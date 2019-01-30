@@ -201,7 +201,7 @@ var webrtcUI = {
     return this.emitter.off(...args);
   },
 
-  // Listeners and observers are registered in nsBrowserGlue.js
+  // Listeners and observers are registered in BrowserGlue.jsm
   receiveMessage(aMessage) {
     switch (aMessage.name) {
       case "rtcpeer:Request": {

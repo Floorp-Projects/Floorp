@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+var EXPORTED_SYMBOLS = ["BrowserGlue", "ContentPermissionPrompt"];
+
 const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -365,10 +367,7 @@ let ACTORS = {
   TelemetryTimestamps.add("blankWindowShown");
 })();
 
-XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
-
 XPCOMUtils.defineLazyServiceGetters(this, {
-  WindowsUIUtils: ["@mozilla.org/windows-ui-utils;1", "nsIWindowsUIUtils"],
   aboutNewTabService: ["@mozilla.org/browser/aboutnewtab-service;1", "nsIAboutNewTabService"],
 });
 XPCOMUtils.defineLazyGetter(this, "WeaveService", () =>
@@ -381,7 +380,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AboutPrivateBrowsingHandler: "resource:///modules/aboutpages/AboutPrivateBrowsingHandler.jsm",
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   AppMenuNotifications: "resource://gre/modules/AppMenuNotifications.jsm",
-  AsyncPrefs: "resource://gre/modules/AsyncPrefs.jsm",
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
   AutoCompletePopup: "resource://gre/modules/AutoCompletePopup.jsm",
   Blocklist: "resource://gre/modules/Blocklist.jsm",
@@ -389,14 +387,11 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   BookmarkJSONUtils: "resource://gre/modules/BookmarkJSONUtils.jsm",
   BrowserUsageTelemetry: "resource:///modules/BrowserUsageTelemetry.jsm",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
-  ContentClick: "resource:///modules/ContentClick.jsm",
   ContextualIdentityService: "resource://gre/modules/ContextualIdentityService.jsm",
-  CustomizableUI: "resource:///modules/CustomizableUI.jsm",
   DateTimePickerParent: "resource://gre/modules/DateTimePickerParent.jsm",
   Discovery: "resource:///modules/Discovery.jsm",
   ExtensionsUI: "resource:///modules/ExtensionsUI.jsm",
   FileSource: "resource://gre/modules/L10nRegistry.jsm",
-  FormValidationHandler: "resource:///modules/FormValidationHandler.jsm",
   FxAccounts: "resource://gre/modules/FxAccounts.jsm",
   HomePage: "resource:///modules/HomePage.jsm",
   HybridContentTelemetry: "resource://gre/modules/HybridContentTelemetry.jsm",
@@ -405,8 +400,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   LanguagePrompt: "resource://gre/modules/LanguagePrompt.jsm",
   LightweightThemeManager: "resource://gre/modules/LightweightThemeManager.jsm",
   LiveBookmarkMigrator: "resource:///modules/LiveBookmarkMigrator.jsm",
-  LoginHelper: "resource://gre/modules/LoginHelper.jsm",
-  LoginManagerParent: "resource://gre/modules/LoginManagerParent.jsm",
   NewTabUtils: "resource://gre/modules/NewTabUtils.jsm",
   Normandy: "resource://normandy/Normandy.jsm",
   ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
@@ -415,15 +408,12 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PageThumbs: "resource://gre/modules/PageThumbs.jsm",
   PdfJs: "resource://pdf.js/PdfJs.jsm",
   PermissionUI: "resource:///modules/PermissionUI.jsm",
-  PictureInPicture: "resource://gre/modules/PictureInPicture.jsm",
   PingCentre: "resource:///modules/PingCentre.jsm",
   PlacesBackups: "resource://gre/modules/PlacesBackups.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   PluralForm: "resource://gre/modules/PluralForm.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   ProcessHangMonitor: "resource:///modules/ProcessHangMonitor.jsm",
-  ReaderParent: "resource:///modules/ReaderParent.jsm",
-  RemotePrompt: "resource:///modules/RemotePrompt.jsm",
   RemoteSettings: "resource://services-settings/remote-settings.js",
   SafeBrowsing: "resource://gre/modules/SafeBrowsing.jsm",
   Sanitizer: "resource:///modules/Sanitizer.jsm",
@@ -437,6 +427,17 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UITour: "resource:///modules/UITour.jsm",
   WebChannel: "resource://gre/modules/WebChannel.jsm",
   WindowsRegistry: "resource://gre/modules/WindowsRegistry.jsm",
+});
+
+// eslint-disable-next-line no-unused-vars
+XPCOMUtils.defineLazyModuleGetters(this, {
+  AsyncPrefs: "resource://gre/modules/AsyncPrefs.jsm",
+  ContentClick: "resource:///modules/ContentClick.jsm",
+  FormValidationHandler: "resource:///modules/FormValidationHandler.jsm",
+  LoginManagerParent: "resource://gre/modules/LoginManagerParent.jsm",
+  PictureInPicture: "resource://gre/modules/PictureInPicture.jsm",
+  ReaderParent: "resource:///modules/ReaderParent.jsm",
+  RemotePrompt: "resource:///modules/RemotePrompt.jsm",
 });
 
 /* global ContentPrefServiceParent:false, ContentSearch:false,
@@ -466,7 +467,6 @@ if (AppConstants.MOZ_CRASHREPORTER) {
   XPCOMUtils.defineLazyModuleGetters(this, {
     PluginCrashReporter: "resource:///modules/ContentCrashHandlers.jsm",
     UnsubmittedCrashHandler: "resource:///modules/ContentCrashHandlers.jsm",
-    CrashSubmit: "resource://gre/modules/CrashSubmit.jsm",
   });
 }
 
@@ -2985,13 +2985,8 @@ BrowserGlue.prototype = {
     }
   },
 
-  // for XPCOM
-  classID:          Components.ID("{eab9012e-5f74-4cbc-b2b5-a590235513cc}"),
-
   QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver,
                                           Ci.nsISupportsWeakReference]),
-
-  _xpcom_factory: XPCOMUtils.generateSingletonFactory(BrowserGlue),
 };
 
 var ContentBlockingCategoriesPrefs = {
@@ -3488,9 +3483,6 @@ var JawsScreenReaderVersionCheck = {
                                   null, options);
   },
 };
-
-var components = [BrowserGlue, ContentPermissionPrompt];
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory(components);
 
 // Listen for UITour messages.
 // Do it here instead of the UITour module itself so that the UITour module is lazy loaded

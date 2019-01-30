@@ -174,8 +174,6 @@
 @BINPATH@/components/nsDNSServiceDiscovery.js
 #endif
 @RESPATH@/browser/components/BrowserComponents.manifest
-@RESPATH@/browser/components/nsBrowserContentHandler.js
-@RESPATH@/browser/components/nsBrowserGlue.js
 @RESPATH@/browser/components/devtools-startup.manifest
 @RESPATH@/browser/components/devtools-startup.js
 @RESPATH@/browser/components/aboutdebugging-registration.js
@@ -193,7 +191,6 @@
 @RESPATH@/browser/components/EnterprisePolicies.js
 @RESPATH@/browser/components/EnterprisePoliciesContent.js
 @RESPATH@/browser/components/EnterprisePolicies.manifest
-@RESPATH@/browser/components/WebProtocolHandlerRegistrar.js
 @RESPATH@/components/Downloads.manifest
 @RESPATH@/components/DownloadLegacy.js
 @RESPATH@/components/PageThumbsComponents.manifest
