@@ -4,7 +4,6 @@
 
 "use strict";
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {UserAgentOverrides} = ChromeUtils.import("resource://gre/modules/UserAgentOverrides.jsm");
 
@@ -29,5 +28,4 @@ UAOverridesBootstrapper.prototype = {
   classID: Components.ID("{965b0ca8-155b-11e7-93ae-92361f002671}"),
 };
 
-const components = [UAOverridesBootstrapper];
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory(components);
+var EXPORTED_SYMBOLS = ["UAOverridesBootstrapper"];
