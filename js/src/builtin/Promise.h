@@ -541,11 +541,23 @@ class OffThreadPromiseRuntimeState {
   JS::DispatchToEventLoopCallback dispatchToEventLoopCallback_;
   void* dispatchToEventLoopClosure_;
 
-  // These fields are mutated by any thread and are guarded by mutex_.
+  // All following fields are mutated by any thread and are guarded by mutex_.
   Mutex mutex_;
-  ConditionVariable allCanceled_;
+
+  // A set of all OffThreadPromiseTasks that have successfully called 'init'.
+  // OffThreadPromiseTask's destructor removes them from the set.
   OffThreadPromiseTaskSet live_;
+
+  // The allCancelled_ condition is waited on and notified during engine shutdown,
+  // communicating when all off-thread tasks in live_ are safe to be destroyed
+  // from the (shutting down) main thread. This condition is met when
+  // live_.count() == numCanceled_ where "canceled" means "the
+  // DispatchToEventLoopCallback failed after this task finished execution".
+  ConditionVariable allCanceled_;
   size_t numCanceled_;
+
+  // The queue of JS::Dispatchables used by the DispatchToEventLoopCallback that
+  // calling js::UseInternalJobQueues installs.
   DispatchableFifo internalDispatchQueue_;
   ConditionVariable internalDispatchQueueAppended_;
   bool internalDispatchQueueClosed_;
