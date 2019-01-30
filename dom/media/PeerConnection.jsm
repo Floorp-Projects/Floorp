@@ -6,19 +6,15 @@
 "use strict";
 
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "PeerConnectionIdp",
   "resource://gre/modules/media/PeerConnectionIdp.jsm");
 ChromeUtils.defineModuleGetter(this, "convertToRTCStatsReport",
   "resource://gre/modules/media/RTCStatsReport.jsm");
-ChromeUtils.defineModuleGetter(this, "AppConstants",
-  "resource://gre/modules/AppConstants.jsm");
 
 const PC_CONTRACT = "@mozilla.org/dom/peerconnection;1";
 const PC_OBS_CONTRACT = "@mozilla.org/dom/peerconnectionobserver;1";
 const PC_ICE_CONTRACT = "@mozilla.org/dom/rtcicecandidate;1";
 const PC_SESSION_CONTRACT = "@mozilla.org/dom/rtcsessiondescription;1";
-const PC_MANAGER_CONTRACT = "@mozilla.org/dom/peerconnectionmanager;1";
 const PC_STATS_CONTRACT = "@mozilla.org/dom/rtcstatsreport;1";
 const PC_STATIC_CONTRACT = "@mozilla.org/dom/peerconnectionstatic;1";
 const PC_SENDER_CONTRACT = "@mozilla.org/dom/rtpsender;1";
@@ -2389,17 +2385,16 @@ setupPrototype(CreateOfferRequest, {
   QueryInterface: ChromeUtils.generateQI([]),
 });
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory(
-  [GlobalPCList,
-   RTCDTMFSender,
-   RTCIceCandidate,
-   RTCSessionDescription,
-   RTCPeerConnection,
-   RTCPeerConnectionStatic,
-   RTCRtpReceiver,
-   RTCRtpSender,
-   RTCRtpTransceiver,
-   RTCStatsReport,
-   PeerConnectionObserver,
-   CreateOfferRequest]
-);
+var EXPORTED_SYMBOLS =
+  ["GlobalPCList",
+   "RTCDTMFSender",
+   "RTCIceCandidate",
+   "RTCSessionDescription",
+   "RTCPeerConnection",
+   "RTCPeerConnectionStatic",
+   "RTCRtpReceiver",
+   "RTCRtpSender",
+   "RTCRtpTransceiver",
+   "RTCStatsReport",
+   "PeerConnectionObserver",
+   "CreateOfferRequest"];

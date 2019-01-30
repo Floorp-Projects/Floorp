@@ -316,11 +316,6 @@
 @RESPATH@/components/ClearDataService.manifest
 @RESPATH@/components/ClearDataService.js
 
-#ifdef MOZ_WEBRTC
-@RESPATH@/components/PeerConnection.js
-@RESPATH@/components/PeerConnection.manifest
-#endif
-
 ; Remote control protocol
 #ifdef ENABLE_MARIONETTE
 @RESPATH@/chrome/marionette@JAREXT@
