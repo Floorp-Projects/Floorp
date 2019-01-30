@@ -91,4 +91,4 @@ nsTerminatorTelemetry.prototype = {
 
 // Module
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([nsTerminatorTelemetry]);
+var EXPORTED_SYMBOLS = ["nsTerminatorTelemetry"];
