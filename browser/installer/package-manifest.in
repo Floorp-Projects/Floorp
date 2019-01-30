@@ -193,7 +193,6 @@
 @RESPATH@/browser/components/EnterprisePolicies.manifest
 @RESPATH@/components/Downloads.manifest
 @RESPATH@/components/DownloadLegacy.js
-@RESPATH@/components/PageThumbsComponents.manifest
 @RESPATH@/components/crashmonitor.manifest
 @RESPATH@/components/nsCrashMonitor.js
 @RESPATH@/components/toolkitsearch.manifest
@@ -210,7 +209,6 @@
 @RESPATH@/components/nsUpdateService.manifest
 #endif
 @RESPATH@/components/ProcessSingleton.manifest
-@RESPATH@/components/PageThumbsStorageService.js
 @RESPATH@/components/mozProtocolHandler.js
 @RESPATH@/components/mozProtocolHandler.manifest
 @RESPATH@/components/nsDefaultCLH.manifest
