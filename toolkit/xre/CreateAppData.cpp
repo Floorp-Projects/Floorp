@@ -9,6 +9,13 @@
 #include "nsAutoPtr.h"
 #include "mozilla/XREAppData.h"
 
+// This include must appear early in the unified cpp file for toolkit/xre to
+// make sure OSX APIs make use of the OSX TextRange before mozilla::TextRange is
+// declared and made a global symbol by a "using namespace mozilla" declaration.
+#ifdef XP_MACOSX
+#  include <Carbon/Carbon.h>
+#endif
+
 using namespace mozilla;
 
 static void ReadString(nsINIParser& parser, const char* section,
