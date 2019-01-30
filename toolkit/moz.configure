@@ -425,12 +425,11 @@ imply_option('--enable-fmp4', ffmpeg, '--enable-ffmpeg')
 option('--enable-av1',
         help='Enable libaom for av1 video support')
 
-@depends('--enable-av1', target, c_compiler)
-def av1(value, target, c_compiler):
+@depends('--enable-av1', target)
+def av1(value, target):
     enabled = bool(value)
     if value.origin == 'default':
-        if target.os == 'WINNT' and target.cpu == 'x86' and \
-                c_compiler and c_compiler.type == 'msvc':
+        if target.os == 'WINNT' and target.cpu == 'x86':
             enabled = False
         else:
             enabled = True
