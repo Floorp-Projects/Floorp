@@ -75,7 +75,7 @@ export function connect(url: string, actor: string, canRewind: boolean) {
  * @static
  */
 export function navigated() {
-  return async function({ dispatch, getState, client, onReload }: ThunkArgs) {
+  return async function({ dispatch, getState, client, panel }: ThunkArgs) {
     // this time out is used to wait for sources. If we have 0 sources,
     // it is likely that the sources are being loaded from the bfcache,
     // and we should make an explicit request to the server to load them.
@@ -84,6 +84,6 @@ export function navigated() {
       const sources = await client.fetchSources();
       dispatch(newSources(sources));
     }
-    onReload();
+    panel.emit("reloaded");
   };
 }
