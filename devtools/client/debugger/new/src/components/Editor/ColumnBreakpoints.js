@@ -9,7 +9,7 @@ import "./ColumnBreakpoints.css";
 
 import { getSelectedSource, visibleColumnBreakpoints } from "../../selectors";
 import { connect } from "../../utils/connect";
-import { makeLocationId } from "../../utils/breakpoint";
+import { makeBreakpointId } from "../../utils/breakpoint";
 import { breakpointItemActions } from "./menus/breakpoints";
 import type { BreakpointItemActions } from "./menus/breakpoints";
 
@@ -41,7 +41,7 @@ class ColumnBreakpoints extends Component {
     editor.codeMirror.operation(() => {
       breakpoints = columnBreakpoints.map(breakpoint => (
         <ColumnBreakpoint
-          key={makeLocationId(breakpoint.location)}
+          key={makeBreakpointId(breakpoint.location)}
           columnBreakpoint={breakpoint}
           editor={editor}
           source={selectedSource}
