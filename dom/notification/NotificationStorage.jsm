@@ -7,11 +7,6 @@
 const DEBUG = false;
 function debug(s) { dump("-*- NotificationStorage.js: " + s + "\n"); }
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-
-const NOTIFICATIONSTORAGE_CID = "{37f819b0-0b5c-11e3-8ffd-0800200c9a66}";
-const NOTIFICATIONSTORAGE_CONTRACTID = "@mozilla.org/notificationStorage;1";
-
 ChromeUtils.defineModuleGetter(this, "Services",
                                "resource://gre/modules/Services.jsm");
 
@@ -191,10 +186,8 @@ NotificationStorage.prototype = {
     }
   },
 
-  classID : Components.ID(NOTIFICATIONSTORAGE_CID),
-  contractID : NOTIFICATIONSTORAGE_CONTRACTID,
   QueryInterface: ChromeUtils.generateQI([Ci.nsINotificationStorage]),
 };
 
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([NotificationStorage]);
+var EXPORTED_SYMBOLS = ["NotificationStorage"];
