@@ -232,9 +232,6 @@
 @RESPATH@/defaults/pref/marionette.js
 #endif
 
-@RESPATH@/components/BuiltinProviders.manifest
-@RESPATH@/components/PresentationControlService.js
-
 #if defined(ENABLE_TESTS) && defined(MOZ_DEBUG)
 @RESPATH@/components/TestInterfaceJS.js
 @RESPATH@/components/TestInterfaceJS.manifest
