@@ -906,11 +906,15 @@ StorageAccessPermissionPrompt.prototype = {
 
   get promptActions() {
     let self = this;
+
+    let storageAccessHistogram = Services.telemetry.getHistogramById("STORAGE_ACCESS_API_UI");
+
     return [{
         label: gBrowserBundle.GetStringFromName("storageAccess.DontAllow.label"),
         accessKey: gBrowserBundle.GetStringFromName("storageAccess.DontAllow.accesskey"),
         action: Ci.nsIPermissionManager.DENY_ACTION,
         callback(state) {
+          storageAccessHistogram.add("Deny");
           self.cancel();
         },
       },
@@ -919,6 +923,7 @@ StorageAccessPermissionPrompt.prototype = {
         accessKey: gBrowserBundle.GetStringFromName("storageAccess.Allow.accesskey"),
         action: Ci.nsIPermissionManager.ALLOW_ACTION,
         callback(state) {
+          storageAccessHistogram.add("Allow");
           self.allow({"storage-access": "allow"});
         },
       },
@@ -927,6 +932,7 @@ StorageAccessPermissionPrompt.prototype = {
         accessKey: gBrowserBundle.GetStringFromName("storageAccess.AllowOnAnySite.accesskey"),
         action: Ci.nsIPermissionManager.ALLOW_ACTION,
         callback(state) {
+          storageAccessHistogram.add("AllowOnAnySite");
           self.allow({"storage-access": "allow-on-any-site"});
         },
     }];
@@ -964,12 +970,19 @@ StorageAccessPermissionPrompt.prototype = {
   },
 
   onBeforeShow() {
+    let storageAccessHistogram = Services.telemetry.getHistogramById("STORAGE_ACCESS_API_UI");
+
+    storageAccessHistogram.add("Request");
+
     let thirdPartyOrigin = this.request.principal.origin;
     if (this._autoGrants &&
         this.getOriginsThirdPartyHasAccessTo(thirdPartyOrigin) <
           this.maxConcurrentAutomaticGrants) {
       // Automatically accept the prompt
       this.allow({"storage-access": "allow-auto-grant"});
+
+      storageAccessHistogram.add("AllowAutomatically");
+
       return false;
     }
     return true;
