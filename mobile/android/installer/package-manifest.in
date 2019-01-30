@@ -123,8 +123,6 @@
 @BINPATH@/components/nsDNSServiceDiscovery.js
 #endif
 @BINPATH@/components/toolkitsearch.manifest
-@BINPATH@/components/nsSearchService.js
-@BINPATH@/components/nsSidebar.js
 @BINPATH@/components/TooltipTextProvider.js
 @BINPATH@/components/TooltipTextProvider.manifest
 @BINPATH@/components/NetworkGeolocationProvider.manifest
