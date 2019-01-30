@@ -53,15 +53,15 @@ SOURCES += [
     'HashStore.cpp',
 ]
 
-EXTRA_COMPONENTS += [
-    'nsURLClassifier.manifest',
-    'nsUrlClassifierHashCompleter.js',
-    'nsUrlClassifierLib.js',
-    'nsUrlClassifierListManager.js',
-]
-
 EXTRA_JS_MODULES += [
     'SafeBrowsing.jsm',
+    'UrlClassifierHashCompleter.jsm',
+    'UrlClassifierLib.jsm',
+    'UrlClassifierListManager.jsm',
+]
+
+XPCOM_MANIFESTS += [
+    'components.conf',
 ]
 
 EXPORTS += [
