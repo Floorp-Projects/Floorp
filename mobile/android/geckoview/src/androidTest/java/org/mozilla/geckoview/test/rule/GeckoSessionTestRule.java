@@ -5,6 +5,7 @@
 
 package org.mozilla.geckoview.test.rule;
 
+import org.mozilla.geckoview.ContentBlocking;
 import org.mozilla.geckoview.GeckoDisplay;
 import org.mozilla.geckoview.GeckoResult;
 import org.mozilla.geckoview.GeckoResult.OnValueListener;
@@ -962,11 +963,15 @@ public class GeckoSessionTestRule implements TestRule {
                                         final @Nullable Object delegate)
             throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         if (cls == GeckoSession.TextInputDelegate.class) {
-            return SessionTextInput.class.getMethod("setDelegate",
-                                                    cls).invoke(session.getTextInput(), delegate);
+            return SessionTextInput.class.getMethod("setDelegate", cls)
+                   .invoke(session.getTextInput(), delegate);
         }
-        return GeckoSession.class.getMethod("set" + cls.getSimpleName(),
-                                            cls).invoke(session, delegate);
+        if (cls == ContentBlocking.Delegate.class) {
+            return GeckoSession.class.getMethod("setContentBlockingDelegate", cls)
+                   .invoke(session, delegate);
+        }
+        return GeckoSession.class.getMethod("set" + cls.getSimpleName(), cls)
+               .invoke(session, delegate);
     }
 
     protected static Object getDelegate(final @NonNull Class<?> cls,
@@ -976,7 +981,12 @@ public class GeckoSessionTestRule implements TestRule {
             return SessionTextInput.class.getMethod("getDelegate")
                                          .invoke(session.getTextInput());
         }
-        return GeckoSession.class.getMethod("get" + cls.getSimpleName()).invoke(session);
+        if (cls == ContentBlocking.Delegate.class) {
+            return GeckoSession.class.getMethod("getContentBlockingDelegate")
+                   .invoke(session);
+        }
+        return GeckoSession.class.getMethod("get" + cls.getSimpleName())
+               .invoke(session);
     }
 
     @NonNull
