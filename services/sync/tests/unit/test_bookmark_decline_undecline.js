@@ -42,7 +42,6 @@ add_task(async function test_decline_undecline() {
     engine.enabled = true;
     await Service.sync();
     ok(getBookmarkWBO(server, bzGuid), "Should be present on server again");
-
   } finally {
     await PlacesSyncUtils.bookmarks.reset();
     await promiseStopServer(server);

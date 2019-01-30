@@ -26,7 +26,6 @@ function postMessageToIframe(aType) {
 }
 
 function setup() {
-
   gScript.addMessageListener("device-prompt", function devicePromptHandler() {
     debug("Got message: device-prompt");
     gScript.removeMessageListener("device-prompt", devicePromptHandler);

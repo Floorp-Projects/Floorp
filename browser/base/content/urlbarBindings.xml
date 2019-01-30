@@ -378,7 +378,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                 event.ctrlKey &&
                 (event.key === "n" || event.key === "p") &&
                 this.popupOpen)) {
-
             // Not a key that should trigger deferring.
             return false;
           }

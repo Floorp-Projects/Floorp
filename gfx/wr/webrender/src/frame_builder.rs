@@ -53,6 +53,8 @@ pub struct FrameBuilderConfig {
     pub dual_source_blending_is_enabled: bool,
     pub chase_primitive: ChasePrimitive,
     pub enable_picture_caching: bool,
+    /// True if we're running tests (i.e. via wrench).
+    pub testing: bool,
 }
 
 /// A builder structure for `tiling::Frame`
@@ -77,6 +79,7 @@ pub struct FrameVisibilityContext<'a> {
     pub surfaces: &'a [SurfaceInfo],
     pub debug_flags: DebugFlags,
     pub scene_properties: &'a SceneProperties,
+    pub config: &'a FrameBuilderConfig,
 }
 
 pub struct FrameVisibilityState<'a> {
@@ -192,6 +195,7 @@ impl FrameBuilder {
                 dual_source_blending_is_supported: false,
                 chase_primitive: ChasePrimitive::Nothing,
                 enable_picture_caching: false,
+                testing: false,
             },
         }
     }
@@ -334,6 +338,7 @@ impl FrameBuilder {
                 surfaces: pic_update_state.surfaces,
                 debug_flags,
                 scene_properties,
+                config: &self.config,
             };
 
             let mut visibility_state = FrameVisibilityState {
@@ -591,6 +596,7 @@ impl FrameBuilder {
             has_been_rendered: false,
             has_texture_cache_tasks,
             prim_headers,
+            recorded_dirty_regions: mem::replace(&mut scratch.recorded_dirty_regions, Vec::new()),
             debug_items: mem::replace(&mut scratch.debug_items, Vec::new()),
         }
     }

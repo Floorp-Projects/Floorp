@@ -13,7 +13,6 @@ var otherWindow;
 var browser1, browser2;
 
 add_task(async function reallyRunTests() {
-
   let tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, testPage);
   browser1 = tab1.linkedBrowser;
 

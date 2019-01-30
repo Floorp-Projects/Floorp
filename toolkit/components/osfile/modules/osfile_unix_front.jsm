@@ -81,7 +81,6 @@
        if (this._closeResult) {
          throw this._closeResult;
        }
-
      };
 
      /**
@@ -344,7 +343,6 @@
          return false;
        }
          return true;
-
      };
 
      /**

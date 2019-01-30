@@ -1757,6 +1757,7 @@ impl YamlFrameReader {
         let raster_space = yaml["raster-space"]
             .as_raster_space()
             .unwrap_or(RasterSpace::Screen);
+        let cache_tiles = yaml["cache"].as_bool().unwrap_or(false);
 
         if is_root {
             if let Some(size) = yaml["scroll-offset"].as_point() {
@@ -1778,7 +1779,7 @@ impl YamlFrameReader {
             mix_blend_mode,
             &filters,
             raster_space,
-            /* cache_tiles = */ false,
+            cache_tiles,
         );
 
         if !yaml["items"].is_badvalue() {

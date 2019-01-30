@@ -26,7 +26,6 @@ registerCleanupFunction(async function() {
 });
 
 add_task(async function shareURL() {
-
   if (!AppConstants.isPlatformAndVersionAtLeast("win", "6.4")) {
     Assert.ok(true, "We only expose share on windows 10 and above");
     return;

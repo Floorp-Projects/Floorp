@@ -78,17 +78,7 @@ async function removeFrame(browser, id) {
 }
 
 function getBrowsingContextById(id) {
-  let contexts = ChromeUtils.getRootBrowsingContexts();
-
-  while (contexts.length) {
-    let context = contexts.pop();
-    if (context.id === id) {
-      return context;
-    }
-    contexts = contexts.concat(context.getChildren());
-  }
-
-  return null;
+  return BrowsingContext.get(id);
 }
 
 add_task(async function() {

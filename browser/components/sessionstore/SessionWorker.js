@@ -161,7 +161,6 @@ var Agent = {
     let data = Encoder.encode(stateString);
 
     try {
-
       if (this.state == STATE_CLEAN || this.state == STATE_EMPTY) {
         // The backups directory may not exist yet. In all other cases,
         // we have either already read from or already written to this
@@ -224,7 +223,6 @@ var Agent = {
 
       telemetry.FX_SESSION_RESTORE_WRITE_FILE_MS = Date.now() - startWriteMs;
       telemetry.FX_SESSION_RESTORE_FILE_SIZE_BYTES = fileStat.size;
-
     } catch (ex) {
       // Don't throw immediately
       exn = exn || ex;
@@ -279,7 +277,6 @@ var Agent = {
     }
 
     if (options.performShutdownCleanup && !exn) {
-
       // During shutdown, if auto-restore is disabled, we need to
       // remove possibly sensitive data that has been stored purely
       // for crash recovery. Note that this slightly decreases our
@@ -309,7 +306,6 @@ var Agent = {
    * Wipes all files holding session data from disk.
    */
   wipe() {
-
     // Don't stop immediately in case of error.
     let exn = null;
 

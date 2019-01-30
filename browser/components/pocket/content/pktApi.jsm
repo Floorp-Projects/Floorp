@@ -51,7 +51,6 @@ XPCOMUtils.defineLazyGlobalGetters(this, ["XMLHttpRequest"]);
 XPCOMUtils.defineLazyPreferenceGetter(this, "gCookieFirstPartyIsolate", "privacy.firstparty.isolate", false);
 
 var pktApi = (function() {
-
     /**
      * Configuration
      */
@@ -326,7 +325,6 @@ var pktApi = (function() {
      * @return {Boolean} Returns Boolean whether the api call started sucessfully
      */
     function addLink(url, options) {
-
         var since = getSetting("latestSince");
         var accessToken = getAccessToken();
 
@@ -543,7 +541,6 @@ var pktApi = (function() {
 
         // Switch the success callback
         options.success = function(data) {
-
             // Update used tags
             var usedTagsJSON = getSetting("usedTags");
             var usedTags = usedTagsJSON ? JSON.parse(usedTagsJSON) : {};
@@ -575,7 +572,6 @@ var pktApi = (function() {
      *                           Function with tags and used tags as parameter.
      */
     function getTags(callback) {
-
         var tagsFromSettings = function() {
             var tagsJSON = getSetting("tags");
             if (typeof tagsJSON !== "undefined") {
@@ -651,7 +647,6 @@ var pktApi = (function() {
      * @return {Boolean} Returns Boolean whether the api call started sucessfully
      */
     function getSuggestedTags(data, options) {
-
         data = data || {};
         options = options || {};
 
@@ -707,7 +702,6 @@ var pktApi = (function() {
         }
 
         return assignedValue;
-
     }
 
     /**

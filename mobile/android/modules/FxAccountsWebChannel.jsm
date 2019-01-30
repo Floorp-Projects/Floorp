@@ -279,7 +279,6 @@ this.FxAccountsWebChannel.prototype = {
                   UITelemetry.addEvent("action.1", "content", null, "fxaccount-login");
                   return success;
                 });
-
             })
             .then(success => {
               if (!success) {

@@ -15,7 +15,7 @@ use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::Receiver;
-use webrender::RendererStats;
+use webrender::RenderResults;
 use webrender::api::*;
 use wrench::{Wrench, WrenchThing};
 use yaml_frame_reader::YamlFrameReader;
@@ -67,16 +67,39 @@ impl Display for ReftestOp {
     }
 }
 
+#[derive(Debug)]
+enum ExtraCheck {
+    DrawCalls(usize),
+    AlphaTargets(usize),
+    ColorTargets(usize),
+    /// Checks the dirty region when rendering the test at |index| in the
+    /// sequence, and compares its serialization to |region|.
+    DirtyRegion { index: usize, region: String },
+}
+
+impl ExtraCheck {
+    fn run(&self, results: &[RenderResults]) -> bool {
+        match *self {
+            ExtraCheck::DrawCalls(x) =>
+                x == results.last().unwrap().stats.total_draw_calls,
+            ExtraCheck::AlphaTargets(x) =>
+                x == results.last().unwrap().stats.alpha_target_count,
+            ExtraCheck::ColorTargets(x) =>
+                x == results.last().unwrap().stats.color_target_count,
+            ExtraCheck::DirtyRegion { index, ref region } =>
+                *region == format!("{}", results[index].recorded_dirty_regions[0]),
+        }
+    }
+}
+
 pub struct Reftest {
     op: ReftestOp,
-    test: PathBuf,
+    test: Vec<PathBuf>,
     reference: PathBuf,
     font_render_mode: Option<FontRenderMode>,
     max_difference: usize,
     num_differences: usize,
-    expected_draw_calls: Option<usize>,
-    expected_alpha_targets: Option<usize>,
-    expected_color_targets: Option<usize>,
+    extra_checks: Vec<ExtraCheck>,
     disable_dual_source_blending: bool,
     allow_mipmaps: bool,
     zoom_factor: f32,
@@ -84,10 +107,11 @@ pub struct Reftest {
 
 impl Display for Reftest {
     fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
+        let paths: Vec<String> = self.test.iter().map(|t| t.display().to_string()).collect();
         write!(
             f,
             "{} {} {}",
-            self.test.display(),
+            paths.join(", "),
             self.op,
             self.reference.display()
         )
@@ -193,13 +217,12 @@ impl ReftestManifest {
             let mut max_count = 0;
             let mut op = ReftestOp::Equal;
             let mut font_render_mode = None;
-            let mut expected_color_targets = None;
-            let mut expected_alpha_targets = None;
-            let mut expected_draw_calls = None;
+            let mut extra_checks = vec![];
             let mut disable_dual_source_blending = false;
             let mut zoom_factor = 1.0;
             let mut allow_mipmaps = false;
 
+            let mut paths = vec![];
             for (i, token) in tokens.iter().enumerate() {
                 match *token {
                     "include" => {
@@ -230,15 +253,21 @@ impl ReftestManifest {
                     }
                     function if function.starts_with("draw_calls") => {
                         let (_, args, _) = parse_function(function);
-                        expected_draw_calls = Some(args[0].parse().unwrap());
+                        extra_checks.push(ExtraCheck::DrawCalls(args[0].parse().unwrap()));
                     }
                     function if function.starts_with("alpha_targets") => {
                         let (_, args, _) = parse_function(function);
-                        expected_alpha_targets = Some(args[0].parse().unwrap());
+                        extra_checks.push(ExtraCheck::AlphaTargets(args[0].parse().unwrap()));
                     }
                     function if function.starts_with("color_targets") => {
                         let (_, args, _) = parse_function(function);
-                        expected_color_targets = Some(args[0].parse().unwrap());
+                        extra_checks.push(ExtraCheck::ColorTargets(args[0].parse().unwrap()));
+                    }
+                    function if function.starts_with("dirty_region") => {
+                        let (_, args, _) = parse_function(function);
+                        let index: usize = args[0].parse().unwrap();
+                        let region: String = args[1].parse().unwrap();
+                        extra_checks.push(ExtraCheck::DirtyRegion { index, region });
                     }
                     options if options.starts_with("options") => {
                         let (_, args, _) = parse_function(options);
@@ -262,25 +291,36 @@ impl ReftestManifest {
                         op = ReftestOp::NotEqual;
                     }
                     _ => {
-                        reftests.push(Reftest {
-                            op,
-                            test: dir.join(tokens[i + 0]),
-                            reference: dir.join(tokens[i + 1]),
-                            font_render_mode,
-                            max_difference: cmp::max(max_difference, options.allow_max_difference),
-                            num_differences: cmp::max(max_count, options.allow_num_differences),
-                            expected_draw_calls,
-                            expected_alpha_targets,
-                            expected_color_targets,
-                            disable_dual_source_blending,
-                            allow_mipmaps,
-                            zoom_factor,
-                        });
-
-                        break;
+                        paths.push(dir.join(*token));
                     }
                 }
             }
+
+            // Don't try to add tests for include lines.
+            if paths.len() < 2 {
+                assert_eq!(paths.len(), 0, "Only one path provided: {:?}", paths[0]);
+                continue;
+            }
+
+            // The reference is the last path provided. If multiple paths are
+            // passed for the test, they render sequentially before being
+            // compared to the reference, which is useful for testing
+            // invalidation.
+            let reference = paths.pop().unwrap();
+            let test = paths;
+
+            reftests.push(Reftest {
+                op,
+                test,
+                reference,
+                font_render_mode,
+                max_difference: cmp::max(max_difference, options.allow_max_difference),
+                num_differences: cmp::max(max_count, options.allow_num_differences),
+                extra_checks,
+                disable_dual_source_blending,
+                allow_mipmaps,
+                zoom_factor,
+            });
         }
 
         ReftestManifest { reftests: reftests }
@@ -290,10 +330,15 @@ impl ReftestManifest {
         self.reftests
             .iter()
             .filter(|x| {
-                x.test.starts_with(prefix) || x.reference.starts_with(prefix)
+                x.test.iter().any(|t| t.starts_with(prefix)) || x.reference.starts_with(prefix)
             })
             .collect()
     }
+}
+
+struct YamlRenderOutput {
+    image: ReftestImage,
+    results: RenderResults,
 }
 
 pub struct ReftestHarness<'a> {
@@ -360,13 +405,13 @@ impl<'a> ReftestHarness<'a> {
         let window_size = self.window.get_inner_size();
         let reference = match t.reference.extension().unwrap().to_str().unwrap() {
             "yaml" => {
-                let (reference, _) = self.render_yaml(
-                    t.reference.as_path(),
+                let output = self.render_yaml(
+                    &t.reference,
                     window_size,
                     t.font_render_mode,
                     t.allow_mipmaps,
                 );
-                reference
+                output.image
             }
             "png" => {
                 self.load_image(t.reference.as_path(), ImageFormat::PNG)
@@ -374,14 +419,34 @@ impl<'a> ReftestHarness<'a> {
             other => panic!("Unknown reftest extension: {}", other),
         };
 
-        // the reference can be smaller than the window size,
-        // in which case we only compare the intersection
-        let (test, stats) = self.render_yaml(
-            t.test.as_path(),
-            reference.size,
-            t.font_render_mode,
-            t.allow_mipmaps,
-        );
+        // The reference can be smaller than the window size, in which case
+        // we only compare the intersection.
+        //
+        // Note also that, when we have multiple test scenes in sequence, we
+        // want to test the picture caching machinery. But since picture caching
+        // only takes effect after the result has been the same several frames in
+        // a row, we need to render the scene multiple times.
+        let mut images = vec![];
+        let mut results = vec![];
+        let num_iterations = if t.test.len() > 1 {
+            webrender::FRAMES_BEFORE_PICTURE_CACHING
+        } else {
+            1
+        };
+        for filename in t.test.iter() {
+            let mut output = None;
+            for _ in 0..num_iterations {
+                output = Some(self.render_yaml(
+                    &filename,
+                    reference.size,
+                    t.font_render_mode,
+                    t.allow_mipmaps,
+                ));
+            }
+            let output = output.unwrap();
+            images.push(output.image);
+            results.push(output.results);
+        }
 
         if t.disable_dual_source_blending {
             self.wrench
@@ -391,42 +456,21 @@ impl<'a> ReftestHarness<'a> {
                 );
         }
 
+        for extra_check in t.extra_checks.iter() {
+            if !extra_check.run(&results) {
+                println!(
+                    "REFTEST TEST-UNEXPECTED-FAIL | {} | Failing Check: {:?} | Actual Results: {:?}",
+                    t,
+                    extra_check,
+                    results,
+                );
+                println!("REFTEST TEST-END | {}", t);
+                return false;
+            }
+        }
+
+        let test = images.pop().unwrap();
         let comparison = test.compare(&reference);
-
-        if let Some(expected_draw_calls) = t.expected_draw_calls {
-            if expected_draw_calls != stats.total_draw_calls {
-                println!("REFTEST TEST-UNEXPECTED-FAIL | {} | {}/{} | expected_draw_calls",
-                    t,
-                    stats.total_draw_calls,
-                    expected_draw_calls
-                );
-                println!("REFTEST TEST-END | {}", t);
-                return false;
-            }
-        }
-        if let Some(expected_alpha_targets) = t.expected_alpha_targets {
-            if expected_alpha_targets != stats.alpha_target_count {
-                println!("REFTEST TEST-UNEXPECTED-FAIL | {} | {}/{} | alpha_target_count",
-                    t,
-                    stats.alpha_target_count,
-                    expected_alpha_targets
-                );
-                println!("REFTEST TEST-END | {}", t);
-                return false;
-            }
-        }
-        if let Some(expected_color_targets) = t.expected_color_targets {
-            if expected_color_targets != stats.color_target_count {
-                println!("REFTEST TEST-UNEXPECTED-FAIL | {} | {}/{} | color_target_count",
-                    t,
-                    stats.color_target_count,
-                    expected_color_targets
-                );
-                println!("REFTEST TEST-END | {}", t);
-                return false;
-            }
-        }
-
         match (&t.op, comparison) {
             (&ReftestOp::Equal, ReftestImageComparison::Equal) => true,
             (
@@ -483,7 +527,7 @@ impl<'a> ReftestHarness<'a> {
         size: DeviceIntSize,
         font_render_mode: Option<FontRenderMode>,
         allow_mipmaps: bool,
-    ) -> (ReftestImage, RendererStats) {
+    ) -> YamlRenderOutput {
         let mut reader = YamlFrameReader::new(filename);
         reader.set_font_render_mode(font_render_mode);
         reader.allow_mipmaps(allow_mipmaps);
@@ -493,7 +537,7 @@ impl<'a> ReftestHarness<'a> {
 
         // wait for the frame
         self.rx.recv().unwrap();
-        let stats = self.wrench.render();
+        let results = self.wrench.render();
 
         let window_size = self.window.get_inner_size();
         assert!(
@@ -515,6 +559,9 @@ impl<'a> ReftestHarness<'a> {
 
         reader.deinit(self.wrench);
 
-        (ReftestImage { data: pixels, size }, stats)
+        YamlRenderOutput {
+            image: ReftestImage { data: pixels, size },
+            results,
+        }
     }
 }

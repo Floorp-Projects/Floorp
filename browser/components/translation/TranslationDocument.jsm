@@ -564,7 +564,6 @@ function swapTextForItem(item, target) {
     // TranslationItem. This means either the TranslationItem.original or
     // TranslationItem.translation array.
     for (let targetItem of curItem[target]) {
-
       if (targetItem instanceof TranslationItem) {
         // If the array element is another TranslationItem object, let's
         // add it to the stack to be visited.
@@ -580,7 +579,6 @@ function swapTextForItem(item, target) {
             // on being able to do anything correctly, so it's better not to
             // bring back the node to this parent.
             targetNode.parentNode == domNode) {
-
           // We don't need to null-check curNode because insertBefore(..., null)
           // does what we need in that case: reorder this node to the end
           // of child nodes.
@@ -595,7 +593,6 @@ function swapTextForItem(item, target) {
         if (curNode) {
           curNode = getNextSiblingSkippingEmptyTextNodes(curNode);
         }
-
       } else if (targetItem === TranslationItem_NodePlaceholder) {
         // If the current item is a placeholder node, we need to move
         // our pointer "past" it, jumping from one side of a block of
@@ -609,7 +606,6 @@ function swapTextForItem(item, target) {
                 curNode.nodeValue.trim() == "")) {
           curNode = curNode.nextSibling;
         }
-
       } else {
         // Finally, if it's a text item, we just need to find the next
         // text node to use. Text nodes don't need to be reordered, so

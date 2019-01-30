@@ -1809,7 +1809,6 @@ var CustomizableUIInternal = {
       // that this was prevented, but we probably still want to close the panel.
       // If consumers don't want this to happen, they should specify the closemenu
       // attribute.
-
     } else if (aEvent.type != "command") { // mouse events:
       if (aEvent.defaultPrevented || aEvent.button != 0) {
         return;

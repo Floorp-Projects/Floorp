@@ -1610,7 +1610,6 @@ var Impl = {
         } else {
           prioParams.booleans[i] = false;
         }
-
       } catch (ex) {
         this._log.error(ex);
       }

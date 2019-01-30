@@ -273,7 +273,6 @@ add_task(async function test_never_offer_translation() {
 });
 
 add_task(async function test_translation_preferences() {
-
   let preferenceChecks = {
     "browser.translation.ui.show": [
       {value: false, expected: {showUI: 0}},
@@ -295,5 +294,4 @@ add_task(async function test_translation_preferences() {
     }
     Services.prefs.clearUserPref(preference);
   }
-
 });

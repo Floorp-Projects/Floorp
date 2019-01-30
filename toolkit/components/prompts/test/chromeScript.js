@@ -48,7 +48,6 @@ function handlePrompt(action, isTabModal, isSelect) {
       ui = doc;
     else
       ui = doc.defaultView.Dialog.ui;
-
   }
 
   let promptState;

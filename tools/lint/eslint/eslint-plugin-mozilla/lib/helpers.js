@@ -722,7 +722,6 @@ module.exports = {
       //   cwd: /path/to/mozilla/repo/a/b/c
     var dirName = path.dirname(fileName);
     return cwd.slice(0, cwd.length - dirName.length) + fileName;
-
   },
 
   /**

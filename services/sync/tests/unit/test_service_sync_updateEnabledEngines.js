@@ -41,7 +41,6 @@ var collectionsHelper = track_collections_helper();
 var upd = collectionsHelper.with_updated_collection;
 
 function sync_httpd_setup(handlers) {
-
   handlers["/1.1/johndoe/info/collections"] = collectionsHelper.handler;
   delete collectionsHelper.collections.crypto;
   delete collectionsHelper.collections.meta;
@@ -308,7 +307,6 @@ add_task(async function test_disabledRemotelyTwoClients() {
 
     _("Engine is disabled.");
     Assert.ok(!engine.enabled);
-
   } finally {
     await Service.startOver();
     await promiseStopServer(server);
@@ -341,7 +339,6 @@ add_task(async function test_disabledRemotely() {
 
     _("Engine is not disabled: only one client.");
     Assert.ok(engine.enabled);
-
   } finally {
     await Service.startOver();
     await promiseStopServer(server);

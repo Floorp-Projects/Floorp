@@ -61,7 +61,6 @@ add_task(async function test_usingKeyboardShortcuts() {
   }
 
   for (let key of keys) {
-
     let tab1 = await addTab();
     let tab2 = await addTab();
     let tab3 = await addTab();

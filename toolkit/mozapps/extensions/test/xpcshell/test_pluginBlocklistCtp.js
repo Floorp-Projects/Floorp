@@ -100,7 +100,6 @@ add_task(async function basic() {
 
   Assert.equal(await blocklist.getPluginBlocklistState(PLUGINS[5], "1", "1.9"),
                nsIBLS.STATE_NOT_BLOCKED);
-
 });
 
 function get_test_plugin() {
@@ -138,7 +137,6 @@ add_task(async function test_is_not_clicktoplay2() {
   var blocklistState = await Blocklist.getPluginBlocklistState(plugin, "1", "1.9");
   Assert.notEqual(blocklistState, Ci.nsIBlocklistService.STATE_VULNERABLE_UPDATE_AVAILABLE);
   Assert.notEqual(blocklistState, Ci.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE);
-
 });
 
 // Test that disabling the blocklist when a plugin is ctp-blocklisted will

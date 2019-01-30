@@ -163,14 +163,12 @@ var PageThumbs = {
     }
 
     return new Promise(resolve => {
-
       let canvas = this.createCanvas(aBrowser.contentWindow);
       this.captureToCanvas(aBrowser, canvas, () => {
         canvas.toBlob(blob => {
           resolve(blob, this.contentType);
         });
       });
-
     });
   },
 
@@ -284,7 +282,6 @@ var PageThumbs = {
    */
   _captureRemoteThumbnail(aBrowser, aWidth, aHeight, aArgs) {
     return new Promise(resolve => {
-
       // The index we send with the request so we can identify the
       // correct response.
       let index = gRemoteThumbId++;
@@ -330,7 +327,6 @@ var PageThumbs = {
         id: index,
         additionalArgs: aArgs,
       });
-
     });
   },
 

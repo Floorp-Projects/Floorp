@@ -978,7 +978,6 @@ GeckoDriver.prototype.execute_ = async function(
       line = 0,
       async = false,
     } = {}) {
-
   assert.open(this.getCurrentWindow());
   await this._handleUserPrompts();
 
@@ -1595,7 +1594,6 @@ GeckoDriver.prototype.setWindowHandle = async function(
       await registerBrowsers;
       await browserListening;
     }
-
   } else {
     // Otherwise switch to the known chrome window
     this.curBrowser = this.browsers[winProperties.outerId];
@@ -1814,7 +1812,6 @@ GeckoDriver.prototype.switchToFrame = async function(cmd) {
     } else {
       throw new NoSuchFrameError(`Unable to locate frame: ${id}`);
     }
-
   } else if (this.context == Context.Content) {
     cmd.commandID = cmd.id;
     await this.listener.switchToFrame(cmd.parameters);

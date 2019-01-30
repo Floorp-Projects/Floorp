@@ -71,7 +71,6 @@ function reference_fetch_file(path, test) {
           resolve(result);
         }
       });
-
   });
 }
 

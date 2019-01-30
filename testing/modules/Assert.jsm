@@ -67,7 +67,6 @@ function truncate(text, newLength = kTruncateLength) {
     return text.length < newLength ? text : text.slice(0, newLength);
   }
     return text;
-
 }
 
 function getMessage(error, prefix = "") {

@@ -258,6 +258,8 @@ class gfxWindowsPlatform : public gfxPlatform {
   void InitializeDirectDrawConfig();
   void InitializeAdvancedLayersConfig();
 
+  void RecordStartupTelemetry();
+
   RefPtr<IDWriteRenderingParams> mRenderingParams[TEXT_RENDERING_COUNT];
   DWRITE_MEASURING_MODE mMeasuringMode;
 

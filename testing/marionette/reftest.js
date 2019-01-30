@@ -228,7 +228,6 @@ max-width: ${width}px; max-height: ${height}px`;
   async run(testUrl, references, expected, timeout,
       width = DEFAULT_REFTEST_WIDTH,
       height = DEFAULT_REFTEST_HEIGHT) {
-
     let timeoutHandle;
 
     let timeoutPromise = new Promise(resolve => {
@@ -350,7 +349,6 @@ max-width: ${width}px; max-height: ${height}px`;
         }
       });
       logger.debug(`Canvas pool (${cacheKey}) is of length ${canvasPool.length}`);
-
     }
 
     if (screenshotData.length) {
@@ -403,8 +401,6 @@ max-width: ${width}px; max-height: ${height}px`;
           break;
         default:
           throw new InvalidArgumentError("Reftest operator should be '==' or '!='");
-
-
       }
     }
     return {lhs, rhs, passed, error};

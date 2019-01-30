@@ -3,7 +3,6 @@
 
 add_task(async function test() {
   await new Promise(resolve => {
-
     const LOGIN_HOST = "http://example.com";
     const LOGIN_COUNT = 5;
 
@@ -126,6 +125,5 @@ add_task(async function test() {
           break;
       }
     }
-
   });
 });

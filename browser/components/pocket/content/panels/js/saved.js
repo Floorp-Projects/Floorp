@@ -552,7 +552,6 @@ PKT_SAVED.prototype = {
 
             myself.overlay.showStateSaved(resp);
         });
-
     },
 };
 

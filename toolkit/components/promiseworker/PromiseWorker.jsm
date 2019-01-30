@@ -347,7 +347,6 @@ this.BasePromiseWorker.prototype = {
         options.outExecutionDuration = durationMs;
       }
       return reply.ok;
-
     }.bind(this))();
   },
 

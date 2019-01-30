@@ -274,7 +274,6 @@ async function startTraceTest(browser) {
       {columnNumber: 16, filename: TEST_URI, functionName: "foobar585956a", lineNumber: 15},
       {columnNumber: 1, filename: TEST_URI, functionName: "onclick", lineNumber: 1},
     ];
-
   });
 
   BrowserTestUtils.synthesizeMouseAtCenter("#test-trace", {}, browser);

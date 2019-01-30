@@ -442,7 +442,6 @@ function populateChildren(menulist, options, selectedIndex, zoom,
   // the dropdown, and if the list is long enough for a search element to be added.
   if (Services.prefs.getBoolPref("dom.forms.selectSearch") && addSearch
       && element.childElementCount > SEARCH_MINIMUM_ELEMENTS) {
-
     // Add a search text field as the first element of the dropdown
     let searchbox = element.ownerDocument.createXULElement("textbox");
     searchbox.setAttribute("type", "search");

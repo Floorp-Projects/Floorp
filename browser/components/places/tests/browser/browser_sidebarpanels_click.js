@@ -37,7 +37,6 @@ add_task(async function test_sidebarpanels_click() {
         title: "test",
         url: TEST_URL,
       });
-
     },
     prepare() {
     },

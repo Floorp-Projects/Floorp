@@ -6,7 +6,6 @@ const PROMPT_URL = "chrome://global/content/commonDialog.xul";
 
 add_task(async function test() {
   await new Promise(resolve => {
-
     let tab = BrowserTestUtils.addTab(gBrowser);
     isnot(tab, gBrowser.selectedTab, "New tab shouldn't be selected");
 
@@ -35,6 +34,5 @@ add_task(async function test() {
 
     BrowserTestUtils.browserLoaded(tab.linkedBrowser).then(() => finish());
     BrowserTestUtils.loadURI(tab.linkedBrowser, "http://example.com/browser/toolkit/components/passwordmgr/test/browser/authenticate.sjs");
-
   });
 });

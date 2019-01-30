@@ -17,7 +17,6 @@ function run_test() {
  * a single path.
  */
 add_task(async function test_watch_single_path_directory_deletion() {
-
   let watchedDir = OS.Constants.Path.profileDir;
   let tempDirName = "test";
   let tmpDirPath = OS.Path.join(watchedDir, tempDirName);

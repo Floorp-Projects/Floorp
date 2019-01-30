@@ -98,16 +98,38 @@ static nsRect FindScrollAnchoringBoundingRect(const nsIFrame* aScrollFrame,
                                               nsIFrame* aCandidate) {
   MOZ_ASSERT(nsLayoutUtils::IsProperAncestorFrame(aScrollFrame, aCandidate));
   if (!!Text::FromNodeOrNull(aCandidate->GetContent())) {
+    // This is a frame for a text node. The spec says we need to accumulate the
+    // union of all line boxes in the coordinate space of the scroll frame
+    // accounting for transforms.
+    //
+    // To do this, we translate and accumulate the overflow rect for each text
+    // continuation to the coordinate space of the nearest ancestor block
+    // frame. Then we transform the resulting rect into the coordinate space of
+    // the scroll frame.
+    //
+    // Transforms aren't allowed on non-replaced inline boxes, so we can assume
+    // that these text node continuations will have the same transform as their
+    // nearest block ancestor. And it should be faster to transform their union
+    // rather than individually transforming each overflow rect
+    //
+    // XXX for fragmented blocks, blockAncestor will be an ancestor only to the
+    //     text continuations in the first block continuation. GetOffsetTo
+    //     should continue to work, but is it correct with transforms or a
+    //     performance hazard?
+    nsIFrame* blockAncestor =
+        nsLayoutUtils::FindNearestBlockAncestor(aCandidate);
+    MOZ_ASSERT(
+        nsLayoutUtils::IsProperAncestorFrame(aScrollFrame, blockAncestor));
     nsRect bounding;
     for (nsIFrame* continuation = aCandidate->FirstContinuation(); continuation;
          continuation = continuation->GetNextContinuation()) {
       nsRect overflowRect =
           continuation->GetScrollableOverflowRectRelativeToSelf();
-      nsRect transformed = nsLayoutUtils::TransformFrameRectToAncestor(
-          continuation, overflowRect, aScrollFrame);
-      bounding = bounding.Union(transformed);
+      overflowRect += continuation->GetOffsetTo(blockAncestor);
+      bounding = bounding.Union(overflowRect);
     }
-    return bounding;
+    return nsLayoutUtils::TransformFrameRectToAncestor(blockAncestor, bounding,
+                                                       aScrollFrame);
   }
 
   nsRect borderRect = aCandidate->GetRectRelativeToSelf();
@@ -352,6 +374,13 @@ ScrollAnchorContainer::ExamineAnchorCandidate(nsIFrame* aFrame) const {
 #else
   ANCHOR_LOG("\t\tVisiting frame=%p.\n", aFrame);
 #endif
+  bool isText = !!Text::FromNodeOrNull(aFrame->GetContent());
+  bool isContinuation = !!aFrame->GetPrevContinuation();
+
+  if (isText && isContinuation) {
+    ANCHOR_LOG("\t\tExcluding continuation text node.\n");
+    return ExamineResult::Exclude;
+  }
 
   // Check if the author has opted out of scroll anchoring for this frame
   // and its descendants.
@@ -405,10 +434,8 @@ ScrollAnchorContainer::ExamineAnchorCandidate(nsIFrame* aFrame) const {
 
   // Check what kind of frame this is
   bool isBlockOutside = aFrame->IsBlockOutside();
-  bool isText = !!Text::FromNodeOrNull(aFrame->GetContent());
   bool isAnonBox = aFrame->Style()->IsAnonBox() && !isText;
   bool isInlineOutside = aFrame->IsInlineOutside() && !isText;
-  bool isContinuation = !!aFrame->GetPrevContinuation();
 
   // If the frame is anonymous or inline-outside, search its descendants for a
   // scroll anchor.

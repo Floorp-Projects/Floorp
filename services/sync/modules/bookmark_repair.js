@@ -397,7 +397,6 @@ class BookmarkRepairRequestor extends CollectionRepairRequestor {
         log.error(`continue repairs finds itself in an unknown state ${state}`);
         state = STATE.ABORTED;
         break;
-
     }
     return state;
   }

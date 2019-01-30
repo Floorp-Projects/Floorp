@@ -73,5 +73,4 @@ add_task(async function test_reload() {
     }
     Assert.equal(count, 1, "We have added one item");
   }
-
 });

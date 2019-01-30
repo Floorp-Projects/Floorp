@@ -86,7 +86,6 @@ add_task(async function test_phase_removeBlocker() {
   info("Testing that we can call removeBlocker before, during and after the call to wait()");
 
   for (let kind of ["phase", "barrier", "xpcom-barrier", "xpcom-barrier-unwrapped"]) {
-
     info("Switching to kind " + kind);
     info("Attempt to add then remove a blocker before wait()");
     let lock = makeLock(kind);
@@ -152,7 +151,6 @@ add_task(async function test_phase_removeBlocker() {
     do_remove_blocker(lock, "foo", false);
     do_remove_blocker(lock, null, false);
   }
-
 });
 
 add_task(async function test_state() {

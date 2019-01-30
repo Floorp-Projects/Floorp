@@ -7,6 +7,7 @@
 #include "mozilla/dom/BrowsingContext.h"
 
 #include "mozilla/dom/CanonicalBrowsingContext.h"
+#include "mozilla/dom/BrowsingContextGroup.h"
 #include "mozilla/dom/BrowsingContextBinding.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
@@ -36,8 +37,6 @@ extern mozilla::LazyLogModule gUserInteractionPRLog;
 
 static LazyLogModule gBrowsingContextLog("BrowsingContext");
 
-static StaticAutoPtr<BrowsingContext::Children> sRootBrowsingContexts;
-
 template <template <typename> class PtrType>
 using BrowsingContextMap =
     HashMap<uint64_t, PtrType<BrowsingContext>, DefaultHasher<uint64_t>,
@@ -52,6 +51,8 @@ static StaticAutoPtr<BrowsingContextMap<RefPtr>> sCachedBrowsingContexts;
 static void Register(BrowsingContext* aBrowsingContext) {
   MOZ_ALWAYS_TRUE(
       sBrowsingContexts->putNew(aBrowsingContext->Id(), aBrowsingContext));
+
+  aBrowsingContext->Group()->Register(aBrowsingContext);
 }
 
 static void Sync(BrowsingContext* aBrowsingContext) {
@@ -78,11 +79,6 @@ BrowsingContext* BrowsingContext::TopLevelBrowsingContext() {
 }
 
 /* static */ void BrowsingContext::Init() {
-  if (!sRootBrowsingContexts) {
-    sRootBrowsingContexts = new BrowsingContext::Children();
-    ClearOnShutdown(&sRootBrowsingContexts);
-  }
-
   if (!sBrowsingContexts) {
     sBrowsingContexts = new BrowsingContextMap<WeakPtr>();
     ClearOnShutdown(&sBrowsingContexts);
@@ -171,18 +167,16 @@ BrowsingContext::BrowsingContext(BrowsingContext* aParent,
       mName(aName),
       mClosed(false),
       mIsActivatedByUserGesture(false) {
+  // Specify our group in our constructor. We will explicitly join the group
+  // when we are registered, as doing so will take a reference.
   if (mParent) {
-    mBrowsingContextGroup = mParent->mBrowsingContextGroup;
+    mGroup = mParent->Group();
   } else if (mOpener) {
-    mBrowsingContextGroup = mOpener->mBrowsingContextGroup;
+    mGroup = mOpener->Group();
   } else {
-    mBrowsingContextGroup = new BrowsingContextGroup();
-  }
-
-  if (!mParent) {
-    // If we don't have a parent we're either a top level or auxiliary
-    // BrowsingContext.
-    mBrowsingContextGroup->AppendElement(this);
+    // To ensure the group has a unique ID, we will use our ID, as the founder
+    // of this BrowsingContextGroup.
+    mGroup = new BrowsingContextGroup();
   }
 }
 
@@ -202,7 +196,7 @@ void BrowsingContext::Attach() {
 
   sCachedBrowsingContexts->remove(Id());
 
-  auto* children = mParent ? &mParent->mChildren : sRootBrowsingContexts.get();
+  auto* children = mParent ? &mParent->mChildren : &mGroup->Toplevels();
   MOZ_DIAGNOSTIC_ASSERT(!children->Contains(this));
 
   children->AppendElement(this);
@@ -221,11 +215,11 @@ void BrowsingContext::Detach() {
   BrowsingContextMap<RefPtr>::Ptr p;
   if (sCachedBrowsingContexts && (p = sCachedBrowsingContexts->lookup(Id()))) {
     MOZ_DIAGNOSTIC_ASSERT(!mParent || !mParent->mChildren.Contains(this));
-    MOZ_DIAGNOSTIC_ASSERT(!sRootBrowsingContexts->Contains(this));
+    MOZ_DIAGNOSTIC_ASSERT(!mGroup || !mGroup->Toplevels().Contains(this));
     sCachedBrowsingContexts->remove(p);
   } else {
-    auto* children =
-        mParent ? &mParent->mChildren : sRootBrowsingContexts.get();
+    auto* children = mParent ? &mParent->mChildren : &mGroup->Toplevels();
+
     // TODO(farre): This assert looks extremely fishy, I know, but
     // what we're actually saying is this: if we're detaching, but our
     // parent doesn't have any children, it is because we're being
@@ -235,6 +229,8 @@ void BrowsingContext::Detach() {
 
     children->RemoveElement(this);
   }
+
+  Group()->Unregister(this);
 
   if (!XRE_IsContentProcess()) {
     return;
@@ -296,15 +292,9 @@ void BrowsingContext::SetOpener(BrowsingContext* aOpener) {
       BrowsingContextId(Id()), BrowsingContextId(aOpener ? aOpener->Id() : 0));
 }
 
-/* static */ void BrowsingContext::GetRootBrowsingContexts(
-    nsTArray<RefPtr<BrowsingContext>>& aBrowsingContexts) {
-  MOZ_ALWAYS_TRUE(aBrowsingContexts.AppendElements(*sRootBrowsingContexts));
-}
-
 BrowsingContext::~BrowsingContext() {
   MOZ_DIAGNOSTIC_ASSERT(!mParent || !mParent->mChildren.Contains(this));
-  MOZ_DIAGNOSTIC_ASSERT(!sRootBrowsingContexts ||
-                        !sRootBrowsingContexts->Contains(this));
+  MOZ_DIAGNOSTIC_ASSERT(!mGroup || !mGroup->Toplevels().Contains(this));
   MOZ_DIAGNOSTIC_ASSERT(!sCachedBrowsingContexts ||
                         !sCachedBrowsingContexts->has(Id()));
 
@@ -378,7 +368,7 @@ void BrowsingContext::ResetUserGestureActivation() {
 NS_IMPL_CYCLE_COLLECTION_CLASS(BrowsingContext)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(BrowsingContext)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocShell, mChildren, mParent)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocShell, mChildren, mParent, mGroup)
   if (XRE_IsParentProcess()) {
     CanonicalBrowsingContext::Cast(tmp)->Unlink();
   }
@@ -386,7 +376,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(BrowsingContext)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(BrowsingContext)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocShell, mChildren, mParent)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocShell, mChildren, mParent, mGroup)
   if (XRE_IsParentProcess()) {
     CanonicalBrowsingContext::Cast(tmp)->Traverse(cb);
   }

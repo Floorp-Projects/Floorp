@@ -165,7 +165,6 @@ var stringifyArg = function stringifyArg(arg) {
       });
     }
       return argToString;
-
   }
   return arg;
 };
@@ -557,7 +556,6 @@ function projector(type, signed) {
     }
       LOG("Projected as a large unsigned integer");
       return projectLargeUInt;
-
   }
   LOG("Projected as a regular number");
   return projectValue;

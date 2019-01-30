@@ -70,7 +70,6 @@ var results = {"name": "",
 function getTestSettings() {
   console.log("getting test settings from control server");
   return new Promise(resolve => {
-
     fetch(settingsURL).then(function(response) {
       response.text().then(function(text) {
         console.log(text);
@@ -352,7 +351,6 @@ async function nextCycle() {
   }
   if (pageCycle <= pageCycles) {
     setTimeout(function() {
-
       let text = "begin pagecycle " + pageCycle;
       postToControlServer("status", text);
 

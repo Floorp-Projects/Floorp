@@ -30,7 +30,6 @@ var registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
 
 function sleep(aMs) {
   return new Promise(resolve => {
-
     let timer = Cc["@mozilla.org/timer;1"]
                   .createInstance(Ci.nsITimer);
 
@@ -39,7 +38,6 @@ function sleep(aMs) {
         resolve();
       },
     }, aMs, timer.TYPE_ONE_SHOT);
-
   });
 }
 

@@ -216,7 +216,6 @@ function onWindowUnloaded() {
       afterTestCallback(previousClosedWindowData, ss.getClosedWindowData());
       afterTestCleanup(newWin);
     }, {capture: true, once: true});
-
   }, {once: true});
 }
 

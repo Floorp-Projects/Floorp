@@ -30,7 +30,6 @@ var collectionsHelper = track_collections_helper();
 var upd = collectionsHelper.with_updated_collection;
 
 function sync_httpd_setup(handlers) {
-
   handlers["/1.1/johndoe/info/collections"] = collectionsHelper.handler;
   delete collectionsHelper.collections.crypto;
   delete collectionsHelper.collections.meta;
@@ -81,7 +80,6 @@ add_task(async function test_noEngines() {
     _("Sync with no engines specified.");
     await Service.sync({engines: []});
     deepEqual(syncedEngines, [], "no engines were synced");
-
   } finally {
     await Service.startOver();
     await promiseStopServer(server);
@@ -95,11 +93,9 @@ add_task(async function test_oneEngine() {
   let server = await setUp();
 
   try {
-
     _("Sync with 1 engine specified.");
     await Service.sync({engines: ["steam"]});
     deepEqual(syncedEngines, ["steam"]);
-
   } finally {
     await Service.startOver();
     await promiseStopServer(server);
@@ -116,7 +112,6 @@ add_task(async function test_bothEnginesSpecified() {
     _("Sync with both engines specified.");
     await Service.sync({engines: ["steam", "stirling"]});
     deepEqual(syncedEngines, ["steam", "stirling"]);
-
   } finally {
     await Service.startOver();
     await promiseStopServer(server);
@@ -133,7 +128,6 @@ add_task(async function test_bothEnginesSpecified() {
     _("Sync with both engines specified.");
     await Service.sync({engines: ["stirling", "steam"]});
     deepEqual(syncedEngines, ["stirling", "steam"]);
-
   } finally {
     await Service.startOver();
     await promiseStopServer(server);
@@ -149,7 +143,6 @@ add_task(async function test_bothEnginesDefault() {
   try {
     await Service.sync();
     deepEqual(syncedEngines, ["steam", "stirling"]);
-
   } finally {
     await Service.startOver();
     await promiseStopServer(server);

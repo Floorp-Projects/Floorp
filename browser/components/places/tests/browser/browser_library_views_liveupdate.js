@@ -172,7 +172,6 @@ async function removeAndCheckItem(itemData) {
  * @returns [node, index, cellText] or [null, null, ""] if not found.
  */
 function getNodeForTreeItem(aItemGuid, aTree) {
-
   function findNode(aContainerIndex) {
     if (aTree.view.isContainerEmpty(aContainerIndex))
       return [null, null, ""];

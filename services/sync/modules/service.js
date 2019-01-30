@@ -159,7 +159,6 @@ Sync11Service.prototype = {
       if (iv.length == 24) {
         ok = true;
       }
-
     } catch (e) {
       this._log.debug("Crypto check failed: " + e);
     }
@@ -243,7 +242,6 @@ Sync11Service.prototype = {
       }
 
       return false; // Don't try again: same keys.
-
     } catch (ex) {
       this._log.warn("Got exception fetching and handling crypto keys. " +
                      "Will try again later.", ex);
@@ -541,7 +539,6 @@ Sync11Service.prototype = {
   },
 
   async verifyAndFetchSymmetricKeys(infoResponse) {
-
     this._log.debug("Fetching and verifying -- or generating -- symmetric keys.");
 
     let syncKeyBundle = this.identity.syncKeyBundle;
@@ -939,7 +936,6 @@ Sync11Service.prototype = {
     if (infoResponse &&
         (infoResponse.obj.meta != this.metaModified) &&
         (!meta || !meta.isNew)) {
-
       // Delete the cached meta record...
       this._log.debug("Clearing cached meta record. metaModified is " +
           JSON.stringify(this.metaModified) + ", setting to " +
@@ -992,7 +988,6 @@ Sync11Service.prototype = {
     // we need to convert it to a number as older clients used it as a string.
     if (!meta || !meta.payload.storageVersion || !meta.payload.syncID ||
         STORAGE_VERSION > parseFloat(remoteVersion)) {
-
       this._log.info("One of: no meta, no meta storageVersion, or no meta syncID. Fresh start needed.");
 
       // abort the server wipe if the GET status was anything other than 404 or 200
@@ -1027,7 +1022,6 @@ Sync11Service.prototype = {
       this._log.warn("Upgrade required to access newer storage version.");
       return false;
     } else if (meta.payload.syncID != this.syncID) {
-
       this._log.info("Sync IDs differ. Local is " + this.syncID + ", remote is " + meta.payload.syncID);
       await this.resetClient();
       this.collectionKeys.clear();
@@ -1131,7 +1125,6 @@ Sync11Service.prototype = {
   async _lockedSync(engineNamesToSync, why) {
     return this._lock("service.js: sync",
                       this._notify("sync", JSON.stringify({why}), async function onNotify() {
-
       let histogram = Services.telemetry.getHistogramById("WEAVE_START_COUNT");
       histogram.add(1);
 

@@ -214,7 +214,6 @@ let signonsTreeView = {
 
     if (col.id == "userCol") {
       _editLogin("username");
-
     } else if (col.id == "passwordCol") {
       if (!value) {
         return;

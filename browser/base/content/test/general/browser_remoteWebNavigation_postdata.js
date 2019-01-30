@@ -18,7 +18,6 @@ add_task(async function test_remoteWebNavigation_postdata() {
   server.start(-1);
 
   await new Promise(resolve => {
-
     server.registerPathHandler("/test", (request, response) => {
       let body = obj.CommonUtils.readBytesFromInputStream(request.bodyInputStream);
       is(body, "success", "request body is correct");

@@ -26,7 +26,6 @@ add_task(async function setup() {
  * Checks if the translation is happening.
  */
 add_task(async function test_bing_translation() {
-
   // Ensure the correct client id is used for authentication.
   Services.prefs.setCharPref(kClientIdPref, "testClient");
 
@@ -63,7 +62,6 @@ add_task(async function test_bing_translation() {
  *
  */
 add_task(async function test_handling_out_of_valid_key_error() {
-
   // Simulating request from inactive subscription.
   Services.prefs.setCharPref(kClientIdPref, "testInactive");
 

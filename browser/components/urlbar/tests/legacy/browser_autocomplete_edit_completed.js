@@ -44,5 +44,4 @@ add_task(async function() {
     promisePopupHidden(gURLBar.popup),
     docLoad,
   ]);
-
 });

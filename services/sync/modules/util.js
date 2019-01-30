@@ -488,7 +488,6 @@ var Utils = {
     // 20-char sync key.
     if (pp.length == 23 &&
         [5, 11, 17].every(i => pp[i] == "-")) {
-
       return pp.slice(0, 5) + pp.slice(6, 11)
              + pp.slice(12, 17) + pp.slice(18, 23);
     }
@@ -496,7 +495,6 @@ var Utils = {
     // "Modern" 26-char key.
     if (pp.length == 31 &&
         [1, 7, 13, 19, 25].every(i => pp[i] == "-")) {
-
       return pp.slice(0, 1) + pp.slice(2, 7)
              + pp.slice(8, 13) + pp.slice(14, 19)
              + pp.slice(20, 25) + pp.slice(26, 31);

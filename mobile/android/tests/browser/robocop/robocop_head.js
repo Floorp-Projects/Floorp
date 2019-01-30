@@ -542,7 +542,6 @@ function pattern_matcher(pattern) {
       }
       return true;
     };
-
 }
 
 // Format an explanation for a pattern match failure, as stored in the
@@ -761,7 +760,6 @@ function run_next_test() {
  */
 
 function JavaBridge(obj) {
-
   this._EVENT_TYPE = "Robocop:JS";
   this._JAVA_EVENT_TYPE = "Robocop:Java";
   this._target = obj;

@@ -44,7 +44,6 @@ function getParent(path) {
 }
 
 function copyDirToTempProfile(path, subdirname) {
-
   if (subdirname === undefined) {
     subdirname = "mochikit-tmp";
   }
@@ -64,7 +63,6 @@ function copyDirToTempProfile(path, subdirname) {
     files[f].copyTo(tmpdir, "");
   }
   return tmpdir;
-
 }
 
 function convertChromeURI(chromeURI) {

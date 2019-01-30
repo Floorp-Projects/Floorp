@@ -92,7 +92,6 @@ TooltipTextProvider.prototype = {
     while (tipElement &&
            (titleText == null) && (XLinkTitleText == null) &&
            (SVGTitleText == null) && (XULtooltiptextText == null)) {
-
       if (tipElement.nodeType == defView.Node.ELEMENT_NODE) {
         if (tipElement.namespaceURI == XULNS)
           XULtooltiptextText = tipElement.getAttribute("tooltiptext");

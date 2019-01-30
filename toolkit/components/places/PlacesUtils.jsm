@@ -2629,7 +2629,6 @@ var GuidHelper = {
 
     let guid = await PlacesUtils.withConnectionWrapper("GuidHelper.getItemGuid",
                                                        async function(db) {
-
       let rows = await db.executeCached(
         "SELECT b.id, b.guid from moz_bookmarks b WHERE b.id = :id LIMIT 1",
         { id: aItemId });

@@ -6,21 +6,21 @@ project’s canonical home was on GitHub.  Today geckodriver is hosted
 in [mozilla-central], and whilst we do want to make future releases
 from [Mozilla’s CI infrastructure], we are currently in between two
 worlds: development happens in m-c, but releases continue to be made
-from GitHub using Travis.
+from GitHub using Travis CI.
 
-The reason for this is that we do not compile geckodriver for all
-our target platforms, that Rust cross-compilation on TaskCluster
-builders is somewhat broken, and that tests are not run in automation.
-We intend to fix all these problems.
+The reason for this is that we haven't setup the release pipeline
+for TaskCluster builds yet, which would also include [signed releases]
+on Windows.
 
 In any case, the steps to release geckodriver are as follows:
 
 [mozilla-central]: https://hg.mozilla.org/mozilla-central/
 [Mozilla’s CI infrastructure]: https://treeherder.mozilla.org/
+[signed releases]: https://github.com/mozilla/geckodriver/issues/292
 
 
-Release new in-tree dependency crates
--------------------------------------
+Update in-tree dependency crates
+--------------------------------
 
 geckodriver depends on a number of Rust crates that also live in
 central by using relative paths:
@@ -46,7 +46,9 @@ release.  If they have receieved no changes, you can skip them:
 For each crate:
 
   1. Bump the version number in Cargo.toml
-  2. `cargo publish`
+  2. Update the crate: `cargo update -p <crate name>`
+  3. Commit the changes for the modified `Cargo.toml`, and `Cargo.lock`
+     (can be found in the repositories root folder)
 
 
 Update the change log
@@ -74,7 +76,7 @@ to make the file readable in a text editor as well as rendered HTML.
 fmt(1) does a splendid job at text formatting.
 
 [CHANGES.md]: https://searchfox.org/mozilla-central/source/testing/geckodriver/CHANGES.md
-[rust-mozrunner]: https://github.com/jgraham/rust_mozrunner
+[rust-mozrunner]: https://searchfox.org/mozilla-central/source/testing/mozbase/rust/mozrunner
 
 
 Update libraries
@@ -85,20 +87,18 @@ Make relevant changes to [Cargo.toml] to upgrade dependencies, then run
 	% ./mach vendor rust
 	% ./mach build testing/geckodriver
 
-to pull down and vendor the upgraded libraries.  Remember to check
-in the [Cargo.lock] file since we want reproducible builds for
-geckodriver, uninfluenced by dependency variations.
+to pull down and vendor the upgraded libraries.
 
 The updates to dependencies should always be made as a separate
 commit to not confuse reviewers, because vendoring involves checking
 in a lot of extra code already reviewed downstream.
 
 [Cargo.toml]: https://searchfox.org/mozilla-central/source/testing/geckodriver/Cargo.toml
-[Cargo.lock]: https://searchfox.org/mozilla-central/source/testing/geckodriver/Cargo.lock
+[Cargo.lock]: https://searchfox.org/mozilla-central/source/Cargo.lock
 
 
-Bump the version number
------------------------
+Bump the version number and update the support page
+---------------------------------------------------
 
 Bump the version number in [Cargo.toml] to the next version.
 geckodriver follows [semantic versioning] so it’s a good idea to
@@ -108,9 +108,47 @@ After you’ve changed the version number, run
 
 	% ./mach build testing/geckodriver
 
-again to update [Cargo.lock], and check in the file.
+again to update [Cargo.lock].
+
+Now update the [support page] by adding a new row to the versions table,
+including the required versions of Selenium, and Firefox.
+
+Finally commit all those changes.
 
 [semantic versioning]: http://semver.org/
+[support page]: https://searchfox.org/mozilla-central/source/testing/geckodriver/doc/Support.md
+
+
+Add the changeset id
+--------------------
+
+To easily allow a release build of geckodriver after cloning the
+repository, the changeset id for the release has to be added to the
+change log. Therefore add a final place-holder commit to the patch
+series, to already get review for.
+
+Once all previous revisions of the patch series have been reviewed and
+landed, it's known which commit id the version bump commit has, finalize the
+change log, and land that remaining revision.
+
+
+Release new in-tree dependency crates
+-------------------------------------
+
+Make sure to wait until the complete patch series from above has been
+merged to mozilla-central. Then continue with the following steps.
+
+Before releasing geckodriver all dependency crates as
+[updated earlier](#update-in-tree-dependency-crates) have to be
+released first.
+
+Therefore change into each of the directories for crates with an update
+and run the following command to publish the crate:
+
+    % cargo publish
+
+Note that if a crate has an in-tree dependency make sure to first
+change the dependency information.
 
 
 Export to GitHub
@@ -126,23 +164,24 @@ state of the project when it was exported to mozilla-central; and
 _release_, from where releases are made.
 
 Before we copy the code over to the GitHub repository we need to
-check out the [commit we made earlier](#bump-the-version-number)
-against central that bumped the version number:
+check out the [release commit that bumped the version number](#add-the-changeset-id)
+on mozilla-central:
 
-	% git checkout $BUMP_REVISION
+    % hg update $RELEASE_REVISION
 
 Or:
 
-	% hg update $BUMP_REVISION
+    % git checkout $RELEASE_REVISION
 
 We will now export the contents of [testing/geckodriver] to the
 _release_ branch:
 
 	% cd $SRC/geckodriver
 	% git checkout release
+    % git pull
 	% git rm -rf .
 	% git clean -fxd
-	% cp -r $SRC/gecko/testing/geckodriver .
+	% cp -rt $SRC/gecko/testing/geckodriver .
 
 [README.md]: https://searchfox.org/mozilla-central/source/testing/geckodriver/README.md
 [testing/geckodriver]: https://searchfox.org/mozilla-central/source/testing/geckodriver
@@ -154,7 +193,7 @@ Manually change in-tree path dependencies
 After the source code has been imported we need to change the dependency
 information for the `mozrunner`, `mozprofile`, `mozversion`, and
 `webdriver` crates.  As explained previously geckodriver depends
-on a relative path in in the mozilla-central repository to build
+on a relative path in the mozilla-central repository to build
 with the latest unreleased source code.
 
 This relative paths do not exist in the GitHub repository and the
@@ -167,14 +206,23 @@ made to it since the last geckodriver release.
 Commit local changes
 --------------------
 
-Now commit all the changes you have made locally to the _release_ branch:
+Now commit all the changes you have made locally to the _release_ branch.
+It is recommended to setup a [GPG key] for signing the commit, so
+that the release commit is marked as `verified`.
 
 	% git add .
-	% git commit -am "import of vX.Y.Z"
+    % git commit -S -am "import of vX.Y.Z" (signed)
+
+or if you cannot use signing use:
+
+    % git add .
+    % git commit -am "import of vX.Y.Z" (unsigned)
 
 As indicated above, the changes you make to this branch will not
 be upstreamed back into mozilla-central.  It is merely used as a
-staging ground for pushing builds to Travis.
+staging ground for pushing builds to Travis CI.
+
+[GPG key]: https://help.github.com/articles/signing-commits/
 
 
 Tag the release
@@ -188,7 +236,7 @@ Run the following command to tag the release:
 Make the release
 ----------------
 
-geckodriver is released and automatically uploaded from Travis by
+geckodriver is released and automatically uploaded from Travis CI by
 pushing a new version tag to the _release_ branch:
 
 	% git push
@@ -198,20 +246,14 @@ pushing a new version tag to the _release_ branch:
 Update the release description
 ------------------------------
 
-Copy the raw Markdown source from [CHANGES.md] into the description
-of the [latest release].  This will highlight for end-users what
+Once the release binaries have been built and are available on the
+[releases page] update the details of the new release by clicking
+`Edit`. Therefore copy the raw Markdown source from [CHANGES.md]
+into the description field. This will highlight for end-users what
 changes were made in that particular package when they visit the
-GitHub downloads section.
+GitHub downloads section. Make sure to check that all references
+can be resolved, and if not make sure to add those too.
 
 Congratulations!  You’ve released geckodriver!
 
-[latest release]: https://github.com/mozilla/geckodriver/releases
-
-
-Future work
------------
-
-In the future, we intend to [sign releases] so that they are
-verifiable.
-
-[sign releases]: https://github.com/mozilla/geckodriver/issues/292
+[releases page]: https://github.com/mozilla/geckodriver/releases

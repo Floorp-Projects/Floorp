@@ -99,7 +99,6 @@
        if (this._closeResult) {
          throw this._closeResult;
        }
-
      };
 
      /**
@@ -801,8 +800,6 @@
             return null;
          }
             throw new File.Error("iter (FindNextFile)", error, this._path);
-
-
      };
 
      /**

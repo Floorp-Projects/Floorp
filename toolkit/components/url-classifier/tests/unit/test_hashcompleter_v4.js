@@ -225,7 +225,6 @@ function registerHandlerUpdateV4() {
     waitUntilMetaDataSaved(NEW_CLIENT_STATE, CHECKSUM, () => {
       run_next_test();
     });
-
   });
 }
 

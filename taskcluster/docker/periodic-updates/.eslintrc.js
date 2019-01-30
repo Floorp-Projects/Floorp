@@ -70,9 +70,6 @@ module.exports = {
     // Disallow unnecessary escape usage in strings and regular expressions.
     "no-useless-escape": "error",
 
-    // Disallow blank line padding within blocks.
-    "padded-blocks": ["error", "never"],
-
     // Enforce spacing after semicolons.
     "semi-spacing": ["error", { "before": false, "after": true }],
 

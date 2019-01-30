@@ -935,7 +935,6 @@ class ContextMenuChild extends ActorChild {
             (elem instanceof this.content.HTMLAreaElement && elem.href) ||
             elem instanceof this.content.HTMLLinkElement ||
             elem.getAttributeNS(XLINK_NS, "type") == "simple")) {
-
           // Target is a link or a descendant of a link.
           context.onLink = true;
 

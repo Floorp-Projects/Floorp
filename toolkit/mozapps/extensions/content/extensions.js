@@ -492,7 +492,6 @@ var gEventManager = {
 
       // Hide the separator if there are no visible menu items before it
       menuSep.hidden = (countMenuItemsBeforeSep == 0);
-
     });
 
     let addonTooltip = document.getElementById("addonitem-tooltip");
@@ -1677,7 +1676,6 @@ function sortElements(aElements, aSortBy, aAscending) {
     // If we got here, then all values of a and b
     // must have been equal.
     return 0;
-
   });
 }
 

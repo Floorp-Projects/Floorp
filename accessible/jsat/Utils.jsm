@@ -153,7 +153,6 @@ var Utils = { // jshint ignore:line
       let extState = {};
       aAccessibleOrEvent.getState(state, extState);
       return new State(state.value, extState.value);
-
   },
 
   getAttributes: function getAttributes(aAccessible) {
