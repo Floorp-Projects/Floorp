@@ -435,8 +435,7 @@ int32_t DeviceInfoDS::CreateCapabilityMap(const char* deviceUniqueIdUTF8)
   GUID preferedVideoFormat = FORMAT_VideoInfo;
   for (int32_t tmp = 0; tmp < count; ++tmp) {
     hr = streamConfig->GetStreamCaps(tmp, &pmt, reinterpret_cast<BYTE*>(&caps));
-    // Bug 1181265 - perhaps a helper dll returns success with nullptr
-    if (!FAILED(hr) && pmt) {
+    if (hr == S_OK) {
       if (pmt->majortype == MEDIATYPE_Video &&
           pmt->formattype == FORMAT_VideoInfo2) {
         RTC_LOG(LS_INFO) << "Device support FORMAT_VideoInfo2";
@@ -465,7 +464,7 @@ int32_t DeviceInfoDS::CreateCapabilityMap(const char* deviceUniqueIdUTF8)
 
   for (int32_t tmp = 0; tmp < count; ++tmp) {
     hr = streamConfig->GetStreamCaps(tmp, &pmt, reinterpret_cast<BYTE*>(&caps));
-    if (FAILED(hr)) {
+    if (hr != S_OK) {
       RTC_LOG(LS_INFO) << "Failed to GetStreamCaps";
       RELEASE_AND_CLEAR(videoControlConfig);
       RELEASE_AND_CLEAR(streamConfig);
