@@ -26,8 +26,19 @@ android {
     flavorDimensions "abi"
     productFlavors {
         // replace the libraries with 64-bit versions when they're ready
-        arm { dimension "abi" }
-        x86 { dimension "abi" }
+        // Processor architectures
+        arm {
+            dimension "abi"
+            ndk {
+                abiFilter "armeabi-v7a"
+            }
+        }
+        x86 {
+            dimension "abi"
+            ndk {
+                abiFilter "x86"
+            }
+        }
     }
 
     compileOptions {
