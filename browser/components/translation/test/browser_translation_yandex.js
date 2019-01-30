@@ -37,7 +37,6 @@ add_task(async function setup() {
  * a sample page.
  */
 add_task(async function test_yandex_translation() {
-
   // Loading the fixture page.
   let url = constructFixtureURL("bug1022725-fr.html");
   let tab = await promiseTestPageLoad(url);

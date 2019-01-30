@@ -30,7 +30,6 @@ function OSCrypto() {
                                                   ]);
 
   try {
-
     this._libs.set("crypt32", ctypes.open("Crypt32"));
     this._libs.set("kernel32", ctypes.open("Kernel32"));
 

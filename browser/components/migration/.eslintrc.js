@@ -14,7 +14,6 @@ module.exports = {
     "no-shadow": "error",
     "no-throw-literal": "error",
     "no-unused-vars": ["error", { "args": "after-used", "vars": "all" }],
-    "padded-blocks": ["error", "never"],
     "semi-spacing": ["error", {"before": false, "after": true}],
     "space-in-parens": ["error", "never"],
     "strict": ["error", "global"],

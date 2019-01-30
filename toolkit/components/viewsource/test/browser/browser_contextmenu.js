@@ -53,7 +53,6 @@ async function onViewSourceWindowOpen(aWindow) {
 }
 
 async function checkMenuItems(contextMenu, selector, copyLinkExpected, copyEmailExpected, expectedClipboardContent) {
-
   let browser = gBrowser.selectedBrowser;
   await ContentTask.spawn(browser, { selector }, async function(arg) {
     content.document.querySelector(arg.selector).scrollIntoView();

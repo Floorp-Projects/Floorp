@@ -58,7 +58,6 @@ async function ensure_tag_results(uris, searchTerm) {
   controller.input = input;
 
   return new Promise(resolve => {
-
     var numSearchesStarted = 0;
     input.onSearchBegin = function() {
       numSearchesStarted++;

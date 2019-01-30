@@ -40,7 +40,6 @@ StructuredLogger.prototype = {
 
   testStatus(test, subtest, status, expected = "PASS",
                         message = null, stack = null, extra = null) {
-
     if (subtest === null || subtest === undefined) {
       // Fix for assertions that don't pass in a name
       subtest = "undefined assertion name";
@@ -242,7 +241,6 @@ StructuredFormatter.prototype = {
                " - expected: " + message.expected;
     }
         return "TEST-" + message.status + " | " + statusInfo;
-
   },
 
   test_end(message) {

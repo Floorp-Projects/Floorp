@@ -227,7 +227,6 @@ function run_test() {
   };
 
   input.onSearchComplete = function() {
-
     Assert.equal(numSearchesStarted, 1);
 
     Assert.equal(controller.searchStatus,

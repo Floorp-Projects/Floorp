@@ -123,7 +123,6 @@ function test_multiplex_streams() {
 }
 
 function test_multiplex_bug797871() {
-
   var data2 = "1234567890123456789012345678901234567890";
 
   var MultiplexStream = CC("@mozilla.org/io/multiplex-input-stream;1",

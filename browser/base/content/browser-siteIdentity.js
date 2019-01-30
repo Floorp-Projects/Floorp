@@ -592,12 +592,10 @@ var gIdentityHandler = {
     let permissions = SitePermissions.getAllForBrowser(gBrowser.selectedBrowser);
     for (let permission of permissions) {
       if (permission.state == SitePermissions.BLOCK) {
-
         let icon = permissionAnchors[permission.id];
         if (icon) {
           icon.setAttribute("showing", "true");
         }
-
       } else if (permission.state != SitePermissions.UNKNOWN) {
         hasGrantedPermissions = true;
       }

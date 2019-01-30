@@ -191,7 +191,6 @@ add_task(async function test_bad_hmac() {
     check_clients_count(1);
     let newKey = Service.collectionKeys.keyForCollection();
     ok(!oldKey.equals(newKey));
-
   } finally {
     await cleanup();
     await promiseStopServer(server);
@@ -295,7 +294,6 @@ add_task(async function test_sync() {
   }
 
   try {
-
     _("First sync. Client record is uploaded.");
     equal(clientWBO(), undefined);
     equal(engine.lastRecordUpload, 0);
@@ -325,7 +323,6 @@ add_task(async function test_sync() {
     equal(clientWBO().payload, undefined);
     equal(engine.lastRecordUpload, yesterday);
     ok(!engine.isFirstSync);
-
   } finally {
     await cleanup();
     await promiseStopServer(server);
@@ -442,7 +439,6 @@ add_task(async function test_last_modified() {
     let payload = collection.cleartext(activeID);
     equal(payload.name, "New name");
     equal(payload.serverLastModified, undefined);
-
   } finally {
     await cleanup();
     server.deleteCollections("foo");
@@ -552,7 +548,6 @@ add_task(async function test_command_validation() {
         equal(engine._tracker[remoteId], undefined);
       }
     }
-
   }
   await cleanup();
 });
@@ -774,7 +769,6 @@ add_task(async function test_filter_duplicate_names() {
 
     ok(engine.remoteClientExists(dupeID), "recently synced dupe ID should now exist");
     equal(engine.remoteClients.length, 3, "recently synced dupe should now be in remoteClients");
-
   } finally {
     await cleanup();
 
@@ -845,7 +839,6 @@ add_task(async function test_command_sync() {
     let command = engine.localCommands[0];
     equal(command.command, "wipeAll");
     equal(command.args.length, 0);
-
   } finally {
     await cleanup();
 
@@ -905,7 +898,6 @@ add_task(async function test_clients_not_in_fxa_list() {
 
     ok(!engine._store._remoteClients[remoteId].stale);
     ok(engine._store._remoteClients[remoteId2].stale);
-
   } finally {
     engine.fxAccounts = fxAccounts;
     await cleanup();
@@ -967,7 +959,6 @@ add_task(async function test_dupe_device_ids() {
 
     ok(engine._store._remoteClients[remoteId].stale);
     ok(!engine._store._remoteClients[remoteId2].stale);
-
   } finally {
     engine.fxAccounts = fxAccounts;
     await cleanup();
@@ -1702,7 +1693,6 @@ add_task(async function ensureSameFlowIDs() {
     for (let client of Object.values(engine._store._remoteClients)) {
       client.commands = [];
     }
-
   } finally {
     Service.recordTelemetryEvent = origRecordTelemetryEvent;
     cleanup();

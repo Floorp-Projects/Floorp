@@ -585,7 +585,6 @@ function sync_httpd_setup(handlers) {
  * may cause strangeness wrt timestamp headers and 412 responses.
  */
 function track_collections_helper() {
-
   /*
    * Our tracking object.
    */
@@ -725,7 +724,6 @@ SyncServer.prototype = {
       _("==========================================");
       do_throw(ex);
     }
-
   },
 
   /**

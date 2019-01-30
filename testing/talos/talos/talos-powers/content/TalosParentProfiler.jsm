@@ -141,7 +141,6 @@ const TalosParentProfiler = {
                 "initted the Profiler";
       console.error(msg);
       return Promise.reject(msg);
-
   },
 
   /**

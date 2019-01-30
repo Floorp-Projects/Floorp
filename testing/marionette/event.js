@@ -779,7 +779,6 @@ function expectEvent_(expectedTarget, expectedEvent, testName) {
  */
 function checkExpectedEvent_(
     expectedTarget, expectedEvent, eventHandler, testName) {
-
   if (eventHandler) {
     let expectEvent = (expectedEvent.charAt(0) != "!");
     let type = expectEvent;
@@ -827,7 +826,6 @@ function checkExpectedEvent_(
 event.synthesizeMouseExpectEvent = function(
     target, offsetX, offsetY, ev, expectedTarget, expectedEvent,
     testName, win) {
-
   let eventHandler = expectEvent_(
       expectedTarget,
       expectedEvent,

@@ -57,7 +57,6 @@ var PointerlockFsWarning = {
   // Shows a warning that the site has entered fullscreen or
   // pointer lock for a short duration.
   show(aOrigin, elementId, timeout, delay) {
-
     if (!this._element) {
       this._element = document.getElementById(elementId);
       // Setup event listeners
@@ -412,7 +411,6 @@ var FullScreen = {
   },
 
   enterDomFullscreen(aBrowser) {
-
     if (!document.fullscreenElement) {
       return;
     }

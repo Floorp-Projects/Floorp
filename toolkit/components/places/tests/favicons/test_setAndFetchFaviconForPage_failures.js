@@ -93,5 +93,4 @@ add_task(async function() {
     Services.scriptSecurityManager.getSystemPrincipal());
 
   await promiseIconChanged;
-
 });

@@ -56,7 +56,6 @@ Report.prototype.pageNames = function() {
 };
 
 Report.prototype.getReport = function() {
-
   var report;
   var pages = this.pageNames();
   var prefixLen = findCommonPrefixLength(pages);
@@ -91,7 +90,6 @@ Report.prototype.getReport = function() {
 };
 
 Report.prototype.getReportSummary = function() {
-
   function average(arr) {
     var sum = 0;
     for (var i in arr)

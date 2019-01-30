@@ -254,9 +254,6 @@ module.exports = {
     // Allow more than one variable declaration per function.
     "one-var": "off",
 
-    // Disallow padding within blocks.
-    "padded-blocks": ["error", "never"],
-
     // Don't require quotes around object literal property names.
     "quote-props": "off",
 

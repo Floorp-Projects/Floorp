@@ -46,7 +46,6 @@ async function checkRecord(name, record, expectedCount, timeCreated,
 async function changePassword(name, hostname, password, expectedCount, timeCreated,
                               expectedTimeCreated, timePasswordChanged,
                               expectedTimePasswordChanged, insert, recordIsUpdated) {
-
   const BOGUS_GUID = "zzzzzz" + hostname;
 
   let record = {id: BOGUS_GUID,
@@ -76,7 +75,6 @@ async function changePassword(name, hostname, password, expectedCount, timeCreat
   return checkRecord(name, record, expectedCount, timeCreated,
                      expectedTimeCreated, timePasswordChanged,
                      expectedTimePasswordChanged, recordIsUpdated);
-
 }
 
 
@@ -200,7 +198,6 @@ add_task(async function run_test() {
     await test_apply_multiple_records_with_times();
 
     await test_apply_same_record_with_different_times();
-
   } finally {
     await store.wipe();
   }

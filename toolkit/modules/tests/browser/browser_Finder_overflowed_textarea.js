@@ -3,7 +3,6 @@
 "use strict";
 
 add_task(async function test_offscreen_text() {
-
   // Generate URI of a big DOM that contains the target text
   // within a textarea at several line positions (to force
   // some targets to be overflowed).

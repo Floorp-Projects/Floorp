@@ -398,7 +398,6 @@ function QuickSort(array, len, comparefn) {
                 stack[top++] = end;
                 end = pivotIndex - 1;
             }
-
         }
     }
     return array;

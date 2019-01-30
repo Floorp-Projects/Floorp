@@ -55,7 +55,6 @@ function testRelation(aIdentifier, aRelType, aRelatedIdentifiers) {
 
     ok(false, msg);
     return;
-
   } else if (!aRelatedIdentifiers) {
     ok(false, "There are unexpected targets of " + relDescr);
     return;

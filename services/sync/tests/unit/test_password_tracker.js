@@ -76,7 +76,6 @@ add_task(async function test_tracking() {
     changes = await tracker.getChangedIDs();
     do_check_empty(changes);
     Assert.equal(tracker.score, 0);
-
   } finally {
     _("Clean up.");
     await store.wipe();

@@ -53,7 +53,6 @@ function addMissingColumns() {
  */
 
 function generateActivePolicies(data) {
-
   let new_cont = document.getElementById("activeContent");
   new_cont.classList.add("active-policies");
 

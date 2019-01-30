@@ -505,7 +505,6 @@ var ViewSourceContent = {
     for (let textNode = treewalker.firstChild();
          textNode && !found;
          textNode = treewalker.nextNode()) {
-
       // \r is not a valid character in the DOM, so we only check for \n.
       let lineArray = textNode.data.split(/\n/);
       let lastLineInNode = curLine + lineArray.length - 1;
@@ -525,7 +524,6 @@ var ViewSourceContent = {
       for (var i = 0, curPos = 0;
            i < lineArray.length;
            curPos += lineArray[i++].length + 1) {
-
         if (i > 0) {
           curLine++;
         }
@@ -548,7 +546,6 @@ var ViewSourceContent = {
 
             break;
           }
-
         } else if (curLine == lineNumber && !("range" in result)) {
           result.range = content.document.createRange();
           result.range.setStart(textNode, curPos);
@@ -557,7 +554,6 @@ var ViewSourceContent = {
           // the very last line in the file (this is the only line that does
           // not end with \n).
           result.range.setEndAfter(pre.lastChild);
-
         } else if (curLine == lineNumber + 1) {
           result.range.setEnd(textNode, curPos - 1);
           found = true;

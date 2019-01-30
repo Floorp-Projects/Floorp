@@ -39,7 +39,6 @@ async function getDummyDatabase(name, extraOptions = {}) {
 
 function sleep(ms) {
   return new Promise(resolve => {
-
     let timer = Cc["@mozilla.org/timer;1"]
                   .createInstance(Ci.nsITimer);
 
@@ -48,7 +47,6 @@ function sleep(ms) {
         resolve();
       },
     }, ms, timer.TYPE_ONE_SHOT);
-
   });
 }
 

@@ -1342,7 +1342,6 @@ class SyncedBookmarksMirror {
     MirrorLog.trace("Setting up merge states table");
     for (let chunk of PlacesSyncUtils.chunkArray(mergeStatesParams,
       Math.floor(SQLITE_MAX_VARIABLE_NUMBER / 3))) {
-
       await this.db.execute(`
         INSERT INTO mergeStates(localGuid, mergedGuid, parentGuid, level,
                                 position, useRemote, shouldUpload)
@@ -1374,7 +1373,6 @@ class SyncedBookmarksMirror {
     MirrorLog.trace("Setting up deletions table");
     for (let chunk of PlacesSyncUtils.chunkArray(deletions,
       SQLITE_MAX_VARIABLE_NUMBER)) {
-
       // This fires the `noteItemRemoved` trigger, which records observer infos
       // for deletions. It's important we do this before updating the structure,
       // so that the trigger captures the old parent and position.

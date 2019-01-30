@@ -97,7 +97,6 @@ class ActionsManager {
       log.info(`Executing recipe "${recipe.name}" (action=${recipe.action})`);
       const action = this.localActions[actionName];
       await action.runRecipe(recipe);
-
     } else if (actionName in this.remoteActionSandboxes) {
       let status;
       const manager = this.remoteActionSandboxes[recipe.action];
@@ -119,7 +118,6 @@ class ActionsManager {
         }
       }
       Uptake.reportRecipe(recipe.id, status);
-
     } else {
       log.error(
         `Could not execute recipe ${recipe.name}:`,

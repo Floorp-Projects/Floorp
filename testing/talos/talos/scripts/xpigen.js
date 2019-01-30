@@ -11,7 +11,6 @@
 // callbacks: object with optional functions:
 //            onsuccess(result), onerror(exception), onprogress(percentage)
 function createXpiDataUri(base, files, callbacks) {
-
   // Synchronous XHR for http[s]/file (untested ftp), throws on any error
   // Note that on firefox, file:// XHR can't access files outside base dir
   function readBinFile(url) {
@@ -68,7 +67,6 @@ function createXpiDataUri(base, files, callbacks) {
     zip = zip.generate({type: "uint8array"});
     onprogress(100);
     setTimeout(onsuccess, 0, "data:application/x-xpinstall;base64," + base64EncArr(zip));
-
   } catch (e) {
     setTimeout(onerror, 0, e);
   }

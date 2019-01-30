@@ -426,7 +426,6 @@ class GeckoViewMediaChild extends GeckoViewChildModule {
       type: "GeckoView:MediaRemoveAll",
     });
   }
-
 }
 
 const {debug, warn} = GeckoViewMediaChild.initLogging("GeckoViewMedia");

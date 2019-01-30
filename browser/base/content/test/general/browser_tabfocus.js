@@ -511,7 +511,6 @@ function expectFocusShift(callback, expectedWindow, expectedElement, focusChange
 
     if (_lastfocuswindow &&
         _lastfocuswindow != expectedWindow) {
-
       if (!gMultiProcessBrowser || _lastfocuswindow != "main-window") {
         expectedEvents.push("blur: " + _lastfocuswindow + "-document");
         expectedEvents.push("blur: " + _lastfocuswindow + "-window");

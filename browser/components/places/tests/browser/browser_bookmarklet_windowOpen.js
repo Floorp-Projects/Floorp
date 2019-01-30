@@ -13,7 +13,6 @@ function makeBookmarkFor(url, keyword) {
     PlacesUtils.keywords.insert({url,
                                  keyword}),
   ]);
-
 }
 
 add_task(async function openKeywordBookmarkWithWindowOpen() {

@@ -232,7 +232,6 @@ Prompt.prototype = {
         obj.icon = item.icon;
 
       this.msg.listitems.push(obj);
-
     }, this);
     return this;
   },

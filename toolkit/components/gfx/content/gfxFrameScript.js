@@ -40,7 +40,6 @@ const gfxFrameScript = {
     if (webProgress.isTopLevel &&
         (flags & Ci.nsIWebProgressListener.STATE_STOP) &&
         this.isSanityTest(req.name)) {
-
       webProgress.removeProgressListener(this);
 
       // If no paint is pending, then the test already painted

@@ -1718,7 +1718,6 @@ async function updateBookmark(db, info, item, oldIndex, newParent, syncChangeDel
 function insertBookmark(item, parent) {
   return PlacesUtils.withConnectionWrapper("Bookmarks.jsm: insertBookmark",
     async function(db) {
-
     // If a guid was not provided, generate one, so we won't need to fetch the
     // bookmark just after having created it.
     let hasExistingGuid = item.hasOwnProperty("guid");
@@ -2267,8 +2266,6 @@ function reorderChildren(parent, orderedChildrenGuids, options) {
       }
 
       if (needReorder) {
-
-
         // Reorder the children array according to the specified order, provided
         // GUIDs come first, others are appended in somehow random order.
         children.sort((a, b) => {

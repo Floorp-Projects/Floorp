@@ -66,7 +66,6 @@ module.exports = {
     "no-warning-comments": "off",
     "object-shorthand": "off",
     "one-var": ["error", "never"],
-    "padded-blocks": ["error", "never"],
     "quote-props": "off",
     "radix": "error",
     "semi-spacing": ["error", {"before": false, "after": true}],

@@ -19,5 +19,4 @@ add_task(async function test_tls_conservative() {
   const xhr_channel = xhr.channel.QueryInterface(Ci.nsIHttpChannelInternal);
   ok(("beConservative" in xhr_channel), "TLS setting is present in XHR channel");
   ok(!xhr_channel.beConservative, "TLS setting in request channel is not set to conservative for XHR");
-
 });

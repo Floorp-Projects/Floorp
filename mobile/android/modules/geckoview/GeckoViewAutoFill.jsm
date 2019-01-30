@@ -149,7 +149,6 @@ class GeckoViewAutoFill {
                   winUtils.removeManuallyManagedState(element, AUTOFILL_STATE),
                   { mozSystemGroup: true, once: true });
             }
-
           } else if (element) {
             warn `Don't know how to auto-fill ${element.tagName}`;
           }

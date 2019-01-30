@@ -114,7 +114,6 @@ add_task(async function test_1() {
   Assert.notEqual(a4, null);
   Assert.equal(a4.isActive, true);
   Assert.equal(a4.version, "1.0");
-
 });
 
 // Test that upgrading the application doesn't disable now incompatible add-ons

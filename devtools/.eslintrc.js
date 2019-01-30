@@ -378,8 +378,6 @@ module.exports = {
     "object-shorthand": "off",
     // Allow more than one variable declaration per function.
     "one-var": "off",
-    // Disallow padding within blocks.
-    "padded-blocks": ["error", "never"],
     // Enforce using `let` only when variables are reassigned.
     "prefer-const": ["error", { "destructuring": "all" }],
     // Don't require quotes around object literal property names.

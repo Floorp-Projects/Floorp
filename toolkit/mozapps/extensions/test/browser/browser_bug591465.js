@@ -113,7 +113,6 @@ function check_contextmenu(aIsTheme, aIsEnabled, aIsRemote, aIsDetails, aIsSingl
   else
     is_element_visible(gManagerWindow.document.getElementById("addonitem-menuseparator"),
                        "Menu separator should be visible with multiple menu items");
-
 }
 
 

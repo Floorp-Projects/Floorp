@@ -263,7 +263,6 @@ add_task(async function test_wipeServer() {
     Assert.equal(steamCollection.payload, undefined);
     Assert.equal(await engine.getLastSync(), 0);
     Assert.equal(engine.toFetch.size, 0);
-
   } finally {
     steamServer.stop(do_test_finished);
     Svc.Prefs.resetBranch("");

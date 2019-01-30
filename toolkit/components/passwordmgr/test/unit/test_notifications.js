@@ -49,9 +49,7 @@ var TestObserver = {
 };
 
 add_task(function test_notifications() {
-
   try {
-
     var testnum = 0;
     var testdesc = "Setup of nsLoginInfo test-users";
 
@@ -163,9 +161,7 @@ add_task(function test_notifications() {
     Services.obs.removeObserver(TestObserver, "passwordmgr-storage-changed");
 
     LoginTestUtils.clearData();
-
   } catch (e) {
     throw new Error("FAILED in test #" + testnum + " -- " + testdesc + ": " + e);
   }
-
 });

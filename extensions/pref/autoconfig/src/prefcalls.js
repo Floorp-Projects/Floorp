@@ -20,14 +20,12 @@ var gVersion;
 var gIsUTF8;
 
 function getPrefBranch() {
-
     var prefService = Cc[PrefServiceContractID]
                         .getService(nsIPrefService);
     return prefService.getBranch(null);
 }
 
 function pref(prefName, value) {
-
     try {
         var prefBranch = getPrefBranch();
 
@@ -48,7 +46,6 @@ function pref(prefName, value) {
 }
 
 function defaultPref(prefName, value) {
-
     try {
         var prefService = Cc[PrefServiceContractID]
                             .getService(nsIPrefService);
@@ -70,7 +67,6 @@ function defaultPref(prefName, value) {
 }
 
 function lockPref(prefName, value) {
-
     try {
         var prefBranch = getPrefBranch();
 
@@ -86,9 +82,7 @@ function lockPref(prefName, value) {
 }
 
 function unlockPref(prefName) {
-
     try {
-
         var prefBranch = getPrefBranch();
         prefBranch.unlockPref(prefName);
     } catch (e) {
@@ -97,12 +91,10 @@ function unlockPref(prefName) {
 }
 
 function getPref(prefName) {
-
     try {
         var prefBranch = getPrefBranch();
 
         switch (prefBranch.getPrefType(prefName)) {
-
         case prefBranch.PREF_STRING:
             if (gIsUTF8) {
                 return prefBranch.getStringPref(prefName);
@@ -124,13 +116,11 @@ function getPref(prefName) {
 }
 
 function clearPref(prefName) {
-
     try {
         var prefBranch = getPrefBranch();
             prefBranch.clearUserPref(prefName);
     } catch (e) {
     }
-
 }
 
 function setLDAPVersion(version) {
@@ -139,7 +129,6 @@ function setLDAPVersion(version) {
 
 
 function getLDAPAttributes(host, base, filter, attribs, isSecure) {
-
     try {
         var urlSpec = "ldap" + (isSecure ? "s" : "") + "://" + host + (isSecure ? ":636" : "") + "/" + base + "?" + attribs + "?sub?" +
                       filter;
@@ -162,7 +151,6 @@ function getLDAPAttributes(host, base, filter, attribs, isSecure) {
 }
 
 function getLDAPValue(str, key) {
-
     try {
         if (str == null || key == null)
             return null;
@@ -187,7 +175,6 @@ function getLDAPValue(str, key) {
 }
 
 function displayError(funcname, message) {
-
     try {
         var promptService = Cc["@mozilla.org/embedcomp/prompt-service;1"]
                               .getService(Ci.nsIPromptService);

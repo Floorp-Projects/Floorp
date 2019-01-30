@@ -258,6 +258,5 @@ add_task(async function() {
                 baseFlags | ssm.DISALLOW_INHERIT_PRINCIPAL);
       }
     );
-
   });
 });

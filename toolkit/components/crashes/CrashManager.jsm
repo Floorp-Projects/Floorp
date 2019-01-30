@@ -388,7 +388,6 @@ this.CrashManager.prototype = Object.freeze({
         }
 
         return unprocessedFiles.length;
-
       } finally {
         this._aggregatePromise = false;
         this._storeProtectedCount--;
@@ -995,7 +994,6 @@ CrashStore.prototype = Object.freeze({
             let oomKey = key + "-oom";
             actualCounts.set(oomKey, (actualCounts.get(oomKey) || 0) + 1);
           }
-
         }
 
         // The validation in this loop is arguably not necessary. We perform

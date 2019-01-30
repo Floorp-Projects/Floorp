@@ -40,7 +40,6 @@ async function checkAboutPreferences({checkboxIsDisabled}) {
   is(browser.contentDocument.getElementById("useMasterPassword").disabled, checkboxIsDisabled,
     "Master Password checkbox is in the correct state: " + checkboxIsDisabled);
 });
-
 }
 
 add_task(async function test_policy_disable_masterpassword() {

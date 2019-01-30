@@ -186,7 +186,6 @@ add_test(function test_processPointerMoveAction() {
       origin = action.PointerOrigin.Viewport;
     }
     deepEqual(actual.origin, origin);
-
   }
   run_next_test();
 });

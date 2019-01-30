@@ -1056,7 +1056,6 @@ add_task(async function test_link_status_change() {
 
     Svc.Obs.notify("network:link-status-changed", null, "change");
     equal(scheduler.scheduleNextSync.callCount, 1);
-
   } finally {
     scheduler.scheduleNextSync.restore();
   }

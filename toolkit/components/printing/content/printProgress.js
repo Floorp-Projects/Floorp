@@ -186,7 +186,6 @@ function replaceInsert( text, index, value ) {
 }
 
 function onLoad() {
-
     // Set global variables.
     printProgress = window.arguments[0];
     if (window.arguments[1]) {

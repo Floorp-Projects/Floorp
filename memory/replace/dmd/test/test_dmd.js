@@ -91,7 +91,6 @@ function test(aPrefix, aArgs) {
     let rv = runProcess(new FileUtils.File("/usr/bin/diff"),
                         ["-u", expectedFile.path, actualFile.path]);
     success = rv == 0;
-
   } catch (e) {
     let expectedData = readFile(expectedFile);
     let actualData   = readFile(actualFile);

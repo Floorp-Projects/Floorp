@@ -325,7 +325,6 @@ AddonsReconciler.prototype = {
       for (let install of installs) {
         if (install.addon && install.addon.id == id &&
             install.state == AddonManager.STATE_INSTALLED) {
-
           installFound = true;
           break;
         }

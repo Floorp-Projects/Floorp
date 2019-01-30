@@ -354,7 +354,6 @@ nsBrowserContentHandler.prototype = {
 
     var chromeParam = cmdLine.handleFlagWithParam("chrome", false);
     if (chromeParam) {
-
       // Handle old preference dialog URLs.
       if (chromeParam == "chrome://browser/content/pref/pref.xul" ||
           chromeParam == "chrome://browser/content/preferences/preferences.xul") {
@@ -770,7 +769,6 @@ nsDefaultCommandLineHandler.prototype = {
       if (URLlist.length) {
         openBrowserWindow(cmdLine, gSystemPrincipal, URLlist);
       }
-
     } else if (!cmdLine.preventDefault) {
       if (AppConstants.isPlatformAndVersionAtLeast("win", "10") &&
           cmdLine.state != Ci.nsICommandLine.STATE_INITIAL_LAUNCH &&

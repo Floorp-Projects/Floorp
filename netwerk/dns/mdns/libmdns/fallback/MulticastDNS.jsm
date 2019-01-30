@@ -430,7 +430,6 @@ class MulticastDNS {
     this._discovered.forEach((discovery, key) => {
       if (discovery.expireTime < Date.now()) {
         this._discovered.delete(key);
-
       }
     });
   }

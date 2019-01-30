@@ -573,7 +573,6 @@ class RTCPeerConnection {
   }
 
   async _legacyCloseWrapper(onSucc, onErr, func) {
-
     let wrapCallback = cb => result => {
       try {
         cb && cb(result);
@@ -614,7 +613,6 @@ class RTCPeerConnection {
    *   msg - Error message to detail which array-entry failed, if any.
    */
   _mustValidateRTCConfiguration({ iceServers }, msg) {
-
     // Normalize iceServers input
     iceServers.forEach(server => {
       if (typeof server.urls === "string") {
@@ -1685,7 +1683,6 @@ class PeerConnectionObserver {
       candidate = new win.RTCIceCandidate({ candidate, sdpMid, sdpMLineIndex });
     } else {
       candidate = null;
-
     }
     this.dispatchEvent(new win.RTCPeerConnectionIceEvent("icecandidate",
                                                          { candidate }));

@@ -21,7 +21,6 @@ SpecialPowers.pushPrefEnv({"set": [
   ["network.disable.ipc.security", true],
   ["dom.ipc.tabs.disabled", false],
 ]}, function() {
-
   var iframe =  document.createElementNS("http://www.w3.org/1999/xhtml", "iframe");
   iframe.setAttribute("remote", "true");
   SpecialPowers.wrap(iframe).mozbrowser = true;
@@ -37,7 +36,6 @@ SpecialPowers.pushPrefEnv({"set": [
   info("Waiting for pruneOldCrashes");
   var future = new Date(Date.now() + 1000 * 60 * 60 * 24);
   crashMan.pruneOldCrashes(future).then(function() {
-
     var crashDateMS = Date.now();
 
     // Inject a frame script that crashes the content process.
@@ -81,7 +79,6 @@ SpecialPowers.pushPrefEnv({"set": [
       });
     }
     setTimeout(tryGetCrash, 1000);
-
   }, function() {
     ok(false, "pruneOldCrashes error");
     SimpleTest.finish();

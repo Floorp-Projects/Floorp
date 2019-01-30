@@ -1098,7 +1098,6 @@ add_task(async function test_prefInvalid() {
 
   Assert.strictEqual(TelemetryEnvironment.currentEnvironment.settings.userPrefs[PREF_TEST_1], undefined);
   Assert.strictEqual(TelemetryEnvironment.currentEnvironment.settings.userPrefs[PREF_TEST_2], undefined);
-
 });
 
 add_task(async function test_addonsWatch_InterestingChange() {

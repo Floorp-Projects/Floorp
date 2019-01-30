@@ -328,6 +328,9 @@ module.exports = {
     // Require object-literal shorthand with ES6 method syntax
     "object-shorthand": ["error", "always", { "avoidQuotes": true }],
 
+    // Prohibit blank lines at the beginning and end of blocks.
+    "padded-blocks": ["error", "never"],
+
     // Require double-quotes everywhere, except where quotes are escaped
     // or template literals are used.
     "quotes": ["error", "double", {

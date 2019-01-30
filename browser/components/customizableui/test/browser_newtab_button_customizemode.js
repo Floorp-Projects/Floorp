@@ -86,7 +86,6 @@ add_task(async function addremove_after_newtab_api() {
     "tabs should still have the adjacent newtab attribute");
   assertNewTabButton("inner");
   ok(CustomizableUI.inDefaultState, "Should be in default state");
-
 });
 
 /**

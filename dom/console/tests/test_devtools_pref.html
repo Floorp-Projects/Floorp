@@ -20,7 +20,6 @@ function consoleListener(expected) {
           SpecialPowers.removeObserver(observer, "console-api-log-event");
           SpecialPowers.removeObserver(observer, "console-api-profiler");
           done(messages);
-
         }
       },
     };

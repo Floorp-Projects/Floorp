@@ -34,5 +34,4 @@ add_task(async function() {
   // Cleanup.
   gBrowser.removeTab(blankTab);
   gBrowser.removeCurrentTab();
-
 });

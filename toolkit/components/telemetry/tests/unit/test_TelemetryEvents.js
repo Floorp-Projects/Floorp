@@ -114,7 +114,6 @@ add_task(async function test_event_summary_limit() {
   let scalarSnapshot = Telemetry.getSnapshotForKeyedScalars("main", true);
   Assert.equal(Object.keys(scalarSnapshot.dynamic["telemetry.dynamic_event_counts"]).length,
                limit, "Should not have recorded more than `limit` events");
-
 });
 
 add_task(async function test_recording_state() {
@@ -298,8 +297,6 @@ add_task(async function test_clear() {
   snapshot = Telemetry.snapshotEvents(OPTIN, true);
   Assert.ok(("parent" in snapshot), "Should have entry for main process.");
   Assert.equal(snapshot.parent.length, (2 * COUNT) - 5 + 1, `Should have returned ${(2 * COUNT) - 5 + 1} events`);
-
-
 });
 
 add_task(async function test_expiry() {

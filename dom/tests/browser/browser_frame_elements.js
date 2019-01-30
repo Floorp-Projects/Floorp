@@ -13,7 +13,6 @@ add_task(async function test() {
       let windowUtils = browser.contentWindow.windowUtils;
       is(windowUtils.containerElement, browser,
           "Container element for main window is xul:browser");
-
     }
 
     await ContentTask.spawn(browser, null, startTests);

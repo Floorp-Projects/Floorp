@@ -113,7 +113,6 @@ async function fetchRemoteRecords(bucket, collection, expectedTimestamp) {
  * an error when a listener fails to execute.
  */
 class EventEmitter {
-
   constructor(events) {
     this._listeners = new Map();
     for (const event of events) {
@@ -166,7 +165,6 @@ class EventEmitter {
 
 
 class RemoteSettingsClient extends EventEmitter {
-
   constructor(collectionName, { bucketNamePref, signerName, filterFunc, localFields = [], lastCheckTimePref }) {
     super(["sync"]); // emitted events
 
@@ -373,7 +371,6 @@ class RemoteSettingsClient extends EventEmitter {
           throw e;
         }
       }
-
     } catch (e) {
       // No specific error was tracked, mark it as unknown.
       if (reportStatus === null) {

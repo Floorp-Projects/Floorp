@@ -23,7 +23,6 @@ function format_mode(mode) {
     return ("0000" + mode.toString(8)).slice(-4);
   }
     return "0" + mode.toString(8);
-
 }
 
 const _umask = OS.Constants.Sys.umask;

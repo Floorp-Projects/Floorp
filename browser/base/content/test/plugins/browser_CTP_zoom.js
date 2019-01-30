@@ -43,7 +43,6 @@ add_task(async function() {
 // visible after each enlargement.
 add_task(async function() {
   for (let count = 0; count < 4; count++) {
-
     FullZoom.enlarge();
 
     // Reload the page

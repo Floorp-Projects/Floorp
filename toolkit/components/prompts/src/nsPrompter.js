@@ -674,7 +674,6 @@ ModalPrompter.prototype = {
 
     confirmEx(title, text, flags, button0, button1, button2,
                          checkLabel, checkValue) {
-
         if (!title)
             title = PromptUtils.getLocalizedString("Confirm");
 

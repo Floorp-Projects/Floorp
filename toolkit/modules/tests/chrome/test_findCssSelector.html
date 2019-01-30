@@ -46,7 +46,6 @@ addTest(function findAllCssSelectors() {
 });
 
 addTest(function findCssSelectorNotContainedInDocument() {
-
   var unattached = document.createElement("div");
   unattached.id = "unattached";
   is(findCssSelector(unattached), "", "Unattached node returns empty string");
@@ -62,7 +61,6 @@ addTest(function findCssSelectorNotContainedInDocument() {
 });
 
 addTest(function findCssSelectorBasic() {
-
   let data = [
     "#one",
     "#" + CSS.escape("2"),

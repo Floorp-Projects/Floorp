@@ -211,7 +211,6 @@ function createProfileWizard() {
 }
 
 async function renameProfile(profile) {
-
   let newName = { value: profile.name };
   let [title, msg] = await document.l10n.formatValues([
     { id: "profiles-rename-profile-title" },

@@ -58,7 +58,6 @@ function loadTabs(gBrowser, urls) {
             !aWebProgress.isLoadingDocument &&
             aWebProgress.isTopLevel &&
             Components.isSuccessCode(aStatus)) {
-
           dump(`Loaded: ${aBrowser.currentURI.spec}\n`);
           waitingToLoad.delete(aBrowser.currentURI.spec);
 
