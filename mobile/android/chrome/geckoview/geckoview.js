@@ -447,9 +447,9 @@ function startup() {
       resource: "resource://gre/modules/GeckoViewTab.jsm",
     },
   }, {
-    name: "GeckoViewTrackingProtection",
+    name: "GeckoViewContentBlocking",
     onEnable: {
-      resource: "resource://gre/modules/GeckoViewTrackingProtection.jsm",
+      resource: "resource://gre/modules/GeckoViewContentBlocking.jsm",
     },
   }]);
 

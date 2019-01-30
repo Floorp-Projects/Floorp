@@ -158,11 +158,6 @@
   fill: var(--theme-icon-color);
 }
 
-.hidden-labels-box:not(.visible) > label,
-.hidden-labels-box.visible ~ .hidden-labels-box > label:last-child {
-  display: none;
-}
-
 .devtools-invisible-splitter {
   border-color: transparent;
   background-color: transparent;

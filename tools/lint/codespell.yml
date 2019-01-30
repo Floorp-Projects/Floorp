@@ -4,18 +4,22 @@ codespell:
     include:
         - browser/base/content/docs/
         - browser/branding/
+        - browser/components/newtab/docs/
         - browser/components/newtab/prerendered/locales/en-US/
         - browser/extensions/formautofill/locales/en-US/
         - browser/extensions/webcompat-reporter/locales/en-US/
+        - browser/installer/windows/docs/
         - browser/locales/en-US/
         - build/docs/
         - devtools/client/locales/en-US/
+        - devtools/docs/
         - devtools/shared/locales/en-US/
         - devtools/startup/locales/en-US/
         - dom/locales/en-US/
         - gfx/docs/
         - intl/docs/
         - intl/locales/en-US/
+        - js/src/doc/
         - layout/tools/layout-debug/ui/locale/en-US/
         - mobile/android/base/locales/en-US/
         - mobile/android/branding/
@@ -31,6 +35,7 @@ codespell:
         - taskcluster/docs/
         - testing/mozbase/docs/
         - toolkit/components/extensions/docs/
+        - toolkit/components/normandy/docs/
         - toolkit/components/telemetry/docs/
         - toolkit/crashreporter/docs/
         - tools/lint/
@@ -54,6 +59,7 @@ codespell:
         - py
         - properties
         - rst
+        - md
     support-files:
         - 'tools/lint/spell/**'
     type: external

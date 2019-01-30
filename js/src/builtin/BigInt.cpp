@@ -124,7 +124,7 @@ bool BigIntObject::toString_impl(JSContext* cx, const CallArgs& args) {
   }
 
   // Steps 6-7.
-  JSLinearString* str = BigInt::toString(cx, bi, radix);
+  JSLinearString* str = BigInt::toString<CanGC>(cx, bi, radix);
   if (!str) {
     return false;
   }
@@ -147,7 +147,7 @@ bool BigIntObject::toLocaleString_impl(JSContext* cx, const CallArgs& args) {
                           ? thisv.toBigInt()
                           : thisv.toObject().as<BigIntObject>().unbox());
 
-  RootedString str(cx, BigInt::toString(cx, bi, 10));
+  RootedString str(cx, BigInt::toString<CanGC>(cx, bi, 10));
   if (!str) {
     return false;
   }

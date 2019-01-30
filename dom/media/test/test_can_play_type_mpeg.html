@@ -96,13 +96,7 @@ function check_mp4(v, enabled) {
     check(codec, "probably");
     ok(MediaSource.isTypeSupported(codec), "VP9 in MP4 should be supported in MSE");
   });
-  // AV1 is temporarily disabled on Win32 due to linker issues
-  // https://bugzilla.mozilla.org/show_bug.cgi?id=1475564
-  if (!isWindows32()) {
-    check("video/mp4; codecs=\"av1\"", "probably");
-  } else {
-    check("video/mp4; codecs=\"av1\"", "");
-  }
+  check("video/mp4; codecs=\"av1\"", "probably");
 }
 
 function check_mp3(v, enabled) {

@@ -14,8 +14,6 @@
 "use strict";
 
 function backgroundScript(token, id, otherId) {
-  browser.tabs.create({url: "tab.html"});
-
   browser.runtime.onMessage.addListener((msg, sender, sendReply) => {
     browser.test.assertEq(id, sender.id, `${id}: Got expected sender ID`);
 
@@ -51,6 +49,8 @@ function backgroundScript(token, id, otherId) {
       browser.test.fail(`${id}: Unexpected runtime external message received: ${msg} ${uneval(sender)}`);
     }
   });
+
+  browser.tabs.create({url: "tab.html"});
 }
 
 function contentScript(token, id, otherId) {

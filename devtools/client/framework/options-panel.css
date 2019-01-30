@@ -84,13 +84,8 @@
   margin-inline-start: 4px;
 }
 
-.options-groupbox > *,
-.options-groupbox > .hidden-labels-box > checkbox {
+.options-groupbox > * {
   padding: 2px;
-}
-
-.options-groupbox > .hidden-labels-box {
-  padding: 0;
 }
 
 .options-citation-label {
