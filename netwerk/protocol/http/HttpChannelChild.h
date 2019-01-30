@@ -261,10 +261,9 @@ class HttpChannelChild final : public PHttpChannelChild,
   void ProcessOnStatus(const nsresult& aStatus);
   void ProcessFlushedForDiversion();
   void ProcessDivertMessages();
-  void ProcessNotifyChannelClassifierProtectionDisabled(
-      uint32_t aAcceptedReason);
+  void ProcessNotifyTrackingProtectionDisabled();
   void ProcessNotifyCookieAllowed();
-  void ProcessNotifyCookieBlocked(uint32_t aRejectedReason);
+  void ProcessNotifyTrackingCookieBlocked(uint32_t aRejectedReason);
   void ProcessNotifyTrackingResource(bool aIsThirdParty);
   void ProcessNotifyFlashPluginStateChanged(
       nsIHttpChannel::FlashPluginState aState);

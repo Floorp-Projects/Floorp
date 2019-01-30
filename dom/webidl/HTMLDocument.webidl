@@ -61,19 +61,18 @@ interface HTMLDocument : Document {
 
 partial interface HTMLDocument {
   /*
-   * Number of nodes that have been blocked by the Safebrowsing API to prevent
-   * tracking, cryptomining and so on. This method is for testing only.
+   * Number of nodes that have been blocked by
+   * the Safebrowsing API to prevent tracking.
    */
   [ChromeOnly, Pure]
-  readonly attribute long blockedNodeByClassifierCount;
+  readonly attribute long blockedTrackingNodeCount;
 
   /*
-   * List of nodes that have been blocked by the Safebrowsing API to prevent
-   * tracking, fingerprinting, cryptomining and so on. This method is for
-   * testing only.
+   * List of nodes that have been blocked by
+   * the Safebrowsing API to prevent tracking.
    */
   [ChromeOnly, Pure]
-  readonly attribute NodeList blockedNodesByClassifier;
+  readonly attribute NodeList blockedTrackingNodes;
 
   [ChromeOnly]
   void userInteractionForTesting();

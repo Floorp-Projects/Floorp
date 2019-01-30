@@ -25,7 +25,6 @@
 #include "mozilla/dom/ReportingHeader.h"
 #include "mozilla/dom/UnionTypes.h"
 #include "mozilla/dom/WindowBinding.h"  // For IdleRequestCallback/Options
-#include "mozilla/net/UrlClassifierFeatureFactory.h"
 #include "IOActivityMonitor.h"
 #include "nsThreadUtils.h"
 #include "mozJSComponentLoader.h"
@@ -832,12 +831,6 @@ constexpr auto kSkipSelfHosted = JS::SavedFrameSelfHosted::Exclude;
 
   RefPtr<JSWindowActorService> service = JSWindowActorService::GetSingleton();
   service->RegisterWindowActor(aName, aOptions, aRv);
-}
-
-/* static */ bool ChromeUtils::IsClassifierBlockingErrorCode(
-    GlobalObject& aGlobal, uint32_t aError) {
-  return net::UrlClassifierFeatureFactory::IsClassifierBlockingErrorCode(
-      static_cast<nsresult>(aError));
 }
 
 }  // namespace dom

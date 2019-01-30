@@ -388,8 +388,7 @@ NS_IMETHODIMP nsExtProtocolChannel::SetParentListener(
   return NS_OK;
 }
 
-NS_IMETHODIMP nsExtProtocolChannel::NotifyChannelClassifierProtectionDisabled(
-    uint32_t aAcceptedReason) {
+NS_IMETHODIMP nsExtProtocolChannel::NotifyTrackingProtectionDisabled() {
   // nothing to do
   return NS_OK;
 }
@@ -399,7 +398,7 @@ NS_IMETHODIMP nsExtProtocolChannel::NotifyCookieAllowed() {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsExtProtocolChannel::NotifyCookieBlocked(
+NS_IMETHODIMP nsExtProtocolChannel::NotifyTrackingCookieBlocked(
     uint32_t aRejectedReason) {
   // nothing to do
   return NS_OK;

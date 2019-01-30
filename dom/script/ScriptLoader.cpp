@@ -28,7 +28,6 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/SRILogHelper.h"
-#include "mozilla/net/UrlClassifierFeatureFactory.h"
 #include "nsGkAtoms.h"
 #include "nsNetUtil.h"
 #include "nsGlobalWindowInner.h"
@@ -3250,9 +3249,8 @@ void ScriptLoader::ReportErrorToConsole(ScriptLoadRequest* aRequest,
     message = isScript ? "ScriptSourceMalformed" : "ModuleSourceMalformed";
   } else if (aResult == NS_ERROR_DOM_BAD_URI) {
     message = isScript ? "ScriptSourceNotAllowed" : "ModuleSourceNotAllowed";
-  } else if (net::UrlClassifierFeatureFactory::IsClassifierBlockingErrorCode(
-                 aResult)) {
-    // Blocking classifier error codes already show their own console messages.
+  } else if (aResult == NS_ERROR_TRACKING_URI) {
+    // Tracking protection errors already show their own console messages.
     return;
   } else {
     message = isScript ? "ScriptSourceLoadFailed" : "ModuleSourceLoadFailed";
@@ -3287,15 +3285,13 @@ void ScriptLoader::ReportPreloadErrorsToConsole(ScriptLoadRequest* aRequest) {
 void ScriptLoader::HandleLoadError(ScriptLoadRequest* aRequest,
                                    nsresult aResult) {
   /*
-   * Handle script not loading error because source was an tracking URL (or
-   * fingerprinting, cryptoming, etc).
+   * Handle script not loading error because source was a tracking URL.
    * We make a note of this script node by including it in a dedicated
    * array of blocked tracking nodes under its parent document.
    */
-  if (net::UrlClassifierFeatureFactory::IsClassifierBlockingErrorCode(
-          aResult)) {
+  if (aResult == NS_ERROR_TRACKING_URI) {
     nsCOMPtr<nsIContent> cont = do_QueryInterface(aRequest->Element());
-    mDocument->AddBlockedNodeByClassifier(cont);
+    mDocument->AddBlockedTrackingNode(cont);
   }
 
   if (aRequest->IsModuleRequest() && !aRequest->mIsInline) {

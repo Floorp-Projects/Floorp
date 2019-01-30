@@ -23,7 +23,6 @@
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/net/HttpChannelChild.h"
 #include "mozilla/net/UrlClassifierCommon.h"
-#include "mozilla/net/UrlClassifierFeatureFactory.h"
 
 #include "AltDataOutputStreamChild.h"
 #include "CookieServiceChild.h"
@@ -1191,8 +1190,7 @@ void HttpChannelChild::DoOnStopRequest(nsIRequest* aRequest,
   // NB: We use aChannelStatus here instead of mStatus because if there was an
   // nsCORSListenerProxy on this request, it will override the tracking
   // protection's return value.
-  if (UrlClassifierFeatureFactory::IsClassifierBlockingErrorCode(
-          aChannelStatus) ||
+  if (aChannelStatus == NS_ERROR_TRACKING_URI ||
       aChannelStatus == NS_ERROR_MALWARE_URI ||
       aChannelStatus == NS_ERROR_UNWANTED_URI ||
       aChannelStatus == NS_ERROR_BLOCKED_URI ||
@@ -1807,22 +1805,18 @@ void HttpChannelChild::ProcessFlushedForDiversion() {
   mEventQ->RunOrEnqueue(new HttpFlushedForDiversionEvent(this), true);
 }
 
-void HttpChannelChild::ProcessNotifyChannelClassifierProtectionDisabled(
-    uint32_t aAcceptedReason) {
-  LOG(
-      ("HttpChannelChild::ProcessNotifyChannelClassifierProtectionDisabled "
-       "[this=%p aAcceptedReason=%" PRIu32 "]\n",
-       this, aAcceptedReason));
+void HttpChannelChild::ProcessNotifyTrackingProtectionDisabled() {
+  LOG(("HttpChannelChild::ProcessNotifyTrackingProtectionDisabled [this=%p]\n",
+       this));
   MOZ_ASSERT(OnSocketThread());
 
   RefPtr<HttpChannelChild> self = this;
   nsCOMPtr<nsIEventTarget> neckoTarget = GetNeckoTarget();
   neckoTarget->Dispatch(
       NS_NewRunnableFunction(
-          "AntiTrackingCommon::NotifyChannelClassifierProtectionDisabled",
-          [self, aAcceptedReason]() {
-            UrlClassifierCommon::NotifyChannelClassifierProtectionDisabled(
-                self, aAcceptedReason);
+          "UrlClassifierCommon::NotifyTrackingProtectionDisabled",
+          [self]() {
+            UrlClassifierCommon::NotifyTrackingProtectionDisabled(self);
           }),
       NS_DISPATCH_NORMAL);
 }
@@ -1843,8 +1837,10 @@ void HttpChannelChild::ProcessNotifyCookieAllowed() {
       NS_DISPATCH_NORMAL);
 }
 
-void HttpChannelChild::ProcessNotifyCookieBlocked(uint32_t aRejectedReason) {
-  LOG(("HttpChannelChild::ProcessNotifyCookieBlocked [this=%p]\n", this));
+void HttpChannelChild::ProcessNotifyTrackingCookieBlocked(
+    uint32_t aRejectedReason) {
+  LOG(("HttpChannelChild::ProcessNotifyTrackingCookieBlocked [this=%p]\n",
+       this));
   MOZ_ASSERT(OnSocketThread());
 
   RefPtr<HttpChannelChild> self = this;
