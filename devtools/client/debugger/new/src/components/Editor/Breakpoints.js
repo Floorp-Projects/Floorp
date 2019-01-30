@@ -7,7 +7,7 @@ import React, { Component } from "react";
 import Breakpoint from "./Breakpoint";
 
 import { getSelectedSource, getFirstVisibleBreakpoints } from "../../selectors";
-import { makeLocationId } from "../../utils/breakpoint";
+import { makeBreakpointId } from "../../utils/breakpoint";
 import { connect } from "../../utils/connect";
 import { breakpointItemActions } from "./menus/breakpoints";
 import { editorItemActions } from "./menus/editor";
@@ -43,7 +43,7 @@ class Breakpoints extends Component<Props> {
         {breakpoints.map(bp => {
           return (
             <Breakpoint
-              key={makeLocationId(bp.location)}
+              key={makeBreakpointId(bp.location)}
               breakpoint={bp}
               selectedSource={selectedSource}
               editor={editor}
