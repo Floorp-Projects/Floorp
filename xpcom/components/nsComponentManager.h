@@ -166,6 +166,8 @@ class nsComponentManagerImpl final : public nsIComponentManager,
   nsresult GetService(mozilla::xpcom::ModuleID, const nsIID& aIID,
                       void** aResult);
 
+  static bool JSLoaderReady() { return gComponentManager->mJSLoaderReady; }
+
   static void InitializeStaticModules();
   static void InitializeModuleLocations();
 
@@ -280,6 +282,8 @@ class nsComponentManagerImpl final : public nsIComponentManager,
   inline PRThread* GetPendingServiceThread(const nsCID& aServiceCID) const;
 
   nsTArray<PendingServiceInfo> mPendingServices;
+
+  bool mJSLoaderReady = false;
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
