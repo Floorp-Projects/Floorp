@@ -2694,6 +2694,12 @@ class CompartmentPrivate {
     return static_cast<CompartmentPrivate*>(priv);
   }
 
+  static CompartmentPrivate* Get(JS::Realm* realm) {
+    MOZ_ASSERT(realm);
+    JS::Compartment* compartment = JS::GetCompartmentForRealm(realm);
+    return Get(compartment);
+  }
+
   static CompartmentPrivate* Get(JSObject* object) {
     JS::Compartment* compartment = js::GetObjectCompartment(object);
     return Get(compartment);
