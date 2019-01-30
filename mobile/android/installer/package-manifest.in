@@ -149,11 +149,6 @@
 @BINPATH@/components/TestInterfaceJSMaplike.js
 #endif
 
-#ifndef MOZ_GECKOVIEW_JAR
-@BINPATH@/components/PresentationNetworkHelper.js
-@BINPATH@/components/PresentationNetworkHelper.manifest
-#endif
-
 ; Modules
 @BINPATH@/modules/*
 @BINPATH@/actors/*

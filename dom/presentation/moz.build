@@ -69,9 +69,8 @@ XPCOM_MANIFESTS += [
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
-    EXTRA_COMPONENTS += [
-        'PresentationNetworkHelper.js',
-        'PresentationNetworkHelper.manifest',
+    EXTRA_JS_MODULES += [
+        'PresentationNetworkHelper.jsm',
     ]
 
 IPDL_SOURCES += [
