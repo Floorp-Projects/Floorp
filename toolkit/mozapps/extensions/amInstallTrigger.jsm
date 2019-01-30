@@ -4,7 +4,6 @@
 
 "use strict";
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {Preferences} = ChromeUtils.import("resource://gre/modules/Preferences.jsm");
 const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
@@ -150,7 +149,7 @@ InstallTrigger.prototype = {
       item = { URL: item };
     }
     if (!item.URL) {
-      throw new this._window.Error("Missing URL property for '" + name + "'");
+      throw new this._window.Error("Missing URL property for '" + keys[0] + "'");
     }
 
     let url = this._resolveURL(item.URL);
@@ -221,6 +220,4 @@ InstallTrigger.prototype = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIDOMGlobalPropertyInitializer]),
 };
 
-
-
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([InstallTrigger]);
+var EXPORTED_SYMBOLS = ["InstallTrigger"];
