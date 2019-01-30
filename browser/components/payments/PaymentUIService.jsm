@@ -301,4 +301,4 @@ PaymentUIService.prototype = {
   },
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([PaymentUIService]);
+var EXPORTED_SYMBOLS = ["PaymentUIService"];
