@@ -38,33 +38,7 @@ DebuggerPanel.prototype = {
       tabTarget: this.toolbox.target,
       debuggerClient: this.toolbox.target.client,
       sourceMaps: this.toolbox.sourceMapService,
-      toolboxActions: {
-        // Open a link in a new browser tab.
-        openLink: this.openLink.bind(this),
-        openWorkerToolbox: this.openWorkerToolbox.bind(this),
-        openElementInInspector: async function(grip) {
-          await this.toolbox.initInspector();
-          const onSelectInspector = this.toolbox.selectTool("inspector");
-          const onGripNodeToFront = this.toolbox.walker.gripToNodeFront(grip);
-          const [front, inspector] = await Promise.all([
-            onGripNodeToFront,
-            onSelectInspector
-          ]);
-
-          const onInspectorUpdated = inspector.once("inspector-updated");
-          const onNodeFrontSet = this.toolbox.selection.setNodeFront(front, {
-            reason: "debugger"
-          });
-
-          return Promise.all([onNodeFrontSet, onInspectorUpdated]);
-        }.bind(this),
-        openConsoleAndEvaluate: async function(input) {
-          const webconsolePanel = await this.toolbox.selectTool("webconsole");
-          const jsterm = webconsolePanel.hud.jsterm;
-          jsterm.execute(input);
-        }.bind(this),
-        onReload: this.onReload.bind(this)
-      }
+      panel: this
     });
 
     this._actions = actions;
@@ -106,6 +80,29 @@ DebuggerPanel.prototype = {
     return gDevToolsBrowser.openWorkerToolbox(workerTargetFront, "jsdebugger");
   },
 
+  openConsoleAndEvaluate: async function(input) {
+    const webconsolePanel = await this.toolbox.selectTool("webconsole");
+    const jsterm = webconsolePanel.hud.jsterm;
+    jsterm.execute(input);
+  },
+
+  openElementInInspector: async function(grip) {
+    await this.toolbox.initInspector();
+    const onSelectInspector = this.toolbox.selectTool("inspector");
+    const onGripNodeToFront = this.toolbox.walker.gripToNodeFront(grip);
+    const [front, inspector] = await Promise.all([
+      onGripNodeToFront,
+      onSelectInspector
+    ]);
+
+    const onInspectorUpdated = inspector.once("inspector-updated");
+    const onNodeFrontSet = this.toolbox.selection.setNodeFront(front, {
+      reason: "debugger"
+    });
+
+    return Promise.all([onNodeFrontSet, onInspectorUpdated]);
+  },
+
   getFrames: function() {
     const frames = this._selectors.getFrames(this._getState());
 
@@ -141,10 +138,6 @@ DebuggerPanel.prototype = {
 
   getSource(sourceURL) {
     return this._selectors.getSourceByURL(this._getState(), sourceURL);
-  },
-
-  onReload: function() {
-    this.emit("reloaded");
   },
 
   destroy: function() {

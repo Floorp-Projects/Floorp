@@ -25,7 +25,7 @@ if (isFirefoxPanel()) {
       tabTarget,
       debuggerClient,
       sourceMaps,
-      toolboxActions
+      panel
     }: any) => {
       return onConnect(
         {
@@ -36,10 +36,8 @@ if (isFirefoxPanel()) {
             debuggerClient
           }
         },
-        {
-          services: { sourceMaps },
-          toolboxActions
-        }
+        sourceMaps,
+        panel
       );
     },
     destroy: () => {
@@ -56,9 +54,16 @@ if (isFirefoxPanel()) {
   window.L10N.setBundle(require("../assets/panel/debugger.properties"));
 
   bootstrap(React, ReactDOM).then(connection => {
-    onConnect(connection, {
-      services: { sourceMaps: require("devtools-source-map") },
-      toolboxActions: {}
+    onConnect(connection, require("devtools-source-map"), {
+      emit: eventName => console.log(`emitted: ${eventName}`),
+      openLink: url => {
+        const win = window.open(url, "_blank");
+        win.focus();
+      },
+      openWorkerToolbox: worker => alert(worker.url),
+      openElementInInspector: grip =>
+        alert(`Opening node in Inspector: ${grip.class}`),
+      openConsoleAndEvaluate: input => alert(`console.log: ${input}`)
     });
   });
 }

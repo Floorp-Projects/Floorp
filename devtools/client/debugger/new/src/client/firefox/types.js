@@ -18,7 +18,8 @@ import type {
   Source,
   Pause,
   Frame,
-  SourceId
+  SourceId,
+  Worker
 } from "../../types";
 
 type URL = string;
@@ -414,3 +415,11 @@ export type FirefoxClientConnection = {
   setTabTarget: (target: TabTarget) => void,
   setThreadClient: (client: ThreadClient) => void
 };
+
+export type Panel = {|
+  emit: (eventName: string) => void,
+  openLink: (url: string) => void,
+  openWorkerToolbox: (worker: Worker) => void,
+  openElementInInspector: (grip: Object) => void,
+  openConsoleAndEvaluate: (input: string) => void
+|};
