@@ -5,16 +5,13 @@ from __future__ import absolute_import
 import os
 import signal
 import sys
-import time
 import unittest
 
 import mozinfo
 import mozunit
-
-from mozprocess import processhandler
-
 import proctest
-
+import time
+from mozprocess import processhandler
 
 here = os.path.dirname(os.path.abspath(__file__))
 
@@ -116,7 +113,7 @@ class ProcTestPoll(proctest.ProcTest):
         os.kill(p.pid, signal.SIGTERM)
 
         # Allow the output reader thread to finish processing remaining data
-        for i in xrange(0, 100):
+        for i in range(0, 100):
             time.sleep(processhandler.INTERVAL_PROCESS_ALIVE_CHECK)
             returncode = p.poll()
             if returncode is not None:

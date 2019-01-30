@@ -6,7 +6,6 @@ import io
 import os
 
 import mozunit
-
 import proctest
 from mozprocess import processhandler
 
@@ -61,10 +60,10 @@ class ProcTestOutput(proctest.ProcTest):
         p.run()
         p.wait()
         for i in range(5, 10):
-            stream.write(str(i) + '\n')
+            stream.write(str(i).encode('utf8') + '\n'.encode('utf8'))
 
         buf.flush()
-        self.assertEquals(stream.getvalue().strip(), expected)
+        self.assertEquals(stream.getvalue().strip().decode('utf8'), expected)
 
         # make sure mozprocess doesn't close the stream
         # since mozprocess didn't create it
