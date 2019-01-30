@@ -418,4 +418,4 @@ WifiGeoPositionProvider.prototype = {
   },
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([WifiGeoPositionProvider]);
+var EXPORTED_SYMBOLS = ["WifiGeoPositionProvider"];
