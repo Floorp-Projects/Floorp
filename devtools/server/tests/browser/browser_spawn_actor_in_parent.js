@@ -25,9 +25,8 @@ add_task(async function() {
   const tab = gBrowser.getTabForBrowser(browser);
   const target = await TargetFactory.forTab(tab);
   await target.attach();
-  const targetFront = target.activeTab;
   const { client } = target;
-  const form = targetFront.targetForm;
+  const form = target.targetForm;
 
   // As this Front isn't instantiated by protocol.js, we have to manually
   // set its actor ID and manage it:

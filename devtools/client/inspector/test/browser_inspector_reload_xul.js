@@ -32,7 +32,7 @@ async function testToolboxInitialization(tab, inspector, toolbox) {
   const markuploaded = inspector.once("markuploaded");
   const onNewRoot = inspector.once("new-root");
   const onUpdated = inspector.once("inspector-updated");
-  await toolbox.target.activeTab.reload();
+  await toolbox.target.reload();
   info("Waiting for inspector to be ready.");
   await markuploaded;
   await onNewRoot;
