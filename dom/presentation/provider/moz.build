@@ -12,7 +12,10 @@ EXTRA_COMPONENTS += [
 UNIFIED_SOURCES += [
     'DeviceProviderHelpers.cpp',
     'MulticastDNSDeviceProvider.cpp',
-    'PresentationDeviceProviderModule.cpp',
+]
+
+XPCOM_MANIFESTS += [
+    'components.conf',
 ]
 
 EXTRA_JS_MODULES.presentation += [
