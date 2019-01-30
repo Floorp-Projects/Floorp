@@ -24,6 +24,9 @@
 #define USING_QUOTA_NAMESPACE using namespace mozilla::dom::quota;
 
 #define DSSTORE_FILE_NAME ".DS_Store"
+#define DESKTOP_FILE_NAME ".desktop"
+#define DESKTOP_INI_FILE_NAME "desktop.ini"
+#define THUMBS_DB_FILE_NAME "Thumbs.db"
 
 #define QM_WARNING(...)                                                      \
   do {                                                                       \
