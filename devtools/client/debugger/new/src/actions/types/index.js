@@ -44,6 +44,7 @@ export type ThunkArgs = {
   openLink: (url: string) => void,
   openWorkerToolbox: (worker: Worker) => void,
   openElementInInspector: (grip: Object) => void,
+  openConsoleAndEvaluate: (input: string) => void,
   onReload: () => void
 };
 
