@@ -328,7 +328,7 @@ nsHttpChannel::nsHttpChannel()
       mStronglyFramed(false),
       mUsedNetwork(0),
       mAuthConnectionRestartable(0),
-      mTrackingProtectionCancellationPending(0),
+      mChannelClassifierCancellationPending(0),
       mAsyncResumePending(0),
       mPushedStream(nullptr),
       mLocalBlocklist(false),
@@ -6051,7 +6051,7 @@ nsHttpChannel::CancelForTrackingProtection() {
   if (mSuspendCount) {
     LOG(("Waiting until resume in Cancel [this=%p]\n", this));
     MOZ_ASSERT(!mCallOnResume);
-    mTrackingProtectionCancellationPending = 1;
+    mChannelClassifierCancellationPending = 1;
     mCallOnResume = [](nsHttpChannel *self) {
       self->HandleContinueCancelledByTrackingProtection();
       return NS_OK;
@@ -6062,7 +6062,7 @@ nsHttpChannel::CancelForTrackingProtection() {
   // Check to see if we should redirect this channel elsewhere by
   // nsIHttpChannel.redirectTo API request
   if (mAPIRedirectToURI) {
-    mTrackingProtectionCancellationPending = 1;
+    mChannelClassifierCancellationPending = 1;
     return AsyncCall(&nsHttpChannel::HandleAsyncAPIRedirect);
   }
 
@@ -6092,10 +6092,10 @@ void nsHttpChannel::ContinueCancelledByTrackingProtection() {
 }
 
 nsresult nsHttpChannel::CancelInternal(nsresult status) {
-  bool trackingProtectionCancellationPending =
-      !!mTrackingProtectionCancellationPending;
+  bool channelClassifierCancellationPending =
+      !!mChannelClassifierCancellationPending;
   if (UrlClassifierFeatureFactory::IsClassifierBlockingErrorCode(status)) {
-    mTrackingProtectionCancellationPending = 0;
+    mChannelClassifierCancellationPending = 0;
   }
 
   mCanceled = true;
@@ -6111,9 +6111,9 @@ nsresult nsHttpChannel::CancelInternal(nsresult status) {
     mRequestContext->CancelTailedRequest(this);
     CloseCacheEntry(false);
     Unused << AsyncAbort(status);
-  } else if (trackingProtectionCancellationPending) {
+  } else if (channelClassifierCancellationPending) {
     // If we're coming from an asynchronous path when canceling a channel due
-    // to tracking protection, we need to AsyncAbort the channel now.
+    // to safe-browsing protection, we need to AsyncAbort the channel now.
     Unused << AsyncAbort(status);
   }
   return NS_OK;
@@ -6635,10 +6635,10 @@ nsresult nsHttpChannel::BeginConnectActual() {
 
   AUTO_PROFILER_LABEL("nsHttpChannel::BeginConnectActual", NETWORK);
 
-  if (mTrackingProtectionCancellationPending) {
+  if (mChannelClassifierCancellationPending) {
     LOG(
-        ("Waiting for tracking protection cancellation in BeginConnectActual "
-         "[this=%p]\n",
+        ("Waiting for safe-browsing protection cancellation in "
+         "BeginConnectActual [this=%p]\n",
          this));
     return NS_OK;
   }
