@@ -51,6 +51,16 @@ class GeckoViewNavigationChild extends GeckoViewChildModule {
                              uri2=${aUri && aUri.displaySpec}
                              error=${aError}`;
 
+    if (aUri && LoadURIDelegate.isSafeBrowsingError(aError)) {
+      const message = {
+        type: "GeckoView:ContentBlocked",
+        uri: aUri.spec,
+        error: aError,
+      };
+
+      this.eventDispatcher.sendRequest(message);
+    }
+
     if (!this.enabled) {
       Components.returnCode = Cr.NS_ERROR_ABORT;
       return null;

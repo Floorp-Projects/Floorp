@@ -7,6 +7,7 @@ package org.mozilla.geckoview_example;
 
 import org.mozilla.geckoview.AllowOrDeny;
 import org.mozilla.geckoview.BasicSelectionActionDelegate;
+import org.mozilla.geckoview.ContentBlocking;
 import org.mozilla.geckoview.GeckoResult;
 import org.mozilla.geckoview.GeckoRuntime;
 import org.mozilla.geckoview.GeckoRuntimeSettings;
@@ -130,7 +131,9 @@ public class GeckoViewActivity extends AppCompatActivity {
                     .useContentProcessHint(mUseMultiprocess)
                     .remoteDebuggingEnabled(true)
                     .consoleOutput(true)
-                    .trackingProtectionCategories(TrackingProtectionDelegate.CATEGORY_ALL)
+                    .contentBlocking(new ContentBlocking.Settings.Builder()
+                        .block(ContentBlocking.AT_ALL)
+                        .build())
                     .crashHandler(ExampleCrashHandler.class);
 
             sGeckoRuntime = GeckoRuntime.create(this, runtimeSettingsBuilder.build());

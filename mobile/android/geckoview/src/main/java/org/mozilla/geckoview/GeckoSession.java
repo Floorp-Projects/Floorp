@@ -604,22 +604,20 @@ public class GeckoSession implements Parcelable {
             }
         };
 
-    private final GeckoSessionHandler<TrackingProtectionDelegate> mTrackingProtectionHandler =
-        new GeckoSessionHandler<TrackingProtectionDelegate>(
-            "GeckoViewTrackingProtection", this,
-            new String[]{ "GeckoView:TrackingProtectionBlocked" }
+    private final GeckoSessionHandler<ContentBlocking.Delegate> mContentBlockingHandler =
+        new GeckoSessionHandler<ContentBlocking.Delegate>(
+            "GeckoViewContentBlocking", this,
+            new String[]{ "GeckoView:ContentBlocked" }
         ) {
             @Override
-            public void handleMessage(final TrackingProtectionDelegate delegate,
+            public void handleMessage(final ContentBlocking.Delegate delegate,
                                       final String event,
                                       final GeckoBundle message,
                                       final EventCallback callback) {
 
-                if ("GeckoView:TrackingProtectionBlocked".equals(event)) {
-                    final String uri = message.getString("src");
-                    final String matchedList = message.getString("matchedList");
-                    delegate.onTrackerBlocked(GeckoSession.this, uri,
-                        TrackingProtection.listToCategory(matchedList));
+                if ("GeckoView:ContentBlocked".equals(event)) {
+                    delegate.onContentBlocked(GeckoSession.this,
+                        ContentBlocking.BlockEvent.fromBundle(message));
                 }
             }
         };
@@ -821,7 +819,7 @@ public class GeckoSession implements Parcelable {
     private final GeckoSessionHandler<?>[] mSessionHandlers = new GeckoSessionHandler<?>[] {
         mContentHandler, mHistoryHandler, mMediaHandler, mNavigationHandler,
         mPermissionHandler, mProgressHandler, mScrollHandler, mSelectionActionDelegate,
-        mTrackingProtectionHandler
+        mContentBlockingHandler
     };
 
     private static class PermissionCallback implements
@@ -1934,22 +1932,22 @@ public class GeckoSession implements Parcelable {
     }
 
     /**
-    * Set the tracking protection callback handler.
+    * Set the content blocking callback handler.
     * This will replace the current handler.
-    * @param delegate An implementation of TrackingProtectionDelegate.
+    * @param delegate An implementation of {@link ContentBlocking.Delegate}.
     */
     @AnyThread
-    public void setTrackingProtectionDelegate(@Nullable TrackingProtectionDelegate delegate) {
-        mTrackingProtectionHandler.setDelegate(delegate, this);
+    public void setContentBlockingDelegate(@Nullable ContentBlocking.Delegate delegate) {
+        mContentBlockingHandler.setDelegate(delegate, this);
     }
 
     /**
-    * Get the tracking protection callback handler.
-    * @return The current tracking protection callback handler.
+    * Get the content blocking callback handler.
+    * @return The current content blocking callback handler.
     */
     @AnyThread
-    public @Nullable TrackingProtectionDelegate getTrackingProtectionDelegate() {
-        return mTrackingProtectionHandler.getDelegate();
+    public @Nullable ContentBlocking.Delegate getContentBlockingDelegate() {
+        return mContentBlockingHandler.getDelegate();
     }
 
     /**
@@ -3800,63 +3798,6 @@ public class GeckoSession implements Parcelable {
         ThreadUtils.assertOnUiThread();
 
         rect.set(0, mClientTop - mTop, mWidth, mHeight);
-    }
-
-    /**
-     * GeckoSession applications implement this interface to handle tracking
-     * protection events.
-     **/
-    public interface TrackingProtectionDelegate {
-        @Retention(RetentionPolicy.SOURCE)
-        @IntDef(flag = true,
-                value = { CATEGORY_NONE, CATEGORY_AD, CATEGORY_ANALYTIC,
-                          CATEGORY_SOCIAL, CATEGORY_CONTENT, CATEGORY_ALL,
-                          CATEGORY_TEST, CATEGORY_AD_EXT })
-        /* package */ @interface Category {}
-
-        static final int CATEGORY_NONE = 0;
-        /**
-         * Block advertisement trackers.
-         */
-        static final int CATEGORY_AD = 1 << 0;
-        /**
-         * Block analytics trackers.
-         */
-        static final int CATEGORY_ANALYTIC = 1 << 1;
-        /**
-         * Block social trackers.
-         */
-        static final int CATEGORY_SOCIAL = 1 << 2;
-        /**
-         * Block content trackers.
-         */
-        static final int CATEGORY_CONTENT = 1 << 3;
-        /**
-         * Block Gecko test trackers (used for tests).
-         */
-        static final int CATEGORY_TEST = 1 << 4;
-        /**
-         * Block all known trackers.
-         */
-        static final int CATEGORY_ALL = (1 << 5) - 1;
-        /**
-         * Experimental: Block advertisements.
-         */
-        static final int CATEGORY_AD_EXT = 1 << 6;
-
-        /**
-         * A tracking element has been blocked from loading.
-         * Set blocked tracker categories via GeckoRuntimeSettings and enable
-         * tracking protection via GeckoSessionSettings.
-         *
-        * @param session The GeckoSession that initiated the callback.
-        * @param uri The URI of the blocked element.
-        * @param categories The tracker categories of the blocked element.
-        *                   One or more of the {@link #CATEGORY_AD CATEGORY_*} flags.
-        */
-        @UiThread
-        void onTrackerBlocked(@NonNull GeckoSession session, @Nullable String uri,
-                              @Category int categories);
     }
 
     /**
