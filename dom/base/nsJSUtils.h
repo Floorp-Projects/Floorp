@@ -15,6 +15,7 @@
  */
 
 #include "mozilla/Assertions.h"
+#include "mozilla/StaticPrefs.h"
 
 #include "GeckoProfiler.h"
 #include "jsapi.h"
@@ -194,6 +195,15 @@ class nsJSUtils {
     // wrapped by calling |JS_WrapValue|.
     MOZ_MUST_USE nsresult ExecScript(JS::MutableHandle<JS::Value> aRetValue);
   };
+
+  static bool BinASTEncodingEnabled()
+  {
+#ifdef JS_BUILD_BINAST
+    return mozilla::StaticPrefs::dom_script_loader_binast_encoding_enabled();
+#else
+    return false;
+#endif
+  }
 
   static nsresult CompileModule(JSContext* aCx,
                                 JS::SourceText<char16_t>& aSrcBuf,
