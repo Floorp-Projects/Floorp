@@ -169,9 +169,6 @@
 @BINPATH@/components/nsAsyncShutdown.manifest
 @BINPATH@/components/nsAsyncShutdown.js
 
-@BINPATH@/components/Downloads.manifest
-@BINPATH@/components/DownloadLegacy.js
-
 #ifndef MOZ_GECKOVIEW_JAR
 @BINPATH@/components/BuiltinProviders.manifest
 @BINPATH@/components/PresentationControlService.js

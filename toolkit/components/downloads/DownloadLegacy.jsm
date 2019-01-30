@@ -14,8 +14,6 @@
 
 "use strict";
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-
 ChromeUtils.defineModuleGetter(this, "Downloads",
                                "resource://gre/modules/Downloads.jsm");
 
@@ -318,4 +316,4 @@ DownloadLegacyTransfer.prototype = {
   _signatureInfo: null,
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([DownloadLegacyTransfer]);
+var EXPORTED_SYMBOLS = ["DownloadLegacyTransfer"];
