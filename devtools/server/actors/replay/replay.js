@@ -468,22 +468,17 @@ function getObjectId(obj) {
   return id;
 }
 
+// Convert a value for sending to the parent.
 function convertValue(value) {
   if (value instanceof Debugger.Object) {
     return { object: getObjectId(value) };
-  }
-  if (value === undefined) {
-    return { special: "undefined" };
-  }
-  if (value !== value) { // eslint-disable-line no-self-compare
-    return { special: "NaN" };
-  }
-  if (value == Infinity) {
-    return { special: "Infinity" };
-  }
-  if (value == -Infinity) {
-    return { special: "-Infinity" };
-  }
+  } else if (value === undefined ||
+             value == Infinity ||
+             value == -Infinity ||
+             Object.is(value, NaN) ||
+             Object.is(value, -0)) {
+      return { special: "" + value };
+    }
   return value;
 }
 
@@ -495,6 +490,23 @@ function convertCompletionValue(value) {
     return { throw: convertValue(value.throw) };
   }
   throw new Error("Unexpected completion value");
+}
+
+// Convert a value we received from the parent.
+function convertValueFromParent(value) {
+  if (isNonNullObject(value)) {
+    if (value.object) {
+      return gPausedObjects.getObject(value.object);
+    }
+    switch (value.special) {
+    case "undefined": return undefined;
+    case "Infinity": return Infinity;
+    case "-Infinity": return -Infinity;
+    case "NaN": return NaN;
+    case "0": return -0;
+    }
+  }
+  return value;
 }
 
 function makeDebuggeeValue(value) {
@@ -700,6 +712,17 @@ const gRequestHandlers = {
       target: convertValue(obj.proxyTarget),
       handler: convertValue(obj.proxyHandler),
     };
+  },
+
+  objectApply(request) {
+    if (!RecordReplayControl.maybeDivergeFromRecording()) {
+      return { throw: "Recording divergence in objectApply" };
+    }
+    const obj = gPausedObjects.getObject(request.id);
+    const thisv = convertValueFromParent(request.thisv);
+    const args = request.args.map(v => convertValueFromParent(v));
+    const rv = obj.apply(thisv, args);
+    return convertCompletionValue(rv);
   },
 
   getEnvironmentNames(request) {
