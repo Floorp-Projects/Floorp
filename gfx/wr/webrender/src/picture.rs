@@ -967,20 +967,22 @@ impl TileCache {
         // at the root of its clip chain (this is enforced by the per-pipeline-root
         // clip node added implicitly during display list flattening). Doing it once
         // here saves doing it for every primitive during update_prim_dependencies.
-        let root_clip_chain_node = &frame_state
-            .clip_store
-            .clip_chain_nodes[self.root_clip_chain_id.0 as usize];
-        let root_clip_node = &frame_state
-            .data_stores
-            .clip[root_clip_chain_node.handle];
-        if let Some(clip_rect) = root_clip_node.item.get_local_clip_rect(root_clip_chain_node.local_pos) {
-            self.map_local_to_world.set_target_spatial_node(
-                root_clip_chain_node.spatial_node_index,
-                frame_context.clip_scroll_tree,
-            );
+        if self.root_clip_chain_id != ClipChainId::NONE {
+            let root_clip_chain_node = &frame_state
+                .clip_store
+                .clip_chain_nodes[self.root_clip_chain_id.0 as usize];
+            let root_clip_node = &frame_state
+                .data_stores
+                .clip[root_clip_chain_node.handle];
+            if let Some(clip_rect) = root_clip_node.item.get_local_clip_rect(root_clip_chain_node.local_pos) {
+                self.map_local_to_world.set_target_spatial_node(
+                    root_clip_chain_node.spatial_node_index,
+                    frame_context.clip_scroll_tree,
+                );
 
-            if let Some(world_clip_rect) = self.map_local_to_world.map(&clip_rect) {
-                self.root_clip_rect = world_clip_rect;
+                if let Some(world_clip_rect) = self.map_local_to_world.map(&clip_rect) {
+                    self.root_clip_rect = world_clip_rect;
+                }
             }
         }
 
