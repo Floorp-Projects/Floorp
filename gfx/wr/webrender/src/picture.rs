@@ -420,6 +420,35 @@ impl DirtyRegion {
             combined,
         }
     }
+
+    /// Creates a record of this dirty region for exporting to test infrastructure.
+    pub fn record(&self) -> RecordedDirtyRegion {
+        let mut rects: Vec<WorldRect> =
+            self.dirty_rects.iter().map(|r| r.world_rect.clone()).collect();
+        rects.sort_unstable_by_key(|r| (r.origin.y as usize, r.origin.x as usize));
+        RecordedDirtyRegion { rects }
+    }
+}
+
+/// A recorded copy of the dirty region for exporting to test infrastructure.
+pub struct RecordedDirtyRegion {
+    pub rects: Vec<WorldRect>,
+}
+
+impl ::std::fmt::Display for RecordedDirtyRegion {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        for r in self.rects.iter() {
+            let (x, y, w, h) = (r.origin.x, r.origin.y, r.size.width, r.size.height);
+            write!(f, "[({},{}):{}x{}]", x, y, w, h)?;
+        }
+        Ok(())
+    }
+}
+
+impl ::std::fmt::Debug for RecordedDirtyRegion {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        ::std::fmt::Display::fmt(self, f)
+    }
 }
 
 /// A helper struct to build a (roughly) minimal set of dirty rectangles
@@ -1489,6 +1518,12 @@ impl TileCache {
         );
 
         builder.build(&mut self.dirty_region);
+
+        // When under test, record a copy of the dirty region to support
+        // invalidation testing in wrench.
+        if frame_context.config.testing {
+            scratch.recorded_dirty_regions.push(self.dirty_region.record());
+        }
 
         // If we end up with too many dirty rects, then it's going to be a lot
         // of extra draw calls to submit (since we currently just submit every
