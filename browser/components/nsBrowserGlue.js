@@ -1487,6 +1487,22 @@ BrowserGlue.prototype = {
     });
   },
 
+  _showNewInstallModal() {
+    // Allow other observers of the same topic to run while we open the dialog.
+    Services.tm.dispatchToMainThread(() => {
+      let win = BrowserWindowTracker.getTopWindow();
+
+      let stack = win.gBrowser.getPanel().querySelector(".browserStack");
+      let mask = win.document.createElementNS(XULNS, "box");
+      mask.setAttribute("id", "content-mask");
+      stack.appendChild(mask);
+
+      Services.ww.openWindow(win, "chrome://browser/content/newInstall.xul",
+                             "_blank", "chrome,modal,resizable=no,centerscreen", null);
+      mask.remove();
+    });
+  },
+
   // All initial windows have opened.
   _onWindowsRestored: function BG__onWindowsRestored() {
     if (this._windowsWereRestored) {
@@ -1541,6 +1557,12 @@ BrowserGlue.prototype = {
 
     this._monitorScreenshotsPref();
     this._monitorWebcompatReporterPref();
+
+    let pService = Cc["@mozilla.org/toolkit/profile-service;1"].
+                  getService(Ci.nsIToolkitProfileService);
+    if (pService.createdAlternateProfile) {
+      this._showNewInstallModal();
+    }
   },
 
   /**
