@@ -935,8 +935,6 @@ nsPlacesExpiration.prototype = {
 
   classID: Components.ID("705a423f-2f69-42f3-b9fe-1517e0dee56f"),
 
-  _xpcom_factory: XPCOMUtils.generateSingletonFactory(nsPlacesExpiration),
-
   QueryInterface: ChromeUtils.generateQI([
     Ci.nsIObserver,
     Ci.nsINavHistoryObserver,
@@ -948,5 +946,4 @@ nsPlacesExpiration.prototype = {
 
 // Module Registration
 
-var components = [nsPlacesExpiration];
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory(components);
+var EXPORTED_SYMBOLS = ["nsPlacesExpiration"];

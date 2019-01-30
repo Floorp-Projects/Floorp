@@ -10,7 +10,6 @@ const TOPIC_GATHER_TELEMETRY = "gather-telemetry";
 // Seconds between maintenance runs.
 const MAINTENANCE_INTERVAL_SECONDS = 7 * 86400;
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.defineModuleGetter(this, "PlacesUtils",
                                "resource://gre/modules/PlacesUtils.jsm");
@@ -54,11 +53,9 @@ PlacesCategoriesStarter.prototype = {
   },
 
   classID: Components.ID("803938d5-e26d-4453-bf46-ad4b26e41114"),
-  _xpcom_factory: XPCOMUtils.generateSingletonFactory(PlacesCategoriesStarter),
   QueryInterface: ChromeUtils.generateQI([
     Ci.nsIObserver,
   ]),
 };
 
-var components = [PlacesCategoriesStarter];
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory(components);
+var EXPORTED_SYMBOLS = ["PlacesCategoriesStarter"];
