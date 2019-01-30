@@ -59,8 +59,6 @@ enum class PixelCastJustification : uint8_t {
   NoTransformOnLayer,
   // LayerPixels are ImagePixels
   LayerIsImage,
-  // External pixels are the same scale as screen pixels
-  ExternalIsScreen,
 };
 
 template <class TargetUnits, class SourceUnits>

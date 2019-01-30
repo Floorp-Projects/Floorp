@@ -197,6 +197,13 @@ class MultiTouchInput : public InputData {
   MultiTouchInput();
   MultiTouchInput(const MultiTouchInput& aOther);
   explicit MultiTouchInput(const WidgetTouchEvent& aTouchEvent);
+  // This conversion from WidgetMouseEvent to MultiTouchInput is needed because
+  // on the B2G emulator we can only receive mouse events, but we need to be
+  // able to pan correctly. To do this, we convert the events into a format that
+  // the panning code can handle. This code is very limited and only supports
+  // SingleTouchData. It also sends garbage for the identifier, radius, force
+  // and rotation angle.
+  explicit MultiTouchInput(const WidgetMouseEvent& aMouseEvent);
   void Translate(const ScreenPoint& aTranslation);
 
   WidgetTouchEvent ToWidgetTouchEvent(nsIWidget* aWidget) const;
@@ -212,9 +219,6 @@ class MultiTouchInput : public InputData {
   // fields must be reflected in its ParamTraits<>, in nsGUIEventIPC.h
   MultiTouchType mType;
   nsTArray<SingleTouchData> mTouches;
-  // The screen offset of the root widget. This can be changing along with
-  // the touch interaction, so we sstore it in the event.
-  ExternalPoint mScreenOffset;
   bool mHandledByAPZ;
 };
 
@@ -410,10 +414,24 @@ class PinchGestureInput : public InputData {
   // clang-format on
 
   // Construct a pinch gesture from a Screen point.
+  // (Technically, we should take the span values in Screen pixels as well,
+  // but that would require also storing them in Screen pixels and then
+  // converting them in TransformToLocal() like the focus point. Since pinch
+  // gesture events are processed by the root content APZC, the only transform
+  // between Screen and ParentLayer pixels should be a translation, which is
+  // irrelevant to span values, so we don't bother.)
   PinchGestureInput(PinchGestureType aType, uint32_t aTime,
-                    TimeStamp aTimeStamp, const ExternalPoint& aScreenOffset,
-                    const ScreenPoint& aFocusPoint, ScreenCoord aCurrentSpan,
-                    ScreenCoord aPreviousSpan, Modifiers aModifiers);
+                    TimeStamp aTimeStamp, const ScreenPoint& aFocusPoint,
+                    ParentLayerCoord aCurrentSpan,
+                    ParentLayerCoord aPreviousSpan, Modifiers aModifiers);
+
+  // Construct a pinch gesture from a ParentLayer point.
+  // mFocusPoint remains (0,0) unless it's set later.
+  PinchGestureInput(PinchGestureType aType, uint32_t aTime,
+                    TimeStamp aTimeStamp,
+                    const ParentLayerPoint& aLocalFocusPoint,
+                    ParentLayerCoord aCurrentSpan,
+                    ParentLayerCoord aPreviousSpan, Modifiers aModifiers);
 
   bool TransformToLocal(const ScreenToParentLayerMatrix4x4& aTransform);
 
@@ -431,21 +449,17 @@ class PinchGestureInput : public InputData {
   // store |BothFingersLifted()|.
   ScreenPoint mFocusPoint;
 
-  // The screen offset of the root widget. This can be changing along with
-  // the touch interaction, so we sstore it in the event.
-  ExternalPoint mScreenOffset;
-
   // |mFocusPoint| transformed to the local coordinates of the APZC targeted
   // by the hit. This is set and used by APZ.
   ParentLayerPoint mLocalFocusPoint;
 
   // The distance between the touches responsible for the pinch gesture.
-  ScreenCoord mCurrentSpan;
+  ParentLayerCoord mCurrentSpan;
 
   // The previous |mCurrentSpan| in the PinchGestureInput preceding this one.
   // This is only really relevant during a PINCHGESTURE_SCALE because when it is
   // of this type then there must have been a history of spans.
-  ScreenCoord mPreviousSpan;
+  ParentLayerCoord mPreviousSpan;
 
   // A special value for mFocusPoint used in PINCHGESTURE_END events to
   // indicate that both fingers have been lifted. If only one finger has
