@@ -353,36 +353,12 @@ ContentPrincipal::GetDomain(nsIURI** aDomain) {
   return NS_OK;
 }
 
-namespace {
-
-struct CompartmentsWithPrincipal : public js::CompartmentFilter {
-  nsIPrincipal* principal;
-
-  explicit CompartmentsWithPrincipal(nsIPrincipal* p) : principal(p) {}
-
-  virtual bool match(JS::Compartment* c) const override {
-    return xpc::GetCompartmentPrincipal(c) == principal;
-  }
-};
-
-}  // namespace
-
 NS_IMETHODIMP
 ContentPrincipal::SetDomain(nsIURI* aDomain) {
   MOZ_ASSERT(aDomain);
 
   mDomain = aDomain;
   SetHasExplicitDomain();
-
-  // Recompute all wrappers between compartments using this principal and other
-  // non-chrome compartments.
-  AutoSafeJSContext cx;
-  bool success = js::RecomputeWrappers(cx, js::ContentCompartmentsOnly(),
-                                       CompartmentsWithPrincipal(this));
-  NS_ENSURE_TRUE(success, NS_ERROR_FAILURE);
-  success = js::RecomputeWrappers(cx, CompartmentsWithPrincipal(this),
-                                  js::ContentCompartmentsOnly());
-  NS_ENSURE_TRUE(success, NS_ERROR_FAILURE);
 
   // Set the changed-document-domain flag on compartments containing realms
   // using this principal.
@@ -392,6 +368,7 @@ ContentPrincipal::SetDomain(nsIURI* aDomain) {
   };
   JSPrincipals* principals =
       nsJSPrincipals::get(static_cast<nsIPrincipal*>(this));
+  AutoSafeJSContext cx;
   JS::IterateRealmsWithPrincipals(cx, principals, nullptr, cb);
 
   return NS_OK;
