@@ -57,68 +57,29 @@ BreakpointClient.prototype = {
   }),
 
   /**
-   * Determines if this breakpoint has a condition
-   */
-  hasCondition: function() {
-    const root = this._client.mainRoot;
-    // XXX bug 990137: We will remove support for client-side handling of
-    // conditional breakpoints
-    if (root.traits.conditionalBreakpoints) {
-      return "condition" in this;
-    }
-    return "conditionalExpression" in this;
-  },
-
-  /**
-   * Get the condition of this breakpoint. Currently we have to
-   * support locally emulated conditional breakpoints until the
-   * debugger servers are updated (see bug 990137). We used a
-   * different property when moving it server-side to ensure that we
-   * are testing the right code.
-   */
-  getCondition: function() {
-    const root = this._client.mainRoot;
-    if (root.traits.conditionalBreakpoints) {
-      return this.condition;
-    }
-    return this.conditionalExpression;
-  },
-
-  /**
    * Set the condition of this breakpoint
    */
   setCondition: function(gThreadClient, condition) {
-    const root = this._client.mainRoot;
     const deferred = promise.defer();
 
-    if (root.traits.conditionalBreakpoints) {
-      const info = {
-        line: this.location.line,
-        column: this.location.column,
-        condition: condition,
-      };
+    const info = {
+      line: this.location.line,
+      column: this.location.column,
+      condition: condition,
+    };
 
-      // Remove the current breakpoint and add a new one with the
-      // condition.
-      this.remove(response => {
-        if (response && response.error) {
-          deferred.reject(response);
-          return;
-        }
-
-        deferred.resolve(this.source.setBreakpoint(info).then(([, newBreakpoint]) => {
-          return newBreakpoint;
-        }));
-      });
-    } else {
-      // The property shouldn't even exist if the condition is blank
-      if (condition === "") {
-        delete this.conditionalExpression;
-      } else {
-        this.conditionalExpression = condition;
+    // Remove the current breakpoint and add a new one with the
+    // condition.
+    this.remove(response => {
+      if (response && response.error) {
+        deferred.reject(response);
+        return;
       }
-      deferred.resolve(this);
-    }
+
+      deferred.resolve(this.source.setBreakpoint(info).then(([, newBreakpoint]) => {
+        return newBreakpoint;
+      }));
+    });
 
     return deferred.promise;
   },
