@@ -1,7 +1,8 @@
 "use strict";
 
-const TEST_URL_PATH_CC = "://example.org/browser/browser/extensions/formautofill/test/browser/autocomplete_creditcard_basic.html";
-const TEST_URL_PATH = "://example.org/browser/browser/extensions/formautofill/test/browser/autocomplete_basic.html";
+// Remove the scheme from the URLs so we can switch between http: and https: later.
+const TEST_URL_PATH_CC = "://example.org" + HTTP_TEST_PATH + "creditCard/autocomplete_creditcard_basic.html";
+const TEST_URL_PATH = "://example.org" + HTTP_TEST_PATH + "autocomplete_basic.html";
 
 add_task(async function setup_storage() {
   await saveAddress(TEST_ADDRESS_1);

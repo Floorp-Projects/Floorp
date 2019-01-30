@@ -20,9 +20,12 @@ const MANAGE_ADDRESSES_DIALOG_URL = "chrome://formautofill/content/manageAddress
 const MANAGE_CREDIT_CARDS_DIALOG_URL = "chrome://formautofill/content/manageCreditCards.xhtml";
 const EDIT_ADDRESS_DIALOG_URL = "chrome://formautofill/content/editAddress.xhtml";
 const EDIT_CREDIT_CARD_DIALOG_URL = "chrome://formautofill/content/editCreditCard.xhtml";
-const BASE_URL = "http://mochi.test:8888/browser/browser/extensions/formautofill/test/browser/";
-const FORM_URL = "http://mochi.test:8888/browser/browser/extensions/formautofill/test/browser/autocomplete_basic.html";
-const CREDITCARD_FORM_URL = "https://example.org/browser/browser/extensions/formautofill/test/browser/autocomplete_creditcard_basic.html";
+
+const HTTP_TEST_PATH = "/browser/browser/extensions/formautofill/test/browser/";
+const BASE_URL = "http://mochi.test:8888" + HTTP_TEST_PATH;
+const FORM_URL = BASE_URL + "autocomplete_basic.html";
+const CREDITCARD_FORM_URL = "https://example.org" + HTTP_TEST_PATH + "creditCard/autocomplete_creditcard_basic.html";
+
 const FTU_PREF = "extensions.formautofill.firstTimeUse";
 const CREDITCARDS_USED_STATUS_PREF = "extensions.formautofill.creditCards.used";
 const ENABLED_AUTOFILL_ADDRESSES_PREF = "extensions.formautofill.addresses.enabled";
@@ -331,9 +334,11 @@ async function removeAllRecords() {
     await removeAddresses(addresses.map(address => address.guid));
   }
 
-  let creditCards = await getCreditCards();
-  if (creditCards.length) {
-    await removeCreditCards(creditCards.map(cc => cc.guid));
+  if (Services.prefs.getBoolPref(AUTOFILL_CREDITCARDS_AVAILABLE_PREF)) {
+    let creditCards = await getCreditCards();
+    if (creditCards.length) {
+      await removeCreditCards(creditCards.map(cc => cc.guid));
+    }
   }
 }
 
