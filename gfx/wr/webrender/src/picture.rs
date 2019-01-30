@@ -102,7 +102,7 @@ pub struct TileIndex(pub usize);
 pub const TILE_SIZE_WIDTH: i32 = 1024;
 pub const TILE_SIZE_HEIGHT: i32 = 256;
 pub const TILE_SIZE_TESTING: i32 = 64;
-const FRAMES_BEFORE_CACHING: usize = 2;
+pub const FRAMES_BEFORE_PICTURE_CACHING: usize = 2;
 const MAX_DIRTY_RECTS: usize = 3;
 
 /// The maximum size per axis of a surface,
@@ -1475,7 +1475,7 @@ impl TileCache {
                 // Only cache tiles that have had the same content for at least two
                 // frames. This skips caching on pages / benchmarks that are changing
                 // every frame, which is wasteful.
-                if tile.same_frames > FRAMES_BEFORE_CACHING {
+                if tile.same_frames >= FRAMES_BEFORE_PICTURE_CACHING {
                     // Ensure that this texture is allocated.
                     resource_cache.texture_cache.update(
                         &mut tile.handle,
