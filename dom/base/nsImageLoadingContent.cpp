@@ -51,6 +51,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ImageTracker.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/net/UrlClassifierFeatureFactory.h"
 #include "mozilla/Preferences.h"
 
 #ifdef LoadImage
@@ -184,16 +185,18 @@ nsImageLoadingContent::Notify(imgIRequest* aRequest, int32_t aType,
       nsresult errorCode = NS_OK;
       aRequest->GetImageErrorCode(&errorCode);
 
-      /* Handle image not loading error because source was a tracking URL.
+      /* Handle image not loading error because source was a tracking URL (or
+       * fingerprinting, cryptomining, etc).
        * We make a note of this image node by including it in a dedicated
        * array of blocked tracking nodes under its parent document.
        */
-      if (errorCode == NS_ERROR_TRACKING_URI) {
+      if (net::UrlClassifierFeatureFactory::IsClassifierBlockingErrorCode(
+              errorCode)) {
         nsCOMPtr<nsIContent> thisNode =
             do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
 
         Document* doc = GetOurOwnerDoc();
-        doc->AddBlockedTrackingNode(thisNode);
+        doc->AddBlockedNodeByClassifier(thisNode);
       }
     }
     nsresult status =

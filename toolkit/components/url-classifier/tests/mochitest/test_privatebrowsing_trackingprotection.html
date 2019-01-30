@@ -72,19 +72,19 @@ function checkLoads(aWindow, aBlocked) {
   var style = win.document.defaultView.getComputedStyle(elt);
   isnot(style.visibility, aBlocked ? "hidden" : "", "Should not load tracking css");
 
-  is(win.document.blockedTrackingNodeCount, aBlocked ? badids.length : 0, "Should identify all tracking elements");
+  is(win.document.blockedNodeByClassifierCount, aBlocked ? badids.length : 0, "Should identify all tracking elements");
 
-  var blockedTrackingNodes = win.document.blockedTrackingNodes;
+  var blockedNodes = win.document.blockedNodesByClassifier;
 
-  // Make sure that every node in blockedTrackingNodes exists in the tree
+  // Make sure that every node in blockedNodes exists in the tree
   // (that may not always be the case but do not expect any nodes to disappear
   // from the tree here)
   var allNodeMatch = true;
-  for (let i = 0; i < blockedTrackingNodes.length; i++) {
+  for (let i = 0; i < blockedNodes.length; i++) {
     let nodeMatch = false;
     for (let j = 0; j < badids.length && !nodeMatch; j++) {
       nodeMatch = nodeMatch ||
-        (blockedTrackingNodes[i] == win.document.getElementById(badids[j]));
+        (blockedNodes[i] == win.document.getElementById(badids[j]));
     }
 
     allNodeMatch = allNodeMatch && nodeMatch;
@@ -92,14 +92,14 @@ function checkLoads(aWindow, aBlocked) {
   is(allNodeMatch, true, "All annotated nodes are expected in the tree");
 
   // Make sure that every node with a badid (see badids) is found in the
-  // blockedTrackingNodes. This tells us if we are neglecting to annotate
+  // blockedNodes. This tells us if we are neglecting to annotate
   // some nodes
   allNodeMatch = true;
   for (let j = 0; j < badids.length; j++) {
     let nodeMatch = false;
-    for (let i = 0; i < blockedTrackingNodes.length && !nodeMatch; i++) {
+    for (let i = 0; i < blockedNodes.length && !nodeMatch; i++) {
       nodeMatch = nodeMatch ||
-        (blockedTrackingNodes[i] == win.document.getElementById(badids[j]));
+        (blockedNodes[i] == win.document.getElementById(badids[j]));
     }
 
     allNodeMatch = allNodeMatch && nodeMatch;

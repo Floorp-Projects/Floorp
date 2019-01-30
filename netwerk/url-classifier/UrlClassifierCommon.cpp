@@ -8,6 +8,7 @@
 
 #include "mozilla/AntiTrackingCommon.h"
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/net/UrlClassifierFeatureFactory.h"
 #include "mozilla/StaticPrefs.h"
 #include "mozIThirdPartyUtil.h"
 #include "nsContentUtils.h"
@@ -224,7 +225,7 @@ LazyLogModule UrlClassifierCommon::sLog("nsChannelClassifier");
   NS_ENSURE_TRUE(doc, NS_OK);
 
   unsigned state;
-  if (aErrorCode == NS_ERROR_TRACKING_URI) {
+  if (UrlClassifierFeatureFactory::IsClassifierBlockingErrorCode(aErrorCode)) {
     state = nsIWebProgressListener::STATE_BLOCKED_TRACKING_CONTENT;
   } else {
     state = nsIWebProgressListener::STATE_BLOCKED_UNSAFE_CONTENT;
@@ -237,12 +238,16 @@ LazyLogModule UrlClassifierCommon::sLog("nsChannelClassifier");
   channel->GetURI(getter_AddRefs(uri));
   NS_ConvertUTF8toUTF16 spec(uri->GetSpecOrDefault());
   const char16_t* params[] = {spec.get()};
-  const char* message = (aErrorCode == NS_ERROR_TRACKING_URI)
-                            ? "TrackerUriBlocked"
-                            : "UnsafeUriBlocked";
-  nsCString category = (aErrorCode == NS_ERROR_TRACKING_URI)
-                           ? NS_LITERAL_CSTRING("Tracking Protection")
-                           : NS_LITERAL_CSTRING("Safe Browsing");
+  const char* message;
+  nsCString category;
+
+  if (UrlClassifierFeatureFactory::IsClassifierBlockingErrorCode(aErrorCode)) {
+    message = UrlClassifierFeatureFactory::
+        ClassifierBlockingErrorCodeToConsoleMessage(aErrorCode, category);
+  } else {
+    message = "UnsafeUriBlocked";
+    category = NS_LITERAL_CSTRING("Safe Browsing");
+  }
 
   nsContentUtils::ReportToConsole(nsIScriptError::warningFlag, category, doc,
                                   nsContentUtils::eNECKO_PROPERTIES, message,
