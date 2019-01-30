@@ -29,8 +29,6 @@ class nsFakeSynthServices : public nsIObserver {
 
   static already_AddRefed<nsFakeSynthServices> GetInstanceForService();
 
-  static void Shutdown();
-
  private:
   virtual ~nsFakeSynthServices() = default;
 
