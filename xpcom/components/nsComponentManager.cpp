@@ -531,6 +531,8 @@ nsresult nsComponentManagerImpl::Init() {
     // used, and before any calls are made into the JS engine.
     nsLayoutModuleInitialize();
 
+    mJSLoaderReady = true;
+
     // The overall order in which chrome.manifests are expected to be treated
     // is the following:
     // - greDir

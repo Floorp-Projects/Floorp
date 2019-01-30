@@ -9,8 +9,11 @@
 #include "mozilla/PerfectHash.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/dom/ScriptSettings.h"
+#include "mozJSComponentLoader.h"
 #include "nsCOMPtr.h"
 #include "nsComponentManager.h"
+#include "nsContentUtils.h"
 #include "nsIFactory.h"
 #include "nsISupports.h"
 #include "nsString.h"
@@ -27,6 +30,9 @@
 //# @decls@
 
 namespace mozilla {
+
+using dom::AutoJSAPI;
+
 namespace xpcom {
 
 static constexpr uint32_t kNoContractID = 0xffffffff;
@@ -80,6 +86,37 @@ nsCString ContractEntry::ContractID() const {
 
 bool ContractEntry::Matches(const nsACString& aContractID) const {
   return aContractID == ContractID() && Module().Active();
+}
+
+
+static nsresult ConstructJSMComponent(const nsACString& aURI,
+                                      const char* aConstructor,
+                                      nsISupports** aResult) {
+  if (!nsComponentManagerImpl::JSLoaderReady()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  AutoJSAPI jsapi;
+  MOZ_ALWAYS_TRUE(jsapi.Init(xpc::PrivilegedJunkScope()));
+  JSContext* cx = jsapi.cx();
+
+  JS::RootedObject global(cx);
+  JS::RootedObject exports(cx);
+  MOZ_TRY(mozJSComponentLoader::Get()->Import(cx, aURI, &global, &exports));
+
+  JS::RootedValue ctor(cx);
+  if (!JS_GetProperty(cx, exports, aConstructor, &ctor) ||
+      !ctor.isObject()) {
+    return NS_ERROR_XPC_JSOBJECT_HAS_NO_FUNCTION_NAMED;
+  }
+
+  JS::RootedObject inst(cx);
+  if (!JS::Construct(cx, ctor, JS::HandleValueArray::empty(), &inst)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return nsContentUtils::XPConnect()->WrapJS(cx, inst, NS_GET_IID(nsISupports),
+                                             (void**)aResult);
 }
 
 
