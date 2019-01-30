@@ -41,7 +41,10 @@ BROWSER_CHROME_MANIFESTS += [
 
 XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
 
-MOCHITEST_MANIFESTS += ['test/mochitest/mochitest.ini']
+MOCHITEST_MANIFESTS += [
+    'test/mochitest/creditCard/mochitest.ini',
+    'test/mochitest/mochitest.ini',
+]
 
 JAR_MANIFESTS += ['jar.mn']
 
