@@ -226,8 +226,8 @@ export type TabTarget = {
     evaluateJSAsync: (
       script: Script,
       func: Function,
-      params?: { frameActor?: FrameId }
-    ) => void,
+      params?: { frameActor: ?FrameId }
+    ) => Promise<{ result: ?Object }>,
     autocomplete: (
       input: string,
       cursor: number,
