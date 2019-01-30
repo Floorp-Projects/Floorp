@@ -38,7 +38,6 @@ function AddonLocalizationConverter() {
 }
 
 AddonLocalizationConverter.prototype = {
-  classID: Components.ID("{ded150e3-c92e-4077-a396-0dba9953e39f}"),
   QueryInterface: ChromeUtils.generateQI([Ci.nsIStreamConverter]),
 
   FROM_TYPE: "application/vnd.mozilla.webext.unlocalized",
@@ -121,7 +120,6 @@ function HttpIndexViewer() {
 }
 
 HttpIndexViewer.prototype = {
-  classID: Components.ID("{742ad274-34c5-43d1-a8b7-293eaf8962d6}"),
   QueryInterface: ChromeUtils.generateQI([Ci.nsIDocumentLoaderFactory]),
 
   createInstance(aCommand, aChannel, aLoadGroup, aContentType, aContainer,
@@ -144,5 +142,4 @@ HttpIndexViewer.prototype = {
   },
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([AddonLocalizationConverter,
-                                                     HttpIndexViewer]);
+var EXPORTED_SYMBOLS = ["AddonLocalizationConverter", "HttpIndexViewer"];
