@@ -5,11 +5,6 @@
 
 "use strict";
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-
-const WELLKNOWNOPPORTUNISTICUTILS_CONTRACTID = "@mozilla.org/network/well-known-opportunistic-utils;1";
-const WELLKNOWNOPPORTUNISTICUTILS_CID = Components.ID("{b4f96c89-5238-450c-8bda-e12c26f1d150}");
-
 function WellKnownOpportunisticUtils() {
   this.valid = false;
   this.mixed = false;
@@ -17,9 +12,6 @@ function WellKnownOpportunisticUtils() {
 }
 
 WellKnownOpportunisticUtils.prototype = {
-  classID: WELLKNOWNOPPORTUNISTICUTILS_CID,
-  contractID: WELLKNOWNOPPORTUNISTICUTILS_CONTRACTID,
-  classDescription: "Well-Known Opportunistic Utils",
   QueryInterface: ChromeUtils.generateQI([Ci.nsIWellKnownOpportunisticUtils]),
 
   verify(aJSON, aOrigin, aAlternatePort) {
@@ -38,4 +30,4 @@ WellKnownOpportunisticUtils.prototype = {
   },
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([WellKnownOpportunisticUtils]);
+var EXPORTED_SYMBOLS = ["WellKnownOpportunisticUtils"];
