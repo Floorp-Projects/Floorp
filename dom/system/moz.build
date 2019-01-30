@@ -79,9 +79,12 @@ UNIFIED_SOURCES += [
     'OSFileConstants.cpp',
 ]
 
-EXTRA_COMPONENTS += [
-    'NetworkGeolocationProvider.js',
-    'NetworkGeolocationProvider.manifest',
+EXTRA_JS_MODULES += [
+    'NetworkGeolocationProvider.jsm',
+]
+
+XPCOM_MANIFESTS += [
+    'components.conf',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')

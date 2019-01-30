@@ -123,8 +123,6 @@
 @BINPATH@/components/toolkitsearch.manifest
 @BINPATH@/components/TooltipTextProvider.js
 @BINPATH@/components/TooltipTextProvider.manifest
-@BINPATH@/components/NetworkGeolocationProvider.manifest
-@BINPATH@/components/NetworkGeolocationProvider.js
 
 @BINPATH@/components/extensions.manifest
 
