@@ -289,10 +289,6 @@ class TestUrlFinder(unittest.TestCase):
                     'path1',
                     None
                 ],
-                'dist/bin/browser/components/nsBrowserGlue.js': [
-                    'path2',
-                    None
-                ],
                 'dist/bin/browser/features/firefox@getpocket.com/bootstrap.js': [
                     'path4',
                     None
@@ -334,7 +330,6 @@ class TestUrlFinder(unittest.TestCase):
 
         paths = [
             ('jar:file:///home/worker/workspace/build/application/' + app_name + '/' + omnijar_name + '!/components/MainProcessSingleton.js', 'path1'),
-            ('jar:file:///home/worker/workspace/build/application/' + app_name + '/browser/' + omnijar_name + '!/components/nsBrowserGlue.js', 'path2'),
             ('jar:file:///home/worker/workspace/build/application/' + app_name + '/browser/features/firefox@getpocket.com.xpi!/bootstrap.js', 'path4'),
         ]
 

@@ -45,7 +45,8 @@ let HybridContentTelemetry = {
 
   /**
    * This is the handler for the async "HybridContentTelemetry:onTelemetryMessage"
-   * message. This function is getting called by the listener in nsBrowserGlue.js.
+   * message. This function is getting called by the listener in
+   * BrowserGlue.jsm.
    */
   onTelemetryMessage(aMessage, aData) {
     if (!this._hybridContentEnabled) {

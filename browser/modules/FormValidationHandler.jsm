@@ -32,7 +32,7 @@ var FormValidationHandler =
    * Events
    */
 
-  // Listeners are added in nsBrowserGlue.js
+  // Listeners are added in BrowserGlue.jsm
   receiveMessage(aMessage) {
     let window = aMessage.target.ownerGlobal;
     let json = aMessage.json;
