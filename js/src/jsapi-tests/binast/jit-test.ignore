@@ -1722,6 +1722,7 @@ parser/bug-896126.js
 basic/bug884920.js
 basic/functionRedeclGlobalConst.js
 ion/bug1214013.js
+xdr/bigint.js
 
 # slow
 atomics/inline-add.js
