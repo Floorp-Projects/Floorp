@@ -43,6 +43,10 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
         'nsExternalURLHandlerService.h',
     ]]
 
+EXPORTS += [
+    'nsLocalHandlerApp.h',
+]
+
 EXPORTS.mozilla.dom += [
     'ExternalHelperAppChild.h',
     'ExternalHelperAppParent.h',

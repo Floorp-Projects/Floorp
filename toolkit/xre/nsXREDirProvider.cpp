@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsAppRunner.h"
-#include "nsToolkitCompsCID.h"
 #include "nsXREDirProvider.h"
 
 #include "jsapi.h"
@@ -38,6 +37,7 @@
 #include "mozilla/dom/ScriptSettings.h"
 
 #include "mozilla/AutoRestore.h"
+#include "mozilla/Components.h"
 #include "mozilla/Services.h"
 #include "mozilla/Omnijar.h"
 #include "mozilla/Preferences.h"
@@ -962,7 +962,8 @@ nsXREDirProvider::DoStartup() {
     MOZ_ASSERT(mPrefsInitialized);
 
     bool safeModeNecessary = false;
-    nsCOMPtr<nsIAppStartup> appStartup(do_GetService(NS_APPSTARTUP_CONTRACTID));
+    nsCOMPtr<nsIAppStartup> appStartup(
+        mozilla::components::AppStartup::Service());
     if (appStartup) {
       rv = appStartup->TrackStartupCrashBegin(&safeModeNecessary);
       if (NS_FAILED(rv) && rv != NS_ERROR_NOT_AVAILABLE)

@@ -7,9 +7,9 @@
 #include "nsDOMOfflineResourceList.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsError.h"
+#include "mozilla/Components.h"
 #include "mozilla/dom/DOMStringList.h"
 #include "nsIPrefetchService.h"
-#include "nsCPrefetchService.h"
 #include "nsMemory.h"
 #include "nsNetUtil.h"
 #include "nsNetCID.h"
@@ -120,8 +120,8 @@ nsresult nsDOMOfflineResourceList::Init() {
 
     // Check for in-progress cache updates
     nsCOMPtr<nsIOfflineCacheUpdateService> cacheUpdateService =
-        do_GetService(NS_OFFLINECACHEUPDATESERVICE_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
+        components::OfflineCacheUpdate::Service();
+    NS_ENSURE_TRUE(cacheUpdateService, NS_ERROR_UNEXPECTED);
 
     uint32_t numUpdates;
     rv = cacheUpdateService->GetNumUpdates(&numUpdates);
@@ -497,9 +497,9 @@ void nsDOMOfflineResourceList::Update(ErrorResult& aRv) {
   }
 
   nsCOMPtr<nsIOfflineCacheUpdateService> updateService =
-      do_GetService(NS_OFFLINECACHEUPDATESERVICE_CONTRACTID, &rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    aRv.Throw(rv);
+      components::OfflineCacheUpdate::Service();
+  if (NS_WARN_IF(!updateService)) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
     return;
   }
 

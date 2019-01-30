@@ -25,7 +25,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=574663
 function waitForPaint(win, utils, callback) {
   win.document.documentElement.getBoundingClientRect();
   if (!utils.isMozAfterPaintPending) {
-    callback();
+    win.requestAnimationFrame(function() {
+      setTimeout(callback);
+    });
     return;
   }
 

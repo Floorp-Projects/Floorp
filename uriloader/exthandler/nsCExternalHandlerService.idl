@@ -14,10 +14,6 @@ nsIExternalHelperAppService
 
 %{ C++
 
-/* A7F800E0-4306-11d4-98D0-001083010E9B */
-#define NS_EXTERNALHELPERAPPSERVICE_CID   \
- { 0xa7f800e0, 0x4306, 0x11d4, { 0x98, 0xd0, 0x0, 0x10, 0x83, 0x1, 0xe, 0x9b } }
-
 #define NS_EXTERNALHELPERAPPSERVICE_CONTRACTID \
 "@mozilla.org/uriloader/external-helper-app-service;1"
 
@@ -30,29 +26,8 @@ nsIExternalHelperAppService
 #define NS_MIMESERVICE_CONTRACTID \
 "@mozilla.org/mime;1"
 
-#define NS_EXTERNALPROTOCOLHANDLER_CID	\
-{ 0xbd6390c8, 0xfbea, 0x11d4, {0x98, 0xf6, 0x0, 0x10, 0x83, 0x1, 0xe, 0x9b } }
-
-/* 9fa83ce7-d0ab-4ed3-938e-afafee435670 */
-#define NS_BLOCKEDEXTERNALPROTOCOLHANDLER_CID	\
-{ 0x9fa83ce7, 0xd0ab, 0x4ed3, {0x93, 0x8e, 0xaf, 0xaf, 0xee, 0x43, 0x56, 0x70 } }
-
-/* bc0017e3-2438-47be-a567-41db58f17627 */
-#define NS_LOCALHANDLERAPP_CID \
-{ 0xbc0017e3, 0x2438, 0x47be, {0xa5, 0x67, 0x41, 0xdb, 0x58, 0xf1, 0x76, 0x27 } }
-
-/*6c3c274b-4cbf-4bb5-a635-05ad2cbb6535*/
-#define NS_DBUSHANDLERAPP_CID \
-{ 0x6c3c274b, 0x4cbf, 0x4bb5, {0xa6, 0x35, 0x05, 0xad, 0x2c, 0xbb, 0x65, 0x35 } }
-
-#define NS_DBUSHANDLERAPP_CONTRACTID \
-"@mozilla.org/uriloader/dbus-handler-app;1"
-
 #define NS_LOCALHANDLERAPP_CONTRACTID \
 "@mozilla.org/uriloader/local-handler-app;1"
-
-#define NS_WEBHANDLERAPP_CONTRACTID \
-"@mozilla.org/uriloader/web-handler-app;1"
 
 %}
 

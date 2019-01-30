@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <dbus/dbus.h>
+#include "mozilla/Components.h"
 #include "mozilla/DBusHelpers.h"
 #include "nsDBusHandlerApp.h"
 #include "nsIURI.h"
@@ -12,9 +13,12 @@
 #include "nsCOMPtr.h"
 #include "nsCExternalHandlerService.h"
 
+using namespace mozilla;
+
 // XXX why does nsMIMEInfoImpl have a threadsafe nsISupports?  do we need one
 // here too?
-NS_IMPL_CLASSINFO(nsDBusHandlerApp, nullptr, 0, NS_DBUSHANDLERAPP_CID)
+NS_IMPL_CLASSINFO(nsDBusHandlerApp, nullptr, 0,
+                  components::DBusHandlerApp::CID())
 NS_IMPL_ISUPPORTS_CI(nsDBusHandlerApp, nsIDBusHandlerApp, nsIHandlerApp)
 
 ////////////////////////////////////////////////////////////////////////////////
