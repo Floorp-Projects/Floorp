@@ -207,8 +207,6 @@
 @RESPATH@/components/WebVTTParserWrapper.js
 @RESPATH@/components/nsHelperAppDlg.manifest
 @RESPATH@/components/nsHelperAppDlg.js
-@RESPATH@/components/NetworkGeolocationProvider.manifest
-@RESPATH@/components/NetworkGeolocationProvider.js
 @RESPATH@/components/extensions.manifest
 #ifdef MOZ_UPDATER
 @RESPATH@/components/nsUpdateService.manifest
