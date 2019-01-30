@@ -2676,6 +2676,12 @@ window._gBrowser = {
     if (!shouldPrompt)
       return true;
 
+    const maxTabsUndo = Services.prefs.getIntPref("browser.sessionstore.max_tabs_undo");
+    if (aCloseTabs != this.closingTabsEnum.ALL &&
+        tabsToClose <= maxTabsUndo) {
+      return true;
+    }
+
     var ps = Services.prompt;
 
     // default to true: if it were false, we wouldn't get this far
