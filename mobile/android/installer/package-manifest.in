@@ -151,8 +151,6 @@
 @BINPATH@/components/nsUpdateTimerManager.js
 
 @BINPATH@/components/ProcessSingleton.manifest
-@BINPATH@/components/nsURLFormatter.manifest
-@BINPATH@/components/nsURLFormatter.js
 @BINPATH@/components/ContentPrefService2.manifest
 @BINPATH@/components/ContentPrefService2.js
 @BINPATH@/components/HandlerService.manifest
