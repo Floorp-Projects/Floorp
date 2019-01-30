@@ -61,7 +61,7 @@ UpdateServiceStub.prototype = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([UpdateServiceStub]);
+var EXPORTED_SYMBOLS = ["UpdateServiceStub"];
 
 /**
  * This function should be called when there are files in the old update
