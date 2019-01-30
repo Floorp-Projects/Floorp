@@ -8,7 +8,6 @@
 // open the new about:debugging when going to about:debugging-new, without having to flip
 // the preference. This allows running both versions of about:debugging side by side to
 // compare them.
-const { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const { nsIAboutModule } = Ci;
@@ -38,6 +37,4 @@ AboutDebuggingNew.prototype = {
   },
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([
-  AboutDebuggingNew,
-]);
+var EXPORTED_SYMBOLS = ["AboutDebuggingNew"];
