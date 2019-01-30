@@ -1370,33 +1370,33 @@ class Document : public nsINode,
   mozilla::Maybe<mozilla::dom::ClientState> GetClientState() const;
   mozilla::Maybe<mozilla::dom::ServiceWorkerDescriptor> GetController() const;
 
-  // Returns the size of the mBlockedTrackingNodes array.
+  // Returns the size of the mBlockedNodesByClassifier array.
   //
-  // This array contains nodes that have been blocked to prevent
-  // user tracking. They most likely have had their nsIChannel
-  // canceled by the URL classifier (Safebrowsing).
+  // This array contains nodes that have been blocked to prevent user tracking,
+  // fingerprinting, cryptomining, etc. They most likely have had their
+  // nsIChannel canceled by the URL classifier (Safebrowsing).
   //
-  // A script can subsequently use GetBlockedTrackingNodes()
+  // A script can subsequently use GetBlockedNodesByClassifier()
   // to get a list of references to these nodes.
   //
   // Note:
-  // This expresses how many tracking nodes have been blocked for this
-  // document since its beginning, not how many of them are still around
-  // in the DOM tree. Weak references to blocked nodes are added in the
-  // mBlockedTrackingNodesArray but they are not removed when those nodes
-  // are removed from the tree or even garbage collected.
-  long BlockedTrackingNodeCount() const {
-    return mBlockedTrackingNodes.Length();
+  // This expresses how many tracking nodes have been blocked for this document
+  // since its beginning, not how many of them are still around in the DOM tree.
+  // Weak references to blocked nodes are added in the mBlockedNodesByClassifier
+  // array but they are not removed when those nodes are removed from the tree
+  // or even garbage collected.
+  long BlockedNodeByClassifierCount() const {
+    return mBlockedNodesByClassifier.Length();
   }
 
   //
-  // Returns strong references to mBlockedTrackingNodes. (Document.h)
+  // Returns strong references to mBlockedNodesByClassifier. (Document.h)
   //
   // This array contains nodes that have been blocked to prevent
   // user tracking. They most likely have had their nsIChannel
   // canceled by the URL classifier (Safebrowsing).
   //
-  already_AddRefed<nsSimpleContentList> BlockedTrackingNodes() const;
+  already_AddRefed<nsSimpleContentList> BlockedNodesByClassifier() const;
 
   // Helper method that returns true if the document has storage-access sandbox
   // flag.
@@ -3248,10 +3248,10 @@ class Document : public nsINode,
 
   /*
    * Given a node, get a weak reference to it and append that reference to
-   * mBlockedTrackingNodes. Can be used later on to look up a node in it.
+   * mBlockedNodesByClassifier. Can be used later on to look up a node in it.
    * (e.g., by the UI)
    */
-  void AddBlockedTrackingNode(nsINode* node) {
+  void AddBlockedNodeByClassifier(nsINode* node) {
     if (!node) {
       return;
     }
@@ -3259,7 +3259,7 @@ class Document : public nsINode,
     nsWeakPtr weakNode = do_GetWeakReference(node);
 
     if (weakNode) {
-      mBlockedTrackingNodes.AppendElement(weakNode);
+      mBlockedNodesByClassifier.AppendElement(weakNode);
     }
   }
 
@@ -4248,7 +4248,7 @@ class Document : public nsINode,
   // classifier. (Safebrowsing)
   //
   // Weak nsINode pointers are used to allow nodes to disappear.
-  nsTArray<nsWeakPtr> mBlockedTrackingNodes;
+  nsTArray<nsWeakPtr> mBlockedNodesByClassifier;
 
   // Weak reference to mScriptGlobalObject QI:d to nsPIDOMWindow,
   // updated on every set of mScriptGlobalObject.

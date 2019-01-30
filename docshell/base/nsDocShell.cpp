@@ -62,6 +62,7 @@
 #include "mozilla/dom/LoadURIOptionsBinding.h"
 
 #include "mozilla/net/ReferrerPolicy.h"
+#include "mozilla/net/UrlClassifierFeatureFactory.h"
 
 #include "nsIApplicationCacheChannel.h"
 #include "nsIApplicationCacheContainer.h"
@@ -6699,7 +6700,8 @@ nsresult nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
     // a tracking URL. We make a note of this iframe node by including
     // it in a dedicated array of blocked tracking nodes under its parent
     // document. (document of parent window of blocked document)
-    if (isTopFrame == false && aStatus == NS_ERROR_TRACKING_URI) {
+    if (!isTopFrame &&
+        UrlClassifierFeatureFactory::IsClassifierBlockingErrorCode(aStatus)) {
       // frameElement is our nsIContent to be annotated
       RefPtr<Element> frameElement;
       nsPIDOMWindowOuter* thisWindow = GetWindow();
@@ -6725,7 +6727,7 @@ nsresult nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
         return NS_OK;
       }
 
-      parentDoc->AddBlockedTrackingNode(frameElement);
+      parentDoc->AddBlockedNodeByClassifier(frameElement);
 
       return NS_OK;
     }
