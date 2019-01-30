@@ -222,8 +222,7 @@ ThirdPartyUtil::IsThirdPartyChannel(nsIChannel* aChannel, nsIURI* aURI,
             return rv;
           }
         } else {
-          NS_WARNING(
-              "Found a principal with no URI, assuming third-party request");
+          // Found a principal with no URI, assuming third-party request
           parentIsThird = true;
         }
       }
