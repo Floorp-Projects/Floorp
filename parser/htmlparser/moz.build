@@ -46,6 +46,10 @@ UNIFIED_SOURCES += [
     'nsScannerString.cpp',
 ]
 
+XPCOM_MANIFESTS += [
+    'components.conf',
+]
+
 FINAL_LIBRARY = 'xul'
 
 if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
