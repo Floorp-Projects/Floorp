@@ -278,7 +278,7 @@ It doesn't mean you need to enforce the immutability using a library like
 #### What it means
 It means that once a structure exists, you don't mutate it.
 
-**Everytime some data changes, the object reference must change as well**. This
+**Every time some data changes, the object reference must change as well**. This
 means a new object or a new array needs to be created. This gives the nice
 reverse guarantee: if the object reference has changed, the data has changed.
 

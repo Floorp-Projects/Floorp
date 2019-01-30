@@ -45,7 +45,7 @@ bookmarks a user has (including default bookmarks). Note that is value is only u
 a user restarts the browser.
 
 `.getAddonsInfo()`:( func) An async function that resolves with an object `{isFullData: (bool), addons: (obj)}`.
-Note that at startup, we are sometimes unable to provide full data due to performance constraits (`.isFullData` will be `false`).
+Note that at startup, we are sometimes unable to provide full data due to performance constraints (`.isFullData` will be `false`).
 E.g.
 
 ```js
