@@ -16,7 +16,7 @@ If any of the above conditions is not satisfied, a 32-bit build is installed.
 
 Scope
 -----
-We support creating the installation in either a machine or a per-user scope. This affects whether application files, shortcuts, and registry entires are created in locations that are accessible to any user on the machine or locations that are specific to a particular user. Even in the full installer there is no UI for configuring which scope is selected; instead both installers automatically select a scope based on whether they have the privileges needed to perform a machine scope installation. This means a user with those privileges can effectively control the scope by the selection they make in the Windows UAC prompt; rejecting it will mean that the installer doesn't see that user as an administrator and will perform a per-user installation.
+We support creating the installation in either a machine or a per-user scope. This affects whether application files, shortcuts, and registry entries are created in locations that are accessible to any user on the machine or locations that are specific to a particular user. Even in the full installer there is no UI for configuring which scope is selected; instead both installers automatically select a scope based on whether they have the privileges needed to perform a machine scope installation. This means a user with those privileges can effectively control the scope by the selection they make in the Windows UAC prompt; rejecting it will mean that the installer doesn't see that user as an administrator and will perform a per-user installation.
 
 Install Location
 ----------------

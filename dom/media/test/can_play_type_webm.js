@@ -36,8 +36,7 @@ async function check_webm(v, enabled) {
   }
 
   await SpecialPowers.pushPrefEnv({"set": [["media.av1.enabled", true]]});
-  // AV1 is disabled on Windows 32 bits (bug 1475564)
-  check("video/webm; codecs=\"av1\"", isWindows32() ? "" : "probably");
+  check("video/webm; codecs=\"av1\"", "probably");
 
   await SpecialPowers.pushPrefEnv({"set": [["media.av1.enabled", false]]});
   check("video/webm; codecs=\"av1\"", "");

@@ -6520,12 +6520,6 @@ nsresult PresShell::EventHandler::HandleEvent(nsIFrame* aFrame,
     return NS_OK;
   }
 
-  nsIContent* capturingContent = ((aGUIEvent->mClass == ePointerEventClass ||
-                                   aGUIEvent->mClass == eWheelEventClass ||
-                                   aGUIEvent->HasMouseEventMessage())
-                                      ? nsIPresShell::GetCapturingContent()
-                                      : nullptr);
-
   RefPtr<Document> retargetEventDoc;
   if (!aDontRetargetEvents) {
     // key and IME related events should not cross top level window boundary.
@@ -6547,7 +6541,8 @@ nsresult PresShell::EventHandler::HandleEvent(nsIFrame* aFrame,
 
       retargetEventDoc = window->GetExtantDoc();
       if (!retargetEventDoc) return NS_OK;
-    } else if (capturingContent) {
+    } else if (nsIContent* capturingContent =
+                   EventHandler::GetCapturingContentFor(aGUIEvent)) {
       // if the mouse is being captured then retarget the mouse event at the
       // document that is being captured.
       retargetEventDoc = capturingContent->GetComposedDoc();
@@ -6611,6 +6606,11 @@ nsresult PresShell::EventHandler::HandleEvent(nsIFrame* aFrame,
   nsIFrame* frame = aFrame;
 
   if (aGUIEvent->IsUsingCoordinates()) {
+    // XXX Retrieving capturing content here.  However, some of the following
+    //     methods allow to run script.  So, isn't it possible the capturing
+    //     content outdated?
+    nsIContent* capturingContent =
+        EventHandler::GetCapturingContentFor(aGUIEvent);
     if (GetDocument()) {
       if (aGUIEvent->mClass == eTouchEventClass) {
         Document::UnlockPointer();
@@ -7154,6 +7154,16 @@ bool PresShell::EventHandler::MaybeHandleEventWithAccessibleCaret(
   // mMultipleActionsPrevented.
   aGUIEvent->mFlags.mMultipleActionsPrevented = true;
   return true;
+}
+
+// static
+nsIContent* PresShell::EventHandler::GetCapturingContentFor(
+    WidgetGUIEvent* aGUIEvent) {
+  return (aGUIEvent->mClass == ePointerEventClass ||
+          aGUIEvent->mClass == eWheelEventClass ||
+          aGUIEvent->HasMouseEventMessage())
+             ? nsIPresShell::GetCapturingContent()
+             : nullptr;
 }
 
 Document* PresShell::GetPrimaryContentDocument() {

@@ -4,11 +4,11 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["GeckoViewTrackingProtection"];
+var EXPORTED_SYMBOLS = ["GeckoViewContentBlocking"];
 
 const {GeckoViewModule} = ChromeUtils.import("resource://gre/modules/GeckoViewModule.jsm");
 
-class GeckoViewTrackingProtection extends GeckoViewModule {
+class GeckoViewContentBlocking extends GeckoViewModule {
   onEnable() {
     debug `onEnable`;
 
@@ -20,25 +20,34 @@ class GeckoViewTrackingProtection extends GeckoViewModule {
     this.browser.addProgressListener(this.progressFilter, flags);
   }
 
+  onDisable() {
+    debug `onDisable`;
+
+    if (!this.progressFilter) {
+      return;
+    }
+    this.progressFilter.removeProgressListener(this);
+    this.browser.removeProgressListener(this.progressFilter);
+  }
+
   onContentBlockingEvent(aWebProgress, aRequest, aEvent) {
     debug `onContentBlockingEvent`;
 
-    if (!(aEvent & Ci.nsIWebProgressListener.STATE_BLOCKED_TRACKING_CONTENT) ||
-        !aRequest || !(aRequest instanceof Ci.nsIClassifiedChannel)) {
+    if (!aRequest || !(aRequest instanceof Ci.nsIClassifiedChannel)) {
       return;
     }
 
-    let channel = aRequest.QueryInterface(Ci.nsIChannel);
-    let uri = channel.URI && channel.URI.spec;
-    let classChannel = aRequest.QueryInterface(Ci.nsIClassifiedChannel);
+    const channel = aRequest.QueryInterface(Ci.nsIChannel);
+    const uri = channel.URI && channel.URI.spec;
+    const classChannel = aRequest.QueryInterface(Ci.nsIClassifiedChannel);
 
     if (!uri || !classChannel.matchedList) {
       return;
     }
 
-    let message = {
-      type: "GeckoView:TrackingProtectionBlocked",
-      src: uri,
+    const message = {
+      type: "GeckoView:ContentBlocked",
+      uri: uri,
       matchedList: classChannel.matchedList,
     };
 

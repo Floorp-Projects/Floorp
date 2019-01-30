@@ -21,7 +21,6 @@ import android.support.annotation.Nullable;
 
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.util.GeckoBundle;
-import org.mozilla.geckoview.GeckoSession.TrackingProtectionDelegate;
 
 @AnyThread
 public final class GeckoRuntimeSettings extends RuntimeSettings {
@@ -141,45 +140,6 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
         }
 
         /**
-         * Set cookie storage behavior.
-         *
-         * @param behavior The storage behavior that should be applied.
-         *                 Use one of the {@link #COOKIE_ACCEPT_ALL COOKIE_ACCEPT_*} flags.
-         * @return The Builder instance.
-         */
-        public @NonNull Builder cookieBehavior(@CookieBehavior int behavior) {
-            getSettings().mCookieBehavior.set(behavior);
-            return this;
-        }
-
-        /**
-         * Set the cookie lifetime.
-         *
-         * @param lifetime The enforced cookie lifetime.
-         *                 Use one of the {@link #COOKIE_LIFETIME_NORMAL COOKIE_LIFETIME_*} flags.
-         * @return The Builder instance.
-         */
-        public @NonNull Builder cookieLifetime(@CookieLifetime int lifetime) {
-            getSettings().mCookieLifetime.set(lifetime);
-            return this;
-        }
-
-        /**
-         * Set tracking protection blocking categories.
-         *
-         * @param categories The categories of trackers that should be blocked.
-         *                   Use one or more of the
-         *                   {@link TrackingProtectionDelegate#CATEGORY_AD TrackingProtectionDelegate.CATEGORY_*} flags.
-         * @return This Builder instance.
-         **/
-        public @NonNull Builder trackingProtectionCategories(
-                @TrackingProtectionDelegate.Category int categories) {
-            getSettings().mTrackingProtection
-                     .set(TrackingProtection.buildPrefValue(categories));
-            return this;
-        }
-
-        /**
          * Set whether or not web console messages should go to logcat.
          *
          * Note: If enabled, Gecko performance may be negatively impacted if
@@ -202,37 +162,6 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
          */
         public @NonNull Builder displayDensityOverride(float density) {
             getSettings().mDisplayDensityOverride = density;
-            return this;
-        }
-
-        /** Set whether or not known malware sites should be blocked.
-         *
-         * Note: For each blocked site, {@link GeckoSession.NavigationDelegate#onLoadError}
-         * with error category {@link WebRequestError#ERROR_CATEGORY_SAFEBROWSING}
-         * is called.
-         *
-         * @param enabled A flag determining whether or not to block malware
-         *                sites.
-         * @return The builder instance.
-         */
-        public @NonNull Builder blockMalware(boolean enabled) {
-            getSettings().mSafebrowsingMalware.set(enabled);
-            return this;
-        }
-
-        /**
-         * Set whether or not known phishing sites should be blocked.
-         *
-         * Note: For each blocked site, {@link GeckoSession.NavigationDelegate#onLoadError}
-         * with error category {@link WebRequestError#ERROR_CATEGORY_SAFEBROWSING}
-         * is called.
-         *
-         * @param enabled A flag determining whether or not to block phishing
-         *                sites.
-         * @return The builder instance.
-         */
-        public @NonNull Builder blockPhishing(boolean enabled) {
-            getSettings().mSafebrowsingPhishing.set(enabled);
             return this;
         }
 
@@ -308,6 +237,12 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
             getSettings().mRequestedLocales = requestedLocales;
             return this;
         }
+
+        public @NonNull Builder contentBlocking(
+                final @NonNull ContentBlocking.Settings cb) {
+            getSettings().mContentBlocking = cb;
+            return this;
+        }
     }
 
     private GeckoRuntime mRuntime;
@@ -315,29 +250,20 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
     /* package */ String[] mArgs;
     /* package */ Bundle mExtras;
 
+    /* package */ ContentBlocking.Settings mContentBlocking;
+
+    public @NonNull ContentBlocking.Settings getContentBlocking() {
+        return mContentBlocking;
+    }
+
     /* package */ final Pref<Boolean> mJavaScript = new Pref<Boolean>(
         "javascript.enabled", true);
     /* package */ final Pref<Boolean> mRemoteDebugging = new Pref<Boolean>(
         "devtools.debugger.remote-enabled", false);
     /* package */ final Pref<Integer> mWebFonts = new Pref<Integer>(
         "browser.display.use_document_fonts", 1);
-    /* package */ final Pref<Integer> mCookieBehavior = new Pref<Integer>(
-        "network.cookie.cookieBehavior", COOKIE_ACCEPT_ALL);
-    /* package */ final Pref<Integer> mCookieLifetime = new Pref<Integer>(
-        "network.cookie.lifetimePolicy", COOKIE_LIFETIME_NORMAL);
-    /* package */ final Pref<String> mTrackingProtection = new Pref<String>(
-        "urlclassifier.trackingTable",
-        TrackingProtection.buildPrefValue(
-            TrackingProtectionDelegate.CATEGORY_TEST |
-            TrackingProtectionDelegate.CATEGORY_ANALYTIC |
-            TrackingProtectionDelegate.CATEGORY_SOCIAL |
-            TrackingProtectionDelegate.CATEGORY_AD));
     /* package */ final Pref<Boolean> mConsoleOutput = new Pref<Boolean>(
         "geckoview.console.enabled", false);
-    /* package */ final Pref<Boolean> mSafebrowsingMalware = new Pref<Boolean>(
-        "browser.safebrowsing.malware.enabled", true);
-    /* package */ final Pref<Boolean> mSafebrowsingPhishing = new Pref<Boolean>(
-        "browser.safebrowsing.phishing.enabled", true);
 
     /* package */ boolean mDebugPause;
     /* package */ boolean mUseMaxScreenDepth;
@@ -372,6 +298,8 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
         if (settings == null) {
             mArgs = new String[0];
             mExtras = new Bundle();
+            mContentBlocking = new ContentBlocking.Settings(
+                    this /* parent */, null /* settings */);
             return;
         }
 
@@ -384,6 +312,8 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
         mUseContentProcess = settings.getUseContentProcessHint();
         mArgs = settings.getArguments().clone();
         mExtras = new Bundle(settings.getExtras());
+        mContentBlocking = new ContentBlocking.Settings(
+                this /* parent */, settings.mContentBlocking);
 
         mDebugPause = settings.mDebugPause;
         mUseMaxScreenDepth = settings.mUseMaxScreenDepth;
@@ -570,127 +500,6 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
         EventDispatcher.getInstance().dispatch("GeckoView:SetLocale", data);
     }
 
-    // Sync values with nsICookieService.idl.
-    @Retention(RetentionPolicy.SOURCE)
-    @IntDef({ COOKIE_ACCEPT_ALL, COOKIE_ACCEPT_FIRST_PARTY,
-              COOKIE_ACCEPT_NONE, COOKIE_ACCEPT_VISITED,
-              COOKIE_ACCEPT_NON_TRACKERS })
-    /* package */ @interface CookieBehavior {}
-
-    /**
-     * Accept first-party and third-party cookies and site data.
-     */
-    public static final int COOKIE_ACCEPT_ALL = 0;
-    /**
-     * Accept only first-party cookies and site data to block cookies which are
-     * not associated with the domain of the visited site.
-     */
-    public static final int COOKIE_ACCEPT_FIRST_PARTY = 1;
-    /**
-     * Do not store any cookies and site data.
-     */
-    public static final int COOKIE_ACCEPT_NONE = 2;
-    /**
-     * Accept first-party and third-party cookies and site data only from
-     * sites previously visited in a first-party context.
-     */
-    public static final int COOKIE_ACCEPT_VISITED = 3;
-    /**
-     * Accept only first-party and non-tracking third-party cookies and site data
-     * to block cookies which are not associated with the domain of the visited
-     * site set by known trackers.
-     */
-    public static final int COOKIE_ACCEPT_NON_TRACKERS = 4;
-
-    /**
-     * Get the assigned cookie storage behavior.
-     *
-     * @return The assigned behavior, as one of {@link #COOKIE_ACCEPT_ALL COOKIE_ACCEPT_*} flags.
-     */
-    public @CookieBehavior int getCookieBehavior() {
-        return mCookieBehavior.get();
-    }
-
-    /**
-     * Set cookie storage behavior.
-     *
-     * @param behavior The storage behavior that should be applied.
-     *                 Use one of the {@link #COOKIE_ACCEPT_ALL COOKIE_ACCEPT_*} flags.
-     * @return This GeckoRuntimeSettings instance.
-     */
-    public @NonNull GeckoRuntimeSettings setCookieBehavior(
-            @CookieBehavior int behavior) {
-        mCookieBehavior.commit(behavior);
-        return this;
-    }
-
-    // Sync values with nsICookieService.idl.
-    @Retention(RetentionPolicy.SOURCE)
-    @IntDef({ COOKIE_LIFETIME_NORMAL, COOKIE_LIFETIME_RUNTIME,
-              COOKIE_LIFETIME_DAYS })
-    /* package */ @interface CookieLifetime {}
-
-    /**
-     * Accept default cookie lifetime.
-     */
-    public static final int COOKIE_LIFETIME_NORMAL = 0;
-    /**
-     * Downgrade cookie lifetime to this runtime's lifetime.
-     */
-    public static final int COOKIE_LIFETIME_RUNTIME = 2;
-    /**
-     * Limit cookie lifetime to N days.
-     * Defaults to 90 days.
-     */
-    public static final int COOKIE_LIFETIME_DAYS = 3;
-
-    /**
-     * Get the assigned cookie lifetime.
-     *
-     * @return The assigned lifetime, as one of {@link #COOKIE_LIFETIME_NORMAL COOKIE_LIFETIME_*} flags.
-     */
-    public @CookieBehavior int getCookieLifetime() {
-        return mCookieLifetime.get();
-    }
-
-    /**
-     * Set the cookie lifetime.
-     *
-     * @param lifetime The enforced cookie lifetime.
-     *                 Use one of the {@link #COOKIE_LIFETIME_NORMAL COOKIE_LIFETIME_*} flags.
-     * @return This GeckoRuntimeSettings instance.
-     */
-    public @NonNull GeckoRuntimeSettings setCookieLifetime(
-            @CookieLifetime int lifetime) {
-        mCookieLifetime.commit(lifetime);
-        return this;
-    }
-
-    /**
-     * Get the set tracking protection blocking categories.
-     *
-     * @return categories The categories of trackers that are set to be blocked.
-     *                    Use one or more of the
-     *                    {@link TrackingProtectionDelegate#CATEGORY_AD TrackingProtectionDelegate.CATEGORY_*} flags.
-     **/
-    public @TrackingProtectionDelegate.Category int getTrackingProtectionCategories() {
-        return TrackingProtection.listToCategory(mTrackingProtection.get());
-    }
-
-    /**
-     * Set tracking protection blocking categories.
-     *
-     * @param categories The categories of trackers that should be blocked.
-     *                   Use one or more of the
-     *                   {@link TrackingProtectionDelegate#CATEGORY_AD TrackingProtectionDelegate.CATEGORY_*} flags.
-     * @return This GeckoRuntimeSettings instance.
-     **/
-    public @NonNull GeckoRuntimeSettings setTrackingProtectionCategories(
-            @TrackingProtectionDelegate.Category int categories) {
-        mTrackingProtection.commit(TrackingProtection.buildPrefValue(categories));
-        return this;
-    }
-
     /**
      * Set whether or not web console messages should go to logcat.
      *
@@ -714,54 +523,6 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
      */
     public boolean getConsoleOutputEnabled() {
         return mConsoleOutput.get();
-    }
-
-    /**
-     * Set whether or not known malware sites should be blocked.
-     *
-     * Note: For each blocked site, {@link GeckoSession.NavigationDelegate#onLoadError}
-     * with error category {@link WebRequestError#ERROR_CATEGORY_SAFEBROWSING}
-     * is called.
-     *
-     * @param enabled A flag determining whether or not to block malware sites.
-     * @return The GeckoRuntimeSettings instance.
-     */
-    public @NonNull GeckoRuntimeSettings setBlockMalware(boolean enabled) {
-        mSafebrowsingMalware.commit(enabled);
-        return this;
-    }
-
-    /**
-     * Get whether or not known malware sites are blocked.
-     *
-     * @return True if malware site blocking is enabled.
-     */
-    public boolean getBlockMalware() {
-        return mSafebrowsingMalware.get();
-    }
-
-    /**
-     * Set whether or not known phishing sites should be blocked.
-     *
-     * Note: For each blocked site, {@link GeckoSession.NavigationDelegate#onLoadError}
-     * with error category {@link WebRequestError#ERROR_CATEGORY_SAFEBROWSING}
-     * is called.
-     *
-     * @param enabled A flag determining whether or not to block phishing sites.
-     * @return The GeckoRuntimeSettings instance.
-     */
-    public @NonNull GeckoRuntimeSettings setBlockPhishing(boolean enabled) {
-        mSafebrowsingPhishing.commit(enabled);
-        return this;
-    }
-
-    /**
-     * Get whether or not known phishing sites are blocked.
-     *
-     * @return True if phishing site blocking is enabled.
-     */
-    public boolean getBlockPhishing() {
-        return mSafebrowsingPhishing.get();
     }
 
     @Override // Parcelable

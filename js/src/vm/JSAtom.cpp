@@ -1082,7 +1082,7 @@ static JSAtom* ToAtomSlow(
 #ifdef ENABLE_BIGINT
   if (v.isBigInt()) {
     RootedBigInt i(cx, v.toBigInt());
-    JSAtom* atom = BigIntToAtom(cx, i);
+    JSAtom* atom = BigIntToAtom<allowGC>(cx, i);
     if (!allowGC && !atom) {
       cx->recoverFromOutOfMemory();
     }

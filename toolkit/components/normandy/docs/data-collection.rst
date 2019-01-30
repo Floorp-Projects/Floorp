@@ -137,7 +137,7 @@ Unenrollment
            preference was changed on the user branch while Normandy was
            inactive. This could mean that the value was manually
            changed in a profile while Firefox was not running.
-         * ``"unknown"``: A reason was not specificied. This should be
+         * ``"unknown"``: A reason was not specified. This should be
            considered a bug.
 
 Add-on Studies
