@@ -5,15 +5,12 @@
 
 const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const {MulticastDNS} = ChromeUtils.import(
   (AppConstants.platform == "android" && !Services.prefs.getBoolPref("network.mdns.use_js_fallback"))
   ? "resource://gre/modules/MulticastDNSAndroid.jsm"
   : "resource://gre/modules/MulticastDNS.jsm");
 
-const DNSSERVICEDISCOVERY_CID = Components.ID("{f9346d98-f27a-4e89-b744-493843416480}");
-const DNSSERVICEDISCOVERY_CONTRACT_ID = "@mozilla.org/toolkit/components/mdnsresponder/dns-sd;1";
 const DNSSERVICEINFO_CONTRACT_ID = "@mozilla.org/toolkit/components/mdnsresponder/dns-info;1";
 
 function log(aMsg) {
@@ -134,7 +131,6 @@ function nsDNSServiceDiscovery() {
 }
 
 nsDNSServiceDiscovery.prototype = {
-  classID: DNSSERVICEDISCOVERY_CID,
   QueryInterface: ChromeUtils.generateQI([Ci.nsISupportsWeakReference, Ci.nsIDNSServiceDiscovery]),
 
   startDiscovery(aServiceType, aListener) {
@@ -179,7 +175,7 @@ nsDNSServiceDiscovery.prototype = {
   },
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([nsDNSServiceDiscovery]);
+var EXPORTED_SYMBOLS = ["nsDNSServiceDiscovery"];
 
 function _toPropertyBag2(obj) {
   if (obj.QueryInterface) {
