@@ -283,8 +283,6 @@
 
 @RESPATH@/components/BuiltinProviders.manifest
 @RESPATH@/components/PresentationControlService.js
-@RESPATH@/components/PresentationDataChannelSessionTransport.js
-@RESPATH@/components/PresentationDataChannelSessionTransport.manifest
 
 @RESPATH@/components/mozIntl.manifest
 @RESPATH@/components/mozIntl.js
