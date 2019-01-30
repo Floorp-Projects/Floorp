@@ -209,12 +209,16 @@ namespace {
 
 struct BlockingErrorCode {
   nsresult mErrorCode;
+  uint32_t mBlockingEventCode;
+  uint32_t mAllowingEventCode;
   const char* mConsoleMessage;
   nsCString mConsoleCategory;
 };
 
 static const BlockingErrorCode sBlockingErrorCodes[] = {
-    {NS_ERROR_TRACKING_URI, "TrackerUriBlocked",
+    {NS_ERROR_TRACKING_URI,
+     nsIWebProgressListener::STATE_BLOCKED_TRACKING_CONTENT,
+     nsIWebProgressListener::STATE_LOADED_TRACKING_CONTENT, "TrackerUriBlocked",
      NS_LITERAL_CSTRING("Tracking Protection")},
 };
 
@@ -230,6 +234,16 @@ static const BlockingErrorCode sBlockingErrorCodes[] = {
     }
   }
 
+  return false;
+}
+
+/* static */ bool UrlClassifierFeatureFactory::IsClassifierBlockingEventCode(
+    uint32_t aEventCode) {
+  for (const auto& blockingErrorCode : sBlockingErrorCodes) {
+    if (aEventCode == blockingErrorCode.mBlockingEventCode) {
+      return true;
+    }
+  }
   return false;
 }
 
