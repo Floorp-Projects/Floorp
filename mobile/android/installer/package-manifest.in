@@ -147,7 +147,6 @@
 @BINPATH@/components/contentAreaDropListener.js
 @BINPATH@/components/servicesComponents.manifest
 @BINPATH@/components/servicesSettings.manifest
-@BINPATH@/components/RemoteSettingsComponents.js
 
 @BINPATH@/components/htmlMenuBuilder.js
 @BINPATH@/components/htmlMenuBuilder.manifest
