@@ -459,9 +459,9 @@ OptionsPanel.prototype = {
       });
     }
 
-    if (!this.target.chrome) {
+    if (this.target.activeTab && !this.target.chrome) {
       this.disableJSNode.checked =
-        !this.target.configureOptions.javascriptEnabled;
+        !this.target.activeTab.configureOptions.javascriptEnabled;
       this.disableJSNode.addEventListener("click", this._disableJSClicked);
     } else {
       // Hide the checkbox and label
@@ -511,7 +511,7 @@ OptionsPanel.prototype = {
       "javascriptEnabled": !checked,
     };
 
-    this.target.reconfigure({ options });
+    this.target.activeTab.reconfigure({ options });
   },
 
   destroy: function() {
@@ -522,7 +522,9 @@ OptionsPanel.prototype = {
 
     this._removeListeners();
 
-    this.disableJSNode.removeEventListener("click", this._disableJSClicked);
+    if (this.target.activeTab) {
+      this.disableJSNode.removeEventListener("click", this._disableJSClicked);
+    }
 
     this.panelWin = this.panelDoc = this.disableJSNode = this.toolbox = null;
   },

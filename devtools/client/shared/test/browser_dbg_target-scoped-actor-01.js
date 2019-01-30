@@ -24,7 +24,8 @@ add_task(async function test() {
   const target = await TargetFactory.forTab(tab);
   await target.attach();
   const { client } = target;
-  const form = target.targetForm;
+  const targetFront = target.activeTab;
+  const form = targetFront.targetForm;
 
   await testTargetScopedActor(client, form);
   await removeTab(gBrowser.selectedTab);
