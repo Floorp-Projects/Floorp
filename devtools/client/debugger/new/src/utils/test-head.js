@@ -64,11 +64,7 @@ function makeFrame({ id, sourceId }: Object, opts: Object = {}) {
   };
 }
 
-/**
- * @memberof utils/test-head
- * @static
- */
-function makeSource(name: string, props: any = {}) {
+function makeSourceRaw(name: string, props: any = {}) {
   return {
     id: name,
     loadedState: "unloaded",
@@ -77,9 +73,24 @@ function makeSource(name: string, props: any = {}) {
   };
 }
 
+/**
+ * @memberof utils/test-head
+ * @static
+ */
+function makeSource(name: string, props: any = {}) {
+  return {
+    source: makeSourceRaw(name, props),
+    sourceActor: {
+      actor: `${name}-actor`,
+      source: name,
+      thread: "FakeThread"
+    }
+  };
+}
+
 function makeOriginalSource(name: string, props?: Object) {
-  const source = makeSource(name, props);
-  return { ...source, id: `${name}/originalSource` };
+  const source = makeSourceRaw(name, props);
+  return { source: { ...source, id: `${name}/originalSource` } };
 }
 
 function makeFuncLocation(startLine, endLine) {

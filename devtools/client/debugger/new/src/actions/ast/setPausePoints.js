@@ -4,7 +4,7 @@
 
 // @flow
 
-import { getSourceFromId } from "../../selectors";
+import { getSourceFromId, getSourceActors } from "../../selectors";
 import * as parser from "../../workers/parser";
 import { isGenerated } from "../../utils/source";
 import { convertToList } from "../../utils/pause/pausePoints";
@@ -62,7 +62,9 @@ export function setPausePoints(sourceId: SourceId) {
 
     if (isGenerated(source)) {
       const compressed = compressPausePoints(pausePoints);
-      await client.setPausePoints(sourceId, compressed);
+      for (const sourceActor of getSourceActors(getState(), sourceId)) {
+        await client.setPausePoints(sourceActor, compressed);
+      }
     }
 
     pausePoints = await mapLocations(

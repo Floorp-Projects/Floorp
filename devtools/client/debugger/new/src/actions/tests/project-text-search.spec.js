@@ -17,9 +17,9 @@ const {
 } = selectors;
 
 const threadClient = {
-  sourceContents: function(sourceId) {
+  sourceContents: function({ source }) {
     return new Promise((resolve, reject) => {
-      switch (sourceId) {
+      switch (source) {
         case "foo1":
           resolve({
             source: "function foo1() {\n  const foo = 5; return foo;\n}",
@@ -46,7 +46,7 @@ const threadClient = {
           break;
       }
 
-      reject(`unknown source: ${sourceId}`);
+      reject(`unknown source: ${source}`);
     });
   }
 };
@@ -85,7 +85,7 @@ describe("project text search", () => {
         source: "function bla(x, y) {\n const bar = 4; return 2;\n}",
         contentType: "text/javascript"
       }),
-      getOriginalURLs: async () => [source2.url]
+      getOriginalURLs: async () => [source2.source.url]
     };
 
     const { dispatch, getState } = createStore(threadClient, {}, mockMaps);

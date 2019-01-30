@@ -43,7 +43,8 @@ import {
   selectors,
   actions,
   makeOriginalSource,
-  waitForState
+  waitForState,
+  makeSource
 } from "../../utils/test-head";
 
 import { makePendingLocationId } from "../../utils/breakpoint";
@@ -255,17 +256,17 @@ describe("initializing with disabled pending breakpoints in prefs", () => {
     await dispatch(actions.loadSourceText(source));
 
     await waitForState(store, state => {
-      const bps = selectors.getBreakpointsForSource(state, source.id);
+      const bps = selectors.getBreakpointsForSource(state, source.source.id);
       return bps && Object.values(bps).length > 0;
     });
 
     const bp = selectors.getBreakpointForLocation(getState(), {
       line: 5,
       column: undefined,
-      sourceUrl: source.url,
-      sourceId: source.id
+      sourceUrl: source.source.url,
+      sourceId: source.source.id
     });
-    expect(bp.location.sourceId).toEqual(source.id);
+    expect(bp.location.sourceId).toEqual(source.source.id);
     expect(bp.disabled).toEqual(true);
   });
 });
@@ -340,11 +341,17 @@ describe("invalid breakpoint location", () => {
     const correctedPendingId = makePendingLocationId(correctedLocation);
 
     // test
-    await dispatch(actions.newSource(makeOriginalSource("foo.js")));
-    await dispatch(actions.loadSourceText(makeOriginalSource("foo.js")));
+    const source = makeSource("foo.js");
+    await dispatch(actions.newSource(source));
+    await dispatch(actions.loadSourceText(source.source));
+
+    // Fixup the breakpoint so that its location can be loaded.
+    bp.location.sourceId = "foo.js";
+    bp.generatedLocation = { ...bp.location };
 
     await dispatch(actions.addBreakpoint(bp.location));
     const pendingBps = selectors.getPendingBreakpoints(getState());
+
     const pendingBp = pendingBps[correctedPendingId];
     expect(pendingBp).toMatchSnapshot();
   });

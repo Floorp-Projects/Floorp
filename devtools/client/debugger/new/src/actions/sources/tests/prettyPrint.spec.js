@@ -18,9 +18,9 @@ describe("sources - pretty print", () => {
     const url = "base.js";
     const source = makeSource(url);
     await dispatch(actions.newSource(source));
-    await dispatch(createPrettySource(url));
+    await dispatch(createPrettySource(source.source.id));
 
-    const prettyURL = `${source.url}:formatted`;
+    const prettyURL = `${source.source.url}:formatted`;
     const pretty = selectors.getSourceByURL(getState(), prettyURL);
     expect(pretty.contentType).toEqual("text/javascript");
     expect(pretty.url.includes(prettyURL)).toEqual(true);

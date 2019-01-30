@@ -45,11 +45,11 @@ describe("sources - new sources", () => {
   it("should automatically select a pending source", async () => {
     const { dispatch, getState } = createStore(threadClient);
     const baseSource = makeSource("base.js");
-    await dispatch(actions.selectSourceURL(baseSource.url));
+    await dispatch(actions.selectSourceURL(baseSource.source.url));
 
     expect(getSelectedSource(getState())).toBe(undefined);
     await dispatch(actions.newSource(baseSource));
-    expect(getSelectedSource(getState()).url).toBe(baseSource.url);
+    expect(getSelectedSource(getState()).url).toBe(baseSource.source.url);
   });
 
   it("should add original sources", async () => {

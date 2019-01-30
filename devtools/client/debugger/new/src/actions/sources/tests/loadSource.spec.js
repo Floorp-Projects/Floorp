@@ -15,11 +15,13 @@ describe("loadSourceText", async () => {
     const store = createStore(sourceThreadClient);
     const { dispatch, getState } = store;
 
+    await dispatch(actions.newSource(makeSource("foo1")));
     await dispatch(actions.loadSourceText({ id: "foo1" }));
     const fooSource = selectors.getSource(getState(), "foo1");
 
     expect(fooSource.text.indexOf("return foo1")).not.toBe(-1);
 
+    await dispatch(actions.newSource(makeSource("foo2")));
     await dispatch(actions.loadSourceText({ id: "foo2" }));
     const foo2Source = selectors.getSource(getState(), "foo2");
 
@@ -102,6 +104,7 @@ describe("loadSourceText", async () => {
   it("should indicate an errored source text", async () => {
     const { dispatch, getState } = createStore(sourceThreadClient);
 
+    await dispatch(actions.newSource(makeSource("bad-id")));
     await dispatch(actions.loadSourceText({ id: "bad-id" }));
     const badSource = selectors.getSource(getState(), "bad-id");
     expect(badSource.error.indexOf("unknown source")).not.toBe(-1);

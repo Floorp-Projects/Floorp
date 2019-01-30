@@ -19,7 +19,7 @@ describe("closing tabs", () => {
     const fooSource = makeSource("foo.js");
     await dispatch(actions.newSource(fooSource));
     await dispatch(actions.selectLocation({ sourceId: "foo.js" }));
-    dispatch(actions.closeTab(fooSource));
+    dispatch(actions.closeTab(fooSource.source));
 
     expect(getSelectedSource(getState())).toBe(undefined);
     expect(getSourceTabs(getState())).toHaveLength(0);
@@ -33,7 +33,7 @@ describe("closing tabs", () => {
     await dispatch(actions.newSource(makeSource("bar.js")));
     await dispatch(actions.selectLocation({ sourceId: "foo.js" }));
     await dispatch(actions.selectLocation({ sourceId: "bar.js" }));
-    dispatch(actions.closeTab(fooSource));
+    dispatch(actions.closeTab(fooSource.source));
 
     expect(getSelectedSource(getState()).id).toBe("bar.js");
     expect(getSourceTabs(getState())).toHaveLength(1);
@@ -45,7 +45,7 @@ describe("closing tabs", () => {
     const fooSource = makeSource("foo.js");
     await dispatch(actions.newSource(fooSource));
     await dispatch(actions.selectLocation({ sourceId: "foo.js" }));
-    dispatch(actions.closeTab(fooSource));
+    dispatch(actions.closeTab(fooSource.source));
 
     expect(getSelectedSource(getState())).toBe(undefined);
     expect(getSourceTabs(getState())).toHaveLength(0);
@@ -59,7 +59,7 @@ describe("closing tabs", () => {
     await dispatch(actions.newSource(barSource));
     await dispatch(actions.selectLocation({ sourceId: "foo.js" }));
     await dispatch(actions.selectLocation({ sourceId: "bar.js" }));
-    await dispatch(actions.closeTab(barSource));
+    await dispatch(actions.closeTab(barSource.source));
 
     expect(getSelectedSource(getState()).id).toBe("foo.js");
     expect(getSourceTabs(getState())).toHaveLength(1);
