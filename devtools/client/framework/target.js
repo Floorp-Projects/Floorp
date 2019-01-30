@@ -436,11 +436,15 @@ class Target extends EventEmitter {
     if (this.isAddon) {
       return this.form.name;
     }
-    return this._title;
+    return this.title;
   }
 
   get url() {
     return this._url;
+  }
+
+  get title() {
+    return this._title || this.url;
   }
 
   get isAddon() {
