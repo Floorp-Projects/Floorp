@@ -7,7 +7,6 @@ var EXPORTED_SYMBOLS = [
   "RemoteSettingsTimer",
 ];
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "RemoteSettings",
   "resource://services-settings/remote-settings.js");
 
@@ -24,5 +23,3 @@ RemoteSettingsTimer.prototype = {
       .catch(e => Cu.reportError(e));
   },
 };
-
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([RemoteSettingsTimer]);
