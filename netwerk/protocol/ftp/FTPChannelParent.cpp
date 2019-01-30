@@ -500,7 +500,8 @@ FTPChannelParent::SetParentListener(HttpChannelParentListener* aListener) {
 }
 
 NS_IMETHODIMP
-FTPChannelParent::NotifyTrackingProtectionDisabled() {
+FTPChannelParent::NotifyChannelClassifierProtectionDisabled(
+    uint32_t aAcceptedReason) {
   // One day, this should probably be filled in.
   return NS_OK;
 }
