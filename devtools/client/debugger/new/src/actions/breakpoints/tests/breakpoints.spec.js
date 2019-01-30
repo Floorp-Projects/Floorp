@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+// @flow
+
 import {
   createStore,
   selectors,
@@ -24,14 +26,14 @@ describe("breakpoints", () => {
       sourceUrl: "http://localhost:8000/examples/a"
     };
 
-    const source = makeSource("a");
-    await dispatch(actions.newSource(source));
-    await dispatch(actions.loadSourceText(source.source));
+    const csr = makeSource("a");
+    await dispatch(actions.newSource(csr));
+    await dispatch(actions.loadSourceText(csr.source));
     await dispatch(actions.addBreakpoint(loc1));
 
     expect(selectors.getBreakpointCount(getState())).toEqual(1);
     const bp = selectors.getBreakpoint(getState(), loc1);
-    expect(bp.location).toEqual(loc1);
+    expect(bp && bp.location).toEqual(loc1);
     expect(getTelemetryEvents("add_breakpoint")).toHaveLength(1);
 
     const bpSources = selectors.getBreakpointSources(getState());
@@ -45,13 +47,14 @@ describe("breakpoints", () => {
       line: 5,
       sourceUrl: "http://localhost:8000/examples/a"
     };
-    await dispatch(actions.newSource(makeSource("a")));
-    await dispatch(actions.loadSourceText(makeSource("a")));
+    const csr = makeSource("a");
+    await dispatch(actions.newSource(csr));
+    await dispatch(actions.loadSourceText(csr.source));
     await dispatch(actions.addBreakpoint(loc1));
 
     expect(selectors.getBreakpointCount(getState())).toEqual(1);
     const bp = selectors.getBreakpoint(getState(), loc1);
-    expect(bp.location).toEqual(loc1);
+    expect(bp && bp.location).toEqual(loc1);
     expect(selectors.getBreakpointSources(getState())).toMatchSnapshot();
   });
 
@@ -62,15 +65,15 @@ describe("breakpoints", () => {
       line: 5,
       sourceUrl: "http://localhost:8000/examples/a"
     };
-    const source = makeSource("a");
-    await dispatch(actions.newSource(source));
-    await dispatch(actions.loadSourceText(source.source));
+    const csr = makeSource("a");
+    await dispatch(actions.newSource(csr));
+    await dispatch(actions.loadSourceText(csr.source));
     const { breakpoint } = await dispatch(actions.addBreakpoint(loc1));
     await dispatch(actions.disableBreakpoint(breakpoint));
 
     expect(selectors.getBreakpointCount(getState())).toEqual(1);
     const bp = selectors.getBreakpoint(getState(), loc1);
-    expect(bp.location).toEqual(loc1);
+    expect(bp && bp.location).toEqual(loc1);
     expect(selectors.getBreakpointSources(getState())).toMatchSnapshot();
   });
 
@@ -82,19 +85,20 @@ describe("breakpoints", () => {
       sourceUrl: "http://localhost:8000/examples/a"
     };
 
-    await dispatch(actions.newSource(makeSource("a")));
-    await dispatch(actions.loadSourceText(makeSource("a")));
+    const csr = makeSource("a");
+    await dispatch(actions.newSource(csr));
+    await dispatch(actions.loadSourceText(csr.source));
 
     await dispatch(actions.addBreakpoint(loc1));
     expect(selectors.getBreakpointCount(getState())).toEqual(1);
     const bp = selectors.getBreakpoint(getState(), loc1);
-    expect(bp.location).toEqual(loc1);
+    expect(bp && bp.location).toEqual(loc1);
 
     await dispatch(actions.addBreakpoint(loc1));
     expect(selectors.getBreakpointCount(getState())).toEqual(1);
   });
 
-  describe("adding a breakpoint to an invalid location", async () => {
+  describe("adding a breakpoint to an invalid location", () => {
     it("adds only one breakpoint with a corrected location", async () => {
       const invalidLocation = {
         sourceId: "a",
@@ -107,8 +111,9 @@ describe("breakpoints", () => {
       } = simulateCorrectThreadClient(2, invalidLocation);
       const { dispatch, getState } = createStore(correctedThreadClient);
 
-      await dispatch(actions.newSource(makeSource("a")));
-      await dispatch(actions.loadSourceText(makeSource("a")));
+      const csr = makeSource("a");
+      await dispatch(actions.newSource(csr));
+      await dispatch(actions.loadSourceText(csr.source));
 
       await dispatch(actions.addBreakpoint(invalidLocation));
       const state = getState();
@@ -133,18 +138,22 @@ describe("breakpoints", () => {
       sourceUrl: "http://localhost:8000/examples/b"
     };
 
-    await dispatch(actions.newSource(makeSource("a")));
-    await dispatch(actions.loadSourceText(makeSource("a")));
+    const aCSR = makeSource("a");
+    await dispatch(actions.newSource(aCSR));
+    await dispatch(actions.loadSourceText(aCSR.source));
 
-    await dispatch(actions.newSource(makeSource("b")));
-    await dispatch(actions.loadSourceText(makeSource("b")));
+    const bCSR = makeSource("b");
+    await dispatch(actions.newSource(bCSR));
+    await dispatch(actions.loadSourceText(bCSR.source));
 
     await dispatch(actions.addBreakpoint(loc1));
     await dispatch(actions.addBreakpoint(loc2));
 
-    await dispatch(
-      actions.removeBreakpoint(selectors.getBreakpoint(getState(), loc1))
-    );
+    const bp = selectors.getBreakpoint(getState(), loc1);
+    if (!bp) {
+      throw new Error("no bp");
+    }
+    await dispatch(actions.removeBreakpoint(bp));
 
     expect(selectors.getBreakpointCount(getState())).toEqual(1);
   });
@@ -164,18 +173,21 @@ describe("breakpoints", () => {
       sourceUrl: "http://localhost:8000/examples/b"
     };
 
-    await dispatch(actions.newSource(makeSource("a")));
-    await dispatch(actions.loadSourceText(makeSource("a")));
+    const aCSR = makeSource("a");
+    await dispatch(actions.newSource(aCSR));
+    await dispatch(actions.loadSourceText(aCSR.source));
 
-    await dispatch(actions.newSource(makeSource("b")));
-    await dispatch(actions.loadSourceText(makeSource("b")));
+    const bCSR = makeSource("b");
+    await dispatch(actions.newSource(bCSR));
+    await dispatch(actions.loadSourceText(bCSR.source));
 
     const { breakpoint } = await dispatch(actions.addBreakpoint(loc1));
     await dispatch(actions.addBreakpoint(loc2));
 
     await dispatch(actions.disableBreakpoint(breakpoint));
 
-    expect(selectors.getBreakpoint(getState(), loc1).disabled).toBe(true);
+    const bp = selectors.getBreakpoint(getState(), loc1);
+    expect(bp && bp.disabled).toBe(true);
   });
 
   it("should enable breakpoint", async () => {
@@ -186,17 +198,20 @@ describe("breakpoints", () => {
       sourceUrl: "http://localhost:8000/examples/a"
     };
 
-    await dispatch(actions.newSource(makeSource("a")));
-    await dispatch(actions.loadSourceText(makeSource("a")));
+    const aCSR = makeSource("a");
+    await dispatch(actions.newSource(aCSR));
+    await dispatch(actions.loadSourceText(aCSR.source));
 
     const { breakpoint } = await dispatch(actions.addBreakpoint(loc));
     await dispatch(actions.disableBreakpoint(breakpoint));
 
-    expect(selectors.getBreakpoint(getState(), loc).disabled).toBe(true);
+    let bp = selectors.getBreakpoint(getState(), loc);
+    expect(bp && bp.disabled).toBe(true);
 
     await dispatch(actions.enableBreakpoint(breakpoint));
 
-    expect(selectors.getBreakpoint(getState(), loc).disabled).toBe(false);
+    bp = selectors.getBreakpoint(getState(), loc);
+    expect(bp && !bp.disabled).toBe(true);
   });
 
   it("should toggle all the breakpoints", async () => {
@@ -214,24 +229,30 @@ describe("breakpoints", () => {
       sourceUrl: "http://localhost:8000/examples/b"
     };
 
-    await dispatch(actions.newSource(makeSource("a")));
-    await dispatch(actions.loadSourceText(makeSource("a")));
+    const aCSR = makeSource("a");
+    await dispatch(actions.newSource(aCSR));
+    await dispatch(actions.loadSourceText(aCSR.source));
 
-    await dispatch(actions.newSource(makeSource("b")));
-    await dispatch(actions.loadSourceText(makeSource("b")));
+    const bCSR = makeSource("b");
+    await dispatch(actions.newSource(bCSR));
+    await dispatch(actions.loadSourceText(bCSR.source));
 
     await dispatch(actions.addBreakpoint(loc1));
     await dispatch(actions.addBreakpoint(loc2));
 
     await dispatch(actions.toggleAllBreakpoints(true));
 
-    expect(selectors.getBreakpoint(getState(), loc1).disabled).toBe(true);
-    expect(selectors.getBreakpoint(getState(), loc2).disabled).toBe(true);
+    let bp1 = selectors.getBreakpoint(getState(), loc1);
+    let bp2 = selectors.getBreakpoint(getState(), loc2);
+    expect(bp1 && bp1.disabled).toBe(true);
+    expect(bp2 && bp2.disabled).toBe(true);
 
-    await dispatch(actions.toggleAllBreakpoints());
+    await dispatch(actions.toggleAllBreakpoints(false));
 
-    expect(selectors.getBreakpoint(getState(), loc1).disabled).toBe(false);
-    expect(selectors.getBreakpoint(getState(), loc2).disabled).toBe(false);
+    bp1 = selectors.getBreakpoint(getState(), loc1);
+    bp2 = selectors.getBreakpoint(getState(), loc2);
+    expect(bp1 && bp1.disabled).toBe(false);
+    expect(bp2 && bp2.disabled).toBe(false);
   });
 
   it("should toggle a breakpoint at a location", async () => {
@@ -240,13 +261,15 @@ describe("breakpoints", () => {
 
     const { dispatch, getState } = createStore(simpleMockThreadClient);
 
-    await dispatch(actions.newSource(makeSource("foo1")));
-    await dispatch(actions.loadSourceText(makeSource("foo1")));
+    const csr = makeSource("foo1");
+    await dispatch(actions.newSource(csr));
+    await dispatch(actions.loadSourceText(csr.source));
 
     await dispatch(actions.selectLocation({ sourceId: "foo1", line: 1 }));
 
     await dispatch(actions.toggleBreakpointAtLine(5));
-    expect(getBp().disabled).toBe(false);
+    const bp = getBp();
+    expect(bp && !bp.disabled).toBe(true);
 
     await dispatch(actions.toggleBreakpointAtLine(5));
     expect(getBp()).toBe(undefined);
@@ -258,15 +281,22 @@ describe("breakpoints", () => {
 
     const { dispatch, getState } = createStore(simpleMockThreadClient);
 
-    await dispatch(actions.newSource(makeSource("foo1")));
-    await dispatch(actions.loadSourceText(makeSource("foo1")));
+    const csr = makeSource("foo1");
+    await dispatch(actions.newSource(csr));
+    await dispatch(actions.loadSourceText(csr.source));
 
     await dispatch(actions.selectLocation({ sourceId: "foo1", line: 1 }));
 
     await dispatch(actions.toggleBreakpointAtLine(5));
-    expect(getBp().disabled).toBe(false);
-    await dispatch(actions.toggleDisabledBreakpoint(getBp()));
-    expect(getBp().disabled).toBe(true);
+    let bp = getBp();
+    expect(bp && !bp.disabled).toBe(true);
+    bp = getBp();
+    if (!bp) {
+      throw new Error("no bp");
+    }
+    await dispatch(actions.toggleDisabledBreakpoint(bp));
+    bp = getBp();
+    expect(bp && bp.disabled).toBe(true);
   });
 
   it("should set the breakpoint condition", async () => {
@@ -278,14 +308,14 @@ describe("breakpoints", () => {
       sourceUrl: "http://localhost:8000/examples/a"
     };
 
-    await dispatch(actions.newSource(makeSource("a")));
-    await dispatch(actions.loadSourceText(makeSource("a")));
+    const csr = makeSource("a");
+    await dispatch(actions.newSource(csr));
+    await dispatch(actions.loadSourceText(csr.source));
 
     await dispatch(actions.addBreakpoint(loc));
 
-    expect(selectors.getBreakpoint(getState(), loc).options.condition).toBe(
-      null
-    );
+    let bp = selectors.getBreakpoint(getState(), loc);
+    expect(bp && bp.options.condition).toBe(null);
 
     await dispatch(
       actions.setBreakpointOptions(loc, {
@@ -294,9 +324,8 @@ describe("breakpoints", () => {
       })
     );
 
-    expect(selectors.getBreakpoint(getState(), loc).options.condition).toBe(
-      "const foo = 0"
-    );
+    bp = selectors.getBreakpoint(getState(), loc);
+    expect(bp && bp.options.condition).toBe("const foo = 0");
   });
 
   it("should set the condition and enable a breakpoint", async () => {
@@ -312,9 +341,8 @@ describe("breakpoints", () => {
     const { breakpoint } = await dispatch(actions.addBreakpoint(loc));
     await dispatch(actions.disableBreakpoint(breakpoint));
 
-    expect(selectors.getBreakpoint(getState(), loc).options.condition).toBe(
-      null
-    );
+    const bp = selectors.getBreakpoint(getState(), loc);
+    expect(bp && bp.options.condition).toBe(null);
 
     await dispatch(
       actions.setBreakpointOptions(loc, {
@@ -323,8 +351,10 @@ describe("breakpoints", () => {
       })
     );
     const newBreakpoint = selectors.getBreakpoint(getState(), loc);
-    expect(newBreakpoint.disabled).toBe(false);
-    expect(newBreakpoint.options.condition).toBe("const foo = 0");
+    expect(newBreakpoint && !newBreakpoint.disabled).toBe(true);
+    expect(newBreakpoint && newBreakpoint.options.condition).toBe(
+      "const foo = 0"
+    );
   });
 
   it("should remap breakpoints on pretty print", async () => {
@@ -336,16 +366,19 @@ describe("breakpoints", () => {
       sourceUrl: "http://localhost:8000/examples/a.js"
     };
 
-    const source = makeSource("a.js");
-    await dispatch(actions.newSource(source));
-    await dispatch(actions.loadSourceText(source.source));
+    const csr = makeSource("a.js");
+    await dispatch(actions.newSource(csr));
+    await dispatch(actions.loadSourceText(csr.source));
 
     await dispatch(actions.addBreakpoint(loc));
     await dispatch(actions.togglePrettyPrint("a.js"));
 
     const breakpoint = selectors.getBreakpointsList(getState())[0];
 
-    expect(breakpoint.location.sourceUrl.includes("formatted")).toBe(true);
+    expect(
+      breakpoint.location.sourceUrl &&
+        breakpoint.location.sourceUrl.includes("formatted")
+    ).toBe(true);
     expect(breakpoint).toMatchSnapshot();
   });
 });

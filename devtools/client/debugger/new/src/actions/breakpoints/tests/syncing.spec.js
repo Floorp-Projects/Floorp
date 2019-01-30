@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+// @flow
+
 jest.mock("../../../utils/source-maps", () => ({
   getGeneratedLocation: jest.fn()
 }));
@@ -93,11 +95,15 @@ function pendingBreakpoint(overrides) {
       name: undefined,
       offset: {
         line: 3
-      }
+      },
+      index: 0
     },
     condition: null,
     disabled: false,
     hidden: false,
+    loading: false,
+    options: {},
+    text: "",
     ...overrides
   };
 }
@@ -113,7 +119,9 @@ function newGeneratedLocation(line) {
 
 describe("loading the debugger", () => {
   it("loads the initial breakpoint state", async () => {
-    getGeneratedLocation.mockImplementation(() => newGeneratedLocation(3));
+    (getGeneratedLocation: any).mockImplementation(() =>
+      newGeneratedLocation(3)
+    );
 
     const { dispatch, getState } = createStore(threadClient, {}, sourceMaps);
 
@@ -138,10 +146,10 @@ describe("loading the debugger", () => {
   it("loads the initial breakpoint state with a changed file", async () => {
     const location = { line: 9, column: 0 };
     const generated = 3;
-    getGeneratedLocation.mockImplementation(() =>
+    (getGeneratedLocation: any).mockImplementation(() =>
       newGeneratedLocation(generated)
     );
-    findScopeByName.mockImplementation(() => ({
+    (findScopeByName: any).mockImplementation(() => ({
       location: { start: location }
     }));
 
@@ -162,7 +170,9 @@ describe("loading the debugger", () => {
     );
 
     expect(threadClient.removeBreakpoint.mock.calls).toHaveLength(0);
-    expect(update.breakpoint.location.line).toBe(location.line + generated);
+    expect(update && update.breakpoint && update.breakpoint.location.line).toBe(
+      location.line + generated
+    );
     expect(update).toMatchSnapshot();
   });
 });
@@ -170,8 +180,10 @@ describe("loading the debugger", () => {
 describe("reloading debuggee", () => {
   beforeEach(() => {
     const location = { line: 0, column: 0 };
-    getGeneratedLocation.mockImplementation(() => newGeneratedLocation(3));
-    findScopeByName.mockImplementation(() => ({
+    (getGeneratedLocation: any).mockImplementation(() =>
+      newGeneratedLocation(3)
+    );
+    (findScopeByName: any).mockImplementation(() => ({
       location: { start: location }
     }));
   });
@@ -221,7 +233,9 @@ describe("reloading debuggee", () => {
     // here we are mocking out what happens when the source changed, and the
     // new line for originalSource line 3, is the generated Source line 5
 
-    getGeneratedLocation.mockImplementation(() => newGeneratedLocation(5));
+    (getGeneratedLocation: any).mockImplementation(() =>
+      newGeneratedLocation(5)
+    );
     // end mocking out
 
     const { dispatch, getState } = createStore(threadClient, {}, sourceMaps);
@@ -247,7 +261,9 @@ describe("reloading debuggee", () => {
   });
 
   it("syncs with changed source and an existing disabled BP", async () => {
-    getGeneratedLocation.mockImplementationOnce(() => newGeneratedLocation(5));
+    (getGeneratedLocation: any).mockImplementationOnce(() =>
+      newGeneratedLocation(5)
+    );
 
     const { dispatch, getState } = createStore(threadClient, {}, sourceMaps);
 
@@ -266,7 +282,9 @@ describe("reloading debuggee", () => {
     const { breakpoint } = await dispatch(actions.addBreakpoint(location));
     await dispatch(actions.disableBreakpoint(breakpoint));
 
-    getGeneratedLocation.mockImplementationOnce(() => newGeneratedLocation(1));
+    (getGeneratedLocation: any).mockImplementationOnce(() =>
+      newGeneratedLocation(1)
+    );
 
     await dispatch(
       actions.syncBreakpoint(

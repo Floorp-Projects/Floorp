@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+// @flow
+
 import {
   createStore,
   selectors,
@@ -34,7 +36,13 @@ describe("navigation", () => {
       fetchWorkers: () => Promise.resolve([]),
       getMainThread: () => "FakeThread"
     });
-    await dispatch(actions.connect("http://test.com/foo"));
+    await dispatch(
+      actions.connect(
+        "http://test.com/foo",
+        "actor",
+        false
+      )
+    );
     expect(selectors.getDebuggeeUrl(getState())).toEqual("http://test.com/foo");
   });
 

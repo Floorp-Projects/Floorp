@@ -4,11 +4,23 @@ exports[`visible column breakpoints duplicate generated locations 1`] = `
 Array [
   Object {
     "breakpoint": Object {
+      "astLocation": null,
+      "disabled": false,
+      "generatedLocation": Object {
+        "column": 1,
+        "line": 1,
+        "sourceId": "foo",
+      },
+      "id": "breakpoint",
+      "loading": false,
       "location": Object {
         "column": 1,
         "line": 1,
         "sourceId": "foo",
       },
+      "options": Object {},
+      "originalText": "text",
+      "text": "text",
     },
     "location": Object {
       "column": 1,
@@ -31,11 +43,23 @@ exports[`visible column breakpoints ignores single breakpoints 1`] = `
 Array [
   Object {
     "breakpoint": Object {
+      "astLocation": null,
+      "disabled": false,
+      "generatedLocation": Object {
+        "column": 1,
+        "line": 1,
+        "sourceId": "foo",
+      },
+      "id": "breakpoint",
+      "loading": false,
       "location": Object {
         "column": 1,
         "line": 1,
         "sourceId": "foo",
       },
+      "options": Object {},
+      "originalText": "text",
+      "text": "text",
     },
     "location": Object {
       "column": 1,
@@ -58,11 +82,23 @@ exports[`visible column breakpoints only shows visible breakpoints 1`] = `
 Array [
   Object {
     "breakpoint": Object {
+      "astLocation": null,
+      "disabled": false,
+      "generatedLocation": Object {
+        "column": 1,
+        "line": 1,
+        "sourceId": "foo",
+      },
+      "id": "breakpoint",
+      "loading": false,
       "location": Object {
         "column": 1,
         "line": 1,
         "sourceId": "foo",
       },
+      "options": Object {},
+      "originalText": "text",
+      "text": "text",
     },
     "location": Object {
       "column": 1,
@@ -85,11 +121,23 @@ exports[`visible column breakpoints simple 1`] = `
 Array [
   Object {
     "breakpoint": Object {
+      "astLocation": null,
+      "disabled": false,
+      "generatedLocation": Object {
+        "column": 1,
+        "line": 1,
+        "sourceId": "foo",
+      },
+      "id": "breakpoint",
+      "loading": false,
       "location": Object {
         "column": 1,
         "line": 1,
         "sourceId": "foo",
       },
+      "options": Object {},
+      "originalText": "text",
+      "text": "text",
     },
     "location": Object {
       "column": 1,
