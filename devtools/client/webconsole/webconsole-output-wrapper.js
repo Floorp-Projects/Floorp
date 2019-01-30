@@ -69,11 +69,11 @@ WebConsoleOutputWrapper.prototype = {
           hud.owner.openLink(url, e);
         },
         canRewind: () => {
-          if (!(hud.owner && hud.owner.target && hud.owner.target.activeTab)) {
+          if (!(hud.owner && hud.owner.target && hud.owner.target)) {
             return false;
           }
 
-          return hud.owner.target.activeTab.traits.canRewind;
+          return hud.owner.target.traits.canRewind;
         },
         createElement: nodename => {
           return this.document.createElement(nodename);
