@@ -6,8 +6,9 @@
 "use strict";
 
 const AutocompletePopup = require("devtools/client/shared/autocomplete-popup");
-const CSSCompleter = require("devtools/client/sourceeditor/css-autocompleter");
-const {KeyCodes} = require("devtools/client/shared/keycodes");
+
+loader.lazyRequireGetter(this, "KeyCodes", "devtools/client/shared/keycodes", true);
+loader.lazyRequireGetter(this, "CSSCompleter", "devtools/client/sourceeditor/css-autocompleter");
 
 const CM_TERN_SCRIPTS = [
   "chrome://devtools/content/sourceeditor/codemirror/addon/tern/tern.js",
