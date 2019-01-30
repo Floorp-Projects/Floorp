@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 const {FormAutoCompleteResult} =
     ChromeUtils.import("resource://gre/modules/nsFormAutoCompleteResult.jsm");
 
@@ -62,5 +61,4 @@ InputListAutoComplete.prototype = {
   },
 };
 
-var component = [InputListAutoComplete];
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory(component);
+var EXPORTED_SYMBOLS = ["InputListAutoComplete"];
