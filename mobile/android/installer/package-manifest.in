@@ -152,9 +152,6 @@
 @BINPATH@/components/htmlMenuBuilder.js
 @BINPATH@/components/htmlMenuBuilder.manifest
 
-@BINPATH@/components/CaptivePortalDetectComponents.manifest
-@BINPATH@/components/captivedetect.js
-
 #if defined(ENABLE_TESTS) && defined(MOZ_DEBUG)
 @BINPATH@/components/TestInterfaceJS.js
 @BINPATH@/components/TestInterfaceJS.manifest
