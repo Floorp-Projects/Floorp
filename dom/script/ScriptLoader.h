@@ -401,14 +401,6 @@ class ScriptLoader final : public nsISupports {
 
   void HandleLoadError(ScriptLoadRequest* aRequest, nsresult aResult);
 
-  static bool BinASTEncodingEnabled() {
-#ifdef JS_BUILD_BINAST
-    return StaticPrefs::dom_script_loader_binast_encoding_enabled();
-#else
-    return false;
-#endif
-  }
-
   /**
    * Process any pending requests asynchronously (i.e. off an event) if there
    * are any. Note that this is a no-op if there aren't any currently pending

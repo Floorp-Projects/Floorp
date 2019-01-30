@@ -301,7 +301,7 @@ nsresult ScriptLoadHandler::EnsureKnownDataType(
     MOZ_ASSERT(altDataType.IsEmpty());
   }
 
-  if (ScriptLoader::BinASTEncodingEnabled()) {
+  if (nsJSUtils::BinASTEncodingEnabled()) {
     nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(req);
     if (httpChannel) {
       nsAutoCString mimeType;
