@@ -321,4 +321,4 @@ Qihoo360seProfileMigrator.prototype.classDescription = "360 Secure Browser Profi
 Qihoo360seProfileMigrator.prototype.contractID = "@mozilla.org/profile/migrator;1?app=browser&type=360se";
 Qihoo360seProfileMigrator.prototype.classID = Components.ID("{d0037b95-296a-4a4e-94b2-c3d075d20ab1}");
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([Qihoo360seProfileMigrator]);
+var EXPORTED_SYMBOLS = ["Qihoo360seProfileMigrator"];
