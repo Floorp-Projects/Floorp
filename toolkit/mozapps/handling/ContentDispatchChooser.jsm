@@ -4,7 +4,6 @@
 
 // Constants
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const CONTENT_HANDLING_URL = "chrome://mozapps/content/handling/dialog.xul";
@@ -67,8 +66,4 @@ nsContentDispatchChooser.prototype =
   QueryInterface: ChromeUtils.generateQI([Ci.nsIContentDispatchChooser]),
 };
 
-// Module
-
-var components = [nsContentDispatchChooser];
-
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory(components);
+var EXPORTED_SYMBOLS = ["nsContentDispatchChooser"];
