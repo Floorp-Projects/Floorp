@@ -12,7 +12,7 @@ import {
   createBreakpoint,
   getASTLocation,
   assertLocation,
-  makeLocationId,
+  makeBreakpointId,
   makeSourceActorLocation
 } from "../../utils/breakpoint";
 import { PROMISE } from "../utils/middleware/promise";
@@ -98,7 +98,7 @@ async function addBreakpointPromise(getState, client, sourceMaps, breakpoint) {
   const text = getTextAtPosition(generatedSource, newGeneratedLocation);
 
   const newBreakpoint = {
-    id: makeLocationId(generatedLocation),
+    id: makeBreakpointId(generatedLocation),
     disabled: false,
     loading: false,
     options: breakpoint.options,
