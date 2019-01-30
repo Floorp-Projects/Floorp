@@ -11,7 +11,7 @@ const nsIDocShell = Ci.nsIDocShell;
 const nsIWebProgressListener = Ci.nsIWebProgressListener;
 
 const NS_LAYOUT_DEBUGGINGTOOLS_CONTRACTID = "@mozilla.org/layout-debug/layout-debuggingtools;1";
-
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function nsLDBBrowserContentListener()
 {
