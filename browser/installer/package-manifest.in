@@ -207,9 +207,6 @@
 
 @RESPATH@/components/Push.manifest
 
-@RESPATH@/components/SlowScriptDebug.manifest
-@RESPATH@/components/SlowScriptDebug.js
-
 ; Remote control protocol
 #ifdef ENABLE_MARIONETTE
 @RESPATH@/chrome/marionette@JAREXT@
