@@ -8,6 +8,7 @@ PromiseTestUtils.whitelistRejectionsGlobally(/Message manager disconnected/);
 
 add_task(async function testUpdatingCommands() {
   let commands = {
+    commandZero: {},
     commandOne: {
       suggested_key: {default: "Shift+Alt+4"},
     },
@@ -63,6 +64,12 @@ add_task(async function testUpdatingCommands() {
 
   let inputs = card.querySelectorAll(".shortcut-input");
   is(inputs.length, Object.keys(commands).length, "There is an input for each command");
+
+  let nameOrder = Array.from(inputs).map(input => input.getAttribute("name"));
+  Assert.deepEqual(
+    nameOrder,
+    ["commandOne", "commandTwo", "_execute_browser_action", "commandZero"],
+    "commandZero should be last since it is unset");
 
   for (let input of inputs) {
     // Change the shortcut.
