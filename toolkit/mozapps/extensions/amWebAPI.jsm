@@ -270,4 +270,4 @@ class WebAPI extends APIObject {
 }
 WebAPI.prototype.QueryInterface = ChromeUtils.generateQI(["nsIDOMGlobalPropertyInitializer"]);
 WebAPI.prototype.classID = Components.ID("{8866d8e3-4ea5-48b7-a891-13ba0ac15235}");
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([WebAPI]);
+var EXPORTED_SYMBOLS = ["WebAPI"];
