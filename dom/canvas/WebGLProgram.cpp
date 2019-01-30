@@ -163,7 +163,7 @@ webgl::UniformInfo::UniformInfo(WebGLActiveInfo* activeInfo)
 
 //#define DUMP_SHADERVAR_MAPPINGS
 
-static already_AddRefed<const webgl::LinkedProgramInfo> QueryProgramInfo(
+static RefPtr<const webgl::LinkedProgramInfo> QueryProgramInfo(
     WebGLProgram* prog, gl::GLContext* gl) {
   WebGLContext* const webgl = prog->mContext;
 
@@ -212,9 +212,12 @@ static already_AddRefed<const webgl::LinkedProgramInfo> QueryProgramInfo(
     gl->fGetActiveAttrib(prog->mGLName, i, mappedName.Length() + 1,
                          &lengthWithoutNull, &elemCount, &elemType,
                          mappedName.BeginWriting());
-    GLenum error = gl->fGetError();
-    if (error != LOCAL_GL_NO_ERROR) {
-      gfxCriticalNote << "Failed to do glGetActiveAttrib: " << error;
+    if (!elemType) {
+      const auto error = gl->fGetError();
+      if (error != LOCAL_GL_CONTEXT_LOST) {
+        gfxCriticalError() << "Failed to do glGetActiveAttrib: " << error;
+      }
+      return nullptr;
     }
 
     mappedName.SetLength(lengthWithoutNull);
@@ -272,6 +275,13 @@ static already_AddRefed<const webgl::LinkedProgramInfo> QueryProgramInfo(
     gl->fGetActiveUniform(prog->mGLName, i, mappedName.Length() + 1,
                           &lengthWithoutNull, &elemCount, &elemType,
                           mappedName.BeginWriting());
+    if (!elemType) {
+      const auto error = gl->fGetError();
+      if (error != LOCAL_GL_CONTEXT_LOST) {
+        gfxCriticalError() << "Failed to do glGetActiveAttrib: " << error;
+      }
+      return nullptr;
+    }
 
     mappedName.SetLength(lengthWithoutNull);
 
@@ -388,6 +398,15 @@ static already_AddRefed<const webgl::LinkedProgramInfo> QueryProgramInfo(
       gl->fGetTransformFeedbackVarying(
           prog->mGLName, i, maxTransformFeedbackVaryingLenWithNull,
           &lengthWithoutNull, &elemCount, &elemType, mappedName.BeginWriting());
+
+      if (!elemType) {
+        const auto error = gl->fGetError();
+        if (error != LOCAL_GL_CONTEXT_LOST) {
+          gfxCriticalError() << "Failed to do glGetActiveAttrib: " << error;
+        }
+        return nullptr;
+      }
+
       mappedName.SetLength(lengthWithoutNull);
 
       ////
@@ -421,7 +440,7 @@ static already_AddRefed<const webgl::LinkedProgramInfo> QueryProgramInfo(
 
   prog->EnumerateFragOutputs(info->fragDataMap);
 
-  return info.forget();
+  return info;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1420,9 +1439,8 @@ void WebGLProgram::LinkAndUpdate() {
   gl->fGetProgramiv(mGLName, LOCAL_GL_LINK_STATUS, &ok);
   if (!ok) return;
 
-  mMostRecentLinkInfo = QueryProgramInfo(this, gl);
-  MOZ_RELEASE_ASSERT(mMostRecentLinkInfo,
-                     "GFX: most recent link info not set.");
+  mMostRecentLinkInfo =
+      QueryProgramInfo(this, gl);  // Fallible after context loss.
 }
 
 bool WebGLProgram::FindAttribUserNameByMappedName(
