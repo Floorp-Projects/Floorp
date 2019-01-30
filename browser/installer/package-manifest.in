@@ -213,8 +213,6 @@
 @RESPATH@/components/htmlMenuBuilder.js
 @RESPATH@/components/htmlMenuBuilder.manifest
 
-@RESPATH@/components/NotificationStorage.js
-@RESPATH@/components/NotificationStorage.manifest
 @RESPATH@/components/Push.manifest
 
 @RESPATH@/components/ProcessSelector.js
