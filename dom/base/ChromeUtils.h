@@ -173,6 +173,8 @@ class ChromeUtils {
 
   static double LastExternalProtocolIframeAllowed(GlobalObject& aGlobal);
 
+  static void ResetLastExternalProtocolIframeAllowed(GlobalObject& aGlobal);
+
   static void RegisterWindowActor(const GlobalObject& aGlobal,
                                   const nsAString& aName,
                                   const WindowActorOptions& aOptions,
