@@ -215,8 +215,6 @@
 #endif
 @RESPATH@/components/nsUpdateTimerManager.manifest
 @RESPATH@/components/nsUpdateTimerManager.js
-@RESPATH@/components/utils.manifest
-@RESPATH@/components/simpleServices.js
 @RESPATH@/components/ProcessSingleton.manifest
 @RESPATH@/components/nsURLFormatter.manifest
 @RESPATH@/components/nsURLFormatter.js
