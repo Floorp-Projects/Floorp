@@ -12,7 +12,6 @@ import org.mozilla.geckoview.GeckoResult;
 import org.mozilla.geckoview.GeckoRuntime;
 import org.mozilla.geckoview.GeckoRuntimeSettings;
 import org.mozilla.geckoview.GeckoSession;
-import org.mozilla.geckoview.GeckoSession.TrackingProtectionDelegate;
 import org.mozilla.geckoview.GeckoSessionSettings;
 import org.mozilla.geckoview.GeckoView;
 import org.mozilla.geckoview.WebRequestError;
@@ -132,7 +131,7 @@ public class GeckoViewActivity extends AppCompatActivity {
                     .remoteDebuggingEnabled(true)
                     .consoleOutput(true)
                     .contentBlocking(new ContentBlocking.Settings.Builder()
-                        .block(ContentBlocking.AT_ALL)
+                        .categories(ContentBlocking.AT_ALL | ContentBlocking.SB_ALL)
                         .build())
                     .crashHandler(ExampleCrashHandler.class);
 
@@ -179,9 +178,9 @@ public class GeckoViewActivity extends AppCompatActivity {
     private void connectSession(GeckoSession session) {
         session.setContentDelegate(new ExampleContentDelegate());
         session.setHistoryDelegate(new ExampleHistoryDelegate());
-        final ExampleTrackingProtectionDelegate tp = new ExampleTrackingProtectionDelegate();
-        session.setTrackingProtectionDelegate(tp);
-        session.setProgressDelegate(new ExampleProgressDelegate(tp));
+        final ExampleContentBlockingDelegate cb = new ExampleContentBlockingDelegate();
+        session.setContentBlockingDelegate(cb);
+        session.setProgressDelegate(new ExampleProgressDelegate(cb));
         session.setNavigationDelegate(new ExampleNavigationDelegate());
 
         final BasicGeckoViewPrompt prompt = new BasicGeckoViewPrompt(this);
@@ -529,10 +528,10 @@ public class GeckoViewActivity extends AppCompatActivity {
     }
 
     private class ExampleProgressDelegate implements GeckoSession.ProgressDelegate {
-        private ExampleTrackingProtectionDelegate mTp;
+        private ExampleContentBlockingDelegate mCb;
 
-        private ExampleProgressDelegate(final ExampleTrackingProtectionDelegate tp) {
-            mTp = tp;
+        private ExampleProgressDelegate(final ExampleContentBlockingDelegate cb) {
+            mCb = cb;
         }
 
         @Override
@@ -540,7 +539,7 @@ public class GeckoViewActivity extends AppCompatActivity {
             Log.i(LOGTAG, "Starting to load page at " + url);
             Log.i(LOGTAG, "zerdatime " + SystemClock.elapsedRealtime() +
                   " - page load start");
-            mTp.clearCounters();
+            mCb.clearCounters();
         }
 
         @Override
@@ -548,7 +547,7 @@ public class GeckoViewActivity extends AppCompatActivity {
             Log.i(LOGTAG, "Stopping page load " + (success ? "successfully" : "unsuccessfully"));
             Log.i(LOGTAG, "zerdatime " + SystemClock.elapsedRealtime() +
                   " - page load stop");
-            mTp.logCounters();
+            mCb.logCounters();
         }
 
         @Override
@@ -852,7 +851,8 @@ public class GeckoViewActivity extends AppCompatActivity {
         }
     }
 
-    private class ExampleTrackingProtectionDelegate implements GeckoSession.TrackingProtectionDelegate {
+    private class ExampleContentBlockingDelegate
+            implements ContentBlocking.Delegate {
         private int mBlockedAds = 0;
         private int mBlockedAnalytics = 0;
         private int mBlockedSocial = 0;
@@ -876,22 +876,23 @@ public class GeckoViewActivity extends AppCompatActivity {
         }
 
         @Override
-        public void onTrackerBlocked(final GeckoSession session, final String uri,
-                                     int categories) {
-            Log.d(LOGTAG, "onTrackerBlocked " + categories + " (" + uri + ")");
-            if ((categories & TrackingProtectionDelegate.CATEGORY_TEST) != 0) {
+        public void onContentBlocked(final GeckoSession session,
+                                     final ContentBlocking.BlockEvent event) {
+            Log.d(LOGTAG, "onContentBlocked " + event.categories +
+                  " (" + event.uri + ")");
+            if ((event.categories & ContentBlocking.AT_TEST) != 0) {
                 mBlockedTest++;
             }
-            if ((categories & TrackingProtectionDelegate.CATEGORY_AD) != 0) {
+            if ((event.categories & ContentBlocking.AT_AD) != 0) {
                 mBlockedAds++;
             }
-            if ((categories & TrackingProtectionDelegate.CATEGORY_ANALYTIC) != 0) {
+            if ((event.categories & ContentBlocking.AT_ANALYTIC) != 0) {
                 mBlockedAnalytics++;
             }
-            if ((categories & TrackingProtectionDelegate.CATEGORY_SOCIAL) != 0) {
+            if ((event.categories & ContentBlocking.AT_SOCIAL) != 0) {
                 mBlockedSocial++;
             }
-            if ((categories & TrackingProtectionDelegate.CATEGORY_CONTENT) != 0) {
+            if ((event.categories & ContentBlocking.AT_CONTENT) != 0) {
                 mBlockedContent++;
             }
         }
