@@ -2296,7 +2296,7 @@ if test -n "$MOZ_SYSTEM_LIBVPX"; then
     dnl === libvpx Version check ===
     dnl ============================
     dnl Check to see if we have a system libvpx package.
-    PKG_CHECK_MODULES(MOZ_LIBVPX, vpx >= 1.5.0)
+    PKG_CHECK_MODULES(MOZ_LIBVPX, vpx >= 1.7.0)
 
     CFLAGS="$CFLAGS $MOZ_LIBVPX_CFLAGS"
     LIBS="$LIBS $MOZ_LIBVPX_LIBS"
