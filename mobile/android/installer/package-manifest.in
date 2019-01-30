@@ -165,10 +165,6 @@
 @BINPATH@/components/HandlerService.js
 @BINPATH@/components/nsWebHandlerApp.manifest
 @BINPATH@/components/nsWebHandlerApp.js
-@BINPATH@/components/satchel.manifest
-@BINPATH@/components/nsFormAutoComplete.js
-@BINPATH@/components/FormHistoryStartup.js
-@BINPATH@/components/nsInputListAutoComplete.js
 @BINPATH@/components/contentAreaDropListener.manifest
 @BINPATH@/components/contentAreaDropListener.js
 @BINPATH@/components/servicesComponents.manifest
