@@ -113,7 +113,13 @@ PushServiceBase.prototype = {
  * `PushService.jsm` at startup and calls its methods directly. It also
  * receives and responds to requests from the content process.
  */
+let parentInstance;
 function PushServiceParent() {
+  if (parentInstance) {
+    return parentInstance;
+  }
+  parentInstance = this;
+
   PushServiceBase.call(this);
 }
 
@@ -123,8 +129,6 @@ XPCOMUtils.defineLazyServiceGetter(PushServiceParent.prototype, "_mm",
   "@mozilla.org/parentprocessmessagemanager;1", "nsISupports");
 
 Object.assign(PushServiceParent.prototype, {
-  _xpcom_factory: XPCOMUtils.generateSingletonFactory(PushServiceParent),
-
   _messages: [
     "Push:Register",
     "Push:Registration",
@@ -306,6 +310,7 @@ Object.defineProperty(PushServiceParent.prototype, "service", {
   },
 });
 
+let contentInstance;
 /**
  * The content process implementation of `nsIPushService`. This version
  * uses the child message manager to forward calls to the parent process.
@@ -313,6 +318,11 @@ Object.defineProperty(PushServiceParent.prototype, "service", {
  * message containing the result.
  */
 function PushServiceContent() {
+  if (contentInstance) {
+    return contentInstance;
+  }
+  contentInstance = this;
+
   PushServiceBase.apply(this, arguments);
   this._requests = new Map();
   this._requestId = 0;
@@ -325,8 +335,6 @@ XPCOMUtils.defineLazyServiceGetter(PushServiceContent.prototype,
   "nsISupports");
 
 Object.assign(PushServiceContent.prototype, {
-  _xpcom_factory: XPCOMUtils.generateSingletonFactory(PushServiceContent),
-
   _messages: [
     "PushService:Register:OK",
     "PushService:Register:KO",
@@ -548,8 +556,8 @@ PushSubscription.prototype = {
   },
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([
-  // Export the correct implementation depending on whether we're running in
-  // the parent or content process.
-  isParent ? PushServiceParent : PushServiceContent,
-]);
+// Export the correct implementation depending on whether we're running in
+// the parent or content process.
+let Service = isParent ? PushServiceParent : PushServiceContent;
+
+var EXPORTED_SYMBOLS = ["Service"];

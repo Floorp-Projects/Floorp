@@ -106,9 +106,7 @@
 @BINPATH@/components/NotificationStorage.js
 @BINPATH@/components/NotificationStorage.manifest
 #ifdef MOZ_ANDROID_GCM
-@BINPATH@/components/Push.js
 @BINPATH@/components/Push.manifest
-@BINPATH@/components/PushComponents.js
 #endif
 @BINPATH@/components/BrowserElementParent.manifest
 @BINPATH@/components/BrowserElementParent.js
