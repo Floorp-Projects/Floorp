@@ -4,7 +4,6 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 
 ChromeUtils.defineModuleGetter(this, "TelemetryController",
@@ -123,4 +122,4 @@ BHRTelemetryService.prototype = Object.freeze({
   },
 });
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([BHRTelemetryService]);
+var EXPORTED_SYMBOLS = ["BHRTelemetryService"];
