@@ -150,8 +150,6 @@
 #endif
 
 #ifndef MOZ_GECKOVIEW_JAR
-@BINPATH@/components/BuiltinProviders.manifest
-@BINPATH@/components/PresentationControlService.js
 @BINPATH@/components/PresentationNetworkHelper.js
 @BINPATH@/components/PresentationNetworkHelper.manifest
 @BINPATH@/components/AndroidCastDeviceProvider.manifest
