@@ -5413,17 +5413,9 @@ static void SweepMisc(GCParallelTask* task) {
 static void SweepCompressionTasks(GCParallelTask* task) {
   JSRuntime* runtime = task->runtime();
 
-  AutoLockHelperThreadState lock;
-
   // Attach finished compression tasks.
-  auto& finished = HelperThreadState().compressionFinishedList(lock);
-  for (size_t i = 0; i < finished.length(); i++) {
-    if (finished[i]->runtimeMatches(runtime)) {
-      UniquePtr<SourceCompressionTask> compressionTask(std::move(finished[i]));
-      HelperThreadState().remove(finished, &i);
-      compressionTask->complete();
-    }
-  }
+  AutoLockHelperThreadState lock;
+  AttachFinishedCompressions(runtime, lock);
 
   // Sweep pending tasks that are holding onto should-be-dead ScriptSources.
   auto& pending = HelperThreadState().compressionPendingList(lock);
