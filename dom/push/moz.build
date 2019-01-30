@@ -7,13 +7,13 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: Push Notifications")
 
 EXTRA_COMPONENTS += [
-    'Push.js',
     'Push.manifest',
-    'PushComponents.js',
 ]
 
 EXTRA_JS_MODULES += [
+    'Push.jsm',
     'PushBroadcastService.jsm',
+    'PushComponents.jsm',
     'PushCrypto.jsm',
     'PushDB.jsm',
     'PushRecord.jsm',
@@ -31,6 +31,10 @@ else:
     EXTRA_JS_MODULES += [
         'PushServiceAndroidGCM.jsm',
     ]
+
+XPCOM_MANIFESTS += [
+    'components.conf',
+]
 
 MOCHITEST_MANIFESTS += [
     'test/mochitest.ini',
