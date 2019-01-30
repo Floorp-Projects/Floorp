@@ -61,8 +61,8 @@ const QUERYINDEX_TITLE         = 2;
 const QUERYINDEX_BOOKMARKED    = 3;
 const QUERYINDEX_BOOKMARKTITLE = 4;
 const QUERYINDEX_TAGS          = 5;
-const QUERYINDEX_VISITCOUNT    = 6;
-const QUERYINDEX_TYPED         = 7;
+//    QUERYINDEX_VISITCOUNT    = 6;
+//    QUERYINDEX_TYPED         = 7;
 const QUERYINDEX_PLACEID       = 8;
 const QUERYINDEX_SWITCHTAB     = 9;
 const QUERYINDEX_FRECENCY      = 10;
@@ -320,7 +320,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
   ExtensionSearchHandler: "resource://gre/modules/ExtensionSearchHandler.jsm",
   ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
-  OS: "resource://gre/modules/osfile.jsm",
   PlacesRemoteTabsAutocompleteProvider: "resource://gre/modules/PlacesRemoteTabsAutocompleteProvider.jsm",
   PlacesSearchAutocompleteProvider: "resource://gre/modules/PlacesSearchAutocompleteProvider.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
@@ -2726,8 +2725,6 @@ UnifiedComplete.prototype = {
 
   classID: Components.ID("f964a319-397a-4d21-8be6-5cdd1ee3e3ae"),
 
-  _xpcom_factory: XPCOMUtils.generateSingletonFactory(UnifiedComplete),
-
   QueryInterface: ChromeUtils.generateQI([
     Ci.nsIAutoCompleteSearch,
     Ci.nsIAutoCompleteSearchDescriptor,
@@ -2737,4 +2734,4 @@ UnifiedComplete.prototype = {
   ]),
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([UnifiedComplete]);
+var EXPORTED_SYMBOLS = ["UnifiedComplete"];
