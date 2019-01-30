@@ -285,4 +285,4 @@ PushSubscriptionCallback.prototype = {
   },
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([Push]);
+var EXPORTED_SYMBOLS = ["Push"];

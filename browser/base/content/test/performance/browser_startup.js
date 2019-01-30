@@ -26,10 +26,6 @@ const startupPhases = {
   // Consider loading your code after first paint instead,
   // eg. from BrowserGlue.jsm' _onFirstWindowLoaded method).
   "before profile selection": {whitelist: {
-    components: new Set([
-      // Bugs to fix: The following components shouldn't be initialized that early.
-      "PushComponents.js", // bug 1369436
-    ]),
     modules: new Set([
       "resource:///modules/BrowserGlue.jsm",
       "resource://gre/modules/AppConstants.jsm",
@@ -39,6 +35,8 @@ const startupPhases = {
       "resource://gre/modules/MainProcessSingleton.jsm",
       "resource://gre/modules/XPCOMUtils.jsm",
       "resource://gre/modules/Services.jsm",
+      // Bugs to fix: The following components shouldn't be initialized that early.
+      "resource://gre/modules/PushComponents.jsm", // bug 1369436
     ]),
   }},
 
