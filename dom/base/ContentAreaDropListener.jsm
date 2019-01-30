@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 // This component is used for handling dragover and drop of urls.
@@ -315,5 +314,4 @@ ContentAreaDropListener.prototype =
   }
 };
 
-var components = [ContentAreaDropListener];
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory(components);
+var EXPORTED_SYMBOLS = ["ContentAreaDropListener"];
