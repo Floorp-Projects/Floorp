@@ -209,8 +209,6 @@
 #ifdef MOZ_UPDATER
 @RESPATH@/components/nsUpdateService.manifest
 #endif
-@RESPATH@/components/nsUpdateTimerManager.manifest
-@RESPATH@/components/nsUpdateTimerManager.js
 @RESPATH@/components/ProcessSingleton.manifest
 @RESPATH@/components/PageThumbsStorageService.js
 @RESPATH@/components/mozProtocolHandler.js

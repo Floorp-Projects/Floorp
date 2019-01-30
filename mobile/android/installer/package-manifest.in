@@ -145,9 +145,6 @@
 @BINPATH@/components/ClearDataService.manifest
 @BINPATH@/components/ClearDataService.js
 
-@BINPATH@/components/nsUpdateTimerManager.manifest
-@BINPATH@/components/nsUpdateTimerManager.js
-
 @BINPATH@/components/ProcessSingleton.manifest
 @BINPATH@/components/ContentPrefService2.manifest
 @BINPATH@/components/ContentPrefService2.js
