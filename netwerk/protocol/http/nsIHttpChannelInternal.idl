@@ -352,11 +352,11 @@ interface nsIHttpChannelInternal : nsISupports
 
     /**
      * Cancel a channel because we have determined that it needs to be blocked
-     * for tracking protection.  This is an internal API that is meant to be
-     * called by the channel classifier.  Please DO NOT use this API if you don't
-     * know whether you should be using it.
+     * for safe-browsing protection.  This is an internal API that is meant to
+     * be called by the channel classifier.  Please DO NOT use this API if you
+     * don't know whether you should be using it.
      */
-    [noscript] void cancelForTrackingProtection();
+    [noscript] void cancelByChannelClassifier(in nsresult aErrorCode);
 
     /**
      * The channel will be loaded over IPv6, disabling IPv4.
