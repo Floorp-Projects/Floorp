@@ -496,4 +496,4 @@ EdgeProfileMigrator.prototype.classDescription = "Edge Profile Migrator";
 EdgeProfileMigrator.prototype.contractID = "@mozilla.org/profile/migrator;1?app=browser&type=edge";
 EdgeProfileMigrator.prototype.classID = Components.ID("{62e8834b-2d17-49f5-96ff-56344903a2ae}");
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([EdgeProfileMigrator]);
+var EXPORTED_SYMBOLS = ["EdgeProfileMigrator"];
