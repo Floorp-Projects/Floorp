@@ -42,6 +42,8 @@ class SamplesWaitingForKey {
 
   void Flush();
 
+  void BreakCycles();
+
  protected:
   ~SamplesWaitingForKey();
 
