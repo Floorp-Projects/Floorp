@@ -144,8 +144,6 @@
 @BINPATH@/components/ClearDataService.js
 
 @BINPATH@/components/ProcessSingleton.manifest
-@BINPATH@/components/ContentPrefService2.manifest
-@BINPATH@/components/ContentPrefService2.js
 @BINPATH@/components/HandlerService.manifest
 @BINPATH@/components/HandlerService.js
 @BINPATH@/components/contentAreaDropListener.manifest
