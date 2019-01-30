@@ -159,7 +159,7 @@ export default class Group extends Component<Props, State> {
         <FrameLocation frame={frame} expanded={expanded} />
         {selectable && <span className="clipboard-only"> </span>}
         <Badge>{this.props.group.length}</Badge>
-        {selectable && <br className="clipboard-only"/>}
+        {selectable && <br className="clipboard-only" />}
       </div>
     );
   }
