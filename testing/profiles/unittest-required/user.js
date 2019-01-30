@@ -85,9 +85,6 @@ user_pref("captivedetect.canonicalURL", "http://{server}/captive-detect/success.
 user_pref("datareporting.healthreport.documentServerURI", "http://{server}/healthreport/");
 user_pref("datareporting.healthreport.uploadEnabled", false);
 user_pref("devtools.browsertoolbox.panel", "jsdebugger");
-user_pref("devtools.chrome.enabled", false);
-user_pref("devtools.debugger.prompt-connection", true);
-user_pref("devtools.debugger.remote-enabled", false);
 user_pref("devtools.debugger.remote-port", 6023);
 user_pref("devtools.testing", true);
 // Required to set values in wpt metadata files (bug 1485842)

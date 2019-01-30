@@ -710,13 +710,6 @@ class MochitestArguments(ArgumentContainer):
         elif not options.symbolsPath and build_obj:
             options.symbolsPath = os.path.join(build_obj.distdir, 'crashreporter-symbols')
 
-        if options.jsdebugger:
-            options.extraPrefs += [
-                "devtools.debugger.remote-enabled=true",
-                "devtools.chrome.enabled=true",
-                "devtools.debugger.prompt-connection=false"
-            ]
-
         if options.debugOnFailure and not options.jsdebugger:
             parser.error(
                 "--debug-on-failure requires --jsdebugger.")

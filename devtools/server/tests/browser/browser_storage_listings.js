@@ -455,6 +455,11 @@ var testSessionStorageObjects = async function(index, hosts, sessionStorageActor
 };
 
 var testIndexedDB = async function(indexedDBActor) {
+  // If this test is run with chrome debugging enabled we get an extra
+  // key for "chrome". We don't want the test to fail in this case, so
+  // ignore it.
+  delete indexedDBActor.hosts.chrome;
+
   is(Object.keys(indexedDBActor.hosts).length, 3,
      "Correct number of host entries for indexed db");
 

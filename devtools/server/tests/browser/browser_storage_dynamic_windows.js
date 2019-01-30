@@ -106,6 +106,14 @@ async function testStores(data, front) {
 function testWindowsBeforeReload(data) {
   for (const storageType in beforeReload) {
     ok(data[storageType], `${storageType} storage actor is present`);
+
+    // If this test is run with chrome debugging enabled we get an extra
+    // key for "chrome". We don't want the test to fail in this case, so
+    // ignore it.
+    if (storageType == "indexedDB") {
+      delete data[storageType].hosts.chrome;
+    }
+
     is(Object.keys(data[storageType].hosts).length,
        Object.keys(beforeReload[storageType]).length,
         `Number of hosts for ${storageType} match`);
