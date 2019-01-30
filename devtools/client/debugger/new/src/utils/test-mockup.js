@@ -34,7 +34,6 @@ function makeMockSource(
   return {
     id,
     url,
-    thread: "FakeThread",
     isBlackBoxed: false,
     isPrettyPrinted: false,
     loadedState: text ? "loaded" : "unloaded",
@@ -50,7 +49,6 @@ function makeMockWasmSource(text: {| binary: Object |}): WasmSource {
   return {
     id: "wasm-source-id",
     url: "url",
-    thread: "FakeThread",
     isBlackBoxed: false,
     isPrettyPrinted: false,
     loadedState: "unloaded",

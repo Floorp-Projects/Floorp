@@ -8,13 +8,14 @@ import {
   createBreakpoint,
   assertBreakpoint,
   assertPendingBreakpoint,
-  findScopeByName
+  findScopeByName,
+  makeSourceActorLocation
 } from "../../utils/breakpoint";
 
 import { getGeneratedLocation } from "../../utils/source-maps";
 import { getTextAtPosition } from "../../utils/source";
 import { originalToGeneratedId, isOriginalId } from "devtools-source-map";
-import { getSource } from "../../selectors";
+import { getSource, getSourceActors } from "../../selectors";
 import type { ThunkArgs, Action } from "../types";
 
 import type {
@@ -49,7 +50,6 @@ async function makeScopedLocation(
 }
 
 function createSyncData(
-  id: SourceId,
   pendingBreakpoint: PendingBreakpoint,
   location: SourceLocation,
   generatedLocation: SourceLocation,
@@ -60,7 +60,6 @@ function createSyncData(
   const overrides = {
     ...pendingBreakpoint,
     generatedLocation,
-    id,
     text,
     originalText
   };
@@ -121,18 +120,32 @@ export async function syncBreakpointPromise(
     scopedGeneratedLocation
   );
 
-  const existingClient = client.getBreakpointByLocation(generatedLocation);
+  const sourceActors = getSourceActors(getState(), sourceId);
 
   /** ******* CASE 1: No server change ***********/
   // early return if breakpoint is disabled or we are in the sameLocation
-  // send update only to redux
-  if (pendingBreakpoint.disabled || (existingClient && isSameLocation)) {
-    const id = pendingBreakpoint.disabled ? "" : existingClient.id;
+  if (pendingBreakpoint.disabled || isSameLocation) {
+    // Make sure the breakpoint is installed on all source actors.
+    if (!pendingBreakpoint.disabled) {
+      for (const sourceActor of sourceActors) {
+        const sourceActorLocation = makeSourceActorLocation(
+          sourceActor,
+          generatedLocation
+        );
+        if (!client.getBreakpointByLocation(sourceActorLocation)) {
+          await client.setBreakpoint(
+            sourceActorLocation,
+            pendingBreakpoint.options,
+            isOriginalId(sourceId)
+          );
+        }
+      }
+    }
+
     const originalText = getTextAtPosition(source, previousLocation);
     const text = getTextAtPosition(generatedSource, generatedLocation);
 
     return createSyncData(
-      id,
       pendingBreakpoint,
       scopedLocation,
       scopedGeneratedLocation,
@@ -143,8 +156,14 @@ export async function syncBreakpointPromise(
   }
 
   // clear server breakpoints if they exist and we have moved
-  if (existingClient) {
-    await client.removeBreakpoint(generatedLocation);
+  for (const sourceActor of sourceActors) {
+    const sourceActorLocation = makeSourceActorLocation(
+      sourceActor,
+      generatedLocation
+    );
+    if (client.getBreakpointByLocation(sourceActorLocation)) {
+      await client.removeBreakpoint(sourceActorLocation);
+    }
   }
 
   /** ******* Case 2: Add New Breakpoint ***********/
@@ -155,15 +174,23 @@ export async function syncBreakpointPromise(
     return { previousLocation, breakpoint: null };
   }
 
-  const { id, actualLocation } = await client.setBreakpoint(
-    scopedGeneratedLocation,
-    isOriginalId(sourceId),
-    pendingBreakpoint.options
-  );
+  const newGeneratedLocation = { ...scopedGeneratedLocation };
+  for (const sourceActor of sourceActors) {
+    const sourceActorLocation = makeSourceActorLocation(
+      sourceActor,
+      scopedGeneratedLocation
+    );
+    const { actualLocation } = await client.setBreakpoint(
+      sourceActorLocation,
+      pendingBreakpoint.options,
+      isOriginalId(sourceId)
+    );
+    newGeneratedLocation.line = actualLocation.line;
+    newGeneratedLocation.column = actualLocation.column;
+  }
 
   // the breakpoint might have slid server side, so we want to get the location
   // based on the server's return value
-  const newGeneratedLocation = actualLocation;
   const newLocation = await sourceMaps.getOriginalLocation(
     newGeneratedLocation
   );
@@ -172,7 +199,6 @@ export async function syncBreakpointPromise(
   const text = getTextAtPosition(generatedSource, newGeneratedLocation);
 
   return createSyncData(
-    id,
     pendingBreakpoint,
     newLocation,
     newGeneratedLocation,

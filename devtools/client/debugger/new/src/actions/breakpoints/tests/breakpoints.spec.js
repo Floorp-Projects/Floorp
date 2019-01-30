@@ -24,8 +24,9 @@ describe("breakpoints", () => {
       sourceUrl: "http://localhost:8000/examples/a"
     };
 
-    await dispatch(actions.newSource(makeSource("a")));
-    await dispatch(actions.loadSourceText(makeSource("a")));
+    const source = makeSource("a");
+    await dispatch(actions.newSource(source));
+    await dispatch(actions.loadSourceText(source.source));
     await dispatch(actions.addBreakpoint(loc1));
 
     expect(selectors.getBreakpointCount(getState())).toEqual(1);
@@ -61,8 +62,9 @@ describe("breakpoints", () => {
       line: 5,
       sourceUrl: "http://localhost:8000/examples/a"
     };
-    await dispatch(actions.newSource(makeSource("a")));
-    await dispatch(actions.loadSourceText(makeSource("a")));
+    const source = makeSource("a");
+    await dispatch(actions.newSource(source));
+    await dispatch(actions.loadSourceText(source.source));
     const { breakpoint } = await dispatch(actions.addBreakpoint(loc1));
     await dispatch(actions.disableBreakpoint(breakpoint));
 
@@ -336,7 +338,7 @@ describe("breakpoints", () => {
 
     const source = makeSource("a.js");
     await dispatch(actions.newSource(source));
-    await dispatch(actions.loadSourceText(makeSource("a.js")));
+    await dispatch(actions.loadSourceText(source.source));
 
     await dispatch(actions.addBreakpoint(loc));
     await dispatch(actions.togglePrettyPrint("a.js"));

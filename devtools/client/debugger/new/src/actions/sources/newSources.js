@@ -21,6 +21,7 @@ import { getRawSourceURL, isPrettyURL, isOriginal } from "../../utils/source";
 import {
   getBlackBoxList,
   getSource,
+  hasSourceActor,
   getPendingSelectedLocation,
   getPendingBreakpointsForSource
 } from "../../selectors";
@@ -30,6 +31,7 @@ import sourceQueue from "../../utils/source-queue";
 
 import type { Source, SourceId } from "../../types";
 import type { Action, ThunkArgs } from "../types";
+import type { CreateSourceResult } from "../../client/firefox/types";
 
 function createOriginalSource(
   originalUrl,
@@ -40,7 +42,6 @@ function createOriginalSource(
     url: originalUrl,
     relativeUrl: originalUrl,
     id: generatedToOriginalId(generatedSource.id, originalUrl),
-    thread: generatedSource.thread,
     isPrettyPrinted: false,
     isWasm: false,
     isBlackBoxed: false,
@@ -61,7 +62,7 @@ function loadSourceMaps(sources: Source[]) {
     const sourceList = await Promise.all(
       sources.map(async ({ id }) => {
         const originalSources = await dispatch(loadSourceMap(id));
-        sourceQueue.queueSources(originalSources);
+        sourceQueue.queueSources(originalSources.map(source => ({ source })));
         return originalSources;
       })
     );
@@ -202,21 +203,35 @@ function restoreBlackBoxedSources(sources: Source[]) {
  * @memberof actions/sources
  * @static
  */
-export function newSource(source: Source) {
+export function newSource(source: CreateSourceResult) {
   return async ({ dispatch }: ThunkArgs) => {
     await dispatch(newSources([source]));
   };
 }
 
-export function newSources(sources: Source[]) {
+export function newSources(createdSources: CreateSourceResult[]) {
   return async ({ dispatch, getState }: ThunkArgs) => {
-    sources = sources.filter(source => !getSource(getState(), source.id));
+    // Find any sources we haven't seen before.
+    const sources = createdSources
+      .map(csr => csr.source)
+      .filter(source => !getSource(getState(), source.id));
+
+    // Find any source actors we haven't seen before.
+    const sourceActors = createdSources
+      .map(csr => csr.sourceActor)
+      .filter(
+        sourceActor => sourceActor && !hasSourceActor(getState(), sourceActor)
+      );
+
+    if (sources.length == 0 && sourceActors.length == 0) {
+      return;
+    }
+
+    dispatch({ type: "ADD_SOURCES", sources, sourceActors });
 
     if (sources.length == 0) {
       return;
     }
-
-    dispatch(({ type: "ADD_SOURCES", sources: sources }: Action));
 
     for (const source of sources) {
       dispatch(checkSelectedSource(source.id));

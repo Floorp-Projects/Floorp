@@ -5,16 +5,16 @@
 // @flow
 
 import type {
-  BreakpointId,
+  ActorId,
   BreakpointOptions,
   BreakpointResult,
   EventListenerBreakpoints,
   Frame,
   FrameId,
-  SourceLocation,
   Script,
-  Source,
   SourceId,
+  SourceActor,
+  SourceActorLocation,
   Worker
 } from "../../types";
 
@@ -24,25 +24,25 @@ import type {
   Grip,
   ThreadClient,
   ObjectClient,
-  BPClients
+  BPClients,
+  SourcesPacket
 } from "./types";
 
 import type { PausePointsMap } from "../../workers/parser";
 
-import { makePendingLocationId } from "../../utils/breakpoint";
+import { makeBreakpointActorId } from "../../utils/breakpoint";
 
 import { createSource, createBreakpointLocation, createWorker } from "./create";
-import { originalToGeneratedId, isOriginalId } from "devtools-source-map";
 import { supportsWorkers, updateWorkerClients } from "./workers";
 
 import { features } from "../../utils/prefs";
 
 let bpClients: BPClients;
 let workerClients: Object;
-let sourceThreads: Object;
 let threadClient: ThreadClient;
 let tabTarget: TabTarget;
 let debuggerClient: DebuggerClient;
+let sourceActors: { [ActorId]: SourceId };
 let supportsWasm: boolean;
 
 type Dependencies = {
@@ -59,7 +59,7 @@ function setupCommands(dependencies: Dependencies): { bpClients: BPClients } {
   supportsWasm = dependencies.supportsWasm;
   bpClients = {};
   workerClients = {};
-  sourceThreads = {};
+  sourceActors = {};
 
   return { bpClients };
 }
@@ -149,16 +149,18 @@ function breakOnNext(thread: string): Promise<*> {
   return lookupThreadClient(thread).breakOnNext();
 }
 
-function sourceContents(
-  sourceId: SourceId
-): {| source: Source, contentType: string |} {
-  const sourceThreadClient = sourceThreads[sourceId];
-  const sourceClient = sourceThreadClient.source({ actor: sourceId });
-  return sourceClient.source();
+async function sourceContents({
+  actor,
+  thread
+}: SourceActor): Promise<{| source: any, contentType: ?string |}> {
+  const sourceThreadClient = lookupThreadClient(thread);
+  const sourceClient = sourceThreadClient.source({ actor });
+  const { source, contentType } = await sourceClient.source();
+  return { source, contentType };
 }
 
-function getBreakpointByLocation(location: SourceLocation) {
-  const id = makePendingLocationId(location);
+function getBreakpointByLocation(location: SourceActorLocation) {
+  const id = makeBreakpointActorId(location);
   const bpClient = bpClients[id];
 
   if (bpClient) {
@@ -195,12 +197,14 @@ function transformOptionsToCondition(options) {
 }
 
 function setBreakpoint(
-  location: SourceLocation,
+  location: SourceActorLocation,
   options: BreakpointOptions,
   noSliding: boolean
 ): Promise<BreakpointResult> {
-  const sourceThreadClient = sourceThreads[location.sourceId];
-  const sourceClient = sourceThreadClient.source({ actor: location.sourceId });
+  const sourceThreadClient = lookupThreadClient(location.sourceActor.thread);
+  const sourceClient = sourceThreadClient.source({
+    actor: location.sourceActor.actor
+  });
 
   return sourceClient
     .setBreakpoint({
@@ -211,21 +215,21 @@ function setBreakpoint(
     })
     .then(([{ actualLocation }, bpClient]) => {
       actualLocation = createBreakpointLocation(location, actualLocation);
-      const id = makePendingLocationId(actualLocation);
+
+      const id = makeBreakpointActorId(actualLocation);
       bpClients[id] = bpClient;
       bpClient.location.line = actualLocation.line;
       bpClient.location.column = actualLocation.column;
-      bpClient.location.url = actualLocation.sourceUrl || "";
 
       return { id, actualLocation };
     });
 }
 
 function removeBreakpoint(
-  generatedLocation: SourceLocation
+  location: SourceActorLocation
 ): Promise<void> | ?BreakpointResult {
   try {
-    const id = makePendingLocationId(generatedLocation);
+    const id = makeBreakpointActorId(location);
     const bpClient = bpClients[id];
     if (!bpClient) {
       console.warn("No breakpoint to delete on server");
@@ -239,19 +243,18 @@ function removeBreakpoint(
 }
 
 function setBreakpointOptions(
-  breakpointId: BreakpointId,
-  location: SourceLocation,
+  location: SourceActorLocation,
   options: BreakpointOptions
 ) {
-  const bpClient = bpClients[breakpointId];
-  delete bpClients[breakpointId];
+  const id = makeBreakpointActorId(location);
+  const bpClient = bpClients[id];
+  delete bpClients[id];
 
-  const sourceThreadClient = sourceThreads[bpClient.source.actor];
+  const sourceThreadClient = bpClient.source._activeThread;
   return bpClient
     .setCondition(sourceThreadClient, transformOptionsToCondition(options))
     .then(_bpClient => {
-      bpClients[breakpointId] = _bpClient;
-      return { id: breakpointId };
+      bpClients[id] = _bpClient;
     });
 }
 
@@ -328,12 +331,7 @@ async function getFrameScopes(frame: Frame): Promise<*> {
     return frame.scope;
   }
 
-  let sourceId = frame.location.sourceId;
-  if (isOriginalId(sourceId)) {
-    sourceId = originalToGeneratedId(sourceId);
-  }
-
-  const sourceThreadClient = sourceThreads[sourceId];
+  const sourceThreadClient = lookupThreadClient(frame.thread);
   return sourceThreadClient.getEnvironment(frame.id);
 }
 
@@ -350,33 +348,28 @@ function pauseOnExceptions(
   );
 }
 
-function prettyPrint(sourceId: SourceId, indentSize: number): Promise<*> {
-  const sourceClient = threadClient.source({ actor: sourceId });
-  return sourceClient.prettyPrint(indentSize);
-}
-
 async function blackBox(
-  sourceId: SourceId,
+  sourceActor: SourceActor,
   isBlackBoxed: boolean,
   range?: Range
 ): Promise<*> {
-  const sourceClient = threadClient.source({ actor: sourceId });
+  const sourceClient = threadClient.source({ actor: sourceActor.actor });
   if (isBlackBoxed) {
     await sourceClient.unblackBox(range);
   } else {
     await sourceClient.blackBox(range);
   }
-
-  return { isBlackBoxed: !isBlackBoxed };
 }
 
-function disablePrettyPrint(sourceId: SourceId): Promise<*> {
-  const sourceClient = threadClient.source({ actor: sourceId });
-  return sourceClient.disablePrettyPrint();
-}
-
-async function setPausePoints(sourceId: SourceId, pausePoints: PausePointsMap) {
-  return sendPacket({ to: sourceId, type: "setPausePoints", pausePoints });
+async function setPausePoints(
+  sourceActor: SourceActor,
+  pausePoints: PausePointsMap
+) {
+  return sendPacket({
+    to: sourceActor.actor,
+    type: "setPausePoints",
+    pausePoints
+  });
 }
 
 async function setSkipPausing(thread: string, shouldSkip: boolean) {
@@ -404,18 +397,17 @@ function pauseGrip(thread: string, func: Function): ObjectClient {
   return lookupThreadClient(thread).pauseGrip(func);
 }
 
-function registerSource(source: Source) {
-  if (isOriginalId(source.id)) {
-    throw new Error("registerSource called with original ID");
-  }
-  sourceThreads[source.id] = lookupThreadClient(source.thread);
+function registerSourceActor(sourceActor: SourceActor) {
+  sourceActors[sourceActor.actor] = sourceActor.source;
 }
 
 async function createSources(client: ThreadClient) {
-  const { sources } = await client.getSources();
-  return (
-    sources &&
-    sources.map(packet => createSource(client.actor, packet, { supportsWasm }))
+  const { sources }: SourcesPacket = await client.getSources();
+  if (!sources) {
+    return null;
+  }
+  return sources.map(packet =>
+    createSource(client.actor, packet, { supportsWasm })
   );
 }
 
@@ -428,6 +420,13 @@ async function fetchSources(): Promise<any[]> {
   }
 
   return sources;
+}
+
+function getSourceForActor(actor: ActorId) {
+  if (!sourceActors[actor]) {
+    throw new Error(`Unknown source actor: ${actor}`);
+  }
+  return sourceActors[actor];
 }
 
 async function fetchWorkers(): Promise<Worker[]> {
@@ -458,6 +457,10 @@ async function fetchWorkers(): Promise<Worker[]> {
   return workers;
 }
 
+function getMainThread() {
+  return threadClient.actor;
+}
+
 const clientCommands = {
   autocomplete,
   blackBox,
@@ -476,6 +479,7 @@ const clientCommands = {
   reverseStepOver,
   breakOnNext,
   sourceContents,
+  getSourceForActor,
   getBreakpointByLocation,
   setBreakpoint,
   setXHRBreakpoint,
@@ -490,15 +494,14 @@ const clientCommands = {
   getProperties,
   getFrameScopes,
   pauseOnExceptions,
-  prettyPrint,
-  disablePrettyPrint,
   fetchSources,
+  registerSourceActor,
   fetchWorkers,
+  getMainThread,
   sendPacket,
   setPausePoints,
   setSkipPausing,
-  setEventListenerBreakpoints,
-  registerSource
+  setEventListenerBreakpoints
 };
 
 export { setupCommands, clientCommands };

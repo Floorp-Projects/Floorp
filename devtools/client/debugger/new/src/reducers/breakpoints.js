@@ -14,10 +14,15 @@ import { isEqual } from "lodash";
 
 import { makeLocationId } from "../utils/breakpoint";
 
-import type { XHRBreakpoint, Breakpoint, SourceLocation } from "../types";
+import type {
+  XHRBreakpoint,
+  Breakpoint,
+  BreakpointId,
+  SourceLocation
+} from "../types";
 import type { Action, DonePromiseAction } from "../actions/types";
 
-export type BreakpointsMap = { [string]: Breakpoint };
+export type BreakpointsMap = { [BreakpointId]: Breakpoint };
 export type XHRBreakpointsList = $ReadOnlyArray<XHRBreakpoint>;
 
 export type BreakpointsState = {

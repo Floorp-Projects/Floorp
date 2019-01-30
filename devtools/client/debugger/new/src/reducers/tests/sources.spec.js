@@ -16,26 +16,33 @@ const fakeSources = foobar.sources.sources;
 
 const extenstionSource = {
   id: "extenstionId",
-  url: "http://example.com/script.js",
-  thread: "foo"
+  url: "http://example.com/script.js"
 };
 
 const firefoxExtensionSource = {
   id: "firefoxExtension",
-  url: "moz-extension://id/js/content.js",
-  thread: "foo"
+  url: "moz-extension://id/js/content.js"
 };
 
 const chromeExtensionSource = {
   id: "chromeExtension",
-  url: "chrome-extension://id/js/content.js",
-  thread: "foo"
+  url: "chrome-extension://id/js/content.js"
 };
 
 const mockedSources = [
   extenstionSource,
   firefoxExtensionSource,
   chromeExtensionSource
+];
+
+const mockedSourceActors = [
+  { actor: "extensionId-actor", source: "extenstionId", thread: "foo" },
+  {
+    actor: "firefoxExtension-actor",
+    source: "firefoxExtension",
+    thread: "foo"
+  },
+  { actor: "chromeExtension-actor", source: "chromeExtension", thread: "foo" }
 ];
 
 describe("sources reducer", () => {
@@ -58,7 +65,8 @@ describe("sources selectors", () => {
       sources: update(state, {
         type: "ADD_SOURCES",
         // coercing to a Source for the purpose of this test
-        sources: ((mockedSources: any): Source[])
+        sources: ((mockedSources: any): Source[]),
+        sourceActors: mockedSourceActors
       })
     };
     const selectedRelativeSources = getRelativeSources(state);
@@ -73,7 +81,8 @@ describe("sources selectors", () => {
       sources: update(state, {
         type: "ADD_SOURCES",
         // coercing to a Source for the purpose of this test
-        sources: ((mockedSources: any): Source[])
+        sources: ((mockedSources: any): Source[]),
+        sourceActors: mockedSourceActors
       })
     };
     const selectedRelativeSources = getRelativeSources(state);

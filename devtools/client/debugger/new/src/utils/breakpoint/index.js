@@ -17,7 +17,9 @@ export { getASTLocation, findScopeByName } from "./astBreakpointLocation";
 
 import type {
   Source,
+  SourceActor,
   SourceLocation,
+  SourceActorLocation,
   PendingLocation,
   Breakpoint,
   PendingBreakpoint
@@ -45,6 +47,8 @@ export function locationMoved(
   );
 }
 
+// The ID for a Breakpoint is derived from its location in its Source.
+// FIXME rename this to makeBreakpointId.
 export function makeLocationId(location: SourceLocation) {
   const { sourceId, line, column } = location;
   const columnString = column || "";
@@ -63,6 +67,24 @@ export function makePendingLocationId(location: SourceLocation) {
   const columnString = column || "";
 
   return `${sourceUrlString}:${line}:${columnString}`;
+}
+
+export function makeSourceActorLocation(
+  sourceActor: SourceActor,
+  location: SourceLocation
+) {
+  return {
+    sourceActor,
+    line: location.line,
+    column: location.column
+  };
+}
+
+// The ID for a BreakpointActor is derived from its location in its SourceActor.
+export function makeBreakpointActorId(location: SourceActorLocation) {
+  const { sourceActor, line, column } = location;
+  const columnString = column || "";
+  return `${sourceActor.actor}:${line}:${columnString}`;
 }
 
 export function assertBreakpoint(breakpoint: Breakpoint) {
@@ -131,7 +153,6 @@ export function createBreakpoint(
     hidden,
     generatedLocation,
     astLocation,
-    id,
     text,
     originalText,
     logValue
@@ -143,7 +164,7 @@ export function createBreakpoint(
     index: 0
   };
   const properties = {
-    id,
+    id: makeLocationId(location),
     options: {
       condition: condition || null,
       logValue: logValue || null,

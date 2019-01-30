@@ -127,7 +127,7 @@ describe("loading the debugger", () => {
       getState,
       threadClient,
       sourceMaps,
-      reloadedSource.id,
+      reloadedSource.source.id,
       pendingBreakpoint()
     );
 
@@ -157,7 +157,7 @@ describe("loading the debugger", () => {
       getState,
       threadClient,
       sourceMaps,
-      reloadedSource.id,
+      reloadedSource.source.id,
       pendingBreakpoint()
     );
 
@@ -187,7 +187,9 @@ describe("reloading debuggee", () => {
       line: 3,
       column: undefined
     };
+    const generatedSource = makeSource("gen.js");
     await dispatch(actions.newSource(reloadedSource));
+    await dispatch(actions.newSource(generatedSource));
     await dispatch(actions.addBreakpoint(loc1));
 
     // manually sync
@@ -195,7 +197,7 @@ describe("reloading debuggee", () => {
       getState,
       threadClient,
       sourceMaps,
-      reloadedSource.id,
+      reloadedSource.source.id,
       pendingBreakpoint({ location: loc1 })
     );
     expect(threadClient.removeBreakpoint.mock.calls).toHaveLength(0);
@@ -228,12 +230,15 @@ describe("reloading debuggee", () => {
     const reloadedSource = makeSource("magic.js");
     await dispatch(actions.newSource(reloadedSource));
 
+    const generatedSource = makeSource("gen.js");
+    await dispatch(actions.newSource(generatedSource));
+
     // manually sync
     const update = await syncBreakpointPromise(
       getState,
       threadClient,
       sourceMaps,
-      reloadedSource.id,
+      reloadedSource.source.id,
       pendingBreakpoint()
     );
     expect(threadClient.removeBreakpoint.mock.calls).toHaveLength(1);
@@ -248,8 +253,12 @@ describe("reloading debuggee", () => {
 
     const reloadedSource = makeSource("magic.js");
     await dispatch(actions.newSource(reloadedSource));
+
+    const generatedSource = makeSource("gen.js");
+    await dispatch(actions.newSource(generatedSource));
+
     const location = {
-      sourceId: reloadedSource.id,
+      sourceId: reloadedSource.source.id,
       line: 3,
       column: undefined
     };
@@ -261,7 +270,7 @@ describe("reloading debuggee", () => {
 
     await dispatch(
       actions.syncBreakpoint(
-        reloadedSource.id,
+        reloadedSource.source.id,
         pendingBreakpoint({ disabled: true })
       )
     );
