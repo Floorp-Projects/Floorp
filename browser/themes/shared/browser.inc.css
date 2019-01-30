@@ -276,3 +276,7 @@
 #cfr-notification-footer-spacer {
   flex-grow: 1;
 }
+
+#content-mask {
+  background: rgba(0, 0, 0, 0.5);
+}
