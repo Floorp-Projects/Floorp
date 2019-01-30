@@ -356,4 +356,4 @@ IEProfileMigrator.prototype.classDescription = "IE Profile Migrator";
 IEProfileMigrator.prototype.contractID = "@mozilla.org/profile/migrator;1?app=browser&type=ie";
 IEProfileMigrator.prototype.classID = Components.ID("{3d2532e3-4932-4774-b7ba-968f5899d3a4}");
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([IEProfileMigrator]);
+var EXPORTED_SYMBOLS = ["IEProfileMigrator"];
