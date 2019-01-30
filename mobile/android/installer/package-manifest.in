@@ -131,8 +131,6 @@
 @BINPATH@/components/extensions.manifest
 
 #ifndef MOZ_GECKOVIEW_JAR
-@BINPATH@/components/utils.manifest
-@BINPATH@/components/simpleServices.js
 @BINPATH@/components/amContentHandler.js
 @BINPATH@/components/amWebAPI.js
 @BINPATH@/components/amInstallTrigger.js
