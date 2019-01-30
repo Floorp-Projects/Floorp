@@ -104,8 +104,6 @@
 #ifdef MOZ_ANDROID_GCM
 @BINPATH@/components/Push.manifest
 #endif
-@BINPATH@/components/BrowserElementParent.manifest
-@BINPATH@/components/BrowserElementParent.js
 @BINPATH@/components/toolkitsearch.manifest
 
 @BINPATH@/components/extensions.manifest

@@ -160,8 +160,6 @@
 #endif
 
 ; JavaScript components
-@RESPATH@/components/BrowserElementParent.manifest
-@RESPATH@/components/BrowserElementParent.js
 @RESPATH@/browser/components/BrowserComponents.manifest
 @RESPATH@/browser/components/devtools-startup.manifest
 @RESPATH@/browser/components/devtools-startup.js
