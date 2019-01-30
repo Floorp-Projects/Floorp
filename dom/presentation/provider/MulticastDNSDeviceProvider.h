@@ -45,7 +45,7 @@ class MulticastDNSDeviceProvider final
   NS_DECL_NSIPRESENTATIONCONTROLSERVERLISTENER
   NS_DECL_NSIOBSERVER
 
-  explicit MulticastDNSDeviceProvider() = default;
+  explicit MulticastDNSDeviceProvider();
   nsresult Init();
   nsresult Uninit();
 

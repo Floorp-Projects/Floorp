@@ -10,14 +10,6 @@
 #include "nsIOSPermissionRequest.h"
 #include "nsWeakReference.h"
 
-#define NS_OSPERMISSIONREQUEST_CID                   \
-  {                                                  \
-    0x95790842, 0x75a0, 0x430d, {                    \
-      0x98, 0xbf, 0xf5, 0xce, 0x37, 0x88, 0xea, 0x6d \
-    }                                                \
-  }
-#define NS_OSPERMISSIONREQUEST_CONTRACTID "@mozilla.org/ospermissionrequest;1"
-
 namespace mozilla {
 namespace dom {
 class Promise;

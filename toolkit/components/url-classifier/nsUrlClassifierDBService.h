@@ -17,7 +17,6 @@
 #include "nsIUrlClassifierDBService.h"
 #include "nsIUrlClassifierInfo.h"
 #include "nsIURIClassifier.h"
-#include "nsToolkitCompsCID.h"
 #include "nsICryptoHMAC.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Mutex.h"
@@ -85,7 +84,8 @@ class nsUrlClassifierDBService final : public nsIUrlClassifierDBService,
 
   nsresult Init();
 
-  static nsUrlClassifierDBService* GetInstance(nsresult* result);
+  static already_AddRefed<nsUrlClassifierDBService> GetInstance(
+      nsresult* result);
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_URLCLASSIFIERDBSERVICE_CID)
 

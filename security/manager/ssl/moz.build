@@ -51,6 +51,10 @@ if CONFIG['MOZ_XUL']:
 
 XPIDL_MODULE = 'pipnss'
 
+XPCOM_MANIFESTS += [
+    'components.conf',
+]
+
 # These aren't actually used in production code yet, so we don't want to
 # ship them with the browser.
 TESTING_JS_MODULES.psm += [

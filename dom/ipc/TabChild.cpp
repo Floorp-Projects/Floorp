@@ -82,7 +82,6 @@
 #include "nsIFrame.h"
 #include "nsIURI.h"
 #include "nsIURIFixup.h"
-#include "nsCDefaultURIFixup.h"
 #include "nsIWebBrowser.h"
 #include "nsIWebProgress.h"
 #include "nsIXULRuntime.h"

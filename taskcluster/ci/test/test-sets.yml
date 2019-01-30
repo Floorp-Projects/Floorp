@@ -279,6 +279,7 @@ macosx64-tests:
     - mochitest-chrome
     - mochitest-clipboard
     - mochitest-devtools-chrome
+    - mochitest-devtools-webreplay
     - mochitest-gpu
     - mochitest-media
     - mochitest-webgl1-core
