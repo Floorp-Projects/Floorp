@@ -18,9 +18,12 @@ if CONFIG['NIGHTLY_BUILD'] and \
    not CONFIG['MOZ_ASAN']:
     DEFINES['MOZ_ENABLE_BACKGROUND_HANG_MONITOR'] = 1
 
-    EXTRA_COMPONENTS += [
-        'BHRTelemetryService.js',
-        'BHRTelemetryService.manifest',
+    EXTRA_JS_MODULES += [
+        'BHRTelemetryService.jsm',
+    ]
+
+    XPCOM_MANIFESTS += [
+        'components.conf',
     ]
 
     XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell.ini']
