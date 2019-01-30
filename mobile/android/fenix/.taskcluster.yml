@@ -43,6 +43,7 @@ tasks:
             - queue:scheduler-id:${scheduler_id}
             - queue:create-task:highest:aws-provisioner-v1/${build_worker_type}
             - project:mobile:fenix:releng:signing:format:autograph_apk
+            - secrets:get:project/mobile/fenix/sentry
             - $if: is_mozilla_mobile_repo
               then:
                 - queue:create-task:highest:scriptworker-prov-v1/mobile-signing-v1
