@@ -647,8 +647,7 @@ class nsWindow::NPZCSupport final
 
   bool HandleMotionEvent(const PanZoomController::LocalRef& aInstance,
                          int32_t aAction, int32_t aActionIndex, int64_t aTime,
-                         int32_t aMetaState, float aScreenX, float aScreenY,
-                         jni::IntArray::Param aPointerId,
+                         int32_t aMetaState, jni::IntArray::Param aPointerId,
                          jni::FloatArray::Param aX, jni::FloatArray::Param aY,
                          jni::FloatArray::Param aOrientation,
                          jni::FloatArray::Param aPressure,
@@ -698,8 +697,6 @@ class nsWindow::NPZCSupport final
     MultiTouchInput input(type, aTime, GetEventTimeStamp(aTime), 0);
     input.modifiers = GetModifiers(aMetaState);
     input.mTouches.SetCapacity(endIndex - startIndex);
-    input.mScreenOffset =
-        ExternalIntPoint(int32_t(floorf(aScreenX)), int32_t(floorf(aScreenY)));
 
     nsTArray<float> x(aX->GetElements());
     nsTArray<float> y(aY->GetElements());
