@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 const {clearTimeout, setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
@@ -947,4 +946,4 @@ TCPControlChannel.prototype = {
                                           Ci.nsIStreamListener]),
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([PresentationControlService]); // jshint ignore:line
+var EXPORTED_SYMBOLS = ["PresentationControlService"];
