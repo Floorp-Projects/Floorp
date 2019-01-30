@@ -263,9 +263,6 @@
 @RESPATH@/components/BuiltinProviders.manifest
 @RESPATH@/components/PresentationControlService.js
 
-@RESPATH@/components/mozIntl.manifest
-@RESPATH@/components/mozIntl.js
-
 #if defined(ENABLE_TESTS) && defined(MOZ_DEBUG)
 @RESPATH@/components/TestInterfaceJS.js
 @RESPATH@/components/TestInterfaceJS.manifest
