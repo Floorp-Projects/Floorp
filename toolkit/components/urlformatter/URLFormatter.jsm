@@ -133,4 +133,4 @@ nsURLFormatterService.prototype = {
   },
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([nsURLFormatterService]);
+var EXPORTED_SYMBOLS = ["nsURLFormatterService"];
