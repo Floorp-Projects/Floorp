@@ -1494,6 +1494,9 @@ static void DumpHelp() {
       "instance.\n"
       "  --UILocale <locale> Start with <locale> resources as UI Locale.\n"
       "  --safe-mode        Disables extensions and themes for this session.\n"
+#ifdef MOZ_BLOCK_PROFILE_DOWNGRADE
+      "  --allow-downgrade  Allows downgrading a profile.\n"
+#endif
       "  -MOZ_LOG=<modules> Treated as MOZ_LOG=<modules> environment variable, "
       "overrides it.\n"
       "  -MOZ_LOG_FILE=<file> Treated as MOZ_LOG_FILE=<file> environment "
@@ -2230,18 +2233,189 @@ static nsresult SelectProfile(nsIProfileLock** aResult,
   return ProfileLockedDialog(rootDir, localDir, unlocker, aNative, aResult);
 }
 
+#ifdef MOZ_BLOCK_PROFILE_DOWNGRADE
+static const char kProfileDowngradeURL[] =
+    "chrome://mozapps/content/profile/profileDowngrade.xul";
+
+static ReturnAbortOnError CheckDowngrade(
+    nsIFile* aProfileDir, nsIFile* aProfileLocalDir, nsACString& aProfileName,
+    nsINativeAppSupport* aNative, nsIToolkitProfileService* aProfileSvc) {
+  int32_t result = 0;
+  nsresult rv;
+
+  {
+    if (gfxPlatform::IsHeadless()) {
+      // TODO: make a way to turn off all dialogs when headless.
+      Output(true,
+             "This profile was last used with a newer version of this "
+             "application. Please create a new profile.\n");
+      return NS_ERROR_ABORT;
+    }
+
+    ScopedXPCOMStartup xpcom;
+    rv = xpcom.Initialize();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = xpcom.SetWindowCreator(aNative);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    {  // extra scoping is needed so we release these components before xpcom
+       // shutdown
+      bool hasSync = false;
+      nsCOMPtr<nsIPrefService> prefSvc =
+          do_GetService("@mozilla.org/preferences-service;1");
+      NS_ENSURE_TRUE(prefSvc, rv);
+
+      nsCOMPtr<nsIFile> prefsFile;
+      rv = aProfileDir->Clone(getter_AddRefs(prefsFile));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      rv = prefsFile->Append(NS_LITERAL_STRING("prefs.js"));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      rv = prefSvc->ReadUserPrefsFromFile(prefsFile);
+      if (NS_SUCCEEDED(rv)) {
+        nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(prefSvc);
+
+        rv = prefBranch->PrefHasUserValue("services.sync.username", &hasSync);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+      nsCOMPtr<nsIWindowWatcher> windowWatcher =
+          do_GetService(NS_WINDOWWATCHER_CONTRACTID);
+      NS_ENSURE_TRUE(windowWatcher, NS_ERROR_ABORT);
+
+      nsCOMPtr<nsIAppStartup> appStartup =
+          do_GetService(NS_APPSTARTUP_CONTRACTID);
+      NS_ENSURE_TRUE(appStartup, NS_ERROR_ABORT);
+
+      nsCOMPtr<nsIDialogParamBlock> paramBlock =
+          do_CreateInstance(NS_DIALOGPARAMBLOCK_CONTRACTID);
+      NS_ENSURE_TRUE(paramBlock, NS_ERROR_ABORT);
+
+      uint8_t flags = 0;
+      if (hasSync) {
+        flags |= nsIToolkitProfileService::hasSync;
+      }
+
+      paramBlock->SetInt(0, flags);
+
+      nsCOMPtr<mozIDOMWindowProxy> newWindow;
+      rv = windowWatcher->OpenWindow(nullptr, kProfileDowngradeURL, "_blank",
+                                     "centerscreen,chrome,modal,titlebar",
+                                     paramBlock, getter_AddRefs(newWindow));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      paramBlock->GetInt(1, &result);
+    }
+  }
+
+  if (result == nsIToolkitProfileService::createNewProfile) {
+    // Create a new profile and start it.
+    nsCString profileName;
+    profileName.AssignLiteral("default");
+#  ifdef MOZ_DEDICATED_PROFILES
+    profileName.Append("-" NS_STRINGIFY(MOZ_UPDATE_CHANNEL));
+#  endif
+    nsCOMPtr<nsIToolkitProfile> newProfile;
+    rv = aProfileSvc->CreateUniqueProfile(nullptr, profileName,
+                                          getter_AddRefs(newProfile));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = aProfileSvc->SetDefaultProfile(newProfile);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = aProfileSvc->Flush();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIFile> profD, profLD;
+    rv = newProfile->GetRootDir(getter_AddRefs(profD));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = newProfile->GetLocalDir(getter_AddRefs(profLD));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    SaveFileToEnv("XRE_PROFILE_PATH", profD);
+    SaveFileToEnv("XRE_PROFILE_LOCAL_PATH", profLD);
+
+    return LaunchChild(aNative);
+  }
+
+  // Cancel
+  return NS_ERROR_ABORT;
+}
+#endif
+
+/**
+ * The version string used in compatibility.ini is in the form
+ * <appversion>_<appbuildid>/<aplatformbuildidid>. The build IDs are in the form
+ * <year><month><day><hour><minute><second>. We need to be able to turn this
+ * into something that can be compared by the version comparator. Build IDs are
+ * numeric so normally we could just use those as part of the version but they
+ * are larger than 32-bit integers so we must split them into two parts.
+ * So we generate a version string of the format:
+ * <appversion>.<appbuilddate>.<appbuildtime>.<platformbuilddate>.<platformbuildtime>
+ * This doesn't compare correctly so
+ * we have to make the build ids separate version parts instead. We also have
+ * to split up the build ids as they are too large for the version comparator's
+ * brain.
+ */
+
+// Build ID dates are 8 digits, build ID times are 6 digits.
+#define BUILDID_DATE_LENGTH 8
+#define BUILDID_TIME_LENGTH 6
+#define BUILDID_LENGTH BUILDID_DATE_LENGTH + BUILDID_TIME_LENGTH
+
+static void GetBuildIDVersions(const nsACString& aFullVersion, int32_t aPos,
+                               nsACString& aBuildVersions) {
+  // Extract the date part then the time part.
+  aBuildVersions.Assign(Substring(aFullVersion, aPos, BUILDID_DATE_LENGTH) +
+      NS_LITERAL_CSTRING(".") +
+      Substring(aFullVersion, aPos + BUILDID_DATE_LENGTH, BUILDID_TIME_LENGTH));
+}
+
+static Version GetComparableVersion(const nsCString& aVersionStr) {
+  // We'll find the position of the '_' and '/' characters. The length from the
+  // '_' character to the '/' character will be the length of a build ID plus
+  // one for the '_' character. Similarly the length from the '/' character to
+  // the end of the string will be the same.
+  const uint32_t kExpectedLength = BUILDID_LENGTH + 1;
+
+  int32_t underscorePos = aVersionStr.FindChar('_');
+  int32_t slashPos = aVersionStr.FindChar('/');
+  if (underscorePos == kNotFound || slashPos == kNotFound ||
+      (slashPos - underscorePos) != kExpectedLength ||
+      (aVersionStr.Length() - slashPos) != kExpectedLength) {
+    NS_WARNING("compatibility.ini Version string does not match the expected format.");
+    return Version(aVersionStr.get());
+  }
+
+  nsCString appBuild, platBuild;
+  NS_NAMED_LITERAL_CSTRING(dot, ".");
+
+  const nsACString& version = Substring(aVersionStr, 0, underscorePos);
+
+  GetBuildIDVersions(aVersionStr, underscorePos + 1, /* outparam */ appBuild);
+  GetBuildIDVersions(aVersionStr, slashPos + 1, /* outparam */ platBuild);
+
+  const nsACString& fullVersion = version + dot + appBuild + dot + platBuild;
+
+  return Version(PromiseFlatCString(fullVersion).get());
+}
+
 /**
  * Checks the compatibility.ini file to see if we have updated our application
  * or otherwise invalidated our caches. If the application has been updated,
  * we return false; otherwise, we return true. We also write the status
  * of the caches (valid/invalid) into the return param aCachesOK. The aCachesOK
- * is always invalid if the application has been updated.
+ * is always invalid if the application has been updated. aIsDowngrade is set to
+ * true if the current application is older than that previously used by the
+ * profile.
  */
 static bool CheckCompatibility(nsIFile* aProfileDir, const nsCString& aVersion,
                                const nsCString& aOSABI, nsIFile* aXULRunnerDir,
                                nsIFile* aAppDir, nsIFile* aFlagFile,
-                               bool* aCachesOK) {
+                               bool* aCachesOK, bool* aIsDowngrade) {
   *aCachesOK = false;
+  *aIsDowngrade = false;
+
   nsCOMPtr<nsIFile> file;
   aProfileDir->Clone(getter_AddRefs(file));
   if (!file) return false;
@@ -2253,7 +2427,16 @@ static bool CheckCompatibility(nsIFile* aProfileDir, const nsCString& aVersion,
 
   nsAutoCString buf;
   rv = parser.GetString("Compatibility", "LastVersion", buf);
-  if (NS_FAILED(rv) || !aVersion.Equals(buf)) return false;
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+
+  if (!aVersion.Equals(buf)) {
+    Version current = GetComparableVersion(aVersion);
+    Version last = GetComparableVersion(buf);
+    *aIsDowngrade = last > current;
+    return false;
+  }
 
   rv = parser.GetString("Compatibility", "LastOSABI", buf);
   if (NS_FAILED(rv) || !aOSABI.Equals(buf)) return false;
@@ -3840,30 +4023,6 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
   rv = mProfileLock->GetLocalDirectory(getter_AddRefs(mProfLD));
   NS_ENSURE_SUCCESS(rv, 1);
 
-  rv = mDirProvider.SetProfile(mProfD, mProfLD);
-  NS_ENSURE_SUCCESS(rv, 1);
-
-  //////////////////////// NOW WE HAVE A PROFILE ////////////////////////
-
-  mozilla::Telemetry::SetProfileDir(mProfD);
-
-  if (mAppData->flags & NS_XRE_ENABLE_CRASH_REPORTER)
-    MakeOrSetMinidumpPath(mProfD);
-
-  CrashReporter::SetProfileDirectory(mProfD);
-
-#ifdef MOZ_ASAN_REPORTER
-  // In ASan reporter builds, we need to set ASan's log_path as early as
-  // possible, so it dumps its errors into files there instead of using
-  // the default stderr location. Since this is crucial for ASan reporter
-  // to work at all (and we don't want people to use a non-functional
-  // ASan reporter build), all failures while setting log_path are fatal.
-  setASanReporterPath(mProfD);
-
-  // Export to env for child processes
-  SaveFileToEnv("ASAN_REPORTER_PATH", mProfD);
-#endif
-
   nsAutoCString version;
   BuildVersion(version);
 
@@ -3891,9 +4050,45 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
   }
 
   bool cachesOK;
-  bool versionOK =
-      CheckCompatibility(mProfD, version, osABI, mDirProvider.GetGREDir(),
-                         mAppData->directory, flagFile, &cachesOK);
+  bool isDowngrade;
+  bool versionOK = CheckCompatibility(
+      mProfD, version, osABI, mDirProvider.GetGREDir(), mAppData->directory,
+      flagFile, &cachesOK, &isDowngrade);
+
+#ifdef MOZ_BLOCK_PROFILE_DOWNGRADE
+  if (isDowngrade && !CheckArg("allow-downgrade")) {
+    rv = CheckDowngrade(mProfD, mProfLD, mProfileName, mNativeApp, mProfileSvc);
+    if (rv == NS_ERROR_LAUNCHED_CHILD_PROCESS || rv == NS_ERROR_ABORT) {
+      *aExitFlag = true;
+      return 0;
+    }
+  }
+#endif
+
+  rv = mDirProvider.SetProfile(mProfD, mProfLD);
+  NS_ENSURE_SUCCESS(rv, 1);
+
+  //////////////////////// NOW WE HAVE A PROFILE ////////////////////////
+
+  mozilla::Telemetry::SetProfileDir(mProfD);
+
+  if (mAppData->flags & NS_XRE_ENABLE_CRASH_REPORTER) {
+    MakeOrSetMinidumpPath(mProfD);
+  }
+
+  CrashReporter::SetProfileDirectory(mProfD);
+
+#ifdef MOZ_ASAN_REPORTER
+  // In ASan reporter builds, we need to set ASan's log_path as early as
+  // possible, so it dumps its errors into files there instead of using
+  // the default stderr location. Since this is crucial for ASan reporter
+  // to work at all (and we don't want people to use a non-functional
+  // ASan reporter build), all failures while setting log_path are fatal.
+  setASanReporterPath(mProfD);
+
+  // Export to env for child processes
+  SaveFileToEnv("ASAN_REPORTER_PATH", mProfD);
+#endif
 
   bool lastStartupWasCrash = CheckLastStartupWasCrash().unwrapOr(false);
 
