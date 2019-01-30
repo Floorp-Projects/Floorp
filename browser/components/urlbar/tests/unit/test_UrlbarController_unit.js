@@ -206,15 +206,44 @@ add_task(function test_receiveResults() {
   sandbox.resetHistory();
 });
 
-add_task(function test_autocomplete_enabled() {
+add_task(async function test_autofillValue() {
+  // Ensure the controller doesn't have any previous queries.
+  delete controller._lastQueryContext;
+
+  // Stub the controller's input so we can tell whether input.autofill() is
+  // called.
+  let input = {
+    autofill: sandbox.stub(),
+  };
+  controller.input = input;
+
   const context = createContext();
-  context.results = [];
+  controller.startQuery(context);
+
+  // Set autofillValue and call receiveResults().
+  context.autofillValue = "test";
+  context.results = [
+    new UrlbarResult(UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
+                     UrlbarUtils.RESULT_SOURCE.TABS,
+                     { url: "http://example.com/1" }),
+  ];
   controller.receiveResults(context);
 
-  Assert.equal(generalListener.onQueryResults.callCount, 1,
-    "Should have called onQueryResults for the listener");
-  Assert.deepEqual(generalListener.onQueryResults.args[0], [context],
-    "Should have called onQueryResults with the context");
+  Assert.equal(input.autofill.callCount, 1,
+    "Should have called input.autofill() one time");
+  Assert.deepEqual(input.autofill.args[0], ["test"],
+    "Should have called input.autofill() with context.autofillValue");
+
+  // Call receiveResults() again with more results.
+  context.results.push(
+    new UrlbarResult(UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
+                     UrlbarUtils.RESULT_SOURCE.TABS,
+                     { url: "http://example.com/2" }),
+  );
+  controller.receiveResults(context);
+
+  Assert.equal(input.autofill.callCount, 1,
+    "Should not have called input.autofill() again");
 
   sandbox.resetHistory();
 });

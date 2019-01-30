@@ -267,7 +267,7 @@ void nsPlaceholderFrame::List(FILE* out, const char* aPrefix,
 
   if (mOutOfFlowFrame) {
     str += " outOfFlowFrame=";
-    nsFrame::ListTag(str, mOutOfFlowFrame);
+    str += mOutOfFlowFrame->ListTag();
   }
   fprintf_stderr(out, "%s\n", str.get());
 }

@@ -444,140 +444,34 @@ static nsresult AccountHasFamilySafetyEnabled(bool& enabled) {
   enabled = loggingRequired == 1 || webFilterOn == 1;
   return NS_OK;
 }
-
-nsresult nsNSSComponent::MaybeImportFamilySafetyRoot(
-    PCCERT_CONTEXT certificate, bool& wasFamilySafetyRoot) {
-  MutexAutoLock lock(mMutex);
-  MOZ_ASSERT(NS_IsMainThread());
-  if (!NS_IsMainThread()) {
-    return NS_ERROR_NOT_SAME_THREAD;
-  }
-  MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("MaybeImportFamilySafetyRoot"));
-  wasFamilySafetyRoot = false;
-
-  UniqueCERTCertificate nssCertificate(
-      PCCERT_CONTEXTToCERTCertificate(certificate));
-  if (!nssCertificate) {
-    MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("couldn't decode certificate"));
-    return NS_ERROR_FAILURE;
-  }
-  // Looking for a certificate with the common name 'Microsoft Family Safety'
-  UniquePORTString subjectName(CERT_GetCommonName(&nssCertificate->subject));
-  MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-          ("subject name is '%s'", subjectName.get()));
-  if (kMicrosoftFamilySafetyCN.Equals(subjectName.get())) {
-    wasFamilySafetyRoot = true;
-    MOZ_ASSERT(!mFamilySafetyRoot);
-    mFamilySafetyRoot = std::move(nssCertificate);
-    MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("added Family Safety root"));
-  }
-  return NS_OK;
-}
-
-nsresult nsNSSComponent::LoadFamilySafetyRoot() {
-  ScopedCertStore certstore(
-      CertOpenSystemStore(0, kWindowsDefaultRootStoreName));
-  if (!certstore.get()) {
-    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-            ("couldn't get certstore '%S'", kWindowsDefaultRootStoreName));
-    return NS_ERROR_FAILURE;
-  }
-  // Any resources held by the certificate are released by the next call to
-  // CertFindCertificateInStore.
-  PCCERT_CONTEXT certificate = nullptr;
-  while ((certificate = CertFindCertificateInStore(
-              certstore.get(), X509_ASN_ENCODING, 0, CERT_FIND_ANY, nullptr,
-              certificate))) {
-    bool wasFamilySafetyRoot = false;
-    nsresult rv = MaybeImportFamilySafetyRoot(certificate, wasFamilySafetyRoot);
-    if (NS_SUCCEEDED(rv) && wasFamilySafetyRoot) {
-      return NS_OK;  // We're done (we're only expecting one root).
-    }
-  }
-  return NS_ERROR_FAILURE;
-}
 #endif  // XP_WIN
 
-void nsNSSComponent::UnloadFamilySafetyRoot() {
-  MOZ_ASSERT(NS_IsMainThread());
-  if (!NS_IsMainThread()) {
-    return;
-  }
-  MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("UnloadFamilySafetyRoot"));
-
-  // We can't call ChangeCertTrustWithPossibleAuthentication while holding
-  // mMutex (because it could potentially call back in to nsNSSComponent and
-  // attempt to acquire mMutex), so we move mFamilySafetyRoot out of
-  // nsNSSComponent into a local handle. This has the side-effect of clearing
-  // mFamilySafetyRoot, which is what we want anyway.
-  UniqueCERTCertificate familySafetyRoot;
-  {
-    MutexAutoLock lock(mMutex);
-    if (!mFamilySafetyRoot) {
-      MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-              ("Family Safety Root wasn't present"));
-      return;
-    }
-    familySafetyRoot = std::move(mFamilySafetyRoot);
-    MOZ_ASSERT(!mFamilySafetyRoot);
-  }
-  MOZ_ASSERT(familySafetyRoot);
-  // It would be intuitive to set the trust to { 0, 0, 0 } here. However, this
-  // doesn't work for temporary certificates because CERT_ChangeCertTrust first
-  // looks up the current trust settings in the permanent cert database, finds
-  // that such trust doesn't exist, considers the current trust to be
-  // { 0, 0, 0 }, and decides that it doesn't need to update the trust since
-  // they're the same. To work around this, we set a non-zero flag to ensure
-  // that the trust will get updated.
-  CERTCertTrust trust = {CERTDB_USER, 0, 0};
-  if (ChangeCertTrustWithPossibleAuthentication(familySafetyRoot, trust,
-                                                nullptr) != SECSuccess) {
-    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-            ("couldn't untrust certificate for TLS server auth"));
-  }
-}
-
-// The supported values of this pref are:
-// 0: disable detecting Family Safety mode and importing the root
-// 1: only attempt to detect Family Safety mode (don't import the root)
-// 2: detect Family Safety mode and import the root
+// On Windows 8.1, if the following preference is 2, we will attempt to detect
+// if the Family Safety TLS interception feature has been enabled. If so, we
+// will behave as if the enterprise roots feature has been enabled (i.e. import
+// and trust third party root certificates from the OS).
+// With any other value of the pref or on any other platform, this does nothing.
+// This preference takes precedence over "security.enterprise_roots.enabled".
 const char* kFamilySafetyModePref = "security.family_safety.mode";
 const uint32_t kFamilySafetyModeDefault = 0;
 
-// The telemetry gathered by this function is as follows:
-// 0-2: the value of the Family Safety mode pref
-// 3: detecting Family Safety mode failed
-// 4: Family Safety was not enabled
-// 5: Family Safety was enabled
-// 6: failed to import the Family Safety root
-// 7: successfully imported the root
-void nsNSSComponent::MaybeEnableFamilySafetyCompatibility(
+bool nsNSSComponent::ShouldEnableEnterpriseRootsForFamilySafety(
     uint32_t familySafetyMode) {
 #ifdef XP_WIN
   if (!(IsWin8Point1OrLater() && !IsWin10OrLater())) {
-    return;
+    return false;
   }
-  if (familySafetyMode > 2) {
-    familySafetyMode = 0;
-  }
-  if (familySafetyMode == 0) {
-    return;
+  if (familySafetyMode != 2) {
+    return false;
   }
   bool familySafetyEnabled;
   nsresult rv = AccountHasFamilySafetyEnabled(familySafetyEnabled);
   if (NS_FAILED(rv)) {
-    return;
+    return false;
   }
-  if (!familySafetyEnabled) {
-    return;
-  }
-  if (familySafetyMode == 2) {
-    rv = LoadFamilySafetyRoot();
-    if (NS_FAILED(rv)) {
-      MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-              ("failed to load Family Safety root"));
-    }
-  }
+  return familySafetyEnabled;
+#else
+  return false;
 #endif  // XP_WIN
 }
 
@@ -641,10 +535,16 @@ void nsNSSComponent::MaybeImportEnterpriseRoots() {
   }
   bool importEnterpriseRoots =
       Preferences::GetBool(kEnterpriseRootModePref, false);
-  if (!importEnterpriseRoots) {
-    return;
+  uint32_t familySafetyMode =
+      Preferences::GetUint(kFamilySafetyModePref, kFamilySafetyModeDefault);
+  // If we've been configured to detect the Family Safety TLS interception
+  // feature, see if it's enabled. If so, we want to import enterprise roots.
+  if (ShouldEnableEnterpriseRootsForFamilySafety(familySafetyMode)) {
+    importEnterpriseRoots = true;
   }
-  ImportEnterpriseRoots();
+  if (importEnterpriseRoots) {
+    ImportEnterpriseRoots();
+  }
 }
 
 void nsNSSComponent::ImportEnterpriseRoots() {
@@ -695,25 +595,6 @@ nsresult nsNSSComponent::TrustLoaded3rdPartyRoots() {
       }
     }
   }
-#ifdef XP_WIN
-  // Again copy mFamilySafetyRoot so we don't hold mMutex while calling
-  // ChangeCertTrustWithPossibleAuthentication.
-  UniqueCERTCertificate familySafetyRoot;
-  {
-    MutexAutoLock lock(mMutex);
-    if (mFamilySafetyRoot) {
-      familySafetyRoot.reset(CERT_DupCertificate(mFamilySafetyRoot.get()));
-      if (!familySafetyRoot) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-    }
-  }
-  if (familySafetyRoot && ChangeCertTrustWithPossibleAuthentication(
-                              familySafetyRoot, trust, nullptr) != SECSuccess) {
-    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-            ("couldn't trust family safety certificate for TLS server auth"));
-  }
-#endif
   return NS_OK;
 }
 
@@ -822,10 +703,15 @@ LoadLoadableRootsTask::Run() {
     }
   }
 
+  // If we've been configured to detect the Family Safety TLS interception
+  // feature, see if it's enabled. If so, we want to import enterprise roots.
+  if (mNSSComponent->ShouldEnableEnterpriseRootsForFamilySafety(
+          mFamilySafetyMode)) {
+    mImportEnterpriseRoots = true;
+  }
   if (mImportEnterpriseRoots) {
     mNSSComponent->ImportEnterpriseRoots();
   }
-  mNSSComponent->MaybeEnableFamilySafetyCompatibility(mFamilySafetyMode);
   nsresult rv = mNSSComponent->TrustLoaded3rdPartyRoots();
   if (NS_FAILED(rv)) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Error,
@@ -1986,10 +1872,7 @@ void nsNSSComponent::ShutdownNSS() {
   ::mozilla::psm::UnloadLoadableRoots();
 
   MutexAutoLock lock(mMutex);
-#ifdef XP_WIN
-  mFamilySafetyRoot = nullptr;
   mEnterpriseRoots = nullptr;
-#endif
 
   PK11_SetPasswordFunc((PK11PasswordFunc) nullptr);
 
@@ -2107,20 +1990,13 @@ nsNSSComponent::Observe(nsISupports* aSubject, const char* aTopic,
       Preferences::GetString("security.test.built_in_root_hash",
                              mTestBuiltInRootHash);
 #endif  // DEBUG
-    } else if (prefName.Equals(kFamilySafetyModePref)) {
-      // When the pref changes, it is safe to change the trust of 3rd party
-      // roots in the same event tick that they're loaded.
-      UnloadFamilySafetyRoot();
-      uint32_t familySafetyMode =
-          Preferences::GetUint(kFamilySafetyModePref, kFamilySafetyModeDefault);
-      MaybeEnableFamilySafetyCompatibility(familySafetyMode);
-      TrustLoaded3rdPartyRoots();
     } else if (prefName.EqualsLiteral("security.content.signature.root_hash")) {
       MutexAutoLock lock(mMutex);
       mContentSigningRootHash.Truncate();
       Preferences::GetString("security.content.signature.root_hash",
                              mContentSigningRootHash);
-    } else if (prefName.Equals(kEnterpriseRootModePref)) {
+    } else if (prefName.Equals(kEnterpriseRootModePref) ||
+               prefName.Equals(kFamilySafetyModePref)) {
       // When the pref changes, it is safe to change the trust of 3rd party
       // roots in the same event tick that they're loaded.
       UnloadEnterpriseRoots();

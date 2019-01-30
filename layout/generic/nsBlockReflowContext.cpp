@@ -64,7 +64,7 @@ bool nsBlockReflowContext::ComputeCollapsedBStartMargin(
   // caller.
 
 #ifdef NOISY_BLOCKDIR_MARGINS
-  nsFrame::ListTag(stdout, aRI.mFrame);
+  aRI.mFrame->ListTag(stdout);
   printf(": %d => %d\n", aRI.ComputedLogicalMargin().BStart(wm),
          aMargin->get());
 #endif
@@ -211,7 +211,7 @@ done:
   }
 
 #ifdef NOISY_BLOCKDIR_MARGINS
-  nsFrame::ListTag(stdout, aRI.mFrame);
+  aRI.mFrame->ListTag(stdout);
   printf(": => %d\n", aMargin->get());
 #endif
 
@@ -236,9 +236,9 @@ void nsBlockReflowContext::ReflowBlock(
     mBStartMargin = aPrevMargin;
 
 #ifdef NOISY_BLOCKDIR_MARGINS
-    nsFrame::ListTag(stdout, mOuterReflowInput.mFrame);
+    mOuterReflowInput.mFrame->ListTag(stdout);
     printf(": reflowing ");
-    nsFrame::ListTag(stdout, mFrame);
+    mFrame->ListTag(stdout);
     printf(" margin => %d, clearance => %d\n", mBStartMargin.get(), aClearance);
 #endif
 
@@ -303,14 +303,14 @@ void nsBlockReflowContext::ReflowBlock(
          CRAZY_SIZE(mMetrics.BSize(mWritingMode))) &&
         !mFrame->GetParent()->IsCrazySizeAssertSuppressed()) {
       printf("nsBlockReflowContext: ");
-      nsFrame::ListTag(stdout, mFrame);
+      mFrame->ListTag(stdout);
       printf(" metrics=%d,%d!\n", mMetrics.ISize(mWritingMode),
              mMetrics.BSize(mWritingMode));
     }
     if ((mMetrics.ISize(mWritingMode) == nscoord(0xdeadbeef)) ||
         (mMetrics.BSize(mWritingMode) == nscoord(0xdeadbeef))) {
       printf("nsBlockReflowContext: ");
-      nsFrame::ListTag(stdout, mFrame);
+      mFrame->ListTag(stdout);
       printf(" didn't set i/b %d,%d!\n", mMetrics.ISize(mWritingMode),
              mMetrics.BSize(mWritingMode));
     }
@@ -382,9 +382,9 @@ bool nsBlockReflowContext::PlaceBlock(const ReflowInput& aReflowInput,
 
 #ifdef NOISY_BLOCKDIR_MARGINS
     printf("  ");
-    nsFrame::ListTag(stdout, mOuterReflowInput.mFrame);
+    mOuterReflowInput.mFrame->ListTag(stdout);
     printf(": ");
-    nsFrame::ListTag(stdout, mFrame);
+    mFrame->ListTag(stdout);
     printf(
         " -- collapsing block start & end margin together; BStart=%d "
         "spaceBStart=%d\n",

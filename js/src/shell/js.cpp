@@ -1067,6 +1067,19 @@ static bool TrackUnhandledRejections(JSContext* cx, JS::HandleObject promise,
     return true;
   }
 
+#if defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
+  if (cx->runningOOMTest) {
+    // When OOM happens, we cannot reliably track the set of unhandled
+    // promise rejections. Throw error only when simulated OOM is used
+    // *and* promises are used in the test.
+    JS_ReportErrorASCII(
+        cx,
+        "Can't track unhandled rejections while running simulated OOM "
+        "test. Call ignoreUnhandledRejections before using oomTest etc.");
+    return false;
+  }
+#endif
+
   if (!sc->unhandledRejectedPromises) {
     sc->unhandledRejectedPromises = SetObject::create(cx);
     if (!sc->unhandledRejectedPromises) {
@@ -1093,7 +1106,8 @@ static bool TrackUnhandledRejections(JSContext* cx, JS::HandleObject promise,
                               &deleted)) {
         return false;
       }
-      MOZ_ASSERT(deleted);
+      // We can't MOZ_ASSERT(deleted) here, because it's possible we failed to
+      // add the promise in the first place, due to OOM.
       break;
   }
 

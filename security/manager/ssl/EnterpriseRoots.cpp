@@ -21,7 +21,6 @@ using namespace mozilla;
 
 #ifdef XP_WIN
 const wchar_t* kWindowsDefaultRootStoreName = L"ROOT";
-NS_NAMED_LITERAL_CSTRING(kMicrosoftFamilySafetyCN, "Microsoft Family Safety");
 
 // Helper function to determine if the OS considers the given certificate to be
 // a trust anchor for TLS server auth certificates. This is to be used in the
@@ -96,6 +95,24 @@ UniqueCERTCertificate PCCERT_CONTEXTToCERTCertificate(PCCERT_CONTEXT pccert) {
                               true));   // copy DER
 }
 
+// Because HCERTSTORE is just a typedef void*, we can't use any of the nice
+// scoped or unique pointer templates. To elaborate, any attempt would
+// instantiate those templates with T = void. When T gets used in the context
+// of T&, this results in void&, which isn't legal.
+class ScopedCertStore final {
+ public:
+  explicit ScopedCertStore(HCERTSTORE certstore) : certstore(certstore) {}
+
+  ~ScopedCertStore() { CertCloseStore(certstore, 0); }
+
+  HCERTSTORE get() { return certstore; }
+
+ private:
+  ScopedCertStore(const ScopedCertStore&) = delete;
+  ScopedCertStore& operator=(const ScopedCertStore&) = delete;
+  HCERTSTORE certstore;
+};
+
 // Loads the enterprise roots at the registry location corresponding to the
 // given location flag.
 // Supported flags are:
@@ -153,20 +170,13 @@ static void GatherEnterpriseRootsForLocation(DWORD locationFlag,
       MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("couldn't decode certificate"));
       continue;
     }
-    // Don't import the Microsoft Family Safety root (this prevents the
-    // Enterprise Roots feature from interacting poorly with the Family
-    // Safety support).
-    UniquePORTString subjectName(CERT_GetCommonName(&nssCertificate->subject));
-    if (kMicrosoftFamilySafetyCN.Equals(subjectName.get())) {
-      MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("skipping Family Safety Root"));
-      continue;
-    }
     if (CERT_AddCertToListTail(roots.get(), nssCertificate.get()) !=
         SECSuccess) {
       MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("couldn't add cert to list"));
       continue;
     }
-    MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("Imported '%s'", subjectName.get()));
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+            ("Imported '%s'", nssCertificate->subjectName));
     numImported++;
     // now owned by roots
     Unused << nssCertificate.release();

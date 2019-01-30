@@ -67,7 +67,7 @@ class DataSourceSurface;
 
 namespace dom {
 
-class ChromeBrowsingContext;
+class CanonicalBrowsingContext;
 class ClonedMessageData;
 class nsIContentParent;
 class Element;
@@ -126,7 +126,7 @@ class TabParent final : public PBrowserParent,
 
   nsIXULBrowserWindow* GetXULBrowserWindow();
 
-  ChromeBrowsingContext* GetBrowsingContext() { return mBrowsingContext; }
+  CanonicalBrowsingContext* GetBrowsingContext() { return mBrowsingContext; }
 
   void Destroy();
 
@@ -677,7 +677,7 @@ class TabParent final : public PBrowserParent,
   RefPtr<nsFrameLoader> mFrameLoader;
 
   // The root browsing context loaded in this TabParent.
-  RefPtr<ChromeBrowsingContext> mBrowsingContext;
+  RefPtr<CanonicalBrowsingContext> mBrowsingContext;
 
   TabId mTabId;
 
