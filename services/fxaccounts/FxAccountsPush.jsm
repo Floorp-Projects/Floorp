@@ -2,11 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {FXA_PUSH_SCOPE_ACCOUNT_UPDATE, ONLOGOUT_NOTIFICATION, ON_ACCOUNT_DESTROYED_NOTIFICATION, ON_ACCOUNT_STATE_CHANGE_NOTIFICATION, ON_COLLECTION_CHANGED_NOTIFICATION, ON_COMMAND_RECEIVED_NOTIFICATION, ON_DEVICE_CONNECTED_NOTIFICATION, ON_DEVICE_DISCONNECTED_NOTIFICATION, ON_PASSWORD_CHANGED_NOTIFICATION, ON_PASSWORD_RESET_NOTIFICATION, ON_PROFILE_CHANGE_NOTIFICATION, ON_PROFILE_UPDATED_NOTIFICATION, ON_VERIFY_LOGIN_NOTIFICATION, log} = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
-
-XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
 /**
  * FxAccountsPushService manages Push notifications for Firefox Accounts in the browser
@@ -268,6 +265,4 @@ FxAccountsPushService.prototype = {
   },
 };
 
-// Service registration below registers with FxAccountsComponents.manifest
-const components = [FxAccountsPushService];
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory(components);
+var EXPORTED_SYMBOLS = ["FxAccountsPushService"];
