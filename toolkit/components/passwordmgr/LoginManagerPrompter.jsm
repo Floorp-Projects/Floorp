@@ -1561,5 +1561,4 @@ XPCOMUtils.defineLazyGetter(this.LoginManagerPrompter.prototype, "log", () => {
   return logger.log.bind(logger);
 });
 
-var component = [LoginManagerPromptFactory, LoginManagerPrompter];
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory(component);
+var EXPORTED_SYMBOLS = ["LoginManagerPromptFactory", "LoginManagerPrompter"];
