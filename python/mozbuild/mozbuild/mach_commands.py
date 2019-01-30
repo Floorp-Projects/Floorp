@@ -1383,16 +1383,21 @@ class PackageFrontend(MachCommandBase):
 
                 digest = algorithm = None
                 data = {}
-                # The file is GPG-signed, but we don't care about validating
-                # that. Instead of parsing the PGP signature, we just take
-                # the one line we're interested in, which starts with a `{`.
-                for l in cot.content.splitlines():
-                    if l.startswith('{'):
-                        try:
-                            data = json.loads(l)
-                            break
-                        except Exception:
-                            pass
+                # The file is GPG-signed, but we don't care about validating that.
+                # The data looks like:
+                #     -----BEGIN PGP SIGNED MESSAGE-----
+                #     Hash: SHA256
+                #
+                #     {
+                #       ...
+                #     }
+                #     -----BEGIN PGP SIGNATURE-----
+                #     <signature data>
+                #     -----END PGP SIGNATURE-----
+                # The following code extracts the json from there.
+                data = json.loads(
+                    cot.content.partition("-----BEGIN PGP SIGNATURE-----")[0]
+                               .partition("Hash: SHA256")[2])
                 for algorithm, digest in (data.get('artifacts', {})
                                               .get(artifact_name, {}).items()):
                     pass
@@ -1522,7 +1527,7 @@ class PackageFrontend(MachCommandBase):
                     os.unlink(record.filename)
                     if attempt < retry:
                         self.log(logging.INFO, 'artifact', {},
-                                 'Will retry in a moment...')
+                                 'Corrupt download. Will retry in a moment...')
                     continue
 
                 downloaded.append(record)
