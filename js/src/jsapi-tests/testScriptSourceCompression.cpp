@@ -18,7 +18,6 @@
 #include "js/CompilationAndEvaluation.h"  // JS::Evaluate
 #include "js/CompileOptions.h"            // JS::CompileOptions
 #include "js/Conversions.h"               // JS::ToString
-#include "js/GCAPI.h"                     // JS_GC
 #include "js/MemoryFunctions.h"           // JS_malloc
 #include "js/RootingAPI.h"                // JS::MutableHandle, JS::Rooted
 #include "js/SourceText.h"                // JS::SourceOwnership, JS::SourceText
@@ -27,6 +26,7 @@
 #include "js/Value.h"  // JS::NullValue, JS::ObjectValue, JS::Value
 #include "jsapi-tests/tests.h"
 #include "vm/Compression.h"  // js::Compressor::CHUNK_SIZE
+#include "vm/HelperThreads.h"  // js::RunPendingSourceCompressions
 #include "vm/JSFunction.h"   // JSFunction::getOrCreateScript
 #include "vm/JSScript.h"  // JSScript, js::ScriptSource::MinimumCompressibleLength
 
@@ -99,10 +99,7 @@ static void CompressSourceSync(JS::Handle<JSFunction*> fun, JSContext* cx) {
   MOZ_RELEASE_ASSERT(script);
   MOZ_RELEASE_ASSERT(script->scriptSource()->hasSourceText());
 
-  // Hoodoo voodoo that presently compresses |fun|'s source.
-  // XXX Be a mensch: replace this with targeted actions to do this!
-  JS_GC(cx);
-  JS_GC(cx);
+  js::RunPendingSourceCompressions(cx->runtime());
 
   // XXX Temporarily don't assert this because not all builds guarantee it.
   //     We test behavior that is *affected in its implementation* by this

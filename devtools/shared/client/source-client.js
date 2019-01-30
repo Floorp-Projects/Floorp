@@ -181,7 +181,6 @@ SourceClient.prototype = {
   setBreakpoint: function({ line, column, condition, noSliding }) {
     // A helper function that sets the breakpoint.
     const doSetBreakpoint = callback => {
-      const root = this._client.mainRoot;
       const location = {
         line,
         column,
@@ -195,13 +194,6 @@ SourceClient.prototype = {
         noSliding,
       };
 
-      // Backwards compatibility: send the breakpoint request to the
-      // thread if the server doesn't support Debugger.Source actors.
-      if (!root.traits.debuggerSourceActors) {
-        packet.to = this._activeThread.actor;
-        packet.location.url = this.url;
-      }
-
       return this._client.request(packet).then(response => {
         // Ignoring errors, since the user may be setting a breakpoint in a
         // dead script that will reappear on a page reload.
@@ -212,7 +204,7 @@ SourceClient.prototype = {
             this,
             response.actor,
             location,
-            root.traits.conditionalBreakpoints ? condition : undefined
+            condition
           );
         }
         if (callback) {

@@ -2,12 +2,12 @@ Supported platforms
 ===================
 
 The following table shows a mapping between [geckodriver releases],
-supported versions of Firefox, and required Selenium version:
+and required versions of Selenium and Firefox:
 
 <style type="text/css">
   table { width: 100%; margin-bottom: 2em; }
   table, th, td { border: solid gray 1px; }
-  td { padding: 5px 10px; text-align: center; }
+  td, th { padding: 5px 10px; text-align: center; }
 </style>
 
 <table>
@@ -15,7 +15,7 @@ supported versions of Firefox, and required Selenium version:
   <tr>
     <th rowspan="2">geckodriver
     <th rowspan="2">Selenium
-    <th colspan="2">Supported versions of Firefox
+    <th colspan="2">Firefox
   </tr>
   <tr>
     <th>min
@@ -23,6 +23,11 @@ supported versions of Firefox, and required Selenium version:
   </tr>
  </thead>
 
+ <tr>
+  <td>0.24.0
+  <td>≥ 3.11 (3.14 Python)
+  <td>57
+  <td>n/a
  <tr>
   <td>0.23.0
   <td>≥ 3.11 (3.14 Python)

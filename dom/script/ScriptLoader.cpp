@@ -1305,7 +1305,7 @@ nsresult ScriptLoader::StartLoad(ScriptLoadRequest* aRequest) {
   if (httpChannel) {
     // HTTP content negotation has little value in this context.
     nsAutoCString acceptTypes("*/*");
-    if (BinASTEncodingEnabled() && aRequest->ShouldAcceptBinASTEncoding()) {
+    if (nsJSUtils::BinASTEncodingEnabled() && aRequest->ShouldAcceptBinASTEncoding()) {
       acceptTypes = APPLICATION_JAVASCRIPT_BINAST ", */*";
     }
     rv = httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),
