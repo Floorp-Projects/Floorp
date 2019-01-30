@@ -7893,10 +7893,8 @@ bool nsDisplayTransform::CreateWebRenderCommands(
                            params,
                            LayoutDeviceRect(position, LayoutDeviceSize()));
 
-  aManager->CommandBuilder().CreateWebRenderCommandsFromDisplayList(
-      mStoredList.GetChildren(), &mStoredList, aDisplayListBuilder, sc,
-      aBuilder, aResources, this);
-  return true;
+  return mStoredList.CreateWebRenderCommands(aBuilder, aResources, sc, aManager,
+                                             aDisplayListBuilder);
 }
 
 bool nsDisplayTransform::UpdateScrollData(
