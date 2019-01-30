@@ -305,4 +305,4 @@ nsStringEnumerator.prototype = {
   },
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([XULStore]);
+var EXPORTED_SYMBOLS = ["XULStore"];

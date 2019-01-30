@@ -244,8 +244,6 @@
 @RESPATH@/components/cryptoComponents.manifest
 @RESPATH@/components/TelemetryStartup.js
 @RESPATH@/components/TelemetryStartup.manifest
-@RESPATH@/components/XULStore.js
-@RESPATH@/components/XULStore.manifest
 @RESPATH@/components/recording-cmdline.js
 @RESPATH@/components/recording-cmdline.manifest
 @RESPATH@/components/htmlMenuBuilder.js
