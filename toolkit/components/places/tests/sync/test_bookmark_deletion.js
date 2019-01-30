@@ -2,6 +2,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 add_task(async function test_complex_orphaning() {
+  let now = Date.now();
+
   let mergeTelemetryEvents = [];
   let buf = await openMirror("complex_orphaning", {
     recordTelemetryEvent(object, method, value, extra) {
@@ -186,6 +188,12 @@ add_task(async function test_complex_orphaning() {
     }],
   }, "Should move orphans to closest surviving parent");
 
+  let tombstones = await PlacesTestUtils.fetchSyncTombstones();
+  deepEqual(tombstones.map(({ guid }) => guid), ["folderDDDDDD"],
+    "Should store local tombstone for D");
+  Assert.ok(is_time_ordered(now, tombstones[0].dateRemoved.getTime()),
+    "Tombstone timestamp should be recent");
+
   await buf.finalize();
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesSyncUtils.bookmarks.reset();
@@ -349,6 +357,8 @@ add_task(async function test_locally_modified_remotely_deleted() {
 });
 
 add_task(async function test_locally_deleted_remotely_modified() {
+  let now = Date.now();
+
   let mergeTelemetryEvents = [];
   let buf = await openMirror("locally_deleted_remotely_modified", {
     recordTelemetryEvent(object, method, value, extra) {
@@ -491,6 +501,13 @@ add_task(async function test_locally_deleted_remotely_modified() {
     }],
   }, "Should restore A and relocate (F G) to menu");
 
+  let tombstones = await PlacesTestUtils.fetchSyncTombstones();
+  deepEqual(tombstones.map(({ guid }) => guid), ["bookmarkCCCC", "bookmarkEEEE",
+    "folderBBBBBB", "folderDDDDDD"],
+    "Should store local tombstones for deleted items; remove for undeleted");
+  Assert.ok(tombstones.every(( { dateRemoved }) => is_time_ordered(now, dateRemoved.getTime())),
+    "Local tombstone timestamps should be recent");
+
   await buf.finalize();
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesSyncUtils.bookmarks.reset();
@@ -616,6 +633,10 @@ add_task(async function test_move_to_new_then_delete() {
       title: MobileBookmarksTitle,
     }],
   }, "Should move C to closest surviving parent");
+
+  let tombstones = await PlacesTestUtils.fetchSyncTombstones();
+  deepEqual(tombstones.map(({ guid }) => guid), ["bookmarkDDDD", "folderAAAAAA",
+    "folderBBBBBB"], "Should store local tombstones for (D A B)");
 
   await buf.finalize();
   await PlacesUtils.bookmarks.eraseEverything();
@@ -845,6 +866,10 @@ add_task(async function test_clear_folder_then_delete() {
     }],
   }, "Should not orphan moved children of a deleted folder");
 
+  let tombstones = await PlacesTestUtils.fetchSyncTombstones();
+  deepEqual(tombstones.map(({ guid }) => guid), ["bookmarkDDDD"],
+    "Should store local tombstone for D");
+
   await buf.finalize();
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesSyncUtils.bookmarks.reset();
@@ -1016,6 +1041,10 @@ add_task(async function test_newer_move_to_deleted() {
       title: MobileBookmarksTitle,
     }],
   }, "Should not decide to keep newly moved items in deleted parents");
+
+  let tombstones = await PlacesTestUtils.fetchSyncTombstones();
+  deepEqual(tombstones.map(({ guid }) => guid), ["folderCCCCCC"],
+    "Should store local tombstone for C");
 
   await buf.finalize();
   await PlacesUtils.bookmarks.eraseEverything();

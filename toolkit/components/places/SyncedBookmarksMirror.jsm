@@ -1991,7 +1991,7 @@ async function initializeTempMirrorEntities(db) {
          "shouldUploadTombstone" check and persist tombstones unconditionally
          in bug 1343103. */
       INSERT OR IGNORE INTO moz_bookmarks_deleted(guid, dateRemoved)
-      SELECT OLD.guid, STRFTIME('%s', 'now', 'localtime', 'utc')
+      SELECT OLD.guid, STRFTIME('%s', 'now', 'localtime', 'utc') * 1000000
       WHERE OLD.shouldUploadTombstone;
 
       /* Remove the item from Places. */
