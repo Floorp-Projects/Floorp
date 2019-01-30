@@ -68,6 +68,49 @@ Test multiple selectors
   }
   
 
+
+Test exact match
+
+  $ ./mach try fuzzy $testargs --full -q "testfoo | 'testbar"
+  Commit message:
+  Fuzzy query=testfoo | 'testbar
+  
+  Pushed via `mach try fuzzy`
+  Calculated try_task_config.json:
+  {
+      "tasks": [
+          "test/foo-debug",
+          "test/foo-opt"
+      ],
+      "templates": {
+          "env": {
+              "TRY_SELECTOR": "fuzzy"
+          }
+      },
+      "version": 1
+  }
+  
+  $ ./mach try fuzzy $testargs --full --exact -q "testfoo | 'testbar"
+  Commit message:
+  Fuzzy query=testfoo | 'testbar
+  
+  Pushed via `mach try fuzzy`
+  Calculated try_task_config.json:
+  {
+      "tasks": [
+          "test/bar-debug",
+          "test/bar-opt"
+      ],
+      "templates": {
+          "env": {
+              "TRY_SELECTOR": "fuzzy"
+          }
+      },
+      "version": 1
+  }
+  
+
+
 Test templates
 
   $ ./mach try fuzzy --no-push --artifact -q "'foo"
