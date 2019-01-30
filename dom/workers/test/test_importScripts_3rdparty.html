@@ -14,6 +14,8 @@
 
 const workerURL = 'http://mochi.test:8888/tests/dom/workers/test/importScripts_3rdParty_worker.js';
 
+const sameOriginURL = 'http://mochi.test:8888/tests/dom/workers/test/invalid.js'
+
 var tests = [
   function() {
     var worker = new Worker("importScripts_3rdParty_worker.js");
@@ -22,7 +24,7 @@ var tests = [
       next();
     };
 
-    worker.postMessage({ url: location.href, test: 'try', nested: false });
+    worker.postMessage({ url: sameOriginURL, test: 'try', nested: false });
   },
 
   function() {
@@ -32,7 +34,7 @@ var tests = [
       next();
     };
 
-    worker.postMessage({ url: location.href, test: 'try', nested: true });
+    worker.postMessage({ url: sameOriginURL, test: 'try', nested: true });
   },
 
   function() {
@@ -42,7 +44,7 @@ var tests = [
       next();
     };
 
-    worker.postMessage({ url: location.href, test: 'eventListener', nested: false });
+    worker.postMessage({ url: sameOriginURL, test: 'eventListener', nested: false });
   },
 
   function() {
@@ -52,7 +54,7 @@ var tests = [
       next();
     };
 
-    worker.postMessage({ url: location.href, test: 'eventListener', nested: true });
+    worker.postMessage({ url: sameOriginURL, test: 'eventListener', nested: true });
   },
 
   function() {
@@ -65,7 +67,7 @@ var tests = [
       event.preventDefault();
     }
 
-    worker.postMessage({ url: location.href, test: 'onerror', nested: false });
+    worker.postMessage({ url: sameOriginURL, test: 'onerror', nested: false });
   },
 
   function() {
@@ -77,7 +79,7 @@ var tests = [
       next();
     };
 
-    worker.postMessage({ url: location.href, test: 'none', nested: false });
+    worker.postMessage({ url: sameOriginURL, test: 'none', nested: false });
   },
 
   function() {
@@ -89,7 +91,7 @@ var tests = [
       next();
     });
 
-    worker.postMessage({ url: location.href, test: 'none', nested: false });
+    worker.postMessage({ url: sameOriginURL, test: 'none', nested: false });
   },
 
   function() {
@@ -102,7 +104,7 @@ var tests = [
       ok("error" in event.data && event.data.error, "The error has been fully received from a nested worker");
       next();
     };
-    worker.postMessage({ url: location.href, test: 'none', nested: true });
+    worker.postMessage({ url: sameOriginURL, test: 'none', nested: true });
   },
 
   function() {
