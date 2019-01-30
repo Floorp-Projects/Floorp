@@ -179,9 +179,6 @@ class ChromeUtils {
                                   const nsAString& aName,
                                   const WindowActorOptions& aOptions,
                                   ErrorResult& aRv);
-
-  static bool IsClassifierBlockingErrorCode(GlobalObject& aGlobal,
-                                            uint32_t aError);
 };
 
 }  // namespace dom

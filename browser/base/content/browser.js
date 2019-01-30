@@ -4914,8 +4914,7 @@ var XULBrowserWindow = {
   //  3. Called directly during this object's initializations.
   //  4. Due to the nsIWebProgressListener.onLocationChange notification.
   // aRequest will be null always in case 2 and 3, and sometimes in case 1 (for
-  // instance, there won't be a request when STATE_BLOCKED_TRACKING_CONTENT or
-  // other blocking events are observed).
+  // instance, there won't be a request when STATE_BLOCKED_TRACKING_CONTENT is observed).
   onContentBlockingEvent(aWebProgress, aRequest, aEvent, aIsSimulated) {
     // Don't need to do anything if the data we use to update the UI hasn't
     // changed

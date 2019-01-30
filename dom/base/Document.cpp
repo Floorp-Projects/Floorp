@@ -5396,15 +5396,14 @@ void Document::ResolveScheduledSVGPresAttrs() {
   mLazySVGPresElements.Clear();
 }
 
-already_AddRefed<nsSimpleContentList> Document::BlockedNodesByClassifier()
-    const {
+already_AddRefed<nsSimpleContentList> Document::BlockedTrackingNodes() const {
   RefPtr<nsSimpleContentList> list = new nsSimpleContentList(nullptr);
 
-  nsTArray<nsWeakPtr> blockedNodes;
-  blockedNodes = mBlockedNodesByClassifier;
+  nsTArray<nsWeakPtr> blockedTrackingNodes;
+  blockedTrackingNodes = mBlockedTrackingNodes;
 
-  for (unsigned long i = 0; i < blockedNodes.Length(); i++) {
-    nsWeakPtr weakNode = blockedNodes[i];
+  for (unsigned long i = 0; i < blockedTrackingNodes.Length(); i++) {
+    nsWeakPtr weakNode = blockedTrackingNodes[i];
     nsCOMPtr<nsIContent> node = do_QueryReferent(weakNode);
     // Consider only nodes to which we have managed to get strong references.
     // Coping with nullptrs since it's expected for nodes to disappear when

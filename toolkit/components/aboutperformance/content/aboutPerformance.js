@@ -257,7 +257,7 @@ var State = {
         Cc["@mozilla.org/url-classifier/dbservice;1"].getService(Ci.nsIURIClassifier);
       classifier.classify(principal, null, true,
                           (aErrorCode, aList, aProvider, aFullHash) => {
-        this._trackingState.set(host, ChromeUtils.IsClassifierBlockingErrorCode(aErrorCode));
+        this._trackingState.set(host, aErrorCode == Cr.NS_ERROR_TRACKING_URI);
       });
     }
     return this._trackingState.get(host);

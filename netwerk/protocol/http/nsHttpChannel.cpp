@@ -122,7 +122,6 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ServiceWorkerUtils.h"
 #include "mozilla/net/AsyncUrlChannelClassifier.h"
-#include "mozilla/net/UrlClassifierFeatureFactory.h"
 
 #ifdef MOZ_TASK_TRACER
 #  include "GeckoTaskTracer.h"
@@ -328,7 +327,7 @@ nsHttpChannel::nsHttpChannel()
       mStronglyFramed(false),
       mUsedNetwork(0),
       mAuthConnectionRestartable(0),
-      mChannelClassifierCancellationPending(0),
+      mTrackingProtectionCancellationPending(0),
       mAsyncResumePending(0),
       mPushedStream(nullptr),
       mLocalBlocklist(false),
@@ -449,27 +448,24 @@ nsresult nsHttpChannel::PrepareToConnect() {
   return OnBeforeConnect();
 }
 
-void nsHttpChannel::HandleContinueCancellingByChannelClassifier(
-    nsresult aErrorCode) {
-  MOZ_ASSERT(
-      UrlClassifierFeatureFactory::IsClassifierBlockingErrorCode(aErrorCode));
+void nsHttpChannel::HandleContinueCancelledByTrackingProtection() {
   MOZ_ASSERT(!mCallOnResume, "How did that happen?");
 
   if (mSuspendCount) {
     LOG(
-        ("Waiting until resume HandleContinueCancellingByChannelClassifier "
+        ("Waiting until resume HandleContinueCancelledByTrackingProtection "
          "[this=%p]\n",
          this));
-    mCallOnResume = [aErrorCode](nsHttpChannel *self) {
-      self->HandleContinueCancellingByChannelClassifier(aErrorCode);
+    mCallOnResume = [](nsHttpChannel *self) {
+      self->HandleContinueCancelledByTrackingProtection();
       return NS_OK;
     };
     return;
   }
 
-  LOG(("nsHttpChannel::HandleContinueCancellingByChannelClassifier [this=%p]\n",
+  LOG(("nsHttpChannel::HandleContinueCancelledByTrackingProtection [this=%p]\n",
        this));
-  ContinueCancellingByChannelClassifier(aErrorCode);
+  ContinueCancelledByTrackingProtection();
 }
 
 void nsHttpChannel::HandleOnBeforeConnect() {
@@ -5994,14 +5990,9 @@ nsHttpChannel::Cancel(nsresult status) {
   MOZ_ASSERT(NS_IsMainThread());
   // We should never have a pump open while a CORS preflight is in progress.
   MOZ_ASSERT_IF(mPreflightChannel, !mCachePump);
-#ifdef DEBUG
-  if (UrlClassifierFeatureFactory::IsClassifierBlockingErrorCode(status)) {
-    MOZ_CRASH_UNSAFE_PRINTF(
-        "Blocking classifier error %d need to be handled by "
-        "CancelByChannelClassifier()",
-        status);
-  }
-#endif
+  MOZ_ASSERT(status != NS_ERROR_TRACKING_URI,
+             "NS_ERROR_TRACKING_URI needs to be handled by "
+             "CancelForTrackingProtection()");
 
   LOG(("nsHttpChannel::Cancel [this=%p status=%" PRIx32 "]\n", this,
        static_cast<uint32_t>(status)));
@@ -6018,15 +6009,12 @@ nsHttpChannel::Cancel(nsresult status) {
 }
 
 NS_IMETHODIMP
-nsHttpChannel::CancelByChannelClassifier(nsresult aErrorCode) {
-  MOZ_ASSERT(
-      UrlClassifierFeatureFactory::IsClassifierBlockingErrorCode(aErrorCode));
+nsHttpChannel::CancelForTrackingProtection() {
   MOZ_ASSERT(NS_IsMainThread());
-
   // We should never have a pump open while a CORS preflight is in progress.
   MOZ_ASSERT_IF(mPreflightChannel, !mCachePump);
 
-  LOG(("nsHttpChannel::CancelByChannelClassifier [this=%p]\n", this));
+  LOG(("nsHttpChannel::CancelForTrackingProtection [this=%p]\n", this));
 
   if (mCanceled) {
     LOG(("  ignoring; already canceled\n"));
@@ -6057,9 +6045,9 @@ nsHttpChannel::CancelByChannelClassifier(nsresult aErrorCode) {
   if (mSuspendCount) {
     LOG(("Waiting until resume in Cancel [this=%p]\n", this));
     MOZ_ASSERT(!mCallOnResume);
-    mChannelClassifierCancellationPending = 1;
-    mCallOnResume = [aErrorCode](nsHttpChannel *self) {
-      self->HandleContinueCancellingByChannelClassifier(aErrorCode);
+    mTrackingProtectionCancellationPending = 1;
+    mCallOnResume = [](nsHttpChannel *self) {
+      self->HandleContinueCancelledByTrackingProtection();
       return NS_OK;
     };
     return NS_OK;
@@ -6068,21 +6056,19 @@ nsHttpChannel::CancelByChannelClassifier(nsresult aErrorCode) {
   // Check to see if we should redirect this channel elsewhere by
   // nsIHttpChannel.redirectTo API request
   if (mAPIRedirectToURI) {
-    mChannelClassifierCancellationPending = 1;
+    mTrackingProtectionCancellationPending = 1;
     return AsyncCall(&nsHttpChannel::HandleAsyncAPIRedirect);
   }
 
-  return CancelInternal(aErrorCode);
+  return CancelInternal(NS_ERROR_TRACKING_URI);
 }
 
-void nsHttpChannel::ContinueCancellingByChannelClassifier(nsresult aErrorCode) {
-  MOZ_ASSERT(
-      UrlClassifierFeatureFactory::IsClassifierBlockingErrorCode(aErrorCode));
+void nsHttpChannel::ContinueCancelledByTrackingProtection() {
   MOZ_ASSERT(NS_IsMainThread());
   // We should never have a pump open while a CORS preflight is in progress.
   MOZ_ASSERT_IF(mPreflightChannel, !mCachePump);
 
-  LOG(("nsHttpChannel::ContinueCancellingByChannelClassifier [this=%p]\n",
+  LOG(("nsHttpChannel::ContinueCancelledByTrackingProtection [this=%p]\n",
        this));
   if (mCanceled) {
     LOG(("  ignoring; already canceled\n"));
@@ -6096,14 +6082,14 @@ void nsHttpChannel::ContinueCancellingByChannelClassifier(nsresult aErrorCode) {
     return;
   }
 
-  Unused << CancelInternal(aErrorCode);
+  Unused << CancelInternal(NS_ERROR_TRACKING_URI);
 }
 
 nsresult nsHttpChannel::CancelInternal(nsresult status) {
-  bool channelClassifierCancellationPending =
-      !!mChannelClassifierCancellationPending;
-  if (UrlClassifierFeatureFactory::IsClassifierBlockingErrorCode(status)) {
-    mChannelClassifierCancellationPending = 0;
+  bool trackingProtectionCancellationPending =
+      !!mTrackingProtectionCancellationPending;
+  if (status == NS_ERROR_TRACKING_URI) {
+    mTrackingProtectionCancellationPending = 0;
   }
 
   mCanceled = true;
@@ -6119,9 +6105,9 @@ nsresult nsHttpChannel::CancelInternal(nsresult status) {
     mRequestContext->CancelTailedRequest(this);
     CloseCacheEntry(false);
     Unused << AsyncAbort(status);
-  } else if (channelClassifierCancellationPending) {
+  } else if (trackingProtectionCancellationPending) {
     // If we're coming from an asynchronous path when canceling a channel due
-    // to safe-browsing protection, we need to AsyncAbort the channel now.
+    // to tracking protection, we need to AsyncAbort the channel now.
     Unused << AsyncAbort(status);
   }
   return NS_OK;
@@ -6643,10 +6629,10 @@ nsresult nsHttpChannel::BeginConnectActual() {
 
   AUTO_PROFILER_LABEL("nsHttpChannel::BeginConnectActual", NETWORK);
 
-  if (mChannelClassifierCancellationPending) {
+  if (mTrackingProtectionCancellationPending) {
     LOG(
-        ("Waiting for safe-browsing protection cancellation in "
-         "BeginConnectActual [this=%p]\n",
+        ("Waiting for tracking protection cancellation in BeginConnectActual "
+         "[this=%p]\n",
          this));
     return NS_OK;
   }

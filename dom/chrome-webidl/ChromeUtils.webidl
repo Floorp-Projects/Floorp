@@ -391,10 +391,6 @@ partial namespace ChromeUtils {
 
   [ChromeOnly, Throws]
   void registerWindowActor(DOMString aName, WindowActorOptions aOptions);
-
-  [ChromeOnly]
-  // aError should a nsresult.
-  boolean isClassifierBlockingErrorCode(unsigned long aError);
 };
 
 /**

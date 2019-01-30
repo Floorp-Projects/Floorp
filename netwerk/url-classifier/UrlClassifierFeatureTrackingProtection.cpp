@@ -148,7 +148,7 @@ UrlClassifierFeatureTrackingProtection::ProcessChannel(nsIChannel* aChannel,
        aChannel));
   nsCOMPtr<nsIHttpChannelInternal> httpChannel = do_QueryInterface(aChannel);
   if (httpChannel) {
-    Unused << httpChannel->CancelByChannelClassifier(NS_ERROR_TRACKING_URI);
+    Unused << httpChannel->CancelForTrackingProtection();
   } else {
     Unused << aChannel->Cancel(NS_ERROR_TRACKING_URI);
   }
