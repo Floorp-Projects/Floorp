@@ -192,3 +192,17 @@ export function hasNode(rootNode: Node, predicate: Function) {
   }
   return false;
 }
+
+export function replaceNode(ancestors: Object[], node: Object) {
+  const parent = ancestors[ancestors.length - 1];
+
+  if (typeof parent.index === "number") {
+    if (Array.isArray(node)) {
+      parent.node[parent.key].splice(parent.index, 1, ...node);
+    } else {
+      parent.node[parent.key][parent.index] = node;
+    }
+  } else {
+    parent.node[parent.key] = node;
+  }
+}
