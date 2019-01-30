@@ -88,6 +88,10 @@
       }
     },
 
+    "CaptivePortal": {
+      "type": "boolean"
+    },
+
     "Certificates": {
       "type": "object",
       "properties": {
