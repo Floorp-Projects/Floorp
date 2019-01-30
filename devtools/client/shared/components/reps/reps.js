@@ -4961,7 +4961,10 @@ const PropTypes = __webpack_require__(3642);
 const { getGripType, wrapRender } = __webpack_require__(3644);
 
 const dom = __webpack_require__(3643);
+const { rep: StringRep } = __webpack_require__(3648);
 const { span } = dom;
+
+const MAX_STRING_LENGTH = 50;
 
 /**
  * Renders a symbol.
@@ -4974,10 +4977,20 @@ function SymbolRep(props) {
   const { className = "objectBox objectBox-symbol", object } = props;
   const { name } = object;
 
+  let symbolText = name || "";
+  if (name && name.type && name.type === "longString") {
+    symbolText = StringRep({
+      object: symbolText,
+      shouldCrop: true,
+      cropLimit: MAX_STRING_LENGTH,
+      useQuotes: false
+    });
+  }
+
   return span({
     className,
     "data-link-actor-id": object.actor
-  }, `Symbol(${name || ""})`);
+  }, "Symbol(", symbolText, ")");
 }
 
 function supportsObject(object, noGrip = false) {
