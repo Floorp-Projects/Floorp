@@ -210,7 +210,6 @@ namespace {
 struct BlockingErrorCode {
   nsresult mErrorCode;
   uint32_t mBlockingEventCode;
-  uint32_t mAllowingEventCode;
   const char* mConsoleMessage;
   nsCString mConsoleCategory;
 };
@@ -218,8 +217,10 @@ struct BlockingErrorCode {
 static const BlockingErrorCode sBlockingErrorCodes[] = {
     {NS_ERROR_TRACKING_URI,
      nsIWebProgressListener::STATE_BLOCKED_TRACKING_CONTENT,
-     nsIWebProgressListener::STATE_LOADED_TRACKING_CONTENT, "TrackerUriBlocked",
-     NS_LITERAL_CSTRING("Tracking Protection")},
+     "TrackerUriBlocked", NS_LITERAL_CSTRING("Tracking Protection")},
+    {NS_ERROR_FINGERPRINTING_URI,
+     nsIWebProgressListener::STATE_BLOCKED_FINGERPRINTING_CONTENT,
+     "TrackerUriBlocked", NS_LITERAL_CSTRING("Tracking Protection")},
 };
 
 }  // namespace
@@ -245,6 +246,17 @@ static const BlockingErrorCode sBlockingErrorCodes[] = {
     }
   }
   return false;
+}
+
+/* static */ uint32_t
+UrlClassifierFeatureFactory::GetClassifierBlockingEventCode(
+    nsresult aErrorCode) {
+  for (const auto& blockingErrorCode : sBlockingErrorCodes) {
+    if (aErrorCode == blockingErrorCode.mErrorCode) {
+      return blockingErrorCode.mBlockingEventCode;
+    }
+  }
+  return 0;
 }
 
 /* static */ const char*
