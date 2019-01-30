@@ -352,6 +352,13 @@ ScrollAnchorContainer::ExamineAnchorCandidate(nsIFrame* aFrame) const {
 #else
   ANCHOR_LOG("\t\tVisiting frame=%p.\n", aFrame);
 #endif
+  bool isText = !!Text::FromNodeOrNull(aFrame->GetContent());
+  bool isContinuation = !!aFrame->GetPrevContinuation();
+
+  if (isText && isContinuation) {
+    ANCHOR_LOG("\t\tExcluding continuation text node.\n");
+    return ExamineResult::Exclude;
+  }
 
   // Check if the author has opted out of scroll anchoring for this frame
   // and its descendants.
@@ -405,10 +412,8 @@ ScrollAnchorContainer::ExamineAnchorCandidate(nsIFrame* aFrame) const {
 
   // Check what kind of frame this is
   bool isBlockOutside = aFrame->IsBlockOutside();
-  bool isText = !!Text::FromNodeOrNull(aFrame->GetContent());
   bool isAnonBox = aFrame->Style()->IsAnonBox() && !isText;
   bool isInlineOutside = aFrame->IsInlineOutside() && !isText;
-  bool isContinuation = !!aFrame->GetPrevContinuation();
 
   // If the frame is anonymous or inline-outside, search its descendants for a
   // scroll anchor.
