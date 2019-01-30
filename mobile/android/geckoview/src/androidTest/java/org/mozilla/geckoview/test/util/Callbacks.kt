@@ -6,6 +6,7 @@
 package org.mozilla.geckoview.test.util
 
 import org.mozilla.geckoview.AllowOrDeny
+import org.mozilla.geckoview.ContentBlocking
 import org.mozilla.geckoview.GeckoResponse
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
@@ -21,10 +22,11 @@ import android.view.inputmethod.ExtractedTextRequest
 class Callbacks private constructor() {
     object Default : All
 
-    interface All : ContentDelegate, HistoryDelegate, MediaDelegate,
+    interface All : ContentBlockingDelegate, ContentDelegate,
+                    HistoryDelegate, MediaDelegate,
                     NavigationDelegate, PermissionDelegate, ProgressDelegate,
                     PromptDelegate, ScrollDelegate, SelectionActionDelegate,
-                    TextInputDelegate, TrackingProtectionDelegate
+                    TextInputDelegate
 
     interface ContentDelegate : GeckoSession.ContentDelegate {
         override fun onTitleChange(session: GeckoSession, title: String?) {
@@ -173,8 +175,9 @@ class Callbacks private constructor() {
         }
     }
 
-    interface TrackingProtectionDelegate : GeckoSession.TrackingProtectionDelegate {
-        override fun onTrackerBlocked(session: GeckoSession, uri: String?, categories: Int) {
+    interface ContentBlockingDelegate : ContentBlocking.Delegate {
+        override fun onContentBlocked(session: GeckoSession,
+                                      event: ContentBlocking.BlockEvent) {
         }
     }
 
