@@ -58,20 +58,24 @@ open class GleanInternalAPI {
     /**
      * Initialize glean.
      *
+     * This should only be initialized once by the application, and not by
+     * libraries using glean. A message is logged to error and no changes are made
+     * to the state if initialize is called a more than once.
+     *
      * A LifecycleObserver will be added to send pings when the application goes
      * into the background.
      *
      * @param applicationContext [Context] to access application features, such
      * as shared preferences
      * @param configuration A Glean [Configuration] object with global settings.
-     * @raises Exception if called more than once
      */
     fun initialize(
         applicationContext: Context,
         configuration: Configuration = Configuration()
     ) {
         if (isInitialized()) {
-            throw IllegalStateException("Glean may not be initialized multiple times")
+            logger.error("Glean should not be initialized multiple times")
+            return
         }
 
         storageEngineManager = StorageEngineManager(applicationContext = applicationContext)
@@ -157,6 +161,11 @@ open class GleanInternalAPI {
      * if metrics are enabled, and there is ping data to send.
      */
     internal fun sendPing(store: String, docType: String) {
+        if (!isInitialized()) {
+            logger.error("Attempted to send ping before Glean was initialized.")
+            return
+        }
+
         // Do not send ping if metrics disabled
         if (!getMetricsEnabled()) {
             logger.debug("Attempt to send ping \"$store\" but metrics disabled, aborting send.")

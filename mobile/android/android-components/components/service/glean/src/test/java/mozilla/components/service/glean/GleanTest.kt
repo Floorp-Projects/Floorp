@@ -23,6 +23,7 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Assert.assertFalse
 import org.junit.Before
@@ -345,9 +346,15 @@ class GleanTest {
         Glean.initialized = true
     }
 
-    @Test(expected = IllegalStateException::class)
-    fun `Don't initialize twice`() {
+    @Test()
+    fun `Initializing twice is a no-op`() {
+        val beforeConfig = Glean.configuration
+
         Glean.initialize(ApplicationProvider.getApplicationContext())
+
+        val afterConfig = Glean.configuration
+
+        assertSame(beforeConfig, afterConfig)
     }
 
     @Test
