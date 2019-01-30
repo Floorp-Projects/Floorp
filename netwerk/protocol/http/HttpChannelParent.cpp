@@ -1786,17 +1786,12 @@ HttpChannelParent::SetParentListener(HttpChannelParentListener* aListener) {
 }
 
 NS_IMETHODIMP
-HttpChannelParent::NotifyChannelClassifierProtectionDisabled(
-    uint32_t aAcceptedReason) {
-  LOG(
-      ("HttpChannelParent::NotifyChannelClassifierProtectionDisabled [this=%p "
-       "aAcceptedReason=%" PRIu32 "]\n",
-       this, aAcceptedReason));
+HttpChannelParent::NotifyTrackingProtectionDisabled() {
+  LOG(("HttpChannelParent::NotifyTrackingProtectionDisabled [this=%p]\n",
+       this));
   if (!mIPCClosed) {
     MOZ_ASSERT(mBgParent);
-    Unused << NS_WARN_IF(
-        !mBgParent->OnNotifyChannelClassifierProtectionDisabled(
-            aAcceptedReason));
+    Unused << NS_WARN_IF(!mBgParent->OnNotifyTrackingProtectionDisabled());
   }
   return NS_OK;
 }
@@ -1812,11 +1807,12 @@ HttpChannelParent::NotifyCookieAllowed() {
 }
 
 NS_IMETHODIMP
-HttpChannelParent::NotifyCookieBlocked(uint32_t aRejectedReason) {
-  LOG(("HttpChannelParent::NotifyCookieBlocked [this=%p]\n", this));
+HttpChannelParent::NotifyTrackingCookieBlocked(uint32_t aRejectedReason) {
+  LOG(("HttpChannelParent::NotifyTrackingCookieBlocked [this=%p]\n", this));
   if (!mIPCClosed) {
     MOZ_ASSERT(mBgParent);
-    Unused << NS_WARN_IF(!mBgParent->OnNotifyCookieBlocked(aRejectedReason));
+    Unused << NS_WARN_IF(
+        !mBgParent->OnNotifyTrackingCookieBlocked(aRejectedReason));
   }
   return NS_OK;
 }

@@ -45,7 +45,6 @@
 #include "mozilla/AntiTrackingCommon.h"
 #include "mozilla/dom/Performance.h"
 #include "mozilla/dom/PerformanceStorage.h"
-#include "mozilla/net/UrlClassifierFeatureFactory.h"
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/Services.h"
 #include "mozIThirdPartyUtil.h"
@@ -4543,10 +4542,8 @@ HttpBaseChannel::GetNativeServerTiming(
 }
 
 NS_IMETHODIMP
-HttpBaseChannel::CancelByChannelClassifier(nsresult aErrorCode) {
-  MOZ_ASSERT(
-      UrlClassifierFeatureFactory::IsClassifierBlockingErrorCode(aErrorCode));
-  return Cancel(aErrorCode);
+HttpBaseChannel::CancelForTrackingProtection() {
+  return Cancel(NS_ERROR_TRACKING_URI);
 }
 
 void HttpBaseChannel::SetIPv4Disabled() { mCaps |= NS_HTTP_DISABLE_IPV4; }

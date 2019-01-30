@@ -217,8 +217,7 @@ UrlClassifierFeatureTrackingAnnotation::ProcessChannel(nsIChannel* aChannel,
     // are unblocked trackers on the site, so notify the UI that we loaded
     // tracking content. UI code can treat this notification differently
     // depending on whether TP is enabled or disabled.
-    UrlClassifierCommon::NotifyChannelClassifierProtectionDisabled(
-        aChannel, nsIWebProgressListener::STATE_LOADED_TRACKING_CONTENT);
+    UrlClassifierCommon::NotifyTrackingProtectionDisabled(aChannel);
 
     if (StaticPrefs::privacy_trackingprotection_lower_network_priority()) {
       LowerPriorityHelper(aChannel);
