@@ -690,6 +690,18 @@ const gRequestHandlers = {
     return properties;
   },
 
+  objectProxyData(request) {
+    if (!RecordReplayControl.maybeDivergeFromRecording()) {
+      return { exception: "Recording divergence in unwrapObject" };
+    }
+    const obj = gPausedObjects.getObject(request.id);
+    return {
+      unwrapped: convertValue(obj.unwrap()),
+      target: convertValue(obj.proxyTarget),
+      handler: convertValue(obj.proxyHandler),
+    };
+  },
+
   getEnvironmentNames(request) {
     if (!RecordReplayControl.maybeDivergeFromRecording()) {
       return [{name: "Unknown names",
