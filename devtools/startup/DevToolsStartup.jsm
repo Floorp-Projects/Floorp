@@ -1007,5 +1007,4 @@ const JsonView = {
   },
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory(
-  [DevToolsStartup]);
+var EXPORTED_SYMBOLS = ["DevToolsStartup"];

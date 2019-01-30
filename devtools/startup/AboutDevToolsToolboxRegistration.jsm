@@ -7,7 +7,6 @@
 // Register about:devtools-toolbox which allows to open a devtools toolbox
 // in a Firefox tab or a custom html iframe in browser.html
 
-const { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const { nsIAboutModule } = Ci;
@@ -35,6 +34,4 @@ AboutDevtoolsToolbox.prototype = {
   },
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([
-  AboutDevtoolsToolbox,
-]);
+var EXPORTED_SYMBOLS = ["AboutDevtoolsToolbox"];
