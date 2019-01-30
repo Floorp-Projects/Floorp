@@ -283,10 +283,6 @@
 @RESPATH@/components/extensions-toolkit.manifest
 @RESPATH@/browser/components/extensions-browser.manifest
 
-; [Normandy]
-@RESPATH@/components/shield.manifest
-@RESPATH@/components/shield-content-process.js
-
 ; Modules
 @RESPATH@/browser/modules/*
 @RESPATH@/modules/*
