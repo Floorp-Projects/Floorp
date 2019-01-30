@@ -45,6 +45,8 @@ class UrlClassifierFeatureFactory final {
   // nsIWebProgressListener.
   static bool IsClassifierBlockingEventCode(uint32_t aEventCode);
 
+  static uint32_t GetClassifierBlockingEventCode(nsresult aErrorCode);
+
   // This can be called only if IsClassifierBlockingErrorCode(aError) returns
   // true.
   static const char* ClassifierBlockingErrorCodeToConsoleMessage(
