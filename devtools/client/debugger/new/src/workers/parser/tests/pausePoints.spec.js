@@ -3,6 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+// @flow
+
 import cases from "jest-in-case";
 import {
   formatPausePoints,
@@ -21,7 +23,10 @@ cases(
       : getSource(file, type);
 
     setSource(source);
-    const nodes = convertToList(getPausePoints(source.id));
+
+    // The coercion here is needed because getPausePoints and convertToList
+    // operate on two incompatible definitions of PausePointsMap
+    const nodes = convertToList((getPausePoints(source.id): any));
     expect(formatPausePoints(source.text, nodes)).toMatchSnapshot();
   },
   [

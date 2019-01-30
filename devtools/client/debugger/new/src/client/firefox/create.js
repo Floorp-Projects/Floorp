@@ -29,7 +29,9 @@ export function createFrame(thread: ThreadId, frame: FramePacket): ?Frame {
   }
 
   // NOTE: Firefox 66 switched from where.source to where.actor
-  const actor = frame.where.source ? frame.where.source.actor : frame.where.actor;
+  const actor = frame.where.source
+    ? frame.where.source.actor
+    : frame.where.actor;
 
   const location = {
     sourceId: clientCommands.getSourceForActor(actor),

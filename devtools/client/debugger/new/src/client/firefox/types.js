@@ -120,7 +120,7 @@ export type SourcesPacket = {
 };
 
 export type CreateSourceResult = {|
-  +sourceActor: SourceActor,
+  sourceActor?: SourceActor,
   +source: Source
 |};
 
