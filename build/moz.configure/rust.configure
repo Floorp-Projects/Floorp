@@ -286,15 +286,9 @@ def rust_tests(enable_rust_tests, rustdoc):
 
 set_config('MOZ_RUST_TESTS', rust_tests)
 
-js_option(env='WIN64_LINK', nargs=1, help='Path to link.exe that targets win64')
-js_option(env='WIN64_LIB', nargs=1, help='Paths to libraries for the win64 linker')
 
-set_config('WIN64_LINK', depends('WIN64_LINK')(lambda x: x))
-set_config('WIN64_LIB', depends('WIN64_LIB')(lambda x: x))
-
-
-@depends(target, rustc_info, c_compiler, 'WIN64_LINK', 'WIN64_LIB')
-def win64_cargo_linker(target, rustc_info, compiler_info, link, lib):
+@depends(target, rustc_info, c_compiler)
+def win64_cargo_linker(target, rustc_info, compiler_info):
     # When we're building a 32-bit Windows build with a 64-bit rustc, we
     # need to configure the linker it will use for host binaries (build scripts)
     # specially because the compiler configuration we use for the build is for
@@ -302,7 +296,7 @@ def win64_cargo_linker(target, rustc_info, compiler_info, link, lib):
     if target.kernel == 'WINNT' and \
        target.cpu in ('x86', 'aarch64') and \
        compiler_info.type in ('msvc', 'clang-cl') and \
-       rustc_info.host == 'x86_64-pc-windows-msvc' and link and lib:
+       rustc_info.host == 'x86_64-pc-windows-msvc':
         return True
 
 
