@@ -6961,15 +6961,16 @@ void GCRuntime::incrementalSlice(SliceBudget& budget, JS::GCReason reason,
         bool(isIncremental), bool(lastMarkSlice), bool(useZeal), budgetBuffer);
   }
 #endif
-  MOZ_ASSERT_IF(isIncrementalGCInProgress(), isIncremental || lastMarkSlice);
+
+  MOZ_ASSERT_IF(isIncrementalGCInProgress(), isIncremental);
 
   /*
-   * It's possible to be in the middle of an incremental collection, but not
-   * doing an incremental collection IF we had to return and re-enter the GC
-   * in order to collect the nursery.
+   * Non-incremental collection expects that the nursery is empty.
    */
-  MOZ_ASSERT_IF(isIncrementalGCInProgress() && !isIncremental,
-                lastMarkSlice && nursery().isEmpty());
+  if (!isIncremental) {
+    MOZ_ASSERT(nursery().isEmpty());
+    storeBuffer().checkEmpty();
+  }
 
   isIncremental = !budget.isUnlimited();
 
