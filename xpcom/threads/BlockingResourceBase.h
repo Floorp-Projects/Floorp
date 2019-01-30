@@ -8,6 +8,7 @@
 #define mozilla_BlockingResourceBase_h
 
 #include "mozilla/Logging.h"
+#include "mozilla/ThreadLocal.h"
 
 #include "nscore.h"
 #include "nsDebug.h"
@@ -152,8 +153,7 @@ class BlockingResourceBase {
    *         resource acquired.
    */
   static BlockingResourceBase* ResourceChainFront() {
-    return (BlockingResourceBase*)PR_GetThreadPrivate(
-        sResourceAcqnChainFrontTPI);
+    return sResourceAcqnChainFront.get();
   }
 
   /**
@@ -175,7 +175,7 @@ class BlockingResourceBase {
    */
   void ResourceChainAppend(BlockingResourceBase* aPrev) {
     mChainPrev = aPrev;
-    PR_SetThreadPrivate(sResourceAcqnChainFrontTPI, this);
+    sResourceAcqnChainFront.set(this);
   }  // NS_NEEDS_RESOURCE(this)
 
   /**
@@ -186,7 +186,7 @@ class BlockingResourceBase {
    */
   void ResourceChainRemove() {
     NS_ASSERTION(this == ResourceChainFront(), "not at chain front");
-    PR_SetThreadPrivate(sResourceAcqnChainFrontTPI, mChainPrev);
+    sResourceAcqnChainFront.set(mChainPrev);
   }  // NS_NEEDS_RESOURCE(this)
 
   /**
@@ -280,11 +280,10 @@ class BlockingResourceBase {
   static PRCallOnceType sCallOnce;
 
   /**
-   * sResourceAcqnChainFrontTPI
-   * Thread-private index to the front of each thread's resource
+   * Thread-private pointer to the front of each thread's resource
    * acquisition chain.
    */
-  static unsigned sResourceAcqnChainFrontTPI;
+  static MOZ_THREAD_LOCAL(BlockingResourceBase*) sResourceAcqnChainFront;
 
   /**
    * sDeadlockDetector
