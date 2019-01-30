@@ -13,6 +13,23 @@ interface nsIProfileLock;
 [scriptable, builtinclass, uuid(1947899b-f369-48fa-89da-f7c37bb1e6bc)]
 interface nsIToolkitProfileService : nsISupports
 {
+    /**
+     * When a downgrade is detected UI is presented to the user to ask how to
+     * proceed. These flags are used to pass some information to the UI.
+     */
+    cenum downgradeUIFlags: 8 {
+        hasSync = 1,
+    };
+
+    /**
+     * When a downgrade is detected UI is presented to the user to ask how to
+     * proceed. These are the possible options the user can choose.
+     */
+    cenum downgradeUIChoice: 8 {
+        quit = 0,
+        createNewProfile = 1,
+    };
+
     attribute boolean startWithLastProfile;
 
     readonly attribute nsISimpleEnumerator /*nsIToolkitProfile*/ profiles;
@@ -74,7 +91,10 @@ interface nsIToolkitProfileService : nsISupports
      *
      * The profile temporary directory will be chosen based on where the
      * profile directory is located.
-     * 
+     *
+     * If a profile with the given name already exists it will be returned
+     * instead of creating a new profile.
+     *
      * @param aRootDir
      *        The profile directory. May be null, in which case a suitable
      *        default will be chosen based on the profile name.
@@ -83,6 +103,23 @@ interface nsIToolkitProfileService : nsISupports
      */
     nsIToolkitProfile createProfile(in nsIFile aRootDir,
                                     in AUTF8String aName);
+
+    /**
+     * Create a new profile with a unique name.
+     *
+     * As above however the name given will be altered to make it a unique
+     * profile name.
+     *
+     * @param aRootDir
+     *        The profile directory. May be null, in which case a suitable
+     *        default will be chosen based on the profile name.
+     * @param aNamePrefix
+     *        The prefix to use for the profile name. If unused this will be
+     *        used as the profile name otherwise additional characters will be
+     *        added to make the name unique.
+     */
+    nsIToolkitProfile createUniqueProfile(in nsIFile aRootDir,
+                                          in AUTF8String aNamePrefix);
 
     /**
      * Returns the number of profiles.
