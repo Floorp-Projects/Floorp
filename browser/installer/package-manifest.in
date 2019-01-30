@@ -174,8 +174,6 @@
 @RESPATH@/components/nsUpdateService.manifest
 #endif
 @RESPATH@/components/ProcessSingleton.manifest
-@RESPATH@/components/nsContentDispatchChooser.manifest
-@RESPATH@/components/nsContentDispatchChooser.js
 @RESPATH@/components/HandlerService.manifest
 @RESPATH@/components/HandlerService.js
 #ifdef XP_MACOSX
