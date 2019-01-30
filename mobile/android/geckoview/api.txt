@@ -45,6 +45,57 @@ package org.mozilla.geckoview {
     method @android.support.annotation.UiThread public void onPixelsResult(int, int, @android.support.annotation.Nullable java.nio.IntBuffer);
   }
 
+  @android.support.annotation.AnyThread public class ContentBlocking {
+    ctor public ContentBlocking();
+    field public static final int AT_AD = 2;
+    field public static final int AT_ALL = 63;
+    field public static final int AT_ANALYTIC = 4;
+    field public static final int AT_CONTENT = 16;
+    field public static final int AT_SOCIAL = 8;
+    field public static final int AT_TEST = 32;
+    field public static final int COOKIE_ACCEPT_ALL = 0;
+    field public static final int COOKIE_ACCEPT_FIRST_PARTY = 1;
+    field public static final int COOKIE_ACCEPT_NONE = 2;
+    field public static final int COOKIE_ACCEPT_NON_TRACKERS = 4;
+    field public static final int COOKIE_ACCEPT_VISITED = 3;
+    field public static final int COOKIE_LIFETIME_DAYS = 3;
+    field public static final int COOKIE_LIFETIME_NORMAL = 0;
+    field public static final int COOKIE_LIFETIME_RUNTIME = 2;
+    field public static final int NONE = 0;
+    field public static final int SB_ALL = 16320;
+    field public static final int SB_HARMFUL = 4096;
+    field public static final int SB_MALWARE = 1024;
+    field public static final int SB_PHISHING = 8192;
+    field public static final int SB_UNWANTED = 2048;
+  }
+
+  public static class ContentBlocking.BlockEvent {
+    ctor public BlockEvent(@android.support.annotation.NonNull java.lang.String, int);
+    field public final int categories;
+    field @android.support.annotation.NonNull public final java.lang.String uri;
+  }
+
+  public static interface ContentBlocking.Delegate {
+    method @android.support.annotation.UiThread public void onContentBlocked(@android.support.annotation.NonNull org.mozilla.geckoview.GeckoSession, @android.support.annotation.NonNull org.mozilla.geckoview.ContentBlocking.BlockEvent);
+  }
+
+  @android.support.annotation.AnyThread public static class ContentBlocking.Settings extends org.mozilla.geckoview.RuntimeSettings {
+    method public int getCategories();
+    method public int getCookieBehavior();
+    method public int getCookieLifetime();
+    method @android.support.annotation.NonNull public org.mozilla.geckoview.ContentBlocking.Settings setCategories(int);
+    method @android.support.annotation.NonNull public org.mozilla.geckoview.ContentBlocking.Settings setCookieBehavior(int);
+    method @android.support.annotation.NonNull public org.mozilla.geckoview.ContentBlocking.Settings setCookieLifetime(int);
+  }
+
+  @android.support.annotation.AnyThread public static class ContentBlocking.Settings.Builder extends org.mozilla.geckoview.RuntimeSettings.Builder<Settings extends org.mozilla.geckoview.RuntimeSettings> {
+    ctor public Builder();
+    method @android.support.annotation.NonNull public org.mozilla.geckoview.ContentBlocking.Settings.Builder categories(int);
+    method @android.support.annotation.NonNull public org.mozilla.geckoview.ContentBlocking.Settings.Builder cookieBehavior(int);
+    method @android.support.annotation.NonNull public org.mozilla.geckoview.ContentBlocking.Settings.Builder cookieLifetime(int);
+    method @android.support.annotation.NonNull protected org.mozilla.geckoview.ContentBlocking.Settings newSettings(org.mozilla.geckoview.ContentBlocking.Settings);
+  }
+
   public class CrashReporter {
     ctor public CrashReporter();
     method @android.support.annotation.AnyThread public static org.mozilla.geckoview.GeckoResult<java.lang.String> sendCrashReport(@android.support.annotation.NonNull android.content.Context, @android.support.annotation.NonNull android.content.Intent, @android.support.annotation.NonNull java.lang.String);
@@ -156,11 +207,8 @@ package org.mozilla.geckoview {
 
   @android.support.annotation.AnyThread public final class GeckoRuntimeSettings extends org.mozilla.geckoview.RuntimeSettings {
     method @android.support.annotation.NonNull public java.lang.String[] getArguments();
-    method public boolean getBlockMalware();
-    method public boolean getBlockPhishing();
     method public boolean getConsoleOutputEnabled();
-    method public int getCookieBehavior();
-    method public int getCookieLifetime();
+    method @android.support.annotation.NonNull public org.mozilla.geckoview.ContentBlocking.Settings getContentBlocking();
     method @android.support.annotation.Nullable public java.lang.Class<?> getCrashHandler();
     method @android.support.annotation.Nullable public java.lang.Float getDisplayDensityOverride();
     method @android.support.annotation.Nullable public java.lang.Integer getDisplayDpiOverride();
@@ -171,39 +219,22 @@ package org.mozilla.geckoview {
     method public boolean getRemoteDebuggingEnabled();
     method @android.support.annotation.Nullable public org.mozilla.geckoview.GeckoRuntime getRuntime();
     method @android.support.annotation.Nullable public android.graphics.Rect getScreenSizeOverride();
-    method public int getTrackingProtectionCategories();
     method public boolean getUseContentProcessHint();
     method public boolean getUseMaxScreenDepth();
     method public boolean getWebFontsEnabled();
-    method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings setBlockMalware(boolean);
-    method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings setBlockPhishing(boolean);
     method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings setConsoleOutputEnabled(boolean);
-    method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings setCookieBehavior(int);
-    method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings setCookieLifetime(int);
     method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings setJavaScriptEnabled(boolean);
     method public void setLocales(@android.support.annotation.Nullable java.lang.String[]);
     method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings setRemoteDebuggingEnabled(boolean);
-    method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings setTrackingProtectionCategories(int);
     method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings setWebFontsEnabled(boolean);
-    field public static final int COOKIE_ACCEPT_ALL = 0;
-    field public static final int COOKIE_ACCEPT_FIRST_PARTY = 1;
-    field public static final int COOKIE_ACCEPT_NONE = 2;
-    field public static final int COOKIE_ACCEPT_NON_TRACKERS = 4;
-    field public static final int COOKIE_ACCEPT_VISITED = 3;
-    field public static final int COOKIE_LIFETIME_DAYS = 3;
-    field public static final int COOKIE_LIFETIME_NORMAL = 0;
-    field public static final int COOKIE_LIFETIME_RUNTIME = 2;
     field public static final android.os.Parcelable.Creator<org.mozilla.geckoview.GeckoRuntimeSettings> CREATOR;
   }
 
   @android.support.annotation.AnyThread public static final class GeckoRuntimeSettings.Builder extends org.mozilla.geckoview.RuntimeSettings.Builder<Settings extends org.mozilla.geckoview.RuntimeSettings> {
     ctor public Builder();
     method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings.Builder arguments(@android.support.annotation.NonNull java.lang.String[]);
-    method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings.Builder blockMalware(boolean);
-    method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings.Builder blockPhishing(boolean);
     method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings.Builder consoleOutput(boolean);
-    method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings.Builder cookieBehavior(int);
-    method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings.Builder cookieLifetime(int);
+    method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings.Builder contentBlocking(@android.support.annotation.NonNull org.mozilla.geckoview.ContentBlocking.Settings);
     method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings.Builder crashHandler(java.lang.Class<?>);
     method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings.Builder displayDensityOverride(float);
     method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings.Builder displayDpiOverride(int);
@@ -213,7 +244,6 @@ package org.mozilla.geckoview {
     method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings.Builder pauseForDebugger(boolean);
     method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings.Builder remoteDebuggingEnabled(boolean);
     method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings.Builder screenSizeOverride(int, int);
-    method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings.Builder trackingProtectionCategories(int);
     method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings.Builder useContentProcessHint(boolean);
     method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings.Builder useMaxScreenDepth(boolean);
     method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings.Builder webFontsEnabled(boolean);
@@ -233,6 +263,7 @@ package org.mozilla.geckoview {
     method @android.support.annotation.UiThread public void getClientToScreenMatrix(@android.support.annotation.NonNull android.graphics.Matrix);
     method @android.support.annotation.UiThread public void getClientToSurfaceMatrix(@android.support.annotation.NonNull android.graphics.Matrix);
     method @android.support.annotation.UiThread @android.support.annotation.NonNull public org.mozilla.geckoview.CompositorController getCompositorController();
+    method @android.support.annotation.AnyThread @android.support.annotation.Nullable public org.mozilla.geckoview.ContentBlocking.Delegate getContentBlockingDelegate();
     method @android.support.annotation.UiThread @android.support.annotation.Nullable public org.mozilla.geckoview.GeckoSession.ContentDelegate getContentDelegate();
     method @android.support.annotation.UiThread @android.support.annotation.NonNull public org.mozilla.geckoview.DynamicToolbarAnimator getDynamicToolbarAnimator();
     method @android.support.annotation.AnyThread @android.support.annotation.NonNull public org.mozilla.gecko.EventDispatcher getEventDispatcher();
@@ -252,7 +283,6 @@ package org.mozilla.geckoview {
     method @android.support.annotation.AnyThread @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoSessionSettings getSettings();
     method @android.support.annotation.UiThread public void getSurfaceBounds(@android.support.annotation.NonNull android.graphics.Rect);
     method @android.support.annotation.AnyThread @android.support.annotation.NonNull public org.mozilla.geckoview.SessionTextInput getTextInput();
-    method @android.support.annotation.AnyThread @android.support.annotation.Nullable public org.mozilla.geckoview.GeckoSession.TrackingProtectionDelegate getTrackingProtectionDelegate();
     method @android.support.annotation.AnyThread @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoResult<java.lang.String> getUserAgent();
     method @android.support.annotation.AnyThread public void goBack();
     method @android.support.annotation.AnyThread public void goForward();
@@ -272,6 +302,7 @@ package org.mozilla.geckoview {
     method @android.support.annotation.AnyThread public void restoreState(@android.support.annotation.NonNull org.mozilla.geckoview.GeckoSession.SessionState);
     method @android.support.annotation.AnyThread @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoResult<org.mozilla.geckoview.GeckoSession.SessionState> saveState();
     method @android.support.annotation.AnyThread public void setActive(boolean);
+    method @android.support.annotation.AnyThread public void setContentBlockingDelegate(@android.support.annotation.Nullable org.mozilla.geckoview.ContentBlocking.Delegate);
     method @android.support.annotation.UiThread public void setContentDelegate(@android.support.annotation.Nullable org.mozilla.geckoview.GeckoSession.ContentDelegate);
     method @android.support.annotation.AnyThread public void setFocused(boolean);
     method @android.support.annotation.AnyThread public void setHistoryDelegate(@android.support.annotation.Nullable org.mozilla.geckoview.GeckoSession.HistoryDelegate);
@@ -282,7 +313,6 @@ package org.mozilla.geckoview {
     method @android.support.annotation.AnyThread public void setPromptDelegate(@android.support.annotation.Nullable org.mozilla.geckoview.GeckoSession.PromptDelegate);
     method @android.support.annotation.UiThread public void setScrollDelegate(@android.support.annotation.Nullable org.mozilla.geckoview.GeckoSession.ScrollDelegate);
     method @android.support.annotation.UiThread public void setSelectionActionDelegate(@android.support.annotation.Nullable org.mozilla.geckoview.GeckoSession.SelectionActionDelegate);
-    method @android.support.annotation.AnyThread public void setTrackingProtectionDelegate(@android.support.annotation.Nullable org.mozilla.geckoview.GeckoSession.TrackingProtectionDelegate);
     method @android.support.annotation.AnyThread public void stop();
     method @android.support.annotation.UiThread protected void setShouldPinOnScreen(boolean);
     field public static final android.os.Parcelable.Creator<org.mozilla.geckoview.GeckoSession> CREATOR;
@@ -616,21 +646,6 @@ package org.mozilla.geckoview {
   }
 
   public static interface GeckoSession.TextInputDelegate.RestartReason implements java.lang.annotation.Annotation {
-  }
-
-  public static interface GeckoSession.TrackingProtectionDelegate {
-    method @android.support.annotation.UiThread public void onTrackerBlocked(@android.support.annotation.NonNull org.mozilla.geckoview.GeckoSession, @android.support.annotation.Nullable java.lang.String, int);
-    field public static final int CATEGORY_AD = 1;
-    field public static final int CATEGORY_AD_EXT = 64;
-    field public static final int CATEGORY_ALL = 31;
-    field public static final int CATEGORY_ANALYTIC = 2;
-    field public static final int CATEGORY_CONTENT = 8;
-    field public static final int CATEGORY_NONE = 0;
-    field public static final int CATEGORY_SOCIAL = 4;
-    field public static final int CATEGORY_TEST = 16;
-  }
-
-  public static interface GeckoSession.TrackingProtectionDelegate.Category implements java.lang.annotation.Annotation {
   }
 
   @android.support.annotation.AnyThread public static class GeckoSession.WebResponseInfo {
