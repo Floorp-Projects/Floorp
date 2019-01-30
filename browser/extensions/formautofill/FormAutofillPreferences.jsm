@@ -74,7 +74,6 @@ FormAutofillPreferences.prototype = {
     let formAutofillFragment = document.createDocumentFragment();
     let formAutofillGroupBoxLabel = document.createXULElement("label");
     let formAutofillGroupBoxLabelHeading = document.createElementNS(HTML_NS, "h2");
-    let formAutofillGroupBoxDescription = document.createXULElement("description");
     let formAutofillGroup = document.createXULElement("vbox");
     let addressAutofill = document.createXULElement("hbox");
     let addressAutofillCheckboxGroup = document.createXULElement("hbox");
@@ -94,10 +93,6 @@ FormAutofillPreferences.prototype = {
     addressAutofillLearnMore.id = "addressAutofillLearnMore";
 
     formAutofillGroupBoxLabelHeading.textContent = this.bundle.GetStringFromName("autofillHeader");
-    formAutofillGroupBoxDescription.textContent =
-      this.bundle.formatStringFromName("autofillDescription",
-                                       [FormAutofillUtils.brandBundle.GetStringFromName("brandShortName")],
-                                       1);
 
     addressAutofill.setAttribute("data-subcategory", "address-autofill");
     addressAutofillCheckbox.setAttribute("label", this.bundle.GetStringFromName("autofillAddressesCheckbox"));
@@ -123,7 +118,6 @@ FormAutofillPreferences.prototype = {
 
     formAutofillGroupBoxLabel.appendChild(formAutofillGroupBoxLabelHeading);
     formAutofillFragment.appendChild(formAutofillGroupBoxLabel);
-    formAutofillFragment.appendChild(formAutofillGroupBoxDescription);
     formAutofillFragment.appendChild(formAutofillGroup);
     formAutofillGroup.appendChild(addressAutofill);
     addressAutofill.appendChild(addressAutofillCheckboxGroup);
