@@ -157,8 +157,6 @@
 @BINPATH@/components/ContentPrefService2.js
 @BINPATH@/components/HandlerService.manifest
 @BINPATH@/components/HandlerService.js
-@BINPATH@/components/nsWebHandlerApp.manifest
-@BINPATH@/components/nsWebHandlerApp.js
 @BINPATH@/components/contentAreaDropListener.manifest
 @BINPATH@/components/contentAreaDropListener.js
 @BINPATH@/components/servicesComponents.manifest

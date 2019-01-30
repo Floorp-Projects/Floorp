@@ -162,8 +162,4 @@ nsWebHandlerApp.prototype = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIWebHandlerApp, Ci.nsIHandlerApp])
 };
 
-////////////////////////////////////////////////////////////////////////////////
-//// Module
-
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([nsWebHandlerApp]);
-
+var EXPORTED_SYMBOLS = ["nsWebHandlerApp"];
