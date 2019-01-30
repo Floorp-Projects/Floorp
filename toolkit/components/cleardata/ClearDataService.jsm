@@ -907,4 +907,4 @@ ClearDataService.prototype = Object.freeze({
   },
 });
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([ClearDataService]);
+var EXPORTED_SYMBOLS = ["ClearDataService"];
