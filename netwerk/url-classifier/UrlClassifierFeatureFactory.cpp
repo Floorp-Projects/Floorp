@@ -221,6 +221,9 @@ static const BlockingErrorCode sBlockingErrorCodes[] = {
     {NS_ERROR_FINGERPRINTING_URI,
      nsIWebProgressListener::STATE_BLOCKED_FINGERPRINTING_CONTENT,
      "TrackerUriBlocked", NS_LITERAL_CSTRING("Tracking Protection")},
+    {NS_ERROR_CRYPTOMINING_URI,
+     nsIWebProgressListener::STATE_BLOCKED_CRYPTOMINING_CONTENT,
+     "TrackerUriBlocked", NS_LITERAL_CSTRING("Tracking Protection")},
 };
 
 }  // namespace

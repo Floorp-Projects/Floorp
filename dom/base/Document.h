@@ -1011,6 +1011,14 @@ class Document : public nsINode,
   }
 
   /**
+   * Get cryptomining content blocked flag for this document.
+   */
+  bool GetHasCryptominingContentBlocked() {
+    return mContentBlockingLog.HasBlockedAnyOfType(
+        nsIWebProgressListener::STATE_BLOCKED_CRYPTOMINING_CONTENT);
+  }
+
+  /**
    * Get all cookies blocked flag for this document.
    */
   bool GetHasAllCookiesBlocked() {
@@ -1061,6 +1069,17 @@ class Document : public nsINode,
         aOriginBlocked,
         nsIWebProgressListener::STATE_BLOCKED_FINGERPRINTING_CONTENT,
         aHasFingerprintingContentBlocked);
+  }
+
+  /**
+   * Set the cryptomining content blocked flag for this document.
+   */
+  void SetHasCryptominingContentBlocked(bool aHasCryptominingContentBlocked,
+                                        const nsACString& aOriginBlocked) {
+    RecordContentBlockingLog(
+        aOriginBlocked,
+        nsIWebProgressListener::STATE_BLOCKED_CRYPTOMINING_CONTENT,
+        aHasCryptominingContentBlocked);
   }
 
   /**
@@ -1157,6 +1176,25 @@ class Document : public nsINode,
         aOriginBlocked,
         nsIWebProgressListener::STATE_LOADED_FINGERPRINTING_CONTENT,
         aHasFingerprintingContentLoaded);
+  }
+
+  /**
+   * Get cryptomining content loaded flag for this document.
+   */
+  bool GetHasCryptominingContentLoaded() {
+    return mContentBlockingLog.HasBlockedAnyOfType(
+        nsIWebProgressListener::STATE_LOADED_CRYPTOMINING_CONTENT);
+  }
+
+  /**
+   * Set the cryptomining content loaded flag for this document.
+   */
+  void SetHasCryptominingContentLoaded(bool aHasCryptominingContentLoaded,
+                                       const nsACString& aOriginBlocked) {
+    RecordContentBlockingLog(
+        aOriginBlocked,
+        nsIWebProgressListener::STATE_LOADED_CRYPTOMINING_CONTENT,
+        aHasCryptominingContentLoaded);
   }
 
   /**
