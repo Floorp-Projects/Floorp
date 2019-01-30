@@ -5,6 +5,7 @@
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/AddTask.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head_notifications.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
@@ -17,6 +18,10 @@
 let image = atob("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAAA1BMVEUAA" +
                  "ACnej3aAAAAAXRSTlMAQObYZgAAAApJREFUCNdjYAAAAAIAAeIhvDMAAAAASUVORK5CYII=");
 const IMAGE_ARRAYBUFFER = Uint8Array.from(image, byte => byte.charCodeAt(0)).buffer;
+
+add_task(async function setup_mock_alert_service() {
+  await MockAlertsService.register();
+});
 
 add_task(async function test_notification() {
   async function background() {
@@ -46,7 +51,7 @@ add_task(async function test_notification() {
 });
 
 add_task(async function test_notification_events() {
-  function background() {
+  async function background() {
     let opts = {
       type: "basic",
       title: "Testing Notification",
@@ -67,17 +72,19 @@ add_task(async function test_notification_events() {
       browser.test.assertEq(createdId, id, "onShown received the expected id.");
       let newId = await browser.notifications.create(id, opts);
       browser.test.assertEq(createdId, newId, "create returned the expected id.");
-      browser.test.sendMessage("created");
+      browser.test.sendMessage("notification-created-twice");
     });
 
     // Test onClosed listener.
     browser.notifications.onClosed.addListener(function listener(id) {
       browser.notifications.onClosed.removeListener(listener);
       browser.test.assertEq(createdId, id, "onClosed received the expected id.");
-      browser.test.sendMessage("closed");
+      browser.test.sendMessage("notification-closed");
     });
 
-    browser.notifications.create(createdId, opts);
+    await browser.notifications.create(createdId, opts);
+
+    browser.test.sendMessage("notification-created-once");
   }
 
   let extension = ExtensionTestUtils.loadExtension({
@@ -86,9 +93,17 @@ add_task(async function test_notification_events() {
     },
     background,
   });
+
   await extension.startup();
-  await extension.awaitMessage("closed");
-  await extension.awaitMessage("created");
+
+  await extension.awaitMessage("notification-created-once");
+  await MockAlertsService.closeNotifications();
+
+  await extension.awaitMessage("notification-closed");
+  await extension.awaitMessage("notification-created-twice");
+
+  await MockAlertsService.closeNotifications();
+
   await extension.unload();
 });
 
@@ -122,6 +137,7 @@ add_task(async function test_notification_clear() {
     },
     background,
   });
+
   await extension.startup();
   await extension.awaitFinish();
   await extension.unload();
@@ -273,6 +289,10 @@ add_task(async function test_notifications_different_contexts() {
   await extension.startup();
   await extension.awaitFinish("notifications");
   await extension.unload();
+});
+
+add_task(async function teardown_mock_alert_service() {
+  await MockAlertsService.unregister();
 });
 
 </script>
