@@ -11,16 +11,10 @@
  * process, including the parent one.
  */
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 const {AboutPages} = ChromeUtils.import("resource://normandy-content/AboutPages.jsm");
 
-// generateNSGetFactory only knows how to register factory classes, with
-// classID properties on their prototype, and a constructor that returns
-// an instance. It can't handle singletons directly. So wrap the
-// aboutStudies singleton in a trivial constructor function.
 function AboutStudies() {
-  return AboutStudies.prototype;
+  return AboutPages.aboutStudies;
 }
-AboutStudies.prototype = AboutPages.aboutStudies;
 
-var NSGetFactory = XPCOMUtils.generateNSGetFactory([AboutStudies]);
+var EXPORTED_SYMBOLS = ["AboutStudies"];
