@@ -2692,17 +2692,14 @@ void gfxPlatform::InitWebRenderConfig() {
   bool prefEnabled = WebRenderPrefEnabled();
   bool envvarEnabled = WebRenderEnvvarEnabled();
 
-  // On Nightly:
-  //   WR? WR+   => means WR was enabled via gfx.webrender.all.qualified
-  //   WR! WR+   => means WR was enabled via gfx.webrender.{all,enabled} or
-  //                envvar
-  // On Beta/Release:
-  //   WR? WR+   => means WR was enabled via gfx.webrender.all.qualified on
-  //                qualified hardware
-  //   WR! WR+   => means WR was enabled via envvar, possibly on unqualified
-  //                hardware.
+  // WR? WR+   => means WR was enabled via gfx.webrender.all.qualified on
+  //              qualified hardware
+  // WR! WR+   => means WR was enabled via gfx.webrender.{all,enabled} or
+  //              envvar, possibly on unqualified hardware
   // In all cases WR- means WR was not enabled, for one of many possible
-  // reasons.
+  // reasons. Prior to bug 1523788 landing the gfx.webrender.{all,enabled}
+  // prefs only worked on Nightly so keep that in mind when looking at older
+  // crash reports.
   ScopedGfxFeatureReporter reporter("WR", prefEnabled || envvarEnabled);
   if (!XRE_IsParentProcess()) {
     // Force-disable WebRender in recording/replaying child processes, which
@@ -2731,19 +2728,14 @@ void gfxPlatform::InitWebRenderConfig() {
 
   const bool wrQualifiedAll = CalculateWrQualifiedPrefValue();
 
-  // envvar works everywhere; we need this for testing in CI. Sadly this allows
-  // beta/release to enable it on unqualified hardware, but at least this is
-  // harder for the average person than flipping a pref.
+  // envvar works everywhere; note that we need this for testing in CI.
+  // Prior to bug 1523788, the `prefEnabled` check was only done on Nightly,
+  // so as to prevent random users from easily enabling WebRender on
+  // unqualified hardware in beta/release.
   if (envvarEnabled) {
     featureWebRender.UserEnable("Force enabled by envvar");
-
-    // gfx.webrender.enabled and gfx.webrender.all only work on nightly
-#ifdef NIGHTLY_BUILD
   } else if (prefEnabled) {
     featureWebRender.UserEnable("Force enabled by pref");
-#endif
-
-    // gfx.webrender.all.qualified works on all channels
   } else if (wrQualifiedAll && featureWebRenderQualified.IsEnabled()) {
     featureWebRender.UserEnable("Qualified enabled by pref ");
   }
