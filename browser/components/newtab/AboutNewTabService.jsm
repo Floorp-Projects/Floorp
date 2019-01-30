@@ -361,4 +361,4 @@ AboutNewTabService.prototype = {
   },
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([AboutNewTabService]);
+var EXPORTED_SYMBOLS = ["AboutNewTabService"];
