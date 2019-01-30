@@ -2,20 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-
-const nsISupports                    = Ci.nsISupports;
-  
-const nsICommandLine                 = Ci.nsICommandLine;
 const nsICommandLineHandler          = Ci.nsICommandLineHandler;
-const nsISupportsString              = Ci.nsISupportsString;
 const nsIWindowWatcher               = Ci.nsIWindowWatcher;
 
 function RecordingCmdLineHandler() {}
 RecordingCmdLineHandler.prototype =
 {
-    classID: Components.ID('{86FB70EC-90FF-45AD-A1C1-F77D3C1184E9}'),
-
     /* nsISupports */
     QueryInterface: ChromeUtils.generateQI([nsICommandLineHandler]),
 
@@ -71,4 +63,4 @@ RecordingCmdLineHandler.prototype =
                "  --recording-output <file> Specify destination file for a drawing recording.\n"
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([RecordingCmdLineHandler]);
+var EXPORTED_SYMBOLS = ["RecordingCmdLineHandler"];
