@@ -223,6 +223,7 @@ impl Wrench {
             blob_image_handler: Some(Box::new(blob::CheckerboardRenderer::new(callbacks.clone()))),
             disable_dual_source_blending,
             chase_primitive,
+            enable_picture_caching: true,
             testing: true,
             ..Default::default()
         };
