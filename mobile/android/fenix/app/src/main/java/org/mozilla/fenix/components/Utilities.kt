@@ -6,7 +6,6 @@ import mozilla.components.feature.intent.IntentProcessor
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionUseCases
 
-
 /**
  * Component group for miscellaneous components.
  */

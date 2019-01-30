@@ -11,7 +11,8 @@ import io.reactivex.functions.Consumer
 import kotlinx.android.extensions.LayoutContainer
 
 abstract class UIView<S : ViewState>(
-    private val container: ViewGroup, val bus: ActionBusFactory
+    private val container: ViewGroup,
+    val bus: ActionBusFactory
 ) : LayoutContainer {
 
     abstract val view: View

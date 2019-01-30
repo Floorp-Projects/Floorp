@@ -7,14 +7,18 @@ package org.mozilla.fenix.home.sessions
 import android.annotation.SuppressLint
 import android.view.ViewGroup
 import mozilla.components.browser.session.Session
-import org.mozilla.fenix.mvi.*
+import org.mozilla.fenix.mvi.Action
+import org.mozilla.fenix.mvi.ActionBusFactory
+import org.mozilla.fenix.mvi.Change
+import org.mozilla.fenix.mvi.UIComponent
+import org.mozilla.fenix.mvi.ViewState
 
 class SessionsComponent(private val container: ViewGroup, override val bus: ActionBusFactory) :
     UIComponent<SessionsState, SessionsAction, SessionsChange>(bus) {
 
     override var initialState: SessionsState = SessionsState(emptyList())
 
-    override val reducer : (SessionsState, SessionsChange) -> SessionsState = { state, change ->
+    override val reducer: (SessionsState, SessionsChange) -> SessionsState = { state, change ->
         when (change) {
             is SessionsChange.SessionsChanged -> state // copy state with changes here
         }

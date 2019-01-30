@@ -20,21 +20,25 @@ class SearchView(context: Context, attrs: AttributeSet) : FrameLayout(context, a
 
     fun transitionToLight() {
         background = lightToDark
-        lightToDark.reverseTransition(500)
+        lightToDark.reverseTransition(transitionDurationMs)
     }
 
     fun transitionToDark() {
         background = lightToDark
-        lightToDark.startTransition(500)
+        lightToDark.startTransition(transitionDurationMs)
     }
 
     fun transitionToDarkFromNoBorder() {
         background = darkToNoBorder
-        darkToNoBorder.reverseTransition(500)
+        darkToNoBorder.reverseTransition(transitionDurationMs)
     }
 
     fun transitionToDarkNoBorder() {
         background = darkToNoBorder
-        darkToNoBorder.startTransition(500)
+        darkToNoBorder.startTransition(transitionDurationMs)
+    }
+
+    companion object {
+        const val transitionDurationMs = 500
     }
 }

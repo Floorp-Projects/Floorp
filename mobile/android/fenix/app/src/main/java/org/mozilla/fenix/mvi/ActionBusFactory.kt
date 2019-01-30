@@ -154,4 +154,3 @@ inline fun LifecycleOwner?.createDestroyObservable(): Observable<Unit> {
         })
     }
 }
-

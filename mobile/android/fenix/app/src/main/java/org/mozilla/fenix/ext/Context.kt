@@ -7,7 +7,10 @@ package org.mozilla.fenix.ext
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
-import android.content.Intent.*
+import android.content.Intent.ACTION_SEND
+import android.content.Intent.EXTRA_SUBJECT
+import android.content.Intent.EXTRA_TEXT
+import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import androidx.annotation.StringRes
 import mozilla.components.support.base.log.Log
 import mozilla.components.support.base.log.Log.Priority.WARN

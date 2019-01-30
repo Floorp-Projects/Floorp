@@ -29,7 +29,5 @@ class SessionsUIView(container: ViewGroup, bus: ActionBusFactory) :
     }
 
     override fun updateView() = Consumer<SessionsState> {
-        
     }
-
 }

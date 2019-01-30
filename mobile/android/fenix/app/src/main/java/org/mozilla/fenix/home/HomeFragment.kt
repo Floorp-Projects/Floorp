@@ -7,14 +7,11 @@ package org.mozilla.fenix.home
 import android.content.res.Resources
 import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
-import android.transition.TransitionInflater
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.view.ViewCompat
 import androidx.fragment.app.Fragment
 import androidx.navigation.Navigation
-import androidx.navigation.fragment.FragmentNavigator
 import kotlinx.android.synthetic.main.fragment_home.*
 import kotlinx.android.synthetic.main.fragment_home.view.*
 import org.mozilla.fenix.R
@@ -26,7 +23,8 @@ import kotlin.math.roundToInt
 
 class HomeFragment : Fragment() {
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
+        inflater: LayoutInflater,
+        container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_home, container, false)
@@ -42,10 +40,15 @@ class HomeFragment : Fragment() {
         }
 
         toolbar.setCompoundDrawablesWithIntrinsicBounds(searchIcon, null, null, null)
-        toolbar.compoundDrawablePadding = (12f * Resources.getSystem().displayMetrics.density).roundToInt()
+        val roundToInt = (toolbarPaddingDp * Resources.getSystem().displayMetrics.density).roundToInt()
+        toolbar.compoundDrawablePadding = roundToInt
         toolbar.setOnClickListener { it ->
             Navigation.findNavController(it).navigate(R.id.action_homeFragment_to_searchFragment, null, null)
         }
         layoutComponents(homeLayout)
+    }
+
+    companion object {
+        const val toolbarPaddingDp = 12f
     }
 }

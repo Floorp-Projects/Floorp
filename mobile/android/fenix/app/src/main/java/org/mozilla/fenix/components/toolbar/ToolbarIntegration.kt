@@ -33,10 +33,10 @@ class ToolbarIntegration(
     init {
         toolbar.setMenuBuilder(context.components.toolbar.menuBuilder)
 
-        toolbar.browserActionMargin = toolbar.resources.pxToDp(8)
+        toolbar.browserActionMargin = toolbar.resources.pxToDp(browserActionMarginDp)
         toolbar.textColor = ContextCompat.getColor(context, R.color.searchText)
         toolbar.urlBoxView = LayoutInflater.from(context).inflate(R.layout.layout_url_backround, null)
-        toolbar.urlBoxMargin = toolbar.resources.pxToDp(8)
+        toolbar.urlBoxMargin = toolbar.resources.pxToDp(urlBoxMargin)
 
         val home = BrowserToolbar.Button(
             context.resources.getDrawable(
@@ -80,5 +80,10 @@ class ToolbarIntegration(
     @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
     fun stop() {
         toolbarFeature.stop()
+    }
+
+    companion object {
+        const val browserActionMarginDp = 8
+        const val urlBoxMargin = 8
     }
 }

@@ -11,12 +11,11 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import org.mozilla.fenix.R
 
-
-class SessionsAdapter() : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+class SessionsAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(viewType, parent, false)
 
-        return when(viewType) {
+        return when (viewType) {
             HeaderViewHolder.LAYOUT_ID -> HeaderViewHolder(view)
             EmptyListViewHolder.LAYOUT_ID -> EmptyListViewHolder(view)
             else -> EmptyListViewHolder(view)
@@ -37,7 +36,7 @@ class SessionsAdapter() : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         }
     }
 
-    private class HeaderViewHolder(private val view: View): RecyclerView.ViewHolder(view) {
+    private class HeaderViewHolder(private val view: View) : RecyclerView.ViewHolder(view) {
         val headerText = view.findViewById<TextView>(R.id.header_text)
 
         companion object {
@@ -45,7 +44,7 @@ class SessionsAdapter() : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         }
     }
 
-    private class EmptyListViewHolder(private val view: View): RecyclerView.ViewHolder(view) {
+    private class EmptyListViewHolder(private val view: View) : RecyclerView.ViewHolder(view) {
         companion object {
             const val LAYOUT_ID = R.layout.session_list_empty
         }

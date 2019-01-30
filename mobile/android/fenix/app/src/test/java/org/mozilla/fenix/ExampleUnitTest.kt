@@ -1,7 +1,7 @@
 package org.mozilla.fenix
 
 import org.junit.Test
-
+/* ktlint-disable no-wildcard-imports */
 import org.junit.Assert.*
 
 /**
