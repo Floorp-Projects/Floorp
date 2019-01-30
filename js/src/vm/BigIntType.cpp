@@ -1075,6 +1075,7 @@ size_t BigInt::calculateMaximumCharactersRequired(HandleBigInt x,
   return AssertedCast<size_t>(maximumCharactersRequired);
 }
 
+template <AllowGC allowGC>
 JSLinearString* BigInt::toStringBasePowerOfTwo(JSContext* cx, HandleBigInt x,
                                                unsigned radix) {
   MOZ_ASSERT(mozilla::IsPowerOfTwo(radix));
@@ -1151,7 +1152,38 @@ JSLinearString* BigInt::toStringBasePowerOfTwo(JSContext* cx, HandleBigInt x,
   }
 
   MOZ_ASSERT(pos == 0);
-  return NewStringCopyN<CanGC>(cx, resultChars.get(), charsRequired);
+  return NewStringCopyN<allowGC>(cx, resultChars.get(), charsRequired);
+}
+
+template<AllowGC allowGC>
+JSLinearString* BigInt::toStringSingleDigitBaseTen(JSContext* cx, Digit digit, bool isNegative) {
+  if (digit <= Digit(INT32_MAX)) {
+    int32_t val = AssertedCast<int32_t>(digit);
+    return Int32ToString<allowGC>(cx, isNegative ? -val : val);
+  }
+
+  MOZ_ASSERT(digit != 0, "zero case should have been handled in toString");
+
+  const size_t charsRequired = CeilDiv(digit, 10) + isNegative;
+  auto resultChars = cx->make_pod_array<char>(charsRequired);
+  if (!resultChars) {
+    return nullptr;
+  }
+
+  size_t pos = charsRequired;
+  while (digit != 0) {
+    MOZ_ASSERT(pos);
+    resultChars[--pos] = radixDigits[digit % 10];
+    digit /= 10;
+  }
+
+  if (isNegative) {
+    MOZ_ASSERT(pos);
+    resultChars[--pos] = '-';
+  }
+
+  MOZ_ASSERT(pos == 0);
+  return NewStringCopyN<allowGC>(cx, resultChars.get(), charsRequired);
 }
 
 static constexpr BigInt::Digit MaxPowerInDigit(uint8_t radix) {
@@ -3018,6 +3050,7 @@ bool BigInt::lessThan(JSContext* cx, HandleValue lhs, HandleValue rhs,
   return true;
 }
 
+template <js::AllowGC allowGC>
 JSLinearString* BigInt::toString(JSContext* cx, HandleBigInt x, uint8_t radix) {
   MOZ_ASSERT(2 <= radix && radix <= 36);
 
@@ -3026,11 +3059,23 @@ JSLinearString* BigInt::toString(JSContext* cx, HandleBigInt x, uint8_t radix) {
   }
 
   if (mozilla::IsPowerOfTwo(radix)) {
-    return toStringBasePowerOfTwo(cx, x, radix);
+    return toStringBasePowerOfTwo<allowGC>(cx, x, radix);
+  }
+
+  if (radix == 10 && x->digitLength() == 1) {
+    return toStringSingleDigitBaseTen<allowGC>(cx, x->digit(0), x->isNegative());
+  }
+
+  // Punt on doing generic toString without GC.
+  if (!allowGC) {
+    return nullptr;
   }
 
   return toStringGeneric(cx, x, radix);
 }
+
+template JSLinearString* BigInt::toString<js::CanGC>(JSContext* cx, HandleBigInt x, uint8_t radix);
+template JSLinearString* BigInt::toString<js::NoGC>(JSContext* cx, HandleBigInt x, uint8_t radix);
 
 template <typename CharT>
 static inline BigInt* ParseStringBigIntLiteral(JSContext* cx,
@@ -3113,13 +3158,17 @@ BigInt* js::ParseBigIntLiteral(JSContext* cx,
   return res;
 }
 
+template <js::AllowGC allowGC>
 JSAtom* js::BigIntToAtom(JSContext* cx, HandleBigInt bi) {
-  JSString* str = BigInt::toString(cx, bi, 10);
+  JSString* str = BigInt::toString<allowGC>(cx, bi, 10);
   if (!str) {
     return nullptr;
   }
   return AtomizeString(cx, str);
 }
+
+template JSAtom* js::BigIntToAtom<js::CanGC>(JSContext* cx, HandleBigInt bi);
+template JSAtom* js::BigIntToAtom<js::NoGC>(JSContext* cx, HandleBigInt bi);
 
 JS::ubi::Node::Size JS::ubi::Concrete<BigInt>::size(
     mozilla::MallocSizeOf mallocSizeOf) const {

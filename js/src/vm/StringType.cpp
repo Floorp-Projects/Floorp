@@ -2170,7 +2170,7 @@ JSString* js::ToStringSlow(
       return nullptr;
     }
     RootedBigInt i(cx, v.toBigInt());
-    str = BigInt::toString(cx, i, 10);
+    str = BigInt::toString<CanGC>(cx, i, 10);
   }
 #endif
   else {
