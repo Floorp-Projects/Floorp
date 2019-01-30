@@ -148,6 +148,7 @@ class BigInt final : public js::gc::TenuredCell {
 
   static double numberValue(BigInt* x);
 
+  template <js::AllowGC allowGC>
   static JSLinearString* toString(JSContext* cx, Handle<BigInt*> x,
                                   uint8_t radix);
   template <typename CharT>
@@ -317,8 +318,12 @@ class BigInt final : public js::gc::TenuredCell {
 
   static bool equal(BigInt* lhs, double rhs);
 
+  template <js::AllowGC allowGC>
   static JSLinearString* toStringBasePowerOfTwo(JSContext* cx, Handle<BigInt*>,
                                                 unsigned radix);
+  template <js::AllowGC allowGC>
+  static JSLinearString* toStringSingleDigitBaseTen(JSContext* cx, Digit digit,
+                                                    bool isNegative);
   static JSLinearString* toStringGeneric(JSContext* cx, Handle<BigInt*>,
                                          unsigned radix);
 
@@ -349,6 +354,7 @@ static_assert(
 
 namespace js {
 
+template <AllowGC allowGC>
 extern JSAtom* BigIntToAtom(JSContext* cx, JS::HandleBigInt bi);
 
 extern JS::BigInt* NumberToBigInt(JSContext* cx, double d);
