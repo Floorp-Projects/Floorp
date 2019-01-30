@@ -287,8 +287,8 @@ internal class DisplayToolbar(
 
         // The url uses whatever space is left. Subtract the icon and (optionally) the menu
         val menuWidth = if (menuView.isVisible()) height else 0
-        val urlWidth = width - iconSize - browserActionsWidth - pageActionsWidth
-                - menuWidth - navigationActionsWidth - 2 * urlBoxMargin
+        val urlWidth = width - iconSize - browserActionsWidth - pageActionsWidth -
+            menuWidth - navigationActionsWidth - 2 * urlBoxMargin
         val urlWidthSpec = MeasureSpec.makeMeasureSpec(urlWidth, MeasureSpec.EXACTLY)
         urlView.measure(urlWidthSpec, fixedHeightSpec)
 
@@ -410,9 +410,8 @@ internal class DisplayToolbar(
         //   +-------------+------+-----------------------+----------+------+
 
         val iconWidth = if (iconView.isVisible()) iconView.measuredWidth else 0
-        val urlRight = measuredWidth - browserActionWidth - pageActionsWidth - menuWidth - urlBoxMargin
         val urlLeft = navigationActionsWidth + iconWidth + urlBoxMargin
-        urlView.layout(urlLeft, 0, urlRight, measuredHeight)
+        urlView.layout(urlLeft, 0, urlLeft + urlView.measuredWidth, measuredHeight)
 
         // The progress bar is going to be drawn at the bottom of the toolbar:
 
