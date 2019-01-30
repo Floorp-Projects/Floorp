@@ -6,7 +6,7 @@ description: GeckoView API Changelog.
 
 <h1> GeckoView API Changelog. </h1>
 
-## v66
+## v67
 - Added nested `ContentBlocking` runtime settings.
 
 - Added `RuntimeSettings` base class to support nested settings.
@@ -14,6 +14,7 @@ description: GeckoView API Changelog.
 - Added `baseUri` to [`ContentDelegate.ContextElement`][65.21] and changed
   `linkUri` to absolute form.
 
+## v66
 - Removed redundant field `GeckoSession.ProgressDelegate.SecurityInformation.trackingMode`.
   Use `GeckoSession.TrackingProtectionDelegate.onTrackerBlocked` for
   notification of blocked elements during page load.
