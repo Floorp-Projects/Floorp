@@ -1234,7 +1234,7 @@ class nsTArray_Impl
 
     size_t index;
     bool found = BinarySearchIf(
-        *this, 0, Length(),
+        Elements(), 0, Length(),
         // Note: We pass the Compare() args here in reverse order and negate the
         // results for compatibility reasons. Some existing callers use Equals()
         // functions with first arguments which match aElement but not aItem, or
@@ -1509,7 +1509,7 @@ class nsTArray_Impl
     ::detail::CompareWrapper<Comparator, Item> comp(aComp);
 
     size_t index;
-    BinarySearchIf(*this, 0, Length(),
+    BinarySearchIf(Elements(), 0, Length(),
                    [&](const elem_type& aElement) {
                      return comp.Compare(aElement, aItem) <= 0 ? 1 : -1;
                    },
