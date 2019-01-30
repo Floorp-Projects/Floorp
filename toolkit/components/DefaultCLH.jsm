@@ -2,15 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const nsISupports              = Ci.nsISupports;
-
-const nsICommandLine           = Ci.nsICommandLine;
 const nsICommandLineHandler    = Ci.nsICommandLineHandler;
 const nsIPrefBranch            = Ci.nsIPrefBranch;
-const nsISupportsString        = Ci.nsISupportsString;
 const nsIWindowWatcher         = Ci.nsIWindowWatcher;
 const nsIProperties            = Ci.nsIProperties;
 const nsIFile                  = Ci.nsIFile;
@@ -109,4 +104,4 @@ nsDefaultCLH.prototype = {
   helpInfo: "",
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([nsDefaultCLH]);
+var EXPORTED_SYMBOLS = ["nsDefaultCLH"];
