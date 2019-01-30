@@ -4,8 +4,6 @@
 
 // This component is used to build the menus for the HTML contextmenu attribute.
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-
 // A global value that is used to identify each menu item. It is
 // incremented with each one that is found.
 var gGeneratedId = 1;
@@ -131,4 +129,4 @@ HTMLMenuBuilder.prototype =
   }
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([HTMLMenuBuilder]);
+var EXPORTED_SYMBOLS = ["HTMLMenuBuilder"];
