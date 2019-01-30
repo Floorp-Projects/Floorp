@@ -69,4 +69,9 @@ void SamplesWaitingForKey::Flush() {
   mSamples.Clear();
 }
 
+void SamplesWaitingForKey::BreakCycles() {
+  MutexAutoLock lock(mMutex);
+  mProxy = nullptr;
+}
+
 }  // namespace mozilla
