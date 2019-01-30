@@ -209,8 +209,6 @@
 @RESPATH@/components/nsUpdateService.manifest
 #endif
 @RESPATH@/components/ProcessSingleton.manifest
-@RESPATH@/components/mozProtocolHandler.js
-@RESPATH@/components/mozProtocolHandler.manifest
 @RESPATH@/components/ContentPrefService2.manifest
 @RESPATH@/components/ContentPrefService2.js
 @RESPATH@/components/nsContentDispatchChooser.manifest
