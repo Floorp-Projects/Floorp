@@ -36,8 +36,10 @@
 #include "nsXULAppAPI.h"
 #include "mozilla/SchedulerGroup.h"
 #include "nsJSEnvironment.h"
+#include "mozilla/dom/Document.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 /*
  * Note that nsHtml5StreamParser implements cycle collecting AddRef and
@@ -115,6 +117,20 @@ class nsHtml5ExecutorFlusher : public Runnable {
       : Runnable("nsHtml5ExecutorFlusher"), mExecutor(aExecutor) {}
   NS_IMETHOD Run() override {
     if (!mExecutor->isInList()) {
+      Document* doc = mExecutor->GetDocument();
+      if (XRE_IsContentProcess() &&
+          nsContentUtils::
+              HighPriorityEventPendingForTopLevelDocumentBeforeContentfulPaint(
+                  doc)) {
+        // Possible early paint pending, reuse the runnable and try to
+        // call RunFlushLoop later.
+        nsCOMPtr<nsIRunnable> flusher = this;
+        if (NS_SUCCEEDED(
+                doc->Dispatch(TaskCategory::Network, flusher.forget()))) {
+          PROFILER_ADD_MARKER("HighPrio blocking parser flushing(1)", DOM);
+          return NS_OK;
+        }
+      }
       mExecutor->RunFlushLoop();
     }
     return NS_OK;
