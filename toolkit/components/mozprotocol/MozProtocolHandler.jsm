@@ -7,12 +7,12 @@ const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm")
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
-function mozProtocolHandler() {
+function MozProtocolHandler() {
   XPCOMUtils.defineLazyPreferenceGetter(this, "urlToLoad", "toolkit.mozprotocol.url",
                                         "https://www.mozilla.org/protocol");
 }
 
-mozProtocolHandler.prototype = {
+MozProtocolHandler.prototype = {
   scheme: "moz",
   defaultPort: -1,
   protocolFlags: Ci.nsIProtocolHandler.URI_DANGEROUS_TO_LOAD,
@@ -40,9 +40,7 @@ mozProtocolHandler.prototype = {
     return this.newChannel2(uri, null);
   },
 
-  classID: Components.ID("{47a45e5f-691e-4799-8686-14f8d3fc0f8c}"),
-
   QueryInterface: ChromeUtils.generateQI([Ci.nsIProtocolHandler]),
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([mozProtocolHandler]);
+var EXPORTED_SYMBOLS = ["MozProtocolHandler"];
