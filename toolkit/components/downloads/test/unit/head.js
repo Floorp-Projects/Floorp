@@ -257,7 +257,6 @@ function promiseStartLegacyDownload(aSourceUrl, aOptions) {
   let transfer = Cc["@mozilla.org/transfer;1"].createInstance(Ci.nsITransfer);
 
   return new Promise(resolve => {
-
     Downloads.getList(Downloads.ALL).then(function(aList) {
       // Temporarily register a view that will get notified when the download we
       // are controlling becomes visible in the list of downloads.
@@ -290,7 +289,6 @@ function promiseStartLegacyDownload(aSourceUrl, aOptions) {
         0, referrer, Ci.nsIHttpChannel.REFERRER_POLICY_UNSAFE_URL,
         null, null, targetFile, isPrivate);
     }).catch(do_report_unexpected_exception);
-
   });
 }
 
@@ -313,7 +311,6 @@ function promiseStartExternalHelperAppServiceDownload(aSourceUrl) {
                                  httpUrl("interruptible_resumable.txt"));
 
   return new Promise(resolve => {
-
     Downloads.getList(Downloads.PUBLIC).then(function(aList) {
       // Temporarily register a view that will get notified when the download we
       // are controlling becomes visible in the list of downloads.
@@ -358,7 +355,6 @@ function promiseStartExternalHelperAppServiceDownload(aSourceUrl) {
         },
       });
     }).catch(do_report_unexpected_exception);
-
   });
 }
 
@@ -375,7 +371,6 @@ function promiseStartExternalHelperAppServiceDownload(aSourceUrl) {
  */
 function promiseDownloadMidway(aDownload) {
   return new Promise(resolve => {
-
     // Wait for the download to reach half of its progress.
     let onchange = function() {
       if (!aDownload.stopped && !aDownload.canceled && aDownload.progress == 50) {
@@ -388,7 +383,6 @@ function promiseDownloadMidway(aDownload) {
     // case the download already reached the expected progress.
     aDownload.onchange = onchange;
     onchange();
-
   });
 }
 
@@ -480,7 +474,6 @@ function promiseVerifyContents(aPath, aExpectedContents) {
           }
           resolve();
         });
-
     });
   })();
 }

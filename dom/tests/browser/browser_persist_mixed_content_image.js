@@ -98,5 +98,4 @@ add_task(async function test_image_download() {
     let imageDownload = await downloadFinishedPromise;
     ok(imageDownload.succeeded, "Image should have downloaded successfully");
   });
-
 });

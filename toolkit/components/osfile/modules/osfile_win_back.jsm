@@ -213,7 +213,6 @@
            return true;
          }
            return fd.dispose(); // Returns the value of |CloseHandle|.
-
        };
 
        libc.declareLazy(SysFile, "_FindClose",
@@ -226,7 +225,6 @@
            return true;
          }
            return handle.dispose(); // Returns the value of |FindClose|.
-
        };
 
        // Declare libc functions as functions of |OS.Win.File|

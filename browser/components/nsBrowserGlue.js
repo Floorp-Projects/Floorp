@@ -1089,7 +1089,6 @@ BrowserGlue.prototype = {
     // check for update if our build is old
     if (AppConstants.MOZ_UPDATER &&
         Services.prefs.getBoolPref("app.update.checkInstallTime")) {
-
       let buildID = Services.appinfo.appBuildID;
       let today = new Date().getTime();
       /* eslint-disable no-multi-spaces */
@@ -2044,7 +2043,6 @@ BrowserGlue.prototype = {
           } catch (e) {
             Cu.reportError(e);
           }
-
         } else {
           Cu.reportError(new Error("Unable to find bookmarks.html file."));
         }
@@ -2091,7 +2089,6 @@ BrowserGlue.prototype = {
         }
         this._idleService.addIdleObserver(this, this._bookmarksBackupIdleTime);
       }
-
     })().catch(ex => {
       Cu.reportError(ex);
     }).then(() => {
@@ -3170,7 +3167,6 @@ ContentPermissionPrompt.prototype = {
       }
 
       permissionPrompt.prompt();
-
     } catch (ex) {
       Cu.reportError(ex);
       request.cancel();

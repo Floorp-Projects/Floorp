@@ -1573,7 +1573,6 @@ SessionStore.prototype = {
   },
 
   _sendClosedTabsToJava(aWindow) {
-
     // If the app is shutting down, we don't need to do anything.
     if (this._loadState <= STATE_QUITTING) {
       return;

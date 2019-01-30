@@ -89,5 +89,4 @@ add_task(async function setup() {
   setData("not valid json");
   await Assert.rejects(AddonRepository.getAvailableLangpacks(),
                        /SyntaxError/, "Got parse error on invalid JSON");
-
 });

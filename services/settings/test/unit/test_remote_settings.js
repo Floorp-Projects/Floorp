@@ -563,5 +563,4 @@ function getSampleResponse(req, port) {
   return responses[`${req.method}:${req.path}?${req.queryString}`] ||
          responses[`${req.method}:${req.path}`] ||
          responses[req.method];
-
 }

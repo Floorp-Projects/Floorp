@@ -105,7 +105,6 @@ add_task(async function test_login_logout() {
     _("Logging out again won't do any harm.");
     Service.logout();
     Assert.ok(!Service.isLoggedIn);
-
   } finally {
     Svc.Prefs.resetBranch("");
     await promiseStopServer(server);
@@ -202,7 +201,6 @@ add_task(async function test_login_on_sync() {
 
     // N.B., a bunch of methods are stubbed at this point. Be careful putting
     // new tests after this point!
-
   } finally {
     Svc.Prefs.resetBranch("");
     await promiseStopServer(server);

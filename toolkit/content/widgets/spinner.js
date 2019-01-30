@@ -18,7 +18,6 @@ function Spinner(props, context) {
 }
 
 {
-
   const ITEM_HEIGHT = 2.5,
         VIEWPORT_SIZE = 7,
         VIEWPORT_COUNT = 5;

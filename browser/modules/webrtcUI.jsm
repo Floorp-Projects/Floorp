@@ -204,7 +204,6 @@ var webrtcUI = {
   // Listeners and observers are registered in nsBrowserGlue.js
   receiveMessage(aMessage) {
     switch (aMessage.name) {
-
       case "rtcpeer:Request": {
         let params = Object.freeze(Object.assign({
           origin: aMessage.target.contentPrincipal.origin,
@@ -893,7 +892,6 @@ function prompt(aBrowser, aRequest) {
 
   // Don't offer "always remember" action in PB mode.
   if (!PrivateBrowsingUtils.isBrowserPrivate(aBrowser)) {
-
     // Disable the permanent 'Allow' action if the connection isn't secure, or for
     // screen/audio sharing (because we can't guess which window the user wants to
     // share without prompting).

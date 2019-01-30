@@ -11,7 +11,6 @@
 // This is loaded into chrome windows with the subscript loader. Wrap in
 // a block to prevent accidentally leaking globals onto `window`.
 (() => {
-
 // Handle customElements.js being loaded as a script in addition to the subscriptLoader
 // from MainProcessSingleton, to handle pages that can open both before and after
 // MainProcessSingleton starts. See Bug 1501845.
@@ -48,7 +47,6 @@ gXULDOMParser.forceEnableXULXBL();
 const MozElements = {};
 
 const MozElementMixin = Base => class MozElement extends Base {
-
   /*
    * Implements attribute inheritance by a child element. Uses XBL @inherit
    * syntax of |to=from|.

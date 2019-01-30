@@ -587,7 +587,6 @@ function testTextHelper(aID, aOffset, aBoundaryType,
             startMsg + "wrong end offset" +
             "(got '" + endOffsetObj.value + "', expected: '" + aEndOffset + "')" +
             ", offset: " + aOffset + endMsg);
-
   } catch (e) {
     var okFunc = exceptionFlag ? todo : ok;
     okFunc(false, startMsg + "failed at offset " + aOffset + endMsg +

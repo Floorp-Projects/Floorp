@@ -115,7 +115,6 @@ add_task(async function runRPTests() {
     is(content.performance.getEntries().length, 0, "For resistFingerprinting, there should be no entries for performance.getEntries()");
     is(content.performance.getEntriesByType("resource").length, 0, "For resistFingerprinting, there should be no entries for performance.getEntriesByType()");
     is(content.performance.getEntriesByName("Test", "mark").length, 0, "For resistFingerprinting, there should be no entries for performance.getEntriesByName()");
-
   };
 
   await setupTest(tab, true, true, 100, runTests);

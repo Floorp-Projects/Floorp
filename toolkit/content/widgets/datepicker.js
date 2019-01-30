@@ -228,7 +228,6 @@ function DatePicker(context) {
           if (event.target == this.context.buttonPrev || event.target == this.context.buttonNext) {
             event.target.classList.remove("active");
           }
-
         }
       }
     },

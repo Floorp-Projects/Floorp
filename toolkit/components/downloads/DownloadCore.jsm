@@ -901,7 +901,6 @@ this.Download.prototype = {
       // Update the current progress from disk if we retained partial data.
       if ((this.hasPartialData || this.hasBlockedData) &&
           this.target.partFilePath) {
-
         try {
           let stat = await OS.File.stat(this.target.partFilePath);
 
@@ -2459,7 +2458,6 @@ this.DownloadLegacySaver.prototype = {
       }
 
       await this._checkReputationAndMove(aSetPropertiesFn);
-
     } catch (ex) {
       // In case the operation failed, ensure we stop downloading data.  Since
       // we never re-enter this function, deferCanceled is always available.

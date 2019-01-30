@@ -13,7 +13,6 @@
 SimpleTest.waitForExplicitFinish();
 
 runWithMSE(async (ms, el) => {
-
   await once(ms, "sourceopen");
   ok(true, "Receive a sourceopen event");
   const videosb = ms.addSourceBuffer("video/mp4");

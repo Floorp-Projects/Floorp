@@ -200,7 +200,6 @@ function unregisterAutoCompleteSearch(aSearch) {
  * Test AutoComplete with multiple AutoCompleteSearch sources.
  */
 function run_test() {
-
   // Make an AutoCompleteSearch that always returns nothing
   var emptySearch = new AutoCompleteSearch("test-empty-search",
                              new AutoCompleteResult([], [], []));

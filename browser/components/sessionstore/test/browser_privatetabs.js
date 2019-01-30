@@ -48,7 +48,6 @@ add_task(async function() {
     ok(true, "Public tab supports undo close");
 
     is(ss.getClosedTabCount(window), 0, "Private tab does not support undo close");
-
   } finally {
     if (tab1) {
       gBrowser.removeTab(tab1);

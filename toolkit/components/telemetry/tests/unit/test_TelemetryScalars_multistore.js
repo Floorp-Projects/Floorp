@@ -161,7 +161,6 @@ add_task(async function test_multistore_uint() {
 
   Telemetry.scalarSet(MULTIPLE_STORES, 9876);
   assertBothEqual(9876);
-
 });
 
 add_task(async function test_empty_absence() {
@@ -219,7 +218,6 @@ add_task(async function test_empty_absence_keyed() {
             `${MULTIPLE_STORES_KEYED} must have the stored key.`);
   Assert.equal(snapshot[MULTIPLE_STORES_KEYED][key], 1,
                `${MULTIPLE_STORES_KEYED}[${key}] should have the correct value.`);
-
 });
 
 add_task(async function test_multistore_default_values() {

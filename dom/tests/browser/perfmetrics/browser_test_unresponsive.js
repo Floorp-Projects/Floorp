@@ -27,5 +27,4 @@ add_task(async function test() {
     exploreResults(results);
     Assert.ok(dataBack == 0);
   });
-
 });

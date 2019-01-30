@@ -309,7 +309,6 @@
               aEvent.preventDefault();
               return;
             }
-
           } catch (ex) {
             Cu.reportError(ex);
           }

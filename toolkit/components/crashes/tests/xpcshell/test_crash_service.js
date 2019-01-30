@@ -48,7 +48,6 @@ async function setup(crashId) {
   await OS.File.copy(minidump, gDumpFile);
   gExtraFile = OS.Path.join(gMinidumpDir.path, crashId + ".extra");
   await OS.File.copy(extra, gExtraFile);
-
 }
 
 // Cleans up the fake crash dump and resets the minidump path

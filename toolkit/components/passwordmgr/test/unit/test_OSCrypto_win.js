@@ -32,7 +32,6 @@ add_task(function test_getIELoginHash() {
 
   Assert.equal(crypto.getIELoginHash("https://www.facebook.com/"),
                "EF44D3E034009CB0FD1B1D81A1FF3F3335213BD796");
-
 });
 
 add_task(function test_decryptData_encryptData() {

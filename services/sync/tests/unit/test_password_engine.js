@@ -212,11 +212,9 @@ add_task(async function test_password_dupe() {
     equal(logins.length, 1);
     equal(logins[0].QueryInterface(Ci.nsILoginMetaInfo).guid, guid2);
     equal(null, collection.payload(guid1));
-
   } finally {
     await cleanup(engine, server);
   }
-
 });
 
 add_task(async function test_sync_password_validation() {
@@ -234,7 +232,6 @@ add_task(async function test_sync_password_validation() {
   Svc.Prefs.set("engine.passwords.validation.enabled", true);
 
   try {
-
     let ping = await wait_for_ping(() => Service.sync());
 
     let engineInfo = ping.engines.find(e => e.name == "passwords");
@@ -242,7 +239,6 @@ add_task(async function test_sync_password_validation() {
 
     let validation = engineInfo.validation;
     ok(validation, "Engine should have validation info");
-
   } finally {
     await cleanup(engine, server);
   }

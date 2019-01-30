@@ -21,7 +21,6 @@ function promiseFormHistoryRemoved() {
 
 function promiseDownloadRemoved(list) {
   return new Promise(resolve => {
-
     let view = {
       onDownloadRemoved(download) {
         list.removeView(view);
@@ -30,7 +29,6 @@ function promiseDownloadRemoved(list) {
     };
 
     list.addView(view);
-
   });
 }
 
@@ -43,7 +41,6 @@ add_task(async function test() {
 
 function countEntries(name, message, check) {
   return new Promise((resolve, reject) => {
-
     var obj = {};
     if (name !== null)
       obj.fieldname = name;
@@ -61,7 +58,6 @@ function countEntries(name, message, check) {
                                }
                              },
                            });
-
   });
 }
 
@@ -430,7 +426,6 @@ async function onHistoryReady() {
 }
 
 async function setupHistory() {
-
   let places = [];
 
   function addPlace(aURI, aTitle, aVisitDate) {
@@ -464,10 +459,8 @@ async function setupHistory() {
 }
 
 async function setupFormHistory() {
-
   function searchEntries(terms, params) {
     return new Promise((resolve, reject) => {
-
       let results = [];
       FormHistory.search(terms, params, { handleResult: result => results.push(result),
                                           handleError(error) {
@@ -594,7 +587,6 @@ async function setupFormHistory() {
 }
 
 async function setupDownloads() {
-
   let publicList = await Downloads.getList(Downloads.PUBLIC);
 
   let download = await Downloads.createDownload({

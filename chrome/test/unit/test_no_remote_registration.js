@@ -118,7 +118,6 @@ function run_test() {
   // Make sure the class ID has not already been registered
   let old_factory = {CID: "", factory: null};
   if (!registrar.isCIDRegistered(XULAppInfoFactory.CID)) {
-
     // Check to see if a contract was already registered and
     // register it if it is not. Otherwise, store the previous one
     // to be restored later and register the new one.

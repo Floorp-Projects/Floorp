@@ -243,7 +243,6 @@ add_task(async function test_dedupeLogins_resolveBy() {
       Assert.strictEqual(actual[i], login, `Check index ${i}`);
     }
   }
-
 });
 
 add_task(async function test_dedupeLogins_preferredOriginMissing() {

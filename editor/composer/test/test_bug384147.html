@@ -30,7 +30,6 @@ editor.focus();
 // If executed directly, a race condition exists that will cause execCommand
 // to fail occasionally (but often).  Defer test execution to page load.
 addLoadEvent(function() {
-
   var sel = window.getSelection();
 
   // Test the effect that the tab key has on list items.  Each test is

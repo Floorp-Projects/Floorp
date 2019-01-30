@@ -13,7 +13,6 @@ function parserForFile(filename) {
         // checkParserOutput will handle a null parser when it's expected.
     }
     return parser;
-
 }
 
 function checkParserOutput(parser, expected) {
@@ -59,7 +58,6 @@ function getParserOutput(parser) {
 
 function run_test() {
 try {
-
 var testdata = [
     { filename: "data/iniparser01.ini", reference: {} },
     { filename: "data/iniparser02.ini", reference: {} },
@@ -301,7 +299,6 @@ caughtError = null;
 try { parser.setString("ok", "ok", "good="); } catch (e) { caughtError = e; }
 Assert.ok(!caughtError);
 caughtError = null;
-
 } catch (e) {
     throw "FAILED in test #" + testnum + " -- " + e;
 }

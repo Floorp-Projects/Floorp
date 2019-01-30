@@ -20,7 +20,6 @@ function run_test() {
       Assert.ok("AvailablePageFile" in extra);
       Assert.ok("TotalPhysicalMemory" in extra);
       Assert.ok("AvailablePhysicalMemory" in extra);
-
     },
     true);
 }

@@ -1,7 +1,6 @@
 const {Status} = ChromeUtils.import("resource://services-sync/status.js");
 
 function run_test() {
-
   // Check initial states
   Assert.ok(!Status.enforceBackoff);
   Assert.equal(Status.backoffInterval, 0);
@@ -85,5 +84,4 @@ function run_test() {
   Assert.ok(!Status.enforceBackoff);
   Assert.equal(Status.backoffInterval, 0);
   Assert.equal(Status.minimumNextSync, 0);
-
 }

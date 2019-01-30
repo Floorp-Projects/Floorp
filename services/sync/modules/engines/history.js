@@ -116,7 +116,6 @@ HistoryStore.prototype = {
 
   // Some helper functions to handle GUIDs
   async setGUID(uri, guid) {
-
     if (!guid) {
       guid = Utils.makeGUID();
     }
@@ -131,7 +130,6 @@ HistoryStore.prototype = {
   },
 
   async GUIDForUri(uri, create) {
-
     // Use the existing GUID if it exists
     let guid;
     try {

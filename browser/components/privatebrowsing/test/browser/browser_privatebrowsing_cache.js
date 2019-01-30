@@ -11,7 +11,6 @@ var tmp = {};
 const {Sanitizer} = ChromeUtils.import("resource:///modules/Sanitizer.jsm");
 
 function test() {
-
   waitForExplicitFinish();
 
   Sanitizer.sanitize(["cache"], {ignoreTimespan: false});
@@ -56,9 +55,7 @@ function getStorageEntryCount(device, goon) {
 
 function get_cache_for_private_window() {
   let win = whenNewWindowLoaded({private: true}, function() {
-
     executeSoon(function() {
-
       ok(true, "The private window got loaded");
 
       let tab = BrowserTestUtils.addTab(win.gBrowser, "http://example.org");
@@ -67,7 +64,6 @@ function get_cache_for_private_window() {
 
       BrowserTestUtils.browserLoaded(newTabBrowser).then(function() {
         executeSoon(function() {
-
           getStorageEntryCount("private", function(nrEntriesP) {
             ok(nrEntriesP >= 1, "Memory cache reports some entries from example.org domain");
 

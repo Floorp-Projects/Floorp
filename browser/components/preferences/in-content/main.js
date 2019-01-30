@@ -2109,7 +2109,6 @@ var gMainPane = {
 
     gSubDialog.open("chrome://browser/content/preferences/applicationManager.xul",
       "resizable=no", handlerInfo, onComplete);
-
   },
 
   chooseApp(aEvent) {

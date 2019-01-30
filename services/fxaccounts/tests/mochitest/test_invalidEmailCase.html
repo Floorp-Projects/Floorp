@@ -86,12 +86,10 @@ function runTest() {
   // It will automatically try to sign in again.  We expect this to succeed.
   client.signIn(wrongEmail, password).then(
     user => {
-
       // Now store the signed-in user state.  This will include the correct
       // email capitalization.
       fxa.setSignedInUser(user).then(
         () => {
-
           // Confirm that the correct email got stored.
           fxa.getSignedInUser().then(
             data => {

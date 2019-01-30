@@ -109,7 +109,6 @@ async function openPrefsFromMenuPanel(expectedPanelId, entryPoint) {
       resolve();
     };
     gBrowser.selectedBrowser.addEventListener("load", handler, true);
-
   });
   newTab = gBrowser.selectedTab;
 

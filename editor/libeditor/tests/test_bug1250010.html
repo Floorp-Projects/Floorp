@@ -28,7 +28,6 @@ function getImageDataURI() {
 /** Test for Bug 1250010 **/
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(function() {
-
   // First test: Empty paragraph is split correctly.
   var div = document.getElementById("test1");
   div.focus();
@@ -83,7 +82,6 @@ SimpleTest.waitForFocus(function() {
   todo_is(newHTML, expectedHTML, "unexpected HTML");
 
   SimpleTest.finish();
-
 });
 
 </script>

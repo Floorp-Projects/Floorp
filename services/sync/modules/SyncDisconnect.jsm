@@ -174,7 +174,6 @@ this.SyncDisconnectInternal = {
     if (sanitizeBrowserData) {
       await this.doSanitizeBrowserData();
     }
-
   },
 
   async disconnect(options) {

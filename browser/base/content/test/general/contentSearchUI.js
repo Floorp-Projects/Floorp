@@ -6,7 +6,6 @@
 "use strict";
 
 (function() {
-
 const TEST_MSG = "ContentSearchUIControllerTest";
 const ENGINE_NAME = "browser_searchSuggestionEngine searchSuggestionEngine.xml";
 var gController;
@@ -202,5 +201,4 @@ function currentState() {
 
   return state;
 }
-
 })();

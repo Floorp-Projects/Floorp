@@ -14,7 +14,6 @@ add_task(async function run_test() {
   let prefs = new Preferences();
 
   try {
-
     _("tracker.modified corresponds to preference.");
     Assert.equal(Svc.Prefs.get("engine.prefs.modified"), undefined);
     Assert.ok(!tracker.modified);
@@ -81,7 +80,6 @@ add_task(async function run_test() {
     await tracker.asyncObserver.promiseObserversComplete();
     Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 3);
     Assert.equal(tracker.modified, false);
-
   } finally {
     await tracker.stop();
     prefs.resetBranch("");

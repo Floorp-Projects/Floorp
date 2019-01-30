@@ -5,7 +5,6 @@
 "use strict";
 
 this.ContentSearchUIController = (function() {
-
 const MAX_DISPLAYED_SUGGESTIONS = 6;
 const SUGGESTION_ID_PREFIX = "searchSuggestion";
 const ONE_OFF_ID_PREFIX = "oneOff";

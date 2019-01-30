@@ -194,7 +194,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1363508
 
   // A test for assuring that script generated events won't be spoofed.
   function doTestNoSpoofingForScriptGeneratedEvent() {
-
     return new Promise(resolve => {
       // Generate a custom pointer event by script.
       let pointerEventCustom = new PointerEvent("pointerover", {

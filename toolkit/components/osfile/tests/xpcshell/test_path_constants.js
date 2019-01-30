@@ -26,7 +26,6 @@ function compare_paths(ospath, key) {
 add_task(async function test_simple_paths() {
   Assert.ok(!!OS.Constants.Path.tmpDir);
   compare_paths(OS.Constants.Path.tmpDir, "TmpD");
-
 });
 
 // Some path constants aren't set up until the profile is available. This

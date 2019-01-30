@@ -66,7 +66,6 @@ function promiseImageDownloaded() {
       MockFilePicker.cleanup();
       destDir.remove(true);
     });
-
   });
 }
 

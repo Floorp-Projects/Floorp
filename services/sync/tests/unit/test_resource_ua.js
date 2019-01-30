@@ -24,7 +24,6 @@ function uaHandler(f) {
 }
 
 add_task(async function setup() {
-
   Log.repository.rootLogger.addAppender(new Log.DumpAppender());
   meta_global = new ServerWBO("global");
   server = httpd_setup({
@@ -41,7 +40,6 @@ add_task(async function setup() {
                " (" + httpProtocolHandler.oscpu + ")" +
                " FxSync/" + WEAVE_VERSION + "." +
                Services.appinfo.appBuildID;
-
 });
 
 add_task(async function test_fetchInfo() {

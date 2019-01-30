@@ -89,7 +89,6 @@ add_task(async function test_part_1() {
 
   // plugin should now be marked as outdated
   Assert.equal(await gBlocklist.getPluginBlocklistState(PLUGINS[0], "1", "1.9"), nsIBLS.STATE_OUTDATED);
-
 });
 
 add_task(async function test_part_2() {

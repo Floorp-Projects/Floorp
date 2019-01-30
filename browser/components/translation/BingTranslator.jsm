@@ -238,7 +238,6 @@ this.BingTranslator.prototype = {
 
       if (newCurSize > MAX_REQUEST_DATA ||
           newChunks > MAX_REQUEST_CHUNKS) {
-
         // If we've reached the API limits, let's stop accumulating data
         // for this request and return. We return information useful for
         // the caller to pass back on the next call, so that the function

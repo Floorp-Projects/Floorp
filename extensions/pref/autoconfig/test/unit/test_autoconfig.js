@@ -55,7 +55,6 @@ function run_test() {
     equal("function", prefs.getStringPref("_autoconfig_.test.displayerror"));
 
     Services.prefs.resetPrefs();
-
   } finally {
     try {
       let autoConfigJS = defaultPrefD.clone();

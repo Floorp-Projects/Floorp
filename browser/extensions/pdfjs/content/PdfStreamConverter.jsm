@@ -548,7 +548,6 @@ class ChromeActions {
 class RangedChromeActions extends ChromeActions {
   constructor(domWindow, contentDispositionFilename, originalRequest,
               rangeEnabled, streamingEnabled, dataListener) {
-
     super(domWindow, contentDispositionFilename);
     this.dataListener = dataListener;
     this.originalRequest = originalRequest;

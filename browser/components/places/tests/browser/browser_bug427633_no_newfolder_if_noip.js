@@ -40,5 +40,4 @@ add_task(async function() {
   tree.view.selection.clearSelection();
   ok(document.getElementById("editBMPanel_newFolderButton").disabled,
      "New folder button is disabled if there's no selection");
-
 });

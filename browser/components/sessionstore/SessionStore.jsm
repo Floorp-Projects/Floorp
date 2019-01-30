@@ -4834,8 +4834,6 @@ var SessionStoreInternal = {
           // We don't want to increment wIndex here.
           continue;
         }
-
-
       }
       wIndex++;
     }
@@ -4876,7 +4874,6 @@ var SessionStoreInternal = {
    */
   _setWindowStateBusyValue:
     function ssi_changeWindowStateBusyValue(aWindow, aValue) {
-
     this._windows[aWindow.__SSi].busy = aValue;
 
     // Keep the to-be-restored state in sync because that is returned by

@@ -102,7 +102,6 @@ add_task(async function test_source_uri_rewrite() {
   let installCalled = false;
   AddonUtils.__proto__.installAddonFromSearchResult =
     async function testInstallAddon(addon, metadata) {
-
     Assert.equal(SERVER_ADDRESS + "/require.xpi?src=sync",
                  addon.sourceURI.spec);
 

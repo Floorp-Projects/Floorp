@@ -139,7 +139,6 @@ add_task(async function test_eventLimitReached() {
   });
   recordEvents(1);
   Assert.equal(pingCount, 3, "Should have sent a third ping");
-
 });
 
 add_task(async function test_timers() {
@@ -158,7 +157,6 @@ add_task(async function test_timers() {
     Assert.ok(delay <= TelemetryEventPing.maxFrequency, "Timer should be at most the max frequency for a subsequent MAX ping.");
   }, pass, pass);
   recordEvents(1000);
-
 });
 
 add_task(async function test_periodic() {

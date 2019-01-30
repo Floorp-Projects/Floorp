@@ -9,7 +9,6 @@ const { L10nRegistry, FileSource } =
 const originalValues = {};
 
 function addMockFileSource() {
-
   const fs = {
     "/localization/de/browser/menu.ftl": `
 key = This is a single message
