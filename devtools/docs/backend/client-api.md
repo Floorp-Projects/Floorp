@@ -22,7 +22,7 @@ function start() {
   client = new DebuggerClient(transport);
 
   client.connect((type, traits) => {
-    // Now the client is conected to the server.
+    // Now the client is connected to the server.
     debugTab();
   });
 }
@@ -50,7 +50,7 @@ async function startClient() {
   client = new DebuggerClient(transport);
 
   client.connect((type, traits) => {
-    // Now the client is conected to the server.
+    // Now the client is connected to the server.
     debugTab();
   });
 }
@@ -164,7 +164,7 @@ function startDebugger() {
   // Start the client.
   client = new DebuggerClient(transport);
   client.connect((type, traits) => {
-    // Now the client is conected to the server.
+    // Now the client is connected to the server.
     debugTab();
   });
 }

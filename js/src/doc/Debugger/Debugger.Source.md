@@ -151,7 +151,7 @@ from its prototype:
       must appear elsewhere.)
 
     (If the sources attached to a DOM element change, the `Debugger.Source`
-    instances representing superceded code still refer to the DOM element;
+    instances representing superseded code still refer to the DOM element;
     this accessor only reflects origins, not current relationships.)
 
 `elementAttributeName`

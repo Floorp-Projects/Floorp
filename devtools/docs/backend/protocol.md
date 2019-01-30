@@ -101,7 +101,7 @@ If an actor receives a packet whose type it does not recognize, it sends an erro
 
 where *message* provides details to help debugger developers understand what went wrong: what kind of actor actor is; the packet received; and so on.
 
-If an actor recieves a packet which is missing needed parameters (say, a `"releaseMany"` packet with no `"actors"` parameter), it sends an error reply of the form:
+If an actor receives a packet which is missing needed parameters (say, a `"releaseMany"` packet with no `"actors"` parameter), it sends an error reply of the form:
 
 ```
 { "from":actor, "error":"missingParameter", "message":message }
@@ -109,7 +109,7 @@ If an actor recieves a packet which is missing needed parameters (say, a `"relea
 
 where *message* provides details to help debugger developers fix the problem.
 
-If an actor recieves a packet with a parameter whose value is inappropriate for the operation, it sends an error reply of the form:
+If an actor receives a packet with a parameter whose value is inappropriate for the operation, it sends an error reply of the form:
 
 ```
 { "from":actor, "error":"badParameterType", "message":message }
@@ -748,7 +748,7 @@ A thread is always in one of the following states:
 These interactions are meant to have certain properties:
 
 * At no point may either client or server send an unbounded number of packets without receiving a packet from its counterpart. This avoids deadlock without requiring either side to buffer an arbitrary number of packets per actor.
-* In states where a transition can be initiated by either the debugger or the thread, it is always clear to the debugger which state the thread actually entered, and for what reason.<br>For example, if the debugger interrupts a running thread, it cannot be sure whether the thread stopped because of the interruption, paused of its own accord (to report a watchpoint hit, say), or exited. However, the next packet the debugger receives will either be "paused", or "exited", resolving the ambiguity.<br>Similarly, when the debugger attaches to a thread, it cannot be sure whether it has succeeded in attaching to the thread, or whether the thread exited before the "attach" packet arrived. However, in either case the debugger can expect a disambiguating response: if the attach suceeded, it receives an "attached" packet; and in the second case, it receives an "exit" packet.<br>To support this property, the thread ignores certain debugger packets in some states (the "interrupt" packet in the **Paused** and **Exited** states, for example). These cases all handle situations where the ignored packet was preempted by some thread action.
+* In states where a transition can be initiated by either the debugger or the thread, it is always clear to the debugger which state the thread actually entered, and for what reason.<br>For example, if the debugger interrupts a running thread, it cannot be sure whether the thread stopped because of the interruption, paused of its own accord (to report a watchpoint hit, say), or exited. However, the next packet the debugger receives will either be "paused", or "exited", resolving the ambiguity.<br>Similarly, when the debugger attaches to a thread, it cannot be sure whether it has succeeded in attaching to the thread, or whether the thread exited before the "attach" packet arrived. However, in either case the debugger can expect a disambiguating response: if the attach succeeded, it receives an "attached" packet; and in the second case, it receives an "exit" packet.<br>To support this property, the thread ignores certain debugger packets in some states (the "interrupt" packet in the **Paused** and **Exited** states, for example). These cases all handle situations where the ignored packet was preempted by some thread action.
 
 Note that the rules here apply to the client's interactions with each thread actor separately. A client may send an "interrupt" to one thread actor while awaiting a reply to a request sent to a different thread actor.
 
