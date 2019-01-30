@@ -99,10 +99,8 @@ const whitelist = {
 // required, as opposed to items in the main whitelist,
 // which are all required.
 const intermittently_loaded_whitelist = {
-  components: new Set([
-    "nsAsyncShutdown.js",
-  ]),
   modules: new Set([
+    "resource://gre/modules/nsAsyncShutdown.jsm",
     "resource://gre/modules/sessionstore/Utils.jsm",
   ]),
   frameScripts: new Set([]),
