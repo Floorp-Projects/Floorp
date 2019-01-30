@@ -117,9 +117,6 @@
 #endif
 #endif
 
-@BINPATH@/components/WebVTT.manifest
-@BINPATH@/components/WebVTTParserWrapper.js
-
 #ifndef MOZ_GECKOVIEW_JAR
 #ifdef MOZ_UPDATER
 @BINPATH@/components/nsUpdateService.manifest
