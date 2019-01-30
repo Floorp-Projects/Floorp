@@ -596,8 +596,6 @@ var BrowserElementPromptService = {
       return;
     }
 
-    Cm.unregisterFactory(oldCID, oldFactory);
-
     var oldInstance = oldFactory.createInstance(null, Ci.nsIPromptFactory);
     var newInstance = new BrowserElementPromptFactory(oldInstance);
 
