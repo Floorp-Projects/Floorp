@@ -273,9 +273,6 @@
 @BINPATH@/crashreporter-override.ini
 #endif
 
-@BINPATH@/components/RemoteWebNavigation.js
-@BINPATH@/components/remotebrowserutils.manifest
-
 [mobile]
 @BINPATH@/chrome/geckoview@JAREXT@
 @BINPATH@/chrome/geckoview.manifest
