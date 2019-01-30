@@ -13,7 +13,8 @@ import {
   getSourceFromId,
   getSelectedSource,
   getSelectedScopeMappings,
-  getSelectedFrameBindings
+  getSelectedFrameBindings,
+  isPaused
 } from "../selectors";
 import { PROMISE } from "./utils/middleware/promise";
 import { wrapExpression } from "../utils/expressions";
@@ -172,8 +173,9 @@ function evaluateExpression(expression: Expression) {
  */
 export function getMappedExpression(expression: string) {
   return async function({ dispatch, getState, client, sourceMaps }: ThunkArgs) {
-    const mappings = getSelectedScopeMappings(getState());
-    const bindings = getSelectedFrameBindings(getState());
+    const state = getState();
+    const mappings = getSelectedScopeMappings(state);
+    const bindings = getSelectedFrameBindings(state);
 
     // We bail early if we do not need to map the expression. This is important
     // because mapping an expression can be slow if the parser worker is
@@ -190,7 +192,7 @@ export function getMappedExpression(expression: string) {
       expression,
       mappings,
       bindings || [],
-      features.mapExpressionBindings,
+      features.mapExpressionBindings && isPaused(state),
       features.mapAwaitExpression
     );
   };
