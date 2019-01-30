@@ -106,10 +106,11 @@ class BrowserFragment : Fragment(), BackHandler {
         promptFeature = PromptFeature(
             fragment = this,
             sessionManager = components.sessionManager,
-            fragmentManager = requireFragmentManager()
-        ) { _, permissions, requestCode ->
-            requestPermissions(permissions, requestCode)
-        }
+            fragmentManager = requireFragmentManager(),
+            onNeedToRequestPermissions = { permissions ->
+                requestPermissions(permissions, REQUEST_CODE_PROMPT_PERMISSIONS)
+            }
+        )
 
         windowFeature = WindowFeature(components.engine, components.sessionManager)
 
@@ -189,6 +190,7 @@ class BrowserFragment : Fragment(), BackHandler {
     companion object {
         private const val SESSION_ID = "session_id"
         private const val REQUEST_CODE_DOWNLOAD_PERMISSIONS = 1
+        private const val REQUEST_CODE_PROMPT_PERMISSIONS = 2
 
         fun create(sessionId: String? = null): BrowserFragment = BrowserFragment().apply {
             arguments = Bundle().apply {
@@ -200,8 +202,8 @@ class BrowserFragment : Fragment(), BackHandler {
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         when (requestCode) {
             REQUEST_CODE_DOWNLOAD_PERMISSIONS -> downloadsFeature.onPermissionsResult(permissions, grantResults)
+            REQUEST_CODE_PROMPT_PERMISSIONS -> promptFeature.onPermissionsResult(permissions, grantResults)
         }
-        promptFeature.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

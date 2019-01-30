@@ -38,6 +38,29 @@ permalink: /changelog/
     }
   ```
 
+ * **feature-prompts**
+   * ⚠️ **This is a breaking API change!**
+   * These change are similar to the ones for feature-downloads above and aim to provide a consistent way of handling permission requests.
+   * The required permissions are now passed to the `onNeedToRequestPermissions` callback.
+   ```kotlin
+   promptFeature = PromptFeature(
+      fragment = this,
+      sessionManager = components.sessionManager,
+      fragmentManager = requireFragmentManager(),
+      onNeedToRequestPermissions = { permissions ->
+          requestPermissions(permissions, REQUEST_CODE_PROMPT_PERMISSIONS)
+      }
+   )
+   ```
+   * Renamed `onRequestsPermissionsResult` to `onPermissionResult` and allow applications to specify the permission request code. This method should be invoked from `onRequestPermissionsResult`:
+  ```kotlin
+   override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+      when (requestCode) {
+          REQUEST_CODE_DOWNLOAD_PERMISSIONS -> downloadsFeature.onPermissionsResult(permissions, grantResults)
+      }        
+    }
+  ```
+
 * **browser-engine-gecko**, **browser-engine-gecko-beta**, **browser-engine-gecko-nightly**
   * After "Merge Day" and the release of Firefox 65 we updated our gecko-based components to follow the new upstream versions:
     * `browser-engine-gecko`: 65.0

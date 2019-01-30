@@ -35,7 +35,6 @@ import mozilla.components.concept.engine.prompt.PromptRequest.Authentication.Met
 import mozilla.components.concept.engine.prompt.PromptRequest.MenuChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.MultipleChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.SingleChoice
-import mozilla.components.feature.prompts.PromptFeature.Companion.FILE_PICKER_REQUEST
 import mozilla.components.support.base.observer.Consumable
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
@@ -71,7 +70,7 @@ class PromptFeatureTest {
         mockFragmentManager = mockFragmentManager()
 
         mockSessionManager = Mockito.spy(SessionManager(engine))
-        promptFeature = PromptFeature(null, mock(), mockSessionManager, mockFragmentManager) { _, _, _ -> }
+        promptFeature = PromptFeature(null, mock(), mockSessionManager, mockFragmentManager) { }
     }
 
     @Test
@@ -114,7 +113,7 @@ class PromptFeatureTest {
         mockFragmentManager = mock()
         doReturn(fragment).`when`(mockFragmentManager).findFragmentByTag(any())
 
-        promptFeature = PromptFeature(mock(), null, mockSessionManager, mockFragmentManager) { _, _, _ -> }
+        promptFeature = PromptFeature(mock(), null, mockSessionManager, mockFragmentManager) { }
 
         promptFeature.start()
         verify(fragment).feature = promptFeature
@@ -135,7 +134,7 @@ class PromptFeatureTest {
         doReturn(transaction).`when`(fragmentManager).beginTransaction()
         doReturn(transaction).`when`(transaction).remove(fragment)
 
-        val feature = PromptFeature(null, mock(), mockSessionManager, fragmentManager) { _, _, _ -> }
+        val feature = PromptFeature(null, mock(), mockSessionManager, fragmentManager) { }
 
         feature.start()
         verify(fragmentManager).beginTransaction()
@@ -154,7 +153,7 @@ class PromptFeatureTest {
         doReturn(transaction).`when`(fragmentManager).beginTransaction()
         doReturn(transaction).`when`(transaction).remove(fragment)
 
-        val feature = PromptFeature(mock(), mock(), mockSessionManager, fragmentManager) { _, _, _ -> }
+        val feature = PromptFeature(mock(), mock(), mockSessionManager, fragmentManager) { }
 
         feature.start()
         verify(fragmentManager).beginTransaction()
@@ -473,7 +472,7 @@ class PromptFeatureTest {
 
     @Test(expected = IllegalStateException::class)
     fun `Initializing a PromptFeature without giving an activity or fragment reference will throw an exception`() {
-        promptFeature = PromptFeature(null, null, mockSessionManager, mockFragmentManager) { _, _, _ -> }
+        promptFeature = PromptFeature(null, null, mockSessionManager, mockFragmentManager) { }
     }
 
     @Test
@@ -483,12 +482,12 @@ class PromptFeatureTest {
         val intent = Intent()
         val code = 1
 
-        promptFeature = PromptFeature(mockActivity, null, mockSessionManager, mockFragmentManager) { _, _, _ -> }
+        promptFeature = PromptFeature(mockActivity, null, mockSessionManager, mockFragmentManager) { }
 
         promptFeature.startActivityForResult(intent, code)
         verify(mockActivity).startActivityForResult(intent, code)
 
-        promptFeature = PromptFeature(null, mockFragment, mockSessionManager, mockFragmentManager) { _, _, _ -> }
+        promptFeature = PromptFeature(null, mockFragment, mockSessionManager, mockFragmentManager) { }
 
         promptFeature.startActivityForResult(intent, code)
         verify(mockFragment).startActivityForResult(intent, code)
@@ -503,13 +502,13 @@ class PromptFeatureTest {
         val filePickerRequest = PromptRequest.File(emptyArray(), false, { _, _ -> }, { _, _ -> }) {}
         val context = ApplicationProvider.getApplicationContext<Context>()
 
-        promptFeature = PromptFeature(null, mockFragment, mockSessionManager, mockFragmentManager) { _, _, _ ->
+        promptFeature = PromptFeature(null, mockFragment, mockSessionManager, mockFragmentManager) {
             onRequestPermissionWasCalled = true
         }
 
         doReturn(context).`when`(mockFragment).requireContext()
 
-        promptFeature.handleFilePickerRequest(filePickerRequest, mock())
+        promptFeature.handleFilePickerRequest(filePickerRequest)
 
         assertTrue(onRequestPermissionWasCalled)
         verify(mockFragment, never()).startActivityForResult(intent, code)
@@ -522,7 +521,7 @@ class PromptFeatureTest {
         val filePickerRequest = PromptRequest.File(emptyArray(), false, { _, _ -> }, { _, _ -> }) {}
         val context = ApplicationProvider.getApplicationContext<Context>()
 
-        promptFeature = PromptFeature(null, mockFragment, mockSessionManager, mockFragmentManager) { _, _, _ ->
+        promptFeature = PromptFeature(null, mockFragment, mockSessionManager, mockFragmentManager) {
             onRequestPermissionWasCalled = true
         }
 
@@ -530,7 +529,7 @@ class PromptFeatureTest {
 
         grantPermission(Manifest.permission.READ_EXTERNAL_STORAGE)
 
-        promptFeature.handleFilePickerRequest(filePickerRequest, mock())
+        promptFeature.handleFilePickerRequest(filePickerRequest)
 
         assertFalse(onRequestPermissionWasCalled)
         verify(mockFragment).startActivityForResult(any<Intent>(), anyInt())
@@ -556,7 +555,7 @@ class PromptFeatureTest {
     @Test
     fun `buildFileChooserIntent with allowMultipleFiles true and not empty mimeTypes will create an intent with EXTRA_ALLOW_MULTIPLE and EXTRA_MIME_TYPES`() {
 
-        promptFeature = PromptFeature(null, mock(), mockSessionManager, mockFragmentManager) { _, _, _ -> }
+        promptFeature = PromptFeature(null, mock(), mockSessionManager, mockFragmentManager) { }
 
         val intent = promptFeature.buildFileChooserIntent(true, arrayOf("image/jpeg"))
 
@@ -605,7 +604,7 @@ class PromptFeatureTest {
 
         session.promptRequest = Consumable.from(filePickerRequest)
 
-        promptFeature.onPermissionsDeny()
+        promptFeature.onPermissionsDenied()
 
         verify(mockSessionManager).selectedSession
         assertTrue(onDismissWasCalled)
@@ -633,7 +632,7 @@ class PromptFeatureTest {
 
         stubContext()
 
-        promptFeature.onActivityResult(PromptFeature.FILE_PICKER_REQUEST, RESULT_OK, intent)
+        promptFeature.onActivityResult(PromptFeature.FILE_PICKER_ACTIVITY_REQUEST_CODE, RESULT_OK, intent)
 
         verify(mockSessionManager).selectedSession
         assertTrue(onSingleFileSelectionWasCalled)
@@ -669,7 +668,7 @@ class PromptFeatureTest {
 
         stubContext()
 
-        promptFeature.onActivityResult(PromptFeature.FILE_PICKER_REQUEST, RESULT_OK, intent)
+        promptFeature.onActivityResult(PromptFeature.FILE_PICKER_ACTIVITY_REQUEST_CODE, RESULT_OK, intent)
 
         verify(mockSessionManager).selectedSession
         assertTrue(onMultipleFileSelectionWasCalled)
@@ -691,7 +690,7 @@ class PromptFeatureTest {
 
         session.promptRequest = Consumable.from(filePickerRequest)
 
-        promptFeature.onActivityResult(PromptFeature.FILE_PICKER_REQUEST, RESULT_CANCELED, intent)
+        promptFeature.onActivityResult(PromptFeature.FILE_PICKER_ACTIVITY_REQUEST_CODE, RESULT_CANCELED, intent)
 
         verify(mockSessionManager).selectedSession
         assertTrue(onDismissWasCalled)
@@ -703,7 +702,7 @@ class PromptFeatureTest {
 
         promptFeature = spy(promptFeature)
 
-        promptFeature.onRequestPermissionsResult(FILE_PICKER_REQUEST, emptyArray(), IntArray(1) { PERMISSION_GRANTED })
+        promptFeature.onPermissionsResult(emptyArray(), IntArray(1) { PERMISSION_GRANTED })
 
         verify(promptFeature).onPermissionsGranted()
     }
@@ -713,20 +712,9 @@ class PromptFeatureTest {
 
         promptFeature = spy(promptFeature)
 
-        promptFeature.onRequestPermissionsResult(FILE_PICKER_REQUEST, emptyArray(), IntArray(1) { PERMISSION_DENIED })
+        promptFeature.onPermissionsResult(emptyArray(), IntArray(1) { PERMISSION_DENIED })
 
-        verify(promptFeature).onPermissionsDeny()
-    }
-
-    @Test
-    fun `onRequestPermissionsResult with invalid request code will not call neither onPermissionsGranted nor onPermissionsDeny`() {
-
-        promptFeature = spy(promptFeature)
-
-        promptFeature.onRequestPermissionsResult(-1344, emptyArray(), IntArray(1) { PERMISSION_DENIED })
-
-        verify(promptFeature, never()).onPermissionsGranted()
-        verify(promptFeature, never()).onPermissionsDeny()
+        verify(promptFeature).onPermissionsDenied()
     }
 
     @Test
@@ -925,6 +913,6 @@ class PromptFeatureTest {
 
         doReturn(context).`when`(mockFragment).requireContext()
 
-        promptFeature = PromptFeature(null, mockFragment, mockSessionManager, mockFragmentManager) { _, _, _ -> }
+        promptFeature = PromptFeature(null, mockFragment, mockSessionManager, mockFragmentManager) {}
     }
 }
