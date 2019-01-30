@@ -4,7 +4,8 @@
 
 "use strict";
 
-/* global addEventListener, addMessageListener, removeMessageListener, sendAsyncMessage */
+/* global content, addEventListener, addMessageListener, removeMessageListener,
+  sendAsyncMessage */
 
 /*
  * Frame script that listens for requests to start a `DebuggerServer` for a frame in a
@@ -17,7 +18,23 @@ try {
 
   // Encapsulate in its own scope to allows loading this frame script more than once.
   (function() {
-    const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+    // In most cases, we are debugging a tab in content process, without chrome
+    // privileges. But in some tests, we are attaching to privileged document.
+    // Because the debugger can't be running in the same compartment than its debuggee,
+    // we have to load the server in a dedicated Loader, flagged with
+    // invisibleToDebugger, which will force it to be loaded in another compartment.
+    let loader, customLoader = false;
+    if (content.document.nodePrincipal.isSystemPrincipal) {
+      const { DevToolsLoader } =
+        ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+      loader = new DevToolsLoader();
+      loader.invisibleToDebugger = true;
+      customLoader = true;
+    } else {
+      // Otherwise, use the shared loader.
+      loader = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+    }
+    const { require } = loader;
 
     const DevToolsUtils = require("devtools/shared/DevToolsUtils");
     const { dumpn } = DevToolsUtils;
@@ -133,6 +150,11 @@ try {
       }
       DebuggerServer.off("connectionchange", destroyServer);
       DebuggerServer.destroy();
+
+      // When debugging chrome pages, we initialized a dedicated loader, also destroy it
+      if (customLoader) {
+        loader.destroy();
+      }
     }
     DebuggerServer.on("connectionchange", destroyServer);
   })();

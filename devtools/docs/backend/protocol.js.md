@@ -482,7 +482,7 @@ You might want to update your front's state when an event is fired, before emitt
         this.amountOfGoodNews++;
     });
 
-You can have events wait until an asynchronous action completes before firing by returning a promise. If you have multiple preEvents defined for a specific event, and atleast one fires asynchronously, then all preEvents most resolve before all events are fired.
+You can have events wait until an asynchronous action completes before firing by returning a promise. If you have multiple preEvents defined for a specific event, and at least one fires asynchronously, then all preEvents most resolve before all events are fired.
 
     countGoodNews: protocol.preEvent("good-news", function (news) {
         return this.updateGoodNews().then(() => this.amountOfGoodNews++);
@@ -563,7 +563,7 @@ You can customize this behavior in two ways.  The first is by defining a `marsha
       return new ChildActor(this.conn, id);
     }
 
-This creates a new child actor owned by the current child actor.  But in this example we want all actors created by the child to be owned by the HelloActor.  So we can define a `defaultParent` property that makes use of the `parent` proeprty provided by the Actor class:
+This creates a new child actor owned by the current child actor.  But in this example we want all actors created by the child to be owned by the HelloActor.  So we can define a `defaultParent` property that makes use of the `parent` property provided by the Actor class:
 
     get marshallPool() { return this.parent }
 

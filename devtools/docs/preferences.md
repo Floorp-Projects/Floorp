@@ -21,7 +21,7 @@ preferences:
 * `String`
 
 Choose the appropriate type depending on the data you need to store. If you need to store
-a JavaSript object or array, the recommended way is to:
+a JavaScript object or array, the recommended way is to:
 * use a `String` type preference
 * use JSON.stringify to save
 * use JSON.parse to read

@@ -59,6 +59,9 @@ If you think you found the right file to edit, add some logging statement on a p
 ```javascript
 // For front-end code
 console.log('hello friends\n');
+
+// Sometimes it's hard to spot your output. Emojis can help here really well.
+console.log('👗👗👗', 'This is your logged output!');
 ```
 
 Or...

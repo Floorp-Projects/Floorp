@@ -311,7 +311,7 @@ methods of other kinds of objects.
 
 `getOffsetsCoverage()`:
 :   **If the instance refers to a `JSScript`**, return `null` or an array which
-    contains informations about the coverage of all opcodes. The elements of
+    contains information about the coverage of all opcodes. The elements of
     the array are objects, each of which describes a single opcode, and
     contains the following properties:
 

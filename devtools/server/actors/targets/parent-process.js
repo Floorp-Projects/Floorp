@@ -152,8 +152,7 @@ parentProcessTargetPrototype._detach = function() {
     this._progressListener.unwatch(docShell);
   }
 
-  BrowsingContextTargetActor.prototype._detach.call(this);
-  return undefined;
+  return BrowsingContextTargetActor.prototype._detach.call(this);
 };
 
 /* ThreadActor hooks. */
