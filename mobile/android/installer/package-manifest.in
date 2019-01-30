@@ -168,8 +168,6 @@
 @BINPATH@/components/TelemetryStartup.manifest
 #endif
 
-@BINPATH@/components/XULStore.js
-@BINPATH@/components/XULStore.manifest
 @BINPATH@/components/htmlMenuBuilder.js
 @BINPATH@/components/htmlMenuBuilder.manifest
 
