@@ -227,12 +227,6 @@
 @BINPATH@/modules/*
 @BINPATH@/actors/*
 
-; Safe Browsing
-@BINPATH@/components/nsURLClassifier.manifest
-@BINPATH@/components/nsUrlClassifierHashCompleter.js
-@BINPATH@/components/nsUrlClassifierListManager.js
-@BINPATH@/components/nsUrlClassifierLib.js
-
 ; Security Reports
 @BINPATH@/components/SecurityReporter.manifest
 @BINPATH@/components/SecurityReporter.js

@@ -845,18 +845,10 @@ HashCompleterRequest.prototype = {
   },
 };
 
-// Converts a URL safe base64 string to a normal base64 string. Will not change
-// normal base64 strings. This is modelled after the same function in
-// nsUrlClassifierUtils.h.
-function unUrlsafeBase64(aStr) {
-  return !aStr ? "" : aStr.replace(/-/g, "+")
-                          .replace(/_/g, "/");
-}
-
 function errorWithStack() {
   let err = new Error();
   err.value = Cr.NS_ERROR_FAILURE;
   return err;
 }
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([HashCompleter]);
+var EXPORTED_SYMBOLS = ["HashCompleter"];
