@@ -2,8 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{DeviceRect, FilterOp, MixBlendMode, PipelineId, PremultipliedColorF, PictureRect, PicturePoint, WorldPoint};
-use api::{DeviceIntRect, DevicePoint, LayoutRect, PictureToRasterTransform, LayoutPixel, PropertyBinding, PropertyBindingId};
+use api::{FilterOp, MixBlendMode, PipelineId, PremultipliedColorF, PictureRect, PicturePoint, WorldPoint};
+use api::{DeviceIntRect, DeviceIntSize, DevicePoint, DeviceRect};
+use api::{LayoutRect, PictureToRasterTransform, LayoutPixel, PropertyBinding, PropertyBindingId};
 use api::{DevicePixelScale, RasterRect, RasterSpace, ColorF, ImageKey, DirtyRect, WorldSize, ClipMode, LayoutSize};
 use api::{PicturePixel, RasterPixel, WorldPixel, WorldRect, ImageFormat, ImageDescriptor, WorldVector2D, LayoutPoint};
 use api::{DebugFlags, DeviceVector2D};
@@ -12,7 +13,7 @@ use clip::{ClipChainId, ClipChainNode, ClipItem};
 use clip_scroll_tree::{ROOT_SPATIAL_NODE_INDEX, ClipScrollTree, SpatialNodeIndex, CoordinateSystemId};
 use debug_colors;
 use device::TextureFilter;
-use euclid::{TypedScale, vec3, TypedRect, TypedPoint2D, TypedSize2D};
+use euclid::{size2, TypedScale, vec3, TypedRect, TypedPoint2D, TypedSize2D};
 use euclid::approxeq::ApproxEq;
 use frame_builder::{FrameVisibilityContext, FrameVisibilityState};
 use intern::ItemUid;
@@ -94,8 +95,13 @@ pub struct TileIndex(pub usize);
 /// The size in device pixels of a cached tile. The currently chosen
 /// size is arbitrary. We should do some profiling to find the best
 /// size for real world pages.
+///
+/// Note that we use a separate, smaller size during wrench testing, so that
+/// we get tighter dirty rects and can do more meaningful invalidation
+/// tests.
 pub const TILE_SIZE_WIDTH: i32 = 1024;
 pub const TILE_SIZE_HEIGHT: i32 = 256;
+pub const TILE_SIZE_TESTING: i32 = 64;
 const FRAMES_BEFORE_CACHING: usize = 2;
 const MAX_DIRTY_RECTS: usize = 3;
 
@@ -753,6 +759,9 @@ impl TileCache {
         frame_context: &FrameVisibilityContext,
         frame_state: &mut FrameVisibilityState,
     ) {
+        let DeviceIntSize { width: tile_width, height: tile_height, _unit: _ } =
+            self.tile_dimensions(frame_context.config.testing);
+
         // Work out the scroll offset to apply to the world reference point.
         let scroll_transform = frame_context.clip_scroll_tree.get_relative_transform(
             ROOT_SPATIAL_NODE_INDEX,
@@ -869,25 +878,25 @@ impl TileCache {
         //           guess based on the size of the picture rect for the tile cache.
         let needed_device_rect = needed_device_rect.inflate(
             0.0,
-            3.0 * TILE_SIZE_HEIGHT as f32,
+            3.0 * tile_height as f32,
         );
 
         let p0 = needed_device_rect.origin;
         let p1 = needed_device_rect.bottom_right();
 
         let p0 = DevicePoint::new(
-            device_ref_point.x + ((p0.x - device_ref_point.x) / TILE_SIZE_WIDTH as f32).floor() * TILE_SIZE_WIDTH as f32,
-            device_ref_point.y + ((p0.y - device_ref_point.y) / TILE_SIZE_HEIGHT as f32).floor() * TILE_SIZE_HEIGHT as f32,
+            device_ref_point.x + ((p0.x - device_ref_point.x) / tile_width as f32).floor() * tile_width as f32,
+            device_ref_point.y + ((p0.y - device_ref_point.y) / tile_height as f32).floor() * tile_height as f32,
         );
 
         let p1 = DevicePoint::new(
-            device_ref_point.x + ((p1.x - device_ref_point.x) / TILE_SIZE_WIDTH as f32).ceil() * TILE_SIZE_WIDTH as f32,
-            device_ref_point.y + ((p1.y - device_ref_point.y) / TILE_SIZE_HEIGHT as f32).ceil() * TILE_SIZE_HEIGHT as f32,
+            device_ref_point.x + ((p1.x - device_ref_point.x) / tile_width as f32).ceil() * tile_width as f32,
+            device_ref_point.y + ((p1.y - device_ref_point.y) / tile_height as f32).ceil() * tile_height as f32,
         );
 
         // And now the number of tiles from that device rect.
-        let x_tiles = ((p1.x - p0.x) / TILE_SIZE_WIDTH as f32).round() as i32;
-        let y_tiles = ((p1.y - p0.y) / TILE_SIZE_HEIGHT as f32).round() as i32;
+        let x_tiles = ((p1.x - p0.x) / tile_width as f32).round() as i32;
+        let y_tiles = ((p1.y - p0.y) / tile_height as f32).round() as i32;
 
         // Step through any old tiles, and retain them if we can. They are keyed only on
         // the (scroll adjusted) world position, relying on the descriptor content checks
@@ -908,8 +917,8 @@ impl TileCache {
             p0.y / frame_context.device_pixel_scale.0,
         );
         self.world_tile_size = WorldSize::new(
-            TILE_SIZE_WIDTH as f32 / frame_context.device_pixel_scale.0,
-            TILE_SIZE_HEIGHT as f32 / frame_context.device_pixel_scale.0,
+            tile_width as f32 / frame_context.device_pixel_scale.0,
+            tile_height as f32 / frame_context.device_pixel_scale.0,
         );
         self.tile_count = TileSize::new(x_tiles, y_tiles);
 
@@ -917,8 +926,8 @@ impl TileCache {
         // previous frame, and update bounding rects.
         for y in 0 .. y_tiles {
             for x in 0 .. x_tiles {
-                let px = p0.x + x as f32 * TILE_SIZE_WIDTH as f32;
-                let py = p0.y + y as f32 * TILE_SIZE_HEIGHT as f32;
+                let px = p0.x + x as f32 * tile_width as f32;
+                let py = p0.y + y as f32 * tile_height as f32;
                 let key = (px.round() as i32, py.round() as i32);
 
                 let mut tile = match old_tiles.remove(&key) {
@@ -1332,9 +1341,10 @@ impl TileCache {
         self.dirty_region.clear();
         self.pending_blits.clear();
 
+        let dim = self.tile_dimensions(frame_context.config.testing);
         let descriptor = ImageDescriptor::new(
-            TILE_SIZE_WIDTH,
-            TILE_SIZE_HEIGHT,
+            dim.width,
+            dim.height,
             ImageFormat::BGRA8,
             true,
             false,
@@ -1535,6 +1545,14 @@ impl TileCache {
         }
 
         local_clip_rect
+    }
+
+    fn tile_dimensions(&self, testing: bool) -> DeviceIntSize {
+        if testing {
+            size2(TILE_SIZE_TESTING, TILE_SIZE_TESTING)
+        } else {
+            size2(TILE_SIZE_WIDTH, TILE_SIZE_HEIGHT)
+        }
     }
 }
 
