@@ -1066,7 +1066,7 @@ nsresult nsToolkitProfileService::SelectStartupProfile(
       name.AssignLiteral(DEFAULT_NAME);
     }
 
-    rv = CreateProfile(nullptr, name, getter_AddRefs(mCurrent));
+    rv = CreateUniqueProfile(nullptr, name, getter_AddRefs(mCurrent));
     if (NS_SUCCEEDED(rv)) {
       if (mUseDedicatedProfile) {
         SetDefaultProfile(mCurrent);
@@ -1259,6 +1259,28 @@ static void SaltProfileName(nsACString& aName) {
   salt[8] = '.';
 
   aName.Insert(salt, 0, 9);
+}
+
+NS_IMETHODIMP
+nsToolkitProfileService::CreateUniqueProfile(nsIFile* aRootDir,
+                                             const nsACString& aNamePrefix,
+                                             nsIToolkitProfile** aResult) {
+  nsCOMPtr<nsIToolkitProfile> profile;
+  nsresult rv = GetProfileByName(aNamePrefix, getter_AddRefs(profile));
+  if (NS_FAILED(rv)) {
+    return CreateProfile(aRootDir, aNamePrefix, aResult);
+  }
+
+  uint32_t suffix = 1;
+  while (true) {
+    nsPrintfCString name("%s-%d", PromiseFlatCString(aNamePrefix).get(),
+                         suffix);
+    rv = GetProfileByName(name, getter_AddRefs(profile));
+    if (NS_FAILED(rv)) {
+      return CreateProfile(aRootDir, name, aResult);
+    }
+    suffix++;
+  }
 }
 
 NS_IMETHODIMP
