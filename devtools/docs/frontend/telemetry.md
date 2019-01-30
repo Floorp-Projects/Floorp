@@ -216,9 +216,9 @@ Notes:
 
 Once the probe has been declared in the `Events.yaml` file, you'll need to actually use it in our code.
 
-It is crucial to understand that event telemetry have a string identifier which is constructed from the `category`, `method`, `object` (name) and `value` on which the event occured. This key points to an "extra" object that contains further information about the event (we will give examples later in this section).
+It is crucial to understand that event telemetry have a string identifier which is constructed from the `category`, `method`, `object` (name) and `value` on which the event occurred. This key points to an "extra" object that contains further information about the event (we will give examples later in this section).
 
-Because these "extra" objects can be from completely independant code paths we
+Because these "extra" objects can be from completely independent code paths we
 can send events and leave them in a pending state until all of the expected extra properties have been received.
 
 First, include the telemetry module in each tool that requires telemetry:
