@@ -885,12 +885,14 @@ function ReplayDebuggerObject(dbg, data, forConsole) {
   this._data = data;
   this._forConsole = forConsole;
   this._properties = null;
+  this._proxyData = null;
 }
 
 ReplayDebuggerObject.prototype = {
   _invalidate() {
     this._data = null;
     this._properties = null;
+    this._proxyData = null;
   },
 
   get callable() { return this._data.callable; },
@@ -913,7 +915,6 @@ ReplayDebuggerObject.prototype = {
   isExtensible() { return this._data.isExtensible; },
   isSealed() { return this._data.isSealed; },
   isFrozen() { return this._data.isFrozen; },
-  unwrap() { return this.isProxy ? NYI() : this; },
 
   get proto() {
     // Don't allow inspection of the prototypes of objects logged to the
@@ -968,13 +969,42 @@ ReplayDebuggerObject.prototype = {
     return rv;
   },
 
+  _ensureProxyData() {
+    if (!this._proxyData) {
+      const data = this._dbg._sendRequestAllowDiverge({
+        type: "objectProxyData",
+        id: this._data.id,
+      });
+      if (data.exception) {
+        throw new Error(data.exception);
+      }
+      this._proxyData = data;
+    }
+  },
+
+  unwrap() {
+    if (!this.isProxy) {
+      return this;
+    }
+    this._ensureProxyData();
+    return this._dbg._convertValue(this._proxyData.unwrapped);
+  },
+
+  get proxyTarget() {
+    this._ensureProxyData();
+    return this._dbg._convertValue(this._proxyData.target);
+  },
+
+  get proxyHandler() {
+    this._ensureProxyData();
+    return this._dbg._convertValue(this._proxyData.handler);
+  },
+
   get allocationSite() { NYI(); },
   get errorMessageName() { NYI(); },
   get errorNotes() { NYI(); },
   get errorLineNumber() { NYI(); },
   get errorColumnNumber() { NYI(); },
-  get proxyTarget() { NYI(); },
-  get proxyHandler() { NYI(); },
   get isPromise() { NYI(); },
   call: NYI,
   apply: NYI,
