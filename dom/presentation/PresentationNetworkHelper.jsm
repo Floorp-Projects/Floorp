@@ -6,14 +6,10 @@
 "use strict";
 
 const {EventDispatcher} = ChromeUtils.import("resource://gre/modules/Messaging.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-
-const NETWORKHELPER_CID = Components.ID("{5fb96caa-6d49-4f6b-9a4b-65dd0d51f92d}");
 
 function PresentationNetworkHelper() {}
 
 PresentationNetworkHelper.prototype = {
-  classID: NETWORKHELPER_CID,
   QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationNetworkHelper]),
 
   getWifiIPAddress(aListener) {
@@ -23,4 +19,4 @@ PresentationNetworkHelper.prototype = {
   },
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([PresentationNetworkHelper]);
+var EXPORTED_SYMBOLS = ["PresentationNetworkHelper"];
