@@ -1,4 +1,4 @@
-52987
+53000
 0/nm
 0th/pt
 1/n1
@@ -15892,8 +15892,10 @@ backslider/M
 backspace/DSMG
 backspin/M
 backsplash/S
+backstab/S
 backstabber/MS
 backstabbing
+backstabby
 backstage/M
 backstair/S
 backstop/SM
@@ -17311,6 +17313,7 @@ bomber/M
 bombproof
 bombshell/SM
 bombsite/S
+bon/S
 bona
 bonanza/MS
 bonbon/MS
@@ -20154,6 +20157,8 @@ colloquy/M
 collude/DSG
 collusion/M
 collusive
+colocate/DGS
+colocation/S
 cologne/SM
 colon/SM
 colonel/SM
@@ -21241,7 +21246,7 @@ cosmonaut/SM
 cosmopolitan/MS
 cosmopolitanism/M
 cosmos/MS
-cosplay
+cosplay/DGSRZ
 cosponsor/GSMD
 cosset/SGD
 cossetted
@@ -21846,6 +21851,7 @@ cullender/MS
 culminate/XDSGN
 culmination/M
 culotte/SM
+culpa/S
 culpability/M
 culpable/I
 culpably
@@ -25747,6 +25753,7 @@ extolled
 extolling
 extort/SGD
 extortion/MRZ
+extortionary
 extortionate/Y
 extortioner/M
 extortionist/MS
@@ -27980,7 +27987,7 @@ geometry/SM
 geophysical
 geophysicist/SM
 geophysics/M
-geopolitical
+geopolitical/Y
 geopolitics/M
 geostationary
 geosynchronous
@@ -34613,6 +34620,7 @@ mazurka/MS
 mañana/M
 mdse
 me/DSH
+mea
 mead/M
 meadow/MS
 meadowlark/MS
@@ -39822,6 +39830,7 @@ pivot/MDGS
 pivotal
 pix/M
 pixel/MS
+pixelate/DS
 pixie/MS
 pizazz/M
 pizza/MS
@@ -43857,7 +43866,7 @@ scalar/S
 scalawag/MS
 scald/MDSG
 scale's
-scale/CGDS
+scale/CGDSB
 scaleless
 scalene
 scaliness/M
@@ -47076,6 +47085,7 @@ stony/TRP
 stood
 stooge/MS
 stool/SM
+stoolie/SM
 stoop/GSMD
 stop's
 stop/US
@@ -47765,6 +47775,7 @@ supertanker/MS
 superuser/S
 supervene/GDS
 supervention/M
+supervillain/SM
 supervise/XGNDS
 supervised/U
 supervision/M
@@ -51476,6 +51487,7 @@ vivace
 vivacious/PY
 vivaciousness/M
 vivacity/M
+vivant/S
 vivaria
 vivarium/SM
 vivid/RYTP
@@ -52389,6 +52401,7 @@ wishbone/SM
 wisher/M
 wishful/Y
 wishlist's
+wishy-washy
 wisp/MS
 wispy/RT
 wist
