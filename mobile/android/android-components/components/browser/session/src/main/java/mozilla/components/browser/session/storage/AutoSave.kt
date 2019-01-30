@@ -203,4 +203,9 @@ private class AutoSaveSessionChange(
         autoSave.logger.info("Save: Session removed")
         autoSave.triggerSave()
     }
+
+    override fun onAllSessionsRemoved() {
+        autoSave.logger.info("Save: All sessions removed")
+        autoSave.triggerSave()
+    }
 }

@@ -262,6 +262,32 @@ class SessionStorageTest {
     }
 
     @Test
+    fun `AutoSave - when all sessions get removed`() {
+        runBlocking {
+            val sessionManager = SessionManager(mock(), { Session("https://getpocket.com") })
+            sessionManager.add(Session("https://www.firefox.com"))
+            sessionManager.add(Session("https://www.mozilla.org"))
+
+            val sessionStorage: SessionStorage = mock()
+
+            val autoSave = AutoSave(
+                sessionManager = sessionManager,
+                sessionStorage = sessionStorage,
+                minimumIntervalMs = 0
+            ).whenSessionsChange()
+
+            assertNull(autoSave.saveJob)
+            verify(sessionStorage, never()).save(any())
+
+            sessionManager.removeAll()
+
+            autoSave.saveJob?.join()
+
+            verify(sessionStorage).save(any())
+        }
+    }
+
+    @Test
     fun `AutoSave - when session gets selected`() {
         runBlocking {
             val sessionManager = SessionManager(mock())
