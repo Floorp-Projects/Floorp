@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#define NS_ALERTSERVICE_CONTRACTID "@mozilla.org/alerts-service;1"
-
 // This separate service uses the same nsIAlertsService interface,
 // but instead sends a notification to a platform alerts API
 // if available. Using a separate CID allows us to overwrite the XUL
@@ -19,9 +17,6 @@
 #define NS_AUTOCOMPLETEMDBRESULT_CONTRACTID \
   "@mozilla.org/autocomplete/mdb-result;1"
 
-#define NS_DOWNLOADPLATFORM_CONTRACTID \
-  "@mozilla.org/toolkit/download-platform;1"
-
 #define NS_FORMHISTORY_CONTRACTID "@mozilla.org/satchel/form-history;1"
 
 #define NS_FORMFILLCONTROLLER_CONTRACTID \
@@ -29,22 +24,6 @@
 
 #define NS_FORMHISTORYAUTOCOMPLETE_CONTRACTID \
   "@mozilla.org/autocomplete/search;1?name=form-history"
-
-#define NS_TYPEAHEADFIND_CONTRACTID "@mozilla.org/typeaheadfind;1"
-
-#define NS_PARENTALCONTROLSSERVICE_CONTRACTID \
-  "@mozilla.org/parental-controls-service;1"
-
-#define NS_URLCLASSIFIERPREFIXSET_CONTRACTID \
-  "@mozilla.org/url-classifier/prefixset;1"
-
-#define NS_URLCLASSIFIERDBSERVICE_CONTRACTID \
-  "@mozilla.org/url-classifier/dbservice;1"
-
-#define NS_URLCLASSIFIERSTREAMUPDATER_CONTRACTID \
-  "@mozilla.org/url-classifier/streamupdater;1"
-
-#define NS_URLCLASSIFIERUTILS_CONTRACTID "@mozilla.org/url-classifier/utils;1"
 
 #define NS_URLCLASSIFIERHASHCOMPLETER_CONTRACTID \
   "@mozilla.org/url-classifier/hashcompleter;1"
@@ -62,36 +41,7 @@
 
 #define NS_FAVICONSERVICE_CONTRACTID "@mozilla.org/browser/favicon-service;1"
 
-#define NS_APPSTARTUP_CONTRACTID "@mozilla.org/toolkit/app-startup;1"
-
-#if defined(MOZ_UPDATER) && !defined(MOZ_WIDGET_ANDROID)
-#  define NS_UPDATEPROCESSOR_CONTRACTID \
-    "@mozilla.org/updates/update-processor;1"
-#endif
-
-#define NS_ADDONCONTENTPOLICY_CONTRACTID "@mozilla.org/addons/content-policy;1"
-
-#if defined(ENABLE_TESTS)
-#  define NS_TELEMETRYGECKOVIEWTESTING_CONTRACTID \
-    "@mozilla.org/telemetry/geckoview-testing;1"
-#endif
-
 /////////////////////////////////////////////////////////////////////////////
-
-#define ALERT_NOTIFICATION_CID                       \
-  {                                                  \
-    0x9a7b7a41, 0x0b47, 0x47f7, {                    \
-      0xb6, 0x1b, 0x15, 0xa2, 0x10, 0xd6, 0xf0, 0x20 \
-    }                                                \
-  }
-
-// {A0CCAAF8-09DA-44D8-B250-9AC3E93C8117}
-#define NS_ALERTSSERVICE_CID                         \
-  {                                                  \
-    0xa0ccaaf8, 0x9da, 0x44d8, {                     \
-      0xb2, 0x50, 0x9a, 0xc3, 0xe9, 0x3c, 0x81, 0x17 \
-    }                                                \
-  }
 
 // {84E11F80-CA55-11DD-AD8B-0800200C9A66}
 #define NS_SYSTEMALERTSSERVICE_CID                   \
@@ -125,13 +75,6 @@
     }                                               \
   }
 
-#define NS_DOWNLOADPLATFORM_CID                      \
-  {                                                  \
-    0x649a14c9, 0xfe5c, 0x48ec, {                    \
-      0x9c, 0x85, 0x00, 0xca, 0xd9, 0xcc, 0xf3, 0x2e \
-    }                                                \
-  }
-
 // {895DB6C7-DBDF-40ea-9F64-B175033243DC}
 #define NS_FORMFILLCONTROLLER_CID                   \
   {                                                 \
@@ -148,51 +91,11 @@
     }                                                \
   }
 
-// {59648a91-5a60-4122-8ff2-54b839c84aed}
-#define NS_PARENTALCONTROLSSERVICE_CID               \
-  {                                                  \
-    0x580530e5, 0x118c, 0x4bc7, {                    \
-      0xab, 0x88, 0xbc, 0x2c, 0xd2, 0xb9, 0x72, 0x23 \
-    }                                                \
-  }
-
-// {e7f70966-9a37-48d7-8aeb-35998f31090e}
-#define NS_TYPEAHEADFIND_CID                         \
-  {                                                  \
-    0xe7f70966, 0x9a37, 0x48d7, {                    \
-      0x8a, 0xeb, 0x35, 0x99, 0x8f, 0x31, 0x09, 0x0e \
-    }                                                \
-  }
-
-// {3d8579f0-75fa-4e00-ba41-38661d5b5d17}
-#define NS_URLCLASSIFIERPREFIXSET_CID                \
-  {                                                  \
-    0x3d8579f0, 0x75fa, 0x4e00, {                    \
-      0xba, 0x41, 0x38, 0x66, 0x1d, 0x5b, 0x5d, 0x17 \
-    }                                                \
-  }
-
 // {7a258022-6765-11e5-b379-b37b1f2354be}
 #define NS_URLCLASSIFIERDBSERVICE_CID                \
   {                                                  \
     0x7a258022, 0x6765, 0x11e5, {                    \
       0xb3, 0x79, 0xb3, 0x7b, 0x1f, 0x23, 0x54, 0xbe \
-    }                                                \
-  }
-
-// e1797597-f4d6-4dd3-a1e1-745ad352cd80
-#define NS_URLCLASSIFIERSTREAMUPDATER_CID            \
-  {                                                  \
-    0xe1797597, 0xf4d6, 0x4dd3, {                    \
-      0xa1, 0xe1, 0x74, 0x5a, 0xd3, 0x52, 0xcd, 0x80 \
-    }                                                \
-  }
-
-// {b7b2ccec-7912-4ea6-a548-b038447004bd}
-#define NS_URLCLASSIFIERUTILS_CID                    \
-  {                                                  \
-    0xb7b2ccec, 0x7912, 0x4ea6, {                    \
-      0xa5, 0x48, 0xb0, 0x38, 0x44, 0x70, 0x04, 0xbd \
     }                                                \
   }
 
@@ -230,57 +133,3 @@
       0xb6, 0x05, 0x60, 0xb0, 0x22, 0xa0, 0x07, 0x56 \
     }                                                \
   }
-
-#if defined(MOZ_UPDATER) && !defined(MOZ_WIDGET_ANDROID)
-#  define NS_UPDATEPROCESSOR_CID                       \
-    {                                                  \
-      0xf3dcf644, 0x79e8, 0x4f59, {                    \
-        0xa1, 0xbb, 0x87, 0x84, 0x54, 0x48, 0x8e, 0xf9 \
-      }                                                \
-    }
-#endif
-
-#define NS_APPLICATION_REPUTATION_SERVICE_CONTRACTID \
-  "@mozilla.org/reputationservice/application-reputation-service;1"
-
-#define NS_APPLICATION_REPUTATION_SERVICE_CID        \
-  {                                                  \
-    0xd21b4c33, 0x716f, 0x4117, {                    \
-      0x80, 0x41, 0x27, 0x70, 0xb5, 0x9f, 0xf8, 0xa6 \
-    }                                                \
-  }
-
-#define NS_LOGIN_REPUTATION_SERVICE_CONTRACTID \
-  "@mozilla.org/reputationservice/login-reputation-service;1"
-
-#define NS_LOGIN_REPUTATION_SERVICE_CID              \
-  {                                                  \
-    0x91fa9e67, 0x1427, 0x4ee9, {                    \
-      0x8e, 0xe0, 0x1a, 0x6e, 0xd5, 0x78, 0xbe, 0xe1 \
-    }                                                \
-  }
-
-#define NS_ADDONCONTENTPOLICY_CID                    \
-  {                                                  \
-    0xc26a8241, 0xecf4, 0x4aed, {                    \
-      0x9f, 0x3c, 0xf1, 0xf5, 0xc7, 0x13, 0xb9, 0xa5 \
-    }                                                \
-  }
-
-#define NS_ADDON_POLICY_SERVICE_CID                  \
-  {                                                  \
-    0x562de129, 0x8338, 0x482c, {                    \
-      0xbb, 0x96, 0xa1, 0xff, 0x09, 0xee, 0x53, 0xcc \
-    }                                                \
-  }
-
-#define NS_ADDON_POLICY_SERVICE_CONTRACTID \
-  "@mozilla.org/addons/policy-service;1"
-
-#if defined(ENABLE_TESTS)
-#  define NS_TELEMETRYGECKOVIEWTESTING_CID \
-    {0xaaa3f7f2,                           \
-     0x8ef0,                               \
-     0x41ec,                               \
-     {0x8d, 0x3, 0xae, 0xd6, 0x67, 0xcf, 0x7f, 0xa2}};
-#endif

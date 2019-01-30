@@ -16,8 +16,8 @@
 #include "nsPIDOMWindow.h"
 #include "nsPrintfCString.h"
 #include "nsString.h"
-#include "nsToolkitCompsCID.h"
 #include "nsXPCOMCIDInternal.h"
+#include "mozilla/Components.h"
 #include "mozilla/XREAppData.h"
 
 #include "mozilla/Services.h"
@@ -148,7 +148,7 @@ nsresult ProfileResetCleanup(nsIToolkitProfile* aOldProfile) {
       do_GetService(NS_WINDOWWATCHER_CONTRACTID));
   if (!windowWatcher) return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIAppStartup> appStartup(do_GetService(NS_APPSTARTUP_CONTRACTID));
+  nsCOMPtr<nsIAppStartup> appStartup(components::AppStartup::Service());
   if (!appStartup) return NS_ERROR_FAILURE;
 
   nsCOMPtr<mozIDOMWindowProxy> progressWindow;

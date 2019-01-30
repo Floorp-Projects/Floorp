@@ -10,13 +10,14 @@
  */
 
 #include "nsContentSink.h"
+#include "mozilla/Components.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/css/Loader.h"
 #include "mozilla/dom/SRILogHelper.h"
 #include "nsStyleLinkElement.h"
 #include "nsIDocShell.h"
 #include "nsILoadContext.h"
-#include "nsCPrefetchService.h"
+#include "nsIPrefetchService.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsIMIMEHeaderParam.h"
@@ -825,8 +826,7 @@ void nsContentSink::PrefetchPreloadHref(const nsAString& aHref,
                                         const nsAString& aAs,
                                         const nsAString& aType,
                                         const nsAString& aMedia) {
-  nsCOMPtr<nsIPrefetchService> prefetchService(
-      do_GetService(NS_PREFETCHSERVICE_CONTRACTID));
+  nsCOMPtr<nsIPrefetchService> prefetchService(components::Prefetch::Service());
   if (prefetchService) {
     // construct URI using document charset
     auto encoding = mDocument->GetDocumentCharacterSet();
@@ -1126,7 +1126,7 @@ void nsContentSink::ProcessOfflineManifest(const nsAString& aManifestSpec) {
       break;
     case CACHE_SELECTION_UPDATE: {
       nsCOMPtr<nsIOfflineCacheUpdateService> updateService =
-          do_GetService(NS_OFFLINECACHEUPDATESERVICE_CONTRACTID);
+          components::OfflineCacheUpdate::Service();
 
       if (updateService) {
         updateService->ScheduleOnDocumentStop(

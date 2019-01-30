@@ -50,6 +50,10 @@ else:
 
 include('../glue/objs.mozbuild')
 
+XPCOM_MANIFESTS += [
+    'components.conf',
+]
+
 UNIFIED_SOURCES += xpcom_gluens_src_cppsrcs
 UNIFIED_SOURCES += xpcom_glue_src_cppsrcs
 

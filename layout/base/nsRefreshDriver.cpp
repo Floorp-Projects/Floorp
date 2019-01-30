@@ -45,6 +45,7 @@
 #include "mozilla/PendingAnimationTracker.h"
 #include "mozilla/PendingFullscreenEvent.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs.h"
 #include "nsViewManager.h"
 #include "GeckoProfiler.h"
 #include "nsNPAPIPluginInstance.h"
@@ -254,6 +255,19 @@ class RefreshDriverTimer {
     MOZ_ASSERT(NS_IsMainThread());
     TimeStamp nextTick = MostRecentRefresh() + GetTimerRate();
     return nextTick < TimeStamp::Now() ? Nothing() : Some(nextTick);
+  }
+
+  // Returns null if the RefreshDriverTimer is attached to several
+  // RefreshDrivers. That may happen for example when there are
+  // several windows open.
+  nsPresContext* GetPresContextForOnlyRefreshDriver() {
+    if (mRootRefreshDrivers.Length() == 1 && mContentRefreshDrivers.IsEmpty()) {
+      return mRootRefreshDrivers[0]->GetPresContext();
+    }
+    if (mContentRefreshDrivers.Length() == 1 && mRootRefreshDrivers.IsEmpty()) {
+      return mContentRefreshDrivers[0]->GetPresContext();
+    }
+    return nullptr;
   }
 
  protected:
@@ -541,6 +555,37 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
           }
 
           return true;
+        }
+
+        if (StaticPrefs::layout_lower_priority_refresh_driver_during_load()) {
+          nsPresContext* pctx =
+              mVsyncRefreshDriverTimer->GetPresContextForOnlyRefreshDriver();
+          if (pctx && pctx->HadContentfulPaint() && pctx->Document() &&
+              pctx->Document()->GetReadyStateEnum() <
+                  Document::READYSTATE_COMPLETE) {
+            nsPIDOMWindowInner* win = pctx->Document()->GetInnerWindow();
+            if (win) {
+              dom::Performance* perf = win->GetPerformance();
+              // Limit slower refresh rate to 5 seconds between the
+              // first contentful paint and page load.
+              if (perf && perf->Now() < 5000) {
+                if (mProcessedVsync) {
+                  mProcessedVsync = false;
+                  // Handle this case similarly to the code above, but just
+                  // use idle queue.
+                  TimeDuration rate = mVsyncRefreshDriverTimer->GetTimerRate();
+                  uint32_t slowRate =
+                      static_cast<uint32_t>(rate.ToMilliseconds() * 4);
+                  nsCOMPtr<nsIRunnable> vsyncEvent = NewRunnableMethod<>(
+                      "RefreshDriverVsyncObserver::NormalPriorityNotify[IDLE]",
+                      this, &RefreshDriverVsyncObserver::NormalPriorityNotify);
+                  NS_DispatchToCurrentThreadQueue(vsyncEvent.forget(), slowRate,
+                                                  EventQueuePriority::Idle);
+                }
+                return true;
+              }
+            }
+          }
         }
 
         RefPtr<RefreshDriverVsyncObserver> kungFuDeathGrip(this);
@@ -1728,7 +1773,23 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
     // situation we don't want to thrash our timer.  So instead we
     // wait until we get a Notify() call when we have no observers
     // before stopping the timer.
-    StopTimer();
+    // On top level content pages keep the timer running initially so that we
+    // paint the page soon enough.
+    if (!XRE_IsContentProcess() || !presShell || mTestControllingRefreshes ||
+        !mPresContext->Document()->IsTopLevelContentDocument() || mThrottled ||
+        gfxPlatform::IsInLayoutAsapMode()) {
+      StopTimer();
+    } else if (mPresContext->Document()->GetReadyStateEnum() <
+                   Document::READYSTATE_COMPLETE &&
+               !mPresContext->HadContentfulPaint()) {
+      if (mInitialTimerRunningLimit.IsNull()) {
+        mInitialTimerRunningLimit =
+            TimeStamp::Now() + TimeDuration::FromSeconds(4.0f);
+        // Don't let the timer to run forever, so limit to 4s for now.
+      } else if (mInitialTimerRunningLimit < TimeStamp::Now()) {
+        StopTimer();
+      }
+    }
     return;
   }
 

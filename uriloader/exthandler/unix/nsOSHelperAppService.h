@@ -14,10 +14,10 @@
 
 #include "nsExternalHelperAppService.h"
 #include "nsCExternalHandlerService.h"
-#include "nsMIMEInfoImpl.h"
 #include "nsCOMPtr.h"
 
 class nsILineInputStream;
+class nsMIMEInfoBase;
 
 class nsOSHelperAppService : public nsExternalHelperAppService {
  public:
