@@ -60,7 +60,6 @@ BreakpointClient.prototype = {
    * Set the condition of this breakpoint
    */
   setCondition: function(gThreadClient, condition) {
-    const root = this._client.mainRoot;
     const deferred = promise.defer();
 
     const info = {
