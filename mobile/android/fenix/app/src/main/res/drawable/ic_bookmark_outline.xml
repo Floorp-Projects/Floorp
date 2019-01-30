@@ -1,0 +1,14 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+  <path
+      android:pathData="M6.749,21.248c-0.326,0 -0.635,-0.143 -0.848,-0.388 -0.213,-0.246 -0.31,-0.573 -0.265,-0.895l0.778,-5.565 -3.74,-4.02c-0.281,-0.301 -0.375,-0.733 -0.244,-1.124 0.13,-0.39 0.464,-0.679 0.87,-0.751l5.229,-0.935 2.464,-4.946c0.19,-0.382 0.58,-0.623 1.007,-0.623 0.427,0 0.817,0.241 1.007,0.623l2.464,4.946 5.229,0.93c0.406,0.072 0.74,0.36 0.87,0.752 0.13,0.39 0.036,0.822 -0.245,1.123L17.586,14.4l0.778,5.568c0.059,0.417 -0.12,0.832 -0.465,1.075 -0.344,0.243 -0.796,0.273 -1.169,0.078L12,18.654l-4.731,2.465c-0.16,0.085 -0.339,0.129 -0.52,0.129zM5.231,10.191l3.3,3.542 -0.674,4.828L12,16.4l4.148,2.162 -0.674,-4.828 3.295,-3.542 -4.64,-0.829L12,5.088 9.871,9.362l-4.64,0.829z"
+      android:fillColor="#202340"
+      android:fillType="evenOdd"/>
+</vector>

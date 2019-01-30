@@ -1,0 +1,11 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<vector android:height="24dp" android:viewportHeight="16"
+    android:viewportWidth="16" android:width="24dp" xmlns:android="http://schemas.android.com/apk/res/android">
+    <path android:fillColor="context-fill" android:pathData="M7.281,5H8.75A0.25,0.25 0,0 0,9 4.75V0.984a0.984,0.984 0,0 0,-1.969 0V4.75a0.25,0.25 0,0 0,0.25 0.25z"/>
+    <path android:fillColor="context-fill" android:pathData="M13.5,2H11a1,1 0,0 0,0 2h2.5a0.5,0.5 0,0 1,0.5 0.5v7a0.5,0.5 0,0 1,-0.5 0.5h-11a0.5,0.5 0,0 1,-0.5 -0.5v-7a0.5,0.5 0,0 1,0.5 -0.5H5a1,1 0,0 0,0 -2H2.5A2.5,2.5 0,0 0,0 4.5v7A2.5,2.5 0,0 0,2.5 14h11a2.5,2.5 0,0 0,2.5 -2.5v-7A2.5,2.5 0,0 0,13.5 2z"/>
+    <path android:fillColor="context-fill" android:pathData="M3.577,6L6.423,6A0.577,0.577 0,0 1,7 6.577L7,9.423A0.577,0.577 0,0 1,6.423 10L3.577,10A0.577,0.577 0,0 1,3 9.423L3,6.577A0.577,0.577 0,0 1,3.577 6z"/>
+    <path android:fillColor="context-fill" android:pathData="M9.5,7h3a0.5,0.5 0,0 0,0 -1h-3a0.5,0.5 0,0 0,0 1zM9.5,8a0.5,0.5 0,0 0,0 1h2a0.5,0.5 0,0 0,0 -1z"/>
+</vector>
