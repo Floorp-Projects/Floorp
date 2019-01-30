@@ -14,6 +14,10 @@ buildscript {
     }
 }
 
+plugins {
+    id("io.gitlab.arturbosch.detekt").version("1.0.0.RC9.2")
+}
+
 allprojects {
     repositories {
         google()
@@ -29,4 +33,34 @@ allprojects {
 
 task clean(type: Delete) {
     delete rootProject.buildDir
+}
+
+detekt {
+    // The version number is duplicated, please refer to plugins block for more details
+    version = "1.0.0.RC9.2"
+    input = files("$projectDir/app")
+    config = files("$projectDir/config/detekt.yml")
+    filters = ".*test.*,.*/resources/.*,.*/tmp/.*"
+
+    reports {
+        html {
+            enabled = true
+            destination = file("$projectDir/build/reports/detekt.html")
+        }
+    }
+}
+
+configurations {
+    ktlint
+}
+
+dependencies {
+    ktlint "com.github.shyiko:ktlint:0.24.0"
+}
+
+task ktlint(type: JavaExec, group: "verification") {
+    description = "Check Kotlin code style."
+    classpath = configurations.ktlint
+    main = "com.github.shyiko.ktlint.Main"
+    args "app/**/*.kt"
 }
