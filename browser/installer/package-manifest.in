@@ -219,10 +219,6 @@
 @RESPATH@/components/NetworkGeolocationProvider.manifest
 @RESPATH@/components/NetworkGeolocationProvider.js
 @RESPATH@/components/extensions.manifest
-@RESPATH@/components/addonManager.js
-@RESPATH@/components/amContentHandler.js
-@RESPATH@/components/amInstallTrigger.js
-@RESPATH@/components/amWebAPI.js
 #ifdef MOZ_UPDATER
 @RESPATH@/components/nsUpdateService.manifest
 #endif
