@@ -8,6 +8,15 @@ add_task(async function() {
   // Sanity check for the source.
   Assert.ok(await migrator.isSourceAvailable());
 
+  // Windows versions newer than 1709 don't store cookies as files anymore,
+  // thus our migrators don't import anything and this test is pointless.
+  // In these versions the CookD folder contains a deprecated.cookie file.
+  let deprecatedCookie = Services.dirsvc.get("CookD", Ci.nsIFile);
+  deprecatedCookie.append("deprecated.cookie");
+  if (deprecatedCookie.exists()) {
+    return;
+  }
+
   const BOOL = ctypes.bool;
   const LPCTSTR = ctypes.char16_t.ptr;
   const DWORD = ctypes.uint32_t;
