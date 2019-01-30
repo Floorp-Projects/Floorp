@@ -29,7 +29,7 @@ class OOMReporter;
 
 namespace dom {
 
-class BrowsingContext;
+class BrowsingContextGroup;
 class ContentParent;
 template <typename>
 struct Nullable;
@@ -37,14 +37,6 @@ template <typename T>
 class Sequence;
 struct WindowPostMessageOptions;
 class WindowProxyHolder;
-
-// List of top-level or auxiliary BrowsingContexts
-class BrowsingContextGroup : public nsTArray<WeakPtr<BrowsingContext>> {
- public:
-  NS_INLINE_DECL_REFCOUNTING(BrowsingContextGroup)
- private:
-  ~BrowsingContextGroup() {}
-};
 
 // BrowsingContext, in this context, is the cross process replicated
 // environment in which information about documents is stored. In
@@ -74,6 +66,9 @@ class BrowsingContext : public nsWrapperCache,
 
   // Look up a BrowsingContext in the current process by ID.
   static already_AddRefed<BrowsingContext> Get(uint64_t aId);
+  static already_AddRefed<BrowsingContext> Get(GlobalObject&, uint64_t aId) {
+    return Get(aId);
+  }
 
   // Create a brand-new BrowsingContext object.
   static already_AddRefed<BrowsingContext> Create(BrowsingContext* aParent,
@@ -133,8 +128,7 @@ class BrowsingContext : public nsWrapperCache,
 
   void SetOpener(BrowsingContext* aOpener);
 
-  static void GetRootBrowsingContexts(
-      nsTArray<RefPtr<BrowsingContext>>& aBrowsingContexts);
+  BrowsingContextGroup* Group() { return mGroup; }
 
   nsISupports* GetParentObject() const;
   JSObject* WrapObject(JSContext* aCx,
@@ -229,7 +223,7 @@ class BrowsingContext : public nsWrapperCache,
   // Unique id identifying BrowsingContext
   const uint64_t mBrowsingContextId;
 
-  RefPtr<BrowsingContextGroup> mBrowsingContextGroup;
+  RefPtr<BrowsingContextGroup> mGroup;
   RefPtr<BrowsingContext> mParent;
   Children mChildren;
   WeakPtr<BrowsingContext> mOpener;
