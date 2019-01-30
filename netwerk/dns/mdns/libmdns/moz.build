@@ -16,12 +16,8 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     ]
 
 else:
-    EXTRA_COMPONENTS += [
-        'nsDNSServiceDiscovery.js',
-        'nsDNSServiceDiscovery.manifest',
-    ]
-
     EXTRA_JS_MODULES += [
+        'DNSServiceDiscovery.jsm',
         'fallback/DataReader.jsm',
         'fallback/DataWriter.jsm',
         'fallback/DNSPacket.jsm',
@@ -29,6 +25,10 @@ else:
         'fallback/DNSResourceRecord.jsm',
         'fallback/DNSTypes.jsm',
         'fallback/MulticastDNS.jsm',
+    ]
+
+    XPCOM_MANIFESTS += [
+        'components.conf',
     ]
 
     if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
