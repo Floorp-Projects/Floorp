@@ -4,11 +4,7 @@
 
 "use strict";
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
-// This constant tells how many messages to process in a single timer execution.
-const MESSAGES_IN_INTERVAL = 1500;
 
 const STORAGE_MAX_EVENTS = 1000;
 
@@ -142,4 +138,4 @@ ConsoleAPIStorageService.prototype = {
   },
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([ConsoleAPIStorageService]);
+var EXPORTED_SYMBOLS = ["ConsoleAPIStorageService"];

@@ -101,8 +101,6 @@
 @BINPATH@/components/components.manifest
 
 ; JavaScript components
-@BINPATH@/components/ConsoleAPI.manifest
-@BINPATH@/components/ConsoleAPIStorage.js
 #ifdef MOZ_ANDROID_GCM
 @BINPATH@/components/Push.manifest
 #endif

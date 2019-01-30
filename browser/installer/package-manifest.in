@@ -160,8 +160,6 @@
 #endif
 
 ; JavaScript components
-@RESPATH@/components/ConsoleAPI.manifest
-@RESPATH@/components/ConsoleAPIStorage.js
 @RESPATH@/components/BrowserElementParent.manifest
 @RESPATH@/components/BrowserElementParent.js
 @RESPATH@/browser/components/BrowserComponents.manifest
