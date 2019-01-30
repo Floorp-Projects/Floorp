@@ -11,7 +11,7 @@ interface nsIDocShell;
 interface WindowGlobalParent {
   readonly attribute boolean isClosed;
   readonly attribute boolean isInProcess;
-  readonly attribute ChromeBrowsingContext browsingContext;
+  readonly attribute CanonicalBrowsingContext browsingContext;
 
   readonly attribute boolean isCurrentGlobal;
 

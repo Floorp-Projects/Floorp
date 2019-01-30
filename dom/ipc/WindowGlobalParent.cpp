@@ -6,7 +6,7 @@
 
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/ipc/InProcessParent.h"
-#include "mozilla/dom/ChromeBrowsingContext.h"
+#include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/WindowGlobalActorsBinding.h"
 #include "mozilla/dom/ChromeUtils.h"
 #include "mozJSComponentLoader.h"
@@ -63,7 +63,7 @@ void WindowGlobalParent::Init(const WindowGlobalInit& aInit) {
     processId = static_cast<ContentParent*>(Manager()->Manager())->ChildID();
   }
 
-  mBrowsingContext = ChromeBrowsingContext::Get(aInit.browsingContextId());
+  mBrowsingContext = CanonicalBrowsingContext::Get(aInit.browsingContextId());
   MOZ_ASSERT(mBrowsingContext);
 
   // XXX(nika): This won't be the case soon, but for now this is a good
