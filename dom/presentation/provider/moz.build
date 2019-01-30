@@ -24,10 +24,9 @@ EXTRA_JS_MODULES.presentation += [
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
-    EXTRA_COMPONENTS += [
+    EXTRA_JS_MODULES += [
         # For android presentation device
-        'AndroidCastDeviceProvider.js',
-        'AndroidCastDeviceProvider.manifest',
+        'AndroidCastDeviceProvider.jsm',
     ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
