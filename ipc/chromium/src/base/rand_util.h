@@ -11,21 +11,8 @@
 
 namespace base {
 
-// Returns a random number in range [0, kuint64max]. Thread-safe.
-uint64_t RandUint64();
-
 // Returns a random number between min and max (inclusive). Thread-safe.
 int RandInt(int min, int max);
-
-// Returns a random double in range [0, 1). Thread-safe.
-double RandDouble();
-
-// Fills |output_length| bytes of |output| with random data.
-//
-// WARNING:
-// Do not use for security-sensitive purposes.
-// See crypto/ for cryptographically secure random number generation APIs.
-void RandBytes(void* output, size_t output_length);
 
 }  // namespace base
 
