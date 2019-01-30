@@ -4,7 +4,6 @@
 
 "use strict";
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.defineModuleGetter(this, "PlacesUtils",
                                "resource://gre/modules/PlacesUtils.jsm");
@@ -130,4 +129,4 @@ PageIconProtocolHandler.prototype = {
   ]),
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([PageIconProtocolHandler]);
+var EXPORTED_SYMBOLS = ["PageIconProtocolHandler"];
