@@ -13,6 +13,9 @@ import kotlinx.android.extensions.LayoutContainer
 abstract class UIView<S : ViewState>(
     private val container: ViewGroup, val bus: ActionBusFactory
 ) : LayoutContainer {
+
+    abstract val view: View
+
     /**
      * Get the XML id for the UIView
      */
@@ -29,12 +32,12 @@ abstract class UIView<S : ViewState>(
     /**
      * Show the UIView
      */
-    open fun show() { container.visibility = View.VISIBLE }
+    open fun show() { view.visibility = View.VISIBLE }
 
     /**
      * Hide the UIView
      */
-    open fun hide() { container.visibility = View.GONE }
+    open fun hide() { view.visibility = View.GONE }
 
     /**
      * Update the view from the ViewState

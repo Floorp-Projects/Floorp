@@ -23,7 +23,7 @@ abstract class UIComponent<S: ViewState, A: Action, C: Change>(open val bus: Act
      * Render the ViewState to the View through the Reducer
      */
     inline fun <reified C : Change> render(noinline reducer: Reducer<S, C>): Disposable =
-        bus.getSafeManagedObservable(C::class.java)
+        getModelChangeEvents<C>()
             .scan(initialState, reducer)
             .distinctUntilChanged()
             .subscribeOn(Schedulers.io())

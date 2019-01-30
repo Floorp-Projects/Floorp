@@ -81,12 +81,12 @@
     <ConstraintSet android:id="@+id/end">
         <Constraint
                 android:id="@+id/wordmark"
-                android:layout_marginLeft="16dp"
+                android:layout_marginStart="16dp"
                 android:layout_marginTop="12dp"
                 android:alpha="0"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                motion:layout_constraintLeft_toLeftOf="parent"
+                motion:layout_constraintStart_toStartOf="parent"
                 motion:layout_constraintTop_toTopOf="parent" />
 
         <Constraint
@@ -94,11 +94,11 @@
             android:layout_marginTop="16dp"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="16dp"
-            android:layout_marginRight="16dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
             motion:layout_constraintTop_toTopOf="parent"
-            motion:layout_constraintLeft_toLeftOf="parent"
-            motion:layout_constraintRight_toRightOf="parent"
+            motion:layout_constraintStart_toStartOf="parent"
+            motion:layout_constraintEnd_toEndOf="parent"
             android:elevation="0dp"/>
 
         <Constraint

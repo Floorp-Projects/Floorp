@@ -16,11 +16,12 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.Navigation
 import androidx.navigation.fragment.FragmentNavigator
 import kotlinx.android.synthetic.main.fragment_home.*
+import kotlinx.android.synthetic.main.fragment_home.view.*
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.home.sessions.SessionsComponent
 import org.mozilla.fenix.home.sessions.layoutComponents
 import org.mozilla.fenix.mvi.ActionBusFactory
-import org.mozilla.fenix.ext.requireComponents
 import kotlin.math.roundToInt
 
 class HomeFragment : Fragment() {
@@ -28,7 +29,9 @@ class HomeFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.fragment_home, container, false)
+        val view = inflater.inflate(R.layout.fragment_home, container, false)
+        SessionsComponent(view.homeLayout, ActionBusFactory.get(this)).setup()
+        return view
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -43,8 +46,6 @@ class HomeFragment : Fragment() {
         toolbar.setOnClickListener { it ->
             Navigation.findNavController(it).navigate(R.id.action_homeFragment_to_searchFragment, null, null)
         }
-
-        SessionsComponent(homeLayout, ActionBusFactory.get(this)).setup()
         layoutComponents(homeLayout)
     }
 }

@@ -2,6 +2,7 @@ package org.mozilla.fenix.home.sessions
 
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.PARENT_ID
+import kotlinx.android.synthetic.main.component_sessions.*
 import kotlinx.android.synthetic.main.fragment_home.*
 import org.jetbrains.anko.constraint.layout.ConstraintSetBuilder.Side.*
 import org.jetbrains.anko.constraint.layout.applyConstraintSet
