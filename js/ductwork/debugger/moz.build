@@ -19,6 +19,10 @@ SOURCES += [
     'JSDebugger.cpp',
 ]
 
+XPCOM_MANIFESTS += [
+    'components.conf',
+]
+
 EXTRA_JS_MODULES += [
     'jsdebugger.jsm',
 ]
