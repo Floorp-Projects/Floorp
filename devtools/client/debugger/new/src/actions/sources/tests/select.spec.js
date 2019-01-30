@@ -83,7 +83,7 @@ describe("sources", () => {
     await dispatch(actions.selectLocation({ sourceId: "foo.js" }));
 
     // closes the 1st tab, which should have no previous tab
-    await dispatch(actions.closeTab(fooSource));
+    await dispatch(actions.closeTab(fooSource.source));
 
     expect(getSelectedSource(getState()).id).toBe("bar.js");
     expect(getSourceTabs(getState())).toHaveLength(2);
@@ -110,7 +110,7 @@ describe("sources", () => {
     await dispatch(actions.selectLocation({ sourceId: "foo.js" }));
     await dispatch(actions.selectLocation({ sourceId: "bar.js" }));
     await dispatch(actions.selectLocation({ sourceId: "baz.js" }));
-    await dispatch(actions.closeTab(bazSource));
+    await dispatch(actions.closeTab(bazSource.source));
     expect(getSelectedSource(getState()).id).toBe("bar.js");
     expect(getSourceTabs(getState())).toHaveLength(2);
   });
@@ -135,14 +135,14 @@ describe("sources", () => {
 
     // 3rd tab is reselected
     await dispatch(actions.selectLocation({ sourceId: "foo.js" }));
-    await dispatch(actions.closeTab(bazSource));
+    await dispatch(actions.closeTab(bazSource.source));
     expect(getSelectedSource(getState()).id).toBe("foo.js");
     expect(getSourceTabs(getState())).toHaveLength(2);
   });
 
   it("should not select new sources that lack a URL", async () => {
     const { dispatch, getState } = createStore(sourceThreadClient);
-    await dispatch(actions.newSource({ id: "foo" }));
+    await dispatch(actions.newSource({ source: { id: "foo" } }));
 
     expect(getSourceCount(getState())).toEqual(1);
     const selectedLocation = getSelectedLocation(getState());
@@ -192,11 +192,11 @@ describe("sources", () => {
     await dispatch(actions.newSource(baseSource));
 
     await dispatch(
-      actions.selectLocation({ sourceId: baseSource.id, line: 1 })
+      actions.selectLocation({ sourceId: baseSource.source.id, line: 1 })
     );
 
-    expect(getSelectedSource(getState()).id).toBe(baseSource.id);
-    await waitForState(store, state => getSymbols(state, baseSource));
+    expect(getSelectedSource(getState()).id).toBe(baseSource.source.id);
+    await waitForState(store, state => getSymbols(state, baseSource.source));
   });
 
   it("should keep the original the viewing context", async () => {
@@ -216,11 +216,13 @@ describe("sources", () => {
     const originalBaseSource = makeOriginalSource("base.js");
     await dispatch(actions.newSource(originalBaseSource));
 
-    await dispatch(actions.selectSource(originalBaseSource.id));
+    await dispatch(actions.selectSource(originalBaseSource.source.id));
 
     const fooSource = makeSource("foo.js");
     await dispatch(actions.newSource(fooSource));
-    await dispatch(actions.selectLocation({ sourceId: fooSource.id, line: 1 }));
+    await dispatch(
+      actions.selectLocation({ sourceId: fooSource.source.id, line: 1 })
+    );
 
     expect(getSelectedLocation(getState()).line).toBe(12);
   });
@@ -234,10 +236,13 @@ describe("sources", () => {
 
     const baseSource = makeOriginalSource("base.js");
     await dispatch(actions.newSource(baseSource));
-    await dispatch(actions.selectSource(baseSource.id));
+    await dispatch(actions.selectSource(baseSource.source.id));
 
     await dispatch(
-      actions.selectSpecificLocation({ sourceId: baseSource.id, line: 1 })
+      actions.selectSpecificLocation({
+        sourceId: baseSource.source.id,
+        line: 1
+      })
     );
     expect(getSelectedLocation(getState()).line).toBe(1);
   });
@@ -246,11 +251,11 @@ describe("sources", () => {
     it("should automatically select a pending source", async () => {
       const { dispatch, getState } = createStore(sourceThreadClient);
       const baseSource = makeSource("base.js");
-      await dispatch(actions.selectSourceURL(baseSource.url));
+      await dispatch(actions.selectSourceURL(baseSource.source.url));
 
       expect(getSelectedSource(getState())).toBe(undefined);
       await dispatch(actions.newSource(baseSource));
-      expect(getSelectedSource(getState()).url).toBe(baseSource.url);
+      expect(getSelectedSource(getState()).url).toBe(baseSource.source.url);
     });
   });
 });

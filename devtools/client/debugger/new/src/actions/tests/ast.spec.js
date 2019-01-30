@@ -27,8 +27,8 @@ const {
 import { prefs } from "../../utils/prefs";
 
 const threadClient = {
-  sourceContents: async sourceId => ({
-    source: sourceTexts[sourceId],
+  sourceContents: async ({ source }) => ({
+    source: sourceTexts[source],
     contentType: "text/javascript"
   }),
   setPausePoints: async () => {},
@@ -69,11 +69,11 @@ describe("ast", () => {
       await dispatch(actions.loadSourceText({ id: "scopes.js" }));
       await dispatch(actions.setPausePoints("scopes.js"));
       await waitForState(store, state => {
-        const lines = getEmptyLines(state, source.id);
+        const lines = getEmptyLines(state, source.source.id);
         return lines && lines.length > 0;
       });
 
-      const emptyLines = getEmptyLines(getState(), source.id);
+      const emptyLines = getEmptyLines(getState(), source.source.id);
       expect(emptyLines).toMatchSnapshot();
     });
   });
@@ -88,15 +88,17 @@ describe("ast", () => {
 
       await dispatch(actions.newSource(source));
 
-      await dispatch(actions.loadSourceText(getSource(getState(), source.id)));
-      await dispatch(actions.setSourceMetaData(source.id));
+      await dispatch(
+        actions.loadSourceText(getSource(getState(), source.source.id))
+      );
+      await dispatch(actions.setSourceMetaData(source.source.id));
 
       await waitForState(store, state => {
-        const metaData = getSourceMetaData(state, source.id);
+        const metaData = getSourceMetaData(state, source.source.id);
         return metaData && metaData.framework;
       });
 
-      const sourceMetaData = getSourceMetaData(getState(), source.id);
+      const sourceMetaData = getSourceMetaData(getState(), source.source.id);
       expect(sourceMetaData.framework).toBe("React");
     });
 
@@ -122,9 +124,12 @@ describe("ast", () => {
         await dispatch(actions.newSource(base));
         await dispatch(actions.loadSourceText({ id: "base.js" }));
         await dispatch(actions.setSymbols("base.js"));
-        await waitForState(store, state => !isSymbolsLoading(state, base));
+        await waitForState(
+          store,
+          state => !isSymbolsLoading(state, base.source)
+        );
 
-        const baseSymbols = getSymbols(getState(), base);
+        const baseSymbols = getSymbols(getState(), base.source);
         expect(baseSymbols).toMatchSnapshot();
       });
     });

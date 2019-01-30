@@ -34,7 +34,7 @@ Object {
     "name": undefined,
     "offset": Object {
       "line": 7,
-      "sourceId": "foo.js/originalSource",
+      "sourceId": "foo.js",
       "sourceUrl": "http://localhost:8000/examples/foo.js",
     },
   },

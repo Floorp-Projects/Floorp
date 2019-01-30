@@ -82,7 +82,6 @@ function findOrCreateNode(
  */
 function traverseTree(
   url: ParsedURL,
-  thread: string,
   tree: TreeDirectory,
   debuggeeHost: ?string
 ): TreeNode {
@@ -167,7 +166,7 @@ export function addToTree(
     return;
   }
 
-  const finalNode = traverseTree(url, source.thread, tree, debuggeeHost);
+  const finalNode = traverseTree(url, tree, debuggeeHost);
 
   // $FlowIgnore
   finalNode.contents = addSourceToNode(finalNode, url, source);

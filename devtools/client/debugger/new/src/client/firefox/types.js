@@ -19,7 +19,8 @@ import type {
   Pause,
   Frame,
   SourceId,
-  Worker
+  Worker,
+  SourceActor
 } from "../../types";
 
 type URL = string;
@@ -117,6 +118,11 @@ export type SourcesPacket = {
   from: ActorId,
   sources: SourcePayload[]
 };
+
+export type CreateSourceResult = {|
+  +sourceActor: SourceActor,
+  +source: Source
+|};
 
 /**
  * Pause Packet sent when the server is in a "paused" state
@@ -318,7 +324,8 @@ export type FunctionGrip = {|
  * @static
  */
 export type SourceClient = {
-  source: () => Source,
+  source: () => { source: any, contentType?: string },
+  _activeThread: ThreadClient,
   actor: string,
   setBreakpoint: ({
     line: number,

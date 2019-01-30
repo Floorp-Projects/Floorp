@@ -30,9 +30,9 @@ const mockThreadClient = {
   getFrameScopes: async frame => frame.scope,
   setPausePoints: async () => {},
   setBreakpoint: () => new Promise(_resolve => {}),
-  sourceContents: sourceId => {
+  sourceContents: ({ source }) => {
     return new Promise((resolve, reject) => {
-      switch (sourceId) {
+      switch (source) {
         case "foo1":
           return resolve({
             source: "function foo1() {\n  return 5;\n}",
@@ -252,7 +252,7 @@ describe("pause", () => {
       const mockPauseInfo = createPauseInfo(generatedLocation);
 
       await dispatch(actions.newSource(makeSource("foo")));
-      await dispatch(actions.newSource(makeOriginalSource("foo")));
+      await dispatch(actions.newSource(makeSource("foo-original")));
       await dispatch(actions.loadSourceText({ id: "foo" }));
       await dispatch(actions.loadSourceText({ id: "foo-original" }));
       await dispatch(actions.setSymbols("foo-original"));
