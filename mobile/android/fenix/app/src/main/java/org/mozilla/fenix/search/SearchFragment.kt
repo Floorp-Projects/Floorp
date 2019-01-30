@@ -4,23 +4,23 @@
 
 package org.mozilla.fenix.search
 
-import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.navigation.Navigation
-import kotlinx.android.synthetic.main.fragment_search.*
 import kotlinx.android.synthetic.main.fragment_search.view.*
-import mozilla.components.browser.domains.autocomplete.ShippedDomainsProvider
 import org.mozilla.fenix.R
-import org.mozilla.fenix.components.toolbar.ToolbarIntegration
-import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.mvi.ActionBusFactory
+import org.mozilla.fenix.search.awesomebar.AwesomeBarAction
+import org.mozilla.fenix.search.awesomebar.AwesomeBarChange
+import org.mozilla.fenix.search.awesomebar.AwesomeBarComponent
+import org.mozilla.fenix.search.toolbar.*
 
 class SearchFragment : Fragment() {
-    private lateinit var searchComponent: SearchComponent
+    private lateinit var toolbarComponent: ToolbarComponent
+    private lateinit var awesomeBarComponent: AwesomeBarComponent
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -28,40 +28,54 @@ class SearchFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_search, container, false)
-        searchComponent = SearchComponent(view.toolbar_wrapper, ActionBusFactory.get(this),
-            { v -> transitionToBrowser(v) })
+        toolbarComponent = ToolbarComponent(view.toolbar_wrapper, ActionBusFactory.get(this))
+        awesomeBarComponent = AwesomeBarComponent(view.search_layout, ActionBusFactory.get(this))
         return view
     }
 
     override fun onResume() {
         super.onResume()
-        searchComponent.editMode()
+        toolbarComponent.editMode()
     }
 
-    @SuppressLint("CheckResult")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         layoutComponents(view.search_layout)
 
-        lifecycle.addObserver(
-            ToolbarIntegration(
-                requireContext(),
-                searchComponent.getView(),
-                ShippedDomainsProvider().also { it.initialize(requireContext()) },
-                requireComponents.core.historyStorage
-            )
-        )
+        lifecycle.addObserver((toolbarComponent.uiView as ToolbarUIView).toolbarIntegration)
 
-        toolbar_wrapper.clipToOutline = false
+        view.toolbar_wrapper.clipToOutline = false
+
+        toolbarComponent
+            .getModelChangeEvents<SearchChange>()
+            .subscribe {
+                when (it) {
+                    is SearchChange.QueryChanged -> {
+                        ActionBusFactory.get(this).emit(AwesomeBarChange::class.java, AwesomeBarChange.UpdateQuery(it.query))
+                    }
+                }
+            }
+
+        toolbarComponent
+            .getUserInteractionEvents<SearchAction>()
+            .subscribe {
+                when (it) {
+                    is SearchAction.UrlCommitted -> transitionToBrowser()
+                }
+            }
+
+        awesomeBarComponent
+            .getUserInteractionEvents<AwesomeBarAction>()
+            .subscribe {
+                when (it) {
+                    is AwesomeBarAction.ItemSelected -> transitionToBrowser()
+                }
+            }
     }
 
-    private fun transitionToBrowser(toolbar: View) {
-        Navigation.findNavController(toolbar)
+    private fun transitionToBrowser() {
+        Navigation.findNavController(view!!.search_layout)
             .navigate(R.id.action_searchFragment_to_browserFragment, null, null)
-    }
-
-    companion object {
-        const val toolbarTextSizeSp = 14f
     }
 }

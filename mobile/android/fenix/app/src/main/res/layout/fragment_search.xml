@@ -24,22 +24,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"/>
 
-    <mozilla.components.browser.awesomebar.BrowserAwesomeBar
-        android:id="@+id/awesomeBar"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:padding="4dp"
-        android:visibility="gone"
-        android:layout_marginTop="16dp"
-        app:layout_constraintTop_toBottomOf="@id/toolbar_wrapper"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/pill_wrapper"
-        mozac:awesomeBarTitleTextColor="#212121"
-        mozac:awesomeBarDescriptionTextColor="#6b6b6b"
-        mozac:awesomeBarChipTextColor="#ffffff"
-        mozac:awesomeBarChipBackgroundColor="#444444" />
-
     <LinearLayout
         android:id="@+id/pill_wrapper"
         android:background="@color/offwhite"

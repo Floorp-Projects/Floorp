@@ -8,6 +8,7 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.PARENT_ID
 import androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.UNSET
 import androidx.recyclerview.widget.LinearLayoutManager
+import kotlinx.android.synthetic.main.component_awesomebar.*
 import kotlinx.android.synthetic.main.fragment_search.*
 import mozilla.components.support.base.log.logger.Logger
 import org.jetbrains.anko.constraint.layout.ConstraintSetBuilder.Side.BOTTOM
