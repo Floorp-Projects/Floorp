@@ -1251,7 +1251,7 @@ Toolbox.prototype = {
       id: "command-button-frames",
       description: L10N.getStr("toolbox.frames.tooltip"),
       isTargetSupported: target => {
-        return target.traits.frames;
+        return target.activeTab && target.activeTab.traits.frames;
       },
       isCurrentlyVisible: () => {
         const hasFrames = this.frameMap.size > 1;
@@ -1346,7 +1346,7 @@ Toolbox.prototype = {
       onClick: this._onPickerClick,
       isInStartContainer: true,
       isTargetSupported: target => {
-        return target.traits.frames;
+        return target.activeTab && target.activeTab.traits.frames;
       },
     });
 
@@ -1361,15 +1361,17 @@ Toolbox.prototype = {
     const pref = "devtools.cache.disabled";
     const cacheDisabled = Services.prefs.getBoolPref(pref);
 
-    await this.target.reconfigure({
-      options: {
-        "cacheDisabled": cacheDisabled,
-      },
-    });
+    if (this.target.activeTab) {
+      await this.target.activeTab.reconfigure({
+        options: {
+          "cacheDisabled": cacheDisabled,
+        },
+      });
 
-    // This event is only emitted for tests in order to know when to reload
-    if (flags.testing) {
-      this.emit("cache-reconfigured");
+      // This event is only emitted for tests in order to know when to reload
+      if (flags.testing) {
+        this.emit("cache-reconfigured");
+      }
     }
   },
 
@@ -1382,11 +1384,13 @@ Toolbox.prototype = {
     const serviceWorkersTestingEnabled =
       Services.prefs.getBoolPref(pref) || false;
 
-    this.target.reconfigure({
-      options: {
-        "serviceWorkersTestingEnabled": serviceWorkersTestingEnabled,
-      },
-    });
+    if (this.target.activeTab) {
+      this.target.activeTab.reconfigure({
+        options: {
+          "serviceWorkersTestingEnabled": serviceWorkersTestingEnabled,
+        },
+      });
+    }
   },
 
   /**
@@ -1430,7 +1434,7 @@ Toolbox.prototype = {
       this.telemetry.toolClosed("paintflashing", this.sessionId, this);
     }
     this.isPaintFlashing = !this.isPaintFlashing;
-    return this.target.reconfigure({
+    return this.target.activeTab.reconfigure({
       options: {
         "paintFlashing": this.isPaintFlashing,
       },
@@ -2200,7 +2204,7 @@ Toolbox.prototype = {
       // Recording tabs need to be reloaded in a new content process.
       reloadAndRecordTab();
     } else {
-      this.target.reload({ force: force });
+      this.target.activeTab.reload({ force: force });
     }
   },
 
@@ -2368,12 +2372,12 @@ Toolbox.prototype = {
   },
 
   _listFrames: async function(event) {
-    if (!this.target.traits.frames) {
+    if (!this.target.activeTab || !this.target.activeTab.traits.frames) {
       // We are not targetting a regular BrowsingContextTargetActor
       // it can be either an addon or browser toolbox actor
       return promise.resolve();
     }
-    const { frames } = await this.target.listFrames();
+    const { frames } = await this.target.activeTab.listFrames();
     this._updateFrames({ frames });
   },
 
@@ -2383,7 +2387,7 @@ Toolbox.prototype = {
   onSelectFrame: function(frameId) {
     // Send packet to the backend to select specified frame and
     // wait for 'frameUpdate' event packet to update the UI.
-    this.target.switchToFrame({ windowId: frameId });
+    this.target.activeTab.switchToFrame({ windowId: frameId });
   },
 
   /**

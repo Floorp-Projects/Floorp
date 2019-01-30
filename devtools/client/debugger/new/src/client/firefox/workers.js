@@ -23,7 +23,7 @@ export async function updateWorkerClients({
 
   const newWorkerClients = {};
 
-  const { workers } = await tabTarget.listWorkers();
+  const { workers } = await tabTarget.activeTab.listWorkers();
   for (const workerTargetFront of workers) {
     await workerTargetFront.attach();
     const [, workerThread] = await workerTargetFront.attachThread();

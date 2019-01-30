@@ -17,15 +17,16 @@ add_task(async () => {
   const tab = await addTab(TAB1_URL);
   const target = await TargetFactory.forTab(tab);
   await target.attach();
+  const targetFront = target.activeTab;
 
-  await testNavigate(target);
+  await testNavigate(targetFront);
   await testDetach(target);
 });
 
-function testNavigate(target) {
+function testNavigate(targetFront) {
   const outstanding = [promise.defer(), promise.defer()];
 
-  target.on("tabNavigated", function onTabNavigated(packet) {
+  targetFront.on("tabNavigated", function onTabNavigated(packet) {
     is(packet.url.split("/").pop(), TAB2_FILE,
       "Got a tab navigation notification.");
 
@@ -36,7 +37,7 @@ function testNavigate(target) {
       outstanding[0].resolve();
     } else {
       ok(true, "Tab finished navigating.");
-      target.off("tabNavigated", onTabNavigated);
+      targetFront.off("tabNavigated", onTabNavigated);
       outstanding[1].resolve();
     }
   });

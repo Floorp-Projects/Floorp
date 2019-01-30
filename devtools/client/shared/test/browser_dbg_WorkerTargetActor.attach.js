@@ -29,7 +29,8 @@ function test() {
     const tab = yield addTab(TAB1_URL);
     const target = yield TargetFactory.forTab(tab);
     yield target.attach();
-    yield listWorkers(target);
+    const targetFront = target.activeTab;
+    yield listWorkers(targetFront);
 
     // If a page still has pending network requests, it will not be moved into
     // the bfcache. Consequently, we cannot use waitForWorkerListChanged here,
@@ -37,7 +38,7 @@ function test() {
     // registered. Instead, we have to wait for the promise returned by
     // createWorker in the tab to be resolved.
     yield createWorkerInTab(tab, WORKER1_URL);
-    let { workers } = yield listWorkers(target);
+    let { workers } = yield listWorkers(targetFront);
     let workerTargetFront1 = findWorker(workers, WORKER1_URL);
     yield workerTargetFront1.attach();
     is(workerTargetFront1.isClosed, false, "worker in tab 1 should not be closed");
@@ -49,7 +50,7 @@ function test() {
     is(workerTargetFront1.isClosed, true, "worker in tab 1 should be closed");
 
     yield createWorkerInTab(tab, WORKER2_URL);
-    ({ workers } = yield listWorkers(target));
+    ({ workers } = yield listWorkers(targetFront));
     const workerTargetFront2 = findWorker(workers, WORKER2_URL);
     yield workerTargetFront2.attach();
     is(workerTargetFront2.isClosed, false, "worker in tab 2 should not be closed");
@@ -60,7 +61,7 @@ function test() {
     yield waitForWorkerClose(workerTargetFront2);
     is(workerTargetFront2.isClosed, true, "worker in tab 2 should be closed");
 
-    ({ workers } = yield listWorkers(target));
+    ({ workers } = yield listWorkers(targetFront));
     workerTargetFront1 = findWorker(workers, WORKER1_URL);
     yield workerTargetFront1.attach();
     is(workerTargetFront1.isClosed, false, "worker in tab 1 should not be closed");

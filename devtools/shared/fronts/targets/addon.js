@@ -75,17 +75,11 @@ class AddonTargetFront extends FrontClassWithSpec(addonTargetSpec) {
   }
 
   async attach() {
-    if (this._attach) {
-      return this._attach;
-    }
-    this._attach = (async () => {
-      const response = await super.attach();
+    const response = await super.attach();
 
-      this.threadActor = response.threadActor;
+    this.threadActor = response.threadActor;
 
-      return this.attachConsole();
-    })();
-    return this._attach;
+    return response;
   }
 
   reconfigure() {
