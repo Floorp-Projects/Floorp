@@ -98,7 +98,7 @@
 
           let onGlobalActors = waitForUpdate(win, "runtime-global-actors");
 
-          let connectionsChanged = waitForConnectionChange("opened", 2);
+          let connectionsChanged = waitForConnectionChange("opened");
           items[0].click();
 
           ok(win.document.querySelector("window").classList.contains("busy"),
@@ -106,7 +106,7 @@
           await win.UI._busyPromise;
 
           await connectionsChanged;
-          is(Object.keys(DebuggerServer._connections).length, 2, "Connected");
+          is(Object.keys(DebuggerServer._connections).length, 1, "Connected");
 
           await onGlobalActors;
 
@@ -128,7 +128,7 @@
           ok(!isPlayActive(), "play button is enabled");
           ok(!isStopActive(), "stop button is disabled");
 
-          connectionsChanged = waitForConnectionChange("closed", 2);
+          connectionsChanged = waitForConnectionChange("closed");
           await win.Cmds.disconnectRuntime();
 
           await connectionsChanged;
@@ -138,7 +138,7 @@
           ok(!isPlayActive(), "play button is disabled");
           ok(!isStopActive(), "stop button is disabled");
 
-          connectionsChanged = waitForConnectionChange("opened", 2);
+          connectionsChanged = waitForConnectionChange("opened");
           onGlobalActors = waitForUpdate(win, "runtime-global-actors");
           const onRuntimeTargets = waitForUpdate(win, "runtime-targets");
           docRuntime.querySelectorAll(".runtime-panel-item-other")[1].click();
@@ -146,7 +146,7 @@
           await onGlobalActors;
           await onRuntimeTargets;
 
-          is(Object.keys(DebuggerServer._connections).length, 2, "Locally connected");
+          is(Object.keys(DebuggerServer._connections).length, 1, "Locally connected");
 
           ok(win.AppManager.isMainProcessDebuggable(), "Main process available");
 
