@@ -167,8 +167,6 @@
 @RESPATH@/components/toolkitsearch.manifest
 @RESPATH@/components/WebVTT.manifest
 @RESPATH@/components/WebVTTParserWrapper.js
-@RESPATH@/components/nsHelperAppDlg.manifest
-@RESPATH@/components/nsHelperAppDlg.js
 @RESPATH@/components/extensions.manifest
 #ifdef MOZ_UPDATER
 @RESPATH@/components/nsUpdateService.manifest
