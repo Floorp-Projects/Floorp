@@ -30,3 +30,7 @@ platform(linux,mac) fuzzy(1,2) == perspective-shadow.yaml perspective-shadow.png
 == complex-preserve-3d.yaml blank.yaml
 platform(linux,mac) fuzzy(9,348) == perspective-border-radius.yaml perspective-border-radius.png
 == snapped-preserve-3d.yaml snapped-preserve-3d-ref.yaml
+platform(linux,mac) fuzzy(1,122) == border-scale.yaml border-scale.png
+platform(linux,mac) fuzzy(1,16) == border-scale-2.yaml border-scale-2.png
+platform(linux,mac) fuzzy(1,69) == border-scale-3.yaml border-scale-3.png
+platform(linux,mac) fuzzy(1,74) == border-scale-4.yaml border-scale-4.png
