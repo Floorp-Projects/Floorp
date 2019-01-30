@@ -1843,10 +1843,8 @@ void HttpChannelChild::ProcessNotifyCookieAllowed() {
       NS_DISPATCH_NORMAL);
 }
 
-void HttpChannelChild::ProcessNotifyTrackingCookieBlocked(
-    uint32_t aRejectedReason) {
-  LOG(("HttpChannelChild::ProcessNotifyTrackingCookieBlocked [this=%p]\n",
-       this));
+void HttpChannelChild::ProcessNotifyCookieBlocked(uint32_t aRejectedReason) {
+  LOG(("HttpChannelChild::ProcessNotifyCookieBlocked [this=%p]\n", this));
   MOZ_ASSERT(OnSocketThread());
 
   RefPtr<HttpChannelChild> self = this;
