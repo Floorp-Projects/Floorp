@@ -481,6 +481,14 @@ static NS_tchar *get_valid_path(NS_tchar **line, bool isdir = false) {
   return path;
 }
 
+/*
+ * Gets a quoted path. The return value is malloc'd and it is the responsibility
+ * of the caller to free it.
+ *
+ * @param  path
+ *         The path to quote.
+ * @return On success the quoted path and nullptr otherwise.
+ */
 static NS_tchar *get_quoted_path(const NS_tchar *path) {
   size_t lenQuote = NS_tstrlen(kQuote);
   size_t lenPath = NS_tstrlen(path);
@@ -3807,6 +3815,7 @@ int add_dir_entries(const NS_tchar *dirpath, ActionList *list) {
         if (rv) {
           LOG(("add_dir_entries Parse error on recurse: " LOG_S ", err: %d",
                quotedpath, rv));
+          free(quotedpath);
           return rv;
         }
         free(quotedpath);
@@ -3892,9 +3901,11 @@ int add_dir_entries(const NS_tchar *dirpath, ActionList *list) {
         if (rv) {
           LOG(("add_dir_entries Parse error on recurse: " LOG_S ", err: %d",
                quotedpath, rv));
+          free(quotedpath);
           closedir(dir);
           return rv;
         }
+        free(quotedpath);
 
         list->Append(action);
       }
@@ -3915,6 +3926,7 @@ int add_dir_entries(const NS_tchar *dirpath, ActionList *list) {
     } else {
       list->Append(action);
     }
+    free(quotedpath);
 
     return rv;
   }
@@ -4035,6 +4047,14 @@ int add_dir_entries(const NS_tchar *dirpath, ActionList *list) {
 }
 #endif
 
+/*
+ * Gets the contents of an update manifest file. The return value is malloc'd
+ * and it is the responsibility of the caller to free it.
+ *
+ * @param  manifest
+ *         The full path to the manifest file.
+ * @return On success the contents of the manifest and nullptr otherwise.
+ */
 static NS_tchar *GetManifestContents(const NS_tchar *manifest) {
   AutoFile mfile(NS_tfopen(manifest, NS_T("rb")));
   if (mfile == nullptr) {
@@ -4069,11 +4089,10 @@ static NS_tchar *GetManifestContents(const NS_tchar *manifest) {
     r -= c;
     rb += c;
   }
-  mbuf[ms.st_size] = '\0';
-  rb = mbuf;
+  *rb = '\0';
 
 #ifndef XP_WIN
-  return rb;
+  return mbuf;
 #else
     NS_tchar *wrb = (NS_tchar *)malloc((ms.st_size + 1) * sizeof(NS_tchar));
     if (!wrb) {
@@ -4081,7 +4100,7 @@ static NS_tchar *GetManifestContents(const NS_tchar *manifest) {
       return nullptr;
     }
 
-    if (!MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, rb, -1, wrb,
+    if (!MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, mbuf, -1, wrb,
                              ms.st_size + 1)) {
       LOG(("GetManifestContents: error converting utf8 to utf16le: %d",
            GetLastError()));
@@ -4104,8 +4123,8 @@ int AddPreCompleteActions(ActionList *list) {
         get_full_path(NS_T("precomplete")));
 #endif
 
-  NS_tchar *rb = GetManifestContents(manifestPath.get());
-  if (rb == nullptr) {
+  NS_tchar *buf = GetManifestContents(manifestPath.get());
+  if (!buf) {
     LOG(
         ("AddPreCompleteActions: error getting contents of precomplete "
          "manifest"));
@@ -4113,6 +4132,7 @@ int AddPreCompleteActions(ActionList *list) {
     // generation scripts enforce the presence of a precomplete manifest.
     return OK;
   }
+  NS_tchar *rb = buf;
 
   int rv;
   NS_tchar *line;
@@ -4125,6 +4145,7 @@ int AddPreCompleteActions(ActionList *list) {
     NS_tchar *token = mstrtok(kWhitespace, &line);
     if (!token) {
       LOG(("AddPreCompleteActions: token not found in manifest"));
+      free(buf);
       return PARSE_ERROR;
     }
 
@@ -4138,21 +4159,25 @@ int AddPreCompleteActions(ActionList *list) {
       action = new RemoveDir();
     } else {
       LOG(("AddPreCompleteActions: unknown token: " LOG_S, token));
+      free(buf);
       return PARSE_ERROR;
     }
 
     if (!action) {
+      free(buf);
       return BAD_ACTION_ERROR;
     }
 
     rv = action->Parse(line);
     if (rv) {
+      free(buf);
       return rv;
     }
 
     list->Append(action);
   }
 
+  free(buf);
   return OK;
 }
 
@@ -4169,17 +4194,17 @@ int DoUpdate() {
     return rv;
   }
 
-  NS_tchar *rb = GetManifestContents(manifest);
+  NS_tchar *buf = GetManifestContents(manifest);
   NS_tremove(manifest);
-  if (rb == nullptr) {
+  if (!buf) {
     LOG(("DoUpdate: error opening manifest file: " LOG_S, manifest));
     return READ_ERROR;
   }
+  NS_tchar *rb = buf;
 
   ActionList list;
   NS_tchar *line;
   bool isFirstAction = true;
-
   while ((line = mstrtok(kNL, &rb)) != 0) {
     // skip comments
     if (*line == NS_T('#')) {
@@ -4189,6 +4214,7 @@ int DoUpdate() {
     NS_tchar *token = mstrtok(kWhitespace, &line);
     if (!token) {
       LOG(("DoUpdate: token not found in manifest"));
+      free(buf);
       return PARSE_ERROR;
     }
 
@@ -4202,6 +4228,7 @@ int DoUpdate() {
         if (NS_tstrcmp(type, NS_T("complete")) == 0) {
           rv = AddPreCompleteActions(&list);
           if (rv) {
+            free(buf);
             return rv;
           }
         }
@@ -4217,15 +4244,18 @@ int DoUpdate() {
     } else if (NS_tstrcmp(token, NS_T("rmrfdir")) == 0) {  // rmdir recursive
       const NS_tchar *reldirpath = mstrtok(kQuote, &line);
       if (!reldirpath) {
+        free(buf);
         return PARSE_ERROR;
       }
 
       if (reldirpath[NS_tstrlen(reldirpath) - 1] != NS_T('/')) {
+        free(buf);
         return PARSE_ERROR;
       }
 
       rv = add_dir_entries(reldirpath, &list);
       if (rv) {
+        free(buf);
         return rv;
       }
 
@@ -4243,15 +4273,18 @@ int DoUpdate() {
       action = new PatchIfFile();
     } else {
       LOG(("DoUpdate: unknown token: " LOG_S, token));
+      free(buf);
       return PARSE_ERROR;
     }
 
     if (!action) {
+      free(buf);
       return BAD_ACTION_ERROR;
     }
 
     rv = action->Parse(line);
     if (rv) {
+      free(buf);
       return rv;
     }
 
@@ -4260,11 +4293,13 @@ int DoUpdate() {
 
   rv = list.Prepare();
   if (rv) {
+    free(buf);
     return rv;
   }
 
   rv = list.Execute();
 
   list.Finish(rv);
+  free(buf);
   return rv;
 }
