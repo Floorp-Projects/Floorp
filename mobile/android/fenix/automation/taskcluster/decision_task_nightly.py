@@ -45,7 +45,8 @@ def generate_build_task(apks, is_staging):
             ' -s project/mobile/fenix/sentry -k dsn -f .sentry_token'
             ' && ./gradlew --no-daemon -PcrashReports=true clean test assembleRelease'),
         features={
-            "chainOfTrust": True
+            "chainOfTrust": True,
+            "taskClusterProxy": True
         },
         artifacts=artifacts,
         worker_type='android-components-g' if is_staging else 'gecko-focus',
