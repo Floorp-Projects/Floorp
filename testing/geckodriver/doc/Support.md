@@ -7,7 +7,7 @@ and required versions of Selenium and Firefox:
 <style type="text/css">
   table { width: 100%; margin-bottom: 2em; }
   table, th, td { border: solid gray 1px; }
-  td { padding: 5px 10px; text-align: center; }
+  td, th { padding: 5px 10px; text-align: center; }
 </style>
 
 <table>
