@@ -24,16 +24,16 @@ const startupPhases = {
   // Anything loaded during app-startup must have a compelling reason
   // to run before we have even selected the user profile.
   // Consider loading your code after first paint instead,
-  // eg. from nsBrowserGlue.js' _onFirstWindowLoaded method).
+  // eg. from BrowserGlue.jsm' _onFirstWindowLoaded method).
   "before profile selection": {whitelist: {
     components: new Set([
-      "nsBrowserGlue.js",
       "MainProcessSingleton.js",
 
       // Bugs to fix: The following components shouldn't be initialized that early.
       "PushComponents.js", // bug 1369436
     ]),
     modules: new Set([
+      "resource:///modules/BrowserGlue.jsm",
       "resource://gre/modules/AppConstants.jsm",
       "resource://gre/modules/ActorManagerParent.jsm",
       "resource://gre/modules/CustomElementsListener.jsm",
