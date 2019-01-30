@@ -98,9 +98,8 @@ function onMessage({ data }) {
 async function connectAndAttachTab(tab) {
   const target = await TargetFactory.forTab(tab);
   await target.attach();
-  const targetFront = target.activeTab;
-  const actorID = targetFront.targetForm.actor;
-  targetFront.on("tabNavigated", function(packet) {
+  const actorID = target.targetForm.actor;
+  target.on("tabNavigated", function(packet) {
     assertEvent("tabNavigated", packet);
   });
   return { target, actorID };

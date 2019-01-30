@@ -99,7 +99,7 @@ async function onTab() {
   // Detach from the previous thread.
   await client.activeThread.detach();
   // Detach from the previous tab.
-  await targetFront.activeTab.detach();
+  await targetFront.detach();
   // Start debugging the new tab.
   start();
 }
@@ -209,7 +209,7 @@ function onTab() {
   // Detach from the previous thread.
   client.activeThread.detach(() => {
     // Detach from the previous tab.
-    client.activeTab.detach(() => {
+    client.detach(() => {
       // Start debugging the new tab.
       debugTab();
     });
