@@ -43,19 +43,10 @@
 #  define HAVE_ASM 0
 #endif
 
-// Set memory aligment
-#if defined(__ANDROID__) && (ARCH_ARM == 1 || ARCH_X86_32 == 1)
-#  define HAVE_MEMALIGN 1
-#elif ARCH_X86_64 == 1 && (defined(_WIN32) || defined(__CYGWIN__)) && \
-    defined(MOZ_ASAN)
-#  define HAVE_ALIGNED_MALLOC 1
-#else
-#  define HAVE_POSIX_MEMALIGN 1
-#endif
-
-// unistd.h is used by tools, which we do not
-// build, so we do not really care.
-#define HAVE_UNISTD_H 1
+// The following macros are defined from autoconf
+// according to the system configuration.
+// (HAVE_MEMALIGN | HAVE_ALIGNED_MALLOC | HAVE_POSIX_MEMALIGN)
+// HAVE_UNISTD_H
 
 // Important when asm is enabled
 #if defined(__APPLE__)
