@@ -9,10 +9,8 @@
 
 #include "nsISubstitutingProtocolHandler.h"
 
-#include "nsIOService.h"
 #include "nsISubstitutionObserver.h"
 #include "nsDataHashtable.h"
-#include "nsStandardURL.h"
 #include "mozilla/chrome/RegistryMessageUtils.h"
 #include "mozilla/Maybe.h"
 
@@ -115,49 +113,6 @@ class SubstitutingProtocolHandler {
   // Enforcing this for ye olde resource:// URIs could carry compat risks, so
   // we just try to enforce it on new protocols going forward.
   bool mEnforceFileOrJar;
-};
-
-// SubstitutingURL : overrides nsStandardURL::GetFile to provide nsIFile
-// resolution
-class SubstitutingURL : public nsStandardURL {
- public:
-  virtual nsStandardURL* StartClone() override;
-  virtual MOZ_MUST_USE nsresult EnsureFile() override;
-  NS_IMETHOD GetClassIDNoAlloc(nsCID* aCID) override;
-
- private:
-  explicit SubstitutingURL() : nsStandardURL(true) {}
-  explicit SubstitutingURL(bool aSupportsFileURL) : nsStandardURL(true) {
-    MOZ_ASSERT(aSupportsFileURL);
-  }
-  virtual nsresult Clone(nsIURI** aURI) override {
-    return nsStandardURL::Clone(aURI);
-  }
-
- public:
-  class Mutator : public TemplatedMutator<SubstitutingURL> {
-    NS_DECL_ISUPPORTS
-   public:
-    explicit Mutator() = default;
-
-   private:
-    virtual ~Mutator() = default;
-
-    SubstitutingURL* Create() override { return new SubstitutingURL(); }
-  };
-
-  NS_IMETHOD Mutate(nsIURIMutator** aMutator) override {
-    RefPtr<SubstitutingURL::Mutator> mutator = new SubstitutingURL::Mutator();
-    nsresult rv = mutator->InitFromURI(this);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-    mutator.forget(aMutator);
-    return NS_OK;
-  }
-
-  friend BaseURIMutator<SubstitutingURL>;
-  friend TemplatedMutator<SubstitutingURL>;
 };
 
 }  // namespace net

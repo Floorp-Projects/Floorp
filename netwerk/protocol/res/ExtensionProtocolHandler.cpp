@@ -39,6 +39,7 @@
 #include "nsIOutputStream.h"
 #include "nsIStreamConverterService.h"
 #include "nsNetUtil.h"
+#include "nsURLHelper.h"
 #include "prio.h"
 #include "SimpleChannel.h"
 

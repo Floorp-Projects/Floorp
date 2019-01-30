@@ -373,6 +373,20 @@ class IPDLCollection(ContextDerived):
         return sorted(set(p for p, _ in self.unified_source_mapping))
 
 
+class XPCOMComponentManifests(ContextDerived):
+    """Collects XPCOM manifest files during the build."""
+
+    def __init__(self, context):
+        ContextDerived.__init__(self, context)
+        self.manifests = set()
+
+    def all_sources(self):
+        return self.manifests
+
+    def all_source_files(self):
+        return []
+
+
 class LinkageWrongKindError(Exception):
     """Error thrown when trying to link objects of the wrong kind"""
 

@@ -8,6 +8,7 @@
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/CORSMode.h"
+#include "mozilla/Components.h"
 #include "mozilla/dom/ClientInfo.h"
 #include "mozilla/dom/HTMLLinkElement.h"
 #include "mozilla/dom/ServiceWorkerDescriptor.h"
@@ -18,7 +19,6 @@
 #include "nsICategoryManager.h"
 #include "nsIObserverService.h"
 #include "nsIWebProgress.h"
-#include "nsCURILoader.h"
 #include "nsICacheInfoChannel.h"
 #include "nsIHttpChannel.h"
 #include "nsIURL.h"
@@ -481,16 +481,14 @@ void nsPrefetchService::DispatchEvent(nsPrefetchNode *node, bool aSuccess) {
 
 void nsPrefetchService::AddProgressListener() {
   // Register as an observer for the document loader
-  nsCOMPtr<nsIWebProgress> progress =
-      do_GetService(NS_DOCUMENTLOADER_SERVICE_CONTRACTID);
+  nsCOMPtr<nsIWebProgress> progress = components::DocLoader::Service();
   if (progress)
     progress->AddProgressListener(this, nsIWebProgress::NOTIFY_STATE_DOCUMENT);
 }
 
 void nsPrefetchService::RemoveProgressListener() {
   // Register as an observer for the document loader
-  nsCOMPtr<nsIWebProgress> progress =
-      do_GetService(NS_DOCUMENTLOADER_SERVICE_CONTRACTID);
+  nsCOMPtr<nsIWebProgress> progress = components::DocLoader::Service();
   if (progress) progress->RemoveProgressListener(this);
 }
 

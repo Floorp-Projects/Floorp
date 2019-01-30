@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "xpcprivate.h"
-#include "mozilla/ModuleUtils.h"
 #include "mozJSSubScriptLoader.h"
 
 /* Module implementation for the xpconnect library. */
@@ -21,17 +20,6 @@
   }
 
 #define MOZJSSUBSCRIPTLOADER_CONTRACTID "@mozilla.org/moz/jssubscript-loader;1"
-
-NS_GENERIC_FACTORY_CONSTRUCTOR(mozJSSubScriptLoader)
-
-NS_DEFINE_NAMED_CID(MOZ_JSSUBSCRIPTLOADER_CID);
-
-#define XPCONNECT_CIDENTRIES                    \
-  {&kMOZ_JSSUBSCRIPTLOADER_CID, false, nullptr, \
-   mozJSSubScriptLoaderConstructor},
-
-#define XPCONNECT_CONTRACTS \
-  {MOZJSSUBSCRIPTLOADER_CONTRACTID, &kMOZ_JSSUBSCRIPTLOADER_CID},
 
 nsresult xpcModuleCtor();
 void xpcModuleDtor();

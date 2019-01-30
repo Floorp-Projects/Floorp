@@ -20,6 +20,7 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/Casting.h"
+#include "mozilla/Components.h"
 #include "mozilla/Encoding.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/HTMLEditor.h"
@@ -160,7 +161,6 @@
 #include "nsArray.h"
 #include "nsArrayUtils.h"
 #include "nsAutoPtr.h"
-#include "nsCDefaultURIFixup.h"
 #include "nsCExternalHandlerService.h"
 #include "nsContentDLF.h"
 #include "nsContentPolicyUtils.h"  // NS_CheckContentLoadPolicy(...)
@@ -399,7 +399,8 @@ nsDocShell::nsDocShell(BrowsingContext* aBrowsingContext)
     NS_ASSERTION(sURIFixup == nullptr,
                  "Huh, sURIFixup not null in first nsDocShell ctor!");
 
-    CallGetService(NS_URIFIXUP_CONTRACTID, &sURIFixup);
+    nsCOMPtr<nsIURIFixup> uriFixup = components::URIFixup::Service();
+    uriFixup.forget(&sURIFixup);
   }
 
   MOZ_LOG(gDocShellLeakLog, LogLevel::Debug, ("DOCSHELL %p created\n", this));
@@ -9628,13 +9629,12 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
     return NS_OK;
   }
 
-  nsresult rv;
-  nsCOMPtr<nsIURILoader> uriLoader =
-      do_GetService(NS_URI_LOADER_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) {
-    return rv;
+  nsCOMPtr<nsIURILoader> uriLoader = components::URILoader::Service();
+  if (NS_WARN_IF(!uriLoader)) {
+    return NS_ERROR_UNEXPECTED;
   }
 
+  nsresult rv;
   if (IsFrame()) {
     MOZ_ASSERT(aContentPolicyType == nsIContentPolicy::TYPE_INTERNAL_IFRAME ||
                    aContentPolicyType == nsIContentPolicy::TYPE_INTERNAL_FRAME,
@@ -11267,7 +11267,7 @@ nsresult nsDocShell::AddToSessionHistory(nsIURI* aURI, nsIChannel* aChannel,
 
   // Create a new entry if necessary.
   if (!entry) {
-    entry = do_CreateInstance(NS_SHENTRY_CONTRACTID);
+    entry = components::SHEntry::Create();
 
     if (!entry) {
       return NS_ERROR_OUT_OF_MEMORY;
