@@ -201,8 +201,6 @@
 @RESPATH@/browser/components/payments.manifest
 @RESPATH@/browser/components/paymentUIService.js
 #endif
-@RESPATH@/components/TooltipTextProvider.js
-@RESPATH@/components/TooltipTextProvider.manifest
 @RESPATH@/components/WebVTT.manifest
 @RESPATH@/components/WebVTTParserWrapper.js
 @RESPATH@/components/nsHelperAppDlg.manifest
