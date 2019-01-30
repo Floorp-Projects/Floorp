@@ -6,6 +6,7 @@ package org.mozilla.fenix.browser
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.transition.TransitionInflater
 import android.view.LayoutInflater
@@ -22,10 +23,12 @@ import mozilla.components.support.ktx.android.arch.lifecycle.addObservers
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.toolbar.ToolbarIntegration
 import org.mozilla.fenix.ext.requireComponents
+import mozilla.components.feature.prompts.PromptFeature
 
 class BrowserFragment : Fragment() {
 
     private lateinit var downloadsFeature: DownloadsFeature
+    private lateinit var promptsFeature: PromptFeature
     private lateinit var sessionFeature: SessionFeature
 
     override fun onCreateView(
@@ -57,6 +60,15 @@ class BrowserFragment : Fragment() {
             }
         )
 
+        promptsFeature = PromptFeature(
+            fragment = this,
+            sessionManager = sessionManager,
+            fragmentManager = requireFragmentManager(),
+            onNeedToRequestPermissions = { permissions ->
+                requestPermissions(permissions, REQUEST_CODE_PROMPT_PERMISSIONS)
+            }
+        )
+
         sessionFeature = SessionFeature(
             sessionManager,
             SessionUseCases(sessionManager),
@@ -72,6 +84,7 @@ class BrowserFragment : Fragment() {
 
         lifecycle.addObservers(
             downloadsFeature,
+            promptsFeature,
             sessionFeature,
             ToolbarIntegration(requireContext(),
                 toolbar,
@@ -83,10 +96,16 @@ class BrowserFragment : Fragment() {
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         when (requestCode) {
             REQUEST_CODE_DOWNLOAD_PERMISSIONS -> downloadsFeature.onPermissionsResult(permissions, grantResults)
+            REQUEST_CODE_PROMPT_PERMISSIONS -> promptsFeature.onPermissionsResult(permissions, grantResults)
         }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        promptsFeature.onActivityResult(requestCode, resultCode, data)
     }
 
     companion object {
         private const val REQUEST_CODE_DOWNLOAD_PERMISSIONS = 1
+        private const val REQUEST_CODE_PROMPT_PERMISSIONS = 2
     }
 }
