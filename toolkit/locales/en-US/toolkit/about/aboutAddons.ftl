@@ -315,5 +315,12 @@ shortcuts-invalid = Invalid combination
 shortcuts-letter = Type a letter
 shortcuts-system = Can’t override a { -brand-short-name } shortcut
 
+shortcuts-card-expand-button =
+    { $numberToShow ->
+        *[other] Show { $numberToShow } More
+    }
+
+shortcuts-card-collapse-button = Show Less
+
 go-back-button =
     .tooltiptext = Go back
