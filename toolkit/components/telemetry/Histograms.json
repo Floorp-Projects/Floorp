@@ -8113,6 +8113,15 @@
     "n_values": 100,
     "description": "Security-related UI events (addons, form submission, TLS certs, Safe Browsing, updates and geolocation). See /security/manager/ssl/nsISecurityUITelemetry.idl for the specific values."
   },
+  "STORAGE_ACCESS_API_UI": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["seceng-telemetry@mozilla.com", "ehsan+telemetry@mozilla.com"],
+    "bug_numbers": [1513309],
+    "expires_in_version": "73",
+    "kind": "categorical",
+    "labels": ["Request", "AllowAutomatically", "Deny", "Allow", "AllowOnAnySite"],
+    "description": "Storage Access API UI events."
+  },
   "IPC_TRANSACTION_CANCEL": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["billm@mozilla.com"],
