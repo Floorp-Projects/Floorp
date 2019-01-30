@@ -26,7 +26,6 @@ EXPORTS += [
 ]
 
 UNIFIED_SOURCES += [
-    'nsAppShellFactory.cpp',
     'nsAppShellService.cpp',
     'nsAppShellWindowEnumerator.cpp',
     'nsChromeTreeOwner.cpp',
@@ -34,6 +33,10 @@ UNIFIED_SOURCES += [
     'nsWebShellWindow.cpp',
     'nsWindowMediator.cpp',
     'nsXULWindow.cpp',
+]
+
+XPCOM_MANIFESTS += [
+    'components.conf',
 ]
 
 LOCAL_INCLUDES += [
