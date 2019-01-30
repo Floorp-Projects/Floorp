@@ -18,13 +18,12 @@
 const kDumpAllStacks = false;
 
 const whitelist = {
-  components: new Set([
-    "ContentProcessSingleton.js",
-  ]),
   modules: new Set([
     "chrome://mochikit/content/ShutdownLeaksCollector.jsm",
     "resource://specialpowers/specialpowers.js",
     "resource://specialpowers/specialpowersAPI.js",
+
+    "resource://gre/modules/ContentProcessSingleton.jsm",
 
     // General utilities
     "resource://gre/modules/AppConstants.jsm",
