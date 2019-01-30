@@ -39,4 +39,4 @@ ContentProcessSingleton.prototype = {
   },
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([ContentProcessSingleton]);
+var EXPORTED_SYMBOLS = ["ContentProcessSingleton"];
