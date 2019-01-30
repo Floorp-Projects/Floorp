@@ -1891,8 +1891,10 @@ void APZCTreeManager::SynthesizePinchGestureFromMouseWheel(
   ScreenPoint focusPoint = aWheelInput.mOrigin;
 
   // Compute span values based on the wheel delta.
-  ScreenCoord oldSpan = 100;
-  ScreenCoord newSpan = oldSpan + aWheelInput.mDeltaY;
+  // See the PinchGestureInput constructor called below for why
+  // it's OK to use ParentLayer coordinates for the span values.
+  ParentLayerCoord oldSpan = 100;
+  ParentLayerCoord newSpan = oldSpan + aWheelInput.mDeltaY;
 
   // There's no ambiguity as to the target for pinch gesture events.
   TargetConfirmationFlags confFlags{true};
@@ -1900,7 +1902,6 @@ void APZCTreeManager::SynthesizePinchGestureFromMouseWheel(
   PinchGestureInput pinchStart{PinchGestureInput::PINCHGESTURE_START,
                                aWheelInput.mTime,
                                aWheelInput.mTimeStamp,
-                               ExternalPoint(0, 0),
                                focusPoint,
                                oldSpan,
                                oldSpan,
@@ -1908,7 +1909,6 @@ void APZCTreeManager::SynthesizePinchGestureFromMouseWheel(
   PinchGestureInput pinchScale1{PinchGestureInput::PINCHGESTURE_SCALE,
                                 aWheelInput.mTime,
                                 aWheelInput.mTimeStamp,
-                                ExternalPoint(0, 0),
                                 focusPoint,
                                 oldSpan,
                                 oldSpan,
@@ -1916,7 +1916,6 @@ void APZCTreeManager::SynthesizePinchGestureFromMouseWheel(
   PinchGestureInput pinchScale2{PinchGestureInput::PINCHGESTURE_SCALE,
                                 aWheelInput.mTime,
                                 aWheelInput.mTimeStamp,
-                                ExternalPoint(0, 0),
                                 focusPoint,
                                 oldSpan,
                                 newSpan,
@@ -1925,7 +1924,6 @@ void APZCTreeManager::SynthesizePinchGestureFromMouseWheel(
       PinchGestureInput::PINCHGESTURE_END,
       aWheelInput.mTime,
       aWheelInput.mTimeStamp,
-      ExternalPoint(0, 0),
       PinchGestureInput::BothFingersLifted<ScreenPixel>(),
       newSpan,
       newSpan,
