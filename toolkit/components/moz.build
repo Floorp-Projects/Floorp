@@ -110,9 +110,12 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     DIRS += ['gfx']
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
-    EXTRA_COMPONENTS += [
-        'nsDefaultCLH.js',
-        'nsDefaultCLH.manifest',
+    EXTRA_JS_MODULES += [
+        'DefaultCLH.jsm',
+    ]
+
+    XPCOM_MANIFESTS += [
+        'components.conf',
     ]
 
 if CONFIG['MOZ_BUILD_APP'] == 'browser':
