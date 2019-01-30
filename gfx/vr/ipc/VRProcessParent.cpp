@@ -66,11 +66,6 @@ void VRProcessParent::Shutdown() {
   MOZ_ASSERT(!mShutdownRequested);
   mListener = nullptr;
 
-  // Tell GPU process to shutdown PVRGPU channel.
-  GPUChild* gpuChild = GPUProcessManager::Get()->GetGPUChild();
-  MOZ_ASSERT(gpuChild);
-  gpuChild->SendShutdownVR();
-
   if (mVRChild) {
     // The channel might already be closed if we got here unexpectedly.
     if (!mChannelClosed) {
