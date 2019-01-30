@@ -99,9 +99,9 @@ addonsManager:
           - site_warning, site_blocked, install_disabled_warning
           - download_started, download_completed, download_failed
     notification_emails: ["addons-dev-internal@mozilla.com"]
-    expiry_version: "68"
+    expiry_version: "73"
     record_in_processes: ["main"]
-    bug_numbers: [1433335, 1515697]
+    bug_numbers: [1433335, 1515697, 1523641]
     release_channel_collection: opt-out
   manage:
     description: >
@@ -117,9 +117,9 @@ addonsManager:
         e.g. install events with source "about:addons" may have "install-from-file" or "url" as method).
       num_strings: The number of permission description strings in the extension permission doorhanger
     notification_emails: ["addons-dev-internal@mozilla.com"]
-    expiry_version: "68"
+    expiry_version: "73"
     record_in_processes: ["main"]
-    bug_numbers: [1433335, 1515697]
+    bug_numbers: [1433335, 1515697, 1523641]
     release_channel_collection: opt-out
 
 extensions.data:
