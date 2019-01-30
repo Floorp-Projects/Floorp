@@ -243,8 +243,6 @@
 @RESPATH@/browser/components/MacTouchBar.manifest
 @RESPATH@/browser/components/MacTouchBar.js
 #endif
-@RESPATH@/components/nsPrompter.manifest
-@RESPATH@/components/nsPrompter.js
 @RESPATH@/components/SyncComponents.manifest
 @RESPATH@/components/Weave.js
 @RESPATH@/components/FxAccountsComponents.manifest
