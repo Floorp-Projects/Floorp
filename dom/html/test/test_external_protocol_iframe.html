@@ -10,6 +10,11 @@
   <div id='foo'><a href='#'>Click here to test this issue</a></div>
   <script>
 
+function test_initialize() {
+  ChromeUtils.resetLastExternalProtocolIframeAllowed();
+  next();
+}
+
 function test_noUserInteraction() {
   is(ChromeUtils.getPopupControlState(), "openAbused", "No user-interaction means: abuse state");
   ok(!ChromeUtils.isPopupTokenUnused(), "Popup token has not been used yet");
@@ -53,6 +58,7 @@ function test_userInteraction() {
 }
 
 let tests = [
+  test_initialize,
   test_noUserInteraction,
   test_userInteraction,
 ];
