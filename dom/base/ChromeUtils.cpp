@@ -768,17 +768,6 @@ constexpr auto kSkipSelfHosted = JS::SavedFrameSelfHosted::Exclude;
   return domPromise.forget();
 }
 
-/* static */ already_AddRefed<BrowsingContext> ChromeUtils::GetBrowsingContext(
-    GlobalObject& aGlobal, uint64_t id) {
-  return BrowsingContext::Get(id);
-}
-
-/* static */ void ChromeUtils::GetRootBrowsingContexts(
-    GlobalObject& aGlobal,
-    nsTArray<RefPtr<BrowsingContext>>& aBrowsingContexts) {
-  BrowsingContext::GetRootBrowsingContexts(aBrowsingContexts);
-}
-
 /* static */ bool ChromeUtils::HasReportingHeaderForOrigin(
     GlobalObject& global, const nsAString& aOrigin, ErrorResult& aRv) {
   if (!XRE_IsParentProcess()) {

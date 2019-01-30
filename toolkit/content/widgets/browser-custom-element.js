@@ -546,7 +546,7 @@ class MozBrowser extends MozElementMixin(XULFrameElement) {
       return this.docShell.browsingContext;
     }
 
-    return ChromeUtils.getBrowsingContext(this._browsingContextId);
+    return BrowsingContext.get(this._browsingContextId);
   }
   /**
    * Note that this overrides webNavigation on XULFrameElement, and duplicates the return value for the non-remote case
