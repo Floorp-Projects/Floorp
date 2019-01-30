@@ -4,7 +4,6 @@
 
 "use strict";
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
@@ -82,4 +81,4 @@ ColorAnalyzer.prototype = {
   QueryInterface: ChromeUtils.generateQI([Ci.mozIColorAnalyzer]),
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([ColorAnalyzer]);
+var EXPORTED_SYMBOLS = ["ColorAnalyzer"];
