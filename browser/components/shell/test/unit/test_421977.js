@@ -37,7 +37,6 @@ function hexToColor(aString) {
  * to aExpectedShellColor in #RRGGBB format.
  */
 function checkGConfToShellColor(aGConfColor, aExpectedShellColor) {
-
   gGConf.setString(GCONF_BG_COLOR_KEY, aGConfColor);
   var shellColor = colorToHex(gShell.desktopBackgroundColor);
 
@@ -50,7 +49,6 @@ function checkGConfToShellColor(aGConfColor, aExpectedShellColor) {
  * aExpectedGConfColor.
  */
 function checkShellToGConfColor(aShellColor, aExpectedGConfColor) {
-
   gShell.desktopBackgroundColor = hexToColor(aShellColor);
   var gconfColor = gGConf.getString(GCONF_BG_COLOR_KEY);
 
@@ -58,7 +56,6 @@ function checkShellToGConfColor(aShellColor, aExpectedGConfColor) {
 }
 
 function run_test() {
-
   // This test is Linux specific for now
   if (!("@mozilla.org/gnome-gconf-service;1" in Cc))
     return;
@@ -83,7 +80,6 @@ function run_test() {
   var origGConfColor = gGConf.getString(GCONF_BG_COLOR_KEY);
 
   try {
-
     checkGConfToShellColor("#000", "#000000");
     checkGConfToShellColor("#00f", "#0000FF");
     checkGConfToShellColor("#b2f", "#BB22FF");
@@ -112,7 +108,6 @@ function run_test() {
     checkShellToGConfColor("#0A0B0C", "#0a0a0b0b0c0c");
     checkShellToGConfColor("#A0B0C0", "#a0a0b0b0c0c0");
     checkShellToGConfColor("#AABBCC", "#aaaabbbbcccc");
-
   } finally {
     gGConf.setString(GCONF_BG_COLOR_KEY, origGConfColor);
   }

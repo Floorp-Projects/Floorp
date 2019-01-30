@@ -58,7 +58,6 @@ const MANIFESTS_FILE = "manifest-scopes.json";
  */
 
 class Manifest {
-
   constructor(browser, manifestUrl) {
     this._manifestUrl = manifestUrl;
     // The key for this is the manifests URL that is required to be unique.
@@ -141,13 +140,11 @@ class Manifest {
 var Manifests = {
 
   async initialise() {
-
     if (this.started) {
       return this.started;
     }
 
     this.started = (async () => {
-
       // Make sure the manifests have the folder needed to save into
       await OS.File.makeDir(MANIFESTS_DIR, {ignoreExisting: true});
 
@@ -164,7 +161,6 @@ var Manifests = {
       // Cache the Manifest objects creates as they are references to files
       // and we do not want multiple file handles
       this.manifestObjs = {};
-
     })();
 
     return this.started;
@@ -191,7 +187,6 @@ var Manifests = {
   // Get the manifest given a url, or if not look for a manifest that is
   // tied to the current page
   async getManifest(browser, manifestUrl) {
-
     // Ensure we have all started up
     await this.initialise();
 

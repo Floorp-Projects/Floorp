@@ -206,7 +206,6 @@ function endCustomizing(aWindow = window) {
     }
     aWindow.gNavToolbox.addEventListener("aftercustomization", onCustomizationEnds);
     aWindow.gCustomizeMode.exit();
-
   });
 }
 
@@ -244,7 +243,6 @@ function openAndLoadWindow(aOptions, aWaitForDelayedStartup = false) {
         Services.obs.removeObserver(onDS, "browser-delayed-startup-finished");
         resolve(win);
       }, "browser-delayed-startup-finished");
-
     } else {
       win.addEventListener("load", function() {
         resolve(win);

@@ -165,7 +165,6 @@ function testNameForRule(aElm, aRuleElm) {
     }
 
     testNameForAttrRule(aElm, aRuleElm);
-
   } else if (aRuleElm.hasAttribute("elm")) {
     if (gDumpToConsole) {
       dump("\nProcessing rule { elm: " + aRuleElm.getAttribute("elm") +
@@ -173,7 +172,6 @@ function testNameForRule(aElm, aRuleElm) {
     }
 
     testNameForElmRule(aElm, aRuleElm);
-
   } else if (aRuleElm.getAttribute("fromsubtree") == "true") {
     if (gDumpToConsole) {
       dump("\nProcessing rule { fromsubtree: " +
@@ -193,7 +191,6 @@ function testNameForAttrRule(aElm, aRule) {
   var type = aRule.getAttribute("type");
   if (type == "string") {
     name = attrValue;
-
   } else if (type == "ref" && attrValue) {
     var ids = attrValue.split(/\s+/);
     for (var idx = 0; idx < ids.length; idx++) {
@@ -220,17 +217,14 @@ function testNameForAttrRule(aElm, aRule) {
     waitForEvent(EVENT_REORDER, aElm.parentNode,
                  gTestIterator.iterateNext, gTestIterator);
     aElm.removeAttribute(attr);
-
   } else if (aRule.hasAttribute("textchanged")) {
     waitForEvent(EVENT_TEXT_INSERTED, aElm,
                  gTestIterator.iterateNext, gTestIterator);
     aElm.removeAttribute(attr);
-
   } else if (aRule.hasAttribute("contentchanged")) {
     waitForEvent(EVENT_REORDER, aElm,
                  gTestIterator.iterateNext, gTestIterator);
     aElm.removeAttribute(attr);
-
   } else {
     aElm.removeAttribute(attr);
     gTestIterator.iterateNext();
@@ -261,7 +255,6 @@ function testNameForElmRule(aElm, aRule) {
                                                NodeFilter.SHOW_ELEMENT,
                                                filter);
     labelElm = treeWalker.nextNode();
-
   } else {
     // if attrname is empty then look for the element in subtree.
     labelElm = aElm.getElementsByTagName(tagname)[0];

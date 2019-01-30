@@ -12,7 +12,6 @@ function deactivateDomainPolicy() {
 }
 
 async function test_domainPolicy() {
-
   ChromeUtils.defineModuleGetter(this, "Promise", "resource://gre/modules/Promise.jsm");
   let outerDeferred = Promise.defer();
   let currentTask = outerDeferred.promise;

@@ -767,7 +767,6 @@ element.isSelected = function(el) {
     } else if (XUL_SELECTED_ELS.has(el.tagName)) {
       return el.selected;
     }
-
   } else if (element.isDOMElement(el)) {
     if (el.localName == "input" && ["checkbox", "radio"].includes(el.type)) {
       return el.checked;
@@ -959,7 +958,6 @@ element.isEditable = function(el) {
  */
 element.coordinates = function(
     node, xOffset = undefined, yOffset = undefined) {
-
   let box = node.getBoundingClientRect();
 
   if (typeof xOffset == "undefined" || xOffset === null) {

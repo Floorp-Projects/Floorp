@@ -91,7 +91,6 @@ add_task(async function test_syncStartup_emptyOrOutdatedGlobalsResetsSync() {
   let engine = makeRotaryEngine();
   engine._store.items = {rekolok: "Rekonstruktionslokomotive"};
   try {
-
     // Confirm initial environment
     const changes = await engine._tracker.getChangedIDs();
     Assert.equal(changes.rekolok, undefined);
@@ -115,7 +114,6 @@ add_task(async function test_syncStartup_emptyOrOutdatedGlobalsResetsSync() {
     Assert.equal(await engine.getLastSync(), 0);
     Assert.equal(collection.payload("flying"), undefined);
     Assert.equal(collection.payload("scotsman"), undefined);
-
   } finally {
     await cleanAndGo(engine, server);
   }
@@ -133,7 +131,6 @@ add_task(async function test_syncStartup_serverHasNewerVersion() {
 
   let engine = makeRotaryEngine();
   try {
-
     // The server has a newer version of the data and our engine can
     // handle.  That should give us an exception.
     let error;
@@ -143,7 +140,6 @@ add_task(async function test_syncStartup_serverHasNewerVersion() {
       error = ex;
     }
     Assert.equal(error.failureCode, VERSION_OUT_OF_DATE);
-
   } finally {
     await cleanAndGo(engine, server);
   }
@@ -165,7 +161,6 @@ add_task(async function test_syncStartup_syncIDMismatchResetsClient() {
   server.registerPathHandler("/1.1/foo/storage/meta/global", global.handler());
 
   try {
-
     // Confirm initial environment
     Assert.equal(await engine.getSyncID(), "");
     const changes = await engine._tracker.getChangedIDs();
@@ -179,7 +174,6 @@ add_task(async function test_syncStartup_syncIDMismatchResetsClient() {
 
     // Sync was reset
     Assert.equal(await engine.getLastSync(), 0);
-
   } finally {
     await cleanAndGo(engine, server);
   }
@@ -198,11 +192,9 @@ add_task(async function test_processIncoming_emptyServer() {
 
   let engine = makeRotaryEngine();
   try {
-
     // Merely ensure that this code path is run without any errors
     await engine._processIncoming();
     Assert.equal(await engine.getLastSync(), 0);
-
   } finally {
     await cleanAndGo(engine, server);
   }
@@ -243,7 +235,6 @@ add_task(async function test_processIncoming_createFromServer() {
   meta_global.payload.engines = {rotary: {version: engine.version, syncID}};
 
   try {
-
     // Confirm initial environment
     Assert.equal(await engine.getLastSync(), 0);
     Assert.equal(engine.lastModified, null);
@@ -262,7 +253,6 @@ add_task(async function test_processIncoming_createFromServer() {
     Assert.equal(engine._store.items.flying, "LNER Class A3 4472");
     Assert.equal(engine._store.items.scotsman, "Flying Scotsman");
     Assert.equal(engine._store.items["../pathological"], "Pathological Case");
-
   } finally {
     await cleanAndGo(engine, server);
   }
@@ -336,7 +326,6 @@ add_task(async function test_processIncoming_reconcile() {
   meta_global.payload.engines = {rotary: {version: engine.version, syncID}};
 
   try {
-
     // Confirm initial environment
     Assert.equal(engine._store.items.newrecord, undefined);
     Assert.equal(engine._store.items.newerserver, "New data, but not as new as server!");
@@ -638,7 +627,6 @@ add_task(async function test_processIncoming_resume_toFetch() {
                                               new WBORecord(engine.metaURL));
   meta_global.payload.engines = {rotary: {version: engine.version, syncID}};
   try {
-
     // Confirm initial environment
     Assert.equal(engine._store.items.flying, undefined);
     Assert.equal(engine._store.items.scotsman, undefined);
@@ -896,7 +884,6 @@ add_task(async function test_processIncoming_failed_records() {
   meta_global.payload.engines = {rotary: {version: engine.version, syncID}};
 
   try {
-
     // Confirm initial environment
     Assert.equal(await engine.getLastSync(), 0);
     Assert.equal(engine.toFetch.size, 0);
@@ -996,7 +983,6 @@ add_task(async function test_processIncoming_decrypt_failed() {
                                               new WBORecord(engine.metaURL));
   meta_global.payload.engines = {rotary: {version: engine.version, syncID}};
   try {
-
     // Confirm initial state
     Assert.equal(engine.toFetch.size, 0);
     Assert.equal(engine.previousFailed.size, 0);
@@ -1025,7 +1011,6 @@ add_task(async function test_processIncoming_decrypt_failed() {
     Assert.equal(observerData, engine.name);
     Assert.equal(observerSubject.applied, 2);
     Assert.equal(observerSubject.failed, 4);
-
   } finally {
     await promiseClean(engine, server);
   }
@@ -1079,7 +1064,6 @@ add_task(async function test_uploadOutgoing_toEmptyServer() {
 
     // The 'flying' record wasn't marked so it wasn't uploaded
     Assert.equal(collection.payload("flying"), undefined);
-
   } finally {
     await cleanAndGo(engine, server);
   }
@@ -1133,7 +1117,6 @@ async function test_uploadOutgoing_max_record_payload_bytes(allowSkippedRecord) 
     // And that we won't try to upload the huge record next time.
     const changes = await engine._tracker.getChangedIDs();
     Assert.equal(changes.flying, undefined);
-
   } catch (e) {
     if (allowSkippedRecord) {
       do_throw("should not get here");
@@ -1215,7 +1198,6 @@ add_task(async function test_uploadOutgoing_failed() {
     // they weren't cleared from the tracker.
     Assert.equal(changes.scotsman, SCOTSMAN_CHANGED);
     Assert.equal(changes.peppercorn, PEPPERCORN_CHANGED);
-
   } finally {
     await promiseClean(engine, server);
   }
@@ -1381,7 +1363,6 @@ add_task(async function test_syncFinish_deleteByIds() {
 
     // The deletion todo list has been reset.
     Assert.equal(engine._delete.ids, undefined);
-
   } finally {
     await cleanAndGo(engine, server);
   }
@@ -1420,7 +1401,6 @@ add_task(async function test_syncFinish_deleteLotsInBatches() {
 
   let engine = makeRotaryEngine();
   try {
-
     // Confirm initial environment
     Assert.equal(noOfUploads, 0);
 
@@ -1451,7 +1431,6 @@ add_task(async function test_syncFinish_deleteLotsInBatches() {
 
     // The deletion todo list has been reset.
     Assert.equal(engine._delete.ids, undefined);
-
   } finally {
     await cleanAndGo(engine, server);
   }
@@ -1528,7 +1507,6 @@ add_task(async function test_sync_partialUpload() {
         Assert.equal(false, id in changes);
       }
     }
-
   } finally {
     Service.serverConfiguration = oldServerConfiguration;
     await promiseClean(engine, server);
@@ -1553,9 +1531,7 @@ add_task(async function test_canDecrypt_noCryptoKeys() {
   await SyncTestingInfrastructure(server);
   let engine = makeRotaryEngine();
   try {
-
     Assert.equal(false, (await engine.canDecrypt()));
-
   } finally {
     await cleanAndGo(engine, server);
   }
@@ -1578,13 +1554,10 @@ add_task(async function test_canDecrypt_true() {
   await SyncTestingInfrastructure(server);
   let engine = makeRotaryEngine();
   try {
-
     Assert.ok((await engine.canDecrypt()));
-
   } finally {
     await cleanAndGo(engine, server);
   }
-
 });
 
 add_task(async function test_syncapplied_observer() {

@@ -72,7 +72,6 @@
     waitForCondition(
       () => animation.currentTime > 100,
         () => {
-
           // We have disabled Time Precision Reduction for CSS Animations, so we expect those tests to fail.
           // If we are testing that preference, we accept either rounded or not rounded values as A-OK.
           var maybeAcceptEverything = function(value) {

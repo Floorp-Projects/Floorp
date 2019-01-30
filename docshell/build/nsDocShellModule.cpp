@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/BrowsingContext.h"
+#include "mozilla/dom/BrowsingContextGroup.h"
 
 // session history
 #include "nsSHEntryShared.h"
@@ -15,6 +16,7 @@ namespace mozilla {
 // The one time initialization for this module
 nsresult InitDocShellModule() {
   mozilla::dom::BrowsingContext::Init();
+  mozilla::dom::BrowsingContextGroup::Init();
   nsresult rv = nsSHistory::Startup();
   NS_ENSURE_SUCCESS(rv, rv);
 

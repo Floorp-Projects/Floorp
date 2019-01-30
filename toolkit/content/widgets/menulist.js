@@ -7,7 +7,6 @@
 // This is loaded into all XUL windows. Wrap in a block to prevent
 // leaking to window scope.
 {
-
 const MozXULMenuElement = MozElementMixin(XULMenuElement);
 const MenuBaseControl = BaseControlMixin(MozXULMenuElement);
 
@@ -55,7 +54,6 @@ class MozMenuList extends MenuBaseControl {
         }
       }
     }, { mozSystemGroup: true });
-
   }
 
   connectedCallback() {
@@ -404,5 +402,4 @@ MenuBaseControl.implementCustomInterface(MozMenuList, [Ci.nsIDOMXULMenuListEleme
                                                        Ci.nsIDOMXULSelectControlElement]);
 
 customElements.define("menulist", MozMenuList);
-
 }

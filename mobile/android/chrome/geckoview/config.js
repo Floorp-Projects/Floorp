@@ -537,7 +537,6 @@ Pref.prototype = {
       default:
         return Services.prefs.getCharPref(this.name);
     }
-
   },
   set value(aPrefValue) {
     switch (this.type) {
@@ -660,7 +659,6 @@ Pref.prototype = {
 
   // Initialize list item object values
   _valueSetup: function AC_valueSetup() {
-
     this.li.setAttribute("type", this.type);
     this.li.setAttribute("value", this.value);
 

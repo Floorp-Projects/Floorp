@@ -23,7 +23,6 @@ function test() {
 
     // executeSoon to allow the JS to execute on the page
     executeSoon(function() {
-
       let tab2;
       let caughtError = false;
       try {

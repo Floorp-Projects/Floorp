@@ -17,7 +17,6 @@ function run_test() {
  * a single path.
  */
 add_task(async function test_watch_single_path_directory_creation() {
-
   // Create and watch a sub-directory of the profile directory so we don't
   // catch notifications we're not interested in (i.e. "startupCache").
   let watchedDir = OS.Path.join(OS.Constants.Path.profileDir, "filewatcher_playground");

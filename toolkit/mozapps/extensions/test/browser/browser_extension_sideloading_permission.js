@@ -12,7 +12,6 @@ AddonTestUtils.initMochitest(this);
 
 // Loading extension by sideloading method
 add_task(async function test() {
-
   await SpecialPowers.pushPrefEnv({
     set: [
       ["xpinstall.signatures.required", false],

@@ -28,7 +28,6 @@
  * `Intl` formatter.
  */
 class FluentType {
-
   /**
    * Create an `FluentType` instance.
    *
@@ -1027,7 +1026,6 @@ class FluentResource extends Map {
  * information.
  */
 class FluentBundle {
-
   /**
    * Create an instance of `FluentBundle`.
    *

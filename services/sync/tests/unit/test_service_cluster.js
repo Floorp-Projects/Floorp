@@ -23,7 +23,6 @@ add_task(async function test_findCluster() {
     _("_findCluster() returns the user's cluster node");
     let cluster = await Service.identity._findCluster();
     Assert.equal(cluster, "http://weave.user.node/");
-
   } finally {
     Svc.Prefs.resetBranch("");
   }

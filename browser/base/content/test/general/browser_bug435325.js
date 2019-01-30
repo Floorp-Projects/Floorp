@@ -4,7 +4,6 @@
 /* Ensure that clicking the button in the Offline mode neterror page makes the browser go online. See bug 435325. */
 
 add_task(async function checkSwitchPageToOnlineMode() {
-
   // Go offline and disable the proxy and cache, then try to load the test URL.
   Services.io.offline = true;
 

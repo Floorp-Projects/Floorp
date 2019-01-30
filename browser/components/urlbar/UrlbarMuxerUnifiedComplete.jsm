@@ -22,12 +22,12 @@ XPCOMUtils.defineLazyGetter(this, "logger", () =>
   Log.repository.getLogger("Places.Urlbar.UrlbarMuxerUnifiedComplete"));
 
 const RESULT_TYPE_TO_GROUP = new Map([
-  [ UrlbarUtils.RESULT_TYPE.TAB_SWITCH, UrlbarUtils.MATCH_GROUP.GENERAL ],
-  [ UrlbarUtils.RESULT_TYPE.SEARCH, UrlbarUtils.MATCH_GROUP.SUGGESTION ],
-  [ UrlbarUtils.RESULT_TYPE.URL, UrlbarUtils.MATCH_GROUP.GENERAL ],
-  [ UrlbarUtils.RESULT_TYPE.KEYWORD, UrlbarUtils.MATCH_GROUP.GENERAL ],
-  [ UrlbarUtils.RESULT_TYPE.OMNIBOX, UrlbarUtils.MATCH_GROUP.EXTENSION ],
-  [ UrlbarUtils.RESULT_TYPE.REMOTE_TAB, UrlbarUtils.MATCH_GROUP.GENERAL ],
+  [ UrlbarUtils.RESULT_TYPE.TAB_SWITCH, UrlbarUtils.RESULT_GROUP.GENERAL ],
+  [ UrlbarUtils.RESULT_TYPE.SEARCH, UrlbarUtils.RESULT_GROUP.SUGGESTION ],
+  [ UrlbarUtils.RESULT_TYPE.URL, UrlbarUtils.RESULT_GROUP.GENERAL ],
+  [ UrlbarUtils.RESULT_TYPE.KEYWORD, UrlbarUtils.RESULT_GROUP.GENERAL ],
+  [ UrlbarUtils.RESULT_TYPE.OMNIBOX, UrlbarUtils.RESULT_GROUP.EXTENSION ],
+  [ UrlbarUtils.RESULT_TYPE.REMOTE_TAB, UrlbarUtils.RESULT_GROUP.GENERAL ],
 ]);
 
 /**
@@ -73,7 +73,7 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
         }
 
         // Handle the heuristic result.
-        if (group == UrlbarUtils.MATCH_GROUP.HEURISTIC &&
+        if (group == UrlbarUtils.RESULT_GROUP.HEURISTIC &&
             match == firstMatch && context.preselected) {
           sortedMatches.push(match);
           handled.add(match);

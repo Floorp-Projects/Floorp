@@ -89,7 +89,6 @@ function isXULElement(aNode) {
 function waitForEvent(aEventType, aTargetOrFunc, aFunc, aContext, aArg1, aArg2) {
   var handler = {
     handleEvent: function handleEvent(aEvent) {
-
       var target = aTargetOrFunc;
       if (typeof aTargetOrFunc == "function")
         target = aTargetOrFunc.call();
@@ -596,7 +595,6 @@ function eventQueue(aEventType) {
     if (this.hasMatchedScenario()) {
       if (this.mNextInvokerStatus == kInvokerNotScheduled) {
         this.processNextInvokerInTimeout();
-
       } else if (this.mNextInvokerStatus == kInvokerCanceled) {
         this.setInvokerStatus(kInvokerPending,
                               "Full match. Void the cancelation of next invoker processing");
@@ -789,7 +787,6 @@ function eventQueue(aEventType) {
           }
           var phase = eventQueue.getEventPhase(eventSeq[idx]);
           target.addEventListener(eventType, this, phase);
-
         } else {
           // A11y event
           addA11yEventListener(eventType, this);
@@ -813,7 +810,6 @@ function eventQueue(aEventType) {
           var target = eventQueue.getEventTarget(eventSeq[idx]);
           var phase = eventQueue.getEventPhase(eventSeq[idx]);
           target.removeEventListener(eventType, this, phase);
-
         } else {
           // A11y event
           removeA11yEventListener(eventType, this);
@@ -1452,7 +1448,6 @@ function synthSelectAll(aNodeOrID, aCheckerOrEventSeq) {
     if (ChromeUtils.getClassName(this.DOMNode) === "HTMLInputElement" ||
         this.DOMNode.localName == "textbox") {
       this.DOMNode.select();
-
     } else {
       window.getSelection().selectAllChildren(this.DOMNode);
     }
@@ -1995,7 +1990,6 @@ var gA11yEventObserver =
           var stateStr = statesToString(event.isExtraState ? 0 : event.state,
                                         event.isExtraState ? event.state : 0);
           info += ", state: " + stateStr + ", is enabled: " + event.isEnabled;
-
         } else if (event instanceof nsIAccessibleTextChangeEvent) {
           info += ", start: " + event.start + ", length: " + event.length +
             ", " + (event.isInserted ? "inserted" : "removed") +

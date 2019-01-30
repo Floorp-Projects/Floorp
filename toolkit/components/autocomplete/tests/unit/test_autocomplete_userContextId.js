@@ -38,7 +38,6 @@ function doSearch(aString, aUserContextId) {
     let input = new AutoCompleteInput([ search.name ], aUserContextId);
     controller.input = input;
     controller.startSearch(aString);
-
   });
  }
 

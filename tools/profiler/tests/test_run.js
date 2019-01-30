@@ -38,6 +38,4 @@ function run_test() {
     Assert.ok(!Services.profiler.IsActive());
     do_test_finished();
   });
-
-
 }

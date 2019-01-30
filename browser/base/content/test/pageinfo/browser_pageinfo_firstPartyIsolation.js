@@ -55,7 +55,6 @@ function testFirstPartyDomain(pageInfo) {
         let loadingPrincipal = serial.deserializeObject(loadingPrincipalStr);
         Assert.equal(loadingPrincipal.originAttributes.firstPartyDomain, EXPECTED_DOMAIN,
                      "loadingPrincipal should have firstPartyDomain set to " + EXPECTED_DOMAIN);
-
       }
 
       resolve();

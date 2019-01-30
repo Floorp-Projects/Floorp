@@ -45,7 +45,6 @@ let ProcessObserver = {
     switch (topic) {
       case "chrome-document-global-created":
       case "content-document-global-created": {
-
         // Strip the hash from the URL, because it's not part of the origin.
         let window = subject;
         let url = window.document.documentURI.replace(/[\#|\?].*$/, "");

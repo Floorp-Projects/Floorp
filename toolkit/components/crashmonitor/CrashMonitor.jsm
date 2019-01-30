@@ -198,7 +198,6 @@ var CrashMonitor = {
           await OS.File.writeAtomic(
             CrashMonitorInternal.path,
             data, {tmpPath: CrashMonitorInternal.path + ".tmp"});
-
         } finally {
           // Resolve promise for blocker
           if (aTopic == "profile-before-change") {

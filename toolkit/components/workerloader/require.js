@@ -50,7 +50,6 @@
 
   // Simple implementation of |require|
   let require = (function() {
-
     /**
      * Mapping from module paths to module exports.
      *

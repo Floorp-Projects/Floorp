@@ -21,7 +21,6 @@ function enum_to_array(strings) {
 }
 
 function run_test() {
-
   // without override
   Services.locale.requestedLocales = ["de"];
   Assert.equal(chromeReg.getSelectedLocale("basepack"), "en-US");
@@ -34,5 +33,4 @@ function run_test() {
   Assert.equal(chromeReg.getSelectedLocale("basepack"), "de");
   Assert.deepEqual(enum_to_array(chromeReg.getLocalesForPackage("basepack")),
                    ["de", "en-US"]);
-
 }

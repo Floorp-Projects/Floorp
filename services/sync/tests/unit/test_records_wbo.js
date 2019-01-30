@@ -66,7 +66,6 @@ add_task(async function test_fetch() {
     _("Extracting collection.");
     let rec3 = new WBORecord("tabs", "foo"); // Create through constructor.
     Assert.equal(rec3.collection, "tabs");
-
   } finally {
     await promiseStopServer(server);
   }

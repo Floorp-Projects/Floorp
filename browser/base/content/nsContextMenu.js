@@ -1105,7 +1105,6 @@ nsContextMenu.prototype = {
       extListener: null,
 
       onStartRequest: function saveLinkAs_onStartRequest(aRequest, aContext) {
-
         // if the timer fired, the error status will have been caused by that,
         // and we'll be restarting in onStopRequest, so no reason to notify
         // the user

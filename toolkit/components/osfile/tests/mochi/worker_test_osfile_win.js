@@ -166,7 +166,6 @@ function test_ReadWrite() {
 
       result = OS.Win.File.SetFilePointer(output, pos, null, OS.Constants.Win.FILE_BEGIN);
       isnot(result, 0, "test_ReadWrite: output seek succeeded");
-
     } else {
       bytes = bytes_read.value;
       pos += bytes;

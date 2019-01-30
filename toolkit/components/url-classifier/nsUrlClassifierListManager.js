@@ -120,7 +120,6 @@ PROT_ListManager.prototype.unregisterTable = function(tableName) {
     delete this.needsUpdate_[table.updateUrl][tableName];
   }
   delete this.tablesData[tableName];
-
 };
 
 /**

@@ -4,7 +4,6 @@
 
 add_task(async function test() {
   await new Promise(resolve => {
-
     Services.logins.removeAllLogins();
 
     // add login data
@@ -60,6 +59,5 @@ add_task(async function test() {
 
       pwmgrdlg.close();
     }
-
   });
 });

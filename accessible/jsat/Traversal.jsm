@@ -184,7 +184,6 @@ var TraversalRules = { // jshint ignore:line
         return Filters.IGNORE;
       }
       return Filters.MATCH;
-
     }),
 
   Button: new BaseTraversalRule(
@@ -273,7 +272,6 @@ var TraversalRules = { // jshint ignore:line
         return Filters.MATCH;
       }
       return Filters.IGNORE;
-
     }),
 
   /* For TalkBack's "Control" granularity. Form conrols and links */
@@ -392,7 +390,6 @@ var TraversalHelper = {
       return moved;
     }
     return aVirtualCursor[aMethod](rule);
-
   },
 
 };

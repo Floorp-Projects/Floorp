@@ -76,7 +76,6 @@ startupRecorder.prototype = {
   },
 
   observe(subject, topic, data) {
-
     if (topic == "app-startup") {
       // We can't ensure our observer will be called first or last, so the list of
       // topics we observe here should avoid the topics used to trigger things

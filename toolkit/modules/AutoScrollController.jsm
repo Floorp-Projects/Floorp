@@ -160,7 +160,6 @@ class AutoScrollController {
   }
 
   startScroll(event) {
-
     this.findNearestScrollableElement(event.originalTarget);
 
     if (!this._scrollable)

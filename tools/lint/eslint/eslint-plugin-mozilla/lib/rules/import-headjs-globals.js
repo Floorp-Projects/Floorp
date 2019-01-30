@@ -18,7 +18,6 @@ var helpers = require("../helpers");
 var globals = require("../globals");
 
 module.exports = function(context) {
-
   function importHead(path, node) {
     try {
       let stats = fs.statSync(path);

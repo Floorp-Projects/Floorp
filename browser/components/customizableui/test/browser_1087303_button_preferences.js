@@ -38,7 +38,6 @@ add_task(function asyncCleanup() {
 
 function waitForPageLoad(aTab) {
   return new Promise((resolve, reject) => {
-
     let timeoutId = setTimeout(() => {
       aTab.linkedBrowser.removeEventListener("load", onTabLoad, true);
       reject("Page didn't load within " + 20000 + "ms");

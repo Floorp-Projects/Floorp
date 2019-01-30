@@ -203,7 +203,6 @@ module.exports = {
     "one-var-declaration-per-line": [2, "initializations"],
     "operator-assignment": [2, "always"],
     "operator-linebreak": [2, "after"],
-    "padded-blocks": [2, "never"],
     "padding-line-between-statements": 0,
     "prefer-arrow-callback": ["error", {"allowNamedFunctions": true}],
     "prefer-const": 0, // TODO: Change to `1`?

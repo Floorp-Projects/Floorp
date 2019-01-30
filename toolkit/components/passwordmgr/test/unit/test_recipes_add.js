@@ -22,7 +22,6 @@ add_task(async function test_get_missing_host() {
   let recipesParent = await RecipeHelpers.initNewParent();
   let exampleRecipes = recipesParent.getRecipesForHost("example.invalid");
   Assert.strictEqual(exampleRecipes.size, 0, "Check recipe count for example.invalid");
-
 });
 
 add_task(async function test_add_get_simple_host() {

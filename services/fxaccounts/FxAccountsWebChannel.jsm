@@ -282,7 +282,6 @@ this.FxAccountsWebChannelHelpers.prototype = {
    * @param accountData the user's account data and credentials
    */
   login(accountData) {
-
     // We don't act on customizeSync anymore, it used to open a dialog inside
     // the browser to selecte the engines to sync but we do it on the web now.
     delete accountData.customizeSync;

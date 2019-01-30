@@ -152,7 +152,6 @@ SyncScheduler.prototype = {
   },
 
   _initPrefGetters() {
-
     XPCOMUtils.defineLazyPreferenceGetter(this,
       "idleTime", "services.sync.scheduler.idleTime");
     XPCOMUtils.defineLazyPreferenceGetter(this,

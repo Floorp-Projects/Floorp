@@ -6,7 +6,6 @@ add_task(async function setup() {
 });
 
 add_task(async function install_xpi() {
-
   // WebExtension with a JSON syntax error in manifest.json
   let xpi1 = Extension.generateXPI({
     files: {

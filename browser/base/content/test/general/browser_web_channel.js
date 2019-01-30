@@ -148,7 +148,6 @@ var gTests = [
       let promiseTestDone = new Promise(function(resolve, reject) {
         preRedirectChannel.listen(function(id, message, preRedirectSender) {
           if (message.command === "redirecting") {
-
             postRedirectChannel.listen(function(aId, aMessage, aPostRedirectSender) {
               is(aId, "post_redirect");
               isnot(aMessage.command, "no_response_expected");
@@ -249,7 +248,6 @@ var gTests = [
         gBrowser,
         url: HTTP_PATH + HTTP_ENDPOINT + "?unsolicited",
       }, async function(targetBrowser) {
-
         channel.send({ command: "unsolicited" }, {
           browser: targetBrowser,
           principal: Services.scriptSecurityManager.createCodebasePrincipal(targetURI, {}),
@@ -286,7 +284,6 @@ var gTests = [
         gBrowser,
         url: HTTP_PATH + HTTP_ENDPOINT + "?unsolicited",
       }, async function(targetBrowser) {
-
         let mismatchURI = Services.io.newURI(HTTP_MISMATCH_PATH);
         let mismatchPrincipal = Services.scriptSecurityManager.createCodebasePrincipal(mismatchURI, {});
 

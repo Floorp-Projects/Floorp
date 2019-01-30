@@ -633,7 +633,6 @@ LoginManagerStorage_mozStorage.prototype = {
 
 
   countLogins(hostname, formSubmitURL, httpRealm) {
-
     let _countLoginsHelper = (hostname, formSubmitURL, httpRealm) => {
       // Do checks for null and empty strings, adjust conditions and params
       let [conditions, params] =

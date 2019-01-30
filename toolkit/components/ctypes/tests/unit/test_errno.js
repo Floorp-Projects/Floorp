@@ -41,7 +41,6 @@ function main_test() {
                                      ctypes.int);
     get_last_error = library.declare("get_last_error", ctypes.default_abi,
                                      ctypes.int);
-
   } catch (x) {
     Assert.equal(ctypes.winLastError, undefined);
   }

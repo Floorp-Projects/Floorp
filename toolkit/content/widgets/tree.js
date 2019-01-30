@@ -146,7 +146,6 @@
         if (cell.col && !cell.col.cycler && cell.childElt != "twisty")
           this.parentNode.changeOpenState(row);
       });
-
     }
 
     connectedCallback() {
@@ -158,7 +157,6 @@
 
       if ("_ensureColumnOrder" in this.parentNode)
         this.parentNode._ensureColumnOrder();
-
     }
   }
 
@@ -194,7 +192,6 @@
           }
         }
       });
-
     }
 
     connectedCallback() {
@@ -210,7 +207,6 @@
           <menuitem anonid="menuitem" label="&restoreColumnOrder.label;"></menuitem>
         </menupopup>
       `, ["chrome://global/locale/tree.dtd"]));
-
     }
 
     buildPopup(aPopup) {
@@ -308,7 +304,6 @@
           tree.view.cycleHeader(tree.columns.getColumnFor(this));
         }
       });
-
     }
 
     markTreeDirty() {
@@ -522,5 +517,4 @@
   }
 
   customElements.define("treecols", MozTreecols);
-
 }

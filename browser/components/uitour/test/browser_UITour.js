@@ -255,7 +255,6 @@ var tests = [
         }, {once: true});
 
         gContentAPI.showInfo("urlbar", "test title", "test text");
-
       }, {once: true});
       gContentAPI.hideInfo();
     }, {once: true});

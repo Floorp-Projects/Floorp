@@ -740,7 +740,6 @@ var Control = {
 };
 
 var go = async function() {
-
   Control.init();
 
   let addons = await AddonManager.getAddonsByTypes(["extension"]);

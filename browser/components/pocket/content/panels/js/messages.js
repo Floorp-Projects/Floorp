@@ -2,7 +2,6 @@
 // https://developer.mozilla.org/en-US/Add-ons/Code_snippets/Interaction_between_privileged_and_non-privileged_pages
 
 var pktPanelMessaging = (function() {
-
  function panelIdFromURL(url) {
    var panelId = url.match(/panelId=([\w|\d|\.]*)&?/);
         if (panelId && panelId.length > 1) {
@@ -22,14 +21,11 @@ var pktPanelMessaging = (function() {
 
  function addMessageListener(panelId, messageId, callback) {
    document.addEventListener(panelPrefixedMessageId(panelId, messageId), function(e) {
-
     callback(JSON.parse(e.target.getAttribute("payload"))[0]);
 
     // TODO: Figure out why e.target.parentNode is null
     // e.target.parentNode.removeChild(e.target);
-
     });
-
   }
 
   function removeMessageListener(panelId, messageId, callback) {

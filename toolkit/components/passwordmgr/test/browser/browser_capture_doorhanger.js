@@ -540,7 +540,6 @@ add_task(async function test_recipeCaptureFields_NewLogin() {
 
     await checkDoorhangerUsernamePassword("notifyu1", "notifyp1");
     clickDoorhangerButton(notif, REMEMBER_BUTTON);
-
   }, "http://example.org"); // The recipe is for example.org
 
   let logins = Services.logins.getAllLogins();

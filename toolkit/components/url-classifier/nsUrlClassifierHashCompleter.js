@@ -403,7 +403,6 @@ HashCompleterRequest.prototype = {
 
       aCallback();
     });
-
   },
 
   // This initiates the HTTP request. It can fail due to backoff timings and

@@ -62,7 +62,6 @@ function testSimpleSub() {
   };
 
   doTest([addUpdate, subUpdate], assertions);
-
 }
 
 // Same as testSimpleSub(), but the sub comes in before the add.

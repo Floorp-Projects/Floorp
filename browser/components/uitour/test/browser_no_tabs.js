@@ -61,7 +61,6 @@ add_task(async function test_windowless_UITour() {
 
   // UITour's ping will resolve this promise.
   await new Promise(resolve => {
-
     // Create a windowless browser and test that UITour works in it.
     let browserPromise = createHiddenBrowser(pageURL);
     browserPromise.then(frameInfo => {

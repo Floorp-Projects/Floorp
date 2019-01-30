@@ -1769,7 +1769,6 @@ add_task(async function test_cancel_midway_restart_with_content_encoding() {
     // case the download already reached the expected progress.
     download.onchange = onchange;
     onchange();
-
   });
 
   Assert.ok(download.stopped);

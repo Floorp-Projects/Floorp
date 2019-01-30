@@ -8,7 +8,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 customElements.define("printpreview-toolbar", class PrintPreviewToolbar extends MozXULElement {
-
   constructor() {
     super();
     this.disconnectedCallback = this.disconnectedCallback.bind(this);

@@ -2,7 +2,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 add_task(async function() {
-
   // allow top level data: URI navigations, otherwise loading data: URIs
   // in toplevel windows fail.
   await SpecialPowers.pushPrefEnv({

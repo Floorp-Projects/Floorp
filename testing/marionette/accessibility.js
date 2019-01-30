@@ -98,7 +98,6 @@ accessibility.get = function(strict = false) {
  * accessibility as well as accessibility of user interactions.
  */
 accessibility.Checks = class {
-
   /**
    * @param {boolean} strict
    *     Flag indicating whether the accessibility issue should be logged
@@ -440,5 +439,4 @@ accessibility.Checks = class {
 
     throw new ElementNotAccessibleError(message);
   }
-
 };

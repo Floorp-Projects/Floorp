@@ -177,7 +177,6 @@ async function testWindowSizeSetting(aBrowser, aSettingWidth, aSettingHeight,
 
   await ContentTask.spawn(aBrowser, testParams,
     async function(input) {
-
       let win;
       // Open a new window and wait until it loads.
       await new Promise(resolve => {

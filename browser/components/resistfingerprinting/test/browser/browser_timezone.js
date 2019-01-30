@@ -31,7 +31,6 @@ add_task(async function test_timezone() {
       is(dateObj.getDay(), dateObj.getUTCDay(), "The day reports in UTC timezone.");
       is(dateObj.getHours(), dateObj.getUTCHours(), "The hours reports in UTC timezone.");
       is(dateObj.getTimezoneOffset(), 0, "The difference with UTC timezone is 0.");
-
     }
   );
 

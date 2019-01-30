@@ -260,5 +260,4 @@ class MozTabpanels extends MozXULElement {
 
 MozXULElement.implementCustomInterface(MozTabpanels, [Ci.nsIDOMXULRelatedElement]);
 customElements.define("tabpanels", MozTabpanels);
-
 }

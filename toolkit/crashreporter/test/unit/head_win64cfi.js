@@ -72,7 +72,6 @@ function stackFrameToString(frameIndex, frame) {
 
   if (typeof frame.module_index !== "undefined" && (frame.module_index >= 0)
     && (frame.module_index < gModules.length)) {
-
     let base = gModules[frame.module_index].base_addr;
     moduleOffset = getModuleOffset(base, ip);
     filename = gModules[frame.module_index].filename;
@@ -175,7 +174,6 @@ function assertStack(stack, expected) {
 // minidumpAnalyzerArgs: An array of additional arguments to pass to
 //   minidump-analyzer.exe.
 function do_x64CFITest(how, expectedStack, minidumpAnalyzerArgs) {
-
   // Setup is run in the subprocess so we cannot use any closures.
   let setupFn = "crashType = CrashTestUtils." + how + ";";
 

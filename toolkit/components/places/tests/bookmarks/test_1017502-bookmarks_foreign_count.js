@@ -59,7 +59,6 @@ add_task(async function add_remove_change_bookmark_test() {
   // Cleanup - Remove changed bookmark
   await PlacesUtils.bookmarks.remove(bm1);
   Assert.equal((await getForeignCountForURL(conn, URI2)), 0);
-
 });
 
 add_task(async function maintenance_foreign_count_test() {

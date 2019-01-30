@@ -433,7 +433,6 @@ function parseLayers(layersDumpLines) {
   return root;
 }
 function populateLayers(root, displayList, pane, previewParent, hasSeenRoot, contentScale, rootPreviewParent) {
-
   contentScale = contentScale || 1;
   rootPreviewParent = rootPreviewParent || previewParent;
 

@@ -56,7 +56,6 @@ var PKT_SIGNUP_OVERLAY = function(options) {
     this.getTranslations = function() {
         this.dictJSON = window.pocketStrings;
     };
-
 };
 
 PKT_SIGNUP_OVERLAY.prototype = {

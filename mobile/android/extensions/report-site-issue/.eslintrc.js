@@ -87,9 +87,6 @@ module.exports = {
     // throw new Error("error")).
     "no-throw-literal": "error",
 
-    // Disallow padding within blocks.
-    "padded-blocks": ["error", "never"],
-
     // Require use of the second argument for parseInt().
     "radix": "error",
 

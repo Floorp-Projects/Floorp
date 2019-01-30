@@ -68,7 +68,6 @@ DownloadLegacyTransfer.prototype = {
 
     if ((aStateFlags & Ci.nsIWebProgressListener.STATE_START) &&
         (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK)) {
-
       let blockedByParentalControls = false;
       // If it is a failed download, aRequest.responseStatus doesn't exist.
       // (missing file on the server, network failure to download)

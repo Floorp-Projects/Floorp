@@ -28,7 +28,6 @@ function run_test() {
 }
 
 add_test(function test_cancel1() {
-
   var uri = ios.newURI("http://localhost/1");
   prefetch.prefetchURI(uri, uri, node1, true);
 

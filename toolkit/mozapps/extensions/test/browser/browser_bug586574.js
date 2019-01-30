@@ -234,7 +234,6 @@ add_test(function() {
 
     info("Clicking Reset to Manual menuitem");
     EventUtils.synthesizeMouseAtCenter(gResetToManual, { }, gManagerWindow);
-
   });
 
   info("Opening utilities menu");

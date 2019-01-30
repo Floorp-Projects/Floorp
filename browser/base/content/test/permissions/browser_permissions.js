@@ -268,7 +268,6 @@ add_task(async function testPolicyPermission() {
 
 add_task(async function testHiddenAfterRefresh() {
   await BrowserTestUtils.withNewTab(PERMISSIONS_PAGE, async function(browser) {
-
     ok(BrowserTestUtils.is_hidden(gIdentityHandler._identityPopup), "Popup is hidden");
 
     await openIdentityPopup();

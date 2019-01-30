@@ -160,7 +160,6 @@ var HelperApps =  {
       EventDispatcher.instance.sendRequestForResult(msg).then(function(data) {
         callback(parseData(data));
       });
-
   },
 
   launchUri: function launchUri(uri) {

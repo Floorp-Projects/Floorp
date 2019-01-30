@@ -343,7 +343,6 @@ var BrowserTestUtils = {
       }
         // It's a string.
         return wantLoad == url;
-
     }
 
     return new Promise(resolve => {
@@ -1584,7 +1583,6 @@ var BrowserTestUtils = {
             (value && element.getAttribute(attr) === value)) {
           resolve();
           mut.disconnect();
-
         }
       });
 

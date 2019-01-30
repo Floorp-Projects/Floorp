@@ -29,7 +29,7 @@ use image::{Repetition};
 use intern;
 use malloc_size_of::MallocSizeOf;
 use picture::{PictureCompositeMode, PicturePrimitive, PictureUpdateState};
-use picture::{ClusterIndex, PrimitiveList, SurfaceIndex, RetainedTiles, RasterConfig};
+use picture::{ClusterIndex, PrimitiveList, RecordedDirtyRegion, SurfaceIndex, RetainedTiles, RasterConfig};
 use prim_store::borders::{ImageBorderDataHandle, NormalBorderDataHandle};
 use prim_store::gradient::{LinearGradientDataHandle, RadialGradientDataHandle};
 use prim_store::image::{ImageDataHandle, ImageInstance, VisibleImageTile, YuvImageDataHandle};
@@ -1553,6 +1553,11 @@ pub struct PrimitiveScratchBuffer {
     /// List of the visibility information for currently visible primitives.
     pub prim_info: Vec<PrimitiveVisibility>,
 
+    /// List of dirty regions for the cached pictures in this document, used to
+    /// verify invalidation in wrench reftests. Only collected in testing.
+    pub recorded_dirty_regions: Vec<RecordedDirtyRegion>,
+
+    /// List of debug display items for rendering.
     pub debug_items: Vec<DebugItem>,
 }
 
@@ -1565,6 +1570,7 @@ impl PrimitiveScratchBuffer {
             segments: SegmentStorage::new(0),
             segment_instances: SegmentInstanceStorage::new(0),
             gradient_tiles: GradientTileStorage::new(0),
+            recorded_dirty_regions: Vec::new(),
             debug_items: Vec::new(),
             prim_info: Vec::new(),
         }
@@ -1599,6 +1605,8 @@ impl PrimitiveScratchBuffer {
         self.prim_info.clear();
 
         self.debug_items.clear();
+
+        assert!(self.recorded_dirty_regions.is_empty(), "Should have sent to Renderer");
     }
 
     #[allow(dead_code)]

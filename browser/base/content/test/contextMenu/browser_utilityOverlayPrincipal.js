@@ -44,7 +44,6 @@ function test_openUILink_checkPrincipal() {
 
     gBrowser.removeCurrentTab();
     runNextTest();
-
   });
 
   // Ensure we get the correct default of "allowInheritPrincipal: false" from openUILink

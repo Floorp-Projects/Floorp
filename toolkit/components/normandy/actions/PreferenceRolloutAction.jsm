@@ -68,7 +68,6 @@ class PreferenceRolloutAction extends BaseAction {
       } else {
         this.log.debug(`No updates to preference rollout ${args.slug}`);
       }
-
     } else { // new enrollment
       // Check if this rollout would be a no-op, which is not allowed.
       if (newRollout.preferences.every(({value, previousValue}) => value === previousValue)) {

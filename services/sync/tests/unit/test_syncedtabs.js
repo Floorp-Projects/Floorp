@@ -225,7 +225,6 @@ add_task(async function test_filter() {
 });
 
 add_task(async function test_duplicatesTabsAcrossClients() {
-
   await configureClients({
     guid_desktop: {
       clientName: "My Desktop",
