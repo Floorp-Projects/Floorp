@@ -5,7 +5,6 @@
 
 "use strict";
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function isAutocompleteDisabled(aField) {
@@ -622,4 +621,4 @@ FormAutoCompleteResult.prototype = {
   },
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([FormAutoComplete]);
+var EXPORTED_SYMBOLS = ["FormAutoComplete"];
