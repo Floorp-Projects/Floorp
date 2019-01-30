@@ -6,6 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "LoginReputationIPC.h"
+#include "mozilla/Components.h"
 #include "mozilla/Unused.h"
 
 using namespace mozilla;
@@ -23,7 +24,7 @@ NS_IMPL_ISUPPORTS(LoginReputationParent, nsILoginReputationQueryCallback)
 mozilla::ipc::IPCResult LoginReputationParent::QueryReputation(nsIURI* aURI) {
   nsresult rv;
   nsCOMPtr<nsILoginReputationService> service =
-      do_GetService(NS_LOGIN_REPUTATION_SERVICE_CONTRACTID, &rv);
+      components::LoginReputation::Service(&rv);
   if (NS_FAILED(rv)) {
     Unused << Send__delete__(this);
     return IPC_OK();

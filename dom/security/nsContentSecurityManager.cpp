@@ -16,7 +16,6 @@
 #include "nsContentUtils.h"
 #include "nsCORSListenerProxy.h"
 #include "nsIStreamListener.h"
-#include "nsCDefaultURIFixup.h"
 #include "nsIURIFixup.h"
 #include "nsIImageLoadingContent.h"
 #include "nsIRedirectHistoryEntry.h"
@@ -25,6 +24,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/nsMixedContentBlocker.h"
 #include "mozilla/dom/TabChild.h"
+#include "mozilla/Components.h"
 #include "mozilla/Logging.h"
 
 NS_IMPL_ISUPPORTS(nsContentSecurityManager, nsIContentSecurityManager,
@@ -380,8 +380,8 @@ static nsresult DoContentSecurityChecks(nsIChannel* aChannel,
     // TYPE_DOCUMENT and TYPE_SUBDOCUMENT loads might potentially
     // be wyciwyg:// channels. Let's fix up the URI so we can
     // perform proper security checks.
-    nsCOMPtr<nsIURIFixup> urifixup(do_GetService(NS_URIFIXUP_CONTRACTID, &rv));
-    if (NS_SUCCEEDED(rv) && urifixup) {
+    nsCOMPtr<nsIURIFixup> urifixup(components::URIFixup::Service());
+    if (urifixup) {
       nsCOMPtr<nsIURI> fixedURI;
       rv = urifixup->CreateExposableURI(uri, getter_AddRefs(fixedURI));
       if (NS_SUCCEEDED(rv)) {
@@ -922,8 +922,8 @@ nsresult nsContentSecurityManager::CheckChannel(nsIChannel* aChannel) {
     // TYPE_DOCUMENT and TYPE_SUBDOCUMENT loads might potentially
     // be wyciwyg:// channels. Let's fix up the URI so we can
     // perform proper security checks.
-    nsCOMPtr<nsIURIFixup> urifixup(do_GetService(NS_URIFIXUP_CONTRACTID, &rv));
-    if (NS_SUCCEEDED(rv) && urifixup) {
+    nsCOMPtr<nsIURIFixup> urifixup(components::URIFixup::Service());
+    if (urifixup) {
       nsCOMPtr<nsIURI> fixedURI;
       rv = urifixup->CreateExposableURI(uri, getter_AddRefs(fixedURI));
       if (NS_SUCCEEDED(rv)) {
