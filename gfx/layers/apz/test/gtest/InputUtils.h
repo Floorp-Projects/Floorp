@@ -28,15 +28,6 @@
  * code to dispatch input events.
  */
 
-inline PinchGestureInput CreatePinchGestureInput(
-    PinchGestureInput::PinchGestureType aType, const ScreenPoint& aFocus,
-    float aCurrentSpan, float aPreviousSpan) {
-  ParentLayerPoint localFocus(aFocus.x, aFocus.y);
-  PinchGestureInput result(aType, 0, TimeStamp(), ExternalPoint(0, 0), aFocus,
-                           aCurrentSpan, aPreviousSpan, 0);
-  return result;
-}
-
 template <class InputReceiver>
 void SetDefaultAllowedTouchBehavior(const RefPtr<InputReceiver>& aTarget,
                                     uint64_t aInputBlockId,
@@ -84,50 +75,6 @@ nsEventStatus TouchUp(const RefPtr<InputReceiver>& aTarget,
       CreateMultiTouchInput(MultiTouchInput::MULTITOUCH_END, aTime);
   mti.mTouches.AppendElement(CreateSingleTouchData(0, aPoint));
   return aTarget->ReceiveInputEvent(mti, nullptr, nullptr);
-}
-
-template <class InputReceiver>
-void PinchWithPinchInput(const RefPtr<InputReceiver>& aTarget,
-                         const ScreenIntPoint& aFocus,
-                         const ScreenIntPoint& aSecondFocus, float aScale,
-                         nsEventStatus (*aOutEventStatuses)[3] = nullptr) {
-  nsEventStatus actualStatus = aTarget->ReceiveInputEvent(
-      CreatePinchGestureInput(PinchGestureInput::PINCHGESTURE_START, aFocus,
-                              10.0, 10.0),
-      nullptr);
-  if (aOutEventStatuses) {
-    (*aOutEventStatuses)[0] = actualStatus;
-  }
-  actualStatus = aTarget->ReceiveInputEvent(
-      CreatePinchGestureInput(PinchGestureInput::PINCHGESTURE_SCALE,
-                              aSecondFocus, 10.0 * aScale, 10.0),
-      nullptr);
-  if (aOutEventStatuses) {
-    (*aOutEventStatuses)[1] = actualStatus;
-  }
-  actualStatus = aTarget->ReceiveInputEvent(
-      CreatePinchGestureInput(
-          PinchGestureInput::PINCHGESTURE_END,
-          PinchGestureInput::BothFingersLifted<ScreenPixel>(), 10.0 * aScale,
-          10.0 * aScale),
-      nullptr);
-  if (aOutEventStatuses) {
-    (*aOutEventStatuses)[2] = actualStatus;
-  }
-}
-
-template <class InputReceiver>
-void PinchWithPinchInputAndCheckStatus(const RefPtr<InputReceiver>& aTarget,
-                                       const ScreenIntPoint& aFocus,
-                                       float aScale, bool aShouldTriggerPinch) {
-  nsEventStatus statuses[3];  // scalebegin, scale, scaleend
-  PinchWithPinchInput(aTarget, aFocus, aFocus, aScale, &statuses);
-
-  nsEventStatus expectedStatus = aShouldTriggerPinch
-                                     ? nsEventStatus_eConsumeNoDefault
-                                     : nsEventStatus_eIgnore;
-  EXPECT_EQ(expectedStatus, statuses[0]);
-  EXPECT_EQ(expectedStatus, statuses[1]);
 }
 
 template <class InputReceiver>
