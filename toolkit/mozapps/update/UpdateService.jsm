@@ -4367,5 +4367,4 @@ UpdatePrompt.prototype = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIUpdatePrompt]),
 };
 
-var components = [UpdateService, Checker, UpdatePrompt, UpdateManager];
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory(components);
+var EXPORTED_SYMBOLS = ["UpdateService", "Checker", "UpdatePrompt", "UpdateManager"];

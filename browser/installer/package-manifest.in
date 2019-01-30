@@ -225,8 +225,6 @@
 @RESPATH@/components/amWebAPI.js
 #ifdef MOZ_UPDATER
 @RESPATH@/components/nsUpdateService.manifest
-@RESPATH@/components/nsUpdateService.js
-@RESPATH@/components/nsUpdateServiceStub.js
 #endif
 @RESPATH@/components/nsUpdateTimerManager.manifest
 @RESPATH@/components/nsUpdateTimerManager.js
