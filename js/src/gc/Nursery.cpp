@@ -110,7 +110,7 @@ js::Nursery::Nursery(JSRuntime* rt)
       timeInChunkAlloc_(0),
       profileThreshold_(0),
       enableProfiling_(false),
-      canAllocateStrings_(false),
+      canAllocateStrings_(true),
       reportTenurings_(0),
       minorGCTriggerReason_(JS::GCReason::NO_REASON)
 #ifdef JS_GC_ZEAL
@@ -811,7 +811,7 @@ void js::Nursery::collect(JS::GCReason reason) {
       for (RealmsInZoneIter r(zone); !r.done(); r.next()) {
         if (jit::JitRealm* jitRealm = r->jitRealm()) {
           jitRealm->discardStubs();
-          jitRealm->stringsCanBeInNursery = false;
+          jitRealm->setStringsCanBeInNursery(false);
           numNurseryStringRealmsDisabled++;
         }
       }

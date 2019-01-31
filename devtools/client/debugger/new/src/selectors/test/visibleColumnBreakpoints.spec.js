@@ -2,18 +2,25 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+// @flow
+
 import { getColumnBreakpoints } from "../visibleColumnBreakpoints";
+import { makeMockSource, makeMockBreakpoint } from "../../utils/test-mockup";
 
 function pp(line, column) {
   return {
-    location: { line, column },
-    generatedLocation: { line, column },
-    types: { break: true }
+    location: { sourceId: "", line, column },
+    generatedLocation: { sourceId: "", line, column },
+    types: { break: true, step: false }
   };
 }
 
+function defaultSource() {
+  return makeMockSource(undefined, "foo");
+}
+
 function bp(line, column) {
-  return { location: { line, column, sourceId: "foo" } };
+  return makeMockBreakpoint(defaultSource(), line, column);
 }
 
 describe("visible column breakpoints", () => {
@@ -25,7 +32,7 @@ describe("visible column breakpoints", () => {
     const pausePoints = [pp(1, 1), pp(1, 5), pp(3, 1)];
     const breakpoints = [bp(1, 1), bp(4, 0), bp(4, 3)];
 
-    const selectedSource = { id: "foo" };
+    const selectedSource = defaultSource();
     const columnBps = getColumnBreakpoints(
       pausePoints,
       breakpoints,
@@ -42,7 +49,7 @@ describe("visible column breakpoints", () => {
     };
     const pausePoints = [pp(1, 1), pp(1, 1), pp(1, 3)];
     const breakpoints = [bp(1, 1)];
-    const selectedSource = { id: "foo" };
+    const selectedSource = defaultSource();
     const columnBps = getColumnBreakpoints(
       pausePoints,
       breakpoints,
@@ -57,9 +64,9 @@ describe("visible column breakpoints", () => {
       start: { line: 1, column: 0 },
       end: { line: 10, column: 10 }
     };
-    const pausePoints = [pp(1, 1), pp(1, 3, pp(2, 1))];
+    const pausePoints = [pp(1, 1), pp(1, 3), pp(2, 1)];
     const breakpoints = [bp(1, 1)];
-    const selectedSource = { id: "foo" };
+    const selectedSource = defaultSource();
     const columnBps = getColumnBreakpoints(
       pausePoints,
       breakpoints,
@@ -76,7 +83,7 @@ describe("visible column breakpoints", () => {
     };
     const pausePoints = [pp(1, 1), pp(1, 3), pp(20, 1)];
     const breakpoints = [bp(1, 1)];
-    const selectedSource = { id: "foo" };
+    const selectedSource = defaultSource();
 
     const columnBps = getColumnBreakpoints(
       pausePoints,

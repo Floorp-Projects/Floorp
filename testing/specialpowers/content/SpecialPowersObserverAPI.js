@@ -562,7 +562,15 @@ SpecialPowersObserverAPI.prototype = {
       case "SPCheckServiceWorkers": {
         let swm = Cc["@mozilla.org/serviceworkers/manager;1"]
                     .getService(Ci.nsIServiceWorkerManager);
-        return { hasWorkers: swm.getAllRegistrations().length != 0 };
+        let regs = swm.getAllRegistrations();
+
+        // XXX This code is shared with specialpowers.js.
+        let workers = new Array(regs.length);
+        for (let i = 0; i < regs.length; ++i) {
+          let { scope, scriptSpec } = regs.queryElementAt(i, Ci.nsIServiceWorkerRegistrationInfo);
+          workers[i] = { scope, scriptSpec };
+        }
+        return { workers };
       }
 
       case "SPLoadExtension": {

@@ -473,9 +473,10 @@ class JitRealm {
                            BailoutReturnStubInfo>
       bailoutReturnStubInfo_;
 
-  // The JitRealm stores stubs to concatenate strings inline and perform
-  // RegExp calls inline.  These bake in zone and realm specific pointers
-  // and can't be stored in JitRuntime.
+  // The JitRealm stores stubs to concatenate strings inline and perform RegExp
+  // calls inline. These bake in zone and realm specific pointers and can't be
+  // stored in JitRuntime. They also are dependent on the value of
+  // 'stringsCanBeInNursery' and must be flushed when its value changes.
   //
   // These are weak pointers, but they can by accessed during off-thread Ion
   // compilation and therefore can't use the usual read barrier. Instead, we
@@ -492,6 +493,8 @@ class JitRealm {
 
   mozilla::EnumeratedArray<StubIndex, StubIndex::Count, ReadBarrieredJitCode>
       stubs_;
+
+  bool stringsCanBeInNursery;
 
   JitCode* generateStringConcatStub(JSContext* cx);
   JitCode* generateRegExpMatcherStub(JSContext* cx);
@@ -534,7 +537,7 @@ class JitRealm {
   JitRealm();
   ~JitRealm();
 
-  MOZ_MUST_USE bool initialize(JSContext* cx);
+  MOZ_MUST_USE bool initialize(JSContext* cx, bool zoneHasNurseryStrings);
 
   // Initialize code stubs only used by Ion, not Baseline.
   MOZ_MUST_USE bool ensureIonStubsExist(JSContext* cx) {
@@ -551,6 +554,20 @@ class JitRealm {
     for (ReadBarrieredJitCode& stubRef : stubs_) {
       stubRef = nullptr;
     }
+  }
+
+  bool hasStubs() const {
+    for (const ReadBarrieredJitCode& stubRef : stubs_) {
+      if (stubRef) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  void setStringsCanBeInNursery(bool allow) {
+    MOZ_ASSERT(!hasStubs());
+    stringsCanBeInNursery = allow;
   }
 
   JitCode* stringConcatStubNoBarrier(uint32_t* requiredBarriersOut) const {
@@ -602,8 +619,6 @@ class JitRealm {
   void performStubReadBarriers(uint32_t stubsToBarrier) const;
 
   size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
-
-  bool stringsCanBeInNursery;
 };
 
 // Called from Zone::discardJitCode().

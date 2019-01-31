@@ -27,28 +27,28 @@ function generateDefaults(disabled) {
       {
         line: 1,
         column: undefined,
-        sourceId: "server1.conn26.child3/source26",
+        sourceId: "source-https://example.com/main.js",
         sourceUrl: "https://example.com/main.js"
       },
-      { id: "https://example.com/main.js:1:", disabled: disabled }
+      { id: "source-https://example.com/main.js:1:", disabled: disabled }
     ),
     createBreakpoint(
       {
         line: 2,
         column: undefined,
-        sourceId: "server1.conn26.child3/source26",
+        sourceId: "source-https://example.com/main.js",
         sourceUrl: "https://example.com/main.js"
       },
-      { id: "https://example.com/main.js:2:", disabled: disabled }
+      { id: "source-https://example.com/main.js:2:", disabled: disabled }
     ),
     createBreakpoint(
       {
         line: 3,
         column: undefined,
-        sourceId: "server1.conn26.child3/source26",
+        sourceId: "source-https://example.com/main.js",
         sourceUrl: "https://example.com/main.js"
       },
-      { id: "https://example.com/main.js:3:", disabled: disabled }
+      { id: "source-https://example.com/main.js:3:", disabled: disabled }
     )
   ];
 

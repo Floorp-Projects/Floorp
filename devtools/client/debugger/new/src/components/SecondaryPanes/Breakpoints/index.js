@@ -18,7 +18,7 @@ import { getDisplayPath } from "../../../utils/source";
 import { getSelectedLocation } from "../../../utils/source-maps";
 
 import {
-  makeLocationId,
+  makeBreakpointId,
   sortSelectedBreakpoints
 } from "../../../utils/breakpoint";
 
@@ -101,7 +101,7 @@ class Breakpoints extends Component<Props> {
               breakpoint={breakpoint}
               source={source}
               selectedSource={selectedSource}
-              key={makeLocationId(
+              key={makeBreakpointId(
                 getSelectedLocation(breakpoint, selectedSource)
               )}
             />

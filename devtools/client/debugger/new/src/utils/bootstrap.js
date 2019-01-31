@@ -21,6 +21,8 @@ import * as selectors from "../selectors";
 import App from "../components/App";
 import { asyncStore, prefs } from "./prefs";
 
+import type { Panel } from "../client/firefox/types";
+
 function renderPanel(component, store) {
   const root = document.createElement("div");
   root.className = "launchpad-root theme-body";
@@ -39,14 +41,15 @@ function renderPanel(component, store) {
 
 export function bootstrapStore(
   client: any,
-  { services, toolboxActions }: any,
+  sourceMaps: Object,
+  panel: Panel,
   initialState: Object
 ) {
   const createStore = configureStore({
     log: prefs.logging || isTesting(),
     timing: isDevelopment(),
     makeThunkArgs: (args, state) => {
-      return { ...args, client, ...services, ...toolboxActions };
+      return { ...args, client, sourceMaps, panel };
     }
   });
 

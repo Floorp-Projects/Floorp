@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+// @flow
+
 import {
   actions,
   selectors,
@@ -11,6 +13,8 @@ import {
   makeOriginalSource,
   makeFrame
 } from "../../../utils/test-head";
+
+import { makeWhyNormal } from "../../../utils/test-mockup";
 
 import * as parser from "../../../workers/parser/index";
 
@@ -30,9 +34,9 @@ const mockThreadClient = {
   getFrameScopes: async frame => frame.scope,
   setPausePoints: async () => {},
   setBreakpoint: () => new Promise(_resolve => {}),
-  sourceContents: sourceId => {
+  sourceContents: ({ source }) => {
     return new Promise((resolve, reject) => {
-      switch (sourceId) {
+      switch (source) {
         case "foo1":
           return resolve({
             source: "function foo1() {\n  return 5;\n}",
@@ -75,20 +79,26 @@ function createPauseInfo(
   frameLocation = { sourceId: "foo1", line: 2 },
   frameOpts = {}
 ) {
+  const frames = [
+    makeFrame(
+      { id: mockFrameId, sourceId: frameLocation.sourceId },
+      {
+        location: frameLocation,
+        ...frameOpts
+      }
+    )
+  ];
   return {
     thread: "FakeThread",
-    frames: [
-      makeFrame(
-        { id: mockFrameId, sourceId: frameLocation.sourceId },
-        {
-          location: frameLocation,
-          ...frameOpts
-        }
-      )
-    ],
+    frame: frames[0],
+    frames,
     loadedObjects: [],
-    why: {}
+    why: makeWhyNormal()
   };
+}
+
+function resumedPacket() {
+  return { from: "FakeThread", type: "resumed" };
 }
 
 describe("pause", () => {
@@ -101,6 +111,9 @@ describe("pause", () => {
       await dispatch(actions.paused(mockPauseInfo));
       const stepped = dispatch(actions.stepIn());
       expect(isStepping(getState())).toBeTruthy();
+      if (!stepInResolve) {
+        throw new Error("no stepInResolve");
+      }
       await stepInResolve();
       await stepped;
       expect(isStepping(getState())).toBeFalsy();
@@ -146,8 +159,9 @@ describe("pause", () => {
         column: 0
       });
 
-      await dispatch(actions.newSource(makeSource("await")));
-      await dispatch(actions.loadSourceText({ id: "await" }));
+      const csr = makeSource("await");
+      await dispatch(actions.newSource(csr));
+      await dispatch(actions.loadSourceText(csr.source));
 
       await dispatch(actions.paused(mockPauseInfo));
       const getNextStepSpy = jest.spyOn(parser, "getNextStep");
@@ -165,8 +179,9 @@ describe("pause", () => {
         column: 6
       });
 
-      await dispatch(actions.newSource(makeSource("await")));
-      await dispatch(actions.loadSourceText({ id: "await" }));
+      const csr = makeSource("await");
+      await dispatch(actions.newSource(csr));
+      await dispatch(actions.loadSourceText(csr.source));
 
       await dispatch(actions.paused(mockPauseInfo));
       const getNextStepSpy = jest.spyOn(parser, "getNextStep");
@@ -190,9 +205,10 @@ describe("pause", () => {
         }
       });
 
-      await dispatch(actions.newSource(makeSource("foo")));
+      const csr = makeSource("foo");
+      await dispatch(actions.newSource(csr));
       await dispatch(actions.newSource(makeOriginalSource("foo")));
-      await dispatch(actions.loadSourceText({ id: "foo" }));
+      await dispatch(actions.loadSourceText(csr.source));
 
       await dispatch(actions.paused(mockPauseInfo));
       expect(selectors.getFrames(getState())).toEqual([
@@ -251,10 +267,12 @@ describe("pause", () => {
       const { dispatch, getState } = store;
       const mockPauseInfo = createPauseInfo(generatedLocation);
 
-      await dispatch(actions.newSource(makeSource("foo")));
-      await dispatch(actions.newSource(makeOriginalSource("foo")));
-      await dispatch(actions.loadSourceText({ id: "foo" }));
-      await dispatch(actions.loadSourceText({ id: "foo-original" }));
+      const fooCSR = makeSource("foo");
+      const fooOriginalCSR = makeSource("foo-original");
+      await dispatch(actions.newSource(fooCSR));
+      await dispatch(actions.newSource(fooOriginalCSR));
+      await dispatch(actions.loadSourceText(fooCSR.source));
+      await dispatch(actions.loadSourceText(fooOriginalCSR.source));
       await dispatch(actions.setSymbols("foo-original"));
 
       await dispatch(actions.paused(mockPauseInfo));
@@ -310,12 +328,13 @@ describe("pause", () => {
       const { dispatch, getState } = store;
       const mockPauseInfo = createPauseInfo(generatedLocation);
 
-      await dispatch(
-        actions.newSource(makeSource("foo-wasm", { isWasm: true }))
-      );
-      await dispatch(actions.newSource(makeOriginalSource("foo-wasm")));
-      await dispatch(actions.loadSourceText({ id: "foo-wasm" }));
-      await dispatch(actions.loadSourceText({ id: "foo-wasm/originalSource" }));
+      const csr = makeSource("foo-wasm", { isWasm: true });
+      const originalCSR = makeOriginalSource("foo-wasm");
+
+      await dispatch(actions.newSource(csr));
+      await dispatch(actions.newSource(originalCSR));
+      await dispatch(actions.loadSourceText(csr.source));
+      await dispatch(actions.loadSourceText(originalCSR.source));
 
       await dispatch(actions.paused(mockPauseInfo));
       expect(selectors.getFrames(getState())).toEqual([
@@ -349,7 +368,7 @@ describe("pause", () => {
       const { dispatch } = createStore(client);
 
       dispatch(actions.stepIn());
-      await dispatch(actions.resumed({ from: "FakeThread" }));
+      await dispatch(actions.resumed(resumedPacket()));
       expect(client.evaluateExpressions.mock.calls).toHaveLength(1);
     });
 
@@ -366,7 +385,7 @@ describe("pause", () => {
       mockThreadClient.evaluateExpressions = () => new Promise(r => r(["YAY"]));
       await dispatch(actions.paused(mockPauseInfo));
 
-      await dispatch(actions.resumed({ from: "FakeThread" }));
+      await dispatch(actions.resumed(resumedPacket()));
       const expression = selectors.getExpression(getState(), "foo");
       expect(expression.value).toEqual("YAY");
     });

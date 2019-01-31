@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+// @flow
+
 import {
   actions,
   selectors,
@@ -29,8 +31,8 @@ describe("sources - new sources", () => {
     expect(getSourceCount(getState())).toEqual(2);
     const base = getSource(getState(), "base.js");
     const jquery = getSource(getState(), "jquery.js");
-    expect(base.id).toEqual("base.js");
-    expect(jquery.id).toEqual("jquery.js");
+    expect(base && base.id).toEqual("base.js");
+    expect(jquery && jquery.id).toEqual("jquery.js");
   });
 
   it("should not add multiple identical sources", async () => {
@@ -44,12 +46,14 @@ describe("sources - new sources", () => {
 
   it("should automatically select a pending source", async () => {
     const { dispatch, getState } = createStore(threadClient);
-    const baseSource = makeSource("base.js");
-    await dispatch(actions.selectSourceURL(baseSource.url));
+    const baseCSR = makeSource("base.js");
+    await dispatch(actions.selectSourceURL(baseCSR.source.url));
 
     expect(getSelectedSource(getState())).toBe(undefined);
-    await dispatch(actions.newSource(baseSource));
-    expect(getSelectedSource(getState()).url).toBe(baseSource.url);
+    await dispatch(actions.newSource(baseCSR));
+
+    const selected = getSelectedSource(getState());
+    expect(selected && selected.url).toBe(baseCSR.source.url);
   });
 
   it("should add original sources", async () => {
@@ -61,10 +65,10 @@ describe("sources - new sources", () => {
       }
     );
 
-    const baseSource = makeSource("base.js", { sourceMapURL: "base.js.map" });
-    await dispatch(actions.newSource(baseSource));
-    const magic = getSourceByURL(getState(), "magic.js", true);
-    expect(magic.url).toEqual("magic.js");
+    const baseCSR = makeSource("base.js", { sourceMapURL: "base.js.map" });
+    await dispatch(actions.newSource(baseCSR));
+    const magic = getSourceByURL(getState(), "magic.js");
+    expect(magic && magic.url).toEqual("magic.js");
   });
 
   // eslint-disable-next-line
@@ -91,11 +95,11 @@ describe("sources - new sources", () => {
         getOriginalURLs: async () => new Promise(_ => {})
       }
     );
-    const baseSource = makeSource("base.js", { sourceMapURL: "base.js.map" });
-    await dispatch(actions.newSource(baseSource));
+    const baseCSR = makeSource("base.js", { sourceMapURL: "base.js.map" });
+    await dispatch(actions.newSource(baseCSR));
     expect(getSourceCount(getState())).toEqual(1);
     const base = getSource(getState(), "base.js");
-    expect(base.id).toEqual("base.js");
+    expect(base && base.id).toEqual("base.js");
   });
 
   // eslint-disable-next-line
@@ -123,9 +127,9 @@ describe("sources - new sources", () => {
     await sourceQueue.flush();
     await waitForState(dbg, state => getSourceCount(state) == 5);
     expect(getSourceCount(getState())).toEqual(5);
-    const barCljs = getSourceByURL(getState(), "bar.cljs", true);
-    expect(barCljs.url).toEqual("bar.cljs");
-    const bazzCljs = getSourceByURL(getState(), "bazz.cljs", true);
-    expect(bazzCljs.url).toEqual("bazz.cljs");
+    const barCljs = getSourceByURL(getState(), "bar.cljs");
+    expect(barCljs && barCljs.url).toEqual("bar.cljs");
+    const bazzCljs = getSourceByURL(getState(), "bazz.cljs");
+    expect(bazzCljs && bazzCljs.url).toEqual("bazz.cljs");
   });
 });

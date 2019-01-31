@@ -5,17 +5,18 @@
 // @flow
 // This module converts Firefox specific types to the generic types
 
-import type { Frame, Source, SourceLocation } from "../../types";
+import type { Frame, Source, SourceActorLocation, ThreadId } from "../../types";
 import type {
   PausedPacket,
   FramesResponse,
   FramePacket,
-  SourcePayload
+  SourcePayload,
+  CreateSourceResult
 } from "./types";
 
 import { clientCommands } from "./commands";
 
-export function createFrame(frame: FramePacket): ?Frame {
+export function createFrame(thread: ThreadId, frame: FramePacket): ?Frame {
   if (!frame) {
     return null;
   }
@@ -28,14 +29,19 @@ export function createFrame(frame: FramePacket): ?Frame {
   }
 
   // NOTE: Firefox 66 switched from where.source to where.actor
+  const actor = frame.where.source
+    ? frame.where.source.actor
+    : frame.where.actor;
+
   const location = {
-    sourceId: frame.where.source ? frame.where.source.actor : frame.where.actor,
+    sourceId: clientCommands.getSourceForActor(actor),
     line: frame.where.line,
     column: frame.where.column
   };
 
   return {
     id: frame.actor,
+    thread,
     displayName: title,
     location,
     generatedLocation: location,
@@ -44,27 +50,33 @@ export function createFrame(frame: FramePacket): ?Frame {
   };
 }
 
+function makeSourceId(source) {
+  return source.url ? `sourceURL-${source.url}` : `source-${source.actor}`;
+}
+
 export function createSource(
   thread: string,
   source: SourcePayload,
   { supportsWasm }: { supportsWasm: boolean }
-): Source {
-  const createdSource = {
-    id: source.actor,
-    thread,
+): CreateSourceResult {
+  const createdSource: any = {
+    id: makeSourceId(source),
     url: source.url,
     relativeUrl: source.url,
     isPrettyPrinted: false,
-    isWasm: false,
     sourceMapURL: source.sourceMapURL,
     introductionUrl: source.introductionUrl,
     isBlackBoxed: false,
-    loadedState: "unloaded"
-  };
-  clientCommands.registerSource(createdSource);
-  return Object.assign(createdSource, {
+    loadedState: "unloaded",
     isWasm: supportsWasm && source.introductionType === "wasm"
-  });
+  };
+  const sourceActor = {
+    actor: source.actor,
+    source: createdSource.id,
+    thread
+  };
+  clientCommands.registerSourceActor(sourceActor);
+  return { sourceActor, source: (createdSource: Source) };
 }
 
 export function createPause(
@@ -78,8 +90,8 @@ export function createPause(
   return {
     ...packet,
     thread,
-    frame: createFrame(frame),
-    frames: response.frames.map(createFrame)
+    frame: createFrame(thread, frame),
+    frames: response.frames.map(createFrame.bind(null, thread))
   };
 }
 
@@ -88,16 +100,15 @@ export function createPause(
 // exists, otherwise use `location`.
 
 export function createBreakpointLocation(
-  location: SourceLocation,
+  location: SourceActorLocation,
   actualLocation?: Object
-): SourceLocation {
+): SourceActorLocation {
   if (!actualLocation) {
     return location;
   }
 
   return {
-    sourceId: actualLocation.source.actor,
-    sourceUrl: actualLocation.source.url,
+    ...location,
     line: actualLocation.line,
     column: actualLocation.column
   };

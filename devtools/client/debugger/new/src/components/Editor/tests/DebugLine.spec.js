@@ -31,7 +31,7 @@ function generateDefaults(editor, overrides) {
       why: { type: "breakpoint" }
     },
     frame: null,
-    source: makeSource("foo"),
+    source: makeSource("foo").source,
     ...overrides
   };
 }
@@ -65,7 +65,7 @@ describe("DebugLine Component", () => {
   describe("pausing at the first location", () => {
     it("should show a new debug line", async () => {
       const { component, props, doc } = render({
-        source: makeSource("foo", { loadedState: "loaded" })
+        source: makeSource("foo", { loadedState: "loaded" }).source
       });
       const line = 2;
       const frame = createFrame(line);
@@ -81,7 +81,7 @@ describe("DebugLine Component", () => {
     describe("pausing at a new location", () => {
       it("should replace the first debug line", async () => {
         const { props, component, clear, doc } = render({
-          source: makeSource("foo", { loadedState: "loaded" })
+          source: makeSource("foo", { loadedState: "loaded" }).source
         });
 
         component.instance().debugExpression = { clear: jest.fn() };

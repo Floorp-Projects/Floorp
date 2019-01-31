@@ -13,6 +13,7 @@ Object {
   },
   "disabled": false,
   "generatedLocation": Object {
+    "column": undefined,
     "line": 7,
     "sourceId": "a",
     "sourceUrl": "http://localhost:8000/examples/a",
@@ -50,11 +51,12 @@ Array [
         },
         "disabled": false,
         "generatedLocation": Object {
+          "column": undefined,
           "line": 2,
           "sourceId": "a",
           "sourceUrl": "http://localhost:8000/examples/a",
         },
-        "id": "hi",
+        "id": "a:2:",
         "loading": false,
         "location": Object {
           "line": 2,
@@ -104,11 +106,12 @@ Object {
   },
   "disabled": false,
   "generatedLocation": Object {
+    "column": undefined,
     "line": 1,
     "sourceId": "a.js",
     "sourceUrl": "http://localhost:8000/examples/a.js",
   },
-  "id": "hi",
+  "id": "a.js:1:",
   "loading": false,
   "location": Object {
     "column": 0,
@@ -142,11 +145,12 @@ Array [
         },
         "disabled": true,
         "generatedLocation": Object {
+          "column": undefined,
           "line": 5,
           "sourceId": "a",
           "sourceUrl": "http://localhost:8000/examples/a",
         },
-        "id": "hi",
+        "id": "a:5:",
         "loading": false,
         "location": Object {
           "line": 5,

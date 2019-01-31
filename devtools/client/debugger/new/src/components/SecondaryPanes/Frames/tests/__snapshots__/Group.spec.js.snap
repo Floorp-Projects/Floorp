@@ -5,21 +5,16 @@ exports[`Group displays a group 1`] = `
   className="frames-group"
   onContextMenu={[Function]}
 >
-  <li
+  <div
     className="group"
     onClick={[Function]}
+    role="listitem"
     tabIndex={0}
     title="Show Back frames"
   >
-    <span
-      className="title"
-    >
-      foo
-    </span>
-    <Badge>
-      1
-    </Badge>
+    <FrameIndent />
     <FrameLocation
+      expanded={false}
       frame={
         Object {
           "displayName": "foo",
@@ -27,7 +22,15 @@ exports[`Group displays a group 1`] = `
         }
       }
     />
-  </li>
+    <span
+      className="clipboard-only"
+    >
+       
+    </span>
+    <Badge>
+      1
+    </Badge>
+  </div>
 </div>
 `;
 
@@ -36,22 +39,17 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
   className="frames-group expanded"
   onContextMenu={[Function]}
 >
-  <li
+  <div
     className="group"
     key="1"
     onClick={[Function]}
+    role="listitem"
     tabIndex={0}
     title="Collapse Back frames"
   >
-    <span
-      className="title"
-    >
-      renderFoo
-    </span>
-    <Badge>
-      3
-    </Badge>
+    <FrameIndent />
     <FrameLocation
+      expanded={true}
       frame={
         Object {
           "displayName": "renderFoo",
@@ -66,10 +64,19 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
         }
       }
     />
-  </li>
+    <span
+      className="clipboard-only"
+    >
+       
+    </span>
+    <Badge>
+      3
+    </Badge>
+  </div>
   <div
     className="frames-list"
   >
+    <FrameIndent />
     <Frame
       copyStackTrace={[MockFunction]}
       disableContextMenu={false}
@@ -92,11 +99,13 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
       hideLocation={true}
       key="1"
       selectFrame={[MockFunction]}
+      selectable={true}
       selectedFrame={Object {}}
       shouldMapDisplayName={false}
       toggleBlackBox={[MockFunction]}
       toggleFrameworkGrouping={[MockFunction]}
     />
+    <FrameIndent />
     <Frame
       copyStackTrace={[MockFunction]}
       disableContextMenu={false}
@@ -119,11 +128,13 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
       hideLocation={true}
       key="2"
       selectFrame={[MockFunction]}
+      selectable={true}
       selectedFrame={Object {}}
       shouldMapDisplayName={false}
       toggleBlackBox={[MockFunction]}
       toggleFrameworkGrouping={[MockFunction]}
     />
+    <FrameIndent />
     <Frame
       copyStackTrace={[MockFunction]}
       disableContextMenu={false}
@@ -146,6 +157,7 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
       hideLocation={true}
       key="3"
       selectFrame={[MockFunction]}
+      selectable={true}
       selectedFrame={Object {}}
       shouldMapDisplayName={false}
       toggleBlackBox={[MockFunction]}
@@ -160,22 +172,17 @@ exports[`Group renders group with anonymous functions 1`] = `
   className="frames-group"
   onContextMenu={[Function]}
 >
-  <li
+  <div
     className="group"
     key="1"
     onClick={[Function]}
+    role="listitem"
     tabIndex={0}
     title="Show Back frames"
   >
-    <span
-      className="title"
-    >
-      &lt;anonymous&gt;
-    </span>
-    <Badge>
-      3
-    </Badge>
+    <FrameIndent />
     <FrameLocation
+      expanded={false}
       frame={
         Object {
           "displayName": "",
@@ -190,7 +197,15 @@ exports[`Group renders group with anonymous functions 1`] = `
         }
       }
     />
-  </li>
+    <span
+      className="clipboard-only"
+    >
+       
+    </span>
+    <Badge>
+      3
+    </Badge>
+  </div>
 </div>
 `;
 
@@ -199,22 +214,17 @@ exports[`Group renders group with anonymous functions 2`] = `
   className="frames-group expanded"
   onContextMenu={[Function]}
 >
-  <li
+  <div
     className="group"
     key="1"
     onClick={[Function]}
+    role="listitem"
     tabIndex={0}
     title="Collapse Back frames"
   >
-    <span
-      className="title"
-    >
-      &lt;anonymous&gt;
-    </span>
-    <Badge>
-      3
-    </Badge>
+    <FrameIndent />
     <FrameLocation
+      expanded={true}
       frame={
         Object {
           "displayName": "",
@@ -229,10 +239,19 @@ exports[`Group renders group with anonymous functions 2`] = `
         }
       }
     />
-  </li>
+    <span
+      className="clipboard-only"
+    >
+       
+    </span>
+    <Badge>
+      3
+    </Badge>
+  </div>
   <div
     className="frames-list"
   >
+    <FrameIndent />
     <Frame
       copyStackTrace={[MockFunction]}
       disableContextMenu={false}
@@ -254,11 +273,13 @@ exports[`Group renders group with anonymous functions 2`] = `
       hideLocation={true}
       key="1"
       selectFrame={[MockFunction]}
+      selectable={true}
       selectedFrame={Object {}}
       shouldMapDisplayName={false}
       toggleBlackBox={[MockFunction]}
       toggleFrameworkGrouping={[MockFunction]}
     />
+    <FrameIndent />
     <Frame
       copyStackTrace={[MockFunction]}
       disableContextMenu={false}
@@ -280,11 +301,13 @@ exports[`Group renders group with anonymous functions 2`] = `
       hideLocation={true}
       key="2"
       selectFrame={[MockFunction]}
+      selectable={true}
       selectedFrame={Object {}}
       shouldMapDisplayName={false}
       toggleBlackBox={[MockFunction]}
       toggleFrameworkGrouping={[MockFunction]}
     />
+    <FrameIndent />
     <Frame
       copyStackTrace={[MockFunction]}
       disableContextMenu={false}
@@ -306,6 +329,7 @@ exports[`Group renders group with anonymous functions 2`] = `
       hideLocation={true}
       key="3"
       selectFrame={[MockFunction]}
+      selectable={true}
       selectedFrame={Object {}}
       shouldMapDisplayName={false}
       toggleBlackBox={[MockFunction]}

@@ -1,16 +1,17 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Frame getFrameTitle 1`] = `
-<li
+<div
   className="frame"
   key="1"
   onContextMenu={[Function]}
   onKeyUp={[Function]}
   onMouseDown={[Function]}
+  role="listitem"
   tabIndex={0}
   title="Jump to https://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com/assets/src/js/foo-view.js:10"
 >
-  	
+  <FrameIndent />
   <FrameTitle
     frame={
       Object {
@@ -30,7 +31,11 @@ exports[`Frame getFrameTitle 1`] = `
       }
     }
   />
-   
+  <span
+    className="clipboard-only"
+  >
+     
+  </span>
   <FrameLocation
     displayFullUrl={false}
     frame={
@@ -46,21 +51,23 @@ exports[`Frame getFrameTitle 1`] = `
       }
     }
   />
-  
-
-</li>
+  <br
+    className="clipboard-only"
+  />
+</div>
 `;
 
 exports[`Frame library frame 1`] = `
-<li
+<div
   className="frame selected"
   key="3"
   onContextMenu={[Function]}
   onKeyUp={[Function]}
   onMouseDown={[Function]}
+  role="listitem"
   tabIndex={0}
 >
-  	
+  <FrameIndent />
   <FrameTitle
     frame={
       Object {
@@ -83,7 +90,11 @@ exports[`Frame library frame 1`] = `
       }
     }
   />
-   
+  <span
+    className="clipboard-only"
+  >
+     
+  </span>
   <FrameLocation
     displayFullUrl={false}
     frame={
@@ -102,21 +113,23 @@ exports[`Frame library frame 1`] = `
       }
     }
   />
-  
-
-</li>
+  <br
+    className="clipboard-only"
+  />
+</div>
 `;
 
 exports[`Frame user frame (not selected) 1`] = `
-<li
+<div
   className="frame"
   key="1"
   onContextMenu={[Function]}
   onKeyUp={[Function]}
   onMouseDown={[Function]}
+  role="listitem"
   tabIndex={0}
 >
-  	
+  <FrameIndent />
   <FrameTitle
     frame={
       Object {
@@ -140,7 +153,11 @@ exports[`Frame user frame (not selected) 1`] = `
       }
     }
   />
-   
+  <span
+    className="clipboard-only"
+  >
+     
+  </span>
   <FrameLocation
     displayFullUrl={false}
     frame={
@@ -160,21 +177,23 @@ exports[`Frame user frame (not selected) 1`] = `
       }
     }
   />
-  
-
-</li>
+  <br
+    className="clipboard-only"
+  />
+</div>
 `;
 
 exports[`Frame user frame 1`] = `
-<li
+<div
   className="frame selected"
   key="1"
   onContextMenu={[Function]}
   onKeyUp={[Function]}
   onMouseDown={[Function]}
+  role="listitem"
   tabIndex={0}
 >
-  	
+  <FrameIndent />
   <FrameTitle
     frame={
       Object {
@@ -198,7 +217,11 @@ exports[`Frame user frame 1`] = `
       }
     }
   />
-   
+  <span
+    className="clipboard-only"
+  >
+     
+  </span>
   <FrameLocation
     displayFullUrl={false}
     frame={
@@ -218,7 +241,8 @@ exports[`Frame user frame 1`] = `
       }
     }
   />
-  
-
-</li>
+  <br
+    className="clipboard-only"
+  />
+</div>
 `;

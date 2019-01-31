@@ -4,8 +4,6 @@
 
 // @flow
 
-const { isDevelopment } = require("devtools-environment");
-
 import type { ThunkArgs } from "./types";
 import type { Worker, Grip } from "../types";
 
@@ -14,45 +12,25 @@ import type { Worker, Grip } from "../types";
  * @static
  */
 export function openLink(url: string) {
-  return async function({ openLink: openLinkCommand }: ThunkArgs) {
-    if (isDevelopment()) {
-      const win = window.open(url, "_blank");
-      win.focus();
-    } else {
-      openLinkCommand(url);
-    }
+  return async function({ panel }: ThunkArgs) {
+    return panel.openLink(url);
   };
 }
 
 export function openWorkerToolbox(worker: Worker) {
-  return async function({
-    getState,
-    openWorkerToolbox: openWorkerToolboxCommand
-  }: ThunkArgs) {
-    if (isDevelopment()) {
-      alert(worker.url);
-    } else {
-      openWorkerToolboxCommand(worker);
-    }
+  return async function({ getState, panel }: ThunkArgs) {
+    return panel.openWorkerToolbox(worker);
   };
 }
 
 export function evaluateInConsole(inputString: string) {
-  return async ({ openConsoleAndEvaluate }: ThunkArgs) => {
-    if (isDevelopment()) {
-      alert(`console.log: ${inputString}`);
-    } else {
-      return openConsoleAndEvaluate(inputString);
-    }
+  return async ({ panel }: ThunkArgs) => {
+    return panel.openConsoleAndEvaluate(inputString);
   };
 }
 
 export function openElementInInspectorCommand(grip: Grip) {
-  return async ({ openElementInInspector }: ThunkArgs) => {
-    if (isDevelopment()) {
-      alert(`Opening node in Inspector: ${grip.class}`);
-    } else {
-      return openElementInInspector(grip);
-    }
+  return async ({ panel }: ThunkArgs) => {
+    return panel.openElementInInspector(grip);
   };
 }

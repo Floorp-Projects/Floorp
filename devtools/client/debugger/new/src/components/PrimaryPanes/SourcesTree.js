@@ -17,7 +17,6 @@ import {
   getExpandedState,
   getProjectDirectoryRoot,
   getRelativeSourcesForThread,
-  getSourceCount,
   getFocusedSourceItem,
   getWorkerByThread,
   getWorkerCount
@@ -346,18 +345,20 @@ class SourcesTree extends Component<Props, State> {
 
 function getSourceForTree(
   state: AppState,
+  relativeSources: SourcesMap,
   source: ?Source,
-  thread: ?string
+  thread
 ): ?Source {
+  if (!source) {
+    return null;
+  }
+
+  source = relativeSources[source.id];
   if (!source || !source.isPrettyPrinted) {
     return source;
   }
 
-  const candidate = getGeneratedSourceByURL(state, getRawSourceURL(source.url));
-
-  if (!thread || !candidate || candidate.thread == thread) {
-    return candidate;
-  }
+  return getGeneratedSourceByURL(state, getRawSourceURL(source.url));
 }
 
 const mapStateToProps = (state, props) => {
@@ -365,16 +366,22 @@ const mapStateToProps = (state, props) => {
   const shownSource = getShownSource(state);
   const focused = getFocusedSourceItem(state);
   const thread = props.thread;
+  const relativeSources = getRelativeSourcesForThread(state, thread);
 
   return {
-    shownSource: getSourceForTree(state, shownSource, thread),
-    selectedSource: getSourceForTree(state, selectedSource, thread),
+    shownSource: getSourceForTree(state, relativeSources, shownSource, thread),
+    selectedSource: getSourceForTree(
+      state,
+      relativeSources,
+      selectedSource,
+      thread
+    ),
     debuggeeUrl: getDebuggeeUrl(state),
     expanded: getExpandedState(state, props.thread),
     focused: focused && focused.thread == props.thread ? focused.item : null,
     projectRoot: getProjectDirectoryRoot(state),
-    sources: getRelativeSourcesForThread(state, thread),
-    sourceCount: getSourceCount(state, props.thread),
+    sources: relativeSources,
+    sourceCount: Object.values(relativeSources).length,
     worker: getWorkerByThread(state, thread),
     workerCount: getWorkerCount(state)
   };

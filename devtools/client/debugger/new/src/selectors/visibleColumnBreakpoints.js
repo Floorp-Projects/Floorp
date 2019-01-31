@@ -10,7 +10,7 @@ import { createSelector } from "reselect";
 import { getViewport, getSelectedSource } from "../selectors";
 import { getVisibleBreakpoints } from "./visibleBreakpoints";
 import { getVisiblePausePoints } from "./visiblePausePoints";
-import { makeLocationId } from "../utils/breakpoint";
+import { makeBreakpointId } from "../utils/breakpoint";
 import type { Selector, PausePoint } from "../reducers/types";
 
 import type {
@@ -118,7 +118,7 @@ export function getColumnBreakpoints(
 
   // 4. Only show one column breakpoint per generated location
   columnBreakpoints = sortedUniqBy(columnBreakpoints, ({ generatedLocation }) =>
-    makeLocationId(generatedLocation)
+    makeBreakpointId(generatedLocation)
   );
 
   // 5. Check that there is atleast one other possible breakpoint on the line

@@ -17,7 +17,9 @@ export { getASTLocation, findScopeByName } from "./astBreakpointLocation";
 
 import type {
   Source,
+  SourceActor,
   SourceLocation,
+  SourceActorLocation,
   PendingLocation,
   Breakpoint,
   PendingBreakpoint
@@ -45,7 +47,8 @@ export function locationMoved(
   );
 }
 
-export function makeLocationId(location: SourceLocation) {
+// The ID for a Breakpoint is derived from its location in its Source.
+export function makeBreakpointId(location: SourceLocation) {
   const { sourceId, line, column } = location;
   const columnString = column || "";
   return `${sourceId}:${line}:${columnString}`;
@@ -63,6 +66,24 @@ export function makePendingLocationId(location: SourceLocation) {
   const columnString = column || "";
 
   return `${sourceUrlString}:${line}:${columnString}`;
+}
+
+export function makeSourceActorLocation(
+  sourceActor: SourceActor,
+  location: SourceLocation
+) {
+  return {
+    sourceActor,
+    line: location.line,
+    column: location.column
+  };
+}
+
+// The ID for a BreakpointActor is derived from its location in its SourceActor.
+export function makeBreakpointActorId(location: SourceActorLocation) {
+  const { sourceActor, line, column } = location;
+  const columnString = column || "";
+  return `${sourceActor.actor}:${line}:${columnString}`;
 }
 
 export function assertBreakpoint(breakpoint: Breakpoint) {
@@ -131,7 +152,6 @@ export function createBreakpoint(
     hidden,
     generatedLocation,
     astLocation,
-    id,
     text,
     originalText,
     logValue
@@ -143,7 +163,7 @@ export function createBreakpoint(
     index: 0
   };
   const properties = {
-    id,
+    id: makeBreakpointId(location),
     options: {
       condition: condition || null,
       logValue: logValue || null,
