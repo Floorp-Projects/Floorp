@@ -586,6 +586,32 @@ def vcs_sparse_checkout(repo):
 
 set_config('VCS_SPARSE_CHECKOUT', vcs_sparse_checkout)
 
+# The application/project to build
+# ==============================================================
+option('--enable-application', nargs=1, env='MOZ_BUILD_APP',
+       help='Application to build. Same as --enable-project.')
+
+
+@depends('--enable-application')
+def application(app):
+    if app:
+        return app
+
+
+imply_option('--enable-project', application)
+
+
+@depends(check_build_environment)
+def default_project(build_env):
+    if build_env.topobjdir.endswith('/js/src'):
+        return 'js'
+    return 'browser'
+
+
+option('--enable-project', nargs=1, default=default_project,
+       help='Project to build')
+
+
 # Host and target systems
 # ==============================================================
 option('--host', nargs=1, help='Define the system type performing the build')
@@ -792,16 +818,26 @@ def real_host(value, shell):
 host = help_host_target | real_host
 
 
-@depends('--target', real_host, shell)
+@depends('--target', real_host, shell, '--enable-project')
 @checking('for target system type', lambda t: t.alias)
-def real_target(value, host, shell):
+def real_target(value, host, shell, project):
+    if project:
+        project = project[0]
     if not value:
+        if project == 'mobile/android':
+            return split_triplet('armv7a-unknown-linux-androideabi')
         return host
     # If --target was only given a cpu arch, expand it with the
-    # non-cpu part of the host.
+    # non-cpu part of the host. For mobile/android, expand it with
+    # unknown-linux-android.
     target = value[0]
     if '-' not in target:
-        cpu, rest = host.alias.split('-', 1)
+        if project == 'mobile/android':
+            rest = 'unknown-linux-android'
+            if target.startswith('arm'):
+                rest += 'eabi'
+        else:
+            cpu, rest = host.alias.split('-', 1)
         return split_triplet('-'.join((target, rest)))
 
     return split_triplet(config_sub(shell, target))
@@ -1006,31 +1042,6 @@ def target_is_solaris(target):
 
 
 set_define('XP_SOLARIS', target_is_solaris)
-
-# The application/project to build
-# ==============================================================
-option('--enable-application', nargs=1, env='MOZ_BUILD_APP',
-       help='Application to build. Same as --enable-project.')
-
-
-@depends('--enable-application')
-def application(app):
-    if app:
-        return app
-
-
-imply_option('--enable-project', application)
-
-
-@depends(check_build_environment)
-def default_project(build_env):
-    if build_env.topobjdir.endswith('/js/src'):
-        return 'js'
-    return 'browser'
-
-
-option('--enable-project', nargs=1, default=default_project,
-       help='Project to build')
 
 
 @depends('--enable-project', '--with-external-source-dir',
