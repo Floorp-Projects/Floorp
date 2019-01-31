@@ -1348,11 +1348,6 @@ static bool ArePossiblePackEnums(const WebGLContext* webgl,
   // OpenGL ES 2.0 $4.3.1 - IMPLEMENTATION_COLOR_READ_{TYPE/FORMAT} is a valid
   // combination for glReadPixels()...
 
-  // So yeah, we are actually checking that these are valid as /unpack/ formats,
-  // instead of /pack/ formats here, but it should cover the INVALID_ENUM cases.
-  if (!webgl->mFormatUsage->AreUnpackEnumsValid(pi.format, pi.type))
-    return false;
-
   // Only valid when pulled from:
   // * GLES 2.0.25 p105:
   //   "table 3.4, excluding formats LUMINANCE and LUMINANCE_ALPHA."
@@ -1367,6 +1362,9 @@ static bool ArePossiblePackEnums(const WebGLContext* webgl,
   }
 
   if (pi.type == LOCAL_GL_UNSIGNED_INT_24_8) return false;
+
+  uint8_t bytes;
+  if (!GetBytesPerPixel(pi, &bytes)) return false;
 
   return true;
 }
