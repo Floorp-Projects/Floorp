@@ -337,9 +337,13 @@ void FeatureData::DoLookup(nsUrlClassifierDBServiceWorker* aWorkerClassifier) {
           isBlacklisted));
 
   if (isBlacklisted == false) {
+    // If one of the blacklist table matches the URI, we don't need to continue
+    // with the others: the feature is blacklisted (but maybe also
+    // whitelisted).
     for (TableData* tableData : mBlacklistTables) {
       if (tableData->DoLookup(aWorkerClassifier)) {
         isBlacklisted = true;
+        break;
       }
     }
   }
