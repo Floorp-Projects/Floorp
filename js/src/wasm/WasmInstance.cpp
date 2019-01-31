@@ -1348,35 +1348,44 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args) {
     return false;
   }
 
+  DebugCodegen(DebugChannel::Function, "wasm-function[%d]; arguments ", funcIndex);
   RootedValue v(cx);
   for (unsigned i = 0; i < func.funcType().args().length(); ++i) {
     v = i < args.length() ? args[i] : UndefinedValue();
     switch (func.funcType().arg(i).code()) {
       case ValType::I32:
         if (!ToInt32(cx, v, (int32_t*)&exportArgs[i])) {
+          DebugCodegen(DebugChannel::Function, "call to ToInt32 failed!\n");
           return false;
         }
+        DebugCodegen(DebugChannel::Function, "i32(%d) ", *(int32_t*)&exportArgs[i]);
         break;
       case ValType::I64:
         MOZ_CRASH("unexpected i64 flowing into callExport");
       case ValType::F32:
         if (!RoundFloat32(cx, v, (float*)&exportArgs[i])) {
+          DebugCodegen(DebugChannel::Function, "call to RoundFloat32 failed!\n");
           return false;
         }
+        DebugCodegen(DebugChannel::Function, "f32(%f) ", *(float*)&exportArgs[i]);
         break;
       case ValType::F64:
         if (!ToNumber(cx, v, (double*)&exportArgs[i])) {
+          DebugCodegen(DebugChannel::Function, "call to ToNumber failed!\n");
           return false;
         }
+        DebugCodegen(DebugChannel::Function, "f64(%lf) ", *(double*)&exportArgs[i]);
         break;
       case ValType::Ref:
         MOZ_CRASH("temporarily unsupported Ref type in callExport");
       case ValType::AnyRef: {
         RootedAnyRef ar(cx, AnyRef::null());
         if (!BoxAnyRef(cx, v, &ar)) {
+          DebugCodegen(DebugChannel::Function, "call to BoxAnyRef failed!\n");
           return false;
         }
         *(void**)&exportArgs[i] = ar.get().forCompiledCode();
+        DebugCodegen(DebugChannel::Function, "ptr(%p) ", *(void**)&exportArgs[i]);
         break;
       }
       case ValType::NullRef: {
@@ -1384,6 +1393,8 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args) {
       }
     }
   }
+
+  DebugCodegen(DebugChannel::Function, "\n");
 
   {
     JitActivation activation(cx);
@@ -1417,31 +1428,38 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args) {
 
   void* retAddr = &exportArgs[0];
 
+  DebugCodegen(DebugChannel::Function, "wasm-function[%d]; returns ", funcIndex);
   switch (func.funcType().ret().code()) {
     case ExprType::Void:
       args.rval().set(UndefinedValue());
+      DebugCodegen(DebugChannel::Function, "void");
       break;
     case ExprType::I32:
       args.rval().set(Int32Value(*(int32_t*)retAddr));
+      DebugCodegen(DebugChannel::Function, "i32(%d)", *(int32_t*)retAddr);
       break;
     case ExprType::I64:
       MOZ_CRASH("unexpected i64 flowing from callExport");
     case ExprType::F32:
       args.rval().set(NumberValue(*(float*)retAddr));
+      DebugCodegen(DebugChannel::Function, "f32(%f)", *(float*)retAddr);
       break;
     case ExprType::F64:
       args.rval().set(NumberValue(*(double*)retAddr));
+      DebugCodegen(DebugChannel::Function, "f64(%lf)", *(double*)retAddr);
       break;
     case ExprType::Ref:
       MOZ_CRASH("temporarily unsupported Ref type in callExport");
     case ExprType::AnyRef:
       args.rval().set(UnboxAnyRef(AnyRef::fromCompiledCode(*(void**)retAddr)));
+      DebugCodegen(DebugChannel::Function, "ptr(%p)", *(void**)retAddr);
       break;
     case ExprType::NullRef:
       MOZ_CRASH("NullRef not expressible");
     case ExprType::Limit:
       MOZ_CRASH("Limit");
   }
+  DebugCodegen(DebugChannel::Function, "\n");
 
   return true;
 }

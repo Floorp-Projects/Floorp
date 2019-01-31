@@ -960,3 +960,28 @@ void wasm::Log(JSContext* cx, const char* fmt, ...) {
 
   va_end(args);
 }
+
+#ifdef WASM_CODEGEN_DEBUG
+bool wasm::IsCodegenDebugEnabled(DebugChannel channel)
+{
+  switch (channel) {
+    case DebugChannel::Function:
+      return JitOptions.enableWasmFuncCallSpew;
+    case DebugChannel::Import:
+      return JitOptions.enableWasmImportCallSpew;
+  }
+  return false;
+}
+#endif
+
+void wasm::DebugCodegen(DebugChannel channel, const char* fmt, ...) {
+#ifdef WASM_CODEGEN_DEBUG
+  if (!IsCodegenDebugEnabled(channel)) {
+    return;
+  }
+  va_list ap;
+  va_start(ap, fmt);
+  vfprintf(stderr, fmt, ap);
+  va_end(ap);
+#endif
+}

@@ -2083,6 +2083,13 @@ enum class SymbolicAddress {
 #if defined(JS_CODEGEN_MIPS32)
   js_jit_gAtomic64Lock,
 #endif
+#ifdef WASM_CODEGEN_DEBUG
+  PrintI32,
+  PrintPtr,
+  PrintF32,
+  PrintF64,
+  PrintText,
+#endif
   Limit
 };
 
@@ -2613,6 +2620,20 @@ class DebugFrame {
 // Verbose logging support.
 
 extern void Log(JSContext* cx, const char* fmt, ...) MOZ_FORMAT_PRINTF(2, 3);
+
+// Codegen debug support.
+
+enum class DebugChannel {
+  Function,
+  Import,
+};
+
+#ifdef WASM_CODEGEN_DEBUG
+bool IsCodegenDebugEnabled(DebugChannel channel);
+#endif
+
+void DebugCodegen(DebugChannel channel, const char* fmt, ...)
+    MOZ_FORMAT_PRINTF(2, 3);
 
 }  // namespace wasm
 }  // namespace js
