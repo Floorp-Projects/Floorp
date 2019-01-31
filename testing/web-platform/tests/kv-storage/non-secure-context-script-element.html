@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
-<title>Async local storage: should not work in non-secure contexts when included via an import statement</title>
+<title>KV Storage: should not work in non-secure contexts when included via a script element</title>
 
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
@@ -14,7 +14,7 @@ test(() => {
 }, "Prerequisite check");
 
 async_test(t => {
-  window.addEventListener("error", t.step_func_done(errorEvent => {
+  self.addEventListener("error", t.step_func_done(errorEvent => {
     assert_equals(errorEvent.error.constructor, DOMException, "Must trigger a DOMException");
     assert_equals(errorEvent.error.name, "SecurityError",
       "The DOMException must be a \"SecurityError\"");
@@ -22,6 +22,4 @@ async_test(t => {
 });
 </script>
 
-<script type="module">
-import "std:async-local-storage";
-</script>
+<script type="module" src="std:kv-storage"></script>

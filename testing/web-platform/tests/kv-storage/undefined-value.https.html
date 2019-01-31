@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
-<title>Async local storage: undefined keys</title>
-<!-- https://github.com/domenic/async-local-storage/commit/5bf31109f37d1371f619ea33d0e2391f10e8b8f5 -->
+<title>KV Storage: undefined values</title>
+<!-- https://github.com/wicg/kv-storage/commit/5bf31109f37d1371f619ea33d0e2391f10e8b8f5 -->
 
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
 
 <script type="module">
-import { StorageArea } from "std:async-local-storage";
-import { testWithArea } from "./helpers/als-tests.js";
+import { StorageArea } from "std:kv-storage";
+import { testWithArea } from "./helpers/kvs-tests.js";
 
 testWithArea(async (area) => {
   assert_equals(await area.get("key"), undefined);

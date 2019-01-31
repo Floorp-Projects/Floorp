@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
-<title>Async local storage API surface</title>
+<title>KV Storage: API surface</title>
 
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
 
 <script type="module">
-import { storage, StorageArea } from "std:async-local-storage";
+import { storage, StorageArea } from "std:kv-storage";
 import * as classAssert from "./helpers/class-assert.js";
-import { testWithArea } from "./helpers/als-tests.js";
+import { testWithArea } from "./helpers/kvs-tests.js";
 
 test(() => {
   classAssert.isConstructor(StorageArea);
