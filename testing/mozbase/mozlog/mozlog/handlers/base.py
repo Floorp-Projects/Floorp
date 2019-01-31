@@ -78,15 +78,14 @@ class StreamHandler(BaseHandler):
     def __init__(self, stream, formatter):
         BaseHandler.__init__(self, formatter)
         assert stream is not None
-        if six.PY2:
-            # This is a hack to deal with the case where we are passed a
-            # StreamWriter (e.g. by mach for stdout). A StreamWriter requires
-            # the code to handle unicode in exactly the opposite way compared
-            # to a normal stream i.e. you always have to pass in a Unicode
-            # object rather than a string object. Cope with that by extracting
-            # the underlying raw stream.
-            if isinstance(stream, codecs.StreamWriter):
-                stream = stream.stream
+        # This is a hack to deal with the case where we are passed a
+        # StreamWriter (e.g. by mach for stdout). A StreamWriter requires
+        # the code to handle unicode in exactly the opposite way compared
+        # to a normal stream i.e. you always have to pass in a Unicode
+        # object rather than a string object. Cope with that by extracting
+        # the underlying raw stream.
+        if isinstance(stream, codecs.StreamWriter):
+            stream = stream.stream
 
         self.formatter = formatter
         self.stream = stream
@@ -99,23 +98,11 @@ class StreamHandler(BaseHandler):
         if not formatted:
             return
         with self._lock:
-            if six.PY3:
-                import io
-                import mozfile
-                if isinstance(self.stream, io.StringIO) and isinstance(formatted, bytes):
-                    formatted = formatted.decode()
-                elif (
-                     isinstance(self.stream, io.BytesIO)
-                     or isinstance(self.stream, mozfile.NamedTemporaryFile)
-                     ) and isinstance(formatted, str):
-                    formatted = formatted.encode()
+            if isinstance(formatted, six.text_type):
+                self.stream.write(formatted.encode("utf-8", "replace"))
+            elif isinstance(formatted, str):
                 self.stream.write(formatted)
             else:
-                if isinstance(formatted, six.text_type):
-                    self.stream.write(formatted.encode("utf-8", "replace"))
-                elif isinstance(formatted, str):
-                    self.stream.write(formatted)
-                else:
-                    assert False, "Got output from the formatter of an unexpected type"
+                assert False, "Got output from the formatter of an unexpected type"
 
             self.stream.flush()

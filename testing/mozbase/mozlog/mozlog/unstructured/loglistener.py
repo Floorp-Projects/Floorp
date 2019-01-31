@@ -32,7 +32,7 @@ class LogMessageHandler(socketserver.BaseRequestHandler):
                 data = self.request.recv(1024)
                 if not data:
                     return
-                self.process_message(data.decode())
+                self.process_message(data)
             except socket.timeout:
                 return
 
