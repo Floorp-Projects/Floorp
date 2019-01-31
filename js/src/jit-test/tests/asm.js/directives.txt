@@ -1,1 +1,1 @@
-|jit-test| test-also-noasmjs
+|jit-test| test-also=--no-asmjs
