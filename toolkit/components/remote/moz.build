@@ -27,4 +27,7 @@ if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
         CXXFLAGS += CONFIG['MOZ_DBUS_GLIB_CFLAGS']
     CXXFLAGS += CONFIG['TK_CFLAGS']
 
+LOCAL_INCLUDES += [
+    '../../profile',
+]
 FINAL_LIBRARY = 'xul'
