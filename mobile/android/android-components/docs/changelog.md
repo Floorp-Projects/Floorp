@@ -18,6 +18,19 @@ permalink: /changelog/
 * **browser-engine-gecko-nightly**
   * Tweaked `NestedGeckoView` to "stick" to `AppBar` in nested scroll, like other Android apps. This is possible after a [fix](https://bugzilla.mozilla.org/show_bug.cgi?id=1515774) in APZ gesture detection.
 
+* **feature-browser**
+  * Added `BrowserToolbar` attributes to color the menu.
+  ```xml
+  <mozilla.components.browser.toolbar.BrowserToolbar
+      android:id="@+id/toolbar"
+      android:layout_width="match_parent"
+      android:layout_height="56dp"
+      android:background="#aaaaaa"
+      app:browserToolbarMenuColor="@color/photonBlue50"
+      app:browserToolbarInsecureColor="@color/photonRed50"
+      app:browserToolbarSecureColor="@color/photonGreen50" />
+  ```
+
 * **feature-contextmenu**
   * Fixed Context Menus feature to work with Custom Tabs by passing in the session ID when applicable.
 
