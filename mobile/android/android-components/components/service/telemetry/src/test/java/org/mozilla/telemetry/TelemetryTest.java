@@ -458,7 +458,7 @@ public class TelemetryTest {
         assertEquals(0, storage.countStoredPings(TelemetryPocketEventPingBuilder.TYPE));
 
         final RecordedRequest request = server.takeRequest();
-        assertEquals("POST /submit/telemetry/ffffffff-0000-0000-ffff-ffffffffffff/fire-tv-events/TelemetryTest/13.1.3/test/789?v=4 HTTP/1.1", request.getRequestLine());
+        assertEquals("POST /submit/pocket/fire-tv-events/1/ffffffff-0000-0000-ffff-ffffffffffff HTTP/1.1", request.getRequestLine());
         assertEquals("application/json; charset=utf-8", request.getHeader("Content-Type"));
         assertEquals(TEST_USER_AGENT, request.getHeader("User-Agent"));
         assertNotNull(request.getHeader("Date"));
