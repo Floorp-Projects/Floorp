@@ -29,7 +29,8 @@ SimpleChannelParent::SetParentListener(HttpChannelParentListener* aListener) {
 }
 
 NS_IMETHODIMP
-SimpleChannelParent::NotifyTrackingProtectionDisabled() {
+SimpleChannelParent::NotifyChannelClassifierProtectionDisabled(
+    uint32_t aAcceptedReason) {
   // Nothing to do.
   return NS_OK;
 }
@@ -41,7 +42,7 @@ SimpleChannelParent::NotifyCookieAllowed() {
 }
 
 NS_IMETHODIMP
-SimpleChannelParent::NotifyTrackingCookieBlocked(uint32_t aRejectedReason) {
+SimpleChannelParent::NotifyCookieBlocked(uint32_t aRejectedReason) {
   // Nothing to do.
   return NS_OK;
 }

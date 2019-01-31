@@ -79,6 +79,7 @@
 #include "mozilla/dom/VideoTrackList.h"
 #include "mozilla/dom/WakeLock.h"
 #include "mozilla/dom/power/PowerManagerService.h"
+#include "mozilla/net/UrlClassifierFeatureFactory.h"
 #include "nsAttrValueInlines.h"
 #include "nsContentPolicyUtils.h"
 #include "nsContentUtils.h"
@@ -639,13 +640,15 @@ HTMLMediaElement::MediaLoadListener::OnStartRequest(nsIRequest* aRequest,
   NS_ENSURE_SUCCESS(rv, rv);
   if (NS_FAILED(status)) {
     if (element) {
-      // Handle media not loading error because source was a tracking URL.
+      // Handle media not loading error because source was a tracking URL (or
+      // fingerprinting, cryptomining, etc).
       // We make a note of this media node by including it in a dedicated
       // array of blocked tracking nodes under its parent document.
-      if (status == NS_ERROR_TRACKING_URI) {
+      if (net::UrlClassifierFeatureFactory::IsClassifierBlockingErrorCode(
+              status)) {
         Document* ownerDoc = element->OwnerDoc();
         if (ownerDoc) {
-          ownerDoc->AddBlockedTrackingNode(element);
+          ownerDoc->AddBlockedNodeByClassifier(element);
         }
       }
       element->NotifyLoadError(

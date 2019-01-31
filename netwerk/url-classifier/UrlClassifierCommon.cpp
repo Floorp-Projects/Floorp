@@ -8,6 +8,7 @@
 
 #include "mozilla/AntiTrackingCommon.h"
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/net/UrlClassifierFeatureFactory.h"
 #include "mozilla/StaticPrefs.h"
 #include "mozIThirdPartyUtil.h"
 #include "nsContentUtils.h"
@@ -48,22 +49,22 @@ LazyLogModule UrlClassifierCommon::sLog("nsChannelClassifier");
   return BasePrincipal::Cast(loadingPrincipal)->AddonAllowsLoad(aURI, true);
 }
 
-/* static */ void UrlClassifierCommon::NotifyTrackingProtectionDisabled(
-    nsIChannel* aChannel) {
+/* static */ void
+UrlClassifierCommon::NotifyChannelClassifierProtectionDisabled(
+    nsIChannel* aChannel, uint32_t aEvent) {
   // Can be called in EITHER the parent or child process.
   nsCOMPtr<nsIParentChannel> parentChannel;
   NS_QueryNotificationCallbacks(aChannel, parentChannel);
   if (parentChannel) {
     // This channel is a parent-process proxy for a child process request.
     // Tell the child process channel to do this instead.
-    parentChannel->NotifyTrackingProtectionDisabled();
+    parentChannel->NotifyChannelClassifierProtectionDisabled(aEvent);
     return;
   }
 
   nsCOMPtr<nsIURI> uriBeingLoaded =
       AntiTrackingCommon::MaybeGetDocumentURIBeingLoaded(aChannel);
-  NotifyChannelBlocked(aChannel, uriBeingLoaded,
-                       nsIWebProgressListener::STATE_LOADED_TRACKING_CONTENT);
+  NotifyChannelBlocked(aChannel, uriBeingLoaded, aEvent);
 }
 
 /* static */ void UrlClassifierCommon::NotifyChannelBlocked(
@@ -152,11 +153,33 @@ LazyLogModule UrlClassifierCommon::sLog("nsChannelClassifier");
               aChannel, chanSpec.get()));
     }
 
-    // Tracking protection will be disabled so update the security state
-    // of the document and fire a secure change event. If we can't get the
-    // window for the channel, then the shield won't show up so we can't send
-    // an event to the securityUI anyway.
-    UrlClassifierCommon::NotifyTrackingProtectionDisabled(aChannel);
+    // Channel classifier protection will be disabled so update the security
+    // state of the document and fire a secure change event. If we can't get the
+    // window for the channel, then the shield won't show up so we can't send an
+    // event to the securityUI anyway.
+
+    uint32_t event = 0;
+    switch (aBlockingPurpose) {
+      case AntiTrackingCommon::eTrackingProtection:
+        MOZ_FALLTHROUGH;
+      case AntiTrackingCommon::eTrackingAnnotations:
+        event = nsIWebProgressListener::STATE_LOADED_TRACKING_CONTENT;
+        break;
+
+      case AntiTrackingCommon::eFingerprinting:
+        event = nsIWebProgressListener::STATE_LOADED_FINGERPRINTING_CONTENT;
+        break;
+
+      case AntiTrackingCommon::eCryptomining:
+        event = nsIWebProgressListener::STATE_LOADED_CRYPTOMINING_CONTENT;
+        break;
+
+      default:
+        MOZ_CRASH("Invalidate blocking purpose.");
+    }
+
+    UrlClassifierCommon::NotifyChannelClassifierProtectionDisabled(aChannel,
+                                                                   event);
 
     return false;
   }
@@ -223,10 +246,9 @@ LazyLogModule UrlClassifierCommon::sLog("nsChannelClassifier");
   RefPtr<dom::Document> doc = docShell->GetDocument();
   NS_ENSURE_TRUE(doc, NS_OK);
 
-  unsigned state;
-  if (aErrorCode == NS_ERROR_TRACKING_URI) {
-    state = nsIWebProgressListener::STATE_BLOCKED_TRACKING_CONTENT;
-  } else {
+  unsigned state =
+      UrlClassifierFeatureFactory::GetClassifierBlockingEventCode(aErrorCode);
+  if (!state) {
     state = nsIWebProgressListener::STATE_BLOCKED_UNSAFE_CONTENT;
   }
 
@@ -237,12 +259,16 @@ LazyLogModule UrlClassifierCommon::sLog("nsChannelClassifier");
   channel->GetURI(getter_AddRefs(uri));
   NS_ConvertUTF8toUTF16 spec(uri->GetSpecOrDefault());
   const char16_t* params[] = {spec.get()};
-  const char* message = (aErrorCode == NS_ERROR_TRACKING_URI)
-                            ? "TrackerUriBlocked"
-                            : "UnsafeUriBlocked";
-  nsCString category = (aErrorCode == NS_ERROR_TRACKING_URI)
-                           ? NS_LITERAL_CSTRING("Tracking Protection")
-                           : NS_LITERAL_CSTRING("Safe Browsing");
+  const char* message;
+  nsCString category;
+
+  if (UrlClassifierFeatureFactory::IsClassifierBlockingErrorCode(aErrorCode)) {
+    message = UrlClassifierFeatureFactory::
+        ClassifierBlockingErrorCodeToConsoleMessage(aErrorCode, category);
+  } else {
+    message = "UnsafeUriBlocked";
+    category = NS_LITERAL_CSTRING("Safe Browsing");
+  }
 
   nsContentUtils::ReportToConsole(nsIScriptError::warningFlag, category, doc,
                                   nsContentUtils::eNECKO_PROPERTIES, message,

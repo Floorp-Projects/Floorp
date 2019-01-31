@@ -46,6 +46,7 @@
 #include "mozilla/dom/MediaList.h"
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/dom/URL.h"
+#include "mozilla/net/UrlClassifierFeatureFactory.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/StyleSheet.h"
@@ -595,20 +596,22 @@ nsresult SheetLoadData::VerifySheetReadyToParse(nsresult aStatus,
   if (NS_FAILED(aStatus)) {
     LOG_WARN(
         ("  Load failed: status 0x%" PRIx32, static_cast<uint32_t>(aStatus)));
-    // Handle sheet not loading error because source was a tracking URL.
+    // Handle sheet not loading error because source was a tracking URL (or
+    // fingerprinting, cryptomining, etc).
     // We make a note of this sheet node by including it in a dedicated
     // array of blocked tracking nodes under its parent document.
     //
     // Multiple sheet load instances might be tied to this request,
     // we annotate each one linked to a valid owning element (node).
-    if (aStatus == NS_ERROR_TRACKING_URI) {
+    if (net::UrlClassifierFeatureFactory::IsClassifierBlockingErrorCode(
+            aStatus)) {
       Document* doc = mLoader->GetDocument();
       if (doc) {
         for (SheetLoadData* data = this; data; data = data->mNext) {
           // mOwningElement may be null but AddBlockTrackingNode can cope
           nsCOMPtr<nsIContent> content =
               do_QueryInterface(data->mOwningElement);
-          doc->AddBlockedTrackingNode(content);
+          doc->AddBlockedNodeByClassifier(content);
         }
       }
     }

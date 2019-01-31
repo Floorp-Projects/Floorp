@@ -346,4 +346,6 @@ this.AppConstants = Object.freeze({
 #else
     false,
 #endif
+
+  TELEMETRY_PING_FORMAT_VERSION: @TELEMETRY_PING_FORMAT_VERSION@,
 });

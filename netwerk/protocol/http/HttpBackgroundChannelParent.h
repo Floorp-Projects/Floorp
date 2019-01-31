@@ -63,14 +63,15 @@ class HttpBackgroundChannelParent final : public PHttpBackgroundChannelParent {
   // over background channel.
   bool OnDiversion();
 
-  // To send NotifyTrackingProtectionDisabled message over background channel.
-  bool OnNotifyTrackingProtectionDisabled();
+  // To send NotifyChannelClassifierProtectionDisabled message over background
+  // channel.
+  bool OnNotifyChannelClassifierProtectionDisabled(uint32_t aAcceptedReason);
 
   // To send NotifyCookieAllowed message over background channel.
   bool OnNotifyCookieAllowed();
 
-  // To send NotifyTrackingCookieBlocked message over background channel.
-  bool OnNotifyTrackingCookieBlocked(uint32_t aRejectedReason);
+  // To send NotifyCookieBlocked message over background channel.
+  bool OnNotifyCookieBlocked(uint32_t aRejectedReason);
 
   // To send NotifyTrackingResource message over background channel.
   bool OnNotifyTrackingResource(bool aIsThirdParty);
