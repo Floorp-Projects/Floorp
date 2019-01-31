@@ -23,6 +23,7 @@ import kotlinx.android.synthetic.main.fragment_browser.view.*
 import mozilla.components.browser.toolbar.behavior.BrowserToolbarBottomBehavior
 import mozilla.components.feature.contextmenu.ContextMenuCandidate
 import mozilla.components.feature.contextmenu.ContextMenuFeature
+import mozilla.components.feature.customtabs.CustomTabsToolbarFeature
 import mozilla.components.feature.downloads.DownloadsFeature
 import mozilla.components.feature.session.SessionFeature
 import mozilla.components.feature.session.SessionUseCases
@@ -47,6 +48,7 @@ class BrowserFragment : Fragment(), BackHandler {
     private lateinit var promptsFeature: PromptFeature
     private lateinit var sessionFeature: SessionFeature
     private lateinit var toolbarComponent: ToolbarComponent
+    private lateinit var customTabsToolbarFeature: CustomTabsToolbarFeature
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -90,6 +92,8 @@ class BrowserFragment : Fragment(), BackHandler {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        val sessionId = arguments?.getString(SESSION_ID)
+
         val sessionManager = requireComponents.core.sessionManager
 
         contextMenuFeature = ContextMenuFeature(
@@ -122,10 +126,19 @@ class BrowserFragment : Fragment(), BackHandler {
         sessionFeature = SessionFeature(
             sessionManager,
             SessionUseCases(sessionManager),
-            view.engineView
+            view.engineView,
+            sessionId
         )
 
         findInPageIntegration = FindInPageIntegration(requireComponents.core.sessionManager, view.findInPageView)
+
+        customTabsToolbarFeature = CustomTabsToolbarFeature(
+            sessionManager,
+            toolbar,
+            sessionId,
+            requireComponents.toolbar.menuBuilder
+        ) { requireActivity().finish() }
+
 
         lifecycle.addObservers(
             contextMenuFeature,
@@ -133,7 +146,8 @@ class BrowserFragment : Fragment(), BackHandler {
             findInPageIntegration,
             promptsFeature,
             sessionFeature,
-            (toolbarComponent.uiView as ToolbarUIView).toolbarIntegration
+            (toolbarComponent.uiView as ToolbarUIView).toolbarIntegration,
+            customTabsToolbarFeature
         )
 
         getSafeManagedObservable<SearchAction>()
@@ -176,8 +190,15 @@ class BrowserFragment : Fragment(), BackHandler {
     }
 
     companion object {
+        private const val SESSION_ID = "session_id"
         private const val REQUEST_CODE_DOWNLOAD_PERMISSIONS = 1
         private const val REQUEST_CODE_PROMPT_PERMISSIONS = 2
         private const val TOOLBAR_HEIGHT = 56f
+
+        fun create(sessionId: String? = null): BrowserFragment = BrowserFragment().apply {
+            arguments = Bundle().apply {
+                putString(SESSION_ID, sessionId)
+            }
+        }
     }
 }

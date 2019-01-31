@@ -46,6 +46,7 @@
         <action
             android:id="@+id/action_browserFragment_to_settingsActivity"
             app:destination="@id/settingsActivity" />
+        <argument android:name="session_id" app:argType="string" app:nullable="true" android:defaultValue="null"/>
     </fragment>
     <activity
         android:id="@+id/settingsActivity"

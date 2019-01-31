@@ -9,6 +9,7 @@ import android.content.Intent
 import android.os.Bundle
 import mozilla.components.browser.session.tab.CustomTabConfig
 import mozilla.components.support.utils.SafeIntent
+import org.mozilla.fenix.customtabs.CustomTabActivity
 import org.mozilla.fenix.ext.components
 
 class IntentReceiverActivity : Activity() {
@@ -20,7 +21,7 @@ class IntentReceiverActivity : Activity() {
 
         val intent = Intent(intent)
         if (CustomTabConfig.isCustomTabIntent(SafeIntent(intent))) {
-            // TODO Enter CustomTabActivity here.
+            intent.setClassName(applicationContext, CustomTabActivity::class.java.name)
         } else {
             intent.setClassName(applicationContext, HomeActivity::class.java.name)
         }

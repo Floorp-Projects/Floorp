@@ -40,7 +40,7 @@ class Toolbar(
         ShippedDomainsProvider().also { it.initialize(context) }
     }
 
-    private val menuToolbar by lazy {
+    val menuToolbar by lazy {
         val back = BrowserMenuItemToolbar.Button(
             mozilla.components.ui.icons.R.drawable.mozac_ic_back,
             iconTintColorResource = R.color.icons,
