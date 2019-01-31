@@ -37,42 +37,41 @@ const TYPE_CSS_RESOURCE_URI = "cssresource";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
-/* eslint-disable max-len */
-const ATTRIBUTE_TYPES = {
-  "action": [
+const ATTRIBUTE_TYPES = new Map([
+  ["action", [
     {namespaceURI: HTML_NS, tagName: "form", type: TYPE_URI},
-  ],
-  "background": [
+  ]],
+  ["background", [
     {namespaceURI: HTML_NS,  tagName: "body", type: TYPE_URI},
-  ],
-  "cite": [
+  ]],
+  ["cite", [
     {namespaceURI: HTML_NS, tagName: "blockquote", type: TYPE_URI},
     {namespaceURI: HTML_NS, tagName: "q", type: TYPE_URI},
     {namespaceURI: HTML_NS, tagName: "del", type: TYPE_URI},
     {namespaceURI: HTML_NS, tagName: "ins", type: TYPE_URI},
-  ],
-  "classid": [
+  ]],
+  ["classid", [
     {namespaceURI: HTML_NS, tagName: "object", type: TYPE_URI},
-  ],
-  "codebase": [
+  ]],
+  ["codebase", [
     {namespaceURI: HTML_NS, tagName: "object", type: TYPE_URI},
     {namespaceURI: HTML_NS, tagName: "applet", type: TYPE_URI},
-  ],
-  "command": [
+  ]],
+  ["command", [
     {namespaceURI: HTML_NS, tagName: "menuitem", type: TYPE_IDREF},
     {namespaceURI: XUL_NS, tagName: "key", type: TYPE_IDREF},
-  ],
-  "contextmenu": [
+  ]],
+  ["contextmenu", [
     {namespaceURI: "*", tagName: "*", type: TYPE_IDREF},
-  ],
-  "data": [
+  ]],
+  ["data", [
     {namespaceURI: HTML_NS, tagName: "object", type: TYPE_URI},
-  ],
-  "for": [
+  ]],
+  ["for", [
     {namespaceURI: HTML_NS, tagName: "label", type: TYPE_IDREF},
     {namespaceURI: HTML_NS, tagName: "output", type: TYPE_IDREF_LIST},
-  ],
-  "form": [
+  ]],
+  ["form", [
     {namespaceURI: HTML_NS, tagName: "button", type: TYPE_IDREF},
     {namespaceURI: HTML_NS, tagName: "fieldset", type: TYPE_IDREF},
     {namespaceURI: HTML_NS, tagName: "input", type: TYPE_IDREF},
@@ -82,56 +81,54 @@ const ATTRIBUTE_TYPES = {
     {namespaceURI: HTML_NS, tagName: "output", type: TYPE_IDREF},
     {namespaceURI: HTML_NS, tagName: "select", type: TYPE_IDREF},
     {namespaceURI: HTML_NS, tagName: "textarea", type: TYPE_IDREF},
-  ],
-  "formaction": [
+  ]],
+  ["formaction", [
     {namespaceURI: HTML_NS, tagName: "button", type: TYPE_URI},
     {namespaceURI: HTML_NS, tagName: "input", type: TYPE_URI},
-  ],
-  "headers": [
+  ]],
+  ["headers", [
     {namespaceURI: HTML_NS, tagName: "td", type: TYPE_IDREF_LIST},
     {namespaceURI: HTML_NS, tagName: "th", type: TYPE_IDREF_LIST},
-  ],
-  "href": [
+  ]],
+  ["href", [
     {namespaceURI: HTML_NS, tagName: "a", type: TYPE_URI},
     {namespaceURI: HTML_NS, tagName: "area", type: TYPE_URI},
     {namespaceURI: "*", tagName: "link", type: TYPE_CSS_RESOURCE_URI,
-     /* eslint-enable */
      isValid: (namespaceURI, tagName, attributes) => {
        return getAttribute(attributes, "rel") === "stylesheet";
      }},
-    /* eslint-disable max-len */
     {namespaceURI: "*", tagName: "link", type: TYPE_URI},
     {namespaceURI: HTML_NS, tagName: "base", type: TYPE_URI},
-  ],
-  "icon": [
+  ]],
+  ["icon", [
     {namespaceURI: HTML_NS, tagName: "menuitem", type: TYPE_URI},
-  ],
-  "list": [
+  ]],
+  ["list", [
     {namespaceURI: HTML_NS, tagName: "input", type: TYPE_IDREF},
-  ],
-  "longdesc": [
+  ]],
+  ["longdesc", [
     {namespaceURI: HTML_NS, tagName: "img", type: TYPE_URI},
     {namespaceURI: HTML_NS, tagName: "frame", type: TYPE_URI},
     {namespaceURI: HTML_NS, tagName: "iframe", type: TYPE_URI},
-  ],
-  "manifest": [
+  ]],
+  ["manifest", [
     {namespaceURI: HTML_NS, tagName: "html", type: TYPE_URI},
-  ],
-  "menu": [
+  ]],
+  ["menu", [
     {namespaceURI: HTML_NS, tagName: "button", type: TYPE_IDREF},
     {namespaceURI: XUL_NS, tagName: "*", type: TYPE_IDREF},
-  ],
-  "ping": [
+  ]],
+  ["ping", [
     {namespaceURI: HTML_NS, tagName: "a", type: TYPE_URI_LIST},
     {namespaceURI: HTML_NS, tagName: "area", type: TYPE_URI_LIST},
-  ],
-  "poster": [
+  ]],
+  ["poster", [
     {namespaceURI: HTML_NS, tagName: "video", type: TYPE_URI},
-  ],
-  "profile": [
+  ]],
+  ["profile", [
     {namespaceURI: HTML_NS, tagName: "head", type: TYPE_URI},
-  ],
-  "src": [
+  ]],
+  ["src", [
     {namespaceURI: "*", tagName: "script", type: TYPE_JS_RESOURCE_URI},
     {namespaceURI: HTML_NS, tagName: "input", type: TYPE_URI},
     {namespaceURI: HTML_NS, tagName: "frame", type: TYPE_URI},
@@ -143,70 +140,69 @@ const ATTRIBUTE_TYPES = {
     {namespaceURI: HTML_NS, tagName: "track", type: TYPE_URI},
     {namespaceURI: HTML_NS, tagName: "video", type: TYPE_URI},
     {namespaceURI: XUL_NS, tagName: "stringbundle", type: TYPE_URI},
-  ],
-  "usemap": [
+  ]],
+  ["usemap", [
     {namespaceURI: HTML_NS, tagName: "img", type: TYPE_URI},
     {namespaceURI: HTML_NS, tagName: "input", type: TYPE_URI},
     {namespaceURI: HTML_NS, tagName: "object", type: TYPE_URI},
 
-  ],
-  "xmlns": [
+  ]],
+  ["xmlns", [
     {namespaceURI: "*", tagName: "*", type: TYPE_URI},
-  ],
-  "containment": [
+  ]],
+  ["containment", [
     {namespaceURI: XUL_NS, tagName: "*", type: TYPE_URI},
-  ],
-  "context": [
+  ]],
+  ["context", [
     {namespaceURI: XUL_NS, tagName: "*", type: TYPE_IDREF},
-  ],
-  "datasources": [
+  ]],
+  ["datasources", [
     {namespaceURI: XUL_NS, tagName: "*", type: TYPE_URI_LIST},
-  ],
-  "insertafter": [
+  ]],
+  ["insertafter", [
     {namespaceURI: XUL_NS, tagName: "*", type: TYPE_IDREF},
-  ],
-  "insertbefore": [
+  ]],
+  ["insertbefore", [
     {namespaceURI: XUL_NS, tagName: "*", type: TYPE_IDREF},
-  ],
-  "observes": [
+  ]],
+  ["observes", [
     {namespaceURI: XUL_NS, tagName: "*", type: TYPE_IDREF},
-  ],
-  "popup": [
+  ]],
+  ["popup", [
     {namespaceURI: XUL_NS, tagName: "*", type: TYPE_IDREF},
-  ],
-  "ref": [
+  ]],
+  ["ref", [
     {namespaceURI: XUL_NS, tagName: "*", type: TYPE_URI},
-  ],
-  "removeelement": [
+  ]],
+  ["removeelement", [
     {namespaceURI: XUL_NS, tagName: "*", type: TYPE_IDREF},
-  ],
-  "template": [
+  ]],
+  ["template", [
     {namespaceURI: XUL_NS, tagName: "*", type: TYPE_IDREF},
-  ],
-  "tooltip": [
+  ]],
+  ["tooltip", [
     {namespaceURI: XUL_NS, tagName: "*", type: TYPE_IDREF},
-  ],
-  /* eslint-enable */
+  ]],
   // SVG links aren't handled yet, see bug 1158831.
-  // "fill": [
+  // ["fill", [
   //   {namespaceURI: SVG_NS, tagName: "*", type: },
-  // ],
-  // "stroke": [
+  // ]],
+  // ["stroke", [
   //   {namespaceURI: SVG_NS, tagName: "*", type: },
-  // ],
-  // "markerstart": [
+  // ]],
+  // ["markerstart", [
   //   {namespaceURI: SVG_NS, tagName: "*", type: },
-  // ],
-  // "markermid": [
+  // ]],
+  // ["markermid", [
   //   {namespaceURI: SVG_NS, tagName: "*", type: },
-  // ],
-  // "markerend": [
+  // ]],
+  // ["markerend", [
   //   {namespaceURI: SVG_NS, tagName: "*", type: },
-  // ],
-  // "xlink:href": [
+  // ]],
+  // ["xlink:href", [
   //   {namespaceURI: SVG_NS, tagName: "*", type: },
-  // ],
-};
+  // ]],
+]);
 
 var parsers = {
   [TYPE_URI]: function(attributeValue) {
@@ -298,11 +294,11 @@ function parseAttribute(namespaceURI, tagName, attributes, attributeName) {
  * type object otherwise.
  */
 function getType(namespaceURI, tagName, attributes, attributeName) {
-  if (!ATTRIBUTE_TYPES[attributeName]) {
+  if (!ATTRIBUTE_TYPES.get(attributeName)) {
     return null;
   }
 
-  for (const typeData of ATTRIBUTE_TYPES[attributeName]) {
+  for (const typeData of ATTRIBUTE_TYPES.get(attributeName)) {
     const hasNamespace = namespaceURI === typeData.namespaceURI ||
                        typeData.namespaceURI === "*";
     const hasTagName = tagName.toLowerCase() === typeData.tagName ||
