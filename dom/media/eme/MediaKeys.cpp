@@ -320,7 +320,7 @@ already_AddRefed<CDMProxy> MediaKeys::CreateCDMProxy(
 #endif
   {
     proxy = new ChromiumCDMProxy(
-        this, mKeySystem, new MediaKeysGMPCrashHelper(this),
+        this, mKeySystem,
         mConfig.mDistinctiveIdentifier == MediaKeysRequirement::Required,
         mConfig.mPersistentState == MediaKeysRequirement::Required,
         aMainThread);
@@ -408,9 +408,10 @@ already_AddRefed<DetailedPromise> MediaKeys::Init(ErrorResult& aRv) {
   MOZ_ASSERT(!mCreatePromiseId, "Should only be created once!");
   mCreatePromiseId = StorePromise(promise);
   AddRef();
-  mProxy->Init(mCreatePromiseId, NS_ConvertUTF8toUTF16(origin),
-               NS_ConvertUTF8toUTF16(topLevelOrigin),
-               KeySystemToGMPName(mKeySystem));
+  RefPtr<MediaKeysGMPCrashHelper> helper = new MediaKeysGMPCrashHelper(this);
+  mProxy->Init(
+      std::move(helper), mCreatePromiseId, NS_ConvertUTF8toUTF16(origin),
+      NS_ConvertUTF8toUTF16(topLevelOrigin), KeySystemToGMPName(mKeySystem));
 
   return promise.forget();
 }
