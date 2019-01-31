@@ -3407,8 +3407,14 @@ int XREMain::XRE_mainInit(bool* aExitFlag) {
   }
   if (ar == ARG_FOUND) {
     SaveToEnv("MOZ_NO_REMOTE=1");
+#ifdef MOZ_WIDGET_GTK
+    mDisableRemote = true;
+  } else if (EnvHasValue("MOZ_NO_REMOTE")) {
+    mDisableRemote = true;
+#endif
   }
 
+#ifdef MOZ_WIDGET_GTK
   ar = CheckArg("new-instance", nullptr,
                 CheckArgFlag::CheckOSInt | CheckArgFlag::RemoveArg);
   if (ar == ARG_BAD) {
@@ -3417,9 +3423,10 @@ int XREMain::XRE_mainInit(bool* aExitFlag) {
                "--osint is specified\n");
     return 1;
   }
-  if (ar == ARG_FOUND) {
-    SaveToEnv("MOZ_NEW_INSTANCE=1");
+  if (ar == ARG_FOUND || EnvHasValue("MOZ_NEW_INSTANCE")) {
+    mDisableRemote = true;
   }
+#endif
 
   ar = CheckArg("offline", nullptr,
                 CheckArgFlag::CheckOSInt | CheckArgFlag::RemoveArg);
@@ -3892,38 +3899,17 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
 #endif
 #if defined(MOZ_WIDGET_GTK)
   // handle --remote now that xpcom is fired up
-  bool newInstance;
-  {
-    char* e = PR_GetEnv("MOZ_NO_REMOTE");
-    mDisableRemote = (mDisableRemote || (e && *e));
-    if (mDisableRemote) {
-      newInstance = true;
-    } else {
-      e = PR_GetEnv("MOZ_NEW_INSTANCE");
-      newInstance = (e && *e);
-    }
-  }
-
-  if (!newInstance) {
-    mRemoteService = new nsRemoteService();
+  if (!mDisableRemote) {
+    mRemoteService = new nsRemoteService(gAppData->remotingName);
     if (mRemoteService) {
-      nsAutoCString program(gAppData->remotingName);
-      ToLowerCase(program);
-
-      const char* profile = nullptr;
-      // It doesn't matter if this succeeds or fails. A failure will be handled
-      // later.
-      CheckArg("p", &profile, CheckArgFlag::None);
-
-      mRemoteService->LockStartup(program, profile);
+      mRemoteService->LockStartup();
 
       // Try to remote the entire command line. If this fails, start up
       // normally.
       const char* desktopStartupIDPtr =
           mDesktopStartupID.IsEmpty() ? nullptr : mDesktopStartupID.get();
 
-      RemoteResult rr =
-          mRemoteService->StartClient(desktopStartupIDPtr, program, profile);
+      RemoteResult rr = mRemoteService->StartClient(desktopStartupIDPtr);
       if (rr == REMOTE_FOUND) {
         *aExitFlag = true;
         return 0;
@@ -4559,7 +4545,7 @@ nsresult XREMain::XRE_mainRun() {
     // if we have X remote support, start listening for requests on the
     // proxy window.
     if (mRemoteService) {
-      mRemoteService->StartupServer(mAppData->remotingName, mProfileName.get());
+      mRemoteService->StartupServer(mProfileName.get());
       mRemoteService->UnlockStartup();
     }
 #endif /* MOZ_WIDGET_GTK */
