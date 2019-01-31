@@ -233,6 +233,12 @@ class GestureEventListener final {
   ScreenPoint mTouchStartPosition;
 
   /**
+   * We store the window/GeckoView's display offset as well, so we can
+   * track the user's physical touch movements in absolute display coordinates.
+   */
+  ExternalPoint mTouchStartOffset;
+
+  /**
    * Task used to timeout a long tap. This gets posted to the UI thread such
    * that it runs a time when a single tap happens. We cache it so that
    * we can cancel it if any other touch event happens.
