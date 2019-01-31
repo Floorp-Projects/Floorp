@@ -33,7 +33,7 @@ function waitForMessage(messageManager, topic) {
   });
 }
 
-add_task(async function testDuplicatePinnedTab() {
+add_task(async function testFind() {
   async function background() {
     function awaitLoad(tabId, url) {
       return new Promise(resolve => {
@@ -176,4 +176,73 @@ add_task(async function testAboutFind() {
   await extension.awaitMessage("done");
   await extension.unload();
   BrowserTestUtils.removeTab(tab);
+});
+
+add_task(async function testIncognitoFind() {
+  await SpecialPowers.pushPrefEnv({set: [["extensions.allowPrivateBrowsingByDefault", false]]});
+
+  async function background() {
+    await browser.test.assertRejects(
+      browser.find.find("banana"),
+      /Unable to search:/,
+      "Should not be able to search private window");
+    await browser.test.assertRejects(
+      browser.find.highlightResults(),
+      /Unable to search:/,
+      "Should not be able to highlight in private window");
+    await browser.test.assertRejects(
+      browser.find.removeHighlighting(),
+      /Invalid tab ID:/,
+      "Should not be able to remove highlight in private window");
+
+    browser.test.sendMessage("done");
+  }
+
+  let privateWin = await BrowserTestUtils.openNewBrowserWindow({private: true});
+  await BrowserTestUtils.loadURI(privateWin.gBrowser.selectedBrowser, "http://example.com");
+  await BrowserTestUtils.browserLoaded(privateWin.gBrowser.selectedBrowser);
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "permissions": ["find", "tabs"],
+    },
+    background,
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("done");
+  await extension.unload();
+  await BrowserTestUtils.closeWindow(privateWin);
+});
+
+add_task(async function testIncognitoFindAllowed() {
+  await SpecialPowers.pushPrefEnv({set: [["extensions.allowPrivateBrowsingByDefault", false]]});
+
+  // We're only testing we can make the calls in a private window,
+  // testFind above tests full functionality.
+  async function background() {
+    await browser.find.find("banana");
+    await browser.find.highlightResults({rangeIndex: 0});
+    await browser.find.removeHighlighting();
+
+    browser.test.sendMessage("done");
+  }
+
+  let url = "http://example.com/browser/browser/components/extensions/test/browser/file_find_frames.html";
+  let privateWin = await BrowserTestUtils.openNewBrowserWindow({private: true});
+  await BrowserTestUtils.loadURI(privateWin.gBrowser.selectedBrowser, url);
+  await BrowserTestUtils.browserLoaded(privateWin.gBrowser.selectedBrowser);
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "permissions": ["find", "tabs"],
+    },
+    background,
+    incognitoOverride: "spanning",
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("done");
+  await extension.unload();
+  await BrowserTestUtils.closeWindow(privateWin);
 });
