@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist lastupdate="1548198338831" xmlns="http://www.mozilla.org/2006/addons-blocklist">
+<blocklist lastupdate="1548699177099" xmlns="http://www.mozilla.org/2006/addons-blocklist">
   <emItems>
     <emItem blockID="i334" id="{0F827075-B026-42F3-885D-98981EE7B1AE}">
       <prefs/>
@@ -2465,6 +2465,14 @@
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
     <emItem blockID="87c17ce6-aaef-4d47-a662-588efff34041" id="/^((\{feff5ea4-ed4a-46a3-9331-12fec01d52a9\})|(\{8ffc339c-0ca1-46e3-acb3-3bfd889f9a21\})|(\{1fe481b5-baad-44e9-b410-082cf0f2acbb\})|(\{92c85192-b325-4599-82e2-a110f193eae6\})|(\{5bc21266-26f1-469a-bc1a-a49d7b70ecb9\})|(\{dc2dd143-f2e7-4f46-a8ff-4dc1a985e889\})|(\{c1233bb6-31a9-4c7d-8469-f8f44adee9ba\})|(\{d0d48905-1065-43dc-ab96-434d100602ed\})|(\{11deae99-2675-4d5e-86cd-7bd55b88daf2\})|(\{a7014e8e-eacf-4ba0-9047-c897c4ed3387\})|(\{b9c545a5-0ffa-490a-8071-2fee09478cfe\})|(\{39e8eebb-4d9e-4a03-93a8-4468fdd7a186\})|(\{8ccc00b1-2010-4155-a07c-f4d7c4d6dec2\})|(\{a1056511-4919-43b7-a9e5-ac2b770de810\})|(\{90a6da19-9165-44c1-819c-e3b53409f9c9\})|(\{e3862078-8f9f-4f8e-99dc-55ba558f0619\})|(\{d89fcf34-2615-4efc-a267-1e83ab6a19d0\})|(\{588151ce-eab4-4acf-83a7-bb5ccaf4d867\})|(\{6ab6312d-5fd4-42a9-ab10-08b954e53f9d\})|(\{24a6cbde-be68-4b7d-9f1b-d4d5dfd178a3\})|(\{55ae1a08-105f-4f7f-9d4e-e448b517db2b\})|(\{74fe9d83-df17-4812-bd3f-27b84b0086b7\})|(\{21140e51-713a-4bf8-865b-e2ee07282409\})|(\{24f39610-2958-4dc8-a73b-75cc9665bffa\})|(\{c50a45a5-efa4-44af-8946-6f20e4748d47\})|(\{41d0b7e0-0d93-4f67-bed9-da6d7688ad16\})|(\{c2bee222-2163-4c0f-89f5-4ac502f06810\})|(\{4be4602e-2b20-473f-8f2b-85e8c53d17dc\})|(\{dec2e9b5-e787-4fb5-a7bc-5894f80f7367\})|(\{179526e1-1824-49f7-afb3-49fdaadaa503\})|(\{4f07d826-ca9e-4370-a508-b984f54758de\})|(\{d0558df2-714f-4793-9d85-d2d648de4f2e\})|(\{daf1a69b-f47b-4936-bd25-5ac21f4e27ec\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="62c54642-73ab-4641-b5c2-47e4ae29bbc5" id="{4e47160d-ec83-417c-ab01-cda978378d9e}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="97c4ee31-4009-40de-ae02-f1b349c87d01" id="/^((\{a9bc520e-68ab-49c2-a8df-75a0349d54fd\})|(\{bfc5d009-c6bd-4526-92ce-a9d27102f7f2\}))$/">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
