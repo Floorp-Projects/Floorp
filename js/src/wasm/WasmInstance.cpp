@@ -154,6 +154,12 @@ bool Instance::callImport(JSContext* cx, uint32_t funcImportIndex,
     return false;
   }
 
+#ifdef WASM_CODEGEN_DEBUG
+  if (!JitOptions.enableWasmJitEntry) {
+    return true;
+  }
+#endif
+
   // The import may already have become optimized.
   for (auto t : code().tiers()) {
     void* jitExitCode = codeBase(t) + fi.jitExitCodeOffset();
