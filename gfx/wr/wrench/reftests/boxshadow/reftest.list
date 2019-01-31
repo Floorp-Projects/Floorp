@@ -3,7 +3,7 @@
 == inset-no-blur-radius.yaml inset-no-blur-radius-ref.png
 == inset-spread-large.yaml inset-spread-large-ref.yaml
 platform(linux,mac) == inset-alpha.yaml inset-alpha.png
-== boxshadow-spread-only.yaml boxshadow-spread-only-ref.png
+platform(linux,mac) == boxshadow-spread-only.yaml boxshadow-spread-only-ref.png
 == box-shadow-clip.yaml box-shadow-clip-ref.yaml
 fuzzy(1,396) == inset-large-offset.yaml inset-large-offset-ref.png
 platform(linux,mac) == inset-border-radius.yaml inset-border-radius.png
@@ -30,7 +30,8 @@ platform(linux,mac) fuzzy(1,41) == box-shadow-stretch-mode-y.yaml box-shadow-str
 platform(linux,mac) fuzzy(1,14) == inset-mask-region.yaml inset-mask-region.png
 == box-shadow-blurred-overlapping-radii.yaml box-shadow-blurred-overlapping-radii-ref.yaml
 
-platform(linux,mac) == box-shadow-huge-radius.yaml box-shadow-huge-radius.png
+fuzzy(1,5) platform(linux,mac) == box-shadow-huge-radius.yaml box-shadow-huge-radius.png
 
 platform(linux,mac) == box-shadow-large-blur-radius-2.yaml box-shadow-large-blur-radius-2.png
 platform(linux,mac) == box-shadow-large-blur-radius-3.yaml box-shadow-large-blur-radius-3.png
+platform(linux,mac) == scale.yaml scale.png
