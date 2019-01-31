@@ -61,7 +61,6 @@ void main(void) {
     PictureTask dest_task = fetch_picture_task(ph.render_task_index);
     Transform transform = fetch_transform(ph.transform_id);
     ImageResource res = fetch_image_resource(ph.user_data.x);
-    ImageResourceExtra extra_data = fetch_image_resource_extra(ph.user_data.x);
     ClipArea clip_area = fetch_clip_area(ph.clip_task_index);
 
     vec2 dest_origin = dest_task.common_data.task_rect.p0 -
@@ -99,12 +98,7 @@ void main(void) {
     ) / texture_size.xyxy;
 
     vec2 f = (local_pos - ph.local_rect.p0) / ph.local_rect.size;
-
-    f = bilerp(
-        extra_data.st_tl, extra_data.st_tr,
-        extra_data.st_bl, extra_data.st_br,
-        f.y, f.x
-    );
+    f = get_image_quad_uv(ph.user_data.x, f);
     vec2 uv = mix(uv0, uv1, f);
     float perspective_interpolate = float(ph.user_data.y);
 
