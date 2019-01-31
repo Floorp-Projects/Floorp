@@ -107,7 +107,7 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
   initialize: function({ source, thread, originalUrl,
                           isInlineSource, contentType }) {
     this._threadActor = thread;
-    this._originalUrl = originalUrl;
+    this._url = originalUrl;
     this._source = source;
     this._contentType = contentType;
     this._isInlineSource = isInlineSource;
@@ -138,10 +138,13 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
     return this.threadActor.breakpointActorMap;
   },
   get url() {
-    if (this.source) {
-      return getSourceURL(this.source, this.threadActor._parent.window);
+    if (this._url) {
+      return this._url;
     }
-    return this._originalUrl;
+    if (this.source) {
+      this._url = getSourceURL(this.source, this.threadActor._parent.window);
+    }
+    return this._url;
   },
 
   get isCacheEnabled() {
