@@ -191,6 +191,25 @@ function doTest() {
     };
   testAccessibleTree("c10", tree);
 
+  // c11: A div must be exposed if it contains a br element.
+  tree =
+    { role: ROLE_SECTION, // outer div
+      children: [
+        { role: ROLE_SECTION, // First line
+          children: [
+            { TEXT_LEAF: [] }, // text
+          ], // end children first line
+        }, // end first line
+        { SECTION: [] }, // second, blank, line
+        { role: ROLE_SECTION, // Third line
+          children: [
+            { TEXT_LEAF: [] }, // text
+          ], // end children third line
+        }, // end third line
+      ], // end children outer div
+    };
+  testAccessibleTree("c11", tree);
+
   SimpleTest.finish();
 }
 
@@ -231,5 +250,8 @@ addA11yLoadEvent(doTest);
 
   <!-- Both inner divs need to be rendered so there is a break after b. -->
   <div id="c10"><div><b>a</b>b</div><div><b>c</b><b>d</b></div></div>
+
+  <!-- Div must be rendered if it contains a br -->
+  <div id="c11"><div>first line.</div><div><br /></div><div>third line</div></div>
 </body>
 </html>
