@@ -47,6 +47,9 @@ func getArchStringFromHeader(header macho.FileHeader) string {
 	if header.Cpu == C.kCPU_TYPE_ARM64 && header.SubCpu == C.kCPU_SUBTYPE_ARM64_ALL {
 		return "arm64"
 	}
+	if header.Cpu == C.kCPU_TYPE_ARM64 && header.SubCpu == C.kCPU_SUBTYPE_ARM64_E {
+		return "arm64e"
+	}
 	if header.Cpu == C.kCPU_TYPE_ARM && header.SubCpu == C.kCPU_SUBTYPE_ARM_V7S {
 		return "armv7s"
 	}

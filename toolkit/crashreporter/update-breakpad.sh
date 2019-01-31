@@ -27,16 +27,17 @@ lss_rev=$(cd $breakpad_repo; git show ${rev}:DEPS | python -c "import sys; exec 
 # We've forked src/client toolkit/crashreporter/breakpad-client.
 rm -rf \
   ${crashreporter_dir}/google-breakpad/appveyor.yml \
-  ${crashreporter_dir}/google-breakpad/docs/ \
   ${crashreporter_dir}/google-breakpad/autotools/ \
+  ${crashreporter_dir}/google-breakpad/docs/ \
   ${crashreporter_dir}/google-breakpad/m4/ \
   ${crashreporter_dir}/google-breakpad/scripts/ \
   ${crashreporter_dir}/google-breakpad/src/client/ \
-  ${crashreporter_dir}/google-breakpad/src/third_party/protobuf \
-  ${crashreporter_dir}/google-breakpad/src/testing/ \
-  ${crashreporter_dir}/google-breakpad/src/tools/gyp/ \
   ${crashreporter_dir}/google-breakpad/src/processor/testdata/ \
+  ${crashreporter_dir}/google-breakpad/src/testing/ \
+  ${crashreporter_dir}/google-breakpad/src/third_party/protobuf \
+  ${crashreporter_dir}/google-breakpad/src/tools/gyp/ \
   ${crashreporter_dir}/google-breakpad/src/tools/windows/dump_syms/testdata/ \
+  ${crashreporter_dir}/google-breakpad/.github/mistaken-pull-closer.yml \
   ${crashreporter_dir}/google-breakpad/.travis.yml
 
 # restore our Makefile.ins

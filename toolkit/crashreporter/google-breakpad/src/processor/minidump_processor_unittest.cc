@@ -203,6 +203,12 @@ static const char *kSystemInfoCPUInfo =
 
 #define ASSERT_EQ_ABORT(e1, e2) ASSERT_TRUE_ABORT((e1) == (e2))
 
+static string GetTestDataPath() {
+  char *srcdir = getenv("srcdir");
+
+  return string(srcdir ? srcdir : ".") + "/src/processor/testdata/";
+}
+
 class TestSymbolSupplier : public SymbolSupplier {
  public:
   TestSymbolSupplier() : interrupt_(false) {}
@@ -249,10 +255,8 @@ SymbolSupplier::SymbolResult TestSymbolSupplier::GetSymbolFile(
   }
 
   if (module && module->code_file() == "c:\\test_app.exe") {
-      *symbol_file = string(getenv("srcdir") ? getenv("srcdir") : ".") +
-                     "/src/processor/testdata/symbols/test_app.pdb/" +
-                     module->debug_identifier() +
-                     "/test_app.sym";
+      *symbol_file = GetTestDataPath() + "symbols/test_app.pdb/" +
+                     module->debug_identifier() + "/test_app.sym";
     return FOUND;
   }
 
@@ -460,8 +464,7 @@ TEST_F(MinidumpProcessorTest, TestSymbolSupplierLookupCounts) {
   BasicSourceLineResolver resolver;
   MinidumpProcessor processor(&supplier, &resolver);
 
-  string minidump_file = string(getenv("srcdir") ? getenv("srcdir") : ".") +
-                         "/src/processor/testdata/minidump2.dmp";
+  string minidump_file = GetTestDataPath() + "minidump2.dmp";
   ProcessState state;
   EXPECT_CALL(supplier, GetCStringSymbolData(
       Property(&google_breakpad::CodeModule::code_file,
@@ -501,8 +504,7 @@ TEST_F(MinidumpProcessorTest, TestBasicProcessing) {
   BasicSourceLineResolver resolver;
   MinidumpProcessor processor(&supplier, &resolver);
 
-  string minidump_file = string(getenv("srcdir") ? getenv("srcdir") : ".") +
-                         "/src/processor/testdata/minidump2.dmp";
+  string minidump_file = GetTestDataPath() + "minidump2.dmp";
 
   ProcessState state;
   ASSERT_EQ(processor.Process(minidump_file, &state),
@@ -737,6 +739,26 @@ TEST_F(MinidumpProcessorTest, TestThreadMissingContext) {
   // Should have a single thread with zero frames.
   ASSERT_EQ(1U, state.threads()->size());
   ASSERT_EQ(0U, state.threads()->at(0)->frames()->size());
+}
+
+TEST_F(MinidumpProcessorTest, Test32BitCrashingAddress) {
+  TestSymbolSupplier supplier;
+  BasicSourceLineResolver resolver;
+  MinidumpProcessor processor(&supplier, &resolver);
+
+  string minidump_file = GetTestDataPath() + "minidump_32bit_crash_addr.dmp";
+
+  ProcessState state;
+  ASSERT_EQ(processor.Process(minidump_file, &state),
+            google_breakpad::PROCESS_OK);
+  ASSERT_EQ(state.system_info()->os, kSystemInfoOS);
+  ASSERT_EQ(state.system_info()->os_short, kSystemInfoOSShort);
+  ASSERT_EQ(state.system_info()->os_version, kSystemInfoOSVersion);
+  ASSERT_EQ(state.system_info()->cpu, kSystemInfoCPU);
+  ASSERT_EQ(state.system_info()->cpu_info, kSystemInfoCPUInfo);
+  ASSERT_TRUE(state.crashed());
+  ASSERT_EQ(state.crash_reason(), "EXCEPTION_ACCESS_VIOLATION_WRITE");
+  ASSERT_EQ(state.crash_address(), 0x45U);
 }
 
 }  // namespace

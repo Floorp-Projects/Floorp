@@ -385,7 +385,7 @@ DWORD ExceptionHandler::ExceptionHandlerThreadMain(void* lpParameter) {
   assert(self->handler_start_semaphore_ != NULL);
   assert(self->handler_finish_semaphore_ != NULL);
 
-  while (true) {
+  for (;;) {
     if (WaitForSingleObject(self->handler_start_semaphore_, INFINITE) ==
         WAIT_OBJECT_0) {
       // Perform the requested action.

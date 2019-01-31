@@ -147,9 +147,11 @@ int ErrnoString(string *error_string);
 #define BPLOG_INIT(pargc, pargv)
 #endif  // BPLOG_INIT
 
+#ifndef BPLOG_LAZY_STREAM
 #define BPLOG_LAZY_STREAM(stream, condition) \
     !(condition) ? (void) 0 : \
                    google_breakpad::LogMessageVoidify() & (BPLOG_ ## stream)
+#endif
 
 #ifndef BPLOG_MINIMUM_SEVERITY
 #define BPLOG_MINIMUM_SEVERITY SEVERITY_INFO
@@ -190,7 +192,9 @@ int ErrnoString(string *error_string);
                         __FILE__, __LINE__)
 #endif  // BPLOG_CRITICAL
 
+#ifndef BPLOG_IF
 #define BPLOG_IF(severity, condition) \
     BPLOG_LAZY_STREAM(severity, ((condition) && BPLOG_LOG_IS_ON(severity)))
+#endif  // BPLOG_IF
 
 #endif  // PROCESSOR_LOGGING_H__
