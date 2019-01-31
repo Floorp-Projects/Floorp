@@ -1047,6 +1047,7 @@ class WebGLContext : public nsICanvasRenderingContextInternal,
   realGLboolean mScissorTestEnabled;
   realGLboolean mDepthTestEnabled = 0;
   realGLboolean mStencilTestEnabled;
+  realGLboolean mBlendEnabled = 0;
   GLenum mGenerateMipmapHint = 0;
 
   struct ScissorRect final {

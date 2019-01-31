@@ -34,13 +34,14 @@ namespace mozilla {
     WEBGL_EXTENSION_IDENTIFIER(EXT_blend_minmax)
     WEBGL_EXTENSION_IDENTIFIER(EXT_color_buffer_float)
     WEBGL_EXTENSION_IDENTIFIER(EXT_color_buffer_half_float)
+    WEBGL_EXTENSION_IDENTIFIER(EXT_disjoint_timer_query)
+    WEBGL_EXTENSION_IDENTIFIER(EXT_float_blend)
     WEBGL_EXTENSION_IDENTIFIER(EXT_frag_depth)
     WEBGL_EXTENSION_IDENTIFIER(EXT_shader_texture_lod)
     WEBGL_EXTENSION_IDENTIFIER(EXT_sRGB)
     WEBGL_EXTENSION_IDENTIFIER(EXT_texture_compression_bptc)
     WEBGL_EXTENSION_IDENTIFIER(EXT_texture_compression_rgtc)
     WEBGL_EXTENSION_IDENTIFIER(EXT_texture_filter_anisotropic)
-    WEBGL_EXTENSION_IDENTIFIER(EXT_disjoint_timer_query)
     WEBGL_EXTENSION_IDENTIFIER(MOZ_debug)
     WEBGL_EXTENSION_IDENTIFIER(OES_element_index_uint)
     WEBGL_EXTENSION_IDENTIFIER(OES_standard_derivatives)
@@ -218,15 +219,15 @@ bool WebGLContext::IsExtensionSupported(WebGLExtensionID ext) const {
         // For warnings-as-errors.
         break;
     }
+  }
 
-    if (gfxPrefs::WebGLDraftExtensionsEnabled()) {
-      /*
-      switch (ext) {
+  if (gfxPrefs::WebGLDraftExtensionsEnabled()) {
+    switch (ext) {
+      case WebGLExtensionID::EXT_float_blend:
+        return WebGLExtensionFloatBlend::IsSupported(this);
+
       default:
-          // For warnings-as-errors.
-          break;
-      }
-      */
+        break;
     }
   }
 
@@ -321,6 +322,9 @@ void WebGLContext::EnableExtension(WebGLExtensionID ext) {
       break;
     case WebGLExtensionID::EXT_disjoint_timer_query:
       obj = new WebGLExtensionDisjointTimerQuery(this);
+      break;
+    case WebGLExtensionID::EXT_float_blend:
+      obj = new WebGLExtensionFloatBlend(this);
       break;
     case WebGLExtensionID::EXT_frag_depth:
       obj = new WebGLExtensionFragDepth(this);
