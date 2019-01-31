@@ -102,6 +102,9 @@ function Sandbox(options) {
     sandboxPrototype: "prototype" in options ? options.prototype : {},
     invisibleToDebugger: "invisibleToDebugger" in options ?
                          options.invisibleToDebugger : false,
+    // For now create the sandbox in a new compartment. This is temporary until
+    // bug 1515290 fixes some devtools tests to not rely on this.
+    freshCompartment: true,
   };
 
   const sandbox = Cu.Sandbox(systemPrincipal, options);
