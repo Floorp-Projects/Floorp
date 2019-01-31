@@ -14,6 +14,10 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 const FALLBACK_ICON = "chrome://mozapps/skin/extensions/extensionGeneric.svg";
+const COLLAPSE_OPTIONS = {
+  limit: 5, // We only want to show 5 when collapsed.
+  allowOver: 1, // Avoid collapsing to hide 1 row.
+};
 
 let templatesLoaded = false;
 const templates = {};
@@ -26,6 +30,7 @@ function loadTemplates() {
   templates.row = document.getElementById("shortcut-row-template");
   templates.empty = document.getElementById("shortcuts-empty-template");
   templates.noAddons = document.getElementById("shortcuts-no-addons");
+  templates.expandRow = document.getElementById("expand-row-template");
 }
 
 function extensionForAddonId(id) {
@@ -274,8 +279,29 @@ async function renderAddons(addons) {
     if (extension.shortcuts) {
       let commands = await extension.shortcuts.allCommands();
 
-      for (let command of commands) {
-        let row = document.importNode(templates.row.content, true);
+      // Sort the commands so the ones with shortcuts are at the top.
+      commands.sort((a, b) => {
+        // Boolean compare the shortcuts to see if they're both set or unset.
+        if (!a.shortcut == !b.shortcut)
+          return 0;
+        if (a.shortcut)
+          return -1;
+        return 1;
+      });
+
+      let {limit, allowOver} = COLLAPSE_OPTIONS;
+      let willHideCommands = commands.length > limit + allowOver;
+      let firstHiddenInput;
+
+      for (let i = 0; i < commands.length; i++) {
+        let command = commands[i];
+
+        let row = document.importNode(templates.row.content, true).firstElementChild;
+
+        if (willHideCommands && i >= limit) {
+          row.setAttribute("hide-before-expand", "true");
+        }
+
         let label = row.querySelector(".shortcut-label");
         let descriptionId = getCommandDescriptionId(command);
         if (descriptionId) {
@@ -292,6 +318,39 @@ async function renderAddons(addons) {
         input.addEventListener("blur", inputBlurred);
         input.addEventListener("focus", clearValue);
 
+        if (willHideCommands && i == limit) {
+          firstHiddenInput = input;
+        }
+
+        card.appendChild(row);
+      }
+
+      // Add an expand button, if needed.
+      if (willHideCommands) {
+        let row = document.importNode(templates.expandRow.content, true);
+        let button = row.querySelector(".expand-button");
+        let numberToShow = commands.length - limit;
+        let setLabel = (type) => {
+          document.l10n.setAttributes(button, `shortcuts-card-${type}-button`, {
+            numberToShow,
+          });
+        };
+
+        setLabel("expand");
+        button.addEventListener("click", (event) => {
+          let expanded = card.hasAttribute("expanded");
+          if (expanded) {
+            card.removeAttribute("expanded");
+            setLabel("expand");
+          } else {
+            card.setAttribute("expanded", "true");
+            setLabel("collapse");
+            // If this as a keyboard event then focus the next input.
+            if (event.mozInputSource == MouseEvent.MOZ_SOURCE_KEYBOARD) {
+              firstHiddenInput.focus();
+            }
+          }
+        });
         card.appendChild(row);
       }
     } else {

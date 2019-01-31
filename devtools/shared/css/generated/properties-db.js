@@ -331,20 +331,6 @@ exports.CSS_PROPERTIES = {
       "visible"
     ]
   },
-  "-moz-binding": {
-    "isInherited": false,
-    "subproperties": [
-      "-moz-binding"
-    ],
-    "supports": [],
-    "values": [
-      "inherit",
-      "initial",
-      "none",
-      "unset",
-      "url"
-    ]
-  },
   "-moz-border-end": {
     "isInherited": false,
     "subproperties": [
@@ -9824,6 +9810,10 @@ exports.PREFERENCES = [
   [
     "scroll-snap-destination",
     "layout.css.scroll-snap.enabled"
+  ],
+  [
+    "-moz-binding",
+    "layout.css.moz-binding.content.enabled"
   ],
   [
     "-webkit-text-stroke-width",

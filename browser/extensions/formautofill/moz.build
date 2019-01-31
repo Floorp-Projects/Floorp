@@ -34,11 +34,17 @@ elif CONFIG['OS_ARCH'] == 'WINNT':
 
 TESTING_JS_MODULES += ['test/fixtures/OSKeyStoreTestUtils.jsm']
 
-BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']
+BROWSER_CHROME_MANIFESTS += [
+    'test/browser/browser.ini',
+    'test/browser/creditCard/browser.ini',
+]
 
 XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
 
-MOCHITEST_MANIFESTS += ['test/mochitest/mochitest.ini']
+MOCHITEST_MANIFESTS += [
+    'test/mochitest/creditCard/mochitest.ini',
+    'test/mochitest/mochitest.ini',
+]
 
 JAR_MANIFESTS += ['jar.mn']
 
