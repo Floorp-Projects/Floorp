@@ -67,7 +67,7 @@ uint32_t VP9Benchmark::MediaBenchmarkVp9Fps() {
   if (!ShouldRun()) {
     return 0;
   }
-  return StaticPrefs::MediaBenchmarkVp9Threshold();
+  return StaticPrefs::MediaBenchmarkVp9Fps();
 }
 
 // static
