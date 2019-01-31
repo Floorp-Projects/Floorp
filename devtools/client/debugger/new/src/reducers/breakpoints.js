@@ -12,12 +12,17 @@
 import { isGeneratedId } from "devtools-source-map";
 import { isEqual } from "lodash";
 
-import { makeLocationId } from "../utils/breakpoint";
+import { makeBreakpointId } from "../utils/breakpoint";
 
-import type { XHRBreakpoint, Breakpoint, SourceLocation } from "../types";
+import type {
+  XHRBreakpoint,
+  Breakpoint,
+  BreakpointId,
+  SourceLocation
+} from "../types";
 import type { Action, DonePromiseAction } from "../actions/types";
 
-export type BreakpointsMap = { [string]: Breakpoint };
+export type BreakpointsMap = { [BreakpointId]: Breakpoint };
 export type XHRBreakpointsList = $ReadOnlyArray<XHRBreakpoint>;
 
 export type BreakpointsState = {
@@ -174,7 +179,7 @@ function unsetBreakpoint(state, locationId) {
 function addBreakpoint(state, action): BreakpointsState {
   if (action.status === "start" && action.breakpoint) {
     const { breakpoint } = action;
-    const locationId = makeLocationId(breakpoint.location);
+    const locationId = makeBreakpointId(breakpoint.location);
     return setBreakpoint(state, locationId, breakpoint);
   }
 
@@ -186,7 +191,7 @@ function addBreakpoint(state, action): BreakpointsState {
 
   // Remove the optimistic update
   if (action.status === "error" && action.breakpoint) {
-    const locationId = makeLocationId(action.breakpoint.location);
+    const locationId = makeBreakpointId(action.breakpoint.location);
     return unsetBreakpoint(state, locationId);
   }
 
@@ -201,20 +206,20 @@ function syncBreakpoint(state, data): BreakpointsState {
       ...state,
       breakpoints: { ...state.breakpoints }
     };
-    delete state.breakpoints[makeLocationId(previousLocation)];
+    delete state.breakpoints[makeBreakpointId(previousLocation)];
   }
 
   if (!breakpoint) {
     return state;
   }
 
-  const locationId = makeLocationId(breakpoint.location);
+  const locationId = makeBreakpointId(breakpoint.location);
   return setBreakpoint(state, locationId, breakpoint);
 }
 
 function updateBreakpoint(state, action): BreakpointsState {
   const { breakpoint } = action;
-  const locationId = makeLocationId(breakpoint.location);
+  const locationId = makeBreakpointId(breakpoint.location);
   return setBreakpoint(state, locationId, breakpoint);
 }
 
@@ -225,7 +230,7 @@ function updateAllBreakpoints(state, action): BreakpointsState {
     breakpoints: { ...state.breakpoints }
   };
   breakpoints.forEach(breakpoint => {
-    const locationId = makeLocationId(breakpoint.location);
+    const locationId = makeBreakpointId(breakpoint.location);
     state.breakpoints[locationId] = breakpoint;
   });
   return state;
@@ -234,7 +239,7 @@ function updateAllBreakpoints(state, action): BreakpointsState {
 function remapBreakpoints(state, action): BreakpointsState {
   const breakpoints = action.breakpoints.reduce(
     (updatedBreakpoints, breakpoint) => {
-      const locationId = makeLocationId(breakpoint.location);
+      const locationId = makeBreakpointId(breakpoint.location);
       return { ...updatedBreakpoints, [locationId]: breakpoint };
     },
     {}
@@ -245,7 +250,7 @@ function remapBreakpoints(state, action): BreakpointsState {
 
 function removeBreakpoint(state, action): BreakpointsState {
   const { breakpoint } = action;
-  const id = makeLocationId(breakpoint.location);
+  const id = makeBreakpointId(breakpoint.location);
   return unsetBreakpoint(state, id);
 }
 
@@ -275,7 +280,7 @@ export function getBreakpoint(
   location: SourceLocation
 ): ?Breakpoint {
   const breakpoints = getBreakpointsMap(state);
-  return breakpoints[makeLocationId(location)];
+  return breakpoints[makeBreakpointId(location)];
 }
 
 export function getBreakpointsDisabled(state: OuterState): boolean {

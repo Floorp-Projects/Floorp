@@ -2,7 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import { actions, selectors, createStore } from "../../utils/test-head";
+// @flow
+
+import {
+  actions,
+  selectors,
+  createStore,
+  makeSource
+} from "../../utils/test-head";
+
+import { makeMockFrame } from "../../utils/test-mockup";
 
 const mockThreadClient = {
   evaluateInFrame: (script, { frameId }) =>
@@ -27,7 +36,7 @@ const mockThreadClient = {
       )
     ),
   getFrameScopes: async () => {},
-  sourceContents: () => ({}),
+  sourceContents: () => ({ source: "", contentType: "text/javascript" }),
   autocomplete: () => {
     return new Promise(resolve => {
       resolve({
@@ -50,7 +59,7 @@ describe("expressions", () => {
   it("should not add empty expressions", () => {
     const { dispatch, getState } = createStore(mockThreadClient);
 
-    dispatch(actions.addExpression());
+    dispatch(actions.addExpression((undefined: any)));
     dispatch(actions.addExpression(""));
 
     expect(selectors.getExpressions(getState()).size).toBe(0);
@@ -134,24 +143,19 @@ describe("expressions", () => {
 
     await dispatch(actions.autocomplete("to", 2));
 
-    expect(
-      selectors.getAutocompleteMatchset(getState(), "to")
-    ).toMatchSnapshot();
+    expect(selectors.getAutocompleteMatchset(getState())).toMatchSnapshot();
   });
 });
 
 async function createFrames(dispatch) {
-  const sourceId = "example.js";
-  const frame = {
-    id: "2",
-    location: { sourceId, line: 3 }
-  };
+  const frame = makeMockFrame();
 
-  await dispatch(actions.newSource({ id: sourceId }));
+  await dispatch(actions.newSource(makeSource("example.js")));
 
   await dispatch(
     actions.paused({
       thread: "UnknownThread",
+      frame,
       frames: [frame],
       why: { type: "just because" }
     })

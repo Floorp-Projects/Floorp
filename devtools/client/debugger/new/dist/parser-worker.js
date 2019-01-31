@@ -780,6 +780,7 @@ exports.getAst = getAst;
 exports.clearASTs = clearASTs;
 exports.traverseAst = traverseAst;
 exports.hasNode = hasNode;
+exports.replaceNode = replaceNode;
 
 var _parseScriptTags = __webpack_require__(1023);
 
@@ -957,6 +958,20 @@ function hasNode(rootNode, predicate) {
     }
   }
   return false;
+}
+
+function replaceNode(ancestors, node) {
+  const parent = ancestors[ancestors.length - 1];
+
+  if (typeof parent.index === "number") {
+    if (Array.isArray(node)) {
+      parent.node[parent.key].splice(parent.index, 1, ...node);
+    } else {
+      parent.node[parent.key][parent.index] = node;
+    }
+  } else {
+    parent.node[parent.key] = node;
+  }
 }
 
 /***/ }),
@@ -23134,6 +23149,7 @@ const dispatcher = new WorkerDispatcher();
 
 const setAssetRootURL = dispatcher.task("setAssetRootURL");
 const getOriginalURLs = dispatcher.task("getOriginalURLs");
+const hasOriginalURL = dispatcher.task("hasOriginalURL");
 const getOriginalRanges = dispatcher.task("getOriginalRanges");
 const getGeneratedRanges = dispatcher.task("getGeneratedRanges", {
   queue: true
@@ -23160,6 +23176,7 @@ module.exports = {
   isOriginalId,
   hasMappedSource,
   getOriginalURLs,
+  hasOriginalURL,
   getOriginalRanges,
   getGeneratedRanges,
   getGeneratedLocation,
@@ -23219,7 +23236,8 @@ function generatedToOriginalId(generatedId, url) {
 }
 
 function isOriginalId(id) {
-  return !!id.match(/\/originalSource/);
+  return (/\/originalSource/.test(id)
+  );
 }
 
 function isGeneratedId(id) {
@@ -23570,6 +23588,8 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = mapExpressionBindings;
 
+var _ast = __webpack_require__(1375);
+
 var _helpers = __webpack_require__(1411);
 
 var _generator = __webpack_require__(2365);
@@ -23583,6 +23603,10 @@ var t = _interopRequireWildcard(_types);
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 function getAssignmentTarget(node, bindings) {
   if (t.isObjectPattern(node)) {
@@ -23626,10 +23650,6 @@ function getAssignmentTarget(node, bindings) {
 
 // translates new bindings `var a = 3` into `self.a = 3`
 // and existing bindings `var a = 3` into `a = 3` for re-assignments
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 function globalizeDeclaration(node, bindings) {
   return node.declarations.map(declaration => t.expressionStatement(t.assignmentExpression("=", getAssignmentTarget(declaration.id, bindings), declaration.init)));
 }
@@ -23638,20 +23658,6 @@ function globalizeDeclaration(node, bindings) {
 // and keeps assignments the same for existing bindings.
 function globalizeAssignment(node, bindings) {
   return t.assignmentExpression(node.operator, getAssignmentTarget(node.left, bindings), node.right);
-}
-
-function replaceNode(ancestors, node) {
-  const parent = ancestors[ancestors.length - 1];
-
-  if (typeof parent.index === "number") {
-    if (Array.isArray(node)) {
-      parent.node[parent.key].splice(parent.index, 1, ...node);
-    } else {
-      parent.node[parent.key][parent.index] = node;
-    }
-  } else {
-    parent.node[parent.key] = node;
-  }
 }
 
 function mapExpressionBindings(expression, ast, bindings = []) {
@@ -23674,7 +23680,7 @@ function mapExpressionBindings(expression, ast, bindings = []) {
       if (t.isIdentifier(node.left) || t.isPattern(node.left)) {
         const newNode = globalizeAssignment(node, bindings);
         isMapped = true;
-        return replaceNode(ancestors, newNode);
+        return (0, _ast.replaceNode)(ancestors, newNode);
       }
 
       return;
@@ -23687,7 +23693,7 @@ function mapExpressionBindings(expression, ast, bindings = []) {
     if (!t.isForStatement(parent.node)) {
       const newNodes = globalizeDeclaration(node, bindings);
       isMapped = true;
-      replaceNode(ancestors, newNodes);
+      (0, _ast.replaceNode)(ancestors, newNodes);
     }
   });
 
@@ -44381,12 +44387,127 @@ function hasTopLevelAwait(ast) {
   return hasAwait;
 }
 
-function wrapExpressionFromAst(ast) {
+// translates new bindings `var a = 3` into `a = 3`.
+function translateDeclarationIntoAssignment(node) {
+  return node.declarations.reduce((acc, declaration) => {
+    // Don't translate declaration without initial assignment (e.g. `var a;`)
+    if (!declaration.init) {
+      return acc;
+    }
+    acc.push(t.expressionStatement(t.assignmentExpression("=", declaration.id, declaration.init)));
+    return acc;
+  }, []);
+}
+
+/**
+ * Given an AST, compute its last statement and replace it with a
+ * return statement.
+ */
+function addReturnNode(ast) {
   const statements = ast.program.body;
   const lastStatement = statements[statements.length - 1];
-  const body = statements.slice(0, -1).concat(t.returnStatement(lastStatement.expression));
+  return statements.slice(0, -1).concat(t.returnStatement(lastStatement.expression));
+}
 
-  const newAst = t.expressionStatement(t.callExpression(t.arrowFunctionExpression([], t.blockStatement(body), true), []));
+function getDeclarations(node) {
+  const { kind, declarations } = node;
+  const declaratorNodes = declarations.reduce((acc, d) => {
+    const declarators = getVariableDeclarators(d.id);
+    return acc.concat(declarators);
+  }, []);
+
+  // We can't declare const variables outside of the async iife because we
+  // wouldn't be able to re-assign them. As a workaround, we transform them
+  // to `let` which should be good enough for those case.
+  return t.variableDeclaration(kind === "const" ? "let" : kind, declaratorNodes);
+}
+
+function getVariableDeclarators(node) {
+  if (t.isIdentifier(node)) {
+    return t.variableDeclarator(t.identifier(node.name));
+  }
+
+  if (t.isObjectProperty(node)) {
+    return getVariableDeclarators(node.value);
+  }
+  if (t.isRestElement(node)) {
+    return getVariableDeclarators(node.argument);
+  }
+
+  if (t.isAssignmentPattern(node)) {
+    return getVariableDeclarators(node.left);
+  }
+
+  if (t.isArrayPattern(node)) {
+    return node.elements.reduce((acc, element) => acc.concat(getVariableDeclarators(element)), []);
+  }
+  if (t.isObjectPattern(node)) {
+    return node.properties.reduce((acc, property) => acc.concat(getVariableDeclarators(property)), []);
+  }
+  return [];
+}
+
+/**
+ * Given an AST and an array of variableDeclaration nodes, return a new AST with
+ * all the declarations at the top of the AST.
+ */
+function addTopDeclarationNodes(ast, declarationNodes) {
+  const statements = [];
+  declarationNodes.forEach(declarationNode => {
+    statements.push(getDeclarations(declarationNode));
+  });
+  statements.push(ast);
+  return t.program(statements);
+}
+
+/**
+ * Given an AST, return an object of the following shape:
+ *   - newAst: {AST} the AST where variable declarations were transformed into
+ *             variable assignments
+ *   - declarations: {Array<Node>} An array of all the declaration nodes needed
+ *                   outside of the async iife.
+ */
+function translateDeclarationsIntoAssignment(ast) {
+  const declarations = [];
+  t.traverse(ast, (node, ancestors) => {
+    const parent = ancestors[ancestors.length - 1];
+
+    if (t.isWithStatement(node) || !(0, _helpers.isTopLevel)(ancestors) || t.isAssignmentExpression(node) || !t.isVariableDeclaration(node) || t.isForStatement(parent.node) || !Array.isArray(node.declarations) || node.declarations.length === 0) {
+      return;
+    }
+
+    const newNodes = translateDeclarationIntoAssignment(node);
+    (0, _ast.replaceNode)(ancestors, newNodes);
+    declarations.push(node);
+  });
+
+  return {
+    newAst: ast,
+    declarations
+  };
+}
+
+/**
+ * Given an AST, wrap its body in an async iife, transform variable declarations
+ * in assignments and move the variable declarations outside of the async iife.
+ * Example: With the AST for the following expression: `let a = await 123`, the
+ * function will return:
+ * let a;
+ * (async => {
+ *   return a = await 123;
+ * })();
+ */
+function wrapExpressionFromAst(ast) {
+  // Transform let and var declarations into assignments, and get back an array
+  // of variable declarations.
+  let { newAst, declarations } = translateDeclarationsIntoAssignment(ast);
+  const body = addReturnNode(newAst);
+
+  // Create the async iife.
+  newAst = t.expressionStatement(t.callExpression(t.arrowFunctionExpression([], t.blockStatement(body), true), []));
+
+  // Now let's put all the variable declarations at the top of the async iife.
+  newAst = addTopDeclarationNodes(newAst, declarations);
 
   return (0, _generator2.default)(newAst).code;
 }

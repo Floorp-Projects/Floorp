@@ -20,7 +20,8 @@ import {
   getSource,
   getSourceFromId,
   getSourceByURL,
-  getSelectedLocation
+  getSelectedLocation,
+  getSourceActors
 } from "../../selectors";
 
 import type { Action, ThunkArgs } from "../types";
@@ -37,7 +38,6 @@ export function createPrettySource(sourceId: string) {
       url,
       relativeUrl: url,
       id,
-      thread: "",
       isBlackBoxed: false,
       isPrettyPrinted: true,
       isWasm: false,
@@ -51,6 +51,13 @@ export function createPrettySource(sourceId: string) {
 
     const { code, mappings } = await prettyPrint({ source, url });
     await sourceMaps.applySourceMap(source.id, url, code, mappings);
+
+    // The source map URL service used by other devtools listens to changes to
+    // sources based on their actor IDs, so apply the mapping there too.
+    const sourceActors = getSourceActors(getState(), sourceId);
+    for (const sourceActor of sourceActors) {
+      await sourceMaps.applySourceMap(sourceActor.actor, url, code, mappings);
+    }
 
     const loadedPrettySource: JsSource = {
       ...prettySource,

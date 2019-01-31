@@ -4,6 +4,7 @@ exports[`loading the debugger loads the initial breakpoint state 1`] = `
 Object {
   "breakpoint": Object {
     "astLocation": Object {
+      "index": 0,
       "name": undefined,
       "offset": Object {
         "line": 3,
@@ -16,7 +17,7 @@ Object {
       "sourceId": "gen.js",
       "sourceUrl": "http://localhost:8000/gen.js",
     },
-    "id": "foo",
+    "id": "magic.js:3:",
     "loading": false,
     "location": Object {
       "column": undefined,
@@ -45,6 +46,7 @@ exports[`loading the debugger loads the initial breakpoint state with a changed 
 Object {
   "breakpoint": Object {
     "astLocation": Object {
+      "index": 0,
       "name": undefined,
       "offset": Object {
         "line": 3,
@@ -57,7 +59,7 @@ Object {
       "sourceId": "gen.js",
       "sourceUrl": "http://localhost:8000/gen.js",
     },
-    "id": "foo",
+    "id": "magic.js:12:",
     "loading": false,
     "location": Object {
       "column": undefined,
@@ -86,6 +88,7 @@ exports[`reloading debuggee syncs with changed source and an existing disabled B
 Object {
   "http://localhost:8000/examples/magic.js:3:": Object {
     "astLocation": Object {
+      "index": 0,
       "name": undefined,
       "offset": Object {
         "line": 3,
@@ -115,6 +118,7 @@ exports[`reloading debuggee syncs with unchanged source with an existing BP 1`] 
 Object {
   "breakpoint": Object {
     "astLocation": Object {
+      "index": 0,
       "name": undefined,
       "offset": Object {
         "line": 3,
@@ -127,7 +131,7 @@ Object {
       "sourceId": "gen.js",
       "sourceUrl": "http://localhost:8000/gen.js",
     },
-    "id": "foo",
+    "id": "magic.js:3:",
     "loading": false,
     "location": Object {
       "column": undefined,
@@ -156,6 +160,7 @@ exports[`reloading debuggee updates a corresponding breakpoint for a changed sou
 Object {
   "breakpoint": Object {
     "astLocation": Object {
+      "index": 0,
       "name": undefined,
       "offset": Object {
         "line": 3,
@@ -168,7 +173,7 @@ Object {
       "sourceId": "gen.js",
       "sourceUrl": "http://localhost:8000/gen.js",
     },
-    "id": "gen.js:5:",
+    "id": "magic.js:3:",
     "loading": false,
     "location": Object {
       "column": undefined,

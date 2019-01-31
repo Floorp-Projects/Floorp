@@ -11,11 +11,16 @@ import {
   assertBreakpoint,
   createBreakpoint,
   getASTLocation,
-  assertLocation
+  assertLocation,
+  makeBreakpointId,
+  makeSourceActorLocation
 } from "../../utils/breakpoint";
 import { PROMISE } from "../utils/middleware/promise";
-import { getSource, getSymbols } from "../../selectors";
-
+import {
+  getSource,
+  getSourceActors,
+  getSymbols,
+} from "../../selectors";
 import { getGeneratedLocation } from "../../utils/source-maps";
 import { getTextAtPosition } from "../../utils/source";
 import { recordEvent } from "../../utils/telemetry";
@@ -50,6 +55,12 @@ async function addBreakpointPromise(getState, client, sourceMaps, breakpoint) {
 
   const generatedSource = getSource(state, generatedLocation.sourceId);
 
+  if (!generatedSource) {
+    throw new Error(
+      `Unable to find generated source: ${generatedLocation.sourceId}`
+    );
+  }
+
   assertLocation(location);
   assertLocation(generatedLocation);
 
@@ -59,13 +70,23 @@ async function addBreakpointPromise(getState, client, sourceMaps, breakpoint) {
     return { breakpoint: newBreakpoint };
   }
 
-  const { id, actualLocation } = await client.setBreakpoint(
-    generatedLocation,
-    breakpoint.options,
-    isOriginalId(location.sourceId)
-  );
+  const sourceActors = getSourceActors(state, generatedSource.id);
+  const newGeneratedLocation = { ...generatedLocation };
 
-  const newGeneratedLocation = actualLocation || generatedLocation;
+  for (const sourceActor of sourceActors) {
+    const sourceActorLocation = makeSourceActorLocation(
+      sourceActor,
+      generatedLocation
+    );
+    const { actualLocation } = await client.setBreakpoint(
+      sourceActorLocation,
+      breakpoint.options,
+      isOriginalId(location.sourceId)
+    );
+    newGeneratedLocation.line = actualLocation.line;
+    newGeneratedLocation.column = actualLocation.column;
+  }
+
   const newLocation = await sourceMaps.getOriginalLocation(
     newGeneratedLocation
   );
@@ -74,10 +95,10 @@ async function addBreakpointPromise(getState, client, sourceMaps, breakpoint) {
   const astLocation = await getASTLocation(source, symbols, newLocation);
 
   const originalText = getTextAtPosition(source, location);
-  const text = getTextAtPosition(generatedSource, actualLocation);
+  const text = getTextAtPosition(generatedSource, newGeneratedLocation);
 
   const newBreakpoint = {
-    id,
+    id: makeBreakpointId(generatedLocation),
     disabled: false,
     loading: false,
     options: breakpoint.options,

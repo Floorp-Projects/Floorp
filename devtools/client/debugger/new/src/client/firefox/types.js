@@ -18,7 +18,9 @@ import type {
   Source,
   Pause,
   Frame,
-  SourceId
+  SourceId,
+  Worker,
+  SourceActor
 } from "../../types";
 
 type URL = string;
@@ -116,6 +118,11 @@ export type SourcesPacket = {
   from: ActorId,
   sources: SourcePayload[]
 };
+
+export type CreateSourceResult = {|
+  sourceActor?: SourceActor,
+  +source: Source
+|};
 
 /**
  * Pause Packet sent when the server is in a "paused" state
@@ -226,8 +233,8 @@ export type TabTarget = {
     evaluateJSAsync: (
       script: Script,
       func: Function,
-      params?: { frameActor?: FrameId }
-    ) => void,
+      params?: { frameActor: ?FrameId }
+    ) => Promise<{ result: ?Object }>,
     autocomplete: (
       input: string,
       cursor: number,
@@ -317,7 +324,8 @@ export type FunctionGrip = {|
  * @static
  */
 export type SourceClient = {
-  source: () => Source,
+  source: () => { source: any, contentType?: string },
+  _activeThread: ThreadClient,
   actor: string,
   setBreakpoint: ({
     line: number,
@@ -414,3 +422,11 @@ export type FirefoxClientConnection = {
   setTabTarget: (target: TabTarget) => void,
   setThreadClient: (client: ThreadClient) => void
 };
+
+export type Panel = {|
+  emit: (eventName: string) => void,
+  openLink: (url: string) => void,
+  openWorkerToolbox: (worker: Worker) => void,
+  openElementInInspector: (grip: Object) => void,
+  openConsoleAndEvaluate: (input: string) => void
+|};

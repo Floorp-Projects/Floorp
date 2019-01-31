@@ -438,6 +438,7 @@ const dispatcher = new WorkerDispatcher();
 
 const setAssetRootURL = dispatcher.task("setAssetRootURL");
 const getOriginalURLs = dispatcher.task("getOriginalURLs");
+const hasOriginalURL = dispatcher.task("hasOriginalURL");
 const getOriginalRanges = dispatcher.task("getOriginalRanges");
 const getGeneratedRanges = dispatcher.task("getGeneratedRanges", {
   queue: true
@@ -464,6 +465,7 @@ module.exports = {
   isOriginalId,
   hasMappedSource,
   getOriginalURLs,
+  hasOriginalURL,
   getOriginalRanges,
   getGeneratedRanges,
   getGeneratedLocation,
@@ -523,7 +525,8 @@ function generatedToOriginalId(generatedId, url) {
 }
 
 function isOriginalId(id) {
-  return !!id.match(/\/originalSource/);
+  return (/\/originalSource/.test(id)
+  );
 }
 
 function isGeneratedId(id) {

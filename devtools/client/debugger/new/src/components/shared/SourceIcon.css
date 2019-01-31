@@ -11,11 +11,17 @@
   height: 15px;
 }
 
-.source-icon.prettyPrint {
+.img.prettyPrint {
   mask: url(/images/prettyPrint.svg) no-repeat;
   mask-size: 100%;
   background: var(--theme-highlight-blue);
   fill: var(--theme-textbox-box-shadow);
+  position: relative;
+}
+
+.sources-list .img.prettyPrint {
+  top: 2px;
+  margin-inline-start: 3px;
 }
 
 .source-icon.vue {

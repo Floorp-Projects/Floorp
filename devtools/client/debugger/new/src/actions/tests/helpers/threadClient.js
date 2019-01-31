@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import { makeLocationId } from "../../../utils/breakpoint";
+import { makeBreakpointId } from "../../../utils/breakpoint";
 
 function createSource(name) {
   name = name.replace(/\..*$/, "");
@@ -40,13 +40,13 @@ export const simpleMockThreadClient = {
   setBreakpointOptions: (_id, _location, _options, _noSliding) =>
     Promise.resolve({ sourceId: "a", line: 5 }),
   setPausePoints: () => Promise.resolve({}),
-  sourceContents: sourceId =>
+  sourceContents: ({ source }) =>
     new Promise((resolve, reject) => {
-      if (sources.includes(sourceId)) {
-        resolve(createSource(sourceId));
+      if (sources.includes(source)) {
+        resolve(createSource(source));
       }
 
-      reject(`unknown source: ${sourceId}`);
+      reject(`unknown source: ${source}`);
     })
 };
 
@@ -58,12 +58,12 @@ function generateCorrectingThreadClient(offset = 0) {
       const actualLocation = { ...location, line: location.line + offset };
 
       return Promise.resolve({
-        id: makeLocationId(location),
+        id: makeBreakpointId(location),
         actualLocation,
         condition
       });
     },
-    sourceContents: sourceId => Promise.resolve(createSource(sourceId))
+    sourceContents: ({ source }) => Promise.resolve(createSource(source))
   };
 }
 
@@ -81,13 +81,13 @@ export function simulateCorrectThreadClient(offset, location) {
 
 // sources and tabs
 export const sourceThreadClient = {
-  sourceContents: function(sourceId) {
+  sourceContents: function({ source }) {
     return new Promise((resolve, reject) => {
-      if (sources.includes(sourceId)) {
-        resolve(createSource(sourceId));
+      if (sources.includes(source)) {
+        resolve(createSource(source));
       }
 
-      reject(`unknown source: ${sourceId}`);
+      reject(`unknown source: ${source}`);
     });
   },
   threadClient: async () => {},
