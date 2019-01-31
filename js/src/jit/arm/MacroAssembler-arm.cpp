@@ -2854,14 +2854,12 @@ void MacroAssemblerARMCompat::boolValueToDouble(const ValueOperand& operand,
 
 void MacroAssemblerARMCompat::int32ValueToDouble(const ValueOperand& operand,
                                                  FloatRegister dest) {
-  VFPRegister vfpdest = VFPRegister(dest);
-  ScratchFloat32Scope scratch(asMasm());
-
   // Transfer the integral value to a floating point register.
-  as_vxfer(operand.payloadReg(), InvalidReg, scratch.sintOverlay(),
+  VFPRegister vfpdest = VFPRegister(dest);
+  as_vxfer(operand.payloadReg(), InvalidReg, vfpdest.sintOverlay(),
            CoreToFloat);
   // Convert the value to a double.
-  as_vcvt(vfpdest, scratch.sintOverlay());
+  as_vcvt(vfpdest, vfpdest.sintOverlay());
 }
 
 void MacroAssemblerARMCompat::boolValueToFloat32(const ValueOperand& operand,
