@@ -42,6 +42,7 @@ UNIFIED_SOURCES += [
     'IfEmitter.cpp',
     'JumpList.cpp',
     'LabelEmitter.cpp',
+    'LexicalScopeEmitter.cpp',
     'NameFunctions.cpp',
     'NameOpEmitter.cpp',
     'ObjectEmitter.cpp',
