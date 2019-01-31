@@ -13,6 +13,8 @@
 #include "nsIObserver.h"
 #include "nsPIDOMWindow.h"
 #include "mozilla/UniquePtr.h"
+#include "nsIFile.h"
+#include "nsProfileLock.h"
 
 enum RemoteResult {
   REMOTE_NOT_FOUND = 0,
@@ -28,6 +30,9 @@ class nsRemoteService final : public nsIObserver {
 
   nsRemoteService() = default;
 
+  void LockStartup(nsCString& aProgram, const char* aProfile);
+  void UnlockStartup();
+
   RemoteResult StartClient(const char* aDesktopStartupID, nsCString& program,
                            const char* profile);
   void StartupServer(const char* aAppName, const char* aProfileName);
@@ -37,6 +42,8 @@ class nsRemoteService final : public nsIObserver {
   ~nsRemoteService();
 
   mozilla::UniquePtr<nsRemoteServer> mRemoteServer;
+  nsProfileLock mRemoteLock;
+  nsCOMPtr<nsIFile> mRemoteLockDir;
 };
 
 #endif  // __nsRemoteService_h__

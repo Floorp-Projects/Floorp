@@ -18,6 +18,11 @@
 #include "nsString.h"
 #include "nsServiceManagerUtils.h"
 #include "mozilla/ModuleUtils.h"
+#include "SpecialSystemDirectory.h"
+
+// Time to wait for the remoting service to start
+#define START_TIMEOUT_SEC 5
+#define START_SLEEP_MSEC 100
 
 using namespace mozilla;
 
@@ -25,6 +30,47 @@ extern int gArgc;
 extern char** gArgv;
 
 NS_IMPL_ISUPPORTS(nsRemoteService, nsIObserver)
+
+void nsRemoteService::LockStartup(nsCString& aProgram, const char* aProfile) {
+  nsCOMPtr<nsIFile> mutexDir;
+  nsresult rv = GetSpecialSystemDirectory(OS_TemporaryDirectory,
+                                          getter_AddRefs(mutexDir));
+  if (NS_SUCCEEDED(rv)) {
+    nsAutoCString mutexPath(aProgram);
+    if (aProfile) {
+      mutexPath.Append(NS_LITERAL_CSTRING("_") + nsDependentCString(aProfile));
+    }
+    mutexDir->AppendNative(mutexPath);
+
+    rv = mutexDir->Create(nsIFile::DIRECTORY_TYPE, 0700);
+    if (NS_SUCCEEDED(rv) || rv == NS_ERROR_FILE_ALREADY_EXISTS) {
+      mRemoteLockDir = mutexDir;
+    }
+  }
+
+  if (mRemoteLockDir) {
+    const mozilla::TimeStamp epoch = mozilla::TimeStamp::Now();
+    do {
+      rv = mRemoteLock.Lock(mRemoteLockDir, nullptr);
+      if (NS_SUCCEEDED(rv)) break;
+      PR_Sleep(START_SLEEP_MSEC);
+    } while ((mozilla::TimeStamp::Now() - epoch) <
+             mozilla::TimeDuration::FromSeconds(START_TIMEOUT_SEC));
+    if (NS_FAILED(rv)) {
+      NS_WARNING("Cannot lock remote start mutex");
+    }
+  }
+}
+
+void nsRemoteService::UnlockStartup() {
+  mRemoteLock.Unlock();
+  mRemoteLock.Cleanup();
+
+  if (mRemoteLockDir) {
+    mRemoteLockDir->Remove(false);
+    mRemoteLockDir = nullptr;
+  }
+}
 
 RemoteResult nsRemoteService::StartClient(const char* aDesktopStartupID,
                                           nsCString& program,
