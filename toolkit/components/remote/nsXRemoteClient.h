@@ -8,10 +8,10 @@
 
 #include "nsRemoteClient.h"
 
-class XRemoteClient : public nsRemoteClient {
+class nsXRemoteClient : public nsRemoteClient {
  public:
-  XRemoteClient();
-  ~XRemoteClient();
+  nsXRemoteClient();
+  ~nsXRemoteClient();
 
   virtual nsresult Init() override;
   virtual nsresult SendCommandLine(const char *aProgram, const char *aProfile,
