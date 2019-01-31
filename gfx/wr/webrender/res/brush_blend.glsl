@@ -37,10 +37,7 @@ void brush_vs(
     // PictureTask src_task = fetch_picture_task(user_data.x);
     vec2 texture_size = vec2(textureSize(sColor0, 0).xy);
     vec2 f = (vi.local_pos - local_rect.p0) / local_rect.size;
-    ImageResourceExtra extra_data = fetch_image_resource_extra(user_data.x);
-    vec2 x = mix(extra_data.st_tl, extra_data.st_tr, f.x);
-    vec2 y = mix(extra_data.st_bl, extra_data.st_br, f.x);
-    f = mix(x, y, f.y);
+    f = get_image_quad_uv(user_data.x, f);
     vec2 uv = mix(uv0, uv1, f);
     float perspective_interpolate = (brush_flags & BRUSH_FLAG_PERSPECTIVE_INTERPOLATION) != 0 ? 1.0 : 0.0;
 

@@ -751,6 +751,8 @@ function getPrefs(ident) {
         // position is synced back to the main thread. So we disable displayport
         // expiry for these tests.
         ["apz.displayport_expiry_ms", 0],
+        // All of test cases should define viewport meta tag.
+        ["dom.meta-viewport.enabled", true],
       ];
     default:
       return [];

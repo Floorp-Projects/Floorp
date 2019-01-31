@@ -117,20 +117,21 @@ ImageResource fetch_image_resource_direct(ivec2 address) {
 
 // Fetch optional extra data for a texture cache resource. This can contain
 // a polygon defining a UV rect within the texture cache resource.
+// Note: the polygon coordinates are in homogeneous space.
 struct ImageResourceExtra {
-    vec2 st_tl;
-    vec2 st_tr;
-    vec2 st_bl;
-    vec2 st_br;
+    vec4 st_tl;
+    vec4 st_tr;
+    vec4 st_bl;
+    vec4 st_br;
 };
 
 ImageResourceExtra fetch_image_resource_extra(int address) {
-    vec4 data[2] = fetch_from_gpu_cache_2(address + VECS_PER_IMAGE_RESOURCE);
+    vec4 data[4] = fetch_from_gpu_cache_4(address + VECS_PER_IMAGE_RESOURCE);
     return ImageResourceExtra(
-        data[0].xy,
-        data[0].zw,
-        data[1].xy,
-        data[1].zw
+        data[0],
+        data[1],
+        data[2],
+        data[3]
     );
 }
 

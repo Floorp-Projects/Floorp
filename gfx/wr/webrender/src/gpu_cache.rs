@@ -25,7 +25,7 @@
 //! for this frame.
 
 use api::{DebugFlags, DocumentId, PremultipliedColorF, IdNamespace, TexelRect};
-use euclid::TypedRect;
+use euclid::{HomogeneousVector, TypedRect};
 use internal_types::{FastHashMap};
 use profiler::GpuCacheProfileCounters;
 use render_backend::{FrameStamp, FrameId};
@@ -107,6 +107,19 @@ impl<P> From<TypedRect<f32, P>> for GpuBlockData {
                 r.origin.y,
                 r.size.width,
                 r.size.height,
+            ],
+        }
+    }
+}
+
+impl<P> From<HomogeneousVector<f32, P>> for GpuBlockData {
+    fn from(v: HomogeneousVector<f32, P>) -> Self {
+        GpuBlockData {
+            data: [
+                v.x,
+                v.y,
+                v.z,
+                v.w,
             ],
         }
     }

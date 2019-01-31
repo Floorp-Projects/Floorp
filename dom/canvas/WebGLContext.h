@@ -1049,6 +1049,16 @@ class WebGLContext : public nsICanvasRenderingContextInternal,
   realGLboolean mStencilTestEnabled;
   GLenum mGenerateMipmapHint = 0;
 
+  struct ScissorRect final {
+    GLint x;
+    GLint y;
+    GLsizei w;
+    GLsizei h;
+
+    void Apply(gl::GLContext&) const;
+  };
+  ScissorRect mScissorRect = {};
+
   bool ValidateCapabilityEnum(GLenum cap);
   realGLboolean* GetStateTrackingSlot(GLenum cap);
 

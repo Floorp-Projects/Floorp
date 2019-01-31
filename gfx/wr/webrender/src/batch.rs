@@ -2623,6 +2623,7 @@ impl ClipBatcher {
         // Because we only run this code path for axis-aligned rects (the root coord system check above),
         // and only for rectangles (not rounded etc), the world_device_rect is not conservative - we know
         // that there is no inner_rect, and the world_device_rect should be the real, axis-aligned clip rect.
+        let mask_origin = mask_screen_rect.origin.to_f32().to_vector();
 
         for y in 0 .. y_tiles {
             for x in 0 .. x_tiles {
@@ -2634,21 +2635,22 @@ impl ClipBatcher {
                     (p0.x + CLIP_RECTANGLE_TILE_SIZE).min(mask_screen_rect.size.width),
                     (p0.y + CLIP_RECTANGLE_TILE_SIZE).min(mask_screen_rect.size.height),
                 );
-                let sub_rect = DeviceIntRect::new(
+                let normalized_sub_rect = DeviceIntRect::new(
                     p0,
                     DeviceIntSize::new(
                         p1.x - p0.x,
                         p1.y - p0.y,
                     ),
                 ).to_f32();
+                let world_sub_rect = normalized_sub_rect.translate(&mask_origin);
 
                 // If the clip rect completely contains this tile rect, then drawing
                 // these pixels would be redundant - since this clip can't possibly
                 // affect the pixels in this tile, skip them!
-                if !world_device_rect.contains_rect(&sub_rect) {
+                if !world_device_rect.contains_rect(&world_sub_rect) {
                     self.rectangles.push(ClipMaskInstance {
                         clip_data_address: gpu_address,
-                        sub_rect,
+                        sub_rect: normalized_sub_rect,
                         ..*instance
                     });
                 }
