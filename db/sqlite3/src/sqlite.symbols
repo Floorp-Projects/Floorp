@@ -36,6 +36,7 @@ sqlite3_column_text16
 sqlite3_column_type
 sqlite3_column_value
 sqlite3_commit_hook
+sqlite3_compileoption_used
 sqlite3_complete
 sqlite3_complete16
 sqlite3_config
