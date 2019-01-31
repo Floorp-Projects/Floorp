@@ -193,6 +193,8 @@ class Theme {
         case "sidebar_text":
         case "sidebar_highlight":
         case "sidebar_highlight_text":
+        case "toolbar_field_highlight":
+        case "toolbar_field_highlight_text":
           this.lwtStyles[color] = cssColor;
           break;
         default:
