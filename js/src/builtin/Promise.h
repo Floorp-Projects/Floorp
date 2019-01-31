@@ -10,6 +10,7 @@
 #include "js/Promise.h"
 
 #include "builtin/SelfHostingDefines.h"
+#include "ds/Fifo.h"
 #include "threading/ConditionVariable.h"
 #include "threading/Mutex.h"
 #include "vm/NativeObject.h"
@@ -526,7 +527,7 @@ using OffThreadPromiseTaskSet =
     HashSet<OffThreadPromiseTask*, DefaultHasher<OffThreadPromiseTask*>,
             SystemAllocPolicy>;
 
-using DispatchableVector = Vector<JS::Dispatchable*, 0, SystemAllocPolicy>;
+using DispatchableFifo = Fifo<JS::Dispatchable*, 0, SystemAllocPolicy>;
 
 class OffThreadPromiseRuntimeState {
   friend class OffThreadPromiseTask;
@@ -541,7 +542,7 @@ class OffThreadPromiseRuntimeState {
   ConditionVariable allCanceled_;
   OffThreadPromiseTaskSet live_;
   size_t numCanceled_;
-  DispatchableVector internalDispatchQueue_;
+  DispatchableFifo internalDispatchQueue_;
   ConditionVariable internalDispatchQueueAppended_;
   bool internalDispatchQueueClosed_;
 
