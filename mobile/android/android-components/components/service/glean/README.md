@@ -80,6 +80,10 @@ class SampleApplication : Application() {
 Once initialized, if collection is enabled, glean will automatically start collecting [baseline metrics](metrics.yaml)
 and sending its [pings](docs/pings.md).
 
+Glean should be initialized as soon as possible, and importantly, before any
+other libraries in the application start using Glean. Library code should never
+call `Glean.initialize`, since it should be called exactly once per application.
+
 ### Defining metrics
 
 The metrics that your application collects must be defined in a `metrics.yaml`
