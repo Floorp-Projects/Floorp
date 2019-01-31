@@ -15,10 +15,13 @@ if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
     SOURCES += [
         'nsGTKRemoteServer.cpp',
         'nsUnixRemoteServer.cpp',
+        'nsXRemoteClient.cpp',
         'nsXRemoteServer.cpp',
+        'RemoteUtils.cpp',
     ]
     if CONFIG['MOZ_ENABLE_DBUS']:
         SOURCES += [
+            'nsDBusRemoteClient.cpp',
             'nsDBusRemoteServer.cpp',
         ]
         CXXFLAGS += CONFIG['MOZ_DBUS_GLIB_CFLAGS']
