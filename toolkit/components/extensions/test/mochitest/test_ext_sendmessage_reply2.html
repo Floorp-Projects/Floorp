@@ -80,7 +80,7 @@ function contentScript(token, id, otherId) {
   });
 }
 
-function tabScript(token, id, otherId) {
+async function tabScript(token, id, otherId) {
   let gotTabMessage = false;
   browser.runtime.onMessage.addListener((msg, sender, sendReply) => {
     browser.test.assertEq(id, sender.id, `${id}: Got expected sender ID`);
@@ -94,6 +94,19 @@ function tabScript(token, id, otherId) {
     if (msg === `${token}-tabMessage`) {
       gotTabMessage = true;
     }
+  });
+
+  browser.test.sendMessage("tab-script-loaded");
+
+  await new Promise(resolve => {
+    const listener = (msg) => {
+      if (msg !== "run-tab-script") {
+        return;
+      }
+      browser.test.onMessage.removeListener(listener);
+      resolve();
+    };
+    browser.test.onMessage.addListener(listener);
   });
 
   Promise.all([
@@ -157,7 +170,15 @@ add_task(async function test_contentscript() {
   let extension1 = ExtensionTestUtils.loadExtension(makeExtension(ID1, ID2));
   let extension2 = ExtensionTestUtils.loadExtension(makeExtension(ID2, ID1));
 
-  await Promise.all([extension1.startup(), extension2.startup()]);
+  await Promise.all([
+    extension1.startup(),
+    extension2.startup(),
+    extension1.awaitMessage("tab-script-loaded"),
+    extension2.awaitMessage("tab-script-loaded"),
+  ]);
+
+  extension1.sendMessage("run-tab-script");
+  extension2.sendMessage("run-tab-script");
 
   let win = window.open("file_sample.html");
 
