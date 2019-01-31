@@ -1869,11 +1869,7 @@ VARCACHE_PREF(
 )
 
 // Block 3rd party fingerprinting resources.
-#ifdef NIGHTLY_BUILD
-# define PREF_VALUE true
-#else
 # define PREF_VALUE false
-#endif
 VARCACHE_PREF(
   "privacy.trackingprotection.fingerprinting.enabled",
    privacy_trackingprotection_fingerprinting_enabled,
@@ -1882,11 +1878,7 @@ VARCACHE_PREF(
 #undef PREF_VALUE
 
 // Block 3rd party cryptomining resources.
-#ifdef NIGHTLY_BUILD
-# define PREF_VALUE true
-#else
 # define PREF_VALUE false
-#endif
 VARCACHE_PREF(
   "privacy.trackingprotection.cryptomining.enabled",
    privacy_trackingprotection_cryptomining_enabled,
