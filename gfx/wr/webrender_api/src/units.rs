@@ -15,6 +15,7 @@
 use app_units::Au;
 use euclid::{Length, TypedRect, TypedScale, TypedSize2D, TypedTransform3D, TypedTranslation2D};
 use euclid::{TypedPoint2D, TypedPoint3D, TypedVector2D, TypedVector3D, TypedSideOffsets2D};
+use euclid::HomogeneousVector;
 use DirtyRect;
 
 /// Geometry in the coordinate system of the render target (screen or intermediate
@@ -32,6 +33,7 @@ pub type DeviceRect = TypedRect<f32, DevicePixel>;
 pub type DevicePoint = TypedPoint2D<f32, DevicePixel>;
 pub type DeviceVector2D = TypedVector2D<f32, DevicePixel>;
 pub type DeviceSize = TypedSize2D<f32, DevicePixel>;
+pub type DeviceHomogeneousVector = HomogeneousVector<f32, DevicePixel>;
 
 /// Geometry in the coordinate system of a Picture (intermediate
 /// surface) in physical pixels.

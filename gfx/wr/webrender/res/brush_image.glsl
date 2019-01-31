@@ -131,10 +131,7 @@ void brush_vs(
             // Since the screen space UVs specify an arbitrary quad, do
             // a bilinear interpolation to get the correct UV for this
             // local position.
-            ImageResourceExtra extra_data = fetch_image_resource_extra(user_data.w);
-            vec2 x = mix(extra_data.st_tl, extra_data.st_tr, f.x);
-            vec2 y = mix(extra_data.st_bl, extra_data.st_br, f.x);
-            f = mix(x, y, f.y);
+            f = get_image_quad_uv(user_data.w, f);
             break;
         }
         default:
