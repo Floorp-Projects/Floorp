@@ -43,10 +43,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define CPU_SUBTYPE_ARM64_ALL 0
 #endif
 
+#ifndef CPU_SUBTYPE_ARM64_E
+#define CPU_SUBTYPE_ARM64_E 2
+#endif
+
 const cpu_type_t kCPU_TYPE_ARM = CPU_TYPE_ARM;
 const cpu_type_t kCPU_TYPE_ARM64 = CPU_TYPE_ARM64;
 
 const cpu_subtype_t kCPU_SUBTYPE_ARM64_ALL = CPU_SUBTYPE_ARM64_ALL;
+const cpu_subtype_t kCPU_SUBTYPE_ARM64_E = CPU_SUBTYPE_ARM64_E;
 const cpu_subtype_t kCPU_SUBTYPE_ARM_V7S = CPU_SUBTYPE_ARM_V7S;
 
 const char* GetNXArchInfoName(cpu_type_t cpu_type, cpu_subtype_t cpu_subtype) {

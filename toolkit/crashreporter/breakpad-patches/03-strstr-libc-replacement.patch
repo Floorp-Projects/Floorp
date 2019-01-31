@@ -1,0 +1,54 @@
+diff --git a/src/common/linux/linux_libc_support.cc b/src/common/linux/linux_libc_support.cc
+--- a/src/common/linux/linux_libc_support.cc
++++ b/src/common/linux/linux_libc_support.cc
+@@ -133,16 +133,27 @@ const char* my_strrchr(const char* hayst
+   while (*haystack) {
+     if (*haystack == needle)
+       ret = haystack;
+     haystack++;
+   }
+   return ret;
+ }
+ 
++const char* my_strstr(const char* haystack, const char* needle) {
++  while (*haystack != 0) {
++    if((*haystack == *needle) &&
++       (my_strncmp(haystack, needle, my_strlen(needle)) == 0)) {
++      return haystack;
++    }
++    haystack++;
++  }
++  return nullptr;
++}
++
+ void* my_memchr(const void* src, int needle, size_t src_len) {
+   const unsigned char* p = (const unsigned char*)src;
+   const unsigned char* p_end = p + src_len;
+   for (; p < p_end; ++p) {
+     if (*p == needle)
+       return (void*)p;
+   }
+   return NULL;
+diff --git a/src/common/linux/linux_libc_support.h b/src/common/linux/linux_libc_support.h
+--- a/src/common/linux/linux_libc_support.h
++++ b/src/common/linux/linux_libc_support.h
+@@ -62,16 +62,18 @@ extern unsigned my_uint_len(uintmax_t i)
+ //   i: the unsigned integer to serialise.
+ //   i_len: the length of the integer in base 10 (see |my_uint_len|).
+ extern void my_uitos(char* output, uintmax_t i, unsigned i_len);
+ 
+ extern const char* my_strchr(const char* haystack, char needle);
+ 
+ extern const char* my_strrchr(const char* haystack, char needle);
+ 
++extern const char *my_strstr(const char *haystack, const char *needle);
++
+ // Read a hex value
+ //   result: (output) the resulting value
+ //   s: a string
+ // Returns a pointer to the first invalid charactor.
+ extern const char* my_read_hex_ptr(uintptr_t* result, const char* s);
+ 
+ extern const char* my_read_decimal_ptr(uintptr_t* result, const char* s);
+ 
+
