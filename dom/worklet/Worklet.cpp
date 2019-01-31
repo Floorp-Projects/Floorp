@@ -394,12 +394,14 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(Worklet)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Worklet)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindow)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mOwnedObject)
   tmp->mImpl->NotifyWorkletFinished();
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Worklet)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindow)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOwnedObject)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(Worklet)
@@ -412,8 +414,9 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Worklet)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-Worklet::Worklet(nsPIDOMWindowInner* aWindow, RefPtr<WorkletImpl> aImpl)
-    : mWindow(aWindow), mImpl(std::move(aImpl)) {
+Worklet::Worklet(nsPIDOMWindowInner* aWindow, RefPtr<WorkletImpl> aImpl,
+                 nsISupports* aOwnedObject)
+    : mWindow(aWindow), mOwnedObject(aOwnedObject), mImpl(std::move(aImpl)) {
   MOZ_ASSERT(aWindow);
   MOZ_ASSERT(mImpl);
   MOZ_ASSERT(NS_IsMainThread());
