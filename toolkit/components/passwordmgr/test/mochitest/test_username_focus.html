@@ -13,8 +13,6 @@
 </head>
 <body>
 <script>
-let pwmgrCommonScript = runInParent(SimpleTest.getTestFileURL("pwmgr_common.js"));
-
 let readyPromise = registerRunTests();
 let chromeScript = runInParent(function chromeSetup() {
   const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
