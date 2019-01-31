@@ -1260,7 +1260,7 @@ impl Device {
     #[cfg(debug_assertions)]
     fn print_shader_errors(source: &str, log: &str) {
         // hacky way to extract the offending lines
-        if !log.starts_with("0:") {
+        if !log.starts_with("0:") && !log.starts_with("0(") {
             return;
         }
         let end_pos = match log[2..].chars().position(|c| !c.is_digit(10)) {
