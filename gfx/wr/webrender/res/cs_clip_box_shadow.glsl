@@ -54,8 +54,7 @@ void main(void) {
         prim_transform,
         clip_transform,
         area,
-        cmi.sub_rect,
-        cmi.snap_offsets
+        cmi.sub_rect
     );
     vLocalPos = vi.local_pos;
     vLayer = res.layer;
