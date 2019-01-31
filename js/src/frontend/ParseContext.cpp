@@ -40,8 +40,6 @@ const char* DeclarationKindString(DeclarationKind kind) {
       return "function";
     case DeclarationKind::VarForAnnexBLexicalFunction:
       return "annex b var";
-    case DeclarationKind::ForOfVar:
-      return "var in for-of";
     case DeclarationKind::SimpleCatchParameter:
     case DeclarationKind::CatchParameter:
       return "catch parameter";
@@ -53,8 +51,7 @@ const char* DeclarationKindString(DeclarationKind kind) {
 bool DeclarationKindIsVar(DeclarationKind kind) {
   return kind == DeclarationKind::Var ||
          kind == DeclarationKind::BodyLevelFunction ||
-         kind == DeclarationKind::VarForAnnexBLexicalFunction ||
-         kind == DeclarationKind::ForOfVar;
+         kind == DeclarationKind::VarForAnnexBLexicalFunction;
 }
 
 bool DeclarationKindIsParameter(DeclarationKind kind) {
@@ -359,10 +356,8 @@ Maybe<DeclarationKind> ParseContext::isVarRedeclaredInEval(
       switch (bi.kind()) {
         case BindingKind::Let: {
           // Annex B.3.5 allows redeclaring simple (non-destructured)
-          // catch parameters with var declarations, except when it
-          // appears in a for-of.
-          bool annexB35Allowance = si.kind() == ScopeKind::SimpleCatch &&
-                                   kind != DeclarationKind::ForOfVar;
+          // catch parameters with var declarations.
+          bool annexB35Allowance = si.kind() == ScopeKind::SimpleCatch;
           if (!annexB35Allowance) {
             return Some(ScopeKindIsCatch(si.kind())
                             ? DeclarationKind::CatchParameter
@@ -434,13 +429,6 @@ bool ParseContext::tryDeclareVarHelper(HandlePropertyName name,
         // restrictive kind. These semantics are implemented in
         // CheckCanDeclareGlobalBinding.
         //
-        // For a var previously declared as ForOfVar, this previous
-        // DeclarationKind is used only to check for if the
-        // 'arguments' binding should be declared. Since body-level
-        // functions shadow 'arguments' [5], it is correct to alter
-        // the kind to BodyLevelFunction. See
-        // declareFunctionArgumentsObject.
-        //
         // VarForAnnexBLexicalFunction declarations are declared when
         // the var scope exits. It is not possible for a var to be
         // previously declared as VarForAnnexBLexicalFunction and
@@ -450,7 +438,6 @@ bool ParseContext::tryDeclareVarHelper(HandlePropertyName name,
         // [2] ES 18.2.1.3
         // [3] ES 8.1.1.4.15
         // [4] ES 8.1.1.4.16
-        // [5] ES 9.2.12
         if (dryRunOption == NotDryRun &&
             kind == DeclarationKind::BodyLevelFunction) {
           MOZ_ASSERT(declaredKind !=
@@ -459,11 +446,9 @@ bool ParseContext::tryDeclareVarHelper(HandlePropertyName name,
         }
       } else if (!DeclarationKindIsParameter(declaredKind)) {
         // Annex B.3.5 allows redeclaring simple (non-destructured)
-        // catch parameters with var declarations, except when it
-        // appears in a for-of.
+        // catch parameters with var declarations.
         bool annexB35Allowance =
-            declaredKind == DeclarationKind::SimpleCatchParameter &&
-            kind != DeclarationKind::ForOfVar;
+            declaredKind == DeclarationKind::SimpleCatchParameter;
 
         // Annex B.3.3 allows redeclaring functions in the same block.
         bool annexB33Allowance =
