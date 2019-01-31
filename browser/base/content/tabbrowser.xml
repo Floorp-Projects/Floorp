@@ -1907,11 +1907,11 @@
            extends="chrome://global/content/bindings/tabbox.xml#tab">
     <content context="tabContextMenu">
       <xul:stack class="tab-stack" flex="1">
-        <xul:vbox xbl:inherits="selected=visuallyselected,fadein"
+        <xul:vbox xbl:inherits="selected=visuallyselected,fadein,multiselected"
                   class="tab-background">
           <xul:hbox xbl:inherits="selected=visuallyselected,multiselected,before-multiselected"
                     class="tab-line"/>
-          <xul:spacer flex="1"/>
+          <xul:spacer flex="1" class="tab-background-inner"/>
           <xul:hbox class="tab-bottom-line"/>
         </xul:vbox>
         <xul:hbox xbl:inherits="pinned,bursting,notselectedsinceload"
