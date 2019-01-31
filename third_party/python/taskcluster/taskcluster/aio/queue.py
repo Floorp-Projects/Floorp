@@ -25,9 +25,8 @@ class Queue(AsyncBaseClient):
     """
 
     classOptions = {
+        "baseUrl": "https://queue.taskcluster.net/v1/"
     }
-    serviceName = 'queue'
-    apiVersion = 'v1'
 
     async def ping(self, *args, **kwargs):
         """

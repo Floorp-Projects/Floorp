@@ -17,9 +17,8 @@ class AwsProvisionerEvents(BaseClient):
     """
 
     classOptions = {
-        "exchangePrefix": "exchange/taskcluster-aws-provisioner/v1/",
+        "exchangePrefix": "exchange/taskcluster-aws-provisioner/v1/"
     }
-    apiVersion = 'v1'
 
     def workerTypeCreated(self, *args, **kwargs):
         """

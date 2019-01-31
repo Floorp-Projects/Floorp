@@ -108,9 +108,8 @@ class Index(BaseClient):
     """
 
     classOptions = {
+        "baseUrl": "https://index.taskcluster.net/v1/"
     }
-    serviceName = 'index'
-    apiVersion = 'v1'
 
     def ping(self, *args, **kwargs):
         """

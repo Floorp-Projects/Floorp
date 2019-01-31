@@ -111,6 +111,6 @@ async def putFile(filename, url, contentType, session=None):
     with open(filename, 'rb') as f:
         contentLength = os.fstat(f.fileno()).st_size
         return await makeHttpRequest('put', url, f, headers={
-            'Content-Length': str(contentLength),
+            'Content-Length': contentLength,
             'Content-Type': contentType,
         }, session=session)

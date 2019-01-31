@@ -23,9 +23,8 @@ class Secrets(BaseClient):
     """
 
     classOptions = {
+        "baseUrl": "https://secrets.taskcluster.net/v1/"
     }
-    serviceName = 'secrets'
-    apiVersion = 'v1'
 
     def ping(self, *args, **kwargs):
         """

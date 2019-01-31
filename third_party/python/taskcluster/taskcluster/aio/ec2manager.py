@@ -17,21 +17,8 @@ class EC2Manager(AsyncBaseClient):
     """
 
     classOptions = {
+        "baseUrl": "https://ec2-manager.taskcluster.net/v1"
     }
-    serviceName = 'ec2-manager'
-    apiVersion = 'v1'
-
-    async def ping(self, *args, **kwargs):
-        """
-        Ping Server
-
-        Respond without doing anything.
-        This endpoint is used to check that the service is up.
-
-        This method is ``stable``
-        """
-
-        return await self._makeApiCall(self.funcinfo["ping"], *args, **kwargs)
 
     async def listWorkerTypes(self, *args, **kwargs):
         """
@@ -39,7 +26,7 @@ class EC2Manager(AsyncBaseClient):
 
         This method is only for debugging the ec2-manager
 
-        This method gives output: ``v1/list-worker-types.json#``
+        This method gives output: ``http://schemas.taskcluster.net/ec2-manager/v1/list-worker-types.json#``
 
         This method is ``experimental``
         """
@@ -52,7 +39,7 @@ class EC2Manager(AsyncBaseClient):
 
         Request an instance of a worker type
 
-        This method takes input: ``v1/run-instance-request.json#``
+        This method takes input: ``http://schemas.taskcluster.net/ec2-manager/v1/run-instance-request.json#``
 
         This method is ``experimental``
         """
@@ -76,7 +63,7 @@ class EC2Manager(AsyncBaseClient):
 
         Return an object which has a generic state description. This only contains counts of instances
 
-        This method gives output: ``v1/worker-type-resources.json#``
+        This method gives output: ``http://schemas.taskcluster.net/ec2-manager/v1/worker-type-resources.json#``
 
         This method is ``experimental``
         """
@@ -89,7 +76,7 @@ class EC2Manager(AsyncBaseClient):
 
         Return a view of the health of a given worker type
 
-        This method gives output: ``v1/health.json#``
+        This method gives output: ``http://schemas.taskcluster.net/ec2-manager/v1/health.json#``
 
         This method is ``experimental``
         """
@@ -102,7 +89,7 @@ class EC2Manager(AsyncBaseClient):
 
         Return a list of the most recent errors encountered by a worker type
 
-        This method gives output: ``v1/errors.json#``
+        This method gives output: ``http://schemas.taskcluster.net/ec2-manager/v1/errors.json#``
 
         This method is ``experimental``
         """
@@ -115,7 +102,7 @@ class EC2Manager(AsyncBaseClient):
 
         Return state information for a given worker type
 
-        This method gives output: ``v1/worker-type-state.json#``
+        This method gives output: ``http://schemas.taskcluster.net/ec2-manager/v1/worker-type-state.json#``
 
         This method is ``experimental``
         """
@@ -128,7 +115,7 @@ class EC2Manager(AsyncBaseClient):
 
         Idempotently ensure that a keypair of a given name exists
 
-        This method takes input: ``v1/create-key-pair.json#``
+        This method takes input: ``http://schemas.taskcluster.net/ec2-manager/v1/create-key-pair.json#``
 
         This method is ``experimental``
         """
@@ -163,7 +150,7 @@ class EC2Manager(AsyncBaseClient):
 
         Return a list of possible prices for EC2
 
-        This method gives output: ``v1/prices.json#``
+        This method gives output: ``http://schemas.taskcluster.net/ec2-manager/v1/prices.json#``
 
         This method is ``experimental``
         """
@@ -176,9 +163,9 @@ class EC2Manager(AsyncBaseClient):
 
         Return a list of possible prices for EC2
 
-        This method takes input: ``v1/prices-request.json#``
+        This method takes input: ``http://schemas.taskcluster.net/ec2-manager/v1/prices-request.json#``
 
-        This method gives output: ``v1/prices.json#``
+        This method gives output: ``http://schemas.taskcluster.net/ec2-manager/v1/prices.json#``
 
         This method is ``experimental``
         """
@@ -191,7 +178,7 @@ class EC2Manager(AsyncBaseClient):
 
         Give some basic stats on the health of our EC2 account
 
-        This method gives output: ``v1/health.json#``
+        This method gives output: ``http://schemas.taskcluster.net/ec2-manager/v1/health.json#``
 
         This method is ``experimental``
         """
@@ -204,7 +191,7 @@ class EC2Manager(AsyncBaseClient):
 
         Return a list of recent errors encountered
 
-        This method gives output: ``v1/errors.json#``
+        This method gives output: ``http://schemas.taskcluster.net/ec2-manager/v1/errors.json#``
 
         This method is ``experimental``
         """
@@ -302,6 +289,29 @@ class EC2Manager(AsyncBaseClient):
 
         return await self._makeApiCall(self.funcinfo["purgeQueues"], *args, **kwargs)
 
+    async def apiReference(self, *args, **kwargs):
+        """
+        API Reference
+
+        Generate an API reference for this service
+
+        This method is ``experimental``
+        """
+
+        return await self._makeApiCall(self.funcinfo["apiReference"], *args, **kwargs)
+
+    async def ping(self, *args, **kwargs):
+        """
+        Ping Server
+
+        Respond without doing anything.
+        This endpoint is used to check that the service is up.
+
+        This method is ``stable``
+        """
+
+        return await self._makeApiCall(self.funcinfo["ping"], *args, **kwargs)
+
     funcinfo = {
         "allState": {
             'args': [],
@@ -315,6 +325,13 @@ class EC2Manager(AsyncBaseClient):
             'method': 'get',
             'name': 'amiUsage',
             'route': '/internal/ami-usage',
+            'stability': 'experimental',
+        },
+        "apiReference": {
+            'args': [],
+            'method': 'get',
+            'name': 'apiReference',
+            'route': '/internal/api-reference',
             'stability': 'experimental',
         },
         "dbpoolStats": {
@@ -333,7 +350,7 @@ class EC2Manager(AsyncBaseClient):
         },
         "ensureKeyPair": {
             'args': ['name'],
-            'input': 'v1/create-key-pair.json#',
+            'input': 'http://schemas.taskcluster.net/ec2-manager/v1/create-key-pair.json#',
             'method': 'get',
             'name': 'ensureKeyPair',
             'route': '/key-pairs/<name>',
@@ -343,7 +360,7 @@ class EC2Manager(AsyncBaseClient):
             'args': [],
             'method': 'get',
             'name': 'getHealth',
-            'output': 'v1/health.json#',
+            'output': 'http://schemas.taskcluster.net/ec2-manager/v1/health.json#',
             'route': '/health',
             'stability': 'experimental',
         },
@@ -351,7 +368,7 @@ class EC2Manager(AsyncBaseClient):
             'args': [],
             'method': 'get',
             'name': 'getPrices',
-            'output': 'v1/prices.json#',
+            'output': 'http://schemas.taskcluster.net/ec2-manager/v1/prices.json#',
             'route': '/prices',
             'stability': 'experimental',
         },
@@ -359,16 +376,16 @@ class EC2Manager(AsyncBaseClient):
             'args': [],
             'method': 'get',
             'name': 'getRecentErrors',
-            'output': 'v1/errors.json#',
+            'output': 'http://schemas.taskcluster.net/ec2-manager/v1/errors.json#',
             'route': '/errors',
             'stability': 'experimental',
         },
         "getSpecificPrices": {
             'args': [],
-            'input': 'v1/prices-request.json#',
+            'input': 'http://schemas.taskcluster.net/ec2-manager/v1/prices-request.json#',
             'method': 'post',
             'name': 'getSpecificPrices',
-            'output': 'v1/prices.json#',
+            'output': 'http://schemas.taskcluster.net/ec2-manager/v1/prices.json#',
             'route': '/prices',
             'stability': 'experimental',
         },
@@ -376,7 +393,7 @@ class EC2Manager(AsyncBaseClient):
             'args': [],
             'method': 'get',
             'name': 'listWorkerTypes',
-            'output': 'v1/list-worker-types.json#',
+            'output': 'http://schemas.taskcluster.net/ec2-manager/v1/list-worker-types.json#',
             'route': '/worker-types',
             'stability': 'experimental',
         },
@@ -410,7 +427,7 @@ class EC2Manager(AsyncBaseClient):
         },
         "runInstance": {
             'args': ['workerType'],
-            'input': 'v1/run-instance-request.json#',
+            'input': 'http://schemas.taskcluster.net/ec2-manager/v1/run-instance-request.json#',
             'method': 'put',
             'name': 'runInstance',
             'route': '/worker-types/<workerType>/instance',
@@ -441,7 +458,7 @@ class EC2Manager(AsyncBaseClient):
             'args': ['workerType'],
             'method': 'get',
             'name': 'workerTypeErrors',
-            'output': 'v1/errors.json#',
+            'output': 'http://schemas.taskcluster.net/ec2-manager/v1/errors.json#',
             'route': '/worker-types/<workerType>/errors',
             'stability': 'experimental',
         },
@@ -449,7 +466,7 @@ class EC2Manager(AsyncBaseClient):
             'args': ['workerType'],
             'method': 'get',
             'name': 'workerTypeHealth',
-            'output': 'v1/health.json#',
+            'output': 'http://schemas.taskcluster.net/ec2-manager/v1/health.json#',
             'route': '/worker-types/<workerType>/health',
             'stability': 'experimental',
         },
@@ -457,7 +474,7 @@ class EC2Manager(AsyncBaseClient):
             'args': ['workerType'],
             'method': 'get',
             'name': 'workerTypeState',
-            'output': 'v1/worker-type-state.json#',
+            'output': 'http://schemas.taskcluster.net/ec2-manager/v1/worker-type-state.json#',
             'route': '/worker-types/<workerType>/state',
             'stability': 'experimental',
         },
@@ -465,7 +482,7 @@ class EC2Manager(AsyncBaseClient):
             'args': ['workerType'],
             'method': 'get',
             'name': 'workerTypeStats',
-            'output': 'v1/worker-type-resources.json#',
+            'output': 'http://schemas.taskcluster.net/ec2-manager/v1/worker-type-resources.json#',
             'route': '/worker-types/<workerType>/stats',
             'stability': 'experimental',
         },
