@@ -22,10 +22,8 @@ class PurgeCacheEvents(AsyncBaseClient):
     """
 
     classOptions = {
-        "exchangePrefix": "exchange/taskcluster-purge-cache/v1/",
+        "exchangePrefix": "exchange/taskcluster-purge-cache/v1/"
     }
-    serviceName = 'purge-cache'
-    apiVersion = 'v1'
 
     def purgeCache(self, *args, **kwargs):
         """

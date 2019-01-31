@@ -22,21 +22,21 @@ class Pulse(AsyncBaseClient):
     """
 
     classOptions = {
+        "baseUrl": "https://pulse.taskcluster.net/v1"
     }
-    serviceName = 'pulse'
-    apiVersion = 'v1'
 
-    async def ping(self, *args, **kwargs):
+    async def overview(self, *args, **kwargs):
         """
-        Ping Server
+        Rabbit Overview
 
-        Respond without doing anything.
-        This endpoint is used to check that the service is up.
+        Get an overview of the Rabbit cluster.
 
-        This method is ``stable``
+        This method gives output: ``http://schemas.taskcluster.net/pulse/v1/rabbit-overview.json``
+
+        This method is ``experimental``
         """
 
-        return await self._makeApiCall(self.funcinfo["ping"], *args, **kwargs)
+        return await self._makeApiCall(self.funcinfo["overview"], *args, **kwargs)
 
     async def listNamespaces(self, *args, **kwargs):
         """
@@ -46,9 +46,9 @@ class Pulse(AsyncBaseClient):
 
         This will list up to 1000 namespaces. If more namespaces are present a
         `continuationToken` will be returned, which can be given in the next
-        request. For the initial request, do not provide continuation token.
+        request. For the initial request, do not provide continuation.
 
-        This method gives output: ``v1/list-namespaces-response.json#``
+        This method gives output: ``http://schemas.taskcluster.net/pulse/v1/list-namespaces-response.json``
 
         This method is ``experimental``
         """
@@ -62,7 +62,7 @@ class Pulse(AsyncBaseClient):
         Get public information about a single namespace. This is the same information
         as returned by `listNamespaces`.
 
-        This method gives output: ``v1/namespace.json#``
+        This method gives output: ``http://schemas.taskcluster.net/pulse/v1/namespace.json``
 
         This method is ``experimental``
         """
@@ -73,35 +73,43 @@ class Pulse(AsyncBaseClient):
         """
         Claim a namespace
 
-        Claim a namespace, returning a connection string with access to that namespace
-        good for use until the `reclaimAt` time in the response body. The connection
-        string can be used as many times as desired during this period, but must not
-        be used after `reclaimAt`.
+        Claim a namespace, returning a username and password with access to that
+        namespace good for a short time.  Clients should call this endpoint again
+        at the re-claim time given in the response, as the password will be rotated
+        soon after that time.  The namespace will expire, and any associated queues
+        and exchanges will be deleted, at the given expiration time.
 
-        Connections made with this connection string may persist beyond `reclaimAt`,
-        although it should not persist forever.  24 hours is a good maximum, and this
-        service will terminate connections after 72 hours (although this value is
-        configurable).
+        The `expires` and `contact` properties can be updated at any time in a reclaim
+        operation.
 
-        The specified `expires` time updates any existing expiration times.  Connections
-        for expired namespaces will be terminated.
+        This method takes input: ``http://schemas.taskcluster.net/pulse/v1/namespace-request.json``
 
-        This method takes input: ``v1/namespace-request.json#``
-
-        This method gives output: ``v1/namespace-response.json#``
+        This method gives output: ``http://schemas.taskcluster.net/pulse/v1/namespace-response.json``
 
         This method is ``experimental``
         """
 
         return await self._makeApiCall(self.funcinfo["claimNamespace"], *args, **kwargs)
 
+    async def ping(self, *args, **kwargs):
+        """
+        Ping Server
+
+        Respond without doing anything.
+        This endpoint is used to check that the service is up.
+
+        This method is ``stable``
+        """
+
+        return await self._makeApiCall(self.funcinfo["ping"], *args, **kwargs)
+
     funcinfo = {
         "claimNamespace": {
             'args': ['namespace'],
-            'input': 'v1/namespace-request.json#',
+            'input': 'http://schemas.taskcluster.net/pulse/v1/namespace-request.json',
             'method': 'post',
             'name': 'claimNamespace',
-            'output': 'v1/namespace-response.json#',
+            'output': 'http://schemas.taskcluster.net/pulse/v1/namespace-response.json',
             'route': '/namespace/<namespace>',
             'stability': 'experimental',
         },
@@ -109,8 +117,8 @@ class Pulse(AsyncBaseClient):
             'args': [],
             'method': 'get',
             'name': 'listNamespaces',
-            'output': 'v1/list-namespaces-response.json#',
-            'query': ['limit', 'continuationToken'],
+            'output': 'http://schemas.taskcluster.net/pulse/v1/list-namespaces-response.json',
+            'query': ['limit', 'continuation'],
             'route': '/namespaces',
             'stability': 'experimental',
         },
@@ -118,8 +126,16 @@ class Pulse(AsyncBaseClient):
             'args': ['namespace'],
             'method': 'get',
             'name': 'namespace',
-            'output': 'v1/namespace.json#',
+            'output': 'http://schemas.taskcluster.net/pulse/v1/namespace.json',
             'route': '/namespace/<namespace>',
+            'stability': 'experimental',
+        },
+        "overview": {
+            'args': [],
+            'method': 'get',
+            'name': 'overview',
+            'output': 'http://schemas.taskcluster.net/pulse/v1/rabbit-overview.json',
+            'route': '/overview',
             'stability': 'experimental',
         },
         "ping": {
