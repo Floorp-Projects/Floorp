@@ -7,16 +7,14 @@
   <script>
 
     xr_promise_test(
-      "A lost webglCanvasContext should not be able to set device",
+      "A lost webglCanvasContext should not be able to set xr compatibility",
      (t) => {
       return XRTest.simulateDeviceConnection({ supportsImmersive:true })
-        .then( (controller) => { return navigator.xr.requestDevice() })
-        .then( (device) => {
+        .then( (controller) => {
           webglCanvas = document.getElementById('webgl-canvas');
-          gl = webglCanvas.getContext('webgl', {compatibleXRDevice: device});
+          gl = webglCanvas.getContext('webgl', {xrCompatible: true});
           gl.getExtension('WEBGL_lose_context').loseContext();
-          return promise_rejects(t, 'InvalidStateError',
-              gl.setCompatibleXRDevice(device));
+          return promise_rejects(t, 'InvalidStateError', gl.makeXRCompatible());
         });
     });
 
