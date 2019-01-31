@@ -10,6 +10,7 @@ import mozilla.components.browser.awesomebar.BrowserAwesomeBar
 import mozilla.components.feature.awesomebar.provider.ClipboardSuggestionProvider
 import mozilla.components.feature.awesomebar.provider.SearchSuggestionProvider
 import mozilla.components.feature.awesomebar.provider.SessionSuggestionProvider
+import mozilla.components.support.ktx.android.graphics.drawable.toBitmap
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.mvi.ActionBusFactory
@@ -23,7 +24,13 @@ class AwesomeBarUIView(container: ViewGroup, bus: ActionBusFactory) :
 
     init {
         with(container.context) {
-            view.addProviders(ClipboardSuggestionProvider(this, components.useCases.sessionUseCases.loadUrl))
+            view.addProviders(ClipboardSuggestionProvider(
+                this,
+                components.useCases.sessionUseCases.loadUrl,
+                getDrawable(R.drawable.ic_link).toBitmap(),
+                getString(R.string.awesomebar_clipboard_title)
+                )
+            )
             view.addProviders(SessionSuggestionProvider(components.core.sessionManager, components.useCases.tabsUseCases.selectTab))
             view.addProviders(SearchSuggestionProvider(
                 components.search.searchEngineManager.getDefaultSearchEngine(this),

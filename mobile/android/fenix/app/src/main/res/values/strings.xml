@@ -29,4 +29,6 @@
 
     <!-- Menu option on the toolbar that takes you to settings page-->
     <string name="settings">Settings</string>
+
+    <string name="awesomebar_clipboard_title">Fill link from Clipboard</string>
 </resources>
