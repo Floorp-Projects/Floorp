@@ -232,6 +232,12 @@ class DevToolsPageDefinition {
   }
 
   buildForToolbox(toolbox) {
+    if (!this.extension.canAccessWindow(toolbox.target.tab.ownerGlobal)) {
+      // We should never create a devtools page for a toolbox related to a private browsing window
+      // if the extension is not allowed to access it.
+      return;
+    }
+
     if (this.devtoolsPageForTarget.has(toolbox.target)) {
       return Promise.reject(new Error("DevtoolsPage has been already created for this toolbox"));
     }
@@ -279,8 +285,10 @@ class DevToolsPageDefinition {
     // Iterate over the existing toolboxes and create the devtools page for them
     // (if the toolbox target is supported).
     for (let toolbox of DevToolsShim.getToolboxes()) {
-      if (!toolbox.target.isLocalTab) {
-        // Skip any non-local tab.
+      if (!toolbox.target.isLocalTab ||
+          !this.extension.canAccessWindow(toolbox.target.tab.ownerGlobal)) {
+        // Skip any non-local tab and private browsing windows if the extension
+        // is not allowed to access them.
         continue;
       }
 
@@ -371,9 +379,11 @@ this.devtools = class extends ExtensionAPI {
   }
 
   onToolboxCreated(toolbox) {
-    if (!toolbox.target.isLocalTab) {
-      // Only local tabs are currently supported (See Bug 1304378 for additional details
-      // related to remote targets support).
+    if (!toolbox.target.isLocalTab ||
+        !this.extension.canAccessWindow(toolbox.target.tab.ownerGlobal)) {
+      // Skip any non-local (as remote tabs are not yet supported, see Bug 1304378 for additional details
+      // related to remote targets support), and private browsing windows if the extension
+      // is not allowed to access them.
       return;
     }
 
