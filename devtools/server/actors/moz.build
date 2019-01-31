@@ -68,13 +68,13 @@ DevToolsModules(
 )
 
 with Files('animation.js'):
-    BUG_COMPONENT = ('DevTools', 'Animation Inspector')
+    BUG_COMPONENT = ('DevTools', 'Inspector: Animations')
 
 with Files('breakpoint.js'):
     BUG_COMPONENT = ('DevTools', 'Debugger')
 
 with Files('css-properties.js'):
-    BUG_COMPONENT = ('DevTools', 'CSS Rules Inspector')
+    BUG_COMPONENT = ('DevTools', 'Inspector: Rules')
 
 with Files('csscoverage.js'):
     BUG_COMPONENT = ('DevTools', 'Graphics Commandline and Toolbar')

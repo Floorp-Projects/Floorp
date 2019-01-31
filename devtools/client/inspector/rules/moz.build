@@ -23,4 +23,4 @@ DevToolsModules(
 BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
 
 with Files('**'):
-    BUG_COMPONENT = ('DevTools', 'CSS Rules Inspector')
+    BUG_COMPONENT = ('DevTools', 'Inspector: Rules')
