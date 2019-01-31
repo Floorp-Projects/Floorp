@@ -423,6 +423,8 @@ class MOZ_NON_TEMPORARY_CLASS PromiseLookup final {
   }
 };
 
+class OffThreadPromiseRuntimeState;
+
 // [SMDOC] OffThreadPromiseTask: an off-main-thread task that resolves a promise
 //
 // An OffThreadPromiseTask is an abstract base class holding a JavaScript
@@ -497,6 +499,8 @@ class OffThreadPromiseTask : public JS::Dispatchable {
 
   void operator=(const OffThreadPromiseTask&) = delete;
   OffThreadPromiseTask(const OffThreadPromiseTask&) = delete;
+
+  void unregister(OffThreadPromiseRuntimeState& state);
 
  protected:
   OffThreadPromiseTask(JSContext* cx, Handle<PromiseObject*> promise);
