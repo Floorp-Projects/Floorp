@@ -1301,6 +1301,16 @@ void WebRenderCommandBuilder::DoGroupingForDisplayList(
 
   bool snapped;
   nsRect groupBounds = aWrappingItem->GetBounds(aDisplayListBuilder, &snapped);
+  // We don't want to restrict the size of the blob to the building rect of the
+  // display item, since that will change when we scroll and trigger a resize
+  // invalidation of the blob (will be fixed by blob recoordination).
+  // Instead we retrieve the bounds of the overflow clip on the <svg> and use
+  // that to restrict our size and prevent invisible content from affecting
+  // our bounds.
+  if (mClippedGroupBounds) {
+    groupBounds = groupBounds.Intersect(mClippedGroupBounds.value());
+    mClippedGroupBounds = Nothing();
+  }
   DIGroup& group = groupData->mSubGroup;
 
   gfx::Size scale = aSc.GetInheritedScale();
@@ -1485,7 +1495,8 @@ bool WebRenderCommandBuilder::ShouldDumpDisplayList(
 void WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(
     nsDisplayList* aDisplayList, nsDisplayItem* aWrappingItem,
     nsDisplayListBuilder* aDisplayListBuilder, const StackingContextHelper& aSc,
-    wr::DisplayListBuilder& aBuilder, wr::IpcResourceUpdateQueue& aResources) {
+    wr::DisplayListBuilder& aBuilder, wr::IpcResourceUpdateQueue& aResources,
+    nsDisplayItem* aOuterItem) {
   if (mDoGrouping) {
     MOZ_RELEASE_ASSERT(
         aWrappingItem,
@@ -1595,6 +1606,25 @@ void WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(
         // animated geometry root, so we can combine subsequent items of that
         // type into the same image.
         mContainsSVGGroup = mDoGrouping = true;
+        if (aOuterItem &&
+            aOuterItem->GetType() == DisplayItemType::TYPE_TRANSFORM) {
+          // Inline <svg> should always have an overflow clip, but it gets put
+          // outside the nsDisplayTransform we create for scaling the svg
+          // viewport. Converting the clip into inner coordinates lets us
+          // restrict the size of the blob images and prevents unnecessary
+          // resizes.
+          nsDisplayTransform* transform =
+              static_cast<nsDisplayTransform*>(aOuterItem);
+
+          nsRect clippedBounds =
+              transform->GetClippedBounds(aDisplayListBuilder);
+          nsRect innerClippedBounds;
+          DebugOnly<bool> result = transform->UntransformRect(
+              aDisplayListBuilder, clippedBounds, &innerClippedBounds);
+          MOZ_ASSERT(result);
+
+          mClippedGroupBounds = Some(innerClippedBounds);
+        }
         GP("attempting to enter the grouping code\n");
       }
 
