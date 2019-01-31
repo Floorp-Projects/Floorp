@@ -6,8 +6,7 @@
 // on debug test slave, it takes about 50s to run the test.
 requestLongerTimeout(4);
 
-const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
-const {gDevTools} = require("devtools/client/framework/devtools");
+loadTestSubscript("head_devtools.js");
 
 // Small helper which provides the common steps to the following reload test cases.
 async function runReloadTestCase({urlParams, background, devtoolsPage, testCase}) {
@@ -37,10 +36,7 @@ async function runReloadTestCase({urlParams, background, devtoolsPage, testCase}
 
   await extension.startup();
 
-  let target = await gDevTools.getTargetForTab(tab);
-
-  await gDevTools.showToolbox(target, "webconsole");
-  info("developer toolbox opened");
+  await openToolboxForTab(tab);
 
   // Wait the test extension to be ready.
   await extension.awaitMessage("devtools_inspected_window_reload.ready");
@@ -50,9 +46,7 @@ async function runReloadTestCase({urlParams, background, devtoolsPage, testCase}
   // Run the test case.
   await testCase(extension);
 
-  await gDevTools.closeToolbox(target);
-
-  await target.destroy();
+  await closeToolboxForTab(tab);
 
   BrowserTestUtils.removeTab(tab);
 

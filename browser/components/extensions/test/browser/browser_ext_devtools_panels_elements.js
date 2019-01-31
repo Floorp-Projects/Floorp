@@ -2,10 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-ChromeUtils.defineModuleGetter(this, "gDevTools",
-                               "resource://devtools/client/framework/gDevTools.jsm");
-ChromeUtils.defineModuleGetter(this, "devtools",
-                               "resource://devtools/shared/Loader.jsm");
+loadTestSubscript("head_devtools.js");
 
 add_task(async function test_devtools_panels_elements_onSelectionChanged() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://mochi.test:8888/");
@@ -62,10 +59,7 @@ add_task(async function test_devtools_panels_elements_onSelectionChanged() {
 
   await extension.startup();
 
-  let target = await devtools.TargetFactory.forTab(tab);
-
-  const toolbox = await gDevTools.showToolbox(target, "webconsole");
-  info("developer toolbox opened");
+  const {toolbox} = await openToolboxForTab(tab);
 
   await extension.awaitMessage("devtools_page_loaded");
 
@@ -98,9 +92,7 @@ add_task(async function test_devtools_panels_elements_onSelectionChanged() {
   is(evalResultOnceMarkupReloaded, "BODY",
      "Got the expected onSelectionChanged once the tab has been completely reloaded");
 
-  await gDevTools.closeToolbox(target);
-
-  await target.destroy();
+  await closeToolboxForTab(tab);
 
   await extension.unload();
 
