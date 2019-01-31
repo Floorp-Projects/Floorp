@@ -28,7 +28,7 @@ use gpu_types::{BrushFlags, SnapOffsets};
 use image::{Repetition};
 use intern;
 use malloc_size_of::MallocSizeOf;
-use picture::{PictureCompositeMode, PicturePrimitive, PictureUpdateState};
+use picture::{PictureCompositeMode, PicturePrimitive};
 use picture::{ClusterIndex, PrimitiveList, RecordedDirtyRegion, SurfaceIndex, RetainedTiles, RasterConfig};
 use prim_store::borders::{ImageBorderDataHandle, NormalBorderDataHandle};
 use prim_store::gradient::{LinearGradientDataHandle, RadialGradientDataHandle};
@@ -1724,42 +1724,6 @@ impl PrimitiveStore {
             .iter()
             .map(|p| p.prim_list.prim_instances.len())
             .sum()
-    }
-
-    /// Update a picture, determining surface configuration,
-    /// rasterization roots, and (in future) whether there
-    /// are cached surfaces that can be used by this picture.
-    pub fn update_picture(
-        &mut self,
-        pic_index: PictureIndex,
-        state: &mut PictureUpdateState,
-        frame_context: &FrameBuildingContext,
-        gpu_cache: &mut GpuCache,
-        data_stores: &DataStores,
-        clip_store: &ClipStore,
-    ) {
-        if let Some(children) = self.pictures[pic_index.0].pre_update(
-            state,
-            frame_context,
-        ) {
-            for child_pic_index in &children {
-                self.update_picture(
-                    *child_pic_index,
-                    state,
-                    frame_context,
-                    gpu_cache,
-                    data_stores,
-                    clip_store,
-                );
-            }
-
-            self.pictures[pic_index.0].post_update(
-                children,
-                state,
-                frame_context,
-                gpu_cache,
-            );
-        }
     }
 
     /// Update visibility pass - update each primitive visibility struct, and
