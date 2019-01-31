@@ -346,7 +346,7 @@ class GleanTest {
         Glean.initialized = true
     }
 
-    @Test()
+    @Test
     fun `Initializing twice is a no-op`() {
         val beforeConfig = Glean.configuration
 
