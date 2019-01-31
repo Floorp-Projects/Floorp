@@ -1,7 +1,17 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- This Source Code Form is subject to the terms of the Mozilla Public
+<?xml version="1.0" encoding="utf-8"?><!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources>
     <string name="pref_key_make_default_browser" translatable="false">pref_key_make_default_browser</string>
+    <string name="pref_key_search_engine" translatable="false">pref_key_search_engine</string>
+    <string name="pref_key_passwords" translatable="false">pref_key_passwords</string>
+    <string name="pref_key_credit_cards_addresses" translatable="false">pref_key_credit_cards_addresses</string>
+    <string name="pref_key_site_permissions" translatable="false">pref_key_site_permissions</string>
+    <string name="pref_key_accessibility" translatable="false">pref_key_accessibility</string>
+    <string name="pref_key_language" translatable="false">pref_key_language</string>
+    <string name="pref_key_data_choices" translatable="false">pref_key_data_choices</string>
+    <string name="pref_key_help" translatable="false">pref_key_help</string>
+    <string name="pref_key_rate" translatable="false">pref_key_rate</string>
+    <string name="pref_key_feedback" translatable="false">pref_key_feedback</string>
+    <string name="pref_key_about" translatable="false">pref_key_about</string>
 </resources>
