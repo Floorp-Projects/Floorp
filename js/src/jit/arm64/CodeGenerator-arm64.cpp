@@ -949,8 +949,8 @@ void CodeGenerator::visitRound(LRound* lir) {
   const FloatRegister input = ToFloatRegister(lir->input());
   const ARMFPRegister input64(input, 64);
   const FloatRegister temp = ToFloatRegister(lir->temp());
-  const FloatRegister scratch = ScratchDoubleReg;
   const Register output = ToRegister(lir->output());
+  ScratchDoubleScope scratch(masm);
 
   Label negative, done;
 
@@ -1026,8 +1026,8 @@ void CodeGenerator::visitRoundF(LRoundF* lir) {
   const FloatRegister input = ToFloatRegister(lir->input());
   const ARMFPRegister input32(input, 32);
   const FloatRegister temp = ToFloatRegister(lir->temp());
-  const FloatRegister scratch = ScratchFloat32Reg;
   const Register output = ToRegister(lir->output());
+  ScratchFloat32Scope scratch(masm);
 
   Label negative, done;
 

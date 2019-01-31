@@ -1228,13 +1228,12 @@ class VerifyOp {
     masm.branchPtr(Assembler::NotEqual, dump, reg, failure_);
   }
   void operator()(FloatRegister reg, Address dump) {
-    FloatRegister scratch;
     if (reg.isDouble()) {
-      scratch = ScratchDoubleReg;
+      ScratchDoubleScope scratch(masm);
       masm.loadDouble(dump, scratch);
       masm.branchDouble(Assembler::DoubleNotEqual, scratch, reg, failure_);
     } else if (reg.isSingle()) {
-      scratch = ScratchFloat32Reg;
+      ScratchFloat32Scope scratch(masm);
       masm.loadFloat32(dump, scratch);
       masm.branchFloat(Assembler::DoubleNotEqual, scratch, reg, failure_);
     }
