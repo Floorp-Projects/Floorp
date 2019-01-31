@@ -1,3 +1,11 @@
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
+
+/**
+ * This tests ensures the urlbar reflects the correct value if a page load is
+ * stopped immediately after loading.
+ */
+
 "use strict";
 
 const goodURL = "http://mochi.test:8888/";

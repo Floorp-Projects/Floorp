@@ -1,6 +1,11 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/**
+ * This test is designed to ensure that the correct command/operation happens
+ * when pressing enter with various key combinations in the urlbar.
+ */
+
 const TEST_VALUE = "example.com";
 const START_VALUE = "example.org";
 
