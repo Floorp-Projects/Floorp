@@ -218,3 +218,7 @@ async function selectRuntime(deviceName, name, document) {
     return runtimeInfo && runtimeInfo.textContent.includes(name);
   });
 }
+
+function getToolbox(win) {
+  return gDevTools.getToolboxes().find(toolbox => toolbox.win === win);
+}

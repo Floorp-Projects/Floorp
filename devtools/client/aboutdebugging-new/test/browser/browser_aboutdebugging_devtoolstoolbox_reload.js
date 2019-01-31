@@ -7,7 +7,7 @@
 Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-collapsibilities.js", this);
 
 /**
- * Test context menu of markup view on about:devtools-toolbox page.
+ * Test whether about:devtools-toolbox display correctly after reloading.
  */
 add_task(async function() {
   info("Force all debug target panes to be expanded");
@@ -31,24 +31,19 @@ add_task(async function() {
   const devtoolsTab = tab.nextElementSibling;
   await waitUntil(() => gBrowser.selectedTab === devtoolsTab);
 
-  info("Select inspector tool");
+  info("Select webconsole tool");
   const devtoolsBrowser = gBrowser.selectedBrowser;
-  const devtoolsDocument = devtoolsBrowser.contentDocument;
-  const devtoolsWindow = devtoolsBrowser.contentWindow;
-  const toolbox = getToolbox(devtoolsWindow);
-  await toolbox.selectTool("inspector");
+  const toolbox = getToolbox(devtoolsBrowser.contentWindow);
+  await toolbox.selectTool("webconsole");
 
-  info("Show context menu of markup view");
-  const markupFrame = getMarkupViewFrame(devtoolsDocument);
-  const markupDocument = markupFrame.contentDocument;
-  const markupWindow = markupFrame.contentWindow;
-  EventUtils.synthesizeMouseAtCenter(markupDocument.body,
-                                     { type: "contextmenu" },
-                                     markupWindow);
+  info("Reload about:devtools-toolbox page");
+  devtoolsBrowser.reload();
+  await gDevTools.once("toolbox-ready");
+  ok(true, "Toolbox is re-created again");
 
-  info("Check whether proper context menu of markup view will be shown");
-  await waitUntil(() => devtoolsDocument.querySelector("#node-menu-edithtml"));
-  ok(true, "Context menu of markup view should be shown");
+  info("Check whether about:devtools-toolbox page displays correctly");
+  ok(devtoolsBrowser.contentDocument.querySelector(".debug-target-info"),
+     "about:devtools-toolbox page displays correctly");
 
   await removeTab(devtoolsTab);
   await Promise.all([
@@ -57,8 +52,3 @@ add_task(async function() {
   ]);
   await removeTab(tab);
 });
-
-function getMarkupViewFrame(rootDocument) {
-  const inspectorFrame = rootDocument.querySelector("#toolbox-panel-iframe-inspector");
-  return inspectorFrame.contentDocument.querySelector("#markup-box iframe");
-}
