@@ -1594,10 +1594,13 @@ nsComponentManagerImpl::RegisterFactory(const nsCID& aClass, const char* aName,
       return NS_ERROR_INVALID_ARG;
     }
 
+    nsDependentCString contractID(aContractID);
+
     SafeMutexAutoLock lock(mLock);
     nsFactoryEntry* oldf = mFactories.Get(&aClass);
     if (oldf) {
-      mContractIDs.Put(nsDependentCString(aContractID), oldf);
+      StaticComponents::InvalidateContractID(contractID);
+      mContractIDs.Put(contractID, oldf);
       return NS_OK;
     }
 
@@ -1605,7 +1608,6 @@ nsComponentManagerImpl::RegisterFactory(const nsCID& aClass, const char* aName,
       // If this is the CID of a static module, just reset the invalid bit of
       // the static entry for this contract ID, and assume it points to the
       // correct class.
-      nsDependentCString contractID(aContractID);
       if (StaticComponents::InvalidateContractID(contractID, false)) {
         mContractIDs.Remove(contractID);
         return NS_OK;
