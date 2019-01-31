@@ -344,8 +344,7 @@ backgroundFetchTest(async (test, backgroundFetch) => {
 
 backgroundFetchTest(async (test, backgroundFetch) => {
   const registration = await backgroundFetch.fetch(
-    uniqueId(),
-    ['resources/feature-name.txt', '/serviceworker/resources/slow-response.php']);
+    uniqueId(), ['resources/feature-name.txt', '/common/slow.py']);
 
   const record = await registration.match('resources/feature-name.txt');
 
