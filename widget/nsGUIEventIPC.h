@@ -1144,6 +1144,7 @@ struct ParamTraits<mozilla::MultiTouchInput> {
     WriteParam(aMsg, aParam.mType);
     WriteParam(aMsg, aParam.mTouches);
     WriteParam(aMsg, aParam.mHandledByAPZ);
+    WriteParam(aMsg, aParam.mScreenOffset);
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter,
@@ -1151,7 +1152,8 @@ struct ParamTraits<mozilla::MultiTouchInput> {
     return ReadParam(aMsg, aIter, static_cast<mozilla::InputData*>(aResult)) &&
            ReadParam(aMsg, aIter, &aResult->mType) &&
            ReadParam(aMsg, aIter, &aResult->mTouches) &&
-           ReadParam(aMsg, aIter, &aResult->mHandledByAPZ);
+           ReadParam(aMsg, aIter, &aResult->mHandledByAPZ) &&
+           ReadParam(aMsg, aIter, &aResult->mScreenOffset);
   }
 };
 
@@ -1264,6 +1266,7 @@ struct ParamTraits<mozilla::PinchGestureInput> {
   static void Write(Message* aMsg, const paramType& aParam) {
     WriteParam(aMsg, static_cast<const mozilla::InputData&>(aParam));
     WriteParam(aMsg, aParam.mType);
+    WriteParam(aMsg, aParam.mScreenOffset);
     WriteParam(aMsg, aParam.mFocusPoint);
     WriteParam(aMsg, aParam.mLocalFocusPoint);
     WriteParam(aMsg, aParam.mCurrentSpan);
@@ -1274,6 +1277,7 @@ struct ParamTraits<mozilla::PinchGestureInput> {
                    paramType* aResult) {
     return ReadParam(aMsg, aIter, static_cast<mozilla::InputData*>(aResult)) &&
            ReadParam(aMsg, aIter, &aResult->mType) &&
+           ReadParam(aMsg, aIter, &aResult->mScreenOffset) &&
            ReadParam(aMsg, aIter, &aResult->mFocusPoint) &&
            ReadParam(aMsg, aIter, &aResult->mLocalFocusPoint) &&
            ReadParam(aMsg, aIter, &aResult->mCurrentSpan) &&

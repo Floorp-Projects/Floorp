@@ -311,8 +311,8 @@ nsEventStatus GestureEventListener::HandleInputTouchMove() {
 
         PinchGestureInput pinchEvent(
             PinchGestureInput::PINCHGESTURE_START, mLastTouchInput.mTime,
-            mLastTouchInput.mTimeStamp, currentFocus, currentSpan, currentSpan,
-            mLastTouchInput.modifiers);
+            mLastTouchInput.mTimeStamp, mLastTouchInput.mScreenOffset,
+            currentFocus, currentSpan, currentSpan, mLastTouchInput.modifiers);
 
         rv = mAsyncPanZoomController->HandleGestureEvent(pinchEvent);
 
@@ -340,8 +340,8 @@ nsEventStatus GestureEventListener::HandleInputTouchMove() {
         SetState(GESTURE_PINCH);
         PinchGestureInput pinchEvent(
             PinchGestureInput::PINCHGESTURE_START, mLastTouchInput.mTime,
-            mLastTouchInput.mTimeStamp, currentFocus, currentSpan, currentSpan,
-            mLastTouchInput.modifiers);
+            mLastTouchInput.mTimeStamp, mLastTouchInput.mScreenOffset,
+            currentFocus, currentSpan, currentSpan, mLastTouchInput.modifiers);
 
         rv = mAsyncPanZoomController->HandleGestureEvent(pinchEvent);
       } else {
@@ -368,8 +368,9 @@ nsEventStatus GestureEventListener::HandleInputTouchMove() {
 
       PinchGestureInput pinchEvent(
           PinchGestureInput::PINCHGESTURE_SCALE, mLastTouchInput.mTime,
-          mLastTouchInput.mTimeStamp, GetCurrentFocus(mLastTouchInput),
-          currentSpan, mPreviousSpan, mLastTouchInput.modifiers);
+          mLastTouchInput.mTimeStamp, mLastTouchInput.mScreenOffset,
+          GetCurrentFocus(mLastTouchInput), currentSpan, mPreviousSpan,
+          mLastTouchInput.modifiers);
 
       rv = mAsyncPanZoomController->HandleGestureEvent(pinchEvent);
       mPreviousSpan = currentSpan;
@@ -390,8 +391,9 @@ nsEventStatus GestureEventListener::HandleInputTouchMove() {
 
       PinchGestureInput pinchEvent(
           PinchGestureInput::PINCHGESTURE_SCALE, mLastTouchInput.mTime,
-          mLastTouchInput.mTimeStamp, currentFocus, effectiveSpan,
-          mPreviousSpan, mLastTouchInput.modifiers);
+          mLastTouchInput.mTimeStamp, mLastTouchInput.mScreenOffset,
+          currentFocus, effectiveSpan, mPreviousSpan,
+          mLastTouchInput.modifiers);
 
       rv = mAsyncPanZoomController->HandleGestureEvent(pinchEvent);
       mPreviousSpan = effectiveSpan;
@@ -472,10 +474,10 @@ nsEventStatus GestureEventListener::HandleInputTouchEnd() {
           // contain meaningful data.
           point = mTouches[0].mScreenPoint;
         }
-        PinchGestureInput pinchEvent(PinchGestureInput::PINCHGESTURE_END,
-                                     mLastTouchInput.mTime,
-                                     mLastTouchInput.mTimeStamp, point, 1.0f,
-                                     1.0f, mLastTouchInput.modifiers);
+        PinchGestureInput pinchEvent(
+            PinchGestureInput::PINCHGESTURE_END, mLastTouchInput.mTime,
+            mLastTouchInput.mTimeStamp, mLastTouchInput.mScreenOffset, point,
+            1.0f, 1.0f, mLastTouchInput.modifiers);
         mAsyncPanZoomController->HandleGestureEvent(pinchEvent);
       }
 
@@ -486,10 +488,10 @@ nsEventStatus GestureEventListener::HandleInputTouchEnd() {
     case GESTURE_ONE_TOUCH_PINCH: {
       SetState(GESTURE_NONE);
       ScreenPoint point = PinchGestureInput::BothFingersLifted<ScreenPixel>();
-      PinchGestureInput pinchEvent(PinchGestureInput::PINCHGESTURE_END,
-                                   mLastTouchInput.mTime,
-                                   mLastTouchInput.mTimeStamp, point, 1.0f,
-                                   1.0f, mLastTouchInput.modifiers);
+      PinchGestureInput pinchEvent(
+          PinchGestureInput::PINCHGESTURE_END, mLastTouchInput.mTime,
+          mLastTouchInput.mTimeStamp, mLastTouchInput.mScreenOffset, point,
+          1.0f, 1.0f, mLastTouchInput.modifiers);
       mAsyncPanZoomController->HandleGestureEvent(pinchEvent);
 
       rv = nsEventStatus_eConsumeNoDefault;
