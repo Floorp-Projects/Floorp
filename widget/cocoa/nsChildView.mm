@@ -3658,6 +3658,9 @@ NSEvent* gLastDragMouseDownEvent = nil;
     ScreenPoint position =
         ViewAs<ScreenPixel>([self convertWindowCoordinatesRoundDown:locationInWindow],
                             PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent);
+    ExternalPoint screenOffset =
+        ViewAs<ExternalPixel>(mGeckoChild->WidgetToScreenOffset(),
+                              PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent);
 
     PRIntervalTime eventIntervalTime = PR_IntervalNow();
     TimeStamp eventTimeStamp = nsCocoaUtils::GetEventTimeStamp([anEvent timestamp]);
@@ -3686,6 +3689,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
     PinchGestureInput event{pinchGestureType,
                             eventIntervalTime,
                             eventTimeStamp,
+                            screenOffset,
                             position,
                             100.0,
                             100.0 * (1.0 - [anEvent magnification]),
