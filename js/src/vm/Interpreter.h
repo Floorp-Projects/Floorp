@@ -551,6 +551,10 @@ JSObject* NewArrayOperationWithTemplate(JSContext* cx,
 ArrayObject* NewArrayCopyOnWriteOperation(JSContext* cx, HandleScript script,
                                           jsbytecode* pc);
 
+MOZ_MUST_USE bool GetImportOperation(JSContext* cx, HandleObject envChain,
+                                     HandleScript script, jsbytecode* pc,
+                                     MutableHandleValue vp);
+
 void ReportRuntimeLexicalError(JSContext* cx, unsigned errorNumber,
                                HandleId id);
 

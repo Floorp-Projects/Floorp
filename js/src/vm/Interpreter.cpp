@@ -243,13 +243,14 @@ static inline bool GetNameOperation(JSContext* cx, InterpreterFrame* fp,
   return GetEnvironmentName<GetNameMode::Normal>(cx, envChain, name, vp);
 }
 
-static inline bool GetImportOperation(JSContext* cx, InterpreterFrame* fp,
-                                      jsbytecode* pc, MutableHandleValue vp) {
-  RootedObject obj(cx, fp->environmentChain()), env(cx), pobj(cx);
-  RootedPropertyName name(cx, fp->script()->getName(pc));
+bool js::GetImportOperation(JSContext* cx, HandleObject envChain,
+                            HandleScript script, jsbytecode* pc,
+                            MutableHandleValue vp) {
+  RootedObject env(cx), pobj(cx);
+  RootedPropertyName name(cx, script->getName(pc));
   Rooted<PropertyResult> prop(cx);
 
-  MOZ_ALWAYS_TRUE(LookupName(cx, name, obj, &env, &pobj, &prop));
+  MOZ_ALWAYS_TRUE(LookupName(cx, name, envChain, &env, &pobj, &prop));
   MOZ_ASSERT(env && env->is<ModuleEnvironmentObject>());
   MOZ_ASSERT(env->as<ModuleEnvironmentObject>().hasImportBinding(name));
   return FetchName<GetNameMode::Normal>(cx, env, pobj, name, prop, vp);
@@ -3229,7 +3230,8 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     CASE(JSOP_GETIMPORT) {
       PUSH_NULL();
       MutableHandleValue rval = REGS.stackHandleAt(-1);
-      if (!GetImportOperation(cx, REGS.fp(), REGS.pc, rval)) {
+      HandleObject envChain = REGS.fp()->environmentChain();
+      if (!GetImportOperation(cx, envChain, script, REGS.pc, rval)) {
         goto error;
       }
 
