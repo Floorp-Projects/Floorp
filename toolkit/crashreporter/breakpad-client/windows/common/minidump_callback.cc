@@ -212,6 +212,14 @@ void IncludeAppMemoryFromExceptionContext(HANDLE aProcess,
     heapAddrCandidates[numElements++] = aExceptionContext->R15;
   }
   heapAddrCandidates[numElements++] = aExceptionContext->Rip;
+#elif defined(_M_ARM64)
+  if (!aInstructionPointerOnly) {
+    for (auto reg : aExceptionContext->X) {
+      heapAddrCandidates[numElements++] = reg;
+    }
+    heapAddrCandidates[numElements++] = aExceptionContext->Sp;
+  }
+  heapAddrCandidates[numElements++] = aExceptionContext->Pc;
 #endif
 
   // Inplace sort the candidates for excluding or merging memory regions.
