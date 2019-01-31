@@ -11,10 +11,10 @@
 #include "mozilla/DBusHelpers.h"
 #include "nsString.h"
 
-class DBusRemoteClient : public nsRemoteClient {
+class nsDBusRemoteClient : public nsRemoteClient {
  public:
-  DBusRemoteClient();
-  ~DBusRemoteClient();
+  nsDBusRemoteClient();
+  ~nsDBusRemoteClient();
 
   virtual nsresult Init() override;
   virtual nsresult SendCommandLine(const char *aProgram, const char *aProfile,
