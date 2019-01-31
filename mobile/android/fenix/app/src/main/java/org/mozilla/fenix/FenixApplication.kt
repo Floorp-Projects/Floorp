@@ -13,6 +13,7 @@ import mozilla.components.service.fretboard.Fretboard
 import mozilla.components.service.fretboard.ValuesProvider
 import mozilla.components.service.fretboard.source.kinto.KintoExperimentSource
 import mozilla.components.service.fretboard.storage.flatfile.FlatFileExperimentStorage
+import mozilla.components.service.glean.Glean
 import mozilla.components.support.base.log.Log
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.log.sink.AndroidLogSink
@@ -29,7 +30,13 @@ class FenixApplication : Application() {
         Log.addSink(AndroidLogSink())
 
         setupCrashReporting()
+        setupGlean(this)
         loadExperiments()
+    }
+
+    private fun setupGlean(context: Context) {
+        Glean.initialize(context)
+        Glean.setMetricsEnabled(BuildConfig.TELEMETRY)
     }
 
     private fun loadExperiments() {

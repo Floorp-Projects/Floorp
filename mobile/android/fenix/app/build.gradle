@@ -1,3 +1,7 @@
+plugins {
+    id "com.jetbrains.python.envs" version "0.0.26"
+}
+
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
@@ -119,7 +123,9 @@ dependencies {
     implementation Deps.mozilla_feature_session
     implementation Deps.mozilla_feature_toolbar
     implementation Deps.mozilla_feature_tabs
+
     implementation Deps.mozilla_service_fretboard
+    implementation Deps.mozilla_service_glean
 
     implementation Deps.mozilla_support_ktx
 
@@ -152,4 +158,15 @@ android.applicationVariants.all { variant ->
     } else {
         buildConfigField 'boolean', 'CRASH_REPORTING', 'false'
     }
+
+    // Activating telemetry only if command line parameter was provided (in automation)
+    if (project.hasProperty("telemetry") && project.property("telemetry") == "true") {
+        buildConfigField 'boolean', 'TELEMETRY', 'true'
+    } else {
+        buildConfigField 'boolean', 'TELEMETRY', 'false'
+    }
 }
+
+// Normally this should use the same version as the glean dependency. But since we are currently using AC snapshots we
+// can't reference a git tag with a specific version here. So we are just using "master" and hoping for the best.
+apply from: 'https://github.com/mozilla-mobile/android-components/raw/master/components/service/glean/scripts/sdk_generator.gradle'
