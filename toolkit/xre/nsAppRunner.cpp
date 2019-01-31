@@ -2465,9 +2465,8 @@ static ReturnAbortOnError CheckDowngrade(nsIFile* aProfileDir,
           do_GetService(NS_WINDOWWATCHER_CONTRACTID);
       NS_ENSURE_TRUE(windowWatcher, NS_ERROR_ABORT);
 
-      nsCOMPtr<nsIAppStartup> appStartup =
-          do_GetService(NS_APPSTARTUP_CONTRACTID);
-      NS_ENSURE_TRUE(appStartup, NS_ERROR_ABORT);
+      nsCOMPtr<nsIAppStartup> appStartup(components::AppStartup::Service());
+      NS_ENSURE_TRUE(appStartup, NS_ERROR_FAILURE)
 
       nsCOMPtr<nsIDialogParamBlock> paramBlock =
           do_CreateInstance(NS_DIALOGPARAMBLOCK_CONTRACTID);
