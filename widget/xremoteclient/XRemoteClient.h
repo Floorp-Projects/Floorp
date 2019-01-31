@@ -14,9 +14,9 @@ class XRemoteClient : public nsRemoteClient {
   ~XRemoteClient();
 
   virtual nsresult Init() override;
-  virtual nsresult SendCommandLine(const char *aProgram, const char *aUsername,
-                                   const char *aProfile, int32_t argc,
-                                   char **argv, const char *aDesktopStartupID,
+  virtual nsresult SendCommandLine(const char *aProgram, const char *aProfile,
+                                   int32_t argc, char **argv,
+                                   const char *aDesktopStartupID,
                                    char **aResponse, bool *aSucceeded) override;
   void Shutdown();
 
@@ -25,8 +25,7 @@ class XRemoteClient : public nsRemoteClient {
   Window CheckChildren(Window aWindow);
   nsresult GetLock(Window aWindow, bool *aDestroyed);
   nsresult FreeLock(Window aWindow);
-  Window FindBestWindow(const char *aProgram, const char *aUsername,
-                        const char *aProfile);
+  Window FindBestWindow(const char *aProgram, const char *aProfile);
   nsresult DoSendCommandLine(Window aWindow, int32_t argc, char **argv,
                              const char *aDesktopStartupID, char **aResponse,
                              bool *aDestroyed);

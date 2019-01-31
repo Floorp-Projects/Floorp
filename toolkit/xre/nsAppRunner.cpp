@@ -1546,40 +1546,8 @@ static inline void DumpVersion() {
 }
 
 #if defined(MOZ_WIDGET_GTK)
-static RemoteResult ParseRemoteCommandLine(nsCString& program,
-                                           const char** profile,
-                                           const char** username) {
-  ArgResult ar;
-
-  ar = CheckArg("p", profile, CheckArgFlag::None);
-  if (ar == ARG_BAD) {
-    // Leave it to the normal command line handling to handle this situation.
-    return REMOTE_NOT_FOUND;
-  }
-
-  const char* temp = nullptr;
-  ar = CheckArg("a", &temp, CheckArgFlag::CheckOSInt | CheckArgFlag::RemoveArg);
-  if (ar == ARG_BAD) {
-    PR_fprintf(PR_STDERR, "Error: argument -a requires an application name\n");
-    return REMOTE_ARG_BAD;
-  }
-  if (ar == ARG_FOUND) {
-    program.Assign(temp);
-  }
-
-  ar = CheckArg("u", username,
-                CheckArgFlag::CheckOSInt | CheckArgFlag::RemoveArg);
-  if (ar == ARG_BAD) {
-    PR_fprintf(PR_STDERR, "Error: argument -u requires a username\n");
-    return REMOTE_ARG_BAD;
-  }
-
-  return REMOTE_FOUND;
-}
-
 static RemoteResult StartRemoteClient(const char* aDesktopStartupID,
-                                      nsCString& program, const char* profile,
-                                      const char* username) {
+                                      nsCString& program, const char* profile) {
   nsAutoPtr<nsRemoteClient> client;
 
   bool useX11Remote = GDK_IS_X11_DISPLAY(gdk_display_get_default());
@@ -1598,7 +1566,7 @@ static RemoteResult StartRemoteClient(const char* aDesktopStartupID,
 
   nsCString response;
   bool success = false;
-  rv = client->SendCommandLine(program.get(), username, profile, gArgc, gArgv,
+  rv = client->SendCommandLine(program.get(), profile, gArgc, gArgv,
                                aDesktopStartupID, getter_Copies(response),
                                &success);
   // did the command fail?
@@ -3988,36 +3956,16 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
     nsAutoCString program(gAppData->remotingName);
     ToLowerCase(program);
 
-    const char* username = getenv("LOGNAME");
     const char* profile = nullptr;
-
-    RemoteResult rr = ParseRemoteCommandLine(program, &profile, &username);
-    if (rr == REMOTE_ARG_BAD) {
-      return 1;
-    }
-
-    if (!username) {
-      struct passwd* pw = getpwuid(geteuid());
-      if (pw && pw->pw_name) {
-        // Beware that another call to getpwent/getpwname/getpwuid will
-        // overwrite pw, but we don't have such another call between here and
-        // when username is used last.
-        username = pw->pw_name;
-      }
-    }
+    // It doesn't matter if this succeeds or fails. A failure will be handled
+    // later.
+    CheckArg("p", &profile, CheckArgFlag::None);
 
     nsCOMPtr<nsIFile> mutexDir;
     rv = GetSpecialSystemDirectory(OS_TemporaryDirectory,
                                    getter_AddRefs(mutexDir));
     if (NS_SUCCEEDED(rv)) {
-      nsAutoCString mutexPath = program + NS_LITERAL_CSTRING("_");
-      // In the unlikely even that LOGNAME is not set and getpwuid failed, just
-      // don't put the username in the mutex directory. It will conflict with
-      // other users mutex, but the worst that can happen is that they wait for
-      // MOZ_XREMOTE_START_TIMEOUT_SEC during startup in that case.
-      if (username) {
-        mutexPath.Append(username);
-      }
+      nsAutoCString mutexPath = program;
       if (profile) {
         mutexPath.Append(NS_LITERAL_CSTRING("_") + nsDependentCString(profile));
       }
@@ -4046,7 +3994,7 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
     const char* desktopStartupIDPtr =
         mDesktopStartupID.IsEmpty() ? nullptr : mDesktopStartupID.get();
 
-    rr = StartRemoteClient(desktopStartupIDPtr, program, profile, username);
+    RemoteResult rr = StartRemoteClient(desktopStartupIDPtr, program, profile);
     if (rr == REMOTE_FOUND) {
       *aExitFlag = true;
       return 0;
