@@ -402,8 +402,16 @@ def load(tests_root, manifest, types=None, meta_filters=None):
     return _load(logger, tests_root, manifest, types, meta_filters)
 
 
+__load_cache = {}
+
+
 def _load(logger, tests_root, manifest, types=None, meta_filters=None):
     # "manifest" is a path or file-like object.
+    manifest_path = (manifest if isinstance(manifest, string_types)
+                     else manifest.name)
+    if manifest_path in __load_cache:
+        return __load_cache[manifest_path]
+
     if isinstance(manifest, string_types):
         if os.path.exists(manifest):
             logger.debug("Opening manifest at %s" % manifest)
@@ -420,12 +428,14 @@ def _load(logger, tests_root, manifest, types=None, meta_filters=None):
         except ValueError:
             logger.warning("%r may be corrupted", manifest)
             return None
-        return rv
+    else:
+        rv = Manifest.from_json(tests_root,
+                                json.load(manifest),
+                                types=types,
+                                meta_filters=meta_filters)
 
-    return Manifest.from_json(tests_root,
-                              json.load(manifest),
-                              types=types,
-                              meta_filters=meta_filters)
+    __load_cache[manifest_path] = rv
+    return rv
 
 
 def load_and_update(tests_root,
