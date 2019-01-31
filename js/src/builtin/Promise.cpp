@@ -8,6 +8,7 @@
 
 #include "mozilla/Atomics.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/Move.h"
 #include "mozilla/TimeStamp.h"
 
 #include "jsexn.h"
@@ -5031,7 +5032,7 @@ void OffThreadPromiseRuntimeState::init(
   // The JS API contract is that 'false' means shutdown, so be infallible
   // here (like Gecko).
   AutoEnterOOMUnsafeRegion noOOM;
-  if (!state.internalDispatchQueue_.append(d)) {
+  if (!state.internalDispatchQueue_.pushBack(d)) {
     noOOM.crash("internalDispatchToEventLoop");
   }
 
@@ -5058,7 +5059,7 @@ void OffThreadPromiseRuntimeState::internalDrain(JSContext* cx) {
   MOZ_ASSERT(!internalDispatchQueueClosed_);
 
   while (true) {
-    DispatchableVector dispatchQueue;
+    DispatchableFifo dispatchQueue;
     {
       LockGuard<Mutex> lock(mutex_);
 
@@ -5071,7 +5072,7 @@ void OffThreadPromiseRuntimeState::internalDrain(JSContext* cx) {
         internalDispatchQueueAppended_.wait(lock);
       }
 
-      Swap(dispatchQueue, internalDispatchQueue_);
+      mozilla::Swap(dispatchQueue, internalDispatchQueue_);
       MOZ_ASSERT(internalDispatchQueue_.empty());
     }
 
@@ -5100,10 +5101,10 @@ void OffThreadPromiseRuntimeState::shutdown(JSContext* cx) {
   // requirement of the embedding that, before shutdown, all successfully-
   // dispatched-to-event-loop tasks have been run.
   if (usingInternalDispatchQueue()) {
-    DispatchableVector dispatchQueue;
+    DispatchableFifo dispatchQueue;
     {
       LockGuard<Mutex> lock(mutex_);
-      Swap(dispatchQueue, internalDispatchQueue_);
+      mozilla::Swap(dispatchQueue, internalDispatchQueue_);
       MOZ_ASSERT(internalDispatchQueue_.empty());
       internalDispatchQueueClosed_ = true;
     }
