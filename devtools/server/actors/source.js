@@ -6,8 +6,7 @@
 
 "use strict";
 
-const { Cc, Ci } = require("chrome");
-const Services = require("Services");
+const { Ci } = require("chrome");
 const { BreakpointActor, setBreakpointAtEntryPoints } = require("devtools/server/actors/breakpoint");
 const { GeneratedLocation } = require("devtools/server/actors/common");
 const { createValueGrip } = require("devtools/server/actors/object/utils");
@@ -18,7 +17,6 @@ const { joinURI } = require("devtools/shared/path");
 const { sourceSpec } = require("devtools/shared/specs/source");
 const { findClosestScriptBySource } = require("devtools/server/actors/utils/closest-scripts");
 
-loader.lazyRequireGetter(this, "mapURIToAddonID", "devtools/server/actors/utils/map-uri-to-addon-id");
 loader.lazyRequireGetter(this, "arrayBufferGrip", "devtools/server/actors/array-buffer", true);
 
 function isEvalSource(source) {
@@ -73,39 +71,6 @@ function getSourceURL(source, window) {
 exports.getSourceURL = getSourceURL;
 
 /**
- * Resolve a URI back to physical file.
- *
- * Of course, this works only for URIs pointing to local resources.
- *
- * @param  uri
- *         URI to resolve
- * @return
- *         resolved nsIURI
- */
-function resolveURIToLocalPath(uri) {
-  let resolved;
-  switch (uri.scheme) {
-    case "jar":
-    case "file":
-      return uri;
-
-    case "chrome":
-      resolved = Cc["@mozilla.org/chrome/chrome-registry;1"]
-                  .getService(Ci.nsIChromeRegistry).convertChromeURL(uri);
-      return resolveURIToLocalPath(resolved);
-
-    case "resource":
-      resolved = Cc["@mozilla.org/network/protocol;1?name=resource"]
-                  .getService(Ci.nsIResProtocolHandler).resolveURI(uri);
-      uri = Services.io.newURI(resolved);
-      return resolveURIToLocalPath(uri);
-
-    default:
-      return null;
-  }
-}
-
-/**
  * A SourceActor provides information about the source of a script. There
  * are two kinds of source actors: ones that represent real source objects,
  * and ones that represent non-existant "original" sources when the real
@@ -150,8 +115,6 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
     this.onSource = this.onSource.bind(this);
     this._getSourceText = this._getSourceText.bind(this);
 
-    this._mapSourceToAddon();
-
     this._init = null;
   },
 
@@ -180,12 +143,6 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
     }
     return this._originalUrl;
   },
-  get addonID() {
-    return this._addonID;
-  },
-  get addonPath() {
-    return this._addonPath;
-  },
 
   get isCacheEnabled() {
     if (this.threadActor._parent._getCacheDisabled) {
@@ -206,8 +163,6 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
     return {
       actor: this.actorID,
       url: this.url ? this.url.split(" -> ").pop() : null,
-      addonID: this._addonID,
-      addonPath: this._addonPath,
       isBlackBoxed: this.threadActor.sources.isBlackBoxed(this.url),
       sourceMapURL: source ? source.sourceMapURL : null,
       introductionUrl: introductionUrl ? introductionUrl.split(" -> ").pop() : null,
@@ -238,55 +193,6 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
       query.url = this.url;
     }
     return this.dbg.findScripts(query);
-  },
-
-  _mapSourceToAddon: function() {
-    let nsuri;
-    try {
-      nsuri = Services.io.newURI(this.url.split(" -> ").pop());
-    } catch (e) {
-      // We can't do anything with an invalid URI
-      return;
-    }
-
-    const localURI = resolveURIToLocalPath(nsuri);
-    if (!localURI) {
-      return;
-    }
-
-    const id = mapURIToAddonID(localURI);
-    if (!id) {
-      return;
-    }
-    this._addonID = id;
-
-    if (localURI instanceof Ci.nsIJARURI) {
-      // The path in the add-on is easy for jar: uris
-      this._addonPath = localURI.JAREntry;
-    } else if (localURI instanceof Ci.nsIFileURL) {
-      // For file: uris walk up to find the last directory that is part of the
-      // add-on
-      const target = localURI.file;
-      let path = target.leafName;
-
-      // We can assume that the directory containing the source file is part
-      // of the add-on
-      let root = target.parent;
-      let file = root.parent;
-      while (file && mapURIToAddonID(Services.io.newFileURI(file))) {
-        path = root.leafName + "/" + path;
-        root = file;
-        file = file.parent;
-      }
-
-      if (!file) {
-        const error = new Error("Could not find the root of the add-on for " + this.url);
-        DevToolsUtils.reportException("SourceActor.prototype._mapSourceToAddon", error);
-        return;
-      }
-
-      this._addonPath = path;
-    }
   },
 
   _reportLoadSourceError: function(error) {
