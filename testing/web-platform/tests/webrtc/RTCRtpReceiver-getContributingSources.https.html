@@ -26,10 +26,10 @@ async function connectAndExpectNoCsrcs(t, kind) {
 }
 
 promise_test(async t => {
-  connectAndExpectNoCsrcs(t, 'audio');
+  await connectAndExpectNoCsrcs(t, 'audio');
 }, '[audio] getContributingSources() returns an empty list in loopback call');
 
 promise_test(async t => {
-  connectAndExpectNoCsrcs(t, 'video');
+  await connectAndExpectNoCsrcs(t, 'video');
 }, '[video] getContributingSources() returns an empty list in loopback call');
 </script>
