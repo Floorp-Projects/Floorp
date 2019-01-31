@@ -5485,13 +5485,6 @@ void ScrollFrameHelper::UpdateMinimumScaleSize(
   MOZ_ASSERT(pc->IsRootContentDocument(),
              "The pres context should be for the root content document");
 
-  const ScrollStyles& styles = pc->GetViewportScrollStylesOverride();
-  // FIXME: Bug 1520077 - Drop this check. We should use the minimum-scale size
-  // even if no overflow:hidden is specified.
-  if (styles.mHorizontal != StyleOverflow::Hidden) {
-    return;
-  }
-
   RefPtr<MobileViewportManager> manager =
       mOuter->PresShell()->GetMobileViewportManager();
   MOZ_ASSERT(manager);
