@@ -175,8 +175,15 @@ function tunnelToInnerBrowser(outer, inner) {
       // different browser properties.
       // The content within is not reloaded.
       outer.setAttribute("remote", "true");
-      outer.setAttribute("remoteType", inner.remoteType);
       outer.construct();
+
+      Object.defineProperty(outer, "remoteType", {
+        get() {
+          return inner.remoteType;
+        },
+        configurable: true,
+        enumerable: true,
+      });
 
       // Verify that we indeed have the correct binding.
       if (!outer.isRemoteBrowser) {
