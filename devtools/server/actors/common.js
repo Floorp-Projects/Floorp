@@ -148,9 +148,7 @@ GeneratedLocation.prototype = {
   },
 
   get generatedUrl() {
-    const actor = this.generatedSourceActor;
-    const source = actor.source;
-    return source ? source.url : actor._originalUrl;
+    return this.generatedSourceActor.url;
   },
 
   get generatedLine() {
