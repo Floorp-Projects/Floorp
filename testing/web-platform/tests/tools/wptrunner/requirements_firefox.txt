@@ -6,4 +6,4 @@ mozrunner==7.2.0
 mozleak==0.2
 mozinstall==1.16.0
 mozdownload==1.25
-
+mozversion==1.5
