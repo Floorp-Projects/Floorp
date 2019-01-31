@@ -1,4 +1,4 @@
-// |jit-test| test-also-wasm-compiler-ion; error: TestComplete
+// |jit-test| test-also=--wasm-compiler=ion; error: TestComplete
 
 load(libdir + "asserts.js");
 
