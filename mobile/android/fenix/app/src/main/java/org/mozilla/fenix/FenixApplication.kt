@@ -10,7 +10,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import mozilla.components.service.fretboard.Fretboard
-import mozilla.components.service.fretboard.ValuesProvider
 import mozilla.components.service.fretboard.source.kinto.KintoExperimentSource
 import mozilla.components.service.fretboard.storage.flatfile.FlatFileExperimentStorage
 import mozilla.components.service.glean.Glean
@@ -44,12 +43,8 @@ class FenixApplication : Application() {
         val experimentSource = KintoExperimentSource(
             EXPERIMENTS_BASE_URL, EXPERIMENTS_BUCKET_NAME, EXPERIMENTS_COLLECTION_NAME
         )
-        fretboard = Fretboard(experimentSource, FlatFileExperimentStorage(experimentsFile),
-            object : ValuesProvider() {
-                override fun getClientId(context: Context): String {
-                    return "10" // hardcode clientId to determine in or out of experiment
-                }
-            })
+        // TODO add ValueProvider to keep clientID in sync with Glean when ready
+        fretboard = Fretboard(experimentSource, FlatFileExperimentStorage(experimentsFile))
         fretboard.loadExperiments()
         Logger.debug("Bucket is ${fretboard.getUserBucket(this@FenixApplication)}")
         Logger.debug("Experiments active: ${fretboard.getExperimentsMap(this@FenixApplication)}")
