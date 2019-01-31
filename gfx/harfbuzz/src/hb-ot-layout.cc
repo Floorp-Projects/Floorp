@@ -684,7 +684,7 @@ struct hb_collect_features_context_t
       feature_indexes (feature_indexes_),
       script_count(0),langsys_count(0) {}
 
-  bool inline visited (const OT::Script &s)
+  bool visited (const OT::Script &s)
   {
     /* We might have Null() object here.  Don't want to involve
      * that in the memoize.  So, detect empty objects and return. */
@@ -697,7 +697,7 @@ struct hb_collect_features_context_t
 
     return visited (s, visited_script);
   }
-  bool inline visited (const OT::LangSys &l)
+  bool visited (const OT::LangSys &l)
   {
     /* We might have Null() object here.  Don't want to involve
      * that in the memoize.  So, detect empty objects and return. */
@@ -713,7 +713,7 @@ struct hb_collect_features_context_t
 
   private:
   template <typename T>
-  bool inline visited (const T &p, hb_set_t &visited_set)
+  bool visited (const T &p, hb_set_t &visited_set)
   {
     hb_codepoint_t delta = (hb_codepoint_t) ((uintptr_t) &p - (uintptr_t) &g);
      if (visited_set.has (delta))
@@ -1299,8 +1299,8 @@ hb_ot_layout_feature_get_characters (hb_face_t      *face,
 
 struct GSUBProxy
 {
-  enum { table_index = 0 };
-  enum { inplace = false };
+  static constexpr unsigned table_index = 0u;
+  static constexpr bool inplace = false;
   typedef OT::SubstLookup Lookup;
 
   GSUBProxy (hb_face_t *face) :
@@ -1313,8 +1313,8 @@ struct GSUBProxy
 
 struct GPOSProxy
 {
-  enum { table_index = 1 };
-  enum { inplace = true };
+  static constexpr unsigned table_index = 1u;
+  static constexpr bool inplace = true;
   typedef OT::PosLookup Lookup;
 
   GPOSProxy (hb_face_t *face) :
@@ -1387,7 +1387,7 @@ apply_string (OT::hb_ot_apply_context_t *c,
   if (likely (!lookup.is_reverse ()))
   {
     /* in/out forward substitution/positioning */
-    if (Proxy::table_index == 0)
+    if (Proxy::table_index == 0u)
       buffer->clear_output ();
     buffer->idx = 0;
 
@@ -1404,7 +1404,7 @@ apply_string (OT::hb_ot_apply_context_t *c,
   else
   {
     /* in-place backward substitution/positioning */
-    if (Proxy::table_index == 0)
+    if (Proxy::table_index == 0u)
       buffer->remove_output ();
     buffer->idx = buffer->len - 1;
 
@@ -1423,7 +1423,7 @@ inline void hb_ot_map_t::apply (const Proxy &proxy,
   OT::hb_ot_apply_context_t c (table_index, font, buffer);
   c.set_recurse_func (Proxy::Lookup::apply_recurse_func);
 
-  for (unsigned int stage_index = 0; stage_index < stages[table_index].len; stage_index++) {
+  for (unsigned int stage_index = 0; stage_index < stages[table_index].length; stage_index++) {
     const stage_map_t *stage = &stages[table_index][stage_index];
     for (; i < stage->last_lookup; i++)
     {

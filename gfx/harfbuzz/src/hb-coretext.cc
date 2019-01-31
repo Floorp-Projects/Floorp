@@ -527,7 +527,7 @@ _hb_coretext_shape (hb_shape_plan_t    *shape_plan,
     /* Scan events and save features for each range. */
     hb_vector_t<active_feature_t> active_features;
     unsigned int last_index = 0;
-    for (unsigned int i = 0; i < feature_events.len; i++)
+    for (unsigned int i = 0; i < feature_events.length; i++)
     {
       feature_event_t *event = &feature_events[i];
 
@@ -536,13 +536,13 @@ _hb_coretext_shape (hb_shape_plan_t    *shape_plan,
         /* Save a snapshot of active features and the range. */
 	range_record_t *range = range_records.push ();
 
-	if (active_features.len)
+	if (active_features.length)
 	{
 	  CFMutableArrayRef features_array = CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks);
 
 	  /* TODO sort and resolve conflicting features? */
 	  /* active_features.qsort (); */
-	  for (unsigned int j = 0; j < active_features.len; j++)
+	  for (unsigned int j = 0; j < active_features.length; j++)
 	  {
 	    CFStringRef keys[] = {
 	      kCTFontFeatureTypeIdentifierKey,
@@ -730,7 +730,7 @@ resize_and_retry:
       CFAttributedStringSetAttribute (attr_string, CFRangeMake (0, chars_len),
 				      kCTFontAttributeName, ct_font);
 
-      if (num_features && range_records.len)
+      if (num_features && range_records.length)
       {
 	unsigned int start = 0;
 	range_record_t *last_range = &range_records[0];
@@ -879,7 +879,7 @@ resize_and_retry:
 	 * Also see: https://bugs.chromium.org/p/chromium/issues/detail?id=597098
 	 */
 	bool matched = false;
-	for (unsigned int i = 0; i < range_records.len; i++)
+	for (unsigned int i = 0; i < range_records.length; i++)
 	  if (range_records[i].font && CFEqual (run_ct_font, range_records[i].font))
 	  {
 	    matched = true;
@@ -1142,7 +1142,7 @@ fail:
   if (line)
     CFRelease (line);
 
-  for (unsigned int i = 0; i < range_records.len; i++)
+  for (unsigned int i = 0; i < range_records.length; i++)
     if (range_records[i].font)
       CFRelease (range_records[i].font);
 

@@ -46,7 +46,6 @@ struct SingleSubstFormat1
 
   void closure (hb_closure_context_t *c) const
   {
-    TRACE_CLOSURE (this);
     for (Coverage::Iter iter (this+coverage); iter.more (); iter.next ())
     {
       /* TODO Switch to range-based API to work around malicious fonts.
@@ -59,7 +58,6 @@ struct SingleSubstFormat1
 
   void collect_glyphs (hb_collect_glyphs_context_t *c) const
   {
-    TRACE_COLLECT_GLYPHS (this);
     if (unlikely (!(this+coverage).add_coverage (c->input))) return;
     for (Coverage::Iter iter (this+coverage); iter.more (); iter.next ())
     {
@@ -120,7 +118,7 @@ struct SingleSubstFormat1
     }
     c->serializer->propagate_error (from, to);
     SingleSubst_serialize (c->serializer, from, to);
-    return_trace (from.len);
+    return_trace (from.length);
   }
 
   bool sanitize (hb_sanitize_context_t *c) const
@@ -147,7 +145,6 @@ struct SingleSubstFormat2
 
   void closure (hb_closure_context_t *c) const
   {
-    TRACE_CLOSURE (this);
     unsigned int count = substitute.len;
     for (Coverage::Iter iter (this+coverage); iter.more (); iter.next ())
     {
@@ -160,7 +157,6 @@ struct SingleSubstFormat2
 
   void collect_glyphs (hb_collect_glyphs_context_t *c) const
   {
-    TRACE_COLLECT_GLYPHS (this);
     if (unlikely (!(this+coverage).add_coverage (c->input))) return;
     unsigned int count = substitute.len;
     for (Coverage::Iter iter (this+coverage); iter.more (); iter.next ())
@@ -218,7 +214,7 @@ struct SingleSubstFormat2
     }
     c->serializer->propagate_error (from, to);
     SingleSubst_serialize (c->serializer, from, to);
-    return_trace (from.len);
+    return_trace (from.length);
   }
 
   bool sanitize (hb_sanitize_context_t *c) const
@@ -249,12 +245,12 @@ struct SingleSubst
     if (unlikely (!c->extend_min (u.format))) return_trace (false);
     unsigned int format = 2;
     int delta = 0;
-    if (glyphs.len)
+    if (glyphs.length)
     {
       format = 1;
       /* TODO(serialize) check for wrap-around */
       delta = substitutes[0] - glyphs[0];
-      for (unsigned int i = 1; i < glyphs.len; i++)
+      for (unsigned int i = 1; i < glyphs.length; i++)
 	if (delta != (int) (substitutes[i] - glyphs[i])) {
 	  format = 2;
 	  break;
@@ -298,17 +294,13 @@ struct Sequence
 {
   void closure (hb_closure_context_t *c) const
   {
-    TRACE_CLOSURE (this);
     unsigned int count = substitute.len;
     for (unsigned int i = 0; i < count; i++)
       c->out->add (substitute[i]);
   }
 
   void collect_glyphs (hb_collect_glyphs_context_t *c) const
-  {
-    TRACE_COLLECT_GLYPHS (this);
-    c->output->add_array (substitute.arrayZ, substitute.len);
-  }
+  { c->output->add_array (substitute.arrayZ, substitute.len); }
 
   bool apply (hb_ot_apply_context_t *c) const
   {
@@ -369,7 +361,6 @@ struct MultipleSubstFormat1
 
   void closure (hb_closure_context_t *c) const
   {
-    TRACE_CLOSURE (this);
     unsigned int count = sequence.len;
     for (Coverage::Iter iter (this+coverage); iter.more (); iter.next ())
     {
@@ -382,7 +373,6 @@ struct MultipleSubstFormat1
 
   void collect_glyphs (hb_collect_glyphs_context_t *c) const
   {
-    TRACE_COLLECT_GLYPHS (this);
     if (unlikely (!(this+coverage).add_coverage (c->input))) return;
     unsigned int count = sequence.len;
     for (unsigned int i = 0; i < count; i++)
@@ -414,8 +404,8 @@ struct MultipleSubstFormat1
   {
     TRACE_SERIALIZE (this);
     if (unlikely (!c->extend_min (*this))) return_trace (false);
-    if (unlikely (!sequence.serialize (c, glyphs.len))) return_trace (false);
-    for (unsigned int i = 0; i < glyphs.len; i++)
+    if (unlikely (!sequence.serialize (c, glyphs.length))) return_trace (false);
+    for (unsigned int i = 0; i < glyphs.length; i++)
     {
       unsigned int substitute_len = substitute_len_list[i];
       if (unlikely (!sequence[i].serialize (c, this)
@@ -490,17 +480,13 @@ struct AlternateSet
 {
   void closure (hb_closure_context_t *c) const
   {
-    TRACE_CLOSURE (this);
     unsigned int count = alternates.len;
     for (unsigned int i = 0; i < count; i++)
       c->out->add (alternates[i]);
   }
 
   void collect_glyphs (hb_collect_glyphs_context_t *c) const
-  {
-    TRACE_COLLECT_GLYPHS (this);
-    c->output->add_array (alternates.arrayZ, alternates.len);
-  }
+  { c->output->add_array (alternates.arrayZ, alternates.len); }
 
   bool apply (hb_ot_apply_context_t *c) const
   {
@@ -555,7 +541,6 @@ struct AlternateSubstFormat1
 
   void closure (hb_closure_context_t *c) const
   {
-    TRACE_CLOSURE (this);
     unsigned int count = alternateSet.len;
     for (Coverage::Iter iter (this+coverage); iter.more (); iter.next ())
     {
@@ -568,7 +553,6 @@ struct AlternateSubstFormat1
 
   void collect_glyphs (hb_collect_glyphs_context_t *c) const
   {
-    TRACE_COLLECT_GLYPHS (this);
     if (unlikely (!(this+coverage).add_coverage (c->input))) return;
     unsigned int count = alternateSet.len;
     for (Coverage::Iter iter (this+coverage); iter.more (); iter.next ())
@@ -604,8 +588,8 @@ struct AlternateSubstFormat1
   {
     TRACE_SERIALIZE (this);
     if (unlikely (!c->extend_min (*this))) return_trace (false);
-    if (unlikely (!alternateSet.serialize (c, glyphs.len))) return_trace (false);
-    for (unsigned int i = 0; i < glyphs.len; i++)
+    if (unlikely (!alternateSet.serialize (c, glyphs.length))) return_trace (false);
+    for (unsigned int i = 0; i < glyphs.length; i++)
     {
       unsigned int alternate_len = alternate_len_list[i];
       if (unlikely (!alternateSet[i].serialize (c, this)
@@ -690,7 +674,6 @@ struct Ligature
 
   void closure (hb_closure_context_t *c) const
   {
-    TRACE_CLOSURE (this);
     unsigned int count = component.lenP1;
     for (unsigned int i = 1; i < count; i++)
       if (!c->glyphs->has (component[i]))
@@ -700,7 +683,6 @@ struct Ligature
 
   void collect_glyphs (hb_collect_glyphs_context_t *c) const
   {
-    TRACE_COLLECT_GLYPHS (this);
     c->input->add_array (component.arrayZ, component.lenP1 ? component.lenP1 - 1 : 0);
     c->output->add (ligGlyph);
   }
@@ -798,7 +780,6 @@ struct LigatureSet
 
   void closure (hb_closure_context_t *c) const
   {
-    TRACE_CLOSURE (this);
     unsigned int num_ligs = ligature.len;
     for (unsigned int i = 0; i < num_ligs; i++)
       (this+ligature[i]).closure (c);
@@ -806,7 +787,6 @@ struct LigatureSet
 
   void collect_glyphs (hb_collect_glyphs_context_t *c) const
   {
-    TRACE_COLLECT_GLYPHS (this);
     unsigned int num_ligs = ligature.len;
     for (unsigned int i = 0; i < num_ligs; i++)
       (this+ligature[i]).collect_glyphs (c);
@@ -841,12 +821,12 @@ struct LigatureSet
   bool serialize (hb_serialize_context_t *c,
 		  hb_array_t<const GlyphID> ligatures,
 		  hb_array_t<const unsigned int> component_count_list,
-		  hb_array_t<const GlyphID> component_list /* Starting from second for each ligature */)
+		  hb_array_t<const GlyphID> &component_list /* Starting from second for each ligature */)
   {
     TRACE_SERIALIZE (this);
     if (unlikely (!c->extend_min (*this))) return_trace (false);
-    if (unlikely (!ligature.serialize (c, ligatures.len))) return_trace (false);
-    for (unsigned int i = 0; i < ligatures.len; i++)
+    if (unlikely (!ligature.serialize (c, ligatures.length))) return_trace (false);
+    for (unsigned int i = 0; i < ligatures.length; i++)
     {
       unsigned int component_count = MAX<int> (component_count_list[i] - 1, 0);
       if (unlikely (!ligature[i].serialize (c, this)
@@ -891,7 +871,6 @@ struct LigatureSubstFormat1
 
   void closure (hb_closure_context_t *c) const
   {
-    TRACE_CLOSURE (this);
     unsigned int count = ligatureSet.len;
     for (Coverage::Iter iter (this+coverage); iter.more (); iter.next ())
     {
@@ -904,7 +883,6 @@ struct LigatureSubstFormat1
 
   void collect_glyphs (hb_collect_glyphs_context_t *c) const
   {
-    TRACE_COLLECT_GLYPHS (this);
     if (unlikely (!(this+coverage).add_coverage (c->input))) return;
     unsigned int count = ligatureSet.len;
     for (Coverage::Iter iter (this+coverage); iter.more (); iter.next ())
@@ -947,8 +925,8 @@ struct LigatureSubstFormat1
   {
     TRACE_SERIALIZE (this);
     if (unlikely (!c->extend_min (*this))) return_trace (false);
-    if (unlikely (!ligatureSet.serialize (c, first_glyphs.len))) return_trace (false);
-    for (unsigned int i = 0; i < first_glyphs.len; i++)
+    if (unlikely (!ligatureSet.serialize (c, first_glyphs.length))) return_trace (false);
+    for (unsigned int i = 0; i < first_glyphs.length; i++)
     {
       unsigned int ligature_count = ligature_per_first_glyph_count_list[i];
       if (unlikely (!ligatureSet[i].serialize (c, this)
@@ -958,8 +936,6 @@ struct LigatureSubstFormat1
 					       component_list))) return_trace (false);
       ligatures_list += ligature_count;
       component_count_list += ligature_count;
-      for (unsigned int i = 0; i < ligature_count; i++)
-	component_list += MAX<int> (component_count_list[i] - 1, 0);
     }
     return_trace (coverage.serialize (c, this).serialize (c, first_glyphs));
   }
@@ -1070,7 +1046,6 @@ struct ReverseChainSingleSubstFormat1
 
   void closure (hb_closure_context_t *c) const
   {
-    TRACE_CLOSURE (this);
     const OffsetArrayOf<Coverage> &lookahead = StructAfter<OffsetArrayOf<Coverage> > (backtrack);
 
     unsigned int count;
@@ -1098,7 +1073,6 @@ struct ReverseChainSingleSubstFormat1
 
   void collect_glyphs (hb_collect_glyphs_context_t *c) const
   {
-    TRACE_COLLECT_GLYPHS (this);
     if (unlikely (!(this+coverage).add_coverage (c->input))) return;
 
     unsigned int count;
@@ -1304,9 +1278,8 @@ struct SubstLookup : Lookup
 
   hb_closure_context_t::return_t closure (hb_closure_context_t *c, unsigned int this_index) const
   {
-    TRACE_CLOSURE (this);
     if (!c->should_visit_lookup (this_index))
-      return_trace (HB_VOID);
+      return hb_closure_context_t::default_return_value ();
 
     c->set_recurse_func (dispatch_closure_recurse_func);
 
@@ -1314,14 +1287,13 @@ struct SubstLookup : Lookup
 
     c->flush ();
 
-    return_trace (ret);
+    return ret;
   }
 
   hb_collect_glyphs_context_t::return_t collect_glyphs (hb_collect_glyphs_context_t *c) const
   {
-    TRACE_COLLECT_GLYPHS (this);
     c->set_recurse_func (dispatch_recurse_func<hb_collect_glyphs_context_t>);
-    return_trace (dispatch (c));
+    return dispatch (c);
   }
 
   template <typename set_t>
@@ -1438,7 +1410,7 @@ struct SubstLookup : Lookup
 
 struct GSUB : GSUBGPOS
 {
-  enum { tableTag = HB_OT_TAG_GSUB };
+  static constexpr hb_tag_t tableTag = HB_OT_TAG_GSUB;
 
   const SubstLookup& get_lookup (unsigned int i) const
   { return CastR<SubstLookup> (GSUBGPOS::get_lookup (i)); }

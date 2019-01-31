@@ -66,7 +66,7 @@ struct TrackTableEntry
   NameID	trackNameID;	/* The 'name' table index for this track.
 				 * (a short word or phrase like "loose"
 				 * or "very tight") */
-  OffsetTo<UnsizedArrayOf<FWORD>, HBUINT16, false>
+  NNOffsetTo<UnsizedArrayOf<FWORD> >
 		valuesZ;	/* Offset from start of tracking table to
 				 * per-size tracking values for this track. */
 
@@ -160,7 +160,7 @@ struct TrackData
 
 struct trak
 {
-  enum { tableTag = HB_AAT_TAG_trak };
+  static constexpr hb_tag_t tableTag = HB_AAT_TAG_trak;
 
   bool has_data () const { return version.to_int (); }
 

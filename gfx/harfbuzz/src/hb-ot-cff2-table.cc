@@ -29,7 +29,7 @@
 
 using namespace CFF;
 
-struct ExtentsParam
+struct extents_param_t
 {
   void init ()
   {
@@ -44,7 +44,7 @@ struct ExtentsParam
   void end_path ()           { path_open = false; }
   bool is_path_open () const { return path_open; }
 
-  void update_bounds (const Point &pt)
+  void update_bounds (const point_t &pt)
   {
     if (pt.x < min_x) min_x = pt.x;
     if (pt.x > max_x) max_x = pt.x;
@@ -53,21 +53,21 @@ struct ExtentsParam
   }
 
   bool  path_open;
-  Number min_x;
-  Number min_y;
-  Number max_x;
-  Number max_y;
+  number_t min_x;
+  number_t min_y;
+  number_t max_x;
+  number_t max_y;
 };
 
-struct CFF2PathProcs_Extents : PathProcs<CFF2PathProcs_Extents, CFF2CSInterpEnv, ExtentsParam>
+struct cff2_path_procs_extents_t : path_procs_t<cff2_path_procs_extents_t, cff2_cs_interp_env_t, extents_param_t>
 {
-  static void moveto (CFF2CSInterpEnv &env, ExtentsParam& param, const Point &pt)
+  static void moveto (cff2_cs_interp_env_t &env, extents_param_t& param, const point_t &pt)
   {
     param.end_path ();
     env.moveto (pt);
   }
 
-  static void line (CFF2CSInterpEnv &env, ExtentsParam& param, const Point &pt1)
+  static void line (cff2_cs_interp_env_t &env, extents_param_t& param, const point_t &pt1)
   {
     if (!param.is_path_open ())
     {
@@ -78,7 +78,7 @@ struct CFF2PathProcs_Extents : PathProcs<CFF2PathProcs_Extents, CFF2CSInterpEnv,
     param.update_bounds (env.get_pt ());
   }
 
-  static void curve (CFF2CSInterpEnv &env, ExtentsParam& param, const Point &pt1, const Point &pt2, const Point &pt3)
+  static void curve (cff2_cs_interp_env_t &env, extents_param_t& param, const point_t &pt1, const point_t &pt2, const point_t &pt3)
   {
     if (!param.is_path_open ())
     {
@@ -93,7 +93,7 @@ struct CFF2PathProcs_Extents : PathProcs<CFF2PathProcs_Extents, CFF2CSInterpEnv,
   }
 };
 
-struct CFF2CSOpSet_Extents : CFF2CSOpSet<CFF2CSOpSet_Extents, ExtentsParam, CFF2PathProcs_Extents> {};
+struct cff2_cs_opset_extents_t : cff2_cs_opset_t<cff2_cs_opset_extents_t, extents_param_t, cff2_path_procs_extents_t> {};
 
 bool OT::cff2::accelerator_t::get_extents (hb_font_t *font,
 					   hb_codepoint_t glyph,
@@ -104,10 +104,10 @@ bool OT::cff2::accelerator_t::get_extents (hb_font_t *font,
   unsigned int num_coords;
   const int *coords = hb_font_get_var_coords_normalized (font, &num_coords);
   unsigned int fd = fdSelect->get_fd (glyph);
-  CFF2CSInterpreter<CFF2CSOpSet_Extents, ExtentsParam> interp;
-  const ByteStr str = (*charStrings)[glyph];
+  cff2_cs_interpreter_t<cff2_cs_opset_extents_t, extents_param_t> interp;
+  const byte_str_t str = (*charStrings)[glyph];
   interp.env.init (str, *this, fd, coords, num_coords);
-  ExtentsParam  param;
+  extents_param_t  param;
   param.init ();
   if (unlikely (!interp.interpret (param))) return false;
 

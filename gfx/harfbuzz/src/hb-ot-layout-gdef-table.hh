@@ -64,7 +64,7 @@ struct AttachList
     if (point_count)
     {
       hb_array_t<const HBUINT16> array = points.sub_array (start_offset, point_count);
-      unsigned int count = array.len;
+      unsigned int count = array.length;
       for (unsigned int i = 0; i < count; i++)
 	point_array[i] = array[i];
     }
@@ -221,7 +221,7 @@ struct LigGlyph
     if (caret_count)
     {
       hb_array_t <const OffsetTo<CaretValue> > array = carets.sub_array (start_offset, caret_count);
-      unsigned int count = array.len;
+      unsigned int count = array.length;
       for (unsigned int i = 0; i < count; i++)
 	caret_array[i] = (this+array[i]).get_caret_value (font, direction, glyph_id, var_store);
     }
@@ -341,7 +341,7 @@ struct MarkGlyphSets
 
 struct GDEF
 {
-  enum { tableTag = HB_OT_TAG_GDEF };
+  static constexpr hb_tag_t tableTag = HB_OT_TAG_GDEF;
 
   enum GlyphClasses {
     UnclassifiedGlyph	= 0,

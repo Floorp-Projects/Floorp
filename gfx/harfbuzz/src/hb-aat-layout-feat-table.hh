@@ -118,11 +118,10 @@ struct FeatureName
     if (selectors_count)
     {
       hb_array_t<const SettingName> arr = settings_table.sub_array (start_offset, selectors_count);
-      unsigned int count = arr.len;
-      for (unsigned int i = 0; i < count; i++)
+      for (unsigned int i = 0; i < arr.length; i++)
         settings_table[start_offset + i].get_info (&selectors[i], default_selector);
     }
-    return settings_table.len;
+    return settings_table.length;
   }
 
   hb_aat_layout_feature_type_t get_feature_type () const
@@ -155,7 +154,7 @@ struct FeatureName
 
 struct feat
 {
-  enum { tableTag = HB_AAT_TAG_feat };
+  static constexpr hb_tag_t tableTag = HB_AAT_TAG_feat;
 
   bool has_data () const { return version.to_int (); }
 

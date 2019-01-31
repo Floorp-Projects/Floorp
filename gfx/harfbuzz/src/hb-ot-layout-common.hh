@@ -900,14 +900,14 @@ struct CoverageFormat2
     TRACE_SERIALIZE (this);
     if (unlikely (!c->extend_min (*this))) return_trace (false);
 
-    if (unlikely (!glyphs.len))
+    if (unlikely (!glyphs.length))
     {
       rangeRecord.len.set (0);
       return_trace (true);
     }
 
     unsigned int num_ranges = 1;
-    for (unsigned int i = 1; i < glyphs.len; i++)
+    for (unsigned int i = 1; i < glyphs.length; i++)
       if (glyphs[i - 1] + 1 != glyphs[i])
 	num_ranges++;
     rangeRecord.len.set (num_ranges);
@@ -916,7 +916,7 @@ struct CoverageFormat2
     unsigned int range = 0;
     rangeRecord[range].start = glyphs[0];
     rangeRecord[range].value.set (0);
-    for (unsigned int i = 1; i < glyphs.len; i++)
+    for (unsigned int i = 1; i < glyphs.length; i++)
     {
       if (glyphs[i - 1] + 1 != glyphs[i])
       {
@@ -1048,10 +1048,10 @@ struct Coverage
     if (unlikely (!c->extend_min (*this))) return_trace (false);
 
     unsigned int num_ranges = 1;
-    for (unsigned int i = 1; i < glyphs.len; i++)
+    for (unsigned int i = 1; i < glyphs.length; i++)
       if (glyphs[i - 1] + 1 != glyphs[i])
 	num_ranges++;
-    u.format.set (glyphs.len * 2 < num_ranges * 3 ? 1 : 2);
+    u.format.set (glyphs.length * 2 < num_ranges * 3 ? 1 : 2);
 
     switch (u.format)
     {
@@ -1199,7 +1199,7 @@ struct ClassDefFormat1
     TRACE_SERIALIZE (this);
     if (unlikely (!c->extend_min (*this))) return_trace (false);
 
-    if (unlikely (!glyphs.len))
+    if (unlikely (!glyphs.length))
     {
       startGlyph.set (0);
       classValue.len.set (0);
@@ -1207,13 +1207,13 @@ struct ClassDefFormat1
     }
 
     hb_codepoint_t glyph_min = glyphs[0];
-    hb_codepoint_t glyph_max = glyphs[glyphs.len - 1];
+    hb_codepoint_t glyph_max = glyphs[glyphs.length - 1];
 
     startGlyph.set (glyph_min);
     classValue.len.set (glyph_max - glyph_min + 1);
     if (unlikely (!c->extend (classValue))) return_trace (false);
 
-    for (unsigned int i = 0; i < glyphs.len; i++)
+    for (unsigned int i = 0; i < glyphs.length; i++)
       classValue[glyphs[i] - glyph_min] = klasses[i];
 
     return_trace (true);
@@ -1239,7 +1239,7 @@ struct ClassDefFormat1
     }
     c->serializer->propagate_error (glyphs, klasses);
     ClassDef_serialize (c->serializer, glyphs, klasses);
-    return_trace (glyphs.len);
+    return_trace (glyphs.length);
   }
 
   bool sanitize (hb_sanitize_context_t *c) const
@@ -1335,14 +1335,14 @@ struct ClassDefFormat2
     TRACE_SERIALIZE (this);
     if (unlikely (!c->extend_min (*this))) return_trace (false);
 
-    if (unlikely (!glyphs.len))
+    if (unlikely (!glyphs.length))
     {
       rangeRecord.len.set (0);
       return_trace (true);
     }
 
     unsigned int num_ranges = 1;
-    for (unsigned int i = 1; i < glyphs.len; i++)
+    for (unsigned int i = 1; i < glyphs.length; i++)
       if (glyphs[i - 1] + 1 != glyphs[i] ||
 	  klasses[i - 1] != klasses[i])
 	num_ranges++;
@@ -1352,7 +1352,7 @@ struct ClassDefFormat2
     unsigned int range = 0;
     rangeRecord[range].start = glyphs[0];
     rangeRecord[range].value.set (klasses[0]);
-    for (unsigned int i = 1; i < glyphs.len; i++)
+    for (unsigned int i = 1; i < glyphs.length; i++)
     {
       if (glyphs[i - 1] + 1 != glyphs[i] ||
 	  klasses[i - 1] != klasses[i])
@@ -1390,7 +1390,7 @@ struct ClassDefFormat2
     }
     c->serializer->propagate_error (glyphs, klasses);
     ClassDef_serialize (c->serializer, glyphs, klasses);
-    return_trace (glyphs.len);
+    return_trace (glyphs.length);
   }
 
   bool sanitize (hb_sanitize_context_t *c) const
@@ -1485,13 +1485,13 @@ struct ClassDef
     if (unlikely (!c->extend_min (*this))) return_trace (false);
 
     unsigned int format = 2;
-    if (glyphs.len)
+    if (glyphs.length)
     {
       hb_codepoint_t glyph_min = glyphs[0];
-      hb_codepoint_t glyph_max = glyphs[glyphs.len - 1];
+      hb_codepoint_t glyph_max = glyphs[glyphs.length - 1];
 
       unsigned int num_ranges = 1;
-      for (unsigned int i = 1; i < glyphs.len; i++)
+      for (unsigned int i = 1; i < glyphs.length; i++)
 	if (glyphs[i - 1] + 1 != glyphs[i] ||
 	    klasses[i - 1] != klasses[i])
 	  num_ranges++;
@@ -1949,7 +1949,7 @@ struct FeatureVariationRecord
 
 struct FeatureVariations
 {
-  enum { NOT_FOUND_INDEX = 0xFFFFFFFFu };
+  static constexpr unsigned NOT_FOUND_INDEX = 0xFFFFFFFFu;
 
   bool find_index (const int *coords, unsigned int coord_len,
 			  unsigned int *index) const

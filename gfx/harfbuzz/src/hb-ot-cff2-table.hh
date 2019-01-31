@@ -136,22 +136,22 @@ struct CFF2VariationStore
   DEFINE_SIZE_MIN (2 + VariationStore::min_size);
 };
 
-struct CFF2TopDictValues : TopDictValues<>
+struct cff2_top_dict_values_t : top_dict_values_t<>
 {
   void init ()
   {
-    TopDictValues<>::init ();
+    top_dict_values_t<>::init ();
     vstoreOffset = 0;
     FDSelectOffset = 0;
   }
-  void fini () { TopDictValues<>::fini (); }
+  void fini () { top_dict_values_t<>::fini (); }
 
   unsigned int calculate_serialized_size () const
   {
     unsigned int size = 0;
     for (unsigned int i = 0; i < get_count (); i++)
     {
-      OpCode op = get_value (i).op;
+      op_code_t op = get_value (i).op;
       switch (op)
       {
 	case OpCode_vstore:
@@ -159,7 +159,7 @@ struct CFF2TopDictValues : TopDictValues<>
 	  size += OpCode_Size (OpCode_longintdict) + 4 + OpCode_Size (op);
 	  break;
 	default:
-	  size += TopDictValues<>::calculate_serialized_op_size (get_value (i));
+	  size += top_dict_values_t<>::calculate_serialized_op_size (get_value (i));
 	  break;
       }
     }
@@ -170,16 +170,16 @@ struct CFF2TopDictValues : TopDictValues<>
   unsigned int  FDSelectOffset;
 };
 
-struct CFF2TopDictOpSet : TopDictOpSet<>
+struct cff2_top_dict_opset_t : top_dict_opset_t<>
 {
-  static void process_op (OpCode op, NumInterpEnv& env, CFF2TopDictValues& dictval)
+  static void process_op (op_code_t op, num_interp_env_t& env, cff2_top_dict_values_t& dictval)
   {
     switch (op) {
       case OpCode_FontMatrix:
 	{
-	  DictVal val;
+	  dict_val_t val;
 	  val.init ();
-	  dictval.add_op (op, env.substr);
+	  dictval.add_op (op, env.str_ref);
 	  env.clear_args ();
 	}
 	break;
@@ -201,27 +201,27 @@ struct CFF2TopDictOpSet : TopDictOpSet<>
 
     if (unlikely (env.in_error ())) return;
 
-    dictval.add_op (op, env.substr);
+    dictval.add_op (op, env.str_ref);
   }
 
-  typedef TopDictOpSet<> SUPER;
+  typedef top_dict_opset_t<> SUPER;
 };
 
-struct CFF2FontDictValues : DictValues<OpStr>
+struct cff2_font_dict_values_t : dict_values_t<op_str_t>
 {
   void init ()
   {
-    DictValues<OpStr>::init ();
+    dict_values_t<op_str_t>::init ();
     privateDictInfo.init ();
   }
-  void fini () { DictValues<OpStr>::fini (); }
+  void fini () { dict_values_t<op_str_t>::fini (); }
 
-  TableInfo    privateDictInfo;
+  table_info_t    privateDictInfo;
 };
 
-struct CFF2FontDictOpSet : DictOpSet
+struct cff2_font_dict_opset_t : dict_opset_t
 {
-  static void process_op (OpCode op, NumInterpEnv& env, CFF2FontDictValues& dictval)
+  static void process_op (op_code_t op, num_interp_env_t& env, cff2_font_dict_values_t& dictval)
   {
     switch (op) {
       case OpCode_Private:
@@ -238,33 +238,33 @@ struct CFF2FontDictOpSet : DictOpSet
 
     if (unlikely (env.in_error ())) return;
 
-    dictval.add_op (op, env.substr);
+    dictval.add_op (op, env.str_ref);
   }
 
   private:
-  typedef DictOpSet SUPER;
+  typedef dict_opset_t SUPER;
 };
 
 template <typename VAL>
-struct CFF2PrivateDictValues_Base : DictValues<VAL>
+struct cff2_private_dict_values_base_t : dict_values_t<VAL>
 {
   void init ()
   {
-    DictValues<VAL>::init ();
+    dict_values_t<VAL>::init ();
     subrsOffset = 0;
     localSubrs = &Null(CFF2Subrs);
     ivs = 0;
   }
-  void fini () { DictValues<VAL>::fini (); }
+  void fini () { dict_values_t<VAL>::fini (); }
 
   unsigned int calculate_serialized_size () const
   {
     unsigned int size = 0;
-    for (unsigned int i = 0; i < DictValues<VAL>::get_count; i++)
-      if (DictValues<VAL>::get_value (i).op == OpCode_Subrs)
+    for (unsigned int i = 0; i < dict_values_t<VAL>::get_count; i++)
+      if (dict_values_t<VAL>::get_value (i).op == OpCode_Subrs)
 	size += OpCode_Size (OpCode_shortint) + 2 + OpCode_Size (OpCode_Subrs);
       else
-	size += DictValues<VAL>::get_value (i).str.len;
+	size += dict_values_t<VAL>::get_value (i).str.length;
     return size;
   }
 
@@ -273,14 +273,14 @@ struct CFF2PrivateDictValues_Base : DictValues<VAL>
   unsigned int      ivs;
 };
 
-typedef CFF2PrivateDictValues_Base<OpStr> CFF2PrivateDictValues_Subset;
-typedef CFF2PrivateDictValues_Base<NumDictVal> CFF2PrivateDictValues;
+typedef cff2_private_dict_values_base_t<op_str_t> cff2_private_dict_values_subset_t;
+typedef cff2_private_dict_values_base_t<num_dict_val_t> cff2_private_dict_values_t;
 
-struct CFF2PrivDictInterpEnv : NumInterpEnv
+struct cff2_priv_dict_interp_env_t : num_interp_env_t
 {
-  void init (const ByteStr &str)
+  void init (const byte_str_t &str)
   {
-    NumInterpEnv::init (str);
+    num_interp_env_t::init (str);
     ivs = 0;
     seen_vsindex = false;
   }
@@ -302,11 +302,11 @@ struct CFF2PrivDictInterpEnv : NumInterpEnv
   bool	  seen_vsindex;
 };
 
-struct CFF2PrivateDictOpSet : DictOpSet
+struct cff2_private_dict_opset_t : dict_opset_t
 {
-  static void process_op (OpCode op, CFF2PrivDictInterpEnv& env, CFF2PrivateDictValues& dictval)
+  static void process_op (op_code_t op, cff2_priv_dict_interp_env_t& env, cff2_private_dict_values_t& dictval)
   {
-    NumDictVal val;
+    num_dict_val_t val;
     val.init ();
 
     switch (op) {
@@ -341,20 +341,20 @@ struct CFF2PrivateDictOpSet : DictOpSet
 	break;
 
       default:
-	DictOpSet::process_op (op, env);
+	dict_opset_t::process_op (op, env);
 	if (!env.argStack.is_empty ()) return;
 	break;
     }
 
     if (unlikely (env.in_error ())) return;
 
-    dictval.add_op (op, env.substr, val);
+    dictval.add_op (op, env.str_ref, val);
   }
 };
 
-struct CFF2PrivateDictOpSet_Subset : DictOpSet
+struct cff2_private_dict_opset_subset_t : dict_opset_t
 {
-  static void process_op (OpCode op, CFF2PrivDictInterpEnv& env, CFF2PrivateDictValues_Subset& dictval)
+  static void process_op (op_code_t op, cff2_priv_dict_interp_env_t& env, cff2_private_dict_values_subset_t& dictval)
   {
     switch (op) {
       case OpCode_BlueValues:
@@ -390,17 +390,17 @@ struct CFF2PrivateDictOpSet_Subset : DictOpSet
 
     if (unlikely (env.in_error ())) return;
 
-    dictval.add_op (op, env.substr);
+    dictval.add_op (op, env.str_ref);
   }
 
   private:
-  typedef DictOpSet SUPER;
+  typedef dict_opset_t SUPER;
 };
 
-typedef DictInterpreter<CFF2TopDictOpSet, CFF2TopDictValues> CFF2TopDict_Interpreter;
-typedef DictInterpreter<CFF2FontDictOpSet, CFF2FontDictValues> CFF2FontDict_Interpreter;
+typedef dict_interpreter_t<cff2_top_dict_opset_t, cff2_top_dict_values_t> cff2_top_dict_interpreter_t;
+typedef dict_interpreter_t<cff2_font_dict_opset_t, cff2_font_dict_values_t> cff2_font_dict_interpreter_t;
 
-}; /* namespace CFF */
+} /* namespace CFF */
 
 namespace OT {
 
@@ -408,7 +408,7 @@ using namespace CFF;
 
 struct cff2
 {
-  static const hb_tag_t tableTag	= HB_OT_TAG_cff2;
+  static constexpr hb_tag_t tableTag = HB_OT_TAG_cff2;
 
   bool sanitize (hb_sanitize_context_t *c) const
   {
@@ -438,9 +438,9 @@ struct cff2
       { fini (); return; }
 
       { /* parse top dict */
-	ByteStr topDictStr (cff2 + cff2->topDict, cff2->topDictSize);
+	byte_str_t topDictStr (cff2 + cff2->topDict, cff2->topDictSize);
 	if (unlikely (!topDictStr.sanitize (&sc))) { fini (); return; }
-	CFF2TopDict_Interpreter top_interp;
+	cff2_top_dict_interpreter_t top_interp;
 	top_interp.env.init (topDictStr);
 	topDict.init ();
 	if (unlikely (!top_interp.interpret (topDict))) { fini (); return; }
@@ -469,24 +469,24 @@ struct cff2
       /* parse font dicts and gather private dicts */
       for (unsigned int i = 0; i < fdCount; i++)
       {
-	const ByteStr fontDictStr = (*fdArray)[i];
+	const byte_str_t fontDictStr = (*fdArray)[i];
 	if (unlikely (!fontDictStr.sanitize (&sc))) { fini (); return; }
-	CFF2FontDictValues  *font;
-	CFF2FontDict_Interpreter font_interp;
+	cff2_font_dict_values_t  *font;
+	cff2_font_dict_interpreter_t font_interp;
 	font_interp.env.init (fontDictStr);
 	font = fontDicts.push ();
-	if (unlikely (font == &Crap(CFF2FontDictValues))) { fini (); return; }
+	if (unlikely (font == &Crap(cff2_font_dict_values_t))) { fini (); return; }
 	font->init ();
 	if (unlikely (!font_interp.interpret (*font))) { fini (); return; }
 
-	const ByteStr privDictStr (StructAtOffsetOrNull<UnsizedByteStr> (cff2, font->privateDictInfo.offset), font->privateDictInfo.size);
+	const byte_str_t privDictStr (StructAtOffsetOrNull<UnsizedByteStr> (cff2, font->privateDictInfo.offset), font->privateDictInfo.size);
 	if (unlikely (!privDictStr.sanitize (&sc))) { fini (); return; }
-	DictInterpreter<PRIVOPSET, PRIVDICTVAL, CFF2PrivDictInterpEnv>  priv_interp;
+	dict_interpreter_t<PRIVOPSET, PRIVDICTVAL, cff2_priv_dict_interp_env_t>  priv_interp;
 	priv_interp.env.init(privDictStr);
 	privateDicts[i].init ();
 	if (unlikely (!priv_interp.interpret (privateDicts[i]))) { fini (); return; }
 
-	privateDicts[i].localSubrs = &StructAtOffsetOrNull<CFF2Subrs> (privDictStr.str, privateDicts[i].subrsOffset);
+	privateDicts[i].localSubrs = &StructAtOffsetOrNull<CFF2Subrs> (&privDictStr[0], privateDicts[i].subrsOffset);
 	if (privateDicts[i].localSubrs != &Null(CFF2Subrs) &&
 	  unlikely (!privateDicts[i].localSubrs->sanitize (&sc)))
 	{ fini (); return; }
@@ -496,6 +496,7 @@ struct cff2
     void fini ()
     {
       sc.end_processing ();
+      topDict.fini ();
       fontDicts.fini_deep ();
       privateDicts.fini_deep ();
       hb_blob_destroy (blob);
@@ -505,32 +506,32 @@ struct cff2
     bool is_valid () const { return blob != nullptr; }
 
     protected:
-    hb_blob_t	       *blob;
-    hb_sanitize_context_t   sc;
+    hb_blob_t			*blob;
+    hb_sanitize_context_t	sc;
 
     public:
-    CFF2TopDictValues	 topDict;
-    const CFF2Subrs	   *globalSubrs;
-    const CFF2VariationStore  *varStore;
-    const CFF2CharStrings     *charStrings;
-    const CFF2FDArray	 *fdArray;
-    const CFF2FDSelect	*fdSelect;
-    unsigned int	      fdCount;
+    cff2_top_dict_values_t	topDict;
+    const CFF2Subrs		*globalSubrs;
+    const CFF2VariationStore	*varStore;
+    const CFF2CharStrings	*charStrings;
+    const CFF2FDArray		*fdArray;
+    const CFF2FDSelect		*fdSelect;
+    unsigned int		fdCount;
 
-    hb_vector_t<CFF2FontDictValues>     fontDicts;
+    hb_vector_t<cff2_font_dict_values_t>     fontDicts;
     hb_vector_t<PRIVDICTVAL>  privateDicts;
 
-    unsigned int	    num_glyphs;
+    unsigned int	      num_glyphs;
   };
 
-  struct accelerator_t : accelerator_templ_t<CFF2PrivateDictOpSet, CFF2PrivateDictValues>
+  struct accelerator_t : accelerator_templ_t<cff2_private_dict_opset_t, cff2_private_dict_values_t>
   {
     HB_INTERNAL bool get_extents (hb_font_t *font,
 				  hb_codepoint_t glyph,
 				  hb_glyph_extents_t *extents) const;
   };
 
-  typedef accelerator_templ_t<CFF2PrivateDictOpSet_Subset, CFF2PrivateDictValues_Subset> accelerator_subset_t;
+  typedef accelerator_templ_t<cff2_private_dict_opset_subset_t, cff2_private_dict_values_subset_t> accelerator_subset_t;
 
   bool subset (hb_subset_plan_t *plan) const
   {
@@ -551,9 +552,9 @@ struct cff2
   }
 
   public:
-  FixedVersion<HBUINT8> version;	/* Version of CFF2 table. set to 0x0200u */
-  OffsetTo<TopDict, HBUINT8, false> topDict;   /* headerSize = Offset to Top DICT. */
-  HBUINT16       topDictSize;	   /* Top DICT size */
+  FixedVersion<HBUINT8>		version;	/* Version of CFF2 table. set to 0x0200u */
+  NNOffsetTo<TopDict, HBUINT8>	topDict;	/* headerSize = Offset to Top DICT. */
+  HBUINT16			topDictSize;	/* Top DICT size */
 
   public:
   DEFINE_SIZE_STATIC (5);

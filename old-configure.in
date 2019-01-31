@@ -1275,8 +1275,6 @@ fi
 
 dnl Checks for library functions.
 dnl ========================================================
-AC_PROG_GCC_TRADITIONAL
-AC_FUNC_MEMCMP
 AC_CHECK_FUNCS(stat64 lstat64 truncate64 statvfs64 statvfs statfs64 statfs getpagesize gmtime_r localtime_r arc4random arc4random_buf mallinfo gettid lchown setpriority strerror syscall)
 
 dnl check for clock_gettime(), the CLOCK_MONOTONIC clock
@@ -1434,30 +1432,6 @@ if test "$GNU_CC"; then
 
   TARGET_COMPILER_ABI="${TARGET_COMPILER_ABI-${ARM_ABI_PREFIX}gcc3}"
 fi
-
-dnl See if a dynamic_cast to void* gives the most derived object.
-AC_CACHE_CHECK(for C++ dynamic_cast to void*,
-               ac_cv_cpp_dynamic_cast_void_ptr,
-               [AC_TRY_RUN([class X { int i; public: virtual ~X() { } };
-                            class Y { int j; public: virtual ~Y() { } };
-                            class Z : public X, public Y { int k; };
-
-                            int main() {
-                                 Z mdo;
-                                 X *subx = (X*)&mdo;
-                                 Y *suby = (Y*)&mdo;
-                                 return !((((void*)&mdo != (void*)subx) &&
-                                           ((void*)&mdo == dynamic_cast<void*>(subx))) ||
-                                          (((void*)&mdo != (void*)suby) &&
-                                           ((void*)&mdo == dynamic_cast<void*>(suby))));
-                            }],
-                           ac_cv_cpp_dynamic_cast_void_ptr=yes,
-                           ac_cv_cpp_dynamic_cast_void_ptr=no,
-                           ac_cv_cpp_dynamic_cast_void_ptr=no)])
-if test "$ac_cv_cpp_dynamic_cast_void_ptr" = yes ; then
-   AC_DEFINE(HAVE_CPP_DYNAMIC_CAST_TO_VOID_PTR)
-fi
-
 
 # try harder, when checking for __thread support, see bug 521750 comment #33 and below
 # We pass MOZ_OPTIMIZE_LDFLAGS to the linker because if dead_strip is
@@ -2456,151 +2430,6 @@ then
     dnl ============================
     dnl Check to see if the system SQLite package is new enough.
     PKG_CHECK_MODULES(SQLITE, sqlite3 >= $SQLITE_VERSION)
-
-    dnl ==================================
-    dnl === SQLITE_SECURE_DELETE check ===
-    dnl ==================================
-    dnl Check to see if the system SQLite package is compiled with
-    dnl SQLITE_SECURE_DELETE enabled.
-    AC_MSG_CHECKING(for SQLITE_SECURE_DELETE support in system SQLite)
-    _SAVE_CFLAGS="$CFLAGS"
-    CFLAGS="$CFLAGS $SQLITE_CFLAGS"
-    _SAVE_LIBS="$LIBS"
-    LIBS="$LIBS $SQLITE_LIBS"
-    AC_CACHE_VAL(ac_cv_sqlite_secure_delete,[
-        AC_TRY_RUN([
-            #include "sqlite3.h"
-
-            int main(int argc, char **argv){
-              return !sqlite3_compileoption_used("SQLITE_SECURE_DELETE");
-            }],
-            ac_cv_sqlite_secure_delete=yes,
-            ac_cv_sqlite_secure_delete=no,
-            ac_cv_sqlite_secure_delete=no
-        )
-    ])
-    AC_MSG_RESULT($ac_cv_sqlite_secure_delete)
-    CFLAGS="$_SAVE_CFLAGS"
-    LIBS="$_SAVE_LIBS"
-    if test "x$ac_cv_sqlite_secure_delete" = "xno"; then
-        AC_MSG_ERROR([System SQLite library is not compiled with SQLITE_SECURE_DELETE.])
-    fi
-
-    dnl ===============================
-    dnl === SQLITE_THREADSAFE check ===
-    dnl ===============================
-    dnl Check to see if the system SQLite package is compiled with
-    dnl SQLITE_THREADSAFE enabled.
-    AC_MSG_CHECKING(for SQLITE_THREADSAFE support in system SQLite)
-    _SAVE_CFLAGS="$CFLAGS"
-    CFLAGS="$CFLAGS $SQLITE_CFLAGS"
-    _SAVE_LIBS="$LIBS"
-    LIBS="$LIBS $SQLITE_LIBS"
-    AC_CACHE_VAL(ac_cv_sqlite_threadsafe,[
-        AC_TRY_RUN([
-            #include "sqlite3.h"
-
-            int main(int argc, char **argv){
-              return !sqlite3_compileoption_used("SQLITE_THREADSAFE=1");
-            }],
-            ac_cv_sqlite_threadsafe=yes,
-            ac_cv_sqlite_threadsafe=no,
-            ac_cv_sqlite_threadsafe=no
-        )
-    ])
-    AC_MSG_RESULT($ac_cv_sqlite_threadsafe)
-    CFLAGS="$_SAVE_CFLAGS"
-    LIBS="$_SAVE_LIBS"
-    if test "x$ac_cv_sqlite_threadsafe" = "xno"; then
-        AC_MSG_ERROR([System SQLite library is not compiled with SQLITE_THREADSAFE.])
-    fi
-
-    dnl ================================
-    dnl === SQLITE_ENABLE_FTS3 check ===
-    dnl ================================
-    dnl check to see if the system SQLite package is compiled with
-    dnl SQLITE_ENABLE_FTS3 enabled.
-    AC_MSG_CHECKING(for SQLITE_ENABLE_FTS3 support in system SQLite)
-    _SAVE_CFLAGS="$CFLAGS"
-    CFLAGS="$CFLAGS $SQLITE_CFLAGS"
-    _SAVE_LIBS="$LIBS"
-    LIBS="$LIBS $SQLITE_LIBS"
-    AC_CACHE_VAL(ac_cv_sqlite_enable_fts3,[
-        AC_TRY_RUN([
-            #include "sqlite3.h"
-
-            int main(int argc, char **argv){
-              return !sqlite3_compileoption_used("SQLITE_ENABLE_FTS3");
-            }],
-            ac_cv_sqlite_enable_fts3=yes,
-            ac_cv_sqlite_enable_fts3=no,
-            ac_cv_sqlite_enable_fts3=no
-        )
-    ])
-    AC_MSG_RESULT($ac_cv_sqlite_enable_fts3)
-    CFLAGS="$_SAVE_CFLAGS"
-    LIBS="$_SAVE_LIBS"
-    if test "x$ac_cv_sqlite_enable_fts3" = "xno"; then
-        AC_MSG_ERROR([System SQLite library is not compiled with SQLITE_ENABLE_FTS3.])
-    fi
-
-    dnl =========================================
-    dnl === SQLITE_ENABLE_UNLOCK_NOTIFY check ===
-    dnl =========================================
-    dnl check to see if the system SQLite package is compiled with
-    dnl SQLITE_ENABLE_UNLOCK_NOTIFY enabled.
-    AC_MSG_CHECKING(for SQLITE_ENABLE_UNLOCK_NOTIFY support in system SQLite)
-    _SAVE_CFLAGS="$CFLAGS"
-    CFLAGS="$CFLAGS $SQLITE_CFLAGS"
-    _SAVE_LIBS="$LIBS"
-    LIBS="$LIBS $SQLITE_LIBS"
-    AC_CACHE_VAL(ac_cv_sqlite_enable_unlock_notify,[
-        AC_TRY_RUN([
-            #include "sqlite3.h"
-
-            int main(int argc, char **argv){
-              return !sqlite3_compileoption_used("SQLITE_ENABLE_UNLOCK_NOTIFY");
-            }],
-            ac_cv_sqlite_enable_unlock_notify=yes,
-            ac_cv_sqlite_enable_unlock_notify=no,
-            ac_cv_sqlite_enable_unlock_notify=no
-        )
-    ])
-    AC_MSG_RESULT($ac_cv_sqlite_enable_unlock_notify)
-    CFLAGS="$_SAVE_CFLAGS"
-    LIBS="$_SAVE_LIBS"
-    if test "x$ac_cv_sqlite_enable_unlock_notify" = "xno"; then
-        AC_MSG_ERROR([System SQLite library is not compiled with SQLITE_ENABLE_UNLOCK_NOTIFY.])
-    fi
-
-    dnl =========================================
-    dnl === SQLITE_ENABLE_DBSTAT_VTAB check ===
-    dnl =========================================
-    dnl check to see if the system SQLite package is compiled with
-    dnl SQLITE_ENABLE_DBSTAT_VTAB.
-    AC_MSG_CHECKING(for SQLITE_ENABLE_DBSTAT_VTAB support in system SQLite)
-    _SAVE_CFLAGS="$CFLAGS"
-    CFLAGS="$CFLAGS $SQLITE_CFLAGS"
-    _SAVE_LIBS="$LIBS"
-    LIBS="$LIBS $SQLITE_LIBS"
-    AC_CACHE_VAL(ac_cv_sqlite_dbstat_vtab,[
-        AC_TRY_RUN([
-            #include "sqlite3.h"
-
-            int main(int argc, char **argv){
-              return !sqlite3_compileoption_used("SQLITE_ENABLE_DBSTAT_VTAB");
-            }],
-            ac_cv_sqlite_dbstat_vtab=yes,
-            ac_cv_sqlite_dbstat_vtab=no,
-            ac_cv_sqlite_dbstat_vtab=no
-        )
-    ])
-    AC_MSG_RESULT($ac_cv_sqlite_dbstat_vtab)
-    CFLAGS="$_SAVE_CFLAGS"
-    LIBS="$_SAVE_LIBS"
-    if test "x$ac_cv_sqlite_dbstat_vtab" = "xno"; then
-        AC_MSG_ERROR([System SQLite library is not compiled with SQLITE_ENABLE_DBSTAT_VTAB.])
-    fi
 else
     dnl ==============================
     dnl === SQLite fdatasync check ===
@@ -3639,7 +3468,6 @@ dnl ========================================================
 dnl The following defines are used by xpcom
 _NON_GLOBAL_ACDEFINES="$_NON_GLOBAL_ACDEFINES
 CPP_THROW_NEW
-HAVE_CPP_DYNAMIC_CAST_TO_VOID_PTR
 HAVE_GETPAGESIZE
 HAVE_STATVFS64
 HAVE_STATVFS

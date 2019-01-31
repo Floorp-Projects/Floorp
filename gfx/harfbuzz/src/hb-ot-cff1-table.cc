@@ -161,7 +161,7 @@ hb_codepoint_t OT::cff1::lookup_standard_encoding_for_sid (hb_codepoint_t code)
     return CFF_UNDEF_SID;
 }
 
-struct Bounds
+struct bounds_t
 {
   void init ()
   {
@@ -169,7 +169,7 @@ struct Bounds
     max.set_int (-0x80000000, -0x80000000);
   }
 
-  void update (const Point &pt)
+  void update (const point_t &pt)
   {
     if (pt.x < min.x) min.x = pt.x;
     if (pt.x > max.x) max.x = pt.x;
@@ -177,7 +177,7 @@ struct Bounds
     if (pt.y > max.y) max.y = pt.y;
   }
 
-  void merge (const Bounds &b)
+  void merge (const bounds_t &b)
   {
     if (empty ())
       *this = b;
@@ -190,7 +190,7 @@ struct Bounds
     }
   }
 
-  void offset (const Point &delta)
+  void offset (const point_t &delta)
   {
     if (!empty ())
     {
@@ -202,11 +202,11 @@ struct Bounds
   bool empty () const
   { return (min.x >= max.x) || (min.y >= max.y); }
 
-  Point min;
-  Point max;
+  point_t min;
+  point_t max;
 };
 
-struct ExtentsParam
+struct extents_param_t
 {
   void init (const OT::cff1::accelerator_t *_cff)
   {
@@ -220,20 +220,20 @@ struct ExtentsParam
   bool is_path_open () const { return path_open; }
 
   bool    path_open;
-  Bounds  bounds;
+  bounds_t  bounds;
 
   const OT::cff1::accelerator_t *cff;
 };
 
-struct CFF1PathProcs_Extents : PathProcs<CFF1PathProcs_Extents, CFF1CSInterpEnv, ExtentsParam>
+struct cff1_path_procs_extents_t : path_procs_t<cff1_path_procs_extents_t, cff1_cs_interp_env_t, extents_param_t>
 {
-  static void moveto (CFF1CSInterpEnv &env, ExtentsParam& param, const Point &pt)
+  static void moveto (cff1_cs_interp_env_t &env, extents_param_t& param, const point_t &pt)
   {
     param.end_path ();
     env.moveto (pt);
   }
 
-  static void line (CFF1CSInterpEnv &env, ExtentsParam& param, const Point &pt1)
+  static void line (cff1_cs_interp_env_t &env, extents_param_t& param, const point_t &pt1)
   {
     if (!param.is_path_open ())
     {
@@ -244,7 +244,7 @@ struct CFF1PathProcs_Extents : PathProcs<CFF1PathProcs_Extents, CFF1CSInterpEnv,
     param.bounds.update (env.get_pt ());
   }
 
-  static void curve (CFF1CSInterpEnv &env, ExtentsParam& param, const Point &pt1, const Point &pt2, const Point &pt3)
+  static void curve (cff1_cs_interp_env_t &env, extents_param_t& param, const point_t &pt1, const point_t &pt2, const point_t &pt3)
   {
     if (!param.is_path_open ())
     {
@@ -259,20 +259,20 @@ struct CFF1PathProcs_Extents : PathProcs<CFF1PathProcs_Extents, CFF1CSInterpEnv,
   }
 };
 
-static bool _get_bounds (const OT::cff1::accelerator_t *cff, hb_codepoint_t glyph, Bounds &bounds, bool in_seac=false);
+static bool _get_bounds (const OT::cff1::accelerator_t *cff, hb_codepoint_t glyph, bounds_t &bounds, bool in_seac=false);
 
-struct CFF1CSOpSet_Extents : CFF1CSOpSet<CFF1CSOpSet_Extents, ExtentsParam, CFF1PathProcs_Extents>
+struct cff1_cs_opset_extents_t : cff1_cs_opset_t<cff1_cs_opset_extents_t, extents_param_t, cff1_path_procs_extents_t>
 {
-  static void process_seac (CFF1CSInterpEnv &env, ExtentsParam& param)
+  static void process_seac (cff1_cs_interp_env_t &env, extents_param_t& param)
   {
     unsigned int  n = env.argStack.get_count ();
-    Point delta;
+    point_t delta;
     delta.x = env.argStack[n-4];
     delta.y = env.argStack[n-3];
     hb_codepoint_t base = param.cff->std_code_to_glyph (env.argStack[n-2].to_int ());
     hb_codepoint_t accent = param.cff->std_code_to_glyph (env.argStack[n-1].to_int ());
 
-    Bounds  base_bounds, accent_bounds;
+    bounds_t  base_bounds, accent_bounds;
     if (likely (!env.in_seac && base && accent
 	       && _get_bounds (param.cff, base, base_bounds, true)
 	       && _get_bounds (param.cff, accent, accent_bounds, true)))
@@ -286,17 +286,17 @@ struct CFF1CSOpSet_Extents : CFF1CSOpSet<CFF1CSOpSet_Extents, ExtentsParam, CFF1
   }
 };
 
-bool _get_bounds (const OT::cff1::accelerator_t *cff, hb_codepoint_t glyph, Bounds &bounds, bool in_seac)
+bool _get_bounds (const OT::cff1::accelerator_t *cff, hb_codepoint_t glyph, bounds_t &bounds, bool in_seac)
 {
   bounds.init ();
   if (unlikely (!cff->is_valid () || (glyph >= cff->num_glyphs))) return false;
 
   unsigned int fd = cff->fdSelect->get_fd (glyph);
-  CFF1CSInterpreter<CFF1CSOpSet_Extents, ExtentsParam> interp;
-  const ByteStr str = (*cff->charStrings)[glyph];
+  cff1_cs_interpreter_t<cff1_cs_opset_extents_t, extents_param_t> interp;
+  const byte_str_t str = (*cff->charStrings)[glyph];
   interp.env.init (str, *cff, fd);
   interp.env.set_in_seac (in_seac);
-  ExtentsParam  param;
+  extents_param_t  param;
   param.init (cff);
   if (unlikely (!interp.interpret (param))) return false;
   bounds = param.bounds;
@@ -305,7 +305,7 @@ bool _get_bounds (const OT::cff1::accelerator_t *cff, hb_codepoint_t glyph, Boun
 
 bool OT::cff1::accelerator_t::get_extents (hb_codepoint_t glyph, hb_glyph_extents_t *extents) const
 {
-  Bounds  bounds;
+  bounds_t  bounds;
 
   if (!_get_bounds (this, glyph, bounds))
     return false;
@@ -334,7 +334,7 @@ bool OT::cff1::accelerator_t::get_extents (hb_codepoint_t glyph, hb_glyph_extent
   return true;
 }
 
-struct GetSeacParam
+struct get_seac_param_t
 {
   void init (const OT::cff1::accelerator_t *_cff)
   {
@@ -350,9 +350,9 @@ struct GetSeacParam
   hb_codepoint_t  accent;
 };
 
-struct CFF1CSOpSet_Seac : CFF1CSOpSet<CFF1CSOpSet_Seac, GetSeacParam>
+struct cff1_cs_opset_seac_t : cff1_cs_opset_t<cff1_cs_opset_seac_t, get_seac_param_t>
 {
-  static void process_seac (CFF1CSInterpEnv &env, GetSeacParam& param)
+  static void process_seac (cff1_cs_interp_env_t &env, get_seac_param_t& param)
   {
     unsigned int  n = env.argStack.get_count ();
     hb_codepoint_t  base_char = (hb_codepoint_t)env.argStack[n-2].to_int ();
@@ -368,10 +368,10 @@ bool OT::cff1::accelerator_t::get_seac_components (hb_codepoint_t glyph, hb_code
   if (unlikely (!is_valid () || (glyph >= num_glyphs))) return false;
 
   unsigned int fd = fdSelect->get_fd (glyph);
-  CFF1CSInterpreter<CFF1CSOpSet_Seac, GetSeacParam> interp;
-  const ByteStr str = (*charStrings)[glyph];
+  cff1_cs_interpreter_t<cff1_cs_opset_seac_t, get_seac_param_t> interp;
+  const byte_str_t str = (*charStrings)[glyph];
   interp.env.init (str, *this, fd);
-  GetSeacParam  param;
+  get_seac_param_t  param;
   param.init (this);
   if (unlikely (!interp.interpret (param))) return false;
 

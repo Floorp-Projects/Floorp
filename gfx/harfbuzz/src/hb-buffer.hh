@@ -119,7 +119,7 @@ struct hb_buffer_t
   /* Text before / after the main buffer contents.
    * Always in Unicode, and ordered outward.
    * Index 0 is for "pre-context", 1 for "post-context". */
-  enum { CONTEXT_LENGTH = 5 };
+  static constexpr unsigned CONTEXT_LENGTH = 5u;
   hb_codepoint_t context[2][CONTEXT_LENGTH];
   unsigned int context_len[2];
 
