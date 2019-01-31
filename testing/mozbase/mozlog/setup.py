@@ -7,7 +7,7 @@ from __future__ import absolute_import
 from setuptools import setup, find_packages
 
 PACKAGE_NAME = 'mozlog'
-PACKAGE_VERSION = '4.0'
+PACKAGE_VERSION = '3.10'
 DEPS = [
     'blessings>=1.3',
     'mozterm',
@@ -34,7 +34,7 @@ setup(name=PACKAGE_NAME,
                    'License :: OSI Approved :: Mozilla Public License 1.1 (MPL 1.1)',
                    'Operating System :: OS Independent',
                    'Programming Language :: Python :: 2.7',
-                   'Programming Language :: Python :: 3.5',
+                   'Programming Language :: Python :: 3',
                    'Topic :: Software Development :: Libraries :: Python Modules'],
       package_data={"mozlog": ["formatters/html/main.js",
                                "formatters/html/style.css"]},

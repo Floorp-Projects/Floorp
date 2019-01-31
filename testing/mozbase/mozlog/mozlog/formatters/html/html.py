@@ -161,11 +161,8 @@ class HTMLFormatter(base.BaseFormatter):
                     # Encode base64 to avoid that some browsers (such as Firefox, Opera)
                     # treats '#' as the start of another link if it is contained in the data URL.
                     # Use 'charset=utf-8' to show special characters like Chinese.
-                    utf8_encoded_bytes = six.text_type(content).encode('utf-8',
-                                                                       'xmlcharrefreplace')
-                    b64_encoded_bytes = base64.b64encode(utf8_encoded_bytes)
-                    b64_encoded_str = b64_encoded_bytes.decode()
-                    href = "data:text/html;charset=utf-8;base64,{0}".format(b64_encoded_str)
+                    utf_encoded = six.text_type(content).encode('utf-8', 'xmlcharrefreplace')
+                    href = 'data:text/html;charset=utf-8;base64,%s' % base64.b64encode(utf_encoded)
 
                 links_html.append(html.a(
                     name.title(),
