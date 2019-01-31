@@ -931,8 +931,9 @@ class FunctionRange {
   Module::Function *function;
 };
 
-// Fills an array of ranges with pointers to the functions which owns them.
-// The array is sorted in ascending order and the ranges are non-overlapping.
+// Fills an array of ranges with pointers to the functions which owns
+// them. The array is sorted in ascending order and the ranges are non
+// empty and non-overlapping.
 
 static void FillSortedFunctionRanges(vector<FunctionRange> &dest_ranges,
                                      vector<Module::Function *> *functions) {
@@ -946,7 +947,9 @@ static void FillSortedFunctionRanges(vector<FunctionRange> &dest_ranges,
          ranges_it != ranges.cend();
          ++ranges_it) {
       FunctionRange range(*ranges_it, func);
-      dest_ranges.push_back(range);
+      if (range.size != 0) {
+          dest_ranges.push_back(range);
+      }
     }
   }
 
