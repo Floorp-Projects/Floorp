@@ -6,6 +6,9 @@
         <link rel="stylesheet" type="text/css" href="pointerevent_styles.css">
         <script src="/resources/testharness.js"></script>
         <script src="/resources/testharnessreport.js"></script>
+        <script src="/resources/testdriver.js"></script>
+        <script src="/resources/testdriver-actions.js"></script>
+        <script src="/resources/testdriver-vendor.js"></script>
         <script src="pointerevent_support.js"></script>
     </head>
     <body>
@@ -72,6 +75,14 @@
                     event_log.push('pointerup@target0');
                     pointerupGot = true;
                 });
+
+                // Inject mouse inputs.
+                new test_driver.Actions()
+                    .pointerMove(0, 0, {origin: captureButton})
+                    .pointerDown()
+                    .pointerMove(10, 0, {origin: target0})
+                    .pointerUp()
+                    .send();
             }
         </script>
         <h1>Pointer Events Capture Test</h1>
