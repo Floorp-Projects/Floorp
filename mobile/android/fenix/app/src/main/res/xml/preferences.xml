@@ -3,45 +3,71 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+<androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <PreferenceCategory android:title="@string/preferences_category_basics">
+    <PreferenceCategory
+        android:title="@string/preferences_category_basics"
+        app:iconSpaceReserved="false">
         <androidx.preference.Preference
-                android:icon="@drawable/mozac_ic_search"
-                android:key="@string/pref_key_search_engine"
-                android:title="@string/preferences_search_engine"/>
-
-        <androidx.preference.Preference
-                android:icon="@drawable/ic_login"
-                android:key="@string/pref_key_passwords"
-                android:title="@string/preferences_passwords"/>
+            android:icon="@drawable/ic_search"
+            android:key="@string/pref_key_search_engine"
+            android:title="@string/preferences_search_engine" />
 
         <androidx.preference.Preference
-                android:icon="@drawable/ic_formfill"
-                android:key="@string/pref_key_credit_cards_addresses"
-                android:title="@string/preferences_credit_cards_addresses"/>
+            android:icon="@drawable/ic_login"
+            android:key="@string/pref_key_passwords"
+            android:title="@string/preferences_passwords" />
 
         <androidx.preference.Preference
-                android:key="@string/pref_key_make_default_browser"
-                android:title="@string/preferences_set_as_default_browser"/>
+            android:icon="@drawable/ic_formfill"
+            android:key="@string/pref_key_credit_cards_addresses"
+            android:title="@string/preferences_credit_cards_addresses" />
+
+        <androidx.preference.SwitchPreference
+            android:key="@string/pref_key_make_default_browser"
+            android:title="@string/preferences_set_as_default_browser" />
     </PreferenceCategory>
 
-    <PreferenceCategory android:title="@string/preferences_category_advanced">
+    <PreferenceCategory
+        android:title="@string/preferences_category_advanced"
+        app:iconSpaceReserved="false">
         <androidx.preference.Preference
-                android:icon="@drawable/ic_permission"
-                android:key="@string/pref_key_site_permissions"
-                android:title="@string/preferences_site_permissions"/>
+            android:icon="@drawable/ic_permission"
+            android:key="@string/pref_key_site_permissions"
+            android:title="@string/preferences_site_permissions" />
         <androidx.preference.Preference
-                android:icon="@drawable/ic_accessibility"
-                android:key="@string/pref_key_accessibility"
-                android:title="@string/preferences_accessibility"/>
+            android:icon="@drawable/ic_accessibility"
+            android:key="@string/pref_key_accessibility"
+            android:title="@string/preferences_accessibility" />
         <androidx.preference.Preference
-                android:icon="@drawable/ic_language"
-                android:key="@string/pref_key_language"
-                android:title="@string/preferences_language"/>
+            android:icon="@drawable/ic_language"
+            android:key="@string/pref_key_language"
+            android:title="@string/preferences_language" />
         <androidx.preference.Preference
-                android:icon="@drawable/ic_data_collection"
-                android:key="@string/pref_key_data_choices"
-                android:title="@string/preferences_data_choices"/>
+            android:icon="@drawable/ic_data_collection"
+            android:key="@string/pref_key_data_choices"
+            android:title="@string/preferences_data_choices" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="@string/preferences_category_about"
+        app:iconSpaceReserved="false">
+        <androidx.preference.Preference
+            android:icon="@drawable/ic_help"
+            android:key="@string/pref_key_help"
+            android:title="@string/preferences_help" />
+        <androidx.preference.Preference
+            android:icon="@drawable/ic_bookmark_outline"
+            android:key="@string/pref_key_rate"
+            android:title="@string/preferences_rate" />
+        <androidx.preference.Preference
+            android:icon="@drawable/ic_feedback"
+            android:key="@string/pref_key_feedback"
+            android:title="@string/preferences_feedback" />
+        <androidx.preference.Preference
+            android:icon="@drawable/ic_about"
+            android:key="@string/pref_key_about"
+            android:title="@string/preferences_about" />
     </PreferenceCategory>
 </androidx.preference.PreferenceScreen>

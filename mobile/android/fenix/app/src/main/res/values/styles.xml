@@ -2,12 +2,19 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <style name="LightAppTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+    </style>
+
+    <style name="SettingsAppTheme" parent="Theme.MaterialComponents.Light">
+        <item name="colorPrimary">@color/offwhite</item>
+        <item name="colorPrimaryDark">@color/offwhite</item>
+        <item name="colorAccent">@color/icons</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="m">true</item>
     </style>
 
     <style name="search_pill" parent="Widget.AppCompat.Button.Borderless">

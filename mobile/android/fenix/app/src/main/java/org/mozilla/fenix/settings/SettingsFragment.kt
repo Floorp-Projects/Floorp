@@ -8,6 +8,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.provider.Settings
 import android.widget.Toast
+import androidx.preference.Preference
 import androidx.preference.Preference.OnPreferenceClickListener
 import androidx.preference.PreferenceFragmentCompat
 import org.mozilla.fenix.R
@@ -37,7 +38,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
     private fun setupPreferences() {
         val makeDefaultBrowserKey = context?.getPreferenceKey(pref_key_make_default_browser)
 
-        val preferenceMakeDefaultBrowser = findPreference(makeDefaultBrowserKey)
+        val preferenceMakeDefaultBrowser = findPreference<Preference>(makeDefaultBrowserKey)
 
         preferenceMakeDefaultBrowser.onPreferenceClickListener = getClickListenerForMakeDefaultBrowser()
     }

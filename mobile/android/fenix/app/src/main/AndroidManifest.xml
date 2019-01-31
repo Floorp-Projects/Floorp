@@ -49,7 +49,7 @@
             android:name=".settings.SettingsActivity"
             android:label="@string/settings"
             android:parentActivityName=".HomeActivity"
-            android:theme="@style/LightAppTheme" />
+            android:theme="@style/SettingsAppTheme" />
     </application>
 
 </manifest>
