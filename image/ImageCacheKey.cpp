@@ -134,7 +134,8 @@ bool ImageCacheKey::SchemeIs(const char* aScheme) {
 
   // If the window is 3rd party resource, let's see if first-party storage
   // access is granted for this image.
-  if (nsContentUtils::IsTrackingResourceWindow(aDocument->GetInnerWindow())) {
+  if (nsContentUtils::IsThirdPartyTrackingResourceWindow(
+          aDocument->GetInnerWindow())) {
     return nsContentUtils::StorageDisabledByAntiTracking(aDocument, aURI)
                ? aDocument
                : nullptr;
