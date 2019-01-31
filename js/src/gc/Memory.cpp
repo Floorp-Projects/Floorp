@@ -870,7 +870,10 @@ void* AllocateMappedContent(int fd, size_t offset, size_t length,
   uint8_t* map =
       static_cast<uint8_t*>(mmap(region, alignedLength, PROT_READ | PROT_WRITE,
                                  MAP_PRIVATE | MAP_FIXED, fd, alignedOffset));
-  MOZ_RELEASE_ASSERT(map != MAP_FAILED);
+  if (map == MAP_FAILED) {
+    UnmapInternal(region, mappedLength);
+    return nullptr;
+  }
 #endif
 
 #ifdef DEBUG
