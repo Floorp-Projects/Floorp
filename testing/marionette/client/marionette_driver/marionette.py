@@ -1746,22 +1746,24 @@ class Marionette(object):
         original_timeout = None
         if script_timeout is not None:
             original_timeout = self.timeout.script
-            self.timeout.script = script_timeout / 1000
+            self.timeout.script = script_timeout / 1000.0
 
-        args = self._to_json(script_args)
-        stack = traceback.extract_stack()
-        frame = stack[-2:-1][0]  # grab the second-to-last frame
-        filename = frame[0] if sys.platform == "win32" else os.path.relpath(frame[0])
-        body = {"script": script.strip(),
-                "args": args,
-                "newSandbox": new_sandbox,
-                "sandbox": sandbox,
-                "line": int(frame[1]),
-                "filename": filename}
-        rv = self._send_message("WebDriver:ExecuteScript", body, key="value")
+        try:
+            args = self._to_json(script_args)
+            stack = traceback.extract_stack()
+            frame = stack[-2:-1][0]  # grab the second-to-last frame
+            filename = frame[0] if sys.platform == "win32" else os.path.relpath(frame[0])
+            body = {"script": script.strip(),
+                    "args": args,
+                    "newSandbox": new_sandbox,
+                    "sandbox": sandbox,
+                    "line": int(frame[1]),
+                    "filename": filename}
+            rv = self._send_message("WebDriver:ExecuteScript", body, key="value")
 
-        if script_timeout is not None:
-            self.timeout.script = original_timeout
+        finally:
+            if script_timeout is not None:
+                self.timeout.script = original_timeout
 
         return self._from_json(rv)
 
@@ -1803,23 +1805,25 @@ class Marionette(object):
         original_timeout = None
         if script_timeout is not None:
             original_timeout = self.timeout.script
-            self.timeout.script = script_timeout / 1000
+            self.timeout.script = script_timeout / 1000.0
 
-        args = self._to_json(script_args)
-        stack = traceback.extract_stack()
-        frame = stack[-2:-1][0]  # grab the second-to-last frame
-        filename = frame[0] if sys.platform == "win32" else os.path.relpath(frame[0])
-        body = {"script": script.strip(),
-                "args": args,
-                "newSandbox": new_sandbox,
-                "sandbox": sandbox,
-                "scriptTimeout": script_timeout,
-                "line": int(frame[1]),
-                "filename": filename}
-        rv = self._send_message("WebDriver:ExecuteAsyncScript", body, key="value")
+        try:
+            args = self._to_json(script_args)
+            stack = traceback.extract_stack()
+            frame = stack[-2:-1][0]  # grab the second-to-last frame
+            filename = frame[0] if sys.platform == "win32" else os.path.relpath(frame[0])
+            body = {"script": script.strip(),
+                    "args": args,
+                    "newSandbox": new_sandbox,
+                    "sandbox": sandbox,
+                    "scriptTimeout": script_timeout,
+                    "line": int(frame[1]),
+                    "filename": filename}
+            rv = self._send_message("WebDriver:ExecuteAsyncScript", body, key="value")
 
-        if script_timeout is not None:
-            self.timeout.script = original_timeout
+        finally:
+            if script_timeout is not None:
+                self.timeout.script = original_timeout
 
         return self._from_json(rv)
 
