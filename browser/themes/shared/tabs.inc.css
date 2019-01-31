@@ -457,11 +457,12 @@
   transition: opacity 150ms ease;
 }
 
-.tabbrowser-tab:not([visuallyselected=true]),
+.tabbrowser-tab:not([visuallyselected=true]):not([multiselected]),
 .tabbrowser-tab:-moz-lwtheme {
   color: inherit;
 }
 
+.tabbrowser-tab[multiselected]:-moz-lwtheme,
 .tabbrowser-tab[visuallyselected=true]:-moz-lwtheme {
   color: var(--lwt-tab-text, var(--toolbar-color));
 }
@@ -493,11 +494,18 @@
   border-top-style: solid;
 }
 
+.tab-background[multiselected=true],
 .tab-background[selected=true] {
   border-top-color: var(--tabs-border-color);
   background-color: var(--toolbar-bgcolor);
   background-image: var(--toolbar-bgimage);
   background-repeat: repeat-x;
+}
+
+/* Add a translucent color (current text color at .2 alpha) on top of multiselected tabs */
+.tab-background[multiselected=true]:not([selected=true]) > .tab-background-inner {
+  background: currentColor;
+  opacity: .2;
 }
 
 .tab-line[multiselected],
@@ -511,6 +519,7 @@
  */
 
 /* Lightweight theme on tabs */
+#tabbrowser-tabs:not([movingtab]) > .tabbrowser-tab > .tab-stack > .tab-background[multiselected=true]:-moz-lwtheme,
 #tabbrowser-tabs:not([movingtab]) > .tabbrowser-tab > .tab-stack > .tab-background[selected=true]:-moz-lwtheme {
   background-attachment: scroll, scroll, fixed;
   background-color: transparent;
@@ -524,11 +533,11 @@
 
 /* Tab hover */
 
-.tabbrowser-tab:hover > .tab-stack > .tab-background:not([selected=true]) {
+.tabbrowser-tab:hover > .tab-stack > .tab-background:not([selected=true]):not([multiselected]) {
   background-color: rgba(0,0,0,.1);
 }
 
-#TabsToolbar[brighttext] .tabbrowser-tab:hover > .tab-stack > .tab-background:not([selected=true]) {
+#TabsToolbar[brighttext] .tabbrowser-tab:hover > .tab-stack > .tab-background:not([selected=true]):not([multiselected]) {
   background-color: rgba(255,255,255,.1);
 }
 
@@ -548,19 +557,8 @@
   background-color: rgba(255,255,255,.2);
 }
 
-.tabbrowser-tab:hover > .tab-stack > .tab-background > .tab-line:not([selected=true])[multiselected],
-#TabsToolbar[brighttext] .tabbrowser-tab:hover > .tab-stack > .tab-background > .tab-line:not([selected=true])[multiselected] {
+.tabbrowser-tab:hover > .tab-stack > .tab-background > .tab-line[multiselected]:not([selected=true]) {
   opacity: 0.5;
-}
-
-/* Tab multi-selected */
-
-.tabbrowser-tab[multiselected] > .tab-stack > .tab-background:not([selected=true]) {
-  background-color: rgba(0,0,0,.1);
-}
-
-#TabsToolbar[brighttext] .tabbrowser-tab[multiselected] > .tab-stack > .tab-background:not([selected=true]) {
-  background-color: rgba(255,255,255,.1);
 }
 
 /* Pinned tabs */
