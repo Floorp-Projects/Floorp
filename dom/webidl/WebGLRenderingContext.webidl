@@ -1117,3 +1117,7 @@ interface MOZ_debug {
     [Throws]
     any getParameter(GLenum pname);
 };
+
+[NoInterfaceObject]
+interface EXT_float_blend {
+}; // interface EXT_float_blend

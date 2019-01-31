@@ -958,6 +958,11 @@ FBStatus WebGLFramebuffer::CheckFramebufferStatus() const {
     mCompletenessInfo.ResetInvalidators({});
     mCompletenessInfo.AddInvalidator(*this);
 
+    const auto fnIsFloat32 = [](const webgl::FormatInfo& info) {
+      if (info.componentType != webgl::ComponentType::Float) return false;
+      return info.r == 32;
+    };
+
     for (const auto& cur : mAttachments) {
       const auto& tex = cur->Texture();
       const auto& rb = cur->Renderbuffer();
@@ -973,6 +978,7 @@ FBStatus WebGLFramebuffer::CheckFramebufferStatus() const {
       MOZ_ASSERT(imageInfo);
       info.width = std::min(info.width, imageInfo->mWidth);
       info.height = std::min(info.height, imageInfo->mHeight);
+      info.hasFloat32 |= fnIsFloat32(*imageInfo->mFormat->format);
     }
     mCompletenessInfo = Some(std::move(info));
     return LOCAL_GL_FRAMEBUFFER_COMPLETE;

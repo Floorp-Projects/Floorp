@@ -135,6 +135,7 @@ static const char* const sExtensionNames[] = {
     "GL_EXT_draw_buffers2",
     "GL_EXT_draw_instanced",
     "GL_EXT_draw_range_elements",
+    "GL_EXT_float_blend",
     "GL_EXT_frag_depth",
     "GL_EXT_framebuffer_blit",
     "GL_EXT_framebuffer_multisample",
