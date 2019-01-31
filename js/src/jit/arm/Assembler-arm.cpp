@@ -1115,8 +1115,8 @@ VFPRegister VFPRegister::singleOverlay(unsigned int which) const {
   return VFPRegister(code_, Single);
 }
 
-// This is necessary for sintOverlay() to make any kind of sense.
-static_assert(FloatRegisters::TotalDouble <= 16);
+static_assert(FloatRegisters::TotalDouble <= 16,
+              "We assume that every Double register also has an Integer personality");
 
 VFPRegister VFPRegister::sintOverlay(unsigned int which) const {
   MOZ_ASSERT(!_isInvalid);
