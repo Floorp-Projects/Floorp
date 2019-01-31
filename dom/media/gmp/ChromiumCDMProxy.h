@@ -21,12 +21,11 @@ class ChromiumCDMProxy : public CDMProxy {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ChromiumCDMProxy, override)
 
   ChromiumCDMProxy(dom::MediaKeys* aKeys, const nsAString& aKeySystem,
-                   GMPCrashHelper* aCrashHelper,
                    bool aAllowDistinctiveIdentifier, bool aAllowPersistentState,
                    nsIEventTarget* aMainThread);
 
-  void Init(PromiseId aPromiseId, const nsAString& aOrigin,
-            const nsAString& aTopLevelOrigin,
+  void Init(RefPtr<GMPCrashHelper>&& aCrashHelper, PromiseId aPromiseId,
+            const nsAString& aOrigin, const nsAString& aTopLevelOrigin,
             const nsAString& aGMPName) override;
 
   void CreateSession(uint32_t aCreateSessionToken,
@@ -110,8 +109,6 @@ class ChromiumCDMProxy : public CDMProxy {
   void OnCDMCreated(uint32_t aPromiseId);
 
   ~ChromiumCDMProxy();
-
-  GMPCrashHelper* mCrashHelper;
 
   Mutex mCDMMutex;
   RefPtr<gmp::ChromiumCDMParent> mCDM;
