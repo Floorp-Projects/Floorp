@@ -73,12 +73,17 @@ bool WebIDLGlobalNameHash::DefineIfEnabled(
   *aFound = true;
 
   ConstructorEnabled checkEnabledForScope = entry->mEnabled;
-  // We do the enabled check on the current compartment of aCx, but for the
+  // We do the enabled check on the current Realm of aCx, but for the
   // actual object we pass in the underlying object in the Xray case.  That
   // way the callee can decide whether to allow access based on the caller
   // or the window being touched.
+  //
+  // Using aCx to represent the current Realm for CheckedUnwrapDynamic
+  // purposes is OK here, because that's the Realm where we plan to do
+  // our property-defining.
   JS::Rooted<JSObject*> global(
-      aCx, js::CheckedUnwrap(aObj, /* stopAtWindowProxy = */ false));
+      aCx,
+      js::CheckedUnwrapDynamic(aObj, aCx, /* stopAtWindowProxy = */ false));
   if (!global) {
     return Throw(aCx, NS_ERROR_DOM_SECURITY_ERR);
   }
@@ -90,7 +95,8 @@ bool WebIDLGlobalNameHash::DefineIfEnabled(
 #ifdef DEBUG
     JS::Rooted<JSObject*> temp(aCx, global);
     DebugOnly<nsGlobalWindowInner*> win;
-    MOZ_ASSERT(NS_SUCCEEDED(UNWRAP_OBJECT(Window, &temp, win)));
+    MOZ_ASSERT(NS_SUCCEEDED(
+        UNWRAP_MAYBE_CROSS_ORIGIN_OBJECT(Window, &temp, win, aCx)));
 #endif
   }
 

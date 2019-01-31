@@ -1597,9 +1597,9 @@ nsXPCComponents_Utils::ImportGlobalProperties(HandleValue aPropertyList,
   js::AssertSameCompartment(cx, global);
   JSAutoRealm ar(cx, global);
 
-  // Don't allow doing this if the global is a Window
+  // Don't allow doing this if the global is a Window.
   nsGlobalWindowInner* win;
-  if (NS_SUCCEEDED(UNWRAP_OBJECT(Window, &global, win))) {
+  if (NS_SUCCEEDED(UNWRAP_NON_WRAPPER_OBJECT(Window, global, win))) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 

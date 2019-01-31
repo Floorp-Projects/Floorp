@@ -101,7 +101,7 @@ bool TestFunctions::ObjectFromAboutBlank(JSContext* aCx, JSObject* aObj) {
   // We purposefully don't use WindowOrNull here, because we want to
   // demonstrate the incorrect behavior we get, not just fail some asserts.
   RefPtr<nsGlobalWindowInner> win;
-  UNWRAP_OBJECT(Window, aObj, win);
+  UNWRAP_MAYBE_CROSS_ORIGIN_OBJECT(Window, aObj, win, aCx);
   if (!win) {
     return false;
   }
