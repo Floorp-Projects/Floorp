@@ -6,6 +6,9 @@
         <link rel="stylesheet" type="text/css" href="pointerevent_styles.css">
         <script src="/resources/testharness.js"></script>
         <script src="/resources/testharnessreport.js"></script>
+        <script src="/resources/testdriver.js"></script>
+        <script src="/resources/testdriver-actions.js"></script>
+        <script src="/resources/testdriver-vendor.js"></script>
         <!-- Additional helper script for common checks across event types -->
         <script type="text/javascript" src="pointerevent_support.js"></script>
     </head>
@@ -45,6 +48,13 @@
                         }, "you have to use pen for this test");
                     }
                 });
+
+                // Inject pen inputs.
+                new test_driver.Actions()
+                  .addPointer("pointer1", "pen")
+                  .pointerMove(0, 0, {origin: target0})
+                  .pointerMove(0, 0)
+                  .send();
             }
 
         </script>
