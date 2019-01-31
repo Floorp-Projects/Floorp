@@ -1572,7 +1572,8 @@ void WebGLContext::Scissor(GLint x, GLint y, GLsizei width, GLsizei height) {
     return;
   }
 
-  gl->fScissor(x, y, width, height);
+  mScissorRect = {x, y, width, height};
+  mScissorRect.Apply(*gl);
 }
 
 void WebGLContext::StencilFunc(GLenum func, GLint ref, GLuint mask) {

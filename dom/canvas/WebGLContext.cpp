@@ -934,7 +934,8 @@ WebGLContext::SetDimensions(int32_t signedWidth, int32_t signedHeight) {
   mViewportHeight = size.height;
   gl->fViewport(mViewportX, mViewportY, mViewportWidth, mViewportHeight);
 
-  gl->fScissor(0, 0, size.width, size.height);
+  mScissorRect = {0, 0, size.width, size.height};
+  mScissorRect.Apply(*gl);
 
   //////
   // Check everything
@@ -1874,6 +1875,12 @@ ScopedDrawCallWrapper::~ScopedDrawCallWrapper() {
 
   mWebGL.Invalidate();
   mWebGL.mShouldPresent = true;
+}
+
+// -
+
+void WebGLContext::ScissorRect::Apply(gl::GLContext& gl) const {
+  gl.fScissor(x, y, w, h);
 }
 
 ////////////////////////////////////////

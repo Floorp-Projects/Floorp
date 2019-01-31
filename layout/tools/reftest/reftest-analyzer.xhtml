@@ -215,15 +215,141 @@ function log_pasted() {
 
 var gTestItems;
 
+// This function is not used in production code, but can be invoked manually
+// from the devtools console in order to test changes to the parsing regexes
+// in process_log.
+function test_parsing() {
+  // Note that the logs in these testcases have been manually edited to strip
+  // out stuff for brevity.
+  var testcases = [
+    { "name": "empty log",
+      "log": "",
+      "expected": { "pass": 0, "unexpected": 0, "random": 0, "skip": 0 },
+    },
+    { "name": "android log",
+      "log": `[task 2018-12-28T10:36:45.718Z] 10:36:45     INFO -  REFTEST TEST-START | a == b
+[task 2018-12-28T10:36:45.719Z] 10:36:45     INFO -  REFTEST TEST-LOAD | a | 78 / 275 (28%)
+[task 2018-12-28T10:36:56.138Z] 10:36:56     INFO -  REFTEST TEST-LOAD | b | 78 / 275 (28%)
+[task 2018-12-28T10:37:06.559Z] 10:37:06     INFO -  REFTEST TEST-UNEXPECTED-FAIL | a == b | image comparison, max difference: 255, number of differing pixels: 5950
+[task 2018-12-28T10:37:06.568Z] 10:37:06     INFO -  REFTEST   IMAGE 1 (TEST): data:image/png;base64,
+[task 2018-12-28T10:37:06.577Z] 10:37:06     INFO -  REFTEST   IMAGE 2 (REFERENCE): data:image/png;base64,
+[task 2018-12-28T10:37:06.577Z] 10:37:06     INFO -  REFTEST INFO | Saved log: stuff trimmed here
+[task 2018-12-28T10:37:06.582Z] 10:37:06     INFO -  REFTEST TEST-END | a == b
+[task 2018-12-28T10:37:06.583Z] 10:37:06     INFO -  REFTEST TEST-START | a2 == b2
+[task 2018-12-28T10:37:06.583Z] 10:37:06     INFO -  REFTEST TEST-LOAD | a2 | 79 / 275 (28%)
+[task 2018-12-28T10:37:06.584Z] 10:37:06     INFO -  REFTEST TEST-LOAD | b2 | 79 / 275 (28%)
+[task 2018-12-28T10:37:16.982Z] 10:37:16     INFO -  REFTEST TEST-PASS | a2 == b2 | image comparison, max difference: 0, number of differing pixels: 0
+[task 2018-12-28T10:37:16.982Z] 10:37:16     INFO -  REFTEST TEST-END | a2 == b2`,
+      "expected": { "pass": 1, "unexpected": 1, "random": 0, "skip": 0 },
+    },
+    { "name": "local reftest run (Linux)",
+      "log": `REFTEST TEST-START | file:///a == file:///b
+REFTEST TEST-LOAD | file:///a | 73 / 86 (84%)
+REFTEST TEST-LOAD | file:///b | 73 / 86 (84%)
+REFTEST TEST-PASS | file:///a == file:///b | image comparison, max difference: 0, number of differing pixels: 0
+REFTEST TEST-END | file:///a == file:///b`,
+      "expected": { "pass": 1, "unexpected": 0, "random": 0, "skip": 0 },
+    },
+    { "name": "wpt reftests (Linux automation)",
+      "log": `16:50:43     INFO - TEST-START | /a
+16:50:43     INFO - PID 4276 | 1548694243694	Marionette	INFO	Testing http://web-platform.test:8000/a == http://web-platform.test:8000/b
+16:50:43     INFO - PID 4276 | 1548694243963	Marionette	INFO	No differences allowed
+16:50:44     INFO - TEST-PASS | /a | took 370ms
+16:50:44     INFO - TEST-START | /a2
+16:50:44     INFO - PID 4276 | 1548694244066	Marionette	INFO	Testing http://web-platform.test:8000/a2 == http://web-platform.test:8000/b2
+16:50:44     INFO - PID 4276 | 1548694244792	Marionette	INFO	No differences allowed
+16:50:44     INFO - PID 4276 | 1548694244792	Marionette	INFO	Found 28 pixels different, maximum difference per channel 14
+16:50:44     INFO - TEST-UNEXPECTED-FAIL | /a2 | Testing http://web-platform.test:8000/a2 == http://web-platform.test:8000/b2
+16:50:44     INFO - REFTEST   IMAGE 1 (TEST): data:image/png;base64,
+16:50:44     INFO - REFTEST   IMAGE 2 (REFERENCE): data:image/png;base64,
+16:50:44     INFO - TEST-INFO took 840ms`,
+      "expected": { "pass": 1, "unexpected": 1, "random": 0, "skip": 0 },
+    },
+    { "name": "windows log",
+      "log": `12:17:14     INFO - REFTEST TEST-START | a == b
+12:17:14     INFO - REFTEST TEST-LOAD | a | 1603 / 2053 (78%)
+12:17:14     INFO - REFTEST TEST-LOAD | b | 1603 / 2053 (78%)
+12:17:14     INFO - REFTEST TEST-PASS(EXPECTED RANDOM) | a == b | image comparison, max difference: 0, number of differing pixels: 0
+12:17:14     INFO - REFTEST TEST-END | a == b
+12:17:14     INFO - REFTEST TEST-START | a2 == b2
+12:17:14     INFO - REFTEST TEST-LOAD | a2 | 1604 / 2053 (78%)
+12:17:14     INFO - REFTEST TEST-LOAD | b2 | 1604 / 2053 (78%)
+12:17:14     INFO - REFTEST TEST-UNEXPECTED-FAIL | a2 == b2 | image comparison, max difference: 255, number of differing pixels: 9976
+12:17:14     INFO - REFTEST   IMAGE 1 (TEST): data:image/png;base64,
+12:17:14     INFO - REFTEST   IMAGE 2 (REFERENCE): data:image/png;base64,
+12:17:14     INFO - REFTEST INFO | Saved log: stuff trimmed here
+12:17:14     INFO - REFTEST TEST-END | a2 == b2
+12:01:09     INFO - REFTEST TEST-START | a3 == b3
+12:01:09     INFO - REFTEST TEST-LOAD | a3 | 66 / 189 (34%)
+12:01:09     INFO - REFTEST TEST-LOAD | b3 | 66 / 189 (34%)
+12:01:09     INFO - REFTEST TEST-KNOWN-FAIL | a3 == b3 | image comparison, max difference: 255, number of differing pixels: 9654
+12:01:09     INFO - REFTEST TEST-END | a3 == b3`,
+      "expected": { "pass": 1, "unexpected": 1, "random": 1, "skip": 0 },
+    },
+    { "name": "webrender wrench log (windows)",
+      "log": `[task 2018-12-29T04:29:48.800Z] REFTEST a == b
+[task 2018-12-29T04:29:48.984Z] REFTEST a2 == b2
+[task 2018-12-29T04:29:49.053Z] REFTEST TEST-UNEXPECTED-FAIL | a2 == b2 | image comparison, max difference: 255, number of differing pixels: 3128
+[task 2018-12-29T04:29:49.053Z] REFTEST   IMAGE 1 (TEST): data:image/png;
+[task 2018-12-29T04:29:49.053Z] REFTEST   IMAGE 2 (REFERENCE): data:image/png;
+[task 2018-12-29T04:29:49.053Z] REFTEST TEST-END | a2 == b2`,
+      "expected": { "pass": 0, "unexpected": 1, "random": 0, "skip": 0 },
+    },
+  ];
+
+  var current_test = 0;
+
+  // Override the build_viewer function invoked at the end of process_log to
+  // actually just check the results of parsing.
+  build_viewer = function() {
+    var expected = testcases[current_test].expected;
+    for (var result of gTestItems) {
+      for (let type in expected) { // type is "pass", "unexpected" etc.
+        if (result[type]) {
+          expected[type]--;
+        }
+      }
+    }
+    var failed = false;
+    for (let type in expected) {
+      if (expected[type] != 0) {
+        console.log(`Failure: for testcase ${testcases[current_test].name} got ${expected[type]} fewer ${type} results than expected!`);
+        failed = true;
+      }
+    }
+    if (!failed) {
+      console.log(`Success for testcase ${testcases[current_test].name}`);
+    }
+  };
+
+  while (current_test < testcases.length) {
+    process_log(testcases[current_test].log);
+    current_test++;
+  }
+}
+
 function process_log(contents) {
   var lines = contents.split(/[\r\n]+/);
   gTestItems = [];
   for (var j in lines) {
+
+    // !!!!!!
+    // When making any changes to this code, please add a test to the
+    // test_parsing function above, and ensure all existing tests pass.
+    // !!!!!!
+
     var line = lines[j];
     // Ignore duplicated output in logcat.
     if (line.match(/I\/Gecko.*?REFTEST/))
       continue;
-    var match = line.match(/^(?:.*? (?:INFO|ERROR) -\s+)?(?:REFTEST\s+)?(.*)$/);
+    var match = line.match(/^.*?(?:REFTEST\s+)(.*)$/);
+    if (!match) {
+      // WPT reftests don't always have the "REFTEST" prefix but do have
+      // mozharness prefixing. Trying to match both prefixes optionally with a
+      // single regex either makes an unreadable mess or matches everything so
+      // we do them separately.
+      match = line.match(/^(?:.*? (?:INFO|ERROR) -\s+)(.*)$/);
+    }
     if (!match)
       continue;
     line = match[1];

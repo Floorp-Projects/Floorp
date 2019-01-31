@@ -5932,7 +5932,7 @@ void nsCSSFrameConstructor::AppendFramesToParent(
     return;
   }
 
-  // If we're appending a list of frames at the last continuations of a
+  // If we're appending a list of frames to the last continuations of a
   // ::-moz-column-content, we may need to create column-span siblings for them.
   if (!nextSibling && IsLastContinuationForColumnContent(aParentFrame)) {
     // Extract any initial non-column-span kids, and append them to
@@ -6871,6 +6871,14 @@ void nsCSSFrameConstructor::ContentAppended(nsIContent* aFirstNewContent,
     AppendFrames(outerTable, nsIFrame::kCaptionList, captionItems);
   }
 
+  LAYOUT_PHASE_TEMP_EXIT();
+  if (StaticPrefs::layout_css_column_span_enabled() &&
+      MaybeRecreateForColumnSpan(state, parentFrame, frameItems, prevSibling)) {
+    LAYOUT_PHASE_TEMP_REENTER();
+    return;
+  }
+  LAYOUT_PHASE_TEMP_REENTER();
+
   if (frameItems.NotEmpty()) {  // append the in-flow kids
     AppendFramesToParent(state, parentFrame, frameItems, prevSibling);
   }
@@ -7325,6 +7333,15 @@ void nsCSSFrameConstructor::ContentRangeInserted(
       }
     }
   }
+
+  LAYOUT_PHASE_TEMP_EXIT();
+  if (StaticPrefs::layout_css_column_span_enabled() &&
+      MaybeRecreateForColumnSpan(state, insertion.mParentFrame, frameItems,
+                                 prevSibling)) {
+    LAYOUT_PHASE_TEMP_REENTER();
+    return;
+  }
+  LAYOUT_PHASE_TEMP_REENTER();
 
   if (frameItems.NotEmpty()) {
     // Notify the parent frame
@@ -10855,6 +10872,61 @@ nsFrameItems nsCSSFrameConstructor::CreateColumnSpanSiblings(
   } while (aChildList.NotEmpty());
 
   return siblings;
+}
+
+bool nsCSSFrameConstructor::MaybeRecreateForColumnSpan(
+    nsFrameConstructorState& aState, nsContainerFrame* aParentFrame,
+    nsFrameList& aFrameList, nsIFrame* aPrevSibling) {
+  MOZ_ASSERT(StaticPrefs::layout_css_column_span_enabled(),
+             "Call this only when layout.css.column-span.enabled is true!");
+
+  if (!aParentFrame->HasAnyStateBits(NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR)) {
+    return false;
+  }
+
+  MOZ_ASSERT(!IsFramePartOfIBSplit(aParentFrame),
+             "We should have wiped aParentFrame in WipeContainingBlock if it's "
+             "part of IB split!");
+
+  nsIFrame* nextSibling = ::GetInsertNextSibling(aParentFrame, aPrevSibling);
+  if (!nextSibling && IsLastContinuationForColumnContent(aParentFrame)) {
+    // We are appending a list of frames to the last continuation of a
+    // ::-moz-column-content. This is the case where we can fix the frame tree
+    // instead of reframing the containing block. Return false and let
+    // AppendFramesToParent() deal with this.
+    return false;
+  }
+
+  auto HasColumnSpan = [](const nsFrameList& aList) {
+    for (nsIFrame* f : aList) {
+      if (f->IsColumnSpan()) {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  if (HasColumnSpan(aFrameList)) {
+    // If any frame in the frame list has "column-span:all" style, i.e. a
+    // -moz-column-span-wrapper frame, we need to reframe the multi-column
+    // containing block.
+    //
+    // We can only be here if none of the new inserted nsIContent* nodes (via
+    // ContentAppended or ContentRangeInserted) have column-span:all style, yet
+    // some of them have column-span:all descendants. Sadly, there's no way to
+    // detect this by checking FrameConstructionItems in WipeContainingBlock().
+    // Otherwise, we would have already wiped the multi-column containing block.
+    PROFILER_TRACING("Layout",
+                     "Reframe multi-column after constructing frame list",
+                     LAYOUT, TRACING_EVENT);
+    aFrameList.DestroyFrames();
+    RecreateFramesForContent(
+        GetMultiColumnContainingBlockFor(aParentFrame)->GetContent(),
+        InsertionKind::Async);
+    return true;
+  }
+
+  return false;
 }
 
 nsIFrame* nsCSSFrameConstructor::ConstructInline(
