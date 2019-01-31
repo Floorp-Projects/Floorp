@@ -361,6 +361,8 @@ IonBuilder::InliningResult IonBuilder::inlineNativeCall(CallInfo& callInfo,
     // TypedArray intrinsics.
     case InlinableNative::TypedArrayConstructor:
       return inlineTypedArray(callInfo, target->native());
+    case InlinableNative::IntrinsicIsTypedArrayConstructor:
+      return inlineIsTypedArrayConstructor(callInfo);
     case InlinableNative::IntrinsicIsTypedArray:
       return inlineIsTypedArray(callInfo);
     case InlinableNative::IntrinsicIsPossiblyWrappedTypedArray:
@@ -2983,6 +2985,37 @@ IonBuilder::InliningResult IonBuilder::inlineTypedArray(CallInfo& callInfo,
   current->add(ins);
   current->push(ins);
   MOZ_TRY(resumeAfter(ins));
+  return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningResult IonBuilder::inlineIsTypedArrayConstructor(
+    CallInfo& callInfo) {
+  MOZ_ASSERT(!callInfo.constructing());
+  MOZ_ASSERT(callInfo.argc() == 1);
+
+  if (getInlineReturnType() != MIRType::Boolean) {
+    return InliningStatus_NotInlined;
+  }
+  if (callInfo.getArg(0)->type() != MIRType::Object) {
+    return InliningStatus_NotInlined;
+  }
+
+  // Try inlining with a constant if the argument is definitely a TypedArray
+  // constructor.
+  TemporaryTypeSet* types = callInfo.getArg(0)->resultTypeSet();
+  if (!types || types->unknownObject() || types->getObjectCount() == 0) {
+    return InliningStatus_NotInlined;
+  }
+  for (unsigned i = 0; i < types->getObjectCount(); i++) {
+    JSObject* singleton = types->getSingleton(i);
+    if (!singleton || !IsTypedArrayConstructor(singleton)) {
+      return InliningStatus_NotInlined;
+    }
+  }
+
+  callInfo.setImplicitlyUsedUnchecked();
+
+  pushConstant(BooleanValue(true));
   return InliningStatus_Inlined;
 }
 

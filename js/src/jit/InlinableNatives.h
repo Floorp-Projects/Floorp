@@ -144,6 +144,7 @@
   _(IntrinsicGuardToSharedArrayBuffer)             \
                                                    \
   _(TypedArrayConstructor)                         \
+  _(IntrinsicIsTypedArrayConstructor)              \
   _(IntrinsicIsTypedArray)                         \
   _(IntrinsicIsPossiblyWrappedTypedArray)          \
   _(IntrinsicTypedArrayLength)                     \
