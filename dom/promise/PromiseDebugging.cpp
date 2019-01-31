@@ -73,7 +73,8 @@ class FlushRejections : public CancelableRunnable {
     GlobalObject& aGlobal, JS::Handle<JSObject*> aPromise,
     PromiseDebuggingStateHolder& aState, ErrorResult& aRv) {
   JSContext* cx = aGlobal.Context();
-  JS::Rooted<JSObject*> obj(cx, js::CheckedUnwrap(aPromise));
+  // CheckedUnwrapStatic is fine, since we're looking for promises only.
+  JS::Rooted<JSObject*> obj(cx, js::CheckedUnwrapStatic(aPromise));
   if (!obj || !JS::IsPromiseObject(obj)) {
     aRv.ThrowTypeError<MSG_IS_NOT_PROMISE>(
         NS_LITERAL_STRING("Argument of PromiseDebugging.getState"));
@@ -99,7 +100,8 @@ class FlushRejections : public CancelableRunnable {
                                                  nsString& aID,
                                                  ErrorResult& aRv) {
   JSContext* cx = aGlobal.Context();
-  JS::Rooted<JSObject*> obj(cx, js::CheckedUnwrap(aPromise));
+  // CheckedUnwrapStatic is fine, since we're looking for promises only.
+  JS::Rooted<JSObject*> obj(cx, js::CheckedUnwrapStatic(aPromise));
   if (!obj || !JS::IsPromiseObject(obj)) {
     aRv.ThrowTypeError<MSG_IS_NOT_PROMISE>(
         NS_LITERAL_STRING("Argument of PromiseDebugging.getState"));
@@ -114,7 +116,8 @@ class FlushRejections : public CancelableRunnable {
     GlobalObject& aGlobal, JS::Handle<JSObject*> aPromise,
     JS::MutableHandle<JSObject*> aStack, ErrorResult& aRv) {
   JSContext* cx = aGlobal.Context();
-  JS::Rooted<JSObject*> obj(cx, js::CheckedUnwrap(aPromise));
+  // CheckedUnwrapStatic is fine, since we're looking for promises only.
+  JS::Rooted<JSObject*> obj(cx, js::CheckedUnwrapStatic(aPromise));
   if (!obj || !JS::IsPromiseObject(obj)) {
     aRv.ThrowTypeError<MSG_IS_NOT_PROMISE>(
         NS_LITERAL_STRING("Argument of PromiseDebugging.getAllocationStack"));
@@ -127,7 +130,8 @@ class FlushRejections : public CancelableRunnable {
     GlobalObject& aGlobal, JS::Handle<JSObject*> aPromise,
     JS::MutableHandle<JSObject*> aStack, ErrorResult& aRv) {
   JSContext* cx = aGlobal.Context();
-  JS::Rooted<JSObject*> obj(cx, js::CheckedUnwrap(aPromise));
+  // CheckedUnwrapStatic is fine, since we're looking for promises only.
+  JS::Rooted<JSObject*> obj(cx, js::CheckedUnwrapStatic(aPromise));
   if (!obj || !JS::IsPromiseObject(obj)) {
     aRv.ThrowTypeError<MSG_IS_NOT_PROMISE>(
         NS_LITERAL_STRING("Argument of PromiseDebugging.getRejectionStack"));
@@ -140,7 +144,8 @@ class FlushRejections : public CancelableRunnable {
     GlobalObject& aGlobal, JS::Handle<JSObject*> aPromise,
     JS::MutableHandle<JSObject*> aStack, ErrorResult& aRv) {
   JSContext* cx = aGlobal.Context();
-  JS::Rooted<JSObject*> obj(cx, js::CheckedUnwrap(aPromise));
+  // CheckedUnwrapStatic is fine, since we're looking for promises only.
+  JS::Rooted<JSObject*> obj(cx, js::CheckedUnwrapStatic(aPromise));
   if (!obj || !JS::IsPromiseObject(obj)) {
     aRv.ThrowTypeError<MSG_IS_NOT_PROMISE>(
         NS_LITERAL_STRING("Argument of PromiseDebugging.getFulfillmentStack"));

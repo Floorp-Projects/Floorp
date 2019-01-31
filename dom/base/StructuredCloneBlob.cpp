@@ -40,7 +40,9 @@ StructuredCloneBlob::Constructor(GlobalObject& aGlobal, JS::HandleValue aValue,
   JS::RootedValue value(cx, aValue);
 
   if (aTargetGlobal) {
-    JS::RootedObject targetGlobal(cx, js::CheckedUnwrap(aTargetGlobal));
+    // OK to unwrap if our caller (represented by cx's Realm) can do it.
+    JS::RootedObject targetGlobal(cx,
+                                  js::CheckedUnwrapDynamic(aTargetGlobal, cx));
     if (!targetGlobal) {
       js::ReportAccessDenied(cx);
       aRv.NoteJSContextException(cx);
@@ -54,7 +56,8 @@ StructuredCloneBlob::Constructor(GlobalObject& aGlobal, JS::HandleValue aValue,
       return nullptr;
     }
   } else if (value.isObject()) {
-    JS::RootedObject obj(cx, js::CheckedUnwrap(&value.toObject()));
+    // OK to unwrap if our caller (represented by cx's Realm) can do it.
+    JS::RootedObject obj(cx, js::CheckedUnwrapDynamic(&value.toObject(), cx));
     if (!obj) {
       js::ReportAccessDenied(cx);
       aRv.NoteJSContextException(cx);
@@ -78,7 +81,8 @@ void StructuredCloneBlob::Deserialize(JSContext* aCx,
                                       bool aKeepData,
                                       JS::MutableHandleValue aResult,
                                       ErrorResult& aRv) {
-  JS::RootedObject scope(aCx, js::CheckedUnwrap(aTargetScope));
+  // OK to unwrap if our caller (represented by aCx's Realm) can do it.
+  JS::RootedObject scope(aCx, js::CheckedUnwrapDynamic(aTargetScope, aCx));
   if (!scope) {
     js::ReportAccessDenied(aCx);
     aRv.NoteJSContextException(aCx);
