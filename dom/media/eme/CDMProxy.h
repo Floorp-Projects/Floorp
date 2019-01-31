@@ -93,8 +93,8 @@ class CDMProxy {
   // Main thread only.
   // Loads the CDM corresponding to mKeySystem.
   // Calls MediaKeys::OnCDMCreated() when the CDM is created.
-  virtual void Init(RefPtr<GMPCrashHelper>&& aCrashHelper, PromiseId aPromiseId,
-                    const nsAString& aOrigin, const nsAString& aTopLevelOrigin,
+  virtual void Init(PromiseId aPromiseId, const nsAString& aOrigin,
+                    const nsAString& aTopLevelOrigin,
                     const nsAString& aName) = 0;
 
   virtual void OnSetDecryptorId(uint32_t aId) {}
