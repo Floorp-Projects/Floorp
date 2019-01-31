@@ -14,12 +14,115 @@ from __future__ import print_function
 
 import glob
 import os
+import sets
 import shutil
 import subprocess
 import sys
 import tempfile
 
 from mozpack import path as mozpath
+
+# The following files have been determined to be dead/unused by a
+# semi-automated analysis. You can just remove any of the files below
+# if you need them. However, files marked with a "Cluster" comment
+# can only be removed together, as they have (directional) dependencies.
+# If you want to rerun this analysis, contact :decoder.
+UNUSED_SOURCES = sets.Set([
+    'intl/icu/source/common/bytestrieiterator.cpp',
+    'intl/icu/source/common/cstr.cpp',
+    'intl/icu/source/common/cwchar.cpp',
+    'intl/icu/source/common/icudataver.cpp',
+    'intl/icu/source/common/icuplug.cpp',
+    'intl/icu/source/common/pluralmap.cpp',
+    'intl/icu/source/common/ucat.cpp',
+    'intl/icu/source/common/ucnv2022.cpp',
+    'intl/icu/source/common/ucnv_ct.cpp',
+    'intl/icu/source/common/ucnvdisp.cpp',
+    'intl/icu/source/common/ucnv_ext.cpp',
+    'intl/icu/source/common/ucnvhz.cpp',
+    'intl/icu/source/common/ucnvisci.cpp',
+    'intl/icu/source/common/ucnv_lmb.cpp',
+    'intl/icu/source/common/ucnvmbcs.cpp',
+    'intl/icu/source/common/uidna.cpp',
+    'intl/icu/source/common/unorm.cpp',
+    'intl/icu/source/common/usc_impl.cpp',
+    'intl/icu/source/common/ustr_wcs.cpp',
+    'intl/icu/source/common/util_props.cpp',
+    'intl/icu/source/i18n/anytrans.cpp',
+    'intl/icu/source/i18n/brktrans.cpp',
+    'intl/icu/source/i18n/casetrn.cpp',
+    'intl/icu/source/i18n/cpdtrans.cpp',
+    'intl/icu/source/i18n/esctrn.cpp',
+    'intl/icu/source/i18n/fmtable_cnv.cpp',
+    'intl/icu/source/i18n/funcrepl.cpp',
+    'intl/icu/source/i18n/gender.cpp',
+    'intl/icu/source/i18n/name2uni.cpp',
+    'intl/icu/source/i18n/nortrans.cpp',
+    'intl/icu/source/i18n/nultrans.cpp',
+    'intl/icu/source/i18n/quant.cpp',
+    'intl/icu/source/i18n/rbt.cpp',
+    'intl/icu/source/i18n/rbt_data.cpp',
+    'intl/icu/source/i18n/rbt_pars.cpp',
+    'intl/icu/source/i18n/rbt_rule.cpp',
+    'intl/icu/source/i18n/rbt_set.cpp',
+    'intl/icu/source/i18n/regexcmp.cpp',
+    'intl/icu/source/i18n/regeximp.cpp',
+    'intl/icu/source/i18n/regexst.cpp',
+    'intl/icu/source/i18n/regextxt.cpp',
+    'intl/icu/source/i18n/rematch.cpp',
+    'intl/icu/source/i18n/remtrans.cpp',
+    'intl/icu/source/i18n/repattrn.cpp',
+    'intl/icu/source/i18n/scientificnumberformatter.cpp',
+    'intl/icu/source/i18n/strmatch.cpp',
+    'intl/icu/source/i18n/strrepl.cpp',
+    'intl/icu/source/i18n/titletrn.cpp',
+    'intl/icu/source/i18n/tolowtrn.cpp',
+    'intl/icu/source/i18n/toupptrn.cpp',
+    'intl/icu/source/i18n/translit.cpp',
+    'intl/icu/source/i18n/transreg.cpp',
+    'intl/icu/source/i18n/tridpars.cpp',
+    'intl/icu/source/i18n/udateintervalformat.cpp',
+    'intl/icu/source/i18n/unesctrn.cpp',
+    'intl/icu/source/i18n/uni2name.cpp',
+    'intl/icu/source/i18n/uregexc.cpp',
+    'intl/icu/source/i18n/uregex.cpp',
+    'intl/icu/source/i18n/uregion.cpp',
+    'intl/icu/source/i18n/uspoof_build.cpp',
+    'intl/icu/source/i18n/uspoof_conf.cpp',
+    'intl/icu/source/i18n/utrans.cpp',
+    'intl/icu/source/i18n/vzone.cpp',
+    'intl/icu/source/i18n/zrule.cpp',
+    'intl/icu/source/i18n/ztrans.cpp',
+
+    # Cluster
+    'intl/icu/source/common/resbund_cnv.cpp',
+    'intl/icu/source/common/ures_cnv.cpp',
+
+    # Cluster
+    'intl/icu/source/common/propsvec.cpp',
+    'intl/icu/source/common/ucnvsel.cpp',
+    'intl/icu/source/common/ucnv_set.cpp',
+
+    # Cluster
+    'intl/icu/source/common/ubiditransform.cpp',
+    'intl/icu/source/common/ushape.cpp',
+
+    # Cluster
+    'intl/icu/source/i18n/csdetect.cpp',
+    'intl/icu/source/i18n/csmatch.cpp',
+    'intl/icu/source/i18n/csr2022.cpp',
+    'intl/icu/source/i18n/csrecog.cpp',
+    'intl/icu/source/i18n/csrmbcs.cpp',
+    'intl/icu/source/i18n/csrsbcs.cpp',
+    'intl/icu/source/i18n/csrucode.cpp',
+    'intl/icu/source/i18n/csrutf8.cpp',
+    'intl/icu/source/i18n/inputext.cpp',
+    'intl/icu/source/i18n/ucsdet.cpp',
+
+    # Cluster
+    'intl/icu/source/i18n/alphaindex.cpp',
+    'intl/icu/source/i18n/ulocdata.cpp',
+])
 
 
 def find_source_file(dir, filename):
@@ -75,6 +178,7 @@ def update_sources(topsrcdir):
                                 'config/external/icu/%s/sources.mozbuild' % d)
         sources = [mozpath.relpath(s, topsrcdir)
                    for s in get_sources_from_makefile(makefile)]
+        sources = filter(lambda x: x not in UNUSED_SOURCES, sources)
         headers = [mozpath.normsep(os.path.relpath(s, topsrcdir))
                    for s in list_headers(mozpath.join(base_path, 'unicode'))]
         write_sources(mozbuild, sources, headers)
