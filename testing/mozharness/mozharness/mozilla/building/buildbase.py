@@ -906,6 +906,11 @@ or run without that action (ie: --no-{action})"
         if c.get('check_test_env'):
             for env_var, env_value in c['check_test_env'].iteritems():
                 check_test_env[env_var] = env_value % dirs
+        # Check tests don't upload anything, however our mozconfigs depend on
+        # UPLOAD_PATH, so we prevent configure from re-running by keeping the
+        # environments consistent.
+        if c.get('upload_env'):
+            check_test_env.update(c['upload_env'])
         return check_test_env
 
     def _rm_old_package(self):
