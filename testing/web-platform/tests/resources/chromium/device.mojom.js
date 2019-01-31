@@ -18,7 +18,7 @@
 
   var exports = mojo.internal.exposeNamespace('device.mojom');
   var string16$ =
-      mojo.internal.exposeNamespace('mojo.common.mojom');
+      mojo.internal.exposeNamespace('mojoBase.mojom');
   if (mojo.config.autoLoadMojomDeps) {
     mojo.internal.loadMojomIfNecessary(
         'mojo/public/mojom/base/string16.mojom', '../../../../mojo/public/mojom/base/string16.mojom.js');
@@ -35,6 +35,8 @@
   UsbOpenDeviceError.OK = 0;
   UsbOpenDeviceError.ACCESS_DENIED = UsbOpenDeviceError.OK + 1;
   UsbOpenDeviceError.ALREADY_OPEN = UsbOpenDeviceError.ACCESS_DENIED + 1;
+  UsbOpenDeviceError.MIN_VALUE = 0,
+  UsbOpenDeviceError.MAX_VALUE = 2,
 
   UsbOpenDeviceError.isKnownEnumValue = function(value) {
     switch (value) {
@@ -56,6 +58,8 @@
   var UsbTransferDirection = {};
   UsbTransferDirection.INBOUND = 0;
   UsbTransferDirection.OUTBOUND = UsbTransferDirection.INBOUND + 1;
+  UsbTransferDirection.MIN_VALUE = 0,
+  UsbTransferDirection.MAX_VALUE = 1,
 
   UsbTransferDirection.isKnownEnumValue = function(value) {
     switch (value) {
@@ -78,6 +82,8 @@
   UsbControlTransferType.CLASS = UsbControlTransferType.STANDARD + 1;
   UsbControlTransferType.VENDOR = UsbControlTransferType.CLASS + 1;
   UsbControlTransferType.RESERVED = UsbControlTransferType.VENDOR + 1;
+  UsbControlTransferType.MIN_VALUE = 0,
+  UsbControlTransferType.MAX_VALUE = 3,
 
   UsbControlTransferType.isKnownEnumValue = function(value) {
     switch (value) {
@@ -102,6 +108,8 @@
   UsbControlTransferRecipient.INTERFACE = UsbControlTransferRecipient.DEVICE + 1;
   UsbControlTransferRecipient.ENDPOINT = UsbControlTransferRecipient.INTERFACE + 1;
   UsbControlTransferRecipient.OTHER = UsbControlTransferRecipient.ENDPOINT + 1;
+  UsbControlTransferRecipient.MIN_VALUE = 0,
+  UsbControlTransferRecipient.MAX_VALUE = 3,
 
   UsbControlTransferRecipient.isKnownEnumValue = function(value) {
     switch (value) {
@@ -126,6 +134,8 @@
   UsbTransferType.ISOCHRONOUS = UsbTransferType.CONTROL + 1;
   UsbTransferType.BULK = UsbTransferType.ISOCHRONOUS + 1;
   UsbTransferType.INTERRUPT = UsbTransferType.BULK + 1;
+  UsbTransferType.MIN_VALUE = 0,
+  UsbTransferType.MAX_VALUE = 3,
 
   UsbTransferType.isKnownEnumValue = function(value) {
     switch (value) {
@@ -155,6 +165,8 @@
   UsbTransferStatus.BABBLE = UsbTransferStatus.DISCONNECT + 1;
   UsbTransferStatus.SHORT_PACKET = UsbTransferStatus.BABBLE + 1;
   UsbTransferStatus.PERMISSION_DENIED = UsbTransferStatus.SHORT_PACKET + 1;
+  UsbTransferStatus.MIN_VALUE = 0,
+  UsbTransferStatus.MAX_VALUE = 8,
 
   UsbTransferStatus.isKnownEnumValue = function(value) {
     switch (value) {
