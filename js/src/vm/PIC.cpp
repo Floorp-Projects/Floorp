@@ -159,6 +159,39 @@ bool js::ForOfPIC::Chain::tryOptimizeArray(JSContext* cx,
   return true;
 }
 
+bool js::ForOfPIC::Chain::tryOptimizeArrayIteratorNext(JSContext* cx,
+                                                       bool* optimized) {
+  MOZ_ASSERT(optimized);
+
+  *optimized = false;
+
+  if (!initialized_) {
+    // If PIC is not initialized, initialize it.
+    if (!initialize(cx)) {
+      return false;
+    }
+  } else if (!disabled_ && !isArrayNextStillSane()) {
+    // Otherwise, if array iterator state is no longer sane, reinitialize.
+    reset();
+
+    if (!initialize(cx)) {
+      return false;
+    }
+  }
+  MOZ_ASSERT(initialized_);
+
+  // If PIC is disabled, don't bother trying to optimize.
+  if (disabled_) {
+    return true;
+  }
+
+  // By the time we get here, we should have a sane iterator state to work with.
+  MOZ_ASSERT(isArrayNextStillSane());
+
+  *optimized = true;
+  return true;
+}
+
 bool js::ForOfPIC::Chain::hasMatchingStub(ArrayObject* obj) {
   // Ensure PIC is initialized and not disabled.
   MOZ_ASSERT(initialized_ && !disabled_);
@@ -291,8 +324,8 @@ const Class ForOfPIC::class_ = {
 /* static */ NativeObject* js::ForOfPIC::createForOfPICObject(
     JSContext* cx, Handle<GlobalObject*> global) {
   cx->check(global);
-  NativeObject* obj =
-      NewNativeObjectWithGivenProto(cx, &ForOfPIC::class_, nullptr);
+  NativeObject* obj = NewNativeObjectWithGivenProto(cx, &ForOfPIC::class_,
+                                                    nullptr, TenuredObject);
   if (!obj) {
     return nullptr;
   }

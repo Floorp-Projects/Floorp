@@ -201,6 +201,8 @@ inline Scalar::Type GetTypedArrayClassType(const Class* clasp) {
   return static_cast<Scalar::Type>(clasp - &TypedArrayObject::classes[0]);
 }
 
+bool IsTypedArrayConstructor(const JSObject* obj);
+
 bool IsTypedArrayConstructor(HandleValue v, uint32_t type);
 
 // In WebIDL terminology, a BufferSource is either an ArrayBuffer or a typed

@@ -1506,6 +1506,26 @@ function TypedArrayStaticFrom(source, mapfn = undefined, thisArg = undefined) {
         if (!IsCallable(usingIterator))
             ThrowTypeError(JSMSG_NOT_ITERABLE, DecompileArg(0, source));
 
+        // Try to take a fast path when there's no mapper function and the
+        // constructor is a built-in TypedArray constructor.
+        if (!mapping && IsTypedArrayConstructor(C)) {
+            // TODO: Add fast path for TypedArray inputs (bug 1491813).
+
+            // The source is a packed array using the default iterator.
+            if (usingIterator === ArrayValues && IsPackedArray(source) &&
+                ArrayIteratorPrototypeOptimizable())
+            {
+                // Steps 7.b-c.
+                var targetObj = new C(source.length);
+
+                // Steps 7.a, 7.d-f.
+                TypedArrayInitFromPackedArray(targetObj, source);
+
+                // Step 7.g.
+                return targetObj;
+            }
+        }
+
         // Step 7.a.
         var values = IterableToList(source, usingIterator);
 
