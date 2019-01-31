@@ -63,10 +63,8 @@ class QueueEvents(BaseClient):
     """
 
     classOptions = {
-        "exchangePrefix": "exchange/taskcluster-queue/v1/",
+        "exchangePrefix": "exchange/taskcluster-queue/v1/"
     }
-    serviceName = 'queue'
-    apiVersion = 'v1'
 
     def taskDefined(self, *args, **kwargs):
         """
