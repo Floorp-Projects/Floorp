@@ -3,9 +3,11 @@ sxg_version=1b3
 certfile=127.0.0.1.sxg.pem
 keyfile=127.0.0.1.sxg.key
 inner_url_origin=https://127.0.0.1:8444
-# TODO: Stop hard-coding "web-platform.test" in certUrl when generating
-# Signed Exchanges on the fly.
-cert_url_origin=https://web-platform.test:8444
+# TODO: Stop hard-coding "web-platform.test" when generating Signed Exchanges on
+# the fly.
+wpt_test_origin=https://web-platform.test:8444
+wpt_test_remote_origin=https://www1.web-platform.test:8444
+cert_url_origin=$wpt_test_origin
 sxg_content_type='content-type: application/signed-exchange;v=b2'
 
 set -e
@@ -38,6 +40,74 @@ gen-signedexchange \
   -o sxg/sxg-location.sxg \
   -miRecordSize 100
 
+# A valid Signed Exchange for testing referrer which logical origin is the wpt
+# test origin.
+gen-signedexchange \
+  -version $sxg_version \
+  -uri $wpt_test_origin/signed-exchange/resources/inner-url.html \
+  -status 200 \
+  -content sxg-location.html \
+  -certificate $certfile \
+  -certUrl $cert_url_origin/signed-exchange/resources/$certfile.cbor \
+  -validityUrl $wpt_test_origin/resource.validity.msg \
+  -privateKey $keyfile \
+  -date 2018-04-01T00:00:00Z \
+  -expire 168h \
+  -o sxg/sxg-referrer-same-origin.sxg \
+  -miRecordSize 100
+
+# A valid Signed Exchange for testing referrer which logical origin is the wpt
+# test remote origin.
+gen-signedexchange \
+  -version $sxg_version \
+  -uri $wpt_test_remote_origin/signed-exchange/resources/inner-url.html \
+  -status 200 \
+  -content sxg-location.html \
+  -certificate $certfile \
+  -certUrl $cert_url_origin/signed-exchange/resources/$certfile.cbor \
+  -validityUrl $wpt_test_remote_origin/resource.validity.msg \
+  -privateKey $keyfile \
+  -date 2018-04-01T00:00:00Z \
+  -expire 168h \
+  -o sxg/sxg-referrer-remote-origin.sxg \
+  -miRecordSize 100
+
+# A invalid Signed Exchange for testing referrer which logical origin is the wpt
+# test origin. Response has Cache-Control: no-store header.
+gen-signedexchange \
+  -version $sxg_version \
+  -uri $wpt_test_origin/signed-exchange/resources/inner-url.html \
+  -status 200 \
+  -responseHeader "Cache-Control: no-store" \
+  -content sxg-location.html \
+  -certificate $certfile \
+  -certUrl $cert_url_origin/signed-exchange/resources/$certfile.cbor \
+  -validityUrl $wpt_test_origin/resource.validity.msg \
+  -privateKey $keyfile \
+  -date 2018-04-01T00:00:00Z \
+  -expire 168h \
+  -o sxg/invalid-sxg-referrer-same-origin.sxg \
+  -miRecordSize 100 \
+  -ignoreErrors true
+
+# A invalid Signed Exchange for testing referrer which logical origin is the wpt
+# test remote origin. Response has Cache-Control: no-store header.
+gen-signedexchange \
+  -version $sxg_version \
+  -uri $wpt_test_remote_origin/signed-exchange/resources/inner-url.html \
+  -status 200 \
+  -responseHeader "Cache-Control: no-store" \
+  -content sxg-location.html \
+  -certificate $certfile \
+  -certUrl $cert_url_origin/signed-exchange/resources/$certfile.cbor \
+  -validityUrl $wpt_test_remote_origin/resource.validity.msg \
+  -privateKey $keyfile \
+  -date 2018-04-01T00:00:00Z \
+  -expire 168h \
+  -o sxg/invalid-sxg-referrer-remote-origin.sxg \
+  -miRecordSize 100 \
+  -ignoreErrors true
+
 # For check-cert-request.tentative.html
 gen-signedexchange \
   -version $sxg_version \
@@ -66,7 +136,8 @@ gen-signedexchange \
   -date 2018-04-01T00:00:00Z \
   -expire 168h \
   -o sxg/sxg-invalid-validity-url.sxg \
-  -miRecordSize 100
+  -miRecordSize 100 \
+  -ignoreErrors true
 
 # certUrl is 404 and fallback URL is another signed exchange.
 gen-signedexchange \
@@ -81,7 +152,8 @@ gen-signedexchange \
   -date 2018-04-01T00:00:00Z \
   -expire 168h \
   -o sxg/fallback-to-another-sxg.sxg \
-  -miRecordSize 100
+  -miRecordSize 100 \
+  -ignoreErrors true
 
 # Nested signed exchange.
 gen-signedexchange \
@@ -97,7 +169,8 @@ gen-signedexchange \
   -date 2018-04-01T00:00:00Z \
   -expire 168h \
   -o sxg/nested-sxg.sxg \
-  -miRecordSize 100
+  -miRecordSize 100 \
+  -ignoreErrors true
 
 # Fallback URL has non-ASCII UTF-8 characters.
 gen-signedexchange \
@@ -113,7 +186,8 @@ gen-signedexchange \
   -date 2018-04-01T00:00:00Z \
   -expire 168h \
   -o sxg/sxg-utf8-inner-url.sxg \
-  -miRecordSize 100
+  -miRecordSize 100 \
+  -ignoreErrors true
 
 # Fallback URL has invalid UTF-8 sequence.
 gen-signedexchange \
@@ -129,7 +203,8 @@ gen-signedexchange \
   -date 2018-04-01T00:00:00Z \
   -expire 168h \
   -o sxg/sxg-invalid-utf8-inner-url.sxg \
-  -miRecordSize 100
+  -miRecordSize 100 \
+  -ignoreErrors true
 
 # Fallback URL has UTF-8 BOM.
 gen-signedexchange \
@@ -145,7 +220,8 @@ gen-signedexchange \
   -date 2018-04-01T00:00:00Z \
   -expire 168h \
   -o sxg/sxg-inner-url-bom.sxg \
-  -miRecordSize 100
+  -miRecordSize 100 \
+  -ignoreErrors true
 
 # Response has Cache-Control: no-store header.
 gen-signedexchange \
@@ -161,7 +237,8 @@ gen-signedexchange \
   -date 2018-04-01T00:00:00Z \
   -expire 168h \
   -o sxg/sxg-noncacheable.sxg \
-  -miRecordSize 100
+  -miRecordSize 100 \
+  -ignoreErrors true
 
 # Response has a strict-transport-security header.
 gen-signedexchange \
