@@ -27,7 +27,7 @@ function checkLoads() {
   window.parent.is(mediaItem1, "loaded", "Should not block tracking video");
   window.parent.is(xhrItem, "loaded", "Should not block tracking XHR");
   window.parent.is(fetchItem, "loaded", "Should not block fetches from tracking domains");
-  window.parent.is(window.document.blockedTrackingNodeCount, 0,
+  window.parent.is(window.document.blockedNodeByClassifierCount, 0,
     "No elements should be blocked");
 
   // End (parent) test.

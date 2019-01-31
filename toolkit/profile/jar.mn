@@ -7,3 +7,7 @@ toolkit.jar:
 * content/mozapps/profile/createProfileWizard.xul (content/createProfileWizard.xul)
   content/mozapps/profile/profileSelection.js     (content/profileSelection.js)
   content/mozapps/profile/profileSelection.xul    (content/profileSelection.xul)
+#ifdef MOZ_BLOCK_PROFILE_DOWNGRADE
+  content/mozapps/profile/profileDowngrade.js     (content/profileDowngrade.js)
+* content/mozapps/profile/profileDowngrade.xul    (content/profileDowngrade.xul)
+#endif

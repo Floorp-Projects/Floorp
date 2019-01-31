@@ -37,6 +37,20 @@ class UrlClassifierFeatureFactory final {
   static already_AddRefed<nsIUrlClassifierFeature> CreateFeatureWithTables(
       const nsACString& aName, const nsTArray<nsCString>& aBlacklistTables,
       const nsTArray<nsCString>& aWhitelistTables);
+
+  // Returns true if this error is known as one of the blocking error codes.
+  static bool IsClassifierBlockingErrorCode(nsresult aError);
+
+  // Returns true if this event is a known blocking state from
+  // nsIWebProgressListener.
+  static bool IsClassifierBlockingEventCode(uint32_t aEventCode);
+
+  static uint32_t GetClassifierBlockingEventCode(nsresult aErrorCode);
+
+  // This can be called only if IsClassifierBlockingErrorCode(aError) returns
+  // true.
+  static const char* ClassifierBlockingErrorCodeToConsoleMessage(
+      nsresult aError, nsACString& aCategory);
 };
 
 }  // namespace net

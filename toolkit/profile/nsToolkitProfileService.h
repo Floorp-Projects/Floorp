@@ -13,6 +13,7 @@
 #include "nsIFactory.h"
 #include "nsSimpleEnumerator.h"
 #include "nsProfileLock.h"
+#include "nsINIParser.h"
 
 class nsToolkitProfile final : public nsIToolkitProfile {
  public:
@@ -76,6 +77,9 @@ class nsToolkitProfileService final : public nsIToolkitProfileService {
   nsresult SelectStartupProfile(int* aArgc, char* aArgv[], bool aIsResetting,
                                 nsIFile** aRootDir, nsIFile** aLocalDir,
                                 nsIToolkitProfile** aProfile, bool* aDidCreate);
+  nsresult CreateResetProfile(nsIToolkitProfile** aNewProfile);
+  nsresult ApplyResetProfile(nsIToolkitProfile* aOldProfile);
+  void RecordStartupTelemetry();
 
  private:
   friend class nsToolkitProfile;
@@ -91,15 +95,54 @@ class nsToolkitProfileService final : public nsIToolkitProfileService {
   void GetProfileByDir(nsIFile* aRootDir, nsIFile* aLocalDir,
                        nsIToolkitProfile** aResult);
 
+  nsresult GetProfileDescriptor(nsIToolkitProfile* aProfile,
+                                nsACString& aDescriptor, bool* aIsRelative);
+  bool IsProfileForCurrentInstall(nsIToolkitProfile* aProfile);
+  void ClearProfileFromOtherInstalls(nsIToolkitProfile* aProfile);
+  bool MaybeMakeDefaultDedicatedProfile(nsIToolkitProfile* aProfile);
+  bool IsSnapEnvironment();
+
+  // Returns the known install hashes from the installs database. Modifying the
+  // installs database is safe while iterating the returned array.
+  nsTArray<nsCString> GetKnownInstalls();
+
+  // Tracks whether SelectStartupProfile has been called.
   bool mStartupProfileSelected;
+  // The first profile in a linked list of profiles loaded from profiles.ini.
   RefPtr<nsToolkitProfile> mFirst;
-  nsCOMPtr<nsIToolkitProfile> mChosen;
-  nsCOMPtr<nsIToolkitProfile> mDefault;
+  // The profile selected for use at startup, if it exists in profiles.ini.
+  nsCOMPtr<nsIToolkitProfile> mCurrent;
+  // The profile selected for this install in installs.ini.
+  nsCOMPtr<nsIToolkitProfile> mDedicatedProfile;
+  // The default profile used by non-dev-edition builds.
+  nsCOMPtr<nsIToolkitProfile> mNormalDefault;
+  // The profile used if mUseDevEditionProfile is true (the default on
+  // dev-edition builds).
+  nsCOMPtr<nsIToolkitProfile> mDevEditionDefault;
+  // The directory that holds profiles.ini and profile directories.
   nsCOMPtr<nsIFile> mAppData;
+  // The directory that holds the cache files for profiles.
   nsCOMPtr<nsIFile> mTempData;
+  // The location of profiles.ini.
   nsCOMPtr<nsIFile> mListFile;
+  // The location of installs.ini.
+  nsCOMPtr<nsIFile> mInstallFile;
+  // The data loaded from installs.ini.
+  nsINIParser mInstallData;
+  // The install hash for the currently running install.
+  nsCString mInstallHash;
+  // Whether to start with the selected profile by default.
   bool mStartWithLast;
+  // True if during startup it appeared that this is the first run.
   bool mIsFirstRun;
+  // True if the default profile is the separate dev-edition-profile.
+  bool mUseDevEditionProfile;
+  // True if this install should use a dedicated default profile.
+  const bool mUseDedicatedProfile;
+  // True if during startup no dedicated profile was already selected, an old
+  // default profile existed but was rejected so a new profile was created.
+  bool mCreatedAlternateProfile;
+  nsString mStartupReason;
 
   static nsToolkitProfileService* gService;
 

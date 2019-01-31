@@ -30,10 +30,10 @@ interface nsIParentChannel : nsIStreamListener
   [noscript] void setParentListener(in HttpChannelParentListener listener);
 
   /**
-   * Called to notify the HttpChannelChild that tracking protection was
-   * disabled for this load.
+   * Called to notify the HttpChannelChild that channel classifier protection
+   * was disabled for this load.
    */
-  [noscript] void notifyTrackingProtectionDisabled();
+  [noscript] void notifyChannelClassifierProtectionDisabled(in uint32_t aAcceptedReason);
 
   /**
    * Called to notify the HttpChannelChild that cookie has been allowed for
@@ -45,7 +45,7 @@ interface nsIParentChannel : nsIStreamListener
    * Called to notify the HttpChannelChild that cookie has been blocked for
    * this load.
    */
-  [noscript] void notifyTrackingCookieBlocked(in uint32_t aRejectedReason);
+  [noscript] void notifyCookieBlocked(in uint32_t aRejectedReason);
 
   /**
    * Called to notify the HttpChannelChild that flash plugin state has changed.

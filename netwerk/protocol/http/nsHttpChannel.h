@@ -169,7 +169,7 @@ class nsHttpChannel final : public HttpBaseChannel,
   NS_IMETHOD SetChannelIsForDownload(bool aChannelIsForDownload) override;
   NS_IMETHOD GetNavigationStartTimeStamp(TimeStamp *aTimeStamp) override;
   NS_IMETHOD SetNavigationStartTimeStamp(TimeStamp aTimeStamp) override;
-  NS_IMETHOD CancelForTrackingProtection() override;
+  NS_IMETHOD CancelByChannelClassifier(nsresult aErrorCode) override;
   // nsISupportsPriority
   NS_IMETHOD SetPriority(int32_t value) override;
   // nsIClassOfService
@@ -310,9 +310,9 @@ class nsHttpChannel final : public HttpBaseChannel,
       const std::function<nsresult(nsHttpChannel *)> &aFunc);
 
   bool RequestIsConditional();
-  void HandleContinueCancelledByTrackingProtection();
+  void HandleContinueCancellingByChannelClassifier(nsresult aErrorCode);
   nsresult CancelInternal(nsresult status);
-  void ContinueCancelledByTrackingProtection();
+  void ContinueCancellingByChannelClassifier(nsresult aErrorCode);
 
   // Connections will only be established in this function.
   // (including DNS prefetch and speculative connection.)
@@ -679,10 +679,10 @@ class nsHttpChannel final : public HttpBaseChannel,
   // the next authentication request can be sent on a whole new connection
   uint32_t mAuthConnectionRestartable : 1;
 
-  // True if the channel classifier has marked the channel to be cancelled
-  // due to the tracking protection rules, but the asynchronous cancellation
+  // True if the channel classifier has marked the channel to be cancelled due
+  // to the safe-browsing classifier rules, but the asynchronous cancellation
   // process hasn't finished yet.
-  uint32_t mTrackingProtectionCancellationPending : 1;
+  uint32_t mChannelClassifierCancellationPending : 1;
 
   // True only when we are between Resume and async fire of mCallOnResume.
   // Used to suspend any newly created pumps in mCallOnResume handler.

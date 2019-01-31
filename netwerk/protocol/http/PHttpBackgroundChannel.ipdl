@@ -54,14 +54,15 @@ child:
   // OnDataAvailable and OnStopRequest messages in the queue back to the parent.
   async DivertMessages();
 
-  // Tell the child that tracking protection was disabled for this load.
-  async NotifyTrackingProtectionDisabled();
+  // Tell the child that channel classifier protection was disabled for this
+  // load.
+  async NotifyChannelClassifierProtectionDisabled(uint32_t aAcceptedReason);
 
   // Tell the child that cookies are allowed for this load.
   async NotifyCookieAllowed();
 
   // Tell the child that tracking cookies are blocked for this load.
-  async NotifyTrackingCookieBlocked(uint32_t aRejectedReason);
+  async NotifyCookieBlocked(uint32_t aRejectedReason);
 
   // Tell the child that the resource being loaded is on the tracking
   // protection list.

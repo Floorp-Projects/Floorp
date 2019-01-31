@@ -13,29 +13,48 @@ interface nsIProfileLock;
 [scriptable, builtinclass, uuid(1947899b-f369-48fa-89da-f7c37bb1e6bc)]
 interface nsIToolkitProfileService : nsISupports
 {
+    /**
+     * When a downgrade is detected UI is presented to the user to ask how to
+     * proceed. These flags are used to pass some information to the UI.
+     */
+    cenum downgradeUIFlags: 8 {
+        hasSync = 1,
+    };
+
+    /**
+     * When a downgrade is detected UI is presented to the user to ask how to
+     * proceed. These are the possible options the user can choose.
+     */
+    cenum downgradeUIChoice: 8 {
+        quit = 0,
+        createNewProfile = 1,
+    };
+
     attribute boolean startWithLastProfile;
 
     readonly attribute nsISimpleEnumerator /*nsIToolkitProfile*/ profiles;
 
     /**
-     * The currently selected profile (the one used or about to be used by the
-     * browser).
+     * The profile currently in use if it is a named profile. This will return
+     * null if the current profile path doesn't match a profile in the database.
      */
-    attribute nsIToolkitProfile selectedProfile;
+    readonly attribute nsIToolkitProfile currentProfile;
 
     /**
-     * The default profile (the one used or about to be used by the
-     * browser if no other profile is specified at runtime). This is the profile
-     * marked with Default=1 in profiles.ini and is usually the same as
-     * selectedProfile, except on Developer Edition.
-     *
-     * Developer Edition uses a profile named "dev-edition-default" as the
-     * default profile (which it creates if it doesn't exist), unless a special
-     * empty file named "ignore-dev-edition-profile" is present next to
-     * profiles.ini. In that case Developer Edition behaves the same as any
-     * other build of Firefox.
+     * The default profile for this build.
+     * On startup this is the profile selected unless overridden by command line
+     * arguments or environment variables. Setting this will change the profile
+     * used by default the next time the application is started.
+     * Attempting to change the default may throw an exception on builds that do
+     * not support changing the default profile, such as developer edition.
      */
     attribute nsIToolkitProfile defaultProfile;
+
+    /**
+     * True if during startup a new profile was created for this install instead
+     * of using the profile that was the default for older versions.
+     */
+    readonly attribute boolean createdAlternateProfile;
 
     /**
      * Selects or creates a profile to use based on the profiles database, any
@@ -72,7 +91,10 @@ interface nsIToolkitProfileService : nsISupports
      *
      * The profile temporary directory will be chosen based on where the
      * profile directory is located.
-     * 
+     *
+     * If a profile with the given name already exists it will be returned
+     * instead of creating a new profile.
+     *
      * @param aRootDir
      *        The profile directory. May be null, in which case a suitable
      *        default will be chosen based on the profile name.
@@ -81,6 +103,23 @@ interface nsIToolkitProfileService : nsISupports
      */
     nsIToolkitProfile createProfile(in nsIFile aRootDir,
                                     in AUTF8String aName);
+
+    /**
+     * Create a new profile with a unique name.
+     *
+     * As above however the name given will be altered to make it a unique
+     * profile name.
+     *
+     * @param aRootDir
+     *        The profile directory. May be null, in which case a suitable
+     *        default will be chosen based on the profile name.
+     * @param aNamePrefix
+     *        The prefix to use for the profile name. If unused this will be
+     *        used as the profile name otherwise additional characters will be
+     *        added to make the name unique.
+     */
+    nsIToolkitProfile createUniqueProfile(in nsIFile aRootDir,
+                                          in AUTF8String aNamePrefix);
 
     /**
      * Returns the number of profiles.

@@ -54,20 +54,20 @@ function checkLoads() {
   window.parent.isnot(
     style.visibility, "hidden", "Should not load tracking css");
 
-  window.parent.is(window.document.blockedTrackingNodeCount, badids.length,
+  window.parent.is(window.document.blockedNodeByClassifierCount, badids.length,
     "Should identify all tracking elements");
 
-  var blockedTrackingNodes = window.document.blockedTrackingNodes;
+  var blockedNodes = window.document.blockedNodesByClassifier;
 
-  // Make sure that every node in blockedTrackingNodes exists in the tree
+  // Make sure that every node in blockedNodes exists in the tree
   // (that may not always be the case but do not expect any nodes to disappear
   // from the tree here)
   var allNodeMatch = true;
-  for (let i = 0; i < blockedTrackingNodes.length; i++) {
+  for (let i = 0; i < blockedNodes.length; i++) {
     let nodeMatch = false;
     for (let j = 0; j < badids.length && !nodeMatch; j++) {
       nodeMatch = nodeMatch ||
-        (blockedTrackingNodes[i] == document.getElementById(badids[j]));
+        (blockedNodes[i] == document.getElementById(badids[j]));
     }
 
     allNodeMatch = allNodeMatch && nodeMatch;
@@ -76,18 +76,18 @@ function checkLoads() {
     "All annotated nodes are expected in the tree");
 
   // Make sure that every node with a badid (see badids) is found in the
-  // blockedTrackingNodes. This tells us if we are neglecting to annotate
+  // blockedNodes. This tells us if we are neglecting to annotate
   // some nodes
   allNodeMatch = true;
   for (let j = 0; j < badids.length; j++) {
     let nodeMatch = false;
-    for (let i = 0; i < blockedTrackingNodes.length && !nodeMatch; i++) {
+    for (let i = 0; i < blockedNodes.length && !nodeMatch; i++) {
       nodeMatch = nodeMatch ||
-        (blockedTrackingNodes[i] == document.getElementById(badids[j]));
+        (blockedNodes[i] == document.getElementById(badids[j]));
     }
 
     if (!nodeMatch) {
-      console.log(badids[j] + " was not found in blockedTrackingNodes");
+      console.log(badids[j] + " was not found in blockedNodes");
     }
     allNodeMatch = allNodeMatch && nodeMatch;
   }
