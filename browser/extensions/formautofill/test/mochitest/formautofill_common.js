@@ -279,7 +279,8 @@ async function triggerPopupAndHoverItem(fieldSelector, selectIndex) {
 }
 
 function formAutoFillCommonSetup() {
-  let chromeURL = SimpleTest.getTestFileURL("formautofill_parent_utils.js");
+  // Remove the /creditCard path segement when referenced from the 'creditCard' subdirectory.
+  let chromeURL = SimpleTest.getTestFileURL("formautofill_parent_utils.js").replace(/\/creditCard/, "");
   formFillChromeScript = SpecialPowers.loadChromeScript(chromeURL);
   formFillChromeScript.addMessageListener("onpopupshown", ({results}) => {
     gLastAutoCompleteResults = results;

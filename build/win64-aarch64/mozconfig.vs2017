@@ -10,9 +10,4 @@ if [ -d "${VSPATH}" ]; then
     export WIN32_REDIST_DIR=${VSPATH}/VC/redist/arm64/Microsoft.VC141.CRT
     export DIA_SDK_PATH="${VSPATH}/DIA SDK"
     export VC_PATH="${VSPATH}/VC"
-
-    win_sdk_version="10.0.17134.0"
-
-    export WIN64_LINK="${VSPATH}/VC/bin/Hostx64/x64/link.exe"
-    export WIN64_LIB="${VSPATH}/VC/lib/x64:${VSPATH}/VC/atlmfc/lib/x64:${VSPATH}/SDK/Lib/${win_sdk_version}/ucrt/x64:${VSPATH}/SDK/Lib/${win_sdk_version}/um/x64:${VSPATH}/DIA SDK/lib/amd64"
 fi

@@ -229,9 +229,7 @@ class Localization {
 
   removeResourceIds(resourceIds) {
     this.resourceIds = this.resourceIds.filter(r => !resourceIds.includes(r));
-    if (this.resourceIds.length) {
-      this.onChange();
-    }
+    this.onChange();
     return this.resourceIds.length;
   }
 

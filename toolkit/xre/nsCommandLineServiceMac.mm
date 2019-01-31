@@ -6,9 +6,6 @@
 #include "nsCommandLineServiceMac.h"
 #include "MacApplicationDelegate.h"
 
-#include <CoreFoundation/CoreFoundation.h>
-#include <Carbon/Carbon.h>
-
 namespace CommandLineServiceMac {
 
 static const int kArgsGrowSize = 20;
@@ -66,12 +63,8 @@ void SetupMacCommandLine(int& argc, char**& argv, bool forRestart) {
   // if the parent is in the foreground.  This will be communicated in a
   // command-line argument to the child.
   if (forRestart) {
-    Boolean isForeground = false;
-    ProcessSerialNumber psnSelf, psnFront;
-    if (::GetCurrentProcess(&psnSelf) == noErr &&
-        ::GetFrontProcess(&psnFront) == noErr &&
-        ::SameProcess(&psnSelf, &psnFront, &isForeground) == noErr &&
-        isForeground) {
+    NSRunningApplication* frontApp = [[NSWorkspace sharedWorkspace] frontmostApplication];
+    if ([frontApp isEqual:[NSRunningApplication currentApplication]]) {
       AddToCommandLine("-foreground");
     }
   }

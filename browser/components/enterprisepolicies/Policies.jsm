@@ -133,6 +133,12 @@ var Policies = {
     },
   },
 
+  "CaptivePortal": {
+    onBeforeAddons(manager, param) {
+      setAndLockPref("network.captive-portal-service.enabled", param);
+    },
+  },
+
   "Certificates": {
     onBeforeAddons(manager, param) {
       if ("ImportEnterpriseRoots" in param) {

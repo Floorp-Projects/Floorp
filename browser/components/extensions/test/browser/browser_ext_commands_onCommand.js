@@ -3,6 +3,8 @@
 "use strict";
 
 add_task(async function test_user_defined_commands() {
+  await SpecialPowers.pushPrefEnv({set: [["extensions.allowPrivateBrowsingByDefault", false]]});
+
   const testCommands = [
     // Ctrl Shortcuts
     {
@@ -214,17 +216,17 @@ add_task(async function test_user_defined_commands() {
     commands[testCommand.name] = command;
   }
 
+  function background() {
+    browser.commands.onCommand.addListener(commandName => {
+      browser.test.sendMessage("oncommand", commandName);
+    });
+    browser.test.sendMessage("ready");
+  }
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "commands": commands,
     },
-
-    background: function() {
-      browser.commands.onCommand.addListener(commandName => {
-        browser.test.sendMessage("oncommand", commandName);
-      });
-      browser.test.sendMessage("ready");
-    },
+    background,
   });
 
   SimpleTest.waitForExplicitFinish();
@@ -273,6 +275,12 @@ add_task(async function test_user_defined_commands() {
   await focusWindow(win2);
   await runTest(win2);
 
+  let privateWin = await BrowserTestUtils.openNewBrowserWindow({private: true});
+  await BrowserTestUtils.loadURI(privateWin.gBrowser.selectedBrowser, "about:robots");
+  await BrowserTestUtils.browserLoaded(privateWin.gBrowser.selectedBrowser);
+  keyset = privateWin.document.getElementById(keysetID);
+  is(keyset, null, "Expected keyset is not added to private windows");
+
   await extension.unload();
 
   // Confirm that the keysets have been removed from both windows after the extension is unloaded.
@@ -282,8 +290,41 @@ add_task(async function test_user_defined_commands() {
   keyset = win2.document.getElementById(keysetID);
   is(keyset, null, "Expected keyset to be removed from the window");
 
+  // Test that given permission the keyset is added to the private window.
+  extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "commands": commands,
+    },
+    incognitoOverride: "spanning",
+    background,
+  });
+  await extension.startup();
+  await extension.awaitMessage("ready");
+  keysetID = `ext-keyset-id-${makeWidgetId(extension.id)}`;
+
+  keyset = win1.document.getElementById(keysetID);
+  ok(keyset != null, "Expected keyset to exist on win1");
+  is(keyset.children.length, expectedCommandsRegistered, "Expected keyset to have the correct number of children");
+
+  keyset = win2.document.getElementById(keysetID);
+  ok(keyset != null, "Expected keyset to exist on win2");
+  is(keyset.children.length, expectedCommandsRegistered, "Expected keyset to have the correct number of children");
+
+  keyset = privateWin.document.getElementById(keysetID);
+  ok(keyset != null, "Expected keyset was added to private windows");
+  is(keyset.children.length, expectedCommandsRegistered, "Expected keyset to have the correct number of children");
+
+  await focusWindow(privateWin);
+  await runTest(privateWin);
+
+  await extension.unload();
+
+  keyset = privateWin.document.getElementById(keysetID);
+  is(keyset, null, "Expected keyset to be removed from the private window");
+
   await BrowserTestUtils.closeWindow(win1);
   await BrowserTestUtils.closeWindow(win2);
+  await BrowserTestUtils.closeWindow(privateWin);
 
   SimpleTest.endMonitorConsole();
   await waitForConsole;

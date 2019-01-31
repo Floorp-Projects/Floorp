@@ -639,59 +639,59 @@ static void ApplyUpdate(nsIFile *greDir, nsIFile *updateDir, nsIFile *appDir,
   }
   *outpid = fork();
   if (*outpid == -1) {
+    delete[] argv;
     return;
   } else if (*outpid == 0) {
     exit(execv(updaterPath.get(), argv));
   }
+  delete[] argv;
 #elif defined(XP_WIN)
   if (isStaged) {
     // Launch the updater to replace the installation with the staged updated.
     if (!WinLaunchChild(updaterPathW.get(), argc, argv)) {
+      delete[] argv;
       return;
     }
   } else {
     // Launch the updater to either stage or apply an update.
     if (!WinLaunchChild(updaterPathW.get(), argc, argv, nullptr, outpid)) {
+      delete[] argv;
       return;
     }
   }
+  delete[] argv;
 #elif defined(XP_MACOSX)
-UpdateDriverSetupMacCommandLine(argc, argv, restart);
-// We need to detect whether elevation is required for this update. This can
-// occur when an admin user installs the application, but another admin
-// user attempts to update (see bug 394984).
-if (restart && !IsRecursivelyWritable(installDirPath.get())) {
-  if (!LaunchElevatedUpdate(argc, argv, outpid)) {
-    LOG(("Failed to launch elevated update!"));
-    exit(1);
+  UpdateDriverSetupMacCommandLine(argc, argv, restart);
+  // We need to detect whether elevation is required for this update. This can
+  // occur when an admin user installs the application, but another admin
+  // user attempts to update (see bug 394984).
+  if (restart && !IsRecursivelyWritable(installDirPath.get())) {
+    if (!LaunchElevatedUpdate(argc, argv, outpid)) {
+      LOG(("Failed to launch elevated update!"));
+      exit(1);
+    }
+    exit(0);
   }
-  exit(0);
-}
 
-if (isStaged) {
-  // Launch the updater to replace the installation with the staged updated.
-  LaunchChildMac(argc, argv);
-} else {
-  // Launch the updater to either stage or apply an update.
-  LaunchChildMac(argc, argv, outpid);
-}
-if (restart) {
-  exit(0);
-}
+  if (isStaged) {
+    // Launch the updater to replace the installation with the staged updated.
+    LaunchChildMac(argc, argv);
+  } else {
+    // Launch the updater to either stage or apply an update.
+    LaunchChildMac(argc, argv, outpid);
+  }
 #else
-if (isStaged) {
-  // Launch the updater to replace the installation with the staged updated.
-  PR_CreateProcessDetached(updaterPath.get(), argv, nullptr, nullptr);
-} else {
-  // Launch the updater to either stage or apply an update.
-  *outpid = PR_CreateProcess(updaterPath.get(), argv, nullptr, nullptr);
-}
+  if (isStaged) {
+    // Launch the updater to replace the installation with the staged updated.
+    PR_CreateProcessDetached(updaterPath.get(), argv, nullptr, nullptr);
+  } else {
+    // Launch the updater to either stage or apply an update.
+    *outpid = PR_CreateProcess(updaterPath.get(), argv, nullptr, nullptr);
+  }
 #endif
-#if !defined(USE_EXECV)
   if (restart) {
     exit(0);
   }
-#endif
 }
 
 /**
