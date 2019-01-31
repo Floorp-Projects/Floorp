@@ -54,6 +54,9 @@ public class TelemetryPocketEventPingBuilder extends TelemetryPingBuilder {
 
     @Override
     protected String getUploadPath(final String documentId) {
-        return super.getUploadPath(documentId) + "?v=4";
+        return String.format("/submit/pocket/%s/%s/%s",
+                getType(),
+                VERSION,
+                documentId);
     }
 }
