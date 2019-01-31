@@ -1185,6 +1185,9 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
             lambda x: list(x.wrapper) + [x.compiler] + list(x.flags)))
         # We check that it works in python configure already.
         add_old_configure_assignment('ac_cv_prog_%s_works' % var.lower(), 'yes')
+        add_old_configure_assignment(
+            'ac_cv_prog_%s_cross' % var.lower(),
+            depends(cross_compiling)(lambda x: 'yes' if x else 'no'))
         gcc_like = depends(valid_compiler.type)(lambda x: 'yes' if x in ('gcc', 'clang') else 'no')
         add_old_configure_assignment('ac_cv_prog_%s_g' % var.lower(), gcc_like)
         if language == 'C':
