@@ -110,7 +110,7 @@ js::Nursery::Nursery(JSRuntime* rt)
       timeInChunkAlloc_(0),
       profileThreshold_(0),
       enableProfiling_(false),
-      canAllocateStrings_(false),
+      canAllocateStrings_(true),
       reportTenurings_(0),
       minorGCTriggerReason_(JS::GCReason::NO_REASON)
 #ifdef JS_GC_ZEAL
