@@ -10,18 +10,16 @@
 </head>
 <body>
 <script type="application/javascript">
-let chromeScript = runInParent(SimpleTest.getTestFileURL("pwmgr_common.js"));
-
 document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("loginFrame").addEventListener("load", (evt) => {
     // Tell the parent to setup test logins.
-    chromeScript.sendAsyncMessage("setupParent", { selfFilling: true });
+    PWMGR_COMMON_PARENT.sendAsyncMessage("setupParent", { selfFilling: true });
   });
 });
 
 let doneSetupPromise = new Promise(resolve => {
   // When the setup is done, load a recipe for this test.
-  chromeScript.addMessageListener("doneSetup", function doneSetup() {
+  PWMGR_COMMON_PARENT.addMessageListener("doneSetup", function doneSetup() {
     resolve();
   });
 });
