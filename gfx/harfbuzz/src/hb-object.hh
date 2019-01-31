@@ -45,7 +45,7 @@
 template <typename item_t, typename lock_t>
 struct hb_lockable_set_t
 {
-  hb_vector_t <item_t, 1> items;
+  hb_vector_t<item_t> items;
 
   void init () { items.init (); }
 
@@ -77,9 +77,10 @@ struct hb_lockable_set_t
   {
     l.lock ();
     item_t *item = items.find (v);
-    if (item) {
+    if (item)
+    {
       item_t old = *item;
-      *item = items[items.len - 1];
+      *item = items[items.length - 1];
       items.pop ();
       l.unlock ();
       old.fini ();
@@ -113,18 +114,20 @@ struct hb_lockable_set_t
 
   void fini (lock_t &l)
   {
-    if (!items.len) {
-      /* No need for locking. */
+    if (!items.length)
+    {
+      /* No need to lock. */
       items.fini ();
       return;
     }
     l.lock ();
-    while (items.len) {
-      item_t old = items[items.len - 1];
-	items.pop ();
-	l.unlock ();
-	old.fini ();
-	l.lock ();
+    while (items.length)
+    {
+      item_t old = items[items.length - 1];
+      items.pop ();
+      l.unlock ();
+      old.fini ();
+      l.lock ();
     }
     items.fini ();
     l.unlock ();

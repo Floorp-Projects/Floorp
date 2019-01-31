@@ -159,7 +159,7 @@ static void
 _create_old_gid_to_new_gid_map (const hb_vector_t<hb_codepoint_t> &glyphs,
 				hb_map_t *glyph_map)
 {
-  for (unsigned int i = 0; i < glyphs.len; i++) {
+  for (unsigned int i = 0; i < glyphs.length; i++) {
     glyph_map->set (glyphs[i], i);
   }
 }

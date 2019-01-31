@@ -599,7 +599,7 @@ struct hb_face_builder_data_t
     hb_blob_t *blob;
   };
 
-  hb_vector_t<table_entry_t, 32> tables;
+  hb_vector_t<table_entry_t> tables;
 };
 
 static hb_face_builder_data_t *
@@ -619,7 +619,7 @@ _hb_face_builder_data_destroy (void *user_data)
 {
   hb_face_builder_data_t *data = (hb_face_builder_data_t *) user_data;
 
-  for (unsigned int i = 0; i < data->tables.len; i++)
+  for (unsigned int i = 0; i < data->tables.length; i++)
     hb_blob_destroy (data->tables[i].blob);
 
   data->tables.fini ();
@@ -631,7 +631,7 @@ static hb_blob_t *
 _hb_face_builder_data_reference_blob (hb_face_builder_data_t *data)
 {
 
-  unsigned int table_count = data->tables.len;
+  unsigned int table_count = data->tables.length;
   unsigned int face_length = table_count * 16 + 12;
 
   for (unsigned int i = 0; i < table_count; i++)

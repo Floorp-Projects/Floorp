@@ -215,9 +215,12 @@ struct hb_uniscribe_shaper_funcs_t
     hinstLib = GetModuleHandle (TEXT ("usp10.dll"));
     if (hinstLib)
     {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-function-type"
       this->ScriptItemizeOpenType = (SIOT) GetProcAddress (hinstLib, "ScriptItemizeOpenType");
       this->ScriptShapeOpenType   = (SSOT) GetProcAddress (hinstLib, "ScriptShapeOpenType");
       this->ScriptPlaceOpenType   = (SPOT) GetProcAddress (hinstLib, "ScriptPlaceOpenType");
+#pragma GCC diagnostic pop
     }
     if (!this->ScriptItemizeOpenType ||
 	!this->ScriptShapeOpenType   ||
@@ -652,7 +655,7 @@ _hb_uniscribe_shape (hb_shape_plan_t    *shape_plan,
     /* Scan events and save features for each range. */
     hb_vector_t<active_feature_t> active_features;
     unsigned int last_index = 0;
-    for (unsigned int i = 0; i < feature_events.len; i++)
+    for (unsigned int i = 0; i < feature_events.length; i++)
     {
       feature_event_t *event = &feature_events[i];
 
@@ -661,26 +664,26 @@ _hb_uniscribe_shape (hb_shape_plan_t    *shape_plan,
         /* Save a snapshot of active features and the range. */
 	range_record_t *range = range_records.push ();
 
-	unsigned int offset = feature_records.len;
+	unsigned int offset = feature_records.length;
 
 	active_features.qsort ();
-	for (unsigned int j = 0; j < active_features.len; j++)
+	for (unsigned int j = 0; j < active_features.length; j++)
 	{
-	  if (!j || active_features[j].rec.tagFeature != feature_records[feature_records.len - 1].tagFeature)
+	  if (!j || active_features[j].rec.tagFeature != feature_records[feature_records.length - 1].tagFeature)
 	  {
 	    feature_records.push (active_features[j].rec);
 	  }
 	  else
 	  {
 	    /* Overrides value for existing feature. */
-	    feature_records[feature_records.len - 1].lParameter = active_features[j].rec.lParameter;
+	    feature_records[feature_records.length - 1].lParameter = active_features[j].rec.lParameter;
 	  }
 	}
 
 	/* Will convert to pointer after all is ready, since feature_records.array
 	 * may move as we grow it. */
 	range->props.potfRecords = reinterpret_cast<OPENTYPE_FEATURE_RECORD *> (offset);
-	range->props.cotfRecords = feature_records.len - offset;
+	range->props.cotfRecords = feature_records.length - offset;
 	range->index_first = last_index;
 	range->index_last  = event->index - 1;
 
@@ -699,14 +702,14 @@ _hb_uniscribe_shape (hb_shape_plan_t    *shape_plan,
       }
     }
 
-    if (!range_records.len) /* No active feature found. */
+    if (!range_records.length) /* No active feature found. */
       num_features = 0;
 
     /* Fixup the pointers. */
-    for (unsigned int i = 0; i < range_records.len; i++)
+    for (unsigned int i = 0; i < range_records.length; i++)
     {
       range_record_t *range = &range_records[i];
-      range->props.potfRecords = feature_records + reinterpret_cast<uintptr_t> (range->props.potfRecords);
+      range->props.potfRecords = (OPENTYPE_FEATURE_RECORD *) feature_records + reinterpret_cast<uintptr_t> (range->props.potfRecords);
     }
   }
 
@@ -817,7 +820,7 @@ retry:
 				     script_tags,
 				     &item_count);
   if (unlikely (FAILED (hr)))
-    FAIL ("ScriptItemizeOpenType() failed: 0x%08xL", hr);
+    FAIL ("ScriptItemizeOpenType() failed: 0x%08lx", hr);
 
 #undef MAX_ITEMS
 
@@ -853,8 +856,8 @@ retry:
 	  range--;
 	while (log_clusters[k] > range->index_last)
 	  range++;
-	if (!range_properties.len ||
-	    &range->props != range_properties[range_properties.len - 1])
+	if (!range_properties.length ||
+	    &range->props != range_properties[range_properties.length - 1])
 	{
 	  TEXTRANGE_PROPERTIES **props = range_properties.push ();
 	  int *c = range_char_counts.push ();
@@ -869,7 +872,7 @@ retry:
 	}
 	else
 	{
-	  range_char_counts[range_char_counts.len - 1]++;
+	  range_char_counts[range_char_counts.length - 1]++;
 	}
 
 	last_range = range;
@@ -888,7 +891,7 @@ retry:
 				     language_tag,
 				     range_char_counts.arrayZ (),
 				     range_properties.arrayZ (),
-				     range_properties.len,
+				     range_properties.length,
 				     pchars + chars_offset,
 				     item_chars_len,
 				     glyphs_size - glyphs_offset,
@@ -916,7 +919,7 @@ retry:
     }
     if (unlikely (FAILED (hr)))
     {
-      FAIL ("ScriptShapeOpenType() failed: 0x%08xL", hr);
+      FAIL ("ScriptShapeOpenType() failed: 0x%08lx", hr);
     }
 
     for (unsigned int j = chars_offset; j < chars_offset + item_chars_len; j++)
@@ -929,7 +932,7 @@ retry:
 				     language_tag,
 				     range_char_counts.arrayZ (),
 				     range_properties.arrayZ (),
-				     range_properties.len,
+				     range_properties.length,
 				     pchars + chars_offset,
 				     log_clusters + chars_offset,
 				     char_props + chars_offset,
@@ -942,7 +945,7 @@ retry:
 				     offsets + glyphs_offset,
 				     nullptr);
     if (unlikely (FAILED (hr)))
-      FAIL ("ScriptPlaceOpenType() failed: 0x%08xL", hr);
+      FAIL ("ScriptPlaceOpenType() failed: 0x%08lx", hr);
 
     if (DEBUG_ENABLED (UNISCRIBE))
       fprintf (stderr, "Item %d RTL %d LayoutRTL %d LogicalOrder %d ScriptTag %c%c%c%c\n",
@@ -961,13 +964,13 @@ retry:
 
   /* Calculate visual-clusters.  That's what we ship. */
   for (unsigned int i = 0; i < glyphs_len; i++)
-    vis_clusters[i] = -1;
+    vis_clusters[i] = (uint32_t) -1;
   for (unsigned int i = 0; i < buffer->len; i++) {
     uint32_t *p = &vis_clusters[log_clusters[buffer->info[i].utf16_index()]];
     *p = MIN (*p, buffer->info[i].cluster);
   }
   for (unsigned int i = 1; i < glyphs_len; i++)
-    if (vis_clusters[i] == -1)
+    if (vis_clusters[i] == (uint32_t) -1)
       vis_clusters[i] = vis_clusters[i - 1];
 
 #undef utf16_index

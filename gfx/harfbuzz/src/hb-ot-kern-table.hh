@@ -160,7 +160,7 @@ struct KernSubTable
 
 struct KernOTSubTableHeader
 {
-  enum { apple = false };
+  static constexpr bool apple = false;
   typedef AAT::ObsoleteTypes Types;
 
   unsigned int tuple_count () const { return 0; }
@@ -197,8 +197,8 @@ struct KernOT : AAT::KerxTable<KernOT>
 {
   friend struct AAT::KerxTable<KernOT>;
 
-  enum { tableTag = HB_OT_TAG_kern };
-  enum { minVersion = 0u };
+  static constexpr hb_tag_t tableTag = HB_OT_TAG_kern;
+  static constexpr unsigned minVersion = 0u;
 
   typedef KernOTSubTableHeader SubTableHeader;
   typedef SubTableHeader::Types Types;
@@ -215,7 +215,7 @@ struct KernOT : AAT::KerxTable<KernOT>
 
 struct KernAATSubTableHeader
 {
-  enum { apple = true };
+  static constexpr bool apple = true;
   typedef AAT::ObsoleteTypes Types;
 
   unsigned int tuple_count () const { return 0; }
@@ -252,8 +252,8 @@ struct KernAAT : AAT::KerxTable<KernAAT>
 {
   friend struct AAT::KerxTable<KernAAT>;
 
-  enum { tableTag = HB_OT_TAG_kern };
-  enum { minVersion = 0x00010000u };
+  static constexpr hb_tag_t tableTag = HB_OT_TAG_kern;
+  static constexpr unsigned minVersion = 0x00010000u;
 
   typedef KernAATSubTableHeader SubTableHeader;
   typedef SubTableHeader::Types Types;
@@ -269,7 +269,7 @@ struct KernAAT : AAT::KerxTable<KernAAT>
 
 struct kern
 {
-  enum { tableTag = HB_OT_TAG_kern };
+  static constexpr hb_tag_t tableTag = HB_OT_TAG_kern;
 
   bool has_data () const { return u.version32; }
   unsigned int get_type () const { return u.major; }

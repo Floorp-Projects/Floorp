@@ -92,7 +92,7 @@ struct OS2V5Tail
 
 struct OS2
 {
-  enum { tableTag = HB_OT_TAG_OS2 };
+  static constexpr hb_tag_t tableTag = HB_OT_TAG_OS2;
 
   bool has_data () const { return this != &Null (OS2); }
 

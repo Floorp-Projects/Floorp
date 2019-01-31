@@ -84,16 +84,16 @@ struct ValueFormat : HBUINT16
   HBINT16		yAdvance;		/* Vertical adjustment for advance--in
 					 * design units (only used for vertical
 					 * writing) */
-  Offset	xPlaDevice;		/* Offset to Device table for
+  OffsetTo<Device>	xPlaDevice;	/* Offset to Device table for
 					 * horizontal placement--measured from
 					 * beginning of PosTable (may be NULL) */
-  Offset	yPlaDevice;		/* Offset to Device table for vertical
+  OffsetTo<Device>	yPlaDevice;	/* Offset to Device table for vertical
 					 * placement--measured from beginning
 					 * of PosTable (may be NULL) */
-  Offset	xAdvDevice;		/* Offset to Device table for
+  OffsetTo<Device>	xAdvDevice;	/* Offset to Device table for
 					 * horizontal advance--measured from
 					 * beginning of PosTable (may be NULL) */
-  Offset	yAdvDevice;		/* Offset to Device table for vertical
+  OffsetTo<Device>	yAdvDevice;	/* Offset to Device table for vertical
 					 * advance--measured from beginning of
 					 * PosTable (may be NULL) */
 #endif
@@ -177,13 +177,13 @@ struct ValueFormat : HBUINT16
   { return *CastP<OffsetTo<Device> > (value); }
   static const OffsetTo<Device>& get_device (const Value* value, bool *worked=nullptr)
   {
-    if (worked) *worked |= *value;
+    if (worked) *worked |= bool (*value);
     return *CastP<OffsetTo<Device> > (value);
   }
 
   static const HBINT16& get_short (const Value* value, bool *worked=nullptr)
   {
-    if (worked) *worked |= *value;
+    if (worked) *worked |= bool (*value);
     return *CastP<HBINT16> (value);
   }
 
@@ -472,10 +472,7 @@ struct SinglePosFormat1
   { return (this+coverage).intersects (glyphs); }
 
   void collect_glyphs (hb_collect_glyphs_context_t *c) const
-  {
-    TRACE_COLLECT_GLYPHS (this);
-    if (unlikely (!(this+coverage).add_coverage (c->input))) return;
-  }
+  { if (unlikely (!(this+coverage).add_coverage (c->input))) return; }
 
   const Coverage &get_coverage () const { return this+coverage; }
 
@@ -527,10 +524,7 @@ struct SinglePosFormat2
   { return (this+coverage).intersects (glyphs); }
 
   void collect_glyphs (hb_collect_glyphs_context_t *c) const
-  {
-    TRACE_COLLECT_GLYPHS (this);
-    if (unlikely (!(this+coverage).add_coverage (c->input))) return;
-  }
+  { if (unlikely (!(this+coverage).add_coverage (c->input))) return; }
 
   const Coverage &get_coverage () const { return this+coverage; }
 
@@ -642,7 +636,6 @@ struct PairSet
   void collect_glyphs (hb_collect_glyphs_context_t *c,
 			      const ValueFormat *valueFormats) const
   {
-    TRACE_COLLECT_GLYPHS (this);
     unsigned int len1 = valueFormats[0].get_len ();
     unsigned int len2 = valueFormats[1].get_len ();
     unsigned int record_size = HBUINT16::static_size * (1 + len1 + len2);
@@ -743,7 +736,6 @@ struct PairPosFormat1
 
   void collect_glyphs (hb_collect_glyphs_context_t *c) const
   {
-    TRACE_COLLECT_GLYPHS (this);
     if (unlikely (!(this+coverage).add_coverage (c->input))) return;
     unsigned int count = pairSet.len;
     for (unsigned int i = 0; i < count; i++)
@@ -820,7 +812,6 @@ struct PairPosFormat2
 
   void collect_glyphs (hb_collect_glyphs_context_t *c) const
   {
-    TRACE_COLLECT_GLYPHS (this);
     if (unlikely (!(this+coverage).add_coverage (c->input))) return;
     if (unlikely (!(this+classDef2).add_coverage (c->input))) return;
   }
@@ -971,10 +962,7 @@ struct CursivePosFormat1
   { return (this+coverage).intersects (glyphs); }
 
   void collect_glyphs (hb_collect_glyphs_context_t *c) const
-  {
-    TRACE_COLLECT_GLYPHS (this);
-    if (unlikely (!(this+coverage).add_coverage (c->input))) return;
-  }
+  { if (unlikely (!(this+coverage).add_coverage (c->input))) return; }
 
   const Coverage &get_coverage () const { return this+coverage; }
 
@@ -1138,7 +1126,6 @@ struct MarkBasePosFormat1
 
   void collect_glyphs (hb_collect_glyphs_context_t *c) const
   {
-    TRACE_COLLECT_GLYPHS (this);
     if (unlikely (!(this+markCoverage).add_coverage (c->input))) return;
     if (unlikely (!(this+baseCoverage).add_coverage (c->input))) return;
   }
@@ -1260,7 +1247,6 @@ struct MarkLigPosFormat1
 
   void collect_glyphs (hb_collect_glyphs_context_t *c) const
   {
-    TRACE_COLLECT_GLYPHS (this);
     if (unlikely (!(this+markCoverage).add_coverage (c->input))) return;
     if (unlikely (!(this+ligatureCoverage).add_coverage (c->input))) return;
   }
@@ -1381,7 +1367,6 @@ struct MarkMarkPosFormat1
 
   void collect_glyphs (hb_collect_glyphs_context_t *c) const
   {
-    TRACE_COLLECT_GLYPHS (this);
     if (unlikely (!(this+mark1Coverage).add_coverage (c->input))) return;
     if (unlikely (!(this+mark2Coverage).add_coverage (c->input))) return;
   }
@@ -1584,10 +1569,7 @@ struct PosLookup : Lookup
   }
 
   hb_collect_glyphs_context_t::return_t collect_glyphs (hb_collect_glyphs_context_t *c) const
-  {
-    TRACE_COLLECT_GLYPHS (this);
-    return_trace (dispatch (c));
-  }
+  { return dispatch (c); }
 
   template <typename set_t>
   void add_coverage (set_t *glyphs) const
@@ -1619,7 +1601,7 @@ struct PosLookup : Lookup
 
 struct GPOS : GSUBGPOS
 {
-  enum { tableTag = HB_OT_TAG_GPOS };
+  static constexpr hb_tag_t tableTag = HB_OT_TAG_GPOS;
 
   const PosLookup& get_lookup (unsigned int i) const
   { return CastR<PosLookup> (GSUBGPOS::get_lookup (i)); }

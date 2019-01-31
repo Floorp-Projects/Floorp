@@ -50,7 +50,7 @@ struct FTStringRange
   }
 
   protected:
-  OffsetTo<UnsizedArrayOf<HBUINT8>, HBUINT16, false>
+  NNOffsetTo<UnsizedArrayOf<HBUINT8> >
 		tag;		/* Offset from the start of the table to
 				 * the beginning of the string */
   HBUINT16	length;		/* String length (in bytes) */
@@ -60,7 +60,7 @@ struct FTStringRange
 
 struct ltag
 {
-  enum { tableTag = HB_AAT_TAG_ltag };
+  static constexpr hb_tag_t tableTag = HB_AAT_TAG_ltag;
 
   hb_language_t get_language (unsigned int i) const
   {
