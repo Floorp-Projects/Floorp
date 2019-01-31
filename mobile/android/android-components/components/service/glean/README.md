@@ -97,6 +97,13 @@ Every application must provide a way to disable and re-enable metrics. This is
 controlled with the `glean.setMetricsEnabled()` method. The application should
 provide some form of user interface to call this method.
 
+## Contact
+
+To contact us you can:
+- Find us on the Mozilla Slack in *#glean*, on [Mozilla IRC](https://wiki.mozilla.org/IRC) in *#telemetry*.
+- To report issues or request changes, file a bug in [Bugzilla in Toolkit::Telemetry](https://bugzilla.mozilla.org/enter_bug.cgi?product=Toolkit&component=Telemetry) and mention Glean in the title.
+- Send an email to *glean-team@mozilla.com*.
+
 ## License
 
     This Source Code Form is subject to the terms of the Mozilla Public
