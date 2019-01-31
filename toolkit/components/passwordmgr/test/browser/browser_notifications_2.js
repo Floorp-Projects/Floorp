@@ -31,7 +31,6 @@ add_task(async function test_empty_password() {
 
     let notificationElement = PopupNotifications.panel.childNodes[0];
     let passwordTextbox = notificationElement.querySelector("#password-notification-password");
-    let toggleCheckbox = notificationElement.querySelector("#password-notification-visibilityToggle");
 
     // Synthesize input to empty the field
     passwordTextbox.focus();

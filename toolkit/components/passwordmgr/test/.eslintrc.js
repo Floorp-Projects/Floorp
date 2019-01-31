@@ -8,6 +8,5 @@ module.exports = {
   "rules": {
     "brace-style": ["error", "1tbs", {"allowSingleLine": false}],
     "no-undef": "off",
-    "no-unused-vars": "off",
   },
 };

@@ -56,6 +56,8 @@ var setupScript = runInParent(function setup() {
                                 "form9userAB", "form9pass", "uname", "pword");
   var login8B = new nsLoginInfo("http://mochi.test:8888", "http://autocomplete5", null,
                                 "form9userAAB", "form9pass", "uname", "pword");
+  // Reference by `eval` in the message listeners below.
+  // eslint-disable-next-line no-unused-vars
   var login8C = new nsLoginInfo("http://mochi.test:8888", "http://autocomplete5", null,
                                 "form9userAABzz", "form9pass", "uname", "pword");
 
