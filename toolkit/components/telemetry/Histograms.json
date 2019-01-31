@@ -10509,8 +10509,8 @@
   "DEVTOOLS_FONTEDITOR_FONT_TYPE_DISPLAYED": {
     "record_in_processes": ["main"],
     "alert_emails": ["dev-developer-tools@lists.mozilla.org", "mbalfanz@mozilla.com"],
-    "expires_in_version": "66",
-    "bug_numbers": [1465424],
+    "expires_in_version": "never",
+    "bug_numbers": [1523656],
     "description": "Indicates if the font editor displayed its UI for a non-variable font or a variable font",
     "releaseChannelCollection": "opt-out",
     "kind": "categorical",
