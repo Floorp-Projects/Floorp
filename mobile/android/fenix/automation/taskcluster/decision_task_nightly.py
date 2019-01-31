@@ -46,7 +46,7 @@ def generate_build_task(apks, is_staging):
             ' && ./gradlew --no-daemon -PcrashReports=true clean test assembleRelease'),
         features={
             "chainOfTrust": True,
-            "taskClusterProxy": True
+            "taskclusterProxy": True
         },
         artifacts=artifacts,
         worker_type='android-components-g' if is_staging else 'gecko-focus',
