@@ -39,7 +39,7 @@ public class PanZoomController extends JNIObject {
 
     @WrapForJNI(calledFrom = "ui")
     private native boolean handleMotionEvent(
-            int action, int actionIndex, long time, int metaState,
+            int action, int actionIndex, long time, int metaState,  float screenX, float screenY,
             int pointerId[], float x[], float y[], float orientation[], float pressure[],
             float toolMajor[], float toolMinor[]);
 
@@ -94,8 +94,15 @@ public class PanZoomController extends JNIObject {
             toolMinor[i] = coords.toolMinor;
         }
 
+        final float screenX = event.getRawX() - event.getX();
+        final float screenY = event.getRawY() - event.getY();
+
+        // Take this opportunity to update screen origin of session. This gets
+        // dispatched to the gecko thread, so we also pass the new screen x/y directly to apz.
+        mSession.onScreenOriginChanged((int)screenX, (int)screenY);
+
         return handleMotionEvent(action, event.getActionIndex(), event.getEventTime(),
-                event.getMetaState(), pointerId, x, y, orientation, pressure,
+                event.getMetaState(), screenX, screenY, pointerId, x, y, orientation, pressure,
                 toolMajor, toolMinor);
     }
 
