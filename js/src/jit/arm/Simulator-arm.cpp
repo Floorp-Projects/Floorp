@@ -2332,6 +2332,8 @@ typedef int32_t (*Prototype_Int_DoubleIntInt)(double arg0, int32_t arg1,
                                               int32_t arg2);
 typedef int32_t (*Prototype_Int_IntDoubleIntInt)(int32_t arg0, double arg1,
                                                  int32_t arg2, int32_t arg3);
+
+typedef int32_t (*Prototype_Int_Float32)(float arg0);
 typedef float (*Prototype_Float32_Float32)(float arg0);
 typedef float (*Prototype_Float32_Float32Float32)(float arg0, float arg1);
 typedef float (*Prototype_Float32_IntInt)(int arg0, int arg1);
@@ -2537,6 +2539,19 @@ void Simulator::softwareInterrupt(SimInstruction* instr) {
           Prototype_Int_Double target =
               reinterpret_cast<Prototype_Int_Double>(external);
           int32_t res = target(dval0);
+          scratchVolatileRegisters(/* scratchFloat = true */);
+          set_register(r0, res);
+          break;
+        }
+        case Args_Int_Float32: {
+          float fval0;
+          if (UseHardFpABI()) {
+            get_float_from_s_register(0, &fval0);
+          } else {
+            fval0 = mozilla::BitwiseCast<float>(arg0);
+          }
+          auto target = reinterpret_cast<Prototype_Int_Float32>(external);
+          int32_t res = target(fval0);
           scratchVolatileRegisters(/* scratchFloat = true */);
           set_register(r0, res);
           break;

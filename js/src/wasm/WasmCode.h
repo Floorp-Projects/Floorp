@@ -724,6 +724,8 @@ class Code : public ShareableBase<Code> {
                                     Metadata& metadata, SharedCode* code);
 };
 
+void PatchDebugSymbolicAccesses(uint8_t* codeBase, jit::MacroAssembler& masm);
+
 }  // namespace wasm
 }  // namespace js
 
