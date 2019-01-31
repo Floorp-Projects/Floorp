@@ -770,6 +770,9 @@ enum ABIFunctionType {
   // int f(double)
   Args_Int_Double = Args_General0 | (ArgType_Double << ArgType_Shift),
 
+  // int f(float32)
+  Args_Int_Float32 = Args_General0 | (ArgType_Float32 << ArgType_Shift),
+
   // float f(float)
   Args_Float32_Float32 =
       (ArgType_Float32 << RetType_Shift) | (ArgType_Float32 << ArgType_Shift),

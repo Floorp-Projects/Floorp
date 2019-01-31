@@ -1377,6 +1377,13 @@ static const char* ThunkedNativeToDescription(SymbolicAddress func) {
     case SymbolicAddress::js_jit_gAtomic64Lock:
       MOZ_CRASH();
 #endif
+#ifdef WASM_CODEGEN_DEBUG
+    case SymbolicAddress::PrintI32:
+    case SymbolicAddress::PrintPtr:
+    case SymbolicAddress::PrintF32:
+    case SymbolicAddress::PrintF64:
+    case SymbolicAddress::PrintText:
+#endif
     case SymbolicAddress::Limit:
       break;
   }

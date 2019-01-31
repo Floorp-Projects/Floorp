@@ -278,6 +278,8 @@ DefaultJitOptions::DefaultJitOptions() {
   SET_DEFAULT(enableWasmJitExit, true);
   SET_DEFAULT(enableWasmJitEntry, true);
   SET_DEFAULT(enableWasmIonFastCalls, true);
+  SET_DEFAULT(enableWasmImportCallSpew, false);
+  SET_DEFAULT(enableWasmFuncCallSpew, false);
 #endif
 }
 
