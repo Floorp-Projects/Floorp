@@ -14,6 +14,12 @@
 #include "nsPIDOMWindow.h"
 #include "mozilla/UniquePtr.h"
 
+enum RemoteResult {
+  REMOTE_NOT_FOUND = 0,
+  REMOTE_FOUND = 1,
+  REMOTE_ARG_BAD = 2
+};
+
 class nsRemoteService final : public nsIObserver {
  public:
   // We will be a static singleton, so don't use the ordinary methods.
@@ -22,8 +28,10 @@ class nsRemoteService final : public nsIObserver {
 
   nsRemoteService() = default;
 
-  void Startup(const char* aAppName, const char* aProfileName);
-  void Shutdown();
+  RemoteResult StartClient(const char* aDesktopStartupID, nsCString& program,
+                           const char* profile);
+  void StartupServer(const char* aAppName, const char* aProfileName);
+  void ShutdownServer();
 
  private:
   ~nsRemoteService();
