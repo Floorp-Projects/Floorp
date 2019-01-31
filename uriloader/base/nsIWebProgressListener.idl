@@ -270,6 +270,18 @@ interface nsIWebProgressListener : nsISupports
    * STATE_LOADED_TRACKING_CONTENT
    *   Tracking content has been loaded.
    *
+   * STATE_BLOCKED_FINGERPRINTING_CONTENT
+   *   Fingerprinting content has been blocked from loading.
+   *
+   * STATE_LOADED_FINGERPRINTING_CONTENT
+   *   Fingerprinting content has been loaded.
+   *
+   * STATE_BLOCKED_CRYPTOMINING_CONTENT
+   *   Cryptomining content has been blocked from loading.
+   *
+   * STATE_LOADED_CRYPTOMINING_CONTENT
+   *   Cryptomining content has been loaded.
+   *
    * STATE_BLOCKED_UNSAFE_CONTENT
    *   Content which againts SafeBrowsing list has been blocked from loading.
    *
@@ -286,14 +298,18 @@ interface nsIWebProgressListener : nsISupports
    * STATE_COOKIES_BLOCKED_FOREIGN
    *   Rejected because cookie policy blocks 3rd party cookies.
    */
-  const unsigned long STATE_BLOCKED_TRACKING_CONTENT      = 0x00001000;
-  const unsigned long STATE_LOADED_TRACKING_CONTENT       = 0x00002000;
-  const unsigned long STATE_BLOCKED_UNSAFE_CONTENT        = 0x00004000;
-  const unsigned long STATE_COOKIES_LOADED                = 0x00008000;
-  const unsigned long STATE_COOKIES_BLOCKED_BY_PERMISSION = 0x10000000;
-  const unsigned long STATE_COOKIES_BLOCKED_TRACKER       = 0x20000000;
-  const unsigned long STATE_COOKIES_BLOCKED_ALL           = 0x40000000;
-  const unsigned long STATE_COOKIES_BLOCKED_FOREIGN       = 0x00000080;
+  const unsigned long STATE_BLOCKED_TRACKING_CONTENT       = 0x00001000;
+  const unsigned long STATE_LOADED_TRACKING_CONTENT        = 0x00002000;
+  const unsigned long STATE_BLOCKED_FINGERPRINTING_CONTENT = 0x00000040;
+  const unsigned long STATE_LOADED_FINGERPRINTING_CONTENT  = 0x00000400;
+  const unsigned long STATE_BLOCKED_CRYPTOMINING_CONTENT   = 0x00000800;
+  const unsigned long STATE_LOADED_CRYPTOMINING_CONTENT    = 0x00200000;
+  const unsigned long STATE_BLOCKED_UNSAFE_CONTENT         = 0x00004000;
+  const unsigned long STATE_COOKIES_LOADED                 = 0x00008000;
+  const unsigned long STATE_COOKIES_BLOCKED_BY_PERMISSION  = 0x10000000;
+  const unsigned long STATE_COOKIES_BLOCKED_TRACKER        = 0x20000000;
+  const unsigned long STATE_COOKIES_BLOCKED_ALL            = 0x40000000;
+  const unsigned long STATE_COOKIES_BLOCKED_FOREIGN        = 0x00000080;
 
   /**
    * Notification indicating the state has changed for one of the requests

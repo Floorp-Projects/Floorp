@@ -5,6 +5,9 @@
 
 #include "nsAppRunner.h"
 #include "nsXREDirProvider.h"
+#ifndef ANDROID
+#  include "commonupdatedir.h"
+#endif
 
 #include "jsapi.h"
 #include "xpcpublic.h"
@@ -1621,7 +1624,7 @@ nsresult nsXREDirProvider::AppendProfilePath(nsIFile* aFile, bool aLocal) {
     vendor = gAppData->vendor;
   }
 
-  nsresult rv;
+  nsresult rv = NS_OK;
 
 #if defined(XP_MACOSX)
   if (!profile.IsEmpty()) {
@@ -1683,10 +1686,13 @@ nsresult nsXREDirProvider::AppendProfilePath(nsIFile* aFile, bool aLocal) {
       folder.Truncate();
     }
 
-    folder.Append(appName);
-    ToLowerCase(folder);
+    // This can be the case in tests.
+    if (!appName.IsEmpty()) {
+      folder.Append(appName);
+      ToLowerCase(folder);
 
-    rv = aFile->AppendNative(folder);
+      rv = aFile->AppendNative(folder);
+    }
   }
   NS_ENSURE_SUCCESS(rv, rv);
 

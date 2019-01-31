@@ -25,6 +25,7 @@ add_task(async () => {
   checkProfileService(profileData);
 
   let { profile, didCreate } = selectStartupProfile(["-P", "Profile1"]);
+  checkStartupReason("argument-p");
 
   Assert.ok(!didCreate, "Should not have created a new profile.");
   Assert.equal(profile.name, "Profile1", "Should have chosen the right profile");

@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+<?xml-stylesheet href="chrome://mozapps/skin/profile/profileDowngrade.css" type="text/css"?>
+
+<!DOCTYPE dialog [
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
+%brandDTD;
+<!ENTITY % syncBrandDTD SYSTEM "chrome://browser/locale/syncBrand.dtd">
+%syncBrandDTD;
+<!ENTITY % profileDTD SYSTEM "chrome://mozapps/locale/profile/profileDowngrade.dtd">
+%profileDTD;
+]>
+
+<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="&window.title;" onload="init()" style="&window.style;"
+        buttonlabelextra1="&window.create;" ondialogextra1="createProfile()"
+#ifdef XP_WIN
+        buttonlabelaccept="&window.quit-win;"
+#else
+        buttonlabelaccept="&window.quit-nonwin;"
+#endif
+        ondialogaccept="quit()" ondialogcancel="quit()"
+        buttons="accept,extra1" buttonpack="end">
+
+  <script type="application/javascript" src="profileDowngrade.js"/>
+
+  <hbox flex="1" align="start">
+    <image id="info" role="presentation"/>
+    <vbox flex="1">
+      <description id="nosync">&window.nosync;</description>
+      <description id="sync">&window.sync;</description>
+    </vbox>
+  </hbox>
+
+</dialog>

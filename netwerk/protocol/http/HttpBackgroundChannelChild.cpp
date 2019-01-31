@@ -291,20 +291,24 @@ IPCResult HttpBackgroundChannelChild::RecvDivertMessages() {
   return IPC_OK();
 }
 
-IPCResult HttpBackgroundChannelChild::RecvNotifyTrackingProtectionDisabled() {
+IPCResult
+HttpBackgroundChannelChild::RecvNotifyChannelClassifierProtectionDisabled(
+    const uint32_t& aAcceptedReason) {
   LOG(
-      ("HttpBackgroundChannelChild::RecvNotifyTrackingProtectionDisabled "
-       "[this=%p]\n",
-       this));
+      ("HttpBackgroundChannelChild::"
+       "RecvNotifyChannelClassifierProtectionDisabled [this=%p "
+       "aAcceptedReason=%" PRIu32 "]\n",
+       this, aAcceptedReason));
   MOZ_ASSERT(OnSocketThread());
 
   if (NS_WARN_IF(!mChannelChild)) {
     return IPC_OK();
   }
 
-  // NotifyTrackingProtectionDisabled has no order dependency to OnStartRequest.
-  // It this be handled as soon as possible
-  mChannelChild->ProcessNotifyTrackingProtectionDisabled();
+  // NotifyChannelClassifierProtectionDisabled has no order dependency to
+  // OnStartRequest. It this be handled as soon as possible
+  mChannelChild->ProcessNotifyChannelClassifierProtectionDisabled(
+      aAcceptedReason);
 
   return IPC_OK();
 }
@@ -323,18 +327,19 @@ IPCResult HttpBackgroundChannelChild::RecvNotifyCookieAllowed() {
   return IPC_OK();
 }
 
-IPCResult HttpBackgroundChannelChild::RecvNotifyTrackingCookieBlocked(
+IPCResult HttpBackgroundChannelChild::RecvNotifyCookieBlocked(
     const uint32_t& aRejectedReason) {
-  LOG((
-      "HttpBackgroundChannelChild::RecvNotifyTrackingCookieBlocked [this=%p]\n",
-      this));
+  LOG(
+      ("HttpBackgroundChannelChild::RecvNotifyCookieBlocked [this=%p "
+       "aRejectedReason=%" PRIu32 "]\n",
+       this, aRejectedReason));
   MOZ_ASSERT(OnSocketThread());
 
   if (NS_WARN_IF(!mChannelChild)) {
     return IPC_OK();
   }
 
-  mChannelChild->ProcessNotifyTrackingCookieBlocked(aRejectedReason);
+  mChannelChild->ProcessNotifyCookieBlocked(aRejectedReason);
 
   return IPC_OK();
 }

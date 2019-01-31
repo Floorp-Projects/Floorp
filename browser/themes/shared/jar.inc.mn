@@ -56,6 +56,8 @@
   skin/classic/browser/identity-icon.svg                       (../shared/identity-block/identity-icon.svg)
   skin/classic/browser/identity-icon-notice.svg                (../shared/identity-block/identity-icon-notice.svg)
   skin/classic/browser/info.svg                                (../shared/info.svg)
+  skin/classic/browser/newInstall.css                          (../shared/newInstall.css)
+  skin/classic/browser/newInstallPage.css                      (../shared/newInstallPage.css)
 
   skin/classic/browser/illustrations/error-session-restore.svg (../shared/illustrations/error-session-restore.svg)
 

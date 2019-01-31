@@ -75,7 +75,7 @@ add_task(async function() {
                           { expected: gExpectedResourcesSeen,
                           },
                           async function(obj) {
-    is(content.document.blockedTrackingNodeCount, obj.expected, "Expected tracking nodes found");
+    is(content.document.blockedNodeByClassifierCount, obj.expected, "Expected tracking nodes found");
   });
 
   info("Removing the tab");
