@@ -333,13 +333,6 @@ async function gLazyFindCommand(cmd, ...args) {
   }
 }
 
-var gPageIcons = {
-  "about:home": "chrome://branding/content/icon32.png",
-  "about:newtab": "chrome://branding/content/icon32.png",
-  "about:welcome": "chrome://branding/content/icon32.png",
-  "about:newinstall": "chrome://branding/content/icon32.png",
-  "about:privatebrowsing": "chrome://browser/skin/privatebrowsing/favicon.svg",
-};
 
 var gInitialPages = [
   "about:blank",
@@ -349,20 +342,10 @@ var gInitialPages = [
   "about:welcomeback",
   "about:sessionrestore",
   "about:welcome",
-  "about:newinstall",
 ];
 
 function isInitialPage(url) {
-  if (!(url instanceof Ci.nsIURI)) {
-    try {
-      url = Services.io.newURI(url);
-    } catch (ex) {
-      return false;
-    }
-  }
-
-  let nonQuery = url.prePath + url.filePath;
-  return gInitialPages.includes(nonQuery) || nonQuery == BROWSER_NEW_TAB_URL;
+  return gInitialPages.includes(url) || url == BROWSER_NEW_TAB_URL;
 }
 
 function browserWindows() {
@@ -1311,18 +1294,13 @@ var gBrowserInit = {
     }
     BrowserSearch.initPlaceHolder();
 
-    // Hack to ensure that the various initial pages favicon is loaded
+    // Hack to ensure that the about:home favicon is loaded
     // instantaneously, to avoid flickering and improve perceived performance.
     this._callWithURIToLoad(uriToLoad => {
-      let url;
-      try {
-        url = Services.io.newURI(uriToLoad);
-      } catch (e) {
-        return;
-      }
-      let nonQuery = url.prePath + url.filePath;
-      if (nonQuery in gPageIcons) {
-        gBrowser.setIcon(gBrowser.selectedTab, gPageIcons[nonQuery]);
+      if (uriToLoad == "about:home" || uriToLoad == "about:newtab" || uriToLoad == "about:welcome") {
+        gBrowser.setIcon(gBrowser.selectedTab, "chrome://branding/content/icon32.png");
+      } else if (uriToLoad == "about:privatebrowsing") {
+        gBrowser.setIcon(gBrowser.selectedTab, "chrome://browser/skin/privatebrowsing/favicon.svg");
       }
     });
 
@@ -2666,7 +2644,7 @@ function URLBarSetURI(aURI, updatePopupNotifications) {
 
     // Replace initial page URIs with an empty string
     // only if there's no opener (bug 370555).
-    if (isInitialPage(uri) &&
+    if (isInitialPage(uri.spec) &&
         checkEmptyPageOrigin(gBrowser.selectedBrowser, uri)) {
       value = "";
     } else {

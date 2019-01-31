@@ -4,8 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-include('../components/telemetry/telemetry-constants.mozbuild')
-
 with Files('**'):
     BUG_COMPONENT = ('Toolkit', 'Startup and Profile System')
 
@@ -189,7 +187,6 @@ if CONFIG['OS_ARCH'] == 'Linux' and 'lib64' in CONFIG['libdir']:
     DEFINES['HAVE_USR_LIB64_DIR'] = True
 
 DEFINES['GRE_MILESTONE'] = CONFIG['GRE_MILESTONE']
-DEFINES['MOZ_APP_VERSION_DISPLAY'] = CONFIG['MOZ_APP_VERSION_DISPLAY']
 
 for var in ('APP_VERSION', 'APP_ID'):
     DEFINES[var] = CONFIG['MOZ_%s' % var]
