@@ -82,6 +82,14 @@ function h1() {
 }
 h1();
 
+// Tests that var declaration is allowed in for-of head.
+function h2() {
+  try {} catch (e) {
+    for (var e of {});
+  }
+}
+h2();
+
 // Tests that redeclaring a var inside the catch is allowed.
 function h3() {
   var e;
@@ -90,16 +98,6 @@ function h3() {
   }
 }
 h3();
-
-// Tests that var declaration is not allowed in for-of head.
-assertThrowsInstanceOf(function () {
-  eval(`
-       function h2() {
-         try {} catch (e) { for (var e of {}); }
-       }
-       log += 'unreached';
-       `);
-}, SyntaxError);
 
 if (typeof evaluate === "function") {
   assertThrowsInstanceOf(function () {
