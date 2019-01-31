@@ -2701,6 +2701,9 @@ pref("security.sri.enable", true);
 // Block scripts with wrong MIME type such as image/ or video/.
 pref("security.block_script_with_wrong_mime", true);
 
+// Block scripts with wrong MIME type when loading via importScripts() in workers.
+pref("security.block_importScripts_with_wrong_mime", true);
+
 // OCSP must-staple
 pref("security.ssl.enable_ocsp_must_staple", true);
 

@@ -161,7 +161,7 @@ struct hb_set_t
     }
 
     typedef unsigned long long elt_t;
-    enum { PAGE_BITS = 512 };
+    static constexpr unsigned PAGE_BITS = 512;
     static_assert ((PAGE_BITS & ((PAGE_BITS) - 1)) == 0, "");
 
     static unsigned int elt_get_min (const elt_t &elt) { return hb_ctz (elt); }
@@ -169,10 +169,10 @@ struct hb_set_t
 
     typedef hb_vector_size_t<elt_t, PAGE_BITS / 8> vector_t;
 
-    enum { ELT_BITS = sizeof (elt_t) * 8 };
-    enum { ELT_MASK = ELT_BITS - 1 };
-    enum { BITS = sizeof (vector_t) * 8 };
-    enum { MASK = BITS - 1 };
+    static constexpr unsigned ELT_BITS = sizeof (elt_t) * 8;
+    static constexpr unsigned ELT_MASK = ELT_BITS - 1;
+    static constexpr unsigned BITS = sizeof (vector_t) * 8;
+    static constexpr unsigned MASK = BITS - 1;
     static_assert ((unsigned) PAGE_BITS == (unsigned) BITS, "");
 
     elt_t &elt (hb_codepoint_t g) { return v[(g & MASK) / ELT_BITS]; }
@@ -186,8 +186,8 @@ struct hb_set_t
   hb_object_header_t header;
   bool successful; /* Allocations successful */
   mutable unsigned int population;
-  hb_vector_t<page_map_t, 1> page_map;
-  hb_vector_t<page_t, 1> pages;
+  hb_vector_t<page_map_t> page_map;
+  hb_vector_t<page_t> pages;
 
   void init_shallow ()
   {
@@ -220,7 +220,7 @@ struct hb_set_t
     if (unlikely (!successful)) return false;
     if (!pages.resize (count) || !page_map.resize (count))
     {
-      pages.resize (page_map.len);
+      pages.resize (page_map.length);
       successful = false;
       return false;
     }
@@ -238,7 +238,7 @@ struct hb_set_t
   }
   bool is_empty () const
   {
-    unsigned int count = pages.len;
+    unsigned int count = pages.length;
     for (unsigned int i = 0; i < count; i++)
       if (!pages[i].is_empty ())
         return false;
@@ -373,7 +373,7 @@ struct hb_set_t
   void set (const hb_set_t *other)
   {
     if (unlikely (!successful)) return;
-    unsigned int count = other->pages.len;
+    unsigned int count = other->pages.length;
     if (!resize (count))
       return;
     population = other->population;
@@ -386,8 +386,8 @@ struct hb_set_t
     if (get_population () != other->get_population ())
       return false;
 
-    unsigned int na = pages.len;
-    unsigned int nb = other->pages.len;
+    unsigned int na = pages.length;
+    unsigned int nb = other->pages.length;
 
     unsigned int a = 0, b = 0;
     for (; a < na && b < nb; )
@@ -429,8 +429,8 @@ struct hb_set_t
 
     dirty ();
 
-    unsigned int na = pages.len;
-    unsigned int nb = other->pages.len;
+    unsigned int na = pages.length;
+    unsigned int nb = other->pages.length;
     unsigned int next_page = na;
 
     unsigned int count = 0, newCount = 0;
@@ -461,7 +461,7 @@ struct hb_set_t
     if (Op::passthru_right)
       count += nb - b;
 
-    if (count > pages.len)
+    if (count > pages.length)
       if (!resize (count))
         return;
     newCount = count;
@@ -517,7 +517,7 @@ struct hb_set_t
 	page_at (count).v = other->page_at (b).v;
       }
     assert (!count);
-    if (pages.len > newCount)
+    if (pages.length > newCount)
       resize (newCount);
   }
 
@@ -547,7 +547,7 @@ struct hb_set_t
     page_map_t map = {get_major (*codepoint), 0};
     unsigned int i;
     page_map.bfind (map, &i, HB_BFIND_NOT_FOUND_STORE_CLOSEST);
-    if (i < page_map.len && page_map[i].major == map.major)
+    if (i < page_map.length && page_map[i].major == map.major)
     {
       if (pages[page_map[i].index].next (codepoint))
       {
@@ -556,7 +556,7 @@ struct hb_set_t
       }
       i++;
     }
-    for (; i < page_map.len; i++)
+    for (; i < page_map.length; i++)
     {
       hb_codepoint_t m = pages[page_map[i].index].get_min ();
       if (m != INVALID)
@@ -578,7 +578,7 @@ struct hb_set_t
     page_map_t map = {get_major (*codepoint), 0};
     unsigned int i;
     page_map.bfind (map, &i, HB_BFIND_NOT_FOUND_STORE_CLOSEST);
-    if (i < page_map.len && page_map[i].major == map.major)
+    if (i < page_map.length && page_map[i].major == map.major)
     {
       if (pages[page_map[i].index].previous (codepoint))
       {
@@ -642,7 +642,7 @@ struct hb_set_t
       return population;
 
     unsigned int pop = 0;
-    unsigned int count = pages.len;
+    unsigned int count = pages.length;
     for (unsigned int i = 0; i < count; i++)
       pop += pages[i].get_population ();
 
@@ -651,7 +651,7 @@ struct hb_set_t
   }
   hb_codepoint_t get_min () const
   {
-    unsigned int count = pages.len;
+    unsigned int count = pages.length;
     for (unsigned int i = 0; i < count; i++)
       if (!page_at (i).is_empty ())
         return page_map[i].major * page_t::PAGE_BITS + page_at (i).get_min ();
@@ -659,28 +659,55 @@ struct hb_set_t
   }
   hb_codepoint_t get_max () const
   {
-    unsigned int count = pages.len;
+    unsigned int count = pages.length;
     for (int i = count - 1; i >= 0; i++)
       if (!page_at (i).is_empty ())
         return page_map[(unsigned) i].major * page_t::PAGE_BITS + page_at (i).get_max ();
     return INVALID;
   }
 
-  static  const hb_codepoint_t INVALID = HB_SET_VALUE_INVALID;
+  static constexpr hb_codepoint_t INVALID = HB_SET_VALUE_INVALID;
+
+  /*
+   * Iterator implementation.
+   */
+  struct const_iter_t : hb_sorted_iter_t<const_iter_t, const hb_codepoint_t>
+  {
+    const_iter_t (const hb_set_t &s_) :
+      s (s_), v (INVALID), l (s.get_population () + 1) { __next__ (); }
+
+    typedef hb_codepoint_t __item_type__;
+    hb_codepoint_t __item__ () const { return v; }
+    bool __more__ () const { return v != INVALID; }
+    void __next__ () { s.next (&v); if (l) l--; }
+    void __prev__ () { s.previous (&v); }
+    unsigned __len__ () { return l; }
+
+    protected:
+    const hb_set_t &s;
+    hb_codepoint_t v;
+    unsigned l;
+  };
+  const_iter_t const_iter () const { return const_iter_t (*this); }
+  operator const_iter_t () const { return const_iter (); }
+  typedef const_iter_t iter_t;
+  iter_t iter () const { return const_iter (); }
+
+  protected:
 
   page_t *page_for_insert (hb_codepoint_t g)
   {
-    page_map_t map = {get_major (g), pages.len};
+    page_map_t map = {get_major (g), pages.length};
     unsigned int i;
     if (!page_map.bfind (map, &i, HB_BFIND_NOT_FOUND_STORE_CLOSEST))
     {
-      if (!resize (pages.len + 1))
+      if (!resize (pages.length + 1))
 	return nullptr;
 
       pages[map.index].init0 ();
       memmove (page_map + i + 1,
 	       page_map + i,
-	       (page_map.len - 1 - i) * page_map.item_size);
+	       (page_map.length - 1 - i) * page_map.item_size);
       page_map[i] = map;
     }
     return &pages[page_map[i].index];

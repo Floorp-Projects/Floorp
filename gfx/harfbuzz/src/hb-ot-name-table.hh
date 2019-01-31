@@ -151,7 +151,7 @@ _hb_ot_name_entry_cmp (const void *pa, const void *pb)
 
 struct name
 {
-  enum { tableTag = HB_OT_TAG_name };
+  static constexpr hb_tag_t tableTag = HB_OT_TAG_name;
 
   unsigned int get_size () const
   { return min_size + count * nameRecordZ.item_size; }
@@ -188,9 +188,9 @@ struct name
 						    this->table->count);
 
       this->names.init ();
-      this->names.alloc (all_names.len);
+      this->names.alloc (all_names.length);
 
-      for (unsigned int i = 0; i < all_names.len; i++)
+      for (unsigned int i = 0; i < all_names.length; i++)
       {
 	hb_ot_name_entry_t *entry = this->names.push ();
 
@@ -204,7 +204,7 @@ struct name
       /* Walk and pick best only for each name_id,language pair,
        * while dropping unsupported encodings. */
       unsigned int j = 0;
-      for (unsigned int i = 0; i < this->names.len; i++)
+      for (unsigned int i = 0; i < this->names.length; i++)
       {
         if (this->names[i].entry_score == UNSUPPORTED ||
 	    this->names[i].language == HB_LANGUAGE_INVALID)
@@ -231,8 +231,8 @@ struct name
       const hb_ot_name_entry_t key = {name_id, {0}, language};
       const hb_ot_name_entry_t *entry = (const hb_ot_name_entry_t *)
 					hb_bsearch (&key,
-						    this->names.arrayZ(),
-						    this->names.len,
+						    (const hb_ot_name_entry_t *) this->names,
+						    this->names.length,
 						    sizeof (key),
 						    _hb_ot_name_entry_cmp_key);
       if (!entry)
@@ -263,7 +263,7 @@ struct name
   /* We only implement format 0 for now. */
   HBUINT16	format;			/* Format selector (=0/1). */
   HBUINT16	count;			/* Number of name records. */
-  OffsetTo<UnsizedArrayOf<HBUINT8>, HBUINT16, false>
+  NNOffsetTo<UnsizedArrayOf<HBUINT8> >
 		stringOffset;		/* Offset to start of string storage (from start of table). */
   UnsizedArrayOf<NameRecord>
 		nameRecordZ;		/* The name records where count is the number of records. */

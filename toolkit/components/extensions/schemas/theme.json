@@ -260,6 +260,14 @@
               "sidebar_highlight_text": {
                 "$ref": "ThemeColor",
                 "optional": true
+              },
+			        "toolbar_field_highlight": {
+                "$ref": "ThemeColor",
+                "optional": true
+              },
+              "toolbar_field_highlight_text": {
+                "$ref": "ThemeColor",
+                "optional": true
               }
             },
             "additionalProperties": { "$ref": "ThemeColor" }

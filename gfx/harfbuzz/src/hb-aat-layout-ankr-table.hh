@@ -58,20 +58,16 @@ typedef LArrayOf<Anchor> GlyphAnchors;
 
 struct ankr
 {
-  enum { tableTag = HB_AAT_TAG_ankr };
+  static constexpr hb_tag_t tableTag = HB_AAT_TAG_ankr;
 
   const Anchor &get_anchor (hb_codepoint_t glyph_id,
 			    unsigned int i,
-			    unsigned int num_glyphs,
-			    const char *end) const
+			    unsigned int num_glyphs) const
   {
-    const Offset<HBUINT16, false> *offset = (this+lookupTable).get_value (glyph_id, num_glyphs);
+    const NNOffsetTo<GlyphAnchors> *offset = (this+lookupTable).get_value (glyph_id, num_glyphs);
     if (!offset)
       return Null(Anchor);
-    const GlyphAnchors &anchors = StructAtOffset<GlyphAnchors> (&(this+anchorData), *offset);
-    /* TODO Use sanitizer; to avoid overflows and more. */
-    if (unlikely ((const char *) &anchors + anchors.get_size () > end))
-      return Null(Anchor);
+    const GlyphAnchors &anchors = &(this+anchorData) + *offset;
     return anchors[i];
   }
 
@@ -80,15 +76,15 @@ struct ankr
     TRACE_SANITIZE (this);
     return_trace (likely (c->check_struct (this) &&
 			  version == 0 &&
-			  lookupTable.sanitize (c, this)));
+			  lookupTable.sanitize (c, this, &(this+anchorData))));
   }
 
   protected:
   HBUINT16	version; 	/* Version number (set to zero) */
   HBUINT16	flags;		/* Flags (currently unused; set to zero) */
-  LOffsetTo<Lookup<Offset<HBUINT16, false> >, false>
+  LOffsetTo<Lookup<NNOffsetTo<GlyphAnchors> > >
 		lookupTable;	/* Offset to the table's lookup table */
-  LOffsetTo<HBUINT8, false>
+  LNNOffsetTo<HBUINT8>
 		anchorData;	/* Offset to the glyph data table */
 
   public:

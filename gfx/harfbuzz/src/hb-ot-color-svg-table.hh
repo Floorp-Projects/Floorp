@@ -62,7 +62,7 @@ struct SVGDocumentIndexEntry
 				 * this index entry. */
   HBUINT16	endGlyphID;	/* The last glyph ID in the range described by
 				 * this index entry. Must be >= startGlyphID. */
-  LOffsetTo<UnsizedArrayOf<HBUINT8>, false>
+  LNNOffsetTo<UnsizedArrayOf<HBUINT8> >
 		svgDoc;		/* Offset from the beginning of the SVG Document Index
 				 * to an SVG document. Must be non-zero. */
   HBUINT32	svgDocLength;	/* Length of the SVG document.
@@ -73,7 +73,7 @@ struct SVGDocumentIndexEntry
 
 struct SVG
 {
-  enum { tableTag = HB_OT_TAG_SVG };
+  static constexpr hb_tag_t tableTag = HB_OT_TAG_SVG;
 
   bool has_data () const { return svgDocEntries; }
 

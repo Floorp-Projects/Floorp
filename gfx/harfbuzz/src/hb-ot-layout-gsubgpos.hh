@@ -59,7 +59,7 @@ struct hb_intersects_context_t :
 };
 
 struct hb_closure_context_t :
-       hb_dispatch_context_t<hb_closure_context_t, hb_void_t, HB_DEBUG_CLOSURE>
+       hb_dispatch_context_t<hb_closure_context_t, hb_void_t, 0>
 {
   const char *get_name () { return "CLOSURE"; }
   typedef return_t (*recurse_func_t) (hb_closure_context_t *c, unsigned int lookup_index);
@@ -151,7 +151,7 @@ struct hb_would_apply_context_t :
 
 
 struct hb_collect_glyphs_context_t :
-       hb_dispatch_context_t<hb_collect_glyphs_context_t, hb_void_t, HB_DEBUG_COLLECT_GLYPHS>
+       hb_dispatch_context_t<hb_collect_glyphs_context_t, hb_void_t, 0>
 {
   const char *get_name () { return "COLLECT_GLYPHS"; }
   typedef return_t (*recurse_func_t) (hb_collect_glyphs_context_t *c, unsigned int lookup_index);
@@ -643,7 +643,7 @@ struct hb_get_subtables_context_t :
     hb_set_digest_t digest;
   };
 
-  typedef hb_vector_t<hb_applicable_t, 2> array_t;
+  typedef hb_vector_t<hb_applicable_t> array_t;
 
   /* Dispatch interface. */
   const char *get_name () { return "GET_SUBTABLES"; }
@@ -1296,7 +1296,6 @@ struct Rule
 
   void closure (hb_closure_context_t *c, ContextClosureLookupContext &lookup_context) const
   {
-    TRACE_CLOSURE (this);
     const UnsizedArrayOf<LookupRecord> &lookupRecord = StructAfter<UnsizedArrayOf<LookupRecord> >
 						       (inputZ.as_array ((inputCount ? inputCount - 1 : 0)));
     context_closure_lookup (c,
@@ -1308,7 +1307,6 @@ struct Rule
   void collect_glyphs (hb_collect_glyphs_context_t *c,
 		       ContextCollectGlyphsLookupContext &lookup_context) const
   {
-    TRACE_COLLECT_GLYPHS (this);
     const UnsizedArrayOf<LookupRecord> &lookupRecord = StructAfter<UnsizedArrayOf<LookupRecord> >
 						       (inputZ.as_array (inputCount ? inputCount - 1 : 0));
     context_collect_glyphs_lookup (c,
@@ -1376,7 +1374,6 @@ struct RuleSet
   void closure (hb_closure_context_t *c,
 		ContextClosureLookupContext &lookup_context) const
   {
-    TRACE_CLOSURE (this);
     unsigned int num_rules = rule.len;
     for (unsigned int i = 0; i < num_rules; i++)
       (this+rule[i]).closure (c, lookup_context);
@@ -1385,7 +1382,6 @@ struct RuleSet
   void collect_glyphs (hb_collect_glyphs_context_t *c,
 		       ContextCollectGlyphsLookupContext &lookup_context) const
   {
-    TRACE_COLLECT_GLYPHS (this);
     unsigned int num_rules = rule.len;
     for (unsigned int i = 0; i < num_rules; i++)
       (this+rule[i]).collect_glyphs (c, lookup_context);
@@ -1455,8 +1451,6 @@ struct ContextFormat1
 
   void closure (hb_closure_context_t *c) const
   {
-    TRACE_CLOSURE (this);
-
     struct ContextClosureLookupContext lookup_context = {
       {intersects_glyph},
       nullptr
@@ -1474,7 +1468,6 @@ struct ContextFormat1
 
   void collect_glyphs (hb_collect_glyphs_context_t *c) const
   {
-    TRACE_COLLECT_GLYPHS (this);
     (this+coverage).add_coverage (c->input);
 
     struct ContextCollectGlyphsLookupContext lookup_context = {
@@ -1567,7 +1560,6 @@ struct ContextFormat2
 
   void closure (hb_closure_context_t *c) const
   {
-    TRACE_CLOSURE (this);
     if (!(this+coverage).intersects (c->glyphs))
       return;
 
@@ -1588,7 +1580,6 @@ struct ContextFormat2
 
   void collect_glyphs (hb_collect_glyphs_context_t *c) const
   {
-    TRACE_COLLECT_GLYPHS (this);
     (this+coverage).add_coverage (c->input);
 
     const ClassDef &class_def = this+classDef;
@@ -1681,7 +1672,6 @@ struct ContextFormat3
 
   void closure (hb_closure_context_t *c) const
   {
-    TRACE_CLOSURE (this);
     if (!(this+coverageZ[0]).intersects (c->glyphs))
       return;
 
@@ -1698,7 +1688,6 @@ struct ContextFormat3
 
   void collect_glyphs (hb_collect_glyphs_context_t *c) const
   {
-    TRACE_COLLECT_GLYPHS (this);
     (this+coverageZ[0]).add_coverage (c->input);
 
     const LookupRecord *lookupRecord = &StructAfter<LookupRecord> (coverageZ.as_array (glyphCount));
@@ -1950,7 +1939,6 @@ struct ChainRule
   void closure (hb_closure_context_t *c,
 		ChainContextClosureLookupContext &lookup_context) const
   {
-    TRACE_CLOSURE (this);
     const HeadlessArrayOf<HBUINT16> &input = StructAfter<HeadlessArrayOf<HBUINT16> > (backtrack);
     const ArrayOf<HBUINT16> &lookahead = StructAfter<ArrayOf<HBUINT16> > (input);
     const ArrayOf<LookupRecord> &lookup = StructAfter<ArrayOf<LookupRecord> > (lookahead);
@@ -1965,7 +1953,6 @@ struct ChainRule
   void collect_glyphs (hb_collect_glyphs_context_t *c,
 		       ChainContextCollectGlyphsLookupContext &lookup_context) const
   {
-    TRACE_COLLECT_GLYPHS (this);
     const HeadlessArrayOf<HBUINT16> &input = StructAfter<HeadlessArrayOf<HBUINT16> > (backtrack);
     const ArrayOf<HBUINT16> &lookahead = StructAfter<ArrayOf<HBUINT16> > (input);
     const ArrayOf<LookupRecord> &lookup = StructAfter<ArrayOf<LookupRecord> > (lookahead);
@@ -2046,7 +2033,6 @@ struct ChainRuleSet
   }
   void closure (hb_closure_context_t *c, ChainContextClosureLookupContext &lookup_context) const
   {
-    TRACE_CLOSURE (this);
     unsigned int num_rules = rule.len;
     for (unsigned int i = 0; i < num_rules; i++)
       (this+rule[i]).closure (c, lookup_context);
@@ -2054,7 +2040,6 @@ struct ChainRuleSet
 
   void collect_glyphs (hb_collect_glyphs_context_t *c, ChainContextCollectGlyphsLookupContext &lookup_context) const
   {
-    TRACE_COLLECT_GLYPHS (this);
     unsigned int num_rules = rule.len;
     for (unsigned int i = 0; i < num_rules; i++)
       (this+rule[i]).collect_glyphs (c, lookup_context);
@@ -2119,8 +2104,6 @@ struct ChainContextFormat1
 
   void closure (hb_closure_context_t *c) const
   {
-    TRACE_CLOSURE (this);
-
     struct ChainContextClosureLookupContext lookup_context = {
       {intersects_glyph},
       {nullptr, nullptr, nullptr}
@@ -2138,7 +2121,6 @@ struct ChainContextFormat1
 
   void collect_glyphs (hb_collect_glyphs_context_t *c) const
   {
-    TRACE_COLLECT_GLYPHS (this);
     (this+coverage).add_coverage (c->input);
 
     struct ChainContextCollectGlyphsLookupContext lookup_context = {
@@ -2232,7 +2214,6 @@ struct ChainContextFormat2
   }
   void closure (hb_closure_context_t *c) const
   {
-    TRACE_CLOSURE (this);
     if (!(this+coverage).intersects (c->glyphs))
       return;
 
@@ -2257,7 +2238,6 @@ struct ChainContextFormat2
 
   void collect_glyphs (hb_collect_glyphs_context_t *c) const
   {
-    TRACE_COLLECT_GLYPHS (this);
     (this+coverage).add_coverage (c->input);
 
     const ClassDef &backtrack_class_def = this+backtrackClassDef;
@@ -2382,7 +2362,6 @@ struct ChainContextFormat3
 
   void closure (hb_closure_context_t *c) const
   {
-    TRACE_CLOSURE (this);
     const OffsetArrayOf<Coverage> &input = StructAfter<OffsetArrayOf<Coverage> > (backtrack);
 
     if (!(this+input[0]).intersects (c->glyphs))
@@ -2404,7 +2383,6 @@ struct ChainContextFormat3
 
   void collect_glyphs (hb_collect_glyphs_context_t *c) const
   {
-    TRACE_COLLECT_GLYPHS (this);
     const OffsetArrayOf<Coverage> &input = StructAfter<OffsetArrayOf<Coverage> > (backtrack);
 
     (this+input[0]).add_coverage (c->input);
@@ -2636,7 +2614,7 @@ struct hb_ot_layout_lookup_accelerator_t
 
   bool apply (hb_ot_apply_context_t *c) const
   {
-    for (unsigned int i = 0; i < subtables.len; i++)
+    for (unsigned int i = 0; i < subtables.length; i++)
       if (subtables[i].apply (c))
 	return true;
     return false;
@@ -2686,7 +2664,7 @@ struct GSUBGPOS
   { return (version.to_int () >= 0x00010001u ? this+featureVars : Null(FeatureVariations))
 	   .find_index (coords, num_coords, index); }
   const Feature& get_feature_variation (unsigned int feature_index,
-					       unsigned int variations_index) const
+					unsigned int variations_index) const
   {
     if (FeatureVariations::NOT_FOUND_INDEX != variations_index &&
 	version.to_int () >= 0x00010001u)

@@ -22,8 +22,8 @@ function promiseLoadEvent(browser, url, eventType = "load", runBeforeLoad) {
       }
 
       browser.removeEventListener(eventType, handle, true);
-      do_print("Browser event received: " + eventType);
-      resolve(event);
+      do_print("Browser event received: " + eventType + ". Will wait 500ms for the tracking event also.");
+      do_timeout(500, () => { resolve(event); });
     }
 
     browser.addEventListener(eventType, handle, true);

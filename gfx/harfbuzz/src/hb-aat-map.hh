@@ -44,7 +44,7 @@ struct hb_aat_map_t
   void fini () { chain_flags.fini (); }
 
   public:
-  hb_vector_t<hb_mask_t, 1> chain_flags;
+  hb_vector_t<hb_mask_t> chain_flags;
 };
 
 struct hb_aat_map_builder_t
@@ -74,7 +74,7 @@ struct hb_aat_map_builder_t
 	     (a->seq < b->seq ? -1 : a->seq > b->seq ? 1 : 0);
     }
 
-    int cmp (unsigned int ty) const
+    int cmp (hb_aat_layout_feature_type_t ty) const
     {
       return (type != ty) ? (type < ty ? -1 : 1) : 0;
     }
@@ -84,7 +84,7 @@ struct hb_aat_map_builder_t
   hb_face_t *face;
 
   public:
-  hb_vector_t<feature_info_t, 32> features;
+  hb_vector_t<feature_info_t> features;
 };
 
 

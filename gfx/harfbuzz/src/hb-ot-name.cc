@@ -59,8 +59,8 @@ hb_ot_name_list_names (hb_face_t    *face,
 		       unsigned int *num_entries /* OUT */)
 {
   const OT::name_accelerator_t &name = *face->table.name;
-  if (num_entries) *num_entries = name.names.len;
-  return name.names.arrayZ();
+  if (num_entries) *num_entries = name.names.length;
+  return (const hb_ot_name_entry_t *) name.names;
 }
 
 
@@ -70,7 +70,7 @@ hb_ot_name_convert_utf (hb_bytes_t                       bytes,
 			unsigned int                    *text_size /* IN/OUT */,
 			typename out_utf_t::codepoint_t *text /* OUT */)
 {
-  unsigned int src_len = bytes.len / sizeof (typename in_utf_t::codepoint_t);
+  unsigned int src_len = bytes.length / sizeof (typename in_utf_t::codepoint_t);
   const typename in_utf_t::codepoint_t *src = (const typename in_utf_t::codepoint_t *) bytes.arrayZ;
   const typename in_utf_t::codepoint_t *src_end = src + src_len;
 

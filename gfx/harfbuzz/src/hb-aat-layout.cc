@@ -157,7 +157,6 @@ AAT::hb_aat_apply_context_t::hb_aat_apply_context_t (const hb_ot_shape_plan_t *p
 						       buffer (buffer_),
 						       sanitizer (),
 						       ankr_table (&Null(AAT::ankr)),
-						       ankr_end (nullptr),
 						       lookup_index (0),
 						       debug_depth (0)
 {
@@ -171,12 +170,8 @@ AAT::hb_aat_apply_context_t::~hb_aat_apply_context_t ()
 { sanitizer.end_processing (); }
 
 void
-AAT::hb_aat_apply_context_t::set_ankr_table (const AAT::ankr *ankr_table_,
-					     const char      *ankr_end_)
-{
-  ankr_table = ankr_table_;
-  ankr_end = ankr_end_;
-}
+AAT::hb_aat_apply_context_t::set_ankr_table (const AAT::ankr *ankr_table_)
+{ ankr_table = ankr_table_; }
 
 
 /*
@@ -286,11 +281,8 @@ hb_aat_layout_position (const hb_ot_shape_plan_t *plan,
   hb_blob_t *kerx_blob = font->face->table.kerx.get_blob ();
   const AAT::kerx& kerx = *kerx_blob->as<AAT::kerx> ();
 
-  hb_blob_t *ankr_blob = font->face->table.ankr.get_blob ();;
-  const AAT::ankr& ankr = *font->face->table.ankr;
-
   AAT::hb_aat_apply_context_t c (plan, font, buffer, kerx_blob);
-  c.set_ankr_table (&ankr, ankr_blob->data + ankr_blob->length);
+  c.set_ankr_table (font->face->table.ankr.get ());
   kerx.apply (&c);
 }
 

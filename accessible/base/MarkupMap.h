@@ -98,7 +98,8 @@ MARKUPMAP(
         }
         // Check to see if first child has an inline frame.
         nsIFrame* firstChildFrame = firstChild->GetPrimaryFrame();
-        if (firstChildFrame && firstChildFrame->IsInlineFrame()) {
+        if (firstChildFrame && (firstChildFrame->IsInlineFrame() ||
+                                firstChildFrame->IsBrFrame())) {
           return new HyperTextAccessibleWrap(aElement, aContext->Document());
         }
         nsIContent* lastChild = aElement->GetLastChild();
@@ -109,7 +110,8 @@ MARKUPMAP(
           }
           // Check to see if last child has an inline frame.
           nsIFrame* lastChildFrame = lastChild->GetPrimaryFrame();
-          if (lastChildFrame && lastChildFrame->IsInlineFrame()) {
+          if (lastChildFrame && (lastChildFrame->IsInlineFrame() ||
+                                 lastChildFrame->IsBrFrame())) {
             return new HyperTextAccessibleWrap(aElement, aContext->Document());
           }
         }

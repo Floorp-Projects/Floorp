@@ -39,17 +39,17 @@ _calculate_glyf_and_loca_prime_size (const OT::glyf::accelerator_t &glyf,
 				     hb_vector_t<unsigned int> *instruction_ranges /* OUT */)
 {
   unsigned int total = 0;
-  for (unsigned int i = 0; i < glyph_ids.len; i++)
+  for (unsigned int i = 0; i < glyph_ids.length; i++)
   {
     hb_codepoint_t next_glyph = glyph_ids[i];
-    if (!instruction_ranges->resize (instruction_ranges->len + 2))
+    if (!instruction_ranges->resize (instruction_ranges->length + 2))
     {
       DEBUG_MSG(SUBSET, nullptr, "Failed to resize instruction_ranges.");
       return false;
     }
-    unsigned int *instruction_start = &(*instruction_ranges)[instruction_ranges->len - 2];
+    unsigned int *instruction_start = &(*instruction_ranges)[instruction_ranges->length - 2];
     *instruction_start = 0;
-    unsigned int *instruction_end = &(*instruction_ranges)[instruction_ranges->len - 1];
+    unsigned int *instruction_end = &(*instruction_ranges)[instruction_ranges->length - 1];
     *instruction_end = 0;
 
     unsigned int start_offset, end_offset;
@@ -79,7 +79,7 @@ _calculate_glyf_and_loca_prime_size (const OT::glyf::accelerator_t &glyf,
 
   *glyf_size = total;
   *use_short_loca = (total <= 131070);
-  *loca_size = (glyph_ids.len + 1)
+  *loca_size = (glyph_ids.length + 1)
       * (*use_short_loca ? sizeof (OT::HBUINT16) : sizeof (OT::HBUINT32));
 
   DEBUG_MSG(SUBSET, nullptr, "preparing to subset glyf: final size %d, loca size %d, using %s loca",
@@ -167,7 +167,7 @@ _write_glyf_and_loca_prime (hb_subset_plan_t              *plan,
   char *glyf_prime_data_next = glyf_prime_data;
 
   bool success = true;
-  for (unsigned int i = 0; i < glyph_ids.len; i++)
+  for (unsigned int i = 0; i < glyph_ids.length; i++)
   {
     unsigned int start_offset, end_offset;
     if (unlikely (!(glyf.get_offsets (glyph_ids[i], &start_offset, &end_offset) &&
@@ -215,7 +215,7 @@ _write_glyf_and_loca_prime (hb_subset_plan_t              *plan,
     glyf_prime_data_next += length + (length % 2); // Align to 2 bytes for short loca.
   }
 
-  success = success && _write_loca_entry (glyph_ids.len,
+  success = success && _write_loca_entry (glyph_ids.length,
 					  glyf_prime_data_next - glyf_prime_data,
 					  use_short_loca,
 					  loca_prime_data,

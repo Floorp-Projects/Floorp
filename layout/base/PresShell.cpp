@@ -7155,7 +7155,6 @@ bool PresShell::EventHandler::GetRetargetEventDocument(
   // active window.  So, the events should be handled on the last focused
   // content in the last focused DOM window in same top level window.
   // Note, if no DOM window has been focused yet, we can discard the events.
-  RefPtr<Document> retargetEventDoc;
   if (aGUIEvent->IsTargetedAtFocusedWindow()) {
     nsCOMPtr<nsPIDOMWindowOuter> window = GetFocusedDOMWindowInOurWindow();
     // No DOM window in same top level window has not been focused yet,
@@ -7164,22 +7163,36 @@ bool PresShell::EventHandler::GetRetargetEventDocument(
       return false;
     }
 
-    retargetEventDoc = window->GetExtantDoc();
-    if (!retargetEventDoc) return false;
-  } else if (nsIContent* capturingContent =
-                 EventHandler::GetCapturingContentFor(aGUIEvent)) {
-    // if the mouse is being captured then retarget the mouse event at the
-    // document that is being captured.
-    retargetEventDoc = capturingContent->GetComposedDoc();
-#ifdef ANDROID
-  } else if ((aGUIEvent->mClass == eTouchEventClass) ||
-             (aGUIEvent->mClass == eMouseEventClass) ||
-             (aGUIEvent->mClass == eWheelEventClass)) {
-    retargetEventDoc = mPresShell->GetPrimaryContentDocument();
-#endif  // #ifdef ANDROID
+    RefPtr<Document> retargetEventDoc = window->GetExtantDoc();
+    if (!retargetEventDoc) {
+      return false;
+    }
+    retargetEventDoc.forget(aRetargetEventDocument);
+    return true;
   }
 
-  retargetEventDoc.forget(aRetargetEventDocument);
+  nsIContent* capturingContent =
+      EventHandler::GetCapturingContentFor(aGUIEvent);
+  if (capturingContent) {
+    // if the mouse is being captured then retarget the mouse event at the
+    // document that is being captured.
+    RefPtr<Document> retargetEventDoc = capturingContent->GetComposedDoc();
+    retargetEventDoc.forget(aRetargetEventDocument);
+    return true;
+  }
+
+#ifdef ANDROID
+  if (aGUIEvent->mClass == eTouchEventClass ||
+      aGUIEvent->mClass == eMouseEventClass ||
+      aGUIEvent->mClass == eWheelEventClass) {
+    RefPtr<Document> retargetEventDoc = mPresShell->GetPrimaryContentDocument();
+    retargetEventDoc.forget(aRetargetEventDocument);
+    return true;
+  }
+#endif  // #ifdef ANDROID
+
+  // When we don't find another document to handle the event, we need to keep
+  // handling the event by ourselves.
   return true;
 }
 
