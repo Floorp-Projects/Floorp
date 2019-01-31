@@ -1617,7 +1617,7 @@ window._gBrowser = {
     }
 
     // Abort if we're not going to change anything
-    let oldRemoteType = aBrowser.getAttribute("remoteType");
+    let oldRemoteType = aBrowser.remoteType;
     if (isRemote == aShouldBeRemote && !newFrameloader &&
         (!isRemote || oldRemoteType == remoteType)) {
       return false;
@@ -1765,7 +1765,7 @@ window._gBrowser = {
     if (!gMultiProcessBrowser)
       return this.updateBrowserRemoteness(aBrowser, false);
 
-    let oldRemoteType = aBrowser.getAttribute("remoteType") || null;
+    let oldRemoteType = aBrowser.remoteType;
 
     aOptions.remoteType =
       E10SUtils.getRemoteTypeForURI(aURL,
