@@ -8,7 +8,7 @@ inner_url_origin=https://127.0.0.1:8444
 wpt_test_origin=https://web-platform.test:8444
 wpt_test_remote_origin=https://www1.web-platform.test:8444
 cert_url_origin=$wpt_test_origin
-sxg_content_type='content-type: application/signed-exchange;v=b2'
+sxg_content_type='content-type: application/signed-exchange;v=b3'
 
 set -e
 
@@ -38,6 +38,21 @@ gen-signedexchange \
   -date 2018-04-01T00:00:00Z \
   -expire 168h \
   -o sxg/sxg-location.sxg \
+  -miRecordSize 100
+
+# A signed exchange of unsupported version.
+gen-signedexchange \
+  -version 1b2 \
+  -uri $inner_url_origin/signed-exchange/resources/inner-url.html \
+  -status 200 \
+  -content sxg-location.html \
+  -certificate $certfile \
+  -certUrl $cert_url_origin/signed-exchange/resources/$certfile.cbor \
+  -validityUrl $inner_url_origin/signed-exchange/resources/resource.validity.msg \
+  -privateKey $keyfile \
+  -date 2018-04-01T00:00:00Z \
+  -expire 168h \
+  -o sxg-version1b2.sxg \
   -miRecordSize 100
 
 # A valid Signed Exchange for testing referrer which logical origin is the wpt
