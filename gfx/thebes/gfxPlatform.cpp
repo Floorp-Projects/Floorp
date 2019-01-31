@@ -2692,6 +2692,25 @@ static FeatureState& WebRenderHardwareQualificationStatus(
                 FeatureStatus::Blocked, "Device too old",
                 NS_LITERAL_CSTRING("FEATURE_FAILURE_DEVICE_TOO_OLD"));
           }
+        } else if (adapterVendorID == u"0x8086") {  // Intel
+          const uint16_t supportedDevices[] = {
+              0x191d,  // HD Graphics P530
+              0x192d,  // Iris Pro Graphics P555
+              0x1912,  // HD Graphics 530
+              0x5912,  // HD Graphics 630
+              0x3e92,  // UHD Graphics 630
+          };
+          bool supported = false;
+          for (uint16_t id : supportedDevices) {
+            if (deviceID == id) {
+              supported = true;
+            }
+          }
+          if (!supported) {
+            featureWebRenderQualified.Disable(
+                FeatureStatus::Blocked, "Device too old",
+                NS_LITERAL_CSTRING("FEATURE_FAILURE_DEVICE_TOO_OLD"));
+          }
 #endif
         } else {
           featureWebRenderQualified.Disable(
