@@ -4659,9 +4659,6 @@ web.ni
 //      ccTLD for the Netherlands
 nl
 
-// BV.nl will be a registry for dutch BV's (besloten vennootschap)
-bv.nl
-
 // no : http://www.norid.no/regelverk/index.en.html
 // The Norwegian registry has declined to notify us of updates. The web pages
 // referenced below are the official source of the data. There is also an
