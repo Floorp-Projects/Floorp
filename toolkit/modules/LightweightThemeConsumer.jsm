@@ -96,6 +96,21 @@ const toolkitVariableMap = [
   ["--toolbar-field-focus-border-color", {
     lwtProperty: "toolbar_field_border_focus",
   }],
+  ["--lwt-toolbar-field-highlight", {
+    lwtProperty: "toolbar_field_highlight",
+    processColor(rgbaChannels, element) {
+      if (!rgbaChannels) {
+        element.removeAttribute("lwt-selection");
+        return null;
+      }
+      element.setAttribute("lwt-selection", "true");
+      const {r, g, b, a} = rgbaChannels;
+      return `rgba(${r}, ${g}, ${b}, ${a})`;
+    },
+  }],
+  ["--lwt-toolbar-field-highlight-text", {
+    lwtProperty: "toolbar_field_highlight_text",
+  }],
 ];
 
 // Get the theme variables from the app resource directory.
