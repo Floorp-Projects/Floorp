@@ -39,6 +39,21 @@
     <!-- Preference for settings related to changing the default browser -->
     <string name="preferences_set_as_default_browser">Set as default browser</string>
 
+    <!-- Preference category for advanced settings -->
+    <string name="preferences_category_advanced">Advanced</string>
+
+    <!-- Preference for advanced site permissions -->
+    <string name="preferences_site_permissions">Site permissions</string>
+
+    <!-- Preference for accessibility -->
+    <string name="preferences_accessibility">Accessibility</string>
+
+    <!-- Preference for language -->
+    <string name="preferences_language">Language</string>
+
+    <!-- Preference for data choices -->
+    <string name="preferences_data_choices">Data choices</string>
+
     <!-- Menu option on the toolbar that takes you to settings page-->
     <string name="settings">Settings</string>
 
