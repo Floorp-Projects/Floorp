@@ -656,6 +656,7 @@ impl RenderTarget for AlphaRenderTarget {
                     task_info.actual_rect,
                     &ctx.screen_world_rect,
                     ctx.device_pixel_scale,
+                    task_info.snap_offsets,
                 );
             }
             RenderTaskKind::ClipRegion(ref region_task) => {
