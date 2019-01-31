@@ -390,10 +390,6 @@ button > hbox > label {
 
 /* Privacy Pane */
 
-#formAutofillGroup {
-  margin-top: 28px;
-}
-
 .doNotTrackLearnMore {
   margin-inline-start: calc(1em + 30px);
   margin-bottom: 1em;
