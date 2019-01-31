@@ -567,6 +567,8 @@ def gen_substs(manifests):
     contract_map = {}
     categories = defaultdict(list)
 
+    jsms = set()
+
     types = set()
 
     for mod in modules:
@@ -588,6 +590,9 @@ def gen_substs(manifests):
         if mod.type and not mod.headers:
             types.add(mod.type)
 
+        if mod.jsm:
+            jsms.add(mod.jsm)
+
     cid_phf = PerfectHash(modules, PHF_SIZE,
                           key=lambda module: module.cid.bytes)
 
@@ -607,6 +612,9 @@ def gen_substs(manifests):
     gen_module_funcs(substs, module_funcs)
 
     gen_includes(substs, headers)
+
+    substs['component_jsms'] = '\n'.join(' %s,' % strings.entry_to_cxx(jsm)
+                                         for jsm in sorted(jsms)) + '\n'
 
     substs['decls'] = gen_decls(types)
 

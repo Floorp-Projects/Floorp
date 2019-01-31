@@ -17,6 +17,7 @@
 #include "StaticComponentData.h"
 
 class nsIFactory;
+class nsIUTF8StringEnumerator;
 class nsISupports;
 
 namespace mozilla {
@@ -207,6 +208,8 @@ class StaticComponents final {
    */
   static bool InvalidateContractID(const nsACString& aContractID,
                                    bool aInvalid = true);
+
+  static already_AddRefed<nsIUTF8StringEnumerator> GetComponentJSMs();
 
   /**
    * Calls any module unload from manifests whose components have been loaded.
