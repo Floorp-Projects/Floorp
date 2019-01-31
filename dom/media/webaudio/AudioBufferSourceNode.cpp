@@ -440,7 +440,7 @@ class AudioBufferSourceNodeEngine final : public AudioNodeEngine {
   }
 
   int32_t ComputeFinalOutSampleRate(float aPlaybackRate, float aDetune) {
-    float computedPlaybackRate = aPlaybackRate * pow(2, aDetune / 1200.f);
+    float computedPlaybackRate = aPlaybackRate * exp2(aDetune / 1200.f);
     // Make sure the playback rate and the doppler shift are something
     // our resampler can work with.
     int32_t rate = WebAudioUtils::TruncateFloatToInt<int32_t>(
