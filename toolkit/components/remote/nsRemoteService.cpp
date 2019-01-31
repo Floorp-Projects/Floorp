@@ -7,8 +7,10 @@
 
 #ifdef MOZ_WIDGET_GTK
 #  include "nsGTKRemoteServer.h"
+#  include "nsXRemoteClient.h"
 #  ifdef MOZ_ENABLE_DBUS
 #    include "nsDBusRemoteServer.h"
+#    include "nsDBusRemoteClient.h"
 #  endif
 #endif
 #include "nsRemoteService.h"
@@ -19,9 +21,54 @@
 
 using namespace mozilla;
 
+extern int gArgc;
+extern char** gArgv;
+
 NS_IMPL_ISUPPORTS(nsRemoteService, nsIObserver)
 
-void nsRemoteService::Startup(const char* aAppName, const char* aProfileName) {
+RemoteResult nsRemoteService::StartClient(const char* aDesktopStartupID,
+                                          nsCString& program,
+                                          const char* profile) {
+  nsAutoPtr<nsRemoteClient> client;
+
+#ifdef MOZ_WIDGET_GTK
+  bool useX11Remote = GDK_IS_X11_DISPLAY(gdk_display_get_default());
+
+#  if defined(MOZ_ENABLE_DBUS)
+  if (!useX11Remote) {
+    client = new nsDBusRemoteClient();
+  }
+#  endif
+  if (useX11Remote) {
+    client = new nsXRemoteClient();
+  }
+
+  nsresult rv = client ? client->Init() : NS_ERROR_FAILURE;
+  if (NS_FAILED(rv)) return REMOTE_NOT_FOUND;
+
+  nsCString response;
+  bool success = false;
+  rv = client->SendCommandLine(program.get(), profile, gArgc, gArgv,
+                               aDesktopStartupID, getter_Copies(response),
+                               &success);
+  // did the command fail?
+  if (!success) return REMOTE_NOT_FOUND;
+
+  // The "command not parseable" error is returned when the
+  // nsICommandLineHandler throws a NS_ERROR_ABORT.
+  if (response.EqualsLiteral("500 command not parseable"))
+    return REMOTE_ARG_BAD;
+
+  if (NS_FAILED(rv)) return REMOTE_NOT_FOUND;
+
+  return REMOTE_FOUND;
+#else
+  return REMOTE_NOT_FOUND;
+#endif
+}
+
+void nsRemoteService::StartupServer(const char* aAppName,
+                                    const char* aProfileName) {
   if (mRemoteServer) {
     return;
   }
@@ -54,15 +101,15 @@ void nsRemoteService::Startup(const char* aAppName, const char* aProfileName) {
   }
 }
 
-void nsRemoteService::Shutdown() { mRemoteServer = nullptr; }
+void nsRemoteService::ShutdownServer() { mRemoteServer = nullptr; }
 
-nsRemoteService::~nsRemoteService() { Shutdown(); }
+nsRemoteService::~nsRemoteService() { ShutdownServer(); }
 
 NS_IMETHODIMP
 nsRemoteService::Observe(nsISupports* aSubject, const char* aTopic,
                          const char16_t* aData) {
   // This can be xpcom-shutdown or quit-application, but it's the same either
   // way.
-  Shutdown();
+  ShutdownServer();
   return NS_OK;
 }
