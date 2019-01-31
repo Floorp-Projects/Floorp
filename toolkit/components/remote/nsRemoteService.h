@@ -28,14 +28,13 @@ class nsRemoteService final : public nsIObserver {
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
-  nsRemoteService() = default;
+  explicit nsRemoteService(const char* aProgram);
 
-  void LockStartup(nsCString& aProgram, const char* aProfile);
+  void LockStartup();
   void UnlockStartup();
 
-  RemoteResult StartClient(const char* aDesktopStartupID, nsCString& program,
-                           const char* profile);
-  void StartupServer(const char* aAppName, const char* aProfileName);
+  RemoteResult StartClient(const char* aDesktopStartupID);
+  void StartupServer(const char* aProfile);
   void ShutdownServer();
 
  private:
@@ -44,6 +43,7 @@ class nsRemoteService final : public nsIObserver {
   mozilla::UniquePtr<nsRemoteServer> mRemoteServer;
   nsProfileLock mRemoteLock;
   nsCOMPtr<nsIFile> mRemoteLockDir;
+  nsCString mProgram;
 };
 
 #endif  // __nsRemoteService_h__
