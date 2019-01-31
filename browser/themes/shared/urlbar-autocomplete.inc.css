@@ -106,6 +106,10 @@
   margin: 0 .4em;
 }
 
+.urlbarView-title:empty + .urlbarView-secondary::before {
+  display: none;
+}
+
 .urlbarView-secondary {
   color: var(--urlbar-popup-action-color);
   font-size: 0.9em;
