@@ -544,6 +544,11 @@ JSObject* Element::WrapObject(JSContext* aCx,
     return nullptr;
   }
 
+  if (XRE_IsContentProcess() && !NodePrincipal()->IsSystemPrincipal()) {
+    // We don't use XBL in content privileged content processes.
+    return obj;
+  }
+
   Document* doc = GetComposedDoc();
   if (!doc) {
     // There's no baseclass that cares about this call so we just
