@@ -409,4 +409,8 @@ static const dom::AudioContext::AudioContextId NO_AUDIO_CONTEXT = 0;
 }  // namespace dom
 }  // namespace mozilla
 
+inline nsISupports* ToSupports(mozilla::dom::AudioContext* p) {
+  return NS_CYCLE_COLLECTION_CLASSNAME(mozilla::dom::AudioContext)::Upcast(p);
+}
+
 #endif

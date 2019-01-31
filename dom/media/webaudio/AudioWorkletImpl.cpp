@@ -34,7 +34,12 @@ namespace mozilla {
 
   RefPtr<AudioWorkletImpl> impl =
       new AudioWorkletImpl(window, principal, aContext->DestinationStream());
-  return MakeAndAddRef<dom::Worklet>(window, std::move(impl));
+
+  // The Worklet owns a reference to the AudioContext so as to keep the graph
+  // thread running as long as the Worklet is alive by keeping the
+  // AudioDestinationNode alive.
+  return MakeAndAddRef<dom::Worklet>(window, std::move(impl),
+                                     ToSupports(aContext));
 }
 
 AudioWorkletImpl::AudioWorkletImpl(nsPIDOMWindowInner* aWindow,
