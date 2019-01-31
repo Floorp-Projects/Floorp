@@ -5,6 +5,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#ifdef XP_UNIX
+#  include <sys/types.h>
+#  include <pwd.h>
+#endif
+
 #ifdef MOZ_WIDGET_GTK
 #  include "nsGTKRemoteServer.h"
 #  include "nsXRemoteClient.h"
@@ -19,6 +24,7 @@
 #include "nsServiceManagerUtils.h"
 #include "mozilla/ModuleUtils.h"
 #include "SpecialSystemDirectory.h"
+#include "mozilla/CmdLineAndEnvUtils.h"
 
 // Time to wait for the remoting service to start
 #define START_TIMEOUT_SEC 5
@@ -29,18 +35,20 @@ using namespace mozilla;
 extern int gArgc;
 extern char** gArgv;
 
+using namespace mozilla;
+
 NS_IMPL_ISUPPORTS(nsRemoteService, nsIObserver)
 
-void nsRemoteService::LockStartup(nsCString& aProgram, const char* aProfile) {
+nsRemoteService::nsRemoteService(const char* aProgram) : mProgram(aProgram) {
+  ToLowerCase(mProgram);
+}
+
+void nsRemoteService::LockStartup() {
   nsCOMPtr<nsIFile> mutexDir;
   nsresult rv = GetSpecialSystemDirectory(OS_TemporaryDirectory,
                                           getter_AddRefs(mutexDir));
   if (NS_SUCCEEDED(rv)) {
-    nsAutoCString mutexPath(aProgram);
-    if (aProfile) {
-      mutexPath.Append(NS_LITERAL_CSTRING("_") + nsDependentCString(aProfile));
-    }
-    mutexDir->AppendNative(mutexPath);
+    mutexDir->AppendNative(mProgram);
 
     rv = mutexDir->Create(nsIFile::DIRECTORY_TYPE, 0700);
     if (NS_SUCCEEDED(rv) || rv == NS_ERROR_FILE_ALREADY_EXISTS) {
@@ -72,9 +80,10 @@ void nsRemoteService::UnlockStartup() {
   }
 }
 
-RemoteResult nsRemoteService::StartClient(const char* aDesktopStartupID,
-                                          nsCString& program,
-                                          const char* profile) {
+RemoteResult nsRemoteService::StartClient(const char* aDesktopStartupID) {
+  const char* profile;
+  ArgResult ar = CheckArg(gArgc, gArgv, "p", &profile, CheckArgFlag::None);
+
   nsAutoPtr<nsRemoteClient> client;
 
 #ifdef MOZ_WIDGET_GTK
@@ -94,7 +103,7 @@ RemoteResult nsRemoteService::StartClient(const char* aDesktopStartupID,
 
   nsCString response;
   bool success = false;
-  rv = client->SendCommandLine(program.get(), profile, gArgc, gArgv,
+  rv = client->SendCommandLine(mProgram.get(), profile, gArgc, gArgv,
                                aDesktopStartupID, getter_Copies(response),
                                &success);
   // did the command fail?
@@ -113,8 +122,7 @@ RemoteResult nsRemoteService::StartClient(const char* aDesktopStartupID,
 #endif
 }
 
-void nsRemoteService::StartupServer(const char* aAppName,
-                                    const char* aProfileName) {
+void nsRemoteService::StartupServer(const char* aProfile) {
   if (mRemoteServer) {
     return;
   }
@@ -132,7 +140,7 @@ void nsRemoteService::StartupServer(const char* aAppName,
   }
 #endif
 
-  nsresult rv = mRemoteServer->Startup(aAppName, aProfileName);
+  nsresult rv = mRemoteServer->Startup(mProgram.get(), aProfile);
 
   if (NS_FAILED(rv)) {
     mRemoteServer = nullptr;
