@@ -1096,6 +1096,19 @@ ShadowRoot* Element::GetShadowRootByMode() const {
 
 bool Element::CanAttachShadowDOM() const {
   /**
+   * If context object’s namespace is not the HTML namespace,
+   * return false.
+   *
+   * Deviate from the spec here to allow shadow dom attachement to
+   * XUL elements.
+   */
+  if (!IsHTMLElement() &&
+      !(XRE_IsParentProcess() && IsXULElement() &&
+        nsContentUtils::AllowXULXBLForPrincipal(NodePrincipal()))) {
+    return false;
+  }
+
+  /**
    * If context object’s local name is not
    *    a valid custom element name, "article", "aside", "blockquote",
    *    "body", "div", "footer", "h1", "h2", "h3", "h4", "h5", "h6",
@@ -1126,15 +1139,6 @@ already_AddRefed<ShadowRoot> Element::AttachShadow(const ShadowRootInit& aInit,
   /**
    * 1. If context object’s namespace is not the HTML namespace,
    *    then throw a "NotSupportedError" DOMException.
-   */
-  if (!IsHTMLElement() &&
-      !(XRE_IsParentProcess() && IsXULElement() &&
-        nsContentUtils::AllowXULXBLForPrincipal(NodePrincipal()))) {
-    aError.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-    return nullptr;
-  }
-
-  /**
    * 2. If context object’s local name is not valid to attach shadow DOM to,
    *    then throw a "NotSupportedError" DOMException.
    */
@@ -1144,7 +1148,7 @@ already_AddRefed<ShadowRoot> Element::AttachShadow(const ShadowRootInit& aInit,
   }
 
   /**
-   * 2. If context object is a shadow host, then throw
+   * 3. If context object is a shadow host, then throw
    *    an "InvalidStateError" DOMException.
    */
   if (GetShadowRoot() || GetXBLBinding()) {
