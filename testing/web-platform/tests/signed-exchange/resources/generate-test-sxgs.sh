@@ -1,5 +1,4 @@
 #!/bin/sh
-
 sxg_version=1b3
 certfile=127.0.0.1.sxg.pem
 keyfile=127.0.0.1.sxg.key
@@ -163,5 +162,22 @@ gen-signedexchange \
   -expire 168h \
   -o sxg/sxg-noncacheable.sxg \
   -miRecordSize 100
+
+# Response has a strict-transport-security header.
+gen-signedexchange \
+  -version $sxg_version \
+  -uri $inner_url_origin/signed-exchange/resources/inner-url.html \
+  -status 200 \
+  -responseHeader "Strict-Transport-Security: max-age=31536000" \
+  -content sxg-location.html \
+  -certificate $certfile \
+  -certUrl $cert_url_origin/signed-exchange/resources/$certfile.cbor \
+  -validityUrl $inner_url_origin/signed-exchange/resources/resource.validity.msg \
+  -privateKey $keyfile \
+  -date 2018-04-01T00:00:00Z \
+  -expire 168h \
+  -o sxg/sxg-hsts.sxg \
+  -miRecordSize 100 \
+  -ignoreErrors true
 
 rm -fr $tmpdir
