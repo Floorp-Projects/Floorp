@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
-<title>Async local storage storage export smoke test</title>
+<title>KV storage: storage export smoke test</title>
 
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
 
 <script type="module">
-import { testVariousMethodsWithDefaultArea } from "./helpers/als-tests.js";
-import { storage } from "std:async-local-storage";
+import { testVariousMethodsWithDefaultArea } from "./helpers/kvs-tests.js";
+import { storage } from "std:kv-storage";
 
 test(() => {
   const { backingStore } = storage;
@@ -17,7 +17,7 @@ test(() => {
   assert_own_property(backingStore, "version");
   assert_equals(Object.getPrototypeOf(backingStore), Object.prototype);
 
-  assert_equals(backingStore.database, "async-local-storage:default");
+  assert_equals(backingStore.database, "kv-storage:default");
   assert_equals(backingStore.store, "store");
   assert_equals(backingStore.version, 1);
 }, "backingStore returns the correct object");
