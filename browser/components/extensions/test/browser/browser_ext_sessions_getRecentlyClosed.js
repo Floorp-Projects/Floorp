@@ -4,8 +4,7 @@
 
 requestLongerTimeout(2);
 
-Services.scriptloader.loadSubScript(new URL("head_sessions.js", gTestPath).href,
-                                    this);
+loadTestSubscript("head_sessions.js");
 
 add_task(async function test_sessions_get_recently_closed() {
   async function openAndCloseWindow(url = "http://example.com", tabUrls) {
