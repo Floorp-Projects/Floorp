@@ -95,6 +95,7 @@ const PREFS_BLACKLIST = [
   /^network[.]proxy[.]/,
   /[.]print_to_filename$/,
   /^print[.]macosx[.]pagesetup/,
+  /^print[.]printer/,
 ];
 
 // Table of getters for various preference types.
