@@ -74,7 +74,7 @@ struct FontDescriptor
 
 struct fdsc
 {
-  enum { tableTag = HB_AAT_TAG_fdsc };
+  static constexpr hb_tag_t tableTag = HB_AAT_TAG_fdsc;
 
   enum {
     Weight	 = HB_TAG ('w','g','h','t'),

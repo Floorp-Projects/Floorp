@@ -71,6 +71,8 @@ public:
     *fontFileStream = mFontFileStream;
     return S_OK;
   }
+
+  virtual ~DWriteFontFileLoader() {}
 };
 
 class DWriteFontFileStream : public IDWriteFontFileStream
@@ -122,6 +124,8 @@ public:
 
   virtual HRESULT STDMETHODCALLTYPE
   GetLastWriteTime (OUT UINT64* lastWriteTime) { return E_NOTIMPL; }
+
+  virtual ~DWriteFontFileStream() {}
 };
 
 
@@ -133,8 +137,8 @@ struct hb_directwrite_face_data_t
 {
   IDWriteFactory *dwriteFactory;
   IDWriteFontFile *fontFile;
-  IDWriteFontFileStream *fontFileStream;
-  IDWriteFontFileLoader *fontFileLoader;
+  DWriteFontFileStream *fontFileStream;
+  DWriteFontFileLoader *fontFileLoader;
   IDWriteFontFace *fontFace;
   hb_blob_t *faceBlob;
 };
@@ -281,7 +285,7 @@ public:
 public:
   TextAnalysis (const wchar_t* text, uint32_t textLength,
 		const wchar_t* localeName, DWRITE_READING_DIRECTION readingDirection)
-	       : mText (text), mTextLength (textLength), mLocaleName (localeName),
+	       : mTextLength (textLength), mText (text), mLocaleName (localeName),
 		 mReadingDirection (readingDirection), mCurrentRun (nullptr) {}
   ~TextAnalysis ()
   {
@@ -516,7 +520,6 @@ _hb_directwrite_shape_full (hb_shape_plan_t    *shape_plan,
 {
   hb_face_t *face = font->face;
   const hb_directwrite_face_data_t *face_data = face->data.directwrite;
-  const hb_directwrite_font_data_t *font_data = font->data.directwrite;
   IDWriteFactory *dwriteFactory = face_data->dwriteFactory;
   IDWriteFontFace *fontFace = face_data->fontFace;
 
@@ -770,7 +773,7 @@ retry_getglyphs:
 
   /* Calculate visual-clusters.  That's what we ship. */
   for (unsigned int i = 0; i < glyphCount; i++)
-    vis_clusters[i] = -1;
+    vis_clusters[i] = (uint32_t) -1;
   for (unsigned int i = 0; i < buffer->len; i++)
   {
     uint32_t *p =
@@ -778,7 +781,7 @@ retry_getglyphs:
     *p = MIN (*p, buffer->info[i].cluster);
   }
   for (unsigned int i = 1; i < glyphCount; i++)
-    if (vis_clusters[i] == -1)
+    if (vis_clusters[i] == (uint32_t) -1)
       vis_clusters[i] = vis_clusters[i - 1];
 
 #undef utf16_index

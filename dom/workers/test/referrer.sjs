@@ -9,6 +9,7 @@ function handleRequest(request, response)
     setState("referer", request.getHeader("referer"));
   } else if (request.queryString == 'import') {
     setState("referer", request.getHeader("referer"));
+    response.setHeader("Content-Type", "text/javascript", false);
     response.write("'hello world'");
   }
 }

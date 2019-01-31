@@ -33,34 +33,34 @@ namespace CFF {
 
 using namespace OT;
 
-enum CSType {
+enum cs_type_t {
   CSType_CharString,
   CSType_GlobalSubr,
   CSType_LocalSubr
 };
 
-struct CallContext
+struct call_context_t
 {
-  void init (const SubByteStr substr_=SubByteStr (), CSType type_=CSType_CharString, unsigned int subr_num_=0)
+  void init (const byte_str_ref_t substr_=byte_str_ref_t (), cs_type_t type_=CSType_CharString, unsigned int subr_num_=0)
   {
-    substr = substr_;
+    str_ref = substr_;
     type = type_;
     subr_num = subr_num_;
   }
 
   void fini () {}
 
-  SubByteStr      substr;
-  CSType	  type;
+  byte_str_ref_t  str_ref;
+  cs_type_t	  type;
   unsigned int    subr_num;
 };
 
 /* call stack */
 const unsigned int kMaxCallLimit = 10;
-struct CallStack : Stack<CallContext, kMaxCallLimit> {};
+struct call_stack_t : stack_t<call_context_t, kMaxCallLimit> {};
 
 template <typename SUBRS>
-struct BiasedSubrs
+struct biased_subrs_t
 {
   void init (const SUBRS &subrs_)
   {
@@ -79,10 +79,10 @@ struct BiasedSubrs
   unsigned int get_count () const { return (subrs == nullptr)? 0: subrs->count; }
   unsigned int get_bias () const { return bias; }
 
-  ByteStr operator [] (unsigned int index) const
+  byte_str_t operator [] (unsigned int index) const
   {
     if (unlikely ((subrs == nullptr) || index >= subrs->count))
-      return Null(ByteStr);
+      return Null(byte_str_t);
     else
       return (*subrs)[index];
   }
@@ -92,7 +92,7 @@ struct BiasedSubrs
   const SUBRS   *subrs;
 };
 
-struct Point
+struct point_t
 {
   void init ()
   {
@@ -106,27 +106,28 @@ struct Point
     y.set_int (_y);
   }
 
-  void move_x (const Number &dx) { x += dx; }
-  void move_y (const Number &dy) { y += dy; }
-  void move (const Number &dx, const Number &dy) { move_x (dx); move_y (dy); }
-  void move (const Point &d) { move_x (d.x); move_y (d.y); }
+  void move_x (const number_t &dx) { x += dx; }
+  void move_y (const number_t &dy) { y += dy; }
+  void move (const number_t &dx, const number_t &dy) { move_x (dx); move_y (dy); }
+  void move (const point_t &d) { move_x (d.x); move_y (d.y); }
 
-  Number  x;
-  Number  y;
+  number_t  x;
+  number_t  y;
 };
 
 template <typename ARG, typename SUBRS>
-struct CSInterpEnv : InterpEnv<ARG>
+struct cs_interp_env_t : interp_env_t<ARG>
 {
-  void init (const ByteStr &str, const SUBRS &globalSubrs_, const SUBRS &localSubrs_)
+  void init (const byte_str_t &str, const SUBRS &globalSubrs_, const SUBRS &localSubrs_)
   {
-    InterpEnv<ARG>::init (str);
+    interp_env_t<ARG>::init (str);
 
     context.init (str, CSType_CharString);
     seen_moveto = true;
     seen_hintmask = false;
     hstem_count = 0;
     vstem_count = 0;
+    hintmask_size = 0;
     pt.init ();
     callStack.init ();
     globalSubrs.init (globalSubrs_);
@@ -134,7 +135,7 @@ struct CSInterpEnv : InterpEnv<ARG>
   }
   void fini ()
   {
-    InterpEnv<ARG>::fini ();
+    interp_env_t<ARG>::fini ();
 
     callStack.fini ();
     globalSubrs.fini ();
@@ -146,7 +147,7 @@ struct CSInterpEnv : InterpEnv<ARG>
     return callStack.in_error () || SUPER::in_error ();
   }
 
-  bool popSubrNum (const BiasedSubrs<SUBRS>& biasedSubrs, unsigned int &subr_num)
+  bool popSubrNum (const biased_subrs_t<SUBRS>& biasedSubrs, unsigned int &subr_num)
   {
     int n = SUPER::argStack.pop_int ();
     n += biasedSubrs.get_bias ();
@@ -157,7 +158,7 @@ struct CSInterpEnv : InterpEnv<ARG>
     return true;
   }
 
-  void callSubr (const BiasedSubrs<SUBRS>& biasedSubrs, CSType type)
+  void callSubr (const biased_subrs_t<SUBRS>& biasedSubrs, cs_type_t type)
   {
     unsigned int subr_num;
 
@@ -167,19 +168,19 @@ struct CSInterpEnv : InterpEnv<ARG>
       SUPER::set_error ();
       return;
     }
-    context.substr = SUPER::substr;
+    context.str_ref = SUPER::str_ref;
     callStack.push (context);
 
     context.init ( biasedSubrs[subr_num], type, subr_num);
-    SUPER::substr = context.substr;
+    SUPER::str_ref = context.str_ref;
   }
 
   void returnFromSubr ()
   {
-    if (unlikely (SUPER::substr.in_error ()))
+    if (unlikely (SUPER::str_ref.in_error ()))
       SUPER::set_error ();
     context = callStack.pop ();
-    SUPER::substr = context.substr;
+    SUPER::str_ref = context.str_ref;
   }
 
   void determine_hintmask_size ()
@@ -195,14 +196,14 @@ struct CSInterpEnv : InterpEnv<ARG>
   void set_endchar (bool endchar_flag_) { endchar_flag = endchar_flag_; }
   bool is_endchar () const { return endchar_flag; }
 
-  const Number &get_x () const { return pt.x; }
-  const Number &get_y () const { return pt.y; }
-  const Point &get_pt () const { return pt; }
+  const number_t &get_x () const { return pt.x; }
+  const number_t &get_y () const { return pt.y; }
+  const point_t &get_pt () const { return pt; }
 
-  void moveto (const Point &pt_ ) { pt = pt_; }
+  void moveto (const point_t &pt_ ) { pt = pt_; }
 
   public:
-  CallContext   context;
+  call_context_t   context;
   bool	  endchar_flag;
   bool	  seen_moveto;
   bool	  seen_hintmask;
@@ -210,18 +211,18 @@ struct CSInterpEnv : InterpEnv<ARG>
   unsigned int  hstem_count;
   unsigned int  vstem_count;
   unsigned int  hintmask_size;
-  CallStack	    callStack;
-  BiasedSubrs<SUBRS>   globalSubrs;
-  BiasedSubrs<SUBRS>   localSubrs;
+  call_stack_t	callStack;
+  biased_subrs_t<SUBRS>   globalSubrs;
+  biased_subrs_t<SUBRS>   localSubrs;
 
   private:
-  Point	 pt;
+  point_t	 pt;
 
-  typedef InterpEnv<ARG> SUPER;
+  typedef interp_env_t<ARG> SUPER;
 };
 
 template <typename ENV, typename PARAM>
-struct PathProcsNull
+struct path_procs_null_t
 {
   static void rmoveto (ENV &env, PARAM& param) {}
   static void hmoveto (ENV &env, PARAM& param) {}
@@ -236,19 +237,19 @@ struct PathProcsNull
   static void hhcurveto (ENV &env, PARAM& param) {}
   static void vhcurveto (ENV &env, PARAM& param) {}
   static void hvcurveto (ENV &env, PARAM& param) {}
-  static void moveto (ENV &env, PARAM& param, const Point &pt) {}
-  static void line (ENV &env, PARAM& param, const Point &pt1) {}
-  static void curve (ENV &env, PARAM& param, const Point &pt1, const Point &pt2, const Point &pt3) {}
+  static void moveto (ENV &env, PARAM& param, const point_t &pt) {}
+  static void line (ENV &env, PARAM& param, const point_t &pt1) {}
+  static void curve (ENV &env, PARAM& param, const point_t &pt1, const point_t &pt2, const point_t &pt3) {}
   static void hflex (ENV &env, PARAM& param) {}
   static void flex (ENV &env, PARAM& param) {}
   static void hflex1 (ENV &env, PARAM& param) {}
   static void flex1 (ENV &env, PARAM& param) {}
 };
 
-template <typename ARG, typename OPSET, typename ENV, typename PARAM, typename PATH=PathProcsNull<ENV, PARAM> >
-struct CSOpSet : OpSet<ARG>
+template <typename ARG, typename OPSET, typename ENV, typename PARAM, typename PATH=path_procs_null_t<ENV, PARAM> >
+struct cs_opset_t : opset_t<ARG>
 {
-  static void process_op (OpCode op, ENV &env, PARAM& param)
+  static void process_op (op_code_t op, ENV &env, PARAM& param)
   {
     switch (op) {
 
@@ -262,7 +263,7 @@ struct CSOpSet : OpSet<ARG>
 	break;
 
       case OpCode_fixedcs:
-	env.argStack.push_fixed_from_substr (env.substr);
+	env.argStack.push_fixed_from_substr (env.str_ref);
 	break;
 
       case OpCode_callsubr:
@@ -370,37 +371,37 @@ struct CSOpSet : OpSet<ARG>
     }
   }
 
-  static void process_hstem (OpCode op, ENV &env, PARAM& param)
+  static void process_hstem (op_code_t op, ENV &env, PARAM& param)
   {
     env.hstem_count += env.argStack.get_count () / 2;
     OPSET::flush_args_and_op (op, env, param);
   }
 
-  static void process_vstem (OpCode op, ENV &env, PARAM& param)
+  static void process_vstem (op_code_t op, ENV &env, PARAM& param)
   {
     env.vstem_count += env.argStack.get_count () / 2;
     OPSET::flush_args_and_op (op, env, param);
   }
 
-  static void process_hintmask (OpCode op, ENV &env, PARAM& param)
+  static void process_hintmask (op_code_t op, ENV &env, PARAM& param)
   {
     env.determine_hintmask_size ();
-    if (likely (env.substr.avail (env.hintmask_size)))
+    if (likely (env.str_ref.avail (env.hintmask_size)))
     {
       OPSET::flush_hintmask (op, env, param);
-      env.substr.inc (env.hintmask_size);
+      env.str_ref.inc (env.hintmask_size);
     }
   }
 
-  static void process_post_flex (OpCode op, ENV &env, PARAM& param)
+  static void process_post_flex (op_code_t op, ENV &env, PARAM& param)
   {
     OPSET::flush_args_and_op (op, env, param);
   }
 
-  static void check_width (OpCode op, ENV &env, PARAM& param)
+  static void check_width (op_code_t op, ENV &env, PARAM& param)
   {}
 
-  static void process_post_move (OpCode op, ENV &env, PARAM& param)
+  static void process_post_move (op_code_t op, ENV &env, PARAM& param)
   {
     if (!env.seen_moveto)
     {
@@ -410,12 +411,12 @@ struct CSOpSet : OpSet<ARG>
     OPSET::flush_args_and_op (op, env, param);
   }
 
-  static void process_post_path (OpCode op, ENV &env, PARAM& param)
+  static void process_post_path (op_code_t op, ENV &env, PARAM& param)
   {
     OPSET::flush_args_and_op (op, env, param);
   }
 
-  static void flush_args_and_op (OpCode op, ENV &env, PARAM& param)
+  static void flush_args_and_op (op_code_t op, ENV &env, PARAM& param)
   {
     OPSET::flush_args (env, param);
     OPSET::flush_op (op, env, param);
@@ -426,16 +427,16 @@ struct CSOpSet : OpSet<ARG>
     env.pop_n_args (env.argStack.get_count ());
   }
 
-  static void flush_op (OpCode op, ENV &env, PARAM& param)
+  static void flush_op (op_code_t op, ENV &env, PARAM& param)
   {
   }
 
-  static void flush_hintmask (OpCode op, ENV &env, PARAM& param)
+  static void flush_hintmask (op_code_t op, ENV &env, PARAM& param)
   {
     OPSET::flush_args_and_op (op, env, param);
   }
 
-  static bool is_number_op (OpCode op)
+  static bool is_number_op (op_code_t op)
   {
     switch (op)
     {
@@ -454,31 +455,31 @@ struct CSOpSet : OpSet<ARG>
   }
 
   protected:
-  typedef OpSet<ARG>  SUPER;
+  typedef opset_t<ARG>  SUPER;
 };
 
 template <typename PATH, typename ENV, typename PARAM>
-struct PathProcs
+struct path_procs_t
 {
   static void rmoveto (ENV &env, PARAM& param)
   {
-    Point pt1 = env.get_pt ();
-    const Number &dy = env.pop_arg ();
-    const Number &dx = env.pop_arg ();
+    point_t pt1 = env.get_pt ();
+    const number_t &dy = env.pop_arg ();
+    const number_t &dx = env.pop_arg ();
     pt1.move (dx, dy);
     PATH::moveto (env, param, pt1);
   }
 
   static void hmoveto (ENV &env, PARAM& param)
   {
-    Point pt1 = env.get_pt ();
+    point_t pt1 = env.get_pt ();
     pt1.move_x (env.pop_arg ());
     PATH::moveto (env, param, pt1);
   }
 
   static void vmoveto (ENV &env, PARAM& param)
   {
-    Point pt1 = env.get_pt ();
+    point_t pt1 = env.get_pt ();
     pt1.move_y (env.pop_arg ());
     PATH::moveto (env, param, pt1);
   }
@@ -487,7 +488,7 @@ struct PathProcs
   {
     for (unsigned int i = 0; i + 2 <= env.argStack.get_count (); i += 2)
     {
-      Point pt1 = env.get_pt ();
+      point_t pt1 = env.get_pt ();
       pt1.move (env.eval_arg (i), env.eval_arg (i+1));
       PATH::line (env, param, pt1);
     }
@@ -495,7 +496,7 @@ struct PathProcs
 
   static void hlineto (ENV &env, PARAM& param)
   {
-    Point pt1;
+    point_t pt1;
     unsigned int i = 0;
     for (; i + 2 <= env.argStack.get_count (); i += 2)
     {
@@ -515,7 +516,7 @@ struct PathProcs
 
   static void vlineto (ENV &env, PARAM& param)
   {
-    Point pt1;
+    point_t pt1;
     unsigned int i = 0;
     for (; i + 2 <= env.argStack.get_count (); i += 2)
     {
@@ -537,11 +538,11 @@ struct PathProcs
   {
     for (unsigned int i = 0; i + 6 <= env.argStack.get_count (); i += 6)
     {
-      Point pt1 = env.get_pt ();
+      point_t pt1 = env.get_pt ();
       pt1.move (env.eval_arg (i), env.eval_arg (i+1));
-      Point pt2 = pt1;
+      point_t pt2 = pt1;
       pt2.move (env.eval_arg (i+2), env.eval_arg (i+3));
-      Point pt3 = pt2;
+      point_t pt3 = pt2;
       pt3.move (env.eval_arg (i+4), env.eval_arg (i+5));
       PATH::curve (env, param, pt1, pt2, pt3);
     }
@@ -552,17 +553,17 @@ struct PathProcs
     unsigned int i = 0;
     for (; i + 6 <= env.argStack.get_count (); i += 6)
     {
-      Point pt1 = env.get_pt ();
+      point_t pt1 = env.get_pt ();
       pt1.move (env.eval_arg (i), env.eval_arg (i+1));
-      Point pt2 = pt1;
+      point_t pt2 = pt1;
       pt2.move (env.eval_arg (i+2), env.eval_arg (i+3));
-      Point pt3 = pt2;
+      point_t pt3 = pt2;
       pt3.move (env.eval_arg (i+4), env.eval_arg (i+5));
       PATH::curve (env, param, pt1, pt2, pt3);
     }
     for (; i + 2 <= env.argStack.get_count (); i += 2)
     {
-      Point pt1 = env.get_pt ();
+      point_t pt1 = env.get_pt ();
       pt1.move (env.eval_arg (i), env.eval_arg (i+1));
       PATH::line (env, param, pt1);
     }
@@ -574,17 +575,17 @@ struct PathProcs
     unsigned int line_limit = (env.argStack.get_count () % 6);
     for (; i + 2 <= line_limit; i += 2)
     {
-      Point pt1 = env.get_pt ();
+      point_t pt1 = env.get_pt ();
       pt1.move (env.eval_arg (i), env.eval_arg (i+1));
       PATH::line (env, param, pt1);
     }
     for (; i + 6 <= env.argStack.get_count (); i += 6)
     {
-      Point pt1 = env.get_pt ();
+      point_t pt1 = env.get_pt ();
       pt1.move (env.eval_arg (i), env.eval_arg (i+1));
-      Point pt2 = pt1;
+      point_t pt2 = pt1;
       pt2.move (env.eval_arg (i+2), env.eval_arg (i+3));
-      Point pt3 = pt2;
+      point_t pt3 = pt2;
       pt3.move (env.eval_arg (i+4), env.eval_arg (i+5));
       PATH::curve (env, param, pt1, pt2, pt3);
     }
@@ -593,15 +594,15 @@ struct PathProcs
   static void vvcurveto (ENV &env, PARAM& param)
   {
     unsigned int i = 0;
-    Point pt1 = env.get_pt ();
+    point_t pt1 = env.get_pt ();
     if ((env.argStack.get_count () & 1) != 0)
       pt1.move_x (env.eval_arg (i++));
     for (; i + 4 <= env.argStack.get_count (); i += 4)
     {
       pt1.move_y (env.eval_arg (i));
-      Point pt2 = pt1;
+      point_t pt2 = pt1;
       pt2.move (env.eval_arg (i+1), env.eval_arg (i+2));
-      Point pt3 = pt2;
+      point_t pt3 = pt2;
       pt3.move_y (env.eval_arg (i+3));
       PATH::curve (env, param, pt1, pt2, pt3);
       pt1 = env.get_pt ();
@@ -611,15 +612,15 @@ struct PathProcs
   static void hhcurveto (ENV &env, PARAM& param)
   {
     unsigned int i = 0;
-    Point pt1 = env.get_pt ();
+    point_t pt1 = env.get_pt ();
     if ((env.argStack.get_count () & 1) != 0)
       pt1.move_y (env.eval_arg (i++));
     for (; i + 4 <= env.argStack.get_count (); i += 4)
     {
       pt1.move_x (env.eval_arg (i));
-      Point pt2 = pt1;
+      point_t pt2 = pt1;
       pt2.move (env.eval_arg (i+1), env.eval_arg (i+2));
-      Point pt3 = pt2;
+      point_t pt3 = pt2;
       pt3.move_x (env.eval_arg (i+3));
       PATH::curve (env, param, pt1, pt2, pt3);
       pt1 = env.get_pt ();
@@ -628,15 +629,15 @@ struct PathProcs
 
   static void vhcurveto (ENV &env, PARAM& param)
   {
-    Point pt1, pt2, pt3;
+    point_t pt1, pt2, pt3;
     unsigned int i = 0;
     if ((env.argStack.get_count () % 8) >= 4)
     {
-      Point pt1 = env.get_pt ();
+      point_t pt1 = env.get_pt ();
       pt1.move_y (env.eval_arg (i));
-      Point pt2 = pt1;
+      point_t pt2 = pt1;
       pt2.move (env.eval_arg (i+1), env.eval_arg (i+2));
-      Point pt3 = pt2;
+      point_t pt3 = pt2;
       pt3.move_x (env.eval_arg (i+3));
       i += 4;
 
@@ -689,15 +690,15 @@ struct PathProcs
 
   static void hvcurveto (ENV &env, PARAM& param)
   {
-    Point pt1, pt2, pt3;
+    point_t pt1, pt2, pt3;
     unsigned int i = 0;
     if ((env.argStack.get_count () % 8) >= 4)
     {
-      Point pt1 = env.get_pt ();
+      point_t pt1 = env.get_pt ();
       pt1.move_x (env.eval_arg (i));
-      Point pt2 = pt1;
+      point_t pt2 = pt1;
       pt2.move (env.eval_arg (i+1), env.eval_arg (i+2));
-      Point pt3 = pt2;
+      point_t pt3 = pt2;
       pt3.move_y (env.eval_arg (i+3));
       i += 4;
 
@@ -749,31 +750,31 @@ struct PathProcs
   }
 
   /* default actions to be overridden */
-  static void moveto (ENV &env, PARAM& param, const Point &pt)
+  static void moveto (ENV &env, PARAM& param, const point_t &pt)
   { env.moveto (pt); }
 
-  static void line (ENV &env, PARAM& param, const Point &pt1)
+  static void line (ENV &env, PARAM& param, const point_t &pt1)
   { PATH::moveto (env, param, pt1); }
 
-  static void curve (ENV &env, PARAM& param, const Point &pt1, const Point &pt2, const Point &pt3)
+  static void curve (ENV &env, PARAM& param, const point_t &pt1, const point_t &pt2, const point_t &pt3)
   { PATH::moveto (env, param, pt3); }
 
   static void hflex (ENV &env, PARAM& param)
   {
     if (likely (env.argStack.get_count () == 7))
     {
-      Point pt1 = env.get_pt ();
+      point_t pt1 = env.get_pt ();
       pt1.move_x (env.eval_arg (0));
-      Point pt2 = pt1;
+      point_t pt2 = pt1;
       pt2.move (env.eval_arg (1), env.eval_arg (2));
-      Point pt3 = pt2;
+      point_t pt3 = pt2;
       pt3.move_x (env.eval_arg (3));
-      Point pt4 = pt3;
+      point_t pt4 = pt3;
       pt4.move_x (env.eval_arg (4));
-      Point pt5 = pt4;
+      point_t pt5 = pt4;
       pt5.move_x (env.eval_arg (5));
       pt5.y = pt1.y;
-      Point pt6 = pt5;
+      point_t pt6 = pt5;
       pt6.move_x (env.eval_arg (6));
 
       curve2 (env, param, pt1, pt2, pt3, pt4, pt5, pt6);
@@ -786,17 +787,17 @@ struct PathProcs
   {
     if (likely (env.argStack.get_count () == 13))
     {
-      Point pt1 = env.get_pt ();
+      point_t pt1 = env.get_pt ();
       pt1.move (env.eval_arg (0), env.eval_arg (1));
-      Point pt2 = pt1;
+      point_t pt2 = pt1;
       pt2.move (env.eval_arg (2), env.eval_arg (3));
-      Point pt3 = pt2;
+      point_t pt3 = pt2;
       pt3.move (env.eval_arg (4), env.eval_arg (5));
-      Point pt4 = pt3;
+      point_t pt4 = pt3;
       pt4.move (env.eval_arg (6), env.eval_arg (7));
-      Point pt5 = pt4;
+      point_t pt5 = pt4;
       pt5.move (env.eval_arg (8), env.eval_arg (9));
-      Point pt6 = pt5;
+      point_t pt6 = pt5;
       pt6.move (env.eval_arg (10), env.eval_arg (11));
 
       curve2 (env, param, pt1, pt2, pt3, pt4, pt5, pt6);
@@ -809,17 +810,17 @@ struct PathProcs
   {
     if (likely (env.argStack.get_count () == 9))
     {
-      Point pt1 = env.get_pt ();
+      point_t pt1 = env.get_pt ();
       pt1.move (env.eval_arg (0), env.eval_arg (1));
-      Point pt2 = pt1;
+      point_t pt2 = pt1;
       pt2.move (env.eval_arg (2), env.eval_arg (3));
-      Point pt3 = pt2;
+      point_t pt3 = pt2;
       pt3.move_x (env.eval_arg (4));
-      Point pt4 = pt3;
+      point_t pt4 = pt3;
       pt4.move_x (env.eval_arg (5));
-      Point pt5 = pt4;
+      point_t pt5 = pt4;
       pt5.move (env.eval_arg (6), env.eval_arg (7));
-      Point pt6 = pt5;
+      point_t pt6 = pt5;
       pt6.move_x (env.eval_arg (8));
       pt6.y = env.get_pt ().y;
 
@@ -833,22 +834,22 @@ struct PathProcs
   {
     if (likely (env.argStack.get_count () == 11))
     {
-      Point d;
+      point_t d;
       d.init ();
       for (unsigned int i = 0; i < 10; i += 2)
 	d.move (env.eval_arg (i), env.eval_arg (i+1));
 
-      Point pt1 = env.get_pt ();
+      point_t pt1 = env.get_pt ();
       pt1.move (env.eval_arg (0), env.eval_arg (1));
-      Point pt2 = pt1;
+      point_t pt2 = pt1;
       pt2.move (env.eval_arg (2), env.eval_arg (3));
-      Point pt3 = pt2;
+      point_t pt3 = pt2;
       pt3.move (env.eval_arg (4), env.eval_arg (5));
-      Point pt4 = pt3;
+      point_t pt4 = pt3;
       pt4.move (env.eval_arg (6), env.eval_arg (7));
-      Point pt5 = pt4;
+      point_t pt5 = pt4;
       pt5.move (env.eval_arg (8), env.eval_arg (9));
-      Point pt6 = pt5;
+      point_t pt6 = pt5;
 
       if (fabs (d.x.to_real ()) > fabs (d.y.to_real ()))
       {
@@ -869,8 +870,8 @@ struct PathProcs
 
   protected:
   static void curve2 (ENV &env, PARAM& param,
-		      const Point &pt1, const Point &pt2, const Point &pt3,
-		      const Point &pt4, const Point &pt5, const Point &pt6)
+		      const point_t &pt1, const point_t &pt2, const point_t &pt3,
+		      const point_t &pt4, const point_t &pt5, const point_t &pt6)
   {
     PATH::curve (env, param, pt1, pt2, pt3);
     PATH::curve (env, param, pt4, pt5, pt6);
@@ -878,7 +879,7 @@ struct PathProcs
 };
 
 template <typename ENV, typename OPSET, typename PARAM>
-struct CSInterpreter : Interpreter<ENV>
+struct cs_interpreter_t : interpreter_t<ENV>
 {
   bool interpret (PARAM& param)
   {
@@ -896,7 +897,7 @@ struct CSInterpreter : Interpreter<ENV>
   }
 
   private:
-  typedef Interpreter<ENV> SUPER;
+  typedef interpreter_t<ENV> SUPER;
 };
 
 } /* namespace CFF */

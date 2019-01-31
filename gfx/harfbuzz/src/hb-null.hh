@@ -93,7 +93,7 @@ struct _hb_assign<T, T, _hb_bool_type<(bool) (1 + (unsigned int) T::min_size)> >
 
 template <typename T, typename V>
 static inline void hb_assign (T &o, const V v)
-{ _hb_assign<T, V, _hb_bool_type<true> >::value (o, v); };
+{ _hb_assign<T, V, _hb_bool_type<true> >::value (o, v); }
 
 
 /*

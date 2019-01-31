@@ -49,15 +49,15 @@ hb_plan_subset_cff_fdselect (const hb_vector_t<hb_codepoint_t> &glyphs,
 			    unsigned int &subset_fd_count /* OUT */,
 			    unsigned int &subset_fdselect_size /* OUT */,
 			    unsigned int &subset_fdselect_format /* OUT */,
-			    hb_vector_t<code_pair> &fdselect_ranges /* OUT */,
-			    Remap &fdmap /* OUT */)
+			    hb_vector_t<code_pair_t> &fdselect_ranges /* OUT */,
+			    remap_t &fdmap /* OUT */)
 {
   subset_fd_count = 0;
   subset_fdselect_size = 0;
   subset_fdselect_format = 0;
   unsigned int  num_ranges = 0;
 
-  unsigned int subset_num_glyphs = glyphs.len;
+  unsigned int subset_num_glyphs = glyphs.length;
   if (subset_num_glyphs == 0)
     return true;
 
@@ -76,7 +76,7 @@ hb_plan_subset_cff_fdselect (const hb_vector_t<hb_codepoint_t> &glyphs,
       {
 	num_ranges++;
 	prev_fd = fd;
-	code_pair pair = { fd, i };
+	code_pair_t pair = { fd, i };
 	fdselect_ranges.push (pair);
       }
     }
@@ -106,7 +106,7 @@ hb_plan_subset_cff_fdselect (const hb_vector_t<hb_codepoint_t> &glyphs,
     }
 
     /* update each font dict index stored as "code" in fdselect_ranges */
-    for (unsigned int i = 0; i < fdselect_ranges.len; i++)
+    for (unsigned int i = 0; i < fdselect_ranges.length; i++)
       fdselect_ranges[i].code = fdmap[fdselect_ranges[i].code];
   }
 
@@ -148,13 +148,13 @@ serialize_fdselect_3_4 (hb_serialize_context_t *c,
 			  const unsigned int num_glyphs,
 			  const FDSelect &src,
 			  unsigned int size,
-			  const hb_vector_t<code_pair> &fdselect_ranges)
+			  const hb_vector_t<code_pair_t> &fdselect_ranges)
 {
   TRACE_SERIALIZE (this);
   FDSELECT3_4 *p = c->allocate_size<FDSELECT3_4> (size);
   if (unlikely (p == nullptr)) return_trace (false);
-  p->nRanges.set (fdselect_ranges.len);
-  for (unsigned int i = 0; i < fdselect_ranges.len; i++)
+  p->nRanges ().set (fdselect_ranges.length);
+  for (unsigned int i = 0; i < fdselect_ranges.length; i++)
   {
     p->ranges[i].first.set (fdselect_ranges[i].glyph);
     p->ranges[i].fd.set (fdselect_ranges[i].code);
@@ -174,7 +174,7 @@ hb_serialize_cff_fdselect (hb_serialize_context_t *c,
 			  unsigned int fd_count,
 			  unsigned int fdselect_format,
 			  unsigned int size,
-			  const hb_vector_t<code_pair> &fdselect_ranges)
+			  const hb_vector_t<code_pair_t> &fdselect_ranges)
 {
   TRACE_SERIALIZE (this);
   FDSelect  *p = c->allocate_min<FDSelect> ();

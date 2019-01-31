@@ -1000,8 +1000,6 @@ fi
 
 dnl Checks for library functions.
 dnl ========================================================
-AC_PROG_GCC_TRADITIONAL
-AC_FUNC_MEMCMP
 AC_CHECK_FUNCS([getc_unlocked _getc_nolock gmtime_r localtime_r pthread_getname_np pthread_get_name_np])
 
 dnl check for clock_gettime(), the CLOCK_MONOTONIC clock
@@ -1152,30 +1150,6 @@ if test "$GNU_CC"; then
 
   TARGET_COMPILER_ABI="${TARGET_COMPILER_ABI-${ARM_ABI_PREFIX}gcc3}"
 fi
-
-dnl See if a dynamic_cast to void* gives the most derived object.
-AC_CACHE_CHECK(for C++ dynamic_cast to void*,
-               ac_cv_cpp_dynamic_cast_void_ptr,
-               [AC_TRY_RUN([class X { int i; public: virtual ~X() { } };
-                            class Y { int j; public: virtual ~Y() { } };
-                            class Z : public X, public Y { int k; };
-
-                            int main() {
-                                 Z mdo;
-                                 X *subx = (X*)&mdo;
-                                 Y *suby = (Y*)&mdo;
-                                 return !((((void*)&mdo != (void*)subx) &&
-                                           ((void*)&mdo == dynamic_cast<void*>(subx))) ||
-                                          (((void*)&mdo != (void*)suby) &&
-                                           ((void*)&mdo == dynamic_cast<void*>(suby))));
-                            }],
-                           ac_cv_cpp_dynamic_cast_void_ptr=yes,
-                           ac_cv_cpp_dynamic_cast_void_ptr=no,
-                           ac_cv_cpp_dynamic_cast_void_ptr=no)])
-if test "$ac_cv_cpp_dynamic_cast_void_ptr" = yes ; then
-   AC_DEFINE(HAVE_CPP_DYNAMIC_CAST_TO_VOID_PTR)
-fi
-
 
 # try harder, when checking for __thread support, see bug 521750 comment #33 and below
 # We pass MOZ_OPTIMIZE_LDFLAGS to the linker because if dead_strip is

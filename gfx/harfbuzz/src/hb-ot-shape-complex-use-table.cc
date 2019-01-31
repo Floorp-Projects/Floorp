@@ -17,6 +17,8 @@
 
 #include "hb-ot-shape-complex-use.hh"
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-macros"
 #define B	USE_B	/* BASE */
 #define CGJ	USE_CGJ	/* CGJ */
 #define CS	USE_CS	/* CONS_WITH_STACKER */
@@ -55,6 +57,7 @@
 #define VMBlw	USE_VMBlw
 #define VMPst	USE_VMPst
 #define VMAbv	USE_VMAbv
+#pragma GCC diagnostic pop
 
 static const USE_TABLE_ELEMENT_TYPE use_table[] = {
 

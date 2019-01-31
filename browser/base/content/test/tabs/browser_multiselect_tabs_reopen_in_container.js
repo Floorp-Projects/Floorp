@@ -56,7 +56,7 @@ add_task(async function testReopen() {
   let tab1 = await addTab("http://mochi.test:8888/1");
   let tab2 = await addTab("http://mochi.test:8888/2");
   let tab3 = await addTab("http://mochi.test:8888/3");
-  let tab4 = await addTab("http://mochi.test:8888/3", {createLazyBrowser: true});
+  let tab4 = BrowserTestUtils.addTab(gBrowser, "http://mochi.test:8888/3", {createLazyBrowser: true});
 
   await BrowserTestUtils.switchTab(gBrowser, tab1);
 

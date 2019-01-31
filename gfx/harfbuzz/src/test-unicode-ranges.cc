@@ -25,7 +25,6 @@
  */
 
 #include "hb.hh"
-
 #include "hb-ot-os2-unicode-ranges.hh"
 
 static void

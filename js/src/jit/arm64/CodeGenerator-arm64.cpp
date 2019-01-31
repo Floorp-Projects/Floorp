@@ -1574,7 +1574,52 @@ void CodeGenerator::visitWasmStackArg(LWasmStackArg* ins) {
   MOZ_CRASH("visitWasmStackArg");
 }
 
-void CodeGenerator::visitUDiv(LUDiv* ins) { MOZ_CRASH("visitUDiv"); }
+void CodeGenerator::visitUDiv(LUDiv* ins) {
+  MDiv* mir = ins->mir();
+  Register lhs = ToRegister(ins->lhs());
+  Register rhs = ToRegister(ins->rhs());
+  Register output = ToRegister(ins->output());
+  ARMRegister lhs32 = ARMRegister(lhs, 32);
+  ARMRegister rhs32 = ARMRegister(rhs, 32);
+  ARMRegister output32 = ARMRegister(output, 32);
+
+  // Prevent divide by zero.
+  if (mir->canBeDivideByZero()) {
+    if (mir->isTruncated()) {
+      if (mir->trapOnError()) {
+        Label nonZero;
+        masm.branchTest32(Assembler::NonZero, rhs, rhs, &nonZero);
+        masm.wasmTrap(wasm::Trap::IntegerDivideByZero, mir->bytecodeOffset());
+        masm.bind(&nonZero);
+      } else {
+        // ARM64 UDIV instruction will return 0 when divided by 0.
+        // No need for extra tests.
+      }
+    } else {
+      bailoutTest32(Assembler::Zero, rhs, rhs, ins->snapshot());
+    }
+  }
+
+  // Unsigned division.
+  masm.Udiv(output32, lhs32, rhs32);
+
+  // If the remainder is > 0, bailout since this must be a double.
+  if (!mir->canTruncateRemainder()) {
+    Register remainder = ToRegister(ins->remainder());
+    ARMRegister remainder32 = ARMRegister(remainder, 32);
+
+    // Compute the remainder: remainder = lhs - (output * rhs).
+    masm.Msub(remainder32, output32, rhs32, lhs32);
+
+    bailoutTest32(Assembler::NonZero, remainder, remainder, ins->snapshot());
+  }
+
+  // Unsigned div can return a value that's not a signed int32.
+  // If our users aren't expecting that, bail.
+  if (!mir->isTruncated()) {
+    bailoutTest32(Assembler::Signed, output, output, ins->snapshot());
+  }
+}
 
 void CodeGenerator::visitUMod(LUMod* ins) {
   MMod* mir = ins->mir();
