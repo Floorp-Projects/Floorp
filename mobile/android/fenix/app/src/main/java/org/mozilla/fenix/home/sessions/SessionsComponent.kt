@@ -4,10 +4,8 @@
 
 package org.mozilla.fenix.home.sessions
 
-import android.annotation.SuppressLint
 import android.view.ViewGroup
 import mozilla.components.browser.session.Session
-import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.fenix.mvi.Action
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.Change
@@ -16,10 +14,13 @@ import org.mozilla.fenix.mvi.ViewState
 
 class SessionsComponent(
     private val container: ViewGroup,
-    override val bus: ActionBusFactory,
+    bus: ActionBusFactory,
     override var initialState: SessionsState = SessionsState(emptyList())
 ) :
-    UIComponent<SessionsState, SessionsAction, SessionsChange>(bus) {
+    UIComponent<SessionsState, SessionsAction, SessionsChange>(
+        bus.getManagedEmitter(SessionsAction::class.java),
+        bus.getSafeManagedObservable(SessionsChange::class.java)
+    ) {
 
     override val reducer: (SessionsState, SessionsChange) -> SessionsState = { state, change ->
         when (change) {
@@ -27,20 +28,10 @@ class SessionsComponent(
         }
     }
 
-    override fun initView() = SessionsUIView(container, bus)
+    override fun initView() = SessionsUIView(container, actionEmitter, changesObservable)
 
     init {
-        setup()
-    }
-
-    @SuppressLint("CheckResult")
-    fun setup(): SessionsComponent {
         render(reducer)
-        getUserInteractionEvents<SessionsAction>()
-            .subscribe {
-                Logger("SessionsComponent").debug(it.toString())
-            }
-        return this
     }
 }
 

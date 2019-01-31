@@ -8,13 +8,18 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import io.reactivex.Observable
+import io.reactivex.Observer
 import io.reactivex.functions.Consumer
 import org.mozilla.fenix.R
-import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.UIView
 
-class SessionsUIView(container: ViewGroup, bus: ActionBusFactory) :
-    UIView<SessionsState>(container, bus) {
+class SessionsUIView(
+    container: ViewGroup,
+    actionEmitter: Observer<SessionsAction>,
+    changesObservable: Observable<SessionsChange>
+) :
+    UIView<SessionsState, SessionsAction, SessionsChange>(container, actionEmitter, changesObservable) {
 
     override val view: RecyclerView = LayoutInflater.from(container.context)
         .inflate(R.layout.component_sessions, container, true)

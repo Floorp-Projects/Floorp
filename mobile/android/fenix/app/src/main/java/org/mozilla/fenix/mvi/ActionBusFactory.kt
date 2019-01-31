@@ -27,6 +27,7 @@ import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.OnLifecycleEvent
 import io.reactivex.Observable
+import io.reactivex.Observer
 import io.reactivex.rxkotlin.merge
 import io.reactivex.subjects.PublishSubject
 import io.reactivex.subjects.Subject
@@ -102,6 +103,10 @@ class ActionBusFactory private constructor(val owner: LifecycleOwner) {
         return if (map[clazz] != null) map[clazz] as Observable<T> else create(clazz)
     }
 
+    fun <T : Action> getManagedEmitter(clazz: Class<T>): Observer<T> {
+        return if (map[clazz] != null) map[clazz] as Observer<T> else create(clazz)
+    }
+
     fun logMergedObservables() {
         // TODO make this observe new items in the map and combine them
         map.values.merge().compose(logState()).subscribe()
@@ -130,6 +135,9 @@ inline fun <reified T : Action> LifecycleOwner.emit(event: T) =
  */
 inline fun <reified T : Action> LifecycleOwner.getSafeManagedObservable(): Observable<T> =
     ActionBusFactory.get(this).getSafeManagedObservable(T::class.java)
+
+inline fun <reified T : Action> LifecycleOwner.getManagedEmitter(): Observer<T> =
+    ActionBusFactory.get(this).getManagedEmitter(T::class.java)
 
 /**
  * This method returns a destroy observable that can be passed to [org.mozilla.fenix.mvi.UIView]s as needed.

@@ -5,6 +5,8 @@ package org.mozilla.fenix.search.awesomebar
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import io.reactivex.Observable
+import io.reactivex.Observer
 import io.reactivex.functions.Consumer
 import mozilla.components.browser.awesomebar.BrowserAwesomeBar
 import mozilla.components.feature.awesomebar.provider.ClipboardSuggestionProvider
@@ -13,11 +15,14 @@ import mozilla.components.feature.awesomebar.provider.SessionSuggestionProvider
 import mozilla.components.support.ktx.android.graphics.drawable.toBitmap
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.UIView
 
-class AwesomeBarUIView(container: ViewGroup, bus: ActionBusFactory) :
-    UIView<AwesomeBarState>(container, bus) {
+class AwesomeBarUIView(
+    container: ViewGroup,
+    actionEmitter: Observer<AwesomeBarAction>,
+    changesObservable: Observable<AwesomeBarChange>
+) :
+    UIView<AwesomeBarState, AwesomeBarAction, AwesomeBarChange>(container, actionEmitter, changesObservable) {
     override val view: BrowserAwesomeBar = LayoutInflater.from(container.context)
         .inflate(R.layout.component_awesomebar, container, true)
         .findViewById(R.id.awesomeBar)
@@ -31,14 +36,15 @@ class AwesomeBarUIView(container: ViewGroup, bus: ActionBusFactory) :
                 getString(R.string.awesomebar_clipboard_title)
                 )
             )
-            view.addProviders(SessionSuggestionProvider(components.core.sessionManager, components.useCases.tabsUseCases.selectTab))
+            view.addProviders(SessionSuggestionProvider(components.core.sessionManager,
+                components.useCases.tabsUseCases.selectTab))
             view.addProviders(SearchSuggestionProvider(
                 components.search.searchEngineManager.getDefaultSearchEngine(this),
                 components.useCases.searchUseCases.defaultSearch,
                 SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS)
             )
 
-            view.setOnStopListener { bus.emit(AwesomeBarAction::class.java, AwesomeBarAction.ItemSelected) }
+            view.setOnStopListener { actionEmitter.onNext(AwesomeBarAction.ItemSelected) }
         }
     }
 

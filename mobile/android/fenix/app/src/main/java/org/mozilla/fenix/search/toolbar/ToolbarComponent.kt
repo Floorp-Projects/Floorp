@@ -16,18 +16,21 @@ import org.mozilla.fenix.mvi.ViewState
 
 class ToolbarComponent(
     private val container: ViewGroup,
-    override val bus: ActionBusFactory,
+    bus: ActionBusFactory,
     override var initialState: SearchState = SearchState("")
 ) :
-    UIComponent<SearchState, SearchAction, SearchChange>(bus) {
+    UIComponent<SearchState, SearchAction, SearchChange>(
+        bus.getManagedEmitter(SearchAction::class.java),
+        bus.getSafeManagedObservable(SearchChange::class.java)
+    ) {
 
     override val reducer: Reducer<SearchState, SearchChange> = { state, change ->
         when (change) {
-            is SearchChange.QueryChanged -> state.updateQuery(change.query)
+            is SearchChange.QueryChanged -> state.copy(query = change.query)
         }
     }
 
-    override fun initView() = ToolbarUIView(container, bus)
+    override fun initView() = ToolbarUIView(container, actionEmitter, changesObservable)
     init {
         render(reducer)
     }
@@ -36,12 +39,11 @@ class ToolbarComponent(
     fun editMode() = getView().editMode()
 }
 
-data class SearchState(val query: String) : ViewState {
-    fun updateQuery(query: String) = SearchState(query)
-}
+data class SearchState(val query: String) : ViewState
 
 sealed class SearchAction : Action {
-    data class UrlCommitted(val url: String): SearchAction()
+    data class UrlCommitted(val url: String) : SearchAction()
+    data class TextChanged(val query: String) : SearchAction()
 }
 
 sealed class SearchChange : Change {

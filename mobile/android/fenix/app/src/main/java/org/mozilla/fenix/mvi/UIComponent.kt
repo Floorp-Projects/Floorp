@@ -5,29 +5,28 @@
 package org.mozilla.fenix.mvi
 
 import io.reactivex.Observable
+import io.reactivex.Observer
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 
-abstract class UIComponent<S : ViewState, A : Action, C : Change>(open val bus: ActionBusFactory) {
+abstract class UIComponent<S : ViewState, A : Action, C : Change>(
+    protected val actionEmitter: Observer<A>,
+    protected val changesObservable: Observable<C>
+) {
+
     abstract var initialState: S
     abstract val reducer: Reducer<S, C>
-    val uiView: UIView<S> by lazy { initView() }
+    val uiView: UIView<S, A, C> by lazy { initView() }
 
-    abstract fun initView(): UIView<S>
+    abstract fun initView(): UIView<S, A, C>
     open fun getContainerId() = uiView.containerId
-
-    inline fun <reified A : Action> getUserInteractionEvents():
-            Observable<A> = bus.getSafeManagedObservable(A::class.java)
-
-    inline fun <reified C : Change> getModelChangeEvents():
-            Observable<C> = bus.getSafeManagedObservable(C::class.java)
 
     /**
      * Render the ViewState to the View through the Reducer
      */
-    inline fun <reified C : Change> render(noinline reducer: Reducer<S, C>): Disposable =
-        getModelChangeEvents<C>()
+    fun render(reducer: Reducer<S, C>): Disposable =
+        changesObservable
             .scan(initialState, reducer)
             .distinctUntilChanged()
             .subscribeOn(Schedulers.io())

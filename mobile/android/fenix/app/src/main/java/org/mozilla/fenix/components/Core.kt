@@ -8,7 +8,6 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.preference.PreferenceManager
 import mozilla.components.browser.engine.gecko.GeckoEngine
-import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.storage.SessionStorage
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
@@ -19,7 +18,6 @@ import mozilla.components.feature.session.HistoryDelegate
 import mozilla.components.lib.crash.handler.CrashHandlerService
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoRuntimeSettings
-import java.util.concurrent.TimeUnit
 
 /**
  * Component group for all core browser functionality.

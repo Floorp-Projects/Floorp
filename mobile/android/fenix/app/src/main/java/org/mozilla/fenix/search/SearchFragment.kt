@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.search
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -13,10 +14,13 @@ import androidx.navigation.Navigation
 import kotlinx.android.synthetic.main.fragment_search.view.*
 import org.mozilla.fenix.R
 import org.mozilla.fenix.mvi.ActionBusFactory
+import org.mozilla.fenix.mvi.getSafeManagedObservable
 import org.mozilla.fenix.search.awesomebar.AwesomeBarAction
 import org.mozilla.fenix.search.awesomebar.AwesomeBarChange
 import org.mozilla.fenix.search.awesomebar.AwesomeBarComponent
-import org.mozilla.fenix.search.toolbar.*
+import org.mozilla.fenix.search.toolbar.SearchAction
+import org.mozilla.fenix.search.toolbar.ToolbarComponent
+import org.mozilla.fenix.search.toolbar.ToolbarUIView
 
 class SearchFragment : Fragment() {
     private lateinit var toolbarComponent: ToolbarComponent
@@ -30,6 +34,7 @@ class SearchFragment : Fragment() {
         val view = inflater.inflate(R.layout.fragment_search, container, false)
         toolbarComponent = ToolbarComponent(view.toolbar_wrapper, ActionBusFactory.get(this))
         awesomeBarComponent = AwesomeBarComponent(view.search_layout, ActionBusFactory.get(this))
+        ActionBusFactory.get(this).logMergedObservables()
         return view
     }
 
@@ -38,6 +43,7 @@ class SearchFragment : Fragment() {
         toolbarComponent.editMode()
     }
 
+    @SuppressLint("CheckResult")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -47,26 +53,18 @@ class SearchFragment : Fragment() {
 
         view.toolbar_wrapper.clipToOutline = false
 
-        toolbarComponent
-            .getModelChangeEvents<SearchChange>()
+        getSafeManagedObservable<SearchAction>()
             .subscribe {
                 when (it) {
-                    is SearchChange.QueryChanged -> {
-                        ActionBusFactory.get(this).emit(AwesomeBarChange::class.java, AwesomeBarChange.UpdateQuery(it.query))
+                    is SearchAction.UrlCommitted -> transitionToBrowser()
+                    is SearchAction.TextChanged -> {
+                        ActionBusFactory.get(this)
+                            .emit(AwesomeBarChange::class.java, AwesomeBarChange.UpdateQuery(it.query))
                     }
                 }
             }
 
-        toolbarComponent
-            .getUserInteractionEvents<SearchAction>()
-            .subscribe {
-                when (it) {
-                    is SearchAction.UrlCommitted -> transitionToBrowser()
-                }
-            }
-
-        awesomeBarComponent
-            .getUserInteractionEvents<AwesomeBarAction>()
+        getSafeManagedObservable<AwesomeBarAction>()
             .subscribe {
                 when (it) {
                     is AwesomeBarAction.ItemSelected -> transitionToBrowser()

@@ -7,6 +7,8 @@ package org.mozilla.fenix.search.toolbar
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
+import io.reactivex.Observable
+import io.reactivex.Observer
 import io.reactivex.functions.Consumer
 import mozilla.components.browser.domains.autocomplete.ShippedDomainsProvider
 import mozilla.components.browser.toolbar.BrowserToolbar
@@ -14,12 +16,14 @@ import mozilla.components.support.ktx.android.content.res.pxToDp
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.toolbar.ToolbarIntegration
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.requireComponents
-import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.UIView
 
-class ToolbarUIView(container: ViewGroup, bus: ActionBusFactory) :
-    UIView<SearchState>(container, bus) {
+class ToolbarUIView(
+    container: ViewGroup,
+    actionEmitter: Observer<SearchAction>,
+    changesObservable: Observable<SearchChange>
+) :
+    UIView<SearchState, SearchAction, SearchChange>(container, actionEmitter, changesObservable) {
 
     val toolbarIntegration: ToolbarIntegration
 
@@ -33,7 +37,7 @@ class ToolbarUIView(container: ViewGroup, bus: ActionBusFactory) :
     init {
         view.apply {
             onUrlClicked = { false }
-            setOnUrlCommitListener { bus.emit(SearchAction::class.java, SearchAction.UrlCommitted(it)) }
+            setOnUrlCommitListener { actionEmitter.onNext(SearchAction.UrlCommitted(it)) }
 
             browserActionMargin = resources.pxToDp(browserActionMarginDp)
             urlBoxView = urlBackground
@@ -46,11 +50,11 @@ class ToolbarUIView(container: ViewGroup, bus: ActionBusFactory) :
 
             setOnEditListener(object : mozilla.components.concept.toolbar.Toolbar.OnEditListener {
                 override fun onTextChanged(text: String) {
-                    bus.emit(SearchChange::class.java, SearchChange.QueryChanged(text))
+                    actionEmitter.onNext(SearchAction.TextChanged(text))
                 }
 
                 override fun onStopEditing() {
-                    bus.emit(SearchAction::class.java, SearchAction.UrlCommitted("foo"))
+                    actionEmitter.onNext(SearchAction.UrlCommitted("foo"))
                 }
             })
         }
