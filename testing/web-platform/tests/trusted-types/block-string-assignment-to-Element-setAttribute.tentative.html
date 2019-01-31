@@ -9,6 +9,8 @@
 </head>
 <body>
 <script>
+  const nullPolicy = TrustedTypes.createPolicy('NullPolicy', {createScript: s => s});
+
   // TrustedURL Assignments
   const URLTestCases = [
     [ 'a', 'href' ],
@@ -29,6 +31,7 @@
       assert_element_accepts_trusted_url_explicit_set(window, c, t, c[0], c[1], RESULTS.URL);
       assert_throws_no_trusted_type_explicit_set(c[0], c[1], 'A string');
       assert_throws_no_trusted_type_explicit_set(c[0], c[1], null);
+      assert_throws_no_trusted_type_explicit_set(c[0], c[1], nullPolicy.createScript('script'));
     }, c[0] + "." + c[1] + " accepts only TrustedURL");
   });
 
@@ -45,6 +48,7 @@
       assert_element_accepts_trusted_script_url_explicit_set(window, c, t, c[0], c[1], RESULTS.SCRIPTURL);
       assert_throws_no_trusted_type_explicit_set(c[0], c[1], 'A string');
       assert_throws_no_trusted_type_explicit_set(c[0], c[1], null);
+      assert_throws_no_trusted_type_explicit_set(c[0], c[1], nullPolicy.createScript('script'));
     }, c[0] + "." + c[1] + " accepts only TrustedScriptURL");
   });
 
@@ -58,8 +62,19 @@
       assert_element_accepts_trusted_html_explicit_set(window, c, t, c[0], c[1], RESULTS.HTML);
       assert_throws_no_trusted_type_explicit_set(c[0], c[1], 'A string');
       assert_throws_no_trusted_type_explicit_set(c[0], c[1], null);
+      assert_throws_no_trusted_type_explicit_set(c[0], c[1], nullPolicy.createScript('script'));
     }, c[0] + "." + c[1] + " accepts only TrustedHTML");
   });
+
+  test(t => {
+    let el = document.createElement('iframe');
+
+    assert_throws(new TypeError(), _ => {
+      el.setAttribute('SrC', INPUTS.URL);
+    });
+
+    assert_equals(el.src, '');
+  }, "`Element.prototype.setAttribute.SrC = string` throws.");
 
   // After default policy creation string and null assignments implicitly call createXYZ
   let p = window.TrustedTypes.createPolicy("default", { createURL: createURLJS, createScriptURL: createScriptURLJS, createHTML: createHTMLJS }, true);
@@ -108,14 +123,4 @@
 
     assert_equals(span.getAttribute('src'), INPUTS.URL);
   }, "`span.src = setAttributeNode(div.src)` with string works.");
-
-  test(t => {
-    let el = document.createElement('iframe');
-
-    assert_throws(new TypeError(), _ => {
-      el.setAttribute('SrC', INPUTS.URL);
-    });
-
-    assert_equals(el.src, '');
-  }, "`Element.prototype.setAttribute.SrC = string` throws.");
 </script>
