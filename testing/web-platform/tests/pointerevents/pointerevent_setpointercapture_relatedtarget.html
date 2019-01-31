@@ -73,6 +73,8 @@
             }
 
             function run() {
+                var actions_promise;
+
                 // After invoking the setPointerCapture method on an element, subsequent pointer events for the specified pointer must be targeted at that element
                 // and boundary events should be sent accordingly and relatedTarget should behave normally.
                 on_event(target0, "pointerover", function (event) {
@@ -81,7 +83,10 @@
                         test(function() {
                             assert_not_equals(event.relatedTarget, null, "relatedTarget should not be null even when the capture is set")
                         }, "relatedTarget should not be null even when the capture is set.");
-                        done();
+
+                        actions_promise.then( () => {
+                            done();
+                        });
                     }
                 });
 
@@ -97,14 +102,14 @@
                 });
 
                 // Inject mouse inputs.
-                new test_driver.Actions()
-                    .pointerMove(0, 0, {origin: target1})
-                    .pointerMove(0, 0, {origin: captureButton})
-                    .pointerDown()
-                    .pointerMove(0, 0, {origin: target1})
-                    .pointerMove(0, 0, {origin: target0})
-                    .pointerUp()
-                    .send();
+                actions_promise = new test_driver.Actions()
+                                      .pointerMove(0, 0, {origin: target1})
+                                      .pointerMove(0, 0, {origin: captureButton})
+                                      .pointerDown()
+                                      .pointerMove(0, 0, {origin: target1})
+                                      .pointerMove(0, 0, {origin: target0})
+                                      .pointerUp()
+                                      .send();
             }
         </script>
         <h1>Pointer Events Capture Test</h1>
