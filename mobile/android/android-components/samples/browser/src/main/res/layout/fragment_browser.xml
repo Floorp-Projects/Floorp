@@ -21,12 +21,13 @@
                 android:layout_height="56dp"
                 android:background="#aaaaaa"/>
 
-        <mozilla.components.feature.findinpage.FindInPageView
-                android:id="@+id/find_in_page"
+        <mozilla.components.feature.findinpage.view.FindInPageBar
+                android:id="@+id/findInPage"
                 android:layout_width="match_parent"
                 android:background="#FFFFFFFF"
                 android:elevation="10dp"
                 android:layout_height="56dp"
+                android:visibility="gone"
                 android:padding="4dp" />
 
     </android.support.design.widget.AppBarLayout>

@@ -22,8 +22,6 @@ import mozilla.components.feature.contextmenu.ContextMenuCandidate
 import mozilla.components.feature.contextmenu.ContextMenuFeature
 import mozilla.components.feature.customtabs.CustomTabsToolbarFeature
 import mozilla.components.feature.downloads.DownloadsFeature
-import mozilla.components.feature.findinpage.FindInPageFeature
-import mozilla.components.feature.findinpage.FindInPageView
 import mozilla.components.feature.prompts.PromptFeature
 import mozilla.components.feature.session.CoordinateScrollingFeature
 import mozilla.components.feature.session.SessionFeature
@@ -33,6 +31,7 @@ import mozilla.components.feature.toolbar.ToolbarAutocompleteFeature
 import mozilla.components.feature.toolbar.ToolbarFeature
 import mozilla.components.support.ktx.android.arch.lifecycle.addObservers
 import org.mozilla.samples.browser.ext.components
+import org.mozilla.samples.browser.integration.FindInPageIntegration
 
 class BrowserFragment : Fragment(), BackHandler {
     private lateinit var sessionFeature: SessionFeature
@@ -45,7 +44,7 @@ class BrowserFragment : Fragment(), BackHandler {
     private lateinit var promptFeature: PromptFeature
     private lateinit var windowFeature: WindowFeature
     private lateinit var customTabsToolbarFeature: CustomTabsToolbarFeature
-    private lateinit var findInPageFeature: FindInPageFeature
+    private lateinit var findInPageIntegration: FindInPageIntegration
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val layout = inflater.inflate(R.layout.fragment_browser, container, false)
@@ -93,8 +92,6 @@ class BrowserFragment : Fragment(), BackHandler {
 
         scrollFeature = CoordinateScrollingFeature(components.sessionManager, layout.engineView, layout.toolbar)
 
-        initFindInPage(layout)
-
         contextMenuFeature = ContextMenuFeature(
             requireFragmentManager(),
             components.sessionManager,
@@ -121,6 +118,8 @@ class BrowserFragment : Fragment(), BackHandler {
             components.menuBuilder
         ) { activity?.finish() }
 
+        findInPageIntegration = FindInPageIntegration(components.sessionManager, layout.findInPage)
+
         // Observe the lifecycle for supported features
         lifecycle.addObservers(
             sessionFeature,
@@ -131,7 +130,7 @@ class BrowserFragment : Fragment(), BackHandler {
             promptFeature,
             windowFeature,
             customTabsToolbarFeature,
-            findInPageFeature
+            findInPageIntegration
         )
 
         return layout
@@ -144,26 +143,6 @@ class BrowserFragment : Fragment(), BackHandler {
             replace(R.id.container, TabsTrayFragment())
             commit()
         }
-    }
-
-    private fun initFindInPage(layout: View) {
-        val findInPageView = layout.findViewById<FindInPageView>(R.id.find_in_page)
-
-        findInPageView.onCloseButtonPressListener = {
-            enableToolBarScroll(layout.toolbar)
-            layout.toolbar.visibility = View.VISIBLE
-        }
-
-        components.onFindInPageClicked = {
-            disableToolBarScroll(layout.toolbar)
-            layout.toolbar.visibility = View.GONE
-            findInPageView.show()
-        }
-
-        findInPageFeature = FindInPageFeature(
-            sessionManager = components.sessionManager,
-            findInPageView = findInPageView
-        )
     }
 
     private fun disableToolBarScroll(toolbar: BrowserToolbar) {
@@ -179,7 +158,7 @@ class BrowserFragment : Fragment(), BackHandler {
 
     override fun onBackPressed(): Boolean {
         return when {
-            findInPageFeature.onBackPressed() -> true
+            findInPageIntegration.onBackPressed() -> true
             toolbarFeature.handleBackPressed() -> true
             sessionFeature.handleBackPressed() -> true
             customTabsToolbarFeature.onBackPressed() -> true

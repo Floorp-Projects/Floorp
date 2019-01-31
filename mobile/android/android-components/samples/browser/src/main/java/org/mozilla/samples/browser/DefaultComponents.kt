@@ -29,6 +29,7 @@ import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.session.HistoryDelegate
 import mozilla.components.feature.tabs.TabsUseCases
+import org.mozilla.samples.browser.integration.FindInPageIntegration
 import org.mozilla.samples.browser.request.SampleRequestInterceptor
 import java.util.concurrent.TimeUnit
 
@@ -107,7 +108,7 @@ open class DefaultComponents(private val applicationContext: Context) {
                     Toast.makeText(applicationContext, "Settings", Toast.LENGTH_SHORT).show()
                 },
                 SimpleBrowserMenuItem("Find In Page") {
-                    onFindInPageClicked?.invoke()
+                    FindInPageIntegration.launch?.invoke()
                 },
                 BrowserMenuDivider(),
                 SimpleBrowserMenuItem("Clear Data") {
@@ -120,8 +121,6 @@ open class DefaultComponents(private val applicationContext: Context) {
                 }
         )
     }
-
-    var onFindInPageClicked: (() -> Unit)? = null
 
     private val menuToolbar by lazy {
         val forward = BrowserMenuItemToolbar.Button(
