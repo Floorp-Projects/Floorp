@@ -18,13 +18,9 @@ let chromeScript = runInParent(function chromeSetup() {
   const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
   let login1A  = Cc["@mozilla.org/login-manager/loginInfo;1"].
                  createInstance(Ci.nsILoginInfo);
-  let login1B  = Cc["@mozilla.org/login-manager/loginInfo;1"].
-                 createInstance(Ci.nsILoginInfo);
   let login2A  = Cc["@mozilla.org/login-manager/loginInfo;1"].
                  createInstance(Ci.nsILoginInfo);
   let login2B  = Cc["@mozilla.org/login-manager/loginInfo;1"].
-                 createInstance(Ci.nsILoginInfo);
-  let login2C  = Cc["@mozilla.org/login-manager/loginInfo;1"].
                  createInstance(Ci.nsILoginInfo);
 
   login1A.init("http://mochi.test:8888", "http://username-focus-1", null,
