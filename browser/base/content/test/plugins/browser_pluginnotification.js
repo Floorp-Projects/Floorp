@@ -349,6 +349,10 @@ add_task(async function() {
   });
 
   await ContentTask.spawn(gTestBrowser, null, async function() {
+    // Waiting for layout to flush and the overlay layout to compute
+    await new Promise(resolve => content.requestAnimationFrame(resolve));
+    await new Promise(resolve => content.requestAnimationFrame(resolve));
+
     let doc = content.document;
     let plugin = doc.getElementById("test");
     let mainBox = plugin.openOrClosedShadowRoot.getElementById("main");

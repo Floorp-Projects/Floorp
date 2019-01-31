@@ -214,7 +214,14 @@ html|a {
 }
 
 :host(:-moz-handler-clicktoplay) .msgClickToPlay {
+  /* Triggers overflow event if the container is too small */
+  min-width: 240px;
   font-size: 13px;
+}
+
+:host(:-moz-handler-clicktoplay) .mainBox[sizing=oversized] {
+  /* Triggers overflow event when there is a layout */
+  width: 101%;
 }
 
 :host(:-moz-handler-clicktoplay) .mainBox[sizing=blank] .hoverBox {
