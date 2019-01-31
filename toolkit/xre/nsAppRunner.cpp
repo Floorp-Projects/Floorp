@@ -188,13 +188,13 @@
 
 // for X remote support
 #if defined(MOZ_WIDGET_GTK)
-#  include "XRemoteClient.h"
+#  include "nsXRemoteClient.h"
 #  include "nsRemoteService.h"
 #  include "nsProfileLock.h"
 #  include "SpecialSystemDirectory.h"
 #  include <sched.h>
 #  ifdef MOZ_ENABLE_DBUS
-#    include "DBusRemoteClient.h"
+#    include "nsDBusRemoteClient.h"
 #  endif
 // Time to wait for the remoting service to start
 #  define MOZ_XREMOTE_START_TIMEOUT_SEC 5
@@ -1554,11 +1554,11 @@ static RemoteResult StartRemoteClient(const char* aDesktopStartupID,
 
 #  if defined(MOZ_ENABLE_DBUS)
   if (!useX11Remote) {
-    client = new DBusRemoteClient();
+    client = new nsDBusRemoteClient();
   }
 #  endif
   if (useX11Remote) {
-    client = new XRemoteClient();
+    client = new nsXRemoteClient();
   }
 
   nsresult rv = client ? client->Init() : NS_ERROR_FAILURE;
