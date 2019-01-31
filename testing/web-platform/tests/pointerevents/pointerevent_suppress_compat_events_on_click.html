@@ -8,6 +8,9 @@
     <link rel="stylesheet" type="text/css" href="pointerevent_styles.css">
     <script src="/resources/testharness.js"></script>
     <script src="/resources/testharnessreport.js"></script>
+    <script src="/resources/testdriver.js"></script>
+    <script src="/resources/testdriver-actions.js"></script>
+    <script src="/resources/testdriver-vendor.js"></script>
     <script type="text/javascript" src="pointerevent_support.js"></script>
     <script type="text/javascript">
       var test_pointerEvent = async_test("Suppress compat mouse events on click");
@@ -60,6 +63,22 @@
                   });
               });
           });
+
+          // Inject mouse inputs.
+          var target0 = document.getElementById('target0');
+          var target1 = document.getElementById('target1');
+          var targetDone = document.getElementById('done');
+          new test_driver.Actions()
+              .pointerMove(0, 0, {origin: target0})
+              .pointerDown()
+              .pointerUp()
+              .pointerMove(0, 0, {origin: target1})
+              .pointerDown()
+              .pointerUp()
+              .pointerMove(0, 0, {origin: targetDone})
+              .pointerDown()
+              .pointerUp()
+              .send();
       }
     </script>
     <style>
