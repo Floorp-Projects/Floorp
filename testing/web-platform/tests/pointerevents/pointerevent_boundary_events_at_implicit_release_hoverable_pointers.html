@@ -8,6 +8,9 @@
     <link rel="stylesheet" type="text/css" href="pointerevent_styles.css">
     <script src="/resources/testharness.js"></script>
     <script src="/resources/testharnessreport.js"></script>
+    <script src="/resources/testdriver.js"></script>
+    <script src="/resources/testdriver-actions.js"></script>
+    <script src="/resources/testdriver-vendor.js"></script>
     <script type="text/javascript" src="pointerevent_support.js"></script>
     <script type="text/javascript">
       var detected_pointertypes = {};
@@ -42,7 +45,7 @@
             detected_pointertypes[event.pointerType] = true;
             event_log.push(event.type + '@' + event.target.id);
             if (event.type == 'lostpointercapture') {
-              setTimeout(function() {
+              step_timeout(function() {
                 test_pointer_event.step(function () {
                   var expected_events = "pointerup, lostpointercapture, pointerout, pointerleave";
                   assert_equals(event_log.join(", "), "pointerout@target, pointerleave@target, pointerover@capture-target, pointerenter@capture-target, gotpointercapture@capture-target, pointerup@capture-target, lostpointercapture@capture-target, pointerout@capture-target, pointerleave@capture-target, pointerover@target, pointerenter@target");
@@ -52,6 +55,13 @@
             }
           });
         });
+
+        // Inject mouse inputs.
+        new test_driver.Actions()
+          .pointerMove(0, 0, {origin: target})
+          .pointerDown()
+          .pointerUp()
+          .send();
       }
     </script>
     <style>
