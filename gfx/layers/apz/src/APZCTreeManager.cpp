@@ -1891,10 +1891,8 @@ void APZCTreeManager::SynthesizePinchGestureFromMouseWheel(
   ScreenPoint focusPoint = aWheelInput.mOrigin;
 
   // Compute span values based on the wheel delta.
-  // See the PinchGestureInput constructor called below for why
-  // it's OK to use ParentLayer coordinates for the span values.
-  ParentLayerCoord oldSpan = 100;
-  ParentLayerCoord newSpan = oldSpan + aWheelInput.mDeltaY;
+  ScreenCoord oldSpan = 100;
+  ScreenCoord newSpan = oldSpan + aWheelInput.mDeltaY;
 
   // There's no ambiguity as to the target for pinch gesture events.
   TargetConfirmationFlags confFlags{true};

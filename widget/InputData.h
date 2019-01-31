@@ -414,24 +414,10 @@ class PinchGestureInput : public InputData {
   // clang-format on
 
   // Construct a pinch gesture from a Screen point.
-  // (Technically, we should take the span values in Screen pixels as well,
-  // but that would require also storing them in Screen pixels and then
-  // converting them in TransformToLocal() like the focus point. Since pinch
-  // gesture events are processed by the root content APZC, the only transform
-  // between Screen and ParentLayer pixels should be a translation, which is
-  // irrelevant to span values, so we don't bother.)
   PinchGestureInput(PinchGestureType aType, uint32_t aTime,
                     TimeStamp aTimeStamp, const ScreenPoint& aFocusPoint,
-                    ParentLayerCoord aCurrentSpan,
-                    ParentLayerCoord aPreviousSpan, Modifiers aModifiers);
-
-  // Construct a pinch gesture from a ParentLayer point.
-  // mFocusPoint remains (0,0) unless it's set later.
-  PinchGestureInput(PinchGestureType aType, uint32_t aTime,
-                    TimeStamp aTimeStamp,
-                    const ParentLayerPoint& aLocalFocusPoint,
-                    ParentLayerCoord aCurrentSpan,
-                    ParentLayerCoord aPreviousSpan, Modifiers aModifiers);
+                    ScreenCoord aCurrentSpan, ScreenCoord aPreviousSpan,
+                    Modifiers aModifiers);
 
   bool TransformToLocal(const ScreenToParentLayerMatrix4x4& aTransform);
 
@@ -454,12 +440,12 @@ class PinchGestureInput : public InputData {
   ParentLayerPoint mLocalFocusPoint;
 
   // The distance between the touches responsible for the pinch gesture.
-  ParentLayerCoord mCurrentSpan;
+  ScreenCoord mCurrentSpan;
 
   // The previous |mCurrentSpan| in the PinchGestureInput preceding this one.
   // This is only really relevant during a PINCHGESTURE_SCALE because when it is
   // of this type then there must have been a history of spans.
-  ParentLayerCoord mPreviousSpan;
+  ScreenCoord mPreviousSpan;
 
   // A special value for mFocusPoint used in PINCHGESTURE_END events to
   // indicate that both fingers have been lifted. If only one finger has
