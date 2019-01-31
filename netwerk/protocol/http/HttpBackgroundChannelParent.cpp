@@ -315,11 +315,13 @@ bool HttpBackgroundChannelParent::OnDiversion() {
   return true;
 }
 
-bool HttpBackgroundChannelParent::OnNotifyTrackingProtectionDisabled() {
+bool HttpBackgroundChannelParent::OnNotifyChannelClassifierProtectionDisabled(
+    uint32_t aAcceptedReason) {
   LOG(
-      ("HttpBackgroundChannelParent::OnNotifyTrackingProtectionDisabled "
-       "[this=%p]\n",
-       this));
+      ("HttpBackgroundChannelParent::"
+       "OnNotifyChannelClassifierProtectionDisabled [this=%p - "
+       "aAcceptedReason=%" PRIu32 "]\n",
+       this, aAcceptedReason));
   AssertIsInMainProcess();
 
   if (NS_WARN_IF(!mIPCOpened)) {
@@ -328,12 +330,15 @@ bool HttpBackgroundChannelParent::OnNotifyTrackingProtectionDisabled() {
 
   if (!IsOnBackgroundThread()) {
     MutexAutoLock lock(mBgThreadMutex);
+    RefPtr<HttpBackgroundChannelParent> self = this;
     nsresult rv = mBackgroundThread->Dispatch(
-        NewRunnableMethod(
+        NS_NewRunnableFunction(
             "net::HttpBackgroundChannelParent::"
-            "OnNotifyTrackingProtectionDisabled",
-            this,
-            &HttpBackgroundChannelParent::OnNotifyTrackingProtectionDisabled),
+            "OnNotifyChannelClassifierProtectionDisabled",
+            [self, aAcceptedReason]() {
+              self->OnNotifyChannelClassifierProtectionDisabled(
+                  aAcceptedReason);
+            }),
         NS_DISPATCH_NORMAL);
 
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
@@ -341,7 +346,7 @@ bool HttpBackgroundChannelParent::OnNotifyTrackingProtectionDisabled() {
     return NS_SUCCEEDED(rv);
   }
 
-  return SendNotifyTrackingProtectionDisabled();
+  return SendNotifyChannelClassifierProtectionDisabled(aAcceptedReason);
 }
 
 bool HttpBackgroundChannelParent::OnNotifyCookieAllowed() {
@@ -369,10 +374,12 @@ bool HttpBackgroundChannelParent::OnNotifyCookieAllowed() {
   return SendNotifyCookieAllowed();
 }
 
-bool HttpBackgroundChannelParent::OnNotifyTrackingCookieBlocked(
+bool HttpBackgroundChannelParent::OnNotifyCookieBlocked(
     uint32_t aRejectedReason) {
-  LOG(("HttpBackgroundChannelParent::OnNotifyTrackingCookieBlocked [this=%p]\n",
-       this));
+  LOG(
+      ("HttpBackgroundChannelParent::OnNotifyCookieBlocked [this=%p "
+       "aRejectedReason=%" PRIu32 "]\n",
+       this, aRejectedReason));
   AssertIsInMainProcess();
 
   if (NS_WARN_IF(!mIPCOpened)) {
@@ -384,9 +391,9 @@ bool HttpBackgroundChannelParent::OnNotifyTrackingCookieBlocked(
     RefPtr<HttpBackgroundChannelParent> self = this;
     nsresult rv = mBackgroundThread->Dispatch(
         NS_NewRunnableFunction(
-            "net::HttpBackgroundChannelParent::OnNotifyTrackingCookieBlocked",
+            "net::HttpBackgroundChannelParent::OnNotifyCookieBlocked",
             [self, aRejectedReason]() {
-              self->OnNotifyTrackingCookieBlocked(aRejectedReason);
+              self->OnNotifyCookieBlocked(aRejectedReason);
             }),
         NS_DISPATCH_NORMAL);
 
@@ -395,7 +402,7 @@ bool HttpBackgroundChannelParent::OnNotifyTrackingCookieBlocked(
     return NS_SUCCEEDED(rv);
   }
 
-  return SendNotifyTrackingCookieBlocked(aRejectedReason);
+  return SendNotifyCookieBlocked(aRejectedReason);
 }
 
 bool HttpBackgroundChannelParent::OnNotifyTrackingResource(bool aIsThirdParty) {

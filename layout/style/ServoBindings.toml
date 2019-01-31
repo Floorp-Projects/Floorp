@@ -380,6 +380,7 @@ opaque-types = [
                                 # don't align properly on Linux 32-bit
     "mozilla::SchedulerGroup", # Non-standard-layout packing of field into superclass
     "mozilla::detail::GkAtoms", # https://bugzilla.mozilla.org/show_bug.cgi?id=1517685
+    "mozilla::detail::ThreadLocal.*",
 ]
 
 # All cbindgen-types are in mod "structs::root::mozilla".

@@ -136,8 +136,8 @@ UrlClassifierFeatureCryptomining::ProcessChannel(nsIChannel* aChannel,
   // This is a blocking feature.
   *aShouldContinue = false;
 
-  UrlClassifierCommon::SetBlockedContent(aChannel, NS_ERROR_TRACKING_URI, aList,
-                                         EmptyCString(), EmptyCString());
+  UrlClassifierCommon::SetBlockedContent(aChannel, NS_ERROR_CRYPTOMINING_URI,
+                                         aList, EmptyCString(), EmptyCString());
 
   UC_LOG(
       ("UrlClassifierFeatureCryptomining::ProcessChannel, cancelling "
@@ -145,12 +145,10 @@ UrlClassifierFeatureCryptomining::ProcessChannel(nsIChannel* aChannel,
        aChannel));
   nsCOMPtr<nsIHttpChannelInternal> httpChannel = do_QueryInterface(aChannel);
 
-  // FIXME: the way we cancel the channel depends on what the UI wants to show.
-  // This needs to change, at some point.
   if (httpChannel) {
-    Unused << httpChannel->CancelForTrackingProtection();
+    Unused << httpChannel->CancelByChannelClassifier(NS_ERROR_CRYPTOMINING_URI);
   } else {
-    Unused << aChannel->Cancel(NS_ERROR_TRACKING_URI);
+    Unused << aChannel->Cancel(NS_ERROR_CRYPTOMINING_URI);
   }
 
   return NS_OK;
