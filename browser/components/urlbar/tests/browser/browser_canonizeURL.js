@@ -1,6 +1,10 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/**
+ * Tests turning non-url-looking values typed in the input field into proper URLs.
+ */
+
 const TEST_ENGINE_BASENAME = "searchSuggestionEngine.xml";
 
 add_task(async function checkCtrlWorks() {
