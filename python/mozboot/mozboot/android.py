@@ -50,15 +50,14 @@ $topsrcdir/mozconfig file, or create the file if it does not exist:
 # Build GeckoView/Firefox for Android:
 ac_add_options --enable-application=mobile/android
 
-# Targeting the following architecture.  Ensure exactly one --target is uncommented!
-# For regular phones:
-ac_add_options --target=arm-linux-androideabi
+# Targeting the following architecture.
+# For regular phones, no --target is needed.
 # For x86 emulators (and x86 devices, which are uncommon):
-# ac_add_options --target=i686-linux-android
+# ac_add_options --target=i686
 # For newer phones.
-# ac_add_options --target=aarch64-linux-android
+# ac_add_options --target=aarch64
 # For x86_64 emulators (and x86_64 devices, which are even less common):
-# ac_add_options --target=x86_64-linux-android
+# ac_add_options --target=x86_64
 
 {extra_lines}
 # With the following Android SDK and NDK:
