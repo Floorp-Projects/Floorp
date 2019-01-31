@@ -16,17 +16,27 @@ class TestExecuteAsyncContent(MarionetteTestCase):
         self.marionette.timeout.script = 1
 
     def test_execute_async_simple(self):
-        self.assertEqual(1, self.marionette.execute_async_script("arguments[arguments.length-1](1);"))
+        self.assertEqual(1,
+                         self.marionette.execute_async_script("arguments[arguments.length-1](1);"))
 
     def test_execute_async_ours(self):
         self.assertEqual(1, self.marionette.execute_async_script("arguments[0](1);"))
 
-    def test_execute_async_timeout(self):
-        self.assertRaises(ScriptTimeoutException, self.marionette.execute_async_script, "var x = 1;")
+    def test_script_timeout_error(self):
+        with self.assertRaisesRegexp(ScriptTimeoutException, "Timed out after 100 ms"):
+            self.marionette.execute_async_script("var x = 1;", script_timeout=100)
 
-    def test_execute_async_unique_timeout(self):
-        self.assertEqual(2, self.marionette.execute_async_script("setTimeout(() => arguments[0](2), 2000);", script_timeout=5000))
-        self.assertRaises(ScriptTimeoutException, self.marionette.execute_async_script, "setTimeout(() => arguments[0](3), 2000);")
+    def test_script_timeout_reset_after_timeout_error(self):
+        script_timeout = self.marionette.timeout.script
+        with self.assertRaises(ScriptTimeoutException):
+            self.marionette.execute_async_script("var x = 1;", script_timeout=100)
+        self.assertEqual(self.marionette.timeout.script, script_timeout)
+
+    def test_script_timeout_no_timeout_error(self):
+        self.assertTrue(self.marionette.execute_async_script("""
+            var callback = arguments[arguments.length - 1];
+            setTimeout(function() { callback(true); }, 500);
+            """, script_timeout=1000))
 
     def test_no_timeout(self):
         self.marionette.timeout.script = 10
@@ -43,7 +53,8 @@ class TestExecuteAsyncContent(MarionetteTestCase):
         self.assertRaises(JavascriptException, self.marionette.execute_async_script, unload)
 
     def test_check_window(self):
-        self.assertTrue(self.marionette.execute_async_script("arguments[0](window != null && window != undefined);"))
+        self.assertTrue(self.marionette.execute_async_script(
+            "arguments[0](window != null && window != undefined);"))
 
     def test_same_context(self):
         var1 = 'testing'
@@ -101,12 +112,12 @@ arguments[0](4);
     def test_sandbox_refresh_arguments(self):
         self.marionette.execute_async_script("this.foobar = [arguments[0], arguments[1]];"
                                              "let resolve = "
-                                                 "arguments[arguments.length - 1];"
+                                             "arguments[arguments.length - 1];"
                                              "resolve();",
                                              script_args=[23, 42])
         self.assertEqual(self.marionette.execute_async_script(
             "arguments[0](this.foobar);", new_sandbox=False),
-                         [23, 42])
+            [23, 42])
 
     # Functions defined in higher privilege scopes, such as the privileged
     # content frame script listener.js runs in, cannot be accessed from
@@ -132,15 +143,15 @@ class TestExecuteAsyncChrome(TestExecuteAsyncContent):
 
     def test_execute_permission(self):
         self.assertEqual(5, self.marionette.execute_async_script("""
-var c = Components.classes;
-arguments[0](5);
-"""))
+            var c = Components.classes;
+            arguments[0](5);
+            """))
 
     def test_execute_async_js_exception(self):
         # Javascript exceptions are not propagated in chrome code
         self.marionette.timeout.script = 0.2
-        self.assertRaises(ScriptTimeoutException,
-            self.marionette.execute_async_script, """
-            var callback = arguments[arguments.length - 1];
-            setTimeout("callback(foo())", 50);
-            """)
+        with self.assertRaises(ScriptTimeoutException):
+            self.marionette.execute_async_script("""
+                var callback = arguments[arguments.length - 1];
+                setTimeout("callback(foo())", 50);
+                """)
