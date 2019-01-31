@@ -286,6 +286,15 @@ REFTEST TEST-END | file:///a == file:///b`,
 12:01:09     INFO - REFTEST TEST-END | a3 == b3`,
       "expected": { "pass": 1, "unexpected": 1, "random": 1, "skip": 0 },
     },
+    { "name": "webrender wrench log (windows)",
+      "log": `[task 2018-12-29T04:29:48.800Z] REFTEST a == b
+[task 2018-12-29T04:29:48.984Z] REFTEST a2 == b2
+[task 2018-12-29T04:29:49.053Z] REFTEST TEST-UNEXPECTED-FAIL | a2 == b2 | image comparison, max difference: 255, number of differing pixels: 3128
+[task 2018-12-29T04:29:49.053Z] REFTEST   IMAGE 1 (TEST): data:image/png;
+[task 2018-12-29T04:29:49.053Z] REFTEST   IMAGE 2 (REFERENCE): data:image/png;
+[task 2018-12-29T04:29:49.053Z] REFTEST TEST-END | a2 == b2`,
+      "expected": { "pass": 0, "unexpected": 1, "random": 0, "skip": 0 },
+    },
   ];
 
   var current_test = 0;
@@ -333,7 +342,14 @@ function process_log(contents) {
     // Ignore duplicated output in logcat.
     if (line.match(/I\/Gecko.*?REFTEST/))
       continue;
-    var match = line.match(/^(?:.*? (?:INFO|ERROR) -\s+)?(?:REFTEST\s+)?(.*)$/);
+    var match = line.match(/^.*?(?:REFTEST\s+)(.*)$/);
+    if (!match) {
+      // WPT reftests don't always have the "REFTEST" prefix but do have
+      // mozharness prefixing. Trying to match both prefixes optionally with a
+      // single regex either makes an unreadable mess or matches everything so
+      // we do them separately.
+      match = line.match(/^(?:.*? (?:INFO|ERROR) -\s+)(.*)$/);
+    }
     if (!match)
       continue;
     line = match[1];
