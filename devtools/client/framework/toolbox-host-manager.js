@@ -104,6 +104,7 @@ ToolboxHostManager.prototype = {
         this.hostType === Toolbox.HostType.RIGHT) {
       this.host.frame.minWidth = WIDTH_CHEVRON_AND_MEATBALL_AND_CLOSE * zoomValue;
     } else if (this.hostType === Toolbox.HostType.WINDOW ||
+               this.hostType === Toolbox.HostType.PAGE ||
                this.hostType === Toolbox.HostType.CUSTOM) {
       this.host.frame.minWidth = WIDTH_CHEVRON_AND_MEATBALL * zoomValue;
     }
@@ -215,7 +216,8 @@ ToolboxHostManager.prototype = {
 
     this.destroyHost();
 
-    if (this.hostType != Toolbox.HostType.CUSTOM) {
+    if (this.hostType !== Toolbox.HostType.CUSTOM &&
+        this.hostType !== Toolbox.HostType.PAGE) {
       Services.prefs.setCharPref(PREVIOUS_HOST, this.hostType);
     }
 
@@ -227,7 +229,8 @@ ToolboxHostManager.prototype = {
 
     this.setMinWidthWithZoom();
 
-    if (hostType != Toolbox.HostType.CUSTOM) {
+    if (hostType !== Toolbox.HostType.CUSTOM &&
+        hostType !== Toolbox.HostType.PAGE) {
       Services.prefs.setCharPref(LAST_HOST, hostType);
     }
 

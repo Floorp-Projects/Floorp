@@ -77,7 +77,7 @@ if (url.search.length > 1) {
       target = await targetFromURL(url);
     }
     const options = { customIframe: host };
-    await gDevTools.showToolbox(target, tool, Toolbox.HostType.CUSTOM, options);
+    await gDevTools.showToolbox(target, tool, Toolbox.HostType.PAGE, options);
   })().catch(error => {
     console.error("Exception while loading the toolbox", error);
   });
