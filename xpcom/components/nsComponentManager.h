@@ -269,7 +269,7 @@ class nsComponentManagerImpl final : public nsIComponentManager,
     SHUTDOWN_COMPLETE
   } mStatus;
 
-  mozilla::ArenaAllocator<1024 * 8, 8> mArena;
+  mozilla::ArenaAllocator<1024 * 1, 8> mArena;
 
   struct PendingServiceInfo {
     const nsCID* cid;
