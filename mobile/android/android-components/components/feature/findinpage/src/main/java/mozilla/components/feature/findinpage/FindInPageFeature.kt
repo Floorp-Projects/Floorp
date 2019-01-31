@@ -4,80 +4,68 @@
 
 package mozilla.components.feature.findinpage
 
-import android.support.annotation.CallSuper
 import android.support.annotation.VisibleForTesting
-import android.support.annotation.VisibleForTesting.PRIVATE
-import mozilla.components.browser.session.SelectionAwareSessionObserver
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.feature.findinpage.internal.FindInPageInteractor
+import mozilla.components.feature.findinpage.internal.FindInPagePresenter
+import mozilla.components.feature.findinpage.view.FindInPageView
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 
 /**
- * This feature will subscribe to the currently selected [Session] and when started will forward
- * [Session.Observer.onFindResult] calls to the [findInPageView] ui widget.
- *
- * @property sessionManager The [SessionManager] instance in order to subscribe to the selected [Session].
- * @property findInPageView The [FindInPageView] instance that will capture user interactions, and new calls
- *  of [Session.Observer.onFindResult] will be delegated.
+ * Feature implementation that will keep a [FindInPageView] in sync with a bound [Session].
  */
-
 class FindInPageFeature(
-    private val sessionManager: SessionManager,
-    private val findInPageView: FindInPageView
+    sessionManager: SessionManager,
+    view: FindInPageView,
+    private val onClose: (() -> Unit)? = null
 ) : LifecycleAwareFeature {
+    @VisibleForTesting internal var presenter = FindInPagePresenter(view)
+    @VisibleForTesting internal var interactor = FindInPageInteractor(this, sessionManager, view)
 
-    private val observer = FindInPageRequestObserver(sessionManager, feature = this)
+    private var session: Session? = null
 
-    /**
-     * Start observing the selected session and forwarding events to the [findInPageView] widget.
-     */
     override fun start() {
-        observer.observeSelected()
-        val selectedSession = sessionManager.selectedSession ?: return
-        val engineSession = sessionManager.getEngineSession(selectedSession) ?: return
-        findInPageView.engineSession = engineSession
+        presenter.start()
+        interactor.start()
     }
 
-    /**
-     * Stop observing the selected session and forwarding events to the [findInPageView] widget.
-     */
     override fun stop() {
-        observer.stop()
+        presenter.stop()
+        interactor.stop()
     }
 
     /**
-     * Informs the [findInPageView] widget that the back button has been pressed.
-     *
-     * @return true if the event was handled, otherwise false.
+     * Binds this feature to the given [Session]. Until unbound the [FindInPageView] will be updated presenting the
+     * current "Find in Page" state.
+     */
+    fun bind(session: Session) {
+        this.session = session
+
+        presenter.bind(session)
+        interactor.bind(session)
+    }
+
+    /**
+     * Returns true if the back button press was handled and the feature unbound from a session.
      */
     fun onBackPressed(): Boolean {
-        return if (findInPageView.isActive()) {
-            findInPageView.onCloseButtonClicked()
+        return if (session != null) {
+            unbind()
             true
         } else {
             false
         }
     }
 
-    @VisibleForTesting(otherwise = PRIVATE)
-    internal fun onFindResult(session: Session, result: Session.FindResult) {
-        findInPageView.onFindResultReceived(result)
-    }
-
-    internal class FindInPageRequestObserver(
-        private val sessionManager: SessionManager,
-        private val feature: FindInPageFeature
-    ) : SelectionAwareSessionObserver(sessionManager) {
-
-        override fun onFindResult(session: Session, result: Session.FindResult) {
-            feature.onFindResult(session, result)
-        }
-
-        @CallSuper
-        override fun onSessionSelected(session: Session) {
-            super.onSessionSelected(session)
-            val engineSession = sessionManager.getEngineSession(session) ?: return
-            feature.findInPageView.engineSession = engineSession
-        }
+    /**
+     * Unbinds the feature from a previously bound [Session]. The [FindInPageView] will be cleared and not be updated
+     * to present the "Find in Page" state anymore.
+     */
+    fun unbind() {
+        session = null
+        presenter.unbind()
+        interactor.unbind()
+        onClose?.invoke()
     }
 }
