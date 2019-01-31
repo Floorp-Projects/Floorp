@@ -1,4 +1,4 @@
-import { StorageArea, storage as defaultArea } from "std:async-local-storage";
+import { StorageArea, storage as defaultArea } from "std:kv-storage";
 import { assertArrayCustomEquals } from "./equality-asserters.js";
 
 export function testWithArea(testFn, description) {
