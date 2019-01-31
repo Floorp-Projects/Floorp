@@ -337,6 +337,7 @@ class ProcessIdComparator {
     }
     RefPtr<ImageBridgeParent> bridge = GetInstance(pid);
     if (!bridge || bridge->mClosed) {
+      i = end;
       continue;
     }
     bridge->SendPendingAsyncMessages();
