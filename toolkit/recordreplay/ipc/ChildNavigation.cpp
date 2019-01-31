@@ -102,6 +102,11 @@ class NavigationPhase {
   virtual void HitRecordingEndpoint(const ExecutionPoint& aPoint) {
     Unsupported("HitRecordingEndpoint");
   }
+
+  // Called when a paint has occurred for the last normal checkpoint.
+  virtual bool ShouldSendPaintMessage() {
+    Unsupported("ShouldSendPaintMessage");
+  }
 };
 
 // Information about a debugger request sent by the middleman.
@@ -186,6 +191,7 @@ class ForwardPhase final : public NavigationPhase {
   void AfterCheckpoint(const CheckpointId& aCheckpoint) override;
   void PositionHit(const ExecutionPoint& aPoint) override;
   void HitRecordingEndpoint(const ExecutionPoint& aPoint) override;
+  bool ShouldSendPaintMessage() override;
 };
 
 // Phase when the replaying process is running forward from a checkpoint to a
@@ -224,6 +230,7 @@ class ReachBreakpointPhase final : public NavigationPhase {
 
   void AfterCheckpoint(const CheckpointId& aCheckpoint) override;
   void PositionHit(const ExecutionPoint& aPoint) override;
+  bool ShouldSendPaintMessage() override;
 };
 
 // Phase when the replaying process is searching forward from a checkpoint to
@@ -232,8 +239,8 @@ class FindLastHitPhase final : public NavigationPhase {
   // Where we started searching from.
   CheckpointId mStart;
 
-  // Endpoint of the search, nothing if the endpoint is the next checkpoint.
-  Maybe<ExecutionPoint> mEnd;
+  // Endpoint of the search.
+  ExecutionPoint mEnd;
 
   // Whether the endpoint itself is considered to be part of the search space.
   bool mIncludeEnd;
@@ -263,16 +270,18 @@ class FindLastHitPhase final : public NavigationPhase {
 
  public:
   // Note: this always rewinds.
-  void Enter(const CheckpointId& aStart, const Maybe<ExecutionPoint>& aEnd,
+  void Enter(const CheckpointId& aStart, const ExecutionPoint& aEnd,
              bool aIncludeEnd);
 
   void ToString(nsAutoCString& aStr) override {
-    aStr.AppendPrintf("FindLastHit");
+    aStr.AppendPrintf("FindLastHit #%zu:%zu", mStart.mNormal, mStart.mTemporary);
+    mEnd.ToString(aStr);
   }
 
   void AfterCheckpoint(const CheckpointId& aCheckpoint) override;
   void PositionHit(const ExecutionPoint& aPoint) override;
   void HitRecordingEndpoint(const ExecutionPoint& aPoint) override;
+  bool ShouldSendPaintMessage() override;
 };
 
 // Structure which manages state about the breakpoints in existence and about
@@ -400,6 +409,10 @@ class NavigationState {
     return mPhase->CurrentExecutionPoint();
   }
 
+  bool ShouldSendPaintMessage() {
+    return mPhase->ShouldSendPaintMessage();
+  }
+
   void SetRecordingEndpoint(size_t aIndex, const ExecutionPoint& aEndpoint) {
     // Ignore endpoints older than the last one we know about.
     if (aIndex <= mRecordingEndpointIndex) {
@@ -432,8 +445,6 @@ class NavigationState {
     return mRecordingEndpoint;
   }
 
-  size_t NumTemporaryCheckpoints() { return mTemporaryCheckpoints.length(); }
-
   bool SaveTemporaryCheckpoint(const ExecutionPoint& aPoint) {
     MOZ_RELEASE_ASSERT(aPoint.mCheckpoint == mLastCheckpoint.mNormal);
     mTemporaryCheckpoints.append(aPoint);
@@ -452,6 +463,21 @@ class NavigationState {
 };
 
 static NavigationState* gNavigation;
+
+// When searching backwards in the execution space, we need to ignore any
+// temporary checkpoints associated with old normal checkpoints. We don't
+// remember what execution points these old temporary checkpoints are
+// associated with.
+static CheckpointId
+SkipUnknownTemporaryCheckpoints(const CheckpointId& aCheckpoint)
+{
+  CheckpointId rval = aCheckpoint;
+  while (rval.mTemporary &&
+         rval.mNormal != gNavigation->LastCheckpoint().mNormal) {
+    rval = GetLastSavedCheckpointPriorTo(rval);
+  }
+  return rval;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // Paused Phase
@@ -520,25 +546,22 @@ void PausedPhase::Resume(bool aForward) {
     return;
   }
 
-  // Search backwards in the execution space.
-  if (mPoint.HasPosition()) {
-    CheckpointId start = gNavigation->LastCheckpoint();
+  // Search backwards in the execution space, from the last saved checkpoint to
+  // where we are paused.
+  CheckpointId start = GetLastSavedCheckpoint();
 
-    // Skip over any temporary checkpoint we saved.
-    if (mSavedTemporaryCheckpoint) {
-      MOZ_RELEASE_ASSERT(start.mTemporary);
-      start.mTemporary--;
-    }
-    gNavigation->mFindLastHitPhase.Enter(start, Some(mPoint),
-                                         /* aIncludeEnd = */ false);
-  } else {
-    // We can't rewind past the beginning of the replay.
-    MOZ_RELEASE_ASSERT(mPoint.mCheckpoint != CheckpointId::First);
-
-    CheckpointId start(mPoint.mCheckpoint - 1);
-    gNavigation->mFindLastHitPhase.Enter(start, Nothing(),
-                                         /* aIncludeEnd = */ false);
+  // Skip over any temporary checkpoint we saved.
+  if (mSavedTemporaryCheckpoint) {
+    start = GetLastSavedCheckpointPriorTo(start);
   }
+
+  // Skip to the previous saved checkpoint if we are paused at a checkpoint.
+  if (!mPoint.HasPosition() && start == CheckpointId(mPoint.mCheckpoint)) {
+    start = GetLastSavedCheckpointPriorTo(start);
+  }
+
+  start = SkipUnknownTemporaryCheckpoints(start);
+  gNavigation->mFindLastHitPhase.Enter(start, mPoint, /* aIncludeEnd = */ false);
   Unreachable();
 }
 
@@ -551,7 +574,6 @@ void PausedPhase::RestoreCheckpoint(size_t aCheckpoint) {
 void PausedPhase::RunToPoint(const ExecutionPoint& aTarget) {
   // This may only be used when we are paused at a normal checkpoint.
   MOZ_RELEASE_ASSERT(!mPoint.HasPosition());
-  MOZ_RELEASE_ASSERT(aTarget.mCheckpoint == mPoint.mCheckpoint);
 
   ResumeExecution();
 
@@ -763,11 +785,14 @@ void ForwardPhase::PositionHit(const ExecutionPoint& aPoint) {
 }
 
 void ForwardPhase::HitRecordingEndpoint(const ExecutionPoint& aPoint) {
-  nsAutoCString str;
-  aPoint.ToString(str);
-
   gNavigation->mPausedPhase.Enter(aPoint, /* aRewind = */ false,
                                   /* aRecordingEndpoint = */ true);
+}
+
+bool
+ForwardPhase::ShouldSendPaintMessage()
+{
+  return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -797,20 +822,20 @@ void ReachBreakpointPhase::Enter(
 }
 
 void ReachBreakpointPhase::AfterCheckpoint(const CheckpointId& aCheckpoint) {
-  if (aCheckpoint == mStart && mTemporaryCheckpoint.isSome()) {
-    js::EnsurePositionHandler(mTemporaryCheckpoint.ref().mPosition);
+  // We can't run past our target point.
+  MOZ_RELEASE_ASSERT(aCheckpoint.mNormal <= mPoint.mCheckpoint);
 
+  if (aCheckpoint == mStart) {
     // Remember the time we started running forwards from the initial
     // checkpoint.
     mStartTime = CurrentTime();
-  } else {
-    MOZ_RELEASE_ASSERT(
-        (aCheckpoint == mStart && mTemporaryCheckpoint.isNothing()) ||
-        (aCheckpoint == mStart.NextCheckpoint(/* aTemporary = */ true) &&
-         mSavedTemporaryCheckpoint));
   }
 
   js::EnsurePositionHandler(mPoint.mPosition);
+
+  if (mTemporaryCheckpoint.isSome()) {
+    js::EnsurePositionHandler(mTemporaryCheckpoint.ref().mPosition);
+  }
 }
 
 // The number of milliseconds to elapse during a ReachBreakpoint search before
@@ -844,15 +869,20 @@ void ReachBreakpointPhase::PositionHit(const ExecutionPoint& aPoint) {
   }
 }
 
+bool
+ReachBreakpointPhase::ShouldSendPaintMessage()
+{
+  // We don't need to send paint messages when reaching the breakpoint, as we
+  // will be pausing at the breakpoint and doing a repaint of the state there.
+  return false;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // FindLastHitPhase
 ///////////////////////////////////////////////////////////////////////////////
 
 void FindLastHitPhase::Enter(const CheckpointId& aStart,
-                             const Maybe<ExecutionPoint>& aEnd,
-                             bool aIncludeEnd) {
-  MOZ_RELEASE_ASSERT(aEnd.isNothing() || aEnd.ref().HasPosition());
-
+                             const ExecutionPoint& aEnd, bool aIncludeEnd) {
   mStart = aStart;
   mEnd = aEnd;
   mIncludeEnd = aIncludeEnd;
@@ -881,22 +911,21 @@ void FindLastHitPhase::Enter(const CheckpointId& aStart,
 }
 
 void FindLastHitPhase::AfterCheckpoint(const CheckpointId& aCheckpoint) {
-  if (aCheckpoint == mStart.NextCheckpoint(/* aTemporary = */ false)) {
-    // We reached the next checkpoint, and are done searching.
-    MOZ_RELEASE_ASSERT(mEnd.isNothing());
+  // We can't run past our endpoint.
+  MOZ_RELEASE_ASSERT(aCheckpoint.mNormal <= mEnd.mCheckpoint);
+
+  if (!mEnd.HasPosition() && mEnd.mCheckpoint == aCheckpoint.mNormal) {
+    MOZ_RELEASE_ASSERT(!aCheckpoint.mTemporary);
     OnRegionEnd();
     Unreachable();
   }
-
-  // We are at the start of the search.
-  MOZ_RELEASE_ASSERT(aCheckpoint == mStart);
 
   for (const TrackedPosition& tracked : mTrackedPositions) {
     js::EnsurePositionHandler(tracked.mPosition);
   }
 
-  if (mEnd.isSome()) {
-    js::EnsurePositionHandler(mEnd.ref().mPosition);
+  if (mEnd.HasPosition()) {
+    js::EnsurePositionHandler(mEnd.mPosition);
   }
 }
 
@@ -921,7 +950,7 @@ void FindLastHitPhase::PositionHit(const ExecutionPoint& aPoint) {
 }
 
 void FindLastHitPhase::CheckForRegionEnd(const ExecutionPoint& aPoint) {
-  if (mEnd.isSome() && mEnd.ref() == aPoint) {
+  if (mEnd == aPoint) {
     OnRegionEnd();
     Unreachable();
   }
@@ -930,6 +959,16 @@ void FindLastHitPhase::CheckForRegionEnd(const ExecutionPoint& aPoint) {
 void FindLastHitPhase::HitRecordingEndpoint(const ExecutionPoint& aPoint) {
   OnRegionEnd();
   Unreachable();
+}
+
+bool
+FindLastHitPhase::ShouldSendPaintMessage()
+{
+  // If the region we're searching contains multiple normal checkpoints, we
+  // only want to send paint messages for the first one. We won't pause at the
+  // later checkpoints, and sending paint messages for them will clobber the
+  // one for the checkpoint we will end up pausing at.
+  return gNavigation->LastCheckpoint().mNormal == mStart.mNormal;
 }
 
 const FindLastHitPhase::TrackedPosition& FindLastHitPhase::FindTrackedPosition(
@@ -959,14 +998,14 @@ void FindLastHitPhase::OnRegionEnd() {
     if (mStart.mTemporary) {
       // We started searching forwards from a temporary checkpoint.
       // Continue searching backwards without notifying the middleman.
-      CheckpointId start = mStart;
-      start.mTemporary--;
+      CheckpointId start = GetLastSavedCheckpointPriorTo(mStart);
+      start = SkipUnknownTemporaryCheckpoints(start);
       ExecutionPoint end = gNavigation->LastTemporaryCheckpointLocation();
-      if (end.HasPosition()) {
+      if (end.HasPosition() || end.mCheckpoint != start.mNormal) {
         // The temporary checkpoint comes immediately after its associated
         // execution point. As we search backwards we need to look for hits at
         // that execution point itself.
-        gNavigation->mFindLastHitPhase.Enter(start, Some(end),
+        gNavigation->mFindLastHitPhase.Enter(start, end,
                                              /* aIncludeEnd = */ true);
         Unreachable();
       } else {
@@ -1156,6 +1195,10 @@ ExecutionPoint TimeWarpTargetExecutionPoint(ProgressCounter aTarget) {
 
 bool MaybeDivergeFromRecording() {
   return gNavigation->MaybeDivergeFromRecording();
+}
+
+bool ShouldSendPaintMessage() {
+  return gNavigation->ShouldSendPaintMessage();
 }
 
 }  // namespace navigation
