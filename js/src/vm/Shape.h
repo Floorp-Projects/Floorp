@@ -1440,14 +1440,13 @@ inline StackBaseShape::StackBaseShape(Shape* shape)
     : flags(shape->getObjectFlags()), clasp(shape->getObjectClass()) {}
 
 class MOZ_RAII AutoRooterGetterSetter {
-  class Inner final : private JS::CustomAutoRooter {
+  class Inner {
    public:
-    inline Inner(JSContext* cx, uint8_t attrs, GetterOp* pgetter_,
-                 SetterOp* psetter_);
+    inline Inner(uint8_t attrs, GetterOp* pgetter_, SetterOp* psetter_);
+
+    void trace(JSTracer* trc);
 
    private:
-    virtual void trace(JSTracer* trc) override;
-
     uint8_t attrs;
     GetterOp* pgetter;
     SetterOp* psetter;
@@ -1456,10 +1455,10 @@ class MOZ_RAII AutoRooterGetterSetter {
  public:
   inline AutoRooterGetterSetter(JSContext* cx, uint8_t attrs, GetterOp* pgetter,
                                 SetterOp* psetter
-                                    MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+                                MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
 
  private:
-  mozilla::Maybe<Inner> inner;
+  mozilla::Maybe<Rooted<Inner>> inner;
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
