@@ -69,6 +69,19 @@
     }, c[0] + "." + c[1] + " accepts only TrustedHTML");
   });
 
+  // TrustedScript Assignments
+  const ScriptTestCases = [
+    [ 'div', 'onclick' ]
+  ];
+
+  ScriptTestCases.forEach(c => {
+    test(t => {
+      assert_element_accepts_trusted_script_explicit_set(window, c, t, c[0], c[1], RESULTS.SCRIPT);
+      assert_throws_no_trusted_type_explicit_set(c[0], c[1], 'A string');
+      assert_throws_no_trusted_type_explicit_set(c[0], c[1], null);
+    }, c[0] + "." + c[1] + " accepts only TrustedScript");
+  });
+
   test(t => {
     let el = document.createElement('iframe');
 
@@ -80,7 +93,7 @@
   }, "`Element.prototype.setAttribute.SrC = string` throws.");
 
   // After default policy creation string and null assignments implicitly call createXYZ
-  let p = window.TrustedTypes.createPolicy("default", { createURL: createURLJS, createScriptURL: createScriptURLJS, createHTML: createHTMLJS }, true);
+  let p = window.TrustedTypes.createPolicy("default", { createURL: createURLJS, createScriptURL: createScriptURLJS, createHTML: createHTMLJS, createScript: createScriptJS }, true);
   URLTestCases.forEach(c => {
     test(t => {
       assert_element_accepts_trusted_type(c[0], c[1], INPUTS.URL, RESULTS.URL);
@@ -105,6 +118,13 @@
     test(t => {
       assert_element_accepts_trusted_type(c[0], c[1], INPUTS.HTML, RESULTS.HTML);
       assert_element_accepts_trusted_type(c[0], c[1], null, "null");
+    }, c[0] + "." + c[1] + " accepts string and null after default policy was created.");
+  });
+
+  ScriptTestCases.forEach(c => {
+    test(t => {
+      assert_element_accepts_trusted_type_explicit_set(c[0], c[1], INPUTS.SCRIPT, RESULTS.SCRIPT);
+      assert_element_accepts_trusted_type_explicit_set(c[0], c[1], null, "null");
     }, c[0] + "." + c[1] + " accepts string and null after default policy was created.");
   });
 
