@@ -37,7 +37,7 @@ class Timeouts(object):
         if name not in ts:
             raise KeyError()
         ms = ts[name]
-        return ms / 1000
+        return ms / 1000.0
 
     @property
     def script(self):

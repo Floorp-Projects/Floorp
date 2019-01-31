@@ -20,6 +20,10 @@ class TestTimeouts(MarionetteTestCase):
         self.marionette.timeout.reset()
         MarionetteTestCase.tearDown(self)
 
+    def test_get_timeout_fraction(self):
+        self.marionette.timeout.script = 0.5
+        self.assertEqual(self.marionette.timeout.script, 0.5)
+
     def test_page_timeout_notdefinetimeout_pass(self):
         test_html = self.marionette.absolute_url("test.html")
         self.marionette.navigate(test_html)
