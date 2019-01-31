@@ -71,3 +71,4 @@ with Files('mozapps/preferences/**'):
 
 with Files('pluginproblem/**'):
     BUG_COMPONENT = ('Core', 'Plug-ins')
+

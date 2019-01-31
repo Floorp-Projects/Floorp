@@ -39,7 +39,7 @@ function startup() {
       listitem.setAttribute("tooltiptext", tooltiptext);
       listitem.profile = profile;
       try {
-        if (profile === gProfileService.defaultProfile) {
+        if (profile === gProfileService.selectedProfile) {
           setTimeout(function(a) {
             profilesElement.ensureElementIsVisible(a);
             profilesElement.selectItem(a);
@@ -93,17 +93,15 @@ function acceptDialog() {
   }
   gDialogParams.objects.insertElementAt(profileLock.nsIProfileLock, 0);
 
-  try {
-    gProfileService.defaultProfile = selectedProfile.profile;
-  } catch (e) {
-    // This can happen on dev-edition. We'll still restart with the selected
-    // profile based on the lock's directories.
-  }
+  gProfileService.selectedProfile = selectedProfile.profile;
+  gProfileService.defaultProfile = selectedProfile.profile;
   updateStartupPrefs();
 
   gDialogParams.SetInt(0, 1);
   /* Bug 257777 */
   gDialogParams.SetInt(1, document.getElementById("offlineState").checked ? 1 : 0);
+
+  gDialogParams.SetString(0, selectedProfile.profile.name);
 
   return true;
 }

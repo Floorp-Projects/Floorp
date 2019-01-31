@@ -2356,46 +2356,6 @@ encoding:
       - main
       - content
 
-startup:
-  profile_selection_reason:
-    bug_numbers:
-      - 1522934
-    description: >
-      How the profile was selected during startup. One of the following reasons:
-        unknown:
-          Generally should not happen, set as a default in case no other reason
-          occured.
-        profile-manager:
-          The profile was selected by the profile manager.
-        profile-reset:
-          The profile was selected for reset, normally this would mean a restart.
-        restart:
-          The user restarted the application, the same profile as previous will
-          be used.
-        argument-profile
-          The profile was selected by the --profile command line argument.
-        argument-p
-          The profile was selected by the -p command line argument.
-        firstrun-claimed-default
-          A first run of a dedicated profiles build chose the old default
-          profile to be the default for this install.
-        firstrun-skipped-default:
-          A first run of a dedicated profiles build skipped over the old default
-          profile and created a new profile.
-        firstrun-created-default:
-          A first run of the application created a new profile to use.
-        default:
-          The default profile was selected as normal.
-    expires: "72"
-    keyed: false
-    kind: string
-    notification_emails:
-      - dtownsend@mozilla.com
-      - rtestard@mozilla.com
-    release_channel_collection: opt-out
-    record_in_processes:
-      - main
-
 # The following section is for probes testing the Telemetry system. They will not be
 # submitted in pings and are only used for testing.
 telemetry.test:
