@@ -60,6 +60,7 @@ class UrlbarInput {
     this.lastQueryContextPromise = Promise.resolve();
     this._untrimmedValue = "";
     this._suppressStartQuery = false;
+    this._actionOverrideKeyCount = 0;
 
     // Forward textbox methods and properties.
     const METHODS = ["addEventListener", "removeEventListener",
@@ -634,8 +635,10 @@ class UrlbarInput {
                             KeyEvent.DOM_VK_META :
                             KeyEvent.DOM_VK_CONTROL)) {
       if (event.type == "keydown") {
+        this._actionOverrideKeyCount++;
         this.setAttribute("noactions", "true");
-      } else {
+      } else if (this._actionOverrideKeyCount &&
+                 --this._actionOverrideKeyCount == 0) {
         this.removeAttribute("noactions");
       }
     }
