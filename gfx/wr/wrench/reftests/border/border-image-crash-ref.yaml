@@ -16,3 +16,6 @@ root:
           repeat-vertical: stretch
           repeat-horizontal: stretch
           fill: true
+        - type: rect
+          bounds: [ 100, 100, 192, 192 ]
+          color: white
