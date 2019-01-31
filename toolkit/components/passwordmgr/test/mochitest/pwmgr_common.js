@@ -166,7 +166,6 @@ function isLoggedIn() {
 
 function logoutMasterPassword() {
   runInParent(function parent_logoutMasterPassword() {
-    const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
     var sdr = Cc["@mozilla.org/security/sdr;1"].getService(Ci.nsISecretDecoderRing);
     sdr.logoutAndTeardown();
   });

@@ -133,6 +133,7 @@ add_task(async function test_normal_new_password_4() {
       "#pass": "notifyp1",
       "#newpass": "notifyp2",
     });
+    is(fieldValues.password, "notifyp1", "Checking submitted password");
     let notif = getCaptureDoorhanger("password-change", PopupNotifications, browser);
     ok(notif, "got notification popup");
     if (notif) {
@@ -172,6 +173,7 @@ add_task(async function test_normal_with_login_6() {
       "#pass": "notifyp1",
       "#newpass": "notifyp2",
     });
+    is(fieldValues.password, "notifyp1", "Checking submitted password");
     let notif = getCaptureDoorhanger("password-change", PopupNotifications, browser);
     ok(notif, "got notification popup");
     if (notif) {
