@@ -2,17 +2,11 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-ChromeUtils.defineModuleGetter(this, "gDevTools",
-                               "resource://devtools/client/framework/gDevTools.jsm");
-ChromeUtils.defineModuleGetter(this, "devtools",
-                               "resource://devtools/shared/Loader.jsm");
-
 /* globals getExtensionSidebarActors, expectNoSuchActorIDs, testSetExpressionSidebarPanel */
 
 // Import the shared test helpers from the related devtools tests.
-Services.scriptloader.loadSubScript(
-  new URL("head_devtools_inspector_sidebar.js", gTestPath).href,
-  this);
+loadTestSubscript("head_devtools.js");
+loadTestSubscript("head_devtools_inspector_sidebar.js");
 
 function isActiveSidebarTabTitle(inspector, expectedTabTitle, message) {
   const actualTabTitle = inspector.panelDoc.querySelector("#inspector-sidebar .tabs-menu-item.is-active").innerText;
@@ -134,10 +128,7 @@ add_task(async function test_devtools_panels_elements_sidebar() {
 
   await extension.startup();
 
-  let target = await devtools.TargetFactory.forTab(tab);
-
-  const toolbox = await gDevTools.showToolbox(target, "webconsole");
-  info("developer toolbox opened");
+  const {toolbox, target} = await openToolboxForTab(tab);
 
   await extension.awaitMessage("devtools_page_loaded");
 
@@ -239,9 +230,7 @@ add_task(async function test_devtools_panels_elements_sidebar() {
 
   await expectNoSuchActorIDs(target.client, actors);
 
-  await gDevTools.closeToolbox(target);
-
-  await target.destroy();
+  await closeToolboxForTab(tab);
 
   BrowserTestUtils.removeTab(tab);
 });
