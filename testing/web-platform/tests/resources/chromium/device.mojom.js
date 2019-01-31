@@ -528,6 +528,8 @@
     this.subclassCode = 0;
     this.protocolCode = 0;
     this.vendorId = 0;
+    this.busNumber = 0;
+    this.portNumber = 0;
     this.productId = 0;
     this.deviceVersionMajor = 0;
     this.deviceVersionMinor = 0;
@@ -553,7 +555,7 @@
         return err;
 
     var kVersionSizes = [
-      {version: 0, numBytes: 72}
+      {version: 0, numBytes: 80}
     ];
     err = messageValidator.validateStructVersion(offset, kVersionSizes);
     if (err !== validator.validationError.NONE)
@@ -577,40 +579,42 @@
 
 
 
+
+
     // validate UsbDeviceInfo.manufacturerName
-    err = messageValidator.validateStructPointer(offset + codec.kStructHeaderSize + 24, string16$.String16, true);
-    if (err !== validator.validationError.NONE)
-        return err;
-
-
-    // validate UsbDeviceInfo.productName
     err = messageValidator.validateStructPointer(offset + codec.kStructHeaderSize + 32, string16$.String16, true);
     if (err !== validator.validationError.NONE)
         return err;
 
 
-    // validate UsbDeviceInfo.serialNumber
+    // validate UsbDeviceInfo.productName
     err = messageValidator.validateStructPointer(offset + codec.kStructHeaderSize + 40, string16$.String16, true);
     if (err !== validator.validationError.NONE)
         return err;
 
 
+    // validate UsbDeviceInfo.serialNumber
+    err = messageValidator.validateStructPointer(offset + codec.kStructHeaderSize + 48, string16$.String16, true);
+    if (err !== validator.validationError.NONE)
+        return err;
+
+
     // validate UsbDeviceInfo.webusbLandingPage
-    err = messageValidator.validateStructPointer(offset + codec.kStructHeaderSize + 48, url$.Url, true);
+    err = messageValidator.validateStructPointer(offset + codec.kStructHeaderSize + 56, url$.Url, true);
     if (err !== validator.validationError.NONE)
         return err;
 
 
 
     // validate UsbDeviceInfo.configurations
-    err = messageValidator.validateArrayPointer(offset + codec.kStructHeaderSize + 56, 8, new codec.PointerTo(UsbConfigurationInfo), false, [0], 0);
+    err = messageValidator.validateArrayPointer(offset + codec.kStructHeaderSize + 64, 8, new codec.PointerTo(UsbConfigurationInfo), false, [0], 0);
     if (err !== validator.validationError.NONE)
         return err;
 
     return validator.validationError.NONE;
   };
 
-  UsbDeviceInfo.encodedSize = codec.kStructHeaderSize + 64;
+  UsbDeviceInfo.encodedSize = codec.kStructHeaderSize + 72;
 
   UsbDeviceInfo.decode = function(decoder) {
     var packed;
@@ -625,6 +629,8 @@
     val.subclassCode = decoder.decodeStruct(codec.Uint8);
     val.protocolCode = decoder.decodeStruct(codec.Uint8);
     val.vendorId = decoder.decodeStruct(codec.Uint16);
+    val.busNumber = decoder.decodeStruct(codec.Uint32);
+    val.portNumber = decoder.decodeStruct(codec.Uint32);
     val.productId = decoder.decodeStruct(codec.Uint16);
     val.deviceVersionMajor = decoder.decodeStruct(codec.Uint8);
     val.deviceVersionMinor = decoder.decodeStruct(codec.Uint8);
@@ -652,6 +658,8 @@
     encoder.encodeStruct(codec.Uint8, val.subclassCode);
     encoder.encodeStruct(codec.Uint8, val.protocolCode);
     encoder.encodeStruct(codec.Uint16, val.vendorId);
+    encoder.encodeStruct(codec.Uint32, val.busNumber);
+    encoder.encodeStruct(codec.Uint32, val.portNumber);
     encoder.encodeStruct(codec.Uint16, val.productId);
     encoder.encodeStruct(codec.Uint8, val.deviceVersionMajor);
     encoder.encodeStruct(codec.Uint8, val.deviceVersionMinor);
