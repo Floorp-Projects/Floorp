@@ -5,6 +5,10 @@
 
 #include "WebGLExtensions.h"
 
+#include "GLContext.h"
+#include "mozilla/dom/WebGLRenderingContextBinding.h"
+#include "WebGLContext.h"
+
 namespace mozilla {
 
 WebGLExtensionBase::WebGLExtensionBase(WebGLContext* context)
@@ -22,5 +26,25 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(WebGLExtensionBase)
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(WebGLExtensionBase, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(WebGLExtensionBase, Release)
+
+// -
+
+WebGLExtensionFloatBlend::WebGLExtensionFloatBlend(WebGLContext* const webgl)
+    : WebGLExtensionBase(webgl) {
+  MOZ_ASSERT(IsSupported(webgl), "Don't construct extension if unsupported.");
+}
+
+WebGLExtensionFloatBlend::~WebGLExtensionFloatBlend() = default;
+
+bool WebGLExtensionFloatBlend::IsSupported(const WebGLContext* const webgl) {
+  if (!webgl->IsWebGL2()) return false;
+  if (!WebGLExtensionEXTColorBufferFloat::IsSupported(webgl)) return false;
+
+  const auto& gl = webgl->gl;
+  return !gl->IsGLES() || gl->IsANGLE() ||
+         gl->IsExtensionSupported(gl::GLContext::EXT_float_blend);
+}
+
+IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionFloatBlend, EXT_float_blend)
 
 }  // namespace mozilla

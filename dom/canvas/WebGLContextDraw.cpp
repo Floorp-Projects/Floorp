@@ -215,6 +215,17 @@ const webgl::CachedDrawFetchLimits* ValidateDraw(WebGLContext* const webgl,
                                                  const uint32_t instanceCount) {
   if (!webgl->BindCurFBForDraw()) return nullptr;
 
+  const auto& fb = webgl->mBoundDrawFramebuffer;
+  if (fb && !webgl->IsExtensionEnabled(WebGLExtensionID::EXT_float_blend) &&
+      webgl->mBlendEnabled) {
+    const auto& info = *fb->GetCompletenessInfo();
+    if (info.hasFloat32) {
+      webgl->ErrorInvalidOperation(
+          "Float32 blending requires EXT_float_blend.");
+      return nullptr;
+    }
+  }
+
   switch (mode) {
     case LOCAL_GL_TRIANGLES:
     case LOCAL_GL_TRIANGLE_STRIP:

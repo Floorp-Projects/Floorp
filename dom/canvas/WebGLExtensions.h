@@ -183,6 +183,16 @@ class WebGLExtensionEXTColorBufferFloat : public WebGLExtensionBase {
   DECL_WEBGL_EXTENSION_GOOP
 };
 
+class WebGLExtensionFloatBlend : public WebGLExtensionBase {
+ public:
+  explicit WebGLExtensionFloatBlend(WebGLContext* webgl);
+  virtual ~WebGLExtensionFloatBlend();
+
+  static bool IsSupported(const WebGLContext*);
+
+  DECL_WEBGL_EXTENSION_GOOP
+};
+
 class WebGLExtensionFragDepth : public WebGLExtensionBase {
  public:
   explicit WebGLExtensionFragDepth(WebGLContext*);
