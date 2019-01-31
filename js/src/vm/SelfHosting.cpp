@@ -2617,7 +2617,9 @@ static const JSFunctionSpec intrinsic_functions[] = {
         "IsPossiblyWrappedTypedArray",
         intrinsic_IsPossiblyWrappedInstanceOfBuiltin<TypedArrayObject>, 1, 0,
         IntrinsicIsPossiblyWrappedTypedArray),
-    JS_FN("IsTypedArrayConstructor", intrinsic_IsTypedArrayConstructor, 1, 0),
+    JS_INLINABLE_FN("IsTypedArrayConstructor",
+                    intrinsic_IsTypedArrayConstructor, 1, 0,
+                    IntrinsicIsTypedArrayConstructor),
 
     JS_FN("TypedArrayBuffer", intrinsic_TypedArrayBuffer, 1, 0),
     JS_FN("TypedArrayByteOffset", intrinsic_TypedArrayByteOffset, 1, 0),
