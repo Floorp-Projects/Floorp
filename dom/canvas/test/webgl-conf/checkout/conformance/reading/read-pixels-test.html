@@ -169,7 +169,7 @@ function continueTestPart2() {
     var format = invalidFormat[ff];
     var buf = new Uint8Array(4);
     gl.readPixels(0, 0, 1, 1, format, gl.UNSIGNED_BYTE, buf);
-    wtu.glErrorShouldBe(gl, gl.INVALID_ENUM, "Should not be able to read as " + wtu.glEnumToString(gl, format));
+    wtu.glErrorShouldBe(gl, [gl.INVALID_ENUM, gl.INVALID_OPERATION], "Should not be able to read as " + wtu.glEnumToString(gl, format));
   }
 
   for (var tt = 0; tt < invalidTypeInfo.length; ++tt) {
@@ -177,7 +177,7 @@ function continueTestPart2() {
     var type = info.type;
     var dest = info.dest;
     gl.readPixels(0, 0, 1, 1, gl.RGBA, type, dest);
-    wtu.glErrorShouldBe(gl, gl.INVALID_ENUM, "Should not be able to read as " + wtu.glEnumToString(gl, type));
+    wtu.glErrorShouldBe(gl, [gl.INVALID_ENUM, gl.INVALID_OPERATION], "Should not be able to read as " + wtu.glEnumToString(gl, type));
   }
 
   var combinations = [
