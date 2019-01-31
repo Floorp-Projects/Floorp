@@ -2443,8 +2443,9 @@ void StoreToTypedArray(JSContext* cx, MacroAssembler& masm, Scalar::Type type,
   if (type == Scalar::Float32 || type == Scalar::Float64) {
     masm.ensureDouble(value, FloatReg0, failure);
     if (type == Scalar::Float32) {
-      masm.convertDoubleToFloat32(FloatReg0, ScratchFloat32Reg);
-      masm.storeToTypedFloatArray(type, ScratchFloat32Reg, dest);
+      ScratchFloat32Scope fpscratch(masm);
+      masm.convertDoubleToFloat32(FloatReg0, fpscratch);
+      masm.storeToTypedFloatArray(type, fpscratch, dest);
     } else {
       masm.storeToTypedFloatArray(type, FloatReg0, dest);
     }

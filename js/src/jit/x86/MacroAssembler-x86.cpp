@@ -921,9 +921,10 @@ void MacroAssembler::wasmTruncateDoubleToUInt32(FloatRegister input,
   vcvttsd2si(input, output);
   branch32(Assembler::Condition::NotSigned, output, Imm32(0), &done);
 
-  loadConstantDouble(double(int32_t(0x80000000)), ScratchDoubleReg);
-  addDouble(input, ScratchDoubleReg);
-  vcvttsd2si(ScratchDoubleReg, output);
+  ScratchDoubleScope fpscratch(*this);
+  loadConstantDouble(double(int32_t(0x80000000)), fpscratch);
+  addDouble(input, fpscratch);
+  vcvttsd2si(fpscratch, output);
 
   branch32(Assembler::Condition::Signed, output, Imm32(0), oolEntry);
   or32(Imm32(0x80000000), output);
@@ -939,9 +940,10 @@ void MacroAssembler::wasmTruncateFloat32ToUInt32(FloatRegister input,
   vcvttss2si(input, output);
   branch32(Assembler::Condition::NotSigned, output, Imm32(0), &done);
 
-  loadConstantFloat32(float(int32_t(0x80000000)), ScratchFloat32Reg);
-  addFloat32(input, ScratchFloat32Reg);
-  vcvttss2si(ScratchFloat32Reg, output);
+  ScratchFloat32Scope fpscratch(*this);
+  loadConstantFloat32(float(int32_t(0x80000000)), fpscratch);
+  addFloat32(input, fpscratch);
+  vcvttss2si(fpscratch, output);
 
   branch32(Assembler::Condition::Signed, output, Imm32(0), oolEntry);
   or32(Imm32(0x80000000), output);

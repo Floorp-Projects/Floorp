@@ -80,7 +80,10 @@ ValueOperand CacheRegisterAllocator::useValueRegister(MacroAssembler& masm,
 
     case OperandLocation::DoubleReg: {
       ValueOperand reg = allocateValueRegister(masm);
-      masm.boxDouble(loc.doubleReg(), reg, ScratchDoubleReg);
+      {
+        ScratchDoubleScope fpscratch(masm);
+        masm.boxDouble(loc.doubleReg(), reg, fpscratch);
+      }
       loc.setValueReg(reg);
       return reg;
     }
@@ -171,9 +174,11 @@ ValueOperand CacheRegisterAllocator::useFixedValueRegister(MacroAssembler& masm,
       popPayload(masm, &loc, reg.scratchReg());
       masm.tagValue(loc.payloadType(), reg.scratchReg(), reg);
       break;
-    case OperandLocation::DoubleReg:
-      masm.boxDouble(loc.doubleReg(), reg, ScratchDoubleReg);
+    case OperandLocation::DoubleReg: {
+      ScratchDoubleScope fpscratch(masm);
+      masm.boxDouble(loc.doubleReg(), reg, fpscratch);
       break;
+    }
     case OperandLocation::Uninitialized:
       MOZ_CRASH();
   }
@@ -2397,8 +2402,9 @@ bool CacheIRCompiler::emitInt32URightShiftResult() {
     masm.jump(&intDone);
 
     masm.bind(&toUint);
-    masm.convertUInt32ToDouble(lhs, ScratchDoubleReg);
-    masm.boxDouble(ScratchDoubleReg, output.valueReg(), ScratchDoubleReg);
+    ScratchDoubleScope fpscratch(masm);
+    masm.convertUInt32ToDouble(lhs, fpscratch);
+    masm.boxDouble(fpscratch, output.valueReg(), fpscratch);
     masm.jump(&floatDone);
   } else {
     masm.branchTest32(Assembler::Signed, lhs, lhs, failure->label());
@@ -2523,11 +2529,14 @@ bool CacheIRCompiler::emitDoubleIncDecResult(bool isInc) {
   masm.ensureDouble(
       val, FloatReg0,
       (mode_ != Mode::Baseline) ? &failurePopReg : failure->label());
-  masm.loadConstantDouble(1.0, ScratchDoubleReg);
-  if (isInc) {
-    masm.addDouble(ScratchDoubleReg, FloatReg0);
-  } else {
-    masm.subDouble(ScratchDoubleReg, FloatReg0);
+  {
+    ScratchDoubleScope fpscratch(masm);
+    masm.loadConstantDouble(1.0, fpscratch);
+    if (isInc) {
+      masm.addDouble(fpscratch, FloatReg0);
+    } else {
+      masm.subDouble(fpscratch, FloatReg0);
+    }
   }
   masm.boxDouble(FloatReg0, output.valueReg(), FloatReg0);
 
