@@ -139,6 +139,9 @@ bool HasSavedCheckpoint();
 // Get the ID of the most recent saved checkpoint.
 CheckpointId GetLastSavedCheckpoint();
 
+// Get the ID of the saved checkpoint prior to aCheckpoint.
+CheckpointId GetLastSavedCheckpointPriorTo(const CheckpointId& aCheckpoint);
+
 // When paused at a breakpoint or at a checkpoint, restore a checkpoint that
 // was saved earlier and resume execution.
 void RestoreCheckpointAndResume(const CheckpointId& aCheckpoint);
