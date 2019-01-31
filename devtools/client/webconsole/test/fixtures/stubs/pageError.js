@@ -23,7 +23,7 @@ stubPreparedMessages.set(`ReferenceError: asdf is not defined`, new ConsoleMessa
   "level": "error",
   "messageText": "ReferenceError: asdf is not defined",
   "parameters": null,
-  "repeatId": "{\"frame\":{\"source\":\"http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html\",\"line\":3,\"column\":5},\"groupId\":null,\"indent\":0,\"level\":\"error\",\"messageText\":\"ReferenceError: asdf is not defined\",\"parameters\":null,\"source\":\"javascript\",\"type\":\"log\",\"userProvidedStyles\":null,\"private\":false}",
+  "repeatId": "{\"frame\":{\"source\":\"http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html\",\"line\":3,\"column\":5},\"groupId\":null,\"indent\":0,\"level\":\"error\",\"messageText\":\"ReferenceError: asdf is not defined\",\"parameters\":null,\"source\":\"javascript\",\"type\":\"log\",\"userProvidedStyles\":null,\"private\":false,\"stacktrace\":[{\"filename\":\"http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html\",\"lineNumber\":3,\"columnNumber\":5,\"functionName\":\"bar\"},{\"filename\":\"http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html\",\"lineNumber\":6,\"columnNumber\":5,\"functionName\":\"foo\"},{\"filename\":\"http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html\",\"lineNumber\":9,\"columnNumber\":3,\"functionName\":null},{\"filename\":\"resource://testing-common/content-task.js line 59 > eval\",\"lineNumber\":7,\"columnNumber\":9,\"functionName\":null},{\"filename\":\"resource://testing-common/content-task.js\",\"lineNumber\":60,\"columnNumber\":20,\"functionName\":null}]}",
   "stacktrace": [
     {
       "filename": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
@@ -80,7 +80,7 @@ stubPreparedMessages.set(`SyntaxError: redeclaration of let a`, new ConsoleMessa
   "level": "error",
   "messageText": "SyntaxError: redeclaration of let a",
   "parameters": null,
-  "repeatId": "{\"frame\":{\"source\":\"http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html\",\"line\":2,\"column\":9},\"groupId\":null,\"indent\":0,\"level\":\"error\",\"messageText\":\"SyntaxError: redeclaration of let a\",\"parameters\":null,\"source\":\"javascript\",\"type\":\"log\",\"userProvidedStyles\":null,\"private\":false}",
+  "repeatId": "{\"frame\":{\"source\":\"http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html\",\"line\":2,\"column\":9},\"groupId\":null,\"indent\":0,\"level\":\"error\",\"messageText\":\"SyntaxError: redeclaration of let a\",\"parameters\":null,\"source\":\"javascript\",\"type\":\"log\",\"userProvidedStyles\":null,\"private\":false,\"stacktrace\":[{\"filename\":\"resource://testing-common/content-task.js line 59 > eval\",\"lineNumber\":7,\"columnNumber\":9,\"functionName\":null},{\"filename\":\"resource://testing-common/content-task.js\",\"lineNumber\":60,\"columnNumber\":20,\"functionName\":null}]}",
   "stacktrace": [
     {
       "filename": "resource://testing-common/content-task.js line 59 > eval",
@@ -132,7 +132,7 @@ stubPreparedMessages.set(`TypeError longString message`, new ConsoleMessage({
     "actor": "server1.conn0.child1/longString30"
   },
   "parameters": null,
-  "repeatId": "{\"frame\":{\"source\":\"http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html\",\"line\":1,\"column\":7},\"groupId\":null,\"indent\":0,\"level\":\"error\",\"messageText\":{\"type\":\"longString\",\"initial\":\"Error: Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Lon\",\"length\":110007,\"actor\":\"server1.conn0.child1/longString30\"},\"parameters\":null,\"source\":\"javascript\",\"type\":\"log\",\"userProvidedStyles\":null,\"private\":false}",
+  "repeatId": "{\"frame\":{\"source\":\"http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html\",\"line\":1,\"column\":7},\"groupId\":null,\"indent\":0,\"level\":\"error\",\"messageText\":{\"type\":\"longString\",\"initial\":\"Error: Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Lon\",\"length\":110007,\"actor\":\"server1.conn0.child1/longString30\"},\"parameters\":null,\"source\":\"javascript\",\"type\":\"log\",\"userProvidedStyles\":null,\"private\":false,\"stacktrace\":[{\"filename\":\"http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html\",\"lineNumber\":1,\"columnNumber\":7,\"functionName\":null},{\"filename\":\"resource://testing-common/content-task.js line 59 > eval\",\"lineNumber\":7,\"columnNumber\":9,\"functionName\":null},{\"filename\":\"resource://testing-common/content-task.js\",\"lineNumber\":60,\"columnNumber\":20,\"functionName\":null}]}",
   "stacktrace": [
     {
       "filename": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
@@ -176,7 +176,7 @@ stubPreparedMessages.set(`throw ""`, new ConsoleMessage({
   "level": "error",
   "messageText": "uncaught exception: ",
   "parameters": null,
-  "repeatId": "{\"frame\":null,\"groupId\":null,\"indent\":0,\"level\":\"error\",\"messageText\":\"uncaught exception: \",\"parameters\":null,\"source\":\"javascript\",\"type\":\"log\",\"userProvidedStyles\":null,\"private\":false}",
+  "repeatId": "{\"frame\":null,\"groupId\":null,\"indent\":0,\"level\":\"error\",\"messageText\":\"uncaught exception: \",\"parameters\":null,\"source\":\"javascript\",\"type\":\"log\",\"userProvidedStyles\":null,\"private\":false,\"stacktrace\":null}",
   "stacktrace": null,
   "frame": null,
   "groupId": null,
@@ -197,7 +197,7 @@ stubPreparedMessages.set(`throw "tomato"`, new ConsoleMessage({
   "level": "error",
   "messageText": "uncaught exception: tomato",
   "parameters": null,
-  "repeatId": "{\"frame\":null,\"groupId\":null,\"indent\":0,\"level\":\"error\",\"messageText\":\"uncaught exception: tomato\",\"parameters\":null,\"source\":\"javascript\",\"type\":\"log\",\"userProvidedStyles\":null,\"private\":false}",
+  "repeatId": "{\"frame\":null,\"groupId\":null,\"indent\":0,\"level\":\"error\",\"messageText\":\"uncaught exception: tomato\",\"parameters\":null,\"source\":\"javascript\",\"type\":\"log\",\"userProvidedStyles\":null,\"private\":false,\"stacktrace\":null}",
   "stacktrace": null,
   "frame": null,
   "groupId": null,

@@ -331,6 +331,7 @@ function getRepeatId(message) {
     type: message.type,
     userProvidedStyles: message.userProvidedStyles,
     private: message.private,
+    stacktrace: message.stacktrace,
   });
 }
 
