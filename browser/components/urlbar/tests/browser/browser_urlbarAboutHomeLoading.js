@@ -1,3 +1,10 @@
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
+
+/**
+ * This tests ensures the urlbar is cleared properly when about:home is visited.
+ */
+
 "use strict";
 
 const {SessionSaver} = ChromeUtils.import("resource:///modules/sessionstore/SessionSaver.jsm");
