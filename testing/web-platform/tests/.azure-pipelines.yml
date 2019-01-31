@@ -10,11 +10,9 @@
 # project is required:
 #  - The "Build pull requests from forks of this repository" setting must be
 #    enabled: https://docs.microsoft.com/en-us/azure/devops/pipelines/repos/github#validate-contributions-from-forks
-#  - A scheduled build for the epochs/daily branch needs to be set up, the push
-#    to the branch alone is not enough: https://github.community/t5/GitHub-API-Development-and/Can-the-Checks-API-be-used-to-trigger-two-runs-when-two-pushed/m-p/17777
-#  - Because scheduled builds don't show up as check runs on GitHub, the wpt.fyi
-#    integration is different; a service connection named staging.wpt.fyi with
-#    URL https://staging.wpt.fyi needs to be created.
+#  - A scheduled build needs to be set up for the the epochs/daily branch.
+#  - To get results from scheduled builds into wpt.fyi, a service connection
+#    named staging.wpt.fyi with URL https://staging.wpt.fyi is needed.
 
 jobs:
 # The affected tests jobs are unconditional for speed, as most PRs have one or
@@ -131,7 +129,7 @@ jobs:
 
 - job: all_macOS
   displayName: 'all tests (Safari Technology Preview)'
-  condition: eq(variables['Build.SourceBranch'], 'refs/heads/epochs/daily')
+  condition: eq(variables['Build.Reason'], 'Schedule')
   strategy:
     parallel: 4 # chosen to make runtime ~2h
   timeoutInMinutes: 360
