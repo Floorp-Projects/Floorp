@@ -5,100 +5,53 @@
 
 "use strict";
 
-const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
-                  "test/mochitest/" +
-                  "test-console-trace-duplicates.html";
+const TEST_URI = "http://example.com/browser/devtools/client/webconsole/test/mochitest/" +
+                 "test-console-trace-duplicates.html";
 
 add_task(async function testTraceMessages() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
-  // NB: Now that stack frames include a column number multiple invocations
-  //     on the same line are considered unique. ie:
-  //       |foo(); foo();|
-  //     will generate two distinct trace entries.
   const message = await waitFor(() => findMessage(hud, "foo1"));
-  const stackInfo = getStackInfo(message);
+  // Wait until stacktrace is displayed.
+  await waitFor(() => !!message.querySelector(".frames"));
 
-  checkStackInfo(stackInfo, {
-    variable: "console.trace()",
-    repeats: 3,
-    filename: "test-console-trace-duplicates.html",
-    line: 24,
-    column: 3,
-    stack: [{
-      functionName: "foo3",
-      filename: TEST_URI,
-      line: 24,
-    }, {
-      functionName: "foo2",
-      filename: TEST_URI,
-      line: 20,
-    }, {
-      functionName: "foo1",
-      filename: TEST_URI,
-      line: 12,
-    }, {
-      functionName: "<anonymous>",
-      filename: TEST_URI,
-      line: 27,
-    }],
-  });
-});
+  is(message.querySelector(".message-body").textContent, "console.trace()",
+    "console.trace message body has expected text");
+  is(message.querySelector(".message-repeats").textContent, "3",
+    "console.trace has the expected content for the repeat badge");
 
-/**
- * Get stack info from a message node. This is a companion to checkStackInfo().
- *
- * @param {MessageNode}
- *        The message from which the stack info will be returned.
- * @returns {Object}
- *          An object in the following format:
- *            {
- *              variable: "console.trace()",
- *              repeats: 3
- *              filename: "some-filename.html"
- *              line: 23
- *              column: 3
- *              stack: [
- *                {
- *                  "functionName": "foo3",
- *                  "filename": "http://example.com/some-filename.html",
- *                  "line":"23",
- *                },
- *                ...
- *              ]
- *            }
- */
-function getStackInfo(message) {
-  const frameNode = message.querySelector(".frame-link-line");
-  const lc = getLineAndColumn(frameNode);
-  const result = {
-    variable: message.querySelector(".cm-variable").textContent,
-    repeats: message.querySelector(".message-repeats").textContent,
-    filename: message.querySelector(".frame-link-filename").textContent,
-    line: lc.line,
-    column: lc.column,
-    stack: [],
-  };
+  is(
+    message.querySelector(".frame-link-filename").textContent,
+    "test-console-trace-duplicates.html",
+    "message frame has expected text content"
+  );
+  const [, line, column] =
+    message.querySelector(".frame-link-line").textContent.split(":");
+  is(line, 20, "message frame has expected line");
+  is(column, 3, "message frame has expected column");
 
   const stack = message.querySelector(".stacktrace");
-  if (stack) {
-    const frames = Array.from(stack.querySelectorAll(".frame"));
+  ok(!!stack, "There's a stacktrace element");
 
-    result.stack = frames.map(frameEl => {
-      const title = frameEl.querySelector(".title");
-      const filename = frameEl.querySelector(".location .filename");
-      const line = frameEl.querySelector(".location .line");
-
-      return {
-        functionName: getElementTextContent(title),
-        filename: getElementTextContent(filename),
-        line: getElementTextContent(line),
-      };
-    });
-  }
-
-  return result;
-}
+  const frames = Array.from(stack.querySelectorAll(".frame"));
+  checkStacktraceFrames(frames, [{
+    functionName: "foo3",
+    filename: TEST_URI,
+    line: 20,
+  }, {
+    functionName: "foo2",
+    filename: TEST_URI,
+    line: 16,
+  }, {
+    functionName: "foo1",
+    filename: TEST_URI,
+    line: 12,
+  }, {
+    functionName: "<anonymous>",
+    filename: TEST_URI,
+    line: 23,
+  }]);
+});
 
 /**
  * Check stack info returned by getStackInfo().
@@ -108,56 +61,18 @@ function getStackInfo(message) {
  * @param {Object} expected
  *        An object in the same format as the expected stackInfo object.
  */
-function checkStackInfo(stackInfo, expected) {
-  is(stackInfo.variable, expected.variable, `"$(expected.variable}" command logged`);
-  is(stackInfo.repeats, expected.repeats, "expected number of repeats are displayed");
-  is(stackInfo.filename, expected.filename, "expected filename is displayed");
-  is(stackInfo.line, expected.line, "expected line is displayed");
-  is(stackInfo.column, expected.column, "expected column is displayed");
+function checkStacktraceFrames(frames, expectedFrames) {
+  is(frames.length, expectedFrames.length,
+    `There are ${frames.length} frames in the stacktrace`);
 
-  ok(stackInfo.stack.length > 0, "a stack is displayed");
-  is(stackInfo.stack.length, expected.stack.length, "the stack is the expected length");
+  frames.forEach((frameEl, i) => {
+    const expected = expectedFrames[i];
 
-  for (let i = 0; i < stackInfo.stack.length; i++) {
-    const actual = stackInfo.stack[i];
-    const stackExpected = expected.stack[i];
-
-    is(actual.functionName, stackExpected.functionName,
-      `expected function name is displayed for index ${i}`);
-    is(actual.filename, stackExpected.filename,
-      `expected filename is displayed for index ${i}`);
-    is(actual.line, stackExpected.line,
-      `expected line is displayed for index ${i}`);
-  }
-}
-
-/**
- * Splits the line and column info from the node containing the line and column
- * to be split e.g. ':10:15'.
- *
- * @param {HTMLNode} node
- *        The HTML node containing the line and column to be split.
- */
-function getLineAndColumn(node) {
-  let lineAndColumn = getElementTextContent(node);
-  let line = 0;
-  let column = 0;
-
-  // LineAndColumn should look something like ":10:15"
-  if (lineAndColumn && lineAndColumn.startsWith(":")) {
-    // Trim the first colon leaving e.g. "10:15"
-    lineAndColumn = lineAndColumn.substr(1);
-
-    // Split "10:15" into line and column variables.
-    [ line, column ] = lineAndColumn.split(":");
-  }
-
-  return {
-    line: line * 1,
-    column: column * 1,
-  };
-}
-
-function getElementTextContent(el) {
-  return el ? el.textContent : null;
+    is(frameEl.querySelector(".title").textContent, expected.functionName,
+      `expected function name is displayed for frame #${i}`);
+    is(frameEl.querySelector(".location .filename").textContent, expected.filename,
+      `expected filename is displayed for frame #${i}`);
+    is(frameEl.querySelector(".location .line").textContent, expected.line,
+      `expected line is displayed for frame #${i}`);
+  });
 }
