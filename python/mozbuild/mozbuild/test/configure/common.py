@@ -99,10 +99,15 @@ class ConfigureTestSandbox(ConfigureSandbox):
 
         self.imported_os = ReadOnlyNamespace(path=ReadOnlyNamespace(**os_path))
 
+        self.modules = kwargs.pop('modules', {}) or {}
+
         super(ConfigureTestSandbox, self).__init__(config, environ, *args,
                                                    **kwargs)
 
     def _get_one_import(self, what):
+        if what in self.modules:
+            return self.modules[what]
+
         if what == 'which.which':
             return self.which
 
@@ -250,7 +255,7 @@ class BaseConfigureTest(unittest.TestCase):
         return 0, args[0], ''
 
     def get_sandbox(self, paths, config, args=[], environ={}, mozconfig='',
-                    out=None, logger=None):
+                    out=None, logger=None, modules=None):
         kwargs = {}
         if logger:
             kwargs['logger'] = logger
@@ -287,7 +292,7 @@ class BaseConfigureTest(unittest.TestCase):
 
             sandbox = ConfigureTestSandbox(paths, config, environ,
                                            ['configure'] + target + args,
-                                           **kwargs)
+                                           modules=modules, **kwargs)
             sandbox.include_file(os.path.join(topsrcdir, 'moz.configure'))
 
             return sandbox
