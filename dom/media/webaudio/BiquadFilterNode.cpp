@@ -34,7 +34,7 @@ static void SetParamsOnBiquad(WebCore::Biquad& aBiquad, float aSampleRate,
   double normalizedFrequency = aFrequency / nyquist;
 
   if (aDetune) {
-    normalizedFrequency *= std::pow(2.0, aDetune / 1200);
+    normalizedFrequency *= std::exp2(aDetune / 1200);
   }
 
   switch (aType) {
