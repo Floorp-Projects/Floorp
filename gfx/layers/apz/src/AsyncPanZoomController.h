@@ -492,6 +492,25 @@ class AsyncPanZoomController {
   ParentLayerPoint ToParentLayerCoordinates(const ScreenPoint& aVector,
                                             const ScreenPoint& aAnchor) const;
 
+  /**
+   * Same as above, but uses an ExternalPoint as the anchor.
+   */
+  ParentLayerPoint ToParentLayerCoordinates(const ScreenPoint& aVector,
+                                            const ExternalPoint& aAnchor) const;
+
+  /**
+   * Combines an offset defined as an external point, with a window-relative
+   * offset to give an absolute external point.
+   */
+  static ExternalPoint ToExternalPoint(const ExternalPoint& aScreenOffset,
+                                       const ScreenPoint& aScreenPoint);
+
+  /**
+   * Gets a vector where the head is the given point, and the tail is
+   * the touch start position.
+   */
+  ScreenPoint PanVector(const ExternalPoint& aPos) const;
+
   // Return whether or not a wheel event will be able to scroll in either
   // direction.
   bool CanScroll(const InputData& aEvent) const;
@@ -724,20 +743,9 @@ class AsyncPanZoomController {
   void ScheduleCompositeAndMaybeRepaint();
 
   /**
-   * Gets the displacement of the current touch since it began. That is, it is
-   * the distance between the current position and the initial position of the
-   * current touch (this only makes sense if a touch is currently happening and
-   * OnTouchMove() or the equivalent for pan gestures is being invoked).
-   * Note: It's an abuse of the 'Coord' class to use it to represent a 2D
-   *       distance, but it's the closest thing we currently have.
-   */
-  ScreenCoord PanDistance() const;
-
-  /**
    * Gets the start point of the current touch.
-   * Like PanDistance(), this only makes sense if a touch is currently
-   * happening and OnTouchMove() or the equivalent for pan gestures is
-   * being invoked.
+   * This only makes sense if a touch is currently happening and OnTouchMove()
+   * or the equivalent for pan gestures is being invoked.
    */
   ParentLayerPoint PanStart() const;
 
@@ -756,6 +764,17 @@ class AsyncPanZoomController {
    * the first one and assumes the rest are either missing or not relevant.
    */
   ParentLayerPoint GetFirstTouchPoint(const MultiTouchInput& aEvent);
+
+  /**
+   * Gets the relevant point in the event
+   * (eg. first touch, or pinch focus point) of the given InputData.
+   */
+  ExternalPoint GetExternalPoint(const InputData& aEvent);
+
+  /**
+   * Gets the relevant point in the event, in external screen coordinates.
+   */
+  ExternalPoint GetFirstExternalTouchPoint(const MultiTouchInput& aEvent);
 
   /**
    * Sets the panning state basing on the pan direction angle and current
@@ -780,9 +799,11 @@ class AsyncPanZoomController {
 
   /**
    * Sets up anything needed for panning. This takes us out of the "TOUCHING"
-   * state and starts actually panning us.
+   * state and starts actually panning us. We provide the physical pixel
+   * position of the start point so that the pan gesture is calculated
+   * regardless of if the window/GeckoView moved during the pan.
    */
-  nsEventStatus StartPanning(const ParentLayerPoint& aStartPoint);
+  nsEventStatus StartPanning(const ExternalPoint& aStartPoint);
 
   /**
    * Wrapper for Axis::UpdateWithTouchAtDevicePoint(). Calls this function for
@@ -990,6 +1011,9 @@ class AsyncPanZoomController {
   // associated with this id, we can adjust the scaling that WebRender applies,
   // thereby controlling the zoom.
   Maybe<uint64_t> mZoomAnimationId;
+
+  // Position on screen where user first put their finger down.
+  ExternalPoint mStartTouch;
 
   friend class Axis;
 
