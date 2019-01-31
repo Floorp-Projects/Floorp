@@ -17,4 +17,4 @@ DevToolsModules(
 )
 
 with Files('**'):
-    BUG_COMPONENT = ('DevTools', 'Animation Inspector')
+    BUG_COMPONENT = ('DevTools', 'Inspector: Animations')
