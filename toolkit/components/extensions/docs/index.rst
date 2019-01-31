@@ -26,6 +26,7 @@ in particular.
    events
    manifest
    lifecycle
+   incognito
    other
    reference
-    
+

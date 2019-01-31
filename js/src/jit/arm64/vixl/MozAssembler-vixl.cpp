@@ -415,7 +415,7 @@ void Assembler::csdb(Instruction* at) {
 
 
 BufferOffset Assembler::Logical(const Register& rd, const Register& rn,
-                                const Operand operand, LogicalOp op)
+                                const Operand& operand, LogicalOp op)
 {
   VIXL_ASSERT(rd.size() == rn.size());
   if (operand.IsImmediate()) {
@@ -724,4 +724,3 @@ void MozBaseAssembler::RetargetFarBranch(Instruction* i, uint8_t** slot, uint8_t
 
 
 }  // namespace vixl
-

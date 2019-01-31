@@ -4057,11 +4057,9 @@ class Assembler : public MozBaseAssembler {
                 const MemOperand& addr,
                 LoadStoreScalingOption option = PreferScaledOffset);
 
-  // TODO(all): The third parameter should be passed by reference but gcc 4.8.2
-  // reports a bogus uninitialised warning then.
   BufferOffset Logical(const Register& rd,
                        const Register& rn,
-                       const Operand operand,
+                       const Operand& operand,
                        LogicalOp op);
   BufferOffset LogicalImmediate(const Register& rd,
                                 const Register& rn,

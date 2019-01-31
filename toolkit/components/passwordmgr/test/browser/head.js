@@ -85,11 +85,12 @@ const DONT_CHANGE_BUTTON = 1;
  *
  * @param {String} aKind The desired `passwordNotificationType`
  * @param {Object} [popupNotifications = PopupNotifications]
+ * @param {Object} [browser = null] Optional browser whose notifications should be searched.
  * @return the found password popup notification.
  */
-function getCaptureDoorhanger(aKind, popupNotifications = PopupNotifications) {
+function getCaptureDoorhanger(aKind, popupNotifications = PopupNotifications, browser = null) {
   ok(true, "Looking for " + aKind + " popup notification");
-  let notification = popupNotifications.getNotification("password");
+  let notification = popupNotifications.getNotification("password", browser);
   if (notification) {
     is(notification.options.passwordNotificationType, aKind, "Notification type matches.");
     if (aKind == "password-change") {

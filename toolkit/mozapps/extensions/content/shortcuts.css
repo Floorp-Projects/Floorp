@@ -38,6 +38,19 @@
   margin-top: 10px;
 }
 
+.card.shortcut:not([expanded]) > .shortcut-row[hide-before-expand] {
+  display: none;
+}
+
+.expand-row {
+  display: flex;
+  justify-content: center;
+}
+
+.expand-button {
+  margin: 8px 0 0;
+}
+
 .shortcut-input {
   font-size: 12px;
   padding: 4px 8px;

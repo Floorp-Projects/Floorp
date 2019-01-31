@@ -411,13 +411,28 @@ def lib_path(libs):
 set_config('LIB', lib_path)
 
 
-@depends(lib_path_for(host))
+lib_path_for_host = lib_path_for(host)
+
+@depends(lib_path_for_host)
 @imports(_from='mozbuild.shellutil', _import='quote')
 def host_linker_libpaths(libs):
     return ['-LIBPATH:%s' % quote(l) for l in libs]
 
 
+@depends(lib_path_for_host)
+@imports(_from='mozbuild.shellutil', _import='quote')
+def host_linker_libpaths_bat(libs):
+    # .bat files need a different style of quoting. Batch quoting is actually
+    # not defined, and up to applications to handle, so it's not really clear
+    # what should be escaped and what not, but most paths should work just
+    # fine without escaping. And we don't care about double-quotes possibly
+    # having to be escaped because they're not allowed in file names on
+    # Windows.
+    return ['"-LIBPATH:%s"' % l for l in libs]
+
+
 set_config('HOST_LINKER_LIBPATHS', host_linker_libpaths)
+set_config('HOST_LINKER_LIBPATHS_BAT', host_linker_libpaths_bat)
 
 
 option(env='MT', nargs=1, help='Path to the Microsoft Manifest Tool')
