@@ -17,9 +17,9 @@ class DBusRemoteClient : public nsRemoteClient {
   ~DBusRemoteClient();
 
   virtual nsresult Init() override;
-  virtual nsresult SendCommandLine(const char *aProgram, const char *aUsername,
-                                   const char *aProfile, int32_t argc,
-                                   char **argv, const char *aDesktopStartupID,
+  virtual nsresult SendCommandLine(const char *aProgram, const char *aProfile,
+                                   int32_t argc, char **argv,
+                                   const char *aDesktopStartupID,
                                    char **aResponse, bool *aSucceeded) override;
   void Shutdown();
 
