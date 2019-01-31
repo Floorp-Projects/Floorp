@@ -75,6 +75,11 @@ struct DefaultJitOptions {
 #ifdef JS_TRACE_LOGGING
   bool enableTraceLogger;
 #endif
+#ifdef WASM_CODEGEN_DEBUG
+  bool enableWasmJitExit;
+  bool enableWasmJitEntry;
+  bool enableWasmIonFastCalls;
+#endif
   uint32_t baselineWarmUpThreshold;
   uint32_t exceptionBailoutThreshold;
   uint32_t frequentBailoutThreshold;

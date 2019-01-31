@@ -273,6 +273,12 @@ DefaultJitOptions::DefaultJitOptions() {
   // the traceLogger will not be recording any events.
   SET_DEFAULT(enableTraceLogger, false);
 #endif
+
+#ifdef WASM_CODEGEN_DEBUG
+  SET_DEFAULT(enableWasmJitExit, true);
+  SET_DEFAULT(enableWasmJitEntry, true);
+  SET_DEFAULT(enableWasmIonFastCalls, true);
+#endif
 }
 
 bool DefaultJitOptions::isSmallFunction(JSScript* script) const {
