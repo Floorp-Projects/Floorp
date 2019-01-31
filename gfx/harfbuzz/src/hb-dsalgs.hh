@@ -28,7 +28,6 @@
 #define HB_DSALGS_HH
 
 #include "hb.hh"
-
 #include "hb-null.hh"
 
 
@@ -107,7 +106,7 @@ hb_bit_storage (T v)
     _BitScanReverse (&where, v);
     return 1 + where;
   }
-# if _WIN64
+# if defined(_WIN64)
   if (sizeof (T) <= 8)
   {
     unsigned long where;
@@ -181,7 +180,7 @@ hb_ctz (T v)
     _BitScanForward (&where, v);
     return where;
   }
-# if _WIN64
+# if defined(_WIN64)
   if (sizeof (T) <= 8)
   {
     unsigned long where;
@@ -237,10 +236,13 @@ hb_ctz (T v)
 template <typename T>
 static inline T* hb_addressof (T& arg)
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-align"
   /* https://en.cppreference.com/w/cpp/memory/addressof */
   return reinterpret_cast<T*>(
 	   &const_cast<char&>(
 	      reinterpret_cast<const volatile char&>(arg)));
+#pragma GCC diagnostic pop
 }
 
 /* ASCII tag/character handling */
@@ -554,26 +556,26 @@ hb_codepoint_parse (const char *s, unsigned int len, int base, hb_codepoint_t *o
 
 struct HbOpOr
 {
-  enum { passthru_left = true };
-  enum { passthru_right = true };
+  static constexpr bool passthru_left = true;
+  static constexpr bool passthru_right = true;
   template <typename T> static void process (T &o, const T &a, const T &b) { o = a | b; }
 };
 struct HbOpAnd
 {
-  enum { passthru_left = false };
-  enum { passthru_right = false };
+  static constexpr bool passthru_left = false;
+  static constexpr bool passthru_right = false;
   template <typename T> static void process (T &o, const T &a, const T &b) { o = a & b; }
 };
 struct HbOpMinus
 {
-  enum { passthru_left = true };
-  enum { passthru_right = false };
+  static constexpr bool passthru_left = true;
+  static constexpr bool passthru_right = false;
   template <typename T> static void process (T &o, const T &a, const T &b) { o = a & ~b; }
 };
 struct HbOpXor
 {
-  enum { passthru_left = true };
-  enum { passthru_right = true };
+  static constexpr bool passthru_left = true;
+  static constexpr bool passthru_right = true;
   template <typename T> static void process (T &o, const T &a, const T &b) { o = a ^ b; }
 };
 

@@ -45,7 +45,7 @@ struct loca
 {
   friend struct glyf;
 
-  enum { tableTag = HB_OT_TAG_loca };
+  static constexpr hb_tag_t tableTag = HB_OT_TAG_loca;
 
   bool sanitize (hb_sanitize_context_t *c HB_UNUSED) const
   {
@@ -71,7 +71,7 @@ struct loca
 
 struct glyf
 {
-  enum { tableTag = HB_OT_TAG_glyf };
+  static constexpr hb_tag_t tableTag = HB_OT_TAG_glyf;
 
   bool sanitize (hb_sanitize_context_t *c HB_UNUSED) const
   {
@@ -200,8 +200,8 @@ struct glyf
     };
 
     static bool get_iterator (const char * glyph_data,
-				     unsigned int length,
-				     CompositeGlyphHeader::Iterator *iterator /* OUT */)
+			      unsigned int length,
+			      CompositeGlyphHeader::Iterator *iterator /* OUT */)
     {
       if (length < GlyphHeader::static_size)
 	return false; /* Empty glyph; zero extents. */
@@ -355,8 +355,8 @@ struct glyf
     }
 
     bool get_offsets (hb_codepoint_t  glyph,
-			     unsigned int   *start_offset /* OUT */,
-			     unsigned int   *end_offset   /* OUT */) const
+		      unsigned int   *start_offset /* OUT */,
+		      unsigned int   *end_offset   /* OUT */) const
     {
       if (unlikely (glyph >= num_glyphs))
 	return false;

@@ -57,7 +57,7 @@ struct VertOriginMetric
 
 struct VORG
 {
-  enum { tableTag = HB_OT_TAG_VORG };
+  static constexpr hb_tag_t tableTag = HB_OT_TAG_VORG;
 
   bool has_data () const { return version.to_int (); }
 
@@ -85,12 +85,12 @@ struct VORG
     subset_table->version.minor.set (0);
 
     subset_table->defaultVertOriginY.set (vorg_table->defaultVertOriginY);
-    subset_table->vertYOrigins.len.set (subset_metrics.len);
+    subset_table->vertYOrigins.len.set (subset_metrics.length);
 
     bool success = true;
-    if (subset_metrics.len > 0)
+    if (subset_metrics.length > 0)
     {
-      unsigned int  size = VertOriginMetric::static_size * subset_metrics.len;
+      unsigned int  size = VertOriginMetric::static_size * subset_metrics.length;
       VertOriginMetric  *metrics = c.allocate_size<VertOriginMetric> (size);
       if (likely (metrics != nullptr))
         memcpy (metrics, &subset_metrics[0], size);
@@ -112,7 +112,7 @@ struct VORG
     subset_metrics.init ();
     unsigned int glyph = 0;
     unsigned int i = 0;
-    while ((glyph < plan->glyphs.len) && (i < vertYOrigins.len))
+    while ((glyph < plan->glyphs.length) && (i < vertYOrigins.len))
     {
       if (plan->glyphs[glyph] > vertYOrigins[i].glyph)
         i++;
@@ -129,7 +129,7 @@ struct VORG
     }
 
     /* alloc the new table */
-    unsigned int dest_sz = VORG::min_size + VertOriginMetric::static_size * subset_metrics.len;
+    unsigned int dest_sz = VORG::min_size + VertOriginMetric::static_size * subset_metrics.length;
     void *dest = (void *) malloc (dest_sz);
     if (unlikely (!dest))
     {

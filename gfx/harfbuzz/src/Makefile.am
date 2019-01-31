@@ -384,15 +384,23 @@ dump_use_data_SOURCES = dump-use-data.cc hb-ot-shape-complex-use-table.cc
 dump_use_data_CPPFLAGS = $(HBCFLAGS)
 dump_use_data_LDADD = libharfbuzz.la $(HBLIBS)
 
-check_PROGRAMS += test-ot-tag test-unicode-ranges
-TESTS += test-ot-tag test-unicode-ranges
+COMPILED_TESTS = test-iter test-ot-tag test-unicode-ranges
+COMPILED_TESTS_CPPFLAGS = $(HBCFLAGS) -DMAIN -UNDEBUG
+COMPILED_TESTS_LDADD = libharfbuzz.la $(HBLIBS)
+check_PROGRAMS += $(COMPILED_TESTS)
+TESTS += $(COMPILED_TESTS)
+
+test_iter_SOURCES = test-iter.cc hb-static.cc
+test_iter_CPPFLAGS = $(COMPILED_TESTS_CPPFLAGS)
+test_iter_LDADD = $(COMPILED_TESTS_LDADD)
 
 test_ot_tag_SOURCES = hb-ot-tag.cc
-test_ot_tag_CPPFLAGS = $(HBCFLAGS) -DMAIN
-test_ot_tag_LDADD = libharfbuzz.la $(HBLIBS)
+test_ot_tag_CPPFLAGS = $(COMPILED_TESTS_CPPFLAGS)
+test_ot_tag_LDADD = $(COMPILED_TESTS_LDADD)
 
 test_unicode_ranges_SOURCES = test-unicode-ranges.cc
-test_unicode_ranges_LDADD = libharfbuzz.la $(HBLIBS)
+test_unicode_ranges_CPPFLAGS = $(COMPILED_TESTS_CPPFLAGS)
+test_unicode_ranges_LDADD = $(COMPILED_TESTS_LDADD)
 
 TESTS_ENVIRONMENT = \
 	srcdir="$(srcdir)" \

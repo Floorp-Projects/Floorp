@@ -139,10 +139,10 @@ hb_font_get_nominal_glyphs_default (hb_font_t *font,
     for (unsigned int i = 0; i < count; i++)
     {
       if (!font->get_nominal_glyph (*first_unicode, first_glyph))
-        return i;
+	return i;
 
-      first_unicode = &StructAtOffset<hb_codepoint_t> (first_unicode, unicode_stride);
-      first_glyph = &StructAtOffset<hb_codepoint_t> (first_glyph, glyph_stride);
+      first_unicode = &StructAtOffsetUnaligned<hb_codepoint_t> (first_unicode, unicode_stride);
+      first_glyph = &StructAtOffsetUnaligned<hb_codepoint_t> (first_glyph, glyph_stride);
     }
     return count;
   }
@@ -238,8 +238,8 @@ hb_font_get_glyph_h_advances_default (hb_font_t* font,
     for (unsigned int i = 0; i < count; i++)
     {
       *first_advance = font->get_glyph_h_advance (*first_glyph);
-      first_glyph = &StructAtOffset<hb_codepoint_t> (first_glyph, glyph_stride);
-      first_advance = &StructAtOffset<hb_position_t> (first_advance, advance_stride);
+      first_glyph = &StructAtOffsetUnaligned<hb_codepoint_t> (first_glyph, glyph_stride);
+      first_advance = &StructAtOffsetUnaligned<hb_position_t> (first_advance, advance_stride);
     }
     return;
   }
@@ -250,7 +250,7 @@ hb_font_get_glyph_h_advances_default (hb_font_t* font,
   for (unsigned int i = 0; i < count; i++)
   {
     *first_advance = font->parent_scale_x_distance (*first_advance);
-    first_advance = &StructAtOffset<hb_position_t> (first_advance, advance_stride);
+    first_advance = &StructAtOffsetUnaligned<hb_position_t> (first_advance, advance_stride);
   }
 }
 
@@ -270,8 +270,8 @@ hb_font_get_glyph_v_advances_default (hb_font_t* font,
     for (unsigned int i = 0; i < count; i++)
     {
       *first_advance = font->get_glyph_v_advance (*first_glyph);
-      first_glyph = &StructAtOffset<hb_codepoint_t> (first_glyph, glyph_stride);
-      first_advance = &StructAtOffset<hb_position_t> (first_advance, advance_stride);
+      first_glyph = &StructAtOffsetUnaligned<hb_codepoint_t> (first_glyph, glyph_stride);
+      first_advance = &StructAtOffsetUnaligned<hb_position_t> (first_advance, advance_stride);
     }
     return;
   }
@@ -282,7 +282,7 @@ hb_font_get_glyph_v_advances_default (hb_font_t* font,
   for (unsigned int i = 0; i < count; i++)
   {
     *first_advance = font->parent_scale_y_distance (*first_advance);
-    first_advance = &StructAtOffset<hb_position_t> (first_advance, advance_stride);
+    first_advance = &StructAtOffsetUnaligned<hb_position_t> (first_advance, advance_stride);
   }
 }
 

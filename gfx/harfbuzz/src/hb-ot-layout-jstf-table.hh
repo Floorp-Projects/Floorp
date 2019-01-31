@@ -195,7 +195,7 @@ struct JstfScript
 
 struct JSTF
 {
-  enum { tableTag = HB_OT_TAG_JSTF };
+  static constexpr hb_tag_t tableTag = HB_OT_TAG_JSTF;
 
   unsigned int get_script_count () const
   { return scriptList.len; }

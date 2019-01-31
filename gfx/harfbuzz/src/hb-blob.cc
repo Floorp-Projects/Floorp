@@ -25,6 +25,18 @@
  * Red Hat Author(s): Behdad Esfahbod
  */
 
+
+/* https://github.com/harfbuzz/harfbuzz/issues/1308
+ * http://www.gnu.org/software/libc/manual/html_node/Feature-Test-Macros.html
+ * https://www.oracle.com/technetwork/articles/servers-storage-dev/standardheaderfiles-453865.html
+ */
+#ifndef _POSIX_C_SOURCE
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-macros"
+#define _POSIX_C_SOURCE 200809L
+#pragma GCC diagnostic pop
+#endif
+
 #include "hb.hh"
 #include "hb-blob.hh"
 

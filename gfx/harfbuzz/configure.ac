@@ -1,6 +1,6 @@
 AC_PREREQ([2.64])
 AC_INIT([HarfBuzz],
-        [2.3.0],
+        [2.3.1],
         [https://github.com/harfbuzz/harfbuzz/issues/new],
         [harfbuzz],
         [http://harfbuzz.org/])
@@ -101,9 +101,6 @@ if test "x$GCC" = "xyes"; then
 	# Put -fno-rtti before $CXXFLAGS such that users can re-enable it
 	# by overriding CXXFLAGS.
 	CXXFLAGS="-fno-rtti $CXXFLAGS -fno-exceptions -fno-threadsafe-statics"
-
-	# Assorted warnings
-	CXXFLAGS="$CXXFLAGS -Wcast-align"
 
 	case "$host" in
 		*-*-mingw*)

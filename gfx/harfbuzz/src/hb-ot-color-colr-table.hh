@@ -87,7 +87,7 @@ struct BaseGlyphRecord
 
 struct COLR
 {
-  enum { tableTag = HB_OT_TAG_COLR };
+  static constexpr hb_tag_t tableTag = HB_OT_TAG_COLR;
 
   bool has_data () const { return numBaseGlyphs; }
 
@@ -104,14 +104,14 @@ struct COLR
     if (count)
     {
       hb_array_t<const LayerRecord> segment_layers = glyph_layers.sub_array (start_offset, *count);
-      *count = segment_layers.len;
-      for (unsigned int i = 0; i < segment_layers.len; i++)
+      *count = segment_layers.length;
+      for (unsigned int i = 0; i < segment_layers.length; i++)
       {
         layers[i].glyph = segment_layers.arrayZ[i].glyphId;
         layers[i].color_index = segment_layers.arrayZ[i].colorIdx;
       }
     }
-    return glyph_layers.len;
+    return glyph_layers.length;
   }
 
   bool sanitize (hb_sanitize_context_t *c) const
@@ -125,9 +125,9 @@ struct COLR
   protected:
   HBUINT16	version;	/* Table version number (starts at 0). */
   HBUINT16	numBaseGlyphs;	/* Number of Base Glyph Records. */
-  LOffsetTo<SortedUnsizedArrayOf<BaseGlyphRecord>, false>
+  LNNOffsetTo<SortedUnsizedArrayOf<BaseGlyphRecord> >
 		baseGlyphsZ;	/* Offset to Base Glyph records. */
-  LOffsetTo<UnsizedArrayOf<LayerRecord>, false>
+  LNNOffsetTo<UnsizedArrayOf<LayerRecord> >
 		layersZ;	/* Offset to Layer Records. */
   HBUINT16	numLayers;	/* Number of Layer Records. */
   public:

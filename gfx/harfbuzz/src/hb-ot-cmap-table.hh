@@ -92,23 +92,23 @@ struct CmapSubtableFormat4
     this->format.set (4);
     this->length.set (get_sub_table_size (segments));
 
-    this->segCountX2.set (segments.len * 2);
-    this->entrySelector.set (MAX (1u, hb_bit_storage (segments.len)) - 1);
+    this->segCountX2.set (segments.length * 2);
+    this->entrySelector.set (MAX (1u, hb_bit_storage (segments.length)) - 1);
     this->searchRange.set (2 * (1u << this->entrySelector));
-    this->rangeShift.set (segments.len * 2 > this->searchRange
-			  ? 2 * segments.len - this->searchRange
+    this->rangeShift.set (segments.length * 2 > this->searchRange
+			  ? 2 * segments.length - this->searchRange
 			  : 0);
 
-    HBUINT16 *end_count = c->allocate_size<HBUINT16> (HBUINT16::static_size * segments.len);
+    HBUINT16 *end_count = c->allocate_size<HBUINT16> (HBUINT16::static_size * segments.length);
     c->allocate_size<HBUINT16> (HBUINT16::static_size); // 2 bytes of padding.
-    HBUINT16 *start_count = c->allocate_size<HBUINT16> (HBUINT16::static_size * segments.len);
-    HBINT16 *id_delta = c->allocate_size<HBINT16> (HBUINT16::static_size * segments.len);
-    HBUINT16 *id_range_offset = c->allocate_size<HBUINT16> (HBUINT16::static_size * segments.len);
+    HBUINT16 *start_count = c->allocate_size<HBUINT16> (HBUINT16::static_size * segments.length);
+    HBINT16 *id_delta = c->allocate_size<HBINT16> (HBUINT16::static_size * segments.length);
+    HBUINT16 *id_range_offset = c->allocate_size<HBUINT16> (HBUINT16::static_size * segments.length);
 
     if (id_range_offset == nullptr)
       return_trace (false);
 
-    for (unsigned int i = 0; i < segments.len; i++)
+    for (unsigned int i = 0; i < segments.length; i++)
     {
       end_count[i].set (segments[i].end_code);
       start_count[i].set (segments[i].start_code);
@@ -157,7 +157,7 @@ struct CmapSubtableFormat4
   static size_t get_sub_table_size (const hb_vector_t<segment_plan> &segments)
   {
     size_t segment_size = 0;
-    for (unsigned int i = 0; i < segments.len; i++)
+    for (unsigned int i = 0; i < segments.length; i++)
     {
       // Parallel array entries
       segment_size +=
@@ -532,7 +532,7 @@ struct CmapSubtableFormat12 : CmapSubtableLongSegmented<CmapSubtableFormat12>
 
   static size_t get_sub_table_size (const hb_vector_t<CmapSubtableLongGroup> &groups)
   {
-    return 16 + 12 * groups.len;
+    return 16 + 12 * groups.length;
   }
 
   static bool create_sub_table_plan (const hb_subset_plan_t *plan,
@@ -560,7 +560,7 @@ struct CmapSubtableFormat12 : CmapSubtableLongSegmented<CmapSubtableFormat12>
     }
 
     DEBUG_MSG(SUBSET, nullptr, "cmap");
-    for (unsigned int i = 0; i < groups->len; i++) {
+    for (unsigned int i = 0; i < groups->length; i++) {
       CmapSubtableLongGroup& group = (*groups)[i];
       DEBUG_MSG(SUBSET, nullptr, "  %d: U+%04X-U+%04X, gid %d-%d", i, (uint32_t) group.startCharCode, (uint32_t) group.endCharCode, (uint32_t) group.glyphID, (uint32_t) group.glyphID + ((uint32_t) group.endCharCode - (uint32_t) group.startCharCode));
     }
@@ -841,7 +841,7 @@ struct EncodingRecord
 
 struct cmap
 {
-  enum { tableTag = HB_OT_TAG_cmap };
+  static constexpr hb_tag_t tableTag = HB_OT_TAG_cmap;
 
   struct subset_plan
   {
@@ -1054,8 +1054,8 @@ struct cmap
 	   done < count && get_glyph_funcZ (get_glyph_data, *first_unicode, first_glyph);
 	   done++)
       {
-	first_unicode = &StructAtOffset<hb_codepoint_t> (first_unicode, unicode_stride);
-	first_glyph = &StructAtOffset<hb_codepoint_t> (first_glyph, glyph_stride);
+	first_unicode = &StructAtOffsetUnaligned<hb_codepoint_t> (first_unicode, unicode_stride);
+	first_glyph = &StructAtOffsetUnaligned<hb_codepoint_t> (first_glyph, glyph_stride);
       }
       return done;
     }

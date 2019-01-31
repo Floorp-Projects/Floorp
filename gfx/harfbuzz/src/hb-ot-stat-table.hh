@@ -225,7 +225,7 @@ struct StatAxisRecord
 
 struct STAT
 {
-  enum { tableTag = HB_OT_TAG_STAT };
+  static constexpr hb_tag_t tableTag = HB_OT_TAG_STAT;
 
   bool sanitize (hb_sanitize_context_t *c) const
   {
@@ -249,7 +249,7 @@ struct STAT
 				 * in the 'fvar' table. In all fonts, must
 				 * be greater than zero if axisValueCount
 				 * is greater than zero. */
-  LOffsetTo<UnsizedArrayOf<StatAxisRecord>, false>
+  LNNOffsetTo<UnsizedArrayOf<StatAxisRecord> >
 		designAxesOffset;
 				/* Offset in bytes from the beginning of
 				 * the STAT table to the start of the design
@@ -257,7 +257,7 @@ struct STAT
 				 * set to zero; if designAxisCount is greater
 				 * than zero, must be greater than zero. */
   HBUINT16	axisValueCount;	/* The number of axis value tables. */
-  LOffsetTo<UnsizedArrayOf<OffsetTo<AxisValue> >, false>
+  LNNOffsetTo<UnsizedArrayOf<OffsetTo<AxisValue> > >
 		offsetToAxisValueOffsets;
 				/* Offset in bytes from the beginning of
 				 * the STAT table to the start of the design
