@@ -221,7 +221,10 @@ namespace dom {
   JS::AutoIdVector valuesIds(cx);
 
   {
-    JS::RootedObject obj(cx, js::CheckedUnwrap(aObj));
+    // cx represents our current Realm, so it makes sense to use it for the
+    // CheckedUnwrapDynamic call.  We do want CheckedUnwrapDynamic, in case
+    // someone is shallow-cloning a Window.
+    JS::RootedObject obj(cx, js::CheckedUnwrapDynamic(aObj, cx));
     if (!obj) {
       js::ReportAccessDenied(cx);
       return;
@@ -258,7 +261,10 @@ namespace dom {
   {
     Maybe<JSAutoRealm> ar;
     if (aTarget) {
-      JS::RootedObject target(cx, js::CheckedUnwrap(aTarget));
+      // Our target could be anything, so we want CheckedUnwrapDynamic here.
+      // "cx" represents the current Realm when we were called from bindings, so
+      // we can just use that.
+      JS::RootedObject target(cx, js::CheckedUnwrapDynamic(aTarget, cx));
       if (!target) {
         js::ReportAccessDenied(cx);
         return;
