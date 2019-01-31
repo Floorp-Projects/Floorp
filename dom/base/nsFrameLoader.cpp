@@ -2509,6 +2509,11 @@ bool nsFrameLoader::TryRemoteBrowser() {
   if (!mRemoteBrowser) {
     return false;
   }
+
+  // We no longer need the remoteType attribute on the frame element.
+  // The remoteType can be queried by asking the message manager instead.
+  ownerElement->UnsetAttr(kNameSpaceID_None, nsGkAtoms::RemoteType, false);
+
   // Now that mRemoteBrowser is set, we can initialize the RenderFrame
   mRemoteBrowser->InitRendering();
 

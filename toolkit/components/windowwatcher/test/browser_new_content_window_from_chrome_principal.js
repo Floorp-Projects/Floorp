@@ -21,6 +21,8 @@ add_task(async function test_chrome_opens_window() {
 
   let win = await newWinPromise;
   let browser = win.gBrowser.selectedBrowser;
+  Assert.equal(browser.remoteType, "web",
+               "Should have the default content remote type.");
 
   await ContentTask.spawn(browser, null, async function() {
     Assert.ok(!content.document.nodePrincipal.isSystemPrincipal,
