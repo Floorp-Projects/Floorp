@@ -1289,6 +1289,7 @@ nsresult nsHttpConnection::OnHeadersAvailable(nsAHttpTransaction *trans,
   // it was successful.  If so, we have to reset the transaction and step-up
   // the socket connection if using SSL. Finally, we have to wake up the
   // socket write request.
+  bool itWasProxyConnect = !!mProxyConnectStream;
   if (mProxyConnectStream) {
     MOZ_ASSERT(mUsingSpdyVersion == SpdyVersion::NONE,
                "SPDY NPN Complete while using proxy connect stream");
@@ -1347,8 +1348,8 @@ nsresult nsHttpConnection::OnHeadersAvailable(nsAHttpTransaction *trans,
   // some proxies expect to see auth response on persistent connection.
   // Also allow persistent conn for h2, as we don't want to waste connections
   // for multiplexed upgrades.
-  if (hasUpgradeReq && responseStatus != 401 && responseStatus != 407 &&
-      !mSpdySession) {
+  if (!itWasProxyConnect && hasUpgradeReq && responseStatus != 401 &&
+      responseStatus != 407 && !mSpdySession) {
     LOG(("HTTP Upgrade in play - disable keepalive for http/1.x\n"));
     DontReuse();
   }
