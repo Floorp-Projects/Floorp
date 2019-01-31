@@ -314,6 +314,10 @@ class UrlbarView {
         secondary.classList.add("urlbarView-action");
         secondary.textContent = bundle.GetStringFromName("switchToTab2");
         break;
+      case UrlbarUtils.RESULT_TYPE.REMOTE_TAB:
+        secondary.classList.add("urlbarView-action");
+        secondary.textContent = result.payload.device;
+        break;
       case UrlbarUtils.RESULT_TYPE.SEARCH:
         secondary.classList.add("urlbarView-action");
         secondary.textContent =
