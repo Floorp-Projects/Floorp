@@ -6,6 +6,9 @@
         <meta name="viewport" content="width=device-width">
         <script src="/resources/testharness.js"></script>
         <script src="/resources/testharnessreport.js"></script>
+        <script src="/resources/testdriver.js"></script>
+        <script src="/resources/testdriver-actions.js"></script>
+        <script src="/resources/testdriver-vendor.js"></script>
         <script src="pointerevent_support.js"></script>
     </head>
     <body onload="run()">
@@ -39,13 +42,19 @@
                 on_event(target0, "pointerout", function (event) {
                     pointeroutCounter++;
 
-                    setTimeout(function() {
+                    step_timeout(function() {
                         test(function() {
                             assert_true(pointeroutCounter == 1, "pointerout received just once")
                         }, "pointerout received just once");
                         done();
                     }, 5000);
                 });
+
+                // Inject mouse inputs.
+                new test_driver.Actions()
+                    .pointerMove(0, 0, {origin: target0})
+                    .pointerMove(0, 0)
+                    .send();
             }
         </script>
         <h1>Pointer Events pointerout received once test</h1>
