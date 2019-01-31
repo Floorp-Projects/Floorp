@@ -4924,8 +4924,7 @@ OffThreadPromiseTask::~OffThreadPromiseTask() {
   MOZ_ASSERT(state.initialized());
 
   if (registered_) {
-    LockGuard<Mutex> lock(state.mutex_);
-    state.live_.remove(this);
+    unregister(state);
   }
 }
 
@@ -4947,12 +4946,25 @@ bool OffThreadPromiseTask::init(JSContext* cx) {
   return true;
 }
 
+void OffThreadPromiseTask::unregister(OffThreadPromiseRuntimeState& state) {
+  MOZ_ASSERT(registered_);
+  LockGuard<Mutex> lock(state.mutex_);
+  state.live_.remove(this);
+  registered_ = false;
+}
+
 void OffThreadPromiseTask::run(JSContext* cx,
                                MaybeShuttingDown maybeShuttingDown) {
   MOZ_ASSERT(cx->runtime() == runtime_);
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime_));
   MOZ_ASSERT(registered_);
-  MOZ_ASSERT(runtime_->offThreadPromiseState.ref().initialized());
+
+  // Remove this task from live_ before calling `resolve`, so that if `resolve`
+  // itself drains the queue reentrantly, the queue will not think this task is
+  // yet to be queued and block waiting for it.
+  OffThreadPromiseRuntimeState& state = runtime_->offThreadPromiseState.ref();
+  MOZ_ASSERT(state.initialized());
+  unregister(state);
 
   if (maybeShuttingDown == JS::Dispatchable::NotShuttingDown) {
     // We can't leave a pending exception when returning to the caller so do
@@ -5058,8 +5070,8 @@ void OffThreadPromiseRuntimeState::internalDrain(JSContext* cx) {
   MOZ_ASSERT(usingInternalDispatchQueue());
   MOZ_ASSERT(!internalDispatchQueueClosed_);
 
-  while (true) {
-    DispatchableFifo dispatchQueue;
+  for (;;) {
+    JS::Dispatchable* d;
     {
       LockGuard<Mutex> lock(mutex_);
 
@@ -5068,18 +5080,17 @@ void OffThreadPromiseRuntimeState::internalDrain(JSContext* cx) {
         return;
       }
 
+      // There are extant live OffThreadPromiseTasks. If none are in the queue,
+      // block until one of them finishes and enqueues a dispatchable.
       while (internalDispatchQueue_.empty()) {
         internalDispatchQueueAppended_.wait(lock);
       }
 
-      mozilla::Swap(dispatchQueue, internalDispatchQueue_);
-      MOZ_ASSERT(internalDispatchQueue_.empty());
+      d = internalDispatchQueue_.popCopyFront();
     }
 
     // Don't call run() with mutex_ held to avoid deadlock.
-    for (JS::Dispatchable* d : dispatchQueue) {
-      d->run(cx, JS::Dispatchable::NotShuttingDown);
-    }
+    d->run(cx, JS::Dispatchable::NotShuttingDown);
   }
 }
 
