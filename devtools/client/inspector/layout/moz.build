@@ -12,3 +12,6 @@ DIRS += [
 DevToolsModules(
     'layout.js',
 )
+
+with Files('**'):
+    BUG_COMPONENT = ('DevTools', 'Inspector: Layout')
