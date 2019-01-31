@@ -581,9 +581,12 @@ void CodeGeneratorX86::visitOutOfLineTruncate(OutOfLineTruncate* ool) {
     // integer, by adding/subtracting 2^32 and then trying to convert to int32.
     // This has to be an exact conversion, as otherwise the truncation works
     // incorrectly on the modified value.
-    masm.zeroDouble(ScratchDoubleReg);
-    masm.vucomisd(ScratchDoubleReg, input);
-    masm.j(Assembler::Parity, &fail);
+    {
+      ScratchDoubleScope fpscratch(masm);
+      masm.zeroDouble(fpscratch);
+      masm.vucomisd(fpscratch, input);
+      masm.j(Assembler::Parity, &fail);
+    }
 
     {
       Label positive;
@@ -600,9 +603,10 @@ void CodeGeneratorX86::visitOutOfLineTruncate(OutOfLineTruncate* ool) {
 
     masm.addDouble(input, temp);
     masm.vcvttsd2si(temp, output);
-    masm.vcvtsi2sd(output, ScratchDoubleReg, ScratchDoubleReg);
+    ScratchDoubleScope fpscratch(masm);
+    masm.vcvtsi2sd(output, fpscratch, fpscratch);
 
-    masm.vucomisd(ScratchDoubleReg, temp);
+    masm.vucomisd(fpscratch, temp);
     masm.j(Assembler::Parity, &fail);
     masm.j(Assembler::Equal, ool->rejoin());
   }
@@ -667,9 +671,12 @@ void CodeGeneratorX86::visitOutOfLineTruncateFloat32(
     // integer, by adding/subtracting 2^32 and then trying to convert to int32.
     // This has to be an exact conversion, as otherwise the truncation works
     // incorrectly on the modified value.
-    masm.zeroFloat32(ScratchFloat32Reg);
-    masm.vucomiss(ScratchFloat32Reg, input);
-    masm.j(Assembler::Parity, &fail);
+    {
+      ScratchFloat32Scope fpscratch(masm);
+      masm.zeroFloat32(fpscratch);
+      masm.vucomiss(fpscratch, input);
+      masm.j(Assembler::Parity, &fail);
+    }
 
     {
       Label positive;
@@ -686,9 +693,10 @@ void CodeGeneratorX86::visitOutOfLineTruncateFloat32(
 
     masm.addFloat32(input, temp);
     masm.vcvttss2si(temp, output);
-    masm.vcvtsi2ss(output, ScratchFloat32Reg, ScratchFloat32Reg);
+    ScratchFloat32Scope fpscratch(masm);
+    masm.vcvtsi2ss(output, fpscratch, fpscratch);
 
-    masm.vucomiss(ScratchFloat32Reg, temp);
+    masm.vucomiss(fpscratch, temp);
     masm.j(Assembler::Parity, &fail);
     masm.j(Assembler::Equal, ool->rejoin());
   }
