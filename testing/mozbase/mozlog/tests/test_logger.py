@@ -210,15 +210,15 @@ class TestStructuredLogging(unittest.TestCase):
 
         # Sleeps prevent listener from receiving entire message in a single call
         # to recv in order to test reconstruction of partial messages.
-        sock.sendall(message_string[:8].encode())
+        sock.sendall(message_string[:8])
         time.sleep(.01)
-        sock.sendall(message_string[8:32].encode())
+        sock.sendall(message_string[8:32])
         time.sleep(.01)
-        sock.sendall(message_string[32:64].encode())
+        sock.sendall(message_string[32:64])
         time.sleep(.01)
-        sock.sendall(message_string[64:128].encode())
+        sock.sendall(message_string[64:128])
         time.sleep(.01)
-        sock.sendall(message_string[128:].encode())
+        sock.sendall(message_string[128:])
 
         server_thread.join()
 

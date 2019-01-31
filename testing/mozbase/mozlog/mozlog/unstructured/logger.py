@@ -150,7 +150,7 @@ class MozFormatter(Formatter):
         # this protected member is used to define the format
         # used by the base Formatter's method
         self._fmt = fmt
-        return Formatter(fmt=fmt).format(record)
+        return Formatter.format(self, record)
 
 
 def getLogger(name, handler=None):
