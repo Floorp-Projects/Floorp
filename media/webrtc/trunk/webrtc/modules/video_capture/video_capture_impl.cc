@@ -152,8 +152,6 @@ int32_t VideoCaptureImpl::IncomingFrame(uint8_t* videoFrame,
     return -1;
   }
 
-  int stride_y = width;
-  int stride_uv = (width + 1) / 2;
   int target_width = width;
   int target_height = height;
 
@@ -166,6 +164,9 @@ int32_t VideoCaptureImpl::IncomingFrame(uint8_t* videoFrame,
     target_width = abs(height);
     target_height = width;
   }
+
+  int stride_y = target_width;
+  int stride_uv = (target_width + 1) / 2;
 
   // Setting absolute height (in case it was negative).
   // In Windows, the image starts bottom left, instead of top left.
