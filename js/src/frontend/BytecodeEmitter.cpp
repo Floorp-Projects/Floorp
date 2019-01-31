@@ -37,7 +37,8 @@
 #include "frontend/ForOfEmitter.h"
 #include "frontend/ForOfLoopControl.h"
 #include "frontend/IfEmitter.h"
-#include "frontend/LabelEmitter.h"  // LabelEmitter
+#include "frontend/LabelEmitter.h"         // LabelEmitter
+#include "frontend/LexicalScopeEmitter.h"  // LexicalScopeEmitter
 #include "frontend/ModuleSharedContext.h"
 #include "frontend/NameOpEmitter.h"
 #include "frontend/ObjectEmitter.h"  // PropertyEmitter, ObjectEmitter, ClassEmitter
@@ -4733,11 +4734,23 @@ bool BytecodeEmitter::emitLexicalScopeBody(
 // the comment on emitSwitch.
 MOZ_NEVER_INLINE bool BytecodeEmitter::emitLexicalScope(
     LexicalScopeNode* lexicalScope) {
-  TDZCheckCache tdzCache(this);
+  LexicalScopeEmitter lse(this);
 
   ParseNode* body = lexicalScope->scopeBody();
   if (lexicalScope->isEmptyScope()) {
-    return emitLexicalScopeBody(body);
+    if (!lse.emitEmptyScope()) {
+      return false;
+    }
+
+    if (!emitLexicalScopeBody(body)) {
+      return false;
+    }
+
+    if (!lse.emitEnd()) {
+      return false;
+    }
+
+    return true;
   }
 
   // We are about to emit some bytecode for what the spec calls "declaration
@@ -4750,7 +4763,6 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitLexicalScope(
     }
   }
 
-  EmitterScope emitterScope(this);
   ScopeKind kind;
   if (body->isKind(ParseNodeKind::Catch)) {
     BinaryNode* catchNode = &body->as<BinaryNode>();
@@ -4762,7 +4774,7 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitLexicalScope(
     kind = ScopeKind::Lexical;
   }
 
-  if (!emitterScope.enterLexical(this, kind, lexicalScope->scopeBindings())) {
+  if (!lse.emitScope(kind, lexicalScope->scopeBindings())) {
     return false;
   }
 
@@ -4770,7 +4782,7 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitLexicalScope(
     // for loops need to emit {FRESHEN,RECREATE}LEXICALENV if there are
     // lexical declarations in the head. Signal this by passing a
     // non-nullptr lexical scope.
-    if (!emitFor(&body->as<ForNode>(), &emitterScope)) {
+    if (!emitFor(&body->as<ForNode>(), &lse.emitterScope())) {
       return false;
     }
   } else {
@@ -4779,7 +4791,10 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitLexicalScope(
     }
   }
 
-  return emitterScope.leave(this);
+  if (!lse.emitEnd()) {
+    return false;
+  }
+  return true;
 }
 
 bool BytecodeEmitter::emitWith(BinaryNode* withNode) {
