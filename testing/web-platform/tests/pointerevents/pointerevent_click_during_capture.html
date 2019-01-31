@@ -7,6 +7,9 @@
         <script src="/resources/testharness.js"></script>
         <script src="/resources/testharnessreport.js"></script>
         <script src="pointerevent_support.js"></script>
+        <script src="/resources/testdriver.js"></script>
+        <script src="/resources/testdriver-actions.js"></script>
+        <script src="/resources/testdriver-vendor.js"></script>
         <style>
         .box {
           margin: 10px;
@@ -35,13 +38,13 @@
               phase = PhaseEnum.Phase1;
               receivedEvents = [];
             }
-        
+
             function run() {
                 var test_pointerEvent = setup_pointerevent_test("click target during capture", ['mouse']);
                 var grey = document.getElementById('grey');
                 var blue = document.getElementById('blue');
                 var green = document.getElementById('green');
-                
+
                 ['gotpointercapture', 'lostpointercapture', 'pointerdown', 'pointerup', 'click'].forEach(function(eventName) {
                   [grey, blue, green].forEach(function(target) {
                     target.addEventListener(eventName, function(event) {
@@ -49,14 +52,14 @@
                         receivedEvents.push(event.type + '@' + target.id);
                         if (phase == PhaseEnum.Phase1 && target == green && event.type == 'click') {
                             test(function() {
-                              assert_equals(receivedEvents.join(','), 'pointerdown@green,pointerup@green,click@green', 'An element should only receive click when it is the first common ancestor of pointerdown and pointerup targets'); 
+                              assert_equals(receivedEvents.join(','), 'pointerdown@green,pointerup@green,click@green', 'An element should only receive click when it is the first common ancestor of pointerdown and pointerup targets');
                             }, "Click target when pointerup/down targeted at the same element with no capture");
                             phase = PhaseEnum.Phase2;
                             receivedEvents = [];
                         }
                         if (phase == PhaseEnum.Phase2 && target == grey && event.type == 'click') {
                             test(function() {
-                              assert_equals(receivedEvents.join(','), 'pointerdown@blue,pointerup@green,click@grey', 'An element should only receive click when it is the first common ancestor of pointerdown and pointerup targets'); 
+                              assert_equals(receivedEvents.join(','), 'pointerdown@blue,pointerup@green,click@grey', 'An element should only receive click when it is the first common ancestor of pointerdown and pointerup targets');
                             }, "Click target when pointerup/down targeted at different elements with no capture");
                             phase = PhaseEnum.Phase1WithCapturing;
                             receivedEvents = [];
@@ -64,13 +67,13 @@
                         if (target == blue && event.type == 'lostpointercapture') {
                           if (phase == PhaseEnum.Phase1WithCapturing) {
                             test_pointerEvent.step(function() {
-                              assert_equals(receivedEvents.join(','), 'pointerdown@green,gotpointercapture@blue,pointerup@blue,click@grey,lostpointercapture@blue', 'An element should only receive click when it is the first common ancestor of pointerdown and pointerup targets'); 
+                              assert_equals(receivedEvents.join(','), 'pointerdown@green,gotpointercapture@blue,pointerup@blue,click@grey,lostpointercapture@blue', 'An element should only receive click when it is the first common ancestor of pointerdown and pointerup targets');
                             });
                             phase = PhaseEnum.Phase2WithCapturing;
                             receivedEvents = [];
                           } else if (phase == PhaseEnum.Phase2WithCapturing) {
                             test_pointerEvent.step(function() {
-                              assert_equals(receivedEvents.join(','), 'pointerdown@blue,gotpointercapture@blue,pointerup@blue,click@blue,lostpointercapture@blue', 'An element should only receive click when it is the first common ancestor of pointerdown and pointerup targets'); 
+                              assert_equals(receivedEvents.join(','), 'pointerdown@blue,gotpointercapture@blue,pointerup@blue,click@blue,lostpointercapture@blue', 'An element should only receive click when it is the first common ancestor of pointerdown and pointerup targets');
                             });
                             test_pointerEvent.done();
                           }
@@ -83,6 +86,27 @@
                     });
                   });
                 });
+
+                // Inject mouse inputs.
+                var green = document.getElementById('green');
+                var blue = document.getElementById('blue');
+                new test_driver.Actions()
+                    .pointerMove(0, 0, {origin: green})
+                    .pointerDown()
+                    .pointerUp()
+                    .pointerMove(0, 0, {origin: blue})
+                    .pointerDown()
+                    .pointerMove(0, 0, {origin: green})
+                    .pointerUp()
+                    .pointerMove(0, 0, {origin: green})
+                    .pointerDown()
+                    .pointerUp()
+                    .pointerMove(0, 0, {origin: blue})
+                    .pointerDown()
+                    .pointerMove(0, 0, {origin: green})
+                    .pointerUp()
+                    .send();
+
             }
         </script>
     </head>
