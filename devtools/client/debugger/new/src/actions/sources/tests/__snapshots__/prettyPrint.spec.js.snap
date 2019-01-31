@@ -15,7 +15,6 @@ Object {
   "sourceMapURL": undefined,
   "text": "undefined
 ",
-  "thread": "",
   "url": "http://localhost:8000/examples/base.js:formatted",
 }
 `;

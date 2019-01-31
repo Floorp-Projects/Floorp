@@ -2,9 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-.frames [role="list"]l {
+.frames [role="list"] {
   list-style: none;
-  margin-top: 4px;
+  margin: 0;
   padding: 0;
 }
 
@@ -106,6 +106,7 @@
   mask-size: 100%;
   display: inline-block;
   width: 12px;
+  margin-inline-start: 4px;
 }
 
 :root.theme-dark .annotation-logo:not(.angular) svg path {

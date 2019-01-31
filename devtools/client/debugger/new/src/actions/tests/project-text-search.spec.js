@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+// @flow
+
 import {
   actions,
   createStore,
@@ -17,9 +19,9 @@ const {
 } = selectors;
 
 const threadClient = {
-  sourceContents: function(sourceId) {
+  sourceContents: function({ source }) {
     return new Promise((resolve, reject) => {
-      switch (sourceId) {
+      switch (source) {
         case "foo1":
           resolve({
             source: "function foo1() {\n  const foo = 5; return foo;\n}",
@@ -46,7 +48,7 @@ const threadClient = {
           break;
       }
 
-      reject(`unknown source: ${sourceId}`);
+      reject(`unknown source: ${source}`);
     });
   }
 };
@@ -64,11 +66,11 @@ describe("project text search", () => {
   it("should search all the loaded sources based on the query", async () => {
     const { dispatch, getState } = createStore(threadClient);
     const mockQuery = "foo";
-    const source1 = makeSource("foo1");
-    const source2 = makeSource("foo2");
+    const csr1 = makeSource("foo1");
+    const csr2 = makeSource("foo2");
 
-    await dispatch(actions.newSource(source1));
-    await dispatch(actions.newSource(source2));
+    await dispatch(actions.newSource(csr1));
+    await dispatch(actions.newSource(csr2));
 
     await dispatch(actions.searchSources(mockQuery));
 
@@ -77,22 +79,22 @@ describe("project text search", () => {
   });
 
   it("should ignore sources with minified versions", async () => {
-    const source1 = makeSource("bar", { sourceMapURL: "bar:formatted" });
-    const source2 = makeSource("bar:formatted");
+    const csr1 = makeSource("bar", { sourceMapURL: "bar:formatted" });
+    const csr2 = makeSource("bar:formatted");
 
     const mockMaps = {
       getOriginalSourceText: async () => ({
         source: "function bla(x, y) {\n const bar = 4; return 2;\n}",
         contentType: "text/javascript"
       }),
-      getOriginalURLs: async () => [source2.url]
+      getOriginalURLs: async () => [csr2.source.url]
     };
 
     const { dispatch, getState } = createStore(threadClient, {}, mockMaps);
     const mockQuery = "bla";
 
-    await dispatch(actions.newSource(source1));
-    await dispatch(actions.newSource(source2));
+    await dispatch(actions.newSource(csr1));
+    await dispatch(actions.newSource(csr2));
 
     await dispatch(actions.searchSources(mockQuery));
 
@@ -103,12 +105,17 @@ describe("project text search", () => {
   it("should search a specific source", async () => {
     const { dispatch, getState } = createStore(threadClient);
 
-    await dispatch(actions.newSource(makeSource("bar")));
-    await dispatch(actions.loadSourceText({ id: "bar" }));
+    const csr = makeSource("bar");
+    await dispatch(actions.newSource(csr));
+    await dispatch(actions.loadSourceText(csr.source));
 
     dispatch(actions.addSearchQuery("bla"));
 
-    const sourceId = getSource(getState(), "bar").id;
+    const barSource = getSource(getState(), "bar");
+    if (!barSource) {
+      throw new Error("no barSource");
+    }
+    const sourceId = barSource.id;
 
     await dispatch(actions.searchSource(sourceId, "bla"), "bla");
 

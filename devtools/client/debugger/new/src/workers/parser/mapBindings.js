@@ -4,6 +4,7 @@
 
 // @flow
 
+import { replaceNode } from "./utils/ast";
 import { isTopLevel } from "./utils/helpers";
 
 import generate from "@babel/generator";
@@ -73,20 +74,6 @@ function globalizeAssignment(node, bindings) {
     getAssignmentTarget(node.left, bindings),
     node.right
   );
-}
-
-function replaceNode(ancestors, node) {
-  const parent = ancestors[ancestors.length - 1];
-
-  if (typeof parent.index === "number") {
-    if (Array.isArray(node)) {
-      parent.node[parent.key].splice(parent.index, 1, ...node);
-    } else {
-      parent.node[parent.key][parent.index] = node;
-    }
-  } else {
-    parent.node[parent.key] = node;
-  }
 }
 
 export default function mapExpressionBindings(

@@ -177,6 +177,12 @@
     }
   }
 
+  let shutdownTopic =
+    SpecialPowers.getBoolPref("dom.serviceWorkers.parent_intercept", false) ?
+      "specialpowers-service-worker-shutdown" :
+      "service-worker-shutdown";
+  SpecialPowers.registerObservers("service-worker-shutdown");
+
   function setShutdownObserver(expectingEvent) {
     info("Setting shutdown observer: expectingEvent=" + expectingEvent);
     return function(ctx) {
@@ -185,16 +191,16 @@
       ctx.observer_promise = new Promise(function(res, rej) {
         ctx.observer = {
           observe: function(subject, topic, data) {
-            ok((topic == "service-worker-shutdown") && expectingEvent, "Service worker was terminated.");
+            ok((topic == shutdownTopic) && expectingEvent, "Service worker was terminated.");
             this.remove(ctx);
           },
           remove: function(ctx) {
-            SpecialPowers.removeObserver(this, "service-worker-shutdown");
+            SpecialPowers.removeObserver(this, shutdownTopic);
             ctx.observer = null;
             res(ctx);
           }
         }
-        SpecialPowers.addObserver(ctx.observer, "service-worker-shutdown");
+        SpecialPowers.addObserver(ctx.observer, shutdownTopic);
       });
 
       return ctx;

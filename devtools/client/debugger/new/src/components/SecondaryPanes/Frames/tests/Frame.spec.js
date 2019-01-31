@@ -76,7 +76,7 @@ describe("Frame", () => {
     expect(component).toMatchSnapshot();
   });
 
-  it("filename only", () => {
+  fit("filename only", () => {
     const frame = {
       id: 1,
       source: {
@@ -90,7 +90,7 @@ describe("Frame", () => {
 
     const props = frameProperties(frame, null);
     const component = mount(<Frame {...props} />);
-    expect(component.text()).toBe("renderFoo foo-view.js:10");
+    expect(component.text()).toBe("\trenderFoo foo-view.js:10\n");
   });
 
   it("full URL", () => {

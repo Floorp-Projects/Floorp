@@ -5,7 +5,11 @@
 // @flow
 
 import { PROMISE } from "../utils/middleware/promise";
-import { getGeneratedSource, getSource } from "../../selectors";
+import {
+  getGeneratedSource,
+  getSource,
+  getSourceActors
+} from "../../selectors";
 import * as parser from "../../workers/parser";
 import { isLoaded, isOriginal } from "../../utils/source";
 import { Telemetry } from "devtools-modules";
@@ -21,13 +25,18 @@ const requests = new Map();
 const loadSourceHistogram = "DEVTOOLS_DEBUGGER_LOAD_SOURCE_MS";
 const telemetry = new Telemetry();
 
-async function loadSource(source: Source, { sourceMaps, client }) {
+async function loadSource(state, source: Source, { sourceMaps, client }) {
   const { id } = source;
   if (isOriginal(source)) {
     return sourceMaps.getOriginalSourceText(source);
   }
 
-  const response = await client.sourceContents(id);
+  const sourceActors = getSourceActors(state, id);
+  if (!sourceActors.length) {
+    throw new Error("No source actor for loadSource");
+  }
+
+  const response = await client.sourceContents(sourceActors[0]);
   telemetry.finish(loadSourceHistogram, source);
 
   return {
@@ -65,7 +74,7 @@ export function loadSourceText(source: ?Source) {
       await dispatch({
         type: "LOAD_SOURCE_TEXT",
         sourceId: source.id,
-        [PROMISE]: loadSource(source, { sourceMaps, client })
+        [PROMISE]: loadSource(getState(), source, { sourceMaps, client })
       });
     } catch (e) {
       deferred.resolve();

@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+// @flow
+
 import {
   containsPosition,
   containsLocation,
@@ -19,6 +21,14 @@ function getTestLoc() {
       column: 10
     }
   };
+}
+
+// AstPosition.column is typed as a number, but many parts of this test set it
+// to undefined. Using zero instead causes test failures, and allowing it to be
+// undefined causes many flow errors in code manipulating AstPosition.
+// Fake a coercion of undefined to number as a workaround for now.
+function undefinedColumn(): number {
+  return (undefined: any);
 }
 
 function startPos(lineOffset, columnOffset) {
@@ -40,14 +50,16 @@ function endPos(lineOffset, columnOffset) {
 function startLine(lineOffset = 0) {
   const { start } = getTestLoc();
   return {
-    line: start.line + lineOffset
+    line: start.line + lineOffset,
+    column: undefinedColumn()
   };
 }
 
 function endLine(lineOffset = 0) {
   const { end } = getTestLoc();
   return {
-    line: end.line + lineOffset
+    line: end.line + lineOffset,
+    column: undefinedColumn()
   };
 }
 
@@ -97,7 +109,7 @@ describe("containsPosition", () => {
   describe("location without the column criterion", () => {
     it("should contain position on the same start line", () => {
       const loc = getTestLoc();
-      loc.start.column = undefined;
+      loc.start.column = undefinedColumn();
       const pos = {
         line: loc.start.line,
         column: 1
@@ -107,7 +119,7 @@ describe("containsPosition", () => {
 
     it("should contain position on the same end line", () => {
       const loc = getTestLoc();
-      loc.end.column = undefined;
+      loc.end.column = undefinedColumn();
       const pos = {
         line: loc.end.line,
         column: 1
@@ -119,14 +131,14 @@ describe("containsPosition", () => {
   describe("location and postion both without the column criterion", () => {
     it("should contain position on the same start line", () => {
       const loc = getTestLoc();
-      loc.start.column = undefined;
+      loc.start.column = undefinedColumn();
       const pos = startLine();
       expect(containsPosition(loc, pos)).toEqual(true);
     });
 
     it("should contain position on the same end line", () => {
       const loc = getTestLoc();
-      loc.end.column = undefined;
+      loc.end.column = undefinedColumn();
       const pos = endLine();
       expect(containsPosition(loc, pos)).toEqual(true);
     });
@@ -196,14 +208,14 @@ describe("containsLocation", () => {
   describe("location A without the column criterion", () => {
     it("should contain location on the same start line", () => {
       const locA = getTestLoc();
-      locA.start.column = undefined;
+      locA.start.column = undefinedColumn();
       const locB = getTestLoc();
       expect(containsLocation(locA, locB)).toEqual(true);
     });
 
     it("should contain location on the same end line", () => {
       const locA = getTestLoc();
-      locA.end.column = undefined;
+      locA.end.column = undefinedColumn();
       const locB = getTestLoc();
       expect(containsLocation(locA, locB)).toEqual(true);
     });
@@ -213,14 +225,14 @@ describe("containsLocation", () => {
     it("should contain location on the same start line", () => {
       const locA = getTestLoc();
       const locB = getTestLoc();
-      locB.start.column = undefined;
+      locB.start.column = undefinedColumn();
       expect(containsLocation(locA, locB)).toEqual(true);
     });
 
     it("should contain location on the same end line", () => {
       const locA = getTestLoc();
       const locB = getTestLoc();
-      locB.end.column = undefined;
+      locB.end.column = undefinedColumn();
       expect(containsLocation(locA, locB)).toEqual(true);
     });
   });
@@ -229,16 +241,16 @@ describe("containsLocation", () => {
     it("should contain location on the same start line", () => {
       const locA = getTestLoc();
       const locB = getTestLoc();
-      locA.start.column = undefined;
-      locB.start.column = undefined;
+      locA.start.column = undefinedColumn();
+      locB.start.column = undefinedColumn();
       expect(containsLocation(locA, locB)).toEqual(true);
     });
 
     it("should contain location on the same end line", () => {
       const locA = getTestLoc();
       const locB = getTestLoc();
-      locA.end.column = undefined;
-      locB.end.column = undefined;
+      locA.end.column = undefinedColumn();
+      locB.end.column = undefinedColumn();
       expect(containsLocation(locA, locB)).toEqual(true);
     });
   });
@@ -273,14 +285,14 @@ describe("nodeContainsPosition", () => {
   describe("node without the column criterion", () => {
     it("should contain position on the same start line", () => {
       const loc = getTestLoc();
-      loc.start.column = undefined;
+      loc.start.column = undefinedColumn();
       const pos = startPos(0, -1);
       expect(nodeContainsPosition({ loc }, pos)).toEqual(true);
     });
 
     it("should contain position on the same end line", () => {
       const loc = getTestLoc();
-      loc.end.column = undefined;
+      loc.end.column = undefinedColumn();
       const pos = startPos(0, 1);
       expect(nodeContainsPosition({ loc }, pos)).toEqual(true);
     });
@@ -297,14 +309,14 @@ describe("nodeContainsPosition", () => {
   describe("node and position both without the column criteria", () => {
     it("should contain position on the same start line", () => {
       const loc = getTestLoc();
-      loc.start.column = undefined;
+      loc.start.column = undefinedColumn();
       const pos = startLine();
       expect(nodeContainsPosition({ loc }, pos)).toEqual(true);
     });
 
     it("should contain position on the same end line", () => {
       const loc = getTestLoc();
-      loc.end.column = undefined;
+      loc.end.column = undefinedColumn();
       const pos = endLine();
       expect(nodeContainsPosition({ loc }, pos)).toEqual(true);
     });

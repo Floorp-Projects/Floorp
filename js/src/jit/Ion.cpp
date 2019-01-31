@@ -378,13 +378,12 @@ JitRealm::JitRealm() : stubCodes_(nullptr), stringsCanBeInNursery(false) {}
 
 JitRealm::~JitRealm() { js_delete(stubCodes_); }
 
-bool JitRealm::initialize(JSContext* cx) {
+bool JitRealm::initialize(JSContext* cx, bool zoneHasNurseryStrings) {
   stubCodes_ = cx->new_<ICStubCodeMap>(cx->zone());
   if (!stubCodes_) {
     return false;
   }
-
-  stringsCanBeInNursery = cx->nursery().canAllocateStrings();
+  setStringsCanBeInNursery(zoneHasNurseryStrings);
 
   return true;
 }

@@ -4,14 +4,7 @@
 
 // @flow
 
-import type {
-  Frame,
-  Scope,
-  Why,
-  Worker,
-  WorkerList,
-  MainThread
-} from "../../types";
+import type { Frame, Scope, Why, WorkerList, MainThread } from "../../types";
 import type { State } from "../../reducers/types";
 import type { MatchedLocations } from "../../reducers/file-search";
 import type { TreeNode } from "../../utils/sources-tree/types";
@@ -23,6 +16,7 @@ import type { UIAction } from "./UIAction";
 import type { PauseAction } from "./PauseAction";
 import type { ASTAction } from "./ASTAction";
 import { clientCommands } from "../../client/firefox";
+import type { Panel } from "../../client/firefox/types";
 
 /**
  * Flow types
@@ -41,10 +35,7 @@ export type ThunkArgs = {
   getState: () => State,
   client: typeof clientCommands,
   sourceMaps: any,
-  openLink: (url: string) => void,
-  openWorkerToolbox: (worker: Worker) => void,
-  openElementInInspector: (grip: Object) => void,
-  onReload: () => void
+  panel: Panel
 };
 
 export type Thunk = ThunkArgs => any;
@@ -62,8 +53,7 @@ type AddTabAction = {|
   +url: string,
   +framework?: string,
   +isOriginal?: boolean,
-  +sourceId?: string,
-  +thread: string
+  +sourceId?: string
 |};
 
 type UpdateTabAction = {|
@@ -71,8 +61,7 @@ type UpdateTabAction = {|
   +url: string,
   +framework?: string,
   +isOriginal?: boolean,
-  +sourceId?: string,
-  +thread: string
+  +sourceId?: string
 |};
 
 type ReplayAction =
@@ -150,7 +139,8 @@ export type QuickOpenAction =
 export type DebugeeAction =
   | {|
       +type: "SET_WORKERS",
-      +workers: WorkerList
+      +workers: WorkerList,
+      +mainThread: string
     |}
   | {|
       +type: "SELECT_THREAD",

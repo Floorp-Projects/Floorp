@@ -17,9 +17,14 @@ import {
   getSelectedSource,
   getBreakpointAtLocation,
   getConditionalPanelLocation,
-  getBreakpointsForSource
+  getBreakpointsForSource,
+  getSourceActors
 } from "../../selectors";
-import { assertBreakpoint, createXHRBreakpoint } from "../../utils/breakpoint";
+import {
+  assertBreakpoint,
+  createXHRBreakpoint,
+  makeSourceActorLocation
+} from "../../utils/breakpoint";
 import {
   addBreakpoint,
   addHiddenBreakpoint,
@@ -42,6 +47,22 @@ import type {
 } from "../../types";
 
 import { recordEvent } from "../../utils/telemetry";
+
+async function removeBreakpointsPromise(client, state, breakpoint) {
+  const sourceActors = getSourceActors(
+    state,
+    breakpoint.generatedLocation.sourceId
+  );
+  for (const sourceActor of sourceActors) {
+    const sourceActorLocation = makeSourceActorLocation(
+      sourceActor,
+      breakpoint.generatedLocation
+    );
+    if (client.getBreakpointByLocation(sourceActorLocation)) {
+      await client.removeBreakpoint(sourceActorLocation);
+    }
+  }
+}
 
 /**
  * Remove a single breakpoint
@@ -70,7 +91,7 @@ export function removeBreakpoint(breakpoint: Breakpoint) {
       type: "REMOVE_BREAKPOINT",
       breakpoint,
       disabled: false,
-      [PROMISE]: client.removeBreakpoint(breakpoint.generatedLocation)
+      [PROMISE]: removeBreakpointsPromise(client, getState(), breakpoint)
     });
   };
 }
@@ -87,7 +108,8 @@ export function disableBreakpoint(breakpoint: Breakpoint) {
       return;
     }
 
-    await client.removeBreakpoint(breakpoint.generatedLocation);
+    await removeBreakpointsPromise(client, getState(), breakpoint);
+
     const newBreakpoint: Breakpoint = { ...breakpoint, disabled: true };
 
     return dispatch(
@@ -144,7 +166,7 @@ export function toggleAllBreakpoints(shouldDisableBreakpoints: boolean) {
 
     for (const breakpoint of breakpoints) {
       if (shouldDisableBreakpoints) {
-        await client.removeBreakpoint(breakpoint.generatedLocation);
+        await removeBreakpointsPromise(client, getState(), breakpoint);
         const newBreakpoint: Breakpoint = { ...breakpoint, disabled: true };
         modifiedBreakpoints.push(newBreakpoint);
       } else {
@@ -282,7 +304,19 @@ export function setBreakpointOptions(
       await dispatch(enableBreakpoint(bp));
     }
 
-    await client.setBreakpointOptions(bp.id, location, options);
+    const sourceActors = getSourceActors(
+      getState(),
+      bp.generatedLocation.sourceId
+    );
+    for (const sourceActor of sourceActors) {
+      const sourceActorLocation = makeSourceActorLocation(
+        sourceActor,
+        bp.generatedLocation
+      );
+      if (client.getBreakpointByLocation(sourceActorLocation)) {
+        await client.setBreakpointOptions(sourceActorLocation, options);
+      }
+    }
 
     const newBreakpoint = { ...bp, disabled: false, options };
 

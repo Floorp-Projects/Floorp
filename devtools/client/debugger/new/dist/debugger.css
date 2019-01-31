@@ -1063,14 +1063,6 @@ html[dir="rtl"] .managed-tree .tree .node > div {
   background: var(--theme-body-color);
   mask-size: 100%;
 }
-
-.img.arrow.arrow.expanded {
-  transform: rotate(0deg);
-}
-
-.img.arrow.arrow.expanded {
-  transform: rotate(0deg);
-}
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -2198,11 +2190,17 @@ menuseparator {
   height: 15px;
 }
 
-.source-icon.prettyPrint {
+.img.prettyPrint {
   mask: url("resource://devtools/client/debugger/new/images/prettyPrint.svg") no-repeat;
   mask-size: 100%;
   background: var(--theme-highlight-blue);
   fill: var(--theme-textbox-box-shadow);
+  position: relative;
+}
+
+.sources-list .img.prettyPrint {
+  top: 2px;
+  margin-inline-start: 3px;
 }
 
 .source-icon.vue {
@@ -2324,6 +2322,10 @@ menuseparator {
 
 .sources-list .tree .focused .label .suffix {
   color: inherit;
+}
+
+.sources-list .tree .img.arrow.expanded {
+  transform: rotate(0deg);
 }
 
 .theme-dark .source-list .tree .node.focused {
@@ -3798,7 +3800,6 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
 .group-description-name {
   padding-left: 5px;
 }
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -3858,7 +3859,7 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
 
 .frames [role="list"] {
   list-style: none;
-  margin-top: 4px;
+  margin: 0;
   padding: 0;
 }
 
@@ -3960,6 +3961,7 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
   mask-size: 100%;
   display: inline-block;
   width: 12px;
+  margin-inline-start: 4px;
 }
 
 :root.theme-dark .annotation-logo:not(.angular) svg path {

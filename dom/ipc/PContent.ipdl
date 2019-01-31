@@ -618,12 +618,6 @@ child:
     async PushSubscriptionChange(nsCString scope, Principal principal);
 
     /**
-     * Send a Push error message to all service worker clients in the child.
-     */
-    async PushError(nsCString scope, Principal principal, nsString message,
-                    uint32_t flags);
-
-    /**
      * Windows specific: associate this content process with the browsers
      * audio session.
      */
@@ -1273,6 +1267,13 @@ both:
      */
     async NotifyPushSubscriptionModifiedObservers(nsCString scope,
                                                   Principal principal);
+
+    /**
+     * Send a Push error message to all service worker clients in the parent or
+     * child.
+     */
+    async PushError(nsCString scope, Principal principal, nsString message,
+                    uint32_t flags);
 
     async WindowClose(BrowsingContextId aContextId,
                       bool aTrustedCaller);
