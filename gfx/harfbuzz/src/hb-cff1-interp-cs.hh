@@ -33,12 +33,12 @@ namespace CFF {
 
 using namespace OT;
 
-typedef BiasedSubrs<CFF1Subrs>   CFF1BiasedSubrs;
+typedef biased_subrs_t<CFF1Subrs>   cff1_biased_subrs_t;
 
-struct CFF1CSInterpEnv : CSInterpEnv<Number, CFF1Subrs>
+struct cff1_cs_interp_env_t : cs_interp_env_t<number_t, CFF1Subrs>
 {
   template <typename ACC>
-  void init (const ByteStr &str, ACC &acc, unsigned int fd)
+  void init (const byte_str_t &str, ACC &acc, unsigned int fd)
   {
     SUPER::init (str, *acc.globalSubrs, *acc.privateDicts[fd].localSubrs);
     processed_width = false;
@@ -74,20 +74,20 @@ struct CFF1CSInterpEnv : CSInterpEnv<Number, CFF1Subrs>
   bool	  processed_width;
   bool	  has_width;
   unsigned int  arg_start;
-  Number	width;
+  number_t	width;
   bool	  in_seac;
 
   private:
-  typedef CSInterpEnv<Number, CFF1Subrs> SUPER;
+  typedef cs_interp_env_t<number_t, CFF1Subrs> SUPER;
 };
 
-template <typename OPSET, typename PARAM, typename PATH=PathProcsNull<CFF1CSInterpEnv, PARAM> >
-struct CFF1CSOpSet : CSOpSet<Number, OPSET, CFF1CSInterpEnv, PARAM, PATH>
+template <typename OPSET, typename PARAM, typename PATH=path_procs_null_t<cff1_cs_interp_env_t, PARAM> >
+struct cff1_cs_opset_t : cs_opset_t<number_t, OPSET, cff1_cs_interp_env_t, PARAM, PATH>
 {
   /* PostScript-originated legacy opcodes (OpCode_add etc) are unsupported */
   /* Type 1-originated deprecated opcodes, seac behavior of endchar and dotsection are supported */
 
-  static void process_op (OpCode op, CFF1CSInterpEnv &env, PARAM& param)
+  static void process_op (op_code_t op, cff1_cs_interp_env_t &env, PARAM& param)
   {
     switch (op) {
       case OpCode_dotsection:
@@ -109,7 +109,7 @@ struct CFF1CSOpSet : CSOpSet<Number, OPSET, CFF1CSInterpEnv, PARAM, PATH>
     }
   }
 
-  static void check_width (OpCode op, CFF1CSInterpEnv &env, PARAM& param)
+  static void check_width (op_code_t op, cff1_cs_interp_env_t &env, PARAM& param)
   {
     if (!env.processed_width)
     {
@@ -139,22 +139,22 @@ struct CFF1CSOpSet : CSOpSet<Number, OPSET, CFF1CSInterpEnv, PARAM, PATH>
     }
   }
 
-  static void process_seac (CFF1CSInterpEnv &env, PARAM& param)
+  static void process_seac (cff1_cs_interp_env_t &env, PARAM& param)
   {
   }
 
-  static void flush_args (CFF1CSInterpEnv &env, PARAM& param)
+  static void flush_args (cff1_cs_interp_env_t &env, PARAM& param)
   {
     SUPER::flush_args (env, param);
     env.clear_args ();  /* pop off width */
   }
 
   private:
-  typedef CSOpSet<Number, OPSET, CFF1CSInterpEnv, PARAM, PATH>  SUPER;
+  typedef cs_opset_t<number_t, OPSET, cff1_cs_interp_env_t, PARAM, PATH>  SUPER;
 };
 
 template <typename OPSET, typename PARAM>
-struct CFF1CSInterpreter : CSInterpreter<CFF1CSInterpEnv, OPSET, PARAM> {};
+struct cff1_cs_interpreter_t : cs_interpreter_t<cff1_cs_interp_env_t, OPSET, PARAM> {};
 
 } /* namespace CFF */
 

@@ -159,7 +159,7 @@ typedef HBUINT16 GlyphID;
 
 /* Script/language-system/feature index */
 struct Index : HBUINT16 {
-  enum { NOT_FOUND_INDEX = 0xFFFFu };
+  static constexpr unsigned NOT_FOUND_INDEX = 0xFFFFu;
 };
 DECLARE_NULL_NAMESPACE_BYTES (OT, Index);
 
@@ -337,7 +337,10 @@ struct OffsetTo : Offset<OffsetType, has_null>
   }
   DEFINE_SIZE_STATIC (sizeof (OffsetType));
 };
-template <typename Type, bool has_null=true> struct LOffsetTo : OffsetTo<Type, HBUINT32, has_null> {};
+/* Partial specializations. */
+template <typename Type,                               bool has_null=true> struct   LOffsetTo : OffsetTo<Type, HBUINT32,   has_null> {};
+template <typename Type, typename OffsetType=HBUINT16                    > struct  NNOffsetTo : OffsetTo<Type, OffsetType, false> {};
+template <typename Type                                                  > struct LNNOffsetTo : OffsetTo<Type, HBUINT32,   false> {};
 
 template <typename Base, typename OffsetType, bool has_null, typename Type>
 static inline const Type& operator + (const Base &base, const OffsetTo<Type, OffsetType, has_null> &offset) { return offset (base); }
@@ -352,8 +355,8 @@ static inline Type& operator + (Base &base, OffsetTo<Type, OffsetType, has_null>
 template <typename Type>
 struct UnsizedArrayOf
 {
-  typedef Type ItemType;
-  enum { item_size = hb_static_size (Type) };
+  typedef Type item_t;
+  static constexpr unsigned item_size = hb_static_size (Type);
 
   HB_NO_CREATE_COPY_ASSIGN_TEMPLATE (UnsizedArrayOf, Type);
 
@@ -508,8 +511,8 @@ struct SortedUnsizedArrayOf : UnsizedArrayOf<Type>
 template <typename Type, typename LenType=HBUINT16>
 struct ArrayOf
 {
-  typedef Type ItemType;
-  enum { item_size = hb_static_size (Type) };
+  typedef Type item_t;
+  static constexpr unsigned item_size = hb_static_size (Type);
 
   HB_NO_CREATE_COPY_ASSIGN_TEMPLATE2 (ArrayOf, Type, LenType);
 
@@ -557,8 +560,8 @@ struct ArrayOf
   bool serialize (hb_serialize_context_t *c, hb_array_t<const T> items)
   {
     TRACE_SERIALIZE (this);
-    if (unlikely (!serialize (c, items.len))) return_trace (false);
-    for (unsigned int i = 0; i < items.len; i++)
+    if (unlikely (!serialize (c, items.length))) return_trace (false);
+    for (unsigned int i = 0; i < items.length; i++)
       hb_assign (arrayZ[i], items[i]);
     return_trace (true);
   }
@@ -679,7 +682,7 @@ struct OffsetListOf : OffsetArrayOf<Type>
 template <typename Type, typename LenType=HBUINT16>
 struct HeadlessArrayOf
 {
-  enum { item_size = Type::static_size };
+  static constexpr unsigned item_size = Type::static_size;
 
   HB_NO_CREATE_COPY_ASSIGN_TEMPLATE2 (HeadlessArrayOf, Type, LenType);
 
@@ -703,9 +706,9 @@ struct HeadlessArrayOf
   {
     TRACE_SERIALIZE (this);
     if (unlikely (!c->extend_min (*this))) return_trace (false);
-    lenP1.set (items.len + 1); /* TODO(serialize) Overflow? */
+    lenP1.set (items.length + 1); /* TODO(serialize) Overflow? */
     if (unlikely (!c->extend (*this))) return_trace (false);
-    for (unsigned int i = 0; i < items.len; i++)
+    for (unsigned int i = 0; i < items.length; i++)
       arrayZ[i] = items[i];
     return_trace (true);
   }
@@ -888,7 +891,7 @@ struct VarSizedBinSearchHeader
 template <typename Type>
 struct VarSizedBinSearchArrayOf
 {
-  enum { item_size = Type::static_size };
+  static constexpr unsigned item_size = Type::static_size;
 
   HB_NO_CREATE_COPY_ASSIGN_TEMPLATE (VarSizedBinSearchArrayOf, Type);
 

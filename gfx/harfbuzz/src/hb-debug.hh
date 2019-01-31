@@ -401,30 +401,6 @@ struct hb_no_trace_t {
 #define TRACE_APPLY(this) hb_no_trace_t<bool> trace
 #endif
 
-#ifndef HB_DEBUG_CLOSURE
-#define HB_DEBUG_CLOSURE (HB_DEBUG+0)
-#endif
-#if HB_DEBUG_CLOSURE
-#define TRACE_CLOSURE(this) \
-	hb_auto_trace_t<HB_DEBUG_CLOSURE, hb_void_t> trace \
-	(&c->debug_depth, c->get_name (), this, HB_FUNC, \
-	 " ")
-#else
-#define TRACE_CLOSURE(this) hb_no_trace_t<hb_void_t> trace HB_UNUSED
-#endif
-
-#ifndef HB_DEBUG_COLLECT_GLYPHS
-#define HB_DEBUG_COLLECT_GLYPHS (HB_DEBUG+0)
-#endif
-#if HB_DEBUG_COLLECT_GLYPHS
-#define TRACE_COLLECT_GLYPHS(this) \
-	hb_auto_trace_t<HB_DEBUG_COLLECT_GLYPHS, hb_void_t> trace \
-	(&c->debug_depth, c->get_name (), this, HB_FUNC, \
-	 " ")
-#else
-#define TRACE_COLLECT_GLYPHS(this) hb_no_trace_t<hb_void_t> trace HB_UNUSED
-#endif
-
 #ifndef HB_DEBUG_SANITIZE
 #define HB_DEBUG_SANITIZE (HB_DEBUG+0)
 #endif
@@ -476,8 +452,6 @@ struct hb_no_trace_t {
 #ifndef HB_DEBUG_DISPATCH
 #define HB_DEBUG_DISPATCH ( \
 	HB_DEBUG_APPLY + \
-	HB_DEBUG_CLOSURE + \
-	HB_DEBUG_COLLECT_GLYPHS + \
 	HB_DEBUG_SANITIZE + \
 	HB_DEBUG_SERIALIZE + \
   HB_DEBUG_SUBSET + \

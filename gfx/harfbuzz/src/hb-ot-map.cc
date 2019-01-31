@@ -33,7 +33,7 @@
 
 void hb_ot_map_t::collect_lookups (unsigned int table_index, hb_set_t *lookups_out) const
 {
-  for (unsigned int i = 0; i < lookups[table_index].len; i++)
+  for (unsigned int i = 0; i < lookups[table_index].length; i++)
     hb_set_add (lookups_out, lookups[table_index][i].index);
 }
 
@@ -82,7 +82,7 @@ void hb_ot_map_builder_t::add_feature (hb_tag_t tag,
   if (unlikely (!tag)) return;
   feature_info_t *info = feature_infos.push();
   info->tag = tag;
-  info->seq = feature_infos.len;
+  info->seq = feature_infos.length;
   info->max_value = value;
   info->flags = flags;
   info->default_value = (flags & F_GLOBAL) ? value : 0;
@@ -174,11 +174,11 @@ hb_ot_map_builder_t::compile (hb_ot_map_t                  &m,
   }
 
   /* Sort features and merge duplicates */
-  if (feature_infos.len)
+  if (feature_infos.length)
   {
     feature_infos.qsort ();
     unsigned int j = 0;
-    for (unsigned int i = 1; i < feature_infos.len; i++)
+    for (unsigned int i = 1; i < feature_infos.length; i++)
       if (feature_infos[i].tag != feature_infos[j].tag)
 	feature_infos[++j] = feature_infos[i];
       else {
@@ -202,7 +202,7 @@ hb_ot_map_builder_t::compile (hb_ot_map_t                  &m,
   /* Allocate bits now */
   unsigned int next_bit = global_bit_shift + 1;
 
-  for (unsigned int i = 0; i < feature_infos.len; i++)
+  for (unsigned int i = 0; i < feature_infos.length; i++)
   {
     const feature_info_t *info = &feature_infos[i];
 
@@ -292,7 +292,7 @@ hb_ot_map_builder_t::compile (hb_ot_map_t                  &m,
 		     key.variations_index[table_index],
 		     global_bit_mask);
 
-      for (unsigned i = 0; i < m.features.len; i++)
+      for (unsigned i = 0; i < m.features.length; i++)
         if (m.features[i].stage[table_index] == stage)
 	  add_lookups (m, table_index,
 		       m.features[i].index[table_index],
@@ -303,12 +303,12 @@ hb_ot_map_builder_t::compile (hb_ot_map_t                  &m,
 		       m.features[i].random);
 
       /* Sort lookups and merge duplicates */
-      if (last_num_lookups < m.lookups[table_index].len)
+      if (last_num_lookups < m.lookups[table_index].length)
       {
-	m.lookups[table_index].qsort (last_num_lookups, m.lookups[table_index].len);
+	m.lookups[table_index].qsort (last_num_lookups, m.lookups[table_index].length);
 
 	unsigned int j = last_num_lookups;
-	for (unsigned int i = j + 1; i < m.lookups[table_index].len; i++)
+	for (unsigned int i = j + 1; i < m.lookups[table_index].length; i++)
 	  if (m.lookups[table_index][i].index != m.lookups[table_index][j].index)
 	    m.lookups[table_index][++j] = m.lookups[table_index][i];
 	  else
@@ -320,9 +320,9 @@ hb_ot_map_builder_t::compile (hb_ot_map_t                  &m,
 	m.lookups[table_index].shrink (j + 1);
       }
 
-      last_num_lookups = m.lookups[table_index].len;
+      last_num_lookups = m.lookups[table_index].length;
 
-      if (stage_index < stages[table_index].len && stages[table_index][stage_index].index == stage) {
+      if (stage_index < stages[table_index].length && stages[table_index][stage_index].index == stage) {
 	hb_ot_map_t::stage_map_t *stage_map = m.stages[table_index].push ();
 	stage_map->last_lookup = last_num_lookups;
 	stage_map->pause_func = stages[table_index][stage_index].pause_func;

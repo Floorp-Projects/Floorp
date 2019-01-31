@@ -58,7 +58,7 @@ struct VariationValueRecord
 
 struct MVAR
 {
-  enum { tableTag = HB_OT_TAG_MVAR };
+  static constexpr hb_tag_t tableTag = HB_OT_TAG_MVAR;
 
   bool sanitize (hb_sanitize_context_t *c) const
   {

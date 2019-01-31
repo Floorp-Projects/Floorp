@@ -64,6 +64,22 @@ static inline const Type& StructAtOffset(const void *P, unsigned int offset)
 template<typename Type>
 static inline Type& StructAtOffset(void *P, unsigned int offset)
 { return * reinterpret_cast<Type*> ((char *) P + offset); }
+template<typename Type>
+static inline const Type& StructAtOffsetUnaligned(const void *P, unsigned int offset)
+{
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-align"
+  return * reinterpret_cast<Type*> ((char *) P + offset);
+#pragma GCC diagnostic pop
+}
+template<typename Type>
+static inline Type& StructAtOffsetUnaligned(void *P, unsigned int offset)
+{
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-align"
+  return * reinterpret_cast<Type*> ((char *) P + offset);
+#pragma GCC diagnostic pop
+}
 
 /* StructAfter<T>(X) returns the struct T& that is placed after X.
  * Works with X of variable size also.  X must implement get_size() */
@@ -97,30 +113,30 @@ static inline Type& StructAfter(TObject &X)
 #define DEFINE_SIZE_STATIC(size) \
   DEFINE_INSTANCE_ASSERTION (sizeof (*this) == (size)) \
   unsigned int get_size () const { return (size); } \
-  enum { null_size = (size) }; \
-  enum { min_size = (size) }; \
-  enum { static_size = (size) }
+  static constexpr unsigned null_size = (size); \
+  static constexpr unsigned min_size = (size); \
+  static constexpr unsigned static_size = (size)
 
 #define DEFINE_SIZE_UNION(size, _member) \
   DEFINE_COMPILES_ASSERTION ((void) this->u._member.static_size) \
   DEFINE_INSTANCE_ASSERTION (sizeof(this->u._member) == (size)) \
-  enum { null_size = (size) }; \
-  enum { min_size = (size) }
+  static constexpr unsigned null_size = (size); \
+  static constexpr unsigned min_size = (size)
 
 #define DEFINE_SIZE_MIN(size) \
   DEFINE_INSTANCE_ASSERTION (sizeof (*this) >= (size)) \
-  enum { null_size = (size) }; \
-  enum { min_size = (size) }
+  static constexpr unsigned null_size = (size); \
+  static constexpr unsigned min_size = (size)
 
 #define DEFINE_SIZE_UNBOUNDED(size) \
   DEFINE_INSTANCE_ASSERTION (sizeof (*this) >= (size)) \
-  enum { min_size = (size) }
+  static constexpr unsigned min_size = (size)
 
 #define DEFINE_SIZE_ARRAY(size, array) \
   DEFINE_COMPILES_ASSERTION ((void) (array)[0].static_size) \
   DEFINE_INSTANCE_ASSERTION (sizeof (*this) == (size) + VAR * sizeof ((array)[0])) \
-  enum { null_size = (size) }; \
-  enum { min_size = (size) }
+  static constexpr unsigned null_size = (size); \
+  static constexpr unsigned min_size = (size)
 
 #define DEFINE_SIZE_ARRAY_SIZED(size, array) \
   unsigned int get_size () const { return (size - (array).min_size + (array).get_size ()); } \
@@ -134,7 +150,7 @@ static inline Type& StructAfter(TObject &X)
 template <typename Context, typename Return, unsigned int MaxDebugDepth>
 struct hb_dispatch_context_t
 {
-  enum { max_debug_depth = MaxDebugDepth };
+  static constexpr unsigned max_debug_depth = MaxDebugDepth;
   typedef Return return_t;
   template <typename T, typename F>
   bool may_dispatch (const T *obj HB_UNUSED, const F *format HB_UNUSED) { return true; }
@@ -268,15 +284,12 @@ struct hb_sanitize_context_t :
     if (!obj) return;
 
     const char *obj_start = (const char *) obj;
-    const char *obj_end = (const char *) obj + obj->get_size ();
-    assert (obj_start <= obj_end); /* Must not overflow. */
-
-    if (unlikely (obj_end < this->start || this->end < obj_start))
+    if (unlikely (obj_start < this->start || this->end <= obj_start))
       this->start = this->end = nullptr;
     else
     {
-      this->start = MAX (this->start, obj_start);
-      this->end   = MIN (this->end  , obj_end  );
+      this->start = obj_start;
+      this->end   = obj_start + MIN<uintptr_t> (this->end - obj_start, obj->get_size ());
     }
   }
 
@@ -667,7 +680,6 @@ template <typename Type>
 struct BEInt<Type, 1>
 {
   public:
-  typedef Type type;
   void set (Type V)      { v = V; }
   operator Type () const { return v; }
   private: uint8_t v;
@@ -676,7 +688,6 @@ template <typename Type>
 struct BEInt<Type, 2>
 {
   public:
-  typedef Type type;
   void set (Type V)
   {
     v[0] = (V >>  8) & 0xFF;
@@ -705,7 +716,6 @@ template <typename Type>
 struct BEInt<Type, 3>
 {
   public:
-  typedef Type type;
   void set (Type V)
   {
     v[0] = (V >> 16) & 0xFF;

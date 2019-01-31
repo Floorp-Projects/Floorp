@@ -428,6 +428,20 @@ hb_set_unicode_props (hb_buffer_t *buffer)
 	_hb_glyph_info_set_continuation (&info[i]);
       }
     }
+    /* Or part of the Other_Grapheme_Extend that is not marks.
+     * As of Unicode 11 that is just:
+     *
+     * 200C          ; Other_Grapheme_Extend # Cf       ZERO WIDTH NON-JOINER
+     * FF9E..FF9F    ; Other_Grapheme_Extend # Lm   [2] HALFWIDTH KATAKANA VOICED SOUND MARK..HALFWIDTH KATAKANA SEMI-VOICED SOUND MARK
+     * E0020..E007F  ; Other_Grapheme_Extend # Cf  [96] TAG SPACE..CANCEL TAG
+     *
+     * ZWNJ is special, we don't want to merge it as there's no need, and keeping
+     * it separate results in more granular clusters.  Ignore Katakana for now.
+     * Tags are used for Emoji sub-region flag sequences:
+     * https://github.com/harfbuzz/harfbuzz/issues/1556
+     */
+    else if (unlikely (hb_in_range<hb_codepoint_t> (info[i].codepoint, 0xE0020u, 0xE007Fu)))
+      _hb_glyph_info_set_continuation (&info[i]);
   }
 }
 
@@ -891,7 +905,8 @@ hb_ot_position_complex (const hb_ot_shape_context_t *c)
 					&pos[i].y_offset);
 
   if (c->plan->fallback_mark_positioning)
-    _hb_ot_shape_fallback_mark_position (c->plan, c->font, c->buffer);
+    _hb_ot_shape_fallback_mark_position (c->plan, c->font, c->buffer,
+					 adjust_offsets_when_zeroing);
 }
 
 static inline void

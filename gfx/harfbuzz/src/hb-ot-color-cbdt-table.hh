@@ -56,7 +56,7 @@ struct SmallGlyphMetrics
     extents->x_bearing = bearingX;
     extents->y_bearing = bearingY;
     extents->width = width;
-    extents->height = -height;
+    extents->height = - (hb_position_t) height;
   }
 
   HBUINT8	height;
@@ -283,7 +283,7 @@ struct BitmapSizeTable
   }
 
   protected:
-  LOffsetTo<IndexSubtableArray, false>
+  LNNOffsetTo<IndexSubtableArray>
 			indexSubtableArrayOffset;
   HBUINT32		indexTablesSize;
   HBUINT32		numberOfIndexSubtables;
@@ -332,7 +332,7 @@ struct CBLC
 {
   friend struct CBDT;
 
-  enum { tableTag = HB_OT_TAG_CBLC };
+  static constexpr hb_tag_t tableTag = HB_OT_TAG_CBLC;
 
   bool sanitize (hb_sanitize_context_t *c) const
   {
@@ -378,7 +378,7 @@ struct CBLC
 
 struct CBDT
 {
-  enum { tableTag = HB_OT_TAG_CBDT };
+  static constexpr hb_tag_t tableTag = HB_OT_TAG_CBDT;
 
   struct accelerator_t
   {

@@ -130,7 +130,7 @@ typedef struct OffsetTable
     sfnt_version.set (sfnt_tag);
     /* Take space for numTables, searchRange, entrySelector, RangeShift
      * and the TableRecords themselves.  */
-    if (unlikely (!tables.serialize (c, items.len))) return_trace (false);
+    if (unlikely (!tables.serialize (c, items.length))) return_trace (false);
 
     const char *dir_end = (const char *) c->head;
     HBUINT32 *checksum_adjustment = nullptr;
@@ -154,7 +154,8 @@ typedef struct OffsetTable
       c->align (4);
       const char *end = (const char *) c->head;
 
-      if (items[i].tag == HB_OT_TAG_head && end - start >= head::static_size)
+      if (items[i].tag == HB_OT_TAG_head &&
+	  (unsigned) (end - start) >= head::static_size)
       {
 	head *h = (head *) start;
 	checksum_adjustment = &h->checkSumAdjustment;
@@ -173,7 +174,7 @@ typedef struct OffsetTable
       /* The following line is a slower version of the following block. */
       //checksum.set_for_data (this, (const char *) c->head - (const char *) this);
       checksum.set_for_data (this, dir_end - (const char *) this);
-      for (unsigned int i = 0; i < items.len; i++)
+      for (unsigned int i = 0; i < items.length; i++)
       {
 	TableRecord &rec = tables.arrayZ[i];
 	checksum.set (checksum + rec.checkSum);
@@ -298,7 +299,7 @@ struct ResourceRecord
   HBINT16	nameOffset;	/* Offset from beginning of resource name list
 				 * to resource name, -1 means there is none. */
   HBUINT8	attrs;		/* Resource attributes */
-  OffsetTo<LArrayOf<HBUINT8>, HBUINT24, false>
+  NNOffsetTo<LArrayOf<HBUINT8>, HBUINT24>
 		offset;		/* Offset from beginning of data block to
 				 * data for this resource */
   HBUINT32	reserved;	/* Reserved for handle to resource */
@@ -333,7 +334,7 @@ struct ResourceTypeRecord
   protected:
   Tag		tag;		/* Resource type. */
   HBUINT16	resCountM1;	/* Number of resources minus 1. */
-  OffsetTo<UnsizedArrayOf<ResourceRecord>, HBUINT16, false>
+  NNOffsetTo<UnsizedArrayOf<ResourceRecord> >
 		resourcesZ;	/* Offset from beginning of resource type list
 				 * to reference item list for this type. */
   public:
@@ -389,7 +390,7 @@ struct ResourceMap
   HBUINT32	reserved1;	/* Reserved for handle to next resource map */
   HBUINT16	resreved2;	/* Reserved for file reference number */
   HBUINT16	attrs;		/* Resource fork attribute */
-  OffsetTo<ArrayOfM1<ResourceTypeRecord>, HBUINT16, false>
+  NNOffsetTo<ArrayOfM1<ResourceTypeRecord> >
 		typeList;	/* Offset from beginning of map to
 				 * resource type list */
   Offset16	nameList;	/* Offset from beginning of map to
@@ -421,10 +422,10 @@ struct ResourceForkHeader
   }
 
   protected:
-  LOffsetTo<UnsizedArrayOf<HBUINT8>, false>
+  LNNOffsetTo<UnsizedArrayOf<HBUINT8> >
 		data;		/* Offset from beginning of resource fork
 				 * to resource data */
-  LOffsetTo<ResourceMap, false>
+  LNNOffsetTo<ResourceMap >
 		map;		/* Offset from beginning of resource fork
 				 * to resource map */
   HBUINT32	dataLen;	/* Length of resource data */

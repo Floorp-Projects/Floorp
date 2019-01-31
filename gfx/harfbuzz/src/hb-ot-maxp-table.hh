@@ -71,7 +71,7 @@ struct maxpV1Tail
 
 struct maxp
 {
-  enum { tableTag = HB_OT_TAG_maxp };
+  static constexpr hb_tag_t tableTag = HB_OT_TAG_maxp;
 
   unsigned int get_num_glyphs () const { return numGlyphs; }
 
@@ -105,7 +105,7 @@ struct maxp
     }
     maxp *maxp_prime = (maxp *) hb_blob_get_data (maxp_prime_blob, nullptr);
 
-    maxp_prime->set_num_glyphs (plan->glyphs.len);
+    maxp_prime->set_num_glyphs (plan->glyphs.length);
     if (plan->drop_hints)
       drop_hint_fields (plan, maxp_prime);
 
