@@ -308,7 +308,6 @@ impl FrameBuilder {
         );
         surfaces.push(root_surface);
 
-        let mut pic_update_state = PictureUpdateState::new(surfaces);
         let mut retained_tiles = mem::replace(
             &mut self.pending_retained_tiles,
             RetainedTiles::new(),
@@ -321,13 +320,12 @@ impl FrameBuilder {
         // set up render tasks, determine scaling of surfaces, and detect
         // which surfaces have valid cached surfaces that don't need to
         // be rendered this frame.
-        self.prim_store.update_picture(
+        PictureUpdateState::update_all(
+            surfaces,
             self.root_pic_index,
-            &mut pic_update_state,
+            &mut self.prim_store.pictures,
             &frame_context,
             gpu_cache,
-            data_stores,
-            &self.clip_store,
         );
 
         {
@@ -335,7 +333,7 @@ impl FrameBuilder {
                 device_pixel_scale,
                 clip_scroll_tree,
                 screen_world_rect,
-                surfaces: pic_update_state.surfaces,
+                surfaces,
                 debug_flags,
                 scene_properties,
                 config: &self.config,
@@ -367,7 +365,7 @@ impl FrameBuilder {
             gpu_cache,
             transforms: transform_palette,
             segment_builder: SegmentBuilder::new(),
-            surfaces: pic_update_state.surfaces,
+            surfaces,
             dirty_region_stack: Vec::new(),
         };
 
