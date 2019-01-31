@@ -1890,6 +1890,16 @@ const Class TypedArrayObject::protoClasses[Scalar::MaxTypedArrayViewType] = {
   return native == TypedArray_lengthGetter;
 }
 
+bool js::IsTypedArrayConstructor(const JSObject* obj) {
+#define CHECK_TYPED_ARRAY_CONSTRUCTOR(T, N)                 \
+  if (IsNativeFunction(obj, N##Array::class_constructor)) { \
+    return true;                                            \
+  }
+  JS_FOR_EACH_TYPED_ARRAY(CHECK_TYPED_ARRAY_CONSTRUCTOR)
+#undef CHECK_TYPED_ARRAY_CONSTRUCTOR
+  return false;
+}
+
 bool js::IsTypedArrayConstructor(HandleValue v, uint32_t type) {
   switch (type) {
     case Scalar::Int8:
