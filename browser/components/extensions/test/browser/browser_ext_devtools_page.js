@@ -2,8 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
-const {gDevTools} = require("devtools/client/framework/devtools");
+loadTestSubscript("head_devtools.js");
 
 /**
  * This test file ensures that:
@@ -119,10 +118,8 @@ add_task(async function test_devtools_page_runtime_api_messaging() {
   info("Wait the content script load");
   await extension.awaitMessage("content_script_loaded");
 
-  let target = await gDevTools.getTargetForTab(tab);
-
   info("Open the developer toolbox");
-  await gDevTools.showToolbox(target, "webconsole");
+  await openToolboxForTab(tab);
 
   info("Wait the devtools page load");
   await extension.awaitMessage("devtools_page_loaded");
@@ -148,9 +145,7 @@ add_task(async function test_devtools_page_runtime_api_messaging() {
   extension.sendMessage("content_script.connect_port");
   await extension.awaitMessage("content_script_port_received");
 
-  await gDevTools.closeToolbox(target);
-
-  await target.destroy();
+  await closeToolboxForTab(tab);
 
   await extension.unload();
 
@@ -247,10 +242,8 @@ add_task(async function test_devtools_page_and_extension_tab_messaging() {
   info("Wait the extension tab page load");
   await extension.awaitMessage("extension_tab_loaded");
 
-  let target = await gDevTools.getTargetForTab(tab);
-
   info("Open the developer toolbox");
-  await gDevTools.showToolbox(target, "webconsole");
+  await openToolboxForTab(tab);
 
   info("Wait the devtools page load");
   await extension.awaitMessage("devtools_page_loaded");
@@ -271,9 +264,7 @@ add_task(async function test_devtools_page_and_extension_tab_messaging() {
   info("Wait for an extension tab port to be received from the background page");
   await extension.awaitMessage("extension_tab_port_received");
 
-  await gDevTools.closeToolbox(target);
-
-  await target.destroy();
+  await closeToolboxForTab(tab);
 
   await extension.unload();
 

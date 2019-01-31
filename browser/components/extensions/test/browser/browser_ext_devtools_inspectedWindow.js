@@ -2,8 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
-const {gDevTools} = require("devtools/client/framework/devtools");
+loadTestSubscript("head_devtools.js");
 
 /**
  * Helper that returns the id of the last additional/extension tool for a provided
@@ -106,10 +105,7 @@ add_task(async function test_devtools_inspectedWindow_tabId() {
 
   let backgroundPageCurrentTabId = await extension.awaitMessage("current-tab-id");
 
-  let target = await gDevTools.getTargetForTab(tab);
-
-  await gDevTools.showToolbox(target, "webconsole");
-  info("developer toolbox opened");
+  await openToolboxForTab(tab);
 
   let devtoolsInspectedWindowTabId = await extension.awaitMessage("inspectedWindow-tab-id");
 
@@ -121,9 +117,7 @@ add_task(async function test_devtools_inspectedWindow_tabId() {
   is(devtoolsPageIframeTabId, backgroundPageCurrentTabId,
      "Got the expected tabId from devtool.inspectedWindow.tabId called in a devtool_page iframe");
 
-  await gDevTools.closeToolbox(target);
-
-  await target.destroy();
+  await closeToolboxForTab(tab);
 
   await extension.unload();
 
@@ -174,10 +168,7 @@ add_task(async function test_devtools_inspectedWindow_eval() {
 
   await extension.startup();
 
-  let target = await gDevTools.getTargetForTab(tab);
-
-  await gDevTools.showToolbox(target, "webconsole");
-  info("developer toolbox opened");
+  await openToolboxForTab(tab);
 
   const evalTestCases = [
     // Successful evaluation results.
@@ -243,9 +234,7 @@ add_task(async function test_devtools_inspectedWindow_eval() {
     }
   }
 
-  await gDevTools.closeToolbox(target);
-
-  await target.destroy();
+  await closeToolboxForTab(tab);
 
   await extension.unload();
 
@@ -336,15 +325,13 @@ add_task(async function test_devtools_inspectedWindow_eval_in_page_and_panel() {
 
   await extension.startup();
 
-  const target = await gDevTools.getTargetForTab(tab);
-  const toolbox = await gDevTools.showToolbox(target, "webconsole");
-  info("developer toolbox opened");
+  const {toolbox} = await openToolboxForTab(tab);
 
   info("Wait for devtools_panel_created event");
   await extension.awaitMessage("devtools_panel_created");
 
   info("Switch to the extension test panel");
-  await gDevTools.showToolbox(target, getAdditionalPanelId(toolbox, "test-eval"));
+  await openToolboxForTab(tab, getAdditionalPanelId(toolbox, "test-eval"));
 
   info("Wait for devtools_panel_initialized event");
   await extension.awaitMessage("devtools_panel_initialized");
@@ -364,8 +351,7 @@ add_task(async function test_devtools_inspectedWindow_eval_in_page_and_panel() {
   Assert.deepEqual(evalResult, TEST_TARGET_URL, "Got the expected eval result in the panel");
 
   // Cleanup
-  await gDevTools.closeToolbox(target);
-  await target.destroy();
+  await closeToolboxForTab(tab);
   await extension.unload();
   BrowserTestUtils.removeTab(tab);
 });
