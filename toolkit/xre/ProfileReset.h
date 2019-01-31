@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsIToolkitProfileService.h"
+#include "nsToolkitProfileService.h"
 #include "nsIFile.h"
 #include "nsThreadUtils.h"
 
@@ -11,11 +11,8 @@ static bool gProfileResetCleanupCompleted = false;
 static const char kResetProgressURL[] =
     "chrome://global/content/resetProfileProgress.xul";
 
-nsresult CreateResetProfile(nsIToolkitProfileService* aProfileSvc,
-                            nsIToolkitProfile* aOldProfile,
-                            nsIToolkitProfile** aNewProfile);
-
-nsresult ProfileResetCleanup(nsIToolkitProfile* aOldProfile);
+nsresult ProfileResetCleanup(nsToolkitProfileService* aService,
+                             nsIToolkitProfile* aOldProfile);
 
 class ProfileResetCleanupResultTask : public mozilla::Runnable {
  public:

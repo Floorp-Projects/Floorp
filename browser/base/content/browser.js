@@ -333,6 +333,13 @@ async function gLazyFindCommand(cmd, ...args) {
   }
 }
 
+var gPageIcons = {
+  "about:home": "chrome://branding/content/icon32.png",
+  "about:newtab": "chrome://branding/content/icon32.png",
+  "about:welcome": "chrome://branding/content/icon32.png",
+  "about:newinstall": "chrome://branding/content/icon32.png",
+  "about:privatebrowsing": "chrome://browser/skin/privatebrowsing/favicon.svg",
+};
 
 var gInitialPages = [
   "about:blank",
@@ -342,10 +349,20 @@ var gInitialPages = [
   "about:welcomeback",
   "about:sessionrestore",
   "about:welcome",
+  "about:newinstall",
 ];
 
 function isInitialPage(url) {
-  return gInitialPages.includes(url) || url == BROWSER_NEW_TAB_URL;
+  if (!(url instanceof Ci.nsIURI)) {
+    try {
+      url = Services.io.newURI(url);
+    } catch (ex) {
+      return false;
+    }
+  }
+
+  let nonQuery = url.prePath + url.filePath;
+  return gInitialPages.includes(nonQuery) || nonQuery == BROWSER_NEW_TAB_URL;
 }
 
 function browserWindows() {
@@ -1294,13 +1311,18 @@ var gBrowserInit = {
     }
     BrowserSearch.initPlaceHolder();
 
-    // Hack to ensure that the about:home favicon is loaded
+    // Hack to ensure that the various initial pages favicon is loaded
     // instantaneously, to avoid flickering and improve perceived performance.
     this._callWithURIToLoad(uriToLoad => {
-      if (uriToLoad == "about:home" || uriToLoad == "about:newtab" || uriToLoad == "about:welcome") {
-        gBrowser.setIcon(gBrowser.selectedTab, "chrome://branding/content/icon32.png");
-      } else if (uriToLoad == "about:privatebrowsing") {
-        gBrowser.setIcon(gBrowser.selectedTab, "chrome://browser/skin/privatebrowsing/favicon.svg");
+      let url;
+      try {
+        url = Services.io.newURI(uriToLoad);
+      } catch (e) {
+        return;
+      }
+      let nonQuery = url.prePath + url.filePath;
+      if (nonQuery in gPageIcons) {
+        gBrowser.setIcon(gBrowser.selectedTab, gPageIcons[nonQuery]);
       }
     });
 
@@ -2644,7 +2666,7 @@ function URLBarSetURI(aURI, updatePopupNotifications) {
 
     // Replace initial page URIs with an empty string
     // only if there's no opener (bug 370555).
-    if (isInitialPage(uri.spec) &&
+    if (isInitialPage(uri) &&
         checkEmptyPageOrigin(gBrowser.selectedBrowser, uri)) {
       value = "";
     } else {
@@ -4914,7 +4936,8 @@ var XULBrowserWindow = {
   //  3. Called directly during this object's initializations.
   //  4. Due to the nsIWebProgressListener.onLocationChange notification.
   // aRequest will be null always in case 2 and 3, and sometimes in case 1 (for
-  // instance, there won't be a request when STATE_BLOCKED_TRACKING_CONTENT is observed).
+  // instance, there won't be a request when STATE_BLOCKED_TRACKING_CONTENT or
+  // other blocking events are observed).
   onContentBlockingEvent(aWebProgress, aRequest, aEvent, aIsSimulated) {
     // Don't need to do anything if the data we use to update the UI hasn't
     // changed
