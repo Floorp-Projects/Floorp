@@ -19,11 +19,13 @@ namespace mozilla {
 
 ChromiumCDMProxy::ChromiumCDMProxy(dom::MediaKeys* aKeys,
                                    const nsAString& aKeySystem,
+                                   GMPCrashHelper* aCrashHelper,
                                    bool aDistinctiveIdentifierRequired,
                                    bool aPersistentStateRequired,
                                    nsIEventTarget* aMainThread)
     : CDMProxy(aKeys, aKeySystem, aDistinctiveIdentifierRequired,
                aPersistentStateRequired, aMainThread),
+      mCrashHelper(aCrashHelper),
       mCDMMutex("ChromiumCDMProxy"),
       mGMPThread(GetGMPAbstractThread()) {
   MOZ_ASSERT(NS_IsMainThread());
@@ -32,8 +34,7 @@ ChromiumCDMProxy::ChromiumCDMProxy(dom::MediaKeys* aKeys,
 
 ChromiumCDMProxy::~ChromiumCDMProxy() { MOZ_COUNT_DTOR(ChromiumCDMProxy); }
 
-void ChromiumCDMProxy::Init(RefPtr<GMPCrashHelper>&& aCrashHelper,
-                            PromiseId aPromiseId, const nsAString& aOrigin,
+void ChromiumCDMProxy::Init(PromiseId aPromiseId, const nsAString& aOrigin,
                             const nsAString& aTopLevelOrigin,
                             const nsAString& aGMPName) {
   MOZ_ASSERT(NS_IsMainThread());
@@ -61,7 +62,7 @@ void ChromiumCDMProxy::Init(RefPtr<GMPCrashHelper>&& aCrashHelper,
 
   gmp::NodeId nodeId(aOrigin, aTopLevelOrigin, aGMPName);
   RefPtr<AbstractThread> thread = mGMPThread;
-  RefPtr<GMPCrashHelper> helper(std::move(aCrashHelper));
+  RefPtr<GMPCrashHelper> helper(mCrashHelper);
   RefPtr<ChromiumCDMProxy> self(this);
   nsCString keySystem = NS_ConvertUTF16toUTF8(mKeySystem);
   RefPtr<Runnable> task(NS_NewRunnableFunction(
