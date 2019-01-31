@@ -678,7 +678,8 @@ class ExtensionData {
       // We only want to set permissions if the feature is preffed on
       // (allowPrivateBrowsingByDefault is false)
       if (!allowPrivateBrowsingByDefault &&
-          manifest.incognito !== "not_allowed" && this.isPrivileged) {
+          manifest.incognito !== "not_allowed" &&
+          this.isPrivileged && !this.addonData.temporarilyInstalled) {
         permissions.add("internal:privateBrowsingAllowed");
       }
 
