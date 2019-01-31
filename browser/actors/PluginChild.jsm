@@ -244,9 +244,14 @@ class PluginChild extends ActorChild {
    * not handle hiding it. That is done by setVisibility with the return value
    * from this function.
    *
+   * @param {Element} plugin  The plug-in element
+   * @param {Element} overlay The overlay element inside the UA Shadow DOM of
+   *                          the plug-in element
+   * @param {boolean} flushLayout Allow flush layout during computation and
+   *                              adjustment.
    * @returns A value from OVERLAY_DISPLAY.
    */
-  computeAndAdjustOverlayDisplay(plugin, overlay) {
+  computeAndAdjustOverlayDisplay(plugin, overlay, flushLayout) {
     let fallbackType = plugin.pluginFallbackType;
     if (plugin.pluginFallbackTypeOverride !== undefined) {
       fallbackType = plugin.pluginFallbackTypeOverride;
@@ -257,16 +262,23 @@ class PluginChild extends ActorChild {
 
     // If the overlay size is 0, we haven't done layout yet. Presume that
     // plugins are visible until we know otherwise.
-    if (overlay.scrollWidth == 0) {
+    if (flushLayout && overlay.scrollWidth == 0) {
       return OVERLAY_DISPLAY.FULL;
     }
 
     let overlayDisplay = OVERLAY_DISPLAY.FULL;
+    let contentWindow = plugin.ownerGlobal;
+    let cwu = contentWindow.windowUtils;
 
     // Is the <object>'s size too small to hold what we want to show?
-    let pluginRect = plugin.getBoundingClientRect();
+    let pluginRect = flushLayout ? plugin.getBoundingClientRect() :
+                                   cwu.getBoundsWithoutFlushing(plugin);
     let pluginWidth = Math.ceil(pluginRect.width);
     let pluginHeight = Math.ceil(pluginRect.height);
+
+    let layoutNeedsFlush = !flushLayout &&
+      cwu.needsFlush(cwu.FLUSH_STYLE) &&
+      cwu.needsFlush(cwu.FLUSH_LAYOUT);
 
     // We must set the attributes while here inside this function in order
     // for a possible re-style to occur, which will make the scrollWidth/Height
@@ -274,7 +286,14 @@ class PluginChild extends ActorChild {
     // overlay here, but the default styling would be used, and that would make
     // it overflow, causing it to change to BLANK instead of remaining as TINY.
 
-    if (pluginWidth <= 32 || pluginHeight <= 32) {
+    if (layoutNeedsFlush) {
+      // Set the content to be oversized when we the overlay size is 0,
+      // so that we could receive an overflow event afterwards when there is
+      // a layout.
+      overlayDisplay = OVERLAY_DISPLAY.FULL;
+      overlay.setAttribute("sizing", "oversized");
+      overlay.removeAttribute("notext");
+    } else if (pluginWidth <= 32 || pluginHeight <= 32) {
       overlay.setAttribute("sizing", "blank");
       overlayDisplay = OVERLAY_DISPLAY.BLANK;
     } else if (pluginWidth <= 80 || pluginHeight <= 60) {
@@ -295,6 +314,13 @@ class PluginChild extends ActorChild {
       overlay.removeAttribute("notext");
     }
 
+    // The hit test below only works with correct layout information,
+    // don't do it if layout needs flush.
+    // We also don't want to access scrollWidth/scrollHeight if
+    // the layout needs flush.
+    if (layoutNeedsFlush) {
+      return overlayDisplay;
+    }
 
     // XXX bug 446693. The text-shadow on the submitted-report text at
     //     the bottom causes scrollHeight to be larger than it should be.
@@ -318,9 +344,6 @@ class PluginChild extends ActorChild {
                    [right, top],
                    [right, bottom],
                    [centerX, centerY]];
-
-    let contentWindow = plugin.ownerGlobal;
-    let cwu = contentWindow.windowUtils;
 
     for (let [x, y] of points) {
       if (x < 0 || y < 0) {
@@ -505,10 +528,11 @@ class PluginChild extends ActorChild {
     if (eventType != "PluginCrashed") {
       if (overlay != null) {
         this.setVisibility(plugin, overlay,
-                           this.computeAndAdjustOverlayDisplay(plugin, overlay));
+                           this.computeAndAdjustOverlayDisplay(plugin, overlay, false));
+
         let resizeListener = () => {
           this.setVisibility(plugin, overlay,
-            this.computeAndAdjustOverlayDisplay(plugin, overlay));
+            this.computeAndAdjustOverlayDisplay(plugin, overlay, true));
         };
         plugin.addEventListener("overflow", resizeListener);
         plugin.addEventListener("underflow", resizeListener);
@@ -926,14 +950,15 @@ class PluginChild extends ActorChild {
     let link = this.getPluginUI(plugin, "reloadLink");
     this.addLinkClickCallback(link, "reloadPage");
 
-    let overlayDisplayState = this.computeAndAdjustOverlayDisplay(plugin, overlay);
+    // This might trigger force reflow, but plug-in crashing code path shouldn't be hot.
+    let overlayDisplayState = this.computeAndAdjustOverlayDisplay(plugin, overlay, true);
 
     // Is the <object>'s size too small to hold what we want to show?
     if (overlayDisplayState != OVERLAY_DISPLAY.FULL) {
       // First try hiding the crash report submission UI.
       statusDiv.removeAttribute("status");
 
-      overlayDisplayState = this.computeAndAdjustOverlayDisplay(plugin, overlay);
+      overlayDisplayState = this.computeAndAdjustOverlayDisplay(plugin, overlay, true);
     }
     this.setVisibility(plugin, overlay, overlayDisplayState);
 
