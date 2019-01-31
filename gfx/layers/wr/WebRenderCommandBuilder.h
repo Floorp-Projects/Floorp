@@ -92,10 +92,11 @@ class WebRenderCommandBuilder {
                        nsDisplayListBuilder* aDisplayListBuilder);
 
   void CreateWebRenderCommandsFromDisplayList(
-      nsDisplayList* aDisplayList, nsDisplayItem* aOuterItem,
+      nsDisplayList* aDisplayList, nsDisplayItem* aWrappingItem,
       nsDisplayListBuilder* aDisplayListBuilder,
       const StackingContextHelper& aSc, wr::DisplayListBuilder& aBuilder,
-      wr::IpcResourceUpdateQueue& aResources);
+      wr::IpcResourceUpdateQueue& aResources,
+      nsDisplayItem* aOuterItem = nullptr);
 
   // aWrappingItem has to be non-null.
   void DoGroupingForDisplayList(nsDisplayList* aDisplayList,
@@ -201,6 +202,7 @@ class WebRenderCommandBuilder {
   // Whether consecutive inactive display items should be grouped into one
   // blob image.
   bool mDoGrouping;
+  Maybe<nsRect> mClippedGroupBounds;
 
   // True if we're currently within an opacity:0 container, and only
   // plugin and hit test items should be considered.
