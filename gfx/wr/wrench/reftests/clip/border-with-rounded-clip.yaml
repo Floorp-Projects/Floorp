@@ -15,7 +15,7 @@ root:
       bounds: [10, 10, 100, 200]
       clip-and-scroll: 2
       type: border
-      width: [300, 300, 300, 300]
+      width: [100, 50, 100, 50]
       border-type: normal
       color: green
       style: solid
