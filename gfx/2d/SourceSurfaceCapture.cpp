@@ -123,13 +123,13 @@ RefPtr<SourceSurface> SourceSurfaceCapture::ResolveImpl(
                            ? aBackendType
                            : BackendType::SKIA;
     dt = Factory::CreateDrawTargetForData(type, data, mSize, mStride, mFormat);
-    if (!dt) {
+    if (!dt || !dt->IsValid()) {
       free(data);
       return nullptr;
     }
   }
 
-  if (!dt) {
+  if (!dt || !dt->IsValid()) {
     // Make sure we haven't allocated and aren't leaking something, the code
     // right anove here should have guaranteed that.
     MOZ_ASSERT(!data);
