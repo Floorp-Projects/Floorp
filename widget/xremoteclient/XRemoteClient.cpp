@@ -6,6 +6,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsDebug.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Sprintf.h"
@@ -139,11 +140,12 @@ static int HandleBadWindow(Display *display, XErrorEvent *event) {
 }
 
 nsresult XRemoteClient::SendCommandLine(const char *aProgram,
-                                        const char *aUsername,
                                         const char *aProfile, int32_t argc,
                                         char **argv,
                                         const char *aDesktopStartupID,
                                         char **aResponse, bool *aWindowFound) {
+  NS_ENSURE_TRUE(aProgram, NS_ERROR_INVALID_ARG);
+
   MOZ_LOG(sRemoteLm, LogLevel::Debug, ("XRemoteClient::SendCommandLine"));
 
   *aWindowFound = false;
@@ -152,7 +154,7 @@ nsresult XRemoteClient::SendCommandLine(const char *aProgram,
   // when windows get destroyed before being accessed.
   sOldHandler = XSetErrorHandler(HandleBadWindow);
 
-  Window w = FindBestWindow(aProgram, aUsername, aProfile);
+  Window w = FindBestWindow(aProgram, aProfile);
 
   nsresult rv = NS_OK;
 
@@ -374,7 +376,6 @@ nsresult XRemoteClient::GetLock(Window aWindow, bool *aDestroyed) {
 }
 
 Window XRemoteClient::FindBestWindow(const char *aProgram,
-                                     const char *aUsername,
                                      const char *aProfile) {
   Window root = RootWindowOfScreen(DefaultScreenOfDisplay(mDisplay));
   Window bestWindow = 0;
@@ -422,40 +423,30 @@ Window XRemoteClient::FindBestWindow(const char *aProgram,
 
     if (status != Success || type == None) continue;
 
-    // If someone passed in a program name, check it against this one
-    // unless it's "any" in which case, we don't care.  If someone did
-    // pass in a program name and this window doesn't support that
-    // protocol, we don't include it in our list.
-    if (aProgram && strcmp(aProgram, "any")) {
-      Unused << XGetWindowProperty(
-          mDisplay, w, mMozProgramAtom, 0, (65536 / sizeof(long)), False,
-          XA_STRING, &type, &format, &nitems, &bytesafter, &data_return);
+    // Check that this window is from the right program.
+    Unused << XGetWindowProperty(
+        mDisplay, w, mMozProgramAtom, 0, (65536 / sizeof(long)), False,
+        XA_STRING, &type, &format, &nitems, &bytesafter, &data_return);
 
-      // If the return name is not the same as what someone passed in,
-      // we don't want this window.
-      if (data_return) {
-        if (strcmp(aProgram, (const char *)data_return)) {
-          XFree(data_return);
-          continue;
-        }
-
-        // This is actually the success condition.
+    // If the return name is not the same as this program name, we don't want
+    // this window.
+    if (data_return) {
+      if (strcmp(aProgram, (const char *)data_return)) {
         XFree(data_return);
-      } else {
-        // Doesn't support the protocol, even though the user
-        // requested it.  So we're not going to use this window.
         continue;
       }
+
+      // This is actually the success condition.
+      XFree(data_return);
+    } else {
+      // Doesn't support the protocol, even though the user
+      // requested it.  So we're not going to use this window.
+      continue;
     }
 
     // Check to see if it has the user atom on that window.  If there
     // is then we need to make sure that it matches what we have.
-    const char *username;
-    if (aUsername) {
-      username = aUsername;
-    } else {
-      username = PR_GetEnv("LOGNAME");
-    }
+    const char *username = PR_GetEnv("LOGNAME");
 
     if (username) {
       Unused << XGetWindowProperty(

@@ -50,9 +50,10 @@ void DBusRemoteClient::Shutdown(void) {
 }
 
 nsresult DBusRemoteClient::SendCommandLine(
-    const char *aProgram, const char *aUsername, const char *aProfile,
-    int32_t argc, char **argv, const char *aDesktopStartupID, char **aResponse,
-    bool *aWindowFound) {
+    const char *aProgram, const char *aProfile, int32_t argc, char **argv,
+    const char *aDesktopStartupID, char **aResponse, bool *aWindowFound) {
+  NS_ENSURE_TRUE(aProgram, NS_ERROR_INVALID_ARG);
+
   MOZ_LOG(sRemoteLm, LogLevel::Debug, ("DBusRemoteClient::SendCommandLine"));
 
   int commandLineLength;
