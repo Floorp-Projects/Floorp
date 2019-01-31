@@ -3,6 +3,8 @@
  */
 
 add_task(async () => {
+  let hash = xreDirProvider.getInstallHash();
+
   let profileData = {
     options: {
       startWithLastProfile: true,
@@ -14,6 +16,13 @@ add_task(async () => {
       name: "Profile3",
       path: "Path3",
     }],
+  };
+  let installData = {
+    installs: {
+      [hash]: {
+        default: "Path2",
+      },
+    },
   };
 
   if (AppConstants.MOZ_DEV_EDITION) {
@@ -34,13 +43,16 @@ add_task(async () => {
   }
 
   writeProfilesIni(profileData);
+  writeInstallsIni(installData);
+
+  let { profile, didCreate } = selectStartupProfile();
+  checkStartupReason("default");
 
   let service = getProfileService();
   checkProfileService(profileData);
 
-  let { profile, didCreate } = selectStartupProfile();
-
   Assert.ok(!didCreate, "Should not have created a new profile.");
-  Assert.equal(profile, service.selectedProfile, "Should have returned the selected profile.");
-  Assert.equal(profile.name, PROFILE_DEFAULT, "Should have selected the right profile");
+  Assert.equal(profile, service.defaultProfile, "Should have returned the default profile.");
+  Assert.equal(profile.name, "default", "Should have selected the right profile");
+  Assert.ok(!service.createdAlternateProfile, "Should not have created an alternate profile.");
 });

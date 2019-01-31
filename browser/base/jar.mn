@@ -117,6 +117,10 @@ browser.jar:
 % override chrome://global/content/license.html chrome://browser/content/license.html
         content/browser/blockedSite.xhtml               (content/blockedSite.xhtml)
         content/browser/blockedSite.js                  (content/blockedSite.js)
+        content/browser/newInstall.xul                (content/newInstall.xul)
+        content/browser/newInstall.js                 (content/newInstall.js)
+        content/browser/newInstallPage.html           (content/newInstallPage.html)
+        content/browser/newInstallPage.js             (content/newInstallPage.js)
 
 % override chrome://global/content/netError.xhtml chrome://browser/content/aboutNetError.xhtml
 

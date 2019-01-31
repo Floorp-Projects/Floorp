@@ -7880,8 +7880,7 @@ bool nsDisplayTransform::CreateWebRenderCommands(
 
   // If it looks like we're animated, we should rasterize in local space
   // (disabling subpixel-aa and global pixel snapping)
-  bool animated =
-      ActiveLayerTracker::IsStyleMaybeAnimated(Frame(), eCSSProperty_transform);
+  bool animated = Frame()->HasAnimationOfTransform();
 
   wr::StackingContextParams params;
   params.mBoundTransform = &newTransformMatrix;
