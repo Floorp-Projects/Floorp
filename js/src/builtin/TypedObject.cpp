@@ -1541,10 +1541,23 @@ void OutlineTypedObject::setOwnerAndData(JSObject* owner, uint8_t* data) {
   owner_ = owner;
   data_ = data;
 
-  // Trigger a post barrier when attaching an object outside the nursery to
-  // one that is inside it.
-  if (owner && !IsInsideNursery(this) && IsInsideNursery(owner)) {
-    owner->storeBuffer()->putWholeCell(this);
+  if (owner) {
+    if (!IsInsideNursery(this) && IsInsideNursery(owner)) {
+      // Trigger a post barrier when attaching an object outside the nursery to
+      // one that is inside it.
+      owner->storeBuffer()->putWholeCell(this);
+    } else if (IsInsideNursery(this) && !IsInsideNursery(owner)) {
+      // ...and also when attaching an object inside the nursery to one that is
+      // outside it, for a subtle reason -- the outline object now points to
+      // the memory owned by 'owner', and can modify object/string references
+      // stored in that memory, potentially storing nursery pointers in it. If
+      // the outline object is in the nursery, then the post barrier will do
+      // nothing; you will be writing a nursery pointer "into" a nursery
+      // object. But that will result in the tenured owner's data containing a
+      // nursery pointer, and thus we need a store buffer edge. Since we can't
+      // catch the actual write, register the owner preemptively now.
+      storeBuffer()->putWholeCell(owner);
+    }
   }
 }
 
