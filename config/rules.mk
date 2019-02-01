@@ -125,24 +125,11 @@ LINK_PDBFILE ?= $(basename $(@F)).pdb
 
 ifndef GNU_CC
 
-#
-# Unless we're building SIMPLE_PROGRAMS, all C++ files share a PDB file per
-# directory. For parallel builds, this PDB file is shared and locked by
-# MSPDBSRV.EXE, starting with MSVC8 SP1. If you're using MSVC 7.1 or MSVC8
-# without SP1, don't do parallel builds.
-#
-# The final PDB for libraries and programs is created by the linker and uses
-# a different name from the single PDB file created by the compiler. See
-# bug 462740.
-#
-
 ifdef SIMPLE_PROGRAMS
 COMPILE_PDB_FLAG ?= -Fd$(basename $(@F)).pdb
-else
-COMPILE_PDB_FLAG ?= -Fdgenerated.pdb -FS
-endif
 COMPILE_CFLAGS += $(COMPILE_PDB_FLAG)
 COMPILE_CXXFLAGS += $(COMPILE_PDB_FLAG)
+endif
 
 ifdef MOZ_DEBUG
 CODFILE=$(basename $(@F)).cod
@@ -166,8 +153,6 @@ endif
 ifeq ($(HOST_OS_ARCH),WINNT)
 HOST_PDBFILE=$(basename $(@F)).pdb
 HOST_PDB_FLAG ?= -Fd$(HOST_PDBFILE)
-HOST_CFLAGS += $(HOST_PDB_FLAG)
-HOST_CXXFLAGS += $(HOST_PDB_FLAG)
 HOST_C_LDFLAGS += $(HOST_PDB_FLAG)
 HOST_CXX_LDFLAGS += $(HOST_PDB_FLAG)
 endif
