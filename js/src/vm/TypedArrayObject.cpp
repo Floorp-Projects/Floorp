@@ -1292,6 +1292,7 @@ bool TypedArrayConstructor(JSContext* cx, unsigned argc, Value* vp) {
 
 /* static */ bool TypedArrayObject::GetTemplateObjectForNative(
     JSContext* cx, Native native, uint32_t len, MutableHandleObject res) {
+  MOZ_ASSERT(!res);
 #define CHECK_TYPED_ARRAY_CONSTRUCTOR(T, N)                              \
   if (native == &TypedArrayObjectTemplate<T>::class_constructor) {       \
     size_t nbytes;                                                       \
