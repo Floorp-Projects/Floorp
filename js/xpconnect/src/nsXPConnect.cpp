@@ -682,8 +682,7 @@ nsXPConnect::GetWrappedNativeOfJSObject(JSContext* aJSContext,
   MOZ_ASSERT(_retval, "bad param");
 
   RootedObject aJSObj(aJSContext, aJSObjArg);
-  aJSObj = js::CheckedUnwrapDynamic(aJSObj, aJSContext,
-                                    /* stopAtWindowProxy = */ false);
+  aJSObj = js::CheckedUnwrap(aJSObj, /* stopAtWindowProxy = */ false);
   if (!aJSObj || !IS_WN_REFLECTOR(aJSObj)) {
     *_retval = nullptr;
     return NS_ERROR_FAILURE;
@@ -694,7 +693,10 @@ nsXPConnect::GetWrappedNativeOfJSObject(JSContext* aJSContext,
   return NS_OK;
 }
 
-static already_AddRefed<nsISupports> ReflectorToISupports(JSObject* reflector) {
+already_AddRefed<nsISupports> xpc::UnwrapReflectorToISupports(
+    JSObject* reflector) {
+  // Unwrap security wrappers, if allowed.
+  reflector = js::CheckedUnwrap(reflector, /* stopAtWindowProxy = */ false);
   if (!reflector) {
     return nullptr;
   }
@@ -715,20 +717,6 @@ static already_AddRefed<nsISupports> ReflectorToISupports(JSObject* reflector) {
   nsCOMPtr<nsISupports> canonical =
       do_QueryInterface(mozilla::dom::UnwrapDOMObjectToISupports(reflector));
   return canonical.forget();
-}
-
-already_AddRefed<nsISupports> xpc::ReflectorToISupportsStatic(
-    JSObject* reflector) {
-  // Unwrap security wrappers, if allowed.
-  return ReflectorToISupports(js::CheckedUnwrapStatic(reflector));
-}
-
-already_AddRefed<nsISupports> xpc::ReflectorToISupportsDynamic(
-    JSObject* reflector, JSContext* cx) {
-  // Unwrap security wrappers, if allowed.
-  return ReflectorToISupports(
-      js::CheckedUnwrapDynamic(reflector, cx,
-                               /* stopAtWindowProxy = */ false));
 }
 
 NS_IMETHODIMP

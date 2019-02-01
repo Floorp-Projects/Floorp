@@ -42,11 +42,9 @@ static void ThrowExceptionValueIfSafe(JSContext* aCx,
   JS::Rooted<JSObject*> exnObj(aCx, &exnVal.toObject());
   MOZ_ASSERT(js::IsObjectInContextCompartment(exnObj, aCx),
              "exnObj needs to be in the right compartment for the "
-             "CheckedUnwrapDynamic thing to make sense");
+             "CheckedUnwrap thing to make sense");
 
-  // aCx's current Realm is where we're throwing, so using it in the
-  // CheckedUnwrapDynamic check makes sense.
-  if (js::CheckedUnwrapDynamic(exnObj, aCx)) {
+  if (js::CheckedUnwrap(exnObj)) {
     // This is an object we're allowed to work with, so just go ahead and throw
     // it.
     JS_SetPendingException(aCx, exnVal);
