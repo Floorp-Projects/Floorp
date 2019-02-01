@@ -659,8 +659,7 @@ bool XPCJSContext::InterruptCallback(JSContext* cx) {
       return false;
     }
     if (proto && xpc::IsSandboxPrototypeProxy(proto) &&
-        (proto = js::CheckedUnwrapDynamic(proto, cx,
-                                          /* stopAtWindowProxy = */ false))) {
+        (proto = js::CheckedUnwrap(proto, /* stopAtWindowProxy = */ false))) {
       win = WindowGlobalOrNull(proto);
     }
   }

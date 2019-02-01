@@ -38,8 +38,6 @@ class CrossOriginObjectWrapper : public js::Wrapper {
       : js::Wrapper(CROSS_COMPARTMENT, /* aHasPrototype = */ false,
                     /* aHasSecurityPolicy = */ true) {}
 
-  bool dynamicCheckedUnwrapAllowed(JSObject* obj, JSContext* cx) const override;
-
   static const CrossOriginObjectWrapper singleton;
 };
 
