@@ -864,6 +864,8 @@ bool SandboxBroker::SetSecurityLevelForPluginProcess(int32_t aSandboxLevel) {
     // not exist.
     AddCachedDirRule(mPolicy, sandbox::TargetPolicy::FILES_ALLOW_DIR_ANY,
                      sRoamingAppDataDir, NS_LITERAL_STRING("\\Macromedia"));
+    AddCachedDirRule(mPolicy, sandbox::TargetPolicy::FILES_ALLOW_QUERY,
+                     sRoamingAppDataDir, NS_LITERAL_STRING("\\Macromedia\\"));
     AddCachedDirRule(mPolicy, sandbox::TargetPolicy::FILES_ALLOW_DIR_ANY,
                      sRoamingAppDataDir,
                      NS_LITERAL_STRING("\\Macromedia\\Flash Player"));
