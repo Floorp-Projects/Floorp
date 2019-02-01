@@ -7,6 +7,7 @@
 #     repository: {url, project, level},
 #     now,
 #     as_slugid: // function
+#     ownTaskId: // taskId of the task that will be created
 #   }
 #
 # - cron tasks - See taskcluster/taskgraph/cron/decision.py
@@ -16,7 +17,7 @@
 #     repository: {url, project, level},
 #     cron: {task_id, job_name, job_symbol, quoted_args},
 #     now,
-#     as_slugid, // function
+#     ownTaskId: // taskId of the task that will be created
 #   }
 #
 # - action tasks - See:
@@ -58,13 +59,13 @@ tasks:
         # ensure there's no trailing `/` on the repo URL
         repoUrl: {$if: 'repository.url[-1] == "/"', then: {$eval: 'repository.url[:-1]'}, else: {$eval: 'repository.url'}}
       in:
-        taskId: {$if: 'tasks_for != "action"', then: '${as_slugid("decision")}'}
+        taskId: {$if: 'tasks_for != "action"', then: '${ownTaskId}'}
         taskGroupId:
           $if: 'tasks_for == "action"'
           then:
             '${action.taskGroupId}'
           else:
-            '${as_slugid("decision")}' # same as taskId; this is how automation identifies a decision tsak
+            '${ownTaskId}' # same as taskId; this is how automation identifies a decision tsak
         schedulerId: 'gecko-level-${repository.level}'
 
         created: {$fromNow: ''}
@@ -134,7 +135,7 @@ tasks:
                 - "index.gecko.v2.${repository.project}.revision.${push.revision}.taskgraph.decision-${cron.job_name}"
                 - "index.gecko.v2.${repository.project}.pushlog-id.${push.pushlog_id}.decision-${cron.job_name}"
                 # list each cron task on this revision, so actions can find them
-                - 'index.gecko.v2.${repository.project}.revision.${push.revision}.cron.${as_slugid("decision")}'
+                - 'index.gecko.v2.${repository.project}.revision.${push.revision}.cron.${ownTaskId}'
                 # BUG 1500166 Notify ciduty by email if a nightly hook fails
                 - "notify.email.ciduty+failedcron@mozilla.com.on-failed"
                 - "notify.email.ciduty+exceptioncron@mozilla.com.on-exception"
