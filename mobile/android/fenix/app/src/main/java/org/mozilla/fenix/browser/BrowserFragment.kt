@@ -15,6 +15,7 @@ import android.view.ViewGroup
 import android.view.accessibility.AccessibilityManager
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.fragment.app.Fragment
+import androidx.navigation.Navigation
 import kotlinx.android.synthetic.main.fragment_browser.*
 import mozilla.components.feature.contextmenu.ContextMenuCandidate
 import mozilla.components.feature.contextmenu.ContextMenuFeature
@@ -103,6 +104,11 @@ class BrowserFragment : Fragment() {
                 requireComponents.toolbar.shippedDomainsProvider,
                 requireComponents.core.historyStorage)
         )
+
+        toolbar.onUrlClicked = {
+            Navigation.findNavController(toolbar).navigate(R.id.action_browserFragment_to_searchFragment, null, null)
+            false
+        }
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
