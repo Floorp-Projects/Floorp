@@ -285,10 +285,10 @@
     images[i].src = svgSrc;
   }
 
-  let testNameIndex = 1;
   function makeTest(el) {
     return function() {
       if (!el.getAttribute("data-expected-width")) {
+        // This code is used to generate reference data for the tests.
         let text = `data-expected-width="${el.offsetWidth}" data-expected-height="${el.offsetHeight}" data-offset-y="${el.offsetTop}" data-offset-x="${el.offsetLeft}"`;
         el.parentElement.innerText = text;
         return;
@@ -300,8 +300,15 @@
     }
   };
 
+
+  let testNameIndex = 1;
+  function getTestName(el) {
+    let svg = el.classList.contains("svg") ? " svg" : "";
+    return "minmax replaced " + el.nodeName + svg + " " + testNameIndex++;
+  };
+
   function testAfterImageLoads(img, test) {
-    let asyncTest = async_test("minmax replaced async IMG " + testNameIndex++);
+    let asyncTest = async_test(getTestName(img));
     img.addEventListener("load", _ => {
       asyncTest.step(test);
       asyncTest.done();
@@ -315,7 +322,7 @@
     if (testElements[i].nodeName == "IMG" && !testElements[i].complete) {
       testAfterImageLoads(testElements[i], myTest);
     } else {
-      test(myTest, "minmax replaced " + testElements[i].nodeName + " " + testNameIndex++);
+      test(myTest, getTestName(testElements[i]));
     }
   }
 </script>
