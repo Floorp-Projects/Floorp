@@ -420,10 +420,10 @@ set_config('MOZ_FFMPEG', ffmpeg)
 set_define('MOZ_FFMPEG', ffmpeg)
 imply_option('--enable-fmp4', ffmpeg, '--enable-ffmpeg')
 
-# Libaom AV1 Video Codec Support
+# AV1 Video Codec Support
 # ==============================================================
-option('--enable-av1',
-        help='Enable libaom for av1 video support')
+option('--disable-av1',
+        help='Disable av1 video support')
 
 @depends('--enable-av1', target, c_compiler)
 def av1(value, target, c_compiler):
