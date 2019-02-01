@@ -2,51 +2,39 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-linux64-upx:
-    description: "UPX build for MinGW32 Cross Compile"
+job-defaults:
     treeherder:
-        kind: build
-        platform: toolchains/opt
-        symbol: TMW(upx)
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         docker-image: {in-tree: mingw32-build}
         max-run-time: 3600
+
+linux64-upx:
+    description: "UPX build for MinGW32 Cross Compile"
+    treeherder:
+        symbol: TMW(upx)
     run:
-        using: toolchain-script
         script: build-upx.sh
         toolchain-artifact: public/build/upx.tar.xz
 
 linux64-wine:
     description: "Wine build for MinGW32 Cross Compile"
     treeherder:
-        kind: build
-        platform: toolchains/opt
         symbol: TMW(wine)
-        tier: 2
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        docker-image: {in-tree: mingw32-build}
         max-run-time: 10800
     run:
-        using: toolchain-script
         script: build-wine.sh
         toolchain-artifact: public/build/wine.tar.xz
 
 linux64-mingw32-gcc:
     description: "GCC toolchain build for MinGW32 Cross Compile"
     treeherder:
-        kind: build
-        platform: toolchains/opt
         symbol: TMW(mingw32-gcc)
-        tier: 2
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        docker-image: {in-tree: mingw32-build}
         max-run-time: 10800
     run:
-        using: toolchain-script
         script: build-gcc-mingw32.sh
         resources:
             - 'build/unix/build-gcc/build-gcc.sh'
@@ -63,16 +51,8 @@ linux64-mingw32-gcc:
 linux64-mingw32-nsis:
     description: "NSIS build for MinGW32 Cross Compile"
     treeherder:
-        kind: build
-        platform: toolchains/opt
         symbol: TMW(mingw32-nsis)
-        tier: 2
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
-    worker:
-        docker-image: {in-tree: mingw32-build}
-        max-run-time: 3600
     run:
-        using: toolchain-script
         script: build-mingw32-nsis.sh
         resources:
             - 'build/unix/build-gcc/build-gcc.sh'
@@ -84,13 +64,8 @@ linux64-mingw32-nsis:
 linux64-mingw-fxc2-x86:
     description: "fxc2.exe x86 build for MinGW Cross Compile"
     treeherder:
-        kind: build
-        platform: toolchains/opt
         symbol: TMW(mingw-fxc2-x86)
-        tier: 2
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        docker-image: {in-tree: mingw32-build}
         max-run-time: 1800
     run:
         using: toolchain-script

@@ -2,22 +2,22 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+job-defaults:
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        max-run-time: 1800
+
 linux64-infer:
     description: "infer build"
     index:
         product: static-analysis
         job-name: linux64-infer
     treeherder:
-        kind: build
-        platform: toolchains/opt
         symbol: TL(infer)
-        tier: 1
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         docker-image: {in-tree: static-analysis-build}
         max-run-time: 3600
     run:
-        using: toolchain-script
         script: build-infer-linux.sh
         resources:
             - 'build/build-infer/build-infer.py'
@@ -27,15 +27,8 @@ linux64-infer:
 linux64-llvm-dsymutil:
     description: "llvm-dsymutil toolchain build"
     treeherder:
-        kind: build
-        platform: toolchains/opt
         symbol: TL(dsymutil)
-        tier: 1
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
-    worker:
-        max-run-time: 1800
     run:
-        using: toolchain-script
         script: build-llvm-dsymutil.sh
         toolchain-artifact: public/build/llvm-dsymutil.tar.xz
     toolchains:
@@ -44,15 +37,10 @@ linux64-llvm-dsymutil:
 linux64-binutils:
     description: "Binutils toolchain build"
     treeherder:
-        kind: build
-        platform: toolchains/opt
         symbol: TL(binutil)
-        tier: 1
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 3600
     run:
-        using: toolchain-script
         script: build-binutils-linux.sh
         resources:
             - 'build/unix/build-binutils/build-binutils.sh'
@@ -64,15 +52,8 @@ linux64-binutils:
 linux64-hfsplus:
     description: "hfsplus toolchain build"
     treeherder:
-        kind: build
-        platform: toolchains/opt
         symbol: TL(hfs+)
-        tier: 1
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
-    worker:
-        max-run-time: 1800
     run:
-        using: toolchain-script
         script: build-hfsplus-linux.sh
         resources:
             - 'build/unix/build-hfsplus/build-hfsplus.sh'
@@ -84,30 +65,18 @@ linux64-hfsplus:
 linux64-libdmg:
     description: "libdmg-hfsplus toolchain build"
     treeherder:
-        kind: build
-        platform: toolchains/opt
         symbol: TL(libdmg-hfs+)
-        tier: 1
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
-    worker:
-        max-run-time: 1800
     run:
-        using: toolchain-script
         script: build-libdmg-hfsplus.sh
         toolchain-artifact: public/build/dmg.tar.xz
 
 linux64-tup:
     description: "tup toolchain build"
     treeherder:
-        kind: build
-        platform: toolchains/opt
         symbol: TL(tup)
-        tier: 1
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 3600
     run:
-        using: toolchain-script
         script: build-tup-linux.sh
         resources:
             - 'taskcluster/scripts/misc/tooltool-download.sh'
@@ -121,16 +90,11 @@ linux64-tup:
 linux64-custom-v8:
     description: "Custom v8 build"
     treeherder:
-        kind: build
-        platform: toolchains/opt
         symbol: TL(custom-v8)
-        tier: 1
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         docker-image: {in-tree: custom-v8}
         max-run-time: 3600
     run:
-        using: toolchain-script
         script: build-custom-v8.sh
         arguments: [
             d8.zip,
@@ -142,16 +106,10 @@ linux64-custom-v8:
 wrench-deps:
     description: "Downloads all the crates needed for building wrench"
     treeherder:
-        kind: build
-        platform: toolchains/opt
         symbol: WR(wrench-deps)
-        tier: 1
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         docker-image: {in-tree: webrender}
-        max-run-time: 1800
     run:
-        using: toolchain-script
         script: wrench-deps-vendoring.sh
         sparse-profile: null  # need all of gfx/wr checked out for this script
         resources:

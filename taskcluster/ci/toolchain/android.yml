@@ -2,23 +2,22 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-linux64-android-sdk-linux-repack:
-    description: "Android SDK (Linux) repack toolchain build"
-    treeherder:
-        kind: build
-        platform: toolchains/opt
-        symbol: TL(android-sdk-linux)
-        tier: 1
+job-defaults:
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         docker-image: {in-tree: android-build}
         max-run-time: 1800
+
+linux64-android-sdk-linux-repack:
+    description: "Android SDK (Linux) repack toolchain build"
+    treeherder:
+        symbol: TL(android-sdk-linux)
+    worker:
         artifacts:
             - name: project/gecko/android-sdk
               path: /builds/worker/project/gecko/android-sdk/
               type: directory
     run:
-        using: toolchain-script
         script: repack-android-sdk-linux.sh
         resources:
             - 'python/mozboot/**/*android*'
@@ -28,20 +27,13 @@ linux64-android-sdk-linux-repack:
 linux64-android-ndk-linux-repack:
     description: "Android NDK (Linux) repack toolchain build"
     treeherder:
-        kind: build
-        platform: toolchains/opt
         symbol: TL(android-ndk-linux)
-        tier: 1
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        docker-image: {in-tree: android-build}
-        max-run-time: 1800
         artifacts:
             - name: project/gecko/android-ndk
               path: /builds/worker/project/gecko/android-ndk/
               type: directory
     run:
-        using: toolchain-script
         script: repack-android-ndk-linux.sh
         resources:
             - 'python/mozboot/**/*android*'
@@ -51,18 +43,11 @@ linux64-android-ndk-linux-repack:
 linux64-android-gradle-dependencies:
     description: "Android Gradle dependencies toolchain task"
     treeherder:
-        kind: build
-        platform: toolchains/opt
         symbol: TL(gradle-dependencies)
-        tier: 1
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        docker-image: {in-tree: android-build}
         env:
             GRADLE_USER_HOME: "/builds/worker/workspace/build/src/mobile/android/gradle/dotgradle-online"
-        max-run-time: 1800
     run:
-        using: toolchain-script
         script: android-gradle-dependencies.sh
         sparse-profile: null
         resources:

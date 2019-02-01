@@ -2,22 +2,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-linux64-clang-tidy:
+job-defaults:
     description: "Clang-tidy build"
     index:
         product: static-analysis
-        job-name: linux64-clang-tidy
-    treeherder:
-        kind: build
-        platform: toolchains/opt
-        symbol: TL(clang-tidy)
-        tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux-large
     worker:
         max-run-time: 3600
     run:
-        using: toolchain-script
-        script: build-clang-tidy-linux.sh
+        toolchain-artifact: public/build/clang-tidy.tar.xz
         resources:
             - 'build/clang-plugin/**/*.cpp'
             - 'build/clang-plugin/**/*.h'
@@ -26,9 +19,17 @@ linux64-clang-tidy:
             - 'build/clang-plugin/moz.build'
             - 'build/clang-plugin/Makefile.in'
             - 'build/build-clang/build-clang.py'
+
+linux64-clang-tidy:
+    index:
+        job-name: linux64-clang-tidy
+    treeherder:
+        symbol: TL(clang-tidy)
+    run:
+        script: build-clang-tidy-linux.sh
+        resources:
             - 'build/build-clang/clang-tidy-linux64.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
-        toolchain-artifact: public/build/clang-tidy.tar.xz
     run-on-projects:
         - trunk
         - try
@@ -36,18 +37,12 @@ linux64-clang-tidy:
         - linux64-gcc-4.9
 
 macosx64-clang-tidy:
-    description: "Clang-tidy build"
     index:
-        product: static-analysis
         job-name: macosx64-clang-tidy
     treeherder:
-        kind: build
-        platform: toolchains/opt
         symbol: TM(clang-tidy)
-        tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux-large
     worker:
-        max-run-time: 3600
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-clang.manifest"
     run-on-projects:
@@ -58,16 +53,8 @@ macosx64-clang-tidy:
         script: build-clang-tidy-macosx.sh
         tooltool-downloads: internal
         resources:
-            - 'build/clang-plugin/**/*.cpp'
-            - 'build/clang-plugin/**/*.h'
-            - 'build/clang-plugin/*.inc'
-            - 'build/clang-plugin/*.py'
-            - 'build/clang-plugin/moz.build'
-            - 'build/clang-plugin/Makefile.in'
-            - 'build/build-clang/build-clang.py'
             - 'build/build-clang/clang-tidy-macosx64.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
-        toolchain-artifact: public/build/clang-tidy.tar.xz
     toolchains:
         - linux64-cctools-port
         - linux64-clang-7
@@ -77,11 +64,8 @@ macosx64-clang-tidy:
 win32-clang-tidy:
     description: "Clang-tidy toolchain build"
     index:
-        product: static-analysis
         job-name: win32-clang-tidy
     treeherder:
-        kind: build
-        platform: toolchains/opt
         symbol: TW32(clang-tidy)
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
@@ -90,16 +74,8 @@ win32-clang-tidy:
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/build-clang-cl.manifest"
     run:
-        using: toolchain-script
         script: build-clang-tidy32-windows.sh
         resources:
-            - 'build/clang-plugin/**/*.cpp'
-            - 'build/clang-plugin/**/*.h'
-            - 'build/clang-plugin/*.inc'
-            - 'build/clang-plugin/*.py'
-            - 'build/clang-plugin/moz.build'
-            - 'build/clang-plugin/Makefile.in'
-            - 'build/build-clang/build-clang.py'
             - 'build/build-clang/clang-tidy-win32.json'
             - 'taskcluster/scripts/misc/build-clang-windows-helper32.sh'
         toolchain-artifact: public/build/clang-tidy.tar.bz2
@@ -110,11 +86,8 @@ win32-clang-tidy:
 win64-clang-tidy:
     description: "Clang-tidy toolchain build"
     index:
-        product: static-analysis
         job-name: win64-clang-tidy
     treeherder:
-        kind: build
-        platform: toolchains/opt
         symbol: TW64(clang-tidy)
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
@@ -123,16 +96,8 @@ win64-clang-tidy:
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/build-clang-cl.manifest"
     run:
-        using: toolchain-script
         script: build-clang-tidy64-windows.sh
         resources:
-            - 'build/clang-plugin/**/*.cpp'
-            - 'build/clang-plugin/**/*.h'
-            - 'build/clang-plugin/*.inc'
-            - 'build/clang-plugin/*.py'
-            - 'build/clang-plugin/moz.build'
-            - 'build/clang-plugin/Makefile.in'
-            - 'build/build-clang/build-clang.py'
             - 'build/build-clang/clang-tidy-win32.json'
             - 'taskcluster/scripts/misc/build-clang-windows-helper64.sh'
         toolchain-artifact: public/build/clang-tidy.tar.bz2

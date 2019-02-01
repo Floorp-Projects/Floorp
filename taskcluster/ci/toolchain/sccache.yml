@@ -2,43 +2,37 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-linux64-sccache:
+job-defaults:
     description: "sccache toolchain build"
     treeherder:
-        kind: build
-        platform: toolchains/opt
         symbol: TL(sccache)
-        tier: 1
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
-    worker:
-        max-run-time: 1800
     run:
         using: toolchain-script
         script: build-sccache.sh
         resources:
             - 'taskcluster/scripts/misc/tooltool-download.sh'
+
+linux64-sccache:
+    treeherder:
+        symbol: TL(sccache)
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        max-run-time: 1800
+    run:
         toolchain-artifact: public/build/sccache2.tar.xz
     toolchains:
         - linux64-rust-1.28
         - linux64-binutils
 
 win64-sccache:
-    description: "sccache toolchain build"
     treeherder:
-        kind: build
-        platform: toolchains/opt
         symbol: TW64(sccache)
-        tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
         max-run-time: 3600
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/sccache-build.manifest"
     run:
-        using: toolchain-script
-        script: build-sccache.sh
-        resources:
-            - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/sccache2.tar.bz2
     toolchains:
         - win64-rust-1.28
