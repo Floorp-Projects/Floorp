@@ -1932,6 +1932,18 @@ class _ParamTraits():
         iffreed = StmtIf(ExprBinary(_FREED_ACTOR_ID, '==', idvar))
         iffreed.addifstmt(cls.fatalError("actor has been |delete|d"))
         ifnull.addelsestmt(iffreed)
+        #   MOZ_ASSERT(aActor->GetIPCChannel() == var->GetIPCChannel(), "...")
+        ifnull.addelsestmt(
+            StmtExpr(ExprCall(ExprVar("MOZ_ASSERT"), args=[
+                ExprBinary(
+                    ExprCall(ExprSelect(cls.actor, '->', 'GetIPCChannel')),
+                    '==',
+                    ExprCall(ExprSelect(cls.var, '->', 'GetIPCChannel'))
+                ),
+                ExprLiteral.String("Actor must be from the same channel as the"
+                                   " actor it's being sent over"),
+            ]))
+        )
 
         # IPC::WriteParam(..)
         write += [ifnull,
