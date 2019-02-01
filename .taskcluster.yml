@@ -1,7 +1,51 @@
 # This file is rendered via JSON-e by
-# - mozilla-taskcluster - https://docs.taskcluster.net/reference/integrations/mozilla-taskcluster/docs/taskcluster-yml
-# - cron tasks - taskcluster/taskgraph/cron/decision.py
-# - action tasks - taskcluster/taskgraph/actions/registry.py
+# - mozilla-taskcluster - See
+#   https://docs.taskcluster.net/reference/integrations/mozilla-taskcluster/docs/taskcluster-yml
+#   {
+#     tasks_for: 'hg-push',
+#     push: {owner, comment, pushlog_id, pushdate},
+#     repository: {url, project, level},
+#     now,
+#     as_slugid: // function
+#   }
+#
+# - cron tasks - See taskcluster/taskgraph/cron/decision.py
+#   {
+#     tasks_for: 'cron',
+#     push: {revision, pushlog_id, pushdate, owner, comment}
+#     repository: {url, project, level},
+#     cron: {task_id, job_name, job_symbol, quoted_args},
+#     now,
+#     as_slugid, // function
+#   }
+#
+# - action tasks - See:
+#   * taskcluster/taskgraph/actions/registry.py,
+#   * https://docs.taskcluster.net/docs/manual/using/actions/spec
+#   * ci-admin:ciadmin/generate/in_tree_actions.py
+#
+#   The registry generates the hookPayload that appears in actions.json, and
+#   contains data from the decision task as well as JSON-e code to combine that
+#   with data supplied as part of the action spec.  When the hook is fired, the
+#   hookPayload is rendered with JSON-e to produce a payload for the hook task
+#   template.
+#
+#   The ci-admin code wraps the content of this file (.taskcluster.yml) with a
+#   JSON-e $let statement that produces the context described below, and
+#   installs that as the hook task template.
+#
+#   {
+#     tasks_for: 'action',
+#     push: {owner, pushlog_id, revision},
+#     repository: {url, project, level},
+#     input,
+#     parameters,
+#     taskId,      // targetted taskId
+#     taskGroupId, // targetted taskGroupId
+#     action: {name, title, description, taskGroupId, symbol, repo_scope, cb_name}
+#     ownTaskId:   // taskId of the task that will be created
+#   }
+
 version: 1
 tasks:
   # NOTE: support for actions in ci-admin requires that the `tasks` property be an array *before* JSON-e rendering
