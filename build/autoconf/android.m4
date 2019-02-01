@@ -91,85 +91,8 @@ AC_SUBST_LIST([STLPORT_LIBS])
 
 
 dnl Configure an Android SDK.
-dnl Arg 1: target SDK version, like 23.
-dnl Arg 2: list of build-tools versions, like "23.0.3 23.0.1".
 AC_DEFUN([MOZ_ANDROID_SDK],
 [
-
-MOZ_ARG_WITH_STRING(android-sdk,
-[  --with-android-sdk=DIR
-                          location where the Android SDK can be found (like ~/.mozbuild/android-sdk-linux)],
-    android_sdk_root=$withval)
-
-android_sdk_root=${withval%/platforms/android-*}
-
-case "$target" in
-*-android*|*-linuxandroid*)
-    if test -z "$android_sdk_root" ; then
-        AC_MSG_ERROR([You must specify --with-android-sdk=/path/to/sdk when targeting Android.])
-    fi
-
-    # We were given an old-style
-    # --with-android-sdk=/path/to/sdk/platforms/android-*.  We could warn, but
-    # we'll get compliance by forcing the issue.
-    if test -e "$withval"/source.properties ; then
-        AC_MSG_ERROR([Including platforms/android-* in --with-android-sdk arguments is deprecated.  Use --with-android-sdk=$android_sdk_root.])
-    fi
-
-    android_target_sdk=$1
-
-    AC_MSG_CHECKING([for Android build-tools])
-    android_build_tools_base="$android_sdk_root"/build-tools
-    for version in $2; do
-        android_build_tools="$android_build_tools_base"/$version
-        if test -d "$android_build_tools" -a -f "$android_build_tools/zipalign"; then
-            AC_MSG_RESULT([$android_build_tools])
-            break
-        fi
-    done
-
-    MOZ_PATH_PROG(ZIPALIGN, zipalign, :, [$android_build_tools])
-    if test -z "$ZIPALIGN" -o "$ZIPALIGN" = ":"; then
-      AC_MSG_ERROR([The program zipalign was not found.  Try |mach bootstrap|.])
-    fi
-
-    android_platform_tools="$android_sdk_root"/platform-tools
-    AC_MSG_CHECKING([for Android platform-tools])
-    if test -d "$android_platform_tools" -a -f "$android_platform_tools/adb"; then
-        AC_MSG_RESULT([$android_platform_tools])
-    else
-        AC_MSG_ERROR([You must install the Android platform-tools.  Try |mach bootstrap|.  (Looked for $android_platform_tools)])
-    fi
-
-    MOZ_PATH_PROG(ADB, adb, :, [$android_platform_tools])
-    if test -z "$ADB" -o "$ADB" = ":"; then
-      AC_MSG_ERROR([The program adb was not found.  Try |mach bootstrap|.])
-    fi
-
-    android_tools="$android_sdk_root"/tools
-    AC_MSG_CHECKING([for Android tools])
-    if test -d "$android_tools" -a -f "$android_tools/emulator"; then
-        AC_MSG_RESULT([$android_tools])
-    else
-        AC_MSG_ERROR([You must install the Android tools.  Try |mach bootstrap|.  (Looked for $android_tools)])
-    fi
-
-    dnl Android Tools 26 changes emulator path.
-    dnl Although android_sdk_root/tools still has emulator command,
-    dnl it doesn't work correctly
-    MOZ_PATH_PROG(EMULATOR, emulator, :, [$android_sdk_root/emulator:$android_tools])
-    if test -z "$EMULATOR" -o "$EMULATOR" = ":"; then
-        AC_MSG_ERROR([The program emulator was not found.  Try |mach bootstrap|.])
-    fi
-
-    ANDROID_TARGET_SDK="${android_target_sdk}"
-    ANDROID_SDK_ROOT="${android_sdk_root}"
-    ANDROID_TOOLS="${android_tools}"
-    AC_SUBST(ANDROID_TARGET_SDK)
-    AC_SUBST(ANDROID_SDK_ROOT)
-    AC_SUBST(ANDROID_TOOLS)
-    ;;
-esac
 
 MOZ_ARG_WITH_STRING(android-min-sdk,
 [  --with-android-min-sdk=[VER]     Impose a minimum Firefox for Android SDK version],

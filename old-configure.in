@@ -1796,7 +1796,7 @@ dnl ========================================================
 
 case "$MOZ_BUILD_APP" in
 mobile/android)
-    MOZ_ANDROID_SDK(28, 27.0.3)
+    MOZ_ANDROID_SDK
     ;;
 esac
 
