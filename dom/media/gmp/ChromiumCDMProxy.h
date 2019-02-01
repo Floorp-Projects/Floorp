@@ -111,7 +111,7 @@ class ChromiumCDMProxy : public CDMProxy {
 
   ~ChromiumCDMProxy();
 
-  GMPCrashHelper* mCrashHelper;
+  RefPtr<GMPCrashHelper> mCrashHelper;
 
   Mutex mCDMMutex;
   RefPtr<gmp::ChromiumCDMParent> mCDM;
