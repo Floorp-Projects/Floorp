@@ -98,7 +98,19 @@ class SystemEngineView @JvmOverloads constructor(
 
     override fun onDestroy() {
         session?.apply {
-            webView.destroy()
+            // The WebView instance is long-lived, as it's referenced in the
+            // engine session. We can't destroy it here since the session
+            // might be used with a different engine view instance later.
+
+            // Further, when this engine view gets destroyed, we need to
+            // remove/detach the WebView so that engine view's activity context
+            // can properly be destroyed and gc'ed. The WebView instances are
+            // created with the context provided to the engine (application
+            // context) and reference their parent (this engine view). Since
+            // we're keeping the engine session (and their WebView) instances
+            // in the SessionManager until closed we'd otherwise prevent
+            // this engine view and its context from getting gc'ed.
+            (webView.parent as? SystemEngineView)?.removeView(webView)
         }
     }
 

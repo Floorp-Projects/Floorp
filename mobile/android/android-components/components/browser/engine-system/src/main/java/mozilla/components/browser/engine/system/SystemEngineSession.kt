@@ -155,6 +155,18 @@ class SystemEngineSession(
     }
 
     /**
+     * See [EngineSession.close]
+     */
+    override fun close() {
+        super.close()
+        // The WebView instance must remain useable for the duration of this session.
+        // We can only destroy it once we're sure this session will not be used
+        // again which is why destroy happens here are not part of regular (activity)
+        // lifecycle event.
+        webView.destroy()
+    }
+
+    /**
      * See [EngineSession.clearData]
      */
     override fun clearData() {

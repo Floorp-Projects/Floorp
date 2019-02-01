@@ -696,4 +696,14 @@ class SystemEngineSessionTest {
         engineSession.exitFullScreenMode()
         verify(customViewCallback).onCustomViewHidden()
     }
+
+    @Test
+    fun closeDestroysWebView() {
+        val engineSession = SystemEngineSession(getApplicationContext())
+        val webView = mock(WebView::class.java)
+        engineSession.webView = webView
+
+        engineSession.close()
+        verify(webView).destroy()
+    }
 }

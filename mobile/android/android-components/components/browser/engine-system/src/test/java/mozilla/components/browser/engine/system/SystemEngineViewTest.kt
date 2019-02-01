@@ -706,26 +706,35 @@ class SystemEngineViewTest {
 
     @Test
     fun `lifecycle methods are invoked`() {
-        val webView = mock(WebView::class.java)
+        val mockWebView = mock(WebView::class.java)
+        val engineSession1 = SystemEngineSession(getApplicationContext())
+        val engineSession2 = SystemEngineSession(getApplicationContext())
+
         val engineView = SystemEngineView(getApplicationContext())
         engineView.onPause()
         engineView.onResume()
         engineView.onDestroy()
 
-        val engineSession = SystemEngineSession(getApplicationContext())
-        engineSession.webView = webView
-        engineView.render(engineSession)
+        engineSession1.webView = mockWebView
+        engineView.render(engineSession1)
+        engineView.onDestroy()
 
-        engineView.onPause()
-        verify(webView, times(1)).onPause()
-        verify(webView, times(1)).pauseTimers()
-
-        engineView.onResume()
-        verify(webView, times(1)).onResume()
-        verify(webView, times(1)).resumeTimers()
+        engineView.render(engineSession2)
+        assertNotNull(engineSession2.webView.parent)
 
         engineView.onDestroy()
-        verify(webView, times(1)).destroy()
+        assertNull(engineSession2.webView.parent)
+
+        engineView.render(engineSession1)
+        engineView.onPause()
+        verify(mockWebView, times(1)).onPause()
+        verify(mockWebView, times(1)).pauseTimers()
+
+        engineView.onResume()
+        verify(mockWebView, times(1)).onResume()
+        verify(mockWebView, times(1)).resumeTimers()
+
+        engineView.onDestroy()
     }
 
     @Test
@@ -1189,18 +1198,6 @@ class SystemEngineViewTest {
             assertEquals(jsAlertCount, 0)
             assertTrue(shouldShowMoreDialogs)
         }
-    }
-
-    @Test
-    fun `render removes webview from previous session`() {
-        val engineView = SystemEngineView(getApplicationContext())
-
-        val session1 = SystemEngineSession(getApplicationContext())
-        val session2 = SystemEngineSession(getApplicationContext())
-        engineView.render(session1)
-        engineView.render(session2)
-
-        assertNull(session1.webView.parent)
     }
 
     private fun Date.add(timeUnit: Int, amountOfTime: Int): Date {
