@@ -7,6 +7,8 @@
 // iframe while defining which document to debug by setting a `target`
 // attribute refering to the document to debug.
 
+const { Toolbox } = require("devtools/client/framework/toolbox");
+
 add_task(async function() {
   // iframe loads the document to debug
   const iframe = document.createXULElement("browser");
@@ -35,6 +37,9 @@ add_task(async function() {
   // is plenty of asynchronous steps during toolbox load
   info("Waiting for toolbox-ready");
   const toolbox = await onToolboxReady;
+
+  is(toolbox.hostType, Toolbox.HostType.PAGE,
+     "Host type of this toolbox shuld be Toolbox.HostType.PAGE");
 
   const onToolboxDestroyed = gDevTools.once("toolbox-destroyed");
   const onTabDetached = toolbox.target.activeTab.once("tabDetached");
