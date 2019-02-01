@@ -1,0 +1,54 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+linux64-node:
+    description: "Node repack toolchain build"
+    treeherder:
+        kind: build
+        platform: toolchains/opt
+        symbol: TL(node)
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        max-run-time: 1800
+    run:
+        using: toolchain-script
+        script: repack-node.sh
+        arguments: ['linux64']
+        toolchain-artifact: public/build/node.tar.xz
+
+macosx64-node:
+    description: "Node repack toolchain build"
+    treeherder:
+        kind: build
+        platform: toolchains/opt
+        symbol: TM(node)
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        max-run-time: 1800
+    run-on-projects:
+        - trunk
+        - try
+    run:
+        using: toolchain-script
+        script: repack-node.sh
+        arguments: ['macosx64']
+        toolchain-artifact: public/build/node.tar.xz
+
+win64-node:
+    description: "Node repack toolchain build"
+    treeherder:
+        kind: build
+        platform: toolchains/opt
+        symbol: TW64(node)
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        max-run-time: 1800
+    run:
+        using: toolchain-script
+        script: repack-node.sh
+        arguments: ['win64']
+        toolchain-artifact: public/build/node.tar.bz2

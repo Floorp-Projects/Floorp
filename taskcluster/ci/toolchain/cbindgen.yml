@@ -1,0 +1,74 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+linux64-cbindgen:
+    description: "cbindgen toolchain build"
+    treeherder:
+        kind: build
+        platform: toolchains/opt
+        symbol: TL(cbindgen)
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        max-run-time: 1800
+    run:
+        using: toolchain-script
+        script: build-cbindgen.sh
+        arguments: ['x86_64-unknown-linux-gnu']
+        resources:
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
+        toolchain-artifact: public/build/cbindgen.tar.xz
+    toolchains:
+        - linux64-rust-1.28
+
+macosx64-cbindgen:
+    description: "cbindgen toolchain build"
+    treeherder:
+        kind: build
+        platform: toolchains/opt
+        symbol: TM(cbindgen)
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        max-run-time: 3600
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-clang.manifest"
+    run-on-projects:
+        - trunk
+        - try
+    run:
+        using: toolchain-script
+        script: build-cbindgen.sh
+        arguments: ['x86_64-apple-darwin']
+        tooltool-downloads: internal
+        resources:
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
+        toolchain-artifact: public/build/cbindgen.tar.xz
+    toolchains:
+        - linux64-cctools-port
+        - linux64-clang-7
+        - linux64-llvm-dsymutil
+        - linux64-rust-macos-1.31
+
+win64-cbindgen:
+    description: "cbindgen toolchain build"
+    treeherder:
+        kind: build
+        platform: toolchains/opt
+        symbol: TW64(cbindgen)
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker:
+        max-run-time: 3600
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/sccache-build.manifest"
+    run:
+        using: toolchain-script
+        script: build-cbindgen.sh
+        arguments: ['x86_64-pc-windows-msvc']
+        resources:
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
+        toolchain-artifact: public/build/cbindgen.tar.bz2
+    toolchains:
+        - win64-rust-1.28

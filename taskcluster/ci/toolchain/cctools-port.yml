@@ -1,0 +1,49 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+linux64-cctools-port:
+    description: "cctools-port toolchain build"
+    treeherder:
+        kind: build
+        platform: toolchains/opt
+        symbol: TL(cctools)
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        max-run-time: 1800
+    run:
+        using: toolchain-script
+        script: build-cctools-port.sh
+        resources:
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
+        toolchain-artifact: public/build/cctools.tar.xz
+    toolchains:
+        - linux64-clang-7
+
+macosx64-cctools-port:
+    description: "cctools-port toolchain build"
+    treeherder:
+        kind: build
+        platform: toolchains/opt
+        symbol: TM(cctools)
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        max-run-time: 1800
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-clang.manifest"
+    run-on-projects:
+        - trunk
+        - try
+    run:
+        using: toolchain-script
+        script: build-cctools-port-macosx.sh
+        tooltool-downloads: internal
+        resources:
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
+        toolchain-artifact: public/build/cctools.tar.bz2
+    toolchains:
+        - linux64-cctools-port
+        - linux64-clang-7
+        - linux64-node
