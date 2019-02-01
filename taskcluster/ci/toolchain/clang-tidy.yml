@@ -92,6 +92,6 @@ win64-clang-tidy:
     run:
         script: build-clang-tidy64-windows.sh
         resources:
-            - 'build/build-clang/clang-tidy-win32.json'
+            - 'build/build-clang/clang-tidy-win64.json'
             - 'taskcluster/scripts/misc/build-clang-windows-helper64.sh'
         toolchain-artifact: public/build/clang-tidy.tar.bz2
