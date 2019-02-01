@@ -147,7 +147,8 @@ static JSObject* GetIDPrototype(JSContext* aCx, const js::Class* aClass) {
 // Unwrap the given value to an object with the correct class, or nullptr.
 static JSObject* GetIDObject(HandleValue aVal, const Class* aClass) {
   if (aVal.isObject()) {
-    JSObject* obj = js::CheckedUnwrap(&aVal.toObject());
+    // We care only about IID/CID objects here, so CheckedUnwrapStatic is fine.
+    JSObject* obj = js::CheckedUnwrapStatic(&aVal.toObject());
     if (obj && js::GetObjectClass(obj) == aClass) {
       return obj;
     }
@@ -168,8 +169,13 @@ Maybe<nsID> JSValue2ID(JSContext* aCx, HandleValue aVal) {
     return Nothing();
   }
 
+  // We only care about ID objects here, so CheckedUnwrapStatic is fine.
+  RootedObject obj(aCx, js::CheckedUnwrapStatic(&aVal.toObject()));
+  if (!obj) {
+    return Nothing();
+  }
+
   mozilla::Maybe<nsID> id;
-  RootedObject obj(aCx, js::CheckedUnwrap(&aVal.toObject()));
   if (js::GetObjectClass(obj) == &sID_Class) {
     // Extract the raw bytes of the nsID from reserved slots.
     uint32_t rawid[] = {js::GetReservedSlot(obj, kID_Slot0).toPrivateUint32(),
@@ -367,8 +373,11 @@ static nsresult FindObjectForHasInstance(JSContext* cx, HandleObject objArg,
   using namespace mozilla::jsipc;
   RootedObject obj(cx, objArg), proto(cx);
   while (true) {
-    // Try the object, or the wrappee if allowed.
-    JSObject* o = js::IsWrapper(obj) ? js::CheckedUnwrap(obj, false) : obj;
+    // Try the object, or the wrappee if allowed.  We want CheckedUnwrapDynamic
+    // here, because we might in fact be looking for a Window.  "cx" represents
+    // our current global.
+    JSObject* o =
+        js::IsWrapper(obj) ? js::CheckedUnwrapDynamic(obj, cx, false) : obj;
     if (o && (IS_WN_REFLECTOR(o) || IsDOMObject(o) || IsCPOW(o))) {
       target.set(o);
       return NS_OK;
@@ -405,7 +414,8 @@ nsresult HasInstance(JSContext* cx, HandleObject objArg, const nsID* iid,
     return mozilla::jsipc::InstanceOf(obj, iid, bp);
   }
 
-  nsCOMPtr<nsISupports> identity = UnwrapReflectorToISupports(obj);
+  // Need to unwrap Window correctly here, so use ReflectorToISupportsDynamic.
+  nsCOMPtr<nsISupports> identity = ReflectorToISupportsDynamic(obj, cx);
   if (!identity) {
     return NS_OK;
   }
