@@ -3886,9 +3886,7 @@ Maybe<ScrollMetadata> ScrollFrameHelper::ComputeScrollMetadata(
       mOuter->GetOffsetToCrossDoc(aContainerReferenceFrame);
 
   Maybe<nsRect> parentLayerClip;
-  // For containerful frames, the clip is on the container layer.
-  if (aClip &&
-      (!gfxPrefs::LayoutUseContainersForRootFrames() || mAddClipRectToLayer)) {
+  if (aClip && mAddClipRectToLayer) {
     parentLayerClip = Some(aClip->GetClipRect());
   }
 
