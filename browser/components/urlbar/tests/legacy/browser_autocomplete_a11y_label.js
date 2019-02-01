@@ -1,6 +1,10 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/**
+ * This test ensures that we produce good labels for a11y purposes.
+ */
+
 const SUGGEST_ALL_PREF = "browser.search.suggest.enabled";
 const SUGGEST_URLBAR_PREF = "browser.urlbar.suggest.searches";
 const TEST_ENGINE_BASENAME = "searchSuggestionEngine.xml";
@@ -9,12 +13,17 @@ add_task(async function switchToTab() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:about");
 
   await promiseAutocompleteResultPopup("% about");
-  let result = await waitForAutocompleteResultAt(1);
-  is(result.getAttribute("type"), "switchtab", "Expect right type attribute");
-  is(result.label, "about:about about:about Tab", "Result a11y label should be: <title> <url> Tab");
+  let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
+  Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
+    "Should have a switch tab result");
 
-  gURLBar.popup.hidePopup();
-  await promisePopupHidden(gURLBar.popup);
+  // XXX Bug 1524539. This fails on QuantumBar because we're producing different
+  // outputs. Once we confirm accessibilty is ok with the new format, we
+  // should update and have this test running on QuantumBar.
+  let element = await UrlbarTestUtils.waitForAutocompleteResultAt(window, 1);
+  is(element.label, "about:about about:about Tab", "Result a11y label should be: <title> <url> Tab");
+
+  await UrlbarTestUtils.promisePopupClose(window);
   gBrowser.removeTab(tab);
 });
 
@@ -33,11 +42,11 @@ add_task(async function searchSuggestions() {
   });
 
   await promiseAutocompleteResultPopup("foo");
-  await waitForAutocompleteResultAt(2);
+  let length = await UrlbarTestUtils.getResultCount(window);
   // Don't assume that the search doesn't match history or bookmarks left around
   // by earlier tests.
-  Assert.ok(gURLBar.popup.richlistbox.itemChildren.length >= 3,
-            "Should get at least heuristic result + two search suggestions");
+  Assert.greaterOrEqual(length, 3,
+    "Should get at least heuristic result + two search suggestions");
   // The first expected search is the search term itself since the heuristic
   // result will come before the search suggestions.
   let expectedSearches = [
@@ -45,15 +54,21 @@ add_task(async function searchSuggestions() {
     "foofoo",
     "foobar",
   ];
-  for (let child of gURLBar.popup.richlistbox.itemChildren) {
-    if (child.getAttribute("type").split(/\s+/).includes("searchengine")) {
-      Assert.ok(expectedSearches.length > 0);
+  for (let i = 0; i < length; i++) {
+    let result = await UrlbarTestUtils.getDetailsOfResultAt(window, i);
+    if (result.type === UrlbarUtils.RESULT_TYPE.SEARCH) {
+      Assert.greaterOrEqual(expectedSearches.length, 0,
+        "Should still have expected searches remaining");
       let suggestion = expectedSearches.shift();
-      Assert.equal(child.label, suggestion + " browser_searchSuggestionEngine searchSuggestionEngine.xml Search",
-                   "Result label should be: <search term> <engine name> Search");
+      // XXX Bug 1524539. This fails on QuantumBar because we're producing different
+      // outputs. Once we confirm accessibilty is ok with the new format, we
+      // should update and have this test running on QuantumBar.
+      let element = await UrlbarTestUtils.waitForAutocompleteResultAt(window, i);
+      Assert.equal(element.label,
+        suggestion + " browser_searchSuggestionEngine searchSuggestionEngine.xml Search",
+        "Result label should be: <search term> <engine name> Search");
     }
   }
   Assert.ok(expectedSearches.length == 0);
-  gURLBar.popup.hidePopup();
-  await promisePopupHidden(gURLBar.popup);
+  await UrlbarTestUtils.promisePopupClose(window);
 });
