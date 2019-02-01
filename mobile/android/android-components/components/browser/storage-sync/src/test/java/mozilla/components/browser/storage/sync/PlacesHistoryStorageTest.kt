@@ -156,13 +156,9 @@ class PlacesHistoryStorageTest {
     fun `storage passes through getAutocompleteSuggestion calls`() {
         val storage = storage!!
         val places = places!!
-        `when`(places.queryAutocomplete("mozilla", 100)).thenReturn(listOf(
-            SearchResult("mozilla", "http://www.mozilla.org", "Mozilla", 10),
-            SearchResult("mozilla", "http://www.firefox.com", "Mozilla Firefox", 5),
-            SearchResult("mozilla", "https://en.wikipedia.org/wiki/Mozilla", "", 8))
-        )
+        `when`(places.matchUrl("mozilla")).thenReturn("http://www.mozilla.org")
         val res = storage.getAutocompleteSuggestion("mozilla")!!
-        assertEquals(3, res.totalItems)
+        assertEquals(1, res.totalItems)
         assertEquals("http://www.mozilla.org", res.url)
         assertEquals("mozilla.org", res.text)
         assertEquals("placesHistory", res.source)
