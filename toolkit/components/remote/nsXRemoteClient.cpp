@@ -466,21 +466,22 @@ Window nsXRemoteClient::FindBestWindow(const char *aProgram,
     // Check to see if there's a profile name on this window.  If
     // there is, then we need to make sure it matches what someone
     // passed in.
-    if (aProfile) {
-      Unused << XGetWindowProperty(
-          mDisplay, w, mMozProfileAtom, 0, (65536 / sizeof(long)), False,
-          XA_STRING, &type, &format, &nitems, &bytesafter, &data_return);
+    Unused << XGetWindowProperty(
+        mDisplay, w, mMozProfileAtom, 0, (65536 / sizeof(long)), False,
+        XA_STRING, &type, &format, &nitems, &bytesafter, &data_return);
 
-      // If there's a profile compare it with what we have
-      if (data_return) {
-        // If the profiles aren't equal, we don't want this window.
-        if (strcmp(aProfile, (const char *)data_return)) {
-          XFree(data_return);
-          continue;
-        }
-
+    // If there's a profile compare it with what we have
+    if (data_return) {
+      // If the profiles aren't equal, we don't want this window.
+      if (strcmp(aProfile, (const char *)data_return)) {
         XFree(data_return);
+        continue;
       }
+
+      XFree(data_return);
+    } else {
+      // This isn't the window for this profile.
+      continue;
     }
 
     // Check to see if the window supports the new command-line passing
