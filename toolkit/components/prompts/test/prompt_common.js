@@ -92,6 +92,19 @@ function checkPromptState(promptState, expectedState) {
     } else {
         is(promptState.focused, expectedState.focused, "Checking focused element");
     }
+
+    if (expectedState.hasOwnProperty("chrome")) {
+        is(promptState.chrome, expectedState.chrome, "Dialog should be opened as chrome");
+    }
+    if (expectedState.hasOwnProperty("dialog")) {
+        is(promptState.dialog, expectedState.dialog, "Dialog should be opened as a dialog");
+    }
+    if (expectedState.hasOwnProperty("chromeDependent")) {
+        is(promptState.chromeDependent, expectedState.chromeDependent, "Dialog should be opened as dependent");
+    }
+    if (expectedState.hasOwnProperty("isWindowModal")) {
+        is(promptState.isWindowModal, expectedState.isWindowModal, "Dialog should be modal");
+    }
 }
 
 function checkEchoedAuthInfo(expectedState, doc) {
