@@ -1,0 +1,24 @@
+diff --git a/src/common/mac/MachIPC.h b/src/common/mac/MachIPC.h
+--- a/src/common/mac/MachIPC.h
++++ b/src/common/mac/MachIPC.h
+@@ -90,18 +90,20 @@
+ //
+ //    char messageString[] = "Hello server!\n";
+ //    message.SetData(messageString, strlen(messageString)+1);
+ //
+ //    kern_return_t result = sender.SendMessage(message, 1000); // timeout 1000ms
+ //
+ 
+ namespace google_breakpad {
++#ifndef PRINT_MACH_RESULT
+ #define PRINT_MACH_RESULT(result_, message_) \
+   printf(message_" %s (%d)\n", mach_error_string(result_), result_ );
++#endif
+ 
+ //==============================================================================
+ // A wrapper class for mach_msg_port_descriptor_t (with same memory layout)
+ // with convenient constructors and accessors
+ class MachMsgPortDescriptor : public mach_msg_port_descriptor_t {
+  public:
+   // General-purpose constructor
+   MachMsgPortDescriptor(mach_port_t in_name,

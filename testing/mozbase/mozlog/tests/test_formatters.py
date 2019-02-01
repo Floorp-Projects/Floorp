@@ -6,7 +6,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import mozunit
 import pytest
-from io import BytesIO
+from six import BytesIO
 
 from mozlog.structuredlog import StructuredLogger
 from mozlog.formatters import (
@@ -21,7 +21,7 @@ formatters = {
 FORMATS = {
     # A list of tuples consisting of (name, options, expected string).
     'PASS': [
-        ('mach', {}, """
+        ('mach', {}, b"""
  0:00.00 SUITE_START: running 3 tests
  0:00.00 TEST_START: test_foo
  0:00.00 TEST_END: OK
@@ -33,11 +33,11 @@ FORMATS = {
 
 suite 1
 ~~~~~~~
-Ran 4 checks (3 tests, 1 subtests)
+Ran 4 checks (1 subtests, 3 tests)
 Expected results: 4
 OK
-""".lstrip('\n')),
-        ('mach', {'verbose': True}, """
+""".lstrip(b'\n')),
+        ('mach', {'verbose': True}, b"""
  0:00.00 SUITE_START: running 3 tests
  0:00.00 TEST_START: test_foo
  0:00.00 TEST_END: OK
@@ -50,14 +50,14 @@ OK
 
 suite 1
 ~~~~~~~
-Ran 4 checks (3 tests, 1 subtests)
+Ran 4 checks (1 subtests, 3 tests)
 Expected results: 4
 OK
-""".lstrip('\n')),
+""".lstrip(b'\n')),
     ],
 
     'FAIL': [
-        ('mach', {}, """
+        ('mach', {}, b"""
  0:00.00 SUITE_START: running 3 tests
  0:00.00 TEST_START: test_foo
  0:00.00 TEST_END: FAIL, expected PASS - expected 0 got 1
@@ -73,7 +73,7 @@ TIMEOUT another subtest
 
 suite 1
 ~~~~~~~
-Ran 5 checks (3 tests, 2 subtests)
+Ran 5 checks (2 subtests, 3 tests)
 Expected results: 1
 Unexpected results: 4
   test: 2 (1 fail, 1 pass)
@@ -90,8 +90,8 @@ test_bar
   TIMEOUT another subtest
 test_baz
   UNEXPECTED-PASS test_baz
-""".lstrip('\n')),
-        ('mach', {'verbose': True}, """
+""".lstrip(b'\n')),
+        ('mach', {'verbose': True}, b"""
  0:00.00 SUITE_START: running 3 tests
  0:00.00 TEST_START: test_foo
  0:00.00 TEST_END: FAIL, expected PASS - expected 0 got 1
@@ -107,7 +107,7 @@ test_baz
 
 suite 1
 ~~~~~~~
-Ran 5 checks (3 tests, 2 subtests)
+Ran 5 checks (2 subtests, 3 tests)
 Expected results: 1
 Unexpected results: 4
   test: 2 (1 fail, 1 pass)
@@ -124,7 +124,7 @@ test_bar
   TIMEOUT another subtest
 test_baz
   UNEXPECTED-PASS test_baz
-""".lstrip('\n')),
+""".lstrip(b'\n')),
     ],
 }
 

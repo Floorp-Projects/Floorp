@@ -23,7 +23,7 @@ setup(name='mozversion',
       packages=['mozversion'],
       include_package_data=True,
       zip_safe=False,
-      install_requires=['mozlog ~= 3.0',
+      install_requires=['mozlog ~= 4.0',
                         'six >= 1.10.0'],
       entry_points="""
       # -*- Entry points: -*-

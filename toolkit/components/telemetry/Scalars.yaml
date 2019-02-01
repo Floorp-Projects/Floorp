@@ -2136,6 +2136,20 @@ timestamps:
     record_in_processes:
       - main
 
+  about_home_topsites_first_paint:
+    bug_numbers:
+      - 1518521
+    description: >
+      Record the timestamp of when the first about:home's Topsites are painted. Only records if
+      about:home is set as the default homepage, and if sessions are not being restored by default.
+    expires: never
+    kind: uint
+    notification_emails:
+      - mconley@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - main
+
 browser.timings:
   last_shutdown:
     bug_numbers:

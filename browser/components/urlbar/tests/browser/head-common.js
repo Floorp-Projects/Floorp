@@ -72,8 +72,8 @@ function promiseSearchComplete(win = window, dontAnimate = false) {
 function promiseAutocompleteResultPopup(inputText,
                                         win = window,
                                         fireInputEvent = false) {
-  return UrlbarTestUtils.promiseAutocompleteResultPopup(inputText,
-    win, waitForFocus, fireInputEvent);
+  return UrlbarTestUtils.promiseAutocompleteResultPopup(win, inputText,
+    waitForFocus, fireInputEvent);
 }
 
 async function waitForAutocompleteResultAt(index) {

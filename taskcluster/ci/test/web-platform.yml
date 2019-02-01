@@ -49,13 +49,13 @@ web-platform-tests:
     run-on-projects:
         by-test-platform:
             android.*: ['mozilla-central', 'try']
-            linux64-qr/.*: ['release', 'try']  # skip on integration branches due to high load
+            .*-qr/.*: ['release', 'try']  # skip on integration branches due to high load
             default: built-projects
     tier:
         by-test-platform:
             android.*: 2
             linux64-asan/opt: 2
-            linux64-qr/.*: 2  # can't be tier-1 if it's not running on integration branches
+            .*-qr/.*: 2  # can't be tier-1 if it's not running on integration branches
             default: default
     mozharness:
         chunked: true
@@ -152,13 +152,13 @@ web-platform-tests-wdspec:
     run-on-projects:
         by-test-platform:
             android.*: ['mozilla-central', 'try']
-            linux64-qr/.*: ['release', 'try']  # skip on integration branches due to high load
+            .*-qr/.*: ['release', 'try']  # skip on integration branches due to high load
             default: built-projects
     tier:
         by-test-platform:
             android.*: 3
             linux64-asan/opt: 2
-            linux64-qr/.*: 2  # can't be tier-1 if it's not running on integration branches
+            .*-qr/.*: 2  # can't be tier-1 if it's not running on integration branches
             default: default
 
 web-platform-tests-wdspec-headless:

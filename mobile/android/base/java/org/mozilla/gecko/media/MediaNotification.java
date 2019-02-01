@@ -77,4 +77,11 @@ public final class MediaNotification implements Parcelable {
             return new MediaNotification[size];
         }
     };
+
+    @Override
+    public String toString() {
+        return "MediaNotification(" + visibility
+                + ", " + tabId
+                + ")";
+    }
 }
