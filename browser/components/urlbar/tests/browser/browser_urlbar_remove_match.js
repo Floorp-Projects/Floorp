@@ -13,20 +13,28 @@ add_task(async function test_remove_history() {
     "onDeleteURI", uri => uri.spec == TEST_URL, "history");
 
   await promiseAutocompleteResultPopup("from_urlbar");
-  let result = await waitForAutocompleteResultAt(1);
-  Assert.equal(result.getAttribute("ac-value"), TEST_URL, "Found the expected result");
+
+  let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
+  Assert.equal(result.url, TEST_URL, "Found the expected result");
+
+  let expectedResultCount = UrlbarTestUtils.getResultCount(window) - 1;
 
   EventUtils.synthesizeKey("KEY_ArrowDown");
-  Assert.equal(gURLBar.popup.richlistbox.selectedIndex, 1);
+  Assert.equal(UrlbarTestUtils.getSelectedIndex(window), 1);
   let options = AppConstants.platform == "macosx" ? { shiftKey: true } : {};
   EventUtils.synthesizeKey("KEY_Delete", options);
   await promiseVisitRemoved;
-  await BrowserTestUtils.waitForCondition(
-    () => !gURLBar.popup.richlistbox.itemChildren.some(c => !c.collapsed && c.getAttribute("ac-value") == TEST_URL),
+  await TestUtils.waitForCondition(
+    () => UrlbarTestUtils.getResultCount(window) == expectedResultCount,
     "Waiting for the result to disappear");
 
-  gURLBar.popup.hidePopup();
-  await promisePopupHidden(gURLBar.popup);
+  for (let i = 0; i < expectedResultCount; i++) {
+    let details = await UrlbarTestUtils.getDetailsOfResultAt(window, i);
+    Assert.notEqual(details.url, TEST_URL,
+      "Should not find the test URL in the remaining results");
+  }
+
+  await UrlbarTestUtils.promisePopupClose(window);
 });
 
 // We shouldn't be able to remove a bookmark item.
@@ -43,11 +51,11 @@ add_task(async function test_remove_bookmark_doesnt() {
   });
 
   await promiseAutocompleteResultPopup("from_urlbar");
-  let result = await waitForAutocompleteResultAt(1);
-  Assert.equal(result.getAttribute("ac-value"), TEST_URL, "Found the expected result");
+  let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
+  Assert.equal(result.url, TEST_URL, "Found the expected result");
 
   EventUtils.synthesizeKey("KEY_ArrowDown");
-  Assert.equal(gURLBar.popup.richlistbox.selectedIndex, 1);
+  Assert.equal(UrlbarTestUtils.getSelectedIndex(window), 1);
   let options = AppConstants.platform == "macosx" ? { shiftKey: true } : {};
   EventUtils.synthesizeKey("KEY_Delete", options);
 
@@ -56,8 +64,7 @@ add_task(async function test_remove_bookmark_doesnt() {
   await new Promise(resolve => setTimeout(resolve, 0));
   await PlacesTestUtils.promiseAsyncUpdates();
 
-  gURLBar.popup.hidePopup();
-  await promisePopupHidden(gURLBar.popup);
+  await UrlbarTestUtils.promisePopupClose(window);
 
   Assert.ok(await PlacesUtils.bookmarks.fetch({url: TEST_URL}),
     "Should still have the URL bookmarked.");

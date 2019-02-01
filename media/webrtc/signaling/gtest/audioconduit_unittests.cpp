@@ -89,6 +89,17 @@ TEST_F(AudioConduitTest, TestConfigureSendMediaCodec) {
   AudioCodecConfig codecConfig(114, "opus", 48000, 2, false);
   ec = mAudioConduit->ConfigureSendMediaCodec(&codecConfig);
   ASSERT_EQ(ec, kMediaConduitNoError);
+  {
+    const webrtc::SdpAudioFormat& f =
+        mCall->mAudioSendConfig.send_codec_spec->format;
+    ASSERT_EQ(f.name, "opus");
+    ASSERT_EQ(f.clockrate_hz, 48000);
+    ASSERT_EQ(f.num_channels, 2UL);
+    ASSERT_NE(f.parameters.find("stereo"), f.parameters.end());
+    ASSERT_EQ(f.parameters.at("stereo"), "1");
+    ASSERT_EQ(f.parameters.find("maxplaybackrate"), f.parameters.end());
+    ASSERT_EQ(f.parameters.find("useinbandfec"), f.parameters.end());
+  }
 
   // null codec
   ec = mAudioConduit->ConfigureSendMediaCodec(nullptr);
@@ -110,10 +121,71 @@ TEST_F(AudioConduitTest, TestConfigureSendMediaCodec) {
   delete[] longName;
 }
 
+TEST_F(AudioConduitTest, TestConfigureSendOpusMono) {
+  MediaConduitErrorCode ec;
+
+  // opus mono
+  AudioCodecConfig codecConfig = AudioCodecConfig(114, "opus", 48000, 1, false);
+  ec = mAudioConduit->ConfigureSendMediaCodec(&codecConfig);
+  ASSERT_EQ(ec, kMediaConduitNoError);
+  {
+    const webrtc::SdpAudioFormat& f =
+        mCall->mAudioSendConfig.send_codec_spec->format;
+    ASSERT_EQ(f.name, "opus");
+    ASSERT_EQ(f.clockrate_hz, 48000);
+    ASSERT_EQ(f.num_channels, 1UL);
+    ASSERT_EQ(f.parameters.find("stereo"), f.parameters.end());
+    ASSERT_EQ(f.parameters.find("maxplaybackrate"), f.parameters.end());
+    ASSERT_EQ(f.parameters.find("useinbandfec"), f.parameters.end());
+  }
+}
+
+TEST_F(AudioConduitTest, TestConfigureSendOpusFEC) {
+  MediaConduitErrorCode ec;
+
+  // opus with inband Forward Error Correction
+  AudioCodecConfig codecConfig = AudioCodecConfig(114, "opus", 48000, 2, true);
+  ec = mAudioConduit->ConfigureSendMediaCodec(&codecConfig);
+  ASSERT_EQ(ec, kMediaConduitNoError);
+  {
+    const webrtc::SdpAudioFormat& f =
+        mCall->mAudioSendConfig.send_codec_spec->format;
+    ASSERT_EQ(f.name, "opus");
+    ASSERT_EQ(f.clockrate_hz, 48000);
+    ASSERT_EQ(f.num_channels, 2UL);
+    ASSERT_NE(f.parameters.find("stereo"), f.parameters.end());
+    ASSERT_EQ(f.parameters.at("stereo"), "1");
+    ASSERT_NE(f.parameters.find("useinbandfec"), f.parameters.end());
+    ASSERT_EQ(f.parameters.at("useinbandfec"), "1");
+    ASSERT_EQ(f.parameters.find("maxplaybackrate"), f.parameters.end());
+  }
+}
+
+TEST_F(AudioConduitTest, TestConfigureSendMaxPlaybackRate) {
+  MediaConduitErrorCode ec;
+
+  AudioCodecConfig codecConfig = AudioCodecConfig(114, "opus", 48000, 2, false);
+  codecConfig.mMaxPlaybackRate = 1234;
+  ec = mAudioConduit->ConfigureSendMediaCodec(&codecConfig);
+  ASSERT_EQ(ec, kMediaConduitNoError);
+  {
+    const webrtc::SdpAudioFormat& f =
+        mCall->mAudioSendConfig.send_codec_spec->format;
+    ASSERT_EQ(f.name, "opus");
+    ASSERT_EQ(f.clockrate_hz, 48000);
+    ASSERT_EQ(f.num_channels, 2UL);
+    ASSERT_NE(f.parameters.find("stereo"), f.parameters.end());
+    ASSERT_EQ(f.parameters.at("stereo"), "1");
+    ASSERT_EQ(f.parameters.find("useinbandfec"), f.parameters.end());
+    ASSERT_NE(f.parameters.find("maxplaybackrate"), f.parameters.end());
+    ASSERT_EQ(f.parameters.at("maxplaybackrate"), "1234");
+  }
+}
+
 TEST_F(AudioConduitTest, TestConfigureReceiveMediaCodecs) {
   MediaConduitErrorCode ec;
 
-  // just opus
+  // just default opus stereo
   std::vector<UniquePtr<mozilla::AudioCodecConfig>> codecs;
   codecs.emplace_back(new AudioCodecConfig(114, "opus", 48000, 2, false));
   ec = mAudioConduit->ConfigureRecvMediaCodecs(codecs);
@@ -127,6 +199,8 @@ TEST_F(AudioConduitTest, TestConfigureReceiveMediaCodecs) {
     ASSERT_EQ(f.clockrate_hz, 48000);
     ASSERT_EQ(f.num_channels, 2UL);
     ASSERT_EQ(f.parameters.at("stereo"), "1");
+    ASSERT_EQ(f.parameters.find("maxplaybackrate"), f.parameters.end());
+    ASSERT_EQ(f.parameters.find("useinbandfec"), f.parameters.end());
   }
 
   // multiple codecs
@@ -189,7 +263,53 @@ TEST_F(AudioConduitTest, TestConfigureReceiveMediaCodecs) {
   delete[] longName;
 }
 
-TEST_F(AudioConduitTest, TestConfigureMaxPlaybackRate) {
+TEST_F(AudioConduitTest, TestConfigureReceiveOpusMono) {
+  MediaConduitErrorCode ec;
+
+  // opus mono
+  std::vector<UniquePtr<mozilla::AudioCodecConfig>> codecs;
+  codecs.emplace_back(new AudioCodecConfig(114, "opus", 48000, 1, false));
+  ec = mAudioConduit->ConfigureRecvMediaCodecs(codecs);
+  ASSERT_EQ(ec, kMediaConduitNoError);
+  ASSERT_EQ(mCall->mAudioReceiveConfig.sync_group, "");
+  ASSERT_EQ(mCall->mAudioReceiveConfig.decoder_map.size(), 1U);
+  {
+    const webrtc::SdpAudioFormat& f =
+        mCall->mAudioReceiveConfig.decoder_map.at(114);
+    ASSERT_EQ(f.name, "opus");
+    ASSERT_EQ(f.clockrate_hz, 48000);
+    ASSERT_EQ(f.num_channels, 1UL);
+    ASSERT_EQ(f.parameters.find("stereo"), f.parameters.end());
+    ASSERT_EQ(f.parameters.find("maxplaybackrate"), f.parameters.end());
+    ASSERT_EQ(f.parameters.find("useinbandfec"), f.parameters.end());
+  }
+}
+
+TEST_F(AudioConduitTest, TestConfigureReceiveOpusFEC) {
+  MediaConduitErrorCode ec;
+
+  // opus with inband Forward Error Correction
+  std::vector<UniquePtr<mozilla::AudioCodecConfig>> codecs;
+  codecs.emplace_back(new AudioCodecConfig(114, "opus", 48000, 2, true));
+  ec = mAudioConduit->ConfigureRecvMediaCodecs(codecs);
+  ASSERT_EQ(ec, kMediaConduitNoError);
+  ASSERT_EQ(mCall->mAudioReceiveConfig.sync_group, "");
+  ASSERT_EQ(mCall->mAudioReceiveConfig.decoder_map.size(), 1U);
+  {
+    const webrtc::SdpAudioFormat& f =
+        mCall->mAudioReceiveConfig.decoder_map.at(114);
+    ASSERT_EQ(f.name, "opus");
+    ASSERT_EQ(f.clockrate_hz, 48000);
+    ASSERT_EQ(f.num_channels, 2UL);
+    ASSERT_NE(f.parameters.find("stereo"), f.parameters.end());
+    ASSERT_EQ(f.parameters.at("stereo"), "1");
+    ASSERT_NE(f.parameters.find("useinbandfec"), f.parameters.end());
+    ASSERT_EQ(f.parameters.at("useinbandfec"), "1");
+    ASSERT_EQ(f.parameters.find("maxplaybackrate"), f.parameters.end());
+  }
+}
+
+TEST_F(AudioConduitTest, TestConfigureReceiveMaxPlaybackRate) {
   MediaConduitErrorCode ec;
 
   std::vector<UniquePtr<mozilla::AudioCodecConfig>> codecs;

@@ -122,7 +122,7 @@ class MachFormatter(base.BaseFormatter):
         # Format check counts
         checks = self.summary.aggregate('count', count)
         rv.append("Ran {} checks ({})".format(sum(checks.values()),
-                  ', '.join(['{} {}s'.format(v, k) for k, v in checks.items() if v])))
+                  ', '.join(['{} {}s'.format(v, k) for k, v in sorted(checks.items()) if v])))
 
         # Format expected counts
         checks = self.summary.aggregate('expected', count, include_skip=False)
@@ -146,7 +146,7 @@ class MachFormatter(base.BaseFormatter):
                 if not count[key]['unexpected']:
                     continue
                 status_str = ", ".join(["{} {}".format(n, s)
-                                        for s, n in count[key]['unexpected'].items()])
+                                        for s, n in sorted(count[key]['unexpected'].items())])
                 rv.append("  {}: {} ({})".format(
                           key, sum(count[key]['unexpected'].values()), status_str))
 

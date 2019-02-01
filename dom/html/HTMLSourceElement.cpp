@@ -86,25 +86,24 @@ nsresult HTMLSourceElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
       (aName == nsGkAtoms::srcset || aName == nsGkAtoms::sizes ||
        aName == nsGkAtoms::media || aName == nsGkAtoms::type) &&
       parent && parent->IsHTMLElement(nsGkAtoms::picture)) {
+    if (aName == nsGkAtoms::media) {
+      UpdateMediaList(aValue);
+    }
+
     nsString strVal = aValue ? aValue->GetStringValue() : EmptyString();
     // Find all img siblings after this <source> and notify them of the change
     nsCOMPtr<nsIContent> sibling = AsContent();
     while ((sibling = sibling->GetNextSibling())) {
-      if (sibling->IsHTMLElement(nsGkAtoms::img)) {
-        HTMLImageElement* img = static_cast<HTMLImageElement*>(sibling.get());
+      if (auto* img = HTMLImageElement::FromNode(sibling)) {
         if (aName == nsGkAtoms::srcset) {
-          img->PictureSourceSrcsetChanged(AsContent(), strVal, aNotify);
+          img->PictureSourceSrcsetChanged(this, strVal, aNotify);
         } else if (aName == nsGkAtoms::sizes) {
-          img->PictureSourceSizesChanged(AsContent(), strVal, aNotify);
-        } else if (aName == nsGkAtoms::media) {
-          UpdateMediaList(aValue);
-          img->PictureSourceMediaOrTypeChanged(AsContent(), aNotify);
-        } else if (aName == nsGkAtoms::type) {
-          img->PictureSourceMediaOrTypeChanged(AsContent(), aNotify);
+          img->PictureSourceSizesChanged(this, strVal, aNotify);
+        } else if (aName == nsGkAtoms::media || aName == nsGkAtoms::type) {
+          img->PictureSourceMediaOrTypeChanged(this, aNotify);
         }
       }
     }
-
   } else if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::media) {
     UpdateMediaList(aValue);
   } else if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::src) {

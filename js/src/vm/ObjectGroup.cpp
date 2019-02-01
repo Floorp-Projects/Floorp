@@ -202,10 +202,6 @@ void ObjectGroup::setAddendum(AddendumKind kind, void* addendum,
 /* static */ bool ObjectGroup::useSingletonForAllocationSite(JSScript* script,
                                                              jsbytecode* pc,
                                                              JSProtoKey key) {
-  // The return value of this method can either be tested like a boolean or
-  // passed to a NewObject method.
-  JS_STATIC_ASSERT(GenericObject == 0);
-
   /*
    * Objects created outside loops in global and eval scripts should have
    * singleton types. For now this is only done for plain objects, but not
@@ -213,17 +209,17 @@ void ObjectGroup::setAddendum(AddendumKind kind, void* addendum,
    */
 
   if (script->functionNonDelazifying() && !script->treatAsRunOnce()) {
-    return GenericObject;
+    return false;
   }
 
   if (key != JSProto_Object) {
-    return GenericObject;
+    return false;
   }
 
   // All loops in the script will have a try note indicating their boundary.
 
   if (!script->hasTrynotes()) {
-    return SingletonObject;
+    return true;
   }
 
   uint32_t offset = script->pcToOffset(pc);
@@ -235,11 +231,11 @@ void ObjectGroup::setAddendum(AddendumKind kind, void* addendum,
     }
 
     if (tn.start <= offset && offset < tn.start + tn.length) {
-      return GenericObject;
+      return false;
     }
   }
 
-  return SingletonObject;
+  return true;
 }
 
 /////////////////////////////////////////////////////////////////////
