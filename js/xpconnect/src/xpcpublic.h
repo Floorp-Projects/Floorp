@@ -139,7 +139,11 @@ void ClearContentXBLScope(JSObject* global);
 
 bool IsSandboxPrototypeProxy(JSObject* obj);
 
-bool IsReflector(JSObject* obj);
+// The JSContext argument represents the Realm that's asking the question.  This
+// is needed to properly answer without exposing information unnecessarily
+// from behind security wrappers.  There will be no exceptions thrown on this
+// JSContext.
+bool IsReflector(JSObject* obj, JSContext* cx);
 
 bool IsXrayWrapper(JSObject* obj);
 
@@ -460,9 +464,24 @@ bool Throw(JSContext* cx, nsresult rv);
 
 /**
  * Returns the nsISupports native behind a given reflector (either DOM or
- * XPCWN).
+ * XPCWN).  If a non-reflector object is passed in, null will be returned.
+ *
+ * This function will not correctly handle Window or Location objects behind
+ * cross-compartment wrappers: it will return null.  If you care about getting
+ * non-null for Window or Location, use ReflectorToISupportsDynamic.
  */
-already_AddRefed<nsISupports> UnwrapReflectorToISupports(JSObject* reflector);
+already_AddRefed<nsISupports> ReflectorToISupportsStatic(JSObject* reflector);
+
+/**
+ * Returns the nsISupports native behind a given reflector (either DOM or
+ * XPCWN).  If a non-reflector object is passed in, null will be returned.
+ *
+ * The JSContext argument represents the Realm that's asking for the
+ * nsISupports.  This is needed to properly handle Window and Location objects,
+ * which do dynamic security checks.
+ */
+already_AddRefed<nsISupports> ReflectorToISupportsDynamic(JSObject* reflector,
+                                                          JSContext* cx);
 
 /**
  * Singleton scopes for stuff that really doesn't fit anywhere else.
