@@ -216,6 +216,8 @@ bool nsXPLookAndFeel::sInitialized = false;
 bool nsXPLookAndFeel::sUseNativeColors = true;
 bool nsXPLookAndFeel::sUseStandinsForNativeColors = false;
 bool nsXPLookAndFeel::sFindbarModalHighlight = false;
+bool nsXPLookAndFeel::sIsInPrefersReducedMotionForTest = false;
+bool nsXPLookAndFeel::sPrefersReducedMotionForTest = false;
 
 nsXPLookAndFeel* nsXPLookAndFeel::sInstance = nullptr;
 bool nsXPLookAndFeel::sShutdown = false;
