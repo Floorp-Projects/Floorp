@@ -16,9 +16,8 @@ from ctypes import (
     c_size_t,
     c_ulong
 )
-from ctypes.wintypes import BOOL, BYTE, DWORD, HANDLE, LARGE_INTEGER
 
-import six
+from ctypes.wintypes import BOOL, BYTE, DWORD, HANDLE, LARGE_INTEGER
 
 LPVOID = c_void_p
 LPDWORD = POINTER(DWORD)
@@ -100,7 +99,7 @@ class JobObjectInfo(object):
     }
 
     def __init__(self, _class):
-        if isinstance(_class, six.string_types):
+        if isinstance(_class, basestring):
             assert _class in self.mapping, \
                 'Class should be one of %s; you gave %s' % (self.mapping, _class)
             _class = self.mapping[_class]
@@ -111,12 +110,12 @@ class JobObjectInfo(object):
 
 
 QueryInformationJobObjectProto = WINFUNCTYPE(
-    BOOL,  # Return type
-    HANDLE,  # hJob
-    DWORD,  # JobObjectInfoClass
-    LPVOID,  # lpJobObjectInfo
-    DWORD,  # cbJobObjectInfoLength
-    LPDWORD  # lpReturnLength
+    BOOL,        # Return type
+    HANDLE,      # hJob
+    DWORD,       # JobObjectInfoClass
+    LPVOID,      # lpJobObjectInfo
+    DWORD,       # cbJobObjectInfoLength
+    LPDWORD      # lpReturnLength
 )
 
 QueryInformationJobObjectFlags = (
