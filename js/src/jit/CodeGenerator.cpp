@@ -6318,6 +6318,19 @@ void CodeGenerator::visitNewTypedArrayDynamicLength(
   masm.bind(ool->rejoin());
 }
 
+typedef TypedArrayObject* (*TypedArrayCreateWithTemplateFn)(JSContext*,
+                                                            HandleObject,
+                                                            HandleObject);
+static const VMFunction TypedArrayCreateWithTemplateInfo =
+    FunctionInfo<TypedArrayCreateWithTemplateFn>(
+        js::TypedArrayCreateWithTemplate, "TypedArrayCreateWithTemplate");
+
+void CodeGenerator::visitNewTypedArrayFromArray(LNewTypedArrayFromArray* lir) {
+  pushArg(ToRegister(lir->array()));
+  pushArg(ImmGCPtr(lir->mir()->templateObject()));
+  callVM(TypedArrayCreateWithTemplateInfo, lir);
+}
+
 // Out-of-line object allocation for JSOP_NEWOBJECT.
 class OutOfLineNewObject : public OutOfLineCodeBase<CodeGenerator> {
   LNewObject* lir_;
