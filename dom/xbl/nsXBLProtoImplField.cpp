@@ -141,7 +141,10 @@ static bool InstallXBLField(JSContext* cx, JS::Handle<JSObject*> callee,
   // But there are some cases where we must accept |thisObj| but not install a
   // property on it, or otherwise touch it.  Hence this split of |this|-vetting
   // duties.
-  nsCOMPtr<nsISupports> native = xpc::UnwrapReflectorToISupports(thisObj);
+  //
+  // OK to use ReflectorToISupportsStatic, because we only care about nodes
+  // here.
+  nsCOMPtr<nsISupports> native = xpc::ReflectorToISupportsStatic(thisObj);
   if (!native) {
     // Looks like whatever |thisObj| is it's not our nsIContent.  It might well
     // be the proto our binding installed, however, where the private is the
