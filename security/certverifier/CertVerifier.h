@@ -206,7 +206,8 @@ class CertVerifier {
                SHA1Mode sha1Mode, BRNameMatchingPolicy::Mode nameMatchingMode,
                NetscapeStepUpPolicy netscapeStepUpPolicy,
                CertificateTransparencyMode ctMode,
-               DistrustedCAPolicy distrustedCAPolicy);
+               DistrustedCAPolicy distrustedCAPolicy,
+               const Vector<Vector<uint8_t>>& thirdPartyRoots);
   ~CertVerifier();
 
   void ClearOCSPCache() { mOCSPCache.Clear(); }
@@ -225,6 +226,11 @@ class CertVerifier {
 
  private:
   OCSPCache mOCSPCache;
+  // We keep a copy of the bytes of each third party root to own.
+  Vector<Vector<uint8_t>> mThirdPartyRoots;
+  // This is a reusable, precomputed list of Inputs corresponding to each root
+  // in mThirdPartyRoots that wasn't too long to make an Input out of.
+  Vector<mozilla::pkix::Input> mThirdPartyRootInputs;
 
   // We only have a forward declarations of these classes (see above)
   // so we must allocate dynamically.

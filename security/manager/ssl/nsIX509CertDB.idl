@@ -338,11 +338,4 @@ interface nsIX509CertDB : nsISupports {
    */
   [must_use]
   nsIX509CertList getCerts();
-
-  /*
-   * Get a list of imported enterprise root certificates (currently only
-   * implemented on Windows).
-   */
-  [must_use]
-  nsIX509CertList getEnterpriseRoots();
 };

@@ -72,29 +72,6 @@ static bool CertIsTrustAnchorForTLSServerAuth(PCCERT_CONTEXT certificate) {
   return false;
 }
 
-// It would be convenient to just use nsIX509CertDB in the following code.
-// However, since nsIX509CertDB depends on nsNSSComponent initialization (and
-// since this code runs during that initialization), we can't use it. Instead,
-// we can use NSS APIs directly (as long as we're called late enough in
-// nsNSSComponent initialization such that those APIs are safe to use).
-
-// Helper function to convert a PCCERT_CONTEXT (i.e. a certificate obtained via
-// a Windows API) to a temporary CERTCertificate (i.e. a certificate for use
-// with NSS APIs).
-UniqueCERTCertificate PCCERT_CONTEXTToCERTCertificate(PCCERT_CONTEXT pccert) {
-  MOZ_ASSERT(pccert);
-  if (!pccert) {
-    return nullptr;
-  }
-
-  SECItem derCert = {siBuffer, pccert->pbCertEncoded, pccert->cbCertEncoded};
-  return UniqueCERTCertificate(
-      CERT_NewTempCertificate(CERT_GetDefaultCertDB(), &derCert,
-                              nullptr,  // nickname unnecessary
-                              false,    // not permanent
-                              true));   // copy DER
-}
-
 // Because HCERTSTORE is just a typedef void*, we can't use any of the nice
 // scoped or unique pointer templates. To elaborate, any attempt would
 // instantiate those templates with T = void. When T gets used in the context
@@ -124,7 +101,7 @@ class ScopedCertStore final {
 //   CERT_SYSTEM_STORE_LOCAL_MACHINE_ENTERPRISE
 //     (for HKLM\SOFTWARE\Microsoft\EnterpriseCertificates\Root\Certificates)
 static void GatherEnterpriseRootsForLocation(DWORD locationFlag,
-                                             UniqueCERTCertList& roots) {
+                                             Vector<Vector<uint8_t>>& roots) {
   MOZ_ASSERT(locationFlag == CERT_SYSTEM_STORE_LOCAL_MACHINE ||
                  locationFlag == CERT_SYSTEM_STORE_LOCAL_MACHINE_GROUP_POLICY ||
                  locationFlag == CERT_SYSTEM_STORE_LOCAL_MACHINE_ENTERPRISE,
@@ -132,10 +109,6 @@ static void GatherEnterpriseRootsForLocation(DWORD locationFlag,
   if (!(locationFlag == CERT_SYSTEM_STORE_LOCAL_MACHINE ||
         locationFlag == CERT_SYSTEM_STORE_LOCAL_MACHINE_GROUP_POLICY ||
         locationFlag == CERT_SYSTEM_STORE_LOCAL_MACHINE_ENTERPRISE)) {
-    return;
-  }
-  MOZ_ASSERT(roots, "roots unexpectedly NULL?");
-  if (!roots) {
     return;
   }
 
@@ -164,27 +137,24 @@ static void GatherEnterpriseRootsForLocation(DWORD locationFlag,
               ("skipping cert not trust anchor for TLS server auth"));
       continue;
     }
-    UniqueCERTCertificate nssCertificate(
-        PCCERT_CONTEXTToCERTCertificate(certificate));
-    if (!nssCertificate) {
-      MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("couldn't decode certificate"));
+    Vector<uint8_t> certBytes;
+    if (!certBytes.append(certificate->pbCertEncoded,
+                          certificate->cbCertEncoded)) {
+      MOZ_LOG(gPIPNSSLog, LogLevel::Verbose,
+              ("couldn't copy cert bytes (out of memory?)"));
       continue;
     }
-    if (CERT_AddCertToListTail(roots.get(), nssCertificate.get()) !=
-        SECSuccess) {
-      MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("couldn't add cert to list"));
+    if (!roots.append(std::move(certBytes))) {
+      MOZ_LOG(gPIPNSSLog, LogLevel::Verbose,
+              ("couldn't append cert bytes to roots list (out of memory?)"));
       continue;
     }
-    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-            ("Imported '%s'", nssCertificate->subjectName));
     numImported++;
-    // now owned by roots
-    Unused << nssCertificate.release();
   }
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("imported %u roots", numImported));
 }
 
-static void GatherEnterpriseRootsWindows(UniqueCERTCertList& roots) {
+static void GatherEnterpriseRootsWindows(Vector<Vector<uint8_t>>& roots) {
   GatherEnterpriseRootsForLocation(CERT_SYSTEM_STORE_LOCAL_MACHINE, roots);
   GatherEnterpriseRootsForLocation(CERT_SYSTEM_STORE_LOCAL_MACHINE_GROUP_POLICY,
                                    roots);
@@ -194,11 +164,7 @@ static void GatherEnterpriseRootsWindows(UniqueCERTCertList& roots) {
 #endif  // XP_WIN
 
 #ifdef XP_MACOSX
-OSStatus GatherEnterpriseRootsOSX(UniqueCERTCertList& roots) {
-  MOZ_ASSERT(roots, "roots unexpectedly NULL?");
-  if (!roots) {
-    return errSecBadReq;
-  }
+OSStatus GatherEnterpriseRootsOSX(Vector<Vector<uint8_t>>& roots) {
   // The following builds a search dictionary corresponding to:
   // { class: "certificate",
   //   match limit: "match all",
@@ -240,40 +206,26 @@ OSStatus GatherEnterpriseRootsOSX(UniqueCERTCertList& roots) {
     ScopedCFType<CFDataRef> der(SecCertificateCopyData(s));
     const unsigned char* ptr = CFDataGetBytePtr(der.get());
     unsigned int len = CFDataGetLength(der.get());
-    SECItem derItem = {
-        siBuffer,
-        const_cast<unsigned char*>(ptr),
-        len,
-    };
-    UniqueCERTCertificate cert(
-        CERT_NewTempCertificate(CERT_GetDefaultCertDB(), &derItem,
-                                nullptr,  // nickname unnecessary
-                                false,    // not permanent
-                                true));   // copy DER
-    if (!cert) {
-      MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-              ("couldn't decode 3rd party root certificate"));
+    Vector<uint8_t> certBytes;
+    if (!certBytes.append(ptr, len)) {
+      MOZ_LOG(gPIPNSSLog, LogLevel::Verbose,
+              ("couldn't copy cert bytes (out of memory?)"));
       continue;
     }
-    UniquePORTString subjectName(CERT_GetCommonName(&cert->subject));
-    if (CERT_AddCertToListTail(roots.get(), cert.get()) != SECSuccess) {
-      MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("couldn't add cert to list"));
+    if (!roots.append(std::move(certBytes))) {
+      MOZ_LOG(gPIPNSSLog, LogLevel::Verbose,
+              ("couldn't append cert bytes to roots list (out of memory?)"));
       continue;
     }
     numImported++;
-    MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("Imported '%s'", subjectName.get()));
-    mozilla::Unused << cert.release();  // owned by roots
   }
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("imported %u roots", numImported));
   return errSecSuccess;
 }
 #endif  // XP_MACOSX
 
-nsresult GatherEnterpriseRoots(UniqueCERTCertList& result) {
-  UniqueCERTCertList roots(CERT_NewCertList());
-  if (!roots) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+nsresult GatherEnterpriseRoots(Vector<Vector<uint8_t>>& roots) {
+  roots.clear();
 #ifdef XP_WIN
   GatherEnterpriseRootsWindows(roots);
 #endif  // XP_WIN
@@ -283,6 +235,5 @@ nsresult GatherEnterpriseRoots(UniqueCERTCertList& result) {
     return NS_ERROR_FAILURE;
   }
 #endif  // XP_MACOSX
-  result = std::move(roots);
   return NS_OK;
 }
