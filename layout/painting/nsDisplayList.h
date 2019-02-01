@@ -3421,6 +3421,15 @@ struct nsDisplayListCollection : public nsDisplayListSet {
     }
   }
 
+  /**
+   * Serialize this display list collection into a display list with the items
+   * in the correct Z order.
+   * @param aOutList the result display list
+   * @param aContent the content element to use for content ordering
+   */
+  void SerializeWithCorrectZOrder(nsDisplayList* aOutResultList,
+                                  nsIContent* aContent);
+
  private:
   // This class is only used on stack, so we don't have to worry about leaking
   // it.  Don't let us be heap-allocated!

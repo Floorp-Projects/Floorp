@@ -3096,53 +3096,17 @@ void nsIFrame::BuildDisplayListForStackingContext(
     set.PositionedDescendants()->AppendToTop(color);
   }
 
-  // Sort PositionedDescendants() in CSS 'z-order' order.  The list is already
-  // in content document order and SortByZOrder is a stable sort which
-  // guarantees that boxes produced by the same element are placed together
-  // in the sort. Consider a position:relative inline element that breaks
-  // across lines and has absolutely positioned children; all the abs-pos
-  // children should be z-ordered after all the boxes for the position:relative
-  // element itself.
-  set.PositionedDescendants()->SortByZOrder();
-
-  nsDisplayList resultList;
-  // Now follow the rules of http://www.w3.org/TR/CSS21/zindex.html
-  // 1,2: backgrounds and borders
-  resultList.AppendToTop(set.BorderBackground());
-  // 3: negative z-index children.
-  for (;;) {
-    nsDisplayItem* item = set.PositionedDescendants()->GetBottom();
-    if (item && item->ZIndex() < 0) {
-      set.PositionedDescendants()->RemoveBottom();
-      resultList.AppendToTop(item);
-      continue;
-    }
-    break;
-  }
-  // 4: block backgrounds
-  resultList.AppendToTop(set.BlockBorderBackgrounds());
-  // 5: floats
-  resultList.AppendToTop(set.Floats());
-  // 7: general content
-  resultList.AppendToTop(set.Content());
-  // 7.5: outlines, in content tree order. We need to sort by content order
-  // because an element with outline that breaks and has children with outline
-  // might have placed child outline items between its own outline items.
-  // The element's outline items need to all come before any child outline
-  // items.
   nsIContent* content = GetContent();
   if (!content) {
     content = PresContext()->Document()->GetRootElement();
   }
-  if (content) {
-    set.Outlines()->SortByContentOrder(content);
-  }
+
+  nsDisplayList resultList;
+  set.SerializeWithCorrectZOrder(&resultList, content);
+
 #ifdef DEBUG
   DisplayDebugBorders(aBuilder, this, set);
 #endif
-  resultList.AppendToTop(set.Outlines());
-  // 8, 9: non-negative z-index children
-  resultList.AppendToTop(set.PositionedDescendants());
 
   // Get the ASR to use for the container items that we create here.
   const ActiveScrolledRoot* containerItemASR = contASRTracker.GetContainerASR();
