@@ -468,8 +468,9 @@ void MacroAssembler::loadFromTypedArray(Scalar::Type arrayType, const T& src,
         }
         bind(&isDouble);
         {
-          convertUInt32ToDouble(temp, ScratchDoubleReg);
-          boxDouble(ScratchDoubleReg, dest, ScratchDoubleReg);
+          ScratchDoubleScope fpscratch(*this);
+          convertUInt32ToDouble(temp, fpscratch);
+          boxDouble(fpscratch, dest, fpscratch);
         }
         bind(&done);
       } else {
@@ -478,17 +479,22 @@ void MacroAssembler::loadFromTypedArray(Scalar::Type arrayType, const T& src,
         tagValue(JSVAL_TYPE_INT32, temp, dest);
       }
       break;
-    case Scalar::Float32:
-      loadFromTypedArray(arrayType, src, AnyRegister(ScratchFloat32Reg),
+    case Scalar::Float32: {
+      ScratchDoubleScope dscratch(*this);
+      FloatRegister fscratch = dscratch.asSingle();
+      loadFromTypedArray(arrayType, src, AnyRegister(fscratch),
                          dest.scratchReg(), nullptr);
-      convertFloat32ToDouble(ScratchFloat32Reg, ScratchDoubleReg);
-      boxDouble(ScratchDoubleReg, dest, ScratchDoubleReg);
+      convertFloat32ToDouble(fscratch, dscratch);
+      boxDouble(dscratch, dest, dscratch);
       break;
-    case Scalar::Float64:
-      loadFromTypedArray(arrayType, src, AnyRegister(ScratchDoubleReg),
+    }
+    case Scalar::Float64: {
+      ScratchDoubleScope fpscratch(*this);
+      loadFromTypedArray(arrayType, src, AnyRegister(fpscratch),
                          dest.scratchReg(), nullptr);
-      boxDouble(ScratchDoubleReg, dest, ScratchDoubleReg);
+      boxDouble(fpscratch, dest, fpscratch);
       break;
+    }
     default:
       MOZ_CRASH("Invalid typed array type");
   }
@@ -667,15 +673,17 @@ void MacroAssembler::storeUnboxedProperty(T address, JSValueType type,
     case JSVAL_TYPE_DOUBLE:
       if (value.constant()) {
         if (value.value().isNumber()) {
-          loadConstantDouble(value.value().toNumber(), ScratchDoubleReg);
-          storeDouble(ScratchDoubleReg, address);
+          ScratchDoubleScope fpscratch(*this);
+          loadConstantDouble(value.value().toNumber(), fpscratch);
+          storeDouble(fpscratch, address);
         } else {
           StoreUnboxedFailure(*this, failure);
         }
       } else if (value.reg().hasTyped()) {
         if (value.reg().type() == MIRType::Int32) {
-          convertInt32ToDouble(value.reg().typedReg().gpr(), ScratchDoubleReg);
-          storeDouble(ScratchDoubleReg, address);
+          ScratchDoubleScope fpscratch(*this);
+          convertInt32ToDouble(value.reg().typedReg().gpr(), fpscratch);
+          storeDouble(fpscratch, address);
         } else if (value.reg().type() == MIRType::Double) {
           storeDouble(value.reg().typedReg().fpu(), address);
         } else {
@@ -685,8 +693,11 @@ void MacroAssembler::storeUnboxedProperty(T address, JSValueType type,
         ValueOperand reg = value.reg().valueReg();
         Label notInt32, end;
         branchTestInt32(Assembler::NotEqual, reg, &notInt32);
-        int32ValueToDouble(reg, ScratchDoubleReg);
-        storeDouble(ScratchDoubleReg, address);
+        {
+          ScratchDoubleScope fpscratch(*this);
+          int32ValueToDouble(reg, fpscratch);
+          storeDouble(fpscratch, address);
+        }
         jump(&end);
         bind(&notInt32);
         if (failure) {
@@ -2231,16 +2242,18 @@ void MacroAssembler::convertInt32ValueToDouble(const Address& address,
                                                Register scratch, Label* done) {
   branchTestInt32(Assembler::NotEqual, address, done);
   unboxInt32(address, scratch);
-  convertInt32ToDouble(scratch, ScratchDoubleReg);
-  storeDouble(ScratchDoubleReg, address);
+  ScratchDoubleScope fpscratch(*this);
+  convertInt32ToDouble(scratch, fpscratch);
+  storeDouble(fpscratch, address);
 }
 
 void MacroAssembler::convertInt32ValueToDouble(ValueOperand val) {
   Label done;
   branchTestInt32(Assembler::NotEqual, val, &done);
   unboxInt32(val, val.scratchReg());
-  convertInt32ToDouble(val.scratchReg(), ScratchDoubleReg);
-  boxDouble(ScratchDoubleReg, val, ScratchDoubleReg);
+  ScratchDoubleScope fpscratch(*this);
+  convertInt32ToDouble(val.scratchReg(), fpscratch);
+  boxDouble(fpscratch, val, fpscratch);
   bind(&done);
 }
 
@@ -2278,15 +2291,19 @@ void MacroAssembler::convertValueToFloatingPoint(ValueOperand value,
   int32ValueToFloatingPoint(value, output, outputType);
   jump(&done);
 
+  // On some non-multiAlias platforms, unboxDouble may use the scratch register,
+  // so do not merge code paths here.
   bind(&isDouble);
-  FloatRegister tmp = output.asDouble();
   if (outputType == MIRType::Float32 && hasMultiAlias()) {
-    tmp = ScratchDoubleReg;
-  }
-
-  unboxDouble(value, tmp);
-  if (outputType == MIRType::Float32) {
+    ScratchDoubleScope tmp(*this);
+    unboxDouble(value, tmp);
     convertDoubleToFloat32(tmp, output);
+  } else {
+    FloatRegister tmp = output.asDouble();
+    unboxDouble(value, tmp);
+    if (outputType == MIRType::Float32) {
+      convertDoubleToFloat32(tmp, output);
+    }
   }
 
   bind(&done);
@@ -2402,9 +2419,10 @@ void MacroAssembler::outOfLineTruncateSlow(FloatRegister src, Register dest,
                                            wasm::BytecodeOffset callOffset) {
 #if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) || \
     defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+  ScratchDoubleScope fpscratch(*this);
   if (widenFloatToDouble) {
-    convertFloat32ToDouble(src, ScratchDoubleReg);
-    src = ScratchDoubleReg;
+    convertFloat32ToDouble(src, fpscratch);
+    src = fpscratch;
   }
 #elif defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
   FloatRegister srcSingle;
@@ -2939,10 +2957,12 @@ void MacroAssembler::Push(TypedOrValueRegister v) {
   } else if (IsFloatingPointType(v.type())) {
     FloatRegister reg = v.typedReg().fpu();
     if (v.type() == MIRType::Float32) {
-      convertFloat32ToDouble(reg, ScratchDoubleReg);
-      reg = ScratchDoubleReg;
+      ScratchDoubleScope fpscratch(*this);
+      convertFloat32ToDouble(reg, fpscratch);
+      Push(fpscratch);
+    } else {
+      Push(reg);
     }
-    Push(reg);
   } else {
     Push(ValueTypeFromMIRType(v.type()), v.typedReg().gpr());
   }

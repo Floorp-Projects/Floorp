@@ -899,7 +899,7 @@ void MacroAssembler::moveValue(const TypedOrValueRegister& src,
     return;
   }
 
-  FloatRegister scratch = ScratchDoubleReg;
+  ScratchDoubleScope scratch(*this);
   FloatRegister freg = reg.fpu();
   if (type == MIRType::Float32) {
     convertFloat32ToDouble(freg, scratch);
@@ -1235,18 +1235,19 @@ void MacroAssembler::oolWasmTruncateCheckF32ToI32(FloatRegister input,
 
   Label isOverflow;
   const float two_31 = -float(INT32_MIN);
+  ScratchFloat32Scope fpscratch(*this);
   if (flags & TRUNC_UNSIGNED) {
-    loadConstantFloat32(two_31 * 2, ScratchFloat32Reg);
-    branchFloat(Assembler::DoubleGreaterThanOrEqual, input, ScratchFloat32Reg,
+    loadConstantFloat32(two_31 * 2, fpscratch);
+    branchFloat(Assembler::DoubleGreaterThanOrEqual, input, fpscratch,
                 &isOverflow);
-    loadConstantFloat32(-1.0f, ScratchFloat32Reg);
-    branchFloat(Assembler::DoubleGreaterThan, input, ScratchFloat32Reg, rejoin);
+    loadConstantFloat32(-1.0f, fpscratch);
+    branchFloat(Assembler::DoubleGreaterThan, input, fpscratch, rejoin);
   } else {
-    loadConstantFloat32(two_31, ScratchFloat32Reg);
-    branchFloat(Assembler::DoubleGreaterThanOrEqual, input, ScratchFloat32Reg,
+    loadConstantFloat32(two_31, fpscratch);
+    branchFloat(Assembler::DoubleGreaterThanOrEqual, input, fpscratch,
                 &isOverflow);
-    loadConstantFloat32(-two_31, ScratchFloat32Reg);
-    branchFloat(Assembler::DoubleGreaterThanOrEqual, input, ScratchFloat32Reg,
+    loadConstantFloat32(-two_31, fpscratch);
+    branchFloat(Assembler::DoubleGreaterThanOrEqual, input, fpscratch,
                 rejoin);
   }
   bind(&isOverflow);
@@ -1265,18 +1266,19 @@ void MacroAssembler::oolWasmTruncateCheckF64ToI32(FloatRegister input,
 
   Label isOverflow;
   const double two_31 = -double(INT32_MIN);
+  ScratchDoubleScope fpscratch(*this);
   if (flags & TRUNC_UNSIGNED) {
-    loadConstantDouble(two_31 * 2, ScratchDoubleReg);
-    branchDouble(Assembler::DoubleGreaterThanOrEqual, input, ScratchDoubleReg,
+    loadConstantDouble(two_31 * 2, fpscratch);
+    branchDouble(Assembler::DoubleGreaterThanOrEqual, input, fpscratch,
                  &isOverflow);
-    loadConstantDouble(-1.0, ScratchDoubleReg);
-    branchDouble(Assembler::DoubleGreaterThan, input, ScratchDoubleReg, rejoin);
+    loadConstantDouble(-1.0, fpscratch);
+    branchDouble(Assembler::DoubleGreaterThan, input, fpscratch, rejoin);
   } else {
-    loadConstantDouble(two_31, ScratchDoubleReg);
-    branchDouble(Assembler::DoubleGreaterThanOrEqual, input, ScratchDoubleReg,
+    loadConstantDouble(two_31, fpscratch);
+    branchDouble(Assembler::DoubleGreaterThanOrEqual, input, fpscratch,
                  &isOverflow);
-    loadConstantDouble(-two_31 - 1, ScratchDoubleReg);
-    branchDouble(Assembler::DoubleGreaterThan, input, ScratchDoubleReg, rejoin);
+    loadConstantDouble(-two_31 - 1, fpscratch);
+    branchDouble(Assembler::DoubleGreaterThan, input, fpscratch, rejoin);
   }
   bind(&isOverflow);
   wasmTrap(wasm::Trap::IntegerOverflow, off);
@@ -1294,18 +1296,19 @@ void MacroAssembler::oolWasmTruncateCheckF32ToI64(FloatRegister input,
 
   Label isOverflow;
   const float two_63 = -float(INT64_MIN);
+  ScratchFloat32Scope fpscratch(*this);
   if (flags & TRUNC_UNSIGNED) {
-    loadConstantFloat32(two_63 * 2, ScratchFloat32Reg);
-    branchFloat(Assembler::DoubleGreaterThanOrEqual, input, ScratchFloat32Reg,
+    loadConstantFloat32(two_63 * 2, fpscratch);
+    branchFloat(Assembler::DoubleGreaterThanOrEqual, input, fpscratch,
                 &isOverflow);
-    loadConstantFloat32(-1.0f, ScratchFloat32Reg);
-    branchFloat(Assembler::DoubleGreaterThan, input, ScratchFloat32Reg, rejoin);
+    loadConstantFloat32(-1.0f, fpscratch);
+    branchFloat(Assembler::DoubleGreaterThan, input, fpscratch, rejoin);
   } else {
-    loadConstantFloat32(two_63, ScratchFloat32Reg);
-    branchFloat(Assembler::DoubleGreaterThanOrEqual, input, ScratchFloat32Reg,
+    loadConstantFloat32(two_63, fpscratch);
+    branchFloat(Assembler::DoubleGreaterThanOrEqual, input, fpscratch,
                 &isOverflow);
-    loadConstantFloat32(-two_63, ScratchFloat32Reg);
-    branchFloat(Assembler::DoubleGreaterThanOrEqual, input, ScratchFloat32Reg,
+    loadConstantFloat32(-two_63, fpscratch);
+    branchFloat(Assembler::DoubleGreaterThanOrEqual, input, fpscratch,
                 rejoin);
   }
   bind(&isOverflow);
@@ -1324,18 +1327,19 @@ void MacroAssembler::oolWasmTruncateCheckF64ToI64(FloatRegister input,
 
   Label isOverflow;
   const double two_63 = -double(INT64_MIN);
+  ScratchDoubleScope fpscratch(*this);
   if (flags & TRUNC_UNSIGNED) {
-    loadConstantDouble(two_63 * 2, ScratchDoubleReg);
-    branchDouble(Assembler::DoubleGreaterThanOrEqual, input, ScratchDoubleReg,
+    loadConstantDouble(two_63 * 2, fpscratch);
+    branchDouble(Assembler::DoubleGreaterThanOrEqual, input, fpscratch,
                  &isOverflow);
-    loadConstantDouble(-1.0, ScratchDoubleReg);
-    branchDouble(Assembler::DoubleGreaterThan, input, ScratchDoubleReg, rejoin);
+    loadConstantDouble(-1.0, fpscratch);
+    branchDouble(Assembler::DoubleGreaterThan, input, fpscratch, rejoin);
   } else {
-    loadConstantDouble(two_63, ScratchDoubleReg);
-    branchDouble(Assembler::DoubleGreaterThanOrEqual, input, ScratchDoubleReg,
+    loadConstantDouble(two_63, fpscratch);
+    branchDouble(Assembler::DoubleGreaterThanOrEqual, input, fpscratch,
                  &isOverflow);
-    loadConstantDouble(-two_63, ScratchDoubleReg);
-    branchDouble(Assembler::DoubleGreaterThanOrEqual, input, ScratchDoubleReg,
+    loadConstantDouble(-two_63, fpscratch);
+    branchDouble(Assembler::DoubleGreaterThanOrEqual, input, fpscratch,
                  rejoin);
   }
   bind(&isOverflow);
