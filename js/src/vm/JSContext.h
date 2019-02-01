@@ -846,8 +846,6 @@ struct JSContext : public JS::RootingContext,
   }
   void* addressOfZone() { return &zone_; }
 
-  const void* addressOfRealm() const { return &realm_; }
-
   // Futex state, used by Atomics.wait() and Atomics.wake() on the Atomics
   // object.
   js::FutexThread fx;
