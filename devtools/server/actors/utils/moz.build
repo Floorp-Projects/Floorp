@@ -18,7 +18,6 @@ DevToolsModules(
     'event-loop.js',
     'function-call.js',
     'make-debugger.js',
-    'map-uri-to-addon-id.js',
     'shapes-utils.js',
     'source-actor-store.js',
     'stack.js',

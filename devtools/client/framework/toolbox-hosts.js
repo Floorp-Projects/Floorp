@@ -371,6 +371,35 @@ CustomHost.prototype = {
 };
 
 /**
+ * Host object for the toolbox as a page.
+ * This is typically used by `about:debugging`, when opening toolbox in a new tab,
+ * via `about:devtools-toolbox` URLs.
+ * The `iframe` ends up being the tab's browser element.
+ */
+function PageHost(hostTab, options) {
+  this.frame = options.customIframe;
+}
+
+PageHost.prototype = {
+  type: "page",
+
+  create: function() {
+    return promise.resolve(this.frame);
+  },
+
+  // Do nothing.
+  raise: function() {},
+
+  // Do nothing.
+  setTitle: function(title) {},
+
+  // Do nothing.
+  destroy: function() {
+    return promise.resolve(null);
+  },
+};
+
+/**
  *  Switch to the given tab in a browser and focus the browser window
  */
 function focusTab(tab) {
@@ -385,5 +414,5 @@ exports.Hosts = {
   "right": RightHost,
   "window": WindowHost,
   "custom": CustomHost,
+  "page": PageHost,
 };
-

@@ -4,8 +4,7 @@
 
 SimpleTest.requestCompleteLog();
 
-Services.scriptloader.loadSubScript(new URL("head_sessions.js", gTestPath).href,
-                                    this);
+loadTestSubscript("head_sessions.js");
 
 async function run_test_extension(incognitoOverride) {
   function background() {

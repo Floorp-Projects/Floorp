@@ -25,6 +25,7 @@
  *          awaitEvent BrowserWindowIterator
  *          navigateTab historyPushState promiseWindowRestored
  *          getIncognitoWindow startIncognitoMonitorExtension
+ *          loadTestSubscript
  */
 
 // There are shutdown issues for which multiple rejections are left uncaught.
@@ -50,6 +51,11 @@ XPCOMUtils.defineLazyGetter(this, "Management", () => {
 if (AppConstants.ASAN) {
   SimpleTest.requestLongerTimeout(10);
 }
+
+function loadTestSubscript(filePath) {
+  Services.scriptloader.loadSubScript(new URL(filePath, gTestPath).href, this);
+}
+
 
 // We run tests under two different configurations, from browser.ini and
 // browser-remote.ini. When running from browser-remote.ini, the tests are

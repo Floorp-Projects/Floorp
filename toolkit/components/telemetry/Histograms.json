@@ -10493,7 +10493,7 @@
     "bug_numbers": [1205845, 1389995],
     "n_values": 9,
     "releaseChannelCollection": "opt-out",
-    "description": "Records DevTools toolbox host each time the toolbox is opened and when the host is changed (0:Bottom, 1:Side, 2:Window, 3:Custom, 9:Unknown)."
+    "description": "Records DevTools toolbox host each time the toolbox is opened and when the host is changed (0:Bottom, 1:RIGHT, 2:WINDOW, 3:CUSTOM, 4:LEFT, 5:PAGE, 9:Unknown)."
   },
   "DEVTOOLS_NUMBER_OF_CSS_GRIDS_IN_A_PAGE": {
     "record_in_processes": ["main", "content"],
@@ -14494,8 +14494,8 @@
   },
   "QM_REPOSITORIES_INITIALIZATION_TIME": {
     "record_in_processes": ["main"],
-    "expires_in_version": "68",
-    "bug_numbers": [1481716],
+    "expires_in_version": "72",
+    "bug_numbers": [1481716, 1523682],
     "kind": "exponential",
     "high": 30000,
     "n_buckets": 30,

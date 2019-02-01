@@ -2,8 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-Services.scriptloader.loadSubScript(new URL("head_webNavigation.js", gTestPath).href,
-                                    this);
+loadTestSubscript("head_webNavigation.js");
 
 SpecialPowers.pushPrefEnv({"set": [["security.allow_eval_with_system_principal",
                                     true]]});
