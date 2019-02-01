@@ -19,6 +19,12 @@ only-for-attributes:
     - nightly
     - signed
 
+not-for-build-platforms:
+    - android-api-16-nightly/opt
+    - android-x86_64-nightly/opt
+    - android-x86-nightly/opt
+    - android-aarch64-nightly/opt
+
 job-template:
     update-no-wnp:
         by-release-type:
