@@ -100,6 +100,7 @@ public class GeckoMediaControlAgent {
     @RobocopTarget
     public static GeckoMediaControlAgent getInstance() {
         if (instance == null) {
+            Log.d(LOGTAG, "getInstance");
             instance = new GeckoMediaControlAgent();
         }
 
@@ -113,11 +114,13 @@ public class GeckoMediaControlAgent {
             return;
         }
 
+        Log.d(LOGTAG, "attachToContext");
         mContext = context.getApplicationContext();
         initialize();
     }
 
     public boolean isAttachedToContext() {
+        Log.d(LOGTAG, "isAttachedToContext - context = " + mContext);
         return (mContext != null);
     }
 
@@ -397,6 +400,7 @@ public class GeckoMediaControlAgent {
 
     @SuppressLint("NewApi")
     /* package */ Notification createNotification(@NonNull MediaNotification mediaNotification) {
+        Log.d(LOGTAG, "createNotification - " + mediaNotification.toString());
         final Notification.MediaStyle style = new Notification.MediaStyle();
         style.setShowActionsInCompactView(0);
 
@@ -495,6 +499,7 @@ public class GeckoMediaControlAgent {
     }
 
     private void updateMediaNotification(boolean startForeground, MediaNotification mediaNotification) {
+        Log.d(LOGTAG, "updateMediaNotification - startForeground " + startForeground + ", " + mediaNotification.toString());
         final Intent intent = new Intent(mContext, MediaControlService.class);
         if (!startForeground) {
             intent.setAction(ACTION_STOP_FOREGROUND);
@@ -504,6 +509,7 @@ public class GeckoMediaControlAgent {
     }
 
     private void shutdownForegroundService() {
+        Log.d(LOGTAG, "shutdownForegroundService");
         final Intent intent = new Intent(mContext, MediaControlService.class);
         intent.setAction(GeckoMediaControlAgent.ACTION_SHUTDOWN);
         notifyForegroundService(intent);
