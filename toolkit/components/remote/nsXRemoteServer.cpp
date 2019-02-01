@@ -93,11 +93,9 @@ void nsXRemoteServer::HandleCommandsFor(Window aWindowId) {
                   XA_STRING, 8, PropModeReplace,
                   (unsigned char *)mAppName.get(), mAppName.Length());
 
-  if (!mProfileName.IsEmpty()) {
-    XChangeProperty(mozilla::DefaultXDisplay(), aWindowId, sMozProfileAtom,
-                    XA_STRING, 8, PropModeReplace,
-                    (unsigned char *)mProfileName.get(), mProfileName.Length());
-  }
+  XChangeProperty(mozilla::DefaultXDisplay(), aWindowId, sMozProfileAtom,
+                  XA_STRING, 8, PropModeReplace,
+                  (unsigned char *)mProfileName.get(), mProfileName.Length());
 }
 
 bool nsXRemoteServer::HandleNewProperty(XID aWindowId, Display *aDisplay,

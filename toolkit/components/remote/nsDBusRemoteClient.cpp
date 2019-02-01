@@ -77,79 +77,38 @@ nsresult nsDBusRemoteClient::SendCommandLine(
 bool nsDBusRemoteClient::GetRemoteDestinationName(const char *aProgram,
                                                   const char *aProfile,
                                                   nsCString &aDestinationName) {
-  if (!aProfile || aProfile[0] == '\0') {
-    // We don't have a profile name - search for active mozilla instances.
-    RefPtr<DBusMessage> msg =
-        already_AddRefed<DBusMessage>(dbus_message_new_method_call(
-            "org.freedesktop.DBus", "/org/freedesktop/DBus",
-            "org.freedesktop.DBus", "ListNames"));
-    if (!msg) {
-      return false;
-    }
+  // We have a profile name - just create the destination.
+  // D-Bus names can contain only [a-z][A-Z][0-9]_
+  // characters so adjust the profile string properly.
+  nsAutoCString profileName;
+  nsresult rv = mozilla::Base64Encode(nsAutoCString(aProfile), profileName);
+  NS_ENSURE_SUCCESS(rv, false);
+  profileName.ReplaceChar("+/=", '_');
 
-    // send message and get a handle for a reply
-    RefPtr<DBusMessage> reply =
-        already_AddRefed<DBusMessage>(dbus_connection_send_with_reply_and_block(
-            mConnection, msg, -1, nullptr));
-    if (!reply) {
-      return false;
-    }
+  aDestinationName =
+      nsPrintfCString("org.mozilla.%s.%s", aProgram, profileName.get());
+  if (aDestinationName.Length() > DBUS_MAXIMUM_NAME_LENGTH)
+    aDestinationName.Truncate(DBUS_MAXIMUM_NAME_LENGTH);
 
-    char **interfaces;
-    dbus_int32_t interfaceNums;
-    if (!dbus_message_get_args(reply, nullptr, DBUS_TYPE_ARRAY,
-                               DBUS_TYPE_STRING, &interfaces, &interfaceNums,
-                               DBUS_TYPE_INVALID)) {
-      return false;
-    }
-
-    nsAutoCString destinationTemplate;
-    destinationTemplate = nsPrintfCString("org.mozilla.%s", aProgram);
-
-    aDestinationName.SetLength(0);
-    for (int i = 0; i < interfaceNums; i++) {
-      if (strstr(interfaces[i], destinationTemplate.get())) {
-        aDestinationName = interfaces[i];
-        break;
-      }
-    }
-    dbus_free_string_array(interfaces);
-
-    return (!aDestinationName.IsEmpty());
-  } else {
-    // We have a profile name - just create the destination.
-    // D-Bus names can contain only [a-z][A-Z][0-9]_
-    // characters so adjust the profile string properly.
-    nsAutoCString profileName;
-    nsresult rv = mozilla::Base64Encode(nsAutoCString(aProfile), profileName);
-    NS_ENSURE_SUCCESS(rv, false);
-    profileName.ReplaceChar("+/=", '_');
-
-    aDestinationName =
-        nsPrintfCString("org.mozilla.%s.%s", aProgram, profileName.get());
-    if (aDestinationName.Length() > DBUS_MAXIMUM_NAME_LENGTH)
-      aDestinationName.Truncate(DBUS_MAXIMUM_NAME_LENGTH);
-
-    static auto sDBusValidateBusName =
-        (bool (*)(const char *, DBusError *))dlsym(RTLD_DEFAULT,
-                                                   "dbus_validate_bus_name");
-    if (!sDBusValidateBusName) {
-      return false;
-    }
-
-    if (!sDBusValidateBusName(aDestinationName.get(), nullptr)) {
-      // We don't have a valid busName yet - try to create a default one.
-      aDestinationName =
-          nsPrintfCString("org.mozilla.%s.%s", aProgram, "default");
-      if (!sDBusValidateBusName(aDestinationName.get(), nullptr)) {
-        // We failed completelly to get a valid bus name - just quit
-        // to prevent crash at dbus_bus_request_name().
-        return false;
-      }
-    }
-
-    return true;
+  static auto sDBusValidateBusName =
+      (bool (*)(const char *, DBusError *))dlsym(RTLD_DEFAULT,
+                                                  "dbus_validate_bus_name");
+  if (!sDBusValidateBusName) {
+    return false;
   }
+
+  if (!sDBusValidateBusName(aDestinationName.get(), nullptr)) {
+    // We don't have a valid busName yet - try to create a default one.
+    aDestinationName =
+        nsPrintfCString("org.mozilla.%s.%s", aProgram, "default");
+    if (!sDBusValidateBusName(aDestinationName.get(), nullptr)) {
+      // We failed completelly to get a valid bus name - just quit
+      // to prevent crash at dbus_bus_request_name().
+      return false;
+    }
+  }
+
+  return true;
 }
 
 nsresult nsDBusRemoteClient::DoSendDBusCommandLine(const char *aProgram,
