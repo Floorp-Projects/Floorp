@@ -6,7 +6,7 @@
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/AddTask.js"></script>
   <script type="text/javascript" src="pwmgr_common.js"></script>
-  <script type="text/javascript" src="prompt_common.js"></script>
+  <script type="text/javascript" src="../../../prompts/test/prompt_common.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
@@ -115,7 +115,7 @@ add_task(async function test1() {
 add_task(async function test2() {
   // Test correct parenting, by opening another tab in the foreground,
   // and making sure the prompt re-focuses the original tab when shown:
-  newWin = window.open();
+  let newWin = window.open();
   newWin.focus();
 
   let state = {

@@ -40,7 +40,7 @@ function doxhr(URL, user, pass, next) {
   };
   xhr.onerror = function() {
     ok(false, "request passed");
-    finishTest();
+    SimpleTest.finish();
   };
   xhr.send();
 }
