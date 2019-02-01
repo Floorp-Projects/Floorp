@@ -149,9 +149,9 @@ class AddonStudyAction extends BaseAction {
     const downloadDeferred = PromiseUtils.defer();
     const installDeferred = PromiseUtils.defer();
 
-    const install = await AddonManager.getInstallForURL(addonUrl, "application/x-xpinstall",
-                                                        null, null, null, null, null,
-                                                        {source: "internal"});
+    const install = await AddonManager.getInstallForURL(addonUrl, {
+      telemetryInfo: {source: "internal"},
+    });
 
     const listener = {
       onDownloadFailed() {

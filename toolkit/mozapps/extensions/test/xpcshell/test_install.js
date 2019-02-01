@@ -249,7 +249,10 @@ add_task(async function test_install_file() {
 // Tests that an install from a url downloads.
 add_task(async function test_install_url() {
   let url = "http://example.com/addons/test_install2_1.xpi";
-  let install = await AddonManager.getInstallForURL(url, "application/x-xpinstall", null, "Test 2", null, "1.0");
+  let install = await AddonManager.getInstallForURL(url, {
+    name: "Test 2",
+    version: "1.0",
+  });
   checkInstall(install, {
     version: "1.0",
     name: "Test 2",
@@ -330,7 +333,10 @@ add_task(async function test_install_new_version() {
   let url = "http://example.com/addons/test_install2_2.xpi";
   let [, install] = await Promise.all([
     AddonTestUtils.promiseInstallEvent("onNewInstall"),
-    AddonManager.getInstallForURL(url, "application/x-xpinstall", null, "Test 2", null, "3.0"),
+    AddonManager.getInstallForURL(url, {
+      name: "Test 2",
+      version: "3.0",
+    }),
   ]);
 
   checkInstall(install, {
@@ -412,7 +418,10 @@ add_task(async function test_install_compat_update() {
   let url = "http://example.com/addons/test_install3.xpi";
   let [, install] = await Promise.all([
     AddonTestUtils.promiseInstallEvent("onNewInstall"),
-    await AddonManager.getInstallForURL(url, "application/x-xpinstall", null, "Test 3", null, "1.0"),
+    await AddonManager.getInstallForURL(url, {
+      name: "Test 3",
+      version: "1.0",
+    }),
   ]);
 
   checkInstall(install, {
@@ -525,7 +534,10 @@ add_task(async function test_cancel() {
   let url = "http://example.com/addons/test_install3.xpi";
   let [, install] = await Promise.all([
     AddonTestUtils.promiseInstallEvent("onNewInstall"),
-    AddonManager.getInstallForURL(url, "application/x-xpinstall", null, "Test 3", null, "1.0"),
+    AddonManager.getInstallForURL(url, {
+      name: "Test 3",
+      version: "1.0",
+    }),
   ]);
 
   checkInstall(install, {
@@ -568,7 +580,7 @@ add_task(async function test_cancel_onDownloadStarted() {
   let url = "http://example.com/addons/test_install2_1.xpi";
   let [, install] = await Promise.all([
     AddonTestUtils.promiseInstallEvent("onNewInstall"),
-    AddonManager.getInstallForURL(url, "application/x-xpinstall"),
+    AddonManager.getInstallForURL(url),
   ]);
 
   equal(install.file, null);
@@ -607,7 +619,7 @@ add_task(async function test_cancel_onDownloadEnded() {
   let url = "http://example.com/addons/test_install2_1.xpi";
   let [, install] = await Promise.all([
     AddonTestUtils.promiseInstallEvent("onNewInstall"),
-    AddonManager.getInstallForURL(url, "application/x-xpinstall"),
+    AddonManager.getInstallForURL(url),
   ]);
 
   equal(install.file, null);
@@ -642,7 +654,7 @@ add_task(async function test_userDisabled_update() {
   let url = "http://example.com/addons/test_install2_1.xpi";
   let [, install] = await Promise.all([
     AddonTestUtils.promiseInstallEvent("onNewInstall"),
-    AddonManager.getInstallForURL(url, "application/x-xpinstall"),
+    AddonManager.getInstallForURL(url),
   ]);
 
   await install.install();
@@ -657,7 +669,7 @@ add_task(async function test_userDisabled_update() {
   });
 
   url = "http://example.com/addons/test_install2_2.xpi";
-  install = await AddonManager.getInstallForURL(url, "application/x-xpinstall");
+  install = await AddonManager.getInstallForURL(url);
   await install.install();
 
   checkAddon("addon2@tests.mozilla.org", install.addon, {
@@ -679,7 +691,7 @@ add_task(async function test_userDisabled_update() {
 // Verify that changing the userDisabled value before onInstallEnded works
 add_task(async function test_userDisabled() {
   let url = "http://example.com/addons/test_install2_1.xpi";
-  let install = await AddonManager.getInstallForURL(url, "application/x-xpinstall");
+  let install = await AddonManager.getInstallForURL(url);
   await install.install();
 
   ok(!install.addon.userDisabled);
@@ -691,7 +703,7 @@ add_task(async function test_userDisabled() {
   });
 
   url = "http://example.com/addons/test_install2_2.xpi";
-  install = await AddonManager.getInstallForURL(url, "application/x-xpinstall");
+  install = await AddonManager.getInstallForURL(url);
 
   install.addListener({
     onInstallStarted() {
@@ -725,7 +737,7 @@ add_task(async function test_18_1() {
   Services.prefs.setBoolPref("extensions.addon2@tests.mozilla.org.getAddons.cache.enabled", false);
 
   let url = "http://example.com/addons/test_install2_1.xpi";
-  let install = await AddonManager.getInstallForURL(url, "application/x-xpinstall");
+  let install = await AddonManager.getInstallForURL(url);
   await install.install();
 
   notEqual(install.addon.fullDescription, "Repository description");
@@ -744,7 +756,7 @@ add_task(async function test_metadata() {
   Services.prefs.setBoolPref("extensions.addon2@tests.mozilla.org.getAddons.cache.enabled", true);
 
   let url = "http://example.com/addons/test_install2_1.xpi";
-  let install = await AddonManager.getInstallForURL(url, "application/x-xpinstall");
+  let install = await AddonManager.getInstallForURL(url);
   await install.install();
 
   equal(install.addon.fullDescription, "Repository description");
@@ -760,7 +772,7 @@ add_task(async function test_metadata() {
 // Do the same again to make sure it works when the data is already in the cache
 add_task(async function test_metadata_again() {
   let url = "http://example.com/addons/test_install2_1.xpi";
-  let install = await AddonManager.getInstallForURL(url, "application/x-xpinstall");
+  let install = await AddonManager.getInstallForURL(url);
   await install.install();
 
   equal(install.addon.fullDescription, "Repository description");
@@ -776,7 +788,7 @@ add_task(async function test_metadata_again() {
 // Tests that an install can be restarted after being cancelled
 add_task(async function test_restart() {
   let url = "http://example.com/addons/test_install1.xpi";
-  let install = await AddonManager.getInstallForURL(url, "application/x-xpinstall");
+  let install = await AddonManager.getInstallForURL(url);
   equal(install.state, AddonManager.STATE_AVAILABLE);
 
   install.addListener({
@@ -821,7 +833,9 @@ add_task(async function test_restart() {
 // was provided
 add_task(async function test_restart_hash() {
   let url = "http://example.com/addons/test_install1.xpi";
-  let install = await AddonManager.getInstallForURL(url, "application/x-xpinstall", do_get_file_hash(XPIS.test_install1));
+  let install = await AddonManager.getInstallForURL(url, {
+    hash: do_get_file_hash(XPIS.test_install1),
+  });
   equal(install.state, AddonManager.STATE_AVAILABLE);
 
   install.addListener({
@@ -866,7 +880,7 @@ add_task(async function test_restart_hash() {
 // it will only fail again
 add_task(async function test_restart_badhash() {
   let url = "http://example.com/addons/test_install1.xpi";
-  let install = await AddonManager.getInstallForURL(url, "application/x-xpinstall", "sha1:foo");
+  let install = await AddonManager.getInstallForURL(url, {hash: "sha1:foo"});
   equal(install.state, AddonManager.STATE_AVAILABLE);
 
   install.addListener({
@@ -892,7 +906,9 @@ add_task(async function test_restart_badhash() {
 // Tests that installs with a hash for a local file work
 add_task(async function test_local_hash() {
   let url = Services.io.newFileURI(XPIS.test_install1).spec;
-  let install = await AddonManager.getInstallForURL(url, "application/x-xpinstall", do_get_file_hash(XPIS.test_install1));
+  let install = await AddonManager.getInstallForURL(url, {
+    hash: do_get_file_hash(XPIS.test_install1),
+  });
 
   checkInstall(install, {
     state: AddonManager.STATE_DOWNLOADED,
@@ -905,7 +921,7 @@ add_task(async function test_local_hash() {
 // Test that an install may be canceled after a redirect.
 add_task(async function test_cancel_redirect() {
   let url = "http://example.com/redirect?/addons/test_install1.xpi";
-  let install = await AddonManager.getInstallForURL(url, "application/x-xpinstall");
+  let install = await AddonManager.getInstallForURL(url);
 
   install.addListener({
     onDownloadProgress() {
@@ -925,7 +941,7 @@ add_task(async function test_cancel_redirect() {
 // cancelled in mid-download
 add_task(async function test_restart2() {
   let url = "http://example.com/addons/test_install1.xpi";
-  let install = await AddonManager.getInstallForURL(url, "application/x-xpinstall");
+  let install = await AddonManager.getInstallForURL(url);
 
   equal(install.state, AddonManager.STATE_AVAILABLE);
 

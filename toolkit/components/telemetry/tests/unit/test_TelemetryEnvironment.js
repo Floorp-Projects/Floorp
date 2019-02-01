@@ -25,7 +25,7 @@ ChromeUtils.defineModuleGetter(this, "ExtensionTestUtils",
                                "resource://testing-common/ExtensionXPCShellUtils.jsm");
 
 async function installXPIFromURL(url) {
-  let install = await AddonManager.getInstallForURL(url, "application/x-xpinstall");
+  let install = await AddonManager.getInstallForURL(url);
   return install.install();
 }
 
