@@ -302,11 +302,12 @@ TRRService::Observe(nsISupports *aSubject, const char *aTopic,
   if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
     ReadPrefs(NS_ConvertUTF16toUTF8(aData).get());
 
+    MutexAutoLock lock(mLock);
     if (((mConfirmationState == CONFIRM_INIT) && !mBootstrapAddr.IsEmpty() &&
          (mMode == MODE_TRRONLY)) ||
         (mConfirmationState == CONFIRM_FAILED)) {
       mConfirmationState = CONFIRM_TRYING;
-      MaybeConfirm();
+      MaybeConfirm_locked();
     }
 
   } else if (!strcmp(aTopic, kOpenCaptivePortalLoginEvent)) {
@@ -317,6 +318,9 @@ TRRService::Observe(nsISupports *aSubject, const char *aTopic,
     nsAutoCString data = NS_ConvertUTF16toUTF8(aData);
     LOG(("TRRservice captive portal was %s\n", data.get()));
     if (!mTRRBLStorage) {
+     // We need a lock if we modify mTRRBLStorage variable because it is
+     // access off the main thread as well.
+     MutexAutoLock lock(mLock);
       mTRRBLStorage = DataStorage::Get(DataStorageClass::TRRBlacklist);
       if (mTRRBLStorage) {
         bool storageWillPersist = true;
@@ -353,6 +357,12 @@ TRRService::Observe(nsISupports *aSubject, const char *aTopic,
 }
 
 void TRRService::MaybeConfirm() {
+  MutexAutoLock lock(mLock);
+  MaybeConfirm_locked();
+}
+
+void TRRService::MaybeConfirm_locked() {
+  mLock.AssertCurrentThreadOwns();
   if (TRR_DISABLED(mMode) || mConfirmer ||
       mConfirmationState != CONFIRM_TRYING) {
     LOG(
@@ -361,19 +371,15 @@ void TRRService::MaybeConfirm() {
          (int)mMode, (void *)mConfirmer, (int)mConfirmationState));
     return;
   }
-  nsAutoCString host;
-  {
-    MutexAutoLock lock(mLock);
-    host = mConfirmationNS;
-  }
-  if (host.Equals("skip")) {
+
+  if (mConfirmationNS.Equals("skip")) {
     LOG(("TRRService starting confirmation test %s SKIPPED\n",
          mPrivateURI.get()));
     mConfirmationState = CONFIRM_OK;
   } else {
     LOG(("TRRService starting confirmation test %s %s\n", mPrivateURI.get(),
-         host.get()));
-    mConfirmer = new TRR(this, host, TRRTYPE_NS, EmptyCString(), false);
+         mConfirmationNS.get()));
+    mConfirmer = new TRR(this, mConfirmationNS, TRRTYPE_NS, EmptyCString(), false);
     NS_DispatchToMainThread(mConfirmer);
   }
 }
@@ -415,6 +421,9 @@ bool TRRService::IsTRRBlacklisted(const nsACString &aHost,
                                   bool aPrivateBrowsing,
                                   bool aParentsToo)  // false if domain
 {
+  // Only use the Storage API on the main thread
+  MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
+
   if (mMode == MODE_TRRONLY) {
     return false;  // might as well try
   }
@@ -431,9 +440,6 @@ bool TRRService::IsTRRBlacklisted(const nsACString &aHost,
   if (!mTRRBLStorage) {
     return false;
   }
-
-  // Only use the Storage API in the main thread
-  MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
 
   if (mClearTRRBLStorage) {
     mTRRBLStorage->Clear();
@@ -459,7 +465,6 @@ bool TRRService::IsTRRBlacklisted(const nsACString &aHost,
     }
   }
 
-  MutexAutoLock lock(mLock);
   // use a unified casing for the hashkey
   nsAutoCString hashkey(aHost + aOriginSuffix);
   nsCString val(mTRRBLStorage->Get(hashkey, aPrivateBrowsing
@@ -474,18 +479,10 @@ bool TRRService::IsTRRBlacklisted(const nsACString &aHost,
       LOG(("Host [%s] is TRR blacklisted\n", nsCString(aHost).get()));
       return true;
     }
+
     // the blacklisted entry has expired
-    RefPtr<DataStorage> storage = mTRRBLStorage;
-    nsCOMPtr<nsIRunnable> runnable = NS_NewRunnableFunction(
-        "proxyStorageRemove", [storage, hashkey, aPrivateBrowsing]() {
-          storage->Remove(hashkey, aPrivateBrowsing ? DataStorage_Private
+    mTRRBLStorage->Remove(hashkey, aPrivateBrowsing ? DataStorage_Private
                                                     : DataStorage_Persistent);
-        });
-    if (!NS_IsMainThread()) {
-      NS_DispatchToMainThread(runnable);
-    } else {
-      runnable->Run();
-    }
   }
   return false;
 }
@@ -518,8 +515,11 @@ class ProxyBlacklist : public Runnable {
 void TRRService::TRRBlacklist(const nsACString &aHost,
                               const nsACString &aOriginSuffix,
                               bool privateBrowsing, bool aParentsToo) {
-  if (!mTRRBLStorage) {
-    return;
+  {
+    MutexAutoLock lock(mLock);
+    if (!mTRRBLStorage) {
+      return;
+    }
   }
 
   if (!NS_IsMainThread()) {
@@ -528,18 +528,17 @@ void TRRService::TRRBlacklist(const nsACString &aHost,
     return;
   }
 
+  MOZ_ASSERT(NS_IsMainThread());
+
   LOG(("TRR blacklist %s\n", nsCString(aHost).get()));
   nsAutoCString hashkey(aHost + aOriginSuffix);
   nsAutoCString val;
   val.AppendInt(NowInSeconds());  // creation time
 
   // this overwrites any existing entry
-  {
-    MutexAutoLock lock(mLock);
-    mTRRBLStorage->Put(
-        hashkey, val,
-        privateBrowsing ? DataStorage_Private : DataStorage_Persistent);
-  }
+  mTRRBLStorage->Put(
+      hashkey, val,
+      privateBrowsing ? DataStorage_Private : DataStorage_Persistent);
 
   if (aParentsToo) {
     // when given a full host name, verify its domain as well
@@ -582,6 +581,7 @@ TRRService::Notify(nsITimer *aTimer) {
 }
 
 void TRRService::TRRIsOkay(enum TrrOkay aReason) {
+  MOZ_ASSERT(NS_IsMainThread());
   Telemetry::AccumulateCategorical(
       aReason == OKAY_NORMAL ? Telemetry::LABELS_DNS_TRR_SUCCESS::Fine
                              : (aReason == OKAY_TIMEOUT
@@ -614,13 +614,21 @@ AHostResolver::LookupStatus TRRService::CompleteLookup(
   nsAutoPtr<AddrInfo> newRRSet(aNewRRSet);
   MOZ_ASSERT(newRRSet && newRRSet->IsTRR() == TRRTYPE_NS);
 
-  MOZ_ASSERT(!mConfirmer || (mConfirmationState == CONFIRM_TRYING));
+#ifdef DEBUG
+  {
+    MutexAutoLock lock(mLock);
+    MOZ_ASSERT(!mConfirmer || (mConfirmationState == CONFIRM_TRYING));
+  }
+#endif
   if (mConfirmationState == CONFIRM_TRYING) {
-    MOZ_ASSERT(mConfirmer);
-    mConfirmationState = NS_SUCCEEDED(status) ? CONFIRM_OK : CONFIRM_FAILED;
-    LOG(("TRRService finishing confirmation test %s %d %X\n", mPrivateURI.get(),
-         (int)mConfirmationState, (unsigned int)status));
-    mConfirmer = nullptr;
+    {
+      MutexAutoLock lock(mLock);
+      MOZ_ASSERT(mConfirmer);
+      mConfirmationState = NS_SUCCEEDED(status) ? CONFIRM_OK : CONFIRM_FAILED;
+      LOG(("TRRService finishing confirmation test %s %d %X\n", mPrivateURI.get(),
+           (int)mConfirmationState, (unsigned int)status));
+      mConfirmer = nullptr;
+    }
     if (mConfirmationState == CONFIRM_FAILED) {
       // retry failed NS confirmation
       NS_NewTimerWithCallback(getter_AddRefs(mRetryConfirmTimer), this,
