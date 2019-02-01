@@ -386,7 +386,7 @@ Index::Index(const IndiceWrapper& aIndices, ByteStream* aSource,
              uint32_t aTrackId, bool aIsAudio)
     : mSource(aSource), mIsAudio(aIsAudio) {
   if (!aIndices.Length()) {
-    mMoofParser = new MoofParser(aSource, aTrackId, aIsAudio);
+    mMoofParser = new MoofParser(aSource, AsVariant(aTrackId), aIsAudio);
   } else {
     if (!mIndex.SetCapacity(aIndices.Length(), fallible)) {
       // OOM.
