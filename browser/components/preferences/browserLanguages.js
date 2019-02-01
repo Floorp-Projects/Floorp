@@ -31,8 +31,7 @@ async function installFromUrl(url, hash, callback) {
   let telemetryInfo = {
     source: "about:preferences",
   };
-  let install = await AddonManager.getInstallForURL(
-    url, "application/x-xpinstall", hash, null, null, null, null, telemetryInfo);
+  let install = await AddonManager.getInstallForURL(url, {hash, telemetryInfo});
   if (callback) {
     callback(install.installId.toString());
   }
