@@ -2303,7 +2303,7 @@ public class GeckoSession implements Parcelable {
                 GeckoBundle[] choiceBundles = message.getBundleArray("choices");
                 PromptDelegate.Choice choices[];
                 if (choiceBundles == null || choiceBundles.length == 0) {
-                    choices = null;
+                    choices = new PromptDelegate.Choice[0];
                 } else {
                     choices = new PromptDelegate.Choice[choiceBundles.length];
                     for (int i = 0; i < choiceBundles.length; i++) {

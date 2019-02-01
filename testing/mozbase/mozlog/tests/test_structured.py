@@ -488,8 +488,14 @@ class TestTypeConversions(BaseStructuredTest):
 
     def test_tuple(self):
         self.logger.suite_start([])
-        self.logger.test_start(("\xf0\x90\x8d\x84\xf0\x90\x8c\xb4\xf0\x90\x8d\x83\xf0\x90\x8d\x84",
-                                42, u"\u16a4"))
+        if six.PY3:
+            self.logger.test_start((b"\xf0\x90\x8d\x84\xf0\x90\x8c\xb4\xf0\x90"
+                                    b"\x8d\x83\xf0\x90\x8d\x84".decode(),
+                                    42, u"\u16a4"))
+        else:
+            self.logger.test_start(("\xf0\x90\x8d\x84\xf0\x90\x8c\xb4\xf0\x90"
+                                    "\x8d\x83\xf0\x90\x8d\x84",
+                                    42, u"\u16a4"))
         self.assert_log_equals({"action": "test_start",
                                 "test": (u'\U00010344\U00010334\U00010343\U00010344',
                                          u"42", u"\u16a4")})
@@ -502,9 +508,15 @@ class TestTypeConversions(BaseStructuredTest):
                                 "message": "1",
                                 "level": "INFO"})
         self.logger.info([1, (2, '3'), "s", "s" + chr(255)])
-        self.assert_log_equals({"action": "log",
-                                "message": "[1, (2, '3'), 's', 's\\xff']",
-                                "level": "INFO"})
+        if six.PY3:
+            self.assert_log_equals({"action": "log",
+                                    "message": "[1, (2, '3'), 's', 's\xff']",
+                                    "level": "INFO"})
+        else:
+            self.assert_log_equals({"action": "log",
+                                    "message": "[1, (2, '3'), 's', 's\\xff']",
+                                    "level": "INFO"})
+
         self.logger.suite_end()
 
     def test_utf8str_write(self):
@@ -516,7 +528,10 @@ class TestTypeConversions(BaseStructuredTest):
             self.logger.info("☺")
             logfile.seek(0)
             data = logfile.readlines()[-1].strip()
-            self.assertEquals(data, "☺")
+            if six.PY3:
+                self.assertEquals(data.decode(), "☺")
+            else:
+                self.assertEquals(data, "☺")
             self.logger.suite_end()
             self.logger.remove_handler(_handler)
 
@@ -799,7 +814,7 @@ Unexpected results: 2
         self.set_position()
         self.logger.suite_end()
 
-        self.assertIn("Ran 5 checks (2 tests, 3 subtests)", self.loglines)
+        self.assertIn("Ran 5 checks (3 subtests, 2 tests)", self.loglines)
         self.assertIn("Expected results: 2", self.loglines)
         self.assertIn("""
 Unexpected results: 3
@@ -962,8 +977,8 @@ class TestCommandline(unittest.TestCase):
         logger.debug("DEBUG message")
         logger.error("ERROR message")
         # The debug level is not logged by default.
-        self.assertEqual(["INFO message",
-                          "ERROR message"],
+        self.assertEqual([b"INFO message",
+                          b"ERROR message"],
                          self.loglines)
 
     def test_logging_errorlevel(self):
@@ -977,7 +992,7 @@ class TestCommandline(unittest.TestCase):
         logger.error("ERROR message")
 
         # Only the error level and above were requested.
-        self.assertEqual(["ERROR message"],
+        self.assertEqual([b"ERROR message"],
                          self.loglines)
 
     def test_logging_debuglevel(self):
@@ -990,9 +1005,9 @@ class TestCommandline(unittest.TestCase):
         logger.debug("DEBUG message")
         logger.error("ERROR message")
         # Requesting a lower log level than default works as expected.
-        self.assertEqual(["INFO message",
-                          "DEBUG message",
-                          "ERROR message"],
+        self.assertEqual([b"INFO message",
+                          b"DEBUG message",
+                          b"ERROR message"],
                          self.loglines)
 
     def test_unused_options(self):

@@ -412,8 +412,12 @@ MediaConduitErrorCode WebrtcAudioConduit::ConfigureRecvMediaCodecs(
 
     webrtc::SdpAudioFormat::Parameters parameters;
     if (codec->mName == "opus") {
-      parameters = {{"stereo", "1"}};
-
+      if (codec->mChannels == 2) {
+        parameters = {{"stereo", "1"}};
+      }
+      if (codec->mFECEnabled) {
+        parameters["useinbandfec"] = "1";
+      }
       if (codec->mMaxPlaybackRate) {
         std::ostringstream o;
         o << codec->mMaxPlaybackRate;
@@ -853,14 +857,18 @@ bool WebrtcAudioConduit::CodecConfigToWebRTCCodec(
   config.encoder_factory = webrtc::CreateBuiltinAudioEncoderFactory();
 
   webrtc::SdpAudioFormat::Parameters parameters;
-  if (codecInfo->mFECEnabled) {
-    parameters["useinbandfec"] = "1";
-  }
-
-  if (codecInfo->mName == "opus" && codecInfo->mMaxPlaybackRate) {
-    std::ostringstream o;
-    o << codecInfo->mMaxPlaybackRate;
-    parameters["maxplaybackrate"] = o.str();
+  if (codecInfo->mName == "opus") {
+    if (codecInfo->mChannels == 2) {
+      parameters["stereo"] = "1";
+    }
+    if (codecInfo->mFECEnabled) {
+      parameters["useinbandfec"] = "1";
+    }
+    if (codecInfo->mMaxPlaybackRate) {
+      std::ostringstream o;
+      o << codecInfo->mMaxPlaybackRate;
+      parameters["maxplaybackrate"] = o.str();
+    }
   }
 
   webrtc::SdpAudioFormat format(codecInfo->mName, codecInfo->mFreq,

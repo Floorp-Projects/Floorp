@@ -102,7 +102,7 @@ Preferences
 
 ``toolkit.telemetry.server``
 
-  The server Telemetry pings are sent to.
+  The server Telemetry pings are sent to. Change requires restart.
 
 ``toolkit.telemetry.log.level``
 

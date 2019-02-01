@@ -253,7 +253,11 @@ WebConsole.prototype = {
     }
 
     if (this.parserService && expression.includes("await ")) {
-      return this.parserService.mapExpression(expression);
+      const shouldMapBindings = false;
+      const shouldMapAwait = true;
+      const res = this.parserService.mapExpression(
+        expression, null, null, shouldMapBindings, shouldMapAwait);
+      return res;
     }
 
     return null;
