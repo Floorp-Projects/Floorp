@@ -297,12 +297,7 @@ public class GeckoMediaControlAgent {
             return;
         }
 
-        ThreadUtils.postToBackgroundThread(new Runnable() {
-            @Override
-            public void run() {
-                updateNotification(tab);
-            }
-        });
+        ThreadUtils.postToBackgroundThread(() -> updateNotification(tab));
     }
 
     /* package */ static boolean isMediaPlaying() {
