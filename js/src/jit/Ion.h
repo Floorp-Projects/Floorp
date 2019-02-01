@@ -169,12 +169,17 @@ static inline bool IsIonEnabled(JSContext* cx) {
 #endif
 }
 
+inline bool IsIonInlinableGetterOrSetterPC(jsbytecode* pc) {
+  // GETPROP, CALLPROP, LENGTH, GETELEM, and JSOP_CALLELEM. (Inlined Getters)
+  // SETPROP, SETNAME, SETGNAME (Inlined Setters)
+  return IsGetPropPC(pc) || IsGetElemPC(pc) || IsSetPropPC(pc);
+}
+
 inline bool IsIonInlinablePC(jsbytecode* pc) {
   // CALL, FUNCALL, FUNAPPLY, EVAL, NEW (Normal Callsites)
-  // GETPROP, CALLPROP, and LENGTH. (Inlined Getters)
-  // SETPROP, SETNAME, SETGNAME (Inlined Setters)
-  return (IsCallPC(pc) && !IsSpreadCallPC(pc)) || IsGetPropPC(pc) ||
-         IsSetPropPC(pc);
+  // or an inlinable getter or setter.
+  return (IsCallPC(pc) && !IsSpreadCallPC(pc)) ||
+         IsIonInlinableGetterOrSetterPC(pc);
 }
 
 inline bool TooManyActualArguments(unsigned nargs) {
