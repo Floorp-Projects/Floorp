@@ -2289,6 +2289,7 @@ window._gBrowser = {
     forceNotRemote,
     fromExternal,
     index,
+    lazyTabTitle,
     name,
     nextTabParentId,
     noInitialLabel,
@@ -2306,7 +2307,6 @@ window._gBrowser = {
     sameProcessAsFrameLoader,
     skipAnimation,
     skipBackgroundNotify,
-    title,
     triggeringPrincipal,
     userContextId,
     recordExecution,
@@ -2553,7 +2553,7 @@ window._gBrowser = {
         SessionStore.setTabState(t, {
           entries: [{
             url: lazyBrowserURI ? lazyBrowserURI.spec : "about:blank",
-            title,
+            title: lazyTabTitle,
             triggeringPrincipal_base64: Utils.serializePrincipal(triggeringPrincipal),
           }],
         });
