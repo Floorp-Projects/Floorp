@@ -36,7 +36,7 @@ const { isSupportedDebugTargetPane } = require("../modules/debug-target-support"
 class RuntimePage extends PureComponent {
   static get propTypes() {
     return {
-      collapsibilities: PropTypes.object.isRequired,
+      collapsibilities: Types.collapsibilities.isRequired,
       dispatch: PropTypes.func.isRequired,
       installedExtensions: PropTypes.arrayOf(PropTypes.object).isRequired,
       otherWorkers: PropTypes.arrayOf(PropTypes.object).isRequired,
