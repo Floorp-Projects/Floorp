@@ -437,6 +437,16 @@ def av1(value, target, c_compiler):
     if enabled:
         return True
 
+@depends(target, nasm_version, when=av1 & compile_environment)
+def dav1d_asm(target, nasm_version):
+    if target.os == 'GNU' and target.kernel == 'Linux' and target.cpu in ('x86', 'x86_64'):
+        if nasm_version < '2.13':
+            die('nasm 2.13 or greater is required for AV1 support. '
+                'Either install nasm or add --disable-av1 to your configure options.')
+        return True
+
+
+set_config('MOZ_DAV1D_ASM', dav1d_asm)
 set_config('MOZ_AV1', av1)
 set_define('MOZ_AV1', av1)
 
