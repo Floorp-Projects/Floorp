@@ -58,6 +58,7 @@ win32/opt:
             - builds/taskcluster_base_win32.py
         extra-config:
             stage_platform: win32
+    run-on-projects: ['mozilla-central', 'try']
     toolchains:
         - win64-clang-cl
         - win64-rust
@@ -197,7 +198,7 @@ win64-plain/debug:
             disable_package_metrics: true
             stage_platform: win64
         mozconfig-variant: plain-debug
-    run-on-projects: [trunk]
+    run-on-projects: ['trunk']
     toolchains:
         - win64-clang-cl
         - win64-rust
@@ -230,6 +231,7 @@ win64/opt:
             - builds/taskcluster_base_win64.py
         extra-config:
             stage_platform: win64
+    run-on-projects: ['mozilla-central', 'try']
     toolchains:
         - win64-clang-cl
         - win64-rust
@@ -266,7 +268,7 @@ win64-plain/opt:
             disable_package_metrics: true
             stage_platform: win64
         mozconfig-variant: plain-opt
-    run-on-projects: [trunk]
+    run-on-projects: ['mozilla-central', 'try']
     toolchains:
         - win64-clang-cl
         - win64-rust
@@ -419,7 +421,7 @@ win32-add-on-devel/opt:
         extra-config:
             stage_platform: win32-add-on-devel
         mozconfig-variant: add-on-devel
-    run-on-projects: ['mozilla-beta', 'mozilla-release', 'mozilla-esr45']
+    run-on-projects: ['mozilla-beta', 'mozilla-release']
     toolchains:
         - win64-clang-cl
         - win64-rust
@@ -453,7 +455,7 @@ win64-add-on-devel/opt:
         extra-config:
             stage_platform: win64-on-devel
         mozconfig-variant: add-on-devel
-    run-on-projects: ['mozilla-beta', 'mozilla-release', 'mozilla-esr45']
+    run-on-projects: ['mozilla-beta', 'mozilla-release']
     toolchains:
         - win64-clang-cl
         - win64-rust
