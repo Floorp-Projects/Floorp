@@ -2200,7 +2200,7 @@ dnl = Breakpad crash reporting (on by default on supported platforms)
 dnl ========================================================
 
 case $target in
-i?86-*-mingw*|x86_64-*-mingw*)
+i?86-*-mingw*|x86_64-*-mingw*|aarch64-*-mingw*)
   MOZ_CRASHREPORTER=1
   ;;
 i?86-apple-darwin*|x86_64-apple-darwin*)
