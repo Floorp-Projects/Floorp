@@ -40,6 +40,8 @@ class BaseType(object):
                 config.get('extensions', []),
             )
             config['exclude'] = exclude
+        elif config.get('exclude'):
+            del config['exclude']
 
         if not paths:
             return
