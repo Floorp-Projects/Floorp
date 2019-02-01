@@ -221,13 +221,6 @@ wr::WrSpaceAndClipChain ClipManager::SwitchItem(
   // for it.
   clips.mClipChainId = DefineClipChain(clip, auPerDevPixel, aStackingContext);
 
-  // If we didn't define a clip chain, inherit one from the stack. Eventually
-  // we should ensure stacking contexts always have a valid clip chain, and
-  // that should eliminate the need for this.
-  if (clips.mClipChainId.isNothing() && !mItemClipStack.empty()) {
-    clips.mClipChainId = mItemClipStack.top().mClipChainId;
-  }
-
   Maybe<wr::WrSpaceAndClip> spaceAndClip = GetScrollLayer(asr);
   MOZ_ASSERT(spaceAndClip.isSome());
   clips.mScrollId = SpatialIdAfterOverride(spaceAndClip->space);
@@ -363,11 +356,22 @@ Maybe<wr::WrClipChainId> ClipManager::DefineClipChain(
     CLIP_LOG("cache[%p] <= %zu\n", chain, clipId.id);
   }
 
-  if (clipIds.Length() == 0) {
-    return Nothing();
+  // Now find the parent display item's clipchain id
+  Maybe<wr::WrClipChainId> parentChainId;
+  if (!mItemClipStack.empty()) {
+    parentChainId = mItemClipStack.top().mClipChainId;
   }
 
-  return Some(mBuilder->DefineClipChain(clipIds));
+  // And define the current display item's clipchain using the clips and the
+  // parent. If the current item has no clips of its own, just use the parent
+  // item's clipchain.
+  Maybe<wr::WrClipChainId> chainId;
+  if (clipIds.Length() > 0) {
+    chainId = Some(mBuilder->DefineClipChain(parentChainId, clipIds));
+  } else {
+    chainId = parentChainId;
+  }
+  return chainId;
 }
 
 ClipManager::~ClipManager() {
