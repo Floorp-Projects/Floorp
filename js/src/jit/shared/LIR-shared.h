@@ -48,7 +48,7 @@ class LBinaryMath : public LInstructionHelper<1, 2 + ExtraUses, Temps> {
 //
 // Note: LSafepoints are 1:1 with LOsiPoints, so it holds a reference to the
 // corresponding LSafepoint to inform it of the LOsiPoint's masm offset when it
-// gets CG'd.
+// gets GC'd.
 class LOsiPoint : public LInstructionHelper<0, 0, 0> {
   LSafepoint* safepoint_;
 
@@ -383,6 +383,22 @@ class LNewTypedArrayDynamicLength : public LInstructionHelper<1, 1, 1> {
 
   MNewTypedArrayDynamicLength* mir() const {
     return mir_->toNewTypedArrayDynamicLength();
+  }
+};
+
+class LNewTypedArrayFromArray : public LCallInstructionHelper<1, 1, 0> {
+ public:
+  LIR_HEADER(NewTypedArrayFromArray)
+
+  explicit LNewTypedArrayFromArray(const LAllocation& array)
+      : LCallInstructionHelper(classOpcode) {
+    setOperand(0, array);
+  }
+
+  const LAllocation* array() { return getOperand(0); }
+
+  MNewTypedArrayFromArray* mir() const {
+    return mir_->toNewTypedArrayFromArray();
   }
 };
 
@@ -6070,6 +6086,7 @@ class LIsTypedArray : public LInstructionHelper<1, 1, 0> {
     setOperand(0, object);
   }
   const LAllocation* object() { return getOperand(0); }
+  MIsTypedArray* mir() const { return mir_->toIsTypedArray(); }
 };
 
 class LIsObject : public LInstructionHelper<1, BOX_PIECES, 0> {

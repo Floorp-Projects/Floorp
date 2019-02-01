@@ -177,7 +177,7 @@ void WasmFrameIter::popFrame() {
     // |      WASM FRAME     | (already unwound)
     // |---------------------|
     //
-    // The next value of FP is just a regular jit frame used marked to
+    // The next value of FP is just a regular jit frame used as a marker to
     // know that we should transition to a JSJit frame iterator.
     unwoundIonCallerFP_ = (uint8_t*)fp_;
     unwoundIonFrameType_ = FrameType::JSJitToWasm;

@@ -6318,6 +6318,19 @@ void CodeGenerator::visitNewTypedArrayDynamicLength(
   masm.bind(ool->rejoin());
 }
 
+typedef TypedArrayObject* (*TypedArrayCreateWithTemplateFn)(JSContext*,
+                                                            HandleObject,
+                                                            HandleObject);
+static const VMFunction TypedArrayCreateWithTemplateInfo =
+    FunctionInfo<TypedArrayCreateWithTemplateFn>(
+        js::TypedArrayCreateWithTemplate, "TypedArrayCreateWithTemplate");
+
+void CodeGenerator::visitNewTypedArrayFromArray(LNewTypedArrayFromArray* lir) {
+  pushArg(ToRegister(lir->array()));
+  pushArg(ImmGCPtr(lir->mir()->templateObject()));
+  callVM(TypedArrayCreateWithTemplateInfo, lir);
+}
+
 // Out-of-line object allocation for JSOP_NEWOBJECT.
 class OutOfLineNewObject : public OutOfLineCodeBase<CodeGenerator> {
   LNewObject* lir_;
@@ -12593,9 +12606,20 @@ void CodeGenerator::visitIsArrayV(LIsArrayV* lir) {
   EmitObjectIsArray(masm, ool, temp, output, &notArray);
 }
 
+typedef bool (*IsPossiblyWrappedTypedArrayFn)(JSContext*, JSObject*, bool*);
+static const VMFunction IsPossiblyWrappedTypedArrayInfo =
+    FunctionInfo<IsPossiblyWrappedTypedArrayFn>(
+        jit::IsPossiblyWrappedTypedArray, "IsPossiblyWrappedTypedArray");
+
 void CodeGenerator::visitIsTypedArray(LIsTypedArray* lir) {
   Register object = ToRegister(lir->object());
   Register output = ToRegister(lir->output());
+
+  OutOfLineCode* ool = nullptr;
+  if (lir->mir()->isPossiblyWrapped()) {
+    ool = oolCallVM(IsPossiblyWrappedTypedArrayInfo, lir, ArgList(object),
+                    StoreRegisterTo(output));
+  }
 
   Label notTypedArray;
   Label done;
@@ -12618,8 +12642,14 @@ void CodeGenerator::visitIsTypedArray(LIsTypedArray* lir) {
   masm.move32(Imm32(1), output);
   masm.jump(&done);
   masm.bind(&notTypedArray);
+  if (ool) {
+    masm.branchTestClassIsProxy(true, output, ool->entry());
+  }
   masm.move32(Imm32(0), output);
   masm.bind(&done);
+  if (ool) {
+    masm.bind(ool->rejoin());
+  }
 }
 
 void CodeGenerator::visitIsObject(LIsObject* ins) {

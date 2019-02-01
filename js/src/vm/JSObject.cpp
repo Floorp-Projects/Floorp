@@ -2011,15 +2011,8 @@ static NativeObject* DefineConstructorAndPrototype(
     return nullptr;
   }
 
-  // Attributes used when installing the constructor on |obj|.
-  uint32_t propertyAttrs = 0;
-
   RootedNativeObject ctor(cx);
   if (!constructor) {
-    if (clasp->flags & JSCLASS_IS_ANONYMOUS) {
-      propertyAttrs = JSPROP_READONLY | JSPROP_PERMANENT;
-    }
-
     ctor = proto;
   } else {
     ctor = NewNativeConstructor(cx, constructor, nargs, atom);
@@ -2040,7 +2033,7 @@ static NativeObject* DefineConstructorAndPrototype(
 
   RootedId id(cx, AtomToId(atom));
   RootedValue value(cx, ObjectValue(*ctor));
-  if (!DefineDataProperty(cx, obj, id, value, propertyAttrs)) {
+  if (!DefineDataProperty(cx, obj, id, value, 0)) {
     return nullptr;
   }
 

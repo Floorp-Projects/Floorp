@@ -245,9 +245,15 @@ void GraphSpewer::beginFunction(JSScript* function) {
   if (!isSpewing()) {
     return;
   }
-
   jsonSpewer_.beginFunction(function);
+  ionspewer.beginFunction();
+}
 
+void GraphSpewer::beginWasmFunction(unsigned funcIndex) {
+  if (!isSpewing()) {
+    return;
+  }
+  jsonSpewer_.beginWasmFunction(funcIndex);
   ionspewer.beginFunction();
 }
 
@@ -321,6 +327,12 @@ void jit::SpewBeginFunction(MIRGenerator* mir, JSScript* function) {
   mir->graphSpewer().beginFunction(function);
 }
 
+void jit::SpewBeginWasmFunction(MIRGenerator* mir, unsigned funcIndex) {
+  MIRGraph* graph = &mir->graph();
+  mir->graphSpewer().init(graph, nullptr);
+  mir->graphSpewer().beginWasmFunction(funcIndex);
+}
+
 AutoSpewEndFunction::~AutoSpewEndFunction() {
   mir_->graphSpewer().endFunction();
 }
@@ -330,203 +342,181 @@ Fprinter& jit::JitSpewPrinter() {
   return out;
 }
 
+static void PrintHelpAndExit(int status = 0) {
+  fflush(nullptr);
+  printf(
+      "\n"
+      "usage: IONFLAGS=option,option,option,... where options can be:\n"
+      "\n"
+      "  aborts        Compilation abort messages\n"
+      "  scripts       Compiled scripts\n"
+      "  mir           MIR information\n"
+      "  prune         Prune unused branches\n"
+      "  escape        Escape analysis\n"
+      "  alias         Alias analysis\n"
+      "  alias-sum     Alias analysis: shows summaries for every block\n"
+      "  gvn           Global Value Numbering\n"
+      "  licm          Loop invariant code motion\n"
+      "  flac          Fold linear arithmetic constants\n"
+      "  eaa           Effective address analysis\n"
+      "  sincos        Replace sin/cos by sincos\n"
+      "  sink          Sink transformation\n"
+      "  regalloc      Register allocation\n"
+      "  inline        Inlining\n"
+      "  snapshots     Snapshot information\n"
+      "  codegen       Native code generation\n"
+      "  bailouts      Bailouts\n"
+      "  caches        Inline caches\n"
+      "  osi           Invalidation\n"
+      "  safepoints    Safepoints\n"
+      "  pools         Literal Pools (ARM only for now)\n"
+      "  cacheflush    Instruction Cache flushes (ARM only for now)\n"
+      "  range         Range Analysis\n"
+      "  logs          JSON visualization logging\n"
+      "  logs-sync     Same as logs, but flushes between each pass (sync. "
+      "compiled functions only).\n"
+      "  profiling     Profiling-related information\n"
+      "  trackopts     Optimization tracking information gathered by the "
+      "Gecko profiler. "
+      "(Note: call enableGeckoProfiling() in your script to enable it).\n"
+      "  trackopts-ext Encoding information about optimization tracking\n"
+      "  dump-mir-expr Dump the MIR expressions\n"
+      "  cfg           Control flow graph generation\n"
+      "  all           Everything\n"
+      "\n"
+      "  bl-aborts     Baseline compiler abort messages\n"
+      "  bl-scripts    Baseline script-compilation\n"
+      "  bl-op         Baseline compiler detailed op-specific messages\n"
+      "  bl-ic         Baseline inline-cache messages\n"
+      "  bl-ic-fb      Baseline IC fallback stub messages\n"
+      "  bl-osr        Baseline IC OSR messages\n"
+      "  bl-bails      Baseline bailouts\n"
+      "  bl-dbg-osr    Baseline debug mode on stack recompile messages\n"
+      "  bl-all        All baseline spew\n"
+      "\n"
+      "See also SPEW=help for information on the Structured Spewer."
+      "\n");
+  exit(status);
+}
+
+static bool IsFlag(const char* found, const char* flag) {
+  return strlen(found) == strlen(flag) && strcmp(found, flag) == 0;
+}
+
 void jit::CheckLogging() {
   if (LoggingChecked) {
     return;
   }
+
   LoggingChecked = true;
-  const char* env = getenv("IONFLAGS");
+
+  char* env = getenv("IONFLAGS");
   if (!env) {
     return;
   }
-  if (strstr(env, "help")) {
-    fflush(nullptr);
-    printf(
-        "\n"
-        "usage: IONFLAGS=option,option,option,... where options can be:\n"
-        "\n"
-        "  aborts        Compilation abort messages\n"
-        "  scripts       Compiled scripts\n"
-        "  mir           MIR information\n"
-        "  prune         Prune unused branches\n"
-        "  escape        Escape analysis\n"
-        "  alias         Alias analysis\n"
-        "  alias-sum     Alias analysis: shows summaries for every block\n"
-        "  gvn           Global Value Numbering\n"
-        "  licm          Loop invariant code motion\n"
-        "  flac          Fold linear arithmetic constants\n"
-        "  eaa           Effective address analysis\n"
-        "  sincos        Replace sin/cos by sincos\n"
-        "  sink          Sink transformation\n"
-        "  regalloc      Register allocation\n"
-        "  inline        Inlining\n"
-        "  snapshots     Snapshot information\n"
-        "  codegen       Native code generation\n"
-        "  bailouts      Bailouts\n"
-        "  caches        Inline caches\n"
-        "  osi           Invalidation\n"
-        "  safepoints    Safepoints\n"
-        "  pools         Literal Pools (ARM only for now)\n"
-        "  cacheflush    Instruction Cache flushes (ARM only for now)\n"
-        "  range         Range Analysis\n"
-        "  logs          JSON visualization logging\n"
-        "  logs-sync     Same as logs, but flushes between each pass (sync. "
-        "compiled functions only).\n"
-        "  profiling     Profiling-related information\n"
-        "  trackopts     Optimization tracking information gathered by the "
-        "Gecko profiler. "
-        "(Note: call enableGeckoProfiling() in your script to enable it).\n"
-        "  trackopts-ext Encoding information about optimization tracking\n"
-        "  dump-mir-expr Dump the MIR expressions\n"
-        "  cfg           Control flow graph generation\n"
-        "  all           Everything\n"
-        "\n"
-        "  bl-aborts     Baseline compiler abort messages\n"
-        "  bl-scripts    Baseline script-compilation\n"
-        "  bl-op         Baseline compiler detailed op-specific messages\n"
-        "  bl-ic         Baseline inline-cache messages\n"
-        "  bl-ic-fb      Baseline IC fallback stub messages\n"
-        "  bl-osr        Baseline IC OSR messages\n"
-        "  bl-bails      Baseline bailouts\n"
-        "  bl-dbg-osr    Baseline debug mode on stack recompile messages\n"
-        "  bl-all        All baseline spew\n"
-        "\n"
-        "See also SPEW=help for information on the Structured Spewer."
-        "\n");
-    exit(0);
-    /*NOTREACHED*/
-  }
-  if (ContainsFlag(env, "aborts")) {
-    EnableChannel(JitSpew_IonAbort);
-  }
-  if (ContainsFlag(env, "prune")) {
-    EnableChannel(JitSpew_Prune);
-  }
-  if (ContainsFlag(env, "escape")) {
-    EnableChannel(JitSpew_Escape);
-  }
-  if (ContainsFlag(env, "alias")) {
-    EnableChannel(JitSpew_Alias);
-  }
-  if (ContainsFlag(env, "alias-sum")) {
-    EnableChannel(JitSpew_AliasSummaries);
-  }
-  if (ContainsFlag(env, "scripts")) {
-    EnableChannel(JitSpew_IonScripts);
-  }
-  if (ContainsFlag(env, "mir")) {
-    EnableChannel(JitSpew_IonMIR);
-  }
-  if (ContainsFlag(env, "gvn")) {
-    EnableChannel(JitSpew_GVN);
-  }
-  if (ContainsFlag(env, "range")) {
-    EnableChannel(JitSpew_Range);
-  }
-  if (ContainsFlag(env, "licm")) {
-    EnableChannel(JitSpew_LICM);
-  }
-  if (ContainsFlag(env, "flac")) {
-    EnableChannel(JitSpew_FLAC);
-  }
-  if (ContainsFlag(env, "eaa")) {
-    EnableChannel(JitSpew_EAA);
-  }
-  if (ContainsFlag(env, "sincos")) {
-    EnableChannel(JitSpew_Sincos);
-  }
-  if (ContainsFlag(env, "sink")) {
-    EnableChannel(JitSpew_Sink);
-  }
-  if (ContainsFlag(env, "regalloc")) {
-    EnableChannel(JitSpew_RegAlloc);
-  }
-  if (ContainsFlag(env, "inline")) {
-    EnableChannel(JitSpew_Inlining);
-  }
-  if (ContainsFlag(env, "snapshots")) {
-    EnableChannel(JitSpew_IonSnapshots);
-  }
-  if (ContainsFlag(env, "codegen")) {
-    EnableChannel(JitSpew_Codegen);
-  }
-  if (ContainsFlag(env, "bailouts")) {
-    EnableChannel(JitSpew_IonBailouts);
-  }
-  if (ContainsFlag(env, "osi")) {
-    EnableChannel(JitSpew_IonInvalidate);
-  }
-  if (ContainsFlag(env, "caches")) {
-    EnableChannel(JitSpew_IonIC);
-  }
-  if (ContainsFlag(env, "safepoints")) {
-    EnableChannel(JitSpew_Safepoints);
-  }
-  if (ContainsFlag(env, "pools")) {
-    EnableChannel(JitSpew_Pools);
-  }
-  if (ContainsFlag(env, "cacheflush")) {
-    EnableChannel(JitSpew_CacheFlush);
-  }
-  if (ContainsFlag(env, "logs")) {
-    EnableIonDebugAsyncLogging();
-  }
-  if (ContainsFlag(env, "logs-sync")) {
-    EnableIonDebugSyncLogging();
-  }
-  if (ContainsFlag(env, "profiling")) {
-    EnableChannel(JitSpew_Profiling);
-  }
-  if (ContainsFlag(env, "trackopts")) {
-    JitOptions.disableOptimizationTracking = false;
-    EnableChannel(JitSpew_OptimizationTracking);
-  }
-  if (ContainsFlag(env, "trackopts-ext")) {
-    EnableChannel(JitSpew_OptimizationTrackingExtended);
-  }
-  if (ContainsFlag(env, "dump-mir-expr")) {
-    EnableChannel(JitSpew_MIRExpressions);
-  }
-  if (ContainsFlag(env, "cfg")) {
-    EnableChannel(JitSpew_CFG);
-  }
-  if (ContainsFlag(env, "all")) {
-    LoggingBits = uint64_t(-1);
-  }
 
-  if (ContainsFlag(env, "bl-aborts")) {
-    EnableChannel(JitSpew_BaselineAbort);
-  }
-  if (ContainsFlag(env, "bl-scripts")) {
-    EnableChannel(JitSpew_BaselineScripts);
-  }
-  if (ContainsFlag(env, "bl-op")) {
-    EnableChannel(JitSpew_BaselineOp);
-  }
-  if (ContainsFlag(env, "bl-ic")) {
-    EnableChannel(JitSpew_BaselineIC);
-  }
-  if (ContainsFlag(env, "bl-ic-fb")) {
-    EnableChannel(JitSpew_BaselineICFallback);
-  }
-  if (ContainsFlag(env, "bl-osr")) {
-    EnableChannel(JitSpew_BaselineOSR);
-  }
-  if (ContainsFlag(env, "bl-bails")) {
-    EnableChannel(JitSpew_BaselineBailouts);
-  }
-  if (ContainsFlag(env, "bl-dbg-osr")) {
-    EnableChannel(JitSpew_BaselineDebugModeOSR);
-  }
-  if (ContainsFlag(env, "bl-all")) {
-    EnableChannel(JitSpew_BaselineAbort);
-    EnableChannel(JitSpew_BaselineScripts);
-    EnableChannel(JitSpew_BaselineOp);
-    EnableChannel(JitSpew_BaselineIC);
-    EnableChannel(JitSpew_BaselineICFallback);
-    EnableChannel(JitSpew_BaselineOSR);
-    EnableChannel(JitSpew_BaselineBailouts);
-    EnableChannel(JitSpew_BaselineDebugModeOSR);
+  const char* found = strtok(env, ",");
+  while (found) {
+    fprintf(stderr, "found tag: %s\n", found);
+    // We're at the end of a flag; check if the previous substring was a
+    // known flag (i-1 is the last character of the flag we just read).
+    if (IsFlag(found, "help")) {
+      PrintHelpAndExit();
+    } else if (IsFlag(found, "aborts")) {
+      EnableChannel(JitSpew_IonAbort);
+    } else if (IsFlag(found, "prune")) {
+      EnableChannel(JitSpew_Prune);
+    } else if (IsFlag(found, "escape")) {
+      EnableChannel(JitSpew_Escape);
+    } else if (IsFlag(found, "alias")) {
+      EnableChannel(JitSpew_Alias);
+    } else if (IsFlag(found, "alias-sum")) {
+      EnableChannel(JitSpew_AliasSummaries);
+    } else if (IsFlag(found, "scripts")) {
+      EnableChannel(JitSpew_IonScripts);
+    } else if (IsFlag(found, "mir")) {
+      EnableChannel(JitSpew_IonMIR);
+    } else if (IsFlag(found, "gvn")) {
+      EnableChannel(JitSpew_GVN);
+    } else if (IsFlag(found, "range")) {
+      EnableChannel(JitSpew_Range);
+    } else if (IsFlag(found, "licm")) {
+      EnableChannel(JitSpew_LICM);
+    } else if (IsFlag(found, "flac")) {
+      EnableChannel(JitSpew_FLAC);
+    } else if (IsFlag(found, "eaa")) {
+      EnableChannel(JitSpew_EAA);
+    } else if (IsFlag(found, "sincos")) {
+      EnableChannel(JitSpew_Sincos);
+    } else if (IsFlag(found, "sink")) {
+      EnableChannel(JitSpew_Sink);
+    } else if (IsFlag(found, "regalloc")) {
+      EnableChannel(JitSpew_RegAlloc);
+    } else if (IsFlag(found, "inline")) {
+      EnableChannel(JitSpew_Inlining);
+    } else if (IsFlag(found, "snapshots")) {
+      EnableChannel(JitSpew_IonSnapshots);
+    } else if (IsFlag(found, "codegen")) {
+      EnableChannel(JitSpew_Codegen);
+    } else if (IsFlag(found, "bailouts")) {
+      EnableChannel(JitSpew_IonBailouts);
+    } else if (IsFlag(found, "osi")) {
+      EnableChannel(JitSpew_IonInvalidate);
+    } else if (IsFlag(found, "caches")) {
+      EnableChannel(JitSpew_IonIC);
+    } else if (IsFlag(found, "safepoints")) {
+      EnableChannel(JitSpew_Safepoints);
+    } else if (IsFlag(found, "pools")) {
+      EnableChannel(JitSpew_Pools);
+    } else if (IsFlag(found, "cacheflush")) {
+      EnableChannel(JitSpew_CacheFlush);
+    } else if (IsFlag(found, "logs")) {
+      EnableIonDebugAsyncLogging();
+    } else if (IsFlag(found, "logs-sync")) {
+      EnableIonDebugSyncLogging();
+    } else if (IsFlag(found, "profiling")) {
+      EnableChannel(JitSpew_Profiling);
+    } else if (IsFlag(found, "trackopts")) {
+      JitOptions.disableOptimizationTracking = false;
+      EnableChannel(JitSpew_OptimizationTracking);
+    } else if (IsFlag(found, "trackopts-ext")) {
+      EnableChannel(JitSpew_OptimizationTrackingExtended);
+    } else if (IsFlag(found, "dump-mir-expr")) {
+      EnableChannel(JitSpew_MIRExpressions);
+    } else if (IsFlag(found, "cfg")) {
+      EnableChannel(JitSpew_CFG);
+    } else if (IsFlag(found, "all")) {
+      LoggingBits = uint64_t(-1);
+    } else if (IsFlag(found, "bl-aborts")) {
+      EnableChannel(JitSpew_BaselineAbort);
+    } else if (IsFlag(found, "bl-scripts")) {
+      EnableChannel(JitSpew_BaselineScripts);
+    } else if (IsFlag(found, "bl-op")) {
+      EnableChannel(JitSpew_BaselineOp);
+    } else if (IsFlag(found, "bl-ic")) {
+      EnableChannel(JitSpew_BaselineIC);
+    } else if (IsFlag(found, "bl-ic-fb")) {
+      EnableChannel(JitSpew_BaselineICFallback);
+    } else if (IsFlag(found, "bl-osr")) {
+      EnableChannel(JitSpew_BaselineOSR);
+    } else if (IsFlag(found, "bl-bails")) {
+      EnableChannel(JitSpew_BaselineBailouts);
+    } else if (IsFlag(found, "bl-dbg-osr")) {
+      EnableChannel(JitSpew_BaselineDebugModeOSR);
+    } else if (IsFlag(found, "bl-all")) {
+      EnableChannel(JitSpew_BaselineAbort);
+      EnableChannel(JitSpew_BaselineScripts);
+      EnableChannel(JitSpew_BaselineOp);
+      EnableChannel(JitSpew_BaselineIC);
+      EnableChannel(JitSpew_BaselineICFallback);
+      EnableChannel(JitSpew_BaselineOSR);
+      EnableChannel(JitSpew_BaselineBailouts);
+      EnableChannel(JitSpew_BaselineDebugModeOSR);
+    } else {
+      fprintf(stderr, "Unknown flag.\n");
+      PrintHelpAndExit(64);
+    }
+    found = strtok(nullptr, ",");
   }
 
   FILE* spewfh = stderr;
