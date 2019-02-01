@@ -540,6 +540,11 @@ pub(crate) mod desc {
                 name: "aClipDeviceArea",
                 count: 4,
                 kind: VertexAttributeKind::F32,
+            },
+            VertexAttribute {
+                name: "aClipSnapOffsets",
+                count: 4,
+                kind: VertexAttributeKind::F32,
             }
         ],
     };
