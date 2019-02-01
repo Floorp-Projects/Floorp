@@ -2023,7 +2023,6 @@ uint32_t TrackBuffersManager::RemoveFrames(const TimeIntervals& aIntervals,
   //   timestamp greater than or equal to highest end timestamp and less than
   //   frame end timestamp"
   TimeUnit intervalsEnd = aIntervals.GetEnd();
-  bool mayBreakLoop = false;
   for (uint32_t i = aStartIndex; i < data.Length(); i++) {
     const RefPtr<MediaRawData> sample = data[i];
     if (aIntervals.ContainsWithStrictEnd(sample->mTime)) {
@@ -2031,14 +2030,12 @@ uint32_t TrackBuffersManager::RemoveFrames(const TimeIntervals& aIntervals,
         firstRemovedIndex = Some(i);
       }
       lastRemovedIndex = i;
-      mayBreakLoop = false;
       continue;
     }
-    if (sample->mKeyframe && mayBreakLoop) {
+    if (sample->mTime >= intervalsEnd) {
+      // We can break the loop now. All frames up to the next keyframe will be
+      // removed during the next step.
       break;
-    }
-    if (sample->mTime > intervalsEnd) {
-      mayBreakLoop = true;
     }
   }
 
