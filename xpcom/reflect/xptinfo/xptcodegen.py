@@ -446,10 +446,10 @@ def link_to_cpp(interfaces, fd):
 
 // These template methods are specialized to be used in the sDOMObjects table.
 template<mozilla::dom::prototypes::ID PrototypeID, typename T>
-static nsresult UnwrapDOMObject(JS::HandleValue aHandle, void** aObj, JSContext* aCx)
+static nsresult UnwrapDOMObject(JS::HandleValue aHandle, void** aObj)
 {
   RefPtr<T> p;
-  nsresult rv = mozilla::dom::UnwrapObject<PrototypeID, T>(aHandle, p, aCx);
+  nsresult rv = mozilla::dom::UnwrapObject<PrototypeID, T>(aHandle, p);
   p.forget(aObj);
   return rv;
 }

@@ -19,7 +19,6 @@
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "mozilla/Likely.h"
 #include "mozilla/dom/ScriptSettings.h"
-#include "mozilla/dom/MaybeCrossOriginObject.h"
 #include "nsContentUtils.h"
 #include "nsXULAppAPI.h"
 
@@ -363,15 +362,6 @@ static void DEBUG_CheckUnwrapSafety(HandleObject obj,
 #endif
 
 const CrossOriginObjectWrapper CrossOriginObjectWrapper::singleton;
-
-bool CrossOriginObjectWrapper::dynamicCheckedUnwrapAllowed(
-    HandleObject obj, JSContext* cx) const {
-  MOZ_ASSERT(js::GetProxyHandler(obj) == this,
-             "Why are we getting called for some random object?");
-  JSObject* target = wrappedObject(obj);
-  return dom::MaybeCrossOriginObjectMixins::IsPlatformObjectSameOrigin(cx,
-                                                                       target);
-}
 
 static const Wrapper* SelectWrapper(bool securityWrapper, XrayType xrayType,
                                     bool waiveXrays, JSObject* obj) {

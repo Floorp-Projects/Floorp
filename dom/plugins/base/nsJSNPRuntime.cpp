@@ -522,9 +522,7 @@ bool JSValToNPVariant(NPP npp, JSContext *cx, const JS::Value &val,
   // Location objects, which are _always_ behind security wrappers).
   JS::Rooted<JSObject *> obj(cx, &val.toObject());
   JS::Rooted<JSObject *> global(cx);
-  // CheckedUnwrapStatic is fine here; if we get a Location or WindowProxy,
-  // we'll just use the current global instead.
-  obj = js::CheckedUnwrapStatic(obj);
+  obj = js::CheckedUnwrap(obj);
   if (obj) {
     global = JS::GetNonCCWObjectGlobal(obj);
   } else {
@@ -1076,10 +1074,7 @@ static JSObject *GetNPObjectWrapper(JSContext *cx, JS::Handle<JSObject *> aObj,
                                     bool wrapResult = true) {
   JS::Rooted<JSObject *> obj(cx, aObj);
 
-  // We can't have WindowProxy or Location objects with NP object wrapper
-  // objects on their proto chain, since they have immutable prototypes.  So
-  // CheckedUnwrapStatic is ok here.
-  while (obj && (obj = js::CheckedUnwrapStatic(obj))) {
+  while (obj && (obj = js::CheckedUnwrap(obj))) {
     if (nsNPObjWrapper::IsWrapper(obj)) {
       if (wrapResult && !JS_WrapObject(cx, &obj)) {
         return nullptr;
