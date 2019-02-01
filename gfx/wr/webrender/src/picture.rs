@@ -1693,10 +1693,7 @@ impl<'a> PictureUpdateState<'a> {
         let new_fallback = match picture.raster_config {
             Some(ref config) => {
                 let surface = &mut self.surfaces[config.surface_index.0];
-                if surface.surface_spatial_node_index == surface.raster_spatial_node_index && (
-                    surface.rect.size.width > MAX_SURFACE_SIZE ||
-                    surface.rect.size.height > MAX_SURFACE_SIZE
-                ) {
+                if !config.establishes_raster_root {
                     surface.raster_spatial_node_index = fallback_raster_spatial_node;
                 }
                 surface.raster_spatial_node_index
@@ -2646,7 +2643,7 @@ impl PicturePrimitive {
         // If this picture establishes a surface, then map the surface bounding
         // rect into the parent surface coordinate space, and propagate that up
         // to the parent.
-        if let Some(ref raster_config) = self.raster_config {
+        if let Some(ref mut raster_config) = self.raster_config {
             let mut surface_rect = {
                 let surface = state.current_surface_mut();
                 // Inflate the local bounding rect if required by the filter effect.
@@ -2681,10 +2678,13 @@ impl PicturePrimitive {
             }
 
             // Check if any of the surfaces can't be rasterized in local space but want to.
-            if raster_config.establishes_raster_root && state.are_raster_roots_assigned {
-                state.are_raster_roots_assigned =
-                    surface_rect.size.width <= MAX_SURFACE_SIZE &&
-                    surface_rect.size.height <= MAX_SURFACE_SIZE;
+            if raster_config.establishes_raster_root {
+                if surface_rect.size.width > MAX_SURFACE_SIZE ||
+                    surface_rect.size.height > MAX_SURFACE_SIZE
+                {
+                    raster_config.establishes_raster_root = false;
+                    state.are_raster_roots_assigned = false;
+                }
             }
 
             // Drop shadows draw both a content and shadow rect, so need to expand the local
