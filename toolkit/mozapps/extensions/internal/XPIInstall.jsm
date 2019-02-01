@@ -1057,7 +1057,7 @@ class AddonInstall {
    *        Optional icons for the add-on
    * @param {string} [options.version]
    *        An optional version for the add-on
-   * @param {Object?} [options.installTelemetryInfo]
+   * @param {Object?} [options.telemetryInfo]
    *        An optional object which provides details about the installation source
    *        included in the addon manager telemetry events.
    * @param {boolean} [options.isUserRequestedUpdate]
@@ -1107,8 +1107,8 @@ class AddonInstall {
     this.isUserRequestedUpdate = options.isUserRequestedUpdate;
     this.installTelemetryInfo = null;
 
-    if (options.installTelemetryInfo) {
-      this.installTelemetryInfo = options.installTelemetryInfo;
+    if (options.telemetryInfo) {
+      this.installTelemetryInfo = options.telemetryInfo;
     } else if (this.existingAddon) {
       // Inherits the installTelemetryInfo on updates (so that the source of the original
       // installation telemetry data is being preserved across the extension updates).
@@ -2543,9 +2543,7 @@ function createLocalInstall(file, location, telemetryInfo) {
   let url = Services.io.newFileURI(file);
 
   try {
-    let install = new LocalAddonInstall(location, url, {
-      installTelemetryInfo: telemetryInfo,
-    });
+    let install = new LocalAddonInstall(location, url, {telemetryInfo});
     return install.init().then(() => install);
   } catch (e) {
     logger.error("Error creating install", e);
@@ -3549,42 +3547,35 @@ var XPIInstall = {
    * Called to get an AddonInstall to download and install an add-on from a URL.
    *
    * @param {nsIURI} aUrl
-   *         The URL to be installed
-   * @param {string?} [aHash]
+   *        The URL to be installed
+   * @param {object} [aOptions]
+   *        Additional options for this install.
+   * @param {string?} [aOptions.hash]
    *        A hash for the install
-   * @param {string} [aName]
+   * @param {string} [aOptions.name]
    *        A name for the install
-   * @param {Object} [aIcons]
+   * @param {Object} [aOptions.icons]
    *        Icon URLs for the install
-   * @param {string} [aVersion]
+   * @param {string} [aOptions.version]
    *        A version for the install
-   * @param {XULElement?} [aBrowser]
+   * @param {XULElement} [aOptions.browser]
    *        The browser performing the install
-   * @param {Object?} [aInstallTelemetryInfo]
+   * @param {Object} [aOptions.telemetryInfo]
    *        An optional object which provides details about the installation source
    *        included in the addon manager telemetry events.
    * @returns {AddonInstall}
    */
-  async getInstallForURL(aUrl, aHash, aName, aIcons, aVersion, aBrowser, aInstallTelemetryInfo) {
+  async getInstallForURL(aUrl, aOptions) {
     let location = XPIStates.getLocation(KEY_APP_PROFILE);
     let url = Services.io.newURI(aUrl);
 
-    let options = {
-      hash: aHash,
-      browser: aBrowser,
-      name: aName,
-      icons: aIcons,
-      version: aVersion,
-      installTelemetryInfo: aInstallTelemetryInfo,
-    };
-
     if (url instanceof Ci.nsIFileURL) {
-      let install = new LocalAddonInstall(location, url, options);
+      let install = new LocalAddonInstall(location, url, aOptions);
       await install.init();
       return install.wrapper;
     }
 
-    let install = new DownloadAddonInstall(location, url, options);
+    let install = new DownloadAddonInstall(location, url, aOptions);
     return install.wrapper;
   },
 

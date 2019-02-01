@@ -1571,26 +1571,26 @@ var AddonManagerInternal = {
    * Asynchronously gets an AddonInstall for a URL.
    *
    * @param  aUrl
-   *         The string represenation of the URL the add-on is located at
-   * @param  aMimetype
-   *         The mimetype of the add-on
-   * @param  aHash
+   *         The string represenation of the URL where the add-on is located
+   * @param  {Object} [aOptions = {}]
+   *         Additional options for this install
+   * @param  {string} [aOptions.hash]
    *         An optional hash of the add-on
-   * @param  aName
+   * @param  {string} [aOptions.name]
    *         An optional placeholder name while the add-on is being downloaded
-   * @param  aIcons
+   * @param  {string|Object} [aOptions.icons]
    *         Optional placeholder icons while the add-on is being downloaded
-   * @param  aVersion
+   * @param  {string} [aOptions.version]
    *         An optional placeholder version while the add-on is being downloaded
-   * @param  aBrowser
+   * @param  {XULElement} [aOptions.browser]
    *         An optional <browser> element for download permissions prompts.
-   * @param  aTelemetryInfo
+   * @param  {Object} [aOptions.telemetryInfo]
    *         An optional object which provides details about the installation source
    *         included in the addon manager telemetry events.
-   * @throws if the aUrl, aCallback or aMimetype arguments are not specified
+   * @throws if aUrl is not specified or if an optional argument of
+   *         an improper type is passed.
    */
-  getInstallForURL(aUrl, aMimetype, aHash, aName,
-                   aIcons, aVersion, aBrowser, aTelemetryInfo) {
+  async getInstallForURL(aUrl, aOptions = {}) {
     if (!gStarted)
       throw Components.Exception("AddonManager is not initialized",
                                  Cr.NS_ERROR_NOT_INITIALIZED);
@@ -1599,45 +1599,41 @@ var AddonManagerInternal = {
       throw Components.Exception("aURL must be a non-empty string",
                                  Cr.NS_ERROR_INVALID_ARG);
 
-    if (!aMimetype || typeof aMimetype != "string")
-      throw Components.Exception("aMimetype must be a non-empty string",
+    if (aOptions.hash && typeof aOptions.hash != "string")
+      throw Components.Exception("hash must be a string or null",
                                  Cr.NS_ERROR_INVALID_ARG);
 
-    if (aHash && typeof aHash != "string")
-      throw Components.Exception("aHash must be a string or null",
+    if (aOptions.name && typeof aOptions.name != "string")
+      throw Components.Exception("name must be a string or null",
                                  Cr.NS_ERROR_INVALID_ARG);
 
-    if (aName && typeof aName != "string")
-      throw Components.Exception("aName must be a string or null",
-                                 Cr.NS_ERROR_INVALID_ARG);
-
-    if (aIcons) {
-      if (typeof aIcons == "string")
-        aIcons = { "32": aIcons };
-      else if (typeof aIcons != "object")
-        throw Components.Exception("aIcons must be a string, an object or null",
+    if (aOptions.icons) {
+      if (typeof aOptions.icons == "string")
+        aOptions.icons = { "32": aOptions.icons };
+      else if (typeof aOptions.icons != "object")
+        throw Components.Exception("icons must be a string, an object or null",
                                    Cr.NS_ERROR_INVALID_ARG);
     } else {
-      aIcons = {};
+      aOptions.icons = {};
     }
 
-    if (aVersion && typeof aVersion != "string")
-      throw Components.Exception("aVersion must be a string or null",
+    if (aOptions.version && typeof aOptions.version != "string")
+      throw Components.Exception("version must be a string or null",
                                  Cr.NS_ERROR_INVALID_ARG);
 
-    if (aBrowser && !Element.isInstance(aBrowser))
-      throw Components.Exception("aBrowser must be an Element or null",
+    if (aOptions.browser && !Element.isInstance(aOptions.browser))
+      throw Components.Exception("aOptions.browser must be an Element or null",
                                  Cr.NS_ERROR_INVALID_ARG);
 
     for (let provider of this.providers) {
-      if (callProvider(provider, "supportsMimetype", false, aMimetype)) {
-        return promiseCallProvider(
-          provider, "getInstallForURL", aUrl, aHash, aName, aIcons,
-          aVersion, aBrowser, aTelemetryInfo);
+      let install = await promiseCallProvider(provider, "getInstallForURL",
+                                              aUrl, aOptions);
+      if (install) {
+        return install;
       }
     }
 
-    return Promise.resolve(null);
+    return null;
   },
 
   /**
@@ -2690,14 +2686,13 @@ var AddonManagerInternal = {
         return Promise.reject({message: err.message});
       }
 
-      let installTelemetryInfo = {
-        source: AddonManager.getInstallSourceFromHost(options.sourceHost),
-        method: "amWebAPI",
-      };
-
-      return AddonManagerInternal.getInstallForURL(options.url, "application/x-xpinstall", options.hash,
-                                                   null, null, null, null, installTelemetryInfo)
-                                 .then(install => {
+      return AddonManagerInternal.getInstallForURL(options.url, {
+        hash: options.hash,
+        telemetryInfo: {
+          source: AddonManager.getInstallSourceFromHost(options.sourceHost),
+          method: "amWebAPI",
+        },
+      }).then(install => {
         AddonManagerInternal.setupPromptHandler(target, null, install, false, "AMO");
 
         let id = this.nextInstall++;
@@ -3277,10 +3272,8 @@ var AddonManager = {
     return "unknown";
   },
 
-  getInstallForURL(aUrl, aMimetype, aHash, aName, aIcons,
-                   aVersion, aBrowser, aTelemetryInfo) {
-    return AddonManagerInternal.getInstallForURL(
-      aUrl, aMimetype, aHash, aName, aIcons, aVersion, aBrowser, aTelemetryInfo);
+  getInstallForURL(aUrl, aOptions) {
+    return AddonManagerInternal.getInstallForURL(aUrl, aOptions);
   },
 
   getInstallForFile(aFile, aMimetype, aTelemetryInfo) {

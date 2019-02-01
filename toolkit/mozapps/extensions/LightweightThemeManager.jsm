@@ -310,8 +310,10 @@ var LightweightThemeManager = {
 
     if ("converted_theme" in parsed) {
       const {url, hash} = parsed.converted_theme;
-      let install = await AddonManager.getInstallForURL(url, "application/x-xpinstall", hash,
-                                                        null, null, null, null, {source: "lwt-converted-theme"});
+      let install = await AddonManager.getInstallForURL(url, {
+        hash,
+        telemetryInfo: {source: "lwt-converted-theme"},
+      });
 
       install.addListener({
         onDownloadEnded() {

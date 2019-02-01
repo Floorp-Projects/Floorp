@@ -37,10 +37,12 @@ AddonUtilsInternal.prototype = {
     // reflected in the AddonInstall, so we can't use it. If we ever get rid
     // of sourceURI rewriting, we can avoid having to reconstruct the
     // AddonInstall.
-    return AddonManager.getInstallForURL(
-      addon.sourceURI.spec, "application/x-xpinstall", undefined, addon.name, addon.iconURL, addon.version,
-      null, {source: "sync"}
-    );
+    return AddonManager.getInstallForURL(addon.sourceURI.spec, {
+      name: addon.name,
+      icons: addon.iconURL,
+      version: addon.version,
+      telemetryInfo: {source: "sync"},
+    });
   },
 
   /**

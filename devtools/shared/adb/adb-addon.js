@@ -123,9 +123,7 @@ class ADBAddon extends EventEmitter {
     } else {
       const install = await AddonManager.getInstallForURL(
         this._getXpiLink(),
-        "application/x-xpinstall",
-        null, null, null, null, null,
-        { source }
+        {telemetryInfo: {source}}
       );
       install.addListener(this);
       install.install();
