@@ -28,7 +28,7 @@ class ToolbarAutocompleteFeature(val toolbar: Toolbar) {
                     return@setAutocompleteListener
                 }
             }
-            delegate.noAutocompleteResult()
+            delegate.noAutocompleteResult(value)
         }
     }
 
@@ -57,13 +57,15 @@ class ToolbarAutocompleteFeature(val toolbar: Toolbar) {
 
     private fun HistoryAutocompleteResult.into(): AutocompleteResult {
         return AutocompleteResult(
-            text = this.text, url = this.url, source = this.source, totalItems = this.totalItems
+            input = this.input, text = this.text, url = this.url, source = this.source,
+            totalItems = this.totalItems
         )
     }
 
     private fun DomainAutocompleteResult.into(): AutocompleteResult {
         return AutocompleteResult(
-                text = this.text, url = this.url, source = this.source, totalItems = this.totalItems
+            input = this.input, text = this.text, url = this.url, source = this.source,
+            totalItems = this.totalItems
         )
     }
 }

@@ -85,7 +85,7 @@ class InMemoryHistoryStorage : HistoryStorage {
     override fun getAutocompleteSuggestion(query: String): HistoryAutocompleteResult? = synchronized(pages) {
         segmentAwareDomainMatch(query, pages.keys)?.let { urlMatch ->
             return HistoryAutocompleteResult(
-                urlMatch.matchedSegment, urlMatch.url, AUTOCOMPLETE_SOURCE_NAME, pages.size)
+                query, urlMatch.matchedSegment, urlMatch.url, AUTOCOMPLETE_SOURCE_NAME, pages.size)
         }
     }
 

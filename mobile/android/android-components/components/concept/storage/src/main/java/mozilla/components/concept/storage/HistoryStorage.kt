@@ -88,12 +88,14 @@ data class SearchResult(
 
 /**
  * Describes an autocompletion result against history storage.
+ * @property input Input for which this result is being provided.
  * @property text Result of autocompletion, text to be displayed.
  * @property url Result of autocompletion, full matching url.
  * @property source Name of the autocompletion source.
  * @property totalItems A total number of results also available.
  */
 data class HistoryAutocompleteResult(
+    val input: String,
     val text: String,
     val url: String,
     val source: String,

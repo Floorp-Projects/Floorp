@@ -130,6 +130,17 @@ permalink: /changelog/
     * `browser-engine-gecko-beta`: 66.0
     * `browser-engine-gecko-nightly`: 67.0
 
+* **browser-toolbar**
+  * Toolbar URL autocompletion is now performed off the UI thread.
+
+* **concept-storage**
+  * ⚠️ **This is a breaking API change!**
+  * `HistoryAutocompleteResult` now includes an `input` field.
+
+* **browser-domains**
+  * ⚠️ **This is a breaking API change!**
+  * `DomainAutocompleteResult` now includes an `input` field.
+
 # 0.40.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.39.0...v0.40.0)

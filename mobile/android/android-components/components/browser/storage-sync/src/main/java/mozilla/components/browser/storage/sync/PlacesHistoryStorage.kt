@@ -93,7 +93,13 @@ open class PlacesHistoryStorage(context: Context) : HistoryStorage, SyncableStor
 
         val resultText = segmentAwareDomainMatch(query, arrayListOf(url))
         return resultText?.let {
-            HistoryAutocompleteResult(it.matchedSegment, it.url, AUTOCOMPLETE_SOURCE_NAME, 1)
+            HistoryAutocompleteResult(
+                input = query,
+                text = it.matchedSegment,
+                url = it.url,
+                source = AUTOCOMPLETE_SOURCE_NAME,
+                totalItems = 1
+            )
         }
     }
 

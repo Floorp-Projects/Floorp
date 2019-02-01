@@ -33,7 +33,7 @@ class ToolbarAutocompleteFeatureTest {
         override var url: String = ""
         override var siteSecure: Toolbar.SiteSecurity = Toolbar.SiteSecurity.INSECURE
 
-        var autocompleteFilter: ((String, AutocompleteDelegate) -> Unit)? = null
+        var autocompleteFilter: (suspend (String, AutocompleteDelegate) -> Unit)? = null
 
         override fun setSearchTerms(searchTerms: String) {
             fail()
@@ -52,7 +52,7 @@ class ToolbarAutocompleteFeatureTest {
             fail()
         }
 
-        override fun setAutocompleteListener(filter: (String, AutocompleteDelegate) -> Unit) {
+        override fun setAutocompleteListener(filter: suspend (String, AutocompleteDelegate) -> Unit) {
             autocompleteFilter = filter
         }
 
@@ -90,9 +90,11 @@ class ToolbarAutocompleteFeatureTest {
         assertNotNull(toolbar.autocompleteFilter)
 
         val autocompleteDelegate: AutocompleteDelegate = mock()
-        toolbar.autocompleteFilter!!.invoke("moz", autocompleteDelegate)
+        runBlocking {
+            toolbar.autocompleteFilter!!("moz", autocompleteDelegate)
+        }
         verify(autocompleteDelegate, never()).applyAutocompleteResult(any())
-        verify(autocompleteDelegate, times(1)).noAutocompleteResult()
+        verify(autocompleteDelegate, times(1)).noAutocompleteResult("moz")
     }
 
     @Test
@@ -120,7 +122,12 @@ class ToolbarAutocompleteFeatureTest {
 
         verifyNoAutocompleteResult(toolbar, autocompleteDelegate, "hi")
         verifyAutocompleteResult(toolbar, autocompleteDelegate, "mo",
-            AutocompleteResult(text = "mozilla.org", url = "https://www.mozilla.org", source = "memoryHistory", totalItems = 1)
+            AutocompleteResult(
+                input = "mo",
+                text = "mozilla.org",
+                url = "https://www.mozilla.org",
+                source = "memoryHistory", totalItems = 1
+            )
         )
 
         // Can autocomplete with just an empty domain provider.
@@ -136,7 +143,13 @@ class ToolbarAutocompleteFeatureTest {
 
         verifyNoAutocompleteResult(toolbar, autocompleteDelegate, "hi")
         verifyAutocompleteResult(toolbar, autocompleteDelegate, "mo",
-            AutocompleteResult(text = "mozilla.org", url = "https://www.mozilla.org", source = "custom", totalItems = 1)
+            AutocompleteResult(
+                input = "mo",
+                text = "mozilla.org",
+                url = "https://www.mozilla.org",
+                source = "custom",
+                totalItems = 1
+            )
         )
 
         // Can autocomplete with empty history and domain providers.
@@ -154,7 +167,13 @@ class ToolbarAutocompleteFeatureTest {
         ))
 
         verifyAutocompleteResult(toolbar, autocompleteDelegate, "mo",
-            AutocompleteResult(text = "mozilla.org", url = "https://www.mozilla.org", source = "custom", totalItems = 2)
+            AutocompleteResult(
+                input = "mo",
+                text = "mozilla.org",
+                url = "https://www.mozilla.org",
+                source = "custom",
+                totalItems = 2
+            )
         )
 
         runBlocking {
@@ -162,25 +181,41 @@ class ToolbarAutocompleteFeatureTest {
         }
 
         verifyAutocompleteResult(toolbar, autocompleteDelegate, "mo",
-            AutocompleteResult(text = "mozilla.org", url = "https://www.mozilla.org", source = "memoryHistory", totalItems = 1)
+            AutocompleteResult(
+                input = "mo",
+                text = "mozilla.org",
+                url = "https://www.mozilla.org",
+                source = "memoryHistory",
+                totalItems = 1
+            )
         )
 
         verifyAutocompleteResult(toolbar, autocompleteDelegate, "mos",
-            AutocompleteResult(text = "moscow.ru", url = "https://moscow.ru", source = "custom", totalItems = 2)
+            AutocompleteResult(
+                input = "mos",
+                text = "moscow.ru",
+                url = "https://moscow.ru",
+                source = "custom",
+                totalItems = 2
+            )
         )
     }
 
     private fun verifyNoAutocompleteResult(toolbar: TestToolbar, autocompleteDelegate: AutocompleteDelegate, query: String) {
-        toolbar.autocompleteFilter!!.invoke(query, autocompleteDelegate)
+        runBlocking {
+            toolbar.autocompleteFilter!!(query, autocompleteDelegate)
+        }
         verify(autocompleteDelegate, never()).applyAutocompleteResult(any())
-        verify(autocompleteDelegate, times(1)).noAutocompleteResult()
+        verify(autocompleteDelegate, times(1)).noAutocompleteResult(query)
         reset(autocompleteDelegate)
     }
 
     private fun verifyAutocompleteResult(toolbar: TestToolbar, autocompleteDelegate: AutocompleteDelegate, query: String, result: AutocompleteResult) {
-        toolbar.autocompleteFilter!!.invoke(query, autocompleteDelegate)
+        runBlocking {
+            toolbar.autocompleteFilter!!.invoke(query, autocompleteDelegate)
+        }
         verify(autocompleteDelegate, times(1)).applyAutocompleteResult(result)
-        verify(autocompleteDelegate, never()).noAutocompleteResult()
+        verify(autocompleteDelegate, never()).noAutocompleteResult(query)
         reset(autocompleteDelegate)
     }
 }

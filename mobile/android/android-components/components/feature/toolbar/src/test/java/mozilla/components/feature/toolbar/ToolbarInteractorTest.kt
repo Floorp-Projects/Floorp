@@ -40,7 +40,7 @@ class ToolbarInteractorTest {
             listener("https://mozilla.org")
         }
 
-        override fun setAutocompleteListener(filter: (String, AutocompleteDelegate) -> Unit) {
+        override fun setAutocompleteListener(filter: suspend (String, AutocompleteDelegate) -> Unit) {
             fail()
         }
 

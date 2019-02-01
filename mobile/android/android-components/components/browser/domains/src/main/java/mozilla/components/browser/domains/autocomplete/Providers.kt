@@ -73,6 +73,7 @@ abstract class BaseDomainAutocompleteProvider(private val list: DomainList) :
             val wwwDomain = "www.${it.host}"
             if (wwwDomain.startsWith(searchText)) {
                 return DomainAutocompleteResult(
+                    input = searchText,
                     text = getResultText(query, wwwDomain),
                     url = it.url,
                     source = list.listName,
@@ -82,6 +83,7 @@ abstract class BaseDomainAutocompleteProvider(private val list: DomainList) :
 
             if (it.host.startsWith(searchText)) {
                 return DomainAutocompleteResult(
+                    input = searchText,
                     text = getResultText(query, it.host),
                     url = it.url,
                     source = list.listName,
@@ -106,12 +108,14 @@ abstract class BaseDomainAutocompleteProvider(private val list: DomainList) :
 
 /**
  * Describes an autocompletion result against a list of domains.
+* @property input Input for which this result is being provided.
  * @property text Result of autocompletion, text to be displayed.
  * @property url Result of autocompletion, full matching url.
  * @property source Name of the autocompletion source.
  * @property totalItems A total number of results also available.
  */
 class DomainAutocompleteResult(
+    val input: String,
     val text: String,
     val url: String,
     val source: String,

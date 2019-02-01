@@ -42,6 +42,26 @@ typealias OnWindowsFocusChangeListener = (Boolean) -> Unit
 typealias TextFormatter = (String) -> String
 
 /**
+ * Aids in testing functionality which relies on some aspects of InlineAutocompleteEditText.
+ */
+interface AutocompleteView {
+    /**
+     * Current text.
+     */
+    val originalText: String
+
+    /**
+     * Apply provided [result] autocomplete result.
+     */
+    fun applyAutocompleteResult(result: InlineAutocompleteEditText.AutocompleteResult)
+
+    /**
+     * Notify that there is no autocomplete result available.
+     */
+    fun noAutocompleteResult()
+}
+
+/**
  * A UI edit text component which supports inline autocompletion.
  *
  * The background color of autocomplete spans can be configured using
@@ -64,10 +84,10 @@ typealias TextFormatter = (String) -> String
  */
 @Suppress("LargeClass", "TooManyFunctions")
 open class InlineAutocompleteEditText @JvmOverloads constructor(
-    val ctx: Context,
+    ctx: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = R.attr.editTextStyle
-) : AppCompatEditText(ctx, attrs, defStyleAttr) {
+) : AppCompatEditText(ctx, attrs, defStyleAttr), AutocompleteView {
 
     data class AutocompleteResult(
         val text: String,
@@ -115,7 +135,7 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
     val nonAutocompleteText: String
         get() = getNonAutocompleteText(text)
 
-    val originalText: String
+    override val originalText: String
         get() = text.subSequence(0, autoCompletePrefixLength).toString()
 
     private val autoCompleteBackgroundColor: Int = {
@@ -352,7 +372,7 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
      * @param result the [AutocompleteProvider.AutocompleteResult] to apply
      */
     @Suppress("ComplexMethod", "ReturnCount")
-    fun applyAutocompleteResult(result: AutocompleteResult) {
+    override fun applyAutocompleteResult(result: AutocompleteResult) {
         // If discardAutoCompleteResult is true, we temporarily disabled
         // autocomplete (due to backspacing, etc.) and we should bail early.
         if (discardAutoCompleteResult) {
@@ -458,7 +478,7 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
         announceForAccessibility(text.toString())
     }
 
-    fun noAutocompleteResult() {
+    override fun noAutocompleteResult() {
         removeAutocomplete(text)
     }
 

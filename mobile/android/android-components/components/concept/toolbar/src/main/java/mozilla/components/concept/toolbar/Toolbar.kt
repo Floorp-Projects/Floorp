@@ -63,7 +63,7 @@ interface Toolbar {
      *
      * @param filter A function which will perform autocompletion and send results to [AutocompleteDelegate].
      */
-    fun setAutocompleteListener(filter: (String, AutocompleteDelegate) -> Unit)
+    fun setAutocompleteListener(filter: suspend (String, AutocompleteDelegate) -> Unit)
 
     /**
      * Adds an action to be displayed on the right side of the toolbar in display mode.

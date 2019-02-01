@@ -14,6 +14,14 @@ import android.view.View
 import android.view.View.OnFocusChangeListener
 import android.view.ViewGroup
 import android.widget.ImageButton
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.cancelChildren
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.toolbar.display.DisplayToolbar
 import mozilla.components.browser.toolbar.edit.EditToolbar
@@ -21,10 +29,17 @@ import mozilla.components.concept.toolbar.AutocompleteDelegate
 import mozilla.components.concept.toolbar.AutocompleteResult
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.support.base.android.Padding
+import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.content.res.pxToDp
 import mozilla.components.support.ktx.android.view.forEach
 import mozilla.components.support.ktx.android.view.isVisible
+import mozilla.components.ui.autocomplete.AutocompleteView
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
+import mozilla.components.ui.autocomplete.OnFilterListener
+import java.util.concurrent.Executors
+import kotlin.coroutines.CoroutineContext
+
+private const val AUTOCOMPLETE_QUERY_THREADS = 3
 
 /**
  * A customizable toolbar for browsers.
@@ -50,10 +65,21 @@ class BrowserToolbar @JvmOverloads constructor(
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
 ) : ViewGroup(context, attrs, defStyleAttr), Toolbar {
+    private val logger = Logger("BrowserToolbar")
+
     // displayToolbar and editToolbar are only visible internally and mutable so that we can mock
     // them in tests.
     @VisibleForTesting internal var displayToolbar = DisplayToolbar(context, this)
     @VisibleForTesting internal var editToolbar = EditToolbar(context, this)
+
+    private val autocompleteExceptionHandler = CoroutineExceptionHandler { _, throwable ->
+        logger.error("Error while processing autocomplete input", throwable)
+    }
+
+    private val autocompleteSupervisorJob = SupervisorJob()
+    private val autocompleteDispatcher = autocompleteSupervisorJob +
+        Executors.newFixedThreadPool(AUTOCOMPLETE_QUERY_THREADS).asCoroutineDispatcher() +
+        autocompleteExceptionHandler
 
     /**
      * Set/Get whether a site security icon (usually a lock or globe icon) should be next to the URL.
@@ -157,24 +183,14 @@ class BrowserToolbar @JvmOverloads constructor(
         editToolbar.editListener = listener
     }
 
-    override fun setAutocompleteListener(filter: (String, AutocompleteDelegate) -> Unit) {
+    override fun setAutocompleteListener(filter: suspend (String, AutocompleteDelegate) -> Unit) {
         // Our 'filter' knows how to autocomplete, and the 'urlView' knows how to apply results of
         // autocompletion. Which gives us a lovely delegate chain!
         // urlView decides when it's appropriate to ask for autocompletion, and in turn we invoke
         // our 'filter' and send results back to 'urlView'.
-        editToolbar.urlView.setOnFilterListener { text ->
-            filter.invoke(text, object : AutocompleteDelegate {
-                override fun applyAutocompleteResult(result: AutocompleteResult) {
-                    editToolbar.urlView.applyAutocompleteResult(InlineAutocompleteEditText.AutocompleteResult(
-                        text = result.text, source = result.source, totalItems = result.totalItems
-                    ))
-                }
-
-                override fun noAutocompleteResult() {
-                    editToolbar.urlView.noAutocompleteResult()
-                }
-            })
-        }
+        editToolbar.urlView.setOnFilterListener(
+            AsyncFilterListener(editToolbar.urlView, autocompleteDispatcher, filter)
+        )
     }
 
     /**
@@ -502,5 +518,79 @@ class BrowserToolbar @JvmOverloads constructor(
         internal const val ACTION_PADDING_DP = 16
         internal val DEFAULT_PADDING =
             Padding(ACTION_PADDING_DP, ACTION_PADDING_DP, ACTION_PADDING_DP, ACTION_PADDING_DP)
+    }
+}
+
+/**
+ * Wraps [filter] execution in a coroutine context, cancelling prior executions on every invocation.
+ * [coroutineContext] must be of type that doesn't propagate cancellation of its children upwards.
+ */
+class AsyncFilterListener(
+    private val urlView: AutocompleteView,
+    override val coroutineContext: CoroutineContext,
+    private val filter: suspend (String, AutocompleteDelegate) -> Unit,
+    private val uiContext: CoroutineContext = Dispatchers.Main
+) : OnFilterListener, CoroutineScope {
+    override fun invoke(text: String) {
+        // We got a new input, so whatever past autocomplete queries we still have running are
+        // irrelevant. We cancel them, but do not depend on cancellation to take place.
+        coroutineContext.cancelChildren()
+
+        CoroutineScope(coroutineContext).launch {
+            filter(text, AsyncAutocompleteDelegate(urlView, this, uiContext))
+        }
+    }
+}
+
+/**
+ * An autocomplete delegate which is aware of its parent scope (to check for cancellations).
+ * Responsible for processing autocompletion results and discarding stale results when [urlView] moved on.
+ */
+class AsyncAutocompleteDelegate(
+    private val urlView: AutocompleteView,
+    private val parentScope: CoroutineScope,
+    override val coroutineContext: CoroutineContext,
+    private val logger: Logger = Logger("AsyncAutocompleteDelegate")
+) : AutocompleteDelegate, CoroutineScope {
+    override fun applyAutocompleteResult(result: AutocompleteResult) {
+        // Bail out if we were cancelled already.
+        if (!parentScope.isActive) {
+            logger.debug("Autocomplete request cancelled. Discarding results.")
+            return
+        }
+
+        // Process results on the UI dispatcher.
+        CoroutineScope(coroutineContext).launch {
+            // Ignore this result if the query is stale.
+            if (result.input == urlView.originalText) {
+                urlView.applyAutocompleteResult(
+                    InlineAutocompleteEditText.AutocompleteResult(
+                        text = result.text,
+                        source = result.source,
+                        totalItems = result.totalItems
+                    )
+                )
+            } else {
+                logger.debug("Discarding stale autocomplete result.")
+            }
+        }
+    }
+
+    override fun noAutocompleteResult(input: String) {
+        // Bail out if we were cancelled already.
+        if (!parentScope.isActive) {
+            logger.debug("Autocomplete request cancelled. Discarding 'noAutocompleteResult'.")
+            return
+        }
+
+        // Process results on the UI thread.
+        CoroutineScope(coroutineContext).launch {
+            // Ignore this result if the query is stale.
+            if (input == urlView.originalText) {
+                urlView.noAutocompleteResult()
+            } else {
+                logger.debug("Discarding stale lack of autocomplete results.")
+            }
+        }
     }
 }

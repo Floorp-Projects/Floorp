@@ -17,17 +17,19 @@ interface AutocompleteDelegate {
     /**
      * Autocompletion was invoked and no match was returned.
      */
-    fun noAutocompleteResult()
+    fun noAutocompleteResult(input: String)
 }
 
 /**
  * Describes an autocompletion result.
+ * @property input Input for which this AutocompleteResult is being provided.
  * @property text AutocompleteResult of autocompletion, text to be displayed.
  * @property url AutocompleteResult of autocompletion, full matching url.
  * @property source Name of the autocompletion source.
  * @property totalItems A total number of results also available.
  */
 data class AutocompleteResult(
+    val input: String,
     val text: String,
     val url: String,
     val source: String,

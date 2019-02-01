@@ -11,13 +11,14 @@ import android.util.AttributeSet
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.newFixedThreadPoolContext
 import mozilla.components.browser.awesomebar.layout.SuggestionLayout
 import mozilla.components.browser.awesomebar.transform.SuggestionTransformer
 import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.support.ktx.android.content.res.pxToDp
+import java.util.concurrent.Executors
 
 private const val PROVIDER_QUERY_THREADS = 3
 
@@ -35,7 +36,7 @@ class BrowserAwesomeBar @JvmOverloads constructor(
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
 ) : RecyclerView(context, attrs, defStyleAttr), AwesomeBar {
-    private val jobDispatcher = newFixedThreadPoolContext(PROVIDER_QUERY_THREADS, "AwesomeBarProviders")
+    private val jobDispatcher = Executors.newFixedThreadPool(PROVIDER_QUERY_THREADS).asCoroutineDispatcher()
     private val providers: MutableList<AwesomeBar.SuggestionProvider> = mutableListOf()
     internal var suggestionsAdapter = SuggestionsAdapter(this)
     internal var scope = CoroutineScope(Dispatchers.Main)
