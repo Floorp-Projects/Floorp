@@ -43,6 +43,10 @@ nsRemoteService::nsRemoteService(const char* aProgram) : mProgram(aProgram) {
   ToLowerCase(mProgram);
 }
 
+void nsRemoteService::SetProfile(nsACString& aProfile) {
+  mProfile = aProfile;
+}
+
 void nsRemoteService::LockStartup() {
   nsCOMPtr<nsIFile> mutexDir;
   nsresult rv = GetSpecialSystemDirectory(OS_TemporaryDirectory,
@@ -81,8 +85,9 @@ void nsRemoteService::UnlockStartup() {
 }
 
 RemoteResult nsRemoteService::StartClient(const char* aDesktopStartupID) {
-  const char* profile;
-  ArgResult ar = CheckArg(gArgc, gArgv, "p", &profile, CheckArgFlag::None);
+  if (mProfile.IsEmpty()) {
+    return REMOTE_NOT_FOUND;
+  }
 
   nsAutoPtr<nsRemoteClient> client;
 
@@ -103,7 +108,7 @@ RemoteResult nsRemoteService::StartClient(const char* aDesktopStartupID) {
 
   nsCString response;
   bool success = false;
-  rv = client->SendCommandLine(mProgram.get(), profile, gArgc, gArgv,
+  rv = client->SendCommandLine(mProgram.get(), mProfile.get(), gArgc, gArgv,
                                aDesktopStartupID, getter_Copies(response),
                                &success);
   // did the command fail?
@@ -122,8 +127,12 @@ RemoteResult nsRemoteService::StartClient(const char* aDesktopStartupID) {
 #endif
 }
 
-void nsRemoteService::StartupServer(const char* aProfile) {
+void nsRemoteService::StartupServer() {
   if (mRemoteServer) {
+    return;
+  }
+
+  if (mProfile.IsEmpty()) {
     return;
   }
 
@@ -140,7 +149,7 @@ void nsRemoteService::StartupServer(const char* aProfile) {
   }
 #endif
 
-  nsresult rv = mRemoteServer->Startup(mProgram.get(), aProfile);
+  nsresult rv = mRemoteServer->Startup(mProgram.get(), mProfile.get());
 
   if (NS_FAILED(rv)) {
     mRemoteServer = nullptr;
