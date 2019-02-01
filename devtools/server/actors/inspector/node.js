@@ -293,7 +293,10 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
   },
 
   writeAttrs: function() {
-    if (!this.rawNode.attributes) {
+    // If the node has no attributes or this.rawNode is the document node and a
+    // node with `name="attributes"` exists in the DOM we need to bail.
+    if (!this.rawNode.attributes ||
+        !(this.rawNode.attributes instanceof NamedNodeMap)) {
       return undefined;
     }
 
