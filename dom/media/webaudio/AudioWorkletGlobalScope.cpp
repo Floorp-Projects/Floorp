@@ -74,8 +74,9 @@ void AudioWorkletGlobalScope::RegisterProcessor(JSContext* aCx,
     return;
   }
 
+  // We know processorConstructor is callable, so not a WindowProxy or Location.
   JS::Rooted<JSObject*> constructorUnwrapped(
-      aCx, js::CheckedUnwrap(processorConstructor));
+      aCx, js::CheckedUnwrapStatic(processorConstructor));
   if (!constructorUnwrapped) {
     // If the caller's compartment does not have permission to access the
     // unwrapped constructor then throw.
