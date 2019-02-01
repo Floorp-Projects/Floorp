@@ -92,14 +92,16 @@ class UrlbarView {
 
     let row;
     if (reverse) {
-      row = this._selected.previousElementSibling ||
+      row = (this._selected && this._selected.previousElementSibling) ||
             this._rows.lastElementChild;
     } else {
-      row = this._selected.nextElementSibling ||
+      row = (this._selected && this._selected.nextElementSibling) ||
             this._rows.firstElementChild;
     }
 
-    this._selected.toggleAttribute("selected", false);
+    if (this._selected) {
+      this._selected.toggleAttribute("selected", false);
+    }
     this._selected = row;
     row.toggleAttribute("selected", true);
 
