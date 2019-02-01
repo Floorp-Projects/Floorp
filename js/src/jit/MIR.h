@@ -2138,12 +2138,10 @@ class MNewTypedArrayDynamicLength : public MUnaryInstruction,
       : MUnaryInstruction(classOpcode, length),
         templateObject_(templateObject),
         initialHeap_(initialHeap) {
+    MOZ_ASSERT(!templateObject->isSingleton());
     setGuard();  // Need to throw if length is negative.
     setResultType(MIRType::Object);
-    if (!templateObject->isSingleton()) {
-      setResultTypeSet(
-          MakeSingletonTypeSet(alloc, constraints, templateObject));
-    }
+    setResultTypeSet(MakeSingletonTypeSet(alloc, constraints, templateObject));
   }
 
  public:
@@ -2159,6 +2157,40 @@ class MNewTypedArrayDynamicLength : public MUnaryInstruction,
   bool appendRoots(MRootList& roots) const override {
     return roots.append(templateObject_);
   }
+};
+
+// Create a new TypedArray from an Array (or Array-like object) or a TypedArray.
+class MNewTypedArrayFromArray : public MUnaryInstruction,
+                                public SingleObjectPolicy::Data {
+  CompilerObject templateObject_;
+  gc::InitialHeap initialHeap_;
+
+  MNewTypedArrayFromArray(TempAllocator& alloc,
+                          CompilerConstraintList* constraints,
+                          JSObject* templateObject, gc::InitialHeap initialHeap,
+                          MDefinition* array)
+      : MUnaryInstruction(classOpcode, array),
+        templateObject_(templateObject),
+        initialHeap_(initialHeap) {
+    MOZ_ASSERT(!templateObject->isSingleton());
+    setGuard();  // Can throw during construction.
+    setResultType(MIRType::Object);
+    setResultTypeSet(MakeSingletonTypeSet(alloc, constraints, templateObject));
+  }
+
+ public:
+  INSTRUCTION_HEADER(NewTypedArrayFromArray)
+  TRIVIAL_NEW_WRAPPERS_WITH_ALLOC
+
+  MDefinition* array() const { return getOperand(0); }
+  JSObject* templateObject() const { return templateObject_; }
+  gc::InitialHeap initialHeap() const { return initialHeap_; }
+
+  bool appendRoots(MRootList& roots) const override {
+    return roots.append(templateObject_);
+  }
+
+  bool possiblyCalls() const override { return true; }
 };
 
 class MNewObject : public MUnaryInstruction, public NoTypePolicy::Data {

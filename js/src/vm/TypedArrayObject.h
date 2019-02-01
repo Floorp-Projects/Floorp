@@ -136,7 +136,8 @@ class TypedArrayObject : public ArrayBufferViewObject {
   void getElements(Value* vp);
 
   static bool GetTemplateObjectForNative(JSContext* cx, Native native,
-                                         uint32_t len, MutableHandleObject res);
+                                         HandleValue arg,
+                                         MutableHandleObject res);
 
   /*
    * Byte length above which created typed arrays will have singleton types
@@ -190,6 +191,10 @@ MOZ_MUST_USE bool TypedArray_bufferGetter(JSContext* cx, unsigned argc,
 extern TypedArrayObject* TypedArrayCreateWithTemplate(JSContext* cx,
                                                       HandleObject templateObj,
                                                       int32_t len);
+
+extern TypedArrayObject* TypedArrayCreateWithTemplate(JSContext* cx,
+                                                      HandleObject templateObj,
+                                                      HandleObject array);
 
 inline bool IsTypedArrayClass(const Class* clasp) {
   return &TypedArrayObject::classes[0] <= clasp &&

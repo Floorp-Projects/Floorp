@@ -386,6 +386,22 @@ class LNewTypedArrayDynamicLength : public LInstructionHelper<1, 1, 1> {
   }
 };
 
+class LNewTypedArrayFromArray : public LCallInstructionHelper<1, 1, 0> {
+ public:
+  LIR_HEADER(NewTypedArrayFromArray)
+
+  explicit LNewTypedArrayFromArray(const LAllocation& array)
+      : LCallInstructionHelper(classOpcode) {
+    setOperand(0, array);
+  }
+
+  const LAllocation* array() { return getOperand(0); }
+
+  MNewTypedArrayFromArray* mir() const {
+    return mir_->toNewTypedArrayFromArray();
+  }
+};
+
 class LNewObject : public LInstructionHelper<1, 0, 1> {
  public:
   LIR_HEADER(NewObject)
