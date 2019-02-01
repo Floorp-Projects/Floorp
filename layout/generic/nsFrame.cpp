@@ -8553,11 +8553,7 @@ nsresult nsIFrame::GetFrameFromDirection(
       frameTraversal->Prev();
 
     traversedFrame = frameTraversal->CurrentItem();
-
-    // Skip anonymous elements, but watch out for generated content
-    if (!traversedFrame ||
-        (!traversedFrame->IsGeneratedContentFrame() &&
-         traversedFrame->GetContent()->IsRootOfNativeAnonymousSubtree())) {
+    if (!traversedFrame) {
       return NS_ERROR_FAILURE;
     }
 
