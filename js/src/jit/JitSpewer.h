@@ -205,6 +205,7 @@ class GraphSpewer {
 };
 
 static inline void SpewBeginFunction(MIRGenerator* mir, JSScript* function) {}
+static inline void SpewBeginWasmFunction(MIRGenerator* mir, unsigned funcIndex) {}
 
 class AutoSpewEndFunction {
  public:
