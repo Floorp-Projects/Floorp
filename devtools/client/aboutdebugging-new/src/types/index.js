@@ -6,9 +6,11 @@
 
 const { debugTarget } = require("./debug-target");
 const { runtime, runtimeDetails } = require("./runtime");
+const ui = require("./ui");
 
 module.exports = Object.assign({}, {
   debugTarget,
   runtime,
   runtimeDetails,
+  ...ui,
 });
