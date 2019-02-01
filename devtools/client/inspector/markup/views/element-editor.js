@@ -313,9 +313,9 @@ ElementEditor.prototype = {
     this._scrollableBadge = this.doc.createElement("div");
     this._scrollableBadge.className = "inspector-badge scrollable-badge";
     this._scrollableBadge.textContent =
-      INSPECTOR_L10N.getStr("markupView.scrollable.badge");
+      INSPECTOR_L10N.getStr("markupView.scrollableBadge.label");
     this._scrollableBadge.title =
-      INSPECTOR_L10N.getStr("markupView.scrollable.tooltip");
+      INSPECTOR_L10N.getStr("markupView.scrollableBadge.tooltip");
     this.elt.insertBefore(this._scrollableBadge, this._customBadge);
   },
 
