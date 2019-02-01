@@ -274,13 +274,6 @@ void LIRGeneratorShared::assignSafepoint(LInstruction* ins, MInstruction* mir,
 
   MResumePoint* mrp =
       mir->resumePoint() ? mir->resumePoint() : lastResumePoint_;
-  // OSIPoints resuming the execution of a call to the VM are by default non
-  // resumable. You either have to call IonBuilder::resumeAfter on the
-  // instruction or annotate the MIR instruction such that either it can be
-  // moved or other instructions can be moved around it.
-  MOZ_ASSERT_IF(mir->isEffectful() && !mir->isMovable(), mir->resumePoint());
-  MOZ_ASSERT_IF(mir->isEffectful() && !mir->isMovable(),
-                mrp->mode() == MResumePoint::ResumeAfter);
   LSnapshot* postSnapshot = buildSnapshot(ins, mrp, kind);
   if (!postSnapshot) {
     abort(AbortReason::Alloc, "buildSnapshot failed");
