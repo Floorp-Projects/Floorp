@@ -152,6 +152,18 @@ function getPromptState(ui) {
     state.focused = "ERROR: unexpected element focused: " + (e ? e.localName : "<null>");
   }
 
+  let treeOwner = ui.prompt &&
+                  ui.prompt.docShell &&
+                  ui.prompt.docShell.treeOwner;
+  if (treeOwner && treeOwner.QueryInterface(Ci.nsIInterfaceRequestor)) {
+    let flags = treeOwner.getInterface(Ci.nsIXULWindow).chromeFlags;
+    state.chrome = (flags & Ci.nsIWebBrowserChrome.CHROME_OPENAS_CHROME) != 0;
+    state.dialog = (flags & Ci.nsIWebBrowserChrome.CHROME_OPENAS_DIALOG) != 0;
+    state.chromeDependent = (flags & Ci.nsIWebBrowserChrome.CHROME_DEPENDENT) != 0;
+    let wbc = treeOwner.getInterface(Ci.nsIWebBrowserChrome);
+    state.isWindowModal = wbc.isWindowModal();
+  }
+
   return state;
 }
 
