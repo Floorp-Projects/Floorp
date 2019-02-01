@@ -3,8 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 job-defaults:
-    worker:
-        docker-image: {in-tree: toolchain-build}
     run-on-projects:
         - trunk
         - try
@@ -130,7 +128,6 @@ macosx64-node:
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        docker-image: {in-tree: toolchain-build}
         max-run-time: 1800
     run:
         using: toolchain-script
