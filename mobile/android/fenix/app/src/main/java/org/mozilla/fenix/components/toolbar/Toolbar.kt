@@ -5,6 +5,7 @@
 package org.mozilla.fenix.components.toolbar
 
 import android.content.Context
+import android.content.Intent
 import mozilla.components.browser.domains.autocomplete.ShippedDomainsProvider
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.BrowserMenuDivider
@@ -14,6 +15,8 @@ import mozilla.components.browser.menu.item.BrowserMenuSwitch
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.feature.session.SessionUseCases
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.share
+import org.mozilla.fenix.settings.SettingsActivity
 
 /**
  * Component group for all functionality related to the browser toolbar.
@@ -130,6 +133,18 @@ class Toolbar(
                 // TODO New Tab
             },
 
+            BrowserMenuImageText(
+                context.getString(R.string.browser_menu_share),
+                R.drawable.mozac_ic_share,
+                context.getString(R.string.browser_menu_share),
+                R.color.icons
+            ) {
+                val url = sessionManager.selectedSession?.url ?: ""
+                context.share(url)
+            }.apply {
+                visible = { sessionManager.selectedSession != null }
+            },
+
             BrowserMenuDivider(),
 
             menuToolbar
@@ -137,6 +152,8 @@ class Toolbar(
     }
 
     private fun openSettingsActivity() {
-        // TODO Open Settings
+        val intent = Intent(context, SettingsActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        context.startActivity(intent)
     }
 }
