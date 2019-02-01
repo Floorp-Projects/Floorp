@@ -74,7 +74,8 @@ const TESTCASES = [
 add_task(async function test() {
   let loginFrame = document.getElementById("loginFrame");
 
-  var android = navigator.appVersion.includes("Android");
+  let waitTime;
+  let android = navigator.appVersion.includes("Android");
   if (android) {
     // intermittent failures on Android Debug at 5 seconds
     waitTime = 10000;

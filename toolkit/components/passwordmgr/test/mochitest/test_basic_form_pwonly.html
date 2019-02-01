@@ -21,8 +21,8 @@ runInParent(() => {
   //
   // Note: pwlogin2 is deleted at the end of the test.
 
-  pwlogin1 = new nsLoginInfo();
-  pwlogin2 = new nsLoginInfo();
+  let pwlogin1 = new nsLoginInfo();
+  let pwlogin2 = new nsLoginInfo();
 
   pwlogin1.init("http://mochi.test:8888", "http://mochi.test:1111", null,
                 "", "1234", "uname", "pword");
