@@ -2548,10 +2548,12 @@ class MacroAssembler : public MacroAssemblerSpecific {
     } else if (IsFloatingPointType(src.type())) {
       FloatRegister reg = src.typedReg().fpu();
       if (src.type() == MIRType::Float32) {
-        convertFloat32ToDouble(reg, ScratchDoubleReg);
-        reg = ScratchDoubleReg;
+        ScratchDoubleScope fpscratch(*this);
+        convertFloat32ToDouble(reg, fpscratch);
+        storeDouble(fpscratch, dest);
+      } else {
+        storeDouble(reg, dest);
       }
-      storeDouble(reg, dest);
     } else {
       storeValue(ValueTypeFromMIRType(src.type()), src.typedReg().gpr(), dest);
     }

@@ -787,30 +787,30 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared {
     loadDouble(Operand(src), dest);
   }
   void unboxDouble(const ValueOperand& src, FloatRegister dest) {
-    MOZ_ASSERT(dest != ScratchDoubleReg);
     if (Assembler::HasSSE41()) {
       vmovd(src.payloadReg(), dest);
       vpinsrd(1, src.typeReg(), dest, dest);
     } else {
+      ScratchDoubleScope fpscratch(asMasm());
       vmovd(src.payloadReg(), dest);
-      vmovd(src.typeReg(), ScratchDoubleReg);
-      vunpcklps(ScratchDoubleReg, dest, dest);
+      vmovd(src.typeReg(), fpscratch);
+      vunpcklps(fpscratch, dest, dest);
     }
   }
   void unboxDouble(const Operand& payload, const Operand& type,
                    Register scratch, FloatRegister dest) {
-    MOZ_ASSERT(dest != ScratchDoubleReg);
     if (Assembler::HasSSE41()) {
       movl(payload, scratch);
       vmovd(scratch, dest);
       movl(type, scratch);
       vpinsrd(1, scratch, dest, dest);
     } else {
+      ScratchDoubleScope fpscratch(asMasm());
       movl(payload, scratch);
       vmovd(scratch, dest);
       movl(type, scratch);
-      vmovd(scratch, ScratchDoubleReg);
-      vunpcklps(ScratchDoubleReg, dest, dest);
+      vmovd(scratch, fpscratch);
+      vunpcklps(fpscratch, dest, dest);
     }
   }
   inline void unboxValue(const ValueOperand& src, AnyRegister dest,

@@ -788,7 +788,7 @@ nsUpdateProcessor::nsUpdateProcessor() : mUpdaterPID(0) {}
 nsUpdateProcessor::~nsUpdateProcessor() {}
 
 NS_IMETHODIMP
-nsUpdateProcessor::ProcessUpdate(nsIUpdate *aUpdate) {
+nsUpdateProcessor::ProcessUpdate() {
   nsresult rv;
 
   nsCOMPtr<nsIProperties> ds =

@@ -2443,9 +2443,9 @@ void CodeGenerator::visitWasmTruncateToInt64(LWasmTruncateToInt64* lir) {
     addOutOfLineCode(ool, mir);
   }
 
-  ScratchDoubleScope scratchScope(masm);
+  ScratchDoubleScope fpscratch(masm);
   if (fromType == MIRType::Float32) {
-    inputDouble = ScratchDoubleReg;
+    inputDouble = fpscratch;
     masm.convertFloat32ToDouble(input, inputDouble);
   }
 
