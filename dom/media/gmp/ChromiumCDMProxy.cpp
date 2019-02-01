@@ -38,6 +38,9 @@ void ChromiumCDMProxy::Init(PromiseId aPromiseId, const nsAString& aOrigin,
                             const nsAString& aTopLevelOrigin,
                             const nsAString& aGMPName) {
   MOZ_ASSERT(NS_IsMainThread());
+
+  RefPtr<GMPCrashHelper> helper(std::move(mCrashHelper));
+
   NS_ENSURE_TRUE_VOID(!mKeys.IsNull());
 
   EME_LOG(
@@ -62,7 +65,6 @@ void ChromiumCDMProxy::Init(PromiseId aPromiseId, const nsAString& aOrigin,
 
   gmp::NodeId nodeId(aOrigin, aTopLevelOrigin, aGMPName);
   RefPtr<AbstractThread> thread = mGMPThread;
-  RefPtr<GMPCrashHelper> helper(mCrashHelper);
   RefPtr<ChromiumCDMProxy> self(this);
   nsCString keySystem = NS_ConvertUTF16toUTF8(mKeySystem);
   RefPtr<Runnable> task(NS_NewRunnableFunction(
