@@ -123,7 +123,7 @@ NS_IMPL_RELEASE_INHERITED(ModuleScript, LoadedScript)
 
 ModuleScript::ModuleScript(ScriptFetchOptions* aFetchOptions, nsIURI* aBaseURL)
     : LoadedScript(ScriptKind::eModule, aFetchOptions, aBaseURL),
-      mSourceElementAssociated(false) {
+      mDebuggerDataInitialized(false) {
   MOZ_ASSERT(!ModuleRecord());
   MOZ_ASSERT(!HasParseError());
   MOZ_ASSERT(!HasErrorToRethrow());
@@ -182,11 +182,11 @@ void ModuleScript::SetErrorToRethrow(const JS::Value& aError) {
   mErrorToRethrow = aError;
 }
 
-void ModuleScript::SetSourceElementAssociated() {
+void ModuleScript::SetDebuggerDataInitialized() {
   MOZ_ASSERT(ModuleRecord());
-  MOZ_ASSERT(!mSourceElementAssociated);
+  MOZ_ASSERT(!mDebuggerDataInitialized);
 
-  mSourceElementAssociated = true;
+  mDebuggerDataInitialized = true;
 }
 
 }  // namespace dom

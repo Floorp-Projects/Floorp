@@ -849,7 +849,9 @@ class AndroidArguments(ArgumentContainer):
     args = [
         [["--deviceSerial"],
          {"dest": "deviceSerial",
-          "help": "ip address of remote device to test",
+          "help": "adb serial number of remote device. This is required "
+                  "when more than one device is connected to the host. "
+                  "Use 'adb devices' to see connected devices.",
           "default": None,
           }],
         [["--adbpath"],
@@ -861,42 +863,42 @@ class AndroidArguments(ArgumentContainer):
         [["--remote-webserver"],
          {"dest": "remoteWebServer",
           "default": None,
-          "help": "ip address where the remote web server is hosted at",
+          "help": "IP address of the remote web server.",
           }],
         [["--http-port"],
          {"dest": "httpPort",
           "default": DEFAULT_PORTS['http'],
-          "help": "http port of the remote web server",
+          "help": "http port of the remote web server.",
           "suppress": True,
           }],
         [["--ssl-port"],
          {"dest": "sslPort",
           "default": DEFAULT_PORTS['https'],
-          "help": "ssl port of the remote web server",
+          "help": "ssl port of the remote web server.",
           "suppress": True,
           }],
         [["--robocop-apk"],
          {"dest": "robocopApk",
           "default": "",
-          "help": "name of the Robocop APK to use for ADB test running",
+          "help": "Name of the robocop APK to use.",
           }],
         [["--remoteTestRoot"],
          {"dest": "remoteTestRoot",
           "default": None,
-          "help": "remote directory to use as test root \
-                   (eg. /mnt/sdcard/tests or /data/local/tests)",
+          "help": "Remote directory to use as test root "
+                  "(eg. /mnt/sdcard/tests or /data/local/tests).",
           "suppress": True,
           }],
         [["--enable-coverage"],
          {"action": "store_true",
           "default": False,
-          "help": "Enable collecting code coverage information when running"
+          "help": "Enable collecting code coverage information when running "
                   "robocop tests.",
           }],
         [["--coverage-output-dir"],
          {"action": "store",
           "default": None,
-          "help": "When using --enable-java-coverage, save the code coverage report"
+          "help": "When using --enable-java-coverage, save the code coverage report "
                   "files to this directory.",
           }],
     ]

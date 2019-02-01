@@ -28,6 +28,7 @@ class JSONSpewer : JSONPrinter {
   explicit JSONSpewer(GenericPrinter& out) : JSONPrinter(out) {}
 
   void beginFunction(JSScript* script);
+  void beginWasmFunction(unsigned funcIndex);
   void beginPass(const char* pass);
   void spewMDef(MDefinition* def);
   void spewMResumePoint(MResumePoint* rp);

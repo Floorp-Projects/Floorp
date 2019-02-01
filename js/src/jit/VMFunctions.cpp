@@ -1797,6 +1797,17 @@ MOZ_MUST_USE bool TrySkipAwait(JSContext* cx, HandleValue val,
   return true;
 }
 
+bool IsPossiblyWrappedTypedArray(JSContext* cx, JSObject* obj, bool* result) {
+  JSObject* unwrapped = CheckedUnwrap(obj);
+  if (!unwrapped) {
+    ReportAccessDenied(cx);
+    return false;
+  }
+
+  *result = unwrapped->is<TypedArrayObject>();
+  return true;
+}
+
 typedef bool (*ProxyGetPropertyFn)(JSContext*, HandleObject, HandleId,
                                    MutableHandleValue);
 const VMFunction ProxyGetPropertyInfo =

@@ -1346,8 +1346,7 @@ static const ClassOps ScriptSourceObjectClassOps = {
 
 const Class ScriptSourceObject::class_ = {
     "ScriptSource",
-    JSCLASS_HAS_RESERVED_SLOTS(RESERVED_SLOTS) | JSCLASS_IS_ANONYMOUS |
-        JSCLASS_FOREGROUND_FINALIZE,
+    JSCLASS_HAS_RESERVED_SLOTS(RESERVED_SLOTS) | JSCLASS_FOREGROUND_FINALIZE,
     &ScriptSourceObjectClassOps};
 
 ScriptSourceObject* ScriptSourceObject::createInternal(JSContext* cx,
