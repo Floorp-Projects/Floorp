@@ -15,7 +15,7 @@
 // This file defines content scripts.
 /* eslint-env mozilla/frame-script */
 
-let baseUrl = "http://mochi.test:8888/tests/toolkit/components/passwordmgr/test/authenticate.sjs";
+let baseUrl = "http://mochi.test:8888/tests/toolkit/components/passwordmgr/test/mochitest/authenticate.sjs";
 function testXHR(url) {
   return new Promise((resolve, reject) => {
     let xhr = new XMLHttpRequest();
