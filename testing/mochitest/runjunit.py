@@ -333,12 +333,14 @@ class JunitArgumentParser(argparse.ArgumentParser):
                           type=str,
                           dest="adbPath",
                           default=None,
-                          help="Path to adb executable.")
+                          help="Path to adb binary.")
         self.add_argument("--deviceSerial",
                           action="store",
                           type=str,
                           dest="deviceSerial",
-                          help="adb serial number of remote device.")
+                          help="adb serial number of remote device. This is required "
+                               "when more than one device is connected to the host. "
+                               "Use 'adb devices' to see connected devices. ")
         self.add_argument("--remoteTestRoot",
                           action="store",
                           type=str,
@@ -410,18 +412,18 @@ class JunitArgumentParser(argparse.ArgumentParser):
                           type=str,
                           dest="httpPort",
                           default=DEFAULT_PORTS['http'],
-                          help="Port of the web server for http traffic.")
+                          help="http port of the remote web server.")
         self.add_argument("--remote-webserver",
                           action="store",
                           type=str,
                           dest="remoteWebServer",
-                          help="IP address of the webserver.")
+                          help="IP address of the remote web server.")
         self.add_argument("--ssl-port",
                           action="store",
                           type=str,
                           dest="sslPort",
                           default=DEFAULT_PORTS['https'],
-                          help="Port of the web server for https traffic.")
+                          help="ssl port of the remote web server.")
         # Remaining arguments are test filters.
         self.add_argument("test_filters",
                           nargs="*",
