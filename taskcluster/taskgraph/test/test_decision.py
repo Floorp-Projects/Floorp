@@ -87,8 +87,9 @@ class TestGetDecisionParameters(unittest.TestCase):
         self.assertEqual(params['owner'], 'ffxbld@noreply.mozilla.org')
 
     @patch('taskgraph.decision.get_hg_revision_branch')
-    def test_try_options(self, _):
-        self.options['message'] = 'try: -b do -t all'
+    @patch('taskgraph.decision.get_hg_commit_message')
+    def test_try_options(self, mock_get_hg_commit_message, _):
+        mock_get_hg_commit_message.return_value = 'try: -b do -t all'
         self.options['project'] = 'try'
         with MockedOpen({self.ttc_file: None}):
             params = decision.get_decision_parameters(FAKE_GRAPH_CONFIG, self.options)
