@@ -2111,9 +2111,11 @@ void gfxPlatform::GetPlatformCMSOutputProfile(void*& mem, size_t& size) {
 void gfxPlatform::GetCMSOutputProfileData(void*& mem, size_t& size) {
   nsAutoCString fname;
   Preferences::GetCString("gfx.color_management.display_profile", fname);
+  mem = nullptr;
   if (!fname.IsEmpty()) {
     qcms_data_from_path(fname.get(), &mem, &size);
-  } else {
+  }
+  if (mem == nullptr) {
     gfxPlatform::GetPlatform()->GetPlatformCMSOutputProfile(mem, size);
   }
 }
