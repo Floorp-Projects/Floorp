@@ -38,8 +38,8 @@
         android:label="fragment_browser"
         tools:layout="@layout/fragment_browser">
         <action
-            android:id="@+id/action_browserFragment_to_homeFragment"
-            app:destination="@id/homeFragment" />
+                android:id="@+id/action_browserFragment_to_homeFragment"
+                app:destination="@id/homeFragment" app:popUpToInclusive="true" app:popUpTo="@+id/homeFragment"/>
         <action
             android:id="@+id/action_browserFragment_to_searchFragment"
             app:destination="@id/searchFragment" />

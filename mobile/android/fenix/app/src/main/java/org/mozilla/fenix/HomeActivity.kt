@@ -31,4 +31,14 @@ class HomeActivity : AppCompatActivity() {
             ).asView()
             else -> super.onCreateView(parent, name, context, attrs)
         }
+
+    override fun onBackPressed() {
+        supportFragmentManager.primaryNavigationFragment?.childFragmentManager?.fragments?.forEach {
+            if (it is BackHandler && it.onBackPressed()) {
+                return
+            }
+        }
+
+        super.onBackPressed()
+    }
 }

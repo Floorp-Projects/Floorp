@@ -27,8 +27,9 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.toolbar.ToolbarIntegration
 import org.mozilla.fenix.ext.requireComponents
 import mozilla.components.feature.prompts.PromptFeature
+import org.mozilla.fenix.BackHandler
 
-class BrowserFragment : Fragment() {
+class BrowserFragment : Fragment(), BackHandler {
 
     private lateinit var contextMenuFeature: ContextMenuFeature
     private lateinit var downloadsFeature: DownloadsFeature
@@ -109,6 +110,14 @@ class BrowserFragment : Fragment() {
             Navigation.findNavController(toolbar).navigate(R.id.action_browserFragment_to_searchFragment, null, null)
             false
         }
+    }
+
+    override fun onBackPressed(): Boolean {
+        if (sessionFeature.handleBackPressed()) return true
+
+        // We'll want to improve this when we add multitasking
+        requireComponents.core.sessionManager.remove()
+        return false
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
