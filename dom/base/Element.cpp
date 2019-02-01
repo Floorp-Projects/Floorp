@@ -215,6 +215,20 @@ nsAtom* nsIContent::DoGetID() const {
   return AsElement()->GetParsedAttr(nsGkAtoms::id)->GetAtomValue();
 }
 
+nsIFrame* nsIContent::GetPrimaryFrame(mozilla::FlushType aType) {
+  Document* doc = GetComposedDoc();
+  if (!doc) {
+    return nullptr;
+  }
+
+  // Cause a flush, so we get up-to-date frame information.
+  if (aType != mozilla::FlushType::None) {
+    doc->FlushPendingNotifications(aType);
+  }
+
+  return GetPrimaryFrame();
+}
+
 namespace mozilla {
 namespace dom {
 
@@ -2178,21 +2192,6 @@ nsresult Element::DispatchClickEvent(nsPresContext* aPresContext,
   }
 
   return DispatchEvent(aPresContext, &event, aTarget, aFullDispatch, aStatus);
-}
-
-nsIFrame* Element::GetPrimaryFrame(FlushType aType) {
-  Document* doc = GetComposedDoc();
-  if (!doc) {
-    return nullptr;
-  }
-
-  // Cause a flush, so we get up-to-date frame
-  // information
-  if (aType != FlushType::None) {
-    doc->FlushPendingNotifications(aType);
-  }
-
-  return GetPrimaryFrame();
 }
 
 //----------------------------------------------------------------------
