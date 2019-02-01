@@ -478,15 +478,15 @@ void VRService::PullState(mozilla::gfx::VRBrowserState& aState) {
   // locked for the duration of the memcpy to and from shmem on
   // both sides.
   // On x86/x64 It is fallable -- If a dirty copy is detected by
-  // a mismatch of browserGenerationA and browserGenerationB,
+  // a mismatch of geckoGenerationA and geckoGenerationB,
   // the copy is discarded and will not replace the last known
   // browser state.
 
 #if defined(MOZ_WIDGET_ANDROID)
-  if (pthread_mutex_lock((pthread_mutex_t*)&(mExternalShmem->browserMutex)) ==
+  if (pthread_mutex_lock((pthread_mutex_t*)&(mExternalShmem->geckoMutex)) ==
       0) {
-    memcpy(&aState, &tmp.browserState, sizeof(VRBrowserState));
-    pthread_mutex_unlock((pthread_mutex_t*)&(mExternalShmem->browserMutex));
+    memcpy(&aState, &tmp.geckoState, sizeof(VRBrowserState));
+    pthread_mutex_unlock((pthread_mutex_t*)&(mExternalShmem->geckoMutex));
   }
 #else
   bool status = true;
@@ -496,12 +496,12 @@ void VRService::PullState(mozilla::gfx::VRBrowserState& aState) {
 #endif  // defined(XP_WIN)
   if (status) {
     VRExternalShmem tmp;
-    if (mAPIShmem->browserGenerationA != mBrowserGeneration) {
+    if (mAPIShmem->geckoGenerationA != mBrowserGeneration) {
       memcpy(&tmp, mAPIShmem, sizeof(VRExternalShmem));
-      if (tmp.browserGenerationA == tmp.browserGenerationB &&
-          tmp.browserGenerationA != 0 && tmp.browserGenerationA != -1) {
-        memcpy(&aState, &tmp.browserState, sizeof(VRBrowserState));
-        mBrowserGeneration = tmp.browserGenerationA;
+      if (tmp.geckoGenerationA == tmp.geckoGenerationB &&
+          tmp.geckoGenerationA != 0 && tmp.geckoGenerationA != -1) {
+        memcpy(&aState, &tmp.geckoState, sizeof(VRBrowserState));
+        mBrowserGeneration = tmp.geckoGenerationA;
       }
     }
   }
