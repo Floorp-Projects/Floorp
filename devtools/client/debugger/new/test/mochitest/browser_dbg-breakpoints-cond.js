@@ -72,8 +72,9 @@ add_task(async function() {
   assertEditorBreakpoint(dbg, 5, true);
 
   // Edit the conditional breakpoint set above
+  const bpCondition1 = waitForDispatch(dbg, "SET_BREAKPOINT_OPTIONS");
   await setConditionalBreakpoint(dbg, 5, "2");
-  await waitForDispatch(dbg, "SET_BREAKPOINT_OPTIONS");
+  await bpCondition1;
   bp = findBreakpoint(dbg, "simple2", 5);
   is(bp.options.condition, "12", "breakpoint is created with the condition");
   assertEditorBreakpoint(dbg, 5, true);
@@ -87,19 +88,20 @@ add_task(async function() {
   // Adding a condition to a breakpoint
   clickElement(dbg, "gutter", 5);
   await waitForDispatch(dbg, "ADD_BREAKPOINT");
+  const bpCondition2 = waitForDispatch(dbg, "SET_BREAKPOINT_OPTIONS");
   await setConditionalBreakpoint(dbg, 5, "1");
-  await waitForDispatch(dbg, "SET_BREAKPOINT_OPTIONS");
+  await bpCondition2;
 
   bp = findBreakpoint(dbg, "simple2", 5);
   is(bp.options.condition, "1", "breakpoint is created with the condition");
   assertEditorBreakpoint(dbg, 5, true);
 
-  const bpCondition = waitForDispatch(dbg, "SET_BREAKPOINT_OPTIONS");
+  const bpCondition3 = waitForDispatch(dbg, "SET_BREAKPOINT_OPTIONS");
   //right click breakpoint in breakpoints list
   rightClickElement(dbg, "breakpointItem", 3)
   // select "remove condition";
   selectContextMenuItem(dbg, selectors.breakpointContextMenu.removeCondition);
-  await bpCondition;
+  await bpCondition3;
   bp = findBreakpoint(dbg, "simple2", 5);
   is(bp.options.condition, undefined, "breakpoint condition removed");
 });
