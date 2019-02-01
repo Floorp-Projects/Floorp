@@ -59,7 +59,6 @@ def make_decision_task(params, root, symbol, arguments=[]):
             'pushlog_id': push_info['pushid'],
             'pushdate': push_info['pushdate'],
             'owner': 'cron',
-            'comment': '',
         },
         'cron': {
             'task_id': os.environ.get('TASK_ID', '<cron task id>'),

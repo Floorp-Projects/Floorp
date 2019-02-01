@@ -20,7 +20,7 @@ from .parameters import Parameters, get_version, get_app_version
 from .taskgraph import TaskGraph
 from .try_option_syntax import parse_message
 from .util.schema import validate_schema, Schema
-from taskgraph.util.hg import get_hg_revision_branch
+from taskgraph.util.hg import get_hg_revision_branch, get_hg_commit_message
 from taskgraph.util.partials import populate_release_history
 from taskgraph.util.yaml import load_yaml
 from voluptuous import Required, Optional
@@ -193,7 +193,6 @@ def get_decision_parameters(config, options):
         'head_repository',
         'head_rev',
         'head_ref',
-        'message',
         'project',
         'pushlog_id',
         'pushdate',
@@ -222,6 +221,7 @@ def get_decision_parameters(config, options):
     parameters['build_number'] = 1
     parameters['version'] = get_version(product_dir)
     parameters['app_version'] = get_app_version(product_dir)
+    parameters['message'] = get_hg_commit_message(GECKO)
     parameters['hg_branch'] = get_hg_revision_branch(GECKO, revision=parameters['head_rev'])
     parameters['next_version'] = None
     parameters['release_type'] = ''
