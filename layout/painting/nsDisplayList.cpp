@@ -2471,8 +2471,11 @@ FrameLayerBuilder* nsDisplayList::BuildLayers(nsDisplayListBuilder* aBuilder,
       rootLayer->SetScrollMetadata(nsTArray<ScrollMetadata>());
     }
 
-    ContainerLayerParameters containerParameters(presShell->GetResolution(),
-                                                 presShell->GetResolution());
+    float rootLayerResolution = gfxPrefs::LayoutUseContainersForRootFrames()
+                                    ? presShell->GetResolution()
+                                    : 1.0f;
+    ContainerLayerParameters containerParameters(rootLayerResolution,
+                                                 rootLayerResolution);
 
     {
       PaintTelemetry::AutoRecord record(PaintTelemetry::Metric::Layerization);
@@ -2492,10 +2495,12 @@ FrameLayerBuilder* nsDisplayList::BuildLayers(nsDisplayListBuilder* aBuilder,
     if (!root) {
       return nullptr;
     }
-    // Root is being scaled up by the X/Y resolution. Scale it back down.
-    root->SetPostScale(1.0f / containerParameters.mXScale,
-                       1.0f / containerParameters.mYScale);
-    root->SetScaleToResolution(containerParameters.mXScale);
+    if (gfxPrefs::LayoutUseContainersForRootFrames()) {
+      // Root is being scaled up by the X/Y resolution. Scale it back down.
+      root->SetPostScale(1.0f / containerParameters.mXScale,
+                         1.0f / containerParameters.mYScale);
+      root->SetScaleToResolution(containerParameters.mXScale);
+    }
 
     auto callback = [root](ScrollableLayerGuid::ViewID aScrollId) -> bool {
       return nsLayoutUtils::ContainsMetricsWithId(root, aScrollId);
@@ -6573,15 +6578,22 @@ already_AddRefed<Layer> nsDisplayResolution::BuildLayer(
     nsDisplayListBuilder* aBuilder, LayerManager* aManager,
     const ContainerLayerParameters& aContainerParameters) {
   nsIPresShell* presShell = mFrame->PresShell();
+  float rootLayerResolution = gfxPrefs::LayoutUseContainersForRootFrames()
+                                  ? presShell->GetResolution()
+                                  : 1.0f;
   ContainerLayerParameters containerParameters(
-      presShell->GetResolution(), presShell->GetResolution(), nsIntPoint(),
+      rootLayerResolution, rootLayerResolution, nsIntPoint(),
       aContainerParameters);
 
   RefPtr<Layer> layer =
       nsDisplaySubDocument::BuildLayer(aBuilder, aManager, containerParameters);
-  layer->SetPostScale(1.0f / presShell->GetResolution(),
-                      1.0f / presShell->GetResolution());
-  layer->AsContainerLayer()->SetScaleToResolution(presShell->GetResolution());
+
+  if (gfxPrefs::LayoutUseContainersForRootFrames()) {
+    layer->SetPostScale(1.0f / presShell->GetResolution(),
+                        1.0f / presShell->GetResolution());
+    layer->AsContainerLayer()->SetScaleToResolution(presShell->GetResolution());
+  }
+
   return layer.forget();
 }
 
@@ -7174,10 +7186,19 @@ nsDisplayAsyncZoom::~nsDisplayAsyncZoom() {
 already_AddRefed<Layer> nsDisplayAsyncZoom::BuildLayer(
     nsDisplayListBuilder* aBuilder, LayerManager* aManager,
     const ContainerLayerParameters& aContainerParameters) {
+  nsIPresShell* presShell = mFrame->PresShell();
+  ContainerLayerParameters containerParameters(
+      presShell->GetResolution(), presShell->GetResolution(), nsIntPoint(),
+      aContainerParameters);
+
   RefPtr<Layer> layer =
-      nsDisplayOwnLayer::BuildLayer(aBuilder, aManager, aContainerParameters);
+      nsDisplayOwnLayer::BuildLayer(aBuilder, aManager, containerParameters);
 
   layer->SetIsAsyncZoomContainer(Some(mViewID));
+
+  layer->SetPostScale(1.0f / presShell->GetResolution(),
+                      1.0f / presShell->GetResolution());
+  layer->AsContainerLayer()->SetScaleToResolution(presShell->GetResolution());
 
   return layer.forget();
 }
