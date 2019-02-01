@@ -2931,19 +2931,11 @@ IonBuilder::InliningResult IonBuilder::inlineTypedArray(CallInfo& callInfo,
     return InliningStatus_NotInlined;
   }
 
-  MDefinition* arg = callInfo.getArg(0);
-
-  if (arg->type() != MIRType::Int32) {
-    return InliningStatus_NotInlined;
-  }
-
   JSObject* templateObject = inspector->getTemplateObjectForNative(pc, native);
-
   if (!templateObject) {
     trackOptimizationOutcome(TrackedOutcome::CantInlineNativeNoTemplateObj);
     return InliningStatus_NotInlined;
   }
-
   MOZ_ASSERT(templateObject->is<TypedArrayObject>());
   TypedArrayObject* obj = &templateObject->as<TypedArrayObject>();
 
@@ -2953,35 +2945,59 @@ IonBuilder::InliningResult IonBuilder::inlineTypedArray(CallInfo& callInfo,
     return InliningStatus_NotInlined;
   }
 
-  MInstruction* ins = nullptr;
+  MDefinition* arg = callInfo.getArg(0);
+  MInstruction* ins;
+  if (arg->type() == MIRType::Int32) {
+    if (!arg->isConstant()) {
+      ins = MNewTypedArrayDynamicLength::New(
+          alloc(), constraints(), templateObject,
+          templateObject->group()->initialHeap(constraints()), arg);
+    } else {
+      // Negative lengths must throw a RangeError.  (We don't track that this
+      // might have previously thrown, when determining whether to inline, so we
+      // have to deal with this error case when inlining.)
+      int32_t providedLen = arg->maybeConstantValue()->toInt32();
+      if (providedLen <= 0) {
+        return InliningStatus_NotInlined;
+      }
 
-  if (!arg->isConstant()) {
-    callInfo.setImplicitlyUsedUnchecked();
-    ins = MNewTypedArrayDynamicLength::New(
+      uint32_t len = AssertedCast<uint32_t>(providedLen);
+      if (obj->length() != len) {
+        return InliningStatus_NotInlined;
+      }
+
+      MConstant* templateConst =
+          MConstant::NewConstraintlessObject(alloc(), obj);
+      current->add(templateConst);
+      ins = MNewTypedArray::New(alloc(), constraints(), templateConst,
+                                obj->group()->initialHeap(constraints()));
+    }
+  } else if (arg->type() == MIRType::Object) {
+    TemporaryTypeSet* types = arg->resultTypeSet();
+    if (!types) {
+      return InliningStatus_NotInlined;
+    }
+
+    // Don't inline if the argument is a, possibly wrapped, ArrayBuffer or
+    // SharedArrayBuffer object.
+    auto IsPossiblyWrappedArrayBufferMaybeSharedClass = [](const Class* clasp) {
+      return clasp->isProxy() || clasp == &ArrayBufferObject::class_ ||
+             clasp == &SharedArrayBufferObject::class_;
+    };
+    auto result = types->forAllClasses(
+        constraints(), IsPossiblyWrappedArrayBufferMaybeSharedClass);
+    if (result != TemporaryTypeSet::ForAllResult::ALL_FALSE) {
+      return InliningStatus_NotInlined;
+    }
+
+    ins = MNewTypedArrayFromArray::New(
         alloc(), constraints(), templateObject,
         templateObject->group()->initialHeap(constraints()), arg);
   } else {
-    // Negative lengths must throw a RangeError.  (We don't track that this
-    // might have previously thrown, when determining whether to inline, so we
-    // have to deal with this error case when inlining.)
-    int32_t providedLen = arg->maybeConstantValue()->toInt32();
-    if (providedLen <= 0) {
-      return InliningStatus_NotInlined;
-    }
-
-    uint32_t len = AssertedCast<uint32_t>(providedLen);
-
-    if (obj->length() != len) {
-      return InliningStatus_NotInlined;
-    }
-
-    callInfo.setImplicitlyUsedUnchecked();
-    MConstant* templateConst = MConstant::NewConstraintlessObject(alloc(), obj);
-    current->add(templateConst);
-    ins = MNewTypedArray::New(alloc(), constraints(), templateConst,
-                              obj->group()->initialHeap(constraints()));
+    return InliningStatus_NotInlined;
   }
 
+  callInfo.setImplicitlyUsedUnchecked();
   current->add(ins);
   current->push(ins);
   MOZ_TRY(resumeAfter(ins));
