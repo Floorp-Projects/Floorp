@@ -6,21 +6,15 @@ plugins {
     id "com.jetbrains.python.envs" version "0.0.26"
 }
 
-apply plugin: 'com.android.application'
+apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
 
 android {
     compileSdkVersion config.compileSdkVersion
 
     defaultConfig {
-        applicationId "org.mozilla.samples.glean"
         minSdkVersion config.minSdkVersion
         targetSdkVersion config.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
-
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
@@ -32,16 +26,10 @@ android {
 }
 
 dependencies {
-    implementation project(':service-glean')
-    implementation project(':support-base')
-
     implementation Dependencies.kotlin_stdlib
-    implementation Dependencies.kotlin_coroutines
 
-    implementation Dependencies.support_appcompat
-    implementation Dependencies.support_customtabs
-
-    implementation project(':samples-glean-library')
+    implementation project(':service-glean')
 }
 
-apply from: '../../components/service/glean/scripts/sdk_generator.gradle'
+apply from: '../../../components/service/glean/scripts/sdk_generator.gradle'
+

@@ -252,6 +252,10 @@ projects:
     path: samples/glean
     description: 'An app demoing how to use the Glean library to collect and send telemetry data.'
     publish: false
+  samples-glean-library:
+    path: samples/glean/samples-glean-library
+    description: 'A third-party library used by samples-glean to demonstrate multi-library support for Glean.'
+    publish: false
   samples-sync-history:
     path: samples/sync-history
     description: 'A simple app demoing Firefox Sync (History) integration.'

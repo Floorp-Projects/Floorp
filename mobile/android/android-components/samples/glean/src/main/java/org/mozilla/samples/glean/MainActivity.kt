@@ -10,6 +10,7 @@ import kotlinx.android.synthetic.main.activity_main.*
 import mozilla.components.service.glean.Glean
 import org.mozilla.samples.glean.GleanMetrics.Test
 import org.mozilla.samples.glean.GleanMetrics.BrowserEngagement
+import org.mozilla.samples.glean.library.SamplesGleanLibrary
 
 open class MainActivity : AppCompatActivity() {
 
@@ -51,5 +52,9 @@ open class MainActivity : AppCompatActivity() {
         }
 
         Test.testTimespan.stopAndSum()
+
+        // Update some metrics from a third-party library
+        SamplesGleanLibrary.recordMetric()
+        SamplesGleanLibrary.recordExperiment()
     }
 }
