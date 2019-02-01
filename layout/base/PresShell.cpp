@@ -6528,36 +6528,12 @@ nsresult PresShell::EventHandler::HandleEvent(nsIFrame* aFrame,
     }
 
     if (retargetEventDoc) {
-      nsCOMPtr<nsIPresShell> presShell = retargetEventDoc->GetShell();
-      // Even if the document doesn't have PresShell, i.e., it's invisible, we
-      // need to dispatch only KeyboardEvent in its nearest visible document
-      // because key focus shouldn't be caught by invisible document.
-      if (!presShell) {
-        if (!aGUIEvent->HasKeyEventMessage()) {
-          return NS_OK;
-        }
-        while (!presShell) {
-          retargetEventDoc = retargetEventDoc->GetParentDocument();
-          if (!retargetEventDoc) {
-            return NS_OK;
-          }
-          presShell = retargetEventDoc->GetShell();
-        }
+      nsIFrame* frame =
+          GetFrameForHandlingEventWith(aGUIEvent, retargetEventDoc, aFrame);
+      if (!frame) {
+        return NS_OK;  // Not need to return error.
       }
-
-      if (presShell != mPresShell) {
-        nsIFrame* frame = presShell->GetRootFrame();
-        if (!frame) {
-          if (aGUIEvent->mMessage == eQueryTextContent ||
-              aGUIEvent->IsContentCommandEvent()) {
-            return NS_OK;
-          }
-
-          frame = GetNearestFrameContainingPresShell(presShell);
-        }
-
-        if (!frame) return NS_OK;
-
+      if (frame != aFrame) {
         nsCOMPtr<nsIPresShell> shell = frame->PresContext()->GetPresShell();
         return shell->HandleEvent(frame, aGUIEvent, true, aEventStatus);
       }
@@ -7194,6 +7170,46 @@ bool PresShell::EventHandler::GetRetargetEventDocument(
   // When we don't find another document to handle the event, we need to keep
   // handling the event by ourselves.
   return true;
+}
+
+nsIFrame* PresShell::EventHandler::GetFrameForHandlingEventWith(
+    WidgetGUIEvent* aGUIEvent, Document* aRetargetDocument,
+    nsIFrame* aFrameForPresShell) {
+  MOZ_ASSERT(aGUIEvent);
+  MOZ_ASSERT(aRetargetDocument);
+
+  nsCOMPtr<nsIPresShell> presShell = aRetargetDocument->GetShell();
+  // Even if the document doesn't have PresShell, i.e., it's invisible, we
+  // need to dispatch only KeyboardEvent in its nearest visible document
+  // because key focus shouldn't be caught by invisible document.
+  if (!presShell) {
+    if (!aGUIEvent->HasKeyEventMessage()) {
+      return nullptr;
+    }
+    Document* retargetEventDoc = aRetargetDocument;
+    while (!presShell) {
+      retargetEventDoc = retargetEventDoc->GetParentDocument();
+      if (!retargetEventDoc) {
+        return nullptr;
+      }
+      presShell = retargetEventDoc->GetShell();
+    }
+  }
+
+  if (presShell != mPresShell) {
+    nsIFrame* frame = presShell->GetRootFrame();
+    if (!frame) {
+      if (aGUIEvent->mMessage == eQueryTextContent ||
+          aGUIEvent->IsContentCommandEvent()) {
+        return nullptr;
+      }
+
+      frame = GetNearestFrameContainingPresShell(presShell);
+    }
+
+    return frame;
+  }
+  return aFrameForPresShell;
 }
 
 Document* PresShell::GetPrimaryContentDocument() {
