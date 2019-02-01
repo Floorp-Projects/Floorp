@@ -27,6 +27,8 @@ function run_test() {
 }
 
 function test_simple_breakpoint() {
+  let hitBreakpoint = false;
+
   gThreadClient.addOneTimeListener("paused", async function(event, packet) {
     const source = await getSourceById(
       gThreadClient,
@@ -34,9 +36,12 @@ function test_simple_breakpoint() {
     );
     source.setBreakpoint({
       line: 3,
-      condition: "a === 1",
+      options: { condition: "a === 1" },
     }).then(function([response, bpClient]) {
       gThreadClient.addOneTimeListener("paused", function(event, packet) {
+        Assert.equal(hitBreakpoint, false);
+        hitBreakpoint = true;
+
         // Check the return value.
         Assert.equal(packet.why.type, "breakpoint");
         Assert.equal(packet.frame.where.line, 3);
@@ -62,4 +67,6 @@ function test_simple_breakpoint() {
                    "test.js",
                    1);
   /* eslint-enable */
+
+  Assert.equal(hitBreakpoint, true);
 }

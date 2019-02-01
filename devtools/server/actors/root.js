@@ -170,6 +170,9 @@ RootActor.prototype = {
     // `front.startProfiler`. This is an optional parameter but it will throw an error if
     // the profiled Firefox doesn't accept it.
     perfActorVersion: 1,
+    // Supports native log points and modifying the condition/log of an existing
+    // breakpoints. Fx66+
+    nativeLogpoints: true,
   },
 
   /**
