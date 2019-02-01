@@ -592,6 +592,30 @@ class PresShell final : public nsIPresShell,
     bool GetRetargetEventDocument(WidgetGUIEvent* aGUIEvent,
                                   Document** aRetargetEventDocument);
 
+    /**
+     * GetFrameForHandlingEventWith() returns a frame which should be used as
+     * aFrame of HandleEvent().  See @return for the detail.
+     *
+     * @param aGUIEvent                 Handling event.
+     * @param aRetargetDocument         Document which aGUIEvent should be
+     *                                  fired on.  Typically, should be result
+     *                                  of GetRetargetEventDocument().
+     * @param aFrameForPresShell        The frame if we need to handle the
+     *                                  event with current instance.  I.e.,
+     *                                  typically, caller sets aFrame of
+     *                                  HandleEvent().
+     * @return                          nullptr if caller should stop handling
+     *                                  the event.
+     *                                  aFrameForPresShell if caller should
+     *                                  keep handling the event by itself.
+     *                                  Otherwise, caller should handle it with
+     *                                  another PresShell which is result of
+     *                                  nsIFrame::PresContext()->GetPresShell().
+     */
+    nsIFrame* GetFrameForHandlingEventWith(WidgetGUIEvent* aGUIEvent,
+                                           Document* aRetargetDocument,
+                                           nsIFrame* aFrameForPresShell);
+
     MOZ_CAN_RUN_SCRIPT
     nsresult RetargetEventToParent(WidgetGUIEvent* aGUIEvent,
                                    nsEventStatus* aEventStatus);

@@ -33,6 +33,15 @@ NS_QUERYFRAME_TAIL_INHERITING(nsBlockFrame)
 ColumnSetWrapperFrame::ColumnSetWrapperFrame(ComputedStyle* aStyle)
     : nsBlockFrame(aStyle, kClassID) {}
 
+void ColumnSetWrapperFrame::Init(nsIContent* aContent,
+                                 nsContainerFrame* aParent,
+                                 nsIFrame* aPrevInFlow) {
+  nsBlockFrame::Init(aContent, aParent, aPrevInFlow);
+
+  // ColumnSetWrapperFrame doesn't need to call ResolveBidi().
+  RemoveStateBits(NS_BLOCK_NEEDS_BIDI_RESOLUTION);
+}
+
 nsContainerFrame* ColumnSetWrapperFrame::GetContentInsertionFrame() {
   nsIFrame* columnSet = PrincipalChildList().OnlyChild();
   if (columnSet) {
@@ -125,6 +134,16 @@ void ColumnSetWrapperFrame::RemoveFrame(ChildListID aListID,
                                         nsIFrame* aOldFrame) {
   MOZ_ASSERT_UNREACHABLE("Unsupported operation!");
   nsBlockFrame::RemoveFrame(aListID, aOldFrame);
+}
+
+void ColumnSetWrapperFrame::MarkIntrinsicISizesDirty() {
+  nsBlockFrame::MarkIntrinsicISizesDirty();
+
+  // The parent's method adds NS_BLOCK_NEEDS_BIDI_RESOLUTION to all our
+  // continuations. Clear the bit because we don't want to call ResolveBidi().
+  for (nsIFrame* f = FirstContinuation(); f; f = f->GetNextContinuation()) {
+    f->RemoveStateBits(NS_BLOCK_NEEDS_BIDI_RESOLUTION);
+  }
 }
 
 #ifdef DEBUG
