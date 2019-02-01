@@ -6558,7 +6558,7 @@ nsresult PresShell::EventHandler::HandleEvent(nsIFrame* aFrame,
     // XXX Retrieving capturing content here.  However, some of the following
     //     methods allow to run script.  So, isn't it possible the capturing
     //     content outdated?
-    nsIContent* capturingContent =
+    nsCOMPtr<nsIContent> capturingContent =
         EventHandler::GetCapturingContentFor(aGUIEvent);
     if (GetDocument()) {
       if (aGUIEvent->mClass == eTouchEventClass) {
