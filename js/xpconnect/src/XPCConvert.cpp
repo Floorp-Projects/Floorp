@@ -1069,9 +1069,9 @@ bool XPCConvert::JSObject2NativeInterface(JSContext* cx, void** dest,
     // scope - see nsBindingManager::GetBindingImplementation.
     //
     // It's also very important that "inner" be rooted here.
-    RootedObject inner(RootingCx(),
-                       js::CheckedUnwrap(src,
-                                         /* stopAtWindowProxy = */ false));
+    RootedObject inner(
+        cx, js::CheckedUnwrapDynamic(src, cx,
+                                     /* stopAtWindowProxy = */ false));
     if (!inner) {
       if (pErr) {
         *pErr = NS_ERROR_XPC_SECURITY_MANAGER_VETO;
@@ -1278,12 +1278,14 @@ nsresult XPCConvert::JSValToXPCException(MutableHandleValue s,
 
     // is this really a native xpcom object with a wrapper?
     JSObject* unwrapped =
-        js::CheckedUnwrap(obj, /* stopAtWindowProxy = */ false);
+        js::CheckedUnwrapDynamic(obj, cx, /* stopAtWindowProxy = */ false);
     if (!unwrapped) {
       return NS_ERROR_XPC_SECURITY_MANAGER_VETO;
     }
+    // It's OK to use ReflectorToISupportsStatic, because we have already
+    // stripped off wrappers.
     if (nsCOMPtr<nsISupports> supports =
-            UnwrapReflectorToISupports(unwrapped)) {
+            ReflectorToISupportsStatic(unwrapped)) {
       nsCOMPtr<Exception> iface = do_QueryInterface(supports);
       if (iface) {
         // just pass through the exception (with extra ref and all)
