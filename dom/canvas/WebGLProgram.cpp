@@ -15,7 +15,6 @@
 #include "WebGLBuffer.h"
 #include "WebGLContext.h"
 #include "WebGLShader.h"
-#include "WebGLShaderValidator.h"
 #include "WebGLTransformFeedback.h"
 #include "WebGLUniformLocation.h"
 #include "WebGLValidateStrings.h"
@@ -161,38 +160,6 @@ webgl::UniformInfo::UniformInfo(WebGLActiveInfo* activeInfo)
 }
 
 //////////
-
-static webgl::TextureBaseType FragOutputBaseType(const GLenum type) {
-  switch (type) {
-    case LOCAL_GL_FLOAT:
-    case LOCAL_GL_FLOAT_VEC2:
-    case LOCAL_GL_FLOAT_VEC3:
-    case LOCAL_GL_FLOAT_VEC4:
-      return webgl::TextureBaseType::Float;
-
-    case LOCAL_GL_INT:
-    case LOCAL_GL_INT_VEC2:
-    case LOCAL_GL_INT_VEC3:
-    case LOCAL_GL_INT_VEC4:
-      return webgl::TextureBaseType::Int;
-
-    case LOCAL_GL_UNSIGNED_INT:
-    case LOCAL_GL_UNSIGNED_INT_VEC2:
-    case LOCAL_GL_UNSIGNED_INT_VEC3:
-    case LOCAL_GL_UNSIGNED_INT_VEC4:
-      return webgl::TextureBaseType::UInt;
-
-    default:
-      break;
-  }
-
-  const auto& str = EnumString(type);
-  gfxCriticalError() << "Unhandled enum for FragOutputBaseType: "
-                     << str.c_str();
-  return webgl::TextureBaseType::Float;
-}
-
-// -
 
 //#define DUMP_SHADERVAR_MAPPINGS
 
@@ -471,66 +438,7 @@ static RefPtr<const webgl::LinkedProgramInfo> QueryProgramInfo(
 
   // Frag outputs
 
-  {
-    const auto& fragShader = prog->FragShader();
-    const auto& handle = fragShader->Validator()->Handle();
-    const auto version = sh::GetShaderVersion(handle);
-
-    const auto fnAddInfo = [&](const webgl::FragOutputInfo& x) {
-      info->fragOutputs.insert({x.loc, x});
-    };
-
-    if (version == 300) {
-      const auto& fragOutputs = sh::GetOutputVariables(handle);
-      if (fragOutputs) {
-        for (const auto& cur : *fragOutputs) {
-          auto loc = cur.location;
-          if (loc == -1) loc = 0;
-
-          const auto info = webgl::FragOutputInfo{
-              uint8_t(loc), nsCString(cur.name.c_str()),
-              nsCString(cur.mappedName.c_str()), FragOutputBaseType(cur.type)};
-          if (!cur.isArray()) {
-            fnAddInfo(info);
-            continue;
-          }
-          MOZ_ASSERT(cur.arraySizes.size() == 1);
-          for (uint32_t i = 0; i < cur.arraySizes[0]; ++i) {
-            const auto indexStr = nsPrintfCString("[%u]", i);
-
-            auto userName = info.userName;
-            userName.Append(indexStr);
-            auto mappedName = info.mappedName;
-            mappedName.Append(indexStr);
-
-            const auto indexedInfo = webgl::FragOutputInfo{
-                uint8_t(info.loc + i), userName, mappedName, info.baseType};
-            fnAddInfo(indexedInfo);
-          }
-        }
-      }
-    } else {
-      // ANGLE's translator doesn't tell us about non-user frag outputs. :(
-
-      const auto& translatedSource = fragShader->TranslatedSource();
-      uint32_t drawBuffers = 1;
-      if (translatedSource.Find("(gl_FragData[1]") != -1 ||
-          translatedSource.Find("(webgl_FragData[1]") != -1) {
-        // The matching with the leading '(' prevents cleverly-named user vars breaking this.
-        // Since ANGLE initializes all outputs, if this is an MRT shader,
-        // FragData[1] will be present. FragData[0] is valid for non-MRT
-        // shaders.
-        drawBuffers = webgl->GLMaxDrawBuffers();
-      }
-
-      for (uint32_t i = 0; i < drawBuffers; ++i) {
-        const auto& name = nsPrintfCString("gl_FragData[%u]", i);
-        const auto info = webgl::FragOutputInfo{uint8_t(i), name, name,
-                                                webgl::TextureBaseType::Float};
-        fnAddInfo(info);
-      }
-    }
-  }
+  prog->EnumerateFragOutputs(info->fragDataMap);
 
   return info;
 }
@@ -841,6 +749,15 @@ GLint WebGLProgram::GetAttribLocation(const nsAString& userName_wide) const {
   return GLint(info->mLoc);
 }
 
+static GLint GetFragDataByUserName(const WebGLProgram* prog,
+                                   const nsCString& userName) {
+  nsCString mappedName;
+  if (!prog->LinkInfo()->MapFragDataName(userName, &mappedName)) return -1;
+
+  return prog->mContext->gl->fGetFragDataLocation(prog->mGLName,
+                                                  mappedName.BeginReading());
+}
+
 GLint WebGLProgram::GetFragDataLocation(const nsAString& userName_wide) const {
   if (!ValidateGLSLVariableName(userName_wide, mContext)) return -1;
 
@@ -850,12 +767,25 @@ GLint WebGLProgram::GetFragDataLocation(const nsAString& userName_wide) const {
   }
 
   const NS_LossyConvertUTF16toASCII userName(userName_wide);
-  const auto& fragOutputs = LinkInfo()->fragOutputs;
-  for (const auto& pair : fragOutputs) {
-    const auto& info = pair.second;
-    if (info.userName == userName) return info.loc;
+#ifdef XP_MACOSX
+  const auto& gl = mContext->gl;
+  if (gl->WorkAroundDriverBugs()) {
+    // OSX doesn't return locs for indexed names, just the base names.
+    // Indicated by failure in:
+    // conformance2/programs/gl-get-frag-data-location.html
+    bool isArray;
+    size_t arrayIndex;
+    nsCString baseUserName;
+    if (!ParseName(userName, &baseUserName, &isArray, &arrayIndex)) return -1;
+
+    if (arrayIndex >= mContext->mGLMaxDrawBuffers) return -1;
+
+    const auto baseLoc = GetFragDataByUserName(this, baseUserName);
+    const auto loc = baseLoc + GLint(arrayIndex);
+    return loc;
   }
-  return -1;
+#endif
+  return GetFragDataByUserName(this, userName);
 }
 
 void WebGLProgram::GetProgramInfoLog(nsAString* const out) const {
@@ -1614,6 +1544,13 @@ bool WebGLProgram::UnmapUniformBlockName(const nsCString& mappedName,
   return true;
 }
 
+void WebGLProgram::EnumerateFragOutputs(
+    std::map<nsCString, const nsCString>& out_FragOutputs) const {
+  MOZ_ASSERT(mFragShader);
+
+  mFragShader->EnumerateFragOutputs(out_FragOutputs);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool IsBaseName(const nsCString& name) {
@@ -1658,6 +1595,29 @@ bool webgl::LinkedProgramInfo::FindUniform(
 
   *out_arrayIndex = arrayIndex;
   *out_info = info;
+  return true;
+}
+
+bool webgl::LinkedProgramInfo::MapFragDataName(
+    const nsCString& userName, nsCString* const out_mappedName) const {
+  // FS outputs can be arrays, but not structures.
+
+  if (fragDataMap.empty()) {
+    // No mappings map from validation, so just forward it.
+    *out_mappedName = userName;
+    return true;
+  }
+
+  nsCString baseUserName;
+  bool isArray;
+  size_t arrayIndex;
+  if (!ParseName(userName, &baseUserName, &isArray, &arrayIndex)) return false;
+
+  const auto itr = fragDataMap.find(baseUserName);
+  if (itr == fragDataMap.end()) return false;
+
+  const auto& baseMappedName = itr->second;
+  AssembleName(baseMappedName, isArray, arrayIndex, out_mappedName);
   return true;
 }
 
