@@ -64,7 +64,7 @@ class ModuleScript final : public LoadedScript {
   JS::Heap<JSObject*> mModuleRecord;
   JS::Heap<JS::Value> mParseError;
   JS::Heap<JS::Value> mErrorToRethrow;
-  bool mSourceElementAssociated;
+  bool mDebuggerDataInitialized;
 
   ~ModuleScript();
 
@@ -78,7 +78,7 @@ class ModuleScript final : public LoadedScript {
   void SetModuleRecord(JS::Handle<JSObject*> aModuleRecord);
   void SetParseError(const JS::Value& aError);
   void SetErrorToRethrow(const JS::Value& aError);
-  void SetSourceElementAssociated();
+  void SetDebuggerDataInitialized();
 
   JSObject* ModuleRecord() const { return mModuleRecord; }
 
@@ -86,7 +86,7 @@ class ModuleScript final : public LoadedScript {
   JS::Value ErrorToRethrow() const { return mErrorToRethrow; }
   bool HasParseError() const { return !mParseError.isUndefined(); }
   bool HasErrorToRethrow() const { return !mErrorToRethrow.isUndefined(); }
-  bool SourceElementAssociated() const { return mSourceElementAssociated; }
+  bool DebuggerDataInitialized() const { return mDebuggerDataInitialized; }
 
   void UnlinkModuleRecord();
 
