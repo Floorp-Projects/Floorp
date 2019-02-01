@@ -345,14 +345,8 @@ static bool SandboxIsProxy(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   RootedObject obj(cx, &args[0].toObject());
-  // CheckedUnwrapStatic is OK here, since we only care about whether
-  // it's a scripted proxy and the things CheckedUnwrapStatic fails on
-  // are not.
-  obj = js::CheckedUnwrapStatic(obj);
-  if (!obj) {
-    args.rval().setBoolean(false);
-    return true;
-  }
+  obj = js::CheckedUnwrap(obj);
+  NS_ENSURE_TRUE(obj, false);
 
   args.rval().setBoolean(js::IsScriptedProxy(obj));
   return true;
@@ -670,10 +664,9 @@ bool WrapAccessorFunction(JSContext* cx, Op& op, PropertyDescriptor* desc,
 }
 
 static bool IsMaybeWrappedDOMConstructor(JSObject* obj) {
-  // We really care about the underlying object here, which might be wrapped in
-  // cross-compartment wrappers.  CheckedUnwrapStatic is fine, since we just
-  // care whether it's a DOM constructor.
-  obj = js::CheckedUnwrapStatic(obj);
+  // We really care about the underlying object here, which might be wrapped
+  // in cross-compartment wrappers.
+  obj = js::CheckedUnwrap(obj);
   if (!obj) {
     return false;
   }
@@ -1142,11 +1135,7 @@ nsresult xpc::CreateSandboxObject(JSContext* cx, MutableHandleValue vp,
       bool useSandboxProxy =
           !!WindowOrNull(js::UncheckedUnwrap(options.proto, false));
       if (!useSandboxProxy) {
-        // We just wrapped options.proto into the compartment of whatever Realm
-        // is on the cx, so use that same realm for the CheckedUnwrapDynamic
-        // call.
-        JSObject* unwrappedProto =
-            js::CheckedUnwrapDynamic(options.proto, cx, false);
+        JSObject* unwrappedProto = js::CheckedUnwrap(options.proto, false);
         if (!unwrappedProto) {
           JS_ReportErrorASCII(cx, "Sandbox must subsume sandboxPrototype");
           return NS_ERROR_INVALID_ARG;
@@ -1275,8 +1264,7 @@ static bool GetPrincipalOrSOP(JSContext* cx, HandleObject from,
   MOZ_ASSERT(out);
   *out = nullptr;
 
-  // We might have a Window here, so need ReflectorToISupportsDynamic
-  nsCOMPtr<nsISupports> native = ReflectorToISupportsDynamic(from, cx);
+  nsCOMPtr<nsISupports> native = xpc::UnwrapReflectorToISupports(from);
 
   if (nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(native)) {
     sop.forget(out);
@@ -1813,9 +1801,7 @@ nsresult xpc::EvalInSandbox(JSContext* cx, HandleObject sandboxArg,
   rval.set(UndefinedValue());
 
   bool waiveXray = xpc::WrapperFactory::HasWaiveXrayFlag(sandboxArg);
-  // CheckedUnwrapStatic is fine here, since we're checking for "is it a
-  // sandbox".
-  RootedObject sandbox(cx, js::CheckedUnwrapStatic(sandboxArg));
+  RootedObject sandbox(cx, js::CheckedUnwrap(sandboxArg));
   if (!sandbox || !IsSandbox(sandbox)) {
     return NS_ERROR_INVALID_ARG;
   }

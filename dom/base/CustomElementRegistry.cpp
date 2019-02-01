@@ -380,9 +380,7 @@ CustomElementDefinition* CustomElementRegistry::LookupCustomElementDefinition(
 
 CustomElementDefinition* CustomElementRegistry::LookupCustomElementDefinition(
     JSContext* aCx, JSObject* aConstructor) const {
-  // We're looking up things that tested true for JS::IsConstructor,
-  // so doing a CheckedUnwrapStatic is fine here.
-  JS::Rooted<JSObject*> constructor(aCx, js::CheckedUnwrapStatic(aConstructor));
+  JS::Rooted<JSObject*> constructor(aCx, js::CheckedUnwrap(aConstructor));
 
   const auto& ptr = mConstructors.lookup(constructor);
   if (!ptr) {
@@ -667,14 +665,8 @@ void CustomElementRegistry::Define(JSContext* aCx, const nsAString& aName,
                                    ErrorResult& aRv) {
   JS::Rooted<JSObject*> constructor(aCx, aFunctionConstructor.CallableOrNull());
 
-  // We need to do a dynamic unwrap in order to throw the right exception.  We
-  // could probably avoid that if we just threw MSG_NOT_CONSTRUCTOR if unwrap
-  // fails.
-  //
-  // In any case, aCx represents the global we want to be using for the unwrap
-  // here.
-  JS::Rooted<JSObject*> constructorUnwrapped(
-      aCx, js::CheckedUnwrapDynamic(constructor, aCx));
+  JS::Rooted<JSObject*> constructorUnwrapped(aCx,
+                                             js::CheckedUnwrap(constructor));
   if (!constructorUnwrapped) {
     // If the caller's compartment does not have permission to access the
     // unwrapped constructor then throw.

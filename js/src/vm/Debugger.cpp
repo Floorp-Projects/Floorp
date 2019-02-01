@@ -3767,15 +3767,14 @@ GlobalObject* Debugger::unwrapDebuggeeArgument(JSContext* cx, const Value& v) {
   }
 
   // If we have a cross-compartment wrapper, dereference as far as is secure.
-  //
-  // Since we're dealing with globals, we may have a WindowProxy here.  So we
-  // have to make sure to do a dynamic unwrap, and we want to unwrap the
-  // WindowProxy too, if we have one.
-  obj = CheckedUnwrapDynamic(obj, cx, /* stopAtWindowProxy = */ false);
+  obj = CheckedUnwrap(obj);
   if (!obj) {
     ReportAccessDenied(cx);
     return nullptr;
   }
+
+  // If that produced a WindowProxy, get the Window (global).
+  obj = ToWindowIfWindowProxy(obj);
 
   // If that didn't produce a global object, it's an error.
   if (!obj->is<GlobalObject>()) {
@@ -9382,8 +9381,7 @@ static DebuggerObject* DebuggerObject_checkThis(JSContext* cx,
 
 #define THIS_DEBUGOBJECT_PROMISE(cx, argc, vp, fnname, args, obj)             \
   THIS_DEBUGOBJECT_REFERENT(cx, argc, vp, fnname, args, obj);                 \
-  /* We only care about promises, so CheckedUnwrapStatic is OK. */            \
-  obj = CheckedUnwrapStatic(obj);                                             \
+  obj = CheckedUnwrap(obj);                                                   \
   if (!obj) {                                                                 \
     ReportAccessDenied(cx);                                                   \
     return false;                                                             \
@@ -9398,8 +9396,7 @@ static DebuggerObject* DebuggerObject_checkThis(JSContext* cx,
 
 #define THIS_DEBUGOBJECT_OWNER_PROMISE(cx, argc, vp, fnname, args, dbg, obj)  \
   THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, fnname, args, dbg, obj);      \
-  /* We only care about promises, so CheckedUnwrapStatic is OK. */            \
-  obj = CheckedUnwrapStatic(obj);                                             \
+  obj = CheckedUnwrap(obj);                                                   \
   if (!obj) {                                                                 \
     ReportAccessDenied(cx);                                                   \
     return false;                                                             \
@@ -10653,8 +10650,7 @@ bool DebuggerObject::isPromise() const {
   JSObject* referent = this->referent();
 
   if (IsCrossCompartmentWrapper(referent)) {
-    /* We only care about promises, so CheckedUnwrapStatic is OK. */
-    referent = CheckedUnwrapStatic(referent);
+    referent = CheckedUnwrap(referent);
     if (!referent) {
       return false;
     }
@@ -10828,8 +10824,7 @@ double DebuggerObject::promiseTimeToResolution() const {
                                                  JSErrorReport*& report) {
   JSObject* obj = maybeError;
   if (IsCrossCompartmentWrapper(obj)) {
-    /* We only care about Error objects, so CheckedUnwrapStatic is OK. */
-    obj = CheckedUnwrapStatic(obj);
+    obj = CheckedUnwrap(obj);
   }
 
   if (!obj) {
@@ -11522,8 +11517,7 @@ double DebuggerObject::promiseTimeToResolution() const {
   RootedObject referent(cx, object->referent());
 
   if (IsCrossCompartmentWrapper(referent)) {
-    /* We only care about promises, so CheckedUnwrapStatic is OK. */
-    referent = CheckedUnwrapStatic(referent);
+    referent = CheckedUnwrap(referent);
     if (!referent) {
       ReportAccessDenied(cx);
       return false;
@@ -12303,8 +12297,7 @@ extern JS_PUBLIC_API bool JS_DefineDebuggerObject(JSContext* cx,
 }
 
 JS_PUBLIC_API bool JS::dbg::IsDebugger(JSObject& obj) {
-  /* We only care about debugger objects, so CheckedUnwrapStatic is OK. */
-  JSObject* unwrapped = CheckedUnwrapStatic(&obj);
+  JSObject* unwrapped = CheckedUnwrap(&obj);
   return unwrapped && unwrapped->getClass() == &Debugger::class_ &&
          js::Debugger::fromJSObject(unwrapped) != nullptr;
 }
@@ -12312,8 +12305,7 @@ JS_PUBLIC_API bool JS::dbg::IsDebugger(JSObject& obj) {
 JS_PUBLIC_API bool JS::dbg::GetDebuggeeGlobals(JSContext* cx, JSObject& dbgObj,
                                                AutoObjectVector& vector) {
   MOZ_ASSERT(IsDebugger(dbgObj));
-  /* Since we know we have a debugger object, CheckedUnwrapStatic is fine. */
-  js::Debugger* dbg = js::Debugger::fromJSObject(CheckedUnwrapStatic(&dbgObj));
+  js::Debugger* dbg = js::Debugger::fromJSObject(CheckedUnwrap(&dbgObj));
 
   if (!vector.reserve(vector.length() + dbg->debuggees.count())) {
     JS_ReportOutOfMemory(cx);
