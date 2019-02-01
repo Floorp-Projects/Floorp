@@ -29,12 +29,13 @@ class nsRemoteService final : public nsIObserver {
   NS_DECL_NSIOBSERVER
 
   explicit nsRemoteService(const char* aProgram);
+  void SetProfile(nsACString& aProfile);
 
   void LockStartup();
   void UnlockStartup();
 
   RemoteResult StartClient(const char* aDesktopStartupID);
-  void StartupServer(const char* aProfile);
+  void StartupServer();
   void ShutdownServer();
 
  private:
@@ -44,6 +45,7 @@ class nsRemoteService final : public nsIObserver {
   nsProfileLock mRemoteLock;
   nsCOMPtr<nsIFile> mRemoteLockDir;
   nsCString mProgram;
+  nsCString mProfile;
 };
 
 #endif  // __nsRemoteService_h__
