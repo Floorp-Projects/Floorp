@@ -327,6 +327,25 @@ void WrapperFactory::PrepareForWrapping(JSContext* cx, HandleObject scope,
   retObj.set(waive ? WaiveXray(cx, obj) : obj);
 }
 
+// This check is completely symmetric, so we don't need to keep track of origin
+// vs target here.  Two compartments may have had transparent CCWs between them
+// only if they are same-origin (ignoring document.domain) or have both had
+// document.domain set at some point and are same-site.  In either case they
+// will have the same SiteIdentifier, so check that first.
+static bool CompartmentsMayHaveHadTransparentCCWs(
+    CompartmentPrivate* private1, CompartmentPrivate* private2) {
+  auto& info1 = private1->originInfo;
+  auto& info2 = private2->originInfo;
+
+  if (!info1.SiteRef().Equals(info2.SiteRef())) {
+    return false;
+  }
+
+  return info1.GetPrincipalIgnoringDocumentDomain()->FastEquals(
+             info2.GetPrincipalIgnoringDocumentDomain()) ||
+         (info1.HasChangedDocumentDomain() && info2.HasChangedDocumentDomain());
+}
+
 #ifdef DEBUG
 static void DEBUG_CheckUnwrapSafety(HandleObject obj,
                                     const js::Wrapper* handler,
@@ -359,9 +378,27 @@ static void DEBUG_CheckUnwrapSafety(HandleObject obj,
                                                                  originComp));
     if (!subsumes) {
       // If the target (which is where the wrapper lives) does not subsume the
-      // origin (which is where the wrapped object lives), then we should have a
-      // security check on the wrapper here.
-      MOZ_ASSERT(handler->hasSecurityPolicy());
+      // origin (which is where the wrapped object lives), then we should
+      // generally have a security check on the wrapper here.  There is one
+      // exception, though: things that used to be same-origin and then stopped
+      // due to document.domain changes.  In that case we will have a
+      // transparent cross-compartment wrapper here even though "subsumes" is no
+      // longer true.
+      CompartmentPrivate* originCompartmentPrivate =
+          CompartmentPrivate::Get(originComp);
+      CompartmentPrivate* targetCompartmentPrivate =
+          CompartmentPrivate::Get(target);
+      if (!originCompartmentPrivate->wantXrays &&
+          !targetCompartmentPrivate->wantXrays &&
+          CompartmentsMayHaveHadTransparentCCWs(originCompartmentPrivate,
+                                                targetCompartmentPrivate)) {
+        // We should have a transparent CCW, unless we have a cross-origin
+        // object, in which case it will be a CrossOriginObjectWrapper.
+        MOZ_ASSERT(handler == &CrossCompartmentWrapper::singleton ||
+                   handler == &CrossOriginObjectWrapper::singleton);
+      } else {
+        MOZ_ASSERT(handler->hasSecurityPolicy());
+      }
     } else {
       // Even if target subsumes origin, we might have a wrapper with a security
       // policy here, if it happens to be a CrossOriginObjectWrapper.
@@ -465,6 +502,10 @@ JSObject* WrapperFactory::Rewrap(JSContext* cx, HandleObject existing,
   JS::Realm* originRealm = js::GetNonCCWObjectRealm(obj);
   RealmPrivate* originRealmPrivate = RealmPrivate::Get(originRealm);
 
+  // Track whether we decided to use a transparent wrapper because of
+  // document.domain usage, so we don't override that decision.
+  bool isTransparentWrapperDueToDocumentDomain = false;
+
   //
   // First, handle the special cases.
   //
@@ -520,6 +561,19 @@ JSObject* WrapperFactory::Rewrap(JSContext* cx, HandleObject existing,
     wrapper = &CrossOriginObjectWrapper::singleton;
   }
 
+  // Special handling for other web objects.  Again, we only want this in
+  // web-like contexts (symmetric security relationships, no forced Xrays).  In
+  // this situation, if the two compartments may ever have had transparent CCWs
+  // between them, we want to keep using transparent CCWs.
+  else if (originSubsumesTarget == targetSubsumesOrigin &&
+           !originCompartmentPrivate->wantXrays &&
+           !targetCompartmentPrivate->wantXrays &&
+           CompartmentsMayHaveHadTransparentCCWs(originCompartmentPrivate,
+                                                 targetCompartmentPrivate)) {
+    isTransparentWrapperDueToDocumentDomain = true;
+    wrapper = &CrossCompartmentWrapper::singleton;
+  }
+
   //
   // Now, handle the regular cases.
   //
@@ -552,7 +606,8 @@ JSObject* WrapperFactory::Rewrap(JSContext* cx, HandleObject existing,
     wrapper = SelectWrapper(securityWrapper, xrayType, waiveXrays, obj);
   }
 
-  if (!targetSubsumesOrigin && !originRealmPrivate->forcePermissiveCOWs) {
+  if (!targetSubsumesOrigin && !originRealmPrivate->forcePermissiveCOWs &&
+      !isTransparentWrapperDueToDocumentDomain) {
     // Do a belt-and-suspenders check against exposing eval()/Function() to
     // non-subsuming content.  But don't worry about doing it in the
     // SpecialPowers case.

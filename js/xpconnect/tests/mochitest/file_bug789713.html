@@ -16,22 +16,29 @@ function go() {
   var ifr = document.getElementById('ifr');
   var pass = true;
   var doc = ifr.contentDocument;
+  var win = ifr.contentWindow;
 
-  // Tree walkers use nsDOMGenericSH, which has a spineless PreCreate.
   var walker = doc.createTreeWalker(doc.body);
   pass = pass && (walker.root === doc.body);
+  walker.foo = "expando";
 
-  // Grab a reference to Object.prototype to make sure we test the machinery
-  // with respect to standard prototype remapping.
-  var objProto = ifr.contentWindow.Object.prototype;
+  win.bar = "another-expando";
 
   // First, do the document.domain operation. This shouldn't crash.
   document.domain = "example.org";
 
-  // Now, make sure that we still can't access cross-origin properties despite
-  // the fact that the WN is shared under the hood.
+  // Now make sure we can still access properties on "walker".
   try {
     walker.root;
+    pass = pass && walker.foo == "expando";
+  } catch (e) {
+    pass = false;
+  }
+
+  // And make sure we can't access properties on "win", because the
+  // document.domain change revoked the access.
+  try {
+    win.bar;
     pass = false;
   } catch (e) { pass = pass && /Permission denied/.exec(e.message); }
   window.parent.postMessage(pass, '*');
