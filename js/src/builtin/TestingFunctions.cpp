@@ -2693,22 +2693,25 @@ static bool testingFunc_inIon(JSContext* cx, unsigned argc, Value* vp) {
     return true;
   }
 
+  JSScript* script = cx->currentScript();
+
+  // Check if current script frame is IonJS
   ScriptFrameIter iter(cx);
   if (!iter.done() && iter.isIon()) {
     // Reset the counter of the IonScript's script.
-    jit::JSJitFrameIter jitIter(cx->activation()->asJit());
-    ++jitIter;
-    jitIter.script()->resetWarmUpResetCounter();
-  } else {
-    // Check if we missed multiple attempts at compiling the innermost script.
-    JSScript* script = cx->currentScript();
-    if (script && script->getWarmUpResetCount() >= 20) {
-      return ReturnStringCopy(
-          cx, args, "Compilation is being repeatedly prevented. Giving up.");
-    }
+    script->resetWarmUpResetCounter();
+
+    args.rval().setBoolean(true);
+    return true;
   }
 
-  args.rval().setBoolean(!iter.done() && iter.isIon());
+  // Check if we missed multiple attempts at compiling the innermost script.
+  if (script && script->getWarmUpResetCount() >= 20) {
+    return ReturnStringCopy(
+        cx, args, "Compilation is being repeatedly prevented. Giving up.");
+  }
+
+  args.rval().setBoolean(false);
   return true;
 }
 
