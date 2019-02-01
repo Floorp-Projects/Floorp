@@ -55,9 +55,9 @@ public class MediaControlService extends Service {
     }
 
     private void handleAction(Intent intent, int startId) {
-        if (intent.getAction() != null) {
-            final String action = intent.getAction();
-            Log.d(LOGTAG, "handleAction, action = " + action);
+        final String action = intent.getAction();
+        Log.d(LOGTAG, "handleAction, action = " + action);
+        if (action != null) {
 
             switch (action) {
                 case GeckoMediaControlAgent.ACTION_SHUTDOWN:
