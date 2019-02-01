@@ -75,8 +75,7 @@ add_task(async function() {
   await withPerfObserver(async function() {
     let switchDone = BrowserTestUtils.waitForEvent(window, "TabSwitchDone");
     BrowserOpenTab();
-    await BrowserTestUtils.waitForEvent(gBrowser.selectedTab, "transitionend",
-        false, e => e.propertyName === "max-width");
+    await BrowserTestUtils.waitForEvent(gBrowser.selectedTab, "TabAnimationEnd");
     await switchDone;
     await BrowserTestUtils.waitForCondition(() => {
       return gBrowser.tabContainer.arrowScrollbox.hasAttribute("scrolledtoend");
