@@ -17,7 +17,7 @@ use euclid::{TypedPoint2D, TypedVector2D};
 use freelist::{FreeList, FreeListHandle, WeakFreeListHandle};
 use glyph_rasterizer::GpuGlyphCacheKey;
 use gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle};
-use gpu_types::{BorderInstance, ImageSource, UvRectKind, SnapOffsets};
+use gpu_types::{BorderInstance, ImageSource, UvRectKind};
 use internal_types::{CacheTextureId, FastHashMap, LayerIndex, SavedTargetIndex};
 #[cfg(feature = "pathfinder")]
 use pathfinder_partitioner::mesh::Mesh;
@@ -239,7 +239,6 @@ pub struct CacheMaskTask {
     pub actual_rect: DeviceIntRect,
     pub root_spatial_node_index: SpatialNodeIndex,
     pub clip_node_range: ClipNodeRange,
-    pub snap_offsets: SnapOffsets,
 }
 
 #[derive(Debug)]
@@ -534,7 +533,6 @@ impl RenderTask {
         resource_cache: &mut ResourceCache,
         render_tasks: &mut RenderTaskTree,
         clip_data_store: &mut ClipDataStore,
-        snap_offsets: SnapOffsets,
     ) -> Self {
         // Step through the clip sources that make up this mask. If we find
         // any box-shadow clip sources, request that image from the render
@@ -604,7 +602,6 @@ impl RenderTask {
                 actual_rect: outer_rect,
                 clip_node_range,
                 root_spatial_node_index,
-                snap_offsets,
             }),
             ClearMode::One,
         )
