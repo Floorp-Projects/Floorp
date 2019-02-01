@@ -2553,10 +2553,17 @@ bool SourceMediaStream::PullNewData(GraphTime aDesiredUpToTime) {
   // the stream at all.
   StreamTime t = GraphTimeToStreamTime(aDesiredUpToTime);
   for (const TrackData& track : mUpdateTracks) {
-    if (track.mCommands & TrackEventCommand::TRACK_EVENT_ENDED) {
+    if (track.mCommands & TRACK_END) {
       continue;
     }
-    StreamTime current = track.mEndOfFlushedData + track.mData->GetDuration();
+    StreamTime current;
+    if (track.mCommands & TRACK_CREATE) {
+      // This track hasn't been created yet. Use the stream's current time
+      // (which the track will get as its start time later).
+      current = GraphTimeToStreamTime(GraphImpl()->mStateComputedTime);
+    } else {
+      current = track.mEndOfFlushedData + track.mData->GetDuration();
+    }
     if (t <= current) {
       continue;
     }
@@ -2617,8 +2624,8 @@ void SourceMediaStream::ExtractPendingInput(GraphTime aCurrentTime) {
            GraphImpl(), this, data->mID, int64_t(streamCurrentTime),
            int64_t(segment->GetDuration())));
 
-      data->mEndOfFlushedData += segment->GetDuration();
       segment->InsertNullDataAtStart(streamCurrentTime);
+      data->mEndOfFlushedData += segment->GetDuration();
       mTracks.AddTrack(data->mID, streamCurrentTime, segment);
       // The track has taken ownership of data->mData, so let's replace
       // data->mData with an empty clone.
