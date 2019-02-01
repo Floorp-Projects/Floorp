@@ -60,11 +60,12 @@ class WebGLShader final : public nsWrapperCache,
   bool UnmapUniformBlockName(const nsACString& baseMappedName,
                              nsCString* const out_baseUserName) const;
 
+  void EnumerateFragOutputs(
+      std::map<nsCString, const nsCString>& out_FragOutputs) const;
+
   bool IsCompiled() const {
     return mTranslationSuccessful && mCompilationSuccessful;
   }
-  const auto* Validator() const { return mValidator.get(); }
-  const auto& TranslatedSource() const { return mTranslatedSource; }
 
  private:
   void BindAttribLocation(GLuint prog, const nsCString& userName,
