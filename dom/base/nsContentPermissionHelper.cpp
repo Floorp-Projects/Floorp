@@ -670,9 +670,7 @@ nsresult TranslateChoices(
       nsCString type = aPermissionRequests[i].type();
 
       JS::Rooted<JSObject*> obj(RootingCx(), &aChoices.toObject());
-      // People really shouldn't be passing WindowProxy or Location
-      // objects for the choices here.
-      obj = js::CheckedUnwrapStatic(obj);
+      obj = CheckedUnwrap(obj);
       if (!obj) {
         return NS_ERROR_FAILURE;
       }

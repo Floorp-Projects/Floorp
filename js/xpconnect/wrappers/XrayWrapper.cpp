@@ -33,7 +33,7 @@ using namespace JS;
 using namespace mozilla;
 
 using js::BaseProxyHandler;
-using js::CheckedUnwrapStatic;
+using js::CheckedUnwrap;
 using js::IsCrossCompartmentWrapper;
 using js::UncheckedUnwrap;
 using js::Wrapper;
@@ -1934,15 +1934,13 @@ static bool RecreateLostWaivers(JSContext* cx, const PropertyDescriptor* orig,
     wrapped.value().set(ObjectValue(*rewaived));
   }
   if (getterWasWaived && !IsCrossCompartmentWrapper(wrapped.getterObject())) {
-    // We can't end up with WindowProxy or Location as getters.
-    MOZ_ASSERT(CheckedUnwrapStatic(wrapped.getterObject()));
+    MOZ_ASSERT(CheckedUnwrap(wrapped.getterObject()));
     rewaived = WrapperFactory::WaiveXray(cx, wrapped.getterObject());
     NS_ENSURE_TRUE(rewaived, false);
     wrapped.setGetterObject(rewaived);
   }
   if (setterWasWaived && !IsCrossCompartmentWrapper(wrapped.setterObject())) {
-    // We can't end up with WindowProxy or Location as setters.
-    MOZ_ASSERT(CheckedUnwrapStatic(wrapped.setterObject()));
+    MOZ_ASSERT(CheckedUnwrap(wrapped.setterObject()));
     rewaived = WrapperFactory::WaiveXray(cx, wrapped.setterObject());
     NS_ENSURE_TRUE(rewaived, false);
     wrapped.setSetterObject(rewaived);
