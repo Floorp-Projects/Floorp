@@ -122,6 +122,7 @@ def check_target(target):
             'for more information about the necessary options.')
 
 include('../../toolkit/moz.configure')
+include('../../build/moz.configure/android-sdk.configure')
 include('../../build/moz.configure/java.configure')
 include('gradle.configure')
 
