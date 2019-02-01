@@ -4170,6 +4170,7 @@ int AddPreCompleteActions(ActionList *list) {
 
     rv = action->Parse(line);
     if (rv) {
+      delete action;
       free(buf);
       return rv;
     }
