@@ -468,9 +468,8 @@ void StructuredCloneHolder::ReadFromBuffer(nsISupports* aParent, JSContext* aCx,
     }
   }
 
-  if (NS_IsMainThread() && xpc::IsReflector(obj, aCx)) {
-    // We only care about principals, so ReflectorToISupportsStatic is fine.
-    nsCOMPtr<nsISupports> base = xpc::ReflectorToISupportsStatic(obj);
+  if (NS_IsMainThread() && xpc::IsReflector(obj)) {
+    nsCOMPtr<nsISupports> base = xpc::UnwrapReflectorToISupports(obj);
     nsCOMPtr<nsIPrincipal> principal = do_QueryInterface(base);
     if (principal) {
       auto nsjsprincipals = nsJSPrincipals::get(principal);
@@ -1043,8 +1042,7 @@ bool StructuredCloneHolder::CustomWriteHandler(JSContext* aCx,
   }
 
   {
-    // We only care about streams, so ReflectorToISupportsStatic is fine.
-    nsCOMPtr<nsISupports> base = xpc::ReflectorToISupportsStatic(aObj);
+    nsCOMPtr<nsISupports> base = xpc::UnwrapReflectorToISupports(aObj);
     nsCOMPtr<nsIInputStream> inputStream = do_QueryInterface(base);
     if (inputStream) {
       return WriteInputStream(aWriter, inputStream, this);
