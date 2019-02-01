@@ -111,6 +111,16 @@ interface Node : EventTarget {
   [ChromeOnly, Pure, BinaryName="flattenedTreeParentNodeNonInline"]
   readonly attribute Node? flattenedTreeParentNode;
 
+  // Mozilla devtools-specific stuff
+  /**
+   * If this element is a flex item (or has one or more anonymous box ancestors
+   * that chain up to an anonymous flex item), then this method returns the
+   * flex container that the flex item participates in. Otherwise, this method
+   * returns null.
+   */
+  [ChromeOnly]
+  readonly attribute Element? parentFlexElement;
+
   /**
    * This method provides a fast-path for the Fluent localization system to
    * bypass the slowdowns in performance during initial document translation.

@@ -467,6 +467,8 @@ class nsINode : public mozilla::dom::EventTarget {
    */
   virtual nsINode* GetScopeChainParent() const;
 
+  MOZ_CAN_RUN_SCRIPT mozilla::dom::Element* GetParentFlexElement();
+
   /**
    * Return whether the node is an Element node
    */
