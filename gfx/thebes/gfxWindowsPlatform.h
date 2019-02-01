@@ -183,7 +183,7 @@ class gfxWindowsPlatform : public gfxPlatform {
 
   void SetupClearTypeParams();
 
-  inline bool DWriteEnabled() const {
+  static inline bool DWriteEnabled() {
     return !!mozilla::gfx::Factory::GetDWriteFactory();
   }
   inline DWRITE_MEASURING_MODE DWriteMeasuringMode() { return mMeasuringMode; }
