@@ -287,8 +287,8 @@ internal class DisplayToolbar(
 
         // The url uses whatever space is left. Subtract the icon and (optionally) the menu
         val menuWidth = if (menuView.isVisible()) height else 0
-        val urlWidth = width - iconSize - browserActionsWidth - pageActionsWidth -
-            menuWidth - navigationActionsWidth - 2 * urlBoxMargin
+        val urlWidth = (width - iconSize - browserActionsWidth - pageActionsWidth -
+            menuWidth - navigationActionsWidth - 2 * urlBoxMargin)
         val urlWidthSpec = MeasureSpec.makeMeasureSpec(urlWidth, MeasureSpec.EXACTLY)
         urlView.measure(urlWidthSpec, fixedHeightSpec)
 
