@@ -3446,8 +3446,7 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   nsDisplayListCollection set(aBuilder);
 
   bool willBuildAsyncZoomContainer =
-      gfxPrefs::APZAllowZooming() &&
-      !gfxPrefs::LayoutUseContainersForRootFrames() && mIsRoot &&
+      aBuilder->ShouldBuildAsyncZoomContainer() && mIsRoot &&
       mOuter->PresContext()->IsRootContentDocument();
 
   nsRect scrollPortClip = mScrollPort + aBuilder->ToReferenceFrame(mOuter);

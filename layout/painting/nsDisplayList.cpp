@@ -1042,6 +1042,7 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mDisablePartialUpdates(false),
       mPartialBuildFailed(false),
       mIsInActiveDocShell(false),
+      mBuildAsyncZoomContainer(false),
       mHitTestArea(),
       mHitTestInfo(CompositorHitTestInvisibleToHit) {
   MOZ_COUNT_CTOR(nsDisplayListBuilder);

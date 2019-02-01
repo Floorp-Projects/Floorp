@@ -3613,10 +3613,24 @@ nsresult nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext,
       DisplayListChecker toBeMergedChecker;
       DisplayListChecker afterMergeChecker;
 
+      // If we transition between wrapping the RCD-RSF contents into an async
+      // zoom container vs. not, we need to rebuild the display list. This only
+      // happens when the zooming or container scrolling prefs are toggled
+      // (manually by the user, or during test setup).
+      bool shouldAttemptPartialUpdate = useRetainedBuilder;
+      bool didBuildAsyncZoomContainer = builder.ShouldBuildAsyncZoomContainer();
+      builder.SetBuildAsyncZoomContainer(
+          gfxPrefs::APZAllowZooming() &&
+          !gfxPrefs::LayoutUseContainersForRootFrames());
+      if (builder.ShouldBuildAsyncZoomContainer() !=
+          didBuildAsyncZoomContainer) {
+        shouldAttemptPartialUpdate = false;
+      }
+
       // Attempt to do a partial build and merge into the existing list.
       // This calls BuildDisplayListForStacking context on a subset of the
       // viewport.
-      if (useRetainedBuilder) {
+      if (shouldAttemptPartialUpdate) {
         if (gfxPrefs::LayoutVerifyRetainDisplayList()) {
           beforeMergeChecker.Set(&list, "BM");
         }
