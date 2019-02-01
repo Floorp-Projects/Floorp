@@ -19,6 +19,9 @@ job-defaults:
             - 'build/clang-plugin/moz.build'
             - 'build/clang-plugin/Makefile.in'
             - 'build/build-clang/build-clang.py'
+    run-on-projects:
+        - trunk
+        - try
 
 linux64-clang-tidy:
     index:
@@ -30,9 +33,6 @@ linux64-clang-tidy:
         resources:
             - 'build/build-clang/clang-tidy-linux64.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
-    run-on-projects:
-        - trunk
-        - try
     toolchains:
         - linux64-gcc-4.9
 
@@ -45,9 +45,6 @@ macosx64-clang-tidy:
     worker:
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-clang.manifest"
-    run-on-projects:
-        - trunk
-        - try
     run:
         using: toolchain-script
         script: build-clang-tidy-macosx.sh
@@ -79,9 +76,6 @@ win32-clang-tidy:
             - 'build/build-clang/clang-tidy-win32.json'
             - 'taskcluster/scripts/misc/build-clang-windows-helper32.sh'
         toolchain-artifact: public/build/clang-tidy.tar.bz2
-    run-on-projects:
-        - trunk
-        - try
 
 win64-clang-tidy:
     description: "Clang-tidy toolchain build"
