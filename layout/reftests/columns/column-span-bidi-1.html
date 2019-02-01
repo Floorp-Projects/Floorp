@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <meta charset="utf-8">
+  <style>
+  h3 {
+    column-span: all;
+  }
+  html {
+    columns: 3em;
+  }
+  </style>
+  <script>
+  function go() {
+    document.body.offsetHeight;
+    document.body.appendChild(a);
+    document.documentElement.removeAttribute("class");
+  }
+  </script>
+  <body onload=go()>
+    <h3>
+      <div id="a"></div>
+    </h3>
+    <!-- The following content will be in a -moz-column-content frame where it's
+         parent is a hard continuation of a nsColumnSetFrame. -->
+    ltr
+    ltr
+    <div dir="rtl">rtl</div>
+  </body>
+</html>
