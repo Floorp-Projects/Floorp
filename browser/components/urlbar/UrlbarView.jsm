@@ -286,9 +286,9 @@ class UrlbarView {
     favicon.className = "urlbarView-favicon";
     if (result.type == UrlbarUtils.RESULT_TYPE.SEARCH ||
         result.type == UrlbarUtils.RESULT_TYPE.KEYWORD) {
-      favicon.src = "chrome://browser/skin/search-glass.svg";
+      favicon.src = UrlbarUtils.ICON.SEARCH_GLASS;
     } else {
-      favicon.src = result.payload.icon || "chrome://mozapps/skin/places/defaultFavicon.svg";
+      favicon.src = result.payload.icon || UrlbarUtils.ICON.DEFAULT;
     }
     content.appendChild(favicon);
 

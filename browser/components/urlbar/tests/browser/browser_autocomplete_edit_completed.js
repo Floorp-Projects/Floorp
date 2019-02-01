@@ -1,3 +1,10 @@
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
+
+/**
+ * Tests selecting a result, and editing the value of that autocompleted result.
+ */
+
 add_task(async function() {
   await PlacesUtils.history.clear();
 
@@ -13,35 +20,36 @@ add_task(async function() {
   });
 
   await promiseAutocompleteResultPopup("http://example.com");
-  await waitForAutocompleteResultAt(1);
 
-  let popup = gURLBar.popup;
-  let list = popup.richlistbox;
-  let initialIndex = list.selectedIndex;
+  const initialIndex = UrlbarTestUtils.getSelectedIndex(window);
 
   info("Key Down to select the next item.");
   EventUtils.synthesizeKey("KEY_ArrowDown");
 
   let nextIndex = initialIndex + 1;
-  let nextValue = gURLBar.controller.getFinalCompleteValueAt(nextIndex);
-  is(list.selectedIndex, nextIndex, "The next item is selected.");
-  is(gURLBar.value, nextValue, "The selected URL is completed.");
+  let nextResult = await UrlbarTestUtils.getDetailsOfResultAt(window, nextIndex);
+  Assert.equal(UrlbarTestUtils.getSelectedIndex(window), nextIndex,
+    "Should have selected the next item");
+  Assert.equal(gURLBar.value, nextResult.url,
+    "Should have completed the URL");
 
   info("Press backspace");
   EventUtils.synthesizeKey("KEY_Backspace");
   await promiseSearchComplete();
 
   let editedValue = gURLBar.textValue;
-  is(list.selectedIndex, initialIndex, "The initial index is selected again.");
-  isnot(editedValue, nextValue, "The URL has changed.");
+  Assert.equal(UrlbarTestUtils.getSelectedIndex(window), initialIndex,
+    "Should have selected the initialIndex again");
+  Assert.notEqual(editedValue, nextResult.url, "The URL has changed.");
 
   let docLoad = BrowserTestUtils.waitForDocLoadAndStopIt("http://" + editedValue,
     gBrowser.selectedBrowser);
 
   info("Press return to load edited URL.");
-  EventUtils.synthesizeKey("KEY_Enter");
-  await Promise.all([
-    promisePopupHidden(gURLBar.popup),
-    docLoad,
-  ]);
+
+  await UrlbarTestUtils.promisePopupClose(window, () => {
+    EventUtils.synthesizeKey("KEY_Enter");
+  });
+
+  await docLoad;
 });

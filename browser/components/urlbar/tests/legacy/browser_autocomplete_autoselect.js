@@ -1,6 +1,11 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/**
+ * Tests that the first item is correctly autoselected and some navigation
+ * around the results list.
+ */
+
 const ONEOFF_URLBAR_PREF = "browser.urlbar.oneOffSearches";
 
 function repeat(limit, func) {
@@ -9,12 +14,14 @@ function repeat(limit, func) {
   }
 }
 
-function is_selected(index) {
-  is(gURLBar.popup.richlistbox.selectedIndex, index, `Item ${index + 1} should be selected`);
+function assertSelected(index) {
+  Assert.equal(UrlbarTestUtils.getSelectedIndex(window),
+    index, "Should have selected the correct item");
   // Also check the "selected" attribute, to ensure it is not a "fake" selection
   // due to binding misbehaviors.
-  ok(gURLBar.popup.richlistbox.selectedItem.hasAttribute("selected"),
-     `Item ${index + 1} should have the "selected" attribute`);
+  let element = UrlbarTestUtils.getSelectedElement(window);
+  Assert.ok(element.hasAttribute("selected"),
+    "Should have the selected attribute on the row element");
 
   // This is true because although both the listbox and the one-offs can have
   // selections, the test doesn't check that.
@@ -22,7 +29,7 @@ function is_selected(index) {
      "A result is selected, so the one-offs should not have a selection");
 }
 
-function is_selected_one_off(index) {
+function assertSelected_one_off(index) {
   is(gURLBar.popup.oneOffSearchButtons.selectedButtonIndex, index,
      "Expected one-off button should be selected");
 
@@ -51,49 +58,49 @@ add_task(async function() {
   await PlacesTestUtils.addVisits(visits);
 
   await promiseAutocompleteResultPopup("example.com/autocomplete");
-  await waitForAutocompleteResultAt(maxResults - 1);
 
-  let popup = gURLBar.popup;
-  let results = popup.richlistbox.itemChildren;
-  is(results.length, maxResults,
-     "Should get maxResults=" + maxResults + " results");
-  is_selected(0);
+  let resultCount = await UrlbarTestUtils.getResultCount(window);
+
+  Assert.equal(resultCount, maxResults,
+    "Should get the expected amount of results");
+  assertSelected(0);
 
   info("Key Down to select the next item");
   EventUtils.synthesizeKey("KEY_ArrowDown");
-  is_selected(1);
+  assertSelected(1);
 
   info("Key Down maxResults-1 times should select the first one-off");
   repeat(maxResults - 1, () => EventUtils.synthesizeKey("KEY_ArrowDown"));
-  is_selected_one_off(0);
+  assertSelected_one_off(0);
 
   info("Key Down numButtons-1 should select the last one-off");
   let numButtons =
     gURLBar.popup.oneOffSearchButtons.getSelectableButtons(true).length;
   repeat(numButtons - 1, () => EventUtils.synthesizeKey("KEY_ArrowDown"));
-  is_selected_one_off(numButtons - 1);
+  assertSelected_one_off(numButtons - 1);
 
   info("Key Down twice more should select the second result");
   repeat(2, () => EventUtils.synthesizeKey("KEY_ArrowDown"));
-  is_selected(1);
+  assertSelected(1);
 
   info("Key Down maxResults + numButtons times should wrap around");
   repeat(maxResults + numButtons,
          () => EventUtils.synthesizeKey("KEY_ArrowDown"));
-  is_selected(1);
+  assertSelected(1);
 
   info("Key Up maxResults + numButtons times should wrap around the other way");
   repeat(maxResults + numButtons, () => EventUtils.synthesizeKey("KEY_ArrowUp"));
-  is_selected(1);
+  assertSelected(1);
 
   info("Page Up will go up the list, but not wrap");
   EventUtils.synthesizeKey("KEY_PageUp");
-  is_selected(0);
+  assertSelected(0);
 
   info("Page Up again will wrap around to the end of the list");
   EventUtils.synthesizeKey("KEY_PageUp");
-  is_selected(maxResults - 1);
+  assertSelected(maxResults - 1);
 
-  EventUtils.synthesizeKey("KEY_Escape");
-  await promisePopupHidden(gURLBar.popup);
+  await UrlbarTestUtils.promisePopupClose(window, () => {
+    EventUtils.synthesizeKey("KEY_Escape");
+  });
 });

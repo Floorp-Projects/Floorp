@@ -101,6 +101,12 @@ var UrlbarUtils = {
     OTHER_NETWORK: 6,
   },
 
+  // This defines icon locations that are common used in the UI.
+  ICON: {
+    DEFAULT: Ci.nsIFaviconService.FAVICON_DEFAULT_URL,
+    SEARCH_GLASS: "chrome://browser/skin/search-glass.svg",
+  },
+
   /**
    * Adds a url to history as long as it isn't in a private browsing window,
    * and it is valid.
