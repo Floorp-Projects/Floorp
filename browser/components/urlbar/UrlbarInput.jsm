@@ -331,9 +331,10 @@ class UrlbarInput {
         return;
       }
       case UrlbarUtils.RESULT_TYPE.SEARCH: {
-        url = this._maybeCanonizeURL(event,
+        let canonizedUrl = this._maybeCanonizeURL(event,
                 result.payload.suggestion || result.payload.query);
-        if (url) {
+        if (canonizedUrl) {
+          url = canonizedUrl;
           break;
         }
         const actionDetails = {
