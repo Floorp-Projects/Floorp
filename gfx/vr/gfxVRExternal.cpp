@@ -870,14 +870,14 @@ void VRSystemManagerExternal::PushState(VRBrowserState* aBrowserState,
   MOZ_ASSERT(mExternalShmem);
   if (mExternalShmem) {
 #if defined(MOZ_WIDGET_ANDROID)
-    if (pthread_mutex_lock((pthread_mutex_t*)&(mExternalShmem->browserMutex)) ==
+    if (pthread_mutex_lock((pthread_mutex_t*)&(mExternalShmem->geckoMutex)) ==
         0) {
-      memcpy((void*)&(mExternalShmem->browserState), aBrowserState,
+      memcpy((void*)&(mExternalShmem->geckoState), aBrowserState,
              sizeof(VRBrowserState));
       if (aNotifyCond) {
-        pthread_cond_signal((pthread_cond_t*)&(mExternalShmem->browserCond));
+        pthread_cond_signal((pthread_cond_t*)&(mExternalShmem->geckoCond));
       }
-      pthread_mutex_unlock((pthread_mutex_t*)&(mExternalShmem->browserMutex));
+      pthread_mutex_unlock((pthread_mutex_t*)&(mExternalShmem->geckoMutex));
     }
 #else
     bool status = true;
@@ -886,13 +886,13 @@ void VRSystemManagerExternal::PushState(VRBrowserState* aBrowserState,
     status = lock.GetStatus();
 #endif  // defined(XP_WIN)
     if (status) {
-      mExternalShmem->browserGenerationA++;
-      memcpy((void*)&(mExternalShmem->browserState), (void*)aBrowserState,
+      mExternalShmem->geckoGenerationA++;
+      memcpy((void*)&(mExternalShmem->geckoState), (void*)aBrowserState,
             sizeof(VRBrowserState));
-      mExternalShmem->browserGenerationB++; mExternalShmem->browserGenerationA++;
-      memcpy((void*)&(mExternalShmem->browserState), (void*)aBrowserState,
+      mExternalShmem->geckoGenerationB++; mExternalShmem->geckoGenerationA++;
+      memcpy((void*)&(mExternalShmem->geckoState), (void*)aBrowserState,
             sizeof(VRBrowserState));
-      mExternalShmem->browserGenerationB++;
+      mExternalShmem->geckoGenerationB++;
     }
 #endif  // defined(MOZ_WIDGET_ANDROID)
   }

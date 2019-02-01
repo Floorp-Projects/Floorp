@@ -34,7 +34,7 @@ enum class GamepadCapabilityFlags : uint16_t;
 #endif  //  MOZILLA_INTERNAL_API
 namespace gfx {
 
-static const int32_t kVRExternalVersion = 5;
+static const int32_t kVRExternalVersion = 6;
 
 // We assign VR presentations to groups with a bitmask.
 // Currently, we will only display either content or chrome.
@@ -390,20 +390,25 @@ struct VRExternalShmem {
   int32_t size;
 #if defined(__ANDROID__)
   pthread_mutex_t systemMutex;
-  pthread_mutex_t browserMutex;
+  pthread_mutex_t geckoMutex;
+  pthread_mutex_t servoMutex;
   pthread_cond_t systemCond;
-  pthread_cond_t browserCond;
+  pthread_cond_t geckoCond;
+  pthread_cond_t servoCond;
 #else
   int64_t generationA;
 #endif  // defined(__ANDROID__)
   VRSystemState state;
 #if !defined(__ANDROID__)
   int64_t generationB;
-  int64_t browserGenerationA;
+  int64_t geckoGenerationA;
+  int64_t servoGenerationA;
 #endif  // !defined(__ANDROID__)
-  VRBrowserState browserState;
+  VRBrowserState geckoState;
+  VRBrowserState servoState;
 #if !defined(__ANDROID__)
-  int64_t browserGenerationB;
+  int64_t geckoGenerationB;
+  int64_t servoGenerationB;
 #endif  // !defined(__ANDROID__)
 };
 
