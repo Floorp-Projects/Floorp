@@ -1506,6 +1506,26 @@ function TypedArrayStaticFrom(source, mapfn = undefined, thisArg = undefined) {
         if (!IsCallable(usingIterator))
             ThrowTypeError(JSMSG_NOT_ITERABLE, DecompileArg(0, source));
 
+        // Try to take a fast path when there's no mapper function and the
+        // constructor is a built-in TypedArray constructor.
+        if (!mapping && IsTypedArrayConstructor(C)) {
+            // TODO: Add fast path for TypedArray inputs (bug 1491813).
+
+            // The source is a packed array using the default iterator.
+            if (usingIterator === ArrayValues && IsPackedArray(source) &&
+                ArrayIteratorPrototypeOptimizable())
+            {
+                // Steps 7.b-c.
+                var targetObj = new C(source.length);
+
+                // Steps 7.a, 7.d-f.
+                TypedArrayInitFromPackedArray(targetObj, source);
+
+                // Step 7.g.
+                return targetObj;
+            }
+        }
+
         // Step 7.a.
         var values = IterableToList(source, usingIterator);
 
@@ -1597,21 +1617,6 @@ function TypedArraySpecies() {
     return this;
 }
 _SetCanonicalName(TypedArraySpecies, "get [Symbol.species]");
-
-// ES 2017 draft June 2, 2016 22.2.3.32
-function TypedArrayToStringTag() {
-    // Step 1.
-    var O = this;
-
-    // Steps 2-3.
-    if (!IsObject(O) || !IsPossiblyWrappedTypedArray(O))
-        return undefined;
-
-    // Steps 4-6.
-    // Modified to retrieve the [[TypedArrayName]] from the constructor.
-    return _NameForTypedArray(O);
-}
-_SetCanonicalName(TypedArrayToStringTag, "get [Symbol.toStringTag]");
 
 // ES2018 draft rev 0525bb33861c7f4e9850f8a222c89642947c4b9c
 // 22.2.2.1.1 Runtime Semantics: IterableToList( items, method )

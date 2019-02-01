@@ -203,6 +203,13 @@ struct ForOfPIC {
     bool tryOptimizeArray(JSContext* cx, HandleArrayObject array,
                           bool* optimized);
 
+    // Check if %ArrayIteratorPrototype% still uses the default "next" method.
+    bool tryOptimizeArrayIteratorNext(JSContext* cx, bool* optimized);
+
+    void trace(JSTracer* trc);
+    void sweep(FreeOp* fop);
+
+   private:
     // Check if the global array-related objects have not been messed with
     // in a way that would disable this PIC.
     bool isArrayStateStillSane();
@@ -215,10 +222,6 @@ struct ForOfPIC {
               canonicalNextFunc_);
     }
 
-    void trace(JSTracer* trc);
-    void sweep(FreeOp* fop);
-
-   private:
     // Check if a matching optimized stub for the given object exists.
     bool hasMatchingStub(ArrayObject* obj);
 

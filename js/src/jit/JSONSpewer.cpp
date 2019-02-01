@@ -21,11 +21,13 @@ using namespace js::jit;
 
 void JSONSpewer::beginFunction(JSScript* script) {
   beginObject();
-  if (script) {
-    formatProperty("name", "%s:%u", script->filename(), script->lineno());
-  } else {
-    property("name", "wasm compilation");
-  }
+  formatProperty("name", "%s:%u", script->filename(), script->lineno());
+  beginListProperty("passes");
+}
+
+void JSONSpewer::beginWasmFunction(unsigned funcIndex) {
+  beginObject();
+  formatProperty("name", "wasm-func%u", funcIndex);
   beginListProperty("passes");
 }
 

@@ -1260,3 +1260,7 @@ skip script test262/harness/detachArrayBuffer.js
 # https://github.com/tc39/test262/pull/1965
 skip script test262/language/expressions/dynamic-import/indirect-resolution.js
 skip script test262/language/expressions/dynamic-import/namespace/default-property-not-set-own.js
+
+# https://github.com/tc39/test262/pull/2023
+skip script test262/language/statements/try/early-catch-var.js
+skip script test262/language/eval-code/direct/var-env-lower-lex-catch-non-strict.js
