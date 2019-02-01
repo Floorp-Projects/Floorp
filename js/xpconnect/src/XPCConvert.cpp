@@ -807,7 +807,7 @@ bool XPCConvert::JSData2Native(JSContext* cx, void* d, HandleValue s,
         return false;
       }
 
-      nsresult err = type.GetDOMObjectInfo().Unwrap(s, (void**)d);
+      nsresult err = type.GetDOMObjectInfo().Unwrap(s, (void**)d, cx);
       if (pErr) {
         *pErr = err;
       }
