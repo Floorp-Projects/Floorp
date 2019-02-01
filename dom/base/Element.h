@@ -1385,17 +1385,6 @@ class Element : public FragmentOrElement {
                                 WidgetEvent* aEvent, nsIContent* aTarget,
                                 bool aFullDispatch, nsEventStatus* aStatus);
 
-  /**
-   * Get the primary frame for this content with flushing
-   *
-   * @param aType the kind of flush to do, typically FlushType::Frames or
-   *              FlushType::Layout
-   * @return the primary frame
-   */
-  nsIFrame* GetPrimaryFrame(FlushType aType);
-  // Work around silly C++ name hiding stuff
-  nsIFrame* GetPrimaryFrame() const { return nsIContent::GetPrimaryFrame(); }
-
   bool IsDisplayContents() const {
     return HasServoData() && Servo_Element_IsDisplayContents(this);
   }
