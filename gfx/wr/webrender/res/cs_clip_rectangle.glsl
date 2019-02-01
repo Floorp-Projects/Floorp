@@ -72,7 +72,8 @@ void main(void) {
         prim_transform,
         clip_transform,
         area,
-        cmi.sub_rect
+        cmi.sub_rect,
+        cmi.snap_offsets
     );
 
     vLocalPos = vi.local_pos;

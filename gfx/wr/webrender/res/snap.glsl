@@ -26,6 +26,9 @@ vec4 compute_snap_positions(
     return world_snap;
 }
 
+/// Given a point within a local rectangle, and the device space corners
+/// of a snapped primitive, return the snap offsets. This *must* exactly
+/// match the logic in the GLSL compute_snap_offset_impl function.
 vec2 compute_snap_offset_impl(
     vec2 reference_pos,
     RectWithSize reference_rect,
