@@ -606,7 +606,7 @@ this.tabs = class extends ExtensionAPI {
             }
 
             // Simple properties
-            const properties = ["index", "pinned", "title"];
+            const properties = ["index", "pinned"];
             for (let prop of properties) {
               if (createProperties[prop] != null) {
                 options[prop] = createProperties[prop];
@@ -626,6 +626,7 @@ this.tabs = class extends ExtensionAPI {
                 return Promise.reject({message: `Cannot create a discarded new tab or "about" urls.`});
               }
               options.createLazyBrowser = true;
+              options.lazyTabTitle = createProperties.title;
             } else if (createProperties.title) {
               return Promise.reject({message: `Title may only be set for discarded tabs.`});
             }
