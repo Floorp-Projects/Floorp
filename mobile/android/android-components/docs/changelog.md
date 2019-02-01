@@ -13,6 +13,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **browser-engine-gecko-nightly**
+  * Tweaked `NestedGeckoView` to "stick" to `AppBar` in nested scroll, like other Android apps. This is possible after a [fix](https://bugzilla.mozilla.org/show_bug.cgi?id=1515774) in APZ gesture detection.
+
 * **feature-customtabs**
   * Added a temporary workaround for Custom Tab intents not being recognized when using the Jetifier tool.
 
