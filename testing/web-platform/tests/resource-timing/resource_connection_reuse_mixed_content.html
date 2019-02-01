@@ -4,7 +4,6 @@
 <meta charset="utf-8" />
 <title>Resource Timing connection reuse</title>
 <link rel="author" title="Google" href="http://www.google.com/" />
-<link rel="help" href="https://www.w3.org/TR/resource-timing/#dom-performanceresourcetiming-initiatortype"/>
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
 <script src="resources/webperftestharness.js"></script>
@@ -25,12 +24,7 @@ function setup_iframe() {
 }
 
 function onload_test() {
-    if (window.performance.getEntriesByType === undefined) {
-      done();
-      return;
-    }
-    const context = new PerformanceContext(iframe.contentWindow.performance);
-    const entries = context.getEntriesByType('resource');
+    const entries = iframe.contentWindow.performance.getEntriesByType('resource');
 
     // When a persistent connection is used, follow-on resources should be included as PerformanceResourceTiming objects.
     test_equals(entries.length, 2, 'There should be 2 PerformanceEntries');
@@ -40,6 +34,7 @@ function onload_test() {
         const entry = entries[1];
         test_equals(entry.fetchStart, entry.connectStart, 'connectStart and fetchStart should be the same');
         test_equals(entry.fetchStart, entry.connectEnd, 'connectEnd and fetchStart should be the same');
+        // secureConnectionStart is the same as fetchStart since the subresource is fetched over https
         test_equals(entry.fetchStart, entry.secureConnectionStart, 'secureConnectionStart and fetchStart should be the same');
         test_equals(entry.fetchStart, entry.domainLookupStart, 'domainLookupStart and fetchStart should be the same')
         test_equals(entry.fetchStart, entry.domainLookupEnd, 'domainLookupEnd and fetchStart should be the same')
@@ -55,6 +50,6 @@ window.setup_iframe = setup_iframe;
 <h1>Description</h1>
 <p>This test validates that connectStart and connectEnd are the same when a connection is reused (e.g. when a persistent connection is used).</p>
 <div id="log"></div>
-<iframe id="frameContext" src="resources/fake_responses.html"></iframe>
+<iframe id="frameContext" src="resources/fake_responses_https.sub.html"></iframe>
 </body>
 </html>
