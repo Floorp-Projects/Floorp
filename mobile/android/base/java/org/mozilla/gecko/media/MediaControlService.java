@@ -39,8 +39,12 @@ public class MediaControlService extends Service {
         Log.d(LOGTAG, "onStartCommand");
 
         if (intent.hasExtra(GeckoMediaControlAgent.EXTRA_NOTIFICATION_DATA)) {
-            currentNotification = GeckoMediaControlAgent.getInstance().createNotification(
-                    (MediaNotification) intent.getParcelableExtra(GeckoMediaControlAgent.EXTRA_NOTIFICATION_DATA));
+            if (GeckoMediaControlAgent.getInstance().isAttachedToContext()) {
+                    currentNotification = GeckoMediaControlAgent.getInstance().createNotification(
+                            (MediaNotification) intent.getParcelableExtra(GeckoMediaControlAgent.EXTRA_NOTIFICATION_DATA));
+            } else {
+                intent.setAction(GeckoMediaControlAgent.ACTION_SHUTDOWN);
+            }
         }
 
         startForeground(R.id.mediaControlNotification, currentNotification);
@@ -53,6 +57,7 @@ public class MediaControlService extends Service {
     private void handleAction(Intent intent, int startId) {
         if (intent.getAction() != null) {
             final String action = intent.getAction();
+            Log.d(LOGTAG, "handleAction, action = " + action);
 
             switch (action) {
                 case GeckoMediaControlAgent.ACTION_SHUTDOWN:
