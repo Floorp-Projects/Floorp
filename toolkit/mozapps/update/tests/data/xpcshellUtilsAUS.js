@@ -2080,8 +2080,7 @@ function stageUpdate(aCheckSvcLog) {
   try {
     // Stage the update.
     Cc["@mozilla.org/updates/update-processor;1"].
-      createInstance(Ci.nsIUpdateProcessor).
-      processUpdate(gUpdateManager.activeUpdate);
+      createInstance(Ci.nsIUpdateProcessor).processUpdate();
   } catch (e) {
     Assert.ok(false,
               "error thrown while calling processUpdate, exception: " + e);
