@@ -6,8 +6,9 @@ Program('minidump_stackwalk')
 
 SOURCES += [
     '/toolkit/crashreporter/google-breakpad/src/common/path_helper.cc',
-    '/toolkit/crashreporter/google-breakpad/src/processor/minidump_stackwalk.cc',
     '/toolkit/crashreporter/google-breakpad/src/processor/simple_symbol_supplier.cc',
+    'http_symbol_supplier.cc',
+    'minidump_stackwalk.cc',
 ]
 
 USE_LIBS += [
@@ -23,6 +24,10 @@ if CONFIG['OS_TARGET'] == 'WINNT':
             '-static-libgcc',
             '-static-libstdc++',
         ]
+
+    OS_LIBS += ['wininet']
+else:
+    OS_LIBS += ['curl']
 
 DisableStlWrapping()
 
