@@ -343,12 +343,14 @@ bool SendCallToMiddleman(size_t aCallId, CallArguments* aArguments,
                          bool aDiverged);
 
 // In the middleman process, perform one or more calls encoded in aInputData
-// and encode their outputs to aOutputData.
-void ProcessMiddlemanCall(const char* aInputData, size_t aInputSize,
+// and encode their outputs to aOutputData. The calls are associated with the
+// specified child process ID.
+void ProcessMiddlemanCall(size_t aChildId,
+                          const char* aInputData, size_t aInputSize,
                           InfallibleVector<char>* aOutputData);
 
-// In the middleman process, reset all call state.
-void ResetMiddlemanCalls();
+// In the middleman process, reset all call state for a child process ID.
+void ResetMiddlemanCalls(size_t aChildId);
 
 ///////////////////////////////////////////////////////////////////////////////
 // Middleman Call Helpers

@@ -691,6 +691,9 @@ function flushRecording() {
     }
   }
 
+  // After flushing the recording there may be more search results.
+  maybeResumeSearch();
+
   gLastRecordingCheckpoint = gActiveChild.lastCheckpoint();
 
   // We now have a usable recording for replaying children.
@@ -988,15 +991,91 @@ const gControl = {
   timeWarp,
 };
 
-// eslint-disable-next-line no-unused-vars
-function ConnectDebugger(dbg) {
-  gDebugger = dbg;
-  dbg._control = gControl;
+////////////////////////////////////////////////////////////////////////////////
+// Search Operations
+////////////////////////////////////////////////////////////////////////////////
+
+let gSearchChild;
+let gSearchRestartNeeded;
+
+function maybeRestartSearch() {
+  if (gSearchRestartNeeded && gSearchChild.paused) {
+    if (gSearchChild.lastPausePoint.checkpoint != FirstCheckpointId ||
+        gSearchChild.lastPausePoint.position) {
+      gSearchChild.sendRestoreCheckpoint(FirstCheckpointId);
+      gSearchChild.waitUntilPaused();
+    }
+    gSearchChild.sendClearBreakpoints();
+    gDebugger._forEachSearch(pos => gSearchChild.sendAddBreakpoint(pos));
+    gSearchRestartNeeded = false;
+    gSearchChild.sendResume({ forward: true });
+    return true;
+  }
+  return false;
 }
+
+function ChildRoleSearch() {}
+
+ChildRoleSearch.prototype = {
+  name: "Search",
+
+  initialize(child, { startup }) {
+    this.child = child;
+  },
+
+  hitExecutionPoint({ point, recordingEndpoint }) {
+    if (maybeRestartSearch()) {
+      return;
+    }
+
+    if (point.position) {
+      gDebugger._onSearchPause(point);
+    }
+
+    if (!recordingEndpoint) {
+      this.poke();
+    }
+  },
+
+  poke() {
+    if (!gSearchRestartNeeded && !this.child.pauseNeeded) {
+      this.child.sendResume({ forward: true });
+    }
+  },
+};
+
+function ensureHasSearchChild() {
+  if (!gSearchChild) {
+    gSearchChild = spawnReplayingChild(new ChildRoleSearch());
+  }
+}
+
+function maybeResumeSearch() {
+  if (gSearchChild && gSearchChild.paused) {
+    gSearchChild.sendResume({ forward: true });
+  }
+}
+
+const gSearchControl = {
+  reset() {
+    ensureHasSearchChild();
+    gSearchRestartNeeded = true;
+    maybeRestartSearch();
+  },
+
+  sendRequest(request) { return gSearchChild.sendDebuggerRequest(request); },
+};
 
 ///////////////////////////////////////////////////////////////////////////////
 // Utilities
 ///////////////////////////////////////////////////////////////////////////////
+
+// eslint-disable-next-line no-unused-vars
+function ConnectDebugger(dbg) {
+  gDebugger = dbg;
+  dbg._control = gControl;
+  dbg._searchControl = gSearchControl;
+}
 
 function dumpv(str) {
   //dump("[ReplayControl] " + str + "\n");

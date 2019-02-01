@@ -94,12 +94,17 @@ void ChildProcessInfo::OnIncomingMessage(const Message& aMsg,
     case MessageType::MiddlemanCallRequest: {
       const MiddlemanCallRequestMessage& nmsg =
           static_cast<const MiddlemanCallRequestMessage&>(aMsg);
-      Message::UniquePtr response(ProcessMiddlemanCallMessage(nmsg));
+      InfallibleVector<char> outputData;
+      ProcessMiddlemanCall(GetId(), nmsg.BinaryData(), nmsg.BinaryDataSize(),
+                           &outputData);
+      Message::UniquePtr response(
+        MiddlemanCallResponseMessage::New(outputData.begin(),
+                                          outputData.length()));
       SendMessage(*response);
       break;
     }
     case MessageType::ResetMiddlemanCalls:
-      ResetMiddlemanCalls();
+      ResetMiddlemanCalls(GetId());
       break;
     default:
       break;
