@@ -772,6 +772,7 @@ class IonBuilder : public MIRGenerator,
   // TypedArray intrinsics.
   enum WrappingBehavior { AllowWrappedTypedArrays, RejectWrappedTypedArrays };
   InliningResult inlineTypedArray(CallInfo& callInfo, Native native);
+  InliningResult inlineIsTypedArrayConstructor(CallInfo& callInfo);
   InliningResult inlineIsTypedArrayHelper(CallInfo& callInfo,
                                           WrappingBehavior wrappingBehavior);
   InliningResult inlineIsTypedArray(CallInfo& callInfo);

@@ -1182,6 +1182,8 @@ bool DoConcatStringObject(JSContext* cx, HandleValue lhs, HandleValue rhs,
 MOZ_MUST_USE bool TrySkipAwait(JSContext* cx, HandleValue val,
                                MutableHandleValue resolved);
 
+bool IsPossiblyWrappedTypedArray(JSContext* cx, JSObject* obj, bool* result);
+
 // VMFunctions shared by JITs
 extern const VMFunction SetArrayLengthInfo;
 extern const VMFunction SetObjectElementInfo;

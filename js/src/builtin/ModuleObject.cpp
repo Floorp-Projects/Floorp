@@ -79,8 +79,7 @@ static bool ModuleValueGetter(JSContext* cx, unsigned argc, Value* vp) {
 // ImportEntryObject
 
 /* static */ const Class ImportEntryObject::class_ = {
-    "ImportEntry", JSCLASS_HAS_RESERVED_SLOTS(ImportEntryObject::SlotCount) |
-                       JSCLASS_IS_ANONYMOUS};
+    "ImportEntry", JSCLASS_HAS_RESERVED_SLOTS(ImportEntryObject::SlotCount)};
 
 DEFINE_GETTER_FUNCTIONS(ImportEntryObject, moduleRequest, ModuleRequestSlot)
 DEFINE_GETTER_FUNCTIONS(ImportEntryObject, importName, ImportNameSlot)
@@ -149,8 +148,7 @@ DEFINE_UINT32_ACCESSOR_METHOD(ImportEntryObject, columnNumber)
 // ExportEntryObject
 
 /* static */ const Class ExportEntryObject::class_ = {
-    "ExportEntry", JSCLASS_HAS_RESERVED_SLOTS(ExportEntryObject::SlotCount) |
-                       JSCLASS_IS_ANONYMOUS};
+    "ExportEntry", JSCLASS_HAS_RESERVED_SLOTS(ExportEntryObject::SlotCount)};
 
 DEFINE_GETTER_FUNCTIONS(ExportEntryObject, exportName, ExportNameSlot)
 DEFINE_GETTER_FUNCTIONS(ExportEntryObject, moduleRequest, ModuleRequestSlot)
@@ -233,8 +231,7 @@ static Value StringOrNullValue(JSString* maybeString) {
 
 /* static */ const Class RequestedModuleObject::class_ = {
     "RequestedModule",
-    JSCLASS_HAS_RESERVED_SLOTS(RequestedModuleObject::SlotCount) |
-        JSCLASS_IS_ANONYMOUS};
+    JSCLASS_HAS_RESERVED_SLOTS(RequestedModuleObject::SlotCount)};
 
 DEFINE_GETTER_FUNCTIONS(RequestedModuleObject, moduleSpecifier,
                         ModuleSpecifierSlot)
@@ -692,7 +689,7 @@ void FunctionDeclaration::trace(JSTracer* trc) {
 
 /* static */ const Class ModuleObject::class_ = {
     "Module",
-    JSCLASS_HAS_RESERVED_SLOTS(ModuleObject::SlotCount) | JSCLASS_IS_ANONYMOUS |
+    JSCLASS_HAS_RESERVED_SLOTS(ModuleObject::SlotCount) |
         JSCLASS_BACKGROUND_FINALIZE,
     &ModuleObject::classOps_};
 

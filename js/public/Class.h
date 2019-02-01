@@ -801,8 +801,8 @@ static const uint32_t JSCLASS_RESERVED_SLOTS_MASK =
 #define JSCLASS_HIGH_FLAGS_SHIFT \
   (JSCLASS_RESERVED_SLOTS_SHIFT + JSCLASS_RESERVED_SLOTS_WIDTH)
 
-static const uint32_t JSCLASS_IS_ANONYMOUS = 1
-                                             << (JSCLASS_HIGH_FLAGS_SHIFT + 0);
+static const uint32_t JSCLASS_INTERNAL_FLAG1 =
+    1 << (JSCLASS_HIGH_FLAGS_SHIFT + 0);
 static const uint32_t JSCLASS_IS_GLOBAL = 1 << (JSCLASS_HIGH_FLAGS_SHIFT + 1);
 static const uint32_t JSCLASS_INTERNAL_FLAG2 =
     1 << (JSCLASS_HIGH_FLAGS_SHIFT + 2);

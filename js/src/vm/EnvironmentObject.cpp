@@ -222,8 +222,7 @@ CallObject* CallObject::createHollowForDebug(JSContext* cx,
 }
 
 const Class CallObject::class_ = {
-    "Call", JSCLASS_IS_ANONYMOUS |
-                JSCLASS_HAS_RESERVED_SLOTS(CallObject::RESERVED_SLOTS)};
+    "Call", JSCLASS_HAS_RESERVED_SLOTS(CallObject::RESERVED_SLOTS)};
 
 /*****************************************************************************/
 
@@ -318,8 +317,7 @@ const Class CallObject::class_ = {
 }
 
 const Class VarEnvironmentObject::class_ = {
-    "Var", JSCLASS_IS_ANONYMOUS | JSCLASS_HAS_RESERVED_SLOTS(
-                                      VarEnvironmentObject::RESERVED_SLOTS)};
+    "Var", JSCLASS_HAS_RESERVED_SLOTS(VarEnvironmentObject::RESERVED_SLOTS)};
 
 /*****************************************************************************/
 
@@ -342,8 +340,7 @@ const ClassOps ModuleEnvironmentObject::classOps_ = {
 
 const Class ModuleEnvironmentObject::class_ = {
     "ModuleEnvironmentObject",
-    JSCLASS_HAS_RESERVED_SLOTS(ModuleEnvironmentObject::RESERVED_SLOTS) |
-        JSCLASS_IS_ANONYMOUS,
+    JSCLASS_HAS_RESERVED_SLOTS(ModuleEnvironmentObject::RESERVED_SLOTS),
     &ModuleEnvironmentObject::classOps_,
     JS_NULL_CLASS_SPEC,
     JS_NULL_CLASS_EXT,
@@ -554,8 +551,7 @@ void ModuleEnvironmentObject::fixEnclosingEnvironmentAfterCompartmentMerge(
 
 const Class WasmInstanceEnvironmentObject::class_ = {
     "WasmInstance",
-    JSCLASS_IS_ANONYMOUS | JSCLASS_HAS_RESERVED_SLOTS(
-                               WasmInstanceEnvironmentObject::RESERVED_SLOTS)};
+    JSCLASS_HAS_RESERVED_SLOTS(WasmInstanceEnvironmentObject::RESERVED_SLOTS)};
 
 /* static */ WasmInstanceEnvironmentObject*
 WasmInstanceEnvironmentObject::createHollowForDebug(
@@ -591,8 +587,7 @@ WasmInstanceEnvironmentObject::createHollowForDebug(
 
 const Class WasmFunctionCallObject::class_ = {
     "WasmCall",
-    JSCLASS_IS_ANONYMOUS |
-        JSCLASS_HAS_RESERVED_SLOTS(WasmFunctionCallObject::RESERVED_SLOTS)};
+    JSCLASS_HAS_RESERVED_SLOTS(WasmFunctionCallObject::RESERVED_SLOTS)};
 
 /* static */ WasmFunctionCallObject*
 WasmFunctionCallObject::createHollowForDebug(JSContext* cx,
@@ -791,8 +786,7 @@ static const ObjectOps WithEnvironmentObjectOps = {
 
 const Class WithEnvironmentObject::class_ = {
     "With",
-    JSCLASS_HAS_RESERVED_SLOTS(WithEnvironmentObject::RESERVED_SLOTS) |
-        JSCLASS_IS_ANONYMOUS,
+    JSCLASS_HAS_RESERVED_SLOTS(WithEnvironmentObject::RESERVED_SLOTS),
     JS_NULL_CLASS_OPS,
     JS_NULL_CLASS_SPEC,
     JS_NULL_CLASS_EXT,
@@ -818,8 +812,7 @@ const Class WithEnvironmentObject::class_ = {
 
 const Class NonSyntacticVariablesObject::class_ = {
     "NonSyntacticVariablesObject",
-    JSCLASS_HAS_RESERVED_SLOTS(NonSyntacticVariablesObject::RESERVED_SLOTS) |
-        JSCLASS_IS_ANONYMOUS};
+    JSCLASS_HAS_RESERVED_SLOTS(NonSyntacticVariablesObject::RESERVED_SLOTS)};
 
 bool js::CreateNonSyntacticEnvironmentChain(JSContext* cx,
                                             AutoObjectVector& envChain,
@@ -1069,8 +1062,7 @@ void LexicalEnvironmentObject::setWindowProxyThisValue(JSObject* obj) {
 
 const Class LexicalEnvironmentObject::class_ = {
     "LexicalEnvironment",
-    JSCLASS_HAS_RESERVED_SLOTS(LexicalEnvironmentObject::RESERVED_SLOTS) |
-        JSCLASS_IS_ANONYMOUS,
+    JSCLASS_HAS_RESERVED_SLOTS(LexicalEnvironmentObject::RESERVED_SLOTS),
     JS_NULL_CLASS_OPS,
     JS_NULL_CLASS_SPEC,
     JS_NULL_CLASS_EXT,
@@ -1211,8 +1203,7 @@ static const ObjectOps RuntimeLexicalErrorObjectObjectOps = {
 
 const Class RuntimeLexicalErrorObject::class_ = {
     "RuntimeLexicalError",
-    JSCLASS_HAS_RESERVED_SLOTS(RuntimeLexicalErrorObject::RESERVED_SLOTS) |
-        JSCLASS_IS_ANONYMOUS,
+    JSCLASS_HAS_RESERVED_SLOTS(RuntimeLexicalErrorObject::RESERVED_SLOTS),
     JS_NULL_CLASS_OPS,
     JS_NULL_CLASS_SPEC,
     JS_NULL_CLASS_EXT,

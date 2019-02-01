@@ -608,8 +608,7 @@ bool GeneralParser<ParseHandler, Unit>::noteDeclaredName(
 
   switch (kind) {
     case DeclarationKind::Var:
-    case DeclarationKind::BodyLevelFunction:
-    case DeclarationKind::ForOfVar: {
+    case DeclarationKind::BodyLevelFunction: {
       Maybe<DeclarationKind> redeclaredKind;
       uint32_t prevPos;
       if (!pc->tryDeclareVar(name, kind, pos.begin, &redeclaredKind,
@@ -1882,8 +1881,7 @@ bool PerHandlerParser<ParseHandler>::declareFunctionArgumentsObject() {
   // declared 'var arguments', we still need to declare 'arguments' in the
   // function scope.
   DeclaredNamePtr p = varScope.lookupDeclaredName(argumentsName);
-  if (p && (p->value()->kind() == DeclarationKind::Var ||
-            p->value()->kind() == DeclarationKind::ForOfVar)) {
+  if (p && p->value()->kind() == DeclarationKind::Var) {
     if (hasExtraBodyVarScope) {
       tryDeclareArguments = true;
     } else {
@@ -4154,11 +4152,6 @@ GeneralParser<ParseHandler, Unit>::declarationPattern(
       *forHeadKind = ParseNodeKind::ForIn;
     } else if (isForOf) {
       *forHeadKind = ParseNodeKind::ForOf;
-
-      // Annex B.3.5 has different early errors for vars in for-of loops.
-      if (declKind == DeclarationKind::Var) {
-        declKind = DeclarationKind::ForOfVar;
-      }
     } else {
       *forHeadKind = ParseNodeKind::ForHead;
     }
@@ -4306,11 +4299,6 @@ GeneralParser<ParseHandler, Unit>::declarationName(DeclarationKind declKind,
         *forHeadKind = ParseNodeKind::ForIn;
       } else if (isForOf) {
         *forHeadKind = ParseNodeKind::ForOf;
-
-        // Annex B.3.5 has different early errors for vars in for-of loops.
-        if (declKind == DeclarationKind::Var) {
-          declKind = DeclarationKind::ForOfVar;
-        }
       } else {
         *forHeadKind = ParseNodeKind::ForHead;
       }
