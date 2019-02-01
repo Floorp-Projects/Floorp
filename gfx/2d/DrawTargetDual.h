@@ -41,6 +41,8 @@ namespace gfx {
  */
 class DrawTargetDual : public DrawTarget {
  public:
+  virtual bool IsValid() const override { return mA->IsValid() && mB->IsValid(); };
+
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DrawTargetDual, override)
   DrawTargetDual(DrawTarget *aA, DrawTarget *aB) : mA(aA), mB(aB) {
     mFormat = aA->GetFormat();
