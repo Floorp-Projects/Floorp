@@ -127,6 +127,14 @@ function Toolbox(target, selectedTool, hostType, contentWindow, frameId,
   this.frameMap = new Map();
   this.selectedFrameId = null;
 
+  /**
+   * KeyShortcuts instance specific to WINDOW host type.
+   * This is the key shortcuts that are only register when the toolbox
+   * is loaded in its own window. Otherwise, these shortcuts are typically
+   * registered by devtools-startup.js module.
+   */
+  this._windowHostShortcuts = null;
+
   this._toolRegistered = this._toolRegistered.bind(this);
   this._toolUnregistered = this._toolUnregistered.bind(this);
   this._onWillNavigate = this._onWillNavigate.bind(this);
@@ -946,23 +954,6 @@ Toolbox.prototype = {
                    event.preventDefault();
                  });
 
-    // Close toolbox key-shortcut handler
-    const onClose = event => this.closeToolbox();
-    this.shortcuts.on(L10N.getStr("toolbox.toggleToolboxF12.key"), onClose);
-
-    // CmdOrCtrl+W is registered only when the toolbox is running in
-    // detached window. In the other case the entire browser tab
-    // is closed when the user uses this shortcut.
-    if (this.hostType == "window") {
-      this.shortcuts.on(L10N.getStr("toolbox.closeToolbox.key"), onClose);
-    }
-
-    if (AppConstants.platform == "macosx") {
-      this.shortcuts.on(L10N.getStr("toolbox.toggleToolboxOSX.key"), onClose);
-    } else {
-      this.shortcuts.on(L10N.getStr("toolbox.toggleToolbox.key"), onClose);
-    }
-
     // Add event listeners
     this.doc.addEventListener("keypress", this._splitConsoleOnKeypress);
     this.doc.addEventListener("focus", this._onFocus, true);
@@ -1035,8 +1026,20 @@ Toolbox.prototype = {
    */
   _addKeysToWindow: function() {
     if (this.hostType != Toolbox.HostType.WINDOW) {
+      // If we are toggling back to other host type, we should unregister the window
+      // listeners
+      if (this._windowHostShortcuts) {
+        this._windowHostShortcuts.destroy();
+        this._windowHostShortcuts = null;
+      }
       return;
     }
+    if (!this._windowHostShortcuts) {
+      this._windowHostShortcuts = new KeyShortcuts({
+        window: this.doc.defaultView,
+      });
+    }
+    const shortcuts = this._windowHostShortcuts;
 
     for (const item of Startup.KeyShortcuts) {
       const { id, toolId, shortcut, modifiers } = item;
@@ -1044,16 +1047,30 @@ Toolbox.prototype = {
 
       if (id == "browserConsole") {
         // Add key for toggling the browser console from the detached window
-        this.shortcuts.on(electronKey, () => {
+        shortcuts.on(electronKey, () => {
           HUDService.toggleBrowserConsole();
         });
       } else if (toolId) {
         // KeyShortcuts contain tool-specific and global key shortcuts,
         // here we only need to copy shortcut specific to each tool.
-        this.shortcuts.on(electronKey, () => {
+        shortcuts.on(electronKey, () => {
           this.selectTool(toolId, "key_shortcut").then(() => this.fireCustomKey(toolId));
         });
       }
+    }
+
+    // CmdOrCtrl+W is registered only when the toolbox is running in
+    // detached window. In the other case the entire browser tab
+    // is closed when the user uses this shortcut.
+    shortcuts.on(L10N.getStr("toolbox.closeToolbox.key"), this.closeToolbox);
+
+    // The others are only registered in window host type as for other hosts,
+    // these keys are already registered by devtools-startup.js
+    shortcuts.on(L10N.getStr("toolbox.toggleToolboxF12.key"), this.closeToolbox);
+    if (AppConstants.platform == "macosx") {
+      shortcuts.on(L10N.getStr("toolbox.toggleToolboxOSX.key"), this.closeToolbox);
+    } else {
+      shortcuts.on(L10N.getStr("toolbox.toggleToolbox.key"), this.closeToolbox);
     }
   },
 
@@ -1557,8 +1574,6 @@ Toolbox.prototype = {
     if (toolDefinition.buildToolStartup && !this._toolStartups.has(id)) {
       this._toolStartups.set(id, toolDefinition.buildToolStartup(this));
     }
-
-    this._addKeysToWindow();
   },
 
   /**
