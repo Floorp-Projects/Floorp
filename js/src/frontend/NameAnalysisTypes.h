@@ -72,7 +72,6 @@ enum class DeclarationKind : uint8_t {
   FormalParameter,
   CoverArrowParameter,
   Var,
-  ForOfVar,
   Let,
   Const,
   Class,  // Handled as same as `let` after parsing.
@@ -97,7 +96,6 @@ static inline BindingKind DeclarationKindToBindingKind(DeclarationKind kind) {
     case DeclarationKind::BodyLevelFunction:
     case DeclarationKind::ModuleBodyLevelFunction:
     case DeclarationKind::VarForAnnexBLexicalFunction:
-    case DeclarationKind::ForOfVar:
       return BindingKind::Var;
 
     case DeclarationKind::Let:

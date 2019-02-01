@@ -348,8 +348,7 @@ TypedObjectModuleObject& js::GlobalObject::getTypedObjectModule() const {
 }
 
 const Class GlobalObject::OffThreadPlaceholderObject::class_ = {
-    "off-thread-prototype-placeholder",
-    JSCLASS_IS_ANONYMOUS | JSCLASS_HAS_RESERVED_SLOTS(1)};
+    "off-thread-prototype-placeholder", JSCLASS_HAS_RESERVED_SLOTS(1)};
 
 /* static */ GlobalObject::OffThreadPlaceholderObject*
 GlobalObject::OffThreadPlaceholderObject::New(JSContext* cx, unsigned slot) {
