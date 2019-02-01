@@ -7,7 +7,7 @@
 const promise = require("devtools/shared/deprecated-sync-thenables");
 
 const eventSource = require("devtools/shared/client/event-source");
-const {DebuggerClient} = require("devtools/shared/client/debugger-client");
+const {arg, DebuggerClient} = require("devtools/shared/client/debugger-client");
 
 /**
  * Breakpoint clients are used to remove breakpoints that are no longer used.
@@ -21,10 +21,10 @@ const {DebuggerClient} = require("devtools/shared/client/debugger-client");
  * @param location object
  *        The location of the breakpoint. This is an object with two properties:
  *        url and line.
- * @param condition string
- *        The conditional expression of the breakpoint
+ * @param options object
+ *        Any options associated with the breakpoint
  */
-function BreakpointClient(client, sourceClient, actor, location, condition) {
+function BreakpointClient(client, sourceClient, actor, location, options) {
   this._client = client;
   this._actor = actor;
   this.location = location;
@@ -32,11 +32,7 @@ function BreakpointClient(client, sourceClient, actor, location, condition) {
   this.location.url = sourceClient.url;
   this.source = sourceClient;
   this.request = this._client.request;
-
-  // The condition property should only exist if it's a truthy value
-  if (condition) {
-    this.condition = condition;
-  }
+  this.options = options;
 }
 
 BreakpointClient.prototype = {
@@ -56,32 +52,46 @@ BreakpointClient.prototype = {
     type: "delete",
   }),
 
+  // Send a setOptions request to newer servers.
+  setOptionsRequester: DebuggerClient.requester({
+    type: "setOptions",
+    options: arg(0),
+  }, {
+    before(packet) {
+      this.options = packet.options;
+      return packet;
+    },
+  }),
+
   /**
-   * Set the condition of this breakpoint
+   * Set any options for this breakpoint.
    */
-  setCondition: function(gThreadClient, condition) {
-    const deferred = promise.defer();
+  setOptions: function(options) {
+    if (this._client.mainRoot.traits.nativeLogpoints) {
+      this.setOptionsRequester(options);
+    } else {
+      // Older servers need to reinstall breakpoints when the condition changes.
+      const deferred = promise.defer();
 
-    const info = {
-      line: this.location.line,
-      column: this.location.column,
-      condition: condition,
-    };
+      const info = {
+        line: this.location.line,
+        column: this.location.column,
+        options,
+      };
 
-    // Remove the current breakpoint and add a new one with the
-    // condition.
-    this.remove(response => {
-      if (response && response.error) {
-        deferred.reject(response);
-        return;
-      }
+      // Remove the current breakpoint and add a new one with the specified
+      // information.
+      this.remove(response => {
+        if (response && response.error) {
+          deferred.reject(response);
+          return;
+        }
 
-      deferred.resolve(this.source.setBreakpoint(info).then(([, newBreakpoint]) => {
-        return newBreakpoint;
-      }));
-    });
-
-    return deferred.promise;
+        deferred.resolve(this.source.setBreakpoint(info).then(([, newBreakpoint]) => {
+          return newBreakpoint;
+        }));
+      });
+    }
   },
 };
 

@@ -726,14 +726,23 @@ void UnmapPages(void* region, size_t length) {
 }
 
 bool MarkPagesUnused(void* region, size_t length) {
-  MOZ_RELEASE_ASSERT(region && OffsetFromAligned(region, pageSize) == 0);
-  MOZ_RELEASE_ASSERT(length > 0 && length % pageSize == 0);
+  MOZ_RELEASE_ASSERT(region);
+  MOZ_RELEASE_ASSERT(length > 0);
+
+  // pageSize == ArenaSize doesn't necessarily hold, but this function is
+  // used by the GC to decommit unused Arenas, so we don't want to assert
+  // if pageSize > ArenaSize.
+  MOZ_ASSERT(OffsetFromAligned(region, ArenaSize) == 0);
+  MOZ_ASSERT(length % ArenaSize == 0);
 
   MOZ_MAKE_MEM_NOACCESS(region, length);
 
   if (!DecommitEnabled()) {
     return true;
   }
+  // We can't decommit part of a page.
+  MOZ_RELEASE_ASSERT(OffsetFromAligned(region, pageSize) == 0);
+  MOZ_RELEASE_ASSERT(length % pageSize == 0);
 
 #if defined(XP_WIN)
   return VirtualAlloc(region, length, MEM_RESET,
@@ -746,10 +755,23 @@ bool MarkPagesUnused(void* region, size_t length) {
 }
 
 void MarkPagesInUse(void* region, size_t length) {
-  MOZ_RELEASE_ASSERT(region && OffsetFromAligned(region, pageSize) == 0);
-  MOZ_RELEASE_ASSERT(length > 0 && length % pageSize == 0);
+  MOZ_RELEASE_ASSERT(region);
+  MOZ_RELEASE_ASSERT(length > 0);
+
+  // pageSize == ArenaSize doesn't necessarily hold, but this function is
+  // used by the GC to recommit Arenas that were previously decommitted,
+  // so we don't want to assert if pageSize > ArenaSize.
+  MOZ_ASSERT(OffsetFromAligned(region, ArenaSize) == 0);
+  MOZ_ASSERT(length % ArenaSize == 0);
 
   MOZ_MAKE_MEM_UNDEFINED(region, length);
+
+  if (!DecommitEnabled()) {
+    return;
+  }
+  // We can't commit part of a page.
+  MOZ_RELEASE_ASSERT(OffsetFromAligned(region, pageSize) == 0);
+  MOZ_RELEASE_ASSERT(length % pageSize == 0);
 }
 
 size_t GetPageFaultCount() {
