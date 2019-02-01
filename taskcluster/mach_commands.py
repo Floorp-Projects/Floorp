@@ -149,9 +149,6 @@ class MachCommands(MachCommandBase):
     @CommandArgument('--comm-head-rev',
                      required=False,
                      help='Commit revision to use from head comm-* repository')
-    @CommandArgument('--message',
-                     required=True,
-                     help='Commit message to be parsed. Example: "try: -b do -p all -u all"')
     @CommandArgument('--project',
                      required=True,
                      help='Project to use for creating task graph. Example: --project=try')

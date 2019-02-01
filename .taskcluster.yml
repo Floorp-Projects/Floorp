@@ -13,7 +13,7 @@
 # - cron tasks - See taskcluster/taskgraph/cron/decision.py
 #   {
 #     tasks_for: 'cron',
-#     push: {revision, pushlog_id, pushdate, owner, comment}
+#     push: {revision, pushlog_id, pushdate, owner}
 #     repository: {url, project, level},
 #     cron: {task_id, job_name, job_symbol, quoted_args},
 #     now,
@@ -188,7 +188,6 @@ tasks:
                 GECKO_HEAD_REPOSITORY: '${repoUrl}'
                 GECKO_HEAD_REF: '${push.revision}'
                 GECKO_HEAD_REV: '${push.revision}'
-                GECKO_COMMIT_MSG: {$if: 'tasks_for != "action"', then: '${push.comment}'}
                 HG_STORE_PATH: /builds/worker/checkouts/hg-store
                 TASKCLUSTER_CACHES: /builds/worker/checkouts
                 # someday, these will be provided by the worker - Bug 1492664
@@ -237,7 +236,6 @@ tasks:
                   --pushlog-id='${push.pushlog_id}'
                   --pushdate='${push.pushdate}'
                   --project='${repository.project}'
-                  --message="$GECKO_COMMIT_MSG"
                   --owner='${ownerEmail}'
                   --level='${repository.level}'
                   --base-repository="$GECKO_BASE_REPOSITORY"
