@@ -79,6 +79,7 @@ class nsNSSComponent final : public nsINSSComponent, public nsIObserver {
 
   void setValidationOptions(bool isInitialSetting,
                             const mozilla::MutexAutoLock& proofOfLock);
+  void UpdateCertVerifierWithEnterpriseRoots();
   nsresult setEnabledTLSVersions();
   nsresult RegisterObservers();
 
@@ -87,8 +88,6 @@ class nsNSSComponent final : public nsINSSComponent, public nsIObserver {
   void UnloadEnterpriseRoots();
 
   bool ShouldEnableEnterpriseRootsForFamilySafety(uint32_t familySafetyMode);
-
-  nsresult TrustLoaded3rdPartyRoots();
 
   // mLoadableRootsLoadedMonitor protects mLoadableRootsLoaded.
   mozilla::Monitor mLoadableRootsLoadedMonitor;
@@ -107,7 +106,7 @@ class nsNSSComponent final : public nsINSSComponent, public nsIObserver {
   RefPtr<mozilla::psm::SharedCertVerifier> mDefaultCertVerifier;
   nsString mMitmCanaryIssuer;
   bool mMitmDetecionEnabled;
-  mozilla::UniqueCERTCertList mEnterpriseRoots;
+  mozilla::Vector<mozilla::Vector<uint8_t>> mEnterpriseRoots;
 
   // The following members are accessed only on the main thread:
   static int mInstanceCount;

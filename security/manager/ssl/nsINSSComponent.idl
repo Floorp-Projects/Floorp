@@ -46,13 +46,13 @@ interface nsINSSComponent : nsISupports {
 
   /**
    * If enabled by the preference "security.enterprise_roots.enabled", returns
-   * an nsIX509CertList representing the imported enterprise root certificates
-   * (i.e. root certificates gleaned from the OS certificate store). Returns
-   * null otherwise.
-   * Currently this is only implemented on Windows, so this function returns
-   * null on all other platforms.
+   * an array of arrays of bytes representing the imported enterprise root
+   * certificates (i.e. root certificates gleaned from the OS certificate
+   * store). Returns an empty array otherwise.
+   * Currently this is only implemented on Windows and MacOS X, so this
+   * function returns an empty array on all other platforms.
    */
-  [noscript] nsIX509CertList getEnterpriseRoots();
+  Array<Array<octet> > getEnterpriseRoots();
 
   /**
    * For performance reasons, the builtin roots module is loaded on a background

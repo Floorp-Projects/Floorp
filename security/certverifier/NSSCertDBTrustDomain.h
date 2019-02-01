@@ -106,7 +106,9 @@ class NSSCertDBTrustDomain : public mozilla::pkix::TrustDomain {
       CertVerifier::SHA1Mode sha1Mode,
       NetscapeStepUpPolicy netscapeStepUpPolicy,
       DistrustedCAPolicy distrustedCAPolicy,
-      const OriginAttributes& originAttributes, UniqueCERTCertList& builtChain,
+      const OriginAttributes& originAttributes,
+      const Vector<mozilla::pkix::Input>& thirdPartyRootInputs,
+      /*out*/ UniqueCERTCertList& builtChain,
       /*optional*/ PinningTelemetryInfo* pinningTelemetryInfo = nullptr,
       /*optional*/ const char* hostname = nullptr);
 
@@ -214,6 +216,7 @@ class NSSCertDBTrustDomain : public mozilla::pkix::TrustDomain {
   DistrustedCAPolicy mDistrustedCAPolicy;
   bool mSawDistrustedCAByPolicyError;
   const OriginAttributes& mOriginAttributes;
+  const Vector<mozilla::pkix::Input>& mThirdPartyRootInputs;  // non-owning
   UniqueCERTCertList& mBuiltChain;  // non-owning
   PinningTelemetryInfo* mPinningTelemetryInfo;
   const char* mHostname;  // non-owning - only used for pinning checks

@@ -11,46 +11,57 @@
 
 do_get_profile(); // must be called before getting nsIX509CertDB
 
-function check_no_enterprise_roots_imported(certDB, dbKey = undefined) {
-  let enterpriseRoots = certDB.getEnterpriseRoots();
-  equal(enterpriseRoots, null, "should not have imported any enterprise roots");
+async function check_no_enterprise_roots_imported(nssComponent, certDB, dbKey = undefined) {
+  let enterpriseRoots = nssComponent.getEnterpriseRoots();
+  notEqual(enterpriseRoots, null, "enterprise roots list should not be null");
+  equal(enterpriseRoots.length, 0, "should not have imported any enterprise roots");
   if (dbKey) {
     let cert = certDB.findCertByDBKey(dbKey);
     // If the garbage-collector hasn't run, there may be reachable copies of
     // imported enterprise root certificates. If so, they shouldn't be trusted
     // to issue TLS server auth certificates.
     if (cert) {
-      ok(!certDB.isCertTrusted(cert, Ci.nsIX509Cert.CA_CERT,
-                               Ci.nsIX509CertDB.TRUSTED_SSL),
-         "previously-imported enterprise root shouldn't be trusted to issue " +
-         "TLS server auth certificates");
+      await asyncTestCertificateUsages(certDB, cert, []);
     }
   }
 }
 
-function check_some_enterprise_roots_imported(certDB) {
-  let enterpriseRoots = certDB.getEnterpriseRoots();
-  notEqual(enterpriseRoots, null, "should have imported some enterprise roots");
+function der_array_to_string(derArray) {
+  let derString = "";
+  for (let b of derArray) {
+    derString += String.fromCharCode(b);
+  }
+  return derString;
+}
+
+async function check_some_enterprise_roots_imported(nssComponent, certDB) {
+  let enterpriseRoots = nssComponent.getEnterpriseRoots();
+  notEqual(enterpriseRoots, null, "enterprise roots list should not be null");
+  notEqual(enterpriseRoots.length, 0, "should have imported some enterprise roots");
   let foundNonBuiltIn = false;
   let savedDBKey = null;
-  for (let cert of enterpriseRoots.getEnumerator()) {
+  for (let certDer of enterpriseRoots) {
+    let cert = certDB.constructX509(der_array_to_string(certDer));
+    notEqual(cert, null, "should be able to decode cert from DER");
     if (!cert.isBuiltInRoot && !savedDBKey) {
       foundNonBuiltIn = true;
       savedDBKey = cert.dbKey;
       info("saving dbKey from " + cert.commonName);
+      await asyncTestCertificateUsages(certDB, cert, [certificateUsageSSLCA]);
+      break;
     }
   }
   ok(foundNonBuiltIn, "should have found non-built-in root");
   return savedDBKey;
 }
 
-function run_test() {
-  let certDB = Cc["@mozilla.org/security/x509certdb;1"]
-                 .getService(Ci.nsIX509CertDB);
+add_task(async function run_test() {
+  let nssComponent = Cc["@mozilla.org/psm;1"].getService(Ci.nsINSSComponent);
+  let certDB = Cc["@mozilla.org/security/x509certdb;1"].getService(Ci.nsIX509CertDB);
   Services.prefs.setBoolPref("security.enterprise_roots.enabled", false);
-  check_no_enterprise_roots_imported(certDB);
+  await check_no_enterprise_roots_imported(nssComponent, certDB);
   Services.prefs.setBoolPref("security.enterprise_roots.enabled", true);
-  let savedDBKey = check_some_enterprise_roots_imported(certDB);
+  let savedDBKey = await check_some_enterprise_roots_imported(nssComponent, certDB);
   Services.prefs.setBoolPref("security.enterprise_roots.enabled", false);
-  check_no_enterprise_roots_imported(certDB, savedDBKey);
-}
+  await check_no_enterprise_roots_imported(nssComponent, certDB, savedDBKey);
+});

@@ -7,9 +7,9 @@
 #ifndef EnterpriseRoots_h
 #define EnterpriseRoots_h
 
-#include "ErrorList.h"
-#include "ScopedNSSTypes.h"
+#include "mozilla/Vector.h"
 
-nsresult GatherEnterpriseRoots(mozilla::UniqueCERTCertList& result);
+nsresult GatherEnterpriseRoots(
+    mozilla::Vector<mozilla::Vector<uint8_t>>& roots);
 
 #endif  // EnterpriseRoots_h
