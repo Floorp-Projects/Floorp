@@ -346,16 +346,6 @@ bool WebGLShader::UnmapUniformBlockName(
   return mValidator->UnmapUniformBlockName(baseMappedName, out_baseUserName);
 }
 
-void WebGLShader::EnumerateFragOutputs(
-    std::map<nsCString, const nsCString>& out_FragOutputs) const {
-  out_FragOutputs.clear();
-
-  if (!mValidator) {
-    return;
-  }
-  mValidator->EnumerateFragOutputs(out_FragOutputs);
-}
-
 void WebGLShader::MapTransformFeedbackVaryings(
     const std::vector<nsString>& varyings,
     std::vector<std::string>* out_mappedVaryings) const {
