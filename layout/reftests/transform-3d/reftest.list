@@ -60,7 +60,7 @@ fuzzy-if((gtkWidget&&layersOMTC)||(winWidget&&!layersGPUAccelerated),0-1,0-86) =
 == transform-style-flat-1a.html transform-style-flat-1-ref.html
 == willchange-containing-block.html?willchange willchange-containing-block.html?ref
 != willchange-containing-block.html?willchange willchange-containing-block.html?noblock
-fuzzy-if(winWidget&&!layersGPUAccelerated,0-1,0-606) fuzzy-if(webrender,0-3,0-304) == scroll-perspective-1.html scroll-perspective-1-ref.html
+fuzzy-if(winWidget&&!layersGPUAccelerated,0-1,0-606) == scroll-perspective-1.html scroll-perspective-1-ref.html
 # Bugs
 fails-if(!layersGPUAccelerated) fuzzy-if(webrender,0-23,0-826) == 1035611-1.html 1035611-1-ref.html # Bug 1072898 for !layersGPUAccelerated failures
 != 1157984-1.html about:blank # Bug 1157984
@@ -82,7 +82,7 @@ fuzzy(0-1,0-10000) == opacity-preserve3d-4.html opacity-preserve3d-4-ref.html
 == opacity-preserve3d-5.html opacity-preserve3d-5-ref.html
 == snap-perspective-1.html snap-perspective-1-ref.html
 == mask-layer-1.html mask-layer-ref.html
-== mask-layer-2.html mask-layer-ref.html
+fuzzy-if(webrender&&gtkWidget,8-8,100-100) == mask-layer-2.html mask-layer-ref.html
 fuzzy-if(webrender,0-16,0-100) == mask-layer-3.html mask-layer-ref.html
 == split-intersect1.html split-intersect1-ref.html
 fuzzy(0-255,0-150) == split-intersect2.html split-intersect2-ref.html
