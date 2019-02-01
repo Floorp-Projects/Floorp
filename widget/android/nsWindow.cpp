@@ -2186,20 +2186,15 @@ void nsWindow::RecvScreenPixels(Shmem&& aMem, const ScreenIntSize& aSize) {
 }
 
 nsresult nsWindow::SetPrefersReducedMotionOverrideForTest(bool aValue) {
-  nsXPLookAndFeel* xpLookAndFeel = nsLookAndFeel::GetInstance();
-
-  static_cast<nsLookAndFeel*>(xpLookAndFeel)
-      ->SetPrefersReducedMotionOverrideForTest(aValue);
+  nsXPLookAndFeel::GetInstance()->SetPrefersReducedMotionOverrideForTest(
+      aValue);
 
   java::GeckoSystemStateListener::NotifyPrefersReducedMotionChangedForTest();
   return NS_OK;
 }
 
 nsresult nsWindow::ResetPrefersReducedMotionOverrideForTest() {
-  nsXPLookAndFeel* xpLookAndFeel = nsLookAndFeel::GetInstance();
-
-  static_cast<nsLookAndFeel*>(xpLookAndFeel)
-      ->ResetPrefersReducedMotionOverrideForTest();
+  nsXPLookAndFeel::GetInstance()->ResetPrefersReducedMotionOverrideForTest();
   return NS_OK;
 }
 

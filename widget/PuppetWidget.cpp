@@ -28,6 +28,7 @@
 #include "nsIWidgetListener.h"
 #include "imgIContainer.h"
 #include "nsView.h"
+#include "nsXPLookAndFeel.h"
 #include "nsPrintfCString.h"
 
 using namespace mozilla;
@@ -903,10 +904,8 @@ struct CursorSurface {
   IntSize mSize;
 };
 
-void PuppetWidget::SetCursor(nsCursor aCursor,
-                             imgIContainer* aCursorImage,
-                             uint32_t aHotspotX,
-                             uint32_t aHotspotY) {
+void PuppetWidget::SetCursor(nsCursor aCursor, imgIContainer* aCursorImage,
+                             uint32_t aHotspotX, uint32_t aHotspotY) {
   if (!mTabChild) {
     return;
   }
@@ -945,7 +944,8 @@ void PuppetWidget::SetCursor(nsCursor aCursor,
 
   mCustomCursor = nullptr;
 
-  nsDependentCString cursorData(customCursorData ? customCursorData.get() : "", length);
+  nsDependentCString cursorData(customCursorData ? customCursorData.get() : "",
+                                length);
   if (!mTabChild->SendSetCursor(aCursor, hasCustomCursor, cursorData,
                                 customCursorSize.width, customCursorSize.height,
                                 stride, format, aHotspotX, aHotspotY, force)) {
@@ -1409,6 +1409,9 @@ nsresult PuppetWidget::SetPrefersReducedMotionOverrideForTest(bool aValue) {
     return NS_ERROR_FAILURE;
   }
 
+  nsXPLookAndFeel::GetInstance()->SetPrefersReducedMotionOverrideForTest(
+      aValue);
+
   mTabChild->SendSetPrefersReducedMotionOverrideForTest(aValue);
   return NS_OK;
 }
@@ -1418,6 +1421,7 @@ nsresult PuppetWidget::ResetPrefersReducedMotionOverrideForTest() {
     return NS_ERROR_FAILURE;
   }
 
+  nsXPLookAndFeel::GetInstance()->ResetPrefersReducedMotionOverrideForTest();
   mTabChild->SendResetPrefersReducedMotionOverrideForTest();
   return NS_OK;
 }
