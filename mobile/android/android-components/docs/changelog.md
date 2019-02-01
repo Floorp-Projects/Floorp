@@ -83,6 +83,9 @@ permalink: /changelog/
     }
   ```
 
+* **feature-contextmenu**
+  * The component is now performing [haptic feedback](https://material.io/design/platform-guidance/android-haptics.html#) when showing a context menu.
+
 * **browser-engine-gecko**, **browser-engine-gecko-beta**, **browser-engine-gecko-nightly**
   * After "Merge Day" and the release of Firefox 65 we updated our gecko-based components to follow the new upstream versions:
     * `browser-engine-gecko`: 65.0

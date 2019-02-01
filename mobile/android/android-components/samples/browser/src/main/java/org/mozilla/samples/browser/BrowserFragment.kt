@@ -98,7 +98,8 @@ class BrowserFragment : Fragment(), BackHandler {
             ContextMenuCandidate.defaultCandidates(
                 requireContext(),
                 components.tabsUseCases,
-                layout))
+                layout),
+            layout.engineView)
 
         promptFeature = PromptFeature(
             fragment = this,

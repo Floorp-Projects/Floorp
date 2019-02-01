@@ -6,9 +6,11 @@ package mozilla.components.feature.contextmenu
 
 import android.support.annotation.VisibleForTesting
 import android.support.v4.app.FragmentManager
+import android.view.HapticFeedbackConstants
 import mozilla.components.browser.session.SelectionAwareSessionObserver
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 
@@ -28,11 +30,13 @@ internal const val FRAGMENT_TAG = "mozac_feature_contextmenu_dialog"
  * all candidates ([ContextMenuCandidate.showFor]) in order to determine which candidates want to show up in the context
  * menu. If a context menu item was selected by the user the feature will invoke the [ContextMenuCandidate.action]
  * method of the related candidate.
+ * @property engineView The [EngineView]] this feature component should show context menus for.
  */
 class ContextMenuFeature(
     private val fragmentManager: FragmentManager,
     private val sessionManager: SessionManager,
     private val candidates: List<ContextMenuCandidate>,
+    private val engineView: EngineView,
     private val sessionId: String? = null
 ) : LifecycleAwareFeature {
     private val observer = ContextMenuObserver(sessionManager, feature = this)
@@ -92,6 +96,9 @@ class ContextMenuFeature(
             session.hitResult.consume { true }
             return
         }
+
+        // We know that we are going to show a context menu. Now is the time to perform the haptic feedback.
+        engineView.asView().performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
 
         val fragment = ContextMenuFragment.create(session, hitResult.src, ids, labels)
         fragment.feature = this
