@@ -6,7 +6,23 @@
 <androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <PreferenceCategory
+    <androidx.preference.Preference
+        android:key="@string/pref_key_sign_in"
+        android:layout="@layout/sign_in_preference"
+        android:summary="@string/preferences_sign_in_description"
+        android:title="@string/preferences_sign_in" />
+
+    <androidx.preference.PreferenceCategory
+        android:title="@string/preferences_category_account"
+        app:iconSpaceReserved="false">
+        <androidx.preference.Preference
+            android:icon="@drawable/ic_shortcuts"
+            android:key="@string/pref_key_account"
+            android:summary="user@email.com"
+            android:title="User Name" />
+    </androidx.preference.PreferenceCategory>
+
+    <androidx.preference.PreferenceCategory
         android:title="@string/preferences_category_basics"
         app:iconSpaceReserved="false">
         <androidx.preference.Preference
@@ -27,9 +43,9 @@
         <androidx.preference.SwitchPreference
             android:key="@string/pref_key_make_default_browser"
             android:title="@string/preferences_set_as_default_browser" />
-    </PreferenceCategory>
+    </androidx.preference.PreferenceCategory>
 
-    <PreferenceCategory
+    <androidx.preference.PreferenceCategory
         android:title="@string/preferences_category_advanced"
         app:iconSpaceReserved="false">
         <androidx.preference.Preference
@@ -48,9 +64,9 @@
             android:icon="@drawable/ic_data_collection"
             android:key="@string/pref_key_data_choices"
             android:title="@string/preferences_data_choices" />
-    </PreferenceCategory>
+    </androidx.preference.PreferenceCategory>
 
-    <PreferenceCategory
+    <androidx.preference.PreferenceCategory
         android:title="@string/preferences_category_about"
         app:iconSpaceReserved="false">
         <androidx.preference.Preference
@@ -69,5 +85,5 @@
             android:icon="@drawable/ic_about"
             android:key="@string/pref_key_about"
             android:title="@string/preferences_about" />
-    </PreferenceCategory>
+    </androidx.preference.PreferenceCategory>
 </androidx.preference.PreferenceScreen>
