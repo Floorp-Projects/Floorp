@@ -131,6 +131,17 @@ class JS_FRIEND_API Wrapper : public ForwardingProxyHandler {
 
   virtual bool finalizeInBackground(const Value& priv) const override;
 
+  /**
+   * A hook subclasses can override to implement CheckedUnwrapDynamic
+   * behavior.  The JSContext represents the "who is trying to unwrap?" Realm.
+   * The JSObject is the wrapper that the caller is trying to unwrap.
+   */
+  virtual bool dynamicCheckedUnwrapAllowed(HandleObject obj,
+                                           JSContext* cx) const {
+    MOZ_ASSERT(hasSecurityPolicy(), "Why are you asking?");
+    return false;
+  }
+
   using BaseProxyHandler::Action;
 
   enum Flags { CROSS_COMPARTMENT = 1 << 0, LAST_USED_FLAG = CROSS_COMPARTMENT };
@@ -387,14 +398,28 @@ JS_FRIEND_API JSObject* UncheckedUnwrap(JSObject* obj,
                                         bool stopAtWindowProxy = true,
                                         unsigned* flagsp = nullptr);
 
-// Given a JSObject, returns that object stripped of wrappers. At each stage,
-// the security wrapper has the opportunity to veto the unwrap. If
-// stopAtWindowProxy is true, then this returns the WindowProxy if it was
-// previously wrapped.
+// Given a JSObject, returns that object stripped of wrappers, except
+// WindowProxy wrappers.  At each stage, the wrapper has the opportunity to veto
+// the unwrap. Null is returned if there are security wrappers that can't be
+// unwrapped.
+//
+// This does a static-only unwrap check: it basically checks whether _all_
+// globals in the wrapper's source compartment should be able to access the
+// wrapper target.  This won't necessarily return the right thing for the HTML
+// spec's cross-origin objects (WindowProxy and Location), but is fine to use
+// when failure to unwrap one of those objects wouldn't be a problem.  For
+// example, if you want to test whether your target object is a specific class
+// that's not WindowProxy or Location, you can use this.
 //
 // ExposeToActiveJS is called on wrapper targets to allow gray marking
 // assertions to work while an incremental GC is in progress, but this means
 // that this cannot be called from the GC or off the main thread.
+JS_FRIEND_API JSObject* CheckedUnwrapStatic(JSObject* obj);
+
+// Old CheckedUnwrap API that we would like to remove once we convert all
+// callers to CheckedUnwrapStatic or CheckedUnwrapDynamic.  If stopAtWindowProxy
+// is true, then this returns the WindowProxy if a WindowProxy is encountered;
+// otherwise it will unwrap the WindowProxy and return a Window.
 JS_FRIEND_API JSObject* CheckedUnwrap(JSObject* obj,
                                       bool stopAtWindowProxy = true);
 
@@ -402,6 +427,36 @@ JS_FRIEND_API JSObject* CheckedUnwrap(JSObject* obj,
 // above. This is the checked version of Wrapper::wrappedObject.
 JS_FRIEND_API JSObject* UnwrapOneChecked(JSObject* obj,
                                          bool stopAtWindowProxy = true);
+
+// Given a JSObject, returns that object stripped of wrappers. At each stage,
+// the security wrapper has the opportunity to veto the unwrap. If
+// stopAtWindowProxy is true, then this returns the WindowProxy if it was
+// previously wrapped.  Null is returned if there are security wrappers that
+// can't be unwrapped.
+//
+// ExposeToActiveJS is called on wrapper targets to allow gray marking
+// assertions to work while an incremental GC is in progress, but this means
+// that this cannot be called from the GC or off the main thread.
+//
+// The JSContext argument will be used for dynamic checks (needed by WindowProxy
+// and Location) and should represent the Realm doing the unwrapping.  It is not
+// used to throw exceptions; this function never throws.
+//
+// This function may be able to GC (and the static analysis definitely thinks it
+// can), but it still takes a JSObject* argument, because some of its callers
+// would actually have a bit of a hard time producing a Rooted.  And it ends up
+// having to root internally anyway, because it wants to use the value in a loop
+// and you can't assign to a HandleObject.  What this means is that callers who
+// plan to use the argument object after they have called this function will
+// need to root it to avoid hazard failures, even though this function doesn't
+// require a Handle.
+JS_FRIEND_API JSObject* CheckedUnwrapDynamic(JSObject* obj, JSContext* cx,
+                                             bool stopAtWindowProxy = true);
+
+// Unwrap only the outermost security wrapper, with the same semantics as
+// above. This is the checked version of Wrapper::wrappedObject.
+JS_FRIEND_API JSObject* UnwrapOneCheckedDynamic(HandleObject obj, JSContext* cx,
+                                                bool stopAtWindowProxy = true);
 
 // Given a JSObject, returns that object stripped of wrappers. This returns the
 // WindowProxy if it was previously wrapped.
