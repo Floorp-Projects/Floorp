@@ -8,16 +8,22 @@
         style="@style/Mozac.Browser.Menu.Item.Container"
         android:layout_width="match_parent"
         android:orientation="horizontal"
-        android:gravity="center_vertical">
+        android:clickable="true"
+        android:gravity="center_vertical"
+        android:focusable="true">
 
     <android.support.v7.widget.AppCompatImageView
             android:id="@+id/image"
             style="@style/Mozac.Browser.Menu.Item.ImageText.Icon"
+            android:clickable="false"
+            android:background="@android:color/transparent"
             tools:src="@android:drawable/screen_background_dark"/>
 
     <TextView
             android:id="@+id/text"
             style="@style/Mozac.Browser.Menu.Item.ImageText.Label"
+            android:clickable="false"
+            android:background="@android:color/transparent"
             android:gravity="center_vertical"
             tools:text="Item"/>
 </LinearLayout>

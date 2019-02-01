@@ -15,6 +15,7 @@ import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.BrowserMenuItemToolbar
 import mozilla.components.browser.menu.item.BrowserMenuCheckbox
 import mozilla.components.browser.menu.item.BrowserMenuDivider
+import mozilla.components.browser.menu.item.BrowserMenuImageText
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.browser.session.Session
@@ -99,7 +100,7 @@ open class DefaultComponents(private val applicationContext: Context) {
     private val menuItems by lazy {
         listOf(
                 menuToolbar,
-                SimpleBrowserMenuItem("Share") {
+                BrowserMenuImageText("Share", R.drawable.mozac_ic_share, "share button", android.R.color.black) {
                     Toast.makeText(applicationContext, "Share", Toast.LENGTH_SHORT).show()
                 },
                 SimpleBrowserMenuItem("Settings") {
