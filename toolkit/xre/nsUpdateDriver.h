@@ -65,7 +65,7 @@ class nsUpdateProcessor final : public nsIUpdateProcessor {
   ~nsUpdateProcessor();
 
   struct StagedUpdateInfo {
-    StagedUpdateInfo() : mArgc(0), mArgv(nullptr), mIsOSUpdate(false) {}
+    StagedUpdateInfo() : mArgc(0), mArgv(nullptr) {}
     ~StagedUpdateInfo() {
       for (int i = 0; i < mArgc; ++i) {
         delete[] mArgv[i];
@@ -76,11 +76,9 @@ class nsUpdateProcessor final : public nsIUpdateProcessor {
     nsCOMPtr<nsIFile> mGREDir;
     nsCOMPtr<nsIFile> mAppDir;
     nsCOMPtr<nsIFile> mUpdateRoot;
-    nsCOMPtr<nsIFile> mOSApplyToDir;
     int mArgc;
     char **mArgv;
     nsCString mAppVersion;
-    bool mIsOSUpdate;
   };
 
  private:

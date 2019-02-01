@@ -399,14 +399,9 @@ interface nsIApplicationUpdateService : nsISupports
 interface nsIUpdateProcessor : nsISupports
 {
   /**
-   * Processes the update which has been downloaded.
-   * This happens without restarting the application.
-   * On Windows, this can also be used for switching to an applied
-   * update request.
-   * @param update The update being applied, or null if this is a switch
-   *               to updated application request.
+   * Stages an update while the application is running.
    */
-  void processUpdate(in nsIUpdate update);
+  void processUpdate();
 
   /**
    * Attempts to fix the permissions of the update directory. This can be done

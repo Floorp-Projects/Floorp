@@ -4474,11 +4474,11 @@ void MacroAssembler::moveValue(const TypedOrValueRegister& src,
     return;
   }
 
-  ScratchDoubleScope scratch(*this);
+  ScratchFloat32Scope scratch(*this);
   FloatRegister freg = reg.fpu();
   if (type == MIRType::Float32) {
-    convertFloat32ToDouble(freg, ScratchFloat32Reg);
-    freg = ScratchFloat32Reg;
+    convertFloat32ToDouble(freg, scratch);
+    freg = scratch;
   }
   ma_vxfer(freg, dest.payloadReg(), dest.typeReg());
 }

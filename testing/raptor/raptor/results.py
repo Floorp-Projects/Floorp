@@ -66,17 +66,17 @@ class RaptorResultsHandler():
             self.supporting_data = []
         self.supporting_data.append(supporting_data)
 
-    def summarize_and_output(self, test_config):
+    def summarize_and_output(self, test_config, test_names):
         # summarize the result data, write to file and output PERFHERDER_DATA
         LOG.info("summarizing raptor test results")
         output = Output(self.results, self.supporting_data, test_config['subtest_alert_on'])
-        output.summarize()
+        output.summarize(test_names)
         output.summarize_screenshots(self.images)
         # only dump out supporting data (i.e. power) if actual Raptor test completed
         if self.supporting_data is not None and len(self.results) != 0:
             output.summarize_supporting_data()
-            output.output_supporting_data()
-        return output.output()
+            output.output_supporting_data(test_names)
+        return output.output(test_names)
 
 
 class RaptorTestResult():
