@@ -32,7 +32,7 @@ class Output(object):
         self.summarized_screenshots = []
         self.subtest_alert_on = subtest_alert_on
 
-    def summarize(self):
+    def summarize(self, test_names):
         suites = []
         test_results = {
             'framework': {
@@ -43,7 +43,8 @@ class Output(object):
 
         # check if we actually have any results
         if len(self.results) == 0:
-            LOG.error("error: no raptor test results found!")
+            LOG.error("error: no raptor test results found for %s" %
+                      ', '.join(test_names))
             return
 
         for test in self.results:
@@ -134,7 +135,8 @@ class Output(object):
                 suite['subtests'] = subtests
 
             else:
-                LOG.error("output.summarize received unsupported test results type")
+                LOG.error("output.summarize received unsupported test results type for %s" %
+                          test.name)
                 return
 
             # for benchmarks there is generally  more than one subtest in each cycle
@@ -602,10 +604,11 @@ class Output(object):
 
         self.summarized_screenshots.append("""</table></body> </html>""")
 
-    def output(self):
+    def output(self, test_names):
         """output to file and perfherder data json """
         if self.summarized_results == {}:
-            LOG.error("error: no summarized raptor results found!")
+            LOG.error("error: no summarized raptor results found for %s" %
+                      ', '.join(test_names))
             return False
 
         if os.environ['MOZ_UPLOAD_DIR']:
@@ -650,7 +653,7 @@ class Output(object):
 
         return True
 
-    def output_supporting_data(self):
+    def output_supporting_data(self, test_names):
         '''
         Supporting data was gathered outside of the main raptor test; it has already
         been summarized, now output it appropriately.
@@ -661,7 +664,8 @@ class Output(object):
         from the actual Raptor test that was ran when the supporting data was gathered.
         '''
         if len(self.summarized_supporting_data) == 0:
-            LOG.error("error: no summarized supporting data found!")
+            LOG.error("error: no summarized supporting data found for %s" %
+                      ', '.join(test_names))
             return False
 
         for next_data_set in self.summarized_supporting_data:
