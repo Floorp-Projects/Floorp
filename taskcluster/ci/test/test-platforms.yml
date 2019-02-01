@@ -253,6 +253,7 @@ windows10-64-qr/debug:
     build-platform: win64/debug
     test-sets:
         - windows-qr-tests
+        - web-platform-tests
 
 windows10-64-qr/opt:
     build-platform: win64/opt
@@ -261,6 +262,7 @@ windows10-64-qr/opt:
         - windows-qr-tests
         - windows-talos
         - raptor-firefox
+        - web-platform-tests
 
 ##
 # MacOS X platforms (matching /macosx.*/)
