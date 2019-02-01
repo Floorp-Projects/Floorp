@@ -14,6 +14,9 @@ private object Versions {
     const val androidx_appcompat = "1.0.2"
     const val androidx_constraint_layout = "2.0.0-alpha3"
     const val androidx_preference = "1.1.0-alpha02"
+    const val androidx_legacy = "1.0.0"
+    const val androidx_annotation = "1.0.1"
+    const val androidx_lifecycle = "2.0.0"
 
     const val mozilla_android_components = "0.41.0-SNAPSHOT"
 
@@ -21,7 +24,6 @@ private object Versions {
     const val test_tools = "1.0.2"
     const val espresso_core = "2.2.2"
 
-    const val androidx_legacy = "1.0.0"
     const val android_arch_navigation = "1.0.0-alpha11"
 }
 
@@ -41,9 +43,6 @@ object Deps {
 
     const val geckoview_nightly_arm = "org.mozilla.geckoview:geckoview-nightly-armeabi-v7a:${Versions.geckoNightly}"
     const val geckoview_nightly_x86 = "org.mozilla.geckoview:geckoview-nightly-x86:${Versions.geckoNightly}"
-
-    const val androidx_appcompat = "androidx.appcompat:appcompat:${Versions.androidx_appcompat}"
-    const val androidx_constraintlayout = "androidx.constraintlayout:constraintlayout:${Versions.androidx_constraint_layout}"
 
     const val mozilla_concept_engine = "org.mozilla.components:concept-engine:${Versions.mozilla_android_components}"
     const val mozilla_concept_tabstray = "org.mozilla.components:concept-tabstray:${Versions.mozilla_android_components}"
@@ -79,6 +78,7 @@ object Deps {
 
     const val mozilla_lib_crash = "org.mozilla.components:lib-crash:${Versions.mozilla_android_components}"
 
+    const val mozilla_support_base = "org.mozilla.components:support-base:${Versions.mozilla_android_components}"
     const val mozilla_support_ktx = "org.mozilla.components:support-ktx:${Versions.mozilla_android_components}"
 
     const val sentry = "io.sentry:sentry-android:${Versions.sentry}"
@@ -87,8 +87,13 @@ object Deps {
     const val tools_test_runner = "com.android.support.test:runner:${Versions.test_tools}"
     const val tools_espresso_core = "com.android.support.test.espresso:espresso-core:${Versions.espresso_core}"
 
+    const val androidx_annotation = "androidx.annotation:annotation:${Versions.androidx_annotation}"
+    const val androidx_appcompat = "androidx.appcompat:appcompat:${Versions.androidx_appcompat}"
+    const val androidx_constraintlayout = "androidx.constraintlayout:constraintlayout:${Versions.androidx_constraint_layout}"
     const val androidx_legacy = "androidx.legacy:legacy-support-v4:${Versions.androidx_legacy}"
+    const val androidx_lifecycle_runtime = "androidx.lifecycle:lifecycle-runtime:${Versions.androidx_lifecycle}"
     const val androidx_preference = "androidx.preference:preference-ktx:${Versions.androidx_preference}"
     const val android_arch_navigation = "android.arch.navigation:navigation-fragment:${Versions.android_arch_navigation}"
+
 }
 

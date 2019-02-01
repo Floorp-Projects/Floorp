@@ -89,7 +89,8 @@ androidExtensions {
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation project(':architecture')
+
     implementation Deps.kotlin_stdlib
     implementation Deps.androidx_appcompat
     implementation Deps.androidx_constraintlayout

@@ -7,7 +7,6 @@ package org.mozilla.fenix.mvi
 import io.reactivex.ObservableTransformer
 import io.reactivex.subjects.Subject
 import mozilla.components.support.base.log.logger.Logger
-import org.mozilla.fenix.BuildConfig
 
 /**
  * An action is a command or intent the user performed
