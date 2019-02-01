@@ -62,6 +62,7 @@ class RulesView {
     this.onToggleSelectorHighlighter = this.onToggleSelectorHighlighter.bind(this);
     this.showDeclarationNameEditor = this.showDeclarationNameEditor.bind(this);
     this.showDeclarationValueEditor = this.showDeclarationValueEditor.bind(this);
+    this.showNewDeclarationEditor = this.showNewDeclarationEditor.bind(this);
     this.showSelectorEditor = this.showSelectorEditor.bind(this);
     this.updateClassList = this.updateClassList.bind(this);
     this.updateRules = this.updateRules.bind(this);
@@ -90,6 +91,7 @@ class RulesView {
       onToggleSelectorHighlighter: this.onToggleSelectorHighlighter,
       showDeclarationNameEditor: this.showDeclarationNameEditor,
       showDeclarationValueEditor: this.showDeclarationValueEditor,
+      showNewDeclarationEditor: this.showNewDeclarationEditor,
       showSelectorEditor: this.showSelectorEditor,
     });
 
@@ -474,6 +476,39 @@ class RulesView {
       multiline: true,
       popup: this.autocompletePopup,
       property: declaration,
+    });
+  }
+
+  /**
+   * Shows the new inplace editor for a new declaration.
+   *
+   * @param  {DOMNode} element
+   *         A new declaration span element to be edited.
+   * @param  {String} ruleId
+   *         The id of the Rule object to be edited.
+   * @param  {Function} callback
+   *         A callback function that is called when the inplace editor is destroyed.
+   */
+  showNewDeclarationEditor(element, ruleId, callback) {
+    new InplaceEditor({
+      advanceChars: ":",
+      contentType: InplaceEditor.CONTENT_TYPES.CSS_PROPERTY,
+      cssProperties: this.cssProperties,
+      destroy: () => {
+        callback();
+      },
+      done: (value, commit) => {
+        if (!commit || !value || !value.trim()) {
+          return;
+        }
+
+        this.elementStyle.addNewDeclaration(ruleId, value);
+        this.telemetry.recordEvent("edit_rule", "ruleview", null, {
+          "session_id": this.toolbox.sessionId,
+        });
+      },
+      element,
+      popup: this.autocompletePopup,
     });
   }
 
