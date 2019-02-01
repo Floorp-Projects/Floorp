@@ -526,8 +526,8 @@ class MP4ContainerParser : public ContainerParser,
       // consumers of ParseStartAndEndTimestamps to add their timestamp offset
       // manually. This allows the ContainerParser to be shared across different
       // timestampOffsets.
-      mParser = new MoofParser(mStream, 0, /* aIsAudio = */ false,
-                               /* aIsMultitrackParser */ true);
+      mParser = new MoofParser(mStream, AsVariant(ParseAllTracks{}),
+                               /* aIsAudio = */ false);
       DDLINKCHILD("parser", mParser.get());
       mInitData = new MediaByteBuffer();
       mCompleteInitSegmentRange = MediaByteRange();
