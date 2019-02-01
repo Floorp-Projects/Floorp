@@ -3301,86 +3301,98 @@ static bool TryAttachFunCallStub(JSContext* cx, ICCall_Fallback* stub,
 static bool GetTemplateObjectForNative(JSContext* cx, HandleFunction target,
                                        const CallArgs& args,
                                        MutableHandleObject res) {
-  Native native = target->native();
+  if (!target->hasJitInfo() ||
+      target->jitInfo()->type() != JSJitInfo::InlinableNative) {
+    return true;
+  }
 
   // Check for natives to which template objects can be attached. This is
   // done to provide templates to Ion for inlining these natives later on.
+  switch (target->jitInfo()->inlinableNative) {
+    case InlinableNative::Array: {
+      // Note: the template array won't be used if its length is inaccurately
+      // computed here.  (We allocate here because compilation may occur on a
+      // separate thread where allocation is impossible.)
+      size_t count = 0;
+      if (args.length() != 1) {
+        count = args.length();
+      } else if (args.length() == 1 && args[0].isInt32() &&
+                 args[0].toInt32() >= 0) {
+        count = args[0].toInt32();
+      }
 
-  if (native == ArrayConstructor || native == array_construct) {
-    // Note: the template array won't be used if its length is inaccurately
-    // computed here.  (We allocate here because compilation may occur on a
-    // separate thread where allocation is impossible.)
-    size_t count = 0;
-    if (args.length() != 1) {
-      count = args.length();
-    } else if (args.length() == 1 && args[0].isInt32() &&
-               args[0].toInt32() >= 0) {
-      count = args[0].toInt32();
-    }
+      if (count > ArrayObject::EagerAllocationMaxLength) {
+        return true;
+      }
 
-    if (count <= ArrayObject::EagerAllocationMaxLength) {
       // With this and other array templates, analyze the group so that
       // we don't end up with a template whose structure might change later.
       res.set(NewFullyAllocatedArrayForCallingAllocationSite(cx, count,
                                                              TenuredObject));
       return !!res;
     }
-  }
 
-  if (args.length() == 1) {
-    size_t len = 0;
-
-    if (args[0].isInt32() && args[0].toInt32() >= 0) {
-      len = args[0].toInt32();
-    }
-
-    if (!TypedArrayObject::GetTemplateObjectForNative(cx, native, len, res)) {
-      return false;
-    }
-    if (res) {
-      return true;
-    }
-  }
-
-  if (native == js::array_slice) {
-    if (args.thisv().isObject()) {
-      RootedObject obj(cx, &args.thisv().toObject());
-      if (!obj->isSingleton()) {
-        res.set(NewFullyAllocatedArrayTryReuseGroup(cx, obj, 0, TenuredObject));
-        return !!res;
+    case InlinableNative::ArraySlice: {
+      if (!args.thisv().isObject()) {
+        return true;
       }
+
+      RootedObject obj(cx, &args.thisv().toObject());
+      if (obj->isSingleton()) {
+        return true;
+      }
+
+      res.set(NewFullyAllocatedArrayTryReuseGroup(cx, obj, 0, TenuredObject));
+      return !!res;
     }
-  }
 
-  if (native == StringConstructor) {
-    RootedString emptyString(cx, cx->runtime()->emptyString);
-    res.set(StringObject::create(cx, emptyString, /* proto = */ nullptr,
-                                 TenuredObject));
-    return !!res;
-  }
+    case InlinableNative::String: {
+      RootedString emptyString(cx, cx->runtime()->emptyString);
+      res.set(StringObject::create(cx, emptyString, /* proto = */ nullptr,
+                                   TenuredObject));
+      return !!res;
+    }
 
-  if (native == obj_create && args.length() == 1 && args[0].isObjectOrNull()) {
-    RootedObject proto(cx, args[0].toObjectOrNull());
-    res.set(ObjectCreateImpl(cx, proto, TenuredObject));
-    return !!res;
-  }
+    case InlinableNative::ObjectCreate: {
+      if (args.length() != 1 || !args[0].isObjectOrNull()) {
+        return true;
+      }
+      RootedObject proto(cx, args[0].toObjectOrNull());
+      res.set(ObjectCreateImpl(cx, proto, TenuredObject));
+      return !!res;
+    }
 
-  if (native == js::intrinsic_NewArrayIterator) {
-    res.set(NewArrayIteratorObject(cx, TenuredObject));
-    return !!res;
-  }
+    case InlinableNative::IntrinsicNewArrayIterator: {
+      res.set(NewArrayIteratorObject(cx, TenuredObject));
+      return !!res;
+    }
 
-  if (native == js::intrinsic_NewStringIterator) {
-    res.set(NewStringIteratorObject(cx, TenuredObject));
-    return !!res;
-  }
+    case InlinableNative::IntrinsicNewStringIterator: {
+      res.set(NewStringIteratorObject(cx, TenuredObject));
+      return !!res;
+    }
 
-  if (native == js::intrinsic_NewRegExpStringIterator) {
-    res.set(NewRegExpStringIteratorObject(cx, TenuredObject));
-    return !!res;
-  }
+    case InlinableNative::IntrinsicNewRegExpStringIterator: {
+      res.set(NewRegExpStringIteratorObject(cx, TenuredObject));
+      return !!res;
+    }
 
-  return true;
+    case InlinableNative::TypedArrayConstructor: {
+      if (args.length() != 1) {
+        return true;
+      }
+
+      size_t len = 0;
+      if (args[0].isInt32() && args[0].toInt32() >= 0) {
+        len = args[0].toInt32();
+      }
+      return TypedArrayObject::GetTemplateObjectForNative(cx, target->native(),
+                                                          len, res);
+    }
+
+    default:
+      return true;
+  }
 }
 
 static bool GetTemplateObjectForClassHook(JSContext* cx, JSNative hook,
