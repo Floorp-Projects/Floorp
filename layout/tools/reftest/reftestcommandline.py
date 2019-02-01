@@ -411,50 +411,52 @@ class RemoteArgumentsParser(ReftestArgumentsParser):
                           type=str,
                           dest="adb_path",
                           default=None,
-                          help="path to adb")
+                          help="Path to adb binary.")
 
         self.add_argument("--deviceSerial",
                           action="store",
                           type=str,
                           dest="deviceSerial",
-                          help="adb serial number of remote device to test")
+                          help="adb serial number of remote device. This is required "
+                               "when more than one device is connected to the host. "
+                               "Use 'adb devices' to see connected devices.")
 
         self.add_argument("--remote-webserver",
                           action="store",
                           type=str,
                           dest="remoteWebServer",
-                          help="IP Address of the webserver hosting the reftest content")
+                          help="IP address of the remote web server.")
 
         self.add_argument("--http-port",
                           action="store",
                           type=str,
                           dest="httpPort",
-                          help="port of the web server for http traffic")
+                          help="http port of the remote web server.")
 
         self.add_argument("--ssl-port",
                           action="store",
                           type=str,
                           dest="sslPort",
-                          help="Port for https traffic to the web server")
+                          help="ssl port of the remote web server.")
 
         self.add_argument("--remoteTestRoot",
                           action="store",
                           type=str,
                           dest="remoteTestRoot",
-                          help="remote directory to use as test root "
-                               "(eg. /mnt/sdcard/tests or /data/local/tests)")
+                          help="Remote directory to use as test root "
+                               "(eg. /mnt/sdcard/tests or /data/local/tests).")
 
         self.add_argument("--httpd-path",
                           action="store",
                           type=str,
                           dest="httpdPath",
-                          help="path to the httpd.js file")
+                          help="Path to the httpd.js file.")
 
         self.add_argument("--no-device-info",
                           action="store_false",
                           dest="printDeviceInfo",
                           default=True,
-                          help="do not display verbose diagnostics about the remote device")
+                          help="Do not display verbose diagnostics about the remote device.")
 
     def validate_remote(self, options, automation):
         if options.remoteWebServer is None:

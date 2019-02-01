@@ -1108,21 +1108,22 @@ bool ScriptLoader::InstantiateModuleTree(ModuleLoadRequest* aRequest) {
   return true;
 }
 
-nsresult ScriptLoader::AssociateSourceElementsForModuleTree(
+nsresult ScriptLoader::InitDebuggerDataForModuleTree(
     JSContext* aCx, ModuleLoadRequest* aRequest) {
-  // Preloading can cause JS scripts to be compiled before DOM script element
-  // nodes have been created. This method ensures compiled scripts are
-  // associated with DOM element nodes before execution.
+  // JS scripts can be associated with a DOM element for use by the debugger,
+  // but preloading can cause scripts to be compiled before DOM script element
+  // nodes have been created. This method ensures that this association takes
+  // place before the first time a module script is run.
 
   MOZ_ASSERT(aRequest);
 
   ModuleScript* moduleScript = aRequest->mModuleScript;
-  if (moduleScript->SourceElementAssociated()) {
+  if (moduleScript->DebuggerDataInitialized()) {
     return NS_OK;
   }
 
   for (ModuleLoadRequest* childRequest : aRequest->mImports) {
-    nsresult rv = AssociateSourceElementsForModuleTree(aCx, childRequest);
+    nsresult rv = InitDebuggerDataForModuleTree(aCx, childRequest);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -1133,13 +1134,13 @@ nsresult ScriptLoader::AssociateSourceElementsForModuleTree(
   if (element) {
     nsresult rv = nsJSUtils::InitModuleSourceElement(aCx, module, element);
     NS_ENSURE_SUCCESS(rv, rv);
-    moduleScript->SetSourceElementAssociated();
   }
 
   // The script is now ready to be exposed to the debugger.
   JS::Rooted<JSScript*> script(aCx, JS::GetModuleScript(module));
   JS::ExposeScriptToDebugger(aCx, script);
 
+  moduleScript->SetDebuggerDataInitialized();
   return NS_OK;
 }
 
@@ -2576,10 +2577,8 @@ nsresult ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest) {
       JS::Rooted<JSObject*> module(cx, moduleScript->ModuleRecord());
       MOZ_ASSERT(module);
 
-      if (!moduleScript->SourceElementAssociated()) {
-        rv = AssociateSourceElementsForModuleTree(cx, request);
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
+      rv = InitDebuggerDataForModuleTree(cx, request);
+      NS_ENSURE_SUCCESS(rv, rv);
 
       rv = nsJSUtils::ModuleEvaluate(cx, module);
       MOZ_ASSERT(NS_FAILED(rv) == aes.HasException());

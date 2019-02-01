@@ -171,39 +171,43 @@ class RemoteCPPUnittestOptions(cppunittests.CPPUnittestOptions):
 
         self.add_option("--deviceSerial", action="store",
                         type="string", dest="device_serial",
-                        help="serial ID of device")
+                        help="adb serial number of remote device. This is required "
+                             "when more than one device is connected to the host. "
+                             "Use 'adb devices' to see connected devices.")
         defaults["device_serial"] = None
 
         self.add_option("--adbPath", action="store",
                         type="string", dest="adb_path",
-                        help="Path to adb")
+                        help="Path to adb binary.")
         defaults["adb_path"] = None
 
         self.add_option("--noSetup", action="store_false",
                         dest="setup",
-                        help="do not copy any files to device (to be used only if "
-                        "device is already setup)")
+                        help="Do not copy any files to device (to be used only if "
+                             "device is already setup).")
         defaults["setup"] = True
 
         self.add_option("--localLib", action="store",
                         type="string", dest="local_lib",
-                        help="location of libraries to push -- preferably stripped")
+                        help="Location of libraries to push -- preferably stripped.")
         defaults["local_lib"] = None
 
         self.add_option("--apk", action="store",
                         type="string", dest="local_apk",
-                        help="local path to Fennec APK")
+                        help="Local path to Firefox for Android APK.")
         defaults["local_apk"] = None
 
         self.add_option("--localBinDir", action="store",
                         type="string", dest="local_bin",
-                        help="local path to bin directory")
+                        help="Local path to bin directory.")
         defaults[
             "local_bin"] = build_obj.bindir if build_obj is not None else None
 
         self.add_option("--remoteTestRoot", action="store",
                         type="string", dest="remote_test_root",
-                        help="remote directory to use as test root (eg. /data/local/tests)")
+                        help="Remote directory to use as test root "
+                             "(eg. /mnt/sdcard/tests or /data/local/tests).")
+
         # /data/local/tests is used because it is usually not possible to set +x permissions
         # on binaries on /mnt/sdcard
         defaults["remote_test_root"] = "/data/local/tests"

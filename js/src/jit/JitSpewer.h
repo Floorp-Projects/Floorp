@@ -135,6 +135,7 @@ class GraphSpewer {
   bool isSpewing() const { return graph_; }
   void init(MIRGraph* graph, JSScript* function);
   void beginFunction(JSScript* function);
+  void beginWasmFunction(unsigned funcIndex);
   void spewPass(const char* pass);
   void spewPass(const char* pass, BacktrackingAllocator* ra);
   void endFunction();
@@ -143,6 +144,8 @@ class GraphSpewer {
 };
 
 void SpewBeginFunction(MIRGenerator* mir, JSScript* function);
+void SpewBeginWasmFunction(MIRGenerator* mir, unsigned funcIndex);
+
 class AutoSpewEndFunction {
  private:
   MIRGenerator* mir_;
@@ -202,6 +205,7 @@ class GraphSpewer {
 };
 
 static inline void SpewBeginFunction(MIRGenerator* mir, JSScript* function) {}
+static inline void SpewBeginWasmFunction(MIRGenerator* mir, unsigned funcIndex) {}
 
 class AutoSpewEndFunction {
  public:

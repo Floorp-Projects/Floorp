@@ -202,6 +202,15 @@ void LIRGenerator::visitNewTypedArrayDynamicLength(
   assignSafepoint(lir, ins);
 }
 
+void LIRGenerator::visitNewTypedArrayFromArray(MNewTypedArrayFromArray* ins) {
+  MDefinition* array = ins->array();
+  MOZ_ASSERT(array->type() == MIRType::Object);
+
+  auto* lir = new (alloc()) LNewTypedArrayFromArray(useRegisterAtStart(array));
+  defineReturn(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
 void LIRGenerator::visitNewObject(MNewObject* ins) {
   LNewObject* lir = new (alloc()) LNewObject(temp());
   define(lir, ins);
@@ -4132,6 +4141,10 @@ void LIRGenerator::visitIsTypedArray(MIsTypedArray* ins) {
 
   auto* lir = new (alloc()) LIsTypedArray(useRegister(ins->value()));
   define(lir, ins);
+
+  if (ins->isPossiblyWrapped()) {
+    assignSafepoint(lir, ins);
+  }
 }
 
 void LIRGenerator::visitIsCallable(MIsCallable* ins) {

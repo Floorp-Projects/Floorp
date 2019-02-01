@@ -2299,8 +2299,7 @@ static const JSClassOps FinalizeCounterClassOps = {nullptr, /* addProperty */
                                                    finalize_counter_finalize};
 
 static const JSClass FinalizeCounterClass = {
-    "FinalizeCounter", JSCLASS_IS_ANONYMOUS | JSCLASS_FOREGROUND_FINALIZE,
-    &FinalizeCounterClassOps};
+    "FinalizeCounter", JSCLASS_FOREGROUND_FINALIZE, &FinalizeCounterClassOps};
 
 static bool MakeFinalizeObserver(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
