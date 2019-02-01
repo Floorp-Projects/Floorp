@@ -35,13 +35,13 @@ var UrlbarTestUtils = {
 
   /**
    * Starts a search for a given string and waits for the search to be complete.
-   * @param {string} inputText the search string
    * @param {object} win The window containing the urlbar
+   * @param {string} inputText the search string
    * @param {function} waitForFocus The Simpletest function
    * @param {boolean} fireInputEvent whether an input event should be used when
    *        starting the query (necessary to set userTypedValued)
    */
-  async promiseAutocompleteResultPopup(inputText, win, waitForFocus, fireInputEvent = false) {
+  async promiseAutocompleteResultPopup(win, inputText, waitForFocus, fireInputEvent = false) {
     let urlbar = getUrlbarAbstraction(win);
     let restoreAnimationsFn = urlbar.disableAnimations();
     await new Promise(resolve => waitForFocus(resolve, win));
@@ -92,6 +92,16 @@ var UrlbarTestUtils = {
   },
 
   /**
+   * Gets the index of the currently selected item.
+   * @param {object} win The window containing the urlbar.
+   * @returns {number} The selected index.
+   */
+  getSelectedIndex(win) {
+    let urlbar = getUrlbarAbstraction(win);
+    return urlbar.getSelectedIndex();
+  },
+
+  /**
    * Gets the number of results.
    * You must wait for the query to be complete before using this.
    * @param {object} win The window containing the urlbar
@@ -126,6 +136,18 @@ var UrlbarTestUtils = {
       () => httpserver.connectionNumber == count,
       "Waiting for speculative connection setup"
     );
+  },
+
+  /**
+   * Waits for the popup to be hidden.
+   * @param {object} win The window containing the urlbar
+   * @param {function} [closeFn] Function to be used to close the popup, if not
+   *        supplied it will default to a closing the popup directly.
+   * @returns {Promise} resolved once the popup is closed
+   */
+  promisePopupClose(win, closeFn = null) {
+    let urlbar = getUrlbarAbstraction(win);
+    return urlbar.promisePopupClose(closeFn);
   },
 };
 
@@ -252,13 +274,21 @@ class UrlbarAbstraction {
       this.panel.richlistbox.itemChildren[this.panel.selectedIndex] : null;
   }
 
+  getSelectedIndex() {
+    if (!this.quantumbar) {
+      return this.panel.selectedIndex;
+    }
+
+    return parseInt(this.urlbar.view._selected.getAttribute("resultIndex"));
+  }
+
   getResultCount() {
     return this.quantumbar ? this.urlbar.view._rows.children.length
                            : this.urlbar.controller.matchCount;
   }
 
   async getDetailsOfResultAt(index) {
-    await this.promiseResultAt(index);
+    let element = await this.promiseResultAt(index);
     function getType(style, action) {
       if (style.includes("searchengine") || style.includes("suggestions")) {
         return UrlbarUtils.RESULT_TYPE.SEARCH;
@@ -279,12 +309,30 @@ class UrlbarAbstraction {
       details.url = (UrlbarUtils.getUrlFromResult(context.results[index])).url;
       details.type = context.results[index].type;
       details.autofill = index == 0 && context.autofillValue;
+      details.image = element.getElementsByClassName("urlbarView-favicon")[0].src;
+      if (details.type == UrlbarUtils.RESULT_TYPE.SEARCH) {
+        details.searchParams = {
+          engine: context.results[index].payload.engine,
+          query: context.results[index].payload.query,
+          suggestion: context.results[index].payload.suggestion,
+        };
+      }
     } else {
       details.url = this.urlbar.controller.getFinalCompleteValueAt(index);
       let style = this.urlbar.controller.getStyleAt(index);
       let action = PlacesUtils.parseActionUrl(this.urlbar.controller.getValueAt(index));
       details.type = getType(style, action);
       details.autofill = style.includes("autofill");
+      details.image = element.getAttribute("image");
+      if (details.type == UrlbarUtils.RESULT_TYPE.SEARCH) {
+        details.searchParams = {
+          engine: action.params.engineName,
+          query: action.params.input,
+          suggestion: action.params.input == action.params.searchQuery ?
+                      undefined :
+                      action.params.searchQuery,
+        };
+      }
     }
     return details;
   }
@@ -316,5 +364,25 @@ class UrlbarAbstraction {
         throw new Error("Cannot find a search suggestion");
       }
     });
+  }
+
+  closePopup() {
+    if (this.quantumbar) {
+      this.urlbar.view.close();
+    } else {
+      this.urlbar.popup.hidePopup();
+    }
+  }
+
+  promisePopupClose(closeFn) {
+    if (closeFn) {
+      closeFn();
+    } else {
+      this.closePopup();
+    }
+    if (!this.quantumbar) {
+      return BrowserTestUtils.waitForPopupEvent(this.urlbar.popup, "hidden");
+    }
+    return BrowserTestUtils.waitForPopupEvent(this.urlbar.view.panel, "hidden");
   }
 }
