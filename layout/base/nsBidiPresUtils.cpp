@@ -127,6 +127,8 @@ struct MOZ_STACK_CLASS BidiParagraphData {
   nsBidiLevel mParaLevel;
   nsIContent* mPrevContent;
   nsIFrame* mPrevFrame;
+  // Cache the block frame which needs bidi resolution.
+  const nsIFrame* mBlock;
 #ifdef DEBUG
   // Only used for NOISY debug output.
   nsBlockFrame* mCurrentBlock;
@@ -138,12 +140,16 @@ struct MOZ_STACK_CLASS BidiParagraphData {
         mRequiresBidi(false),
         mParaLevel(nsBidiPresUtils::BidiLevelFromStyle(aBlockFrame->Style())),
         mPrevContent(nullptr),
-        mPrevFrame(nullptr)
+        mPrevFrame(nullptr),
+        mBlock(aBlockFrame)
 #ifdef DEBUG
         ,
         mCurrentBlock(aBlockFrame)
 #endif
   {
+    MOZ_ASSERT(mBlock->FirstContinuation() == mBlock,
+               "mBlock must be the first continuation!");
+
     if (mParaLevel > 0) {
       mRequiresBidi = true;
     }
@@ -1779,7 +1785,9 @@ void nsBidiPresUtils::RemoveBidiContinuation(BidiParagraphData* aBpd,
       // so they can be reused or deleted by normal reflow code
       frame->SetProperty(nsIFrame::BidiDataProperty(), bidiData);
       frame->AddStateBits(NS_FRAME_IS_BIDI);
-      while (frame) {
+
+      // Go no further than the block which needs resolution.
+      while (frame && aBpd->mBlock != frame->FirstContinuation()) {
         nsIFrame* prev = frame->GetPrevContinuation();
         if (prev) {
           MakeContinuationFluid(prev, frame);
