@@ -1164,26 +1164,29 @@ JSLinearString* BigInt::toStringSingleDigitBaseTen(JSContext* cx, Digit digit, b
 
   MOZ_ASSERT(digit != 0, "zero case should have been handled in toString");
 
-  const size_t charsRequired = CeilDiv(digit, 10) + isNegative;
-  auto resultChars = cx->make_pod_array<char>(charsRequired);
-  if (!resultChars) {
-    return nullptr;
-  }
+  constexpr size_t maxLength = 1 + (std::numeric_limits<Digit>::digits10 + 1);
+  static_assert(maxLength == 11 || maxLength == 21,
+                "unexpected decimal string length");
 
-  size_t pos = charsRequired;
+  char resultChars[maxLength];
+  size_t writePos = maxLength;
+
   while (digit != 0) {
-    MOZ_ASSERT(pos);
-    resultChars[--pos] = radixDigits[digit % 10];
+    MOZ_ASSERT(writePos > 0);
+    resultChars[--writePos] = radixDigits[digit % 10];
     digit /= 10;
   }
+  MOZ_ASSERT(writePos < maxLength);
+  MOZ_ASSERT(resultChars[writePos] != '0');
 
   if (isNegative) {
-    MOZ_ASSERT(pos);
-    resultChars[--pos] = '-';
+    MOZ_ASSERT(writePos > 0);
+    resultChars[--writePos] = '-';
   }
 
-  MOZ_ASSERT(pos == 0);
-  return NewStringCopyN<allowGC>(cx, resultChars.get(), charsRequired);
+  MOZ_ASSERT(writePos < maxLength);
+  return NewStringCopyN<allowGC>(cx, resultChars + writePos,
+                                 maxLength - writePos);
 }
 
 static constexpr BigInt::Digit MaxPowerInDigit(uint8_t radix) {
@@ -1806,7 +1809,7 @@ BigInt* BigInt::mod(JSContext* cx, HandleBigInt x, HandleBigInt y) {
       return nullptr;
     }
     MOZ_ASSERT(remainder);
-    return remainder;
+    return destructivelyTrimHighZeroDigits(cx, remainder);
   }
 }
 
@@ -2213,7 +2216,7 @@ uint64_t BigInt::toUint64(BigInt* x) {
 
   uint64_t digit = x->digit(0);
 
-  if (DigitBits == 32 && x->digitLength() >= 1) {
+  if (DigitBits == 32 && x->digitLength() > 1) {
     digit |= static_cast<uint64_t>(x->digit(1)) << 32;
   }
 

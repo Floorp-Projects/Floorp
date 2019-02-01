@@ -33,55 +33,13 @@ if test -z "$bucket" -a -z "$SCCACHE_DISABLE" -a -z "$MOZ_PGO"; then
                 bucket=taskcluster-level-3-sccache-${region}
                 ;;
             esac
-
-            # set a dummy master
-            case "${region}" in
-            eu-central-1)
-                master=dummy.euc1.mozilla.com
-                ;;
-            us-east-1)
-                master=dummy.use1.mozilla.com
-                ;;
-            us-west-1)
-                master=dummy.usw1.mozilla.com
-                ;;
-            us-west-2)
-                master=dummy.usw2.mozilla.com
-                ;;
-            esac
         fi
     fi
 fi
 
-# if platform hasn't been determined from buildprops, and we're on windows,
-# it must be set to prevent adding ac_add_options --with-ccache below
-if test -z "$platform"; then
-    # set platform based on the SYSTEMROOT env var
-    case "${SYSTEMROOT}" in
-    *Windows)
-        platform=windows
-        suffix=.exe
-        ;;
-    esac
-fi
-
 if test -n "$bucket"; then
     mk_add_options "export SCCACHE_BUCKET=$bucket"
-    case "$master" in
-    *us[ew][12].mozilla.com*|*euc1.mozilla.com*)
-        mk_add_options "export SCCACHE_NAMESERVER=169.254.169.253"
-        ;;
-    esac
-    export CCACHE="$topsrcdir/sccache2/sccache${suffix}"
+    export CCACHE="$topsrcdir/sccache2/sccache"
     export SCCACHE_VERBOSE_STATS=1
     mk_add_options MOZBUILD_MANAGE_SCCACHE_DAEMON=${topsrcdir}/sccache2/sccache
-    case "$platform" in
-    win*)
-        # For now, sccache doesn't support separate PDBs so force debug info to be
-        # in object files.
-        mk_add_options "export COMPILE_PDB_FLAG="
-        mk_add_options "export HOST_PDB_FLAG="
-        mk_add_options "export MOZ_DEBUG_FLAGS=-Z7"
-        ;;
-    esac
 fi

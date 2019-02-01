@@ -276,10 +276,8 @@ void TrackUnionStream::CopyTrackData(StreamTracks::Track* aInputTrack,
     interval.mEnd = std::min(interval.mEnd, aTo);
     StreamTime inputEnd =
         source->GraphTimeToStreamTimeWithBlocking(interval.mEnd);
-    StreamTime inputTrackEndPoint = STREAM_TIME_MAX;
 
     if (aInputTrack->IsEnded() && aInputTrack->GetEnd() <= inputEnd) {
-      inputTrackEndPoint = aInputTrack->GetEnd();
       *aOutputTrackFinished = true;
       break;
     }
@@ -309,9 +307,7 @@ void TrackUnionStream::CopyTrackData(StreamTracks::Track* aInputTrack,
                    "Samples missing");
         StreamTime inputStart =
             source->GraphTimeToStreamTimeWithBlocking(interval.mStart);
-        segment->AppendSlice(*aInputTrack->GetSegment(),
-                             std::min(inputTrackEndPoint, inputStart),
-                             std::min(inputTrackEndPoint, inputEnd));
+        segment->AppendSlice(*aInputTrack->GetSegment(), inputStart, inputEnd);
       }
     }
     ApplyTrackDisabling(outputTrack->GetID(), segment);

@@ -2,8 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
-const {gDevTools} = require("devtools/client/framework/devtools");
+loadTestSubscript("head_devtools.js");
 
 function background() {
   browser.test.onMessage.addListener(msg => {
@@ -134,10 +133,7 @@ add_task(async function test_devtools_network_on_navigated() {
   await extension.startup();
   await extension.awaitMessage("ready");
 
-  let target = await gDevTools.getTargetForTab(tab);
-
-  await gDevTools.showToolbox(target, "webconsole");
-  info("Developer toolbox opened.");
+  await openToolboxForTab(tab);
 
   extension.sendMessage("navigate");
   await extension.awaitMessage("tabUpdated");
@@ -153,9 +149,7 @@ add_task(async function test_devtools_network_on_navigated() {
   extension.sendMessage("reload");
   await extension.awaitMessage("tabUpdated");
 
-  await gDevTools.closeToolbox(target);
-
-  await target.destroy();
+  await closeToolboxForTab(tab);
 
   await extension.unload();
 
@@ -172,11 +166,8 @@ add_task(async function test_devtools_network_get_har() {
   await extension.startup();
   await extension.awaitMessage("ready");
 
-  let target = await gDevTools.getTargetForTab(tab);
-
   // Open the Toolbox
-  let toolbox = await gDevTools.showToolbox(target, "webconsole");
-  info("Developer toolbox opened.");
+  const {toolbox} = await openToolboxForTab(tab);
 
   // Get HAR, it should be empty since no data collected yet.
   const getHAREmptyPromise = extension.awaitMessage("getHAR-result");
@@ -205,9 +196,7 @@ add_task(async function test_devtools_network_get_har() {
   is(emptyResultWithPanel.entries.length, 1, "HAR log should not be empty");
 
   // Shutdown
-  await gDevTools.closeToolbox(target);
-
-  await target.destroy();
+  await closeToolboxForTab(tab);
 
   await extension.unload();
 
@@ -223,11 +212,9 @@ add_task(async function test_devtools_network_on_request_finished() {
 
   await extension.startup();
   await extension.awaitMessage("ready");
-  let target = await gDevTools.getTargetForTab(tab);
 
   // Open the Toolbox
-  let toolbox = await gDevTools.showToolbox(target, "webconsole");
-  info("Developer toolbox opened.");
+  const {toolbox} = await openToolboxForTab(tab);
 
   // Wait the extension to subscribe the onRequestFinished listener.
   await extension.sendMessage("addOnRequestFinishedListener");
@@ -255,9 +242,7 @@ add_task(async function test_devtools_network_on_request_finished() {
      "The resolved value is equal to the one received in the callback API mode");
 
   // Shutdown
-  await gDevTools.closeToolbox(target);
-
-  await target.destroy();
+  await closeToolboxForTab(tab);
 
   await extension.unload();
 
