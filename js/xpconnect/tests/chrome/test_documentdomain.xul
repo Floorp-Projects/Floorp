@@ -61,11 +61,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=601277
     ok(!win1A.tryToAccess(winBase), "base must collaborate too");
     ok(!winBase.tryToAccess(win1A), "base must collaborate too");
     ok(!win1A.tryToAccess(win1B), "No longer same-origin");
-    ok(!win1A.tryToAccessStored(), "No longer same-origin");
+    ok(win1A.tryToAccessStored(), "We don't revoke access except through Window and Location");
     ok(!win1B.tryToAccess(win1A), "No longer same-origin");
-    ok(!win1B.tryToAccessStored(), "No longer same-origin");
-    ok(win1A.invokingFunctionThrowsSecurityException('evalFromB'), "No longer same-origin");
-    ok(win1B.invokingFunctionThrowsSecurityException('functionFromA'), "No longer same-origin");
+    ok(win1B.tryToAccessStored(), "We don't revoke access except through Window and Location");
+    ok(!win1A.invokingFunctionThrowsSecurityException('evalFromB'), "We don't revoke access except through Window and Location");
+    ok(!win1B.invokingFunctionThrowsSecurityException('functionFromA'), "We don't revoke access except through Window and Location");
 
     // Set document.domain on test1B. Now we're cooking with gas.
     win1B.setDomain('example.org');

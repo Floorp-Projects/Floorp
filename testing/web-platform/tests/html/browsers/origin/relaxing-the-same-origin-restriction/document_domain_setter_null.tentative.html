@@ -1,35 +1,14 @@
 <!DOCTYPE html>
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
+<script src="support/document_domain_frame.sub.js"></script>
 <body>
 <!-- SEKRITS! -->
 <input id="sekrit" value="omg!">
 
 <script>
-  function postMessageToFrame(frame, message) {
-    return new Promise(resolve => {
-      var c = new MessageChannel();
-      c.port1.onmessage = e => {
-        resolve({ data: e.data, frame: frame })
-      };
-      frame.contentWindow.postMessage(message, '*', [c.port2]);
-    });
-  }
-
-  function createFrame() {
-    return new Promise(resolve => {
-      var i = document.createElement('iframe');
-      i.src = "./support/document_domain_frame.html";
-      window.addEventListener('message', m => {
-        if (m.source == i.contentWindow)
-          resolve(i);
-      });
-      document.body.appendChild(i);
-    });
-  }
-
   promise_test(t => {
-    return createFrame()
+    return createFrame(t)
       .then(f => postMessageToFrame(f, 'poke-at-parent'))
       .then(result => {
         assert_equals(result.data, document.querySelector('#sekrit').value);
@@ -38,7 +17,7 @@
   }, "Access allowed with no 'document.domain' modification. (Sanity check)");
 
   promise_test(t => {
-    return createFrame()
+    return createFrame(t)
       .then(f => postMessageToFrame(f, { domain: null }))
       .then(result => {
         assert_equals(result.data, 'Done');
@@ -51,7 +30,7 @@
   }, "No access when frame sets a `null` 'document.domain'.");
 
   promise_test(t => {
-    return createFrame()
+    return createFrame(t)
       .then(f => {
         document.domain = null;
         assert_equals(document.domain, "null");
@@ -64,7 +43,7 @@
   }, "No access when parent sets a `null` 'document.domain'.");
 
   promise_test(t => {
-    return createFrame()
+    return createFrame(t)
       .then(f => {
         document.domain = null;
         assert_equals(document.domain, "null");
