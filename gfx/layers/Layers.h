@@ -1216,6 +1216,14 @@ class Layer {
     }
   }
 
+  void SetIsAsyncZoomContainer(const Maybe<FrameMetrics::ViewID>& aViewId) {
+    if (mSimpleAttrs.SetIsAsyncZoomContainer(aViewId)) {
+      MOZ_LAYERS_LOG_IF_SHADOWABLE(
+          this, ("Layer::Mutated(%p) IsAsyncZoomContainer", this));
+      MutatedSimple();
+    }
+  }
+
   /**
    * CONSTRUCTION PHASE ONLY
    * This flag is true when the transform on the layer is a perspective
@@ -1359,6 +1367,9 @@ class Layer {
   virtual float GetPostXScale() const { return mSimpleAttrs.GetPostXScale(); }
   virtual float GetPostYScale() const { return mSimpleAttrs.GetPostYScale(); }
   bool GetIsFixedPosition() { return mSimpleAttrs.IsFixedPosition(); }
+  Maybe<FrameMetrics::ViewID> IsAsyncZoomContainer() {
+    return mSimpleAttrs.IsAsyncZoomContainer();
+  }
   bool GetTransformIsPerspective() const {
     return mSimpleAttrs.GetTransformIsPerspective();
   }
