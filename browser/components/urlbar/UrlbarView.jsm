@@ -264,7 +264,11 @@ class UrlbarView {
     item.className = "urlbarView-row";
     item.setAttribute("resultIndex", resultIndex);
 
-    if (result.source == UrlbarUtils.RESULT_SOURCE.TABS) {
+    if (result.type == UrlbarUtils.RESULT_TYPE.SEARCH) {
+      item.setAttribute("type", "search");
+    } else if (result.type == UrlbarUtils.RESULT_TYPE.REMOTE_TAB) {
+      item.setAttribute("type", "remotetab");
+    } else if (result.source == UrlbarUtils.RESULT_SOURCE.TABS) {
       item.setAttribute("type", "tab");
     } else if (result.source == UrlbarUtils.RESULT_SOURCE.BOOKMARKS) {
       item.setAttribute("type", "bookmark");
@@ -307,35 +311,45 @@ class UrlbarView {
       content.appendChild(tagsContainer);
     }
 
-    let secondary = this._createElement("span");
-    secondary.className = "urlbarView-secondary";
+    let action;
+    let url;
+    let setAction = text => {
+      action = this._createElement("span");
+      action.className = "urlbarView-secondary urlbarView-action";
+      action.textContent = text;
+    };
+    let setURL = () => {
+      url = this._createElement("span");
+      url.className = "urlbarView-secondary urlbarView-url";
+      this._addTextContentWithHighlights(url, result.payload.url || "",
+                                         result.payloadHighlights.url || []);
+    };
     switch (result.type) {
       case UrlbarUtils.RESULT_TYPE.TAB_SWITCH:
-        secondary.classList.add("urlbarView-action");
-        secondary.textContent = bundle.GetStringFromName("switchToTab2");
+        setAction(bundle.GetStringFromName("switchToTab2"));
         break;
       case UrlbarUtils.RESULT_TYPE.REMOTE_TAB:
-        secondary.classList.add("urlbarView-action");
-        secondary.textContent = result.payload.device;
+        setAction(result.payload.device);
+        setURL();
         break;
       case UrlbarUtils.RESULT_TYPE.SEARCH:
-        secondary.classList.add("urlbarView-action");
-        secondary.textContent =
-          bundle.formatStringFromName("searchWithEngine",
-                                      [result.payload.engine], 1);
+        setAction(bundle.formatStringFromName("searchWithEngine",
+                                              [result.payload.engine], 1));
         break;
       default:
         if (resultIndex == 0) {
-          secondary.classList.add("urlbarView-action");
-          secondary.textContent = bundle.GetStringFromName("visit");
+          setAction(bundle.GetStringFromName("visit"));
         } else {
-          secondary.classList.add("urlbarView-url");
-          this._addTextContentWithHighlights(secondary, result.payload.url || "",
-                                             result.payloadHighlights.url || []);
+          setURL();
         }
         break;
     }
-    content.appendChild(secondary);
+    if (action) {
+      content.appendChild(action);
+    }
+    if (url) {
+      content.appendChild(url);
+    }
 
     return item;
   }

@@ -3,8 +3,7 @@
 "use strict";
 
 /* import-globals-from ../../../../../toolkit/components/extensions/test/mochitest/head_webrequest.js */
-Services.scriptloader.loadSubScript(new URL("head_webrequest.js", gTestPath).href,
-                                    this);
+loadTestSubscript("head_webrequest.js");
 
 ChromeUtils.import("resource://testing-common/HiddenFrame.jsm", this);
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";

@@ -92,6 +92,7 @@
   background-image: url(chrome://browser/skin/bookmark.svg);
 }
 
+.urlbarView-row[type=remotetab] > .urlbarView-row-inner > .urlbarView-type-icon,
 .urlbarView-row[type=tab] > .urlbarView-row-inner > .urlbarView-type-icon {
   background-image: url(chrome://browser/skin/tab.svg);
 }
@@ -128,6 +129,13 @@
 .urlbarView-row[selected] > .urlbarView-row-inner > .urlbarView-secondary::before,
 .urlbarView-row[selected] > .urlbarView-row-inner > .urlbarView-secondary {
   color: inherit;
+}
+
+.urlbarView-row[type=remotetab][selected] > .urlbarView-row-inner > .urlbarView-action,
+.urlbarView-row[type=remotetab]:hover > .urlbarView-row-inner > .urlbarView-action,
+.urlbarView-row[type=remotetab]:not([selected]):not(:hover) > .urlbarView-row-inner > .urlbarView-url,
+.urlbarView-row[type=search]:not([selected]):not(:hover) > .urlbarView-row-inner > .urlbarView-action {
+  display: none;
 }
 
 .urlbarView-tags {
