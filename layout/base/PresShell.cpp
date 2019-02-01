@@ -7178,38 +7178,46 @@ nsIFrame* PresShell::EventHandler::GetFrameForHandlingEventWith(
   MOZ_ASSERT(aGUIEvent);
   MOZ_ASSERT(aRetargetDocument);
 
-  nsCOMPtr<nsIPresShell> presShell = aRetargetDocument->GetShell();
+  nsCOMPtr<nsIPresShell> retargetPresShell = aRetargetDocument->GetShell();
   // Even if the document doesn't have PresShell, i.e., it's invisible, we
   // need to dispatch only KeyboardEvent in its nearest visible document
   // because key focus shouldn't be caught by invisible document.
-  if (!presShell) {
+  if (!retargetPresShell) {
     if (!aGUIEvent->HasKeyEventMessage()) {
       return nullptr;
     }
     Document* retargetEventDoc = aRetargetDocument;
-    while (!presShell) {
+    while (!retargetPresShell) {
       retargetEventDoc = retargetEventDoc->GetParentDocument();
       if (!retargetEventDoc) {
         return nullptr;
       }
-      presShell = retargetEventDoc->GetShell();
+      retargetPresShell = retargetEventDoc->GetShell();
     }
   }
 
-  if (presShell != mPresShell) {
-    nsIFrame* frame = presShell->GetRootFrame();
-    if (!frame) {
-      if (aGUIEvent->mMessage == eQueryTextContent ||
-          aGUIEvent->IsContentCommandEvent()) {
-        return nullptr;
-      }
-
-      frame = GetNearestFrameContainingPresShell(presShell);
-    }
-
-    return frame;
+  // If the found PresShell is this instance, caller needs to keep handling
+  // aGUIEvent by itself.  Therefore, return the given frame which was set
+  // to aFrame of HandleEvent().
+  if (retargetPresShell == mPresShell) {
+    return aFrameForPresShell;
   }
-  return aFrameForPresShell;
+
+  // Use root frame of the new PresShell if there is.
+  nsIFrame* rootFrame = retargetPresShell->GetRootFrame();
+  if (rootFrame) {
+    return rootFrame;
+  }
+
+  // Otherwise, and if aGUIEvent requires content of PresShell, caller should
+  // stop handling the event.
+  if (aGUIEvent->mMessage == eQueryTextContent ||
+      aGUIEvent->IsContentCommandEvent()) {
+    return nullptr;
+  }
+
+  // Otherwise, use nearest ancestor frame which includes the PresShell.
+  return GetNearestFrameContainingPresShell(retargetPresShell);
 }
 
 Document* PresShell::GetPrimaryContentDocument() {
