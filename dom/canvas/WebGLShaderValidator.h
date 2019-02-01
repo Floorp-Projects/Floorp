@@ -6,10 +6,11 @@
 #ifndef WEBGL_SHADER_VALIDATOR_H_
 #define WEBGL_SHADER_VALIDATOR_H_
 
-#include "GLSLANG/ShaderLang.h"
-#include "GLDefs.h"
-#include "nsString.h"
 #include <string>
+
+#include "GLDefs.h"
+#include "GLSLANG/ShaderLang.h"
+#include "nsString.h"
 
 namespace mozilla {
 namespace webgl {
@@ -43,6 +44,7 @@ class ShaderValidator final {
   bool CanLinkTo(const ShaderValidator* prev, nsCString* const out_log) const;
   size_t CalcNumSamplerUniforms() const;
   size_t NumAttributes() const;
+  const auto& Handle() const { return mHandle; }
 
   bool FindAttribUserNameByMappedName(
       const std::string& mappedName,
@@ -64,9 +66,6 @@ class ShaderValidator final {
                                bool* const out_isArray) const;
   bool UnmapUniformBlockName(const nsACString& baseMappedName,
                              nsCString* const out_baseUserName) const;
-
-  void EnumerateFragOutputs(
-      std::map<nsCString, const nsCString>& out_FragOutputs) const;
 
   bool ValidateTransformFeedback(
       const std::vector<nsString>& userNames, uint32_t maxComponents,
