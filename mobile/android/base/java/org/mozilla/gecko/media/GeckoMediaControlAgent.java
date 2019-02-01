@@ -113,11 +113,11 @@ public class GeckoMediaControlAgent {
             return;
         }
 
-        mContext = context;
+        mContext = context.getApplicationContext();
         initialize();
     }
 
-    private boolean isAttachedToContext() {
+    public boolean isAttachedToContext() {
         return (mContext != null);
     }
 
@@ -322,7 +322,7 @@ public class GeckoMediaControlAgent {
             return;
         }
 
-        Log.d(LOGTAG, "HandleAction, action = " + action + ", mediaState = " + sMediaState);
+        Log.d(LOGTAG, "handleAction, action = " + action + ", mediaState = " + sMediaState);
         switch (action) {
             case ACTION_RESUME :
                 mController.getTransportControls().play();
