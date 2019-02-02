@@ -72,7 +72,7 @@ static const RedirEntry kRedirMap[] = {
     {"checkerboard", "chrome://global/content/aboutCheckerboard.xhtml",
      nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
          nsIAboutModule::ALLOW_SCRIPT},
-#if !defined(NIGHTLY_BUILD) || !defined(MOZ_BUILD_APP_IS_BROWSER)
+#ifndef MOZ_BUILD_APP_IS_BROWSER
     {"config", "chrome://global/content/config.xul", 0},
 #endif
 #ifdef MOZ_CRASHREPORTER

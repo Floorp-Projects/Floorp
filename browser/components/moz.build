@@ -31,6 +31,7 @@ with Files('controlcenter/**'):
 
 DIRS += [
     'about',
+    'aboutconfig',
     'attribution',
     'contextualidentity',
     'customizableui',
@@ -61,7 +62,6 @@ DIRS += ['build']
 
 if CONFIG['NIGHTLY_BUILD']:
     DIRS += [
-        'aboutconfig',
         'payments',
     ]
 

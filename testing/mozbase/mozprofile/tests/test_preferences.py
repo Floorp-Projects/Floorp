@@ -125,7 +125,7 @@ def test_ini_keep_case(compare_generated):
     """
     # write the .ini file
     _ini = """[DEFAULT]
-general.warnOnAboutConfig = False
+network.dns.disableIPv6 = True
 """
     try:
         fd, name = tempfile.mkstemp(suffix='.ini', text=True)
@@ -134,7 +134,7 @@ general.warnOnAboutConfig = False
         commandline = ["--preferences", name]
 
         # test the [DEFAULT] section
-        _prefs = {'general.warnOnAboutConfig': 'False'}
+        _prefs = {'network.dns.disableIPv6': 'True'}
         compare_generated(_prefs, commandline)
 
     finally:

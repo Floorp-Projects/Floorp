@@ -938,6 +938,7 @@ class RunProgram(MachCommandBase):
                 all(p not in params for p in ['-profile', '--profile', '-P'])
             if no_profile_option_given and not noprofile:
                 prefs = {
+                   'browser.aboutConfig.showWarning': False,
                    'browser.shell.checkDefaultBrowser': False,
                    'general.warnOnAboutConfig': False,
                 }
