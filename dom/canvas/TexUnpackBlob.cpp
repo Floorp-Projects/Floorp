@@ -68,7 +68,7 @@ static bool IsPIValidForDOM(const webgl::PackingInfo& pi) {
 static bool ValidatePIForDOM(WebGLContext* webgl,
                              const webgl::PackingInfo& pi) {
   if (!IsPIValidForDOM(pi)) {
-    webgl->ErrorInvalidOperation("Format or type is invalid for DOM sources.");
+    webgl->ErrorInvalidValue("Format or type is invalid for DOM sources.");
     return false;
   }
   return true;
