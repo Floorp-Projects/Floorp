@@ -28,11 +28,13 @@ import org.mozilla.fenix.components.toolbar.ToolbarIntegration
 import org.mozilla.fenix.ext.requireComponents
 import mozilla.components.feature.prompts.PromptFeature
 import org.mozilla.fenix.BackHandler
+import org.mozilla.fenix.components.FindInPageIntegration
 
 class BrowserFragment : Fragment(), BackHandler {
 
     private lateinit var contextMenuFeature: ContextMenuFeature
     private lateinit var downloadsFeature: DownloadsFeature
+    private lateinit var findInPageIntegration: FindInPageIntegration
     private lateinit var promptsFeature: PromptFeature
     private lateinit var sessionFeature: SessionFeature
 
@@ -88,6 +90,14 @@ class BrowserFragment : Fragment(), BackHandler {
             engineView
         )
 
+        findInPageIntegration = FindInPageIntegration(requireComponents.core.sessionManager, findInPageView)
+        val toolbarIntegration = ToolbarIntegration(
+            requireContext(),
+            toolbar,
+            requireComponents.toolbar.shippedDomainsProvider,
+            requireComponents.core.historyStorage
+        )
+
         // Stop toolbar from collapsing if TalkBack is enabled
         val accessibilityManager = context?.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
         if (accessibilityManager.isEnabled) {
@@ -98,12 +108,10 @@ class BrowserFragment : Fragment(), BackHandler {
         lifecycle.addObservers(
             contextMenuFeature,
             downloadsFeature,
+            findInPageIntegration,
             promptsFeature,
             sessionFeature,
-            ToolbarIntegration(requireContext(),
-                toolbar,
-                requireComponents.toolbar.shippedDomainsProvider,
-                requireComponents.core.historyStorage)
+            toolbarIntegration
         )
 
         toolbar.onUrlClicked = {
@@ -113,6 +121,7 @@ class BrowserFragment : Fragment(), BackHandler {
     }
 
     override fun onBackPressed(): Boolean {
+        if (findInPageIntegration.onBackPressed()) return true
         if (sessionFeature.handleBackPressed()) return true
 
         // We'll want to improve this when we add multitasking

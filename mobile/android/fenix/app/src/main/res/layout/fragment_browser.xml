@@ -31,6 +31,17 @@
             mozac:awesomeBarTitleTextColor="#ffffff" />
     </FrameLayout>
 
+    <mozilla.components.feature.findinpage.view.FindInPageBar
+            android:id="@+id/findInPageView"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_gravity="bottom"
+            android:background="@color/offwhite"
+            mozac:findInPageResultCountTextColor="@color/colorPrimary"
+            mozac:findInPageButtonsTint="@color/colorPrimary"
+            android:visibility="gone"
+            app:layout_behavior="org.mozilla.fenix.components.FindInPageBarBehavior" />
+
     <mozilla.components.browser.toolbar.BrowserToolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
@@ -43,4 +54,5 @@
         android:transitionName="firstTransitionName"
         app:layout_behavior="mozilla.components.browser.toolbar.behavior.BrowserToolbarBottomBehavior"
         app:layout_scrollFlags="scroll|enterAlways|snap|exitUntilCollapsed" />
+
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

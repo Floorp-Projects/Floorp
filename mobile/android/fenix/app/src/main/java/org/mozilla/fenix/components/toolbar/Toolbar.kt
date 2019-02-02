@@ -17,6 +17,7 @@ import mozilla.components.feature.session.SessionUseCases
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.share
 import org.mozilla.fenix.settings.SettingsActivity
+import org.mozilla.fenix.components.FindInPageIntegration
 
 /**
  * Component group for all functionality related to the browser toolbar.
@@ -112,7 +113,9 @@ class Toolbar(
                 context.getString(R.string.browser_menu_find_in_page),
                 R.color.icons
             ) {
-                // TODO Find in Page
+                FindInPageIntegration.launch?.invoke()
+            }.apply {
+                visible = { sessionManager.selectedSession != null }
             },
 
             BrowserMenuImageText(
