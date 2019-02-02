@@ -355,6 +355,12 @@ JS_FRIEND_API JSObject* js::UncheckedUnwrap(JSObject* wrapped,
   return wrapped;
 }
 
+JS_FRIEND_API JSObject* js::CheckedUnwrapStatic(JSObject* obj) {
+  // For now, just forward to the old API.  Once we remove it, we can
+  // inline it here, without the stopAtWindowProxy bits.
+  return CheckedUnwrap(obj);
+}
+
 JS_FRIEND_API JSObject* js::CheckedUnwrap(JSObject* obj,
                                           bool stopAtWindowProxy) {
   while (true) {
@@ -378,6 +384,42 @@ JS_FRIEND_API JSObject* js::UnwrapOneChecked(JSObject* obj,
 
   const Wrapper* handler = Wrapper::wrapperHandler(obj);
   return handler->hasSecurityPolicy() ? nullptr : Wrapper::wrappedObject(obj);
+}
+
+JS_FRIEND_API JSObject* js::CheckedUnwrapDynamic(JSObject* obj, JSContext* cx,
+                                                 bool stopAtWindowProxy) {
+  RootedObject wrapper(cx, obj);
+  while (true) {
+    JSObject* unwrapped =
+        UnwrapOneCheckedDynamic(wrapper, cx, stopAtWindowProxy);
+    if (!unwrapped || unwrapped == wrapper) {
+      return unwrapped;
+    }
+    wrapper = unwrapped;
+  }
+}
+
+JS_FRIEND_API JSObject* js::UnwrapOneCheckedDynamic(HandleObject obj,
+                                                    JSContext* cx,
+                                                    bool stopAtWindowProxy) {
+  MOZ_ASSERT(!JS::RuntimeHeapIsCollecting());
+  MOZ_ASSERT(CurrentThreadCanAccessRuntime(obj->runtimeFromAnyThread()));
+  // We should know who's asking.
+  MOZ_ASSERT(cx);
+  MOZ_ASSERT(cx->realm());
+
+  if (!obj->is<WrapperObject>() ||
+      MOZ_UNLIKELY(stopAtWindowProxy && IsWindowProxy(obj))) {
+    return obj;
+  }
+
+  const Wrapper* handler = Wrapper::wrapperHandler(obj);
+  if (!handler->hasSecurityPolicy() ||
+      handler->dynamicCheckedUnwrapAllowed(obj, cx)) {
+    return Wrapper::wrappedObject(obj);
+  }
+
+  return nullptr;
 }
 
 void js::ReportAccessDenied(JSContext* cx) {
