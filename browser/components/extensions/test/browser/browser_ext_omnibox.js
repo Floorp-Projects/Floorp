@@ -300,6 +300,10 @@ add_task(async function() {
     suggestions,
   });
 
+  // When we're the first task to be added, `waitForExplicitFinish()` may not have
+  // been called yet. Let's just do that, otherwise the `monitorConsole` will make
+  // the test fail with a failing assertion.
+  SimpleTest.waitForExplicitFinish();
   // Start monitoring the console.
   let waitForConsole = new Promise(resolve => {
     SimpleTest.monitorConsole(resolve, [{

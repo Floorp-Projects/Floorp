@@ -135,13 +135,9 @@ SuggestAutoComplete.prototype = {
       return;
     }
 
-    Services.search.init(aResult => {
-      if (!Components.isSuccessCode(aResult)) {
-        Cu.reportError("Could not initialize search service, bailing out: " + aResult);
-        return;
-      }
+    Services.search.init().then(() => {
       this._triggerSearch(searchString, formHistorySearchParam, listener, privacyMode);
-    });
+    }).catch(result => Cu.reportError("Could not initialize search service, bailing out: " + result));
   },
 
   /**

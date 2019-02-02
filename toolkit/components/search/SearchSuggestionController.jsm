@@ -144,7 +144,7 @@ this.SearchSuggestionController.prototype = {
     if (typeof privateMode === "undefined") {
       throw new Error("The privateMode argument is required to avoid unintentional privacy leaks");
     }
-    if (!(engine instanceof Ci.nsISearchEngine)) {
+    if (!engine.getSubmission) {
       throw new Error("Invalid search engine");
     }
     if (!this.maxLocalResults && !this.maxRemoteResults) {

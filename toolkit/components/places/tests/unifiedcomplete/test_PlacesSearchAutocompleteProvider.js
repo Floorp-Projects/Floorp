@@ -7,6 +7,7 @@ const {updateAppInfo} = ChromeUtils.import("resource://testing-common/AppInfo.js
 updateAppInfo();
 
 add_task(async function() {
+  await Services.search.init();
     // Tell the search service we are running in the US.  This also has the
     // desired side-effect of preventing our geoip lookup.
    Services.prefs.setCharPref("browser.search.region", "US");
@@ -17,7 +18,7 @@ add_task(async function() {
 });
 
 add_task(async function search_engine_match() {
-  let engine = await promiseDefaultSearchEngine();
+  let engine = await Services.search.getDefault();
   let domain = engine.getResultDomain();
   let token = domain.substr(0, 1);
   let matchedEngine =
@@ -33,12 +34,11 @@ add_task(async function no_match() {
 });
 
 add_task(async function hide_search_engine_nomatch() {
-  let engine = await promiseDefaultSearchEngine();
+  let engine = await Services.search.getDefault();
   let domain = engine.getResultDomain();
   let token = domain.substr(0, 1);
   let promiseTopic = promiseSearchTopic("engine-changed");
-  Services.search.removeEngine(engine);
-  await promiseTopic;
+  await Promise.all([Services.search.removeEngine(engine), promiseTopic]);
   Assert.ok(engine.hidden);
   let matchedEngine =
     await PlacesSearchAutocompleteProvider.engineForDomainPrefix(token);
@@ -51,8 +51,8 @@ add_task(async function add_search_engine_match() {
     null,
     await PlacesSearchAutocompleteProvider.engineForDomainPrefix("bacon")
   );
-  Services.search.addEngineWithDetails("bacon", "", "pork", "Search Bacon",
-                                       "GET", "http://www.bacon.moz/?search={searchTerms}");
+  await Promise.all([Services.search.addEngineWithDetails("bacon", "", "pork", "Search Bacon",
+    "GET", "http://www.bacon.moz/?search={searchTerms}"), promiseTopic]);
   await promiseTopic;
   let matchedEngine =
     await PlacesSearchAutocompleteProvider.engineForDomainPrefix("bacon");
@@ -94,9 +94,8 @@ add_task(async function test_aliased_search_engine_match_upper_case_alias() {
     null,
     await PlacesSearchAutocompleteProvider.engineForDomainPrefix("patch")
   );
-  Services.search.addEngineWithDetails("patch", "", "PR", "Search Patch",
-                                       "GET", "http://www.patch.moz/?search={searchTerms}");
-  await promiseTopic;
+  await Promise.all([Services.search.addEngineWithDetails("patch", "", "PR", "Search Patch",
+    "GET", "http://www.patch.moz/?search={searchTerms}"), promiseTopic]);
   // lower case
   let matchedEngine =
     await PlacesSearchAutocompleteProvider.engineForAlias("pr");
@@ -121,8 +120,7 @@ add_task(async function test_aliased_search_engine_match_upper_case_alias() {
 add_task(async function remove_search_engine_nomatch() {
   let engine = Services.search.getEngineByName("bacon");
   let promiseTopic = promiseSearchTopic("engine-removed");
-  Services.search.removeEngine(engine);
-  await promiseTopic;
+  await Promise.all([Services.search.removeEngine(engine), promiseTopic]);
   Assert.equal(
     null,
     await PlacesSearchAutocompleteProvider.engineForDomainPrefix("bacon")
@@ -132,7 +130,7 @@ add_task(async function remove_search_engine_nomatch() {
 add_task(async function test_parseSubmissionURL_basic() {
   // Most of the logic of parseSubmissionURL is tested in the search service
   // itself, thus we only do a sanity check of the wrapper here.
-  let engine = await promiseDefaultSearchEngine();
+  let engine = await Services.search.getDefault();
   let submissionURL = engine.getSubmission("terms").uri.spec;
 
   let result = PlacesSearchAutocompleteProvider.parseSubmissionURL(submissionURL);
@@ -149,14 +147,6 @@ add_task(async function test_builtin_aliased_search_engine_match() {
   Assert.ok(matchedEngine);
   Assert.equal(matchedEngine.name, "Google");
 });
-
-function promiseDefaultSearchEngine() {
-  return new Promise(resolve => {
-    Services.search.init( () => {
-      resolve(Services.search.defaultEngine);
-    });
-  });
-}
 
 function promiseSearchTopic(expectedVerb) {
   return new Promise(resolve => {

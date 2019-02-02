@@ -15,8 +15,8 @@ add_task(async function searchEngines() {
   let schemes = ["http", "https"];
   for (let i = 0; i < schemes.length; i++) {
     let scheme = schemes[i];
-    Services.search.addEngineWithDetails("TestEngine", "", "", "", "GET",
-                                         scheme + "://www.example.com/");
+    await Services.search.addEngineWithDetails("TestEngine", "", "", "", "GET",
+                                               scheme + "://www.example.com/");
     let engine = Services.search.getEngineByName("TestEngine");
     engine.addParam("q", "{searchTerms}", null);
 
@@ -169,7 +169,7 @@ add_task(async function searchEngines() {
       matches: [],
     });
 
-    Services.search.removeEngine(engine);
+    await Services.search.removeEngine(engine);
   }
 
   await cleanup();

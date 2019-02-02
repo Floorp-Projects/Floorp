@@ -1,33 +1,7 @@
 const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
-Services.prefs.setBoolPref("keyword.enabled", true);
-
 const kSearchEngineID = "test_urifixup_search_engine";
 const kSearchEngineURL = "http://www.example.org/?search={searchTerms}";
-Services.search.addEngineWithDetails(kSearchEngineID, "", "", "", "get",
-                                     kSearchEngineURL);
-
-Services.io.getProtocolHandler("resource")
-        .QueryInterface(Ci.nsIResProtocolHandler)
-        .setSubstitution("search-plugins",
-                         Services.io.newURI("chrome://mozapps/locale/searchplugins/"));
-
-var oldDefaultEngine = Services.search.defaultEngine;
-Services.search.defaultEngine = Services.search.getEngineByName(kSearchEngineID);
-
-var selectedName = Services.search.defaultEngine.name;
-Assert.equal(selectedName, kSearchEngineID);
-
-registerCleanupFunction(function() {
-  if (oldDefaultEngine) {
-    Services.search.defaultEngine = oldDefaultEngine;
-  }
-  let engine = Services.search.getEngineByName(kSearchEngineID);
-  if (engine) {
-    Services.search.removeEngine(engine);
-  }
-  Services.prefs.clearUserPref("keyword.enabled");
-});
 
 var isWin = AppConstants.platform == "win";
 
@@ -103,6 +77,34 @@ if (extProtocolSvc && extProtocolSvc.externalProtocolHandlerExists("mailto")) {
 }
 
 var len = data.length;
+
+add_task(async function setup() {
+  Services.prefs.setBoolPref("keyword.enabled", true);
+  Services.io.getProtocolHandler("resource")
+          .QueryInterface(Ci.nsIResProtocolHandler)
+          .setSubstitution("search-plugins",
+                           Services.io.newURI("chrome://mozapps/locale/searchplugins/"));
+
+  await Services.search.addEngineWithDetails(kSearchEngineID, "", "", "", "get", kSearchEngineURL);
+
+  var oldCurrentEngine = await Services.search.getDefault();
+  await Services.search.setDefault(Services.search.getEngineByName(kSearchEngineID));
+
+  var selectedName = (await Services.search.getDefault()).name;
+  Assert.equal(selectedName, kSearchEngineID);
+
+  registerCleanupFunction(async function() {
+    if (oldCurrentEngine) {
+      await Services.search.setDefault(oldCurrentEngine);
+    }
+    let engine = Services.search.getEngineByName(kSearchEngineID);
+    if (engine) {
+      await Services.search.removeEngine(engine);
+    }
+    Services.prefs.clearUserPref("keyword.enabled");
+  });
+});
+
 // Make sure we fix what needs fixing
 add_task(function test_fix_unknown_schemes() {
   for (let i = 0; i < len; ++i) {

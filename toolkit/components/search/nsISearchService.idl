@@ -236,19 +236,20 @@ interface nsIBrowserSearchInitObserver : nsISupports
   void onInitComplete(in nsresult aStatus);
 };
 
-[scriptable, uuid(150ef720-bbe2-4169-b9f3-ef7ec0654ced)]
-interface nsIBrowserSearchService : nsISupports
+[scriptable, uuid(0301834b-2630-440e-8b98-db8dc55f34b9)]
+interface nsISearchService : nsISupports
 {
   /**
    * Start asynchronous initialization.
    *
-   * The callback is triggered once initialization is complete, which may be
+   * The promise is resolved once initialization is complete, which may be
    * immediately, if initialization has already been completed by some previous
-   * call to this method. The callback is always invoked asynchronously.
-   *
-   * @param aObserver An optional object observing the end of initialization.
+   * call to this method.
+   * This method should only be called when you need or want to wait for the
+   * full initialization of the search service, which may include waiting for
+   * outbound service requests.
    */
-  void init([optional] in nsIBrowserSearchInitObserver aObserver);
+  Promise init();
 
   /**
    * Determine whether initialization has been completed.
@@ -267,7 +268,7 @@ interface nsIBrowserSearchService : nsISupports
   /**
    * Resets the default engine to its original value.
    */
-  void resetToOriginalDefaultEngine();
+  Promise resetToOriginalDefaultEngine();
 
   /**
    * Checks if an EngineURL of type URLTYPE_SEARCH_HTML exists for
@@ -306,20 +307,14 @@ interface nsIBrowserSearchService : nsISupports
    *        value is false, the engine will be added to the list upon successful
    *        load, but it will not be selected as the current engine.
    *
-   * @param callback
-   *        A nsISearchInstallCallback that will be notified when the
-   *        addition is complete, or if the addition fails. It will not be
-   *        called if addEngine throws an exception.
-   *
    * @param extensionID [optional]
    *        Optional: The correct extensionID if called by an add-on.
    *
    * @throws NS_ERROR_FAILURE if the description file cannot be successfully
    *         loaded.
    */
-  void addEngine(in AString engineURL, in AString iconURL, in boolean confirm,
-                 [optional] in nsISearchInstallCallback callback,
-                 [optional] in AString extensionID);
+  Promise addEngine(in AString engineURL, in AString iconURL, in boolean confirm,
+                    [optional] in AString extensionID);
 
   /**
    * Adds a new search engine, without asking the user for confirmation and
@@ -376,15 +371,24 @@ interface nsIBrowserSearchService : nsISupports
    *        to OpenSearch parameter substitution.
    *
    */
-  void addEngineWithDetails(in AString name,
-                            in jsval iconURL,
-                            [optional] in AString alias,
-                            [optional] in AString description,
-                            [optional] in AString method,
-                            [optional] in AString url,
-                            [optional] in AString extensionID);
+  Promise addEngineWithDetails(in AString name,
+                               in jsval iconURL,
+                               [optional] in AString alias,
+                               [optional] in AString description,
+                               [optional] in AString method,
+                               [optional] in AString url,
+                               [optional] in AString extensionID);
 
-  void addEnginesFromExtension(in jsval extension);
+  /**
+   * Adds search providers to the search service.  If the search
+   * service is configured to load multiple locales for the extension,
+   * it may load more than one search engine.
+   *
+   * @param extension
+   *        The extension to load from.
+   * @returns Promise that resolves when finished.
+   */
+  Promise addEnginesFromExtension(in jsval extension);
 
   /**
    * Un-hides all engines in the set of engines returned by getDefaultEngines.
@@ -416,9 +420,7 @@ interface nsIBrowserSearchService : nsISupports
    *
    * @returns an array of nsISearchEngine objects.
    */
-  void getEngines(
-            [optional] out unsigned long engineCount,
-            [retval, array, size_is(engineCount)] out nsISearchEngine engines);
+  Promise getEngines();
 
   /**
    * Returns an array of all installed search engines whose hidden attribute is
@@ -426,9 +428,7 @@ interface nsIBrowserSearchService : nsISupports
    *
    * @returns an array of nsISearchEngine objects.
    */
-  void getVisibleEngines(
-            [optional] out unsigned long engineCount,
-            [retval, array, size_is(engineCount)] out nsISearchEngine engines);
+  Promise getVisibleEngines();
 
   /**
    * Returns an array of all default search engines. This includes all loaded
@@ -436,19 +436,14 @@ interface nsIBrowserSearchService : nsISupports
    *
    * @returns an array of nsISearchEngine objects.
    */
-  void getDefaultEngines(
-            [optional] out unsigned long engineCount,
-            [retval, array, size_is(engineCount)] out nsISearchEngine engines);
+  Promise getDefaultEngines();
 
   /**
    * Returns an array of search engines installed by a given extension.
    *
    * @returns an array of nsISearchEngine objects.
    */
-  void getEnginesByExtensionID(in AString extensionID,
-            [optional] out unsigned long engineCount,
-            [retval, array, size_is(engineCount)] out nsISearchEngine engines);
-
+  Promise getEnginesByExtensionID(in AString extensionID);
 
   /**
    * Moves a visible search engine.
@@ -461,7 +456,7 @@ interface nsIBrowserSearchService : nsISupports
    * @throws NS_ERROR_FAILURE if newIndex is out of bounds, or if engine is
    *         hidden.
    */
-  void moveEngine(in nsISearchEngine engine, in long newIndex);
+  Promise moveEngine(in nsISearchEngine engine, in long newIndex);
 
   /**
    * Removes the search engine. If the search engine is installed in a global
@@ -471,7 +466,7 @@ interface nsIBrowserSearchService : nsISupports
    * @param  engine
    *         The engine to remove.
    */
-  void removeEngine(in nsISearchEngine engine);
+  Promise removeEngine(in nsISearchEngine engine);
 
   /**
    * The original Engine object that is the default for this region,
@@ -489,6 +484,8 @@ interface nsIBrowserSearchService : nsISupports
    */
   attribute nsISearchEngine defaultEngine;
 
+  Promise getDefault();
+  Promise setDefault(in nsISearchEngine engine);
 
   /**
    * Gets a representation of the default engine in an anonymized JSON
@@ -497,7 +494,7 @@ interface nsIBrowserSearchService : nsISupports
    * @return an object containing anonymized info about the default engine:
    *         name, loadPath, submissionURL (for default engines).
    */
-  jsval getDefaultEngineInfo();
+  Promise getDefaultEngineInfo();
 
   /**
    * Determines if the provided URL represents results from a search engine, and
@@ -516,8 +513,8 @@ interface nsIBrowserSearchService : nsISupports
   nsISearchParseSubmissionResult parseSubmissionURL(in AString url);
 
   /**
-   * Determines if a URL is related to search and if so, records the 
-   * appropriate telemtry.
+   * Determines if a URL is related to search and if so, records the
+   * appropriate telemetry.
    *
    * @param url
    *        String containing the URL to parse, for example
@@ -567,7 +564,5 @@ interface nsIBrowserSearchService : nsISupports
  * Sent when the "default" engine is changed.
  */
 #define SEARCH_ENGINE_DEFAULT      "engine-default";
-
-
 
 %}

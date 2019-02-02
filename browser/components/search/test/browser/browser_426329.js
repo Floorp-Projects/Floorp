@@ -68,7 +68,7 @@ function promiseSetEngine() {
           ss.defaultEngine = engine;
           break;
         case "engine-current":
-          ok(ss.defaultEngine.name == "Bug 426329", "currentEngine set");
+          ok(ss.defaultEngine.name == "Bug 426329", "defaultEngine set");
           searchBar = BrowserSearch.searchBar;
           searchButton = searchBar.querySelector(".search-go-button");
           ok(searchButton, "got search-go-button");
@@ -107,6 +107,8 @@ function promiseRemoveEngine() {
 var preSelectedBrowser;
 var preTabNo;
 async function prepareTest() {
+  await Services.search.init();
+
   preSelectedBrowser = gBrowser.selectedBrowser;
   preTabNo = gBrowser.tabs.length;
   searchBar = BrowserSearch.searchBar;

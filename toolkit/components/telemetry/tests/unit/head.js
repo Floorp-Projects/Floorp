@@ -346,9 +346,8 @@ function getSnapshot(histogramId) {
 // Helper for setting an empty list of Environment preferences to watch.
 function setEmptyPrefWatchlist() {
   const {TelemetryEnvironment} = ChromeUtils.import("resource://gre/modules/TelemetryEnvironment.jsm");
-  return TelemetryEnvironment.onInitialized().then(() => {
-    TelemetryEnvironment.testWatchPreferences(new Map());
-  });
+  return TelemetryEnvironment.onInitialized().then(() =>
+    TelemetryEnvironment.testWatchPreferences(new Map()));
 }
 
 if (runningInParent) {

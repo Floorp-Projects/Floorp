@@ -146,12 +146,7 @@ add_task(async function() {
 
   Services.prefs.setCharPref("distribution.searchplugins.defaultLocale", "de-DE");
 
-  await new Promise(resolve => {
-    Services.search.init(function() {
-      Assert.equal(Services.search.isInitialized, true);
-      var engine = Services.search.getEngineByName("Google");
-      Assert.equal(engine.description, "override-de-DE");
-      resolve();
-    });
-  });
+  await Services.search.init();
+  var engine = Services.search.getEngineByName("Google");
+  Assert.equal(engine.description, "override-de-DE");
 });

@@ -5,8 +5,8 @@
 add_task(async function() {
   // Note that head_autocomplete.js has already added a MozSearch engine.
   // Here we add another engine with a search alias.
-  Services.search.addEngineWithDetails("AliasedMozSearch", "", "doit", "",
-                                       "GET", "http://s.example.com/search");
+  await Services.search.addEngineWithDetails("AliasedMozSearch", "", "doit", "",
+                                             "GET", "http://s.example.com/search");
 
   info("search engine");
   await check_autocomplete({
@@ -30,11 +30,11 @@ add_task(async function() {
   });
 
   info("search engine, after current engine has changed");
-  Services.search.addEngineWithDetails("MozSearch2", "", "", "", "GET",
-                                       "http://s.example.com/search2");
+  await Services.search.addEngineWithDetails("MozSearch2", "", "", "", "GET",
+                                             "http://s.example.com/search2");
   let engine = Services.search.getEngineByName("MozSearch2");
   notEqual(Services.search.defaultEngine, engine, "New engine shouldn't be the current engine yet");
-  Services.search.defaultEngine = engine;
+  await Services.search.setDefault(engine);
   await check_autocomplete({
     search: "mozilla",
     searchParam: "enable-actions",

@@ -105,7 +105,7 @@ add_task(async function() {
 
   // Check the heuristic result.
   let result = promiseValues[2];
-  let engineName = Services.search.defaultEngine.name;
+  let engineName = (await Services.search.getDefault()).name;
   Assert.deepEqual(
     PlacesUtils.parseActionUrl(result.url),
     {

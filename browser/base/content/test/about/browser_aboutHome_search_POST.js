@@ -10,7 +10,7 @@ add_task(async function() {
   await BrowserTestUtils.withNewTab({ gBrowser, url: "about:home" }, function(browser) {
     return new Promise(resolve => {
       let searchObserver = async function search_observer(subject, topic, data) {
-        let currEngine = Services.search.defaultEngine;
+        let currEngine = await Services.search.getDefault();
         let engine = subject.QueryInterface(Ci.nsISearchEngine);
         info("Observer: " + data + " for " + engine.name);
 
@@ -25,9 +25,8 @@ add_task(async function() {
         // Ready to execute the tests!
         let needle = "Search for something awesome.";
 
-        let p = promiseContentSearchChange(browser, engine.name);
-        Services.search.defaultEngine = engine;
-        await p;
+        await Promise.all([promiseContentSearchChange(browser, engine.name),
+          Services.search.setDefault(engine)]);
         let promise = BrowserTestUtils.browserLoaded(browser);
         await ContentTask.spawn(browser, { needle }, async function(args) {
           let doc = content.document;
@@ -46,9 +45,9 @@ add_task(async function() {
              "Search text should arrive correctly");
         });
 
-        Services.search.defaultEngine = currEngine;
+        await Services.search.setDefault(currEngine);
         try {
-          Services.search.removeEngine(engine);
+          await Services.search.removeEngine(engine);
         } catch (ex) {}
         resolve();
       };

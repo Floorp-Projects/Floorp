@@ -59,6 +59,10 @@ function promiseContentSearchReady(browser) {
   });
 }
 
+add_task(async function setup() {
+  await Services.search.init();
+});
+
 for (let engine of searchEngineDetails) {
   add_task(async function() {
     let previouslySelectedEngine = Services.search.defaultEngine;

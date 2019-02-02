@@ -41,7 +41,9 @@ let expectedEngine = {
   },
 };
 
-function test() {
+add_task(async function test() {
+  await Services.search.init();
+
   let engine = Services.search.getEngineByName("Google");
   ok(engine, "Found Google search engine");
 
@@ -95,4 +97,4 @@ function test() {
 
   // Check all other engine properties.
   isSubObjectOf(expectedEngine, engine, "Google");
-}
+});

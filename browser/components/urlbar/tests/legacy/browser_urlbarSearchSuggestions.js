@@ -7,11 +7,11 @@ add_task(async function prepare() {
   Services.prefs.setBoolPref(SUGGEST_URLBAR_PREF, true);
   let engine = await SearchTestUtils.promiseNewSearchEngine(
     getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME);
-  let oldCurrentEngine = Services.search.defaultEngine;
-  Services.search.defaultEngine = engine;
+  let oldDefaultEngine = await Services.search.getDefault();
+  await Services.search.setDefault(engine);
   registerCleanupFunction(async function() {
     Services.prefs.setBoolPref(SUGGEST_URLBAR_PREF, suggestionsEnabled);
-    Services.search.defaultEngine = oldCurrentEngine;
+    await Services.search.setDefault(oldDefaultEngine);
 
     // Clicking suggestions causes visits to search results pages, so clear that
     // history now.
@@ -33,7 +33,7 @@ add_task(async function clickSuggestion() {
                "Expected suggestion engine");
   let item = gURLBar.popup.richlistbox.getItemAtIndex(idx);
 
-  let uri = Services.search.defaultEngine.getSubmission(suggestion).uri;
+  let uri = (await Services.search.getDefault()).getSubmission(suggestion).uri;
   let loadPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser,
                                                    false, uri.spec);
   item.click();
@@ -51,7 +51,7 @@ async function testPressEnterOnSuggestion(expectedUrl = null, keyModifiers = {})
                "Expected suggestion engine");
 
   if (!expectedUrl) {
-    expectedUrl = Services.search.defaultEngine.getSubmission(suggestion).uri.spec;
+    expectedUrl = (await Services.search.getDefault()).getSubmission(suggestion).uri.spec;
   }
 
   let promiseLoad =

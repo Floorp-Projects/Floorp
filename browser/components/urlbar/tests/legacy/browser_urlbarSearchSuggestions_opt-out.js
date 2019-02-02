@@ -14,8 +14,8 @@ const NO_RESULTS_TIMEOUT_MS = 500;
 add_task(async function prepare() {
   let engine = await SearchTestUtils.promiseNewSearchEngine(
     getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME);
-  let oldCurrentEngine = Services.search.defaultEngine;
-  Services.search.defaultEngine = engine;
+  let oldDefaultEngine = await Services.search.getDefault();
+  await Services.search.setDefault(engine);
   let suggestionsEnabled = Services.prefs.getBoolPref(SUGGEST_URLBAR_PREF);
   let defaults = Services.prefs.getDefaultBranch("browser.urlbar.");
   let searchSuggestionsDefault = defaults.getBoolPref("suggest.searches");
@@ -26,7 +26,7 @@ add_task(async function prepare() {
   Services.prefs.setBoolPref(ONEOFF_PREF, true);
   registerCleanupFunction(async function() {
     defaults.setBoolPref("suggest.searches", searchSuggestionsDefault);
-    Services.search.defaultEngine = oldCurrentEngine;
+    await Services.search.setDefault(oldDefaultEngine);
     Services.prefs.clearUserPref(SUGGEST_ALL_PREF);
     Services.prefs.setBoolPref(SUGGEST_URLBAR_PREF, suggestionsEnabled);
     Services.prefs.setBoolPref(CHOICE_PREF, suggestionsChoice);

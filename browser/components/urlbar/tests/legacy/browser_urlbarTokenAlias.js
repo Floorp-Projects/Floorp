@@ -8,13 +8,13 @@
 const ALIAS = "@test";
 
 add_task(async function init() {
-  Services.search.addEngineWithDetails("Test", {
+  await Services.search.addEngineWithDetails("Test", {
     alias: ALIAS,
     template: "http://example.com/?search={searchTerms}",
   });
   registerCleanupFunction(async function() {
     let engine = Services.search.getEngineByName("Test");
-    Services.search.removeEngine(engine);
+    await Services.search.removeEngine(engine);
     // Make sure the popup is closed for the next test.
     gURLBar.handleRevert();
     gURLBar.blur();
@@ -150,7 +150,7 @@ add_task(async function nonHeuristicAliases() {
   // Get the list of token alias engines (those with aliases that start with
   // "@").
   let tokenEngines = [];
-  for (let engine of Services.search.getEngines()) {
+  for (let engine of await Services.search.getEngines()) {
     let aliases = [];
     if (engine.alias) {
       aliases.push(engine.alias);

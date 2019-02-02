@@ -220,7 +220,7 @@
 #endif
 
 #ifdef MOZ_TOOLKIT_SEARCH
-#  include "nsIBrowserSearchService.h"
+#  include "nsISearchService.h"
 #endif
 
 using namespace mozilla;
@@ -13164,7 +13164,7 @@ void nsDocShell::MaybeNotifyKeywordSearchLoading(const nsString& aProvider,
   }
 
 #ifdef MOZ_TOOLKIT_SEARCH
-  nsCOMPtr<nsIBrowserSearchService> searchSvc =
+  nsCOMPtr<nsISearchService> searchSvc =
       do_GetService("@mozilla.org/browser/search-service;1");
   if (searchSvc) {
     nsCOMPtr<nsISearchEngine> searchEngine;
