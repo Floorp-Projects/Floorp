@@ -17,6 +17,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarController: "resource:///modules/UrlbarController.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarQueryContext: "resource:///modules/UrlbarUtils.jsm",
+  UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
   UrlbarValueFormatter: "resource:///modules/UrlbarValueFormatter.jsm",
   UrlbarView: "resource:///modules/UrlbarView.jsm",
@@ -437,10 +438,25 @@ class UrlbarInput {
     }));
   }
 
-  typeRestrictToken(char) {
+  /**
+   * Sets the input's value, starts a search, and opens the popup.
+   *
+   * @param {string} value
+   *   The input's value will be set to this value, and the search will
+   *   use it as its query.
+   */
+  search(value) {
     this.window.focusAndSelectUrlBar();
 
-    this.inputField.value = char + " ";
+    // If the value is a restricted token, append a space.
+    if (Object.values(UrlbarTokenizer.RESTRICT).includes(value)) {
+      this.inputField.value = value + " ";
+    } else {
+      this.inputField.value = value;
+    }
+
+    // Avoid selecting the text if this method is called twice in a row.
+    this.selectionStart = -1;
 
     let event = this.document.createEvent("UIEvents");
     event.initUIEvent("input", true, false, this.window, 0);
