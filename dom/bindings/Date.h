@@ -33,7 +33,7 @@ class Date {
     mMsecSinceEpoch = aMilliseconds;
   }
 
-  // Can return false if CheckedUnwrap fails.  This will NOT throw;
+  // Can return false if unboxing fails.  This will NOT throw;
   // callers should do it as needed.
   bool SetTimeStamp(JSContext* aCx, JSObject* aObject);
 
