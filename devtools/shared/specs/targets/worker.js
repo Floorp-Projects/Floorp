@@ -32,7 +32,8 @@ const workerTargetSpec = generateActorSpec({
   events: {
     // WorkerTargetActor still uses old sendActorEvent function,
     // but it should use emit instead.
-    close: {
+    // Do not emit a `close` event as Target class emit this event on destroy
+    "worker-close": {
       type: "close",
     },
     // newSource is being sent by ThreadActor in the name of its parent,

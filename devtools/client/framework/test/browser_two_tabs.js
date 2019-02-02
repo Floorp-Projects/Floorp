@@ -30,10 +30,10 @@ add_task(async () => {
 
   await checkGetTab(client, tab1, tab2, targetFront1, targetFront2);
   await checkGetTabFailures(client);
-  await checkSelectedTargetActor(client, targetFront2);
+  await checkSelectedTargetActor(targetFront2);
 
   await removeTab(tab2);
-  await checkFirstTargetActor(client, targetFront1);
+  await checkFirstTargetActor(targetFront1);
 
   await removeTab(tab1);
   await client.close();
@@ -76,22 +76,16 @@ async function checkGetTabFailures(client) {
   }
 }
 
-async function checkSelectedTargetActor(client, targetFront2) {
+async function checkSelectedTargetActor(targetFront2) {
   // Send a naive request to the second target actor to check if it works
-  const response = await client.request({
-    to: targetFront2.targetForm.consoleActor,
-    type: "startListeners",
-    listeners: [],
-  });
+  await targetFront2.attach();
+  const response = await targetFront2.activeConsole.startListeners([]);
   ok("startedListeners" in response, "Actor from the selected tab should respond to the request.");
 }
 
-async function checkFirstTargetActor(client, targetFront1) {
+async function checkFirstTargetActor(targetFront1) {
   // then send a request to the first target actor to check if it still works
-  const response = await client.request({
-    to: targetFront1.targetForm.consoleActor,
-    type: "startListeners",
-    listeners: [],
-  });
+  await targetFront1.attach();
+  const response = await targetFront1.activeConsole.startListeners([]);
   ok("startedListeners" in response, "Actor from the first tab should still respond.");
 }
