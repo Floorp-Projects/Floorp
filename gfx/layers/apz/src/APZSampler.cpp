@@ -168,6 +168,16 @@ AsyncTransform APZSampler::GetCurrentAsyncTransformForFixedAdjustment(
       AsyncPanZoomController::eForCompositing);
 }
 
+AsyncTransform APZSampler::GetCurrentAsyncViewportRelativeTransform(
+    const LayerMetricsWrapper& aLayer) {
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+  AssertOnSamplerThread();
+
+  MOZ_ASSERT(aLayer.GetApzc());
+  return aLayer.GetApzc()->GetCurrentAsyncViewportRelativeTransform(
+      AsyncPanZoomController::eForCompositing);
+}
+
 AsyncTransformComponentMatrix APZSampler::GetOverscrollTransform(
     const LayerMetricsWrapper& aLayer) {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
