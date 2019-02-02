@@ -11,14 +11,23 @@ const TESTCASE_URI = TEST_BASE_HTTP + "autocomplete.html";
 const AUTOCOMPLETION_PREF = "devtools.styleeditor.autocompletion-enabled";
 
 add_task(async function() {
+  const { ui } = await openStyleEditorForURL(TESTCASE_URI);
+  const editor = await ui.editors[0].getSourceEditor();
+  editor.sourceEditor.setOption("autocomplete", false);
+
+  is(editor.sourceEditor.getOption("autocomplete"), false,
+     "Autocompletion option does not exist");
+  ok(!editor.sourceEditor.getAutocompletionPopup(),
+     "Autocompletion popup does not exist");
+});
+
+add_task(async function() {
   Services.prefs.setBoolPref(AUTOCOMPLETION_PREF, false);
   const { ui } = await openStyleEditorForURL(TESTCASE_URI);
   const editor = await ui.editors[0].getSourceEditor();
 
   is(editor.sourceEditor.getOption("autocomplete"), false,
      "Autocompletion option does not exist");
-  ok(!editor.sourceEditor.getAutocompletionPopup(),
-     "Autocompletion popup does not exist");
 });
 
 registerCleanupFunction(() => {
