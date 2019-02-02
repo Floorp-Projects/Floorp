@@ -759,7 +759,7 @@ void SVGMaskObserverList::ResolveImage(uint32_t aIndex) {
 
   if (!image.IsResolved()) {
     MOZ_ASSERT(image.GetType() == nsStyleImageType::eStyleImageType_Image);
-    image.ResolveImage(mFrame->PresContext(), nullptr);
+    image.ResolveImage(*mFrame->PresContext()->Document(), nullptr);
 
     mozilla::css::ImageLoader* imageLoader =
         mFrame->PresContext()->Document()->StyleImageLoader();
