@@ -6,6 +6,8 @@
  * after generating screenshots using the actor.
  */
 
+var { CanvasFront } = require("devtools/shared/fronts/canvas");
+
 async function ifTestingSupported() {
   const { target, front } = await initCanvasDebuggerBackend(WEBGL_BINDINGS_URL);
   loadFrameScriptUtils();
