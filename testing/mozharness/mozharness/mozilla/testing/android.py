@@ -324,8 +324,7 @@ class AndroidMixin(object):
             self.device.install_app(apk)
         except (mozdevice.ADBError, mozdevice.ADBTimeoutError):
             self.info('Failed to install %s on %s' %
-                      (self.installer_path, self.device_name),
-                      exc_info=1)
+                      (self.installer_path, self.device_name))
             self.fatal('INFRA-ERROR: Failed to install %s' %
                        self.installer_path,
                        EXIT_STATUS_DICT[TBPL_RETRY])
