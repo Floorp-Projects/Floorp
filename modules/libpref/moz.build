@@ -49,6 +49,9 @@ if CONFIG['NIGHTLY_BUILD']:
     DEFINES['ENABLE_WASM_REFTYPES'] = True
     DEFINES['ENABLE_WASM_GC'] = True
 
+if CONFIG['MOZ_BUILD_APP'] == 'browser':
+    DEFINES['MOZ_BUILD_APP_IS_BROWSER'] = True
+
 FINAL_TARGET_PP_FILES += [
     'greprefs.js',
 ]
