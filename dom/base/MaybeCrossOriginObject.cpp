@@ -27,8 +27,8 @@ namespace mozilla {
 namespace dom {
 
 /* static */
-bool MaybeCrossOriginObjectMixins::IsPlatformObjectSameOrigin(
-    JSContext* cx, JS::Handle<JSObject*> obj) {
+bool MaybeCrossOriginObjectMixins::IsPlatformObjectSameOrigin(JSContext* cx,
+                                                              JSObject* obj) {
   MOZ_ASSERT(!js::IsCrossCompartmentWrapper(obj));
   // WindowProxy and Window must always be same-Realm, so we can do
   // our IsPlatformObjectSameOrigin check against either one.  But verify that
