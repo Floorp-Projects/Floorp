@@ -18,12 +18,11 @@ add_task(async function() {
   const tab = await addTab(TAB_URL);
   const target = await TargetFactory.forTab(tab);
   await target.attach();
-  const targetFront = target.activeTab;
 
-  await listWorkers(targetFront);
+  await listWorkers(target);
   await createWorkerInTab(tab, WORKER_URL);
 
-  const { workers } = await listWorkers(targetFront);
+  const { workers } = await listWorkers(target);
   const workerTargetFront = findWorker(workers, WORKER_URL);
 
   const toolbox = await gDevTools.showToolbox(TargetFactory.forWorker(workerTargetFront),
