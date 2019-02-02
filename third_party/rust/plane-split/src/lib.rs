@@ -162,13 +162,9 @@ impl<
             .all(|p| self.signed_distance_to(p) * d0 > T::zero())
     }
 
+    //TODO(breaking): turn this into Result<Line, DotProduct>
     /// Compute the line of intersection with another plane.
     pub fn intersect(&self, other: &Self) -> Option<Line<T, U>> {
-        let cross_dir = self.normal.cross(other.normal);
-        if cross_dir.dot(cross_dir) < T::approx_epsilon() {
-            return None
-        }
-
         // compute any point on the intersection between planes
         // (n1, v) + d1 = 0
         // (n2, v) + d2 = 0
@@ -183,6 +179,10 @@ impl<
         let origin = TypedPoint3D::origin() +
             self.normal * ((other.offset * w - self.offset) * factor) -
             other.normal* ((other.offset - self.offset * w) * factor);
+
+        let cross_dir = self.normal.cross(other.normal);
+        // note: the cross product isn't too close to zero
+        // due to the previous check
 
         Some(Line {
             origin,
