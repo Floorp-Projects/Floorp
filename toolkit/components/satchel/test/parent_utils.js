@@ -101,6 +101,16 @@ var ParentUtils = {
     });
   },
 
+  testMenuEntry(index, statement) {
+    ContentTaskUtils.waitForCondition(() => {
+      let el = gAutocompletePopup.richlistbox.getItemAtIndex(index);
+      let testFunc = new Services.ww.activeWindow.Function("el", `return ${statement}`);
+      return gAutocompletePopup.popupOpen && el && testFunc(el);
+    }, "Testing menu entry").then(() => {
+      sendAsyncMessage("menuEntryTested");
+    });
+  },
+
   getPopupState() {
     sendAsyncMessage("gotPopupState", {
       open: gAutocompletePopup.popupOpen,
@@ -141,6 +151,9 @@ addMessageListener("waitForMenuChange", ({ expectedCount, expectedFirstValue }) 
 
 addMessageListener("waitForSelectedIndex", ({ expectedIndex }) => {
   ParentUtils.checkSelectedIndex(expectedIndex);
+});
+addMessageListener("waitForMenuEntryTest", ({ index, statement }) => {
+  ParentUtils.testMenuEntry(index, statement);
 });
 
 addMessageListener("getPopupState", () => {

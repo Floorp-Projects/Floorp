@@ -1254,6 +1254,11 @@ Editor.prototype = {
    * editor), but we do want to always disable it if it is preffed off.
    */
   setupAutoCompletion: function() {
+    if (!this.config.autocomplete && !this.initializeAutoCompletion) {
+      // Do nothing since there is no autocomplete config and no autocompletion have
+      // been initialized.
+      return;
+    }
     // The autocomplete module will overwrite this.initializeAutoCompletion
     // with a mode specific autocompletion handler.
     if (!this.initializeAutoCompletion) {

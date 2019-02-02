@@ -14,14 +14,14 @@ runChecksAfterCommonInit(() => startTest());
 
 runInParent(function setup() {
   const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-  login1 = Cc["@mozilla.org/login-manager/loginInfo;1"].
-           createInstance(Ci.nsILoginInfo);
-  login2 = Cc["@mozilla.org/login-manager/loginInfo;1"].
-           createInstance(Ci.nsILoginInfo);
-  login3 = Cc["@mozilla.org/login-manager/loginInfo;1"].
-           createInstance(Ci.nsILoginInfo);
-  login4 = Cc["@mozilla.org/login-manager/loginInfo;1"].
-           createInstance(Ci.nsILoginInfo);
+  let login1 = Cc["@mozilla.org/login-manager/loginInfo;1"].
+               createInstance(Ci.nsILoginInfo);
+  let login2 = Cc["@mozilla.org/login-manager/loginInfo;1"].
+               createInstance(Ci.nsILoginInfo);
+  let login3 = Cc["@mozilla.org/login-manager/loginInfo;1"].
+               createInstance(Ci.nsILoginInfo);
+  let login4 = Cc["@mozilla.org/login-manager/loginInfo;1"].
+               createInstance(Ci.nsILoginInfo);
 
   login1.init("http://mochi.test:8888", "http://bug600551-1", null,
               "testuser@example.com", "testpass1", "", "");

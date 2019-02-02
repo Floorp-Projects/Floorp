@@ -125,7 +125,8 @@ add_task(function test_initialize() {
  */
 add_task(function test_logins_statistics() {
   // Repeat the operation twice to test that histograms are not accumulated.
-  for (let repeating of [false, true]) {
+  for (let pass of [1, 2]) {
+    info(`pass ${pass}`);
     triggerStatisticsCollection();
 
     // Should record 1 in the bucket corresponding to the number of passwords.

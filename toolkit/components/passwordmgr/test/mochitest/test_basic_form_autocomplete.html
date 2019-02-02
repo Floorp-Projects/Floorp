@@ -6,7 +6,7 @@
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/AddTask.js"></script>
-  <script type="text/javascript" src="satchel_common.js"></script>
+  <script type="text/javascript" src="../../../satchel/test/satchel_common.js"></script>
   <script type="text/javascript" src="pwmgr_common.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
@@ -56,6 +56,8 @@ var setupScript = runInParent(function setup() {
                                 "form9userAB", "form9pass", "uname", "pword");
   var login8B = new nsLoginInfo("http://mochi.test:8888", "http://autocomplete5", null,
                                 "form9userAAB", "form9pass", "uname", "pword");
+  // Reference by `eval` in the message listeners below.
+  // eslint-disable-next-line no-unused-vars
   var login8C = new nsLoginInfo("http://mochi.test:8888", "http://autocomplete5", null,
                                 "form9userAABzz", "form9pass", "uname", "pword");
 
@@ -453,8 +455,7 @@ add_task(async function test_form1_delete() {
 
   // Delete the first entry (of 4), "tempuser1"
   synthesizeKey("KEY_ArrowDown");
-  var numLogins;
-  numLogins = LoginManager.countLogins("http://mochi.test:8888", "http://autocomplete:8888", null);
+  let numLogins = LoginManager.countLogins("http://mochi.test:8888", "http://autocomplete:8888", null);
   is(numLogins, 5, "Correct number of logins before deleting one");
 
   let countChangedPromise = notifyMenuChanged(3);
@@ -497,7 +498,7 @@ add_task(async function test_form1_delete_second() {
   synthesizeKey("KEY_ArrowDown");
   synthesizeKey("KEY_Delete", {shiftKey: true});
   checkACForm("", "");
-  numLogins = LoginManager.countLogins("http://mochi.test:8888", "http://autocomplete:8888", null);
+  let numLogins = LoginManager.countLogins("http://mochi.test:8888", "http://autocomplete:8888", null);
   is(numLogins, 3, "Correct number of logins after deleting one");
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessed();
@@ -529,7 +530,7 @@ add_task(async function test_form1_delete_last() {
   synthesizeKey("KEY_ArrowDown");
   synthesizeKey("KEY_Delete", {shiftKey: true});
   checkACForm("", "");
-  numLogins = LoginManager.countLogins("http://mochi.test:8888", "http://autocomplete:8888", null);
+  let numLogins = LoginManager.countLogins("http://mochi.test:8888", "http://autocomplete:8888", null);
   is(numLogins, 2, "Correct number of logins after deleting one");
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessed();
@@ -560,7 +561,7 @@ add_task(async function test_form1_check_only_entry_remaining() {
   synthesizeKey("KEY_ArrowDown");
   synthesizeKey("KEY_Delete", {shiftKey: true});
   checkACForm("", "");
-  numLogins = LoginManager.countLogins("http://mochi.test:8888", "http://autocomplete:8888", null);
+  let numLogins = LoginManager.countLogins("http://mochi.test:8888", "http://autocomplete:8888", null);
   is(numLogins, 1, "Correct number of logins after deleting one");
 
   // remove the login that's not shown in the list.

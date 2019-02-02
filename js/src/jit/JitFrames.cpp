@@ -2033,7 +2033,7 @@ void InlineFrameIterator::findNextFrame() {
     if (JSOp(*pc_) == JSOP_FUNCALL) {
       MOZ_ASSERT(GET_ARGC(pc_) > 0);
       numActualArgs_ = GET_ARGC(pc_) - 1;
-    } else if (IsGetPropPC(pc_)) {
+    } else if (IsGetPropPC(pc_) || IsGetElemPC(pc_)) {
       numActualArgs_ = 0;
     } else if (IsSetPropPC(pc_)) {
       numActualArgs_ = 1;
@@ -2207,7 +2207,7 @@ bool InlineFrameIterator::isConstructing() const {
     ++parent;
 
     // Inlined Getters and Setters are never constructing.
-    if (IsGetPropPC(parent.pc()) || IsSetPropPC(parent.pc())) {
+    if (IsIonInlinableGetterOrSetterPC(parent.pc())) {
       return false;
     }
 
