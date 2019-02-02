@@ -89,6 +89,6 @@ fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-35,0-194) == transforms-1.
 # Test for antialiasing gaps between background and border
 fuzzy-if(gtkWidget,0-1,0-9) fuzzy-if(winWidget&&!d2d,0-1,0-9) fuzzy-if(d2d,0-5,0-40) fuzzy-if(Android||skiaContent,0-1,0-9) == curved-border-background-nogap.html curved-border-background-nogap-ref.html
 
-== color-layer-1a.html color-layer-1-ref.html
+fuzzy-if(webrender,0-1,0-4) == color-layer-1a.html color-layer-1-ref.html
 
 fuzzy-if(webrender,1-1,104-162) == corner-split.html corner-split-ref.svg
