@@ -367,6 +367,7 @@ class UrlbarInput {
    */
   setValueFromResult(result) {
     let val;
+
     switch (result.type) {
       case UrlbarUtils.RESULT_TYPE.SEARCH:
         val = result.payload.suggestion || result.payload.query;
@@ -388,13 +389,6 @@ class UrlbarInput {
     }
     this.value = val;
 
-    // Dispatch the input event to update userTypedValue. See bug 287996.
-    let event = this.document.createEvent("UIEvents");
-    event.initUIEvent("input", true, false, this.window, 0);
-    this.inputField.dispatchEvent(event);
-
-    // Both the value setter and the input event handler clobber the actiontype
-    // attribute, so update this last.
     switch (result.type) {
       case UrlbarUtils.RESULT_TYPE.TAB_SWITCH:
         this.setAttribute("actiontype", "switchtab");
