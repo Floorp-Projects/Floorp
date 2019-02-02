@@ -99,6 +99,8 @@ class APZSampler {
   void MarkAsyncTransformAppliedToContent(const LayerMetricsWrapper& aLayer);
   bool HasUnusedAsyncTransform(const LayerMetricsWrapper& aLayer);
 
+  ScrollableLayerGuid GetGuid(const LayerMetricsWrapper& aLayer);
+
   /**
    * This can be used to assert that the current thread is the
    * sampler thread (which samples the async transform).
