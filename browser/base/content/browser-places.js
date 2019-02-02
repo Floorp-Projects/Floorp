@@ -542,7 +542,7 @@ var PlacesCommandHook = {
   },
 
   searchBookmarks() {
-    gURLBar.typeRestrictToken(UrlbarTokenizer.RESTRICT.BOOKMARK);
+    gURLBar.search(UrlbarTokenizer.RESTRICT.BOOKMARK);
   },
 };
 
