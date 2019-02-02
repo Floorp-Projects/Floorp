@@ -246,7 +246,7 @@ var AppManager = exports.AppManager = {
       return Promise.reject("tried to reload non-tab project");
     }
     return this.getTarget().then(target => {
-      target.activeTab.reload();
+      target.reload();
     }, console.error);
   },
 

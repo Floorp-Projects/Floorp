@@ -131,13 +131,13 @@ function navigateInHistory(aTarget, aDirection, aWaitForTargetEvent = "navigate"
 }
 
 function navigate(aTarget, aUrl, aWaitForTargetEvent = "navigate") {
-  executeSoon(() => aTarget.activeTab.navigateTo({ url: aUrl }));
+  executeSoon(() => aTarget.navigateTo({ url: aUrl }));
   return once(aTarget, aWaitForTargetEvent);
 }
 
 async function reload(aTarget, aWaitForTargetEvent = "navigate") {
   const onTargetEvent = once(aTarget, aWaitForTargetEvent);
-  await aTarget.activeTab.reload();
+  await aTarget.reload();
   return onTargetEvent;
 }
 

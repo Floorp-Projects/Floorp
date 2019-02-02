@@ -29,7 +29,7 @@ function ensureCSSErrorReportingEnabled(hud) {
       const cssFilterToggled =
         action.type == FILTER_TOGGLE && action.filter == "css";
       if (cssFilterToggled || action.type == INITIALIZE) {
-        proxy.target.activeTab.ensureCSSErrorReportingEnabled();
+        proxy.target.ensureCSSErrorReportingEnabled();
       }
       return state;
     }

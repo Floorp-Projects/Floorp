@@ -42,7 +42,7 @@ add_task(async function() {
      "Host type of this toolbox shuld be Toolbox.HostType.PAGE");
 
   const onToolboxDestroyed = gDevTools.once("toolbox-destroyed");
-  const onTabDetached = toolbox.target.activeTab.once("tabDetached");
+  const onTabDetached = toolbox.target.once("tabDetached");
 
   info("Removing the iframes");
   toolboxIframe.remove();

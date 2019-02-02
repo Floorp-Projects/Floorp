@@ -73,7 +73,7 @@ async function toggleJS(toolbox) {
     info("Checking checkbox to disable JS");
   }
 
-  let { javascriptEnabled } = toolbox.target.activeTab.configureOptions;
+  let { javascriptEnabled } = toolbox.target.configureOptions;
   is(javascriptEnabled, !cbx.checked,
     "BrowsingContextTargetFront's configureOptions is correct before the toggle");
 
@@ -81,7 +81,7 @@ async function toggleJS(toolbox) {
   cbx.click();
   await browserLoaded;
 
-  ({ javascriptEnabled } = toolbox.target.activeTab.configureOptions);
+  ({ javascriptEnabled } = toolbox.target.configureOptions);
   is(javascriptEnabled, !cbx.checked,
     "BrowsingContextTargetFront's configureOptions is correctly updated");
 }

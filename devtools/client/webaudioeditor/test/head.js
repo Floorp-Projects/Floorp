@@ -43,12 +43,12 @@ registerCleanupFunction(() => {
 });
 
 function reload(aTarget, aWaitForTargetEvent = "navigate") {
-  aTarget.activeTab.reload();
+  aTarget.reload();
   return once(aTarget, aWaitForTargetEvent);
 }
 
 function navigate(aTarget, aUrl, aWaitForTargetEvent = "navigate") {
-  executeSoon(() => aTarget.activeTab.navigateTo({ url: aUrl }));
+  executeSoon(() => aTarget.navigateTo({ url: aUrl }));
   return once(aTarget, aWaitForTargetEvent);
 }
 

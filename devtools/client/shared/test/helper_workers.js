@@ -176,11 +176,10 @@ async function initWorkerDebugger(TAB_URL, WORKER_URL) {
   const target = await TargetFactory.forTab(tab);
   await target.attach();
   const { client } = target;
-  const targetFront = target.activeTab;
 
   await createWorkerInTab(tab, WORKER_URL);
 
-  const { workers } = await listWorkers(targetFront);
+  const { workers } = await listWorkers(target);
   const workerTargetFront = findWorker(workers, WORKER_URL);
 
   const toolbox = await gDevTools.showToolbox(TargetFactory.forWorker(workerTargetFront),
@@ -193,7 +192,7 @@ async function initWorkerDebugger(TAB_URL, WORKER_URL) {
 
   const context = createDebuggerContext(toolbox);
 
-  return { ...context, client, tab, targetFront, workerTargetFront, toolbox, gDebugger};
+  return { ...context, client, tab, target, workerTargetFront, toolbox, gDebugger};
 }
 
 // Override addTab/removeTab as defined by shared-head, since these have
@@ -241,8 +240,7 @@ this.removeTab = function removeTab(tab, win) {
 async function attachThreadActorForTab(tab) {
   const target = await TargetFactory.forTab(tab);
   await target.attach();
-  const targetFront = target.activeTab;
-  const [, threadClient] = await targetFront.attachThread();
+  const [, threadClient] = await target.attachThread();
   await threadClient.resume();
   return { client: target.client, threadClient };
 }
