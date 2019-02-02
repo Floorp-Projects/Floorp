@@ -6521,22 +6521,13 @@ nsresult PresShell::EventHandler::HandleEvent(nsIFrame* aFrame,
   }
 
   if (!aDontRetargetEvents) {
-    RefPtr<Document> retargetEventDoc;
-    if (!GetRetargetEventDocument(aGUIEvent,
-                                  getter_AddRefs(retargetEventDoc))) {
-      return NS_OK;  // Not need to return error.
-    }
-
-    if (retargetEventDoc) {
-      nsIFrame* frame =
-          GetFrameForHandlingEventWith(aGUIEvent, retargetEventDoc, aFrame);
-      if (!frame) {
-        return NS_OK;  // Not need to return error.
-      }
-      if (frame != aFrame) {
-        nsCOMPtr<nsIPresShell> shell = frame->PresContext()->GetPresShell();
-        return shell->HandleEvent(frame, aGUIEvent, true, aEventStatus);
-      }
+    // If aGUIEvent should be handled in another PresShell, we should call its
+    // HandleEvent() and do nothing here.
+    nsresult rv = NS_OK;
+    if (MaybeHandleEventWithAnotherPresShell(aFrame, aGUIEvent, aEventStatus,
+                                             &rv)) {
+      // Handled by another PresShell or nobody can handle the event.
+      return rv;
     }
   }
 
@@ -7218,6 +7209,48 @@ nsIFrame* PresShell::EventHandler::GetFrameForHandlingEventWith(
 
   // Otherwise, use nearest ancestor frame which includes the PresShell.
   return GetNearestFrameContainingPresShell(retargetPresShell);
+}
+
+bool PresShell::EventHandler::MaybeHandleEventWithAnotherPresShell(
+    nsIFrame* aFrameForPresShell, WidgetGUIEvent* aGUIEvent,
+    nsEventStatus* aEventStatus, nsresult* aRv) {
+  MOZ_ASSERT(aGUIEvent);
+  MOZ_ASSERT(aEventStatus);
+  MOZ_ASSERT(aRv);
+
+  *aRv = NS_OK;
+
+  RefPtr<Document> retargetEventDoc;
+  if (!GetRetargetEventDocument(aGUIEvent, getter_AddRefs(retargetEventDoc))) {
+    // Nobody can handle this event.  So, treat as handled by somebody to make
+    // caller do nothing anymore.
+    return true;
+  }
+
+  // If there is no proper retarget document, the caller should handle the
+  // event by itself.
+  if (!retargetEventDoc) {
+    return false;
+  }
+
+  nsIFrame* frame = GetFrameForHandlingEventWith(aGUIEvent, retargetEventDoc,
+                                                 aFrameForPresShell);
+  if (!frame) {
+    // Nobody can handle this event.  So, treat as handled by somebody to make
+    // caller do nothing anymore.
+    return true;
+  }
+
+  // If we reached same frame as set to HandleEvent(), the caller should handle
+  // the event by itself.
+  if (frame == aFrameForPresShell) {
+    return false;
+  }
+
+  // We need to handle aGUIEvent with another PresShell.
+  nsCOMPtr<nsIPresShell> shell = frame->PresContext()->GetPresShell();
+  *aRv = shell->HandleEvent(frame, aGUIEvent, true, aEventStatus);
+  return true;
 }
 
 Document* PresShell::GetPrimaryContentDocument() {
