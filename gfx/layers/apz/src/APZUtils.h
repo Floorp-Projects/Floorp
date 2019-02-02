@@ -138,6 +138,13 @@ class MOZ_RAII AutoApplyAsyncTestAttributes {
   FrameMetrics mPrevFrameMetrics;
 };
 
+enum class AsyncTransformComponent { eScroll, eZoom };
+
+using AsyncTransformComponents = EnumSet<AsyncTransformComponent>;
+
+constexpr AsyncTransformComponents ScrollAndZoom(
+    AsyncTransformComponent::eScroll, AsyncTransformComponent::eZoom);
+
 namespace apz {
 
 /**

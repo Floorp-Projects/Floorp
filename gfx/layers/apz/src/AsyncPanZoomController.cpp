@@ -3952,25 +3952,35 @@ AsyncTransform AsyncPanZoomController::GetCurrentAsyncViewportTransform(
 }
 
 AsyncTransform AsyncPanZoomController::GetCurrentAsyncTransform(
-    AsyncTransformConsumer aMode) const {
+    AsyncTransformConsumer aMode, AsyncTransformComponents aComponents) const {
   RecursiveMutexAutoLock lock(mRecursiveMutex);
 
   if (aMode == eForCompositing && mScrollMetadata.IsApzForceDisabled()) {
     return AsyncTransform();
   }
 
-  CSSPoint lastPaintScrollOffset;
-  if (mLastContentPaintMetrics.IsScrollable()) {
-    lastPaintScrollOffset = mLastContentPaintMetrics.GetScrollOffset();
+  CSSToParentLayerScale2D effectiveZoom;
+  if (aComponents.contains(AsyncTransformComponent::eZoom)) {
+    effectiveZoom = GetEffectiveZoom(aMode);
+  } else {
+    effectiveZoom =
+        Metrics().LayersPixelsPerCSSPixel() * LayerToParentLayerScale(1.0f);
   }
 
-  CSSPoint currentScrollOffset = GetEffectiveScrollOffset(aMode);
-
-  CSSToParentLayerScale2D effectiveZoom = GetEffectiveZoom(aMode);
-  ParentLayerPoint translation =
-      (currentScrollOffset - lastPaintScrollOffset) * effectiveZoom;
   LayerToParentLayerScale compositedAsyncZoom =
       (effectiveZoom / Metrics().LayersPixelsPerCSSPixel()).ToScaleFactor();
+
+  ParentLayerPoint translation;
+  if (aComponents.contains(AsyncTransformComponent::eScroll)) {
+    CSSPoint lastPaintScrollOffset;
+    if (mLastContentPaintMetrics.IsScrollable()) {
+      lastPaintScrollOffset = mLastContentPaintMetrics.GetScrollOffset();
+    }
+
+    CSSPoint currentScrollOffset = GetEffectiveScrollOffset(aMode);
+
+    translation = (currentScrollOffset - lastPaintScrollOffset) * effectiveZoom;
+  }
 
   return AsyncTransform(compositedAsyncZoom, -translation);
 }
