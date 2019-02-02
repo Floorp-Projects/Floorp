@@ -423,6 +423,19 @@ void AsyncCompositionManager::AlignFixedAndStickyLayers(
     return;
   }
 
+  AdjustFixedOrStickyLayer(aTransformedSubtreeRoot, layer, aTransformScrollId,
+                           aPreviousTransformForRoot, aCurrentTransformForRoot,
+                           aFixedLayerMargins, aClipPartsCache);
+}
+
+void AsyncCompositionManager::AdjustFixedOrStickyLayer(
+    Layer* aTransformedSubtreeRoot, Layer* aFixedOrSticky,
+    ScrollableLayerGuid::ViewID aTransformScrollId,
+    const LayerToParentLayerMatrix4x4& aPreviousTransformForRoot,
+    const LayerToParentLayerMatrix4x4& aCurrentTransformForRoot,
+    const ScreenMargin& aFixedLayerMargins, ClipPartsCache& aClipPartsCache) {
+  Layer* layer = aFixedOrSticky;
+
   // Insert a translation so that the position of the anchor point is the same
   // before and after the change to the transform of aTransformedSubtreeRoot.
 
