@@ -1694,8 +1694,11 @@ class ICGetElem_Fallback : public ICMonitoredFallbackStub {
   // Compiler for this stub kind.
   class Compiler : public ICStubCompiler {
    protected:
+    CodeOffset bailoutReturnOffset_;
     bool hasReceiver_;
     MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm) override;
+    void postGenerateStubCode(MacroAssembler& masm,
+                              Handle<JitCode*> code) override;
 
     virtual int32_t getKey() const override {
       return static_cast<int32_t>(kind) |

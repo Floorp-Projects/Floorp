@@ -276,8 +276,7 @@ class IonBuilder : public MIRGenerator,
                                       PropertyName* name, BarrierKind barrier,
                                       TemporaryTypeSet* types);
   AbortReasonOr<Ok> getPropTryCommonGetter(bool* emitted, MDefinition* obj,
-                                           PropertyName* name,
-                                           TemporaryTypeSet* types,
+                                           jsid id, TemporaryTypeSet* types,
                                            bool innerized = false);
   AbortReasonOr<Ok> getPropTryInlineAccess(bool* emitted, MDefinition* obj,
                                            PropertyName* name,
@@ -864,19 +863,18 @@ class IonBuilder : public MIRGenerator,
   MDefinition* specializeInlinedReturn(MDefinition* rdef, MBasicBlock* exit);
 
   NativeObject* commonPrototypeWithGetterSetter(TemporaryTypeSet* types,
-                                                PropertyName* name,
-                                                bool isGetter,
+                                                jsid id, bool isGetter,
                                                 JSFunction* getterOrSetter,
                                                 bool* guardGlobal);
   AbortReasonOr<Ok> freezePropertiesForCommonPrototype(
-      TemporaryTypeSet* types, PropertyName* name, JSObject* foundProto,
-      bool allowEmptyTypesForGlobal = false);
+      TemporaryTypeSet* types, jsid id, JSObject* foundProto,
+      bool allowEmptyTypesForGlobal);
   /*
    * Callers must pass a non-null globalGuard if they pass a non-null
    * globalShape.
    */
   AbortReasonOr<bool> testCommonGetterSetter(
-      TemporaryTypeSet* types, PropertyName* name, bool isGetter,
+      TemporaryTypeSet* types, jsid id, bool isGetter,
       JSFunction* getterOrSetter, MDefinition** guard,
       Shape* globalShape = nullptr, MDefinition** globalGuard = nullptr);
   AbortReasonOr<bool> testShouldDOMCall(TypeSet* inTypes, JSFunction* func,

@@ -725,8 +725,20 @@ class ADBDevice(ADBCommand):
 
         self._selinux = None
         self.enforcing = 'Permissive'
-        self.version = int(self.shell_output("getprop ro.build.version.sdk",
-                                             timeout=timeout))
+
+        self.version = 0
+        while self.version < 1 and (time.time() - start_time) <= float(timeout):
+            try:
+                version = self.shell_output("getprop ro.build.version.sdk",
+                                            timeout=timeout)
+                self.version = int(version)
+            except ValueError:
+                self._logger.info("unexpected ro.build.version.sdk: '%s'" % version)
+                time.sleep(2)
+        if self.version < 1:
+            # note slightly different meaning to the ADBTimeoutError here (and above):
+            # failed to get valid (numeric) version string in all attempts in allowed time
+            raise ADBTimeoutError("ADBDevice: unable to determine ro.build.version.sdk.")
 
         # Do we have pidof?
         if self.version >= version_codes.N:
