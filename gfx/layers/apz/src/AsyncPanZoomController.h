@@ -1103,6 +1103,16 @@ class AsyncPanZoomController {
       AsyncTransformComponents aComponents = ScrollAndZoom) const;
 
   /**
+   * Get the current async transform of the visual viewport relative to
+   * the layout viewport.
+   * We don't have an |aComponents| parameter here because the relative
+   * transform can only be a translation (the visual and layout viewports
+   * are zoomed together).
+   */
+  AsyncTransform GetCurrentAsyncViewportRelativeTransform(
+      AsyncTransformConsumer aMode) const;
+
+  /**
    * Returns the incremental transformation corresponding to the async
    * panning/zooming of the larger of the visual or layout viewport.
    */

@@ -3985,6 +3985,38 @@ AsyncTransform AsyncPanZoomController::GetCurrentAsyncTransform(
   return AsyncTransform(compositedAsyncZoom, -translation);
 }
 
+AsyncTransform AsyncPanZoomController::GetCurrentAsyncViewportRelativeTransform(
+    AsyncTransformConsumer aMode) const {
+  RecursiveMutexAutoLock lock(mRecursiveMutex);
+
+  if (aMode == eForCompositing && mScrollMetadata.IsApzForceDisabled()) {
+    return AsyncTransform();
+  }
+
+  CSSPoint lastPaintRelativeViewportOffset;
+  if (mLastContentPaintMetrics.IsScrollable()) {
+    lastPaintRelativeViewportOffset =
+        mLastContentPaintMetrics.GetScrollOffset() -
+        mLastContentPaintMetrics.GetLayoutViewport().TopLeft();
+  }
+
+  CSSPoint currentRelativeViewportOffset =
+      GetEffectiveScrollOffset(aMode) -
+      GetEffectiveLayoutViewport(aMode).TopLeft();
+
+  // Don't include the zoom, because that applies to both the visual and
+  // layout viewports so it's not part of the *relative* transform.
+  // The non-async part of the zoom is only calculated so that we can get
+  // the translation into the right coordinate space.
+  CSSToParentLayerScale2D effectiveZoom =
+      Metrics().LayersPixelsPerCSSPixel() * LayerToParentLayerScale(1.0f);
+  ParentLayerPoint translation =
+      (currentRelativeViewportOffset - lastPaintRelativeViewportOffset) *
+      effectiveZoom;
+
+  return AsyncTransform(LayerToParentLayerScale{}, -translation);
+}
+
 AsyncTransform
 AsyncPanZoomController::GetCurrentAsyncTransformForFixedAdjustment(
     AsyncTransformConsumer aMode) const {
