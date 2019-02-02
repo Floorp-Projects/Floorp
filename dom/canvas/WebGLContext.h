@@ -1712,8 +1712,8 @@ class WebGLContext : public nsICanvasRenderingContextInternal,
 
   bool ValidateArrayBufferView(const dom::ArrayBufferView& view,
                                GLuint elemOffset, GLuint elemCountOverride,
-                               uint8_t** const out_bytes,
-                               size_t* const out_byteLen);
+                               GLenum errorVal, uint8_t** const out_bytes,
+                               size_t* const out_byteLen) const;
 
  protected:
   ////

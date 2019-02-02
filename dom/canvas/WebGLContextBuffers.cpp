@@ -330,8 +330,8 @@ void WebGLContext::BufferData(GLenum target, const dom::ArrayBufferView& src,
 
   uint8_t* bytes;
   size_t byteLen;
-  if (!ValidateArrayBufferView(src, srcElemOffset, srcElemCountOverride, &bytes,
-                               &byteLen)) {
+  if (!ValidateArrayBufferView(src, srcElemOffset, srcElemCountOverride,
+                               LOCAL_GL_INVALID_VALUE, &bytes, &byteLen)) {
     return;
   }
 
@@ -373,8 +373,8 @@ void WebGLContext::BufferSubData(GLenum target, WebGLsizeiptr dstByteOffset,
 
   uint8_t* bytes;
   size_t byteLen;
-  if (!ValidateArrayBufferView(src, srcElemOffset, srcElemCountOverride, &bytes,
-                               &byteLen)) {
+  if (!ValidateArrayBufferView(src, srcElemOffset, srcElemCountOverride,
+                               LOCAL_GL_INVALID_VALUE, &bytes, &byteLen)) {
     return;
   }
 

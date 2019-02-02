@@ -2205,8 +2205,9 @@ static inline size_t SizeOfViewElem(const dom::ArrayBufferView& view) {
 bool WebGLContext::ValidateArrayBufferView(const dom::ArrayBufferView& view,
                                            GLuint elemOffset,
                                            GLuint elemCountOverride,
+                                           const GLenum errorEnum,
                                            uint8_t** const out_bytes,
-                                           size_t* const out_byteLen) {
+                                           size_t* const out_byteLen) const {
   view.ComputeLengthAndData();
   uint8_t* const bytes = view.DataAllowShared();
   const size_t byteLen = view.LengthAllowShared();
@@ -2215,14 +2216,14 @@ bool WebGLContext::ValidateArrayBufferView(const dom::ArrayBufferView& view,
 
   size_t elemCount = byteLen / elemSize;
   if (elemOffset > elemCount) {
-    ErrorInvalidValue("Invalid offset into ArrayBufferView.");
+    GenerateError(errorEnum, "Invalid offset into ArrayBufferView.");
     return false;
   }
   elemCount -= elemOffset;
 
   if (elemCountOverride) {
     if (elemCountOverride > elemCount) {
-      ErrorInvalidValue("Invalid sub-length for ArrayBufferView.");
+      GenerateError(errorEnum, "Invalid sub-length for ArrayBufferView.");
       return false;
     }
     elemCount = elemCountOverride;

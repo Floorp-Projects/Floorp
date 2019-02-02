@@ -93,7 +93,7 @@ void WebGL2Context::GetBufferSubData(GLenum target, GLintptr srcByteOffset,
   uint8_t* bytes;
   size_t byteLen;
   if (!ValidateArrayBufferView(dstData, dstElemOffset, dstElemCountOverride,
-                               &bytes, &byteLen)) {
+                               LOCAL_GL_INVALID_VALUE, &bytes, &byteLen)) {
     return;
   }
 
