@@ -41,8 +41,7 @@ bool MaybeCrossOriginObjectMixins::IsPlatformObjectSameOrigin(JSContext* cx,
 
   BasePrincipal* subjectPrincipal =
       BasePrincipal::Cast(nsContentUtils::SubjectPrincipal(cx));
-  BasePrincipal* objectPrincipal =
-      BasePrincipal::Cast(nsContentUtils::ObjectPrincipal(obj));
+  nsIPrincipal* objectPrincipal = nsContentUtils::ObjectPrincipal(obj);
 
   // The spec effectively has an EqualsConsideringDomain check here,
   // because the spec has no concept of asymmetric security
@@ -54,25 +53,11 @@ bool MaybeCrossOriginObjectMixins::IsPlatformObjectSameOrigin(JSContext* cx,
   // SubsumesConsideringDomain give the same results and use
   // EqualsConsideringDomain for the check we actually do, since it's
   // stricter and more closely matches the spec.
-  //
-  // That said, if the (not very well named)
-  // OriginAttributes::IsRestrictOpenerAccessForFPI() method returns
-  // false, we want to use FastSubsumesConsideringDomainIgnoringFPD
-  // instead of FastEqualsConsideringDomain, because in that case we
-  // still want to treat things which are in different first-party
-  // contexts as same-origin.
   MOZ_ASSERT(
       subjectPrincipal->FastEqualsConsideringDomain(objectPrincipal) ==
           subjectPrincipal->FastSubsumesConsideringDomain(objectPrincipal),
       "Why are we in an asymmetric case here?");
-  if (OriginAttributes::IsRestrictOpenerAccessForFPI()) {
-    return subjectPrincipal->FastEqualsConsideringDomain(objectPrincipal);
-  }
-
-  return subjectPrincipal->FastSubsumesConsideringDomainIgnoringFPD(
-             objectPrincipal) &&
-         objectPrincipal->FastSubsumesConsideringDomainIgnoringFPD(
-             subjectPrincipal);
+  return subjectPrincipal->FastEqualsConsideringDomain(objectPrincipal);
 }
 
 bool MaybeCrossOriginObjectMixins::CrossOriginGetOwnPropertyHelper(
