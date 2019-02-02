@@ -1,14 +1,12 @@
-
 from __future__ import absolute_import, print_function
 
 import sys
-
-from cStringIO import StringIO
 from random import randint, seed
 
-import pytest
 import mozdevice
+import pytest
 from mock import patch
+from six import StringIO
 
 # set up required module-level variables/objects
 seed(1488590)
@@ -32,6 +30,7 @@ def mock_command_output(monkeypatch):
 
     :param object monkeypatch: pytest provided fixture for mocking.
     """
+
     def command_output_wrapper(object, cmd, timeout):
         """Actual monkeypatch implementation of the comand_output method call.
 
@@ -57,6 +56,7 @@ def mock_shell_output(monkeypatch):
 
     :param object monkeypatch: pytest provided fixture for mocking.
     """
+
     def shell_output_wrapper(object, cmd, env=None, cwd=None, timeout=None, root=False):
         """Actual monkeypatch implementation of the shell_output method call.
 
@@ -92,6 +92,7 @@ def mock_is_path_internal_storage(monkeypatch):
 
     :param object monkeypatch: pytest provided fixture for mocking.
     """
+
     def is_path_internal_storage_wrapper(object, path, timeout=None):
         """Actual monkeypatch implementation of the is_path_internal_storage() call.
 
@@ -124,6 +125,7 @@ def mock_shell_bool(monkeypatch):
 
     :param object monkeypatch: pytest provided fixture for mocking.
     """
+
     def shell_bool_wrapper(object, cmd, env=None, cwd=None, timeout=None, root=False):
         """Actual monkeypatch implementation of the shell_bool method call.
 
@@ -171,6 +173,7 @@ def redirect_stdout_and_assert():
 
     :returns: _wrapper method
     """
+
     def _wrapper(func, **kwargs):
         """Implements the stdout sleight-of-hand.
 
@@ -193,4 +196,5 @@ def redirect_stdout_and_assert():
         func(**kwargs)
         sys.stdout = original_stdout
         assert expected_text in testing_stdout.getvalue().rstrip()
+
     return _wrapper
