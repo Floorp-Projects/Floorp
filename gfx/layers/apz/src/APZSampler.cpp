@@ -210,6 +210,14 @@ bool APZSampler::HasUnusedAsyncTransform(const LayerMetricsWrapper& aLayer) {
               .IsIdentity();
 }
 
+ScrollableLayerGuid APZSampler::GetGuid(const LayerMetricsWrapper& aLayer) {
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+  AssertOnSamplerThread();
+
+  MOZ_ASSERT(aLayer.GetApzc());
+  return aLayer.GetApzc()->GetGuid();
+}
+
 void APZSampler::AssertOnSamplerThread() const {
   if (APZThreadUtils::GetThreadAssertionsEnabled()) {
     MOZ_ASSERT(IsSamplerThread());

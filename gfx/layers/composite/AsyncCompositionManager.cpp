@@ -873,13 +873,48 @@ bool AsyncCompositionManager::ApplyAsyncContentTransformToTree(
   // the individual parts for descendant layers.
   ClipPartsCache clipPartsCache;
 
+  Layer* zoomContainer = nullptr;
+  Maybe<LayerMetricsWrapper> zoomedMetrics;
+
   ForEachNode<ForwardIterator>(
       aLayer,
-      [&stackDeferredClips](Layer* layer) {
+      [&](Layer* layer) {
         stackDeferredClips.push(Maybe<ParentLayerIntRect>());
+
+        // If we encounter the async zoom container, find the corresponding
+        // APZC and stash it into |zoomedMetrics|.
+        // (We stash it in the form of a LayerMetricsWrapper because
+        // APZSampler requires going through that rather than using the APZC
+        // directly.)
+        // We do this on the way down the tree (i.e. here in the pre-action)
+        // so that by the time we encounter the layers with the RCD-RSF's
+        // scroll metadata (which will be descendants of the async zoom
+        // container), we can check for it and know we should only apply the
+        // scroll portion of the async transform to those layers (as the zoom
+        // portion will go on the async zoom container).
+        if (Maybe<ScrollableLayerGuid::ViewID> zoomedScrollId =
+                layer->IsAsyncZoomContainer()) {
+          zoomContainer = layer;
+          ForEachNode<ForwardIterator>(
+              LayerMetricsWrapper(layer),
+              [zoomedScrollId, &zoomedMetrics](LayerMetricsWrapper aWrapper) {
+                // Do not descend into layer subtrees with a different layers
+                // id.
+                if (aWrapper.AsRefLayer()) {
+                  return TraversalFlag::Skip;
+                }
+
+                if (aWrapper.Metrics().GetScrollId() == *zoomedScrollId) {
+                  zoomedMetrics = Some(aWrapper);
+                  MOZ_ASSERT(zoomedMetrics->GetApzc());
+                  return TraversalFlag::Abort;
+                }
+
+                return TraversalFlag::Continue;
+              });
+        }
       },
-      [this, &aOutFoundRoot, &stackDeferredClips, &appliedTransform,
-       &clipPartsCache](Layer* layer) {
+      [&](Layer* layer) {
         Maybe<ParentLayerIntRect> clipDeferredFromChildren =
             stackDeferredClips.top();
         stackDeferredClips.pop();
@@ -962,8 +997,15 @@ bool AsyncCompositionManager::ApplyAsyncContentTransformToTree(
 
             hasAsyncTransform = true;
 
+            AsyncTransformComponents asyncTransformComponents =
+                (zoomedMetrics &&
+                 sampler->GetGuid(*zoomedMetrics) == sampler->GetGuid(wrapper))
+                    ? AsyncTransformComponents{AsyncTransformComponent::eScroll}
+                    : ScrollAndZoom;
+
             AsyncTransform asyncTransformWithoutOverscroll =
-                sampler->GetCurrentAsyncTransform(wrapper);
+                sampler->GetCurrentAsyncTransform(wrapper,
+                                                  asyncTransformComponents);
             AsyncTransformComponentMatrix overscrollTransform =
                 sampler->GetOverscrollTransform(wrapper);
             AsyncTransformComponentMatrix asyncTransform =
@@ -1126,6 +1168,21 @@ bool AsyncCompositionManager::ApplyAsyncContentTransformToTree(
                     layer->GetAncestorMaskLayerAt(maskLayerIndex);
                 ancestorMaskLayers.AppendElement(ancestorMaskLayer);
               }
+            }
+          }
+
+          if (Maybe<ScrollableLayerGuid::ViewID> zoomedScrollId =
+                  layer->IsAsyncZoomContainer()) {
+            if (zoomedMetrics) {
+              AsyncTransform zoomTransform = sampler->GetCurrentAsyncTransform(
+                  *zoomedMetrics, {AsyncTransformComponent::eZoom});
+              hasAsyncTransform = true;
+              combinedAsyncTransform *=
+                  AsyncTransformComponentMatrix(zoomTransform);
+            } else {
+              // TODO: Is this normal? It happens on some pages, such as
+              // about:config on mobile, for just one frame or so, before the
+              // scroll metadata for zoomedScrollId appears in the layer tree.
             }
           }
         }
