@@ -158,8 +158,7 @@ HarAutomation.prototype = {
    */
   executeExport: function(data) {
     const items = this.collector.getItems();
-    const form = this.toolbox.target.form;
-    const title = form.title || form.url;
+    const { title } = this.toolbox.target;
 
     const options = {
       requestData: null,
