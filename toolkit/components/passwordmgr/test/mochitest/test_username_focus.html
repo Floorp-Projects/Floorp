@@ -7,26 +7,20 @@
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/AddTask.js"></script>
-  <script type="text/javascript" src="satchel_common.js"></script>
+  <script type="text/javascript" src="../../../satchel/test/satchel_common.js"></script>
   <script type="text/javascript" src="pwmgr_common.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
 <script>
-let pwmgrCommonScript = runInParent(SimpleTest.getTestFileURL("pwmgr_common.js"));
-
 let readyPromise = registerRunTests();
 let chromeScript = runInParent(function chromeSetup() {
   const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
   let login1A  = Cc["@mozilla.org/login-manager/loginInfo;1"].
                  createInstance(Ci.nsILoginInfo);
-  let login1B  = Cc["@mozilla.org/login-manager/loginInfo;1"].
-                 createInstance(Ci.nsILoginInfo);
   let login2A  = Cc["@mozilla.org/login-manager/loginInfo;1"].
                  createInstance(Ci.nsILoginInfo);
   let login2B  = Cc["@mozilla.org/login-manager/loginInfo;1"].
-                 createInstance(Ci.nsILoginInfo);
-  let login2C  = Cc["@mozilla.org/login-manager/loginInfo;1"].
                  createInstance(Ci.nsILoginInfo);
 
   login1A.init("http://mochi.test:8888", "http://username-focus-1", null,
@@ -128,7 +122,7 @@ add_task(async function test_autofilled() {
   removeFocus();
   usernameField.value = "testuser";
   info("Focus when we don't have an exact match");
-  shownPromise = promiseACShown();
+  let shownPromise = promiseACShown();
   usernameField.focus();
   await shownPromise;
 });
@@ -143,7 +137,7 @@ add_task(async function test_autofilled_prefilled_un() {
   removeFocus();
   usernameField.value = "testuser";
   info("Focus when we don't have an exact match");
-  shownPromise = promiseACShown();
+  let shownPromise = promiseACShown();
   usernameField.focus();
   await shownPromise;
 });
@@ -166,7 +160,7 @@ add_task(async function test_autofilled_focused_dynamic() {
   removeFocus();
   passwordField.value = "test";
   info("Focus when we don't have an exact match");
-  shownPromise = promiseACShown();
+  let shownPromise = promiseACShown();
   usernameField.focus();
   await shownPromise;
 });
@@ -176,7 +170,7 @@ add_task(async function test_autofilled_focused_dynamic() {
 add_task(async function test_multiple() {
   let usernameField = $_("-multiple", "uname");
   info("Fields not filled due to multiple so autocomplete upon focus");
-  shownPromise = promiseACShown();
+  let shownPromise = promiseACShown();
   usernameField.focus();
   await shownPromise;
 });
@@ -205,7 +199,7 @@ add_task(async function test_multiple_prefilled_un1() {
   removeFocus();
   usernameField.value = "testuser";
   info("Focus when we don't have an exact match");
-  shownPromise = promiseACShown();
+  let shownPromise = promiseACShown();
   usernameField.focus();
   await shownPromise;
 });
@@ -220,7 +214,7 @@ add_task(async function test_multiple_prefilled_un2() {
   removeFocus();
   usernameField.value = "testuser";
   info("Focus when we don't have an exact match");
-  shownPromise = promiseACShown();
+  let shownPromise = promiseACShown();
   usernameField.focus();
   await shownPromise;
 });
@@ -243,7 +237,7 @@ add_task(async function test_multiple_prefilled_focused_dynamic() {
   removeFocus();
   passwordField.value = "test";
   info("Focus when we don't have an exact match");
-  shownPromise = promiseACShown();
+  let shownPromise = promiseACShown();
   usernameField.focus();
   await shownPromise;
 });

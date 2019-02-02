@@ -313,6 +313,60 @@ const BaseControlMixin = Base => {
 };
 MozElements.BaseControl = BaseControlMixin(MozXULElement);
 
+const BaseTextMixin = Base => class extends Base {
+  set label(val) {
+    this.setAttribute("label", val);
+    return val;
+  }
+
+  get label() {
+    return this.getAttribute("label");
+  }
+
+  set crop(val) {
+    this.setAttribute("crop", val);
+    return val;
+  }
+
+  get crop() {
+    return this.getAttribute("crop");
+  }
+
+  set image(val) {
+    this.setAttribute("image", val);
+    return val;
+  }
+
+  get image() {
+    return this.getAttribute("image");
+  }
+
+  set command(val) {
+    this.setAttribute("command", val);
+    return val;
+  }
+
+  get command() {
+    return this.getAttribute("command");
+  }
+
+  set accessKey(val) {
+    // Always store on the control
+    this.setAttribute("accesskey", val);
+    // If there is a label, change the accesskey on the labelElement
+    // if it's also set there
+    if (this.labelElement) {
+      this.labelElement.accessKey = val;
+    }
+    return val;
+  }
+
+  get accessKey() {
+    return this.labelElement ? this.labelElement.accessKey : this.getAttribute("accesskey");
+  }
+};
+MozElements.BaseText = BaseTextMixin(MozXULElement);
+
 // Attach the base class to the window so other scripts can use it:
 window.BaseControlMixin = BaseControlMixin;
 window.MozElementMixin = MozElementMixin;
@@ -331,6 +385,8 @@ if (!isDummyDocument) {
     "chrome://global/content/elements/general.js",
     "chrome://global/content/elements/notificationbox.js",
     "chrome://global/content/elements/radio.js",
+    "chrome://global/content/elements/richlistbox.js",
+    "chrome://global/content/elements/autocomplete-richlistitem.js",
     "chrome://global/content/elements/textbox.js",
     "chrome://global/content/elements/tabbox.js",
     "chrome://global/content/elements/tree.js",
@@ -341,7 +397,6 @@ if (!isDummyDocument) {
   for (let [tag, script] of [
     ["findbar", "chrome://global/content/elements/findbar.js"],
     ["menulist", "chrome://global/content/elements/menulist.js"],
-    ["richlistbox", "chrome://global/content/elements/richlistbox.js"],
     ["stringbundle", "chrome://global/content/elements/stringbundle.js"],
     ["printpreview-toolbar", "chrome://global/content/printPreviewToolbar.js"],
     ["editor", "chrome://global/content/elements/editor.js"],
