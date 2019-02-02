@@ -2287,6 +2287,7 @@ JSFunction* js::CloneFunctionReuseScript(
 JSFunction* js::CloneFunctionAndScript(JSContext* cx, HandleFunction fun,
                                        HandleObject enclosingEnv,
                                        HandleScope newScope,
+                                       Handle<ScriptSourceObject*> sourceObject,
                                        gc::AllocKind allocKind /* = FUNCTION */,
                                        HandleObject proto /* = nullptr */) {
   MOZ_ASSERT(NewFunctionEnvironmentIsWellFormed(cx, enclosingEnv));
@@ -2329,7 +2330,7 @@ JSFunction* js::CloneFunctionAndScript(JSContext* cx, HandleFunction fun,
              "Otherwise we could relazify clone below!");
 
   RootedScript clonedScript(
-      cx, CloneScriptIntoFunction(cx, newScope, clone, script));
+      cx, CloneScriptIntoFunction(cx, newScope, clone, script, sourceObject));
   if (!clonedScript) {
     return nullptr;
   }
