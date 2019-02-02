@@ -1810,6 +1810,15 @@ static const webgl::FormatUsageInfo* ValidateCopyDestUsage(
     GLenum internalFormat) {
   const auto& fua = webgl->mFormatUsage;
 
+  switch (internalFormat) {
+    case LOCAL_GL_R8_SNORM:
+    case LOCAL_GL_RG8_SNORM:
+    case LOCAL_GL_RGB8_SNORM:
+    case LOCAL_GL_RGBA8_SNORM:
+      webgl->ErrorInvalidEnum("SNORM formats are invalid for CopyTexImage.");
+      return nullptr;
+  }
+
   auto dstUsage = fua->GetSizedTexUsage(internalFormat);
   if (!dstUsage) {
     // Ok, maybe it's unsized.
