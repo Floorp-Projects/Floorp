@@ -38,7 +38,7 @@ namespace dom {
 // template parameter.  We can avoid having multiple instantiations of them by
 // pulling them out into this helper class.
 class MaybeCrossOriginObjectMixins {
- protected:
+ public:
   /**
    * Implementation of
    * <https://html.spec.whatwg.org/multipage/browsers.html#isplatformobjectsameorigin-(-o-)>.
@@ -46,9 +46,9 @@ class MaybeCrossOriginObjectMixins {
    * same-compartment may not be same-Realm.  "obj" can be a WindowProxy, a
    * Window, or a Location.
    */
-  static bool IsPlatformObjectSameOrigin(JSContext* cx,
-                                         JS::Handle<JSObject*> obj);
+  static bool IsPlatformObjectSameOrigin(JSContext* cx, JSObject* obj);
 
+ protected:
   /**
    * Implementation of
    * <https://html.spec.whatwg.org/multipage/browsers.html#crossorigingetownpropertyhelper-(-o,-p-)>.
