@@ -1091,16 +1091,6 @@ class AsyncPanZoomController {
       AsyncTransformConsumer aMode) const;
 
   /**
-   * Returns the incremental transformation corresponding to the async
-   * panning/zooming of the layout viewport (unlike GetCurrentAsyncTransform,
-   * which deals with async movement of the visual viewport). That is, when
-   * this transform is multiplied with the layer's existing transform, it will
-   * make the layer appear with the desired pan/zoom amount.
-   */
-  AsyncTransform GetCurrentAsyncViewportTransform(
-      AsyncTransformConsumer aMode) const;
-
-  /**
    * Returns the incremental transformation corresponding to the async pan/zoom
    * in progress. That is, when this transform is multiplied with the layer's
    * existing transform, it will make the layer appear with the desired pan/zoom
@@ -1148,6 +1138,16 @@ class AsyncPanZoomController {
    * |Metrics()| immediately, without any delay.)
    */
   bool SampleCompositedAsyncTransform();
+
+  /**
+   * Returns the incremental transformation corresponding to the async
+   * panning/zooming of the layout viewport (unlike GetCurrentAsyncTransform,
+   * which deals with async movement of the visual viewport). That is, when
+   * this transform is multiplied with the layer's existing transform, it will
+   * make the layer appear with the desired pan/zoom amount.
+   */
+  AsyncTransform GetCurrentAsyncViewportTransform(
+      AsyncTransformConsumer aMode) const;
 
   /*
    * Helper functions to query the async layout viewport, scroll offset, and
