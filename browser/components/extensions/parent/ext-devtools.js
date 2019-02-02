@@ -102,7 +102,7 @@ global.getToolboxEvalOptions = function(context) {
   }
 
   // Provide the console actor ID to implement the "inspect" binding.
-  options.toolboxConsoleActorID = toolbox.target.form.consoleActor;
+  options.toolboxConsoleActorID = toolbox.target.activeConsole.actor;
 
   return options;
 };

@@ -29,11 +29,10 @@ add_task(async function test() {
   const tabFront = tabs.filter(a => a.url == TAB1_URL).pop();
   ok(tabFront, "Should have an actor for the tab");
 
-  let response = await tabFront.attach();
-  is(response.type, "tabAttached", "Should have attached");
+  await tabFront.attach();
 
   const previousActorID = tabFront.actorID;
-  response = await tabFront.detach();
+  let response = await tabFront.detach();
   is(response.type, "detached", "Should have detached");
 
   tabs = await client.mainRoot.listTabs();
@@ -41,8 +40,7 @@ add_task(async function test() {
   is(newFront.actorID, previousActorID, "Should have the same actor for the same tab");
   isnot(newFront, tabFront, "But the front should be a new one");
 
-  response = await newFront.attach();
-  is(response.type, "tabAttached", "Should have attached");
+  await newFront.attach();
   response = await newFront.detach();
   is(response.type, "detached", "Should have detached");
 
