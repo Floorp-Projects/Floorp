@@ -876,8 +876,11 @@ void WorkerDebuggerGlobalScope::LoadSubScript(
 
   Maybe<JSAutoRealm> ar;
   if (aSandbox.WasPassed()) {
-    JS::Rooted<JSObject*> sandbox(aCx, js::CheckedUnwrap(aSandbox.Value()));
-    if (!IsWorkerDebuggerSandbox(sandbox)) {
+    // We only care about worker debugger sandbox objects here, so
+    // CheckedUnwrapStatic is fine.
+    JS::Rooted<JSObject*> sandbox(aCx,
+                                  js::CheckedUnwrapStatic(aSandbox.Value()));
+    if (!sandbox || !IsWorkerDebuggerSandbox(sandbox)) {
       aRv.Throw(NS_ERROR_INVALID_ARG);
       return;
     }
