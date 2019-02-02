@@ -124,7 +124,8 @@ inline js::PromiseObject* js::DebuggerObject::promise() const {
 
   JSObject* referent = this->referent();
   if (IsCrossCompartmentWrapper(referent)) {
-    referent = CheckedUnwrap(referent);
+    // We know we have a Promise here, so CheckedUnwrapStatic is fine.
+    referent = CheckedUnwrapStatic(referent);
     MOZ_ASSERT(referent);
   }
 
