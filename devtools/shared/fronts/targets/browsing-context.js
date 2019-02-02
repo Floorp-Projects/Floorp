@@ -169,6 +169,17 @@ class BrowsingContextTargetFront extends
 
     return response;
   }
+
+  destroy() {
+    const promise = super.destroy();
+
+    // As detach isn't necessarily called on target's destroy
+    // (it isn't for local tabs), ensure removing listeners set in attach.
+    this.off("tabNavigated", this._onTabNavigated);
+    this.off("frameUpdate", this._onFrameUpdate);
+
+    return promise;
+  }
 }
 
 exports.BrowsingContextTargetFront = BrowsingContextTargetFront;
