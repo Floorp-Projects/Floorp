@@ -87,7 +87,8 @@ class APZSampler {
   CSSRect GetCurrentAsyncLayoutViewport(const LayerMetricsWrapper& aLayer);
   ParentLayerPoint GetCurrentAsyncScrollOffset(
       const LayerMetricsWrapper& aLayer);
-  AsyncTransform GetCurrentAsyncTransform(const LayerMetricsWrapper& aLayer);
+  AsyncTransform GetCurrentAsyncTransform(const LayerMetricsWrapper& aLayer,
+                                          AsyncTransformComponents aComponents);
   AsyncTransform GetCurrentAsyncTransformForFixedAdjustment(
       const LayerMetricsWrapper& aLayer);
   AsyncTransformComponentMatrix GetOverscrollTransform(

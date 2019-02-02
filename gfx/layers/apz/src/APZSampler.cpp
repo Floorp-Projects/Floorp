@@ -149,13 +149,13 @@ ParentLayerPoint APZSampler::GetCurrentAsyncScrollOffset(
 }
 
 AsyncTransform APZSampler::GetCurrentAsyncTransform(
-    const LayerMetricsWrapper& aLayer) {
+    const LayerMetricsWrapper& aLayer, AsyncTransformComponents aComponents) {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   AssertOnSamplerThread();
 
   MOZ_ASSERT(aLayer.GetApzc());
   return aLayer.GetApzc()->GetCurrentAsyncTransform(
-      AsyncPanZoomController::eForCompositing);
+      AsyncPanZoomController::eForCompositing, aComponents);
 }
 
 AsyncTransform APZSampler::GetCurrentAsyncTransformForFixedAdjustment(

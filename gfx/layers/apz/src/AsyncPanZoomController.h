@@ -1105,8 +1105,12 @@ class AsyncPanZoomController {
    * in progress. That is, when this transform is multiplied with the layer's
    * existing transform, it will make the layer appear with the desired pan/zoom
    * amount.
+   * The transform can have both scroll and zoom components; the caller can
+   * request just one or the other, or both, via the |aComponents| parameter.
    */
-  AsyncTransform GetCurrentAsyncTransform(AsyncTransformConsumer aMode) const;
+  AsyncTransform GetCurrentAsyncTransform(
+      AsyncTransformConsumer aMode,
+      AsyncTransformComponents aComponents = ScrollAndZoom) const;
 
   /**
    * Returns the incremental transformation corresponding to the async
