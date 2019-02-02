@@ -170,6 +170,18 @@ class AsyncCompositionManager final {
       const ScreenMargin& aFixedLayerMargins, ClipPartsCache& aClipPartsCache);
 
   /**
+   * Helper function for AlignFixedAndStickyLayers() to perform a transform
+   * adjustment for a single fixed or sticky layer, rather than all such
+   * layers rooted at a subtree. May also be called directly.
+   */
+  void AdjustFixedOrStickyLayer(
+      Layer* aTransformedSubtreeRoot, Layer* aFixedOrSticky,
+      ScrollableLayerGuid::ViewID aTransformScrollId,
+      const LayerToParentLayerMatrix4x4& aPreviousTransformForRoot,
+      const LayerToParentLayerMatrix4x4& aCurrentTransformForRoot,
+      const ScreenMargin& aFixedLayerMargins, ClipPartsCache& aClipPartsCache);
+
+  /**
    * DRAWING PHASE ONLY
    *
    * For reach RefLayer in our layer tree, look up its referent and connect it
