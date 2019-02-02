@@ -6,7 +6,7 @@
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/AddTask.js"></script>
   <script type="text/javascript" src="pwmgr_common.js"></script>
-  <script type="text/javascript" src="prompt_common.js"></script>
+  <script type="text/javascript" src="../../../prompts/test/prompt_common.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
@@ -185,9 +185,9 @@ add_task(async function test_autologin() {
   proxyAuthinfo.realm    = "Proxy Realm";
   proxyAuthinfo.flags    = Ci.nsIAuthInformation.AUTH_PROXY;
 
-  time1 = pwmgr.findLogins({}, mozproxy, null, "Proxy Realm")[0].QueryInterface(Ci.nsILoginMetaInfo).timeLastUsed;
+  let time1 = pwmgr.findLogins({}, mozproxy, null, "Proxy Realm")[0].QueryInterface(Ci.nsILoginMetaInfo).timeLastUsed;
   isOk = prompter2.promptAuth(proxyChannel, level, proxyAuthinfo);
-  time2 = pwmgr.findLogins({}, mozproxy, null, "Proxy Realm")[0].QueryInterface(Ci.nsILoginMetaInfo).timeLastUsed;
+  let time2 = pwmgr.findLogins({}, mozproxy, null, "Proxy Realm")[0].QueryInterface(Ci.nsILoginMetaInfo).timeLastUsed;
 
   ok(isOk, "Checking dialog return value (accept)");
   isnot(time1, time2, "Checking that timeLastUsed was updated");
@@ -221,11 +221,11 @@ add_task(async function test_autologin_incorrect() {
   proxyAuthinfo.realm    = "Proxy Realm";
   proxyAuthinfo.flags    = (Ci.nsIAuthInformation.AUTH_PROXY | Ci.nsIAuthInformation.PREVIOUS_FAILED);
 
-  time1 = pwmgr.findLogins({}, mozproxy, null, "Proxy Realm")[0].QueryInterface(Ci.nsILoginMetaInfo).timeLastUsed;
+  let time1 = pwmgr.findLogins({}, mozproxy, null, "Proxy Realm")[0].QueryInterface(Ci.nsILoginMetaInfo).timeLastUsed;
   promptDone = handlePrompt(state, action);
   isOk = prompter2.promptAuth(proxyChannel, level, proxyAuthinfo);
   await promptDone;
-  time2 = pwmgr.findLogins({}, mozproxy, null, "Proxy Realm")[0].QueryInterface(Ci.nsILoginMetaInfo).timeLastUsed;
+  let time2 = pwmgr.findLogins({}, mozproxy, null, "Proxy Realm")[0].QueryInterface(Ci.nsILoginMetaInfo).timeLastUsed;
 
   ok(isOk, "Checking dialog return value (accept)");
   isnot(time1, time2, "Checking that timeLastUsed was updated");

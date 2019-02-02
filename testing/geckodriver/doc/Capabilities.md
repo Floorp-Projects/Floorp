@@ -28,13 +28,18 @@ started and run. It may contain any of the following fields:
  <tr id=capability-binary>
   <td><code>binary</code>
   <td align="center">string
-  <td>Absolute path of the Firefox binary,
-   e.g. <code>/usr/bin/firefox</code>
-   or <code>/Applications/Firefox.app/Contents/MacOS/firefox</code>,
+  <td><p>
+   Absolute path of the Firefox binary
    to select which custom browser binary to use.
    If left undefined geckodriver will attempt
    to deduce the default location of Firefox
    on the current system.
+
+   <p>
+   On macOS the path must be absolute to the browser binary,
+   e.g. <code>/Applications/Firefox.app/Contents/MacOS/firefox</code>.
+   Specifying an application bundle such as <code>/Applications/Firefox.app</code>
+   will <em>not</em> work.
  </tr>
 
  <tr id=capability-args>

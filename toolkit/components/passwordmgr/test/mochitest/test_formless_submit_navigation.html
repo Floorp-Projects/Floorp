@@ -13,8 +13,6 @@
 const LMCBackstagePass = SpecialPowers.Cu.import("resource://gre/modules/LoginManagerContent.jsm");
 const { LoginManagerContent, LoginFormFactory } = LMCBackstagePass;
 
-let chromeScript = runInParent(SimpleTest.getTestFileURL("pwmgr_common.js"));
-
 let loadPromise = new Promise(resolve => {
   document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("loginFrame").addEventListener("load", (evt) => {
@@ -125,9 +123,9 @@ const TESTCASES = [
 function getSubmitMessage() {
   info("getSubmitMessage");
   return new Promise((resolve, reject) => {
-    chromeScript.addMessageListener("formSubmissionProcessed", function processed(...args) {
+    PWMGR_COMMON_PARENT.addMessageListener("formSubmissionProcessed", function processed(...args) {
       info("got formSubmissionProcessed");
-      chromeScript.removeMessageListener("formSubmissionProcessed", processed);
+      PWMGR_COMMON_PARENT.removeMessageListener("formSubmissionProcessed", processed);
       resolve(...args);
     });
   });

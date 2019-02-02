@@ -80,8 +80,8 @@
     let mm = runInParent(() => {
       const { classes: parentCc, interfaces: parentCi, utils: parentCu } = Components;
 
-      parentCu.import("resource://gre/modules/Services.jsm");
-      parentCu.import("resource://gre/modules/NetUtil.jsm");
+      let {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+      let {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
       parentCu.import("resource://gre/modules/Timer.jsm");
       parentCu.import("resource://gre/modules/XPCOMUtils.jsm");
 

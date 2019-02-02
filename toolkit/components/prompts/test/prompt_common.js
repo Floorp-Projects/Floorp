@@ -35,20 +35,6 @@ function handlePrompt(state, action) {
   });
 }
 
-function checkPromptModal() {
-  return new Promise(resolve => {
-    gChromeScript.addMessageListener("checkPromptModalResult", function handled(result) {
-      gChromeScript.removeMessageListener("checkPromptModalResult", handled);
-      ok(result.chrome, "Dialog should be opened as chrome");
-      ok(result.dialog, "Dialog should be a dialog");
-      ok(result.chromeDependent, "Dialog should be chrome dependent");
-      ok(result.isWindowModal, "Dialog should be a window modal");
-      resolve(true);
-    });
-    gChromeScript.sendAsyncMessage("checkPromptModal");
-  });
-}
-
 function checkPromptState(promptState, expectedState) {
     info(`checkPromptState: ${expectedState.msg}`);
     // XXX check title? OS X has title in content
@@ -91,6 +77,19 @@ function checkPromptState(promptState, expectedState) {
         is(promptState.focused, "infoBody", "buttons don't focus on OS X, but infoBody does instead");
     } else {
         is(promptState.focused, expectedState.focused, "Checking focused element");
+    }
+
+    if (expectedState.hasOwnProperty("chrome")) {
+        is(promptState.chrome, expectedState.chrome, "Dialog should be opened as chrome");
+    }
+    if (expectedState.hasOwnProperty("dialog")) {
+        is(promptState.dialog, expectedState.dialog, "Dialog should be opened as a dialog");
+    }
+    if (expectedState.hasOwnProperty("chromeDependent")) {
+        is(promptState.chromeDependent, expectedState.chromeDependent, "Dialog should be opened as dependent");
+    }
+    if (expectedState.hasOwnProperty("isWindowModal")) {
+        is(promptState.isWindowModal, expectedState.isWindowModal, "Dialog should be modal");
     }
 }
 

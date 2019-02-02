@@ -15,8 +15,6 @@ const { LoginManagerContent, LoginFormFactory } = LMCBackstagePass;
 
 SimpleTest.requestFlakyTimeout("Testing that a message doesn't arrive");
 
-let chromeScript = runInParent(SimpleTest.getTestFileURL("pwmgr_common.js"));
-
 let loadPromise = new Promise(resolve => {
   document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("loginFrame").addEventListener("load", (evt) => {
@@ -40,10 +38,10 @@ add_task(async function setup() {
   info("Waiting for page and frame loads");
   await loadPromise;
 
-  chromeScript.addMessageListener("formSubmissionProcessed", submissionProcessed);
+  PWMGR_COMMON_PARENT.addMessageListener("formSubmissionProcessed", submissionProcessed);
 
   SimpleTest.registerCleanupFunction(() => {
-    chromeScript.removeMessageListener("formSubmissionProcessed", submissionProcessed);
+    PWMGR_COMMON_PARENT.removeMessageListener("formSubmissionProcessed", submissionProcessed);
   });
 });
 
@@ -76,7 +74,8 @@ const TESTCASES = [
 add_task(async function test() {
   let loginFrame = document.getElementById("loginFrame");
 
-  var android = navigator.appVersion.includes("Android");
+  let waitTime;
+  let android = navigator.appVersion.includes("Android");
   if (android) {
     // intermittent failures on Android Debug at 5 seconds
     waitTime = 10000;
