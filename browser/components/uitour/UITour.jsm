@@ -1458,19 +1458,14 @@ var UITour = {
         break;
       case "search":
       case "selectedSearchEngine":
-        Services.search.init(rv => {
-          let data;
-          if (Components.isSuccessCode(rv)) {
-            let engines = Services.search.getVisibleEngines();
-            data = {
-              searchEngineIdentifier: Services.search.defaultEngine.identifier,
-              engines: engines.filter((engine) => engine.identifier)
-                              .map((engine) => TARGET_SEARCHENGINE_PREFIX + engine.identifier),
-            };
-          } else {
-            data = {engines: [], searchEngineIdentifier: ""};
-          }
-          this.sendPageCallback(aMessageManager, aCallbackID, data);
+        Services.search.getVisibleEngines().then(engines => {
+          this.sendPageCallback(aMessageManager, aCallbackID, {
+            searchEngineIdentifier: Services.search.defaultEngine.identifier,
+            engines: engines.filter(engine => engine.identifier)
+                            .map(engine => TARGET_SEARCHENGINE_PREFIX + engine.identifier),
+          });
+        }).catch(() => {
+          this.sendPageCallback(aMessageManager, aCallbackID, {engines: [], searchEngineIdentifier: ""});
         });
         break;
       case "sync":
@@ -1663,17 +1658,10 @@ var UITour = {
 
   selectSearchEngine(aID) {
     return new Promise((resolve, reject) => {
-      Services.search.init((rv) => {
-        if (!Components.isSuccessCode(rv)) {
-          reject("selectSearchEngine: search service init failed: " + rv);
-          return;
-        }
-
-        let engines = Services.search.getVisibleEngines();
+      Services.search.getVisibleEngines().then(engines => {
         for (let engine of engines) {
           if (engine.identifier == aID) {
-            Services.search.defaultEngine = engine;
-            resolve();
+            Services.search.setDefault(engine).finally(resolve);
             return;
           }
         }

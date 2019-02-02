@@ -12,20 +12,20 @@ add_task(async function setup() {
   // Create two new search engines. Mark one as the default engine, so
   // the test don't crash. We need to engines for this test as the searchbar
   // in content doesn't display the default search engine among the one-off engines.
-  Services.search.addEngineWithDetails("MozSearch", "", "mozalias", "", "GET",
-                                       "http://example.com/?q={searchTerms}");
+  await Services.search.addEngineWithDetails("MozSearch", "", "mozalias", "", "GET",
+                                             "http://example.com/?q={searchTerms}");
 
-  Services.search.addEngineWithDetails("MozSearch2", "", "mozalias2", "", "GET",
-                                       "http://example.com/?q={searchTerms}");
+  await Services.search.addEngineWithDetails("MozSearch2", "", "mozalias2", "", "GET",
+                                             "http://example.com/?q={searchTerms}");
 
   // Make the first engine the default search engine.
   let engineDefault = Services.search.getEngineByName("MozSearch");
-  let originalEngine = Services.search.defaultEngine;
-  Services.search.defaultEngine = engineDefault;
+  let originalEngine = await Services.search.getDefault();
+  await Services.search.setDefault(engineDefault);
 
   // Move the second engine at the beginning of the one-off list.
   let engineOneOff = Services.search.getEngineByName("MozSearch2");
-  Services.search.moveEngine(engineOneOff, 0);
+  await Services.search.moveEngine(engineOneOff, 0);
 
   // Enable local telemetry recording for the duration of the tests.
   let oldCanRecord = Services.telemetry.canRecordExtended;
@@ -36,9 +36,9 @@ add_task(async function setup() {
 
   // Make sure to restore the engine once we're done.
   registerCleanupFunction(async function() {
-    Services.search.defaultEngine = originalEngine;
-    Services.search.removeEngine(engineDefault);
-    Services.search.removeEngine(engineOneOff);
+    await Services.search.setDefault(originalEngine);
+    await Services.search.removeEngine(engineDefault);
+    await Services.search.removeEngine(engineOneOff);
     await PlacesUtils.history.clear();
     Services.telemetry.setEventRecordingEnabled("navigation", false);
     Services.telemetry.canRecordExtended = oldCanRecord;

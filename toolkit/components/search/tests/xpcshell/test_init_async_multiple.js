@@ -25,7 +25,7 @@ function run_test() {
   for (let i = 0; i < numberOfInitializers; ++i) {
     let me = i;
     pending[me] = true;
-    Services.search.init(function search_initialized_0(aStatus) {
+    Services.search.init().then(function search_initialized_0(aStatus) {
       Assert.ok(Components.isSuccessCode(aStatus));
       init_complete(me);
     });
@@ -40,13 +40,14 @@ function run_test() {
     Assert.ok(Services.search.isInitialized);
     if (numberPending == 0) {
       // Just check that we can access a list of engines.
-      let engines = Services.search.getEngines();
-      Assert.notEqual(engines, null);
+      Services.search.getEngines().then(engines => {
+        Assert.notEqual(engines, null);
 
-      // Wait a little before quitting: if some initializer is
-      // triggered twice, we want to catch that error.
-      do_timeout(1000, function() {
-        do_test_finished();
+        // Wait a little before quitting: if some initializer is
+        // triggered twice, we want to catch that error.
+        do_timeout(1000, function() {
+          do_test_finished();
+        });
       });
     }
   };

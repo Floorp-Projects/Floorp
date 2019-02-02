@@ -53,8 +53,8 @@ function run_test() {
   checkService("vc", Ci.nsIVersionComparator);
   checkService("wm", Ci.nsIWindowMediator);
   checkService("ww", Ci.nsIWindowWatcher);
-  if ("nsIBrowserSearchService" in Ci) {
-    checkService("search", Ci.nsIBrowserSearchService);
+  if ("nsISearchService" in Ci) {
+    checkService("search", Ci.nsISearchService);
   }
   if ("nsIAndroidBridge" in Ci) {
     checkService("androidBridge", Ci.nsIAndroidBridge);

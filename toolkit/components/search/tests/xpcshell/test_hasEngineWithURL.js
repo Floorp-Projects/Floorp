@@ -2,17 +2,8 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * Tests the hasEngineWithURL() method of the nsIBrowserSearchService.
+ * Tests the hasEngineWithURL() method of the nsISearchService.
  */
-function run_test() {
-  info("Setting up test");
-
-  useHttpServer();
-
-  info("Test starting");
-  run_next_test();
-}
-
 
 // Return a discreet, cloned copy of an (engine) object.
 function getEngineClone(engine) {
@@ -27,9 +18,9 @@ function checkEngineState(exists, engine) {
 }
 
 // Add a search engine for testing.
-function addEngineWithParams(engine) {
-  Services.search.addEngineWithDetails(engine.name, null, null, null,
-                                       engine.method, engine.formURL);
+async function addEngineWithParams(engine) {
+  await Services.search.addEngineWithDetails(engine.name, null, null, null,
+                                             engine.method, engine.formURL);
 
   let addedEngine = Services.search.getEngineByName(engine.name);
   for (let param of engine.queryParams) {
@@ -39,6 +30,11 @@ function addEngineWithParams(engine) {
 
 // Main test.
 add_task(async function test_hasEngineWithURL() {
+  info("Setting up test");
+
+  useHttpServer();
+
+  info("Test starting");
   // Avoid deprecated synchronous initialization.
   await asyncInit();
 
@@ -111,7 +107,7 @@ add_task(async function test_hasEngineWithURL() {
 
 
   // Add the unsorted engine and it's queryParams.
-  addEngineWithParams(UNSORTED_ENGINE);
+  await addEngineWithParams(UNSORTED_ENGINE);
   info("The unsorted engine has been added.");
 
 

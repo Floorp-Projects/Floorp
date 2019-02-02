@@ -180,9 +180,7 @@ this.TopSitesFeed = class TopSitesFeed {
         Array(emptySlots).fill(null)
       );
 
-      await new Promise(resolve => Services.search.init(resolve));
-
-      const tryToInsertSearchShortcut = shortcut => {
+      const tryToInsertSearchShortcut = async shortcut => {
         const nextAvailable = pinnedSites.indexOf(null);
         // Only add a search shortcut if the site isn't already pinned, we
         // haven't previously inserted it, there's space to pin it, and the
@@ -191,16 +189,18 @@ this.TopSitesFeed = class TopSitesFeed {
           !pinnedSites.find(s => s && s.hostname === shortcut.shortURL) &&
           !prevInsertedShortcuts.includes(shortcut.shortURL) &&
           nextAvailable > -1 &&
-          checkHasSearchEngine(shortcut.keyword)
+          await checkHasSearchEngine(shortcut.keyword)
         ) {
-          const site = this.topSiteToSearchTopSite({url: shortcut.url});
+          const site = await this.topSiteToSearchTopSite({url: shortcut.url});
           this._pinSiteAt(site, nextAvailable);
           pinnedSites[nextAvailable] = site;
           newInsertedShortcuts.push(shortcut.shortURL);
         }
       };
 
-      shouldPin.forEach(shortcut => tryToInsertSearchShortcut(shortcut));
+      for (let shortcut of shouldPin) {
+        await tryToInsertSearchShortcut(shortcut);
+      }
 
       if (newInsertedShortcuts.length) {
         this.store.dispatch(ac.SetPref(SEARCH_SHORTCUTS_HAVE_PINNED_PREF, prevInsertedShortcuts.concat(newInsertedShortcuts).join(",")));
@@ -216,43 +216,42 @@ this.TopSitesFeed = class TopSitesFeed {
     const searchShortcutsExperiment = this.store.getState().Prefs.values[SEARCH_SHORTCUTS_EXPERIMENT];
     // We must wait for search services to initialize in order to access default
     // search engine properties without triggering a synchronous initialization
-    await new Promise(resolve => Services.search.init(resolve));
+    await Services.search.init();
 
-    // Get all frecent sites from history
-    const frecent = (await this.frecentCache.request({
+    // Get all frecent sites from history.
+    let frecent = [];
+    const cache = await this.frecentCache.request({
       // We need to overquery due to the top 5 alexa search + default search possibly being removed
       numItems: numItems + SEARCH_FILTERS.length + 1,
       topsiteFrecency: FRECENCY_THRESHOLD,
-    }))
-    .reduce((validLinks, link) => {
+    });
+    for (let link of cache) {
       const hostname = shortURL(link);
       if (!this.isExperimentOnAndLinkFilteredSearch(hostname)) {
-        validLinks.push({
-          ...(searchShortcutsExperiment ? this.topSiteToSearchTopSite(link) : link),
+        frecent.push({
+          ...(searchShortcutsExperiment ? await this.topSiteToSearchTopSite(link) : link),
           hostname,
         });
       }
-      return validLinks;
-    }, []);
+    }
 
-    // Remove any defaults that have been blocked
-    const notBlockedDefaultSites = DEFAULT_TOP_SITES
-      .reduce((topsites, link) => {
-        const searchProvider = getSearchProvider(shortURL(link));
-        if (NewTabUtils.blockedLinks.isBlocked({url: link.url})) {
-          return topsites;
-        } else if (this.isExperimentOnAndLinkFilteredSearch(link.hostname)) {
-          return topsites;
-          // If we've previously blocked a search shortcut, remove the default top site
-          // that matches the hostname
-        } else if (searchProvider && NewTabUtils.blockedLinks.isBlocked({url: searchProvider.url})) {
-          return topsites;
-        }
-        return [
-          ...topsites,
-          searchShortcutsExperiment ? this.topSiteToSearchTopSite(link) : link,
-        ];
-      }, []);
+    // Remove any defaults that have been blocked.
+    let notBlockedDefaultSites = [];
+    for (let link of DEFAULT_TOP_SITES) {
+      const searchProvider = getSearchProvider(shortURL(link));
+      if (NewTabUtils.blockedLinks.isBlocked({url: link.url})) {
+        continue;
+      } else if (this.isExperimentOnAndLinkFilteredSearch(link.hostname)) {
+        continue;
+        // If we've previously blocked a search shortcut, remove the default top site
+        // that matches the hostname
+      } else if (searchProvider && NewTabUtils.blockedLinks.isBlocked({url: searchProvider.url})) {
+        continue;
+      }
+      notBlockedDefaultSites.push(
+        searchShortcutsExperiment ? await this.topSiteToSearchTopSite(link) : link,
+      );
+    }
 
     // Get pinned links augmented with desired properties
     let plainPinned = await this.pinnedCache.request();
@@ -379,8 +378,7 @@ this.TopSitesFeed = class TopSitesFeed {
     }
 
     // Populate the state with available search shortcuts
-    await new Promise(resolve => Services.search.init(resolve));
-    const searchShortcuts = Services.search.getDefaultEngines().reduce((result, engine) => {
+    const searchShortcuts = (await Services.search.getDefaultEngines()).reduce((result, engine) => {
       const shortcut = CUSTOM_SEARCH_SHORTCUTS.find(s => engine.wrappedJSObject._internalAliases.includes(s.keyword));
       if (shortcut) {
         result.push(this._tippyTopProvider.processSite({...shortcut}));
@@ -393,9 +391,9 @@ this.TopSitesFeed = class TopSitesFeed {
     }));
   }
 
-  topSiteToSearchTopSite(site) {
+  async topSiteToSearchTopSite(site) {
     const searchProvider = getSearchProvider(shortURL(site));
-    if (!searchProvider || !checkHasSearchEngine(searchProvider.keyword)) {
+    if (!searchProvider || !await checkHasSearchEngine(searchProvider.keyword)) {
       return site;
     }
     return {

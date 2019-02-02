@@ -12,10 +12,10 @@ const urlbarPopup = document.getElementById("PopupAutoCompleteRichResult");
 const searchOneOff = searchPopup.oneOffButtons;
 const urlBarOneOff = urlbarPopup.oneOffSearchButtons;
 
-let originalEngine = Services.search.defaultEngine;
+var originalEngine;
 
-function resetEngine() {
-  Services.search.defaultEngine = originalEngine;
+async function resetEngine() {
+  await Services.search.setDefault(originalEngine);
 }
 
 registerCleanupFunction(resetEngine);
@@ -23,6 +23,7 @@ registerCleanupFunction(resetEngine);
 let searchIcon;
 
 add_task(async function init() {
+  originalEngine = await Services.search.getDefault();
   let searchbar = await gCUITestUtils.addSearchBar();
   registerCleanupFunction(() => {
     gCUITestUtils.removeSearchBar();
@@ -44,7 +45,7 @@ add_task(async function test_searchBarChangeEngine() {
   );
 
   // Click the set default engine menu item.
-  let promise = promiseCurrentEngineChanged();
+  let promise = promisedefaultEngineChanged();
   EventUtils.synthesizeMouseAtCenter(setDefaultEngineMenuItem, {});
 
   // This also checks the engine correctly changed.
@@ -78,20 +79,20 @@ add_task(async function test_urlBarChangeEngine() {
   );
 
   // Click the set default engine menu item.
-  let promise = promiseCurrentEngineChanged();
+  let promise = promisedefaultEngineChanged();
   EventUtils.synthesizeMouseAtCenter(setDefaultEngineMenuItem, {});
 
   // This also checks the engine correctly changed.
   await promise;
 
-  let currentEngine = Services.search.defaultEngine;
+  let defaultEngine = await Services.search.getDefault();
 
   // For the urlbar, we should keep the new engine's icon.
-  Assert.equal(oneOffButton.id, URLBAR_BASE_ID + currentEngine.name,
+  Assert.equal(oneOffButton.id, URLBAR_BASE_ID + defaultEngine.name,
                "Should now have the original engine's id for the button");
-  Assert.equal(oneOffButton.getAttribute("tooltiptext"), currentEngine.name,
+  Assert.equal(oneOffButton.getAttribute("tooltiptext"), defaultEngine.name,
                "Should now have the original engine's name for the tooltip");
-  Assert.equal(oneOffButton.image, currentEngine.iconURI.spec,
+  Assert.equal(oneOffButton.image, defaultEngine.iconURI.spec,
                "Should now have the original engine's uri for the image");
 
   await promiseClosePopup(urlbarPopup);
@@ -103,11 +104,11 @@ add_task(async function test_urlBarChangeEngine() {
  *
  * @returns {Promise} Resolved once the test engine is set as the current engine.
  */
-function promiseCurrentEngineChanged() {
+function promisedefaultEngineChanged() {
   return new Promise(resolve => {
     function observer(aSub, aTopic, aData) {
       if (aData == "engine-current") {
-        Assert.equal(Services.search.defaultEngine.name, TEST_ENGINE_NAME, "currentEngine set");
+        Assert.equal(Services.search.defaultEngine.name, TEST_ENGINE_NAME, "defaultEngine set");
         Services.obs.removeObserver(observer, "browser-search-engine-modified");
         resolve();
       }

@@ -806,17 +806,17 @@ var Policies = {
       }
     },
     onAllWindowsRestored(manager, param) {
-      Services.search.init(() => {
+      Services.search.init().then(async () => {
         if (param.Remove) {
           // Only rerun if the list of engine names has changed.
-          runOncePerModification("removeSearchEngines",
-                                 JSON.stringify(param.Remove),
-                                 () => {
+          await runOncePerModification("removeSearchEngines",
+                                       JSON.stringify(param.Remove),
+                                       async function() {
             for (let engineName of param.Remove) {
               let engine = Services.search.getEngineByName(engineName);
               if (engine) {
                 try {
-                  Services.search.removeEngine(engine);
+                  await Services.search.removeEngine(engine);
                 } catch (ex) {
                   log.error("Unable to remove the search engine", ex);
                 }
@@ -827,9 +827,9 @@ var Policies = {
         if (param.Add) {
           // Only rerun if the list of engine names has changed.
           let engineNameList = param.Add.map(engine => engine.Name);
-          runOncePerModification("addSearchEngines",
-                                 JSON.stringify(engineNameList),
-                                 () => {
+          await runOncePerModification("addSearchEngines",
+                                       JSON.stringify(engineNameList),
+                                       async function() {
             for (let newEngine of param.Add) {
               let newEngineParameters = {
                 template:    newEngine.URLTemplate,
@@ -842,8 +842,8 @@ var Policies = {
                 queryCharset: "UTF-8",
               };
               try {
-                Services.search.addEngineWithDetails(newEngine.Name,
-                                                     newEngineParameters);
+                await Services.search.addEngineWithDetails(newEngine.Name,
+                                                           newEngineParameters);
               } catch (ex) {
                 log.error("Unable to add search engine", ex);
               }
@@ -851,7 +851,7 @@ var Policies = {
           });
         }
         if (param.Default) {
-          runOncePerModification("setDefaultSearchEngine", param.Default, () => {
+          await runOncePerModification("setDefaultSearchEngine", param.Default, async () => {
             let defaultEngine;
             try {
               defaultEngine = Services.search.getEngineByName(param.Default);
@@ -865,7 +865,7 @@ var Policies = {
             }
             if (defaultEngine) {
               try {
-                Services.search.defaultEngine = defaultEngine;
+                await Services.search.setDefault(defaultEngine);
               } catch (ex) {
                 log.error("Unable to set the default search engine", ex);
               }

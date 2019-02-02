@@ -19,9 +19,7 @@ const kSearchEngineDetails = {
 add_task(async function test_migrateLegacyEngine() {
   Assert.ok(!Services.search.isInitialized);
 
-  await asyncInit();
-
-  Services.search.addEngineWithDetails(kSearchEngineID, kSearchEngineDetails);
+  await Services.search.addEngineWithDetails(kSearchEngineID, kSearchEngineDetails);
 
   // Modify the loadpath so it looks like an legacy plugin loadpath
   let engine = Services.search.getEngineByName(kSearchEngineID);
@@ -29,7 +27,7 @@ add_task(async function test_migrateLegacyEngine() {
   engine.wrappedJSObject._extensionID = null;
 
   // This should replace the existing engine
-  Services.search.addEngineWithDetails(kSearchEngineID, kSearchEngineDetails);
+  await Services.search.addEngineWithDetails(kSearchEngineID, kSearchEngineDetails);
 
   engine = Services.search.getEngineByName(kSearchEngineID);
   Assert.equal(engine.wrappedJSObject._loadPath, "[other]addEngineWithDetails:" + kExtensionID);

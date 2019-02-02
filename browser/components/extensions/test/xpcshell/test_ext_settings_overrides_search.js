@@ -19,7 +19,7 @@ AddonTestUtils.createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "42", "42
 
 add_task(async function setup() {
   await AddonTestUtils.promiseStartupManager();
-  Services.search.init();
+  await Services.search.init();
 });
 
 add_task(async function test_extension_adding_engine() {
@@ -118,8 +118,8 @@ add_task(async function test_upgrade_default_position_engine() {
   await ext1.startup();
 
   let engine = Services.search.getEngineByName("MozSearch");
-  Services.search.defaultEngine = engine;
-  Services.search.moveEngine(engine, 1);
+  await Services.search.setDefault(engine);
+  await Services.search.moveEngine(engine, 1);
 
   await ext1.upgrade({
     manifest: {
@@ -142,7 +142,8 @@ add_task(async function test_upgrade_default_position_engine() {
 
   engine = Services.search.getEngineByName("MozSearch");
   equal(Services.search.defaultEngine, engine, "Default engine should still be MozSearch");
-  equal(Services.search.getEngines().indexOf(engine), 1, "Engine is in position 1");
+  equal((await Services.search.getEngines()).map(e => e.name).indexOf(engine.name),
+        1, "Engine is in position 1");
 
   await ext1.unload();
   await delay();

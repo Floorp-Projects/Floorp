@@ -40,6 +40,6 @@ add_task(async function run_test() {
   Assert.notEqual(engine, null);
 
   // remove the engine and verify the file has been removed too.
-  Services.search.removeEngine(engine);
+  await Services.search.removeEngine(engine);
   Assert.ok(!file.exists());
 });

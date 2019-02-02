@@ -4,22 +4,21 @@
 add_task(async function () {
   const kSearchEngineID = "test_urifixup_search_engine";
   const kSearchEngineURL = "http://localhost/?search={searchTerms}";
-  Services.search.addEngineWithDetails(kSearchEngineID, "", "", "", "get",
-                                       kSearchEngineURL);
+  await Services.search.addEngineWithDetails(kSearchEngineID, "", "", "", "get", kSearchEngineURL);
 
-  let oldDefaultEngine = Services.search.defaultEngine;
-  Services.search.defaultEngine = Services.search.getEngineByName(kSearchEngineID);
+  let oldDefaultEngine = await Services.search.getDefault();
+  await Services.search.setDefault(Services.search.getEngineByName(kSearchEngineID));
 
-  let selectedName = Services.search.defaultEngine.name;
+  let selectedName = (await Services.search.getDefault()).name;
   Assert.equal(selectedName, kSearchEngineID, "Check fake search engine is selected");
 
-  registerCleanupFunction(function() {
+  registerCleanupFunction(async function() {
     if (oldDefaultEngine) {
-      Services.search.defaultEngine = oldDefaultEngine;
+      await Services.search.setDefault(oldDefaultEngine);
     }
     let engine = Services.search.getEngineByName(kSearchEngineID);
     if (engine) {
-      Services.search.removeEngine(engine);
+      await Services.search.removeEngine(engine);
     }
   });
 

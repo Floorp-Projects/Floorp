@@ -3780,13 +3780,11 @@ const BrowserSearch = {
   delayedStartupInit() {
     // Asynchronously initialize the search service if necessary, to get the
     // current engine for working out the placeholder.
-    Services.search.init(rv => {
-      if (Components.isSuccessCode(rv)) {
-        // Delay the update for this until so that we don't change it while
-        // the user is looking at it / isn't expecting it.
-        this._updateURLBarPlaceholder(Services.search.defaultEngine, true);
-        this._searchInitComplete = true;
-      }
+    Services.search.getDefault().then(defaultEngine => {
+      // Delay the update for this until so that we don't change it while
+      // the user is looking at it / isn't expecting it.
+      this._updateURLBarPlaceholder(defaultEngine.name, true);
+      this._searchInitComplete = true;
     });
   },
 
@@ -3818,7 +3816,7 @@ const BrowserSearch = {
       break;
     case "engine-current":
       if (this._searchInitComplete) {
-        this._updateURLBarPlaceholder(engine);
+        this._updateURLBarPlaceholder(engineName);
       }
       break;
     }
@@ -3894,21 +3892,23 @@ const BrowserSearch = {
    * Note: The engine name will only be displayed for built-in engines, as we
    * know they should have short names.
    *
-   * @param {nsISearchEngine} engine The search engine to use for the update.
+   * @param {String}  engineName     The search engine name to use for the update.
    * @param {Boolean} delayUpdate    Set to true, to delay update until the
    *                                 placeholder is not displayed.
    */
-  _updateURLBarPlaceholder(engine, delayUpdate = false) {
-    if (!engine) {
-      throw new Error("Expected an engine to be specified");
+  async _updateURLBarPlaceholder(engineName, delayUpdate = false) {
+    if (!engineName) {
+      throw new Error("Expected an engineName to be specified");
     }
 
-    let engineName = "";
-    if (Services.search.getDefaultEngines().includes(engine)) {
-      engineName = engine.name;
+    let defaultEngines = await Services.search.getDefaultEngines();
+    if (defaultEngines.some(defaultEngine => defaultEngine.name == engineName)) {
       Services.prefs.setStringPref("browser.urlbar.placeholderName", engineName);
     } else {
       Services.prefs.clearUserPref("browser.urlbar.placeholderName");
+      // Set the engine name to an empty string for non-default engines, which'll
+      // make sure we display the default placeholder string.
+      engineName = "";
     }
 
     // Only delay if requested, and we're not displaying text in the URL bar

@@ -38,7 +38,8 @@ this.search = class extends ExtensionAPI {
       search: {
         async get() {
           await searchInitialized;
-          let visibleEngines = Services.search.getVisibleEngines();
+          let visibleEngines = await Services.search.getVisibleEngines();
+          let defaultEngine = await Services.search.getDefault();
           return Promise.all(visibleEngines.map(async engine => {
             let favIconUrl;
             if (engine.iconURI) {
@@ -53,7 +54,7 @@ this.search = class extends ExtensionAPI {
 
             return {
               name: engine.name,
-              isDefault: engine === Services.search.defaultEngine,
+              isDefault: engine.name === defaultEngine.name,
               alias: engine.alias || undefined,
               favIconUrl,
             };
@@ -69,7 +70,7 @@ this.search = class extends ExtensionAPI {
               throw new ExtensionError(`${searchProperties.engine} was not found`);
             }
           } else {
-            engine = Services.search.defaultEngine;
+            engine = await Services.search.getDefault();
           }
           let submission = engine.getSubmission(searchProperties.query, null, "webextension");
           let options = {

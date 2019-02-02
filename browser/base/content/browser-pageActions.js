@@ -1189,11 +1189,11 @@ BrowserPageActions.addSearchEngine = {
   },
 
   _installEngine(uri, image) {
-    Services.search.addEngine(uri, image, false, {
-      onSuccess: engine => {
+    Services.search.addEngine(uri, image, false).then(
+      engine => {
         showBrowserPageActionFeedback(this.action);
       },
-      onError(errorCode) {
+      errorCode => {
         if (errorCode != Ci.nsISearchInstallCallback.ERROR_DUPLICATE_ENGINE) {
           // Download error is shown by the search service
           return;
@@ -1210,8 +1210,8 @@ BrowserPageActions.addSearchEngine = {
         prompt.QueryInterface(Ci.nsIWritablePropertyBag2);
         prompt.setPropertyAsBool("allowTabModal", true);
         prompt.alert(title, text);
-      },
-    });
+      }
+    );
   },
 };
 

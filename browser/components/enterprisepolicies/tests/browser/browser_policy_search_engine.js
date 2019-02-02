@@ -51,7 +51,7 @@ async function test_opensearch(shouldWork) {
 add_task(async function test_install_and_set_default() {
   // Make sure we are starting in an expected state to avoid false positive
   // test results.
-  isnot(Services.search.defaultEngine.name, "MozSearch",
+  isnot((await Services.search.getDefault()).name, "MozSearch",
         "Default search engine should not be MozSearch when test starts");
   is(Services.search.getEngineByName("Foo"), null,
      "Engine \"Foo\" should not be present when test starts");
@@ -69,21 +69,23 @@ add_task(async function test_install_and_set_default() {
       },
     },
   });
+  // Get in line, because the Search policy callbacks are async.
+  await TestUtils.waitForTick();
 
   // If this passes, it means that the new search engine was properly installed
   // *and* was properly set as the default.
-  is(Services.search.defaultEngine.name, "MozSearch",
+  is((await Services.search.getDefault()).name, "MozSearch",
      "Specified search engine should be the default");
 
   // Clean up
-  Services.search.removeEngine(Services.search.defaultEngine);
+  await Services.search.removeEngine(await Services.search.getDefault());
   EnterprisePolicyTesting.resetRunOnceState();
 });
 
 // Same as the last test, but with "PreventInstalls" set to true to make sure
 // it does not prevent search engines from being installed properly
 add_task(async function test_install_and_set_default_prevent_installs() {
-  isnot(Services.search.defaultEngine.name, "MozSearch",
+  isnot((await Services.search.getDefault()).name, "MozSearch",
         "Default search engine should not be MozSearch when test starts");
   is(Services.search.getEngineByName("Foo"), null,
      "Engine \"Foo\" should not be present when test starts");
@@ -102,12 +104,14 @@ add_task(async function test_install_and_set_default_prevent_installs() {
       },
     },
   });
+  // Get in line, because the Search policy callbacks are async.
+  await TestUtils.waitForTick();
 
-  is(Services.search.defaultEngine.name, "MozSearch",
+  is((await Services.search.getDefault()).name, "MozSearch",
      "Specified search engine should be the default");
 
   // Clean up
-  Services.search.removeEngine(Services.search.defaultEngine);
+  await Services.search.removeEngine(await Services.search.getDefault());
   EnterprisePolicyTesting.resetRunOnceState();
 });
 
@@ -213,6 +217,8 @@ add_task(async function test_install_and_remove() {
       },
     },
   });
+  // Get in line, because the Search policy callbacks are async.
+  await TestUtils.waitForTick();
 
   // If this passes, it means that the new search engine was properly installed
 
@@ -230,6 +236,8 @@ add_task(async function test_install_and_remove() {
       },
     },
   });
+  // Get in line, because the Search policy callbacks are async.
+  await TestUtils.waitForTick();
 
   // If this passes, it means that the specified engine was properly removed
   is(Services.search.getEngineByName("Foo"), null,

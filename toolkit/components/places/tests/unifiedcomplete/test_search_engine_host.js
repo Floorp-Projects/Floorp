@@ -3,10 +3,10 @@
 
 add_task(async function test_searchEngine_autoFill() {
   Services.prefs.setBoolPref("browser.urlbar.autoFill.searchEngines", true);
-  Services.search.addEngineWithDetails("MySearchEngine", "", "", "",
-                                       "GET", "http://my.search.com/");
+  await Services.search.addEngineWithDetails("MySearchEngine", "", "", "",
+                                             "GET", "http://my.search.com/");
   let engine = Services.search.getEngineByName("MySearchEngine");
-  registerCleanupFunction(() => Services.search.removeEngine(engine));
+  registerCleanupFunction(async () => Services.search.removeEngine(engine));
 
   // Add an uri that matches the search string with high frecency.
   let uri = NetUtil.newURI("http://www.example.com/my/");

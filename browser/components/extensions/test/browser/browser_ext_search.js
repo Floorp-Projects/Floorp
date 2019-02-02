@@ -59,11 +59,11 @@ add_task(async function test_search() {
   await extension.startup();
 
   let addonEngines = await extension.awaitMessage("engines");
-  let engines = Services.search.getEngines().filter(engine => !engine.hidden);
+  let engines = (await Services.search.getEngines()).filter(engine => !engine.hidden);
   is(addonEngines.length, engines.length, "Engine lengths are the same.");
   let defaultEngine = addonEngines.filter(engine => engine.isDefault === true);
   is(defaultEngine.length, 1, "One default engine");
-  is(defaultEngine[0].name, Services.search.defaultEngine.name, "Default engine is correct");
+  is(defaultEngine[0].name, (await Services.search.getDefault()).name, "Default engine is correct");
 
   let url = await extension.awaitMessage("searchLoaded");
   is(url, SEARCH_URL.replace("{searchTerms}", SEARCH_TERM + "1"), "Loaded page matches search");

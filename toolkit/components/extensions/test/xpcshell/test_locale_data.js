@@ -128,3 +128,27 @@ add_task(async function testInvalidSyntax() {
   ok(extension.errors[1].includes("Loading locale file _locales\/en_US\/messages\.json: SyntaxError"),
      "Got syntax error");
 });
+
+add_task(async function testExtractLocalizedManifest() {
+  let extension = await generateAddon({
+    "manifest": {
+      "name": "__MSG_extensionName__",
+      "default_locale": "en_US",
+    },
+
+    "files": {
+      "_locales/en_US/messages.json": '{"extensionName": {"message": "foo"}}',
+      "_locales/de_DE/messages.json": '{"extensionName": {"message": "bar"}}',
+    },
+  });
+
+  await extension.loadManifest();
+  equal(extension.manifest.name, "foo", "name localized");
+
+  let manifest = await extension.getLocalizedManifest("de-DE");
+  ok(extension.localeData.has("de-DE"), "has de_DE locale");
+  equal(manifest.name, "bar", "name localized");
+
+  await Assert.rejects(extension.getLocalizedManifest("xx-XX"),
+                       /does not contain the locale xx-XX/, "xx-XX does not exist");
+});

@@ -26,18 +26,9 @@ var SearchTestUtils = Object.freeze({
    * @returns {Promise} Returns a promise that is resolved with the new engine
    *                    or rejected if it fails.
    */
-  promiseNewSearchEngine(url) {
-    return new Promise((resolve, reject) => {
-      Services.search.addEngine(url, "", false, {
-        onSuccess(engine) {
-          gTestGlobals.registerCleanupFunction(() => Services.search.removeEngine(engine));
-          resolve(engine);
-        },
-        onError(errCode) {
-          gTestGlobals.Assert.ok(false, `addEngine failed with error code ${errCode}`);
-          reject();
-        },
-      });
-    });
+  async promiseNewSearchEngine(url) {
+    let engine = await Services.search.addEngine(url, "", false);
+    gTestGlobals.registerCleanupFunction(async () => Services.search.removeEngine(engine));
+    return engine;
   },
 });

@@ -10,7 +10,6 @@
 
 const {FormHistory} = ChromeUtils.import("resource://gre/modules/FormHistory.jsm");
 const {SearchSuggestionController} = ChromeUtils.import("resource://gre/modules/SearchSuggestionController.jsm");
-const {setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 const {PromiseUtils} = ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
 
 // We must make sure the FormHistoryStartup component is

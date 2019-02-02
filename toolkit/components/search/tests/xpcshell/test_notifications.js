@@ -10,8 +10,8 @@ var gTestLog = [];
  *  - engine-changed (while we're installing the engine, we modify it, which notifies - bug 606886)
  *  - engine-added (engine was added to the store by the search service)
  *   -> our search observer is called, which sets:
- *    - .defaultEngine, triggering engine-default
- *    - .currentEngine, triggering engine-current (after bug 493051 - for now the search service sets this after engine-added)
+ *    - .defaultEngine, triggering engine-default and engine-current (after bug
+ *      493051 - for now the search service sets this after engine-added)
  *   ...and then schedules a removal
  *  - engine-loaded (the search service's observer is garanteed to fire first, which is what causes engine-added to fire)
  *  - engine-removed (due to the removal schedule above)
@@ -35,7 +35,6 @@ function search_observer(subject, topic, data) {
     case "engine-added":
       let retrievedEngine = Services.search.getEngineByName("Test search engine");
       Assert.equal(engine, retrievedEngine);
-      Services.search.defaultEngine = engine;
       Services.search.defaultEngine = engine;
       executeSoon(function() {
         Services.search.removeEngine(engine);

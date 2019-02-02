@@ -18,7 +18,7 @@ function run_test() {
 }
 
 add_test(function test_identifier() {
-  Services.search.init(async function initComplete(aResult) {
+  Services.search.init().then(async function initComplete(aResult) {
     info("init'd search service");
     Assert.ok(Components.isSuccessCode(aResult));
 

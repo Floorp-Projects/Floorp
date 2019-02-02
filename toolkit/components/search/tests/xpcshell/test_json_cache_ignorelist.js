@@ -42,18 +42,18 @@ add_test(function prepare_test_data() {
 add_test(function test_cache_rest() {
   info("init search service");
 
-  Services.search.init(function initComplete(aResult) {
+  Services.search.init().then(function initComplete(aResult) {
     info("init'd search service");
     Assert.ok(Components.isSuccessCode(aResult));
 
-    let engines = Services.search.getEngines({});
+    Services.search.getEngines().then(engines => {
+      // Engine list will have been reset to the default,
+      // Not the one engine in the cache.
+      // It should have more than one engine.
+      Assert.ok(engines.length > 1);
 
-    // Engine list will have been reset to the default,
-    // Not the one engine in the cache.
-    // It should have more than one engine.
-    Assert.ok(engines.length > 1);
-
-    removeCacheFile();
-    run_next_test();
+      removeCacheFile();
+      run_next_test();
+    });
   });
 });

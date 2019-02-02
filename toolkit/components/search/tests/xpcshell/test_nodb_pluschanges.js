@@ -33,8 +33,8 @@ add_task(async function test_nodb_pluschanges() {
 
   let search = Services.search;
 
-  search.moveEngine(engine1, 0);
-  search.moveEngine(engine2, 1);
+  await search.moveEngine(engine1, 0);
+  await search.moveEngine(engine2, 1);
 
   // This is needed to avoid some reentrency issues in nsSearchService.
   info("Next step is forcing flush");

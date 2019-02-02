@@ -8,15 +8,14 @@ add_task(async function() {
   info("Check that performing a search fires a search event and records to Telemetry.");
 
   await BrowserTestUtils.withNewTab({ gBrowser, url: "about:home" }, async function(browser) {
-    let currEngine = Services.search.defaultEngine;
+    let currEngine = await Services.search.getDefault();
     let engine = await promiseNewEngine("searchSuggestionEngine.xml");
     // Make this actually work in healthreport by giving it an ID:
     Object.defineProperty(engine.wrappedJSObject, "identifier",
                           { value: "org.mozilla.testsearchsuggestions" });
 
-    let p = promiseContentSearchChange(browser, engine.name);
-    Services.search.defaultEngine = engine;
-    await p;
+    await Promise.all([promiseContentSearchChange(browser, engine.name),
+      Services.search.setDefault(engine)]);
 
     await ContentTask.spawn(browser, { expectedName: engine.name }, async function(args) {
       let engineName = content.wrappedJSObject.gContentSearchController.defaultEngine.name;
@@ -37,8 +36,7 @@ add_task(async function() {
 
     let searchStr = "a search";
 
-    let expectedURL = Services.search.defaultEngine
-      .getSubmission(searchStr, null, "homepage").uri.spec;
+    let expectedURL = (await Services.search.getDefault()).getSubmission(searchStr, null, "homepage").uri.spec;
     let promise = BrowserTestUtils.waitForDocLoadAndStopIt(expectedURL, browser);
 
     // Perform a search to increase the SEARCH_COUNT histogram.
@@ -58,9 +56,9 @@ add_task(async function() {
     Assert.equal(hs[histogramKey].sum, numSearchesBefore + 1,
                  "histogram sum should be incremented");
 
-    Services.search.defaultEngine = currEngine;
+    await Services.search.setDefault(currEngine);
     try {
-      Services.search.removeEngine(engine);
+      await Services.search.removeEngine(engine);
     } catch (ex) {}
   });
 });

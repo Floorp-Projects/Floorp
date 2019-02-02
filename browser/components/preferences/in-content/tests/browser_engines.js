@@ -8,7 +8,7 @@ add_task(async function() {
   ok(!tree.hidden, "The search engine list should be visible when Search is requested");
 
   // Check for default search engines to be displayed in the engineList
-  let defaultEngines = Services.search.getDefaultEngines();
+  let defaultEngines = await Services.search.getDefaultEngines();
   for (let i = 0; i < defaultEngines.length; i++) {
       let engine = defaultEngines[i];
       let cellName = tree.view.getCellText(i, tree.columns.getNamedColumn("engineName"));

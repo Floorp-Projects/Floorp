@@ -22,9 +22,7 @@ add_task(async function test_nocache() {
 
   let afterCachePromise = promiseAfterCache();
 
-  await new Promise((resolve, reject) => search.init(rv => {
-    Components.isSuccessCode(rv) ? resolve() : reject();
-  }));
+  await search.init();
 
   // Check that the cache is created at startup
   await afterCachePromise;

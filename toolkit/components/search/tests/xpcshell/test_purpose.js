@@ -8,7 +8,7 @@
 
 "use strict";
 
-function run_test() {
+add_task(async function setup() {
   // The test engines used in this test need to be recognized as 'default'
   // engines, or their MozParams used to set the purpose will be ignored.
   let url = "resource://test/data/";
@@ -17,8 +17,8 @@ function run_test() {
   resProt.setSubstitution("search-plugins",
                           Services.io.newURI(url));
 
-  run_next_test();
-}
+  await Services.search.init();
+});
 
 add_task(async function test_purpose() {
   let engine = Services.search.getEngineByName("Test search engine");
@@ -67,8 +67,6 @@ add_task(async function test_purpose() {
   engine = Services.search.getEngineByName("engine-system-purpose");
   // ... and check that the system purpose is used correctly.
   check_submission("sys", "foo", "text/html", "system");
-
-  do_test_finished();
 });
 
 add_task(async function test_purpose() {
@@ -118,6 +116,4 @@ add_task(async function test_purpose() {
   engine = Services.search.getEngineByName("engine-system-purpose");
   // ... and check that the system purpose is used correctly.
   check_submission("sys", "foo", "text/html", "system");
-
-  do_test_finished();
 });
