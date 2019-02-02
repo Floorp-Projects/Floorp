@@ -43,7 +43,6 @@ tasks:
             - queue:scheduler-id:${scheduler_id}
             - queue:create-task:highest:aws-provisioner-v1/${build_worker_type}
             - project:mobile:fenix:releng:signing:format:autograph_apk
-            - secrets:get:project/mobile/fenix/sentry
             - $if: is_mozilla_mobile_repo
               then:
                 - queue:create-task:highest:scriptworker-prov-v1/mobile-signing-v1
@@ -51,12 +50,14 @@ tasks:
                 - project:mobile:fenix:releng:signing:cert:release-signing
                 - project:mobile:fenix:releng:googleplay:product:fenix
                 - queue:route:index.project.mobile.fenix.signed-nightly.*
+                - secrets:get:project/mobile/fenix/sentry
               else:
                 - queue:create-task:highest:scriptworker-prov-v1/mobile-signing-dep-v1
                 - queue:create-task:highest:scriptworker-prov-v1/mobile-pushapk-dep-v1
                 - project:mobile:fenix:releng:signing:cert:dep-signing
                 - project:mobile:fenix:releng:googleplay:product:fenix:dep
                 - queue:route:index.project.mobile.fenix.staging-signed-nightly.*
+                - secrets:get:garbage/staging/project/mobile/fenix/sentry
         payload:
           maxRunTime: 600   # Decision should remain fast enough to schedule a handful of tasks
           image: mozillamobile/fenix:1.3

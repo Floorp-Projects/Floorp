@@ -36,13 +36,14 @@ def generate_build_task(apks, is_staging):
     } for apk in apks}
 
     checkout = 'git clone {} repository && cd repository'.format(GITHUB_HTTP_REPOSITORY)
+    sentry_secret = '{}project/mobile/fenix/sentry'.format('garbage/staging/' if is_staging else '')
 
     return taskcluster.slugId(), BUILDER.build_task(
         name="(Fenix) Build task",
         description="Build Fenix from source code.",
         command=('cd .. && ' + checkout +
             ' && python automation/taskcluster/helper/get-secret.py'
-            ' -s project/mobile/fenix/sentry -k dsn -f .sentry_token'
+            ' -s {} -k dsn -f .sentry_token'.format(sentry_secret) +
             ' && ./gradlew --no-daemon -PcrashReports=true clean test assembleRelease'),
         features={
             "chainOfTrust": True,
@@ -51,7 +52,7 @@ def generate_build_task(apks, is_staging):
         artifacts=artifacts,
         worker_type='android-components-g' if is_staging else 'gecko-focus',
         scopes=[
-            "secrets:get:project/mobile/fenix/sentry"
+            "secrets:get:{}".format(sentry_secret)
         ]
     )
 
