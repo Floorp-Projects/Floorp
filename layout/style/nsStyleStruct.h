@@ -2397,8 +2397,6 @@ class nsStyleContentData {
   CounterFunction* GetCounters() const {
     MOZ_ASSERT(mType == StyleContentType::Counter ||
                mType == StyleContentType::Counters);
-    MOZ_ASSERT(mContent.mCounters->mCounterStyle.IsResolved(),
-               "Counter style should have been resolved");
     return mContent.mCounters;
   }
 

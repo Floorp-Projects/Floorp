@@ -6783,10 +6783,13 @@ void nsBlockFrame::CreateBulletFrameForListItem() {
                                 NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET)) == 0,
              "How can we have a bullet already?");
 
-  nsIPresShell* shell = PresShell();
+  nsPresContext* pc = PresContext();
+  nsIPresShell* shell = pc->PresShell();
   const nsStyleList* styleList = StyleList();
+  CounterStyle* style =
+      pc->CounterStyleManager()->ResolveCounterStyle(styleList->mCounterStyle);
 
-  CSSPseudoElementType pseudoType = styleList->mCounterStyle->IsBullet()
+  CSSPseudoElementType pseudoType = style->IsBullet()
                                         ? CSSPseudoElementType::mozListBullet
                                         : CSSPseudoElementType::mozListNumber;
 
@@ -6817,7 +6820,7 @@ bool nsBlockFrame::BulletIsEmpty() const {
                    HasOutsideBullet(),
                "should only care when we have an outside bullet");
   const nsStyleList* list = StyleList();
-  return list->mCounterStyle->IsNone() && !list->GetListStyleImage();
+  return list->mCounterStyle.IsNone() && !list->GetListStyleImage();
 }
 
 void nsBlockFrame::GetSpokenBulletText(nsAString& aText) const {

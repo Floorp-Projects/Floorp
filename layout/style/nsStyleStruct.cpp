@@ -459,7 +459,7 @@ nsStyleList::nsStyleList(const Document& aDocument)
   MOZ_COUNT_CTOR(nsStyleList);
   MOZ_ASSERT(NS_IsMainThread());
 
-  mCounterStyle = CounterStyleManager::GetDiscStyle();
+  mCounterStyle = nsGkAtoms::disc;
   mQuotes = Servo_Quotes_GetInitialValue().Consume();
 }
 
@@ -482,7 +482,6 @@ void nsStyleList::FinishStyle(nsPresContext* aPresContext,
     mListStyleImage->Resolve(
         aPresContext, aOldStyle ? aOldStyle->mListStyleImage.get() : nullptr);
   }
-  mCounterStyle.Resolve(aPresContext->CounterStyleManager());
 }
 
 nsChangeHint nsStyleList::CalcDifference(
@@ -3637,24 +3636,15 @@ bool nsStyleContentData::operator==(const nsStyleContentData& aOther) const {
 
 void nsStyleContentData::Resolve(nsPresContext* aPresContext,
                                  const nsStyleContentData* aOldStyle) {
-  switch (mType) {
-    case StyleContentType::Image:
-      if (!mContent.mImage->IsResolved()) {
-        const nsStyleImageRequest* oldRequest =
-            (aOldStyle && aOldStyle->mType == StyleContentType::Image)
-                ? aOldStyle->mContent.mImage
-                : nullptr;
-        mContent.mImage->Resolve(aPresContext, oldRequest);
-      }
-      break;
-    case StyleContentType::Counter:
-    case StyleContentType::Counters: {
-      mContent.mCounters->mCounterStyle.Resolve(
-          aPresContext->CounterStyleManager());
-      break;
-    }
-    default:
-      break;
+  if (mType != StyleContentType::Image) {
+    return;
+  }
+  if (!mContent.mImage->IsResolved()) {
+    const nsStyleImageRequest* oldRequest =
+        (aOldStyle && aOldStyle->mType == StyleContentType::Image)
+            ? aOldStyle->mContent.mImage
+            : nullptr;
+    mContent.mImage->Resolve(aPresContext, oldRequest);
   }
 }
 
@@ -3688,25 +3678,9 @@ nsStyleContent::nsStyleContent(const nsStyleContent& aSource)
 
 nsChangeHint nsStyleContent::CalcDifference(
     const nsStyleContent& aNewData) const {
-  // In ElementRestyler::Restyle we assume that if there's no existing
-  // ::before or ::after and we don't have to restyle children of the
-  // node then we can't end up with a ::before or ::after due to the
-  // restyle of the node itself.  That's not quite true, but the only
-  // exception to the above is when the 'content' property of the node
-  // changes and the pseudo-element inherits the changed value.  Since
-  // the code here triggers a frame change on the node in that case,
-  // the optimization in ElementRestyler::Restyle is ok.  But if we ever
-  // change this code to not reconstruct frames on changes to the
-  // 'content' property, then we will need to revisit the optimization
-  // in ElementRestyler::Restyle.
-
   // Unfortunately we need to reframe even if the content lengths are the same;
   // a simple reflow will not pick up different text or different image URLs,
   // since we set all that up in the CSSFrameConstructor
-  //
-  // Also note that we also rely on this to return ReconstructFrame when
-  // content changes to ensure that nsCounterUseNode wouldn't reference
-  // to stale counter stylex.
   if (mContents != aNewData.mContents || mIncrements != aNewData.mIncrements ||
       mResets != aNewData.mResets) {
     return nsChangeHint_ReconstructFrame;

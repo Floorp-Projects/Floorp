@@ -1124,15 +1124,8 @@ void Gecko_CopyAlternateValuesFrom(nsFont* aDest, const nsFont* aSrc) {
 
 void Gecko_SetCounterStyleToName(CounterStylePtr* aPtr, nsAtom* aName,
                                  RawGeckoPresContextBorrowed aPresContext) {
-  // Try resolving the counter style if possible, and keep it unresolved
-  // otherwise.
-  CounterStyleManager* manager = aPresContext->CounterStyleManager();
   RefPtr<nsAtom> name = already_AddRefed<nsAtom>(aName);
-  if (CounterStyle* style = manager->GetCounterStyle(name)) {
-    *aPtr = style;
-  } else {
-    *aPtr = name.forget();
-  }
+  *aPtr = name.forget();
 }
 
 void Gecko_SetCounterStyleToSymbols(CounterStylePtr* aPtr, uint8_t aSymbolsType,
@@ -1156,10 +1149,7 @@ void Gecko_CopyCounterStyle(CounterStylePtr* aDst,
 }
 
 nsAtom* Gecko_CounterStyle_GetName(const CounterStylePtr* aPtr) {
-  if (!aPtr->IsResolved()) {
-    return aPtr->AsAtom();
-  }
-  return (*aPtr)->GetStyleName();
+  return aPtr->IsAtom() ? aPtr->AsAtom() : nullptr;
 }
 
 const AnonymousCounterStyle* Gecko_CounterStyle_GetAnonymous(

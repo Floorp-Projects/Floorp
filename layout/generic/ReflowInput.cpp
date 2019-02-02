@@ -136,21 +136,32 @@ static nscoord FontSizeInflationListMarginAdjustment(const nsIFrame* aFrame) {
   }
 
   float inflation = nsLayoutUtils::FontSizeInflationFor(aFrame);
-  if (inflation > 1.0f) {
-    auto listStyleType = aFrame->StyleList()->mCounterStyle->GetStyle();
-    if (listStyleType != NS_STYLE_LIST_STYLE_NONE &&
-        listStyleType != NS_STYLE_LIST_STYLE_DISC &&
-        listStyleType != NS_STYLE_LIST_STYLE_CIRCLE &&
-        listStyleType != NS_STYLE_LIST_STYLE_SQUARE &&
-        listStyleType != NS_STYLE_LIST_STYLE_DISCLOSURE_CLOSED &&
-        listStyleType != NS_STYLE_LIST_STYLE_DISCLOSURE_OPEN) {
-      // The HTML spec states that the default padding for ordered lists
-      // begins at 40px, indicating that we have 40px of space to place a
-      // bullet. When performing font inflation calculations, we add space
-      // equivalent to this, but simply inflated at the same amount as the
-      // text, in app units.
-      return nsPresContext::CSSPixelsToAppUnits(40) * (inflation - 1);
-    }
+  if (inflation <= 1.0f) {
+    return 0;
+  }
+
+  // The HTML spec states that the default padding for ordered lists
+  // begins at 40px, indicating that we have 40px of space to place a
+  // bullet. When performing font inflation calculations, we add space
+  // equivalent to this, but simply inflated at the same amount as the
+  // text, in app units.
+  auto margin = nsPresContext::CSSPixelsToAppUnits(40) * (inflation - 1);
+
+  auto* list = aFrame->StyleList();
+  if (!list->mCounterStyle.IsAtom()) {
+    return margin;
+  }
+
+  // NOTE(emilio): @counter-style can override some of the styles from this
+  // list, and we won't add margin to the counter.
+  //
+  // See https://github.com/w3c/csswg-drafts/issues/3584
+  nsAtom* type = list->mCounterStyle.AsAtom();
+  if (type != nsGkAtoms::none && type != nsGkAtoms::disc &&
+      type != nsGkAtoms::circle && type != nsGkAtoms::square &&
+      type != nsGkAtoms::disclosure_closed &&
+      type != nsGkAtoms::disclosure_open) {
+    return margin;
   }
 
   return 0;

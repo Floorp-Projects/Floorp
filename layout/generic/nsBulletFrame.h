@@ -93,7 +93,8 @@ class nsBulletFrame final : public nsFrame {
                              int32_t aIncrement);
 
   /* get list item text, with prefix & suffix */
-  void GetListItemText(nsAString& aResult);
+  static void GetListItemText(mozilla::CounterStyle*, mozilla::WritingMode,
+                              int32_t aOrdinal, nsAString& aResult);
 
   void GetSpokenText(nsAString& aText);
 
@@ -139,6 +140,8 @@ class nsBulletFrame final : public nsFrame {
   int32_t mOrdinal;
 
  private:
+  mozilla::CounterStyle* ResolveCounterStyle();
+  nscoord GetListStyleAscent() const;
   void RegisterImageRequest(bool aKnownToBeAnimated);
   void DeregisterAndCancelImageRequest();
 
