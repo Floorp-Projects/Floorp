@@ -7,6 +7,12 @@
     <string name="menu_share_with">Share with…</string>
     <string name="browser_home_button">Home</string>
 
+    <!-- Home view -->
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
+    <string name="content_description_menu">More options</string>
+    <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
+    <string name="content_description_private_browsing_button">Enable Private Browsing</string>
+
     <!-- Browser Menu -->
     <string name="browser_menu_back">Back</string>
     <string name="browser_menu_forward">Forward</string>

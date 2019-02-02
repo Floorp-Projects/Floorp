@@ -17,7 +17,7 @@
     <color name="icons">#20233E</color>
 
     <color name="session_list_empty_bg">#1A665BFD</color>
-    <color name="session_list_empty_fg">#665BFD</color>
+    <color name="session_list_empty_fg">#544CD9</color>
     <color name="session_list_header">#6D6D6E</color>
 
     <color name="searchPillBackground">#FAFAFC</color>
