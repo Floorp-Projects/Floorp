@@ -1269,7 +1269,8 @@ void WebGLContext::ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height,
 
   uint8_t* bytes;
   size_t byteLen;
-  if (!ValidateArrayBufferView(dstView, dstElemOffset, 0, &bytes, &byteLen))
+  if (!ValidateArrayBufferView(dstView, dstElemOffset, 0,
+                               LOCAL_GL_INVALID_VALUE, &bytes, &byteLen))
     return;
 
   ////
