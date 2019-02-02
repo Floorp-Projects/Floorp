@@ -22,9 +22,7 @@ add_task(async function test_addEngineWithDetails() {
   Services.prefs.getDefaultBranch(BROWSER_SEARCH_PREF)
           .setBoolPref("reset.enabled", true);
 
-  await asyncInit();
-
-  Services.search.addEngineWithDetails(kSearchEngineID, {
+  await Services.search.addEngineWithDetails(kSearchEngineID, {
     template: kSearchEngineURL,
     description: kDescription,
     iconURL: kIconURL,
@@ -43,22 +41,20 @@ add_task(async function test_addEngineWithDetails() {
 
   // Set the engine as default; this should set a loadPath verification hash,
   // which should ensure we don't show the search reset prompt.
-  Services.search.defaultEngine = engine;
+  await Services.search.setDefault(engine);
 
   let expectedURL = kSearchEngineURL.replace("{searchTerms}", kSearchTerm);
-  let submission =
-    Services.search.defaultEngine.getSubmission(kSearchTerm, null, "searchbar");
+  let submission = (await Services.search.getDefault()).getSubmission(kSearchTerm, null, "searchbar");
   Assert.equal(submission.uri.spec, expectedURL);
   let expectedSuggestURL = kSearchSuggestURL.replace("{searchTerms}", kSearchTerm);
-  let submissionSuggest =
-    Services.search.defaultEngine.getSubmission(kSearchTerm, URLTYPE_SUGGEST_JSON);
+  let submissionSuggest = (await Services.search.getDefault()).getSubmission(kSearchTerm, URLTYPE_SUGGEST_JSON);
   Assert.equal(submissionSuggest.uri.spec, expectedSuggestURL);
 });
 
 add_task(async function test_addEngineWithDetailsPOST() {
   Assert.ok(Services.search.isInitialized);
 
-  Services.search.addEngineWithDetails(kSearchEnginePOSTID, {
+  await Services.search.addEngineWithDetails(kSearchEnginePOSTID, {
     template: kSearchEnginePOSTURL,
     method: "POST",
     postData: kSearchEnginePOSTData,

@@ -16,7 +16,7 @@ let {
 
 add_task(async function setup() {
   await promiseStartupManager();
-  Services.search.init();
+  await Services.search.init();
   registerCleanupFunction(async () => {
     await promiseShutdownManager();
   });

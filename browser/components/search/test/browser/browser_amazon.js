@@ -9,7 +9,9 @@
 
 const BROWSER_SEARCH_PREF = "browser.search.";
 
-function test() {
+add_task(async function test() {
+  await Services.search.init();
+
   let engine = Services.search.getEngineByName("Amazon.com");
   ok(engine, "Amazon.com");
 
@@ -79,4 +81,4 @@ function test() {
   };
 
   isSubObjectOf(EXPECTED_ENGINE, engine, "Amazon");
-}
+});

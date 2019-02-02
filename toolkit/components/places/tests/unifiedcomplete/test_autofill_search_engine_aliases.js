@@ -11,14 +11,14 @@ const TEST_ENGINE_ALIAS = "@autofilltest";
 
 add_task(async function init() {
   // Add an engine with an "@" alias.
-  Services.search.addEngineWithDetails(TEST_ENGINE_NAME, {
+  await Services.search.addEngineWithDetails(TEST_ENGINE_NAME, {
     alias: TEST_ENGINE_ALIAS,
     template: "http://example.com/?search={searchTerms}",
   });
-  registerCleanupFunction(() => {
+  registerCleanupFunction(async () => {
     let engine = Services.search.getEngineByName(TEST_ENGINE_NAME);
     Assert.ok(engine);
-    Services.search.removeEngine(engine);
+    await Services.search.removeEngine(engine);
   });
 });
 

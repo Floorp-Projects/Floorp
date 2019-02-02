@@ -91,7 +91,7 @@ function test() {
     gBrowser.removeTab(tab);
   });
 
-  nextTest();
+  Services.search.init().then(nextTest);
 }
 
 var gCurrTest;

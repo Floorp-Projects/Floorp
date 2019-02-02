@@ -238,19 +238,14 @@ const TargetingGetters = {
   get searchEngines() {
     return new Promise(resolve => {
       // Note: calling init ensures this code is only executed after Search has been initialized
-      Services.search.init(rv => {
-        if (Components.isSuccessCode(rv)) {
-          let engines = Services.search.getVisibleEngines();
-          resolve({
-            current: Services.search.defaultEngine.identifier,
-            installed: engines
-              .map(engine => engine.identifier)
-              .filter(engine => engine),
-          });
-        } else {
-          resolve({installed: [], current: ""});
-        }
-      });
+      Services.search.getVisibleEngines().then(engines => {
+        resolve({
+          current: Services.search.defaultEngine.identifier,
+          installed: engines
+            .map(engine => engine.identifier)
+            .filter(engine => engine),
+        });
+      }).catch(() => resolve({installed: [], current: ""}));
     });
   },
   get isDefaultBrowser() {

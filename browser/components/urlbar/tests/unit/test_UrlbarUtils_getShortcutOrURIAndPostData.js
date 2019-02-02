@@ -138,7 +138,7 @@ async function setupKeywords() {
     }
 
     if (data instanceof searchKeywordData) {
-      Services.search.addEngineWithDetails(data.keyword, "", data.keyword, "", data.method, data.uri.spec);
+      await Services.search.addEngineWithDetails(data.keyword, "", data.keyword, "", data.method, data.uri.spec);
       let addedEngine = Services.search.getEngineByName(data.keyword);
       if (data.postData) {
         let [paramName, paramValue] = data.postData.split("=");
@@ -151,5 +151,7 @@ async function setupKeywords() {
 
 async function cleanupKeywords() {
   await PlacesUtils.bookmarks.remove(folder);
-  gAddedEngines.map(Services.search.removeEngine);
+  for (let engine of gAddedEngines)
+    await Services.search.removeEngine(engine);
+  gAddedEngines = [];
 }

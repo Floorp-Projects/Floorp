@@ -117,7 +117,7 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
       await searchInitialized;
       let engine = Services.search.getEngineByName(item.value);
       try {
-        Services.search.removeEngine(engine);
+        await Services.search.removeEngine(engine);
       } catch (e) {
         Cu.reportError(e);
       }
@@ -204,7 +204,8 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
       let engineName = searchProvider.name.trim();
       if (searchProvider.is_default) {
         let engine = Services.search.getEngineByName(engineName);
-        if (engine && Services.search.getDefaultEngines().includes(engine)) {
+        let defaultEngines = await Services.search.getDefaultEngines();
+        if (engine && defaultEngines.some(defaultEngine => defaultEngine.name == engineName)) {
           // Needs to be called every time to handle reenabling, but
           // only sets default for install or enable.
           await this.setDefault(engineName);
@@ -217,7 +218,8 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
         if (extension.startupReason === "ADDON_INSTALL") {
           // Don't ask if it already the current engine
           let engine = Services.search.getEngineByName(engineName);
-          if (Services.search.defaultEngine != engine) {
+          let defaultEngine = await Services.search.getDefault();
+          if (defaultEngine.name != engine.name) {
             let subject = {
               wrappedJSObject: {
                 // This is a hack because we don't have the browser of
@@ -226,12 +228,12 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
                 browser: windowTracker.topWindow.gBrowser.selectedBrowser,
                 name: this.extension.name,
                 icon: this.extension.iconURL,
-                currentEngine: Services.search.defaultEngine.name,
+                currentEngine: defaultEngine.name,
                 newEngine: engineName,
                 resolve(allow) {
                   if (allow) {
                     ExtensionSettingsStore.addSetting(
-                      extension.id, DEFAULT_SEARCH_STORE_TYPE, DEFAULT_SEARCH_SETTING_NAME, engineName, () => Services.search.defaultEngine.name);
+                      extension.id, DEFAULT_SEARCH_STORE_TYPE, DEFAULT_SEARCH_SETTING_NAME, engineName, () => defaultEngine.name);
                     Services.search.defaultEngine = Services.search.getEngineByName(engineName);
                   }
                 },
@@ -256,9 +258,10 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
   async setDefault(engineName) {
     let {extension} = this;
     if (extension.startupReason === "ADDON_INSTALL") {
+      let defaultEngine = await Services.search.getDefault();
       let item = await ExtensionSettingsStore.addSetting(
-        extension.id, DEFAULT_SEARCH_STORE_TYPE, DEFAULT_SEARCH_SETTING_NAME, engineName, () => Services.search.defaultEngine.name);
-      Services.search.defaultEngine = Services.search.getEngineByName(item.value);
+        extension.id, DEFAULT_SEARCH_STORE_TYPE, DEFAULT_SEARCH_SETTING_NAME, engineName, () => defaultEngine.name);
+      await Services.search.setDefault(Services.search.getEngineByName(item.value));
     } else if (extension.startupReason === "ADDON_ENABLE") {
       chrome_settings_overrides.processDefaultSearchSetting("enable", extension.id);
     }
@@ -269,30 +272,32 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
     let isCurrent = false;
     let index = -1;
     if (extension.startupReason === "ADDON_UPGRADE") {
-      let engines = Services.search.getEnginesByExtensionID(extension.id);
+      let engines = await Services.search.getEnginesByExtensionID(extension.id);
       if (engines.length > 0) {
+        let firstEngine = engines[0];
+        let firstEngineName = firstEngine.name;
         // There can be only one engine right now
-        isCurrent = Services.search.defaultEngine == engines[0];
+        isCurrent = (await Services.search.getDefault()).name == firstEngineName;
         // Get position of engine and store it
-        index = Services.search.getEngines().indexOf(engines[0]);
-        Services.search.removeEngine(engines[0]);
+        index = (await Services.search.getEngines()).map(engine => engine.name).indexOf(firstEngineName);
+        await Services.search.removeEngine(firstEngine);
       }
     }
     try {
-      Services.search.addEnginesFromExtension(extension);
+      await Services.search.addEnginesFromExtension(extension);
       // Bug 1488516.  Preparing to support multiple engines per extension so
       // multiple locales can be loaded.
-      let engines = Services.search.getEnginesByExtensionID(extension.id);
+      let engines = await Services.search.getEnginesByExtensionID(extension.id);
       await ExtensionSettingsStore.addSetting(
         extension.id, DEFAULT_SEARCH_STORE_TYPE, ENGINE_ADDED_SETTING_NAME,
         engines[0].name);
       if (extension.startupReason === "ADDON_UPGRADE") {
         let engine = Services.search.getEngineByName(engines[0].name);
         if (isCurrent) {
-          Services.search.defaultEngine = engine;
+          await Services.search.setDefault(engine);
         }
         if (index != -1) {
-          Services.search.moveEngine(engine, index);
+          await Services.search.moveEngine(engine, index);
         }
       }
     } catch (e) {

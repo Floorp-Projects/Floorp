@@ -6,6 +6,7 @@
 
 add_task(async function() {
   const ss = Services.search;
+  await ss.init();
   const ENGINE_NAME = "Foo";
   let contextMenu;
 
@@ -35,7 +36,7 @@ add_task(async function() {
           resProt.setSubstitution("search-plugins", originalSubstitution);
           break;
         case "engine-current":
-          is(ss.defaultEngine.name, ENGINE_NAME, "currentEngine set");
+          is(ss.defaultEngine.name, ENGINE_NAME, "defaultEngine set");
           resolve();
           break;
         case "engine-removed":

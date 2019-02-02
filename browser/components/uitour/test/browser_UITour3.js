@@ -153,15 +153,9 @@ add_UITour_task(async function test_info_target_callback() {
 });
 
 add_UITour_task(async function test_getConfiguration_selectedSearchEngine() {
-  await new Promise((resolve) => {
-    Services.search.init(async function(rv) {
-      ok(Components.isSuccessCode(rv), "Search service initialized");
-      let engine = Services.search.defaultEngine;
-      let data = await getConfigurationPromise("selectedSearchEngine");
-      is(data.searchEngineIdentifier, engine.identifier, "Correct engine identifier");
-      resolve();
-    });
-  });
+  let engine = await Services.search.getDefault();
+  let data = await getConfigurationPromise("selectedSearchEngine");
+  is(data.searchEngineIdentifier, engine.identifier, "Correct engine identifier");
 });
 
 add_UITour_task(async function test_setSearchTerm() {

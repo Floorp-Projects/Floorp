@@ -165,14 +165,7 @@ class ShowHeartbeatAction extends BaseAction {
     }
 
     const userId = ClientEnvironment.userId;
-    const searchEngine = await new Promise(resolve => {
-      Services.search.init(rv => {
-        if (Components.isSuccessCode(rv)) {
-          resolve(Services.search.defaultEngine.identifier);
-        }
-      });
-    });
-
+    const searchEngine = (await Services.search.getDefault()).identifier;
     const args = {
       fxVersion: Services.appinfo.version,
       isDefaultBrowser: ShellService.isDefaultBrowser() ? 1 : 0,

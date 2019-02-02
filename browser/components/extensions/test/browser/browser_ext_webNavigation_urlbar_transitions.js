@@ -38,34 +38,26 @@ async function addBookmark(bookmark) {
   });
 }
 
-function addSearchEngine(basename) {
-  return new Promise((resolve, reject) => {
-    info("Waiting for engine to be added: " + basename);
-    let url = getRootDirectory(gTestPath) + basename;
-    Services.search.addEngine(url, "", false, {
-      onSuccess: (engine) => {
-        info(`Search engine added: ${basename}`);
-        registerCleanupFunction(() => Services.search.removeEngine(engine));
-        resolve(engine);
-      },
-      onError: (errCode) => {
-        ok(false, `addEngine failed with error code ${errCode}`);
-        reject();
-      },
-    });
-  });
+async function addSearchEngine(basename) {
+  info("Waiting for engine to be added: " + basename);
+  let url = getRootDirectory(gTestPath) + basename;
+  let engine = await Services.search.addEngine(url, "", false);
+
+  info(`Search engine added: ${basename}`);
+  registerCleanupFunction(async () => Services.search.removeEngine(engine));
+  return engine;
 }
 
 async function prepareSearchEngine() {
-  let oldCurrentEngine = Services.search.defaultEngine;
+  let oldDefaultEngine = await Services.search.getDefault();
   let suggestionsEnabled = Services.prefs.getBoolPref(SUGGEST_URLBAR_PREF);
   Services.prefs.setBoolPref(SUGGEST_URLBAR_PREF, true);
   let engine = await addSearchEngine(TEST_ENGINE_BASENAME);
-  Services.search.defaultEngine = engine;
+  await Services.search.setDefault(engine);
 
   registerCleanupFunction(async function() {
     Services.prefs.setBoolPref(SUGGEST_URLBAR_PREF, suggestionsEnabled);
-    Services.search.defaultEngine = oldCurrentEngine;
+    await Services.search.setDefault(oldDefaultEngine);
 
     // Make sure the popup is closed for the next test.
     gURLBar.blur();

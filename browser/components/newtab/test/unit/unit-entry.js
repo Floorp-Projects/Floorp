@@ -232,7 +232,6 @@ const TEST_GLOBAL = {
           __internalAliases: ["@google"],
         },
       },
-      currentEngine: {identifier: "google", searchForm: "https://www.google.com/search?q=&ie=utf-8&oe=utf-8&client=firefox-b"},
     },
     scriptSecurityManager: {
       createNullPrincipal() {},

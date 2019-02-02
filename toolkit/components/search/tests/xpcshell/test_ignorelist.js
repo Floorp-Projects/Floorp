@@ -14,24 +14,20 @@ const kExtensionID = "searchignore@mozilla.com";
 add_task(async function test_ignorelistEngineLowerCase() {
   Assert.ok(!Services.search.isInitialized);
 
-  await asyncInit();
-
-  Services.search.addEngineWithDetails(kSearchEngineID1, "", "", "", "get",
-                                       kSearchEngineURL1);
+  await Services.search.addEngineWithDetails(kSearchEngineID1, "", "", "", "get", kSearchEngineURL1);
 
   // An ignored engine shouldn't be available at all
   let engine = Services.search.getEngineByName(kSearchEngineID1);
   Assert.equal(engine, null, "Engine should not exist");
 
-  Services.search.addEngineWithDetails(kSearchEngineID2, "", "", "", "get",
-                                       kSearchEngineURL2);
+  await Services.search.addEngineWithDetails(kSearchEngineID2, "", "", "", "get", kSearchEngineURL2);
 
   // An ignored engine shouldn't be available at all
   engine = Services.search.getEngineByName(kSearchEngineID2);
   Assert.equal(engine, null, "Engine should not exist");
 
-  Services.search.addEngineWithDetails(kSearchEngineID3, "", "", "", "get",
-                                       kSearchEngineURL3, kExtensionID);
+  await Services.search.addEngineWithDetails(kSearchEngineID3, "", "", "", "get",
+                                             kSearchEngineURL3, kExtensionID);
 
   // An ignored engine shouldn't be available at all
   engine = Services.search.getEngineByName(kSearchEngineID3);

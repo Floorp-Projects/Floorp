@@ -330,18 +330,18 @@ class SearchOneOffs {
     return this._bundle;
   }
 
-  get engines() {
+  async getEngines() {
     if (this._engines) {
       return this._engines;
     }
     let currentEngineNameToIgnore;
     if (!this.getAttribute("includecurrentengine"))
-      currentEngineNameToIgnore = Services.search.defaultEngine.name;
+      currentEngineNameToIgnore = (await Services.search.getDefault()).name;
 
     let pref = Services.prefs.getStringPref("browser.search.hiddenOneOffs");
     let hiddenList = pref ? pref.split(",") : [];
 
-    this._engines = Services.search.getVisibleEngines().filter(e => {
+    this._engines = (await Services.search.getVisibleEngines()).filter(e => {
       let name = e.name;
       return (!currentEngineNameToIgnore ||
               name != currentEngineNameToIgnore) &&
@@ -391,7 +391,7 @@ class SearchOneOffs {
   /**
    * Builds all the UI.
    */
-  _rebuild() {
+  async _rebuild() {
     // Update the 'Search for <keywords> with:" header.
     this._updateAfterQueryChanged();
 
@@ -428,10 +428,11 @@ class SearchOneOffs {
       this.settingsButtonCompact.nextElementSibling.remove();
     }
 
-    let engines = this.engines;
+    let engines = await this.getEngines();
+    let defaultEngine = await Services.search.getDefault();
     let oneOffCount = engines.length;
     let collapsed = !oneOffCount ||
-                    (oneOffCount == 1 && engines[0].name == Services.search.defaultEngine.name);
+                    (oneOffCount == 1 && engines[0].name == defaultEngine.name);
 
     // header is a xul:deck so collapsed doesn't work on it, see bug 589569.
     this.header.hidden = this.buttons.collapsed = collapsed;

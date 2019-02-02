@@ -1,38 +1,6 @@
-var prefList = ["browser.fixup.typo.scheme", "keyword.enabled",
-                "browser.fixup.domainwhitelist.whitelisted"];
-for (let pref of prefList) {
-  Services.prefs.setBoolPref(pref, true);
-}
-
 const kSearchEngineID = "test_urifixup_search_engine";
 const kSearchEngineURL = "http://www.example.org/?search={searchTerms}";
-Services.search.addEngineWithDetails(kSearchEngineID, "", "", "", "get",
-                                     kSearchEngineURL);
-
-Services.io.getProtocolHandler("resource")
-        .QueryInterface(Ci.nsIResProtocolHandler)
-        .setSubstitution("search-plugins",
-                         Services.io.newURI("chrome://mozapps/locale/searchplugins/"));
-
-var oldDefaultEngine = Services.search.defaultEngine;
-Services.search.defaultEngine = Services.search.getEngineByName(kSearchEngineID);
-
-var selectedName = Services.search.defaultEngine.name;
-Assert.equal(selectedName, kSearchEngineID);
-
 const kForceHostLookup = "browser.fixup.dns_first_for_single_words";
-registerCleanupFunction(function() {
-  if (oldDefaultEngine) {
-    Services.search.defaultEngine = oldDefaultEngine;
-  }
-  let engine = Services.search.getEngineByName(kSearchEngineID);
-  if (engine) {
-    Services.search.removeEngine(engine);
-  }
-  Services.prefs.clearUserPref("keyword.enabled");
-  Services.prefs.clearUserPref("browser.fixup.typo.scheme");
-  Services.prefs.clearUserPref(kForceHostLookup);
-});
 
 // TODO(bug 1522134), this test should also use
 // combinations of the following flags.
@@ -524,9 +492,42 @@ function sanitize(input) {
   return input.replace(/\r|\n/g, "").trim();
 }
 
+add_task(async function setup() {
+  var prefList = ["browser.fixup.typo.scheme", "keyword.enabled",
+                  "browser.fixup.domainwhitelist.whitelisted"];
+  for (let pref of prefList) {
+    Services.prefs.setBoolPref(pref, true);
+  }
+
+  Services.io.getProtocolHandler("resource")
+          .QueryInterface(Ci.nsIResProtocolHandler)
+          .setSubstitution("search-plugins",
+                           Services.io.newURI("chrome://mozapps/locale/searchplugins/"));
+
+  await Services.search.addEngineWithDetails(kSearchEngineID, "", "", "", "get", kSearchEngineURL);
+
+  var oldCurrentEngine = await Services.search.getDefault();
+  await Services.search.setDefault(Services.search.getEngineByName(kSearchEngineID));
+
+  var selectedName = (await Services.search.getDefault()).name;
+  Assert.equal(selectedName, kSearchEngineID);
+
+  registerCleanupFunction(async function() {
+    if (oldCurrentEngine) {
+      await Services.search.setDefault(oldCurrentEngine);
+    }
+    let engine = Services.search.getEngineByName(kSearchEngineID);
+    if (engine) {
+      await Services.search.removeEngine(engine);
+    }
+    Services.prefs.clearUserPref("keyword.enabled");
+    Services.prefs.clearUserPref("browser.fixup.typo.scheme");
+    Services.prefs.clearUserPref(kForceHostLookup);
+  });
+});
 
 var gSingleWordHostLookup = false;
-function run_test() {
+add_task(async function run_test() {
   // Only keywordlookup things should be affected by requiring a DNS lookup for single-word hosts:
   info("Check only keyword lookup testcases should be affected by requiring DNS for single hosts");
   let affectedTests = testcases.filter(t => !t.keywordLookup && t.affectedByDNSForSingleHosts);
@@ -539,7 +540,7 @@ function run_test() {
   do_single_test_run();
   gSingleWordHostLookup = true;
   do_single_test_run();
-}
+});
 
 function do_single_test_run() {
   Services.prefs.setBoolPref(kForceHostLookup, gSingleWordHostLookup);

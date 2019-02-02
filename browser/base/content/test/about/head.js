@@ -164,24 +164,23 @@ function promiseContentSearchChange(browser, newEngineName) {
 /**
  * Wait for the search engine to be added.
  */
-function promiseNewEngine(basename) {
+async function promiseNewEngine(basename) {
   info("Waiting for engine to be added: " + basename);
-  return new Promise((resolve, reject) => {
-    let url = getRootDirectory(gTestPath) + basename;
-    Services.search.addEngine(url, "", false, {
-      onSuccess(engine) {
-        info("Search engine added: " + basename);
-        registerCleanupFunction(() => {
-          try {
-            Services.search.removeEngine(engine);
-          } catch (ex) { /* Can't remove the engine more than once */ }
-        });
-        resolve(engine);
-      },
-      onError(errCode) {
-        ok(false, "addEngine failed with error code " + errCode);
-        reject();
-      },
-    });
+  let url = getRootDirectory(gTestPath) + basename;
+  let engine;
+  try {
+    engine = await Services.search.addEngine(url, "", false);
+  } catch (errCode) {
+    ok(false, "addEngine failed with error code " + errCode);
+    throw errCode;
+  }
+
+  info("Search engine added: " + basename);
+  registerCleanupFunction(async () => {
+    try {
+      await Services.search.removeEngine(engine);
+    } catch (ex) { /* Can't remove the engine more than once */ }
   });
+
+  return engine;
 }

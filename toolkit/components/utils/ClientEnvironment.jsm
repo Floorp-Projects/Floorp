@@ -70,11 +70,8 @@ class ClientEnvironmentBase {
 
   static get searchEngine() {
     return (async () => {
-      const searchInitialized = await new Promise(resolve => Services.search.init(resolve));
-      if (Components.isSuccessCode(searchInitialized)) {
-        return Services.search.defaultEngine.identifier;
-      }
-      return null;
+      await TelemetryEnvironment.onInitialized();
+      return TelemetryEnvironment.currentEnvironment.settings.defaultSearchEngine;
     })();
   }
 

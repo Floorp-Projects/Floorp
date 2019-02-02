@@ -8,11 +8,11 @@ add_task(async function init() {
   });
   let engine = await SearchTestUtils.promiseNewSearchEngine(
     getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME);
-  let oldCurrentEngine = Services.search.defaultEngine;
-  Services.search.moveEngine(engine, 0);
-  Services.search.defaultEngine = engine;
+  let oldDefaultEngine = await Services.search.getDefault();
+  await Services.search.moveEngine(engine, 0);
+  await Services.search.setDefault(engine);
   registerCleanupFunction(async function() {
-    Services.search.defaultEngine = oldCurrentEngine;
+    await Services.search.setDefault(oldDefaultEngine);
 
     await PlacesUtils.history.clear();
     // Make sure the popup is closed for the next test.

@@ -7,17 +7,17 @@
  */
 
 add_task(async function() {
-  Services.search.addEngineWithDetails("MozSearch", "", "", "", "GET",
-                                       "http://example.com/?q={searchTerms}");
+  await Services.search.addEngineWithDetails("MozSearch", "", "", "", "GET",
+    "http://example.com/?q={searchTerms}");
   let engine = Services.search.getEngineByName("MozSearch");
-  let originalEngine = Services.search.defaultEngine;
-  Services.search.defaultEngine = engine;
+  let originalEngine = await Services.search.getDefault();
+  await Services.search.setDefault(engine);
 
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:mozilla");
 
   registerCleanupFunction(async function() {
-    Services.search.defaultEngine = originalEngine;
-    Services.search.removeEngine(engine);
+    await Services.search.setDefault(originalEngine);
+    await Services.search.removeEngine(engine);
     try {
       BrowserTestUtils.removeTab(tab);
     } catch (ex) { /* tab may have already been closed in case of failure */ }

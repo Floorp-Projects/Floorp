@@ -21,8 +21,8 @@ add_task(async function setup() {
     return data == "engine-added";
   });
 
-  Services.search.addEngine("http://test:80/browser/browser/base/content/test/general/POSTSearchEngine.xml",
-                            null, false);
+  const url = "http://test:80/browser/browser/base/content/test/general/POSTSearchEngine.xml";
+  await Services.search.addEngine(url, null, false);
 
   let [subject, data] = await engineAddedPromise;
 
@@ -33,10 +33,10 @@ add_task(async function setup() {
     Assert.ok(false, "Wrong search engine added");
   }
 
-  Services.search.defaultEngine = engine;
+  await Services.search.setDefault(engine);
 
-  registerCleanupFunction(function() {
-    Services.search.removeEngine(engine);
+  registerCleanupFunction(async function() {
+    await Services.search.removeEngine(engine);
   });
 });
 

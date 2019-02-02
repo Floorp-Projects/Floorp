@@ -15,8 +15,8 @@ function run_test() {
 
 add_task(async function test_parseSubmissionURL() {
   // Hide the default engines to prevent them from being used in the search.
-  for (let engine of Services.search.getEngines()) {
-    Services.search.removeEngine(engine);
+  for (let engine of await Services.search.getEngines()) {
+    await Services.search.removeEngine(engine);
   }
 
   let [engine1, engine2, engine3, engine4] = await addTestEngines([

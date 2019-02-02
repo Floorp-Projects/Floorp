@@ -26,7 +26,7 @@ add_task(async function test_listJSONlocale() {
 
   Assert.ok(Services.search.isInitialized, "search initialized");
 
-  let sortedEngines = Services.search.getEngines();
+  let sortedEngines = await Services.search.getEngines();
   Assert.equal(sortedEngines.length, 1, "Should have only one engine");
 });
 
@@ -42,8 +42,9 @@ add_task(async function test_listJSONlocaleSwitch() {
 
   Assert.ok(Services.search.isInitialized, "search initialized");
 
-  let sortedEngines = Services.search.getEngines();
+  let sortedEngines = await Services.search.getEngines();
   Assert.equal(sortedEngines.length, 2, "Should have two engines");
+  // Assert.equal(sortedEngines[0].identifier, "engine-pref");
 });
 
 // Check that region overrides apply
@@ -54,7 +55,7 @@ add_task(async function test_listJSONRegionOverride() {
 
   Assert.ok(Services.search.isInitialized, "search initialized");
 
-  let sortedEngines = Services.search.getEngines();
+  let sortedEngines = await Services.search.getEngines();
   Assert.equal(sortedEngines.length, 2, "Should have two engines");
   Assert.equal(sortedEngines[0].identifier, "engine-chromeicon", "Engine should have been overridden by engine-chromeicon");
 });

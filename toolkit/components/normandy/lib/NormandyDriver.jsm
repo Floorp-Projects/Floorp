@@ -72,12 +72,9 @@ var NormandyDriver = function(sandboxManager) {
       appinfo.syncTotalDevices = appinfo.syncDesktopDevices + appinfo.syncMobileDevices;
 
       const searchEnginePromise = new Promise(resolve => {
-        Services.search.init(rv => {
-          if (Components.isSuccessCode(rv)) {
-            appinfo.searchEngine = Services.search.defaultEngine.identifier;
-          }
-          resolve();
-        });
+        Services.search.init().then(() => {
+          appinfo.searchEngine = Services.search.defaultEngine.identifier;
+        }).finally(resolve);
       });
 
       const pluginsPromise = (async () => {

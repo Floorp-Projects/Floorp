@@ -10,7 +10,7 @@ add_task(async function init() {
   // as the first one-off.
   let engine = await SearchTestUtils.promiseNewSearchEngine(
     getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME);
-  Services.search.moveEngine(engine, 0);
+  await Services.search.moveEngine(engine, 0);
 
   registerCleanupFunction(async function() {
     await hidePopup();
@@ -167,7 +167,7 @@ add_task(async function searchWith() {
 
   let item = gURLBar.popup.richlistbox.firstElementChild;
   Assert.equal(item._actionText.textContent,
-               "Search with " + Services.search.defaultEngine.name,
+               "Search with " + (await Services.search.getDefault()).name,
                "Sanity check: first result's action text");
 
   // Alt+Down to the first one-off.  Now the first result and the first one-off
@@ -176,7 +176,7 @@ add_task(async function searchWith() {
   assertState(0, 0, typedValue);
 
   let engineName = gURLBar.popup.oneOffSearchButtons.selectedButton.engine.name;
-  Assert.notEqual(engineName, Services.search.defaultEngine.name,
+  Assert.notEqual(engineName, (await Services.search.getDefault()).name,
                   "Sanity check: First one-off engine should not be " +
                   "the current engine");
   Assert.equal(item._actionText.textContent,
@@ -234,8 +234,8 @@ add_task(async function oneOffReturn() {
 add_task(async function collapsedOneOffs() {
   // Disable all the engines but the current one, check the oneoffs are
   // collapsed and that moving up selects the last match.
-  let engines = Services.search.getVisibleEngines()
-                               .filter(e => e.name != Services.search.defaultEngine.name);
+  let defaultEngine = await Services.search.getDefault();
+  let engines = (await Services.search.getVisibleEngines()).filter(e => e.name != defaultEngine.name);
   await SpecialPowers.pushPrefEnv({"set": [
     [ "browser.search.hiddenOneOffs", engines.map(e => e.name).join(",") ],
   ]});

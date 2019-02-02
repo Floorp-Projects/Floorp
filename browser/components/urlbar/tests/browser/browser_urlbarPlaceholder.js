@@ -10,13 +10,13 @@
 
 const TEST_ENGINE_BASENAME = "searchSuggestionEngine.xml";
 
-const originalEngine = Services.search.defaultEngine;
-const expectedString = gBrowserBundle.formatStringFromName("urlbar.placeholder",
-  [originalEngine.name], 1);
-var extraEngine;
+var originalEngine, extraEngine, expectedString;
 var tabs = [];
 
 add_task(async function setup() {
+  originalEngine = await Services.search.getDefault();
+  expectedString = gBrowserBundle.formatStringFromName("urlbar.placeholder", [originalEngine.name], 1);
+
   let rootDir = getRootDirectory(gTestPath);
   extraEngine = await SearchTestUtils.promiseNewSearchEngine(rootDir + TEST_ENGINE_BASENAME);
 
@@ -25,8 +25,8 @@ add_task(async function setup() {
   let urlTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:mozilla");
   BrowserTestUtils.removeTab(urlTab);
 
-  registerCleanupFunction(() => {
-    Services.search.defaultEngine = originalEngine;
+  registerCleanupFunction(async () => {
+    await Services.search.setDefault(originalEngine);
     for (let tab of tabs) {
       BrowserTestUtils.removeTab(tab);
     }
@@ -36,17 +36,19 @@ add_task(async function setup() {
 add_task(async function test_change_default_engine_updates_placeholder() {
   tabs.push(await BrowserTestUtils.openNewForegroundTab(gBrowser));
 
-  Services.search.defaultEngine = extraEngine;
+  await Services.search.setDefault(extraEngine);
 
   await TestUtils.waitForCondition(
     () => gURLBar.getAttribute("placeholder") == gURLBar.getAttribute("defaultPlaceholder"),
     "The placeholder should match the default placeholder for non-built-in engines.");
+  Assert.equal(gURLBar.getAttribute("placeholder"), gURLBar.getAttribute("defaultPlaceholder"));
 
-  Services.search.defaultEngine = originalEngine;
+  await Services.search.setDefault(originalEngine);
 
   await TestUtils.waitForCondition(
     () => gURLBar.getAttribute("placeholder") == expectedString,
     "The placeholder should include the engine name for built-in engines.");
+  Assert.equal(gURLBar.getAttribute("placeholder"), expectedString);
 });
 
 add_task(async function test_delayed_update_placeholder() {
@@ -60,7 +62,7 @@ add_task(async function test_delayed_update_placeholder() {
   tabs.push(blankTab);
 
   // Pretend we've "initialized".
-  BrowserSearch._updateURLBarPlaceholder(extraEngine, true);
+  BrowserSearch._updateURLBarPlaceholder(extraEngine.name, true);
 
   Assert.equal(gURLBar.getAttribute("placeholder"), expectedString,
     "Placeholder should be unchanged.");
@@ -75,7 +77,8 @@ add_task(async function test_delayed_update_placeholder() {
   // Do it the other way to check both named engine and fallback code paths.
   await BrowserTestUtils.switchTab(gBrowser, blankTab);
 
-  BrowserSearch._updateURLBarPlaceholder(originalEngine, true);
+  BrowserSearch._updateURLBarPlaceholder(originalEngine.name, true);
+  await TestUtils.waitForTick();
 
   Assert.equal(gURLBar.getAttribute("placeholder"), gURLBar.getAttribute("defaultPlaceholder"),
     "Placeholder should be unchanged.");
@@ -87,7 +90,8 @@ add_task(async function test_delayed_update_placeholder() {
     "The placeholder should include the engine name for built-in engines.");
 
   // Now check when we have a URL displayed, the placeholder is updated straight away.
-  BrowserSearch._updateURLBarPlaceholder(extraEngine);
+  BrowserSearch._updateURLBarPlaceholder(extraEngine.name);
+  await TestUtils.waitForTick();
 
   Assert.equal(gURLBar.getAttribute("placeholder"), gURLBar.getAttribute("defaultPlaceholder"),
     "Placeholder should be the default.");

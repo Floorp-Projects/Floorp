@@ -131,8 +131,7 @@ add_task(async function test_text() {
     EventUtils.synthesizeMouseAtCenter(searchbarEngine, {});
   });
 
-  let url = Services.search.defaultEngine
-                           .getSubmission(searchbar.textbox.value).uri.spec;
+  let url = (await Services.search.getDefault()).getSubmission(searchbar.textbox.value).uri.spec;
   await promiseTabLoadEvent(gBrowser.selectedTab, url);
 
   // Move the cursor out of the panel area to avoid messing with other tests.

@@ -2,10 +2,10 @@ var gOriginalEngine;
 var gEngine;
 var gRestyleSearchesPref = "browser.urlbar.restyleSearches";
 
-registerCleanupFunction(() => {
+registerCleanupFunction(async () => {
   Services.prefs.clearUserPref(gRestyleSearchesPref);
-  Services.search.defaultEngine = gOriginalEngine;
-  Services.search.removeEngine(gEngine);
+  await Services.search.setDefault(gOriginalEngine);
+  await Services.search.removeEngine(gEngine);
   return PlacesUtils.history.clear();
 });
 
@@ -18,12 +18,12 @@ add_task(async function() {
 });
 
 add_task(async function() {
-  Services.search.addEngineWithDetails("SearchEngine", "", "", "",
-                                       "GET", "http://s.example.com/search");
+  await Services.search.addEngineWithDetails("SearchEngine", "", "", "",
+    "GET", "http://s.example.com/search");
   gEngine = Services.search.getEngineByName("SearchEngine");
   gEngine.addParam("q", "{searchTerms}", null);
-  gOriginalEngine = Services.search.defaultEngine;
-  Services.search.defaultEngine = gEngine;
+  gOriginalEngine = await Services.search.getDefault();
+  await Services.search.setDefault(gEngine);
 
   let uri = NetUtil.newURI("http://s.example.com/search?q=foobar&client=1");
   await PlacesTestUtils.addVisits({ uri, title: "Foo - SearchEngine Search" });

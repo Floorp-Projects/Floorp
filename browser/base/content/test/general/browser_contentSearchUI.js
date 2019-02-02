@@ -736,21 +736,21 @@ function promiseMsg(name, type, msgMan) {
 function setUpEngines() {
   return (async function() {
     info("Removing default search engines");
-    let currentEngineName = Services.search.defaultEngine.name;
-    let currentEngines = Services.search.getVisibleEngines();
+    let currentEngineName = (await Services.search.getDefault()).name;
+    let currentEngines = await Services.search.getVisibleEngines();
     info("Adding test search engines");
     let rootDir = getRootDirectory(gTestPath);
     let engine1 = await SearchTestUtils.promiseNewSearchEngine(
       rootDir + TEST_ENGINE_BASENAME);
     await SearchTestUtils.promiseNewSearchEngine(
       rootDir + TEST_ENGINE_2_BASENAME);
-    Services.search.defaultEngine = engine1;
+    await Services.search.setDefault(engine1);
     for (let engine of currentEngines) {
-      Services.search.removeEngine(engine);
+      await Services.search.removeEngine(engine);
     }
-    registerCleanupFunction(() => {
+    registerCleanupFunction(async () => {
       Services.search.restoreDefaultEngines();
-      Services.search.defaultEngine = Services.search.getEngineByName(currentEngineName);
+      await Services.search.setDefault(Services.search.getEngineByName(currentEngineName));
     });
   })();
 }

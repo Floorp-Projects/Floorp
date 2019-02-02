@@ -356,48 +356,42 @@ var tests = [
       });
     });
   },
-  function test_search(done) {
-    Services.search.init(rv => {
-      if (!Components.isSuccessCode(rv)) {
-        ok(false, "search service init failed: " + rv);
-        done();
-        return;
-      }
-      let defaultEngine = Services.search.defaultEngine;
-      gContentAPI.getConfiguration("search", data => {
-        let visibleEngines = Services.search.getVisibleEngines();
-        let expectedEngines = visibleEngines.filter((engine) => engine.identifier)
-                                            .map((engine) => "searchEngine-" + engine.identifier);
+  taskify(async function test_search() {
+    let defaultEngine = await Services.search.getDefault();
+    let visibleEngines = await Services.search.getVisibleEngines();
+    let expectedEngines = visibleEngines.filter((engine) => engine.identifier)
+                                        .map((engine) => "searchEngine-" + engine.identifier);
 
-        let engines = data.engines;
-        ok(Array.isArray(engines), "data.engines should be an array");
-        is(engines.sort().toString(), expectedEngines.sort().toString(),
-           "Engines should be as expected");
+    let data = await new Promise(resolve => gContentAPI.getConfiguration("search", resolve));
+    let engines = data.engines;
+    ok(Array.isArray(engines), "data.engines should be an array");
+    is(engines.sort().toString(), expectedEngines.sort().toString(),
+       "Engines should be as expected");
 
-        is(data.searchEngineIdentifier, defaultEngine.identifier,
-           "the searchEngineIdentifier property should contain the defaultEngine's identifier");
+    is(data.searchEngineIdentifier, defaultEngine.identifier,
+       "the searchEngineIdentifier property should contain the defaultEngine's identifier");
 
-        let someOtherEngineID = data.engines.filter(t => t != "searchEngine-" + defaultEngine.identifier)[0];
-        someOtherEngineID = someOtherEngineID.replace(/^searchEngine-/, "");
+    let someOtherEngineID = data.engines.filter(t => t != "searchEngine-" + defaultEngine.identifier)[0];
+    someOtherEngineID = someOtherEngineID.replace(/^searchEngine-/, "");
 
-        let observe = function(subject, topic, verb) {
-          info("browser-search-engine-modified: " + verb);
-          if (verb == "engine-current") {
-            is(Services.search.defaultEngine.identifier, someOtherEngineID, "correct engine was switched to");
-            done();
-          }
-        };
-        Services.obs.addObserver(observe, "browser-search-engine-modified");
-        registerCleanupFunction(() => {
-          // Clean up
-          Services.obs.removeObserver(observe, "browser-search-engine-modified");
-          Services.search.defaultEngine = defaultEngine;
-        });
-
-        gContentAPI.setDefaultSearchEngine(someOtherEngineID);
+    await new Promise(resolve => {
+      let observe = function(subject, topic, verb) {
+        info("browser-search-engine-modified: " + verb);
+        if (verb == "engine-current") {
+          is(Services.search.defaultEngine.identifier, someOtherEngineID, "correct engine was switched to");
+          done();
+        }
+      };
+      Services.obs.addObserver(observe, "browser-search-engine-modified");
+      registerCleanupFunction(async () => {
+        // Clean up
+        Services.obs.removeObserver(observe, "browser-search-engine-modified");
+        await Services.search.setDefault(defaultEngine);
       });
+
+      gContentAPI.setDefaultSearchEngine(someOtherEngineID);
     });
-  },
+  }),
   taskify(async function test_treatment_tag() {
     let ac = new TelemetryArchiveTesting.Checker();
     await ac.promiseInit();

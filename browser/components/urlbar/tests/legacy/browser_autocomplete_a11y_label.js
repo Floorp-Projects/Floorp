@@ -30,13 +30,13 @@ add_task(async function switchToTab() {
 add_task(async function searchSuggestions() {
   let engine = await SearchTestUtils.promiseNewSearchEngine(
     getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME);
-  let oldCurrentEngine = Services.search.defaultEngine;
-  Services.search.defaultEngine = engine;
+  let oldDefaultEngine = await Services.search.getDefault();
+  await Services.search.setDefault(engine);
   Services.prefs.setBoolPref(SUGGEST_ALL_PREF, true);
   let suggestionsEnabled = Services.prefs.getBoolPref(SUGGEST_URLBAR_PREF);
   Services.prefs.setBoolPref(SUGGEST_URLBAR_PREF, true);
-  registerCleanupFunction(function() {
-    Services.search.defaultEngine = oldCurrentEngine;
+  registerCleanupFunction(async function() {
+    await Services.search.setDefault(oldDefaultEngine);
     Services.prefs.clearUserPref(SUGGEST_ALL_PREF);
     Services.prefs.setBoolPref(SUGGEST_URLBAR_PREF, suggestionsEnabled);
   });

@@ -63,21 +63,21 @@ add_task(taskWithNewTab(async function test_disabled_ac() {
   let suggestOpenPages = Preferences.get("browser.urlbar.suggest.openpage");
   Preferences.set("browser.urlbar.suggest.openpage", false);
 
-  Services.search.addEngineWithDetails("MozSearch", "", "", "", "GET",
-                                       "http://example.com/?q={searchTerms}");
+  await Services.search.addEngineWithDetails("MozSearch", "", "", "", "GET",
+    "http://example.com/?q={searchTerms}");
   let engine = Services.search.getEngineByName("MozSearch");
-  let originalEngine = Services.search.defaultEngine;
-  Services.search.defaultEngine = engine;
+  let originalEngine = await Services.search.getDefault();
+  await Services.search.setDefault(engine);
 
-  function cleanup() {
+  async function cleanup() {
     Preferences.set("browser.urlbar.suggest.history", suggestHistory);
     Preferences.set("browser.urlbar.suggest.bookmark", suggestBookmarks);
     Preferences.set("browser.urlbar.suggest.openpage", suggestOpenPages);
 
-    Services.search.defaultEngine = originalEngine;
+    await Services.search.setDefault(originalEngine);
     let mozSearchEngine = Services.search.getEngineByName("MozSearch");
     if (mozSearchEngine) {
-      Services.search.removeEngine(mozSearchEngine);
+      await Services.search.removeEngine(mozSearchEngine);
     }
   }
   registerCleanupFunction(cleanup);

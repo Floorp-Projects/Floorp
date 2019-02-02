@@ -6,7 +6,7 @@ function run_test() {
   let url = "http://localhost:0";
 
   Services.prefs.setCharPref("browser.search.geoip.url", url);
-  Services.search.init(() => {
+  Services.search.init().then(() => {
     try {
       Services.prefs.getCharPref("browser.search.region");
       ok(false, "not expecting region to be set");

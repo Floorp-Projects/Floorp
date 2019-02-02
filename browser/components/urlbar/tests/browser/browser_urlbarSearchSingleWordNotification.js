@@ -32,10 +32,7 @@ async function runURLBarSearchTest({valueToOpen, expectSearch, expectNotificatio
   if (!expectSearch) {
     expectedURI = "http://" + valueToOpen + "/";
   } else {
-    await new Promise(resolve => {
-      Services.search.init(resolve);
-    });
-    expectedURI = Services.search.defaultEngine.getSubmission(valueToOpen, null, "keyword").uri.spec;
+    expectedURI = (await Services.search.getDefault()).getSubmission(valueToOpen, null, "keyword").uri.spec;
   }
   aWindow.gURLBar.focus();
   let docLoadPromise =

@@ -520,18 +520,14 @@ add_task(async function ensure_search_engine() {
   let geoPref = "browser.search.geoip.url";
   Services.prefs.setCharPref(geoPref, "");
   registerCleanupFunction(() => Services.prefs.clearUserPref(geoPref));
-  await new Promise(resolve => {
-    Services.search.init(resolve);
-  });
-
   // Remove any existing engines before adding ours.
-  for (let engine of Services.search.getEngines()) {
-    Services.search.removeEngine(engine);
+  for (let engine of await Services.search.getEngines()) {
+    await Services.search.removeEngine(engine);
   }
-  Services.search.addEngineWithDetails("MozSearch", "", "", "", "GET",
-                                       "http://s.example.com/search");
+  await Services.search.addEngineWithDetails("MozSearch", "", "", "", "GET",
+                                             "http://s.example.com/search");
   let engine = Services.search.getEngineByName("MozSearch");
-  Services.search.defaultEngine = engine;
+  await Services.search.setDefault(engine);
 });
 
 /**

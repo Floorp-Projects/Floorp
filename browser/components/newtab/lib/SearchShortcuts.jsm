@@ -37,8 +37,8 @@ this.getSearchProvider = getSearchProvider;
 
 // Check topsite against predefined list of valid search engines
 // https://searchfox.org/mozilla-central/rev/ca869724246f4230b272ed1c8b9944596e80d920/toolkit/components/search/nsSearchService.js#939
-function checkHasSearchEngine(keyword) {
-  return Services.search.getDefaultEngines()
+async function checkHasSearchEngine(keyword) {
+  return (await Services.search.getDefaultEngines())
     .find(e => e.wrappedJSObject._internalAliases.includes(keyword));
 }
 this.checkHasSearchEngine = checkHasSearchEngine;

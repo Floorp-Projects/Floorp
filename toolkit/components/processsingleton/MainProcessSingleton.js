@@ -49,12 +49,8 @@ MainProcessSingleton.prototype = {
       return;
     }
 
-    Services.search.init(function(status) {
-      if (status != Cr.NS_OK)
-        return;
-
-      Services.search.addEngine(engineURL.spec, iconURL ? iconURL.spec : null, true);
-    });
+    Services.search.addEngine(engineURL.spec, iconURL ? iconURL.spec : null, true)
+      .catch(ex => Cu.reportError("Unable to add search engine to the search service: " + ex));
   },
 
   observe(subject, topic, data) {

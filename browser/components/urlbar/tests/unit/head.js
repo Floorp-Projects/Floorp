@@ -158,7 +158,6 @@ async function addTestEngine(basename, httpServer = undefined) {
     "http://localhost:" + httpServer.identity.primaryPort + "/data/";
 
   info("Adding engine: " + basename);
-  await new Promise(resolve => Services.search.init(resolve));
   return new Promise(resolve => {
     Services.obs.addObserver(function obs(subject, topic, data) {
       let engine = subject.QueryInterface(Ci.nsISearchEngine);

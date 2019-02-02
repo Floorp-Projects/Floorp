@@ -66,7 +66,7 @@ add_task(async function one() {
     // Remove the engine.
     enginePromise =
       promiseEngine("engine-removed", "page_action_menu_add_search_engine_0");
-    Services.search.removeEngine(engine);
+    await Services.search.removeEngine(engine);
     await enginePromise;
 
     // Open the panel again.
@@ -207,7 +207,7 @@ add_task(async function many() {
     // Remove the first engine.
     enginePromise =
       promiseEngine("engine-removed", "page_action_menu_add_search_engine_0");
-    Services.search.removeEngine(engines.shift());
+    await Services.search.removeEngine(engines.shift());
     await enginePromise;
 
     // Open the panel again.  The action should be present and showing the first
@@ -229,7 +229,7 @@ add_task(async function many() {
     // Remove the second engine.
     enginePromise =
       promiseEngine("engine-removed", "page_action_menu_add_search_engine_1");
-    Services.search.removeEngine(engines.shift());
+    await Services.search.removeEngine(engines.shift());
     await enginePromise;
 
     // Open the panel again and check the subview.  The subview should be
@@ -263,7 +263,7 @@ add_task(async function many() {
     // Remove the third engine.
     enginePromise =
       promiseEngine("engine-removed", "page_action_menu_add_search_engine_2");
-    Services.search.removeEngine(engines.shift());
+    await Services.search.removeEngine(engines.shift());
     await enginePromise;
 
     // Open the panel again and check the subview.
@@ -323,7 +323,7 @@ add_task(async function urlbarOne() {
     enginePromise =
       promiseEngine("engine-removed", "page_action_menu_add_search_engine_0");
     placedPromise = promisePlacedInUrlbar();
-    Services.search.removeEngine(engine);
+    await Services.search.removeEngine(engine);
     await enginePromise;
 
     // The action should be present again.
@@ -439,7 +439,7 @@ add_task(async function urlbarMany() {
     enginePromise =
       promiseEngine("engine-removed", "page_action_menu_add_search_engine_0");
     placedPromise = promisePlacedInUrlbar();
-    Services.search.removeEngine(engines.shift());
+    await Services.search.removeEngine(engines.shift());
     await enginePromise;
 
     // The action should be placed again.
@@ -452,7 +452,7 @@ add_task(async function urlbarMany() {
     // Remove the second engine.
     enginePromise =
       promiseEngine("engine-removed", "page_action_menu_add_search_engine_1");
-    Services.search.removeEngine(engines.shift());
+    await Services.search.removeEngine(engines.shift());
     await enginePromise;
 
     // Open the panel again and check the subview.  The subview should be
@@ -478,7 +478,7 @@ add_task(async function urlbarMany() {
     // Remove the third engine.
     enginePromise =
       promiseEngine("engine-removed", "page_action_menu_add_search_engine_2");
-    Services.search.removeEngine(engines.shift());
+    await Services.search.removeEngine(engines.shift());
     await enginePromise;
 
     // Open the panel again and check the subview.

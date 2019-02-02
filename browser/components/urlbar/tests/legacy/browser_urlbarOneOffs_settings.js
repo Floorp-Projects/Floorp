@@ -13,7 +13,7 @@ add_task(async function init() {
   // as the first one-off.
   let engine = await SearchTestUtils.promiseNewSearchEngine(
     getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME);
-  Services.search.moveEngine(engine, 0);
+  await Services.search.moveEngine(engine, 0);
 
   registerCleanupFunction(async function() {
     await hidePopup();

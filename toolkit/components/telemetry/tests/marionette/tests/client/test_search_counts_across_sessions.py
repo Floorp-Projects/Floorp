@@ -20,7 +20,7 @@ class TestSearchCounts(TelemetryTestCase):
         script = """\
         let searchService = Components.classes[
                 "@mozilla.org/browser/search-service;1"]
-            .getService(Components.interfaces.nsIBrowserSearchService);
+            .getService(Components.interfaces.nsISearchService);
         return searchService.defaultEngine.identifier;
         """
 

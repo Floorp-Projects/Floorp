@@ -338,7 +338,7 @@ var ContentSearch = {
     }
     let pref = Services.prefs.getCharPref("browser.search.hiddenOneOffs");
     let hiddenList = pref ? pref.split(",") : [];
-    for (let engine of Services.search.getVisibleEngines()) {
+    for (let engine of await Services.search.getVisibleEngines()) {
       let uri = engine.getIconURLBySize(16, 16);
       let iconBuffer = uri;
       if (!uriFlag) {
@@ -555,8 +555,7 @@ var ContentSearch = {
 
   _initService() {
     if (!this._initServicePromise) {
-      this._initServicePromise =
-        new Promise(resolve => Services.search.init(resolve));
+      this._initServicePromise = Services.search.init();
     }
     return this._initServicePromise;
   },

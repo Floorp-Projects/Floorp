@@ -16,13 +16,15 @@ requestLongerTimeout(5);
 
 /* These reflows happen only the first time the awesomebar panel opens. */
 const EXPECTED_REFLOWS_FIRST_OPEN = [];
-if (AppConstants.DEBUG ||
-    AppConstants.platform == "win" ||
-    AppConstants.platform == "macosx") {
+if (AppConstants.platform != "macosx" &&
+    (AppConstants.DEBUG ||
+     AppConstants.platform == "win")) {
   EXPECTED_REFLOWS_FIRST_OPEN.push({
     stack: [
       "_rebuild@chrome://browser/content/search/search-one-offs.js",
-      "set popup@chrome://browser/content/search/search-one-offs.js",
+      /* This is limited to a one-line stack, because the next item is an async
+         function and as such not supported on all trees, according to bug 1501761.
+      "async*set popup@chrome://browser/content/search/search-one-offs.js",
       "_syncOneOffSearchesEnabled@chrome://browser/content/urlbarBindings.xml",
       "toggleOneOffSearches@chrome://browser/content/urlbarBindings.xml",
       "_enableOrDisableOneOffSearches@chrome://browser/content/urlbarBindings.xml",
@@ -30,7 +32,7 @@ if (AppConstants.DEBUG ||
       "_openAutocompletePopup@chrome://browser/content/urlbarBindings.xml",
       "openAutocompletePopup@chrome://browser/content/urlbarBindings.xml",
       "openPopup@chrome://global/content/bindings/autocomplete.xml",
-      "set_popupOpen@chrome://global/content/bindings/autocomplete.xml",
+      "set_popupOpen@chrome://global/content/bindings/autocomplete.xml",*/
     ],
   });
 }
