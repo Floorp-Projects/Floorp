@@ -10,9 +10,9 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.constraintlayout.motion.widget.MotionLayout
 import androidx.fragment.app.Fragment
 import androidx.navigation.Navigation
-import kotlinx.android.synthetic.main.fragment_home.*
 import kotlinx.android.synthetic.main.fragment_home.view.*
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.requireComponents
@@ -43,19 +43,90 @@ class HomeFragment : Fragment() {
         }
 
         // Temporary so we can easily test settings
-        menuButton.setOnClickListener {
+        view.menuButton.setOnClickListener {
             Navigation.findNavController(it).navigate(R.id.action_homeFragment_to_settingsActivity, null, null)
         }
 
-        toolbar.setCompoundDrawablesWithIntrinsicBounds(searchIcon, null, null, null)
+        view.toolbar.setCompoundDrawablesWithIntrinsicBounds(searchIcon, null, null, null)
         val roundToInt = (toolbarPaddingDp * Resources.getSystem().displayMetrics.density).roundToInt()
-        toolbar.compoundDrawablePadding = roundToInt
-        toolbar.setOnClickListener { it ->
+        view.toolbar.compoundDrawablePadding = roundToInt
+        view.toolbar.setOnClickListener { it ->
             Navigation.findNavController(it).navigate(R.id.action_homeFragment_to_searchFragment, null, null)
+        }
+
+        // There is currently an issue with visibility changes in ConstraintLayout 2.0.0-alpha3
+        // https://issuetracker.google.com/issues/122090772
+        // For now we're going to manually implement KeyTriggers.
+        view.homeLayout.setTransitionListener(object : MotionLayout.TransitionListener {
+            private val firstKeyTrigger = KeyTrigger(
+                firstKeyTriggerFrame,
+                { view.toolbar_wrapper.transitionToDark() },
+                { view.toolbar_wrapper.transitionToLight() }
+            )
+            private val secondKeyTrigger = KeyTrigger(
+                secondKeyTriggerFrame,
+                { view.toolbar_wrapper.transitionToDarkNoBorder() },
+                { view.toolbar_wrapper.transitionToDarkFromNoBorder() }
+            )
+
+            override fun onTransitionChange(
+                motionLayout: MotionLayout?,
+                startId: Int,
+                endId: Int,
+                progress: Float
+            ) {
+                firstKeyTrigger.conditionallyFire(progress)
+                secondKeyTrigger.conditionallyFire(progress)
+            }
+            override fun onTransitionCompleted(p0: MotionLayout?, p1: Int) { }
+        })
+    }
+
+    @SuppressWarnings("MagicNumber")
+    private class KeyTrigger(
+        frame: Int,
+        private val onPositiveCross: () -> Unit,
+        private val onNegativeCross: () -> Unit
+    ) {
+        private val fireThreshhold = (frame + 0.5F) / 100.0F
+        private var negativeReset = false
+        private var positiveReset = false
+        private var lastFirePosition = 0f
+        private val triggerSlack = 0.1f
+
+        fun conditionallyFire(progress: Float) {
+            var offset: Float
+            var lastOffset: Float
+
+            if (negativeReset) {
+                offset = progress - fireThreshhold
+                lastOffset = lastFirePosition - fireThreshhold
+                if (offset * lastOffset < 0.0f && offset < 0.0f) {
+                    onNegativeCross.invoke()
+                    negativeReset = false
+                }
+            } else if (Math.abs(progress - fireThreshhold) > triggerSlack) {
+                negativeReset = true
+            }
+
+            if (positiveReset) {
+                offset = progress - fireThreshhold
+                lastOffset = lastFirePosition - fireThreshhold
+                if (offset * lastOffset < 0.0f && offset > 0.0f) {
+                    onPositiveCross.invoke()
+                    positiveReset = false
+                }
+            } else if (Math.abs(progress - fireThreshhold) > triggerSlack) {
+                positiveReset = true
+            }
+
+            lastFirePosition = progress
         }
     }
 
     companion object {
         const val toolbarPaddingDp = 12f
+        const val firstKeyTriggerFrame = 55
+        const val secondKeyTriggerFrame = 90
     }
 }

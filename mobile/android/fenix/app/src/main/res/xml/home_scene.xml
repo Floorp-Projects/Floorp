@@ -58,6 +58,11 @@
                 motion:framePosition="50"
                 android:elevation="0dp" />
 
+            <!--
+                https://github.com/mozilla-mobile/fenix/issues/362
+                There is currently an issue with visibility changes in ConstraintLayout 2.0.0-alpha3
+                https://issuetracker.google.com/issues/122090772
+                For now we're going to manually implement KeyTriggers.
             <KeyTrigger
                 motion:target="@id/toolbar_wrapper"
                 motion:framePosition="55"
@@ -71,6 +76,7 @@
                     motion:onPositiveCross="transitionToDarkNoBorder"
                     motion:onNegativeCross="transitionToDarkFromNoBorder"
             />
+            -->
 
         </KeyFrameSet>
     </Transition>
