@@ -44,7 +44,7 @@ window.Application = {
         return toolbox.selectTool(toolId);
       },
     };
-    this.toolbox.target.activeTab.on("workerListChanged", this.updateWorkers);
+    this.toolbox.target.on("workerListChanged", this.updateWorkers);
     this.client.mainRoot.on("serviceWorkerRegistrationListChanged", this.updateWorkers);
     this.client.mainRoot.on("processListChanged", this.updateWorkers);
     this.client.mainRoot.onFront("serviceWorkerRegistration", front => {
@@ -101,7 +101,7 @@ window.Application = {
   },
 
   destroy() {
-    this.toolbox.target.activeTab.off("workerListChanged", this.updateWorkers);
+    this.toolbox.target.off("workerListChanged", this.updateWorkers);
     this.client.mainRoot.off("serviceWorkerRegistrationListChanged",
       this.updateWorkers);
     this.client.mainRoot.off("processListChanged", this.updateWorkers);

@@ -38,7 +38,7 @@ async function testChromeTab() {
   const target = await TargetFactory.forTab(tab);
   await target.attach();
 
-  const [, threadClient] = await target.activeTab.attachThread();
+  const [, threadClient] = await target.attachThread();
   await threadClient.resume();
 
   const { sources } = await threadClient.getSources();
@@ -102,7 +102,7 @@ async function testMainProcess() {
   });
   await target.attach();
 
-  const [, threadClient] = await target.activeTab.attachThread();
+  const [, threadClient] = await target.attachThread();
   await threadClient.resume();
   const { sources } = await threadClient.getSources();
   ok(sources.find(s => s.url == "resource://devtools/client/framework/devtools.js"),

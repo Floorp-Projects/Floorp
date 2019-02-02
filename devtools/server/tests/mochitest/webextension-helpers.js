@@ -60,10 +60,10 @@ function waitForFramesUpdated(target, matchFn) {
         return;
       }
 
-      target.activeTab.off("frameUpdate", listener);
+      target.off("frameUpdate", listener);
       resolve(data.frames);
     };
-    target.activeTab.on("frameUpdate", listener);
+    target.on("frameUpdate", listener);
   });
 }
 
