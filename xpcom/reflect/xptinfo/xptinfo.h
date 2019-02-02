@@ -522,8 +522,8 @@ static_assert(sizeof(nsXPTConstantInfo) == 8, "wrong size");
  * This object will not live in rodata as it contains relocations.
  */
 struct nsXPTDOMObjectInfo {
-  nsresult Unwrap(JS::HandleValue aHandle, void** aObj) const {
-    return mUnwrap(aHandle, aObj);
+  nsresult Unwrap(JS::HandleValue aHandle, void** aObj, JSContext* aCx) const {
+    return mUnwrap(aHandle, aObj, aCx);
   }
 
   bool Wrap(JSContext* aCx, void* aObj, JS::MutableHandleValue aHandle) const {
@@ -536,7 +536,7 @@ struct nsXPTDOMObjectInfo {
   // Ensure these fields are in the same order as xptcodegen.py //
   ////////////////////////////////////////////////////////////////
 
-  nsresult (*mUnwrap)(JS::HandleValue aHandle, void** aObj);
+  nsresult (*mUnwrap)(JS::HandleValue aHandle, void** aObj, JSContext* aCx);
   bool (*mWrap)(JSContext* aCx, void* aObj, JS::MutableHandleValue aHandle);
   void (*mCleanup)(void* aObj);
 };

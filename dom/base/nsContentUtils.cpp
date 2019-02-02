@@ -10296,8 +10296,9 @@ template <prototypes::ID PrototypeID, class NativeType, typename T>
 static Result<Ok, nsresult> ExtractExceptionValues(
     JSContext* aCx, JS::HandleObject aObj, nsAString& aSourceSpecOut,
     uint32_t* aLineOut, uint32_t* aColumnOut, nsString& aMessageOut) {
+  AssertStaticUnwrapOK<PrototypeID>();
   RefPtr<T> exn;
-  MOZ_TRY((UnwrapObject<PrototypeID, NativeType>(aObj, exn)));
+  MOZ_TRY((UnwrapObject<PrototypeID, NativeType>(aObj, exn, nullptr)));
 
   exn->GetFilename(aCx, aSourceSpecOut);
   if (!aSourceSpecOut.IsEmpty()) {
