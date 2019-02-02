@@ -1669,8 +1669,14 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           // and fire an input event to do that.  (If we set this.textValue we'd
           // get an input event for free, but it would also set mIgnoreInput,
           // skipping all of the above requirements.)
-          this.focus();
-          this.value = value;
+          focusAndSelectUrlBar();
+
+          // If the value is a restricted token, append a space.
+          if (Object.values(UrlbarTokenizer.RESTRICT).includes(value)) {
+            this.inputField.value = value + " ";
+          } else {
+            this.inputField.value = value;
+          }
 
           // Avoid selecting the text if this method is called twice in a row.
           this.selectionStart = -1;
@@ -1687,19 +1693,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             this.gotResultForCurrentQuery = false;
             this.controller.startSearch(value);
           }
-        ]]></body>
-      </method>
-
-      <method name="typeRestrictToken">
-        <parameter name="char"/>
-        <body><![CDATA[
-          focusAndSelectUrlBar();
-
-          this.inputField.value = char + " ";
-
-          let event = this.document.createEvent("UIEvents");
-          event.initUIEvent("input", true, false, window, 0);
-          this.inputField.dispatchEvent(event);
         ]]></body>
       </method>
 
