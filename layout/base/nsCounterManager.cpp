@@ -78,13 +78,15 @@ void nsCounterUseNode::GetText(nsString& aResult) {
     }
   }
 
-  WritingMode wm =
-      mPseudoFrame ? mPseudoFrame->GetWritingMode() : WritingMode();
+  WritingMode wm = mPseudoFrame->GetWritingMode();
+  CounterStyle* style =
+      mPseudoFrame->PresContext()->CounterStyleManager()->ResolveCounterStyle(
+          mCounterStyle);
   for (uint32_t i = stack.Length() - 1;; --i) {
     nsCounterNode* n = stack[i];
     nsAutoString text;
     bool isTextRTL;
-    mCounterStyle->GetCounterText(n->mValueAfter, wm, text, isTextRTL);
+    style->GetCounterText(n->mValueAfter, wm, text, isTextRTL);
     aResult.Append(text);
     if (i == 0) {
       break;
