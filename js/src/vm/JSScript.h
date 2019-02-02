@@ -1127,11 +1127,15 @@ class ScriptSourceHolder {
 // ScriptSourceObject stores the ScriptSource and GC pointers related to it.
 //
 // ScriptSourceObjects can be cloned when we clone the JSScript (in order to
-// execute the script in a different realm/compartment). In this case we create
-// a new SSO that stores (a wrapper for) the original SSO in its "canonical
-// slot". The canonical SSO is always used for the private, introductionScript,
+// execute the script in a different compartment). In this case we create a new
+// SSO that stores (a wrapper for) the original SSO in its "canonical slot".
+// The canonical SSO is always used for the private, introductionScript,
 // element, elementAttributeName slots. This means their accessors may return an
 // object in a different compartment, hence the "unwrapped" prefix.
+//
+// Note that we don't clone the SSO when cloning the script for a different
+// realm in the same compartment, so sso->realm() does not necessarily match the
+// script's realm.
 //
 // We need ScriptSourceObject (instead of storing these GC pointers in the
 // ScriptSource itself) to properly account for cross-zone pointers: the
@@ -3186,7 +3190,8 @@ extern void DescribeScriptedCallerForDirectEval(
     unsigned* linenop, uint32_t* pcOffset, bool* mutedErrors);
 
 JSScript* CloneScriptIntoFunction(JSContext* cx, HandleScope enclosingScope,
-                                  HandleFunction fun, HandleScript src);
+                                  HandleFunction fun, HandleScript src,
+                                  Handle<ScriptSourceObject*> sourceObject);
 
 JSScript* CloneGlobalScript(JSContext* cx, ScopeKind scopeKind,
                             HandleScript src);

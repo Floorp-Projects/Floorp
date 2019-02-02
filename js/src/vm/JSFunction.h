@@ -972,8 +972,8 @@ extern JSFunction* CloneFunctionReuseScript(
 // Functions whose scripts are cloned are always given singleton types.
 extern JSFunction* CloneFunctionAndScript(
     JSContext* cx, HandleFunction fun, HandleObject parent,
-    HandleScope newScope, gc::AllocKind kind = gc::AllocKind::FUNCTION,
-    HandleObject proto = nullptr);
+    HandleScope newScope, Handle<ScriptSourceObject*> sourceObject,
+    gc::AllocKind kind = gc::AllocKind::FUNCTION, HandleObject proto = nullptr);
 
 extern JSFunction* CloneAsmJSModuleFunction(JSContext* cx, HandleFunction fun);
 
