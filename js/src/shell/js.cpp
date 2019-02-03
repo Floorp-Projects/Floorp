@@ -3699,7 +3699,7 @@ static bool Crash(JSContext* cx, unsigned argc, Value* vp) {
 #ifndef DEBUG
   MOZ_ReportCrash(utf8chars.get(), __FILE__, __LINE__);
 #endif
-  MOZ_CRASH_UNSAFE_OOL(utf8chars.get());
+  MOZ_CRASH_UNSAFE(utf8chars.get());
 }
 
 static bool GetSLX(JSContext* cx, unsigned argc, Value* vp) {
