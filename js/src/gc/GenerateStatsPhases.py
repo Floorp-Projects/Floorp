@@ -89,7 +89,7 @@ PhaseKindGraphRoots = [
         PhaseKind("MARK_DISCARD_CODE", "Mark Discard Code", 3),
         PhaseKind("RELAZIFY_FUNCTIONS", "Relazify Functions", 4),
         PhaseKind("PURGE", "Purge", 5),
-        PhaseKind("PURGE_SHAPE_TABLES", "Purge ShapeTables", 60),
+        PhaseKind("PURGE_SHAPE_CACHES", "Purge ShapeCaches", 60),
         JoinParallelTasksPhaseKind
     ]),
     PhaseKind("MARK", "Mark", 6, [

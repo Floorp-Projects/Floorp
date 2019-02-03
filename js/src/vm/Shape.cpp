@@ -38,6 +38,12 @@ using JS::AutoCheckCannotGC;
 Shape* const ShapeTable::Entry::SHAPE_REMOVED =
     (Shape*)ShapeTable::Entry::SHAPE_COLLISION;
 
+bool ShapeIC::init(JSContext* cx) {
+  size_ = MAX_SIZE;
+  entries_.reset(cx->pod_calloc<Entry>(size_));
+  return (!entries_) ? false : true;
+}
+
 bool ShapeTable::init(JSContext* cx, Shape* lastProp) {
   uint32_t sizeLog2 = CeilingLog2Size(entryCount_);
   uint32_t size = JS_BIT(sizeLog2);
@@ -49,7 +55,7 @@ bool ShapeTable::init(JSContext* cx, Shape* lastProp) {
   }
 
   size = JS_BIT(sizeLog2);
-  entries_ = cx->pod_calloc<Entry>(size);
+  entries_.reset(cx->pod_calloc<Entry>(size));
   if (!entries_) {
     return false;
   }
@@ -155,17 +161,37 @@ void Shape::handoffTableTo(Shape* shape) {
     return false;
   }
 
-  ShapeTable* table = cx->new_<ShapeTable>(shape->entryCount());
+  UniquePtr<ShapeTable> table =
+      cx->make_unique<ShapeTable>(shape->entryCount());
   if (!table) {
     return false;
   }
 
   if (!table->init(cx, shape)) {
-    js_free(table);
     return false;
   }
 
-  shape->base()->setTable(table);
+  shape->base()->setTable(table.release());
+  return true;
+}
+
+/* static */ bool Shape::cachify(JSContext* cx, Shape* shape) {
+  MOZ_ASSERT(!shape->hasTable() && !shape->hasIC());
+
+  if (!shape->ensureOwnBaseShape(cx)) {
+    return false;
+  }
+
+  UniquePtr<ShapeIC> ic = cx->make_unique<ShapeIC>();
+  if (!ic) {
+    return false;
+  }
+
+  if (!ic->init(cx)) {
+    return false;
+  }
+
+  shape->base()->setIC(ic.release());
   return true;
 }
 
@@ -189,8 +215,8 @@ bool ShapeTable::change(JSContext* cx, int log2Delta) {
   MOZ_ASSERT(newLog2 <= HASH_BITS);
   hashShift_ = HASH_BITS - newLog2;
   removedCount_ = 0;
-  Entry* oldTable = entries_;
-  entries_ = newTable;
+  Entry* oldTable = entries_.release();
+  entries_.reset(newTable);
 
   /* Copy only live entries, leaving removed and free ones behind. */
   AutoCheckCannotGC nogc;
@@ -228,6 +254,23 @@ bool ShapeTable::grow(JSContext* cx) {
   return true;
 }
 
+void ShapeCachePtr::trace(JSTracer* trc) {
+  if (isIC()) {
+    getICPointer()->trace(trc);
+  } else if (isTable()) {
+    getTablePointer()->trace(trc);
+  }
+}
+
+void ShapeIC::trace(JSTracer* trc) {
+  for (size_t i = 0; i < entryCount(); i++) {
+    Entry& entry = entries_[i];
+    if (entry.shape_) {
+      TraceManuallyBarrieredEdge(trc, &entry.shape_, "ShapeIC shape");
+    }
+  }
+}
+
 void ShapeTable::trace(JSTracer* trc) {
   for (size_t i = 0; i < capacity(); i++) {
     Entry& entry = getEntry(i);
@@ -242,6 +285,24 @@ void ShapeTable::trace(JSTracer* trc) {
 }
 
 #ifdef JSGC_HASH_TABLE_CHECKS
+
+void ShapeCachePtr::checkAfterMovingGC() {
+  if (isIC()) {
+    getICPointer()->checkAfterMovingGC();
+  } else if (isTable()) {
+    getTablePointer()->checkAfterMovingGC();
+  }
+}
+
+void ShapeIC::checkAfterMovingGC() {
+  for (size_t i = 0; i < entryCount(); i++) {
+    Entry& entry = entries_[i];
+    Shape* shape = entry.shape_;
+    if (shape) {
+      CheckGCThingAfterMovingGC(shape);
+    }
+  }
+}
 
 void ShapeTable::checkAfterMovingGC() {
   for (size_t i = 0; i < capacity(); i++) {
@@ -500,7 +561,7 @@ class MOZ_RAII AutoCheckShapeConsistency {
 /* static */ MOZ_ALWAYS_INLINE bool
 NativeObject::maybeConvertToOrGrowDictionaryForAdd(
     JSContext* cx, HandleNativeObject obj, HandleId id, ShapeTable** table,
-    ShapeTable::Entry** entry, const AutoKeepShapeTables& keep) {
+    ShapeTable::Entry** entry, const AutoKeepShapeCaches& keep) {
   MOZ_ASSERT(!!*table == !!*entry);
 
   // The code below deals with either converting obj to dictionary mode or
@@ -529,7 +590,7 @@ NativeObject::maybeConvertToOrGrowDictionaryForAdd(
 
 MOZ_ALWAYS_INLINE void Shape::updateDictionaryTable(
     ShapeTable* table, ShapeTable::Entry* entry,
-    const AutoKeepShapeTables& keep) {
+    const AutoKeepShapeCaches& keep) {
   MOZ_ASSERT(table);
   MOZ_ASSERT(entry);
   MOZ_ASSERT(inDictionary());
@@ -559,7 +620,7 @@ static void AssertValidPropertyOp(NativeObject* obj, GetterOp getter,
 /* static */ Shape* NativeObject::addAccessorPropertyInternal(
     JSContext* cx, HandleNativeObject obj, HandleId id, GetterOp getter,
     SetterOp setter, unsigned attrs, ShapeTable* table,
-    ShapeTable::Entry* entry, const AutoKeepShapeTables& keep) {
+    ShapeTable::Entry* entry, const AutoKeepShapeCaches& keep) {
   AutoCheckShapeConsistency check(obj);
   AutoRooterGetterSetter gsRoot(cx, attrs, &getter, &setter);
 
@@ -600,7 +661,7 @@ static void AssertValidPropertyOp(NativeObject* obj, GetterOp getter,
 /* static */ Shape* NativeObject::addDataPropertyInternal(
     JSContext* cx, HandleNativeObject obj, HandleId id, uint32_t slot,
     unsigned attrs, ShapeTable* table, ShapeTable::Entry* entry,
-    const AutoKeepShapeTables& keep) {
+    const AutoKeepShapeCaches& keep) {
   AutoCheckShapeConsistency check(obj);
 
   // The slot, if any, must be a reserved slot.
@@ -708,7 +769,7 @@ static MOZ_ALWAYS_INLINE Shape* PropertyTreeReadBarrier(Shape* parent,
     return kid;
   } while (0);
 
-  AutoKeepShapeTables keep(cx);
+  AutoKeepShapeCaches keep(cx);
   ShapeTable* table = nullptr;
   ShapeTable::Entry* entry = nullptr;
 
@@ -900,7 +961,7 @@ static void AssertValidArrayIndex(NativeObject* obj, jsid id) {
   AssertValidArrayIndex(obj, id);
 
   // Search for id in order to claim its entry if table has been allocated.
-  AutoKeepShapeTables keep(cx);
+  AutoKeepShapeCaches keep(cx);
   RootedShape shape(cx);
   {
     ShapeTable* table;
@@ -1016,7 +1077,7 @@ static void AssertValidArrayIndex(NativeObject* obj, jsid id) {
   AutoRooterGetterSetter gsRoot(cx, attrs, &getter, &setter);
 
   // Search for id in order to claim its entry if table has been allocated.
-  AutoKeepShapeTables keep(cx);
+  AutoKeepShapeCaches keep(cx);
   RootedShape shape(cx);
   {
     ShapeTable* table;
@@ -1154,7 +1215,7 @@ static void AssertValidArrayIndex(NativeObject* obj, jsid id) {
                                                jsid id_) {
   RootedId id(cx, id_);
 
-  AutoKeepShapeTables keep(cx);
+  AutoKeepShapeCaches keep(cx);
   ShapeTable* table;
   ShapeTable::Entry* entry;
   RootedShape shape(cx);
@@ -1463,11 +1524,7 @@ static void AssertValidArrayIndex(NativeObject* obj, jsid id) {
 }
 
 inline BaseShape::BaseShape(const StackBaseShape& base)
-    : clasp_(base.clasp),
-      flags(base.flags),
-      slotSpan_(0),
-      unowned_(nullptr),
-      table_(nullptr) {}
+    : clasp_(base.clasp), flags(base.flags), slotSpan_(0), unowned_(nullptr) {}
 
 /* static */ void BaseShape::copyFromUnowned(BaseShape& dest,
                                              UnownedBaseShape& src) {
@@ -1525,11 +1582,11 @@ void BaseShape::assertConsistency() {
 }
 
 void BaseShape::traceChildren(JSTracer* trc) {
-  traceChildrenSkipShapeTable(trc);
-  traceShapeTable(trc);
+  traceChildrenSkipShapeCache(trc);
+  traceShapeCache(trc);
 }
 
-void BaseShape::traceChildrenSkipShapeTable(JSTracer* trc) {
+void BaseShape::traceChildrenSkipShapeCache(JSTracer* trc) {
   if (isOwned()) {
     TraceEdge(trc, &unowned_, "base");
   }
@@ -1537,21 +1594,18 @@ void BaseShape::traceChildrenSkipShapeTable(JSTracer* trc) {
   assertConsistency();
 }
 
-void BaseShape::traceShapeTable(JSTracer* trc) {
+void BaseShape::traceShapeCache(JSTracer* trc) {
   AutoCheckCannotGC nogc;
-  if (ShapeTable* table = maybeTable(nogc)) {
-    table->trace(trc);
-  }
+  cache_.trace(trc);
 }
 
 #ifdef DEBUG
-bool BaseShape::canSkipMarkingShapeTable(Shape* lastShape) {
+bool BaseShape::canSkipMarkingShapeCache(Shape* lastShape) {
   // Check that every shape in the shape table will be marked by marking
   // |lastShape|.
-
   AutoCheckCannotGC nogc;
-  ShapeTable* table = maybeTable(nogc);
-  if (!table) {
+  ShapeCachePtr cache = getCache(nogc);
+  if (!cache.isTable()) {
     return true;
   }
 
@@ -1559,13 +1613,14 @@ bool BaseShape::canSkipMarkingShapeTable(Shape* lastShape) {
   for (Shape::Range<NoGC> r(lastShape); !r.empty(); r.popFront()) {
     Shape* shape = &r.front();
     ShapeTable::Entry& entry =
-        table->search<MaybeAdding::NotAdding>(shape->propid(), nogc);
+        cache.getTablePointer()->search<MaybeAdding::NotAdding>(shape->propid(),
+                                                                nogc);
     if (entry.isLive()) {
       count++;
     }
   }
 
-  return count == table->entryCount();
+  return count == cache.getTablePointer()->entryCount();
 }
 #endif
 
@@ -1584,9 +1639,8 @@ void Zone::checkBaseShapeTableAfterMovingGC() {
 #endif  // JSGC_HASH_TABLE_CHECKS
 
 void BaseShape::finalize(FreeOp* fop) {
-  if (table_) {
-    fop->delete_(table_);
-    table_ = nullptr;
+  if (cache_.isInitialized()) {
+    cache_.destroy(fop);
   }
 }
 
