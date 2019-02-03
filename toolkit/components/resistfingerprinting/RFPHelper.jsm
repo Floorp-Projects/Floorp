@@ -16,11 +16,25 @@ const kTopicHttpOnModifyRequest = "http-on-modify-request";
 const kPrefLetterboxing = "privacy.resistFingerprinting.letterboxing";
 const kPrefLetterboxingDimensions =
   "privacy.resistFingerprinting.letterboxing.dimensions";
+const kPrefLetterboxingTesting =
+  "privacy.resistFingerprinting.letterboxing.testing";
 const kTopicDOMWindowOpened = "domwindowopened";
 const kEventLetterboxingSizeUpdate = "Letterboxing:ContentSizeUpdated";
 
 const kDefaultWidthStepping = 200;
 const kDefaultHeightStepping = 100;
+
+var logConsole;
+function log(msg) {
+  if (!logConsole) {
+    logConsole = console.createInstance({
+      prefix: "RFPHelper.jsm",
+      maxLogLevelPref: "privacy.resistFingerprinting.jsmloglevel",
+    });
+  }
+
+  logConsole.log(msg);
+}
 
 class _RFPHelper {
   // ============================================================================
@@ -41,6 +55,8 @@ class _RFPHelper {
     Services.prefs.addObserver(kPrefLetterboxing, this);
     XPCOMUtils.defineLazyPreferenceGetter(this, "_letterboxingDimensions",
       kPrefLetterboxingDimensions, "", null, this._parseLetterboxingDimensions);
+    XPCOMUtils.defineLazyPreferenceGetter(this, "_isLetterboxingTesting",
+      kPrefLetterboxingTesting, false);
 
     // Add RFP and Letterboxing observers if prefs are enabled
     this._handleResistFingerprintingChanged();
@@ -326,6 +342,8 @@ class _RFPHelper {
    * content viewport.
    */
   async _roundContentView(aBrowser) {
+    let logId = Math.random();
+    log("_roundContentView[" + logId + "]");
     let win = aBrowser.ownerGlobal;
     let browserContainer = aBrowser.getTabBrowser()
                                    .getBrowserContainer(aBrowser);
@@ -345,14 +363,21 @@ class _RFPHelper {
         };
       });
 
+    log("_roundContentView[" + logId + "] contentWidth=" + contentWidth + " contentHeight=" + contentHeight +
+      " containerWidth=" + containerWidth + " containerHeight=" + containerHeight + " ");
+
     let calcMargins = (aWidth, aHeight) => {
+      let result;
+      log("_roundContentView[" + logId + "] calcMargins(" + aWidth + ", " + aHeight + ")");
       // If the set is empty, we will round the content with the default
       // stepping size.
       if (!this._letterboxingDimensions.length) {
-        return {
+        result = {
           width: (aWidth % kDefaultWidthStepping) / 2,
           height: (aHeight % kDefaultHeightStepping) / 2,
         };
+        log("_roundContentView[" + logId + "] calcMargins(" + aWidth + ", " + aHeight + ") = " + result.width + " x " + result.height);
+        return result;
       }
 
       let matchingArea = aWidth * aHeight;
@@ -375,7 +400,6 @@ class _RFPHelper {
         }
       }
 
-      let result;
       // If we cannot find any dimensions match to the real content window, this
       // means the content area is smaller the smallest size in the set. In this
       // case, we won't apply any margins.
@@ -391,6 +415,7 @@ class _RFPHelper {
         };
       }
 
+      log("_roundContentView[" + logId + "] calcMargins(" + aWidth + ", " + aHeight + ") = " + result.width + " x " + result.height);
       return result;
     };
 
@@ -401,10 +426,16 @@ class _RFPHelper {
 
     // If the size of the content is already quantized, we do nothing.
     if (aBrowser.style.margin == `${margins.height}px ${margins.width}px`) {
+      log("_roundContentView[" + logId + "] is_rounded == true");
+      if (this._isLetterboxingTesting) {
+        log("_roundContentView[" + logId + "] is_rounded == true test:letterboxing:update-margin-finish");
+        Services.obs.notifyObservers(null, "test:letterboxing:update-margin-finish");
+      }
       return;
     }
 
     win.requestAnimationFrame(() => {
+      log("_roundContentView[" + logId + "] setting margins to " + margins.width + " x " + margins.height);
       // One cannot (easily) control the color of a margin unfortunately.
       // An initial attempt to use a border instead of a margin resulted
       // in offset event dispatching; so for now we use a colorless margin.
