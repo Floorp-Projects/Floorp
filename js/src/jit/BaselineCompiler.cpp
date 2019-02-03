@@ -372,6 +372,36 @@ MethodStatus BaselineCompiler::compile() {
 }
 
 template <>
+void BaselineCompilerCodeGen::loadScript(Register dest) {
+  masm.movePtr(ImmGCPtr(handler.script()), dest);
+}
+
+template <>
+void BaselineInterpreterCodeGen::loadScript(Register dest) {
+  // TODO(bug 1522394): consider adding interpreterScript to BaselineFrame once
+  // we are able to run benchmarks.
+
+  masm.loadPtr(frame.addressOfCalleeToken(), dest);
+
+  Label notFunction, done;
+  masm.branchTestPtr(Assembler::NonZero, dest, Imm32(CalleeTokenScriptBit),
+                     &notFunction);
+  {
+    // CalleeToken_Function or CalleeToken_FunctionConstructing.
+    masm.andPtr(Imm32(uint32_t(CalleeTokenMask)), dest);
+    masm.loadPtr(Address(dest, JSFunction::offsetOfScript()), dest);
+    masm.jump(&done);
+  }
+  masm.bind(&notFunction);
+  {
+    // CalleeToken_Script.
+    masm.andPtr(Imm32(uint32_t(CalleeTokenMask)), dest);
+  }
+
+  masm.bind(&done);
+}
+
+template <>
 void BaselineCompilerCodeGen::emitInitializeLocals() {
   // Initialize all locals to |undefined|. Lexical bindings are temporal
   // dead zoned in bytecode.
@@ -413,7 +443,22 @@ void BaselineCompilerCodeGen::emitInitializeLocals() {
 
 template <>
 void BaselineInterpreterCodeGen::emitInitializeLocals() {
-  MOZ_CRASH("NYI: interpreter emitInitializeLocals");
+  // Push |undefined| for all locals.
+
+  Register scratch = R0.scratchReg();
+  loadScript(scratch);
+  masm.load32(Address(scratch, JSScript::offsetOfNfixed()), scratch);
+
+  Label top, done;
+  masm.bind(&top);
+  masm.branchTest32(Assembler::Zero, scratch, scratch, &done);
+  {
+    masm.pushValue(UndefinedValue());
+    masm.sub32(Imm32(1), scratch);
+    masm.jump(&top);
+  }
+
+  masm.bind(&done);
 }
 
 // On input:
@@ -507,7 +552,8 @@ void BaselineCodeGen<Handler>::prepareVMCall() {
 
 template <>
 void BaselineCompilerCodeGen::storeFrameSizeAndPushDescriptor(
-    uint32_t frameBaseSize, uint32_t argSize, const Address& frameSizeAddr) {
+    uint32_t frameBaseSize, uint32_t argSize, const Address& frameSizeAddr,
+    Register scratch1, Register scratch2) {
   uint32_t frameVals = frame.nlocals() + frame.stackDepth();
 
   uint32_t frameFullSize = frameBaseSize + (frameVals * sizeof(Value));
@@ -520,22 +566,22 @@ void BaselineCompilerCodeGen::storeFrameSizeAndPushDescriptor(
 
 template <>
 void BaselineInterpreterCodeGen::storeFrameSizeAndPushDescriptor(
-    uint32_t frameBaseSize, uint32_t argSize, const Address& frameSizeAddr) {
-  MOZ_CRASH("NYI: interpreter storeFrameSizeAndPushDescriptor");
-}
+    uint32_t frameBaseSize, uint32_t argSize, const Address& frameSizeAddr,
+    Register scratch1, Register scratch2) {
+  // scratch1 = FramePointer + BaselineFrame::FramePointerOffset - StackPointer.
+  masm.computeEffectiveAddress(
+      Address(BaselineFrameReg, BaselineFrame::FramePointerOffset), scratch1);
+  masm.subStackPtrFrom(scratch1);
 
-template <>
-void BaselineCompilerCodeGen::computeFullFrameSize(uint32_t frameBaseSize,
-                                                   Register dest) {
-  uint32_t frameVals = frame.nlocals() + frame.stackDepth();
-  uint32_t frameFullSize = frameBaseSize + (frameVals * sizeof(Value));
-  masm.move32(Imm32(frameFullSize), dest);
-}
+  // Store the frame size without VMFunction arguments. Use
+  // computeEffectiveAddress instead of sub32 to avoid an extra move.
+  masm.computeEffectiveAddress(Address(scratch1, -int32_t(argSize)), scratch2);
+  masm.store32(scratch2, frameSizeAddr);
 
-template <>
-void BaselineInterpreterCodeGen::computeFullFrameSize(uint32_t frameBaseSize,
-                                                      Register dest) {
-  MOZ_CRASH("NYI: interpreter computeFullFrameSize");
+  // Push frame descriptor based on the full frame size.
+  masm.makeFrameDescriptor(scratch1, FrameType::BaselineJS,
+                           ExitFrameLayout::Size());
+  masm.push(scratch1);
 }
 
 template <typename Handler>
@@ -572,29 +618,29 @@ bool BaselineCodeGen<Handler>::callVM(const VMFunction& fun,
   uint32_t frameBaseSize =
       BaselineFrame::FramePointerOffset + BaselineFrame::Size();
   if (phase == POST_INITIALIZE) {
-    storeFrameSizeAndPushDescriptor(frameBaseSize, argSize, frameSizeAddress);
+    storeFrameSizeAndPushDescriptor(frameBaseSize, argSize, frameSizeAddress,
+                                    R0.scratchReg(), R1.scratchReg());
   } else {
     MOZ_ASSERT(phase == CHECK_OVER_RECURSED);
-    Label afterWrite;
-    Label writePostInitialize;
+    Label done, pushedFrameLocals;
 
     // If OVER_RECURSED is set, then frame locals haven't been pushed yet.
     masm.branchTest32(Assembler::Zero, frame.addressOfFlags(),
-                      Imm32(BaselineFrame::OVER_RECURSED),
-                      &writePostInitialize);
-
-    masm.move32(Imm32(frameBaseSize), ICTailCallReg);
-    masm.jump(&afterWrite);
-
-    masm.bind(&writePostInitialize);
-    computeFullFrameSize(frameBaseSize, ICTailCallReg);
-
-    masm.bind(&afterWrite);
-    masm.store32(ICTailCallReg, frameSizeAddress);
-    masm.add32(Imm32(argSize), ICTailCallReg);
-    masm.makeFrameDescriptor(ICTailCallReg, FrameType::BaselineJS,
-                             ExitFrameLayout::Size());
-    masm.push(ICTailCallReg);
+                      Imm32(BaselineFrame::OVER_RECURSED), &pushedFrameLocals);
+    {
+      masm.store32(Imm32(frameBaseSize), frameSizeAddress);
+      uint32_t descriptor =
+          MakeFrameDescriptor(frameBaseSize + argSize, FrameType::BaselineJS,
+                              ExitFrameLayout::Size());
+      masm.push(Imm32(descriptor));
+      masm.jump(&done);
+    }
+    masm.bind(&pushedFrameLocals);
+    {
+      storeFrameSizeAndPushDescriptor(frameBaseSize, argSize, frameSizeAddress,
+                                      R0.scratchReg(), R1.scratchReg());
+    }
+    masm.bind(&done);
   }
   MOZ_ASSERT(fun.expectTailCall == NonTailCall);
   // Perform the call.
@@ -680,16 +726,6 @@ void BaselineCompilerCodeGen::emitIsDebuggeeCheck() {
 template <>
 void BaselineInterpreterCodeGen::emitIsDebuggeeCheck() {
   MOZ_CRASH("NYI: interpreter emitIsDebuggeeCheck");
-}
-
-template <>
-void BaselineCompilerCodeGen::loadScript(Register dest) {
-  masm.movePtr(ImmGCPtr(handler.script()), dest);
-}
-
-template <>
-void BaselineInterpreterCodeGen::loadScript(Register dest) {
-  MOZ_CRASH("NYI: interpreter loadScript");
 }
 
 template <>
