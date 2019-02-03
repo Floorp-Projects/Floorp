@@ -575,6 +575,16 @@ class PresShell final : public nsIPresShell,
         PresShell& aPresShell);
 
     /**
+     * MaybeDiscardEvent() checks whether it's safe to handle aGUIEvent right
+     * now.  If it's not safe, this may notify somebody of discarding event if
+     * necessary.
+     *
+     * @param aGUIEvent   Handling event.
+     * @return            true if it's not safe to handle the event.
+     */
+    bool MaybeDiscardEvent(WidgetGUIEvent* aGUIEvent);
+
+    /**
      * GetCapturingContentFor() returns capturing content for aGUIEvent.
      * If aGUIEvent is not related to capturing, this returns nullptr.
      */

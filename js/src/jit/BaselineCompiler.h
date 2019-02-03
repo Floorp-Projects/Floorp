@@ -303,14 +303,14 @@ class BaselineCodeGen {
   }
 
   // Pushes the current script as argument for a VM function.
-  void pushScriptArg();
+  void pushScriptArg(Register scratch);
 
   // Pushes the bytecode pc as argument for a VM function.
   void pushBytecodePCArg();
 
   // Pushes a name/object/scope associated with the current bytecode op (and
   // stored in the script) as argument for a VM function.
-  enum class ScriptObjectType { RegExp, Function, ObjectLiteral };
+  enum class ScriptObjectType { RegExp, Function };
   void pushScriptObjectArg(ScriptObjectType type);
   void pushScriptNameArg();
   void pushScriptScopeArg();
@@ -341,8 +341,8 @@ class BaselineCodeGen {
   void prepareVMCall();
 
   void storeFrameSizeAndPushDescriptor(uint32_t frameBaseSize, uint32_t argSize,
-                                       const Address& frameSizeAddr);
-  void computeFullFrameSize(uint32_t frameBaseSize, Register dest);
+                                       const Address& frameSizeAddr,
+                                       Register scratch1, Register scratch2);
 
   enum CallVMPhase { POST_INITIALIZE, CHECK_OVER_RECURSED };
   bool callVM(const VMFunction& fun, CallVMPhase phase = POST_INITIALIZE);
@@ -553,6 +553,8 @@ class BaselineCompilerHandler {
     static const unsigned EARLY_STACK_CHECK_SLOT_COUNT = 128;
     return script()->nslots() > EARLY_STACK_CHECK_SLOT_COUNT;
   }
+
+  JSObject* maybeNoCloneSingletonObject();
 };
 
 using BaselineCompilerCodeGen = BaselineCodeGen<BaselineCompilerHandler>;
@@ -644,6 +646,8 @@ class BaselineInterpreterHandler {
   // The interpreter always does the early stack check because we don't know the
   // frame size statically.
   bool needsEarlyStackCheck() const { return true; }
+
+  JSObject* maybeNoCloneSingletonObject() { return nullptr; }
 };
 
 using BaselineInterpreterCodeGen = BaselineCodeGen<BaselineInterpreterHandler>;

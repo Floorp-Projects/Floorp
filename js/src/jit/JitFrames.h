@@ -16,13 +16,16 @@
 namespace js {
 namespace jit {
 
+struct SafepointSlotEntry;
+
 enum CalleeTokenTag {
   CalleeToken_Function = 0x0,  // untagged
   CalleeToken_FunctionConstructing = 0x1,
   CalleeToken_Script = 0x2
 };
 
-struct SafepointSlotEntry;
+// Any CalleeToken with this bit set must be CalleeToken_Script.
+static const uintptr_t CalleeTokenScriptBit = CalleeToken_Script;
 
 static const uintptr_t CalleeTokenMask = ~uintptr_t(0x3);
 

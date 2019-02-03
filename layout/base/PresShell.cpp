@@ -6503,20 +6503,8 @@ nsresult PresShell::EventHandler::HandleEvent(nsIFrame* aFrame,
     return NS_OK;
   }
 
-  if (!nsContentUtils::IsSafeToRunScript() &&
-      aGUIEvent->IsAllowedToDispatchDOMEvent()) {
-    if (aGUIEvent->mClass == eCompositionEventClass) {
-      IMEStateManager::OnCompositionEventDiscarded(
-          aGUIEvent->AsCompositionEvent());
-    }
-#ifdef DEBUG
-    if (aGUIEvent->IsIMERelatedEvent()) {
-      nsPrintfCString warning("%s event is discarded",
-                              ToChar(aGUIEvent->mMessage));
-      NS_WARNING(warning.get());
-    }
-#endif
-    nsContentUtils::WarnScriptWasIgnored(GetDocument());
+  if (MaybeDiscardEvent(aGUIEvent)) {
+    // Nobody cannot handle the event for now.
     return NS_OK;
   }
 
@@ -7093,6 +7081,40 @@ bool PresShell::EventHandler::MaybeHandleEventWithAccessibleCaret(
   // If the event is consumed, cancel APZC panning by setting
   // mMultipleActionsPrevented.
   aGUIEvent->mFlags.mMultipleActionsPrevented = true;
+  return true;
+}
+
+bool PresShell::EventHandler::MaybeDiscardEvent(WidgetGUIEvent* aGUIEvent) {
+  MOZ_ASSERT(aGUIEvent);
+
+  // If it is safe to dispatch events now, don't discard the event.
+  if (nsContentUtils::IsSafeToRunScript()) {
+    return false;
+  }
+
+  // If the event does not cause dispatching DOM event (i.e., internal event),
+  // we can keep handling it even when it's not safe to run script.
+  if (!aGUIEvent->IsAllowedToDispatchDOMEvent()) {
+    return false;
+  }
+
+  // If the event is a composition event, we need to let IMEStateManager know
+  // it's discarded because it needs to listen all composition events to manage
+  // TextComposition instance.
+  if (aGUIEvent->mClass == eCompositionEventClass) {
+    IMEStateManager::OnCompositionEventDiscarded(
+        aGUIEvent->AsCompositionEvent());
+  }
+
+#ifdef DEBUG
+  if (aGUIEvent->IsIMERelatedEvent()) {
+    nsPrintfCString warning("%s event is discarded",
+                            ToChar(aGUIEvent->mMessage));
+    NS_WARNING(warning.get());
+  }
+#endif  // #ifdef DEBUG
+
+  nsContentUtils::WarnScriptWasIgnored(GetDocument());
   return true;
 }
 
