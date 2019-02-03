@@ -4758,7 +4758,7 @@ void TypeScript::destroy(Zone* zone) {
 void Zone::addSizeOfIncludingThis(
     mozilla::MallocSizeOf mallocSizeOf, size_t* typePool, size_t* regexpZone,
     size_t* jitZone, size_t* baselineStubsOptimized, size_t* cachedCFG,
-    size_t* uniqueIdMap, size_t* shapeTables, size_t* atomsMarkBitmaps,
+    size_t* uniqueIdMap, size_t* shapeCaches, size_t* atomsMarkBitmaps,
     size_t* compartmentObjects, size_t* crossCompartmentWrappersTables,
     size_t* compartmentsPrivateData) {
   *typePool += types.typeLifoAlloc().sizeOfExcludingThis(mallocSizeOf);
@@ -4768,7 +4768,7 @@ void Zone::addSizeOfIncludingThis(
                                      baselineStubsOptimized, cachedCFG);
   }
   *uniqueIdMap += uniqueIds().shallowSizeOfExcludingThis(mallocSizeOf);
-  *shapeTables += baseShapes().sizeOfExcludingThis(mallocSizeOf) +
+  *shapeCaches += baseShapes().sizeOfExcludingThis(mallocSizeOf) +
                   initialShapes().sizeOfExcludingThis(mallocSizeOf);
   *atomsMarkBitmaps += markedAtoms().sizeOfExcludingThis(mallocSizeOf);
 

@@ -22,13 +22,13 @@
 
 namespace js {
 
-inline AutoKeepShapeTables::AutoKeepShapeTables(JSContext* cx)
-    : cx_(cx), prev_(cx->zone()->keepShapeTables()) {
-  cx->zone()->setKeepShapeTables(true);
+inline AutoKeepShapeCaches::AutoKeepShapeCaches(JSContext* cx)
+    : cx_(cx), prev_(cx->zone()->keepShapeCaches()) {
+  cx->zone()->setKeepShapeCaches(true);
 }
 
-inline AutoKeepShapeTables::~AutoKeepShapeTables() {
-  cx_->zone()->setKeepShapeTables(prev_);
+inline AutoKeepShapeCaches::~AutoKeepShapeCaches() {
+  cx_->zone()->setKeepShapeCaches(prev_);
 }
 
 inline StackBaseShape::StackBaseShape(const Class* clasp, uint32_t objectFlags)
@@ -38,8 +38,8 @@ MOZ_ALWAYS_INLINE Shape* Shape::search(JSContext* cx, jsid id) {
   return search(cx, this, id);
 }
 
-MOZ_ALWAYS_INLINE bool Shape::maybeCreateTableForLookup(JSContext* cx) {
-  if (hasTable()) {
+MOZ_ALWAYS_INLINE bool Shape::maybeCreateCacheForLookup(JSContext* cx) {
+  if (hasTable() || hasIC()) {
     return true;
   }
 
@@ -52,12 +52,12 @@ MOZ_ALWAYS_INLINE bool Shape::maybeCreateTableForLookup(JSContext* cx) {
     return true;
   }
 
-  return Shape::hashify(cx, this);
+  return Shape::cachify(cx, this);
 }
 
 template <MaybeAdding Adding>
 /* static */ inline bool Shape::search(JSContext* cx, Shape* start, jsid id,
-                                       const AutoKeepShapeTables& keep,
+                                       const AutoKeepShapeCaches& keep,
                                        Shape** pshape, ShapeTable** ptable,
                                        ShapeTable::Entry** pentry) {
   if (start->inDictionary()) {
@@ -80,18 +80,31 @@ template <MaybeAdding Adding>
 template <MaybeAdding Adding>
 /* static */ MOZ_ALWAYS_INLINE Shape* Shape::search(JSContext* cx, Shape* start,
                                                     jsid id) {
-  if (start->maybeCreateTableForLookup(cx)) {
+  Shape* foundShape = nullptr;
+  if (start->maybeCreateCacheForLookup(cx)) {
     JS::AutoCheckCannotGC nogc;
-    if (ShapeTable* table = start->maybeTable(nogc)) {
-      ShapeTable::Entry& entry = table->search<Adding>(id, nogc);
-      return entry.shape();
+    ShapeCachePtr cache = start->getCache(nogc);
+    if (cache.search<Adding>(id, start, &foundShape)) {
+      return foundShape;
     }
   } else {
     // Just do a linear search.
     cx->recoverFromOutOfMemory();
   }
 
-  return start->searchLinear(id);
+  foundShape = start->searchLinear(id);
+  if (start->hasIC()) {
+    JS::AutoCheckCannotGC nogc;
+    if (!start->appendShapeToIC(id, foundShape, nogc)) {
+      // Failure indicates that the cache is full, which means we missed
+      // the cache ShapeIC::MAX_SIZE times. This indicates the cache is no
+      // longer useful, so convert it into a ShapeTable.
+      if (!Shape::hashify(cx, start)) {
+        cx->recoverFromOutOfMemory();
+      }
+    }
+  }
+  return foundShape;
 }
 
 inline Shape* Shape::new_(JSContext* cx, Handle<StackShape> other,
@@ -343,7 +356,7 @@ MOZ_ALWAYS_INLINE ShapeTable::Entry& ShapeTable::searchUnchecked(jsid id) {
 
 template <MaybeAdding Adding>
 MOZ_ALWAYS_INLINE ShapeTable::Entry& ShapeTable::search(
-    jsid id, const AutoKeepShapeTables&) {
+    jsid id, const AutoKeepShapeCaches&) {
   return searchUnchecked<Adding>(id);
 }
 
@@ -359,16 +372,17 @@ MOZ_ALWAYS_INLINE ShapeTable::Entry& ShapeTable::search(
  */
 MOZ_ALWAYS_INLINE Shape* Shape::searchNoHashify(Shape* start, jsid id) {
   /*
-   * If we have a table, search in the shape table, else do a linear
-   * search. We never hashify into a table in parallel.
+   * If we have a cache, search in the shape cache, else do a linear
+   * search. We never hashify or cachify into a table in parallel.
    */
+  Shape* foundShape;
   JS::AutoCheckCannotGC nogc;
-  if (ShapeTable* table = start->maybeTable(nogc)) {
-    ShapeTable::Entry& entry = table->search<MaybeAdding::NotAdding>(id, nogc);
-    return entry.shape();
+  ShapeCachePtr cache = start->getCache(nogc);
+  if (!cache.search<MaybeAdding::NotAdding>(id, start, &foundShape)) {
+    foundShape = start->searchLinear(id);
   }
 
-  return start->searchLinear(id);
+  return foundShape;
 }
 
 /* static */ MOZ_ALWAYS_INLINE Shape* NativeObject::addDataProperty(
@@ -378,7 +392,7 @@ MOZ_ALWAYS_INLINE Shape* Shape::searchNoHashify(Shape* start, jsid id) {
   MOZ_ASSERT(obj->uninlinedNonProxyIsExtensible());
   MOZ_ASSERT(!obj->containsPure(id));
 
-  AutoKeepShapeTables keep(cx);
+  AutoKeepShapeCaches keep(cx);
   ShapeTable* table = nullptr;
   ShapeTable::Entry* entry = nullptr;
   if (obj->inDictionaryMode()) {
@@ -399,7 +413,7 @@ MOZ_ALWAYS_INLINE Shape* Shape::searchNoHashify(Shape* start, jsid id) {
   MOZ_ASSERT(obj->uninlinedNonProxyIsExtensible());
   MOZ_ASSERT(!obj->containsPure(id));
 
-  AutoKeepShapeTables keep(cx);
+  AutoKeepShapeCaches keep(cx);
   ShapeTable* table = nullptr;
   ShapeTable::Entry* entry = nullptr;
   if (obj->inDictionaryMode()) {

@@ -70,7 +70,7 @@ JS::Zone::Zone(JSRuntime* rt)
       gcScheduled_(false),
       gcScheduledSaved_(false),
       gcPreserveCode_(false),
-      keepShapeTables_(this, false),
+      keepShapeCaches_(this, false),
       listNext_(NotOnList) {
   /* Ensure that there are no vtables to mess us up here. */
   MOZ_ASSERT(reinterpret_cast<JS::shadow::Zone*>(this) ==
