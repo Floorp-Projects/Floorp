@@ -834,9 +834,6 @@ void BaselineCompilerCodeGen::pushScriptObjectArg(ScriptObjectType type) {
     case ScriptObjectType::Function:
       pushArg(ImmGCPtr(script->getFunction(handler.pc())));
       return;
-    case ScriptObjectType::ObjectLiteral:
-      pushArg(ImmGCPtr(script->getObject(handler.pc())));
-      return;
   }
   MOZ_CRASH("Unexpected object type");
 }
@@ -2052,38 +2049,45 @@ bool BaselineInterpreterCodeGen::emit_JSOP_SYMBOL() {
   MOZ_CRASH("NYI: interpreter JSOP_SYMBOL");
 }
 
-typedef JSObject* (*DeepCloneObjectLiteralFn)(JSContext*, HandleObject,
-                                              NewObjectKind);
-static const VMFunction DeepCloneObjectLiteralInfo =
-    FunctionInfo<DeepCloneObjectLiteralFn>(DeepCloneObjectLiteral,
-                                           "DeepCloneObjectLiteral");
+JSObject* BaselineCompilerHandler::maybeNoCloneSingletonObject() {
+  Realm* realm = script()->realm();
+  if (realm->creationOptions().cloneSingletons()) {
+    return nullptr;
+  }
 
-template <>
-bool BaselineCompilerCodeGen::emit_JSOP_OBJECT() {
-  if (cx->realm()->creationOptions().cloneSingletons()) {
-    prepareVMCall();
+  realm->behaviors().setSingletonsAsValues();
+  return script()->getObject(pc());
+}
 
-    pushArg(ImmWord(TenuredObject));
-    pushScriptObjectArg(ScriptObjectType::ObjectLiteral);
+typedef JSObject* (*SingletonObjectLiteralFn)(JSContext*, HandleScript,
+                                              jsbytecode*);
+static const VMFunction SingletonObjectLiteralInfo =
+    FunctionInfo<SingletonObjectLiteralFn>(SingletonObjectLiteralOperation,
+                                           "SingletonObjectLiteralOperation");
 
-    if (!callVM(DeepCloneObjectLiteralInfo)) {
-      return false;
-    }
-
-    // Box and push return value.
-    masm.tagValue(JSVAL_TYPE_OBJECT, ReturnReg, R0);
-    frame.push(R0);
+template <typename Handler>
+bool BaselineCodeGen<Handler>::emit_JSOP_OBJECT() {
+  // If we know we don't have to clone the object literal, just push it
+  // directly. Note that the interpreter always does the VM call; that's fine
+  // because this op is only used in run-once code.
+  if (JSObject* obj = handler.maybeNoCloneSingletonObject()) {
+    frame.push(ObjectValue(*obj));
     return true;
   }
 
-  cx->realm()->behaviors().setSingletonsAsValues();
-  frame.push(ObjectValue(*handler.script()->getObject(handler.pc())));
-  return true;
-}
+  prepareVMCall();
 
-template <>
-bool BaselineInterpreterCodeGen::emit_JSOP_OBJECT() {
-  MOZ_CRASH("NYI: interpreter JSOP_OBJECT");
+  pushBytecodePCArg();
+  pushScriptArg(R2.scratchReg());
+
+  if (!callVM(SingletonObjectLiteralInfo)) {
+    return false;
+  }
+
+  // Box and push return value.
+  masm.tagValue(JSVAL_TYPE_OBJECT, ReturnReg, R0);
+  frame.push(R0);
+  return true;
 }
 
 template <>
