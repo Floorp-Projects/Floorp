@@ -341,8 +341,8 @@ class BaselineCodeGen {
   void prepareVMCall();
 
   void storeFrameSizeAndPushDescriptor(uint32_t frameBaseSize, uint32_t argSize,
-                                       const Address& frameSizeAddr);
-  void computeFullFrameSize(uint32_t frameBaseSize, Register dest);
+                                       const Address& frameSizeAddr,
+                                       Register scratch1, Register scratch2);
 
   enum CallVMPhase { POST_INITIALIZE, CHECK_OVER_RECURSED };
   bool callVM(const VMFunction& fun, CallVMPhase phase = POST_INITIALIZE);
