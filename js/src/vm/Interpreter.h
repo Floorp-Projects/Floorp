@@ -498,6 +498,9 @@ bool DefLexicalOperation(JSContext* cx, HandleObject envChain,
 bool DefFunOperation(JSContext* cx, HandleScript script, HandleObject envChain,
                      HandleFunction funArg);
 
+JSObject* SingletonObjectLiteralOperation(JSContext* cx, HandleScript script,
+                                          jsbytecode* pc);
+
 bool ThrowMsgOperation(JSContext* cx, const unsigned errorNum);
 
 bool GetAndClearException(JSContext* cx, MutableHandleValue res);
