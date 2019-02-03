@@ -3333,6 +3333,9 @@ var SessionStoreInternal = {
       winData[aAttr] = this._getWindowDimension(aWindow, aAttr);
     }, this);
 
+    if (winData.sizemode != "minimized")
+      winData.sizemodeBeforeMinimized = winData.sizemode;
+
     var hidden = WINDOW_HIDEABLE_FEATURES.filter(function(aItem) {
       return aWindow[aItem] && !aWindow[aItem].visible;
     });
@@ -4291,7 +4294,8 @@ var SessionStoreInternal = {
         +(aWinData.height || 0),
         "screenX" in aWinData ? +aWinData.screenX : NaN,
         "screenY" in aWinData ? +aWinData.screenY : NaN,
-        aWinData.sizemode || "", aWinData.sidebar || "");
+        aWinData.sizemode || "", aWinData.sizemodeBeforeMinimized || "",
+        aWinData.sidebar || "");
     }, 0);
   },
 
@@ -4307,10 +4311,12 @@ var SessionStoreInternal = {
    *        Window top
    * @param aSizeMode
    *        Window size mode (eg: maximized)
+   * @param aSizeModeBeforeMinimized
+   *        Window size mode before window got minimized (eg: maximized)
    * @param aSidebar
    *        Sidebar command
    */
-  restoreDimensions: function ssi_restoreDimensions(aWindow, aWidth, aHeight, aLeft, aTop, aSizeMode, aSidebar) {
+  restoreDimensions: function ssi_restoreDimensions(aWindow, aWidth, aHeight, aLeft, aTop, aSizeMode, aSizeModeBeforeMinimized, aSidebar) {
     var win = aWindow;
     var _this = this;
     function win_(aName) { return _this._getWindowDimension(win, aName); }
@@ -4379,12 +4385,15 @@ var SessionStoreInternal = {
           aWindow.resizeTo(aWidth, aHeight);
         }
       }
+      this._windows[aWindow.__SSi].sizemodeBeforeMinimized = aSizeModeBeforeMinimized;
       if (aSizeMode && win_("sizemode") != aSizeMode && !gResistFingerprintingEnabled) {
         switch (aSizeMode) {
         case "maximized":
           aWindow.maximize();
           break;
         case "minimized":
+          if (aSizeModeBeforeMinimized == "maximized")
+            aWindow.maximize();
           aWindow.minimize();
           break;
         case "normal":
