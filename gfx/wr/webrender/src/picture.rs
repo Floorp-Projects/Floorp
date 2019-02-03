@@ -34,7 +34,7 @@ use scene::{FilterOpHelpers, SceneProperties};
 use scene_builder::Interners;
 use smallvec::SmallVec;
 use std::{mem, u16};
-use std::sync::atomic::{AtomicUsize, ATOMIC_USIZE_INIT, Ordering};
+use std::sync::atomic::{AtomicUsize, Ordering};
 use texture_cache::{Eviction, TextureCacheHandle};
 use tiling::RenderTargetKind;
 use util::{ComparableVec, TransformedRectKind, MatrixHelpers, MaxRect};
@@ -116,7 +116,7 @@ const MAX_PRIMS_TO_SEARCH: usize = 128;
 
 /// Used to get unique tile IDs, even when the tile cache is
 /// destroyed between display lists / scenes.
-static NEXT_TILE_ID: AtomicUsize = ATOMIC_USIZE_INIT;
+static NEXT_TILE_ID: AtomicUsize = AtomicUsize::new(0);
 
 fn clamp(value: i32, low: i32, high: i32) -> i32 {
     value.max(low).min(high)

@@ -27,7 +27,7 @@ use std::ptr;
 use std::rc::Rc;
 use std::slice;
 use std::sync::Arc;
-use std::sync::atomic::{AtomicUsize, ATOMIC_USIZE_INIT, Ordering};
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::thread;
 use webrender_build::shader::ProgramSourceDigest;
 use webrender_build::shader::{parse_shader_source, shader_source_from_file};
@@ -44,7 +44,7 @@ pub struct GpuFrameId(usize);
 /// to be atomic per se, but we make it atomic to satisfy the thread safety
 /// invariants in the type system. We could also put the value in TLS, but that
 /// would be more expensive to access.
-static GPU_BYTES_ALLOCATED: AtomicUsize = ATOMIC_USIZE_INIT;
+static GPU_BYTES_ALLOCATED: AtomicUsize = AtomicUsize::new(0);
 
 /// Returns the number of GPU bytes currently allocated.
 pub fn total_gpu_bytes_allocated() -> usize {
