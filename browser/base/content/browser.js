@@ -3243,6 +3243,8 @@ function BrowserReloadWithFlags(reloadFlags) {
   // permissions on user reload.
   for (let tab of unchangedRemoteness) {
     SitePermissions.clearTemporaryPermissions(tab.linkedBrowser);
+    // Also reset DOS mitigations for the basic auth prompt on reload.
+    delete tab.linkedBrowser.canceledAuthenticationPromptCounter;
   }
   PanelMultiView.hidePopup(gIdentityHandler._identityPopup);
 
