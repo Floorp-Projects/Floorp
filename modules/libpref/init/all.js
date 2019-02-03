@@ -1442,6 +1442,9 @@ pref("privacy.firstparty.isolate.restrict_opener_access", true);
 // If you do set it, to work around some broken website, please file a bug with
 // information so we can understand why it is needed.
 pref("privacy.resistFingerprinting.autoDeclineNoUserInputCanvasPrompts", true);
+// The log level for browser console messages logged in RFPHelper.jsm
+// Change to 'All' and restart to see the messages
+pref("privacy.resistFingerprinting.jsmloglevel", "Warn");
 // A subset of Resist Fingerprinting protections focused specifically on timers for testing
 // This affects the Animation API, the performance APIs, Date.getTime, Event.timestamp,
 //   File.lastModified, audioContext.currentTime, canvas.captureStream.currentTime
