@@ -3299,14 +3299,10 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     END_CASE(JSOP_OBJECT)
 
     CASE(JSOP_CALLSITEOBJ) {
-      ReservedRooted<JSObject*> cso(&rootObject0, script->getObject(REGS.pc));
-      ReservedRooted<JSObject*> raw(
-          &rootObject1, script->getObject(GET_UINT32_INDEX(REGS.pc) + 1));
-
-      if (!ProcessCallSiteObjOperation(cx, cso, raw)) {
+      JSObject* cso = ProcessCallSiteObjOperation(cx, script, REGS.pc);
+      if (!cso) {
         goto error;
       }
-
       PUSH_OBJECT(*cso);
     }
     END_CASE(JSOP_CALLSITEOBJ)
