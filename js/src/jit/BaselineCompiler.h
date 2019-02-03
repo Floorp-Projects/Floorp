@@ -303,7 +303,7 @@ class BaselineCodeGen {
   }
 
   // Pushes the current script as argument for a VM function.
-  void pushScriptArg();
+  void pushScriptArg(Register scratch);
 
   // Pushes the bytecode pc as argument for a VM function.
   void pushBytecodePCArg();
