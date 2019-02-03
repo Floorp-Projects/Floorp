@@ -155,7 +155,7 @@ pub extern "C" fn intentional_panic(message: *const c_char) {
 }
 
 extern "C" {
-    // We can't use MOZ_CrashOOL directly because it may be weakly linked
+    // We can't use MOZ_Crash directly because it may be weakly linked
     // to libxul, and rust can't handle that.
     fn GeckoCrashOOL(filename: *const c_char, line: c_int, reason: *const c_char) -> !;
 }
@@ -235,7 +235,7 @@ fn panic_hook(info: &panic::PanicInfo) {
     }
 }
 
-/// Configure a panic hook to redirect rust panics to Gecko's MOZ_CrashOOL.
+/// Configure a panic hook to redirect rust panics to Gecko's MOZ_Crash.
 #[no_mangle]
 pub extern "C" fn install_rust_panic_hook() {
     panic::set_hook(Box::new(panic_hook));
