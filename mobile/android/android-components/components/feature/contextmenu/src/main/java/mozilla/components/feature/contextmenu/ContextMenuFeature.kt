@@ -32,8 +32,8 @@ internal const val FRAGMENT_TAG = "mozac_feature_contextmenu_dialog"
 class ContextMenuFeature(
     private val fragmentManager: FragmentManager,
     private val sessionManager: SessionManager,
-    private val candidates: List<ContextMenuCandidate>
-
+    private val candidates: List<ContextMenuCandidate>,
+    private val sessionId: String? = null
 ) : LifecycleAwareFeature {
     private val observer = ContextMenuObserver(sessionManager, feature = this)
 
@@ -48,7 +48,7 @@ class ContextMenuFeature(
             reattachFragment(fragment as ContextMenuFragment)
         }
 
-        observer.observeSelected()
+        observer.start(sessionId)
     }
 
     /**
@@ -119,11 +119,16 @@ class ContextMenuFeature(
  * needs to be shown.
  */
 internal class ContextMenuObserver(
-    sessionManager: SessionManager,
+    private val sessionManager: SessionManager,
     private val feature: ContextMenuFeature
 ) : SelectionAwareSessionObserver(sessionManager) {
     override fun onLongPress(session: Session, hitResult: HitResult): Boolean {
         feature.onLongPress(session, hitResult)
         return false
+    }
+
+    fun start(sessionId: String?) {
+        val session = sessionId?.let { sessionManager.findSessionById(sessionId) }
+        session?.let { observeFixed(it) } ?: observeSelected()
     }
 }

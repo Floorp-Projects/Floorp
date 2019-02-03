@@ -18,6 +18,9 @@ permalink: /changelog/
 * **browser-engine-gecko-nightly**
   * Tweaked `NestedGeckoView` to "stick" to `AppBar` in nested scroll, like other Android apps. This is possible after a [fix](https://bugzilla.mozilla.org/show_bug.cgi?id=1515774) in APZ gesture detection.
 
+* **feature-contextmenu**
+  * Fixed Context Menus feature to work with Custom Tabs by passing in the session ID when applicable.
+
 * **feature-customtabs**
   * Added a temporary workaround for Custom Tab intents not being recognized when using the Jetifier tool.
 
@@ -39,7 +42,7 @@ permalink: /changelog/
    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
       when (requestCode) {
           REQUEST_CODE_DOWNLOAD_PERMISSIONS -> downloadsFeature.onPermissionsResult(permissions, grantResults)
-      }        
+      }
     }
   ```
 
@@ -62,7 +65,7 @@ permalink: /changelog/
    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
       when (requestCode) {
           REQUEST_CODE_DOWNLOAD_PERMISSIONS -> downloadsFeature.onPermissionsResult(permissions, grantResults)
-      }        
+      }
     }
   ```
 
