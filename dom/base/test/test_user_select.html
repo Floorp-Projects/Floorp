@@ -34,6 +34,7 @@ a { position:absolute; bottom: 0; right:0; }
 <div id="testB"><n><s>aaaa</s>aaa</n>bbbbbbbbccccccc</div>
 <div id="testC">aaaaaaabbbbbbbb<n>cc<s>c</s>cccc</n></div>
 <div id="testE">aaa<s id="testEc1">aaaa<a class="text">bbbb</a>dd<a>cccc</a>ddddddd</s>eeee</div>
+<div id="testI">aaa<span contenteditable="true" spellcheck="false">bbb</span><s>ccc</s>ddd</div>
 <div id="testF">aaaa
 <div class="non-selectable">x</div>
 <div class="non-selectable">x</div>
@@ -243,6 +244,13 @@ function test()
   checkRange(0, [0,1,-1,1], e);
   checkRange(1, [1,0,-1,2], e.children[0]);
   checkRange(2, [2,0,2,2], e);
+  doneTest(e);
+
+  clear();
+  e = document.getElementById('testI');
+  dragSelect(e, 200, 80);
+  checkText('bbd', e);
+  checkRangeCount(2, e);
   doneTest(e);
 
   // ======================================================

@@ -459,18 +459,21 @@ bool Selection::GetInterlinePosition(ErrorResult& aRv) {
   return mFrameSelection->GetHint() == CARET_ASSOCIATE_AFTER;
 }
 
-bool Selection::IsEditorSelection() const {
-  nsINode* focusNode = GetFocusNode();
-  if (!focusNode) {
+static bool IsEditorNode(const nsINode* aNode) {
+  if (!aNode) {
     return false;
   }
 
-  if (focusNode->IsEditable()) {
+  if (aNode->IsEditable()) {
     return true;
   }
 
-  auto* element = Element::FromNode(focusNode);
+  auto* element = Element::FromNode(aNode);
   return element && element->State().HasState(NS_EVENT_STATE_MOZ_READWRITE);
+}
+
+bool Selection::IsEditorSelection() const {
+  return IsEditorNode(GetFocusNode());
 }
 
 Nullable<int16_t> Selection::GetCaretBidiLevel(
@@ -913,16 +916,16 @@ nsresult Selection::SubtractRange(RangeData* aRange, nsRange* aSubtract,
 
 void Selection::UserSelectRangesToAdd(nsRange* aItem,
                                       nsTArray<RefPtr<nsRange>>& aRangesToAdd) {
-  aItem->ExcludeNonSelectableNodes(&aRangesToAdd);
-  if (aRangesToAdd.IsEmpty()) {
-    ErrorResult err;
-    nsINode* node = aItem->GetStartContainer(err);
-    if (node && node->IsContent() && node->AsContent()->GetEditingHost()) {
-      // A contenteditable node with user-select:none, for example.
-      // Allow it to have a collapsed selection (for the caret).
-      aItem->Collapse(GetDirection() == eDirPrevious);
-      aRangesToAdd.AppendElement(aItem);
-    }
+  // We cannot directly call IsEditorSelection() because we may be in an
+  // inconsistent state during Collapse() (we're cleared already but we haven't
+  // got a new focus node yet).
+  if (IsEditorNode(aItem->GetStartContainer()) &&
+      IsEditorNode(aItem->GetEndContainer())) {
+    // Don't mess with the selection ranges for editing, editor doesn't really
+    // deal well with multi-range selections.
+    aRangesToAdd.AppendElement(aItem);
+  } else {
+    aItem->ExcludeNonSelectableNodes(&aRangesToAdd);
   }
 }
 
