@@ -216,6 +216,7 @@ var tests = [
     [ 'bug1510942-2.html' , 'bug1510942-2-ref.html' ] ,
     [ 'bug1518339-1.html' , 'bug1518339-1-ref.html' ] ,
     [ 'bug1518339-2.html' , 'bug1518339-2-ref.html' ] ,
+    [ 'bug1524266-1.html' , 'bug1524266-1-ref.html' ] ,
     function() {SpecialPowers.pushPrefEnv({'clear': [['layout.accessiblecaret.enabled']]}, nextTest);} ,
 ];
 
@@ -327,6 +328,12 @@ if (navigator.platform.includes("Linux")) {
     // eDirNext, VK_RIGHT / LEFT
     [ 'multi-range-script-select.html#next1SR' , 'multi-range-script-select-ref.html#next1SR'  ] ,
     [ 'multi-range-script-select.html#next1SL' , 'multi-range-script-select-ref.html#next1SL'  ] ,
+
+    // Tries to select and delete non-selectable content in a user-select subtree.
+    [ 'bug1524266-2.html' , 'bug1524266-2-ref.html' ] ,
+    [ 'bug1524266-3.html' , 'bug1524266-2-ref.html' ] ,
+    // Tries to select and delete non-editable content in a user-select subtree.
+    [ 'bug1524266-4.html' , 'bug1524266-2-ref.html' ] ,
   ]);
 }
 
