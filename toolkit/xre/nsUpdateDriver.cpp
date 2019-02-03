@@ -636,8 +636,13 @@ static void ApplyUpdate(nsIFile *greDir, nsIFile *updateDir, nsIFile *appDir,
   // execv on Windows.
   if (restart) {
     exit(execv(updaterPath.get(), argv));
-  } else {
-    *outpid = PR_CreateProcess(updaterPath.get(), argv, nullptr, nullptr);
+  }
+  *outpid = fork();
+  if (*outpid == -1) {
+    delete[] argv;
+    return;
+  } else if (*outpid == 0) {
+    exit(execv(updaterPath.get(), argv));
   }
   delete[] argv;
 #elif defined(XP_WIN)
@@ -701,6 +706,25 @@ static bool ProcessHasTerminated(ProcessType pt) {
   return true;
 #elif defined(XP_MACOSX)
   // We're waiting for the process to terminate in LaunchChildMac.
+  return true;
+#elif defined(XP_UNIX)
+  int exitStatus;
+  pid_t exited = waitpid(pt, &exitStatus, WNOHANG);
+  if (exited == 0) {
+    // Process is still running.
+    sleep(1);
+    return false;
+  }
+  if (exited == -1) {
+    LOG(("Error while checking if the updater process is finished"));
+    // This shouldn't happen, but if it does, the updater process is lost to us,
+    // so the best we can do is pretend that it's exited.
+    return true;
+  }
+  // If we get here, the process has exited; make sure it exited normally.
+  if (WIFEXITED(exitStatus) && (WEXITSTATUS(exitStatus) != 0)) {
+    LOG(("Error while running the updater process, check update.log"));
+  }
   return true;
 #else
   // No way to have a non-blocking implementation on these platforms,
