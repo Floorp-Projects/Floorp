@@ -2092,15 +2092,9 @@ bool BaselineCodeGen<Handler>::emit_JSOP_OBJECT() {
 
 template <>
 bool BaselineCompilerCodeGen::emit_JSOP_CALLSITEOBJ() {
-  JSScript* script = handler.script();
-  jsbytecode* pc = handler.pc();
-  RootedObject cso(cx, script->getObject(pc));
-  RootedObject raw(cx, script->getObject(GET_UINT32_INDEX(pc) + 1));
-  if (!cso || !raw) {
-    return false;
-  }
-
-  if (!ProcessCallSiteObjOperation(cx, cso, raw)) {
+  RootedScript script(cx, handler.script());
+  JSObject* cso = ProcessCallSiteObjOperation(cx, script, handler.pc());
+  if (!cso) {
     return false;
   }
 
@@ -2108,9 +2102,27 @@ bool BaselineCompilerCodeGen::emit_JSOP_CALLSITEOBJ() {
   return true;
 }
 
+typedef ArrayObject* (*ProcessCallSiteObjFn)(JSContext*, HandleScript,
+                                             jsbytecode*);
+static const VMFunction ProcessCallSiteObjInfo =
+    FunctionInfo<ProcessCallSiteObjFn>(ProcessCallSiteObjOperation,
+                                       "ProcessCallSiteObjOperation");
+
 template <>
 bool BaselineInterpreterCodeGen::emit_JSOP_CALLSITEOBJ() {
-  MOZ_CRASH("NYI: interpreter JSOP_CALLSITEOBJ");
+  prepareVMCall();
+
+  pushBytecodePCArg();
+  pushScriptArg(R2.scratchReg());
+
+  if (!callVM(ProcessCallSiteObjInfo)) {
+    return false;
+  }
+
+  // Box and push return value.
+  masm.tagValue(JSVAL_TYPE_OBJECT, ReturnReg, R0);
+  frame.push(R0);
+  return true;
 }
 
 typedef JSObject* (*CloneRegExpObjectFn)(JSContext*, Handle<RegExpObject*>);
