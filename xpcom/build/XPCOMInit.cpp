@@ -443,7 +443,7 @@ NS_InitXPCOM2(nsIServiceManager** aResult, nsIFile* aBinDirectory,
   // Initialize the JS engine.
   const char* jsInitFailureReason = JS_InitWithFailureDiagnostic();
   if (jsInitFailureReason) {
-    MOZ_CRASH_UNSAFE_OOL(jsInitFailureReason);
+    MOZ_CRASH_UNSAFE(jsInitFailureReason);
   }
   sInitializedJS = true;
 

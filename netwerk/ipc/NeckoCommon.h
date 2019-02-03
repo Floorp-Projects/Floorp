@@ -38,7 +38,7 @@ class TabChild;
       msg.AppendLiteral(                                        \
           " (set NECKO_ERRORS_ARE_FATAL=0 in your environment " \
           "to convert this error into a warning.)");            \
-      MOZ_CRASH_UNSAFE_OOL(msg.get());                          \
+      MOZ_CRASH_UNSAFE(msg.get());                              \
     } else {                                                    \
       msg.AppendLiteral(                                        \
           " (set NECKO_ERRORS_ARE_FATAL=1 in your environment " \
