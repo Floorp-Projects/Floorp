@@ -5,14 +5,14 @@
 #define UNUSED_ERROR(x) ER3(SSL_ERROR_UNUSED_##x, (SSL_ERROR_BASE + x), \
                             "Unrecognized SSL error_code.")
 
-/* SSL-specific security error codes  */
+/* SSL-specific security error codes */
 /* caller must include "sslerr.h" */
 
 ER3(SSL_ERROR_EXPORT_ONLY_SERVER, SSL_ERROR_BASE + 0,
-    "Unable to communicate securely.  Peer does not support high-grade encryption.")
+    "Unable to communicate securely. Peer does not support high-grade encryption.")
 
 ER3(SSL_ERROR_US_ONLY_SERVER, SSL_ERROR_BASE + 1,
-    "Unable to communicate securely.  Peer requires high-grade encryption which is not supported.")
+    "Unable to communicate securely. Peer requires high-grade encryption which is not supported.")
 
 ER3(SSL_ERROR_NO_CYPHER_OVERLAP, SSL_ERROR_BASE + 2,
     "Cannot communicate securely with peer: no common encryption algorithm(s).")
@@ -197,7 +197,7 @@ ER3(SSL_ERROR_RX_UNKNOWN_ALERT, (SSL_ERROR_BASE + 57),
     "SSL received an alert record with an unknown alert description.")
 
 /*
- * Received an alert reporting what we did wrong.  (more alerts above)
+ * Received an alert reporting what we did wrong. (more alerts above)
  */
 ER3(SSL_ERROR_CLOSE_NOTIFY_ALERT, (SSL_ERROR_BASE + 58),
     "SSL peer has closed this connection.")

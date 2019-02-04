@@ -29,6 +29,10 @@
             [ 'OS=="linux"', {
               'dependencies': [
                 'lib/freebl/freebl.gyp:freeblpriv3',
+              ],
+            }],
+            [ 'OS=="linux" and mozilla_client==0', {
+              'dependencies': [
                 'lib/sysinit/sysinit.gyp:nsssysinit',
               ],
             }],
@@ -68,7 +72,7 @@
             'lib/util/util.gyp:nssutil',
           ],
           'conditions': [
-            [ 'OS=="linux"', {
+            [ 'OS=="linux" and mozilla_client==0', {
               'dependencies': [
                 'lib/sysinit/sysinit.gyp:nsssysinit_static',
               ],
@@ -199,6 +203,10 @@
             [ 'OS=="linux"', {
               'dependencies': [
                 'cmd/lowhashtest/lowhashtest.gyp:lowhashtest',
+              ],
+            }],
+            [ 'OS=="linux" and mozilla_client==0', {
+              'dependencies': [
                 'gtests/sysinit_gtest/sysinit_gtest.gyp:sysinit_gtest',
               ],
             }],
