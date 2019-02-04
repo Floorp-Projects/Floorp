@@ -8,33 +8,6 @@
 
 #include "mozilla/SchedulerGroup.h"
 
-bool nsILabelableRunnable::IsReadyToRun() {
-  SchedulerGroupSet groups;
-  if (!GetAffectedSchedulerGroups(groups)) {
-    // it can not be labeled right now.
-    return false;
-  }
-
-  if (groups.mSingle) {
-    MOZ_ASSERT(groups.mMulti.isNothing());
-    return !groups.mSingle->IsRunning();
-  }
-
-  if (groups.mMulti.isSome()) {
-    MOZ_ASSERT(!groups.mSingle);
-    for (auto iter = groups.mMulti.ref().ConstIter(); !iter.Done();
-         iter.Next()) {
-      if (iter.Get()->GetKey()->IsRunning()) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  // No affected groups if we are here. Then, it's ready to run.
-  return true;
-}
-
 void nsILabelableRunnable::SchedulerGroupSet::Put(
     mozilla::SchedulerGroup* aGroup) {
   if (mSingle) {
