@@ -42,7 +42,7 @@ open class GleanInternalAPI {
 
     // `internal` so this can be modified for testing
     internal var initialized = false
-    private var metricsEnabled = true
+    private var uploadEnabled = true
 
     // The application id detected by glean to be used as part of the submission
     // endpoint.
@@ -98,24 +98,25 @@ open class GleanInternalAPI {
     }
 
     /**
-     * Enable or disable metric collection.
+     * Enable or disable glean collection and upload.
      *
      * Metric collection is enabled by default.
      *
-     * When disabled, metrics aren't recorded at all.
+     * When disabled, metrics aren't recorded at all and no data
+     * is uploaded.
      *
      * @param enabled When true, enable metric collection.
      */
-    fun setMetricsEnabled(enabled: Boolean) {
+    fun setUploadEnabled(enabled: Boolean) {
         logger.info("Metrics enabled: $enabled")
-        metricsEnabled = enabled
+        uploadEnabled = enabled
     }
 
     /**
-     * Get the status of metrics enabled.
+     * Get whether or not glean is allowed to record and upload data.
      */
-    fun getMetricsEnabled(): Boolean {
-        return metricsEnabled
+    fun getUploadEnabled(): Boolean {
+        return uploadEnabled
     }
 
     /**
@@ -158,7 +159,7 @@ open class GleanInternalAPI {
     /**
      * Collect and assemble the ping. Asynchronously submits the assembled
      * payload to the designated server using [httpPingUploader] but only
-     * if metrics are enabled, and there is ping data to send.
+     * if upload is enabled, and there is ping data to send.
      */
     internal fun sendPing(store: String, docType: String) {
         if (!isInitialized()) {
@@ -166,8 +167,8 @@ open class GleanInternalAPI {
             return
         }
 
-        // Do not send ping if metrics disabled
-        if (!getMetricsEnabled()) {
+        // Do not send ping if upload is disabled
+        if (!getUploadEnabled()) {
             logger.debug("Attempt to send ping \"$store\" but metrics disabled, aborting send.")
             return
         }

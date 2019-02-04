@@ -47,7 +47,7 @@ interface CommonMetricData {
         }
 
         // Silently drop if metrics are turned off globally or locally
-        if (!Glean.getMetricsEnabled() || disabled) {
+        if (!Glean.getUploadEnabled() || disabled) {
             return false
         }
 

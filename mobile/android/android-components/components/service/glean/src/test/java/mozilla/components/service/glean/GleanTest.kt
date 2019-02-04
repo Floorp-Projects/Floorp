@@ -54,7 +54,7 @@ class GleanTest {
 
     @After
     fun resetGlobalState() {
-        Glean.setMetricsEnabled(true)
+        Glean.setUploadEnabled(true)
         Glean.clearExperiments()
     }
 
@@ -68,8 +68,8 @@ class GleanTest {
                 sendInPings = listOf("store1")
         )
         StringsStorageEngine.clearAllStores()
-        Glean.setMetricsEnabled(false)
-        assertEquals(false, Glean.getMetricsEnabled())
+        Glean.setUploadEnabled(false)
+        assertEquals(false, Glean.getUploadEnabled())
         stringMetric.set("foo")
         assertNull(
                 "Metrics should not be recorded if glean is disabled",
@@ -88,17 +88,17 @@ class GleanTest {
                 objects = listOf("buttonA")
         )
         EventsStorageEngine.clearAllStores()
-        Glean.setMetricsEnabled(true)
-        assertEquals(true, Glean.getMetricsEnabled())
+        Glean.setUploadEnabled(true)
+        assertEquals(true, Glean.getUploadEnabled())
         eventMetric.record("buttonA", "event1")
         val snapshot1 = EventsStorageEngine.getSnapshot(storeName = "store1", clearStore = false)
         assertEquals(1, snapshot1!!.size)
-        Glean.setMetricsEnabled(false)
-        assertEquals(false, Glean.getMetricsEnabled())
+        Glean.setUploadEnabled(false)
+        assertEquals(false, Glean.getUploadEnabled())
         eventMetric.record("buttonA", "event2")
         val snapshot2 = EventsStorageEngine.getSnapshot(storeName = "store1", clearStore = false)
         assertEquals(1, snapshot2!!.size)
-        Glean.setMetricsEnabled(true)
+        Glean.setUploadEnabled(true)
         eventMetric.record("buttonA", "event3")
         val snapshot3 = EventsStorageEngine.getSnapshot(storeName = "store1", clearStore = false)
         assertEquals(2, snapshot3!!.size)
@@ -376,7 +376,7 @@ class GleanTest {
         resetGlean(config = Glean.configuration.copy(
             serverEndpoint = "http://" + server.hostName + ":" + server.port
         ))
-        Glean.setMetricsEnabled(false)
+        Glean.setUploadEnabled(false)
 
         try {
             Glean.handleEvent(Glean.PingEvent.Background)
