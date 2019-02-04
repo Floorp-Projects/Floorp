@@ -330,20 +330,13 @@ function loadPrefs() {
   document.body.className = "config-background";
   [...document.styleSheets].find(s => s.title == "infop").disabled = true;
 
+  let { content } = document.getElementById("main");
   document.body.textContent = "";
-  let searchContainer = document.createElement("div");
-  searchContainer.id = "search-container";
-  let search = document.createElement("input");
-  search.type = "text";
-  search.id = "search";
-  document.l10n.setAttributes(search, "about-config-search");
-  searchContainer.appendChild(search);
-  document.body.appendChild(searchContainer);
-  search.focus();
+  document.body.appendChild(content);
 
-  let prefs = document.createElement("table");
-  prefs.id = "prefs";
-  document.body.appendChild(prefs);
+  let search = document.getElementById("search");
+  let prefs = document.getElementById("prefs");
+  search.focus();
 
   for (let name of Services.prefs.getChildList("")) {
     new PrefRow(name);
