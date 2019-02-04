@@ -254,6 +254,13 @@
   background-color: var(--input-background-color);
 }
 
+/* Styles for disabled input fields */
+.font-value-input[disabled],
+.font-value-select[disabled],
+.font-value-slider[disabled] {
+  opacity: 0.5;
+}
+
 /* Do not use browser "invalid" state */
 .font-value-slider:-moz-ui-invalid,
 .font-value-input:-moz-ui-invalid {
