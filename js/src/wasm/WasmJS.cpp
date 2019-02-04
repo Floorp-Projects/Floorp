@@ -111,7 +111,7 @@ bool wasm::HasOptimizedCompilerTier(JSContext* cx) {
 #ifdef ENABLE_WASM_CRANELIFT
          || (cx->options().wasmCranelift() && CraneliftCanCompile())
 #endif
-  ;
+      ;
 }
 
 // Return whether wasm compilation is allowed by prefs.  This check
@@ -417,7 +417,8 @@ bool wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code,
     return false;
   }
 
-  SharedCompileArgs compileArgs = CompileArgs::build(cx, std::move(scriptedCaller));
+  SharedCompileArgs compileArgs =
+      CompileArgs::build(cx, std::move(scriptedCaller));
   if (!compileArgs) {
     return false;
   }

@@ -376,9 +376,9 @@ class Zone : public JS::shadow::Zone,
   CompartmentVector& compartments() { return compartments_.ref(); }
 
   // This zone's gray roots.
-  using GrayRootVector = mozilla::SegmentedVector<js::gc::Cell*,
-                                                  1024 * sizeof(js::gc::Cell*),
-                                                  js::SystemAllocPolicy>;
+  using GrayRootVector =
+      mozilla::SegmentedVector<js::gc::Cell*, 1024 * sizeof(js::gc::Cell*),
+                               js::SystemAllocPolicy>;
 
  private:
   js::ZoneOrGCTaskData<GrayRootVector> gcGrayRoots_;

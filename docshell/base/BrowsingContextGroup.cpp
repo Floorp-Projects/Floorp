@@ -11,7 +11,8 @@
 namespace mozilla {
 namespace dom {
 
-StaticAutoPtr<nsTArray<RefPtr<BrowsingContextGroup>>> BrowsingContextGroup::sAllGroups;
+StaticAutoPtr<nsTArray<RefPtr<BrowsingContextGroup>>>
+    BrowsingContextGroup::sAllGroups;
 
 /* static */ void BrowsingContextGroup::Init() {
   if (!sAllGroups) {

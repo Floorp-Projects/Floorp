@@ -1411,7 +1411,7 @@ bool BufferGetterImpl(JSContext* cx, const CallArgs& args) {
 // ES2019 draft rev fc9ecdcd74294d0ca3146d4b274e2a8e79565dc3
 // 22.2.3.32 get %TypedArray%.prototype [ @@toStringTag ]
 static bool TypedArray_toStringTagGetter(JSContext* cx, unsigned argc,
-    Value* vp) {
+                                         Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   // Steps 1-2.

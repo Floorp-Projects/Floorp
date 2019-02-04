@@ -14,7 +14,6 @@
 #include "base/logging.h"
 #include "mozilla/RandomNum.h"
 
-
 namespace base {
 
 int RandInt(int min, int max) {

@@ -137,17 +137,15 @@ static void SetupABIArguments(MacroAssembler& masm, const FuncExport& fe,
           case MIRType::Double: {
             ScratchDoubleScope fpscratch(masm);
             masm.loadDouble(src, fpscratch);
-            masm.storeDouble(
-                fpscratch,
-                Address(masm.getStackPointer(), iter->offsetFromArgBase()));
+            masm.storeDouble(fpscratch, Address(masm.getStackPointer(),
+                                                iter->offsetFromArgBase()));
             break;
           }
           case MIRType::Float32: {
             ScratchFloat32Scope fpscratch(masm);
             masm.loadFloat32(src, fpscratch);
-            masm.storeFloat32(
-                fpscratch,
-                Address(masm.getStackPointer(), iter->offsetFromArgBase()));
+            masm.storeFloat32(fpscratch, Address(masm.getStackPointer(),
+                                                 iter->offsetFromArgBase()));
             break;
           }
           default:

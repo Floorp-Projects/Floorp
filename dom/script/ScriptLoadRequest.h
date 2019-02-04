@@ -255,10 +255,10 @@ class ScriptLoadRequest
                                    // mNonAsyncExternalScriptInsertedRequests
   bool mIsXSLT;                    // True if we live in mXSLTRequests.
   bool mIsCanceled;                // True if we have been explicitly canceled.
-  bool mWasCompiledOMT;    // True if the script has been compiled off main
-                           // thread.
-  bool mIsTracking;        // True if the script comes from a source on our
-                           // tracking protection list.
+  bool mWasCompiledOMT;  // True if the script has been compiled off main
+                         // thread.
+  bool mIsTracking;      // True if the script comes from a source on our
+                         // tracking protection list.
 
   RefPtr<ScriptFetchOptions> mFetchOptions;
 

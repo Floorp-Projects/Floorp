@@ -54,7 +54,7 @@ class StructuredCloneBlob final : public nsIMemoryReporter {
   explicit StructuredCloneBlob();
 
   class Holder : public StructuredCloneHolder {
-  public:
+   public:
     using StructuredCloneHolder::StructuredCloneHolder;
 
     bool ReadStructuredCloneInternal(JSContext* aCx,

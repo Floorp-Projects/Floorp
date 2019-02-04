@@ -66,7 +66,8 @@ using mozilla::IsWin8OrLater;
 using namespace mozilla;
 using namespace mozilla::widget;
 
-NS_IMPL_ISUPPORTS(nsWindowsShellService, nsIToolkitShellService, nsIShellService)
+NS_IMPL_ISUPPORTS(nsWindowsShellService, nsIToolkitShellService,
+                  nsIShellService)
 
 static nsresult OpenKeyForReading(HKEY aKeyRoot, const nsAString& aKeyName,
                                   HKEY* aKey) {

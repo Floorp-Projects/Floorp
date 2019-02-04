@@ -4011,8 +4011,7 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
 
 bool wasm::IonCompileFunctions(const ModuleEnvironment& env, LifoAlloc& lifo,
                                const FuncCompileInputVector& inputs,
-                               CompiledCode* code,
-                               UniqueChars* error) {
+                               CompiledCode* code, UniqueChars* error) {
   MOZ_ASSERT(env.tier() == Tier::Optimized);
   MOZ_ASSERT(env.optimizedBackend() == OptimizedBackend::Ion);
 

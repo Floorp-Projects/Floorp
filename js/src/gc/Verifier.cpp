@@ -782,9 +782,9 @@ bool js::gc::CheckWeakMapEntryMarking(const WeakMapBase* map, Cell* key,
       map->markColor == MarkColor::Black ? CellColor::Black : CellColor::Gray;
   if (object && GetCellColor(object) != mapColor) {
     fprintf(stderr, "WeakMap object is marked differently to the map\n");
-    fprintf(stderr, "(map %p is %s, object %p is %s)\n",
-            map, CellColorName(mapColor),
-            object, CellColorName(GetCellColor(object)));
+    fprintf(stderr, "(map %p is %s, object %p is %s)\n", map,
+            CellColorName(mapColor), object,
+            CellColorName(GetCellColor(object)));
     ok = false;
   }
 

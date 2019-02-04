@@ -33,8 +33,7 @@ bool IonCanCompile();
 MOZ_MUST_USE bool IonCompileFunctions(const ModuleEnvironment& env,
                                       LifoAlloc& lifo,
                                       const FuncCompileInputVector& inputs,
-                                      CompiledCode* code,
-                                      UniqueChars* error);
+                                      CompiledCode* code, UniqueChars* error);
 
 }  // namespace wasm
 }  // namespace js
