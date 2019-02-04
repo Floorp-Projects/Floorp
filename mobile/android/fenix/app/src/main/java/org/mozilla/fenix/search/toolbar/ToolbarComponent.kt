@@ -5,8 +5,6 @@
 package org.mozilla.fenix.search.toolbar
 
 import android.view.ViewGroup
-import kotlinx.android.synthetic.main.fragment_browser.*
-import mozilla.components.browser.toolbar.BrowserToolbar
 import org.mozilla.fenix.mvi.Action
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.Change
@@ -41,6 +39,7 @@ data class SearchState(val query: String, val isEditing: Boolean) : ViewState
 sealed class SearchAction : Action {
     data class UrlCommitted(val url: String) : SearchAction()
     data class TextChanged(val query: String) : SearchAction()
+    object ToolbarTapped : SearchAction()
 }
 
 sealed class SearchChange : Change {

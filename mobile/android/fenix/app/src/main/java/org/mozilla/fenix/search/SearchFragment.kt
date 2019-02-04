@@ -33,7 +33,11 @@ class SearchFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_search, container, false)
-        toolbarComponent = ToolbarComponent(view.toolbar_wrapper, ActionBusFactory.get(this), SearchState("", isEditing = true))
+        toolbarComponent = ToolbarComponent(
+            view.toolbar_wrapper,
+            ActionBusFactory.get(this),
+            SearchState("", isEditing = true)
+        )
         awesomeBarComponent = AwesomeBarComponent(view.search_layout, ActionBusFactory.get(this))
         ActionBusFactory.get(this).logMergedObservables()
         return view

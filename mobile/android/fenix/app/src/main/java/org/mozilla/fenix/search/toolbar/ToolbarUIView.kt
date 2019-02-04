@@ -36,8 +36,11 @@ class ToolbarUIView(
 
     init {
         view.apply {
-            onUrlClicked = { false }
             setOnUrlCommitListener { actionEmitter.onNext(SearchAction.UrlCommitted(it)) }
+            onUrlClicked = {
+                actionEmitter.onNext(SearchAction.ToolbarTapped)
+                false
+            }
 
             browserActionMargin = resources.pxToDp(browserActionMarginDp)
             urlBoxView = urlBackground

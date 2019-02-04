@@ -9,14 +9,18 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.transition.TransitionInflater
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.accessibility.AccessibilityManager
 import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.navigation.Navigation
-import kotlinx.android.synthetic.main.fragment_browser.*
+import kotlinx.android.synthetic.main.component_search.*
+import kotlinx.android.synthetic.main.fragment_browser.view.*
+import mozilla.components.browser.toolbar.behavior.BrowserToolbarBottomBehavior
 import mozilla.components.feature.contextmenu.ContextMenuCandidate
 import mozilla.components.feature.contextmenu.ContextMenuFeature
 import mozilla.components.feature.downloads.DownloadsFeature
@@ -24,11 +28,16 @@ import mozilla.components.feature.session.SessionFeature
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.support.ktx.android.arch.lifecycle.addObservers
 import org.mozilla.fenix.R
-import org.mozilla.fenix.components.toolbar.ToolbarIntegration
 import org.mozilla.fenix.ext.requireComponents
 import mozilla.components.feature.prompts.PromptFeature
 import org.mozilla.fenix.BackHandler
 import org.mozilla.fenix.components.FindInPageIntegration
+import org.mozilla.fenix.mvi.ActionBusFactory
+import org.mozilla.fenix.mvi.getSafeManagedObservable
+import org.mozilla.fenix.search.toolbar.SearchAction
+import org.mozilla.fenix.search.toolbar.SearchState
+import org.mozilla.fenix.search.toolbar.ToolbarComponent
+import org.mozilla.fenix.search.toolbar.ToolbarUIView
 
 class BrowserFragment : Fragment(), BackHandler {
 
@@ -37,13 +46,38 @@ class BrowserFragment : Fragment(), BackHandler {
     private lateinit var findInPageIntegration: FindInPageIntegration
     private lateinit var promptsFeature: PromptFeature
     private lateinit var sessionFeature: SessionFeature
+    private lateinit var toolbarComponent: ToolbarComponent
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.fragment_browser, container, false)
+        val view = inflater.inflate(R.layout.fragment_browser, container, false)
+        toolbarComponent = ToolbarComponent(
+            view.browserLayout,
+            ActionBusFactory.get(this),
+            SearchState("", isEditing = false)
+        )
+
+        toolbarComponent.uiView.view.apply {
+            setBackgroundColor(ContextCompat.getColor(view.context, R.color.offwhite))
+
+            (layoutParams as CoordinatorLayout.LayoutParams).apply {
+                // Stop toolbar from collapsing if TalkBack is enabled
+                val accessibilityManager = context
+                    ?.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
+
+                if (!accessibilityManager.isEnabled) {
+                    behavior = BrowserToolbarBottomBehavior(view.context, null)
+                }
+
+                gravity = Gravity.BOTTOM
+                height = (resources.displayMetrics.density * TOOLBAR_HEIGHT).toInt()
+            }
+        }
+
+        return view
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -87,23 +121,10 @@ class BrowserFragment : Fragment(), BackHandler {
         sessionFeature = SessionFeature(
             sessionManager,
             SessionUseCases(sessionManager),
-            engineView
+            view.engineView
         )
 
-        findInPageIntegration = FindInPageIntegration(requireComponents.core.sessionManager, findInPageView)
-        val toolbarIntegration = ToolbarIntegration(
-            requireContext(),
-            toolbar,
-            requireComponents.toolbar.shippedDomainsProvider,
-            requireComponents.core.historyStorage
-        )
-
-        // Stop toolbar from collapsing if TalkBack is enabled
-        val accessibilityManager = context?.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
-        if (accessibilityManager.isEnabled) {
-            val layoutParams = toolbar.layoutParams as CoordinatorLayout.LayoutParams
-            layoutParams.behavior = null
-        }
+        findInPageIntegration = FindInPageIntegration(requireComponents.core.sessionManager, view.findInPageView)
 
         lifecycle.addObservers(
             contextMenuFeature,
@@ -111,13 +132,15 @@ class BrowserFragment : Fragment(), BackHandler {
             findInPageIntegration,
             promptsFeature,
             sessionFeature,
-            toolbarIntegration
+            (toolbarComponent.uiView as ToolbarUIView).toolbarIntegration
         )
 
-        toolbar.onUrlClicked = {
-            Navigation.findNavController(toolbar).navigate(R.id.action_browserFragment_to_searchFragment, null, null)
-            false
-        }
+        getSafeManagedObservable<SearchAction>()
+            .subscribe {
+                if (it is SearchAction.ToolbarTapped) {
+                    navigateToSearch()
+                }
+            }
     }
 
     override fun onDestroyView() {
@@ -146,8 +169,14 @@ class BrowserFragment : Fragment(), BackHandler {
         promptsFeature.onActivityResult(requestCode, resultCode, data)
     }
 
+    private fun navigateToSearch() {
+        Navigation.findNavController(toolbar)
+            .navigate(R.id.action_browserFragment_to_searchFragment, null, null)
+    }
+
     companion object {
         private const val REQUEST_CODE_DOWNLOAD_PERMISSIONS = 1
         private const val REQUEST_CODE_PROMPT_PERMISSIONS = 2
+        private const val TOOLBAR_HEIGHT = 56f
     }
 }
