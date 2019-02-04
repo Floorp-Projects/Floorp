@@ -307,5 +307,5 @@ SchedulerGroup::Runnable::GetPriority(uint32_t* aPriority) {
 }
 
 NS_IMPL_ISUPPORTS_INHERITED(SchedulerGroup::Runnable, mozilla::Runnable,
-                            nsIRunnablePriority, nsILabelableRunnable,
+                            nsIRunnablePriority,
                             SchedulerGroup::Runnable)
