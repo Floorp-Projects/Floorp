@@ -405,11 +405,11 @@ class nsTextFrame : public nsFrame {
     mozilla::SVGContextPaint* contextPaint = nullptr;
     DrawPathCallbacks* callbacks = nullptr;
     enum {
-      PaintText,         // Normal text painting.
-      GenerateTextMask   // To generate a mask from a text frame. Should
-                         // only paint text itself with opaque color.
-                         // Text shadow, text selection color and text
-                         // decoration are all discarded in this state.
+      PaintText,        // Normal text painting.
+      GenerateTextMask  // To generate a mask from a text frame. Should
+                        // only paint text itself with opaque color.
+                        // Text shadow, text selection color and text
+                        // decoration are all discarded in this state.
     };
     uint8_t state = PaintText;
     explicit PaintTextParams(gfxContext* aContext) : context(aContext) {}

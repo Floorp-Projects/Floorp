@@ -19,8 +19,8 @@ static bool sBuildingCommandLine = false;
 void AddToCommandLine(const char* inArgText) {
   if (sArgsUsed >= sArgsAllocated - 1) {
     // realloc does not free the given pointer if allocation fails
-    char** temp = static_cast<char**>(
-        realloc(sArgs, (sArgsAllocated + kArgsGrowSize) * sizeof(char*)));
+    char** temp =
+        static_cast<char**>(realloc(sArgs, (sArgsAllocated + kArgsGrowSize) * sizeof(char*)));
     if (!temp) return;
     sArgs = temp;
     sArgsAllocated += kArgsGrowSize;

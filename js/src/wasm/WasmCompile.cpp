@@ -73,9 +73,8 @@ uint32_t wasm::ObservedCPUFeatures() {
 #endif
 }
 
-SharedCompileArgs
-CompileArgs::build(JSContext* cx, ScriptedCaller&& scriptedCaller)
-{
+SharedCompileArgs CompileArgs::build(JSContext* cx,
+                                     ScriptedCaller&& scriptedCaller) {
   bool baseline = BaselineCanCompile() && cx->options().wasmBaseline();
   bool ion = IonCanCompile() && cx->options().wasmIon();
 #ifdef ENABLE_WASM_CRANELIFT
@@ -96,8 +95,10 @@ CompileArgs::build(JSContext* cx, ScriptedCaller&& scriptedCaller)
   // is open.
   bool debug = cx->realm()->debuggerObservesAsmJS();
 
-  bool sharedMemory = cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled();
-  bool forceTiering = cx->options().testWasmAwaitTier2() || JitOptions.wasmDelayTier2;
+  bool sharedMemory =
+      cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled();
+  bool forceTiering =
+      cx->options().testWasmAwaitTier2() || JitOptions.wasmDelayTier2;
 
   if (debug || gc) {
     if (!baseline) {
@@ -479,7 +480,8 @@ void CompilerEnvironment::computeParameters(Decoder& d, bool gcFeatureOptIn) {
     tier_ = hasSecondTier ? Tier::Optimized : Tier::Baseline;
   }
 
-  optimizedBackend_ = craneliftEnabled ? OptimizedBackend::Cranelift : OptimizedBackend::Ion;
+  optimizedBackend_ =
+      craneliftEnabled ? OptimizedBackend::Cranelift : OptimizedBackend::Ion;
 
   debug_ = debugEnabled ? DebugEnabled::True : DebugEnabled::False;
   gcTypes_ = gcEnabled;
@@ -582,8 +584,9 @@ void wasm::CompileTier2(const CompileArgs& args, const Bytes& bytecode,
   Decoder d(bytecode, 0, &error);
 
   bool gcTypesConfigured = false;  // No optimized backend support yet
-  OptimizedBackend optimizedBackend =
-      args.craneliftEnabled ? OptimizedBackend::Cranelift : OptimizedBackend::Ion;
+  OptimizedBackend optimizedBackend = args.craneliftEnabled
+                                          ? OptimizedBackend::Cranelift
+                                          : OptimizedBackend::Ion;
 
   CompilerEnvironment compilerEnv(CompileMode::Tier2, Tier::Optimized,
                                   optimizedBackend, DebugEnabled::False,

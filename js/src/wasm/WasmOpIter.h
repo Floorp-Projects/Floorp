@@ -1913,7 +1913,8 @@ inline bool OpIter<Policy>::readMemOrTableCopy(bool isMem,
 }
 
 template <typename Policy>
-inline bool OpIter<Policy>::readDataOrElemDrop(bool isData, uint32_t* segIndex) {
+inline bool OpIter<Policy>::readDataOrElemDrop(bool isData,
+                                               uint32_t* segIndex) {
   MOZ_ASSERT(Classify(op_) == OpKind::DataOrElemDrop);
 
   if (isData) {

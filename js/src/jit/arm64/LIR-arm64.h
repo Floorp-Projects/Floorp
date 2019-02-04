@@ -209,8 +209,9 @@ class LUDiv : public LBinaryMath<1> {
  public:
   LIR_HEADER(UDiv);
 
-  LUDiv(const LAllocation& lhs, const LAllocation& rhs, const LDefinition& remainder)
-    : LBinaryMath(classOpcode) {
+  LUDiv(const LAllocation& lhs, const LAllocation& rhs,
+        const LDefinition& remainder)
+      : LBinaryMath(classOpcode) {
     setOperand(0, lhs);
     setOperand(1, rhs);
     setTemp(0, remainder);

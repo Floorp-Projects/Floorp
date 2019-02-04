@@ -54,7 +54,7 @@
 
 // dynamic_cast<void*> is not supported on Windows without RTTI.
 #ifndef _WIN32
-#define HAVE_CPP_DYNAMIC_CAST_TO_VOID_PTR
+#  define HAVE_CPP_DYNAMIC_CAST_TO_VOID_PTR
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////

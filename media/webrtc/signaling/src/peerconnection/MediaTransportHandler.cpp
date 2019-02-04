@@ -84,8 +84,8 @@ class MediaTransportHandlerSTS : public MediaTransportHandler,
       const std::string& aLocalPwd, size_t aComponentCount,
       const std::string& aUfrag, const std::string& aPassword,
       const nsTArray<uint8_t>& aKeyDer, const nsTArray<uint8_t>& aCertDer,
-      SSLKEAType aAuthType, bool aDtlsClient,
-      const DtlsDigestList& aDigests, bool aPrivacyRequested) override;
+      SSLKEAType aAuthType, bool aDtlsClient, const DtlsDigestList& aDigests,
+      bool aPrivacyRequested) override;
 
   void RemoveTransportsExcept(
       const std::set<std::string>& aTransportIds) override;
@@ -109,10 +109,12 @@ class MediaTransportHandlerSTS : public MediaTransportHandler,
       std::unique_ptr<dom::RTCStatsReportInternal>&& aReport) override;
 
  private:
-  RefPtr<TransportFlow> CreateTransportFlow(
-      const std::string& aTransportId, bool aIsRtcp,
-      RefPtr<DtlsIdentity> aDtlsIdentity, bool aDtlsClient,
-      const DtlsDigestList& aDigests, bool aPrivacyRequested);
+  RefPtr<TransportFlow> CreateTransportFlow(const std::string& aTransportId,
+                                            bool aIsRtcp,
+                                            RefPtr<DtlsIdentity> aDtlsIdentity,
+                                            bool aDtlsClient,
+                                            const DtlsDigestList& aDigests,
+                                            bool aPrivacyRequested);
 
   struct Transport {
     RefPtr<TransportFlow> mFlow;
@@ -416,8 +418,8 @@ void MediaTransportHandlerSTS::ActivateTransport(
     const std::string& aLocalPwd, size_t aComponentCount,
     const std::string& aUfrag, const std::string& aPassword,
     const nsTArray<uint8_t>& aKeyDer, const nsTArray<uint8_t>& aCertDer,
-    SSLKEAType aAuthType, bool aDtlsClient,
-    const DtlsDigestList& aDigests, bool aPrivacyRequested) {
+    SSLKEAType aAuthType, bool aDtlsClient, const DtlsDigestList& aDigests,
+    bool aPrivacyRequested) {
   MOZ_ASSERT(aComponentCount);
   RefPtr<DtlsIdentity> dtlsIdentity(
       DtlsIdentity::Deserialize(aKeyDer, aCertDer, aAuthType));

@@ -81,9 +81,7 @@ class MOZ_STACK_CLASS LexicalScopeEmitter {
   explicit LexicalScopeEmitter(BytecodeEmitter* bce);
 
   // Returns the scope object for non-empty scope.
-  const EmitterScope& emitterScope() const {
-    return *emitterScope_;
-  }
+  const EmitterScope& emitterScope() const { return *emitterScope_; }
 
   MOZ_MUST_USE bool emitScope(ScopeKind kind,
                               JS::Handle<LexicalScope::Data*> bindings);

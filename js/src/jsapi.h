@@ -1761,7 +1761,8 @@ extern JS_PUBLIC_API bool JS_Enumerate(JSContext* cx, JS::HandleObject obj,
  * `src` object (which must not be null) to `target` (which also must not be
  * null).
  */
-extern JS_PUBLIC_API bool JS_AssignObject(JSContext* cx, JS::HandleObject target,
+extern JS_PUBLIC_API bool JS_AssignObject(JSContext* cx,
+                                          JS::HandleObject target,
                                           JS::HandleObject src);
 
 /*

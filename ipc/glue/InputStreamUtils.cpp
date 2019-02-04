@@ -147,9 +147,10 @@ void InputStreamHelper::SerializeInputStream(
                                aDelayedStart, aManager);
 }
 
-void InputStreamHelper::SerializeInputStreamAsPipe(
-    nsIInputStream* aInputStream, InputStreamParams& aParams,
-    bool aDelayedStart, nsIContentChild* aManager) {
+void InputStreamHelper::SerializeInputStreamAsPipe(nsIInputStream* aInputStream,
+                                                   InputStreamParams& aParams,
+                                                   bool aDelayedStart,
+                                                   nsIContentChild* aManager) {
   SerializeInputStreamAsPipeInternal(aInputStream, aParams, aDelayedStart,
                                      aManager);
 }
@@ -162,9 +163,10 @@ void InputStreamHelper::SerializeInputStreamAsPipe(nsIInputStream* aInputStream,
                                      aManager);
 }
 
-void InputStreamHelper::SerializeInputStreamAsPipe(
-    nsIInputStream* aInputStream, InputStreamParams& aParams,
-    bool aDelayedStart, nsIContentParent* aManager) {
+void InputStreamHelper::SerializeInputStreamAsPipe(nsIInputStream* aInputStream,
+                                                   InputStreamParams& aParams,
+                                                   bool aDelayedStart,
+                                                   nsIContentParent* aManager) {
   SerializeInputStreamAsPipeInternal(aInputStream, aParams, aDelayedStart,
                                      aManager);
 }

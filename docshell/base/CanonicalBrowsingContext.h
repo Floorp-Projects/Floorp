@@ -64,8 +64,8 @@ class CanonicalBrowsingContext final : public BrowsingContext {
 
   using Type = BrowsingContext::Type;
   CanonicalBrowsingContext(BrowsingContext* aParent, BrowsingContext* aOpener,
-                          const nsAString& aName, uint64_t aBrowsingContextId,
-                          uint64_t aProcessId, Type aType = Type::Chrome);
+                           const nsAString& aName, uint64_t aBrowsingContextId,
+                           uint64_t aProcessId, Type aType = Type::Chrome);
 
  private:
   friend class BrowsingContext;

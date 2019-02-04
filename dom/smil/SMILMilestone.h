@@ -64,10 +64,10 @@ class SMILMilestone {
     return !(*this < aOther);
   }
 
-  SMILTime mTime;    // The milestone time. This may be in container time or
-                     // parent container time depending on where it is used.
-  bool mIsEnd;       // true if this milestone corresponds to an interval
-                     // end, false otherwise.
+  SMILTime mTime;  // The milestone time. This may be in container time or
+                   // parent container time depending on where it is used.
+  bool mIsEnd;     // true if this milestone corresponds to an interval
+                   // end, false otherwise.
 };
 
 }  // namespace mozilla

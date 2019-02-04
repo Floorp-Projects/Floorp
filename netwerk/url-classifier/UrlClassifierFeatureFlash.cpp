@@ -38,7 +38,8 @@ bool IsInitialized() { return !!sFlashFeaturesMap[0].mFeature; }
 
 }  // namespace
 
-UrlClassifierFeatureFlash::UrlClassifierFeatureFlash(const UrlClassifierFeatureFlash::FlashFeature& aFlashFeature)
+UrlClassifierFeatureFlash::UrlClassifierFeatureFlash(
+    const UrlClassifierFeatureFlash::FlashFeature& aFlashFeature)
     : UrlClassifierFeatureBase(
           nsDependentCString(aFlashFeature.mName),
           nsDependentCString(aFlashFeature.mBlacklistPrefTables),
@@ -119,7 +120,8 @@ UrlClassifierFeatureFlash::UrlClassifierFeatureFlash(const UrlClassifierFeatureF
 
   for (const FlashFeature& flashFeature : sFlashFeaturesMap) {
     MOZ_ASSERT(flashFeature.mFeature);
-    if (!flashFeature.mSubdocumentOnly || contentPolicyType == nsIContentPolicy::TYPE_SUBDOCUMENT) {
+    if (!flashFeature.mSubdocumentOnly ||
+        contentPolicyType == nsIContentPolicy::TYPE_SUBDOCUMENT) {
       aFeatures.AppendElement(flashFeature.mFeature);
     }
   }

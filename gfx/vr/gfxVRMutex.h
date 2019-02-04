@@ -52,11 +52,9 @@ public:
     }
   }
 
-  bool GetStatus() {
-    return mStatus;
-  }
+  bool GetStatus() { return mStatus; }
 
-private:
+ private:
   HANDLE mHandle;
   bool mStatus;
 };

@@ -1247,8 +1247,7 @@ void MacroAssembler::oolWasmTruncateCheckF32ToI32(FloatRegister input,
     branchFloat(Assembler::DoubleGreaterThanOrEqual, input, fpscratch,
                 &isOverflow);
     loadConstantFloat32(-two_31, fpscratch);
-    branchFloat(Assembler::DoubleGreaterThanOrEqual, input, fpscratch,
-                rejoin);
+    branchFloat(Assembler::DoubleGreaterThanOrEqual, input, fpscratch, rejoin);
   }
   bind(&isOverflow);
   wasmTrap(wasm::Trap::IntegerOverflow, off);
@@ -1308,8 +1307,7 @@ void MacroAssembler::oolWasmTruncateCheckF32ToI64(FloatRegister input,
     branchFloat(Assembler::DoubleGreaterThanOrEqual, input, fpscratch,
                 &isOverflow);
     loadConstantFloat32(-two_63, fpscratch);
-    branchFloat(Assembler::DoubleGreaterThanOrEqual, input, fpscratch,
-                rejoin);
+    branchFloat(Assembler::DoubleGreaterThanOrEqual, input, fpscratch, rejoin);
   }
   bind(&isOverflow);
   wasmTrap(wasm::Trap::IntegerOverflow, off);
@@ -1339,8 +1337,7 @@ void MacroAssembler::oolWasmTruncateCheckF64ToI64(FloatRegister input,
     branchDouble(Assembler::DoubleGreaterThanOrEqual, input, fpscratch,
                  &isOverflow);
     loadConstantDouble(-two_63, fpscratch);
-    branchDouble(Assembler::DoubleGreaterThanOrEqual, input, fpscratch,
-                 rejoin);
+    branchDouble(Assembler::DoubleGreaterThanOrEqual, input, fpscratch, rejoin);
   }
   bind(&isOverflow);
   wasmTrap(wasm::Trap::IntegerOverflow, off);

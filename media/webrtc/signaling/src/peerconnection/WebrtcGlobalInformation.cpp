@@ -444,9 +444,10 @@ static nsresult RunLogQuery(const nsCString& aPattern,
 
   RefPtr<MediaTransportHandler> transportHandler = ctx->GetTransportHandler();
 
-  InvokeAsync(
-      stsThread, __func__,
-      [transportHandler, aPattern]() { return transportHandler->GetIceLog(aPattern); })
+  InvokeAsync(stsThread, __func__,
+              [transportHandler, aPattern]() {
+                return transportHandler->GetIceLog(aPattern);
+              })
       ->Then(GetMainThreadSerialEventTarget(), __func__,
              [aRequestId, aThisChild](Sequence<nsString>&& aLogLines) {
                OnGetLogging_m(aThisChild, aRequestId, std::move(aLogLines));
@@ -478,8 +479,10 @@ static nsresult RunLogClear() {
 
   RefPtr<MediaTransportHandler> transportHandler = ctx->GetTransportHandler();
 
-  return RUN_ON_THREAD(stsThread, WrapRunnable(transportHandler, &MediaTransportHandler::ClearIceLog),
-                       NS_DISPATCH_NORMAL);
+  return RUN_ON_THREAD(
+      stsThread,
+      WrapRunnable(transportHandler, &MediaTransportHandler::ClearIceLog),
+      NS_DISPATCH_NORMAL);
 }
 
 void WebrtcGlobalInformation::ClearLogging(const GlobalObject& aGlobal) {

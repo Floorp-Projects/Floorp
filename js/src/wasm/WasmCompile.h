@@ -67,7 +67,8 @@ struct CompileArgs : ShareableBase<CompileArgs> {
   // You should use the first one in general, unless you have a very good
   // reason (i.e. no JSContext around and you know which flags have been used).
 
-  static SharedCompileArgs build(JSContext* cx, ScriptedCaller&& scriptedCaller);
+  static SharedCompileArgs build(JSContext* cx,
+                                 ScriptedCaller&& scriptedCaller);
 
   explicit CompileArgs(ScriptedCaller&& scriptedCaller)
       : scriptedCaller(std::move(scriptedCaller)),

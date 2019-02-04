@@ -19,17 +19,23 @@
 namespace mozilla {
 namespace gfx {
 
-class SourceSurfaceOffset: public SourceSurface {
-  public:
-  SourceSurfaceOffset(RefPtr<SourceSurface> aSurface, IntPoint aOffset) :
-    mSurface(aSurface),
-    mOffset(aOffset) {}
+class SourceSurfaceOffset : public SourceSurface {
+ public:
+  SourceSurfaceOffset(RefPtr<SourceSurface> aSurface, IntPoint aOffset)
+      : mSurface(aSurface), mOffset(aOffset) {}
   virtual SurfaceType GetType() const override { return SurfaceType::OFFSET; }
   virtual IntSize GetSize() const override { return mSurface->GetSize(); }
-  virtual IntRect GetRect() const override { return IntRect(mOffset, mSurface->GetSize()); }
-  virtual SurfaceFormat GetFormat() const override { return mSurface->GetFormat(); }
-  virtual already_AddRefed<DataSourceSurface> GetDataSurface() override { return mSurface->GetDataSurface(); }
-  private:
+  virtual IntRect GetRect() const override {
+    return IntRect(mOffset, mSurface->GetSize());
+  }
+  virtual SurfaceFormat GetFormat() const override {
+    return mSurface->GetFormat();
+  }
+  virtual already_AddRefed<DataSourceSurface> GetDataSurface() override {
+    return mSurface->GetDataSurface();
+  }
+
+ private:
   RefPtr<SourceSurface> mSurface;
   IntPoint mOffset;
 };

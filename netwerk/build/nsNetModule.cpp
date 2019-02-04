@@ -76,7 +76,6 @@ NS_IMPL_COMPONENT_FACTORY(net::nsHttpsHandler) {
   return handler.forget().downcast<nsIHttpProtocolHandler>();
 }
 
-
 #include "nsCacheService.h"
 
 nsresult nsCacheServiceConstructor(nsISupports* aOuter, const nsIID& aIID,
@@ -378,13 +377,14 @@ void nsNetShutdown() {
   gDataSniffers = nullptr;
 }
 
-static const mozilla::Module kNeckoModule = {mozilla::Module::kVersion,
-                                             nullptr,
-                                             nullptr,
-                                             kNeckoCategories,
-                                             nullptr,
-                                             nullptr,
-                                             nullptr,
-                                             mozilla::Module::ALLOW_IN_SOCKET_PROCESS};
+static const mozilla::Module kNeckoModule = {
+    mozilla::Module::kVersion,
+    nullptr,
+    nullptr,
+    kNeckoCategories,
+    nullptr,
+    nullptr,
+    nullptr,
+    mozilla::Module::ALLOW_IN_SOCKET_PROCESS};
 
 NSMODULE_DEFN(necko) = &kNeckoModule;

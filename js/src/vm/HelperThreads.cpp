@@ -2264,7 +2264,8 @@ void js::CancelOffThreadCompressions(JSRuntime* runtime) {
                            runtime);
 }
 
-void js::AttachFinishedCompressions(JSRuntime* runtime, AutoLockHelperThreadState& lock) {
+void js::AttachFinishedCompressions(JSRuntime* runtime,
+                                    AutoLockHelperThreadState& lock) {
   auto& finished = HelperThreadState().compressionFinishedList(lock);
   for (size_t i = 0; i < finished.length(); i++) {
     if (finished[i]->runtimeMatches(runtime)) {

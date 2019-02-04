@@ -55,23 +55,22 @@ void StoreBuffer::GenericBuffer::trace(JSTracer* trc) {
 }
 
 StoreBuffer::StoreBuffer(JSRuntime* rt, const Nursery& nursery)
- : bufferVal(this),
-   bufferCell(this),
-   bufferSlot(this),
-   bufferWholeCell(this),
-   bufferGeneric(this),
-   cancelIonCompilations_(false),
-   runtime_(rt),
-   nursery_(nursery),
-   aboutToOverflow_(false),
-   enabled_(false)
+    : bufferVal(this),
+      bufferCell(this),
+      bufferSlot(this),
+      bufferWholeCell(this),
+      bufferGeneric(this),
+      cancelIonCompilations_(false),
+      runtime_(rt),
+      nursery_(nursery),
+      aboutToOverflow_(false),
+      enabled_(false)
 #ifdef DEBUG
- ,
-   mEntered(false)
+      ,
+      mEntered(false)
 #endif
 {
 }
-
 
 void StoreBuffer::checkEmpty() const {
   MOZ_ASSERT(bufferVal.isEmpty());

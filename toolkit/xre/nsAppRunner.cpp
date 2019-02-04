@@ -2547,7 +2547,8 @@ static ReturnAbortOnError CheckDowngrade(nsIFile* aProfileDir,
 static void GetBuildIDVersions(const nsACString& aFullVersion, int32_t aPos,
                                nsACString& aBuildVersions) {
   // Extract the date part then the time part.
-  aBuildVersions.Assign(Substring(aFullVersion, aPos, BUILDID_DATE_LENGTH) +
+  aBuildVersions.Assign(
+      Substring(aFullVersion, aPos, BUILDID_DATE_LENGTH) +
       NS_LITERAL_CSTRING(".") +
       Substring(aFullVersion, aPos + BUILDID_DATE_LENGTH, BUILDID_TIME_LENGTH));
 }
@@ -2564,7 +2565,8 @@ static Version GetComparableVersion(const nsCString& aVersionStr) {
   if (underscorePos == kNotFound || slashPos == kNotFound ||
       (slashPos - underscorePos) != kExpectedLength ||
       (aVersionStr.Length() - slashPos) != kExpectedLength) {
-    NS_WARNING("compatibility.ini Version string does not match the expected format.");
+    NS_WARNING(
+        "compatibility.ini Version string does not match the expected format.");
     return Version(aVersionStr.get());
   }
 
@@ -4693,7 +4695,8 @@ nsresult XREMain::XRE_mainRun() {
   AddSandboxAnnotations();
 #endif /* MOZ_CONTENT_SANDBOX */
 
-  static_cast<nsToolkitProfileService*>(mProfileSvc.get())->RecordStartupTelemetry();
+  static_cast<nsToolkitProfileService*>(mProfileSvc.get())
+      ->RecordStartupTelemetry();
 
   {
     rv = appStartup->Run();
