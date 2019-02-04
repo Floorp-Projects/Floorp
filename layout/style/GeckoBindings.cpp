@@ -327,8 +327,7 @@ uint32_t Gecko_CalcStyleDifference(ComputedStyleBorrowed aOldStyle,
 
   uint32_t equalStructs;
   nsChangeHint result =
-      const_cast<ComputedStyle*>(aOldStyle)->CalcStyleDifference(
-          const_cast<ComputedStyle*>(aNewStyle), &equalStructs);
+      aOldStyle->CalcStyleDifference(*aNewStyle, &equalStructs);
 
   *aAnyStyleStructChanged =
       equalStructs != StyleStructConstants::kAllStructsMask;
