@@ -422,42 +422,52 @@ SlicedInputStream::OnInputStreamReady(nsIAsyncInputStream* aStream) {
 
 void SlicedInputStream::Serialize(mozilla::ipc::InputStreamParams& aParams,
                                   FileDescriptorArray& aFileDescriptors,
-                                  bool aDelayedStart,
+                                  bool aDelayedStart, uint32_t aMaxSize,
+                                  uint32_t* aSizeUsed,
                                   mozilla::dom::nsIContentChild* aManager) {
-  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aManager);
+  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aMaxSize,
+                    aSizeUsed, aManager);
 }
 
 void SlicedInputStream::Serialize(mozilla::ipc::InputStreamParams& aParams,
                                   FileDescriptorArray& aFileDescriptors,
-                                  bool aDelayedStart,
+                                  bool aDelayedStart, uint32_t aMaxSize,
+                                  uint32_t* aSizeUsed,
                                   mozilla::ipc::PBackgroundChild* aManager) {
-  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aManager);
+  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aMaxSize,
+                    aSizeUsed, aManager);
 }
 
 void SlicedInputStream::Serialize(mozilla::ipc::InputStreamParams& aParams,
                                   FileDescriptorArray& aFileDescriptors,
-                                  bool aDelayedStart,
+                                  bool aDelayedStart, uint32_t aMaxSize,
+                                  uint32_t* aSizeUsed,
                                   mozilla::dom::nsIContentParent* aManager) {
-  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aManager);
+  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aMaxSize,
+                    aSizeUsed, aManager);
 }
 
 void SlicedInputStream::Serialize(mozilla::ipc::InputStreamParams& aParams,
                                   FileDescriptorArray& aFileDescriptors,
-                                  bool aDelayedStart,
+                                  bool aDelayedStart, uint32_t aMaxSize,
+                                  uint32_t* aSizeUsed,
                                   mozilla::ipc::PBackgroundParent* aManager) {
-  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aManager);
+  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aMaxSize,
+                    aSizeUsed, aManager);
 }
 
 template <typename M>
 void SlicedInputStream::SerializeInternal(
     mozilla::ipc::InputStreamParams& aParams,
-    FileDescriptorArray& aFileDescriptors, bool aDelayedStart, M* aManager) {
+    FileDescriptorArray& aFileDescriptors, bool aDelayedStart,
+    uint32_t aMaxSize, uint32_t* aSizeUsed, M* aManager) {
   MOZ_ASSERT(mInputStream);
   MOZ_ASSERT(mWeakIPCSerializableInputStream);
 
   SlicedInputStreamParams params;
-  InputStreamHelper::SerializeInputStream(
-      mInputStream, params.stream(), aFileDescriptors, aDelayedStart, aManager);
+  InputStreamHelper::SerializeInputStream(mInputStream, params.stream(),
+                                          aFileDescriptors, aDelayedStart,
+                                          aMaxSize, aSizeUsed, aManager);
   params.start() = mStart;
   params.length() = mLength;
   params.curPos() = mCurPos;

@@ -319,38 +319,48 @@ NonBlockingAsyncInputStream::AsyncWait(nsIInputStreamCallback* aCallback,
 void NonBlockingAsyncInputStream::Serialize(
     mozilla::ipc::InputStreamParams& aParams,
     FileDescriptorArray& aFileDescriptors, bool aDelayedStart,
+    uint32_t aMaxSize, uint32_t* aSizeUsed,
     mozilla::dom::nsIContentChild* aManager) {
-  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aManager);
+  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aMaxSize,
+                    aSizeUsed, aManager);
 }
 
 void NonBlockingAsyncInputStream::Serialize(
     mozilla::ipc::InputStreamParams& aParams,
     FileDescriptorArray& aFileDescriptors, bool aDelayedStart,
+    uint32_t aMaxSize, uint32_t* aSizeUsed,
     mozilla::ipc::PBackgroundChild* aManager) {
-  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aManager);
+  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aMaxSize,
+                    aSizeUsed, aManager);
 }
 
 void NonBlockingAsyncInputStream::Serialize(
     mozilla::ipc::InputStreamParams& aParams,
     FileDescriptorArray& aFileDescriptors, bool aDelayedStart,
+    uint32_t aMaxSize, uint32_t* aSizeUsed,
     mozilla::dom::nsIContentParent* aManager) {
-  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aManager);
+  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aMaxSize,
+                    aSizeUsed, aManager);
 }
 
 void NonBlockingAsyncInputStream::Serialize(
     mozilla::ipc::InputStreamParams& aParams,
     FileDescriptorArray& aFileDescriptors, bool aDelayedStart,
+    uint32_t aMaxSize, uint32_t* aSizeUsed,
     mozilla::ipc::PBackgroundParent* aManager) {
-  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aManager);
+  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aMaxSize,
+                    aSizeUsed, aManager);
 }
 
 template <typename M>
 void NonBlockingAsyncInputStream::SerializeInternal(
     mozilla::ipc::InputStreamParams& aParams,
-    FileDescriptorArray& aFileDescriptors, bool aDelayedStart, M* aManager) {
+    FileDescriptorArray& aFileDescriptors, bool aDelayedStart,
+    uint32_t aMaxSize, uint32_t* aSizeUsed, M* aManager) {
   MOZ_ASSERT(mWeakIPCSerializableInputStream);
-  InputStreamHelper::SerializeInputStream(
-      mInputStream, aParams, aFileDescriptors, aDelayedStart, aManager);
+  InputStreamHelper::SerializeInputStream(mInputStream, aParams,
+                                          aFileDescriptors, aDelayedStart,
+                                          aMaxSize, aSizeUsed, aManager);
 }
 
 bool NonBlockingAsyncInputStream::Deserialize(
