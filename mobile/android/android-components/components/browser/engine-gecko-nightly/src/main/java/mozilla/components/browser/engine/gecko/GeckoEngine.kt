@@ -74,10 +74,10 @@ class GeckoEngine(
             set(value) { runtime.settings.webFontsEnabled = value }
 
         override var trackingProtectionPolicy: TrackingProtectionPolicy?
-            get() = TrackingProtectionPolicy.select(runtime.settings.trackingProtectionCategories)
+            get() = TrackingProtectionPolicy.select(runtime.settings.contentBlocking.categories)
             set(value) {
                 value?.let {
-                    runtime.settings.trackingProtectionCategories = it.categories
+                    runtime.settings.contentBlocking.categories = it.categories
                     defaultSettings?.trackingProtectionPolicy = value
                 }
             }

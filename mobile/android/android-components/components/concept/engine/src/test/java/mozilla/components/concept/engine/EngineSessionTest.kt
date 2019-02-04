@@ -507,12 +507,16 @@ class EngineSessionTest {
     fun `tracking protection policies have correct categories`() {
         assertEquals(TrackingProtectionPolicy.ALL, TrackingProtectionPolicy.all().categories)
         assertEquals(TrackingProtectionPolicy.NONE, TrackingProtectionPolicy.none().categories)
-        assertEquals(TrackingProtectionPolicy.ALL, TrackingProtectionPolicy.select(
-                TrackingProtectionPolicy.AD,
-                TrackingProtectionPolicy.ANALYTICS,
-                TrackingProtectionPolicy.CONTENT,
-                TrackingProtectionPolicy.TEST,
-                TrackingProtectionPolicy.SOCIAL).categories)
+        assertTrue(TrackingProtectionPolicy.all().contains(
+            TrackingProtectionPolicy.select(TrackingProtectionPolicy.AD).categories))
+        assertTrue(TrackingProtectionPolicy.all().contains(
+            TrackingProtectionPolicy.select(TrackingProtectionPolicy.ANALYTICS).categories))
+        assertTrue(TrackingProtectionPolicy.all().contains(
+            TrackingProtectionPolicy.select(TrackingProtectionPolicy.CONTENT).categories))
+        assertTrue(TrackingProtectionPolicy.all().contains(
+            TrackingProtectionPolicy.select(TrackingProtectionPolicy.TEST).categories))
+        assertTrue(TrackingProtectionPolicy.all().contains(
+            TrackingProtectionPolicy.select(TrackingProtectionPolicy.SOCIAL).categories))
 
         val policy = TrackingProtectionPolicy.select(TrackingProtectionPolicy.AD, TrackingProtectionPolicy.ANALYTICS)
         assertTrue(policy.contains(TrackingProtectionPolicy.AD))

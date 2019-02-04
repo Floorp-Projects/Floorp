@@ -19,6 +19,7 @@ import org.junit.runner.RunWith
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
+import org.mozilla.geckoview.ContentBlocking
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoRuntimeSettings
 import org.mozilla.geckoview.GeckoWebExecutor
@@ -49,11 +50,13 @@ class GeckoEngineTest {
     @Test
     fun settings() {
         val defaultSettings = DefaultSettings()
+        val contentBlockingSettings =
+                ContentBlocking.Settings.Builder().categories(TrackingProtectionPolicy.none().categories).build()
         val runtime = mock(GeckoRuntime::class.java)
         val runtimeSettings = mock(GeckoRuntimeSettings::class.java)
         `when`(runtimeSettings.javaScriptEnabled).thenReturn(true)
         `when`(runtimeSettings.webFontsEnabled).thenReturn(true)
-        `when`(runtimeSettings.trackingProtectionCategories).thenReturn(TrackingProtectionPolicy.none().categories)
+        `when`(runtimeSettings.contentBlocking).thenReturn(contentBlockingSettings)
         `when`(runtime.settings).thenReturn(runtimeSettings)
         val engine = GeckoEngine(context, runtime = runtime, defaultSettings = defaultSettings)
 
@@ -79,7 +82,13 @@ class GeckoEngineTest {
 
         assertEquals(TrackingProtectionPolicy.none(), engine.settings.trackingProtectionPolicy)
         engine.settings.trackingProtectionPolicy = TrackingProtectionPolicy.all()
-        verify(runtimeSettings).trackingProtectionCategories = TrackingProtectionPolicy.all().categories
+        assertEquals(TrackingProtectionPolicy.select(
+                TrackingProtectionPolicy.AD,
+                TrackingProtectionPolicy.SOCIAL,
+                TrackingProtectionPolicy.ANALYTICS,
+                TrackingProtectionPolicy.CONTENT,
+                TrackingProtectionPolicy.TEST
+        ).categories, contentBlockingSettings.categories)
         assertEquals(defaultSettings.trackingProtectionPolicy, TrackingProtectionPolicy.all())
 
         try {
@@ -97,8 +106,11 @@ class GeckoEngineTest {
     fun defaultSettings() {
         val runtime = mock(GeckoRuntime::class.java)
         val runtimeSettings = mock(GeckoRuntimeSettings::class.java)
+        val contentBlockingSettings =
+                ContentBlocking.Settings.Builder().categories(TrackingProtectionPolicy.none().categories).build()
         `when`(runtimeSettings.javaScriptEnabled).thenReturn(true)
         `when`(runtime.settings).thenReturn(runtimeSettings)
+        `when`(runtimeSettings.contentBlocking).thenReturn(contentBlockingSettings)
 
         val engine = GeckoEngine(context, DefaultSettings(
                 trackingProtectionPolicy = TrackingProtectionPolicy.all(),
@@ -111,7 +123,13 @@ class GeckoEngineTest {
         verify(runtimeSettings).javaScriptEnabled = false
         verify(runtimeSettings).webFontsEnabled = false
         verify(runtimeSettings).remoteDebuggingEnabled = true
-        verify(runtimeSettings).trackingProtectionCategories = TrackingProtectionPolicy.all().categories
+        assertEquals(TrackingProtectionPolicy.select(
+            TrackingProtectionPolicy.AD,
+            TrackingProtectionPolicy.SOCIAL,
+            TrackingProtectionPolicy.ANALYTICS,
+            TrackingProtectionPolicy.CONTENT,
+            TrackingProtectionPolicy.TEST
+        ).categories, contentBlockingSettings.categories)
         assertTrue(engine.settings.testingModeEnabled)
         assertEquals("test-ua", engine.settings.userAgentString)
     }

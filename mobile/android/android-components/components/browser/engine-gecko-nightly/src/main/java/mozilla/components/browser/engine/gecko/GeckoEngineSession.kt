@@ -30,6 +30,7 @@ import mozilla.components.support.ktx.kotlin.isPhone
 import mozilla.components.support.utils.DownloadUtils
 import mozilla.components.support.utils.ThreadUtils
 import org.mozilla.geckoview.AllowOrDeny
+import org.mozilla.geckoview.ContentBlocking
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoSession
@@ -480,9 +481,8 @@ class GeckoEngineSession(
         override fun onFocusRequest(session: GeckoSession) = Unit
     }
 
-    private fun createTrackingProtectionDelegate() = GeckoSession.TrackingProtectionDelegate {
-        session, uri, _ ->
-            session?.let { uri?.let { notifyObservers { onTrackerBlocked(it) } } }
+    private fun createContentBlockingDelegate() = ContentBlocking.Delegate {
+        _, event -> notifyObservers { onTrackerBlocked(event.uri) }
     }
 
     private fun createPermissionDelegate() = object : GeckoSession.PermissionDelegate {
@@ -504,7 +504,7 @@ class GeckoEngineSession(
             callback: GeckoSession.PermissionDelegate.MediaCallback
         ) {
             val request = GeckoPermissionRequest.Media(
-                    uri ?: "",
+                    uri,
                     video?.toList() ?: emptyList(),
                     audio?.toList() ?: emptyList(),
                     callback)
@@ -583,7 +583,7 @@ class GeckoEngineSession(
         geckoSession.navigationDelegate = createNavigationDelegate()
         geckoSession.progressDelegate = createProgressDelegate()
         geckoSession.contentDelegate = createContentDelegate()
-        geckoSession.trackingProtectionDelegate = createTrackingProtectionDelegate()
+        geckoSession.contentBlockingDelegate = createContentBlockingDelegate()
         geckoSession.permissionDelegate = createPermissionDelegate()
         geckoSession.promptDelegate = GeckoPromptDelegate(this)
         geckoSession.historyDelegate = createHistoryDelegate()
@@ -592,7 +592,6 @@ class GeckoEngineSession(
     companion object {
         internal const val PROGRESS_START = 25
         internal const val PROGRESS_STOP = 100
-        internal const val GECKO_STATE_KEY = "GECKO_STATE"
         internal const val MOZ_NULL_PRINCIPAL = "moz-nullprincipal:"
         internal const val ABOUT_BLANK = "about:blank"
 

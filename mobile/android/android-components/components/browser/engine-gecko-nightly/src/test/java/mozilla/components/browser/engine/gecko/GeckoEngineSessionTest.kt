@@ -44,6 +44,7 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyZeroInteractions
 import org.mozilla.geckoview.AllowOrDeny
+import org.mozilla.geckoview.ContentBlocking
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoRuntimeSettings
@@ -71,7 +72,7 @@ class GeckoEngineSessionTest {
     private lateinit var progressDelegate: ArgumentCaptor<GeckoSession.ProgressDelegate>
     private lateinit var contentDelegate: ArgumentCaptor<GeckoSession.ContentDelegate>
     private lateinit var permissionDelegate: ArgumentCaptor<GeckoSession.PermissionDelegate>
-    private lateinit var trackingProtectionDelegate: ArgumentCaptor<GeckoSession.TrackingProtectionDelegate>
+    private lateinit var contentBlockingDelegate: ArgumentCaptor<ContentBlocking.Delegate>
     private lateinit var historyDelegate: ArgumentCaptor<GeckoSession.HistoryDelegate>
 
     private val testMainScope = CoroutineScope(newSingleThreadContext("Test"))
@@ -96,8 +97,7 @@ class GeckoEngineSessionTest {
         progressDelegate = ArgumentCaptor.forClass(GeckoSession.ProgressDelegate::class.java)
         contentDelegate = ArgumentCaptor.forClass(GeckoSession.ContentDelegate::class.java)
         permissionDelegate = ArgumentCaptor.forClass(GeckoSession.PermissionDelegate::class.java)
-        trackingProtectionDelegate = ArgumentCaptor.forClass(
-                GeckoSession.TrackingProtectionDelegate::class.java)
+        contentBlockingDelegate = ArgumentCaptor.forClass(ContentBlocking.Delegate::class.java)
         historyDelegate = ArgumentCaptor.forClass(GeckoSession.HistoryDelegate::class.java)
 
         geckoSession = mockGeckoSession()
@@ -109,7 +109,7 @@ class GeckoEngineSessionTest {
         verify(geckoSession).progressDelegate = progressDelegate.capture()
         verify(geckoSession).contentDelegate = contentDelegate.capture()
         verify(geckoSession).permissionDelegate = permissionDelegate.capture()
-        verify(geckoSession).trackingProtectionDelegate = trackingProtectionDelegate.capture()
+        verify(geckoSession).contentBlockingDelegate = contentBlockingDelegate.capture()
         verify(geckoSession).historyDelegate = historyDelegate.capture()
     }
 
@@ -701,7 +701,7 @@ class GeckoEngineSessionTest {
 
         captureDelegates()
 
-        trackingProtectionDelegate.value.onTrackerBlocked(geckoSession, "tracker1", 0)
+        contentBlockingDelegate.value.onContentBlocked(geckoSession, ContentBlocking.BlockEvent("tracker1", 0))
         assertEquals("tracker1", trackerBlocked)
     }
 
