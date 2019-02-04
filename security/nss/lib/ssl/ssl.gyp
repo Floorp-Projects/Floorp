@@ -73,11 +73,6 @@
             '-std=gnu99',
           ],
         }],
-        [ 'enable_sslkeylogfile==1', {
-          'defines': [
-            'NSS_ALLOW_SSLKEYLOGFILE',
-          ],
-        }],
       ],
       'dependencies': [
         '<(DEPTH)/exports.gyp:nss_exports',
@@ -97,6 +92,11 @@
       }
     }
   ],
+  'target_defaults': {
+    'defines': [
+      'NSS_ALLOW_SSLKEYLOGFILE=1'
+    ]
+  },
   'variables': {
     'module': 'nss'
   }

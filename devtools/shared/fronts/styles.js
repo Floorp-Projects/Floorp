@@ -13,8 +13,7 @@ const {
 } = require("devtools/shared/specs/styles");
 const promise = require("promise");
 
-loader.lazyRequireGetter(this, "RuleRewriter",
-  "devtools/shared/css/parsing-utils", true);
+loader.lazyRequireGetter(this, "RuleRewriter", "devtools/shared/fronts/inspector/rule-rewriter");
 
 /**
  * PageStyleFront, the front object for the PageStyleActor

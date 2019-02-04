@@ -18,14 +18,16 @@
     <title data-l10n-id="about-config-title"></title>
   </head>
   <body>
-    <div class="container">
+    <div class="container" role="alertdialog" aria-labelledby="warningTitle"
+         aria-describedby="warningDescription">
 
       <div class="title">
-        <h1 class="title-text" data-l10n-id="about-config-warning-title"></h1>
+        <h1 id="warningTitle" class="title-text"
+            data-l10n-id="about-config-warning-title"></h1>
       </div>
 
       <div class="description">
-        <p data-l10n-id="about-config-warning-text"></p>
+        <p id="warningDescription" data-l10n-id="about-config-warning-text"></p>
       </div>
 
       <div class="toggle-container-with-text">
@@ -35,7 +37,7 @@
       </div>
 
       <div class="button-container">
-        <button class="primary" onclick="onWarningButtonClick();"
+        <button autofocus class="primary" onclick="onWarningButtonClick();"
                 data-l10n-id="about-config-warning-button"></button>
       </div>
     </div>
