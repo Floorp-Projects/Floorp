@@ -261,9 +261,6 @@ class BackgroundChildImpl : public PBackgroundChild {
   virtual bool DeallocPHttpBackgroundChannelChild(
       PHttpBackgroundChannelChild* aActor) override;
 
-  bool GetMessageSchedulerGroups(const Message& aMsg,
-                                 SchedulerGroupSet& aGroups) override;
-
   virtual PMIDIPortChild* AllocPMIDIPortChild(
       const MIDIPortInfo& aPortInfo, const bool& aSysexEnabled) override;
   virtual bool DeallocPMIDIPortChild(PMIDIPortChild*) override;

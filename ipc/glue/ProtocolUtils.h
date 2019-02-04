@@ -451,8 +451,6 @@ class IToplevelProtocol : public IProtocol {
     MessageChannel mChannel;
   };
 
-  using SchedulerGroupSet = nsILabelableRunnable::SchedulerGroupSet;
-
   void SetTransport(UniquePtr<Transport> aTrans) { mTrans = std::move(aTrans); }
 
   Transport* GetTransport() const { return mTrans.get(); }
@@ -555,15 +553,6 @@ class IToplevelProtocol : public IProtocol {
   virtual void OnExitedSyncSend() {}
 
   virtual void ProcessRemoteNativeEventsInInterruptCall() {}
-
-  // Override this method in top-level protocols to change the SchedulerGroups
-  // that a message might affect. This should be used only as a last resort
-  // when it's difficult to determine an EventTarget ahead of time. See the
-  // comment in nsILabelableRunnable.h for more information.
-  virtual bool GetMessageSchedulerGroups(const Message& aMsg,
-                                         SchedulerGroupSet& aGroups) {
-    return false;
-  }
 
   virtual void OnChannelReceivedMessage(const Message& aMsg) {}
 
