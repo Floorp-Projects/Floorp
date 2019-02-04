@@ -5890,6 +5890,8 @@ pref("dom.storageManager.prompt.testing.allow", false);
 pref("browser.storageManager.pressureNotification.minIntervalMS", 1200000);
 pref("browser.storageManager.pressureNotification.usageThresholdGB", 5);
 
+pref("browser.sanitizer.loglevel", "Warn");
+
 // When a user cancels this number of authentication dialogs coming from
 // a single web page in a row, all following authentication dialogs will
 // be blocked (automatically canceled) for that page. The counter resets
