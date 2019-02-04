@@ -449,18 +449,13 @@ browser.Context = class {
       this.tab = this.tabBrowser.tabs[index];
 
       if (focus) {
-        switch (this.driver.appName) {
-          case "fennec":
-            this.tabBrowser.selectTab(this.tab);
-            break;
-
-          case "firefox":
-            this.tabBrowser.selectedTab = this.tab;
-            break;
-
-          default:
-            throw new UnsupportedOperationError(
-              `switchToTab() not supported in ${this.driver.appName}`);
+        if ("selectTab" in this.tabBrowser) {
+          this.tabBrowser.selectTab(this.tab);
+        } else if ("selectedTab" in this.tabBrowser) {
+          this.tabBrowser.selectedTab = this.tab;
+        } else {
+          throw new UnsupportedOperationError(
+            `switchToTab() not supported in ${this.driver.appName}`);
         }
       }
     }
