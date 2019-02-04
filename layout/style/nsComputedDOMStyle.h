@@ -162,16 +162,22 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
 
+  /**
+   * A method to get a percentage base for a percentage value.  Returns true
+   * if a percentage base value was determined, false otherwise.
+   */
+  typedef bool (nsComputedDOMStyle::*PercentageBaseGetter)(nscoord&);
+
   already_AddRefed<CSSValue> GetEllipseRadii(const nsStyleCorners& aRadius,
                                              mozilla::Corner aFullCorner);
 
   already_AddRefed<CSSValue> GetOffsetWidthFor(mozilla::Side aSide);
 
-  already_AddRefed<CSSValue> GetAbsoluteOffset(mozilla::Side aSide);
-
-  already_AddRefed<CSSValue> GetRelativeOffset(mozilla::Side aSide);
-
-  already_AddRefed<CSSValue> GetStickyOffset(mozilla::Side aSide);
+  already_AddRefed<CSSValue> GetAbsoluteOffset(mozilla::Side);
+  nscoord GetUsedAbsoluteOffset(mozilla::Side);
+  already_AddRefed<CSSValue> GetNonStaticPositionOffset(
+      mozilla::Side aSide, bool aResolveAuto, PercentageBaseGetter aWidthGetter,
+      PercentageBaseGetter aHeightGetter);
 
   already_AddRefed<CSSValue> GetStaticOffset(mozilla::Side aSide);
 
@@ -404,12 +410,6 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
                           nsROCSSPrimitiveValue* aValue);
 
   /**
-   * A method to get a percentage base for a percentage value.  Returns true
-   * if a percentage base value was determined, false otherwise.
-   */
-  typedef bool (nsComputedDOMStyle::*PercentageBaseGetter)(nscoord&);
-
-  /**
    * Method to set aValue to aCoord.  If aCoord is a percentage value and
    * aPercentageBaseGetter is not null, aPercentageBaseGetter is called.  If it
    * returns true, the percentage base it outputs in its out param is used
@@ -447,7 +447,9 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
                                  const nsStyleSides& aValues);
 
   bool GetCBContentWidth(nscoord& aWidth);
-  bool GetCBContentHeight(nscoord& aWidth);
+  bool GetCBContentHeight(nscoord& aHeight);
+  bool GetCBPaddingRectWidth(nscoord& aWidth);
+  bool GetCBPaddingRectHeight(nscoord& aHeight);
   bool GetScrollFrameContentWidth(nscoord& aWidth);
   bool GetScrollFrameContentHeight(nscoord& aHeight);
   bool GetFrameBoundsWidthForTransform(nscoord& aWidth);
