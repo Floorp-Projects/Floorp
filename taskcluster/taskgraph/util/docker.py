@@ -12,7 +12,6 @@ import requests_unixsocket
 import sys
 import urllib
 import urlparse
-import yaml
 
 from mozbuild.util import memoize
 from mozpack.files import GeneratedFile
@@ -20,6 +19,8 @@ from mozpack.archive import (
     create_tar_gz_from_files,
 )
 from .. import GECKO
+
+from .yaml import load_yaml
 
 
 IMAGE_DIR = os.path.join(GECKO, 'taskcluster', 'docker')
@@ -273,13 +274,11 @@ def stream_context_tar(topsrcdir, context_dir, out_file, prefix, args=None):
 def image_paths():
     """Return a map of image name to paths containing their Dockerfile.
     """
-    with open(os.path.join(GECKO, 'taskcluster', 'ci', 'docker-image',
-                           'kind.yml')) as fh:
-        config = yaml.safe_load(fh)
-        return {
-            k: os.path.join(IMAGE_DIR, v.get('definition', k))
-            for k, v in config['jobs'].items()
-        }
+    config = load_yaml(GECKO, 'taskcluster', 'ci', 'docker-image', 'kind.yml')
+    return {
+        k: os.path.join(IMAGE_DIR, v.get('definition', k))
+        for k, v in config['jobs'].items()
+    }
 
 
 def image_path(name):
