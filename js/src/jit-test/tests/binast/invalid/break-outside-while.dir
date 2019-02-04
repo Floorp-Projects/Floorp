@@ -1,0 +1,1 @@
+// |jit-test| error: unlabeled break must be inside loop or switch
