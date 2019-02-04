@@ -12,12 +12,13 @@ const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
 
 const Actions = require("../../actions/index");
+const Types = require("../../types/index");
 
 class NetworkLocationsList extends PureComponent {
   static get propTypes() {
     return {
       dispatch: PropTypes.func.isRequired,
-      networkLocations: PropTypes.arrayOf(PropTypes.string).isRequired,
+      networkLocations: PropTypes.arrayOf(Types.location).isRequired,
     };
   }
 

@@ -1,7 +1,52 @@
 # This file is rendered via JSON-e by
-# - mozilla-taskcluster - https://docs.taskcluster.net/reference/integrations/mozilla-taskcluster/docs/taskcluster-yml
-# - cron tasks - taskcluster/taskgraph/cron/decision.py
-# - action tasks - taskcluster/taskgraph/actions/registry.py
+# - mozilla-taskcluster - See
+#   https://docs.taskcluster.net/reference/integrations/mozilla-taskcluster/docs/taskcluster-yml
+#   {
+#     tasks_for: 'hg-push',
+#     push: {owner, comment, pushlog_id, pushdate},
+#     repository: {url, project, level},
+#     now,
+#     as_slugid: // function
+#     ownTaskId: // taskId of the task that will be created
+#   }
+#
+# - cron tasks - See taskcluster/taskgraph/cron/decision.py
+#   {
+#     tasks_for: 'cron',
+#     push: {revision, pushlog_id, pushdate, owner}
+#     repository: {url, project, level},
+#     cron: {task_id, job_name, job_symbol, quoted_args},
+#     now,
+#     ownTaskId: // taskId of the task that will be created
+#   }
+#
+# - action tasks - See:
+#   * taskcluster/taskgraph/actions/registry.py,
+#   * https://docs.taskcluster.net/docs/manual/using/actions/spec
+#   * ci-admin:ciadmin/generate/in_tree_actions.py
+#
+#   The registry generates the hookPayload that appears in actions.json, and
+#   contains data from the decision task as well as JSON-e code to combine that
+#   with data supplied as part of the action spec.  When the hook is fired, the
+#   hookPayload is rendered with JSON-e to produce a payload for the hook task
+#   template.
+#
+#   The ci-admin code wraps the content of this file (.taskcluster.yml) with a
+#   JSON-e $let statement that produces the context described below, and
+#   installs that as the hook task template.
+#
+#   {
+#     tasks_for: 'action',
+#     push: {owner, pushlog_id, revision},
+#     repository: {url, project, level},
+#     input,
+#     parameters,
+#     taskId,      // targetted taskId
+#     taskGroupId, // targetted taskGroupId
+#     action: {name, title, description, taskGroupId, symbol, repo_scope, cb_name}
+#     ownTaskId:   // taskId of the task that will be created
+#   }
+
 version: 1
 tasks:
   # NOTE: support for actions in ci-admin requires that the `tasks` property be an array *before* JSON-e rendering
@@ -14,13 +59,13 @@ tasks:
         # ensure there's no trailing `/` on the repo URL
         repoUrl: {$if: 'repository.url[-1] == "/"', then: {$eval: 'repository.url[:-1]'}, else: {$eval: 'repository.url'}}
       in:
-        taskId: {$if: 'tasks_for != "action"', then: '${as_slugid("decision")}'}
+        taskId: {$if: 'tasks_for != "action"', then: '${ownTaskId}'}
         taskGroupId:
           $if: 'tasks_for == "action"'
           then:
             '${action.taskGroupId}'
           else:
-            '${as_slugid("decision")}' # same as taskId; this is how automation identifies a decision tsak
+            '${ownTaskId}' # same as taskId; this is how automation identifies a decision tsak
         schedulerId: 'gecko-level-${repository.level}'
 
         created: {$fromNow: ''}
@@ -93,7 +138,7 @@ tasks:
                 - "index.gecko.v2.${repository.project}.revision.${push.revision}.taskgraph.decision-${cron.job_name}"
                 - "index.gecko.v2.${repository.project}.pushlog-id.${push.pushlog_id}.decision-${cron.job_name}"
                 # list each cron task on this revision, so actions can find them
-                - 'index.gecko.v2.${repository.project}.revision.${push.revision}.cron.${as_slugid("decision")}'
+                - 'index.gecko.v2.${repository.project}.revision.${push.revision}.cron.${ownTaskId}'
                 # BUG 1500166 Notify ciduty by email if a nightly hook fails
                 - "notify.email.ciduty+failedcron@mozilla.com.on-failed"
                 - "notify.email.ciduty+exceptioncron@mozilla.com.on-exception"
@@ -146,7 +191,6 @@ tasks:
                 GECKO_HEAD_REPOSITORY: '${repoUrl}'
                 GECKO_HEAD_REF: '${push.revision}'
                 GECKO_HEAD_REV: '${push.revision}'
-                GECKO_COMMIT_MSG: {$if: 'tasks_for != "action"', then: '${push.comment}'}
                 HG_STORE_PATH: /builds/worker/checkouts/hg-store
                 TASKCLUSTER_CACHES: /builds/worker/checkouts
                 # someday, these will be provided by the worker - Bug 1492664
@@ -195,7 +239,6 @@ tasks:
                   --pushlog-id='${push.pushlog_id}'
                   --pushdate='${push.pushdate}'
                   --project='${repository.project}'
-                  --message="$GECKO_COMMIT_MSG"
                   --owner='${ownerEmail}'
                   --level='${repository.level}'
                   --base-repository="$GECKO_BASE_REPOSITORY"

@@ -40,11 +40,6 @@ async function performTests() {
   is(filterBarNode.offsetHeight + inputNode.offsetHeight, wrapper.offsetHeight,
     "The entire height is taken by filter bar and input");
 
-  await setFilterBarVisible(hud, true);
-  testWrapperLayout(wrapper);
-  is(filterBarNode.offsetHeight + inputNode.offsetHeight, wrapper.offsetHeight,
-    "The entire height is still taken by filter bar and input");
-
   info("Logging a message in the content window");
   const onLogMessage = waitForMessage(hud, "simple text message");
   ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
@@ -72,12 +67,6 @@ async function performTests() {
     "One message is still visible in the output node");
   testWrapperLayout(wrapper);
 
-  info("Hide secondary filter bar");
-  await setFilterBarVisible(hud, false);
-  is(outputNode.clientHeight, MINIMUM_MESSAGE_HEIGHT,
-    "One message is still visible in the output node");
-  testWrapperLayout(wrapper);
-
   const filterBarHeight = filterBarNode.clientHeight;
 
   info("Show the hidden messages label");
@@ -95,13 +84,6 @@ async function performTests() {
 
   ok(filterBarNode.clientHeight > filterBarHeight, "The filter bar is taller");
   testWrapperLayout(wrapper);
-
-  info("Show filter bar");
-  await setFilterBarVisible(hud, true);
-  testWrapperLayout(wrapper);
-
-  info("Hide filter bar");
-  await setFilterBarVisible(hud, false);
 
   info("Expand the window so hidden label isn't on its own line anymore");
   hostWindow.resizeTo(window.screen.availWidth, window.screen.availHeight);

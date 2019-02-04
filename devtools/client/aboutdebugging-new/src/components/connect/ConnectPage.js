@@ -25,6 +25,7 @@ const NetworkLocationsForm = createFactory(require("./NetworkLocationsForm"));
 const NetworkLocationsList = createFactory(require("./NetworkLocationsList"));
 
 const { PREFERENCES, PAGE_TYPES } = require("../../constants");
+const Types = require("../../types/index");
 
 const USB_ICON_SRC = "chrome://devtools/skin/images/aboutdebugging-connect-icon.svg";
 const WIFI_ICON_SRC = "chrome://devtools/skin/images/aboutdebugging-connect-icon.svg";
@@ -33,12 +34,12 @@ const GLOBE_ICON_SRC = "chrome://devtools/skin/images/aboutdebugging-globe-icon.
 class ConnectPage extends PureComponent {
   static get propTypes() {
     return {
-      adbAddonStatus: PropTypes.string,
+      adbAddonStatus: Types.adbAddonStatus,
       dispatch: PropTypes.func.isRequired,
       // Provided by wrapping the component with FluentReact.withLocalization.
       getString: PropTypes.func.isRequired,
       networkEnabled: PropTypes.bool.isRequired,
-      networkLocations: PropTypes.arrayOf(PropTypes.string).isRequired,
+      networkLocations: PropTypes.arrayOf(Types.location).isRequired,
       wifiEnabled: PropTypes.bool.isRequired,
     };
   }

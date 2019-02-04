@@ -15,6 +15,7 @@ class FontAxis extends PureComponent {
   static get propTypes() {
     return {
       axis: PropTypes.shape(Types.fontVariationAxis),
+      disabled: PropTypes.bool.isRequired,
       onChange: PropTypes.func.isRequired,
       value: PropTypes.string.isRequired,
     };
@@ -51,6 +52,7 @@ class FontAxis extends PureComponent {
 
     return FontPropertyValue({
       className: "font-control-axis",
+      disabled: this.props.disabled,
       label: axis.name,
       min: axis.minValue,
       minLabel: true,

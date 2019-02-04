@@ -26,7 +26,7 @@ const Sidebar = createFactory(require("./sidebar/Sidebar"));
 class App extends PureComponent {
   static get propTypes() {
     return {
-      adbAddonStatus: PropTypes.string,
+      adbAddonStatus: Types.adbAddonStatus,
       // The "dispatch" helper is forwarded to the App component via connect.
       // From that point, components are responsible for forwarding the dispatch
       // property to all components who need to dispatch actions.
@@ -35,9 +35,9 @@ class App extends PureComponent {
       getString: PropTypes.func.isRequired,
       isScanningUsb: PropTypes.bool.isRequired,
       networkEnabled: PropTypes.bool.isRequired,
-      networkLocations: PropTypes.arrayOf(PropTypes.string).isRequired,
+      networkLocations: PropTypes.arrayOf(Types.location).isRequired,
       networkRuntimes: PropTypes.arrayOf(Types.runtime).isRequired,
-      selectedPage: PropTypes.string,
+      selectedPage: Types.page,
       selectedRuntimeId: PropTypes.string,
       usbRuntimes: PropTypes.arrayOf(Types.runtime).isRequired,
       wifiEnabled: PropTypes.bool.isRequired,

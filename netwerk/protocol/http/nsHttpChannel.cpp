@@ -795,20 +795,22 @@ nsresult nsHttpChannel::ContinueConnect() {
   return DoConnect();
 }
 
-nsresult nsHttpChannel::DoConnect(nsAHttpConnection *aConn) {
-  LOG(("nsHttpChannel::DoConnect [this=%p]\n", this));
+nsresult nsHttpChannel::DoConnect(nsHttpTransaction *aTransWithStickyConn) {
+  LOG(("nsHttpChannel::DoConnect [this=%p, aTransWithStickyConn=%p]\n", this,
+       aTransWithStickyConn));
 
   nsresult rv = SetupTransaction();
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  // transfer ownership of connection to transaction
-  if (aConn) {
-    mTransaction->SetConnection(aConn);
+  if (aTransWithStickyConn) {
+    rv = gHttpHandler->InitiateTransactionWithStickyConn(
+        mTransaction, mPriority, aTransWithStickyConn);
+  } else {
+    rv = gHttpHandler->InitiateTransaction(mTransaction, mPriority);
   }
 
-  rv = gHttpHandler->InitiateTransaction(mTransaction, mPriority);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -5930,15 +5932,7 @@ NS_IMETHODIMP nsHttpChannel::CloseStickyConnection() {
     return NS_OK;
   }
 
-  RefPtr<nsAHttpConnection> conn = mTransaction->GetConnectionReference();
-  if (!conn) {
-    LOG(("  no connection"));
-    return NS_OK;
-  }
-
-  // This turns the IsPersistent() indicator on the connection to false,
-  // and makes us throw it away in OnStopRequest.
-  conn->DontReuse();
+  mTransaction->DontReuseConnection();
   return NS_OK;
 }
 
@@ -7475,16 +7469,22 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
     LOG(("nsHttpChannel %p has a strongly framed transaction: %d", this,
          mStronglyFramed));
 
-    //
-    // grab references to connection in case we need to retry an
-    // authentication request over it or use it for an upgrade
-    // to another protocol.
-    //
+    // Save the reference of |mTransaction| to |transactionWithStickyConn|
+    // when it has a sticky connection.
+    // In the case we need to retry an authentication request, we need to
+    // reuse the connection of |transactionWithStickyConn|.
+    RefPtr<nsHttpTransaction> transactionWithStickyConn;
+    if (mCaps & NS_HTTP_STICKY_CONNECTION ||
+        mTransaction->Caps() & NS_HTTP_STICKY_CONNECTION) {
+      transactionWithStickyConn = mTransaction;
+      LOG(("  transaction %p has sticky connection",
+           transactionWithStickyConn.get()));
+    }
+
     // this code relies on the code in nsHttpTransaction::Close, which
     // tests for NS_HTTP_STICKY_CONNECTION to determine whether or not to
     // keep the connection around after the transaction is finished.
     //
-    RefPtr<nsAHttpConnection> conn;
     LOG(("  mAuthRetryPending=%d, status=%" PRIx32 ", sticky conn cap=%d",
          mAuthRetryPending, static_cast<uint32_t>(status),
          mCaps & NS_HTTP_STICKY_CONNECTION));
@@ -7492,37 +7492,22 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
     // might have been updated by the transaction itself during inspection of
     // the reposnse headers yet on the socket thread (found connection based
     // auth schema).
-    if ((mAuthRetryPending || NS_FAILED(status)) &&
-        (mCaps & NS_HTTP_STICKY_CONNECTION ||
-         mTransaction->Caps() & NS_HTTP_STICKY_CONNECTION)) {
-      conn = mTransaction->GetConnectionReference();
-      LOG(("  transaction %p provides connection %p", mTransaction.get(),
-           conn.get()));
 
-      if (conn) {
-        if (NS_FAILED(status)) {
-          // Close (don't reuse) the sticky connection if it's in the middle
-          // of an NTLM negotiation and this channel has been cancelled.
-          // There are proxy servers known to get confused when we send
-          // a new request over such a half-stated connection.
-          if (!mAuthConnectionRestartable) {
-            LOG(("  not reusing a half-authenticated sticky connection"));
-            conn->DontReuse();
-          }
-          conn = nullptr;
-        } else if (!conn->IsPersistent()) {
-          // This is so far a workaround to fix leak when reusing unpersistent
-          // connection for authentication retry. See bug 459620 comment 4
-          // for details.
-          LOG(("  connection is not persistent, not reusing it"));
-          conn = nullptr;
+    if ((mAuthRetryPending || NS_FAILED(status)) && transactionWithStickyConn) {
+      if (NS_FAILED(status)) {
+        // Close (don't reuse) the sticky connection if it's in the middle
+        // of an NTLM negotiation and this channel has been cancelled.
+        // There are proxy servers known to get confused when we send
+        // a new request over such a half-stated connection.
+        if (!mAuthConnectionRestartable) {
+          LOG(("  not reusing a half-authenticated sticky connection"));
+          transactionWithStickyConn->DontReuseConnection();
         }
       }
     }
 
-    RefPtr<nsAHttpConnection> stickyConn;
     if (mCaps & NS_HTTP_STICKY_CONNECTION) {
-      stickyConn = mTransaction->GetConnectionReference();
+      mTransaction->SetH2WSConnRefTaken();
     }
 
     mTransferSize = mTransaction->GetTransferSize();
@@ -7566,18 +7551,20 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
     if (authRetry) {
       mAuthRetryPending = false;
       auto continueOSR = [authRetry, isFromNet, contentComplete,
-                          stickyConn{std::move(stickyConn)}](auto *self,
-                                                             nsresult aStatus) {
+                          transactionWithStickyConn](auto *self,
+                                                     nsresult aStatus) {
         return self->ContinueOnStopRequestAfterAuthRetry(
-            aStatus, authRetry, isFromNet, contentComplete, stickyConn);
+            aStatus, authRetry, isFromNet, contentComplete,
+            transactionWithStickyConn);
       };
-      status = DoAuthRetry(conn, continueOSR);
+      status = DoAuthRetry(transactionWithStickyConn, continueOSR);
       if (NS_SUCCEEDED(status)) {
         return NS_OK;
       }
     }
     return ContinueOnStopRequestAfterAuthRetry(status, authRetry, isFromNet,
-                                               contentComplete, stickyConn);
+                                               contentComplete,
+                                               transactionWithStickyConn);
   }
 
   return ContinueOnStopRequest(status, isFromNet, contentComplete);
@@ -7585,13 +7572,13 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
 
 nsresult nsHttpChannel::ContinueOnStopRequestAfterAuthRetry(
     nsresult aStatus, bool aAuthRetry, bool aIsFromNet, bool aContentComplete,
-    nsAHttpConnection *aStickyConn) {
+    nsHttpTransaction *aTransWithStickyConn) {
   LOG(
       ("nsHttpChannel::ContinueOnStopRequestAfterAuthRetry "
        "[this=%p, aStatus=%" PRIx32
-       " aAuthRetry=%d, aIsFromNet=%d, aStickyConn=%p]\n",
+       " aAuthRetry=%d, aIsFromNet=%d, aTransWithStickyConn=%p]\n",
        this, static_cast<uint32_t>(aStatus), aAuthRetry, aIsFromNet,
-       aStickyConn));
+       aTransWithStickyConn));
 
   if (aAuthRetry && NS_SUCCEEDED(aStatus)) {
     return NS_OK;
@@ -7623,20 +7610,20 @@ nsresult nsHttpChannel::ContinueOnStopRequestAfterAuthRetry(
     return NS_OK;
   }
 
-  bool upgradeWebsocket = mUpgradeProtocolCallback && aStickyConn &&
+  bool upgradeWebsocket = mUpgradeProtocolCallback && aTransWithStickyConn &&
                           mResponseHead &&
                           ((mResponseHead->Status() == 101 &&
                             mResponseHead->Version() == HttpVersion::v1_1) ||
                            (mResponseHead->Status() == 200 &&
                             mResponseHead->Version() == HttpVersion::v2_0));
 
-  bool upgradeConnect = mUpgradeProtocolCallback && aStickyConn &&
+  bool upgradeConnect = mUpgradeProtocolCallback && aTransWithStickyConn &&
                         (mCaps & NS_HTTP_CONNECT_ONLY) && mResponseHead &&
                         mResponseHead->Status() == 200;
 
   if (upgradeWebsocket || upgradeConnect) {
     nsresult rv = gHttpHandler->ConnMgr()->CompleteUpgrade(
-        aStickyConn, mUpgradeProtocolCallback);
+        aTransWithStickyConn, mUpgradeProtocolCallback);
     if (NS_FAILED(rv)) {
       LOG(("  CompleteUpgrade failed with %08x", static_cast<uint32_t>(rv)));
     }
@@ -8401,10 +8388,11 @@ nsHttpChannel::ResumeAt(uint64_t aStartPos, const nsACString &aEntityID) {
 }
 
 nsresult nsHttpChannel::DoAuthRetry(
-    nsAHttpConnection *conn,
+    nsHttpTransaction *aTransWithStickyConn,
     const std::function<nsresult(nsHttpChannel *, nsresult)>
         &aContinueOnStopRequestFunc) {
-  LOG(("nsHttpChannel::DoAuthRetry [this=%p]\n", this));
+  LOG(("nsHttpChannel::DoAuthRetry [this=%p, aTransWithStickyConn=%p]\n", this,
+       aTransWithStickyConn));
 
   MOZ_ASSERT(!mTransaction, "should not have a transaction");
 
@@ -8427,15 +8415,15 @@ nsresult nsHttpChannel::DoAuthRetry(
   // notify "http-on-modify-request" observers
   CallOnModifyRequestObservers();
 
-  RefPtr<nsAHttpConnection> connRef(conn);
+  RefPtr<nsHttpTransaction> trans(aTransWithStickyConn);
   return CallOrWaitForResume(
-      [conn{std::move(connRef)}, aContinueOnStopRequestFunc](auto *self) {
-        return self->ContinueDoAuthRetry(conn, aContinueOnStopRequestFunc);
+      [trans{std::move(trans)}, aContinueOnStopRequestFunc](auto *self) {
+        return self->ContinueDoAuthRetry(trans, aContinueOnStopRequestFunc);
       });
 }
 
 nsresult nsHttpChannel::ContinueDoAuthRetry(
-    nsAHttpConnection *aConn,
+    nsHttpTransaction *aTransWithStickyConn,
     const std::function<nsresult(nsHttpChannel *, nsresult)>
         &aContinueOnStopRequestFunc) {
   LOG(("nsHttpChannel::ContinueDoAuthRetry [this=%p]\n", this));
@@ -8468,10 +8456,10 @@ nsresult nsHttpChannel::ContinueDoAuthRetry(
   // notify "http-on-before-connect" observers
   gHttpHandler->OnBeforeConnect(this);
 
-  RefPtr<nsAHttpConnection> connRef(aConn);
+  RefPtr<nsHttpTransaction> trans(aTransWithStickyConn);
   return CallOrWaitForResume(
-      [conn{std::move(connRef)}, aContinueOnStopRequestFunc](auto *self) {
-        nsresult rv = self->DoConnect(conn);
+      [trans{std::move(trans)}, aContinueOnStopRequestFunc](auto *self) {
+        nsresult rv = self->DoConnect(trans);
         return aContinueOnStopRequestFunc(self, rv);
       });
 }
