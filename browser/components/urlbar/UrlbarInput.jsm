@@ -368,7 +368,6 @@ class UrlbarInput {
    */
   setValueFromResult(result) {
     let val;
-
     switch (result.type) {
       case UrlbarUtils.RESULT_TYPE.SEARCH:
         val = result.payload.suggestion || result.payload.query;
@@ -389,7 +388,10 @@ class UrlbarInput {
       }
     }
     this.value = val;
+    // Also update userTypedValue. See bug 287996.
+    this.window.gBrowser.userTypedValue = val;
 
+    // The value setter clobbers the actiontype attribute, so update this after that.
     switch (result.type) {
       case UrlbarUtils.RESULT_TYPE.TAB_SWITCH:
         this.setAttribute("actiontype", "switchtab");
