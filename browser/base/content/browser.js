@@ -6355,25 +6355,19 @@ var ToolbarContextMenu = {
     return triggerNode;
   },
 
-  async updateExtension(popup) {
+  updateExtension(popup) {
     let removeExtension = popup.querySelector(".customize-context-removeExtension");
     let manageExtension = popup.querySelector(".customize-context-manageExtension");
     let separator = removeExtension.nextElementSibling;
     let node = this._getUnwrappedTriggerNode(popup);
     let isWebExt = node && node.hasAttribute("data-extensionid");
     removeExtension.hidden = manageExtension.hidden = separator.hidden = !isWebExt;
-    let id = node.getAttribute("data-extensionid");
-    let {permissions} = await AddonManager.getAddonByID(id);
-    removeExtension.disabled = !(permissions & AddonManager.PERM_CAN_UNINSTALL);
   },
 
   async removeExtensionForContextAction(popup) {
     let id = this._getUnwrappedTriggerNode(popup).getAttribute("data-extensionid");
     let addon = await AddonManager.getAddonByID(id);
-    let {name, permissions} = addon;
-    if (!(permissions & AddonManager.PERM_CAN_UNINSTALL)) {
-      return;
-    }
+    let {name} = addon;
     let brand = document.getElementById("bundle_brand").getString("brandShorterName");
     let {getFormattedString, getString} = gNavigatorBundle;
     let title = getFormattedString("webext.remove.confirmation.title", [name]);
