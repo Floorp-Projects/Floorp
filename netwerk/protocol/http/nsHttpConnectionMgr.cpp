@@ -370,6 +370,37 @@ nsresult nsHttpConnectionMgr::AddTransaction(nsHttpTransaction *trans,
   return PostEvent(&nsHttpConnectionMgr::OnMsgNewTransaction, priority, trans);
 }
 
+class NewTransactionData : public ARefBase {
+ public:
+  NewTransactionData(nsHttpTransaction *trans, int32_t priority,
+                     nsHttpTransaction *transWithStickyConn)
+      : mTrans(trans),
+        mPriority(priority),
+        mTransWithStickyConn(transWithStickyConn) {}
+
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(NewTransactionData, override)
+
+  RefPtr<nsHttpTransaction> mTrans;
+  int32_t mPriority;
+  RefPtr<nsHttpTransaction> mTransWithStickyConn;
+
+ private:
+  virtual ~NewTransactionData() = default;
+};
+
+nsresult nsHttpConnectionMgr::AddTransactionWithStickyConn(
+    nsHttpTransaction *trans, int32_t priority,
+    nsHttpTransaction *transWithStickyConn) {
+  LOG(
+      ("nsHttpConnectionMgr::AddTransactionWithStickyConn "
+       "[trans=%p %d transWithStickyConn=%p]\n",
+       trans, priority, transWithStickyConn));
+  RefPtr<NewTransactionData> data =
+      new NewTransactionData(trans, priority, transWithStickyConn);
+  return PostEvent(&nsHttpConnectionMgr::OnMsgNewTransactionWithStickyConn, 0,
+                   data);
+}
+
 nsresult nsHttpConnectionMgr::RescheduleTransaction(nsHttpTransaction *trans,
                                                     int32_t priority) {
   LOG(("nsHttpConnectionMgr::RescheduleTransaction [trans=%p %d]\n", trans,
@@ -515,17 +546,17 @@ nsresult nsHttpConnectionMgr::ReclaimConnection(nsHttpConnection *conn) {
   return PostEvent(&nsHttpConnectionMgr::OnMsgReclaimConnection, 0, conn);
 }
 
-// A structure used to marshall 5 pointers across the various necessary
+// A structure used to marshall 6 pointers across the various necessary
 // threads to complete an HTTP upgrade.
 class nsCompleteUpgradeData : public ARefBase {
  public:
-  nsCompleteUpgradeData(nsAHttpConnection *aConn,
+  nsCompleteUpgradeData(nsHttpTransaction *aTrans,
                         nsIHttpUpgradeListener *aListener, bool aJsWrapped)
-      : mConn(aConn), mUpgradeListener(aListener), mJsWrapped(aJsWrapped) {}
+      : mTrans(aTrans), mUpgradeListener(aListener), mJsWrapped(aJsWrapped) {}
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(nsCompleteUpgradeData, override)
 
-  RefPtr<nsAHttpConnection> mConn;
+  RefPtr<nsHttpTransaction> mTrans;
   nsCOMPtr<nsIHttpUpgradeListener> mUpgradeListener;
 
   nsCOMPtr<nsISocketTransport> mSocketTransport;
@@ -539,14 +570,14 @@ class nsCompleteUpgradeData : public ARefBase {
 };
 
 nsresult nsHttpConnectionMgr::CompleteUpgrade(
-    nsAHttpConnection *aConn, nsIHttpUpgradeListener *aUpgradeListener) {
+    nsHttpTransaction *aTrans, nsIHttpUpgradeListener *aUpgradeListener) {
   // test if aUpgradeListener is a wrapped JsObject
   nsCOMPtr<nsIXPConnectWrappedJS> wrapper = do_QueryInterface(aUpgradeListener);
 
   bool wrapped = !!wrapper;
 
   RefPtr<nsCompleteUpgradeData> data =
-      new nsCompleteUpgradeData(aConn, aUpgradeListener, wrapped);
+      new nsCompleteUpgradeData(aTrans, aUpgradeListener, wrapped);
   return PostEvent(&nsHttpConnectionMgr::OnMsgCompleteUpgrade, 0, data);
 }
 
@@ -2309,6 +2340,38 @@ void nsHttpConnectionMgr::OnMsgNewTransaction(int32_t priority,
   if (NS_FAILED(rv)) trans->Close(rv);  // for whatever its worth
 }
 
+void nsHttpConnectionMgr::OnMsgNewTransactionWithStickyConn(int32_t priority,
+                                                            ARefBase *param) {
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+
+  NewTransactionData *data = static_cast<NewTransactionData *>(param);
+  LOG(
+      ("nsHttpConnectionMgr::OnMsgNewTransactionWithStickyConn "
+       "[trans=%p, transWithStickyConn=%p, conn=%p]\n",
+       data->mTrans.get(), data->mTransWithStickyConn.get(),
+       data->mTransWithStickyConn->Connection()));
+
+  MOZ_ASSERT(data->mTransWithStickyConn &&
+             data->mTransWithStickyConn->Caps() & NS_HTTP_STICKY_CONNECTION);
+
+  data->mTrans->SetPriority(data->mPriority);
+
+  RefPtr<nsAHttpConnection> conn = data->mTransWithStickyConn->Connection();
+  if (conn && conn->IsPersistent()) {
+    // This is so far a workaround to only reuse persistent
+    // connection for authentication retry. See bug 459620 comment 4
+    // for details.
+    LOG((" Reuse connection [%p] for transaction [%p]", conn.get(),
+         data->mTrans.get()));
+    data->mTrans->SetConnection(conn);
+  }
+
+  nsresult rv = ProcessNewTransaction(data->mTrans);
+  if (NS_FAILED(rv)) {
+    data->mTrans->Close(rv);  // for whatever its worth
+  }
+}
+
 static uint64_t TabIdForQueuing(nsAHttpTransaction *transaction) {
   return gHttpHandler->ActiveTabPriority()
              ? transaction->TopLevelOuterContentWindowId()
@@ -2792,43 +2855,54 @@ void nsHttpConnectionMgr::OnMsgReclaimConnection(int32_t, ARefBase *param) {
 }
 
 void nsHttpConnectionMgr::OnMsgCompleteUpgrade(int32_t, ARefBase *param) {
-  nsCompleteUpgradeData *data = static_cast<nsCompleteUpgradeData *>(param);
-  MOZ_ASSERT(OnSocketThread() || (data->mJsWrapped == NS_IsMainThread()),
-             "not on socket thread");
-  LOG((
-      "nsHttpConnectionMgr::OnMsgCompleteUpgrade "
-      "this=%p conn=%p listener=%p wrapped=%d\n",
-      this, data->mConn.get(), data->mUpgradeListener.get(), data->mJsWrapped));
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
   nsresult rv = NS_OK;
-  if (!data->mSocketTransport) {
-    rv = data->mConn->TakeTransport(getter_AddRefs(data->mSocketTransport),
-                                    getter_AddRefs(data->mSocketIn),
-                                    getter_AddRefs(data->mSocketOut));
+  nsCompleteUpgradeData *data = static_cast<nsCompleteUpgradeData *>(param);
+  MOZ_ASSERT(data->mTrans && data->mTrans->Caps() & NS_HTTP_STICKY_CONNECTION);
+
+  RefPtr<nsAHttpConnection> conn(data->mTrans->Connection());
+  LOG(
+      ("nsHttpConnectionMgr::OnMsgCompleteUpgrade "
+       "conn=%p listener=%p wrapped=%d\n",
+       conn.get(), data->mUpgradeListener.get(), data->mJsWrapped));
+
+  if (!conn) {
+    return;
   }
 
-  if (NS_SUCCEEDED(rv)) {
-    if (!data->mJsWrapped || !OnSocketThread()) {
-      rv = data->mUpgradeListener->OnTransportAvailable(
-          data->mSocketTransport, data->mSocketIn, data->mSocketOut);
-      if (NS_FAILED(rv)) {
-        LOG(
-            ("nsHttpConnectionMgr::OnMsgCompleteUpgrade "
-             "this=%p conn=%p listener=%p wrapped=%d\n",
-             this, data->mConn.get(), data->mUpgradeListener.get(),
-             data->mJsWrapped));
-      }
-    } else {
-      LOG(
-          ("nsHttpConnectionMgr::OnMsgCompleteUpgrade "
-           "this=%p conn=%p listener=%p wrapped=%d pass to main thread\n",
-           this, data->mConn.get(), data->mUpgradeListener.get(),
-           data->mJsWrapped));
+  MOZ_ASSERT(!data->mSocketTransport);
+  rv = conn->TakeTransport(getter_AddRefs(data->mSocketTransport),
+                           getter_AddRefs(data->mSocketIn),
+                           getter_AddRefs(data->mSocketOut));
 
-      nsCOMPtr<nsIRunnable> event = new ConnEvent(
-          this, &nsHttpConnectionMgr::OnMsgCompleteUpgrade, 0, param);
-      NS_DispatchToMainThread(event);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  RefPtr<nsCompleteUpgradeData> upgradeData(data);
+  auto transportAvailableFunc = [upgradeData{std::move(upgradeData)}]() {
+    nsresult rv = upgradeData->mUpgradeListener->OnTransportAvailable(
+        upgradeData->mSocketTransport, upgradeData->mSocketIn,
+        upgradeData->mSocketOut);
+    if (NS_FAILED(rv)) {
+      LOG(
+          ("nsHttpConnectionMgr::OnMsgCompleteUpgrade OnTransportAvailable "
+           "failed. listener=%p\n",
+           upgradeData->mUpgradeListener.get()));
     }
+  };
+
+  if (data->mJsWrapped) {
+    LOG(
+        ("nsHttpConnectionMgr::OnMsgCompleteUpgrade "
+         "conn=%p listener=%p wrapped=%d pass to main thread\n",
+         conn.get(), data->mUpgradeListener.get(), data->mJsWrapped));
+    NS_DispatchToMainThread(
+        NS_NewRunnableFunction("net::nsHttpConnectionMgr::OnMsgCompleteUpgrade",
+                               transportAvailableFunc));
+  } else {
+    transportAvailableFunc();
   }
 }
 
@@ -3796,11 +3870,20 @@ void nsHttpConnectionMgr::OnMsgSpeculativeConnect(int32_t, ARefBase *param) {
   }
 }
 
-bool ConnectionHandle::IsPersistent() { return mConn->IsPersistent(); }
+bool ConnectionHandle::IsPersistent() {
+  MOZ_ASSERT(OnSocketThread());
+  return mConn->IsPersistent();
+}
 
-bool ConnectionHandle::IsReused() { return mConn->IsReused(); }
+bool ConnectionHandle::IsReused() {
+  MOZ_ASSERT(OnSocketThread());
+  return mConn->IsReused();
+}
 
-void ConnectionHandle::DontReuse() { mConn->DontReuse(); }
+void ConnectionHandle::DontReuse() {
+  MOZ_ASSERT(OnSocketThread());
+  mConn->DontReuse();
+}
 
 nsresult ConnectionHandle::PushBack(const char *buf, uint32_t bufLen) {
   return mConn->PushBack(buf, bufLen);

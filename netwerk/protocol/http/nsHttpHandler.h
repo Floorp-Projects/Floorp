@@ -240,6 +240,16 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
     return mConnMgr->AddTransaction(trans, priority);
   }
 
+  // This function is also called to kick-off a new transaction. But the new
+  // transaction will take a sticky connection from |transWithStickyConn|
+  // and reuse it.
+  MOZ_MUST_USE nsresult
+  InitiateTransactionWithStickyConn(nsHttpTransaction *trans, int32_t priority,
+                                    nsHttpTransaction *transWithStickyConn) {
+    return mConnMgr->AddTransactionWithStickyConn(trans, priority,
+                                                  transWithStickyConn);
+  }
+
   // Called to change the priority of an existing transaction that has
   // already been initiated.
   MOZ_MUST_USE nsresult RescheduleTransaction(nsHttpTransaction *trans,

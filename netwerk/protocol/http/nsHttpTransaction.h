@@ -111,10 +111,6 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   // Returning null if there is no trailer.
   nsHttpHeaderArray *TakeResponseTrailers();
 
-  // Provides a thread safe reference of the connection
-  // nsHttpTransaction::Connection should only be used on the socket thread
-  already_AddRefed<nsAHttpConnection> GetConnectionReference();
-
   // Called to set/find out if the transaction generated a complete response.
   bool ResponseIsComplete() { return mResponseIsComplete; }
   void SetResponseIsComplete() { mResponseIsComplete = true; }
@@ -427,6 +423,8 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   // This examins classification of this transaction whether the Throttleable
   // class has been set while Leader, Unblocked, DontThrottle has not.
   bool EligibleForThrottling() const;
+
+  void DontReuseConnection();
 
  private:
   bool mSubmittedRatePacing;
