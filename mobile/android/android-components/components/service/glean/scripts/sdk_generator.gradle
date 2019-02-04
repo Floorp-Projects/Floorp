@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import org.apache.tools.ant.taskdefs.condition.Os
+import groovy.json.JsonOutput
 
 // This installs a Miniconda3 environment into the gradle user home directory
 // so that it will be shared between all libraries that use glean.  This is
@@ -28,7 +29,7 @@ android {
         buildConfigField(
             "String",
             "GLEAN_MINICONDA_DIR",
-            "\"" + GLEAN_MINICONDA_DIR + "\""
+            JsonOutput.toJson(GLEAN_MINICONDA_DIR.path)
         )
     }
 }
