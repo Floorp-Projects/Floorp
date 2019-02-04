@@ -180,7 +180,7 @@ class Parameters(ReadOnlyDict):
         """
         Whether this is a staging release or not.
 
-        :return basestring: One of "production" or "staging".
+        :return six.text_type: One of "production" or "staging".
         """
         return release_level(self['project'])
 
