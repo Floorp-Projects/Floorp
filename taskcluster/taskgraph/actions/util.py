@@ -11,6 +11,8 @@ import logging
 import os
 import re
 
+from six import text_type
+
 from requests.exceptions import HTTPError
 
 from taskgraph import create
@@ -181,7 +183,7 @@ def relativize_datestamps(task_def):
         r'(?:z|[+-]\d\d:\d\d)$', re.I)
 
     def recurse(value):
-        if isinstance(value, basestring):
+        if isinstance(value, text_type):
             if ts_pattern.match(value):
                 value = parse_time(value)
                 diff = value - base
