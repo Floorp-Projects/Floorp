@@ -591,35 +591,46 @@ nsBufferedInputStream::GetUnbufferedStream(nsISupports** aStream) {
 
 void nsBufferedInputStream::Serialize(InputStreamParams& aParams,
                                       FileDescriptorArray& aFileDescriptors,
-                                      bool aDelayedStart,
+                                      bool aDelayedStart, uint32_t aMaxSize,
+                                      uint32_t* aSizeUsed,
                                       mozilla::dom::nsIContentChild* aManager) {
-  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aManager);
+  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aMaxSize,
+                    aSizeUsed, aManager);
 }
 
 void nsBufferedInputStream::Serialize(InputStreamParams& aParams,
                                       FileDescriptorArray& aFileDescriptors,
-                                      bool aDelayedStart,
+                                      bool aDelayedStart, uint32_t aMaxSize,
+                                      uint32_t* aSizeUsed,
                                       PBackgroundChild* aManager) {
-  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aManager);
+  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aMaxSize,
+                    aSizeUsed, aManager);
 }
 
 void nsBufferedInputStream::Serialize(
     InputStreamParams& aParams, FileDescriptorArray& aFileDescriptors,
-    bool aDelayedStart, mozilla::dom::nsIContentParent* aManager) {
-  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aManager);
+    bool aDelayedStart, uint32_t aMaxSize, uint32_t* aSizeUsed,
+    mozilla::dom::nsIContentParent* aManager) {
+  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aMaxSize,
+                    aSizeUsed, aManager);
 }
 
 void nsBufferedInputStream::Serialize(InputStreamParams& aParams,
                                       FileDescriptorArray& aFileDescriptors,
-                                      bool aDelayedStart,
+                                      bool aDelayedStart, uint32_t aMaxSize,
+                                      uint32_t* aSizeUsed,
                                       PBackgroundParent* aManager) {
-  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aManager);
+  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aMaxSize,
+                    aSizeUsed, aManager);
 }
 
 template <typename M>
 void nsBufferedInputStream::SerializeInternal(
     InputStreamParams& aParams, FileDescriptorArray& aFileDescriptors,
-    bool aDelayedStart, M* aManager) {
+    bool aDelayedStart, uint32_t aMaxSize, uint32_t* aSizeUsed, M* aManager) {
+  MOZ_ASSERT(aSizeUsed);
+  *aSizeUsed = 0;
+
   BufferedInputStreamParams params;
 
   if (mStream) {
@@ -627,8 +638,9 @@ void nsBufferedInputStream::SerializeInternal(
     MOZ_ASSERT(stream);
 
     InputStreamParams wrappedParams;
-    InputStreamHelper::SerializeInputStream(
-        stream, wrappedParams, aFileDescriptors, aDelayedStart, aManager);
+    InputStreamHelper::SerializeInputStream(stream, wrappedParams,
+                                            aFileDescriptors, aDelayedStart,
+                                            aMaxSize, aSizeUsed, aManager);
 
     params.optionalStream() = wrappedParams;
   } else {
