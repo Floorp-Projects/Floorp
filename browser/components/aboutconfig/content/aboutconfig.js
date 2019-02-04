@@ -314,7 +314,7 @@ if (!Preferences.get("browser.aboutConfig.showWarning")) {
   // the value of the textbox has been restored from previous sessions.
   document.addEventListener("DOMContentLoaded", loadPrefs, { once: true });
   window.addEventListener("load", () => {
-    if (document.getElementById("search").value) {
+    if (document.getElementById("about-config-search").value) {
       filterPrefs();
     }
   }, { once: true });
@@ -334,7 +334,7 @@ function loadPrefs() {
   document.body.textContent = "";
   document.body.appendChild(content);
 
-  let search = document.getElementById("search");
+  let search = document.getElementById("about-config-search");
   let prefs = document.getElementById("prefs");
   search.focus();
 
@@ -391,7 +391,7 @@ function filterPrefs() {
   }
   gDeletedPrefs.clear();
 
-  let searchName = document.getElementById("search").value.trim();
+  let searchName = document.getElementById("about-config-search").value.trim();
   gFilterString = searchName.toLowerCase();
   let prefArray = [...gExistingPrefs.values()];
   if (gFilterString) {
