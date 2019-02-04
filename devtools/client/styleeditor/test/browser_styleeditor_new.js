@@ -65,6 +65,10 @@ async function testInitialState(editor) {
   ok(editor.sourceLoaded, "new editor is loaded when attached");
   ok(editor.isNew, "new editor has isNew flag");
 
+  if (!editor.sourceEditor.hasFocus()) {
+    info("Waiting for stylesheet editor to gain focus");
+    await editor.sourceEditor.once("focus");
+  }
   ok(editor.sourceEditor.hasFocus(), "new editor has focus");
 
   summary = editor.summary;
