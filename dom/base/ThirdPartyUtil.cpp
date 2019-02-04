@@ -16,7 +16,9 @@
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIURI.h"
 #include "nsThreadUtils.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Logging.h"
+#include "mozilla/StaticPtr.h"
 #include "mozilla/Unused.h"
 #include "nsPIDOMWindow.h"
 
@@ -29,13 +31,37 @@ static mozilla::LazyLogModule gThirdPartyLog("thirdPartyUtil");
 #undef LOG
 #define LOG(args) MOZ_LOG(gThirdPartyLog, mozilla::LogLevel::Debug, args)
 
+static mozilla::StaticRefPtr<ThirdPartyUtil> gService;
+
 nsresult ThirdPartyUtil::Init() {
   NS_ENSURE_TRUE(NS_IsMainThread(), NS_ERROR_NOT_AVAILABLE);
+
+  MOZ_ASSERT(!gService);
+  gService = this;
+  mozilla::ClearOnShutdown(&gService);
 
   nsresult rv;
   mTLDService = do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID, &rv);
 
   return rv;
+}
+
+ThirdPartyUtil::~ThirdPartyUtil() { gService = nullptr; }
+
+// static
+ThirdPartyUtil* ThirdPartyUtil::GetInstance() {
+  if (gService) {
+    return gService;
+  }
+  nsCOMPtr<mozIThirdPartyUtil> tpuService =
+      mozilla::services::GetThirdPartyUtil();
+  if (!tpuService) {
+    return nullptr;
+  }
+  MOZ_ASSERT(
+      gService,
+      "gService must have been initialized in nsEffectiveTLDService::Init");
+  return gService;
 }
 
 // Determine if aFirstDomain is a different base domain to aSecondURI; or, if
