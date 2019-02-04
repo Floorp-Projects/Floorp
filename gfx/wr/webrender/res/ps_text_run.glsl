@@ -81,34 +81,39 @@ VertexInfo write_text_vertex(RectWithSize local_clip_rect,
     // Compute the snapping offset only if the scroll node transform is axis-aligned.
     if (remove_subpx_offset) {
         // Be careful to only snap with the transform when in screen raster space.
-        if (raster_space == RASTER_SCREEN) {
-            // Transform from local space to device space.
-            float device_scale = task.common_data.device_pixel_scale / transform.m[3].w;
-            mat2 device_transform = mat2(transform.m) * device_scale;
+        switch (raster_space) {
+            case RASTER_SCREEN: {
+                // Transform from local space to device space.
+                float device_scale = task.common_data.device_pixel_scale / transform.m[3].w;
+                mat2 device_transform = mat2(transform.m) * device_scale;
 
-            // Ensure the transformed text offset does not contain a subpixel translation
-            // such that glyph snapping is stable for equivalent glyph subpixel positions.
-            vec2 device_text_pos = device_transform * text_offset + transform.m[3].xy * device_scale;
-            snap_offset = floor(device_text_pos + 0.5) - device_text_pos;
+                // Ensure the transformed text offset does not contain a subpixel translation
+                // such that glyph snapping is stable for equivalent glyph subpixel positions.
+                vec2 device_text_pos = device_transform * text_offset + transform.m[3].xy * device_scale;
+                snap_offset = floor(device_text_pos + 0.5) - device_text_pos;
 
-            // Snap the glyph offset to a device pixel, using an appropriate bias depending
-            // on whether subpixel positioning is required.
-            vec2 device_glyph_offset = device_transform * glyph_offset;
-            snap_offset += floor(device_glyph_offset + snap_bias) - device_glyph_offset;
+                // Snap the glyph offset to a device pixel, using an appropriate bias depending
+                // on whether subpixel positioning is required.
+                vec2 device_glyph_offset = device_transform * glyph_offset;
+                snap_offset += floor(device_glyph_offset + snap_bias) - device_glyph_offset;
 
-            // Transform from device space back to local space.
-            local_transform = inverse(device_transform);
+                // Transform from device space back to local space.
+                local_transform = inverse(device_transform);
 
 #ifndef WR_FEATURE_GLYPH_TRANSFORM
-            // If not using transformed subpixels, the glyph rect is actually in local space.
-            // So convert the snap offset back to local space.
-            snap_offset = local_transform * snap_offset;
+                // If not using transformed subpixels, the glyph rect is actually in local space.
+                // So convert the snap offset back to local space.
+                snap_offset = local_transform * snap_offset;
 #endif
-        } else {
-            // Otherwise, when in local raster space, the transform may be animated, so avoid
-            // snapping with the transform to avoid oscillation.
-            snap_offset = floor(text_offset + 0.5) - text_offset;
-            snap_offset += floor(glyph_offset + snap_bias) - glyph_offset;
+                break;
+            }
+            default: {
+                // Otherwise, when in local raster space, the transform may be animated, so avoid
+                // snapping with the transform to avoid oscillation.
+                snap_offset = floor(text_offset + 0.5) - text_offset;
+                snap_offset += floor(glyph_offset + snap_bias) - glyph_offset;
+                break;
+            }
         }
     }
 
