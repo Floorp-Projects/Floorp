@@ -154,13 +154,11 @@ ThirdPartyUtil::IsThirdPartyWindow(mozIDOMWindowProxy* aWindow, nsIURI* aURI,
     }
   }
 
-  nsCOMPtr<nsPIDOMWindowOuter> current = nsPIDOMWindowOuter::From(aWindow),
-                               parent;
-  nsCOMPtr<nsIURI> parentURI;
+  nsPIDOMWindowOuter* current = nsPIDOMWindowOuter::From(aWindow);
   do {
     // We use GetScriptableParent rather than GetParent because we consider
     // <iframe mozbrowser> to be a top-level frame.
-    parent = current->GetScriptableParent();
+    nsPIDOMWindowOuter* parent = current->GetScriptableParent();
     // We don't use SameCOMIdentity here since we know that nsPIDOMWindowOuter
     // is only implemented by nsGlobalWindowOuter, so different objects of that
     // type will not have different nsISupports COM identities, and checking the
@@ -172,6 +170,7 @@ ThirdPartyUtil::IsThirdPartyWindow(mozIDOMWindowProxy* aWindow, nsIURI* aURI,
       return NS_OK;
     }
 
+    nsCOMPtr<nsIURI> parentURI;
     rv = GetURIFromWindow(parent, getter_AddRefs(parentURI));
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -184,7 +183,6 @@ ThirdPartyUtil::IsThirdPartyWindow(mozIDOMWindowProxy* aWindow, nsIURI* aURI,
     }
 
     current = parent;
-    currentURI = parentURI;
   } while (1);
 
   MOZ_ASSERT_UNREACHABLE("should've returned");
