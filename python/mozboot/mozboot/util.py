@@ -10,13 +10,7 @@ import os
 def get_state_dir():
     """Obtain path to a directory to hold state.
 
-    Returns a tuple of the path and a bool indicating whether the
-    value came from an environment variable.
+    Returns:
+        A path to the state dir (str)
     """
-    state_user_dir = os.path.expanduser('~/.mozbuild')
-    state_env_dir = os.environ.get('MOZBUILD_STATE_PATH')
-
-    if state_env_dir:
-        return state_env_dir, True
-    else:
-        return state_user_dir, False
+    return os.environ.get('MOZBUILD_STATE_PATH', os.path.expanduser('~/.mozbuild'))
