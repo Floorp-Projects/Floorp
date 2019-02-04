@@ -24,6 +24,7 @@ RUN apt-get update && \
       gcc-multilib \
       gnupg \
       libc6-dev \
+      nasm \
       openjdk-8-jdk-headless \
       pkg-config \
       patch \
