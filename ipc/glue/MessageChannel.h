@@ -578,8 +578,6 @@ class MessageChannel : HasResultCodes, MessageLoop::DestructionObserver {
     Message& Msg() { return mMessage; }
     const Message& Msg() const { return mMessage; }
 
-    bool GetAffectedSchedulerGroups(SchedulerGroupSet& aGroups) override;
-
    private:
     MessageTask() = delete;
     MessageTask(const MessageTask&) = delete;

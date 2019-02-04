@@ -57,12 +57,6 @@ class nsILabelableRunnable : public nsISupports {
 
     void SetIsRunning(bool aIsRunning);
   };
-
-  // Returns true if the runnable can be labeled right now. In this case,
-  // aGroups will contain the set of SchedulerGroups that can be affected by the
-  // runnable. If this returns false, no assumptions can be made about which
-  // SchedulerGroups are affected by the runnable.
-  virtual bool GetAffectedSchedulerGroups(SchedulerGroupSet& aGroups) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsILabelableRunnable, NS_ILABELABLERUNNABLE_IID);

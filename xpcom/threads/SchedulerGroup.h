@@ -104,8 +104,6 @@ class SchedulerGroup : public LinkedListElement<SchedulerGroup> {
     Runnable(already_AddRefed<nsIRunnable>&& aRunnable, SchedulerGroup* aGroup,
              dom::DocGroup* aDocGroup);
 
-    bool GetAffectedSchedulerGroups(SchedulerGroupSet& aGroups) override;
-
     SchedulerGroup* Group() const { return mGroup; }
     dom::DocGroup* DocGroup() const;
 
