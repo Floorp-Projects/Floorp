@@ -267,11 +267,15 @@ class ParticularProcessPriorityManager final : public WakeLockObserver,
   void FireTestOnlyObserverNotification(const char* aTopic,
                                         const char* aData = nullptr);
 
+  bool IsHoldingWakeLock(const nsAString& aTopic);
+
   ContentParent* mContentParent;
   uint64_t mChildID;
   ProcessPriority mPriority;
   bool mHoldsCPUWakeLock;
   bool mHoldsHighPriorityWakeLock;
+  bool mHoldsPlayingAudioWakeLock;
+  bool mHoldsPlayingVideoWakeLock;
 
   /**
    * Used to implement NameWithComma().
@@ -492,7 +496,9 @@ ParticularProcessPriorityManager::ParticularProcessPriorityManager(
       mChildID(aContentParent->ChildID()),
       mPriority(PROCESS_PRIORITY_UNKNOWN),
       mHoldsCPUWakeLock(false),
-      mHoldsHighPriorityWakeLock(false) {
+      mHoldsHighPriorityWakeLock(false),
+      mHoldsPlayingAudioWakeLock(false),
+      mHoldsPlayingVideoWakeLock(false) {
   MOZ_ASSERT(XRE_IsParentProcess());
   LOGP("Creating ParticularProcessPriorityManager.");
 }
@@ -517,14 +523,27 @@ void ParticularProcessPriorityManager::Init() {
 
   // This process may already hold the CPU lock; for example, our parent may
   // have acquired it on our behalf.
-  WakeLockInformation info1, info2;
-  GetWakeLockInfo(NS_LITERAL_STRING("cpu"), &info1);
-  mHoldsCPUWakeLock = info1.lockingProcesses().Contains(ChildID());
+  mHoldsCPUWakeLock = IsHoldingWakeLock(NS_LITERAL_STRING("cpu"));
+  mHoldsHighPriorityWakeLock =
+      IsHoldingWakeLock(NS_LITERAL_STRING("high-priority"));
+  mHoldsPlayingAudioWakeLock =
+      IsHoldingWakeLock(NS_LITERAL_STRING("audio-playing"));
+  mHoldsPlayingVideoWakeLock =
+      IsHoldingWakeLock(NS_LITERAL_STRING("video-playing"));
 
-  GetWakeLockInfo(NS_LITERAL_STRING("high-priority"), &info2);
-  mHoldsHighPriorityWakeLock = info2.lockingProcesses().Contains(ChildID());
-  LOGP("Done starting up.  mHoldsCPUWakeLock=%d, mHoldsHighPriorityWakeLock=%d",
-       mHoldsCPUWakeLock, mHoldsHighPriorityWakeLock);
+  LOGP(
+      "Done starting up.  mHoldsCPUWakeLock=%d, "
+      "mHoldsHighPriorityWakeLock=%d, mHoldsPlayingAudioWakeLock=%d, "
+      "mHoldsPlayingVideoWakeLock=%d",
+      mHoldsCPUWakeLock, mHoldsHighPriorityWakeLock, mHoldsPlayingAudioWakeLock,
+      mHoldsPlayingVideoWakeLock);
+}
+
+bool ParticularProcessPriorityManager::IsHoldingWakeLock(
+    const nsAString& aTopic) {
+  WakeLockInformation info;
+  GetWakeLockInfo(aTopic, &info);
+  return info.lockingProcesses().Contains(ChildID());
 }
 
 ParticularProcessPriorityManager::~ParticularProcessPriorityManager() {
@@ -552,6 +571,10 @@ ParticularProcessPriorityManager::~ParticularProcessPriorityManager() {
     dest = &mHoldsCPUWakeLock;
   } else if (aInfo.topic().EqualsLiteral("high-priority")) {
     dest = &mHoldsHighPriorityWakeLock;
+  } else if (aInfo.topic().EqualsLiteral("audio-playing")) {
+    dest = &mHoldsPlayingAudioWakeLock;
+  } else if (aInfo.topic().EqualsLiteral("video-playing")) {
+    dest = &mHoldsPlayingVideoWakeLock;
   }
 
   if (dest) {
@@ -560,8 +583,10 @@ ParticularProcessPriorityManager::~ParticularProcessPriorityManager() {
       *dest = thisProcessLocks;
       LOGP(
           "Got wake lock changed event. "
-          "Now mHoldsCPUWakeLock=%d, mHoldsHighPriorityWakeLock=%d",
-          mHoldsCPUWakeLock, mHoldsHighPriorityWakeLock);
+          "Now mHoldsCPUWakeLock=%d, mHoldsHighPriorityWakeLock=%d, "
+          "mHoldsPlayingAudioWakeLock=%d, mHoldsPlayingVideoWakeLock=%d",
+          mHoldsCPUWakeLock, mHoldsHighPriorityWakeLock,
+          mHoldsPlayingAudioWakeLock, mHoldsPlayingVideoWakeLock);
       ResetPriority();
     }
   }
@@ -728,7 +753,8 @@ ProcessPriority ParticularProcessPriorityManager::ComputePriority() {
     return PROCESS_PRIORITY_FOREGROUND;
   }
 
-  if (mHoldsCPUWakeLock || mHoldsHighPriorityWakeLock) {
+  if (mHoldsCPUWakeLock || mHoldsHighPriorityWakeLock ||
+      mHoldsPlayingAudioWakeLock || mHoldsPlayingVideoWakeLock) {
     return PROCESS_PRIORITY_BACKGROUND_PERCEIVABLE;
   }
 
