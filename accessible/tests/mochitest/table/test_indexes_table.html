@@ -142,6 +142,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=410052
       ];
       testTableIndexes("tablewithcolspanandcelldisplayblock", idxes);
 
+      // ////////////////////////////////////////////////////////////////////////
+      // A table with all elements being display:block, including a row group.
+      // This makes us fall back to the ARIAGridRowAccessible, and we must
+      // make sure the index is 0. Crazy example from Gmail.
+      idxes = [
+        [0],
+      ];
+      testTableIndexes("tablealldisplayblock", idxes);
+
       SimpleTest.finish();
     }
 
@@ -434,5 +443,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=410052
     </tr>
   </table>
 
+  <table id="tablealldisplayblock" style="display:block;">
+    <tbody style="display:block;">
+      <tr style="display:block;">
+        <td style="display:block;">text</td>
+      </tr>
+    </tbody>
+  </table>
+  
 </body>
 </html>
