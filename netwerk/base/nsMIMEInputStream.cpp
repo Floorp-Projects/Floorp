@@ -72,6 +72,7 @@ class nsMIMEInputStream : public nsIMIMEInputStream,
                             const char* aFromRawSegment, uint32_t aToOffset,
                             uint32_t aCount, uint32_t* aWriteCount);
 
+  bool IsSeekableInputStream() const;
   bool IsAsyncInputStream() const;
   bool IsIPCSerializable() const;
   bool IsInputStreamLength() const;
@@ -101,8 +102,8 @@ NS_IMPL_CLASSINFO(nsMIMEInputStream, nullptr, nsIClassInfo::THREADSAFE,
 NS_INTERFACE_MAP_BEGIN(nsMIMEInputStream)
   NS_INTERFACE_MAP_ENTRY(nsIMIMEInputStream)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIInputStream, nsIMIMEInputStream)
-  NS_INTERFACE_MAP_ENTRY(nsISeekableStream)
   NS_INTERFACE_MAP_ENTRY(nsITellableStream)
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsISeekableStream, IsSeekableInputStream())
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIIPCSerializableInputStream,
                                      IsIPCSerializable())
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIAsyncInputStream, IsAsyncInputStream())
@@ -462,6 +463,11 @@ nsMIMEInputStream::OnInputStreamLengthReady(nsIAsyncInputStreamLength* aStream,
 
   MOZ_ASSERT(callback);
   return callback->OnInputStreamLengthReady(this, aLength);
+}
+
+bool nsMIMEInputStream::IsSeekableInputStream() const {
+  nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mStream);
+  return !!seekable;
 }
 
 bool nsMIMEInputStream::IsAsyncInputStream() const {
