@@ -12,7 +12,6 @@ import json
 import logging
 import os
 import traceback
-import yaml
 
 from . import decision, schema
 from .util import match_utc
@@ -22,6 +21,7 @@ from taskgraph.util.attributes import match_run_on_projects
 from taskgraph.util.hg import calculate_head_rev
 from taskgraph.util.schema import resolve_keyed_by
 from taskgraph.util.taskcluster import get_session
+from taskgraph.util.yaml import load_yaml
 
 # Functions to handle each `job.type` in `.cron.yml`.  These are called with
 # the contents of the `job` property from `.cron.yml` and should return a
@@ -35,8 +35,7 @@ logger = logging.getLogger(__name__)
 
 
 def load_jobs(params, root):
-    with open(os.path.join(root, '.cron.yml'), 'rb') as f:
-        cron_yml = yaml.safe_load(f)
+    cron_yml = load_yaml(root, '.cron.yml')
     schema.validate(cron_yml)
 
     # resolve keyed_by fields in each job

@@ -9,12 +9,12 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import jsone
 import pipes
-import yaml
 import os
 import slugid
 
 from taskgraph.util.time import current_json_time
 from taskgraph.util.hg import find_hg_revision_push_info
+from taskgraph.util.yaml import load_yaml
 
 
 def run_decision_task(job, params, root):
@@ -36,8 +36,7 @@ def run_decision_task(job, params, root):
 
 def make_decision_task(params, root, symbol, arguments=[]):
     """Generate a basic decision task, based on the root .taskcluster.yml"""
-    with open(os.path.join(root, '.taskcluster.yml'), 'rb') as f:
-        taskcluster_yml = yaml.safe_load(f)
+    taskcluster_yml = load_yaml(root, '.taskcluster.yml')
 
     push_info = find_hg_revision_push_info(
         params['repository_url'],
