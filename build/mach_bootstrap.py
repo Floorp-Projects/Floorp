@@ -319,6 +319,9 @@ def bootstrap(topsrcdir, mozilla_dir=None):
 
             return state_dir
 
+        if key == 'local_state_dir':
+            return get_state_dir(srcdir=True)
+
         if key == 'topdir':
             return topsrcdir
 
