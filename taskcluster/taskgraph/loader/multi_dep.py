@@ -178,7 +178,7 @@ def get_primary_dep(config, dep_tasks):
 
     """
     primary_dependencies = config.get('primary-dependency')
-    if isinstance(primary_dependencies, str):
+    if isinstance(primary_dependencies, basestring):
         primary_dependencies = [primary_dependencies]
     if not primary_dependencies:
         assert len(dep_tasks) == 1, "Must define a primary-dependency!"
