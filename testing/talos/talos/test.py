@@ -1037,3 +1037,6 @@ class about_preferences_basic(PageloaderTest):
     unit = 'ms'
     lower_is_better = True
     fnbpaint = True
+    """ASAP mode"""
+    preferences = {'layout.frame_rate': 0,
+                   'docshell.event_starvation_delay_hint': 1}
