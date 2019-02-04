@@ -47,7 +47,6 @@ class FilterBar extends Component {
   constructor(props) {
     super(props);
     this.onClickMessagesClear = this.onClickMessagesClear.bind(this);
-    this.onClickFilterBarToggle = this.onClickFilterBarToggle.bind(this);
     this.onClickRemoveAllFilters = this.onClickRemoveAllFilters.bind(this);
     this.onClickRemoveTextFilter = this.onClickRemoveTextFilter.bind(this);
     this.onSearchInput = this.onSearchInput.bind(this);
@@ -100,10 +99,6 @@ class FilterBar extends Component {
 
   onClickMessagesClear() {
     this.props.dispatch(actions.messagesClear());
-  }
-
-  onClickFilterBarToggle() {
-    this.props.dispatch(actions.filterBarToggle());
   }
 
   onClickRemoveAllFilters() {
@@ -238,7 +233,6 @@ class FilterBar extends Component {
   render() {
     const {
       filter,
-      filterBarVisible,
       persistLogs,
       filteredMessagesCount,
       hidePersistLogsCheckbox,
@@ -257,12 +251,6 @@ class FilterBar extends Component {
         }),
         dom.div({
           className: "devtools-separator",
-        }),
-        dom.button({
-          className: "devtools-button devtools-filter-icon" + (
-            filterBarVisible ? " checked" : ""),
-          title: l10n.getStr("webconsole.toggleFilterButton.tooltip"),
-          onClick: this.onClickFilterBarToggle,
         }),
         dom.input({
           className: "devtools-plaininput text-filter",
@@ -300,9 +288,7 @@ class FilterBar extends Component {
       ));
     }
 
-    if (filterBarVisible) {
-      children.push(this.renderFiltersConfigBar());
-    }
+    children.push(this.renderFiltersConfigBar());
 
     return (
       dom.div({

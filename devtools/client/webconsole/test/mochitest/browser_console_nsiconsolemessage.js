@@ -71,5 +71,4 @@ add_task(async function() {
   await waitFor(() => findMessages(hud, "liveBrowserConsoleMessage2").length === 0);
 
   resetFilters(hud);
-  await setFilterBarVisible(hud, false);
 });

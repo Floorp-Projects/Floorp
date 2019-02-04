@@ -12,7 +12,6 @@ const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
-  await setFilterBarVisible(hud, true);
 
   const filterState = await getFilterState(hud);
 
@@ -62,5 +61,4 @@ async function testFilterPersistence() {
     "testFilterPersistence: Messages of all levels shown when filters are on.");
 
   await resetFilters(hud);
-  await setFilterBarVisible(hud, false);
 }
