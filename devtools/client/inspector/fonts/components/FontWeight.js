@@ -14,6 +14,7 @@ const { getStr } = require("../utils/l10n");
 class FontWeight extends PureComponent {
   static get propTypes() {
     return {
+      disabled: PropTypes.bool.isRequired,
       onChange: PropTypes.func.isRequired,
       value: PropTypes.string.isRequired,
     };
@@ -21,6 +22,7 @@ class FontWeight extends PureComponent {
 
   render() {
     return FontPropertyValue({
+      disabled: this.props.disabled,
       label: getStr("fontinspector.fontWeightLabel"),
       min: 100,
       max: 900,

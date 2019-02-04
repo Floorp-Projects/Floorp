@@ -10,6 +10,7 @@ const { parseFontVariationAxes } = require("../utils/font-utils");
 const {
   APPLY_FONT_VARIATION_INSTANCE,
   RESET_EDITOR,
+  SET_FONT_EDITOR_DISABLED,
   UPDATE_AXIS_VALUE,
   UPDATE_CUSTOM_INSTANCE,
   UPDATE_EDITOR_STATE,
@@ -22,6 +23,8 @@ const INITIAL_STATE = {
   axes: {},
   // Copy of the most recent axes values. Used to revert from a named instance.
   customInstanceValues: [],
+  // When true, prevent users from interacting with inputs in the font editor.
+  disabled: false,
   // Fonts used on the selected element.
   fonts: [],
   // Current selected font variation instance.
@@ -73,6 +76,10 @@ const reducers = {
       return { axis: [axis], value: state.axes[axis] };
     });
     return newState;
+  },
+
+  [SET_FONT_EDITOR_DISABLED](state, { disabled }) {
+    return { ...state, disabled };
   },
 
   [UPDATE_EDITOR_STATE](state, { fonts, properties, id }) {

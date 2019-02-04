@@ -24,6 +24,7 @@ class FontPropertyValue extends PureComponent {
       autoIncrement: PropTypes.bool,
       className: PropTypes.string,
       defaultValue: PropTypes.number,
+      disabled: PropTypes.bool.isRequired,
       label: PropTypes.string.isRequired,
       min: PropTypes.number.isRequired,
       // Whether to show the `min` prop value as a label.
@@ -375,12 +376,13 @@ class FontPropertyValue extends PureComponent {
     return dom.select(
       {
         className: "font-value-select",
+        disabled: this.props.disabled,
         onChange: this.onUnitChange,
+        value: this.props.unit,
       },
       options.map(unit => {
         return dom.option(
           {
-            selected: unit === this.props.unit,
             value: unit,
           },
           unit
@@ -450,6 +452,7 @@ class FontPropertyValue extends PureComponent {
         onMouseMove: this.onMouseMove,
         onMouseUp: this.onMouseUp,
         className: "font-value-slider",
+        disabled: this.props.disabled,
         name: this.props.name,
         title: this.props.label,
         type: "range",
@@ -463,6 +466,7 @@ class FontPropertyValue extends PureComponent {
         max: this.props.autoIncrement ? null : this.props.max,
         name: this.props.name,
         className: "font-value-input",
+        disabled: this.props.disabled,
         type: "number",
       }
     );
@@ -470,6 +474,7 @@ class FontPropertyValue extends PureComponent {
     return dom.label(
       {
         className: `font-control ${this.props.className}`,
+        disabled: this.props.disabled,
       },
       dom.div(
         {
