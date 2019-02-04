@@ -111,7 +111,7 @@ class AboutConfigTest {
   }
 
   get searchInput() {
-    return this.document.getElementById("search");
+    return this.document.getElementById("about-config-search");
   }
 
   get prefsTable() {
