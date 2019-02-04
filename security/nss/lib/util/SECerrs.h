@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* General security error codes  */
+/* General security error codes */
 /* Caller must #include "secerr.h" */
 
 ER3(SEC_ERROR_IO, SEC_ERROR_BASE + 0,
@@ -54,7 +54,7 @@ ER3(SEC_ERROR_BAD_PASSWORD, SEC_ERROR_BASE + 15,
     "The security password entered is incorrect.")
 
 ER3(SEC_ERROR_RETRY_PASSWORD, SEC_ERROR_BASE + 16,
-    "New password entered incorrectly.  Please try again.")
+    "New password entered incorrectly. Please try again.")
 
 ER3(SEC_ERROR_NO_NODELOCK, SEC_ERROR_BASE + 17,
     "security library: no nodelock.")
@@ -96,10 +96,10 @@ ER3(SEC_ERROR_CERT_NO_RESPONSE, (SEC_ERROR_BASE + 29),
     "Cert Library: No Response")
 
 ER3(SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE, (SEC_ERROR_BASE + 30),
-    "The certificate issuer's certificate has expired.  Check your system date and time.")
+    "The certificate issuer's certificate has expired. Check your system date and time.")
 
 ER3(SEC_ERROR_CRL_EXPIRED, (SEC_ERROR_BASE + 31),
-    "The CRL for the certificate's issuer has expired.  Update it or check your system date and time.")
+    "The CRL for the certificate's issuer has expired. Update it or check your system date and time.")
 
 ER3(SEC_ERROR_CRL_BAD_SIGNATURE, (SEC_ERROR_BASE + 32),
     "The CRL for the certificate's issuer has an invalid signature.")
@@ -159,7 +159,7 @@ ER3(SEC_ERROR_DECRYPTION_DISALLOWED, (SEC_ERROR_BASE + 49),
 
 /* Fortezza Alerts */
 ER3(XP_SEC_FORTEZZA_BAD_CARD, (SEC_ERROR_BASE + 50),
-    "Fortezza card has not been properly initialized.  \
+    "Fortezza card has not been properly initialized. \
 Please remove it and return it to your issuer.")
 
 ER3(XP_SEC_FORTEZZA_NO_CARD, (SEC_ERROR_BASE + 51),
@@ -245,31 +245,31 @@ ER3(SEC_ERROR_IMPORTING_CERTIFICATES, (SEC_ERROR_BASE + 77),
     "Error attempting to import certificates.")
 
 ER3(SEC_ERROR_PKCS12_DECODING_PFX, (SEC_ERROR_BASE + 78),
-    "Unable to import.  Decoding error.  File not valid.")
+    "Unable to import. Decoding error. File not valid.")
 
 ER3(SEC_ERROR_PKCS12_INVALID_MAC, (SEC_ERROR_BASE + 79),
-    "Unable to import.  Invalid MAC.  Incorrect password or corrupt file.")
+    "Unable to import. Invalid MAC. Incorrect password or corrupt file.")
 
 ER3(SEC_ERROR_PKCS12_UNSUPPORTED_MAC_ALGORITHM, (SEC_ERROR_BASE + 80),
-    "Unable to import.  MAC algorithm not supported.")
+    "Unable to import. MAC algorithm not supported.")
 
 ER3(SEC_ERROR_PKCS12_UNSUPPORTED_TRANSPORT_MODE, (SEC_ERROR_BASE + 81),
-    "Unable to import.  Only password integrity and privacy modes supported.")
+    "Unable to import. Only password integrity and privacy modes supported.")
 
 ER3(SEC_ERROR_PKCS12_CORRUPT_PFX_STRUCTURE, (SEC_ERROR_BASE + 82),
-    "Unable to import.  File structure is corrupt.")
+    "Unable to import. File structure is corrupt.")
 
 ER3(SEC_ERROR_PKCS12_UNSUPPORTED_PBE_ALGORITHM, (SEC_ERROR_BASE + 83),
-    "Unable to import.  Encryption algorithm not supported.")
+    "Unable to import. Encryption algorithm not supported.")
 
 ER3(SEC_ERROR_PKCS12_UNSUPPORTED_VERSION, (SEC_ERROR_BASE + 84),
-    "Unable to import.  File version not supported.")
+    "Unable to import. File version not supported.")
 
 ER3(SEC_ERROR_PKCS12_PRIVACY_PASSWORD_INCORRECT, (SEC_ERROR_BASE + 85),
-    "Unable to import.  Incorrect privacy password.")
+    "Unable to import. Incorrect privacy password.")
 
 ER3(SEC_ERROR_PKCS12_CERT_COLLISION, (SEC_ERROR_BASE + 86),
-    "Unable to import.  Same nickname already exists in database.")
+    "Unable to import. Same nickname already exists in database.")
 
 ER3(SEC_ERROR_USER_CANCELLED, (SEC_ERROR_BASE + 87),
     "The user pressed cancel.")
@@ -290,34 +290,34 @@ ER3(SEC_ERROR_CERT_ADDR_MISMATCH, (SEC_ERROR_BASE + 92),
     "Address in signing certificate does not match address in message headers.")
 
 ER3(SEC_ERROR_PKCS12_UNABLE_TO_IMPORT_KEY, (SEC_ERROR_BASE + 93),
-    "Unable to import.  Error attempting to import private key.")
+    "Unable to import. Error attempting to import private key.")
 
 ER3(SEC_ERROR_PKCS12_IMPORTING_CERT_CHAIN, (SEC_ERROR_BASE + 94),
-    "Unable to import.  Error attempting to import certificate chain.")
+    "Unable to import. Error attempting to import certificate chain.")
 
 ER3(SEC_ERROR_PKCS12_UNABLE_TO_LOCATE_OBJECT_BY_NAME, (SEC_ERROR_BASE + 95),
-    "Unable to export.  Unable to locate certificate or key by nickname.")
+    "Unable to export. Unable to locate certificate or key by nickname.")
 
 ER3(SEC_ERROR_PKCS12_UNABLE_TO_EXPORT_KEY, (SEC_ERROR_BASE + 96),
-    "Unable to export.  Private Key could not be located and exported.")
+    "Unable to export. Private Key could not be located and exported.")
 
 ER3(SEC_ERROR_PKCS12_UNABLE_TO_WRITE, (SEC_ERROR_BASE + 97),
-    "Unable to export.  Unable to write the export file.")
+    "Unable to export. Unable to write the export file.")
 
 ER3(SEC_ERROR_PKCS12_UNABLE_TO_READ, (SEC_ERROR_BASE + 98),
-    "Unable to import.  Unable to read the import file.")
+    "Unable to import. Unable to read the import file.")
 
 ER3(SEC_ERROR_PKCS12_KEY_DATABASE_NOT_INITIALIZED, (SEC_ERROR_BASE + 99),
-    "Unable to export.  Key database corrupt or deleted.")
+    "Unable to export. Key database corrupt or deleted.")
 
 ER3(SEC_ERROR_KEYGEN_FAIL, (SEC_ERROR_BASE + 100),
     "Unable to generate public/private key pair.")
 
 ER3(SEC_ERROR_INVALID_PASSWORD, (SEC_ERROR_BASE + 101),
-    "Password entered is invalid.  Please pick a different one.")
+    "Password entered is invalid. Please pick a different one.")
 
 ER3(SEC_ERROR_RETRY_OLD_PASSWORD, (SEC_ERROR_BASE + 102),
-    "Old password entered incorrectly.  Please try again.")
+    "Old password entered incorrectly. Please try again.")
 
 ER3(SEC_ERROR_BAD_NICKNAME, (SEC_ERROR_BASE + 103),
     "Certificate nickname already in use.")
@@ -344,7 +344,7 @@ ER3(SEC_ERROR_OLD_KRL, (SEC_ERROR_BASE + 110),
     "New KRL is not later than the current one.")
 
 ER3(SEC_ERROR_CKL_CONFLICT, (SEC_ERROR_BASE + 111),
-    "New CKL has different issuer than current CKL.  Delete current CKL.")
+    "New CKL has different issuer than current CKL. Delete current CKL.")
 
 ER3(SEC_ERROR_CERT_NOT_IN_NAME_SPACE, (SEC_ERROR_BASE + 112),
     "The Certifying Authority for this certificate is not permitted to issue a \
@@ -518,7 +518,7 @@ ER3(SEC_ERROR_PKCS11_GENERAL_ERROR, (SEC_ERROR_BASE + 167),
     "A PKCS #11 module returned CKR_GENERAL_ERROR, indicating that an unrecoverable error has occurred.")
 
 ER3(SEC_ERROR_PKCS11_FUNCTION_FAILED, (SEC_ERROR_BASE + 168),
-    "A PKCS #11 module returned CKR_FUNCTION_FAILED, indicating that the requested function could not be performed.  Trying the same operation again might succeed.")
+    "A PKCS #11 module returned CKR_FUNCTION_FAILED, indicating that the requested function could not be performed. Trying the same operation again might succeed.")
 
 ER3(SEC_ERROR_PKCS11_DEVICE_ERROR, (SEC_ERROR_BASE + 169),
     "A PKCS #11 module returned CKR_DEVICE_ERROR, indicating that a problem has occurred with the token or slot.")

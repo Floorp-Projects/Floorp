@@ -478,10 +478,11 @@ if mozinfo.isWin:
         :param pid: PID of the process to terminate.
         """
         PROCESS_TERMINATE = 0x0001
+        SYNCHRONIZE = 0x00100000
         WAIT_OBJECT_0 = 0x0
         WAIT_FAILED = -1
         logger = get_logger()
-        handle = OpenProcess(PROCESS_TERMINATE, 0, pid)
+        handle = OpenProcess(PROCESS_TERMINATE | SYNCHRONIZE, 0, pid)
         if handle:
             if kernel32.TerminateProcess(handle, 1):
                 # TerminateProcess is async; wait up to 30 seconds for process to

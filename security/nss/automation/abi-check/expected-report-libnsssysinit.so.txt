@@ -1,8 +1,0 @@
-Function symbols changes summary: 2 Removed, 0 Added function symbols not referenced by debug info
-Variable symbols changes summary: 0 Removed, 0 Added variable symbol not referenced by debug info
-
-2 Removed function symbols not referenced by debug info:
-
-  _fini
-  _init
-
