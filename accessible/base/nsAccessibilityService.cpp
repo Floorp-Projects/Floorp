@@ -1041,8 +1041,10 @@ Accessible* nsAccessibilityService::CreateAccessible(nsINode* aNode,
           newAcc = new ARIAGridCellAccessibleWrap(content, document);
 
       } else if (roleMapEntry->IsOfType(eTableRow)) {
-        if (aContext->IsTable())
+        if (aContext->IsTable() ||
+            (aContext->Parent() && aContext->Parent()->IsTable())) {
           newAcc = new ARIARowAccessible(content, document);
+        }
 
       } else if (roleMapEntry->IsOfType(eTable)) {
         newAcc = new ARIAGridAccessibleWrap(content, document);
