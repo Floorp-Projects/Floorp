@@ -8103,8 +8103,8 @@ nsContentUtils::StorageAccess nsContentUtils::StorageAllowedForWindow(
     // callee is able to deal with a null channel argument, and if passed null,
     // will only fail to notify the UI in case storage gets blocked.
     nsIChannel* channel = document->GetChannel();
-    return InternalStorageAllowedForPrincipal(principal, aWindow, nullptr,
-                                              channel, *aRejectedReason);
+    return InternalStorageAllowedCheck(principal, aWindow, nullptr, channel,
+                                       *aRejectedReason);
   }
 
   // No document? Let's return a generic rejected reason.
@@ -8124,8 +8124,8 @@ nsContentUtils::StorageAccess nsContentUtils::StorageAllowedForDocument(
     nsIChannel* channel = aDoc->GetChannel();
 
     uint32_t rejectedReason = 0;
-    return InternalStorageAllowedForPrincipal(principal, inner, nullptr,
-                                              channel, rejectedReason);
+    return InternalStorageAllowedCheck(principal, inner, nullptr, channel,
+                                       rejectedReason);
   }
 
   return StorageAccess::eDeny;
@@ -8139,8 +8139,8 @@ nsContentUtils::StorageAccess nsContentUtils::StorageAllowedForNewWindow(
   // parent may be nullptr
 
   uint32_t rejectedReason = 0;
-  return InternalStorageAllowedForPrincipal(aPrincipal, aParent, aURI, nullptr,
-                                            rejectedReason);
+  return InternalStorageAllowedCheck(aPrincipal, aParent, aURI, nullptr,
+                                     rejectedReason);
 }
 
 // static, public
@@ -8155,18 +8155,18 @@ nsContentUtils::StorageAccess nsContentUtils::StorageAllowedForChannel(
   NS_ENSURE_TRUE(principal, nsContentUtils::StorageAccess::eDeny);
 
   uint32_t rejectedReason = 0;
-  nsContentUtils::StorageAccess result = InternalStorageAllowedForPrincipal(
+  nsContentUtils::StorageAccess result = InternalStorageAllowedCheck(
       principal, nullptr, nullptr, aChannel, rejectedReason);
 
   return result;
 }
 
 // static, public
-nsContentUtils::StorageAccess nsContentUtils::StorageAllowedForPrincipal(
+nsContentUtils::StorageAccess nsContentUtils::StorageAllowedForServiceWorker(
     nsIPrincipal* aPrincipal) {
   uint32_t rejectedReason = 0;
-  return InternalStorageAllowedForPrincipal(aPrincipal, nullptr, nullptr,
-                                            nullptr, rejectedReason);
+  return InternalStorageAllowedCheck(aPrincipal, nullptr, nullptr, nullptr,
+                                     rejectedReason);
 }
 
 // static, private
@@ -8356,12 +8356,9 @@ bool nsContentUtils::StorageDisabledByAntiTracking(nsPIDOMWindowInner* aWindow,
 }
 
 // static, private
-nsContentUtils::StorageAccess
-nsContentUtils::InternalStorageAllowedForPrincipal(nsIPrincipal* aPrincipal,
-                                                   nsPIDOMWindowInner* aWindow,
-                                                   nsIURI* aURI,
-                                                   nsIChannel* aChannel,
-                                                   uint32_t& aRejectedReason) {
+nsContentUtils::StorageAccess nsContentUtils::InternalStorageAllowedCheck(
+    nsIPrincipal* aPrincipal, nsPIDOMWindowInner* aWindow, nsIURI* aURI,
+    nsIChannel* aChannel, uint32_t& aRejectedReason) {
   MOZ_ASSERT(aPrincipal);
 
   aRejectedReason = 0;
@@ -8413,7 +8410,7 @@ nsContentUtils::InternalStorageAllowedForPrincipal(nsIPrincipal* aPrincipal,
   //
   // This is due to backwards-compatibility and the state of storage access
   // before the introducton of
-  // nsContentUtils::InternalStorageAllowedForPrincipal:
+  // nsContentUtils::InternalStorageAllowedCheck:
   //
   // BEFORE:
   // localStorage, caches: allowed in 3rd-party iframes always
