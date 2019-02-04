@@ -75,7 +75,7 @@ nsresult ThirdPartyUtil::IsThirdPartyInternal(const nsCString& aFirstDomain,
   }
 
   // Get the base domain for aSecondURI.
-  nsCString secondDomain;
+  nsAutoCString secondDomain;
   nsresult rv = GetBaseDomain(aSecondURI, secondDomain);
   LOG(("ThirdPartyUtil::IsThirdPartyInternal %s =? %s", aFirstDomain.get(),
        secondDomain.get()));
@@ -118,7 +118,7 @@ ThirdPartyUtil::IsThirdPartyURI(nsIURI* aFirstURI, nsIURI* aSecondURI,
   NS_ENSURE_ARG(aSecondURI);
   NS_ASSERTION(aResult, "null outparam pointer");
 
-  nsCString firstHost;
+  nsAutoCString firstHost;
   nsresult rv = GetBaseDomain(aFirstURI, firstHost);
   if (NS_FAILED(rv)) return rv;
 
@@ -141,7 +141,7 @@ ThirdPartyUtil::IsThirdPartyWindow(mozIDOMWindowProxy* aWindow, nsIURI* aURI,
   rv = GetURIFromWindow(aWindow, getter_AddRefs(currentURI));
   if (NS_FAILED(rv)) return rv;
 
-  nsCString bottomDomain;
+  nsAutoCString bottomDomain;
   rv = GetBaseDomain(currentURI, bottomDomain);
   if (NS_FAILED(rv)) return rv;
 
@@ -227,7 +227,7 @@ ThirdPartyUtil::IsThirdPartyChannel(nsIChannel* aChannel, nsIURI* aURI,
   rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(channelURI));
   if (NS_FAILED(rv)) return rv;
 
-  nsCString channelDomain;
+  nsAutoCString channelDomain;
   rv = GetBaseDomain(channelURI, channelDomain);
   if (NS_FAILED(rv)) return rv;
 
