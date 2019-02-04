@@ -2943,19 +2943,23 @@ void nsIFrame::BuildDisplayListForStackingContext(
 
   nsDisplayListBuilder::AutoContainerASRTracker contASRTracker(aBuilder);
 
-  DisplayListClipState::AutoSaveRestore cssClip(aBuilder);
-  {
-    // The clip property clips everything, including filters and what not.
-    if (auto contentClip = GetClipPropClipRect(disp, effects, GetSize())) {
-      nsPoint offset = isTransformed
-                           ? GetOffsetToCrossDoc(
-                                 aBuilder->FindReferenceFrameFor(GetParent()))
-                           : aBuilder->GetCurrentFrameOffsetToReferenceFrame();
-
-      aBuilder->IntersectDirtyRect(*contentClip);
-      aBuilder->IntersectVisibleRect(*contentClip);
-      cssClip.ClipContentDescendants(*contentClip + offset);
+  auto cssClip = GetClipPropClipRect(disp, effects, GetSize());
+  auto ApplyClipProp = [&](DisplayListClipState::AutoSaveRestore& aClipState) {
+    if (!cssClip) {
+      return;
     }
+    nsPoint offset = aBuilder->GetCurrentFrameOffsetToReferenceFrame();
+    aBuilder->IntersectDirtyRect(*cssClip);
+    aBuilder->IntersectVisibleRect(*cssClip);
+    aClipState.ClipContentDescendants(*cssClip + offset);
+  };
+
+  // The CSS clip property is effectively inside the transform, but outside the
+  // filters. So if we're not transformed we can apply it just here for
+  // simplicity, instead of on each of the places that handle clipCapturedBy.
+  DisplayListClipState::AutoSaveRestore untransformedCssClip(aBuilder);
+  if (!isTransformed) {
+    ApplyClipProp(untransformedCssClip);
   }
 
   // If there is a current clip, then depending on the container items we
@@ -2992,6 +2996,20 @@ void nsIFrame::BuildDisplayListForStackingContext(
   DisplayListClipState::AutoSaveRestore clipState(aBuilder);
   if (clipCapturedBy != ContainerItemType::eNone) {
     clipState.Clear();
+  }
+
+  DisplayListClipState::AutoSaveRestore transformedCssClip(aBuilder);
+  if (isTransformed) {
+    // FIXME(emilio, bug 1525159): In the case we have a both a transform _and_
+    // filters, this clips the input to the filters as well, which is not
+    // correct (clipping by the `clip` property is supposed to happen after
+    // applying the filter effects, per [1].
+    //
+    // This is not a regression though, since we used to do that anyway before
+    // bug 1514384, and even without the transform we get it wrong.
+    //
+    // [1]: https://drafts.fxtf.org/css-masking/#placement
+    ApplyClipProp(transformedCssClip);
   }
 
   mozilla::UniquePtr<HitTestInfo> hitTestInfo;
@@ -3284,6 +3302,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
   }
 
   if (isTransformed) {
+    transformedCssClip.Restore();
     if (clipCapturedBy == ContainerItemType::eTransform) {
       // Restore clip state now so nsDisplayTransform is clipped properly.
       clipState.Restore();
