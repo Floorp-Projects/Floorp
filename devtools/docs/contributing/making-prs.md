@@ -8,8 +8,16 @@ First, commit your changes. For example:
 
 ```bash
 hg add /path/to/file/changed
-hg commit -m "Bug 1234567 - Implement feature XYZ."
+hg commit -m "Bug 1234567 - Implement feature XYZ. r=name,name2!"
 ```
+
+ The commit message explained in detail:
+ - `Bug 1234567` - The number of the bug in bugzilla.
+ - `- Implement feature XYZ.` - The commit message.
+ - `r=name` - The short form to request a review.
+ - `,name2!` - You can have more than one reviewer. The `!` makes the review a *blocking* review (Patch can not land without accepted review). You will also need to add it to the name in the popup after you ran `arc diff`.
+
+ Please note your first commit message will be also the title of your patch in Phabricator. (Don't worry, if something goes wrong. You can still change things in the UI later).
 
 Then create a revision in Differential, using Arcanist (or `moz-phab`):
 
