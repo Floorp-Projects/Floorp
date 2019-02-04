@@ -8,9 +8,9 @@ import os
 import yaml
 
 
-def load_yaml(path, name):
+def load_yaml(*parts):
     """Convenience function to load a YAML file in the given path.  This is
     useful for loading kind configuration files from the kind path."""
-    filename = os.path.join(path, name)
+    filename = os.path.join(*parts)
     with open(filename, "rb") as f:
         return yaml.safe_load(f)
