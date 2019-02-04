@@ -119,8 +119,9 @@ MozElements.RichListBox = class RichListBox extends MozElements.BaseControl {
     });
 
     this.addEventListener("click", event => {
-      // clicking into nothing should unselect
-      if (event.originalTarget == this) {
+      // clicking into nothing should unselect multiple selections
+      if (event.originalTarget == this &&
+          this.selType == "multiple") {
         this.clearSelection();
         this.currentItem = null;
       }
