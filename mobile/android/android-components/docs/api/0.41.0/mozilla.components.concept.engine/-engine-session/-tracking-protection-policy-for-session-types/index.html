@@ -1,0 +1,90 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>EngineSession.TrackingProtectionPolicyForSessionTypes - android-components</title>
+<link rel="stylesheet" href="../../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../../index.html">mozilla.components.concept.engine</a>&nbsp;/&nbsp;<a href="../index.html">EngineSession</a>&nbsp;/&nbsp;<a href="./index.html">TrackingProtectionPolicyForSessionTypes</a><br/>
+<br/>
+<h1>TrackingProtectionPolicyForSessionTypes</h1>
+<code><span class="keyword">class </span><span class="identifier">TrackingProtectionPolicyForSessionTypes</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../-tracking-protection-policy/index.html"><span class="identifier">TrackingProtectionPolicy</span></a></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L112">(source)</a>
+<p>Subtype of <a href="../-tracking-protection-policy/index.html">TrackingProtectionPolicy</a> to control the type of session this policy
+should be applied to. By default, a policy will be applied to all sessions.</p>
+<h3>Inherited Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../-tracking-protection-policy/categories.html">categories</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">categories</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="../-tracking-protection-policy/use-for-private-sessions.html">useForPrivateSessions</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">useForPrivateSessions</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="../-tracking-protection-policy/use-for-regular-sessions.html">useForRegularSessions</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">useForRegularSessions</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="for-private-sessions-only.html">forPrivateSessionsOnly</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">forPrivateSessionsOnly</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="../-tracking-protection-policy/index.html"><span class="identifier">TrackingProtectionPolicy</span></a></code>
+<p>Marks this policy to be used for private sessions only.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="for-regular-sessions-only.html">forRegularSessionsOnly</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">forRegularSessionsOnly</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="../-tracking-protection-policy/index.html"><span class="identifier">TrackingProtectionPolicy</span></a></code>
+<p>Marks this policy to be used for regular (non-private) sessions only.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Inherited Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../-tracking-protection-policy/contains.html">contains</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">contains</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy$contains(kotlin.Int)/category">category</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="../-tracking-protection-policy/equals.html">equals</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">equals</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy$equals(kotlin.Any)/other">other</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">?</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="../-tracking-protection-policy/hash-code.html">hashCode</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">hashCode</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a></code></td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

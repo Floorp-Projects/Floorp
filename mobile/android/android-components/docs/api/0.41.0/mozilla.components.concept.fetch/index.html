@@ -1,0 +1,94 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>mozilla.components.concept.fetch - android-components</title>
+<link rel="stylesheet" href="../../style.css">
+</HEAD>
+<BODY>
+<a href="../index.html">android-components</a>&nbsp;/&nbsp;<a href="./index.html">mozilla.components.concept.fetch</a><br/>
+<br/>
+<h2>Package mozilla.components.concept.fetch</h2>
+<h3>Types</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-client/index.html">Client</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">class </span><span class="identifier">Client</span></code>
+<p>A generic <a href="-client/index.html">Client</a> for fetching resources via HTTP/s.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-header/index.html">Header</a></p>
+</td>
+<td>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">Header</span></code>
+<p>Represents a <a href="-header/index.html">Header</a> containing of a <a href="-header/name.html">name</a> and <a href="-header/value.html">value</a>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-headers/index.html">Headers</a></p>
+</td>
+<td>
+<code><span class="keyword">interface </span><span class="identifier">Headers</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-iterable/index.html"><span class="identifier">Iterable</span></a><span class="symbol">&lt;</span><a href="-header/index.html"><span class="identifier">Header</span></a><span class="symbol">&gt;</span></code>
+<p>A collection of HTTP <a href="-headers/index.html">Headers</a> (immutable) of a <a href="-request/index.html">Request</a> or <a href="-response/index.html">Response</a>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-mutable-headers/index.html">MutableHeaders</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">MutableHeaders</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-headers/index.html"><span class="identifier">Headers</span></a><span class="symbol">, </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-mutable-iterable/index.html"><span class="identifier">MutableIterable</span></a><span class="symbol">&lt;</span><a href="-header/index.html"><span class="identifier">Header</span></a><span class="symbol">&gt;</span></code>
+<p>A collection of HTTP <a href="-headers/index.html">Headers</a> (mutable) of a <a href="-request/index.html">Request</a> or <a href="-response/index.html">Response</a>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-request/index.html">Request</a></p>
+</td>
+<td>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">Request</span></code>
+<p>The <a href="-request/index.html">Request</a> data class represents a resource request to be send by a <a href="-client/index.html">Client</a>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-response/index.html">Response</a></p>
+</td>
+<td>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">Response</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/java/io/Closeable.html"><span class="identifier">Closeable</span></a></code>
+<p>The <a href="-response/index.html">Response</a> data class represents a reponse to a <a href="-request/index.html">Request</a> send by a <a href="-client/index.html">Client</a>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="client-error.html">clientError</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><a href="-response/index.html"><span class="identifier">Response</span></a><span class="symbol">.</span><span class="identifier">clientError</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Returns true if the response was a client error (status in the range 400-499) or false otherwise.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="success.html">success</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><a href="-response/index.html"><span class="identifier">Response</span></a><span class="symbol">.</span><span class="identifier">success</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Returns true if the response was successful (status in the range 200-299) or false otherwise.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

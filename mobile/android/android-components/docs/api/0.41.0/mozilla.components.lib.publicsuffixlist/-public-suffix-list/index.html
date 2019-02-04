@@ -1,0 +1,86 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>PublicSuffixList - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.lib.publicsuffixlist</a>&nbsp;/&nbsp;<a href="./index.html">PublicSuffixList</a><br/>
+<br/>
+<h1>PublicSuffixList</h1>
+<code><span class="keyword">class </span><span class="identifier">PublicSuffixList</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/lib/publicsuffixlist/src/main/java/mozilla/components/lib/publicsuffixlist/PublicSuffixList.kt#L26">(source)</a>
+<p>API for reading and accessing the public suffix list.</p>
+<p>A "public suffix" is one under which Internet users can (or historically could) directly register names. Some
+ examples of public suffixes are .com, .co.uk and pvt.k12.ma.us. The Public Suffix List is a list of all known
+ public suffixes.</p>
+<p>Note that this implementation applies the rules of the public suffix list only and does not validate domains.</p>
+<p>https://publicsuffix.org/
+https://github.com/publicsuffix/list</p>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">PublicSuffixList</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.lib.publicsuffixlist.PublicSuffixList$<init>(android.content.Context, kotlinx.coroutines.CoroutineDispatcher, kotlinx.coroutines.CoroutineScope)/context">context</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/content/Context.html"><span class="identifier">Context</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.lib.publicsuffixlist.PublicSuffixList$<init>(android.content.Context, kotlinx.coroutines.CoroutineDispatcher, kotlinx.coroutines.CoroutineScope)/dispatcher">dispatcher</span><span class="symbol">:</span>&nbsp;<span class="identifier">CoroutineDispatcher</span>&nbsp;<span class="symbol">=</span>&nbsp;Dispatchers.IO<span class="symbol">, </span><span class="identifier" id="mozilla.components.lib.publicsuffixlist.PublicSuffixList$<init>(android.content.Context, kotlinx.coroutines.CoroutineDispatcher, kotlinx.coroutines.CoroutineScope)/scope">scope</span><span class="symbol">:</span>&nbsp;<span class="identifier">CoroutineScope</span>&nbsp;<span class="symbol">=</span>&nbsp;CoroutineScope(dispatcher)<span class="symbol">)</span></code>
+<p>API for reading and accessing the public suffix list.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="get-public-suffix.html">getPublicSuffix</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">getPublicSuffix</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.lib.publicsuffixlist.PublicSuffixList$getPublicSuffix(kotlin.String)/domain">domain</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><span class="identifier">&lt;ERROR CLASS&gt;</span></code>
+<p>Returns the public suffix of the given <a href="get-public-suffix.html#mozilla.components.lib.publicsuffixlist.PublicSuffixList$getPublicSuffix(kotlin.String)/domain">domain</a>. Returns <code>null</code> if the <a href="get-public-suffix.html#mozilla.components.lib.publicsuffixlist.PublicSuffixList$getPublicSuffix(kotlin.String)/domain">domain</a> is a public suffix itself.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-public-suffix-plus-one.html">getPublicSuffixPlusOne</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">getPublicSuffixPlusOne</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.lib.publicsuffixlist.PublicSuffixList$getPublicSuffixPlusOne(kotlin.String)/domain">domain</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><span class="identifier">Deferred</span><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span><span class="symbol">&gt;</span></code>
+<p>Returns the public suffix and one more level; known as the effective top-level domain (eTLD). Returns <code>null</code> if
+<a href="get-public-suffix-plus-one.html#mozilla.components.lib.publicsuffixlist.PublicSuffixList$getPublicSuffixPlusOne(kotlin.String)/domain">domain</a> is a public suffix itself.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="is-public-suffix.html">isPublicSuffix</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">isPublicSuffix</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.lib.publicsuffixlist.PublicSuffixList$isPublicSuffix(kotlin.String)/domain">domain</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><span class="identifier">Deferred</span><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">&gt;</span></code>
+<p>Returns true if the given <a href="is-public-suffix.html#mozilla.components.lib.publicsuffixlist.PublicSuffixList$isPublicSuffix(kotlin.String)/domain">domain</a> is a public suffix; false otherwise.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="prefetch.html">prefetch</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">prefetch</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><span class="identifier">Deferred</span><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a><span class="symbol">&gt;</span></code>
+<p>Prefetch the public suffix list from disk so that it is available in memory.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="strip-public-suffix.html">stripPublicSuffix</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">stripPublicSuffix</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.lib.publicsuffixlist.PublicSuffixList$stripPublicSuffix(kotlin.String)/domain">domain</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><span class="identifier">&lt;ERROR CLASS&gt;</span></code>
+<p>Strips the public suffix from the given <a href="strip-public-suffix.html#mozilla.components.lib.publicsuffixlist.PublicSuffixList$stripPublicSuffix(kotlin.String)/domain">domain</a>. Returns the original domain if no public suffix could be
+stripped.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

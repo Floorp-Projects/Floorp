@@ -1,0 +1,102 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>Experiment.Matcher - android-components</title>
+<link rel="stylesheet" href="../../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../../index.html">mozilla.components.service.fretboard</a>&nbsp;/&nbsp;<a href="../index.html">Experiment</a>&nbsp;/&nbsp;<a href="./index.html">Matcher</a><br/>
+<br/>
+<h1>Matcher</h1>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">Matcher</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/service/fretboard/src/main/java/mozilla/components/service/fretboard/Experiment.kt#L47">(source)</a>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">Matcher</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.fretboard.Experiment.Matcher$<init>(kotlin.String, kotlin.String, kotlin.collections.List((kotlin.String)), kotlin.String, kotlin.String, kotlin.String, kotlin.String, kotlin.String)/language">language</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span>&nbsp;<span class="symbol">=</span>&nbsp;null<span class="symbol">, </span><span class="identifier" id="mozilla.components.service.fretboard.Experiment.Matcher$<init>(kotlin.String, kotlin.String, kotlin.collections.List((kotlin.String)), kotlin.String, kotlin.String, kotlin.String, kotlin.String, kotlin.String)/appId">appId</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span>&nbsp;<span class="symbol">=</span>&nbsp;null<span class="symbol">, </span><span class="identifier" id="mozilla.components.service.fretboard.Experiment.Matcher$<init>(kotlin.String, kotlin.String, kotlin.collections.List((kotlin.String)), kotlin.String, kotlin.String, kotlin.String, kotlin.String, kotlin.String)/regions">regions</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html"><span class="identifier">List</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">&gt;</span><span class="symbol">?</span>&nbsp;<span class="symbol">=</span>&nbsp;null<span class="symbol">, </span><span class="identifier" id="mozilla.components.service.fretboard.Experiment.Matcher$<init>(kotlin.String, kotlin.String, kotlin.collections.List((kotlin.String)), kotlin.String, kotlin.String, kotlin.String, kotlin.String, kotlin.String)/version">version</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span>&nbsp;<span class="symbol">=</span>&nbsp;null<span class="symbol">, </span><span class="identifier" id="mozilla.components.service.fretboard.Experiment.Matcher$<init>(kotlin.String, kotlin.String, kotlin.collections.List((kotlin.String)), kotlin.String, kotlin.String, kotlin.String, kotlin.String, kotlin.String)/manufacturer">manufacturer</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span>&nbsp;<span class="symbol">=</span>&nbsp;null<span class="symbol">, </span><span class="identifier" id="mozilla.components.service.fretboard.Experiment.Matcher$<init>(kotlin.String, kotlin.String, kotlin.collections.List((kotlin.String)), kotlin.String, kotlin.String, kotlin.String, kotlin.String, kotlin.String)/device">device</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span>&nbsp;<span class="symbol">=</span>&nbsp;null<span class="symbol">, </span><span class="identifier" id="mozilla.components.service.fretboard.Experiment.Matcher$<init>(kotlin.String, kotlin.String, kotlin.collections.List((kotlin.String)), kotlin.String, kotlin.String, kotlin.String, kotlin.String, kotlin.String)/country">country</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span>&nbsp;<span class="symbol">=</span>&nbsp;null<span class="symbol">, </span><span class="identifier" id="mozilla.components.service.fretboard.Experiment.Matcher$<init>(kotlin.String, kotlin.String, kotlin.collections.List((kotlin.String)), kotlin.String, kotlin.String, kotlin.String, kotlin.String, kotlin.String)/releaseChannel">releaseChannel</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span>&nbsp;<span class="symbol">=</span>&nbsp;null<span class="symbol">)</span></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="app-id.html">appId</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">appId</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span></code>
+<p>id (package name) of the expected application, as a regex</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="country.html">country</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">country</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span></code>
+<p>Required country, as a three-letter abbreviation</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="device.html">device</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">device</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span></code>
+<p>Required device model, as a regex</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="language.html">language</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">language</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span></code>
+<p>Language of the device, as a regex</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="manufacturer.html">manufacturer</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">manufacturer</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span></code>
+<p>Required device manufacturer, as a regex</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="regions.html">regions</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">regions</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html"><span class="identifier">List</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">&gt;</span><span class="symbol">?</span></code>
+<p>Regions where the experiment should be enabled</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="release-channel.html">releaseChannel</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">releaseChannel</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span></code>
+<p>Required app release channel (alpha, beta, ...), as a regex</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="version.html">version</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">version</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span></code>
+<p>Required app version, as a regex</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

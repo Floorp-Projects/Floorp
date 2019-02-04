@@ -1,0 +1,76 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>mozilla.components.support.base.facts - android-components</title>
+<link rel="stylesheet" href="../../style.css">
+</HEAD>
+<BODY>
+<a href="../index.html">android-components</a>&nbsp;/&nbsp;<a href="./index.html">mozilla.components.support.base.facts</a><br/>
+<br/>
+<h2>Package mozilla.components.support.base.facts</h2>
+<h3>Types</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-action/index.html">Action</a></p>
+</td>
+<td>
+<code><span class="keyword">enum</span> <span class="keyword">class </span><span class="identifier">Action</span></code>
+<p>A user or system action that causes <a href="-fact/index.html">Fact</a> instances to be emitted.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-fact/index.html">Fact</a></p>
+</td>
+<td>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">Fact</span></code>
+<p>A fact describing a generic event that has occurred in a component.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-fact-processor/index.html">FactProcessor</a></p>
+</td>
+<td>
+<code><span class="keyword">interface </span><span class="identifier">FactProcessor</span></code>
+<p>A <a href="-fact-processor/index.html">FactProcessor</a> receives <a href="-fact/index.html">Fact</a> instances to process them further.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-facts/index.html">Facts</a></p>
+</td>
+<td>
+<code><span class="keyword">object </span><span class="identifier">Facts</span></code>
+<p>Global API for collecting <a href="-fact/index.html">Fact</a> objects and forwarding them to <a href="-fact-processor/index.html">FactProcessor</a> instances.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="collect.html">collect</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><a href="-fact/index.html"><span class="identifier">Fact</span></a><span class="symbol">.</span><span class="identifier">collect</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Collect this fact through the <a href="-facts/index.html">Facts</a> singleton.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="register.html">register</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><a href="-fact-processor/index.html"><span class="identifier">FactProcessor</span></a><span class="symbol">.</span><span class="identifier">register</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="-facts/index.html"><span class="identifier">Facts</span></a></code>
+<p>Registers this <a href="-fact-processor/index.html">FactProcessor</a> to collect <a href="-fact/index.html">Fact</a> instances from the <a href="-facts/index.html">Facts</a> singleton.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

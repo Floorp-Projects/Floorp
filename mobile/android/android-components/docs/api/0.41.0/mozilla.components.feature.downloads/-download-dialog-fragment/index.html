@@ -1,0 +1,118 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>DownloadDialogFragment - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.feature.downloads</a>&nbsp;/&nbsp;<a href="./index.html">DownloadDialogFragment</a><br/>
+<br/>
+<h1>DownloadDialogFragment</h1>
+<code><span class="keyword">abstract</span> <span class="keyword">class </span><span class="identifier">DownloadDialogFragment</span>&nbsp;<span class="symbol">:</span>&nbsp;<span class="identifier">DialogFragment</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/src/main/java/mozilla/components/feature/downloads/DownloadDialogFragment.kt#L16">(source)</a>
+<p>This is a general representation of a dialog meant to be used in collaboration with <a href="../-downloads-feature/index.html">DownloadsFeature</a>
+to show a dialog before a download is triggered.
+If <a href="../-simple-download-dialog-fragment/index.html">SimpleDownloadDialogFragment</a> is not flexible enough for your use case you should inherit for this class.
+Be mindful to call <a href="on-start-download.html">onStartDownload</a> when you want to start the download.</p>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">DownloadDialogFragment</span><span class="symbol">(</span><span class="symbol">)</span></code>
+<p>This is a general representation of a dialog meant to be used in collaboration with <a href="../-downloads-feature/index.html">DownloadsFeature</a>
+to show a dialog before a download is triggered.
+If <a href="../-simple-download-dialog-fragment/index.html">SimpleDownloadDialogFragment</a> is not flexible enough for your use case you should inherit for this class.
+Be mindful to call <a href="on-start-download.html">onStartDownload</a> when you want to start the download.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="on-start-download.html">onStartDownload</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">onStartDownload</span><span class="symbol">: </span><span class="symbol">(</span><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>A callback to trigger a download, call it when you are ready to start a download. For instance,
+a valid use case can be in confirmation dialog, after the positive button is clicked,
+this callback must be called.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="set-download.html">setDownload</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">setDownload</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.feature.downloads.DownloadDialogFragment$setDownload(mozilla.components.browser.session.Download)/download">download</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.browser.session/-download/index.html"><span class="identifier">Download</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>add the metadata of this download object to the arguments of this fragment.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Companion Object Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-f-r-a-g-m-e-n-t_-t-a-g.html">FRAGMENT_TAG</a></p>
+</td>
+<td>
+<code><span class="keyword">const</span> <span class="keyword">val </span><span class="identifier">FRAGMENT_TAG</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="-k-e-y_-c-o-n-t-e-n-t_-l-e-n-g-t-h.html">KEY_CONTENT_LENGTH</a></p>
+</td>
+<td>
+<code><span class="keyword">const</span> <span class="keyword">val </span><span class="identifier">KEY_CONTENT_LENGTH</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code>
+<p>Key for finding the content length in the arguments.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-k-e-y_-f-i-l-e_-n-a-m-e.html">KEY_FILE_NAME</a></p>
+</td>
+<td>
+<code><span class="keyword">const</span> <span class="keyword">val </span><span class="identifier">KEY_FILE_NAME</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code>
+<p>Key for finding the file name in the arguments.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-k-e-y_-u-r-l.html">KEY_URL</a></p>
+</td>
+<td>
+<code><span class="keyword">const</span> <span class="keyword">val </span><span class="identifier">KEY_URL</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code>
+<p>Key for finding the url in the arguments.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Inheritors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../-simple-download-dialog-fragment/index.html">SimpleDownloadDialogFragment</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">SimpleDownloadDialogFragment</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">DownloadDialogFragment</span></a></code>
+<p>A confirmation dialog to be called before a download is triggered.
+Meant to be used in collaboration with <a href="../-downloads-feature/index.html">DownloadsFeature</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

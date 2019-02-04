@@ -1,0 +1,18 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>AsyncLoginsStorage.wipeLocal - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.service.sync.logins</a>&nbsp;/&nbsp;<a href="index.html">AsyncLoginsStorage</a>&nbsp;/&nbsp;<a href="./wipe-local.html">wipeLocal</a><br/>
+<br/>
+<h1>wipeLocal</h1>
+<a name="mozilla.components.service.sync.logins.AsyncLoginsStorage$wipeLocal()"></a>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">wipeLocal</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><span class="identifier">Deferred</span><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a><span class="symbol">&gt;</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/AsyncLoginsStorage.kt#L158">(source)</a>
+<p>Clear out all local state, bringing us back to the state before the first write (or sync).</p>
+<p><strong>RejectsWith</strong><br/>
+<a href="../-logins-storage-exception.html">LoginsStorageException</a> if the storage is locked, and on unexpected
+    errors (IO failure, rust panics, etc)</p>
+</BODY>
+</HTML>

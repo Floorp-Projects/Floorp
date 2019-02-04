@@ -1,0 +1,81 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>AutoSave - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.browser.session.storage</a>&nbsp;/&nbsp;<a href="./index.html">AutoSave</a><br/>
+<br/>
+<h1>AutoSave</h1>
+<code><span class="keyword">class </span><span class="identifier">AutoSave</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/storage/AutoSave.kt#L23">(source)</a>
+<h3>Types</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-storage/index.html">Storage</a></p>
+</td>
+<td>
+<code><span class="keyword">interface </span><span class="identifier">Storage</span></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">AutoSave</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.session.storage.AutoSave$<init>(mozilla.components.browser.session.SessionManager, mozilla.components.browser.session.storage.AutoSave.Storage, kotlin.Long)/sessionManager">sessionManager</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.browser.session/-session-manager/index.html"><span class="identifier">SessionManager</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.session.storage.AutoSave$<init>(mozilla.components.browser.session.SessionManager, mozilla.components.browser.session.storage.AutoSave.Storage, kotlin.Long)/sessionStorage">sessionStorage</span><span class="symbol">:</span>&nbsp;<a href="-storage/index.html"><span class="identifier">Storage</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.session.storage.AutoSave$<init>(mozilla.components.browser.session.SessionManager, mozilla.components.browser.session.storage.AutoSave.Storage, kotlin.Long)/minimumIntervalMs">minimumIntervalMs</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html"><span class="identifier">Long</span></a><span class="symbol">)</span></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="periodically-in-foreground.html">periodicallyInForeground</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">periodicallyInForeground</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.session.storage.AutoSave$periodicallyInForeground(kotlin.Long, java.util.concurrent.TimeUnit, java.util.concurrent.ScheduledExecutorService, android.arch.lifecycle.Lifecycle)/interval">interval</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html"><span class="identifier">Long</span></a>&nbsp;<span class="symbol">=</span>&nbsp;300<span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.session.storage.AutoSave$periodicallyInForeground(kotlin.Long, java.util.concurrent.TimeUnit, java.util.concurrent.ScheduledExecutorService, android.arch.lifecycle.Lifecycle)/unit">unit</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/java/util/concurrent/TimeUnit.html"><span class="identifier">TimeUnit</span></a>&nbsp;<span class="symbol">=</span>&nbsp;TimeUnit.SECONDS<span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.session.storage.AutoSave$periodicallyInForeground(kotlin.Long, java.util.concurrent.TimeUnit, java.util.concurrent.ScheduledExecutorService, android.arch.lifecycle.Lifecycle)/scheduler">scheduler</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/java/util/concurrent/ScheduledExecutorService.html"><span class="identifier">ScheduledExecutorService</span></a>&nbsp;<span class="symbol">=</span>&nbsp;Executors.newSingleThreadScheduledExecutor()<span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.session.storage.AutoSave$periodicallyInForeground(kotlin.Long, java.util.concurrent.TimeUnit, java.util.concurrent.ScheduledExecutorService, android.arch.lifecycle.Lifecycle)/lifecycle">lifecycle</span><span class="symbol">:</span>&nbsp;<span class="identifier">Lifecycle</span>&nbsp;<span class="symbol">=</span>&nbsp;ProcessLifecycleOwner.get().lifecycle<span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">AutoSave</span></a></code>
+<p>Saves the state periodically when the app is in the foreground.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="when-going-to-background.html">whenGoingToBackground</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">whenGoingToBackground</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.session.storage.AutoSave$whenGoingToBackground(android.arch.lifecycle.Lifecycle)/lifecycle">lifecycle</span><span class="symbol">:</span>&nbsp;<span class="identifier">Lifecycle</span>&nbsp;<span class="symbol">=</span>&nbsp;ProcessLifecycleOwner.get().lifecycle<span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">AutoSave</span></a></code>
+<p>Saves the state automatically when the app goes to the background.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="when-sessions-change.html">whenSessionsChange</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">whenSessionsChange</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">AutoSave</span></a></code>
+<p>Saves the state automatically when the sessions change, e.g. sessions get added and removed.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Companion Object Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-d-e-f-a-u-l-t_-i-n-t-e-r-v-a-l_-m-i-l-l-i-s-e-c-o-n-d-s.html">DEFAULT_INTERVAL_MILLISECONDS</a></p>
+</td>
+<td>
+<code><span class="keyword">const</span> <span class="keyword">val </span><span class="identifier">DEFAULT_INTERVAL_MILLISECONDS</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html"><span class="identifier">Long</span></a></code></td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

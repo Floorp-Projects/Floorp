@@ -1,0 +1,56 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>FactProcessor - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.support.base.facts</a>&nbsp;/&nbsp;<a href="./index.html">FactProcessor</a><br/>
+<br/>
+<h1>FactProcessor</h1>
+<code><span class="keyword">interface </span><span class="identifier">FactProcessor</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/facts/FactProcessor.kt#L10">(source)</a>
+<p>A <a href="./index.html">FactProcessor</a> receives <a href="../-fact/index.html">Fact</a> instances to process them further.</p>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="process.html">process</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">process</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.support.base.facts.FactProcessor$process(mozilla.components.support.base.facts.Fact)/fact">fact</span><span class="symbol">:</span>&nbsp;<a href="../-fact/index.html"><span class="identifier">Fact</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Passes the given <a href="../-fact/index.html">Fact</a> to the <a href="./index.html">FactProcessor</a> for processing.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Extension Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../register.html">register</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><a href="./index.html"><span class="identifier">FactProcessor</span></a><span class="symbol">.</span><span class="identifier">register</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="../-facts/index.html"><span class="identifier">Facts</span></a></code>
+<p>Registers this <a href="./index.html">FactProcessor</a> to collect <a href="../-fact/index.html">Fact</a> instances from the <a href="../-facts/index.html">Facts</a> singleton.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Inheritors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../../mozilla.components.support.base.facts.processor/-log-fact-processor/index.html">LogFactProcessor</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">LogFactProcessor</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">FactProcessor</span></a></code>
+<p>A <a href="./index.html">FactProcessor</a> implementation that prints collected <a href="../-fact/index.html">Fact</a> instances to the log.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

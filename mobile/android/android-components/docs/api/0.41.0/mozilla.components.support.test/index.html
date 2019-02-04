@@ -1,0 +1,92 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>mozilla.components.support.test - android-components</title>
+<link rel="stylesheet" href="../../style.css">
+</HEAD>
+<BODY>
+<a href="../index.html">android-components</a>&nbsp;/&nbsp;<a href="./index.html">mozilla.components.support.test</a><br/>
+<br/>
+<h2>Package mozilla.components.support.test</h2>
+<h3>Types</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-k-argument-captor/index.html">KArgumentCaptor</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">KArgumentCaptor</span><span class="symbol">&lt;</span><span class="keyword">out</span>&nbsp;<span class="identifier">T</span><span class="symbol">&gt;</span></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="any.html">any</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="symbol">&lt;</span><span class="identifier">T</span><span class="symbol">&gt;</span> <span class="identifier">any</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="any.html#T"><span class="identifier">T</span></a></code>
+<p>Mockito matcher that matches anything, including nulls and varargs.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="argument-captor.html">argumentCaptor</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="symbol">&lt;</span><span class="identifier">T</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span> <span class="identifier">argumentCaptor</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="-k-argument-captor/index.html"><span class="identifier">KArgumentCaptor</span></a><span class="symbol">&lt;</span><a href="argument-captor.html#T"><span class="identifier">T</span></a><span class="symbol">&gt;</span></code>
+<p>Creates a <a href="-k-argument-captor/index.html">KArgumentCaptor</a> for given type.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="create-instance.html">createInstance</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="symbol">&lt;</span><span class="identifier">T</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span> <span class="identifier">createInstance</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.support.test$createInstance(kotlin.reflect.KClass((mozilla.components.support.test.createInstance.T)))/kClass">kClass</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.reflect/-k-class/index.html"><span class="identifier">KClass</span></a><span class="symbol">&lt;</span><a href="create-instance.html#T"><span class="identifier">T</span></a><span class="symbol">&gt;</span><span class="symbol">)</span><span class="symbol">: </span><a href="create-instance.html#T"><span class="identifier">T</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="eq.html">eq</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="symbol">&lt;</span><span class="identifier">T</span><span class="symbol">&gt;</span> <span class="identifier">eq</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.support.test$eq(mozilla.components.support.test.eq.T)/value">value</span><span class="symbol">:</span>&nbsp;<a href="eq.html#T"><span class="identifier">T</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="eq.html#T"><span class="identifier">T</span></a></code>
+<p>Mockito matcher that matches if the argument is the same as the provided value.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="expect-exception.html">expectException</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="symbol">&lt;</span><span class="identifier">T</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-throwable/index.html"><span class="identifier">Throwable</span></a><span class="symbol">&gt;</span> <span class="identifier">expectException</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.support.test$expectException(kotlin.reflect.KClass((mozilla.components.support.test.expectException.T)), kotlin.Function0((kotlin.Unit)))/clazz">clazz</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.reflect/-k-class/index.html"><span class="identifier">KClass</span></a><span class="symbol">&lt;</span><a href="expect-exception.html#T"><span class="identifier">T</span></a><span class="symbol">&gt;</span><span class="symbol">, </span><span class="identifier" id="mozilla.components.support.test$expectException(kotlin.reflect.KClass((mozilla.components.support.test.expectException.T)), kotlin.Function0((kotlin.Unit)))/block">block</span><span class="symbol">:</span>&nbsp;<span class="symbol">(</span><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Expect <a href="expect-exception.html#mozilla.components.support.test$expectException(kotlin.reflect.KClass((mozilla.components.support.test.expectException.T)), kotlin.Function0((kotlin.Unit)))/block">block</a> to throw an exception. Otherwise fail the test (junit).</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="mock.html">mock</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="symbol">&lt;</span><span class="identifier">T</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span> <span class="identifier">mock</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="mock.html#T"><span class="identifier">T</span></a></code>
+<p>Dynamically create a mock object. This method is helpful when creating mocks of classes
+using generics.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="mock-motion-event.html">mockMotionEvent</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">mockMotionEvent</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.support.test$mockMotionEvent(kotlin.Int, kotlin.Long, kotlin.Long, kotlin.Float, kotlin.Float, kotlin.Int)/action">action</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.support.test$mockMotionEvent(kotlin.Int, kotlin.Long, kotlin.Long, kotlin.Float, kotlin.Float, kotlin.Int)/downTime">downTime</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html"><span class="identifier">Long</span></a>&nbsp;<span class="symbol">=</span>&nbsp;System.currentTimeMillis()<span class="symbol">, </span><span class="identifier" id="mozilla.components.support.test$mockMotionEvent(kotlin.Int, kotlin.Long, kotlin.Long, kotlin.Float, kotlin.Float, kotlin.Int)/eventTime">eventTime</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html"><span class="identifier">Long</span></a>&nbsp;<span class="symbol">=</span>&nbsp;System.currentTimeMillis()<span class="symbol">, </span><span class="identifier" id="mozilla.components.support.test$mockMotionEvent(kotlin.Int, kotlin.Long, kotlin.Long, kotlin.Float, kotlin.Float, kotlin.Int)/x">x</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-float/index.html"><span class="identifier">Float</span></a>&nbsp;<span class="symbol">=</span>&nbsp;0f<span class="symbol">, </span><span class="identifier" id="mozilla.components.support.test$mockMotionEvent(kotlin.Int, kotlin.Long, kotlin.Long, kotlin.Float, kotlin.Float, kotlin.Int)/y">y</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-float/index.html"><span class="identifier">Float</span></a>&nbsp;<span class="symbol">=</span>&nbsp;0f<span class="symbol">, </span><span class="identifier" id="mozilla.components.support.test$mockMotionEvent(kotlin.Int, kotlin.Long, kotlin.Long, kotlin.Float, kotlin.Float, kotlin.Int)/metaState">metaState</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a>&nbsp;<span class="symbol">=</span>&nbsp;0<span class="symbol">)</span><span class="symbol">: </span><a href="https://developer.android.com/reference/android/view/MotionEvent.html"><span class="identifier">MotionEvent</span></a></code>
+<p>Creates a custom <a href="https://developer.android.com/reference/android/view/MotionEvent.html">MotionEvent</a> for testing. As of SDK 28 <a href="https://developer.android.com/reference/android/view/MotionEvent.html">MotionEvent</a>s can't be mocked anymore and need to be created
+through <a href="https://developer.android.com/reference/android/view/MotionEvent.html#obtain(long, long, int, int, android.view.MotionEvent.PointerProperties[], android.view.MotionEvent.PointerCoords[], int, int, float, float, int, int, int, int)">MotionEvent.obtain</a>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

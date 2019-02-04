@@ -1,0 +1,53 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>Action - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.support.base.facts</a>&nbsp;/&nbsp;<a href="./index.html">Action</a><br/>
+<br/>
+<h1>Action</h1>
+<code><span class="keyword">enum</span> <span class="keyword">class </span><span class="identifier">Action</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/facts/Action.kt#L10">(source)</a>
+<p>A user or system action that causes <a href="../-fact/index.html">Fact</a> instances to be emitted.</p>
+<h3>Enum Values</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-c-l-i-c-k.html">CLICK</a></p>
+</td>
+<td>
+<p>The user has clicked on something.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-t-o-g-g-l-e.html">TOGGLE</a></p>
+</td>
+<td>
+<p>The user has toggled something.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-c-o-m-m-i-t.html">COMMIT</a></p>
+</td>
+<td>
+<p>The user has committed an input (e.g. entered text into an input field and then pressed enter).</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-i-n-t-e-r-a-c-t-i-o-n.html">INTERACTION</a></p>
+</td>
+<td>
+<p>A generic interaction that can be caused by a previous action (e.g. the user clicks on a button which causes a
+<a href="../-fact/index.html">Fact</a> with <a href="-c-l-i-c-k.html">CLICK</a> action to be emitted. This click may causes something to load which emits a follow-up a
+<a href="../-fact/index.html">Fact</a> with <a href="-i-n-t-e-r-a-c-t-i-o-n.html">INTERACTION</a> action.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

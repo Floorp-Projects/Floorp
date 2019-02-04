@@ -1,0 +1,67 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>CustomDomainsProvider - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.browser.domains.autocomplete</a>&nbsp;/&nbsp;<a href="./index.html">CustomDomainsProvider</a><br/>
+<br/>
+<h1>CustomDomainsProvider</h1>
+<code><span class="keyword">class </span><span class="identifier">CustomDomainsProvider</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../-base-domain-autocomplete-provider/index.html"><span class="identifier">BaseDomainAutocompleteProvider</span></a></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/browser/domains/src/main/java/mozilla/components/browser/domains/autocomplete/Providers.kt#L37">(source)</a>
+<p>Provides autocomplete functionality for domains based on a list managed by <a href="../../mozilla.components.browser.domains/-custom-domains/index.html">CustomDomains</a>.</p>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">CustomDomainsProvider</span><span class="symbol">(</span><span class="symbol">)</span></code>
+<p>Provides autocomplete functionality for domains based on a list managed by <a href="../../mozilla.components.browser.domains/-custom-domains/index.html">CustomDomains</a>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Inherited Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../-base-domain-autocomplete-provider/domains.html">domains</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">domains</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html"><span class="identifier">List</span></a><span class="symbol">&lt;</span><a href="../../mozilla.components.browser.domains/-domain/index.html"><span class="identifier">Domain</span></a><span class="symbol">&gt;</span></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="initialize.html">initialize</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">initialize</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.domains.autocomplete.CustomDomainsProvider$initialize(android.content.Context)/context">context</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/content/Context.html"><span class="identifier">Context</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Inherited Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../-base-domain-autocomplete-provider/get-autocomplete-suggestion.html">getAutocompleteSuggestion</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">getAutocompleteSuggestion</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.domains.autocomplete.BaseDomainAutocompleteProvider$getAutocompleteSuggestion(kotlin.String)/query">query</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="../-domain-autocomplete-result/index.html"><span class="identifier">DomainAutocompleteResult</span></a><span class="symbol">?</span></code>
+<p>Computes an autocomplete suggestion for the given text, and invokes the
+provided callback, passing the result.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

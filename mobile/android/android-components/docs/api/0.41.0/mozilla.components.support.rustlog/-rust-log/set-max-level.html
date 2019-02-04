@@ -1,0 +1,30 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>RustLog.setMaxLevel - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.support.rustlog</a>&nbsp;/&nbsp;<a href="index.html">RustLog</a>&nbsp;/&nbsp;<a href="./set-max-level.html">setMaxLevel</a><br/>
+<br/>
+<h1>setMaxLevel</h1>
+<a name="mozilla.components.support.rustlog.RustLog$setMaxLevel(mozilla.components.support.base.log.Log.Priority, kotlin.Boolean)"></a>
+<code><span class="keyword">fun </span><span class="identifier">setMaxLevel</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.support.rustlog.RustLog$setMaxLevel(mozilla.components.support.base.log.Log.Priority, kotlin.Boolean)/level">level</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.support.base.log/-log/-priority/index.html"><span class="identifier">Priority</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.support.rustlog.RustLog$setMaxLevel(mozilla.components.support.base.log.Log.Priority, kotlin.Boolean)/includePII">includePII</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a>&nbsp;<span class="symbol">=</span>&nbsp;false<span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/support/rustlog/src/main/java/mozilla/components/support/rustlog/RustLog.kt#L70">(source)</a>
+<p>Set the maximum level of logs that will be forwarded to <a href="../../mozilla.components.support.base.log/-log/index.html">Log</a>. By
+default, the max level is DEBUG.</p>
+<p>This is somewhat redundant with <a href="../../mozilla.components.support.base.log/-log/log-level.html">Log.logLevel</a> (and a stricter
+filter on Log.logLevel will take precedence here), however
+setting the max level here can improve performance a great deal,
+as it allows the Rust code to skip a great deal of work.</p>
+<p>This includes a <code>includePII</code> flag, which allows enabling logs at
+the trace level. It is ignored if level is not <a href="../../mozilla.components.support.base.log/-log/-priority/-d-e-b-u-g.html">Log.Priority.DEBUG</a>.
+These trace level logs* may contain the personal information of users
+but can be very helpful for tracking down bugs.</p>
+<h3>Parameters</h3>
+<p><a name="level"></a>
+<code>level</code> - The maximum (inclusive) level to include logs at.</p>
+<p><a name="includePII"></a>
+<code>includePII</code> - If <code>level</code> is <a href="../../mozilla.components.support.base.log/-log/-priority/-d-e-b-u-g.html">Log.Priority.DEBUG</a>, allow
+    debug logs to contain PII.</p>
+</BODY>
+</HTML>

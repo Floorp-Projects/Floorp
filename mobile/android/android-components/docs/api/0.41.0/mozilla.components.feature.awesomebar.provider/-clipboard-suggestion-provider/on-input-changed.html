@@ -1,0 +1,26 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>ClipboardSuggestionProvider.onInputChanged - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.feature.awesomebar.provider</a>&nbsp;/&nbsp;<a href="index.html">ClipboardSuggestionProvider</a>&nbsp;/&nbsp;<a href="./on-input-changed.html">onInputChanged</a><br/>
+<br/>
+<h1>onInputChanged</h1>
+<a name="mozilla.components.feature.awesomebar.provider.ClipboardSuggestionProvider$onInputChanged(kotlin.String)"></a>
+<code><span class="keyword">suspend</span> <span class="keyword">fun </span><span class="identifier">onInputChanged</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.feature.awesomebar.provider.ClipboardSuggestionProvider$onInputChanged(kotlin.String)/text">text</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html"><span class="identifier">List</span></a><span class="symbol">&lt;</span><a href="../../mozilla.components.concept.awesomebar/-awesome-bar/-suggestion/index.html"><span class="identifier">Suggestion</span></a><span class="symbol">&gt;</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/feature/awesomebar/src/main/java/mozilla/components/feature/awesomebar/provider/ClipboardSuggestionProvider.kt#L29">(source)</a>
+<p>Overrides <a href="../../mozilla.components.concept.awesomebar/-awesome-bar/-suggestion-provider/on-input-changed.html">SuggestionProvider.onInputChanged</a></p>
+<p>Fired whenever the user changes their input, after they have started interacting with the awesome bar.</p>
+<p>This is a suspending function. An <a href="../../mozilla.components.concept.awesomebar/-awesome-bar/index.html">AwesomeBar</a> implementation is expected to invoke this method from a
+<a href="https://kotlinlang.org/docs/reference/coroutines-overview.html">Coroutine</a>. This allows the <a href="../../mozilla.components.concept.awesomebar/-awesome-bar/index.html">AwesomeBar</a>
+implementation to group and cancel calls to multiple providers.</p>
+<p>Coroutine cancellation is cooperative. A coroutine code has to cooperate to be cancellable:
+https://github.com/Kotlin/kotlinx.coroutines/blob/master/docs/cancellation-and-timeouts.md</p>
+<h3>Parameters</h3>
+<p><a name="text"></a>
+<code>text</code> - The current user input in the toolbar.</p>
+<p><strong>Return</strong><br/>
+A list of suggestions to be displayed by the <a href="../../mozilla.components.concept.awesomebar/-awesome-bar/index.html">AwesomeBar</a>.</p>
+</BODY>
+</HTML>

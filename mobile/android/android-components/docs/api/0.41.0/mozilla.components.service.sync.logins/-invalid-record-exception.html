@@ -1,0 +1,20 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>InvalidRecordException - android-components</title>
+<link rel="stylesheet" href="../../style.css">
+</HEAD>
+<BODY>
+<a href="../index.html">android-components</a>&nbsp;/&nbsp;<a href="index.html">mozilla.components.service.sync.logins</a>&nbsp;/&nbsp;<a href="./-invalid-record-exception.html">InvalidRecordException</a><br/>
+<br/>
+<h1>InvalidRecordException</h1>
+<code><span class="keyword">typealias </span><span class="identifier">InvalidRecordException</span>&nbsp;<span class="symbol">=</span>&nbsp;<span class="identifier">InvalidRecordException</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/AsyncLoginsStorage.kt#L81">(source)</a>
+<p>This is thrown on attempts to insert or update a record so that it
+is no longer valid, where "invalid" is defined as such:</p>
+<ul><li>A record with a blank <code>password</code> is invalid.</li>
+<li>A record with a blank <code>hostname</code> is invalid.</li>
+<li>A record that doesn't have a <code>formSubmitURL</code> nor a <code>httpRealm</code> is invalid.</li>
+<li>A record that has both a <code>formSubmitURL</code> and a <code>httpRealm</code> is invalid.</li>
+</ul>
+</BODY>
+</HTML>

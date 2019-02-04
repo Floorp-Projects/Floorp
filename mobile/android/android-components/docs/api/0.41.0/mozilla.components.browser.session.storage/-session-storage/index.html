@@ -1,0 +1,69 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>SessionStorage - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.browser.session.storage</a>&nbsp;/&nbsp;<a href="./index.html">SessionStorage</a><br/>
+<br/>
+<h1>SessionStorage</h1>
+<code><span class="keyword">class </span><span class="identifier">SessionStorage</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../-auto-save/-storage/index.html"><span class="identifier">Storage</span></a></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/storage/SessionStorage.kt#L27">(source)</a>
+<p>Session storage for persisting the state of a <a href="../../mozilla.components.browser.session/-session-manager/index.html">SessionManager</a> to disk (browser and engine session states).</p>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">SessionStorage</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.session.storage.SessionStorage$<init>(android.content.Context, mozilla.components.concept.engine.Engine)/context">context</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/content/Context.html"><span class="identifier">Context</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.session.storage.SessionStorage$<init>(android.content.Context, mozilla.components.concept.engine.Engine)/engine">engine</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.concept.engine/-engine/index.html"><span class="identifier">Engine</span></a><span class="symbol">)</span></code>
+<p>Session storage for persisting the state of a <a href="../../mozilla.components.browser.session/-session-manager/index.html">SessionManager</a> to disk (browser and engine session states).</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="auto-save.html">autoSave</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">autoSave</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.session.storage.SessionStorage$autoSave(mozilla.components.browser.session.SessionManager, kotlin.Long, java.util.concurrent.TimeUnit)/sessionManager">sessionManager</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.browser.session/-session-manager/index.html"><span class="identifier">SessionManager</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.session.storage.SessionStorage$autoSave(mozilla.components.browser.session.SessionManager, kotlin.Long, java.util.concurrent.TimeUnit)/interval">interval</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html"><span class="identifier">Long</span></a>&nbsp;<span class="symbol">=</span>&nbsp;AutoSave.DEFAULT_INTERVAL_MILLISECONDS<span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.session.storage.SessionStorage$autoSave(mozilla.components.browser.session.SessionManager, kotlin.Long, java.util.concurrent.TimeUnit)/unit">unit</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/java/util/concurrent/TimeUnit.html"><span class="identifier">TimeUnit</span></a>&nbsp;<span class="symbol">=</span>&nbsp;TimeUnit.MILLISECONDS<span class="symbol">)</span><span class="symbol">: </span><a href="../-auto-save/index.html"><span class="identifier">AutoSave</span></a></code>
+<p>Starts configuring automatic saving of the state.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="clear.html">clear</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">clear</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Clears the state saved on disk.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="restore.html">restore</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">restore</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="../../mozilla.components.browser.session/-session-manager/-snapshot/index.html"><span class="identifier">Snapshot</span></a><span class="symbol">?</span></code>
+<p>Reads the saved state from disk. Returns null if no state was found on disk or if reading the file failed.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="save.html">save</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">save</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.session.storage.SessionStorage$save(mozilla.components.browser.session.SessionManager.Snapshot)/snapshot">snapshot</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.browser.session/-session-manager/-snapshot/index.html"><span class="identifier">Snapshot</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Saves the given state to disk.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>
