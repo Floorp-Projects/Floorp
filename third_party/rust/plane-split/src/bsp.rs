@@ -21,22 +21,21 @@ impl<T, U> BspPlane for Polygon<T, U> where
         trace!("\t\tbase {:?}", self.plane);
 
         //Note: we treat `self` as a plane, and `poly` as a concrete polygon here
-        let (intersection, dist) = match self.plane.intersect(&poly.plane) {
-            None if self.plane.normal.dot(poly.plane.normal) > T::zero() => {
-                debug!("\t\tNormals roughly point to the same direction");
-                (Intersection::Coplanar, self.plane.offset - poly.plane.offset)
-            }
-            None => {
-                debug!("\t\tNormals roughly point to opposite directions");
-                (Intersection::Coplanar, self.plane.offset + poly.plane.offset)
-            }
-            Some(_) if self.plane.are_outside(&poly.points) => {
-                let dist = self.plane.signed_distance_sum_to(&poly);
-                (Intersection::Outside, dist)
-            }
-            Some(line) => {
-                //Note: distance isn't relevant here
-                (Intersection::Inside(line), T::zero())
+        let (intersection, dist) = if self.plane.are_outside(&poly.points) {
+            let dist = self.plane.signed_distance_sum_to(&poly);
+            (Intersection::Outside, dist)
+        } else {
+            match self.plane.intersect(&poly.plane) {
+                Some(line) => {
+                    //Note: distance isn't relevant here
+                    (Intersection::Inside(line), T::zero())
+                }
+                None => {
+                    let ndot = self.plane.normal.dot(poly.plane.normal);
+                    debug!("\t\tNormals are aligned with {:?}", ndot);
+                    let dist = self.plane.offset - ndot * poly.plane.offset;
+                    (Intersection::Coplanar, dist)
+                }
             }
         };
 
@@ -64,7 +63,7 @@ impl<T, U> BspPlane for Polygon<T, U> where
             }
             Intersection::Inside(line) => {
                 debug!("\t\tCut across {:?}", line);
-                let (res_add1, res_add2) = poly.split(&line);
+                let (res_add1, res_add2) = poly.split_with_normal(&line, &self.plane.normal);
                 let mut front = Vec::new();
                 let mut back = Vec::new();
 
