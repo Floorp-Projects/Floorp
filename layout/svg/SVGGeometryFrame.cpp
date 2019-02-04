@@ -176,8 +176,8 @@ nsresult SVGGeometryFrame::AttributeChanged(int32_t aNameSpaceID,
     SVGGeometryElement* element =
         static_cast<SVGGeometryElement*>(GetContent());
 
-    auto oldStyleSVG = aOldComputedStyle->PeekStyleSVG();
-    if (oldStyleSVG && !SVGContentUtils::ShapeTypeHasNoCorners(GetContent())) {
+    auto* oldStyleSVG = aOldComputedStyle->StyleSVG();
+    if (!SVGContentUtils::ShapeTypeHasNoCorners(GetContent())) {
       if (StyleSVG()->mStrokeLinecap != oldStyleSVG->mStrokeLinecap &&
           element->IsSVGElement(nsGkAtoms::path)) {
         // If the stroke-linecap changes to or from "butt" then our element
