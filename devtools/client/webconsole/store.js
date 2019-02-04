@@ -69,7 +69,6 @@ function configureStore(hud, options = {}) {
       netxhr: getBoolPref(PREFS.FILTER.NETXHR),
     }),
     ui: UiState({
-      filterBarVisible: getBoolPref(PREFS.UI.FILTER_BAR),
       networkMessageActiveTabId: "headers",
       persistLogs: getBoolPref(PREFS.UI.PERSIST),
     }),
