@@ -17,7 +17,7 @@ import org.mozilla.fenix.mvi.ViewState
 class ToolbarComponent(
     private val container: ViewGroup,
     bus: ActionBusFactory,
-    override var initialState: SearchState = SearchState("")
+    override var initialState: SearchState = SearchState("", false)
 ) :
     UIComponent<SearchState, SearchAction, SearchChange>(
         bus.getManagedEmitter(SearchAction::class.java),
@@ -34,12 +34,9 @@ class ToolbarComponent(
     init {
         render(reducer)
     }
-
-    fun getView(): BrowserToolbar = uiView.toolbar
-    fun editMode() = getView().editMode()
 }
 
-data class SearchState(val query: String) : ViewState
+data class SearchState(val query: String, val isEditing: Boolean) : ViewState
 
 sealed class SearchAction : Action {
     data class UrlCommitted(val url: String) : SearchAction()

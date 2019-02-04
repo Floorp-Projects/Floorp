@@ -70,6 +70,11 @@ class ToolbarUIView(
     }
 
     override fun updateView() = Consumer<SearchState> {
+        if (it.isEditing) {
+            view.editMode()
+        } else {
+            view.displayMode()
+        }
     }
 
     companion object {
