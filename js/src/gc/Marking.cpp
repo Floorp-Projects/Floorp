@@ -38,6 +38,7 @@
 #include "gc/Nursery-inl.h"
 #include "gc/PrivateIterators-inl.h"
 #include "gc/Zone-inl.h"
+#include "vm/GeckoProfiler-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/Realm-inl.h"
 #include "vm/StringType-inl.h"
@@ -3641,6 +3642,11 @@ static bool UnmarkGrayGCThing(JSRuntime* rt, JS::GCCellPtr thing) {
   // Gray cell unmarking can occur at different points between recording and
   // replay, so disallow recorded events from occurring in the tracer.
   mozilla::recordreplay::AutoDisallowThreadEvents d;
+
+  AutoGeckoProfilerEntry profilingStackFrame(
+    rt->mainContextFromOwnThread(),
+    "UnmarkGrayGCThing",
+    ProfilingStackFrame::Category::GCCC);
 
   UnmarkGrayTracer unmarker(rt);
   gcstats::AutoPhase innerPhase(rt->gc.stats(),
