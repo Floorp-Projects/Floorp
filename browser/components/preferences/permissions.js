@@ -183,7 +183,7 @@ var gPermissionManager = {
     this._permissions.set(p.origin, p);
   },
 
-  addPermission(capability) {
+  async addPermission(capability) {
     let textbox = document.getElementById("url");
     let input_url = textbox.value.replace(/^\s*/, ""); // trim any leading space
     let principal;
@@ -224,7 +224,7 @@ var gPermissionManager = {
     if (!existingPermission) {
       this._permissionsToAdd.set(principal.origin, permissionParams);
       this._addPermissionToList(permissionParams);
-      this.buildPermissionsList();
+      await this.buildPermissionsList();
     } else if (existingPermission.capability != capability) {
       existingPermission.capability = capability;
       this._permissionsToAdd.set(principal.origin, permissionParams);
@@ -376,7 +376,7 @@ var gPermissionManager = {
     window.close();
   },
 
-  buildPermissionsList(sortCol) {
+  async buildPermissionsList(sortCol) {
     // Clear old entries.
     let oldItems = this._list.querySelectorAll("richlistitem");
     for (let item of oldItems) {
@@ -392,14 +392,14 @@ var gPermissionManager = {
     }
 
     // Sort permissions.
-    this._sortPermissions(this._list, frag, sortCol);
+    await this._sortPermissions(this._list, frag, sortCol);
 
     this._list.appendChild(frag);
 
     this._setRemoveButtonState();
   },
 
-  _sortPermissions(list, frag, column) {
+  async _sortPermissions(list, frag, column) {
     let sortDirection;
 
     if (!column) {
@@ -431,6 +431,10 @@ var gPermissionManager = {
     });
 
     let items = Array.from(frag.querySelectorAll("richlistitem"));
+
+    // Need to apply localization values to the richlistitems before
+    // we can sort them.
+    await document.l10n.translateElements(frag.querySelectorAll("[data-l10n-id]"));
 
     if (sortDirection === "descending") {
       items.sort((a, b) => sortFunc(b, a));
