@@ -587,12 +587,6 @@ def check_compiler(compiler, language, target):
 
     flags = []
 
-    def append_flag(flag):
-        if flag not in flags:
-            if info.type == 'clang-cl':
-                flags.append('-Xclang')
-            flags.append(flag)
-
     # Check language standards
     # --------------------------------------------------------------------
     if language != info.language:
@@ -605,7 +599,9 @@ def check_compiler(compiler, language, target):
     # example)
     if info.language == 'C' and info.language_version != 199901:
         if info.type in ('clang-cl', 'clang', 'gcc'):
-            append_flag('-std=gnu99')
+            if info.type == 'clang-cl':
+                flags.append('-Xclang')
+            flags.append('-std=gnu99')
 
     # Note: MSVC, while supporting C++14, still reports 199711L for __cplusplus.
     # Note: this is a strict version check because we used to always add
@@ -613,48 +609,41 @@ def check_compiler(compiler, language, target):
     cxx14_version = 201402
     if info.language == 'C++':
         if info.type == 'clang' and info.language_version != cxx14_version:
-            append_flag('-std=gnu++14')
+            flags.append('-std=gnu++14')
         # MSVC headers include C++14 features, but don't guard them
         # with appropriate checks.
         elif info.type == 'clang-cl' and info.language_version != cxx14_version:
-            append_flag('-std=c++14')
+            flags.append('-Xclang')
+            flags.append('-std=c++14')
 
     # Check compiler target
     # --------------------------------------------------------------------
-    if not info.cpu or info.cpu != target.cpu:
-        if info.type == 'clang':
-            append_flag('--target=%s' % target.toolchain)
-        elif info.type == 'clang-cl':
-            # Ideally this would share the 'clang' branch above, but on Windows
-            # the --target needs additional data like ms-compatibility-version.
-            if (info.cpu, target.cpu) == ('x86_64', 'x86'):
-                # -m32 does not use -Xclang, so add it directly.
-                flags.append('-m32')
-            elif target.toolchain == 'aarch64-mingw32':
-                # clang-cl uses a different name for this target
-                flags.append('--target=aarch64-windows-msvc')
-        elif info.type == 'gcc':
-            same_arch = same_arch_different_bits()
-            if (target.cpu, info.cpu) in same_arch:
-                append_flag('-m32')
-            elif (info.cpu, target.cpu) in same_arch:
-                append_flag('-m64')
+    has_target = False
+    if info.type == 'clang':
+        if not info.kernel or info.kernel != target.kernel or \
+                not info.endianness or info.endianness != target.endianness:
+            flags.append('--target=%s' % target.toolchain)
+            has_target = True
 
-    if not info.kernel or info.kernel != target.kernel:
-        if info.type == 'clang':
-            append_flag('--target=%s' % target.toolchain)
+        # Add target flag when there is an OS mismatch (e.g. building for Android on
+        # Linux). However, only do this if the target OS is in our whitelist, to
+        # keep things the same on other platforms.
+        elif target.os in OS_preprocessor_checks and (
+                not info.os or info.os != target.os):
+            flags.append('--target=%s' % target.toolchain)
+            has_target = True
 
-    if not info.endianness or info.endianness != target.endianness:
-        if info.type == 'clang':
-            append_flag('--target=%s' % target.toolchain)
-
-    # Add target flag when there is an OS mismatch (e.g. building for Android on
-    # Linux). However, only do this if the target OS is in our whitelist, to
-    # keep things the same on other platforms.
-    if target.os in OS_preprocessor_checks and (
-            not info.os or info.os != target.os):
-        if info.type == 'clang':
-            append_flag('--target=%s' % target.toolchain)
+    if not has_target and (not info.cpu or info.cpu != target.cpu and info.type != 'msvc'):
+        same_arch = same_arch_different_bits()
+        if (target.cpu, info.cpu) in same_arch:
+            flags.append('-m32')
+        elif (info.cpu, target.cpu) in same_arch:
+            flags.append('-m64')
+        elif info.type == 'clang-cl' and target.cpu == 'aarch64':
+            # clang-cl uses a different name for this target
+            flags.append('--target=aarch64-windows-msvc')
+        elif info.type == 'clang':
+            flags.append('--target=%s' % target.toolchain)
 
     return namespace(
         type=info.type,
