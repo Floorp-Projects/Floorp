@@ -29,6 +29,8 @@ android {
         buildConfigField(
             "String",
             "GLEAN_MINICONDA_DIR",
+            // Carefully escape the string here so it will support `\` in
+            // Windows paths correctly.
             JsonOutput.toJson(GLEAN_MINICONDA_DIR.path)
         )
     }
