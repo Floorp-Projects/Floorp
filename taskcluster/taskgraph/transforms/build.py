@@ -53,6 +53,18 @@ def stub_installer(config, jobs):
 
 
 @transforms.add
+def resolve_shipping_product(config, jobs):
+    for job in jobs:
+        resolve_keyed_by(
+            job, 'shipping-product', item_name=job['name'],
+            **{
+                'release-type': config.params['release_type'],
+            }
+        )
+        yield job
+
+
+@transforms.add
 def update_channel(config, jobs):
     for job in jobs:
         resolve_keyed_by(
