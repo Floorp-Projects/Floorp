@@ -238,14 +238,9 @@ public class FindInPageBar extends LinearLayout
     public boolean onKey(View v, int keyCode, KeyEvent event) {
         if (event == null) return false;
 
-        if (event.getAction() == KeyEvent.ACTION_DOWN &&
-                event.getKeyCode() == KeyEvent.KEYCODE_ENTER &&
-                event.isShiftPressed()) {
-            //  Consume Shift+Enter which would otherwise insert a newline character in the search box
-            return true;
-        }
+        // Keeping the buttons pressed will continue cycling through the search results
 
-        if (event.getAction() == KeyEvent.ACTION_UP &&
+        if (event.getAction() == KeyEvent.ACTION_DOWN &&
                 event.getKeyCode() == KeyEvent.KEYCODE_ENTER) {
             if (event.isShiftPressed()) {
                 findPrevInPage();
