@@ -2306,9 +2306,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
     return mIndividualTransform ? do_AddRef(mIndividualTransform) : nullptr;
   }
 
- private:
-  // Helpers for above functions, which do some but not all of the tests
-  // for them (since transform must be tested separately for each).
   void GenerateCombinedIndividualTransform();
 };
 
