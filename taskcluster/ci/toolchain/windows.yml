@@ -184,6 +184,29 @@ win64-aarch64-rust:
         ]
         toolchain-artifact: public/build/rustc.tar.bz2
 
+win32-node:
+    description: "Node repack toolchain build"
+    index:
+        product: bootstrap-support
+        job-name: win32-node
+    treeherder:
+        kind: build
+        platform: toolchains/opt
+        symbol: TW32(node)
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        docker-image: {in-tree: toolchain-build}
+        max-run-time: 1800
+    run:
+        using: toolchain-script
+        script: repack-node.sh
+        arguments: ['win32']
+        toolchain-artifact: public/build/node.tar.bz2
+    run-on-projects:
+        - trunk
+        - try
+
 win64-node:
     description: "Node repack toolchain build"
     treeherder:
