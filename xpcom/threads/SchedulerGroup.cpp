@@ -267,13 +267,6 @@ SchedulerGroup::Runnable::Runnable(already_AddRefed<nsIRunnable>&& aRunnable,
       mGroup(aGroup),
       mDocGroup(aDocGroup) {}
 
-bool SchedulerGroup::Runnable::GetAffectedSchedulerGroups(
-    SchedulerGroupSet& aGroups) {
-  aGroups.Clear();
-  aGroups.Put(Group());
-  return true;
-}
-
 dom::DocGroup* SchedulerGroup::Runnable::DocGroup() const { return mDocGroup; }
 
 #ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY

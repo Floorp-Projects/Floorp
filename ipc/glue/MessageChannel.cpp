@@ -2042,16 +2042,6 @@ MessageChannel::MessageTask::GetPriority(uint32_t* aPriority) {
   return NS_OK;
 }
 
-bool MessageChannel::MessageTask::GetAffectedSchedulerGroups(
-    SchedulerGroupSet& aGroups) {
-  if (!mChannel) {
-    return false;
-  }
-
-  mChannel->AssertWorkerThread();
-  return mChannel->mListener->GetMessageSchedulerGroups(mMessage, aGroups);
-}
-
 void MessageChannel::DispatchMessage(Message&& aMsg) {
   AssertWorkerThread();
   mMonitor->AssertCurrentThreadOwns();
