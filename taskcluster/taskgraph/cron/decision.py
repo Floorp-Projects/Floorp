@@ -43,15 +43,6 @@ def make_decision_task(params, root, symbol, arguments=[]):
         params['repository_url'],
         params['head_rev'])
 
-    slugids = {}
-
-    def as_slugid(name):
-        # https://github.com/taskcluster/json-e/issues/164
-        name = name[0]
-        if name not in slugids:
-            slugids[name] = slugid.nice()
-        return slugids[name]
-
     # provide a similar JSON-e context to what mozilla-taskcluster provides:
     # https://docs.taskcluster.net/reference/integrations/mozilla-taskcluster/docs/taskcluster-yml
     # but with a different tasks_for and an extra `cron` section
@@ -68,7 +59,6 @@ def make_decision_task(params, root, symbol, arguments=[]):
             'pushlog_id': push_info['pushid'],
             'pushdate': push_info['pushdate'],
             'owner': 'cron',
-            'comment': '',
         },
         'cron': {
             'task_id': os.environ.get('TASK_ID', '<cron task id>'),
@@ -78,7 +68,7 @@ def make_decision_task(params, root, symbol, arguments=[]):
             'quoted_args': ' '.join(pipes.quote(a) for a in arguments),
         },
         'now': current_json_time(),
-        'as_slugid': as_slugid,
+        'ownTaskId': slugid.nice(),
     }
 
     rendered = jsone.render(taskcluster_yml, context)

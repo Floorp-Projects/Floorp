@@ -16,7 +16,8 @@ with Files("**"):
 with Files("harness/**"):
     SCHEDULES.exclusive = ["marionette", "firefox-ui"]
 
-SPHINX_TREES["marionette"] = "doc"
+SPHINX_TREES["/testing/marionette"] = "doc"
+SPHINX_PYTHON_PACKAGE_DIRS += ["client/marionette_driver"]
 
-with Files('doc/**'):
-    SCHEDULES.exclusive = ['docs']
+with Files("doc/**"):
+    SCHEDULES.exclusive = ["docs"]

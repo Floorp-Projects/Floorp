@@ -10,7 +10,6 @@ const { getAllUi } = require("devtools/client/webconsole/selectors/ui");
 const { getMessage } = require("devtools/client/webconsole/selectors/messages");
 
 const {
-  FILTER_BAR_TOGGLE,
   INITIALIZE,
   PERSIST_TOGGLE,
   PREFS,
@@ -21,16 +20,6 @@ const {
   SPLIT_CONSOLE_CLOSE_BUTTON_TOGGLE,
   TIMESTAMPS_TOGGLE,
 } = require("devtools/client/webconsole/constants");
-
-function filterBarToggle() {
-  return ({dispatch, getState, prefsService}) => {
-    dispatch({
-      type: FILTER_BAR_TOGGLE,
-    });
-    const {filterBarVisible} = getAllUi(getState());
-    prefsService.setBoolPref(PREFS.UI.FILTER_BAR, filterBarVisible);
-  };
-}
 
 function persistToggle() {
   return ({dispatch, getState, prefsService}) => {
@@ -111,7 +100,6 @@ function reverseSearchInputToggle({initialValue} = {}) {
 }
 
 module.exports = {
-  filterBarToggle,
   initialize,
   persistToggle,
   reverseSearchInputToggle,

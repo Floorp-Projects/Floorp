@@ -47,8 +47,12 @@ def get_hg_revision_branch(root, revision):
     ], cwd=root)
 
 
+# For these functions, we assume that run-task has correctly checked out the
+# revision indicated by GECKO_HEAD_REF, so all that remains is to see what the
+# current revision is.  Mercurial refers to that as `.`.
+def get_hg_commit_message(root):
+    return subprocess.check_output(['hg', 'log', '-r', '.', '-T', '{desc}'], cwd=root)
+
+
 def calculate_head_rev(root):
-    # we assume that run-task has correctly checked out the revision indicated by
-    # GECKO_HEAD_REF, so all that remains is to see what the current revision is.
-    # Mercurial refers to that as `.`.
     return subprocess.check_output(['hg', 'log', '-r', '.', '-T', '{node}'], cwd=root)

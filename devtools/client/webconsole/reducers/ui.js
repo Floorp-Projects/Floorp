@@ -6,7 +6,6 @@
 "use strict";
 
 const {
-  FILTER_BAR_TOGGLE,
   INITIALIZE,
   MESSAGES_CLEAR,
   PERSIST_TOGGLE,
@@ -23,7 +22,6 @@ const {
 } = require("devtools/client/netmonitor/src/constants");
 
 const UiState = (overrides) => Object.freeze(Object.assign({
-  filterBarVisible: false,
   initialized: false,
   networkMessageActiveTabId: PANELS.HEADERS,
   persistLogs: false,
@@ -37,8 +35,6 @@ const UiState = (overrides) => Object.freeze(Object.assign({
 
 function ui(state = UiState(), action) {
   switch (action.type) {
-    case FILTER_BAR_TOGGLE:
-      return Object.assign({}, state, {filterBarVisible: !state.filterBarVisible});
     case PERSIST_TOGGLE:
       return Object.assign({}, state, {persistLogs: !state.persistLogs});
     case TIMESTAMPS_TOGGLE:

@@ -34,8 +34,8 @@ async function performTests(codeMirror) {
   EventUtils.synthesizeKey("KEY_Tab", {shiftKey: true});
   is(jsterm.getInputValue(), "", "inputnode is empty - matched");
   ok(!isJstermFocused(jsterm), "input isn't focused anymore");
-  ok(hasFocus(hud.ui.outputNode.querySelector(".filter-checkbox input")),
-    `The "Persist Logs" checkbox is now focused`);
+  ok(hasFocus(hud.ui.outputNode.querySelector(".devtools-button.net")),
+    `The "Requests" filter button is now focused`);
 
   info("Check that hitting Tab when input is not empty insert a tab");
   jsterm.focus();

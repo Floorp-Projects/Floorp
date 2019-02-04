@@ -262,11 +262,6 @@ pref("devtools.browserconsole.filter.css", false);
 pref("devtools.browserconsole.filter.net", false);
 pref("devtools.browserconsole.filter.netxhr", false);
 
-// Web console filter bar settings
-pref("devtools.webconsole.ui.filterbar", false);
-// Browser console filter bar settings
-pref("devtools.browserconsole.ui.filterbar", false);
-
 // Max number of inputs to store in web console history.
 pref("devtools.webconsole.inputHistoryCount", 300);
 
