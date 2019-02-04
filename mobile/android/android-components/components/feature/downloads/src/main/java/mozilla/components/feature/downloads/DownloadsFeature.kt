@@ -44,6 +44,7 @@ class DownloadsFeature(
     var onDownloadCompleted: OnDownloadCompleted = { _, _ -> },
     private val downloadManager: DownloadManager = DownloadManager(applicationContext, onDownloadCompleted),
     private val sessionManager: SessionManager,
+    private val sessionId: String? = null,
     private val fragmentManager: FragmentManager? = null,
     private var dialog: DownloadDialogFragment = SimpleDownloadDialogFragment.newInstance()
 ) : SelectionAwareSessionObserver(sessionManager), LifecycleAwareFeature {
@@ -53,7 +54,8 @@ class DownloadsFeature(
      * to be processed.
      */
     override fun start() {
-        super.observeSelected()
+        val session = sessionId?.let { sessionManager.findSessionById(sessionId) }
+        session?.let { observeFixed(it) } ?: observeSelected()
 
         findPreviousDialogFragment()?.let {
             reAttachOnStartDownloadListener(it)

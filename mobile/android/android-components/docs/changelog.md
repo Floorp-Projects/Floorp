@@ -45,6 +45,7 @@ permalink: /changelog/
       }
     }
   ```
+  * Fixed Downloads feature to work with Custom Tabs by passing in the session ID when applicable.
 
  * **feature-prompts**
    * ⚠️ **This is a breaking API change!**

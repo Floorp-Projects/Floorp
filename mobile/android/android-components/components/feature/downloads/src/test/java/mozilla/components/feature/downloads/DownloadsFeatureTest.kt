@@ -23,6 +23,7 @@ import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
@@ -47,6 +48,34 @@ class DownloadsFeatureTest {
         mockSessionManager = spy(SessionManager(engine))
         mockDownloadManager = mock()
         feature = DownloadsFeature(context, downloadManager = mockDownloadManager, sessionManager = mockSessionManager)
+    }
+
+    @Test
+    fun `when valid sessionId is provided, observe it's session`() {
+        feature = spy(DownloadsFeature(
+            RuntimeEnvironment.application,
+            downloadManager = mockDownloadManager,
+            sessionManager = mockSessionManager,
+            sessionId = "123"
+        ))
+        `when`(mockSessionManager.findSessionById(anyString())).thenReturn(mock())
+
+        feature.start()
+
+        verify(feature).observeFixed(any())
+    }
+
+    @Test
+    fun `when sessionId is NOT provided, observe selected session`() {
+        feature = spy(DownloadsFeature(
+            RuntimeEnvironment.application,
+            downloadManager = mockDownloadManager,
+            sessionManager = mockSessionManager
+        ))
+
+        feature.start()
+
+        verify(feature).observeSelected()
     }
 
     @Test
