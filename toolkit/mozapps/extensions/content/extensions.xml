@@ -569,7 +569,7 @@
 
       <xul:image class="card-heading-image" anonid="theme-screenshot" xbl:inherits="src=previewURL"/>
 
-      <xul:hbox class="content-container" align="center">
+      <xul:hbox class="content-container">
         <xul:vbox class="icon-container">
           <xul:image anonid="icon" class="icon"/>
         </xul:vbox>
