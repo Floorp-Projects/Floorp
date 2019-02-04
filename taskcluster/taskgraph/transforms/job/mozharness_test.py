@@ -96,13 +96,6 @@ def mozharness_test_on_docker(config, job, taskdesc):
         'type': 'directory',
     } for (prefix, path) in artifacts]
 
-    worker['caches'] = [{
-        'type': 'persistent',
-        'name': 'level-{}-{}-test-workspace'.format(
-            config.params['level'], config.params['project']),
-        'mount-point': "{workdir}/workspace".format(**run),
-    }]
-
     env = worker.setdefault('env', {})
     env.update({
         'MOZHARNESS_CONFIG': ' '.join(mozharness['config']),
