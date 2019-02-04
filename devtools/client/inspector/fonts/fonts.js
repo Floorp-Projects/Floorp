@@ -25,11 +25,11 @@ const { updateFonts } = require("./actions/fonts");
 const {
   applyInstance,
   resetFontEditor,
+  setEditorDisabled,
   updateAxis,
   updateCustomInstance,
   updateFontEditor,
   updateFontProperty,
-  updateWarningMessage,
 } = require("./actions/font-editor");
 const { updatePreviewText } = require("./actions/font-options");
 
@@ -551,8 +551,7 @@ class FontInspector {
     return this.inspector &&
            this.inspector.selection.nodeFront &&
            this.inspector.selection.isConnected() &&
-           this.inspector.selection.isElementNode() &&
-           !this.inspector.selection.isPseudoElementNode();
+           this.inspector.selection.isElementNode();
   }
 
   /**
@@ -805,13 +804,6 @@ class FontInspector {
    */
   async refreshFontEditor() {
     if (!this.store || !this.isSelectedNodeValid()) {
-      if (this.inspector.selection.isPseudoElementNode()) {
-        const noPseudoWarning = getStr("fontinspector.noPseduoWarning");
-        this.store.dispatch(resetFontEditor());
-        this.store.dispatch(updateWarningMessage(noPseudoWarning));
-        return;
-      }
-
       // If the selection is a TextNode, switch selection to be its parent node.
       if (this.inspector.selection.isTextNode()) {
         const selection = this.inspector.selection;
@@ -876,6 +868,9 @@ class FontInspector {
     });
 
     this.store.dispatch(updateFontEditor(fonts, properties, node.actorID));
+    const isPseudo = this.inspector.selection.isPseudoElementNode();
+    this.store.dispatch(setEditorDisabled(isPseudo));
+
     this.inspector.emit("fonteditor-updated");
     // Listen to manual changes in the Rule view that could update the Font Editor state
     this.ruleView.on("property-value-updated", this.onRulePropertyUpdated);
