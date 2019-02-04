@@ -10,7 +10,11 @@
 const { Cu } = require("chrome");
 const Services = require("Services");
 const makeDebugger = require("devtools/server/actors/utils/make-debugger");
-const { isAnonymous } = require("devtools/shared/layout/utils");
+const {
+  isAfterPseudoElement,
+  isBeforePseudoElement,
+  isNativeAnonymous,
+} = require("devtools/shared/layout/utils");
 
 // eslint-disable-next-line
 const JQUERY_LIVE_REGEX = /return typeof \w+.*.event\.triggered[\s\S]*\.event\.(dispatch|handle).*arguments/;
@@ -347,9 +351,10 @@ class JQueryEventCollector extends MainEventCollector {
     const jQuery = this.getJQuery(node);
     const handlers = [];
 
-    // If jQuery is not on the page or if this is an anonymous node we need
-    // to return early.
-    if (!jQuery || isAnonymous(node)) {
+    // If jQuery is not on the page, if this is an anonymous node or a pseudo
+    // element we need to return early.
+    if (!jQuery || isNativeAnonymous(node) ||
+        isBeforePseudoElement(node) || isAfterPseudoElement(node)) {
       if (checkOnly) {
         return false;
       }
