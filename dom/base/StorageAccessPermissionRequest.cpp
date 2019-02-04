@@ -21,7 +21,7 @@ StorageAccessPermissionRequest::StorageAccessPermissionRequest(
     AllowAutoGrantCallback&& aAllowAutoGrantCallback,
     AllowAnySiteCallback&& aAllowAnySiteCallback,
     CancelCallback&& aCancelCallback)
-    : ContentPermissionRequestBase(aNodePrincipal, false, aWindow,
+    : ContentPermissionRequestBase(aNodePrincipal, aWindow,
                                    NS_LITERAL_CSTRING("dom.storage_access"),
                                    NS_LITERAL_CSTRING("storage-access")),
       mAllowCallback(std::move(aAllowCallback)),
