@@ -39,7 +39,7 @@ job-defaults:
     # The build_attrs transform defaults to setting a `skip-unlles-schedules'
     # optimization based on the task label. The tasks here don't have corresponding
     # schedules defined in mozbuild.
-    optimization: {}
+    optimization: null
 
 jobs:
     firefox-source/opt:

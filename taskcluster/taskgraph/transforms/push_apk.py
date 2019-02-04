@@ -17,10 +17,6 @@ from taskgraph.util.taskcluster import get_artifact_prefix
 
 from voluptuous import Optional, Required
 
-# Voluptuous uses marker objects as dictionary *keys*, but they are not
-# comparable, so we cast all of the keys back to regular strings
-task_description_schema = {str(k): v for k, v in task_description_schema.schema.iteritems()}
-
 
 push_apk_description_schema = Schema({
     Required('dependent-tasks'): object,

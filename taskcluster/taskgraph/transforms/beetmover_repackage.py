@@ -136,10 +136,6 @@ UPSTREAM_ARTIFACT_SIGNED_MAR_PATHS = [
     'target.bz2.complete.mar',
 ]
 
-# Voluptuous uses marker objects as dictionary *keys*, but they are not
-# comparable, so we cast all of the keys back to regular strings
-task_description_schema = {str(k): v for k, v in task_description_schema.schema.iteritems()}
-
 beetmover_description_schema = schema.extend({
     # depname is used in taskref's to identify the taskID of the unsigned things
     Required('depname', default='build'): basestring,
