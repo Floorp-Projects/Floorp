@@ -34,7 +34,6 @@
 #include "mozilla/UniquePtr.h"
 #include "MainThreadUtils.h"
 #include "nsICrashReporter.h"
-#include "nsILabelableRunnable.h"
 
 #if defined(ANDROID) && defined(DEBUG)
 #  include <android/log.h>
