@@ -30,7 +30,7 @@ build = MozbuildObject.from_environment(cwd=here)
 vcs = get_repository_object(build.topsrcdir)
 
 root_hash = hashlib.sha256(os.path.abspath(build.topsrcdir)).hexdigest()
-cache_dir = os.path.join(get_state_dir()[0], 'cache', root_hash, 'chunk_mapping')
+cache_dir = os.path.join(get_state_dir(), 'cache', root_hash, 'chunk_mapping')
 if not os.path.isdir(cache_dir):
     os.makedirs(cache_dir)
 CHUNK_MAPPING_FILE = os.path.join(cache_dir, 'chunk_mapping.sqlite')

@@ -136,7 +136,7 @@ def fzf_bootstrap(update=False):
     if fzf_bin and not update:
         return fzf_bin
 
-    fzf_path = os.path.join(get_state_dir()[0], 'fzf')
+    fzf_path = os.path.join(get_state_dir(), 'fzf')
     if update and not os.path.isdir(fzf_path):
         print("fzf installed somewhere other than {}, please update manually".format(fzf_path))
         sys.exit(1)
