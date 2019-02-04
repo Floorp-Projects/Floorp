@@ -15,6 +15,7 @@ const { getUnitFromValue, getStepForUnit } = require("../utils/font-utils");
 class FontSize extends PureComponent {
   static get propTypes() {
     return {
+      disabled: PropTypes.bool.isRequired,
       onChange: PropTypes.func.isRequired,
       value: PropTypes.string.isRequired,
     };
@@ -59,6 +60,7 @@ class FontSize extends PureComponent {
 
     return FontPropertyValue({
       autoIncrement: true,
+      disabled: this.props.disabled,
       label: getStr("fontinspector.fontSizeLabel"),
       min: 0,
       max: this.historicMax[unit],
