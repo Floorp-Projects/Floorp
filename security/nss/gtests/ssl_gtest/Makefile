@@ -36,12 +36,6 @@ CPPSRCS := $(filter-out $(shell grep -l '^TEST_F' $(CPPSRCS)), $(CPPSRCS))
 CFLAGS += -DNSS_DISABLE_TLS_1_3
 endif
 
-ifdef NSS_ALLOW_SSLKEYLOGFILE
-SSLKEYLOGFILE_FILES = ssl_keylog_unittest.cc
-else
-SSLKEYLOGFILE_FILES = $(NULL)
-endif
-
 #######################################################################
 # (5) Execute "global" rules. (OPTIONAL)                              #
 #######################################################################

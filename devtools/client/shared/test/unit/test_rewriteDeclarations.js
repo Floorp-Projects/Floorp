@@ -4,7 +4,7 @@
 "use strict";
 
 const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
-const {RuleRewriter} = require("devtools/shared/css/parsing-utils");
+const RuleRewriter = require("devtools/shared/fronts/inspector/rule-rewriter");
 const {isCssPropertyKnown} = require("devtools/server/actors/css-properties");
 
 const TEST_DATA = [
