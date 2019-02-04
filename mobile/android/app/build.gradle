@@ -224,7 +224,7 @@ dependencies {
         implementation "com.android.support:mediarouter-v7:$support_library_version"
         implementation "com.google.android.gms:play-services-basement:$google_play_services_version"
         implementation "com.google.android.gms:play-services-base:$google_play_services_version"
-        implementation "com.google.android.gms:play-services-cast:$google_play_services_version"
+        implementation "com.google.android.gms:play-services-cast:$google_play_services_cast_version"
     }
 
     if (mozconfig.substs.MOZ_INSTALL_TRACKING) {
@@ -457,13 +457,15 @@ android.applicationVariants.all configureVariantDebugLevel
 import groovy.xml.XmlUtil
 
 // Workaround for fixing sub-dependencies upon gradle error:
-// All gms/firebase libraries must use the exact same version specification (mixing versions can
+// All gms/firebase (except play-services-cast since it has sub-dependencies in 15.0.0)
+// libraries must use the exact same version specification (mixing versions can
 // lead to runtime crashes). Found versions 15.0.1, 15.0.0. Examples include
-// com.google.android.gms:play-services-base:15.0.1 and com.google.android.gms:play-services-cast:15.0.0
+// com.google.android.gms:play-services-base:15.0.1 and com.google.android.gms:play-services-basement:15.0.0
 configurations.all {
     resolutionStrategy {
         eachDependency { DependencyResolveDetails details ->
-            if (details.requested.group == 'com.google.android.gms') {
+            if (details.requested.group == 'com.google.android.gms'
+                    && details.requested.name != 'play-services-cast') {
                 details.useVersion "$google_play_services_version"
             }
         }
