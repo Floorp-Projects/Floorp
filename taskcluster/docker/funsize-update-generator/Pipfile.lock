@@ -343,11 +343,11 @@
         },
         "scriptworker": {
             "hashes": [
-                "sha256:0b63c0f1668f17d5da37bd5543039a7985f55f36587b66dc0cc1c79ab7238513",
-                "sha256:937da0419c8f95e5f6ddebed21cb04e4536372f0292bce184f9e0642727d3623"
+                "sha256:238fb4c4c53feb4844040ad70920243e35bdbf89d426496cc3536a79b9b52491",
+                "sha256:cd7376a464692316e402abf3565692917a4d13f6d2a57827165c583fab9613db"
             ],
             "index": "pypi",
-            "version": "==17.2.2"
+            "version": "==18.1.0"
         },
         "sh": {
             "hashes": [
