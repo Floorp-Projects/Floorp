@@ -1,6 +1,6 @@
-==========
-Marionette
-==========
+=================
+Marionette server
+=================
 
 Marionette is the remote protocol that lets out-of-process programs
 communicate with, instrument, and control Gecko-based browsers.
@@ -46,7 +46,7 @@ See also:
 * Documentation for `Firefox Puppeteer`_, which is used to in-tree
   to write Firefox UI tests.
 
-.. _Marionette Python client: http://marionette-client.readthedocs.io
+.. _Marionette Python client: ../../../python/marionette_driver.html
 .. _Firefox Puppeteer: http://firefox-puppeteer.readthedocs.io
 
 
