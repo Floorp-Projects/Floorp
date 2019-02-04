@@ -4,16 +4,26 @@ title: Changelog
 permalink: /changelog/
 ---
 
-# 0.41.0-SNAPSHOT  (In Development)
+# 0.42.0-SNAPSHOT  (In Development)
 
-* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.40.0...master)
-* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/43?closed=1)
-* [API reference](https://mozilla-mobile.github.io/android-components/api/0.40.0/index)
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.41.0...master)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/44?closed=1)
+* [API reference](https://mozilla-mobile.github.io/android-components/api/0.41.0/index)
 * [Dependencies](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Dependencies.kt)
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+# 0.41.0
+
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.40.0...v0.41.0)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/43?closed=1)
+* [API reference](https://mozilla-mobile.github.io/android-components/api/0.41.0/index)
+* [Dependencies](https://github.com/mozilla-mobile/android-components/blob/v0.41.0/buildSrc/src/main/java/Dependencies.kt)
+* [Gecko](https://github.com/mozilla-mobile/android-components/blob/v0.41.0/buildSrc/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/android-components/blob/v0.41.0/buildSrc/src/main/java/Config.kt)
+
 * Mozilla App Services dependency upgraded: **0.15.0** 🔺
+  * [0.15.0 release notes](https://github.com/mozilla/application-services/releases/tag/v0.15.0)
 
 * **browser-engine-gecko-nightly**
   * Tweaked `NestedGeckoView` to "stick" to `AppBar` in nested scroll, like other Android apps. This is possible after a [fix](https://bugzilla.mozilla.org/show_bug.cgi?id=1515774) in APZ gesture detection.
