@@ -316,7 +316,7 @@ void nsView::DoResetWidgetBounds(bool aMoveOnly, bool aInvalidateChangedSize) {
   }
 
   bool curVisibility = widget->IsVisible();
-  bool newVisibility = IsEffectivelyVisible();
+  bool newVisibility = !invisiblePopup && IsEffectivelyVisible();
   if (curVisibility && !newVisibility) {
     widget->Show(false);
   }
