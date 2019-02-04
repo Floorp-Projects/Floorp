@@ -543,48 +543,19 @@ GeolocationPermissionPrompt.prototype = {
   },
 
   get promptActions() {
-    // We collect Telemetry data on Geolocation prompts and how users
-    // respond to them. The probe keys are a bit verbose, so let's alias them.
-    const SHARE_LOCATION =
-      Ci.nsISecurityUITelemetry.WARNING_GEOLOCATION_REQUEST_SHARE_LOCATION;
-    const ALWAYS_SHARE =
-      Ci.nsISecurityUITelemetry.WARNING_GEOLOCATION_REQUEST_ALWAYS_SHARE;
-    const NEVER_SHARE =
-      Ci.nsISecurityUITelemetry.WARNING_GEOLOCATION_REQUEST_NEVER_SHARE;
-
-    let secHistogram = Services.telemetry.getHistogramById("SECURITY_UI");
-
     return [{
       label: gBrowserBundle.GetStringFromName("geolocation.allowLocation"),
       accessKey:
         gBrowserBundle.GetStringFromName("geolocation.allowLocation.accesskey"),
       action: SitePermissions.ALLOW,
-      callback(state) {
-        if (state && state.checkboxChecked) {
-          secHistogram.add(ALWAYS_SHARE);
-        } else {
-          secHistogram.add(SHARE_LOCATION);
-        }
-      },
     }, {
       label: gBrowserBundle.GetStringFromName("geolocation.dontAllowLocation"),
       accessKey:
         gBrowserBundle.GetStringFromName("geolocation.dontAllowLocation.accesskey"),
       action: SitePermissions.BLOCK,
-      callback(state) {
-        if (state && state.checkboxChecked) {
-          secHistogram.add(NEVER_SHARE);
-        }
-      },
     }];
   },
 
-  onBeforeShow() {
-    let secHistogram = Services.telemetry.getHistogramById("SECURITY_UI");
-    const SHOW_REQUEST = Ci.nsISecurityUITelemetry.WARNING_GEOLOCATION_REQUEST;
-    secHistogram.add(SHOW_REQUEST);
-    return true;
-  },
 };
 
 PermissionUI.GeolocationPermissionPrompt = GeolocationPermissionPrompt;
