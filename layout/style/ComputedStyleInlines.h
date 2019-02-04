@@ -51,7 +51,7 @@ namespace mozilla {
     if (needToCompute) {                                            \
       MOZ_ASSERT(NS_IsMainThread());                                \
       MOZ_ASSERT(!mozilla::IsInServoTraversal());                   \
-      const_cast<nsStyle##name_*>(data)->FinishStyle(               \
+      const_cast<nsStyle##name_*>(data)->TriggerImageLoads(         \
           *mPresContext->Document(), nullptr);                      \
       /* the ComputedStyle owns the struct */                       \
       SetRequestedStruct(kStructID);                                \
@@ -71,12 +71,12 @@ void ComputedStyle::ResolveSameStructsAs(const ComputedStyle* aOther) {
   auto newBits = aOther->mRequestedStructs & ~mRequestedStructs;
 
 #define STYLE_STRUCT(name_)                                                    \
-  if (nsStyle##name_::kHasFinishStyle &&                                       \
+  if (nsStyle##name_::kHasTriggerImageLoads &&                                 \
       (newBits & StyleStructConstants::BitFor(StyleStructID::name_))) {        \
     const nsStyle##name_* data = ComputedData()->GetStyle##name_();            \
     const nsStyle##name_* oldData = aOther->ComputedData()->GetStyle##name_(); \
-    const_cast<nsStyle##name_*>(data)->FinishStyle(*mPresContext->Document(),  \
-                                                   oldData);                   \
+    const_cast<nsStyle##name_*>(data)->TriggerImageLoads(                      \
+        *mPresContext->Document(), oldData);                                   \
   }
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
