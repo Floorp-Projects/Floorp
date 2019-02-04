@@ -55,9 +55,9 @@ def tags(node):
 def prefs(node):
     def value(ini_value):
         if isinstance(ini_value, (str, unicode)):
-            return tuple(ini_value.split(":", 1))
+            return tuple(pref_piece.strip() for pref_piece in ini_value.split(':', 1))
         else:
-            return (ini_value, None)
+            return (ini_value.strip(), None)
 
     try:
         node_prefs = node.get("prefs")
