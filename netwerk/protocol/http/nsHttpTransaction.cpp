@@ -462,6 +462,16 @@ nsAHttpConnection *nsHttpTransaction::Connection() {
   return mConnection.get();
 }
 
+void nsHttpTransaction::SetH2WSConnRefTaken() {
+  if (mH2WSTransaction) {
+    // Need to let the websocket transaction/connection know we've reached
+    // this point so it can stop forwarding information through us and
+    // instead communicate directly with the websocket channel.
+    mH2WSTransaction->SetConnRefTaken();
+    mH2WSTransaction = nullptr;
+  }
+}
+
 nsHttpResponseHead *nsHttpTransaction::TakeResponseHead() {
   MOZ_ASSERT(!mResponseHeadTaken, "TakeResponseHead called 2x");
 

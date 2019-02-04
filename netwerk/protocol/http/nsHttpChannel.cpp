@@ -7506,6 +7506,10 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
       }
     }
 
+    if (mCaps & NS_HTTP_STICKY_CONNECTION) {
+      mTransaction->SetH2WSConnRefTaken();
+    }
+
     mTransferSize = mTransaction->GetTransferSize();
 
     // If we are using the transaction to serve content, we also save the
