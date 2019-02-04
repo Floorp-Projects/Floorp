@@ -6,9 +6,6 @@
 
 "use strict";
 
-const S100NS_FROM1601TO1970 = 0x19DB1DED53E8000;
-const S100NS_PER_MS = 10;
-
 const AUTH_TYPE = {
   SCHEME_HTML: 0,
   SCHEME_BASIC: 1,
@@ -27,31 +24,6 @@ ChromeUtils.defineModuleGetter(this, "PlacesUtils",
                                "resource://gre/modules/PlacesUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "OSCrypto",
                                "resource://gre/modules/OSCrypto.jsm");
-
-/**
- * Convert Chrome time format to Date object
- *
- * @param   aTime
- *          Chrome time
- * @return  converted Date object
- * @note    Google Chrome uses FILETIME / 10 as time.
- *          FILETIME is based on same structure of Windows.
- */
-function chromeTimeToDate(aTime) {
-  return new Date((aTime * S100NS_PER_MS - S100NS_FROM1601TO1970) / 10000);
-}
-
-/**
- * Convert Date object to Chrome time format
- *
- * @param   aDate
- *          Date object or integer equivalent
- * @return  Chrome time
- * @note    For details on Chrome time, see chromeTimeToDate.
- */
-function dateToChromeTime(aDate) {
-  return (aDate * 10000 + S100NS_FROM1601TO1970) / S100NS_PER_MS;
-}
 
 /**
  * Converts an array of chrome bookmark objects into one our own places code
@@ -264,7 +236,8 @@ async function GetHistoryResource(aProfileFolder) {
 
         let query = "SELECT url, title, last_visit_time, typed_count FROM urls WHERE hidden = 0";
         if (MAX_AGE_IN_DAYS) {
-          let maxAge = dateToChromeTime(Date.now() - MAX_AGE_IN_DAYS * 24 * 60 * 60 * 1000);
+          let maxAge = ChromeMigrationUtils.dateToChromeTime(
+            Date.now() - MAX_AGE_IN_DAYS * 24 * 60 * 60 * 1000);
           query += " AND last_visit_time > " + maxAge;
         }
         if (LIMIT) {
@@ -286,7 +259,8 @@ async function GetHistoryResource(aProfileFolder) {
               url: new URL(row.getResultByName("url")),
               visits: [{
                 transition,
-                date: chromeTimeToDate(row.getResultByName("last_visit_time")),
+                date: ChromeMigrationUtils.chromeTimeToDate(
+                  row.getResultByName("last_visit_time")),
               }],
             });
           } catch (e) {
@@ -337,8 +311,8 @@ async function GetCookiesResource(aProfileFolder) {
         }
 
         try {
-          let expiresUtc =
-            chromeTimeToDate(row.getResultByName("expires_utc")) / 1000;
+          let expiresUtc = ChromeMigrationUtils.chromeTimeToDate(
+            row.getResultByName("expires_utc")) / 1000;
           Services.cookies.add(host_key,
                                row.getResultByName("path"),
                                row.getResultByName("name"),
@@ -400,7 +374,8 @@ async function GetWindowsPasswordsResource(aProfileFolder) {
             httpRealm: null,
             usernameElement: row.getResultByName("username_element"),
             passwordElement: row.getResultByName("password_element"),
-            timeCreated: chromeTimeToDate(row.getResultByName("date_created") + 0).getTime(),
+            timeCreated: ChromeMigrationUtils.chromeTimeToDate(
+              row.getResultByName("date_created") + 0).getTime(),
             timesUsed: row.getResultByName("times_used") + 0,
           };
 
