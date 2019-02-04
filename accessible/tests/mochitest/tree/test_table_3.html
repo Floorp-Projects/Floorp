@@ -106,7 +106,7 @@ const ROWHEADER = ROLE_ROWHEADER;
 const CELL = ROLE_CELL;
 const STATICTEXT = ROLE_STATICTEXT;
 const TEXT_LEAF = ROLE_TEXT_LEAF;
-const TEXT_CONTAINER = ROLE_TEXT_CONTAINER;
+const GROUPING = ROLE_GROUPING;
 
 function doTest() {
   let accTree =
@@ -129,7 +129,7 @@ function doTest() {
       { ROW: [
         { role: CELL },
       ] },
-      { TEXT_CONTAINER: [
+      { GROUPING: [
         { ROW: [
           { CELL: [ { role: TEXT_LEAF, name: "Toy Story 3" } ] },
           { CELL: [

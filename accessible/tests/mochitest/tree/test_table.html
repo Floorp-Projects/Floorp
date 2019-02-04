@@ -170,7 +170,7 @@
       // table5 (intermediate accessible for tbody)
       accTree =
         { TABLE: [
-          { TEXT_CONTAINER: [
+          { GROUPING: [
             { ROW: [
               { CELL: [
                 { TEXT_LEAF: [ ] },
@@ -251,6 +251,22 @@
           ] },
         ] };
       testAccessibleTree("table_containing_block_cell", accTree);
+
+      // ///////////////////////////////////////////////////////////////////////
+      // A table with all elements being display:block, including a row group.
+      // This makes us fall back to the ARIAGridRowAccessible.
+      // Crazy example from Gmail.
+      accTree =
+        { TABLE: [
+          { GROUPING: [
+            { ROW: [
+              { CELL: [
+                { TEXT_LEAF: [ ] },
+              ] },
+            ] },
+          ] },
+        ] };
+        testAccessibleTree("table_all_display_block", accTree);
 
       SimpleTest.finish();
     }
@@ -389,6 +405,13 @@
       <td>Normal cell</td>
       <td style="display: block;">Block cell</td>
     </tr>
+  </table>
+  <table id="table_all_display_block" style="display:block;">
+    <tbody style="display:block;">
+      <tr style="display:block;">
+        <td style="display:block;">text</td>
+      </tr>
+    </tbody>
   </table>
 </body>
 </html>

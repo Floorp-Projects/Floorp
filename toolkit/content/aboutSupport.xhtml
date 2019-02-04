@@ -7,7 +7,6 @@
 <!DOCTYPE html [
   <!ENTITY % htmlDTD PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd"> %htmlDTD;
   <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd"> %brandDTD;
-  <!ENTITY % resetProfileDTD SYSTEM "chrome://global/locale/resetProfile.dtd"> %resetProfileDTD;
 ]>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -23,6 +22,7 @@
             src="chrome://global/content/aboutSupport.js"/>
     <link rel="localization" href="branding/brand.ftl"/>
     <link rel="localization" href="toolkit/about/aboutSupport.ftl"/>
+    <link rel="localization" href="toolkit/global/resetProfile.ftl"/>
   </head>
 
   <body class="wide-container">
@@ -30,10 +30,8 @@
 #ifndef ANDROID
     <div id="action-box" class="notice-box">
       <div id="reset-box">
-        <h3>&refreshProfile.title;</h3>
-        <button id="reset-box-button">
-          &refreshProfile.button.label;
-        </button>
+        <h3 data-l10n-id="refresh-profile"/>
+        <button id="reset-box-button" data-l10n-id="refresh-profile-button"/>
       </div>
       <div id="safe-mode-box">
         <h3 data-l10n-id="safe-mode-title"/>
