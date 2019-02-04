@@ -21,15 +21,6 @@ macosx64)
     # From https://nodejs.org/dist/v8.11.3/SHASUMS256.txt.asc
     SHA256SUM=7eac0bf398cb6ecf9f84dfc577ee84eee3d930f7a54b7e50f56d1a358b528792
     ;;
-win32)
-    ARCH=win-x86
-    # From https://nodejs.org/dist/v8.11.3/SHASUMS256.txt.asc
-    SHA256SUM=9482a0ad7aa5cd964cbeb11a605377b5c5aae4eae952c838aecf079de6088dc6
-    SUFFIX=zip
-    UNARCHIVE=unzip
-    REPACK_TAR_COMPRESSION_SWITCH=j
-    REPACK_SUFFIX=tar.bz2
-    ;;
 win64)
     ARCH=win-x64
     # From https://nodejs.org/dist/v8.11.3/SHASUMS256.txt.asc
