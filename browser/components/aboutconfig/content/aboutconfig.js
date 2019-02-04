@@ -14,6 +14,12 @@ const GETTERS_BY_PREF_TYPE = {
   [Ci.nsIPrefBranch.PREF_STRING]: "getStringPref",
 };
 
+const STRINGS_ADD_BY_TYPE = {
+  Boolean: "about-config-pref-add-type-boolean",
+  Number: "about-config-pref-add-type-number",
+  String: "about-config-pref-add-type-string",
+};
+
 let gDefaultBranch = Services.prefs.getDefaultBranch("");
 let gFilterPrefsTask = new DeferredTask(() => filterPrefs(), SEARCH_TIMEOUT_MS);
 
@@ -207,7 +213,7 @@ class PrefRow {
           radio.checked = this.type == type;
           form.appendChild(radio);
           let radioLabel = document.createElement("span");
-          radioLabel.textContent = type;
+          document.l10n.setAttributes(radioLabel, STRINGS_ADD_BY_TYPE[type]);
           form.appendChild(radioLabel);
         }
         form.addEventListener("click", event => {

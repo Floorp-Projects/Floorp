@@ -363,6 +363,12 @@ async function checkClickOnNode(hud, toolbox, frameLinkNode) {
   await onSourceInDebuggerOpened;
 
   const dbg = toolbox.getPanel("jsdebugger");
+
+  // Wait for the source to finish loading, if it is pending.
+  await waitFor(() => {
+    return !!dbg._selectors.getSelectedSource(dbg._getState());
+  });
+
   is(
     dbg._selectors.getSelectedSource(dbg._getState()).url,
     url,
