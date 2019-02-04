@@ -6,6 +6,5 @@
 
 DevToolsModules(
     'node-picker.js',
-    'rule-rewriter.js',
 )
 
