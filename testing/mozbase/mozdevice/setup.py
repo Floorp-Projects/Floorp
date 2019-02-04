@@ -8,7 +8,7 @@ from __future__ import absolute_import
 from setuptools import setup
 
 PACKAGE_NAME = 'mozdevice'
-PACKAGE_VERSION = '2.0.1'
+PACKAGE_VERSION = '3.0.0'
 
 deps = ['mozlog >= 3.0']
 
@@ -17,7 +17,7 @@ setup(name=PACKAGE_NAME,
       description="Mozilla-authored device management",
       long_description="see https://firefox-source-docs.mozilla.org/mozbase/index.html",
       classifiers=['Programming Language :: Python :: 2.7',
-                   'Programming Language :: Python :: 2 :: Only'],
+                   'Programming Language :: Python :: 3.5'],
       # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
       keywords='',
       author='Mozilla Automation and Testing Team',
