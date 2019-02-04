@@ -1248,7 +1248,7 @@ void Element::NotifyUAWidgetSetupOrChange() {
   MOZ_ASSERT(IsInComposedDoc());
   // Schedule a runnable, ensure the event dispatches before
   // returning to content script.
-  // This event cause UA Widget to construct or cause onattributechange callback
+  // This event cause UA Widget to construct or cause onchange callback
   // of existing UA Widget to run; dispatching this event twice should not cause
   // UA Widget to re-init.
   nsContentUtils::AddScriptRunner(NS_NewRunnableFunction(
@@ -1277,6 +1277,14 @@ void Element::NotifyUAWidgetTeardown(UnattachShadowRoot aUnattachShadowRoot) {
           return;
         }
         MOZ_ASSERT(self->GetShadowRoot()->IsUAWidget());
+
+        // Bail out if the element is being collected by CC
+        bool hasHadScriptObject = true;
+        nsIScriptGlobalObject* scriptObject =
+            ownerDoc->GetScriptHandlingObject(hasHadScriptObject);
+        if (!scriptObject && hasHadScriptObject) {
+          return;
+        }
 
         nsresult rv = nsContentUtils::DispatchChromeEvent(
             ownerDoc, self, NS_LITERAL_STRING("UAWidgetTeardown"),

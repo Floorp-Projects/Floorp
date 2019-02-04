@@ -19,6 +19,8 @@ The ``onsetup`` method is called right after the instance is constructed. The ca
 
 When the element is removed from the tree, ``UAWidgetTeardown`` is dispatched so UAWidgetsChild can destroy the widget, if it exists. If so, the UAWidgetsChild calls the ``destructor()`` method on the widget, causing the widget to destruct itself.
 
+Counter-intuitively, elements are not considered "removed from the tree" when the document is unloaded. This is considered safe as anything the widget touches should be reset or cleaned up when the document unloads. Please do not violate the assumption by having any browser state toggled by the destructor.
+
 When a UA Widget initializes, it should create its own DOM inside the passed UA Widget Shadow Root, including the ``<link>`` element necessary to load the stylesheet, add event listeners, etc. When destroyed (i.e. the destructor method is called), it should do the opposite.
 
 **Specialization**: for video controls, we do not want to do the work if the control is not needed (i.e. when the ``<video>`` or ``<audio>`` element has no "controls" attribute set), so we forgo dispatching the event from HTMLMediaElement in the BindToTree method. Instead, another ``UAWidgetSetupOrChange`` event will cause the sandbox and the widget instance to construct when the attribute is set to true. The same event is also responsible for triggering the ``onchange()`` method on UA Widgets if the widget is already initialized.
