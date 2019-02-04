@@ -52,7 +52,7 @@ exports.viewSourceInDebugger = async function(toolbox, sourceURL, sourceLine,
                                               reason = "unknown") {
   const dbg = await toolbox.loadTool("jsdebugger");
   const source = dbg.getSource(sourceURL);
-  if (source) {
+  if (source || await toolbox.sourceMapService.hasOriginalURL(sourceURL)) {
     await toolbox.selectTool("jsdebugger", reason);
     dbg.selectSource(sourceURL, sourceLine);
     return true;
