@@ -3654,6 +3654,9 @@ void JSObject::dump(js::GenericPrinter& out) const {
     if (nobj->hasShapeTable()) {
       out.put(" hasShapeTable");
     }
+    if (nobj->hasShapeIC()) {
+      out.put(" hasShapeCache");
+    }
     if (nobj->hadElementsAccess()) {
       out.put(" had_elements_access");
     }

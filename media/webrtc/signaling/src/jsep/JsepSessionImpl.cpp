@@ -1792,6 +1792,16 @@ nsresult JsepSessionImpl::ValidateAnswer(const Sdp& offer, const Sdp& answer) {
       return NS_ERROR_INVALID_ARG;
     }
 
+    if (mSdpHelper.MsectionIsDisabled(answerMsection)) {
+      continue;
+    }
+
+    if (mSdpHelper.MsectionIsDisabled(offerMsection)) {
+      JSEP_SET_ERROR(
+          "Answer tried to enable an m-section that was disabled in the offer");
+      return NS_ERROR_INVALID_ARG;
+    }
+
     if (!offerMsection.IsSending() && answerMsection.IsReceiving()) {
       JSEP_SET_ERROR("Answer tried to set recv when offer did not set send");
       return NS_ERROR_INVALID_ARG;
