@@ -1,1534 +1,1638 @@
+# -*- Mode: Yaml; tab-width: 8; indent-tabs-mode: nil; yaml-indent-offset: 2 -*-
+# vim: set ts=8 sts=2 et sw=2 tw=80:
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 parser:
-    class-template:
-        template<typename Tok>
-    class-name:
-        BinASTParser<Tok>
-    type-ok:
-        ParseNode*
-    default-value:
-        nullptr
-    list:
-        append: |
-            result->appendWithoutOrderAssumption(item);
+  class-template:
+    template<typename Tok>
+  class-name:
+    BinASTParser<Tok>
+  type-ok:
+    ParseNode*
+  default-value:
+    nullptr
+  list:
+    append: |
+      result->appendWithoutOrderAssumption(item);
 
 # Rules for generating BinASTParser.cpp
 cpp:
-    header: |
-        /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
-        * vim: set ts=8 sts=2 et sw=2 tw=80:
-        * This Source Code Form is subject to the terms of the Mozilla Public
-        * License, v. 2.0. If a copy of the MPL was not distributed with this
-        * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+  header: |
+    /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+     * vim: set ts=8 sts=2 et sw=2 tw=80:
+     * This Source Code Form is subject to the terms of the Mozilla Public
+     * License, v. 2.0. If a copy of the MPL was not distributed with this
+     * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-        // To generate this file, see the documentation in
-        // js/src/frontend/binsource/README.md.
+    // To generate this file, see the documentation in
+    // js/src/frontend/binsource/README.md.
 
-        #include "frontend/BinASTParser.h"
+    #include "frontend/BinASTParser.h"
 
-        #include "mozilla/ArrayUtils.h"
-        #include "mozilla/Casting.h"
-        #include "mozilla/Maybe.h"
-        #include "mozilla/Move.h"
-        #include "mozilla/PodOperations.h"
-        #include "mozilla/Vector.h"
+    #include "mozilla/ArrayUtils.h"
+    #include "mozilla/Casting.h"
+    #include "mozilla/Maybe.h"
+    #include "mozilla/Move.h"
+    #include "mozilla/PodOperations.h"
+    #include "mozilla/Vector.h"
 
-        #include "frontend/BinSource-macros.h"
-        #include "frontend/BinTokenReaderMultipart.h"
-        #include "frontend/FullParseHandler.h"
-        #include "frontend/ParseNode.h"
-        #include "frontend/Parser.h"
-        #include "frontend/SharedContext.h"
+    #include "frontend/BinSource-macros.h"
+    #include "frontend/BinTokenReaderMultipart.h"
+    #include "frontend/FullParseHandler.h"
+    #include "frontend/ParseNode.h"
+    #include "frontend/Parser.h"
+    #include "frontend/SharedContext.h"
 
-        #include "vm/RegExpObject.h"
+    #include "vm/RegExpObject.h"
 
-        #include "frontend/ParseContext-inl.h"
+    #include "frontend/ParseContext-inl.h"
 
-        namespace js {
-        namespace frontend {
+    namespace js {
+    namespace frontend {
 
-        // Compare a bunch of `uint8_t` values (as returned by the tokenizer_) with
-        // a string literal (and ONLY a string literal).
-        template<typename Tok, size_t N>
-        bool operator==(const typename Tok::Chars& left, const char (&right)[N]) {
-            return Tok::equals(left, right);
-        }
+    // Compare a bunch of `uint8_t` values (as returned by the tokenizer_) with
+    // a string literal (and ONLY a string literal).
+    template<typename Tok, size_t N>
+    bool operator==(const typename Tok::Chars& left, const char (&right)[N]) {
+      return Tok::equals(left, right);
+    }
 
-    footer: |
+  footer: |
 
-        // Force class instantiation.
-        // This ensures that the symbols are built, without having to export all our
-        // code (and its baggage of #include and macros) in the header.
-        template class BinASTParser<BinTokenReaderMultipart>;
+    // Force class instantiation.
+    // This ensures that the symbols are built, without having to export all our
+    // code (and its baggage of #include and macros) in the header.
+    template class BinASTParser<BinTokenReaderMultipart>;
 
-        } // namespace frontend
-        } // namespace js
-
-
+    } // namespace frontend
+    } // namespace js
 
 hpp:
-    # Rules for generating BinASTParser.h
-    class:
-        header: |
-            /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
-            * vim: set ts=8 sts=2 et sw=2 tw=80:
-            * This Source Code Form is subject to the terms of the Mozilla Public
-            * License, v. 2.0. If a copy of the MPL was not distributed with this
-            * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+  # Rules for generating BinASTParser.h
+  class:
+    header: |
+      /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+       * vim: set ts=8 sts=2 et sw=2 tw=80:
+       * This Source Code Form is subject to the terms of the Mozilla Public
+       * License, v. 2.0. If a copy of the MPL was not distributed with this
+       * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-            // To generate this file, see the documentation in
-            // js/src/frontend/binsource/README.md.
+      // To generate this file, see the documentation in
+      // js/src/frontend/binsource/README.md.
 
-            #ifndef frontend_BinASTParser_h
-            #define frontend_BinASTParser_h
+      #ifndef frontend_BinASTParser_h
+      #define frontend_BinASTParser_h
 
-            #include "mozilla/Maybe.h"
+      #include "mozilla/Maybe.h"
 
-            #include "frontend/BCEParserHandle.h"
-            #include "frontend/BinASTParserPerTokenizer.h"
-            #include "frontend/BinToken.h"
-            #include "frontend/BinTokenReaderMultipart.h"
-            #include "frontend/FullParseHandler.h"
-            #include "frontend/ParseContext.h"
-            #include "frontend/ParseNode.h"
-            #include "frontend/SharedContext.h"
+      #include "frontend/BCEParserHandle.h"
+      #include "frontend/BinASTParserPerTokenizer.h"
+      #include "frontend/BinToken.h"
+      #include "frontend/BinTokenReaderMultipart.h"
+      #include "frontend/FullParseHandler.h"
+      #include "frontend/ParseContext.h"
+      #include "frontend/ParseNode.h"
+      #include "frontend/SharedContext.h"
 
-            #include "js/CompileOptions.h"
-            #include "js/GCHashTable.h"
-            #include "js/GCVector.h"
-            #include "js/Result.h"
+      #include "js/CompileOptions.h"
+      #include "js/GCHashTable.h"
+      #include "js/GCVector.h"
+      #include "js/Result.h"
 
-            namespace js {
-            namespace frontend {
+      namespace js {
+      namespace frontend {
 
-            template<typename Tok>
-            class BinASTParser : public BinASTParserPerTokenizer<Tok>
-            {
-              public:
-                using Base = BinASTParserPerTokenizer<Tok>;
+      template<typename Tok>
+      class BinASTParser : public BinASTParserPerTokenizer<Tok> {
+       public:
+        using Base = BinASTParserPerTokenizer<Tok>;
 
-                using Tokenizer = Tok;
+        using Tokenizer = Tok;
 
-                using BinFields = typename Tokenizer::BinFields;
-                using AutoList = typename Tokenizer::AutoList;
-                using AutoTaggedTuple = typename Tokenizer::AutoTaggedTuple;
-                using AutoTuple = typename Tokenizer::AutoTuple;
-                using Chars = typename Tokenizer::Chars;
+        using BinFields = typename Tokenizer::BinFields;
+        using AutoList = typename Tokenizer::AutoList;
+        using AutoTaggedTuple = typename Tokenizer::AutoTaggedTuple;
+        using AutoTuple = typename Tokenizer::AutoTuple;
+        using Chars = typename Tokenizer::Chars;
 
-              public:
-                // Auto-generated types.
-                using AssertedDeclaredKind = binast::AssertedDeclaredKind;
-                using BinaryOperator = binast::BinaryOperator;
-                using CompoundAssignmentOperator = binast::CompoundAssignmentOperator;
-                using UnaryOperator = binast::UnaryOperator;
-                using UpdateOperator = binast::UpdateOperator;
-                using VariableDeclarationKind = binast::VariableDeclarationKind;
+       public:
+        // Auto-generated types.
+        using AssertedDeclaredKind = binast::AssertedDeclaredKind;
+        using BinaryOperator = binast::BinaryOperator;
+        using CompoundAssignmentOperator = binast::CompoundAssignmentOperator;
+        using UnaryOperator = binast::UnaryOperator;
+        using UpdateOperator = binast::UpdateOperator;
+        using VariableDeclarationKind = binast::VariableDeclarationKind;
 
-              public:
-                // BinASTParserPerTokenizer types.
-                using AssertedScopeKind = typename Base::AssertedScopeKind;
+       public:
+        // BinASTParserPerTokenizer types.
+        using AssertedScopeKind = typename Base::AssertedScopeKind;
 
-              public:
-                BinASTParser(JSContext* cx, LifoAlloc& alloc, UsedNameTracker& usedNames,
-                             const JS::ReadOnlyCompileOptions& options,
-                             HandleScriptSourceObject sourceObject,
-                             Handle<LazyScript*> lazyScript = nullptr)
-                    : BinASTParserPerTokenizer<Tok>(cx, alloc, usedNames, options, sourceObject, lazyScript)
-                {}
-                ~BinASTParser()
-                {}
+       public:
+        BinASTParser(JSContext* cx, LifoAlloc& alloc, UsedNameTracker& usedNames,
+                     const JS::ReadOnlyCompileOptions& options,
+                     HandleScriptSourceObject sourceObject,
+                     Handle<LazyScript*> lazyScript = nullptr)
+            : BinASTParserPerTokenizer<Tok>(cx, alloc, usedNames, options,
+                                            sourceObject, lazyScript) {}
+        ~BinASTParser() {}
 
-              protected:
-                // BinASTParserBase fields.
-                using Base::cx_;
+       protected:
+        // BinASTParserBase fields.
+        using Base::cx_;
 
-                using Base::alloc_;
-                using Base::usedNames_;
+        using Base::alloc_;
+        using Base::usedNames_;
 
-                using Base::sourceObject_;
-                using Base::parseContext_;
-                using Base::factory_;
+        using Base::sourceObject_;
+        using Base::parseContext_;
+        using Base::factory_;
 
-              protected:
-                // BinASTParserPerTokenizer types.
-                using AutoVariableDeclarationKind = typename Base::AutoVariableDeclarationKind;
-              protected:
-                // BinASTParserPerTokenizer fields.
-                using Base::tokenizer_;
-                using Base::variableDeclarationKind_;
+       protected:
+        // BinASTParserPerTokenizer types.
+        using AutoVariableDeclarationKind =
+            typename Base::AutoVariableDeclarationKind;
 
-              protected:
-                // BinASTParserPerTokenizer methods.
-                using Base::raiseInvalidClosedVar;
-                using Base::raiseMissingVariableInAssertedScope;
-                using Base::raiseMissingDirectEvalInAssertedScope;
-                using Base::raiseInvalidKind;
-                using Base::raiseInvalidVariant;
-                using Base::raiseMissingField;
-                using Base::raiseEmpty;
-                using Base::raiseOOM;
-                using Base::raiseError;
+       protected:
+        // BinASTParserPerTokenizer fields.
+        using Base::tokenizer_;
+        using Base::variableDeclarationKind_;
 
-                using Base::makeEmptyFunctionNode;
-                using Base::buildFunction;
-                using Base::buildFunctionBox;
-                using Base::addScopeName;
-                using Base::captureFunctionName;
+       protected:
+        // BinASTParserPerTokenizer methods.
+        using Base::raiseInvalidClosedVar;
+        using Base::raiseMissingVariableInAssertedScope;
+        using Base::raiseMissingDirectEvalInAssertedScope;
+        using Base::raiseInvalidKind;
+        using Base::raiseInvalidVariant;
+        using Base::raiseMissingField;
+        using Base::raiseEmpty;
+        using Base::raiseOOM;
+        using Base::raiseError;
 
-                using Base::getDeclaredScope;
-                using Base::getBoundScope;
-                using Base::checkBinding;
-                using Base::checkPositionalParameterIndices;
+        using Base::makeEmptyFunctionNode;
+        using Base::buildFunction;
+        using Base::buildFunctionBox;
+        using Base::addScopeName;
+        using Base::captureFunctionName;
 
-                using Base::checkFunctionLength;
-                using Base::checkClosedVars;
+        using Base::getDeclaredScope;
+        using Base::getBoundScope;
+        using Base::checkBinding;
+        using Base::checkPositionalParameterIndices;
 
-                using Base::prependDirectivesToBody;
+        using Base::checkFunctionLength;
+        using Base::checkClosedVars;
 
-                using Base::forceStrictIfNecessary;
+        using Base::prependDirectivesToBody;
 
-              public:
-        footer: |
-            };
+        using Base::forceStrictIfNecessary;
 
-            extern template class BinASTParser<BinTokenReaderMultipart>;
+       public:
+    footer: |
+      };
 
-            } // namespace frontend
-            } // namespace js
+      extern template class BinASTParser<BinTokenReaderMultipart>;
 
-            #endif // frontend_BinASTParser_h
+      } // namespace frontend
+      } // namespace js
 
-    enums:
-        header: |
-            /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
-            * vim: set ts=8 sts=2 et sw=2 tw=80:
-            * This Source Code Form is subject to the terms of the Mozilla Public
-            * License, v. 2.0. If a copy of the MPL was not distributed with this
-            * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+      #endif // frontend_BinASTParser_h
 
-            // To generate this file, see the documentation in
-            // js/src/frontend/binsource/README.md.
+  enums:
+    header: |
+      /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+       * vim: set ts=8 sts=2 et sw=2 tw=80:
+       * This Source Code Form is subject to the terms of the Mozilla Public
+       * License, v. 2.0. If a copy of the MPL was not distributed with this
+       * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-            #ifndef frontend_BinASTEnum_h
-            #define frontend_BinASTEnum_h
+      // To generate this file, see the documentation in
+      // js/src/frontend/binsource/README.md.
 
-            namespace js {
-            namespace frontend {
-            namespace binast {
-        footer: |
-            } // namespace binast
-            } // namespace frontend
-            } // namespace js
+      #ifndef frontend_BinASTEnum_h
+      #define frontend_BinASTEnum_h
 
-            #endif // frontend_BinASTEnum_h
+      namespace js {
+      namespace frontend {
+      namespace binast {
+    footer: |
+      } // namespace binast
+      } // namespace frontend
+      } // namespace js
 
-    # Rules for generating BinToken.h
-    tokens:
-        kind:
-            doc: |
-                /**
-                 * The different kinds of Binary AST nodes, as per the specifications of
-                 * Binary AST.
-                 *
-                 * These kinds match roughly with the `ParseNodeKind` used internally.
-                 *
-                 * Usage:
-                 *
-                 * ```c++
-                 * #define WITH_KIND(CPP_NAME, SPEC_NAME) ...
-                 * FOR_EACH_BIN_KIND(WITH_KIND)
-                 * ```
-                 *
-                 *
-                 * (sorted by alphabetical order)
-                 */
-        field:
-            doc: |
-                /**
-                 * The different fields of Binary AST nodes, as per the specifications of
-                 * Binary AST.
-                 *
-                 * Usage:
-                 *
-                 * ```c++
-                 * #define WITH_FIELD(CPP_NAME, SPEC_NAME) ...
-                 * FOR_EACH_BIN_FIELD(WITH_FIELD)
-                 * ```
-                 *
-                 * (sorted by alphabetical order)
-                 */
-        variants:
-            doc: |
-                /**
-                 * The different variants of Binary AST string enums, as per
-                 * the specifications of Binary AST, as a single macro and
-                 * `enum class`.
-                 *
-                 * Separate enum classes are also defined in BinASTParser.h.
-                 *
-                 * Usage:
-                 *
-                 * ```c++
-                 * #define WITH_VARIANT(CPP_NAME, SPEC_NAME) ...
-                 * FOR_EACH_BIN_VARIANT(WITH_VARIANT)
-                 * ```
-                 *
-                 * (sorted by alphabetical order)
-                 */
+      #endif // frontend_BinASTEnum_h
 
-        header: |
-            /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
-             * vim: set ts=8 sts=2 et sw=2 tw=80:
-             * This Source Code Form is subject to the terms of the Mozilla Public
-             * License, v. 2.0. If a copy of the MPL was not distributed with this
-             * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+  # Rules for generating BinToken.h
+  tokens:
+    kind:
+      doc: |
+        /**
+         * The different kinds of Binary AST nodes, as per the specifications of
+         * Binary AST.
+         *
+         * These kinds match roughly with the `ParseNodeKind` used internally.
+         *
+         * Usage:
+         *
+         * ```c++
+         * #define WITH_KIND(CPP_NAME, SPEC_NAME) ...
+         * FOR_EACH_BIN_KIND(WITH_KIND)
+         * ```
+         *
+         *
+         * (sorted by alphabetical order)
+         */
+    field:
+      doc: |
+        /**
+         * The different fields of Binary AST nodes, as per the specifications of
+         * Binary AST.
+         *
+         * Usage:
+         *
+         * ```c++
+         * #define WITH_FIELD(CPP_NAME, SPEC_NAME) ...
+         * FOR_EACH_BIN_FIELD(WITH_FIELD)
+         * ```
+         *
+         * (sorted by alphabetical order)
+         */
+    variants:
+      doc: |
+        /**
+         * The different variants of Binary AST string enums, as per
+         * the specifications of Binary AST, as a single macro and
+         * `enum class`.
+         *
+         * Separate enum classes are also defined in BinASTParser.h.
+         *
+         * Usage:
+         *
+         * ```c++
+         * #define WITH_VARIANT(CPP_NAME, SPEC_NAME) ...
+         * FOR_EACH_BIN_VARIANT(WITH_VARIANT)
+         * ```
+         *
+         * (sorted by alphabetical order)
+         */
+
+    header: |
+      /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+       * vim: set ts=8 sts=2 et sw=2 tw=80:
+       * This Source Code Form is subject to the terms of the Mozilla Public
+       * License, v. 2.0. If a copy of the MPL was not distributed with this
+       * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
-            // To generate this file, see the documentation in
-            // js/src/frontend/binsource/README.md.
+      // To generate this file, see the documentation in
+      // js/src/frontend/binsource/README.md.
 
-            #ifndef frontend_BinToken_h
-            #define frontend_BinToken_h
+      #ifndef frontend_BinToken_h
+      #define frontend_BinToken_h
 
-            #include <stddef.h>
+      #include <stddef.h>
 
-            /**
-             * Definition of Binary AST tokens.
-             *
-             * In the Binary AST world, an AST is composed of nodes, where a node is
-             * defined by:
-             * - a Kind (see `BinKind`);
-             * - a list of fields, where each field is:
-             *    - a Name (see `BinField`);
-             *    - a Value, which may be either a node or a primitive value.
-             *
-             * The mapping between Kind and list of fields is determined entirely by
-             * the grammar of Binary AST. The mapping between (Kind, Name) and the
-             * structure of Value is also determined entirely by the grammar of
-             * Binary AST.
-             *
-             * As per the specifications of Binary AST, kinds may be added as the
-             * language grows, but never removed. The mapping between Kind and list
-             * of fields may also change to add new fields or make some fields optional,
-             * but may never remove a field. Finally, the mapping between (Kind, Name)
-             * and the structure of Value may be modified to add new possible values,
-             * but never to remove a value.
-             *
-             * A Binary AST parser must be able to fail gracefully when confronted with
-             * unknown Kinds or Names.
-             */
+      /**
+       * Definition of Binary AST tokens.
+       *
+       * In the Binary AST world, an AST is composed of nodes, where a node is
+       * defined by:
+       * - a Kind (see `BinKind`);
+       * - a list of fields, where each field is:
+       *    - a Name (see `BinField`);
+       *    - a Value, which may be either a node or a primitive value.
+       *
+       * The mapping between Kind and list of fields is determined entirely by
+       * the grammar of Binary AST. The mapping between (Kind, Name) and the
+       * structure of Value is also determined entirely by the grammar of
+       * Binary AST.
+       *
+       * As per the specifications of Binary AST, kinds may be added as the
+       * language grows, but never removed. The mapping between Kind and list
+       * of fields may also change to add new fields or make some fields optional,
+       * but may never remove a field. Finally, the mapping between (Kind, Name)
+       * and the structure of Value may be modified to add new possible values,
+       * but never to remove a value.
+       *
+       * A Binary AST parser must be able to fail gracefully when confronted with
+       * unknown Kinds or Names.
+       */
 
-            namespace js {
-            namespace frontend {
-        footer: |
+      namespace js {
+      namespace frontend {
+    footer: |
 
-            /**
-             * Return a string describing a `BinKind`.
-             */
-            const char* describeBinKind(const BinKind& kind);
+      /**
+       * Return a string describing a `BinKind`.
+       */
+      const char* describeBinKind(const BinKind& kind);
 
-            /**
-             * Return a string describing a `BinField`.
-             */
-            const char* describeBinField(const BinField& kind);
+      /**
+       * Return a string describing a `BinField`.
+       */
+      const char* describeBinField(const BinField& kind);
 
-            /**
-             * Return a string describing a `BinVariant`.
-             */
-            const char* describeBinVariant(const BinVariant& kind);
+      /**
+       * Return a string describing a `BinVariant`.
+       */
+      const char* describeBinVariant(const BinVariant& kind);
 
-            } // namespace frontend
-            } // namespace js
+      } // namespace frontend
+      } // namespace js
 
-            #endif // frontend_BinToken_h
+      #endif // frontend_BinToken_h
 
 Arguments:
-    init:
-        BINJS_TRY_DECL(result, factory_.newList(ParseNodeKind::Arguments, tokenizer_->pos(start)));
-    append:
-        factory_.addList(/* list = */ result, /* kid = */ item);
+  init: |
+    BINJS_TRY_DECL(result, factory_.newList(ParseNodeKind::Arguments,
+                                            tokenizer_->pos(start)));
+  append:
+    factory_.addList(/* list = */ result, /* kid = */ item);
 
 ArrayExpression:
-    build: |
-        if (elements->empty()) {
-            elements->setHasNonConstInitializer();
-        }
-        auto result = elements;
+  build: |
+    if (elements->empty()) {
+      elements->setHasNonConstInitializer();
+    }
+    auto result = elements;
 
 AssertedBlockScope:
-    type-ok:
-        Ok
-    init: |
-        const auto scopeKind = AssertedScopeKind::Block;
-    fields:
-        declaredNames:
-            extra-args: scopeKind
-        hasDirectEval:
-            after: |
-                if (hasDirectEval) {
-                    parseContext_->sc()->setHasDirectEval();
-                    parseContext_->sc()->setBindingsAccessedDynamically();
-                }
-    build: |
-        if (hasDirectEval && parseContext_->isFunctionBox() && !parseContext_->sc()->strict()) {
-            // In non-strict mode code, direct calls to eval can
-            // add variables to the call object.
-            parseContext_->functionBox()->setHasExtensibleScope();
+  type-ok:
+    Ok
+  init: |
+    const auto scopeKind = AssertedScopeKind::Block;
+  fields:
+    declaredNames:
+      extra-args: scopeKind
+    hasDirectEval:
+      after: |
+        if (hasDirectEval) {
+          parseContext_->sc()->setHasDirectEval();
+          parseContext_->sc()->setBindingsAccessedDynamically();
         }
-        auto result = Ok();
+  build: |
+    if (hasDirectEval && parseContext_->isFunctionBox() &&
+        !parseContext_->sc()->strict()) {
+      // In non-strict mode code, direct calls to eval can
+      // add variables to the call object.
+      parseContext_->functionBox()->setHasExtensibleScope();
+    }
+    auto result = Ok();
 
 AssertedBoundName:
-    type-ok:
-        Ok
-    extra-params: AssertedScopeKind scopeKind
-    extra-args: scopeKind
-    init: |
-        const bool allowDuplicateName = false;
-    fields:
-        isCaptured:
-             after: |
-                ParseContext::Scope* scope;
-                DeclarationKind declKind;
-                MOZ_TRY(getBoundScope(scopeKind, scope, declKind));
-    build: |
-        MOZ_TRY(addScopeName(scopeKind, name, scope, declKind, isCaptured, allowDuplicateName));
-        auto result = Ok();
+  type-ok:
+    Ok
+  extra-params: AssertedScopeKind scopeKind
+  extra-args: scopeKind
+  init: |
+    const bool allowDuplicateName = false;
+  fields:
+    isCaptured:
+      after: |
+        ParseContext::Scope* scope;
+        DeclarationKind declKind;
+        MOZ_TRY(getBoundScope(scopeKind, scope, declKind));
+  build: |
+    MOZ_TRY(addScopeName(scopeKind, name, scope, declKind, isCaptured,
+                         allowDuplicateName));
+    auto result = Ok();
 
 AssertedDeclaredName:
-    inherits: AssertedBoundName
-    fields:
-        kind:
-            after: |
-                if (kind_ == AssertedDeclaredKind::NonConstLexical) {
-                    return raiseError("Let is not supported in this preview release");
-                }
-                if (kind_ == AssertedDeclaredKind::ConstLexical) {
-                    return raiseError("Const is not supported in this preview release");
-                }
-        isCaptured:
-            after: |
-                ParseContext::Scope* scope;
-                DeclarationKind declKind;
-                MOZ_TRY(getDeclaredScope(scopeKind, kind_, scope, declKind));
+  inherits: AssertedBoundName
+  fields:
+    kind:
+      after: |
+        if (kind_ == AssertedDeclaredKind::NonConstLexical) {
+          return raiseError("Let is not supported in this preview release");
+        }
+        if (kind_ == AssertedDeclaredKind::ConstLexical) {
+          return raiseError("Const is not supported in this preview release");
+        }
+    isCaptured:
+      after: |
+        ParseContext::Scope* scope;
+        DeclarationKind declKind;
+        MOZ_TRY(getDeclaredScope(scopeKind, kind_, scope, declKind));
 
 AssertedMaybePositionalParameterName:
-    inherits: AssertedBoundName
-    extra-params: |
-        AssertedScopeKind scopeKind,
-        MutableHandle<GCVector<JSAtom*>> positionalParams
-    extra-args: |
-        scopeKind, positionalParams
-    sum-arms:
-        AssertedRestParameterName:
-            disabled: true
-        AssertedParameterName:
-            disabled: true
+  inherits: AssertedBoundName
+  extra-params: |
+    AssertedScopeKind scopeKind,
+    MutableHandle<GCVector<JSAtom*>> positionalParams
+  extra-args: |
+    scopeKind, positionalParams
+  sum-arms:
+    AssertedRestParameterName:
+      disabled: true
+    AssertedParameterName:
+      disabled: true
 
 AssertedPositionalParameterName:
-    inherits: AssertedMaybePositionalParameterName
-    init: |
-        bool allowDuplicateName = !parseContext_->sc()->strict();
-    fields:
-        name:
-            after: |
-                // `positionalParams` vector can be shorter than the actual
-                // parameter length. Resize on demand.
-                // (see also ListOfAssertedMaybePositionalParameterName)
-                size_t prevLength = positionalParams.get().length();
-                if (index >= prevLength) {
-                    // This is implementation limit, which is not in the spec.
-                    if (index >= ARGNO_LIMIT - 1) {
-                        return raiseError("AssertedPositionalParameterName.index is too big");
-                    }
-                    size_t newLength = index + 1;
-                    BINJS_TRY(positionalParams.get().resize(newLength));
-                    for (uint32_t i = prevLength; i < newLength; i++) {
-                        positionalParams.get()[i] = nullptr;
-                    }
-                }
+  inherits: AssertedMaybePositionalParameterName
+  init: |
+    bool allowDuplicateName = !parseContext_->sc()->strict();
+  fields:
+    name:
+      after: |
+        // `positionalParams` vector can be shorter than the actual
+        // parameter length. Resize on demand.
+        // (see also ListOfAssertedMaybePositionalParameterName)
+        size_t prevLength = positionalParams.get().length();
+        if (index >= prevLength) {
+          // This is implementation limit, which is not in the spec.
+          if (index >= ARGNO_LIMIT - 1) {
+            return raiseError("AssertedPositionalParameterName.index is too big");
+          }
+          size_t newLength = index + 1;
+          BINJS_TRY(positionalParams.get().resize(newLength));
+          for (uint32_t i = prevLength; i < newLength; i++) {
+            positionalParams.get()[i] = nullptr;
+          }
+        }
 
-                if (positionalParams.get()[index]) {
-                    return raiseError("AssertedPositionalParameterName has duplicate entry for the same index");
-                }
-                positionalParams.get()[index] = name;
+        if (positionalParams.get()[index]) {
+          return raiseError("AssertedPositionalParameterName has duplicate entry for the same index");
+        }
+        positionalParams.get()[index] = name;
 
 AssertedBoundNamesScope:
-    inherits: AssertedBlockScope
-    init: |
-        const auto scopeKind = AssertedScopeKind::Catch;
-    fields:
-        boundNames:
-            extra-args: scopeKind
+  inherits: AssertedBlockScope
+  init: |
+    const auto scopeKind = AssertedScopeKind::Catch;
+  fields:
+    boundNames:
+      extra-args: scopeKind
 
 AssertedParameterScope:
-    inherits: AssertedBlockScope
-    extra-params: |
-        MutableHandle<GCVector<JSAtom*>> positionalParams
-    extra-args: |
-        positionalParams
-    init: |
-        const auto scopeKind = AssertedScopeKind::Parameter;
-    fields:
-        isSimpleParameterList:
-            after: |
-                (void) isSimpleParameterList;
-        paramNames:
-            extra-args: scopeKind, positionalParams
+  inherits: AssertedBlockScope
+  extra-params: |
+    MutableHandle<GCVector<JSAtom*>> positionalParams
+  extra-args: |
+    positionalParams
+  init: |
+    const auto scopeKind = AssertedScopeKind::Parameter;
+  fields:
+    isSimpleParameterList:
+      after: |
+        (void) isSimpleParameterList;
+    paramNames:
+      extra-args: scopeKind, positionalParams
 
 AssertedScriptGlobalScope:
-    inherits: AssertedBlockScope
-    init: |
-        const auto scopeKind = AssertedScopeKind::Global;
+  inherits: AssertedBlockScope
+  init: |
+    const auto scopeKind = AssertedScopeKind::Global;
 
 AssertedVarScope:
-    inherits: AssertedBlockScope
-    init: |
-        const auto scopeKind = AssertedScopeKind::Var;
+  inherits: AssertedBlockScope
+  init: |
+    const auto scopeKind = AssertedScopeKind::Var;
 
 AssignmentExpression:
-    build: |
-        BINJS_TRY_DECL(result, factory_.newAssignment(ParseNodeKind::AssignExpr, binding, expression));
+  build: |
+    BINJS_TRY_DECL(result,
+                   factory_.newAssignment(ParseNodeKind::AssignExpr,
+                                          binding, expression));
 
 AssignmentTargetIdentifier:
-    build: |
-        if (!IsIdentifier(name)) {
-            return raiseError("Invalid identifier");
-        }
-        BINJS_TRY(usedNames_.noteUse(cx_, name, parseContext_->scriptId(), parseContext_->innermostScope()->id()));
-        BINJS_TRY_DECL(result, factory_.newName(name->asPropertyName(), tokenizer_->pos(start), cx_));
+  build: |
+    if (!IsIdentifier(name)) {
+      return raiseError("Invalid identifier");
+    }
+    BINJS_TRY(usedNames_.noteUse(cx_, name, parseContext_->scriptId(),
+                                 parseContext_->innermostScope()->id()));
+    BINJS_TRY_DECL(result,
+                   factory_.newName(name->asPropertyName(),
+                                    tokenizer_->pos(start), cx_));
 
 BindingIdentifier:
-    build: |
-        if (!IsIdentifier(name)) {
-            return raiseError("Invalid identifier");
-        }
-        BINJS_TRY_DECL(result, factory_.newName(name->asPropertyName(), tokenizer_->pos(start), cx_));
+  build: |
+    if (!IsIdentifier(name)) {
+      return raiseError("Invalid identifier");
+    }
+    BINJS_TRY_DECL(result,
+                   factory_.newName(name->asPropertyName(),
+                                    tokenizer_->pos(start), cx_));
 
 BinaryExpression:
-    build: |
-        ParseNodeKind pnk;
-        switch (operator_) {
-          case BinaryOperator::Comma:
-            pnk = ParseNodeKind::CommaExpr;
-            break;
-          case BinaryOperator::LogicalOr:
-            pnk = ParseNodeKind::OrExpr;
-            break;
-          case BinaryOperator::LogicalAnd:
-            pnk = ParseNodeKind::AndExpr;
-            break;
-          case BinaryOperator::BitOr:
-            pnk = ParseNodeKind::BitOrExpr;
-            break;
-          case BinaryOperator::BitXor:
-            pnk = ParseNodeKind::BitXorExpr;
-            break;
-          case BinaryOperator::BitAnd:
-            pnk = ParseNodeKind::BitAndExpr;
-            break;
-          case BinaryOperator::Eq:
-            pnk = ParseNodeKind::EqExpr;
-            break;
-          case BinaryOperator::Neq:
-            pnk = ParseNodeKind::NeExpr;
-            break;
-          case BinaryOperator::StrictEq:
-            pnk = ParseNodeKind::StrictEqExpr;
-            break;
-          case BinaryOperator::StrictNeq:
-            pnk = ParseNodeKind::StrictNeExpr;
-            break;
-          case BinaryOperator::LessThan:
-            pnk = ParseNodeKind::LtExpr;
-            break;
-          case BinaryOperator::LeqThan:
-            pnk = ParseNodeKind::LeExpr;
-            break;
-          case BinaryOperator::GreaterThan:
-            pnk = ParseNodeKind::GtExpr;
-            break;
-          case BinaryOperator::GeqThan:
-            pnk = ParseNodeKind::GeExpr;
-            break;
-          case BinaryOperator::In:
-            pnk = ParseNodeKind::InExpr;
-            break;
-          case BinaryOperator::Instanceof:
-            pnk = ParseNodeKind::InstanceOfExpr;
-            break;
-          case BinaryOperator::Lsh:
-            pnk = ParseNodeKind::LshExpr;
-            break;
-          case BinaryOperator::Rsh:
-            pnk = ParseNodeKind::RshExpr;
-            break;
-          case BinaryOperator::Ursh:
-            pnk = ParseNodeKind::UrshExpr;
-            break;
-          case BinaryOperator::Plus:
-            pnk = ParseNodeKind::AddExpr;
-            break;
-          case BinaryOperator::Minus:
-            pnk = ParseNodeKind::SubExpr;
-            break;
-          case BinaryOperator::Mul:
-            pnk = ParseNodeKind::MulExpr;
-            break;
-          case BinaryOperator::Div:
-            pnk = ParseNodeKind::DivExpr;
-            break;
-          case BinaryOperator::Mod:
-            pnk = ParseNodeKind::ModExpr;
-            break;
-          case BinaryOperator::Pow:
-            pnk = ParseNodeKind::PowExpr;
-            break;
-        }
+  build: |
+    ParseNodeKind pnk;
+    switch (operator_) {
+      case BinaryOperator::Comma:
+        pnk = ParseNodeKind::CommaExpr;
+        break;
+      case BinaryOperator::LogicalOr:
+        pnk = ParseNodeKind::OrExpr;
+        break;
+      case BinaryOperator::LogicalAnd:
+        pnk = ParseNodeKind::AndExpr;
+        break;
+      case BinaryOperator::BitOr:
+        pnk = ParseNodeKind::BitOrExpr;
+        break;
+      case BinaryOperator::BitXor:
+        pnk = ParseNodeKind::BitXorExpr;
+        break;
+      case BinaryOperator::BitAnd:
+        pnk = ParseNodeKind::BitAndExpr;
+        break;
+      case BinaryOperator::Eq:
+        pnk = ParseNodeKind::EqExpr;
+        break;
+      case BinaryOperator::Neq:
+        pnk = ParseNodeKind::NeExpr;
+        break;
+      case BinaryOperator::StrictEq:
+        pnk = ParseNodeKind::StrictEqExpr;
+        break;
+      case BinaryOperator::StrictNeq:
+        pnk = ParseNodeKind::StrictNeExpr;
+        break;
+      case BinaryOperator::LessThan:
+        pnk = ParseNodeKind::LtExpr;
+        break;
+      case BinaryOperator::LeqThan:
+        pnk = ParseNodeKind::LeExpr;
+        break;
+      case BinaryOperator::GreaterThan:
+        pnk = ParseNodeKind::GtExpr;
+        break;
+      case BinaryOperator::GeqThan:
+        pnk = ParseNodeKind::GeExpr;
+        break;
+      case BinaryOperator::In:
+        pnk = ParseNodeKind::InExpr;
+        break;
+      case BinaryOperator::Instanceof:
+        pnk = ParseNodeKind::InstanceOfExpr;
+        break;
+      case BinaryOperator::Lsh:
+        pnk = ParseNodeKind::LshExpr;
+        break;
+      case BinaryOperator::Rsh:
+        pnk = ParseNodeKind::RshExpr;
+        break;
+      case BinaryOperator::Ursh:
+        pnk = ParseNodeKind::UrshExpr;
+        break;
+      case BinaryOperator::Plus:
+        pnk = ParseNodeKind::AddExpr;
+        break;
+      case BinaryOperator::Minus:
+        pnk = ParseNodeKind::SubExpr;
+        break;
+      case BinaryOperator::Mul:
+        pnk = ParseNodeKind::MulExpr;
+        break;
+      case BinaryOperator::Div:
+        pnk = ParseNodeKind::DivExpr;
+        break;
+      case BinaryOperator::Mod:
+        pnk = ParseNodeKind::ModExpr;
+        break;
+      case BinaryOperator::Pow:
+        pnk = ParseNodeKind::PowExpr;
+        break;
+    }
 
-        ParseNode* result;
-        if (left->isKind(pnk) &&
-            pnk != ParseNodeKind::PowExpr /* ParseNodeKind::PowExpr is not left-associative */)
-        {
-            // Regroup left-associative operations into lists.
-            left->template as<ListNode>().appendWithoutOrderAssumption(right);
-            result = left;
-        } else {
-            BINJS_TRY_DECL(list, factory_.newList(pnk, tokenizer_->pos(start)));
+    ParseNode* result;
+    // ParseNodeKind::PowExpr is not left-associative
+    if (left->isKind(pnk) && pnk != ParseNodeKind::PowExpr) {
+      // Regroup left-associative operations into lists.
+      left->template as<ListNode>().appendWithoutOrderAssumption(right);
+      result = left;
+    } else {
+      BINJS_TRY_DECL(list, factory_.newList(pnk, tokenizer_->pos(start)));
 
-            list->appendWithoutOrderAssumption(left);
-            list->appendWithoutOrderAssumption(right);
-            result = list;
-        }
+      list->appendWithoutOrderAssumption(left);
+      list->appendWithoutOrderAssumption(right);
+      result = list;
+    }
 
 Block:
-    init: |
-        ParseContext::Statement stmt(parseContext_, StatementKind::Block);
-        ParseContext::Scope currentScope(cx_, parseContext_, usedNames_);
-        BINJS_TRY(currentScope.init(parseContext_));
-    build: |
-        MOZ_TRY(checkClosedVars(currentScope));
-        BINJS_TRY_DECL(bindings, NewLexicalScopeData(cx_, currentScope, alloc_, parseContext_));
-        BINJS_TRY_DECL(result, factory_.newLexicalScope(*bindings, statements));
+  init: |
+    ParseContext::Statement stmt(parseContext_, StatementKind::Block);
+    ParseContext::Scope currentScope(cx_, parseContext_, usedNames_);
+    BINJS_TRY(currentScope.init(parseContext_));
+  build: |
+    MOZ_TRY(checkClosedVars(currentScope));
+    BINJS_TRY_DECL(bindings,
+                   NewLexicalScopeData(cx_, currentScope, alloc_,
+                                       parseContext_));
+    BINJS_TRY_DECL(result, factory_.newLexicalScope(*bindings, statements));
 
 BreakStatement:
-    fields:
-        label:
-            block:
-                replace: |
-                    RootedAtom label(cx_);
-                    MOZ_TRY_VAR(label, tokenizer_->readMaybeAtom());
+  fields:
+    label:
+      block:
+        replace: |
+          RootedAtom label(cx_);
+          MOZ_TRY_VAR(label, tokenizer_->readMaybeAtom());
 
-    build: |
-        if (label) {
-            if (!IsIdentifier(label)) {
-                return raiseError("Invalid identifier");
-            }
+  build: |
+    if (label) {
+      if (!IsIdentifier(label)) {
+        return raiseError("Invalid identifier");
+      }
 
-            auto validity = parseContext_->checkBreakStatement(label->asPropertyName());
+      auto validity
+          = parseContext_->checkBreakStatement(label->asPropertyName());
 
-            if (validity.isErr()) {
-                switch (validity.unwrapErr()) {
-                case ParseContext::BreakStatementError::ToughBreak:
-                    return raiseError(kind, "Not in a loop");
-                case ParseContext::BreakStatementError::LabelNotFound:
-                    return raiseError(kind, "Label not found");
-                }
-            }
+      if (validity.isErr()) {
+        switch (validity.unwrapErr()) {
+          case ParseContext::BreakStatementError::ToughBreak:
+            return raiseError(kind, "Not in a loop");
+          case ParseContext::BreakStatementError::LabelNotFound:
+            return raiseError(kind, "Label not found");
         }
-        BINJS_TRY_DECL(result, factory_.newBreakStatement(label ? label->asPropertyName() : nullptr, tokenizer_->pos(start)));
+      }
+    }
+    BINJS_TRY_DECL(result,
+                   factory_.newBreakStatement(label ? label->asPropertyName()
+                                                    : nullptr,
+                                              tokenizer_->pos(start)));
 
 CallExpression:
-    build: |
-        auto op = JSOP_CALL;
+  build: |
+    auto op = JSOP_CALL;
 
-        // Try to optimize funcall and funapply at the bytecode level
-        if (PropertyName* prop = factory_.maybeDottedProperty(callee)) {
-            if (prop == cx_->names().apply) {
-                op = JSOP_FUNAPPLY;
-                if (parseContext_->isFunctionBox())
-                    parseContext_->functionBox()->usesApply = true;
-            } else if (prop == cx_->names().call) {
-                op = JSOP_FUNCALL;
-            }
+    // Try to optimize funcall and funapply at the bytecode level
+    if (PropertyName* prop = factory_.maybeDottedProperty(callee)) {
+      if (prop == cx_->names().apply) {
+        op = JSOP_FUNAPPLY;
+        if (parseContext_->isFunctionBox()) {
+          parseContext_->functionBox()->usesApply = true;
+        }
+      } else if (prop == cx_->names().call) {
+        op = JSOP_FUNCALL;
+      }
+    }
+
+    // Check for direct calls to `eval`.
+    if (factory_.isEvalName(callee, cx_)) {
+      if (!parseContext_->varScope().lookupDeclaredNameForAdd(cx_->names().eval) &&
+          !parseContext_->innermostScope()->lookupDeclaredNameForAdd(cx_->names().eval)) {
+        // This is a direct call to `eval`.
+        if (!parseContext_->sc()->hasDirectEval()) {
+          return raiseMissingDirectEvalInAssertedScope();
         }
 
-        // Check for direct calls to `eval`.
-        if (factory_.isEvalName(callee, cx_)) {
-            if (!parseContext_->varScope().lookupDeclaredNameForAdd(cx_->names().eval)
-             && !parseContext_->innermostScope()->lookupDeclaredNameForAdd(cx_->names().eval))
-            {
-                // This is a direct call to `eval`.
-                if (!parseContext_->sc()->hasDirectEval()) {
-                    return raiseMissingDirectEvalInAssertedScope();
-                }
+        op = parseContext_->sc()->strict() ? JSOP_STRICTEVAL : JSOP_EVAL;
+      }
+    }
 
-                op = parseContext_->sc()->strict() ? JSOP_STRICTEVAL : JSOP_EVAL;
-            }
-        }
-
-        BINJS_TRY_DECL(result, factory_.newCall(callee, arguments));
-        result->setOp(op);
-
+    BINJS_TRY_DECL(result, factory_.newCall(callee, arguments));
+    result->setOp(op);
 
 CatchClause:
-    type-ok:
-        LexicalScopeNode*
-    init: |
-        ParseContext::Statement stmt(parseContext_, StatementKind::Catch);
-        ParseContext::Scope currentScope(cx_, parseContext_, usedNames_);
-        BINJS_TRY(currentScope.init(parseContext_));
-    build: |
-        MOZ_TRY(checkClosedVars(currentScope));
-        BINJS_TRY_DECL(bindings, NewLexicalScopeData(cx_, currentScope, alloc_, parseContext_));
-        BINJS_TRY_DECL(result, factory_.newLexicalScope(*bindings, body));
-        BINJS_TRY(factory_.setupCatchScope(result, binding, body));
+  type-ok:
+    LexicalScopeNode*
+  init: |
+    ParseContext::Statement stmt(parseContext_, StatementKind::Catch);
+    ParseContext::Scope currentScope(cx_, parseContext_, usedNames_);
+    BINJS_TRY(currentScope.init(parseContext_));
+  build: |
+    MOZ_TRY(checkClosedVars(currentScope));
+    BINJS_TRY_DECL(bindings,
+                   NewLexicalScopeData(cx_, currentScope, alloc_,
+                                       parseContext_));
+    BINJS_TRY_DECL(result, factory_.newLexicalScope(*bindings, body));
+    BINJS_TRY(factory_.setupCatchScope(result, binding, body));
 
 CompoundAssignmentExpression:
-    build: |
-        ParseNodeKind pnk;
-        switch (operator_){
-          case CompoundAssignmentOperator::PlusAssign:
-            pnk = ParseNodeKind::AddAssignExpr;
-            break;
-          case CompoundAssignmentOperator::MinusAssign:
-            pnk = ParseNodeKind::SubAssignExpr;
-            break;
-          case CompoundAssignmentOperator::MulAssign:
-            pnk = ParseNodeKind::MulAssignExpr;
-            break;
-          case CompoundAssignmentOperator::DivAssign:
-            pnk = ParseNodeKind::DivAssignExpr;
-            break;
-          case CompoundAssignmentOperator::ModAssign:
-            pnk = ParseNodeKind::ModAssignExpr;
-            break;
-          case CompoundAssignmentOperator::PowAssign:
-            pnk = ParseNodeKind::PowAssignExpr;
-            break;
-          case CompoundAssignmentOperator::LshAssign:
-            pnk = ParseNodeKind::LshAssignExpr;
-            break;
-          case CompoundAssignmentOperator::RshAssign:
-            pnk = ParseNodeKind::RshAssignExpr;
-            break;
-          case CompoundAssignmentOperator::UrshAssign:
-            pnk = ParseNodeKind::UrshAssignExpr;
-            break;
-          case CompoundAssignmentOperator::BitOrAssign:
-            pnk = ParseNodeKind::BitOrAssignExpr;
-            break;
-          case CompoundAssignmentOperator::BitXorAssign:
-            pnk = ParseNodeKind::BitXorAssignExpr;
-            break;
-          case CompoundAssignmentOperator::BitAndAssign:
-            pnk = ParseNodeKind::BitAndAssignExpr;
-            break;
-        }
-        BINJS_TRY_DECL(result, factory_.newAssignment(pnk, binding, expression));
+  build: |
+    ParseNodeKind pnk;
+    switch (operator_){
+      case CompoundAssignmentOperator::PlusAssign:
+        pnk = ParseNodeKind::AddAssignExpr;
+        break;
+      case CompoundAssignmentOperator::MinusAssign:
+        pnk = ParseNodeKind::SubAssignExpr;
+        break;
+      case CompoundAssignmentOperator::MulAssign:
+        pnk = ParseNodeKind::MulAssignExpr;
+        break;
+      case CompoundAssignmentOperator::DivAssign:
+        pnk = ParseNodeKind::DivAssignExpr;
+        break;
+      case CompoundAssignmentOperator::ModAssign:
+        pnk = ParseNodeKind::ModAssignExpr;
+        break;
+      case CompoundAssignmentOperator::PowAssign:
+        pnk = ParseNodeKind::PowAssignExpr;
+        break;
+      case CompoundAssignmentOperator::LshAssign:
+        pnk = ParseNodeKind::LshAssignExpr;
+        break;
+      case CompoundAssignmentOperator::RshAssign:
+        pnk = ParseNodeKind::RshAssignExpr;
+        break;
+      case CompoundAssignmentOperator::UrshAssign:
+        pnk = ParseNodeKind::UrshAssignExpr;
+        break;
+      case CompoundAssignmentOperator::BitOrAssign:
+        pnk = ParseNodeKind::BitOrAssignExpr;
+        break;
+      case CompoundAssignmentOperator::BitXorAssign:
+        pnk = ParseNodeKind::BitXorAssignExpr;
+        break;
+      case CompoundAssignmentOperator::BitAndAssign:
+        pnk = ParseNodeKind::BitAndAssignExpr;
+        break;
+    }
+    BINJS_TRY_DECL(result, factory_.newAssignment(pnk, binding, expression));
 
 ComputedMemberAssignmentTarget:
-    build: |
-        BINJS_TRY_DECL(result, factory_.newPropertyByValue(object, expression, tokenizer_->offset()));
+  build: |
+    BINJS_TRY_DECL(result,
+                   factory_.newPropertyByValue(object, expression,
+                                               tokenizer_->offset()));
 
 ComputedMemberExpression:
-    build: |
-        BINJS_TRY_DECL(result, factory_.newPropertyByValue(object, expression, tokenizer_->offset()));
+  build: |
+    BINJS_TRY_DECL(result,
+                   factory_.newPropertyByValue(object, expression,
+                                               tokenizer_->offset()));
 
 ConditionalExpression:
-    build: |
-        BINJS_TRY_DECL(result, factory_.newConditional(test, consequent, alternate));
+  build: |
+    BINJS_TRY_DECL(result,
+                   factory_.newConditional(test, consequent, alternate));
 
 ContinueStatement:
-    fields:
-        label:
-            block:
-                replace: |
-                    RootedAtom label(cx_);
-                    MOZ_TRY_VAR(label, tokenizer_->readMaybeAtom());
+  fields:
+    label:
+      block:
+        replace: |
+          RootedAtom label(cx_);
+          MOZ_TRY_VAR(label, tokenizer_->readMaybeAtom());
 
-    build: |
-        if (label) {
-            if (!IsIdentifier(label)) {
-                return raiseError("ContinueStatement - Label MUST be an identifier");
-            }
+  build: |
+    if (label) {
+      if (!IsIdentifier(label)) {
+        return raiseError("ContinueStatement - Label MUST be an identifier");
+      }
 
-            auto validity = parseContext_->checkContinueStatement(label ? label->asPropertyName() : nullptr);
-            if (validity.isErr()) {
-                switch (validity.unwrapErr()) {
-                  case ParseContext::ContinueStatementError::NotInALoop:
-                    return raiseError(kind, "Not in a loop");
-                  case ParseContext::ContinueStatementError::LabelNotFound:
-                    return raiseError(kind, "Label not found");
-                }
-            }
+      auto validity
+          = parseContext_->checkContinueStatement(label ? label->asPropertyName()
+                                                        : nullptr);
+      if (validity.isErr()) {
+        switch (validity.unwrapErr()) {
+          case ParseContext::ContinueStatementError::NotInALoop:
+            return raiseError(kind, "Not in a loop");
+          case ParseContext::ContinueStatementError::LabelNotFound:
+            return raiseError(kind, "Label not found");
         }
+      }
+    }
 
-        BINJS_TRY_DECL(result, factory_.newContinueStatement(label ? label->asPropertyName() : nullptr, tokenizer_->pos(start)));
+    BINJS_TRY_DECL(result,
+                   factory_.newContinueStatement(label ? label->asPropertyName() : nullptr,
+                                                 tokenizer_->pos(start)));
 
 DataProperty:
-    build: |
-        if (!factory_.isUsableAsObjectPropertyName(name)) {
-            return raiseError("DataProperty key kind");
-        }
+  build: |
+    if (!factory_.isUsableAsObjectPropertyName(name)) {
+      return raiseError("DataProperty key kind");
+    }
 
-        ParseNode* result;
-        if (name->template is<NameNode>() && name->template as<NameNode>().atom() == cx_->names().proto) {
-            BINJS_TRY_VAR(result, factory_.newUnary(ParseNodeKind::MutateProto, start, expression));
-        } else {
-            BINJS_TRY_VAR(result, factory_.newObjectMethodOrPropertyDefinition(name, expression, AccessorType::None));
-        }
+    ParseNode* result;
+    if (name->template is<NameNode>() &&
+        name->template as<NameNode>().atom() == cx_->names().proto) {
+      BINJS_TRY_VAR(result,
+                    factory_.newUnary(ParseNodeKind::MutateProto, start,
+                                      expression));
+    } else {
+      BINJS_TRY_VAR(result,
+                    factory_.newObjectMethodOrPropertyDefinition(name,
+                                                                 expression,
+                                                                 AccessorType::None));
+    }
 
 Directive:
-    build: |
-        TokenPos pos = tokenizer_->pos(start);
-        BINJS_TRY_DECL(result, factory_.newStringLiteral(rawValue, pos));
+  build: |
+    TokenPos pos = tokenizer_->pos(start);
+    BINJS_TRY_DECL(result, factory_.newStringLiteral(rawValue, pos));
 
 DoWhileStatement:
-    init:
-        ParseContext::Statement stmt(parseContext_, StatementKind::DoLoop);
-    build:
-        BINJS_TRY_DECL(result, factory_.newDoWhileStatement(body, test, tokenizer_->pos(start)));
+  init:
+    ParseContext::Statement stmt(parseContext_, StatementKind::DoLoop);
+  build: |
+    BINJS_TRY_DECL(result,
+                   factory_.newDoWhileStatement(body, test,
+                                                tokenizer_->pos(start)));
 
 EagerFunctionDeclaration:
-    init: |
-        const auto syntax = FunctionSyntaxKind::Statement;
-    inherits: EagerFunctionExpression
+  init: |
+    const auto syntax = FunctionSyntaxKind::Statement;
+  inherits: EagerFunctionExpression
 
 LazyFunctionDeclaration:
-    init: |
-        const auto syntax = FunctionSyntaxKind::Statement;
-    inherits: LazyFunctionExpression
+  init: |
+    const auto syntax = FunctionSyntaxKind::Statement;
+  inherits: LazyFunctionExpression
 
 FunctionExpressionContents:
-    type-ok:
-        Ok
-    extra-params: |
-        uint32_t funLength,
-        ListNode** paramsOut,
-        ListNode** bodyOut
-    extra-args: |
-        funLength, paramsOut, bodyOut
-    fields:
-        isThisCaptured:
-            after: |
-                // TODO: Use this in BinASTParser::buildFunction.
-                (void) isThisCaptured;
-        isFunctionNameCaptured:
-            after: |
-                // Per spec, isFunctionNameCaptured can be true for anonymous
-                // function.  Check isFunctionNameCaptured only for named
-                // function.
-                if (parseContext_->functionBox()->function()->isNamedLambda() &&
-                    isFunctionNameCaptured)
-                {
-                    captureFunctionName();
-                }
-        parameterScope:
-            before: |
-                Rooted<GCVector<JSAtom*>> positionalParams(cx_, GCVector<JSAtom*>(cx_));
-            extra-args: |
-                &positionalParams
-        params:
-            after: |
-                MOZ_TRY(checkFunctionLength(funLength));
-                MOZ_TRY(checkPositionalParameterIndices(positionalParams, params));
-    build: |
-        *paramsOut = params;
-        *bodyOut = body;
-        auto result = Ok();
+  type-ok:
+    Ok
+  extra-params: |
+    uint32_t funLength,
+    ListNode** paramsOut,
+    ListNode** bodyOut
+  extra-args: |
+    funLength, paramsOut, bodyOut
+  fields:
+    isThisCaptured:
+      after: |
+        // TODO: Use this in BinASTParser::buildFunction.
+        (void) isThisCaptured;
+    isFunctionNameCaptured:
+      after: |
+        // Per spec, isFunctionNameCaptured can be true for anonymous
+        // function.  Check isFunctionNameCaptured only for named
+        // function.
+        if (parseContext_->functionBox()->function()->isNamedLambda() &&
+          isFunctionNameCaptured) {
+          captureFunctionName();
+        }
+    parameterScope:
+      before: |
+        Rooted<GCVector<JSAtom*>> positionalParams(cx_, GCVector<JSAtom*>(cx_));
+      extra-args: |
+        &positionalParams
+    params:
+      after: |
+        MOZ_TRY(checkFunctionLength(funLength));
+        MOZ_TRY(checkPositionalParameterIndices(positionalParams, params));
+  build: |
+    *paramsOut = params;
+    *bodyOut = body;
+    auto result = Ok();
 
 FunctionOrMethodContents:
-    inherits: FunctionExpressionContents
+  inherits: FunctionExpressionContents
 
 GetterContents:
-    inherits: FunctionExpressionContents
-    fields:
-        body:
-            before: |
-                BINJS_TRY_DECL(params, this->template new_<ListNode>(ParseNodeKind::ParamsBody, tokenizer_->pos(start)));
+  inherits: FunctionExpressionContents
+  fields:
+    body:
+      before: |
+        BINJS_TRY_DECL(params,
+                       this->template new_<ListNode>(ParseNodeKind::ParamsBody,
+                                                     tokenizer_->pos(start)));
 
 SetterContents:
-    inherits: FunctionExpressionContents
-    fields:
-        param:
-            after: |
-              BINJS_TRY_DECL(params, this->template new_<ListNode>(ParseNodeKind::ParamsBody, param->pn_pos));
-              factory_.addList(params, param);
-              MOZ_TRY(checkPositionalParameterIndices(positionalParams, params));
+  inherits: FunctionExpressionContents
+  fields:
+    param:
+      after: |
+        BINJS_TRY_DECL(params,
+                       this->template new_<ListNode>(ParseNodeKind::ParamsBody,
+                                                     param->pn_pos));
+        factory_.addList(params, param);
+        MOZ_TRY(checkPositionalParameterIndices(positionalParams, params));
 
 EagerFunctionExpression:
-    init: |
-        const auto syntax = FunctionSyntaxKind::Expression;
-    fields:
-        isGenerator:
-            after: |
-                if (isGenerator) {
-                    return raiseError("Generator is not supported in this preview release");
-                }
-        isAsync:
-            after: |
-                if (isAsync) {
-                    return raiseError("Async function is not supported in this preview release");
-                }
-        contents:
-            before: |
-                BINJS_MOZ_TRY_DECL(funbox, buildFunctionBox(
-                    isGenerator ? GeneratorKind::Generator
-                                : GeneratorKind::NotGenerator,
-                    isAsync ? FunctionAsyncKind::AsyncFunction
-                            : FunctionAsyncKind::SyncFunction,
-                    syntax,
-                    (syntax != FunctionSyntaxKind::Setter &&
-                     syntax != FunctionSyntaxKind::Getter) ? name : nullptr));
-
-                forceStrictIfNecessary(funbox, directives);
-
-                // Push a new ParseContext. It will be used to parse `scope`, the arguments, the function.
-                BinParseContext funpc(cx_, this, funbox, /* newDirectives = */ nullptr);
-                BINJS_TRY(funpc.init());
-                parseContext_->functionScope().useAsVarScope(parseContext_);
-                MOZ_ASSERT(parseContext_->isFunctionBox());
-
-                ParseContext::Scope lexicalScope(cx_, parseContext_, usedNames_);
-                BINJS_TRY(lexicalScope.init(parseContext_));
-                ListNode* params;
-                ListNode* body;
-            extra-args: |
-                length, &params, &body
-            after: |
-                MOZ_TRY(prependDirectivesToBody(body, directives));
-    build: |
-        BINJS_TRY_DECL(lexicalScopeData, NewLexicalScopeData(cx_, lexicalScope, alloc_, parseContext_));
-        BINJS_TRY_DECL(bodyScope, factory_.newLexicalScope(*lexicalScopeData, body));
-        BINJS_MOZ_TRY_DECL(result, buildFunction(start, kind, name, params, bodyScope, funbox));
-
-LazyFunctionExpression:
-    init: |
-        const auto syntax = FunctionSyntaxKind::Expression;
-    fields:
-        isGenerator:
-            after: |
-                if (isGenerator) {
-                    return raiseError("Generator is not supported in this preview release");
-                }
-        isAsync:
-            after: |
-                if (isAsync) {
-                    return raiseError("Async function is not supported in this preview release");
-                }
-        contents:
-            block:
-                replace:
-                    // Don't parse the contents until we delazify.
-    build: |
+  init: |
+    const auto syntax = FunctionSyntaxKind::Expression;
+  fields:
+    isGenerator:
+      after: |
+        if (isGenerator) {
+          return raiseError("Generator is not supported in this preview release");
+        }
+    isAsync:
+      after: |
+        if (isAsync) {
+          return raiseError("Async function is not supported in this preview release");
+        }
+    contents:
+      before: |
         BINJS_MOZ_TRY_DECL(funbox, buildFunctionBox(
-            isGenerator ? GeneratorKind::Generator
-                        : GeneratorKind::NotGenerator,
-            isAsync ? FunctionAsyncKind::AsyncFunction
-                    : FunctionAsyncKind::SyncFunction,
-            syntax, name));
+          isGenerator ? GeneratorKind::Generator
+                      : GeneratorKind::NotGenerator,
+          isAsync ? FunctionAsyncKind::AsyncFunction
+                  : FunctionAsyncKind::SyncFunction,
+          syntax,
+          (syntax != FunctionSyntaxKind::Setter &&
+           syntax != FunctionSyntaxKind::Getter) ? name : nullptr));
 
         forceStrictIfNecessary(funbox, directives);
 
-        RootedFunction fun(cx_, funbox->function());
+        // Push a new ParseContext. It will be used to parse `scope`, the arguments,
+        // the function.
+        BinParseContext funpc(cx_, this, funbox, /* newDirectives = */ nullptr);
+        BINJS_TRY(funpc.init());
+        parseContext_->functionScope().useAsVarScope(parseContext_);
+        MOZ_ASSERT(parseContext_->isFunctionBox());
 
-        // TODO: This will become incorrect in the face of ES6 features.
-        fun->setArgCount(length);
+        ParseContext::Scope lexicalScope(cx_, parseContext_, usedNames_);
+        BINJS_TRY(lexicalScope.init(parseContext_));
+        ListNode* params;
+        ListNode* body;
+      extra-args: |
+        length, &params, &body
+      after: |
+        MOZ_TRY(prependDirectivesToBody(body, directives));
+  build: |
+    BINJS_TRY_DECL(lexicalScopeData,
+                   NewLexicalScopeData(cx_, lexicalScope, alloc_,
+                                       parseContext_));
+    BINJS_TRY_DECL(bodyScope,
+                   factory_.newLexicalScope(*lexicalScopeData, body));
+    BINJS_MOZ_TRY_DECL(result,
+                       buildFunction(start, kind, name, params, bodyScope,
+                                     funbox));
 
-        auto skipStart = contentsSkip.startOffset();
-        BINJS_TRY_DECL(lazy, LazyScript::Create(cx_, fun, sourceObject_, parseContext_->closedOverBindingsForLazy(), parseContext_->innerFunctionsForLazy,
-                                                skipStart, skipStart + contentsSkip.length(),
-                                                skipStart, 0, skipStart, ParseGoal::Script));
-
-        if (funbox->strict()) {
-            lazy->setStrict();
+LazyFunctionExpression:
+  init: |
+    const auto syntax = FunctionSyntaxKind::Expression;
+  fields:
+    isGenerator:
+      after: |
+        if (isGenerator) {
+          return raiseError("Generator is not supported in this preview release");
         }
-        lazy->setIsBinAST();
-        funbox->function()->initLazyScript(lazy);
+    isAsync:
+      after: |
+        if (isAsync) {
+          return raiseError("Async function is not supported in this preview release");
+        }
+    contents:
+      block:
+        replace:
+          // Don't parse the contents until we delazify.
+  build: |
+    BINJS_MOZ_TRY_DECL(funbox, buildFunctionBox(
+      isGenerator ? GeneratorKind::Generator
+                  : GeneratorKind::NotGenerator,
+      isAsync ? FunctionAsyncKind::AsyncFunction
+              : FunctionAsyncKind::SyncFunction,
+      syntax, name));
 
-        BINJS_MOZ_TRY_DECL(result, makeEmptyFunctionNode(skipStart, kind, funbox));
+    forceStrictIfNecessary(funbox, directives);
+
+    RootedFunction fun(cx_, funbox->function());
+
+    // TODO: This will become incorrect in the face of ES6 features.
+    fun->setArgCount(length);
+
+    auto skipStart = contentsSkip.startOffset();
+    BINJS_TRY_DECL(lazy, LazyScript::Create(
+      cx_, fun, sourceObject_,
+      parseContext_->closedOverBindingsForLazy(),
+      parseContext_->innerFunctionsForLazy,
+      skipStart, skipStart + contentsSkip.length(),
+      skipStart, 0, skipStart, ParseGoal::Script));
+
+    if (funbox->strict()) {
+      lazy->setStrict();
+    }
+    lazy->setIsBinAST();
+    funbox->function()->initLazyScript(lazy);
+
+    BINJS_MOZ_TRY_DECL(result, makeEmptyFunctionNode(skipStart, kind, funbox));
 
 EagerGetter:
-    init: |
-        const auto syntax = FunctionSyntaxKind::Setter;
-        const bool isGenerator = false;
-        const bool isAsync = false;
-        const auto accessorType = AccessorType::Getter;
-        const uint32_t length = 0;
-    inherits: EagerMethod
+  init: |
+    const auto syntax = FunctionSyntaxKind::Setter;
+    const bool isGenerator = false;
+    const bool isAsync = false;
+    const auto accessorType = AccessorType::Getter;
+    const uint32_t length = 0;
+  inherits: EagerMethod
 
 EagerMethod:
-    init: |
-        const auto syntax = FunctionSyntaxKind::Method;
-        const auto accessorType = AccessorType::None;
-    inherits: EagerFunctionExpression
-    build: |
-        BINJS_MOZ_TRY_DECL(method, buildFunction(start, kind, name, params, body, funbox));
-        BINJS_TRY_DECL(result, factory_.newObjectMethodOrPropertyDefinition(name, method, accessorType));
+  init: |
+    const auto syntax = FunctionSyntaxKind::Method;
+    const auto accessorType = AccessorType::None;
+  inherits: EagerFunctionExpression
+  build: |
+    BINJS_MOZ_TRY_DECL(method,
+                       buildFunction(start, kind, name, params, body, funbox));
+    BINJS_TRY_DECL(result,
+                   factory_.newObjectMethodOrPropertyDefinition(name, method,
+                                                                accessorType));
 
 EagerSetter:
-    init: |
-        const auto syntax = FunctionSyntaxKind::Setter;
-        const bool isGenerator = false;
-        const bool isAsync = false;
-        const auto accessorType = AccessorType::Setter;
-    inherits: EagerMethod
+  init: |
+    const auto syntax = FunctionSyntaxKind::Setter;
+    const bool isGenerator = false;
+    const bool isAsync = false;
+    const auto accessorType = AccessorType::Setter;
+  inherits: EagerMethod
 
 EmptyStatement:
-    build:
-        BINJS_TRY_DECL(result, factory_.newEmptyStatement(tokenizer_->pos(start)));
+  build:
+    BINJS_TRY_DECL(result, factory_.newEmptyStatement(tokenizer_->pos(start)));
 
 ExpressionStatement:
-    build:
-        BINJS_TRY_DECL(result, factory_.newExprStatement(expression, tokenizer_->offset()));
+  build: |
+    BINJS_TRY_DECL(result,
+                   factory_.newExprStatement(expression, tokenizer_->offset()));
 
 ForInOfBinding:
-    init:
-        AutoVariableDeclarationKind kindGuard(this);
-    build: |
-        // Restored by `kindGuard`.
-        variableDeclarationKind_ = kind_;
-        MOZ_TRY(checkBinding(binding->template as<NameNode>().atom()->asPropertyName()));
-        ParseNodeKind pnk;
-        switch (kind_) {
-          case VariableDeclarationKind::Var:
-            pnk = ParseNodeKind::VarStmt;
-            break;
-          case VariableDeclarationKind::Let:
-            return raiseError("Let is not supported in this preview release");
-          case VariableDeclarationKind::Const:
-            return raiseError("Const is not supported in this preview release");
-        }
-        BINJS_TRY_DECL(result, factory_.newDeclarationList(pnk, tokenizer_->pos(start)));
-        factory_.addList(result, binding);
+  init:
+    AutoVariableDeclarationKind kindGuard(this);
+  build: |
+    // Restored by `kindGuard`.
+    variableDeclarationKind_ = kind_;
+    MOZ_TRY(checkBinding(binding->template as<NameNode>().atom()->asPropertyName()));
+    ParseNodeKind pnk;
+    switch (kind_) {
+      case VariableDeclarationKind::Var:
+        pnk = ParseNodeKind::VarStmt;
+        break;
+      case VariableDeclarationKind::Let:
+        return raiseError("Let is not supported in this preview release");
+      case VariableDeclarationKind::Const:
+        return raiseError("Const is not supported in this preview release");
+    }
+    BINJS_TRY_DECL(result,
+                   factory_.newDeclarationList(pnk, tokenizer_->pos(start)));
+    factory_.addList(result, binding);
 
 
 
 ForInStatement:
-    init: |
-        ParseContext::Statement stmt(parseContext_, StatementKind::ForInLoop);
+  init: |
+    ParseContext::Statement stmt(parseContext_, StatementKind::ForInLoop);
 
-        // Implicit scope around the `for`, used to store `for (let x in  ...)`
-        // or `for (const x in ...)`-style declarations. Detail on the
-        // declaration is stored as part of `scope`.
-        ParseContext::Scope scope(cx_, parseContext_, usedNames_);
-        BINJS_TRY(scope.init(parseContext_));
-    build: |
-        BINJS_TRY_DECL(forHead, factory_.newForInOrOfHead(ParseNodeKind::ForIn, left, right, tokenizer_->pos(start)));
-        ParseNode* result;
-        BINJS_TRY_VAR(result, factory_.newForStatement(start, forHead, body, /*flags*/ 0));
+    // Implicit scope around the `for`, used to store `for (let x in  ...)`
+    // or `for (const x in ...)`-style declarations. Detail on the
+    // declaration is stored as part of `scope`.
+    ParseContext::Scope scope(cx_, parseContext_, usedNames_);
+    BINJS_TRY(scope.init(parseContext_));
+  build: |
+    BINJS_TRY_DECL(forHead,
+                   factory_.newForInOrOfHead(ParseNodeKind::ForIn, left, right,
+                                             tokenizer_->pos(start)));
+    ParseNode* result;
+    BINJS_TRY_VAR(result,
+                  factory_.newForStatement(start, forHead, body,
+                                            /* iflags = */ 0));
 
-        if (!scope.isEmpty()) {
-            BINJS_TRY_DECL(bindings, NewLexicalScopeData(cx_, scope, alloc_, parseContext_));
-            BINJS_TRY_VAR(result, factory_.newLexicalScope(*bindings, result));
-        }
+    if (!scope.isEmpty()) {
+      BINJS_TRY_DECL(bindings, NewLexicalScopeData(cx_, scope, alloc_, parseContext_));
+      BINJS_TRY_VAR(result, factory_.newLexicalScope(*bindings, result));
+    }
 
 FormalParameters:
-    type-ok:
-        ListNode*
-    build: |
-        auto result = items;
-        if (rest) {
-            return raiseError("Rest parameter is not supported in this preview release");
-        }
+  type-ok:
+    ListNode*
+  build: |
+    auto result = items;
+    if (rest) {
+      return raiseError("Rest parameter is not supported in this preview release");
+    }
 
 ForStatement:
-    init: |
-        ParseContext::Statement stmt(parseContext_, StatementKind::ForLoop);
+  init: |
+    ParseContext::Statement stmt(parseContext_, StatementKind::ForLoop);
 
-        // Implicit scope around the `for`, used to store `for (let x; ...; ...)`
-        // or `for (const x; ...; ...)`-style declarations. Detail on the
-        // declaration is stored as part of `BINJS_Scope`.
-        ParseContext::Scope scope(cx_, parseContext_, usedNames_);
-        BINJS_TRY(scope.init(parseContext_));
-    build: |
-        BINJS_TRY_DECL(forHead, factory_.newForHead(init, test, update, tokenizer_->pos(start)));
-        ParseNode* result;
-        BINJS_TRY_VAR(result, factory_.newForStatement(start, forHead, body, /* iflags = */ 0));
+    // Implicit scope around the `for`, used to store `for (let x; ...; ...)`
+    // or `for (const x; ...; ...)`-style declarations. Detail on the
+    // declaration is stored as part of `BINJS_Scope`.
+    ParseContext::Scope scope(cx_, parseContext_, usedNames_);
+    BINJS_TRY(scope.init(parseContext_));
+  build: |
+    BINJS_TRY_DECL(forHead,
+                   factory_.newForHead(init, test, update,
+                                       tokenizer_->pos(start)));
+    ParseNode* result;
+    BINJS_TRY_VAR(result,
+                  factory_.newForStatement(start, forHead, body,
+                                           /* iflags = */ 0));
 
-        if (!scope.isEmpty()) {
-            BINJS_TRY_DECL(bindings, NewLexicalScopeData(cx_, scope, alloc_, parseContext_));
-            BINJS_TRY_VAR(result, factory_.newLexicalScope(*bindings, result));
-        }
+    if (!scope.isEmpty()) {
+      BINJS_TRY_DECL(bindings,
+                     NewLexicalScopeData(cx_, scope, alloc_, parseContext_));
+      BINJS_TRY_VAR(result, factory_.newLexicalScope(*bindings, result));
+    }
 
 FunctionBody:
-    inherits: ListOfStatement
+  inherits: ListOfStatement
 
 IdentifierExpression:
-    build: |
-        if (!IsIdentifier(name)) {
-            return raiseError("Invalid identifier");
-        }
-        BINJS_TRY(usedNames_.noteUse(cx_, name, parseContext_->scriptId(), parseContext_->innermostScope()->id()));
-        BINJS_TRY_DECL(result, factory_.newName(name->asPropertyName(), tokenizer_->pos(start), cx_));
+  build: |
+    if (!IsIdentifier(name)) {
+      return raiseError("Invalid identifier");
+    }
+    BINJS_TRY(usedNames_.noteUse(cx_, name, parseContext_->scriptId(),
+                                 parseContext_->innermostScope()->id()));
+    BINJS_TRY_DECL(result,
+                   factory_.newName(name->asPropertyName(),
+                                    tokenizer_->pos(start), cx_));
 
 IfStatement:
-    build: |
-        BINJS_TRY_DECL(result, factory_.newIfStatement(start, test, consequent, alternate));
+  build: |
+    BINJS_TRY_DECL(result,
+                   factory_.newIfStatement(start, test, consequent, alternate));
 
 LabelledStatement:
-    fields:
-        label:
-            after: |
-                if (!IsIdentifier(label)) {
-                    return raiseError("Invalid identifier");
-                }
-                ParseContext::LabelStatement stmt(parseContext_, label);
-    build:
-        BINJS_TRY_DECL(result, factory_.newLabeledStatement(label->asPropertyName(), body, start));
+  fields:
+    label:
+      after: |
+        if (!IsIdentifier(label)) {
+          return raiseError("Invalid identifier");
+        }
+        ParseContext::LabelStatement stmt(parseContext_, label);
+  build: |
+    BINJS_TRY_DECL(result,
+                   factory_.newLabeledStatement(label->asPropertyName(), body,
+                                                start));
 
 ListOfAssertedBoundName:
-    extra-params: AssertedScopeKind scopeKind
-    extra-args: scopeKind
-    type-ok:
-        Ok
-    init: |
-        (void) start;
-        auto result = Ok();
-    append: |
-        // Nothing to do here.
+  extra-params: AssertedScopeKind scopeKind
+  extra-args: scopeKind
+  type-ok:
+    Ok
+  init: |
+    (void) start;
+    auto result = Ok();
+  append: |
+    // Nothing to do here.
 
 ListOfAssertedMaybePositionalParameterName:
-    inherits: ListOfAssertedBoundName
-    extra-params: |
-        AssertedScopeKind scopeKind,
-        MutableHandle<GCVector<JSAtom*>> positionalParams
-    extra-args: |
-        scopeKind, positionalParams
-    init: |
-        (void) start;
-        auto result = Ok();
-        // This list contains also destructuring parameters, and the number of
-        // list items can be greater than the actual parameters, or more than
-        // ARGNO_LIMIT even if the number of parameters fits into ARGNO_LIMIT.
-        // Also, the number of parameters can be greater than this list's length
-        // if one of destructuring parameter is empty.
-        //
-        // We resize `positionalParams` vector on demand, to keep the vector
-        // length match to the known maximum positional parameter index + 1.
+  inherits: ListOfAssertedBoundName
+  extra-params: |
+    AssertedScopeKind scopeKind,
+    MutableHandle<GCVector<JSAtom*>> positionalParams
+  extra-args: |
+    scopeKind, positionalParams
+  init: |
+    (void) start;
+    auto result = Ok();
+    // This list contains also destructuring parameters, and the number of
+    // list items can be greater than the actual parameters, or more than
+    // ARGNO_LIMIT even if the number of parameters fits into ARGNO_LIMIT.
+    // Also, the number of parameters can be greater than this list's length
+    // if one of destructuring parameter is empty.
+    //
+    // We resize `positionalParams` vector on demand, to keep the vector
+    // length match to the known maximum positional parameter index + 1.
 
 ListOfAssertedDeclaredName:
-    inherits: ListOfAssertedBoundName
+  inherits: ListOfAssertedBoundName
 
 ListOfDirective:
-    type-ok:
-        ListNode*
-    init:
-        BINJS_TRY_DECL(result, factory_.newStatementList(tokenizer_->pos(start)));
-    append:
-        factory_.addStatementToList(result, item);
+  type-ok:
+    ListNode*
+  init:
+    BINJS_TRY_DECL(result, factory_.newStatementList(tokenizer_->pos(start)));
+  append:
+    factory_.addStatementToList(result, item);
 
 ListOfObjectProperty:
-    type-ok:
-        ListNode*
-    init:
-        BINJS_TRY_DECL(result, factory_.newObjectLiteral(start));
-    append: |
-        if (!item->isConstant())
-            result->setHasNonConstInitializer();
-        result->appendWithoutOrderAssumption(item);
+  type-ok:
+    ListNode*
+  init:
+    BINJS_TRY_DECL(result, factory_.newObjectLiteral(start));
+  append: |
+    if (!item->isConstant())
+      result->setHasNonConstInitializer();
+    result->appendWithoutOrderAssumption(item);
 
 ListOfOptionalSpreadElementOrExpression:
-    type-ok:
-        ListNode*
-    init:
-        BINJS_TRY_DECL(result, factory_.newArrayLiteral(start));
-    append: |
-        if (item) {
-            factory_.addArrayElement(result, item); // Infallible.
-        } else {
-            BINJS_TRY(factory_.addElision(result, tokenizer_->pos(start)));
-        }
+  type-ok:
+    ListNode*
+  init:
+    BINJS_TRY_DECL(result, factory_.newArrayLiteral(start));
+  append: |
+    if (item) {
+      factory_.addArrayElement(result, item); // Infallible.
+    } else {
+      BINJS_TRY(factory_.addElision(result, tokenizer_->pos(start)));
+    }
 
 ListOfParameter:
-    type-ok:
-        ListNode*
-    init: |
-        BINJS_TRY_DECL(result, this->template new_<ListNode>(ParseNodeKind::ParamsBody, tokenizer_->pos(start)));
-    append:
-        factory_.addList(/* list = */ result, /* kid = */ item);
+  type-ok:
+    ListNode*
+  init: |
+    BINJS_TRY_DECL(result,
+                   this->template new_<ListNode>(ParseNodeKind::ParamsBody,
+                                                 tokenizer_->pos(start)));
+  append:
+    factory_.addList(/* list = */ result, /* kid = */ item);
 
 ListOfStatement:
-    type-ok:
-        ListNode*
-    init:
-        BINJS_TRY_DECL(result, factory_.newStatementList(tokenizer_->pos(start)));
-    append:
-        factory_.addStatementToList(result, item);
+  type-ok:
+    ListNode*
+  init:
+    BINJS_TRY_DECL(result, factory_.newStatementList(tokenizer_->pos(start)));
+  append:
+    factory_.addStatementToList(result, item);
 
 
 #ListOfSpreadElementOrExpression:
-#    type-ok:
-#        ListNode*
-#    init:
-#        BINJS_TRY_DECL(result, this->template new_<ListNode>(ParseNodeKind::ParamsBody, tokenizer_->pos()));
-#    append:
-#        result->appendWithoutOrderAssumption(item);
+#  type-ok:
+#    ListNode*
+#  init:
+#    BINJS_TRY_DECL(result,
+#                   this->template new_<ListNode>(ParseNodeKind::ParamsBody,
+#                                                 tokenizer_->pos()));
+#  append:
+#    result->appendWithoutOrderAssumption(item);
 
 ListOfSwitchCase:
-    type-ok:
-        ListNode*
-    init:
-        BINJS_TRY_DECL(result, factory_.newStatementList(tokenizer_->pos(start)));
-    append:
-        factory_.addCaseStatementToList(result, item);
+  type-ok:
+    ListNode*
+  init:
+    BINJS_TRY_DECL(result, factory_.newStatementList(tokenizer_->pos(start)));
+  append:
+    factory_.addCaseStatementToList(result, item);
 
 ListOfVariableDeclarator:
-    type-ok:
-        ListNode*
-    init: |
-        BINJS_TRY_DECL(result, factory_.newDeclarationList(ParseNodeKind::ConstDecl /*Placeholder*/,
-            tokenizer_->pos(start)));
+  type-ok:
+    ListNode*
+  init: |
+    BINJS_TRY_DECL(result,
+                   factory_.newDeclarationList(ParseNodeKind::ConstDecl /* Placeholder */,
+                   tokenizer_->pos(start)));
 
 LiteralBooleanExpression:
-    build:
-        BINJS_TRY_DECL(result, factory_.newBooleanLiteral(value, tokenizer_->pos(start)));
+  build: |
+    BINJS_TRY_DECL(result,
+                   factory_.newBooleanLiteral(value, tokenizer_->pos(start)));
 
 LiteralNumericExpression:
-    build:
-        BINJS_TRY_DECL(result, factory_.newNumber(value, DecimalPoint::HasDecimal, tokenizer_->pos(start)));
+  build: |
+    BINJS_TRY_DECL(result,
+                   factory_.newNumber(value, DecimalPoint::HasDecimal, tokenizer_->pos(start)));
 
 LiteralNullExpression:
-    build:
-        BINJS_TRY_DECL(result, factory_.newNullLiteral(tokenizer_->pos(start)));
+  build: |
+    BINJS_TRY_DECL(result, factory_.newNullLiteral(tokenizer_->pos(start)));
 
 LiteralPropertyName:
-    build: |
-        ParseNode* result;
-        uint32_t index;
-        if (value->isIndex(&index)) {
-            BINJS_TRY_VAR(result, factory_.newNumber(index, NoDecimal, TokenPos(start, tokenizer_->offset())));
-        } else {
-            BINJS_TRY_VAR(result, factory_.newObjectLiteralPropertyName(value, tokenizer_->pos(start)));
-        }
+  build: |
+    ParseNode* result;
+    uint32_t index;
+    if (value->isIndex(&index)) {
+      BINJS_TRY_VAR(result,
+                    factory_.newNumber(index, NoDecimal,
+                                       TokenPos(start, tokenizer_->offset())));
+    } else {
+      BINJS_TRY_VAR(result,
+                    factory_.newObjectLiteralPropertyName(value,
+                                                          tokenizer_->pos(start)));
+    }
 
 LiteralRegExpExpression:
-    fields:
-        flags:
-            block:
-                replace: |
-                    Chars flags(cx_);
-                    MOZ_TRY(tokenizer_->readChars(flags));
-    build: |
-        RegExpFlag reflags = NoFlags;
-        for (auto c : flags) {
-            if (c == 'g' && !(reflags & GlobalFlag)) {
-                reflags = RegExpFlag(reflags | GlobalFlag);
-            } else if (c == 'i' && !(reflags & IgnoreCaseFlag)) {
-                reflags = RegExpFlag(reflags | IgnoreCaseFlag);
-            } else if (c == 'm' && !(reflags & MultilineFlag)) {
-                reflags = RegExpFlag(reflags | MultilineFlag);
-            } else if (c == 'y' && !(reflags & StickyFlag)) {
-                reflags = RegExpFlag(reflags | StickyFlag);
-            } else if (c == 'u' && !(reflags & UnicodeFlag)) {
-                reflags = RegExpFlag(reflags | UnicodeFlag);
-            } else {
-                return raiseError("Invalid regexp flags");
-            }
-        }
+  fields:
+    flags:
+      block:
+        replace: |
+          Chars flags(cx_);
+          MOZ_TRY(tokenizer_->readChars(flags));
+  build: |
+    RegExpFlag reflags = NoFlags;
+    for (auto c : flags) {
+      if (c == 'g' && !(reflags & GlobalFlag)) {
+        reflags = RegExpFlag(reflags | GlobalFlag);
+      } else if (c == 'i' && !(reflags & IgnoreCaseFlag)) {
+        reflags = RegExpFlag(reflags | IgnoreCaseFlag);
+      } else if (c == 'm' && !(reflags & MultilineFlag)) {
+        reflags = RegExpFlag(reflags | MultilineFlag);
+      } else if (c == 'y' && !(reflags & StickyFlag)) {
+        reflags = RegExpFlag(reflags | StickyFlag);
+      } else if (c == 'u' && !(reflags & UnicodeFlag)) {
+        reflags = RegExpFlag(reflags | UnicodeFlag);
+      } else {
+        return raiseError("Invalid regexp flags");
+      }
+    }
 
 
-        Rooted<RegExpObject*> reobj(cx_);
-        BINJS_TRY_VAR(reobj, RegExpObject::create(cx_,
-            pattern,
-            reflags,
-            TenuredObject));
+    Rooted<RegExpObject*> reobj(cx_);
+    BINJS_TRY_VAR(reobj,
+                  RegExpObject::create(cx_, pattern, reflags, TenuredObject));
 
-        BINJS_TRY_DECL(result, factory_.newRegExp(reobj, tokenizer_->pos(start), *this));
+    BINJS_TRY_DECL(result,
+                   factory_.newRegExp(reobj, tokenizer_->pos(start), *this));
 
 LiteralStringExpression:
-    build:
-        BINJS_TRY_DECL(result, factory_.newStringLiteral(value, tokenizer_->pos(start)));
+  build: |
+    BINJS_TRY_DECL(result,
+                   factory_.newStringLiteral(value, tokenizer_->pos(start)));
 
 NewExpression:
-    build: |
-        BINJS_TRY_DECL(result, factory_.newNewExpression(tokenizer_->pos(start).begin, callee, arguments));
+  build: |
+    BINJS_TRY_DECL(result,
+                   factory_.newNewExpression(tokenizer_->pos(start).begin,
+                                             callee, arguments));
 
 ObjectExpression:
-    build:
-        auto result = properties;
+  build:
+    auto result = properties;
 
 OptionalCatchClause:
-    type-ok:
-        LexicalScopeNode*
+  type-ok:
+    LexicalScopeNode*
 
 Parameter:
-    sum-arms:
-        BindingIdentifier:
-            after: |
-                if (!parseContext_->positionalFormalParameterNames().append(result->template as<NameNode>().atom())) {
-                    return raiseOOM();
-                }
-                if (parseContext_->isFunctionBox()) {
-                    parseContext_->functionBox()->length++;
-                }
+  sum-arms:
+    BindingIdentifier:
+      after: |
+        if (!parseContext_->positionalFormalParameterNames().append(
+                result->template as<NameNode>().atom())) {
+          return raiseOOM();
+        }
+        if (parseContext_->isFunctionBox()) {
+          parseContext_->functionBox()->length++;
+        }
 
 ReturnStatement:
-    init: |
-        if (!parseContext_->isFunctionBox()) {
-            // Return statements are permitted only inside functions.
-            return raiseInvalidKind("Toplevel Statement", kind);
-        }
+  init: |
+    if (!parseContext_->isFunctionBox()) {
+      // Return statements are permitted only inside functions.
+      return raiseInvalidKind("Toplevel Statement", kind);
+    }
 
-        parseContext_->functionBox()->usesReturn = true;
-    build:
-        BINJS_TRY_DECL(result, factory_.newReturnStatement(expression, tokenizer_->pos(start)));
+    parseContext_->functionBox()->usesReturn = true;
+  build: |
+    BINJS_TRY_DECL(result,
+                   factory_.newReturnStatement(expression,
+                                               tokenizer_->pos(start)));
 
 Script:
-    fields:
-        directives:
-            after: |
-                forceStrictIfNecessary(parseContext_->sc(), directives);
-    build:
-        MOZ_TRY(checkClosedVars(parseContext_->varScope()));
-        MOZ_TRY(prependDirectivesToBody(/* body = */ statements, directives));
-        auto result = statements;
+  fields:
+    directives:
+      after: |
+        forceStrictIfNecessary(parseContext_->sc(), directives);
+  build: |
+    MOZ_TRY(checkClosedVars(parseContext_->varScope()));
+    MOZ_TRY(prependDirectivesToBody(/* body = */ statements, directives));
+    auto result = statements;
 
 ShorthandProperty:
-    build: |
-        MOZ_ASSERT(name->isKind(ParseNodeKind::Name));
-        MOZ_ASSERT(!factory_.isUsableAsObjectPropertyName(name));
-        BINJS_TRY_DECL(propName, factory_.newObjectLiteralPropertyName(name->template as<NameNode>().name(), tokenizer_->pos(start)));
+  build: |
+    MOZ_ASSERT(name->isKind(ParseNodeKind::Name));
+    MOZ_ASSERT(!factory_.isUsableAsObjectPropertyName(name));
+    BINJS_TRY_DECL(propName,
+                   factory_.newObjectLiteralPropertyName(name->template as<NameNode>().name(),
+                                                         tokenizer_->pos(start)));
 
-        BINJS_TRY_DECL(result, factory_.newObjectMethodOrPropertyDefinition(propName, name, AccessorType::None));
-        result->setKind(ParseNodeKind::Shorthand);
+    BINJS_TRY_DECL(result,
+                   factory_.newObjectMethodOrPropertyDefinition(propName, name,
+                                                                AccessorType::None));
+    result->setKind(ParseNodeKind::Shorthand);
 
 SwitchCase:
-    type-ok:
-        CaseClause*
-    build: |
-        BINJS_TRY_DECL(result, factory_.newCaseOrDefault(start, test, consequent));
+  type-ok:
+    CaseClause*
+  build: |
+    BINJS_TRY_DECL(result, factory_.newCaseOrDefault(start, test, consequent));
 
 SwitchDefault:
-    build: |
-        BINJS_TRY_DECL(result, factory_.newCaseOrDefault(start, nullptr, consequent));
+  build: |
+    BINJS_TRY_DECL(result,
+                   factory_.newCaseOrDefault(start, nullptr, consequent));
 
 SwitchStatement:
-    build: |
-        BINJS_TRY_DECL(scope, factory_.newLexicalScope(nullptr, cases));
-        BINJS_TRY_DECL(result, factory_.newSwitchStatement(start, discriminant, scope, false));
+  build: |
+    BINJS_TRY_DECL(scope, factory_.newLexicalScope(nullptr, cases));
+    BINJS_TRY_DECL(result,
+                   factory_.newSwitchStatement(start, discriminant, scope,
+                                               /* hasDefault = */ false));
 
 SwitchStatementWithDefault:
-    build: |
-        // Concatenate `preDefaultCase`, `defaultCase`, `postDefaultCase`
-        auto cases = preDefaultCases;
-        factory_.addList(cases, defaultCase);
-        ParseNode* iter = postDefaultCases->head();
-        while (iter) {
-            ParseNode* next = iter->pn_next;
-            factory_.addList(cases, iter);
-            iter = next;
-        }
-        BINJS_TRY_DECL(scope, factory_.newLexicalScope(nullptr, cases));
-        BINJS_TRY_DECL(result, factory_.newSwitchStatement(start, discriminant, scope, true));
+  build: |
+    // Concatenate `preDefaultCase`, `defaultCase`, `postDefaultCase`
+    auto cases = preDefaultCases;
+    factory_.addList(cases, defaultCase);
+    ParseNode* iter = postDefaultCases->head();
+    while (iter) {
+      ParseNode* next = iter->pn_next;
+      factory_.addList(cases, iter);
+      iter = next;
+    }
+    BINJS_TRY_DECL(scope, factory_.newLexicalScope(nullptr, cases));
+    BINJS_TRY_DECL(result,
+                   factory_.newSwitchStatement(start, discriminant, scope,
+                                               /* hasDefault = */ true));
 
 StaticMemberAssignmentTarget:
-    init:
-        size_t nameStart;
-    fields:
-        property:
-            block:
-                before: |
-                    nameStart = tokenizer_->offset();
-    build: |
-        BINJS_TRY_DECL(name, factory_.newPropertyName(property->asPropertyName(), tokenizer_->pos(nameStart)));
-        BINJS_TRY_DECL(result, factory_.newPropertyAccess(object, name));
+  init:
+    size_t nameStart;
+  fields:
+    property:
+      block:
+        before: |
+          nameStart = tokenizer_->offset();
+  build: |
+    BINJS_TRY_DECL(name,
+                   factory_.newPropertyName(property->asPropertyName(),
+                                            tokenizer_->pos(nameStart)));
+    BINJS_TRY_DECL(result, factory_.newPropertyAccess(object, name));
 
 StaticMemberExpression:
-    init:
-        size_t nameStart;
-    fields:
-        property:
-            block:
-                before: |
-                    nameStart = tokenizer_->offset();
-    build: |
-        BINJS_TRY_DECL(name, factory_.newPropertyName(property->asPropertyName(), tokenizer_->pos(nameStart)));
-        BINJS_TRY_DECL(result, factory_.newPropertyAccess(object, name));
+  init:
+    size_t nameStart;
+  fields:
+    property:
+      block:
+        before: |
+          nameStart = tokenizer_->offset();
+  build: |
+    BINJS_TRY_DECL(name,
+                   factory_.newPropertyName(property->asPropertyName(),
+                   tokenizer_->pos(nameStart)));
+    BINJS_TRY_DECL(result, factory_.newPropertyAccess(object, name));
 
 ThisExpression:
-    build: |
-        if (parseContext_->isFunctionBox()) {
-            parseContext_->functionBox()->usesThis = true;
-        }
+  build: |
+    if (parseContext_->isFunctionBox()) {
+      parseContext_->functionBox()->usesThis = true;
+    }
 
-        TokenPos pos = tokenizer_->pos(start);
-        ParseNode* thisName(nullptr);
-        if (parseContext_->sc()->thisBinding() == ThisBinding::Function) {
-            HandlePropertyName dotThis = cx_->names().dotThis;
-            BINJS_TRY(usedNames_.noteUse(cx_, dotThis, parseContext_->scriptId(), parseContext_->innermostScope()->id()));
-            BINJS_TRY_VAR(thisName, factory_.newName(dotThis, pos, cx_));
-        }
+    TokenPos pos = tokenizer_->pos(start);
+    ParseNode* thisName(nullptr);
+    if (parseContext_->sc()->thisBinding() == ThisBinding::Function) {
+      HandlePropertyName dotThis = cx_->names().dotThis;
+      BINJS_TRY(usedNames_.noteUse(cx_, dotThis, parseContext_->scriptId(),
+                                   parseContext_->innermostScope()->id()));
+      BINJS_TRY_VAR(thisName, factory_.newName(dotThis, pos, cx_));
+    }
 
-        BINJS_TRY_DECL(result, factory_.newThisLiteral(pos, thisName));
+    BINJS_TRY_DECL(result, factory_.newThisLiteral(pos, thisName));
 
 ThrowStatement:
-    build:
-        BINJS_TRY_DECL(result, factory_.newThrowStatement(expression, tokenizer_->pos(start)));
+  build: |
+    BINJS_TRY_DECL(result,
+                   factory_.newThrowStatement(expression,
+                                              tokenizer_->pos(start)));
 
 TryCatchStatement:
-    fields:
-        body:
-            block:
-                declare:
-                    ParseNode* body;
-                before: |
-                    ParseContext::Statement stmt(parseContext_, StatementKind::Try);
-                    ParseContext::Scope scope(cx_, parseContext_, usedNames_);
-                    BINJS_TRY(scope.init(parseContext_));
-    build:
-        BINJS_TRY_DECL(result, factory_.newTryStatement(start, body, catchClause, /* finallyBlock = */ nullptr));
+  fields:
+    body:
+      block:
+        declare:
+          ParseNode* body;
+        before: |
+          ParseContext::Statement stmt(parseContext_, StatementKind::Try);
+          ParseContext::Scope scope(cx_, parseContext_, usedNames_);
+          BINJS_TRY(scope.init(parseContext_));
+  build: |
+    BINJS_TRY_DECL(result,
+                   factory_.newTryStatement(start, body, catchClause,
+                                            /* finallyBlock = */ nullptr));
 
 TryFinallyStatement:
-    fields:
-        body:
-            block:
-                declare:
-                    ParseNode* body;
-                before: |
-                    ParseContext::Statement stmt(parseContext_, StatementKind::Try);
-                    ParseContext::Scope scope(cx_, parseContext_, usedNames_);
-                    BINJS_TRY(scope.init(parseContext_));
-        finalizer:
-            block:
-                declare:
-                    ParseNode* finalizer;
-                before: |
-                    ParseContext::Statement stmt(parseContext_, StatementKind::Finally);
-                    ParseContext::Scope scope(cx_, parseContext_, usedNames_);
-                    BINJS_TRY(scope.init(parseContext_));
-    build:
-        BINJS_TRY_DECL(result, factory_.newTryStatement(start, body, catchClause, finalizer));
+  fields:
+    body:
+      block:
+        declare:
+          ParseNode* body;
+        before: |
+          ParseContext::Statement stmt(parseContext_, StatementKind::Try);
+          ParseContext::Scope scope(cx_, parseContext_, usedNames_);
+          BINJS_TRY(scope.init(parseContext_));
+    finalizer:
+      block:
+        declare:
+          ParseNode* finalizer;
+        before: |
+          ParseContext::Statement stmt(parseContext_, StatementKind::Finally);
+          ParseContext::Scope scope(cx_, parseContext_, usedNames_);
+          BINJS_TRY(scope.init(parseContext_));
+  build: |
+    BINJS_TRY_DECL(result,
+                   factory_.newTryStatement(start, body, catchClause,
+                                            finalizer));
 
 UnaryExpression:
-    build: |
-        ParseNodeKind pnk;
-        switch (operator_) {
-          case UnaryOperator::Minus:
-            pnk = ParseNodeKind::NegExpr;
-            break;
-          case UnaryOperator::Plus:
-            pnk = ParseNodeKind::PosExpr;
-            break;
-          case UnaryOperator::Not:
-            pnk = ParseNodeKind::NotExpr;
-            break;
-          case UnaryOperator::BitNot:
-            pnk = ParseNodeKind::BitNotExpr;
-            break;
-          case UnaryOperator::Typeof: {
-            if (operand->isKind(ParseNodeKind::Name)) {
-                pnk = ParseNodeKind::TypeOfNameExpr;
-            } else {
-                pnk = ParseNodeKind::TypeOfExpr;
-            }
-            break;
-          }
-          case UnaryOperator::Void:
-            pnk = ParseNodeKind::VoidExpr;
-            break;
-          case UnaryOperator::Delete: {
-            switch (operand->getKind()) {
-              case ParseNodeKind::Name:
-                operand->setOp(JSOP_DELNAME);
-                pnk = ParseNodeKind::DeleteNameExpr;
-                BINJS_TRY(this->strictModeError(JSMSG_DEPRECATED_DELETE_OPERAND));
-                parseContext_->sc()->setBindingsAccessedDynamically();
-                break;
-              case ParseNodeKind::DotExpr:
-                pnk = ParseNodeKind::DeletePropExpr;
-                break;
-              case ParseNodeKind::ElemExpr:
-                pnk = ParseNodeKind::DeleteElemExpr;
-                break;
-              default:
-                pnk = ParseNodeKind::DeleteExpr;
-            }
-            break;
-          }
+  build: |
+    ParseNodeKind pnk;
+    switch (operator_) {
+      case UnaryOperator::Minus:
+        pnk = ParseNodeKind::NegExpr;
+        break;
+      case UnaryOperator::Plus:
+        pnk = ParseNodeKind::PosExpr;
+        break;
+      case UnaryOperator::Not:
+        pnk = ParseNodeKind::NotExpr;
+        break;
+      case UnaryOperator::BitNot:
+        pnk = ParseNodeKind::BitNotExpr;
+        break;
+      case UnaryOperator::Typeof: {
+        if (operand->isKind(ParseNodeKind::Name)) {
+          pnk = ParseNodeKind::TypeOfNameExpr;
+        } else {
+          pnk = ParseNodeKind::TypeOfExpr;
         }
-        BINJS_TRY_DECL(result, factory_.newUnary(pnk, start, operand));
+        break;
+      }
+      case UnaryOperator::Void:
+        pnk = ParseNodeKind::VoidExpr;
+        break;
+      case UnaryOperator::Delete: {
+        switch (operand->getKind()) {
+          case ParseNodeKind::Name:
+            operand->setOp(JSOP_DELNAME);
+            pnk = ParseNodeKind::DeleteNameExpr;
+            BINJS_TRY(this->strictModeError(JSMSG_DEPRECATED_DELETE_OPERAND));
+            parseContext_->sc()->setBindingsAccessedDynamically();
+            break;
+          case ParseNodeKind::DotExpr:
+            pnk = ParseNodeKind::DeletePropExpr;
+            break;
+          case ParseNodeKind::ElemExpr:
+            pnk = ParseNodeKind::DeleteElemExpr;
+            break;
+          default:
+            pnk = ParseNodeKind::DeleteExpr;
+        }
+        break;
+      }
+    }
+    BINJS_TRY_DECL(result, factory_.newUnary(pnk, start, operand));
 
 UpdateExpression:
-    build: |
-        ParseNodeKind pnk;
-        switch (operator_) {
-          case UpdateOperator::Incr:
-            pnk = isPrefix ? ParseNodeKind::PreIncrementExpr
-                           : ParseNodeKind::PostIncrementExpr;
-            break;
-          case UpdateOperator::Decr:
-            pnk = isPrefix ? ParseNodeKind::PreDecrementExpr
-                           : ParseNodeKind::PostDecrementExpr;
-            break;
-        }
-        BINJS_TRY_DECL(result, factory_.newUnary(pnk, start, operand));
+  build: |
+    ParseNodeKind pnk;
+    switch (operator_) {
+      case UpdateOperator::Incr:
+        pnk = isPrefix ? ParseNodeKind::PreIncrementExpr
+                       : ParseNodeKind::PostIncrementExpr;
+        break;
+      case UpdateOperator::Decr:
+        pnk = isPrefix ? ParseNodeKind::PreDecrementExpr
+                       : ParseNodeKind::PostDecrementExpr;
+        break;
+    }
+    BINJS_TRY_DECL(result, factory_.newUnary(pnk, start, operand));
 
 VariableDeclaration:
-    init:
-        AutoVariableDeclarationKind kindGuard(this);
+  init:
+    AutoVariableDeclarationKind kindGuard(this);
 
-    fields:
-        kind:
-            after: |
-                // Restored by `kindGuard`.
-                variableDeclarationKind_ = kind_;
+  fields:
+    kind:
+      after: |
+        // Restored by `kindGuard`.
+        variableDeclarationKind_ = kind_;
 
-    build: |
-        // By specification, the list may not be empty.
-        if (declarators->empty()) {
-            return raiseEmpty("VariableDeclaration");
-        }
+  build: |
+    // By specification, the list may not be empty.
+    if (declarators->empty()) {
+      return raiseEmpty("VariableDeclaration");
+    }
 
-        ParseNodeKind pnk;
-        switch (kind_) {
-          case VariableDeclarationKind::Var:
-            pnk = ParseNodeKind::VarStmt;
-            break;
-          case VariableDeclarationKind::Let:
-            return raiseError("Let is not supported in this preview release");
-          case VariableDeclarationKind::Const:
-            return raiseError("Const is not supported in this preview release");
-        }
-        declarators->setKind(pnk);
-        auto result = declarators;
+    ParseNodeKind pnk;
+    switch (kind_) {
+      case VariableDeclarationKind::Var:
+        pnk = ParseNodeKind::VarStmt;
+        break;
+      case VariableDeclarationKind::Let:
+        return raiseError("Let is not supported in this preview release");
+      case VariableDeclarationKind::Const:
+        return raiseError("Const is not supported in this preview release");
+    }
+    declarators->setKind(pnk);
+    auto result = declarators;
 
 VariableDeclarator:
-    build: |
-        ParseNode* result;
-        if (binding->isKind(ParseNodeKind::Name)) {
-            // `var foo [= bar]``
-            NameNode* bindingNameNode = &binding->template as<NameNode>();
-            MOZ_TRY(checkBinding(bindingNameNode->atom()->asPropertyName()));
-            result = bindingNameNode;
-            if (init) {
-                BINJS_TRY(factory_.finishInitializerAssignment(bindingNameNode, init));
-            }
-        } else {
-            // `var pattern = bar`
-            if (!init) {
-                // Here, `init` is required.
-                return raiseMissingField("VariableDeclarator (with non-trivial pattern)", BinField::Init);
-            }
+  build: |
+    ParseNode* result;
+    if (binding->isKind(ParseNodeKind::Name)) {
+      // `var foo [= bar]``
+      NameNode* bindingNameNode = &binding->template as<NameNode>();
+      MOZ_TRY(checkBinding(bindingNameNode->atom()->asPropertyName()));
+      result = bindingNameNode;
+      if (init) {
+        BINJS_TRY(factory_.finishInitializerAssignment(bindingNameNode, init));
+      }
+    } else {
+      // `var pattern = bar`
+      if (!init) {
+        // Here, `init` is required.
+        return raiseMissingField("VariableDeclarator (with non-trivial pattern)",
+                                 BinField::Init);
+      }
 
-            MOZ_CRASH("Unimplemented: AssertedScope check for BindingPattern variable declaration");
-            BINJS_TRY_VAR(result, factory_.newAssignment(ParseNodeKind::AssignExpr, binding, init));
-        }
+      MOZ_CRASH("Unimplemented: AssertedScope check for BindingPattern variable declaration");
+      BINJS_TRY_VAR(result,
+                    factory_.newAssignment(ParseNodeKind::AssignExpr, binding,
+                                           init));
+    }
 
 WhileStatement:
-    init:
-        ParseContext::Statement stmt(parseContext_, StatementKind::WhileLoop);
-    build:
-        BINJS_TRY_DECL(result, factory_.newWhileStatement(start, test, body));
+  init:
+    ParseContext::Statement stmt(parseContext_, StatementKind::WhileLoop);
+  build:
+    BINJS_TRY_DECL(result, factory_.newWhileStatement(start, test, body));
 
 WithStatement:
-    fields:
-        body:
-            before: |
-                ParseContext::Statement stmt(parseContext_, StatementKind::With);
-    build: |
-        parseContext_->sc()->setBindingsAccessedDynamically();
-        BINJS_TRY_DECL(result, factory_.newWithStatement(start, object, body));
+  fields:
+    body:
+      before: |
+        ParseContext::Statement stmt(parseContext_, StatementKind::With);
+  build: |
+    parseContext_->sc()->setBindingsAccessedDynamically();
+    BINJS_TRY_DECL(result, factory_.newWithStatement(start, object, body));
