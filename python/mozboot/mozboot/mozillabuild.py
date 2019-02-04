@@ -4,40 +4,11 @@
 
 from __future__ import absolute_import, print_function
 
-import ctypes
 import os
 import sys
 import subprocess
 
 from mozboot.base import BaseBootstrapper
-
-
-def is_aarch64_host():
-    wintypes = ctypes.wintypes
-    kernel32 = ctypes.windll.kernel32
-    IMAGE_FILE_MACHINE_UNKNOWN = 0
-    IMAGE_FILE_MACHINE_ARM64 = 0xAA64
-
-    try:
-        iswow64process2 = kernel32.IsWow64Process2
-    except:
-        # If we can't access the symbol, we know we're not on aarch64.
-        return False
-
-    currentProcess = kernel32.GetCurrentProcess()
-    processMachine = wintypes.USHORT()
-    nativeMachine = wintypes.USHORT()
-    processMachine = IMAGE_FILE_MACHINE_UNKNOWN
-    nativeMachine = IMAGE_FILE_MACHINE_UNKNOWN
-
-    gotValue = iswow64process2(currentProcess,
-                               ctypes.byref(processMachine)
-                               ctypes.byref(nativeMachine))
-    # If this call fails, we have no idea.
-    if not gotValue:
-        return False
-
-    return nativeMachine == IMAGE_FILE_MACHINE_ARM64
 
 
 class MozillaBuildBootstrapper(BaseBootstrapper):
@@ -78,24 +49,14 @@ class MozillaBuildBootstrapper(BaseBootstrapper):
         self.install_toolchain_static_analysis(checkout_root)
 
     def ensure_stylo_packages(self, state_dir, checkout_root):
-        # On-device artifact builds are supported; on-device desktop builds are not.
-        if is_aarch64_host():
-            raise Exception('You should not be performing desktop builds on an '
-                            'AArch64 device.  If you want to do artifact builds '
-                            'instead, please choose the appropriate artifact build '
-                            'option when beginning bootstrap.')
-
         from mozboot import stylo
         self.install_toolchain_artifact(state_dir, checkout_root, stylo.WINDOWS_CLANG)
         self.install_toolchain_artifact(state_dir, checkout_root, stylo.WINDOWS_CBINDGEN)
 
     def ensure_node_packages(self, state_dir, checkout_root):
         from mozboot import node
-        # We don't have native aarch64 node available, but aarch64 windows
-        # runs x86 binaries, so just use the x86 packages for such hosts.
-        node_artifact = node.WIN32 if is_aarch64_host() else node.WIN64
         self.install_toolchain_artifact(
-            state_dir, checkout_root, node_artifact)
+            state_dir, checkout_root, node.WINDOWS)
 
     def _update_package_manager(self):
         pass

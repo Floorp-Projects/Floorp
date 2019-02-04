@@ -93,7 +93,6 @@ treeherder:
 
 index:
     products:
-        - 'bootstrap-support'
         - 'firefox'
         - 'fennec'
         - 'mobile'

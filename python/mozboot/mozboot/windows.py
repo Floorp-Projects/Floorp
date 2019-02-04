@@ -82,11 +82,8 @@ class WindowsBootstrapper(BaseBootstrapper):
 
     def ensure_node_packages(self, state_dir, checkout_root):
         from mozboot import node
-        # We don't have native aarch64 node available, but aarch64 windows
-        # runs x86 binaries, so just use the x86 packages for such hosts.
-        node_artifact = node.WIN32 if is_aarch64_host() else node.WIN64
         self.install_toolchain_artifact(
-            state_dir, checkout_root, node_artifact)
+            state_dir, checkout_root, node.WINDOWS)
 
     def _update_package_manager(self):
         self.pacman_update()
