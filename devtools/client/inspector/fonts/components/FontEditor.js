@@ -54,6 +54,7 @@ class FontEditor extends PureComponent {
       return FontAxis({
         key: axis.tag,
         axis,
+        disabled: this.props.fontEditor.disabled,
         onChange: this.props.onPropertyChange,
         minLabel: true,
         maxLabel: true,
@@ -143,6 +144,7 @@ class FontEditor extends PureComponent {
   renderFontSize(value) {
     return value !== null && FontSize({
       key: `${this.props.fontEditor.id}:font-size`,
+      disabled: this.props.fontEditor.disabled,
       onChange: this.props.onPropertyChange,
       value,
     });
@@ -151,6 +153,7 @@ class FontEditor extends PureComponent {
   renderLineHeight(value) {
     return value !== null && LineHeight({
       key: `${this.props.fontEditor.id}:line-height`,
+      disabled: this.props.fontEditor.disabled,
       onChange: this.props.onPropertyChange,
       value,
     });
@@ -159,6 +162,7 @@ class FontEditor extends PureComponent {
   renderFontStyle(value) {
     return value && FontStyle({
       onChange: this.props.onPropertyChange,
+      disabled: this.props.fontEditor.disabled,
       value,
     });
   }
@@ -166,6 +170,7 @@ class FontEditor extends PureComponent {
   renderFontWeight(value) {
     return value !== null && FontWeight({
       onChange: this.props.onPropertyChange,
+      disabled: this.props.fontEditor.disabled,
       value,
     });
   }

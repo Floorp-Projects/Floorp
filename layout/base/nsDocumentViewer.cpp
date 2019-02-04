@@ -758,18 +758,19 @@ nsresult nsDocumentViewer::InitPresentationStuff(bool aDoInitialReflow) {
   MOZ_ASSERT(
       p2a ==
       mPresContext->DeviceContext()->AppUnitsPerDevPixelAtUnitFullZoom());
-  nscoord width = p2a * mBounds.width;
-  nscoord height = p2a * mBounds.height;
 
-  mViewManager->SetWindowDimensions(width, height);
-  mPresContext->SetVisibleArea(nsRect(0, 0, width, height));
-  mPresContext->SetTextZoom(mTextZoom);
-  mPresContext->SetFullZoom(mPageZoom);
-  mPresContext->SetOverrideDPPX(mOverrideDPPX);
+  {
+    nscoord width = p2a * mBounds.width;
+    nscoord height = p2a * mBounds.height;
+
+    mViewManager->SetWindowDimensions(width, height);
+    mPresContext->SetVisibleArea(nsRect(0, 0, width, height));
+    mPresContext->SetTextZoom(mTextZoom);
+    mPresContext->SetFullZoom(mPageZoom);
+    mPresContext->SetOverrideDPPX(mOverrideDPPX);
+  }
 
   p2a = mPresContext->AppUnitsPerDevPixel();  // zoom may have changed it
-  width = p2a * mBounds.width;
-  height = p2a * mBounds.height;
   if (aDoInitialReflow) {
     nsCOMPtr<nsIPresShell> shell = mPresShell;
     // Initial reflow

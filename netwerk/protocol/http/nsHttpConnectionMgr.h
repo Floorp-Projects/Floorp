@@ -106,6 +106,11 @@ class nsHttpConnectionMgr final : public nsIObserver, public AltSvcCache {
   // adds a transaction to the list of managed transactions.
   MOZ_MUST_USE nsresult AddTransaction(nsHttpTransaction *, int32_t priority);
 
+  // Add a new transaction with a sticky connection from |transWithStickyConn|.
+  MOZ_MUST_USE nsresult
+  AddTransactionWithStickyConn(nsHttpTransaction *trans, int32_t priority,
+                               nsHttpTransaction *transWithStickyConn);
+
   // called to reschedule the given transaction.  it must already have been
   // added to the connection manager via AddTransaction.
   MOZ_MUST_USE nsresult RescheduleTransaction(nsHttpTransaction *,
@@ -161,8 +166,10 @@ class nsHttpConnectionMgr final : public nsIObserver, public AltSvcCache {
   // socket thread after a 101 response has been received and the socket
   // needs to be transferred to an expectant upgrade listener such as
   // websockets.
+  // @param aTrans: a transaction that contains a sticky connection. We'll
+  //                take the transport of this connection.
   MOZ_MUST_USE nsresult CompleteUpgrade(
-      nsAHttpConnection *aConn, nsIHttpUpgradeListener *aUpgradeListener);
+      nsHttpTransaction *aTrans, nsIHttpUpgradeListener *aUpgradeListener);
 
   // called to update a parameter after the connection manager has already
   // been initialized.
@@ -666,6 +673,7 @@ class nsHttpConnectionMgr final : public nsIObserver, public AltSvcCache {
   void OnMsgShutdown(int32_t, ARefBase *);
   void OnMsgShutdownConfirm(int32_t, ARefBase *);
   void OnMsgNewTransaction(int32_t, ARefBase *);
+  void OnMsgNewTransactionWithStickyConn(int32_t, ARefBase *);
   void OnMsgReschedTransaction(int32_t, ARefBase *);
   void OnMsgUpdateClassOfServiceOnTransaction(int32_t, ARefBase *);
   void OnMsgCancelTransaction(int32_t, ARefBase *);

@@ -740,7 +740,7 @@ void TransactionObserver::Complete(nsHttpTransaction *aTrans, nsresult reason) {
   }
   mRanOnce = true;
 
-  RefPtr<nsAHttpConnection> conn = aTrans->GetConnectionReference();
+  RefPtr<nsAHttpConnection> conn = aTrans->Connection();
   LOG(("TransactionObserver::Complete %p aTrans %p reason %" PRIx32
        " conn %p\n",
        this, aTrans, static_cast<uint32_t>(reason), conn.get()));

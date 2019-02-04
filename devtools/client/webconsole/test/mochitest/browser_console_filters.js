@@ -26,7 +26,6 @@ add_task(async function() {
   ok(!filterState.error, "The web console error filter is disabled");
 
   await resetFilters(hud);
-  await setFilterBarVisible(hud, false);
   await closeConsole();
   info("web console closed");
 
@@ -45,5 +44,4 @@ add_task(async function() {
   ok(!filterState.error, "The browser console error filter is disabled");
 
   await resetFilters(hud);
-  await setFilterBarVisible(hud, false);
 });

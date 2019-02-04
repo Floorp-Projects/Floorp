@@ -20,7 +20,7 @@ RUST_TESTS = [
 with Files("**"):
     BUG_COMPONENT = ("Testing", "geckodriver")
 
-SPHINX_TREES["geckodriver"] = "doc"
+SPHINX_TREES["/testing/geckodriver"] = "doc"
 
-with Files('doc/**'):
-    SCHEDULES.exclusive = ['docs']
+with Files("doc/**"):
+    SCHEDULES.exclusive = ["docs"]

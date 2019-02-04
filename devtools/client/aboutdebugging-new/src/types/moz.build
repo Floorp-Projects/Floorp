@@ -6,4 +6,5 @@ DevToolsModules(
     'debug-target.js',
     'index.js',
     'runtime.js',
+    'ui.js',
 )
