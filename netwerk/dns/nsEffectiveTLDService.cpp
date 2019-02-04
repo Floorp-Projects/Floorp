@@ -58,6 +58,22 @@ nsEffectiveTLDService::~nsEffectiveTLDService() {
   gService = nullptr;
 }
 
+// static
+already_AddRefed<nsEffectiveTLDService> nsEffectiveTLDService::GetInstance() {
+  if (gService) {
+    return do_AddRef(gService);
+  }
+  nsCOMPtr<nsIEffectiveTLDService> tldService =
+      do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
+  if (!tldService) {
+    return nullptr;
+  }
+  MOZ_ASSERT(
+      gService,
+      "gService must have been initialized in nsEffectiveTLDService::Init");
+  return do_AddRef(gService);
+}
+
 MOZ_DEFINE_MALLOC_SIZE_OF(EffectiveTLDServiceMallocSizeOf)
 
 // The amount of heap memory measured here is tiny. It used to be bigger when

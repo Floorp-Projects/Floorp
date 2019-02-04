@@ -23,6 +23,10 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'necko_dns'
 
+EXPORTS += [
+    'nsEffectiveTLDService.h',
+]
+
 EXPORTS.mozilla.net += [
     'ChildDNSService.h',
     'DNS.h',

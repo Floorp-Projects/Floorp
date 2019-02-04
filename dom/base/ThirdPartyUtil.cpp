@@ -40,10 +40,8 @@ nsresult ThirdPartyUtil::Init() {
   gService = this;
   mozilla::ClearOnShutdown(&gService);
 
-  nsresult rv;
-  mTLDService = do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID, &rv);
-
-  return rv;
+  mTLDService = nsEffectiveTLDService::GetInstance();
+  return mTLDService ? NS_OK : NS_ERROR_FAILURE;
 }
 
 ThirdPartyUtil::~ThirdPartyUtil() { gService = nullptr; }
