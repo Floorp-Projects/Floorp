@@ -114,7 +114,7 @@ class SystemEngineView @JvmOverloads constructor(
         }
     }
 
-    internal fun initWebView(webView: WebView = NestedWebView(context)): WebView {
+    internal fun initWebView(webView: WebView): WebView {
         webView.tag = "mozac_system_engine_webview"
         webView.webViewClient = createWebViewClient()
         webView.webChromeClient = createWebChromeClient()
