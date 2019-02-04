@@ -727,16 +727,24 @@ GeckoDriver.prototype.newSession = async function(cmd) {
   let browserListening = this.listeningPromise();
 
   let waitForWindow = function() {
-    let windowType;
+    let windowTypes;
     switch (this.appId) {
       case APP_ID_THUNDERBIRD:
-        windowType = "mail:3pane";
+        windowTypes = ["mail:3pane"];
         break;
       default:
-        windowType = "navigator:browser";
+        // We assume that an app either has GeckoView windows, or
+        // Firefox/Fennec windows, but not both.
+        windowTypes = ["navigator:browser", "navigator:geckoview"];
         break;
     }
-    let win = Services.wm.getMostRecentWindow(windowType);
+    let win;
+    for (let windowType of windowTypes) {
+      win = Services.wm.getMostRecentWindow(windowType);
+      if (win) {
+        break;
+      }
+    }
     if (!win) {
       // if the window isn't even created, just poll wait for it
       let checkTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
