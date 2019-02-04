@@ -3066,7 +3066,9 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
       mSpecifiedRotate(aSource.mSpecifiedRotate),
       mSpecifiedTranslate(aSource.mSpecifiedTranslate),
       mSpecifiedScale(aSource.mSpecifiedScale),
-      mIndividualTransform(aSource.mIndividualTransform),
+      // We intentionally leave mIndividualTransform as null, is the caller's
+      // responsibility to call GenerateCombinedIndividualTransform when
+      // appropriate.
       mMotion(aSource.mMotion ? MakeUnique<StyleMotion>(*aSource.mMotion)
                               : nullptr),
       mTransformOrigin{aSource.mTransformOrigin[0], aSource.mTransformOrigin[1],
@@ -3138,7 +3140,6 @@ void nsStyleDisplay::FinishStyle(Document& aDocument,
 
   mShapeOutside.FinishStyle(aDocument,
                             aOldStyle ? &aOldStyle->mShapeOutside : nullptr);
-  GenerateCombinedIndividualTransform();
 }
 
 static inline bool TransformListChanged(
@@ -3431,11 +3432,7 @@ bool nsStyleDisplay::TransformChanged(const nsStyleDisplay& aNewData) const {
 }
 
 void nsStyleDisplay::GenerateCombinedIndividualTransform() {
-  // FIXME(emilio): This should probably be called from somewhere like what we
-  // do for image layers, instead of FinishStyle.
-  //
-  // This does and undoes the work a ton of times in Stylo.
-  mIndividualTransform = nullptr;
+  MOZ_ASSERT(!mIndividualTransform);
 
   // Follow the order defined in the spec to append transform functions.
   // https://drafts.csswg.org/css-transforms-2/#ctm
