@@ -4052,6 +4052,8 @@ IonBuilder::InliningResult IonBuilder::inlineWasmCall(CallInfo& callInfo,
   current->push(call);
   current->add(call);
 
+  MOZ_TRY(resumeAfter(call));
+
   callInfo.setImplicitlyUsedUnchecked();
 
   return InliningStatus_Inlined;
