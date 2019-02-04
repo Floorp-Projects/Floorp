@@ -120,6 +120,12 @@ class BrowserFragment : Fragment(), BackHandler {
         }
     }
 
+    override fun onDestroyView() {
+        super.onDestroyView()
+
+        lifecycle.removeObserver(sessionFeature)
+    }
+
     override fun onBackPressed(): Boolean {
         if (findInPageIntegration.onBackPressed()) return true
         if (sessionFeature.handleBackPressed()) return true
