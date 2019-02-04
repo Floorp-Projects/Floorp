@@ -211,12 +211,10 @@ class NotificationPermissionRequest : public ContentPermissionRequestBase,
   NS_IMETHOD Allow(JS::HandleValue choices) override;
 
   NotificationPermissionRequest(nsIPrincipal* aPrincipal,
-                                bool aIsHandlingUserInput,
                                 nsPIDOMWindowInner* aWindow, Promise* aPromise,
                                 NotificationPermissionCallback* aCallback)
       : ContentPermissionRequestBase(
-            aPrincipal, aIsHandlingUserInput, aWindow,
-            NS_LITERAL_CSTRING("notification"),
+            aPrincipal, aWindow, NS_LITERAL_CSTRING("notification"),
             NS_LITERAL_CSTRING("desktop-notification")),
         mPermission(NotificationPermission::Default),
         mPromise(aPromise),
@@ -1554,9 +1552,8 @@ already_AddRefed<Promise> Notification::RequestPermission(
   if (aCallback.WasPassed()) {
     permissionCallback = &aCallback.Value();
   }
-  bool isHandlingUserInput = EventStateManager::IsHandlingUserInput();
   nsCOMPtr<nsIRunnable> request = new NotificationPermissionRequest(
-      principal, isHandlingUserInput, window, promise, permissionCallback);
+      principal, window, promise, permissionCallback);
 
   window->AsGlobal()->Dispatch(TaskCategory::Other, request.forget());
 

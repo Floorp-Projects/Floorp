@@ -28,7 +28,7 @@ MIDIPermissionRequest::MIDIPermissionRequest(nsPIDOMWindowInner* aWindow,
                                              Promise* aPromise,
                                              const MIDIOptions& aOptions)
     : ContentPermissionRequestBase(
-          aWindow->GetDoc()->NodePrincipal(), true, aWindow,
+          aWindow->GetDoc()->NodePrincipal(), aWindow,
           NS_LITERAL_CSTRING(""),  // We check prefs in a custom way here
           NS_LITERAL_CSTRING("midi")),
       mPromise(aPromise),
