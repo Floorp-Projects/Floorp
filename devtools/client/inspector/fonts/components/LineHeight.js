@@ -15,6 +15,7 @@ const { getUnitFromValue, getStepForUnit } = require("../utils/font-utils");
 class LineHeight extends PureComponent {
   static get propTypes() {
     return {
+      disabled: PropTypes.bool.isRequired,
       onChange: PropTypes.func.isRequired,
       value: PropTypes.string.isRequired,
     };
@@ -62,6 +63,7 @@ class LineHeight extends PureComponent {
 
     return FontPropertyValue({
       autoIncrement: true,
+      disabled: this.props.disabled,
       label: getStr("fontinspector.lineHeightLabelCapitalized"),
       min: 0,
       max: this.historicMax[unit],
