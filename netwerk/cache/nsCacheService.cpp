@@ -64,8 +64,10 @@ static const char *observerList[] = {
     "suspend_process_notification", "resume_process_notification"};
 
 static const char *prefList[] = {
-    OFFLINE_CACHE_ENABLE_PREF,      OFFLINE_CACHE_CAPACITY_PREF,
-    OFFLINE_CACHE_DIR_PREF,         nullptr,
+    OFFLINE_CACHE_ENABLE_PREF,
+    OFFLINE_CACHE_CAPACITY_PREF,
+    OFFLINE_CACHE_DIR_PREF,
+    nullptr,
 };
 
 class nsCacheProfilePrefObserver : public nsIObserver {

@@ -693,7 +693,8 @@ static void SetElementAsString(Element* aElement, const nsAString& aValue) {
       return;
     }
   }
-  input = HTMLInputElement::FromNodeOrNull(nsFocusManager::GetRedirectedFocus(aElement));
+  input = HTMLInputElement::FromNodeOrNull(
+      nsFocusManager::GetRedirectedFocus(aElement));
   if (input) {
     input->SetValue(aValue, CallerType::NonSystem, rv);
     if (!rv.Failed()) {
@@ -962,7 +963,8 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY
   }
   if (aData.mXpath.WasPassed()) {
     for (auto& entry : aData.mXpath.Value().Entries()) {
-      RefPtr<Element> node = FindNodeByXPath(aGlobal.Context(), aDocument, entry.mKey);
+      RefPtr<Element> node =
+          FindNodeByXPath(aGlobal.Context(), aDocument, entry.mKey);
       if (node == nullptr) {
         continue;
       }
@@ -1027,7 +1029,8 @@ static void ReadAllEntriesFromStorage(
     return;
   }
 
-  Record<nsString, Record<nsString, nsString>>::EntryType* recordEntry = nullptr;
+  Record<nsString, Record<nsString, nsString>>::EntryType* recordEntry =
+      nullptr;
   for (uint32_t i = 0; i < len; i++) {
     Record<nsString, nsString>::EntryType entry;
     mozilla::IgnoredErrorResult res;
@@ -1126,7 +1129,8 @@ static void CollectedSessionStorageInternal(
     nsCOMPtr<nsIPrincipal> principal = BasePrincipal::CreateCodebasePrincipal(
         NS_ConvertUTF16toUTF8(Substring(entry.mKey, 0, pos)));
     nsresult rv;
-    nsCOMPtr<nsIDOMStorageManager> storageManager = do_QueryInterface(aDocShell, &rv);
+    nsCOMPtr<nsIDOMStorageManager> storageManager =
+        do_QueryInterface(aDocShell, &rv);
     if (NS_FAILED(rv)) {
       return;
     }
@@ -1137,7 +1141,8 @@ static void CollectedSessionStorageInternal(
     // followup bug to bug 600307.
     // Null window because the current window doesn't match the principal yet
     // and loads about:blank.
-    storageManager->CreateStorage(nullptr, principal, EmptyString(), false, getter_AddRefs(storage));
+    storageManager->CreateStorage(nullptr, principal, EmptyString(), false,
+                                  getter_AddRefs(storage));
     if (!storage) {
       continue;
     }

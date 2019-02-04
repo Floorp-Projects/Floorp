@@ -101,16 +101,13 @@ void MacroAssembler::guardTypeSet(const Source& address, const TypeSet* types,
   MOZ_ASSERT(!types->unknown());
 
   Label matched;
-  TypeSet::Type tests[] = {TypeSet::Int32Type(),
-                           TypeSet::UndefinedType(),
-                           TypeSet::BooleanType(),
-                           TypeSet::StringType(),
+  TypeSet::Type tests[] = {TypeSet::Int32Type(),    TypeSet::UndefinedType(),
+                           TypeSet::BooleanType(),  TypeSet::StringType(),
                            TypeSet::SymbolType(),
 #ifdef ENABLE_BIGINT
                            TypeSet::BigIntType(),
 #endif
-                           TypeSet::NullType(),
-                           TypeSet::MagicArgType(),
+                           TypeSet::NullType(),     TypeSet::MagicArgType(),
                            TypeSet::AnyObjectType()};
 
   // The double type also implies Int32.

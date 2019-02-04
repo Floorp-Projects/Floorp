@@ -3308,7 +3308,8 @@ nsresult nsWindow::Create(nsIWidget *aParent, nsNativeWidget aNativeParent,
         int screenNumber = GDK_SCREEN_XNUMBER(screen);
         int visualId = 0;
         if (useWebRender) {
-          // WebRender rquests AlphaVisual for making readback to work correctly.
+          // WebRender rquests AlphaVisual for making readback to work
+          // correctly.
           needsAlphaVisual = true;
         }
         if (GLContextGLX::FindVisual(display, screenNumber, useWebRender,

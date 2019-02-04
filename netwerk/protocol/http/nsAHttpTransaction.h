@@ -13,7 +13,7 @@
 /* Xlib headers insist on this for some reason... Nuke it because
    it'll override our member name */
 typedef Status __StatusTmp;
-#undef Status
+#  undef Status
 typedef __StatusTmp Status;
 #endif
 

@@ -426,8 +426,7 @@ nsresult TransportLayerDtls::SetVerificationAllowAll() {
   return NS_OK;
 }
 
-nsresult TransportLayerDtls::SetVerificationDigest(
-    const DtlsDigest &digest) {
+nsresult TransportLayerDtls::SetVerificationDigest(const DtlsDigest &digest) {
   // Defensive programming
   if (verification_mode_ != VERIFY_UNSET &&
       verification_mode_ != VERIFY_DIGEST) {

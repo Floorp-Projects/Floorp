@@ -318,11 +318,7 @@ class DrawTargetD2D1 : public DrawTarget {
   bool EnsureLuminanceEffect();
   RefPtr<ID2D1Effect> mLuminanceEffect;
 
-  enum class InitState {
-    Uninitialized,
-    Success,
-    Failure
-  };
+  enum class InitState { Uninitialized, Success, Failure };
   InitState mInitState;
   RefPtr<IDXGISurface> mSurface;
 };

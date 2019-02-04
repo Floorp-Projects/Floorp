@@ -5764,7 +5764,8 @@ void ContentParent::UnregisterRemoveWorkerActor() {
 
 mozilla::ipc::IPCResult ContentParent::RecvWindowClose(
     const BrowsingContextId& aContextId, const bool& aTrustedCaller) {
-  RefPtr<CanonicalBrowsingContext> bc = CanonicalBrowsingContext::Get(aContextId);
+  RefPtr<CanonicalBrowsingContext> bc =
+      CanonicalBrowsingContext::Get(aContextId);
   if (!bc) {
     MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Debug,
             ("ParentIPC: Trying to send a message to dead or detached context "
@@ -5786,7 +5787,8 @@ mozilla::ipc::IPCResult ContentParent::RecvWindowClose(
 
 mozilla::ipc::IPCResult ContentParent::RecvWindowFocus(
     const BrowsingContextId& aContextId) {
-  RefPtr<CanonicalBrowsingContext> bc = CanonicalBrowsingContext::Get(aContextId);
+  RefPtr<CanonicalBrowsingContext> bc =
+      CanonicalBrowsingContext::Get(aContextId);
   if (!bc) {
     MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Debug,
             ("ParentIPC: Trying to send a message to dead or detached context "
@@ -5804,7 +5806,8 @@ mozilla::ipc::IPCResult ContentParent::RecvWindowFocus(
 
 mozilla::ipc::IPCResult ContentParent::RecvWindowBlur(
     const BrowsingContextId& aContextId) {
-  RefPtr<CanonicalBrowsingContext> bc = CanonicalBrowsingContext::Get(aContextId);
+  RefPtr<CanonicalBrowsingContext> bc =
+      CanonicalBrowsingContext::Get(aContextId);
   if (!bc) {
     MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Debug,
             ("ParentIPC: Trying to send a message to dead or detached context "
@@ -5823,7 +5826,8 @@ mozilla::ipc::IPCResult ContentParent::RecvWindowBlur(
 mozilla::ipc::IPCResult ContentParent::RecvWindowPostMessage(
     const BrowsingContextId& aContextId, const ClonedMessageData& aMessage,
     const PostMessageData& aData) {
-  RefPtr<CanonicalBrowsingContext> bc = CanonicalBrowsingContext::Get(aContextId);
+  RefPtr<CanonicalBrowsingContext> bc =
+      CanonicalBrowsingContext::Get(aContextId);
   if (!bc) {
     MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Debug,
             ("ParentIPC: Trying to send a message to dead or detached context "

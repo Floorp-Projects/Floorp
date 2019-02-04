@@ -117,7 +117,7 @@ BrowsingContext* BrowsingContext::TopLevelBrowsingContext() {
   RefPtr<BrowsingContext> context;
   if (XRE_IsParentProcess()) {
     context = new CanonicalBrowsingContext(aParent, aOpener, aName, id,
-                                          /* aProcessId */ 0, aType);
+                                           /* aProcessId */ 0, aType);
   } else {
     context = new BrowsingContext(aParent, aOpener, aName, id, aType);
   }

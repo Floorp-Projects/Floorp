@@ -3677,7 +3677,8 @@ static AstMemOrTableCopy* ParseMemOrTableCopy(WasmParseContext& c,
                                         memOrTableSource, src, len);
 }
 
-static AstDataOrElemDrop* ParseDataOrElemDrop(WasmParseContext& c, bool isData) {
+static AstDataOrElemDrop* ParseDataOrElemDrop(WasmParseContext& c,
+                                              bool isData) {
   WasmToken segIndexTok;
   if (!c.ts.getIf(WasmToken::Index, &segIndexTok)) {
     return nullptr;
@@ -5600,8 +5601,7 @@ static bool ResolveWake(Resolver& r, AstWake& s) {
 
 #ifdef ENABLE_WASM_BULKMEM_OPS
 static bool ResolveMemOrTableCopy(Resolver& r, AstMemOrTableCopy& s) {
-  return ResolveExpr(r, s.dest()) &&
-         ResolveExpr(r, s.src()) &&
+  return ResolveExpr(r, s.dest()) && ResolveExpr(r, s.src()) &&
          ResolveExpr(r, s.len()) &&
          (s.isMem() || r.resolveTable(s.destTable())) &&
          (s.isMem() || r.resolveTable(s.srcTable()));
@@ -6370,8 +6370,7 @@ static bool EncodeWake(Encoder& e, AstWake& s) {
 
 #ifdef ENABLE_WASM_BULKMEM_OPS
 static bool EncodeMemOrTableCopy(Encoder& e, AstMemOrTableCopy& s) {
-  return EncodeExpr(e, s.dest()) &&
-         EncodeExpr(e, s.src()) &&
+  return EncodeExpr(e, s.dest()) && EncodeExpr(e, s.src()) &&
          EncodeExpr(e, s.len()) &&
          e.writeOp(s.isMem() ? MiscOp::MemCopy : MiscOp::TableCopy) &&
          e.writeVarU32(s.isMem() ? 0 : s.srcTable().index()) &&
@@ -6384,19 +6383,16 @@ static bool EncodeDataOrElemDrop(Encoder& e, AstDataOrElemDrop& s) {
 }
 
 static bool EncodeMemFill(Encoder& e, AstMemFill& s) {
-  return EncodeExpr(e, s.start()) &&
-         EncodeExpr(e, s.val()) &&
-         EncodeExpr(e, s.len()) &&
-         e.writeOp(MiscOp::MemFill) &&
-         e.writeVarU32(/* memory index */0);
+  return EncodeExpr(e, s.start()) && EncodeExpr(e, s.val()) &&
+         EncodeExpr(e, s.len()) && e.writeOp(MiscOp::MemFill) &&
+         e.writeVarU32(/* memory index */ 0);
 }
 
 static bool EncodeMemOrTableInit(Encoder& e, AstMemOrTableInit& s) {
   return EncodeExpr(e, s.dst()) && EncodeExpr(e, s.src()) &&
          EncodeExpr(e, s.len()) &&
          e.writeOp(s.isMem() ? MiscOp::MemInit : MiscOp::TableInit) &&
-         e.writeVarU32(s.segIndex()) &&
-         e.writeVarU32(s.target().index());
+         e.writeVarU32(s.segIndex()) && e.writeVarU32(s.target().index());
 }
 #endif
 

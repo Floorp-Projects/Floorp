@@ -44,7 +44,8 @@ const char* const BlockingResourceBase::kResourceTypeName[] = {
 #ifdef DEBUG
 
 PRCallOnceType BlockingResourceBase::sCallOnce;
-MOZ_THREAD_LOCAL(BlockingResourceBase*) BlockingResourceBase::sResourceAcqnChainFront;
+MOZ_THREAD_LOCAL(BlockingResourceBase*)
+BlockingResourceBase::sResourceAcqnChainFront;
 BlockingResourceBase::DDT* BlockingResourceBase::sDeadlockDetector;
 
 void BlockingResourceBase::StackWalkCallback(uint32_t aFrameNumber, void* aPc,

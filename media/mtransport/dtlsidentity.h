@@ -25,18 +25,14 @@ namespace mozilla {
 class DtlsDigest {
  public:
   const static size_t kMaxDtlsDigestLength = HASH_LENGTH_MAX;
-  explicit DtlsDigest(const std::string& algorithm)
-      : algorithm_(algorithm) {}
-  DtlsDigest(const std::string& algorithm,
-             const std::vector<uint8_t>& value)
+  explicit DtlsDigest(const std::string& algorithm) : algorithm_(algorithm) {}
+  DtlsDigest(const std::string& algorithm, const std::vector<uint8_t>& value)
       : algorithm_(algorithm), value_(value) {
     MOZ_ASSERT(value.size() <= kMaxDtlsDigestLength);
   }
   ~DtlsDigest() = default;
 
-  bool operator!=(const DtlsDigest& rhs) const {
-    return !operator==(rhs);
-  }
+  bool operator!=(const DtlsDigest& rhs) const { return !operator==(rhs); }
 
   bool operator==(const DtlsDigest& rhs) const {
     if (algorithm_ != rhs.algorithm_) {

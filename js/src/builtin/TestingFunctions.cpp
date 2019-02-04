@@ -698,7 +698,8 @@ static bool WasmGcEnabled(JSContext* cx, unsigned argc, Value* vp) {
 
 static bool WasmDebugSupport(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  args.rval().setBoolean(cx->options().wasmBaseline() && wasm::BaselineCanCompile());
+  args.rval().setBoolean(cx->options().wasmBaseline() &&
+                         wasm::BaselineCanCompile());
   return true;
 }
 

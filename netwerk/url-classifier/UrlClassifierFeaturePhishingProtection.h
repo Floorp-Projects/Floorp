@@ -21,8 +21,7 @@ class UrlClassifierFeaturePhishingProtection final
 
   static void MaybeShutdown();
 
-  static void MaybeCreate(
-      nsTArray<RefPtr<nsIUrlClassifierFeature>>& aFeatures);
+  static void MaybeCreate(nsTArray<RefPtr<nsIUrlClassifierFeature>>& aFeatures);
 
   static already_AddRefed<nsIUrlClassifierFeature> GetIfNameMatches(
       const nsACString& aName);

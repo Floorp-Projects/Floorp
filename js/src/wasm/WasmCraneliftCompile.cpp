@@ -279,9 +279,7 @@ const GlobalDesc* env_global(const CraneliftModuleEnvironment* env,
 bool wasm::CraneliftCompileFunctions(const ModuleEnvironment& env,
                                      LifoAlloc& lifo,
                                      const FuncCompileInputVector& inputs,
-                                     CompiledCode* code,
-                                     UniqueChars* error) {
-
+                                     CompiledCode* code, UniqueChars* error) {
   MOZ_RELEASE_ASSERT(CraneliftCanCompile());
 
   MOZ_ASSERT(env.tier() == Tier::Optimized);

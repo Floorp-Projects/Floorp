@@ -83,9 +83,7 @@ class StoreBuffer {
     /* Maximum number of entries before we request a minor GC. */
     const static size_t MaxEntries = 48 * 1024 / sizeof(T);
 
-    explicit MonoTypeBuffer(StoreBuffer* owner)
-     : last_(T()), owner_(owner)
-    {}
+    explicit MonoTypeBuffer(StoreBuffer* owner) : last_(T()), owner_(owner) {}
 
     void clear() {
       last_ = T();
@@ -143,8 +141,7 @@ class StoreBuffer {
     StoreBuffer* owner_;
 
     explicit WholeCellBuffer(StoreBuffer* owner)
-     : storage_(nullptr), head_(nullptr), owner_(owner)
-    {}
+        : storage_(nullptr), head_(nullptr), owner_(owner) {}
 
     MOZ_MUST_USE bool init();
 
@@ -179,7 +176,8 @@ class StoreBuffer {
     UniquePtr<LifoAlloc> storage_;
     StoreBuffer* owner_;
 
-    explicit GenericBuffer(StoreBuffer* owner) : storage_(nullptr), owner_(owner) {}
+    explicit GenericBuffer(StoreBuffer* owner)
+        : storage_(nullptr), owner_(owner) {}
 
     MOZ_MUST_USE bool init();
 

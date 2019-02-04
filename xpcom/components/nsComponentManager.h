@@ -163,7 +163,8 @@ class nsComponentManagerImpl final : public nsIComponentManager,
   mozilla::Maybe<EntryWrapper> LookupByContractID(
       const MutexLock&, const nsACString& aContractID);
 
-  nsresult GetService(mozilla::xpcom::ModuleID, const nsIID& aIID, void** aResult);
+  nsresult GetService(mozilla::xpcom::ModuleID, const nsIID& aIID,
+                      void** aResult);
 
   static void InitializeStaticModules();
   static void InitializeModuleLocations();

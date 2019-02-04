@@ -19,8 +19,7 @@ namespace mozilla {
 namespace dom {
 
 StructuredCloneBlob::StructuredCloneBlob() {
-  mHolder.emplace(Holder::CloningSupported,
-                  Holder::TransferringNotSupported,
+  mHolder.emplace(Holder::CloningSupported, Holder::TransferringNotSupported,
                   Holder::StructuredCloneScope::DifferentProcess);
 }
 
@@ -177,9 +176,9 @@ bool StructuredCloneBlob::WriteStructuredClone(JSContext* aCx,
   return mHolder->WriteStructuredClone(aCx, aWriter, aHolder);
 }
 
-bool StructuredCloneBlob::Holder::WriteStructuredClone(JSContext* aCx,
-                                                       JSStructuredCloneWriter* aWriter,
-                                                       StructuredCloneHolder* aHolder) {
+bool StructuredCloneBlob::Holder::WriteStructuredClone(
+    JSContext* aCx, JSStructuredCloneWriter* aWriter,
+    StructuredCloneHolder* aHolder) {
   auto& data = mBuffer->data();
   if (!JS_WriteUint32Pair(aWriter, SCTAG_DOM_STRUCTURED_CLONE_HOLDER, 0) ||
       !JS_WriteUint32Pair(aWriter, data.Size(), JS_STRUCTURED_CLONE_VERSION) ||
@@ -210,8 +209,7 @@ StructuredCloneBlob::CollectReports(nsIHandleReportCallback* aHandleReport,
   }
 
   MOZ_COLLECT_REPORT("explicit/dom/structured-clone-holder", KIND_HEAP,
-                     UNITS_BYTES,
-                     size,
+                     UNITS_BYTES, size,
                      "Memory used by StructuredCloneHolder DOM objects.");
 
   return NS_OK;

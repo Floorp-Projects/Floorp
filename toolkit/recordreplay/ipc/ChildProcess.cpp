@@ -97,9 +97,8 @@ void ChildProcessInfo::OnIncomingMessage(const Message& aMsg,
       InfallibleVector<char> outputData;
       ProcessMiddlemanCall(GetId(), nmsg.BinaryData(), nmsg.BinaryDataSize(),
                            &outputData);
-      Message::UniquePtr response(
-        MiddlemanCallResponseMessage::New(outputData.begin(),
-                                          outputData.length()));
+      Message::UniquePtr response(MiddlemanCallResponseMessage::New(
+          outputData.begin(), outputData.length()));
       SendMessage(*response);
       break;
     }

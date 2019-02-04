@@ -101,7 +101,7 @@ void nsFontFaceLoader::StartedLoading(nsIStreamLoader* aStreamLoader) {
 
   MOZ_DIAGNOSTIC_ASSERT(!loader->mInLoadTimerCallback);
   MOZ_DIAGNOSTIC_ASSERT(!loader->mInStreamComplete);
-  AutoRestore<bool> scope { loader->mInLoadTimerCallback };
+  AutoRestore<bool> scope{loader->mInLoadTimerCallback};
   loader->mInLoadTimerCallback = true;
 
   if (!loader->mFontFaceSet) {
@@ -201,7 +201,7 @@ nsFontFaceLoader::OnStreamComplete(nsIStreamLoader* aLoader,
   MOZ_DIAGNOSTIC_ASSERT(!mInLoadTimerCallback);
   MOZ_DIAGNOSTIC_ASSERT(!mInStreamComplete);
 
-  AutoRestore<bool> scope { mInStreamComplete };
+  AutoRestore<bool> scope{mInStreamComplete};
   mInStreamComplete = true;
 
   DropChannel();
