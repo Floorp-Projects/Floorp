@@ -111,6 +111,8 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   // Returning null if there is no trailer.
   nsHttpHeaderArray *TakeResponseTrailers();
 
+  void SetH2WSConnRefTaken();
+
   // Called to set/find out if the transaction generated a complete response.
   bool ResponseIsComplete() { return mResponseIsComplete; }
   void SetResponseIsComplete() { mResponseIsComplete = true; }
