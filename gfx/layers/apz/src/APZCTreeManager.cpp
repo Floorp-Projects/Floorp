@@ -3190,7 +3190,7 @@ APZCTreeManager::ComputeTransformForScrollThumb(
     scrollbarTransform.PostTranslate(0, yTranslation, 0);
   }
   if (*aScrollbarData.mDirection == ScrollDirection::eHorizontal) {
-    // See detailed comments under the VERTICAL case.
+    // See detailed comments under the eVertical case.
 
     const ParentLayerCoord asyncScrollX = asyncTransform._41;
     const float asyncZoomX = asyncTransform._11;
