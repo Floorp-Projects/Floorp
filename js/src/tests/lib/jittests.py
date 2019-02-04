@@ -434,8 +434,7 @@ def run_test_remote(test, device, prefix, options):
     except ADBTimeoutError:
         raise
     except ADBProcessError as e:
-        out = e.adb_process.stdout
-        print("exception output: %s" % str(out))
+        out = str(e.adb_process.stdout)
         returncode = e.adb_process.exitcode
 
     elapsed = (datetime.now() - start).total_seconds()
