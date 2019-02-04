@@ -215,6 +215,9 @@ class Schema(voluptuous.Schema):
         schema.__class__ = Schema
         return schema
 
+    def __getitem__(self, item):
+        return self.schema[item]
+
 
 OptimizationSchema = voluptuous.Any(
     # always run this task (default)

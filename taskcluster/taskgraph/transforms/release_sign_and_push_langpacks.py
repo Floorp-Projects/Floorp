@@ -14,8 +14,6 @@ from taskgraph.util.schema import resolve_keyed_by, optionally_keyed_by
 from taskgraph.transforms.task import task_description_schema
 from voluptuous import Any, Required
 
-task_description_schema = {str(k): v for k, v in task_description_schema.schema.iteritems()}
-
 transforms = TransformSequence()
 
 langpack_sign_push_description_schema = schema.extend({

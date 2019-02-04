@@ -37,8 +37,6 @@ _MOZ_UPDATE_CHANNEL_PER_BRANCH = {
     'maple': '-nightly-maple',
 }
 
-task_description_schema = {str(k): v for k, v in task_description_schema.schema.iteritems()}
-
 beetmover_description_schema = schema.extend({
     Required('depname', default='build'): basestring,
     Optional('label'): basestring,
