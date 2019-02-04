@@ -11,7 +11,7 @@ import subprocess
 from mozboot.util import get_state_dir
 
 
-CONFIG_PATH = os.path.join(get_state_dir()[0], "autotry.ini")
+CONFIG_PATH = os.path.join(get_state_dir(), "autotry.ini")
 
 
 def list_presets(section=None):
