@@ -718,11 +718,7 @@ async function sanitizeOnShutdown(progress) {
 
     // We use just the URI here, because permissions ignore OriginAttributes.
     let principals = await getAllPrincipals(permission.principal.URI);
-    let promises = [];
-    principals.forEach(principal => {
-      promises.push(sanitizeSessionPrincipal(principal));
-    });
-    await Promise.all(promises);
+    await maybeSanitizeSessionPrincipals(principals);
   }
 
   if (Sanitizer.shouldSanitizeNewTabContainer) {
