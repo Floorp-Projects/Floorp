@@ -161,7 +161,12 @@ ThirdPartyUtil::IsThirdPartyWindow(mozIDOMWindowProxy* aWindow, nsIURI* aURI,
     // We use GetScriptableParent rather than GetParent because we consider
     // <iframe mozbrowser> to be a top-level frame.
     parent = current->GetScriptableParent();
-    if (SameCOMIdentity(parent, current)) {
+    // We don't use SameCOMIdentity here since we know that nsPIDOMWindowOuter
+    // is only implemented by nsGlobalWindowOuter, so different objects of that
+    // type will not have different nsISupports COM identities, and checking the
+    // actual COM identity using SameCOMIdentity is expensive due to the virtual
+    // calls involved.
+    if (parent == current) {
       // We're at the topmost content window. We already know the answer.
       *aResult = false;
       return NS_OK;
