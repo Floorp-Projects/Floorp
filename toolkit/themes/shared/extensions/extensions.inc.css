@@ -469,7 +469,11 @@ button.warning {
   -moz-box-align: center;
 }
 
-.content-container,
+.content-container {
+  -moz-box-align: center;
+}
+
+#updates-list > .addon > .content-container,
 .basicinfo-container {
   -moz-box-align: start;
 }
