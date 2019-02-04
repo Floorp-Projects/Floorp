@@ -108,9 +108,9 @@ export default class Group extends Component<Props, State> {
 
     return (
       <div className="frames-list">
-        {group.reduce((acc, frame) => {
+        {group.reduce((acc, frame, i) => {
           if (selectable) {
-            acc.push(<FrameIndent />);
+            acc.push(<FrameIndent key={`frame-indent-${i}`} />);
           }
           return acc.concat(
             <FrameComponent
