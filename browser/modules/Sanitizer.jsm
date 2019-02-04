@@ -22,6 +22,17 @@ XPCOMUtils.defineLazyServiceGetter(this, "serviceWorkerManager",
                                    "@mozilla.org/serviceworkers/manager;1",
                                    "nsIServiceWorkerManager");
 
+var logConsole;
+function log(msg) {
+  if (!logConsole) {
+    logConsole = console.createInstance({
+      prefix: "** Sanitizer.jsm",
+      maxLogLevelPref: "browser.sanitizer.loglevel",
+    });
+  }
+
+  logConsole.log(msg);
+}
 
 // Used as unique id for pending sanitizations.
 var gPendingSanitizationSerial = 0;
@@ -654,6 +665,8 @@ async function sanitizeInternal(items, aItemsToClear, progress, options = {}) {
 }
 
 async function sanitizeOnShutdown(progress) {
+  log("Sanitizing on shutdown");
+
   if (Sanitizer.shouldSanitizeOnShutdown) {
     // Need to sanitize upon shutdown
     let itemsToClear = getItemsToClearFromPrefBranch(Sanitizer.PREF_SHUTDOWN_BRANCH);
@@ -684,6 +697,7 @@ async function sanitizeOnShutdown(progress) {
   // the logic below currently does!
   if (Services.prefs.getIntPref(PREF_COOKIE_LIFETIME,
                                 Ci.nsICookieService.ACCEPT_NORMALLY) == Ci.nsICookieService.ACCEPT_SESSION) {
+    log("Session-only configuration detected");
     let principals = await getAllPrincipals();
     await maybeSanitizeSessionPrincipals(principals);
   }
@@ -699,6 +713,8 @@ async function sanitizeOnShutdown(progress) {
     if (!isSupportedURI(permission.principal.URI)) {
       continue;
     }
+
+    log("Custom session cookie permission detected for: " + permission.principal.URI.spec);
 
     // We use just the URI here, because permissions ignore OriginAttributes.
     let principals = await getAllPrincipals(permission.principal.URI);
@@ -783,6 +799,8 @@ async function getAllPrincipals(matchUri = null) {
 // This method receives a list of principals and it checks if some of them or
 // some of their sub-domain need to be sanitize.
 async function maybeSanitizeSessionPrincipals(principals) {
+  log("Sanitizing " + principals.length + " principals");
+
   let promises = [];
 
   principals.forEach(principal => {
@@ -795,20 +813,25 @@ async function maybeSanitizeSessionPrincipals(principals) {
 }
 
 function cookiesAllowedForDomainOrSubDomain(principal) {
+  log("Checking principal: " + principal.URI.spec);
+
   // If we have the 'cookie' permission for this principal, let's return
   // immediately.
   let p = Services.perms.testPermissionFromPrincipal(principal, "cookie");
   if (p == Ci.nsICookiePermission.ACCESS_ALLOW) {
+    log("Cookie allowed!");
     return true;
   }
 
   if (p == Ci.nsICookiePermission.ACCESS_DENY ||
       p == Ci.nsICookiePermission.ACCESS_SESSION) {
+    log("Cookie denied or session!");
     return false;
   }
 
   // This is an old profile with unsupported permission values
   if (p != Ci.nsICookiePermission.ACCESS_DEFAULT) {
+    log("Not supported cookie permission: " + p);
     return false;
   }
 
@@ -825,14 +848,18 @@ function cookiesAllowedForDomainOrSubDomain(principal) {
     // We don't care about scheme, port, and anything else.
     if (Services.eTLD.hasRootDomain(perm.principal.URI.host,
                                     principal.URI.host)) {
+      log("Recursive cookie check on principal: " + perm.principal.URI.spec);
       return cookiesAllowedForDomainOrSubDomain(perm.principal);
     }
   }
 
+  log("Cookie not allowed.");
   return false;
 }
 
 async function sanitizeSessionPrincipal(principal) {
+  log("Sanitizing principal: " + principal.URI.spec);
+
   await new Promise(resolve => {
     Services.clearData.deleteDataFromPrincipal(principal, true /* user request */,
                                                Ci.nsIClearDataService.CLEAR_DOM_STORAGES |
