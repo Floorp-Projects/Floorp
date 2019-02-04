@@ -15,7 +15,6 @@ const actionTypes = {
   BATCH_ACTIONS: "BATCH_ACTIONS",
   CLEAR_HISTORY: "CLEAR_HISTORY",
   DEFAULT_FILTERS_RESET: "DEFAULT_FILTERS_RESET",
-  FILTER_BAR_TOGGLE: "FILTER_BAR_TOGGLE",
   FILTER_TEXT_SET: "FILTER_TEXT_SET",
   FILTER_TOGGLE: "FILTER_TOGGLE",
   FILTERS_CLEAR: "FILTERS_CLEAR",
@@ -61,9 +60,6 @@ const prefs = {
       NETXHR: "filter.netxhr",
     },
     UI: {
-      // Filter bar UI preference only have the suffix since it can be used either for
-      // the webconsole or the browser console.
-      FILTER_BAR: "ui.filterbar",
       // Persist is only used by the webconsole.
       PERSIST: "devtools.webconsole.persistlog",
       // Max number of entries in history list.
