@@ -4,14 +4,18 @@
 
 loader: taskgraph.loader.transform:loader
 
+kind-dependencies:
+   - post-beetmover-dummy
+
 transforms:
    - taskgraph.transforms.bouncer_locations:transforms
+   - taskgraph.transforms.release:run_on_releases
+   - taskgraph.transforms.release_deps:transforms
    - taskgraph.transforms.task:transforms
 
 job-defaults:
    description: nightly bouncer locations job
    attributes:
-      build_platform: linux64-nightly
       nightly: true
    worker-type:
       by-project:
@@ -28,6 +32,8 @@ job-defaults:
             - project:releng:bouncer:action:locations
             - project:releng:bouncer:server:staging
    run-on-projects: ['maple', 'mozilla-central']
+   run-on-releases: ['nightly']
+   shipping-phase: ship
    treeherder:
       symbol: BncLoc
       kind: other
@@ -35,6 +41,7 @@ job-defaults:
 
 jobs:
    firefox:
+      shipping-product: firefox
       bouncer-products:
          - firefox-nightly-latest
          - firefox-nightly-latest-ssl
