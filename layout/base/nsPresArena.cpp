@@ -24,8 +24,6 @@ using namespace mozilla;
 
 template <size_t ArenaSize>
 nsPresArena<ArenaSize>::~nsPresArena<ArenaSize>() {
-  ClearArenaRefPtrs();
-
 #if defined(MOZ_HAVE_MEM_CHECKS)
   for (FreeList* entry = mFreeLists; entry != ArrayEnd(mFreeLists); ++entry) {
     nsTArray<void*>::index_type len;
@@ -36,45 +34,6 @@ nsPresArena<ArenaSize>::~nsPresArena<ArenaSize>() {
     }
   }
 #endif
-}
-
-template <size_t ArenaSize>
-/* inline */ void nsPresArena<ArenaSize>::ClearArenaRefPtrWithoutDeregistering(
-    void* aPtr, ArenaObjectID aObjectID) {
-  switch (aObjectID) {
-    // We use ArenaRefPtr<ComputedStyle>, which can be ComputedStyle
-    // or GeckoComputedStyle. GeckoComputedStyle is actually arena managed,
-    // but ComputedStyle isn't.
-    case eArenaObjectID_GeckoComputedStyle:
-      static_cast<ArenaRefPtr<ComputedStyle>*>(aPtr)
-          ->ClearWithoutDeregistering();
-      return;
-    default:
-      MOZ_ASSERT(false, "unexpected ArenaObjectID value");
-      break;
-  }
-}
-
-template <size_t ArenaSize>
-void nsPresArena<ArenaSize>::ClearArenaRefPtrs() {
-  for (auto iter = mArenaRefPtrs.Iter(); !iter.Done(); iter.Next()) {
-    void* ptr = iter.Key();
-    ArenaObjectID id = iter.UserData();
-    ClearArenaRefPtrWithoutDeregistering(ptr, id);
-  }
-  mArenaRefPtrs.Clear();
-}
-
-template <size_t ArenaSize>
-void nsPresArena<ArenaSize>::ClearArenaRefPtrs(ArenaObjectID aObjectID) {
-  for (auto iter = mArenaRefPtrs.Iter(); !iter.Done(); iter.Next()) {
-    void* ptr = iter.Key();
-    ArenaObjectID id = iter.UserData();
-    if (id == aObjectID) {
-      ClearArenaRefPtrWithoutDeregistering(ptr, id);
-      iter.Remove();
-    }
-  }
 }
 
 template <size_t ArenaSize>

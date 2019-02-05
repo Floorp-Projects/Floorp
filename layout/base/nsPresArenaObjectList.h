@@ -9,8 +9,6 @@
 
 // These are objects that can be stored in the pres arena
 
-PRES_ARENA_OBJECT(GeckoComputedStyle)
-
 PRES_ARENA_OBJECT(nsLineBox)
 PRES_ARENA_OBJECT(DisplayItemData)
 PRES_ARENA_OBJECT(nsFrameList)
