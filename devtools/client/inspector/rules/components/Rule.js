@@ -4,9 +4,10 @@
 
 "use strict";
 
-const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
+const { createFactory, createRef, PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const { editableItem } = require("devtools/client/shared/inplace-editor");
 
 const Declarations = createFactory(require("./Declarations"));
 const Selector = createFactory(require("./Selector"));
@@ -23,8 +24,41 @@ class Rule extends PureComponent {
       rule: PropTypes.shape(Types.rule).isRequired,
       showDeclarationNameEditor: PropTypes.func.isRequired,
       showDeclarationValueEditor: PropTypes.func.isRequired,
+      showNewDeclarationEditor: PropTypes.func.isRequired,
       showSelectorEditor: PropTypes.func.isRequired,
     };
+  }
+
+  constructor(props) {
+    super(props);
+
+    this.closeBraceSpan = createRef();
+    this.newDeclarationSpan = createRef();
+
+    this.state = {
+      // Whether or not the new declaration editor is visible.
+      isNewDeclarationEditorVisible: false,
+    };
+
+    this.onEditorBlur = this.onEditorBlur.bind(this);
+  }
+
+  componentDidMount() {
+    if (this.props.rule.isUserAgentStyle) {
+      return;
+    }
+
+    editableItem({
+      element: this.closeBraceSpan.current,
+    }, () => {
+      this.setState({ isNewDeclarationEditorVisible: true });
+      this.props.showNewDeclarationEditor(this.newDeclarationSpan.current,
+        this.props.rule.id, this.onEditorBlur);
+    });
+  }
+
+  onEditorBlur() {
+    this.setState({ isNewDeclarationEditorVisible: false });
   }
 
   render() {
@@ -79,7 +113,27 @@ class Rule extends PureComponent {
             showDeclarationNameEditor,
             showDeclarationValueEditor,
           }),
-          dom.div({ className: "ruleview-ruleclose" }, "}")
+          dom.li(
+            {
+              className: "ruleview-property ruleview-newproperty",
+              style: {
+                display: this.state.isNewDeclarationEditorVisible ? "block" : "none",
+              },
+            },
+            dom.span({
+              className: "ruleview-propertyname",
+              ref: this.newDeclarationSpan,
+            })
+          ),
+          dom.div(
+            {
+              className: "ruleview-ruleclose",
+              ref: this.closeBraceSpan,
+              tabIndex: !isUserAgentStyle && !this.state.isNewDeclarationEditorVisible ?
+                0 : -1,
+            },
+            "}"
+          )
         )
       )
     );
