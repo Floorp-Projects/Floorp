@@ -22,7 +22,8 @@ TestSyncHangParent::~TestSyncHangParent() {
 }
 
 void DeleteSyncHangSubprocess(MessageLoop* uiLoop) {
-  delete gSyncHangSubprocess;
+  gSyncHangSubprocess->Destroy();
+  gSyncHangSubprocess = nullptr;
 }
 
 void DeferredSyncHangParentShutdown() {

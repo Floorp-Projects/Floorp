@@ -2118,26 +2118,31 @@ bool nsDisplayListBuilder::AddToWillChangeBudget(nsIFrame* aFrame,
 bool nsDisplayListBuilder::IsInWillChangeBudget(nsIFrame* aFrame,
                                                 const nsSize& aSize) {
   bool onBudget = AddToWillChangeBudget(aFrame, aSize);
+  if (onBudget) {
+    return true;
+  }
 
-  if (!onBudget) {
-    nsString usageStr;
+  auto* pc = aFrame->PresContext();
+  auto* doc = pc->Document();
+  if (!doc->HasWarnedAbout(Document::eIgnoringWillChangeOverBudget)) {
+    nsAutoString usageStr;
     usageStr.AppendInt(GetLayerizationCost(aSize));
 
-    nsString multiplierStr;
+    nsAutoString multiplierStr;
     multiplierStr.AppendInt(gWillChangeAreaMultiplier);
 
-    nsString limitStr;
-    nsRect area = aFrame->PresContext()->GetVisibleArea();
+    nsAutoString limitStr;
+    nsRect area = pc->GetVisibleArea();
     uint32_t budgetLimit = nsPresContext::AppUnitsToIntCSSPixels(area.width) *
                            nsPresContext::AppUnitsToIntCSSPixels(area.height);
     limitStr.AppendInt(budgetLimit);
 
     const char16_t* params[] = {multiplierStr.get(), limitStr.get()};
-    aFrame->PresContext()->Document()->WarnOnceAbout(
-        Document::eIgnoringWillChangeOverBudget, false, params,
-        ArrayLength(params));
+    doc->WarnOnceAbout(Document::eIgnoringWillChangeOverBudget, false, params,
+                       ArrayLength(params));
   }
-  return onBudget;
+
+  return false;
 }
 
 void nsDisplayListBuilder::RemoveFromWillChangeBudget(nsIFrame* aFrame) {
@@ -8557,7 +8562,7 @@ bool nsDisplayPerspective::CreateWebRenderCommands(
   Maybe<uint64_t> scrollingRelativeTo;
   for (auto* asr = GetActiveScrolledRoot(); asr; asr = asr->mParent) {
     if (nsLayoutUtils::IsAncestorFrameCrossDoc(
-          asr->mScrollableFrame->GetScrolledFrame(), perspectiveFrame)) {
+            asr->mScrollableFrame->GetScrolledFrame(), perspectiveFrame)) {
       scrollingRelativeTo.emplace(asr->GetViewId());
       break;
     }

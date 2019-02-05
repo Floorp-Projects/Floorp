@@ -2793,8 +2793,9 @@ bool RestyleManager::ProcessPostTraversal(Element* aElement,
     MOZ_ASSERT(styleFrame || isDisplayContents);
 
     // Note that upToDateContext could be the same as oldOrDisplayContentsStyle,
-    // but it doesn't matter, since the only point of it is calling FinishStyle
-    // on the relevant structs, and those don't matter for display: contents.
+    // but it doesn't matter, since the only point of it is calling
+    // TriggerImageLoads on the relevant structs, and those don't matter for
+    // display: contents.
     upToDateContext->ResolveSameStructsAs(oldOrDisplayContentsStyle);
 
     // We want to walk all the continuations here, even the ones with different

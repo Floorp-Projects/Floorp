@@ -368,7 +368,7 @@ class nsStorageInputStream final : public nsIInputStream,
 
   template <typename M>
   void SerializeInternal(InputStreamParams& aParams, bool aDelayedStart,
-                         M* aManager);
+                         uint32_t aMaxSize, uint32_t* aSizeUsed, M* aManager);
 };
 
 NS_IMPL_ISUPPORTS(nsStorageInputStream, nsIInputStream, nsISeekableStream,
@@ -552,43 +552,51 @@ nsresult nsStorageInputStream::Seek(uint32_t aPosition) {
 
 void nsStorageInputStream::Serialize(InputStreamParams& aParams,
                                      FileDescriptorArray&, bool aDelayedStart,
+                                     uint32_t aMaxSize, uint32_t* aSizeUsed,
                                      mozilla::dom::nsIContentChild* aManager) {
-  SerializeInternal(aParams, aDelayedStart, aManager);
+  SerializeInternal(aParams, aDelayedStart, aMaxSize, aSizeUsed, aManager);
 }
 
 void nsStorageInputStream::Serialize(InputStreamParams& aParams,
                                      FileDescriptorArray&, bool aDelayedStart,
+                                     uint32_t aMaxSize, uint32_t* aSizeUsed,
                                      mozilla::ipc::PBackgroundChild* aManager) {
-  SerializeInternal(aParams, aDelayedStart, aManager);
+  SerializeInternal(aParams, aDelayedStart, aMaxSize, aSizeUsed, aManager);
 }
 
 void nsStorageInputStream::Serialize(InputStreamParams& aParams,
                                      FileDescriptorArray&, bool aDelayedStart,
+                                     uint32_t aMaxSize, uint32_t* aSizeUsed,
                                      mozilla::dom::nsIContentParent* aManager) {
-  SerializeInternal(aParams, aDelayedStart, aManager);
+  SerializeInternal(aParams, aDelayedStart, aMaxSize, aSizeUsed, aManager);
 }
 
 void nsStorageInputStream::Serialize(
     InputStreamParams& aParams, FileDescriptorArray&, bool aDelayedStart,
+    uint32_t aMaxSize, uint32_t* aSizeUsed,
     mozilla::ipc::PBackgroundParent* aManager) {
-  SerializeInternal(aParams, aDelayedStart, aManager);
+  SerializeInternal(aParams, aDelayedStart, aMaxSize, aSizeUsed, aManager);
 }
 
 template <typename M>
 void nsStorageInputStream::SerializeInternal(InputStreamParams& aParams,
-                                             bool aDelayedStart, M* aManager) {
+                                             bool aDelayedStart,
+                                             uint32_t aMaxSize,
+                                             uint32_t* aSizeUsed, M* aManager) {
+  MOZ_ASSERT(aSizeUsed);
+  *aSizeUsed = 0;
+
   uint64_t remaining = 0;
   nsresult rv = Available(&remaining);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
-  // If the string is known to be larger than 1MB, prefer sending it in chunks.
-  const uint64_t kTooLargeStream = 1024 * 1024;
-
-  if (remaining > kTooLargeStream) {
+  if (remaining >= aMaxSize) {
     InputStreamHelper::SerializeInputStreamAsPipe(this, aParams, aDelayedStart,
                                                   aManager);
     return;
   }
+
+  *aSizeUsed = remaining;
 
   nsCString combined;
   int64_t offset;

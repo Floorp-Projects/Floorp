@@ -16,10 +16,12 @@
 
 #include "IPDLUnitTestSubprocess.h"
 
+// clang-format off
 //-----------------------------------------------------------------------------
 //===== TEMPLATED =====
-$ { INCLUDES }
+${INCLUDES}
 //-----------------------------------------------------------------------------
+// clang-format on
 
 using namespace std;
 
@@ -70,20 +72,24 @@ namespace {
 enum IPDLUnitTestType {
   NoneTest = 0,
 
-  //-----------------------------------------------------------------------------
-  //===== TEMPLATED =====
-  ${ENUM_VALUES}
+  // clang-format off
+//-----------------------------------------------------------------------------
+//===== TEMPLATED =====
+${ENUM_VALUES}
 
   LastTest = ${LAST_ENUM}
-  //-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+//clang-format on
 };
 
 IPDLUnitTestType IPDLUnitTestFromString(const char* const aString) {
   if (!aString) return static_cast<IPDLUnitTestType>(0);
-  //-----------------------------------------------------------------------------
-  //===== TEMPLATED =====
-  $ { STRING_TO_ENUMS }
-  //-----------------------------------------------------------------------------
+// clang-format off
+//-----------------------------------------------------------------------------
+//===== TEMPLATED =====
+${STRING_TO_ENUMS}
+//-----------------------------------------------------------------------------
+  // clang-format on
   else return static_cast<IPDLUnitTestType>(0);
 }
 
@@ -125,10 +131,12 @@ void IPDLUnitTestMain(void* aData) {
 
   // Check whether this test is enabled for processes:
   switch (test) {
-    //-----------------------------------------------------------------------------
-    //===== TEMPLATED =====
-    $ { PARENT_ENABLED_CASES_PROC }
-      //-----------------------------------------------------------------------------
+    // clang-format off
+//-----------------------------------------------------------------------------
+//===== TEMPLATED =====
+${PARENT_ENABLED_CASES_PROC}
+//-----------------------------------------------------------------------------
+      // clang-format on
 
     default:
       fail("not reached");
@@ -150,10 +158,12 @@ void IPDLUnitTestMain(void* aData) {
   base::ProcessId child = base::GetProcId(gSubprocess->GetChildProcessHandle());
 
   switch (test) {
-    //-----------------------------------------------------------------------------
-    //===== TEMPLATED =====
-    $ { PARENT_MAIN_CASES_PROC }
-      //-----------------------------------------------------------------------------
+    // clang-format off
+//-----------------------------------------------------------------------------
+//===== TEMPLATED =====
+${PARENT_MAIN_CASES_PROC}
+//-----------------------------------------------------------------------------
+      // clang-format on
 
     default:
       fail("not reached");
@@ -173,10 +183,12 @@ void IPDLUnitTestThreadMain(char* testString) {
 
   // Check whether this test is enabled for threads:
   switch (test) {
-    //-----------------------------------------------------------------------------
-    //===== TEMPLATED =====
-    $ { PARENT_ENABLED_CASES_THREAD }
-      //-----------------------------------------------------------------------------
+    // clang-format off
+//-----------------------------------------------------------------------------
+//===== TEMPLATED =====
+${PARENT_ENABLED_CASES_THREAD}
+//-----------------------------------------------------------------------------
+      // clang-format on
 
     default:
       fail("not reached");
@@ -195,10 +207,12 @@ void IPDLUnitTestThreadMain(char* testString) {
   MessageLoop* childMessageLoop = gChildThread->message_loop();
 
   switch (test) {
-    //-----------------------------------------------------------------------------
-    //===== TEMPLATED =====
-    $ { PARENT_MAIN_CASES_THREAD }
-      //-----------------------------------------------------------------------------
+    // clang-format off
+//-----------------------------------------------------------------------------
+//===== TEMPLATED =====
+${PARENT_MAIN_CASES_THREAD}
+//-----------------------------------------------------------------------------
+      // clang-format on
 
     default:
       fail("not reached");
@@ -210,10 +224,12 @@ void DeleteParentActor() {
   if (!gParentActor) return;
 
   switch (IPDLUnitTest()) {
-    //-----------------------------------------------------------------------------
-    //===== TEMPLATED =====
-    $ { PARENT_DELETE_CASES }
-      //-----------------------------------------------------------------------------
+    // clang-format off
+//-----------------------------------------------------------------------------
+//===== TEMPLATED =====
+${PARENT_DELETE_CASES}
+//-----------------------------------------------------------------------------
+      // clang-format on
     default:
       ::mozilla::_ipdltest::fail("???");
   }
@@ -229,7 +245,8 @@ void QuitXPCOM() {
 
 void DeleteSubprocess(MessageLoop* uiLoop) {
   // pong to QuitXPCOM
-  delete gSubprocess;
+  gSubprocess->Destroy();
+  gSubprocess = nullptr;
   uiLoop->PostTask(NewRunnableFunction("QuitXPCOM", QuitXPCOM));
 }
 
@@ -299,10 +316,12 @@ void DeleteChildActor() {
   if (!gChildActor) return;
 
   switch (IPDLUnitTest()) {
-    //-----------------------------------------------------------------------------
-    //===== TEMPLATED =====
-    $ { CHILD_DELETE_CASES }
-      //-----------------------------------------------------------------------------
+    // clang-format off
+//-----------------------------------------------------------------------------
+//===== TEMPLATED =====
+${CHILD_DELETE_CASES}
+//-----------------------------------------------------------------------------
+      // clang-format on
     default:
       ::mozilla::_ipdltest::fail("???");
   }
@@ -311,10 +330,12 @@ void DeleteChildActor() {
 void IPDLUnitTestChildInit(IPC::Channel* transport, base::ProcessId parentPid,
                            MessageLoop* worker) {
   switch (IPDLUnitTest()) {
-    //-----------------------------------------------------------------------------
-    //===== TEMPLATED =====
-    $ { CHILD_INIT_CASES }
-      //-----------------------------------------------------------------------------
+    // clang-format off
+//-----------------------------------------------------------------------------
+//===== TEMPLATED =====
+${CHILD_INIT_CASES}
+//-----------------------------------------------------------------------------
+      // clang-format on
 
     default:
       fail("not reached");

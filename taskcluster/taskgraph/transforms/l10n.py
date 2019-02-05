@@ -36,11 +36,6 @@ def _by_platform(arg):
     return optionally_keyed_by('build-platform', arg)
 
 
-# Voluptuous uses marker objects as dictionary *keys*, but they are not
-# comparable, so we cast all of the keys back to regular strings
-job_description_schema = {str(k): v for k, v in job_description_schema.schema.iteritems()}
-task_description_schema = {str(k): v for k, v in task_description_schema.schema.iteritems()}
-
 l10n_description_schema = schema.extend({
     # Name for this job, inferred from the dependent job before validation
     Required('name'): basestring,

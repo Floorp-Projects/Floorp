@@ -785,6 +785,10 @@ win64-asan-reporter-nightly/opt:
     description: "Win64 Opt ASAN Reporter Nightly"
     attributes:
         nightly: true
+    shipping-product:
+        by-release-type:
+            nightly: firefox
+            default: null
     index:
         product: firefox
         job-name: win64-asan-reporter-opt

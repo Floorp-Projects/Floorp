@@ -41,7 +41,6 @@ class RDDProcessHost final : public mozilla::ipc::GeckoChildProcessHost {
   };
 
   explicit RDDProcessHost(Listener* listener);
-  ~RDDProcessHost();
 
   // Launch the subprocess asynchronously. On failure, false is returned.
   // Otherwise, true is returned, and the OnProcessLaunchComplete listener
@@ -92,6 +91,8 @@ class RDDProcessHost final : public mozilla::ipc::GeckoChildProcessHost {
   void KillProcess();
 
  private:
+  ~RDDProcessHost();
+
   // Called on the main thread.
   void OnChannelConnectedTask();
   void OnChannelErrorTask();
@@ -107,7 +108,6 @@ class RDDProcessHost final : public mozilla::ipc::GeckoChildProcessHost {
 
   void DestroyProcess();
 
- private:
   DISALLOW_COPY_AND_ASSIGN(RDDProcessHost);
 
   Listener* mListener;

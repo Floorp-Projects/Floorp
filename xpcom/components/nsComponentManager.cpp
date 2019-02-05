@@ -127,11 +127,12 @@ class AutoIDString : public nsAutoCStringN<NSID_LENGTH> {
  public:
   explicit AutoIDString(const nsID& aID) {
     SetLength(NSID_LENGTH - 1);
-    aID.ToProvidedString(*reinterpret_cast<char(*)[NSID_LENGTH]>(BeginWriting()));
+    aID.ToProvidedString(
+        *reinterpret_cast<char(*)[NSID_LENGTH]>(BeginWriting()));
   }
 };
 
-}
+}  // namespace
 
 namespace mozilla {
 namespace xpcom {
@@ -462,10 +463,14 @@ nsresult nsComponentManagerImpl::Init() {
         ProcessSelectorMatches(ProcessSelector::ALLOW_IN_SOCKET_PROCESS);
     gProcessMatchTable[size_t(ProcessSelector::ALLOW_IN_GPU_AND_VR_PROCESS)] =
         ProcessSelectorMatches(ProcessSelector::ALLOW_IN_GPU_AND_VR_PROCESS);
-    gProcessMatchTable[size_t(ProcessSelector::ALLOW_IN_GPU_AND_SOCKET_PROCESS)] =
-        ProcessSelectorMatches(ProcessSelector::ALLOW_IN_GPU_AND_SOCKET_PROCESS);
-    gProcessMatchTable[size_t(ProcessSelector::ALLOW_IN_GPU_VR_AND_SOCKET_PROCESS)] =
-        ProcessSelectorMatches(ProcessSelector::ALLOW_IN_GPU_VR_AND_SOCKET_PROCESS);
+    gProcessMatchTable[size_t(
+        ProcessSelector::ALLOW_IN_GPU_AND_SOCKET_PROCESS)] =
+        ProcessSelectorMatches(
+            ProcessSelector::ALLOW_IN_GPU_AND_SOCKET_PROCESS);
+    gProcessMatchTable[size_t(
+        ProcessSelector::ALLOW_IN_GPU_VR_AND_SOCKET_PROCESS)] =
+        ProcessSelectorMatches(
+            ProcessSelector::ALLOW_IN_GPU_VR_AND_SOCKET_PROCESS);
   }
 
   MOZ_ASSERT(NOT_INITIALIZED == mStatus);
@@ -814,8 +819,7 @@ void nsComponentManagerImpl::ManifestComponent(ManifestProcessingContext& aCx,
     LogMessageWithContext(
         aCx.mFile, aLineNo,
         "Trying to re-register CID '%s' already registered by %s.",
-        AutoIDString(cid).get(),
-        existing.get());
+        AutoIDString(cid).get(), existing.get());
     return;
   }
 
@@ -1128,8 +1132,7 @@ nsComponentManagerImpl::CreateInstance(const nsCID& aClass,
     fprintf(stderr,
             "Creating new instance on shutdown. Denied.\n"
             "         CID: %s\n         IID: %s\n",
-            AutoIDString(aClass).get(),
-            AutoIDString(aIID).get());
+            AutoIDString(aClass).get(), AutoIDString(aIID).get());
 #endif /* SHOW_DENIED_ON_SHUTDOWN */
     return NS_ERROR_UNEXPECTED;
   }
@@ -1430,8 +1433,7 @@ nsComponentManagerImpl::GetService(const nsCID& aClass, const nsIID& aIID,
     fprintf(stderr,
             "Getting service on shutdown. Denied.\n"
             "         CID: %s\n         IID: %s\n",
-            AutoIDString(aClass).get(),
-            AutoIDString(aIID).get());
+            AutoIDString(aClass).get(), AutoIDString(aIID).get());
 #endif /* SHOW_DENIED_ON_SHUTDOWN */
     return NS_ERROR_UNEXPECTED;
   }
@@ -1446,9 +1448,8 @@ nsComponentManagerImpl::GetService(const nsCID& aClass, const nsIID& aIID,
   return GetServiceLocked(lock, *entry, aIID, aResult);
 }
 
-nsresult
-nsComponentManagerImpl::GetService(ModuleID aId, const nsIID& aIID,
-                                   void** aResult) {
+nsresult nsComponentManagerImpl::GetService(ModuleID aId, const nsIID& aIID,
+                                            void** aResult) {
   const auto& entry = gStaticModules[size_t(aId)];
 
   // test this first, since there's no point in returning a service during
@@ -1460,8 +1461,7 @@ nsComponentManagerImpl::GetService(ModuleID aId, const nsIID& aIID,
     fprintf(stderr,
             "Getting service on shutdown. Denied.\n"
             "         CID: %s\n         IID: %s\n",
-            AutoIDString(entry.CID()).get(),
-            AutoIDString(aIID).get());
+            AutoIDString(entry.CID()).get(), AutoIDString(aIID).get());
 #endif /* SHOW_DENIED_ON_SHUTDOWN */
     return NS_ERROR_UNEXPECTED;
   }
@@ -1502,8 +1502,7 @@ nsComponentManagerImpl::IsServiceInstantiated(const nsCID& aClass,
     fprintf(stderr,
             "Checking for service on shutdown. Denied.\n"
             "         CID: %s\n         IID: %s\n",
-            AutoIDString(aClass).get(),
-            AutoIDString(aIID).get());
+            AutoIDString(aClass).get(), AutoIDString(aIID).get());
 #endif /* SHOW_DENIED_ON_SHUTDOWN */
     return NS_ERROR_UNEXPECTED;
   }
@@ -1511,8 +1510,7 @@ nsComponentManagerImpl::IsServiceInstantiated(const nsCID& aClass,
   if (Maybe<EntryWrapper> entry = LookupByCID(aClass)) {
     if (auto* service = entry->ServiceInstance()) {
       nsCOMPtr<nsISupports> instance;
-      nsresult rv = service->QueryInterface(
-          aIID, getter_AddRefs(instance));
+      nsresult rv = service->QueryInterface(aIID, getter_AddRefs(instance));
       *aResult = (instance != nullptr);
       return rv;
     }
@@ -1546,8 +1544,7 @@ nsComponentManagerImpl::IsServiceInstantiatedByContractID(
           LookupByContractID(nsDependentCString(aContractID))) {
     if (auto* service = entry->ServiceInstance()) {
       nsCOMPtr<nsISupports> instance;
-      nsresult rv = service->QueryInterface(
-          aIID, getter_AddRefs(instance));
+      nsresult rv = service->QueryInterface(aIID, getter_AddRefs(instance));
       *aResult = (instance != nullptr);
       return rv;
     }

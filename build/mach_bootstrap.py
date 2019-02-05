@@ -264,7 +264,7 @@ def bootstrap(topsrcdir, mozilla_dir=None):
                                 mach_context=context, substs=substs,
                                 paths=paths)
         if data:
-            telemetry_dir = os.path.join(get_state_dir()[0], 'telemetry')
+            telemetry_dir = os.path.join(get_state_dir(), 'telemetry')
             try:
                 os.mkdir(telemetry_dir)
             except OSError as e:
@@ -284,7 +284,7 @@ def bootstrap(topsrcdir, mozilla_dir=None):
         if should_skip_telemetry_submission(handler):
             return True
 
-        state_dir, _ = get_state_dir()
+        state_dir = get_state_dir()
 
         machpath = os.path.join(instance.topsrcdir, 'mach')
         with open(os.devnull, 'wb') as devnull:
@@ -299,8 +299,8 @@ def bootstrap(topsrcdir, mozilla_dir=None):
         if key is None:
             return
         if key == 'state_dir':
-            state_dir, is_environ = get_state_dir()
-            if is_environ:
+            state_dir = get_state_dir()
+            if state_dir == os.environ.get('MOZBUILD_STATE_PATH'):
                 if not os.path.exists(state_dir):
                     print('Creating global state directory from environment variable: %s'
                           % state_dir)
@@ -318,6 +318,9 @@ def bootstrap(topsrcdir, mozilla_dir=None):
                     os.makedirs(state_dir, mode=0o770)
 
             return state_dir
+
+        if key == 'local_state_dir':
+            return get_state_dir(srcdir=True)
 
         if key == 'topdir':
             return topsrcdir
@@ -340,7 +343,7 @@ def bootstrap(topsrcdir, mozilla_dir=None):
 
     if not driver.settings_paths:
         # default global machrc location
-        driver.settings_paths.append(get_state_dir()[0])
+        driver.settings_paths.append(get_state_dir())
     # always load local repository configuration
     driver.settings_paths.append(mozilla_dir)
 

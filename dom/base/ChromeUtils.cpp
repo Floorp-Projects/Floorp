@@ -405,7 +405,8 @@ NS_IMPL_ISUPPORTS_INHERITED(IdleDispatchRunnable, IdleRunnable,
 
   JS::RootedObject global(cx);
   JS::RootedObject exports(cx);
-  nsresult rv = moduleloader->Import(cx, registryLocation, &global, &exports, ignoreExports);
+  nsresult rv = moduleloader->Import(cx, registryLocation, &global, &exports,
+                                     ignoreExports);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return;

@@ -186,7 +186,7 @@ add_task(async function test_CtoPtoC_multipart() {
     return new Blob(["!"]);
   });
 
-  ok(blob, "CtoPtoC-,ultipart: We have a blob!");
+  ok(blob, "CtoPtoC-multipart: We have a blob!");
   is(blob.size, "!".length, "CtoPtoC-multipart: The size matches");
 
   let newBlob = new Blob(["world", blob]);
@@ -209,4 +209,26 @@ add_task(async function test_CtoPtoC_multipart() {
 
   BrowserTestUtils.removeTab(tab1);
   BrowserTestUtils.removeTab(tab2);
+});
+
+// Multipart Blob childA-parent with a max size
+add_task(async function test_CtoPsize_multipart() {
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, BASE_URI);
+  let browser = gBrowser.getBrowserForTab(tab);
+
+  let blob = await ContentTask.spawn(browser, null, function() {
+    Cu.importGlobalProperties(["Blob"]);
+
+    let data = new Array(1024*512).join('A');
+    let blob1 = new Blob([data]);
+    let blob2 = new Blob([data]);
+    let blob3 = new Blob([data]);
+
+    return new Blob([blob1, blob2, blob3]);
+  });
+
+  ok(blob, "CtoPsize-multipart: We have a blob!");
+  is(blob.size, new Array(1024*512).join('A').length * 3, "CtoPsize-multipart: The size matches");
+
+  BrowserTestUtils.removeTab(tab);
 });

@@ -27,8 +27,6 @@ from voluptuous import (
     Schema,
 )
 
-job_description_schema = {str(k): v for k, v in job_description_schema.schema.iteritems()}
-
 source_test_description_schema = Schema({
     # most fields are passed directly through as job fields, and are not
     # repeated here

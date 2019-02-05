@@ -10,6 +10,7 @@
  */
 
 #include "mozilla/Attributes.h"
+#include "mozilla/CheckedInt.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/SystemGroup.h"
@@ -112,7 +113,8 @@ class nsMultiplexInputStream final : public nsIMultiplexInputStream,
   template <typename M>
   void SerializeInternal(InputStreamParams& aParams,
                          FileDescriptorArray& aFileDescriptors,
-                         bool aDelayedStart, M* aManager);
+                         bool aDelayedStart, uint32_t aMaxSize,
+                         uint32_t* aSizeUsed, M* aManager);
 
   static nsresult ReadSegCb(nsIInputStream* aIn, void* aClosure,
                             const char* aFromRawSegment, uint32_t aToOffset,
@@ -990,51 +992,69 @@ nsresult nsMultiplexInputStreamConstructor(nsISupports* aOuter, REFNSIID aIID,
 
 void nsMultiplexInputStream::Serialize(
     InputStreamParams& aParams, FileDescriptorArray& aFileDescriptors,
-    bool aDelayedStart, mozilla::dom::nsIContentChild* aManager) {
-  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aManager);
+    bool aDelayedStart, uint32_t aMaxSize, uint32_t* aSizeUsed,
+    mozilla::dom::nsIContentChild* aManager) {
+  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aMaxSize,
+                    aSizeUsed, aManager);
 }
 
 void nsMultiplexInputStream::Serialize(InputStreamParams& aParams,
                                        FileDescriptorArray& aFileDescriptors,
-                                       bool aDelayedStart,
+                                       bool aDelayedStart, uint32_t aMaxSize,
+                                       uint32_t* aSizeUsed,
                                        PBackgroundChild* aManager) {
-  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aManager);
+  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aMaxSize,
+                    aSizeUsed, aManager);
 }
 
 void nsMultiplexInputStream::Serialize(
     InputStreamParams& aParams, FileDescriptorArray& aFileDescriptors,
-    bool aDelayedStart, mozilla::dom::nsIContentParent* aManager) {
-  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aManager);
+    bool aDelayedStart, uint32_t aMaxSize, uint32_t* aSizeUsed,
+    mozilla::dom::nsIContentParent* aManager) {
+  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aMaxSize,
+                    aSizeUsed, aManager);
 }
 
 void nsMultiplexInputStream::Serialize(InputStreamParams& aParams,
                                        FileDescriptorArray& aFileDescriptors,
-                                       bool aDelayedStart,
+                                       bool aDelayedStart, uint32_t aMaxSize,
+                                       uint32_t* aSizeUsed,
                                        PBackgroundParent* aManager) {
-  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aManager);
+  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aMaxSize,
+                    aSizeUsed, aManager);
 }
 
 template <typename M>
 void nsMultiplexInputStream::SerializeInternal(
     InputStreamParams& aParams, FileDescriptorArray& aFileDescriptors,
-    bool aDelayedStart, M* aManager) {
+    bool aDelayedStart, uint32_t aMaxSize, uint32_t* aSizeUsed, M* aManager) {
   MutexAutoLock lock(mLock);
 
   MultiplexInputStreamParams params;
 
-  uint32_t streamCount = mStreams.Length();
+  CheckedUint32 totalSizeUsed = 0;
+  CheckedUint32 maxSize = aMaxSize;
 
+  uint32_t streamCount = mStreams.Length();
   if (streamCount) {
     InfallibleTArray<InputStreamParams>& streams = params.streams();
 
     streams.SetCapacity(streamCount);
     for (uint32_t index = 0; index < streamCount; index++) {
+      uint32_t sizeUsed = 0;
       InputStreamParams childStreamParams;
       InputStreamHelper::SerializeInputStream(
           mStreams[index].mStream, childStreamParams, aFileDescriptors,
-          aDelayedStart, aManager);
-
+          aDelayedStart, maxSize.value(), &sizeUsed, aManager);
       streams.AppendElement(childStreamParams);
+
+      MOZ_ASSERT(maxSize.value() >= sizeUsed);
+
+      maxSize -= sizeUsed;
+      MOZ_DIAGNOSTIC_ASSERT(maxSize.isValid());
+
+      totalSizeUsed += sizeUsed;
+      MOZ_DIAGNOSTIC_ASSERT(totalSizeUsed.isValid());
     }
   }
 
@@ -1043,6 +1063,9 @@ void nsMultiplexInputStream::SerializeInternal(
   params.startedReadingCurrent() = mStartedReadingCurrent;
 
   aParams = params;
+
+  MOZ_ASSERT(aSizeUsed);
+  *aSizeUsed = totalSizeUsed.value();
 }
 
 bool nsMultiplexInputStream::Deserialize(

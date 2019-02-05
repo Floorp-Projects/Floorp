@@ -259,15 +259,12 @@ class TabParent final : public PBrowserParent,
       const nsString& aAction, nsTArray<nsCString>&& aEnabledCommands,
       nsTArray<nsCString>&& aDisabledCommands) override;
 
-  virtual mozilla::ipc::IPCResult RecvSetCursor(const nsCursor& aValue,
-                                                const bool& aHasCustomCursor,
-                                                const nsCString& aUri,
-                                                const uint32_t& aWidth, const uint32_t& aHeight,
-                                                const uint32_t& aStride,
-                                                const gfx::SurfaceFormat& aFormat,
-                                                const uint32_t& aHotspotX,
-                                                const uint32_t& aHotspotY,
-                                                const bool& aForce) override;
+  virtual mozilla::ipc::IPCResult RecvSetCursor(
+      const nsCursor& aValue, const bool& aHasCustomCursor,
+      const nsCString& aUri, const uint32_t& aWidth, const uint32_t& aHeight,
+      const uint32_t& aStride, const gfx::SurfaceFormat& aFormat,
+      const uint32_t& aHotspotX, const uint32_t& aHotspotY,
+      const bool& aForce) override;
 
   virtual mozilla::ipc::IPCResult RecvSetStatus(
       const uint32_t& aType, const nsString& aStatus) override;

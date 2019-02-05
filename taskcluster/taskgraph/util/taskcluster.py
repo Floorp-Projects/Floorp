@@ -9,13 +9,13 @@ from __future__ import absolute_import, print_function, unicode_literals
 import os
 import datetime
 import functools
-import yaml
 import requests
 import logging
 import taskcluster_urls as liburls
 from mozbuild.util import memoize
 from requests.packages.urllib3.util.retry import Retry
 from taskgraph.task import Task
+from taskgraph.util import yaml
 
 logger = logging.getLogger(__name__)
 
@@ -85,7 +85,7 @@ def _handle_artifact(path, response):
     if path.endswith('.json'):
         return response.json()
     if path.endswith('.yml'):
-        return yaml.safe_load(response.text)
+        return yaml.load_stream(response.text)
     response.raw.read = functools.partial(response.raw.read,
                                           decode_content=True)
     return response.raw

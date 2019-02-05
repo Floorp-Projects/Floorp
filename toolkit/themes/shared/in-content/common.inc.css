@@ -255,16 +255,19 @@ xul|menulist[disabled="true"] {
   opacity: 0.4;
 }
 
+html|button[autofocus],
 *|button.primary {
   background-color: var(--in-content-primary-button-background);
   color: var(--in-content-selected-text) !important;
 }
 
+html|button[autofocus]:enabled:hover,
 html|button.primary:enabled:hover,
 xul|button.primary:not([disabled="true"]):hover {
   background-color: var(--in-content-primary-button-background-hover);
 }
 
+html|button[autofocus]:enabled:hover:active,
 html|button.primary:enabled:hover:active,
 xul|button.primary:not([disabled="true"]):hover:active {
   background-color: var(--in-content-primary-button-background-active);

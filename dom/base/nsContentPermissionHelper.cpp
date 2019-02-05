@@ -509,16 +509,15 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(ContentPermissionRequestBase)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(ContentPermissionRequestBase)
 
 ContentPermissionRequestBase::ContentPermissionRequestBase(
-    nsIPrincipal* aPrincipal, bool aIsHandlingUserInput,
-    nsPIDOMWindowInner* aWindow, const nsACString& aPrefName,
-    const nsACString& aType)
+    nsIPrincipal* aPrincipal, nsPIDOMWindowInner* aWindow,
+    const nsACString& aPrefName, const nsACString& aType)
     : mPrincipal(aPrincipal),
       mTopLevelPrincipal(aWindow ? ::GetTopLevelPrincipal(aWindow) : nullptr),
       mWindow(aWindow),
       mRequester(aWindow ? new nsContentPermissionRequester(aWindow) : nullptr),
       mPrefName(aPrefName),
       mType(aType),
-      mIsHandlingUserInput(aIsHandlingUserInput) {}
+      mIsHandlingUserInput(EventStateManager::IsHandlingUserInput()) {}
 
 NS_IMETHODIMP
 ContentPermissionRequestBase::GetPrincipal(

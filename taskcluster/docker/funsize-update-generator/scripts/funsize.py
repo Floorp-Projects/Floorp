@@ -238,14 +238,8 @@ def get_hash(path, hash_type="sha512"):
 
 
 class WorkEnv(object):
-
     def __init__(self, allowed_url_prefixes, mar=None, mbsdiff=None, arch=None):
-        self.workdir = tempfile.mkdtemp()
-        self.paths = {
-            'unwrap_full_update.pl': os.path.join(self.workdir, 'unwrap_full_update.pl'),
-            'mar': os.path.join(self.workdir, 'mar'),
-            'mbsdiff': os.path.join(self.workdir, 'mbsdiff')
-        }
+        self.paths = dict()
         self.urls = {
             'unwrap_full_update.pl': 'https://hg.mozilla.org/mozilla-central/raw-file/default/'
             'tools/update-packaging/unwrap_full_update.pl',
@@ -262,10 +256,11 @@ class WorkEnv(object):
         self.arch = arch
 
     async def setup(self, mar=None, mbsdiff=None):
+        self.workdir = tempfile.mkdtemp()
         for filename, url in self.urls.items():
-            if filename not in self.paths:
-                log.info("Been told about %s but don't know where to download it to!", filename)
-                continue
+            if filename in self.paths:
+                os.unlink(self.paths[filename])
+            self.paths[filename] = os.path.join(self.workdir, filename)
             await retry_download(url, dest=self.paths[filename], mode=0o755)
 
     async def download_buildsystem_bits(self, repo, revision):
@@ -296,10 +291,20 @@ def verify_allowed_url(mar, allowed_url_prefixes):
         ))
 
 
-async def manage_partial(partial_def, work_env, filename_template, artifacts_dir, signing_certs):
+async def manage_partial(partial_def, filename_template, artifacts_dir,
+                         allowed_url_prefixes, signing_certs, arch=None):
     """Manage the creation of partial mars based on payload."""
+
+    work_env = WorkEnv(
+        allowed_url_prefixes=allowed_url_prefixes,
+        mar=partial_def.get('mar_binary'),
+        mbsdiff=partial_def.get('mbsdiff_binary'),
+        arch=arch,
+    )
+    await work_env.setup()
+
     for mar in (partial_def["from_mar"], partial_def["to_mar"]):
-        verify_allowed_url(mar, work_env.allowed_url_prefixes)
+        verify_allowed_url(mar, allowed_url_prefixes)
 
     complete_mars = {}
     use_old_format = False
@@ -422,13 +427,6 @@ async def async_main(args, signing_certs):
     task = json.load(args.task_definition)
     # TODO: verify task["extra"]["funsize"]["partials"] with jsonschema
     for definition in task["extra"]["funsize"]["partials"]:
-        workenv = WorkEnv(
-            allowed_url_prefixes=allowed_url_prefixes,
-            mar=definition.get('mar_binary'),
-            mbsdiff=definition.get('mbsdiff_binary'),
-            arch=args.arch,
-        )
-        await workenv.setup()
         tasks.append(asyncio.ensure_future(retry_async(
                                            manage_partial,
                                            retry_exceptions=(
@@ -439,8 +437,9 @@ async def async_main(args, signing_certs):
                                                partial_def=definition,
                                                filename_template=args.filename_template,
                                                artifacts_dir=args.artifacts_dir,
-                                               work_env=workenv,
-                                               signing_certs=signing_certs
+                                               allowed_url_prefixes=allowed_url_prefixes,
+                                               signing_certs=signing_certs,
+                                               arch=args.arch
                                            ))))
     manifest = await asyncio.gather(*tasks)
     return manifest

@@ -13,22 +13,19 @@
 #include "mozilla/layers/CompositorManagerParent.h"
 #include "mozilla/layers/LayerTreeOwnerTracker.h"
 
-int
-FuzzingInitCompositorManagerParentIPC(int* argc, char*** argv)
-{
+int FuzzingInitCompositorManagerParentIPC(int* argc, char*** argv) {
   mozilla::ipc::ProtocolFuzzerHelper::CompositorBridgeParentSetup();
   mozilla::layers::LayerTreeOwnerTracker::Initialize();
   return 0;
 }
 
-static int
-RunCompositorManagerParentIPCFuzzing(const uint8_t* data, size_t size)
-{
+static int RunCompositorManagerParentIPCFuzzing(const uint8_t* data,
+                                                size_t size) {
   static mozilla::layers::CompositorManagerParent* p =
-    mozilla::layers::CompositorManagerParent::CreateSameProcess().take();
+      mozilla::layers::CompositorManagerParent::CreateSameProcess().take();
 
   static nsTArray<nsCString> ignored = mozilla::ipc::LoadIPCMessageBlacklist(
-    getenv("MOZ_IPC_MESSAGE_FUZZ_BLACKLIST"));
+      getenv("MOZ_IPC_MESSAGE_FUZZ_BLACKLIST"));
 
   mozilla::ipc::FuzzProtocol(p, data, size, ignored);
 

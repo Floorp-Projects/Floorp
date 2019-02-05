@@ -871,8 +871,7 @@ void MacroAssembler::oolWasmTruncateCheckF64ToI64(FloatRegister input,
       Label positive;
       ScratchDoubleScope fpscratch(*this);
       loadConstantDouble(0.0, fpscratch);
-      branchDouble(Assembler::DoubleGreaterThan, input, fpscratch,
-                   &positive);
+      branchDouble(Assembler::DoubleGreaterThan, input, fpscratch, &positive);
       move64(Imm64(0), output);
       jump(rejoin);
 
@@ -919,8 +918,7 @@ void MacroAssembler::oolWasmTruncateCheckF64ToI64(FloatRegister input,
   // high that the highest resolution around is much more than 1.
   ScratchDoubleScope fpscratch(*this);
   loadConstantDouble(double(int64_t(INT64_MIN)), fpscratch);
-  branchDouble(Assembler::DoubleNotEqual, input, fpscratch,
-               &traps.intOverflow);
+  branchDouble(Assembler::DoubleNotEqual, input, fpscratch, &traps.intOverflow);
   jump(rejoin);
 }
 

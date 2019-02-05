@@ -54,6 +54,8 @@ void WebGLExtensionInstancedArrays::VertexAttribDivisorANGLE(GLuint index,
 }
 
 bool WebGLExtensionInstancedArrays::IsSupported(const WebGLContext* webgl) {
+  if (webgl->IsWebGL2()) return false;
+
   gl::GLContext* gl = webgl->GL();
   return gl->IsSupported(gl::GLFeature::draw_instanced) &&
          gl->IsSupported(gl::GLFeature::instanced_arrays);

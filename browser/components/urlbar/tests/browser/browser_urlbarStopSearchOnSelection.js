@@ -2,6 +2,11 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/**
+ * This tests that when a search is stopped due to the user selecting a result,
+ * the view doesn't update after that.
+ */
+
 "use strict";
 
 const TEST_ENGINE_BASENAME = "searchSuggestionEngineSlow.xml";
@@ -28,8 +33,7 @@ add_task(async function init() {
     await Services.search.setDefault(oldDefaultEngine);
     await PlacesUtils.history.clear();
     // Make sure the popup is closed for the next test.
-    gURLBar.blur();
-    Assert.ok(!gURLBar.popup.popupOpen, "popup should be closed");
+    await UrlbarTestUtils.promisePopupClose(window);
   });
 });
 
@@ -66,23 +70,16 @@ add_task(async function mainTest() {
 
   // + 1 for the heuristic result
   let numExpectedResults = TEST_ENGINE_NUM_EXPECTED_RESULTS + 1;
-  let results = gURLBar.popup.richlistbox.itemChildren;
-  let numActualResults = Array.reduce(results, (memo, result) => {
-    if (!result.collapsed) {
-      memo++;
-    }
-    return memo;
-  }, 0);
-  Assert.equal(numActualResults, numExpectedResults);
+  Assert.equal(UrlbarTestUtils.getResultCount(window), numExpectedResults,
+    "Should have the correct number of results displayed");
 
   let expectedSuggestions = ["testfoo", "testbar"];
   for (let i = 0; i < TEST_ENGINE_NUM_EXPECTED_RESULTS; i++) {
     // + 1 to skip the heuristic result
-    let item = gURLBar.popup.richlistbox.itemChildren[i + 1];
-    let action = item._parseActionUrl(item.getAttribute("url"));
-    Assert.ok(action);
-    Assert.equal(action.type, "searchengine");
-    Assert.ok("searchSuggestion" in action.params);
-    Assert.equal(action.params.searchSuggestion, expectedSuggestions[i]);
+    let result = await UrlbarTestUtils.getDetailsOfResultAt(window, i + 1);
+    Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.SEARCH,
+      "Should have the correct result type");
+    Assert.equal(result.searchParams.suggestion, expectedSuggestions[i],
+      "Should have the correct suggestion");
   }
 });

@@ -44,6 +44,15 @@ nsresult GfxInfo::Init() {
   return GfxInfoBase::Init();
 }
 
+void GfxInfo::AddCrashReportAnnotations() {
+  CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::AdapterVendorID,
+                                     mVendor);
+  CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::AdapterDeviceID,
+                                     mRenderer);
+  CrashReporter::AnnotateCrashReport(
+      CrashReporter::Annotation::AdapterDriverVersion, mVersion);
+}
+
 void GfxInfo::GetData() {
   // to understand this function, see bug 639842. We retrieve the OpenGL driver
   // information in a separate process to protect against bad drivers.
@@ -168,15 +177,7 @@ void GfxInfo::GetData() {
   mAdapterDescription.AppendLiteral(" -- ");
   mAdapterDescription.Append(mRenderer);
 
-  nsAutoCString note;
-  note.AppendLiteral("OpenGL: ");
-  note.Append(mAdapterDescription);
-  note.AppendLiteral(" -- ");
-  note.Append(mVersion);
-  if (mHasTextureFromPixmap) note.AppendLiteral(" -- texture_from_pixmap");
-  note.Append('\n');
-
-  CrashReporter::AppendAppNotesToCrashReport(note);
+  AddCrashReportAnnotations();
 
   // determine the major OpenGL version. That's the first integer in the version
   // string.

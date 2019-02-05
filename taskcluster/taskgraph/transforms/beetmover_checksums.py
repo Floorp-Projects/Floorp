@@ -22,10 +22,6 @@ from voluptuous import Optional, Required
 from taskgraph.util.treeherder import replace_group
 from taskgraph.transforms.task import task_description_schema
 
-# Voluptuous uses marker objects as dictionary *keys*, but they are not
-# comparable, so we cast all of the keys back to regular strings
-task_description_schema = {str(k): v for k, v in task_description_schema.schema.iteritems()}
-
 beetmover_checksums_description_schema = schema.extend({
     Required('depname', default='build'): basestring,
     Required('attributes'): {basestring: object},

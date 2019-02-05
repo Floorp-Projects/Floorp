@@ -206,11 +206,15 @@ already_AddRefed<SharedWorker> SharedWorker::Constructor(
     ipcClientInfo = void_t();
   }
 
+  bool storageAccessAllowed =
+      storageAllowed > nsContentUtils::StorageAccess::eDeny;
+
   RemoteWorkerData remoteWorkerData(
       nsString(aScriptURL), baseURL, resolvedScriptURL, name,
       loadingPrincipalInfo, loadingPrincipalCSP, loadingPrincipalPreloadCSP,
       principalInfo, principalCSP, principalPreloadCSP, loadInfo.mDomain,
-      isSecureContext, ipcClientInfo, true /* sharedWorker */);
+      isSecureContext, ipcClientInfo, storageAccessAllowed,
+      true /* sharedWorker */);
 
   PSharedWorkerChild* pActor = actorChild->SendPSharedWorkerConstructor(
       remoteWorkerData, loadInfo.mWindowID, portIdentifier);

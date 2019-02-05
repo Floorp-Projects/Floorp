@@ -1416,7 +1416,8 @@ static bool DecodeStructType(Decoder& d, ModuleEnvironment* env,
 #ifdef ENABLE_WASM_REFTYPES
 static bool DecodeGCFeatureOptInSection(Decoder& d, ModuleEnvironment* env) {
   MaybeSectionRange range;
-  if (!d.startSection(SectionId::GcFeatureOptIn, env, &range, "gcfeatureoptin")) {
+  if (!d.startSection(SectionId::GcFeatureOptIn, env, &range,
+                      "gcfeatureoptin")) {
     return false;
   }
   if (!range) {

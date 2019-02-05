@@ -246,6 +246,6 @@ class JS_PUBLIC_API ContextOptions {
 
 JS_PUBLIC_API ContextOptions& ContextOptionsRef(JSContext* cx);
 
-} // namespace JS
+}  // namespace JS
 
-#endif // js_ContextOptions_h
+#endif  // js_ContextOptions_h

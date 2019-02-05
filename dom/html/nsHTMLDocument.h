@@ -213,6 +213,8 @@ class nsHTMLDocument : public mozilla::dom::Document, public nsIHTMLDocument {
 
   void UserInteractionForTesting();
 
+  void SetKeyPressEventModel(uint16_t aKeyPressEventModel);
+
  protected:
   ~nsHTMLDocument();
 
@@ -300,6 +302,15 @@ class nsHTMLDocument : public mozilla::dom::Document, public nsIHTMLDocument {
   virtual void SetDocumentCharacterSet(
       NotNull<const Encoding*> aEncoding) override;
 
+  /**
+   * MaybeDispatchCheckKeyPressEventModelEvent() dispatches
+   * "CheckKeyPressEventModel" event to check whether we should dispatch
+   * keypress events in confluent model or split model.  This should be
+   * called only when mEditingState is changed to eDesignMode or
+   * eConentEditable at first time.
+   */
+  void MaybeDispatchCheckKeyPressEventModelEvent();
+
   // Tracks if we are currently processing any document.write calls (either
   // implicit or explicit). Note that if a write call writes out something which
   // would block the parser, then mWriteLevel will be incorrect until the parser
@@ -337,6 +348,10 @@ class nsHTMLDocument : public mozilla::dom::Document, public nsIHTMLDocument {
    * MaybeEditingStateChanged() script runners from a nested scope.
    */
   bool mPendingMaybeEditingStateChanged;
+
+  // mHasBeenEditable is set to true when mEditingState is firstly set to
+  // eDesignMode or eContentEditable.
+  bool mHasBeenEditable;
 };
 
 namespace mozilla {

@@ -202,11 +202,6 @@ void GPUProcessHost::KillHard(const char* aReason) {
 
 uint64_t GPUProcessHost::GetProcessToken() const { return mProcessToken; }
 
-static void DelayedDeleteSubprocess(GeckoChildProcessHost* aSubprocess) {
-  XRE_GetIOMessageLoop()->PostTask(
-      mozilla::MakeAndAddRef<DeleteTask<GeckoChildProcessHost>>(aSubprocess));
-}
-
 void GPUProcessHost::KillProcess() { KillHard("DiagnosticKill"); }
 
 void GPUProcessHost::DestroyProcess() {
@@ -217,8 +212,8 @@ void GPUProcessHost::DestroyProcess() {
     mTaskFactory.RevokeAll();
   }
 
-  MessageLoop::current()->PostTask(NewRunnableFunction(
-      "DestroyProcessRunnable", DelayedDeleteSubprocess, this));
+  MessageLoop::current()->PostTask(NS_NewRunnableFunction(
+      "DestroyProcessRunnable", [this] { Destroy(); }));
 }
 
 }  // namespace gfx

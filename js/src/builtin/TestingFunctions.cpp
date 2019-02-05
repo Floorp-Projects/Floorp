@@ -698,7 +698,8 @@ static bool WasmGcEnabled(JSContext* cx, unsigned argc, Value* vp) {
 
 static bool WasmDebugSupport(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  args.rval().setBoolean(cx->options().wasmBaseline() && wasm::BaselineCanCompile());
+  args.rval().setBoolean(cx->options().wasmBaseline() &&
+                         wasm::BaselineCanCompile());
   return true;
 }
 
@@ -2669,12 +2670,23 @@ static bool testingFunc_inJit(JSContext* cx, unsigned argc, Value* vp) {
     return ReturnStringCopy(cx, args, "Baseline is disabled.");
   }
 
-  JSScript* script = cx->currentScript();
-  if (script && script->getWarmUpResetCount() >= 20) {
-    return ReturnStringCopy(
-        cx, args, "Compilation is being repeatedly prevented. Giving up.");
+  // Use frame iterator to inspect caller.
+  FrameIter iter(cx);
+  MOZ_ASSERT(!iter.done());
+
+  if (iter.hasScript()) {
+    // Detect repeated attempts to compile, resetting the counter if inJit
+    // succeeds. Note: This script may have be inlined into its caller.
+    if (iter.isJSJit()) {
+      iter.script()->resetWarmUpResetCounter();
+    } else if (iter.script()->getWarmUpResetCount() >= 20) {
+      return ReturnStringCopy(
+          cx, args, "Compilation is being repeatedly prevented. Giving up.");
+    }
   }
 
+  // Returns true for any JIT (including WASM).
+  MOZ_ASSERT_IF(iter.isJSJit(), cx->currentlyRunningInJit());
   args.rval().setBoolean(cx->currentlyRunningInJit());
   return true;
 }
@@ -2686,29 +2698,22 @@ static bool testingFunc_inIon(JSContext* cx, unsigned argc, Value* vp) {
     return ReturnStringCopy(cx, args, "Ion is disabled.");
   }
 
-  if (cx->activation()->hasWasmExitFP()) {
-    // Exited through wasm. Note this is false when the fast wasm->jit exit
-    // was taken, in which case we actually have jit frames on the stack.
-    args.rval().setBoolean(false);
-    return true;
-  }
+  // Use frame iterator to inspect caller.
+  FrameIter iter(cx);
+  MOZ_ASSERT(!iter.done());
 
-  ScriptFrameIter iter(cx);
-  if (!iter.done() && iter.isIon()) {
-    // Reset the counter of the IonScript's script.
-    jit::JSJitFrameIter jitIter(cx->activation()->asJit());
-    ++jitIter;
-    jitIter.script()->resetWarmUpResetCounter();
-  } else {
-    // Check if we missed multiple attempts at compiling the innermost script.
-    JSScript* script = cx->currentScript();
-    if (script && script->getWarmUpResetCount() >= 20) {
+  if (iter.hasScript()) {
+    // Detect repeated attempts to compile, resetting the counter if inIon
+    // succeeds. Note: This script may have be inlined into its caller.
+    if (iter.isIon()) {
+      iter.script()->resetWarmUpResetCounter();
+    } else if (iter.script()->getWarmUpResetCount() >= 20) {
       return ReturnStringCopy(
           cx, args, "Compilation is being repeatedly prevented. Giving up.");
     }
   }
 
-  args.rval().setBoolean(!iter.done() && iter.isIon());
+  args.rval().setBoolean(iter.isIon());
   return true;
 }
 

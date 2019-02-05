@@ -71,7 +71,7 @@ class RaptorRunner(MozbuildObject):
         print("Updating external benchmarks from {}".format(BENCHMARK_REPOSITORY))
 
         # Set up the external repo
-        external_repo_path = os.path.join(get_state_dir()[0], 'performance-tests')
+        external_repo_path = os.path.join(get_state_dir(), 'performance-tests')
 
         try:
             subprocess.check_output(['git', '--version'])

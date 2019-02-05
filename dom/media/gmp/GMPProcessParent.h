@@ -22,7 +22,6 @@ namespace gmp {
 class GMPProcessParent final : public mozilla::ipc::GeckoChildProcessHost {
  public:
   explicit GMPProcessParent(const std::string& aGMPPath);
-  ~GMPProcessParent();
 
   // Synchronously launch the plugin process. If the process fails to launch
   // after timeoutMs, this method will return false.
@@ -37,6 +36,8 @@ class GMPProcessParent final : public mozilla::ipc::GeckoChildProcessHost {
   using mozilla::ipc::GeckoChildProcessHost::GetChildProcessHandle;
 
  private:
+  ~GMPProcessParent();
+
   void DoDelete();
 
   std::string mGMPPath;

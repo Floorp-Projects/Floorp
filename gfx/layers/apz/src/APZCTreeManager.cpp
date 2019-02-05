@@ -3130,6 +3130,11 @@ APZCTreeManager::ComputeTransformForScrollThumb(
   AsyncTransformComponentMatrix asyncTransform =
       aApzc->GetCurrentAsyncTransform(AsyncPanZoomController::eForCompositing);
 
+  // With container scrolling, the RCD-RSF scrollbars are subject to the
+  // content resolution, which requires some special handling.
+  bool scrollbarSubjectToResolution =
+      aMetrics.IsRootContent() && gfxPrefs::LayoutUseContainersForRootFrames();
+
   // |asyncTransform| represents the amount by which we have scrolled and
   // zoomed since the last paint. Because the scrollbar was sized and positioned
   // based on the painted content, we need to adjust it based on asyncTransform
@@ -3176,7 +3181,7 @@ APZCTreeManager::ComputeTransformForScrollThumb(
         thumbOriginDelta * effectiveZoom;
     yTranslation -= thumbOriginDeltaPL;
 
-    if (aMetrics.IsRootContent()) {
+    if (scrollbarSubjectToResolution) {
       // Scrollbar for the root are painted at the same resolution as the
       // content. Since the coordinate space we apply this transform in includes
       // the resolution, we need to adjust for it as well here. Note that in
@@ -3190,7 +3195,7 @@ APZCTreeManager::ComputeTransformForScrollThumb(
     scrollbarTransform.PostTranslate(0, yTranslation, 0);
   }
   if (*aScrollbarData.mDirection == ScrollDirection::eHorizontal) {
-    // See detailed comments under the VERTICAL case.
+    // See detailed comments under the eVertical case.
 
     const ParentLayerCoord asyncScrollX = asyncTransform._41;
     const float asyncZoomX = asyncTransform._11;
@@ -3211,7 +3216,7 @@ APZCTreeManager::ComputeTransformForScrollThumb(
         thumbOriginDelta * effectiveZoom;
     xTranslation -= thumbOriginDeltaPL;
 
-    if (aMetrics.IsRootContent()) {
+    if (scrollbarSubjectToResolution) {
       xTranslation *= aMetrics.GetPresShellResolution();
     }
 
@@ -3228,7 +3233,7 @@ APZCTreeManager::ComputeTransformForScrollThumb(
   // thumb's size to vary with the zoom (other than its length reflecting the
   // fraction of the scrollable length that's in view, which is taken care of
   // above), we apply a transform to cancel out this resolution.
-  if (aMetrics.IsRootContent()) {
+  if (scrollbarSubjectToResolution) {
     compensation = AsyncTransformComponentMatrix::Scaling(
                        aMetrics.GetPresShellResolution(),
                        aMetrics.GetPresShellResolution(), 1.0f)

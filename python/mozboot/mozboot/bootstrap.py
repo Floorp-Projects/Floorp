@@ -341,7 +341,7 @@ class Bootstrapper(object):
     # be available. We /could/ refactor parts of mach_bootstrap.py to be
     # part of this directory to avoid the code duplication.
     def try_to_create_state_dir(self):
-        state_dir, _ = get_state_dir()
+        state_dir = get_state_dir()
 
         if not os.path.exists(state_dir):
             should_create_state_dir = True

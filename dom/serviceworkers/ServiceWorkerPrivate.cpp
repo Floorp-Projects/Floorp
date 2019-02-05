@@ -1723,7 +1723,7 @@ nsresult ServiceWorkerPrivate::SpawnWorkerIfNeeded(WakeUpReason aWhy,
   info.mLoadingPrincipal = info.mPrincipal;
 
   nsContentUtils::StorageAccess access =
-      nsContentUtils::StorageAllowedForPrincipal(info.mPrincipal);
+      nsContentUtils::StorageAllowedForServiceWorker(info.mPrincipal);
   info.mStorageAllowed =
       access > nsContentUtils::StorageAccess::ePrivateBrowsing;
   info.mOriginAttributes = mInfo->GetOriginAttributes();

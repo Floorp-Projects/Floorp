@@ -723,11 +723,6 @@ class MarionetteTestharnessExecutor(TestharnessExecutor):
             if done:
                 break
 
-        try:
-            self.protocol.testharness.close_old_windows(protocol)
-        except Exception:
-            pass
-
         if self.protocol.coverage.is_enabled:
             self.protocol.coverage.dump()
 

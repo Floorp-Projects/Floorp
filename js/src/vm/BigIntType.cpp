@@ -212,10 +212,10 @@ BigInt* BigInt::neg(JSContext* cx, HandleBigInt x) {
 }
 
 #if !defined(JS_64BIT)
-#define HAVE_TWO_DIGIT 1
+#  define HAVE_TWO_DIGIT 1
 using TwoDigit = uint64_t;
 #elif defined(HAVE_INT128_SUPPORT)
-#define HAVE_TWO_DIGIT 1
+#  define HAVE_TWO_DIGIT 1
 using TwoDigit = __uint128_t;
 #endif
 
@@ -563,11 +563,10 @@ BigInt* BigInt::absoluteSub(JSContext* cx, HandleBigInt x, HandleBigInt y,
 //
 // This function returns false if `quotient` is an empty handle, but allocating
 // the quotient failed.  Otherwise it returns true, indicating success.
-bool BigInt::absoluteDivWithDigitDivisor(JSContext* cx, HandleBigInt x,
-                                         Digit divisor,
-                                         const Maybe<MutableHandleBigInt>& quotient,
-                                         Digit* remainder,
-                                         bool quotientNegative) {
+bool BigInt::absoluteDivWithDigitDivisor(
+    JSContext* cx, HandleBigInt x, Digit divisor,
+    const Maybe<MutableHandleBigInt>& quotient, Digit* remainder,
+    bool quotientNegative) {
   MOZ_ASSERT(divisor);
 
   MOZ_ASSERT(!x->isZero());
@@ -734,11 +733,10 @@ BigInt* BigInt::absoluteLeftShiftAlwaysCopy(JSContext* cx, HandleBigInt x,
 // interested in one of them.  See Knuth, Volume 2, section 4.3.1, Algorithm D.
 // Also see the overview of the algorithm by Jan Marthedal Rasmussen over at
 // https://janmr.com/blog/2014/04/basic-multiple-precision-long-division/.
-bool BigInt::absoluteDivWithBigIntDivisor(JSContext* cx, HandleBigInt dividend,
-                                          HandleBigInt divisor,
-                                          const Maybe<MutableHandleBigInt>& quotient,
-                                          const Maybe<MutableHandleBigInt>& remainder,
-                                          bool isNegative) {
+bool BigInt::absoluteDivWithBigIntDivisor(
+    JSContext* cx, HandleBigInt dividend, HandleBigInt divisor,
+    const Maybe<MutableHandleBigInt>& quotient,
+    const Maybe<MutableHandleBigInt>& remainder, bool isNegative) {
   MOZ_ASSERT(divisor->digitLength() >= 2);
   MOZ_ASSERT(dividend->digitLength() >= divisor->digitLength());
 
@@ -1155,8 +1153,9 @@ JSLinearString* BigInt::toStringBasePowerOfTwo(JSContext* cx, HandleBigInt x,
   return NewStringCopyN<allowGC>(cx, resultChars.get(), charsRequired);
 }
 
-template<AllowGC allowGC>
-JSLinearString* BigInt::toStringSingleDigitBaseTen(JSContext* cx, Digit digit, bool isNegative) {
+template <AllowGC allowGC>
+JSLinearString* BigInt::toStringSingleDigitBaseTen(JSContext* cx, Digit digit,
+                                                   bool isNegative) {
   if (digit <= Digit(INT32_MAX)) {
     int32_t val = AssertedCast<int32_t>(digit);
     return Int32ToString<allowGC>(cx, isNegative ? -val : val);
@@ -3066,7 +3065,8 @@ JSLinearString* BigInt::toString(JSContext* cx, HandleBigInt x, uint8_t radix) {
   }
 
   if (radix == 10 && x->digitLength() == 1) {
-    return toStringSingleDigitBaseTen<allowGC>(cx, x->digit(0), x->isNegative());
+    return toStringSingleDigitBaseTen<allowGC>(cx, x->digit(0),
+                                               x->isNegative());
   }
 
   // Punt on doing generic toString without GC.
@@ -3077,8 +3077,12 @@ JSLinearString* BigInt::toString(JSContext* cx, HandleBigInt x, uint8_t radix) {
   return toStringGeneric(cx, x, radix);
 }
 
-template JSLinearString* BigInt::toString<js::CanGC>(JSContext* cx, HandleBigInt x, uint8_t radix);
-template JSLinearString* BigInt::toString<js::NoGC>(JSContext* cx, HandleBigInt x, uint8_t radix);
+template JSLinearString* BigInt::toString<js::CanGC>(JSContext* cx,
+                                                     HandleBigInt x,
+                                                     uint8_t radix);
+template JSLinearString* BigInt::toString<js::NoGC>(JSContext* cx,
+                                                    HandleBigInt x,
+                                                    uint8_t radix);
 
 template <typename CharT>
 static inline BigInt* ParseStringBigIntLiteral(JSContext* cx,

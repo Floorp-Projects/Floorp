@@ -23,7 +23,7 @@
 namespace mozilla {
 
 // TODO(bug 1522632): This function should be moved to NSS
-static SECItem* ExportDEREncryptedPrivateKeyInfo(
+static SECItem *ExportDEREncryptedPrivateKeyInfo(
     PK11SlotInfo *slot,    /* optional, encrypt key in this slot */
     SECOidTag algTag,      /* encrypt key with this algorithm */
     const SECItem *pwitem, /* password for PBE encryption */
@@ -32,7 +32,7 @@ static SECItem* ExportDEREncryptedPrivateKeyInfo(
     void *wincx)           /* context for password callback ? */
 {
   SECKEYEncryptedPrivateKeyInfo *pki = PK11_ExportEncryptedPrivKeyInfo(
-      slot, algTag, const_cast<SECItem*>(pwitem), pk, iteration, wincx);
+      slot, algTag, const_cast<SECItem *>(pwitem), pk, iteration, wincx);
   SECItem *derPKI;
 
   if (!pki) {
@@ -337,8 +337,8 @@ nsresult DtlsIdentity::ComputeFingerprint(const UniqueCERTCertificate &cert,
   MOZ_ASSERT(ho->length >= 20);  // Double check
   digest->value_.resize(ho->length);
 
-  SECStatus rv =
-      HASH_HashBuf(ho->type, digest->value_.data(), cert->derCert.data, cert->derCert.len);
+  SECStatus rv = HASH_HashBuf(ho->type, digest->value_.data(),
+                              cert->derCert.data, cert->derCert.len);
   if (rv != SECSuccess) {
     return NS_ERROR_FAILURE;
   }

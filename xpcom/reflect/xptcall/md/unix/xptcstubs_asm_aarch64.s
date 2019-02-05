@@ -10,8 +10,13 @@
             .hidden SharedStub
             .type  SharedStub,@function
 SharedStub:
+            .cfi_startproc
             stp         x29, x30, [sp,#-16]!
+            .cfi_adjust_cfa_offset 16
+            .cfi_rel_offset x29, 0
+            .cfi_rel_offset x30, 8
             mov         x29, sp
+            .cfi_def_cfa_register x29
 
             sub         sp, sp, #8*(NGPREGS+NFPREGS)
             stp         x0, x1, [sp, #64+(0*8)]
@@ -33,7 +38,12 @@ SharedStub:
             bl          PrepareAndDispatch
 
             add         sp, sp, #8*(NGPREGS+NFPREGS)
+            .cfi_def_cfa_register sp
             ldp         x29, x30, [sp],#16
+            .cfi_adjust_cfa_offset -16
+            .cfi_restore x29
+            .cfi_restore x30
             ret
+            .cfi_endproc
 
             .size SharedStub, . - SharedStub

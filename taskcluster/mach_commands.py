@@ -279,12 +279,12 @@ class MachCommands(MachCommandBase):
     def test_action_callback(self, **options):
         import taskgraph.parameters
         import taskgraph.actions
-        import yaml
+        from taskgraph.util import yaml
 
         def load_data(filename):
             with open(filename) as f:
                 if filename.endswith('.yml'):
-                    return yaml.safe_load(f)
+                    return yaml.load_stream(f)
                 elif filename.endswith('.json'):
                     return json.load(f)
                 else:

@@ -23,32 +23,38 @@ class InputStreamHelper {
   // These 4 methods allow to serialize an inputStream into InputStreamParams.
   // The manager is needed in case a stream needs to serialize itself as
   // IPCRemoteStream.
-  // In case the stream wants to serialize itself as IPCRemoteStream, its
-  // content will be sent to the other side of the IPC pipe in chunks. This
-  // sending can start immediatelly or at the first read based on the value of
-  // |aDelayedStart|.
+  // The stream serializes itself fully only if the resulting IPC message will
+  // be smaller than |aMaxSize|. Otherwise, the stream serializes itself as
+  // IPCRemoteStream, and, its content will be sent to the other side of the IPC
+  // pipe in chunks. This sending can start immediatelly or at the first read
+  // based on the value of |aDelayedStart|. The IPC message size is returned
+  // into |aSizeUsed|.
   static void SerializeInputStream(nsIInputStream* aInputStream,
                                    InputStreamParams& aParams,
                                    nsTArray<FileDescriptor>& aFileDescriptors,
-                                   bool aDelayedStart,
+                                   bool aDelayedStart, uint32_t aMaxSize,
+                                   uint32_t* aSizeUsed,
                                    mozilla::dom::nsIContentChild* aManager);
 
   static void SerializeInputStream(nsIInputStream* aInputStream,
                                    InputStreamParams& aParams,
                                    nsTArray<FileDescriptor>& aFileDescriptors,
-                                   bool aDelayedStart,
+                                   bool aDelayedStart, uint32_t aMaxSize,
+                                   uint32_t* aSizeUsed,
                                    PBackgroundChild* aManager);
 
   static void SerializeInputStream(nsIInputStream* aInputStream,
                                    InputStreamParams& aParams,
                                    nsTArray<FileDescriptor>& aFileDescriptors,
-                                   bool aDelayedStart,
+                                   bool aDelayedStart, uint32_t aMaxSize,
+                                   uint32_t* aSizeUsed,
                                    mozilla::dom::nsIContentParent* aManager);
 
   static void SerializeInputStream(nsIInputStream* aInputStream,
                                    InputStreamParams& aParams,
                                    nsTArray<FileDescriptor>& aFileDescriptors,
-                                   bool aDelayedStart,
+                                   bool aDelayedStart, uint32_t aMaxSize,
+                                   uint32_t* aSizeUsed,
                                    PBackgroundParent* aManager);
 
   // When a stream wants to serialize itself as IPCRemoteStream, it uses one of

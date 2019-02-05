@@ -31,14 +31,14 @@ use std::fmt;
 use std::io;
 use std::io::Write;
 use std::str;
-use std::sync::atomic::{AtomicUsize, Ordering, ATOMIC_USIZE_INIT};
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 use chrono;
 use log;
 use mozprofile::preferences::Pref;
 
-static MAX_LOG_LEVEL: AtomicUsize = ATOMIC_USIZE_INIT;
-const LOGGED_TARGETS: &'static [&'static str] = &[
+static MAX_LOG_LEVEL: AtomicUsize = AtomicUsize::new(0);
+const LOGGED_TARGETS: &[&str] = &[
     "geckodriver",
     "mozprofile",
     "mozrunner",
