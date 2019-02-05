@@ -339,16 +339,13 @@ static void DEBUG_CheckUnwrapSafety(HandleObject obj,
   } else if (AccessCheck::isChrome(target) ||
              xpc::IsUniversalXPConnectEnabled(target)) {
     // If the caller is chrome (or effectively so), unwrap should always be
-    // allowed, but we might have a CrossOriginObjectWrapper here which allows
-    // it dynamically.
-    MOZ_ASSERT(!handler->hasSecurityPolicy() ||
-               handler == &CrossOriginObjectWrapper::singleton);
+    // allowed.
+    MOZ_ASSERT(!handler->hasSecurityPolicy());
   } else if (RealmPrivate::Get(origin)->forcePermissiveCOWs) {
     // Similarly, if this is a privileged scope that has opted to make itself
     // accessible to the world (allowed only during automation), unwrap should
-    // be allowed.  Again, it might be allowed dynamically.
-    MOZ_ASSERT(!handler->hasSecurityPolicy() ||
-               handler == &CrossOriginObjectWrapper::singleton);
+    // be allowed.
+    MOZ_ASSERT(!handler->hasSecurityPolicy());
   } else {
     // Otherwise, it should depend on whether the target subsumes the origin.
     JS::Compartment* originComp = JS::GetCompartmentForRealm(origin);
@@ -357,17 +354,7 @@ static void DEBUG_CheckUnwrapSafety(HandleObject obj,
              ? AccessCheck::subsumesConsideringDomain(target, originComp)
              : AccessCheck::subsumesConsideringDomainIgnoringFPD(target,
                                                                  originComp));
-    if (!subsumes) {
-      // If the target (which is where the wrapper lives) does not subsume the
-      // origin (which is where the wrapped object lives), then we should have a
-      // security check on the wrapper here.
-      MOZ_ASSERT(handler->hasSecurityPolicy());
-    } else {
-      // Even if target subsumes origin, we might have a wrapper with a security
-      // policy here, if it happens to be a CrossOriginObjectWrapper.
-      MOZ_ASSERT(!handler->hasSecurityPolicy() ||
-                 handler == &CrossOriginObjectWrapper::singleton);
-    }
+    MOZ_ASSERT(handler->hasSecurityPolicy() == !subsumes);
   }
 }
 #else
@@ -415,6 +402,12 @@ static const Wrapper* SelectWrapper(bool securityWrapper, XrayType xrayType,
     }
     MOZ_ASSERT(xrayType == XrayForOpaqueObject);
     return &PermissiveXrayOpaque::singleton;
+  }
+
+  // This is a security wrapper. Use the security versions and filter.
+  if (xrayType == XrayForDOMObject &&
+      IdentifyCrossOriginObject(obj) != CrossOriginOpaque) {
+    return &CrossOriginObjectWrapper::singleton;
   }
 
   // There's never any reason to expose other objects to non-subsuming actors.
@@ -506,18 +499,6 @@ JSObject* WrapperFactory::Rewrap(JSContext* cx, HandleObject existing,
       wrapper =
           &FilteringWrapper<CrossCompartmentSecurityWrapper, Opaque>::singleton;
     }
-  }
-
-  // Special handling for the web's cross-origin objects (WindowProxy and
-  // Location).  We only need or want to do this in web-like contexts, where all
-  // security relationships are symmetric and there are no forced Xrays.
-  else if (originSubsumesTarget == targetSubsumesOrigin &&
-           // Check for the more rare case of cross-origin objects before doing
-           // the more-likely-to-pass checks for wantXrays.
-           IsCrossOriginAccessibleObject(obj) &&
-           (!targetSubsumesOrigin || (!originCompartmentPrivate->wantXrays &&
-                                      !targetCompartmentPrivate->wantXrays))) {
-    wrapper = &CrossOriginObjectWrapper::singleton;
   }
 
   //
