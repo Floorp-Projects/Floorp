@@ -632,8 +632,9 @@ class GetUserMediaWindowListener {
       nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
       auto* globalWindow = nsGlobalWindowInner::GetInnerWindowWithId(mWindowID);
       if (globalWindow) {
-        auto req = MakeRefPtr<GetUserMediaRequest>(globalWindow->AsInner(),
-                                                   VoidString(), VoidString());
+        auto req = MakeRefPtr<GetUserMediaRequest>(
+            globalWindow->AsInner(), VoidString(), VoidString(),
+            EventStateManager::IsHandlingUserInput());
         obs->NotifyObservers(req, "recording-device-stopped", nullptr);
       }
       return;
@@ -686,8 +687,9 @@ class GetUserMediaWindowListener {
         auto* globalWindow =
             nsGlobalWindowInner::GetInnerWindowWithId(mWindowID);
         auto* window = globalWindow ? globalWindow->AsInner() : nullptr;
-        auto req = MakeRefPtr<GetUserMediaRequest>(window, removedRawId,
-                                                   removedSourceType);
+        auto req = MakeRefPtr<GetUserMediaRequest>(
+            window, removedRawId, removedSourceType,
+            EventStateManager::IsHandlingUserInput());
         obs->NotifyObservers(req, "recording-device-stopped", nullptr);
       }
     }
@@ -715,8 +717,9 @@ class GetUserMediaWindowListener {
             nsGlobalWindowInner::GetInnerWindowWithId(mWindowID);
         nsPIDOMWindowInner* window =
             globalWindow ? globalWindow->AsInner() : nullptr;
-        auto req = MakeRefPtr<GetUserMediaRequest>(window, removedRawId,
-                                                   removedSourceType);
+        auto req = MakeRefPtr<GetUserMediaRequest>(
+            window, removedRawId, removedSourceType,
+            EventStateManager::IsHandlingUserInput());
         obs->NotifyObservers(req, "recording-device-stopped", nullptr);
       }
     }
