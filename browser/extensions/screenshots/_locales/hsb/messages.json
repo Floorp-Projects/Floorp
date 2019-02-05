@@ -17,6 +17,9 @@
   "saveScreenshotSelectedArea": {
     "message": "Składować"
   },
+  "uploadScreenshotSelectedArea": {
+    "message": "Nahrać"
+  },
   "saveScreenshotVisibleArea": {
     "message": "Widźomny wobwod składować"
   },
@@ -28,6 +31,9 @@
   },
   "downloadScreenshot": {
     "message": "Sćahnyć"
+  },
+  "downloadScreenshotTitle": {
+    "message": "Foto wobrazowki sćahnyć"
   },
   "downloadOnlyNotice": {
     "message": "Tuchwilu sće w modusu „Jenož sćahnyć“."
@@ -63,6 +69,9 @@
   },
   "copyScreenshot": {
     "message": "Kopěrować"
+  },
+  "copyScreenshotTitle": {
+    "message": "Foto wobrazowki do mjezyskłada kopěrować"
   },
   "notificationImageCopiedTitle": {
     "message": "Foto kopěrowane"
@@ -122,8 +131,8 @@
   "genericErrorDetails": {
     "message": "Njejsmy sej wěsći, štož je so stało. Chceće hišće raz spytać abo chceće druhu stronu fotografować?"
   },
-  "tourBodyIntro": {
-    "message": "Čińće, składujće a dźělće fota wobrazowki bjez toho, zo byšće Firefox wopušćił."
+  "tourBodyIntroServerless": {
+    "message": "Wutworće, kopěrujće a sćehńće fota wobrazowki, bjeztoho zo byšće Firefox wopušćił."
   },
   "tourHeaderPageAction": {
     "message": "Nowe wašnje składowanja"
@@ -142,18 +151,6 @@
   },
   "tourBodyFullPage": {
     "message": "Wubjerće tłóčatka horjeka naprawo, zo byšće widźomny wobwod we woknje abo cyłu stronu fotografować."
-  },
-  "tourHeaderDownloadUpload": {
-    "message": "Tak, kaž so wam spodoba"
-  },
-  "tourBodyDownloadUpload": {
-    "message": "Składujće swoje přitřihane fota wobrazowki w interneće, zo byšće je lóšo dźělił, abo sćehńće je na swój ličak. Móžeće tež na tłóčatko „Moje fota wobrazowki“ kliknyć, zo byšće wšě fota wobrazowki namakał, kotrež sće činił."
-  },
-  "tourHeaderAccounts": {
-    "message": "Fota wobrazowki za puć"
-  },
-  "tourBodyAccounts": {
-    "message": "Přizjewće so pola swojeho konta Firefox, zo byšće přistup na swoje fota wobrazowki na wšěch wašich gratach měł a składujće swoje najlubše fota wobrazowki na přeco."
   },
   "tourSkip": {
     "message": "Přeskočić"

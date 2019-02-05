@@ -17,6 +17,9 @@
   "saveScreenshotSelectedArea": {
     "message": "Tallenna"
   },
+  "uploadScreenshotSelectedArea": {
+    "message": "Lähetä"
+  },
   "saveScreenshotVisibleArea": {
     "message": "Tallenna näkyvä alue"
   },
@@ -28,6 +31,9 @@
   },
   "downloadScreenshot": {
     "message": "Lataa"
+  },
+  "downloadScreenshotTitle": {
+    "message": "Lataa kuvakaappaus"
   },
   "downloadOnlyNotice": {
     "message": "Olet vain lataus -tilassa."
@@ -63,6 +69,9 @@
   },
   "copyScreenshot": {
     "message": "Kopioi"
+  },
+  "copyScreenshotTitle": {
+    "message": "Kopioi kuvakaappaus leikepöydälle"
   },
   "notificationImageCopiedTitle": {
     "message": "Kaappaus kopioitu"
@@ -122,9 +131,6 @@
   "genericErrorDetails": {
     "message": "Emme oikein tiedä, mitä tapahtui. Haluatko yrittää uudestaan tai ottaa kuvan eri sivusta?"
   },
-  "tourBodyIntro": {
-    "message": "Ota, tallenna ja jaa kuvakaappaus poistumatta Firefoxista."
-  },
   "tourHeaderPageAction": {
     "message": "Uusi tapa tallentaa"
   },
@@ -142,12 +148,6 @@
   },
   "tourBodyFullPage": {
     "message": "Valitse oikean yläkulman painikkeista joko ikkunassa näkyvän alueen tai koko sivun kaappaus."
-  },
-  "tourHeaderDownloadUpload": {
-    "message": "Haluamallasi tavalla"
-  },
-  "tourBodyDownloadUpload": {
-    "message": "Tallenna rajaamasi kuvat verkkoon helpompaa jakamista varten tai lataa ne tietokoneellesi. Voit myös napsauttaa Omat kaappaukset -painiketta ja nähdä kaikki ottamasi kuvat."
   },
   "tourSkip": {
     "message": "OHITA"

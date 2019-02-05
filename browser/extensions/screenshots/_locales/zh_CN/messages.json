@@ -17,6 +17,9 @@
   "saveScreenshotSelectedArea": {
     "message": "保存"
   },
+  "uploadScreenshotSelectedArea": {
+    "message": "上传"
+  },
   "saveScreenshotVisibleArea": {
     "message": "截取可见范围"
   },
@@ -28,6 +31,9 @@
   },
   "downloadScreenshot": {
     "message": "下载"
+  },
+  "downloadScreenshotTitle": {
+    "message": "下载截图"
   },
   "downloadOnlyNotice": {
     "message": "您目前处在仅下载模式。"
@@ -63,6 +69,9 @@
   },
   "copyScreenshot": {
     "message": "复制"
+  },
+  "copyScreenshotTitle": {
+    "message": "复制截图到剪贴板"
   },
   "notificationImageCopiedTitle": {
     "message": "截图已复制"
@@ -122,8 +131,8 @@
   "genericErrorDetails": {
     "message": "我们不确定发生了什么。您可以再试一次或者试试另一个页面。"
   },
-  "tourBodyIntro": {
-    "message": "截取、保存和分享屏幕截图，无需 Firefox 以外的工具。"
+  "tourBodyIntroServerless": {
+    "message": "截取、复制、下载屏幕截图，不必离开 Firefox。"
   },
   "tourHeaderPageAction": {
     "message": "新的保存方法"
@@ -142,18 +151,6 @@
   },
   "tourBodyFullPage": {
     "message": "选择右上角的按钮可以截取窗口中的可见区域或者整个页面。"
-  },
-  "tourHeaderDownloadUpload": {
-    "message": "做您所想"
-  },
-  "tourBodyDownloadUpload": {
-    "message": "将您裁剪后的截图保存到网上以便共享，或者下载到您的计算机。您也可以点击“我的截图”按钮找到您截取的所有截图。"
-  },
-  "tourHeaderAccounts": {
-    "message": "Screenshots to Go"
-  },
-  "tourBodyAccounts": {
-    "message": "登录您的 Firefox 账户，即可访问您在所有设备上的截图，并永久保存您收藏的截图。"
   },
   "tourSkip": {
     "message": "跳过"

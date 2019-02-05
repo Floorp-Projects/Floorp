@@ -17,6 +17,9 @@
   "saveScreenshotSelectedArea": {
     "message": "Sekles"
   },
+  "uploadScreenshotSelectedArea": {
+    "message": "Sali"
+  },
   "saveScreenshotVisibleArea": {
     "message": "Sekles ayen ibanen"
   },

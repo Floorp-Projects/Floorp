@@ -17,6 +17,9 @@
   "saveScreenshotSelectedArea": {
     "message": "Salvar"
   },
+  "uploadScreenshotSelectedArea": {
+    "message": "Enviar"
+  },
   "saveScreenshotVisibleArea": {
     "message": "Salvar área visível"
   },
@@ -28,6 +31,9 @@
   },
   "downloadScreenshot": {
     "message": "Baixar"
+  },
+  "downloadScreenshotTitle": {
+    "message": "Baixar captura"
   },
   "downloadOnlyNotice": {
     "message": "Você está atualmente no modo somente baixar."
@@ -42,7 +48,7 @@
     "message": "Cookies de terceiros estão desabilitados."
   },
   "downloadOnlyDetailsNeverRemember": {
-    "message": "“Nunca lembrar o histórico” está habilitado."
+    "message": "“Nunca lembrar o histórico” está ativado."
   },
   "downloadOnlyDetailsESR": {
     "message": "Você está usando o Firefox ESR."
@@ -63,6 +69,9 @@
   },
   "copyScreenshot": {
     "message": "Copiar"
+  },
+  "copyScreenshotTitle": {
+    "message": "Copiar captura para área de transferência"
   },
   "notificationImageCopiedTitle": {
     "message": "Capturado"
@@ -102,7 +111,7 @@
     "message": "Não conseguimos capturar a tela nesta página."
   },
   "unshootablePageErrorDetails": {
-    "message": "Esta não é uma página web padrão, por isso não podemos capturar sua tela."
+    "message": "Esta não é uma página web padrão, por isso você não pode tirar uma captura dela."
   },
   "selfScreenshotErrorTitle": {
     "message": "Você não pode capturar uma página do Firefox Screenshots!"
@@ -122,8 +131,8 @@
   "genericErrorDetails": {
     "message": "Não temos certeza do que acabou de acontecer. Tentar novamente ou fazer uma captura de uma página diferente?"
   },
-  "tourBodyIntro": {
-    "message": "Capture, salve e compartilhe telas sem sair do Firefox."
+  "tourBodyIntroServerless": {
+    "message": "Faça, copie e baixe capturas de tela sem deixar o Firefox."
   },
   "tourHeaderPageAction": {
     "message": "Um novo jeito de salvar"
@@ -142,12 +151,6 @@
   },
   "tourBodyFullPage": {
     "message": "Selecione os botões no canto superior direito para capturar a área visível na janela ou capturar uma página inteira."
-  },
-  "tourHeaderDownloadUpload": {
-    "message": "Como você quiser"
-  },
-  "tourBodyDownloadUpload": {
-    "message": "Salve suas capturas na web para compartilhar mais facilmente, ou baixe-as no seu computador. Você também pode clicar no botão Minhas capturas para encontrar todas as capturas que tirou."
   },
   "tourSkip": {
     "message": "Pular"

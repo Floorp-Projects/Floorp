@@ -17,6 +17,9 @@
   "saveScreenshotSelectedArea": {
     "message": "သိမ်းရန်"
   },
+  "uploadScreenshotSelectedArea": {
+    "message": "တင်ပါ"
+  },
   "saveScreenshotVisibleArea": {
     "message": "မြင်ရသည်များကို သိမ်းပါ"
   },
@@ -148,6 +151,12 @@
   },
   "tourBodyDownloadUpload": {
     "message": "ဝဘ်တွင် အလွယ်တကူ မျှဝေရန် သို့မဟုတ် ကွန်ပျူတာထဲသို့ ဆွဲယူကူးရန် ဖြတ်တောက်ထားသော ပုံဖမ်းချက်များကို သိမ်းပါ။ ရိုက်ထားသမျှပုံများအားလုံးကို ရှာဖွေကြည့်ရှုရန် ရိုက်ထားသောပုံများတွင်လည်း ကလစ်နှိပ်ကြည့်နိုင်သည်။"
+  },
+  "tourHeaderAccounts": {
+    "message": "အသုံးပြုတိုင်း ရှိနေမည့် Screenshots"
+  },
+  "tourBodyAccounts": {
+    "message": "ကိရိယာအားလုံးရှိ မျက်နှာပြင်ရိုက်ချက်များကို အသုံးပြုရန် နှင့် သင်နှစ်သက်သည်များကို သိမ်းဆည်းရန် သင့် Firefox Account နှင့် ဝင်ရောက်ပါ။"
   },
   "tourSkip": {
     "message": "SKIP"

@@ -17,6 +17,9 @@
   "saveScreenshotSelectedArea": {
     "message": "Desa"
   },
+  "uploadScreenshotSelectedArea": {
+    "message": "Puja"
+  },
   "saveScreenshotVisibleArea": {
     "message": "Captura la part visible"
   },

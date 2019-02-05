@@ -17,6 +17,9 @@
   "saveScreenshotSelectedArea": {
     "message": "భద్రపరచు"
   },
+  "uploadScreenshotSelectedArea": {
+    "message": "ఎక్కించు"
+  },
   "saveScreenshotVisibleArea": {
     "message": "కనిపించే దానిని బద్రపరచండి"
   },

@@ -17,6 +17,9 @@
   "saveScreenshotSelectedArea": {
     "message": "Salva"
   },
+  "uploadScreenshotSelectedArea": {
+    "message": "Carica"
+  },
   "saveScreenshotVisibleArea": {
     "message": "Salva l’area visibile"
   },
@@ -28,6 +31,9 @@
   },
   "downloadScreenshot": {
     "message": "Scarica"
+  },
+  "downloadScreenshotTitle": {
+    "message": "Scarica screenshot"
   },
   "downloadOnlyNotice": {
     "message": "Al momento è attiva la modalità “Solo download”."
@@ -63,6 +69,9 @@
   },
   "copyScreenshot": {
     "message": "Copia"
+  },
+  "copyScreenshotTitle": {
+    "message": "Copia lo screenshot negli appunti"
   },
   "notificationImageCopiedTitle": {
     "message": "Immagine copiata"
@@ -122,8 +131,8 @@
   "genericErrorDetails": {
     "message": "Non sappiamo che cosa sia successo. Riprova, magari con una pagina diversa."
   },
-  "tourBodyIntro": {
-    "message": "Cattura, salva e condividi schermate senza mai uscire da Firefox."
+  "tourBodyIntroServerless": {
+    "message": "Cattura, copia e scarica schermate senza mai uscire da Firefox."
   },
   "tourHeaderPageAction": {
     "message": "Un nuovo modo per salvare informazioni"
@@ -142,18 +151,6 @@
   },
   "tourBodyFullPage": {
     "message": "Utilizza i pulsanti in alto a destra per catturare una parte della finestra o l’intera pagina."
-  },
-  "tourHeaderDownloadUpload": {
-    "message": "Come piace a te"
-  },
-  "tourBodyDownloadUpload": {
-    "message": "Cattura una schermata di una pagina web, ritagliala e salvala online per condividerla in modo più veloce, oppure scaricala sul tuo computer. Puoi anche utilizzare il pulsante “Le mie immagini” per ritrovare tutte le immagini che hai salvato."
-  },
-  "tourHeaderAccounts": {
-    "message": "I tuoi screenshot, sempre con te"
-  },
-  "tourBodyAccounts": {
-    "message": "Accedi al tuo account Firefox per avere sempre a disposizione gli screenshot salvati su tutti i tuoi dispositivi e conservare le tue immagini preferite senza limiti di tempo."
   },
   "tourSkip": {
     "message": "Ignora"

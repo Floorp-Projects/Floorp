@@ -17,6 +17,9 @@
   "saveScreenshotSelectedArea": {
     "message": "محفوظ کریں"
   },
+  "uploadScreenshotSelectedArea": {
+    "message": "اپ لوڈ کریں"
+  },
   "saveScreenshotVisibleArea": {
     "message": "مرئی محفوظ کریں"
   },

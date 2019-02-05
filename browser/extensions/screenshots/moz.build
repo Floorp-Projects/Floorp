@@ -97,10 +97,6 @@ FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["el"] += [
   '_locales/el/messages.json'
 ]
 
-FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["en_CA"] += [
-  '_locales/en_CA/messages.json'
-]
-
 FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["en_GB"] += [
   '_locales/en_GB/messages.json'
 ]
@@ -343,6 +339,10 @@ FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["sq"] += [
 
 FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["sr"] += [
   '_locales/sr/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["su"] += [
+  '_locales/su/messages.json'
 ]
 
 FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["sv_SE"] += [

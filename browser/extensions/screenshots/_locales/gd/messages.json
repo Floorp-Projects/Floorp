@@ -17,6 +17,9 @@
   "saveScreenshotSelectedArea": {
     "message": "Sàbhail"
   },
+  "uploadScreenshotSelectedArea": {
+    "message": "Luchdaich suas"
+  },
   "saveScreenshotVisibleArea": {
     "message": "Sàbhail na tha ri fhaicinn"
   },
@@ -75,8 +78,13 @@
       }
     }
   },
-  "imageCroppedWarning": {
-    "message": "Chaidh an dealbh a bhearradh is tha e {pixels}px a-nis."
+  "imageCropPopupWarning": {
+    "message": "Thèid an dealbh a shàbhail thu a bhearradh ach am bith e $PIXELS$px a dh’àirde.",
+    "placeholders": {
+      "pixels": {
+        "content": "$1"
+      }
+    }
   },
   "requestErrorTitle": {
     "message": "Tuibriste."
@@ -143,6 +151,12 @@
   },
   "tourBodyDownloadUpload": {
     "message": "Sàbhail na glacaidhean bearrte air an lìon ach am bi e furasta an co-roinneadh no luchdaich a-nuas iad dhan choimpiutair agad. ’S urrainn dhut briogadh air a’ phutan “Na glacaidhean agam” cuideachd is chì thu gach glacadh a thog thu."
+  },
+  "tourHeaderAccounts": {
+    "message": "Thoir leat glacadh"
+  },
+  "tourBodyAccounts": {
+    "message": "Clàraich a-steach leis a’ chunntas Firefox agad a dh’fhaighinn greim air na glacaidhean uile agad air feadh nan uidheaman agad is sàbhail an fheadhainn chudromach gu buan."
   },
   "tourSkip": {
     "message": "LEUM SEACHAD"

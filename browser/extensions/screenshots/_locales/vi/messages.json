@@ -17,6 +17,9 @@
   "saveScreenshotSelectedArea": {
     "message": "Lưu lại"
   },
+  "uploadScreenshotSelectedArea": {
+    "message": "Tải lên"
+  },
   "saveScreenshotVisibleArea": {
     "message": "Lưu phần nhìn thấy"
   },
@@ -28,6 +31,9 @@
   },
   "downloadScreenshot": {
     "message": "Tải xuống"
+  },
+  "downloadScreenshotTitle": {
+    "message": "Tải về ảnh chụp màn hình"
   },
   "downloadOnlyNotice": {
     "message": "Bạn hiện đang ở chế độ chỉ tải về."
@@ -64,6 +70,9 @@
   "copyScreenshot": {
     "message": "Sao chép"
   },
+  "copyScreenshotTitle": {
+    "message": "Sao chép ảnh chụp màn hình vào clipboard"
+  },
   "notificationImageCopiedTitle": {
     "message": "Ảnh chụp màn hình đã được sao chép"
   },
@@ -71,6 +80,14 @@
     "message": "Ảnh chụp màn hình của bạn đã được sao chép vào clipboard. Nhấn $META_KEY$-V để dán.",
     "placeholders": {
       "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "imageCropPopupWarning": {
+    "message": "Ảnh đã lưu sẽ được cắt thành $PIXELS$px chiều cao.",
+    "placeholders": {
+      "pixels": {
         "content": "$1"
       }
     }
@@ -114,8 +131,8 @@
   "genericErrorDetails": {
     "message": "Chúng tôi không chắc những gì vừa xảy ra. Thử lại hoặc chụp một trang khác?"
   },
-  "tourBodyIntro": {
-    "message": "Tạo, lưu và chia sẻ ảnh chụp màn hình mà không rời khỏi Firefox."
+  "tourBodyIntroServerless": {
+    "message": "Chụp, sao chép và tải về ảnh chụp màn hình mà không cần rời khỏi Firefox."
   },
   "tourHeaderPageAction": {
     "message": "Một cách mới để lưu"
@@ -134,15 +151,6 @@
   },
   "tourBodyFullPage": {
     "message": "Chọn các nút ở phía trên bên phải để chụp khu vực nhìn thấy được trong cửa sổ hoặc để chụp toàn bộ trang."
-  },
-  "tourHeaderDownloadUpload": {
-    "message": "Như bạn thích"
-  },
-  "tourBodyDownloadUpload": {
-    "message": "Lưu ảnh đã cắt của bạn lên web để chia sẻ dễ dàng hơn hoặc tải chúng xuống máy tính của bạn. Bạn cũng có thể nhấp vào nút Ảnh chụp của tôi để tìm tất cả ảnh bạn đã chụp."
-  },
-  "tourBodyAccounts": {
-    "message": "Đăng nhập bằng tài khoản Firefox của bạn để truy cập các bức ảnh trên tất cả các thiết bị và lưu bức ảnh yêu thích của bạn mãi mãi."
   },
   "tourSkip": {
     "message": "SKIP"

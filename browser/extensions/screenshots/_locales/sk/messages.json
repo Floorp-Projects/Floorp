@@ -17,6 +17,9 @@
   "saveScreenshotSelectedArea": {
     "message": "Uložiť"
   },
+  "uploadScreenshotSelectedArea": {
+    "message": "Nahrať"
+  },
   "saveScreenshotVisibleArea": {
     "message": "Uložiť viditeľnú časť"
   },

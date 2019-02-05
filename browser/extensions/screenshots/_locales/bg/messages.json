@@ -17,6 +17,9 @@
   "saveScreenshotSelectedArea": {
     "message": "Запазване"
   },
+  "uploadScreenshotSelectedArea": {
+    "message": "Качване"
+  },
   "saveScreenshotVisibleArea": {
     "message": "Запазване на видимата област"
   },
@@ -148,6 +151,12 @@
   },
   "tourBodyDownloadUpload": {
     "message": "Запазвайте снимките на страници от Мрежата, за да ги споделяте по-лесно или ги изтегляйте на компютъра си. А бутонът „Моите снимки“ ще ви покаже всички направени от вас снимки."
+  },
+  "tourHeaderAccounts": {
+    "message": "Снимки на екрана за из път"
+  },
+  "tourBodyAccounts": {
+    "message": "Впишете се в Снимки на екрана с вашия Firefox Account, за да получите достъп до вашите снимки на всички ваши устройства и за да запазите вашите любими снимки завинаги."
   },
   "tourSkip": {
     "message": "Пропускане"
