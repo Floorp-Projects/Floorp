@@ -247,20 +247,6 @@ class nsIPresShell : public nsStubDocumentObserver {
     if (!mIsDestroying) mFrameArena.FreeByObjectID(aID, aPtr);
   }
 
-  template <typename T>
-  void RegisterArenaRefPtr(mozilla::ArenaRefPtr<T>* aPtr) {
-    mFrameArena.RegisterArenaRefPtr(aPtr);
-  }
-
-  template <typename T>
-  void DeregisterArenaRefPtr(mozilla::ArenaRefPtr<T>* aPtr) {
-    mFrameArena.DeregisterArenaRefPtr(aPtr);
-  }
-
-  void ClearArenaRefPtrs(mozilla::ArenaObjectID aObjectID) {
-    mFrameArena.ClearArenaRefPtrs(aObjectID);
-  }
-
   Document* GetDocument() const { return mDocument; }
 
   nsPresContext* GetPresContext() const { return mPresContext; }

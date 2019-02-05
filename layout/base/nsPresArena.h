@@ -12,7 +12,6 @@
 
 #include "mozilla/ArenaAllocator.h"
 #include "mozilla/ArenaObjectID.h"
-#include "mozilla/ArenaRefPtr.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/MemoryChecking.h"  // Note: Do not remove this, needed for MOZ_HAVE_MEM_CHECKS below
 #include "mozilla/MemoryReporting.h"
@@ -59,47 +58,6 @@ class nsPresArena {
   void FreeByCustomID(uint32_t aID, void* ptr) { Free(aID, ptr); }
 
   /**
-   * Register an ArenaRefPtr to be cleared when this arena is about to
-   * be destroyed.
-   *
-   * (Defined in ArenaRefPtrInlines.h.)
-   *
-   * @param aPtr The ArenaRefPtr to clear.
-   * @param aObjectID The ArenaObjectID value that uniquely identifies
-   *   the type of object the ArenaRefPtr holds.
-   */
-  template <typename T>
-  void RegisterArenaRefPtr(mozilla::ArenaRefPtr<T>* aPtr) {
-    MOZ_ASSERT(!mArenaRefPtrs.Contains(aPtr));
-    mArenaRefPtrs.Put(aPtr, T::ArenaObjectID());
-  }
-
-  /**
-   * Deregister an ArenaRefPtr that was previously registered with
-   * RegisterArenaRefPtr.
-   */
-  template <typename T>
-  void DeregisterArenaRefPtr(mozilla::ArenaRefPtr<T>* aPtr) {
-    MOZ_ASSERT(mArenaRefPtrs.Contains(aPtr));
-    mArenaRefPtrs.Remove(aPtr);
-  }
-
-  /**
-   * Clears all currently registered ArenaRefPtrs.  This will be called during
-   * the destructor, but can be called by users of nsPresArena who want to
-   * ensure arena-allocated objects are released earlier.
-   */
-  void ClearArenaRefPtrs();
-
-  /**
-   * Clears all currently registered ArenaRefPtrs for the given ArenaObjectID.
-   * This is called when we reconstruct the rule tree so that ComputedStyles
-   * pointing into the old rule tree aren't released afterwards, triggering an
-   * assertion in ~ComputedStyle.
-   */
-  void ClearArenaRefPtrs(mozilla::ArenaObjectID aObjectID);
-
-  /**
    * Increment nsWindowSizes with sizes of interesting objects allocated in this
    * arena.
    */
@@ -110,9 +68,6 @@ class nsPresArena {
  private:
   void* Allocate(uint32_t aCode, size_t aSize);
   void Free(uint32_t aCode, void* aPtr);
-
-  inline void ClearArenaRefPtrWithoutDeregistering(
-      void* aPtr, mozilla::ArenaObjectID aObjectID);
 
   class FreeList {
    public:
@@ -129,7 +84,6 @@ class nsPresArena {
 
   FreeList mFreeLists[mozilla::eArenaObjectID_COUNT];
   mozilla::ArenaAllocator<ArenaSize, 8> mPool;
-  nsDataHashtable<nsPtrHashKey<void>, mozilla::ArenaObjectID> mArenaRefPtrs;
 };
 
 #endif
