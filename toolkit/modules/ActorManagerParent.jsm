@@ -185,6 +185,15 @@ let ACTORS = {
     },
   },
 
+  KeyPressEventModelChecker: {
+    child: {
+      module: "resource://gre/actors/KeyPressEventModelCheckerChild.jsm",
+      events: {
+        "CheckKeyPressEventModel": {capture: true, mozSystemGroup: true},
+      },
+    },
+  },
+
   ManifestMessages: {
     child: {
       module: "resource://gre/modules/ManifestMessagesChild.jsm",
