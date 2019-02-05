@@ -30,6 +30,15 @@ win64)
     REPACK_TAR_COMPRESSION_SWITCH=j
     REPACK_SUFFIX=tar.bz2
     ;;
+win32)
+    ARCH=win-x86
+    # From https://nodejs.org/dist/v8.11.3/SHASUMS256.txt.asc
+    SHA256SUM=9482a0ad7aa5cd964cbeb11a605377b5c5aae4eae952c838aecf079de6088dc6
+    SUFFIX=zip
+    UNARCHIVE=unzip
+    REPACK_TAR_COMPRESSION_SWITCH=j
+    REPACK_SUFFIX=tar.bz2
+    ;;
 esac
 
 VERSION=8.11.3
