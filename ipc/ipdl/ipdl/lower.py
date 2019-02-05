@@ -623,11 +623,11 @@ def _cxxConstPtrToType(ipdltype, side):
 
 
 def _allocMethod(ptype, side):
-    return 'Alloc' + ptype.name() + side.title()
+    return ExprVar('Alloc' + ptype.name() + side.title())
 
 
 def _deallocMethod(ptype, side):
-    return 'Dealloc' + ptype.name() + side.title()
+    return ExprVar('Dealloc' + ptype.name() + side.title())
 
 ##
 # A _HybridDecl straddles IPDL and C++ decls.  It knows which C++
@@ -956,7 +956,7 @@ class MessageDecl(ipdl.ast.MessageDecl):
         name = _recvPrefix(self.decl.type) + self.baseName()
         if self.decl.type.isCtor():
             name += 'Constructor'
-        return name
+        return ExprVar(name)
 
     def sendMethod(self):
         name = _sendPrefix(self.decl.type) + self.baseName()
@@ -3133,7 +3133,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 implicit = (not isdtor)
                 returnsems = 'resolver' if md.decl.type.isAsync() else 'out'
                 recvDecl = MethodDecl(
-                    md.recvMethod(),
+                    md.recvMethod().name,
                     params=md.makeCxxParams(paramsems='move', returnsems=returnsems,
                                             side=self.side, implicit=implicit),
                     ret=Type('mozilla::ipc::IPCResult'),
@@ -3156,12 +3156,12 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             actortype = md.actorDecl().bareType(self.side)
 
             self.cls.addstmt(StmtDecl(MethodDecl(
-                _allocMethod(managed, self.side),
+                _allocMethod(managed, self.side).name,
                 params=md.makeCxxParams(side=self.side, implicit=False),
                 ret=actortype, methodspec=MethodSpec.PURE)))
 
             self.cls.addstmt(StmtDecl(MethodDecl(
-                _deallocMethod(managed, self.side),
+                _deallocMethod(managed, self.side).name,
                 params=[Decl(actortype, 'aActor')],
                 ret=Type.BOOL, methodspec=MethodSpec.PURE)))
 
@@ -3577,8 +3577,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
             foreachdealloc = forLoopOverHashtable(managedVar, itervar)
             foreachdealloc.addstmts([
-                StmtExpr(self.thisCall(_deallocMethod(managed, self.side),
-                                       [actorFromIter(itervar)]))
+                StmtExpr(ExprCall(_deallocMethod(managed, self.side),
+                                  args=[actorFromIter(itervar)]))
             ])
 
             block = StmtBlock()
@@ -3683,8 +3683,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                         "actor not managed by this!"),
                     Whitespace.NL,
                     StmtExpr(_callRemoveManagedActor(containervar, actorvar)),
-                    StmtExpr(self.thisCall(_deallocMethod(manageeipdltype, self.side),
-                                           [actorvar])),
+                    StmtExpr(ExprCall(_deallocMethod(manageeipdltype, self.side),
+                                      args=[actorvar])),
                     StmtReturn()
                 ])
                 switchontype.addcase(CaseLabel(_protocolId(manageeipdltype).name),
@@ -3732,10 +3732,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
     # serialization/deserialization and dispatching handlers for
     # received messages.
     ##
-
-    def thisCall(self, function, args):
-        return ExprCall(ExprVar(function), args=args)
-
     def visitMessageDecl(self, md):
         isctor = md.decl.type.isCtor()
         isdtor = md.decl.type.isDtor()
@@ -4623,7 +4619,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         return stmts
 
     def callAllocActor(self, md, retsems, side):
-        return self.thisCall(
+        return ExprCall(
             _allocMethod(md.decl.type.constructedType(), side),
             args=md.makeCxxArgs(retsems=retsems, retcallsems='out',
                                 implicit=False))
@@ -4654,15 +4650,11 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         retsems = 'in'
         if md.decl.type.isAsync() and md.returns:
             retsems = 'resolver'
-        failif = StmtIf(ExprNot(self.thisCall(
-            md.recvMethod(),
-            md.makeCxxArgs(
-                paramsems='move',
-                retsems=retsems,
-                retcallsems='out',
-                implicit=implicit
-            )
-        )))
+        failif = StmtIf(ExprNot(
+            ExprCall(md.recvMethod(),
+                     args=md.makeCxxArgs(paramsems='move', retsems=retsems,
+                                         retcallsems='out',
+                                         implicit=implicit))))
         failif.addifstmts([
             _protocolErrorBreakpoint('Handler returned error code!'),
             Whitespace('// Error handled in mozilla::ipc::IPCResult\n', indent=True),
