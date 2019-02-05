@@ -133,20 +133,6 @@ bool PluginProcessParent::Launch(
   return result;
 }
 
-void PluginProcessParent::Delete() {
-  MessageLoop* currentLoop = MessageLoop::current();
-  MessageLoop* ioLoop = XRE_GetIOMessageLoop();
-
-  if (currentLoop == ioLoop) {
-    delete this;
-    return;
-  }
-
-  ioLoop->PostTask(
-      NewNonOwningRunnableMethod("plugins::PluginProcessParent::Delete", this,
-                                 &PluginProcessParent::Delete));
-}
-
 /**
  * This function exists so that we may provide an additional level of
  * indirection between the task being posted to main event loop (a
