@@ -5659,14 +5659,7 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(CodeNode* funNode,
 
     if (needsProto) {
       MOZ_ASSERT(funNode->getOp() == JSOP_LAMBDA);
-      funNode->setOp(JSOP_FUNWITHPROTO);
-    }
-
-    if (funNode->getOp() == JSOP_DEFFUN) {
-      if (!emitIndex32(JSOP_LAMBDA, index)) {
-        return false;
-      }
-      return emit1(JSOP_DEFFUN);
+      return emitIndex32(JSOP_FUNWITHPROTO, index);
     }
 
     // This is a FunctionExpression, ArrowFunctionExpression, or class
