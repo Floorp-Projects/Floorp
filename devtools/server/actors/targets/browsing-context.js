@@ -997,6 +997,8 @@ const browsingContextTargetPrototype = {
       } catch (e) {
         continue;
       }
+      // Ensure docShell.document is available.
+      docShell.QueryInterface(Ci.nsIWebNavigation);
       // We don't really want to reparse UA sheets and such, but want to do
       // Shadow DOM / XBL.
       const sheets =
