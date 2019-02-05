@@ -79,36 +79,9 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
     return (computed && computed.backgroundImage === "none");
   }
 
-  const isDownloadOnly = exports.isDownloadOnly = function() {
-    return window.downloadOnly;
+  const showMyShots = exports.showMyShots = function() {
+    return window.hasAnyShots;
   };
-
-  // the download notice is rendered in iframes that match the document height
-  // or the window height. If parent iframe matches window height, pass in true
-  function renderDownloadNotice(initAtBottom = false) {
-    const notice = makeEl("table", "notice");
-    notice.innerHTML = `
-      <div class="notice-tooltip">
-        <p data-l10n-id="downloadOnlyDetails"></p>
-        <ul>
-          <li data-l10n-id="downloadOnlyDetailsPrivate"></li>
-          <li data-l10n-id="downloadOnlyDetailsNeverRemember"></li>
-          <li data-l10n-id="downloadOnlyDetailsESR"></li>
-          <li data-l10n-id="downloadOnlyDetailsNoUploadPref"></li>
-        </ul>
-      </div>
-      <tbody>
-        <tr class="notice-wrapper">
-          <td class="notice-content" data-l10n-id="downloadOnlyNotice"></td>
-          <td class="notice-help"></td>
-        </tr>
-      <tbody>`;
-    localizeText(notice);
-    if (initAtBottom) {
-      notice.style.bottom = "10px";
-    }
-    return notice;
-  }
 
   function initializeIframe() {
     const el = document.createElement("iframe");
@@ -300,10 +273,10 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
                      <div class="preview-instructions" data-l10n-id="screenshotInstructions"></div>
                      <button class="cancel-shot">${browser.i18n.getMessage("cancelScreenshot")}</button>
                      <div class="myshots-all-buttons-container">
-                       ${isDownloadOnly() ? "" : `
+                       ${showMyShots() ? `
                          <button class="myshots-button" tabindex="3" data-l10n-id="myShotsLink"></button>
                          <div class="spacer"></div>
-                       `}
+                       ` : ""}
                        <button class="visible" tabindex="2" data-l10n-id="saveScreenshotVisibleArea"></button>
                        <button class="full-page" tabindex="1" data-l10n-id="saveScreenshotFullPage"></button>
                      </div>
@@ -318,7 +291,7 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
             this.document.documentElement.lang = browser.i18n.getMessage("@@ui_locale");
             const overlay = this.document.querySelector(".preview-overlay");
             localizeText(this.document);
-            if (!(isDownloadOnly())) {
+            if (showMyShots()) {
               overlay.querySelector(".myshots-button").addEventListener(
                 "click", watchFunction(assertIsTrusted(standardOverlayCallbacks.onOpenMyShots)));
             }
@@ -409,22 +382,14 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
                         data-l10n-title="cancelScreenshot"><img
                         src="${browser.extension.getURL("icons/cancel.svg")}" /></button>
                       <button class="highlight-button-copy"
-                        data-l10n-title="copyScreenshot"><img
-                        src="${browser.extension.getURL("icons/copy.svg")}" /></button>
-                      ${isDownloadOnly() ?
-                        `<button class="highlight-button-download download-only-button"
-                          data-l10n-title="downloadScreenshot"><img
-                          src="${browser.extension.getURL("icons/download.svg")}"
-                          />${browser.i18n.getMessage("downloadScreenshot")}</button>` :
-                        `<button class="highlight-button-download"
-                          data-l10n-title="downloadScreenshot"><img
-                          src="${browser.extension.getURL("icons/download.svg")}" /></button>
-                         <button class="preview-button-save"
-                          data-l10n-title="saveScreenshotSelectedArea"><img
-                          src="${browser.extension.getURL("icons/cloud.svg")}"
-                          />${browser.i18n.getMessage("saveScreenshotSelectedArea")}</button>`
-                      }
+                        data-l10n-title="copyScreenshotTitle"><img
+                        src="${browser.extension.getURL("icons/copy.svg")}" />${browser.i18n.getMessage("copyScreenshot")}</button>
+                      <button class="highlight-button-download"
+                        data-l10n-title="downloadScreenshotTitle"><img
+                        src="${browser.extension.getURL("icons/download-white.svg")}"
+                        />${browser.i18n.getMessage("downloadScreenshot")}</button>
                     </div>
+                      <div class="preview-image-wrapper"></div>
                   </div>
                   <div class="loader" style="display:none">
                     <div class="loader-inner"></div>
@@ -436,12 +401,6 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
             this.document.documentElement.lang = browser.i18n.getMessage("@@ui_locale");
             localizeText(this.document);
             const overlay = this.document.querySelector(".preview-overlay");
-            if (isDownloadOnly()) {
-              overlay.appendChild(renderDownloadNotice(true));
-            } else {
-              overlay.querySelector(".preview-button-save").addEventListener(
-                "click", watchFunction(assertIsTrusted(standardOverlayCallbacks.onSavePreview)));
-            }
             overlay.querySelector(".highlight-button-copy").addEventListener(
               "click", watchFunction(assertIsTrusted(standardOverlayCallbacks.onCopyPreview)));
             overlay.querySelector(".highlight-button-download").addEventListener(
@@ -471,7 +430,6 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
 
     showLoader() {
       this.document.body.querySelector(".preview-image").style.display = "none";
-      this.document.body.querySelector(".notice").style.display = "none";
       this.document.body.querySelector(".loader").style.display = "";
     },
 
@@ -642,24 +600,6 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
       this.bgRight.style.height = `${pos.bottom - pos.top}px`;
       this.bgRight.style.left = `${pos.right}px`;
       this.bgRight.style.width = `calc(100% - ${pos.right}px)`;
-      // the download notice is injected into an iframe that matches the document size
-      // in order to reposition it on scroll we need to bind an updated positioning
-      // function to some window events.
-      this.repositionDownloadNotice = () => {
-        if (this.downloadNotice) {
-          const currentYOffset = window.pageYOffset;
-          const currentWinBottom = window.innerHeight;
-          this.downloadNotice.style.top = (currentYOffset + currentWinBottom - 60) + "px";
-        }
-      };
-
-      if (this.downloadNotice) {
-        this.downloadNotice.style.top = (pageYOffset + winBottom - 60) + "px";
-        // event callbacks are delayed 100ms each to keep from overloading things
-        this.windowChangeStop = this.delayExecution(100, this.repositionDownloadNotice);
-        window.addEventListener("scroll", watchFunction(assertIsTrusted(this.windowChangeStop)));
-        window.addEventListener("resize", watchFunction(assertIsTrusted(this.windowChangeStop)));
-      }
     },
 
     // used to eventually move the download-only warning
@@ -675,11 +615,7 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
     },
 
     remove() {
-      if (this.downloadNotice) {
-        window.removeEventListener("scroll", this.windowChangeStop, true);
-        window.removeEventListener("resize", this.windowChangeStop, true);
-      }
-      for (const name of ["el", "bgTop", "bgLeft", "bgRight", "bgBottom", "downloadNotice"]) {
+      for (const name of ["el", "bgTop", "bgLeft", "bgRight", "bgBottom"]) {
         if (name in this) {
           util.removeNode(this[name]);
           this[name] = null;
@@ -702,42 +638,26 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
       buttons.appendChild(cancel);
 
       const copy = makeEl("button", "highlight-button-copy");
-      copy.title = browser.i18n.getMessage("copyScreenshot");
+      copy.title = browser.i18n.getMessage("copyScreenshotTitle");
       const copyImg = makeEl("img");
+      const copyString = makeEl("span");
+      copyString.textContent = browser.i18n.getMessage("copyScreenshot");
       copyImg.src = browser.extension.getURL("icons/copy.svg");
       copy.appendChild(copyImg);
+      copy.appendChild(copyString);
       buttons.appendChild(copy);
 
-      let download, save;
-
-      if (isDownloadOnly()) {
-        download = makeEl("button", "highlight-button-download download-only-button");
-        const downloadImg = makeEl("img");
-        downloadImg.src = browser.extension.getURL("icons/download.svg");
-        download.appendChild(downloadImg);
-        download.append(browser.i18n.getMessage("downloadScreenshot"));
-        download.title = browser.i18n.getMessage("downloadScreenshot");
-      } else {
-        download = makeEl("button", "highlight-button-download");
-        download.title = browser.i18n.getMessage("downloadScreenshot");
-        const downloadImg = makeEl("img");
-        downloadImg.src = browser.extension.getURL("icons/download.svg");
-        download.appendChild(downloadImg);
-        save = makeEl("button", "highlight-button-save");
-        const saveImg = makeEl("img");
-        saveImg.src = browser.extension.getURL("icons/cloud.svg");
-        save.appendChild(saveImg);
-        save.append(browser.i18n.getMessage("saveScreenshotSelectedArea"));
-        save.title = browser.i18n.getMessage("saveScreenshotSelectedArea");
-      }
+      const download = makeEl("button", "highlight-button-download");
+      const downloadImg = makeEl("img");
+      downloadImg.src = browser.extension.getURL("icons/download-white.svg");
+      download.appendChild(downloadImg);
+      download.append(browser.i18n.getMessage("downloadScreenshot"));
+      download.title = browser.i18n.getMessage("downloadScreenshotTitle");
       buttons.appendChild(download);
-      if (save) {
-        buttons.appendChild(save);
-      }
       this.cancel = cancel;
       this.download = download;
       this.copy = copy;
-      this.save = save;
+
       boxEl.appendChild(buttons);
       for (const name of movements) {
         const elTarget = makeEl("div", "mover-target direction-" + name);
@@ -754,10 +674,6 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
       this.bgBottom = makeEl("div", "bghighlight");
       iframe.document().body.appendChild(this.bgBottom);
       iframe.document().body.appendChild(boxEl);
-      if (isDownloadOnly()) {
-        this.downloadNotice = renderDownloadNotice();
-        iframe.document().body.appendChild(this.downloadNotice);
-      }
       this.el = boxEl;
     },
 
@@ -838,9 +754,6 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
       if (this.el) {
         this.el.style.display = "none";
       }
-      if (this.downloadNotice) {
-        this.downloadNotice.display = "none";
-      }
     },
 
     remove() {
@@ -874,22 +787,11 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
   };
 
   exports.Preview = {
-    display(dataUrl, showCropWarning) {
+    display(dataUrl) {
       const img = makeEl("IMG");
       const imgBlob = blobConverters.dataUrlToBlob(dataUrl);
       img.src = URL.createObjectURL(imgBlob);
-      iframe.document().querySelector(".preview-image").appendChild(img);
-      if (showCropWarning && !(isDownloadOnly())) {
-        const imageCroppedEl = makeEl("table", "notice middle");
-        imageCroppedEl.innerHTML = `<tbody>
-          <tr class="notice-wrapper">
-            <td class="notice-content"></td>
-          </tr>
-        </tbody>`;
-        const contentCell = imageCroppedEl.getElementsByTagName("td");
-        contentCell[0].textContent = browser.i18n.getMessage("imageCropPopupWarning", buildSettings.maxImageHeight);
-        iframe.document().querySelector(".preview-buttons").appendChild(imageCroppedEl);
-      }
+      iframe.document().querySelector(".preview-image-wrapper").appendChild(img);
     },
   };
 

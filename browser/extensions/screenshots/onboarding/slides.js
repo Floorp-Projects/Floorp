@@ -53,10 +53,13 @@ this.slides = (function() {
         doc.documentElement.lang = browser.i18n.getMessage("@@ui_locale");
         localizeText(doc);
         activateSlide(doc);
+        // Give the DOM a moment to settle before applying focus
+        setTimeout(() => {
+          iframe.contentWindow.focus();
+        });
         resolve();
       }), {once: true});
       document.body.appendChild(iframe);
-      iframe.focus();
       window.addEventListener("resize", onResize);
     });
   };

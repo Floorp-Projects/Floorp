@@ -911,13 +911,8 @@ this.uicontrol = (function() {
     if ((event.key || event.code) === "Enter"
         && getState.state === "selected"
         && ui.iframe.document().activeElement.tagName === "BODY") {
-      if (ui.isDownloadOnly()) {
-        sendEvent("download-shot", "keyboard-enter");
-        downloadShot();
-      } else {
-        sendEvent("save-shot", "keyboard-enter");
-        shooter.takeShot("selection", selectedPos);
-      }
+      sendEvent("download-shot", "keyboard-enter");
+      downloadShot();
     }
   }
 

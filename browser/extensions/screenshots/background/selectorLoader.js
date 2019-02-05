@@ -1,4 +1,4 @@
-/* globals catcher, communication, log */
+/* globals catcher, communication, log, main */
 
 "use strict";
 
@@ -69,7 +69,13 @@ this.selectorLoader = (function() {
   exports.loadModules = function(tabId, hasSeenOnboarding) {
     catcher.watchPromise(hasSeenOnboarding.then(onboarded => {
       loadingTabs.add(tabId);
-      let promise = downloadOnlyCheck(tabId);
+      let promise = Promise.resolve();
+      promise = promise.then(() => {
+        browser.tabs.executeScript(tabId, {
+          code: `window.hasAnyShots = ${!!main.hasAnyShots()};`,
+          runAt: "document_start",
+        });
+      });
       if (onboarded) {
         promise = promise.then(() => {
           return executeModules(tabId, standardScripts.concat(selectorScripts));
@@ -88,25 +94,6 @@ this.selectorLoader = (function() {
       });
     }));
   };
-
-  function downloadOnlyCheck(tabId) {
-    return browser.experiments.screenshots.isHistoryEnabled().then((historyEnabled) => {
-      return browser.experiments.screenshots.isUploadDisabled().then((uploadDisabled) => {
-        return browser.experiments.screenshots.getUpdateChannel().then((channel) => {
-          return browser.tabs.get(tabId).then(tab => {
-            const downloadOnly = !historyEnabled || uploadDisabled || channel === "esr" || tab.incognito;
-            return browser.tabs.executeScript(tabId, {
-              // Note: `window` here refers to a global accessible to content
-              // scripts, but not the scripts in the underlying page. For more
-              // details, see https://mdn.io/WebExtensions/Content_scripts#Content_script_environment
-              code: `window.downloadOnly = ${downloadOnly}`,
-              runAt: "document_start",
-            });
-          });
-        });
-      });
-    });
-  }
 
   function executeModules(tabId, scripts) {
     let lastPromise = Promise.resolve(null);
