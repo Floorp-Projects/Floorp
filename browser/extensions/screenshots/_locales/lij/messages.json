@@ -43,6 +43,14 @@
   "copyScreenshot": {
     "message": "Còpia"
   },
+  "notificationImageCopiedDetails": {
+    "message": "A föto a l'é stæta copiâ inti aponti. Sciacca $META_KEY$-V pe incolâ.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
   "requestErrorTitle": {
     "message": "Feua serviçio."
   },

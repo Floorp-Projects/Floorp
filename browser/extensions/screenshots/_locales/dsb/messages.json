@@ -17,6 +17,9 @@
   "saveScreenshotSelectedArea": {
     "message": "Składowaś"
   },
+  "uploadScreenshotSelectedArea": {
+    "message": "Nagraś"
+  },
   "saveScreenshotVisibleArea": {
     "message": "Widobny wobcerk składowaś"
   },
@@ -28,6 +31,9 @@
   },
   "downloadScreenshot": {
     "message": "Ześěgnuś"
+  },
+  "downloadScreenshotTitle": {
+    "message": "Foto wobrazowki ześěgnuś"
   },
   "downloadOnlyNotice": {
     "message": "Tuchylu sćo w modusu „Jano ześěgnuś“."
@@ -63,6 +69,9 @@
   },
   "copyScreenshot": {
     "message": "Kopěrowaś"
+  },
+  "copyScreenshotTitle": {
+    "message": "Foto wobrazowki do mjazywótkłada kopěrowaś"
   },
   "notificationImageCopiedTitle": {
     "message": "Foto kopěrowane"
@@ -122,8 +131,8 @@
   "genericErrorDetails": {
     "message": "Njejsmy se wěste, což jo se stało. Cośo hyšći raz wopytaś abo cośo drugi bok fotografěrowaś?"
   },
-  "tourBodyIntro": {
-    "message": "Gótujśo, składujśo a źělśo fota wobrazowki mimo až Firefox spušćaśo."
+  "tourBodyIntroServerless": {
+    "message": "Napórajśo, kopěrujćśo a ześěgniśo fota wobrazowki, mimo aby Firefox spušćił."
   },
   "tourHeaderPageAction": {
     "message": "Nowa wašnja składowanja"
@@ -142,18 +151,6 @@
   },
   "tourBodyFullPage": {
     "message": "Wubjeŕśo tłocašk górjejce napšawo, aby widobny wobcerk we woknje abo ceły bok fotografěrowaś."
-  },
-  "tourHeaderDownloadUpload": {
-    "message": "Tak, kaž se wam spódoba"
-  },
-  "tourBodyDownloadUpload": {
-    "message": "Składujśo swóje pśirězane fota wobrazowki w interneśe, aby je lažcej źělił, abo ześěgniśo je na swójo licadło. Móžośo teke na tłocašk „Móje fota wobrazowki“ kliknuś, abye wšě fota wobrazowki namakał, kótarež sćo gótował."
-  },
-  "tourHeaderAccounts": {
-    "message": "Fota wobrazowki za drogu"
-  },
-  "tourBodyAccounts": {
-    "message": "Pśizjawśo se pla swójogo konta Firefox, aby pśistup k swójim fotam wobrazowki na wšych wašych rědach měł a składujśo swóje nejlubše fota wobrazowki na pśecej."
   },
   "tourSkip": {
     "message": "Pśeskócyś"

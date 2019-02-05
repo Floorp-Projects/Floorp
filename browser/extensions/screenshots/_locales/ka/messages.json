@@ -17,6 +17,9 @@
   "saveScreenshotSelectedArea": {
     "message": "შენახვა"
   },
+  "uploadScreenshotSelectedArea": {
+    "message": "ატვირთვა"
+  },
   "saveScreenshotVisibleArea": {
     "message": "ხილული ნაწილის შენახვა"
   },
@@ -51,10 +54,10 @@
     "message": "ატვირთვა შეზღუდულია."
   },
   "notificationLinkCopiedTitle": {
-    "message": "ბმული დაკოპირებულია"
+    "message": "ბმულის ასლი აღებულია"
   },
   "notificationLinkCopiedDetails": {
-    "message": "თქვენი სურათის ბმული დაკოპირებულია. ჩასმისთვის დააწექით $META_KEY$-V.",
+    "message": "თქვენი სურათის ბმულის ასლი მზადაა. ჩასმისთვის დააწექით $META_KEY$-V.",
     "placeholders": {
       "meta_key": {
         "content": "$1"
@@ -62,13 +65,13 @@
     }
   },
   "copyScreenshot": {
-    "message": "კოპირება"
+    "message": "ასლი"
   },
   "notificationImageCopiedTitle": {
-    "message": "სურათი დაკოპირებულია"
+    "message": "სურათის ასლი მზადაა"
   },
   "notificationImageCopiedDetails": {
-    "message": "თქვენი სურათი დაკოპირებულია. ჩასმისთვის დააწექით $META_KEY$-V.",
+    "message": "თქვენი სურათის ასლი მზადაა. ჩასმისთვის დააწექით $META_KEY$-V.",
     "placeholders": {
       "meta_key": {
         "content": "$1"

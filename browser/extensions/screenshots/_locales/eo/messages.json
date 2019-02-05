@@ -17,6 +17,9 @@
   "saveScreenshotSelectedArea": {
     "message": "Konservi"
   },
+  "uploadScreenshotSelectedArea": {
+    "message": "Alŝuti"
+  },
   "saveScreenshotVisibleArea": {
     "message": "Konservi tion, kio videblas"
   },
@@ -28,6 +31,9 @@
   },
   "downloadScreenshot": {
     "message": "Elŝuti"
+  },
+  "downloadScreenshotTitle": {
+    "message": "Elŝuti ekrankopion"
   },
   "downloadOnlyNotice": {
     "message": "Vi estas nun en la reĝimo \"Nur elŝutoj\"."
@@ -63,6 +69,9 @@
   },
   "copyScreenshot": {
     "message": "Kopii"
+  },
+  "copyScreenshotTitle": {
+    "message": "Kopii ekrankopion al tondujo"
   },
   "notificationImageCopiedTitle": {
     "message": "Ekrankopio kopiita"
@@ -122,8 +131,8 @@
   "genericErrorDetails": {
     "message": "Ni ne tro certas, kio ĵus okazis. Ĉu vi povus klopodi denove aŭ fari ekrankopion de alia paĝo?"
   },
-  "tourBodyIntro": {
-    "message": "Faru, konservu kaj dividu ekrankopiojn sen forlasi Firefox."
+  "tourBodyIntroServerless": {
+    "message": "Fari, kopii kaj elŝuti ekrankopiojn sen forlasi Firefox."
   },
   "tourHeaderPageAction": {
     "message": "Nova maniero konservi ekrankopiojn"
@@ -142,12 +151,6 @@
   },
   "tourBodyFullPage": {
     "message": "Elektu la butonojn supre kaj dekstre por kapti la videblan areon en la fenestro aŭ por kapti tutan paĝon."
-  },
-  "tourHeaderDownloadUpload": {
-    "message": "Kiel vi volas"
-  },
-  "tourBodyDownloadUpload": {
-    "message": "Konservu vian eltonditajn ekrankopiojn en la reto, por pli facile dividi ilin, aŭ elŝutu ilin al via komputilo. Vi ankaŭ povas alklaki la butonon 'Miaj ekrankopioj' por trovi ĉiujn ekrankopiojn faritajn de vi."
   },
   "tourSkip": {
     "message": "Pretersalti"

@@ -17,6 +17,9 @@
   "saveScreenshotSelectedArea": {
     "message": "Bewarje"
   },
+  "uploadScreenshotSelectedArea": {
+    "message": "Oplade"
+  },
   "saveScreenshotVisibleArea": {
     "message": "Sichtbere bewarje"
   },
@@ -28,6 +31,9 @@
   },
   "downloadScreenshot": {
     "message": "Downloade"
+  },
+  "downloadScreenshotTitle": {
+    "message": "Skermôfbylding downloade"
   },
   "downloadOnlyNotice": {
     "message": "Jo binne op dit stuit yn Allinnich-downloademodus."
@@ -63,6 +69,9 @@
   },
   "copyScreenshot": {
     "message": "Kopiearje"
+  },
+  "copyScreenshotTitle": {
+    "message": "Skermôfbylding nei klamboerd kopiearje"
   },
   "notificationImageCopiedTitle": {
     "message": "Ofbylding kopiearre"
@@ -122,8 +131,8 @@
   "genericErrorDetails": {
     "message": "Wy binne net wis wat der krekt bard is. Wolle jo it nochris probearje of in skermôfdruk fan in oare side meitsje?"
   },
-  "tourBodyIntro": {
-    "message": "Meitsje, bewarje en diel skermôfdrukken sûnder Firefox te ferlitten."
+  "tourBodyIntroServerless": {
+    "message": "Meitsje, kopiearje en download skermôfbyldingen sûnder Firefox te ferlitten."
   },
   "tourHeaderPageAction": {
     "message": "In nije manier om te bewarjen"
@@ -142,18 +151,6 @@
   },
   "tourBodyFullPage": {
     "message": "Selektearje knoppen rjochts boppe-oan om it sichtbere gebiet yn it finster te fetsjen, of fetsje in folsleine side."
-  },
-  "tourHeaderDownloadUpload": {
-    "message": "Nei jo winsk"
-  },
-  "tourBodyDownloadUpload": {
-    "message": "Bewarje jo byknippe skermôfdrukken nei it web om se maklik te dielen, of download se nei jo kompjûter. Jo kinne ek op de knop Myn skermôfdrukken klikke om al jo makke skermôfdrukken te finen."
-  },
-  "tourHeaderAccounts": {
-    "message": "Skermôfbyldingen om mei te nimmen"
-  },
-  "tourBodyAccounts": {
-    "message": "Meld jo oan mei jo Firefox-account om jo ôfbyldingen op al jo apparaten te besjen en jo favorite ôfbyldingen foar altyd te bewarjen."
   },
   "tourSkip": {
     "message": "Oerslaan"

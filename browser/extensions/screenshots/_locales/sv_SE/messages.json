@@ -17,6 +17,9 @@
   "saveScreenshotSelectedArea": {
     "message": "Spara"
   },
+  "uploadScreenshotSelectedArea": {
+    "message": "Ladda upp"
+  },
   "saveScreenshotVisibleArea": {
     "message": "Spara synligt område"
   },
@@ -28,6 +31,9 @@
   },
   "downloadScreenshot": {
     "message": "Ladda ner"
+  },
+  "downloadScreenshotTitle": {
+    "message": "Ladda ner skärmbild"
   },
   "downloadOnlyNotice": {
     "message": "Du är för närvarande i nedladdningsbart läge."
@@ -63,6 +69,9 @@
   },
   "copyScreenshot": {
     "message": "Kopiera"
+  },
+  "copyScreenshotTitle": {
+    "message": "Kopiera skärmbild till urklipp"
   },
   "notificationImageCopiedTitle": {
     "message": "Bild kopierad"
@@ -122,8 +131,8 @@
   "genericErrorDetails": {
     "message": "Vi är inte säkra på vad som just hände. Kan du försöka igen eller ta en bild på en annan sida?"
   },
-  "tourBodyIntro": {
-    "message": "Ta, spara, och dela skärmbilder utan att lämna Firefox."
+  "tourBodyIntroServerless": {
+    "message": "Ta, kopiera och ladda ner skärmbilder utan att lämna Firefox."
   },
   "tourHeaderPageAction": {
     "message": "Ett nytt sätt att spara"
@@ -142,18 +151,6 @@
   },
   "tourBodyFullPage": {
     "message": "Välj knapparna i det övre högra hörnet för att fånga det synliga området i fönstret eller för att fånga en hel sida."
-  },
-  "tourHeaderDownloadUpload": {
-    "message": "Som du vill ha det"
-  },
-  "tourBodyDownloadUpload": {
-    "message": "Spara dina beskurna bilder till webben för enklare delning, eller hämta dem till datorn. Du kan också klicka på knappen Mina skärmbilder för att hitta alla bilder du tagit."
-  },
-  "tourHeaderAccounts": {
-    "message": "Skärmbilder att ta med"
-  },
-  "tourBodyAccounts": {
-    "message": "Logga in med ditt Firefox-konto för att komma åt dina bilder på alla dina enheter och spara dina favoritbilder för alltid."
   },
   "tourSkip": {
     "message": "Hoppa över"

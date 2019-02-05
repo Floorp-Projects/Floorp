@@ -6,7 +6,7 @@
     "message": "Mozilla <screenshots-feedback@mozilla.com>"
   },
   "contextMenuLabel": {
-    "message": "একটি স্ক্রীনশট নিন"
+    "message": "একটি স্ক্রিনশট নিন"
   },
   "myShotsLink": {
     "message": "আমার সটসমূহ"
@@ -16,6 +16,9 @@
   },
   "saveScreenshotSelectedArea": {
     "message": "সংরক্ষণ"
+  },
+  "uploadScreenshotSelectedArea": {
+    "message": "আপলোড"
   },
   "saveScreenshotVisibleArea": {
     "message": "যতটুকু দেখা যাচ্ছে সংরক্ষণ করুন"
@@ -28,6 +31,9 @@
   },
   "downloadScreenshot": {
     "message": "ডাউনলোড"
+  },
+  "downloadScreenshotTitle": {
+    "message": "স্ক্রিনশট ডাউনলোড করুন"
   },
   "downloadOnlyNotice": {
     "message": "আপনি বর্তমানে Download-Only মোডে আছেন।"
@@ -63,6 +69,9 @@
   },
   "copyScreenshot": {
     "message": "অনুলিপি"
+  },
+  "copyScreenshotTitle": {
+    "message": "ক্লিপবোর্ডে স্ক্রিনশট অনুলিপি করুন"
   },
   "notificationImageCopiedTitle": {
     "message": "শট অনুলিপি করা হয়েছে"
@@ -102,7 +111,7 @@
     "message": "আমার এই পেজের স্ক্রিনশট নিতে পারব না।"
   },
   "unshootablePageErrorDetails": {
-    "message": "এটা কোন আদর্শ ওয়েব পেজ না, তাই আপনি এটার স্ক্রিনশট তুলতে পারবেন না।"
+    "message": "এটা কোন প্রমিত ওয়েব পেজ না, তাই আপনি এটার স্ক্রিনশট তুলতে পারবেন না।"
   },
   "selfScreenshotErrorTitle": {
     "message": "আপনি Firefox স্ক্রিনশটের পেজের শট নিতে পারেন না!"
@@ -122,8 +131,8 @@
   "genericErrorDetails": {
     "message": "এই মাত্র কি ঘটেছে আমরা নিশ্চিত নই। আপনি কি অনুগ্রহ করে পুরনায় সট নেবেন কিংবা ভিন্ন একটি পেজে চেষ্টা করবেন?"
   },
-  "tourBodyIntro": {
-    "message": "Firefox ত্যাগ করা ছাড়াই স্ক্রিনশট তোল, সংরক্ষণ কর এবং শেয়ার কর।"
+  "tourBodyIntroServerless": {
+    "message": "Firefox থেকে না বের হয়েই স্ক্রিনশট নিন, অনুলিপি এবং ডাউনলোড করুন।"
   },
   "tourHeaderPageAction": {
     "message": "সংরক্ষণ করার এক নতুন পদ্ধতি"
@@ -135,19 +144,13 @@
     "message": "ক্যাপচার করুন আপনি যা চান"
   },
   "tourBodyClickAndDrag": {
-    "message": "একটি পেজের কিয়দংশ ক্যাপচার করতে ক্লিক করে ড্রাগ করুন। অতঃপর আপনি মাউজ হোভার করে আপনার নির্বাচিত অংশ হাইলাইট করতে পারবেন।"
+    "message": "পাতার কিয়দংশ ক্যাপচার করতে ক্লিক করে ড্রাগ করুন। অতঃপর আপনি মাউস হোভার করে আপনার নির্বাচিত অংশ হাইলাইট করতে পারবেন।"
   },
   "tourHeaderFullPage": {
-    "message": "উইন্ডো ক্যাপচার করুন অথবা পুরো পেজ"
+    "message": "উইন্ডো অথবা সম্পূর্ণ পাতা ক্যাপচার করুন"
   },
   "tourBodyFullPage": {
-    "message": "ইউন্ডোতে দৃশ্যমান অংশ অথবা সম্পূর্ণ পেজ ক্যাপচার করতে উপরে ডানদিকের বাটনগুলো থেকে নির্বাচন করুন।"
-  },
-  "tourHeaderDownloadUpload": {
-    "message": "আপনি যেমন পছন্দ করেন"
-  },
-  "tourBodyDownloadUpload": {
-    "message": "আপনার ক্রপ করা সটসমূহ ওয়েবে রাখুন সহজে শেয়ার করার সুবিধার্থে, অথবা আপনার কম্পিউটারে ডাউনলোড করুন। আপনার সকল সটসমূহ খুঁজে পেতে আমার সটসমূহ বাটনে ক্লিক করুন।"
+    "message": "ইউন্ডোতে দৃশ্যমান অংশ অথবা সম্পূর্ণ পাতা ক্যাপচার করতে উপরে ডানদিকের বাটনগুলো থেকে নির্বাচন করুন।"
   },
   "tourSkip": {
     "message": "এড়িয়ে যান"

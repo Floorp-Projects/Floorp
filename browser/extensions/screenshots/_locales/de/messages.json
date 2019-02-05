@@ -17,6 +17,9 @@
   "saveScreenshotSelectedArea": {
     "message": "Speichern"
   },
+  "uploadScreenshotSelectedArea": {
+    "message": "Hochladen"
+  },
   "saveScreenshotVisibleArea": {
     "message": "Sichtbaren Bereich speichern"
   },
@@ -28,6 +31,9 @@
   },
   "downloadScreenshot": {
     "message": "Herunterladen"
+  },
+  "downloadScreenshotTitle": {
+    "message": "Bildschirmfoto herunterladen"
   },
   "downloadOnlyNotice": {
     "message": "Sie sind aktuell im Modus „Nur herunterladen“."
@@ -63,6 +69,9 @@
   },
   "copyScreenshot": {
     "message": "Kopieren"
+  },
+  "copyScreenshotTitle": {
+    "message": "Bildschirmfoto in Zwischenablage kopieren"
   },
   "notificationImageCopiedTitle": {
     "message": "Bildschirmfoto kopiert"
@@ -122,8 +131,8 @@
   "genericErrorDetails": {
     "message": "Wir wissen auch nicht, was gerade passiert ist. Könnten Sie das Bildschirmfoto erneut oder auf einer anderen Seite aufnehmen?"
   },
-  "tourBodyIntro": {
-    "message": "Bildschirmfotos aufnehmen, speichern und teilen, ohne Firefox zu verlassen."
+  "tourBodyIntroServerless": {
+    "message": "Bildschirmfotos aufnehmen, kopieren und herunterladen, ohne Firefox zu verlassen."
   },
   "tourHeaderPageAction": {
     "message": "Neue Speichermöglichkeit"
@@ -142,18 +151,6 @@
   },
   "tourBodyFullPage": {
     "message": "Nutzen Sie die Schaltflächen rechts oben, um den sichtbaren Bereich im Fenster oder eine ganze Seite zu speichern."
-  },
-  "tourHeaderDownloadUpload": {
-    "message": "Wie Sie möchten"
-  },
-  "tourBodyDownloadUpload": {
-    "message": "Speichern Sie Ihre zugeschnittenen Bildschirmfotos im Internet, sodass sie leicht zu teilen sind, oder laden Sie sie auf Ihren Computer herunter. Sie können auch auf die Schaltfläche „Meine Bildschirmfotos“ klicken, um alle Ihre Bildschirmfotos zu finden."
-  },
-  "tourHeaderAccounts": {
-    "message": "Screenshots zum Mitnehmen"
-  },
-  "tourBodyAccounts": {
-    "message": "Melden Sie sich mit Ihrem Firefox-Konto an, um auf all Ihren Geräten auf Ihre Bildschirmfotos zuzugreifen und Ihre Favoriten dauerhaft zu speichern."
   },
   "tourSkip": {
     "message": "Überspringen"

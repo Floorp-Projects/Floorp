@@ -17,6 +17,9 @@
   "saveScreenshotSelectedArea": {
     "message": "Guardar"
   },
+  "uploadScreenshotSelectedArea": {
+    "message": "Carregar"
+  },
   "saveScreenshotVisibleArea": {
     "message": "Guardar visível"
   },
@@ -28,6 +31,9 @@
   },
   "downloadScreenshot": {
     "message": "Transferir"
+  },
+  "downloadScreenshotTitle": {
+    "message": "Transferir captura de ecrã"
   },
   "downloadOnlyNotice": {
     "message": "Está atualmente no modo Transferências-apenas."
@@ -63,6 +69,9 @@
   },
   "copyScreenshot": {
     "message": "Copiar"
+  },
+  "copyScreenshotTitle": {
+    "message": "Copiar captura de ecrã para a área de transferência"
   },
   "notificationImageCopiedTitle": {
     "message": "Captura copiada"
@@ -122,8 +131,8 @@
   "genericErrorDetails": {
     "message": "Não temos a certeza do que acabou de acontecer. Importa-se de tentar novamente ou tirar uma captura de uma página diferente?"
   },
-  "tourBodyIntro": {
-    "message": "Tire, guarde e partilhe capturas de ecrã sem sair do Firefox."
+  "tourBodyIntroServerless": {
+    "message": "Tire, copie, e transfira capturas de ecrã sem sair do Firefox."
   },
   "tourHeaderPageAction": {
     "message": "Uma nova maneira de guardar"
@@ -142,15 +151,6 @@
   },
   "tourBodyFullPage": {
     "message": "Selecione os botões no canto superior direito para capturar a área visível na janela ou para capturar uma página inteira."
-  },
-  "tourHeaderDownloadUpload": {
-    "message": "Como você gosta"
-  },
-  "tourBodyDownloadUpload": {
-    "message": "Guarde as suas capturas na web para partilhar mais facilmente ou transfira-as para o seu computador. Pode também clicar no botão Minhas capturas para encontrar todas as capturas que tirou."
-  },
-  "tourBodyAccounts": {
-    "message": "Inicie sessão com a sua Conta Firefox para aceder às suas capturas em todos os seus dispositivos e guardar as suas capturas favoritas para sempre."
   },
   "tourSkip": {
     "message": "SALTAR"

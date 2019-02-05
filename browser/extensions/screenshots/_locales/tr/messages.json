@@ -17,6 +17,9 @@
   "saveScreenshotSelectedArea": {
     "message": "Kaydet"
   },
+  "uploadScreenshotSelectedArea": {
+    "message": "Yükle"
+  },
   "saveScreenshotVisibleArea": {
     "message": "Görünür alanı kaydet"
   },
@@ -28,6 +31,9 @@
   },
   "downloadScreenshot": {
     "message": "İndir"
+  },
+  "downloadScreenshotTitle": {
+    "message": "Ekran görüntüsünü indir"
   },
   "downloadOnlyNotice": {
     "message": "Şu anda Yalnızca İndirme modundasınız."
@@ -63,6 +69,9 @@
   },
   "copyScreenshot": {
     "message": "Kopyala"
+  },
+  "copyScreenshotTitle": {
+    "message": "Ekran görüntüsünü panoya kopyala"
   },
   "notificationImageCopiedTitle": {
     "message": "Görüntü kopyalandı"
@@ -122,8 +131,8 @@
   "genericErrorDetails": {
     "message": "Ne olduğunu biz de anlamadık. Bir daha denemeye veya başka bir sayfanın ekran görüntüsünü almaya ne dersiniz?"
   },
-  "tourBodyIntro": {
-    "message": "Firefox'tan çıkmadan ekran görüntüleri alın, kaydedin ve paylaşın."
+  "tourBodyIntroServerless": {
+    "message": "Firefox'tan ayrılmadan ekran görüntülerini yakalayın, kopyalayın ve indirin."
   },
   "tourHeaderPageAction": {
     "message": "Kaydetmenin yeni yolu"
@@ -142,18 +151,6 @@
   },
   "tourBodyFullPage": {
     "message": "Yalnızca pencerede gördüğünüz alanı veya sayfanın tamamını yakalamak için sağ üstteki düğmelerden uygun olanı seçin."
-  },
-  "tourHeaderDownloadUpload": {
-    "message": "İstediğin gibi yakala"
-  },
-  "tourBodyDownloadUpload": {
-    "message": "Ekran görüntülerinizi daha kolay paylaşmak web’e kaydedebilir veya bilgisayarınıza indirebilirsiniz. Kaydettiğiniz tüm görüntüleri bulmak için “Ekran görüntülerim” düğmesine tıklayabilirsiniz."
-  },
-  "tourHeaderAccounts": {
-    "message": "Screenshots her yerde"
-  },
-  "tourBodyAccounts": {
-    "message": "Ekran görüntülerinize tüm cihazlarınızdan erişmek ve favori görüntülerinizi sonsuza dek saklamak için Firefox Hesabınıza giriş yapın."
   },
   "tourSkip": {
     "message": "GEÇ"

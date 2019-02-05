@@ -17,6 +17,9 @@
   "saveScreenshotSelectedArea": {
     "message": "Uložit"
   },
+  "uploadScreenshotSelectedArea": {
+    "message": "Nahrát"
+  },
   "saveScreenshotVisibleArea": {
     "message": "Uložit viditelnou oblast"
   },
@@ -28,6 +31,9 @@
   },
   "downloadScreenshot": {
     "message": "Stáhnout"
+  },
+  "downloadScreenshotTitle": {
+    "message": "Stáhnout snímek"
   },
   "downloadOnlyNotice": {
     "message": "Nyní jste v režimu pouze ke stažení."
@@ -63,6 +69,9 @@
   },
   "copyScreenshot": {
     "message": "Kopírovat"
+  },
+  "copyScreenshotTitle": {
+    "message": "Zkopírovat snímek do schránky"
   },
   "notificationImageCopiedTitle": {
     "message": "Snímek zkopírován"
@@ -122,8 +131,8 @@
   "genericErrorDetails": {
     "message": "Nejsme si jistí, co se právě stalo. Chcete to zkusit znovu, nebo zkusíte pořídit snímek na jiné stránce?"
   },
-  "tourBodyIntro": {
-    "message": "Pořizujte, ukládejte a sdílejte snímky webových stránek bez opuštění Firefoxu."
+  "tourBodyIntroServerless": {
+    "message": "Pořizujte, kopírujte a ukládejte snímky webových stránek bez opuštění Firefoxu."
   },
   "tourHeaderPageAction": {
     "message": "Nový způsob ukládání"
@@ -142,18 +151,6 @@
   },
   "tourBodyFullPage": {
     "message": "Pomocí tlačítek vpravo nahoře můžete pořídit snímek jen viditelné části nebo úplně celé stránky."
-  },
-  "tourHeaderDownloadUpload": {
-    "message": "Jak sami chcete"
-  },
-  "tourBodyDownloadUpload": {
-    "message": "Uložte si oříznutý snímek stránky na web pro rychlejší sdílení, nebo si ho stáhněte do počítače. Pro zobrazení všech snímků stačí klepnout na tlačítko Mé snímky."
-  },
-  "tourHeaderAccounts": {
-    "message": "Snímky stránek vždy s sebou"
-  },
-  "tourBodyAccounts": {
-    "message": "Pro přístup ke snímkům z jiných zařízení nebo jejich ukládání se prosím přihlaste svým účtem Firefoxu."
   },
   "tourSkip": {
     "message": "Přeskočit"

@@ -17,6 +17,9 @@
   "saveScreenshotSelectedArea": {
     "message": "Guardar"
   },
+  "uploadScreenshotSelectedArea": {
+    "message": "Cargar"
+  },
   "saveScreenshotVisibleArea": {
     "message": "Guardar visible"
   },
@@ -150,7 +153,7 @@
     "message": "Guarda tus capturas recortadas en la Web para compartirlas más fácilmente o descárgalas en tu computadora. También puedes hacer clic en el botón Mis Capturas para encontrar todas las fotos que has tomado."
   },
   "tourHeaderAccounts": {
-    "message": "Screenshots to Go"
+    "message": "Capturas en todos los dispositivos"
   },
   "tourBodyAccounts": {
     "message": "Inicia sesión con tu cuenta de Firefox para acceder a tus capturas en todos tus dispositivos y guarda tus capturas favoritas para siempre."

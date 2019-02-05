@@ -17,6 +17,9 @@
   "saveScreenshotSelectedArea": {
     "message": "บันทึก"
   },
+  "uploadScreenshotSelectedArea": {
+    "message": "อัปโหลด"
+  },
   "saveScreenshotVisibleArea": {
     "message": "บันทึกส่วนที่มองเห็น"
   },
@@ -32,14 +35,23 @@
   "downloadOnlyNotice": {
     "message": "คุณกำลังอยู่ในโหมดดาวน์โหลดเท่านั้น"
   },
+  "downloadOnlyDetails": {
+    "message": "Firefox Screenshots จะเปลี่ยนเป็นโหมดดาวน์โหลดอย่างเดียวโดยอัตโนมัติในสถานการณ์เหล่านี้:"
+  },
   "downloadOnlyDetailsPrivate": {
     "message": "ในหน้าต่างการท่องเว็บแบบส่วนตัว"
   },
   "downloadOnlyDetailsThirdParty": {
     "message": "คุกกี้บุคคลที่สามถูกปิดการใช้งาน"
   },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "“ไม่จดจำประวัติเสมอ” ถูกเปิดใช้งานอยู่"
+  },
   "downloadOnlyDetailsESR": {
     "message": "คุณกำลังใช้ Firefox ESR"
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "อัปโหลดได้ถูกปิดใช้งาน"
   },
   "notificationLinkCopiedTitle": {
     "message": "คัดลอกลิงก์แล้ว"
@@ -57,6 +69,14 @@
   },
   "notificationImageCopiedTitle": {
     "message": "คัดลอกภาพหน้าจอแล้ว"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "คัดลอกภาพของคุณไปยังคลิปบอร์ดแล้ว กด $META_KEY$-V เพื่อวาง",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
   },
   "requestErrorTitle": {
     "message": "ใช้งานไม่ได้"
@@ -102,6 +122,9 @@
   },
   "tourHeaderPageAction": {
     "message": "หนทางใหม่ในการบันทึก"
+  },
+  "tourBodyPageAction": {
+    "message": "ขยายเมนูการกระทำหน้าในแถบที่อยู่ทุกครั้งที่คุณต้องการจับภาพหน้าจอ"
   },
   "tourHeaderClickAndDrag": {
     "message": "จับภาพแค่สิ่งที่คุณต้องการ"
