@@ -13,10 +13,17 @@
  */
 
 _NS_InvokeByIndex:
+            .cfi_startproc
             # set up frame
             stp         x29, x30, [sp,#-32]!
+            .cfi_adjust_cfa_offset 32
+            .cfi_rel_offset x29, 0
+            .cfi_rel_offset x30, 8
             mov         x29, sp
+            .cfi_def_cfa_register x29
             stp         x19, x20, [sp,#16]
+            .cfi_rel_offset x19, 16
+            .cfi_rel_offset x20, 24
 
             # save methodIndex across function calls
             mov         w20, w1
@@ -58,9 +65,16 @@ _NS_InvokeByIndex:
             blr         x16
 
             add         sp, sp, w19, uxth #3
+            .cfi_def_cfa_register sp
             ldp         x19, x20, [sp,#16]
+            .cfi_restore x19
+            .cfi_restore x20
             ldp         x29, x30, [sp],#32
+            .cfi_adjust_cfa_offset -32
+            .cfi_restore x29
+            .cfi_restore x30
             ret
+            .cfi_endproc
 
             .size _NS_InvokeByIndex, . - _NS_InvokeByIndex
 
