@@ -41,13 +41,12 @@ function asyncBlob() {
     bytes[i] = IMAGE.charCodeAt(i);
   }
 
-  let array = [];
-  for (let i = 0; i < 20000; ++i) {
-    array.push(new Uint8Array(bytes));
+  let blob = new Blob([new Uint8Array(bytes)], { type: "text/html"});
+  while (blob.size <= 1024*1024) {
+    blob = new Blob([blob, blob], { type: "text/html"});
   }
 
-  let blob = new Blob(array, { type: "text/html"});
-  ok(blob.size > 1000000, "More than 1mb");
+  ok(blob.size > 1024 * 1024, "More than 1mb");
 
   let bc = new BroadcastChannel('a');
   bc.onmessage = e => {
@@ -78,6 +77,7 @@ function next() {
   test();
 }
 
+SimpleTest.requestLongerTimeout(3); // slow on Android
 SimpleTest.waitForExplicitFinish();
 next();
 </script>
