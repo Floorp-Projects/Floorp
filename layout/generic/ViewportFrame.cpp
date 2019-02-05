@@ -382,12 +382,6 @@ void ViewportFrame::UpdateStyle(ServoRestyleState& aRestyleState) {
       aRestyleState.StyleSet().ResolveInheritingAnonymousBoxStyle(pseudo,
                                                                   nullptr);
 
-  // We're special because we have a null GetContent(), so don't call things
-  // like UpdateStyleOfOwnedChildFrame that try to append changes for the
-  // content to the change list.  Nor do we computed a changehint, since we have
-  // no way to apply it anyway.
-  newStyle->ResolveSameStructsAs(Style());
-
   MOZ_ASSERT(!GetNextContinuation(), "Viewport has continuations?");
   SetComputedStyle(newStyle);
 

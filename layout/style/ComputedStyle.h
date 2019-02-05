@@ -42,6 +42,10 @@ void Gecko_ComputedStyle_Destroy(mozilla::ComputedStyle*);
 
 namespace mozilla {
 
+namespace dom {
+class Document;
+}
+
 enum class CSSPseudoElementType : uint8_t;
 class ComputedStyle;
 
@@ -219,38 +223,10 @@ class ComputedStyle {
     mCachedInheritingStyles.Insert(aStyle);
   }
 
-/**
- * Define typesafe getter functions for each style struct by
- * preprocessing the list of style structs.  These functions are the
- * preferred way to get style data.  The macro creates functions like:
- *   const nsStyleBorder* StyleBorder();
- *   const nsStyleColor* StyleColor();
- */
-#define STYLE_STRUCT(name_) \
-  inline const nsStyle##name_* Style##name_() MOZ_NONNULL_RETURN;
-#include "nsStyleStructList.h"
-#undef STYLE_STRUCT
-
-  /**
-   * Equivalent to StyleFoo(), except that we skip the cache write during the
-   * servo traversal. This can cause incorrect behavior if used improperly,
-   * since we won't record that layout potentially depends on the values in
-   * this style struct. Use with care.
-   */
-
-#define STYLE_STRUCT(name_) \
-  inline const nsStyle##name_* ThreadsafeStyle##name_();
-#include "nsStyleStructList.h"
-#undef STYLE_STRUCT
-
-/**
- * PeekStyle* is like Style* but doesn't trigger style
- * computation if the data is not cached on either the ComputedStyle
- * or the rule node.
- *
- * Perhaps this shouldn't be a public ComputedStyle API.
- */
-#define STYLE_STRUCT(name_) inline const nsStyle##name_* PeekStyle##name_();
+#define STYLE_STRUCT(name_)                                              \
+  inline const nsStyle##name_* Style##name_() const MOZ_NONNULL_RETURN { \
+    return mSource.GetStyle##name_();                                    \
+  }
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
 
@@ -271,8 +247,8 @@ class ComputedStyle {
    * CSS Variables are not compared here. Instead, the caller is responsible for
    * that when needed (basically only for elements).
    */
-  nsChangeHint CalcStyleDifference(ComputedStyle* aNewContext,
-                                   uint32_t* aEqualStructs);
+  nsChangeHint CalcStyleDifference(const ComputedStyle& aNewContext,
+                                   uint32_t* aEqualStructs) const;
 
  public:
   /**
@@ -296,9 +272,13 @@ class ComputedStyle {
   static nscolor CombineVisitedColors(nscolor* aColors, bool aLinkIsVisited);
 
   /**
-   * Start the background image loads for this ComputedStyle.
+   * Start image loads for this style.
+   *
+   * The Document is used to get a hand on the image loader. The old style is a
+   * hack for bug 1439285.
    */
-  inline void StartBackgroundImageLoads();
+  inline void StartImageLoads(dom::Document&,
+                              const ComputedStyle* aOldStyle = nullptr);
 
 #ifdef DEBUG
   void List(FILE* out, int32_t aIndent);
@@ -306,25 +286,12 @@ class ComputedStyle {
   static Maybe<StyleStructID> LookupStruct(const nsACString& aName);
 #endif
 
-  /**
-   * Makes this context match |aOther| in terms of which style structs have
-   * been resolved.
-   */
-  inline void ResolveSameStructsAs(const ComputedStyle* aOther);
-
   // The |aCVsSize| outparam on this function is where the actual CVs size
   // value is added. It's done that way because the callers know which value
   // the size should be added to.
   void AddSizeOfIncludingThis(nsWindowSizes& aSizes, size_t* aCVsSize) const;
 
  protected:
-  bool HasRequestedStruct(StyleStructID aID) const {
-    return mRequestedStructs & StyleStructConstants::BitFor(aID);
-  }
-
-  void SetRequestedStruct(StyleStructID aID) {
-    mRequestedStructs |= StyleStructConstants::BitFor(aID);
-  }
 
   // Needs to be friend so that it can call the destructor without making it
   // public.
@@ -339,24 +306,10 @@ class ComputedStyle {
   // A cache of anonymous box and lazy pseudo styles inheriting from this style.
   CachedInheritingStyles mCachedInheritingStyles;
 
-// Helper functions for GetStyle* and PeekStyle*
-#define STYLE_STRUCT_INHERITED(name_) \
-  template <bool aComputeData>        \
-  const nsStyle##name_* DoGetStyle##name_();
-#define STYLE_STRUCT_RESET(name_) \
-  template <bool aComputeData>    \
-  const nsStyle##name_* DoGetStyle##name_();
-
-#include "nsStyleStructList.h"
-#undef STYLE_STRUCT_RESET
-#undef STYLE_STRUCT_INHERITED
-
   // If this ComputedStyle is for a pseudo-element or anonymous box,
   // the relevant atom.
   const RefPtr<nsAtom> mPseudoTag;
 
-  // A bitfield with the structs that have been requested so far.
-  uint32_t mRequestedStructs = 0;
   const Bit mBits;
   const CSSPseudoElementType mPseudoType;
 };
