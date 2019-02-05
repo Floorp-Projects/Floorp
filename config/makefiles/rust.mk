@@ -92,18 +92,11 @@ ifndef FUZZING_INTERFACES
 # https://github.com/alexcrichton/cc-rs/blob/baa71c0e298d9ad7ac30f0ad78f20b4b3b3a8fb2/src/lib.rs#L1715
 rust_cc_env_name := $(subst -,_,$(RUST_TARGET))
 
-ifeq (WINNT,$(HOST_OS_ARCH))
-# Don't do most of this on Windows because msys path translation makes a mess of the paths, and
-# we put MSVC in PATH there anyway.  But we do suppress warnings, since all such warnings
-# are in third-party code.
-export CFLAGS_$(rust_cc_env_name)=-w
-else
 export CC_$(rust_cc_env_name)=$(CC)
 export CXX_$(rust_cc_env_name)=$(CXX)
 export CFLAGS_$(rust_cc_env_name)=$(COMPUTED_CFLAGS)
 export CXXFLAGS_$(rust_cc_env_name)=$(COMPUTED_CXXFLAGS)
 export AR_$(rust_cc_env_name)=$(AR)
-endif # WINNT
 endif # FUZZING_INTERFACES
 endif # MOZ_CODE_COVERAGE
 endif # MOZ_UBSAN
