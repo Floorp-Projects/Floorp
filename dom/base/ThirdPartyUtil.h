@@ -10,7 +10,7 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "mozIThirdPartyUtil.h"
-#include "nsEffectiveTLDService.h"
+#include "nsIEffectiveTLDService.h"
 #include "mozilla/Attributes.h"
 
 class nsIURI;
@@ -22,15 +22,13 @@ class ThirdPartyUtil final : public mozIThirdPartyUtil {
 
   nsresult Init();
 
-  static ThirdPartyUtil* GetInstance();
-
  private:
-  ~ThirdPartyUtil();
+  ~ThirdPartyUtil() {}
 
   nsresult IsThirdPartyInternal(const nsCString& aFirstDomain,
                                 nsIURI* aSecondURI, bool* aResult);
 
-  RefPtr<nsEffectiveTLDService> mTLDService;
+  nsCOMPtr<nsIEffectiveTLDService> mTLDService;
 };
 
 #endif

@@ -23,7 +23,7 @@
 #include "nsIIOService.h"
 #include "nsIParentChannel.h"
 #include "nsIPermission.h"
-#include "nsPermissionManager.h"
+#include "nsIPermissionManager.h"
 #include "nsIPrincipal.h"
 #include "nsIScriptError.h"
 #include "nsIURI.h"
@@ -457,7 +457,7 @@ class TemporaryAccessGrantObserver final : public nsIObserver {
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
-  static void Create(nsPermissionManager* aPM, nsIPrincipal* aPrincipal,
+  static void Create(nsIPermissionManager* aPM, nsIPrincipal* aPrincipal,
                      const nsACString& aType) {
     nsCOMPtr<nsITimer> timer;
     RefPtr<TemporaryAccessGrantObserver> observer =
@@ -483,7 +483,7 @@ class TemporaryAccessGrantObserver final : public nsIObserver {
   }
 
  private:
-  TemporaryAccessGrantObserver(nsPermissionManager* aPM,
+  TemporaryAccessGrantObserver(nsIPermissionManager* aPM,
                                nsIPrincipal* aPrincipal,
                                const nsACString& aType)
       : mPM(aPM), mPrincipal(aPrincipal), mType(aType) {
@@ -496,7 +496,7 @@ class TemporaryAccessGrantObserver final : public nsIObserver {
 
  private:
   nsCOMPtr<nsITimer> mTimer;
-  RefPtr<nsPermissionManager> mPM;
+  nsCOMPtr<nsIPermissionManager> mPM;
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsCString mType;
 };
@@ -761,8 +761,8 @@ AntiTrackingCommon::SaveFirstPartyStorageAccessGrantedForOriginOnParentProcess(
                                                                 __func__);
   }
 
-  nsPermissionManager* permManager = nsPermissionManager::GetInstance();
-  if (NS_WARN_IF(!permManager)) {
+  nsCOMPtr<nsIPermissionManager> pm = services::GetPermissionManager();
+  if (NS_WARN_IF(!pm)) {
     LOG(("Permission manager is null, bailing out early"));
     return FirstPartyStorageAccessGrantPromise::CreateAndReject(false,
                                                                 __func__);
@@ -790,9 +790,9 @@ AntiTrackingCommon::SaveFirstPartyStorageAccessGrantedForOriginOnParentProcess(
          "permission manager",
          expirationTime));
 
-    rv = permManager->AddFromPrincipal(aTrackingPrincipal, "cookie",
-                                       nsICookiePermission::ACCESS_ALLOW,
-                                       expirationType, when);
+    rv = pm->AddFromPrincipal(aTrackingPrincipal, "cookie",
+                              nsICookiePermission::ACCESS_ALLOW, expirationType,
+                              when);
   } else {
     uint32_t privateBrowsingId = 0;
     rv = aParentPrincipal->GetPrivateBrowsingId(&privateBrowsingId);
@@ -813,13 +813,13 @@ AntiTrackingCommon::SaveFirstPartyStorageAccessGrantedForOriginOnParentProcess(
          "permission manager",
          type.get(), expirationTime));
 
-    rv = permManager->AddFromPrincipal(aParentPrincipal, type.get(),
-                                       nsIPermissionManager::ALLOW_ACTION,
-                                       expirationType, when);
+    rv = pm->AddFromPrincipal(aParentPrincipal, type.get(),
+                              nsIPermissionManager::ALLOW_ACTION,
+                              expirationType, when);
 
     if (NS_SUCCEEDED(rv) && (aAllowMode == eAllowAutoGrant)) {
       // Make sure temporary access grants do not survive more than 24 hours.
-      TemporaryAccessGrantObserver::Create(permManager, aParentPrincipal, type);
+      TemporaryAccessGrantObserver::Create(pm, aParentPrincipal, type);
     }
   }
   Unused << NS_WARN_IF(NS_FAILED(rv));
@@ -1033,15 +1033,14 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
     return true;
   }
 
-  nsPermissionManager* permManager = nsPermissionManager::GetInstance();
-  if (NS_WARN_IF(!permManager)) {
+  nsCOMPtr<nsIPermissionManager> pm = services::GetPermissionManager();
+  if (NS_WARN_IF(!pm)) {
     LOG(("Failed to obtain the permission manager"));
     return false;
   }
 
   uint32_t result = 0;
-  rv = permManager->TestPermissionFromPrincipal(parentPrincipal, type.get(),
-                                                &result);
+  rv = pm->TestPermissionFromPrincipal(parentPrincipal, type.get(), &result);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     LOG(("Failed to test the permission"));
     return false;
@@ -1281,15 +1280,14 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
   nsAutoCString type;
   CreatePermissionKey(trackingOrigin, origin, type);
 
-  nsPermissionManager* permManager = nsPermissionManager::GetInstance();
-  if (NS_WARN_IF(!permManager)) {
+  nsCOMPtr<nsIPermissionManager> pm = services::GetPermissionManager();
+  if (NS_WARN_IF(!pm)) {
     LOG(("Failed to obtain the permission manager"));
     return false;
   }
 
   uint32_t result = 0;
-  rv = permManager->TestPermissionFromPrincipal(parentPrincipal, type.get(),
-                                                &result);
+  rv = pm->TestPermissionFromPrincipal(parentPrincipal, type.get(), &result);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     LOG(("Failed to test the permission"));
     return false;
@@ -1377,15 +1375,14 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
   nsAutoCString type;
   CreatePermissionKey(origin, origin, type);
 
-  nsPermissionManager* permManager = nsPermissionManager::GetInstance();
-  if (NS_WARN_IF(!permManager)) {
+  nsCOMPtr<nsIPermissionManager> pm = services::GetPermissionManager();
+  if (NS_WARN_IF(!pm)) {
     LOG(("Failed to obtain the permission manager"));
     return false;
   }
 
   uint32_t result = 0;
-  rv = permManager->TestPermissionFromPrincipal(parentPrincipal, type.get(),
-                                                &result);
+  rv = pm->TestPermissionFromPrincipal(parentPrincipal, type.get(), &result);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     LOG(("Failed to test the permission"));
     return false;
@@ -1444,8 +1441,8 @@ nsresult AntiTrackingCommon::IsOnContentBlockingAllowList(
   }
   escaped.Append(temp);
 
-  nsPermissionManager* permManager = nsPermissionManager::GetInstance();
-  NS_ENSURE_TRUE(permManager, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIPermissionManager> permMgr = services::GetPermissionManager();
+  NS_ENSURE_TRUE(permMgr, NS_ERROR_FAILURE);
 
   // Check both the normal mode and private browsing mode user override
   // permissions.
@@ -1459,8 +1456,8 @@ nsresult AntiTrackingCommon::IsOnContentBlockingAllowList(
     }
 
     uint32_t permissions = nsIPermissionManager::UNKNOWN_ACTION;
-    rv = permManager->TestPermissionOriginNoSuffix(topWinURI, types[i].first(),
-                                                   &permissions);
+    rv = permMgr->TestPermissionOriginNoSuffix(topWinURI, types[i].first(),
+                                               &permissions);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (permissions == nsIPermissionManager::ALLOW_ACTION) {
@@ -1600,8 +1597,8 @@ nsresult AntiTrackingCommon::IsOnContentBlockingAllowList(
     Unused << aPrincipal->GetURI(getter_AddRefs(uri));
     LOG_SPEC(("Saving the userInteraction for %s", _spec), uri);
 
-    nsPermissionManager* permManager = nsPermissionManager::GetInstance();
-    if (NS_WARN_IF(!permManager)) {
+    nsCOMPtr<nsIPermissionManager> pm = services::GetPermissionManager();
+    if (NS_WARN_IF(!pm)) {
       LOG(("Permission manager is null, bailing out early"));
       return;
     }
@@ -1621,9 +1618,9 @@ nsresult AntiTrackingCommon::IsOnContentBlockingAllowList(
       when = 0;
     }
 
-    rv = permManager->AddFromPrincipal(aPrincipal, USER_INTERACTION_PERM,
-                                       nsIPermissionManager::ALLOW_ACTION,
-                                       expirationType, when);
+    rv = pm->AddFromPrincipal(aPrincipal, USER_INTERACTION_PERM,
+                              nsIPermissionManager::ALLOW_ACTION,
+                              expirationType, when);
     Unused << NS_WARN_IF(NS_FAILED(rv));
     return;
   }
@@ -1641,14 +1638,14 @@ nsresult AntiTrackingCommon::IsOnContentBlockingAllowList(
 
 /* static */ bool AntiTrackingCommon::HasUserInteraction(
     nsIPrincipal* aPrincipal) {
-  nsPermissionManager* permManager = nsPermissionManager::GetInstance();
-  if (NS_WARN_IF(!permManager)) {
+  nsCOMPtr<nsIPermissionManager> pm = services::GetPermissionManager();
+  if (NS_WARN_IF(!pm)) {
     return false;
   }
 
   uint32_t result = 0;
-  nsresult rv = permManager->TestPermissionFromPrincipal(
-      aPrincipal, USER_INTERACTION_PERM, &result);
+  nsresult rv = pm->TestPermissionFromPrincipal(aPrincipal,
+                                                USER_INTERACTION_PERM, &result);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return false;
   }
