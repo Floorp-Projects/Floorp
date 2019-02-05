@@ -148,6 +148,10 @@ class AudioParam final : public nsWrapperCache, public AudioParamTimeline {
 
   float MaxValue() const { return mMaxValue; }
 
+  bool IsStreamSuspended() const {
+    return mStream ? mStream->IsSuspended() : false;
+  }
+
   const nsTArray<AudioNode::InputNode>& InputNodes() const {
     return mInputNodes;
   }
