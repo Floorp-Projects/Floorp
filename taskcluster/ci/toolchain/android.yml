@@ -1,0 +1,66 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+job-defaults:
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        docker-image: {in-tree: android-build}
+        max-run-time: 1800
+
+linux64-android-sdk-linux-repack:
+    description: "Android SDK (Linux) repack toolchain build"
+    treeherder:
+        symbol: TL(android-sdk-linux)
+    worker:
+        artifacts:
+            - name: project/gecko/android-sdk
+              path: /builds/worker/project/gecko/android-sdk/
+              type: directory
+    run:
+        script: repack-android-sdk-linux.sh
+        resources:
+            - 'python/mozboot/**/*android*'
+        toolchain-artifact: project/gecko/android-sdk/android-sdk-linux.tar.xz
+        toolchain-alias: android-sdk-linux
+
+linux64-android-ndk-linux-repack:
+    description: "Android NDK (Linux) repack toolchain build"
+    treeherder:
+        symbol: TL(android-ndk-linux)
+    worker:
+        artifacts:
+            - name: project/gecko/android-ndk
+              path: /builds/worker/project/gecko/android-ndk/
+              type: directory
+    run:
+        script: repack-android-ndk-linux.sh
+        resources:
+            - 'python/mozboot/**/*android*'
+        toolchain-artifact: project/gecko/android-ndk/android-ndk.tar.xz
+        toolchain-alias: android-ndk-linux
+
+linux64-android-gradle-dependencies:
+    description: "Android Gradle dependencies toolchain task"
+    treeherder:
+        symbol: TL(gradle-dependencies)
+    worker:
+        env:
+            GRADLE_USER_HOME: "/builds/worker/workspace/build/src/mobile/android/gradle/dotgradle-online"
+    run:
+        script: android-gradle-dependencies.sh
+        sparse-profile: null
+        resources:
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
+            - 'taskcluster/scripts/misc/android-gradle-dependencies/**'
+            - '*.gradle'
+            - 'mobile/android/**/*.gradle'
+            - 'mobile/android/config/mozconfigs/android-api-16-gradle-dependencies/**'
+            - 'mobile/android/config/mozconfigs/common*'
+            - 'mobile/android/gradle.configure'
+        toolchain-artifact: public/build/android-gradle-dependencies.tar.xz
+        toolchain-alias: android-gradle-dependencies
+    toolchains:
+        # Aliases aren't allowed for toolchains depending on toolchains.
+        - linux64-android-sdk-linux-repack
+        - linux64-node

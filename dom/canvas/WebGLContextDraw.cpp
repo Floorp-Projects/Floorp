@@ -311,6 +311,51 @@ const webgl::CachedDrawFetchLimits* ValidateDraw(WebGLContext* const webgl,
 
   // -
 
+  const auto& fragOutputs = linkInfo->fragOutputs;
+  const auto fnValidateFragOutputType =
+      [&](const uint8_t loc, const webgl::TextureBaseType dstBaseType) {
+        const auto itr = fragOutputs.find(loc);
+        if (MOZ_UNLIKELY(itr == fragOutputs.end())) {
+          webgl->ErrorInvalidOperation(
+              "Program has no frag output at location %u, but"
+              " destination draw buffer has an attached"
+              " image.",
+              uint32_t(loc));
+          return false;
+        }
+
+        const auto& info = itr->second;
+        const auto& srcBaseType = info.baseType;
+        if (MOZ_UNLIKELY(dstBaseType != srcBaseType)) {
+          const auto& srcStr = ToString(srcBaseType);
+          const auto& dstStr = ToString(dstBaseType);
+          webgl->ErrorInvalidOperation(
+              "Program frag output at location %u is type %s,"
+              " but destination draw buffer is type %s.",
+              uint32_t(loc), srcStr, dstStr);
+          return false;
+        }
+        return true;
+      };
+
+  if (!webgl->mRasterizerDiscardEnabled) {
+    if (fb) {
+      for (const auto& attach : fb->ColorDrawBuffers()) {
+        const auto i =
+            uint8_t(attach->mAttachmentPoint - LOCAL_GL_COLOR_ATTACHMENT0);
+        const auto& imageInfo = attach->GetImageInfo();
+        if (!imageInfo) continue;
+        const auto& dstBaseType = imageInfo->mFormat->format->baseType;
+        if (!fnValidateFragOutputType(i, dstBaseType)) return nullptr;
+      }
+    } else {
+      if (!fnValidateFragOutputType(0, webgl::TextureBaseType::Float))
+        return nullptr;
+    }
+  }
+
+  // -
+
   const auto fetchLimits = linkInfo->GetDrawFetchLimits();
   if (!fetchLimits) return nullptr;
 

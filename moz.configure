@@ -441,9 +441,13 @@ include(tup_include)
 
 option(env='WATCHMAN', nargs=1, help='Path to the watchman program')
 
-@depends('WATCHMAN')
+@depends(host, 'WATCHMAN')
 @checking('for watchman', callback=lambda w: w.path if w else 'not found')
-def watchman(prog):
+def watchman(host, prog):
+    # On Windows, `watchman` is only supported on 64-bit hosts.
+    if host.os == 'WINNT' and host.cpu != 'x86_64':
+        return
+
     if not prog:
         prog = find_program('watchman')
 

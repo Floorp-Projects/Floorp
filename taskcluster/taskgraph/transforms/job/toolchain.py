@@ -114,6 +114,9 @@ def docker_worker_toolchain(config, job, taskdesc):
     worker = taskdesc['worker']
     worker['chain-of-trust'] = True
 
+    # If the task doesn't have a docker-image, set a default
+    worker.setdefault('docker-image', {'in-tree': 'toolchain-build'})
+
     # Allow the job to specify where artifacts come from, but add
     # public/build if it's not there already.
     artifacts = worker.setdefault('artifacts', [])

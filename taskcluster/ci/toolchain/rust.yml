@@ -1,0 +1,192 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+job-defaults:
+    description: "rust repack"
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        max-run-time: 7200
+        env:
+            UPLOAD_DIR: artifacts
+    run:
+        script: repack_rust.py
+        toolchain-artifact: public/build/rustc.tar.xz
+
+linux64-rust-1.28:
+    treeherder:
+        symbol: TL(rust-1.28)
+    run:
+        arguments: [
+            '--channel', '1.28.0',
+            '--host', 'x86_64-unknown-linux-gnu',
+            '--target', 'x86_64-unknown-linux-gnu',
+            '--target', 'i686-unknown-linux-gnu',
+        ]
+
+linux64-rust-1.31:
+    treeherder:
+        symbol: TL(rust-1.31)
+    run:
+        arguments: [
+            '--channel', '1.31.0',
+            '--host', 'x86_64-unknown-linux-gnu',
+            '--target', 'x86_64-unknown-linux-gnu',
+            '--target', 'i686-unknown-linux-gnu',
+        ]
+
+linux64-rust-1.32:
+    treeherder:
+        symbol: TL(rust)
+    run:
+        arguments: [
+            '--channel', '1.32.0',
+            '--host', 'x86_64-unknown-linux-gnu',
+            '--target', 'x86_64-unknown-linux-gnu',
+            '--target', 'i686-unknown-linux-gnu',
+        ]
+        toolchain-alias: linux64-rust
+
+linux64-rust-nightly:
+    description: "rust nightly repack"
+    treeherder:
+        symbol: TL(rust-nightly)
+    run:
+        arguments: [
+            '--channel', 'nightly-2018-10-05',
+            '--host', 'x86_64-unknown-linux-gnu',
+            '--target', 'x86_64-unknown-linux-gnu',
+            '--target', 'i686-unknown-linux-gnu',
+        ]
+
+linux64-rust-macos-1.31:
+    description: "rust repack with macos-cross support"
+    treeherder:
+        symbol: TL(rust-macos-1.31)
+    run:
+        arguments: [
+            '--channel', '1.31.0',
+            '--host', 'x86_64-unknown-linux-gnu',
+            '--target', 'x86_64-unknown-linux-gnu',
+            '--target', 'x86_64-apple-darwin',
+        ]
+
+linux64-rust-macos-1.32:
+    description: "rust repack with macos-cross support"
+    treeherder:
+        symbol: TL(rust-macos)
+    run:
+        arguments: [
+            '--channel', '1.32.0',
+            '--host', 'x86_64-unknown-linux-gnu',
+            '--target', 'x86_64-unknown-linux-gnu',
+            '--target', 'x86_64-apple-darwin',
+        ]
+        toolchain-alias: linux64-rust-macos
+
+linux64-rust-nightly-macos:
+    description: "rust nightly repack with macos-cross support"
+    treeherder:
+        symbol: TL(rust-nightly-macos)
+    run:
+        arguments: [
+            '--channel', 'nightly-2018-10-05',
+            '--host', 'x86_64-unknown-linux-gnu',
+            '--target', 'x86_64-unknown-linux-gnu',
+            '--target', 'x86_64-apple-darwin',
+        ]
+
+linux64-rust-android-1.32:
+    description: "rust repack with android-cross support"
+    treeherder:
+        symbol: TL(rust-android)
+    run:
+        arguments: [
+            '--channel', '1.32.0',
+            '--host', 'x86_64-unknown-linux-gnu',
+            '--target', 'x86_64-unknown-linux-gnu',
+            '--target', 'armv7-linux-androideabi',
+            '--target', 'aarch64-linux-android',
+            '--target', 'i686-linux-android',
+            '--target', 'x86_64-linux-android',
+        ]
+        toolchain-alias: linux64-rust-android
+
+win64-rust-1.28:
+    treeherder:
+        symbol: TW64(rust-1.28)
+    run:
+        arguments: [
+            '--channel', '1.28.0',
+            '--host', 'x86_64-pc-windows-msvc',
+            '--target', 'x86_64-pc-windows-msvc',
+            '--target', 'i686-pc-windows-msvc',
+        ]
+        toolchain-artifact: public/build/rustc.tar.bz2
+
+win64-rust-1.32:
+    treeherder:
+        symbol: TW64(rust)
+    run:
+        arguments: [
+            '--channel', '1.32.0',
+            '--host', 'x86_64-pc-windows-msvc',
+            '--target', 'x86_64-pc-windows-msvc',
+            '--target', 'i686-pc-windows-msvc',
+        ]
+        toolchain-alias: win64-rust
+        toolchain-artifact: public/build/rustc.tar.bz2
+
+win64-rust-nightly:
+    description: "rust nightly repack"
+    treeherder:
+        symbol: TW64(rust-nightly)
+    run:
+        arguments: [
+            '--channel', 'nightly-2018-10-05',
+            '--host', 'x86_64-pc-windows-msvc',
+            '--target', 'x86_64-pc-windows-msvc',
+            '--target', 'i686-pc-windows-msvc',
+        ]
+        toolchain-artifact: public/build/rustc.tar.bz2
+
+win64-aarch64-rust:
+    description: "rust repack with aarch64 support"
+    treeherder:
+        symbol: TW64(rust-aarch64)
+    run:
+        arguments: [
+            '--channel', '1.32.0',
+            '--host', 'x86_64-pc-windows-msvc',
+            '--target', 'x86_64-pc-windows-msvc',
+            '--target', 'aarch64-pc-windows-msvc',
+            '--target', 'i686-pc-windows-msvc',
+        ]
+        toolchain-artifact: public/build/rustc.tar.bz2
+
+mingw32-rust-1.31:
+    treeherder:
+        symbol: TMW(rust-1.31)
+    run:
+        arguments: [
+            '--channel', '1.31.0',
+            '--host', 'x86_64-unknown-linux-gnu',
+            '--target', 'i686-unknown-linux-gnu',
+            '--target', 'i686-pc-windows-gnu',
+            '--target', 'x86_64-pc-windows-gnu',
+            '--target', 'x86_64-unknown-linux-gnu',
+        ]
+
+mingw32-rust-1.32:
+    treeherder:
+        symbol: TMW(rust)
+    run:
+        arguments: [
+            '--channel', '1.32.0',
+            '--host', 'x86_64-unknown-linux-gnu',
+            '--target', 'i686-unknown-linux-gnu',
+            '--target', 'i686-pc-windows-gnu',
+            '--target', 'x86_64-pc-windows-gnu',
+            '--target', 'x86_64-unknown-linux-gnu',
+        ]
+        toolchain-alias: mingw32-rust

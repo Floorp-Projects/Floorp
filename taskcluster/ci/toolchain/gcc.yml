@@ -1,0 +1,79 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+job-defaults:
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        max-run-time: 3600
+    run:
+        resources:
+            - 'build/unix/build-gcc/build-gcc.sh'
+        toolchain-artifact: public/build/gcc.tar.xz
+
+linux64-gcc-4.9:
+    description: "GCC 4.9 toolchain build"
+    treeherder:
+        symbol: TL(gcc4.9)
+    run:
+        script: build-gcc-4.9-linux.sh
+    fetches:
+        fetch:
+            - binutils-2.25.1
+            - cloog-0.18.1
+            - gcc-4.9.4
+            - gmp-5.1.3
+            - isl-0.12.2
+            - mpc-0.8.2
+            - mpfr-3.1.5
+
+linux64-gcc-6:
+    description: "GCC 6 toolchain build"
+    treeherder:
+        symbol: TL(gcc6)
+    run:
+        script: build-gcc-6-linux.sh
+        toolchain-alias: linux64-gcc
+    fetches:
+        fetch:
+            - binutils-2.28.1
+            - gcc-6.4.0
+            - gmp-5.1.3
+            - isl-0.15
+            - mpc-0.8.2
+            - mpfr-3.1.5
+
+linux64-gcc-7:
+    description: "GCC 7 toolchain build"
+    treeherder:
+        symbol: TL(gcc7)
+    run:
+        script: build-gcc-7-linux.sh
+    fetches:
+        fetch:
+            - binutils-2.28.1
+            - gcc-7.3.0
+            - gmp-6.1.0
+            - isl-0.16.1
+            - mpc-1.0.3
+            - mpfr-3.1.4
+
+linux64-gcc-sixgill:
+    description: "sixgill GCC plugin build"
+    treeherder:
+        symbol: TL(sixgill)
+    run:
+        script: build-gcc-sixgill-plugin-linux.sh
+        resources:
+            - 'taskcluster/scripts/misc/build-gcc-sixgill-plugin-linux.sh'
+        toolchain-artifact: public/build/sixgill.tar.xz
+    toolchains:
+        - linux64-gcc-6
+    fetches:
+        fetch:
+            - binutils-2.28.1
+            - isl-0.15
+            - gcc-6.4.0
+            - gmp-5.1.3
+            - mpc-0.8.2
+            - mpfr-3.1.5

@@ -33,6 +33,7 @@ mod async;
 mod cmsg;
 pub mod codec;
 pub mod core;
+#[allow(deprecated)]
 pub mod errors;
 pub mod fd_passing;
 pub mod frame;

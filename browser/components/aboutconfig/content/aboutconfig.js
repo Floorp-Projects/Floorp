@@ -314,7 +314,7 @@ if (!Preferences.get("browser.aboutConfig.showWarning")) {
   // the value of the textbox has been restored from previous sessions.
   document.addEventListener("DOMContentLoaded", loadPrefs, { once: true });
   window.addEventListener("load", () => {
-    if (document.getElementById("search").value) {
+    if (document.getElementById("about-config-search").value) {
       filterPrefs();
     }
   }, { once: true });
@@ -330,20 +330,13 @@ function loadPrefs() {
   document.body.className = "config-background";
   [...document.styleSheets].find(s => s.title == "infop").disabled = true;
 
+  let { content } = document.getElementById("main");
   document.body.textContent = "";
-  let searchContainer = document.createElement("div");
-  searchContainer.id = "search-container";
-  let search = document.createElement("input");
-  search.type = "text";
-  search.id = "search";
-  document.l10n.setAttributes(search, "about-config-search");
-  searchContainer.appendChild(search);
-  document.body.appendChild(searchContainer);
-  search.focus();
+  document.body.appendChild(content);
 
-  let prefs = document.createElement("table");
-  prefs.id = "prefs";
-  document.body.appendChild(prefs);
+  let search = document.getElementById("about-config-search");
+  let prefs = document.getElementById("prefs");
+  search.focus();
 
   for (let name of Services.prefs.getChildList("")) {
     new PrefRow(name);
@@ -398,7 +391,7 @@ function filterPrefs() {
   }
   gDeletedPrefs.clear();
 
-  let searchName = document.getElementById("search").value.trim();
+  let searchName = document.getElementById("about-config-search").value.trim();
   gFilterString = searchName.toLowerCase();
   let prefArray = [...gExistingPrefs.values()];
   if (gFilterString) {
