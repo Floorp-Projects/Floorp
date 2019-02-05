@@ -36,6 +36,7 @@ add_task(async function preferred_API() {
       return image.href;
     });
 
+    let filePickerPromise = waitForFilePicker();
     saveImageURL(url, "image.jpg", null, true, false, null, null, null, null,
       false, gBrowser.contentPrincipal);
     await ContentTask.spawn(gBrowser.selectedBrowser, null, async () => {
@@ -49,8 +50,7 @@ add_task(async function preferred_API() {
              Ci.nsIClassOfService.Throttleable);
       }
     });
-
-    await waitForFilePicker();
+    await filePickerPromise;
   });
 });
 
@@ -89,7 +89,8 @@ add_task(async function deprecated_API() {
              Ci.nsIClassOfService.Throttleable);
       }
     });
+    let filePickerPromise = waitForFilePicker();
     saveImageURL(url, "image.jpg", null, true, false, null, doc, null, null);
-    await waitForFilePicker();
+    await filePickerPromise;
   });
 });
