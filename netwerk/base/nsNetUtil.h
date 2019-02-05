@@ -12,10 +12,12 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsILoadGroup.h"
+#include "nsINestedURI.h"
 #include "nsINetUtil.h"
 #include "nsIRequest.h"
 #include "nsILoadInfo.h"
 #include "nsIIOService.h"
+#include "nsIURI.h"
 #include "mozilla/NotNull.h"
 #include "mozilla/Services.h"
 #include "mozilla/Unused.h"
@@ -24,7 +26,6 @@
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
 
-class nsIURI;
 class nsIPrincipal;
 class nsIAsyncStreamCopier;
 class nsIAuthPrompt;
@@ -38,7 +39,6 @@ class nsIFileStream;
 class nsIInputStream;
 class nsIInputStreamPump;
 class nsIInterfaceRequestor;
-class nsINestedURI;
 class nsIOutputStream;
 class nsIParentChannel;
 class nsIPersistentProperties;
@@ -716,6 +716,44 @@ nsresult NS_URIChainHasFlags(nsIURI *uri, uint32_t flags, bool *result);
  * value could be just the object passed in if it's not a nested URI.
  */
 already_AddRefed<nsIURI> NS_GetInnermostURI(nsIURI *aURI);
+
+/**
+ * Helper function for getting the host name of the innermost URI for a given
+ * URI.  The return value could be the host name of the URI passed in if it's
+ * not a nested URI.
+ */
+inline nsresult NS_GetInnermostURIHost(nsIURI *aURI, nsACString &aHost) {
+  aHost.Truncate();
+
+  // This block is optimized in order to avoid the overhead of calling
+  // NS_GetInnermostURI() which incurs a lot of overhead in terms of
+  // AddRef/Release calls.
+  nsINestedURI *nestedURI = nullptr;
+  nsresult rv = CallQueryInterface(aURI, &nestedURI);
+  if (NS_SUCCEEDED(rv)) {
+    // We have a nested URI!
+    nsCOMPtr<nsIURI> uri;
+    rv = nestedURI->GetInnermostURI(getter_AddRefs(uri));
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    NS_RELEASE(nestedURI);
+
+    rv = uri->GetAsciiHost(aHost);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+  } else {
+    // We have a non-nested URI!
+    rv = aURI->GetAsciiHost(aHost);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+  }
+
+  return NS_OK;
+}
 
 /**
  * Get the "final" URI for a channel.  This is either channel's load info
