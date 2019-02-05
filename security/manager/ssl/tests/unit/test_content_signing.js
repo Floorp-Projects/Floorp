@@ -95,7 +95,7 @@ function run_test() {
   ok(!verifier.verifyContentSignature(DATA, GOOD_SIGNATURE, chain1, ONECRL_NAME),
      "Before the root is set, signatures should fail to verify but not throw.");
   // Check for generic chain building error.
-  check_telemetry(6, 1, "DA7EBEF3F52224744D6C67D85162E2F6B234A1B15A8EEFAE81DB7BD6C8DB7531");
+  check_telemetry(6, 1, "4D80E67497B0B5721479598316E1E5C54E63947307AFAE3BBCD1093DB5F69C3A");
 
   setRoot(TEST_DATA_DIR + "content_signing_root.pem");
 
@@ -117,7 +117,7 @@ function run_test() {
   ok(!verifier.verifyContentSignature(DATA, BAD_SIGNATURE, chain1, ONECRL_NAME),
      "A bad signature should not verify");
   // Check for invalid signature
-  check_telemetry(1, 1, "DA7EBEF3F52224744D6C67D85162E2F6B234A1B15A8EEFAE81DB7BD6C8DB7531");
+  check_telemetry(1, 1, "4D80E67497B0B5721479598316E1E5C54E63947307AFAE3BBCD1093DB5F69C3A");
 
   // Check a good signature from cert with good SAN but a different key than the
   // one used to create the signature
@@ -127,7 +127,7 @@ function run_test() {
                                       ONECRL_NAME),
      "A signature should not verify if the signing key is wrong");
   // Check for wrong key in cert.
-  check_telemetry(9, 1, "64012AA308FF36A629FAF47EE3F4F6541E5FC88387B2B2D70B9497016F00A9E5");
+  check_telemetry(9, 1, "9B7086F61E126889B14421ABE9D41551D3994B8B11CD2A73604D5D227F488937");
 
   // Check a good signature from cert with good SAN but a different key than the
   // one used to create the signature (this time, an RSA key)
@@ -137,7 +137,7 @@ function run_test() {
                                       ONECRL_NAME),
      "A signature should not verify if the signing key is wrong (RSA)");
   // Check for wrong key in cert.
-  check_telemetry(9, 1, "64012AA308FF36A629FAF47EE3F4F6541E5FC88387B2B2D70B9497016F00A9E5");
+  check_telemetry(9, 1, "9B7086F61E126889B14421ABE9D41551D3994B8B11CD2A73604D5D227F488937");
 
   // Check a good signature from cert with good SAN but with chain missing root
   let missingRoot = [oneCRLChain[0], oneCRLChain[1]].join("\n");
@@ -146,7 +146,7 @@ function run_test() {
                                       ONECRL_NAME),
      "A signature should not verify if the chain is incomplete (missing root)");
   // Check for generic chain building error.
-  check_telemetry(6, 1, "DA7EBEF3F52224744D6C67D85162E2F6B234A1B15A8EEFAE81DB7BD6C8DB7531");
+  check_telemetry(6, 1, "4D80E67497B0B5721479598316E1E5C54E63947307AFAE3BBCD1093DB5F69C3A");
 
   // Check a good signature from cert with good SAN but with no path to root
   let missingInt = [oneCRLChain[0], oneCRLChain[2]].join("\n");
@@ -155,7 +155,7 @@ function run_test() {
                                       ONECRL_NAME),
      "A signature should not verify if the chain is incomplete (missing int)");
   // Check for generic chain building error.
-  check_telemetry(6, 1, "DA7EBEF3F52224744D6C67D85162E2F6B234A1B15A8EEFAE81DB7BD6C8DB7531");
+  check_telemetry(6, 1, "4D80E67497B0B5721479598316E1E5C54E63947307AFAE3BBCD1093DB5F69C3A");
 
   // Check good signatures from good certificates with the wrong SANs
   chain1 = oneCRLChain.join("\n");
@@ -164,7 +164,7 @@ function run_test() {
                                       ABOUT_NEWTAB_NAME),
      "A OneCRL signature should not verify if we require the newtab SAN");
   // Check for invalid EE cert.
-  check_telemetry(7, 1, "DA7EBEF3F52224744D6C67D85162E2F6B234A1B15A8EEFAE81DB7BD6C8DB7531");
+  check_telemetry(7, 1, "4D80E67497B0B5721479598316E1E5C54E63947307AFAE3BBCD1093DB5F69C3A");
 
   chain2 = remoteNewTabChain.join("\n");
   verifier = getSignatureVerifier();
@@ -172,14 +172,14 @@ function run_test() {
                                       ONECRL_NAME),
      "A newtab signature should not verify if we require the OneCRL SAN");
   // Check for invalid EE cert.
-  check_telemetry(7, 1, "EEE207A9F4D1DC1FB71222B42C3DA4D2DC41DDDF75F4B7137D290B3B1317CDB3");
+  check_telemetry(7, 1, "C9244A3E9FBC895126DF1E5E9CDB38051855EB33062C7B33A1117B053B414031");
 
   // Check good signatures with good chains with some other invalid names
   verifier = getSignatureVerifier();
   ok(!verifier.verifyContentSignature(DATA, GOOD_SIGNATURE, chain1, ""),
      "A signature should not verify if the SANs do not match an empty name");
   // Check for invalid EE cert.
-  check_telemetry(7, 1, "DA7EBEF3F52224744D6C67D85162E2F6B234A1B15A8EEFAE81DB7BD6C8DB7531");
+  check_telemetry(7, 1, "4D80E67497B0B5721479598316E1E5C54E63947307AFAE3BBCD1093DB5F69C3A");
 
   // Test expired certificate.
   let chainExpired = expiredOneCRLChain.join("\n");
