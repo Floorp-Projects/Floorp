@@ -3441,6 +3441,20 @@ Assembler::Condition MacroAssemblerARMCompat::testStringTruthy(
   return truthy ? Assembler::NotEqual : Assembler::Equal;
 }
 
+#ifdef ENABLE_BIGINT
+Assembler::Condition MacroAssemblerARMCompat::testBigIntTruthy(
+    bool truthy, const ValueOperand& value) {
+  Register bi = value.payloadReg();
+  ScratchRegisterScope scratch(asMasm());
+  SecondScratchRegisterScope scratch2(asMasm());
+
+  ma_dtr(IsLoad, bi, Imm32(BigInt::offsetOfLengthSignAndReservedBits()),
+         scratch, scratch2);
+  as_cmp(scratch, Imm8(0));
+  return truthy ? Assembler::NotEqual : Assembler::Equal;
+}
+#endif
+
 void MacroAssemblerARMCompat::floor(FloatRegister input, Register output,
                                     Label* bail) {
   Label handleZero;
