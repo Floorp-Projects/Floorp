@@ -52,8 +52,9 @@ class nsTextFrame : public nsFrame {
   typedef gfxTextRun::Range Range;
 
  public:
-  explicit nsTextFrame(ComputedStyle* aStyle, ClassID aID = kClassID)
-      : nsFrame(aStyle, aID),
+  explicit nsTextFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
+                       ClassID aID = kClassID)
+      : nsFrame(aStyle, aPresContext, aID),
         mNextContinuation(nullptr),
         mContentOffset(0),
         mContentLengthHint(0),

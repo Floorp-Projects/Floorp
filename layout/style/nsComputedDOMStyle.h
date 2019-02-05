@@ -9,8 +9,6 @@
 #ifndef nsComputedDOMStyle_h__
 #define nsComputedDOMStyle_h__
 
-#include "mozilla/ArenaRefPtr.h"
-#include "mozilla/ArenaRefPtrInlines.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/StyleComplexColor.h"
 #include "mozilla/UniquePtr.h"
@@ -501,11 +499,8 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
    * in this case will check that the ComputedStyle is still valid to be used,
    * by checking whether flush styles results in any restyles having been
    * processed.
-   *
-   * Since an ArenaRefPtr is used to hold the ComputedStyle, it will be cleared
-   * if the pres arena from which it was allocated goes away.
    */
-  mozilla::ArenaRefPtr<mozilla::ComputedStyle> mComputedStyle;
+  RefPtr<mozilla::ComputedStyle> mComputedStyle;
   RefPtr<nsAtom> mPseudo;
 
   /*

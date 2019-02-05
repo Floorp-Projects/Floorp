@@ -11,7 +11,6 @@
 
 #include "nsIMemoryReporter.h"
 #include <algorithm>
-#include "mozilla/ArenaObjectID.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/CachedInheritingStyles.h"
 #include "mozilla/Maybe.h"
@@ -83,18 +82,6 @@ class ComputedStyle {
   ComputedStyle(nsPresContext* aPresContext, nsAtom* aPseudoTag,
                 CSSPseudoElementType aPseudoType,
                 ServoComputedDataForgotten aComputedValues);
-
-  // FIXME(emilio, bug 548397): This will need to go away. Don't add new callers
-  // of this methed.
-  nsPresContext* PresContextForFrame() const { return mPresContext; }
-
-  // These two methods are for use by ArenaRefPtr.
-  //
-  // FIXME(emilio): Think this can go away.
-  static mozilla::ArenaObjectID ArenaObjectID() {
-    return mozilla::eArenaObjectID_GeckoComputedStyle;
-  }
-  nsIPresShell* Arena();
 
   void AddRef() { Servo_ComputedStyle_AddRef(this); }
   void Release() { Servo_ComputedStyle_Release(this); }
@@ -297,8 +284,6 @@ class ComputedStyle {
   friend void ::Gecko_ComputedStyle_Destroy(ComputedStyle*);
 
   ~ComputedStyle() = default;
-
-  nsPresContext* const mPresContext;
 
   ServoComputedData mSource;
 

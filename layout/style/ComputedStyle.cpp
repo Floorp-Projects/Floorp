@@ -27,7 +27,6 @@
 #include "mozilla/dom/Document.h"
 #include "nsPrintfCString.h"
 #include "RubyUtils.h"
-#include "mozilla/ArenaObjectID.h"
 #include "mozilla/ComputedStyleInlines.h"
 #include "mozilla/Preferences.h"
 
@@ -46,8 +45,7 @@ namespace mozilla {
 ComputedStyle::ComputedStyle(nsPresContext* aPresContext, nsAtom* aPseudoTag,
                              CSSPseudoElementType aPseudoType,
                              ServoComputedDataForgotten aComputedValues)
-    : mPresContext(aPresContext),
-      mSource(aComputedValues),
+    : mSource(aComputedValues),
       mPseudoTag(aPseudoTag),
       mBits(static_cast<Bit>(Servo_ComputedValues_GetStyleBits(this))),
       mPseudoType(aPseudoType) {}
@@ -271,8 +269,6 @@ void ComputedStyle::List(FILE* out, int32_t aIndent) {
   fprintf_stderr(out, "%s{ServoComputedData}\n", str.get());
 }
 #endif
-
-nsIPresShell* ComputedStyle::Arena() { return mPresContext->PresShell(); }
 
 template <typename Func>
 static nscolor GetVisitedDependentColorInternal(ComputedStyle* aSc,

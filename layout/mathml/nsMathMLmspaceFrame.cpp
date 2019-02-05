@@ -17,7 +17,8 @@ using namespace mozilla;
 
 nsIFrame* NS_NewMathMLmspaceFrame(nsIPresShell* aPresShell,
                                   ComputedStyle* aStyle) {
-  return new (aPresShell) nsMathMLmspaceFrame(aStyle);
+  return new (aPresShell)
+      nsMathMLmspaceFrame(aStyle, aPresShell->GetPresContext());
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsMathMLmspaceFrame)

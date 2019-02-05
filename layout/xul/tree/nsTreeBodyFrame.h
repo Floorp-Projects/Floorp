@@ -54,7 +54,7 @@ class nsTreeBodyFrame final : public nsLeafBoxFrame,
   typedef mozilla::image::ImgDrawResult ImgDrawResult;
 
  public:
-  explicit nsTreeBodyFrame(ComputedStyle* aStyle);
+  explicit nsTreeBodyFrame(ComputedStyle* aStyle, nsPresContext* aPresContext);
   ~nsTreeBodyFrame();
 
   NS_DECL_QUERYFRAME

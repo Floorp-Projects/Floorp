@@ -50,8 +50,9 @@ class nsRubyTextContainerFrame final : public nsContainerFrame {
   friend nsContainerFrame* NS_NewRubyTextContainerFrame(
       nsIPresShell* aPresShell, ComputedStyle* aStyle);
 
-  explicit nsRubyTextContainerFrame(ComputedStyle* aStyle)
-      : nsContainerFrame(aStyle, kClassID), mISize(0) {}
+  explicit nsRubyTextContainerFrame(ComputedStyle* aStyle,
+                                    nsPresContext* aPresContext)
+      : nsContainerFrame(aStyle, aPresContext, kClassID), mISize(0) {}
 
   void UpdateSpanFlag();
 

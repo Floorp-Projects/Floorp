@@ -55,7 +55,7 @@ class nsPageFrame final : public nsContainerFrame {
   void AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult) override;
 
  protected:
-  explicit nsPageFrame(ComputedStyle* aStyle);
+  explicit nsPageFrame(ComputedStyle* aStyle, nsPresContext* aPresContext);
   virtual ~nsPageFrame();
 
   typedef enum { eHeader, eFooter } nsHeaderFooterEnum;
@@ -89,7 +89,7 @@ class nsPageFrame final : public nsContainerFrame {
 class nsPageBreakFrame final : public nsLeafFrame {
   NS_DECL_FRAMEARENA_HELPERS(nsPageBreakFrame)
 
-  explicit nsPageBreakFrame(ComputedStyle* aStyle);
+  explicit nsPageBreakFrame(ComputedStyle* aStyle, nsPresContext* aPresContext);
   ~nsPageBreakFrame();
 
   virtual void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,

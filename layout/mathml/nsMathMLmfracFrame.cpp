@@ -35,7 +35,8 @@ using namespace mozilla::gfx;
 
 nsIFrame* NS_NewMathMLmfracFrame(nsIPresShell* aPresShell,
                                  ComputedStyle* aStyle) {
-  return new (aPresShell) nsMathMLmfracFrame(aStyle);
+  return new (aPresShell)
+      nsMathMLmfracFrame(aStyle, aPresShell->GetPresContext());
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsMathMLmfracFrame)

@@ -14,8 +14,9 @@ class nsSVGInnerSVGFrame final : public nsSVGViewportFrame {
                                           ComputedStyle* aStyle);
 
  protected:
-  explicit nsSVGInnerSVGFrame(ComputedStyle* aStyle)
-      : nsSVGViewportFrame(aStyle, kClassID) {}
+  explicit nsSVGInnerSVGFrame(ComputedStyle* aStyle,
+                              nsPresContext* aPresContext)
+      : nsSVGViewportFrame(aStyle, aPresContext, kClassID) {}
 
  public:
   NS_DECL_QUERYFRAME

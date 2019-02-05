@@ -41,11 +41,11 @@ using namespace mozilla::image;
 NS_IMPL_ISUPPORTS(nsRangeFrame::DummyTouchListener, nsIDOMEventListener)
 
 nsIFrame* NS_NewRangeFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle) {
-  return new (aPresShell) nsRangeFrame(aStyle);
+  return new (aPresShell) nsRangeFrame(aStyle, aPresShell->GetPresContext());
 }
 
-nsRangeFrame::nsRangeFrame(ComputedStyle* aStyle)
-    : nsContainerFrame(aStyle, kClassID) {}
+nsRangeFrame::nsRangeFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
+    : nsContainerFrame(aStyle, aPresContext, kClassID) {}
 
 nsRangeFrame::~nsRangeFrame() {}
 

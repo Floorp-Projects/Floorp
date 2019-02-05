@@ -153,12 +153,12 @@ class nsBoxFrame : public nsContainerFrame {
   void AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult) override;
 
  private:
-  explicit nsBoxFrame(ComputedStyle* aStyle)
-      : nsBoxFrame(aStyle, kClassID, false, nullptr) {}
+  explicit nsBoxFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
+      : nsBoxFrame(aStyle, aPresContext, kClassID, false, nullptr) {}
 
  protected:
-  nsBoxFrame(ComputedStyle* aStyle, ClassID aID, bool aIsRoot = false,
-             nsBoxLayout* aLayoutManager = nullptr);
+  nsBoxFrame(ComputedStyle* aStyle, nsPresContext* aPresContext, ClassID aID,
+             bool aIsRoot = false, nsBoxLayout* aLayoutManager = nullptr);
   virtual ~nsBoxFrame();
 
   virtual bool GetInitialEqualSize(bool& aEqualSize);

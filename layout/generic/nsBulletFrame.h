@@ -49,8 +49,8 @@ class nsBulletFrame final : public nsFrame {
   NS_DECL_QUERYFRAME
 #endif
 
-  explicit nsBulletFrame(ComputedStyle* aStyle)
-      : nsFrame(aStyle, kClassID),
+  explicit nsBulletFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
+      : nsFrame(aStyle, aPresContext, kClassID),
         mPadding(GetWritingMode()),
         mIntrinsicSize(GetWritingMode()),
         mOrdinal(0),

@@ -150,8 +150,9 @@ ComputedStyle* nsTableFrame::GetParentComputedStyle(
   return GetParent()->DoGetParentComputedStyle(aProviderFrame);
 }
 
-nsTableFrame::nsTableFrame(ComputedStyle* aStyle, ClassID aID)
-    : nsContainerFrame(aStyle, aID),
+nsTableFrame::nsTableFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
+                           ClassID aID)
+    : nsContainerFrame(aStyle, aPresContext, aID),
       mCellMap(nullptr),
       mTableLayoutStrategy(nullptr) {
   memset(&mBits, 0, sizeof(mBits));
@@ -3851,7 +3852,7 @@ nscoord nsTableFrame::GetRowSpacing(int32_t aStartRowIndex,
 
 nsTableFrame* NS_NewTableFrame(nsIPresShell* aPresShell,
                                ComputedStyle* aStyle) {
-  return new (aPresShell) nsTableFrame(aStyle);
+  return new (aPresShell) nsTableFrame(aStyle, aPresShell->GetPresContext());
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsTableFrame)

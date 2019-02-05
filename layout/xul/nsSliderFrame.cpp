@@ -68,7 +68,7 @@ static already_AddRefed<nsIContent> GetContentOfBox(nsIFrame* aBox) {
 }
 
 nsIFrame* NS_NewSliderFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle) {
-  return new (aPresShell) nsSliderFrame(aStyle);
+  return new (aPresShell) nsSliderFrame(aStyle, aPresShell->GetPresContext());
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsSliderFrame)
@@ -77,8 +77,8 @@ NS_QUERYFRAME_HEAD(nsSliderFrame)
   NS_QUERYFRAME_ENTRY(nsSliderFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsBoxFrame)
 
-nsSliderFrame::nsSliderFrame(ComputedStyle* aStyle)
-    : nsBoxFrame(aStyle, kClassID),
+nsSliderFrame::nsSliderFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
+    : nsBoxFrame(aStyle, aPresContext, kClassID),
       mRatio(0.0f),
       mDragStart(0),
       mThumbStart(0),

@@ -26,8 +26,8 @@ class nsSVGMaskFrame final : public nsSVGContainerFrame {
   typedef mozilla::image::imgDrawingParams imgDrawingParams;
 
  protected:
-  explicit nsSVGMaskFrame(ComputedStyle* aStyle)
-      : nsSVGContainerFrame(aStyle, kClassID), mInUse(false) {
+  explicit nsSVGMaskFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
+      : nsSVGContainerFrame(aStyle, aPresContext, kClassID), mInUse(false) {
     AddStateBits(NS_FRAME_IS_NONDISPLAY);
   }
 

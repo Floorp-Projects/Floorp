@@ -29,7 +29,8 @@ class nsFileControlFrame final : public nsBlockFrame,
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsFileControlFrame)
 
-  explicit nsFileControlFrame(ComputedStyle* aStyle);
+  explicit nsFileControlFrame(ComputedStyle* aStyle,
+                              nsPresContext* aPresContext);
 
   virtual void Init(nsIContent* aContent, nsContainerFrame* aParent,
                     nsIFrame* aPrevInFlow) override;

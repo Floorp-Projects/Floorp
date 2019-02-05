@@ -30,8 +30,9 @@ using namespace mozilla::gfx;
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGGradientFrame::nsSVGGradientFrame(ComputedStyle* aStyle, ClassID aID)
-    : nsSVGPaintServerFrame(aStyle, aID),
+nsSVGGradientFrame::nsSVGGradientFrame(ComputedStyle* aStyle,
+                                       nsPresContext* aPresContext, ClassID aID)
+    : nsSVGPaintServerFrame(aStyle, aPresContext, aID),
       mSource(nullptr),
       mLoopFlag(false),
       mNoHRefURI(false) {}
@@ -594,14 +595,16 @@ already_AddRefed<gfxPattern> nsSVGRadialGradientFrame::CreateGradient() {
 
 nsIFrame* NS_NewSVGLinearGradientFrame(nsIPresShell* aPresShell,
                                        ComputedStyle* aStyle) {
-  return new (aPresShell) nsSVGLinearGradientFrame(aStyle);
+  return new (aPresShell)
+      nsSVGLinearGradientFrame(aStyle, aPresShell->GetPresContext());
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsSVGLinearGradientFrame)
 
 nsIFrame* NS_NewSVGRadialGradientFrame(nsIPresShell* aPresShell,
                                        ComputedStyle* aStyle) {
-  return new (aPresShell) nsSVGRadialGradientFrame(aStyle);
+  return new (aPresShell)
+      nsSVGRadialGradientFrame(aStyle, aPresShell->GetPresContext());
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsSVGRadialGradientFrame)

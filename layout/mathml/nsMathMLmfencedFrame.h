@@ -77,8 +77,9 @@ class nsMathMLmfencedFrame final : public nsMathMLContainerFrame {
   }
 
  protected:
-  explicit nsMathMLmfencedFrame(ComputedStyle* aStyle)
-      : nsMathMLContainerFrame(aStyle, kClassID),
+  explicit nsMathMLmfencedFrame(ComputedStyle* aStyle,
+                                nsPresContext* aPresContext)
+      : nsMathMLContainerFrame(aStyle, aPresContext, kClassID),
         mOpenChar(nullptr),
         mCloseChar(nullptr),
         mSeparatorsChar(nullptr),

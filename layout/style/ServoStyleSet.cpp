@@ -1247,10 +1247,6 @@ already_AddRefed<ComputedStyle> ServoStyleSet::ResolveStyleLazilyInternal(
             .Consume();
   }
 
-  MOZ_DIAGNOSTIC_ASSERT(computedValues->PresContextForFrame() ==
-                            GetPresContext() ||
-                        aElement->OwnerDoc()->GetBFCacheEntry());
-
   return computedValues.forget();
 }
 

@@ -56,7 +56,8 @@ class nsComboboxControlFrame final : public nsBlockFrame,
       nsIPresShell* aPresShell, ComputedStyle* aStyle, nsFrameState aFlags);
   friend class nsComboboxDisplayFrame;
 
-  explicit nsComboboxControlFrame(ComputedStyle* aStyle);
+  explicit nsComboboxControlFrame(ComputedStyle* aStyle,
+                                  nsPresContext* aPresContext);
   ~nsComboboxControlFrame();
 
   NS_DECL_QUERYFRAME

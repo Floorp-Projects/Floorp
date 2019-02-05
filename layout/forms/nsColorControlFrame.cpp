@@ -21,12 +21,14 @@ using mozilla::dom::Document;
 using mozilla::dom::Element;
 using mozilla::dom::HTMLInputElement;
 
-nsColorControlFrame::nsColorControlFrame(ComputedStyle* aStyle)
-    : nsHTMLButtonControlFrame(aStyle, kClassID) {}
+nsColorControlFrame::nsColorControlFrame(ComputedStyle* aStyle,
+                                         nsPresContext* aPresContext)
+    : nsHTMLButtonControlFrame(aStyle, aPresContext, kClassID) {}
 
 nsIFrame* NS_NewColorControlFrame(nsIPresShell* aPresShell,
                                   ComputedStyle* aStyle) {
-  return new (aPresShell) nsColorControlFrame(aStyle);
+  return new (aPresShell)
+      nsColorControlFrame(aStyle, aPresShell->GetPresContext());
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsColorControlFrame)

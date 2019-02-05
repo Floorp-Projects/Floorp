@@ -25,7 +25,7 @@ class nsProgressFrame final : public nsContainerFrame,
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsProgressFrame)
 
-  explicit nsProgressFrame(ComputedStyle* aStyle);
+  explicit nsProgressFrame(ComputedStyle* aStyle, nsPresContext* aPresContext);
   virtual ~nsProgressFrame();
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot,

@@ -22,7 +22,7 @@ using namespace mozilla::dom;
 // Implementation
 
 nsIFrame* NS_NewSVGGFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle) {
-  return new (aPresShell) nsSVGGFrame(aStyle);
+  return new (aPresShell) nsSVGGFrame(aStyle, aPresShell->GetPresContext());
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsSVGGFrame)

@@ -14,7 +14,8 @@ using namespace mozilla;
 nsContainerFrame* NS_NewSelectsAreaFrame(nsIPresShell* aShell,
                                          ComputedStyle* aStyle,
                                          nsFrameState aFlags) {
-  nsSelectsAreaFrame* it = new (aShell) nsSelectsAreaFrame(aStyle);
+  nsSelectsAreaFrame* it =
+      new (aShell) nsSelectsAreaFrame(aStyle, aShell->GetPresContext());
 
   // We need NS_BLOCK_FLOAT_MGR to ensure that the options inside the select
   // aren't expanded by right floats outside the select.
