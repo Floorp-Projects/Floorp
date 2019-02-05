@@ -172,9 +172,6 @@ FontFaceSet::~FontFaceSet() {
   MOZ_ASSERT(!ServoStyleSet::IsInServoTraversal());
 
   Disconnect();
-  for (auto it = mLoaders.Iter(); !it.Done(); it.Next()) {
-    it.Get()->GetKey()->Cancel();
-  }
 }
 
 JSObject* FontFaceSet::WrapObject(JSContext* aContext,
@@ -191,6 +188,12 @@ void FontFaceSet::Disconnect() {
     // been unlinked from the document.
     mDocument->CSSLoader()->RemoveObserver(this);
   }
+
+  for (auto it = mLoaders.Iter(); !it.Done(); it.Next()) {
+    it.Get()->GetKey()->Cancel();
+  }
+
+  mLoaders.Clear();
 }
 
 void FontFaceSet::RemoveDOMContentLoadedListener() {
