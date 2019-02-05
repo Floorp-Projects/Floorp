@@ -11,7 +11,7 @@ add_task(async () => {
 
   writeProfilesIni({
     profiles: [{
-      name: "default",
+      name: PROFILE_DEFAULT,
       path: defaultProfile.leafName,
       default: true,
     }],
@@ -27,7 +27,7 @@ add_task(async () => {
   Assert.equal(profileData.profiles.length, 1, "Should have the right number of profiles.");
 
   let profile = profileData.profiles[0];
-  Assert.equal(profile.name, "default", "Should have the right name.");
+  Assert.equal(profile.name, PROFILE_DEFAULT, "Should have the right name.");
   Assert.equal(profile.path, defaultProfile.leafName, "Should be the original default profile.");
   Assert.ok(profile.default, "Should be marked as the old-style default.");
 
@@ -39,5 +39,5 @@ add_task(async () => {
 
   Assert.ok(!didCreate, "Should not have created a new profile.");
   Assert.ok(selectedProfile.rootDir.equals(defaultProfile), "Should be using the right directory.");
-  Assert.equal(selectedProfile.name, "default");
+  Assert.equal(selectedProfile.name, PROFILE_DEFAULT);
 });
