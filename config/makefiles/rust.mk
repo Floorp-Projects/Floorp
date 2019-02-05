@@ -2,6 +2,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
+# /!\ In this file, we export multiple variables globally via make rather than
+# in recipes via the `env` command to avoid round-trips to msys on Windows, which
+# tend to break environment variable values in interesting ways.
+
 cargo_host_flag := --target=$(RUST_HOST_TARGET)
 cargo_target_flag := --target=$(RUST_TARGET)
 
@@ -130,9 +134,7 @@ $(HOST_RECIPES): RUSTFLAGS:=$(rustflags_override)
 # don't use the prefix when make -n is used, so that cargo doesn't run
 # in that case)
 define RUN_CARGO
-$(if $(findstring n,$(filter-out --%, $(MAKEFLAGS))),,+)env \
-	$(2) \
-	$(CARGO) $(1) $(cargo_build_flags)
+$(if $(findstring n,$(filter-out --%, $(MAKEFLAGS))),,+)$(CARGO) $(1) $(cargo_build_flags)
 endef
 
 # This function is intended to be called by:
@@ -143,11 +145,11 @@ endef
 #
 #   $(call CARGO_BUILD)
 define CARGO_BUILD
-$(call RUN_CARGO,rustc,$(1))
+$(call RUN_CARGO,rustc)
 endef
 
 define CARGO_CHECK
-$(call RUN_CARGO,check,$(1))
+$(call RUN_CARGO,check)
 endef
 
 cargo_linker_env_var := CARGO_TARGET_$(RUST_TARGET_ENV_NAME)_LINKER
@@ -169,10 +171,19 @@ ifndef FUZZING_INTERFACES
 # but not the final libraries. Filter those out because they
 # cause problems on macOS 10.7; see bug 1365993 for details.
 # Also, we don't want to pass PGO flags until cargo supports them.
-target_cargo_env_vars := \
-	MOZ_CARGO_WRAP_LDFLAGS="$(filter-out -fsanitize=cfi% -framework Cocoa -lobjc AudioToolbox ExceptionHandling -fprofile-%,$(LDFLAGS))" \
-	MOZ_CARGO_WRAP_LD="$(CC)" \
-	$(cargo_linker_env_var)=$(topsrcdir)/build/cargo-linker
+export MOZ_CARGO_WRAP_LDFLAGS
+export MOZ_CARGO_WRAP_LD
+# Exporting from make always exports a value. Setting a value per-recipe
+# would export an empty value for the host recipes. When not doing a
+# cross-compile, the --target for those is the same, and cargo will use
+# $(cargo_linker_env_var) for its linker, so we always pass the
+# cargo-linker wrapper, and fill MOZ_CARGO_WRAP_LD* more or less
+# appropriately for all recipes.
+export $(cargo_linker_env_var):=$(topsrcdir)/build/cargo-linker
+$(TARGET_RECIPES): MOZ_CARGO_WRAP_LDFLAGS:=$(filter-out -fsanitize=cfi% -framework Cocoa -lobjc AudioToolbox ExceptionHandling -fprofile-%,$(LDFLAGS))
+$(TARGET_RECIPES): MOZ_CARGO_WRAP_LD:=$(CC)
+$(HOST_RECIPES): MOZ_CARGO_WRAP_LDFLAGS:=$(HOST_LDFLAGS)
+$(HOST_RECIPES): MOZ_CARGO_WRAP_LD:=$(HOST_CC)
 endif # FUZZING_INTERFACES
 endif # MOZ_UBSAN
 endif # MOZ_TSAN
@@ -193,7 +204,7 @@ endif
 # build.
 force-cargo-library-build:
 	$(REPORT_BUILD)
-	$(call CARGO_BUILD,$(target_cargo_env_vars)) --lib $(cargo_target_flag) $(rust_features_flag) -- $(cargo_rustc_flags)
+	$(call CARGO_BUILD) --lib $(cargo_target_flag) $(rust_features_flag) -- $(cargo_rustc_flags)
 
 $(RUST_LIBRARY_FILE): force-cargo-library-build
 # When we are building in --enable-release mode; we add an additional check to confirm
@@ -208,7 +219,7 @@ endif
 endif
 
 force-cargo-library-check:
-	$(call CARGO_CHECK,$(target_cargo_env_vars)) --lib $(cargo_target_flag) $(rust_features_flag)
+	$(call CARGO_CHECK) --lib $(cargo_target_flag) $(rust_features_flag)
 else
 force-cargo-library-check:
 	@true
@@ -226,7 +237,7 @@ endif
 rust_test_flag := --no-fail-fast
 
 force-cargo-test-run:
-	$(call RUN_CARGO,test $(cargo_target_flag) $(rust_test_flag) $(rust_test_options) $(rust_features_flag),$(target_cargo_env_vars))
+	$(call RUN_CARGO,test $(cargo_target_flag) $(rust_test_flag) $(rust_test_options) $(rust_features_flag))
 
 endif
 
@@ -252,12 +263,12 @@ endif # HOST_RUST_LIBRARY_FILE
 ifdef RUST_PROGRAMS
 force-cargo-program-build:
 	$(REPORT_BUILD)
-	$(call CARGO_BUILD,$(target_cargo_env_vars)) $(addprefix --bin ,$(RUST_CARGO_PROGRAMS)) $(cargo_target_flag)
+	$(call CARGO_BUILD) $(addprefix --bin ,$(RUST_CARGO_PROGRAMS)) $(cargo_target_flag)
 
 $(RUST_PROGRAMS): force-cargo-program-build
 
 force-cargo-program-check:
-	$(call CARGO_CHECK,$(target_cargo_env_vars)) $(addprefix --bin ,$(RUST_CARGO_PROGRAMS)) $(cargo_target_flag)
+	$(call CARGO_CHECK) $(addprefix --bin ,$(RUST_CARGO_PROGRAMS)) $(cargo_target_flag)
 else
 force-cargo-program-check:
 	@true
