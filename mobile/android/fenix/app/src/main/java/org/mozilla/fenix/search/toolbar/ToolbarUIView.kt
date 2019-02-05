@@ -44,7 +44,6 @@ class ToolbarUIView(
 
             browserActionMargin = resources.pxToDp(browserActionMarginDp)
             urlBoxView = urlBackground
-            urlBoxMargin = this.resources.pxToDp(urlBoxMarginDp)
 
             textColor = ContextCompat.getColor(context, R.color.searchText)
             textSize = toolbarTextSizeSp
@@ -83,6 +82,5 @@ class ToolbarUIView(
     companion object {
         const val toolbarTextSizeSp = 14f
         const val browserActionMarginDp = 8
-        const val urlBoxMarginDp = 8
     }
 }
