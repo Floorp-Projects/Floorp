@@ -6025,8 +6025,8 @@ static bool ParseFunction(ModuleValidator<Unit>& m, FunctionNode** funNodeOut,
     return false;
   }
 
-  FunctionNode* funNode =
-      m.parser().handler.newFunctionStatement(m.parser().pos());
+  FunctionNode* funNode = m.parser().handler.newFunction(
+      FunctionSyntaxKind::Statement, m.parser().pos());
   if (!funNode) {
     return false;
   }

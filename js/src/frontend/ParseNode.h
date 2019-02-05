@@ -243,6 +243,7 @@ inline bool IsTypeofKind(ParseNodeKind kind) {
  *           time to specialize arg and var bytecodes early.
  *   body: ParamsBody or null for lazily-parsed function, ordinarily;
  *         ParseNodeKind::LexicalScope for implicit function in genexpr
+ *   syntaxKind: the syntax of the function
  * ParamsBody (ListNode)
  *   head: list of formal parameters with
  *           * Name node with non-empty name for SingleNameBinding without
@@ -598,6 +599,32 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_CLASS)
 // ParseNodeKindArity[size_t(pnk)] is the arity of a ParseNode of kind pnk.
 extern const ParseNodeArity ParseNodeKindArity[];
 
+enum class FunctionSyntaxKind {
+  // A non-arrow function expression.
+  Expression,
+
+  // A named function appearing as a Statement.
+  Statement,
+
+  Arrow,
+  Method,
+  ClassConstructor,
+  DerivedClassConstructor,
+  Getter,
+  Setter,
+};
+
+static inline bool IsConstructorKind(FunctionSyntaxKind kind) {
+  return kind == FunctionSyntaxKind::ClassConstructor ||
+         kind == FunctionSyntaxKind::DerivedClassConstructor;
+}
+
+static inline bool IsMethodDefinitionKind(FunctionSyntaxKind kind) {
+  return IsConstructorKind(kind) || kind == FunctionSyntaxKind::Method ||
+         kind == FunctionSyntaxKind::Getter ||
+         kind == FunctionSyntaxKind::Setter;
+}
+
 class ParseNode {
   ParseNodeKind pn_type; /* ParseNodeKind::PNK_* type */
 
@@ -734,6 +761,7 @@ class ParseNode {
       friend class FunctionNode;
       FunctionBox* funbox;
       ParseNode* body;
+      FunctionSyntaxKind syntaxKind;
     } function;
     struct {
      private:
@@ -1471,14 +1499,24 @@ inline bool ParseNode::isForLoopDeclaration() const {
 
 class FunctionNode : public ParseNode {
  public:
-  FunctionNode(JSOp op, const TokenPos& pos)
+  FunctionNode(FunctionSyntaxKind syntaxKind, JSOp op, const TokenPos& pos)
       : ParseNode(ParseNodeKind::Function, op, pos) {
-    MOZ_ASSERT(op == JSOP_NOP ||           // statement
-               op == JSOP_LAMBDA_ARROW ||  // arrow function
-               op == JSOP_LAMBDA);         // expression, method, accessor, &c.
+    MOZ_ASSERT(op == JSOP_NOP || op == JSOP_LAMBDA_ARROW || op == JSOP_LAMBDA);
+    MOZ_ASSERT_IF(op == JSOP_NOP, syntaxKind == FunctionSyntaxKind::Statement);
+    MOZ_ASSERT_IF(op == JSOP_LAMBDA_ARROW,
+                  syntaxKind == FunctionSyntaxKind::Arrow);
+    MOZ_ASSERT_IF(
+        op == JSOP_LAMBDA,
+        syntaxKind == FunctionSyntaxKind::Statement ||
+            syntaxKind == FunctionSyntaxKind::Construction ||
+            syntaxKind == FunctionSyntaxKind::DerivedClassConstructor ||
+            syntaxKind == FunctionSyntaxKind::Method ||
+            syntaxKind == FunctionSyntaxKind::Getter ||
+            syntaxKind == FunctionSyntaxKind::Setter);
     MOZ_ASSERT(!pn_u.function.body);
     MOZ_ASSERT(!pn_u.function.funbox);
     MOZ_ASSERT(is<FunctionNode>());
+    pn_u.function.syntaxKind = syntaxKind;
   }
 
   static bool test(const ParseNode& node) {
@@ -1513,6 +1551,8 @@ class FunctionNode : public ParseNode {
   void setFunbox(FunctionBox* funbox) { pn_u.function.funbox = funbox; }
 
   void setBody(ListNode* body) { pn_u.function.body = body; }
+
+  FunctionSyntaxKind syntaxKind() const { return pn_u.function.syntaxKind; }
 
   bool functionIsHoisted() const {
     MOZ_ASSERT(isOp(JSOP_LAMBDA) || isOp(JSOP_LAMBDA_ARROW) || isOp(JSOP_NOP));
@@ -2270,32 +2310,6 @@ inline JSOp AccessorTypeToJSOp(AccessorType atype) {
     default:
       MOZ_CRASH("unexpected accessor type");
   }
-}
-
-enum class FunctionSyntaxKind {
-  // A non-arrow function expression.
-  Expression,
-
-  // A named function appearing as a Statement.
-  Statement,
-
-  Arrow,
-  Method,
-  ClassConstructor,
-  DerivedClassConstructor,
-  Getter,
-  Setter,
-};
-
-static inline bool IsConstructorKind(FunctionSyntaxKind kind) {
-  return kind == FunctionSyntaxKind::ClassConstructor ||
-         kind == FunctionSyntaxKind::DerivedClassConstructor;
-}
-
-static inline bool IsMethodDefinitionKind(FunctionSyntaxKind kind) {
-  return IsConstructorKind(kind) || kind == FunctionSyntaxKind::Method ||
-         kind == FunctionSyntaxKind::Getter ||
-         kind == FunctionSyntaxKind::Setter;
 }
 
 static inline ParseNode* FunctionFormalParametersList(ParseNode* fn,
