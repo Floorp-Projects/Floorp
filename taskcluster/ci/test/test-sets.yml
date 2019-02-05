@@ -374,9 +374,11 @@ android-opt-tests:
     # Robocop tests often fail on Debug builds
     - robocop
 
-android-x86-kvm-tests:
+android-x86_64-opt-tests:
     - crashtest
     - geckoview-junit
+
+android-x86_64-tests:
     - jsreftest
     # - mochitest
     # - mochitest-chrome
@@ -386,9 +388,10 @@ android-x86-kvm-tests:
     # - mochitest-webgl1-core
     # - reftest
     # - test-verify
+
+android-x86-tests:
     - web-platform-tests
     - web-platform-tests-reftests
-    # - web-platform-tests-wdspec
 
 android-ccov-tests:
     - geckoview-junit
