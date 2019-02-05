@@ -798,8 +798,6 @@ static inline PropertyIteratorObject* VectorToKeyIterator(JSContext* cx,
                                                           HandleObject obj,
                                                           AutoIdVector& props,
                                                           uint32_t numGuards) {
-  MOZ_ASSERT(cx->compartment() == obj->compartment(),
-             "We may end up allocating shapes in the wrong zone!");
   if (obj->isSingleton() && !JSObject::setIteratedSingleton(cx, obj)) {
     return nullptr;
   }
@@ -808,9 +806,8 @@ static inline PropertyIteratorObject* VectorToKeyIterator(JSContext* cx,
   return CreatePropertyIterator(cx, obj, props, numGuards, 0);
 }
 
-JS_FRIEND_API JSObject* js::EnumeratedIdVectorToIterator(JSContext* cx,
-                                                         HandleObject obj,
-                                                         AutoIdVector& props) {
+JSObject* js::EnumeratedIdVectorToIterator(JSContext* cx, HandleObject obj,
+                                           AutoIdVector& props) {
   return VectorToKeyIterator(cx, obj, props, 0);
 }
 
