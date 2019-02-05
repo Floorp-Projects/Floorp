@@ -1,3 +1,13 @@
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
+/**
+ * This tests checks that search suggestions can be acted upon correctly
+ * e.g. selection with modifiers, copying text.
+ */
+
+"use strict";
+
 const SUGGEST_URLBAR_PREF = "browser.urlbar.suggest.searches";
 const TEST_ENGINE_BASENAME = "searchSuggestionEngine.xml";
 
@@ -17,9 +27,7 @@ add_task(async function prepare() {
     // history now.
     await PlacesUtils.history.clear();
 
-    // Make sure the popup is closed for the next test.
-    gURLBar.blur();
-    Assert.ok(!gURLBar.popup.popupOpen, "popup should be closed");
+    await UrlbarTestUtils.promisePopupClose(window);
   });
 });
 
@@ -29,14 +37,14 @@ add_task(async function clickSuggestion() {
   await promiseAutocompleteResultPopup("foo");
   let [idx, suggestion, engineName] = await promiseFirstSuggestion();
   Assert.equal(engineName,
-               "browser_searchSuggestionEngine%20searchSuggestionEngine.xml",
+               "browser_searchSuggestionEngine searchSuggestionEngine.xml",
                "Expected suggestion engine");
-  let item = gURLBar.popup.richlistbox.getItemAtIndex(idx);
 
   let uri = (await Services.search.getDefault()).getSubmission(suggestion).uri;
   let loadPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser,
                                                    false, uri.spec);
-  item.click();
+  let element = await UrlbarTestUtils.waitForAutocompleteResultAt(window, idx);
+  EventUtils.synthesizeMouseAtCenter(element, {}, window);
   await loadPromise;
   BrowserTestUtils.removeTab(tab);
 });
@@ -47,7 +55,7 @@ async function testPressEnterOnSuggestion(expectedUrl = null, keyModifiers = {})
   await promiseAutocompleteResultPopup("foo");
   let [idx, suggestion, engineName] = await promiseFirstSuggestion();
   Assert.equal(engineName,
-               "browser_searchSuggestionEngine%20searchSuggestionEngine.xml",
+               "browser_searchSuggestionEngine searchSuggestionEngine.xml",
                "Expected suggestion engine");
 
   if (!expectedUrl) {
@@ -75,6 +83,10 @@ add_task(async function ctrlEnterOnSuggestion() {
 });
 
 add_task(async function copySuggestionText() {
+  // TODO Bug 1525018 - Implement search suggestion handling for copy.
+  if (UrlbarPrefs.get("quantumbar")) {
+    return;
+  }
   gURLBar.focus();
   await promiseAutocompleteResultPopup("foo");
   let [idx, suggestion] = await promiseFirstSuggestion();
@@ -85,32 +97,23 @@ add_task(async function copySuggestionText() {
   await new Promise((resolve, reject) => waitForClipboard(suggestion, function() {
     goDoCommand("cmd_copy");
   }, resolve, reject));
-  EventUtils.synthesizeKey("KEY_Escape");
-  await promisePopupHidden(gURLBar.popup);
+  await UrlbarTestUtils.promisePopupClose(window, () =>
+    EventUtils.synthesizeKey("KEY_Escape"));
 });
 
-function getFirstSuggestion() {
-  let controller = gURLBar.popup.input.controller;
-  let matchCount = controller.matchCount;
+async function getFirstSuggestion() {
+  let matchCount = UrlbarTestUtils.getResultCount(window);
   for (let i = 0; i < matchCount; i++) {
-    let url = controller.getValueAt(i);
-    let mozActionMatch = url.match(/^moz-action:([^,]+),(.*)$/);
-    if (mozActionMatch) {
-      let [, type, paramStr] = mozActionMatch;
-      let params = JSON.parse(paramStr);
-      if (type == "searchengine" && "searchSuggestion" in params) {
-        return [i, params.searchSuggestion, params.engineName];
-      }
+    let result = await UrlbarTestUtils.getDetailsOfResultAt(window, i);
+    if (result.type == UrlbarUtils.RESULT_TYPE.SEARCH &&
+        result.searchParams.suggestion) {
+      return [i, result.searchParams.suggestion, result.searchParams.engine];
     }
   }
   return [-1, null, null];
 }
 
 async function promiseFirstSuggestion() {
-  let tuple = [-1, null, null];
-  await BrowserTestUtils.waitForCondition(() => {
-    tuple = getFirstSuggestion();
-    return tuple[0] >= 0;
-  });
-  return tuple;
+  await UrlbarTestUtils.promiseSuggestionsPresent(window);
+  return getFirstSuggestion();
 }
