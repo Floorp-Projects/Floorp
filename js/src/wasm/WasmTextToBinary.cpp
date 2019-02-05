@@ -7172,12 +7172,26 @@ static bool EncodeElemSegment(Encoder& e, AstElemSegment& segment) {
     return false;
   }
 
+  if (segment.isPassive()) {
+    if (!e.writeFixedU8(uint8_t(TypeCode::AnyFunc))) {
+      return false;
+    }
+  }
+
   if (!e.writeVarU32(segment.elems().length())) {
     return false;
   }
 
   for (const AstRef& elem : segment.elems()) {
+    // Passive segments have an initializer expression, for now restricted to a
+    // function index.
+    if (segment.isPassive() && !e.writeFixedU8(PlaceholderRefFunc)) {
+      return false;
+    }
     if (!e.writeVarU32(elem.index())) {
+      return false;
+    }
+    if (segment.isPassive() && !e.writeFixedU8(uint8_t(Op::End))) {
       return false;
     }
   }
