@@ -105,7 +105,7 @@ add_task(async function testExperiments() {
 add_task(withDriver(Assert, async function testAddonsInContext(driver) {
   // Create before install so that the listener is added before startup completes.
   const startupPromise = AddonTestUtils.promiseWebExtensionStartup("normandydriver@example.com");
-  const addonInstall = await AddonManager.getInstallForURL(TEST_XPI_URL, "application/x-xpinstall");
+  const addonInstall = await AddonManager.getInstallForURL(TEST_XPI_URL);
   await addonInstall.install();
   const addonId = addonInstall.addon.id;
   await startupPromise;

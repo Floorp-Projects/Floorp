@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-const pdfjsVersion = '2.1.228';
-const pdfjsBuild = '1f3e7700';
+const pdfjsVersion = '2.1.243';
+const pdfjsBuild = 'c0d6e46e';
 
 const pdfjsCoreWorker = __w_pdfjs_require__(1);
 
@@ -375,7 +375,7 @@ var WorkerMessageHandler = {
     var cancelXHRs = null;
     var WorkerTasks = [];
     let apiVersion = docParams.apiVersion;
-    let workerVersion = '2.1.228';
+    let workerVersion = '2.1.243';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -1737,10 +1737,24 @@ function isSpace(ch) {
 }
 
 function createPromiseCapability() {
-  var capability = {};
+  const capability = Object.create(null);
+  let isSettled = false;
+  Object.defineProperty(capability, 'settled', {
+    get() {
+      return isSettled;
+    }
+
+  });
   capability.promise = new Promise(function (resolve, reject) {
-    capability.resolve = resolve;
-    capability.reject = reject;
+    capability.resolve = function (data) {
+      isSettled = true;
+      resolve(data);
+    };
+
+    capability.reject = function (reason) {
+      isSettled = true;
+      reject(reason);
+    };
   });
   return capability;
 }
@@ -20764,7 +20778,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
             fontFamily: font.fallbackName,
             ascent: font.ascent,
             descent: font.descent,
-            vertical: font.vertical
+            vertical: !!font.vertical
           };
         }
 
@@ -20941,8 +20955,12 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
           return;
         }
 
-        textContentItem.width *= textContentItem.textAdvanceScale;
-        textContentItem.height *= textContentItem.textAdvanceScale;
+        if (!textContentItem.vertical) {
+          textContentItem.width *= textContentItem.textAdvanceScale;
+        } else {
+          textContentItem.height *= textContentItem.textAdvanceScale;
+        }
+
         textContent.items.push(runBidiTransform(textContentItem));
         textContentItem.initialized = false;
         textContentItem.str.length = 0;
