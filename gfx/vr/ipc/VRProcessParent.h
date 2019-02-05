@@ -30,7 +30,6 @@ class VRProcessParent final : public mozilla::ipc::GeckoChildProcessHost {
   };
 
   explicit VRProcessParent(Listener* aListener);
-  ~VRProcessParent();
 
   bool Launch();
   void Shutdown();
@@ -48,6 +47,8 @@ class VRProcessParent final : public mozilla::ipc::GeckoChildProcessHost {
   VRChild* GetActor() const { return mVRChild.get(); }
 
  private:
+  ~VRProcessParent();
+
   DISALLOW_COPY_AND_ASSIGN(VRProcessParent);
 
   void InitAfterConnect(bool aSucceeded);

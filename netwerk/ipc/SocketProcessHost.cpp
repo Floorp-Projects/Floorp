@@ -281,19 +281,14 @@ void SocketProcessHost::OnChannelClosed() {
   MOZ_ASSERT(!mSocketProcessParent);
 }
 
-static void DelayedDeleteSubprocess(GeckoChildProcessHost* aSubprocess) {
-  XRE_GetIOMessageLoop()->PostTask(
-      MakeAndAddRef<DeleteTask<GeckoChildProcessHost>>(aSubprocess));
-}
-
 void SocketProcessHost::DestroyProcess() {
   {
     MonitorAutoLock lock(mMonitor);
     mTaskFactory.RevokeAll();
   }
 
-  MessageLoop::current()->PostTask(NewRunnableFunction(
-      "DestroySocketProcessRunnable", DelayedDeleteSubprocess, this));
+  MessageLoop::current()->PostTask(NS_NewRunnableFunction(
+      "DestroySocketProcessRunnable", [this] { Destroy(); }));
 }
 
 //-----------------------------------------------------------------------------
