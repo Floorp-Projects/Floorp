@@ -848,10 +848,8 @@ already_AddRefed<ComputedStyle> ServoStyleSet::ProbePseudoElementStyle(
   bool isBeforeOrAfter = aType == CSSPseudoElementType::before ||
                          aType == CSSPseudoElementType::after;
   if (isBeforeOrAfter) {
-    const nsStyleDisplay* display =
-        computedValues->ComputedData()->GetStyleDisplay();
-    const nsStyleContent* content =
-        computedValues->ComputedData()->GetStyleContent();
+    const nsStyleDisplay* display = computedValues->StyleDisplay();
+    const nsStyleContent* content = computedValues->StyleContent();
     if (display->mDisplay == StyleDisplay::None ||
         content->ContentCount() == 0) {
       return nullptr;

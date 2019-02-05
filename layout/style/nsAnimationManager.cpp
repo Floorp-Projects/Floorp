@@ -538,8 +538,7 @@ void nsAnimationManager::UpdateAnimations(dom::Element* aElement,
              "document tree");
 
   const nsStyleDisplay* disp =
-      aComputedStyle ? aComputedStyle->ComputedData()->GetStyleDisplay()
-                     : nullptr;
+      aComputedStyle ? aComputedStyle->StyleDisplay() : nullptr;
 
   if (!disp || disp->mDisplay == StyleDisplay::None) {
     // If we are in a display:none subtree we will have no computed values.

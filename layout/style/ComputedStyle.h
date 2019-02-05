@@ -87,7 +87,6 @@ class ComputedStyle {
   // FIXME(emilio, bug 548397): This will need to go away. Don't add new callers
   // of this methed.
   nsPresContext* PresContextForFrame() const { return mPresContext; }
-  const ServoComputedData* ComputedData() const { return &mSource; }
 
   // These two methods are for use by ArenaRefPtr.
   //
@@ -115,7 +114,7 @@ class ComputedStyle {
   // both (1) lead to a privacy leak and (2) lead to dynamic change bugs
   // related to the Peek code in ComputedStyle::CalcStyleDifference.
   ComputedStyle* GetStyleIfVisited() const {
-    return ComputedData()->visited_style.mPtr;
+    return mSource.visited_style.mPtr;
   }
 
   bool IsLazilyCascadedPseudoElement() const {
