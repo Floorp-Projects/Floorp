@@ -22,9 +22,9 @@
 "use strict";
 var EXPORTED_SYMBOLS = ["PdfJsDefaultPreferences"];
 var PdfJsDefaultPreferences = Object.freeze({
- "showPreviousViewOnLoad": true,
+ "viewOnLoad": 0,
  "defaultZoomValue": "",
- "sidebarViewOnLoad": 0,
+ "sidebarViewOnLoad": -1,
  "cursorToolOnLoad": 0,
  "enableWebGL": false,
  "eventBusDispatchToDOM": false,
@@ -39,10 +39,8 @@ var PdfJsDefaultPreferences = Object.freeze({
  "renderer": "canvas",
  "renderInteractiveForms": false,
  "enablePrintAutoRotate": false,
- "disableOpenActionDestination": true,
- "disablePageMode": false,
  "disablePageLabels": false,
  "historyUpdateUrl": false,
- "scrollModeOnLoad": 0,
- "spreadModeOnLoad": 0
+ "scrollModeOnLoad": -1,
+ "spreadModeOnLoad": -1
 });
