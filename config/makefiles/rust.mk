@@ -82,14 +82,21 @@ ifndef FUZZING_INTERFACES
 #   which will muck things up.
 # * Don't do this for GCC code coverage builds because the way rustc invokes the linker doesn't
 #   work with GCC 6: https://bugzilla.mozilla.org/show_bug.cgi?id=1477305
-#
-# We don't pass HOST_{CC,CXX} down in any form because our host value might not match
-# what cargo chooses and there's no way to control cargo's selection, so we just have to
-# hope that if something needs to build a host C source file it can find a usable compiler!
-#
+
+# We start with host variables because the rust host and the rust target might be the same,
+# in which case we want the latter to take priority.
+
 # We're passing these for consumption by the `cc` crate, which doesn't use the same
 # convention as cargo itself:
 # https://github.com/alexcrichton/cc-rs/blob/baa71c0e298d9ad7ac30f0ad78f20b4b3b3a8fb2/src/lib.rs#L1715
+rust_host_cc_env_name := $(subst -,_,$(RUST_HOST_TARGET))
+
+export CC_$(rust_host_cc_env_name)=$(HOST_CC)
+export CXX_$(rust_host_cc_env_name)=$(HOST_CXX)
+export CFLAGS_$(rust_host_cc_env_name)=$(COMPUTED_HOST_CFLAGS)
+export CXXFLAGS_$(rust_host_cc_env_name)=$(COMPUTED_HOST_CXXFLAGS)
+# We don't have a HOST_AR. If rust needs one, assume it's going to pick an appropriate one.
+
 rust_cc_env_name := $(subst -,_,$(RUST_TARGET))
 
 export CC_$(rust_cc_env_name)=$(CC)
