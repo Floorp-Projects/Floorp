@@ -53,7 +53,8 @@ using namespace mozilla::dom;
 
 nsIFrame* NS_NewTextControlFrame(nsIPresShell* aPresShell,
                                  ComputedStyle* aStyle) {
-  return new (aPresShell) nsTextControlFrame(aStyle);
+  return new (aPresShell)
+      nsTextControlFrame(aStyle, aPresShell->GetPresContext());
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsTextControlFrame)
@@ -109,8 +110,9 @@ class nsTextControlFrame::nsAnonDivObserver final
   nsTextControlFrame& mFrame;
 };
 
-nsTextControlFrame::nsTextControlFrame(ComputedStyle* aStyle)
-    : nsContainerFrame(aStyle, kClassID),
+nsTextControlFrame::nsTextControlFrame(ComputedStyle* aStyle,
+                                       nsPresContext* aPresContext)
+    : nsContainerFrame(aStyle, aPresContext, kClassID),
       mFirstBaseline(NS_INTRINSIC_WIDTH_UNKNOWN),
       mEditorHasBeenInitialized(false),
       mIsProcessing(false)

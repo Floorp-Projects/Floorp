@@ -59,6 +59,7 @@
 
 using namespace mozilla;
 using namespace mozilla::gfx;
+using mozilla::dom::Document;
 
 NS_IMETHODIMP
 nsComboboxControlFrame::RedisplayTextEvent::Run() {
@@ -112,7 +113,8 @@ nsComboboxControlFrame* nsComboboxControlFrame::sFocused = nullptr;
 nsComboboxControlFrame* NS_NewComboboxControlFrame(nsIPresShell* aPresShell,
                                                    ComputedStyle* aStyle,
                                                    nsFrameState aStateFlags) {
-  nsComboboxControlFrame* it = new (aPresShell) nsComboboxControlFrame(aStyle);
+  nsComboboxControlFrame* it = new (aPresShell)
+      nsComboboxControlFrame(aStyle, aPresShell->GetPresContext());
 
   if (it) {
     // set the state flags (if any are provided)
@@ -217,8 +219,9 @@ static int32_t gReflowInx = -1;
 //-- Done with macros
 //------------------------------------------------------
 
-nsComboboxControlFrame::nsComboboxControlFrame(ComputedStyle* aStyle)
-    : nsBlockFrame(aStyle, kClassID),
+nsComboboxControlFrame::nsComboboxControlFrame(ComputedStyle* aStyle,
+                                               nsPresContext* aPresContext)
+    : nsBlockFrame(aStyle, aPresContext, kClassID),
       mDisplayFrame(nullptr),
       mButtonFrame(nullptr),
       mDropdownFrame(nullptr),
@@ -1206,7 +1209,8 @@ class nsComboboxDisplayFrame final : public nsBlockFrame {
 
   nsComboboxDisplayFrame(ComputedStyle* aStyle,
                          nsComboboxControlFrame* aComboBox)
-      : nsBlockFrame(aStyle, kClassID), mComboBox(aComboBox) {}
+      : nsBlockFrame(aStyle, aComboBox->PresContext(), kClassID),
+        mComboBox(aComboBox) {}
 
 #ifdef DEBUG_FRAME_DUMP
   nsresult GetFrameName(nsAString& aResult) const override {
@@ -1464,8 +1468,7 @@ void nsComboboxControlFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   }
 
   // draw a focus indicator only when focus rings should be drawn
-  Document* doc = mContent->GetComposedDoc();
-  if (doc) {
+  if (Document* doc = mContent->GetComposedDoc()) {
     nsPIDOMWindowOuter* window = doc->GetWindow();
     if (window && window->ShouldShowFocusRing()) {
       nsPresContext* presContext = PresContext();

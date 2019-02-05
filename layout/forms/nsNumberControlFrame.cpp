@@ -34,7 +34,8 @@ using namespace mozilla::dom;
 
 nsIFrame* NS_NewNumberControlFrame(nsIPresShell* aPresShell,
                                    ComputedStyle* aStyle) {
-  return new (aPresShell) nsNumberControlFrame(aStyle);
+  return new (aPresShell)
+      nsNumberControlFrame(aStyle, aPresShell->GetPresContext());
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsNumberControlFrame)
@@ -45,8 +46,10 @@ NS_QUERYFRAME_HEAD(nsNumberControlFrame)
   NS_QUERYFRAME_ENTRY(nsIFormControlFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
-nsNumberControlFrame::nsNumberControlFrame(ComputedStyle* aStyle)
-    : nsContainerFrame(aStyle, kClassID), mHandlingInputEvent(false) {}
+nsNumberControlFrame::nsNumberControlFrame(ComputedStyle* aStyle,
+                                           nsPresContext* aPresContext)
+    : nsContainerFrame(aStyle, aPresContext, kClassID),
+      mHandlingInputEvent(false) {}
 
 void nsNumberControlFrame::DestroyFrom(nsIFrame* aDestructRoot,
                                        PostDestroyData& aPostDestroyData) {

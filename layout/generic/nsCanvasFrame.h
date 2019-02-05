@@ -36,8 +36,8 @@ class nsCanvasFrame final : public nsContainerFrame,
                             public nsIAnonymousContentCreator,
                             public nsIPopupContainer {
  public:
-  explicit nsCanvasFrame(ComputedStyle* aStyle)
-      : nsContainerFrame(aStyle, kClassID),
+  explicit nsCanvasFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
+      : nsContainerFrame(aStyle, aPresContext, kClassID),
         mDoPaintFocus(false),
         mAddedScrollPositionListener(false),
         mPopupSetFrame(nullptr) {}

@@ -23,8 +23,8 @@ class nsGroupBoxFrame final : public nsBoxFrame {
  public:
   NS_DECL_FRAMEARENA_HELPERS(nsGroupBoxFrame)
 
-  explicit nsGroupBoxFrame(ComputedStyle* aStyle)
-      : nsBoxFrame(aStyle, kClassID) {}
+  explicit nsGroupBoxFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
+      : nsBoxFrame(aStyle, aPresContext, kClassID) {}
 
   virtual nsresult GetXULBorderAndPadding(nsMargin& aBorderAndPadding) override;
 
@@ -87,7 +87,7 @@ public:
 */
 
 nsIFrame* NS_NewGroupBoxFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle) {
-  return new (aPresShell) nsGroupBoxFrame(aStyle);
+  return new (aPresShell) nsGroupBoxFrame(aStyle, aPresShell->GetPresContext());
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsGroupBoxFrame)

@@ -48,8 +48,8 @@ class nsSVGImageFrame final : public mozilla::SVGGeometryFrame,
                                        ComputedStyle* aStyle);
 
  protected:
-  explicit nsSVGImageFrame(ComputedStyle* aStyle)
-      : SVGGeometryFrame(aStyle, kClassID),
+  explicit nsSVGImageFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
+      : SVGGeometryFrame(aStyle, aPresContext, kClassID),
         mReflowCallbackPosted(false),
         mForceSyncDecoding(false) {
     EnableVisibilityTracking();

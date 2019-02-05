@@ -232,8 +232,9 @@ class nsFlexContainerFrame final : public nsContainerFrame {
 
  protected:
   // Protected constructor & destructor
-  explicit nsFlexContainerFrame(ComputedStyle* aStyle)
-      : nsContainerFrame(aStyle, kClassID),
+  explicit nsFlexContainerFrame(ComputedStyle* aStyle,
+                                nsPresContext* aPresContext)
+      : nsContainerFrame(aStyle, aPresContext, kClassID),
         mCachedMinISize(NS_INTRINSIC_WIDTH_UNKNOWN),
         mCachedPrefISize(NS_INTRINSIC_WIDTH_UNKNOWN),
         mBaselineFromLastReflow(NS_INTRINSIC_WIDTH_UNKNOWN),

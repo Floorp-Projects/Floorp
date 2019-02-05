@@ -48,7 +48,7 @@ class nsDeckFrame final : public nsBoxFrame {
   }
 #endif
 
-  explicit nsDeckFrame(ComputedStyle* aStyle);
+  explicit nsDeckFrame(ComputedStyle* aStyle, nsPresContext* aPresContext);
 
   nsIFrame* GetSelectedBox();
 

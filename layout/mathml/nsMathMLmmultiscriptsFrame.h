@@ -41,8 +41,9 @@ class nsMathMLmmultiscriptsFrame final : public nsMathMLContainerFrame {
   uint8_t ScriptIncrement(nsIFrame* aFrame) override;
 
  protected:
-  explicit nsMathMLmmultiscriptsFrame(ComputedStyle* aStyle)
-      : nsMathMLContainerFrame(aStyle, kClassID) {}
+  explicit nsMathMLmmultiscriptsFrame(ComputedStyle* aStyle,
+                                      nsPresContext* aPresContext)
+      : nsMathMLContainerFrame(aStyle, aPresContext, kClassID) {}
   virtual ~nsMathMLmmultiscriptsFrame();
 };
 

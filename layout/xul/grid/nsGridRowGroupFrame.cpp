@@ -24,7 +24,8 @@ already_AddRefed<nsBoxLayout> NS_NewGridRowGroupLayout();
 nsIFrame* NS_NewGridRowGroupFrame(nsIPresShell* aPresShell,
                                   ComputedStyle* aStyle) {
   nsCOMPtr<nsBoxLayout> layout = NS_NewGridRowGroupLayout();
-  return new (aPresShell) nsGridRowGroupFrame(aStyle, layout);
+  return new (aPresShell)
+      nsGridRowGroupFrame(aStyle, aPresShell->GetPresContext(), layout);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsGridRowGroupFrame)

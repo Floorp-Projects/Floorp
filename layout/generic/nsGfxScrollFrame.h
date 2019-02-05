@@ -1187,10 +1187,12 @@ class nsHTMLScrollFrame : public nsContainerFrame,
 #endif
 
  protected:
-  nsHTMLScrollFrame(ComputedStyle* aStyle, bool aIsRoot)
-      : nsHTMLScrollFrame(aStyle, kClassID, aIsRoot) {}
+  nsHTMLScrollFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
+                    bool aIsRoot)
+      : nsHTMLScrollFrame(aStyle, aPresContext, kClassID, aIsRoot) {}
 
-  nsHTMLScrollFrame(ComputedStyle* aStyle, nsIFrame::ClassID aID, bool aIsRoot);
+  nsHTMLScrollFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
+                    nsIFrame::ClassID aID, bool aIsRoot);
   void SetSuppressScrollbarUpdate(bool aSuppress) {
     mHelper.mSuppressScrollbarUpdate = aSuppress;
   }
@@ -1658,7 +1660,7 @@ class nsXULScrollFrame final : public nsBoxFrame,
 #endif
 
  protected:
-  nsXULScrollFrame(ComputedStyle* aStyle, bool aIsRoot,
+  nsXULScrollFrame(ComputedStyle*, nsPresContext*, bool aIsRoot,
                    bool aClipAllDescendants);
 
   void ClampAndSetBounds(nsBoxLayoutState& aState, nsRect& aRect,

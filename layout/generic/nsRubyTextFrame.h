@@ -44,8 +44,8 @@ class nsRubyTextFrame final : public nsRubyContentFrame {
  protected:
   friend nsContainerFrame* NS_NewRubyTextFrame(nsIPresShell* aPresShell,
                                                ComputedStyle* aStyle);
-  explicit nsRubyTextFrame(ComputedStyle* aStyle)
-      : nsRubyContentFrame(aStyle, kClassID) {}
+  explicit nsRubyTextFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
+      : nsRubyContentFrame(aStyle, aPresContext, kClassID) {}
 };
 
 #endif /* nsRubyTextFrame_h___ */

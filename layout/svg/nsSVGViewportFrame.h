@@ -19,8 +19,9 @@ class gfxContext;
 class nsSVGViewportFrame : public nsSVGDisplayContainerFrame,
                            public nsISVGSVGFrame {
  protected:
-  nsSVGViewportFrame(ComputedStyle* aStyle, nsIFrame::ClassID aID)
-      : nsSVGDisplayContainerFrame(aStyle, aID) {}
+  nsSVGViewportFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
+                     nsIFrame::ClassID aID)
+      : nsSVGDisplayContainerFrame(aStyle, aPresContext, aID) {}
 
  public:
   NS_DECL_ABSTRACT_FRAME(nsSVGViewportFrame)

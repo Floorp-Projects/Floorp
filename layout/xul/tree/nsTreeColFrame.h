@@ -21,8 +21,8 @@ class nsTreeColFrame final : public nsBoxFrame {
  public:
   NS_DECL_FRAMEARENA_HELPERS(nsTreeColFrame)
 
-  explicit nsTreeColFrame(ComputedStyle* aStyle)
-      : nsBoxFrame(aStyle, kClassID) {}
+  explicit nsTreeColFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
+      : nsBoxFrame(aStyle, aPresContext, kClassID) {}
 
   virtual void Init(nsIContent* aContent, nsContainerFrame* aParent,
                     nsIFrame* aPrevInFlow) override;

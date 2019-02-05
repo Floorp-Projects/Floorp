@@ -35,7 +35,7 @@ class nsStackFrame final : public nsBoxFrame {
       nsDisplayListBuilder* aBuilder, const nsDisplayListSet& aLists) override;
 
  protected:
-  explicit nsStackFrame(ComputedStyle* aStyle);
+  explicit nsStackFrame(ComputedStyle* aStyle, nsPresContext* aPresContext);
 };  // class nsStackFrame
 
 #endif

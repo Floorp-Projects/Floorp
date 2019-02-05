@@ -40,8 +40,10 @@ using namespace mozilla::layout;
          kid->BStart(aWritingMode, mRect.Size());
 }
 
-nsTableWrapperFrame::nsTableWrapperFrame(ComputedStyle* aStyle, ClassID aID)
-    : nsContainerFrame(aStyle, aID) {}
+nsTableWrapperFrame::nsTableWrapperFrame(ComputedStyle* aStyle,
+                                         nsPresContext* aPresContext,
+                                         ClassID aID)
+    : nsContainerFrame(aStyle, aPresContext, aID) {}
 
 nsTableWrapperFrame::~nsTableWrapperFrame() {}
 
@@ -1001,7 +1003,8 @@ nsIContent* nsTableWrapperFrame::GetCellAt(uint32_t aRowIdx,
 
 nsTableWrapperFrame* NS_NewTableWrapperFrame(nsIPresShell* aPresShell,
                                              ComputedStyle* aStyle) {
-  return new (aPresShell) nsTableWrapperFrame(aStyle);
+  return new (aPresShell)
+      nsTableWrapperFrame(aStyle, aPresShell->GetPresContext());
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsTableWrapperFrame)

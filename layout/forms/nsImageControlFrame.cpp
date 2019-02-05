@@ -19,7 +19,8 @@ using namespace mozilla;
 class nsImageControlFrame final : public nsImageFrame,
                                   public nsIFormControlFrame {
  public:
-  explicit nsImageControlFrame(ComputedStyle* aStyle);
+  explicit nsImageControlFrame(ComputedStyle* aStyle,
+                               nsPresContext* aPresContext);
   ~nsImageControlFrame();
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot,
@@ -56,8 +57,9 @@ class nsImageControlFrame final : public nsImageFrame,
                                    const nsAString& aValue) override;
 };
 
-nsImageControlFrame::nsImageControlFrame(ComputedStyle* aStyle)
-    : nsImageFrame(aStyle, kClassID) {}
+nsImageControlFrame::nsImageControlFrame(ComputedStyle* aStyle,
+                                         nsPresContext* aPresContext)
+    : nsImageFrame(aStyle, aPresContext, kClassID) {}
 
 nsImageControlFrame::~nsImageControlFrame() {}
 
@@ -71,7 +73,8 @@ void nsImageControlFrame::DestroyFrom(nsIFrame* aDestructRoot,
 
 nsIFrame* NS_NewImageControlFrame(nsIPresShell* aPresShell,
                                   ComputedStyle* aStyle) {
-  return new (aPresShell) nsImageControlFrame(aStyle);
+  return new (aPresShell)
+      nsImageControlFrame(aStyle, aPresShell->GetPresContext());
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsImageControlFrame)

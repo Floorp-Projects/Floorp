@@ -25,7 +25,8 @@ class SVGViewFrame final : public nsFrame {
                                       ComputedStyle* aStyle);
 
  protected:
-  explicit SVGViewFrame(ComputedStyle* aStyle) : nsFrame(aStyle, kClassID) {
+  explicit SVGViewFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
+      : nsFrame(aStyle, aPresContext, kClassID) {
     AddStateBits(NS_FRAME_IS_NONDISPLAY);
   }
 
@@ -61,7 +62,7 @@ class SVGViewFrame final : public nsFrame {
 };
 
 nsIFrame* NS_NewSVGViewFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle) {
-  return new (aPresShell) SVGViewFrame(aStyle);
+  return new (aPresShell) SVGViewFrame(aStyle, aPresShell->GetPresContext());
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(SVGViewFrame)

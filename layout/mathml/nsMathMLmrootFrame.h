@@ -52,7 +52,8 @@ class nsMathMLmrootFrame final : public nsMathMLContainerFrame {
   }
 
  protected:
-  explicit nsMathMLmrootFrame(ComputedStyle* aStyle);
+  explicit nsMathMLmrootFrame(ComputedStyle* aStyle,
+                              nsPresContext* aPresContext);
   virtual ~nsMathMLmrootFrame();
 
   nsMathMLChar mSqrChar;

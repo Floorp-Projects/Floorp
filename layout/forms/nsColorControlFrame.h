@@ -51,7 +51,8 @@ class nsColorControlFrame final : public nsHTMLButtonControlFrame,
   nsresult UpdateColor();
 
  private:
-  explicit nsColorControlFrame(ComputedStyle* aStyle);
+  explicit nsColorControlFrame(ComputedStyle* aStyle,
+                               nsPresContext* aPresContext);
 
   nsCOMPtr<Element> mColorContent;
 };

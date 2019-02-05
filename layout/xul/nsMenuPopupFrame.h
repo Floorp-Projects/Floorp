@@ -173,7 +173,7 @@ class nsMenuPopupFrame final : public nsBoxFrame,
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsMenuPopupFrame)
 
-  explicit nsMenuPopupFrame(ComputedStyle* aStyle);
+  explicit nsMenuPopupFrame(ComputedStyle* aStyle, nsPresContext* aPresContext);
 
   // nsMenuParent interface
   virtual nsMenuFrame* GetCurrentMenuItem() override;

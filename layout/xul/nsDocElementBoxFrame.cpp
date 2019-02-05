@@ -35,8 +35,9 @@ class nsDocElementBoxFrame final : public nsBoxFrame,
   friend nsIFrame* NS_NewBoxFrame(nsIPresShell* aPresShell,
                                   ComputedStyle* aStyle);
 
-  explicit nsDocElementBoxFrame(ComputedStyle* aStyle)
-      : nsBoxFrame(aStyle, kClassID, true) {}
+  explicit nsDocElementBoxFrame(ComputedStyle* aStyle,
+                                nsPresContext* aPresContext)
+      : nsBoxFrame(aStyle, aPresContext, kClassID, true) {}
 
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsDocElementBoxFrame)
@@ -66,7 +67,8 @@ class nsDocElementBoxFrame final : public nsBoxFrame,
 
 nsContainerFrame* NS_NewDocElementBoxFrame(nsIPresShell* aPresShell,
                                            ComputedStyle* aStyle) {
-  return new (aPresShell) nsDocElementBoxFrame(aStyle);
+  return new (aPresShell)
+      nsDocElementBoxFrame(aStyle, aPresShell->GetPresContext());
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsDocElementBoxFrame)

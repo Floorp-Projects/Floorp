@@ -67,8 +67,9 @@ class nsPlaceholderFrame final : public nsFrame {
                                                     ComputedStyle* aStyle,
                                                     nsFrameState aTypeBits);
 
-  nsPlaceholderFrame(ComputedStyle* aStyle, nsFrameState aTypeBits)
-      : nsFrame(aStyle, kClassID), mOutOfFlowFrame(nullptr) {
+  nsPlaceholderFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
+                     nsFrameState aTypeBits)
+      : nsFrame(aStyle, aPresContext, kClassID), mOutOfFlowFrame(nullptr) {
     MOZ_ASSERT(
         aTypeBits == PLACEHOLDER_FOR_FLOAT ||
             aTypeBits == PLACEHOLDER_FOR_ABSPOS ||

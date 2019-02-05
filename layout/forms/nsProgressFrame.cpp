@@ -26,13 +26,14 @@ using namespace mozilla;
 using namespace mozilla::dom;
 
 nsIFrame* NS_NewProgressFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle) {
-  return new (aPresShell) nsProgressFrame(aStyle);
+  return new (aPresShell) nsProgressFrame(aStyle, aPresShell->GetPresContext());
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsProgressFrame)
 
-nsProgressFrame::nsProgressFrame(ComputedStyle* aStyle)
-    : nsContainerFrame(aStyle, kClassID), mBarDiv(nullptr) {}
+nsProgressFrame::nsProgressFrame(ComputedStyle* aStyle,
+                                 nsPresContext* aPresContext)
+    : nsContainerFrame(aStyle, aPresContext, kClassID), mBarDiv(nullptr) {}
 
 nsProgressFrame::~nsProgressFrame() {}
 

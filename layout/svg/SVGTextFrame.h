@@ -176,8 +176,8 @@ class SVGTextFrame final : public nsSVGDisplayContainerFrame {
   typedef mozilla::gfx::Point Point;
 
  protected:
-  explicit SVGTextFrame(ComputedStyle* aStyle)
-      : nsSVGDisplayContainerFrame(aStyle, kClassID),
+  explicit SVGTextFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
+      : nsSVGDisplayContainerFrame(aStyle, aPresContext, kClassID),
         mTrailingUndisplayedCharacters(0),
         mFontSizeScaleFactor(1.0f),
         mLastContextScale(1.0f),

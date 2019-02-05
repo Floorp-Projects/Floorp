@@ -22,7 +22,7 @@ class nsColumnSetFrame final : public nsContainerFrame {
  public:
   NS_DECL_FRAMEARENA_HELPERS(nsColumnSetFrame)
 
-  explicit nsColumnSetFrame(ComputedStyle* aStyle);
+  explicit nsColumnSetFrame(ComputedStyle* aStyle, nsPresContext* aPresContext);
 
   virtual void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
                       const ReflowInput& aReflowInput,

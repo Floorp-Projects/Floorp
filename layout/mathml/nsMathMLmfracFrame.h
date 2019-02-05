@@ -88,8 +88,9 @@ class nsMathMLmfracFrame final : public nsMathMLContainerFrame {
   uint8_t ScriptIncrement(nsIFrame* aFrame) override;
 
  protected:
-  explicit nsMathMLmfracFrame(ComputedStyle* aStyle)
-      : nsMathMLContainerFrame(aStyle, kClassID),
+  explicit nsMathMLmfracFrame(ComputedStyle* aStyle,
+                              nsPresContext* aPresContext)
+      : nsMathMLContainerFrame(aStyle, aPresContext, kClassID),
         mLineRect(),
         mSlashChar(nullptr),
         mLineThickness(0),

@@ -54,7 +54,8 @@ class nsMathMLmsqrtFrame final : public nsMathMLmencloseFrame {
   }
 
  protected:
-  explicit nsMathMLmsqrtFrame(ComputedStyle* aStyle);
+  explicit nsMathMLmsqrtFrame(ComputedStyle* aStyle,
+                              nsPresContext* aPresContext);
   virtual ~nsMathMLmsqrtFrame();
 };
 

@@ -43,7 +43,7 @@ class nsBox : public nsIFrame {
 
   virtual nsresult XULRelayoutChildAtOrdinal(nsIFrame* aChild) override;
 
-  nsBox(ClassID aID);
+  nsBox(ComputedStyle*, nsPresContext*, ClassID);
   virtual ~nsBox();
 
   /**

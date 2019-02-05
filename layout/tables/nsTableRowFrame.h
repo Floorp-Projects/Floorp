@@ -254,7 +254,8 @@ class nsTableRowFrame : public nsContainerFrame {
   /** protected constructor.
    * @see NewFrame
    */
-  explicit nsTableRowFrame(ComputedStyle* aStyle, ClassID aID = kClassID);
+  explicit nsTableRowFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
+                           ClassID aID = kClassID);
 
   void InitChildReflowInput(nsPresContext& aPresContext,
                             const mozilla::LogicalSize& aAvailSize,

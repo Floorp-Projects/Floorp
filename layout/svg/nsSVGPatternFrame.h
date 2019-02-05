@@ -33,7 +33,8 @@ class nsSVGPatternFrame final : public nsSVGPaintServerFrame {
   friend nsIFrame* NS_NewSVGPatternFrame(nsIPresShell* aPresShell,
                                          ComputedStyle* aStyle);
 
-  explicit nsSVGPatternFrame(ComputedStyle* aStyle);
+  explicit nsSVGPatternFrame(ComputedStyle* aStyle,
+                             nsPresContext* aPresContext);
 
   // nsSVGPaintServerFrame methods:
   virtual already_AddRefed<gfxPattern> GetPaintServerPattern(

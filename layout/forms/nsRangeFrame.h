@@ -30,7 +30,7 @@ class nsRangeFrame final : public nsContainerFrame,
 
   friend class nsDisplayRangeFocusRing;
 
-  explicit nsRangeFrame(ComputedStyle* aStyle);
+  explicit nsRangeFrame(ComputedStyle* aStyle, nsPresContext* aPresContext);
   virtual ~nsRangeFrame();
 
   typedef mozilla::CSSPseudoElementType CSSPseudoElementType;

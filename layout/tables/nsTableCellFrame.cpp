@@ -74,7 +74,7 @@ class nsDisplayTableCellSelection final : public nsDisplayItem {
 
 nsTableCellFrame::nsTableCellFrame(ComputedStyle* aStyle,
                                    nsTableFrame* aTableFrame, ClassID aID)
-    : nsContainerFrame(aStyle, aID),
+    : nsContainerFrame(aStyle, aTableFrame->PresContext(), aID),
       mDesiredSize(aTableFrame->GetWritingMode()) {
   mColIndex = 0;
   mPriorAvailISize = 0;
