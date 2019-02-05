@@ -1146,11 +1146,11 @@ impl Build {
                 if clang_cl {
                     if target.contains("x86_64") {
                         cmd.args.push("-m64".into());
-                    } else if target.contains("i586") {
+                    } else if target.contains("86") {
                         cmd.args.push("-m32".into());
                         cmd.args.push("/arch:IA32".into());
                     } else {
-                        cmd.args.push("-m32".into());
+                        cmd.args.push(format!("--target={}", target).into());
                     }
                 } else {
                     if target.contains("i586") {
