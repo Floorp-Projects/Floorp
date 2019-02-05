@@ -408,7 +408,7 @@ JS::Value WebGLContext::GetParameter(JSContext* cx, GLenum pname,
       return JS::Int32Value(mGLMaxFragmentUniformVectors);
 
     case LOCAL_GL_MAX_VARYING_VECTORS:
-      return JS::Int32Value(mGLMaxVaryingVectors);
+      return JS::Int32Value(mGLMaxFragmentInputVectors);
 
     case LOCAL_GL_COMPRESSED_TEXTURE_FORMATS: {
       uint32_t length = mCompressedTextureFormats.Length();
