@@ -25,7 +25,7 @@ namespace {
 void DeleteSubprocess(Mutex* mutex, CondVar* cvar) {
   MutexAutoLock lock(*mutex);
 
-  delete gSubprocess;
+  gSubprocess->Destroy();
   gSubprocess = nullptr;
 
   cvar->Notify();

@@ -43,9 +43,7 @@ class GPUProcessHost final : public mozilla::ipc::GeckoChildProcessHost {
     virtual void OnRemoteProcessDeviceReset(GPUProcessHost* aHost) {}
   };
 
- public:
   explicit GPUProcessHost(Listener* listener);
-  ~GPUProcessHost();
 
   // Launch the subprocess asynchronously. On failure, false is returned.
   // Otherwise, true is returned, and the OnProcessLaunchComplete listener
@@ -96,6 +94,8 @@ class GPUProcessHost final : public mozilla::ipc::GeckoChildProcessHost {
   void KillProcess();
 
  private:
+  ~GPUProcessHost();
+
   // Called on the main thread.
   void OnChannelConnectedTask();
   void OnChannelErrorTask();
@@ -111,7 +111,6 @@ class GPUProcessHost final : public mozilla::ipc::GeckoChildProcessHost {
 
   void DestroyProcess();
 
- private:
   DISALLOW_COPY_AND_ASSIGN(GPUProcessHost);
 
   Listener* mListener;

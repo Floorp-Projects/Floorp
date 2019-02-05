@@ -16,7 +16,7 @@ namespace {
 // QuitParent(), because it's testing degenerate edge cases
 
 void DeleteSubprocess() {
-  delete gSubprocess;
+  gSubprocess->Destroy();
   gSubprocess = nullptr;
 }
 
