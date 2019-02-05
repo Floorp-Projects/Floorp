@@ -2,6 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/**
+ * This tests for the correct URL being displayed in the URL bar after switching
+ * tabs which are in different states (e.g. deleted, partially deleted).
+ */
+
+"use strict";
+
 const TEST_PATH = getRootDirectory(gTestPath)
   .replace("chrome://mochitests/content", "http://example.com");
 const TEST_URL = `${TEST_PATH}dummy_page.html`;
