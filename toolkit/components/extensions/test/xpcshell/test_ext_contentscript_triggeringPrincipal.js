@@ -9,8 +9,6 @@
  * loads.
  */
 
-const {escaped} = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm", null);
-
 const env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
 
 // Make sure media pre-loading is enabled on Android so that our <audio> and
@@ -215,6 +213,44 @@ function createElement(test, opts) {
 
   return {elem, srcElem, src};
 }
+
+/**
+ * Escapes any occurrences of &, ", < or > with XML entities.
+ *
+ * @param {string} str
+ *        The string to escape.
+ * @returns {string} The escaped string.
+ */
+function escapeXML(str) {
+  let replacements = {"&": "&amp;", '"': "&quot;", "'": "&apos;", "<": "&lt;", ">": "&gt;"};
+  return String(str).replace(/[&"''<>]/g, m => replacements[m]);
+}
+
+/**
+ * A tagged template function which escapes any XML metacharacters in
+ * interpolated values.
+ *
+ * @param {Array<string>} strings
+ *        An array of literal strings extracted from the templates.
+ * @param {Array} values
+ *        An array of interpolated values extracted from the template.
+ * @returns {string}
+ *        The result of the escaped values interpolated with the literal
+ *        strings.
+ */
+function escaped(strings, ...values) {
+  let result = [];
+
+  for (let [i, string] of strings.entries()) {
+    result.push(string);
+    if (i < values.length) {
+      result.push(escapeXML(values[i]));
+    }
+  }
+
+  return result.join("");
+}
+
 
 /**
  * Converts the given test data, as accepted by {@see getElementData},

@@ -182,43 +182,6 @@ class MockBlocklist {
 MockBlocklist.prototype.QueryInterface = ChromeUtils.generateQI(["nsIBlocklistService"]);
 
 
-/**
- * Escapes any occurrences of &, ", < or > with XML entities.
- *
- * @param {string} str
- *        The string to escape.
- * @return {string} The escaped string.
- */
-function escapeXML(str) {
-  let replacements = {"&": "&amp;", '"': "&quot;", "'": "&apos;", "<": "&lt;", ">": "&gt;"};
-  return String(str).replace(/[&"''<>]/g, m => replacements[m]);
-}
-
-/**
- * A tagged template function which escapes any XML metacharacters in
- * interpolated values.
- *
- * @param {Array<string>} strings
- *        An array of literal strings extracted from the templates.
- * @param {Array} values
- *        An array of interpolated values extracted from the template.
- * @returns {string}
- *        The result of the escaped values interpolated with the literal
- *        strings.
- */
-function escaped(strings, ...values) {
-  let result = [];
-
-  for (let [i, string] of strings.entries()) {
-    result.push(string);
-    if (i < values.length)
-      result.push(escapeXML(values[i]));
-  }
-
-  return result.join("");
-}
-
-
 class AddonsList {
   constructor(file) {
     this.extensions = [];
@@ -864,71 +827,6 @@ var AddonTestUtils = {
     }
 
     this.addonsList = new AddonsList(this.addonStartup);
-  },
-
-  /**
-   * Creates an update.rdf structure as a string using for the update data passed.
-   *
-   * @param {Object} data
-   *        The update data as a JS object. Each property name is an add-on ID,
-   *        the property value is an array of each version of the add-on. Each
-   *        array value is a JS object containing the data for the version, at
-   *        minimum a "version" and "targetApplications" property should be
-   *        included to create a functional update manifest.
-   * @return {string} The update.rdf structure as a string.
-   */
-  createUpdateRDF(data) {
-    var rdf = '<?xml version="1.0"?>\n';
-    rdf += '<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"\n' +
-           '     xmlns:em="http://www.mozilla.org/2004/em-rdf#">\n';
-
-    for (let addon in data) {
-      rdf += escaped`  <Description about="urn:mozilla:extension:${addon}"><em:updates><Seq>\n`;
-
-      for (let versionData of data[addon]) {
-        rdf += "    <li><Description>\n";
-        rdf += this._writeProps(versionData, ["version"],
-                                `      `);
-        for (let app of versionData.targetApplications || []) {
-          rdf += "      <em:targetApplication><Description>\n";
-          rdf += this._writeProps(app, ["id", "minVersion", "maxVersion", "updateLink", "updateHash"],
-                                  `        `);
-          rdf += "      </Description></em:targetApplication>\n";
-        }
-        rdf += "    </Description></li>\n";
-      }
-      rdf += "  </Seq></em:updates></Description>\n";
-    }
-    rdf += "</RDF>\n";
-
-    return rdf;
-  },
-
-  _writeProps(obj, props, indent = "  ") {
-    let items = [];
-    for (let prop of props) {
-      if (obj[prop] !== undefined)
-        items.push(escaped`${indent}<em:${prop}>${obj[prop]}</em:${prop}>\n`);
-    }
-    return items.join("");
-  },
-
-  _writeArrayProps(obj, props, indent = "  ") {
-    let items = [];
-    for (let prop of props) {
-      for (let val of obj[prop] || [])
-        items.push(escaped`${indent}<em:${prop}>${val}</em:${prop}>\n`);
-    }
-    return items.join("");
-  },
-
-  _writeLocaleStrings(data) {
-    let items = [];
-
-    items.push(this._writeProps(data, ["name", "description", "creator", "homepageURL"]));
-    items.push(this._writeArrayProps(data, ["developer", "translator", "contributor"]));
-
-    return items.join("");
   },
 
   /**
