@@ -53,8 +53,7 @@ def make_beetmover_checksums_description(config, jobs):
         extra['partner_path'] = dep_job.task['payload']['upstreamArtifacts'][0]['locale']
         extra['repack_id'] = repack_id
 
-        dependent_kind = str(dep_job.kind)
-        dependencies = {dependent_kind: dep_job.label}
+        dependencies = {dep_job.kind: dep_job.label}
         for k, v in dep_job.dependencies.items():
             if k.startswith('beetmover'):
                 dependencies[k] = v

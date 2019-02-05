@@ -113,9 +113,7 @@ def make_task_description(config, jobs):
             locales='/'.join(job['attributes']['chunk_locales']),
         )
 
-        job['dependencies'] = {
-            str(dep_job.kind): dep_job.label
-        }
+        job['dependencies'] = {dep_job.kind: dep_job.label}
         job['treeherder'] = treeherder
 
         yield job
