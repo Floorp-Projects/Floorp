@@ -229,7 +229,9 @@ pub enum ClientMessage {
 
 #[derive(Debug, Deserialize, Serialize)]
 pub enum CallbackReq {
-    Data(isize, usize),
+    Data { nframes: isize,
+           input_frame_size: usize,
+           output_frame_size: usize },
     State(ffi::cubeb_state),
 }
 
