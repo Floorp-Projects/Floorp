@@ -5,7 +5,7 @@ use euclid::approxeq::ApproxEq;
 use euclid::Trig;
 use num_traits::{Float, One, Zero};
 
-use std::{fmt, mem, ops};
+use std::{fmt, iter, mem, ops};
 
 
 /// The projection of a `Polygon` on a line.
@@ -361,8 +361,104 @@ impl<T, U> Polygon<T, U> where
         }
     }
 
-    /// Split the polygon along the specified `Line`. Will do nothing if the line
-    /// doesn't belong to the polygon plane.
+    fn split_impl(
+        &mut self,
+        first: (usize, TypedPoint3D<T, U>),
+        second: (usize, TypedPoint3D<T, U>),
+    ) -> (Option<Self>, Option<Self>) {
+        //TODO: can be optimized for when the polygon has a redundant 4th vertex
+        //TODO: can be simplified greatly if only working with triangles
+        debug!("\t\tReached complex case [{}, {}]", first.0, second.0);
+        let base = first.0;
+        assert!(base < self.points.len());
+        match second.0 - first.0 {
+            1 => {
+                // rect between the cut at the diagonal
+                let other1 = Polygon {
+                    points: [
+                        first.1,
+                        second.1,
+                        self.points[(base + 2) & 3],
+                        self.points[base],
+                    ],
+                    .. self.clone()
+                };
+                // triangle on the near side of the diagonal
+                let other2 = Polygon {
+                    points: [
+                        self.points[(base + 2) & 3],
+                        self.points[(base + 3) & 3],
+                        self.points[base],
+                        self.points[base],
+                    ],
+                    .. self.clone()
+                };
+                // triangle being cut out
+                self.points = [
+                    first.1,
+                    self.points[(base + 1) & 3],
+                    second.1,
+                    second.1,
+                ];
+                (Some(other1), Some(other2))
+            }
+            2 => {
+                // rect on the far side
+                let other = Polygon {
+                    points: [
+                        first.1,
+                        self.points[(base + 1) & 3],
+                        self.points[(base + 2) & 3],
+                        second.1,
+                    ],
+                    .. self.clone()
+                };
+                // rect on the near side
+                self.points = [
+                    first.1,
+                    second.1,
+                    self.points[(base + 3) & 3],
+                    self.points[base],
+                ];
+                (Some(other), None)
+            }
+            3 => {
+                // rect between the cut at the diagonal
+                let other1 = Polygon {
+                    points: [
+                        first.1,
+                        self.points[(base + 1) & 3],
+                        self.points[(base + 3) & 3],
+                        second.1,
+                    ],
+                    .. self.clone()
+                };
+                // triangle on the far side of the diagonal
+                let other2 = Polygon {
+                    points: [
+                        self.points[(base + 1) & 3],
+                        self.points[(base + 2) & 3],
+                        self.points[(base + 3) & 3],
+                        self.points[(base + 3) & 3],
+                    ],
+                    .. self.clone()
+                };
+                // triangle being cut out
+                self.points = [
+                    first.1,
+                    second.1,
+                    self.points[base],
+                    self.points[base],
+                ];
+                (Some(other1), Some(other2))
+            }
+            _ => panic!("Unexpected indices {} {}", first.0, second.0),
+        }
+    }
+
+    /// Split the polygon along the specified `Line`.
+    /// Will do nothing if the line doesn't belong to the polygon plane.
+    #[deprecated(note = "Use split_with_normal instead")]
     pub fn split(&mut self, line: &Line<T, U>) -> (Option<Self>, Option<Self>) {
         debug!("\tSplitting");
         // check if the cut is within the polygon plane first
@@ -381,17 +477,8 @@ impl<T, U> Polygon<T, U> where
             .zip(self.points.iter())
             .zip(cuts.iter_mut())
         {
-            // intersecting line segment [a, b] with `line`
-            // a + (b-a) * t = r + k * d
-            // (a, d) + t * (b-a, d) - (r, d) = k
-            // a + t * (b-a) = r + t * (b-a, d) * d + (a-r, d) * d
-            // t * ((b-a) - (b-a, d)*d) = (r-a) - (r-a, d) * d
-            let pr = line.origin - a - line.dir * line.dir.dot(line.origin - a);
-            let pb = b - a - line.dir * line.dir.dot(b - a);
-            let denom = pb.dot(pb);
-            if !denom.approx_eq(&T::zero()) {
-                let t = pr.dot(pb) / denom;
-                if t > T::approx_epsilon() && t < T::one() - T::approx_epsilon() {
+            if let Some(t) = line.intersect_edge(a .. b) {
+                if t >= T::zero() && t < T::one() {
                     *cut = Some(a + (b - a) * t);
                 }
             }
@@ -405,61 +492,60 @@ impl<T, U> Polygon<T, U> where
             Some(pos) => first + 1 + pos,
             None => return (None, None),
         };
-        debug!("\t\tReached complex case [{}, {}]", first, second);
-        //TODO: can be optimized for when the polygon has a redundant 4th vertex
-        //TODO: can be simplified greatly if only working with triangles
-        let (a, b) = (cuts[first].unwrap(), cuts[second].unwrap());
-        match second-first {
-            2 => {
-                let mut other_points = self.points;
-                other_points[first] = a;
-                other_points[(first+3) % 4] = b;
-                self.points[first+1] = a;
-                self.points[first+2] = b;
-                let poly = Polygon {
-                    points: other_points,
-                    .. self.clone()
-                };
-                (Some(poly), None)
+        self.split_impl(
+            (first, cuts[first].unwrap()),
+            (second, cuts[second].unwrap()),
+        )
+    }
+
+    /// Split the polygon along the specified `Line`, with a normal to the split line provided.
+    /// This is useful when called by the plane splitter, since the other plane's normal
+    /// forms the side direction here, and figuring out the actual line of split isn't needed.
+    /// Will do nothing if the line doesn't belong to the polygon plane.
+    pub fn split_with_normal(
+        &mut self, line: &Line<T, U>, normal: &TypedVector3D<T, U>,
+    ) -> (Option<Self>, Option<Self>) {
+        debug!("\tSplitting with normal");
+        // figure out which side of the split does each point belong to
+        let mut sides = [T::zero(); 4];
+        let (mut cut_positive, mut cut_negative) = (None, None);
+        for (side, point) in sides.iter_mut().zip(&self.points) {
+            *side = normal.dot(*point - line.origin);
+        }
+        // compute the edge intersection points
+        for (i, ((&side1, point1), (&side0, point0))) in sides[1..]
+            .iter()
+            .chain(iter::once(&sides[0]))
+            .zip(self.points[1..].iter().chain(iter::once(&self.points[0])))
+            .zip(sides.iter().zip(&self.points))
+            .enumerate()
+        {
+            // figure out if an edge between 0 and 1 needs to be cut
+            let cut = if side0 < T::zero() && side1 >= T::zero() {
+                &mut cut_positive
+            } else if side0 > T::zero() && side1 <= T::zero() {
+                &mut cut_negative
+            } else {
+                continue;
+            };
+            // compute the cut point
+            if let Some(t) = line.intersect_edge(*point0 .. *point1) {
+                //Note: it is expected that T is in [0, 1] range, but it can go outside of it
+                // by an epsilon due to computation inefficiencies, and it's fine.
+                debug_assert!(t >= -T::epsilon() && t <= T::one() + T::epsilon());
+                debug_assert_eq!(*cut, None);
+                let point = *point0 + (*point1 - *point0) * t;
+                *cut = Some((i, point));
             }
-            3 => {
-                let xpoints = [
-                    self.points[first+1],
-                    self.points[first+2],
-                    self.points[first+3],
-                    b];
-                let ypoints = [a, self.points[first+1], b, b];
-                self.points = [self.points[first], a, b, b];
-                let poly1 = Polygon {
-                    points: xpoints,
-                    .. self.clone()
-                };
-                let poly2 = Polygon {
-                    points: ypoints,
-                    .. self.clone()
-                };
-                (Some(poly1), Some(poly2))
+        }
+        // form new polygons
+        if let (Some(first), Some(mut second)) = (cut_positive, cut_negative) {
+            if second.0 < first.0 {
+                second.0 += 4;
             }
-            1 => {
-                let xpoints = [
-                    b,
-                    self.points[(first+2) % 4],
-                    self.points[(first+3) % 4],
-                    self.points[first]
-                    ];
-                let ypoints = [self.points[first], a, b, b];
-                self.points = [a, self.points[first+1], b, b];
-                let poly1 = Polygon {
-                    points: xpoints,
-                    .. self.clone()
-                };
-                let poly2 = Polygon {
-                    points: ypoints,
-                    .. self.clone()
-                };
-                (Some(poly1), Some(poly2))
-            }
-            _ => panic!("Unexpected indices {} {}", first, second),
+            self.split_impl(first, second)
+        } else {
+            (None, None)
         }
     }
 }
