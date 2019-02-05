@@ -3062,12 +3062,27 @@ RefPtr<GenericPromise> MediaInputPort::BlockSourceTrackId(
 
   MozPromiseHolder<GenericPromise> holder;
   RefPtr<GenericPromise> p = holder.Ensure(__func__);
-  nsCOMPtr<nsIRunnable> runnable =
-      NewRunnableFrom([h = std::move(holder)]() mutable {
-        MOZ_ASSERT(NS_IsMainThread());
-        h.Resolve(true, __func__);
-        return NS_OK;
-      });
+
+  class HolderRunnable : public Runnable {
+   public:
+    explicit HolderRunnable(MozPromiseHolder<GenericPromise>&& aHolder)
+        : Runnable("MediaInputPort::HolderRunnable"),
+          mHolder(std::move(aHolder)) {}
+
+    NS_IMETHOD Run() override {
+      MOZ_ASSERT(NS_IsMainThread());
+      mHolder.Resolve(true, __func__);
+      return NS_OK;
+    }
+
+   private:
+    ~HolderRunnable() {
+      mHolder.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
+    }
+    MozPromiseHolder<GenericPromise> mHolder;
+  };
+
+  auto runnable = MakeRefPtr<HolderRunnable>(std::move(holder));
   GraphImpl()->AppendMessage(
       MakeUnique<Message>(this, aTrackId, aBlockingMode, runnable.forget()));
   return p;
