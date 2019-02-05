@@ -24,11 +24,11 @@ import os
 import re
 
 import jsone
-import yaml
 from slugid import nice as slugid
 from .task import Task
 from .graph import Graph
 from .taskgraph import TaskGraph
+from .util.yaml import load_yaml
 
 here = os.path.abspath(os.path.dirname(__file__))
 logger = logging.getLogger(__name__)
@@ -193,9 +193,7 @@ class apply_jsone_templates(object):
                     'target_tasks': self.target_tasks,
                 }
 
-                template_path = os.path.join(self.template_dir, template + '.yml')
-                with open(template_path) as f:
-                    template = yaml.safe_load(f)
+                template = load_yaml(self.template_dir, template + '.yml')
                 result = jsone.render(template, context) or {}
                 for attr in ('task', 'attributes'):
                     if attr in result:

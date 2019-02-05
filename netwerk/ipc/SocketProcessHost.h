@@ -40,9 +40,7 @@ class SocketProcessHost final : public mozilla::ipc::GeckoChildProcessHost {
     virtual ~Listener() = default;
   };
 
- public:
   explicit SocketProcessHost(Listener* listener);
-  ~SocketProcessHost();
 
   // Launch the socket process asynchronously.
   // The OnProcessLaunchComplete listener callback will be invoked
@@ -75,6 +73,8 @@ class SocketProcessHost final : public mozilla::ipc::GeckoChildProcessHost {
   void OnChannelError() override;
 
  private:
+  ~SocketProcessHost();
+
   // Called on the main thread.
   void OnChannelConnectedTask();
   void OnChannelErrorTask();
@@ -87,7 +87,6 @@ class SocketProcessHost final : public mozilla::ipc::GeckoChildProcessHost {
 
   void DestroyProcess();
 
- private:
   DISALLOW_COPY_AND_ASSIGN(SocketProcessHost);
 
   RefPtr<Listener> mListener;

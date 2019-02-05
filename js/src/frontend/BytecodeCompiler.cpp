@@ -290,14 +290,14 @@ class MOZ_STACK_CLASS frontend::StandaloneFunctionCompiler final
     return createSourceAndParser(info, ParseGoal::Script, parameterListEnd);
   }
 
-  CodeNode* parse(StandaloneFunctionInfo& info, HandleFunction fun,
-                  HandleScope enclosingScope, GeneratorKind generatorKind,
-                  FunctionAsyncKind asyncKind,
-                  const Maybe<uint32_t>& parameterListEnd);
+  FunctionNode* parse(StandaloneFunctionInfo& info, HandleFunction fun,
+                      HandleScope enclosingScope, GeneratorKind generatorKind,
+                      FunctionAsyncKind asyncKind,
+                      const Maybe<uint32_t>& parameterListEnd);
 
   MOZ_MUST_USE bool compile(MutableHandleFunction fun,
                             StandaloneFunctionInfo& info,
-                            CodeNode* parsedFunction);
+                            FunctionNode* parsedFunction);
 
  private:
   // Create a script for a function with the given toString offsets in source
@@ -610,7 +610,7 @@ ModuleObject* frontend::ModuleCompiler<Unit>::compile(ModuleInfo& info) {
   if (!emplaceEmitter(info, emitter, &modulesc)) {
     return nullptr;
   }
-  if (!emitter->emitScript(pn->as<CodeNode>().body())) {
+  if (!emitter->emitScript(pn->as<ModuleNode>().body())) {
     return nullptr;
   }
 
@@ -639,7 +639,7 @@ ModuleObject* frontend::ModuleCompiler<Unit>::compile(ModuleInfo& info) {
 // event handler attribute in an HTML <INPUT> tag, or in a Function()
 // constructor.
 template <typename Unit>
-CodeNode* frontend::StandaloneFunctionCompiler<Unit>::parse(
+FunctionNode* frontend::StandaloneFunctionCompiler<Unit>::parse(
     StandaloneFunctionInfo& info, HandleFunction fun,
     HandleScope enclosingScope, GeneratorKind generatorKind,
     FunctionAsyncKind asyncKind, const Maybe<uint32_t>& parameterListEnd) {
@@ -655,7 +655,7 @@ CodeNode* frontend::StandaloneFunctionCompiler<Unit>::parse(
   // function should have been parsed, we backup and reparse with the new set
   // of directives.
 
-  ParseNode* fn;
+  FunctionNode* fn;
   do {
     Directives newDirectives = info.directives;
     fn = parser->standaloneFunction(fun, enclosingScope, parameterListEnd,
@@ -666,14 +666,14 @@ CodeNode* frontend::StandaloneFunctionCompiler<Unit>::parse(
     }
   } while (!fn);
 
-  return &fn->as<CodeNode>();
+  return fn;
 }
 
 // Compile a standalone JS function.
 template <typename Unit>
 bool frontend::StandaloneFunctionCompiler<Unit>::compile(
     MutableHandleFunction fun, StandaloneFunctionInfo& info,
-    CodeNode* parsedFunction) {
+    FunctionNode* parsedFunction) {
   FunctionBox* funbox = parsedFunction->funbox();
   if (funbox->function()->isInterpreted()) {
     MOZ_ASSERT(fun == funbox->function());
@@ -966,7 +966,7 @@ static bool CompileLazyFunctionImpl(JSContext* cx, Handle<LazyScript*> lazy,
     return false;
   }
 
-  ParseNode* pn =
+  FunctionNode* pn =
       parser.standaloneLazyFunction(fun, lazy->toStringStart(), lazy->strict(),
                                     lazy->generatorKind(), lazy->asyncKind());
   if (!pn) {
@@ -988,15 +988,13 @@ static bool CompileLazyFunctionImpl(JSContext* cx, Handle<LazyScript*> lazy,
     script->setHasBeenCloned();
   }
 
-  BytecodeEmitter bce(/* parent = */ nullptr, &parser,
-                      pn->as<CodeNode>().funbox(), script, lazy, pn->pn_pos,
-                      BytecodeEmitter::LazyFunction);
+  BytecodeEmitter bce(/* parent = */ nullptr, &parser, pn->funbox(), script,
+                      lazy, pn->pn_pos, BytecodeEmitter::LazyFunction);
   if (!bce.init()) {
     return false;
   }
 
-  if (!bce.emitFunctionScript(&pn->as<CodeNode>(),
-                              BytecodeEmitter::TopLevelFunction::Yes)) {
+  if (!bce.emitFunctionScript(pn, BytecodeEmitter::TopLevelFunction::Yes)) {
     return false;
   }
 
@@ -1069,17 +1067,16 @@ bool frontend::CompileLazyBinASTFunction(JSContext* cx,
     return false;
   }
 
-  ParseNode* pn = parsed.unwrap();
+  FunctionNode* pn = parsed.unwrap();
 
-  BytecodeEmitter bce(nullptr, &parser, pn->as<CodeNode>().funbox(), script,
-                      lazy, pn->pn_pos, BytecodeEmitter::LazyFunction);
+  BytecodeEmitter bce(nullptr, &parser, pn->funbox(), script, lazy, pn->pn_pos,
+                      BytecodeEmitter::LazyFunction);
 
   if (!bce.init()) {
     return false;
   }
 
-  if (!bce.emitFunctionScript(&pn->as<CodeNode>(),
-                              BytecodeEmitter::TopLevelFunction::Yes)) {
+  if (!bce.emitFunctionScript(pn, BytecodeEmitter::TopLevelFunction::Yes)) {
     return false;
   }
 
@@ -1109,7 +1106,7 @@ bool frontend::CompileStandaloneFunction(
     scope = &cx->global()->emptyGlobalScope();
   }
 
-  CodeNode* parsedFunction =
+  FunctionNode* parsedFunction =
       compiler.parse(info, fun, scope, GeneratorKind::NotGenerator,
                      FunctionAsyncKind::SyncFunction, parameterListEnd);
   if (!parsedFunction || !compiler.compile(fun, info, parsedFunction)) {
@@ -1134,7 +1131,7 @@ bool frontend::CompileStandaloneGenerator(
   }
 
   RootedScope emptyGlobalScope(cx, &cx->global()->emptyGlobalScope());
-  CodeNode* parsedFunction =
+  FunctionNode* parsedFunction =
       compiler.parse(info, fun, emptyGlobalScope, GeneratorKind::Generator,
                      FunctionAsyncKind::SyncFunction, parameterListEnd);
   if (!parsedFunction || !compiler.compile(fun, info, parsedFunction)) {
@@ -1159,7 +1156,7 @@ bool frontend::CompileStandaloneAsyncFunction(
   }
 
   RootedScope emptyGlobalScope(cx, &cx->global()->emptyGlobalScope());
-  CodeNode* parsedFunction =
+  FunctionNode* parsedFunction =
       compiler.parse(info, fun, emptyGlobalScope, GeneratorKind::NotGenerator,
                      FunctionAsyncKind::AsyncFunction, parameterListEnd);
   if (!parsedFunction || !compiler.compile(fun, info, parsedFunction)) {
@@ -1184,7 +1181,7 @@ bool frontend::CompileStandaloneAsyncGenerator(
   }
 
   RootedScope emptyGlobalScope(cx, &cx->global()->emptyGlobalScope());
-  CodeNode* parsedFunction =
+  FunctionNode* parsedFunction =
       compiler.parse(info, fun, emptyGlobalScope, GeneratorKind::Generator,
                      FunctionAsyncKind::AsyncFunction, parameterListEnd);
   if (!parsedFunction || !compiler.compile(fun, info, parsedFunction)) {

@@ -35,6 +35,7 @@
 #include "mozilla/Unused.h"
 
 #include <algorithm>
+#include <memory>
 #include <utility>
 
 #include "jsapi.h"
@@ -758,6 +759,9 @@ bool SCInput::readArray(T* p, size_t nelems) {
   }
 
   if (!point.readBytes(reinterpret_cast<char*>(p), size.value())) {
+    // To avoid any way in which uninitialized data could escape, zero the array
+    // if filling it failed.
+    std::uninitialized_fill_n(p, nelems, 0);
     return false;
   }
 

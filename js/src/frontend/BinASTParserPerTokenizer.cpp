@@ -134,7 +134,7 @@ JS::Result<ParseNode*> BinASTParserPerTokenizer<Tok>::parseAux(
 }
 
 template <typename Tok>
-JS::Result<ParseNode*> BinASTParserPerTokenizer<Tok>::parseLazyFunction(
+JS::Result<FunctionNode*> BinASTParserPerTokenizer<Tok>::parseLazyFunction(
     ScriptSource* scriptSource, const size_t firstOffset) {
   MOZ_ASSERT(lazyScript_);
   MOZ_ASSERT(scriptSource->length() > firstOffset);
@@ -260,16 +260,43 @@ JS::Result<FunctionBox*> BinASTParserPerTokenizer<Tok>::buildFunctionBox(
   return funbox;
 }
 
+FunctionSyntaxKind BinKindToFunctionSyntaxKind(const BinKind kind) {
+  // FIXME: this doesn't cover FunctionSyntaxKind::ClassConstructor and
+  // FunctionSyntaxKind::DerivedClassConstructor.
+  switch (kind) {
+    case BinKind::EagerFunctionDeclaration:
+    case BinKind::LazyFunctionDeclaration:
+      return FunctionSyntaxKind::Statement;
+    case BinKind::EagerFunctionExpression:
+    case BinKind::LazyFunctionExpression:
+      return FunctionSyntaxKind::Expression;
+    case BinKind::EagerArrowExpressionWithFunctionBody:
+    case BinKind::LazyArrowExpressionWithFunctionBody:
+    case BinKind::EagerArrowExpressionWithExpression:
+    case BinKind::LazyArrowExpressionWithExpression:
+      return FunctionSyntaxKind::Arrow;
+    case BinKind::EagerMethod:
+    case BinKind::LazyMethod:
+      return FunctionSyntaxKind::Method;
+    case BinKind::EagerGetter:
+    case BinKind::LazyGetter:
+      return FunctionSyntaxKind::Getter;
+    case BinKind::EagerSetter:
+    case BinKind::LazySetter:
+      return FunctionSyntaxKind::Setter;
+    default:
+      MOZ_CRASH("Invalid/ kind");
+  }
+}
+
 template <typename Tok>
-JS::Result<CodeNode*> BinASTParserPerTokenizer<Tok>::makeEmptyFunctionNode(
+JS::Result<FunctionNode*> BinASTParserPerTokenizer<Tok>::makeEmptyFunctionNode(
     const size_t start, const BinKind kind, FunctionBox* funbox) {
   // LazyScript compilation requires basically none of the fields filled out.
   TokenPos pos = tokenizer_->pos(start);
-  bool isStatement = kind == BinKind::EagerFunctionDeclaration ||
-                     kind == BinKind::LazyFunctionDeclaration;
+  FunctionSyntaxKind syntaxKind = BinKindToFunctionSyntaxKind(kind);
 
-  BINJS_TRY_DECL(result, isStatement ? factory_.newFunctionStatement(pos)
-                                     : factory_.newFunctionExpression(pos));
+  BINJS_TRY_DECL(result, factory_.newFunction(syntaxKind, pos));
 
   factory_.setFunctionBox(result, funbox);
 
@@ -277,7 +304,7 @@ JS::Result<CodeNode*> BinASTParserPerTokenizer<Tok>::makeEmptyFunctionNode(
 }
 
 template <typename Tok>
-JS::Result<ParseNode*> BinASTParserPerTokenizer<Tok>::buildFunction(
+JS::Result<FunctionNode*> BinASTParserPerTokenizer<Tok>::buildFunction(
     const size_t start, const BinKind kind, ParseNode* name, ListNode* params,
     ParseNode* body, FunctionBox* funbox) {
   // Set the argument count for building argument packets. Function.length is

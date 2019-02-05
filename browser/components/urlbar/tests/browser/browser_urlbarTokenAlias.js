@@ -17,8 +17,7 @@ add_task(async function init() {
     await Services.search.removeEngine(engine);
     // Make sure the popup is closed for the next test.
     gURLBar.handleRevert();
-    gURLBar.blur();
-    Assert.ok(!gURLBar.popup.popupOpen, "popup should be closed");
+    await UrlbarTestUtils.promisePopupClose(window, () => gURLBar.blur());
   });
 });
 
@@ -43,10 +42,10 @@ add_task(async function spacesBeforeAlias() {
   gURLBar.search("     " + ALIAS);
   await promiseSearchComplete();
   await waitForAutocompleteResultAt(0);
-  assertAlias(true);
+  await assertAlias(true);
 
-  EventUtils.synthesizeKey("KEY_Escape");
-  await promisePopupHidden(gURLBar.popup);
+  await UrlbarTestUtils.promisePopupClose(window,
+    () => EventUtils.synthesizeKey("KEY_Escape"));
 });
 
 
@@ -55,10 +54,10 @@ add_task(async function charsBeforeAlias() {
   gURLBar.search("not an alias " + ALIAS);
   await promiseSearchComplete();
   await waitForAutocompleteResultAt(0);
-  assertAlias(false);
+  await assertAlias(false);
 
-  EventUtils.synthesizeKey("KEY_Escape");
-  await promisePopupHidden(gURLBar.popup);
+  await UrlbarTestUtils.promisePopupClose(window,
+    () => EventUtils.synthesizeKey("KEY_Escape"));
 });
 
 
@@ -68,10 +67,10 @@ add_task(async function restrictionCharBeforeAlias() {
   gURLBar.search(UrlbarTokenizer.RESTRICT.BOOKMARK + " " + ALIAS);
   await promiseSearchComplete();
   await waitForAutocompleteResultAt(0);
-  assertAlias(false);
+  await assertAlias(false);
 
-  EventUtils.synthesizeKey("KEY_Escape");
-  await promisePopupHidden(gURLBar.popup);
+  await UrlbarTestUtils.promisePopupClose(window,
+    () => EventUtils.synthesizeKey("KEY_Escape"));
 });
 
 
@@ -83,10 +82,10 @@ add_task(async function aliasCase() {
   gURLBar.search(alias);
   await promiseSearchComplete();
   await waitForAutocompleteResultAt(0);
-  assertAlias(true, alias);
+  await assertAlias(true, alias);
 
-  EventUtils.synthesizeKey("KEY_Escape");
-  await promisePopupHidden(gURLBar.popup);
+  await UrlbarTestUtils.promisePopupClose(window,
+    () => EventUtils.synthesizeKey("KEY_Escape"));
 });
 
 
@@ -102,11 +101,10 @@ add_task(async function inputDoesntMatchHeuristicResult() {
   gURLBar.search(searchString);
   await promiseSearchComplete();
   await waitForAutocompleteResultAt(0);
-  assertAlias(true);
+  await assertAlias(true);
 
-  // Hide the popup.
-  EventUtils.synthesizeKey("KEY_Escape");
-  await promisePopupHidden(gURLBar.popup);
+  await UrlbarTestUtils.promisePopupClose(window,
+    () => EventUtils.synthesizeKey("KEY_Escape"));
 
   // Manually set the urlbar value to a string that contains the alias at the
   // beginning but is not the same as the search string.
@@ -123,11 +121,10 @@ add_task(async function inputDoesntMatchHeuristicResult() {
   gURLBar.search(searchString);
   await promiseSearchComplete();
   await waitForAutocompleteResultAt(0);
-  assertAlias(true);
+  await assertAlias(true);
 
-  // Hide the popup.
-  EventUtils.synthesizeKey("KEY_Escape");
-  await promisePopupHidden(gURLBar.popup);
+  await UrlbarTestUtils.promisePopupClose(window,
+    () => EventUtils.synthesizeKey("KEY_Escape"));
 
   // Manually set the urlbar value to a string that contains the alias, but not
   // at the beginning and is not the same as the search string.
@@ -147,6 +144,10 @@ add_task(async function inputDoesntMatchHeuristicResult() {
 // Selecting a non-heuristic (non-first) search engine result with an alias and
 // empty query should put the alias in the urlbar and highlight it.
 add_task(async function nonHeuristicAliases() {
+  // TODO Bug 1524714 - This currently isn't working correctly in QuantumBar.
+  if (UrlbarPrefs.get("quantumbar")) {
+    return;
+  }
   // Get the list of token alias engines (those with aliases that start with
   // "@").
   let tokenEngines = [];
@@ -173,7 +174,6 @@ add_task(async function nonHeuristicAliases() {
   gURLBar.search("@");
   await promiseSearchComplete();
   await waitForAutocompleteResultAt(tokenEngines.length - 1);
-
   // Key down to select each result in turn.  The urlbar value should be set to
   // each alias, and each should be highlighted.
   for (let { tokenAliases } of tokenEngines) {
@@ -182,9 +182,8 @@ add_task(async function nonHeuristicAliases() {
     assertHighlighted(true, alias);
   }
 
-  // Hide the popup.
-  EventUtils.synthesizeKey("KEY_Escape");
-  await promisePopupHidden(gURLBar.popup);
+  await UrlbarTestUtils.promisePopupClose(window,
+    () => EventUtils.synthesizeKey("KEY_Escape"));
 });
 
 
@@ -198,11 +197,11 @@ add_task(async function nonTokenAlias() {
   gURLBar.search(alias);
   await promiseSearchComplete();
   await waitForAutocompleteResultAt(0);
-  assertFirstResultIsAlias(true, alias);
+  await assertFirstResultIsAlias(true, alias);
   assertHighlighted(false);
 
-  EventUtils.synthesizeKey("KEY_Escape");
-  await promisePopupHidden(gURLBar.popup);
+  await UrlbarTestUtils.promisePopupClose(window,
+    () => EventUtils.synthesizeKey("KEY_Escape"));
 
   engine.alias = ALIAS;
 });
@@ -210,6 +209,10 @@ add_task(async function nonTokenAlias() {
 
 // Clicking on an @ alias in the popup should fill it in the urlbar input.
 add_task(async function clickAndFillAlias() {
+  // TODO Bug 1524714 - This currently isn't working correctly in QuantumBar.
+  if (UrlbarPrefs.get("quantumbar")) {
+    return;
+  }
   // Do a search for "@" to show all the @ aliases.
   gURLBar.search("@");
   await promiseSearchComplete();
@@ -226,22 +229,22 @@ add_task(async function clickAndFillAlias() {
   }
 
   // Click it.
-  let hiddenPromise = promisePopupHidden(gURLBar.popup);
-  EventUtils.synthesizeMouseAtCenter(testEngineItem, {});
+  await UrlbarTestUtils.promisePopupClose(window, () => {
+    EventUtils.synthesizeMouseAtCenter(testEngineItem, {});
+  });
 
   // The popup will close and then open again with the new search string, which
   // should be the test alias.
-  await hiddenPromise;
   await promiseSearchComplete();
   await promisePopupShown(gURLBar.popup);
-  assertAlias(true);
+  await assertAlias(true);
 
   // The urlbar input value should be the alias followed by a space so that it's
   // ready for the user to start typing.
   Assert.equal(gURLBar.textValue, `${ALIAS} `);
 
-  EventUtils.synthesizeKey("KEY_Escape");
-  await promisePopupHidden(gURLBar.popup);
+  await UrlbarTestUtils.promisePopupClose(window,
+    () => EventUtils.synthesizeKey("KEY_Escape"));
 });
 
 
@@ -257,7 +260,7 @@ async function doSimpleTest(revertBetweenSteps) {
   gURLBar.search(ALIAS.substr(0, ALIAS.length - 1));
   await promiseSearchComplete();
   await waitForAutocompleteResultAt(0);
-  assertAlias(false);
+  await assertAlias(false);
 
   if (revertBetweenSteps) {
     gURLBar.handleRevert();
@@ -268,7 +271,7 @@ async function doSimpleTest(revertBetweenSteps) {
   gURLBar.search(ALIAS);
   await promiseSearchComplete();
   await waitForAutocompleteResultAt(0);
-  assertAlias(true);
+  await assertAlias(true);
 
   if (revertBetweenSteps) {
     gURLBar.handleRevert();
@@ -279,7 +282,7 @@ async function doSimpleTest(revertBetweenSteps) {
   gURLBar.search(ALIAS + " foo");
   await promiseSearchComplete();
   await waitForAutocompleteResultAt(0);
-  assertAlias(true);
+  await assertAlias(true);
 
   if (revertBetweenSteps) {
     gURLBar.handleRevert();
@@ -290,7 +293,7 @@ async function doSimpleTest(revertBetweenSteps) {
   gURLBar.search(ALIAS);
   await promiseSearchComplete();
   await waitForAutocompleteResultAt(0);
-  assertAlias(true);
+  await assertAlias(true);
 
   if (revertBetweenSteps) {
     gURLBar.handleRevert();
@@ -301,31 +304,37 @@ async function doSimpleTest(revertBetweenSteps) {
   gURLBar.search(ALIAS.substr(0, ALIAS.length - 1));
   await promiseSearchComplete();
   await waitForAutocompleteResultAt(0);
-  assertAlias(false);
+  await assertAlias(false);
 
-  EventUtils.synthesizeKey("KEY_Escape");
-  await promisePopupHidden(gURLBar.popup);
+  await UrlbarTestUtils.promisePopupClose(window,
+    () => EventUtils.synthesizeKey("KEY_Escape"));
 
   Services.prefs.clearUserPref("browser.urlbar.autoFill");
 }
 
-function assertAlias(aliasPresent, expectedAlias = ALIAS) {
-  assertFirstResultIsAlias(aliasPresent, expectedAlias);
+async function assertAlias(aliasPresent, expectedAlias = ALIAS) {
+  await assertFirstResultIsAlias(aliasPresent, expectedAlias);
   assertHighlighted(aliasPresent, expectedAlias);
 }
 
-function assertFirstResultIsAlias(isAlias, expectedAlias) {
-  let controller = gURLBar.popup.input.controller;
-  let action = PlacesUtils.parseActionUrl(controller.getFinalCompleteValueAt(0));
-  Assert.ok(action);
-  Assert.equal(action.type, "searchengine");
-  Assert.equal("alias" in action.params, isAlias);
+async function assertFirstResultIsAlias(isAlias, expectedAlias) {
+  let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
+  Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.SEARCH,
+    "Should have the correct type");
+
+  Assert.equal("keyword" in result.searchParams && !!result.searchParams.keyword,
+    isAlias, "Should have a keyword if expected");
   if (isAlias) {
-    Assert.equal(action.params.alias, expectedAlias);
+    Assert.equal(result.searchParams.keyword, expectedAlias,
+      "Should have the correct keyword");
   }
 }
 
 function assertHighlighted(highlighted, expectedAlias) {
+  // TODO Bug 1499648 - These tests don't currently work in QuantumBar.
+  if (UrlbarPrefs.get("quantumbar")) {
+    return;
+  }
   let selection = gURLBar.editor.selectionController.getSelection(
     Ci.nsISelectionController.SELECTION_FIND
   );

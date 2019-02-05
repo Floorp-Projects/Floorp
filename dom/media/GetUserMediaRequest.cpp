@@ -26,13 +26,14 @@ GetUserMediaRequest::GetUserMediaRequest(
 
 GetUserMediaRequest::GetUserMediaRequest(nsPIDOMWindowInner* aInnerWindow,
                                          const nsAString& aRawId,
-                                         const nsAString& aMediaSource)
+                                         const nsAString& aMediaSource,
+                                         bool aIsHandlingUserInput)
     : mInnerWindowID(0),
       mOuterWindowID(0),
       mRawID(aRawId),
       mMediaSource(aMediaSource),
       mIsSecure(false),
-      mIsHandlingUserInput(false) {
+      mIsHandlingUserInput(aIsHandlingUserInput) {
   if (aInnerWindow && aInnerWindow->GetOuterWindow()) {
     mOuterWindowID = aInnerWindow->GetOuterWindow()->WindowID();
   }

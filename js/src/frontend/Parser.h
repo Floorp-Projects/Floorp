@@ -510,7 +510,7 @@ class MOZ_STACK_CLASS PerHandlerParser : public ParserBase {
 
   const char* nameIsArgumentsOrEval(Node node);
 
-  bool noteDestructuredPositionalFormalParameter(CodeNodeType funNode,
+  bool noteDestructuredPositionalFormalParameter(FunctionNodeType funNode,
                                                  Node destruct);
 
   bool noteUsedName(HandlePropertyName name) {
@@ -590,7 +590,7 @@ class MOZ_STACK_CLASS PerHandlerParser : public ParserBase {
     return handler.newPropertyAccess(expr, key);
   }
 
-  FunctionBox* newFunctionBox(CodeNodeType funNode, JSFunction* fun,
+  FunctionBox* newFunctionBox(FunctionNodeType funNode, JSFunction* fun,
                               uint32_t toStringStart, Directives directives,
                               GeneratorKind generatorKind,
                               FunctionAsyncKind asyncKind);
@@ -1042,13 +1042,13 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
                                       ListNodeType nodeList, TokenKind* ttp);
 
   inline bool trySyntaxParseInnerFunction(
-      CodeNodeType* funNode, HandleFunction fun, uint32_t toStringStart,
+      FunctionNodeType* funNode, HandleFunction fun, uint32_t toStringStart,
       InHandling inHandling, YieldHandling yieldHandling,
       FunctionSyntaxKind kind, GeneratorKind generatorKind,
       FunctionAsyncKind asyncKind, bool tryAnnexB,
       Directives inheritedDirectives, Directives* newDirectives);
 
-  inline bool skipLazyInnerFunction(CodeNodeType funNode,
+  inline bool skipLazyInnerFunction(FunctionNodeType funNode,
                                     uint32_t toStringStart,
                                     FunctionSyntaxKind kind, bool tryAnnexB);
 
@@ -1059,16 +1059,16 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
 
   // Parse an inner function given an enclosing ParseContext and a
   // FunctionBox for the inner function.
-  MOZ_MUST_USE CodeNodeType innerFunctionForFunctionBox(
-      CodeNodeType funNode, ParseContext* outerpc, FunctionBox* funbox,
+  MOZ_MUST_USE FunctionNodeType innerFunctionForFunctionBox(
+      FunctionNodeType funNode, ParseContext* outerpc, FunctionBox* funbox,
       InHandling inHandling, YieldHandling yieldHandling,
       FunctionSyntaxKind kind, Directives* newDirectives);
 
   // Parse a function's formal parameters and its body assuming its function
   // ParseContext is already on the stack.
   bool functionFormalParametersAndBody(
-      InHandling inHandling, YieldHandling yieldHandling, CodeNodeType* funNode,
-      FunctionSyntaxKind kind,
+      InHandling inHandling, YieldHandling yieldHandling,
+      FunctionNodeType* funNode, FunctionSyntaxKind kind,
       const mozilla::Maybe<uint32_t>& parameterListEnd = mozilla::Nothing(),
       bool isStandaloneFunction = false);
 
@@ -1081,12 +1081,13 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
    *
    * Each returns a parse node tree or null on error.
    */
-  CodeNodeType functionStmt(
+  FunctionNodeType functionStmt(
       uint32_t toStringStart, YieldHandling yieldHandling,
       DefaultHandling defaultHandling,
       FunctionAsyncKind asyncKind = FunctionAsyncKind::SyncFunction);
-  CodeNodeType functionExpr(uint32_t toStringStart, InvokedPrediction invoked,
-                            FunctionAsyncKind asyncKind);
+  FunctionNodeType functionExpr(uint32_t toStringStart,
+                                InvokedPrediction invoked,
+                                FunctionAsyncKind asyncKind);
 
   Node statement(YieldHandling yieldHandling);
   bool maybeParseDirective(ListNodeType list, Node pn, bool* cont);
@@ -1245,22 +1246,20 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
 
   BinaryNodeType importExpr(YieldHandling yieldHandling, bool allowCallSyntax);
 
-  CodeNodeType methodDefinition(uint32_t toStringStart, PropertyType propType,
-                                HandleAtom funName);
+  FunctionNodeType methodDefinition(uint32_t toStringStart,
+                                    PropertyType propType, HandleAtom funName);
 
   /*
    * Additional JS parsers.
    */
   bool functionArguments(YieldHandling yieldHandling, FunctionSyntaxKind kind,
-                         CodeNodeType funNode);
+                         FunctionNodeType funNode);
 
-  CodeNodeType functionDefinition(CodeNodeType funNode, uint32_t toStringStart,
-                                  InHandling inHandling,
-                                  YieldHandling yieldHandling, HandleAtom name,
-                                  FunctionSyntaxKind kind,
-                                  GeneratorKind generatorKind,
-                                  FunctionAsyncKind asyncKind,
-                                  bool tryAnnexB = false);
+  FunctionNodeType functionDefinition(
+      FunctionNodeType funNode, uint32_t toStringStart, InHandling inHandling,
+      YieldHandling yieldHandling, HandleAtom name, FunctionSyntaxKind kind,
+      GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
+      bool tryAnnexB = false);
 
   // Parse a function body.  Pass StatementListBody if the body is a list of
   // statements; pass ExpressionBody if the body is a single expression.
@@ -1288,7 +1287,7 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
   inline bool checkExportedNamesForObjectBinding(ListNodeType obj);
   inline bool checkExportedNamesForDeclaration(Node node);
   inline bool checkExportedNamesForDeclarationList(ListNodeType node);
-  inline bool checkExportedNameForFunction(CodeNodeType funNode);
+  inline bool checkExportedNameForFunction(FunctionNodeType funNode);
   inline bool checkExportedNameForClass(ClassNodeType classNode);
   inline bool checkExportedNameForClause(NameNodeType nameNode);
 
@@ -1327,7 +1326,7 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
 
   void reportRedeclaration(HandlePropertyName name, DeclarationKind prevKind,
                            TokenPos pos, uint32_t prevPos);
-  bool notePositionalFormalParameter(CodeNodeType funNode,
+  bool notePositionalFormalParameter(FunctionNodeType funNode,
                                      HandlePropertyName name, uint32_t beginPos,
                                      bool disallowDuplicateParams,
                                      bool* duplicatedParam);
@@ -1402,8 +1401,8 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
 
   ListNodeType statementList(YieldHandling yieldHandling);
 
-  MOZ_MUST_USE CodeNodeType innerFunction(
-      CodeNodeType funNode, ParseContext* outerpc, HandleFunction fun,
+  MOZ_MUST_USE FunctionNodeType innerFunction(
+      FunctionNodeType funNode, ParseContext* outerpc, HandleFunction fun,
       uint32_t toStringStart, InHandling inHandling,
       YieldHandling yieldHandling, FunctionSyntaxKind kind,
       GeneratorKind generatorKind, FunctionAsyncKind asyncKind, bool tryAnnexB,
@@ -1536,7 +1535,7 @@ class MOZ_STACK_CLASS Parser<SyntaxParseHandler, Unit> final
 #endif
 
   // Parse a module.
-  CodeNodeType moduleBody(ModuleSharedContext* modulesc);
+  ModuleNodeType moduleBody(ModuleSharedContext* modulesc);
 
   inline BinaryNodeType importDeclaration();
   inline bool checkLocalExportNames(ListNodeType node);
@@ -1545,18 +1544,18 @@ class MOZ_STACK_CLASS Parser<SyntaxParseHandler, Unit> final
   inline bool checkExportedNamesForObjectBinding(ListNodeType obj);
   inline bool checkExportedNamesForDeclaration(Node node);
   inline bool checkExportedNamesForDeclarationList(ListNodeType node);
-  inline bool checkExportedNameForFunction(CodeNodeType funNode);
+  inline bool checkExportedNameForFunction(FunctionNodeType funNode);
   inline bool checkExportedNameForClass(ClassNodeType classNode);
   inline bool checkExportedNameForClause(NameNodeType nameNode);
 
   bool trySyntaxParseInnerFunction(
-      CodeNodeType* funNode, HandleFunction fun, uint32_t toStringStart,
+      FunctionNodeType* funNode, HandleFunction fun, uint32_t toStringStart,
       InHandling inHandling, YieldHandling yieldHandling,
       FunctionSyntaxKind kind, GeneratorKind generatorKind,
       FunctionAsyncKind asyncKind, bool tryAnnexB,
       Directives inheritedDirectives, Directives* newDirectives);
 
-  bool skipLazyInnerFunction(CodeNodeType funNode, uint32_t toStringStart,
+  bool skipLazyInnerFunction(FunctionNodeType funNode, uint32_t toStringStart,
                              FunctionSyntaxKind kind, bool tryAnnexB);
 
   bool asmJS(ListNodeType list);
@@ -1691,7 +1690,7 @@ class MOZ_STACK_CLASS Parser<FullParseHandler, Unit> final
 #endif
 
   // Parse a module.
-  CodeNodeType moduleBody(ModuleSharedContext* modulesc);
+  ModuleNodeType moduleBody(ModuleSharedContext* modulesc);
 
   BinaryNodeType importDeclaration();
   bool checkLocalExportNames(ListNodeType node);
@@ -1700,18 +1699,18 @@ class MOZ_STACK_CLASS Parser<FullParseHandler, Unit> final
   bool checkExportedNamesForObjectBinding(ListNodeType obj);
   bool checkExportedNamesForDeclaration(Node node);
   bool checkExportedNamesForDeclarationList(ListNodeType node);
-  bool checkExportedNameForFunction(CodeNodeType funNode);
+  bool checkExportedNameForFunction(FunctionNodeType funNode);
   bool checkExportedNameForClass(ClassNodeType classNode);
   inline bool checkExportedNameForClause(NameNodeType nameNode);
 
   bool trySyntaxParseInnerFunction(
-      CodeNodeType* funNode, HandleFunction fun, uint32_t toStringStart,
+      FunctionNodeType* funNode, HandleFunction fun, uint32_t toStringStart,
       InHandling inHandling, YieldHandling yieldHandling,
       FunctionSyntaxKind kind, GeneratorKind generatorKind,
       FunctionAsyncKind asyncKind, bool tryAnnexB,
       Directives inheritedDirectives, Directives* newDirectives);
 
-  bool skipLazyInnerFunction(CodeNodeType funNode, uint32_t toStringStart,
+  bool skipLazyInnerFunction(FunctionNodeType funNode, uint32_t toStringStart,
                              FunctionSyntaxKind kind, bool tryAnnexB);
 
   // Functions present only in Parser<FullParseHandler, Unit>.
@@ -1725,14 +1724,14 @@ class MOZ_STACK_CLASS Parser<FullParseHandler, Unit> final
 
   // Parse a function, given only its arguments and body. Used for lazily
   // parsed functions.
-  CodeNodeType standaloneLazyFunction(HandleFunction fun,
-                                      uint32_t toStringStart, bool strict,
-                                      GeneratorKind generatorKind,
-                                      FunctionAsyncKind asyncKind);
+  FunctionNodeType standaloneLazyFunction(HandleFunction fun,
+                                          uint32_t toStringStart, bool strict,
+                                          GeneratorKind generatorKind,
+                                          FunctionAsyncKind asyncKind);
 
   // Parse a function, used for the Function, GeneratorFunction, and
   // AsyncFunction constructors.
-  CodeNodeType standaloneFunction(
+  FunctionNodeType standaloneFunction(
       HandleFunction fun, HandleScope enclosingScope,
       const mozilla::Maybe<uint32_t>& parameterListEnd,
       GeneratorKind generatorKind, FunctionAsyncKind asyncKind,

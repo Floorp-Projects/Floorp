@@ -27,7 +27,7 @@ class FilterNodeSoftware;
  */
 class FilterInvalidationListener {
  public:
-  virtual void FilterInvalidated(FilterNodeSoftware* aFilter) = 0;
+  virtual void FilterInvalidated(FilterNodeSoftware *aFilter) = 0;
 };
 
 /**
@@ -46,23 +46,23 @@ class FilterNodeSoftware : public FilterNode,
   static already_AddRefed<FilterNode> Create(FilterType aType);
 
   // Draw the filter, intended to be called by DrawTarget*::DrawFilter.
-  void Draw(DrawTarget* aDrawTarget, const Rect& aSourceRect,
-            const Point& aDestPoint, const DrawOptions& aOptions);
+  void Draw(DrawTarget *aDrawTarget, const Rect &aSourceRect,
+            const Point &aDestPoint, const DrawOptions &aOptions);
 
   virtual FilterBackend GetBackendType() override {
     return FILTER_BACKEND_SOFTWARE;
   }
-  virtual void SetInput(uint32_t aIndex, SourceSurface* aSurface) override;
-  virtual void SetInput(uint32_t aIndex, FilterNode* aFilter) override;
+  virtual void SetInput(uint32_t aIndex, SourceSurface *aSurface) override;
+  virtual void SetInput(uint32_t aIndex, FilterNode *aFilter) override;
 
-  virtual const char* GetName() { return "Unknown"; }
+  virtual const char *GetName() { return "Unknown"; }
 
-  virtual void AddInvalidationListener(FilterInvalidationListener* aListener);
+  virtual void AddInvalidationListener(FilterInvalidationListener *aListener);
   virtual void RemoveInvalidationListener(
-      FilterInvalidationListener* aListener);
+      FilterInvalidationListener *aListener);
 
   // FilterInvalidationListener implementation
-  virtual void FilterInvalidated(FilterNodeSoftware* aFilter) override;
+  virtual void FilterInvalidated(FilterNodeSoftware *aFilter) override;
 
  protected:
   // The following methods are intended to be overriden by subclasses.
@@ -82,7 +82,7 @@ class FilterNodeSoftware : public FilterNode,
    * This method returns the intersection of the filter's output rect with
    * aInRect. Filters with unconstrained output always return aInRect.
    */
-  virtual IntRect GetOutputRectInRect(const IntRect& aInRect) = 0;
+  virtual IntRect GetOutputRectInRect(const IntRect &aInRect) = 0;
 
   /**
    * Return a surface with the rendered output which is of size aRect.Size().
@@ -93,21 +93,21 @@ class FilterNodeSoftware : public FilterNode,
    * pass through input surfaces unchanged.
    * Callers need to treat the returned surface as immutable.
    */
-  virtual already_AddRefed<DataSourceSurface> Render(const IntRect& aRect) = 0;
+  virtual already_AddRefed<DataSourceSurface> Render(const IntRect &aRect) = 0;
 
   /**
    * Call RequestRect (see below) on any input filters with the desired input
    * rect, so that the input filter knows what to cache the next time it
    * renders.
    */
-  virtual void RequestFromInputsForRect(const IntRect& aRect) {}
+  virtual void RequestFromInputsForRect(const IntRect &aRect) {}
 
   /**
    * This method provides a caching default implementation but can be overriden
    * by subclasses that don't want to cache their output. Those classes should
    * call Render(aRect) directly from here.
    */
-  virtual already_AddRefed<DataSourceSurface> GetOutput(const IntRect& aRect);
+  virtual already_AddRefed<DataSourceSurface> GetOutput(const IntRect &aRect);
 
   // The following methods are non-virtual helper methods.
 
@@ -140,10 +140,10 @@ class FilterNodeSoftware : public FilterNode,
    * Each pixel row of the returned surface is guaranteed to be 16-byte aligned.
    */
   already_AddRefed<DataSourceSurface> GetInputDataSourceSurface(
-      uint32_t aInputEnumIndex, const IntRect& aRect,
+      uint32_t aInputEnumIndex, const IntRect &aRect,
       FormatHint aFormatHint = CAN_HANDLE_A8,
       ConvolveMatrixEdgeMode aEdgeMode = EDGE_MODE_NONE,
-      const IntRect* aTransparencyPaddedSourceRect = nullptr);
+      const IntRect *aTransparencyPaddedSourceRect = nullptr);
 
   /**
    * Returns the intersection of the input filter's or surface's output rect
@@ -180,15 +180,15 @@ class FilterNodeSoftware : public FilterNode,
    * GetOutput call. Expected to call RequestRect on this filter's input
    * filters.
    */
-  void RequestRect(const IntRect& aRect);
+  void RequestRect(const IntRect &aRect);
 
   /**
    * Set input filter and clear input surface for this input index, or set
    * input surface and clear input filter. One of aSurface and aFilter should
    * be null.
    */
-  void SetInput(uint32_t aIndex, SourceSurface* aSurface,
-                FilterNodeSoftware* aFilter);
+  void SetInput(uint32_t aIndex, SourceSurface *aSurface,
+                FilterNodeSoftware *aFilter);
 
  protected:
   /**
@@ -204,7 +204,7 @@ class FilterNodeSoftware : public FilterNode,
    * unsubscribe themselves from us when they let go of their reference to us.
    * This ensures that the pointers in this array are never stale.
    */
-  std::vector<FilterInvalidationListener*> mInvalidationListeners;
+  std::vector<FilterInvalidationListener *> mInvalidationListeners;
 
   /**
    * Lock guarding mRequestedRect, mCachedRect, and mCachedOutput. All uses
@@ -391,9 +391,9 @@ class FilterNodeTableTransferSoftware
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeTableTransferSoftware,
                                           override)
-  virtual const char* GetName() override { return "TableTransfer"; }
+  virtual const char *GetName() override { return "TableTransfer"; }
   using FilterNodeComponentTransferSoftware::SetAttribute;
-  virtual void SetAttribute(uint32_t aIndex, const Float* aFloat,
+  virtual void SetAttribute(uint32_t aIndex, const Float *aFloat,
                             uint32_t aSize) override;
 
  protected:
@@ -401,7 +401,7 @@ class FilterNodeTableTransferSoftware
                                uint8_t aTable[256]) override;
 
  private:
-  void FillLookupTableImpl(std::vector<Float>& aTableValues,
+  void FillLookupTableImpl(std::vector<Float> &aTableValues,
                            uint8_t aTable[256]);
 
   std::vector<Float> mTableR;
@@ -415,9 +415,9 @@ class FilterNodeDiscreteTransferSoftware
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeDiscreteTransferSoftware,
                                           override)
-  virtual const char* GetName() override { return "DiscreteTransfer"; }
+  virtual const char *GetName() override { return "DiscreteTransfer"; }
   using FilterNodeComponentTransferSoftware::SetAttribute;
-  virtual void SetAttribute(uint32_t aIndex, const Float* aFloat,
+  virtual void SetAttribute(uint32_t aIndex, const Float *aFloat,
                             uint32_t aSize) override;
 
  protected:
@@ -425,7 +425,7 @@ class FilterNodeDiscreteTransferSoftware
                                uint8_t aTable[256]) override;
 
  private:
-  void FillLookupTableImpl(std::vector<Float>& aTableValues,
+  void FillLookupTableImpl(std::vector<Float> &aTableValues,
                            uint8_t aTable[256]);
 
   std::vector<Float> mTableR;
@@ -440,7 +440,7 @@ class FilterNodeLinearTransferSoftware
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeLinearTransformSoftware,
                                           override)
   FilterNodeLinearTransferSoftware();
-  virtual const char* GetName() override { return "LinearTransfer"; }
+  virtual const char *GetName() override { return "LinearTransfer"; }
   using FilterNodeComponentTransferSoftware::SetAttribute;
   virtual void SetAttribute(uint32_t aIndex, Float aValue) override;
 
@@ -467,7 +467,7 @@ class FilterNodeGammaTransferSoftware
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeGammaTransferSoftware,
                                           override)
   FilterNodeGammaTransferSoftware();
-  virtual const char* GetName() override { return "GammaTransfer"; }
+  virtual const char *GetName() override { return "GammaTransfer"; }
   using FilterNodeComponentTransferSoftware::SetAttribute;
   virtual void SetAttribute(uint32_t aIndex, Float aValue) override;
 

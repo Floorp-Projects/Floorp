@@ -1761,6 +1761,10 @@ nsCSSValueSharedList* Gecko_NewNoneTransform() {
   return list.forget().take();
 }
 
+void Gecko_StyleDisplay_GenerateCombinedTransform(nsStyleDisplay* aDisplay) {
+  aDisplay->GenerateCombinedIndividualTransform();
+}
+
 void Gecko_CSSValue_SetNumber(nsCSSValueBorrowedMut aCSSValue, float aNumber) {
   aCSSValue->SetFloatValue(aNumber, eCSSUnit_Number);
 }

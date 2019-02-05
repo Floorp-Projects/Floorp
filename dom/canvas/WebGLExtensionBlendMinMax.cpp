@@ -18,6 +18,8 @@ WebGLExtensionBlendMinMax::WebGLExtensionBlendMinMax(WebGLContext* webgl)
 WebGLExtensionBlendMinMax::~WebGLExtensionBlendMinMax() {}
 
 bool WebGLExtensionBlendMinMax::IsSupported(const WebGLContext* webgl) {
+  if (webgl->IsWebGL2()) return false;
+
   return webgl->GL()->IsSupported(gl::GLFeature::blend_minmax);
 }
 

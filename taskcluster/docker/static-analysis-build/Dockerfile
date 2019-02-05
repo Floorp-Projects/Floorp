@@ -8,6 +8,10 @@ VOLUME /builds/worker/tooltool-cache
 
 ENV XZ_OPT=-T0
 
+# %ARG TASKCLUSTER_ROOT_URL
+# %ARG DOCKER_IMAGE_PACKAGES
+RUN /usr/local/sbin/setup_packages.sh $TASKCLUSTER_ROOT_URL $DOCKER_IMAGE_PACKAGES
+
 RUN apt-get update && \
     apt-get install \
       autoconf2.13 \
@@ -24,6 +28,7 @@ RUN apt-get update && \
       gcc-multilib \
       gnupg \
       libc6-dev \
+      nasm \
       openjdk-8-jdk-headless \
       pkg-config \
       patch \

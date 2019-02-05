@@ -95,7 +95,7 @@ void GMPProcessParent::DoDelete() {
     mDeletedCallback->Run();
   }
 
-  delete this;
+  Destroy();
 }
 
 }  // namespace gmp

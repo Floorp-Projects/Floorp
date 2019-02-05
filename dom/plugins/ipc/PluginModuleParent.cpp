@@ -631,7 +631,7 @@ PluginModuleChromeParent::~PluginModuleChromeParent() {
   NS_ASSERTION(mShutdown, "NP_Shutdown didn't");
 
   if (mSubprocess) {
-    mSubprocess->Delete();
+    mSubprocess->Destroy();
     mSubprocess = nullptr;
   }
 

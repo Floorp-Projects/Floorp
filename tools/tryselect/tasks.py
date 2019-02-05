@@ -58,12 +58,12 @@ def generate_tasks(params, full, root):
     params = params or "project=mozilla-central"
 
     # Try to delete the old taskgraph cache directory.
-    old_cache_dir = os.path.join(get_state_dir()[0], 'cache', 'taskgraph')
+    old_cache_dir = os.path.join(get_state_dir(), 'cache', 'taskgraph')
     if os.path.isdir(old_cache_dir):
         shutil.rmtree(old_cache_dir)
 
     root_hash = hashlib.sha256(os.path.abspath(root)).hexdigest()
-    cache_dir = os.path.join(get_state_dir()[0], 'cache', root_hash, 'taskgraph')
+    cache_dir = os.path.join(get_state_dir(), 'cache', root_hash, 'taskgraph')
 
     # Cleanup old cache files
     for path in glob.glob(os.path.join(cache_dir, '*_set')):

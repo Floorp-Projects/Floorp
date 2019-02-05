@@ -1396,6 +1396,12 @@
         ]]></body>
       </method>
 
+      <method name="onUpdateAvailable">
+        <body><![CDATA[
+          this._showStatus("update-available");
+        ]]></body>
+      </method>
+
       <method name="onNoUpdateAvailable">
         <body><![CDATA[
           this._showStatus("none");

@@ -7,11 +7,11 @@ from __future__ import absolute_import, print_function, unicode_literals
 import os
 import logging
 import attr
-import yaml
 from mozpack import path
 
 from .util.schema import validate_schema, Schema, optionally_keyed_by
 from voluptuous import Required, Optional, Any
+from .util.yaml import load_yaml
 
 logger = logging.getLogger(__name__)
 
@@ -100,8 +100,7 @@ def load_graph_config(root_dir):
         raise Exception("Couldn't find taskgraph configuration: {}".format(config_yml))
 
     logger.debug("loading config from `{}`".format(config_yml))
-    with open(config_yml) as f:
-        config = yaml.safe_load(f)
+    config = load_yaml(config_yml)
 
     validate_graph_config(config)
     return GraphConfig(config=config, root_dir=root_dir)

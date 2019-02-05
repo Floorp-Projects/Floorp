@@ -99,8 +99,9 @@ WebGLExtensionTextureFloat::WebGLExtensionTextureFloat(WebGLContext* webgl)
 WebGLExtensionTextureFloat::~WebGLExtensionTextureFloat() {}
 
 bool WebGLExtensionTextureFloat::IsSupported(const WebGLContext* webgl) {
-  gl::GLContext* gl = webgl->GL();
+  if (webgl->IsWebGL2()) return false;
 
+  gl::GLContext* gl = webgl->GL();
   if (!gl->IsSupported(gl::GLFeature::texture_float)) return false;
 
   const bool needsSwizzle = gl->IsCoreProfile();

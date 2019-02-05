@@ -39,8 +39,6 @@ def get_variant(test_platform):
     return ''
 
 
-test_description_schema = {str(k): v for k, v in test_description_schema.schema.iteritems()}
-
 mozharness_test_run_schema = Schema({
     Required('using'): 'mozharness-test',
     Required('test'): test_description_schema,
@@ -95,13 +93,6 @@ def mozharness_test_on_docker(config, job, taskdesc):
         'path': os.path.join('{workdir}/workspace'.format(**run), path),
         'type': 'directory',
     } for (prefix, path) in artifacts]
-
-    worker['caches'] = [{
-        'type': 'persistent',
-        'name': 'level-{}-{}-test-workspace'.format(
-            config.params['level'], config.params['project']),
-        'mount-point': "{workdir}/workspace".format(**run),
-    }]
 
     env = worker.setdefault('env', {})
     env.update({

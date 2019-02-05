@@ -2701,6 +2701,17 @@ static FeatureState& WebRenderHardwareQualificationStatus(
               0x1912,  // HD Graphics 530
               0x5912,  // HD Graphics 630
               0x3e92,  // UHD Graphics 630
+              // HD Graphics 4600
+              0x0412,
+              0x0416,
+              0x041a,
+              0x041b,
+              0x041e,
+              0x0a12,
+              0x0a16,
+              0x0a1a,
+              0x0a1b,
+              0x0a1e,
           };
           bool supported = false;
           for (uint16_t id : supportedDevices) {

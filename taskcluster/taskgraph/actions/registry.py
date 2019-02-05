@@ -12,6 +12,9 @@ import re
 from slugid import nice as slugid
 from types import FunctionType
 from collections import namedtuple
+
+from six import text_type
+
 from taskgraph import create
 from taskgraph.config import load_graph_config
 from taskgraph.util import taskcluster, yaml, hash
@@ -37,7 +40,7 @@ def is_json(data):
 @memoize
 def read_taskcluster_yml(filename):
     '''Load and parse .taskcluster.yml, memoized to save some time'''
-    return yaml.load_yaml(*os.path.split(filename))
+    return yaml.load_yaml(filename)
 
 
 @memoize
@@ -127,8 +130,8 @@ def register_callback_action(name, title, symbol, description, order=10000,
     """
     mem = {"registered": False}  # workaround nonlocal missing in 2.x
 
-    assert isinstance(title, basestring), 'title must be a string'
-    assert isinstance(description, basestring), 'description must be a string'
+    assert isinstance(title, text_type), 'title must be a string'
+    assert isinstance(description, text_type), 'description must be a string'
     title = title.strip()
     description = description.strip()
 
@@ -138,7 +141,7 @@ def register_callback_action(name, title, symbol, description, order=10000,
         context = lambda params: context_value  # noqa
 
     def register_callback(cb, cb_name=cb_name):
-        assert isinstance(name, basestring), 'name must be a string'
+        assert isinstance(name, text_type), 'name must be a string'
         assert isinstance(order, int), 'order must be an integer'
         assert kind in ('task', 'hook'), 'kind must be task or hook'
         assert callable(schema) or is_json(schema), 'schema must be a JSON compatible object'
@@ -146,7 +149,7 @@ def register_callback_action(name, title, symbol, description, order=10000,
         # Allow for json-e > 25 chars in the symbol.
         if '$' not in symbol:
             assert 1 <= len(symbol) <= 25, 'symbol must be between 1 and 25 characters'
-        assert isinstance(symbol, basestring), 'symbol must be a string'
+        assert isinstance(symbol, text_type), 'symbol must be a string'
 
         assert not mem['registered'], 'register_callback_action must be used as decorator'
         if not cb_name:

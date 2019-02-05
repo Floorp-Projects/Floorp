@@ -159,12 +159,10 @@ static already_AddRefed<nsIFactory> CreateINIParserFactory(
 }
 
 const mozilla::Module::CIDEntry kXPCOMCIDEntries[] = {
-    {&kINIParserFactoryCID, false, CreateINIParserFactory},
-    {nullptr}};
+    {&kINIParserFactoryCID, false, CreateINIParserFactory}, {nullptr}};
 
 const mozilla::Module::ContractIDEntry kXPCOMContracts[] = {
-    {NS_INIPARSERFACTORY_CONTRACTID, &kINIParserFactoryCID},
-    {nullptr}};
+    {NS_INIPARSERFACTORY_CONTRACTID, &kINIParserFactoryCID}, {nullptr}};
 
 const mozilla::Module kXPCOMModule = {
     mozilla::Module::kVersion,

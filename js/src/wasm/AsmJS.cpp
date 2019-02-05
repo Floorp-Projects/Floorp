@@ -581,19 +581,18 @@ static ParseNode* ElemIndex(ParseNode* pn) {
   return &pn->as<PropertyByValue>().key();
 }
 
-static inline JSFunction* FunctionObject(CodeNode* funNode) {
-  MOZ_ASSERT(funNode->isKind(ParseNodeKind::Function));
+static inline JSFunction* FunctionObject(FunctionNode* funNode) {
   return funNode->funbox()->function();
 }
 
-static inline PropertyName* FunctionName(CodeNode* funNode) {
+static inline PropertyName* FunctionName(FunctionNode* funNode) {
   if (JSAtom* name = FunctionObject(funNode)->explicitName()) {
     return name->asPropertyName();
   }
   return nullptr;
 }
 
-static inline ParseNode* FunctionStatementList(CodeNode* funNode) {
+static inline ParseNode* FunctionStatementList(FunctionNode* funNode) {
   MOZ_ASSERT(funNode->body()->isKind(ParseNodeKind::ParamsBody));
   LexicalScopeNode* last =
       &funNode->body()->as<ListNode>().last()->as<LexicalScopeNode>();
@@ -1330,7 +1329,7 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidatorShared {
 
  protected:
   JSContext* cx_;
-  CodeNode* moduleFunctionNode_;
+  FunctionNode* moduleFunctionNode_;
   PropertyName* moduleFunctionName_;
   PropertyName* globalArgumentName_ = nullptr;
   PropertyName* importArgumentName_ = nullptr;
@@ -1358,7 +1357,7 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidatorShared {
   bool errorOverRecursed_ = false;
 
  protected:
-  ModuleValidatorShared(JSContext* cx, CodeNode* moduleFunctionNode)
+  ModuleValidatorShared(JSContext* cx, FunctionNode* moduleFunctionNode)
       : cx_(cx),
         moduleFunctionNode_(moduleFunctionNode),
         moduleFunctionName_(FunctionName(moduleFunctionNode)),
@@ -1891,7 +1890,7 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidator
 
  public:
   ModuleValidator(JSContext* cx, AsmJSParser<Unit>& parser,
-                  CodeNode* moduleFunctionNode)
+                  FunctionNode* moduleFunctionNode)
       : ModuleValidatorShared(cx, moduleFunctionNode), parser_(parser) {}
 
   ~ModuleValidator() {
@@ -2689,7 +2688,7 @@ static bool CheckModuleLevelName(ModuleValidatorShared& m, ParseNode* usepn,
   return true;
 }
 
-static bool CheckFunctionHead(ModuleValidatorShared& m, CodeNode* funNode) {
+static bool CheckFunctionHead(ModuleValidatorShared& m, FunctionNode* funNode) {
   FunctionBox* funbox = funNode->funbox();
   MOZ_ASSERT(!funbox->hasExprBody());
 
@@ -2733,7 +2732,8 @@ static bool CheckModuleArgument(ModuleValidatorShared& m, ParseNode* arg,
   return true;
 }
 
-static bool CheckModuleArguments(ModuleValidatorShared& m, CodeNode* funNode) {
+static bool CheckModuleArguments(ModuleValidatorShared& m,
+                                 FunctionNode* funNode) {
   unsigned numFormals;
   ParseNode* arg1 = FunctionFormalParametersList(funNode, &numFormals);
   ParseNode* arg2 = arg1 ? NextNode(arg1) : nullptr;
@@ -5997,7 +5997,7 @@ static bool CheckStatement(FunctionValidator<Unit>& f, ParseNode* stmt) {
 }
 
 template <typename Unit>
-static bool ParseFunction(ModuleValidator<Unit>& m, CodeNode** funNodeOut,
+static bool ParseFunction(ModuleValidator<Unit>& m, FunctionNode** funNodeOut,
                           unsigned* line) {
   auto& tokenStream = m.tokenStream();
 
@@ -6025,7 +6025,8 @@ static bool ParseFunction(ModuleValidator<Unit>& m, CodeNode** funNodeOut,
     return false;
   }
 
-  CodeNode* funNode = m.parser().handler.newFunctionStatement(m.parser().pos());
+  FunctionNode* funNode = m.parser().handler.newFunction(
+      FunctionSyntaxKind::Statement, m.parser().pos());
   if (!funNode) {
     return false;
   }
@@ -6075,7 +6076,7 @@ static bool CheckFunction(ModuleValidator<Unit>& m) {
   auto releaseMark =
       mozilla::MakeScopeExit([&m, &mark] { m.parser().release(mark); });
 
-  CodeNode* funNode = nullptr;
+  FunctionNode* funNode = nullptr;
   unsigned line = 0;
   if (!ParseFunction(m, &funNode, &line)) {
     return false;
@@ -6364,7 +6365,7 @@ static SharedModule CheckModule(JSContext* cx, AsmJSParser<Unit>& parser,
                                 unsigned* time) {
   int64_t before = PRMJ_Now();
 
-  CodeNode* moduleFunctionNode = parser.pc->functionBox()->functionNode;
+  FunctionNode* moduleFunctionNode = parser.pc->functionBox()->functionNode;
 
   ModuleValidator<Unit> m(cx, parser, moduleFunctionNode);
   if (!m.init()) {

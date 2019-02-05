@@ -952,7 +952,7 @@ void TimeoutManager::RunTimeout(const TimeStamp& aNow,
               aProcessIdle ? "Deferred " : "",
               timeout->mIsInterval ? "Interval" : "Timeout",
               int(elapsed.ToMilliseconds()), int(target.ToMilliseconds()),
-              int(delta.ToMilliseconds()),  int(runtime.ToMilliseconds()));
+              int(delta.ToMilliseconds()), int(runtime.ToMilliseconds()));
           // don't have end before start...
           profiler_add_marker(
               "setTimeout", js::ProfilingStackFrame::Category::DOM,

@@ -588,14 +588,18 @@ set_config('MAKENSISU_FLAGS', nsis_flags)
 check_prog('7Z', ('7z', '7za'), allow_missing=True, when=target_is_windows)
 
 
-@depends(c_compiler, bindgen_config_paths)
-def llvm_objdump(c_compiler, bindgen_config_paths):
+@depends(host_c_compiler, c_compiler, bindgen_config_paths)
+def llvm_objdump(host_c_compiler, c_compiler, bindgen_config_paths):
     clang = None
-    if c_compiler and c_compiler.type == 'clang':
-        clang = c_compiler.compiler
-    elif c_compiler and c_compiler.type == 'clang-cl':
-        clang = os.path.join(os.path.dirname(c_compiler.compiler), 'clang')
-    elif bindgen_config_paths:
+    for compiler in (host_c_compiler, c_compiler):
+        if compiler and compiler.type == 'clang':
+            clang = compiler.compiler
+            break
+        elif compiler and compiler.type == 'clang-cl':
+            clang = os.path.join(os.path.dirname(compiler.compiler), 'clang')
+            break
+
+    if not clang and bindgen_config_paths:
         clang = bindgen_config_paths.clang_path
     llvm_objdump = 'llvm-objdump'
     if clang:

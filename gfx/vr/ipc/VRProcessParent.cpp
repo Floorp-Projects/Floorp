@@ -93,15 +93,10 @@ void VRProcessParent::Shutdown() {
   DestroyProcess();
 }
 
-static void DelayedDeleteSubprocess(GeckoChildProcessHost* aSubprocess) {
-  XRE_GetIOMessageLoop()->PostTask(
-      mozilla::MakeAndAddRef<DeleteTask<GeckoChildProcessHost>>(aSubprocess));
-}
-
 void VRProcessParent::DestroyProcess() {
   if (mLaunchThread) {
-    mLaunchThread->Dispatch(NewRunnableFunction("DestroyProcessRunnable",
-                                                DelayedDeleteSubprocess, this));
+    mLaunchThread->Dispatch(NS_NewRunnableFunction("DestroyProcessRunnable",
+                                                   [this] { Destroy(); }));
   }
 }
 

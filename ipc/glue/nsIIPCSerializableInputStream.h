@@ -47,22 +47,26 @@ class NS_NO_VTABLE nsIIPCSerializableInputStream : public nsISupports {
 
   virtual void Serialize(mozilla::ipc::InputStreamParams& aParams,
                          FileDescriptorArray& aFileDescriptors,
-                         bool aDelayedStart,
+                         bool aDelayedStart, uint32_t aMaxSize,
+                         uint32_t* aSizeUsed,
                          mozilla::dom::nsIContentChild* aManager) = 0;
 
   virtual void Serialize(mozilla::ipc::InputStreamParams& aParams,
                          FileDescriptorArray& aFileDescriptors,
-                         bool aDelayedStart,
+                         bool aDelayedStart, uint32_t aMaxSize,
+                         uint32_t* aSizeUsed,
                          mozilla::ipc::PBackgroundChild* aManager) = 0;
 
   virtual void Serialize(mozilla::ipc::InputStreamParams& aParams,
                          FileDescriptorArray& aFileDescriptors,
-                         bool aDelayedStart,
+                         bool aDelayedStart, uint32_t aMaxSize,
+                         uint32_t* aSizeUsed,
                          mozilla::dom::nsIContentParent* aManager) = 0;
 
   virtual void Serialize(mozilla::ipc::InputStreamParams& aParams,
                          FileDescriptorArray& aFileDescriptors,
-                         bool aDelayedStart,
+                         bool aDelayedStart, uint32_t aMaxSize,
+                         uint32_t* aSizeUsed,
                          mozilla::ipc::PBackgroundParent* aManager) = 0;
 
   virtual bool Deserialize(const mozilla::ipc::InputStreamParams& aParams,
@@ -72,53 +76,61 @@ class NS_NO_VTABLE nsIIPCSerializableInputStream : public nsISupports {
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIIPCSerializableInputStream,
                               NS_IIPCSERIALIZABLEINPUTSTREAM_IID)
 
-#define NS_DECL_NSIIPCSERIALIZABLEINPUTSTREAM                        \
-  virtual void Serialize(mozilla::ipc::InputStreamParams&,           \
-                         FileDescriptorArray&, bool,                 \
-                         mozilla::dom::nsIContentChild*) override;   \
-                                                                     \
-  virtual void Serialize(mozilla::ipc::InputStreamParams&,           \
-                         FileDescriptorArray&, bool,                 \
-                         mozilla::ipc::PBackgroundChild*) override;  \
-                                                                     \
-  virtual void Serialize(mozilla::ipc::InputStreamParams&,           \
-                         FileDescriptorArray&, bool,                 \
-                         mozilla::dom::nsIContentParent*) override;  \
-                                                                     \
-  virtual void Serialize(mozilla::ipc::InputStreamParams&,           \
-                         FileDescriptorArray&, bool,                 \
-                         mozilla::ipc::PBackgroundParent*) override; \
-                                                                     \
-  virtual bool Deserialize(const mozilla::ipc::InputStreamParams&,   \
+#define NS_DECL_NSIIPCSERIALIZABLEINPUTSTREAM                             \
+  virtual void Serialize(mozilla::ipc::InputStreamParams&,                \
+                         FileDescriptorArray&, bool, uint32_t, uint32_t*, \
+                         mozilla::dom::nsIContentChild*) override;        \
+                                                                          \
+  virtual void Serialize(mozilla::ipc::InputStreamParams&,                \
+                         FileDescriptorArray&, bool, uint32_t, uint32_t*, \
+                         mozilla::ipc::PBackgroundChild*) override;       \
+                                                                          \
+  virtual void Serialize(mozilla::ipc::InputStreamParams&,                \
+                         FileDescriptorArray&, bool, uint32_t, uint32_t*, \
+                         mozilla::dom::nsIContentParent*) override;       \
+                                                                          \
+  virtual void Serialize(mozilla::ipc::InputStreamParams&,                \
+                         FileDescriptorArray&, bool, uint32_t, uint32_t*, \
+                         mozilla::ipc::PBackgroundParent*) override;      \
+                                                                          \
+  virtual bool Deserialize(const mozilla::ipc::InputStreamParams&,        \
                            const FileDescriptorArray&) override;
 
 #define NS_FORWARD_NSIIPCSERIALIZABLEINPUTSTREAM(_to)                          \
   virtual void Serialize(mozilla::ipc::InputStreamParams& aParams,             \
                          FileDescriptorArray& aFileDescriptors,                \
-                         bool aDelayedStart,                                   \
+                         bool aDelayedStart, uint32_t aMaxSize,                \
+                         uint32_t* aSizeUsed,                                  \
                          mozilla::dom::nsIContentChild* aManager) override {   \
-    _to Serialize(aParams, aFileDescriptors, aDelayedStart, aManager);         \
+    _to Serialize(aParams, aFileDescriptors, aDelayedStart, aMaxSize,          \
+                  aSizeUsed, aManager);                                        \
   }                                                                            \
                                                                                \
   virtual void Serialize(mozilla::ipc::InputStreamParams& aParams,             \
                          FileDescriptorArray& aFileDescriptors,                \
-                         bool aDelayedStart,                                   \
+                         bool aDelayedStart, uint32_t aMaxSize,                \
+                         uint32_t* aSizeUsed,                                  \
                          mozilla::ipc::PBackgroundChild* aManager) override {  \
-    _to Serialize(aParams, aFileDescriptors, aDelayedStart, aManager);         \
+    _to Serialize(aParams, aFileDescriptors, aDelayedStart, aMaxSize,          \
+                  aSizeUsed, aManager);                                        \
   }                                                                            \
                                                                                \
   virtual void Serialize(mozilla::ipc::InputStreamParams& aParams,             \
                          FileDescriptorArray& aFileDescriptors,                \
-                         bool aDelayedStart,                                   \
+                         bool aDelayedStart, uint32_t aMaxSize,                \
+                         uint32_t* aSizeUsed,                                  \
                          mozilla::dom::nsIContentParent* aManager) override {  \
-    _to Serialize(aParams, aFileDescriptors, aDelayedStart, aManager);         \
+    _to Serialize(aParams, aFileDescriptors, aDelayedStart, aMaxSize,          \
+                  aSizeUsed, aManager);                                        \
   }                                                                            \
                                                                                \
   virtual void Serialize(mozilla::ipc::InputStreamParams& aParams,             \
                          FileDescriptorArray& aFileDescriptors,                \
-                         bool aDelayedStart,                                   \
+                         bool aDelayedStart, uint32_t aMaxSize,                \
+                         uint32_t* aSizeUsed,                                  \
                          mozilla::ipc::PBackgroundParent* aManager) override { \
-    _to Serialize(aParams, aFileDescriptors, aDelayedStart, aManager);         \
+    _to Serialize(aParams, aFileDescriptors, aDelayedStart, aMaxSize,          \
+                  aSizeUsed, aManager);                                        \
   }                                                                            \
                                                                                \
   virtual bool Deserialize(const mozilla::ipc::InputStreamParams& aParams,     \
@@ -130,37 +142,45 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIIPCSerializableInputStream,
 #define NS_FORWARD_SAFE_NSIIPCSERIALIZABLEINPUTSTREAM(_to)                     \
   virtual void Serialize(mozilla::ipc::InputStreamParams& aParams,             \
                          FileDescriptorArray& aFileDescriptors,                \
-                         bool aDelayedStart,                                   \
+                         bool aDelayedStart, uint32_t aMaxSize,                \
+                         uint32_t* aSizeUsed,                                  \
                          mozilla::dom::nsIContentChild* aManager) override {   \
     if (_to) {                                                                 \
-      _to->Serialize(aParams, aFileDescriptors, aDelayedStart, aManager);      \
+      _to->Serialize(aParams, aFileDescriptors, aDelayedStart, aMaxSize,       \
+                     aSizeUsed, aManager);                                     \
     }                                                                          \
   }                                                                            \
                                                                                \
   virtual void Serialize(mozilla::ipc::InputStreamParams& aParams,             \
                          FileDescriptorArray& aFileDescriptors,                \
-                         bool aDelayedStart,                                   \
+                         bool aDelayedStart, uint32_t aMaxSize,                \
+                         uint32_t* aSizeUsed,                                  \
                          mozilla::ipc::PBackgroundChild* aManager) override {  \
     if (_to) {                                                                 \
-      _to->Serialize(aParams, aFileDescriptors, aDelayedStart, aManager);      \
+      _to->Serialize(aParams, aFileDescriptors, aDelayedStart, aMaxSize,       \
+                     aSizeUsed, aManager);                                     \
     }                                                                          \
   }                                                                            \
                                                                                \
   virtual void Serialize(mozilla::ipc::InputStreamParams& aParams,             \
                          FileDescriptorArray& aFileDescriptors,                \
-                         bool aDelayedStart,                                   \
+                         bool aDelayedStart, uint32_t aMaxSize,                \
+                         uint32_t* aSizeUsed,                                  \
                          mozilla::dom::nsIContentParent* aManager) override {  \
     if (_to) {                                                                 \
-      _to->Serialize(aParams, aFileDescriptors, aDelayedStart, aManager);      \
+      _to->Serialize(aParams, aFileDescriptors, aDelayedStart, aMaxSize,       \
+                     aSizeUsed, aManager);                                     \
     }                                                                          \
   }                                                                            \
                                                                                \
   virtual void Serialize(mozilla::ipc::InputStreamParams& aParams,             \
                          FileDescriptorArray& aFileDescriptors,                \
-                         bool aDelayedStart,                                   \
+                         bool aDelayedStart, uint32_t aMaxSize,                \
+                         uint32_t* aSizeUsed,                                  \
                          mozilla::ipc::PBackgroundParent* aManager) override { \
     if (_to) {                                                                 \
-      _to->Serialize(aParams, aFileDescriptors, aDelayedStart, aManager);      \
+      _to->Serialize(aParams, aFileDescriptors, aDelayedStart, aMaxSize,       \
+                     aSizeUsed, aManager);                                     \
     }                                                                          \
   }                                                                            \
                                                                                \

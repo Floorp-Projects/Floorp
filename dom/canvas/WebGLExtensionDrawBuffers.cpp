@@ -35,8 +35,9 @@ void WebGLExtensionDrawBuffers::DrawBuffersWEBGL(
 }
 
 bool WebGLExtensionDrawBuffers::IsSupported(const WebGLContext* webgl) {
-  gl::GLContext* gl = webgl->GL();
+  if (webgl->IsWebGL2()) return false;
 
+  gl::GLContext* gl = webgl->GL();
   return gl->IsSupported(gl::GLFeature::draw_buffers);
 }
 

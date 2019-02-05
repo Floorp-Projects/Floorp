@@ -29,10 +29,11 @@ namespace wasm {
 bool BaselineCanCompile();
 
 // Generate adequate code quickly.
-MOZ_MUST_USE bool BaselineCompileFunctions(
-    const ModuleEnvironment& env, LifoAlloc& lifo,
-    const FuncCompileInputVector& inputs, CompiledCode* code,
-    UniqueChars* error);
+MOZ_MUST_USE bool BaselineCompileFunctions(const ModuleEnvironment& env,
+                                           LifoAlloc& lifo,
+                                           const FuncCompileInputVector& inputs,
+                                           CompiledCode* code,
+                                           UniqueChars* error);
 
 class BaseLocalIter {
  private:

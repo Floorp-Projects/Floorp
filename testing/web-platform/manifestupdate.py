@@ -49,7 +49,7 @@ def create_parser():
         "--rewrite-config", action="store_true", default=False,
         help="Force the local configuration to be regenerated")
     p.add_argument(
-        "--cache-root", action="store", default=os.path.join(get_state_dir()[0], "cache", "wpt"),
+        "--cache-root", action="store", default=os.path.join(get_state_dir(), "cache", "wpt"),
         help="Path to use for the metadata cache")
     commandline.add_logging_group(p)
 

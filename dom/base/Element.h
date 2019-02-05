@@ -1218,7 +1218,7 @@ class Element : public FragmentOrElement {
   void AttachAndSetUAShadowRoot();
 
   // Dispatch an event to UAWidgetsChild, triggering construction
-  // or onattributechange callback on the existing widget.
+  // or onchange callback on the existing widget.
   void NotifyUAWidgetSetupOrChange();
 
   enum class UnattachShadowRoot {

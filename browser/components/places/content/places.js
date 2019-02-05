@@ -167,6 +167,11 @@ var PlacesOrganizer = {
 
     window.addEventListener("AppCommand", this, true);
 
+    let placeContentElement = document.getElementById("placeContent");
+    placeContentElement.addEventListener("onOpenFlatContainer", function(e) {
+      PlacesOrganizer.openFlatContainer(e.detail);
+    });
+
     if (AppConstants.platform === "macosx") {
       // 1. Map Edit->Find command to OrganizerCommand_find:all.  Need to map
       // both the menuitem and the Find key.
@@ -372,6 +377,11 @@ var PlacesOrganizer = {
     }
   },
 
+  /**
+   * Handle openFlatContainer events.
+   * @param aContainer
+   *        The node the event was dispatched on.
+   */
   openFlatContainer(aContainer) {
     if (aContainer.bookmarkGuid) {
       PlacesUtils.asContainer(this._places.selectedNode).containerOpen = true;

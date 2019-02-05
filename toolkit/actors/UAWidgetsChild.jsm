@@ -37,9 +37,9 @@ class UAWidgetsChild extends ActorChild {
       this.setupWidget(aElement);
       return;
     }
-    if (typeof widget.wrappedJSObject.onchange == "function") {
+    if (typeof widget.onchange == "function") {
       try {
-        widget.wrappedJSObject.onchange();
+        widget.onchange();
       } catch (ex) {
         Cu.reportError(ex);
       }
@@ -90,13 +90,12 @@ class UAWidgetsChild extends ActorChild {
     }
 
     let widget = new sandbox[widgetName](shadowRoot);
+    if (!isSystemPrincipal) {
+      widget = widget.wrappedJSObject;
+    }
     this.widgets.set(aElement, widget);
     try {
-      if (!isSystemPrincipal) {
-        widget.wrappedJSObject.onsetup();
-      } else {
-        widget.onsetup();
-      }
+      widget.onsetup();
     } catch (ex) {
       Cu.reportError(ex);
     }
@@ -107,9 +106,9 @@ class UAWidgetsChild extends ActorChild {
     if (!widget) {
       return;
     }
-    if (typeof widget.wrappedJSObject.destructor == "function") {
+    if (typeof widget.destructor == "function") {
       try {
-        widget.wrappedJSObject.destructor();
+        widget.destructor();
       } catch (ex) {
         Cu.reportError(ex);
       }
