@@ -10,6 +10,9 @@ with Files('**'):
 with Files('Finder*.jsm'):
     BUG_COMPONENT = ('Toolkit', 'Find Toolbar')
 
+with Files('KeyPressEventModelCheckerChild.jsm'):
+    BUG_COMPONENT = ('Core', 'DOM: Events')
+
 FINAL_TARGET_FILES.actors += [
     'AudioPlaybackChild.jsm',
     'AutoplayChild.jsm',
@@ -19,6 +22,7 @@ FINAL_TARGET_FILES.actors += [
     'ExtFindChild.jsm',
     'FindBarChild.jsm',
     'FinderChild.jsm',
+    'KeyPressEventModelCheckerChild.jsm',
     'PopupBlockingChild.jsm',
     'PrintingChild.jsm',
     'PurgeSessionHistoryChild.jsm',
