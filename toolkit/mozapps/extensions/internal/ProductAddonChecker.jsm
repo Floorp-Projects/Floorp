@@ -105,6 +105,8 @@ function downloadXML(url, allowNonBuiltIn = false, allowedCerts = null) {
     request.channel.loadFlags |= Ci.nsIRequest.LOAD_BYPASS_CACHE;
     // Prevent the request from writing to the cache.
     request.channel.loadFlags |= Ci.nsIRequest.INHIBIT_CACHING;
+    // Don't send any cookies
+    request.channel.loadFlags |= Ci.nsIRequest.LOAD_ANONYMOUS;
     // Use conservative TLS settings. See bug 1325501.
     // TODO move to ServiceRequest.
     if (request.channel instanceof Ci.nsIHttpChannelInternal) {

@@ -332,7 +332,18 @@ android-em-4.3-arm7-api-16/opt:
 android-em-7.0-x86/opt:
     build-platform: android-x86/opt
     test-sets:
-        - android-x86-kvm-tests
+        - android-x86-tests
+
+android-em-7.0-x86_64/opt:
+    build-platform: android-x86_64/opt
+    test-sets:
+        - android-x86_64-tests
+        - android-x86_64-opt-tests
+
+android-em-7.0-x86_64/debug:
+    build-platform: android-x86_64/debug
+    test-sets:
+        - android-x86_64-tests
 
 # android-hw test platforms execute on real devices attached to Autophone hosts.
 
