@@ -47,10 +47,8 @@
 #include "nsPrintfCString.h"
 #include "mozilla/AbstractThread.h"
 #include "ExpandedPrincipal.h"
-#include "mozilla/StaticPtr.h"
-#include "mozilla/ClearOnShutdown.h"
 
-static mozilla::StaticRefPtr<nsPermissionManager> gPermissionManager;
+static nsPermissionManager* gPermissionManager = nullptr;
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -980,21 +978,10 @@ nsPermissionManager::GetXPCOMSingleton() {
   if (NS_SUCCEEDED(permManager->Init())) {
     // Note: This is cleared in the nsPermissionManager destructor.
     gPermissionManager = permManager.get();
-    ClearOnShutdown(&gPermissionManager);
     return permManager.forget();
   }
 
   return nullptr;
-}
-
-// static
-nsPermissionManager* nsPermissionManager::GetInstance() {
-  if (!gPermissionManager) {
-    // Hand off the creation of the permission manager to GetXPCOMSingleton.
-    nsCOMPtr<nsIPermissionManager> permManager = GetXPCOMSingleton();
-  }
-
-  return gPermissionManager;
 }
 
 nsresult nsPermissionManager::Init() {

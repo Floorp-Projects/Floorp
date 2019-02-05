@@ -15,10 +15,6 @@ UNIFIED_SOURCES += [
     'AntiTrackingCommon.cpp',
 ]
 
-LOCAL_INCLUDES += [
-    '/extensions/cookie',
-]
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
