@@ -19,6 +19,8 @@ WebGLExtensionFragDepth::WebGLExtensionFragDepth(WebGLContext* webgl)
 WebGLExtensionFragDepth::~WebGLExtensionFragDepth() {}
 
 bool WebGLExtensionFragDepth::IsSupported(const WebGLContext* webgl) {
+  if (webgl->IsWebGL2()) return false;
+
   gl::GLContext* gl = webgl->GL();
   return gl->IsSupported(gl::GLFeature::frag_depth);
 }

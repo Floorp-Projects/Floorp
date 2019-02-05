@@ -162,6 +162,8 @@ class WebGLExtensionDepthTexture : public WebGLExtensionBase {
   explicit WebGLExtensionDepthTexture(WebGLContext*);
   virtual ~WebGLExtensionDepthTexture();
 
+  static bool IsSupported(const WebGLContext*);
+
   DECL_WEBGL_EXTENSION_GOOP
 };
 

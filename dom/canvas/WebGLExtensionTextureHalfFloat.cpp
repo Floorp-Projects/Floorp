@@ -104,8 +104,9 @@ WebGLExtensionTextureHalfFloat::WebGLExtensionTextureHalfFloat(
 WebGLExtensionTextureHalfFloat::~WebGLExtensionTextureHalfFloat() {}
 
 bool WebGLExtensionTextureHalfFloat::IsSupported(const WebGLContext* webgl) {
-  gl::GLContext* gl = webgl->GL();
+  if (webgl->IsWebGL2()) return false;
 
+  gl::GLContext* gl = webgl->GL();
   if (!gl->IsSupported(gl::GLFeature::texture_half_float) &&
       !gl->IsExtensionSupported(gl::GLContext::OES_texture_half_float)) {
     return false;
