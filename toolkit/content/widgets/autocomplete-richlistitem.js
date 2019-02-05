@@ -83,16 +83,16 @@ MozElements.MozAutocompleteRichlistitem = class MozAutocompleteRichlistitem exte
     if (!this.__inheritedAttributeMap) {
       this.__inheritedAttributeMap = new Map([
         [ this.querySelector(".ac-type-icon"), [ "selected", "current", "type" ] ],
-      [ this.querySelector(".ac-site-icon"), [ "src=image", "selected", "type" ] ],
-      [ this.querySelector(".ac-title"), [ "selected" ] ],
-      [ this.querySelector(".ac-title-text"), [ "selected" ] ],
-      [ this.querySelector(".ac-tags"), [ "selected" ] ],
-      [ this.querySelector(".ac-tags-text"), [ "selected" ] ],
-      [ this.querySelector(".ac-separator"), [ "selected", "actiontype", "type" ] ],
-      [ this.querySelector(".ac-url"), [ "selected", "actiontype" ] ],
-      [ this.querySelector(".ac-url-text"), [ "selected" ] ],
-      [ this.querySelector(".ac-action"), [ "selected", "actiontype" ] ],
-      [ this.querySelector(".ac-action-text"), [ "selected" ] ],
+        [ this.querySelector(".ac-site-icon"), [ "src=image", "selected", "type" ] ],
+        [ this.querySelector(".ac-title"), [ "selected" ] ],
+        [ this.querySelector(".ac-title-text"), [ "selected" ] ],
+        [ this.querySelector(".ac-tags"), [ "selected" ] ],
+        [ this.querySelector(".ac-tags-text"), [ "selected" ] ],
+        [ this.querySelector(".ac-separator"), [ "selected", "actiontype", "type" ] ],
+        [ this.querySelector(".ac-url"), [ "selected", "actiontype" ] ],
+        [ this.querySelector(".ac-url-text"), [ "selected" ] ],
+        [ this.querySelector(".ac-action"), [ "selected", "actiontype" ] ],
+        [ this.querySelector(".ac-action-text"), [ "selected" ] ],
       ]);
     }
     return this.__inheritedAttributeMap;
@@ -128,7 +128,7 @@ MozElements.MozAutocompleteRichlistitem = class MozAutocompleteRichlistitem exte
         </description>
       </hbox>
       <hbox class="ac-separator" align="center">
-        <description class="ac-separator-text"></description>
+        <description class="ac-separator-text" value="—"></description>
       </hbox>
       <hbox class="ac-url" align="center">
         <description class="ac-text-overflow-container">
@@ -984,7 +984,7 @@ class MozAutocompleteRichlistitemInsecureWarning extends MozElements.MozAutocomp
         </description>
       </hbox>
       <hbox class="ac-separator" align="center">
-        <description class="ac-separator-text"></description>
+        <description class="ac-separator-text" value="—"></description>
       </hbox>
       <hbox class="ac-url" align="center">
         <description class="ac-text-overflow-container">

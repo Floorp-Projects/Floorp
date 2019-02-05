@@ -1,0 +1,51 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+job-defaults:
+    description: "minidump_stackwalk toolchain build"
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        max-run-time: 1800
+    run:
+        script: build-minidump-stackwalk.sh
+        sparse-profile: null
+        resources:
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
+        toolchain-artifact: public/build/minidump_stackwalk.tar.xz
+    run-on-projects:
+        - trunk
+        - try
+
+linux64-minidump-stackwalk:
+    treeherder:
+        symbol: TL(stackwalk)
+    toolchains:
+        - linux64-clang-7
+        - linux64-binutils
+        - linux64-rust-1.31
+
+macosx64-minidump-stackwalk:
+    treeherder:
+        symbol: TM(stackwalk)
+    worker:
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-clang.manifest"
+    run:
+        arguments: ['macosx64']
+        tooltool-downloads: internal
+    toolchains:
+        - linux64-cctools-port
+        - linux64-clang-7
+        - linux64-rust-macos-1.31
+
+win32-minidump-stackwalk:
+    treeherder:
+        symbol: TW32(stackwalk)
+    worker:
+        docker-image: {in-tree: mingw32-build}
+    run:
+        arguments: ['mingw32']
+    toolchains:
+        - linux64-clang-trunk-mingw-x86
+        - mingw32-rust-1.31

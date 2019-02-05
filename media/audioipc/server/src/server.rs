@@ -82,35 +82,25 @@ struct ServerStreamCallbacks {
 }
 
 impl ServerStreamCallbacks {
-    fn data_callback(&mut self, input: &[u8], output: &mut [u8]) -> isize {
-        trace!("Stream data callback: {} {}", input.len(), output.len());
+    fn data_callback(&mut self, input: &[u8], output: &mut [u8], nframes: isize) -> isize {
+        trace!("Stream data callback: {} {} {}", nframes, input.len(), output.len());
 
-        // FFI wrapper (data_cb_c) converted buffers to [u8] slices but len is frames *not* bytes.
-        // Convert slices to correct length now we have {input,output}_frame_size available.
-        let real_input = unsafe {
-            let nbytes = input.len() * self.input_frame_size as usize;
-            slice::from_raw_parts(input.as_ptr(), nbytes)
-        };
-        let real_output = unsafe {
-            let nbytes = output.len() * self.output_frame_size as usize;
-            slice::from_raw_parts_mut(output.as_mut_ptr(), nbytes)
-        };
-
-        self.input_shm.write(real_input).unwrap();
+        self.input_shm.write(input).unwrap();
 
         let r = self
             .rpc
-            .call(CallbackReq::Data(
-                output.len() as isize,
-                self.output_frame_size as usize,
-            )).wait();
+            .call(CallbackReq::Data {
+                nframes: nframes,
+                input_frame_size: self.input_frame_size as usize,
+                output_frame_size: self.output_frame_size as usize,
+            }).wait();
 
         match r {
             Ok(CallbackResp::Data(frames)) => {
                 if frames >= 0 {
                     let nbytes = frames as usize * self.output_frame_size as usize;
                     trace!("Reslice output to {}", nbytes);
-                    self.output_shm.read(&mut real_output[..nbytes]).unwrap();
+                    self.output_shm.read(&mut output[..nbytes]).unwrap();
                 }
                 frames
             }
@@ -436,14 +426,16 @@ unsafe extern "C" fn data_cb_c(
         let input = if input_buffer.is_null() {
             &[]
         } else {
-            slice::from_raw_parts(input_buffer as *const u8, nframes as usize)
+            let nbytes = nframes * cbs.input_frame_size as c_long;
+            slice::from_raw_parts(input_buffer as *const u8, nbytes as usize)
         };
         let output: &mut [u8] = if output_buffer.is_null() {
             &mut []
         } else {
-            slice::from_raw_parts_mut(output_buffer as *mut u8, nframes as usize)
+            let nbytes = nframes * cbs.output_frame_size as c_long;
+            slice::from_raw_parts_mut(output_buffer as *mut u8, nbytes as usize)
         };
-        cbs.data_callback(input, output) as c_long
+        cbs.data_callback(input, output, nframes as isize) as c_long
     });
     ok.unwrap_or(0)
 }

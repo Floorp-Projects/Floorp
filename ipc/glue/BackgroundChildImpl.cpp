@@ -756,23 +756,6 @@ bool BackgroundChildImpl::DeallocPServiceWorkerRegistrationChild(
   return dom::DeallocServiceWorkerRegistrationChild(aActor);
 }
 
-bool BackgroundChildImpl::GetMessageSchedulerGroups(
-    const Message& aMsg, SchedulerGroupSet& aGroups) {
-  if (aMsg.type() == layout::PVsync::MessageType::Msg_Notify__ID) {
-    MOZ_ASSERT(NS_IsMainThread());
-    aGroups.Clear();
-    if (dom::TabChild::HasVisibleTabs()) {
-      for (auto iter = dom::TabChild::GetVisibleTabs().ConstIter();
-           !iter.Done(); iter.Next()) {
-        aGroups.Put(iter.Get()->GetKey()->TabGroup());
-      }
-    }
-    return true;
-  }
-
-  return false;
-}
-
 dom::PEndpointForReportChild* BackgroundChildImpl::AllocPEndpointForReportChild(
     const nsString& aGroupName, const PrincipalInfo& aPrincipalInfo) {
   return new dom::EndpointForReportChild();

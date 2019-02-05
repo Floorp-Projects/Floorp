@@ -34,6 +34,7 @@ use tokio_uds::UnixStream;
 
 mod server;
 
+#[allow(deprecated)]
 pub mod errors {
     error_chain! {
         links {

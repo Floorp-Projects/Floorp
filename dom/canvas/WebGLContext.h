@@ -1524,6 +1524,7 @@ class WebGLContext : public nsICanvasRenderingContextInternal,
   GLenum LastColorAttachmentEnum() const {
     return LOCAL_GL_COLOR_ATTACHMENT0 + mGLMaxColorAttachments - 1;
   }
+  const auto& GLMaxDrawBuffers() const { return mGLMaxDrawBuffers; }
 
   const decltype(mOptions)& Options() const { return mOptions; }
 

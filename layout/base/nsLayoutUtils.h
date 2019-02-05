@@ -2945,15 +2945,11 @@ class nsLayoutUtils {
   // from preferences.
   static uint8_t ControlCharVisibilityDefault();
 
-  enum class FlushUserFontSet {
-    Yes,
-    No,
-  };
-
+  // Callers are responsible to ensure the user-font-set is up-to-date if
+  // aUseUserFontSet is true.
   static already_AddRefed<nsFontMetrics> GetMetricsFor(
       nsPresContext* aPresContext, bool aIsVertical,
-      const nsStyleFont* aStyleFont, nscoord aFontSize, bool aUseUserFontSet,
-      FlushUserFontSet aFlushUserFontSet);
+      const nsStyleFont* aStyleFont, nscoord aFontSize, bool aUseUserFontSet);
 
   /**
    * Appropriately add the correct font if we are using DocumentFonts or
