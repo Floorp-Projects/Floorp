@@ -23,7 +23,7 @@ dictionary RequestDeviceOptions {
   boolean acceptAllDevices = false;
 };
 
-[Exposed=Window, SecureContext]
+[SecureContext]
 interface Bluetooth : EventTarget {
   Promise<boolean> getAvailability();
   attribute EventHandler onavailabilitychanged;
@@ -31,9 +31,9 @@ interface Bluetooth : EventTarget {
   readonly attribute BluetoothDevice? referringDevice;
   Promise<BluetoothDevice> requestDevice(optional RequestDeviceOptions options);
 };
-Bluetooth includes BluetoothDeviceEventHandlers;
-Bluetooth includes CharacteristicEventHandlers;
-Bluetooth includes ServiceEventHandlers;
+Bluetooth implements BluetoothDeviceEventHandlers;
+Bluetooth implements CharacteristicEventHandlers;
+Bluetooth implements ServiceEventHandlers;
 
 dictionary BluetoothPermissionDescriptor : PermissionDescriptor {
   DOMString deviceId;
@@ -53,13 +53,11 @@ dictionary BluetoothPermissionData {
   required sequence<AllowedBluetoothDevice> allowedDevices;
 };
 
-[Exposed=Window]
 interface BluetoothPermissionResult : PermissionStatus {
   attribute FrozenArray<BluetoothDevice> devices;
 };
 
 [
-  Exposed=Window,
   Constructor(DOMString type, optional ValueEventInit initDict),
   SecureContext
 ]
@@ -71,8 +69,8 @@ dictionary ValueEventInit : EventInit {
   any value = null;
 };
 
-[Exposed=Window, SecureContext]
-interface BluetoothDevice : EventTarget {
+[SecureContext]
+interface BluetoothDevice {
   readonly attribute DOMString id;
   readonly attribute DOMString? name;
   readonly attribute BluetoothRemoteGATTServer? gatt;
@@ -81,20 +79,20 @@ interface BluetoothDevice : EventTarget {
   void unwatchAdvertisements();
   readonly attribute boolean watchingAdvertisements;
 };
-BluetoothDevice includes BluetoothDeviceEventHandlers;
-BluetoothDevice includes CharacteristicEventHandlers;
-BluetoothDevice includes ServiceEventHandlers;
+BluetoothDevice implements EventTarget;
+BluetoothDevice implements BluetoothDeviceEventHandlers;
+BluetoothDevice implements CharacteristicEventHandlers;
+BluetoothDevice implements ServiceEventHandlers;
 
-[Exposed=Window, SecureContext]
+[SecureContext]
 interface BluetoothManufacturerDataMap {
   readonly maplike<unsigned short, DataView>;
 };
-[Exposed=Window, SecureContext]
+[SecureContext]
 interface BluetoothServiceDataMap {
   readonly maplike<UUID, DataView>;
 };
 [
-  Exposed=Window,
   Constructor(DOMString type, BluetoothAdvertisingEventInit init),
   SecureContext
 ]
@@ -118,11 +116,11 @@ dictionary BluetoothAdvertisingEventInit : EventInit {
   unsigned short appearance;
   byte txPower;
   byte rssi;
-  BluetoothManufacturerDataMap manufacturerData;
-  BluetoothServiceDataMap serviceData;
+  Map manufacturerData;
+  Map serviceData;
 };
 
-[Exposed=Window, SecureContext]
+[SecureContext]
 interface BluetoothRemoteGATTServer {
   [SameObject]
   readonly attribute BluetoothDevice device;
@@ -134,8 +132,8 @@ interface BluetoothRemoteGATTServer {
     getPrimaryServices(optional BluetoothServiceUUID service);
 };
 
-[Exposed=Window, SecureContext]
-interface BluetoothRemoteGATTService : EventTarget {
+[SecureContext]
+interface BluetoothRemoteGATTService {
   [SameObject]
   readonly attribute BluetoothDevice device;
   readonly attribute UUID uuid;
@@ -149,11 +147,12 @@ interface BluetoothRemoteGATTService : EventTarget {
   Promise<sequence<BluetoothRemoteGATTService>>
     getIncludedServices(optional BluetoothServiceUUID service);
 };
-BluetoothRemoteGATTService includes CharacteristicEventHandlers;
-BluetoothRemoteGATTService includes ServiceEventHandlers;
+BluetoothRemoteGATTService implements EventTarget;
+BluetoothRemoteGATTService implements CharacteristicEventHandlers;
+BluetoothRemoteGATTService implements ServiceEventHandlers;
 
-[Exposed=Window, SecureContext]
-interface BluetoothRemoteGATTCharacteristic : EventTarget {
+[SecureContext]
+interface BluetoothRemoteGATTCharacteristic {
   [SameObject]
   readonly attribute BluetoothRemoteGATTService service;
   readonly attribute UUID uuid;
@@ -167,9 +166,10 @@ interface BluetoothRemoteGATTCharacteristic : EventTarget {
   Promise<BluetoothRemoteGATTCharacteristic> startNotifications();
   Promise<BluetoothRemoteGATTCharacteristic> stopNotifications();
 };
-BluetoothRemoteGATTCharacteristic includes CharacteristicEventHandlers;
+BluetoothRemoteGATTCharacteristic implements EventTarget;
+BluetoothRemoteGATTCharacteristic implements CharacteristicEventHandlers;
 
-[Exposed=Window, SecureContext]
+[SecureContext]
 interface BluetoothCharacteristicProperties {
   readonly attribute boolean broadcast;
   readonly attribute boolean read;
@@ -182,7 +182,7 @@ interface BluetoothCharacteristicProperties {
   readonly attribute boolean writableAuxiliaries;
 };
 
-[Exposed=Window, SecureContext]
+[SecureContext]
 interface BluetoothRemoteGATTDescriptor {
   [SameObject]
   readonly attribute BluetoothRemoteGATTCharacteristic characteristic;
@@ -192,25 +192,24 @@ interface BluetoothRemoteGATTDescriptor {
   Promise<void> writeValue(BufferSource value);
 };
 
-[SecureContext]
-interface mixin CharacteristicEventHandlers {
+[NoInterfaceObject, SecureContext]
+interface CharacteristicEventHandlers {
   attribute EventHandler oncharacteristicvaluechanged;
 };
 
-[SecureContext]
-interface mixin BluetoothDeviceEventHandlers {
+[NoInterfaceObject, SecureContext]
+interface BluetoothDeviceEventHandlers {
   attribute EventHandler ongattserverdisconnected;
 };
 
-[SecureContext]
-interface mixin ServiceEventHandlers {
+[NoInterfaceObject, SecureContext]
+interface ServiceEventHandlers {
   attribute EventHandler onserviceadded;
   attribute EventHandler onservicechanged;
   attribute EventHandler onserviceremoved;
 };
 
 typedef DOMString UUID;
-[Exposed=Window]
 interface BluetoothUUID {
   static UUID getService((DOMString or unsigned long) name);
   static UUID getCharacteristic((DOMString or unsigned long) name);

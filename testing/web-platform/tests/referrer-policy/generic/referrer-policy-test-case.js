@@ -96,31 +96,31 @@ function ReferrerPolicyTestCase(scenario, testDescription, sanityChecker) {
     },
 
     start: function() {
-      async_test(function(test) {
+      t._constructSubresourceUrl();
+      t._constructExpectedReferrerUrl();
 
-        t._constructSubresourceUrl();
-        t._constructExpectedReferrerUrl();
+      var test = async_test(t._testDescription);
 
-        t._invokeSubresource(test.step_func(function(result) {
-          // Check if the result is in valid format. NOOP in release.
-          sanityChecker.checkSubresourceResult(
-              test, t._scenario, t._subresourceUrl, result);
+      t._invokeSubresource(function(result) {
+        // Check if the result is in valid format. NOOP in release.
+        sanityChecker.checkSubresourceResult(
+            test, t._scenario, t._subresourceUrl, result);
 
-          // Check the reported URL.
-          test.step(function() {
-            assert_equals(result.referrer,
-                          t._expectedReferrerUrl,
-                          "Reported Referrer URL is '" +
-                          t._scenario.referrer_url + "'.");
-            assert_equals(result.headers.referer,
-                          t._expectedReferrerUrl,
-                          "Reported Referrer URL from HTTP header is '" +
-                          t._expectedReferrerUrl + "'");
-          }, "Reported Referrer URL is as expected: " + t._scenario.referrer_url);
+        // Check the reported URL.
+        test.step(function() {
+          assert_equals(result.referrer,
+                        t._expectedReferrerUrl,
+                        "Reported Referrer URL is '" +
+                        t._scenario.referrer_url + "'.");
+          assert_equals(result.headers.referer,
+                        t._expectedReferrerUrl,
+                        "Reported Referrer URL from HTTP header is '" +
+                        t._expectedReferrerUrl + "'");
+        }, "Reported Referrer URL is as expected: " + t._scenario.referrer_url);
 
-          test.done();
-        }), test);
-      }, t._testDescription);
+        test.done();
+      }, test);
+
     }
   }
 

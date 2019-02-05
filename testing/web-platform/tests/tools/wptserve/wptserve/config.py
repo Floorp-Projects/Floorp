@@ -75,9 +75,7 @@ def json_types(obj):
         return {key: json_types(value) for key, value in iteritems(obj)}
     if (isinstance(obj, string_types) or
         isinstance(obj, integer_types) or
-        isinstance(obj, float) or
-        isinstance(obj, bool) or
-        obj is None):
+        isinstance(obj, float)):
         return obj
     if isinstance(obj, list) or hasattr(obj, "__iter__"):
         return [json_types(value) for value in obj]
@@ -128,9 +126,7 @@ class ConfigBuilder(object):
             "openssl": {
                 "openssl_binary": "openssl",
                 "base_path": "_certs",
-                "password": "web-platform-tests",
                 "force_regenerate": False,
-                "duration": 30,
                 "base_conf_path": None
             },
             "pregenerated": {
@@ -320,7 +316,7 @@ class ConfigBuilder(object):
         self._ssl_env.__enter__()
         if self._ssl_env.ssl_enabled:
             key_path, cert_path = self._ssl_env.host_cert_path(data["domains_set"])
-            ca_cert_path = self._ssl_env.ca_cert_path(data["domains_set"])
+            ca_cert_path = self._ssl_env.ca_cert_path()
             return {"key_path": key_path,
                     "ca_cert_path": ca_cert_path,
                     "cert_path": cert_path,

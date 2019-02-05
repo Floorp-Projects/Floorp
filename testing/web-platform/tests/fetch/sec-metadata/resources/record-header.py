@@ -2,7 +2,6 @@ import os
 import uuid
 import hashlib
 import time
-import json
 
 def main(request, response):
   ## Get the query parameter (key) from URL ##
@@ -31,14 +30,8 @@ def main(request, response):
   ## Record incoming Sec-Metadata header value
   else:
     try:
-      ## Return a serialized JSON object with one member per header. If the ##
-      ## header isn't present, the member will contain an empty string.     ##
-      header = json.dumps({
-        "dest": request.headers.get("sec-fetch-dest", ""),
-        "mode": request.headers.get("sec-fetch-mode", ""),
-        "site": request.headers.get("sec-fetch-site", ""),
-        "user": request.headers.get("sec-fetch-user", ""),
-      })
+      ## Return empty string as a default value ##
+      header = request.headers.get("Sec-Metadata", "")
       request.server.stash.put(testId, header)
     except KeyError:
       ## The header is already recorded or it doesn't exist

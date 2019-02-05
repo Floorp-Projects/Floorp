@@ -4,21 +4,14 @@
 
 'use strict';
 
-if ((typeof mojo !== 'undefined') && mojo.bindingsLibraryInitialized) {
+if (mojo && mojo.internal) {
   throw new Error('The Mojo bindings library has been initialized.');
 }
 
 var mojo = mojo || {};
-mojo.bindingsLibraryInitialized = true;
-
-mojo.internal = mojo.internal || {};
-
-mojo.config = mojo.config || {};
-if (typeof mojo.config.global === 'undefined') {
-  mojo.config.global = this;
-}
-
-if (typeof mojo.config.autoLoadMojomDeps === 'undefined') {
+mojo.internal = {};
+mojo.internal.global = this;
+mojo.config = {
   // Whether to automatically load mojom dependencies.
   // For example, if foo.mojom imports bar.mojom, |autoLoadMojomDeps| set to
   // true means that loading foo.mojom.js will insert a <script> tag to load
@@ -59,12 +52,11 @@ if (typeof mojo.config.autoLoadMojomDeps === 'undefined') {
   // <script src="http://example.org/scripts/b/d/bar.mojom.js"></script>
   //
   // -->
-  mojo.config.autoLoadMojomDeps = true;
-}
+  autoLoadMojomDeps: true
+};
 
 (function() {
   var internal = mojo.internal;
-  var config = mojo.config;
 
   var LoadState = {
     PENDING_LOAD: 1,
@@ -74,7 +66,7 @@ if (typeof mojo.config.autoLoadMojomDeps === 'undefined') {
   var mojomRegistry = new Map();
 
   function exposeNamespace(namespace) {
-    var current = config.global;
+    var current = internal.global;
     var parts = namespace.split('.');
 
     for (var part; parts.length && (part = parts.shift());) {
@@ -112,7 +104,7 @@ if (typeof mojo.config.autoLoadMojomDeps === 'undefined') {
       return;
     }
 
-    if (config.global.document === undefined) {
+    if (internal.global.document === undefined) {
       throw new Error(
           'Mojom dependency autoloading is not implemented in workers. ' +
           'Please see config variable mojo.config.autoLoadMojomDeps for more ' +
@@ -121,8 +113,8 @@ if (typeof mojo.config.autoLoadMojomDeps === 'undefined') {
 
     markMojomPendingLoad(id);
     var url = new URL(relativePath, document.currentScript.src).href;
-    config.global.document.write('<script type="text/javascript" src="' +
-                                 url + '"><' + '/script>');
+    internal.global.document.write('<script type="text/javascript" src="' +
+                                   url + '"><' + '/script>');
   }
 
   internal.exposeNamespace = exposeNamespace;
@@ -679,103 +671,6 @@ if (typeof mojo.config.autoLoadMojomDeps === 'undefined') {
   mojo.Binding = Binding;
   mojo.BindingSet = BindingSet;
   mojo.InterfacePtrController = InterfacePtrController;
-})();
-// Copyright 2016 The Chromium Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-
-(function() {
-  var internal = mojo.internal;
-
-  // Constants ----------------------------------------------------------------
-  var kInterfaceIdNamespaceMask = 0x80000000;
-  var kMasterInterfaceId = 0x00000000;
-  var kInvalidInterfaceId = 0xFFFFFFFF;
-
-  // ---------------------------------------------------------------------------
-
-  function InterfacePtrInfo(handle, version) {
-    this.handle = handle;
-    this.version = version;
-  }
-
-  InterfacePtrInfo.prototype.isValid = function() {
-    return this.handle instanceof MojoHandle;
-  };
-
-  InterfacePtrInfo.prototype.close = function() {
-    if (!this.isValid())
-      return;
-
-    this.handle.close();
-    this.handle = null;
-    this.version = 0;
-  };
-
-  function AssociatedInterfacePtrInfo(interfaceEndpointHandle, version) {
-    this.interfaceEndpointHandle = interfaceEndpointHandle;
-    this.version = version;
-  }
-
-  AssociatedInterfacePtrInfo.prototype.isValid = function() {
-    return this.interfaceEndpointHandle.isValid();
-  };
-
-  // ---------------------------------------------------------------------------
-
-  function InterfaceRequest(handle) {
-    this.handle = handle;
-  }
-
-  InterfaceRequest.prototype.isValid = function() {
-    return this.handle instanceof MojoHandle;
-  };
-
-  InterfaceRequest.prototype.close = function() {
-    if (!this.isValid())
-      return;
-
-    this.handle.close();
-    this.handle = null;
-  };
-
-  function AssociatedInterfaceRequest(interfaceEndpointHandle) {
-    this.interfaceEndpointHandle = interfaceEndpointHandle;
-  }
-
-  AssociatedInterfaceRequest.prototype.isValid = function() {
-    return this.interfaceEndpointHandle.isValid();
-  };
-
-  AssociatedInterfaceRequest.prototype.resetWithReason = function(reason) {
-    this.interfaceEndpointHandle.reset(reason);
-  };
-
-  function isMasterInterfaceId(interfaceId) {
-    return interfaceId === kMasterInterfaceId;
-  }
-
-  function isValidInterfaceId(interfaceId) {
-    return interfaceId !== kInvalidInterfaceId;
-  }
-
-  function hasInterfaceIdNamespaceBitSet(interfaceId) {
-    if (interfaceId >= 2 * kInterfaceIdNamespaceMask) {
-      throw new Error("Interface ID should be a 32-bit unsigned integer.");
-    }
-    return interfaceId >= kInterfaceIdNamespaceMask;
-  }
-
-  mojo.InterfacePtrInfo = InterfacePtrInfo;
-  mojo.InterfaceRequest = InterfaceRequest;
-  mojo.AssociatedInterfacePtrInfo = AssociatedInterfacePtrInfo;
-  mojo.AssociatedInterfaceRequest = AssociatedInterfaceRequest;
-  internal.isMasterInterfaceId = isMasterInterfaceId;
-  internal.isValidInterfaceId = isValidInterfaceId;
-  internal.hasInterfaceIdNamespaceBitSet = hasInterfaceIdNamespaceBitSet;
-  internal.kInvalidInterfaceId = kInvalidInterfaceId;
-  internal.kMasterInterfaceId = kMasterInterfaceId;
-  internal.kInterfaceIdNamespaceMask = kInterfaceIdNamespaceMask;
 })();
 // Copyright 2014 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
@@ -2176,10 +2071,6 @@ if (typeof mojo.config.autoLoadMojomDeps === 'undefined') {
       var receiverResult = this.incomingReceiver_ &&
           this.incomingReceiver_.accept(message);
 
-      // Dispatching the message may have closed the connector.
-      if (this.handle_ == null)
-        return;
-
       // Handle invalid incoming message.
       if (!internal.isTestingMode() && !receiverResult) {
         // TODO(yzshen): Consider notifying the embedder.
@@ -2240,6 +2131,95 @@ if (typeof mojo.config.autoLoadMojomDeps === 'undefined') {
 
   internal.Connector = Connector;
 })();
+// Copyright 2016 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+(function() {
+  var internal = mojo.internal;
+
+  // Constants ----------------------------------------------------------------
+  var kInterfaceIdNamespaceMask = 0x80000000;
+  var kMasterInterfaceId = 0x00000000;
+  var kInvalidInterfaceId = 0xFFFFFFFF;
+
+  // ---------------------------------------------------------------------------
+
+  function InterfacePtrInfo(handle, version) {
+    this.handle = handle;
+    this.version = version;
+  }
+
+  InterfacePtrInfo.prototype.isValid = function() {
+    return this.handle instanceof MojoHandle;
+  };
+
+  InterfacePtrInfo.prototype.close = function() {
+    if (!this.isValid())
+      return;
+
+    this.handle.close();
+    this.handle = null;
+    this.version = 0;
+  };
+
+  function AssociatedInterfacePtrInfo(interfaceEndpointHandle, version) {
+    this.interfaceEndpointHandle = interfaceEndpointHandle;
+    this.version = version;
+  }
+
+  AssociatedInterfacePtrInfo.prototype.isValid = function() {
+    return this.interfaceEndpointHandle.isValid();
+  };
+
+  // ---------------------------------------------------------------------------
+
+  function InterfaceRequest(handle) {
+    this.handle = handle;
+  }
+
+  InterfaceRequest.prototype.isValid = function() {
+    return this.handle instanceof MojoHandle;
+  };
+
+  InterfaceRequest.prototype.close = function() {
+    if (!this.isValid())
+      return;
+
+    this.handle.close();
+    this.handle = null;
+  };
+
+  function AssociatedInterfaceRequest(interfaceEndpointHandle) {
+    this.interfaceEndpointHandle = interfaceEndpointHandle;
+  }
+
+  AssociatedInterfaceRequest.prototype.isValid = function() {
+    return this.interfaceEndpointHandle.isValid();
+  };
+
+  AssociatedInterfaceRequest.prototype.resetWithReason = function(reason) {
+    this.interfaceEndpointHandle.reset(reason);
+  };
+
+  function isMasterInterfaceId(interfaceId) {
+    return interfaceId === kMasterInterfaceId;
+  }
+
+  function isValidInterfaceId(interfaceId) {
+    return interfaceId !== kInvalidInterfaceId;
+  }
+
+  mojo.InterfacePtrInfo = InterfacePtrInfo;
+  mojo.InterfaceRequest = InterfaceRequest;
+  mojo.AssociatedInterfacePtrInfo = AssociatedInterfacePtrInfo;
+  mojo.AssociatedInterfaceRequest = AssociatedInterfaceRequest;
+  internal.isMasterInterfaceId = isMasterInterfaceId;
+  internal.isValidInterfaceId = isValidInterfaceId;
+  internal.kInvalidInterfaceId = kInvalidInterfaceId;
+  internal.kMasterInterfaceId = kMasterInterfaceId;
+  internal.kInterfaceIdNamespaceMask = kInterfaceIdNamespaceMask;
+})();
 // Copyright 2017 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
@@ -2254,12 +2234,12 @@ if (typeof mojo.config.autoLoadMojomDeps === 'undefined') {
       throw error;
     }
 
-    if (message.getName() != mojo.interfaceControl.kRunMessageId) {
+    if (message.getName() != mojo.interfaceControl2.kRunMessageId) {
       throw new Error("Control message name is not kRunMessageId");
     }
 
     // Validate payload.
-    error = mojo.interfaceControl.RunMessageParams.validate(messageValidator,
+    error = mojo.interfaceControl2.RunMessageParams.validate(messageValidator,
         message.getHeaderNumBytes());
     if (error != internal.validationError.NONE) {
       throw error;
@@ -2273,12 +2253,12 @@ if (typeof mojo.config.autoLoadMojomDeps === 'undefined') {
       throw error;
     }
 
-    if (message.getName() != mojo.interfaceControl.kRunOrClosePipeMessageId) {
+    if (message.getName() != mojo.interfaceControl2.kRunOrClosePipeMessageId) {
       throw new Error("Control message name is not kRunOrClosePipeMessageId");
     }
 
     // Validate payload.
-    error = mojo.interfaceControl.RunOrClosePipeMessageParams.validate(
+    error = mojo.interfaceControl2.RunOrClosePipeMessageParams.validate(
         messageValidator, message.getHeaderNumBytes());
     if (error != internal.validationError.NONE) {
       throw error;
@@ -2288,7 +2268,7 @@ if (typeof mojo.config.autoLoadMojomDeps === 'undefined') {
   function runOrClosePipe(message, interfaceVersion) {
     var reader = new internal.MessageReader(message);
     var runOrClosePipeMessageParams = reader.decodeStruct(
-        mojo.interfaceControl.RunOrClosePipeMessageParams);
+        mojo.interfaceControl2.RunOrClosePipeMessageParams);
     return interfaceVersion >=
         runOrClosePipeMessageParams.input.requireVersion.version;
   }
@@ -2296,35 +2276,35 @@ if (typeof mojo.config.autoLoadMojomDeps === 'undefined') {
   function run(message, responder, interfaceVersion) {
     var reader = new internal.MessageReader(message);
     var runMessageParams =
-        reader.decodeStruct(mojo.interfaceControl.RunMessageParams);
+        reader.decodeStruct(mojo.interfaceControl2.RunMessageParams);
     var runOutput = null;
 
     if (runMessageParams.input.queryVersion) {
-      runOutput = new mojo.interfaceControl.RunOutput();
+      runOutput = new mojo.interfaceControl2.RunOutput();
       runOutput.queryVersionResult = new
-          mojo.interfaceControl.QueryVersionResult(
+          mojo.interfaceControl2.QueryVersionResult(
               {'version': interfaceVersion});
     }
 
     var runResponseMessageParams = new
-        mojo.interfaceControl.RunResponseMessageParams();
+        mojo.interfaceControl2.RunResponseMessageParams();
     runResponseMessageParams.output = runOutput;
 
-    var messageName = mojo.interfaceControl.kRunMessageId;
+    var messageName = mojo.interfaceControl2.kRunMessageId;
     var payloadSize =
-        mojo.interfaceControl.RunResponseMessageParams.encodedSize;
+        mojo.interfaceControl2.RunResponseMessageParams.encodedSize;
     var requestID = reader.requestID;
     var builder = new internal.MessageV1Builder(messageName,
         payloadSize, internal.kMessageIsResponse, requestID);
-    builder.encodeStruct(mojo.interfaceControl.RunResponseMessageParams,
+    builder.encodeStruct(mojo.interfaceControl2.RunResponseMessageParams,
                          runResponseMessageParams);
     responder.accept(builder.finish());
     return true;
   }
 
   function isInterfaceControlMessage(message) {
-    return message.getName() == mojo.interfaceControl.kRunMessageId ||
-           message.getName() == mojo.interfaceControl.kRunOrClosePipeMessageId;
+    return message.getName() == mojo.interfaceControl2.kRunMessageId ||
+           message.getName() == mojo.interfaceControl2.kRunOrClosePipeMessageId;
   }
 
   function ControlMessageHandler(interfaceVersion) {
@@ -2354,14 +2334,14 @@ if (typeof mojo.config.autoLoadMojomDeps === 'undefined') {
 
   function constructRunOrClosePipeMessage(runOrClosePipeInput) {
     var runOrClosePipeMessageParams = new
-        mojo.interfaceControl.RunOrClosePipeMessageParams();
+        mojo.interfaceControl2.RunOrClosePipeMessageParams();
     runOrClosePipeMessageParams.input = runOrClosePipeInput;
 
-    var messageName = mojo.interfaceControl.kRunOrClosePipeMessageId;
+    var messageName = mojo.interfaceControl2.kRunOrClosePipeMessageId;
     var payloadSize =
-        mojo.interfaceControl.RunOrClosePipeMessageParams.encodedSize;
+        mojo.interfaceControl2.RunOrClosePipeMessageParams.encodedSize;
     var builder = new internal.MessageV0Builder(messageName, payloadSize);
-    builder.encodeStruct(mojo.interfaceControl.RunOrClosePipeMessageParams,
+    builder.encodeStruct(mojo.interfaceControl2.RunOrClosePipeMessageParams,
                          runOrClosePipeMessageParams);
     var message = builder.finish();
     return message;
@@ -2374,12 +2354,12 @@ if (typeof mojo.config.autoLoadMojomDeps === 'undefined') {
       throw error;
     }
 
-    if (message.getName() != mojo.interfaceControl.kRunMessageId) {
+    if (message.getName() != mojo.interfaceControl2.kRunMessageId) {
       throw new Error("Control message name is not kRunMessageId");
     }
 
     // Validate payload.
-    error = mojo.interfaceControl.RunResponseMessageParams.validate(
+    error = mojo.interfaceControl2.RunResponseMessageParams.validate(
         messageValidator, message.getHeaderNumBytes());
     if (error != internal.validationError.NONE) {
       throw error;
@@ -2391,7 +2371,7 @@ if (typeof mojo.config.autoLoadMojomDeps === 'undefined') {
 
     var reader = new internal.MessageReader(message);
     var runResponseMessageParams = reader.decodeStruct(
-        mojo.interfaceControl.RunResponseMessageParams);
+        mojo.interfaceControl2.RunResponseMessageParams);
 
     return Promise.resolve(runResponseMessageParams);
   }
@@ -2406,12 +2386,12 @@ if (typeof mojo.config.autoLoadMojomDeps === 'undefined') {
   * @return {Promise} that resolves to a RunResponseMessageParams.
   */
   function sendRunMessage(receiver, runMessageParams) {
-    var messageName = mojo.interfaceControl.kRunMessageId;
-    var payloadSize = mojo.interfaceControl.RunMessageParams.encodedSize;
+    var messageName = mojo.interfaceControl2.kRunMessageId;
+    var payloadSize = mojo.interfaceControl2.RunMessageParams.encodedSize;
     // |requestID| is set to 0, but is later properly set by Router.
     var builder = new internal.MessageV1Builder(messageName,
         payloadSize, internal.kMessageExpectsResponse, 0);
-    builder.encodeStruct(mojo.interfaceControl.RunMessageParams,
+    builder.encodeStruct(mojo.interfaceControl2.RunMessageParams,
                          runMessageParams);
     var message = builder.finish();
 
@@ -2423,10 +2403,10 @@ if (typeof mojo.config.autoLoadMojomDeps === 'undefined') {
   }
 
   ControlMessageProxy.prototype.queryVersion = function() {
-    var runMessageParams = new mojo.interfaceControl.RunMessageParams();
-    runMessageParams.input = new mojo.interfaceControl.RunInput();
+    var runMessageParams = new mojo.interfaceControl2.RunMessageParams();
+    runMessageParams.input = new mojo.interfaceControl2.RunInput();
     runMessageParams.input.queryVersion =
-        new mojo.interfaceControl.QueryVersion();
+        new mojo.interfaceControl2.QueryVersion();
 
     return sendRunMessage(this.receiver_, runMessageParams).then(function(
         runResponseMessageParams) {
@@ -2435,9 +2415,9 @@ if (typeof mojo.config.autoLoadMojomDeps === 'undefined') {
   };
 
   ControlMessageProxy.prototype.requireVersion = function(version) {
-    var runOrClosePipeInput = new mojo.interfaceControl.RunOrClosePipeInput();
+    var runOrClosePipeInput = new mojo.interfaceControl2.RunOrClosePipeInput();
     runOrClosePipeInput.requireVersion =
-        new mojo.interfaceControl.RequireVersion({'version': version});
+        new mojo.interfaceControl2.RequireVersion({'version': version});
     var message = constructRunOrClosePipeMessage(runOrClosePipeInput);
     this.receiver_.accept(message);
   };
@@ -2861,12 +2841,12 @@ if (typeof mojo.config.autoLoadMojomDeps === 'undefined') {
       throw error;
     }
 
-    if (message.getName() != mojo.pipeControl.kRunOrClosePipeMessageId) {
+    if (message.getName() != mojo.pipeControl2.kRunOrClosePipeMessageId) {
       throw new Error("Control message name is not kRunOrClosePipeMessageId");
     }
 
     // Validate payload.
-    error = mojo.pipeControl.RunOrClosePipeMessageParams.validate(
+    error = mojo.pipeControl2.RunOrClosePipeMessageParams.validate(
         messageValidator, message.getHeaderNumBytes());
     if (error != internal.validationError.NONE) {
       throw error;
@@ -2876,7 +2856,7 @@ if (typeof mojo.config.autoLoadMojomDeps === 'undefined') {
   function runOrClosePipe(message, delegate) {
     var reader = new internal.MessageReader(message);
     var runOrClosePipeMessageParams = reader.decodeStruct(
-        mojo.pipeControl.RunOrClosePipeMessageParams);
+        mojo.pipeControl2.RunOrClosePipeMessageParams);
     var event = runOrClosePipeMessageParams.input
         .peerAssociatedEndpointClosedEvent;
     return delegate.onPeerAssociatedEndpointClosed(event.id,
@@ -2908,15 +2888,15 @@ if (typeof mojo.config.autoLoadMojomDeps === 'undefined') {
 
   function constructRunOrClosePipeMessage(runOrClosePipeInput) {
     var runOrClosePipeMessageParams = new
-        mojo.pipeControl.RunOrClosePipeMessageParams();
+        mojo.pipeControl2.RunOrClosePipeMessageParams();
     runOrClosePipeMessageParams.input = runOrClosePipeInput;
 
-    var messageName = mojo.pipeControl.kRunOrClosePipeMessageId;
+    var messageName = mojo.pipeControl2.kRunOrClosePipeMessageId;
     var payloadSize =
-        mojo.pipeControl.RunOrClosePipeMessageParams.encodedSize;
+        mojo.pipeControl2.RunOrClosePipeMessageParams.encodedSize;
 
     var builder = new internal.MessageV0Builder(messageName, payloadSize);
-    builder.encodeStruct(mojo.pipeControl.RunOrClosePipeMessageParams,
+    builder.encodeStruct(mojo.pipeControl2.RunOrClosePipeMessageParams,
                          runOrClosePipeMessageParams);
     var message = builder.finish();
     message.setInterfaceId(internal.kInvalidInterfaceId);
@@ -2935,14 +2915,14 @@ if (typeof mojo.config.autoLoadMojomDeps === 'undefined') {
 
   PipeControlMessageProxy.prototype.constructPeerEndpointClosedMessage =
       function(interfaceId, reason) {
-    var event = new mojo.pipeControl.PeerAssociatedEndpointClosedEvent();
+    var event = new mojo.pipeControl2.PeerAssociatedEndpointClosedEvent();
     event.id = interfaceId;
     if (reason) {
-      event.disconnectReason = new mojo.pipeControl.DisconnectReason({
+      event.disconnectReason = new mojo.pipeControl2.DisconnectReason({
           customReason: reason.customReason,
           description: reason.description});
     }
-    var runOrClosePipeInput = new mojo.pipeControl.RunOrClosePipeInput();
+    var runOrClosePipeInput = new mojo.pipeControl2.RunOrClosePipeInput();
     runOrClosePipeInput.peerAssociatedEndpointClosedEvent = event;
     return constructRunOrClosePipeMessage(runOrClosePipeInput);
   };
@@ -3116,15 +3096,6 @@ if (typeof mojo.config.autoLoadMojomDeps === 'undefined') {
       return new internal.InterfaceEndpointHandle();
     }
 
-    // Unless it is the master ID, |interfaceId| is from the remote side and
-    // therefore its namespace bit is supposed to be different than the value
-    // that this router would use.
-    if (!internal.isMasterInterfaceId(interfaceId) &&
-        this.setInterfaceIdNamespaceBit_ ===
-            internal.hasInterfaceIdNamespaceBitSet(interfaceId)) {
-      return new internal.InterfaceEndpointHandle();
-    }
-
     var endpoint = this.endpoints_.get(interfaceId);
 
     if (!endpoint) {
@@ -3193,6 +3164,8 @@ if (typeof mojo.config.autoLoadMojomDeps === 'undefined') {
 
   Router.prototype.onPeerAssociatedEndpointClosed = function(interfaceId,
       reason) {
+    check(!internal.isMasterInterfaceId(interfaceId) || reason);
+
     var endpoint = this.endpoints_.get(interfaceId);
     if (!endpoint) {
       endpoint = new InterfaceEndpoint(this, interfaceId);
@@ -3277,8 +3250,6 @@ if (typeof mojo.config.autoLoadMojomDeps === 'undefined') {
  */
 (function() {
   var internal = mojo.internal;
-  var textDecoder = new TextDecoder('utf-8');
-  var textEncoder = new TextEncoder('utf-8');
 
   /**
    * Decodes the UTF8 string from the given buffer.
@@ -3286,7 +3257,7 @@ if (typeof mojo.config.autoLoadMojomDeps === 'undefined') {
    * @return {string} The corresponding JavaScript string.
    */
   function decodeUtf8String(buffer) {
-    return textDecoder.decode(buffer);
+    return decodeURIComponent(escape(String.fromCharCode.apply(null, buffer)));
   }
 
   /**
@@ -3298,11 +3269,12 @@ if (typeof mojo.config.autoLoadMojomDeps === 'undefined') {
    * @return {number} The number of bytes written to |outputBuffer|.
    */
   function encodeUtf8String(str, outputBuffer) {
-    const utf8Buffer = textEncoder.encode(str);
-    if (outputBuffer.length < utf8Buffer.length)
+    var utf8String = unescape(encodeURIComponent(str));
+    if (outputBuffer.length < utf8String.length)
       throw new Error("Buffer too small for encodeUtf8String");
-    outputBuffer.set(utf8Buffer);
-    return utf8Buffer.length;
+    for (var i = 0; i < outputBuffer.length && i < utf8String.length; i++)
+      outputBuffer[i] = utf8String.charCodeAt(i);
+    return i;
   }
 
   /**
@@ -3310,7 +3282,8 @@ if (typeof mojo.config.autoLoadMojomDeps === 'undefined') {
    * |str| would occupy.
    */
   function utf8Length(str) {
-    return textEncoder.encode(str).length;
+    var utf8String = unescape(encodeURIComponent(str));
+    return utf8String.length;
   }
 
   internal.decodeUtf8String = decodeUtf8String;
@@ -3999,21 +3972,25 @@ if (typeof mojo.config.autoLoadMojomDeps === 'undefined') {
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+
 'use strict';
 
 (function() {
-  var mojomId = 'mojo/public/interfaces/bindings/interface_control_messages.mojom';
+  var mojomId = 'mojo/public/interfaces/bindings/new_bindings/interface_control_messages.mojom';
   if (mojo.internal.isMojomLoaded(mojomId)) {
     console.warn('The following mojom is loaded multiple times: ' + mojomId);
     return;
   }
   mojo.internal.markMojomLoaded(mojomId);
+
+  // TODO(yzshen): Define these aliases to minimize the differences between the
+  // old/new modes. Remove them when the old mode goes away.
   var bindings = mojo;
   var associatedBindings = mojo;
   var codec = mojo.internal;
   var validator = mojo.internal;
 
-  var exports = mojo.internal.exposeNamespace('mojo.interfaceControl');
+  var exports = mojo.internal.exposeNamespace('mojo.interfaceControl2');
 
 
   var kRunMessageId = 0xFFFFFFFF;
@@ -4397,42 +4374,42 @@ if (typeof mojo.config.autoLoadMojomDeps === 'undefined') {
     this.initDefault_();
     this.initValue_(value);
   }
-
-
+  
+  
   RunInput.Tags = {
     queryVersion: 0,
     flushForTesting: 1,
   };
-
+  
   RunInput.prototype.initDefault_ = function() {
     this.$data = null;
     this.$tag = undefined;
   }
-
+  
   RunInput.prototype.initValue_ = function(value) {
     if (value == undefined) {
       return;
     }
-
+  
     var keys = Object.keys(value);
     if (keys.length == 0) {
       return;
     }
-
+  
     if (keys.length > 1) {
       throw new TypeError("You may set only one member on a union.");
     }
-
+  
     var fields = [
         "queryVersion",
         "flushForTesting",
     ];
-
+  
     if (fields.indexOf(keys[0]) < 0) {
       throw new ReferenceError(keys[0] + " is not a RunInput member.");
-
+  
     }
-
+  
     this[keys[0]] = value[keys[0]];
   }
   Object.defineProperty(RunInput.prototype, "queryVersion", {
@@ -4443,7 +4420,7 @@ if (typeof mojo.config.autoLoadMojomDeps === 'undefined') {
       }
       return this.$data;
     },
-
+  
     set: function(value) {
       this.$tag = RunInput.Tags.queryVersion;
       this.$data = value;
@@ -4457,14 +4434,14 @@ if (typeof mojo.config.autoLoadMojomDeps === 'undefined') {
       }
       return this.$data;
     },
-
+  
     set: function(value) {
       this.$tag = RunInput.Tags.flushForTesting;
       this.$data = value;
     }
   });
-
-
+  
+  
     RunInput.encode = function(encoder, val) {
       if (val == null) {
         encoder.writeUint64(0);
@@ -4474,7 +4451,7 @@ if (typeof mojo.config.autoLoadMojomDeps === 'undefined') {
       if (val.$tag == undefined) {
         throw new TypeError("Cannot encode unions with an unknown member set.");
       }
-
+    
       encoder.writeUint32(16);
       encoder.writeUint32(val.$tag);
       switch (val.$tag) {
@@ -4487,8 +4464,8 @@ if (typeof mojo.config.autoLoadMojomDeps === 'undefined') {
       }
       encoder.align();
     };
-
-
+  
+  
     RunInput.decode = function(decoder) {
       var size = decoder.readUint32();
       if (size == 0) {
@@ -4496,7 +4473,7 @@ if (typeof mojo.config.autoLoadMojomDeps === 'undefined') {
         decoder.readUint64();
         return null;
       }
-
+    
       var result = new RunInput();
       var tag = decoder.readUint32();
       switch (tag) {
@@ -4508,24 +4485,24 @@ if (typeof mojo.config.autoLoadMojomDeps === 'undefined') {
           break;
       }
       decoder.align();
-
+    
       return result;
     };
-
-
+  
+  
     RunInput.validate = function(messageValidator, offset) {
       var size = messageValidator.decodeUnionSize(offset);
       if (size != 16) {
         return validator.validationError.INVALID_UNION_SIZE;
       }
-
+    
       var tag = messageValidator.decodeUnionTag(offset);
       var data_offset = offset + 8;
       var err;
       switch (tag) {
         case RunInput.Tags.queryVersion:
           
-
+    
     // validate RunInput.queryVersion
     err = messageValidator.validateStructPointer(data_offset, QueryVersion, false);
     if (err !== validator.validationError.NONE)
@@ -4533,57 +4510,57 @@ if (typeof mojo.config.autoLoadMojomDeps === 'undefined') {
           break;
         case RunInput.Tags.flushForTesting:
           
-
+    
     // validate RunInput.flushForTesting
     err = messageValidator.validateStructPointer(data_offset, FlushForTesting, false);
     if (err !== validator.validationError.NONE)
         return err;
           break;
       }
-
+    
       return validator.validationError.NONE;
     };
-
+  
   RunInput.encodedSize = 16;
 
   function RunOutput(value) {
     this.initDefault_();
     this.initValue_(value);
   }
-
-
+  
+  
   RunOutput.Tags = {
     queryVersionResult: 0,
   };
-
+  
   RunOutput.prototype.initDefault_ = function() {
     this.$data = null;
     this.$tag = undefined;
   }
-
+  
   RunOutput.prototype.initValue_ = function(value) {
     if (value == undefined) {
       return;
     }
-
+  
     var keys = Object.keys(value);
     if (keys.length == 0) {
       return;
     }
-
+  
     if (keys.length > 1) {
       throw new TypeError("You may set only one member on a union.");
     }
-
+  
     var fields = [
         "queryVersionResult",
     ];
-
+  
     if (fields.indexOf(keys[0]) < 0) {
       throw new ReferenceError(keys[0] + " is not a RunOutput member.");
-
+  
     }
-
+  
     this[keys[0]] = value[keys[0]];
   }
   Object.defineProperty(RunOutput.prototype, "queryVersionResult", {
@@ -4594,14 +4571,14 @@ if (typeof mojo.config.autoLoadMojomDeps === 'undefined') {
       }
       return this.$data;
     },
-
+  
     set: function(value) {
       this.$tag = RunOutput.Tags.queryVersionResult;
       this.$data = value;
     }
   });
-
-
+  
+  
     RunOutput.encode = function(encoder, val) {
       if (val == null) {
         encoder.writeUint64(0);
@@ -4611,7 +4588,7 @@ if (typeof mojo.config.autoLoadMojomDeps === 'undefined') {
       if (val.$tag == undefined) {
         throw new TypeError("Cannot encode unions with an unknown member set.");
       }
-
+    
       encoder.writeUint32(16);
       encoder.writeUint32(val.$tag);
       switch (val.$tag) {
@@ -4621,8 +4598,8 @@ if (typeof mojo.config.autoLoadMojomDeps === 'undefined') {
       }
       encoder.align();
     };
-
-
+  
+  
     RunOutput.decode = function(decoder) {
       var size = decoder.readUint32();
       if (size == 0) {
@@ -4630,7 +4607,7 @@ if (typeof mojo.config.autoLoadMojomDeps === 'undefined') {
         decoder.readUint64();
         return null;
       }
-
+    
       var result = new RunOutput();
       var tag = decoder.readUint32();
       switch (tag) {
@@ -4639,74 +4616,74 @@ if (typeof mojo.config.autoLoadMojomDeps === 'undefined') {
           break;
       }
       decoder.align();
-
+    
       return result;
     };
-
-
+  
+  
     RunOutput.validate = function(messageValidator, offset) {
       var size = messageValidator.decodeUnionSize(offset);
       if (size != 16) {
         return validator.validationError.INVALID_UNION_SIZE;
       }
-
+    
       var tag = messageValidator.decodeUnionTag(offset);
       var data_offset = offset + 8;
       var err;
       switch (tag) {
         case RunOutput.Tags.queryVersionResult:
           
-
+    
     // validate RunOutput.queryVersionResult
     err = messageValidator.validateStructPointer(data_offset, QueryVersionResult, false);
     if (err !== validator.validationError.NONE)
         return err;
           break;
       }
-
+    
       return validator.validationError.NONE;
     };
-
+  
   RunOutput.encodedSize = 16;
 
   function RunOrClosePipeInput(value) {
     this.initDefault_();
     this.initValue_(value);
   }
-
-
+  
+  
   RunOrClosePipeInput.Tags = {
     requireVersion: 0,
   };
-
+  
   RunOrClosePipeInput.prototype.initDefault_ = function() {
     this.$data = null;
     this.$tag = undefined;
   }
-
+  
   RunOrClosePipeInput.prototype.initValue_ = function(value) {
     if (value == undefined) {
       return;
     }
-
+  
     var keys = Object.keys(value);
     if (keys.length == 0) {
       return;
     }
-
+  
     if (keys.length > 1) {
       throw new TypeError("You may set only one member on a union.");
     }
-
+  
     var fields = [
         "requireVersion",
     ];
-
+  
     if (fields.indexOf(keys[0]) < 0) {
       throw new ReferenceError(keys[0] + " is not a RunOrClosePipeInput member.");
-
+  
     }
-
+  
     this[keys[0]] = value[keys[0]];
   }
   Object.defineProperty(RunOrClosePipeInput.prototype, "requireVersion", {
@@ -4717,14 +4694,14 @@ if (typeof mojo.config.autoLoadMojomDeps === 'undefined') {
       }
       return this.$data;
     },
-
+  
     set: function(value) {
       this.$tag = RunOrClosePipeInput.Tags.requireVersion;
       this.$data = value;
     }
   });
-
-
+  
+  
     RunOrClosePipeInput.encode = function(encoder, val) {
       if (val == null) {
         encoder.writeUint64(0);
@@ -4734,7 +4711,7 @@ if (typeof mojo.config.autoLoadMojomDeps === 'undefined') {
       if (val.$tag == undefined) {
         throw new TypeError("Cannot encode unions with an unknown member set.");
       }
-
+    
       encoder.writeUint32(16);
       encoder.writeUint32(val.$tag);
       switch (val.$tag) {
@@ -4744,8 +4721,8 @@ if (typeof mojo.config.autoLoadMojomDeps === 'undefined') {
       }
       encoder.align();
     };
-
-
+  
+  
     RunOrClosePipeInput.decode = function(decoder) {
       var size = decoder.readUint32();
       if (size == 0) {
@@ -4753,7 +4730,7 @@ if (typeof mojo.config.autoLoadMojomDeps === 'undefined') {
         decoder.readUint64();
         return null;
       }
-
+    
       var result = new RunOrClosePipeInput();
       var tag = decoder.readUint32();
       switch (tag) {
@@ -4762,34 +4739,34 @@ if (typeof mojo.config.autoLoadMojomDeps === 'undefined') {
           break;
       }
       decoder.align();
-
+    
       return result;
     };
-
-
+  
+  
     RunOrClosePipeInput.validate = function(messageValidator, offset) {
       var size = messageValidator.decodeUnionSize(offset);
       if (size != 16) {
         return validator.validationError.INVALID_UNION_SIZE;
       }
-
+    
       var tag = messageValidator.decodeUnionTag(offset);
       var data_offset = offset + 8;
       var err;
       switch (tag) {
         case RunOrClosePipeInput.Tags.requireVersion:
           
-
+    
     // validate RunOrClosePipeInput.requireVersion
     err = messageValidator.validateStructPointer(data_offset, RequireVersion, false);
     if (err !== validator.validationError.NONE)
         return err;
           break;
       }
-
+    
       return validator.validationError.NONE;
     };
-
+  
   RunOrClosePipeInput.encodedSize = 16;
   exports.kRunMessageId = kRunMessageId;
   exports.kRunOrClosePipeMessageId = kRunOrClosePipeMessageId;
@@ -4807,21 +4784,25 @@ if (typeof mojo.config.autoLoadMojomDeps === 'undefined') {
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+
 'use strict';
 
 (function() {
-  var mojomId = 'mojo/public/interfaces/bindings/pipe_control_messages.mojom';
+  var mojomId = 'mojo/public/interfaces/bindings/new_bindings/pipe_control_messages.mojom';
   if (mojo.internal.isMojomLoaded(mojomId)) {
     console.warn('The following mojom is loaded multiple times: ' + mojomId);
     return;
   }
   mojo.internal.markMojomLoaded(mojomId);
+
+  // TODO(yzshen): Define these aliases to minimize the differences between the
+  // old/new modes. Remove them when the old mode goes away.
   var bindings = mojo;
   var associatedBindings = mojo;
   var codec = mojo.internal;
   var validator = mojo.internal;
 
-  var exports = mojo.internal.exposeNamespace('mojo.pipeControl');
+  var exports = mojo.internal.exposeNamespace('mojo.pipeControl2');
 
 
   var kRunOrClosePipeMessageId = 0xFFFFFFFE;
@@ -4913,6 +4894,7 @@ if (typeof mojo.config.autoLoadMojomDeps === 'undefined') {
 
 
 
+    
     // validate DisconnectReason.description
     err = messageValidator.validateStringPointer(offset + codec.kStructHeaderSize + 8, false)
     if (err !== validator.validationError.NONE)
@@ -4980,6 +4962,7 @@ if (typeof mojo.config.autoLoadMojomDeps === 'undefined') {
 
 
 
+    
     // validate PeerAssociatedEndpointClosedEvent.disconnectReason
     err = messageValidator.validateStructPointer(offset + codec.kStructHeaderSize + 8, DisconnectReason, true);
     if (err !== validator.validationError.NONE)
@@ -5020,40 +5003,40 @@ if (typeof mojo.config.autoLoadMojomDeps === 'undefined') {
     this.initDefault_();
     this.initValue_(value);
   }
-
-
+  
+  
   RunOrClosePipeInput.Tags = {
     peerAssociatedEndpointClosedEvent: 0,
   };
-
+  
   RunOrClosePipeInput.prototype.initDefault_ = function() {
     this.$data = null;
     this.$tag = undefined;
   }
-
+  
   RunOrClosePipeInput.prototype.initValue_ = function(value) {
     if (value == undefined) {
       return;
     }
-
+  
     var keys = Object.keys(value);
     if (keys.length == 0) {
       return;
     }
-
+  
     if (keys.length > 1) {
       throw new TypeError("You may set only one member on a union.");
     }
-
+  
     var fields = [
         "peerAssociatedEndpointClosedEvent",
     ];
-
+  
     if (fields.indexOf(keys[0]) < 0) {
       throw new ReferenceError(keys[0] + " is not a RunOrClosePipeInput member.");
-
+  
     }
-
+  
     this[keys[0]] = value[keys[0]];
   }
   Object.defineProperty(RunOrClosePipeInput.prototype, "peerAssociatedEndpointClosedEvent", {
@@ -5064,14 +5047,14 @@ if (typeof mojo.config.autoLoadMojomDeps === 'undefined') {
       }
       return this.$data;
     },
-
+  
     set: function(value) {
       this.$tag = RunOrClosePipeInput.Tags.peerAssociatedEndpointClosedEvent;
       this.$data = value;
     }
   });
-
-
+  
+  
     RunOrClosePipeInput.encode = function(encoder, val) {
       if (val == null) {
         encoder.writeUint64(0);
@@ -5081,7 +5064,7 @@ if (typeof mojo.config.autoLoadMojomDeps === 'undefined') {
       if (val.$tag == undefined) {
         throw new TypeError("Cannot encode unions with an unknown member set.");
       }
-
+    
       encoder.writeUint32(16);
       encoder.writeUint32(val.$tag);
       switch (val.$tag) {
@@ -5091,8 +5074,8 @@ if (typeof mojo.config.autoLoadMojomDeps === 'undefined') {
       }
       encoder.align();
     };
-
-
+  
+  
     RunOrClosePipeInput.decode = function(decoder) {
       var size = decoder.readUint32();
       if (size == 0) {
@@ -5100,7 +5083,7 @@ if (typeof mojo.config.autoLoadMojomDeps === 'undefined') {
         decoder.readUint64();
         return null;
       }
-
+    
       var result = new RunOrClosePipeInput();
       var tag = decoder.readUint32();
       switch (tag) {
@@ -5109,34 +5092,34 @@ if (typeof mojo.config.autoLoadMojomDeps === 'undefined') {
           break;
       }
       decoder.align();
-
+    
       return result;
     };
-
-
+  
+  
     RunOrClosePipeInput.validate = function(messageValidator, offset) {
       var size = messageValidator.decodeUnionSize(offset);
       if (size != 16) {
         return validator.validationError.INVALID_UNION_SIZE;
       }
-
+    
       var tag = messageValidator.decodeUnionTag(offset);
       var data_offset = offset + 8;
       var err;
       switch (tag) {
         case RunOrClosePipeInput.Tags.peerAssociatedEndpointClosedEvent:
           
-
+    
     // validate RunOrClosePipeInput.peerAssociatedEndpointClosedEvent
     err = messageValidator.validateStructPointer(data_offset, PeerAssociatedEndpointClosedEvent, false);
     if (err !== validator.validationError.NONE)
         return err;
           break;
       }
-
+    
       return validator.validationError.NONE;
     };
-
+  
   RunOrClosePipeInput.encodedSize = 16;
   exports.kRunOrClosePipeMessageId = kRunOrClosePipeMessageId;
   exports.RunOrClosePipeMessageParams = RunOrClosePipeMessageParams;

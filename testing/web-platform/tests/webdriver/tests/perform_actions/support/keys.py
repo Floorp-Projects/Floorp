@@ -109,7 +109,7 @@ ALL_KEYS = getmembers(Keys, lambda x: type(x) == unicode)
 
 ALL_EVENTS = {
     "ADD": {
-        "code": "NumpadAdd",
+        "code": "",
         "ctrl": False,
         "key": "+",
         "location": 3,
@@ -442,7 +442,7 @@ ALL_EVENTS = {
         "value": u"\ue01d",
     },
     "NUMPAD4": {
-        "code": "Numpad4",
+        "code": "PageDown",
         "ctrl": False,
         "key": "4",
         "location": 3,
@@ -451,7 +451,7 @@ ALL_EVENTS = {
         "value": u"\ue01e",
     },
     "NUMPAD5": {
-        "code": "Numpad5",
+        "code": "PageUp",
         "ctrl": False,
         "key": "5",
         "location": 3,
@@ -496,7 +496,7 @@ ALL_EVENTS = {
         "value": u"\ue023",
     },
     "PAGE_DOWN": {
-        "code": "PageDown",
+        "code": "",
         "ctrl": False,
         "key": "PageDown",
         "location": 0,
@@ -505,7 +505,7 @@ ALL_EVENTS = {
         "value": u"\ue00f",
     },
     "PAGE_UP": {
-        "code": "PageUp",
+        "code": "",
         "ctrl": False,
         "key": "PageUp",
         "location": 0,
@@ -676,7 +676,7 @@ ALL_EVENTS = {
         "value": u"\ue018",
     },
     "SEPARATOR": {
-        "code": "NumpadComma",
+        "code": "NumpadSubtract",
         "ctrl": False,
         "key": ",",
         "location": 3,
@@ -703,7 +703,7 @@ ALL_EVENTS = {
         "value": u"\ue00d",
     },
     "SUBTRACT": {
-        "code": "NumpadSubtract",
+        "code": "",
         "ctrl": False,
         "key": "-",
         "location": 3,

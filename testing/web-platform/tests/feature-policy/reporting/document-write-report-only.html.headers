@@ -1,1 +1,1 @@
-Feature-Policy-Report-Only: document-write 'none'
+Feature-Policy: document-write-report-only 'none'

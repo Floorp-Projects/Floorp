@@ -99,15 +99,15 @@ function wrapResult(url, server_data) {
   }
 }
 
-function queryIframe(url, callback, attributes, referrer_policy, test) {
-  var iframe = appendIframeToBody(url, attributes);
-  var listener = test.step_func(function(event) {
+function queryIframe(url, callback, referrer_policy) {
+  var iframe = appendIframeToBody(url, referrer_policy);
+  var listener = function(event) {
     if (event.source != iframe.contentWindow)
       return;
 
     callback(event.data, url);
     window.removeEventListener("message", listener);
-  });
+  }
   window.addEventListener("message", listener);
 }
 
@@ -122,12 +122,12 @@ function queryImage(url, callback, attributes, referrerPolicy, test) {
   var noSrcDocPolicy = new Promise((resolve, reject) => {
     var iframeWithoutOwnPolicy = document.createElement('iframe');
     iframeWithoutOwnPolicy.srcdoc = "Hello, world.";
-    iframeWithoutOwnPolicy.onload = test.step_func(function () {
+    iframeWithoutOwnPolicy.onload = function () {
       var nextUrl = url + "&cache_destroyer2=" + (new Date()).getTime();
-      loadImageInWindow(nextUrl, test.step_func(function (img) {
+      loadImageInWindow(nextUrl, function (img) {
         resolve(decodeImageData(extractImageData(img)));
-      }), attributes, iframeWithoutOwnPolicy.contentWindow);
-    });
+      }, attributes, iframeWithoutOwnPolicy.contentWindow);
+    };
     document.body.appendChild(iframeWithoutOwnPolicy);
   });
 
@@ -137,19 +137,19 @@ function queryImage(url, callback, attributes, referrerPolicy, test) {
     var iframeWithOwnPolicy = document.createElement('iframe');
     iframeWithOwnPolicy.srcdoc = "<meta name='referrer' content='" + iframePolicy + "'>Hello world.";
 
-    iframeWithOwnPolicy.onload = test.step_func(function () {
+    iframeWithOwnPolicy.onload = function () {
       var nextUrl = url + "&cache_destroyer3=" + (new Date()).getTime();
-      loadImageInWindow(nextUrl, test.step_func(function (img) {
+      loadImageInWindow(nextUrl, function (img) {
         resolve(decodeImageData(extractImageData(img)));
-      }), null, iframeWithOwnPolicy.contentWindow);
-    });
+      }, null, iframeWithOwnPolicy.contentWindow);
+    };
     document.body.appendChild(iframeWithOwnPolicy);
   });
 
   var pagePolicy = new Promise((resolve, reject) => {
-    loadImageInWindow(url, test.step_func(function (img) {
+    loadImageInWindow(url, function (img) {
       resolve(decodeImageData(extractImageData(img)));
-    }), attributes, window);
+    }, attributes, window);
   });
 
   Promise.all([noSrcDocPolicy, srcDocPolicy, pagePolicy]).then(test.step_func(values => {
@@ -159,52 +159,52 @@ function queryImage(url, callback, attributes, referrerPolicy, test) {
   }));
 }
 
-function queryXhr(url, callback, attributes, referrer_policy, test) {
+function queryXhr(url, callback) {
   var xhr = new XMLHttpRequest();
   xhr.open('GET', url, true);
-  xhr.onreadystatechange = test.step_func(function(e) {
-    if (xhr.readyState == 4 && xhr.status == 200) {
-      var server_data = JSON.parse(xhr.responseText);
+  xhr.onreadystatechange = function(e) {
+    if (this.readyState == 4 && this.status == 200) {
+      var server_data = JSON.parse(this.responseText);
       callback(wrapResult(url, server_data), url);
     }
-  });
+  };
   xhr.send();
 }
 
-function queryWorker(url, callback, attributes, referrer_policy, test) {
+function queryWorker(url, callback) {
   var worker = new Worker(url);
-  worker.onmessage = test.step_func(function(event) {
+  worker.onmessage = function(event) {
     var server_data = event.data;
     callback(wrapResult(url, server_data), url);
-  });
+  };
 }
 
-function queryModuleWorkerTopLevel(url, callback, attributes, referrer_policy, test) {
+function queryModuleWorkerTopLevel(url, callback) {
   var worker = new Worker(url, {type: "module"});
-  worker.onmessage = test.step_func(function(event) {
+  worker.onmessage = function(event) {
     var server_data = event.data;
     callback(wrapResult(url, server_data), url);
-  });
+  };
 }
 
-function querySharedWorker(url, callback, attributes, referrer_policy, test) {
+function querySharedWorker(url, callback) {
   var worker = new SharedWorker(url);
-  worker.port.onmessage = test.step_func(function(event) {
+  worker.port.onmessage = function(event) {
     var server_data = event.data;
     callback(wrapResult(url, server_data), url);
-  });
+  };
 }
 
-function queryFetch(url, callback, attributes, referrer_policy, test) {
-  fetch(url).then(test.step_func(function(response) {
-      response.json().then(test.step_func(function(server_data) {
+function queryFetch(url, callback) {
+  fetch(url).then(function(response) {
+      response.json().then(function(server_data) {
         callback(wrapResult(url, server_data), url);
-      }));
-    })
+      });
+    }
   );
 }
 
-function queryNavigable(element, url, callback, attributes, test) {
+function queryNavigable(element, url, callback, attributes) {
   var navigable = element
   navigable.href = url;
   navigable.target = "helper-iframe";
@@ -220,41 +220,42 @@ function queryNavigable(element, url, callback, attributes, test) {
     }
   }
 
-  var listener = test.step_func(function(event) {
+  var listener = function(event) {
     if (event.source != helperIframe.contentWindow)
       return;
+
     callback(event.data, url);
     window.removeEventListener("message", listener);
-  });
+  }
   window.addEventListener("message", listener);
 
   navigable.click();
 }
 
-function queryLink(url, callback, attributes, referrer_policy, test) {
+function queryLink(url, callback, referrer_policy) {
   var a = document.createElement("a");
   a.innerHTML = "Link to subresource";
   document.body.appendChild(a);
-  queryNavigable(a, url, callback, attributes, test)
+  queryNavigable(a, url, callback, referrer_policy)
 }
 
-function queryAreaLink(url, callback, attributes, referrer_policy, test) {
+function queryAreaLink(url, callback, referrer_policy) {
   var area = document.createElement("area");
   // TODO(kristijanburnik): Append to map and add image.
   document.body.appendChild(area);
-  queryNavigable(area, url, callback, attributes, test)
+  queryNavigable(area, url, callback, referrer_policy)
 }
 
-function queryScript(url, callback, attributes, referrer_policy, test) {
+function queryScript(url, callback, attributes, referrer_policy) {
   var script = document.createElement("script");
   script.src = url;
   script.referrerPolicy = referrer_policy;
 
-  var listener = test.step_func(function(event) {
+  var listener = function(event) {
     var server_data = event.data;
     callback(wrapResult(url, server_data), url);
     window.removeEventListener("message", listener);
-  });
+  }
   window.addEventListener("message", listener);
 
   document.body.appendChild(script);

@@ -28,4 +28,3 @@ then
 fi
 
 sudo Xvfb $DISPLAY -screen 0 ${SCREEN_WIDTH}x${SCREEN_HEIGHT}x${SCREEN_DEPTH} &
-sudo fluxbox -display $DISPLAY &

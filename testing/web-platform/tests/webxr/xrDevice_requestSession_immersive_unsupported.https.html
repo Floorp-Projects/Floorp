@@ -8,12 +8,13 @@
       "Requesting an immersive session when unsupported rejects",
       (t) => {
         return XRTest.simulateDeviceConnection({ supportsImmersive:false })
-          .then( (controller) => new Promise((resolve) => {
+          .then( (controller) => { return navigator.xr.requestDevice() })
+          .then( (magicWindowOnlyDevice) => new Promise((resolve) => {
             XRTest.simulateUserActivation( () => {
               resolve(promise_rejects(
                 t,
                 "NotSupportedError",
-                navigator.xr.requestSession({ mode: 'immersive-vr' })
+                magicWindowOnlyDevice.requestSession({ immersive: true })
               ))
             });
           }));

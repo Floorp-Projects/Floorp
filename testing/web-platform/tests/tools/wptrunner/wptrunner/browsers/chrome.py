@@ -47,8 +47,6 @@ def executor_kwargs(test_type, server_config, cache_manager, run_info_data,
                     }
                 }
             },
-            "useAutomationExtension": False,
-            "excludeSwitches": ["enable-automation"],
             "w3c": True
         }
     }
@@ -65,6 +63,10 @@ def executor_kwargs(test_type, server_config, cache_manager, run_info_data,
             capabilities["goog:chromeOptions"]["args"] = []
         if "--headless" not in capabilities["goog:chromeOptions"]["args"]:
             capabilities["goog:chromeOptions"]["args"].append("--headless")
+
+    if test_type == "testharness":
+        capabilities["goog:chromeOptions"]["useAutomationExtension"] = False
+        capabilities["goog:chromeOptions"]["excludeSwitches"] = ["enable-automation"]
 
     executor_kwargs["capabilities"] = capabilities
 

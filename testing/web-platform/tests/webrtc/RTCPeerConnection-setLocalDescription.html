@@ -108,7 +108,7 @@
     };
     await pc.setLocalDescription(offer);
     eventSequence += 'setLocalDescription;';
-    await signalingstatechangeResolver;
+    await signalingstatechangeResolver.promise;
     assert_equals(eventSequence, 'onsignalingstatechange;setLocalDescription;');
   }, 'onsignalingstatechange fires before setLocalDescription resolves');
 
