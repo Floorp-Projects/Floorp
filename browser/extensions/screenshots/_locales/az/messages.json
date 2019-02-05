@@ -17,6 +17,9 @@
   "saveScreenshotSelectedArea": {
     "message": "Saxla"
   },
+  "uploadScreenshotSelectedArea": {
+    "message": "Yüklə"
+  },
   "saveScreenshotVisibleArea": {
     "message": "Görünən ərazini saxla"
   },

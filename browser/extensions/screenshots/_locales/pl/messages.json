@@ -17,6 +17,9 @@
   "saveScreenshotSelectedArea": {
     "message": "Zapisz"
   },
+  "uploadScreenshotSelectedArea": {
+    "message": "Wyślij"
+  },
   "saveScreenshotVisibleArea": {
     "message": "Zapisz widoczne"
   },
@@ -28,6 +31,9 @@
   },
   "downloadScreenshot": {
     "message": "Pobierz"
+  },
+  "downloadScreenshotTitle": {
+    "message": "Pobierz zrzut ekranu"
   },
   "downloadOnlyNotice": {
     "message": "Obecnie używany jest tryb umożliwiający tylko pobieranie."
@@ -63,6 +69,9 @@
   },
   "copyScreenshot": {
     "message": "Kopiuj"
+  },
+  "copyScreenshotTitle": {
+    "message": "Skopiuj zrzut ekranu do schowka"
   },
   "notificationImageCopiedTitle": {
     "message": "Skopiowano zrzut"
@@ -122,8 +131,8 @@
   "genericErrorDetails": {
     "message": "Nie bardzo wiemy, co się wydarzyło. Spróbujesz ponownie lub wykonasz zrzut innej strony?"
   },
-  "tourBodyIntro": {
-    "message": "Wykonuj, zapisuj i udostępniaj zrzuty ekranu bez wychodzenia z Firefoksa."
+  "tourBodyIntroServerless": {
+    "message": "Wykonuj, kopiuj i pobieraj zrzuty ekranu bez wychodzenia z Firefoksa."
   },
   "tourHeaderPageAction": {
     "message": "Nowy sposób zapisywania"
@@ -142,18 +151,6 @@
   },
   "tourBodyFullPage": {
     "message": "Kliknij przycisk w górnym prawym rogu, aby zapisać obszar widoczny w oknie lub całą stronę."
-  },
-  "tourHeaderDownloadUpload": {
-    "message": "Tak, jak lubisz"
-  },
-  "tourBodyDownloadUpload": {
-    "message": "Zapisuj przycięte zrzuty w Internecie, aby łatwiej je udostępniać, albo pobierz je na swój komputer. Możesz też kliknąć przycisk „Moje zrzuty”, aby przeglądać wszystkie wykonane zrzuty."
-  },
-  "tourHeaderAccounts": {
-    "message": "Zrzuty ekranu na wynos"
-  },
-  "tourBodyAccounts": {
-    "message": "Zaloguj się na konto Firefoksa, aby mieć dostęp do swoich zrzutów na wszystkich urządzeniach i zachować ulubione na zawsze."
   },
   "tourSkip": {
     "message": "Pomiń"

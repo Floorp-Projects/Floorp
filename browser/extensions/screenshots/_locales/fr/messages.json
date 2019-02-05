@@ -17,6 +17,9 @@
   "saveScreenshotSelectedArea": {
     "message": "Enregistrer"
   },
+  "uploadScreenshotSelectedArea": {
+    "message": "Envoyer en ligne"
+  },
   "saveScreenshotVisibleArea": {
     "message": "Capturer la zone visible"
   },

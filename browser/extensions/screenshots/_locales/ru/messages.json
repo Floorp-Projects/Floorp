@@ -17,6 +17,9 @@
   "saveScreenshotSelectedArea": {
     "message": "Сохранить"
   },
+  "uploadScreenshotSelectedArea": {
+    "message": "Выгрузить"
+  },
   "saveScreenshotVisibleArea": {
     "message": "Сохранить видимую область"
   },
@@ -28,6 +31,9 @@
   },
   "downloadScreenshot": {
     "message": "Загрузить"
+  },
+  "downloadScreenshotTitle": {
+    "message": "Загрузить скриншот"
   },
   "downloadOnlyNotice": {
     "message": "Сейчас вы в режиме только загрузки."
@@ -63,6 +69,9 @@
   },
   "copyScreenshot": {
     "message": "Копировать"
+  },
+  "copyScreenshotTitle": {
+    "message": "Копировать скриншот в буфер обмена"
   },
   "notificationImageCopiedTitle": {
     "message": "Снимок скопирован"
@@ -122,8 +131,8 @@
   "genericErrorDetails": {
     "message": "Мы не уверены, в чём проблема. Попробуете ещё раз или сделаете снимок другой страницы?"
   },
-  "tourBodyIntro": {
-    "message": "Делайте, сохраняйте и делитесь скриншотами прямо в Firefox."
+  "tourBodyIntroServerless": {
+    "message": "Создавайте, копируйте и загружайте скриншоты, не покидая Firefox."
   },
   "tourHeaderPageAction": {
     "message": "Новый способ сохранения"
@@ -142,18 +151,6 @@
   },
   "tourBodyFullPage": {
     "message": "С помощью кнопок в верхнем правом углу выбирайте захват видимой области окна или страницы целиком."
-  },
-  "tourHeaderDownloadUpload": {
-    "message": "Как вам нравится"
-  },
-  "tourBodyDownloadUpload": {
-    "message": "Сохраняйте свои снимки в Интернете, чтобы легко ими делиться, или загружайте их на свой компьютер. Вы также можете просмотреть все сохранённые снимки, нажав на кнопку Мои снимки."
-  },
-  "tourHeaderAccounts": {
-    "message": "Скриншоты на ходу"
-  },
-  "tourBodyAccounts": {
-    "message": "Войдите в свой Аккаунт Firefox, чтобы получить доступ к вашим снимкам на всех ваших устройствах и сохраняйте любимые вами навсегда."
   },
   "tourSkip": {
     "message": "Пропустить"

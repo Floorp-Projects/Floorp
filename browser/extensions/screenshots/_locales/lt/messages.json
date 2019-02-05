@@ -17,6 +17,9 @@
   "saveScreenshotSelectedArea": {
     "message": "Įrašyti"
   },
+  "uploadScreenshotSelectedArea": {
+    "message": "Įkelti"
+  },
   "saveScreenshotVisibleArea": {
     "message": "Įrašyti matomą"
   },
@@ -28,6 +31,9 @@
   },
   "downloadScreenshot": {
     "message": "Atsisiųsti"
+  },
+  "downloadScreenshotTitle": {
+    "message": "Atsisiųsti ekrano nuotrauką"
   },
   "downloadOnlyNotice": {
     "message": "Dabar esate tik atsiuntimo veiksenoje."
@@ -63,6 +69,9 @@
   },
   "copyScreenshot": {
     "message": "Kopijuoti"
+  },
+  "copyScreenshotTitle": {
+    "message": "Kopijuoti ekrano nutrauką į iškarpinę"
   },
   "notificationImageCopiedTitle": {
     "message": "Nuotrauka nukopijuota"
@@ -122,8 +131,8 @@
   "genericErrorDetails": {
     "message": "Mes nesame tikri, kas ką tik nutiko. Norite pabandyti dar kartą arba nufotografuoti kitą tinklalapį?"
   },
-  "tourBodyIntro": {
-    "message": "Darykite, įrašykite ir dalinkitės ekrano nuotraukomis nepalikdami „Firefox“."
+  "tourBodyIntroServerless": {
+    "message": "Fotografuokite, kopijuokite, ir atsisiųskite ekrano nuotraukas nepalikdami „Firefox“."
   },
   "tourHeaderPageAction": {
     "message": "Naujas būdas įrašyti"
@@ -142,18 +151,6 @@
   },
   "tourBodyFullPage": {
     "message": "Pasirinkite mygtukus aukščiau dešinėje, norėdami užfiksuoti matomą lango dalį arba visą tinklalapį."
-  },
-  "tourHeaderDownloadUpload": {
-    "message": "Kaip jums patogiau"
-  },
-  "tourBodyDownloadUpload": {
-    "message": "Įrašykite padarytas nuotraukas saityne patogesniam dalinimuisi, arba atsisiųskite jas į savo kompiuterį. Spustelėję mygtuką „Mano nuotraukos“, matysite visas savo padarytas nuotraukas."
-  },
-  "tourHeaderAccounts": {
-    "message": "Nuotraukos visur"
-  },
-  "tourBodyAccounts": {
-    "message": "Prisijungę su savo „Firefox“ paskyra, nuotraukas galėsite pasiekti visuose savo įrenginiuose, ir visam laikui įrašyti patinkančias."
   },
   "tourSkip": {
     "message": "SKIP"

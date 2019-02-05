@@ -17,6 +17,9 @@
   "saveScreenshotSelectedArea": {
     "message": "Salvesta"
   },
+  "uploadScreenshotSelectedArea": {
+    "message": "Laadi üles"
+  },
   "saveScreenshotVisibleArea": {
     "message": "Salvesta nähtav"
   },

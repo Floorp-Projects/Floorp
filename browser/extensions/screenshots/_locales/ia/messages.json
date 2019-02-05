@@ -17,6 +17,9 @@
   "saveScreenshotSelectedArea": {
     "message": "Salvar"
   },
+  "uploadScreenshotSelectedArea": {
+    "message": "Cargar"
+  },
   "saveScreenshotVisibleArea": {
     "message": "Salvar le area visibile"
   },
@@ -28,6 +31,9 @@
   },
   "downloadScreenshot": {
     "message": "Discargar"
+  },
+  "downloadScreenshotTitle": {
+    "message": "Discargar instantaneo de schermo"
   },
   "downloadOnlyNotice": {
     "message": "Tu es actualmente in modo solo-discargamento."
@@ -63,6 +69,9 @@
   },
   "copyScreenshot": {
     "message": "Copiar"
+  },
+  "copyScreenshotTitle": {
+    "message": "Copiar instantaneo del schermo in le area de transferentia"
   },
   "notificationImageCopiedTitle": {
     "message": "Instantaneo copiate"
@@ -122,8 +131,8 @@
   "genericErrorDetails": {
     "message": "Nos non sape lo que occurreva. Reprobar o capturar un instantaneo de un altere pagina?"
   },
-  "tourBodyIntro": {
-    "message": "Captura, salva e comparti instantaneos de schermo sin lassar Firefox."
+  "tourBodyIntroServerless": {
+    "message": "Captura, copia e discarga instantaneos de schermo sin lassar Firefox."
   },
   "tourHeaderPageAction": {
     "message": "Un nove modo pro salvar"
@@ -142,18 +151,6 @@
   },
   "tourBodyFullPage": {
     "message": "Elige le buttones in alto a dextra pro capturar le area visibile in le fenestra o pro capturar un pagina integre."
-  },
-  "tourHeaderDownloadUpload": {
-    "message": "Como tu lo agrada"
-  },
-  "tourBodyDownloadUpload": {
-    "message": "Salvar tu instantaneos retaliate al web pro los compartir plus facilemente, o los discargar a tu computator. Tu alsi pote cliccar sur le button Mi Instantaneos pro trovar tote le instantaneos que tu ha prendite."
-  },
-  "tourHeaderAccounts": {
-    "message": "Tu instantaneos sempre con te"
-  },
-  "tourBodyAccounts": {
-    "message": "Authentica te con tu conto Firefox pro acceder a tu instantaneos sur tote tu apparatos e salva per sempre tu instantaneos favorite."
   },
   "tourSkip": {
     "message": "SKIP"
