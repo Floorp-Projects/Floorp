@@ -776,7 +776,7 @@ class FullParseHandler {
  public:
   FunctionNodeType newFunction(FunctionSyntaxKind syntaxKind,
                                const TokenPos& pos) {
-    return new_<FunctionNode>(syntaxKind, JSOP_NOP, pos);
+    return new_<FunctionNode>(syntaxKind, pos);
   }
 
   BinaryNodeType newObjectMethodOrPropertyDefinition(Node key, Node value,
