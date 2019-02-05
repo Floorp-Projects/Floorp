@@ -16,6 +16,7 @@ const {
   moveInfobar,
 } = require("./utils/markup");
 const {
+  findFlexOrGridParentContainerForNode,
   getCurrentZoom,
   setIgnoreLayoutChanges,
  } = require("devtools/shared/layout/utils");
@@ -439,7 +440,7 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
     } else {
       // The highlighted element is not a flexbox container so we need to check
       // if it is a flex item.
-      const container = node.parentFlexElement;
+      const container = findFlexOrGridParentContainerForNode(node, "flex");
 
       if (container) {
         for (const region of BOX_MODEL_REGIONS) {
