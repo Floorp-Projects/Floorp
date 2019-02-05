@@ -9,7 +9,7 @@ geckoview-junit:
     max-run-time: 3600
     tier:
         by-test-platform:
-            android-em-7.0-x86/.*: 3
+            android-em-7.*: 3
             default: default
     chunks:
         by-test-platform:
@@ -21,7 +21,7 @@ geckoview-junit:
         script: android_emulator_unittest.py
         config:
             by-test-platform:
-                android-em-7.0-x86/.*:
+                android-em-7.*:
                     - android/android_common.py
                     - android/androidx86_7_0.py
                 android-em-4.*:
@@ -90,10 +90,10 @@ test-verify:
                 default: desktop_unittest.py
         config:
             by-test-platform:
-                android-em-7.0-x86/opt:
+                android-em-7.*:
                     - android/android_common.py
                     - android/androidx86_7_0.py
-                android-em.*:
+                android-em-4.*:
                     - android/android_common.py
                     - android/androidarm_4_3.py
                 linux.*:
@@ -133,10 +133,10 @@ test-verify-gpu:
                 default: desktop_unittest.py
         config:
             by-test-platform:
-                android-em-7.0-x86/opt:
+                android-em-7.*:
                     - android/android_common.py
                     - android/androidx86_7_0.py
-                android-em.*:
+                android-em-4.*:
                     - android/android_common.py
                     - android/androidarm_4_3.py
                 linux.*:
@@ -170,10 +170,10 @@ test-coverage:
                 default: desktop_unittest.py
         config:
             by-test-platform:
-                android-em-7.0-x86/opt:
+                android-em-7.*:
                     - android/android_common.py
                     - android/androidx86_7_0.py
-                android-em.*:
+                android-em-4.*:
                     - android/android_common.py
                     - android/androidarm_4_3.py
                 linux.*:
@@ -211,10 +211,10 @@ test-coverage-gpu:
                 default: desktop_unittest.py
         config:
             by-test-platform:
-                android-em-7.0-x86/opt:
+                android-em-7.*:
                     - android/android_common.py
                     - android/androidx86_7_0.py
-                android-em.*:
+                android-em-4.*:
                     - android/android_common.py
                     - android/androidarm_4_3.py
                 linux.*:
