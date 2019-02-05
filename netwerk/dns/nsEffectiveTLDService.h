@@ -29,6 +29,8 @@ class nsEffectiveTLDService final : public nsIEffectiveTLDService,
   nsEffectiveTLDService();
   nsresult Init();
 
+  static already_AddRefed<nsEffectiveTLDService> GetInstance();
+
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
 
  private:
