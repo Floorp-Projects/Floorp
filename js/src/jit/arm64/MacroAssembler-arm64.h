@@ -1394,6 +1394,14 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
   void unboxSymbol(const Address& src, Register dest) {
     unboxNonDouble(src, dest, JSVAL_TYPE_SYMBOL);
   }
+#ifdef ENABLE_BIGINT
+  void unboxBigInt(const ValueOperand& operand, Register dest) {
+    unboxNonDouble(operand, dest, JSVAL_TYPE_BIGINT);
+  }
+  void unboxBigInt(const Address& src, Register dest) {
+    unboxNonDouble(src, dest, JSVAL_TYPE_BIGINT);
+  }
+#endif
   // These two functions use the low 32-bits of the full value register.
   void boolValueToDouble(const ValueOperand& operand, FloatRegister dest) {
     convertInt32ToDouble(operand.valueReg(), dest);
@@ -1754,6 +1762,19 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
     MOZ_ASSERT(src.index != scratch);
     splitSignExtTag(src, scratch);
     return testBigInt(cond, scratch);
+  }
+  Condition testBigIntTruthy(bool truthy, const ValueOperand& value) {
+    vixl::UseScratchRegisterScope temps(this);
+    const Register scratch = temps.AcquireX().asUnsized();
+    const ARMRegister scratch64(scratch, 64);
+
+    MOZ_ASSERT(value.valueReg() != scratch);
+
+    unboxBigInt(value, scratch);
+    Ldr(scratch64,
+        MemOperand(scratch64, BigInt::offsetOfLengthSignAndReservedBits()));
+    Cmp(scratch64, Operand(0));
+    return truthy ? Condition::NonZero : Condition::Zero;
   }
 #endif
   Condition testInt32(Condition cond, const BaseIndex& src) {

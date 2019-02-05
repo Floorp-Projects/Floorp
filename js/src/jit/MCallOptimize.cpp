@@ -2119,10 +2119,11 @@ IonBuilder::InliningResult IonBuilder::inlineStrFromCharCode(
 
   MDefinition* codeUnit = callInfo.getArg(0);
   if (codeUnit->type() != MIRType::Int32) {
-    // MTruncateToInt32 will always bail for objects and symbols, so don't
-    // try to inline String.fromCharCode() for these two value types.
+    // MTruncateToInt32 will always bail for objects, symbols and BigInts, so
+    // don't try to inline String.fromCharCode() for these value types.
     if (codeUnit->mightBeType(MIRType::Object) ||
-        codeUnit->mightBeType(MIRType::Symbol)) {
+        codeUnit->mightBeType(MIRType::Symbol) ||
+        IF_BIGINT(codeUnit->mightBeType(MIRType::BigInt), false)) {
       return InliningStatus_NotInlined;
     }
 
@@ -3537,6 +3538,7 @@ IonBuilder::InliningResult IonBuilder::inlineToInteger(CallInfo& callInfo) {
   if (input->mightBeType(MIRType::Object) ||
       input->mightBeType(MIRType::String) ||
       input->mightBeType(MIRType::Symbol) ||
+      IF_BIGINT(input->mightBeType(MIRType::BigInt), false) ||
       input->mightBeType(MIRType::Undefined) || input->mightBeMagicType()) {
     return InliningStatus_NotInlined;
   }
@@ -3661,13 +3663,15 @@ IonBuilder::InliningResult IonBuilder::inlineAtomicsCompareExchange(
   // https://bugzilla.mozilla.org/show_bug.cgi?id=1141986#c20.
   MDefinition* oldval = callInfo.getArg(2);
   if (oldval->mightBeType(MIRType::Object) ||
-      oldval->mightBeType(MIRType::Symbol)) {
+      oldval->mightBeType(MIRType::Symbol) ||
+      IF_BIGINT(oldval->mightBeType(MIRType::BigInt), false)) {
     return InliningStatus_NotInlined;
   }
 
   MDefinition* newval = callInfo.getArg(3);
   if (newval->mightBeType(MIRType::Object) ||
-      newval->mightBeType(MIRType::Symbol)) {
+      newval->mightBeType(MIRType::Symbol) ||
+      IF_BIGINT(newval->mightBeType(MIRType::BigInt), false)) {
     return InliningStatus_NotInlined;
   }
 
@@ -3707,7 +3711,8 @@ IonBuilder::InliningResult IonBuilder::inlineAtomicsExchange(
 
   MDefinition* value = callInfo.getArg(2);
   if (value->mightBeType(MIRType::Object) ||
-      value->mightBeType(MIRType::Symbol)) {
+      value->mightBeType(MIRType::Symbol) ||
+      IF_BIGINT(value->mightBeType(MIRType::BigInt), false)) {
     return InliningStatus_NotInlined;
   }
 
@@ -3792,7 +3797,8 @@ IonBuilder::InliningResult IonBuilder::inlineAtomicsStore(CallInfo& callInfo) {
   }
 
   if (value->mightBeType(MIRType::Object) ||
-      value->mightBeType(MIRType::Symbol)) {
+      value->mightBeType(MIRType::Symbol) ||
+      IF_BIGINT(value->mightBeType(MIRType::BigInt), false)) {
     return InliningStatus_NotInlined;
   }
 
@@ -3837,7 +3843,8 @@ IonBuilder::InliningResult IonBuilder::inlineAtomicsBinop(
 
   MDefinition* value = callInfo.getArg(2);
   if (value->mightBeType(MIRType::Object) ||
-      value->mightBeType(MIRType::Symbol)) {
+      value->mightBeType(MIRType::Symbol) ||
+      IF_BIGINT(value->mightBeType(MIRType::BigInt), false)) {
     return InliningStatus_NotInlined;
   }
 

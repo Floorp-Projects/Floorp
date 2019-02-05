@@ -124,6 +124,9 @@ enum BailoutKind {
   Bailout_NonObjectInput,
   Bailout_NonStringInput,
   Bailout_NonSymbolInput,
+#ifdef ENABLE_BIGINT
+  Bailout_NonBigIntInput,
+#endif
 
   // Atomic operations require shared memory, bail out if the typed array
   // maps unshared memory.
@@ -223,6 +226,10 @@ inline const char* BailoutKindString(BailoutKind kind) {
       return "Bailout_NonStringInput";
     case Bailout_NonSymbolInput:
       return "Bailout_NonSymbolInput";
+#ifdef ENABLE_BIGINT
+    case Bailout_NonBigIntInput:
+      return "Bailout_NonBigIntInput";
+#endif
     case Bailout_NonSharedTypedArrayInput:
       return "Bailout_NonSharedTypedArrayInput";
     case Bailout_Debugger:
@@ -441,6 +448,9 @@ enum class MIRType : uint8_t {
   // Types above have trivial conversion to a number.
   String,
   Symbol,
+#ifdef ENABLE_BIGINT
+  BigInt,
+#endif
   // Types above are primitive (including undefined and null).
   Object,
   MagicOptimizedArguments,    // JS_OPTIMIZED_ARGUMENTS magic value.
@@ -488,6 +498,10 @@ static inline MIRType MIRTypeFromValueType(JSValueType type) {
       return MIRType::String;
     case JSVAL_TYPE_SYMBOL:
       return MIRType::Symbol;
+#ifdef ENABLE_BIGINT
+    case JSVAL_TYPE_BIGINT:
+      return MIRType::BigInt;
+#endif
     case JSVAL_TYPE_BOOLEAN:
       return MIRType::Boolean;
     case JSVAL_TYPE_NULL:
@@ -518,6 +532,10 @@ static inline JSValueType ValueTypeFromMIRType(MIRType type) {
       return JSVAL_TYPE_STRING;
     case MIRType::Symbol:
       return JSVAL_TYPE_SYMBOL;
+#ifdef ENABLE_BIGINT
+    case MIRType::BigInt:
+      return JSVAL_TYPE_BIGINT;
+#endif
     case MIRType::MagicOptimizedArguments:
     case MIRType::MagicOptimizedOut:
     case MIRType::MagicHole:
@@ -571,6 +589,10 @@ static inline const char* StringFromMIRType(MIRType type) {
       return "String";
     case MIRType::Symbol:
       return "Symbol";
+#ifdef ENABLE_BIGINT
+    case MIRType::BigInt:
+      return "BigInt";
+#endif
     case MIRType::Object:
       return "Object";
     case MIRType::MagicOptimizedArguments:
