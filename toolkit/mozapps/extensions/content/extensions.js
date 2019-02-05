@@ -3659,11 +3659,12 @@ var gDragDrop = {
       }
 
       if (url) {
-        let install = await AddonManager.getInstallForURL(url, "application/x-xpinstall",
-                                                          null, null, null, null, null, {
-                                                            source: "about:addons",
-                                                            method: "drag-and-drop",
-                                                          });
+        let install = await AddonManager.getInstallForURL(url, {
+          telemetryInfo: {
+            source: "about:addons",
+            method: "drag-and-drop",
+          },
+        });
         AddonManager.installAddonFromAOM(browser, document.documentURIObject, install);
       }
     }

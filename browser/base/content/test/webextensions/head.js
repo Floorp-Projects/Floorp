@@ -97,10 +97,8 @@ function promiseInstallEvent(addon, event) {
  *          Resolves when the extension has been installed with the Addon
  *          object as the resolution value.
  */
-async function promiseInstallAddon(url, installTelemetryInfo) {
-  let install = await AddonManager.getInstallForURL(url, "application/x-xpinstall",
-                                                    null, null, null, null, null,
-                                                    installTelemetryInfo);
+async function promiseInstallAddon(url, telemetryInfo) {
+  let install = await AddonManager.getInstallForURL(url, {telemetryInfo});
   install.install();
 
   let addon = await new Promise(resolve => {

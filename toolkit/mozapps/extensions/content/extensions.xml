@@ -1222,14 +1222,14 @@
             }
           }
 
-          var dataReq = new XMLHttpRequest();
+          var dataReq = new XMLHttpRequest({mozAnon: true});
           dataReq.open("GET", aURI.spec, true);
           dataReq.responseType = "document";
           dataReq.addEventListener("load", handleResponse);
           dataReq.addEventListener("error", handleError);
           dataReq.send(null);
 
-          var styleReq = new XMLHttpRequest();
+          var styleReq = new XMLHttpRequest({mozAnon: true});
           styleReq.open("GET", UPDATES_RELEASENOTES_TRANSFORMFILE, true);
           styleReq.responseType = "document";
           styleReq.addEventListener("load", handleResponse);
