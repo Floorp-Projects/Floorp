@@ -95,22 +95,34 @@ fn test_cut() {
     let rect: TypedRect<f32, ()> = rect(-10.0, -10.0, 20.0, 20.0);
     let poly = Polygon::from_rect(rect, 0);
     let mut poly2 = Polygon::from_rect(rect, 0);
+    // test robustness for positions
+    for p in &mut poly2.points {
+        p.z += 0.00000001;
+    }
+    match poly.cut(poly2.clone()) {
+        PlaneCut::Sibling(p) => assert_eq!(p, poly2),
+        PlaneCut::Cut { .. } => panic!("wrong cut!"),
+    }
+    // test robustness for normal
     poly2.plane.normal.z += 0.00000001;
     match poly.cut(poly2.clone()) {
         PlaneCut::Sibling(p) => assert_eq!(p, poly2),
         PlaneCut::Cut { .. } => panic!("wrong cut!"),
     }
+    // test opposite normal handling
     poly2.plane.normal *= -1.0;
     match poly.cut(poly2.clone()) {
         PlaneCut::Sibling(p) => assert_eq!(p, poly2),
         PlaneCut::Cut { .. } => panic!("wrong cut!"),
     }
 
+    // test grouping front
     poly2.plane.offset += 0.1;
     match poly.cut(poly2.clone()) {
         PlaneCut::Cut { ref front, ref back } => assert_eq!((front.len(), back.len()), (1, 0)),
         PlaneCut::Sibling(_) => panic!("wrong sibling!"),
     }
+    // test grouping back
     poly2.plane.normal *= -1.0;
     match poly.cut(poly2.clone()) {
         PlaneCut::Cut { ref front, ref back } => assert_eq!((front.len(), back.len()), (0, 1)),

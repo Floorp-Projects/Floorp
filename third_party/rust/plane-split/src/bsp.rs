@@ -22,15 +22,14 @@ impl<T, U> BspPlane for Polygon<T, U> where
 
         //Note: we treat `self` as a plane, and `poly` as a concrete polygon here
         let (intersection, dist) = match self.plane.intersect(&poly.plane) {
-            None if self.plane.normal.dot(poly.plane.normal) > T::zero() => {
-                debug!("\t\tNormals roughly point to the same direction");
-                (Intersection::Coplanar, self.plane.offset - poly.plane.offset)
-            }
             None => {
-                debug!("\t\tNormals roughly point to opposite directions");
-                (Intersection::Coplanar, self.plane.offset + poly.plane.offset)
+                let ndot = self.plane.normal.dot(poly.plane.normal);
+                debug!("\t\tNormals are aligned with {:?}", ndot);
+                let dist = self.plane.offset - ndot * poly.plane.offset;
+                (Intersection::Coplanar, dist)
             }
             Some(_) if self.plane.are_outside(&poly.points) => {
+                //Note: we can't start with `are_outside` because it's subject to FP precision
                 let dist = self.plane.signed_distance_sum_to(&poly);
                 (Intersection::Outside, dist)
             }
@@ -64,7 +63,7 @@ impl<T, U> BspPlane for Polygon<T, U> where
             }
             Intersection::Inside(line) => {
                 debug!("\t\tCut across {:?}", line);
-                let (res_add1, res_add2) = poly.split(&line);
+                let (res_add1, res_add2) = poly.split_with_normal(&line, &self.plane.normal);
                 let mut front = Vec::new();
                 let mut back = Vec::new();
 
