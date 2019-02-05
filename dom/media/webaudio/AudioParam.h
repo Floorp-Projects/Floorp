@@ -161,6 +161,9 @@ class AudioParam final : public nsWrapperCache, public AudioParamTimeline {
   // May create the stream if it doesn't exist
   MediaStream* Stream();
 
+  // Return nullptr if stream doesn't exist.
+  MediaStream* GetStream() const;
+
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override {
     size_t amount = AudioParamTimeline::SizeOfExcludingThis(aMallocSizeOf);
     // Not owned:
