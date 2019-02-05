@@ -16,12 +16,6 @@
  */
 #define NS_XPCOM_SHUTDOWN_THREADS_OBSERVER_ID "xpcom-shutdown-threads"
 
-/**
- * During this shutdown notification all module loaders must unload XPCOM
- * modules.
- */
-#define NS_XPCOM_SHUTDOWN_LOADERS_OBSERVER_ID "xpcom-shutdown-loaders"
-
 // PUBLIC
 namespace mozilla {
 
