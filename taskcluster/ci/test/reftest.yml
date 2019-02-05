@@ -69,8 +69,8 @@ jsreftest:
     chunks:
         by-test-platform:
             android-em-4.3-arm7-api-16/debug: 100
-            android-em-7.0-x86/opt: 4
-            android-em-7.0-x86/debug: 8
+            android-em-7.0-x86_64/opt: 4
+            android-em-7.0-x86_64/debug: 8
             android-em.*: 40
             windows.*: 2
             windows10-64-ccov/debug: 5

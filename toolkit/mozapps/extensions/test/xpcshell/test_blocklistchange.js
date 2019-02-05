@@ -158,7 +158,7 @@ function Pmanual_update(aVersion) {
   const names = ["soft1", "soft2", "soft3", "soft4", "hard", "regexp"];
   return Promise.all(names.map(async name => {
     let url = `http://example.com/addons/blocklist_${name}_${aVersion}.xpi`;
-    let install = await AddonManager.getInstallForURL(url, "application/x-xpinstall");
+    let install = await AddonManager.getInstallForURL(url);
 
     // installAddonFromAOM() does more checking than install.install().
     // In particular, it will refuse to install an incompatible addon.

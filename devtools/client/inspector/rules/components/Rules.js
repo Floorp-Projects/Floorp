@@ -19,6 +19,7 @@ class Rules extends PureComponent {
       rules: PropTypes.arrayOf(PropTypes.shape(Types.rule)).isRequired,
       showDeclarationNameEditor: PropTypes.func.isRequired,
       showDeclarationValueEditor: PropTypes.func.isRequired,
+      showNewDeclarationEditor: PropTypes.func.isRequired,
       showSelectorEditor: PropTypes.func.isRequired,
     };
   }
@@ -30,6 +31,7 @@ class Rules extends PureComponent {
       rules,
       showDeclarationNameEditor,
       showDeclarationValueEditor,
+      showNewDeclarationEditor,
       showSelectorEditor,
     } = this.props;
 
@@ -41,6 +43,7 @@ class Rules extends PureComponent {
         rule,
         showDeclarationNameEditor,
         showDeclarationValueEditor,
+        showNewDeclarationEditor,
         showSelectorEditor,
       });
     });
