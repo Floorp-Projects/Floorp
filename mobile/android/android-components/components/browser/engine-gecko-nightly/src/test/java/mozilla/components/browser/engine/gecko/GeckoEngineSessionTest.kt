@@ -766,6 +766,17 @@ class GeckoEngineSessionTest {
     }
 
     @Test
+    fun trackingProtectionCategoriesAreAligned() {
+        assertEquals(TrackingProtectionPolicy.AD, ContentBlocking.AT_AD)
+        assertEquals(TrackingProtectionPolicy.ANALYTICS, ContentBlocking.AT_ANALYTIC)
+        assertEquals(TrackingProtectionPolicy.CONTENT, ContentBlocking.AT_CONTENT)
+        assertEquals(TrackingProtectionPolicy.SOCIAL, ContentBlocking.AT_SOCIAL)
+        assertEquals(TrackingProtectionPolicy.TEST, ContentBlocking.AT_TEST)
+
+        assertEquals(TrackingProtectionPolicy.all().categories, ContentBlocking.AT_ALL)
+    }
+
+    @Test
     fun settingTestingMode() {
         val runtime = mock(GeckoRuntime::class.java)
         `when`(runtime.settings).thenReturn(mock(GeckoRuntimeSettings::class.java))
