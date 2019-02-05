@@ -392,9 +392,8 @@ bool nsTransitionManager::UpdateTransitions(dom::Element* aElement,
 
   CSSTransitionCollection* collection =
       CSSTransitionCollection::GetAnimationCollection(aElement, aPseudoType);
-  const nsStyleDisplay* disp = aNewStyle.ComputedData()->GetStyleDisplay();
-  return DoUpdateTransitions(*disp, aElement, aPseudoType, collection,
-                             aOldStyle, aNewStyle);
+  return DoUpdateTransitions(*aNewStyle.StyleDisplay(), aElement, aPseudoType,
+                             collection, aOldStyle, aNewStyle);
 }
 
 bool nsTransitionManager::DoUpdateTransitions(
