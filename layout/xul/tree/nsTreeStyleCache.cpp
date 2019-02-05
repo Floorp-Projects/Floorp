@@ -74,6 +74,11 @@ ComputedStyle* nsTreeStyleCache::GetComputedStyle(
         aPresContext->StyleSet()->ResolveXULTreePseudoStyle(
             aContent->AsElement(), aPseudoElement, aStyle, aInputWord);
 
+    // Normally we rely on nsFrame::Init / RestyleManager to call this, but
+    // these are weird and don't use a frame, yet ::-moz-tree-twisty definitely
+    // pokes at list-style-image.
+    newResult->StartImageLoads(*aPresContext->Document());
+
     // Put the ComputedStyle in our table, transferring the owning reference to
     // the table.
     if (!mCache) {
