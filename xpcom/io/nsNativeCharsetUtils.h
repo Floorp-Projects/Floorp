@@ -23,6 +23,9 @@
  *                                                                           *
 \*****************************************************************************/
 
+#include "nsError.h"
+#include "nsStringFwd.h"
+
 /**
  * thread-safe conversion routines that do not depend on uconv libraries.
  */
