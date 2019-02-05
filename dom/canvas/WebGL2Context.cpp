@@ -145,6 +145,9 @@ bool WebGLContext::InitWebGL2(FailureReason* const out_failReason) {
   gl->GetUIntegerv(LOCAL_GL_MAX_UNIFORM_BUFFER_BINDINGS,
                    &mGLMaxUniformBufferBindings);
 
+  mGLMinProgramTexelOffset = gl->GetIntAs<uint32_t>(LOCAL_GL_MIN_PROGRAM_TEXEL_OFFSET);
+  mGLMaxProgramTexelOffset = gl->GetIntAs<uint32_t>(LOCAL_GL_MAX_PROGRAM_TEXEL_OFFSET);
+
   mIndexedUniformBufferBindings.resize(mGLMaxUniformBufferBindings);
 
   mDefaultTransformFeedback = new WebGLTransformFeedback(this, 0);

@@ -150,11 +150,19 @@ webgl::ShaderValidator* WebGLContext::CreateShaderValidator(
 
   resources.MaxVertexAttribs = mGLMaxVertexAttribs;
   resources.MaxVertexUniformVectors = mGLMaxVertexUniformVectors;
-  resources.MaxVaryingVectors = mGLMaxVaryingVectors;
   resources.MaxVertexTextureImageUnits = mGLMaxVertexTextureImageUnits;
   resources.MaxCombinedTextureImageUnits = mGLMaxCombinedTextureImageUnits;
   resources.MaxTextureImageUnits = mGLMaxFragmentTextureImageUnits;
   resources.MaxFragmentUniformVectors = mGLMaxFragmentUniformVectors;
+
+  resources.MaxVertexOutputVectors = mGLMaxVertexOutputVectors;
+  resources.MaxFragmentInputVectors = mGLMaxFragmentInputVectors;
+  resources.MaxVaryingVectors = mGLMaxFragmentInputVectors;
+
+  if (IsWebGL2()) {
+    resources.MinProgramTexelOffset = mGLMinProgramTexelOffset;
+    resources.MaxProgramTexelOffset = mGLMaxProgramTexelOffset;
+  }
 
   const bool hasMRTs =
       (IsWebGL2() || IsExtensionEnabled(WebGLExtensionID::WEBGL_draw_buffers));
