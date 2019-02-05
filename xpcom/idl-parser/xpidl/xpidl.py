@@ -423,7 +423,7 @@ class Typedef(object):
 
     def rustType(self, calltype):
         if self.name == 'nsresult':
-            return '::nserror::nsresult'
+            return "%s::nserror::nsresult" % (calltype != 'in' and '*mut ' or '')
 
         return "%s%s" % (calltype != 'in' and '*mut ' or '',
                          self.name)
