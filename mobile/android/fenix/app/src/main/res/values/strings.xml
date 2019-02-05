@@ -90,4 +90,22 @@
 
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">Data choices</string>
+
+    <!-- Option in Library to open Sessions page -->
+    <string name="library_sessions">Sessions</string>
+
+    <!-- Option in Library to open Screenshots page -->
+    <string name="library_screenshots">Screenshots</string>
+
+    <!-- Option in Library to open Downloads page -->
+    <string name="library_downloads">Downloads</string>
+
+    <!-- Option in Library to open Favorites page -->
+    <string name="library_favorites">Favorites</string>
+
+    <!-- Option in Library to open History page -->
+    <string name="library_history">History</string>
+
+    <!-- Option in Library to open Logins page -->
+    <string name="library_logins">Logins</string>
 </resources>
