@@ -20,10 +20,8 @@ add_task(async function init() {
     }
     Services.prefs.clearUserPref("timesBeforeHidingSuggestionsHint");
 
-    // Make sure the popup is closed for the next test.
     gURLBar.handleRevert();
-    gURLBar.blur();
-    Assert.ok(!gURLBar.popup.popupOpen, "popup should be closed");
+    await UrlbarTestUtils.promisePopupClose(window);
   });
 });
 
@@ -33,15 +31,13 @@ add_task(async function basic() {
   let resetNotification = enableSearchSuggestionsNotification();
 
   gURLBar.search("basic");
-  await promiseSearchComplete();
-  await waitForAutocompleteResultAt(0);
-  assertUrlbarValue("basic");
+  await assertUrlbarValue("basic");
 
   assertSearchSuggestionsNotificationVisible(true);
   assertOneOffButtonsVisible(true);
 
-  EventUtils.synthesizeKey("KEY_Escape");
-  await promisePopupHidden(gURLBar.popup);
+  await UrlbarTestUtils.promisePopupClose(window, () =>
+    EventUtils.synthesizeKey("KEY_Escape"));
 
   resetNotification();
 });
@@ -53,28 +49,24 @@ add_task(async function searchEngineAlias() {
   let resetNotification = enableSearchSuggestionsNotification();
 
   gURLBar.search("@example");
-  await promiseSearchComplete();
-  await waitForAutocompleteResultAt(0);
-  assertUrlbarValue("@example");
+  await assertUrlbarValue("@example");
 
   assertSearchSuggestionsNotificationVisible(false);
   assertOneOffButtonsVisible(false);
 
-  EventUtils.synthesizeKey("KEY_Escape");
-  await promisePopupHidden(gURLBar.popup);
+  await UrlbarTestUtils.promisePopupClose(window, () =>
+    EventUtils.synthesizeKey("KEY_Escape"));
 
   // Open the popup again (by doing another search) to make sure the
   // notification and one-off buttons are shown -- i.e., that we didn't
   // accidentally break them.
   gURLBar.search("not an engine alias");
-  await promiseSearchComplete();
-  await waitForAutocompleteResultAt(0);
-  assertUrlbarValue("not an engine alias");
+  await assertUrlbarValue("not an engine alias");
   assertSearchSuggestionsNotificationVisible(true);
   assertOneOffButtonsVisible(true);
 
-  EventUtils.synthesizeKey("KEY_Escape");
-  await promisePopupHidden(gURLBar.popup);
+  await UrlbarTestUtils.promisePopupClose(window, () =>
+    EventUtils.synthesizeKey("KEY_Escape"));
 
   resetNotification();
 });
@@ -108,6 +100,10 @@ function enableSearchSuggestionsNotification() {
  *        True if it should be visible, false if not.
  */
 function assertSearchSuggestionsNotificationVisible(visible) {
+  // TODO Bug 1525296: Not implemented for QuantumBar.
+  if (UrlbarPrefs.get("quantumbar")) {
+    return;
+  }
   Assert.equal(
     gURLBar.popup.classList.contains("showSearchSuggestionsNotification"),
     visible
@@ -125,6 +121,10 @@ function assertSearchSuggestionsNotificationVisible(visible) {
  *        True if they should be visible, false if not.
  */
 function assertOneOffButtonsVisible(visible) {
+  // TODO Bug 1491248: Not implemented for QuantumBar.
+  if (UrlbarPrefs.get("quantumbar")) {
+    return;
+  }
   Assert.equal(gURLBar.popup.oneOffSearchesEnabled, visible);
   Assert.equal(
     window.getComputedStyle(gURLBar.popup.oneOffSearchButtons.container).display,
@@ -140,12 +140,16 @@ function assertOneOffButtonsVisible(visible) {
  * @param {string} value
  *        The urlbar's expected value.
  */
-function assertUrlbarValue(value) {
+async function assertUrlbarValue(value) {
+  await waitForAutocompleteResultAt(0);
+
   Assert.equal(gURLBar.value, value);
-  let controller = gURLBar.controller;
-  Assert.ok(controller.matchCount > 0);
-  let action = gURLBar._parseActionUrl(controller.getValueAt(0));
-  Assert.ok(action);
-  Assert.equal(action.type, "searchengine");
-  Assert.equal(action.params.searchQuery, value);
+  Assert.greater(UrlbarTestUtils.getResultCount(window), 0,
+    "Should have at least one result");
+
+  let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
+  Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.SEARCH,
+    "Should have type search for the first result");
+  Assert.equal(result.searchParams.query, value,
+    "Should have the correct query for the first result");
 }
