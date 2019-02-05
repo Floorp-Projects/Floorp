@@ -247,8 +247,11 @@ this.AboutPreferences = class AboutPreferences {
           label.setAttribute("flex", 1);
           detailHbox.appendChild(label);
 
+          // Add box so the search tooltip is positioned correctly
+          const tooltipBox = createAppend("hbox", detailHbox);
+
           // Add appropriate number of localized entries to the dropdown
-          const menulist = createAppend("menulist", detailHbox);
+          const menulist = createAppend("menulist", tooltipBox);
           menulist.setAttribute("crop", "none");
           const menupopup = createAppend("menupopup", menulist);
           for (let num = 1; num <= maxRows; num++) {
