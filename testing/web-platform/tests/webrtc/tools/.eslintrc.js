@@ -105,7 +105,7 @@ module.exports = {
     createDataChannelPair: true,
     awaitMessage: true,
     blobToArrayBuffer: true,
-    assert_equals_typed_array: true,
+    assert_equals_array_buffer: true,
     generateMediaStreamTrack: true,
     getTrackFromUserMedia: true,
     getUserMediaTracksAndStreams: true,

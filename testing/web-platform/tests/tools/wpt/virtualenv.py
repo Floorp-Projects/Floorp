@@ -9,13 +9,11 @@ from tools.wpt.utils import call
 logger = logging.getLogger(__name__)
 
 class Virtualenv(object):
-    def __init__(self, path, skip_virtualenv_setup):
+    def __init__(self, path):
         self.path = path
-        self.skip_virtualenv_setup = skip_virtualenv_setup
-        if not skip_virtualenv_setup:
-            self.virtualenv = find_executable("virtualenv")
-            if not self.virtualenv:
-                raise ValueError("virtualenv must be installed and on the PATH")
+        self.virtualenv = find_executable("virtualenv")
+        if not self.virtualenv:
+            raise ValueError("virtualenv must be installed and on the PATH")
 
     @property
     def exists(self):

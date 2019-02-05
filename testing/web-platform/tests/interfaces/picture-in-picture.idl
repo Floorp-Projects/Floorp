@@ -9,7 +9,6 @@ partial interface HTMLVideoElement {
   attribute EventHandler onenterpictureinpicture;
   attribute EventHandler onleavepictureinpicture;
 
-  [CEReactions] attribute boolean autoPictureInPicture;
   [CEReactions] attribute boolean disablePictureInPicture;
 };
 
@@ -19,7 +18,7 @@ partial interface Document {
   [NewObject] Promise<void> exitPictureInPicture();
 };
 
-partial interface mixin DocumentOrShadowRoot {
+partial interface DocumentOrShadowRoot {
   readonly attribute Element? pictureInPictureElement;
 };
 

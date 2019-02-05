@@ -359,6 +359,8 @@ class SeleniumRefTestExecutor(RefTestExecutor):
         self.close_after_done = close_after_done
         self.has_window = False
 
+        with open(os.path.join(here, "reftest.js")) as f:
+            self.script = f.read()
         with open(os.path.join(here, "reftest-wait_webdriver.js")) as f:
             self.wait_script = f.read()
 
@@ -368,11 +370,7 @@ class SeleniumRefTestExecutor(RefTestExecutor):
     def do_test(self, test):
         self.logger.info("Test requires OS-level window focus")
 
-        width_offset, height_offset = self.protocol.webdriver.execute_script(
-            """return [window.outerWidth - window.innerWidth,
-                       window.outerHeight - window.innerHeight];"""
-        )
-        self.protocol.webdriver.set_window_size(600 + width_offset, 600 + height_offset)
+        self.protocol.webdriver.set_window_size(600, 600)
 
         result = self.implementation.run_test(test)
 

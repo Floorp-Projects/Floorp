@@ -12,9 +12,9 @@
         return;
 
       assert_header_equals(e.data, {
-        "dest": "nested-document",
-        "site": "same-origin",
-        "user":"?F"
+        "cause": "forced",
+        "destination": "nested-document",
+        "site": "same-origin"
       });
       t.done();
     }));
@@ -30,9 +30,9 @@
         return;
 
       assert_header_equals(e.data, {
-        "dest": "nested-document",
-        "site": "same-site",
-        "user": "?F"
+        "cause": "forced",
+        "destination": "nested-document",
+        "site": "same-site"
       });
       t.done();
     }));
@@ -48,9 +48,9 @@
         return;
 
       assert_header_equals(e.data, {
-        "dest": "nested-document",
-        "site": "cross-site",
-        "user": "?F"
+        "cause": "forced",
+        "destination": "nested-document",
+        "site": "cross-site"
       });
       t.done();
     }));

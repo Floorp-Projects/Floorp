@@ -1,7 +1,5 @@
 import urllib
-import sys, os
-sys.path.append(os.path.join(os.path.dirname(__file__), "../common/"))
-import sleep
+import time
 
 def main(request, response):
     index = request.request_path.index("?")
@@ -13,7 +11,7 @@ def main(request, response):
         if arg.startswith("ignored"):
             continue
         elif arg.endswith("ms"):
-            sleep.sleep_at_least(float(arg[0:-2]))
+            time.sleep(float(arg[0:-2]) / 1E3);
         elif arg.startswith("redirect:"):
             return (302, "WEBPERF MARKETING"), [("Location", urllib.unquote(arg[9:]))], "TEST"
         elif arg.startswith("mime:"):

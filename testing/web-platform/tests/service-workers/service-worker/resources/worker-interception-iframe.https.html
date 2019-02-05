@@ -1,5 +1,4 @@
 <script src="/common/get-host-info.sub.js"></script>
-<script src="/resources/testharness.js"></script>
 <script src="test-helpers.sub.js?pipe=sub"></script>
 <script>
 var host_info = get_host_info();
@@ -12,7 +11,7 @@ function boilerplate_test(url, msg) {
           worker.postMessage(msg);
         })
       .then(function(data) {
-          assert_equals(data, "This load was successfully intercepted.");
+          window.parent.postMessage({results: data}, host_info['HTTPS_ORIGIN']);
         });
 }
 

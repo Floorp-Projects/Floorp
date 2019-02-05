@@ -14,6 +14,5 @@ self.addEventListener('message', function(event) {
   });
 
 self.addEventListener('fetch', function(event) {
-    if (!/404/.test(event.request.url))
-      event.respondWith(new Response('Intercepted!'));
-  });
+    event.respondWith(new Response('Intercepted!'));
+});

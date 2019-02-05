@@ -12,10 +12,5 @@ def main(request, response):
             if (window.top != window)
                 window.top.postMessage(data, "*");
         </script>
-    """ % json.dumps({
-        "dest": request.headers.get("sec-fetch-dest", ""),
-        "mode": request.headers.get("sec-fetch-mode", ""),
-        "site": request.headers.get("sec-fetch-site", ""),
-        "user": request.headers.get("sec-fetch-user", ""),
-        })
+    """ % json.dumps(request.headers.get("Sec-Metadata", ""))
     return headers, body

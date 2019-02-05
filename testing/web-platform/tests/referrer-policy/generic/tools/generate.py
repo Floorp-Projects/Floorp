@@ -2,36 +2,30 @@
 
 from __future__ import print_function
 
-import copy
 import os, sys, json
 from common_paths import *
 import spec_validator
 import argparse
 
 
-def expand_pattern(expansion_pattern, test_expansion_schema):
+def expand_test_expansion_pattern(spec_test_expansion, test_expansion_schema):
     expansion = {}
-    for artifact_key in expansion_pattern:
-        artifact_value = expansion_pattern[artifact_key]
+    for artifact in spec_test_expansion:
+        artifact_value = spec_test_expansion[artifact]
         if artifact_value == '*':
-            expansion[artifact_key] = test_expansion_schema[artifact_key]
+            expansion[artifact] = test_expansion_schema[artifact]
         elif isinstance(artifact_value, list):
-            expansion[artifact_key] = artifact_value
-        elif isinstance(artifact_value, dict):
-            # Flattened expansion.
-            expansion[artifact_key] = []
-            values_dict = expand_pattern(artifact_value,
-                                         test_expansion_schema[artifact_key])
-            for sub_key in values_dict.keys():
-                expansion[artifact_key] += values_dict[sub_key]
+            expansion[artifact] = artifact_value
         else:
-            expansion[artifact_key] = [artifact_value]
+            expansion[artifact] = [artifact_value]
 
     return expansion
 
 
-def permute_expansion(expansion, artifact_order, selection = {}, artifact_index = 0):
-    assert isinstance(artifact_order, list), "artifact_order should be a list"
+def permute_expansion(expansion, selection = {}, artifact_index = 0):
+    artifact_order = ['delivery_method', 'redirection', 'origin',
+                      'source_protocol', 'target_protocol', 'subresource',
+                      'referrer_url', 'name']
 
     if artifact_index >= len(artifact_order):
         yield selection
@@ -42,7 +36,6 @@ def permute_expansion(expansion, artifact_order, selection = {}, artifact_index 
     for artifact_value in expansion[artifact_key]:
         selection[artifact_key] = artifact_value
         for next_selection in permute_expansion(expansion,
-                                                artifact_order,
                                                 selection,
                                                 artifact_index + 1):
             yield next_selection
@@ -122,8 +115,8 @@ def generate_selection(selection, spec, subresource_path,
         selection['meta_delivery_method'] = "\n    " + \
                                             selection['meta_delivery_method']
 
-    # Write out the generated HTML file.
-    write_file(test_filename, test_html_template % selection)
+    with open(test_filename, 'w') as f:
+        f.write(test_html_template % selection)
 
 
 def generate_test_source_files(spec_json, target):
@@ -131,55 +124,42 @@ def generate_test_source_files(spec_json, target):
     specification = spec_json['specification']
 
     spec_json_js_template = get_template('spec_json.js.template')
-    write_file(generated_spec_json_filename,
-               spec_json_js_template % {'spec_json': json.dumps(spec_json)})
+    with open(generated_spec_json_filename, 'w') as f:
+        f.write(spec_json_js_template
+                % {'spec_json': json.dumps(spec_json)})
 
     # Choose a debug/release template depending on the target.
     html_template = "test.%s.html.template" % target
-
-    artifact_order = test_expansion_schema.keys() + ['name']
-    artifact_order.remove('expansion')
 
     # Create list of excluded tests.
     exclusion_dict = {}
     for excluded_pattern in spec_json['excluded_tests']:
         excluded_expansion = \
-            expand_pattern(excluded_pattern, test_expansion_schema)
-        for excluded_selection in permute_expansion(excluded_expansion,
-                                                    artifact_order):
+            expand_test_expansion_pattern(excluded_pattern,
+                                          test_expansion_schema)
+        for excluded_selection in permute_expansion(excluded_expansion):
             excluded_selection_path = selection_pattern % excluded_selection
             exclusion_dict[excluded_selection_path] = True
 
     for spec in specification:
-        # Used to make entries with expansion="override" override preceding
-        # entries with the same |selection_path|.
-        output_dict = {}
-
-        for expansion_pattern in spec['test_expansion']:
-            expansion = expand_pattern(expansion_pattern, test_expansion_schema)
-            for selection in permute_expansion(expansion, artifact_order):
+        for spec_test_expansion in spec['test_expansion']:
+            expansion = expand_test_expansion_pattern(spec_test_expansion,
+                                                      test_expansion_schema)
+            for selection in permute_expansion(expansion):
                 selection_path = selection_pattern % selection
                 if not selection_path in exclusion_dict:
-                    if selection_path in output_dict:
-                        if expansion_pattern['expansion'] != 'override':
-                            print("Error: %s's expansion is default but overrides %s" % (selection['name'], output_dict[selection_path]['name']))
-                            sys.exit(1)
-                    output_dict[selection_path] = copy.deepcopy(selection)
+                    subresource_path = \
+                        spec_json["subresource_path"][selection["subresource"]]
+                    generate_selection(selection,
+                                       spec,
+                                       subresource_path,
+                                       html_template)
                 else:
                     print('Excluding selection:', selection_path)
 
-        for selection_path in output_dict:
-            selection = output_dict[selection_path]
-            subresource_path = \
-                spec_json["subresource_path"][selection["subresource"]]
-            generate_selection(selection,
-                               spec,
-                               subresource_path,
-                               html_template)
 
-
-def main(target, spec_filename):
-    spec_json = load_spec_json(spec_filename)
+def main(target):
+    spec_json = load_spec_json();
     spec_validator.assert_valid_spec_json(spec_json)
     generate_test_source_files(spec_json, target)
 
@@ -189,8 +169,6 @@ if __name__ == '__main__':
     parser.add_argument('-t', '--target', type = str,
         choices = ("release", "debug"), default = "release",
         help = 'Sets the appropriate template for generating tests')
-    parser.add_argument('-s', '--spec', type = str, default = None,
-        help = 'Specify a file used for describing and generating the tests')
     # TODO(kristijanburnik): Add option for the spec_json file.
     args = parser.parse_args()
-    main(args.target, args.spec)
+    main(args.target)
