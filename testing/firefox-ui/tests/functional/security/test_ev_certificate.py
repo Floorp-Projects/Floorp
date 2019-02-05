@@ -49,11 +49,9 @@ class TestEVCertificate(PuppeteerMixin, MarionetteTestCase):
         # Check the idenity popup doorhanger
         self.assertEqual(self.identity_popup.element.get_attribute('connection'), 'secure-ev')
 
-        # For EV certificates no hostname but the organization name is shown
-        l10n_header = self.browser.localize_property('identity.headerWithHost')
-        l10n_header = l10n_header.replace('%S', cert['organization'])
-        self.assertEqual(self.identity_popup.view.main.header.get_property('textContent'),
-                         l10n_header)
+        # For EV certificates, the hostname is shown
+        self.assertRegexpMatches(self.identity_popup.view.main.header.get_property('textContent'),
+                                 '.*badssl\.com$')
 
         # Only the secure label is visible in the main view
         secure_label = self.identity_popup.view.main.secure_connection_label
