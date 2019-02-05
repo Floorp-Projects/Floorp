@@ -15,9 +15,27 @@ transforms:
    - taskgraph.transforms.task:transforms
 
 job-defaults:
+   treeherder:
+      kind: build
+      platform: toolchains/opt
+      tier: 1
    run-on-projects: []
+   run:
+      using: toolchain-script
 
 jobs-from:
-   - linux.yml
-   - macosx.yml
-   - windows.yml
+   - android.yml
+   - cbindgen.yml
+   - cctools-port.yml
+   - clang-tidy.yml
+   - clang.yml
+   - gcc.yml
+   - gn.yml
+   - grcov.yml
+   - mingw.yml
+   - minidump_stackwalk.yml
+   - misc.yml
+   - node.yml
+   - rust.yml
+   - rust-size.yml
+   - sccache.yml

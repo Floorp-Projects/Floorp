@@ -1,0 +1,152 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+job-defaults:
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux-xlarge
+    worker:
+        max-run-time: 7200
+    run:
+        resources:
+            - 'build/build-clang/build-clang.py'
+
+linux64-clang-3.9:
+    description: "Clang 3.9 toolchain build"
+    treeherder:
+        symbol: TL(clang3.9)
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux-large
+    run:
+        script: build-clang-3.9-linux.sh
+        resources:
+            - 'build/build-clang/clang-3.9-linux64.json'
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
+        toolchain-artifact: public/build/clang.tar.xz
+    toolchains:
+        - linux64-gcc-4.9
+
+linux64-clang-7:
+    description: "Clang 7 toolchain build"
+    treeherder:
+        symbol: TL(clang7)
+    run:
+        using: toolchain-script
+        script: build-clang-7-linux.sh
+        resources:
+            - 'build/build-clang/build-clang.py'
+            - 'build/build-clang/clang-7-linux64.json'
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
+        toolchain-alias: linux64-clang
+        toolchain-artifact: public/build/clang.tar.xz
+    toolchains:
+        - linux64-gcc-4.9
+
+linux64-clang-trunk-mingw-x86:
+    description: "MinGW-Clang Trunk x86 toolchain build"
+    treeherder:
+        symbol: TMW(clang-x86)
+    run:
+        script: build-clang-trunk-mingw.sh
+        arguments: [
+            'x86'
+        ]
+        resources:
+            - 'build/build-clang/clang-trunk-mingw.json'
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
+        toolchain-artifact: public/build/clangmingw.tar.xz
+    toolchains:
+        - linux64-gcc-4.9
+
+linux64-clang-trunk-mingw-x64:
+    description: "MinGW-Clang Trunk x64 toolchain build"
+    treeherder:
+        symbol: TMW(clang-x64)
+        tier: 2
+    run:
+        script: build-clang-trunk-mingw.sh
+        arguments: [
+            'x64'
+        ]
+        resources:
+            - 'build/build-clang/clang-trunk-mingw.json'
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
+        toolchain-artifact: public/build/clangmingw.tar.xz
+    toolchains:
+        - linux64-gcc-4.9
+
+linux64-clang-7-android-cross:
+    description: "Clang 7 toolchain build"
+    treeherder:
+        symbol: TL(clang7-android)
+    run:
+        using: toolchain-script
+        script: build-clang-7-android.sh
+        resources:
+            - 'build/build-clang/clang-7-android.json'
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
+        toolchain-alias: linux64-clang-android-cross
+        toolchain-artifact: public/build/clang.tar.xz
+    toolchains:
+        - linux64-gcc-4.9
+        - linux64-android-ndk-linux-repack
+
+linux64-clang-7-macosx-cross:
+    description: "Clang 7 toolchain build with MacOS Compiler RT libs"
+    treeherder:
+        symbol: TL(clang7-macosx-cross)
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        max-run-time: 3600
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-clang.manifest"
+    run:
+        script: build-clang-7-linux-macosx-cross.sh
+        resources:
+            - 'build/build-clang/clang-7-macosx64.json'
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
+        toolchain-alias: linux64-clang-macosx-cross
+        toolchain-artifact: public/build/clang.tar.xz
+        tooltool-downloads: internal
+    toolchains:
+        - linux64-cctools-port
+        - linux64-clang-7
+        - linux64-gcc-4.9
+
+macosx64-clang:
+    description: "Clang toolchain build"
+    treeherder:
+        symbol: TM(clang)
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux-large
+    worker:
+        max-run-time: 3600
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-clang.manifest"
+    run-on-projects:
+        - trunk
+        - try
+    run:
+        script: build-clang-macosx.sh
+        tooltool-downloads: internal
+        resources:
+            - 'build/build-clang/clang-7-macosx64.json'
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
+        toolchain-artifact: public/build/clang.tar.xz
+    toolchains:
+        - linux64-cctools-port
+        - linux64-clang-7
+        - linux64-gcc-4.9
+        - linux64-node
+
+win64-clang-cl:
+    description: "Clang-cl toolchain build"
+    treeherder:
+        symbol: TW64(clang-cl)
+    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker:
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/build-clang-cl.manifest"
+    run:
+        script: build-clang64-windows.sh
+        resources:
+            - 'build/build-clang/clang-win64.json'
+            - 'taskcluster/scripts/misc/build-clang-windows-helper64.sh'
+        toolchain-artifact: public/build/clang.tar.bz2

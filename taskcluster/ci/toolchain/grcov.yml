@@ -1,0 +1,44 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+job-defaults:
+    description: "grcov toolchain build"
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        max-run-time: 1800
+    run:
+        script: build-grcov.sh
+        resources:
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
+        toolchain-artifact: public/build/grcov.tar.xz
+
+linux64-grcov:
+    treeherder:
+        symbol: TL(grcov)
+    toolchains:
+        - linux64-rust-1.28
+        - linux64-clang-7
+
+macosx64-grcov:
+    treeherder:
+        symbol: TM(grcov)
+    run-on-projects:
+        - trunk
+        - try
+    toolchains:
+        - linux64-rust-1.28
+        - linux64-clang-7
+
+win64-grcov:
+    treeherder:
+        symbol: TW64(grcov)
+    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker:
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/sccache-build.manifest"
+    run:
+        toolchain-artifact: public/build/grcov.tar.bz2
+    toolchains:
+        - win64-rust-1.28
+        - win64-clang-cl

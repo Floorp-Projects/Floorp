@@ -41,5 +41,16 @@
                 data-l10n-id="about-config-warning-button"></button>
       </div>
     </div>
+
+    <template id="main">
+      <div id="search-container">
+        <!-- Use a unique ID to prevent showing autocomplete results from other
+             browser pages with similarly named fields. -->
+        <input type="text" id="about-config-search"
+               data-l10n-id="about-config-search">
+      </div>
+
+      <table id="prefs"></table>
+    </template>
   </body>
 </html>

@@ -61,7 +61,7 @@ add_task(async function test_set_tabstate_and_duplicate() {
      "the tab's state was correctly restored");
 
   // add text data
-  await setInputValue(tab.linkedBrowser, {id: "search", value: value3});
+  await setInputValue(tab.linkedBrowser, {id: "about-config-search", value: value3});
 
   // duplicate the tab
   let tab2 = ss.duplicateTab(window, tab);
@@ -71,7 +71,7 @@ add_task(async function test_set_tabstate_and_duplicate() {
   ok(ss.getCustomTabValue(tab2, key2) == value2 &&
      tab2.linkedBrowser.currentURI.spec == URL,
      "correctly duplicated the tab's state");
-  let textbox = await getInputValue(tab2.linkedBrowser, {id: "search"});
+  let textbox = await getInputValue(tab2.linkedBrowser, {id: "about-config-search"});
   is(textbox, value3, "also duplicated text data");
 
   // clean up

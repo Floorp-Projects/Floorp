@@ -1,0 +1,33 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+job-defaults:
+    description: "rust-size toolchain build"
+    worker:
+        max-run-time: 1800
+    run:
+        script: build-rust-size.sh
+        resources:
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
+
+linux64-rust-size:
+    treeherder:
+        symbol: TL(rust-size)
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    run:
+        toolchain-artifact: public/build/rust-size.tar.xz
+    toolchains:
+        - linux64-rust-1.28
+
+win64-rust-size:
+    treeherder:
+        symbol: TW64(rust-size)
+    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker:
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/sccache-build.manifest"
+    run:
+        toolchain-artifact: public/build/rust-size.tar.bz2
+    toolchains:
+        - win64-rust-1.28

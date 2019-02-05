@@ -69,11 +69,12 @@ impl rpc::Server for CallbackServer {
 
     fn process(&mut self, req: Self::Request) -> Self::Future {
         match req {
-            CallbackReq::Data(nframes, frame_size) => {
+            CallbackReq::Data { nframes, input_frame_size, output_frame_size } => {
                 trace!(
-                    "stream_thread: Data Callback: nframes={} frame_size={}",
+                    "stream_thread: Data Callback: nframes={} input_fs={} output_fs={}",
                     nframes,
-                    frame_size
+                    input_frame_size,
+                    output_frame_size,
                 );
 
                 // Clone values that need to be moved into the cpu pool thread.
@@ -92,14 +93,14 @@ impl rpc::Server for CallbackServer {
                     // TODO: This is proof-of-concept. Make it better.
                     let input_ptr: *const u8 = match input_shm {
                         Some(shm) => shm
-                            .get_slice(nframes as usize * frame_size)
+                            .get_slice(nframes as usize * input_frame_size)
                             .unwrap()
                             .as_ptr(),
                         None => ptr::null(),
                     };
                     let output_ptr: *mut u8 = match output_shm {
                         Some(ref mut shm) => shm
-                            .get_mut_slice(nframes as usize * frame_size)
+                            .get_mut_slice(nframes as usize * output_frame_size)
                             .unwrap()
                             .as_mut_ptr(),
                         None => ptr::null_mut(),

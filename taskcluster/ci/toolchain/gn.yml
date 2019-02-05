@@ -1,0 +1,52 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+job-defaults:
+    description: "gn toolchain build"
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        max-run-time: 1800
+    run-on-projects:
+        - trunk
+        - try
+    run:
+        tooltool-downloads: public
+        resources:
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
+            - 'taskcluster/scripts/misc/build-gn-common.sh'
+        toolchain-artifact: public/build/gn.tar.xz
+
+linux64-gn:
+    treeherder:
+        symbol: TL(gn)
+    run:
+        script: build-gn-linux.sh
+    toolchains:
+        - linux64-gcc-4.9
+
+macosx64-gn:
+    treeherder:
+        symbol: TM(gn)
+    worker:
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-clang.manifest"
+    run:
+        script: build-gn-macosx.sh
+        tooltool-downloads: internal
+    toolchains:
+        - linux64-cctools-port
+        - linux64-clang-7
+        - linux64-node
+
+win32-gn:
+    treeherder:
+        symbol: TW32(gn)
+    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker:
+        max-run-time: 3600
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/gn-build.manifest"
+    run:
+        script: build-gn-win32.sh
+        toolchain-artifact: public/build/gn.tar.bz2

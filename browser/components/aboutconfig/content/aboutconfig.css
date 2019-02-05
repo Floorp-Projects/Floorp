@@ -35,7 +35,7 @@ body.config-warning {
   min-width: 644px;
 }
 
-#search {
+#about-config-search {
   box-sizing: border-box;
   width: 100%;
   background-image: url("chrome://global/skin/icons/search-textbox.svg");
