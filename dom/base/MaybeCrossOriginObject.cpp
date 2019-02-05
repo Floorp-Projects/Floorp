@@ -423,37 +423,11 @@ template <typename Base>
 JSObject* MaybeCrossOriginObject<Base>::enumerate(
     JSContext* cx, JS::Handle<JSObject*> proxy) const {
   // We want to avoid any possible magic here and just do the BaseProxyHandler
-  // thing of using our property keys to enumerate.  But we can't actually call
-  // BaseProxyHandler::enumerate, because that does two things: (1) Get the keys
-  // and (2) create the iterator object.  We want to do (1) in our current
-  // Realm, because if this is a cross-origin access we want to handle it
-  // appropriately.  But the iterator object needs to be created in the Realm of
-  // "proxy", because it might involve changing "proxy"'s shape, and that needs
-  // to happen in at least the same zone as "proxy".
-  JS::AutoIdVector props(cx);
-  if (!GetPropertyKeys(cx, proxy, 0, &props)) {
-    return nullptr;
-  }
-
-  // Create the iterator object in the Realm of "proxy".
-  JS::Rooted<JSObject*> iterator(cx);
-  {  // Scope for JSAutoRealm
-    JSAutoRealm ar(cx, proxy);
-    for (auto& id : props) {
-      JS_MarkCrossZoneId(cx, id);
-    }
-    iterator = EnumeratedIdVectorToIterator(cx, proxy, props);
-    if (!iterator) {
-      return nullptr;
-    }
-  }
-
-  // And now put things back in the Realm we started with.
-  if (!MaybeWrapObject(cx, &iterator)) {
-    return nullptr;
-  }
-
-  return iterator;
+  // thing of using our property keys to enumerate.
+  //
+  // Note that we do not need to enter the Realm of "proxy" here, nor do we want
+  // to: if this is a cross-origin access we want to handle it appropriately.
+  return js::BaseProxyHandler::enumerate(cx, proxy);
 }
 
 // Force instantiations of the out-of-line template methods we need.
