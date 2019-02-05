@@ -7650,7 +7650,7 @@ nsresult PresShell::DispatchEventToDOM(WidgetEvent* aEvent,
             nsContentUtils::IsURIInPrefList(
                 uri,
                 "dom.keyboardevent.keypress.hack.dispatch_non_printable_keys");
-        mForceUseLegacyKeyCodeAndCharCodeValues =
+        mForceUseLegacyKeyCodeAndCharCodeValues |=
             nsContentUtils::IsURIInPrefList(uri,
                                             "dom.keyboardevent.keypress.hack."
                                             "use_legacy_keycode_and_charcode");

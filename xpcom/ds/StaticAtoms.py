@@ -748,6 +748,7 @@ STATIC_ATOMS = [
     Atom("onchargingtimechange", "onchargingtimechange"),
     Atom("onchecking", "onchecking"),
     Atom("onCheckboxStateChange", "onCheckboxStateChange"),
+    Atom("onCheckKeyPressEventModel", "onCheckKeyPressEventModel"),
     Atom("onclick", "onclick"),
     Atom("onclose", "onclose"),
     Atom("oncommand", "oncommand"),

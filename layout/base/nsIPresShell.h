@@ -1607,6 +1607,12 @@ class nsIPresShell : public nsStubDocumentObserver {
 
   void NativeAnonymousContentRemoved(nsIContent* aAnonContent);
 
+  /**
+   * See HTMLDocument.setKeyPressEventModel() in HTMLDocument.webidl for the
+   * detail.
+   */
+  virtual void SetKeyPressEventModel(uint16_t aKeyPressEventModel) = 0;
+
  protected:
   /**
    * Refresh observer management.
