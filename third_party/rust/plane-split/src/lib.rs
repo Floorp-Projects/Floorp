@@ -67,6 +67,30 @@ impl<T, U> Line<T, U> where
         is_zero_vec(self.dir.cross(other.dir)) &&
         is_zero_vec(self.dir.cross(diff))
     }
+
+    /// Intersect an edge given by the end points.
+    /// Returns the fraction of the edge where the intersection occurs.
+    fn intersect_edge(
+        &self,
+        edge: ops::Range<TypedPoint3D<T, U>>,
+    ) -> Option<T>
+    where T: ops::Div<T, Output=T>
+    {
+        let edge_vec = edge.end - edge.start;
+        let origin_vec = self.origin - edge.start;
+        // edge.start + edge_vec * t = r + k * d
+        // (edge.start, d) + t * (edge_vec, d) - (r, d) = k
+        // edge.start + t * edge_vec = r + t * (edge_vec, d) * d + (start-r, d) * d
+        // t * (edge_vec - (edge_vec, d)*d) = origin_vec - (origin_vec, d) * d
+        let pr = origin_vec - self.dir * self.dir.dot(origin_vec);
+        let pb = edge_vec - self.dir * self.dir.dot(edge_vec);
+        let denom = pb.dot(pb);
+        if denom.approx_eq(&T::zero()) {
+            None
+        } else {
+            Some(pr.dot(pb) / denom)
+        }
+    }
 }
 
 
