@@ -2294,7 +2294,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
    * frame (i.e., when calculating style changes).
    */
   inline bool IsFixedPosContainingBlockForNonSVGTextFrames(
-      mozilla::ComputedStyle&) const;
+      const mozilla::ComputedStyle&) const;
   inline bool
   IsFixedPosContainingBlockForContainLayoutAndPaintSupportingFrames() const;
   inline bool IsFixedPosContainingBlockForTransformSupportingFrames() const;
