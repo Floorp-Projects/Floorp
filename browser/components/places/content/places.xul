@@ -388,8 +388,7 @@
               enableColumnDrag="true"
               onfocus="PlacesOrganizer.updateDetailsPane(event)"
               onselect="PlacesOrganizer.updateDetailsPane(event)"
-              onkeypress="ContentTree.onKeyPress(event);"
-              onopenflatcontainer="PlacesOrganizer.openFlatContainer(aContainer);">
+              onkeypress="ContentTree.onKeyPress(event);">
           <treecols id="placeContentColumns" context="placesColumnsContext">
             <treecol label="&col.name.label;" id="placesContentTitle" anonid="title" flex="5" primary="true" ordinal="1"
                       persist="width hidden ordinal sortActive sortDirection"/>
