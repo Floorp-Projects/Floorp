@@ -91,8 +91,8 @@ class BinASTParserPerTokenizer : public BinASTParserBase,
                                const Vector<uint8_t>& data,
                                BinASTSourceMetadata** metadataPtr = nullptr);
 
-  JS::Result<ParseNode*> parseLazyFunction(ScriptSource* src,
-                                           const size_t firstOffset);
+  JS::Result<FunctionNode*> parseLazyFunction(ScriptSource* scriptSource,
+                                              const size_t firstOffset);
 
  protected:
   MOZ_MUST_USE JS::Result<ParseNode*> parseAux(
@@ -139,12 +139,13 @@ class BinASTParserPerTokenizer : public BinASTParserBase,
 
   // Build a function object for a function-producing production. Called AFTER
   // creating the scope.
-  JS::Result<CodeNode*> makeEmptyFunctionNode(const size_t start,
-                                              const BinKind kind,
-                                              FunctionBox* funbox);
-  JS::Result<ParseNode*> buildFunction(const size_t start, const BinKind kind,
-                                       ParseNode* name, ListNode* params,
-                                       ParseNode* body, FunctionBox* funbox);
+  JS::Result<FunctionNode*> makeEmptyFunctionNode(const size_t start,
+                                                  const BinKind kind,
+                                                  FunctionBox* funbox);
+  JS::Result<FunctionNode*> buildFunction(const size_t start,
+                                          const BinKind kind, ParseNode* name,
+                                          ListNode* params, ParseNode* body,
+                                          FunctionBox* funbox);
   JS::Result<FunctionBox*> buildFunctionBox(GeneratorKind generatorKind,
                                             FunctionAsyncKind functionAsyncKind,
                                             FunctionSyntaxKind syntax,

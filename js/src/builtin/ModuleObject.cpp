@@ -1380,7 +1380,7 @@ bool ModuleBuilder::processExport(frontend::ParseNode* exportNode) {
     }
 
     case ParseNodeKind::Function: {
-      RootedFunction func(cx_, kid->as<CodeNode>().funbox()->function());
+      RootedFunction func(cx_, kid->as<FunctionNode>().funbox()->function());
       MOZ_ASSERT(!func->isArrow());
       RootedAtom localName(cx_, func->explicitName());
       RootedAtom exportName(

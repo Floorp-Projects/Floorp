@@ -94,7 +94,6 @@ restart:
     // that we preserve an unreachable function declaration node against
     // dead-code removal.
     case ParseNodeKind::Function:
-      MOZ_ASSERT(node->is<CodeNode>());
       *result = false;
       return true;
 
@@ -286,8 +285,7 @@ restart:
       LexicalScopeNode* scope = &node->as<LexicalScopeNode>();
       ParseNode* expr = scope->scopeBody();
 
-      if (expr->isKind(ParseNodeKind::ForStmt) ||
-          expr->isKind(ParseNodeKind::Function)) {
+      if (expr->isKind(ParseNodeKind::ForStmt) || expr->is<FunctionNode>()) {
         return ContainsHoistedDeclaration(cx, expr, result);
       }
 
@@ -571,7 +569,7 @@ static bool FoldTypeOfExpr(JSContext* cx, UnaryNode* node) {
   } else if (expr->isKind(ParseNodeKind::TrueExpr) ||
              expr->isKind(ParseNodeKind::FalseExpr)) {
     result = cx->names().boolean;
-  } else if (expr->isKind(ParseNodeKind::Function)) {
+  } else if (expr->is<FunctionNode>()) {
     result = cx->names().function;
   }
 
@@ -1362,7 +1360,7 @@ class FoldVisitor : public ParseNodeVisitor<FoldVisitor> {
     // See bug 537673 and bug 1182373.
     ParseNode* callee = node->left();
     if (node->isKind(ParseNodeKind::NewExpr) || !callee->isInParens() ||
-        callee->isKind(ParseNodeKind::Function)) {
+        callee->is<FunctionNode>()) {
       if (!visit(*node->unsafeLeftReference())) {
         return false;
       }
@@ -1433,7 +1431,7 @@ class FoldVisitor : public ParseNodeVisitor<FoldVisitor> {
   }
 
   bool visitFunction(ParseNode*& pn) {
-    CodeNode& node = pn->as<CodeNode>();
+    FunctionNode& node = pn->as<FunctionNode>();
 
     // Don't constant-fold inside "use asm" code, as this could create a parse
     // tree that doesn't type-check as asm.js.

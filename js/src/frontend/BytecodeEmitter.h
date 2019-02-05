@@ -484,7 +484,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
 
   // Emit function code for the tree rooted at body.
   enum class TopLevelFunction { No, Yes };
-  MOZ_MUST_USE bool emitFunctionScript(CodeNode* funNode,
+  MOZ_MUST_USE bool emitFunctionScript(FunctionNode* funNode,
                                        TopLevelFunction isTopLevel);
 
   void updateDepth(ptrdiff_t target);
@@ -580,7 +580,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
                                      JSOp op);
   MOZ_MUST_USE bool emitRegExp(uint32_t index);
 
-  MOZ_NEVER_INLINE MOZ_MUST_USE bool emitFunction(CodeNode* funNode,
+  MOZ_NEVER_INLINE MOZ_MUST_USE bool emitFunction(FunctionNode* funNode,
                                                   bool needsProto = false);
   MOZ_NEVER_INLINE MOZ_MUST_USE bool emitObject(ListNode* objNode);
 

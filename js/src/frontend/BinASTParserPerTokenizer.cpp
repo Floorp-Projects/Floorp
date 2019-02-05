@@ -134,7 +134,7 @@ JS::Result<ParseNode*> BinASTParserPerTokenizer<Tok>::parseAux(
 }
 
 template <typename Tok>
-JS::Result<ParseNode*> BinASTParserPerTokenizer<Tok>::parseLazyFunction(
+JS::Result<FunctionNode*> BinASTParserPerTokenizer<Tok>::parseLazyFunction(
     ScriptSource* scriptSource, const size_t firstOffset) {
   MOZ_ASSERT(lazyScript_);
   MOZ_ASSERT(scriptSource->length() > firstOffset);
@@ -261,7 +261,7 @@ JS::Result<FunctionBox*> BinASTParserPerTokenizer<Tok>::buildFunctionBox(
 }
 
 template <typename Tok>
-JS::Result<CodeNode*> BinASTParserPerTokenizer<Tok>::makeEmptyFunctionNode(
+JS::Result<FunctionNode*> BinASTParserPerTokenizer<Tok>::makeEmptyFunctionNode(
     const size_t start, const BinKind kind, FunctionBox* funbox) {
   // LazyScript compilation requires basically none of the fields filled out.
   TokenPos pos = tokenizer_->pos(start);
@@ -277,7 +277,7 @@ JS::Result<CodeNode*> BinASTParserPerTokenizer<Tok>::makeEmptyFunctionNode(
 }
 
 template <typename Tok>
-JS::Result<ParseNode*> BinASTParserPerTokenizer<Tok>::buildFunction(
+JS::Result<FunctionNode*> BinASTParserPerTokenizer<Tok>::buildFunction(
     const size_t start, const BinKind kind, ParseNode* name, ListNode* params,
     ParseNode* body, FunctionBox* funbox) {
   // Set the argument count for building argument packets. Function.length is
