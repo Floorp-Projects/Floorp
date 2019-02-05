@@ -883,9 +883,20 @@ void AudioContext::OnStateChanged(void* aPromise, AudioContextState aNewState) {
 nsTArray<MediaStream*> AudioContext::GetAllStreams() const {
   nsTArray<MediaStream*> streams;
   for (auto iter = mAllNodes.ConstIter(); !iter.Done(); iter.Next()) {
-    MediaStream* s = iter.Get()->GetKey()->GetStream();
+    AudioNode* node = iter.Get()->GetKey();
+    MediaStream* s = node->GetStream();
     if (s) {
       streams.AppendElement(s);
+    }
+    // Add the streams for the AudioParam that have an AudioNode input.
+    const nsTArray<RefPtr<AudioParam>>& audioParams = node->OutputParams();
+    if (!audioParams.IsEmpty()) {
+      for (auto& param : audioParams) {
+        s = param->GetStream();
+        if (s) {
+          streams.AppendElement(s);
+        }
+      }
     }
   }
   return streams;
