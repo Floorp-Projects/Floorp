@@ -129,8 +129,7 @@ enum class WebGLExtensionID : uint8_t {
   WEBGL_depth_texture,
   WEBGL_draw_buffers,
   WEBGL_lose_context,
-  Max,
-  Unknown
+  Max
 };
 
 class UniqueBuffer {

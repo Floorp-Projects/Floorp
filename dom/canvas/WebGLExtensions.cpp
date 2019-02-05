@@ -5,6 +5,7 @@
 
 #include "WebGLExtensions.h"
 
+#include "gfxPrefs.h"
 #include "GLContext.h"
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
 #include "WebGLContext.h"
@@ -37,8 +38,10 @@ WebGLExtensionFloatBlend::WebGLExtensionFloatBlend(WebGLContext* const webgl)
 WebGLExtensionFloatBlend::~WebGLExtensionFloatBlend() = default;
 
 bool WebGLExtensionFloatBlend::IsSupported(const WebGLContext* const webgl) {
-  if (!webgl->IsWebGL2()) return false;
-  if (!WebGLExtensionEXTColorBufferFloat::IsSupported(webgl)) return false;
+  if (!gfxPrefs::WebGLDraftExtensionsEnabled()) return false;
+  if (!WebGLExtensionColorBufferFloat::IsSupported(webgl) &&
+      !WebGLExtensionEXTColorBufferFloat::IsSupported(webgl))
+    return false;
 
   const auto& gl = webgl->gl;
   return !gl->IsGLES() || gl->IsANGLE() ||
