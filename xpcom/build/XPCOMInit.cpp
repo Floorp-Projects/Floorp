@@ -663,7 +663,6 @@ nsresult ShutdownXPCOM(nsIServiceManager* aServMgr) {
     mozilla::InitLateWriteChecks();
 
     if (observerService) {
-      mozilla::KillClearOnShutdown(ShutdownPhase::ShutdownLoaders);
       observerService->Shutdown();
     }
   }
