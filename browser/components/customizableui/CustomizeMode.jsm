@@ -1318,16 +1318,6 @@ CustomizeMode.prototype = {
 
     this._clearLWThemesMenu(aEvent.target);
 
-    function previewTheme(aPreviewThemeEvent) {
-      LightweightThemeManager.previewTheme(
-        aPreviewThemeEvent.target.theme.id != DEFAULT_THEME_ID ?
-        aPreviewThemeEvent.target.theme : null);
-    }
-
-    function resetPreview() {
-      LightweightThemeManager.resetPreview();
-    }
-
     let onThemeSelected = panel => {
       // This causes us to call _onUIChange when the LWT actually changes,
       // so the restore defaults / undo reset button is updated correctly.
@@ -1352,9 +1342,6 @@ CustomizeMode.prototype = {
       if (isActive) {
         tbb.setAttribute("active", "true");
       }
-      tbb.addEventListener("focus", previewTheme);
-      tbb.addEventListener("mouseover", previewTheme);
-      tbb.addEventListener("blur", resetPreview);
 
       return tbb;
     }
@@ -1399,23 +1386,6 @@ CustomizeMode.prototype = {
       });
       panel.insertBefore(button, recommendedLabel);
     }
-
-    function panelMouseOut(e) {
-      // mouseout events bubble, so we get mouseout events for the buttons
-      // in the panel. Here, we only care when the mouse actually leaves
-      // the panel. For some reason event.target might not be the panel
-      // even when the mouse *is* leaving the panel, so we check
-      // explicitOriginalTarget instead.
-      if (e.explicitOriginalTarget == panel) {
-        resetPreview();
-      }
-    }
-
-    panel.addEventListener("mouseout", panelMouseOut);
-    panel.addEventListener("popuphidden", () => {
-      panel.removeEventListener("mouseout", panelMouseOut);
-      resetPreview();
-    }, {once: true});
 
     let lwthemePrefs = Services.prefs.getBranch("lightweightThemes.");
     let recommendedThemes = lwthemePrefs.getStringPref("recommendedThemes");
