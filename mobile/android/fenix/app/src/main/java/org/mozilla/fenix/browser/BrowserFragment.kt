@@ -98,7 +98,8 @@ class BrowserFragment : Fragment(), BackHandler {
             ContextMenuCandidate.defaultCandidates(
                 requireContext(),
                 requireComponents.useCases.tabsUseCases,
-                view))
+                view),
+            view.engineView)
 
         downloadsFeature = DownloadsFeature(
             requireContext(),
