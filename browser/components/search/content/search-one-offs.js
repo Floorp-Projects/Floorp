@@ -40,8 +40,8 @@ class SearchOneOffs {
       </menupopup>
       `, ["chrome://browser/locale/browser.dtd"]));
 
+    this._view = null;
     this._popup = null;
-
     this._textbox = null;
 
     this._textboxWidth = 0;
@@ -172,6 +172,15 @@ class SearchOneOffs {
   }
 
   /**
+   * @param {UrlbarView} val
+   */
+  set view(val) {
+    this._view = val;
+    this.popup = val && val.panel;
+    return val;
+  }
+
+  /**
    * The popup that contains the one-offs.  This is required, so it should
    * never be null or undefined, except possibly before the one-offs are
    * used.
@@ -247,7 +256,8 @@ class SearchOneOffs {
    */
   set query(val) {
     this._query = val;
-    if (this.popup && this.popup.popupOpen) {
+    if (this._view && this._view.isOpen ||
+        this.popup && this.popup.popupOpen) {
       this._updateAfterQueryChanged();
     }
     return val;
@@ -733,7 +743,7 @@ class SearchOneOffs {
       }
     }
 
-    this.popup.handleOneOffSearch(aEvent, aEngine, where, params);
+    (this._view || this.popup).handleOneOffSearch(aEvent, aEngine, where, params);
   }
 
   /**
