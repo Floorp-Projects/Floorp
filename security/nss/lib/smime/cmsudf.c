@@ -239,7 +239,7 @@ NSS_CMSGenericWrapperData_Destroy(SECOidTag type, NSSCMSGenericWrapperData *gd)
 {
     const nsscmstypeInfo *typeInfo = nss_cmstype_lookup(type);
 
-    if (typeInfo && typeInfo->destroy) {
+    if (typeInfo && (typeInfo->destroy) && (gd != NULL)) {
         (*typeInfo->destroy)(gd);
     }
 }
