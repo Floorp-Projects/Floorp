@@ -75,7 +75,7 @@ def retrigger_decision_action(parameters, graph_config, input, task_group_id, ta
                 'type': 'integer',
                 'default': 1,
                 'minimum': 1,
-                'maximum': 6,
+                'maximum': 100,
                 'title': 'Times',
                 'description': 'How many times to run each task.',
             }
