@@ -38,7 +38,7 @@ use log;
 use mozprofile::preferences::Pref;
 
 static MAX_LOG_LEVEL: AtomicUsize = AtomicUsize::new(0);
-const LOGGED_TARGETS: &'static [&'static str] = &[
+const LOGGED_TARGETS: &[&str] = &[
     "geckodriver",
     "mozprofile",
     "mozrunner",
