@@ -717,7 +717,7 @@ html|input.urlbar-input {
   list-style-image: none;
 }
 
-#urlbar[noactions] > #urlbar-display-box,
+#urlbar[actionoverride] > #urlbar-display-box,
 #urlbar:not([actiontype="switchtab"]):not([actiontype="extension"]) > #urlbar-display-box,
 #urlbar:not([actiontype="switchtab"]) > #urlbar-display-box > #switchtab,
 #urlbar:not([actiontype="extension"]) > #urlbar-display-box > #extension {

@@ -207,6 +207,7 @@ class UrlbarView {
     }
 
     this.panel.removeAttribute("hidden");
+    this.panel.removeAttribute("actionoverride");
 
     this._alignPanel();
 
@@ -270,8 +271,8 @@ class UrlbarView {
       item.setAttribute("type", "search");
     } else if (result.type == UrlbarUtils.RESULT_TYPE.REMOTE_TAB) {
       item.setAttribute("type", "remotetab");
-    } else if (result.source == UrlbarUtils.RESULT_SOURCE.TABS) {
-      item.setAttribute("type", "tab");
+    } else if (result.type == UrlbarUtils.RESULT_TYPE.TAB_SWITCH) {
+      item.setAttribute("type", "switchtab");
     } else if (result.source == UrlbarUtils.RESULT_SOURCE.BOOKMARKS) {
       item.setAttribute("type", "bookmark");
     }
@@ -329,6 +330,7 @@ class UrlbarView {
     switch (result.type) {
       case UrlbarUtils.RESULT_TYPE.TAB_SWITCH:
         setAction(bundle.GetStringFromName("switchToTab2"));
+        setURL();
         break;
       case UrlbarUtils.RESULT_TYPE.REMOTE_TAB:
         setAction(result.payload.device);

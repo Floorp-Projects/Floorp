@@ -314,7 +314,7 @@ class UrlbarInput {
 
     switch (result.type) {
       case UrlbarUtils.RESULT_TYPE.TAB_SWITCH: {
-        if (this.hasAttribute("noactions")) {
+        if (this.hasAttribute("actionoverride")) {
           where = "current";
           break;
         }
@@ -647,7 +647,7 @@ class UrlbarInput {
     return selectedVal;
   }
 
-  _toggleNoActions(event) {
+  _toggleActionOverride(event) {
     if (event.keyCode == KeyEvent.DOM_VK_SHIFT ||
         event.keyCode == KeyEvent.DOM_VK_ALT ||
         event.keyCode == (AppConstants.platform == "macosx" ?
@@ -655,10 +655,12 @@ class UrlbarInput {
                             KeyEvent.DOM_VK_CONTROL)) {
       if (event.type == "keydown") {
         this._actionOverrideKeyCount++;
-        this.setAttribute("noactions", "true");
+        this.setAttribute("actionoverride", "true");
+        this.view.panel.setAttribute("actionoverride", "true");
       } else if (this._actionOverrideKeyCount &&
                  --this._actionOverrideKeyCount == 0) {
-        this.removeAttribute("noactions");
+        this.removeAttribute("actionoverride");
+        this.view.panel.removeAttribute("actionoverride");
       }
     }
   }
@@ -1003,11 +1005,11 @@ class UrlbarInput {
 
   _on_keydown(event) {
     this.controller.handleKeyNavigation(event);
-    this._toggleNoActions(event);
+    this._toggleActionOverride(event);
   }
 
   _on_keyup(event) {
-    this._toggleNoActions(event);
+    this._toggleActionOverride(event);
   }
 
   _on_popupshowing() {
