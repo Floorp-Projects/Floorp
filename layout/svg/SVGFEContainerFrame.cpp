@@ -23,8 +23,9 @@ class SVGFEContainerFrame final : public nsContainerFrame {
                                              ComputedStyle* aStyle);
 
  protected:
-  explicit SVGFEContainerFrame(ComputedStyle* aStyle)
-      : nsContainerFrame(aStyle, kClassID) {
+  explicit SVGFEContainerFrame(ComputedStyle* aStyle,
+                               nsPresContext* aPresContext)
+      : nsContainerFrame(aStyle, aPresContext, kClassID) {
     AddStateBits(NS_FRAME_SVG_LAYOUT | NS_FRAME_IS_NONDISPLAY);
   }
 
@@ -62,7 +63,8 @@ class SVGFEContainerFrame final : public nsContainerFrame {
 
 nsIFrame* NS_NewSVGFEContainerFrame(nsIPresShell* aPresShell,
                                     ComputedStyle* aStyle) {
-  return new (aPresShell) SVGFEContainerFrame(aStyle);
+  return new (aPresShell)
+      SVGFEContainerFrame(aStyle, aPresShell->GetPresContext());
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(SVGFEContainerFrame)

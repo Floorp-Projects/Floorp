@@ -23,7 +23,8 @@ class SVGFELeafFrame final : public nsFrame {
                                         ComputedStyle* aStyle);
 
  protected:
-  explicit SVGFELeafFrame(ComputedStyle* aStyle) : nsFrame(aStyle, kClassID) {
+  explicit SVGFELeafFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
+      : nsFrame(aStyle, aPresContext, kClassID) {
     AddStateBits(NS_FRAME_SVG_LAYOUT | NS_FRAME_IS_NONDISPLAY);
   }
 
@@ -60,7 +61,7 @@ class SVGFELeafFrame final : public nsFrame {
 
 nsIFrame* NS_NewSVGFELeafFrame(nsIPresShell* aPresShell,
                                ComputedStyle* aStyle) {
-  return new (aPresShell) SVGFELeafFrame(aStyle);
+  return new (aPresShell) SVGFELeafFrame(aStyle, aPresShell->GetPresContext());
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(SVGFELeafFrame)

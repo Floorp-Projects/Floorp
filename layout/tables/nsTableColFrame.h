@@ -274,7 +274,7 @@ class nsTableColFrame final : public nsSplittableFrame {
   }
 
  protected:
-  explicit nsTableColFrame(ComputedStyle* aStyle);
+  explicit nsTableColFrame(ComputedStyle* aStyle, nsPresContext* aPresContext);
   ~nsTableColFrame();
 
   nscoord mMinCoord;

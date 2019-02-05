@@ -23,7 +23,8 @@ class nsSVGForeignObjectFrame final : public nsContainerFrame,
                                                        ComputedStyle* aStyle);
 
  protected:
-  explicit nsSVGForeignObjectFrame(ComputedStyle* aStyle);
+  explicit nsSVGForeignObjectFrame(ComputedStyle* aStyle,
+                                   nsPresContext* aPresContext);
 
  public:
   NS_DECL_QUERYFRAME

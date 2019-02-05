@@ -27,7 +27,7 @@ typedef nsAbsoluteContainingBlock::AbsPosReflowFlags AbsPosReflowFlags;
 
 ViewportFrame* NS_NewViewportFrame(nsIPresShell* aPresShell,
                                    ComputedStyle* aStyle) {
-  return new (aPresShell) ViewportFrame(aStyle);
+  return new (aPresShell) ViewportFrame(aStyle, aPresShell->GetPresContext());
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(ViewportFrame)

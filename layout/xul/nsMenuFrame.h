@@ -77,7 +77,7 @@ class nsMenuTimerMediator final : public nsITimerCallback, public nsINamed {
 
 class nsMenuFrame final : public nsBoxFrame, public nsIReflowCallback {
  public:
-  explicit nsMenuFrame(ComputedStyle* aStyle);
+  explicit nsMenuFrame(ComputedStyle* aStyle, nsPresContext* aPresContext);
 
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsMenuFrame)

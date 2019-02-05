@@ -1187,7 +1187,8 @@ void nsFrameConstructorState::ConstructBackdropFrameFor(nsIContent* aContent,
   nsContainerFrame* parentFrame =
       GetGeometricParent(*style->StyleDisplay(), nullptr);
 
-  nsBackdropFrame* backdropFrame = new (mPresShell) nsBackdropFrame(style);
+  nsBackdropFrame* backdropFrame =
+      new (mPresShell) nsBackdropFrame(style, mPresShell->GetPresContext());
   backdropFrame->Init(aContent, parentFrame, nullptr);
 
   nsFrameState placeholderType;

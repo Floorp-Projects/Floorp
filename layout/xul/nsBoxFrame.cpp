@@ -88,11 +88,12 @@ using namespace mozilla::gfx;
 nsIFrame* NS_NewBoxFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle,
                          bool aIsRoot, nsBoxLayout* aLayoutManager) {
   return new (aPresShell)
-      nsBoxFrame(aStyle, nsBoxFrame::kClassID, aIsRoot, aLayoutManager);
+      nsBoxFrame(aStyle, aPresShell->GetPresContext(), nsBoxFrame::kClassID,
+                 aIsRoot, aLayoutManager);
 }
 
 nsIFrame* NS_NewBoxFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle) {
-  return new (aPresShell) nsBoxFrame(aStyle);
+  return new (aPresShell) nsBoxFrame(aStyle, aPresShell->GetPresContext());
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsBoxFrame)
@@ -103,9 +104,9 @@ NS_QUERYFRAME_HEAD(nsBoxFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 #endif
 
-nsBoxFrame::nsBoxFrame(ComputedStyle* aStyle, ClassID aID, bool aIsRoot,
-                       nsBoxLayout* aLayoutManager)
-    : nsContainerFrame(aStyle, aID), mFlex(0), mAscent(0) {
+nsBoxFrame::nsBoxFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
+                       ClassID aID, bool aIsRoot, nsBoxLayout* aLayoutManager)
+    : nsContainerFrame(aStyle, aPresContext, aID), mFlex(0), mAscent(0) {
   AddStateBits(NS_STATE_IS_HORIZONTAL | NS_STATE_AUTO_STRETCH);
 
   if (aIsRoot) AddStateBits(NS_STATE_IS_ROOT);

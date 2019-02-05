@@ -92,6 +92,8 @@ using namespace mozilla::gfx;
 using namespace mozilla::image;
 using namespace mozilla::layers;
 
+using mozilla::layout::TextDrawTarget;
+
 // sizes (pixels) for image icon, padding and border frame
 #define ICON_SIZE (16)
 #define ICON_PADDING (3)
@@ -130,20 +132,21 @@ static bool HaveFixedSize(const ReflowInput& aReflowInput) {
 }
 
 nsIFrame* NS_NewImageFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle) {
-  return new (aPresShell)
-      nsImageFrame(aStyle, nsImageFrame::Kind::ImageElement);
+  return new (aPresShell) nsImageFrame(aStyle, aPresShell->GetPresContext(),
+                                       nsImageFrame::Kind::ImageElement);
 }
 
 nsIFrame* NS_NewImageFrameForContentProperty(nsIPresShell* aPresShell,
                                              ComputedStyle* aStyle) {
-  return new (aPresShell)
-      nsImageFrame(aStyle, nsImageFrame::Kind::ContentProperty);
+  return new (aPresShell) nsImageFrame(aStyle, aPresShell->GetPresContext(),
+                                       nsImageFrame::Kind::ContentProperty);
 }
 
 nsIFrame* NS_NewImageFrameForGeneratedContentIndex(nsIPresShell* aPresShell,
                                                    ComputedStyle* aStyle) {
   return new (aPresShell)
-      nsImageFrame(aStyle, nsImageFrame::Kind::ContentPropertyAtIndex);
+      nsImageFrame(aStyle, aPresShell->GetPresContext(),
+                   nsImageFrame::Kind::ContentPropertyAtIndex);
 }
 
 bool nsImageFrame::ShouldShowBrokenImageIcon() const {
@@ -169,13 +172,15 @@ bool nsImageFrame::ShouldShowBrokenImageIcon() const {
 
 nsImageFrame* nsImageFrame::CreateContinuingFrame(nsIPresShell* aPresShell,
                                                   ComputedStyle* aStyle) const {
-  return new (aPresShell) nsImageFrame(aStyle, mKind);
+  return new (aPresShell)
+      nsImageFrame(aStyle, aPresShell->GetPresContext(), mKind);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsImageFrame)
 
-nsImageFrame::nsImageFrame(ComputedStyle* aStyle, ClassID aID, Kind aKind)
-    : nsAtomicContainerFrame(aStyle, aID),
+nsImageFrame::nsImageFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
+                           ClassID aID, Kind aKind)
+    : nsAtomicContainerFrame(aStyle, aPresContext, aID),
       mComputedSize(0, 0),
       mIntrinsicRatio(0, 0),
       mKind(aKind),

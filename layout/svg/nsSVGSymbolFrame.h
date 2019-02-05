@@ -14,8 +14,8 @@ class nsSVGSymbolFrame final : public nsSVGViewportFrame {
                                         ComputedStyle* aStyle);
 
  protected:
-  explicit nsSVGSymbolFrame(ComputedStyle* aStyle)
-      : nsSVGViewportFrame(aStyle, kClassID) {}
+  explicit nsSVGSymbolFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
+      : nsSVGViewportFrame(aStyle, aPresContext, kClassID) {}
 
  public:
   NS_DECL_QUERYFRAME

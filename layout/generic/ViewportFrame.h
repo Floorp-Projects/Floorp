@@ -31,8 +31,8 @@ class ViewportFrame : public nsContainerFrame {
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(ViewportFrame)
 
-  explicit ViewportFrame(ComputedStyle* aStyle)
-      : ViewportFrame(aStyle, kClassID) {}
+  explicit ViewportFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
+      : ViewportFrame(aStyle, aPresContext, kClassID) {}
 
   virtual ~ViewportFrame() {}  // useful for debugging
 
@@ -85,8 +85,8 @@ class ViewportFrame : public nsContainerFrame {
 #endif
 
  protected:
-  ViewportFrame(ComputedStyle* aStyle, ClassID aID)
-      : nsContainerFrame(aStyle, aID), mView(nullptr) {}
+  ViewportFrame(ComputedStyle* aStyle, nsPresContext* aPresContext, ClassID aID)
+      : nsContainerFrame(aStyle, aPresContext, aID), mView(nullptr) {}
 
   /**
    * Calculate how much room is available for fixed frames. That means

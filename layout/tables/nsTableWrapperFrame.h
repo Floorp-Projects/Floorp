@@ -176,7 +176,9 @@ class nsTableWrapperFrame : public nsContainerFrame {
                                       mozilla::LogicalSize);
 
  protected:
-  explicit nsTableWrapperFrame(ComputedStyle* aStyle, ClassID aID = kClassID);
+  explicit nsTableWrapperFrame(ComputedStyle* aStyle,
+                               nsPresContext* aPresContext,
+                               ClassID aID = kClassID);
   virtual ~nsTableWrapperFrame();
 
   void InitChildReflowInput(nsPresContext& aPresContext,

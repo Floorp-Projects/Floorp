@@ -27,7 +27,8 @@ class nsSVGOuterSVGFrame final : public nsSVGDisplayContainerFrame,
                                                   ComputedStyle* aStyle);
 
  protected:
-  explicit nsSVGOuterSVGFrame(ComputedStyle* aStyle);
+  explicit nsSVGOuterSVGFrame(ComputedStyle* aStyle,
+                              nsPresContext* aPresContext);
 
  public:
   NS_DECL_QUERYFRAME
@@ -217,8 +218,9 @@ class nsSVGOuterSVGAnonChildFrame final : public nsSVGDisplayContainerFrame {
   friend nsContainerFrame* NS_NewSVGOuterSVGAnonChildFrame(
       nsIPresShell* aPresShell, ComputedStyle* aStyle);
 
-  explicit nsSVGOuterSVGAnonChildFrame(ComputedStyle* aStyle)
-      : nsSVGDisplayContainerFrame(aStyle, kClassID) {}
+  explicit nsSVGOuterSVGAnonChildFrame(ComputedStyle* aStyle,
+                                       nsPresContext* aPresContext)
+      : nsSVGDisplayContainerFrame(aStyle, aPresContext, kClassID) {}
 
  public:
   NS_DECL_FRAMEARENA_HELPERS(nsSVGOuterSVGAnonChildFrame)

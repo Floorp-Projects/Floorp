@@ -30,7 +30,8 @@ struct DateTimeValue;
 class nsDateTimeControlFrame final : public nsContainerFrame {
   typedef mozilla::dom::DateTimeValue DateTimeValue;
 
-  explicit nsDateTimeControlFrame(ComputedStyle* aStyle);
+  explicit nsDateTimeControlFrame(ComputedStyle* aStyle,
+                                  nsPresContext* aPresContext);
 
  public:
   friend nsIFrame* NS_NewDateTimeControlFrame(nsIPresShell* aPresShell,

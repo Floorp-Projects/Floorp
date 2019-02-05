@@ -541,9 +541,9 @@ class nsFrame : public nsBox {
 
  protected:
   // Protected constructor and destructor
-  nsFrame(ComputedStyle* aStyle, ClassID aID);
-  explicit nsFrame(ComputedStyle* aStyle)
-      : nsFrame(aStyle, ClassID::nsFrame_id) {}
+  nsFrame(ComputedStyle* aStyle, nsPresContext* aPresContext, ClassID aID);
+  explicit nsFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
+      : nsFrame(aStyle, aPresContext, ClassID::nsFrame_id) {}
   virtual ~nsFrame();
 
   /**

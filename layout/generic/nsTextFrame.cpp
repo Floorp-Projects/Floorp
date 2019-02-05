@@ -4408,8 +4408,9 @@ class nsContinuingTextFrame final : public nsTextFrame {
                           InlinePrefISizeData* aData) final;
 
  protected:
-  explicit nsContinuingTextFrame(ComputedStyle* aStyle)
-      : nsTextFrame(aStyle, kClassID) {}
+  explicit nsContinuingTextFrame(ComputedStyle* aStyle,
+                                 nsPresContext* aPresContext)
+      : nsTextFrame(aStyle, aPresContext, kClassID) {}
 
   nsTextFrame* mPrevContinuation;
 };
@@ -4573,14 +4574,15 @@ static void VerifyNotDirty(nsFrameState state) {
 #endif
 
 nsIFrame* NS_NewTextFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle) {
-  return new (aPresShell) nsTextFrame(aStyle);
+  return new (aPresShell) nsTextFrame(aStyle, aPresShell->GetPresContext());
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsTextFrame)
 
 nsIFrame* NS_NewContinuingTextFrame(nsIPresShell* aPresShell,
                                     ComputedStyle* aStyle) {
-  return new (aPresShell) nsContinuingTextFrame(aStyle);
+  return new (aPresShell)
+      nsContinuingTextFrame(aStyle, aPresShell->GetPresContext());
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsContinuingTextFrame)

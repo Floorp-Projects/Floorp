@@ -21,7 +21,8 @@ using namespace mozilla::image;
 
 nsContainerFrame* NS_NewSVGMarkerFrame(nsIPresShell* aPresShell,
                                        ComputedStyle* aStyle) {
-  return new (aPresShell) nsSVGMarkerFrame(aStyle);
+  return new (aPresShell)
+      nsSVGMarkerFrame(aStyle, aPresShell->GetPresContext());
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsSVGMarkerFrame)
@@ -214,7 +215,8 @@ nsSVGMarkerFrame::AutoMarkerReferencer::~AutoMarkerReferencer() {
 
 nsContainerFrame* NS_NewSVGMarkerAnonChildFrame(nsIPresShell* aPresShell,
                                                 ComputedStyle* aStyle) {
-  return new (aPresShell) nsSVGMarkerAnonChildFrame(aStyle);
+  return new (aPresShell)
+      nsSVGMarkerAnonChildFrame(aStyle, aPresShell->GetPresContext());
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsSVGMarkerAnonChildFrame)

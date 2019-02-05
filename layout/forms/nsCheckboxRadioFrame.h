@@ -23,7 +23,8 @@ class nsCheckboxRadioFrame final : public nsAtomicContainerFrame,
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsCheckboxRadioFrame)
 
-  explicit nsCheckboxRadioFrame(ComputedStyle* aStyle);
+  explicit nsCheckboxRadioFrame(ComputedStyle* aStyle,
+                                nsPresContext* aPresContext);
 
   // nsIFrame replacements
   virtual bool IsFrameOfType(uint32_t aFlags) const override {

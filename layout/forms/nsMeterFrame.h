@@ -23,7 +23,7 @@ class nsMeterFrame final : public nsContainerFrame,
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsMeterFrame)
 
-  explicit nsMeterFrame(ComputedStyle* aStyle);
+  explicit nsMeterFrame(ComputedStyle* aStyle, nsPresContext* aPresContext);
   virtual ~nsMeterFrame();
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot,

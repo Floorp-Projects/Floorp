@@ -79,7 +79,8 @@ const char kPrefIncrementalSearchTimeout[] =
 //
 nsIFrame* NS_NewMenuPopupFrame(nsIPresShell* aPresShell,
                                ComputedStyle* aStyle) {
-  return new (aPresShell) nsMenuPopupFrame(aStyle);
+  return new (aPresShell)
+      nsMenuPopupFrame(aStyle, aPresShell->GetPresContext());
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsMenuPopupFrame)
@@ -91,8 +92,9 @@ NS_QUERYFRAME_TAIL_INHERITING(nsBoxFrame)
 //
 // nsMenuPopupFrame ctor
 //
-nsMenuPopupFrame::nsMenuPopupFrame(ComputedStyle* aStyle)
-    : nsBoxFrame(aStyle, kClassID),
+nsMenuPopupFrame::nsMenuPopupFrame(ComputedStyle* aStyle,
+                                   nsPresContext* aPresContext)
+    : nsBoxFrame(aStyle, aPresContext, kClassID),
       mCurrentMenu(nullptr),
       mView(nullptr),
       mPrefSize(-1, -1),

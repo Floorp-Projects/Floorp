@@ -38,13 +38,14 @@ using namespace mozilla;
 // Creates a new Resizer frame and returns it
 //
 nsIFrame* NS_NewResizerFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle) {
-  return new (aPresShell) nsResizerFrame(aStyle);
+  return new (aPresShell) nsResizerFrame(aStyle, aPresShell->GetPresContext());
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsResizerFrame)
 
-nsResizerFrame::nsResizerFrame(ComputedStyle* aStyle)
-    : nsTitleBarFrame(aStyle, kClassID) {}
+nsResizerFrame::nsResizerFrame(ComputedStyle* aStyle,
+                               nsPresContext* aPresContext)
+    : nsTitleBarFrame(aStyle, aPresContext, kClassID) {}
 
 nsresult nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
                                      WidgetGUIEvent* aEvent,

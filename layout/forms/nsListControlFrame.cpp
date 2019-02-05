@@ -82,7 +82,8 @@ class nsListEventListener final : public nsIDOMEventListener {
 //---------------------------------------------------------
 nsContainerFrame* NS_NewListControlFrame(nsIPresShell* aPresShell,
                                          ComputedStyle* aStyle) {
-  nsListControlFrame* it = new (aPresShell) nsListControlFrame(aStyle);
+  nsListControlFrame* it =
+      new (aPresShell) nsListControlFrame(aStyle, aPresShell->GetPresContext());
 
   it->AddStateBits(NS_FRAME_INDEPENDENT_SELECTION);
 
@@ -92,8 +93,9 @@ nsContainerFrame* NS_NewListControlFrame(nsIPresShell* aPresShell,
 NS_IMPL_FRAMEARENA_HELPERS(nsListControlFrame)
 
 //---------------------------------------------------------
-nsListControlFrame::nsListControlFrame(ComputedStyle* aStyle)
-    : nsHTMLScrollFrame(aStyle, kClassID, false),
+nsListControlFrame::nsListControlFrame(ComputedStyle* aStyle,
+                                       nsPresContext* aPresContext)
+    : nsHTMLScrollFrame(aStyle, aPresContext, kClassID, false),
       mView(nullptr),
       mMightNeedSecondPass(false),
       mHasPendingInterruptAtStartOfReflow(false),

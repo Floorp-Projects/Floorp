@@ -22,11 +22,13 @@ using mozilla::dom::HTMLInputElement;
 
 nsCheckboxRadioFrame* NS_NewCheckboxRadioFrame(nsIPresShell* aPresShell,
                                                ComputedStyle* aStyle) {
-  return new (aPresShell) nsCheckboxRadioFrame(aStyle);
+  return new (aPresShell)
+      nsCheckboxRadioFrame(aStyle, aPresShell->GetPresContext());
 }
 
-nsCheckboxRadioFrame::nsCheckboxRadioFrame(ComputedStyle* aStyle)
-    : nsAtomicContainerFrame(aStyle, kClassID) {}
+nsCheckboxRadioFrame::nsCheckboxRadioFrame(ComputedStyle* aStyle,
+                                           nsPresContext* aPresContext)
+    : nsAtomicContainerFrame(aStyle, aPresContext, kClassID) {}
 
 nsCheckboxRadioFrame::~nsCheckboxRadioFrame() {}
 

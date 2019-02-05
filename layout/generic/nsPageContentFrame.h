@@ -46,8 +46,9 @@ class nsPageContentFrame final : public mozilla::ViewportFrame {
 #endif
 
  protected:
-  explicit nsPageContentFrame(ComputedStyle* aStyle)
-      : ViewportFrame(aStyle, kClassID) {}
+  explicit nsPageContentFrame(ComputedStyle* aStyle,
+                              nsPresContext* aPresContext)
+      : ViewportFrame(aStyle, aPresContext, kClassID) {}
 
   nsSharedPageData* mPD;
 };

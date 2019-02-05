@@ -15,8 +15,9 @@ class nsSVGUseFrame final : public nsSVGGFrame {
                                      ComputedStyle* aStyle);
 
  protected:
-  explicit nsSVGUseFrame(ComputedStyle* aStyle)
-      : nsSVGGFrame(aStyle, kClassID), mHasValidDimensions(true) {}
+  explicit nsSVGUseFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
+      : nsSVGGFrame(aStyle, aPresContext, kClassID),
+        mHasValidDimensions(true) {}
 
  public:
   NS_DECL_FRAMEARENA_HELPERS(nsSVGUseFrame)

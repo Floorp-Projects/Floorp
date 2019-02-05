@@ -18,7 +18,7 @@
 typedef mozilla::ComputedStyle ComputedStyle;
 
 nsIFrame* NS_NewPopupSetFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle) {
-  return new (aPresShell) nsPopupSetFrame(aStyle);
+  return new (aPresShell) nsPopupSetFrame(aStyle, aPresShell->GetPresContext());
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsPopupSetFrame)

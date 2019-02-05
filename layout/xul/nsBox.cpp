@@ -57,7 +57,8 @@ nsresult nsBox::EndXULLayout(nsBoxLayoutState& aState) {
 bool nsBox::gGotTheme = false;
 StaticRefPtr<nsITheme> nsBox::gTheme;
 
-nsBox::nsBox(ClassID aID) : nsIFrame(aID) {
+nsBox::nsBox(ComputedStyle* aStyle, nsPresContext* aPresContext, ClassID aID)
+    : nsIFrame(aStyle, aPresContext, aID) {
   MOZ_COUNT_CTOR(nsBox);
   if (!gGotTheme) {
     gTheme = do_GetNativeTheme();

@@ -83,7 +83,7 @@ class nsTextBoxFrame final : public nsLeafBoxFrame {
 
   void CalcDrawRect(gfxContext& aRenderingContext);
 
-  explicit nsTextBoxFrame(ComputedStyle* aStyle);
+  explicit nsTextBoxFrame(ComputedStyle* aStyle, nsPresContext* aPresContext);
 
   nscoord CalculateTitleForWidth(gfxContext& aRenderingContext, nscoord aWidth);
 

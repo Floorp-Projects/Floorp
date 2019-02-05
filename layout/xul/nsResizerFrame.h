@@ -28,7 +28,7 @@ class nsResizerFrame final : public nsTitleBarFrame {
   friend nsIFrame* NS_NewResizerFrame(nsIPresShell* aPresShell,
                                       ComputedStyle* aStyle);
 
-  explicit nsResizerFrame(ComputedStyle* aStyle);
+  explicit nsResizerFrame(ComputedStyle* aStyle, nsPresContext* aPresContext);
 
   virtual nsresult HandleEvent(nsPresContext* aPresContext,
                                mozilla::WidgetGUIEvent* aEvent,
