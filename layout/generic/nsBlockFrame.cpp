@@ -487,7 +487,8 @@ bool nsBlockFrame::GetNaturalBaselineBOffset(
     if (line->IsBlock()) {
       nscoord offset;
       nsIFrame* kid = line->mFirstChild;
-      if (kid->GetVerticalAlignBaseline(aWM, &offset)) {
+      if (!aWM.IsOrthogonalTo(kid->GetWritingMode()) &&
+          kid->GetVerticalAlignBaseline(aWM, &offset)) {
         // Ignore relative positioning for baseline calculations.
         const nsSize& sz = line->mContainerSize;
         offset += kid->GetLogicalNormalPosition(aWM, sz).B(aWM);
