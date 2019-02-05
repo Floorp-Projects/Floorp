@@ -103,6 +103,7 @@ endif # MOZ_TSAN
 endif # MOZ_ASAN
 
 export CARGO_TARGET_DIR
+export RUSTFLAGS
 export RUSTC
 export RUSTDOC
 export RUSTFMT
@@ -113,13 +114,24 @@ export CLANG_PATH=$(MOZ_CLANG_PATH)
 export PKG_CONFIG_ALLOW_CROSS=1
 export RUST_BACKTRACE=full
 export MOZ_TOPOBJDIR=$(topobjdir)
+
+TARGET_RECIPES := \
+  force-cargo-test-run \
+  $(foreach a,library program,$(foreach b,build check,force-cargo-$(a)-$(b)))
+
+$(TARGET_RECIPES): RUSTFLAGS:=$(rustflags_override) $(RUSTFLAGS)
+
+HOST_RECIPES := \
+  $(foreach a,library program,$(foreach b,build check,force-cargo-host-$(a)-$(b)))
+
+$(HOST_RECIPES): RUSTFLAGS:=$(rustflags_override)
+
 # We use the + prefix to pass down the jobserver fds to cargo, but we
 # don't use the prefix when make -n is used, so that cargo doesn't run
 # in that case)
 define RUN_CARGO
 $(if $(findstring n,$(filter-out --%, $(MAKEFLAGS))),,+)env \
-	RUSTFLAGS='$(2)' \
-	$(3) \
+	$(2) \
 	$(CARGO) $(1) $(cargo_build_flags)
 endef
 
@@ -130,20 +142,12 @@ endef
 # but, given the idiosyncracies of make, can also be called without arguments:
 #
 #   $(call CARGO_BUILD)
-define CARGO_BUILD_HOST
-$(call RUN_CARGO,rustc,$(rustflags_override),$(1))
-endef
-
-define CARGO_CHECK_HOST
-$(call RUN_CARGO,check,$(rustflags_override),$(1))
-endef
-
 define CARGO_BUILD
-$(call RUN_CARGO,rustc,$(rustflags_override) $(RUSTFLAGS),$(1))
+$(call RUN_CARGO,rustc,$(1))
 endef
 
 define CARGO_CHECK
-$(call RUN_CARGO,check,$(rustflags_override) $(RUSTFLAGS),$(1))
+$(call RUN_CARGO,check,$(1))
 endef
 
 cargo_linker_env_var := CARGO_TARGET_$(RUST_TARGET_ENV_NAME)_LINKER
@@ -222,7 +226,7 @@ endif
 rust_test_flag := --no-fail-fast
 
 force-cargo-test-run:
-	$(call RUN_CARGO,test $(cargo_target_flag) $(rust_test_flag) $(rust_test_options) $(rust_features_flag),$(rustflags_override) $(RUSTFLAGS),$(target_cargo_env_vars))
+	$(call RUN_CARGO,test $(cargo_target_flag) $(rust_test_flag) $(rust_test_options) $(rust_features_flag),$(target_cargo_env_vars))
 
 endif
 
@@ -234,12 +238,12 @@ endif
 
 force-cargo-host-library-build:
 	$(REPORT_BUILD)
-	$(call CARGO_BUILD_HOST) --lib $(cargo_host_flag) $(host_rust_features_flag)
+	$(call CARGO_BUILD) --lib $(cargo_host_flag) $(host_rust_features_flag)
 
 $(HOST_RUST_LIBRARY_FILE): force-cargo-host-library-build
 
 force-cargo-host-library-check:
-	$(call CARGO_CHECK_HOST) --lib $(cargo_host_flag) $(host_rust_features_flag)
+	$(call CARGO_CHECK) --lib $(cargo_host_flag) $(host_rust_features_flag)
 else
 force-cargo-host-library-check:
 	@true
@@ -261,13 +265,13 @@ endif # RUST_PROGRAMS
 ifdef HOST_RUST_PROGRAMS
 force-cargo-host-program-build:
 	$(REPORT_BUILD)
-	$(call CARGO_BUILD_HOST) $(addprefix --bin ,$(HOST_RUST_CARGO_PROGRAMS)) $(cargo_host_flag)
+	$(call CARGO_BUILD) $(addprefix --bin ,$(HOST_RUST_CARGO_PROGRAMS)) $(cargo_host_flag)
 
 $(HOST_RUST_PROGRAMS): force-cargo-host-program-build
 
 force-cargo-host-program-check:
 	$(REPORT_BUILD)
-	$(call CARGO_CHECK_HOST) $(addprefix --bin ,$(HOST_RUST_CARGO_PROGRAMS)) $(cargo_host_flag)
+	$(call CARGO_CHECK) $(addprefix --bin ,$(HOST_RUST_CARGO_PROGRAMS)) $(cargo_host_flag)
 else
 force-cargo-host-program-check:
 	@true
