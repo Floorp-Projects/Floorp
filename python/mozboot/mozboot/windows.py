@@ -83,7 +83,7 @@ class WindowsBootstrapper(BaseBootstrapper):
     def ensure_node_packages(self, state_dir, checkout_root):
         from mozboot import node
         self.install_toolchain_artifact(
-            state_dir, checkout_root, node.WINDOWS)
+            state_dir, checkout_root, node.WIN64)
 
     def _update_package_manager(self):
         self.pacman_update()

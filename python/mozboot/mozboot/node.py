@@ -4,6 +4,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-WINDOWS = 'win64-node'
+WIN32 = 'win32-node'
+WIN64 = 'win64-node'
 LINUX = 'linux64-node'
 OSX = 'macosx64-node'
