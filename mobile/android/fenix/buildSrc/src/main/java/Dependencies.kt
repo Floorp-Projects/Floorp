@@ -18,7 +18,7 @@ private object Versions {
     const val androidx_annotation = "1.0.1"
     const val androidx_lifecycle = "2.0.0"
 
-    const val mozilla_android_components = "0.41.0-SNAPSHOT"
+    const val mozilla_android_components = "0.42.0-SNAPSHOT"
 
     const val junit = "4.12"
     const val test_tools = "1.0.2"
