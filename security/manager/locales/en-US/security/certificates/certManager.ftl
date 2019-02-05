@@ -33,40 +33,30 @@ certmgr-detail-pretty-print-tab-title =
 certmgr-pending-label =
     .value = Currently verifying certificate…
 
-certmgr-subject-info-label =
-    .value = Issued To
+certmgr-subject-label = Issued To
 
-certmgr-issuer-info-label =
-    .value = Issued By
+certmgr-issuer-label = Issued By
 
-certmgr-period-of-validity-label =
-    .value = Period of Validity
+certmgr-period-of-validity = Period of Validity
 
-certmgr-fingerprints-label =
-    .value = Fingerprints
+certmgr-fingerprints = Fingerprints
 
 certmgr-cert-detail =
     .title = Certificate Detail
     .buttonlabelaccept = Close
     .buttonaccesskeyaccept = C
 
-certmgr-cert-detail-cn =
-    .value = Common Name (CN)
+certmgr-cert-detail-commonname = Common Name (CN)
 
-certmgr-cert-detail-o =
-    .value = Organization (O)
+certmgr-cert-detail-org = Organization (O)
 
-certmgr-cert-detail-ou =
-    .value = Organizational Unit (OU)
+certmgr-cert-detail-orgunit = Organizational Unit (OU)
 
-certmgr-cert-detail-serialnumber =
-    .value = Serial Number
+certmgr-cert-detail-serial-number = Serial Number
 
-certmgr-cert-detail-sha256-fingerprint =
-    .value = SHA-256 Fingerprint
+certmgr-cert-detail-sha-256-fingerprint = SHA-256 Fingerprint
 
-certmgr-cert-detail-sha1-fingerprint =
-    .value = SHA1 Fingerprint
+certmgr-cert-detail-sha-1-fingerprint = SHA1 Fingerprint
 
 certmgr-edit-ca-cert =
     .title = Edit CA certificate trust settings
@@ -96,17 +86,15 @@ certmgr-override-lifetime =
 certmgr-token-name =
     .label = Security Device
 
+certmgr-begins-on = Begins On
+
 certmgr-begins-label =
     .label = Begins On
 
-certmgr-begins-value =
-    .value = { certmgr-begins-label.label }
+certmgr-expires-on = Expires On
 
 certmgr-expires-label =
     .label = Expires On
-
-certmgr-expires-value =
-    .value = { certmgr-expires-label.label }
 
 certmgr-email =
     .label = E-Mail Address
