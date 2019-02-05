@@ -79,8 +79,7 @@ nsresult ThirdPartyUtil::IsThirdPartyInternal(const nsCString& aFirstDomain,
        secondDomain.get()));
   if (NS_FAILED(rv)) return rv;
 
-  // Check strict equality.
-  *aResult = aFirstDomain != secondDomain;
+  *aResult = IsThirdPartyInternal(aFirstDomain, secondDomain);
   return NS_OK;
 }
 
@@ -133,19 +132,15 @@ ThirdPartyUtil::IsThirdPartyWindow(mozIDOMWindowProxy* aWindow, nsIURI* aURI,
 
   bool result;
 
-  // Get the URI of the window, and its base domain.
-  nsresult rv;
-  nsCOMPtr<nsIURI> currentURI;
-  rv = GetURIFromWindow(aWindow, getter_AddRefs(currentURI));
-  if (NS_FAILED(rv)) return rv;
-
-  nsAutoCString bottomDomain;
-  rv = GetBaseDomain(currentURI, bottomDomain);
-  if (NS_FAILED(rv)) return rv;
+  nsCString bottomDomain =
+      GetBaseDomainFromWindow(nsPIDOMWindowOuter::From(aWindow));
+  if (bottomDomain.IsEmpty()) {
+    return NS_ERROR_FAILURE;
+  }
 
   if (aURI) {
     // Determine whether aURI is foreign with respect to currentURI.
-    rv = IsThirdPartyInternal(bottomDomain, aURI, &result);
+    nsresult rv = IsThirdPartyInternal(bottomDomain, aURI, &result);
     if (NS_FAILED(rv)) return rv;
 
     if (result) {
@@ -170,12 +165,12 @@ ThirdPartyUtil::IsThirdPartyWindow(mozIDOMWindowProxy* aWindow, nsIURI* aURI,
       return NS_OK;
     }
 
-    nsCOMPtr<nsIURI> parentURI;
-    rv = GetURIFromWindow(parent, getter_AddRefs(parentURI));
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsCString parentDomain = GetBaseDomainFromWindow(parent);
+    if (parentDomain.IsEmpty()) {
+      return NS_ERROR_FAILURE;
+    }
 
-    rv = IsThirdPartyInternal(bottomDomain, parentURI, &result);
-    if (NS_FAILED(rv)) return rv;
+    result = IsThirdPartyInternal(bottomDomain, parentDomain);
 
     if (result) {
       *aResult = true;
