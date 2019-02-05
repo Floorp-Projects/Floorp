@@ -589,7 +589,6 @@ void nsFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
                   NS_FRAME_MAY_BE_TRANSFORMED |
                   NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN));
   } else {
-    mComputedStyle->StartImageLoads(*PresContext()->Document());
     PresContext()->ConstructedFrame();
   }
   if (GetParent()) {
@@ -1067,8 +1066,8 @@ void nsIFrame::MarkNeedsDisplayItemRebuild() {
     // We don't want to set the property if one already exists.
     nsMargin oldValue(0, 0, 0, 0);
     nsMargin newValue(0, 0, 0, 0);
-    const nsStyleMargin* oldMargin = aOldComputedStyle->StyleMargin();
-    if (oldMargin->GetMargin(oldValue)) {
+    const nsStyleMargin* oldMargin = aOldComputedStyle->PeekStyleMargin();
+    if (oldMargin && oldMargin->GetMargin(oldValue)) {
       if (!StyleMargin()->GetMargin(newValue) || oldValue != newValue) {
         if (!HasProperty(UsedMarginProperty())) {
           AddProperty(UsedMarginProperty(), new nsMargin(oldValue));
@@ -1077,8 +1076,8 @@ void nsIFrame::MarkNeedsDisplayItemRebuild() {
       }
     }
 
-    const nsStylePadding* oldPadding = aOldComputedStyle->StylePadding();
-    if (oldPadding->GetPadding(oldValue)) {
+    const nsStylePadding* oldPadding = aOldComputedStyle->PeekStylePadding();
+    if (oldPadding && oldPadding->GetPadding(oldValue)) {
       if (!StylePadding()->GetPadding(newValue) || oldValue != newValue) {
         if (!HasProperty(UsedPaddingProperty())) {
           AddProperty(UsedPaddingProperty(), new nsMargin(oldValue));
@@ -1087,16 +1086,20 @@ void nsIFrame::MarkNeedsDisplayItemRebuild() {
       }
     }
 
-    const nsStyleBorder* oldBorder = aOldComputedStyle->StyleBorder();
-    oldValue = oldBorder->GetComputedBorder();
-    newValue = StyleBorder()->GetComputedBorder();
-    if (oldValue != newValue && !HasProperty(UsedBorderProperty())) {
-      AddProperty(UsedBorderProperty(), new nsMargin(oldValue));
+    const nsStyleBorder* oldBorder = aOldComputedStyle->PeekStyleBorder();
+    if (oldBorder) {
+      oldValue = oldBorder->GetComputedBorder();
+      newValue = StyleBorder()->GetComputedBorder();
+      if (oldValue != newValue && !HasProperty(UsedBorderProperty())) {
+        AddProperty(UsedBorderProperty(), new nsMargin(oldValue));
+      }
     }
 
-    const nsStyleDisplay* oldDisp = aOldComputedStyle->StyleDisplay();
-    if (oldDisp->mOverflowAnchor != StyleDisplay()->mOverflowAnchor) {
-      if (auto* container = ScrollAnchorContainer::FindFor(this)) {
+    const nsStyleDisplay* oldDisp = aOldComputedStyle->PeekStyleDisplay();
+    if (oldDisp &&
+        (oldDisp->mOverflowAnchor != StyleDisplay()->mOverflowAnchor)) {
+      if (ScrollAnchorContainer* container =
+              ScrollAnchorContainer::FindFor(this)) {
         container->InvalidateAnchor();
       }
       if (nsIScrollableFrame* scrollableFrame = do_QueryFrame(this)) {
@@ -1106,19 +1109,20 @@ void nsIFrame::MarkNeedsDisplayItemRebuild() {
 
     if (mInScrollAnchorChain) {
       const nsStylePosition* oldPosition =
-          aOldComputedStyle->StylePosition();
-      if (oldPosition->mOffset != StylePosition()->mOffset ||
-          oldPosition->mWidth != StylePosition()->mWidth ||
-          oldPosition->mMinWidth != StylePosition()->mMinWidth ||
-          oldPosition->mMaxWidth != StylePosition()->mMaxWidth ||
-          oldPosition->mHeight != StylePosition()->mHeight ||
-          oldPosition->mMinHeight != StylePosition()->mMinHeight ||
-          oldPosition->mMaxHeight != StylePosition()->mMaxHeight) {
+          aOldComputedStyle->PeekStylePosition();
+      if (oldPosition &&
+          (oldPosition->mOffset != StylePosition()->mOffset ||
+           oldPosition->mWidth != StylePosition()->mWidth ||
+           oldPosition->mMinWidth != StylePosition()->mMinWidth ||
+           oldPosition->mMaxWidth != StylePosition()->mMaxWidth ||
+           oldPosition->mHeight != StylePosition()->mHeight ||
+           oldPosition->mMinHeight != StylePosition()->mMinHeight ||
+           oldPosition->mMaxHeight != StylePosition()->mMaxHeight)) {
         needAnchorSuppression = true;
       }
 
-      if (oldDisp->mPosition != StyleDisplay()->mPosition ||
-          oldDisp->TransformChanged(*StyleDisplay())) {
+      if (oldDisp && (oldDisp->mPosition != StyleDisplay()->mPosition ||
+                      oldDisp->TransformChanged(*StyleDisplay()))) {
         needAnchorSuppression = true;
       }
     }
@@ -10244,7 +10248,14 @@ void nsIFrame::UpdateStyleOfChildAnonBox(nsIFrame* aChildFrame,
   //    anonymous boxes directly.
   uint32_t equalStructs;  // Not used, actually.
   nsChangeHint childHint = aChildFrame->Style()->CalcStyleDifference(
-      *aNewComputedStyle, &equalStructs);
+      aNewComputedStyle, &equalStructs);
+
+  // CalcStyleDifference will handle caching structs on the new style, but only
+  // if we're not on a style worker thread.
+  MOZ_ASSERT(!ServoStyleSet::IsInServoTraversal(),
+             "if we can get in here from style worker threads, then we need "
+             "a ResolveSameStructsAs call to ensure structs are cached on "
+             "aNewComputedStyle");
 
   // If aChildFrame is out of flow, then aRestyleState's "changes handled by the
   // parent" doesn't apply to it, because it may have some other parent in the

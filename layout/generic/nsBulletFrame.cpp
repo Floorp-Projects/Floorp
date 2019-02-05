@@ -150,17 +150,19 @@ bool nsBulletFrame::IsSelfEmpty() {
   if (aOldComputedStyle) {
     nsAccessibilityService* accService = nsIPresShell::AccService();
     if (accService) {
-      const nsStyleList* oldStyleList = aOldComputedStyle->StyleList();
-      bool hadBullet = oldStyleList->GetListStyleImage() ||
-                       !oldStyleList->mCounterStyle.IsNone();
+      const nsStyleList* oldStyleList = aOldComputedStyle->PeekStyleList();
+      if (oldStyleList) {
+        bool hadBullet = oldStyleList->GetListStyleImage() ||
+                         !oldStyleList->mCounterStyle.IsNone();
 
-      const nsStyleList* newStyleList = StyleList();
-      bool hasBullet = newStyleList->GetListStyleImage() ||
-                       !newStyleList->mCounterStyle.IsNone();
+        const nsStyleList* newStyleList = StyleList();
+        bool hasBullet = newStyleList->GetListStyleImage() ||
+                         !newStyleList->mCounterStyle.IsNone();
 
-      if (hadBullet != hasBullet) {
-        accService->UpdateListBullet(PresContext()->GetPresShell(), mContent,
-                                     hasBullet);
+        if (hadBullet != hasBullet) {
+          accService->UpdateListBullet(PresContext()->GetPresShell(), mContent,
+                                       hasBullet);
+        }
       }
     }
   }

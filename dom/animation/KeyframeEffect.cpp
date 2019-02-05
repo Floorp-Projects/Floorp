@@ -1537,7 +1537,7 @@ void KeyframeEffect::CalculateCumulativeChangeHint(
 
       uint32_t equalStructs = 0;
       nsChangeHint changeHint =
-          fromContext->CalcStyleDifference(*toContext, &equalStructs);
+          fromContext->CalcStyleDifference(toContext, &equalStructs);
 
       mCumulativeChangeHint |= changeHint;
     }
