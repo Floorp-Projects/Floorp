@@ -234,6 +234,17 @@ const POLICIES_TESTS = [
       "network.captive-portal-service.enabled": false,
     },
   },
+
+  // POLICY: NetworkPrediction
+  {
+    policies: {
+      "NetworkPrediction": false,
+    },
+    lockedPrefs: {
+      "network.dns.disablePrefetch": true,
+      "network.dns.disablePrefetchFromHTTPS": true,
+    },
+  },
 ];
 
 add_task(async function test_policy_remember_passwords() {

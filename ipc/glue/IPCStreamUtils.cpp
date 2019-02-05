@@ -38,8 +38,14 @@ bool SerializeInputStreamWithFdsChild(nsIIPCSerializableInputStream* aStream,
   MOZ_RELEASE_ASSERT(aStream);
   MOZ_ASSERT(aManager);
 
+  const uint64_t kTooLargeStream = 1024 * 1024;
+
+  uint32_t sizeUsed = 0;
   AutoTArray<FileDescriptor, 4> fds;
-  aStream->Serialize(aValue.stream(), fds, aDelayedStart, aManager);
+  aStream->Serialize(aValue.stream(), fds, aDelayedStart, kTooLargeStream,
+                     &sizeUsed, aManager);
+
+  MOZ_ASSERT(sizeUsed <= kTooLargeStream);
 
   if (aValue.stream().type() == InputStreamParams::T__None) {
     MOZ_CRASH("Serialize failed!");
@@ -67,8 +73,14 @@ bool SerializeInputStreamWithFdsParent(nsIIPCSerializableInputStream* aStream,
   MOZ_RELEASE_ASSERT(aStream);
   MOZ_ASSERT(aManager);
 
+  const uint64_t kTooLargeStream = 1024 * 1024;
+
+  uint32_t sizeUsed = 0;
   AutoTArray<FileDescriptor, 4> fds;
-  aStream->Serialize(aValue.stream(), fds, aDelayedStart, aManager);
+  aStream->Serialize(aValue.stream(), fds, aDelayedStart, kTooLargeStream,
+                     &sizeUsed, aManager);
+
+  MOZ_ASSERT(sizeUsed <= kTooLargeStream);
 
   if (aValue.stream().type() == InputStreamParams::T__None) {
     MOZ_CRASH("Serialize failed!");

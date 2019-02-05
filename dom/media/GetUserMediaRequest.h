@@ -24,7 +24,7 @@ class GetUserMediaRequest : public nsISupports, public nsWrapperCache {
                       const MediaStreamConstraints& aConstraints,
                       bool aIsSecure, bool aIsHandlingUserInput);
   GetUserMediaRequest(nsPIDOMWindowInner* aInnerWindow, const nsAString& aRawId,
-                      const nsAString& aMediaSource);
+                      const nsAString& aMediaSource, bool aIsHandlingUserInput);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(GetUserMediaRequest)

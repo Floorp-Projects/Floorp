@@ -565,29 +565,45 @@ IPCBlobInputStream::OnInputStreamReady(nsIAsyncInputStream* aStream) {
 
 void IPCBlobInputStream::Serialize(mozilla::ipc::InputStreamParams& aParams,
                                    FileDescriptorArray& aFileDescriptors,
-                                   bool aDelayedStart,
+                                   bool aDelayedStart, uint32_t aMaxSize,
+                                   uint32_t* aSizeUsed,
                                    nsIContentChild* aManager) {
+  MOZ_ASSERT(aSizeUsed);
+  *aSizeUsed = 0;
+
   SerializeInternal(aParams);
 }
 
 void IPCBlobInputStream::Serialize(mozilla::ipc::InputStreamParams& aParams,
                                    FileDescriptorArray& aFileDescriptors,
-                                   bool aDelayedStart,
+                                   bool aDelayedStart, uint32_t aMaxSize,
+                                   uint32_t* aSizeUsed,
                                    mozilla::ipc::PBackgroundChild* aManager) {
+  MOZ_ASSERT(aSizeUsed);
+  *aSizeUsed = 0;
+
   SerializeInternal(aParams);
 }
 
 void IPCBlobInputStream::Serialize(mozilla::ipc::InputStreamParams& aParams,
                                    FileDescriptorArray& aFileDescriptors,
-                                   bool aDelayedStart,
+                                   bool aDelayedStart, uint32_t aMaxSize,
+                                   uint32_t* aSizeUsed,
                                    nsIContentParent* aManager) {
+  MOZ_ASSERT(aSizeUsed);
+  *aSizeUsed = 0;
+
   SerializeInternal(aParams);
 }
 
 void IPCBlobInputStream::Serialize(mozilla::ipc::InputStreamParams& aParams,
                                    FileDescriptorArray& aFileDescriptors,
-                                   bool aDelayedStart,
+                                   bool aDelayedStart, uint32_t aMaxSize,
+                                   uint32_t* aSizeUsed,
                                    mozilla::ipc::PBackgroundParent* aManager) {
+  MOZ_ASSERT(aSizeUsed);
+  *aSizeUsed = 0;
+
   SerializeInternal(aParams);
 }
 

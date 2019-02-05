@@ -24,9 +24,6 @@ import copy
 logger = logging.getLogger(__name__)
 
 
-task_description_schema = {str(k): v for k, v in task_description_schema.schema.iteritems()}
-
-
 transforms = TransformSequence()
 
 

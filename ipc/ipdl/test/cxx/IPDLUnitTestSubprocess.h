@@ -15,7 +15,6 @@ namespace _ipdltest {
 class IPDLUnitTestSubprocess : public mozilla::ipc::GeckoChildProcessHost {
  public:
   IPDLUnitTestSubprocess();
-  ~IPDLUnitTestSubprocess();
 
   /**
    * Asynchronously launch the plugin process.
@@ -24,6 +23,8 @@ class IPDLUnitTestSubprocess : public mozilla::ipc::GeckoChildProcessHost {
   // bool Launch();
 
  private:
+  ~IPDLUnitTestSubprocess();
+
   DISALLOW_EVIL_CONSTRUCTORS(IPDLUnitTestSubprocess);
 };
 

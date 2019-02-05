@@ -283,7 +283,7 @@ BigIntBox* ParserBase::newBigIntBox(BigInt* val) {
 
 template <class ParseHandler>
 FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
-    CodeNodeType funNode, JSFunction* fun, uint32_t toStringStart,
+    FunctionNodeType funNode, JSFunction* fun, uint32_t toStringStart,
     Directives inheritedDirectives, GeneratorKind generatorKind,
     FunctionAsyncKind asyncKind) {
   MOZ_ASSERT(fun);
@@ -516,7 +516,7 @@ void GeneralParser<ParseHandler, Unit>::reportRedeclaration(
 // forbid duplicates.)
 template <class ParseHandler, typename Unit>
 bool GeneralParser<ParseHandler, Unit>::notePositionalFormalParameter(
-    CodeNodeType funNode, HandlePropertyName name, uint32_t beginPos,
+    FunctionNodeType funNode, HandlePropertyName name, uint32_t beginPos,
     bool disallowDuplicateParams, bool* duplicatedParam) {
   if (AddDeclaredNamePtr p =
           pc->functionScope().lookupDeclaredNameForAdd(name)) {
@@ -563,7 +563,7 @@ bool GeneralParser<ParseHandler, Unit>::notePositionalFormalParameter(
 
 template <class ParseHandler>
 bool PerHandlerParser<ParseHandler>::noteDestructuredPositionalFormalParameter(
-    CodeNodeType funNode, Node destruct) {
+    FunctionNodeType funNode, Node destruct) {
   // Append an empty name to the positional formals vector to keep track of
   // argument slots when making FunctionScope::Data.
   if (!pc->positionalFormalParameterNames().append(nullptr)) {
@@ -1446,7 +1446,7 @@ ListNode* Parser<FullParseHandler, Unit>::globalBody(
 }
 
 template <typename Unit>
-CodeNode* Parser<FullParseHandler, Unit>::moduleBody(
+ModuleNode* Parser<FullParseHandler, Unit>::moduleBody(
     ModuleSharedContext* modulesc) {
   MOZ_ASSERT(checkOptionsCalled);
 
@@ -1460,7 +1460,7 @@ CodeNode* Parser<FullParseHandler, Unit>::moduleBody(
     return nullptr;
   }
 
-  CodeNodeType moduleNode = handler.newModule(pos());
+  ModuleNodeType moduleNode = handler.newModule(pos());
   if (!moduleNode) {
     return null();
   }
@@ -1531,7 +1531,7 @@ CodeNode* Parser<FullParseHandler, Unit>::moduleBody(
 }
 
 template <typename Unit>
-SyntaxParseHandler::CodeNodeType Parser<SyntaxParseHandler, Unit>::moduleBody(
+SyntaxParseHandler::ModuleNodeType Parser<SyntaxParseHandler, Unit>::moduleBody(
     ModuleSharedContext* modulesc) {
   MOZ_ALWAYS_FALSE(abortIfSyntaxParser());
   return SyntaxParseHandler::NodeFailure;
@@ -1757,7 +1757,7 @@ static AwaitHandling GetAwaitHandling(FunctionAsyncKind asyncKind) {
 }
 
 template <typename Unit>
-CodeNode* Parser<FullParseHandler, Unit>::standaloneFunction(
+FunctionNode* Parser<FullParseHandler, Unit>::standaloneFunction(
     HandleFunction fun, HandleScope enclosingScope,
     const Maybe<uint32_t>& parameterListEnd, GeneratorKind generatorKind,
     FunctionAsyncKind asyncKind, Directives inheritedDirectives,
@@ -1795,7 +1795,8 @@ CodeNode* Parser<FullParseHandler, Unit>::standaloneFunction(
     anyChars.ungetToken();
   }
 
-  CodeNodeType funNode = handler.newFunctionStatement(pos());
+  FunctionSyntaxKind syntaxKind = FunctionSyntaxKind::Statement;
+  FunctionNodeType funNode = handler.newFunction(syntaxKind, pos());
   if (!funNode) {
     return null();
   }
@@ -1824,9 +1825,9 @@ CodeNode* Parser<FullParseHandler, Unit>::standaloneFunction(
   AwaitHandling awaitHandling = GetAwaitHandling(asyncKind);
   AutoAwaitIsKeyword<FullParseHandler, Unit> awaitIsKeyword(this,
                                                             awaitHandling);
-  if (!functionFormalParametersAndBody(
-          InAllowed, yieldHandling, &funNode, FunctionSyntaxKind::Statement,
-          parameterListEnd, /* isStandaloneFunction = */ true)) {
+  if (!functionFormalParametersAndBody(InAllowed, yieldHandling, &funNode,
+                                       syntaxKind, parameterListEnd,
+                                       /* isStandaloneFunction = */ true)) {
     return null();
   }
 
@@ -1842,7 +1843,7 @@ CodeNode* Parser<FullParseHandler, Unit>::standaloneFunction(
   if (!FoldConstants(context, &node, this)) {
     return null();
   }
-  funNode = &node->as<CodeNode>();
+  funNode = &node->as<FunctionNode>();
 
   if (!this->setSourceMapInfo()) {
     return null();
@@ -2205,7 +2206,7 @@ JSAtom* ParserBase::prefixAccessorName(PropertyType propType,
 template <class ParseHandler, typename Unit>
 bool GeneralParser<ParseHandler, Unit>::functionArguments(
     YieldHandling yieldHandling, FunctionSyntaxKind kind,
-    CodeNodeType funNode) {
+    FunctionNodeType funNode) {
   FunctionBox* funbox = pc->functionBox();
 
   bool parenFreeArrow = false;
@@ -2515,7 +2516,7 @@ bool GeneralParser<ParseHandler, Unit>::functionArguments(
 
 template <typename Unit>
 bool Parser<FullParseHandler, Unit>::skipLazyInnerFunction(
-    CodeNode* funNode, uint32_t toStringStart, FunctionSyntaxKind kind,
+    FunctionNode* funNode, uint32_t toStringStart, FunctionSyntaxKind kind,
     bool tryAnnexB) {
   // When a lazily-parsed function is called, we only fully parse (and emit)
   // that function, not any of its nested children. The initial syntax-only
@@ -2552,14 +2553,14 @@ bool Parser<FullParseHandler, Unit>::skipLazyInnerFunction(
 
 template <typename Unit>
 bool Parser<SyntaxParseHandler, Unit>::skipLazyInnerFunction(
-    CodeNodeType funNode, uint32_t toStringStart, FunctionSyntaxKind kind,
+    FunctionNodeType funNode, uint32_t toStringStart, FunctionSyntaxKind kind,
     bool tryAnnexB) {
   MOZ_CRASH("Cannot skip lazy inner functions when syntax parsing");
 }
 
 template <class ParseHandler, typename Unit>
 bool GeneralParser<ParseHandler, Unit>::skipLazyInnerFunction(
-    CodeNodeType funNode, uint32_t toStringStart, FunctionSyntaxKind kind,
+    FunctionNodeType funNode, uint32_t toStringStart, FunctionSyntaxKind kind,
     bool tryAnnexB) {
   return asFinalParser()->skipLazyInnerFunction(funNode, toStringStart, kind,
                                                 tryAnnexB);
@@ -2643,9 +2644,9 @@ GeneralParser<ParseHandler, Unit>::templateLiteral(
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::CodeNodeType
+typename ParseHandler::FunctionNodeType
 GeneralParser<ParseHandler, Unit>::functionDefinition(
-    CodeNodeType funNode, uint32_t toStringStart, InHandling inHandling,
+    FunctionNodeType funNode, uint32_t toStringStart, InHandling inHandling,
     YieldHandling yieldHandling, HandleAtom funName, FunctionSyntaxKind kind,
     GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
     bool tryAnnexB /* = false */) {
@@ -2719,7 +2720,7 @@ GeneralParser<ParseHandler, Unit>::functionDefinition(
 
 template <typename Unit>
 bool Parser<FullParseHandler, Unit>::trySyntaxParseInnerFunction(
-    CodeNode** funNode, HandleFunction fun, uint32_t toStringStart,
+    FunctionNode** funNode, HandleFunction fun, uint32_t toStringStart,
     InHandling inHandling, YieldHandling yieldHandling, FunctionSyntaxKind kind,
     GeneratorKind generatorKind, FunctionAsyncKind asyncKind, bool tryAnnexB,
     Directives inheritedDirectives, Directives* newDirectives) {
@@ -2797,7 +2798,7 @@ bool Parser<FullParseHandler, Unit>::trySyntaxParseInnerFunction(
   } while (false);
 
   // We failed to do a syntax parse above, so do the full parse.
-  CodeNodeType innerFunc = innerFunction(
+  FunctionNodeType innerFunc = innerFunction(
       *funNode, pc, fun, toStringStart, inHandling, yieldHandling, kind,
       generatorKind, asyncKind, tryAnnexB, inheritedDirectives, newDirectives);
   if (!innerFunc) {
@@ -2810,12 +2811,12 @@ bool Parser<FullParseHandler, Unit>::trySyntaxParseInnerFunction(
 
 template <typename Unit>
 bool Parser<SyntaxParseHandler, Unit>::trySyntaxParseInnerFunction(
-    CodeNodeType* funNode, HandleFunction fun, uint32_t toStringStart,
+    FunctionNodeType* funNode, HandleFunction fun, uint32_t toStringStart,
     InHandling inHandling, YieldHandling yieldHandling, FunctionSyntaxKind kind,
     GeneratorKind generatorKind, FunctionAsyncKind asyncKind, bool tryAnnexB,
     Directives inheritedDirectives, Directives* newDirectives) {
   // This is already a syntax parser, so just parse the inner function.
-  CodeNodeType innerFunc = innerFunction(
+  FunctionNodeType innerFunc = innerFunction(
       *funNode, pc, fun, toStringStart, inHandling, yieldHandling, kind,
       generatorKind, asyncKind, tryAnnexB, inheritedDirectives, newDirectives);
 
@@ -2829,7 +2830,7 @@ bool Parser<SyntaxParseHandler, Unit>::trySyntaxParseInnerFunction(
 
 template <class ParseHandler, typename Unit>
 inline bool GeneralParser<ParseHandler, Unit>::trySyntaxParseInnerFunction(
-    CodeNodeType* funNode, HandleFunction fun, uint32_t toStringStart,
+    FunctionNodeType* funNode, HandleFunction fun, uint32_t toStringStart,
     InHandling inHandling, YieldHandling yieldHandling, FunctionSyntaxKind kind,
     GeneratorKind generatorKind, FunctionAsyncKind asyncKind, bool tryAnnexB,
     Directives inheritedDirectives, Directives* newDirectives) {
@@ -2839,9 +2840,9 @@ inline bool GeneralParser<ParseHandler, Unit>::trySyntaxParseInnerFunction(
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::CodeNodeType
+typename ParseHandler::FunctionNodeType
 GeneralParser<ParseHandler, Unit>::innerFunctionForFunctionBox(
-    CodeNodeType funNode, ParseContext* outerpc, FunctionBox* funbox,
+    FunctionNodeType funNode, ParseContext* outerpc, FunctionBox* funbox,
     InHandling inHandling, YieldHandling yieldHandling, FunctionSyntaxKind kind,
     Directives* newDirectives) {
   // Note that it is possible for outerpc != this->pc, as we may be
@@ -2868,9 +2869,9 @@ GeneralParser<ParseHandler, Unit>::innerFunctionForFunctionBox(
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::CodeNodeType
+typename ParseHandler::FunctionNodeType
 GeneralParser<ParseHandler, Unit>::innerFunction(
-    CodeNodeType funNode, ParseContext* outerpc, HandleFunction fun,
+    FunctionNodeType funNode, ParseContext* outerpc, HandleFunction fun,
     uint32_t toStringStart, InHandling inHandling, YieldHandling yieldHandling,
     FunctionSyntaxKind kind, GeneratorKind generatorKind,
     FunctionAsyncKind asyncKind, bool tryAnnexB, Directives inheritedDirectives,
@@ -2888,7 +2889,7 @@ GeneralParser<ParseHandler, Unit>::innerFunction(
   }
   funbox->initWithEnclosingParseContext(outerpc, kind);
 
-  CodeNodeType innerFunc = innerFunctionForFunctionBox(
+  FunctionNodeType innerFunc = innerFunctionForFunctionBox(
       funNode, outerpc, funbox, inHandling, yieldHandling, kind, newDirectives);
   if (!innerFunc) {
     return null();
@@ -2926,12 +2927,25 @@ bool GeneralParser<ParseHandler, Unit>::appendToCallSiteObj(
 }
 
 template <typename Unit>
-CodeNode* Parser<FullParseHandler, Unit>::standaloneLazyFunction(
+FunctionNode* Parser<FullParseHandler, Unit>::standaloneLazyFunction(
     HandleFunction fun, uint32_t toStringStart, bool strict,
     GeneratorKind generatorKind, FunctionAsyncKind asyncKind) {
   MOZ_ASSERT(checkOptionsCalled);
 
-  CodeNodeType funNode = handler.newFunctionStatement(pos());
+  FunctionSyntaxKind syntaxKind = FunctionSyntaxKind::Statement;
+  if (fun->isClassConstructor()) {
+    syntaxKind = FunctionSyntaxKind::ClassConstructor;
+  } else if (fun->isMethod()) {
+    syntaxKind = FunctionSyntaxKind::Method;
+  } else if (fun->isGetter()) {
+    syntaxKind = FunctionSyntaxKind::Getter;
+  } else if (fun->isSetter()) {
+    syntaxKind = FunctionSyntaxKind::Setter;
+  } else if (fun->isArrow()) {
+    syntaxKind = FunctionSyntaxKind::Arrow;
+  }
+
+  FunctionNodeType funNode = handler.newFunction(syntaxKind, pos());
   if (!funNode) {
     return null();
   }
@@ -2964,18 +2978,6 @@ CodeNode* Parser<FullParseHandler, Unit>::standaloneLazyFunction(
   }
 
   YieldHandling yieldHandling = GetYieldHandling(generatorKind);
-  FunctionSyntaxKind syntaxKind = FunctionSyntaxKind::Statement;
-  if (fun->isClassConstructor()) {
-    syntaxKind = FunctionSyntaxKind::ClassConstructor;
-  } else if (fun->isMethod()) {
-    syntaxKind = FunctionSyntaxKind::Method;
-  } else if (fun->isGetter()) {
-    syntaxKind = FunctionSyntaxKind::Getter;
-  } else if (fun->isSetter()) {
-    syntaxKind = FunctionSyntaxKind::Setter;
-  } else if (fun->isArrow()) {
-    syntaxKind = FunctionSyntaxKind::Arrow;
-  }
 
   if (!functionFormalParametersAndBody(InAllowed, yieldHandling, &funNode,
                                        syntaxKind)) {
@@ -2987,15 +2989,15 @@ CodeNode* Parser<FullParseHandler, Unit>::standaloneLazyFunction(
   if (!FoldConstants(context, &node, this)) {
     return null();
   }
-  funNode = &node->as<CodeNode>();
+  funNode = &node->as<FunctionNode>();
 
   return funNode;
 }
 
 template <class ParseHandler, typename Unit>
 bool GeneralParser<ParseHandler, Unit>::functionFormalParametersAndBody(
-    InHandling inHandling, YieldHandling yieldHandling, CodeNodeType* funNode,
-    FunctionSyntaxKind kind,
+    InHandling inHandling, YieldHandling yieldHandling,
+    FunctionNodeType* funNode, FunctionSyntaxKind kind,
     const Maybe<uint32_t>& parameterListEnd /* = Nothing() */,
     bool isStandaloneFunction /* = false */) {
   // Given a properly initialized parse context, try to parse an actual
@@ -3165,7 +3167,7 @@ bool GeneralParser<ParseHandler, Unit>::functionFormalParametersAndBody(
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::CodeNodeType
+typename ParseHandler::FunctionNodeType
 GeneralParser<ParseHandler, Unit>::functionStmt(uint32_t toStringStart,
                                                 YieldHandling yieldHandling,
                                                 DefaultHandling defaultHandling,
@@ -3240,7 +3242,8 @@ GeneralParser<ParseHandler, Unit>::functionStmt(uint32_t toStringStart,
     return null();
   }
 
-  CodeNodeType funNode = handler.newFunctionStatement(pos());
+  FunctionSyntaxKind syntaxKind = FunctionSyntaxKind::Statement;
+  FunctionNodeType funNode = handler.newFunction(syntaxKind, pos());
   if (!funNode) {
     return null();
   }
@@ -3256,12 +3259,12 @@ GeneralParser<ParseHandler, Unit>::functionStmt(uint32_t toStringStart,
 
   YieldHandling newYieldHandling = GetYieldHandling(generatorKind);
   return functionDefinition(funNode, toStringStart, InAllowed, newYieldHandling,
-                            name, FunctionSyntaxKind::Statement, generatorKind,
-                            asyncKind, tryAnnexB);
+                            name, syntaxKind, generatorKind, asyncKind,
+                            tryAnnexB);
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::CodeNodeType
+typename ParseHandler::FunctionNodeType
 GeneralParser<ParseHandler, Unit>::functionExpr(uint32_t toStringStart,
                                                 InvokedPrediction invoked,
                                                 FunctionAsyncKind asyncKind) {
@@ -3294,7 +3297,8 @@ GeneralParser<ParseHandler, Unit>::functionExpr(uint32_t toStringStart,
     anyChars.ungetToken();
   }
 
-  CodeNodeType funNode = handler.newFunctionExpression(pos());
+  FunctionSyntaxKind syntaxKind = FunctionSyntaxKind::Expression;
+  FunctionNodeType funNode = handler.newFunction(syntaxKind, pos());
   if (!funNode) {
     return null();
   }
@@ -3304,8 +3308,7 @@ GeneralParser<ParseHandler, Unit>::functionExpr(uint32_t toStringStart,
   }
 
   return functionDefinition(funNode, toStringStart, InAllowed, yieldHandling,
-                            name, FunctionSyntaxKind::Expression, generatorKind,
-                            asyncKind);
+                            name, syntaxKind, generatorKind, asyncKind);
 }
 
 /*
@@ -4914,20 +4917,20 @@ inline bool GeneralParser<ParseHandler, Unit>::checkExportedNameForClause(
 
 template <typename Unit>
 bool Parser<FullParseHandler, Unit>::checkExportedNameForFunction(
-    CodeNode* funNode) {
+    FunctionNode* funNode) {
   return checkExportedName(funNode->funbox()->function()->explicitName());
 }
 
 template <typename Unit>
 inline bool Parser<SyntaxParseHandler, Unit>::checkExportedNameForFunction(
-    CodeNodeType funNode) {
+    FunctionNodeType funNode) {
   MOZ_ALWAYS_FALSE(abortIfSyntaxParser());
   return false;
 }
 
 template <class ParseHandler, typename Unit>
 inline bool GeneralParser<ParseHandler, Unit>::checkExportedNameForFunction(
-    CodeNodeType funNode) {
+    FunctionNodeType funNode) {
   return asFinalParser()->checkExportedNameForFunction(funNode);
 }
 
@@ -5245,7 +5248,7 @@ GeneralParser<ParseHandler, Unit>::exportFunctionDeclaration(
     return null();
   }
 
-  if (!checkExportedNameForFunction(handler.asCode(kid))) {
+  if (!checkExportedNameForFunction(handler.asFunction(kid))) {
     return null();
   }
 
@@ -7045,7 +7048,7 @@ GeneralParser<ParseHandler, Unit>::classDefinition(
     // Calling toString on constructors need to return the source text for
     // the entire class. The end offset is unknown at this point in
     // parsing and will be amended when class parsing finishes below.
-    CodeNodeType funNode = methodDefinition(
+    FunctionNodeType funNode = methodDefinition(
         isConstructor ? classStartOffset : nameOffset, propType, funName);
     if (!funNode) {
       return null();
@@ -8023,14 +8026,15 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::assignExpr(
       }
     }
 
-    CodeNodeType funNode = handler.newArrowFunction(pos());
+    FunctionSyntaxKind syntaxKind = FunctionSyntaxKind::Arrow;
+    FunctionNodeType funNode = handler.newFunction(syntaxKind, pos());
     if (!funNode) {
       return null();
     }
 
     return functionDefinition(funNode, toStringStart, inHandling, yieldHandling,
-                              nullptr, FunctionSyntaxKind::Arrow,
-                              GeneratorKind::NotGenerator, asyncKind);
+                              nullptr, syntaxKind, GeneratorKind::NotGenerator,
+                              asyncKind);
   }
 
   MOZ_ALWAYS_TRUE(tokenStream.getToken(&tokenAfterLHS, TokenStream::Operand));
@@ -9736,7 +9740,7 @@ GeneralParser<ParseHandler, Unit>::objectLiteral(YieldHandling yieldHandling,
           }
         }
 
-        CodeNodeType funNode =
+        FunctionNodeType funNode =
             methodDefinition(namePos.begin, propType, funName);
         if (!funNode) {
           return null();
@@ -9783,33 +9787,33 @@ GeneralParser<ParseHandler, Unit>::objectLiteral(YieldHandling yieldHandling,
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::CodeNodeType
+typename ParseHandler::FunctionNodeType
 GeneralParser<ParseHandler, Unit>::methodDefinition(uint32_t toStringStart,
                                                     PropertyType propType,
                                                     HandleAtom funName) {
-  FunctionSyntaxKind kind;
+  FunctionSyntaxKind syntaxKind;
   switch (propType) {
     case PropertyType::Getter:
-      kind = FunctionSyntaxKind::Getter;
+      syntaxKind = FunctionSyntaxKind::Getter;
       break;
 
     case PropertyType::Setter:
-      kind = FunctionSyntaxKind::Setter;
+      syntaxKind = FunctionSyntaxKind::Setter;
       break;
 
     case PropertyType::Method:
     case PropertyType::GeneratorMethod:
     case PropertyType::AsyncMethod:
     case PropertyType::AsyncGeneratorMethod:
-      kind = FunctionSyntaxKind::Method;
+      syntaxKind = FunctionSyntaxKind::Method;
       break;
 
     case PropertyType::Constructor:
-      kind = FunctionSyntaxKind::ClassConstructor;
+      syntaxKind = FunctionSyntaxKind::ClassConstructor;
       break;
 
     case PropertyType::DerivedConstructor:
-      kind = FunctionSyntaxKind::DerivedClassConstructor;
+      syntaxKind = FunctionSyntaxKind::DerivedClassConstructor;
       break;
 
     default:
@@ -9828,13 +9832,13 @@ GeneralParser<ParseHandler, Unit>::methodDefinition(uint32_t toStringStart,
 
   YieldHandling yieldHandling = GetYieldHandling(generatorKind);
 
-  CodeNodeType funNode = handler.newFunctionExpression(pos());
+  FunctionNodeType funNode = handler.newFunction(syntaxKind, pos());
   if (!funNode) {
     return null();
   }
 
   return functionDefinition(funNode, toStringStart, InAllowed, yieldHandling,
-                            funName, kind, generatorKind, asyncKind);
+                            funName, syntaxKind, generatorKind, asyncKind);
 }
 
 template <class ParseHandler, typename Unit>

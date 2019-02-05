@@ -53,6 +53,8 @@ WebGLExtensionSRGB::WebGLExtensionSRGB(WebGLContext* webgl)
 WebGLExtensionSRGB::~WebGLExtensionSRGB() {}
 
 bool WebGLExtensionSRGB::IsSupported(const WebGLContext* const webgl) {
+  if (webgl->IsWebGL2()) return false;
+
   return webgl->gl->IsSupported(gl::GLFeature::sRGB);
 }
 

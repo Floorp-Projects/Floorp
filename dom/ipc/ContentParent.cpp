@@ -1590,16 +1590,6 @@ void ContentParent::ProcessingError(Result aCode, const char* aReason) {
 #endif
 }
 
-namespace {
-
-void DelayedDeleteSubprocess(GeckoChildProcessHost* aSubprocess) {
-  RefPtr<DeleteTask<GeckoChildProcessHost>> task =
-      new DeleteTask<GeckoChildProcessHost>(aSubprocess);
-  XRE_GetIOMessageLoop()->PostTask(task.forget());
-}
-
-}  // namespace
-
 void ContentParent::ActorDestroy(ActorDestroyReason why) {
   RefPtr<ContentParent> kungFuDeathGrip(mSelfRef.forget());
   MOZ_RELEASE_ASSERT(kungFuDeathGrip);
@@ -1700,14 +1690,16 @@ void ContentParent::ActorDestroy(ActorDestroyReason why) {
   }
   mIdleListeners.Clear();
 
-  MessageLoop::current()->PostTask(NewRunnableFunction(
-      "DelayedDeleteSubprocessRunnable", DelayedDeleteSubprocess, mSubprocess));
+  // FIXME (bug 1520997): does this really need an additional dispatch?
+  MessageLoop::current()->PostTask(NS_NewRunnableFunction(
+      "DelayedDeleteSubprocessRunnable",
+      [subprocess = mSubprocess] { subprocess->Destroy(); }));
   mSubprocess = nullptr;
 
   // Delete any remaining replaying children.
   for (auto& replayingProcess : mReplayingChildren) {
     if (replayingProcess) {
-      DelayedDeleteSubprocess(replayingProcess);
+      replayingProcess->Destroy();
       replayingProcess = nullptr;
     }
   }
@@ -2411,7 +2403,7 @@ ContentParent::~ContentParent() {
   // Normally mSubprocess is destroyed in ActorDestroy, but that won't
   // happen if the process wasn't launched or if it failed to launch.
   if (mSubprocess) {
-    DelayedDeleteSubprocess(mSubprocess);
+    mSubprocess->Destroy();
   }
 }
 
@@ -5764,7 +5756,8 @@ void ContentParent::UnregisterRemoveWorkerActor() {
 
 mozilla::ipc::IPCResult ContentParent::RecvWindowClose(
     const BrowsingContextId& aContextId, const bool& aTrustedCaller) {
-  RefPtr<CanonicalBrowsingContext> bc = CanonicalBrowsingContext::Get(aContextId);
+  RefPtr<CanonicalBrowsingContext> bc =
+      CanonicalBrowsingContext::Get(aContextId);
   if (!bc) {
     MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Debug,
             ("ParentIPC: Trying to send a message to dead or detached context "
@@ -5786,7 +5779,8 @@ mozilla::ipc::IPCResult ContentParent::RecvWindowClose(
 
 mozilla::ipc::IPCResult ContentParent::RecvWindowFocus(
     const BrowsingContextId& aContextId) {
-  RefPtr<CanonicalBrowsingContext> bc = CanonicalBrowsingContext::Get(aContextId);
+  RefPtr<CanonicalBrowsingContext> bc =
+      CanonicalBrowsingContext::Get(aContextId);
   if (!bc) {
     MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Debug,
             ("ParentIPC: Trying to send a message to dead or detached context "
@@ -5804,7 +5798,8 @@ mozilla::ipc::IPCResult ContentParent::RecvWindowFocus(
 
 mozilla::ipc::IPCResult ContentParent::RecvWindowBlur(
     const BrowsingContextId& aContextId) {
-  RefPtr<CanonicalBrowsingContext> bc = CanonicalBrowsingContext::Get(aContextId);
+  RefPtr<CanonicalBrowsingContext> bc =
+      CanonicalBrowsingContext::Get(aContextId);
   if (!bc) {
     MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Debug,
             ("ParentIPC: Trying to send a message to dead or detached context "
@@ -5823,7 +5818,8 @@ mozilla::ipc::IPCResult ContentParent::RecvWindowBlur(
 mozilla::ipc::IPCResult ContentParent::RecvWindowPostMessage(
     const BrowsingContextId& aContextId, const ClonedMessageData& aMessage,
     const PostMessageData& aData) {
-  RefPtr<CanonicalBrowsingContext> bc = CanonicalBrowsingContext::Get(aContextId);
+  RefPtr<CanonicalBrowsingContext> bc =
+      CanonicalBrowsingContext::Get(aContextId);
   if (!bc) {
     MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Debug,
             ("ParentIPC: Trying to send a message to dead or detached context "

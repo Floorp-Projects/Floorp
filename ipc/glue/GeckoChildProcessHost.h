@@ -12,8 +12,8 @@
 #include "base/waitable_event.h"
 #include "chrome/common/child_process_host.h"
 
-#include "mozilla/DebugOnly.h"
 #include "mozilla/ipc/FileDescriptor.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/StaticPtr.h"
@@ -41,14 +41,21 @@ class GeckoChildProcessHost : public ChildProcessHost {
   explicit GeckoChildProcessHost(GeckoProcessType aProcessType,
                                  bool aIsFileContent = false);
 
-  ~GeckoChildProcessHost();
+  // Causes the object to be deleted, on the I/O thread, after any
+  // pending asynchronous work (like launching) is complete.  This
+  // method can be called from any thread.  If called from the I/O
+  // thread itself, deletion won't happen until the event loop spins;
+  // otherwise, it could happen immediately.
+  //
+  // GeckoChildProcessHost instances must not be deleted except
+  // through this method.
+  void Destroy();
 
   static uint32_t GetUniqueID();
 
   // Does not block.  The IPC channel may not be initialized yet, and
   // the child process may or may not have been created when this
-  // method returns.  This GeckoChildProcessHost must not be destroyed
-  // while the launch is in progress.
+  // method returns.
   bool AsyncLaunch(StringVector aExtraOpts = StringVector());
 
   virtual bool WaitUntilConnected(int32_t aTimeoutMs = 0);
@@ -127,6 +134,8 @@ class GeckoChildProcessHost : public ChildProcessHost {
   }
 
  protected:
+  ~GeckoChildProcessHost();
+
   GeckoProcessType mProcessType;
   bool mIsFileContent;
   Monitor mMonitor;
@@ -181,13 +190,13 @@ class GeckoChildProcessHost : public ChildProcessHost {
  private:
   DISALLOW_EVIL_CONSTRUCTORS(GeckoChildProcessHost);
 
-  // Does the actual work for AsyncLaunch, on the IO thread.
-  // (TODO, bug 1487287: move this to its own thread(s).)
+  // Does the actual work for AsyncLaunch; run in a thread pool
+  // (or, on Windows, a dedicated thread).
   bool PerformAsyncLaunch(StringVector aExtraOpts);
 
-  // Also called on the I/O thread; creates channel, launches, and
-  // consolidates error handling.
-  bool RunPerformAsyncLaunch(StringVector aExtraOpts);
+  // Called on the I/O thread; creates channel, dispatches
+  // PerformAsyncLaunch, and consolidates error handling.
+  void RunPerformAsyncLaunch(StringVector aExtraOpts);
 
   enum class BinaryPathType { Self, PluginContainer };
 
@@ -211,6 +220,8 @@ class GeckoChildProcessHost : public ChildProcessHost {
 #if defined(OS_LINUX)
   nsCString mTmpDirName;
 #endif
+
+  mozilla::Atomic<bool> mDestroying;
 
   static uint32_t sNextUniqueID;
 

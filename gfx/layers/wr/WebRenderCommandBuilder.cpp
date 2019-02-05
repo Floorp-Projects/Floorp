@@ -520,7 +520,7 @@ struct DIGroup {
           // we need to catch bounds changes of containers so that we continue
           // to have the correct bounds rects in the recording
           if (DetectContainerLayerPropertiesBoundsChange(aItem, aData,
-                                                            *geometry)) {
+                                                         *geometry)) {
             nsRect clippedBounds = clip.ApplyNonRoundedIntersection(
                 geometry->ComputeInvalidationRegion());
             aData->mGeometry = std::move(geometry);

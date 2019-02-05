@@ -136,6 +136,8 @@ jobs:
   static-analysis-build:
     symbol: I(static-analysis-build)
     parent: android-build
+    packages:
+      - deb9-nasm
   mingw32-build:
     symbol: I(mingw)
     parent: debian9-base

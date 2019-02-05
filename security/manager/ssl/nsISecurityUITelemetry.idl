@@ -85,17 +85,6 @@ const uint32_t WARNING_BAD_CERT_CONFIRM_ADD_EXCEPTION_FLAG_DOMAIN = 2;
 const uint32_t WARNING_BAD_CERT_CONFIRM_ADD_EXCEPTION_FLAG_TIME = 4;
 // This uses up buckets till 45
 
-/*
- * Geolocation Popup Telemetry
- */
-
-const uint32_t WARNING_GEOLOCATION_REQUEST = 46;
-const uint32_t WARNING_GEOLOCATION_REQUEST_SHARE_LOCATION = 47;
-const uint32_t WARNING_GEOLOCATION_REQUEST_ALWAYS_SHARE = 48;
-const uint32_t WARNING_GEOLOCATION_REQUEST_NEVER_SHARE = 49;
-// It would be nice to measure the two cases of user clicking
-// "not now", and user closing the popup. This is currently not implemented.
-
 // const uint32_t WARNING_MALWARE_PAGE_TOP = 52;
 // const uint32_t WARNING_MALWARE_PAGE_TOP_WHY_BLOCKED = 53;
 // const uint32_t WARNING_MALWARE_PAGE_TOP_GET_ME_OUT_OF_HERE = 54;

@@ -217,7 +217,7 @@ class NSSCertDBTrustDomain : public mozilla::pkix::TrustDomain {
   bool mSawDistrustedCAByPolicyError;
   const OriginAttributes& mOriginAttributes;
   const Vector<mozilla::pkix::Input>& mThirdPartyRootInputs;  // non-owning
-  UniqueCERTCertList& mBuiltChain;  // non-owning
+  UniqueCERTCertList& mBuiltChain;                            // non-owning
   PinningTelemetryInfo* mPinningTelemetryInfo;
   const char* mHostname;  // non-owning - only used for pinning checks
   nsCOMPtr<nsICertBlocklist> mCertBlocklist;

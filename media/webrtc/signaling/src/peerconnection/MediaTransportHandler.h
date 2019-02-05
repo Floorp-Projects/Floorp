@@ -8,8 +8,8 @@
 #include "mozilla/RefPtr.h"
 #include "nsISupportsImpl.h"
 #include "sigslot.h"
-#include "transportlayer.h"      // Need the State enum
-#include "dtlsidentity.h"  // For DtlsDigest
+#include "transportlayer.h"  // Need the State enum
+#include "dtlsidentity.h"    // For DtlsDigest
 #include "mozilla/dom/PeerConnectionImplEnumsBinding.h"
 #include "mozilla/dom/RTCConfigurationBinding.h"
 #include "nricectx.h"               // Need some enums
@@ -78,8 +78,8 @@ class MediaTransportHandler {
       const std::string& aLocalPwd, size_t aComponentCount,
       const std::string& aUfrag, const std::string& aPassword,
       const nsTArray<uint8_t>& aKeyDer, const nsTArray<uint8_t>& aCertDer,
-      SSLKEAType aAuthType, bool aDtlsClient,
-      const DtlsDigestList& aDigests, bool aPrivacyRequested) = 0;
+      SSLKEAType aAuthType, bool aDtlsClient, const DtlsDigestList& aDigests,
+      bool aPrivacyRequested) = 0;
 
   virtual void RemoveTransportsExcept(
       const std::set<std::string>& aTransportIds) = 0;

@@ -452,7 +452,7 @@ bool UIShowCrashUI(const StringTable& files, const StringTable& queryParameters,
   g_signal_connect(commentBuffer, "insert-text", G_CALLBACK(CommentInsert), 0);
 
   gtk_container_add(GTK_CONTAINER(scrolled), gCommentText);
-  gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(gCommentText), GTK_WRAP_WORD);
+  gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(gCommentText), GTK_WRAP_WORD_CHAR);
   gtk_widget_set_size_request(GTK_WIDGET(gCommentText), -1, 100);
 
   if (gQueryParameters.find("URL") != gQueryParameters.end()) {

@@ -108,20 +108,13 @@
         <body><![CDATA[
           let result = PlacesUtils.history
                                   .executeQuery(query, options);
-          let callback;
-          if (this.flatList) {
-            let onOpenFlatContainer = this.onOpenFlatContainer;
-            if (onOpenFlatContainer)
-              callback = new Function("aContainer", onOpenFlatContainer);
-          }
-
           if (!this._controller) {
             this._controller = new PlacesController(this);
             this._controller.disableUserActions = this.disableUserActions;
             this.controllers.appendController(this._controller);
           }
 
-          let treeView = new PlacesTreeView(this.flatList, callback, this._controller);
+          let treeView = new PlacesTreeView(this);
 
           // Observer removal is done within the view itself.  When the tree
           // goes away, view.setTree(null) is called, which then
@@ -144,21 +137,6 @@
         <setter><![CDATA[
           if (this.flatList != val) {
             this.setAttribute("flatList", val);
-            // reload with the last place set
-            if (this.place)
-              this.place = this.place;
-          }
-          return val;
-        ]]></setter>
-      </property>
-
-      <property name="onOpenFlatContainer">
-        <getter><![CDATA[
-          return this.getAttribute("onopenflatcontainer");
-        ]]></getter>
-        <setter><![CDATA[
-          if (this.onOpenFlatContainer != val) {
-            this.setAttribute("onopenflatcontainer", val);
             // reload with the last place set
             if (this.place)
               this.place = this.place;

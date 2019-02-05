@@ -31,6 +31,7 @@ add_task(async function() {
     "Should have type search");
   Assert.deepEqual(result.searchParams, {
       engine: "MozSearch",
+      keyword: undefined,
       query: "open a search",
       suggestion: undefined,
   }, "Should have the correct result parameters.");

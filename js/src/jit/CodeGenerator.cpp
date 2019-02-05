@@ -11676,9 +11676,9 @@ void CodeGenerator::visitOutOfLineSwitch(
   jumpTable->setOutOfLine();
   auto& labels = jumpTable->labels();
 #if defined(JS_CODEGEN_ARM64)
-  AutoForbidPools afp(&masm, (labels.length() + 1) * (sizeof(void*) / vixl::kInstructionSize));
+  AutoForbidPools afp(
+      &masm, (labels.length() + 1) * (sizeof(void*) / vixl::kInstructionSize));
 #endif
-
 
   if (tableType == SwitchTableType::OutOfLine) {
 #if defined(JS_CODEGEN_ARM)

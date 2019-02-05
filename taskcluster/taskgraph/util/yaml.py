@@ -5,25 +5,35 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import os
-import re
-import yaml
+
+from yaml.loader import SafeLoader
 
 
-def load_yaml(path, name, enforce_order=False):
+class UnicodeLoader(SafeLoader):
+    def construct_yaml_str(self, node):
+        return self.construct_scalar(node)
+
+
+UnicodeLoader.add_constructor(
+    'tag:yaml.org,2002:str',
+    UnicodeLoader.construct_yaml_str)
+
+
+def load_stream(stream):
+    """
+    Parse the first YAML document in a stream
+    and produce the corresponding Python object.
+    """
+    loader = UnicodeLoader(stream)
+    try:
+        return loader.get_single_data()
+    finally:
+        loader.dispose()
+
+
+def load_yaml(*parts):
     """Convenience function to load a YAML file in the given path.  This is
-    useful for loading kind configuration files from the kind path.  If
-    `enforce_order` is given, then any top-level keys in the file must
-    be given in order."""
-    filename = os.path.join(path, name)
-    if enforce_order:
-        keys = []
-        key_re = re.compile('^([^ #:]+):')
-        with open(filename, "rb") as f:
-            for line in f:
-                mo = key_re.match(line)
-                if mo:
-                    keys.append(mo.group(1))
-            if keys != list(sorted(keys)):
-                raise Exception("keys in {} are not sorted".format(filename))
+    useful for loading kind configuration files from the kind path."""
+    filename = os.path.join(*parts)
     with open(filename, "rb") as f:
-        return yaml.safe_load(f)
+        return load_stream(f)

@@ -1348,7 +1348,7 @@ restart:
       return true;
 
     case ParseNodeKind::Function:
-      MOZ_ASSERT(pn->is<CodeNode>());
+      MOZ_ASSERT(pn->is<FunctionNode>());
       /*
        * A named function, contrary to ES3, is no longer effectful, because
        * we bind its name lexically (using JSOP_CALLEE) instead of creating
@@ -2414,10 +2414,9 @@ bool BytecodeEmitter::emitScript(ParseNode* body) {
   return true;
 }
 
-bool BytecodeEmitter::emitFunctionScript(CodeNode* funNode,
+bool BytecodeEmitter::emitFunctionScript(FunctionNode* funNode,
                                          TopLevelFunction isTopLevel) {
   MOZ_ASSERT(inPrologue());
-  MOZ_ASSERT(funNode->isKind(ParseNodeKind::Function));
   ParseNode* body = funNode->body();
   MOZ_ASSERT(body->isKind(ParseNodeKind::ParamsBody));
   FunctionBox* funbox = sc->asFunctionBox();
@@ -3084,10 +3083,10 @@ bool BytecodeEmitter::setOrEmitSetFunName(ParseNode* maybeFun,
                                           HandleAtom name) {
   MOZ_ASSERT(maybeFun->isDirectRHSAnonFunction());
 
-  if (maybeFun->isKind(ParseNodeKind::Function)) {
+  if (maybeFun->is<FunctionNode>()) {
     // Function doesn't have 'name' property at this point.
     // Set function's name at compile time.
-    return setFunName(maybeFun->as<CodeNode>().funbox()->function(), name);
+    return setFunName(maybeFun->as<FunctionNode>().funbox()->function(), name);
   }
 
   MOZ_ASSERT(maybeFun->isKind(ParseNodeKind::ClassDecl));
@@ -4703,8 +4702,8 @@ bool BytecodeEmitter::emitHoistedFunctionsInList(ListNode* stmtList) {
       }
     }
 
-    if (maybeFun->isKind(ParseNodeKind::Function) &&
-        maybeFun->as<CodeNode>().functionIsHoisted()) {
+    if (maybeFun->is<FunctionNode>() &&
+        maybeFun->as<FunctionNode>().functionIsHoisted()) {
       if (!emitTree(maybeFun)) {
         return false;
       }
@@ -5503,7 +5502,7 @@ bool BytecodeEmitter::emitFor(ForNode* forNode,
   return emitForOf(forNode, headLexicalEmitterScope);
 }
 
-MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(CodeNode* funNode,
+MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(FunctionNode* funNode,
                                                     bool needsProto) {
   FunctionBox* funbox = funNode->funbox();
   RootedFunction fun(cx, funbox->function());
@@ -5638,7 +5637,8 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(CodeNode* funNode,
   // Non-hoisted functions simply emit their respective op.
   if (!funNode->functionIsHoisted()) {
     // JSOP_LAMBDA_ARROW is always preceded by a new.target
-    MOZ_ASSERT(fun->isArrow() == (funNode->getOp() == JSOP_LAMBDA_ARROW));
+    MOZ_ASSERT(fun->isArrow() ==
+               (funNode->syntaxKind() == FunctionSyntaxKind::Arrow));
     if (funbox->isAsync()) {
       MOZ_ASSERT(!needsProto);
       return emitAsyncWrapper(index, funbox->needsHomeObject(), fun->isArrow(),
@@ -5658,20 +5658,17 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(CodeNode* funNode,
     }
 
     if (needsProto) {
-      MOZ_ASSERT(funNode->getOp() == JSOP_LAMBDA);
-      funNode->setOp(JSOP_FUNWITHPROTO);
-    }
-
-    if (funNode->getOp() == JSOP_DEFFUN) {
-      if (!emitIndex32(JSOP_LAMBDA, index)) {
-        return false;
-      }
-      return emit1(JSOP_DEFFUN);
+      MOZ_ASSERT(funNode->syntaxKind() ==
+                 FunctionSyntaxKind::DerivedClassConstructor);
+      return emitIndex32(JSOP_FUNWITHPROTO, index);
     }
 
     // This is a FunctionExpression, ArrowFunctionExpression, or class
     // constructor. Emit the single instruction (without location info).
-    return emitIndex32(funNode->getOp(), index);
+    JSOp op = funNode->syntaxKind() == FunctionSyntaxKind::Arrow
+                  ? JSOP_LAMBDA_ARROW
+                  : JSOP_LAMBDA;
+    return emitIndex32(op, index);
   }
 
   MOZ_ASSERT(!needsProto);
@@ -5700,7 +5697,7 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(CodeNode* funNode,
       }
     } else {
       MOZ_ASSERT(sc->isGlobalContext() || sc->isEvalContext());
-      MOZ_ASSERT(funNode->getOp() == JSOP_NOP);
+      MOZ_ASSERT(funNode->syntaxKind() == FunctionSyntaxKind::Statement);
       MOZ_ASSERT(inPrologue());
       if (funbox->isAsync()) {
         if (!emitAsyncWrapper(index, fun->isMethod(), fun->isArrow(),
@@ -7677,9 +7674,9 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
         return false;
       }
 
-      if (propVal->isKind(ParseNodeKind::Function) &&
-          propVal->as<CodeNode>().funbox()->needsHomeObject()) {
-        FunctionBox* funbox = propVal->as<CodeNode>().funbox();
+      if (propVal->is<FunctionNode>() &&
+          propVal->as<FunctionNode>().funbox()->needsHomeObject()) {
+        FunctionBox* funbox = propVal->as<FunctionNode>().funbox();
         MOZ_ASSERT(funbox->function()->allowSuperProperty());
 
         if (!pe.emitInitHomeObject(funbox->asyncKind())) {
@@ -7765,10 +7762,10 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
       if (isPropertyAnonFunctionOrClass) {
         MOZ_ASSERT(op == JSOP_INITPROP);
 
-        if (propVal->isKind(ParseNodeKind::Function)) {
+        if (propVal->is<FunctionNode>()) {
           // When the value is function, we set the function's name
           // at the compile-time, instead of emitting SETFUNNAME.
-          FunctionBox* funbox = propVal->as<CodeNode>().funbox();
+          FunctionBox* funbox = propVal->as<FunctionNode>().funbox();
           anonFunction = funbox->function();
         } else {
           // Only object literal can have a property where key is
@@ -8480,8 +8477,8 @@ bool BytecodeEmitter::emitLexicalInitialization(JSAtom* name) {
   return true;
 }
 
-static MOZ_ALWAYS_INLINE CodeNode* FindConstructor(JSContext* cx,
-                                                   ListNode* classMethods) {
+static MOZ_ALWAYS_INLINE FunctionNode* FindConstructor(JSContext* cx,
+                                                       ListNode* classMethods) {
   for (ParseNode* mn : classMethods->contents()) {
     if (mn->is<ClassField>()) {
       // TODO(khyperia): Implement private field access.
@@ -8507,7 +8504,7 @@ bool BytecodeEmitter::emitClass(ClassNode* classNode) {
   ClassNames* names = classNode->names();
   ParseNode* heritageExpression = classNode->heritage();
   ListNode* classMembers = classNode->memberList();
-  CodeNode* constructor = FindConstructor(cx, classMembers);
+  FunctionNode* constructor = FindConstructor(cx, classMembers);
 
   //                [stack]
 
@@ -8633,7 +8630,7 @@ bool BytecodeEmitter::emitTree(
 
   switch (pn->getKind()) {
     case ParseNodeKind::Function:
-      if (!emitFunction(&pn->as<CodeNode>())) {
+      if (!emitFunction(&pn->as<FunctionNode>())) {
         return false;
       }
       break;

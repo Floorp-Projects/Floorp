@@ -370,6 +370,10 @@
       }
     },
 
+    "NetworkPrediction": {
+      "type": "boolean"
+    },
+
     "NoDefaultBookmarks": {
       "type": "boolean"
     },

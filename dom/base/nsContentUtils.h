@@ -2967,10 +2967,9 @@ class nsContentUtils {
 
   /*
    * Checks if storage for the given principal is permitted by the user's
-   * preferences. The caller is assumed to not be a third-party iframe.
-   * (if that is possible, the caller should use StorageAllowedForWindow)
+   * preferences. This method should be used only by ServiceWorker loading.
    */
-  static StorageAccess StorageAllowedForPrincipal(nsIPrincipal* aPrincipal);
+  static StorageAccess StorageAllowedForServiceWorker(nsIPrincipal* aPrincipal);
 
   /*
    * Returns true if this document should disable storages because of the
@@ -3356,7 +3355,7 @@ class nsContentUtils {
    * Gets the current cookie lifetime policy for a given principal by checking
    * with preferences and the permission manager.
    *
-   * Used in the implementation of InternalStorageAllowedForPrincipal.
+   * Used in the implementation of InternalStorageAllowedCheck.
    */
   static void GetCookieLifetimePolicyForPrincipal(nsIPrincipal* aPrincipal,
                                                   uint32_t* aLifetimePolicy);
@@ -3370,12 +3369,14 @@ class nsContentUtils {
    * allow a channel instead of the window reference when determining 3rd party
    * status.
    *
-   * Used in the implementation of StorageAllowedForWindow and
-   * StorageAllowedForPrincipal.
+   * Used in the implementation of StorageAllowedForWindow,
+   * StorageAllowedForChannel and StorageAllowedForServiceWorker.
    */
-  static StorageAccess InternalStorageAllowedForPrincipal(
-      nsIPrincipal* aPrincipal, nsPIDOMWindowInner* aWindow, nsIURI* aURI,
-      nsIChannel* aChannel, uint32_t& aRejectedReason);
+  static StorageAccess InternalStorageAllowedCheck(nsIPrincipal* aPrincipal,
+                                                   nsPIDOMWindowInner* aWindow,
+                                                   nsIURI* aURI,
+                                                   nsIChannel* aChannel,
+                                                   uint32_t& aRejectedReason);
 
   static nsINode* GetCommonAncestorHelper(nsINode* aNode1, nsINode* aNode2);
   static nsIContent* GetCommonFlattenedTreeAncestorHelper(

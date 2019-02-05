@@ -353,7 +353,7 @@ function process_log(contents) {
     if (!match)
       continue;
     line = match[1];
-    match = line.match(/^(TEST-PASS|TEST-UNEXPECTED-PASS|TEST-KNOWN-FAIL|TEST-UNEXPECTED-FAIL|TEST-DEBUG-INFO)(\(EXPECTED RANDOM\)|) \| ([^\|]+) \|(.*)/);
+    match = line.match(/^(TEST-PASS|TEST-UNEXPECTED-PASS|TEST-FAIL|TEST-KNOWN-FAIL|TEST-UNEXPECTED-FAIL|TEST-DEBUG-INFO)(\(EXPECTED RANDOM\)|) \| ([^\|]+)(?: \|(.*)|$)/);
     if (match) {
       var state = match[1];
       var random = match[2];

@@ -7,12 +7,11 @@ Transform the beetmover task into an actual task description.
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import yaml
-
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.scriptworker import (
     get_release_config,
 )
+from taskgraph.util.yaml import load_yaml
 
 from mozrelease.balrog import generate_update_properties
 from mozilla_version.gecko import GeckoVersion
@@ -26,8 +25,7 @@ def generate_update_line(config, jobs):
     release_config = get_release_config(config)
     for job in jobs:
         config_file = job.pop('whats-new-config')
-        with open(config_file, "rb") as f:
-            update_config = yaml.safe_load(f)
+        update_config = load_yaml(config_file)
 
         product = job['shipping-product']
         if product == 'devedition':

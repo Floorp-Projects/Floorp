@@ -240,7 +240,7 @@ nsresult MemoryTelemetry::GatherReports(
     if (NS_SUCCEEDED(rv)) {                                             \
       HandleMemoryReport(Telemetry::id, nsIMemoryReporter::units, amt); \
     } else if (rv != NS_ERROR_NOT_AVAILABLE) {                          \
-      NS_WARNING("Failed to retrieve memory telemetry for " # metric);  \
+      NS_WARNING("Failed to retrieve memory telemetry for " #metric);   \
     }                                                                   \
   } while (0)
 

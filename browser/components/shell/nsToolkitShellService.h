@@ -10,8 +10,7 @@
 
 class nsToolkitShellService : public nsIToolkitShellService {
  public:
-  NS_IMETHOD IsDefaultBrowser(bool aForAllTypes,
-                              bool* aIsDefaultBrowser) = 0;
+  NS_IMETHOD IsDefaultBrowser(bool aForAllTypes, bool* aIsDefaultBrowser) = 0;
 
   NS_IMETHODIMP IsDefaultApplication(bool* aIsDefaultBrowser) {
     // Only care about the http(s) protocol. This only matters on Windows.

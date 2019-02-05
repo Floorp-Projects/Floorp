@@ -313,6 +313,7 @@ class UrlbarAbstraction {
       if (details.type == UrlbarUtils.RESULT_TYPE.SEARCH) {
         details.searchParams = {
           engine: context.results[index].payload.engine,
+          keyword: context.results[index].payload.keyword,
           query: context.results[index].payload.query,
           suggestion: context.results[index].payload.suggestion,
         };
@@ -327,10 +328,9 @@ class UrlbarAbstraction {
       if (details.type == UrlbarUtils.RESULT_TYPE.SEARCH) {
         details.searchParams = {
           engine: action.params.engineName,
+          keyword: action.params.alias,
           query: action.params.input,
-          suggestion: action.params.input == action.params.searchQuery ?
-                      undefined :
-                      action.params.searchQuery,
+          suggestion: action.params.searchSuggestion,
         };
       }
     }

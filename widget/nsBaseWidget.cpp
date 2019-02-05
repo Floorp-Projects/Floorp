@@ -640,8 +640,8 @@ void nsBaseWidget::SetSizeMode(nsSizeMode aMode) {
 //
 //-------------------------------------------------------------------------
 
-void nsBaseWidget::SetCursor(nsCursor aCursor,
-                             imgIContainer*, uint32_t, uint32_t) {
+void nsBaseWidget::SetCursor(nsCursor aCursor, imgIContainer*, uint32_t,
+                             uint32_t) {
   // We don't support the cursor image.
   mCursor = aCursor;
 }

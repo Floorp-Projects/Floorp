@@ -679,6 +679,13 @@ var Policies = {
     },
   },
 
+  "NetworkPrediction": {
+    onBeforeAddons(manager, param) {
+      setAndLockPref("network.dns.disablePrefetch", !param);
+      setAndLockPref("network.dns.disablePrefetchFromHTTPS", !param);
+    },
+  },
+
   "NoDefaultBookmarks": {
     onProfileAfterChange(manager, param) {
       if (param) {

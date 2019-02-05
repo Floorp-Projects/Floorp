@@ -9,6 +9,7 @@ var EXPORTED_SYMBOLS = ["UrlbarView"];
 const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
+  UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
@@ -42,6 +43,7 @@ class UrlbarView {
     this._rows.addEventListener("overflow", this);
     this._rows.addEventListener("underflow", this);
 
+    this.panel.addEventListener("popupshowing", this);
     this.panel.addEventListener("popuphiding", this);
 
     this.controller.setView(this);
@@ -191,6 +193,32 @@ class UrlbarView {
     this.input.setValueFromResult(this._queryContext.results[newSelectionIndex]);
   }
 
+  /**
+   * Passes DOM events for the view to the _on_<event type> methods.
+   * @param {Event} event
+   *   DOM event from the <view>.
+   */
+  handleEvent(event) {
+    let methodName = "_on_" + event.type;
+    if (methodName in this) {
+      this[methodName](event);
+    } else {
+      throw new Error("Unrecognized UrlbarView event: " + event.type);
+    }
+  }
+
+  /**
+   * This is called when a one-off is clicked and when "search in new tab"
+   * is selected from a one-off context menu.
+   * @param {Event} event
+   * @param {nsISearchEngine} engine
+   * @param {string} where
+   * @param {object} params
+   */
+  handleOneOffSearch(event, engine, where, params) {
+    this.input.handleCommand(event, where, params);
+  }
+
   // Private methods below.
 
   _getBoundsWithoutFlushing(element) {
@@ -207,12 +235,9 @@ class UrlbarView {
     }
 
     this.panel.removeAttribute("hidden");
+    this.panel.removeAttribute("actionoverride");
 
     this._alignPanel();
-
-    // TODO: Search one off buttons are a stub right now.
-    //       We'll need to set them up properly.
-    this.oneOffSearchButtons;
 
     this.panel.openPopup(this.input.textbox.closest("toolbar"), "after_end", 0, -1);
   }
@@ -270,8 +295,8 @@ class UrlbarView {
       item.setAttribute("type", "search");
     } else if (result.type == UrlbarUtils.RESULT_TYPE.REMOTE_TAB) {
       item.setAttribute("type", "remotetab");
-    } else if (result.source == UrlbarUtils.RESULT_SOURCE.TABS) {
-      item.setAttribute("type", "tab");
+    } else if (result.type == UrlbarUtils.RESULT_TYPE.TAB_SWITCH) {
+      item.setAttribute("type", "switchtab");
     } else if (result.source == UrlbarUtils.RESULT_SOURCE.BOOKMARKS) {
       item.setAttribute("type", "bookmark");
     }
@@ -329,6 +354,7 @@ class UrlbarView {
     switch (result.type) {
       case UrlbarUtils.RESULT_TYPE.TAB_SWITCH:
         setAction(bundle.GetStringFromName("switchToTab2"));
+        setURL();
         break;
       case UrlbarUtils.RESULT_TYPE.REMOTE_TAB:
         setAction(result.payload.device);
@@ -393,17 +419,19 @@ class UrlbarView {
     }
   }
 
-  /**
-   * Passes DOM events for the view to the _on_<event type> methods.
-   * @param {Event} event
-   *   DOM event from the <view>.
-   */
-  handleEvent(event) {
-    let methodName = "_on_" + event.type;
-    if (methodName in this) {
-      this[methodName](event);
-    } else {
-      throw new Error("Unrecognized UrlbarView event: " + event.type);
+  _enableOrDisableOneOffSearches() {
+    if (UrlbarPrefs.get("oneOffSearches")) {
+      this.oneOffSearchButtons.telemetryOrigin = "urlbar";
+      this.oneOffSearchButtons.style.display = "";
+      // Set .textbox first, since the popup setter will cause
+      // a _rebuild call that uses it.
+      this.oneOffSearchButtons.textbox = this.input.textbox;
+      this.oneOffSearchButtons.view = this;
+    } else if (this._oneOffSearchButtons) {
+      this.oneOffSearchButtons.telemetryOrigin = null;
+      this.oneOffSearchButtons.style.display = "none";
+      this.oneOffSearchButtons.textbox = null;
+      this.oneOffSearchButtons.view = null;
     }
   }
 
@@ -455,7 +483,11 @@ class UrlbarView {
     }
   }
 
-  _on_popuphiding(event) {
+  _on_popupshowing() {
+    this._enableOrDisableOneOffSearches();
+  }
+
+  _on_popuphiding() {
     this.controller.cancelQuery();
   }
 }

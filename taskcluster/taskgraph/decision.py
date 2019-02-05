@@ -221,7 +221,8 @@ def get_decision_parameters(config, options):
     parameters['build_number'] = 1
     parameters['version'] = get_version(product_dir)
     parameters['app_version'] = get_app_version(product_dir)
-    parameters['message'] = get_hg_commit_message(GECKO)
+    parameters['message'] = get_hg_commit_message(os.path.join(GECKO,
+                                                               product_dir))
     parameters['hg_branch'] = get_hg_revision_branch(GECKO, revision=parameters['head_rev'])
     parameters['next_version'] = None
     parameters['release_type'] = ''

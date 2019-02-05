@@ -185,6 +185,7 @@ nsresult XPathResult::SetExprResult(txAExprResult* aExprResult,
     return NS_OK;
   }
 
+  mCurrentPos = 0;
   mInvalidIteratorState = false;
 
   if (mResultNodes.Count() > 0) {

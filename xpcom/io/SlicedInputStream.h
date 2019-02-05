@@ -64,7 +64,8 @@ class SlicedInputStream final : public nsIAsyncInputStream,
   template <typename M>
   void SerializeInternal(mozilla::ipc::InputStreamParams& aParams,
                          FileDescriptorArray& aFileDescriptors,
-                         bool aDelayedStart, M* aManager);
+                         bool aDelayedStart, uint32_t aMaxSize,
+                         uint32_t* aSizeUsed, M* aManager);
 
   void SetSourceStream(already_AddRefed<nsIInputStream> aInputStream);
 

@@ -53,7 +53,8 @@ template <typename M>
 void SerializeInputStreamInternal(nsIInputStream* aInputStream,
                                   InputStreamParams& aParams,
                                   nsTArray<FileDescriptor>& aFileDescriptors,
-                                  bool aDelayedStart, M* aManager) {
+                                  bool aDelayedStart, uint32_t aMaxSize,
+                                  uint32_t* aSizeUsed, M* aManager) {
   MOZ_ASSERT(aInputStream);
   MOZ_ASSERT(aManager);
 
@@ -63,7 +64,8 @@ void SerializeInputStreamInternal(nsIInputStream* aInputStream,
     MOZ_CRASH("Input stream is not serializable!");
   }
 
-  serializable->Serialize(aParams, aFileDescriptors, aDelayedStart, aManager);
+  serializable->Serialize(aParams, aFileDescriptors, aDelayedStart, aMaxSize,
+                          aSizeUsed, aManager);
 
   if (aParams.type() == InputStreamParams::T__None) {
     MOZ_CRASH("Serialize failed!");
@@ -118,38 +120,39 @@ void SerializeInputStreamAsPipeInternal(nsIInputStream* aInputStream,
 void InputStreamHelper::SerializeInputStream(
     nsIInputStream* aInputStream, InputStreamParams& aParams,
     nsTArray<FileDescriptor>& aFileDescriptors, bool aDelayedStart,
-    nsIContentChild* aManager) {
+    uint32_t aMaxSize, uint32_t* aSizeUsed, nsIContentChild* aManager) {
   SerializeInputStreamInternal(aInputStream, aParams, aFileDescriptors,
-                               aDelayedStart, aManager);
+                               aDelayedStart, aMaxSize, aSizeUsed, aManager);
 }
 
 void InputStreamHelper::SerializeInputStream(
     nsIInputStream* aInputStream, InputStreamParams& aParams,
     nsTArray<FileDescriptor>& aFileDescriptors, bool aDelayedStart,
-    PBackgroundChild* aManager) {
+    uint32_t aMaxSize, uint32_t* aSizeUsed, PBackgroundChild* aManager) {
   SerializeInputStreamInternal(aInputStream, aParams, aFileDescriptors,
-                               aDelayedStart, aManager);
+                               aDelayedStart, aMaxSize, aSizeUsed, aManager);
 }
 
 void InputStreamHelper::SerializeInputStream(
     nsIInputStream* aInputStream, InputStreamParams& aParams,
     nsTArray<FileDescriptor>& aFileDescriptors, bool aDelayedStart,
-    nsIContentParent* aManager) {
+    uint32_t aMaxSize, uint32_t* aSizeUsed, nsIContentParent* aManager) {
   SerializeInputStreamInternal(aInputStream, aParams, aFileDescriptors,
-                               aDelayedStart, aManager);
+                               aDelayedStart, aMaxSize, aSizeUsed, aManager);
 }
 
 void InputStreamHelper::SerializeInputStream(
     nsIInputStream* aInputStream, InputStreamParams& aParams,
     nsTArray<FileDescriptor>& aFileDescriptors, bool aDelayedStart,
-    PBackgroundParent* aManager) {
+    uint32_t aMaxSize, uint32_t* aSizeUsed, PBackgroundParent* aManager) {
   SerializeInputStreamInternal(aInputStream, aParams, aFileDescriptors,
-                               aDelayedStart, aManager);
+                               aDelayedStart, aMaxSize, aSizeUsed, aManager);
 }
 
-void InputStreamHelper::SerializeInputStreamAsPipe(
-    nsIInputStream* aInputStream, InputStreamParams& aParams,
-    bool aDelayedStart, nsIContentChild* aManager) {
+void InputStreamHelper::SerializeInputStreamAsPipe(nsIInputStream* aInputStream,
+                                                   InputStreamParams& aParams,
+                                                   bool aDelayedStart,
+                                                   nsIContentChild* aManager) {
   SerializeInputStreamAsPipeInternal(aInputStream, aParams, aDelayedStart,
                                      aManager);
 }
@@ -162,9 +165,10 @@ void InputStreamHelper::SerializeInputStreamAsPipe(nsIInputStream* aInputStream,
                                      aManager);
 }
 
-void InputStreamHelper::SerializeInputStreamAsPipe(
-    nsIInputStream* aInputStream, InputStreamParams& aParams,
-    bool aDelayedStart, nsIContentParent* aManager) {
+void InputStreamHelper::SerializeInputStreamAsPipe(nsIInputStream* aInputStream,
+                                                   InputStreamParams& aParams,
+                                                   bool aDelayedStart,
+                                                   nsIContentParent* aManager) {
   SerializeInputStreamAsPipeInternal(aInputStream, aParams, aDelayedStart,
                                      aManager);
 }
