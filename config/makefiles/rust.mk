@@ -6,6 +6,10 @@
 # in recipes via the `env` command to avoid round-trips to msys on Windows, which
 # tend to break environment variable values in interesting ways.
 
+# /!\ Avoid the use of double-quotes in this file, so that the cargo
+# commands can be executed directly by make, without doing a round-trip
+# through a shell.
+
 cargo_host_flag := --target=$(RUST_HOST_TARGET)
 cargo_target_flag := --target=$(RUST_TARGET)
 
@@ -194,7 +198,7 @@ endif # ifneq WINNT
 ifdef RUST_LIBRARY_FILE
 
 ifdef RUST_LIBRARY_FEATURES
-rust_features_flag := --features "$(RUST_LIBRARY_FEATURES)"
+rust_features_flag := --features '$(RUST_LIBRARY_FEATURES)'
 endif
 
 # Assume any system libraries rustc links against are already in the target's LIBS.
@@ -230,7 +234,7 @@ ifdef RUST_TESTS
 rust_test_options := $(foreach test,$(RUST_TESTS),-p $(test))
 
 ifdef RUST_TEST_FEATURES
-rust_features_flag := --features "$(RUST_TEST_FEATURES)"
+rust_features_flag := --features '$(RUST_TEST_FEATURES)'
 endif
 
 # Don't stop at the first failure. We want to list all failures together.
@@ -244,7 +248,7 @@ endif
 ifdef HOST_RUST_LIBRARY_FILE
 
 ifdef HOST_RUST_LIBRARY_FEATURES
-host_rust_features_flag := --features "$(HOST_RUST_LIBRARY_FEATURES)"
+host_rust_features_flag := --features '$(HOST_RUST_LIBRARY_FEATURES)'
 endif
 
 force-cargo-host-library-build:
