@@ -130,16 +130,16 @@ bool nsStyleDisplay::HasPerspective(const nsIFrame* aContextFrame) const {
 }
 
 bool nsStyleDisplay::IsFixedPosContainingBlockForNonSVGTextFrames(
-    mozilla::ComputedStyle& aStyle) const {
+    const mozilla::ComputedStyle& aStyle) const {
   // NOTE: Any CSS properties that influence the output of this function
   // should have the FIXPOS_CB flag set on them.
-  NS_ASSERTION(aStyle.ThreadsafeStyleDisplay() == this, "unexpected aStyle");
+  NS_ASSERTION(aStyle.StyleDisplay() == this, "unexpected aStyle");
 
   if (mWillChangeBitField & NS_STYLE_WILL_CHANGE_FIXPOS_CB) {
     return true;
   }
 
-  return aStyle.ThreadsafeStyleEffects()->HasFilters();
+  return aStyle.StyleEffects()->HasFilters();
 }
 
 bool nsStyleDisplay::
@@ -157,8 +157,7 @@ bool nsStyleDisplay::IsFixedPosContainingBlockForTransformSupportingFrames()
 bool nsStyleDisplay::IsFixedPosContainingBlock(
     const nsIFrame* aContextFrame) const {
   mozilla::ComputedStyle* style = aContextFrame->Style();
-  NS_ASSERTION(style->ThreadsafeStyleDisplay() == this,
-               "unexpected aContextFrame");
+  NS_ASSERTION(style->StyleDisplay() == this, "unexpected aContextFrame");
   // NOTE: Any CSS properties that influence the output of this function
   // should have the FIXPOS_CB flag set on them.
   if (!IsFixedPosContainingBlockForNonSVGTextFrames(*style) &&
@@ -187,8 +186,7 @@ bool nsStyleDisplay::IsAbsPosContainingBlockForNonSVGTextFrames() const {
 bool nsStyleDisplay::IsAbsPosContainingBlock(
     const nsIFrame* aContextFrame) const {
   mozilla::ComputedStyle* style = aContextFrame->Style();
-  NS_ASSERTION(style->ThreadsafeStyleDisplay() == this,
-               "unexpected aContextFrame");
+  NS_ASSERTION(style->StyleDisplay() == this, "unexpected aContextFrame");
   // NOTE: Any CSS properties that influence the output of this function
   // should have the ABSPOS_CB set on them.
   if (!IsAbsPosContainingBlockForNonSVGTextFrames() &&
