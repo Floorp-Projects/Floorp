@@ -644,6 +644,13 @@ class Document : public nsINode,
   nsIURI* GetOriginalURI() const { return mOriginalURI; }
 
   /**
+   * Return the base domain of the document.  This has been computed using
+   * mozIThirdPartyUtil::GetBaseDomain() and can be used for third-party
+   * checks.  When the URI of the document changes, this value is recomputed.
+   */
+  nsCString GetBaseDomain() const { return mBaseDomain; }
+
+  /**
    * Set the URI for the document.  This also sets the document's original URI,
    * if it's null.
    */
@@ -3819,6 +3826,9 @@ class Document : public nsINode,
   nsCOMPtr<nsIURI> mChromeXHRDocURI;
   nsCOMPtr<nsIURI> mDocumentBaseURI;
   nsCOMPtr<nsIURI> mChromeXHRDocBaseURI;
+
+  // The base domain of the document for third-party checks.
+  nsCString mBaseDomain;
 
   // A lazily-constructed URL data for style system to resolve URL value.
   RefPtr<mozilla::URLExtraData> mCachedURLData;
