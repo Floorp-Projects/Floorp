@@ -34,3 +34,13 @@ win64-node:
     run:
         arguments: ['win64']
         toolchain-artifact: public/build/node.tar.bz2
+
+win32-node:
+    treeherder:
+        symbol: TW32(node)
+    run:
+        arguments: ['win32']
+        toolchain-artifact: public/build/node.tar.bz2
+    run-on-projects:
+        - trunk
+        - try
