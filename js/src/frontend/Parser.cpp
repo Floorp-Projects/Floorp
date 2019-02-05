@@ -1795,7 +1795,8 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneFunction(
     anyChars.ungetToken();
   }
 
-  FunctionNodeType funNode = handler.newFunctionStatement(pos());
+  FunctionSyntaxKind syntaxKind = FunctionSyntaxKind::Statement;
+  FunctionNodeType funNode = handler.newFunction(syntaxKind, pos());
   if (!funNode) {
     return null();
   }
@@ -1824,9 +1825,9 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneFunction(
   AwaitHandling awaitHandling = GetAwaitHandling(asyncKind);
   AutoAwaitIsKeyword<FullParseHandler, Unit> awaitIsKeyword(this,
                                                             awaitHandling);
-  if (!functionFormalParametersAndBody(
-          InAllowed, yieldHandling, &funNode, FunctionSyntaxKind::Statement,
-          parameterListEnd, /* isStandaloneFunction = */ true)) {
+  if (!functionFormalParametersAndBody(InAllowed, yieldHandling, &funNode,
+                                       syntaxKind, parameterListEnd,
+                                       /* isStandaloneFunction = */ true)) {
     return null();
   }
 
@@ -2931,7 +2932,20 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneLazyFunction(
     GeneratorKind generatorKind, FunctionAsyncKind asyncKind) {
   MOZ_ASSERT(checkOptionsCalled);
 
-  FunctionNodeType funNode = handler.newFunctionStatement(pos());
+  FunctionSyntaxKind syntaxKind = FunctionSyntaxKind::Statement;
+  if (fun->isClassConstructor()) {
+    syntaxKind = FunctionSyntaxKind::ClassConstructor;
+  } else if (fun->isMethod()) {
+    syntaxKind = FunctionSyntaxKind::Method;
+  } else if (fun->isGetter()) {
+    syntaxKind = FunctionSyntaxKind::Getter;
+  } else if (fun->isSetter()) {
+    syntaxKind = FunctionSyntaxKind::Setter;
+  } else if (fun->isArrow()) {
+    syntaxKind = FunctionSyntaxKind::Arrow;
+  }
+
+  FunctionNodeType funNode = handler.newFunction(syntaxKind, pos());
   if (!funNode) {
     return null();
   }
@@ -2964,18 +2978,6 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneLazyFunction(
   }
 
   YieldHandling yieldHandling = GetYieldHandling(generatorKind);
-  FunctionSyntaxKind syntaxKind = FunctionSyntaxKind::Statement;
-  if (fun->isClassConstructor()) {
-    syntaxKind = FunctionSyntaxKind::ClassConstructor;
-  } else if (fun->isMethod()) {
-    syntaxKind = FunctionSyntaxKind::Method;
-  } else if (fun->isGetter()) {
-    syntaxKind = FunctionSyntaxKind::Getter;
-  } else if (fun->isSetter()) {
-    syntaxKind = FunctionSyntaxKind::Setter;
-  } else if (fun->isArrow()) {
-    syntaxKind = FunctionSyntaxKind::Arrow;
-  }
 
   if (!functionFormalParametersAndBody(InAllowed, yieldHandling, &funNode,
                                        syntaxKind)) {
@@ -3240,7 +3242,8 @@ GeneralParser<ParseHandler, Unit>::functionStmt(uint32_t toStringStart,
     return null();
   }
 
-  FunctionNodeType funNode = handler.newFunctionStatement(pos());
+  FunctionSyntaxKind syntaxKind = FunctionSyntaxKind::Statement;
+  FunctionNodeType funNode = handler.newFunction(syntaxKind, pos());
   if (!funNode) {
     return null();
   }
@@ -3256,8 +3259,8 @@ GeneralParser<ParseHandler, Unit>::functionStmt(uint32_t toStringStart,
 
   YieldHandling newYieldHandling = GetYieldHandling(generatorKind);
   return functionDefinition(funNode, toStringStart, InAllowed, newYieldHandling,
-                            name, FunctionSyntaxKind::Statement, generatorKind,
-                            asyncKind, tryAnnexB);
+                            name, syntaxKind, generatorKind, asyncKind,
+                            tryAnnexB);
 }
 
 template <class ParseHandler, typename Unit>
@@ -3294,7 +3297,8 @@ GeneralParser<ParseHandler, Unit>::functionExpr(uint32_t toStringStart,
     anyChars.ungetToken();
   }
 
-  FunctionNodeType funNode = handler.newFunctionExpression(pos());
+  FunctionSyntaxKind syntaxKind = FunctionSyntaxKind::Expression;
+  FunctionNodeType funNode = handler.newFunction(syntaxKind, pos());
   if (!funNode) {
     return null();
   }
@@ -3304,8 +3308,7 @@ GeneralParser<ParseHandler, Unit>::functionExpr(uint32_t toStringStart,
   }
 
   return functionDefinition(funNode, toStringStart, InAllowed, yieldHandling,
-                            name, FunctionSyntaxKind::Expression, generatorKind,
-                            asyncKind);
+                            name, syntaxKind, generatorKind, asyncKind);
 }
 
 /*
@@ -8023,14 +8026,15 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::assignExpr(
       }
     }
 
-    FunctionNodeType funNode = handler.newArrowFunction(pos());
+    FunctionSyntaxKind syntaxKind = FunctionSyntaxKind::Arrow;
+    FunctionNodeType funNode = handler.newFunction(syntaxKind, pos());
     if (!funNode) {
       return null();
     }
 
     return functionDefinition(funNode, toStringStart, inHandling, yieldHandling,
-                              nullptr, FunctionSyntaxKind::Arrow,
-                              GeneratorKind::NotGenerator, asyncKind);
+                              nullptr, syntaxKind, GeneratorKind::NotGenerator,
+                              asyncKind);
   }
 
   MOZ_ALWAYS_TRUE(tokenStream.getToken(&tokenAfterLHS, TokenStream::Operand));
@@ -9787,29 +9791,29 @@ typename ParseHandler::FunctionNodeType
 GeneralParser<ParseHandler, Unit>::methodDefinition(uint32_t toStringStart,
                                                     PropertyType propType,
                                                     HandleAtom funName) {
-  FunctionSyntaxKind kind;
+  FunctionSyntaxKind syntaxKind;
   switch (propType) {
     case PropertyType::Getter:
-      kind = FunctionSyntaxKind::Getter;
+      syntaxKind = FunctionSyntaxKind::Getter;
       break;
 
     case PropertyType::Setter:
-      kind = FunctionSyntaxKind::Setter;
+      syntaxKind = FunctionSyntaxKind::Setter;
       break;
 
     case PropertyType::Method:
     case PropertyType::GeneratorMethod:
     case PropertyType::AsyncMethod:
     case PropertyType::AsyncGeneratorMethod:
-      kind = FunctionSyntaxKind::Method;
+      syntaxKind = FunctionSyntaxKind::Method;
       break;
 
     case PropertyType::Constructor:
-      kind = FunctionSyntaxKind::ClassConstructor;
+      syntaxKind = FunctionSyntaxKind::ClassConstructor;
       break;
 
     case PropertyType::DerivedConstructor:
-      kind = FunctionSyntaxKind::DerivedClassConstructor;
+      syntaxKind = FunctionSyntaxKind::DerivedClassConstructor;
       break;
 
     default:
@@ -9828,13 +9832,13 @@ GeneralParser<ParseHandler, Unit>::methodDefinition(uint32_t toStringStart,
 
   YieldHandling yieldHandling = GetYieldHandling(generatorKind);
 
-  FunctionNodeType funNode = handler.newFunctionExpression(pos());
+  FunctionNodeType funNode = handler.newFunction(syntaxKind, pos());
   if (!funNode) {
     return null();
   }
 
   return functionDefinition(funNode, toStringStart, InAllowed, yieldHandling,
-                            funName, kind, generatorKind, asyncKind);
+                            funName, syntaxKind, generatorKind, asyncKind);
 }
 
 template <class ParseHandler, typename Unit>

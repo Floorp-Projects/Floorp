@@ -774,16 +774,9 @@ class FullParseHandler {
   }
 
  public:
-  FunctionNodeType newFunctionStatement(const TokenPos& pos) {
-    return new_<FunctionNode>(JSOP_NOP, pos);
-  }
-
-  FunctionNodeType newFunctionExpression(const TokenPos& pos) {
-    return new_<FunctionNode>(JSOP_LAMBDA, pos);
-  }
-
-  FunctionNodeType newArrowFunction(const TokenPos& pos) {
-    return new_<FunctionNode>(JSOP_LAMBDA_ARROW, pos);
+  FunctionNodeType newFunction(FunctionSyntaxKind syntaxKind,
+                               const TokenPos& pos) {
+    return new_<FunctionNode>(syntaxKind, JSOP_NOP, pos);
   }
 
   BinaryNodeType newObjectMethodOrPropertyDefinition(Node key, Node value,

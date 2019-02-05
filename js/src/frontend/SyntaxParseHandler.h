@@ -483,19 +483,19 @@ class SyntaxParseHandler {
     return true;
   }
 
-  FunctionNodeType newFunctionStatement(const TokenPos& pos) {
-    return NodeFunctionStatement;
-  }
-
-  FunctionNodeType newFunctionExpression(const TokenPos& pos) {
-    // All non-arrow function expressions are initially presumed to have
-    // block body.  This will be overridden later *if* the function
-    // expression permissibly has an AssignmentExpression body.
-    return NodeFunctionExpression;
-  }
-
-  FunctionNodeType newArrowFunction(const TokenPos& pos) {
-    return NodeFunctionArrow;
+  FunctionNodeType newFunction(FunctionSyntaxKind syntaxKind,
+                               const TokenPos& pos) {
+    switch (syntaxKind) {
+      case FunctionSyntaxKind::Statement:
+        return NodeFunctionStatement;
+      case FunctionSyntaxKind::Arrow:
+        return NodeFunctionArrow;
+      default:
+        // All non-arrow function expressions are initially presumed to have
+        // block body.  This will be overridden later *if* the function
+        // expression permissibly has an AssignmentExpression body.
+        return NodeFunctionExpression;
+    }
   }
 
   void setFunctionFormalParametersAndBody(FunctionNodeType funNode,
