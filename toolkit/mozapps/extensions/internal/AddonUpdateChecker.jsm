@@ -230,14 +230,13 @@ function UpdateParser(aId, aUrl, aObserver) {
 
   logger.debug("Requesting " + aUrl);
   try {
-    this.request = new ServiceRequest();
+    this.request = new ServiceRequest({mozAnon: true});
     this.request.open("GET", this.url, true);
     this.request.channel.notificationCallbacks = new CertUtils.BadCertHandler(!requireBuiltIn);
     this.request.channel.loadFlags |= Ci.nsIRequest.LOAD_BYPASS_CACHE;
     // Prevent the request from writing to cache.
     this.request.channel.loadFlags |= Ci.nsIRequest.INHIBIT_CACHING;
     this.request.overrideMimeType("text/plain");
-    this.request.setRequestHeader("Moz-XPI-Update", "1", true);
     this.request.timeout = TIMEOUT;
     this.request.addEventListener("load", () => this.onLoad());
     this.request.addEventListener("error", () => this.onError());

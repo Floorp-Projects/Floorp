@@ -484,6 +484,19 @@ Section "-Application" APP_IDX
   StrCpy $0 "Software\Microsoft\MediaPlayer\ShimInclusionList\plugin-container.exe"
   ${CreateRegKey} "$TmpVal" "$0" 0
 
+  ; MaxLoaderThreads option is only required on AArch64 (ARM64) and it can only
+  ; be set in HKEY_LOCAL_MACHINE.
+  ${If} "${ARCH}" == "AArch64"
+  ${AndIf} $TmpVal == "HKLM"
+    StrCpy $0 "Software\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\${FileMainEXE}"
+    ${CreateRegKey} "$TmpVal" "$0" 0
+    ${WriteRegDWORD2} $TmpVal "$0" "MaxLoaderThreads" 1 0
+
+    StrCpy $0 "Software\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\plugin-container.exe"
+    ${CreateRegKey} "$TmpVal" "$0" 0
+    ${WriteRegDWORD2} $TmpVal "$0" "MaxLoaderThreads" 1 0
+  ${EndIf}
+
   ${If} $TmpVal == "HKLM"
     ; Set the permitted LSP Categories
     ${SetAppLSPCategories} ${LSP_CATEGORIES}
