@@ -266,11 +266,7 @@ nsresult RemoteWorkerChild::ExecWorkerOnMainThread(
   info.mDomain = aData.domain();
   info.mPrincipal = principal;
   info.mLoadingPrincipal = loadingPrincipal;
-
-  nsContentUtils::StorageAccess access =
-      nsContentUtils::StorageAllowedForPrincipal(info.mPrincipal);
-  info.mStorageAllowed =
-      access > nsContentUtils::StorageAccess::ePrivateBrowsing;
+  info.mStorageAllowed = aData.isStorageAccessAllowed();
   info.mOriginAttributes =
       BasePrincipal::Cast(principal)->OriginAttributesRef();
 
