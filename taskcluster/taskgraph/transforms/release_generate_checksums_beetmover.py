@@ -81,9 +81,7 @@ def make_task_description(config, jobs):
         description = "Transfer *SUMS and *SUMMARY checksums file to S3."
 
         # first dependency is the signing task for the *SUMS files
-        dependencies = {
-            str(dep_job.kind): dep_job.label
-        }
+        dependencies = {dep_job.kind: dep_job.label}
 
         if len(dep_job.dependencies) > 1:
             raise NotImplementedError(
