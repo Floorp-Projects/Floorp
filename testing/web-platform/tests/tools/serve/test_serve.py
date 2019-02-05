@@ -1,7 +1,6 @@
-import json
-import os
 import pickle
 import platform
+import os
 
 import pytest
 
@@ -76,11 +75,3 @@ def test_pickle():
     # Ensure that the config object can be pickled
     with ConfigBuilder() as c:
         pickle.dumps(c)
-
-
-def test_config_json_length():
-    # we serialize the config as JSON for pytestrunner and put it in an env
-    # variable, which on Windows must have a length <= 0x7FFF (int16)
-    with ConfigBuilder() as c:
-        data = json.dumps(c.as_dict())
-    assert len(data) <= 0x7FFF

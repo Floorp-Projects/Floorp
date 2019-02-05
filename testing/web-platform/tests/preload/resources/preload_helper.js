@@ -20,9 +20,3 @@ function verifyNumberOfDownloads(url, number)
     });
     assert_equals(numDownloads, number, url);
 }
-
-function verifyNumberOfResourceTimingEntries(url, number)
-{
-    var numEntries = performance.getEntriesByName(getAbsoluteURL(url)).length;
-    assert_equals(numEntries, number, url);
-}

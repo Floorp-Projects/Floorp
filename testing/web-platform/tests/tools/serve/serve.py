@@ -16,7 +16,6 @@ import traceback
 from six.moves import urllib
 import uuid
 from collections import defaultdict, OrderedDict
-from itertools import chain, product
 from multiprocessing import Process, Event
 
 from localpaths import repo_root
@@ -723,9 +722,6 @@ def build_config(override_path=None, **kwargs):
 
     return rv
 
-def _make_subdomains_product(s, depth=2):
-    return set(u".".join(x) for x in chain(*(product(s, repeat=i) for i in range(1, depth+1))))
-
 _subdomains = {u"www",
                u"www1",
                u"www2",
@@ -733,10 +729,6 @@ _subdomains = {u"www",
                u"élève"}
 
 _not_subdomains = {u"nonexistent"}
-
-_subdomains = _make_subdomains_product(_subdomains)
-
-_not_subdomains = _make_subdomains_product(_not_subdomains)
 
 
 class ConfigBuilder(config.ConfigBuilder):
@@ -767,9 +759,7 @@ class ConfigBuilder(config.ConfigBuilder):
             "openssl": {
                 "openssl_binary": "openssl",
                 "base_path": "_certs",
-                "password": "web-platform-tests",
                 "force_regenerate": False,
-                "duration": 30,
                 "base_conf_path": None
             },
             "pregenerated": {

@@ -14,7 +14,6 @@ dictionary FaceDetectorOptions {
   boolean fastMode;
 };
 
-[Serializable]
 interface DetectedFace {
   [SameObject] readonly attribute DOMRectReadOnly boundingBox;
   [SameObject] readonly attribute FrozenArray<Landmark>? landmarks;
@@ -34,7 +33,7 @@ enum LandmarkType {
 [Exposed=(Window,Worker),
  Constructor(optional BarcodeDetectorOptions barcodeDetectorOptions)]
 interface BarcodeDetector {
-  static Promise<sequence<BarcodeFormat>> getSupportedFormats();
+  readonly attribute FrozenArray<BarcodeFormat> supportedFormats;
 
   Promise<sequence<DetectedBarcode>> detect(ImageBitmapSource image);
 };
@@ -43,7 +42,6 @@ dictionary BarcodeDetectorOptions {
   sequence<BarcodeFormat> formats;
 };
 
-[Serializable]
 interface DetectedBarcode {
   [SameObject] readonly attribute DOMRectReadOnly boundingBox;
   [SameObject] readonly attribute DOMString rawValue;

@@ -114,18 +114,16 @@ def make_subject(common_name,
     return "".join(rv)
 
 def make_alt_names(hosts):
-    return ",".join("DNS:%s" % host for host in hosts)
-
-def make_name_constraints(hosts):
-    return ",".join("permitted;DNS:%s" % host for host in hosts)
+    rv = []
+    for name in hosts:
+        rv.append("DNS:%s" % name)
+    return ",".join(rv)
 
 def get_config(root_dir, hosts, duration=30):
     if hosts is None:
         san_line = ""
-        constraints_line = ""
     else:
         san_line = "subjectAltName = %s" % make_alt_names(hosts)
-        constraints_line = "nameConstraints = " + make_name_constraints(hosts)
 
     if os.path.sep == "\\":
         # This seems to be needed for the Shining Light OpenSSL on
@@ -215,11 +213,9 @@ basicConstraints = CA:true
 subjectKeyIdentifier=hash
 authorityKeyIdentifier=keyid:always,issuer:always
 keyUsage = keyCertSign
-%(constraints_line)s
 """ % {"root_dir": root_dir,
        "san_line": san_line,
        "duration": duration,
-       "constraints_line": constraints_line,
        "sep": os.path.sep.replace("\\", "\\\\")}
 
     return rv
@@ -291,13 +287,13 @@ class OpenSSLEnvironment(object):
         return OpenSSL(self.logger, self.binary, self.base_path, conf_path, hosts,
                        self.duration, self.base_conf_path)
 
-    def ca_cert_path(self, hosts):
+    def ca_cert_path(self):
         """Get the path to the CA certificate file, generating a
         new one if needed"""
         if self._ca_cert_path is None and not self.force_regenerate:
             self._load_ca_cert()
         if self._ca_cert_path is None:
-            self._generate_ca(hosts)
+            self._generate_ca()
         return self._ca_cert_path
 
     def _load_ca_cert(self):
@@ -330,7 +326,7 @@ class OpenSSLEnvironment(object):
         #TODO: check the key actually signed the cert.
         return True
 
-    def _generate_ca(self, hosts):
+    def _generate_ca(self):
         path = self.path
         self.logger.info("Generating new CA in %s" % self.base_path)
 
@@ -338,7 +334,7 @@ class OpenSSLEnvironment(object):
         req_path = path("careq.pem")
         cert_path = path("cacert.pem")
 
-        with self._config_openssl(hosts) as openssl:
+        with self._config_openssl(None) as openssl:
             openssl("req",
                     "-batch",
                     "-new",
@@ -395,7 +391,7 @@ class OpenSSLEnvironment(object):
     def _generate_host_cert(self, hosts):
         host = hosts[0]
         if self._ca_key_path is None:
-            self._generate_ca(hosts)
+            self._generate_ca()
         ca_key_path = self._ca_key_path
 
         assert os.path.exists(ca_key_path)

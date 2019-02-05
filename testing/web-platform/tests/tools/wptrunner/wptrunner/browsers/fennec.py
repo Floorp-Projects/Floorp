@@ -13,11 +13,10 @@ from .base import (get_free_port,
                    browser_command)
 from ..executors.executormarionette import (MarionetteTestharnessExecutor,  # noqa: F401
                                             MarionetteRefTestExecutor)  # noqa: F401
-from .firefox import (get_timeout_multiplier,  # noqa: F401
-                      run_info_browser_version,
-                      update_properties,  # noqa: F401
-                      executor_kwargs,  # noqa: F401
-                      FirefoxBrowser)  # noqa: F401
+from .firefox import (get_timeout_multiplier,
+                      update_properties,
+                      executor_kwargs,
+                      FirefoxBrowser)
 
 
 __wptrunner__ = {"product": "fennec",
@@ -68,11 +67,9 @@ def env_extras(**kwargs):
 
 
 def run_info_extras(**kwargs):
-    rv = {"e10s": False,
-          "headless": False,
-          "sw-e10s": False}
-    rv.update(run_info_browser_version(kwargs["binary"]))
-    return rv
+    return {"e10s": False,
+            "headless": False,
+            "sw-e10s": False}
 
 
 def env_options():

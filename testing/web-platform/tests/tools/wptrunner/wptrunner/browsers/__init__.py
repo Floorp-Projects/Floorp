@@ -34,5 +34,4 @@ product_list = ["chrome",
                 "servo",
                 "servodriver",
                 "opera",
-                "webkit",
-                "epiphany"]
+                "webkit"]

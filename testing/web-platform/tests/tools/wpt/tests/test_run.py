@@ -17,7 +17,6 @@ def venv():
     class Virtualenv(virtualenv.Virtualenv):
         def __init__(self):
             self.path = tempfile.mkdtemp()
-            self.skip_virtualenv_setup = False
 
         def create(self):
             return

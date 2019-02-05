@@ -1,6 +1,5 @@
 // META: global=window,worker
 // META: script=/common/utils.js
-// META: script=/common/get-host-info.sub.js
 // META: script=../request/request-error.js
 
 const BODY_METHODS = ['arrayBuffer', 'blob', 'formData', 'json', 'text'];
@@ -16,9 +15,6 @@ function abortRequests() {
     keys.map(key => fetch(`../resources/stash-put.py?key=${key}&value=close`))
   );
 }
-
-const hostInfo = get_host_info();
-const urlHostname = hostInfo.REMOTE_HOST;
 
 promise_test(async t => {
   const controller = new AbortController();
@@ -36,7 +32,7 @@ promise_test(async t => {
   controller.abort();
 
   const url = new URL('../resources/data.json', location);
-  url.hostname = urlHostname;
+  url.hostname = 'www1.' + url.hostname;
 
   const fetchPromise = fetch(url, {
     signal,
@@ -319,7 +315,7 @@ promise_test(async t => {
   requestAbortKeys.push(abortKey);
 
   const url = new URL(`../resources/infinite-slow-response.py?stateKey=${stateKey}&abortKey=${abortKey}`, location);
-  url.hostname = urlHostname;
+  url.hostname = 'www1.' + url.hostname;
 
   await fetch(url, {
     signal,
@@ -327,7 +323,7 @@ promise_test(async t => {
   });
 
   const stashTakeURL = new URL(`../resources/stash-take.py?key=${stateKey}`, location);
-  stashTakeURL.hostname = urlHostname;
+  stashTakeURL.hostname = 'www1.' + stashTakeURL.hostname;
 
   const beforeAbortResult = await fetch(stashTakeURL).then(r => r.json());
   assert_equals(beforeAbortResult, "open", "Connection is open");

@@ -18,19 +18,8 @@ const validMethodBasicCard = Object.freeze({
   supportedMethods: "basic-card",
 });
 
-const applePay = Object.freeze({
-  supportedMethods: "https://apple.com/apple-pay",
-  data: {
-    version: 3,
-    merchantIdentifier: "merchant.com.example",
-    countryCode: "US",
-    merchantCapabilities: ["supports3DS"],
-    supportedNetworks: ["visa"],
-  }
-});
-
 // Methods
-const validMethods = Object.freeze([validMethodBasicCard, validMethod, applePay]);
+const validMethods = Object.freeze([validMethodBasicCard, validMethod]);
 
 // Amounts
 const validAmount = Object.freeze({

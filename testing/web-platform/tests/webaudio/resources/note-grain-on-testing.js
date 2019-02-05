@@ -1,23 +1,17 @@
-// Use a power of two to eliminate round-off converting from frames to time.
-let sampleRate = 32768;
+let sampleRate = 44100.0;
 
 // How many grains to play.
 let numberOfTests = 100;
 
-// Duration of each grain to be played.  Make a whole number of frames
-let duration = Math.floor(0.01 * sampleRate) / sampleRate;
-
-// A little extra bit of silence between grain boundaries.  Must be a whole
-// number of frames.
-let grainGap = Math.floor(0.005 * sampleRate) / sampleRate;
+// Duration of each grain to be played
+let duration = 0.01;
 
 // Time step between the start of each grain.  We need to add a little
 // bit of silence so we can detect grain boundaries
-let timeStep = duration + grainGap;
+let timeStep = duration + .005;
 
-// Time step between the start for each grain.  Must be a whole number of
-// frames.
-let grainOffsetStep = Math.floor(0.001 * sampleRate) / sampleRate;
+// Time step between the start for each grain.
+let grainOffsetStep = 0.001;
 
 // How long to render to cover all of the grains.
 let renderTime = (numberOfTests + 1) * timeStep;

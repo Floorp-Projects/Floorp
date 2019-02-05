@@ -3,12 +3,10 @@ let StereoPannerTest = (function() {
   // Constants
   let PI_OVER_TWO = Math.PI * 0.5;
 
-  // Use a power of two to eliminate any round-off when converting frames to
-  // time.
-  let gSampleRate = 32768;
+  let gSampleRate = 44100;
 
-  // Time step when each panner node starts.  Make sure this is on a frame boundary.
-  let gTimeStep = Math.floor(0.001 * gSampleRate) / gSampleRate;
+  // Time step when each panner node starts.
+  let gTimeStep = 0.001;
 
   // How many panner nodes to create for the test
   let gNodesToCreate = 100;
@@ -79,7 +77,7 @@ let StereoPannerTest = (function() {
     // The max error we allow between the rendered impulse and the
     // expected value.  This value is experimentally determined.  Set
     // to 0 to make the test fail to see what the actual error is.
-    this.maxAllowedError = 9.8015e-8;
+    this.maxAllowedError = 1.3e-6;
 
     // Max (absolute) error and the index of the maxima for the left
     // and right channels.

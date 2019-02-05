@@ -1,1 +1,1 @@
-Feature-Policy-Report-Only: geolocation 'none'
+Feature-Policy: geolocation-report-only 'none'

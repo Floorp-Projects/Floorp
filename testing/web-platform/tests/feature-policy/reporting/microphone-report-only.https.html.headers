@@ -1,1 +1,1 @@
-Feature-Policy-Report-Only: microphone 'none'
+Feature-Policy: microphone-report-only 'none'

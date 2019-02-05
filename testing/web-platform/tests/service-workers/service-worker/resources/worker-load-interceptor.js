@@ -8,8 +8,6 @@ self.onfetch = function(event) {
     if (url.indexOf("synthesized-response.txt") != -1) {
         event.respondWith(new Response(response_text));
     } else if (url.indexOf("synthesized-response.js") != -1) {
-      event.respondWith(new Response(
-          response_script,
-          {headers: {'Content-Type': 'application/javascript'}}));
+        event.respondWith(new Response(response_script));
     }
 };
