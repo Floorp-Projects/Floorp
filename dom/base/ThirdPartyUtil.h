@@ -22,8 +22,10 @@ class ThirdPartyUtil final : public mozIThirdPartyUtil {
 
   nsresult Init();
 
+  static ThirdPartyUtil* GetInstance();
+
  private:
-  ~ThirdPartyUtil() {}
+  ~ThirdPartyUtil();
 
   nsresult IsThirdPartyInternal(const nsCString& aFirstDomain,
                                 nsIURI* aSecondURI, bool* aResult);
