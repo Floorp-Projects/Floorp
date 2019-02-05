@@ -246,7 +246,7 @@ class SingletonThreadHolder final {
 static StaticRefPtr<SingletonThreadHolder> sThread;
 
 static void ClearSingletonOnShutdown() {
-  ClearOnShutdown(&sThread, ShutdownPhase::ShutdownLoaders);
+  ClearOnShutdown(&sThread);
 }
 #endif
 
