@@ -139,7 +139,6 @@ class BrowserFragment : Fragment(), BackHandler {
             requireComponents.toolbar.menuBuilder
         ) { requireActivity().finish() }
 
-
         lifecycle.addObservers(
             contextMenuFeature,
             downloadsFeature,
@@ -164,9 +163,11 @@ class BrowserFragment : Fragment(), BackHandler {
         lifecycle.removeObserver(sessionFeature)
     }
 
+    @SuppressWarnings("ReturnCount")
     override fun onBackPressed(): Boolean {
         if (findInPageIntegration.onBackPressed()) return true
         if (sessionFeature.handleBackPressed()) return true
+        if (customTabsToolbarFeature.onBackPressed()) return true
 
         // We'll want to improve this when we add multitasking
         requireComponents.core.sessionManager.remove()
@@ -190,15 +191,9 @@ class BrowserFragment : Fragment(), BackHandler {
     }
 
     companion object {
-        private const val SESSION_ID = "session_id"
+        const val SESSION_ID = "session_id"
         private const val REQUEST_CODE_DOWNLOAD_PERMISSIONS = 1
         private const val REQUEST_CODE_PROMPT_PERMISSIONS = 2
         private const val TOOLBAR_HEIGHT = 56f
-
-        fun create(sessionId: String? = null): BrowserFragment = BrowserFragment().apply {
-            arguments = Bundle().apply {
-                putString(SESSION_ID, sessionId)
-            }
-        }
     }
 }

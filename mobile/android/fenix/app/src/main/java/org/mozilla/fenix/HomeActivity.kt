@@ -10,24 +10,12 @@ import android.util.AttributeSet
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import mozilla.components.concept.engine.EngineView
-import mozilla.components.feature.intent.IntentProcessor
-import mozilla.components.support.utils.SafeIntent
-import org.mozilla.fenix.browser.BrowserFragment
 import org.mozilla.fenix.ext.components
 
 open class HomeActivity : AppCompatActivity() {
-    private var sessionId: String? = null
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
-
-        if (savedInstanceState == null) {
-            sessionId = SafeIntent(intent).getStringExtra(IntentProcessor.ACTIVE_SESSION_ID)
-            supportFragmentManager.beginTransaction()
-                .replace(R.id.container, BrowserFragment.create(sessionId))
-                .commit()
-        }
     }
 
     override fun onCreateView(
