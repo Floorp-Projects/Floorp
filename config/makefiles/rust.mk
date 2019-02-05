@@ -44,7 +44,7 @@ endif
 endif
 
 ifdef CARGO_INCREMENTAL
-cargo_incremental := CARGO_INCREMENTAL=$(CARGO_INCREMENTAL)
+export CARGO_INCREMENTAL
 endif
 
 rustflags_neon =
@@ -55,7 +55,7 @@ endif
 rustflags_override = $(MOZ_RUST_DEFAULT_FLAGS) $(rustflags_neon)
 
 ifdef MOZ_USING_SCCACHE
-sccache_wrap := RUSTC_WRAPPER='$(CCACHE)'
+export RUSTC_WRAPPER=$(CCACHE)
 endif
 
 ifdef MOZ_CODE_COVERAGE
@@ -88,17 +88,13 @@ ifeq (WINNT,$(HOST_OS_ARCH))
 # Don't do most of this on Windows because msys path translation makes a mess of the paths, and
 # we put MSVC in PATH there anyway.  But we do suppress warnings, since all such warnings
 # are in third-party code.
-cargo_c_compiler_envs := \
- CFLAGS_$(rust_cc_env_name)="-w" \
- $(NULL)
+export CFLAGS_$(rust_cc_env_name)=-w
 else
-cargo_c_compiler_envs := \
- CC_$(rust_cc_env_name)="$(CC)" \
- CXX_$(rust_cc_env_name)="$(CXX)" \
- CFLAGS_$(rust_cc_env_name)="$(COMPUTED_CFLAGS)" \
- CXXFLAGS_$(rust_cc_env_name)="$(COMPUTED_CXXFLAGS)" \
- AR_$(rust_cc_env_name)="$(AR)" \
- $(NULL)
+export CC_$(rust_cc_env_name)=$(CC)
+export CXX_$(rust_cc_env_name)=$(CXX)
+export CFLAGS_$(rust_cc_env_name)=$(COMPUTED_CFLAGS)
+export CXXFLAGS_$(rust_cc_env_name)=$(COMPUTED_CXXFLAGS)
+export AR_$(rust_cc_env_name)=$(AR)
 endif # WINNT
 endif # FUZZING_INTERFACES
 endif # MOZ_CODE_COVERAGE
@@ -106,25 +102,23 @@ endif # MOZ_UBSAN
 endif # MOZ_TSAN
 endif # MOZ_ASAN
 
+export CARGO_TARGET_DIR
+export RUSTC
+export RUSTDOC
+export RUSTFMT
+export MOZ_SRC=$(topsrcdir)
+export MOZ_DIST=$(ABS_DIST)
+export LIBCLANG_PATH=$(MOZ_LIBCLANG_PATH)
+export CLANG_PATH=$(MOZ_CLANG_PATH)
+export PKG_CONFIG_ALLOW_CROSS=1
+export RUST_BACKTRACE=full
+export MOZ_TOPOBJDIR=$(topobjdir)
 # We use the + prefix to pass down the jobserver fds to cargo, but we
 # don't use the prefix when make -n is used, so that cargo doesn't run
 # in that case)
 define RUN_CARGO
-$(if $(findstring n,$(filter-out --%, $(MAKEFLAGS))),,+)env $(sccache_wrap) \
-	CARGO_TARGET_DIR=$(CARGO_TARGET_DIR) \
+$(if $(findstring n,$(filter-out --%, $(MAKEFLAGS))),,+)env \
 	RUSTFLAGS='$(2)' \
-	RUSTC=$(RUSTC) \
-	RUSTDOC=$(RUSTDOC) \
-	RUSTFMT=$(RUSTFMT) \
-	$(cargo_c_compiler_envs) \
-	MOZ_SRC=$(topsrcdir) \
-	MOZ_DIST=$(ABS_DIST) \
-	LIBCLANG_PATH="$(MOZ_LIBCLANG_PATH)" \
-	CLANG_PATH="$(MOZ_CLANG_PATH)" \
-	PKG_CONFIG_ALLOW_CROSS=1 \
-	RUST_BACKTRACE=full \
-	MOZ_TOPOBJDIR=$(topobjdir) \
-	$(cargo_incremental) \
 	$(3) \
 	$(CARGO) $(1) $(cargo_build_flags)
 endef
