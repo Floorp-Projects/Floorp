@@ -1499,20 +1499,8 @@ inline bool ParseNode::isForLoopDeclaration() const {
 
 class FunctionNode : public ParseNode {
  public:
-  FunctionNode(FunctionSyntaxKind syntaxKind, JSOp op, const TokenPos& pos)
-      : ParseNode(ParseNodeKind::Function, op, pos) {
-    MOZ_ASSERT(op == JSOP_NOP || op == JSOP_LAMBDA_ARROW || op == JSOP_LAMBDA);
-    MOZ_ASSERT_IF(op == JSOP_NOP, syntaxKind == FunctionSyntaxKind::Statement);
-    MOZ_ASSERT_IF(op == JSOP_LAMBDA_ARROW,
-                  syntaxKind == FunctionSyntaxKind::Arrow);
-    MOZ_ASSERT_IF(
-        op == JSOP_LAMBDA,
-        syntaxKind == FunctionSyntaxKind::Statement ||
-            syntaxKind == FunctionSyntaxKind::Construction ||
-            syntaxKind == FunctionSyntaxKind::DerivedClassConstructor ||
-            syntaxKind == FunctionSyntaxKind::Method ||
-            syntaxKind == FunctionSyntaxKind::Getter ||
-            syntaxKind == FunctionSyntaxKind::Setter);
+  FunctionNode(FunctionSyntaxKind syntaxKind, const TokenPos& pos)
+      : ParseNode(ParseNodeKind::Function, JSOP_NOP, pos) {
     MOZ_ASSERT(!pn_u.function.body);
     MOZ_ASSERT(!pn_u.function.funbox);
     MOZ_ASSERT(is<FunctionNode>());
@@ -1555,8 +1543,7 @@ class FunctionNode : public ParseNode {
   FunctionSyntaxKind syntaxKind() const { return pn_u.function.syntaxKind; }
 
   bool functionIsHoisted() const {
-    MOZ_ASSERT(isOp(JSOP_LAMBDA) || isOp(JSOP_LAMBDA_ARROW) || isOp(JSOP_NOP));
-    return isOp(JSOP_NOP);
+    return syntaxKind() == FunctionSyntaxKind::Statement;
   }
 };
 
