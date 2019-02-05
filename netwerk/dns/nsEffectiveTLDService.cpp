@@ -110,12 +110,11 @@ nsEffectiveTLDService::GetPublicSuffix(nsIURI *aURI,
                                        nsACString &aPublicSuffix) {
   NS_ENSURE_ARG_POINTER(aURI);
 
-  nsCOMPtr<nsIURI> innerURI = NS_GetInnermostURI(aURI);
-  NS_ENSURE_ARG_POINTER(innerURI);
-
   nsAutoCString host;
-  nsresult rv = innerURI->GetAsciiHost(host);
-  if (NS_FAILED(rv)) return rv;
+  nsresult rv = NS_GetInnermostURIHost(aURI, host);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   return GetBaseDomainInternal(host, 0, aPublicSuffix);
 }
@@ -129,12 +128,11 @@ nsEffectiveTLDService::GetBaseDomain(nsIURI *aURI, uint32_t aAdditionalParts,
   NS_ENSURE_ARG_POINTER(aURI);
   NS_ENSURE_TRUE(((int32_t)aAdditionalParts) >= 0, NS_ERROR_INVALID_ARG);
 
-  nsCOMPtr<nsIURI> innerURI = NS_GetInnermostURI(aURI);
-  NS_ENSURE_ARG_POINTER(innerURI);
-
   nsAutoCString host;
-  nsresult rv = innerURI->GetAsciiHost(host);
-  if (NS_FAILED(rv)) return rv;
+  nsresult rv = NS_GetInnermostURIHost(aURI, host);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   return GetBaseDomainInternal(host, aAdditionalParts + 1, aBaseDomain);
 }
