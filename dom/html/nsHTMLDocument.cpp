@@ -176,7 +176,8 @@ nsHTMLDocument::nsHTMLDocument()
       mContentEditableCount(0),
       mEditingState(EditingState::eOff),
       mDisableCookieAccess(false),
-      mPendingMaybeEditingStateChanged(false) {
+      mPendingMaybeEditingStateChanged(false),
+      mHasBeenEditable(false) {
   mType = eHTML;
   mDefaultElementType = kNameSpaceID_XHTML;
   mCompatMode = eCompatibility_NavQuirks;
@@ -2434,7 +2435,43 @@ nsresult nsHTMLDocument::EditingStateChanged() {
   }
   htmlEditor->SyncRealTimeSpell();
 
+  MaybeDispatchCheckKeyPressEventModelEvent();
+
   return NS_OK;
+}
+
+void nsHTMLDocument::MaybeDispatchCheckKeyPressEventModelEvent() {
+  // Currently, we need to check only when we're becoming editable for
+  // contenteditable.
+  if (mEditingState != eContentEditable) {
+    return;
+  }
+
+  if (mHasBeenEditable) {
+    return;
+  }
+  mHasBeenEditable = true;
+
+  // Dispatch "CheckKeyPressEventModel" event.  That is handled only by
+  // KeyPressEventModelCheckerChild.  Then, it calls SetKeyPressEventModel()
+  // with proper keypress event for the active web app.
+  WidgetEvent checkEvent(true, eUnidentifiedEvent);
+  checkEvent.mSpecifiedEventType = nsGkAtoms::onCheckKeyPressEventModel;
+  checkEvent.mFlags.mCancelable = false;
+  checkEvent.mFlags.mBubbles = false;
+  checkEvent.mFlags.mOnlySystemGroupDispatch = true;
+  // Post the event rather than dispatching it synchronously because we need
+  // a call of SetKeyPressEventModel() before first key input.  Therefore, we
+  // can avoid paying unnecessary runtime cost for most web apps.
+  (new AsyncEventDispatcher(this, checkEvent))->PostDOMEvent();
+}
+
+void nsHTMLDocument::SetKeyPressEventModel(uint16_t aKeyPressEventModel) {
+  nsIPresShell* presShell = GetShell();
+  if (!presShell) {
+    return;
+  }
+  presShell->SetKeyPressEventModel(aKeyPressEventModel);
 }
 
 void nsHTMLDocument::SetDesignMode(const nsAString& aDesignMode,

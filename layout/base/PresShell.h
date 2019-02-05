@@ -12,6 +12,7 @@
 #include "MobileViewportManager.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
+#include "mozilla/dom/HTMLDocumentBinding.h"
 #include "mozilla/layers/FocusTarget.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ServoStyleSet.h"
@@ -382,6 +383,12 @@ class PresShell final : public nsIPresShell,
   bool HasHandledUserInput() const override { return mHasHandledUserInput; }
 
   void FireResizeEvent() override;
+
+  void SetKeyPressEventModel(uint16_t aKeyPressEventModel) override {
+    mForceUseLegacyKeyCodeAndCharCodeValues |=
+        aKeyPressEventModel ==
+        dom::HTMLDocument_Binding::KEYPRESS_EVENT_MODEL_SPLIT;
+  }
 
   static PresShell* GetShellForEventTarget(nsIFrame* aFrame,
                                            nsIContent* aContent);
