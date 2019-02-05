@@ -892,6 +892,7 @@ static inline bool SimpleArithOperand(MDefinition* op) {
   return !op->emptyResultTypeSet() && !op->mightBeType(MIRType::Object) &&
          !op->mightBeType(MIRType::String) &&
          !op->mightBeType(MIRType::Symbol) &&
+         IF_BIGINT(!op->mightBeType(MIRType::BigInt), true) &&
          !op->mightBeType(MIRType::MagicOptimizedArguments) &&
          !op->mightBeType(MIRType::MagicHole) &&
          !op->mightBeType(MIRType::MagicIsConstructing);
@@ -1391,6 +1392,9 @@ class MConstant : public MNullaryInstruction {
       double d;
       JSString* str;
       JS::Symbol* sym;
+#ifdef ENABLE_BIGINT
+      BigInt* bi;
+#endif
       JSObject* obj;
       uint64_t asBits;
     };
@@ -1508,6 +1512,12 @@ class MConstant : public MNullaryInstruction {
     MOZ_ASSERT(type() == MIRType::Symbol);
     return payload_.sym;
   }
+#ifdef ENABLE_BIGINT
+  BigInt* toBigInt() const {
+    MOZ_ASSERT(type() == MIRType::BigInt);
+    return payload_.bi;
+  }
+#endif
   JSObject& toObject() const {
     MOZ_ASSERT(type() == MIRType::Object);
     return *payload_.obj;
@@ -3306,7 +3316,9 @@ class MUnbox final : public MUnaryInstruction, public BoxInputsPolicy::Data {
 
     MOZ_ASSERT(type == MIRType::Boolean || type == MIRType::Int32 ||
                type == MIRType::Double || type == MIRType::String ||
-               type == MIRType::Symbol || type == MIRType::Object);
+               type == MIRType::Symbol ||
+               IF_BIGINT(type == MIRType::BigInt, false) ||
+               type == MIRType::Object);
 
     TemporaryTypeSet* resultSet = ins->resultTypeSet();
     if (resultSet && type == MIRType::Object) {
@@ -3347,6 +3359,11 @@ class MUnbox final : public MUnaryInstruction, public BoxInputsPolicy::Data {
       case MIRType::Symbol:
         kind = Bailout_NonSymbolInput;
         break;
+#ifdef ENABLE_BIGINT
+      case MIRType::BigInt:
+        kind = Bailout_NonBigIntInput;
+        break;
+#endif
       case MIRType::Object:
         kind = Bailout_NonObjectInput;
         break;
@@ -3660,9 +3677,10 @@ class MToDouble : public MToFPInstruction {
     setMovable();
 
     // An object might have "valueOf", which means it is effectful.
-    // ToNumber(symbol) throws.
+    // ToNumber(symbol) and ToNumber(bigint) throw.
     if (def->mightBeType(MIRType::Object) ||
-        def->mightBeType(MIRType::Symbol)) {
+        def->mightBeType(MIRType::Symbol) ||
+        IF_BIGINT(def->mightBeType(MIRType::BigInt), false)) {
       setGuard();
     }
   }
@@ -3703,6 +3721,11 @@ class MToDouble : public MToFPInstruction {
     if (input()->type() == MIRType::Symbol) {
       return false;
     }
+#ifdef ENABLE_BIGINT
+    if (input()->type() == MIRType::BigInt) {
+      return false;
+    }
+#endif
 
     return true;
   }
@@ -3724,9 +3747,10 @@ class MToFloat32 : public MToFPInstruction {
     setMovable();
 
     // An object might have "valueOf", which means it is effectful.
-    // ToNumber(symbol) throws.
+    // ToNumber(symbol) and ToNumber(BigInt) throw.
     if (def->mightBeType(MIRType::Object) ||
-        def->mightBeType(MIRType::Symbol)) {
+        def->mightBeType(MIRType::Symbol) ||
+        IF_BIGINT(def->mightBeType(MIRType::BigInt), false)) {
       setGuard();
     }
   }
@@ -3982,9 +4006,10 @@ class MToNumberInt32 : public MUnaryInstruction, public ToInt32Policy::Data {
     setMovable();
 
     // An object might have "valueOf", which means it is effectful.
-    // ToNumber(symbol) throws.
+    // ToNumber(symbol) and ToNumber(BigInt) throw.
     if (def->mightBeType(MIRType::Object) ||
-        def->mightBeType(MIRType::Symbol)) {
+        def->mightBeType(MIRType::Symbol) ||
+        IF_BIGINT(def->mightBeType(MIRType::BigInt), false)) {
       setGuard();
     }
   }
@@ -4037,9 +4062,10 @@ class MTruncateToInt32 : public MUnaryInstruction, public ToInt32Policy::Data {
     setMovable();
 
     // An object might have "valueOf", which means it is effectful.
-    // ToInt32(symbol) throws.
+    // ToInt32(symbol) and ToInt32(BigInt) throw.
     if (def->mightBeType(MIRType::Object) ||
-        def->mightBeType(MIRType::Symbol)) {
+        def->mightBeType(MIRType::Symbol) ||
+        IF_BIGINT(def->mightBeType(MIRType::BigInt), false)) {
       setGuard();
     }
   }
@@ -4078,10 +4104,11 @@ class MToString : public MUnaryInstruction, public ToStringPolicy::Data {
     setResultType(MIRType::String);
     setMovable();
 
-    // Objects might override toString and Symbols throw. We bailout in
+    // Objects might override toString; Symbol and BigInts throw. We bailout in
     // those cases and run side-effects in baseline instead.
     if (def->mightBeType(MIRType::Object) ||
-        def->mightBeType(MIRType::Symbol)) {
+        def->mightBeType(MIRType::Symbol) ||
+        IF_BIGINT(def->mightBeType(MIRType::BigInt), false)) {
       setGuard();
     }
   }

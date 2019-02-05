@@ -1558,6 +1558,11 @@ class MacroAssembler : public MacroAssemblerSpecific {
   inline void branchTestStringTruthy(bool truthy, const ValueOperand& value,
                                      Label* label)
       DEFINED_ON(arm, arm64, mips32, mips64, x86_shared);
+#ifdef ENABLE_BIGINT
+  inline void branchTestBigIntTruthy(bool truthy, const ValueOperand& value,
+                                     Label* label)
+      DEFINED_ON(arm, arm64, mips32, mips64, x86_shared);
+#endif
 
   // Create an unconditional branch to the address given as argument.
   inline void branchToComputedAddress(const BaseIndex& address) PER_ARCH;

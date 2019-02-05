@@ -775,7 +775,10 @@ bool ToDoublePolicy::staticAdjustInputs(TempAllocator& alloc,
     case MIRType::Object:
     case MIRType::String:
     case MIRType::Symbol:
-      // Objects might be effectful. Symbols give TypeError.
+#ifdef ENABLE_BIGINT
+    case MIRType::BigInt:
+#endif
+      // Objects might be effectful. Symbols and BigInts give TypeError.
       break;
     default:
       break;
@@ -827,7 +830,10 @@ bool ToInt32Policy::staticAdjustInputs(TempAllocator& alloc,
     case MIRType::Object:
     case MIRType::String:
     case MIRType::Symbol:
-      // Objects might be effectful. Symbols give TypeError.
+#ifdef ENABLE_BIGINT
+    case MIRType::BigInt:
+#endif
+      // Objects might be effectful. Symbols and BigInts give TypeError.
       break;
     default:
       break;
@@ -843,7 +849,8 @@ bool ToStringPolicy::staticAdjustInputs(TempAllocator& alloc,
   MOZ_ASSERT(ins->isToString());
 
   MIRType type = ins->getOperand(0)->type();
-  if (type == MIRType::Object || type == MIRType::Symbol) {
+  if (type == MIRType::Object || type == MIRType::Symbol ||
+      IF_BIGINT(type == MIRType::BigInt, false)) {
     ins->replaceOperand(0, BoxAt(alloc, ins, ins->getOperand(0)));
     return true;
   }
@@ -962,6 +969,9 @@ bool StoreUnboxedScalarPolicy::adjustValueInput(TempAllocator& alloc,
     case MIRType::Object:
     case MIRType::String:
     case MIRType::Symbol:
+#ifdef ENABLE_BIGINT
+    case MIRType::BigInt:
+#endif
       value = BoxAt(alloc, ins, value);
       break;
     default:
