@@ -2336,9 +2336,6 @@ nsIFrame* nsCSSFrameConstructor::ConstructDocElementFrame(
     return nullptr;
   }
 
-  // Make sure to start any background image loads for the root element now.
-  computedStyle->StartBackgroundImageLoads();
-
   nsFrameConstructorSaveState docElementContainingBlockAbsoluteSaveState;
   if (mHasRootAbsPosContainingBlock) {
     // Push the absolute containing block now so we can absolutely position
@@ -5649,10 +5646,6 @@ void nsCSSFrameConstructor::ConstructFramesFromItem(
                        computedStyle, aFrameItems);
     return;
   }
-
-  // Start background loads during frame construction so that we're
-  // guaranteed that they will be started before onload fires.
-  computedStyle->StartBackgroundImageLoads();
 
   AutoRestore<nsFrameState> savedStateBits(aState.mAdditionalStateBits);
   if (item.mIsGeneratedContent) {

@@ -130,16 +130,16 @@ bool nsStyleDisplay::HasPerspective(const nsIFrame* aContextFrame) const {
 }
 
 bool nsStyleDisplay::IsFixedPosContainingBlockForNonSVGTextFrames(
-    mozilla::ComputedStyle& aStyle) const {
+    const mozilla::ComputedStyle& aStyle) const {
   // NOTE: Any CSS properties that influence the output of this function
   // should have the FIXPOS_CB flag set on them.
-  NS_ASSERTION(aStyle.ThreadsafeStyleDisplay() == this, "unexpected aStyle");
+  NS_ASSERTION(aStyle.StyleDisplay() == this, "unexpected aStyle");
 
   if (mWillChangeBitField & NS_STYLE_WILL_CHANGE_FIXPOS_CB) {
     return true;
   }
 
-  return aStyle.ThreadsafeStyleEffects()->HasFilters();
+  return aStyle.StyleEffects()->HasFilters();
 }
 
 bool nsStyleDisplay::
