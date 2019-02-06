@@ -28,14 +28,14 @@ const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.j
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["CSS"]);
 
+ChromeUtils.defineModuleGetter(this, "AddonManager",
+                               "resource://gre/modules/AddonManager.jsm");
 ChromeUtils.defineModuleGetter(this, "AMTelemetry",
                                "resource://gre/modules/AddonManager.jsm");
 ChromeUtils.defineModuleGetter(this, "DragPositionManager",
                                "resource:///modules/DragPositionManager.jsm");
 ChromeUtils.defineModuleGetter(this, "BrowserUtils",
                                "resource://gre/modules/BrowserUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "LightweightThemeManager",
-                               "resource://gre/modules/LightweightThemeManager.jsm");
 ChromeUtils.defineModuleGetter(this, "SessionStore",
                                "resource:///modules/sessionstore/SessionStore.jsm");
 XPCOMUtils.defineLazyGetter(this, "gWidgetsBundle", function() {
@@ -164,11 +164,11 @@ CustomizeMode.prototype = {
     }
   },
 
-  _updateLWThemeButtonIcon() {
+  async _updateThemeButtonIcon() {
     let lwthemeButton = this.$("customization-lwtheme-button");
     let lwthemeIcon = this.document.getAnonymousElementByAttribute(lwthemeButton,
                         "class", "button-icon");
-    let theme = LightweightThemeManager.currentTheme;
+    let theme = (await AddonManager.getAddonsByTypes(["theme"])).find(addon => addon.isActive);
     lwthemeIcon.style.backgroundImage = theme ? "url(" + theme.iconURL + ")" : "";
   },
 
@@ -344,8 +344,8 @@ CustomizeMode.prototype = {
       }, 0);
       this._updateEmptyPaletteNotice();
 
-      this._updateLWThemeButtonIcon();
-      Services.obs.addObserver(this, "lightweight-theme-changed");
+      this._updateThemeButtonIcon();
+      AddonManager.addAddonListener(this);
 
       this._setupDownloadAutoHideToggle();
 
@@ -388,7 +388,7 @@ CustomizeMode.prototype = {
 
     this._teardownDownloadAutoHideToggle();
 
-    Services.obs.removeObserver(this, "lightweight-theme-changed");
+    AddonManager.removeAddonListener(this);
     CustomizableUI.removeListener(this);
 
     this.document.removeEventListener("keypress", this);
@@ -1310,13 +1310,13 @@ CustomizeMode.prototype = {
     this._onUIChange();
   },
 
-  onLWThemesMenuShowing(aEvent) {
+  async onThemesMenuShowing(aEvent) {
     const DEFAULT_THEME_ID = "default-theme@mozilla.org";
     const LIGHT_THEME_ID = "firefox-compact-light@mozilla.org";
     const DARK_THEME_ID = "firefox-compact-dark@mozilla.org";
     const MAX_THEME_COUNT = 6;
 
-    this._clearLWThemesMenu(aEvent.target);
+    this._clearThemesMenu(aEvent.target);
 
     let onThemeSelected = panel => {
       // This causes us to call _onUIChange when the LWT actually changes,
@@ -1336,7 +1336,7 @@ CustomizeMode.prototype = {
         tbb.setAttribute("tooltiptext", aTheme.description);
       tbb.setAttribute("tabindex", "0");
       tbb.classList.add("customization-lwtheme-menu-theme");
-      let isActive = activeThemeID == aTheme.id;
+      let isActive = aTheme.isActive;
       tbb.setAttribute("aria-checked", isActive);
       tbb.setAttribute("role", "menuitemradio");
       if (isActive) {
@@ -1346,24 +1346,17 @@ CustomizeMode.prototype = {
       return tbb;
     }
 
-    let themes = [];
-    let lwts = LightweightThemeManager.usedThemes;
-    let currentLwt = LightweightThemeManager.currentTheme;
-
-    let activeThemeID = currentLwt ? currentLwt.id : DEFAULT_THEME_ID;
+    let themes = await AddonManager.getAddonsByTypes(["theme"]);
+    let currentTheme = themes.find(theme => theme.isActive);
 
     // Move the current theme (if any) and the light/dark themes to the start:
-    let importantThemes = [DEFAULT_THEME_ID, LIGHT_THEME_ID, DARK_THEME_ID];
-    if (currentLwt && !importantThemes.includes(currentLwt.id)) {
-      importantThemes.push(currentLwt.id);
+    let importantThemes = new Set([DEFAULT_THEME_ID, LIGHT_THEME_ID, DARK_THEME_ID]);
+    if (currentTheme) {
+      importantThemes.add(currentTheme.id);
     }
-    for (let importantTheme of importantThemes) {
-      let themeIndex = lwts.findIndex(theme => theme.id == importantTheme);
-      if (themeIndex > -1) {
-        themes.push(...lwts.splice(themeIndex, 1));
-      }
-    }
-    themes = themes.concat(lwts);
+
+    themes.sort((a, b) => importantThemes.has(b) - importantThemes.has(a));
+
     if (themes.length > MAX_THEME_COUNT)
       themes.length = MAX_THEME_COUNT;
 
@@ -1371,11 +1364,8 @@ CustomizeMode.prototype = {
     let panel = footer.parentNode;
     for (let theme of themes) {
       let button = buildToolbarButton(theme);
-      button.addEventListener("command", () => {
-        if ("userDisabled" in button.theme)
-          button.theme.userDisabled = false;
-        else
-          LightweightThemeManager.currentTheme = button.theme;
+      button.addEventListener("command", async () => {
+        await button.theme.enable();
         onThemeSelected(panel);
         AMTelemetry.recordActionEvent({
           object: "customize",
@@ -1387,7 +1377,7 @@ CustomizeMode.prototype = {
     }
   },
 
-  _clearLWThemesMenu(panel) {
+  _clearThemesMenu(panel) {
     let footer = this.$("customization-lwtheme-menu-footer");
     let element = footer;
     while (element.previousElementSibling &&
@@ -1515,14 +1505,19 @@ CustomizeMode.prototype = {
           this._updateDragSpaceCheckbox();
         }
         break;
-      case "lightweight-theme-changed":
-        this._updateLWThemeButtonIcon();
-        if (this._nextThemeChangeUserTriggered) {
-          this._onUIChange();
-        }
-        this._nextThemeChangeUserTriggered = false;
-        break;
     }
+  },
+
+  async onEnabled(addon) {
+    if (addon.type != "theme") {
+      return;
+    }
+
+    await this._updateThemeButtonIcon();
+    if (this._nextThemeChangeUserTriggered) {
+      this._onUIChange();
+    }
+    this._nextThemeChangeUserTriggered = false;
   },
 
   _canDrawInTitlebar() {
