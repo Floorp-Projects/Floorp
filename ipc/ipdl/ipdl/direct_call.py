@@ -304,6 +304,8 @@ VIRTUAL_CALL_CLASSES = set([
     ("PFTPChannel", "parent"),
     ("PHttpChannel", "child"),
     ("PHttpChannel", "parent"),
+    ("PSessionStorageObserver", "child"),
+    ("PSessionStorageObserver", "parent"),
     ("PWyciwygChannel", "child"),
 
     # bug 1513911
