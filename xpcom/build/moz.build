@@ -100,6 +100,7 @@ LOCAL_INCLUDES += [
     '../threads',
     '/chrome',
     '/docshell/base',
+    '/js/xpconnect/loader',
 ]
 
 if CONFIG['MOZ_VPX']:
