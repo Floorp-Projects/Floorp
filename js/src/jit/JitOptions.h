@@ -79,6 +79,8 @@ struct DefaultJitOptions {
   bool enableWasmJitExit;
   bool enableWasmJitEntry;
   bool enableWasmIonFastCalls;
+  bool enableWasmImportCallSpew;
+  bool enableWasmFuncCallSpew;
 #endif
   uint32_t baselineWarmUpThreshold;
   uint32_t exceptionBailoutThreshold;

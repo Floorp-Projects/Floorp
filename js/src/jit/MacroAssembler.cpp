@@ -3208,6 +3208,15 @@ CodeOffset MacroAssembler::callWithABI(wasm::BytecodeOffset bytecode,
   return raOffset;
 }
 
+void MacroAssembler::callDebugWithABI(wasm::SymbolicAddress imm,
+                                      MoveOp::Type result) {
+  MOZ_ASSERT(!wasm::NeedsBuiltinThunk(imm));
+  uint32_t stackAdjust;
+  callWithABIPre(&stackAdjust, /* callFromWasm = */ false);
+  call(imm);
+  callWithABIPost(stackAdjust, result, /* callFromWasm = */ false);
+}
+
 // ===============================================================
 // Exit frame footer.
 
