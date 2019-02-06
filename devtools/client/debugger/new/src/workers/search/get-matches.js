@@ -2,14 +2,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+// @flow
+
 import assert from "../../utils/assert";
 import buildQuery from "../../utils/build-query";
+
+import type { SearchModifiers } from "../../types";
 
 export default function getMatches(
   query: string,
   text: string,
   modifiers: SearchModifiers
-): number {
+): Object[] {
   if (!query || !text || !modifiers) {
     return [];
   }
@@ -22,6 +26,11 @@ export default function getMatches(
     let singleMatch;
     const line = lines[i];
     while ((singleMatch = regexQuery.exec(line)) !== null) {
+      // Flow doesn't understand the test above.
+      if (!singleMatch) {
+        throw new Error("no singleMatch");
+      }
+
       matchedLocations.push({ line: i, ch: singleMatch.index });
 
       // When the match is an empty string the regexQuery.lastIndex will not

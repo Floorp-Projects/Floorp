@@ -5804,6 +5804,7 @@ const vendored = exports.vendored = {
   // See .babel/transform-mc.js
   Svg: _Svg2.default
 };
+// $FlowIgnore
 
 /***/ }),
 
