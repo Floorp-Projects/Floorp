@@ -548,6 +548,15 @@ html[dir="rtl"] .tree-node button.arrow {
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+:root {
+  /* header height is 28px + 1px for its border */
+  --editor-header-height: 29px;
+  /* footer height is 24px + 1px for its border */
+  --editor-footer-height: 25px;
+  /* searchbar height is 24px + 2px for its top and bottom borders */
+  --editor-searchbar-height: 26px;
+}
+
 :root.theme-light,
 :root .theme-light {
   --search-overlays-semitransparent: rgba(221, 225, 228, 0.66);
@@ -589,13 +598,9 @@ button:focus {
   display: flex;
   position: relative;
   flex: 1;
-  background-color: var(--theme-tab-toolbar-background);
-  height: calc(100% - 1px);
+  background-color: var(--theme-body-background);
+  height: 100%;
   overflow: hidden;
-}
-
-.theme-dark .editor-pane {
-  background-color: var(--theme-toolbar-background);
 }
 
 .editor-container {
@@ -2368,58 +2373,58 @@ menuseparator {
   font-size: 12px;
   width: 100%;
   background: var(--theme-body-background);
-  border-top: 1px solid var(--theme-splitter-color);
   display: flex;
   -moz-user-select: none;
   user-select: none;
   box-sizing: border-box;
-  height: 29px;
+  height: var(--editor-header-height);
   margin: 0;
   padding: 0;
+  border-bottom: 1px solid var(--theme-splitter-color);
 }
 
 .source-outline-tabs .tab {
+  align-items: center;
   background-color: var(--theme-toolbar-background);
-  border-top: 2px solid transparent;
-  border-bottom: 1px solid var(--theme-splitter-color);
   color: var(--theme-toolbar-color);
   cursor: default;
   display: inline-flex;
   flex: 1;
   justify-content: center;
-  margin-bottom: 0px;
-  margin-top: -1px;
   overflow: hidden;
-  padding: 5px 8px 7px 8px;
+  padding: 5px;
   position: relative;
   transition: all 0.25s ease;
 }
 
-.source-outline-tabs .tab:not(.active):hover {
-  background-color: var(--theme-toolbar-hover);
-  border-top: 2px solid rgba(0, 0, 0, 0.2);
-}
-
-.theme-dark .source-outline-tabs .tab:hover {
-  border-top: 2px solid var(--tab-line-hover-color);
+.source-outline-tabs .tab::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: var(--tab-line-color, transparent);
+  transition: transform 250ms var(--animation-curve), opacity 250ms var(--animation-curve);
+  opacity: 0;
+  transform: scaleX(0);
 }
 
 .source-outline-tabs .tab.active {
-  border-top: 2px solid var(--tab-line-selected-color);
+  --tab-line-color: var(--tab-line-selected-color);
   color: var(--theme-toolbar-selected-color);
+  border-bottom-color: transparent;
 }
 
-.theme-dark .source-outline-tabs .tab.active {
-  color: var(--theme-toolbar-selected-color);
+.source-outline-tabs .tab:not(.active):hover {
+  --tab-line-color: var(--tab-line-hover-color);
+  background-color: var(--theme-toolbar-hover);
 }
 
-.theme-dark .source-outline-tabs .tab.active:hover {
-  border-top: 2px solid var(--tab-line-selected-color);
-}
-
-.source-outline-tabs .tab.active path,
-.source-outline-tabs .tab:hover path {
-  fill: var(--theme-body-color);
+.source-outline-tabs .tab:hover::before,
+.source-outline-tabs .tab.active::before {
+  opacity: 1;
+  transform: scaleX(1);
 }
 
 .source-outline-panel {
@@ -2527,7 +2532,7 @@ menuseparator {
   transition: opacity 200ms;
   border: none;
   background: transparent;
-  padding: 6px;
+  padding: 4px 6px;
 }
 
 .source-footer > .commands > .action .img {
@@ -2597,13 +2602,13 @@ menuseparator {
 .search-bar {
   display: flex;
   border: 1px solid transparent;
-  border-top: 1px solid var(--theme-splitter-color);
+  border-top-color: var(--theme-splitter-color);
   height: var(--editor-searchbar-height);
+  transition: border-color 200ms var(--animation-curve);
 }
 
 .search-bar.search-bar-focused {
-  border: 1px solid var(--blue-50);
-  transition: border-color 0.2s ease-in-out;
+  border-color: var(--blue-50);
 }
 
 .search-bar .search-field {
@@ -3050,10 +3055,8 @@ menuseparator {
 .editor-wrapper {
   --debug-line-border: rgb(145, 188, 219);
   --debug-expression-background: rgba(202, 227, 255, 0.5);
-  --editor-searchbar-height: 27px;
   --debug-line-error-border: rgb(255, 0, 0);
   --debug-expression-error-background: rgba(231, 116, 113, 0.3);
-  --editor-header-height: 30px;
   --highlight-line-duration: 1500ms;
 }
 
@@ -3093,7 +3096,6 @@ menuseparator {
   width: calc(100% - 1px);
   top: var(--editor-header-height);
   left: 0px;
-  --editor-footer-height: 24px;
 }
 
 html[dir="rtl"] .editor-mount {
@@ -4232,7 +4234,8 @@ html[dir="rtl"] .command-bar {
   border-bottom: none;
   background-color: var(--theme-body-background);
   border-top: 1px solid var(--theme-splitter-color);
-  flex: 0 0 25px;
+  flex: none;
+  height: var(--editor-footer-height);
 }
 
 .command-bar.bottom {
@@ -4608,33 +4611,16 @@ html .welcomebox .toggle-button-end.collapsed {
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 .source-header {
-  border-bottom: 1px solid var(--theme-splitter-color);
-  width: 100%;
-  height: 29px;
   display: flex;
+  width: 100%;
+  height: var(--editor-header-height);
+  border-bottom: 1px solid var(--theme-splitter-color);
+  background-color: var(--theme-toolbar-background);
 }
 
 .source-header * {
   -moz-user-select: none;
   user-select: none;
-}
-
-.source-header .new-tab-btn {
-  padding: 4px;
-  margin-top: 4px;
-  margin-left: 2px;
-  fill: var(--theme-comment);
-  transition: 0.1s ease;
-  align-self: center;
-}
-
-.source-header .new-tab-btn:hover {
-  background-color: var(--theme-toolbar-background-hover);
-}
-
-.source-header .new-tab-btn svg {
-  width: 12px;
-  display: block;
 }
 
 .source-tabs {
@@ -4651,7 +4637,7 @@ html .welcomebox .toggle-button-end.collapsed {
   overflow: hidden;
   padding: 5px;
   cursor: default;
-  height: 30px;
+  height: calc(var(--editor-header-height) - 1px);
   font-size: 12px;
   background-color: transparent;
   vertical-align: bottom;
@@ -4664,44 +4650,27 @@ html .welcomebox .toggle-button-end.collapsed {
   left: 0;
   width: 100%;
   height: 2px;
-  background: transparent;
+  background-color: var(--tab-line-color, transparent);
   transition: transform 250ms var(--animation-curve), opacity 250ms var(--animation-curve);
   opacity: 0;
   transform: scaleX(0);
 }
 
-.source-tab:first-child {
-  margin-inline-start: 0;
-}
-
-.source-tab:not(.active):hover {
-  background: linear-gradient(var(--theme-toolbar-hover) 28px, transparent 1px);
-}
-
-.source-tab:not(.active):hover::before {
-  background: var(--tab-line-hover-color);
-  opacity: 1;
-  transform: scaleX(1);
-}
-
 .source-tab.active {
+  --tab-line-color: var(--tab-line-selected-color);
   color: var(--theme-toolbar-selected-color);
   border-bottom-color: transparent;
 }
 
+.source-tab:not(.active):hover {
+  --tab-line-color: var(--tab-line-hover-color);
+  background-color: var(--theme-toolbar-hover);
+}
+
+.source-tab:hover::before,
 .source-tab.active::before {
-  background: var(--tab-line-selected-color);
   opacity: 1;
   transform: scaleX(1);
-}
-
-.theme-dark .source-tab.active {
-  color: var(--theme-toolbar-selected-color);
-}
-
-.source-tab.active path,
-.source-tab:hover path {
-  fill: var(--theme-body-color);
 }
 
 .source-tab .source-icon {
@@ -4715,10 +4684,6 @@ html .welcomebox .toggle-button-end.collapsed {
   align-self: center;
 }
 
-.source-tab .prettyPrint path {
-  fill: var(--theme-textbox-box-shadow);
-}
-
 .source-tab .img.react {
   mask: url("resource://devtools/client/debugger/new/images/react.svg") no-repeat;
   mask-size: 100%;
@@ -4726,14 +4691,6 @@ html .welcomebox .toggle-button-end.collapsed {
   width: 14px;
   background: var(--theme-highlight-bluegrey);
   top: 0;
-}
-
-.source-tab .blackBox path {
-  fill: var(--theme-textbox-box-shadow);
-}
-
-.theme-dark .source-tab .blackBox circle {
-  fill: var(--theme-body-color);
 }
 
 .source-tab .filename {
