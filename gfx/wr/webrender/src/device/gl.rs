@@ -1791,7 +1791,7 @@ impl Device {
             for (read_fbo, draw_fbo) in src.fbos.iter().zip(&dst.fbos) {
                 self.bind_read_target_impl(*read_fbo);
                 self.bind_draw_target_impl(*draw_fbo);
-                self.blit_render_target(rect, rect);
+                self.blit_render_target(rect, rect, TextureFilter::Linear);
             }
             self.reset_draw_target();
             self.reset_read_target();
@@ -1942,8 +1942,18 @@ impl Device {
         }
     }
 
-    pub fn blit_render_target(&mut self, src_rect: DeviceIntRect, dest_rect: DeviceIntRect) {
+    pub fn blit_render_target(
+        &mut self,
+        src_rect: DeviceIntRect,
+        dest_rect: DeviceIntRect,
+        filter: TextureFilter,
+    ) {
         debug_assert!(self.inside_frame);
+
+        let filter = match filter {
+            TextureFilter::Nearest => gl::NEAREST,
+            TextureFilter::Linear | TextureFilter::Trilinear => gl::LINEAR,
+        };
 
         self.gl.blit_framebuffer(
             src_rect.origin.x,
@@ -1955,7 +1965,7 @@ impl Device {
             dest_rect.origin.x + dest_rect.size.width,
             dest_rect.origin.y + dest_rect.size.height,
             gl::COLOR_BUFFER_BIT,
-            gl::LINEAR,
+            filter,
         );
     }
 

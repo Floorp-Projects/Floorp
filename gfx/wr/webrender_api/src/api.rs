@@ -1023,6 +1023,8 @@ bitflags! {
         const TEXTURE_CACHE_DBG_DISABLE_SHRINK = 1 << 16;
         /// Highlight all primitives with colors based on kind.
         const PRIMITIVE_DBG = 1 << 17;
+        /// Draw a zoom widget showing part of the framebuffer zoomed in.
+        const ZOOM_DBG = 1 << 18;
     }
 }
 
