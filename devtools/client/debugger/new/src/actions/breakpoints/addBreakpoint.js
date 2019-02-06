@@ -154,7 +154,6 @@ export function addBreakpoint(
   return async ({ dispatch, getState, sourceMaps, client }: ThunkArgs) => {
     recordEvent("add_breakpoint");
     let breakpointPosition = location;
-
     if (features.columnBreakpoints && location.column === undefined) {
       await dispatch(setBreakpointPositions(location));
       breakpointPosition = getFirstVisibleBreakpointPosition(
