@@ -25,27 +25,25 @@ class WebSocketEventListenerChild final : public PWebSocketEventListenerChild,
 
   mozilla::ipc::IPCResult RecvWebSocketCreated(
       const uint32_t& aWebSocketSerialID, const nsString& aURI,
-      const nsCString& aProtocols) override;
+      const nsCString& aProtocols);
 
   mozilla::ipc::IPCResult RecvWebSocketOpened(
       const uint32_t& aWebSocketSerialID, const nsString& aEffectiveURI,
-      const nsCString& aProtocols, const nsCString& aExtensions) override;
+      const nsCString& aProtocols, const nsCString& aExtensions);
 
   mozilla::ipc::IPCResult RecvWebSocketMessageAvailable(
       const uint32_t& aWebSocketSerialID, const nsCString& aData,
-      const uint16_t& aMessageType) override;
+      const uint16_t& aMessageType);
 
   mozilla::ipc::IPCResult RecvWebSocketClosed(
       const uint32_t& aWebSocketSerialID, const bool& aWasClean,
-      const uint16_t& aCode, const nsString& aReason) override;
+      const uint16_t& aCode, const nsString& aReason);
 
   mozilla::ipc::IPCResult RecvFrameReceived(
-      const uint32_t& aWebSocketSerialID,
-      const WebSocketFrameData& aFrameData) override;
+      const uint32_t& aWebSocketSerialID, const WebSocketFrameData& aFrameData);
 
-  mozilla::ipc::IPCResult RecvFrameSent(
-      const uint32_t& aWebSocketSerialID,
-      const WebSocketFrameData& aFrameData) override;
+  mozilla::ipc::IPCResult RecvFrameSent(const uint32_t& aWebSocketSerialID,
+                                        const WebSocketFrameData& aFrameData);
 
   void Close();
 

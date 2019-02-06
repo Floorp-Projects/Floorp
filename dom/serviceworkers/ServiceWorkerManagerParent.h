@@ -23,6 +23,7 @@ class ServiceWorkerManagerService;
 
 class ServiceWorkerManagerParent final : public PServiceWorkerManagerParent {
   friend class mozilla::ipc::BackgroundParentImpl;
+  friend class PServiceWorkerManagerParent;
 
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ServiceWorkerManagerParent)
@@ -33,37 +34,33 @@ class ServiceWorkerManagerParent final : public PServiceWorkerManagerParent {
   ServiceWorkerManagerParent();
   ~ServiceWorkerManagerParent();
 
-  virtual mozilla::ipc::IPCResult RecvRegister(
-      const ServiceWorkerRegistrationData& aData) override;
+  mozilla::ipc::IPCResult RecvRegister(
+      const ServiceWorkerRegistrationData& aData);
 
-  virtual mozilla::ipc::IPCResult RecvUnregister(
-      const PrincipalInfo& aPrincipalInfo, const nsString& aScope) override;
+  mozilla::ipc::IPCResult RecvUnregister(const PrincipalInfo& aPrincipalInfo,
+                                         const nsString& aScope);
 
-  virtual mozilla::ipc::IPCResult RecvPropagateSoftUpdate(
-      const OriginAttributes& aOriginAttributes,
-      const nsString& aScope) override;
+  mozilla::ipc::IPCResult RecvPropagateSoftUpdate(
+      const OriginAttributes& aOriginAttributes, const nsString& aScope);
 
-  virtual mozilla::ipc::IPCResult RecvPropagateUnregister(
-      const PrincipalInfo& aPrincipalInfo, const nsString& aScope) override;
+  mozilla::ipc::IPCResult RecvPropagateUnregister(
+      const PrincipalInfo& aPrincipalInfo, const nsString& aScope);
 
-  virtual mozilla::ipc::IPCResult RecvPropagateRemove(
-      const nsCString& aHost) override;
+  mozilla::ipc::IPCResult RecvPropagateRemove(const nsCString& aHost);
 
-  virtual mozilla::ipc::IPCResult RecvPropagateRemoveAll() override;
+  mozilla::ipc::IPCResult RecvPropagateRemoveAll();
 
-  virtual mozilla::ipc::IPCResult RecvShutdown() override;
+  mozilla::ipc::IPCResult RecvShutdown();
 
-  virtual PServiceWorkerUpdaterParent* AllocPServiceWorkerUpdaterParent(
-      const OriginAttributes& aOriginAttributes,
-      const nsCString& aScope) override;
+  PServiceWorkerUpdaterParent* AllocPServiceWorkerUpdaterParent(
+      const OriginAttributes& aOriginAttributes, const nsCString& aScope);
 
   virtual mozilla::ipc::IPCResult RecvPServiceWorkerUpdaterConstructor(
       PServiceWorkerUpdaterParent* aActor,
       const OriginAttributes& aOriginAttributes,
       const nsCString& aScope) override;
 
-  virtual bool DeallocPServiceWorkerUpdaterParent(
-      PServiceWorkerUpdaterParent* aActor) override;
+  bool DeallocPServiceWorkerUpdaterParent(PServiceWorkerUpdaterParent* aActor);
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 

@@ -1831,6 +1831,39 @@ main {
   color: #0C0C0D;
   margin: 16px 0; }
 
+.ds-message-container {
+  display: none;
+  color: #737373;
+  font-size: 13px;
+  justify-content: center;
+  margin: 0 auto 40px;
+  width: 936px; }
+  .ds-message-container p {
+    margin: 0;
+    align-self: center;
+    line-height: 20px;
+    display: flex; }
+  .ds-message-container .icon {
+    align-self: center;
+    fill: var(--newtab-icon-secondary-color);
+    margin-inline-end: 6px;
+    width: 20px;
+    height: 20px; }
+  .ds-message-container .ds-message-actions {
+    align-self: center;
+    border: 0;
+    padding: 0; }
+    .ds-message-container .ds-message-actions button {
+      height: 24px;
+      margin: 0;
+      margin-inline-start: 20px;
+      padding: 0 20px; }
+      .ds-message-container .ds-message-actions button.dismiss {
+        padding: 0; }
+
+.force-light-theme[lwt-newtab-brighttext] .ds-message-container {
+  display: flex; }
+
 .ds-card-grid {
   display: grid;
   grid-gap: 24px; }
@@ -2338,6 +2371,33 @@ main {
     margin: 8px 0 0; }
   .ds-card .context {
     color: #008EA4; }
+
+.ds-message {
+  margin: 8px 0 0; }
+  .ds-message .title {
+    display: flex;
+    align-items: center; }
+    .ds-message .title img {
+      width: 16px;
+      height: 16px;
+      margin: 0 6px 0 0; }
+    .ds-message .title span {
+      line-height: 24px;
+      font-size: 17px;
+      color: #0C0C0D;
+      font-weight: 600; }
+  .ds-message .subtitle {
+    line-height: 20px;
+    font-size: 14px;
+    color: #737373;
+    margin: 0; }
+    .ds-message .subtitle span::after {
+      content: ' '; }
+    .ds-message .subtitle a:hover,
+    .ds-message .subtitle a:focus {
+      text-decoration: underline; }
+  .ds-message .ds-hr {
+    margin: 16px 0 8px; }
 
 .ASRouterButton {
   font-weight: 600;

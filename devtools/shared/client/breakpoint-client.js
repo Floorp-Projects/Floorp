@@ -68,30 +68,30 @@ BreakpointClient.prototype = {
    */
   setOptions: function(options) {
     if (this._client.mainRoot.traits.nativeLogpoints) {
-      this.setOptionsRequester(options);
-    } else {
-      // Older servers need to reinstall breakpoints when the condition changes.
-      const deferred = promise.defer();
-
-      const info = {
-        line: this.location.line,
-        column: this.location.column,
-        options,
-      };
-
-      // Remove the current breakpoint and add a new one with the specified
-      // information.
-      this.remove(response => {
-        if (response && response.error) {
-          deferred.reject(response);
-          return;
-        }
-
-        deferred.resolve(this.source.setBreakpoint(info).then(([, newBreakpoint]) => {
-          return newBreakpoint;
-        }));
-      });
+      return this.setOptionsRequester(options).then(() => this);
     }
+    // Older servers need to reinstall breakpoints when the condition changes.
+    const deferred = promise.defer();
+
+    const info = {
+      line: this.location.line,
+      column: this.location.column,
+      options,
+    };
+
+    // Remove the current breakpoint and add a new one with the specified
+    // information.
+    this.remove(response => {
+      if (response && response.error) {
+        deferred.reject(response);
+        return;
+      }
+
+      deferred.resolve(this.source.setBreakpoint(info).then(([, newBreakpoint]) => {
+        return newBreakpoint;
+      }));
+    });
+    return deferred;
   },
 };
 

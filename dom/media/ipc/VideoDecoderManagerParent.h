@@ -13,6 +13,8 @@ namespace mozilla {
 class VideoDecoderManagerThreadHolder;
 
 class VideoDecoderManagerParent final : public PVideoDecoderManagerParent {
+  friend class PVideoDecoderManagerParent;
+
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VideoDecoderManagerParent)
 
@@ -36,13 +38,13 @@ class VideoDecoderManagerParent final : public PVideoDecoderManagerParent {
       const CreateDecoderParams::OptionSet& aOptions,
       const layers::TextureFactoryIdentifier& aIdentifier, bool* aSuccess,
       nsCString* aBlacklistedD3D11Driver, nsCString* aBlacklistedD3D9Driver,
-      nsCString* aErrorDescription) override;
-  bool DeallocPVideoDecoderParent(PVideoDecoderParent* actor) override;
+      nsCString* aErrorDescription);
+  bool DeallocPVideoDecoderParent(PVideoDecoderParent* actor);
 
   mozilla::ipc::IPCResult RecvReadback(const SurfaceDescriptorGPUVideo& aSD,
-                                       SurfaceDescriptor* aResult) override;
+                                       SurfaceDescriptor* aResult);
   mozilla::ipc::IPCResult RecvDeallocateSurfaceDescriptorGPUVideo(
-      const SurfaceDescriptorGPUVideo& aSD) override;
+      const SurfaceDescriptorGPUVideo& aSD);
 
   void ActorDestroy(mozilla::ipc::IProtocol::ActorDestroyReason) override;
 

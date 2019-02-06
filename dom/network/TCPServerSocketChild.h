@@ -53,8 +53,7 @@ class TCPServerSocketChild : public mozilla::net::PTCPServerSocketChild,
 
   void Close();
 
-  virtual mozilla::ipc::IPCResult RecvCallbackAccept(
-      PTCPSocketChild* socket) override;
+  mozilla::ipc::IPCResult RecvCallbackAccept(PTCPSocketChild* socket);
 };
 
 }  // namespace dom

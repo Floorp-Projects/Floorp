@@ -28,6 +28,7 @@ class FileDescriptor;
 class FileDescriptorSetChild final : public PFileDescriptorSetChild {
   friend class BackgroundChildImpl;
   friend class mozilla::dom::nsIContentChild;
+  friend class PFileDescriptorSetChild;
 
   nsTArray<FileDescriptor> mFileDescriptors;
 
@@ -38,8 +39,8 @@ class FileDescriptorSetChild final : public PFileDescriptorSetChild {
   explicit FileDescriptorSetChild(const FileDescriptor& aFileDescriptor);
   ~FileDescriptorSetChild();
 
-  virtual mozilla::ipc::IPCResult RecvAddFileDescriptor(
-      const FileDescriptor& aFileDescriptor) override;
+  mozilla::ipc::IPCResult RecvAddFileDescriptor(
+      const FileDescriptor& aFileDescriptor);
 };
 
 }  // namespace ipc

@@ -24,6 +24,8 @@ class ReadStream;
 class CacheStreamControlChild final : public PCacheStreamControlChild,
                                       public StreamControl,
                                       public ActorChild {
+  friend class PCacheStreamControlChild;
+
  public:
   CacheStreamControlChild();
   ~CacheStreamControlChild();
@@ -51,8 +53,8 @@ class CacheStreamControlChild final : public PCacheStreamControlChild,
 
   // PCacheStreamControlChild methods
   virtual void ActorDestroy(ActorDestroyReason aReason) override;
-  virtual mozilla::ipc::IPCResult RecvClose(const nsID& aId) override;
-  virtual mozilla::ipc::IPCResult RecvCloseAll() override;
+  mozilla::ipc::IPCResult RecvClose(const nsID& aId);
+  mozilla::ipc::IPCResult RecvCloseAll();
 
   bool mDestroyStarted;
   bool mDestroyDelayed;

@@ -33,13 +33,13 @@ class RemotePrintJobChild final : public PRemotePrintJobChild,
                            const int32_t& aStartPage, const int32_t& aEndPage);
 
   mozilla::ipc::IPCResult RecvPrintInitializationResult(
-      const nsresult& aRv, const FileDescriptor& aFd) final;
+      const nsresult& aRv, const FileDescriptor& aFd);
 
   void ProcessPage();
 
-  mozilla::ipc::IPCResult RecvPageProcessed(const FileDescriptor& aFd) final;
+  mozilla::ipc::IPCResult RecvPageProcessed(const FileDescriptor& aFd);
 
-  mozilla::ipc::IPCResult RecvAbortPrint(const nsresult& aRv) final;
+  mozilla::ipc::IPCResult RecvAbortPrint(const nsresult& aRv);
 
   void SetPagePrintTimer(nsPagePrintTimer* aPagePrintTimer);
 

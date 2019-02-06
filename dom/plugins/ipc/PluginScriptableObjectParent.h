@@ -43,44 +43,42 @@ class PluginScriptableObjectParent : public PPluginScriptableObjectParent {
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  virtual mozilla::ipc::IPCResult AnswerHasMethod(const PluginIdentifier& aId,
-                                                  bool* aHasMethod) override;
+  mozilla::ipc::IPCResult AnswerHasMethod(const PluginIdentifier& aId,
+                                          bool* aHasMethod);
 
-  virtual mozilla::ipc::IPCResult AnswerInvoke(
-      const PluginIdentifier& aId, InfallibleTArray<Variant>&& aArgs,
-      Variant* aResult, bool* aSuccess) override;
+  mozilla::ipc::IPCResult AnswerInvoke(const PluginIdentifier& aId,
+                                       InfallibleTArray<Variant>&& aArgs,
+                                       Variant* aResult, bool* aSuccess);
 
-  virtual mozilla::ipc::IPCResult AnswerInvokeDefault(
-      InfallibleTArray<Variant>&& aArgs, Variant* aResult,
-      bool* aSuccess) override;
+  mozilla::ipc::IPCResult AnswerInvokeDefault(InfallibleTArray<Variant>&& aArgs,
+                                              Variant* aResult, bool* aSuccess);
 
-  virtual mozilla::ipc::IPCResult AnswerHasProperty(
-      const PluginIdentifier& aId, bool* aHasProperty) override;
+  mozilla::ipc::IPCResult AnswerHasProperty(const PluginIdentifier& aId,
+                                            bool* aHasProperty);
 
-  virtual mozilla::ipc::IPCResult AnswerGetParentProperty(
-      const PluginIdentifier& aId, Variant* aResult, bool* aSuccess) override;
+  mozilla::ipc::IPCResult AnswerGetParentProperty(const PluginIdentifier& aId,
+                                                  Variant* aResult,
+                                                  bool* aSuccess);
 
-  virtual mozilla::ipc::IPCResult AnswerSetProperty(const PluginIdentifier& aId,
-                                                    const Variant& aValue,
-                                                    bool* aSuccess) override;
+  mozilla::ipc::IPCResult AnswerSetProperty(const PluginIdentifier& aId,
+                                            const Variant& aValue,
+                                            bool* aSuccess);
 
-  virtual mozilla::ipc::IPCResult AnswerRemoveProperty(
-      const PluginIdentifier& aId, bool* aSuccess) override;
+  mozilla::ipc::IPCResult AnswerRemoveProperty(const PluginIdentifier& aId,
+                                               bool* aSuccess);
 
-  virtual mozilla::ipc::IPCResult AnswerEnumerate(
-      InfallibleTArray<PluginIdentifier>* aProperties, bool* aSuccess) override;
+  mozilla::ipc::IPCResult AnswerEnumerate(
+      InfallibleTArray<PluginIdentifier>* aProperties, bool* aSuccess);
 
-  virtual mozilla::ipc::IPCResult AnswerConstruct(
-      InfallibleTArray<Variant>&& aArgs, Variant* aResult,
-      bool* aSuccess) override;
+  mozilla::ipc::IPCResult AnswerConstruct(InfallibleTArray<Variant>&& aArgs,
+                                          Variant* aResult, bool* aSuccess);
 
-  virtual mozilla::ipc::IPCResult AnswerNPN_Evaluate(const nsCString& aScript,
-                                                     Variant* aResult,
-                                                     bool* aSuccess) override;
+  mozilla::ipc::IPCResult AnswerNPN_Evaluate(const nsCString& aScript,
+                                             Variant* aResult, bool* aSuccess);
 
-  virtual mozilla::ipc::IPCResult RecvProtect() override;
+  mozilla::ipc::IPCResult RecvProtect();
 
-  virtual mozilla::ipc::IPCResult RecvUnprotect() override;
+  mozilla::ipc::IPCResult RecvUnprotect();
 
   static const NPClass* GetClass() { return &sNPClass; }
 

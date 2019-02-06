@@ -24,8 +24,8 @@ class AltDataOutputStreamChild : public PAltDataOutputStreamChild,
   void AddIPDLReference();
   void ReleaseIPDLReference();
   // Saves an error code which will be reported to the writer on the next call.
-  virtual mozilla::ipc::IPCResult RecvError(const nsresult& err) override;
-  virtual mozilla::ipc::IPCResult RecvDeleteSelf() override;
+  virtual mozilla::ipc::IPCResult RecvError(const nsresult& err);
+  virtual mozilla::ipc::IPCResult RecvDeleteSelf();
 
  private:
   virtual ~AltDataOutputStreamChild() = default;

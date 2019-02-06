@@ -41,6 +41,8 @@ namespace plugins {
 class PluginInstanceChild;
 
 class PluginModuleChild : public PPluginModuleChild {
+  friend class PPluginModuleChild;
+
  protected:
   virtual mozilla::ipc::RacyInterruptPolicy MediateInterruptRace(
       const MessageInfo& parent, const MessageInfo& child) override {
@@ -49,66 +51,60 @@ class PluginModuleChild : public PPluginModuleChild {
 
   virtual bool ShouldContinueFromReplyTimeout() override;
 
-  virtual mozilla::ipc::IPCResult RecvSettingChanged(
-      const PluginSettings& aSettings) override;
+  mozilla::ipc::IPCResult RecvSettingChanged(const PluginSettings& aSettings);
 
   // Implement the PPluginModuleChild interface
-  virtual mozilla::ipc::IPCResult RecvInitProfiler(
-      Endpoint<mozilla::PProfilerChild>&& aEndpoint) override;
-  virtual mozilla::ipc::IPCResult RecvDisableFlashProtectedMode() override;
-  virtual mozilla::ipc::IPCResult AnswerNP_GetEntryPoints(NPError* rv) override;
-  virtual mozilla::ipc::IPCResult AnswerNP_Initialize(
-      const PluginSettings& aSettings, NPError* rv) override;
-  virtual mozilla::ipc::IPCResult AnswerSyncNPP_New(
-      PPluginInstanceChild* aActor, NPError* rv) override;
+  mozilla::ipc::IPCResult RecvInitProfiler(
+      Endpoint<mozilla::PProfilerChild>&& aEndpoint);
+  mozilla::ipc::IPCResult RecvDisableFlashProtectedMode();
+  mozilla::ipc::IPCResult AnswerNP_GetEntryPoints(NPError* rv);
+  mozilla::ipc::IPCResult AnswerNP_Initialize(const PluginSettings& aSettings,
+                                              NPError* rv);
+  mozilla::ipc::IPCResult AnswerSyncNPP_New(PPluginInstanceChild* aActor,
+                                            NPError* rv);
 
-  virtual mozilla::ipc::IPCResult RecvInitPluginModuleChild(
-      Endpoint<PPluginModuleChild>&& endpoint) override;
+  mozilla::ipc::IPCResult RecvInitPluginModuleChild(
+      Endpoint<PPluginModuleChild>&& endpoint);
 
-  virtual mozilla::ipc::IPCResult RecvInitPluginFunctionBroker(
-      Endpoint<PFunctionBrokerChild>&& endpoint) override;
+  mozilla::ipc::IPCResult RecvInitPluginFunctionBroker(
+      Endpoint<PFunctionBrokerChild>&& endpoint);
 
-  virtual PPluginInstanceChild* AllocPPluginInstanceChild(
+  PPluginInstanceChild* AllocPPluginInstanceChild(
       const nsCString& aMimeType, const InfallibleTArray<nsCString>& aNames,
-      const InfallibleTArray<nsCString>& aValues) override;
+      const InfallibleTArray<nsCString>& aValues);
 
-  virtual bool DeallocPPluginInstanceChild(
-      PPluginInstanceChild* aActor) override;
+  bool DeallocPPluginInstanceChild(PPluginInstanceChild* aActor);
 
-  virtual mozilla::ipc::IPCResult RecvPPluginInstanceConstructor(
+  mozilla::ipc::IPCResult RecvPPluginInstanceConstructor(
       PPluginInstanceChild* aActor, const nsCString& aMimeType,
       InfallibleTArray<nsCString>&& aNames,
       InfallibleTArray<nsCString>&& aValues) override;
-  virtual mozilla::ipc::IPCResult AnswerNP_Shutdown(NPError* rv) override;
+  mozilla::ipc::IPCResult AnswerNP_Shutdown(NPError* rv);
 
-  virtual mozilla::ipc::IPCResult AnswerOptionalFunctionsSupported(
-      bool* aURLRedirectNotify, bool* aClearSiteData,
-      bool* aGetSitesWithData) override;
+  mozilla::ipc::IPCResult AnswerOptionalFunctionsSupported(
+      bool* aURLRedirectNotify, bool* aClearSiteData, bool* aGetSitesWithData);
 
-  virtual mozilla::ipc::IPCResult RecvNPP_ClearSiteData(
-      const nsCString& aSite, const uint64_t& aFlags, const uint64_t& aMaxAge,
-      const uint64_t& aCallbackId) override;
+  mozilla::ipc::IPCResult RecvNPP_ClearSiteData(const nsCString& aSite,
+                                                const uint64_t& aFlags,
+                                                const uint64_t& aMaxAge,
+                                                const uint64_t& aCallbackId);
 
-  virtual mozilla::ipc::IPCResult RecvNPP_GetSitesWithData(
-      const uint64_t& aCallbackId) override;
+  mozilla::ipc::IPCResult RecvNPP_GetSitesWithData(const uint64_t& aCallbackId);
 
-  virtual mozilla::ipc::IPCResult RecvSetAudioSessionData(
-      const nsID& aId, const nsString& aDisplayName,
-      const nsString& aIconPath) override;
+  mozilla::ipc::IPCResult RecvSetAudioSessionData(const nsID& aId,
+                                                  const nsString& aDisplayName,
+                                                  const nsString& aIconPath);
 
-  virtual mozilla::ipc::IPCResult RecvSetParentHangTimeout(
-      const uint32_t& aSeconds) override;
+  mozilla::ipc::IPCResult RecvSetParentHangTimeout(const uint32_t& aSeconds);
 
-  virtual mozilla::ipc::IPCResult AnswerInitCrashReporter(
-      Shmem&& aShmem, mozilla::dom::NativeThreadId* aId) override;
+  mozilla::ipc::IPCResult AnswerInitCrashReporter(
+      Shmem&& aShmem, mozilla::dom::NativeThreadId* aId);
 
   virtual void ActorDestroy(ActorDestroyReason why) override;
 
-  virtual mozilla::ipc::IPCResult RecvProcessNativeEventsInInterruptCall()
-      override;
+  mozilla::ipc::IPCResult RecvProcessNativeEventsInInterruptCall();
 
-  virtual mozilla::ipc::IPCResult AnswerModuleSupportsAsyncRender(
-      bool* aResult) override;
+  mozilla::ipc::IPCResult AnswerModuleSupportsAsyncRender(bool* aResult);
 
  public:
   explicit PluginModuleChild(bool aIsChrome);
@@ -197,9 +193,9 @@ class PluginModuleChild : public PPluginModuleChild {
   NPError PluginRequiresAudioDeviceChanges(PluginInstanceChild* aInstance,
                                            NPBool aShouldRegister);
   mozilla::ipc::IPCResult RecvNPP_SetValue_NPNVaudioDeviceChangeDetails(
-      const NPAudioDeviceChangeDetailsIPC& detailsIPC) override;
+      const NPAudioDeviceChangeDetailsIPC& detailsIPC);
   mozilla::ipc::IPCResult RecvNPP_SetValue_NPNVaudioDeviceStateChanged(
-      const NPAudioDeviceStateChangedIPC& aDeviceStateIPC) override;
+      const NPAudioDeviceStateChangedIPC& aDeviceStateIPC);
 
  private:
   NPError DoNP_Initialize(const PluginSettings& aSettings);

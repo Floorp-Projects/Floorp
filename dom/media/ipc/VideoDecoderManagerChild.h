@@ -16,6 +16,8 @@ class SourceSurface;
 
 class VideoDecoderManagerChild final : public PVideoDecoderManagerChild,
                                        public mozilla::ipc::IShmemAllocator {
+  friend class PVideoDecoderManagerChild;
+
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VideoDecoderManagerChild)
 
@@ -74,8 +76,8 @@ class VideoDecoderManagerChild final : public PVideoDecoderManagerChild,
       const CreateDecoderParams::OptionSet& aOptions,
       const layers::TextureFactoryIdentifier& aIdentifier, bool* aSuccess,
       nsCString* aBlacklistedD3D11Driver, nsCString* aBlacklistedD3D9Driver,
-      nsCString* aErrorDescription) override;
-  bool DeallocPVideoDecoderChild(PVideoDecoderChild* actor) override;
+      nsCString* aErrorDescription);
+  bool DeallocPVideoDecoderChild(PVideoDecoderChild* actor);
 
  private:
   // Main thread only

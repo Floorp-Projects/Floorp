@@ -56,12 +56,11 @@ class IPCBlobInputStreamChild final
 
   void StreamNeeded(IPCBlobInputStream* aStream, nsIEventTarget* aEventTarget);
 
-  mozilla::ipc::IPCResult RecvStreamReady(
-      const OptionalIPCStream& aStream) override;
+  mozilla::ipc::IPCResult RecvStreamReady(const OptionalIPCStream& aStream);
 
   void LengthNeeded(IPCBlobInputStream* aStream, nsIEventTarget* aEventTarget);
 
-  mozilla::ipc::IPCResult RecvLengthReady(const int64_t& aLength) override;
+  mozilla::ipc::IPCResult RecvLengthReady(const int64_t& aLength);
 
   void Shutdown();
 

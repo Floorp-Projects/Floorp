@@ -45,17 +45,16 @@ class UDPSocketChild : public mozilla::net::PUDPSocketChild,
   UDPSocketChild();
   virtual ~UDPSocketChild();
 
-  virtual mozilla::ipc::IPCResult RecvCallbackOpened(
-      const UDPAddressInfo& aAddressInfo) override;
-  virtual mozilla::ipc::IPCResult RecvCallbackConnected(
-      const UDPAddressInfo& aAddressInfo) override;
-  virtual mozilla::ipc::IPCResult RecvCallbackClosed() override;
-  virtual mozilla::ipc::IPCResult RecvCallbackReceivedData(
-      const UDPAddressInfo& aAddressInfo,
-      InfallibleTArray<uint8_t>&& aData) override;
-  virtual mozilla::ipc::IPCResult RecvCallbackError(
-      const nsCString& aMessage, const nsCString& aFilename,
-      const uint32_t& aLineNumber) override;
+  mozilla::ipc::IPCResult RecvCallbackOpened(
+      const UDPAddressInfo& aAddressInfo);
+  mozilla::ipc::IPCResult RecvCallbackConnected(
+      const UDPAddressInfo& aAddressInfo);
+  mozilla::ipc::IPCResult RecvCallbackClosed();
+  mozilla::ipc::IPCResult RecvCallbackReceivedData(
+      const UDPAddressInfo& aAddressInfo, InfallibleTArray<uint8_t>&& aData);
+  mozilla::ipc::IPCResult RecvCallbackError(const nsCString& aMessage,
+                                            const nsCString& aFilename,
+                                            const uint32_t& aLineNumber);
 
  private:
   nsresult SendDataInternal(const UDPSocketAddr& aAddr, const uint8_t* aData,

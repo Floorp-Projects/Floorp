@@ -55,6 +55,8 @@ enum GMPState {
 class GMPContentParent;
 
 class GMPParent final : public PGMPParent {
+  friend class PGMPParent;
+
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GMPParent)
 
@@ -156,19 +158,19 @@ class GMPParent final : public PGMPParent {
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
   mozilla::ipc::IPCResult RecvInitCrashReporter(
-      Shmem&& shmem, const NativeThreadId& aThreadId) override;
+      Shmem&& shmem, const NativeThreadId& aThreadId);
 
   mozilla::ipc::IPCResult RecvPGMPStorageConstructor(
       PGMPStorageParent* actor) override;
-  PGMPStorageParent* AllocPGMPStorageParent() override;
-  bool DeallocPGMPStorageParent(PGMPStorageParent* aActor) override;
+  PGMPStorageParent* AllocPGMPStorageParent();
+  bool DeallocPGMPStorageParent(PGMPStorageParent* aActor);
 
   mozilla::ipc::IPCResult RecvPGMPTimerConstructor(
       PGMPTimerParent* actor) override;
-  PGMPTimerParent* AllocPGMPTimerParent() override;
-  bool DeallocPGMPTimerParent(PGMPTimerParent* aActor) override;
+  PGMPTimerParent* AllocPGMPTimerParent();
+  bool DeallocPGMPTimerParent(PGMPTimerParent* aActor);
 
-  mozilla::ipc::IPCResult RecvPGMPContentChildDestroyed() override;
+  mozilla::ipc::IPCResult RecvPGMPContentChildDestroyed();
   bool IsUsed() {
     return mGMPContentChildCount > 0 || !mGetContentParentPromises.IsEmpty();
   }

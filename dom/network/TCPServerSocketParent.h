@@ -30,8 +30,8 @@ class TCPServerSocketParent : public mozilla::net::PTCPServerSocketParent,
 
   void Init();
 
-  virtual mozilla::ipc::IPCResult RecvClose() override;
-  virtual mozilla::ipc::IPCResult RecvRequestDelete() override;
+  mozilla::ipc::IPCResult RecvClose();
+  mozilla::ipc::IPCResult RecvRequestDelete();
 
   void AddIPDLReference();
   void ReleaseIPDLReference();

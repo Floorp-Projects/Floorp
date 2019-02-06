@@ -802,9 +802,7 @@ function getSourceContent(sourceClient) {
  * @returns Promise<SourceClient>
  */
 async function getSource(threadClient, url) {
-  const {sources} = await threadClient.getSources();
-  const source = sources.find((s) => s.url === url);
-
+  const source = await getSourceForm(threadClient, url);
   if (source) {
     return threadClient.source(source);
   }
@@ -813,9 +811,13 @@ async function getSource(threadClient, url) {
 }
 
 async function getSourceById(threadClient, id) {
-  const { sources } = await threadClient.getSources();
-  const form = sources.find(source => source.actor == id);
+  const form = await getSourceFormById(threadClient, id);
   return threadClient.source(form);
+}
+
+async function getSourceForm(threadClient, url) {
+  const {sources} = await threadClient.getSources();
+  return sources.find((s) => s.url === url);
 }
 
 async function getSourceFormById(threadClient, id) {

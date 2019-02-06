@@ -74,30 +74,29 @@ class ImageBridgeParent final : public PImageBridgeParent,
   virtual base::ProcessId GetChildProcessId() override { return OtherPid(); }
 
   // PImageBridge
-  virtual mozilla::ipc::IPCResult RecvUpdate(
-      EditArray&& aEdits, OpDestroyArray&& aToDestroy,
-      const uint64_t& aFwdTransactionId) override;
+  mozilla::ipc::IPCResult RecvUpdate(EditArray&& aEdits,
+                                     OpDestroyArray&& aToDestroy,
+                                     const uint64_t& aFwdTransactionId);
 
-  virtual PTextureParent* AllocPTextureParent(
+  PTextureParent* AllocPTextureParent(
       const SurfaceDescriptor& aSharedData, const ReadLockDescriptor& aReadLock,
       const LayersBackend& aLayersBackend, const TextureFlags& aFlags,
       const uint64_t& aSerial,
-      const wr::MaybeExternalImageId& aExternalImageId) override;
-  virtual bool DeallocPTextureParent(PTextureParent* actor) override;
+      const wr::MaybeExternalImageId& aExternalImageId);
+  bool DeallocPTextureParent(PTextureParent* actor);
 
-  virtual mozilla::ipc::IPCResult RecvNewCompositable(
+  mozilla::ipc::IPCResult RecvNewCompositable(
       const CompositableHandle& aHandle, const TextureInfo& aInfo,
-      const LayersBackend& aLayersBackend) override;
-  virtual mozilla::ipc::IPCResult RecvReleaseCompositable(
-      const CompositableHandle& aHandle) override;
+      const LayersBackend& aLayersBackend);
+  mozilla::ipc::IPCResult RecvReleaseCompositable(
+      const CompositableHandle& aHandle);
 
-  PMediaSystemResourceManagerParent* AllocPMediaSystemResourceManagerParent()
-      override;
+  PMediaSystemResourceManagerParent* AllocPMediaSystemResourceManagerParent();
   bool DeallocPMediaSystemResourceManagerParent(
-      PMediaSystemResourceManagerParent* aActor) override;
+      PMediaSystemResourceManagerParent* aActor);
 
   // Shutdown step 1
-  virtual mozilla::ipc::IPCResult RecvWillClose() override;
+  mozilla::ipc::IPCResult RecvWillClose();
 
   MessageLoop* GetMessageLoop() const { return mMessageLoop; }
 

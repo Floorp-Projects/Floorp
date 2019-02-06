@@ -25,6 +25,8 @@ class StreamList;
 class CacheStreamControlParent final : public PCacheStreamControlParent,
                                        public StreamControl,
                                        Manager::Listener {
+  friend class PCacheStreamControlParent;
+
  public:
   CacheStreamControlParent();
   ~CacheStreamControlParent();
@@ -55,10 +57,10 @@ class CacheStreamControlParent final : public PCacheStreamControlParent,
   // PCacheStreamControlParent methods
   virtual void ActorDestroy(ActorDestroyReason aReason) override;
 
-  virtual mozilla::ipc::IPCResult RecvOpenStream(
-      const nsID& aStreamId, OpenStreamResolver&& aResolve) override;
+  mozilla::ipc::IPCResult RecvOpenStream(const nsID& aStreamId,
+                                         OpenStreamResolver&& aResolve);
 
-  virtual mozilla::ipc::IPCResult RecvNoteClosed(const nsID& aId) override;
+  mozilla::ipc::IPCResult RecvNoteClosed(const nsID& aId);
 
   void NotifyClose(const nsID& aId);
   void NotifyCloseAll();

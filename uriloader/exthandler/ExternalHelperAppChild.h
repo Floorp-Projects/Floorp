@@ -31,7 +31,7 @@ class ExternalHelperAppChild : public PExternalHelperAppChild,
   // the child.
   void SetHandler(nsExternalAppHandler *handler) { mHandler = handler; }
 
-  virtual mozilla::ipc::IPCResult RecvCancel(const nsresult &aStatus) override;
+  mozilla::ipc::IPCResult RecvCancel(const nsresult &aStatus);
 
  private:
   virtual ~ExternalHelperAppChild();

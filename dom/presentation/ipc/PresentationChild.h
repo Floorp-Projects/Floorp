@@ -24,39 +24,37 @@ class PresentationChild final : public PPresentationChild {
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  virtual PPresentationRequestChild* AllocPPresentationRequestChild(
-      const PresentationIPCRequest& aRequest) override;
+  PPresentationRequestChild* AllocPPresentationRequestChild(
+      const PresentationIPCRequest& aRequest);
 
-  virtual bool DeallocPPresentationRequestChild(
-      PPresentationRequestChild* aActor) override;
+  bool DeallocPPresentationRequestChild(PPresentationRequestChild* aActor);
 
   mozilla::ipc::IPCResult RecvPPresentationBuilderConstructor(
       PPresentationBuilderChild* aActor, const nsString& aSessionId,
       const uint8_t& aRole) override;
 
-  virtual PPresentationBuilderChild* AllocPPresentationBuilderChild(
-      const nsString& aSessionId, const uint8_t& aRole) override;
+  PPresentationBuilderChild* AllocPPresentationBuilderChild(
+      const nsString& aSessionId, const uint8_t& aRole);
 
-  virtual bool DeallocPPresentationBuilderChild(
-      PPresentationBuilderChild* aActor) override;
+  bool DeallocPPresentationBuilderChild(PPresentationBuilderChild* aActor);
 
-  virtual mozilla::ipc::IPCResult RecvNotifyAvailableChange(
-      nsTArray<nsString>&& aAvailabilityUrls, const bool& aAvailable) override;
+  mozilla::ipc::IPCResult RecvNotifyAvailableChange(
+      nsTArray<nsString>&& aAvailabilityUrls, const bool& aAvailable);
 
-  virtual mozilla::ipc::IPCResult RecvNotifySessionStateChange(
+  mozilla::ipc::IPCResult RecvNotifySessionStateChange(
       const nsString& aSessionId, const uint16_t& aState,
-      const nsresult& aReason) override;
+      const nsresult& aReason);
 
-  virtual mozilla::ipc::IPCResult RecvNotifyMessage(
-      const nsString& aSessionId, const nsCString& aData,
-      const bool& aIsBinary) override;
+  mozilla::ipc::IPCResult RecvNotifyMessage(const nsString& aSessionId,
+                                            const nsCString& aData,
+                                            const bool& aIsBinary);
 
-  virtual mozilla::ipc::IPCResult RecvNotifySessionConnect(
-      const uint64_t& aWindowId, const nsString& aSessionId) override;
+  mozilla::ipc::IPCResult RecvNotifySessionConnect(const uint64_t& aWindowId,
+                                                   const nsString& aSessionId);
 
-  virtual mozilla::ipc::IPCResult RecvNotifyCloseSessionTransport(
+  mozilla::ipc::IPCResult RecvNotifyCloseSessionTransport(
       const nsString& aSessionId, const uint8_t& aRole,
-      const nsresult& aReason) override;
+      const nsresult& aReason);
 
  private:
   virtual ~PresentationChild();
@@ -76,8 +74,7 @@ class PresentationRequestChild final : public PPresentationRequestChild {
   virtual mozilla::ipc::IPCResult Recv__delete__(
       const nsresult& aResult) override;
 
-  virtual mozilla::ipc::IPCResult RecvNotifyRequestUrlSelected(
-      const nsString& aUrl) override;
+  mozilla::ipc::IPCResult RecvNotifyRequestUrlSelected(const nsString& aUrl);
 
  private:
   virtual ~PresentationRequestChild();

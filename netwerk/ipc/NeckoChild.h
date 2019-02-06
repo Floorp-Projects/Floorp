@@ -16,6 +16,8 @@ namespace net {
 
 // Header file contents
 class NeckoChild : public PNeckoChild {
+  friend class PNeckoChild;
+
  public:
   NeckoChild() = default;
   virtual ~NeckoChild();
@@ -23,94 +25,81 @@ class NeckoChild : public PNeckoChild {
   static void InitNeckoChild();
 
  protected:
-  virtual PHttpChannelChild* AllocPHttpChannelChild(
+  PHttpChannelChild* AllocPHttpChannelChild(
       const PBrowserOrId&, const SerializedLoadContext&,
-      const HttpChannelCreationArgs& aOpenArgs) override;
-  virtual bool DeallocPHttpChannelChild(PHttpChannelChild*) override;
+      const HttpChannelCreationArgs& aOpenArgs);
+  bool DeallocPHttpChannelChild(PHttpChannelChild*);
 
-  virtual PStunAddrsRequestChild* AllocPStunAddrsRequestChild() override;
-  virtual bool DeallocPStunAddrsRequestChild(
-      PStunAddrsRequestChild* aActor) override;
+  PStunAddrsRequestChild* AllocPStunAddrsRequestChild();
+  bool DeallocPStunAddrsRequestChild(PStunAddrsRequestChild* aActor);
 
-  virtual PWebrtcProxyChannelChild* AllocPWebrtcProxyChannelChild(
-      const PBrowserOrId& browser) override;
-  virtual bool DeallocPWebrtcProxyChannelChild(
-      PWebrtcProxyChannelChild* aActor) override;
+  PWebrtcProxyChannelChild* AllocPWebrtcProxyChannelChild(
+      const PBrowserOrId& browser);
+  bool DeallocPWebrtcProxyChannelChild(PWebrtcProxyChannelChild* aActor);
 
-  virtual PAltDataOutputStreamChild* AllocPAltDataOutputStreamChild(
+  PAltDataOutputStreamChild* AllocPAltDataOutputStreamChild(
       const nsCString& type, const int64_t& predictedSize,
-      PHttpChannelChild* channel) override;
-  virtual bool DeallocPAltDataOutputStreamChild(
-      PAltDataOutputStreamChild* aActor) override;
+      PHttpChannelChild* channel);
+  bool DeallocPAltDataOutputStreamChild(PAltDataOutputStreamChild* aActor);
 
-  virtual PCookieServiceChild* AllocPCookieServiceChild() override;
-  virtual bool DeallocPCookieServiceChild(PCookieServiceChild*) override;
-  virtual PWyciwygChannelChild* AllocPWyciwygChannelChild() override;
-  virtual bool DeallocPWyciwygChannelChild(PWyciwygChannelChild*) override;
-  virtual PFTPChannelChild* AllocPFTPChannelChild(
+  PCookieServiceChild* AllocPCookieServiceChild();
+  bool DeallocPCookieServiceChild(PCookieServiceChild*);
+  PWyciwygChannelChild* AllocPWyciwygChannelChild();
+  bool DeallocPWyciwygChannelChild(PWyciwygChannelChild*);
+  PFTPChannelChild* AllocPFTPChannelChild(
       const PBrowserOrId& aBrowser, const SerializedLoadContext& aSerialized,
-      const FTPChannelCreationArgs& aOpenArgs) override;
-  virtual bool DeallocPFTPChannelChild(PFTPChannelChild*) override;
-  virtual PWebSocketChild* AllocPWebSocketChild(const PBrowserOrId&,
-                                                const SerializedLoadContext&,
-                                                const uint32_t&) override;
-  virtual bool DeallocPWebSocketChild(PWebSocketChild*) override;
-  virtual PTCPSocketChild* AllocPTCPSocketChild(const nsString& host,
-                                                const uint16_t& port) override;
-  virtual bool DeallocPTCPSocketChild(PTCPSocketChild*) override;
-  virtual PTCPServerSocketChild* AllocPTCPServerSocketChild(
+      const FTPChannelCreationArgs& aOpenArgs);
+  bool DeallocPFTPChannelChild(PFTPChannelChild*);
+  PWebSocketChild* AllocPWebSocketChild(const PBrowserOrId&,
+                                        const SerializedLoadContext&,
+                                        const uint32_t&);
+  bool DeallocPWebSocketChild(PWebSocketChild*);
+  PTCPSocketChild* AllocPTCPSocketChild(const nsString& host,
+                                        const uint16_t& port);
+  bool DeallocPTCPSocketChild(PTCPSocketChild*);
+  PTCPServerSocketChild* AllocPTCPServerSocketChild(
       const uint16_t& aLocalPort, const uint16_t& aBacklog,
-      const bool& aUseArrayBuffers) override;
-  virtual bool DeallocPTCPServerSocketChild(PTCPServerSocketChild*) override;
-  virtual PUDPSocketChild* AllocPUDPSocketChild(
-      const Principal& aPrincipal, const nsCString& aFilter) override;
-  virtual bool DeallocPUDPSocketChild(PUDPSocketChild*) override;
-  virtual PDNSRequestChild* AllocPDNSRequestChild(
+      const bool& aUseArrayBuffers);
+  bool DeallocPTCPServerSocketChild(PTCPServerSocketChild*);
+  PUDPSocketChild* AllocPUDPSocketChild(const Principal& aPrincipal,
+                                        const nsCString& aFilter);
+  bool DeallocPUDPSocketChild(PUDPSocketChild*);
+  PDNSRequestChild* AllocPDNSRequestChild(
       const nsCString& aHost, const OriginAttributes& aOriginAttributes,
-      const uint32_t& aFlags) override;
-  virtual bool DeallocPDNSRequestChild(PDNSRequestChild*) override;
-  virtual PDataChannelChild* AllocPDataChannelChild(
-      const uint32_t& channelId) override;
-  virtual bool DeallocPDataChannelChild(PDataChannelChild* child) override;
-  virtual PFileChannelChild* AllocPFileChannelChild(
-      const uint32_t& channelId) override;
-  virtual bool DeallocPFileChannelChild(PFileChannelChild* child) override;
-  virtual PSimpleChannelChild* AllocPSimpleChannelChild(
-      const uint32_t& channelId) override;
-  virtual bool DeallocPSimpleChannelChild(PSimpleChannelChild* child) override;
-  virtual PChannelDiverterChild* AllocPChannelDiverterChild(
-      const ChannelDiverterArgs& channel) override;
-  virtual bool DeallocPChannelDiverterChild(
-      PChannelDiverterChild* actor) override;
-  virtual PTransportProviderChild* AllocPTransportProviderChild() override;
-  virtual bool DeallocPTransportProviderChild(
-      PTransportProviderChild* aActor) override;
-  virtual mozilla::ipc::IPCResult RecvAsyncAuthPromptForNestedFrame(
+      const uint32_t& aFlags);
+  bool DeallocPDNSRequestChild(PDNSRequestChild*);
+  PDataChannelChild* AllocPDataChannelChild(const uint32_t& channelId);
+  bool DeallocPDataChannelChild(PDataChannelChild* child);
+  PFileChannelChild* AllocPFileChannelChild(const uint32_t& channelId);
+  bool DeallocPFileChannelChild(PFileChannelChild* child);
+  PSimpleChannelChild* AllocPSimpleChannelChild(const uint32_t& channelId);
+  bool DeallocPSimpleChannelChild(PSimpleChannelChild* child);
+  PChannelDiverterChild* AllocPChannelDiverterChild(
+      const ChannelDiverterArgs& channel);
+  bool DeallocPChannelDiverterChild(PChannelDiverterChild* actor);
+  PTransportProviderChild* AllocPTransportProviderChild();
+  bool DeallocPTransportProviderChild(PTransportProviderChild* aActor);
+  mozilla::ipc::IPCResult RecvAsyncAuthPromptForNestedFrame(
       const TabId& aNestedFrameId, const nsCString& aUri,
-      const nsString& aRealm, const uint64_t& aCallbackId) override;
-  virtual PWebSocketEventListenerChild* AllocPWebSocketEventListenerChild(
-      const uint64_t& aInnerWindowID) override;
-  virtual bool DeallocPWebSocketEventListenerChild(
-      PWebSocketEventListenerChild*) override;
+      const nsString& aRealm, const uint64_t& aCallbackId);
+  PWebSocketEventListenerChild* AllocPWebSocketEventListenerChild(
+      const uint64_t& aInnerWindowID);
+  bool DeallocPWebSocketEventListenerChild(PWebSocketEventListenerChild*);
 
   /* Predictor Messsages */
-  virtual mozilla::ipc::IPCResult RecvPredOnPredictPrefetch(
-      const URIParams& aURI, const uint32_t& aHttpStatus) override;
-  virtual mozilla::ipc::IPCResult RecvPredOnPredictPreconnect(
-      const URIParams& aURI) override;
-  virtual mozilla::ipc::IPCResult RecvPredOnPredictDNS(
-      const URIParams& aURI) override;
+  mozilla::ipc::IPCResult RecvPredOnPredictPrefetch(
+      const URIParams& aURI, const uint32_t& aHttpStatus);
+  mozilla::ipc::IPCResult RecvPredOnPredictPreconnect(const URIParams& aURI);
+  mozilla::ipc::IPCResult RecvPredOnPredictDNS(const URIParams& aURI);
 
-  virtual mozilla::ipc::IPCResult RecvSpeculativeConnectRequest() override;
-  virtual mozilla::ipc::IPCResult RecvNetworkChangeNotification(
-      nsCString const& type) override;
+  mozilla::ipc::IPCResult RecvSpeculativeConnectRequest();
+  mozilla::ipc::IPCResult RecvNetworkChangeNotification(nsCString const& type);
 
-  virtual PTrackingDummyChannelChild* AllocPTrackingDummyChannelChild(
+  PTrackingDummyChannelChild* AllocPTrackingDummyChannelChild(
       nsIURI* aURI, nsIURI* aTopWindowURI, const nsresult& aTopWindowURIResult,
-      const OptionalLoadInfoArgs& aLoadInfo) override;
+      const OptionalLoadInfoArgs& aLoadInfo);
 
-  virtual bool DeallocPTrackingDummyChannelChild(
-      PTrackingDummyChannelChild* aChannel) override;
+  bool DeallocPTrackingDummyChannelChild(PTrackingDummyChannelChild* aChannel);
 };
 
 /**

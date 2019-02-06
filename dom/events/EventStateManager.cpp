@@ -3606,6 +3606,105 @@ void EventStateManager::ClearFrameRefs(nsIFrame* aFrame) {
   }
 }
 
+static Maybe<gfx::IntPoint> ComputeHotspot(const nsIFrame::Cursor& aCursor) {
+  if (!aCursor.mContainer) {
+    return {};
+  }
+
+  // css3-ui says to use the CSS-specified hotspot if present,
+  // otherwise use the intrinsic hotspot, otherwise use the top left
+  // corner.
+  uint32_t hotspotX, hotspotY;
+  if (aCursor.mHaveHotspot) {
+    int32_t imgWidth, imgHeight;
+    aCursor.mContainer->GetWidth(&imgWidth);
+    aCursor.mContainer->GetHeight(&imgHeight);
+
+    // XXX std::max(NS_lround(x), 0)?
+    hotspotX = aCursor.mHotspotX > 0.0f ? uint32_t(aCursor.mHotspotX + 0.5f)
+                                        : uint32_t(0);
+    if (hotspotX >= uint32_t(imgWidth)) hotspotX = imgWidth - 1;
+    hotspotY = aCursor.mHotspotY > 0.0f ? uint32_t(aCursor.mHotspotY + 0.5f)
+                                        : uint32_t(0);
+    if (hotspotY >= uint32_t(imgHeight)) hotspotY = imgHeight - 1;
+  } else {
+    hotspotX = 0;
+    hotspotY = 0;
+    nsCOMPtr<nsIProperties> props(do_QueryInterface(aCursor.mContainer));
+    if (props) {
+      nsCOMPtr<nsISupportsPRUint32> hotspotXWrap, hotspotYWrap;
+
+      props->Get("hotspotX", NS_GET_IID(nsISupportsPRUint32),
+                 getter_AddRefs(hotspotXWrap));
+      props->Get("hotspotY", NS_GET_IID(nsISupportsPRUint32),
+                 getter_AddRefs(hotspotYWrap));
+
+      if (hotspotXWrap) hotspotXWrap->GetData(&hotspotX);
+      if (hotspotYWrap) hotspotYWrap->GetData(&hotspotY);
+    }
+  }
+
+  return Some(gfx::IntPoint{hotspotX, hotspotY});
+}
+
+// Given the event that we're processing, and the computed cursor and hotspot,
+// determine whether the custom CSS cursor should be blocked (that is, not
+// honored).
+//
+// We will not honor it all of the following are true:
+//
+//  * layout.cursor.block.enabled is true.
+//  * the size of the custom cursor is bigger than layout.cursor.block.max-size.
+//  * the bounds of the cursor would end up outside of the viewport of the
+//    top-level content document.
+//
+// This is done in order to prevent hijacking the cursor, see bug 1445844 and
+// co.
+static bool ShouldBlockCustomCursor(nsPresContext* aPresContext,
+                                    WidgetEvent* aEvent,
+                                    const nsIFrame::Cursor& aCursor,
+                                    const Maybe<gfx::IntPoint>& aHotspot) {
+  if (!StaticPrefs::layout_cursor_block_enabled()) {
+    return false;
+  }
+  if (!aCursor.mContainer) {
+    return false;
+  }
+  MOZ_ASSERT(aHotspot);
+
+  int32_t width = 0;
+  int32_t height = 0;
+  aCursor.mContainer->GetWidth(&width);
+  aCursor.mContainer->GetHeight(&height);
+
+  int32_t maxSize = StaticPrefs::layout_cursor_block_max_size();
+
+  if (width <= maxSize && height <= maxSize) {
+    return false;
+  }
+
+  // We don't want to deal with iframes, just let them do their thing unless
+  // they intersect UI.
+  //
+  // TODO(emilio, bug 1525561): In a fission world, we should have a better way
+  // to find the event coordinates relative to the content area.
+  nsPresContext* topLevel =
+    aPresContext->GetToplevelContentDocumentPresContext();
+  if (!topLevel) {
+    return false;
+  }
+
+  nsPoint point = nsLayoutUtils::GetEventCoordinatesRelativeTo(
+      aEvent, topLevel->PresShell()->GetRootFrame());
+
+  nsSize size(CSSPixel::ToAppUnits(width), CSSPixel::ToAppUnits(height));
+  nsPoint hotspot(CSSPixel::ToAppUnits(aHotspot->x),
+                  CSSPixel::ToAppUnits(aHotspot->y));
+
+  nsRect cursorRect(point - hotspot, size);
+  return !topLevel->GetVisibleArea().Contains(cursorRect);
+}
+
 void EventStateManager::UpdateCursor(nsPresContext* aPresContext,
                                      WidgetEvent* aEvent,
                                      nsIFrame* aTargetFrame,
@@ -3616,8 +3715,7 @@ void EventStateManager::UpdateCursor(nsPresContext* aPresContext,
 
   auto cursor = StyleCursorKind::Default;
   imgIContainer* container = nullptr;
-  bool haveHotspot = false;
-  float hotspotX = 0.0f, hotspotY = 0.0f;
+  Maybe<gfx::IntPoint> hotspot;
 
   // If cursor is locked just use the locked one
   if (mLockCursor != kInvalidCursorKind) {
@@ -3628,7 +3726,7 @@ void EventStateManager::UpdateCursor(nsPresContext* aPresContext,
     nsIFrame::Cursor framecursor;
     nsPoint pt =
         nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, aTargetFrame);
-    // Avoid setting cursor when the mouse is over a windowless pluign.
+    // Avoid setting cursor when the mouse is over a windowless plugin.
     if (NS_FAILED(aTargetFrame->GetCursor(pt, framecursor))) {
       if (XRE_IsContentProcess()) {
         mLastFrameConsumedSetCursor = true;
@@ -3651,9 +3749,11 @@ void EventStateManager::UpdateCursor(nsPresContext* aPresContext,
     }
     cursor = framecursor.mCursor;
     container = framecursor.mContainer;
-    haveHotspot = framecursor.mHaveHotspot;
-    hotspotX = framecursor.mHotspotX;
-    hotspotY = framecursor.mHotspotY;
+    hotspot = ComputeHotspot(framecursor);
+
+    if (ShouldBlockCustomCursor(aPresContext, aEvent, framecursor, hotspot)) {
+      container = nullptr;
+    }
   }
 
   if (nsContentUtils::UseActivityCursor()) {
@@ -3673,8 +3773,8 @@ void EventStateManager::UpdateCursor(nsPresContext* aPresContext,
   }
 
   if (aTargetFrame) {
-    SetCursor(cursor, container, haveHotspot, hotspotX, hotspotY,
-              aTargetFrame->GetNearestWidget(), false);
+    SetCursor(cursor, container, hotspot, aTargetFrame->GetNearestWidget(),
+              false);
     gLastCursorSourceFrame = aTargetFrame;
     gLastCursorUpdateTime = TimeStamp::NowLoRes();
   }
@@ -3697,9 +3797,8 @@ void EventStateManager::ClearCachedWidgetCursor(nsIFrame* aTargetFrame) {
 
 nsresult EventStateManager::SetCursor(StyleCursorKind aCursor,
                                       imgIContainer* aContainer,
-                                      bool aHaveHotspot, float aHotspotX,
-                                      float aHotspotY, nsIWidget* aWidget,
-                                      bool aLockCursor) {
+                                      const Maybe<gfx::IntPoint>& aHotspot,
+                                      nsIWidget* aWidget, bool aLockCursor) {
   EnsureDocument(mPresContext);
   NS_ENSURE_TRUE(mDocument, NS_ERROR_FAILURE);
   sMouseOverDocument = mDocument.get();
@@ -3825,42 +3924,9 @@ nsresult EventStateManager::SetCursor(StyleCursorKind aCursor,
       break;
   }
 
-  // First, try the imgIContainer, if non-null
-  uint32_t hotspotX = 0;
-  uint32_t hotspotY = 0;
-  if (aContainer) {
-    // css3-ui says to use the CSS-specified hotspot if present,
-    // otherwise use the intrinsic hotspot, otherwise use the top left
-    // corner.
-    if (aHaveHotspot) {
-      int32_t imgWidth, imgHeight;
-      aContainer->GetWidth(&imgWidth);
-      aContainer->GetHeight(&imgHeight);
-
-      // XXX std::max(NS_lround(x), 0)?
-      hotspotX = aHotspotX > 0.0f ? uint32_t(aHotspotX + 0.5f) : uint32_t(0);
-      if (hotspotX >= uint32_t(imgWidth)) hotspotX = imgWidth - 1;
-      hotspotY = aHotspotY > 0.0f ? uint32_t(aHotspotY + 0.5f) : uint32_t(0);
-      if (hotspotY >= uint32_t(imgHeight)) hotspotY = imgHeight - 1;
-    } else {
-      hotspotX = 0;
-      hotspotY = 0;
-      nsCOMPtr<nsIProperties> props(do_QueryInterface(aContainer));
-      if (props) {
-        nsCOMPtr<nsISupportsPRUint32> hotspotXWrap, hotspotYWrap;
-
-        props->Get("hotspotX", NS_GET_IID(nsISupportsPRUint32),
-                   getter_AddRefs(hotspotXWrap));
-        props->Get("hotspotY", NS_GET_IID(nsISupportsPRUint32),
-                   getter_AddRefs(hotspotYWrap));
-
-        if (hotspotXWrap) hotspotXWrap->GetData(&hotspotX);
-        if (hotspotYWrap) hotspotYWrap->GetData(&hotspotY);
-      }
-    }
-  }
-
-  aWidget->SetCursor(c, aContainer, hotspotX, hotspotY);
+  int32_t x = aHotspot ? aHotspot->x : 0;
+  int32_t y = aHotspot ? aHotspot->y : 0;
+  aWidget->SetCursor(c, aContainer, x, y);
   return NS_OK;
 }
 

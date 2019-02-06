@@ -85,6 +85,8 @@ class ContentChild final : public PContentChild,
   typedef mozilla::ipc::PFileDescriptorSetChild PFileDescriptorSetChild;
   typedef mozilla::ipc::URIParams URIParams;
 
+  friend class PContentChild;
+
  public:
   NS_DECL_NSIWINDOWPROVIDER
 
@@ -155,43 +157,42 @@ class ContentChild final : public PContentChild,
   static void UpdateCookieStatus(nsIChannel* aChannel);
 
   mozilla::ipc::IPCResult RecvInitContentBridgeChild(
-      Endpoint<PContentBridgeChild>&& aEndpoint) override;
+      Endpoint<PContentBridgeChild>&& aEndpoint);
 
   mozilla::ipc::IPCResult RecvInitGMPService(
-      Endpoint<PGMPServiceChild>&& aGMPService) override;
+      Endpoint<PGMPServiceChild>&& aGMPService);
 
   mozilla::ipc::IPCResult RecvInitProfiler(
-      Endpoint<PProfilerChild>&& aEndpoint) override;
+      Endpoint<PProfilerChild>&& aEndpoint);
 
   mozilla::ipc::IPCResult RecvGMPsChanged(
-      nsTArray<GMPCapabilityData>&& capabilities) override;
+      nsTArray<GMPCapabilityData>&& capabilities);
 
   mozilla::ipc::IPCResult RecvInitProcessHangMonitor(
-      Endpoint<PProcessHangMonitorChild>&& aHangMonitor) override;
+      Endpoint<PProcessHangMonitorChild>&& aHangMonitor);
 
   mozilla::ipc::IPCResult RecvInitRendering(
       Endpoint<PCompositorManagerChild>&& aCompositor,
       Endpoint<PImageBridgeChild>&& aImageBridge,
       Endpoint<PVRManagerChild>&& aVRBridge,
       Endpoint<PVideoDecoderManagerChild>&& aVideoManager,
-      nsTArray<uint32_t>&& namespaces) override;
+      nsTArray<uint32_t>&& namespaces);
 
-  mozilla::ipc::IPCResult RecvRequestPerformanceMetrics(
-      const nsID& aID) override;
+  mozilla::ipc::IPCResult RecvRequestPerformanceMetrics(const nsID& aID);
 
   mozilla::ipc::IPCResult RecvReinitRendering(
       Endpoint<PCompositorManagerChild>&& aCompositor,
       Endpoint<PImageBridgeChild>&& aImageBridge,
       Endpoint<PVRManagerChild>&& aVRBridge,
       Endpoint<PVideoDecoderManagerChild>&& aVideoManager,
-      nsTArray<uint32_t>&& namespaces) override;
+      nsTArray<uint32_t>&& namespaces);
 
-  virtual mozilla::ipc::IPCResult RecvAudioDefaultDeviceChange() override;
+  virtual mozilla::ipc::IPCResult RecvAudioDefaultDeviceChange();
 
-  mozilla::ipc::IPCResult RecvReinitRenderingForDeviceReset() override;
+  mozilla::ipc::IPCResult RecvReinitRenderingForDeviceReset();
 
   virtual mozilla::ipc::IPCResult RecvSetProcessSandbox(
-      const MaybeFileDesc& aBroker) override;
+      const MaybeFileDesc& aBroker);
 
   virtual PBrowserChild* AllocPBrowserChild(const TabId& aTabId,
                                             const TabId& aSameTabGroupAs,
@@ -208,47 +209,45 @@ class ContentChild final : public PContentChild,
   virtual bool DeallocPIPCBlobInputStreamChild(
       PIPCBlobInputStreamChild* aActor) override;
 
-  virtual PHalChild* AllocPHalChild() override;
-  virtual bool DeallocPHalChild(PHalChild*) override;
+  PHalChild* AllocPHalChild();
+  bool DeallocPHalChild(PHalChild*);
 
-  virtual PHeapSnapshotTempFileHelperChild*
-  AllocPHeapSnapshotTempFileHelperChild() override;
+  PHeapSnapshotTempFileHelperChild* AllocPHeapSnapshotTempFileHelperChild();
 
-  virtual bool DeallocPHeapSnapshotTempFileHelperChild(
-      PHeapSnapshotTempFileHelperChild*) override;
+  bool DeallocPHeapSnapshotTempFileHelperChild(
+      PHeapSnapshotTempFileHelperChild*);
 
-  virtual PCycleCollectWithLogsChild* AllocPCycleCollectWithLogsChild(
+  PCycleCollectWithLogsChild* AllocPCycleCollectWithLogsChild(
       const bool& aDumpAllTraces, const FileDescriptor& aGCLog,
-      const FileDescriptor& aCCLog) override;
+      const FileDescriptor& aCCLog);
 
-  virtual bool DeallocPCycleCollectWithLogsChild(
-      PCycleCollectWithLogsChild* aActor) override;
+  bool DeallocPCycleCollectWithLogsChild(PCycleCollectWithLogsChild* aActor);
 
   virtual mozilla::ipc::IPCResult RecvPCycleCollectWithLogsConstructor(
       PCycleCollectWithLogsChild* aChild, const bool& aDumpAllTraces,
       const FileDescriptor& aGCLog, const FileDescriptor& aCCLog) override;
 
-  virtual PWebBrowserPersistDocumentChild* AllocPWebBrowserPersistDocumentChild(
-      PBrowserChild* aBrowser, const uint64_t& aOuterWindowID) override;
+  PWebBrowserPersistDocumentChild* AllocPWebBrowserPersistDocumentChild(
+      PBrowserChild* aBrowser, const uint64_t& aOuterWindowID);
 
   virtual mozilla::ipc::IPCResult RecvPWebBrowserPersistDocumentConstructor(
       PWebBrowserPersistDocumentChild* aActor, PBrowserChild* aBrowser,
       const uint64_t& aOuterWindowID) override;
 
-  virtual bool DeallocPWebBrowserPersistDocumentChild(
-      PWebBrowserPersistDocumentChild* aActor) override;
+  bool DeallocPWebBrowserPersistDocumentChild(
+      PWebBrowserPersistDocumentChild* aActor);
 
-  virtual PTestShellChild* AllocPTestShellChild() override;
+  PTestShellChild* AllocPTestShellChild();
 
-  virtual bool DeallocPTestShellChild(PTestShellChild*) override;
+  bool DeallocPTestShellChild(PTestShellChild*);
 
   virtual mozilla::ipc::IPCResult RecvPTestShellConstructor(
       PTestShellChild*) override;
 
-  virtual PScriptCacheChild* AllocPScriptCacheChild(
-      const FileDescOrError& cacheFile, const bool& wantCacheData) override;
+  PScriptCacheChild* AllocPScriptCacheChild(const FileDescOrError& cacheFile,
+                                            const bool& wantCacheData);
 
-  virtual bool DeallocPScriptCacheChild(PScriptCacheChild*) override;
+  bool DeallocPScriptCacheChild(PScriptCacheChild*);
 
   virtual mozilla::ipc::IPCResult RecvPScriptCacheConstructor(
       PScriptCacheChild*, const FileDescOrError& cacheFile,
@@ -256,13 +255,13 @@ class ContentChild final : public PContentChild,
 
   jsipc::CPOWManager* GetCPOWManager() override;
 
-  virtual PNeckoChild* AllocPNeckoChild() override;
+  PNeckoChild* AllocPNeckoChild();
 
-  virtual bool DeallocPNeckoChild(PNeckoChild*) override;
+  bool DeallocPNeckoChild(PNeckoChild*);
 
-  virtual PPrintingChild* AllocPPrintingChild() override;
+  PPrintingChild* AllocPPrintingChild();
 
-  virtual bool DeallocPPrintingChild(PPrintingChild*) override;
+  bool DeallocPPrintingChild(PPrintingChild*);
 
   virtual PChildToParentStreamChild* SendPChildToParentStreamConstructor(
       PChildToParentStreamChild*) override;
@@ -275,107 +274,96 @@ class ContentChild final : public PContentChild,
   virtual bool DeallocPParentToChildStreamChild(
       PParentToChildStreamChild*) override;
 
-  virtual PPSMContentDownloaderChild* AllocPPSMContentDownloaderChild(
-      const uint32_t& aCertType) override;
+  PPSMContentDownloaderChild* AllocPPSMContentDownloaderChild(
+      const uint32_t& aCertType);
 
-  virtual bool DeallocPPSMContentDownloaderChild(
-      PPSMContentDownloaderChild* aDownloader) override;
+  bool DeallocPPSMContentDownloaderChild(
+      PPSMContentDownloaderChild* aDownloader);
 
-  virtual PExternalHelperAppChild* AllocPExternalHelperAppChild(
+  PExternalHelperAppChild* AllocPExternalHelperAppChild(
       const OptionalURIParams& uri, const nsCString& aMimeContentType,
       const nsCString& aContentDisposition,
       const uint32_t& aContentDispositionHint,
       const nsString& aContentDispositionFilename, const bool& aForceSave,
       const int64_t& aContentLength, const bool& aWasFileChannel,
-      const OptionalURIParams& aReferrer, PBrowserChild* aBrowser) override;
+      const OptionalURIParams& aReferrer, PBrowserChild* aBrowser);
 
-  virtual bool DeallocPExternalHelperAppChild(
-      PExternalHelperAppChild* aService) override;
+  bool DeallocPExternalHelperAppChild(PExternalHelperAppChild* aService);
 
-  virtual PHandlerServiceChild* AllocPHandlerServiceChild() override;
+  PHandlerServiceChild* AllocPHandlerServiceChild();
 
-  virtual bool DeallocPHandlerServiceChild(PHandlerServiceChild*) override;
+  bool DeallocPHandlerServiceChild(PHandlerServiceChild*);
 
-  virtual PMediaChild* AllocPMediaChild() override;
+  PMediaChild* AllocPMediaChild();
 
-  virtual bool DeallocPMediaChild(PMediaChild* aActor) override;
+  bool DeallocPMediaChild(PMediaChild* aActor);
 
-  virtual PPresentationChild* AllocPPresentationChild() override;
+  PPresentationChild* AllocPPresentationChild();
 
-  virtual bool DeallocPPresentationChild(PPresentationChild* aActor) override;
+  bool DeallocPPresentationChild(PPresentationChild* aActor);
 
-  virtual mozilla::ipc::IPCResult RecvNotifyPresentationReceiverLaunched(
-      PBrowserChild* aIframe, const nsString& aSessionId) override;
+  mozilla::ipc::IPCResult RecvNotifyPresentationReceiverLaunched(
+      PBrowserChild* aIframe, const nsString& aSessionId);
 
-  virtual mozilla::ipc::IPCResult RecvNotifyPresentationReceiverCleanUp(
-      const nsString& aSessionId) override;
+  mozilla::ipc::IPCResult RecvNotifyPresentationReceiverCleanUp(
+      const nsString& aSessionId);
 
-  virtual mozilla::ipc::IPCResult RecvNotifyEmptyHTTPCache() override;
+  mozilla::ipc::IPCResult RecvNotifyEmptyHTTPCache();
 
-  virtual PSpeechSynthesisChild* AllocPSpeechSynthesisChild() override;
+  PSpeechSynthesisChild* AllocPSpeechSynthesisChild();
 
-  virtual bool DeallocPSpeechSynthesisChild(
-      PSpeechSynthesisChild* aActor) override;
+  bool DeallocPSpeechSynthesisChild(PSpeechSynthesisChild* aActor);
 
-  virtual mozilla::ipc::IPCResult RecvRegisterChrome(
+  mozilla::ipc::IPCResult RecvRegisterChrome(
       InfallibleTArray<ChromePackage>&& packages,
       InfallibleTArray<SubstitutionMapping>&& resources,
       InfallibleTArray<OverrideMapping>&& overrides, const nsCString& locale,
-      const bool& reset) override;
-  virtual mozilla::ipc::IPCResult RecvRegisterChromeItem(
-      const ChromeRegistryItem& item) override;
+      const bool& reset);
+  mozilla::ipc::IPCResult RecvRegisterChromeItem(
+      const ChromeRegistryItem& item);
 
-  virtual mozilla::ipc::IPCResult RecvClearImageCache(
-      const bool& privateLoader, const bool& chrome) override;
+  mozilla::ipc::IPCResult RecvClearImageCache(const bool& privateLoader,
+                                              const bool& chrome);
 
   virtual mozilla::jsipc::PJavaScriptChild* AllocPJavaScriptChild() override;
 
   virtual bool DeallocPJavaScriptChild(
       mozilla::jsipc::PJavaScriptChild*) override;
 
-  virtual PRemoteSpellcheckEngineChild* AllocPRemoteSpellcheckEngineChild()
-      override;
+  PRemoteSpellcheckEngineChild* AllocPRemoteSpellcheckEngineChild();
 
-  virtual bool DeallocPRemoteSpellcheckEngineChild(
-      PRemoteSpellcheckEngineChild*) override;
+  bool DeallocPRemoteSpellcheckEngineChild(PRemoteSpellcheckEngineChild*);
 
-  virtual mozilla::ipc::IPCResult RecvSetOffline(const bool& offline) override;
+  mozilla::ipc::IPCResult RecvSetOffline(const bool& offline);
 
-  virtual mozilla::ipc::IPCResult RecvSetConnectivity(
-      const bool& connectivity) override;
-  virtual mozilla::ipc::IPCResult RecvSetCaptivePortalState(
-      const int32_t& state) override;
+  mozilla::ipc::IPCResult RecvSetConnectivity(const bool& connectivity);
+  mozilla::ipc::IPCResult RecvSetCaptivePortalState(const int32_t& state);
 
-  virtual mozilla::ipc::IPCResult RecvBidiKeyboardNotify(
-      const bool& isLangRTL, const bool& haveBidiKeyboards) override;
+  mozilla::ipc::IPCResult RecvBidiKeyboardNotify(const bool& isLangRTL,
+                                                 const bool& haveBidiKeyboards);
 
-  virtual mozilla::ipc::IPCResult RecvNotifyVisited(
-      nsTArray<URIParams>&& aURIs) override;
+  mozilla::ipc::IPCResult RecvNotifyVisited(nsTArray<URIParams>&& aURIs);
 
   // auto remove when alertfinished is received.
   nsresult AddRemoteAlertObserver(const nsString& aData,
                                   nsIObserver* aObserver);
 
-  virtual mozilla::ipc::IPCResult RecvPreferenceUpdate(
-      const Pref& aPref) override;
-  virtual mozilla::ipc::IPCResult RecvVarUpdate(
-      const GfxVarUpdate& pref) override;
+  mozilla::ipc::IPCResult RecvPreferenceUpdate(const Pref& aPref);
+  mozilla::ipc::IPCResult RecvVarUpdate(const GfxVarUpdate& pref);
 
-  virtual mozilla::ipc::IPCResult RecvDataStoragePut(
-      const nsString& aFilename, const DataStorageItem& aItem) override;
+  mozilla::ipc::IPCResult RecvDataStoragePut(const nsString& aFilename,
+                                             const DataStorageItem& aItem);
 
-  virtual mozilla::ipc::IPCResult RecvDataStorageRemove(
-      const nsString& aFilename, const nsCString& aKey,
-      const DataStorageType& aType) override;
+  mozilla::ipc::IPCResult RecvDataStorageRemove(const nsString& aFilename,
+                                                const nsCString& aKey,
+                                                const DataStorageType& aType);
 
-  virtual mozilla::ipc::IPCResult RecvDataStorageClear(
-      const nsString& aFilename) override;
+  mozilla::ipc::IPCResult RecvDataStorageClear(const nsString& aFilename);
 
-  virtual mozilla::ipc::IPCResult RecvNotifyAlertsObserver(
-      const nsCString& aType, const nsString& aData) override;
+  mozilla::ipc::IPCResult RecvNotifyAlertsObserver(const nsCString& aType,
+                                                   const nsString& aData);
 
-  virtual mozilla::ipc::IPCResult RecvLoadProcessScript(
-      const nsString& aURL) override;
+  virtual mozilla::ipc::IPCResult RecvLoadProcessScript(const nsString& aURL);
 
   virtual mozilla::ipc::IPCResult RecvAsyncMessage(
       const nsString& aMsg, InfallibleTArray<CpowEntry>&& aCpows,
@@ -383,129 +371,125 @@ class ContentChild final : public PContentChild,
       const ClonedMessageData& aData) override;
 
   mozilla::ipc::IPCResult RecvRegisterStringBundles(
-      nsTArray<StringBundleDescriptor>&& stringBundles) override;
+      nsTArray<StringBundleDescriptor>&& stringBundles);
 
   mozilla::ipc::IPCResult RecvUpdateSharedData(
       const FileDescriptor& aMapFile, const uint32_t& aMapSize,
-      nsTArray<IPCBlob>&& aBlobs, nsTArray<nsCString>&& aChangedKeys) override;
+      nsTArray<IPCBlob>&& aBlobs, nsTArray<nsCString>&& aChangedKeys);
 
-  virtual mozilla::ipc::IPCResult RecvGeolocationUpdate(
-      nsIDOMGeoPosition* aPosition) override;
+  mozilla::ipc::IPCResult RecvGeolocationUpdate(nsIDOMGeoPosition* aPosition);
 
-  virtual mozilla::ipc::IPCResult RecvGeolocationError(
-      const uint16_t& errorCode) override;
+  mozilla::ipc::IPCResult RecvGeolocationError(const uint16_t& errorCode);
 
-  virtual mozilla::ipc::IPCResult RecvUpdateDictionaryList(
-      InfallibleTArray<nsString>&& aDictionaries) override;
+  mozilla::ipc::IPCResult RecvUpdateDictionaryList(
+      InfallibleTArray<nsString>&& aDictionaries);
 
-  virtual mozilla::ipc::IPCResult RecvUpdateFontList(
-      InfallibleTArray<SystemFontListEntry>&& aFontList) override;
+  mozilla::ipc::IPCResult RecvUpdateFontList(
+      InfallibleTArray<SystemFontListEntry>&& aFontList);
 
-  virtual mozilla::ipc::IPCResult RecvUpdateAppLocales(
-      nsTArray<nsCString>&& aAppLocales) override;
-  virtual mozilla::ipc::IPCResult RecvUpdateRequestedLocales(
-      nsTArray<nsCString>&& aRequestedLocales) override;
+  mozilla::ipc::IPCResult RecvUpdateAppLocales(
+      nsTArray<nsCString>&& aAppLocales);
+  mozilla::ipc::IPCResult RecvUpdateRequestedLocales(
+      nsTArray<nsCString>&& aRequestedLocales);
 
-  virtual mozilla::ipc::IPCResult RecvClearSiteDataReloadNeeded(
-      const nsString& aOrigin) override;
+  mozilla::ipc::IPCResult RecvClearSiteDataReloadNeeded(
+      const nsString& aOrigin);
 
-  virtual mozilla::ipc::IPCResult RecvAddPermission(
-      const IPC::Permission& permission) override;
+  mozilla::ipc::IPCResult RecvAddPermission(const IPC::Permission& permission);
 
-  virtual mozilla::ipc::IPCResult RecvRemoveAllPermissions() override;
+  mozilla::ipc::IPCResult RecvRemoveAllPermissions();
 
-  virtual mozilla::ipc::IPCResult RecvFlushMemory(
-      const nsString& reason) override;
+  mozilla::ipc::IPCResult RecvFlushMemory(const nsString& reason);
 
-  virtual mozilla::ipc::IPCResult RecvActivateA11y(
-      const uint32_t& aMainChromeTid, const uint32_t& aMsaaID) override;
-  virtual mozilla::ipc::IPCResult RecvShutdownA11y() override;
+  mozilla::ipc::IPCResult RecvActivateA11y(const uint32_t& aMainChromeTid,
+                                           const uint32_t& aMsaaID);
+  mozilla::ipc::IPCResult RecvShutdownA11y();
 
-  virtual mozilla::ipc::IPCResult RecvGarbageCollect() override;
-  virtual mozilla::ipc::IPCResult RecvCycleCollect() override;
-  virtual mozilla::ipc::IPCResult RecvUnlinkGhosts() override;
+  mozilla::ipc::IPCResult RecvGarbageCollect();
+  mozilla::ipc::IPCResult RecvCycleCollect();
+  mozilla::ipc::IPCResult RecvUnlinkGhosts();
 
-  virtual mozilla::ipc::IPCResult RecvAppInfo(
+  mozilla::ipc::IPCResult RecvAppInfo(
       const nsCString& version, const nsCString& buildID, const nsCString& name,
       const nsCString& UAName, const nsCString& ID, const nsCString& vendor,
-      const nsCString& sourceURL) override;
+      const nsCString& sourceURL);
 
-  virtual mozilla::ipc::IPCResult RecvRemoteType(
-      const nsString& aRemoteType) override;
+  mozilla::ipc::IPCResult RecvRemoteType(const nsString& aRemoteType);
 
   const nsAString& GetRemoteType() const;
 
-  virtual mozilla::ipc::IPCResult RecvInitServiceWorkers(
-      const ServiceWorkerConfiguration& aConfig) override;
+  mozilla::ipc::IPCResult RecvInitServiceWorkers(
+      const ServiceWorkerConfiguration& aConfig);
 
-  virtual mozilla::ipc::IPCResult RecvInitBlobURLs(
-      nsTArray<BlobURLRegistrationData>&& aRegistations) override;
+  mozilla::ipc::IPCResult RecvInitBlobURLs(
+      nsTArray<BlobURLRegistrationData>&& aRegistations);
 
-  virtual mozilla::ipc::IPCResult RecvInitJSWindowActorInfos(
-      nsTArray<JSWindowActorInfo>&& aInfos) override;
+  mozilla::ipc::IPCResult RecvInitJSWindowActorInfos(
+      nsTArray<JSWindowActorInfo>&& aInfos);
 
-  virtual mozilla::ipc::IPCResult RecvLastPrivateDocShellDestroyed() override;
+  mozilla::ipc::IPCResult RecvLastPrivateDocShellDestroyed();
 
-  virtual mozilla::ipc::IPCResult RecvNotifyProcessPriorityChanged(
-      const hal::ProcessPriority& aPriority) override;
+  mozilla::ipc::IPCResult RecvNotifyProcessPriorityChanged(
+      const hal::ProcessPriority& aPriority);
 
-  virtual mozilla::ipc::IPCResult RecvMinimizeMemoryUsage() override;
+  mozilla::ipc::IPCResult RecvMinimizeMemoryUsage();
 
-  virtual mozilla::ipc::IPCResult RecvLoadAndRegisterSheet(
-      const URIParams& aURI, const uint32_t& aType) override;
+  mozilla::ipc::IPCResult RecvLoadAndRegisterSheet(const URIParams& aURI,
+                                                   const uint32_t& aType);
 
-  virtual mozilla::ipc::IPCResult RecvUnregisterSheet(
-      const URIParams& aURI, const uint32_t& aType) override;
+  mozilla::ipc::IPCResult RecvUnregisterSheet(const URIParams& aURI,
+                                              const uint32_t& aType);
 
   void AddIdleObserver(nsIObserver* aObserver, uint32_t aIdleTimeInS);
 
   void RemoveIdleObserver(nsIObserver* aObserver, uint32_t aIdleTimeInS);
 
-  virtual mozilla::ipc::IPCResult RecvNotifyIdleObserver(
-      const uint64_t& aObserver, const nsCString& aTopic,
-      const nsString& aData) override;
+  mozilla::ipc::IPCResult RecvNotifyIdleObserver(const uint64_t& aObserver,
+                                                 const nsCString& aTopic,
+                                                 const nsString& aData);
 
-  virtual mozilla::ipc::IPCResult RecvUpdateWindow(
-      const uintptr_t& aChildId) override;
+  mozilla::ipc::IPCResult RecvUpdateWindow(const uintptr_t& aChildId);
 
-  virtual mozilla::ipc::IPCResult RecvDomainSetChanged(
+  mozilla::ipc::IPCResult RecvDomainSetChanged(
       const uint32_t& aSetType, const uint32_t& aChangeType,
-      const OptionalURIParams& aDomain) override;
+      const OptionalURIParams& aDomain);
 
-  virtual mozilla::ipc::IPCResult RecvShutdown() override;
+  mozilla::ipc::IPCResult RecvShutdown();
 
-  virtual mozilla::ipc::IPCResult RecvInvokeDragSession(
-      nsTArray<IPCDataTransfer>&& aTransfers, const uint32_t& aAction) override;
+  mozilla::ipc::IPCResult RecvInvokeDragSession(
+      nsTArray<IPCDataTransfer>&& aTransfers, const uint32_t& aAction);
 
-  virtual mozilla::ipc::IPCResult RecvEndDragSession(
+  mozilla::ipc::IPCResult RecvEndDragSession(
       const bool& aDoneDrag, const bool& aUserCancelled,
       const mozilla::LayoutDeviceIntPoint& aEndDragPoint,
-      const uint32_t& aKeyModifiers) override;
+      const uint32_t& aKeyModifiers);
 
-  virtual mozilla::ipc::IPCResult RecvPush(const nsCString& aScope,
+  mozilla::ipc::IPCResult RecvPush(const nsCString& aScope,
+                                   const IPC::Principal& aPrincipal,
+                                   const nsString& aMessageId);
+
+  mozilla::ipc::IPCResult RecvPushWithData(const nsCString& aScope,
                                            const IPC::Principal& aPrincipal,
-                                           const nsString& aMessageId) override;
+                                           const nsString& aMessageId,
+                                           InfallibleTArray<uint8_t>&& aData);
 
-  virtual mozilla::ipc::IPCResult RecvPushWithData(
-      const nsCString& aScope, const IPC::Principal& aPrincipal,
-      const nsString& aMessageId, InfallibleTArray<uint8_t>&& aData) override;
+  mozilla::ipc::IPCResult RecvPushSubscriptionChange(
+      const nsCString& aScope, const IPC::Principal& aPrincipal);
 
-  virtual mozilla::ipc::IPCResult RecvPushSubscriptionChange(
-      const nsCString& aScope, const IPC::Principal& aPrincipal) override;
+  mozilla::ipc::IPCResult RecvPushError(const nsCString& aScope,
+                                        const IPC::Principal& aPrincipal,
+                                        const nsString& aMessage,
+                                        const uint32_t& aFlags);
 
-  virtual mozilla::ipc::IPCResult RecvPushError(
-      const nsCString& aScope, const IPC::Principal& aPrincipal,
-      const nsString& aMessage, const uint32_t& aFlags) override;
+  mozilla::ipc::IPCResult RecvNotifyPushSubscriptionModifiedObservers(
+      const nsCString& aScope, const IPC::Principal& aPrincipal);
 
-  virtual mozilla::ipc::IPCResult RecvNotifyPushSubscriptionModifiedObservers(
-      const nsCString& aScope, const IPC::Principal& aPrincipal) override;
+  mozilla::ipc::IPCResult RecvActivate(PBrowserChild* aTab);
 
-  virtual mozilla::ipc::IPCResult RecvActivate(PBrowserChild* aTab) override;
-
-  virtual mozilla::ipc::IPCResult RecvDeactivate(PBrowserChild* aTab) override;
+  mozilla::ipc::IPCResult RecvDeactivate(PBrowserChild* aTab);
 
   mozilla::ipc::IPCResult RecvRefreshScreens(
-      nsTArray<ScreenDetails>&& aScreens) override;
+      nsTArray<ScreenDetails>&& aScreens);
 
   // Get the directory for IndexedDB files. We query the parent for this and
   // cache the value
@@ -546,30 +530,29 @@ class ContentChild final : public PContentChild,
 
   PBrowserOrId GetBrowserOrId(TabChild* aTabChild);
 
-  virtual POfflineCacheUpdateChild* AllocPOfflineCacheUpdateChild(
+  POfflineCacheUpdateChild* AllocPOfflineCacheUpdateChild(
       const URIParams& manifestURI, const URIParams& documentURI,
-      const PrincipalInfo& aLoadingPrincipalInfo,
-      const bool& stickDocument) override;
+      const PrincipalInfo& aLoadingPrincipalInfo, const bool& stickDocument);
 
-  virtual bool DeallocPOfflineCacheUpdateChild(
-      POfflineCacheUpdateChild* offlineCacheUpdate) override;
+  bool DeallocPOfflineCacheUpdateChild(
+      POfflineCacheUpdateChild* offlineCacheUpdate);
 
-  virtual PWebrtcGlobalChild* AllocPWebrtcGlobalChild() override;
+  PWebrtcGlobalChild* AllocPWebrtcGlobalChild();
 
-  virtual bool DeallocPWebrtcGlobalChild(PWebrtcGlobalChild* aActor) override;
+  bool DeallocPWebrtcGlobalChild(PWebrtcGlobalChild* aActor);
 
-  virtual PContentPermissionRequestChild* AllocPContentPermissionRequestChild(
+  PContentPermissionRequestChild* AllocPContentPermissionRequestChild(
       const InfallibleTArray<PermissionRequest>& aRequests,
       const IPC::Principal& aPrincipal,
       const IPC::Principal& aTopLevelPrincipal,
-      const bool& aIsHandlingUserInput, const TabId& aTabId) override;
-  virtual bool DeallocPContentPermissionRequestChild(
-      PContentPermissionRequestChild* actor) override;
+      const bool& aIsHandlingUserInput, const TabId& aTabId);
+  bool DeallocPContentPermissionRequestChild(
+      PContentPermissionRequestChild* actor);
 
   // Windows specific - set up audio session
-  virtual mozilla::ipc::IPCResult RecvSetAudioSessionData(
-      const nsID& aId, const nsString& aDisplayName,
-      const nsString& aIconPath) override;
+  mozilla::ipc::IPCResult RecvSetAudioSessionData(const nsID& aId,
+                                                  const nsString& aDisplayName,
+                                                  const nsString& aIconPath);
 
   // GetFiles for WebKit/Blink FileSystem API and Directory API must run on the
   // parent process.
@@ -579,54 +562,52 @@ class ContentChild final : public PContentChild,
 
   void DeleteGetFilesRequest(nsID& aUUID, GetFilesHelperChild* aChild);
 
-  virtual mozilla::ipc::IPCResult RecvGetFilesResponse(
-      const nsID& aUUID, const GetFilesResponseResult& aResult) override;
+  mozilla::ipc::IPCResult RecvGetFilesResponse(
+      const nsID& aUUID, const GetFilesResponseResult& aResult);
 
-  virtual mozilla::ipc::IPCResult RecvBlobURLRegistration(
+  mozilla::ipc::IPCResult RecvBlobURLRegistration(
       const nsCString& aURI, const IPCBlob& aBlob,
-      const IPC::Principal& aPrincipal) override;
+      const IPC::Principal& aPrincipal);
 
-  virtual mozilla::ipc::IPCResult RecvBlobURLUnregistration(
-      const nsCString& aURI) override;
+  mozilla::ipc::IPCResult RecvBlobURLUnregistration(const nsCString& aURI);
 
-  virtual mozilla::ipc::IPCResult RecvFileCreationResponse(
-      const nsID& aUUID, const FileCreationResult& aResult) override;
+  mozilla::ipc::IPCResult RecvFileCreationResponse(
+      const nsID& aUUID, const FileCreationResult& aResult);
 
   mozilla::ipc::IPCResult RecvRequestMemoryReport(
       const uint32_t& generation, const bool& anonymize,
-      const bool& minimizeMemoryUsage, const MaybeFileDesc& DMDFile) override;
+      const bool& minimizeMemoryUsage, const MaybeFileDesc& DMDFile);
 
-  virtual mozilla::ipc::IPCResult RecvSetXPCOMProcessAttributes(
+  mozilla::ipc::IPCResult RecvSetXPCOMProcessAttributes(
       const XPCOMInitData& aXPCOMInit, const StructuredCloneData& aInitialData,
       nsTArray<LookAndFeelInt>&& aLookAndFeelIntCache,
-      nsTArray<SystemFontListEntry>&& aFontList) override;
+      nsTArray<SystemFontListEntry>&& aFontList);
 
-  virtual mozilla::ipc::IPCResult RecvProvideAnonymousTemporaryFile(
-      const uint64_t& aID, const FileDescOrError& aFD) override;
+  mozilla::ipc::IPCResult RecvProvideAnonymousTemporaryFile(
+      const uint64_t& aID, const FileDescOrError& aFD);
 
   mozilla::ipc::IPCResult RecvSetPermissionsWithKey(
-      const nsCString& aPermissionKey,
-      nsTArray<IPC::Permission>&& aPerms) override;
+      const nsCString& aPermissionKey, nsTArray<IPC::Permission>&& aPerms);
 
-  virtual mozilla::ipc::IPCResult RecvShareCodeCoverageMutex(
-      const CrossProcessMutexHandle& aHandle) override;
+  mozilla::ipc::IPCResult RecvShareCodeCoverageMutex(
+      const CrossProcessMutexHandle& aHandle);
 
-  virtual mozilla::ipc::IPCResult RecvFlushCodeCoverageCounters(
-      FlushCodeCoverageCountersResolver&& aResolver) override;
+  mozilla::ipc::IPCResult RecvFlushCodeCoverageCounters(
+      FlushCodeCoverageCountersResolver&& aResolver);
 
-  virtual mozilla::ipc::IPCResult RecvGetMemoryUniqueSetSize(
-      GetMemoryUniqueSetSizeResolver&& aResolver) override;
+  mozilla::ipc::IPCResult RecvGetMemoryUniqueSetSize(
+      GetMemoryUniqueSetSizeResolver&& aResolver);
 
-  virtual mozilla::ipc::IPCResult RecvSetInputEventQueueEnabled() override;
+  mozilla::ipc::IPCResult RecvSetInputEventQueueEnabled();
 
-  virtual mozilla::ipc::IPCResult RecvFlushInputEventQueue() override;
+  mozilla::ipc::IPCResult RecvFlushInputEventQueue();
 
-  virtual mozilla::ipc::IPCResult RecvSuspendInputEventQueue() override;
+  mozilla::ipc::IPCResult RecvSuspendInputEventQueue();
 
-  virtual mozilla::ipc::IPCResult RecvResumeInputEventQueue() override;
+  mozilla::ipc::IPCResult RecvResumeInputEventQueue();
 
-  virtual mozilla::ipc::IPCResult RecvAddDynamicScalars(
-      nsTArray<DynamicScalarDefinition>&& aDefs) override;
+  mozilla::ipc::IPCResult RecvAddDynamicScalars(
+      nsTArray<DynamicScalarDefinition>&& aDefs);
 
 #if defined(XP_WIN) && defined(ACCESSIBILITY)
   bool SendGetA11yContentId();
@@ -639,22 +620,19 @@ class ContentChild final : public PContentChild,
   }
 
   // PURLClassifierChild
-  virtual PURLClassifierChild* AllocPURLClassifierChild(
-      const Principal& aPrincipal, bool* aSuccess) override;
-  virtual bool DeallocPURLClassifierChild(PURLClassifierChild* aActor) override;
+  PURLClassifierChild* AllocPURLClassifierChild(const Principal& aPrincipal,
+                                                bool* aSuccess);
+  bool DeallocPURLClassifierChild(PURLClassifierChild* aActor);
 
   // PURLClassifierLocalChild
-  virtual PURLClassifierLocalChild* AllocPURLClassifierLocalChild(
+  PURLClassifierLocalChild* AllocPURLClassifierLocalChild(
       const URIParams& aUri,
-      const nsTArray<IPCURLClassifierFeature>& aFeatures) override;
-  virtual bool DeallocPURLClassifierLocalChild(
-      PURLClassifierLocalChild* aActor) override;
+      const nsTArray<IPCURLClassifierFeature>& aFeatures);
+  bool DeallocPURLClassifierLocalChild(PURLClassifierLocalChild* aActor);
 
-  virtual PLoginReputationChild* AllocPLoginReputationChild(
-      const URIParams& aUri) override;
+  PLoginReputationChild* AllocPLoginReputationChild(const URIParams& aUri);
 
-  virtual bool DeallocPLoginReputationChild(
-      PLoginReputationChild* aActor) override;
+  bool DeallocPLoginReputationChild(PLoginReputationChild* aActor);
 
   nsTArray<LookAndFeelInt>& LookAndFeelCache() { return mLookAndFeelCache; }
 
@@ -683,26 +661,24 @@ class ContentChild final : public PContentChild,
 
   mozilla::ipc::IPCResult RecvSetPluginList(
       const uint32_t& aPluginEpoch, nsTArray<PluginTag>&& aPluginTags,
-      nsTArray<FakePluginTag>&& aFakePluginTags) override;
+      nsTArray<FakePluginTag>&& aFakePluginTags);
 
-  virtual PClientOpenWindowOpChild* AllocPClientOpenWindowOpChild(
-      const ClientOpenWindowArgs& aArgs) override;
+  PClientOpenWindowOpChild* AllocPClientOpenWindowOpChild(
+      const ClientOpenWindowArgs& aArgs);
 
-  virtual mozilla::ipc::IPCResult RecvPClientOpenWindowOpConstructor(
+  mozilla::ipc::IPCResult RecvPClientOpenWindowOpConstructor(
       PClientOpenWindowOpChild* aActor,
       const ClientOpenWindowArgs& aArgs) override;
 
-  virtual bool DeallocPClientOpenWindowOpChild(
-      PClientOpenWindowOpChild* aActor) override;
+  bool DeallocPClientOpenWindowOpChild(PClientOpenWindowOpChild* aActor);
 
-  mozilla::ipc::IPCResult RecvSaveRecording(
-      const FileDescriptor& aFile) override;
+  mozilla::ipc::IPCResult RecvSaveRecording(const FileDescriptor& aFile);
 
-  virtual mozilla::ipc::IPCResult RecvCrossProcessRedirect(
+  mozilla::ipc::IPCResult RecvCrossProcessRedirect(
       const uint32_t& aRegistrarId, nsIURI* aURI, const uint32_t& aNewLoadFlags,
       const OptionalLoadInfoArgs& aLoadInfoForwarder,
       const uint64_t& aChannelId, nsIURI* aOriginalURI,
-      const uint64_t& aIdentifier) override;
+      const uint64_t& aIdentifier);
 
 #ifdef NIGHTLY_BUILD
   // Fetch the current number of pending input events.
@@ -733,15 +709,13 @@ class ContentChild final : public PContentChild,
 
   virtual void OnChannelReceivedMessage(const Message& aMsg) override;
 
-  virtual mozilla::ipc::IPCResult RecvWindowClose(
-      const BrowsingContextId& aContextId, const bool& aTrustedCaller) override;
-  virtual mozilla::ipc::IPCResult RecvWindowFocus(
-      const BrowsingContextId& aContextId) override;
-  virtual mozilla::ipc::IPCResult RecvWindowBlur(
-      const BrowsingContextId& aContextId) override;
-  virtual mozilla::ipc::IPCResult RecvWindowPostMessage(
+  mozilla::ipc::IPCResult RecvWindowClose(const BrowsingContextId& aContextId,
+                                          const bool& aTrustedCaller);
+  mozilla::ipc::IPCResult RecvWindowFocus(const BrowsingContextId& aContextId);
+  mozilla::ipc::IPCResult RecvWindowBlur(const BrowsingContextId& aContextId);
+  mozilla::ipc::IPCResult RecvWindowPostMessage(
       const BrowsingContextId& aContextId, const ClonedMessageData& aMessage,
-      const PostMessageData& aData) override;
+      const PostMessageData& aData);
 
 #ifdef NIGHTLY_BUILD
   virtual PContentChild::Result OnMessageReceived(const Message& aMsg) override;

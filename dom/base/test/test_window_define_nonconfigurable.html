@@ -21,11 +21,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1107443
   var retval = Object.defineProperty(window, "nosuchprop",
                                      { value: 5, configurable: false });
   if (AppConstants.RELEASE_OR_BETA) {
-    todo_is(retval, false,
-            "Should return false when 'failing' to define non-configurable property via Object.defineProperty.")
+    todo_is(retval, null,
+            "Should return null when 'failing' to define non-configurable property via Object.defineProperty.")
   } else {
-    is(retval, false,
-       "Should return false when 'failing' to define non-configurable property via Object.defineProperty.")
+    is(retval, null,
+       "Should return null when 'failing' to define non-configurable property via Object.defineProperty.")
   }
   var desc = Object.getOwnPropertyDescriptor(window, "nosuchprop");
   is(typeof(desc), "object", "Should have a property 'nosuchprop' now");
@@ -38,6 +38,33 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1107443
   }
   is(desc.writable, false, "Property 'nosuchprop' should be readonly");
   is(desc.value, 5, "Property 'nosuchprop' should have the right value");
+
+  retval = Object.defineProperties(window, {
+    "firstProp": { value: 1 },
+    "secondProp": { value: 2, configurable: false },
+    "thirdProp": { value: 3 },
+  });
+  if (AppConstants.RELEASE_OR_BETA) {
+    todo_is(retval, null,
+            "Should return null when 'failing' to define non-configurable property via Object.defineProperties.")
+  } else {
+    is(retval, null,
+       "Should return null when 'failing' to define non-configurable property via Object.defineProperties.")
+  }
+  // The properties should all be defined.
+  for (var [prop, val] of [["firstProp", 1], ["secondProp", 2], ["thirdProp", 3]]) {
+    desc = Object.getOwnPropertyDescriptor(window, prop);
+    is(typeof(desc), "object", `Should have a property '${prop}' now`);
+    if (AppConstants.RELEASE_OR_BETA) {
+      todo_is(desc.configurable, true,
+              `Property '${prop}' should be configurable`);
+    } else {
+      is(desc.configurable, true,
+	 `Property '${prop}' should be configurable`);
+    }
+    is(desc.writable, false, `Property '${prop}' should be readonly`);
+    is(desc.value, val, `Property '${prop}' should have the right value`);
+  }
 
   retval = Object.defineProperty(window, "nosuchprop2", { value: 6 });
   is(retval, window,
