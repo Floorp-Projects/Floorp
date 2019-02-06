@@ -32,29 +32,25 @@ function test_simple_breakpoint() {
       gThreadClient,
       packet.frame.where.actor
     );
-    await source.setBreakpoint({
-      line: 3,
-      options: { condition: "a === 2" },
-    });
-    source.setBreakpoint({
-      line: 4,
-      options: { condition: "a === 1" },
-    }).then(function([response, bpClient]) {
-      gThreadClient.addOneTimeListener("paused", function(event, packet) {
-        // Check the return value.
-        Assert.equal(packet.why.type, "breakpoint");
-        Assert.equal(packet.frame.where.line, 4);
+    const location1 = { sourceUrl: source.url, line: 3 };
+    gThreadClient.setBreakpoint(location1, { condition: "a === 2" });
+    const location2 = { sourceUrl: source.url, line: 4 };
+    gThreadClient.setBreakpoint(location2, { condition: "a === 1" });
+    gThreadClient.addOneTimeListener("paused", function(event, packet) {
+      // Check the return value.
+      Assert.equal(packet.why.type, "breakpoint");
+      Assert.equal(packet.frame.where.line, 4);
 
-        // Remove the breakpoint.
-        bpClient.remove(function(response) {
-          gThreadClient.resume(function() {
-            finishClient(gClient);
-          });
-        });
+      // Remove the breakpoint.
+      gThreadClient.removeBreakpoint(location2);
+
+      gThreadClient.resume(function() {
+        finishClient(gClient);
       });
-      // Continue until the breakpoint is hit.
-      gThreadClient.resume();
     });
+
+    // Continue until the breakpoint is hit.
+    gThreadClient.resume();
   });
 
   /* eslint-disable */

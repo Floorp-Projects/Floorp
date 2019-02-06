@@ -90,6 +90,17 @@ export type PendingLocation = {
   +sourceUrl?: string
 };
 
+// Type of location used when setting breakpoints in the server. Exactly one of
+// { sourceUrl, sourceId } must be specified. Soon this will replace
+// SourceLocation and PendingLocation, and SourceActorLocation will be removed
+// (bug 1524374).
+export type BreakpointLocation = {
+  +line: number,
+  +column?: number,
+  +sourceUrl?: string,
+  +sourceId?: SourceId
+};
+
 export type ASTLocation = {|
   +name: ?string,
   +offset: PartialPosition,

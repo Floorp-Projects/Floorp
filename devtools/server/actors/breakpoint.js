@@ -8,9 +8,6 @@
 
 "use strict";
 
-const { ActorClassWithSpec } = require("devtools/shared/protocol");
-const { breakpointSpec } = require("devtools/shared/specs/breakpoint");
-
 /**
  * Set breakpoints on all the given entry points with the given
  * BreakpointActor as the handler.
@@ -29,31 +26,22 @@ function setBreakpointAtEntryPoints(actor, entryPoints) {
 exports.setBreakpointAtEntryPoints = setBreakpointAtEntryPoints;
 
 /**
- * BreakpointActors exist for the lifetime of their containing thread and are
- * responsible for deleting breakpoints, handling breakpoint hits and
- * associating breakpoints with scripts.
+ * BreakpointActors are instantiated for each breakpoint that has been installed
+ * by the client. They are not true actors and do not communicate with the
+ * client directly, but encapsulate the DebuggerScript locations where the
+ * breakpoint is installed.
  */
-const BreakpointActor = ActorClassWithSpec(breakpointSpec, {
-  /**
-   * Create a Breakpoint actor.
-   *
-   * @param ThreadActor threadActor
-   *        The parent thread actor that contains this breakpoint.
-   * @param GeneratedLocation generatedLocation
-   *        The generated location of the breakpoint.
-   */
-  initialize: function(threadActor, generatedLocation) {
-    // A map from Debugger.Script instances to the offsets which the breakpoint
-    // has been set for in that script.
-    this.scripts = new Map();
+function BreakpointActor(threadActor, location) {
+  // A map from Debugger.Script instances to the offsets which the breakpoint
+  // has been set for in that script.
+  this.scripts = new Map();
 
-    this.threadActor = threadActor;
-    this.generatedLocation = generatedLocation;
-    this.options = null;
-    this.isPending = true;
-  },
+  this.threadActor = threadActor;
+  this.location = location;
+  this.options = null;
+}
 
-  // Called when new breakpoint options are received from the client.
+BreakpointActor.prototype = {
   setOptions(options) {
     for (const [script, offsets] of this.scripts) {
       this._updateOptionsForScript(script, offsets, this.options, options);
@@ -85,7 +73,6 @@ const BreakpointActor = ActorClassWithSpec(breakpointSpec, {
       script.setBreakpoint(offset, this);
     }
 
-    this.isPending = false;
     this._updateOptionsForScript(script, offsets, null, this.options);
   },
 
@@ -241,18 +228,13 @@ const BreakpointActor = ActorClassWithSpec(breakpointSpec, {
     return this.threadActor._pauseAndRespond(frame, reason);
   },
 
-  /**
-   * Handle a protocol request to remove this breakpoint.
-   */
   delete: function() {
     // Remove from the breakpoint store.
-    if (this.generatedLocation) {
-      this.threadActor.breakpointActorMap.deleteActor(this.generatedLocation);
-    }
+    this.threadActor.breakpointActorMap.deleteActor(this.location);
     this.threadActor.threadLifetimePool.removeActor(this);
     // Remove the actual breakpoint from the associated scripts.
     this.removeScripts();
   },
-});
+};
 
 exports.BreakpointActor = BreakpointActor;
