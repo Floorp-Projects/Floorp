@@ -94,8 +94,7 @@ const FEATURES = [
     list: ["urlclassifier.trackingTable",
            "urlclassifier.trackingWhitelistTable"],
     enabled() {
-      return Services.prefs.getBoolPref("toolkit.telemetry.isGeckoViewMode", false) ||
-             Services.prefs.getBoolPref("privacy.trackingprotection.enabled") ||
+      return Services.prefs.getBoolPref("privacy.trackingprotection.enabled") ||
              Services.prefs.getBoolPref("privacy.trackingprotection.pbmode.enabled");
     },
     update() {

@@ -31,8 +31,8 @@ class VideoBridgeParent final : public PVideoBridgeParent,
                                       const ReadLockDescriptor& aReadLock,
                                       const LayersBackend& aLayersBackend,
                                       const TextureFlags& aFlags,
-                                      const uint64_t& aSerial) override;
-  bool DeallocPTextureParent(PTextureParent* actor) override;
+                                      const uint64_t& aSerial);
+  bool DeallocPTextureParent(PTextureParent* actor);
 
   // HostIPCAllocator
   base::ProcessId GetChildProcessId() override { return OtherPid(); }

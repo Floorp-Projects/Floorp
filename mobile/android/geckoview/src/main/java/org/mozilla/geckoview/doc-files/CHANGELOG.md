@@ -9,6 +9,9 @@ exclude: true
 <h1> GeckoView API Changelog. </h1>
 
 ## v67
+- Change `ContentBlocking.AT_ALL` and `ContentBlocking.SB_ALL` values to mirror
+  the actual constants they encompass.
+
 - Added nested `ContentBlocking` runtime settings.
 
 - Added `RuntimeSettings` base class to support nested settings.
@@ -125,4 +128,4 @@ exclude: true
 [65.24]: ../CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: ../GeckoResult.html
 
-[api-version]: 2b12249de4649178832780cb5c0aba13079803c8
+[api-version]: 1a31e792d4802cb18219b7ac5281a63a89a1df75

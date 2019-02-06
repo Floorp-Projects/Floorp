@@ -287,6 +287,7 @@ this.AboutPreferences = class AboutPreferences {
       createAppend("hbox", discoveryGroup)
         .appendChild(contentDiscoveryButton)
         .addEventListener("click", async () => {
+          this.store.dispatch({type: at.DISCOVERY_STREAM_OPT_OUT});
           const activeExperiments = await PreferenceExperiments.getAllActive();
           const experiment = activeExperiments.find(exp => exp.preferenceName === DISCOVERY_STREAM_CONFIG_PREF_NAME);
           // Unconditionally update the UI for a fast user response and in

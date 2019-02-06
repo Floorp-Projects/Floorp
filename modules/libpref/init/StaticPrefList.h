@@ -616,6 +616,21 @@ VARCACHE_PREF(
 // Layout prefs
 //---------------------------------------------------------------------------
 
+// Whether to block large cursors intersecting UI.
+VARCACHE_PREF(
+  "layout.cursor.block.enabled",
+   layout_cursor_block_enabled,
+  bool, true
+)
+
+// The maximum width or height of the cursor we should allow when intersecting
+// the UI, in CSS pixels.
+VARCACHE_PREF(
+  "layout.cursor.block.max-size",
+   layout_cursor_block_max_size,
+  uint32_t, 64
+)
+
 // Debug-only pref to force enable the AccessibleCaret. If you want to
 // control AccessibleCaret by mouse, you'll need to set
 // "layout.accessiblecaret.hide_carets_for_mouse_input" to false.

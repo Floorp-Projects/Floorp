@@ -25,6 +25,8 @@ class TemporaryIPCBlobChildCallback {
 
 class TemporaryIPCBlobChild final
     : public mozilla::ipc::PTemporaryIPCBlobChild {
+  friend class mozilla::ipc::PTemporaryIPCBlobChild;
+
  public:
   NS_INLINE_DECL_REFCOUNTING(TemporaryIPCBlobChild)
 
@@ -36,7 +38,7 @@ class TemporaryIPCBlobChild final
  private:
   ~TemporaryIPCBlobChild();
 
-  mozilla::ipc::IPCResult RecvFileDesc(const FileDescriptor& aFD) override;
+  mozilla::ipc::IPCResult RecvFileDesc(const FileDescriptor& aFD);
 
   mozilla::ipc::IPCResult Recv__delete__(
       const IPCBlobOrError& aBlobOrError) override;

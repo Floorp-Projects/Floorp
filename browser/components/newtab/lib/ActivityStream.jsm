@@ -222,6 +222,14 @@ const PREFS_CONFIG = new Map([
       layout_endpoint: "https://getpocket.com/v3/newtab/layout?version=1&consumer_key=40249-e88c401e1b1f2242d9e441c4&layout_variant=basic",
     }),
   }],
+  ["discoverystream.optOut.0", {
+    title: "Opt out of new layout v0",
+    value: false,
+  }],
+  ["darkModeMessage", {
+    title: "Boolean flag that decides whether to show the dark Mode message or not.",
+    value: IS_NIGHTLY_OR_UNBRANDED_BUILD,
+  }],
 ]);
 
 // Array of each feed's FEEDS_CONFIG factory and values to add to PREFS_CONFIG

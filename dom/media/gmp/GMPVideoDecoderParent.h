@@ -26,6 +26,8 @@ class GMPVideoDecoderParent final : public PGMPVideoDecoderParent,
                                     public GMPVideoDecoderProxy,
                                     public GMPSharedMemManager,
                                     public GMPCrashHelperHolder {
+  friend class PGMPVideoDecoderParent;
+
  public:
   NS_INLINE_DECL_REFCOUNTING(GMPVideoDecoderParent)
 

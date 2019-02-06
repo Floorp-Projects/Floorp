@@ -31,6 +31,8 @@ class GMPContentParent;
 
 class ChromiumCDMParent final : public PChromiumCDMParent,
                                 public GMPCrashHelperHolder {
+  friend class PChromiumCDMParent;
+
  public:
   typedef MozPromise<bool, MediaResult, /* IsExclusive = */ true> InitPromise;
 
@@ -88,40 +90,39 @@ class ChromiumCDMParent final : public PChromiumCDMParent,
   ~ChromiumCDMParent() {}
 
   ipc::IPCResult Recv__delete__() override;
-  ipc::IPCResult RecvOnResolvePromiseWithKeyStatus(
-      const uint32_t& aPromiseId, const uint32_t& aKeyStatus) override;
-  ipc::IPCResult RecvOnResolveNewSessionPromise(
-      const uint32_t& aPromiseId, const nsCString& aSessionId) override;
-  ipc::IPCResult RecvResolveLoadSessionPromise(
-      const uint32_t& aPromiseId, const bool& aSuccessful) override;
-  ipc::IPCResult RecvOnResolvePromise(const uint32_t& aPromiseId) override;
+  ipc::IPCResult RecvOnResolvePromiseWithKeyStatus(const uint32_t& aPromiseId,
+                                                   const uint32_t& aKeyStatus);
+  ipc::IPCResult RecvOnResolveNewSessionPromise(const uint32_t& aPromiseId,
+                                                const nsCString& aSessionId);
+  ipc::IPCResult RecvResolveLoadSessionPromise(const uint32_t& aPromiseId,
+                                               const bool& aSuccessful);
+  ipc::IPCResult RecvOnResolvePromise(const uint32_t& aPromiseId);
   ipc::IPCResult RecvOnRejectPromise(const uint32_t& aPromiseId,
                                      const uint32_t& aError,
                                      const uint32_t& aSystemCode,
-                                     const nsCString& aErrorMessage) override;
+                                     const nsCString& aErrorMessage);
   ipc::IPCResult RecvOnSessionMessage(const nsCString& aSessionId,
                                       const uint32_t& aMessageType,
-                                      nsTArray<uint8_t>&& aMessage) override;
+                                      nsTArray<uint8_t>&& aMessage);
   ipc::IPCResult RecvOnSessionKeysChange(
-      const nsCString& aSessionId,
-      nsTArray<CDMKeyInformation>&& aKeysInfo) override;
-  ipc::IPCResult RecvOnExpirationChange(
-      const nsCString& aSessionId, const double& aSecondsSinceEpoch) override;
-  ipc::IPCResult RecvOnSessionClosed(const nsCString& aSessionId) override;
+      const nsCString& aSessionId, nsTArray<CDMKeyInformation>&& aKeysInfo);
+  ipc::IPCResult RecvOnExpirationChange(const nsCString& aSessionId,
+                                        const double& aSecondsSinceEpoch);
+  ipc::IPCResult RecvOnSessionClosed(const nsCString& aSessionId);
   ipc::IPCResult RecvDecrypted(const uint32_t& aId, const uint32_t& aStatus,
-                               ipc::Shmem&& aData) override;
+                               ipc::Shmem&& aData);
   ipc::IPCResult RecvDecryptFailed(const uint32_t& aId,
-                                   const uint32_t& aStatus) override;
-  ipc::IPCResult RecvOnDecoderInitDone(const uint32_t& aStatus) override;
+                                   const uint32_t& aStatus);
+  ipc::IPCResult RecvOnDecoderInitDone(const uint32_t& aStatus);
   ipc::IPCResult RecvDecodedShmem(const CDMVideoFrame& aFrame,
-                                  ipc::Shmem&& aShmem) override;
+                                  ipc::Shmem&& aShmem);
   ipc::IPCResult RecvDecodedData(const CDMVideoFrame& aFrame,
-                                 nsTArray<uint8_t>&& aData) override;
-  ipc::IPCResult RecvDecodeFailed(const uint32_t& aStatus) override;
-  ipc::IPCResult RecvShutdown() override;
-  ipc::IPCResult RecvResetVideoDecoderComplete() override;
-  ipc::IPCResult RecvDrainComplete() override;
-  ipc::IPCResult RecvIncreaseShmemPoolSize() override;
+                                 nsTArray<uint8_t>&& aData);
+  ipc::IPCResult RecvDecodeFailed(const uint32_t& aStatus);
+  ipc::IPCResult RecvShutdown();
+  ipc::IPCResult RecvResetVideoDecoderComplete();
+  ipc::IPCResult RecvDrainComplete();
+  ipc::IPCResult RecvIncreaseShmemPoolSize();
   void ActorDestroy(ActorDestroyReason aWhy) override;
   bool SendBufferToCDM(uint32_t aSizeInBytes);
 

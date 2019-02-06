@@ -19,6 +19,8 @@ namespace mozilla {
 namespace net {
 
 class CookieServiceParent : public PCookieServiceParent {
+  friend class PCookieServiceParent;
+
  public:
   CookieServiceParent();
   virtual ~CookieServiceParent() = default;
@@ -42,18 +44,18 @@ class CookieServiceParent : public PCookieServiceParent {
  protected:
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  virtual mozilla::ipc::IPCResult RecvSetCookieString(
+  mozilla::ipc::IPCResult RecvSetCookieString(
       const URIParams &aHost, const OptionalURIParams &aChannelURI,
       const bool &aIsForeign, const bool &aIsTrackingResource,
       const bool &aFirstPartyStorageAccessGranted,
       const nsCString &aCookieString, const nsCString &aServerTime,
-      const OriginAttributes &aAttrs, const bool &aFromHttp) override;
-  virtual mozilla::ipc::IPCResult RecvPrepareCookieList(
+      const OriginAttributes &aAttrs, const bool &aFromHttp);
+  mozilla::ipc::IPCResult RecvPrepareCookieList(
       const URIParams &aHost, const bool &aIsForeign,
       const bool &aIsTackingResource,
       const bool &aFirstPartyStorageAccessGranted,
       const bool &aIsSafeTopLevelNav, const bool &aIsSameSiteForeign,
-      const OriginAttributes &aAttrs) override;
+      const OriginAttributes &aAttrs);
 
   void SerialializeCookieList(const nsTArray<nsCookie *> &aFoundCookieList,
                               nsTArray<CookieStruct> &aCookiesList,

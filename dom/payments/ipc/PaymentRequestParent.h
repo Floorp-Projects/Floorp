@@ -15,6 +15,8 @@ namespace mozilla {
 namespace dom {
 
 class PaymentRequestParent final : public PPaymentRequestParent {
+  friend class PPaymentRequestParent;
+
   NS_INLINE_DECL_REFCOUNTING(PaymentRequestParent)
  public:
   PaymentRequestParent();
@@ -34,7 +36,7 @@ class PaymentRequestParent final : public PPaymentRequestParent {
 
  protected:
   mozilla::ipc::IPCResult RecvRequestPayment(
-      const IPCPaymentActionRequest& aRequest) override;
+      const IPCPaymentActionRequest& aRequest);
 
   mozilla::ipc::IPCResult Recv__delete__() override;
 

@@ -49,11 +49,11 @@ class IPCBlobInputStreamParent final
 
   void SetCallback(IPCBlobInputStreamParentCallback* aCallback);
 
-  mozilla::ipc::IPCResult RecvStreamNeeded() override;
+  mozilla::ipc::IPCResult RecvStreamNeeded();
 
-  mozilla::ipc::IPCResult RecvLengthNeeded() override;
+  mozilla::ipc::IPCResult RecvLengthNeeded();
 
-  mozilla::ipc::IPCResult RecvClose() override;
+  mozilla::ipc::IPCResult RecvClose();
 
   mozilla::ipc::IPCResult Recv__delete__() override;
 

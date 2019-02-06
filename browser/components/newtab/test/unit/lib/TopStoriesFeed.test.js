@@ -526,32 +526,32 @@ describe("Top Stories Feed", () => {
 
       clock.tick(1);
       let expectedPrefValue = JSON.stringify({1: 1, 2: 1, 3: 1});
-      instance.onAction({type: at.TELEMETRY_IMPRESSION_STATS, data: {tiles: [{id: 1}, {id: 2}, {id: 3}]}});
+      instance.onAction({type: at.TELEMETRY_IMPRESSION_STATS, data: {source: "TOP_STORIES", tiles: [{id: 1}, {id: 2}, {id: 3}]}});
       assert.calledWith(instance._prefs.set.firstCall, REC_IMPRESSION_TRACKING_PREF, expectedPrefValue);
 
       // Only need to record first impression, so impression pref shouldn't change
       instance._prefs.get = pref => expectedPrefValue;
       clock.tick(1);
-      instance.onAction({type: at.TELEMETRY_IMPRESSION_STATS, data: {tiles: [{id: 1}, {id: 2}, {id: 3}]}});
+      instance.onAction({type: at.TELEMETRY_IMPRESSION_STATS, data: {source: "TOP_STORIES", tiles: [{id: 1}, {id: 2}, {id: 3}]}});
       assert.calledOnce(instance._prefs.set);
 
       // New first impressions should be added
       clock.tick(1);
       let expectedPrefValueTwo = JSON.stringify({1: 1, 2: 1, 3: 1, 4: 3, 5: 3, 6: 3});
-      instance.onAction({type: at.TELEMETRY_IMPRESSION_STATS, data: {tiles: [{id: 4}, {id: 5}, {id: 6}]}});
+      instance.onAction({type: at.TELEMETRY_IMPRESSION_STATS, data: {source: "TOP_STORIES", tiles: [{id: 4}, {id: 5}, {id: 6}]}});
       assert.calledWith(instance._prefs.set.secondCall, REC_IMPRESSION_TRACKING_PREF, expectedPrefValueTwo);
     });
     it("should not record top story impressions for non-view impressions", async () => {
       instance._prefs = {get: pref => undefined, set: sinon.spy()};
       instance.personalized = true;
 
-      instance.onAction({type: at.TELEMETRY_IMPRESSION_STATS, data: {click: 0, tiles: [{id: 1}]}});
+      instance.onAction({type: at.TELEMETRY_IMPRESSION_STATS, data: {source: "TOP_STORIES", click: 0, tiles: [{id: 1}]}});
       assert.notCalled(instance._prefs.set);
 
-      instance.onAction({type: at.TELEMETRY_IMPRESSION_STATS, data: {block: 0, tiles: [{id: 1}]}});
+      instance.onAction({type: at.TELEMETRY_IMPRESSION_STATS, data: {source: "TOP_STORIES", block: 0, tiles: [{id: 1}]}});
       assert.notCalled(instance._prefs.set);
 
-      instance.onAction({type: at.TELEMETRY_IMPRESSION_STATS, data: {pocket: 0, tiles: [{id: 1}]}});
+      instance.onAction({type: at.TELEMETRY_IMPRESSION_STATS, data: {source: "TOP_STORIES", pocket: 0, tiles: [{id: 1}]}});
       assert.notCalled(instance._prefs.set);
     });
     it("should clean up top story impressions", async () => {
@@ -973,18 +973,18 @@ describe("Top Stories Feed", () => {
       await instance.fetchStories();
 
       let expectedPrefValue = JSON.stringify({5: [0]});
-      instance.onAction({type: at.TELEMETRY_IMPRESSION_STATS, data: {tiles: [{id: 3}, {id: 2}, {id: 1}]}});
+      instance.onAction({type: at.TELEMETRY_IMPRESSION_STATS, data: {source: "TOP_STORIES", tiles: [{id: 3}, {id: 2}, {id: 1}]}});
       assert.calledWith(instance._prefs.set.firstCall, SPOC_IMPRESSION_TRACKING_PREF, expectedPrefValue);
 
       clock.tick(1);
       instance._prefs.get = pref => expectedPrefValue;
       let expectedPrefValueCallTwo = JSON.stringify({5: [0, 1]});
-      instance.onAction({type: at.TELEMETRY_IMPRESSION_STATS, data: {tiles: [{id: 3}, {id: 2}, {id: 1}]}});
+      instance.onAction({type: at.TELEMETRY_IMPRESSION_STATS, data: {source: "TOP_STORIES", tiles: [{id: 3}, {id: 2}, {id: 1}]}});
       assert.calledWith(instance._prefs.set.secondCall, SPOC_IMPRESSION_TRACKING_PREF, expectedPrefValueCallTwo);
 
       clock.tick(1);
       instance._prefs.get = pref => expectedPrefValueCallTwo;
-      instance.onAction({type: at.TELEMETRY_IMPRESSION_STATS, data: {tiles: [{id: 3}, {id: 2}, {id: 4}]}});
+      instance.onAction({type: at.TELEMETRY_IMPRESSION_STATS, data: {source: "TOP_STORIES", tiles: [{id: 3}, {id: 2}, {id: 4}]}});
       assert.calledWith(instance._prefs.set.thirdCall, SPOC_IMPRESSION_TRACKING_PREF, JSON.stringify({5: [0, 1], 6: [2]}));
     });
     it("should not record spoc/campaign impressions for non-view impressions", async () => {
@@ -1007,13 +1007,13 @@ describe("Top Stories Feed", () => {
       fetchStub.resolves({ok: true, status: 200, json: () => Promise.resolve(response)});
       await instance.onInit();
 
-      instance.onAction({type: at.TELEMETRY_IMPRESSION_STATS, data: {click: 0, tiles: [{id: 1}]}});
+      instance.onAction({type: at.TELEMETRY_IMPRESSION_STATS, data: {source: "TOP_STORIES", click: 0, tiles: [{id: 1}]}});
       assert.notCalled(instance._prefs.set);
 
-      instance.onAction({type: at.TELEMETRY_IMPRESSION_STATS, data: {block: 0, tiles: [{id: 1}]}});
+      instance.onAction({type: at.TELEMETRY_IMPRESSION_STATS, data: {source: "TOP_STORIES", block: 0, tiles: [{id: 1}]}});
       assert.notCalled(instance._prefs.set);
 
-      instance.onAction({type: at.TELEMETRY_IMPRESSION_STATS, data: {pocket: 0, tiles: [{id: 1}]}});
+      instance.onAction({type: at.TELEMETRY_IMPRESSION_STATS, data: {source: "TOP_STORIES", pocket: 0, tiles: [{id: 1}]}});
       assert.notCalled(instance._prefs.set);
     });
     it("should clean up spoc/campaign impressions", async () => {
@@ -1033,9 +1033,9 @@ describe("Top Stories Feed", () => {
       await instance.fetchStories();
 
       // simulate impressions for campaign 5 and 6
-      instance.onAction({type: at.TELEMETRY_IMPRESSION_STATS, data: {tiles: [{id: 3}, {id: 2}, {id: 1}]}});
+      instance.onAction({type: at.TELEMETRY_IMPRESSION_STATS, data: {source: "TOP_STORIES", tiles: [{id: 3}, {id: 2}, {id: 1}]}});
       instance._prefs.get = pref => (pref === SPOC_IMPRESSION_TRACKING_PREF) && JSON.stringify({5: [0]});
-      instance.onAction({type: at.TELEMETRY_IMPRESSION_STATS, data: {tiles: [{id: 3}, {id: 2}, {id: 4}]}});
+      instance.onAction({type: at.TELEMETRY_IMPRESSION_STATS, data: {source: "TOP_STORIES", tiles: [{id: 3}, {id: 2}, {id: 4}]}});
 
       let expectedPrefValue = JSON.stringify({5: [0], 6: [0]});
       assert.calledWith(instance._prefs.set.secondCall, SPOC_IMPRESSION_TRACKING_PREF, expectedPrefValue);

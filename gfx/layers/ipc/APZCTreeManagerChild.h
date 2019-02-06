@@ -19,6 +19,8 @@ class RemoteCompositorSession;
 
 class APZCTreeManagerChild : public IAPZCTreeManager,
                              public PAPZCTreeManagerChild {
+  friend class PAPZCTreeManagerChild;
+
  public:
   APZCTreeManagerChild();
 
@@ -68,15 +70,14 @@ class APZCTreeManagerChild : public IAPZCTreeManager,
                                         const LayoutDevicePoint& aPoint,
                                         const Modifiers& aModifiers,
                                         const ScrollableLayerGuid& aGuid,
-                                        const uint64_t& aInputBlockId) override;
+                                        const uint64_t& aInputBlockId);
 
   mozilla::ipc::IPCResult RecvNotifyPinchGesture(
       const PinchGestureType& aType, const ScrollableLayerGuid& aGuid,
-      const LayoutDeviceCoord& aSpanChange,
-      const Modifiers& aModifiers) override;
+      const LayoutDeviceCoord& aSpanChange, const Modifiers& aModifiers);
 
   mozilla::ipc::IPCResult RecvCancelAutoscroll(
-      const ScrollableLayerGuid::ViewID& aScrollId) override;
+      const ScrollableLayerGuid::ViewID& aScrollId);
 
   virtual ~APZCTreeManagerChild();
 

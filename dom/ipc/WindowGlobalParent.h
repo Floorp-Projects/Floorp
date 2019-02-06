@@ -29,6 +29,8 @@ class JSWindowActorParent;
 class WindowGlobalParent final : public nsISupports,
                                  public nsWrapperCache,
                                  public PWindowGlobalParent {
+  friend class PWindowGlobalParent;
+
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(WindowGlobalParent)
@@ -97,9 +99,9 @@ class WindowGlobalParent final : public nsISupports,
 
  protected:
   // IPC messages
-  mozilla::ipc::IPCResult RecvUpdateDocumentURI(nsIURI* aURI) override;
-  mozilla::ipc::IPCResult RecvBecomeCurrentWindowGlobal() override;
-  mozilla::ipc::IPCResult RecvDestroy() override;
+  mozilla::ipc::IPCResult RecvUpdateDocumentURI(nsIURI* aURI);
+  mozilla::ipc::IPCResult RecvBecomeCurrentWindowGlobal();
+  mozilla::ipc::IPCResult RecvDestroy();
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 

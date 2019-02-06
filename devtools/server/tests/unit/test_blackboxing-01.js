@@ -30,6 +30,7 @@ const SOURCE_URL = "http://example.com/source.js";
 
 const testBlackBox = async function() {
   const packet = await executeOnNextTickAndWaitForPause(evalCode, gClient);
+
   const bpSource = await getSourceById(
     gThreadClient,
     packet.frame.where.actor
@@ -38,9 +39,9 @@ const testBlackBox = async function() {
   await setBreakpoint(bpSource, { line: 2 });
   await resume(gThreadClient);
 
-  const sourceClient = await getSource(gThreadClient, BLACK_BOXED_URL);
+  let sourceForm = await getSourceForm(gThreadClient, BLACK_BOXED_URL);
 
-  Assert.ok(!sourceClient.isBlackBoxed,
+  Assert.ok(!sourceForm.isBlackBoxed,
             "By default the source is not black boxed.");
 
   // Test that we can step into `doStuff` when we are not black boxed.
@@ -58,8 +59,10 @@ const testBlackBox = async function() {
     }
   );
 
-  await blackBox(sourceClient);
-  Assert.ok(sourceClient.isBlackBoxed);
+  const blackboxedSource = await getSource(gThreadClient, BLACK_BOXED_URL);
+  await blackBox(blackboxedSource);
+  sourceForm = await getSourceForm(gThreadClient, BLACK_BOXED_URL);
+  Assert.ok(sourceForm.isBlackBoxed);
 
   // Test that we step through `doStuff` when we are black boxed and its frame
   // doesn't show up.
@@ -81,8 +84,9 @@ const testBlackBox = async function() {
     }
   );
 
-  await unBlackBox(sourceClient);
-  Assert.ok(!sourceClient.isBlackBoxed);
+  await unBlackBox(blackboxedSource);
+  sourceForm = await getSourceForm(gThreadClient, BLACK_BOXED_URL);
+  Assert.ok(!sourceForm.isBlackBoxed);
 
   // Test that we can step into `doStuff` again.
   await runTest(

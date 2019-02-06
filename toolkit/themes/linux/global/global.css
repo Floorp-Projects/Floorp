@@ -171,10 +171,6 @@ separator.groove[orient="vertical"] {
   margin-right: 0.4em;
 }
 
-.small-margin {
-  margin: 1px 2px;
-}
-
 .plain {
   -moz-appearance: none;
   margin: 0 !important;
@@ -205,10 +201,6 @@ label[disabled="true"] {
 
 .header {
   font-weight: bold;
-}
-
-.monospace {
-  font-family: monospace;
 }
 
 .indent {

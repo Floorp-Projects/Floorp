@@ -22,6 +22,7 @@ class HttpChannelChild;
 
 class HttpBackgroundChannelChild final : public PHttpBackgroundChannelChild {
   friend class BackgroundChannelCreateCallback;
+  friend class PHttpBackgroundChannelChild;
 
  public:
   explicit HttpBackgroundChannelChild();
@@ -45,37 +46,37 @@ class HttpBackgroundChannelChild final : public PHttpBackgroundChannelChild {
                                    const nsresult& aTransportStatus,
                                    const uint64_t& aOffset,
                                    const uint32_t& aCount,
-                                   const nsCString& aData) override;
+                                   const nsCString& aData);
 
-  IPCResult RecvOnStopRequest(
-      const nsresult& aChannelStatus, const ResourceTimingStruct& aTiming,
-      const TimeStamp& aLastActiveTabOptHit,
-      const nsHttpHeaderArray& aResponseTrailers) override;
+  IPCResult RecvOnStopRequest(const nsresult& aChannelStatus,
+                              const ResourceTimingStruct& aTiming,
+                              const TimeStamp& aLastActiveTabOptHit,
+                              const nsHttpHeaderArray& aResponseTrailers);
 
   IPCResult RecvOnProgress(const int64_t& aProgress,
-                           const int64_t& aProgressMax) override;
+                           const int64_t& aProgressMax);
 
-  IPCResult RecvOnStatus(const nsresult& aStatus) override;
+  IPCResult RecvOnStatus(const nsresult& aStatus);
 
-  IPCResult RecvFlushedForDiversion() override;
+  IPCResult RecvFlushedForDiversion();
 
-  IPCResult RecvDivertMessages() override;
+  IPCResult RecvDivertMessages();
 
-  IPCResult RecvOnStartRequestSent() override;
+  IPCResult RecvOnStartRequestSent();
 
   IPCResult RecvNotifyChannelClassifierProtectionDisabled(
-      const uint32_t& aAcceptedReason) override;
+      const uint32_t& aAcceptedReason);
 
-  IPCResult RecvNotifyCookieAllowed() override;
+  IPCResult RecvNotifyCookieAllowed();
 
-  IPCResult RecvNotifyCookieBlocked(const uint32_t& aRejectedReason) override;
+  IPCResult RecvNotifyCookieBlocked(const uint32_t& aRejectedReason);
 
-  IPCResult RecvNotifyTrackingResource(const bool& aIsThirdParty) override;
+  IPCResult RecvNotifyTrackingResource(const bool& aIsThirdParty);
 
   IPCResult RecvNotifyFlashPluginStateChanged(
-      const nsIHttpChannel::FlashPluginState& aState) override;
+      const nsIHttpChannel::FlashPluginState& aState);
 
-  IPCResult RecvSetClassifierMatchedInfo(const ClassifierInfo& info) override;
+  IPCResult RecvSetClassifierMatchedInfo(const ClassifierInfo& info);
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 

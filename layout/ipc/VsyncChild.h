@@ -29,6 +29,7 @@ class VsyncChild final : public PVsyncChild {
   NS_INLINE_DECL_REFCOUNTING(VsyncChild)
 
   friend class mozilla::ipc::BackgroundChildImpl;
+  friend class PVsyncChild;
 
  public:
   // Hide the SendObserve/SendUnobserve in PVsyncChild. We add an flag
@@ -52,9 +53,8 @@ class VsyncChild final : public PVsyncChild {
   VsyncChild();
   virtual ~VsyncChild();
 
-  virtual mozilla::ipc::IPCResult RecvNotify(const VsyncEvent& aVsync) override;
-  virtual mozilla::ipc::IPCResult RecvVsyncRate(
-      const float& aVsyncRate) override;
+  mozilla::ipc::IPCResult RecvNotify(const VsyncEvent& aVsync);
+  mozilla::ipc::IPCResult RecvVsyncRate(const float& aVsyncRate);
   virtual void ActorDestroy(ActorDestroyReason aActorDestroyReason) override;
 
   bool mObservingVsync;

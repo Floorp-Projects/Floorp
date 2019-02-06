@@ -53,6 +53,8 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
                                     public TextureForwarder {
   typedef InfallibleTArray<AsyncParentMessageData> AsyncParentMessageArray;
 
+  friend class PCompositorBridgeChild;
+
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CompositorBridgeChild, override);
 
@@ -84,38 +86,35 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
   // process). This may only be called on the main thread.
   static bool CompositorIsInGPUProcess();
 
-  virtual mozilla::ipc::IPCResult RecvDidComposite(
-      const LayersId& aId, const TransactionId& aTransactionId,
-      const TimeStamp& aCompositeStart,
-      const TimeStamp& aCompositeEnd) override;
+  mozilla::ipc::IPCResult RecvDidComposite(const LayersId& aId,
+                                           const TransactionId& aTransactionId,
+                                           const TimeStamp& aCompositeStart,
+                                           const TimeStamp& aCompositeEnd);
 
-  virtual mozilla::ipc::IPCResult RecvNotifyFrameStats(
-      nsTArray<FrameStats>&& aFrameStats) override;
+  mozilla::ipc::IPCResult RecvNotifyFrameStats(
+      nsTArray<FrameStats>&& aFrameStats);
 
-  virtual mozilla::ipc::IPCResult RecvInvalidateLayers(
-      const LayersId& aLayersId) override;
+  mozilla::ipc::IPCResult RecvInvalidateLayers(const LayersId& aLayersId);
 
-  virtual mozilla::ipc::IPCResult RecvUpdatePluginConfigurations(
+  mozilla::ipc::IPCResult RecvUpdatePluginConfigurations(
       const LayoutDeviceIntPoint& aContentOffset,
       const LayoutDeviceIntRegion& aVisibleRegion,
-      nsTArray<PluginWindowData>&& aPlugins) override;
+      nsTArray<PluginWindowData>&& aPlugins);
 
-  virtual mozilla::ipc::IPCResult RecvCaptureAllPlugins(
-      const uintptr_t& aParentWidget) override;
+  mozilla::ipc::IPCResult RecvCaptureAllPlugins(const uintptr_t& aParentWidget);
 
-  virtual mozilla::ipc::IPCResult RecvHideAllPlugins(
-      const uintptr_t& aParentWidget) override;
+  mozilla::ipc::IPCResult RecvHideAllPlugins(const uintptr_t& aParentWidget);
 
-  virtual PTextureChild* AllocPTextureChild(
+  PTextureChild* AllocPTextureChild(
       const SurfaceDescriptor& aSharedData, const ReadLockDescriptor& aReadLock,
       const LayersBackend& aLayersBackend, const TextureFlags& aFlags,
       const LayersId& aId, const uint64_t& aSerial,
-      const wr::MaybeExternalImageId& aExternalImageId) override;
+      const wr::MaybeExternalImageId& aExternalImageId);
 
-  virtual bool DeallocPTextureChild(PTextureChild* actor) override;
+  bool DeallocPTextureChild(PTextureChild* actor);
 
-  virtual mozilla::ipc::IPCResult RecvParentAsyncMessages(
-      InfallibleTArray<AsyncParentMessageData>&& aMessages) override;
+  mozilla::ipc::IPCResult RecvParentAsyncMessages(
+      InfallibleTArray<AsyncParentMessageData>&& aMessages);
   virtual PTextureChild* CreateTexture(
       const SurfaceDescriptor& aSharedData, const ReadLockDescriptor& aReadLock,
       LayersBackend aLayersBackend, TextureFlags aFlags, uint64_t aSerial,
@@ -200,21 +199,20 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
   virtual bool DeallocShmem(mozilla::ipc::Shmem& aShmem) override;
 
   PCompositorWidgetChild* AllocPCompositorWidgetChild(
-      const CompositorWidgetInitData& aInitData) override;
-  bool DeallocPCompositorWidgetChild(PCompositorWidgetChild* aActor) override;
+      const CompositorWidgetInitData& aInitData);
+  bool DeallocPCompositorWidgetChild(PCompositorWidgetChild* aActor);
 
-  PAPZCTreeManagerChild* AllocPAPZCTreeManagerChild(
-      const LayersId& aLayersId) override;
-  bool DeallocPAPZCTreeManagerChild(PAPZCTreeManagerChild* aActor) override;
+  PAPZCTreeManagerChild* AllocPAPZCTreeManagerChild(const LayersId& aLayersId);
+  bool DeallocPAPZCTreeManagerChild(PAPZCTreeManagerChild* aActor);
 
-  PAPZChild* AllocPAPZChild(const LayersId& aLayersId) override;
-  bool DeallocPAPZChild(PAPZChild* aActor) override;
+  PAPZChild* AllocPAPZChild(const LayersId& aLayersId);
+  bool DeallocPAPZChild(PAPZChild* aActor);
 
   void WillEndTransaction();
 
   PWebRenderBridgeChild* AllocPWebRenderBridgeChild(
-      const wr::PipelineId& aPipelineId, const LayoutDeviceIntSize&) override;
-  bool DeallocPWebRenderBridgeChild(PWebRenderBridgeChild* aActor) override;
+      const wr::PipelineId& aPipelineId, const LayoutDeviceIntSize&);
+  bool DeallocPWebRenderBridgeChild(PWebRenderBridgeChild* aActor);
 
   wr::MaybeExternalImageId GetNextExternalImageId() override;
 
@@ -262,31 +260,29 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
 
   void AfterDestroy();
 
-  virtual PLayerTransactionChild* AllocPLayerTransactionChild(
-      const nsTArray<LayersBackend>& aBackendHints,
-      const LayersId& aId) override;
+  PLayerTransactionChild* AllocPLayerTransactionChild(
+      const nsTArray<LayersBackend>& aBackendHints, const LayersId& aId);
 
-  virtual bool DeallocPLayerTransactionChild(
-      PLayerTransactionChild* aChild) override;
+  bool DeallocPLayerTransactionChild(PLayerTransactionChild* aChild);
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  virtual mozilla::ipc::IPCResult RecvSharedCompositorFrameMetrics(
+  mozilla::ipc::IPCResult RecvSharedCompositorFrameMetrics(
       const mozilla::ipc::SharedMemoryBasic::Handle& metrics,
       const CrossProcessMutexHandle& handle, const LayersId& aLayersId,
-      const uint32_t& aAPZCId) override;
+      const uint32_t& aAPZCId);
 
-  virtual mozilla::ipc::IPCResult RecvReleaseSharedCompositorFrameMetrics(
-      const ViewID& aId, const uint32_t& aAPZCId) override;
+  mozilla::ipc::IPCResult RecvReleaseSharedCompositorFrameMetrics(
+      const ViewID& aId, const uint32_t& aAPZCId);
 
-  virtual mozilla::ipc::IPCResult RecvRemotePaintIsReady() override;
+  mozilla::ipc::IPCResult RecvRemotePaintIsReady();
 
   mozilla::ipc::IPCResult RecvObserveLayersUpdate(
       const LayersId& aLayersId, const LayersObserverEpoch& aEpoch,
-      const bool& aActive) override;
+      const bool& aActive);
 
-  virtual mozilla::ipc::IPCResult RecvNotifyWebRenderError(
-      const WebRenderError& aError) override;
+  mozilla::ipc::IPCResult RecvNotifyWebRenderError(
+      const WebRenderError& aError);
 
   uint64_t GetNextResourceId();
 

@@ -33,16 +33,14 @@ class RDDChild final : public PRDDChild {
   bool EnsureRDDReady();
 
   // PRDDChild overrides.
-  mozilla::ipc::IPCResult RecvInitComplete() override;
+  mozilla::ipc::IPCResult RecvInitComplete();
   mozilla::ipc::IPCResult RecvInitCrashReporter(
-      Shmem&& shmem, const NativeThreadId& aThreadId) override;
+      Shmem&& shmem, const NativeThreadId& aThreadId);
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  mozilla::ipc::IPCResult RecvAddMemoryReport(
-      const MemoryReport& aReport) override;
-  mozilla::ipc::IPCResult RecvFinishMemoryReport(
-      const uint32_t& aGeneration) override;
+  mozilla::ipc::IPCResult RecvAddMemoryReport(const MemoryReport& aReport);
+  mozilla::ipc::IPCResult RecvFinishMemoryReport(const uint32_t& aGeneration);
 
   bool SendRequestMemoryReport(const uint32_t& aGeneration,
                                const bool& aAnonymize,

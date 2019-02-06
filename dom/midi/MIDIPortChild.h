@@ -25,13 +25,12 @@ class MIDIPortInfo;
 class MIDIPortChild final : public PMIDIPortChild, public MIDIPortInterface {
  public:
   NS_INLINE_DECL_REFCOUNTING(MIDIPortChild);
-  virtual mozilla::ipc::IPCResult RecvReceive(
-      nsTArray<MIDIMessage>&& aMsgs) override;
+  mozilla::ipc::IPCResult RecvReceive(nsTArray<MIDIMessage>&& aMsgs);
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  virtual mozilla::ipc::IPCResult RecvUpdateStatus(
-      const uint32_t& aDeviceState, const uint32_t& aConnectionState) override;
+  mozilla::ipc::IPCResult RecvUpdateStatus(const uint32_t& aDeviceState,
+                                           const uint32_t& aConnectionState);
 
   MIDIPortChild(const MIDIPortInfo& aPortInfo, bool aSysexEnabled,
                 MIDIPort* aPort);

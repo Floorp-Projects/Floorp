@@ -283,7 +283,7 @@ function ObjectDefineProperty(obj, propertyKey, attributes) {
     // Steps 1-4.
     if (!ObjectOrReflectDefineProperty(obj, propertyKey, attributes, true)) {
         // Not standardized yet: https://github.com/tc39/ecma262/pull/688
-        return false;
+        return null;
     }
 
     // Step 5.

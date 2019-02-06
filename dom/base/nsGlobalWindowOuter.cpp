@@ -2082,10 +2082,13 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
 
       JS::Rooted<JSObject*> obj(cx, GetWrapperPreserveColor());
 
+      MOZ_ASSERT(js::IsWindowProxy(obj));
+
       js::SetProxyReservedSlot(obj, OUTER_WINDOW_SLOT,
                                js::PrivateValue(nullptr));
       js::SetProxyReservedSlot(outerObject, OUTER_WINDOW_SLOT,
                                js::PrivateValue(nullptr));
+      js::SetProxyReservedSlot(obj, HOLDER_WEAKMAP_SLOT, JS::UndefinedValue());
 
       outerObject = xpc::TransplantObject(cx, obj, outerObject);
       if (!outerObject) {
@@ -7496,7 +7499,7 @@ void nsGlobalWindowOuter::SetCursorOuter(const nsAString& aCursor,
 
     // Call esm and set cursor.
     aError = presContext->EventStateManager()->SetCursor(
-        cursor, nullptr, false, 0.0f, 0.0f, widget, true);
+        cursor, nullptr, Nothing(), widget, true);
   }
 }
 

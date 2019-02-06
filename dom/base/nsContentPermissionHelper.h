@@ -221,11 +221,10 @@ class RemotePermissionRequest final
                           nsPIDOMWindowInner* aWindow);
 
   // It will be called when prompt dismissed.
-  virtual mozilla::ipc::IPCResult RecvNotifyResult(
-      const bool& aAllow,
-      InfallibleTArray<PermissionChoice>&& aChoices) override;
+  mozilla::ipc::IPCResult RecvNotifyResult(
+      const bool& aAllow, InfallibleTArray<PermissionChoice>&& aChoices);
 
-  virtual mozilla::ipc::IPCResult RecvGetVisibility() override;
+  mozilla::ipc::IPCResult RecvGetVisibility();
 
   void IPDLAddRef() {
     mIPCOpen = true;
