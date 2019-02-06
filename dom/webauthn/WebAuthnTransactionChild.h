@@ -27,14 +27,14 @@ class WebAuthnTransactionChild final : public PWebAuthnTransactionChild {
 
   mozilla::ipc::IPCResult RecvConfirmRegister(
       const uint64_t& aTransactionId,
-      const WebAuthnMakeCredentialResult& aResult) override;
+      const WebAuthnMakeCredentialResult& aResult);
 
   mozilla::ipc::IPCResult RecvConfirmSign(
       const uint64_t& aTransactionId,
-      const WebAuthnGetAssertionResult& aResult) override;
+      const WebAuthnGetAssertionResult& aResult);
 
   mozilla::ipc::IPCResult RecvAbort(const uint64_t& aTransactionId,
-                                    const nsresult& aError) override;
+                                    const nsresult& aError);
 
   void ActorDestroy(ActorDestroyReason why) override;
 

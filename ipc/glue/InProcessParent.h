@@ -31,6 +31,7 @@ class InProcessChild;
 class InProcessParent : public nsIObserver, public PInProcessParent {
  public:
   friend class InProcessChild;
+  friend class PInProcessParent;
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
@@ -44,11 +45,10 @@ class InProcessParent : public nsIObserver, public PInProcessParent {
   static IProtocol* ChildActorFor(IProtocol* aActor);
 
  protected:
-  virtual mozilla::dom::PWindowGlobalParent* AllocPWindowGlobalParent(
-      const WindowGlobalInit& aInit) override;
+  mozilla::dom::PWindowGlobalParent* AllocPWindowGlobalParent(
+      const WindowGlobalInit& aInit);
 
-  virtual bool DeallocPWindowGlobalParent(
-      mozilla::dom::PWindowGlobalParent* aActor) override;
+  bool DeallocPWindowGlobalParent(mozilla::dom::PWindowGlobalParent* aActor);
 
   virtual IPCResult RecvPWindowGlobalConstructor(
       mozilla::dom::PWindowGlobalParent* aActor,

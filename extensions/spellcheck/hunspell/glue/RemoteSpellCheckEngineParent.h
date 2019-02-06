@@ -21,21 +21,20 @@ class RemoteSpellcheckEngineParent : public PRemoteSpellcheckEngineParent {
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
   virtual mozilla::ipc::IPCResult RecvSetDictionary(const nsString& aDictionary,
-                                                    bool* success) override;
+                                                    bool* success);
 
   virtual mozilla::ipc::IPCResult RecvSetDictionaryFromList(
-      nsTArray<nsString>&& aList,
-      SetDictionaryFromListResolver&& aResolve) override;
+      nsTArray<nsString>&& aList, SetDictionaryFromListResolver&& aResolve);
 
   virtual mozilla::ipc::IPCResult RecvCheck(const nsString& aWord,
-                                            bool* aIsMisspelled) override;
+                                            bool* aIsMisspelled);
 
-  virtual mozilla::ipc::IPCResult RecvCheckAsync(
-      nsTArray<nsString>&& aWord, CheckAsyncResolver&& aResolve) override;
+  virtual mozilla::ipc::IPCResult RecvCheckAsync(nsTArray<nsString>&& aWord,
+                                                 CheckAsyncResolver&& aResolve);
 
   virtual mozilla::ipc::IPCResult RecvCheckAndSuggest(
       const nsString& aWord, bool* aIsMisspelled,
-      InfallibleTArray<nsString>* aSuggestions) override;
+      InfallibleTArray<nsString>* aSuggestions);
 
  private:
   RefPtr<mozSpellChecker> mSpellChecker;

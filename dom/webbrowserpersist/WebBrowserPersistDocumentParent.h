@@ -44,23 +44,20 @@ class WebBrowserPersistDocumentParent final
   using Attrs = WebBrowserPersistDocumentAttrs;
 
   // IPDL methods:
-  virtual mozilla::ipc::IPCResult RecvAttributes(
-      const Attrs& aAttrs, const OptionalIPCStream& aPostStream) override;
-  virtual mozilla::ipc::IPCResult RecvInitFailure(
-      const nsresult& aFailure) override;
+  mozilla::ipc::IPCResult RecvAttributes(const Attrs& aAttrs,
+                                         const OptionalIPCStream& aPostStream);
+  mozilla::ipc::IPCResult RecvInitFailure(const nsresult& aFailure);
 
-  virtual PWebBrowserPersistResourcesParent*
-  AllocPWebBrowserPersistResourcesParent() override;
-  virtual bool DeallocPWebBrowserPersistResourcesParent(
-      PWebBrowserPersistResourcesParent* aActor) override;
+  PWebBrowserPersistResourcesParent* AllocPWebBrowserPersistResourcesParent();
+  bool DeallocPWebBrowserPersistResourcesParent(
+      PWebBrowserPersistResourcesParent* aActor);
 
-  virtual PWebBrowserPersistSerializeParent*
-  AllocPWebBrowserPersistSerializeParent(const WebBrowserPersistURIMap& aMap,
-                                         const nsCString& aRequestedContentType,
-                                         const uint32_t& aEncoderFlags,
-                                         const uint32_t& aWrapColumn) override;
-  virtual bool DeallocPWebBrowserPersistSerializeParent(
-      PWebBrowserPersistSerializeParent* aActor) override;
+  PWebBrowserPersistSerializeParent* AllocPWebBrowserPersistSerializeParent(
+      const WebBrowserPersistURIMap& aMap,
+      const nsCString& aRequestedContentType, const uint32_t& aEncoderFlags,
+      const uint32_t& aWrapColumn);
+  bool DeallocPWebBrowserPersistSerializeParent(
+      PWebBrowserPersistSerializeParent* aActor);
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 

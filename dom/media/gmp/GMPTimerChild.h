@@ -19,6 +19,8 @@ namespace gmp {
 class GMPChild;
 
 class GMPTimerChild : public PGMPTimerChild {
+  friend class PGMPTimerChild;
+
  public:
   NS_INLINE_DECL_REFCOUNTING(GMPTimerChild)
 
@@ -28,7 +30,7 @@ class GMPTimerChild : public PGMPTimerChild {
 
  protected:
   // GMPTimerChild
-  mozilla::ipc::IPCResult RecvTimerExpired(const uint32_t& aTimerId) override;
+  mozilla::ipc::IPCResult RecvTimerExpired(const uint32_t& aTimerId);
 
  private:
   ~GMPTimerChild();

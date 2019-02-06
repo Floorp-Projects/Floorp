@@ -64,9 +64,12 @@ test_newtab({
         components: [{
           type: "HorizontalRule",
           styles: {
-            "hr": `background-image: url(https://example.com/background);
+            // NB: Use display: none to avoid network requests to unfiltered urls
+            "hr": `display: none;
+                   background-image: url(https://example.com/background);
                    content: url(chrome://browser/content);
-                   cursor: url(  resource://activity-stream/cursor  ), auto;`,
+                   cursor: url(  resource://activity-stream/cursor  ), auto;
+                   list-style-image: url('https://img-getpocket.cdn.mozilla.net/list');`,
           },
         }],
       }],
@@ -78,6 +81,7 @@ test_newtab({
     is(styles.backgroundImage, "none", "filtered out invalid background image url");
     is(styles.content, `url("chrome://browser/content/browser.xul")`, "applied, normalized and allowed content url");
     is(styles.cursor, `url("resource://activity-stream/cursor"), auto`, "applied, normalized and allowed cursor url");
+    is(styles.listStyleImage, `url("https://img-getpocket.cdn.mozilla.net/list")`, "applied, normalized and allowed list style image url");
   },
 });
 

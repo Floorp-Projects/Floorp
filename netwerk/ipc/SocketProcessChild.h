@@ -32,17 +32,17 @@ class SocketProcessChild final : public PSocketProcessChild {
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  mozilla::ipc::IPCResult RecvPreferenceUpdate(const Pref& aPref) override;
+  mozilla::ipc::IPCResult RecvPreferenceUpdate(const Pref& aPref);
   mozilla::ipc::IPCResult RecvRequestMemoryReport(
       const uint32_t& generation, const bool& anonymize,
-      const bool& minimizeMemoryUsage, const MaybeFileDesc& DMDFile) override;
-  mozilla::ipc::IPCResult RecvSetOffline(const bool& aOffline) override;
+      const bool& minimizeMemoryUsage, const MaybeFileDesc& DMDFile);
+  mozilla::ipc::IPCResult RecvSetOffline(const bool& aOffline);
   mozilla::ipc::IPCResult RecvInitSocketProcessBridgeParent(
       const ProcessId& aContentProcessId,
-      Endpoint<mozilla::net::PSocketProcessBridgeParent>&& aEndpoint) override;
+      Endpoint<mozilla::net::PSocketProcessBridgeParent>&& aEndpoint);
   mozilla::ipc::IPCResult RecvInitProfiler(
-      Endpoint<mozilla::PProfilerChild>&& aEndpoint) override;
-  mozilla::ipc::IPCResult RecvSocketProcessTelemetryPing() override;
+      Endpoint<mozilla::PProfilerChild>&& aEndpoint);
+  mozilla::ipc::IPCResult RecvSocketProcessTelemetryPing();
 
   void CleanUp();
   void DestroySocketProcessBridgeParent(ProcessId aId);

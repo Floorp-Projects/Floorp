@@ -35,51 +35,45 @@ class GPUChild final : public PGPUChild, public gfxVarReceiver {
   bool EnsureGPUReady();
   base::ProcessHandle GetChildProcessHandle();
 
-  PAPZInputBridgeChild* AllocPAPZInputBridgeChild(
-      const LayersId& aLayersId) override;
-  bool DeallocPAPZInputBridgeChild(PAPZInputBridgeChild* aActor) override;
+  PAPZInputBridgeChild* AllocPAPZInputBridgeChild(const LayersId& aLayersId);
+  bool DeallocPAPZInputBridgeChild(PAPZInputBridgeChild* aActor);
 
   // gfxVarReceiver overrides.
   void OnVarChanged(const GfxVarUpdate& aVar) override;
 
   // PGPUChild overrides.
-  mozilla::ipc::IPCResult RecvInitComplete(const GPUDeviceData& aData) override;
-  mozilla::ipc::IPCResult RecvReportCheckerboard(
-      const uint32_t& aSeverity, const nsCString& aLog) override;
+  mozilla::ipc::IPCResult RecvInitComplete(const GPUDeviceData& aData);
+  mozilla::ipc::IPCResult RecvReportCheckerboard(const uint32_t& aSeverity,
+                                                 const nsCString& aLog);
   mozilla::ipc::IPCResult RecvInitCrashReporter(
-      Shmem&& shmem, const NativeThreadId& aThreadId) override;
-  mozilla::ipc::IPCResult RecvCreateVRProcess() override;
-  mozilla::ipc::IPCResult RecvShutdownVRProcess() override;
+      Shmem&& shmem, const NativeThreadId& aThreadId);
+  mozilla::ipc::IPCResult RecvCreateVRProcess();
+  mozilla::ipc::IPCResult RecvShutdownVRProcess();
 
   mozilla::ipc::IPCResult RecvAccumulateChildHistograms(
-      InfallibleTArray<HistogramAccumulation>&& aAccumulations) override;
+      InfallibleTArray<HistogramAccumulation>&& aAccumulations);
   mozilla::ipc::IPCResult RecvAccumulateChildKeyedHistograms(
-      InfallibleTArray<KeyedHistogramAccumulation>&& aAccumulations) override;
+      InfallibleTArray<KeyedHistogramAccumulation>&& aAccumulations);
   mozilla::ipc::IPCResult RecvUpdateChildScalars(
-      InfallibleTArray<ScalarAction>&& aScalarActions) override;
+      InfallibleTArray<ScalarAction>&& aScalarActions);
   mozilla::ipc::IPCResult RecvUpdateChildKeyedScalars(
-      InfallibleTArray<KeyedScalarAction>&& aScalarActions) override;
+      InfallibleTArray<KeyedScalarAction>&& aScalarActions);
   mozilla::ipc::IPCResult RecvRecordChildEvents(
-      nsTArray<ChildEventData>&& events) override;
+      nsTArray<ChildEventData>&& events);
   mozilla::ipc::IPCResult RecvRecordDiscardedData(
-      const DiscardedData& aDiscardedData) override;
+      const DiscardedData& aDiscardedData);
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
-  mozilla::ipc::IPCResult RecvGraphicsError(const nsCString& aError) override;
-  mozilla::ipc::IPCResult RecvNotifyUiObservers(
-      const nsCString& aTopic) override;
-  mozilla::ipc::IPCResult RecvNotifyDeviceReset(
-      const GPUDeviceData& aData) override;
-  mozilla::ipc::IPCResult RecvAddMemoryReport(
-      const MemoryReport& aReport) override;
-  mozilla::ipc::IPCResult RecvFinishMemoryReport(
-      const uint32_t& aGeneration) override;
-  mozilla::ipc::IPCResult RecvUpdateFeature(
-      const Feature& aFeature, const FeatureFailure& aChange) override;
+  mozilla::ipc::IPCResult RecvGraphicsError(const nsCString& aError);
+  mozilla::ipc::IPCResult RecvNotifyUiObservers(const nsCString& aTopic);
+  mozilla::ipc::IPCResult RecvNotifyDeviceReset(const GPUDeviceData& aData);
+  mozilla::ipc::IPCResult RecvAddMemoryReport(const MemoryReport& aReport);
+  mozilla::ipc::IPCResult RecvFinishMemoryReport(const uint32_t& aGeneration);
+  mozilla::ipc::IPCResult RecvUpdateFeature(const Feature& aFeature,
+                                            const FeatureFailure& aChange);
   mozilla::ipc::IPCResult RecvUsedFallback(const Fallback& aFallback,
-                                           const nsCString& aMessage) override;
-  mozilla::ipc::IPCResult RecvBHRThreadHang(
-      const HangDetails& aDetails) override;
+                                           const nsCString& aMessage);
+  mozilla::ipc::IPCResult RecvBHRThreadHang(const HangDetails& aDetails);
 
   bool SendRequestMemoryReport(const uint32_t& aGeneration,
                                const bool& aAnonymize,

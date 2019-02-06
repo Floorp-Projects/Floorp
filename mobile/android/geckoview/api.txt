@@ -48,7 +48,7 @@ package org.mozilla.geckoview {
   @android.support.annotation.AnyThread public class ContentBlocking {
     ctor public ContentBlocking();
     field public static final int AT_AD = 2;
-    field public static final int AT_ALL = 63;
+    field public static final int AT_ALL = 62;
     field public static final int AT_ANALYTIC = 4;
     field public static final int AT_CONTENT = 16;
     field public static final int AT_SOCIAL = 8;
@@ -62,7 +62,7 @@ package org.mozilla.geckoview {
     field public static final int COOKIE_LIFETIME_NORMAL = 0;
     field public static final int COOKIE_LIFETIME_RUNTIME = 2;
     field public static final int NONE = 0;
-    field public static final int SB_ALL = 16320;
+    field public static final int SB_ALL = 15360;
     field public static final int SB_HARMFUL = 4096;
     field public static final int SB_MALWARE = 1024;
     field public static final int SB_PHISHING = 8192;

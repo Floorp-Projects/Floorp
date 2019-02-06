@@ -179,27 +179,26 @@ class ImageBridgeChild final : public PImageBridgeChild,
 
   virtual base::ProcessId GetParentPid() const override { return OtherPid(); }
 
-  virtual PTextureChild* AllocPTextureChild(
+  PTextureChild* AllocPTextureChild(
       const SurfaceDescriptor& aSharedData, const ReadLockDescriptor& aReadLock,
       const LayersBackend& aLayersBackend, const TextureFlags& aFlags,
       const uint64_t& aSerial,
-      const wr::MaybeExternalImageId& aExternalImageId) override;
+      const wr::MaybeExternalImageId& aExternalImageId);
 
-  virtual bool DeallocPTextureChild(PTextureChild* actor) override;
+  bool DeallocPTextureChild(PTextureChild* actor);
 
-  PMediaSystemResourceManagerChild* AllocPMediaSystemResourceManagerChild()
-      override;
+  PMediaSystemResourceManagerChild* AllocPMediaSystemResourceManagerChild();
   bool DeallocPMediaSystemResourceManagerChild(
-      PMediaSystemResourceManagerChild* aActor) override;
+      PMediaSystemResourceManagerChild* aActor);
 
-  virtual mozilla::ipc::IPCResult RecvParentAsyncMessages(
-      InfallibleTArray<AsyncParentMessageData>&& aMessages) override;
+  mozilla::ipc::IPCResult RecvParentAsyncMessages(
+      InfallibleTArray<AsyncParentMessageData>&& aMessages);
 
-  virtual mozilla::ipc::IPCResult RecvDidComposite(
-      InfallibleTArray<ImageCompositeNotification>&& aNotifications) override;
+  mozilla::ipc::IPCResult RecvDidComposite(
+      InfallibleTArray<ImageCompositeNotification>&& aNotifications);
 
-  virtual mozilla::ipc::IPCResult RecvReportFramesDropped(
-      const CompositableHandle& aHandle, const uint32_t& aFrames) override;
+  mozilla::ipc::IPCResult RecvReportFramesDropped(
+      const CompositableHandle& aHandle, const uint32_t& aFrames);
 
   // Create an ImageClient from any thread.
   RefPtr<ImageClient> CreateImageClient(CompositableType aType,

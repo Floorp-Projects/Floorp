@@ -17,6 +17,8 @@ class WebSocketEventService;
 
 class WebSocketEventListenerParent final : public PWebSocketEventListenerParent,
                                            public nsIWebSocketEventListener {
+  friend class PWebSocketEventListenerParent;
+
  public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIWEBSOCKETEVENTLISTENER
@@ -26,7 +28,7 @@ class WebSocketEventListenerParent final : public PWebSocketEventListenerParent,
  private:
   ~WebSocketEventListenerParent();
 
-  virtual mozilla::ipc::IPCResult RecvClose() override;
+  mozilla::ipc::IPCResult RecvClose();
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 

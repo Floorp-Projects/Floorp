@@ -107,7 +107,7 @@ window.gActivityStreamStrings = {
   "firstrun_invalid_input": "Se requiere un correo electrónico válido",
   "firstrun_extra_legal_links": "Al proceder, acepta los {terms} y {privacy}.",
   "firstrun_terms_of_service": "Términos del servicio",
-  "firstrun_privacy_notice": "Anuncio de privacidad",
+  "firstrun_privacy_notice": "Nota de privacidad",
   "firstrun_continue_to_login": "Continuar",
   "firstrun_skip_login": "Saltear este paso",
   "context_menu_title": "Abrir menú",

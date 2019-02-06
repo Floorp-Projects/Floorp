@@ -29,6 +29,8 @@ class VRControllerPuppet;
 class VRManagerParent final : public PVRManagerParent {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VRManagerParent);
 
+  friend class PVRManagerParent;
+
  public:
   explicit VRManagerParent(ProcessId aChildProcessId, bool aIsContentChild);
 
@@ -46,51 +48,47 @@ class VRManagerParent final : public PVRManagerParent {
  protected:
   ~VRManagerParent();
 
-  virtual PVRLayerParent* AllocPVRLayerParent(const uint32_t& aDisplayID,
-                                              const uint32_t& aGroup) override;
-  virtual bool DeallocPVRLayerParent(PVRLayerParent* actor) override;
+  PVRLayerParent* AllocPVRLayerParent(const uint32_t& aDisplayID,
+                                      const uint32_t& aGroup);
+  bool DeallocPVRLayerParent(PVRLayerParent* actor);
 
   virtual void ActorDestroy(ActorDestroyReason why) override;
   void OnChannelConnected(int32_t pid) override;
 
-  virtual mozilla::ipc::IPCResult RecvRefreshDisplays() override;
-  virtual mozilla::ipc::IPCResult RecvResetSensor(
-      const uint32_t& aDisplayID) override;
-  virtual mozilla::ipc::IPCResult RecvSetGroupMask(
-      const uint32_t& aDisplayID, const uint32_t& aGroupMask) override;
-  virtual mozilla::ipc::IPCResult RecvSetHaveEventListener(
-      const bool& aHaveEventListener) override;
-  virtual mozilla::ipc::IPCResult RecvControllerListenerAdded() override;
-  virtual mozilla::ipc::IPCResult RecvControllerListenerRemoved() override;
-  virtual mozilla::ipc::IPCResult RecvVibrateHaptic(
-      const uint32_t& aControllerIdx, const uint32_t& aHapticIndex,
-      const double& aIntensity, const double& aDuration,
-      const uint32_t& aPromiseID) override;
-  virtual mozilla::ipc::IPCResult RecvStopVibrateHaptic(
-      const uint32_t& aControllerIdx) override;
-  virtual mozilla::ipc::IPCResult RecvCreateVRTestSystem() override;
-  virtual mozilla::ipc::IPCResult RecvCreateVRServiceTestDisplay(
-      const nsCString& aID, const uint32_t& aPromiseID) override;
-  virtual mozilla::ipc::IPCResult RecvCreateVRServiceTestController(
-      const nsCString& aID, const uint32_t& aPromiseID) override;
-  virtual mozilla::ipc::IPCResult RecvSetDisplayInfoToMockDisplay(
-      const uint32_t& aDeviceID, const VRDisplayInfo& aDisplayInfo) override;
-  virtual mozilla::ipc::IPCResult RecvSetSensorStateToMockDisplay(
-      const uint32_t& aDeviceID, const VRHMDSensorState& aSensorState) override;
-  virtual mozilla::ipc::IPCResult RecvNewButtonEventToMockController(
-      const uint32_t& aDeviceID, const long& aButton,
-      const bool& aPressed) override;
-  virtual mozilla::ipc::IPCResult RecvNewAxisMoveEventToMockController(
-      const uint32_t& aDeviceID, const long& aAxis,
-      const double& aValue) override;
-  virtual mozilla::ipc::IPCResult RecvNewPoseMoveToMockController(
-      const uint32_t& aDeviceID, const GamepadPoseState& pose) override;
-  virtual mozilla::ipc::IPCResult RecvStartVRNavigation(
-      const uint32_t& aDeviceID) override;
-  virtual mozilla::ipc::IPCResult RecvStopVRNavigation(
-      const uint32_t& aDeviceID, const TimeDuration& aTimeout) override;
-  virtual mozilla::ipc::IPCResult RecvStartActivity() override;
-  virtual mozilla::ipc::IPCResult RecvStopActivity() override;
+  mozilla::ipc::IPCResult RecvRefreshDisplays();
+  mozilla::ipc::IPCResult RecvResetSensor(const uint32_t& aDisplayID);
+  mozilla::ipc::IPCResult RecvSetGroupMask(const uint32_t& aDisplayID,
+                                           const uint32_t& aGroupMask);
+  mozilla::ipc::IPCResult RecvSetHaveEventListener(
+      const bool& aHaveEventListener);
+  mozilla::ipc::IPCResult RecvControllerListenerAdded();
+  mozilla::ipc::IPCResult RecvControllerListenerRemoved();
+  mozilla::ipc::IPCResult RecvVibrateHaptic(const uint32_t& aControllerIdx,
+                                            const uint32_t& aHapticIndex,
+                                            const double& aIntensity,
+                                            const double& aDuration,
+                                            const uint32_t& aPromiseID);
+  mozilla::ipc::IPCResult RecvStopVibrateHaptic(const uint32_t& aControllerIdx);
+  mozilla::ipc::IPCResult RecvCreateVRTestSystem();
+  mozilla::ipc::IPCResult RecvCreateVRServiceTestDisplay(
+      const nsCString& aID, const uint32_t& aPromiseID);
+  mozilla::ipc::IPCResult RecvCreateVRServiceTestController(
+      const nsCString& aID, const uint32_t& aPromiseID);
+  mozilla::ipc::IPCResult RecvSetDisplayInfoToMockDisplay(
+      const uint32_t& aDeviceID, const VRDisplayInfo& aDisplayInfo);
+  mozilla::ipc::IPCResult RecvSetSensorStateToMockDisplay(
+      const uint32_t& aDeviceID, const VRHMDSensorState& aSensorState);
+  mozilla::ipc::IPCResult RecvNewButtonEventToMockController(
+      const uint32_t& aDeviceID, const long& aButton, const bool& aPressed);
+  mozilla::ipc::IPCResult RecvNewAxisMoveEventToMockController(
+      const uint32_t& aDeviceID, const long& aAxis, const double& aValue);
+  mozilla::ipc::IPCResult RecvNewPoseMoveToMockController(
+      const uint32_t& aDeviceID, const GamepadPoseState& pose);
+  mozilla::ipc::IPCResult RecvStartVRNavigation(const uint32_t& aDeviceID);
+  mozilla::ipc::IPCResult RecvStopVRNavigation(const uint32_t& aDeviceID,
+                                               const TimeDuration& aTimeout);
+  mozilla::ipc::IPCResult RecvStartActivity();
+  mozilla::ipc::IPCResult RecvStopActivity();
 
  private:
   void RegisterWithManager();

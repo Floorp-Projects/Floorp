@@ -91,6 +91,8 @@ class FileHandleThreadPool final {
 };
 
 class BackgroundMutableFileParentBase : public PBackgroundMutableFileParent {
+  friend PBackgroundMutableFileParent;
+
   nsTHashtable<nsPtrHashKey<FileHandle>> mFileHandles;
   nsCString mDirectoryId;
   nsString mFileName;
@@ -153,17 +155,17 @@ class BackgroundMutableFileParentBase : public PBackgroundMutableFileParent {
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
   virtual PBackgroundFileHandleParent* AllocPBackgroundFileHandleParent(
-      const FileMode& aMode) override;
+      const FileMode& aMode);
 
   virtual mozilla::ipc::IPCResult RecvPBackgroundFileHandleConstructor(
       PBackgroundFileHandleParent* aActor, const FileMode& aMode) override;
 
   virtual bool DeallocPBackgroundFileHandleParent(
-      PBackgroundFileHandleParent* aActor) final;
+      PBackgroundFileHandleParent* aActor);
 
-  mozilla::ipc::IPCResult RecvDeleteMe() final;
+  mozilla::ipc::IPCResult RecvDeleteMe();
 
-  mozilla::ipc::IPCResult RecvGetFileId(int64_t* aFileId) override;
+  virtual mozilla::ipc::IPCResult RecvGetFileId(int64_t* aFileId);
 };
 
 }  // namespace dom

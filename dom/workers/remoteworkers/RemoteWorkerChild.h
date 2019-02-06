@@ -23,6 +23,8 @@ class WorkerPrivate;
 class OptionalMessagePortIdentifier;
 
 class RemoteWorkerChild final : public PRemoteWorkerChild {
+  friend class PRemoteWorkerChild;
+
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RemoteWorkerChild)
 
@@ -51,7 +53,7 @@ class RemoteWorkerChild final : public PRemoteWorkerChild {
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  mozilla::ipc::IPCResult RecvExecOp(const RemoteWorkerOp& aOp) override;
+  mozilla::ipc::IPCResult RecvExecOp(const RemoteWorkerOp& aOp);
 
   void RecvExecOpOnMainThread(const RemoteWorkerOp& aOp);
 

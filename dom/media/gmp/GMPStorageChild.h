@@ -47,6 +47,8 @@ class GMPRecordImpl : public GMPRecord {
 };
 
 class GMPStorageChild : public PGMPStorageChild {
+  friend class PGMPStorageChild;
+
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GMPStorageChild)
 
@@ -73,13 +75,13 @@ class GMPStorageChild : public PGMPStorageChild {
 
   // PGMPStorageChild
   mozilla::ipc::IPCResult RecvOpenComplete(const nsCString& aRecordName,
-                                           const GMPErr& aStatus) override;
-  mozilla::ipc::IPCResult RecvReadComplete(
-      const nsCString& aRecordName, const GMPErr& aStatus,
-      InfallibleTArray<uint8_t>&& aBytes) override;
+                                           const GMPErr& aStatus);
+  mozilla::ipc::IPCResult RecvReadComplete(const nsCString& aRecordName,
+                                           const GMPErr& aStatus,
+                                           InfallibleTArray<uint8_t>&& aBytes);
   mozilla::ipc::IPCResult RecvWriteComplete(const nsCString& aRecordName,
-                                            const GMPErr& aStatus) override;
-  mozilla::ipc::IPCResult RecvShutdown() override;
+                                            const GMPErr& aStatus);
+  mozilla::ipc::IPCResult RecvShutdown();
 
  private:
   Monitor mMonitor;

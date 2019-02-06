@@ -119,15 +119,16 @@ class TracingMarkerPayload : public ProfilerMarkerPayload {
   TracingKind mKind;
 };
 
-class IOMarkerPayload : public ProfilerMarkerPayload {
+class DiskIOMarkerPayload : public ProfilerMarkerPayload {
  public:
-  IOMarkerPayload(const char* aSource, const char* aFilename,
-                  const mozilla::TimeStamp& aStartTime,
+  DiskIOMarkerPayload(const char* aOperation, const char* aSource,
+                  const char* aFilename, const mozilla::TimeStamp& aStartTime,
                   const mozilla::TimeStamp& aEndTime,
                   UniqueProfilerBacktrace aStack)
       : ProfilerMarkerPayload(aStartTime, aEndTime, mozilla::Nothing(),
                               mozilla::Nothing(), std::move(aStack)),
         mSource(aSource),
+        mOperation(aOperation ? strdup(aOperation) : nullptr),
         mFilename(aFilename ? strdup(aFilename) : nullptr) {
     MOZ_ASSERT(aSource);
   }
@@ -136,6 +137,7 @@ class IOMarkerPayload : public ProfilerMarkerPayload {
 
  private:
   const char* mSource;
+  mozilla::UniqueFreePtr<char> mOperation;
   mozilla::UniqueFreePtr<char> mFilename;
 };
 

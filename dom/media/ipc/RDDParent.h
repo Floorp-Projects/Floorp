@@ -24,15 +24,15 @@ class RDDParent final : public PRDDParent {
   bool Init(base::ProcessId aParentPid, const char* aParentBuildID,
             MessageLoop* aIOLoop, IPC::Channel* aChannel);
 
-  mozilla::ipc::IPCResult RecvInit() override;
+  mozilla::ipc::IPCResult RecvInit();
   mozilla::ipc::IPCResult RecvInitProfiler(
-      Endpoint<PProfilerChild>&& aEndpoint) override;
+      Endpoint<PProfilerChild>&& aEndpoint);
 
   mozilla::ipc::IPCResult RecvNewContentRemoteDecoderManager(
-      Endpoint<PRemoteDecoderManagerParent>&& aEndpoint) override;
+      Endpoint<PRemoteDecoderManagerParent>&& aEndpoint);
   mozilla::ipc::IPCResult RecvRequestMemoryReport(
       const uint32_t& generation, const bool& anonymize,
-      const bool& minimizeMemoryUsage, const MaybeFileDesc& DMDFile) override;
+      const bool& minimizeMemoryUsage, const MaybeFileDesc& DMDFile);
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 

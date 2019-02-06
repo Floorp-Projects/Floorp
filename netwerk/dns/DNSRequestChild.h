@@ -18,6 +18,8 @@ namespace mozilla {
 namespace net {
 
 class DNSRequestChild final : public PDNSRequestChild, public nsICancelable {
+  friend class PDNSRequestChild;
+
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSICANCELABLE
@@ -40,8 +42,7 @@ class DNSRequestChild final : public PDNSRequestChild, public nsICancelable {
   friend class ChildDNSService;
   virtual ~DNSRequestChild() {}
 
-  virtual mozilla::ipc::IPCResult RecvLookupCompleted(
-      const DNSRequestResponse& reply) override;
+  mozilla::ipc::IPCResult RecvLookupCompleted(const DNSRequestResponse& reply);
   virtual void ActorDestroy(ActorDestroyReason why) override;
 
   nsCOMPtr<nsIDNSListener> mListener;

@@ -42,7 +42,7 @@ window.gActivityStreamStrings = {
   "prefs_home_description": "Fren agbur i tebɣiḍ deg ugdil agejdan Firefox.",
   "prefs_content_discovery_header": "Asebter agejdan Firefox",
   "prefs_content_discovery_description": "Content Discovery in Firefox Home allows you to discover high-quality, relevant articles from across the web.",
-  "prefs_content_discovery_button": "Turn Off Content Discovery",
+  "prefs_content_discovery_button": "Sens asnirem n ubur",
   "prefs_section_rows_option": "{num} izirig;{num} izirigen",
   "prefs_search_header": "Anadi Web",
   "prefs_topsites_description": "Ismal i tettwaliḍ aṭas",

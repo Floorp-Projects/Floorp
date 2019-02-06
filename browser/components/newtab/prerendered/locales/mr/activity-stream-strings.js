@@ -40,7 +40,7 @@ window.gActivityStreamStrings = {
   "section_disclaimer_topstories_buttontext": "ठीक आहे, समजले",
   "prefs_home_header": "फायरफॉक्स होम वरील मजकूर",
   "prefs_home_description": "आपल्या फायरफॉक्सचा मुख्यपृष्ठवर आपल्याला कोणती माहिती पाहिजे ते निवडा.",
-  "prefs_content_discovery_header": "Firefox Home",
+  "prefs_content_discovery_header": "Firefox मुख्यपृष्ठ",
   "prefs_content_discovery_description": "Content Discovery in Firefox Home allows you to discover high-quality, relevant articles from across the web.",
   "prefs_content_discovery_button": "Turn Off Content Discovery",
   "prefs_section_rows_option": "{num} ओळ;{num} ओळी",
@@ -77,9 +77,9 @@ window.gActivityStreamStrings = {
   "topsites_form_image_validation": "प्रतिमा लोड झाली नाही. वेगळी URL वापरून पहा.",
   "pocket_read_more": "लोकप्रिय विषय:",
   "pocket_read_even_more": "अधिक कथा पहा",
-  "pocket_more_reccommendations": "More Recommendations",
-  "pocket_how_it_works": "How it works",
-  "pocket_cta_button": "Get Pocket",
+  "pocket_more_reccommendations": "अधिक शिफारसी",
+  "pocket_how_it_works": "हे कसे कार्य करते",
+  "pocket_cta_button": "Pocket मिळवा",
   "pocket_cta_text": "Save the stories you love in Pocket, and fuel your mind with fascinating reads.",
   "highlights_empty_state": "ब्राउझिंग सुरू करा, आणि आम्ही आपल्याला इथे आपण अलीकडील भेट दिलेले किंवा वाचनखूण लावलेले उत्कृष्ठ लेख, व्हिडिओ, आणि इतर पृष्ठांपैकी काही दाखवू.",
   "topstories_empty_state": "तुम्ही सर्व बघितले. {provider} कडून आणखी महत्वाच्या गोष्टी बघण्यासाठी नंतर परत तपासा. प्रतीक्षा करू शकत नाही? वेबवरील छान गोष्टी शोधण्यासाठी लोकप्रिय विषय निवडा.",
@@ -110,6 +110,5 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "गोपनीयता सूचना",
   "firstrun_continue_to_login": "पुढे चला",
   "firstrun_skip_login": "ही पायरी वगळा",
-  "context_menu_title": "Open menu",
-  "pocket_learn_more": "अधिक जाणा"
+  "context_menu_title": "मेनु उघडा"
 };
