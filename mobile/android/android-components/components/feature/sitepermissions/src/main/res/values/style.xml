@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<resources>
+    <!-- Item Divider -->
+    <style name="Mozac.Feature.Site.Permissions.Item.Divider" parent="">
+        <item name="android:background">?android:attr/listDivider</item>
+    </style>
+
+    <style name="Mozac.Feature.Site.Permissions.Item.Divider.Horizontal">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">@dimen/mozac_feature_sitepermissions_divider_height</item>
+    </style>
+</resources>

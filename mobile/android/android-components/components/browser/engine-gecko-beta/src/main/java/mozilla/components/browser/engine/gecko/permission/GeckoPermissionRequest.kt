@@ -111,6 +111,10 @@ sealed class GeckoPermissionRequest constructor(
             callback.grant(videos.firstOrNull(), audios.firstOrNull())
         }
 
+        override fun containsVideoAndAudioSources(): Boolean {
+            return videoSources.isNotEmpty() && audioSources.isNotEmpty()
+        }
+
         override fun reject() {
             callback.reject()
         }

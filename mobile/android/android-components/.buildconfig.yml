@@ -80,6 +80,10 @@ projects:
       path: components/feature/findinpage
       description: 'Feature that will subscribe to the selected session and show an UI for results of find in page.'
       publish: true
+  feature-sitepermissions:
+    path: components/feature/sitepermissions
+    description: 'A feature for showing site permission request prompts.'
+    publish: true
   browser-awesomebar:
     path: components/browser/awesomebar
     description: 'A customizable awesomebar component for browsers.'

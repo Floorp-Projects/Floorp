@@ -135,6 +135,7 @@ dependencies {
     implementation project(':feature-tabs')
     implementation project(':feature-prompts')
     implementation project(':feature-findinpage')
+    implementation project(':feature-sitepermissions')
 
     implementation project(':ui-autocomplete')
 

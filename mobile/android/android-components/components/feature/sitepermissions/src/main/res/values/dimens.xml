@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<resources>
+    <dimen name="mozac_feature_sitepermissions_divider_height">1dp</dimen>
+    <dimen name="mozac_feature_sitepermissions_permission_icon_height">24dp</dimen>
+    <dimen name="mozac_feature_sitepermissions_permission_icon_width">24dp</dimen>
+    <dimen name="mozac_feature_sitepermissions_permission_group_spacing">10dp</dimen>
+</resources>

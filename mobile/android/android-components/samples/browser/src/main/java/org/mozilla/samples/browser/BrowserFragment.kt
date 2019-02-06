@@ -20,6 +20,7 @@ import mozilla.components.feature.prompts.PromptFeature
 import mozilla.components.feature.session.CoordinateScrollingFeature
 import mozilla.components.feature.session.SessionFeature
 import mozilla.components.feature.session.WindowFeature
+import mozilla.components.feature.sitepermissions.SitePermissionsFeature
 import mozilla.components.feature.tabs.toolbar.TabsToolbarFeature
 import mozilla.components.feature.toolbar.ToolbarAutocompleteFeature
 import mozilla.components.feature.toolbar.ToolbarFeature
@@ -36,6 +37,7 @@ class BrowserFragment : Fragment(), BackHandler {
     private val downloadsFeature = ViewBoundFeatureWrapper<DownloadsFeature>()
     private val promptFeature = ViewBoundFeatureWrapper<PromptFeature>()
     private val findInPageIntegration = ViewBoundFeatureWrapper<FindInPageIntegration>()
+    private val sitePermissionsFeature = ViewBoundFeatureWrapper<SitePermissionsFeature>()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val layout = inflater.inflate(R.layout.fragment_browser, container, false)
@@ -113,6 +115,16 @@ class BrowserFragment : Fragment(), BackHandler {
 
         val windowFeature = WindowFeature(components.engine, components.sessionManager)
 
+        sitePermissionsFeature.set(
+            feature = SitePermissionsFeature(
+                sessionManager = components.sessionManager
+            ) { permissions ->
+                requestPermissions(permissions, REQUEST_CODE_APP_PERMISSIONS)
+            },
+            owner = this,
+            view = layout
+        )
+
         customTabsToolbarFeature.set(
             feature = CustomTabsToolbarFeature(
                 components.sessionManager,
@@ -161,6 +173,7 @@ class BrowserFragment : Fragment(), BackHandler {
         private const val SESSION_ID = "session_id"
         private const val REQUEST_CODE_DOWNLOAD_PERMISSIONS = 1
         private const val REQUEST_CODE_PROMPT_PERMISSIONS = 2
+        private const val REQUEST_CODE_APP_PERMISSIONS = 3
 
         fun create(sessionId: String? = null): BrowserFragment = BrowserFragment().apply {
             arguments = Bundle().apply {
@@ -176,6 +189,9 @@ class BrowserFragment : Fragment(), BackHandler {
             }
             REQUEST_CODE_PROMPT_PERMISSIONS -> promptFeature.withFeature {
                 it.onPermissionsResult(permissions, grantResults)
+            }
+            REQUEST_CODE_APP_PERMISSIONS -> sitePermissionsFeature.withFeature {
+                it.onPermissionsResult(grantResults)
             }
         }
     }

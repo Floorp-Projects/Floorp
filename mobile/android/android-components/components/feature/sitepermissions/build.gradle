@@ -4,7 +4,6 @@
 
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
-apply plugin: 'org.jetbrains.kotlin.android.extensions'
 
 android {
     compileSdkVersion config.compileSdkVersion
@@ -20,25 +19,20 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-    androidExtensions {
-        experimental = true
-    }
 }
 
 dependencies {
+    implementation project(':browser-session')
+    implementation project(':concept-engine')
+    implementation project(':ui-icons')
+
     implementation Dependencies.kotlin_stdlib
-    implementation Dependencies.support_annotations
-    implementation Dependencies.kotlin_coroutines
+    implementation Dependencies.support_constraintlayout
 
-    // We expose this as API because we are using Observable in our public API and do not want every
-    // consumer to have to manually import "base".
-    api project(':support-base')
-    api project(':browser-errorpages')
-
+    testImplementation Dependencies.androidx_test_core
     testImplementation Dependencies.testing_junit
     testImplementation Dependencies.testing_robolectric
     testImplementation Dependencies.testing_mockito
-
     testImplementation project(':support-test')
 }
 

@@ -128,6 +128,8 @@ _Combined components to implement feature-specific use cases._
 
 * 🔴 [**Find In Page**](components/feature/findinpage/README.md) - A component that provides an UI widget for [find in page functionality](https://support.mozilla.org/en-US/kb/search-contents-current-page-text-or-links).
 
+* 🔴 [**Site Permissions**](components/feature/sidepermissions/README.md) - A feature for showing site permission request prompts.
+
 ## UI
 
 _Generic low-level UI components for building apps._

@@ -37,6 +37,9 @@ permalink: /changelog/
 * **ui-doorhanger**
   * 🆕 New component: A `Doorhanger` is a floating heads-up popup that can be anchored to a view. They are presented to notify the user of something that is important (e.g. a content permission request).
 
+* **feature-sitepermissions**
+  * 🆕 New component: A feature that will subscribe to the selected session, and will provide an UI for all the incoming appPermission and contentPermission request.
+
 # 0.41.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.40.0...v0.41.0)

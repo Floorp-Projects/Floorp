@@ -40,3 +40,7 @@ locales = [
 [[paths]]
   reference = "components/feature/findinpage/src/main/res/values/strings.xml"
   l10n = "components/feature/findinpage/src/main/res/values-{android_locale}/strings.xml"
+
+ [[paths]]
+   reference = "components/feature/sitepermissions/src/main/res/values/strings.xml"
+   l10n = "components/feature/sitepermissions/src/main/res/values-{android_locale}/strings.xml"

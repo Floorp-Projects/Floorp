@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?><!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingStart="?android:attr/listPreferredItemPaddingLeft"
+        android:paddingTop="?android:attr/listPreferredItemPaddingLeft"
+        android:paddingEnd="?android:attr/listPreferredItemPaddingLeft">
+
+        <android.support.v7.widget.AppCompatImageView
+            android:id="@+id/icon"
+            android:layout_width="@dimen/mozac_feature_sitepermissions_permission_icon_width"
+            android:layout_height="@dimen/mozac_feature_sitepermissions_permission_icon_height"
+            android:layout_marginEnd="10dp"
+            android:background="@android:color/transparent"
+            android:clickable="false"
+            android:contentDescription="@string/mozac_feature_sitepermissions_accessibility_permission_icon"
+            tools:src="@drawable/mozac_ic_notification"
+            tools:tint="@android:color/black"/>
+
+        <TextView
+            android:id="@+id/title"
+            style="?android:attr/textAppearanceMedium"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            tools:text="Allow wikipedia.org to send notifications?" />
+
+    </LinearLayout>
+</ScrollView>
