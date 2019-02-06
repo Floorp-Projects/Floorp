@@ -102,6 +102,21 @@ glean.baseline:
     notification_emails:
       - telemetry-client-dev@mozilla.com
 
+  locale:
+    type: string
+    lifetime: application
+    send_in_pings:
+      - baseline
+    description: |
+      The locale of the application (e.g. "es-ES").
+    bugs:
+      - 1512938
+      - 1525540
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1512938#c3
+    notification_emails:
+      - telemetry-client-dev@mozilla.com
+
 glean.internal.metrics:
   client_id:
     type: uuid

@@ -222,7 +222,8 @@ class GleanTest {
                 "glean.baseline.os_version",
                 "glean.baseline.device_manufacturer",
                 "glean.baseline.device_model",
-                "glean.baseline.architecture"
+                "glean.baseline.architecture",
+                "glean.baseline.locale"
             )
             val baselineMetricsObject = baselineJson.getJSONObject("metrics")!!
             val baselineStringMetrics = baselineMetricsObject.getJSONObject("string")!!
