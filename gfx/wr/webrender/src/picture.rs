@@ -2960,7 +2960,7 @@ impl PicturePrimitive {
             PictureCompositeMode::Filter(FilterOp::DropShadow(offset, blur_radius, color)) => {
                 let blur_std_deviation = blur_radius * frame_context.device_pixel_scale.0;
                 let blur_range = (blur_std_deviation * BLUR_SAMPLE_SCALE).ceil() as i32;
-
+                let rounded_std_dev = blur_std_deviation.round();
                 // The clipped field is the part of the picture that is visible
                 // on screen. The unclipped field is the screen-space rect of
                 // the complete picture, if no screen / clip-chain was applied
@@ -2969,10 +2969,13 @@ impl PicturePrimitive {
                 // blur results, inflate that clipped area by the blur range, and
                 // then intersect with the total screen rect, to minimize the
                 // allocation size.
-                let device_rect = clipped
-                    .inflate(blur_range, blur_range)
-                    .intersection(&unclipped.to_i32())
-                    .unwrap();
+                let mut device_rect = clipped.inflate(blur_range, blur_range)
+                        .intersection(&unclipped.to_i32())
+                        .unwrap();
+                device_rect.size = RenderTask::adjusted_blur_source_size(
+                    device_rect.size,
+                    rounded_std_dev,
+                );
 
                 let uv_rect_kind = calculate_uv_rect_kind(
                     &pic_rect,
@@ -2996,7 +2999,7 @@ impl PicturePrimitive {
                 let picture_task_id = frame_state.render_tasks.add(picture_task);
 
                 let blur_render_task = RenderTask::new_blur(
-                    blur_std_deviation.round(),
+                    rounded_std_dev,
                     picture_task_id,
                     frame_state.render_tasks,
                     RenderTargetKind::Color,
