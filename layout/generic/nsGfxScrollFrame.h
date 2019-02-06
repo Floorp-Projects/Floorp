@@ -812,6 +812,8 @@ class nsHTMLScrollFrame : public nsContainerFrame,
     return mHelper.ComputeCustomOverflow(aOverflowAreas);
   }
 
+  nscoord GetLogicalBaseline(mozilla::WritingMode aWritingMode) const override;
+
   bool GetVerticalAlignBaseline(mozilla::WritingMode aWM,
                                 nscoord* aBaseline) const override {
     NS_ASSERTION(!aWM.IsOrthogonalTo(GetWritingMode()),
