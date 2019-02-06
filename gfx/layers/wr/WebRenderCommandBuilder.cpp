@@ -1442,6 +1442,8 @@ void WebRenderCommandBuilder::BuildWebRenderCommands(
     params.mFilters = std::move(aFilters);
     params.animation = mZoomProp.ptrOr(nullptr);
     params.cache_tiles = isTopLevelContent;
+    params.clip =
+        wr::WrStackingContextClip::ClipChain(aBuilder.CurrentClipChainId());
 
     StackingContextHelper pageRootSc(sc, nullptr, nullptr, nullptr, aBuilder,
                                      params);

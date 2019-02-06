@@ -117,7 +117,7 @@ impl From<Option<PictureCompositeMode>> for PictureCompositeKey {
                     }
                 }
             }
-            Some(PictureCompositeMode::Blit) |
+            Some(PictureCompositeMode::Blit(_)) |
             Some(PictureCompositeMode::TileCache { .. }) |
             None => {
                 PictureCompositeKey::Identity
