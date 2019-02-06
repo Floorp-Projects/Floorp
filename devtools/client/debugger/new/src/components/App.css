@@ -18,6 +18,11 @@ button:focus {
   background-color: var(--theme-toolbar-background-hover);
 }
 
+.theme-dark button:hover,
+.theme-dark button:focus {
+  background-color: var(--theme-toolbar-hover);
+}
+
 .debugger {
   display: flex;
   flex: 1;
