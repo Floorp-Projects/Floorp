@@ -28,9 +28,9 @@ class TestShellParent : public PTestShellParent {
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
   PTestShellCommandParent* AllocPTestShellCommandParent(
-      const nsString& aCommand) override;
+      const nsString& aCommand);
 
-  bool DeallocPTestShellCommandParent(PTestShellCommandParent* aActor) override;
+  bool DeallocPTestShellCommandParent(PTestShellCommandParent* aActor);
 
   bool CommandDone(TestShellCommandParent* aActor, const nsString& aResponse);
 };

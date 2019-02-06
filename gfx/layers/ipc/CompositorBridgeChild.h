@@ -108,13 +108,13 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
   virtual mozilla::ipc::IPCResult RecvHideAllPlugins(
       const uintptr_t& aParentWidget) override;
 
-  virtual PTextureChild* AllocPTextureChild(
+  PTextureChild* AllocPTextureChild(
       const SurfaceDescriptor& aSharedData, const ReadLockDescriptor& aReadLock,
       const LayersBackend& aLayersBackend, const TextureFlags& aFlags,
       const LayersId& aId, const uint64_t& aSerial,
-      const wr::MaybeExternalImageId& aExternalImageId) override;
+      const wr::MaybeExternalImageId& aExternalImageId);
 
-  virtual bool DeallocPTextureChild(PTextureChild* actor) override;
+  bool DeallocPTextureChild(PTextureChild* actor);
 
   virtual mozilla::ipc::IPCResult RecvParentAsyncMessages(
       InfallibleTArray<AsyncParentMessageData>&& aMessages) override;
@@ -202,21 +202,20 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
   virtual bool DeallocShmem(mozilla::ipc::Shmem& aShmem) override;
 
   PCompositorWidgetChild* AllocPCompositorWidgetChild(
-      const CompositorWidgetInitData& aInitData) override;
-  bool DeallocPCompositorWidgetChild(PCompositorWidgetChild* aActor) override;
+      const CompositorWidgetInitData& aInitData);
+  bool DeallocPCompositorWidgetChild(PCompositorWidgetChild* aActor);
 
-  PAPZCTreeManagerChild* AllocPAPZCTreeManagerChild(
-      const LayersId& aLayersId) override;
-  bool DeallocPAPZCTreeManagerChild(PAPZCTreeManagerChild* aActor) override;
+  PAPZCTreeManagerChild* AllocPAPZCTreeManagerChild(const LayersId& aLayersId);
+  bool DeallocPAPZCTreeManagerChild(PAPZCTreeManagerChild* aActor);
 
-  PAPZChild* AllocPAPZChild(const LayersId& aLayersId) override;
-  bool DeallocPAPZChild(PAPZChild* aActor) override;
+  PAPZChild* AllocPAPZChild(const LayersId& aLayersId);
+  bool DeallocPAPZChild(PAPZChild* aActor);
 
   void WillEndTransaction();
 
   PWebRenderBridgeChild* AllocPWebRenderBridgeChild(
-      const wr::PipelineId& aPipelineId, const LayoutDeviceIntSize&) override;
-  bool DeallocPWebRenderBridgeChild(PWebRenderBridgeChild* aActor) override;
+      const wr::PipelineId& aPipelineId, const LayoutDeviceIntSize&);
+  bool DeallocPWebRenderBridgeChild(PWebRenderBridgeChild* aActor);
 
   wr::MaybeExternalImageId GetNextExternalImageId() override;
 
@@ -264,12 +263,10 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
 
   void AfterDestroy();
 
-  virtual PLayerTransactionChild* AllocPLayerTransactionChild(
-      const nsTArray<LayersBackend>& aBackendHints,
-      const LayersId& aId) override;
+  PLayerTransactionChild* AllocPLayerTransactionChild(
+      const nsTArray<LayersBackend>& aBackendHints, const LayersId& aId);
 
-  virtual bool DeallocPLayerTransactionChild(
-      PLayerTransactionChild* aChild) override;
+  bool DeallocPLayerTransactionChild(PLayerTransactionChild* aChild);
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 

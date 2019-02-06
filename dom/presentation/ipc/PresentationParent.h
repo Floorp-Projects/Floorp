@@ -41,17 +41,15 @@ class PresentationParent final : public PPresentationParent,
       PPresentationRequestParent* aActor,
       const PresentationIPCRequest& aRequest) override;
 
-  virtual PPresentationRequestParent* AllocPPresentationRequestParent(
-      const PresentationIPCRequest& aRequest) override;
+  PPresentationRequestParent* AllocPPresentationRequestParent(
+      const PresentationIPCRequest& aRequest);
 
-  virtual bool DeallocPPresentationRequestParent(
-      PPresentationRequestParent* aActor) override;
+  bool DeallocPPresentationRequestParent(PPresentationRequestParent* aActor);
 
-  virtual PPresentationBuilderParent* AllocPPresentationBuilderParent(
-      const nsString& aSessionId, const uint8_t& aRole) override;
+  PPresentationBuilderParent* AllocPPresentationBuilderParent(
+      const nsString& aSessionId, const uint8_t& aRole);
 
-  virtual bool DeallocPPresentationBuilderParent(
-      PPresentationBuilderParent* aActor) override;
+  bool DeallocPPresentationBuilderParent(PPresentationBuilderParent* aActor);
 
   virtual mozilla::ipc::IPCResult Recv__delete__() override;
 

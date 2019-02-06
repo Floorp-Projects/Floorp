@@ -294,17 +294,17 @@ class TabParent final : public PBrowserParent,
   virtual mozilla::ipc::IPCResult RecvDispatchKeyboardEvent(
       const mozilla::WidgetKeyboardEvent& aEvent) override;
 
-  virtual PColorPickerParent* AllocPColorPickerParent(
-      const nsString& aTitle, const nsString& aInitialColor) override;
+  PColorPickerParent* AllocPColorPickerParent(const nsString& aTitle,
+                                              const nsString& aInitialColor);
 
-  virtual bool DeallocPColorPickerParent(
-      PColorPickerParent* aColorPicker) override;
+  bool DeallocPColorPickerParent(PColorPickerParent* aColorPicker);
 
-  virtual PDocAccessibleParent* AllocPDocAccessibleParent(
-      PDocAccessibleParent*, const uint64_t&, const uint32_t&,
-      const IAccessibleHolder&) override;
+  PDocAccessibleParent* AllocPDocAccessibleParent(PDocAccessibleParent*,
+                                                  const uint64_t&,
+                                                  const uint32_t&,
+                                                  const IAccessibleHolder&);
 
-  virtual bool DeallocPDocAccessibleParent(PDocAccessibleParent*) override;
+  bool DeallocPDocAccessibleParent(PDocAccessibleParent*);
 
   virtual mozilla::ipc::IPCResult RecvPDocAccessibleConstructor(
       PDocAccessibleParent* aDoc, PDocAccessibleParent* aParentDoc,
@@ -316,10 +316,9 @@ class TabParent final : public PBrowserParent,
    */
   a11y::DocAccessibleParent* GetTopLevelDocAccessible() const;
 
-  virtual PWindowGlobalParent* AllocPWindowGlobalParent(
-      const WindowGlobalInit& aInit) override;
+  PWindowGlobalParent* AllocPWindowGlobalParent(const WindowGlobalInit& aInit);
 
-  virtual bool DeallocPWindowGlobalParent(PWindowGlobalParent* aActor) override;
+  bool DeallocPWindowGlobalParent(PWindowGlobalParent* aActor);
 
   virtual mozilla::ipc::IPCResult RecvPWindowGlobalConstructor(
       PWindowGlobalParent* aActor, const WindowGlobalInit& aInit) override;
@@ -439,20 +438,20 @@ class TabParent final : public PBrowserParent,
                      Modifiers aModifiers, const ScrollableLayerGuid& aGuid,
                      uint64_t aInputBlockId);
 
-  virtual PFilePickerParent* AllocPFilePickerParent(
-      const nsString& aTitle, const int16_t& aMode) override;
+  PFilePickerParent* AllocPFilePickerParent(const nsString& aTitle,
+                                            const int16_t& aMode);
 
-  virtual bool DeallocPFilePickerParent(PFilePickerParent* actor) override;
+  bool DeallocPFilePickerParent(PFilePickerParent* actor);
 
-  virtual PIndexedDBPermissionRequestParent*
-  AllocPIndexedDBPermissionRequestParent(const Principal& aPrincipal) override;
+  PIndexedDBPermissionRequestParent* AllocPIndexedDBPermissionRequestParent(
+      const Principal& aPrincipal);
 
   virtual mozilla::ipc::IPCResult RecvPIndexedDBPermissionRequestConstructor(
       PIndexedDBPermissionRequestParent* aActor,
       const Principal& aPrincipal) override;
 
-  virtual bool DeallocPIndexedDBPermissionRequestParent(
-      PIndexedDBPermissionRequestParent* aActor) override;
+  bool DeallocPIndexedDBPermissionRequestParent(
+      PIndexedDBPermissionRequestParent* aActor);
 
   bool GetGlobalJSObject(JSContext* cx, JSObject** globalp);
 
@@ -512,14 +511,13 @@ class TabParent final : public PBrowserParent,
   /**
    * Native widget remoting protocol for use with windowed plugins with e10s.
    */
-  virtual PPluginWidgetParent* AllocPPluginWidgetParent() override;
+  PPluginWidgetParent* AllocPPluginWidgetParent();
 
-  virtual bool DeallocPPluginWidgetParent(PPluginWidgetParent* aActor) override;
+  bool DeallocPPluginWidgetParent(PPluginWidgetParent* aActor);
 
-  virtual PPaymentRequestParent* AllocPPaymentRequestParent() override;
+  PPaymentRequestParent* AllocPPaymentRequestParent();
 
-  virtual bool DeallocPPaymentRequestParent(
-      PPaymentRequestParent* aActor) override;
+  bool DeallocPPaymentRequestParent(PPaymentRequestParent* aActor);
 
   bool SendLoadRemoteScript(const nsString& aURL,
                             const bool& aRunInGlobalScope);

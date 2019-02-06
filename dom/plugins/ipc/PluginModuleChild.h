@@ -70,12 +70,11 @@ class PluginModuleChild : public PPluginModuleChild {
   virtual mozilla::ipc::IPCResult RecvInitPluginFunctionBroker(
       Endpoint<PFunctionBrokerChild>&& endpoint) override;
 
-  virtual PPluginInstanceChild* AllocPPluginInstanceChild(
+  PPluginInstanceChild* AllocPPluginInstanceChild(
       const nsCString& aMimeType, const InfallibleTArray<nsCString>& aNames,
-      const InfallibleTArray<nsCString>& aValues) override;
+      const InfallibleTArray<nsCString>& aValues);
 
-  virtual bool DeallocPPluginInstanceChild(
-      PPluginInstanceChild* aActor) override;
+  bool DeallocPPluginInstanceChild(PPluginInstanceChild* aActor);
 
   virtual mozilla::ipc::IPCResult RecvPPluginInstanceConstructor(
       PPluginInstanceChild* aActor, const nsCString& aMimeType,
