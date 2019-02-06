@@ -41,11 +41,6 @@ if CONFIG['OS_TARGET'] == 'WINNT':
         SOURCES += ['cygprofile.cpp']
         SOURCES['cygprofile.cpp'].pgo_generate_only = True
 
-    if CONFIG['CC_TYPE'] == "msvc":
-        CFLAGS += ['-guard:cf']
-        CXXFLAGS += ['-guard:cf']
-        LDFLAGS += ['-guard:cf']
-
 if CONFIG['MOZ_WIDGET_TOOLKIT']:
 
     if CONFIG['MOZ_MEMORY'] and FORCE_SHARED_LIB:
