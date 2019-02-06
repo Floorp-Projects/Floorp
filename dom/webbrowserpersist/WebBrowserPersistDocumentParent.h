@@ -49,18 +49,16 @@ class WebBrowserPersistDocumentParent final
   virtual mozilla::ipc::IPCResult RecvInitFailure(
       const nsresult& aFailure) override;
 
-  virtual PWebBrowserPersistResourcesParent*
-  AllocPWebBrowserPersistResourcesParent() override;
-  virtual bool DeallocPWebBrowserPersistResourcesParent(
-      PWebBrowserPersistResourcesParent* aActor) override;
+  PWebBrowserPersistResourcesParent* AllocPWebBrowserPersistResourcesParent();
+  bool DeallocPWebBrowserPersistResourcesParent(
+      PWebBrowserPersistResourcesParent* aActor);
 
-  virtual PWebBrowserPersistSerializeParent*
-  AllocPWebBrowserPersistSerializeParent(const WebBrowserPersistURIMap& aMap,
-                                         const nsCString& aRequestedContentType,
-                                         const uint32_t& aEncoderFlags,
-                                         const uint32_t& aWrapColumn) override;
-  virtual bool DeallocPWebBrowserPersistSerializeParent(
-      PWebBrowserPersistSerializeParent* aActor) override;
+  PWebBrowserPersistSerializeParent* AllocPWebBrowserPersistSerializeParent(
+      const WebBrowserPersistURIMap& aMap,
+      const nsCString& aRequestedContentType, const uint32_t& aEncoderFlags,
+      const uint32_t& aWrapColumn);
+  bool DeallocPWebBrowserPersistSerializeParent(
+      PWebBrowserPersistSerializeParent* aActor);
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 

@@ -162,13 +162,13 @@ class GMPParent final : public PGMPParent {
 
   mozilla::ipc::IPCResult RecvPGMPStorageConstructor(
       PGMPStorageParent* actor) override;
-  PGMPStorageParent* AllocPGMPStorageParent() override;
-  bool DeallocPGMPStorageParent(PGMPStorageParent* aActor) override;
+  PGMPStorageParent* AllocPGMPStorageParent();
+  bool DeallocPGMPStorageParent(PGMPStorageParent* aActor);
 
   mozilla::ipc::IPCResult RecvPGMPTimerConstructor(
       PGMPTimerParent* actor) override;
-  PGMPTimerParent* AllocPGMPTimerParent() override;
-  bool DeallocPGMPTimerParent(PGMPTimerParent* aActor) override;
+  PGMPTimerParent* AllocPGMPTimerParent();
+  bool DeallocPGMPTimerParent(PGMPTimerParent* aActor);
 
   mozilla::ipc::IPCResult RecvPGMPContentChildDestroyed() override;
   bool IsUsed() {

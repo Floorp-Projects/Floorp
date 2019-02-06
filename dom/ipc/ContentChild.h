@@ -210,47 +210,45 @@ class ContentChild final : public PContentChild,
   virtual bool DeallocPIPCBlobInputStreamChild(
       PIPCBlobInputStreamChild* aActor) override;
 
-  virtual PHalChild* AllocPHalChild() override;
-  virtual bool DeallocPHalChild(PHalChild*) override;
+  PHalChild* AllocPHalChild();
+  bool DeallocPHalChild(PHalChild*);
 
-  virtual PHeapSnapshotTempFileHelperChild*
-  AllocPHeapSnapshotTempFileHelperChild() override;
+  PHeapSnapshotTempFileHelperChild* AllocPHeapSnapshotTempFileHelperChild();
 
-  virtual bool DeallocPHeapSnapshotTempFileHelperChild(
-      PHeapSnapshotTempFileHelperChild*) override;
+  bool DeallocPHeapSnapshotTempFileHelperChild(
+      PHeapSnapshotTempFileHelperChild*);
 
-  virtual PCycleCollectWithLogsChild* AllocPCycleCollectWithLogsChild(
+  PCycleCollectWithLogsChild* AllocPCycleCollectWithLogsChild(
       const bool& aDumpAllTraces, const FileDescriptor& aGCLog,
-      const FileDescriptor& aCCLog) override;
+      const FileDescriptor& aCCLog);
 
-  virtual bool DeallocPCycleCollectWithLogsChild(
-      PCycleCollectWithLogsChild* aActor) override;
+  bool DeallocPCycleCollectWithLogsChild(PCycleCollectWithLogsChild* aActor);
 
   virtual mozilla::ipc::IPCResult RecvPCycleCollectWithLogsConstructor(
       PCycleCollectWithLogsChild* aChild, const bool& aDumpAllTraces,
       const FileDescriptor& aGCLog, const FileDescriptor& aCCLog) override;
 
-  virtual PWebBrowserPersistDocumentChild* AllocPWebBrowserPersistDocumentChild(
-      PBrowserChild* aBrowser, const uint64_t& aOuterWindowID) override;
+  PWebBrowserPersistDocumentChild* AllocPWebBrowserPersistDocumentChild(
+      PBrowserChild* aBrowser, const uint64_t& aOuterWindowID);
 
   virtual mozilla::ipc::IPCResult RecvPWebBrowserPersistDocumentConstructor(
       PWebBrowserPersistDocumentChild* aActor, PBrowserChild* aBrowser,
       const uint64_t& aOuterWindowID) override;
 
-  virtual bool DeallocPWebBrowserPersistDocumentChild(
-      PWebBrowserPersistDocumentChild* aActor) override;
+  bool DeallocPWebBrowserPersistDocumentChild(
+      PWebBrowserPersistDocumentChild* aActor);
 
-  virtual PTestShellChild* AllocPTestShellChild() override;
+  PTestShellChild* AllocPTestShellChild();
 
-  virtual bool DeallocPTestShellChild(PTestShellChild*) override;
+  bool DeallocPTestShellChild(PTestShellChild*);
 
   virtual mozilla::ipc::IPCResult RecvPTestShellConstructor(
       PTestShellChild*) override;
 
-  virtual PScriptCacheChild* AllocPScriptCacheChild(
-      const FileDescOrError& cacheFile, const bool& wantCacheData) override;
+  PScriptCacheChild* AllocPScriptCacheChild(const FileDescOrError& cacheFile,
+                                            const bool& wantCacheData);
 
-  virtual bool DeallocPScriptCacheChild(PScriptCacheChild*) override;
+  bool DeallocPScriptCacheChild(PScriptCacheChild*);
 
   virtual mozilla::ipc::IPCResult RecvPScriptCacheConstructor(
       PScriptCacheChild*, const FileDescOrError& cacheFile,
@@ -258,13 +256,13 @@ class ContentChild final : public PContentChild,
 
   jsipc::CPOWManager* GetCPOWManager() override;
 
-  virtual PNeckoChild* AllocPNeckoChild() override;
+  PNeckoChild* AllocPNeckoChild();
 
-  virtual bool DeallocPNeckoChild(PNeckoChild*) override;
+  bool DeallocPNeckoChild(PNeckoChild*);
 
-  virtual PPrintingChild* AllocPPrintingChild() override;
+  PPrintingChild* AllocPPrintingChild();
 
-  virtual bool DeallocPPrintingChild(PPrintingChild*) override;
+  bool DeallocPPrintingChild(PPrintingChild*);
 
   virtual PChildToParentStreamChild* SendPChildToParentStreamConstructor(
       PChildToParentStreamChild*) override;
@@ -277,34 +275,33 @@ class ContentChild final : public PContentChild,
   virtual bool DeallocPParentToChildStreamChild(
       PParentToChildStreamChild*) override;
 
-  virtual PPSMContentDownloaderChild* AllocPPSMContentDownloaderChild(
-      const uint32_t& aCertType) override;
+  PPSMContentDownloaderChild* AllocPPSMContentDownloaderChild(
+      const uint32_t& aCertType);
 
-  virtual bool DeallocPPSMContentDownloaderChild(
-      PPSMContentDownloaderChild* aDownloader) override;
+  bool DeallocPPSMContentDownloaderChild(
+      PPSMContentDownloaderChild* aDownloader);
 
-  virtual PExternalHelperAppChild* AllocPExternalHelperAppChild(
+  PExternalHelperAppChild* AllocPExternalHelperAppChild(
       const OptionalURIParams& uri, const nsCString& aMimeContentType,
       const nsCString& aContentDisposition,
       const uint32_t& aContentDispositionHint,
       const nsString& aContentDispositionFilename, const bool& aForceSave,
       const int64_t& aContentLength, const bool& aWasFileChannel,
-      const OptionalURIParams& aReferrer, PBrowserChild* aBrowser) override;
+      const OptionalURIParams& aReferrer, PBrowserChild* aBrowser);
 
-  virtual bool DeallocPExternalHelperAppChild(
-      PExternalHelperAppChild* aService) override;
+  bool DeallocPExternalHelperAppChild(PExternalHelperAppChild* aService);
 
-  virtual PHandlerServiceChild* AllocPHandlerServiceChild() override;
+  PHandlerServiceChild* AllocPHandlerServiceChild();
 
-  virtual bool DeallocPHandlerServiceChild(PHandlerServiceChild*) override;
+  bool DeallocPHandlerServiceChild(PHandlerServiceChild*);
 
-  virtual PMediaChild* AllocPMediaChild() override;
+  PMediaChild* AllocPMediaChild();
 
-  virtual bool DeallocPMediaChild(PMediaChild* aActor) override;
+  bool DeallocPMediaChild(PMediaChild* aActor);
 
-  virtual PPresentationChild* AllocPPresentationChild() override;
+  PPresentationChild* AllocPPresentationChild();
 
-  virtual bool DeallocPPresentationChild(PPresentationChild* aActor) override;
+  bool DeallocPPresentationChild(PPresentationChild* aActor);
 
   virtual mozilla::ipc::IPCResult RecvNotifyPresentationReceiverLaunched(
       PBrowserChild* aIframe, const nsString& aSessionId) override;
@@ -314,10 +311,9 @@ class ContentChild final : public PContentChild,
 
   virtual mozilla::ipc::IPCResult RecvNotifyEmptyHTTPCache() override;
 
-  virtual PSpeechSynthesisChild* AllocPSpeechSynthesisChild() override;
+  PSpeechSynthesisChild* AllocPSpeechSynthesisChild();
 
-  virtual bool DeallocPSpeechSynthesisChild(
-      PSpeechSynthesisChild* aActor) override;
+  bool DeallocPSpeechSynthesisChild(PSpeechSynthesisChild* aActor);
 
   virtual mozilla::ipc::IPCResult RecvRegisterChrome(
       InfallibleTArray<ChromePackage>&& packages,
@@ -335,11 +331,9 @@ class ContentChild final : public PContentChild,
   virtual bool DeallocPJavaScriptChild(
       mozilla::jsipc::PJavaScriptChild*) override;
 
-  virtual PRemoteSpellcheckEngineChild* AllocPRemoteSpellcheckEngineChild()
-      override;
+  PRemoteSpellcheckEngineChild* AllocPRemoteSpellcheckEngineChild();
 
-  virtual bool DeallocPRemoteSpellcheckEngineChild(
-      PRemoteSpellcheckEngineChild*) override;
+  bool DeallocPRemoteSpellcheckEngineChild(PRemoteSpellcheckEngineChild*);
 
   virtual mozilla::ipc::IPCResult RecvSetOffline(const bool& offline) override;
 
@@ -548,25 +542,24 @@ class ContentChild final : public PContentChild,
 
   PBrowserOrId GetBrowserOrId(TabChild* aTabChild);
 
-  virtual POfflineCacheUpdateChild* AllocPOfflineCacheUpdateChild(
+  POfflineCacheUpdateChild* AllocPOfflineCacheUpdateChild(
       const URIParams& manifestURI, const URIParams& documentURI,
-      const PrincipalInfo& aLoadingPrincipalInfo,
-      const bool& stickDocument) override;
+      const PrincipalInfo& aLoadingPrincipalInfo, const bool& stickDocument);
 
-  virtual bool DeallocPOfflineCacheUpdateChild(
-      POfflineCacheUpdateChild* offlineCacheUpdate) override;
+  bool DeallocPOfflineCacheUpdateChild(
+      POfflineCacheUpdateChild* offlineCacheUpdate);
 
-  virtual PWebrtcGlobalChild* AllocPWebrtcGlobalChild() override;
+  PWebrtcGlobalChild* AllocPWebrtcGlobalChild();
 
-  virtual bool DeallocPWebrtcGlobalChild(PWebrtcGlobalChild* aActor) override;
+  bool DeallocPWebrtcGlobalChild(PWebrtcGlobalChild* aActor);
 
-  virtual PContentPermissionRequestChild* AllocPContentPermissionRequestChild(
+  PContentPermissionRequestChild* AllocPContentPermissionRequestChild(
       const InfallibleTArray<PermissionRequest>& aRequests,
       const IPC::Principal& aPrincipal,
       const IPC::Principal& aTopLevelPrincipal,
-      const bool& aIsHandlingUserInput, const TabId& aTabId) override;
-  virtual bool DeallocPContentPermissionRequestChild(
-      PContentPermissionRequestChild* actor) override;
+      const bool& aIsHandlingUserInput, const TabId& aTabId);
+  bool DeallocPContentPermissionRequestChild(
+      PContentPermissionRequestChild* actor);
 
   // Windows specific - set up audio session
   virtual mozilla::ipc::IPCResult RecvSetAudioSessionData(
@@ -641,22 +634,19 @@ class ContentChild final : public PContentChild,
   }
 
   // PURLClassifierChild
-  virtual PURLClassifierChild* AllocPURLClassifierChild(
-      const Principal& aPrincipal, bool* aSuccess) override;
-  virtual bool DeallocPURLClassifierChild(PURLClassifierChild* aActor) override;
+  PURLClassifierChild* AllocPURLClassifierChild(const Principal& aPrincipal,
+                                                bool* aSuccess);
+  bool DeallocPURLClassifierChild(PURLClassifierChild* aActor);
 
   // PURLClassifierLocalChild
-  virtual PURLClassifierLocalChild* AllocPURLClassifierLocalChild(
+  PURLClassifierLocalChild* AllocPURLClassifierLocalChild(
       const URIParams& aUri,
-      const nsTArray<IPCURLClassifierFeature>& aFeatures) override;
-  virtual bool DeallocPURLClassifierLocalChild(
-      PURLClassifierLocalChild* aActor) override;
+      const nsTArray<IPCURLClassifierFeature>& aFeatures);
+  bool DeallocPURLClassifierLocalChild(PURLClassifierLocalChild* aActor);
 
-  virtual PLoginReputationChild* AllocPLoginReputationChild(
-      const URIParams& aUri) override;
+  PLoginReputationChild* AllocPLoginReputationChild(const URIParams& aUri);
 
-  virtual bool DeallocPLoginReputationChild(
-      PLoginReputationChild* aActor) override;
+  bool DeallocPLoginReputationChild(PLoginReputationChild* aActor);
 
   nsTArray<LookAndFeelInt>& LookAndFeelCache() { return mLookAndFeelCache; }
 
@@ -687,15 +677,14 @@ class ContentChild final : public PContentChild,
       const uint32_t& aPluginEpoch, nsTArray<PluginTag>&& aPluginTags,
       nsTArray<FakePluginTag>&& aFakePluginTags) override;
 
-  virtual PClientOpenWindowOpChild* AllocPClientOpenWindowOpChild(
-      const ClientOpenWindowArgs& aArgs) override;
+  PClientOpenWindowOpChild* AllocPClientOpenWindowOpChild(
+      const ClientOpenWindowArgs& aArgs);
 
   virtual mozilla::ipc::IPCResult RecvPClientOpenWindowOpConstructor(
       PClientOpenWindowOpChild* aActor,
       const ClientOpenWindowArgs& aArgs) override;
 
-  virtual bool DeallocPClientOpenWindowOpChild(
-      PClientOpenWindowOpChild* aActor) override;
+  bool DeallocPClientOpenWindowOpChild(PClientOpenWindowOpChild* aActor);
 
   mozilla::ipc::IPCResult RecvSaveRecording(
       const FileDescriptor& aFile) override;

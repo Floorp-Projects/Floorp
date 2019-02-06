@@ -48,9 +48,9 @@ class VRManagerParent final : public PVRManagerParent {
  protected:
   ~VRManagerParent();
 
-  virtual PVRLayerParent* AllocPVRLayerParent(const uint32_t& aDisplayID,
-                                              const uint32_t& aGroup) override;
-  virtual bool DeallocPVRLayerParent(PVRLayerParent* actor) override;
+  PVRLayerParent* AllocPVRLayerParent(const uint32_t& aDisplayID,
+                                      const uint32_t& aGroup);
+  bool DeallocPVRLayerParent(PVRLayerParent* actor);
 
   virtual void ActorDestroy(ActorDestroyReason why) override;
   void OnChannelConnected(int32_t pid) override;

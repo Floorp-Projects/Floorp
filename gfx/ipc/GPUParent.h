@@ -34,9 +34,8 @@ class GPUParent final : public PGPUParent {
             MessageLoop* aIOLoop, IPC::Channel* aChannel);
   void NotifyDeviceReset();
 
-  PAPZInputBridgeParent* AllocPAPZInputBridgeParent(
-      const LayersId& aLayersId) override;
-  bool DeallocPAPZInputBridgeParent(PAPZInputBridgeParent* aActor) override;
+  PAPZInputBridgeParent* AllocPAPZInputBridgeParent(const LayersId& aLayersId);
+  bool DeallocPAPZInputBridgeParent(PAPZInputBridgeParent* aActor);
 
   mozilla::ipc::IPCResult RecvInit(
       nsTArray<GfxPrefSetting>&& prefs, nsTArray<GfxVarUpdate>&& vars,

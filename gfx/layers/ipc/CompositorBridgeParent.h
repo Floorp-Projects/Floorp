@@ -100,6 +100,8 @@ class CompositorBridgeParentBase : public PCompositorBridgeParent,
                                    public HostIPCAllocator,
                                    public ShmemAllocator,
                                    public MetricsSharingController {
+  friend class PCompositorBridgeParent;
+
  public:
   explicit CompositorBridgeParentBase(CompositorManagerParent* aManager);
 
@@ -196,6 +198,37 @@ class CompositorBridgeParentBase : public PCompositorBridgeParent,
 
  protected:
   ~CompositorBridgeParentBase() override;
+
+  virtual PAPZParent* AllocPAPZParent(const LayersId& layersId) = 0;
+  virtual bool DeallocPAPZParent(PAPZParent* aActor) = 0;
+
+  virtual PAPZCTreeManagerParent* AllocPAPZCTreeManagerParent(
+      const LayersId& layersId) = 0;
+  virtual bool DeallocPAPZCTreeManagerParent(
+      PAPZCTreeManagerParent* aActor) = 0;
+
+  virtual PLayerTransactionParent* AllocPLayerTransactionParent(
+      const nsTArray<LayersBackend>& layersBackendHints,
+      const LayersId& id) = 0;
+  virtual bool DeallocPLayerTransactionParent(
+      PLayerTransactionParent* aActor) = 0;
+
+  virtual PTextureParent* AllocPTextureParent(
+      const SurfaceDescriptor& aSharedData, const ReadLockDescriptor& aReadLock,
+      const LayersBackend& aBackend, const TextureFlags& aTextureFlags,
+      const LayersId& id, const uint64_t& aSerial,
+      const MaybeExternalImageId& aExternalImageId) = 0;
+  virtual bool DeallocPTextureParent(PTextureParent* aActor) = 0;
+
+  virtual PWebRenderBridgeParent* AllocPWebRenderBridgeParent(
+      const PipelineId& pipelineId, const LayoutDeviceIntSize& aSize) = 0;
+  virtual bool DeallocPWebRenderBridgeParent(
+      PWebRenderBridgeParent* aActor) = 0;
+
+  virtual PCompositorWidgetParent* AllocPCompositorWidgetParent(
+      const CompositorWidgetInitData& aInitData) = 0;
+  virtual bool DeallocPCompositorWidgetParent(
+      PCompositorWidgetParent* aActor) = 0;
 
   bool mCanSend;
 

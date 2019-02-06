@@ -105,13 +105,12 @@ class PluginInstanceChild : public PPluginInstanceChild {
   virtual void DoAsyncSetWindow(const gfxSurfaceType& aSurfaceType,
                                 const NPRemoteWindow& aWindow, bool aIsAsync);
 
-  virtual PPluginSurfaceChild* AllocPPluginSurfaceChild(
-      const WindowsSharedMemoryHandle&, const gfx::IntSize&,
-      const bool&) override {
+  PPluginSurfaceChild* AllocPPluginSurfaceChild(
+      const WindowsSharedMemoryHandle&, const gfx::IntSize&, const bool&) {
     return new PPluginSurfaceChild();
   }
 
-  virtual bool DeallocPPluginSurfaceChild(PPluginSurfaceChild* s) override {
+  bool DeallocPPluginSurfaceChild(PPluginSurfaceChild* s) {
     delete s;
     return true;
   }
@@ -133,11 +132,10 @@ class PluginInstanceChild : public PPluginInstanceChild {
 
   virtual mozilla::ipc::IPCResult AnswerNPP_Destroy(NPError* result) override;
 
-  virtual PPluginScriptableObjectChild* AllocPPluginScriptableObjectChild()
-      override;
+  PPluginScriptableObjectChild* AllocPPluginScriptableObjectChild();
 
-  virtual bool DeallocPPluginScriptableObjectChild(
-      PPluginScriptableObjectChild* aObject) override;
+  bool DeallocPPluginScriptableObjectChild(
+      PPluginScriptableObjectChild* aObject);
 
   virtual mozilla::ipc::IPCResult RecvPPluginScriptableObjectConstructor(
       PPluginScriptableObjectChild* aActor) override;
@@ -151,19 +149,19 @@ class PluginInstanceChild : public PPluginInstanceChild {
       PBrowserStreamChild* actor, const nsCString& mimeType,
       const bool& seekable, NPError* rv, uint16_t* stype) override;
 
-  virtual PBrowserStreamChild* AllocPBrowserStreamChild(
-      const nsCString& url, const uint32_t& length,
-      const uint32_t& lastmodified, PStreamNotifyChild* notifyData,
-      const nsCString& headers) override;
+  PBrowserStreamChild* AllocPBrowserStreamChild(const nsCString& url,
+                                                const uint32_t& length,
+                                                const uint32_t& lastmodified,
+                                                PStreamNotifyChild* notifyData,
+                                                const nsCString& headers);
 
-  virtual bool DeallocPBrowserStreamChild(PBrowserStreamChild* stream) override;
+  bool DeallocPBrowserStreamChild(PBrowserStreamChild* stream);
 
-  virtual PStreamNotifyChild* AllocPStreamNotifyChild(
+  PStreamNotifyChild* AllocPStreamNotifyChild(
       const nsCString& url, const nsCString& target, const bool& post,
-      const nsCString& buffer, const bool& file, NPError* result) override;
+      const nsCString& buffer, const bool& file, NPError* result);
 
-  virtual bool DeallocPStreamNotifyChild(
-      PStreamNotifyChild* notifyData) override;
+  bool DeallocPStreamNotifyChild(PStreamNotifyChild* notifyData);
 
   virtual mozilla::ipc::IPCResult AnswerSetPluginFocus() override;
 
@@ -237,14 +235,13 @@ class PluginInstanceChild : public PPluginInstanceChild {
   virtual mozilla::ipc::IPCResult RecvUpdateBackground(
       const SurfaceDescriptor& aBackground, const nsIntRect& aRect) override;
 
-  virtual PPluginBackgroundDestroyerChild*
-  AllocPPluginBackgroundDestroyerChild() override;
+  PPluginBackgroundDestroyerChild* AllocPPluginBackgroundDestroyerChild();
 
-  virtual mozilla::ipc::IPCResult RecvPPluginBackgroundDestroyerConstructor(
+  mozilla::ipc::IPCResult RecvPPluginBackgroundDestroyerConstructor(
       PPluginBackgroundDestroyerChild* aActor) override;
 
-  virtual bool DeallocPPluginBackgroundDestroyerChild(
-      PPluginBackgroundDestroyerChild* aActor) override;
+  bool DeallocPPluginBackgroundDestroyerChild(
+      PPluginBackgroundDestroyerChild* aActor);
 
 #if defined(OS_WIN)
   static bool RegisterWindowClass();

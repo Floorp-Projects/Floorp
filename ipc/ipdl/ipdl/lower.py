@@ -3161,23 +3161,26 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                     recvDecl.methodspec = MethodSpec.PURE
                     self.cls.addstmt(StmtDecl(recvDecl))
 
-        for md in p.messageDecls:
-            managed = md.decl.type.constructedType()
-            if not ptype.isManagerOf(managed) or md.decl.type.isDtor():
-                continue
+        # If we're using virtual calls, we need the methods to be declared on
+        # the base class.
+        if (self.protocol.name, self.side) in VIRTUAL_CALL_CLASSES:
+            for md in p.messageDecls:
+                managed = md.decl.type.constructedType()
+                if not ptype.isManagerOf(managed) or md.decl.type.isDtor():
+                    continue
 
-            # add the Alloc/Dealloc interface for managed actors
-            actortype = md.actorDecl().bareType(self.side)
+                # add the Alloc/Dealloc interface for managed actors
+                actortype = md.actorDecl().bareType(self.side)
 
-            self.cls.addstmt(StmtDecl(MethodDecl(
-                _allocMethod(managed, self.side),
-                params=md.makeCxxParams(side=self.side, implicit=False),
-                ret=actortype, methodspec=MethodSpec.PURE)))
+                self.cls.addstmt(StmtDecl(MethodDecl(
+                    _allocMethod(managed, self.side),
+                    params=md.makeCxxParams(side=self.side, implicit=False),
+                    ret=actortype, methodspec=MethodSpec.PURE)))
 
-            self.cls.addstmt(StmtDecl(MethodDecl(
-                _deallocMethod(managed, self.side),
-                params=[Decl(actortype, 'aActor')],
-                ret=Type.BOOL, methodspec=MethodSpec.PURE)))
+                self.cls.addstmt(StmtDecl(MethodDecl(
+                    _deallocMethod(managed, self.side),
+                    params=[Decl(actortype, 'aActor')],
+                    ret=Type.BOOL, methodspec=MethodSpec.PURE)))
 
         # ActorDestroy() method; default is no-op
         if self.side == 'parent':

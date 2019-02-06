@@ -36,20 +36,17 @@ class nsPrintingProxy final : public nsIPrintingPromptService,
                              uint32_t aFlags);
 
  protected:
-  virtual PPrintProgressDialogChild* AllocPPrintProgressDialogChild() override;
+  PPrintProgressDialogChild* AllocPPrintProgressDialogChild();
 
-  virtual bool DeallocPPrintProgressDialogChild(
-      PPrintProgressDialogChild* aActor) override;
+  bool DeallocPPrintProgressDialogChild(PPrintProgressDialogChild* aActor);
 
-  virtual PPrintSettingsDialogChild* AllocPPrintSettingsDialogChild() override;
+  PPrintSettingsDialogChild* AllocPPrintSettingsDialogChild();
 
-  virtual bool DeallocPPrintSettingsDialogChild(
-      PPrintSettingsDialogChild* aActor) override;
+  bool DeallocPPrintSettingsDialogChild(PPrintSettingsDialogChild* aActor);
 
-  virtual PRemotePrintJobChild* AllocPRemotePrintJobChild() override;
+  PRemotePrintJobChild* AllocPRemotePrintJobChild();
 
-  virtual bool DeallocPRemotePrintJobChild(
-      PRemotePrintJobChild* aActor) override;
+  bool DeallocPRemotePrintJobChild(PRemotePrintJobChild* aActor);
 
  private:
   nsPrintingProxy();

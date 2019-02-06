@@ -45,9 +45,9 @@ class SpeechSynthesisChild : public PSpeechSynthesisChild {
   PSpeechSynthesisRequestChild* AllocPSpeechSynthesisRequestChild(
       const nsString& aLang, const nsString& aUri, const nsString& aText,
       const float& aVolume, const float& aPitch, const float& aRate,
-      const bool& aIsChrome) override;
+      const bool& aIsChrome);
   bool DeallocPSpeechSynthesisRequestChild(
-      PSpeechSynthesisRequestChild* aActor) override;
+      PSpeechSynthesisRequestChild* aActor);
 };
 
 class SpeechSynthesisRequestChild : public PSpeechSynthesisRequestChild {

@@ -40,22 +40,17 @@ class PrintingParent final : public PPrintingParent {
       const PrintData& data, const bool& usePrinterNamePrefix,
       const uint32_t& flags, nsresult* rv) override;
 
-  virtual PPrintProgressDialogParent* AllocPPrintProgressDialogParent()
-      override;
+  PPrintProgressDialogParent* AllocPPrintProgressDialogParent();
 
-  virtual bool DeallocPPrintProgressDialogParent(
-      PPrintProgressDialogParent* aActor) override;
+  bool DeallocPPrintProgressDialogParent(PPrintProgressDialogParent* aActor);
 
-  virtual PPrintSettingsDialogParent* AllocPPrintSettingsDialogParent()
-      override;
+  PPrintSettingsDialogParent* AllocPPrintSettingsDialogParent();
 
-  virtual bool DeallocPPrintSettingsDialogParent(
-      PPrintSettingsDialogParent* aActor) override;
+  bool DeallocPPrintSettingsDialogParent(PPrintSettingsDialogParent* aActor);
 
-  virtual PRemotePrintJobParent* AllocPRemotePrintJobParent() override;
+  PRemotePrintJobParent* AllocPRemotePrintJobParent();
 
-  virtual bool DeallocPRemotePrintJobParent(
-      PRemotePrintJobParent* aActor) override;
+  bool DeallocPRemotePrintJobParent(PRemotePrintJobParent* aActor);
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 

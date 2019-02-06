@@ -78,12 +78,12 @@ class ImageBridgeParent final : public PImageBridgeParent,
       EditArray&& aEdits, OpDestroyArray&& aToDestroy,
       const uint64_t& aFwdTransactionId) override;
 
-  virtual PTextureParent* AllocPTextureParent(
+  PTextureParent* AllocPTextureParent(
       const SurfaceDescriptor& aSharedData, const ReadLockDescriptor& aReadLock,
       const LayersBackend& aLayersBackend, const TextureFlags& aFlags,
       const uint64_t& aSerial,
-      const wr::MaybeExternalImageId& aExternalImageId) override;
-  virtual bool DeallocPTextureParent(PTextureParent* actor) override;
+      const wr::MaybeExternalImageId& aExternalImageId);
+  bool DeallocPTextureParent(PTextureParent* actor);
 
   virtual mozilla::ipc::IPCResult RecvNewCompositable(
       const CompositableHandle& aHandle, const TextureInfo& aInfo,
@@ -91,10 +91,9 @@ class ImageBridgeParent final : public PImageBridgeParent,
   virtual mozilla::ipc::IPCResult RecvReleaseCompositable(
       const CompositableHandle& aHandle) override;
 
-  PMediaSystemResourceManagerParent* AllocPMediaSystemResourceManagerParent()
-      override;
+  PMediaSystemResourceManagerParent* AllocPMediaSystemResourceManagerParent();
   bool DeallocPMediaSystemResourceManagerParent(
-      PMediaSystemResourceManagerParent* aActor) override;
+      PMediaSystemResourceManagerParent* aActor);
 
   // Shutdown step 1
   virtual mozilla::ipc::IPCResult RecvWillClose() override;
