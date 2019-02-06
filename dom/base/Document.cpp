@@ -7514,6 +7514,10 @@ void Document::Destroy() {
 
   mLayoutHistoryState = nullptr;
 
+  if (mOriginalDocument) {
+    mOriginalDocument->mLatestStaticClone = nullptr;
+  }
+
   // Shut down our external resource map.  We might not need this for
   // leak-fixing if we fix nsDocumentViewer to do cycle-collection, but
   // tearing down all those frame trees right now is the right thing to do.
@@ -8886,8 +8890,10 @@ already_AddRefed<Document> Document::CreateStaticClone(
     if (clonedDoc) {
       if (IsStaticDocument()) {
         clonedDoc->mOriginalDocument = mOriginalDocument;
+        mOriginalDocument->mLatestStaticClone = clonedDoc;
       } else {
         clonedDoc->mOriginalDocument = this;
+        mLatestStaticClone = clonedDoc;
       }
 
       clonedDoc->mOriginalDocument->mStaticCloneCount++;
