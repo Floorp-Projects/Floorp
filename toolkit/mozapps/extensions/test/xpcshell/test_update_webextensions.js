@@ -1,7 +1,5 @@
 "use strict";
 
-const TOOLKIT_ID = "toolkit@mozilla.org";
-
 // We don't have an easy way to serve update manifests from a secure URL.
 Services.prefs.setBoolPref(PREF_EM_CHECK_UPDATE_SECURITY, false);
 
@@ -86,18 +84,8 @@ var checkUpdates = async function(aData, aReason = AddonManager.UPDATE_WHEN_PERI
 
     delete update.addon;
 
-    let file;
-    if (addon.rdf) {
-      provide(addon, "version", version);
-      provide(addon, "targetApplications", [{id: TOOLKIT_ID,
-                                             minVersion: "42",
-                                             maxVersion: "*"}]);
-
-      file = createTempXPIFile(addon);
-    } else {
-      provide(addon, "manifest.version", version);
-      file = createTempWebExtensionFile(addon);
-    }
+    provide(addon, "manifest.version", version);
+    let file = createTempWebExtensionFile(addon);
     file.moveTo(addonsDir, `${id}-${version}.xpi`.replace(/[{}]/g, ""));
 
     let path = `/addons/${file.leafName}`;

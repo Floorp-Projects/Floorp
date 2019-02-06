@@ -46,7 +46,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ExtensionStorage: "resource://gre/modules/ExtensionStorage.jsm",
   ExtensionStorageIDB: "resource://gre/modules/ExtensionStorageIDB.jsm",
   ExtensionTelemetry: "resource://gre/modules/ExtensionTelemetry.jsm",
-  ExtensionTestCommon: "resource://testing-common/ExtensionTestCommon.jsm",
   FileSource: "resource://gre/modules/L10nRegistry.jsm",
   L10nRegistry: "resource://gre/modules/L10nRegistry.jsm",
   Log: "resource://gre/modules/Log.jsm",
@@ -1504,18 +1503,6 @@ class Extension extends ExtensionData {
       }
     }
     return frameLoader || ExtensionParent.DebugUtils.getFrameLoader(this.id);
-  }
-
-  static generateXPI(data) {
-    return ExtensionTestCommon.generateXPI(data);
-  }
-
-  static generateZipFile(files, baseName = "generated-extension.xpi") {
-    return ExtensionTestCommon.generateZipFile(files, baseName);
-  }
-
-  static generate(data) {
-    return ExtensionTestCommon.generate(data);
   }
 
   on(hook, f) {

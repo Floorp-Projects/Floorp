@@ -1,22 +1,9 @@
 "use strict";
 
-const {Extension, ExtensionData} = ChromeUtils.import("resource://gre/modules/Extension.jsm");
-
-/* globals ExtensionData */
-
-const uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
+const {ExtensionData} = ChromeUtils.import("resource://gre/modules/Extension.jsm");
 
 async function generateAddon(data) {
-  let id = uuidGenerator.generateUUID().number;
-
-  data = Object.assign({}, data);
-  data.manifest = Object.assign({applications: {gecko: {id}}}, data.manifest || {});
-
-  let xpi = Extension.generateXPI(data);
-  registerCleanupFunction(() => {
-    Services.obs.notifyObservers(xpi, "flush-cache-entry");
-    xpi.remove(false);
-  });
+  let xpi = AddonTestUtils.createTempWebExtensionFile(data);
 
   let fileURI = Services.io.newFileURI(xpi);
   let jarURI = NetUtil.newURI(`jar:${fileURI.spec}!/`);

@@ -2,6 +2,11 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+// This test is disabled but is being kept around so it can eventualy
+// be modernized and re-enabled.  But is uses obsolete test helpers that
+// fail lint, so just skip linting it for now.
+/* eslint-disable */
+
 // This verifies that moving an extension in the filesystem without any other
 // change still keeps updated compatibility information
 
