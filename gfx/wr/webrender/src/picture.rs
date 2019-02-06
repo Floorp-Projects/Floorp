@@ -2918,10 +2918,17 @@ impl PicturePrimitive {
                 // blur results, inflate that clipped area by the blur range, and
                 // then intersect with the total screen rect, to minimize the
                 // allocation size.
-                let device_rect = clipped
+                let mut device_rect = clipped
                     .inflate(inflation_factor, inflation_factor)
                     .intersection(&unclipped.to_i32())
                     .unwrap();
+                // Adjust the size to avoid introducing sampling errors during the down-scaling passes.
+                // what would be even better is to rasterize the picture at the down-scaled size
+                // directly.
+                device_rect.size = RenderTask::adjusted_blur_source_size(
+                    device_rect.size,
+                    blur_std_deviation,
+                );
 
                 let uv_rect_kind = calculate_uv_rect_kind(
                     &pic_rect,
