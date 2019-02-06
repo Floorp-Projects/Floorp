@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>MSE: can properly resume after a partial media segment header followed by abort </title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mediasource.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+const VIDEO_CODEC_STRING = 'video/webm; codecs="vp09.00.51.08.01.01.01.01"';
+
+const logError = (error) => {
+  console.error(error, error.message);
+  ok(false, "should not reach here");
+};
+
+runWithMSE(async (ms, v) => {
+  await once(ms, "sourceopen");
+  const sb = ms.addSourceBuffer(VIDEO_CODEC_STRING);
+
+  const arrayBuffer = await fetchWithXHR("1516754.webm");
+  info("- append init segment, a media segment and a partial media segment header -");
+  sb.appendBuffer(new Uint8Array(arrayBuffer, 0, 87355 + 3000));
+
+  info("- wait for updateend -");
+  await once(sb, "updateend");
+
+  // start seeking.
+  v.currentTime = 11;
+  v.addEventListener('seeked', () => {
+    info("- seek completed -");
+    SimpleTest.finish();
+  });
+
+  sb.abort();
+
+  info("- append init segment -");
+  sb.appendBuffer(new Uint8Array(arrayBuffer, 0, 3150));
+  info("- wait for updateend -");
+  await once(sb, "updateend");
+  info("- append media segment 10-15s -")
+  sb.appendBuffer(new Uint8Array(arrayBuffer, 159968, 72931));
+
+  // We now wait for seek to complete
+});
+
+</script>
+</pre>
+</body>
+</html>
