@@ -1000,7 +1000,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             let triggeringPrincipal = browserDragAndDrop.getTriggeringPrincipal(aEvent);
             aEvent.preventDefault();
             let url = links[0].url;
-            let strippedURL = stripUnsafeProtocolOnPaste(url);
+            let strippedURL = UrlbarUtils.stripUnsafeProtocolOnPaste(url);
             if (strippedURL != url) {
               aEvent.stopImmediatePropagation();
               return null;
@@ -1275,7 +1275,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
               }
               let oldEnd = oldValue.substring(this.inputField.selectionEnd);
 
-              let pasteData = stripUnsafeProtocolOnPaste(originalPasteData);
+              let pasteData = UrlbarUtils.stripUnsafeProtocolOnPaste(originalPasteData);
               if (originalPasteData != pasteData) {
                 // Unfortunately we're not allowed to set the bits being pasted
                 // so cancel this event:
