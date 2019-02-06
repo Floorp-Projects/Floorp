@@ -1118,10 +1118,11 @@ bool FormatUsageAuthority::AreUnpackEnumsValid(GLenum unpackFormat,
 ////////////////////
 
 void FormatUsageAuthority::AllowRBFormat(GLenum sizedFormat,
-                                         const FormatUsageInfo* usage) {
+                                         const FormatUsageInfo* usage,
+                                         const bool expectRenderable) {
   MOZ_ASSERT(!usage->format->compression);
   MOZ_ASSERT(usage->format->sizedFormat);
-  MOZ_ASSERT(usage->IsRenderable());
+  MOZ_ASSERT(usage->IsRenderable() || !expectRenderable);
 
   AlwaysInsert(mRBFormatMap, sizedFormat, usage);
 }
