@@ -124,6 +124,11 @@ TypedObjectModuleObject& js::GlobalObject::getTypedObjectModule() const {
                                                   IfClassIsDisabled mode) {
   MOZ_ASSERT(key != JSProto_Null);
   MOZ_ASSERT(!global->isStandardClassResolved(key));
+  MOZ_ASSERT(cx->compartment() == global->compartment());
+
+  // |global| must be same-compartment but make sure we're in its realm: the
+  // code below relies on this.
+  AutoRealm ar(cx, global);
 
   if (global->zone()->createdForHelperThread()) {
     return resolveOffThreadConstructor(cx, global, key);
