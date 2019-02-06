@@ -992,15 +992,6 @@ nsresult EventListenerManager::CompileEventHandlerInternal(
   NS_ENSURE_SUCCESS(result, result);
   NS_ENSURE_TRUE(handler, NS_ERROR_FAILURE);
 
-  JS::Rooted<JSFunction*> func(cx, JS_GetObjectFunction(handler));
-  MOZ_ASSERT(func);
-  JS::Rooted<JSScript*> jsScript(cx, JS_GetFunctionScript(cx, func));
-  MOZ_ASSERT(jsScript);
-  RefPtr<LoadedScript> loaderScript = ScriptLoader::GetActiveScript(cx);
-  if (loaderScript) {
-    loaderScript->AssociateWithScript(jsScript);
-  }
-
   MOZ_ASSERT(js::IsObjectInContextCompartment(handler, cx));
   JS::Rooted<JSObject*> handlerGlobal(cx, JS::CurrentGlobalOrNull(cx));
 
