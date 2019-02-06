@@ -72,17 +72,6 @@ CODE_COVERAGE_GCC=1
 endif
 endif
 
-ifndef MOZ_ASAN
-ifndef MOZ_TSAN
-ifndef MOZ_UBSAN
-ifneq (1,$(CODE_COVERAGE_GCC))
-ifndef FUZZING_INTERFACES
-# Pass the compilers and flags in use to cargo for use in build scripts.
-# * Don't do this for ASAN/TSAN builds because we don't pass our custom linker (see below)
-#   which will muck things up.
-# * Don't do this for GCC code coverage builds because the way rustc invokes the linker doesn't
-#   work with GCC 6: https://bugzilla.mozilla.org/show_bug.cgi?id=1477305
-
 # We start with host variables because the rust host and the rust target might be the same,
 # in which case we want the latter to take priority.
 
@@ -93,22 +82,33 @@ rust_host_cc_env_name := $(subst -,_,$(RUST_HOST_TARGET))
 
 export CC_$(rust_host_cc_env_name)=$(HOST_CC)
 export CXX_$(rust_host_cc_env_name)=$(HOST_CXX)
-export CFLAGS_$(rust_host_cc_env_name)=$(COMPUTED_HOST_CFLAGS)
-export CXXFLAGS_$(rust_host_cc_env_name)=$(COMPUTED_HOST_CXXFLAGS)
 # We don't have a HOST_AR. If rust needs one, assume it's going to pick an appropriate one.
 
 rust_cc_env_name := $(subst -,_,$(RUST_TARGET))
 
 export CC_$(rust_cc_env_name)=$(CC)
 export CXX_$(rust_cc_env_name)=$(CXX)
+export AR_$(rust_cc_env_name)=$(AR)
+ifeq (,$(MOZ_ASAN)$(MOZ_TSAN)$(MOZ_UBSAN)$(CODE_COVERAGE_GCC)$(FUZZING_INTERFACES))
+export CFLAGS_$(rust_host_cc_env_name)=$(COMPUTED_HOST_CFLAGS)
+export CXXFLAGS_$(rust_host_cc_env_name)=$(COMPUTED_HOST_CXXFLAGS)
 export CFLAGS_$(rust_cc_env_name)=$(COMPUTED_CFLAGS)
 export CXXFLAGS_$(rust_cc_env_name)=$(COMPUTED_CXXFLAGS)
-export AR_$(rust_cc_env_name)=$(AR)
-endif # FUZZING_INTERFACES
-endif # MOZ_CODE_COVERAGE
-endif # MOZ_UBSAN
-endif # MOZ_TSAN
-endif # MOZ_ASAN
+else
+# Because cargo doesn't allow to distinguish builds happening for build
+# scripts/procedural macros vs. those happening for the rust target,
+# we can't blindly pass all our flags down for cc-rs to use them, because of the
+# side effects they can have on what otherwise should be host builds.
+# So for sanitizer, fuzzing and coverage builds, we only pass the base compiler
+# flags.
+# This means C code built by rust is not going to be covered by sanitizer,
+# fuzzing and coverage. But at least we control what compiler is being used,
+# rather than relying on cc-rs guesses, which, sometimes fail us.
+export CFLAGS_$(rust_host_cc_env_name)=$(HOST_CC_BASE_FLAGS)
+export CXXFLAGS_$(rust_host_cc_env_name)=$(HOST_CXX_BASE_FLAGS)
+export CFLAGS_$(rust_cc_env_name)=$(CC_BASE_FLAGS)
+export CXXFLAGS_$(rust_cc_env_name)=$(CXX_BASE_FLAGS)
+endif
 
 export CARGO_TARGET_DIR
 export RUSTFLAGS
