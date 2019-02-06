@@ -377,12 +377,12 @@ class MOZ_STACK_CLASS LayerMetricsWrapper {
     return mLayer->GetScrollbarData();
   }
 
-  uint64_t GetScrollbarAnimationId() const {
+  Maybe<uint64_t> GetScrollbarAnimationId() const {
     MOZ_ASSERT(IsValid());
     // This function is only really needed for template-compatibility with
     // WebRenderScrollDataWrapper. Although it will be called, the return
     // value is not used.
-    return 0;
+    return Nothing();
   }
 
   ScrollableLayerGuid::ViewID GetFixedPositionScrollContainerId() const {
