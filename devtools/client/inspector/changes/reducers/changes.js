@@ -45,6 +45,8 @@ function cloneState(state = {}) {
  * @param {Object} ruleData
  *        Information about a CSS rule:
  *        {
+ *          id:        {String}
+ *                     Unique rule id.
  *          selector:  {String}
  *                     CSS selector text
  *          ancestors: {Array}
@@ -66,7 +68,6 @@ function createRule(ruleData, rules) {
   const ruleAncestry = [...ruleData.ancestors, { ...ruleData }];
 
   return ruleAncestry
-    // First, generate a unique identifier for each rule.
     .map((rule, index) => {
       // Ensure each rule has ancestors excluding itself (expand the flattened rule tree).
       rule.ancestors = ruleAncestry.slice(0, index);
@@ -77,7 +78,9 @@ function createRule(ruleData, rules) {
           `${rule.typeName} ${(rule.conditionText || rule.name || rule.keyText)}`;
       }
 
-      return getRuleHash(rule);
+      // Bug 1525326: Remove getRuleHash() in Firefox 70. Until then, we fallback
+      // to the custom hashing method if the server did not provide a rule with an id.
+      return rule.id || getRuleHash(rule);
     })
     // Then, create new entries in the rules collection and assign dependencies.
     .map((ruleId, index, array) => {
@@ -194,19 +197,20 @@ const reducers = {
     change = { ...defaults, ...change };
     state = cloneState(state);
 
-    const { type, href, index, isFramed } = change.source;
     const { selector, ancestors, ruleIndex, type: changeType } = change;
-    const sourceId = getSourceHash(change.source);
-    const ruleId = getRuleHash({ selector, ancestors, ruleIndex });
+    // Bug 1525326: remove getSourceHash() and getRuleHash() in Firefox 70 after we no
+    // longer support old servers which do not implement the id for the rule and source.
+    const sourceId = change.source.id || getSourceHash(change.source);
+    const ruleId = change.id || getRuleHash({ selector, ancestors, ruleIndex });
 
     // Copy or create object identifying the source (styelsheet/element) for this change.
-    const source = Object.assign({}, state[sourceId], { type, href, index, isFramed });
+    const source = Object.assign({}, state[sourceId], change.source);
     // Copy or create collection of all rules ever changed in this source.
     const rules = Object.assign({}, source.rules);
-    // Refrence or create object identifying the rule for this change.
+    // Reference or create object identifying the rule for this change.
     let rule = rules[ruleId];
     if (!rule) {
-      rule = createRule({ selector, ancestors, ruleIndex }, rules);
+      rule = createRule(change, rules);
       if (changeType.startsWith("rule-")) {
         rule.changeType = changeType;
       }
