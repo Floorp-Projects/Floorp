@@ -317,10 +317,27 @@ class CustomTabsToolbarFeatureTest {
         `when`(sessionManager.findSessionById(anyString())).thenReturn(session)
 
         val feature = spy(CustomTabsToolbarFeature(sessionManager, toolbar, sessionId) { closeExecuted = true })
-
         val result = feature.onBackPressed()
 
         assertTrue(result)
         assertTrue(closeExecuted)
+    }
+
+    @Test
+    fun `onBackPressed without a session does nothing`() {
+        val sessionId = null
+        val session: Session = mock()
+        val toolbar = BrowserToolbar(RuntimeEnvironment.application)
+        val sessionManager: SessionManager = mock()
+        var closeExecuted = false
+        `when`(session.customTabConfig).thenReturn(mock())
+        `when`(sessionManager.findSessionById(anyString())).thenReturn(session)
+
+        val feature = spy(CustomTabsToolbarFeature(sessionManager, toolbar, sessionId) { closeExecuted = true })
+
+        val result = feature.onBackPressed()
+
+        assertFalse(result)
+        assertFalse(closeExecuted)
     }
 }

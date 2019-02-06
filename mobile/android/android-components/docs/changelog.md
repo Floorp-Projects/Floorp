@@ -19,6 +19,9 @@ permalink: /changelog/
 * **browser-engine-system**
   * Added support for [JavaScript prompt alerts](https://developer.mozilla.org/en-US/docs/Web/API/Window/prompt) on WebView.
 
+* **feature-customtabs**
+  * Fixed an issue causing the `closeListener` to be invoked even when the current session isn't a Custom Tab.
+
 # 0.41.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.40.0...v0.41.0)

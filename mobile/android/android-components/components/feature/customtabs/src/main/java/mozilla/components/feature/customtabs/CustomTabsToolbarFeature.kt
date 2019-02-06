@@ -135,10 +135,11 @@ class CustomTabsToolbarFeature(
      */
     fun onBackPressed(): Boolean {
         val result = sessionManager.runWithSession(sessionId) {
+            closeListener.invoke()
             remove(it)
             true
         }
-        closeListener.invoke()
+
         return result
     }
 
