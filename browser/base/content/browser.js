@@ -6321,18 +6321,29 @@ var ToolbarContextMenu = {
     return triggerNode;
   },
 
-  updateExtension(popup) {
+  _getExtensionId(popup) {
+    let node = this._getUnwrappedTriggerNode(popup);
+    return node && node.getAttribute("data-extensionid");
+  },
+
+  async updateExtension(popup) {
     let removeExtension = popup.querySelector(".customize-context-removeExtension");
     let manageExtension = popup.querySelector(".customize-context-manageExtension");
     let separator = removeExtension.nextElementSibling;
-    let node = this._getUnwrappedTriggerNode(popup);
-    let isWebExt = node && node.hasAttribute("data-extensionid");
-    removeExtension.hidden = manageExtension.hidden = separator.hidden = !isWebExt;
+    let id = this._getExtensionId(popup);
+    let addon = id && await AddonManager.getAddonByID(id);
+    removeExtension.hidden = manageExtension.hidden = separator.hidden = !addon;
+    if (addon) {
+      removeExtension.disabled = !(addon.permissions & AddonManager.PERM_CAN_UNINSTALL);
+    }
   },
 
   async removeExtensionForContextAction(popup) {
-    let id = this._getUnwrappedTriggerNode(popup).getAttribute("data-extensionid");
-    let addon = await AddonManager.getAddonByID(id);
+    let id = this._getExtensionId(popup);
+    let addon = id && await AddonManager.getAddonByID(id);
+    if (!addon || !(addon.permissions & AddonManager.PERM_CAN_UNINSTALL)) {
+      return;
+    }
     let {name} = addon;
     let brand = document.getElementById("bundle_brand").getString("brandShorterName");
     let {getFormattedString, getString} = gNavigatorBundle;
@@ -6350,9 +6361,11 @@ var ToolbarContextMenu = {
   },
 
   openAboutAddonsForContextAction(popup) {
-    let id = this._getUnwrappedTriggerNode(popup).getAttribute("data-extensionid");
-    let viewID = "addons://detail/" + encodeURIComponent(id);
-    BrowserOpenAddonsMgr(viewID);
+    let id = this._getExtensionId(popup);
+    if (id) {
+      let viewID = "addons://detail/" + encodeURIComponent(id);
+      BrowserOpenAddonsMgr(viewID);
+    }
   },
 };
 
