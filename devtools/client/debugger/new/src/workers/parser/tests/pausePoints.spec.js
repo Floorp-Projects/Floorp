@@ -27,7 +27,7 @@ cases(
     // The coercion here is needed because getPausePoints and convertToList
     // operate on two incompatible definitions of PausePointsMap
     const nodes = convertToList((getPausePoints(source.id): any));
-    expect(formatPausePoints(source.text, nodes)).toMatchSnapshot();
+    expect(formatPausePoints(source.text || "", nodes)).toMatchSnapshot();
   },
   [
     { name: "control-flow", file: "control-flow" },

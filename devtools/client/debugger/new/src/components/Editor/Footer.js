@@ -158,7 +158,7 @@ class SourceFooter extends PureComponent<Props, State> {
         key="toggle"
         collapsed={!this.props.endPanelCollapsed}
         horizontal={this.props.horizontal}
-        handleClick={this.props.togglePaneCollapse}
+        handleClick={(this.props.togglePaneCollapse: any)}
       />
     );
   }
