@@ -278,7 +278,7 @@ class MOZ_STACK_CLASS WebRenderScrollDataWrapper {
     return mLayer->GetScrollbarData();
   }
 
-  uint64_t GetScrollbarAnimationId() const {
+  Maybe<uint64_t> GetScrollbarAnimationId() const {
     MOZ_ASSERT(IsValid());
     return mLayer->GetScrollbarAnimationId();
   }

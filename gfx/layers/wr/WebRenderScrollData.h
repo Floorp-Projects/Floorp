@@ -89,9 +89,9 @@ class WebRenderLayerScrollData {
   void SetScrollbarData(const ScrollbarData& aData) { mScrollbarData = aData; }
   const ScrollbarData& GetScrollbarData() const { return mScrollbarData; }
   void SetScrollbarAnimationId(const uint64_t& aId) {
-    mScrollbarAnimationId = aId;
+    mScrollbarAnimationId = Some(aId);
   }
-  const uint64_t& GetScrollbarAnimationId() const {
+  Maybe<uint64_t> GetScrollbarAnimationId() const {
     return mScrollbarAnimationId;
   }
 
@@ -132,7 +132,7 @@ class WebRenderLayerScrollData {
   Maybe<LayersId> mReferentId;
   EventRegionsOverride mEventRegionsOverride;
   ScrollbarData mScrollbarData;
-  uint64_t mScrollbarAnimationId;
+  Maybe<uint64_t> mScrollbarAnimationId;
   ScrollableLayerGuid::ViewID mFixedPosScrollContainerId;
   Maybe<uint64_t> mZoomAnimationId;
 };
