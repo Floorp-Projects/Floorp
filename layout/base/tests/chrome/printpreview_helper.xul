@@ -23,7 +23,7 @@ var file = Cc["@mozilla.org/file/directory_service;1"]
              .get("TmpD", Ci.nsIFile);
 filePath = file.path;
 
-function printpreview() {
+function printpreview(hasMozPrintCallback) {
   gWbp = window.frames[1].docShell.printPreview;
   var listener = {
     onLocationChange: function(webProgress, request, location, flags) { },
@@ -54,7 +54,11 @@ function printpreview() {
   window.frames[0].addEventListener("afterprint", afterprint, true);
   gWbp.printPreview(gWbp.globalPrintSettings, window.frames[0], listener);
   is(before, 1, "Should have called beforeprint listener!");
-  is(after, 1, "Should have called afterprint listener!");
+  if (!hasMozPrintCallback) {
+    // If there's a mozPrintCallback the after print event won't fire until
+    // later.
+    is(after, 1, "Should have called afterprint listener!");
+  }
   window.frames[0].removeEventListener("beforeprint", beforeprint, true);
   window.frames[0].removeEventListener("afterprint", afterprint, true);
   prefs.clearUserPref('print.show_print_progress');
@@ -344,6 +348,44 @@ async function runTest9() {
   ctx2.drawWindow(window.frames[1], 0, 0, 400, 400, "rgb(255,255,255)");
   exitprintpreview();
   ok(compareCanvases(), "Printing <use> subtrees should create same output");
+
+  requestAnimationFrame(function() { setTimeout(runTest10); } );
+}
+
+// Test for bug 1524640
+async function runTest10() {
+  // Test that fonts loaded during mozprint callback are loaded into the cloned
+  // document.
+  const iframeElement = document.getElementsByTagName("iframe")[0];
+
+  // First, snapshot the page with font defined in CSS.
+  await new Promise((resolve) => {
+    iframeElement.addEventListener("load", resolve, { capture: true, once: true });
+    iframeElement.setAttribute("src", "printpreview_font_mozprintcallback_ref.html");
+  });
+  let mozPrintCallbackDone = new Promise((resolve) => {
+    iframeElement.addEventListener("message", resolve, { capture: true, once: true });
+  });
+  printpreview(true);
+  await mozPrintCallbackDone;
+  ctx1.drawWindow(window.frames[1], 0, 0, 400, 400, "rgb(255,255,255)");
+  exitprintpreview();
+
+  // Second, snapshot the page with font loaded in JS.
+  await new Promise((resolve) => {
+    iframeElement.addEventListener("load", resolve, { capture: true, once: true });
+    iframeElement.setAttribute("src", "printpreview_font_mozprintcallback.html");
+  });
+  mozPrintCallbackDone = new Promise((resolve) => {
+    iframeElement.addEventListener("message", resolve, { capture: true, once: true });
+  });
+  printpreview(true);
+  // Wait for the mozprintcallback to finish.
+  await mozPrintCallbackDone;
+  ctx2.drawWindow(window.frames[1], 0, 0, 400, 400, "rgb(255,255,255)");
+
+  exitprintpreview();
+  ok(compareCanvases(), "Printing pages with fonts loaded from a mozPrintCallback should be the same.");
 
   finish();
 }

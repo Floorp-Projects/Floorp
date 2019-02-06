@@ -417,6 +417,16 @@ bool FontFaceSet::HasRuleFontFace(FontFace* aFontFace) {
 }
 #endif
 
+bool IsPdfJs(nsIPrincipal* aPrincipal) {
+  if (!aPrincipal) {
+    return false;
+  }
+  nsCOMPtr<nsIURI> uri;
+  aPrincipal->GetURI(getter_AddRefs(uri));
+  return uri && uri->GetSpecOrDefault().EqualsLiteral(
+                    "resource://pdf.js/web/viewer.html");
+}
+
 void FontFaceSet::Add(FontFace& aFontFace, ErrorResult& aRv) {
   FlushUserFontSet();
 
@@ -449,6 +459,16 @@ void FontFaceSet::Add(FontFace& aFontFace, ErrorResult& aRv) {
   MarkUserFontSetDirty();
   mHasLoadingFontFacesIsDirty = true;
   CheckLoadingStarted();
+  RefPtr<dom::Document> clonedDoc = mDocument->GetLatestStaticClone();
+  if (clonedDoc) {
+    // The document is printing, copy the font to the static clone as well.
+    nsCOMPtr<nsIPrincipal> principal = mDocument->GetPrincipal();
+    if (principal->IsSystemPrincipal() || IsPdfJs(principal)) {
+      ErrorResult rv;
+      clonedDoc->Fonts()->Add(aFontFace, rv);
+      MOZ_ASSERT(!rv.Failed());
+    }
+  }
 }
 
 void FontFaceSet::Clear() {
