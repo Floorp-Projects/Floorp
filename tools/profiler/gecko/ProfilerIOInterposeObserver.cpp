@@ -18,9 +18,9 @@ void ProfilerIOInterposeObserver::Observe(Observation& aObservation) {
   nsString filename;
   aObservation.Filename(filename);
   profiler_add_marker(
-      aObservation.ObservedOperationString(),
-      js::ProfilingStackFrame::Category::OTHER,
-      MakeUnique<IOMarkerPayload>(
-          aObservation.Reference(), NS_ConvertUTF16toUTF8(filename).get(),
-          aObservation.Start(), aObservation.End(), std::move(stack)));
+      "DiskIO", js::ProfilingStackFrame::Category::OTHER,
+      MakeUnique<DiskIOMarkerPayload>(
+          aObservation.ObservedOperationString(), aObservation.Reference(),
+          NS_ConvertUTF16toUTF8(filename).get(), aObservation.Start(),
+          aObservation.End(), std::move(stack)));
 }
