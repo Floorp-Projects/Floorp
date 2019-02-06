@@ -2097,6 +2097,12 @@ bool nsContentUtils::ShouldResistFingerprinting(Document* aDoc) {
 }
 
 /* static */
+bool nsContentUtils::UseStandinsForNativeColors() {
+  return ShouldResistFingerprinting() ||
+         StaticPrefs::ui_use_standins_for_native_colors();
+}
+
+/* static */
 void nsContentUtils::CalcRoundedWindowSizeForResistingFingerprinting(
     int32_t aChromeWidth, int32_t aChromeHeight, int32_t aScreenWidth,
     int32_t aScreenHeight, int32_t aInputWidth, int32_t aInputHeight,
