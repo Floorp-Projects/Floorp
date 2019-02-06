@@ -115,7 +115,6 @@ class nsXPLookAndFeel : public mozilla::LookAndFeel {
   static int32_t sCachedColors[LookAndFeel::eColorID_LAST_COLOR];
   static int32_t sCachedColorBits[COLOR_CACHE_SIZE];
   static bool sUseNativeColors;
-  static bool sUseStandinsForNativeColors;
   static bool sFindbarModalHighlight;
 
   static nsXPLookAndFeel* sInstance;
