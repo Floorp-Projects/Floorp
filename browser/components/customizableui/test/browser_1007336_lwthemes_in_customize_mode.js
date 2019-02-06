@@ -7,7 +7,6 @@
 const DEFAULT_THEME_ID = "default-theme@mozilla.org";
 const LIGHT_THEME_ID = "firefox-compact-light@mozilla.org";
 const DARK_THEME_ID = "firefox-compact-dark@mozilla.org";
-const {LightweightThemeManager} = ChromeUtils.import("resource://gre/modules/LightweightThemeManager.jsm");
 
 add_task(async function() {
   Services.prefs.clearUserPref("lightweightThemes.usedThemes");
@@ -130,7 +129,9 @@ add_task(async function() {
 
   // check that "Restore Defaults" button resets theme
   await gCustomizeMode.reset();
-  is(LightweightThemeManager.currentTheme.id, DEFAULT_THEME_ID, "Current theme reset to default");
+
+  defaultTheme = await AddonManager.getAddonByID(DEFAULT_THEME_ID);
+  is(defaultTheme.isActive, true, "Current theme reset to default");
 
   await endCustomizing();
   Services.prefs.setCharPref("lightweightThemes.usedThemes", "[]");
