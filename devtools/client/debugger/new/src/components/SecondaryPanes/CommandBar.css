@@ -116,8 +116,7 @@ html[dir="rtl"] .command-bar {
   border-bottom: none;
   background-color: var(--theme-body-background);
   border-top: 1px solid var(--theme-splitter-color);
-  flex: none;
-  height: var(--editor-footer-height);
+  flex: 0 0 25px;
 }
 
 .command-bar.bottom {

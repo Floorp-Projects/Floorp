@@ -346,9 +346,7 @@ describe("pause", () => {
           location: originalLocation,
           originalDisplayName: "fooBar",
           scope: { bindings: { arguments: [], variables: {} } },
-          source: null,
-          this: undefined,
-          thread: undefined
+          this: undefined
         },
         {
           displayName: "barZoo",
@@ -358,9 +356,7 @@ describe("pause", () => {
           location: originalLocation2,
           originalDisplayName: "barZoo",
           scope: { bindings: { arguments: [], variables: {} } },
-          source: null,
-          this: undefined,
-          thread: undefined
+          this: undefined
         }
       ]);
     });

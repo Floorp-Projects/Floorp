@@ -10,12 +10,17 @@ import {
   simplifyDisplayName
 } from "../displayName";
 
-import { makeMockFrame, makeMockSource } from "../../../test-mockup";
-
 describe("formatCopyName", () => {
   it("simple", () => {
-    const source = makeMockSource("todo-view.js");
-    const frame = makeMockFrame(undefined, source, undefined, 12, "child");
+    const frame = {
+      displayName: "child",
+      location: {
+        line: 12
+      },
+      source: {
+        url: "todo-view.js"
+      }
+    };
 
     expect(formatCopyName(frame, L10N)).toEqual("child (todo-view.js#12)");
   });
@@ -23,37 +28,35 @@ describe("formatCopyName", () => {
 
 describe("formatting display names", () => {
   it("uses a library description", () => {
-    const source = makeMockSource("assets/backbone.js");
     const frame = {
-      ...makeMockFrame(undefined, source, undefined, undefined, "extend/child"),
-      library: "Backbone"
+      library: "Backbone",
+      displayName: "extend/child",
+      source: {
+        url: "assets/backbone.js"
+      }
     };
 
     expect(formatDisplayName(frame, undefined, L10N)).toEqual("Create Class");
   });
 
   it("shortens an anonymous function", () => {
-    const source = makeMockSource("assets/bar.js");
-    const frame = makeMockFrame(
-      undefined,
-      source,
-      undefined,
-      undefined,
-      "extend/child/bar/baz"
-    );
+    const frame = {
+      displayName: "extend/child/bar/baz",
+      source: {
+        url: "assets/bar.js"
+      }
+    };
 
     expect(formatDisplayName(frame, undefined, L10N)).toEqual("baz");
   });
 
   it("does not truncates long function names", () => {
-    const source = makeMockSource("extend/child/bar/baz");
-    const frame = makeMockFrame(
-      undefined,
-      source,
-      undefined,
-      undefined,
-      "bazbazbazbazbazbazbazbazbazbazbazbazbaz"
-    );
+    const frame = {
+      displayName: "bazbazbazbazbazbazbazbazbazbazbazbazbaz",
+      source: {
+        url: "assets/bar.js"
+      }
+    };
 
     expect(formatDisplayName(frame, undefined, L10N)).toEqual(
       "bazbazbazbazbazbazbazbazbazbazbazbazbaz"
@@ -61,28 +64,33 @@ describe("formatting display names", () => {
   });
 
   it("returns the original function name when present", () => {
-    const source = makeMockSource("entry.js");
     const frame = {
-      ...makeMockFrame(undefined, source),
       originalDisplayName: "originalFn",
-      displayName: "fn"
+      displayName: "fn",
+      source: {
+        url: "entry.js"
+      }
     };
 
     expect(formatDisplayName(frame, undefined, L10N)).toEqual("originalFn");
   });
 
   it("returns anonymous when displayName is undefined", () => {
-    const frame = { ...makeMockFrame(), displayName: undefined };
+    const frame = {};
     expect(formatDisplayName(frame, undefined, L10N)).toEqual("<anonymous>");
   });
 
   it("returns anonymous when displayName is null", () => {
-    const frame = { ...makeMockFrame(), displayName: (null: any) };
+    const frame = {
+      displayName: null
+    };
     expect(formatDisplayName(frame, undefined, L10N)).toEqual("<anonymous>");
   });
 
   it("returns anonymous when displayName is an empty string", () => {
-    const frame = { ...makeMockFrame(), displayName: "" };
+    const frame = {
+      displayName: ""
+    };
     expect(formatDisplayName(frame, undefined, L10N)).toEqual("<anonymous>");
   });
 });

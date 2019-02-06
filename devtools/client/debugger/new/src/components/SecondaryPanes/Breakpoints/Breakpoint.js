@@ -170,16 +170,14 @@ class Breakpoint extends PureComponent<Props> {
         />
         <label
           htmlFor={breakpoint.id}
-          className="breakpoint-label cm-s-mozilla devtools-monospace"
+          className="breakpoint-label cm-s-mozilla"
           onClick={this.selectBreakpoint}
           title={text}
         >
           <span dangerouslySetInnerHTML={this.highlightText(text, editor)} />
         </label>
         <div className="breakpoint-line-close">
-          <div className="breakpoint-line devtools-monospace">
-            {this.getBreakpointLocation()}
-          </div>
+          <div className="breakpoint-line">{this.getBreakpointLocation()}</div>
           <CloseButton
             handleClick={e => this.removeBreakpoint(e)}
             tooltip={L10N.getStr("breakpoints.removeBreakpointTooltip")}

@@ -15,11 +15,11 @@ import FrameComponent from "./Frame";
 
 import "./Group.css";
 
-import type { Frame } from "../../../types";
+import type { LocalFrame } from "./types";
 import Badge from "../../shared/Badge";
 import FrameIndent from "./FrameIndent";
 
-type FrameLocationProps = { frame: Frame, expanded: boolean };
+type FrameLocationProps = { frame: LocalFrame, expanded: boolean };
 function FrameLocation({ frame, expanded }: FrameLocationProps) {
   const library = frame.library || getLibraryFromUrl(frame);
   if (!library) {
@@ -39,8 +39,8 @@ function FrameLocation({ frame, expanded }: FrameLocationProps) {
 FrameLocation.displayName = "FrameLocation";
 
 type Props = {
-  group: Frame[],
-  selectedFrame: Frame,
+  group: LocalFrame[],
+  selectedFrame: LocalFrame,
   selectFrame: Function,
   toggleFrameworkGrouping: Function,
   copyStackTrace: Function,

@@ -9,7 +9,6 @@ import { mount, shallow } from "enzyme";
 import Frames from "../index.js";
 // eslint-disable-next-line
 import { formatCallStackFrames } from "../../../../selectors/getCallStackFrames";
-import { makeMockFrame, makeMockSource } from "../../../../utils/test-mockup";
 
 function render(overrides = {}) {
   const defaultProps = {
@@ -192,23 +191,23 @@ describe("Frames", () => {
 
   describe("Blackboxed Frames", () => {
     it("filters blackboxed frames", () => {
-      const source1 = makeMockSource(undefined, "1");
-      const source2 = makeMockSource(undefined, "2");
-      source2.isBlackBoxed = true;
-
       const frames = [
-        makeMockFrame("1", source1),
-        makeMockFrame("2", source2),
-        makeMockFrame("3", source1),
-        makeMockFrame("8", source2)
+        { id: 1, location: { sourceId: "1" } },
+        { id: 2, location: { sourceId: "2" } },
+        { id: 3, location: { sourceId: "1" } },
+        { id: 8, location: { sourceId: "2" } }
       ];
 
       const sources = {
-        "1": source1,
-        "2": source2
+        "1": { id: "1" },
+        "2": { id: "2", isBlackBoxed: true }
       };
 
-      const processedFrames = formatCallStackFrames(frames, sources, source1);
+      const processedFrames = formatCallStackFrames(
+        frames,
+        sources,
+        sources["1"]
+      );
       const selectedFrame = frames[0];
 
       const component = render({

@@ -3,13 +3,16 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 .welcomebox {
-  position: absolute;
-  top: var(--editor-header-height);
-  left: 0;
-  bottom: 1px;
   width: calc(100% - 1px);
+
+  /* Offsetting it by 30px for the sources-header area */
+  height: calc(100% - 30px);
+  position: absolute;
+  top: 30px;
+  left: 0;
   padding: 50px 0 0 0;
   text-align: center;
+  font-size: 1.25em;
   background-color: var(--theme-toolbar-background);
   font-weight: lighter;
   z-index: 10;
@@ -33,7 +36,6 @@
 .alignlabel {
   display: flex;
   white-space: nowrap;
-  font-size: 1.25em;
 }
 
 .shortcutKeys {

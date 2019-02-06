@@ -9,8 +9,6 @@ import { kebabCase } from "lodash";
 
 import { showMenu } from "devtools-contextmenu";
 import { copyToTheClipboard } from "../../../../utils/clipboard";
-import { makeMockFrame, makeMockSource } from "../../../../utils/test-mockup";
-
 jest.mock("devtools-contextmenu", () => ({ showMenu: jest.fn() }));
 jest.mock("../../../../utils/clipboard", () => ({
   copyToTheClipboard: jest.fn()
@@ -24,13 +22,18 @@ function generateMockId(labelString) {
 describe("FrameMenu", () => {
   let mockEvent: any;
   let mockFrame;
-  let emptyFrame: any;
+  let emptyFrame;
   let callbacks;
   let frameworkGroupingOn;
   let toggleFrameworkGrouping;
 
   beforeEach(() => {
-    mockFrame = makeMockFrame(undefined, makeMockSource("isFake"));
+    mockFrame = {
+      source: {
+        url: "isFake",
+        isBlackBoxed: false
+      }
+    };
     mockEvent = {
       stopPropagation: jest.fn(),
       preventDefault: jest.fn()

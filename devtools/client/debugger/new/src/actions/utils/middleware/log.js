@@ -3,10 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 /* global window */
 
-// @flow
-
 import { isTesting } from "devtools-environment";
-import type { ThunkArgs } from "../../types";
 
 const blacklist = [
   "SET_POPUP_OBJECT_PROPERTIES",
@@ -21,7 +18,7 @@ const blacklist = [
   "NODE_PROPERTIES_LOADED"
 ];
 
-function cloneAction(action: any) {
+function cloneAction(action) {
   action = action || {};
   action = { ...action };
 
@@ -82,7 +79,6 @@ function serializeAction(action) {
     return JSON.stringify(action);
   } catch (e) {
     console.error(e);
-    return "";
   }
 }
 
@@ -90,12 +86,11 @@ function serializeAction(action) {
  * A middleware that logs all actions coming through the system
  * to the console.
  */
-export function log({ dispatch, getState }: ThunkArgs) {
-  return (next: any) => (action: any) => {
+export function log({ dispatch, getState }) {
+  return next => action => {
     const asyncMsg = !action.status ? "" : `[${action.status}]`;
 
     if (isTesting()) {
-      // $FlowIgnore
       dump(
         `[ACTION] ${action.type} ${asyncMsg} - ${serializeAction(action)}\n`
       );

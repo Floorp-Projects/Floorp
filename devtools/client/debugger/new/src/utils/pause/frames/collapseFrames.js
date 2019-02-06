@@ -7,7 +7,7 @@
 import { get, findIndex } from "lodash";
 
 // eslint-disable-next-line max-len
-import type { Frame } from "../../../types";
+import type { LocalFrame } from "../../../components/SecondaryPanes/Frames/types";
 import { getFrameUrl } from "./getFrameUrl";
 
 function collapseLastFrames(frames) {
@@ -24,10 +24,10 @@ function collapseLastFrames(frames) {
   return { newFrames, lastGroup };
 }
 
-type FrameGroup = Frame[];
-type GroupedFrames = Array<FrameGroup | Frame>;
+type FrameGroup = LocalFrame[];
+type GroupedFrames = Array<FrameGroup | LocalFrame>;
 
-export function collapseFrames(frames: Frame[]): GroupedFrames {
+export function collapseFrames(frames: LocalFrame[]): GroupedFrames {
   // We collapse groups of one so that user frames
   // are not in a group of one
   function addGroupToList(group, list) {
