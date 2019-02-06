@@ -24,8 +24,6 @@ ChromeUtils.defineModuleGetter(this, "AttributionCode",
                                "resource:///modules/AttributionCode.jsm");
 ChromeUtils.defineModuleGetter(this, "ctypes",
                                "resource://gre/modules/ctypes.jsm");
-ChromeUtils.defineModuleGetter(this, "LightweightThemeManager",
-                               "resource://gre/modules/LightweightThemeManager.jsm");
 ChromeUtils.defineModuleGetter(this, "ProfileAge",
                                "resource://gre/modules/ProfileAge.jsm");
 ChromeUtils.defineModuleGetter(this, "WindowsRegistry",
@@ -699,18 +697,12 @@ EnvironmentAddonBuilder.prototype = {
    */
   async _updateAddons(atStartup) {
     this._environment._log.trace("_updateAddons");
-    let personaId = null;
-    let theme = LightweightThemeManager.currentTheme;
-    if (theme) {
-      personaId = theme.id;
-    }
 
     let addons = {
       activeAddons: await this._getActiveAddons(),
       theme: await this._getActiveTheme(),
       activePlugins: this._getActivePlugins(atStartup),
       activeGMPlugins: await this._getActiveGMPlugins(atStartup),
-      persona: personaId,
     };
 
     let result = {

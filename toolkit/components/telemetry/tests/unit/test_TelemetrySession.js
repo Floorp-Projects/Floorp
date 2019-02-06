@@ -11,7 +11,6 @@
 const {CommonUtils} = ChromeUtils.import("resource://services-common/utils.js");
 const {ClientID} = ChromeUtils.import("resource://gre/modules/ClientID.jsm");
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/LightweightThemeManager.jsm", this);
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
 ChromeUtils.import("resource://gre/modules/TelemetryController.jsm", this);
 ChromeUtils.import("resource://gre/modules/TelemetrySession.jsm", this);
