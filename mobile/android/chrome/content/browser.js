@@ -6661,7 +6661,7 @@ var Distribution = {
         let bytes = await OS.File.read(aFile.path);
         let raw = new TextDecoder().decode(bytes) || "";
       } catch (e) {
-        if (!(e instanceof OS.File.Error && reason.becauseNoSuchFile)) {
+        if (!(e instanceof OS.File.Error && e.becauseNoSuchFile)) {
           Cu.reportError("Distribution: Could not read from " + aFile.leafName + " file");
         }
         return;
