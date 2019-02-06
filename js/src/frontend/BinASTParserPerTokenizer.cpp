@@ -772,7 +772,7 @@ BinASTParserPerTokenizer<Tok>::raiseError(BinKind kind,
                                           const char* description) {
   Sprinter out(cx_);
   BINJS_TRY(out.init());
-  BINJS_TRY(out.printf("In %s, %s", describeBinKind(kind), description));
+  BINJS_TRY(out.printf("In %s, ", description));
   return tokenizer_->raiseError(out.string());
 }
 
