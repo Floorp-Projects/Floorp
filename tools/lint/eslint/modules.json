@@ -26,7 +26,6 @@
   "bookmarks.jsm": ["PlacesItem", "Bookmark", "Separator", "Livemark", "BookmarkFolder", "DumpBookmarks"],
   "bookmark_repair.js": ["BookmarkRepairRequestor", "BookmarkRepairResponder"],
   "bookmark_validator.js": ["BookmarkValidator", "BookmarkProblemData"],
-  "BootstrapMonitor.jsm": ["monitor"],
   "browser-loader.js": ["BrowserLoader"],
   "browser.js": ["browser", "Context", "WindowState"],
   "browserid_identity.js": ["BrowserIDManager", "AuthenticationError"],

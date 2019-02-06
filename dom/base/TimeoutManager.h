@@ -203,6 +203,10 @@ class TimeoutManager final {
   Timeouts mTimeouts;
   uint32_t mTimeoutIdCounter;
   uint32_t mNextFiringId;
+#ifdef DEBUG
+  int64_t mFiringIndex;
+  int64_t mLastFiringIndex;
+#endif
   AutoTArray<uint32_t, 2> mFiringIdStack;
   mozilla::dom::Timeout* mRunningTimeout;
 

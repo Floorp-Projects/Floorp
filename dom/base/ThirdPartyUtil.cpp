@@ -16,7 +16,9 @@
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIURI.h"
 #include "nsThreadUtils.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Logging.h"
+#include "mozilla/StaticPtr.h"
 #include "mozilla/Unused.h"
 #include "nsPIDOMWindow.h"
 
@@ -29,13 +31,35 @@ static mozilla::LazyLogModule gThirdPartyLog("thirdPartyUtil");
 #undef LOG
 #define LOG(args) MOZ_LOG(gThirdPartyLog, mozilla::LogLevel::Debug, args)
 
+static mozilla::StaticRefPtr<ThirdPartyUtil> gService;
+
 nsresult ThirdPartyUtil::Init() {
   NS_ENSURE_TRUE(NS_IsMainThread(), NS_ERROR_NOT_AVAILABLE);
 
-  nsresult rv;
-  mTLDService = do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID, &rv);
+  MOZ_ASSERT(!gService);
+  gService = this;
+  mozilla::ClearOnShutdown(&gService);
 
-  return rv;
+  mTLDService = nsEffectiveTLDService::GetInstance();
+  return mTLDService ? NS_OK : NS_ERROR_FAILURE;
+}
+
+ThirdPartyUtil::~ThirdPartyUtil() { gService = nullptr; }
+
+// static
+ThirdPartyUtil* ThirdPartyUtil::GetInstance() {
+  if (gService) {
+    return gService;
+  }
+  nsCOMPtr<mozIThirdPartyUtil> tpuService =
+      mozilla::services::GetThirdPartyUtil();
+  if (!tpuService) {
+    return nullptr;
+  }
+  MOZ_ASSERT(
+      gService,
+      "gService must have been initialized in nsEffectiveTLDService::Init");
+  return gService;
 }
 
 // Determine if aFirstDomain is a different base domain to aSecondURI; or, if
@@ -49,14 +73,13 @@ nsresult ThirdPartyUtil::IsThirdPartyInternal(const nsCString& aFirstDomain,
   }
 
   // Get the base domain for aSecondURI.
-  nsCString secondDomain;
+  nsAutoCString secondDomain;
   nsresult rv = GetBaseDomain(aSecondURI, secondDomain);
   LOG(("ThirdPartyUtil::IsThirdPartyInternal %s =? %s", aFirstDomain.get(),
        secondDomain.get()));
   if (NS_FAILED(rv)) return rv;
 
-  // Check strict equality.
-  *aResult = aFirstDomain != secondDomain;
+  *aResult = IsThirdPartyInternal(aFirstDomain, secondDomain);
   return NS_OK;
 }
 
@@ -92,7 +115,7 @@ ThirdPartyUtil::IsThirdPartyURI(nsIURI* aFirstURI, nsIURI* aSecondURI,
   NS_ENSURE_ARG(aSecondURI);
   NS_ASSERTION(aResult, "null outparam pointer");
 
-  nsCString firstHost;
+  nsAutoCString firstHost;
   nsresult rv = GetBaseDomain(aFirstURI, firstHost);
   if (NS_FAILED(rv)) return rv;
 
@@ -109,19 +132,15 @@ ThirdPartyUtil::IsThirdPartyWindow(mozIDOMWindowProxy* aWindow, nsIURI* aURI,
 
   bool result;
 
-  // Get the URI of the window, and its base domain.
-  nsresult rv;
-  nsCOMPtr<nsIURI> currentURI;
-  rv = GetURIFromWindow(aWindow, getter_AddRefs(currentURI));
-  if (NS_FAILED(rv)) return rv;
-
-  nsCString bottomDomain;
-  rv = GetBaseDomain(currentURI, bottomDomain);
-  if (NS_FAILED(rv)) return rv;
+  nsCString bottomDomain =
+      GetBaseDomainFromWindow(nsPIDOMWindowOuter::From(aWindow));
+  if (bottomDomain.IsEmpty()) {
+    return NS_ERROR_FAILURE;
+  }
 
   if (aURI) {
     // Determine whether aURI is foreign with respect to currentURI.
-    rv = IsThirdPartyInternal(bottomDomain, aURI, &result);
+    nsresult rv = IsThirdPartyInternal(bottomDomain, aURI, &result);
     if (NS_FAILED(rv)) return rv;
 
     if (result) {
@@ -130,24 +149,28 @@ ThirdPartyUtil::IsThirdPartyWindow(mozIDOMWindowProxy* aWindow, nsIURI* aURI,
     }
   }
 
-  nsCOMPtr<nsPIDOMWindowOuter> current = nsPIDOMWindowOuter::From(aWindow),
-                               parent;
-  nsCOMPtr<nsIURI> parentURI;
+  nsPIDOMWindowOuter* current = nsPIDOMWindowOuter::From(aWindow);
   do {
     // We use GetScriptableParent rather than GetParent because we consider
     // <iframe mozbrowser> to be a top-level frame.
-    parent = current->GetScriptableParent();
-    if (SameCOMIdentity(parent, current)) {
+    nsPIDOMWindowOuter* parent = current->GetScriptableParent();
+    // We don't use SameCOMIdentity here since we know that nsPIDOMWindowOuter
+    // is only implemented by nsGlobalWindowOuter, so different objects of that
+    // type will not have different nsISupports COM identities, and checking the
+    // actual COM identity using SameCOMIdentity is expensive due to the virtual
+    // calls involved.
+    if (parent == current) {
       // We're at the topmost content window. We already know the answer.
       *aResult = false;
       return NS_OK;
     }
 
-    rv = GetURIFromWindow(parent, getter_AddRefs(parentURI));
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsCString parentDomain = GetBaseDomainFromWindow(parent);
+    if (parentDomain.IsEmpty()) {
+      return NS_ERROR_FAILURE;
+    }
 
-    rv = IsThirdPartyInternal(bottomDomain, parentURI, &result);
-    if (NS_FAILED(rv)) return rv;
+    result = IsThirdPartyInternal(bottomDomain, parentDomain);
 
     if (result) {
       *aResult = true;
@@ -155,7 +178,6 @@ ThirdPartyUtil::IsThirdPartyWindow(mozIDOMWindowProxy* aWindow, nsIURI* aURI,
     }
 
     current = parent;
-    currentURI = parentURI;
   } while (1);
 
   MOZ_ASSERT_UNREACHABLE("should've returned");
@@ -201,7 +223,7 @@ ThirdPartyUtil::IsThirdPartyChannel(nsIChannel* aChannel, nsIURI* aURI,
   rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(channelURI));
   if (NS_FAILED(rv)) return rv;
 
-  nsCString channelDomain;
+  nsAutoCString channelDomain;
   rv = GetBaseDomain(channelURI, channelDomain);
   if (NS_FAILED(rv)) return rv;
 
