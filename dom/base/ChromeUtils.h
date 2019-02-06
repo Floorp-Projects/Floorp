@@ -180,6 +180,9 @@ class ChromeUtils {
                                   const WindowActorOptions& aOptions,
                                   ErrorResult& aRv);
 
+  static void UnregisterWindowActor(const GlobalObject& aGlobal,
+                                    const nsAString& aName);
+
   static bool IsClassifierBlockingErrorCode(GlobalObject& aGlobal,
                                             uint32_t aError);
 };

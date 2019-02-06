@@ -57,6 +57,10 @@ void JSWindowActorService::RegisterWindowActor(
   }
 }
 
+void JSWindowActorService::UnregisterWindowActor(const nsAString& aName) {
+  mDescriptors.Remove(aName);
+}
+
 void JSWindowActorService::LoadJSWindowActorInfos(
     nsTArray<JSWindowActorInfo>& aInfos) {
   MOZ_ASSERT(NS_IsMainThread());
