@@ -17,9 +17,6 @@ parser.add_option('--binjsdir', dest='binjsdir',
                   help='cwd when running binjs_encode')
 parser.add_option('--binjs_encode', dest='binjs_encode',
                   help='path to binjs_encode commad')
-parser.add_option('--binjs_convert_from_json', dest='binjs_convert_from_json',
-                  default="",
-                  help='path to binjs_convert_from_json commad (optional)')
 (options, filters) = parser.parse_args()
 
 
@@ -56,29 +53,9 @@ def ensure_file(path, name):
 ensure_dir(options.topsrcdir, 'topsrcdir')
 ensure_dir(options.binjsdir, 'binjsdir')
 ensure_file(options.binjs_encode, 'binjs_encode command')
-if options.binjs_convert_from_json:
-    ensure_file(options.binjs_convert_from_json, 'binjs_convert_from_json command')
 
 jittest_dir = os.path.join(options.topsrcdir, 'js', 'src', 'jit-test', 'tests')
 ensure_dir(jittest_dir, 'jit-test')
-
-jsapi_tests_dir = os.path.join(options.topsrcdir, 'js', 'src', 'jsapi-tests')
-ensure_dir(jsapi_tests_dir, 'binast in jsapi-tests')
-
-jsapi_binast_dir = os.path.join(jsapi_tests_dir, 'binast')
-ensure_dir(jsapi_binast_dir, 'binast in jsapi-tests')
-
-invalid_tests_dir = os.path.join(jsapi_binast_dir, 'invalid', 'tests')
-ensure_dir(invalid_tests_dir, 'invalid tests')
-
-invalid_lib_dir = os.path.join(jsapi_binast_dir, 'invalid', 'lib')
-ensure_dir(invalid_lib_dir, 'library for libvalid tests')
-sys.path.insert(0, os.path.join(invalid_lib_dir))
-
-invalid_tests_output_dir = os.path.join(jittest_dir, 'binast', 'invalid')
-ensure_dir(invalid_tests_output_dir, 'invalid tests output')
-
-import filter_runner
 
 
 def check_filter(outfile_path):
@@ -368,60 +345,14 @@ def convert_wpt():
 def convert_jsapi_test():
     """ Convert jsapi-test files into .binjs.
     """
-    encode_inplace(os.path.join(jsapi_binast_dir, 'parser', 'multipart'))
+    binast_test_dir = os.path.join(options.topsrcdir, 'js', 'src', 'jsapi-tests', 'binast')
+    ensure_dir(binast_test_dir, 'binast in jsapi-tests')
 
+    encode_inplace(os.path.join(binast_test_dir, 'parser', 'multipart'))
 
-def convert(infile_path, filter_path, outfile_path, binjs_convert_from_json_args=[]):
-    """ Convert the given .js file into .binjs, with filter applied.
-
-    :param infile_path (string)
-           The path to the input .js file.
-    :param filter_path (string)
-           The path to the filter .py file.
-    :param outfile_path (string)
-           The path to the output .binjs file.
-
-    :param binjs_convert_from_json_args (list)
-           The command line arguments passed to binjs_convert_from_json command.
-    """
-
-    if not check_filter(outfile_path):
-        return
-
-    print(' converting', infile_path)
-    print('         to', outfile_path)
-    print('with filter', filter_path)
-
-    infile = open(infile_path)
-    outfile = open(outfile_path, 'w')
-
-    source = subprocess.check_output(
-        [options.binjs_encode, 'advanced', 'json'],
-        cwd=options.binjsdir, stdin=infile)
-
-    filtered_source = filter_runner.run(filter_path, source)
-
-    convert_from_json = subprocess.Popen(
-        [options.binjs_convert_from_json] + binjs_convert_from_json_args,
-        cwd=options.binjsdir, stdin=subprocess.PIPE, stdout=outfile)
-    convert_from_json.stdin.write(filtered_source)
-    convert_from_json.stdin.close()
-
-def convert_invalid_test():
-    for root, dirs, files in os.walk(invalid_tests_dir):
-        for filename in files:
-            if filename.endswith('.js'):
-                infile_path = os.path.join(root, filename)
-                filter_path = os.path.join(root, filename.replace('.js', '.py'))
-                outfile_path = os.path.join(invalid_tests_output_dir,
-                                            filename.replace('.js', '.binjs'))
-                convert(infile_path, filter_path, outfile_path)
 
 convert_jittest()
 
 convert_wpt()
 
 convert_jsapi_test()
-
-if options.binjs_convert_from_json:
-    convert_invalid_test()

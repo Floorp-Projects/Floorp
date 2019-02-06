@@ -393,8 +393,6 @@ def find_tests(substring=None, run_binast=False):
                 continue
             if os.path.join('binast', 'nonlazy') in dirpath:
                 continue
-            if os.path.join('binast', 'invalid') in dirpath:
-                continue
 
         for filename in filenames:
             if not (filename.endswith('.js') or filename.endswith('.binjs')):
