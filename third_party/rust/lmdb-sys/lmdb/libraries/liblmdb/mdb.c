@@ -109,7 +109,7 @@ typedef SSIZE_T	ssize_t;
 #include <unistd.h>
 #endif
 
-#if defined(__sun) || defined(ANDROID)
+#if defined(__sun) || defined(__ANDROID__)
 /* Most platforms have posix_memalign, older may only have memalign */
 #define HAVE_MEMALIGN	1
 #include <malloc.h>
@@ -123,7 +123,7 @@ typedef SSIZE_T	ssize_t;
 #if defined(__APPLE__) || defined (BSD) || defined(__FreeBSD_kernel__)
 # define MDB_USE_POSIX_SEM	1
 # define MDB_FDATASYNC		fsync
-#elif defined(ANDROID)
+#elif defined(__ANDROID__)
 # define MDB_FDATASYNC		fsync
 #endif
 
@@ -256,7 +256,7 @@ typedef SSIZE_T	ssize_t;
  */
 #ifndef MDB_USE_ROBUST
 /* Android currently lacks Robust Mutex support. So does glibc < 2.4. */
-# if defined(MDB_USE_POSIX_MUTEX) && (defined(ANDROID) || \
+# if defined(MDB_USE_POSIX_MUTEX) && (defined(__ANDROID__) || \
 	(defined(__GLIBC__) && GLIBC_VER < 0x020004))
 #  define MDB_USE_ROBUST	0
 # else
