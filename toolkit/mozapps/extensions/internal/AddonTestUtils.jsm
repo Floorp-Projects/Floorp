@@ -36,8 +36,6 @@ ChromeUtils.defineModuleGetter(this, "FileTestUtils",
                                "resource://testing-common/FileTestUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "HttpServer",
                                "resource://testing-common/httpd.js");
-ChromeUtils.defineModuleGetter(this, "InstallRDF",
-                               "resource://gre/modules/addons/RDFManifestConverter.jsm");
 ChromeUtils.defineModuleGetter(this, "MockRegistrar",
                                "resource://testing-common/MockRegistrar.jsm");
 
@@ -365,9 +363,6 @@ var AddonTestUtils = {
     // By default ignore bundled add-ons
     Services.prefs.setBoolPref("extensions.installDistroAddons", false);
 
-    // By default don't check for hotfixes
-    Services.prefs.setCharPref("extensions.hotfix.id", "");
-
     // Ensure signature checks are enabled by default
     Services.prefs.setBoolPref("xpinstall.signatures.required", true);
 
@@ -615,11 +610,6 @@ var AddonTestUtils = {
 
   getManifestURI(file) {
     if (file.isDirectory()) {
-      file.append("install.rdf");
-      if (file.exists()) {
-        return NetUtil.newURI(file);
-      }
-
       file.leafName = "manifest.json";
       if (file.exists())
         return NetUtil.newURI(file);
@@ -630,10 +620,6 @@ var AddonTestUtils = {
     let zip = ZipReader(file);
     try {
       let uri = NetUtil.newURI(file);
-
-      if (zip.hasEntry("install.rdf")) {
-        return NetUtil.newURI(`jar:${uri.spec}!/install.rdf`);
-      }
 
       if (zip.hasEntry("manifest.json")) {
         return NetUtil.newURI(`jar:${uri.spec}!/manifest.json`);
@@ -651,12 +637,6 @@ var AddonTestUtils = {
 
   async getIDFromManifest(manifestURI) {
     let body = await fetch(manifestURI.spec);
-
-    if (manifestURI.spec.endsWith(".rdf")) {
-      let manifest = InstallRDF.loadFromBuffer(await body.arrayBuffer()).decode();
-      return manifest.id;
-    }
-
     let manifest = await body.json();
     try {
       return manifest.applications.gecko.id;
@@ -951,58 +931,6 @@ var AddonTestUtils = {
     return items.join("");
   },
 
-  createInstallRDF(data) {
-    let defaults = {
-      bootstrap: true,
-      version: "1.0",
-      name: `Test Extension ${data.id}`,
-      targetApplications: [
-        {
-          "id": "xpcshell@tests.mozilla.org",
-          "minVersion": "1",
-          "maxVersion": "64.*",
-        },
-      ],
-    };
-
-    var rdf = '<?xml version="1.0"?>\n';
-    rdf += '<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"\n' +
-           '     xmlns:em="http://www.mozilla.org/2004/em-rdf#">\n';
-
-    rdf += '<Description about="urn:mozilla:install-manifest">\n';
-
-    data = Object.assign({}, defaults, data);
-
-    let props = ["id", "version", "type", "internalName", "updateURL",
-                 "optionsURL", "optionsType", "aboutURL", "iconURL",
-                 "skinnable", "bootstrap", "strictCompatibility"];
-    rdf += this._writeProps(data, props);
-
-    rdf += this._writeLocaleStrings(data);
-
-    for (let platform of data.targetPlatforms || [])
-      rdf += escaped`<em:targetPlatform>${platform}</em:targetPlatform>\n`;
-
-    for (let app of data.targetApplications || []) {
-      rdf += "<em:targetApplication><Description>\n";
-      rdf += this._writeProps(app, ["id", "minVersion", "maxVersion"]);
-      rdf += "</Description></em:targetApplication>\n";
-    }
-
-    for (let localized of data.localized || []) {
-      rdf += "<em:localized><Description>\n";
-      rdf += this._writeArrayProps(localized, ["locale"]);
-      rdf += this._writeLocaleStrings(localized);
-      rdf += "</Description></em:localized>\n";
-    }
-
-    for (let dep of data.dependencies || [])
-      rdf += escaped`<em:dependency><Description em:id="${dep}"/></em:dependency>\n`;
-
-    rdf += "</Description>\n</RDF>\n";
-    return rdf;
-  },
-
   /**
    * Recursively create all directories up to and including the given
    * path, if they do not exist.
@@ -1086,9 +1014,6 @@ var AddonTestUtils = {
   },
 
   promiseWriteFilesToExtension(dir, id, files, unpacked = this.testUnpacked) {
-    if (typeof files["install.rdf"] === "object")
-      files["install.rdf"] = this.createInstallRDF(files["install.rdf"]);
-
     if (unpacked) {
       let path = OS.Path.join(dir, id);
 
@@ -1122,9 +1047,6 @@ var AddonTestUtils = {
    */
   createTempXPIFile(files) {
     let file = this.allocTempXPIFile();
-    if (typeof files["install.rdf"] === "object")
-      files["install.rdf"] = this.createInstallRDF(files["install.rdf"]);
-
     this.writeFilesToZip(file.path, files);
     return file;
   },
@@ -1281,8 +1203,7 @@ var AddonTestUtils = {
 
   /**
    * Sets the last modified time of the extension, usually to trigger an update
-   * of its metadata. If the extension is unpacked, this function assumes that
-   * the extension contains only the install.rdf file.
+   * of its metadata.
    *
    * @param {nsIFile} ext A file pointing to either the packed extension or its unpacked directory.
    * @param {number} time The time to which we set the lastModifiedTime of the extension

@@ -20,8 +20,8 @@ ChromeUtils.defineModuleGetter(this, "AddonTestUtils",
                                "resource://testing-common/AddonTestUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "ContentTask",
                                "resource://testing-common/ContentTask.jsm");
-ChromeUtils.defineModuleGetter(this, "Extension",
-                               "resource://gre/modules/Extension.jsm");
+ChromeUtils.defineModuleGetter(this, "ExtensionTestCommon",
+                               "resource://testing-common/ExtensionTestCommon.jsm");
 ChromeUtils.defineModuleGetter(this, "FileUtils",
                                "resource://gre/modules/FileUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "MessageChannel",
@@ -32,8 +32,6 @@ ChromeUtils.defineModuleGetter(this, "Services",
                                "resource://gre/modules/Services.jsm");
 ChromeUtils.defineModuleGetter(this, "TestUtils",
                                "resource://testing-common/TestUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "ExtensionTestCommon",
-                               "resource://testing-common/ExtensionTestCommon.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "Management", () => {
   const {Management} = ChromeUtils.import("resource://gre/modules/Extension.jsm", null);
@@ -579,7 +577,7 @@ class AOMExtensionWrapper extends ExtensionWrapper {
 
     await this._flushCache();
 
-    let xpiFile = Extension.generateXPI(data);
+    let xpiFile = ExtensionTestCommon.generateXPI(data);
 
     this.cleanupFiles.push(xpiFile);
 
@@ -785,12 +783,12 @@ var ExtensionTestUtils = {
 
   loadExtension(data) {
     if (data.useAddonManager) {
-      let xpiFile = Extension.generateXPI(data);
+      let xpiFile = ExtensionTestCommon.generateXPI(data);
 
       return this.loadExtensionXPI(xpiFile, data.useAddonManager, data.amInstallTelemetryInfo);
     }
 
-    let extension = Extension.generate(data);
+    let extension = ExtensionTestCommon.generate(data);
 
     return new ExtensionWrapper(this.currentScope, extension);
   },

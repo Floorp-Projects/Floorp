@@ -15,6 +15,9 @@ namespace dom {
 Timeout::Timeout()
     : mTimeoutId(0),
       mFiringId(TimeoutManager::InvalidFiringId),
+#ifdef DEBUG
+      mFiringIndex(-1),
+#endif
       mPopupState(PopupBlocker::openAllowed),
       mReason(Reason::eTimeoutOrInterval),
       mNestingLevel(0),
