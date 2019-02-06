@@ -66,8 +66,11 @@ add_task(async function() {
   info("Clicked on light theme");
   await themeChangedPromise;
 
+  let button = document.getElementById("customization-reset-button");
+  await TestUtils.waitForCondition(() => !button.disabled);
+
   // Check restore defaults button is enabled.
-  ok(!document.getElementById("customization-reset-button").disabled,
+  ok(!button.disabled,
      "Reset button should not be disabled anymore");
   ok((/light/i).test(themesButtonIcon.style.backgroundImage),
      `Button should show light theme thumbnail - was: "${themesButtonIcon.style.backgroundImage}"`);
@@ -89,6 +92,8 @@ add_task(async function() {
   firstLWTheme.doCommand();
   info("Clicked on first theme");
   await themeChangedPromise;
+
+  await new Promise(executeSoon);
 
   popupShownPromise = popupShown(popup);
   EventUtils.synthesizeMouseAtCenter(themesButton, {});
