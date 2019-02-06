@@ -4034,8 +4034,9 @@ AsyncPanZoomController::GetCurrentAsyncTransformForFixedAdjustment(
 
 AsyncTransformComponentMatrix
 AsyncPanZoomController::GetCurrentAsyncTransformWithOverscroll(
-    AsyncTransformConsumer aMode) const {
-  return AsyncTransformComponentMatrix(GetCurrentAsyncTransform(aMode)) *
+    AsyncTransformConsumer aMode, AsyncTransformComponents aComponents) const {
+  return AsyncTransformComponentMatrix(
+             GetCurrentAsyncTransform(aMode, aComponents)) *
          GetOverscrollTransform(aMode);
 }
 
