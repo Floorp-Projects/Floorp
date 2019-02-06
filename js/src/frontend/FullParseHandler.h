@@ -787,6 +787,12 @@ class FullParseHandler {
                      AccessorTypeToJSOp(atype));
   }
 
+  BinaryNodeType newShorthandPropertyDefinition(Node key, Node value) {
+    MOZ_ASSERT(isUsableAsObjectPropertyName(key));
+
+    return newBinary(ParseNodeKind::Shorthand, key, value, JSOP_INITPROP);
+  }
+
   void setFunctionFormalParametersAndBody(FunctionNodeType funNode,
                                           ListNodeType paramsBody) {
     MOZ_ASSERT_IF(paramsBody, paramsBody->isKind(ParseNodeKind::ParamsBody));
