@@ -34,7 +34,7 @@ module.exports = {
         exclude: /node_modules/,
         loader: "babel-loader",
         // Converts .jsm files into common-js modules
-        options: {plugins: [["jsm-to-esmodules", {basePath: resourcePathRegEx, replace: true}], ["transform-object-rest-spread", {"useBuiltIns": true}]]},
+        options: {plugins: [["jsm-to-esmodules", {basePath: resourcePathRegEx, removeOtherImports: true, replace: true}], ["transform-object-rest-spread", {"useBuiltIns": true}]]},
       },
     ],
   },
