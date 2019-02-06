@@ -849,6 +849,14 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM {
   void unboxSymbol(const Address& src, Register dest) {
     unboxNonDouble(src, dest, JSVAL_TYPE_SYMBOL);
   }
+#ifdef ENABLE_BIGINT
+  void unboxBigInt(const ValueOperand& src, Register dest) {
+    unboxNonDouble(src, dest, JSVAL_TYPE_BIGINT);
+  }
+  void unboxBigInt(const Address& src, Register dest) {
+    unboxNonDouble(src, dest, JSVAL_TYPE_BIGINT);
+  }
+#endif
   void unboxObject(const ValueOperand& src, Register dest) {
     unboxNonDouble(src, dest, JSVAL_TYPE_OBJECT);
   }
@@ -917,6 +925,9 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM {
   Condition testBooleanTruthy(bool truthy, const ValueOperand& operand);
   Condition testDoubleTruthy(bool truthy, FloatRegister reg);
   Condition testStringTruthy(bool truthy, const ValueOperand& value);
+#ifdef ENABLE_BIGINT
+  Condition testBigIntTruthy(bool truthy, const ValueOperand& value);
+#endif
 
   void boolValueToFloat32(const ValueOperand& operand, FloatRegister dest);
   void int32ValueToFloat32(const ValueOperand& operand, FloatRegister dest);

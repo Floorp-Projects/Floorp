@@ -4695,8 +4695,7 @@ nsresult XREMain::XRE_mainRun() {
   AddSandboxAnnotations();
 #endif /* MOZ_CONTENT_SANDBOX */
 
-  static_cast<nsToolkitProfileService*>(mProfileSvc.get())
-      ->RecordStartupTelemetry();
+  static_cast<nsToolkitProfileService*>(mProfileSvc.get())->CompleteStartup();
 
   {
     rv = appStartup->Run();

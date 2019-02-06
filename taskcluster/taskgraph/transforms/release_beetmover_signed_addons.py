@@ -101,9 +101,7 @@ def make_task_description(config, jobs):
             get_beetmover_action_scope(config),
         ]
 
-        job['dependencies'] = {
-            str(dep_job.kind): dep_job.label
-        }
+        job['dependencies'] = {dep_job.kind: dep_job.label}
 
         job['run-on-projects'] = dep_job.attributes['run_on_projects']
         job['treeherder'] = treeherder

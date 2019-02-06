@@ -28,8 +28,7 @@ SOURCES += [
 # see: third_party/dav1d/include/dav1d/common.h
 DEFINES['DAV1D_API'] = ''
 
-# Enable ASM build only on Linux for now.
-if CONFIG['OS_TARGET'] == 'Linux' and (CONFIG['CPU_ARCH'] in ('x86', 'x86_64')):
+if CONFIG['MOZ_DAV1D_ASM']:
     # Default stack aligment is 16 bytes
     DIRS += ['asm']
 

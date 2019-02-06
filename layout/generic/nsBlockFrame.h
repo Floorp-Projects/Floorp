@@ -122,6 +122,9 @@ class nsBlockFrame : public nsContainerFrame {
   nscoord GetLogicalBaseline(mozilla::WritingMode aWritingMode) const override;
   bool GetVerticalAlignBaseline(mozilla::WritingMode aWM,
                                 nscoord* aBaseline) const override {
+    NS_ASSERTION(!aWM.IsOrthogonalTo(GetWritingMode()),
+                 "You should only call this on frames with a WM that's "
+                 "parallel to aWM");
     nscoord lastBaseline;
     if (GetNaturalBaselineBOffset(aWM, BaselineSharingGroup::eLast,
                                   &lastBaseline)) {

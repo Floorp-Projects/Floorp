@@ -420,8 +420,11 @@ var gPermissionManager = {
 
       case "statusCol":
         sortFunc = (a, b) => {
-          return a.querySelector(".website-capability-value").getAttribute("value") >
-                 b.querySelector(".website-capability-value").getAttribute("value");
+          // The capabilities values ("Allow" and "Block") are localized asynchronously.
+          // Sort based on the guaranteed-present localization ID instead, note that the
+          // ascending/descending arrow may be pointing the wrong way.
+          return a.querySelector(".website-capability-value").getAttribute("data-l10n-id") >
+                 b.querySelector(".website-capability-value").getAttribute("data-l10n-id");
         };
         break;
     }

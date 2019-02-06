@@ -977,6 +977,28 @@ static void GetScrollableOverflowForPerspective(
   }
 }
 
+nscoord nsHTMLScrollFrame::GetLogicalBaseline(WritingMode aWritingMode) const {
+  // This function implements some of the spec text here:
+  //  https://drafts.csswg.org/css-align/#baseline-export
+  //
+  // Specifically: if our scrolled frame is a block, we just use the inherited
+  // GetLogicalBaseline() impl, which synthesizes a baseline from the
+  // margin-box. Otherwise, we defer to our scrolled frame, considering it
+  // to be scrolled to its initial scroll position.
+  if (mHelper.mScrolledFrame->IsBlockFrame()) {
+    return nsContainerFrame::GetLogicalBaseline(aWritingMode);
+  }
+
+  // OK, here's where we defer to our scrolled frame. We have to add our
+  // border BStart thickness to whatever it returns, to produce an offset in
+  // our frame-rect's coordinate system. (We don't have to add padding,
+  // because the scrolled frame handles our padding.)
+  LogicalMargin border = GetLogicalUsedBorder(aWritingMode);
+
+  return border.BStart(aWritingMode) +
+         mHelper.mScrolledFrame->GetLogicalBaseline(aWritingMode);
+}
+
 void nsHTMLScrollFrame::AdjustForPerspective(nsRect& aScrollableOverflow) {
   // If we have perspective that is being applied to our children, then
   // the effective transform on the child depends on the relative position

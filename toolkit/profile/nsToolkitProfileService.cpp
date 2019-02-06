@@ -304,7 +304,8 @@ nsToolkitProfileService::nsToolkitProfileService()
       mUseDedicatedProfile(false),
 #endif
       mCreatedAlternateProfile(false),
-      mStartupReason(NS_LITERAL_STRING("unknown")) {
+      mStartupReason(NS_LITERAL_STRING("unknown")),
+      mMaybeLockProfile(false) {
 #ifdef MOZ_DEV_EDITION
   mUseDevEditionProfile = true;
 #endif
@@ -313,13 +314,30 @@ nsToolkitProfileService::nsToolkitProfileService()
 
 nsToolkitProfileService::~nsToolkitProfileService() { gService = nullptr; }
 
-void nsToolkitProfileService::RecordStartupTelemetry() {
+void nsToolkitProfileService::CompleteStartup() {
   if (!mStartupProfileSelected) {
     return;
   }
 
   ScalarSet(mozilla::Telemetry::ScalarID::STARTUP_PROFILE_SELECTION_REASON,
             mStartupReason);
+
+  if (mMaybeLockProfile) {
+    nsCOMPtr<nsIToolkitShellService> shell =
+        do_GetService(NS_TOOLKITSHELLSERVICE_CONTRACTID);
+    if (!shell) {
+      return;
+    }
+
+    bool isDefaultApp;
+    nsresult rv = shell->IsDefaultApplication(&isDefaultApp);
+    NS_ENSURE_SUCCESS_VOID(rv);
+
+    if (isDefaultApp) {
+      mInstallData.SetString(mInstallHash.get(), "Locked", "1");
+      Flush();
+    }
+  }
 }
 
 // Tests whether the passed profile was last used by this install.
@@ -457,28 +475,17 @@ bool nsToolkitProfileService::MaybeMakeDefaultDedicatedProfile(
   // Set this as the default profile for this install.
   SetDefaultProfile(aProfile);
 
-  bool isDefaultApp = false;
-
-  nsCOMPtr<nsIToolkitShellService> shell =
-      do_GetService(NS_TOOLKITSHELLSERVICE_CONTRACTID);
-  if (shell) {
-    rv = shell->IsDefaultApplication(&isDefaultApp);
-    // If the shell component is following XPCOM rules then this shouldn't be
-    // needed, but let's be safe.
-    if (NS_FAILED(rv)) {
-      isDefaultApp = false;
-    }
-  }
-
-  if (!isDefaultApp) {
-    // SetDefaultProfile will have locked this profile to this install so no
-    // other installs will steal it, but this was auto-selected so we want to
-    // unlock it so that the OS default install can take it at a later time.
-    mInstallData.DeleteString(mInstallHash.get(), "Locked");
-  }
+  // SetDefaultProfile will have locked this profile to this install so no
+  // other installs will steal it, but this was auto-selected so we want to
+  // unlock it so that other installs can potentially take it.
+  mInstallData.DeleteString(mInstallHash.get(), "Locked");
 
   // Persist the changes.
   Flush();
+
+  // Once XPCOM is available check if this is the default application and if so
+  // lock the profile again.
+  mMaybeLockProfile = true;
 
   return true;
 }
@@ -815,10 +822,10 @@ nsToolkitProfileService::SelectStartupProfile(
   nsresult rv = SelectStartupProfile(&argc, argv.get(), aIsResetting, aRootDir,
                                      aLocalDir, aProfile, aDidCreate);
 
-  // Since we were called outside of the normal startup path record the
-  // telemetry now.
+  // Since we were called outside of the normal startup path complete any
+  // startup tasks.
   if (NS_SUCCEEDED(rv)) {
-    RecordStartupTelemetry();
+    CompleteStartup();
   }
 
   return rv;
@@ -1118,6 +1125,18 @@ nsresult nsToolkitProfileService::SelectStartupProfile(
   }
 
   mStartupReason = NS_LITERAL_STRING("default");
+
+  // This code block can be removed before riding the trains to 68.
+  if (mUseDedicatedProfile) {
+    nsCString locked;
+    rv = mInstallData.GetString(mInstallHash.get(), "Locked", locked);
+    if (NS_FAILED(rv) || !locked.EqualsLiteral("1")) {
+      // The profile is unlocked. This can only happen if this profile was the
+      // old default profile and it was chosen as the dedicated default on a
+      // previous run. Check later if this is the default app and if so lock it.
+      mMaybeLockProfile = true;
+    }
+  }
 
   // Use the selected profile.
   mCurrent->GetRootDir(aRootDir);

@@ -5,7 +5,7 @@
 use api::{ColorF, DeviceIntPoint, DevicePixelScale, LayoutPixel, PicturePixel, RasterPixel};
 use api::{DeviceIntRect, DeviceIntSize, DocumentLayer, FontRenderMode, DebugFlags};
 use api::{LayoutPoint, LayoutRect, LayoutSize, PipelineId, RasterSpace, WorldPoint, WorldRect, WorldPixel};
-use clip::{ClipDataStore, ClipStore};
+use clip::{ClipDataStore, ClipStore, ClipChainStack};
 use clip_scroll_tree::{ClipScrollTree, ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex};
 use display_list_flattener::{DisplayListFlattener};
 use gpu_cache::GpuCache;
@@ -90,6 +90,7 @@ pub struct FrameVisibilityState<'a> {
     pub tile_cache: Option<TileCache>,
     pub retained_tiles: &'a mut RetainedTiles,
     pub data_stores: &'a mut DataStores,
+    pub clip_chain_stack: ClipChainStack,
 }
 
 pub struct FrameBuildingContext<'a> {
@@ -112,6 +113,7 @@ pub struct FrameBuildingState<'a> {
     pub segment_builder: SegmentBuilder,
     pub surfaces: &'a mut Vec<SurfaceInfo>,
     pub dirty_region_stack: Vec<DirtyRegion>,
+    pub clip_chain_stack: ClipChainStack,
 }
 
 impl<'a> FrameBuildingState<'a> {
@@ -326,6 +328,8 @@ impl FrameBuilder {
             &mut self.prim_store.pictures,
             &frame_context,
             gpu_cache,
+            &self.clip_store,
+            &data_stores.clip,
         );
 
         {
@@ -347,6 +351,7 @@ impl FrameBuilder {
                 tile_cache: None,
                 retained_tiles: &mut retained_tiles,
                 data_stores,
+                clip_chain_stack: ClipChainStack::new(),
             };
 
             self.prim_store.update_visibility(
@@ -367,6 +372,7 @@ impl FrameBuilder {
             segment_builder: SegmentBuilder::new(),
             surfaces,
             dirty_region_stack: Vec::new(),
+            clip_chain_stack: ClipChainStack::new(),
         };
 
         // Push a default dirty region which culls primitives

@@ -890,6 +890,14 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared {
     cmp32(Operand(string, JSString::offsetOfLength()), Imm32(0));
     return truthy ? Assembler::NotEqual : Assembler::Equal;
   }
+#ifdef ENABLE_BIGINT
+  Condition testBigIntTruthy(bool truthy, const ValueOperand& value) {
+    Register bi = value.payloadReg();
+    cmpPtr(Operand(bi, BigInt::offsetOfLengthSignAndReservedBits()),
+           ImmWord(0));
+    return truthy ? Assembler::NotEqual : Assembler::Equal;
+  }
+#endif
 
   template <typename T>
   inline void loadInt32OrDouble(const T& src, FloatRegister dest);

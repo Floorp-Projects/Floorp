@@ -3369,6 +3369,11 @@ void MacroAssembler::maybeBranchTestType(MIRType type, MDefinition* maybeDef,
       case MIRType::Symbol:
         branchTestSymbol(Equal, tag, label);
         break;
+#ifdef ENABLE_BIGINT
+      case MIRType::BigInt:
+        branchTestBigInt(Equal, tag, label);
+        break;
+#endif
       case MIRType::Object:
         branchTestObject(Equal, tag, label);
         break;
