@@ -1369,7 +1369,6 @@ CustomizeMode.prototype = {
 
     let footer = doc.getElementById("customization-lwtheme-menu-footer");
     let panel = footer.parentNode;
-    let recommendedLabel = doc.getElementById("customization-lwtheme-menu-recommended");
     for (let theme of themes) {
       let button = buildToolbarButton(theme);
       button.addEventListener("command", () => {
@@ -1384,52 +1383,16 @@ CustomizeMode.prototype = {
           extra: {type: "theme", addonId: theme.id},
         });
       });
-      panel.insertBefore(button, recommendedLabel);
-    }
-
-    let lwthemePrefs = Services.prefs.getBranch("lightweightThemes.");
-    let recommendedThemes = lwthemePrefs.getStringPref("recommendedThemes");
-    recommendedThemes = JSON.parse(recommendedThemes);
-    let sb = Services.strings.createBundle("chrome://browser/locale/lightweightThemes.properties");
-    for (let theme of recommendedThemes) {
-      try {
-        theme.name = sb.GetStringFromName("lightweightThemes." + theme.id + ".name");
-        theme.description = sb.GetStringFromName("lightweightThemes." + theme.id + ".description");
-      } catch (ex) {
-        // If finding strings for this failed, just don't build it. This can
-        // happen for users with 'older' recommended themes lists, some of which
-        // have since been removed from Firefox.
-        continue;
-      }
-      let button = buildToolbarButton(theme);
-      button.addEventListener("command", () => {
-        LightweightThemeManager.setLocalTheme(button.theme);
-        recommendedThemes = recommendedThemes.filter((aTheme) => { return aTheme.id != button.theme.id; });
-        lwthemePrefs.setStringPref("recommendedThemes",
-                                   JSON.stringify(recommendedThemes));
-        onThemeSelected(panel);
-        let addonId = `${button.theme.id}@personas.mozilla.org`;
-        AMTelemetry.recordActionEvent({
-          object: "customize",
-          action: "enable",
-          value: "recommended",
-          extra: {type: "theme", addonId},
-        });
-      });
       panel.insertBefore(button, footer);
     }
-    let hideRecommendedLabel = (footer.previousElementSibling == recommendedLabel);
-    recommendedLabel.hidden = hideRecommendedLabel;
   },
 
   _clearLWThemesMenu(panel) {
     let footer = this.$("customization-lwtheme-menu-footer");
-    let recommendedLabel = this.$("customization-lwtheme-menu-recommended");
-    for (let element of [footer, recommendedLabel]) {
-      while (element.previousElementSibling &&
-             element.previousElementSibling.localName == "toolbarbutton") {
-        element.previousElementSibling.remove();
-      }
+    let element = footer;
+    while (element.previousElementSibling &&
+           element.previousElementSibling.localName == "toolbarbutton") {
+      element.previousElementSibling.remove();
     }
 
     // Workaround for bug 1059934
