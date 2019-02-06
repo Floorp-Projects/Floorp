@@ -30,8 +30,7 @@ static bool IsValidHost(const nsACString& host) {
   }
 
   if (host.EqualsLiteral("addons.mozilla.org") ||
-      host.EqualsLiteral("discovery.addons.mozilla.org") ||
-      host.EqualsLiteral("testpilot.firefox.com")) {
+      host.EqualsLiteral("discovery.addons.mozilla.org")) {
     return true;
   }
 
@@ -41,8 +40,6 @@ static bool IsValidHost(const nsACString& host) {
         host.LowerCaseEqualsLiteral("discovery.addons.allizom.org") ||
         host.LowerCaseEqualsLiteral("addons-dev.allizom.org") ||
         host.LowerCaseEqualsLiteral("discovery.addons-dev.allizom.org") ||
-        host.LowerCaseEqualsLiteral("testpilot.stage.mozaws.net") ||
-        host.LowerCaseEqualsLiteral("testpilot.dev.mozaws.net") ||
         host.LowerCaseEqualsLiteral("example.com")) {
       return true;
     }

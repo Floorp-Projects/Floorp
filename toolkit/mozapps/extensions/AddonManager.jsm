@@ -52,10 +52,9 @@ var PREF_EM_CHECK_COMPATIBILITY = MOZ_COMPATIBILITY_NIGHTLY ?
 
 const VALID_TYPES_REGEXP = /^[\w\-]+$/;
 
-const WEBAPI_INSTALL_HOSTS = ["addons.mozilla.org", "testpilot.firefox.com"];
+const WEBAPI_INSTALL_HOSTS = ["addons.mozilla.org"];
 const WEBAPI_TEST_INSTALL_HOSTS = [
   "addons.allizom.org", "addons-dev.allizom.org",
-  "testpilot.stage.mozaws.net", "testpilot.dev.mozaws.net",
   "example.com",
 ];
 
