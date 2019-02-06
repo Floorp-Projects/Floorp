@@ -197,19 +197,10 @@ function convertResultToMatches(context, result, urls) {
     if (!match) {
       continue;
     }
-    // Manage autofill and preselected properties for the first match.
+    // Manage autofillValue and preselected properties for the first match.
     if (i == 0) {
       if (style.includes("autofill") && result.defaultIndex == 0) {
-        let autofillValue = result.getValueAt(i);
-        if (autofillValue.toLocaleLowerCase()
-            .startsWith(context.searchString.toLocaleLowerCase())) {
-          match.autofill = {
-            value: context.searchString +
-                   autofillValue.substring(context.searchString.length),
-            selectionStart: context.searchString.length,
-            selectionEnd: autofillValue.length,
-          };
-        }
+        context.autofillValue = result.getValueAt(i);
       }
       if (style.includes("heuristic")) {
         context.preselected = true;

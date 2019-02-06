@@ -337,7 +337,7 @@ class UrlbarAbstraction {
       let context = await this.urlbar.lastQueryContextPromise;
       details.url = (UrlbarUtils.getUrlFromResult(context.results[index])).url;
       details.type = context.results[index].type;
-      details.autofill = index == 0 && context.results[index].autofill;
+      details.autofill = index == 0 && context.autofillValue;
       details.image = element.getElementsByClassName("urlbarView-favicon")[0].src;
       details.title = context.results[index].title;
       let actions = element.getElementsByClassName("urlbarView-action");
