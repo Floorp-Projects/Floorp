@@ -1272,10 +1272,10 @@ impl TileCache {
             prim_instance.spatial_node_index,
             clip_scroll_tree,
         );
-        let world_culling_rect = self
-            .map_local_to_world
-            .map(&culling_rect)
-            .expect("bug: unable to map local clip rect");
+        let world_culling_rect = match self.map_local_to_world.map(&culling_rect) {
+            Some(rect) => rect,
+            None => return false,
+        };
 
         // Normalize the tile coordinates before adding to tile dependencies.
         // For each affected tile, mark any of the primitive dependencies.
