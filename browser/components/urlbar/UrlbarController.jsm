@@ -136,6 +136,9 @@ class UrlbarController {
     }
 
     if (queryContext.lastResultCount == 0) {
+      if (queryContext.autofillValue) {
+        this.input.autofill(queryContext.autofillValue);
+      }
       // The first time we receive results try to connect to the heuristic
       // result.
       this.speculativeConnect(queryContext, 0, "resultsadded");
@@ -270,7 +273,7 @@ class UrlbarController {
     switch (reason) {
       case "resultsadded": {
         // We should connect to an heuristic result, if it exists.
-        if ((resultIndex == 0 && context.preselected) || result.autofill) {
+        if (resultIndex == 0 && (context.preselected || context.autofillValue)) {
           if (result.type == UrlbarUtils.RESULT_TYPE.SEARCH) {
             // Speculative connect only if search suggestions are enabled.
             if (UrlbarPrefs.get("suggest.searches") &&
@@ -278,7 +281,7 @@ class UrlbarController {
               let engine = Services.search.defaultEngine;
               UrlbarUtils.setupSpeculativeConnection(engine, this.browserWindow);
             }
-          } else if (result.autofill) {
+          } else if (context.autofillValue) {
             UrlbarUtils.setupSpeculativeConnection(url, this.browserWindow);
           }
         }

@@ -75,6 +75,8 @@ It is augmented as it progresses through the system, with various information:
              // RESULT_SOURCE.*, that can be returned by the model.
 
     // Properties added by the Model.
+    autofillValue; // {string} the text value that should be autofilled in the
+                   // input, if any.
     preselected; // {boolean} whether the first result should be preselected.
     results; // {array} list of UrlbarResult objects.
     tokens; // {array} tokens extracted from the searchString, each token is an
@@ -373,12 +375,6 @@ properties, supported by all of the results.
     title: {string} A title that may be used as a label for this result.
     icon: {string} Url of an icon for this result.
     payload: {object} Object containing properties for the specific RESULT_TYPE.
-    autofill: {object} An object describing the text that should be
-              autofilled in the input when the result is selected, if any.
-    autofill.value: {string} The autofill value.
-    autofill.selectionStart: {integer} The first index in the autofill
-                             selection.
-    autofill.selectionEnd: {integer} The last index in the autofill selection.
   }
 
 The following RESULT_TYPEs are supported:
