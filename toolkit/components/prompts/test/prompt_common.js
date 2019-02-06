@@ -49,7 +49,7 @@ function checkPromptState(promptState, expectedState) {
     is(promptState.checkMsg, expectedState.checkMsg, "Checking checkbox label");
     is(promptState.checked, expectedState.checked, "Checking checkbox checked");
     if (!isTabModal)
-      is(promptState.iconClass, "spaced " + expectedState.iconClass, "Checking expected icon CSS class");
+      is(promptState.iconClass, expectedState.iconClass, "Checking expected icon CSS class");
     is(promptState.textValue, expectedState.textValue, "Checking textbox value");
     is(promptState.passValue, expectedState.passValue, "Checking passbox value");
 
