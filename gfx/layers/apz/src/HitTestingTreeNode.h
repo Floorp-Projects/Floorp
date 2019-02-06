@@ -106,7 +106,7 @@ class HitTestingTreeNode {
                       const CSSTransformMatrix& aTransform,
                       const Maybe<ParentLayerIntRegion>& aClipRegion,
                       const EventRegionsOverride& aOverride,
-                      bool aIsBackfaceHidden);
+                      bool aIsBackfaceHidden, bool aIsAsyncZoomContainer);
   bool IsOutsideClip(const ParentLayerPoint& aPoint) const;
 
   /* Scrollbar info */
@@ -140,6 +140,8 @@ class HitTestingTreeNode {
   EventRegionsOverride GetEventRegionsOverride() const;
   const CSSTransformMatrix& GetTransform() const;
   const LayerIntRegion& GetVisibleRegion() const;
+
+  bool IsAsyncZoomContainer() const;
 
   /* Debug helpers */
   void Dump(const char* aPrefix = "") const;
@@ -194,6 +196,9 @@ class HitTestingTreeNode {
    * vice versa, so it's sufficient to record this at hit test tree
    * building time. */
   bool mIsBackfaceHidden;
+
+  /* Whether layer L is the async zoom container layer. */
+  bool mIsAsyncZoomContainer;
 
   /* This is clip rect for L that we wish to use for hit-testing purposes. Note
    * that this may not be exactly the same as the clip rect on layer L because
