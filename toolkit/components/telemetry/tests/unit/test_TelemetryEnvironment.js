@@ -17,10 +17,6 @@ const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 ChromeUtils.defineModuleGetter(this, "AttributionCode",
                                "resource:///modules/AttributionCode.jsm");
 
-// Lazy load |LightweightThemeManager|.
-ChromeUtils.defineModuleGetter(this, "LightweightThemeManager",
-                               "resource://gre/modules/LightweightThemeManager.jsm");
-
 ChromeUtils.defineModuleGetter(this, "ExtensionTestUtils",
                                "resource://testing-common/ExtensionXPCShellUtils.jsm");
 
