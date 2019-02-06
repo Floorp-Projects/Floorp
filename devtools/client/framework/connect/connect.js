@@ -9,7 +9,6 @@
 var {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 var Services = require("Services");
 var {gDevTools} = require("devtools/client/framework/devtools");
-var {TargetFactory} = require("devtools/client/framework/target");
 var {Toolbox} = require("devtools/client/framework/toolbox");
 var {DebuggerClient} = require("devtools/shared/client/debugger-client");
 var {LocalizationHelper} = require("devtools/shared/l10n");
@@ -204,19 +203,11 @@ function handleConnectionTimeout() {
  * The user clicked on one of the buttons.
  * Opens the toolbox.
  */
-function openToolbox(activeTab, chrome = false) {
-  const options = {
-    activeTab,
-    client: gClient,
-    chrome,
-  };
-  TargetFactory.forRemoteTab(options).then((target) => {
-    const hostType = Toolbox.HostType.WINDOW;
-    gDevTools.showToolbox(target, "webconsole", hostType).then((toolbox) => {
-      toolbox.once("destroyed", function() {
-        gClient.close();
-      });
-    }, console.error);
-    window.close();
-  }, console.error);
+async function openToolbox(target, chrome = false) {
+  const hostType = Toolbox.HostType.WINDOW;
+  const toolbox = gDevTools.showToolbox(target, "webconsole", hostType);
+  toolbox.once("destroyed", function() {
+    gClient.close();
+  });
+  window.close();
 }

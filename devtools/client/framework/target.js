@@ -87,31 +87,6 @@ exports.TargetFactory = {
     return client.mainRoot.getTab({ tab });
   },
 
-  /**
-   * Return a promise of a Target for a remote tab.
-   * @param {Object} options
-   *        The options object has the following properties:
-   *        {
-   *          activeTab: front for this tab target,
-   *          client: a DebuggerClient instance
-   *                  (caller owns this and is responsible for closing),
-   *          chrome: true if the remote target is the whole process
-   *        }
-   *
-   * @return A promise of a target object
-   */
-  forRemoteTab: function({ activeTab, client, chrome }) {
-    const target = activeTab;
-    if (chrome) {
-      target.forceChrome();
-    }
-    const targetPromise = target.attach().then(() => target);
-    targetPromise.catch(e => {
-      console.error("Exception while attaching target", e);
-    });
-    return targetPromise;
-  },
-
   forWorker: function(workerTargetFront) {
     return workerTargetFront;
   },

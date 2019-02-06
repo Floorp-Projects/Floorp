@@ -328,13 +328,7 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
     const client = new DebuggerClient(transport);
 
     await client.connect();
-    const front = await client.mainRoot.getProcess(processId);
-    const options = {
-      activeTab: front,
-      client,
-      chrome: true,
-    };
-    const target = await TargetFactory.forRemoteTab(options);
+    const target = await client.mainRoot.getProcess(processId);
     // Ensure closing the connection in order to cleanup
     // the debugger client and also the server created in the
     // content process

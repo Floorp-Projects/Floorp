@@ -49,15 +49,7 @@ async function testTarget(client, target) {
 function test() {
   waitForExplicitFinish();
 
-  getParentProcessActors((client, front) => {
-    const options = {
-      activeTab: front,
-      client,
-      chrome: true,
-    };
-
-    TargetFactory.forRemoteTab(options).then(testTarget.bind(null, client));
-  });
+  getParentProcessActors(testTarget);
 }
 
 function close(target, client) {
