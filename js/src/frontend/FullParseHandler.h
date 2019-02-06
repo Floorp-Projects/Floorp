@@ -36,8 +36,7 @@ class FullParseHandler {
   ParseNodeAllocator allocator;
 
   ParseNode* allocParseNode(size_t size) {
-    MOZ_ASSERT(size == sizeof(ParseNode));
-    return static_cast<ParseNode*>(allocator.allocNode());
+    return static_cast<ParseNode*>(allocator.allocNode(size));
   }
 
   /*

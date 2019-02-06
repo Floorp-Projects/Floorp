@@ -35,7 +35,7 @@ void ListNode::checkConsistency() const {
 
     tailNode = &last->pn_next;
   } else {
-    tailNode = &pn_u.list.head;
+    tailNode = &head_;
   }
   MOZ_ASSERT(tail() == tailNode);
   MOZ_ASSERT(count() == actualCount);
@@ -46,9 +46,9 @@ void ListNode::checkConsistency() const {
  * Allocate a ParseNode from parser's node freelist or, failing that, from
  * cx's temporary arena.
  */
-void* ParseNodeAllocator::allocNode() {
+void* ParseNodeAllocator::allocNode(size_t size) {
   LifoAlloc::AutoFallibleScope fallibleAllocator(&alloc);
-  void* p = alloc.alloc(sizeof(ParseNode));
+  void* p = alloc.alloc(size);
   if (!p) {
     ReportOutOfMemory(cx);
   }
