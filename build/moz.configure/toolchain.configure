@@ -1711,7 +1711,9 @@ def security_hardening_cflags(hardening_flag, asan, optimize, c_compiler, target
             js_ldflags.append("-Wl,--dynamicbase")
 
         # Control Flow Guard (CFG) ----------------------------
-        if c_compiler.type == 'clang-cl' and c_compiler.version >= '8':
+        # See Bug 1525588 for why this doesn't work on Windows ARM
+        if c_compiler.type == 'clang-cl' and c_compiler.version >= '8' and \
+           target.cpu != 'aarch64':
             flags.append("-guard:cf")
             js_flags.append("-guard:cf")
             # nolongjmp is needed because clang doesn't emit the CFG tables of
