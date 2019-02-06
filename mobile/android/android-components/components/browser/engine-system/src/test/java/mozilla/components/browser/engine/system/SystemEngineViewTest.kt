@@ -12,6 +12,7 @@ import android.net.http.SslError
 import android.os.Bundle
 import android.os.Message
 import android.view.View
+import android.webkit.JsPromptResult
 import android.webkit.JsResult
 import android.webkit.SslErrorHandler
 import android.webkit.WebChromeClient
@@ -1198,6 +1199,116 @@ class SystemEngineViewTest {
             assertEquals(jsAlertCount, 0)
             assertTrue(shouldShowMoreDialogs)
         }
+    }
+
+    @Test
+    fun `Calling onJsPrompt must provide a TextPrompt PromptRequest`() {
+        val context = getApplicationContext<Context>()
+        val engineSession = SystemEngineSession(context)
+        val engineView = SystemEngineView(context)
+        var request: PromptRequest? = null
+
+        engineSession.register(object : EngineSession.Observer {
+            override fun onPromptRequest(promptRequest: PromptRequest) {
+                request = promptRequest
+            }
+        })
+
+        engineView.render(engineSession)
+
+        val mockJSPromptResult = mock<JsPromptResult>()
+
+        engineSession.webView.webChromeClient!!.onJsPrompt(
+            mock(),
+            "http://www.mozilla.org",
+            "message",
+            "defaultValue",
+            mockJSPromptResult
+        )
+
+        val textPromptRequest = request as PromptRequest.TextPrompt
+        assertTrue(request is PromptRequest.TextPrompt)
+
+        assertTrue(textPromptRequest.title.contains("mozilla.org"))
+        assertEquals(textPromptRequest.hasShownManyDialogs, false)
+        assertEquals(textPromptRequest.inputLabel, "message")
+        assertEquals(textPromptRequest.inputValue, "defaultValue")
+
+        textPromptRequest.onConfirm(true, "value")
+        verify(mockJSPromptResult).confirm("value")
+        assertEquals(engineView.jsAlertCount, 1)
+
+        textPromptRequest.onDismiss()
+        verify(mockJSPromptResult).cancel()
+
+        textPromptRequest.onConfirm(true, "value")
+        assertEquals(engineView.shouldShowMoreDialogs, false)
+
+        engineView.lastDialogShownAt = engineView.lastDialogShownAt.add(YEAR, -1)
+        engineSession.webView.webChromeClient!!.onJsPrompt(
+            mock(),
+            "http://www.mozilla.org",
+            "message", "defaultValue",
+            mockJSPromptResult
+        )
+
+        assertEquals(engineView.jsAlertCount, 1)
+        verify(mockJSPromptResult, times(2)).cancel()
+
+        engineView.lastDialogShownAt = engineView.lastDialogShownAt.add(YEAR, -1)
+        engineView.jsAlertCount = 100
+        engineView.shouldShowMoreDialogs = true
+
+        engineSession.webView.webChromeClient!!.onJsPrompt(
+            mock(),
+            "http://www.mozilla.org",
+            null,
+            null,
+            mockJSPromptResult
+        )
+
+        assertTrue((request as PromptRequest.TextPrompt).hasShownManyDialogs)
+
+        engineSession.currentUrl = "http://www.mozilla.org"
+        engineSession.webView.webChromeClient!!.onJsPrompt(
+            mock(),
+            null,
+            "message",
+            "defaultValue",
+            mockJSPromptResult
+        )
+        assertTrue((request as PromptRequest.TextPrompt).title.contains("mozilla.org"))
+    }
+
+    @Test
+    fun `Calling onJsPrompt with a null session must not provide a TextPrompt PromptRequest`() {
+        val context = getApplicationContext<Context>()
+        val engineSession = SystemEngineSession(context)
+        val engineView = SystemEngineView(context)
+
+        var request: PromptRequest? = null
+
+        engineSession.register(object : EngineSession.Observer {
+            override fun onPromptRequest(promptRequest: PromptRequest) {
+                request = promptRequest
+            }
+        })
+
+        engineView.render(engineSession)
+
+        val mockJSPromptResult = mock<JsPromptResult>()
+        engineView.session = null
+
+        val wasTheDialogHandled = engineSession.webView.webChromeClient!!.onJsPrompt(
+            mock(),
+            "http://www.mozilla.org",
+            "message", "defaultValue",
+            mockJSPromptResult
+        )
+
+        assertTrue(wasTheDialogHandled)
+        assertNull(request)
+        verify(mockJSPromptResult).cancel()
     }
 
     private fun Date.add(timeUnit: Int, amountOfTime: Int): Date {

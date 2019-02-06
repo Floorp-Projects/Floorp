@@ -16,6 +16,9 @@ permalink: /changelog/
 * **feature-session**
   * Fixed an issue causing `EngineViewPresenter` to render a selected `Session` even though it was configured to show a fixed `Session`. This issue caused a crash (`IllegalStateException: Display already acquired`) in the [Reference Browser](https://github.com/mozilla-mobile/reference-browser) when a "Custom Tab" and the "Browser" tried to render the same `Session`.
 
+* **browser-engine-system**
+  * Added support for [JavaScript prompt alerts](https://developer.mozilla.org/en-US/docs/Web/API/Window/prompt) on WebView.
+
 # 0.41.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.40.0...v0.41.0)
@@ -67,7 +70,7 @@ permalink: /changelog/
   ```
 
   * Removed the `onPermissionsGranted` method in favour of `onPermissionsResult` which handles both granted and denied permissions. This method should be invoked from `onRequestPermissionsResult`:
-  
+
   ```kotlin
    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
       when (requestCode) {
@@ -82,7 +85,7 @@ permalink: /changelog/
    * ⚠️ **This is a breaking API change!**
    * These change are similar to the ones for feature-downloads above and aim to provide a consistent way of handling permission requests.
    * The required permissions are now passed to the `onNeedToRequestPermissions` callback.
-   
+
    ```kotlin
    promptFeature = PromptFeature(
       fragment = this,
@@ -93,9 +96,9 @@ permalink: /changelog/
       }
    )
    ```
-   
+
    * Renamed `onRequestsPermissionsResult` to `onPermissionResult` and allow applications to specify the permission request code. This method should be invoked from `onRequestPermissionsResult`:
-  
+
   ```kotlin
    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
       when (requestCode) {

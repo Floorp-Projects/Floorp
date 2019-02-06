@@ -13,6 +13,7 @@ import android.os.Build
 import android.os.Handler
 import android.os.Message
 import android.support.annotation.VisibleForTesting
+import android.support.annotation.VisibleForTesting.PRIVATE
 import android.util.AttributeSet
 import android.view.View
 import android.webkit.CookieManager
@@ -61,7 +62,8 @@ class SystemEngineView @JvmOverloads constructor(
     defStyleAttr: Int = 0
 ) : FrameLayout(context, attrs, defStyleAttr), EngineView, View.OnLongClickListener {
 
-    private var session: SystemEngineSession? = null
+    @VisibleForTesting(otherwise = PRIVATE)
+    internal var session: SystemEngineSession? = null
     internal var jsAlertCount = 0
     internal var shouldShowMoreDialogs = true
     internal var lastDialogShownAt = Date()
@@ -358,15 +360,44 @@ class SystemEngineView @JvmOverloads constructor(
             return true
         }
 
-        // Related Issue: https://github.com/mozilla-mobile/android-components/issues/1815
         override fun onJsPrompt(
             view: WebView?,
             url: String?,
             message: String?,
             defaultValue: String?,
-            result: JsPromptResult?
+            result: JsPromptResult
         ): Boolean {
-            return applyDefaultJsDialogBehavior(result)
+            val session = session ?: return applyDefaultJsDialogBehavior(result)
+
+            val title = context.getString(R.string.mozac_browser_engine_system_alert_title, url ?: session.currentUrl)
+
+            val onDismiss: () -> Unit = {
+                result.cancel()
+            }
+
+            val onConfirm: (Boolean, String) -> Unit = { shouldNotShowMoreDialogs, valueInput ->
+                shouldShowMoreDialogs = !shouldNotShowMoreDialogs
+                result.confirm(valueInput)
+            }
+
+            if (shouldShowMoreDialogs) {
+                session.notifyObservers {
+                    onPromptRequest(
+                        PromptRequest.TextPrompt(
+                            title ?: "",
+                            message ?: "",
+                            defaultValue ?: "",
+                            areDialogsBeingAbused(),
+                            onDismiss,
+                            onConfirm
+                        )
+                    )
+                }
+            } else {
+                result.cancel()
+            }
+            updateJSDialogAbusedState()
+            return true
         }
 
         // Related Issue: https://github.com/mozilla-mobile/android-components/issues/1814
