@@ -3582,6 +3582,8 @@ nsresult nsWindow::Create(nsIWidget *aParent, nsNativeWidget aNativeParent,
                            G_CALLBACK(settings_changed_cb), this);
     g_signal_connect_after(default_settings, "notify::gtk-enable-animations",
                            G_CALLBACK(settings_changed_cb), this);
+    g_signal_connect_after(default_settings, "notify::gtk-decoration-layout",
+                           G_CALLBACK(settings_changed_cb), this);
   }
 
   if (mContainer) {
