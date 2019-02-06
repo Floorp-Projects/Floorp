@@ -17,7 +17,6 @@ origin	uitour	1	about:newtab
 
 # XPInstall
 origin	install	1	https://addons.mozilla.org
-origin	install	1	https://testpilot.firefox.com
 
 # Remote troubleshooting
 origin	remote-troubleshooting	1	https://input.mozilla.org
