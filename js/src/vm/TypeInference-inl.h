@@ -1418,27 +1418,31 @@ inline AutoSweepObjectGroup::~AutoSweepObjectGroup() {
 
 inline AutoSweepTypeScript::AutoSweepTypeScript(JSScript* script)
 #ifdef DEBUG
-    : script_(script)
+    : zone_(script->zone()),
+      typeScript_(script->types())
 #endif
 {
-  if (script->typesNeedsSweep()) {
-    script->sweepTypes(*this);
+  if (TypeScript* types = script->types()) {
+    Zone* zone = script->zone();
+    if (types->typesNeedsSweep(zone)) {
+      types->sweepTypes(*this, zone);
+    }
   }
 }
 
 #ifdef DEBUG
 inline AutoSweepTypeScript::~AutoSweepTypeScript() {
   // This should still hold.
-  MOZ_ASSERT(!script_->typesNeedsSweep());
+  MOZ_ASSERT_IF(typeScript_, !typeScript_->typesNeedsSweep(zone_));
 }
 #endif
 
-}  // namespace js
-
-inline bool JSScript::typesNeedsSweep() const {
+inline bool TypeScript::typesNeedsSweep(Zone* zone) const {
   MOZ_ASSERT(!js::TlsContext.get()->inUnsafeCallWithABI);
-  return types_ && typesGeneration() != zone()->types.generation;
+  return typesGeneration() != zone->types.generation;
 }
+
+}  // namespace js
 
 inline bool JSScript::ensureHasTypes(JSContext* cx, js::AutoKeepTypeScripts&) {
   return types() || makeTypes(cx);

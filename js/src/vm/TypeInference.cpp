@@ -1551,7 +1551,7 @@ bool js::FinishCompilation(JSContext* cx, HandleScript script,
 
     // If necessary, add constraints to trigger invalidation on the script
     // after any future changes to the stack type sets.
-    if (entry.script->hasFreezeConstraints()) {
+    if (types->hasFreezeConstraints(sweep)) {
       continue;
     }
 
@@ -1567,7 +1567,7 @@ bool js::FinishCompilation(JSContext* cx, HandleScript script,
     }
 
     if (succeeded) {
-      entry.script->setHasFreezeConstraints();
+      types->setHasFreezeConstraints(sweep);
     }
   }
 
@@ -3596,7 +3596,11 @@ TypeScript::TypeScript(JSScript* script, ICScriptPtr&& icScript,
     : icScript_(std::move(icScript)),
       numTypeSets_(numTypeSets),
       bytecodeTypeMapHint_(0),
-      active_(false) {
+      active_(false),
+      typesGeneration_(false),
+      hasFreezeConstraints_(false) {
+  setTypesGeneration(script->zone()->types.generation);
+
   StackTypeSet* array = typeArrayDontCheckGeneration();
   for (unsigned i = 0; i < numTypeSets; i++) {
     new (&array[i]) StackTypeSet();
@@ -3641,7 +3645,6 @@ bool JSScript::makeTypes(JSContext* cx) {
   prepareForDestruction.release();
 
   types_ = new (typeScript) TypeScript(this, std::move(icScript), numTypeSets);
-  setTypesGeneration(cx->zone()->types.generation);
 
 #ifdef DEBUG
   StackTypeSet* typeArray = typeScript->typeArrayDontCheckGeneration();
@@ -4700,23 +4703,23 @@ void ObjectGroup::sweep(const AutoSweepObjectGroup& sweep) {
   }
 }
 
-/* static */ void JSScript::sweepTypes(const js::AutoSweepTypeScript& sweep) {
-  MOZ_ASSERT(typesGeneration() != zone()->types.generation);
-  setTypesGeneration(zone()->types.generation);
+/* static */ void TypeScript::sweepTypes(const js::AutoSweepTypeScript& sweep,
+                                         Zone* zone) {
+  MOZ_ASSERT(typesGeneration() != zone->types.generation);
+  setTypesGeneration(zone->types.generation);
 
-  AssertGCStateForSweep(zone());
+  AssertGCStateForSweep(zone);
 
   Maybe<AutoClearTypeInferenceStateOnOOM> clearStateOnOOM;
-  if (!zone()->types.isSweepingTypes()) {
-    clearStateOnOOM.emplace(zone());
+  if (!zone->types.isSweepingTypes()) {
+    clearStateOnOOM.emplace(zone);
   }
 
-  TypeZone& types = zone()->types;
+  TypeZone& types = zone->types;
 
   // Sweep the inlinedCompilations Vector.
   {
-    RecompileInfoVector& inlinedCompilations =
-        types_->inlinedCompilations(sweep);
+    RecompileInfoVector& inlinedCompilations = this->inlinedCompilations(sweep);
     size_t dest = 0;
     for (size_t i = 0; i < inlinedCompilations.length(); i++) {
       if (inlinedCompilations[i].shouldSweep(types)) {
@@ -4728,18 +4731,17 @@ void ObjectGroup::sweep(const AutoSweepObjectGroup& sweep) {
     inlinedCompilations.shrinkTo(dest);
   }
 
-  unsigned num = types_->numTypeSets();
-  StackTypeSet* typeArray = types_->typeArray(sweep);
-
   // Remove constraints and references to dead objects from stack type sets.
+  unsigned num = numTypeSets();
+  StackTypeSet* arr = typeArray(sweep);
   for (unsigned i = 0; i < num; i++) {
-    typeArray[i].sweep(sweep, zone());
+    arr[i].sweep(sweep, zone);
   }
 
-  if (zone()->types.hadOOMSweepingTypes()) {
+  if (types.hadOOMSweepingTypes()) {
     // It's possible we OOM'd while copying freeze constraints, so they
     // need to be regenerated.
-    clearFlag(MutableFlags::HasFreezeConstraints);
+    hasFreezeConstraints_ = false;
   }
 }
 
@@ -4753,10 +4755,6 @@ void JSScript::maybeReleaseTypes() {
 
   types_->destroy(zone());
   types_ = nullptr;
-
-  // Freeze constraints on stack type sets need to be regenerated the
-  // next time the script is analyzed.
-  clearFlag(MutableFlags::HasFreezeConstraints);
 }
 
 void TypeScript::destroy(Zone* zone) {
