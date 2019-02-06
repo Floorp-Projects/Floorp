@@ -1307,7 +1307,6 @@ name = "jsrust_shared"
 version = "0.1.0"
 dependencies = [
  "baldrdash 0.1.0",
- "bindgen 0.43.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]

@@ -243,13 +243,14 @@ static inline bool GetNameOperation(JSContext* cx, InterpreterFrame* fp,
   return GetEnvironmentName<GetNameMode::Normal>(cx, envChain, name, vp);
 }
 
-static inline bool GetImportOperation(JSContext* cx, InterpreterFrame* fp,
-                                      jsbytecode* pc, MutableHandleValue vp) {
-  RootedObject obj(cx, fp->environmentChain()), env(cx), pobj(cx);
-  RootedPropertyName name(cx, fp->script()->getName(pc));
+bool js::GetImportOperation(JSContext* cx, HandleObject envChain,
+                            HandleScript script, jsbytecode* pc,
+                            MutableHandleValue vp) {
+  RootedObject env(cx), pobj(cx);
+  RootedPropertyName name(cx, script->getName(pc));
   Rooted<PropertyResult> prop(cx);
 
-  MOZ_ALWAYS_TRUE(LookupName(cx, name, obj, &env, &pobj, &prop));
+  MOZ_ALWAYS_TRUE(LookupName(cx, name, envChain, &env, &pobj, &prop));
   MOZ_ASSERT(env && env->is<ModuleEnvironmentObject>());
   MOZ_ASSERT(env->as<ModuleEnvironmentObject>().hasImportBinding(name));
   return FetchName<GetNameMode::Normal>(cx, env, pobj, name, prop, vp);
@@ -3229,7 +3230,8 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     CASE(JSOP_GETIMPORT) {
       PUSH_NULL();
       MutableHandleValue rval = REGS.stackHandleAt(-1);
-      if (!GetImportOperation(cx, REGS.fp(), REGS.pc, rval)) {
+      HandleObject envChain = REGS.fp()->environmentChain();
+      if (!GetImportOperation(cx, envChain, script, REGS.pc, rval)) {
         goto error;
       }
 
@@ -3732,17 +3734,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     END_CASE(JSOP_NEWARRAY)
 
     CASE(JSOP_NEWARRAY_COPYONWRITE) {
-      ReservedRooted<JSObject*> baseobj(
-          &rootObject0,
-          ObjectGroup::getOrFixupCopyOnWriteObject(cx, script, REGS.pc));
-      if (!baseobj) {
-        goto error;
-      }
-
-      ReservedRooted<JSObject*> obj(
-          &rootObject1, NewDenseCopyOnWriteArray(
-                            cx, ((RootedObject&)(baseobj)).as<ArrayObject>(),
-                            gc::DefaultHeap));
+      JSObject* obj = NewArrayCopyOnWriteOperation(cx, script, REGS.pc);
       if (!obj) {
         goto error;
       }
@@ -4147,9 +4139,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     END_CASE(JSOP_CHECKCLASSHERITAGE)
 
     CASE(JSOP_BUILTINPROTO) {
-      MOZ_ASSERT(GET_UINT8(REGS.pc) < JSProto_LIMIT);
-      JSProtoKey key = static_cast<JSProtoKey>(GET_UINT8(REGS.pc));
-      JSObject* builtin = GlobalObject::getOrCreatePrototype(cx, key);
+      JSObject* builtin = BuiltinProtoOperation(cx, REGS.pc);
       if (!builtin) {
         goto error;
       }
@@ -4227,11 +4217,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     END_CASE(JSOP_NEWTARGET)
 
     CASE(JSOP_IMPORTMETA) {
-      ReservedRooted<JSObject*> module(&rootObject0,
-                                       GetModuleObjectForScript(script));
-      MOZ_ASSERT(module);
-
-      JSObject* metaObject = GetOrCreateModuleMetaObject(cx, module);
+      JSObject* metaObject = ImportMetaOperation(cx, script);
       if (!metaObject) {
         goto error;
       }
@@ -4687,6 +4673,20 @@ JSObject* js::SingletonObjectLiteralOperation(JSContext* cx,
 
   cx->realm()->behaviors().setSingletonsAsValues();
   return obj;
+}
+
+JSObject* js::ImportMetaOperation(JSContext* cx, HandleScript script) {
+  RootedObject module(cx, GetModuleObjectForScript(script));
+  MOZ_ASSERT(module);
+  return GetOrCreateModuleMetaObject(cx, module);
+}
+
+JSObject* js::BuiltinProtoOperation(JSContext* cx, jsbytecode* pc) {
+  MOZ_ASSERT(*pc == JSOP_BUILTINPROTO);
+  MOZ_ASSERT(GET_UINT8(pc) < JSProto_LIMIT);
+
+  JSProtoKey key = static_cast<JSProtoKey>(GET_UINT8(pc));
+  return GlobalObject::getOrCreatePrototype(cx, key);
 }
 
 bool js::ThrowMsgOperation(JSContext* cx, const unsigned errorNum) {
@@ -5247,6 +5247,20 @@ JSObject* js::NewArrayOperationWithTemplate(JSContext* cx,
              templateObject->as<ArrayObject>().lastProperty());
   obj->setGroup(templateObject->group());
   return obj;
+}
+
+ArrayObject* js::NewArrayCopyOnWriteOperation(JSContext* cx,
+                                              HandleScript script,
+                                              jsbytecode* pc) {
+  MOZ_ASSERT(*pc == JSOP_NEWARRAY_COPYONWRITE);
+
+  RootedArrayObject baseobj(
+      cx, ObjectGroup::getOrFixupCopyOnWriteObject(cx, script, pc));
+  if (!baseobj) {
+    return nullptr;
+  }
+
+  return NewDenseCopyOnWriteArray(cx, baseobj, gc::DefaultHeap);
 }
 
 void js::ReportRuntimeLexicalError(JSContext* cx, unsigned errorNumber,
