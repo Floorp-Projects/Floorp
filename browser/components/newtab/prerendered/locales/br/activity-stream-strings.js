@@ -40,7 +40,7 @@ window.gActivityStreamStrings = {
   "section_disclaimer_topstories_buttontext": "Mat eo, komprenet am eus",
   "prefs_home_header": "Endalc'had Degemer Firefox",
   "prefs_home_description": "Dibabit peseurt endalc'had a fell deoc'h kaout war ho skramm Firefox Degemer.",
-  "prefs_content_discovery_header": "Firefox Home",
+  "prefs_content_discovery_header": "Degemer Firefox",
   "prefs_content_discovery_description": "Content Discovery in Firefox Home allows you to discover high-quality, relevant articles from across the web.",
   "prefs_content_discovery_button": "Turn Off Content Discovery",
   "prefs_section_rows_option": "{num} renk;{num} renk;{num} renk;{num} a renkoù;{num} renk",
@@ -94,7 +94,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Merañ ar gevrenn",
   "section_menu_action_manage_webext": "Merañ an askouezh",
   "section_menu_action_add_topsite": "Ouzhpennañ ul lec'hienn gwellañ din",
-  "section_menu_action_add_search_engine": "Ouzhpennañ ul lusker klask",
+  "section_menu_action_add_search_engine": "Ouzhpennañ ul lusker enklask",
   "section_menu_action_move_up": "Dilec'hiañ etrezek ar c'hrec'h",
   "section_menu_action_move_down": "Dilec'hiañ etrezek an traoñ",
   "section_menu_action_privacy_notice": "Evezhiadennoù a-fet buhez prevez",
@@ -110,6 +110,5 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "evezhiadennoù a-fet buhez prevez",
   "firstrun_continue_to_login": "Kenderc'hel",
   "firstrun_skip_login": "Tremen ar bazenn-mañ",
-  "context_menu_title": "Digeriñ al lañser",
-  "pocket_learn_more": "Gouzout hiroc'h"
+  "context_menu_title": "Digeriñ al lañser"
 };

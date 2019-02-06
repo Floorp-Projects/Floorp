@@ -64,4 +64,10 @@ interface nsIAboutNewTabService : nsISupports
    * overridden attribute to false.
    */
   void resetNewTabURL();
+
+  /**
+  * Records a scalar metric for how long it takes to pain Top Sites, this will
+  * only record the first timestamp, all the subsequent calls will be ignored.
+  */
+  void maybeRecordTopsitesPainted(in unsigned long long timestamp);
 };

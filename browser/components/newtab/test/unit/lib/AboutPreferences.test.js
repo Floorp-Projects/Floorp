@@ -16,7 +16,10 @@ describe("AboutPreferences Feed", () => {
     Sections = [];
     DiscoveryStream = {config: {enabled: false}};
     instance = new AboutPreferences();
-    instance.store = {getState: () => ({Sections, DiscoveryStream})};
+    instance.store = {
+      dispatch: sandbox.stub(),
+      getState: () => ({Sections, DiscoveryStream}),
+    };
   });
   afterEach(() => {
     globals.restore();
@@ -293,13 +296,23 @@ describe("AboutPreferences Feed", () => {
       });
     });
     describe("#DiscoveryStream", () => {
+      let PreferenceExperimentsStub;
+      beforeEach(() => {
+        DiscoveryStream = {config: {enabled: true}};
+        PreferenceExperimentsStub = {
+          getAllActive: sandbox.stub().resolves([{name: "discoverystream", preferenceName: "browser.newtabpage.activity-stream.discoverystream.config"}]),
+          stop: sandbox.stub().resolves(),
+        };
+        globals.set("PreferenceExperiments", PreferenceExperimentsStub);
+      });
       it("should not render the Discovery Stream section", () => {
+        DiscoveryStream = {config: {enabled: false}};
+
         testRender();
 
         assert.isFalse(node.textContent.includes("prefs_content_discovery"));
       });
       it("should render the Discovery Stream section", () => {
-        DiscoveryStream = {config: {enabled: true}};
         const spy = sandbox.spy(instance, "renderPreferences");
 
         testRender();
@@ -312,14 +325,15 @@ describe("AboutPreferences Feed", () => {
         // Stream is enabled
         assert.propertyVal(node.style, "visibility", "hidden");
       });
-      it("should toggle the Discovery Stream pref on button click", async () => {
-        DiscoveryStream = {config: {enabled: true}};
-        const PreferenceExperimentsStub = {
-          getAllActive: sandbox.stub().resolves([{name: "discoverystream", preferenceName: "browser.newtabpage.activity-stream.discoverystream.config"}]),
-          stop: sandbox.stub().resolves(),
-        };
-        globals.set("PreferenceExperiments", PreferenceExperimentsStub);
+      it("should request Discovery Stream opt-out on button click", async () => {
+        testRender();
+        // Trigger the button click listener
+        await node.addEventListener.firstCall.args[1]();
 
+        assert.calledOnce(instance.store.dispatch);
+        assert.calledWithExactly(instance.store.dispatch, {type: at.DISCOVERY_STREAM_OPT_OUT});
+      });
+      it("should reset the Discovery Stream experiment on button click", async () => {
         testRender();
 
         assert.calledOnce(node.addEventListener);

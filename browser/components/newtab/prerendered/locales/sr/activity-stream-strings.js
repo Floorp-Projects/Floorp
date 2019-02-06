@@ -40,9 +40,9 @@ window.gActivityStreamStrings = {
   "section_disclaimer_topstories_buttontext": "У реду",
   "prefs_home_header": "Садржај Firefox почетне странице",
   "prefs_home_description": "Изаберите садржај који желите видети на вашој Firefox почетној страници.",
-  "prefs_content_discovery_header": "Firefox Home",
-  "prefs_content_discovery_description": "Content Discovery in Firefox Home allows you to discover high-quality, relevant articles from across the web.",
-  "prefs_content_discovery_button": "Turn Off Content Discovery",
+  "prefs_content_discovery_header": "Firefox почетна",
+  "prefs_content_discovery_description": "Откривање садржаја на Firefox почетној вам омогућава да добијете веома квалитетне и вама значајне чланке са целог веба.",
+  "prefs_content_discovery_button": "Искључи откривање садржаја",
   "prefs_section_rows_option": "{num} ред;{num} реда;{num} редова",
   "prefs_search_header": "Веб претрага",
   "prefs_topsites_description": "Сајтови које највише посећујете",
@@ -78,7 +78,7 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "Популарне теме:",
   "pocket_read_even_more": "Погледајте још прича",
   "pocket_more_reccommendations": "Још препорука",
-  "pocket_how_it_works": "How it works",
+  "pocket_how_it_works": "Како ово ради",
   "pocket_cta_button": "Преузмите Pocket",
   "pocket_cta_text": "Сачувајте приче које волите у Pocket и напуните свој ум фасцинантним причама.",
   "highlights_empty_state": "Почните са коришћењем веба а ми ћемо вам овде приказивати неке од одличних чланака, видео записа и других страница које сте скоро посетили.",
@@ -110,6 +110,5 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "обавештење о приватности",
   "firstrun_continue_to_login": "Настави",
   "firstrun_skip_login": "Прескочи овај корак",
-  "context_menu_title": "Open menu",
-  "pocket_learn_more": "Сазнајте више"
+  "context_menu_title": "Отвори мени"
 };

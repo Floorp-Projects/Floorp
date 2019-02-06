@@ -91,7 +91,7 @@ module.exports = function(config) {
               options: {
                 plugins: [
                   // Converts .jsm files into common-js modules
-                  ["jsm-to-commonjs", {basePath: PATHS.resourcePathRegEx, replace: true}], // require("babel-plugin-jsm-to-commonjs")
+                  ["jsm-to-commonjs", {basePath: PATHS.resourcePathRegEx, removeOtherImports: true, replace: true}], // require("babel-plugin-jsm-to-commonjs")
                   ["transform-async-to-module-method", {module: "co-task", method: "async"}], // require("babel-plugin-transform-async-to-module-method")
                   "transform-es2015-modules-commonjs", // require("babel-plugin-transform-es2015-modules-commonjs")
                   ["transform-object-rest-spread", {"useBuiltIns": true}], // require("babel-plugin-transform-object-rest-spread")

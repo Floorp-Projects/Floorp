@@ -747,6 +747,24 @@ describe("TelemetryFeed", () => {
 
       assert.notCalled(instance.setLoadTriggerInfo);
     });
+
+    it("should call maybeRecordTopsitesPainted when url is about:home and topsites_first_painted_ts is given", () => {
+      const topsites_first_painted_ts = 44455;
+      const data = {topsites_first_painted_ts};
+      const spy = sandbox.spy();
+
+      sandbox.stub(Services.prefs, "getIntPref").returns(1);
+      globals.set("aboutNewTabService", {
+        overridden: false,
+        newTabURL: "",
+        maybeRecordTopsitesPainted: spy,
+      });
+      instance.addSession("port123", "about:home");
+      instance.saveSessionPerfData("port123", data);
+
+      assert.calledOnce(spy);
+      assert.calledWith(spy, topsites_first_painted_ts);
+    });
   });
   describe("#uninit", () => {
     it("should call .pingCentre.uninit", () => {
