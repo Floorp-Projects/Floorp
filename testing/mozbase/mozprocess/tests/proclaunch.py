@@ -4,15 +4,15 @@ from __future__ import absolute_import, print_function
 
 import argparse
 import collections
-import ConfigParser
 import multiprocessing
+
 import time
+from six.moves import configparser
 
 ProcessNode = collections.namedtuple('ProcessNode', ['maxtime', 'children'])
 
 
 class ProcessLauncher(object):
-
     """ Create and Launch process trees specified by a '.ini' file
 
         Typical .ini file accepted by this class :
@@ -90,7 +90,7 @@ class ProcessLauncher(object):
         #   Where each child process is a list of type: [count to run, name of child]
         self.children = {}
 
-        cfgparser = ConfigParser.ConfigParser()
+        cfgparser = configparser.ConfigParser()
 
         if not cfgparser.read(manifest):
             raise IOError('The manifest %s could not be found/opened', manifest)
@@ -100,7 +100,7 @@ class ProcessLauncher(object):
             # Maxtime is a mandatory option
             # ConfigParser.NoOptionError is raised if maxtime does not exist
             if '*' in section or ',' in section:
-                raise ConfigParser.ParsingError(
+                raise configparser.ParsingError(
                     "%s is not a valid section name. "
                     "Section names cannot contain a '*' or ','." % section)
             m_time = cfgparser.get(section, 'maxtime')
@@ -130,13 +130,13 @@ class ProcessLauncher(object):
                                 children[i][0] = int(child[0])
 
                             if children[i][1] not in sections:
-                                raise ConfigParser.ParsingError(
+                                raise configparser.ParsingError(
                                     'No section corresponding to child %s' % child[1])
                     except ValueError:
                         raise ValueError(
                             'Expected process count to be an integer, specified %s' % child[0])
 
-            except ConfigParser.NoOptionError:
+            except configparser.NoOptionError:
                 children = None
             pn = ProcessNode(maxtime=m_time,
                              children=children)
@@ -193,7 +193,6 @@ class ProcessLauncher(object):
 
 
 if __name__ == '__main__':
-
     parser = argparse.ArgumentParser()
     parser.add_argument("manifest", help="Specify the configuration .ini file")
     args = parser.parse_args()

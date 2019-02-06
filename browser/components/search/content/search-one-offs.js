@@ -79,6 +79,12 @@ class SearchOneOffs {
     this._engines = null;
 
     /**
+     * `_rebuild()` is async, because it queries the Search Service, which means
+     * there is a potential for a race when it's called multiple times in succession.
+     */
+    this._rebuilding = false;
+
+    /**
      * If a page offers more than this number of engines, the add-engines
      * menu button is shown, instead of showing the engines directly in the
      * popup.
@@ -399,9 +405,27 @@ class SearchOneOffs {
   }
 
   /**
-   * Builds all the UI.
+   * Infallible, non-re-entrant version of `__rebuild()`.
    */
   async _rebuild() {
+    if (this._rebuilding) {
+      return;
+    }
+
+    this._rebuilding = true;
+    try {
+      await this.__rebuild();
+    } catch (ex) {
+      Cu.reportError("Search-one-offs::_rebuild() error: " + ex);
+    } finally {
+      this._rebuilding = false;
+    }
+  }
+
+  /**
+   * Builds all the UI.
+   */
+  async __rebuild() {
     // Update the 'Search for <keywords> with:" header.
     this._updateAfterQueryChanged();
 

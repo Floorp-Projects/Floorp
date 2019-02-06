@@ -756,8 +756,7 @@ AbortReasonOr<Ok> IonBuilder::init() {
     argTypes = nullptr;
   }
 
-  AutoSweepTypeScript sweep(script());
-  bytecodeTypeMap = script()->types(sweep)->bytecodeTypeMap();
+  bytecodeTypeMap = script()->types()->bytecodeTypeMap();
 
   return Ok();
 }

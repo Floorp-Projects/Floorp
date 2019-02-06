@@ -1733,12 +1733,7 @@ class JSScript : public js::gc::TenuredCell {
     // Script has an entry in Realm::debugScriptMap.
     HasDebugScript = 1 << 6,
 
-    // Freeze constraints for stack type sets have been generated.
-    HasFreezeConstraints = 1 << 7,
-
-    // Generation for this script's TypeScript. If out of sync with the
-    // TypeZone's generation, the TypeScript needs to be swept.
-    TypesGeneration = 1 << 8,
+    // (1 << 7) and (1 << 8) are unused.
 
     // Do not relazify this script. This is used by the relazify() testing
     // function for scripts that are on the stack and also by the AutoDelazify
@@ -2116,13 +2111,6 @@ class JSScript : public js::gc::TenuredCell {
   }
   bool hasScriptName();
 
-  bool hasFreezeConstraints() const {
-    return hasFlag(MutableFlags::HasFreezeConstraints);
-  }
-  void setHasFreezeConstraints() {
-    setFlag(MutableFlags::HasFreezeConstraints);
-  }
-
   bool warnedAboutUndefinedProp() const {
     return hasFlag(MutableFlags::WarnedAboutUndefinedProp);
   }
@@ -2213,15 +2201,6 @@ class JSScript : public js::gc::TenuredCell {
    */
   bool argsObjAliasesFormals() const {
     return needsArgsObj() && hasMappedArgsObj();
-  }
-
-  uint32_t typesGeneration() const {
-    return uint32_t(hasFlag(MutableFlags::TypesGeneration));
-  }
-
-  void setTypesGeneration(uint32_t generation) {
-    MOZ_ASSERT(generation <= 1);
-    setFlag(MutableFlags::TypesGeneration, bool(generation));
   }
 
   void setDoNotRelazify(bool b) { setFlag(MutableFlags::DoNotRelazify, b); }
@@ -2420,11 +2399,9 @@ class JSScript : public js::gc::TenuredCell {
   /* Ensure the script has a TypeScript. */
   inline bool ensureHasTypes(JSContext* cx, js::AutoKeepTypeScripts&);
 
-  inline js::TypeScript* types(const js::AutoSweepTypeScript& sweep);
-  inline bool typesNeedsSweep() const;
+  js::TypeScript* types() { return types_; }
 
   void maybeReleaseTypes();
-  void sweepTypes(const js::AutoSweepTypeScript& sweep);
 
   inline js::GlobalObject& global() const;
   inline bool hasGlobal(const js::GlobalObject* global) const;
