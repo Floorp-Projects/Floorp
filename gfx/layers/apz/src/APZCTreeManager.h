@@ -765,6 +765,11 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
   mutable mozilla::RecursiveMutex mTreeLock;
   RefPtr<HitTestingTreeNode> mRootNode;
 
+  /* True if the current hit-testing tree contains an async zoom container
+   * node.
+   */
+  bool mUsingAsyncZoomContainer;
+
   /** A lock that protects mApzcMap and mScrollThumbInfo. */
   mutable mozilla::Mutex mMapLock;
   /**
