@@ -9,8 +9,10 @@ sample_metrics:
     type: counter
     description: >
       A simple counter defined in a third-party library
-    send_in_pings:
-      - baseline
+    # To see the result immediately when pressing the "send ping" button in the
+    # interface, uncomment the following:
+    # send_in_pings:
+    #   - baseline
     bugs:
       - 123456789
     data_reviews:
