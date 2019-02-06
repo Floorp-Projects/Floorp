@@ -72,6 +72,16 @@ var UrlbarTestUtils = {
   },
 
   /**
+   * Returns the oneOffSearchButtons object for the urlbar.
+   * @param {object} win The window containing the urlbar
+   * @returns {object} The oneOffSearchButtons
+   */
+  getOneOffSearchButtons(win) {
+    let urlbar = getUrlbarAbstraction(win);
+    return urlbar.oneOffSearchButtons;
+  },
+
+  /**
    * Gets an abstracted rapresentation of the result at an index.
    * @param {object} win The window containing the urlbar
    * @param {number} index The index to look for
@@ -136,6 +146,20 @@ var UrlbarTestUtils = {
       () => httpserver.connectionNumber == count,
       "Waiting for speculative connection setup"
     );
+  },
+
+  /**
+   * Waits for the popup to be hidden.
+   * @param {object} win The window containing the urlbar
+   * @param {function} openFn Function to be used to open the popup.
+   * @returns {Promise} resolved once the popup is closed
+   */
+  promisePopupOpen(win, openFn) {
+    if (!openFn) {
+      throw new Error("openFn should be supplied to promisePopupOpen");
+    }
+    let urlbar = getUrlbarAbstraction(win);
+    return urlbar.promisePopupOpen(openFn);
   },
 
   /**
@@ -221,6 +245,11 @@ class UrlbarAbstraction {
 
   get panel() {
     return this.quantumbar ? this.urlbar.panel : this.urlbar.popup;
+  }
+
+  get oneOffSearchButtons() {
+    return this.quantumbar ? this.urlbar.view.oneOffSearchButtons :
+           this.urlbar.popup.oneOffSearchButtons;
   }
 
   startSearch(text) {
@@ -310,6 +339,12 @@ class UrlbarAbstraction {
       details.type = context.results[index].type;
       details.autofill = index == 0 && context.autofillValue;
       details.image = element.getElementsByClassName("urlbarView-favicon")[0].src;
+      details.title = context.results[index].title;
+      let actions = element.getElementsByClassName("urlbarView-action");
+      details.displayed = {
+        title: element.getElementsByClassName("urlbarView-title")[0].textContent,
+        action: actions.length > 0 ? actions[0].textContent : null,
+      };
       if (details.type == UrlbarUtils.RESULT_TYPE.SEARCH) {
         details.searchParams = {
           engine: context.results[index].payload.engine,
@@ -325,6 +360,11 @@ class UrlbarAbstraction {
       details.type = getType(style, action);
       details.autofill = style.includes("autofill");
       details.image = element.getAttribute("image");
+      details.title = element.getAttribute("title");
+      details.displayed = {
+        title: element._titleText.textContent,
+        action: element._actionText.textContent,
+      };
       if (details.type == UrlbarUtils.RESULT_TYPE.SEARCH) {
         details.searchParams = {
           engine: action.params.engineName,
@@ -366,6 +406,11 @@ class UrlbarAbstraction {
     });
   }
 
+  async promisePopupOpen(openFn) {
+    await openFn();
+    return BrowserTestUtils.waitForPopupEvent(this.panel, "shown");
+  }
+
   closePopup() {
     if (this.quantumbar) {
       this.urlbar.view.close();
@@ -374,9 +419,9 @@ class UrlbarAbstraction {
     }
   }
 
-  promisePopupClose(closeFn) {
+  async promisePopupClose(closeFn) {
     if (closeFn) {
-      closeFn();
+      await closeFn();
     } else {
       this.closePopup();
     }
