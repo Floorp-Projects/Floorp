@@ -57,7 +57,7 @@ class Header extends PureComponent {
         className: "devtools-checkbox-toggle",
         checked: this.props.highlighted,
         onChange: this.onFlexboxCheckboxClick,
-        title: getStr("flexbox.togglesFlexboxHighlighter"),
+        title: getStr("flexbox.togglesFlexboxHighlighter2"),
         type: "checkbox",
       })
     );
