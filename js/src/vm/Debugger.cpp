@@ -2708,7 +2708,7 @@ class MOZ_RAII ExecutionObservableScript
 static inline void MarkTypeScriptActiveIfObservable(
     JSScript* script, const Debugger::ExecutionObservableSet& obs) {
   if (obs.shouldRecompileOrInvalidate(script)) {
-    script->typesDontCheckGeneration()->setActive();
+    script->types()->setActive();
   }
 }
 
@@ -2792,7 +2792,7 @@ static bool UpdateExecutionObservabilityOfScriptsInZone(
   for (size_t i = 0; i < scripts.length(); i++) {
     MOZ_ASSERT_IF(scripts[i]->isDebuggee(), observing);
     FinishDiscardBaselineScript(fop, scripts[i]);
-    scripts[i]->typesDontCheckGeneration()->resetActive();
+    scripts[i]->types()->resetActive();
   }
 
   // Iterate through all wasm instances to find ones that need to be updated.

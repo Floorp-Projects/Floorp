@@ -227,11 +227,25 @@ class TypeScript {
   // Variable-size array. This is followed by the bytecode type map.
   StackTypeSet typeArray_[1];
 
+  StackTypeSet* typeArrayDontCheckGeneration() {
+    // Ensure typeArray_ is the last data member of TypeScript.
+    static_assert(sizeof(TypeScript) ==
+                      sizeof(typeArray_) + offsetof(TypeScript, typeArray_),
+                  "typeArray_ must be the last member of TypeScript");
+    return const_cast<StackTypeSet*>(typeArray_);
+  }
+
  public:
   TypeScript(JSScript* script, ICScriptPtr&& icScript, uint32_t numTypeSets);
 
-  RecompileInfoVector& inlinedCompilations() { return inlinedCompilations_; }
-  MOZ_MUST_USE bool addInlinedCompilation(RecompileInfo info) {
+  RecompileInfoVector& inlinedCompilations(
+      const js::AutoSweepTypeScript& sweep) {
+    MOZ_ASSERT(sweep.script()->types() == this);
+    return inlinedCompilations_;
+  }
+  MOZ_MUST_USE bool addInlinedCompilation(const js::AutoSweepTypeScript& sweep,
+                                          RecompileInfo info) {
+    MOZ_ASSERT(sweep.script()->types() == this);
     if (!inlinedCompilations_.empty() && inlinedCompilations_.back() == info) {
       return true;
     }
@@ -252,11 +266,9 @@ class TypeScript {
   }
 
   /* Array of type sets for variables and JOF_TYPESET ops. */
-  StackTypeSet* typeArray() const {
-    // Ensure typeArray_ is the last data member of TypeScript.
-    JS_STATIC_ASSERT(sizeof(TypeScript) ==
-                     sizeof(typeArray_) + offsetof(TypeScript, typeArray_));
-    return const_cast<StackTypeSet*>(typeArray_);
+  StackTypeSet* typeArray(const js::AutoSweepTypeScript& sweep) {
+    MOZ_ASSERT(sweep.script()->types() == this);
+    return typeArrayDontCheckGeneration();
   }
 
   uint32_t* bytecodeTypeMap() {
@@ -332,7 +344,7 @@ class TypeScript {
   }
 
 #ifdef DEBUG
-  void printTypes(JSContext* cx, HandleScript script) const;
+  void printTypes(JSContext* cx, HandleScript script);
 #endif
 };
 
