@@ -319,7 +319,6 @@ nsHttpChannel::nsHttpChannel()
       mCacheEntryIsReadOnly(false),
       mCacheEntryIsWriteOnly(false),
       mCacheEntriesToWaitFor(0),
-      mHasQueryString(0),
       mConcurrentCacheAccess(0),
       mIsPartialRequest(0),
       mHasAutoRedirectVetoNotifier(0),
@@ -3746,7 +3745,6 @@ nsresult nsHttpChannel::OpenCacheEntry(bool isHttps) {
   mConcurrentCacheAccess = 0;
 
   mLoadedFromApplicationCache = false;
-  mHasQueryString = HasQueryString(mRequestHead.ParsedMethod(), mURI);
 
   LOG(("nsHttpChannel::OpenCacheEntry [this=%p]", this));
 
@@ -4775,22 +4773,6 @@ nsresult nsHttpChannel::UpdateExpirationTime() {
   }
 
   return NS_OK;
-}
-
-/*static*/ inline bool nsHttpChannel::HasQueryString(
-    nsHttpRequestHead::ParsedMethodType method, nsIURI *uri) {
-  // Must be called on the main thread because nsIURI does not implement
-  // thread-safe QueryInterface.
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (method != nsHttpRequestHead::kMethod_Get &&
-      method != nsHttpRequestHead::kMethod_Head)
-    return false;
-
-  nsAutoCString query;
-  nsCOMPtr<nsIURL> url = do_QueryInterface(uri);
-  nsresult rv = url->GetQuery(query);
-  return NS_SUCCEEDED(rv) && !query.IsEmpty();
 }
 
 bool nsHttpChannel::ShouldUpdateOfflineCacheEntry() {
