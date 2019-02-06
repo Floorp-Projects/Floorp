@@ -3312,9 +3312,35 @@ bool BaselineCompilerCodeGen::emit_JSOP_GETIMPORT() {
   return true;
 }
 
+typedef bool (*GetImportOperationFn)(JSContext*, HandleObject, HandleScript,
+                                     jsbytecode*, MutableHandleValue);
+static const VMFunction GetImportOperationInfo =
+    FunctionInfo<GetImportOperationFn>(GetImportOperation,
+                                       "GetImportOperation");
+
 template <>
 bool BaselineInterpreterCodeGen::emit_JSOP_GETIMPORT() {
-  MOZ_CRASH("NYI: interpreter JSOP_GETIMPORT");
+  frame.syncStack(0);
+
+  masm.loadPtr(frame.addressOfEnvironmentChain(), R0.scratchReg());
+
+  prepareVMCall();
+
+  pushBytecodePCArg();
+  pushScriptArg(R2.scratchReg());
+  pushArg(R0.scratchReg());
+
+  if (!callVM(GetImportOperationInfo)) {
+    return false;
+  }
+
+  // Enter the type monitor IC.
+  if (!emitNextIC()) {
+    return false;
+  }
+
+  frame.push(R0);
+  return true;
 }
 
 template <typename Handler>
