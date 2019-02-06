@@ -186,7 +186,6 @@ if CONFIG['ENABLE_TESTS']:
         '/testing/modules',
         '/testing/runtimes',
         '/testing/web-platform',
-        '/testing/extensions',
     ]
 
     # The file id utility requires breakpad libraries.
