@@ -588,7 +588,7 @@ html|input.urlbar-input {
   margin-bottom: 0;
 }
 
-.tabbrowser-tab:not(:hover) > .tab-stack > .tab-content > .tab-icon-image:not([selected="true"]) {
+.tabbrowser-tab:not(:hover) > .tab-stack > .tab-content > .tab-icon-image:not([selected="true"]):not([multiselected]) {
   opacity: .9;
 }
 
@@ -600,7 +600,7 @@ html|input.urlbar-input {
   opacity: 0.9999;
 }
 
-.tab-label-container:not([selected="true"]) {
+.tab-label-container:not([selected="true"]):not([multiselected]) {
   opacity: .7;
 }
 
@@ -608,12 +608,13 @@ html|input.urlbar-input {
   font: message-box;
   border: none;
 }
-
+.tabbrowser-tab[multiselected]:not(:-moz-lwtheme),
 .tabbrowser-tab[visuallyselected=true]:not(:-moz-lwtheme) {
   /* overriding tabbox.css */
   color: hsl(240, 5%, 5%);
 }
 
+.tabbrowser-tab[multiselected],
 .tabbrowser-tab[visuallyselected=true] {
   /* overriding tabbox.css */
   text-shadow: inherit;
@@ -642,6 +643,7 @@ html|input.urlbar-input {
   text-shadow: none;
 }
 
+.tabbrowser-tab[multiselected]:not(:-moz-lwtheme),
 .tabbrowser-tab[visuallyselected=true]:not(:-moz-lwtheme) {
   -moz-font-smoothing-background-color: var(--toolbar-bgcolor);
 }
