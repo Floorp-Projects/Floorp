@@ -2419,11 +2419,9 @@ class JSScript : public js::gc::TenuredCell {
 
   /* Ensure the script has a TypeScript. */
   inline bool ensureHasTypes(JSContext* cx, js::AutoKeepTypeScripts&);
-
-  inline js::TypeScript* types(const js::AutoSweepTypeScript& sweep);
   inline bool typesNeedsSweep() const;
 
-  js::TypeScript* typesDontCheckGeneration() { return types_; }
+  js::TypeScript* types() { return types_; }
 
   void maybeReleaseTypes();
   void sweepTypes(const js::AutoSweepTypeScript& sweep);
