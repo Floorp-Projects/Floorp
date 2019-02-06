@@ -1652,3 +1652,14 @@ with only_when(compile_environment & target_is_windows):
     set_config('MOZ_D3DCOMPILER_VISTA_DLL', d3d_compiler_dll.name,
                when=d3d_compiler_dll.path)
     set_config('MOZ_D3DCOMPILER_VISTA_DLL_PATH', d3d_compiler_dll.path)
+
+# Remoting protocol support
+# ==============================================================
+
+@depends(toolkit)
+def has_remote(toolkit):
+    if 'gtk' in toolkit or toolkit == 'windows':
+        return True
+
+set_config('MOZ_HAS_REMOTE', has_remote)
+set_define('MOZ_HAS_REMOTE', has_remote)
