@@ -34,7 +34,7 @@ BEGIN_TEST(testWindowNonConfigurable) {
       "Object.defineProperty(windowProxy, 'bar', {value: 1, configurable: "
       "false})",
       &v);
-  CHECK(v.isFalse());  // This is the important bit!
+  CHECK(v.isNull());  // This is the important bit!
   EVAL(
       "Object.defineProperty(windowProxy, 'bar', {value: 1, configurable: "
       "true})",
