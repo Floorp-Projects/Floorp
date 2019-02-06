@@ -883,7 +883,7 @@ function parseVueScript(code) {
 function parseConsoleScript(text, opts) {
   try {
     return _parse(text, {
-      plugins: ["objectRestSpread"],
+      plugins: ["objectRestSpread", "dynamicImport"],
       ...opts,
       allowAwaitOutsideFunction: true
     });
