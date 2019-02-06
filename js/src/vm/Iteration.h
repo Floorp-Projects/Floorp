@@ -369,9 +369,6 @@ JSObject* GetIterator(JSContext* cx, HandleObject obj);
 
 PropertyIteratorObject* LookupInIteratorCache(JSContext* cx, HandleObject obj);
 
-JSObject* EnumeratedIdVectorToIterator(JSContext* cx, HandleObject obj,
-                                       AutoIdVector& props);
-
 JSObject* NewEmptyPropertyIterator(JSContext* cx);
 
 JSObject* ValueToIterator(JSContext* cx, HandleValue vp);
