@@ -94,5 +94,10 @@ function testEvalcx() {
     // Check for either an exception or CCW (with --more-compartments).
     assertEq((sb && objectGlobal(sb) === null) ||
              ex.toString().includes("visibility"), true);
+
+    // Bug 1524707.
+    var lazysb = evalcx("lazy");
+    Object.setPrototypeOf(lazysb, Math);
+    assertEq(lazysb.__proto__, Math);
 }
 testEvalcx();
