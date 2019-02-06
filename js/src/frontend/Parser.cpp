@@ -395,8 +395,12 @@ typename ParseHandler::ListNodeType GeneralParser<ParseHandler, Unit>::parse() {
   }
   if (foldConstants) {
     Node node = stmtList;
-    if (!FoldConstants(context, &node, this)) {
-      return null();
+    // Don't constant-fold inside "use asm" code, as this could create a parse
+    // tree that doesn't type-check as asm.js.
+    if (!pc->useAsmOrInsideUseAsm()) {
+      if (!FoldConstants(context, &node, &handler)) {
+        return null();
+      }
     }
     stmtList = handler.asList(node);
   }
@@ -1372,8 +1376,12 @@ LexicalScopeNode* Parser<FullParseHandler, Unit>::evalBody(
 #endif
 
   ParseNode* node = body;
-  if (!FoldConstants(context, &node, this)) {
-    return nullptr;
+  // Don't constant-fold inside "use asm" code, as this could create a parse
+  // tree that doesn't type-check as asm.js.
+  if (!pc->useAsmOrInsideUseAsm()) {
+    if (!FoldConstants(context, &node, &handler)) {
+      return null();
+    }
   }
   body = handler.asLexicalScope(node);
 
@@ -1420,8 +1428,12 @@ ListNode* Parser<FullParseHandler, Unit>::globalBody(
   }
 
   ParseNode* node = body;
-  if (!FoldConstants(context, &node, this)) {
-    return null();
+  // Don't constant-fold inside "use asm" code, as this could create a parse
+  // tree that doesn't type-check as asm.js.
+  if (!pc->useAsmOrInsideUseAsm()) {
+    if (!FoldConstants(context, &node, &handler)) {
+      return null();
+    }
   }
   body = &node->as<ListNode>();
 
@@ -1508,8 +1520,12 @@ ModuleNode* Parser<FullParseHandler, Unit>::moduleBody(
   }
 
   ParseNode* node = stmtList;
-  if (!FoldConstants(context, &node, this)) {
-    return null();
+  // Don't constant-fold inside "use asm" code, as this could create a parse
+  // tree that doesn't type-check as asm.js.
+  if (!pc->useAsmOrInsideUseAsm()) {
+    if (!FoldConstants(context, &node, &handler)) {
+      return null();
+    }
   }
   stmtList = &node->as<ListNode>();
 
@@ -1840,8 +1856,12 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneFunction(
   }
 
   ParseNode* node = funNode;
-  if (!FoldConstants(context, &node, this)) {
-    return null();
+  // Don't constant-fold inside "use asm" code, as this could create a parse
+  // tree that doesn't type-check as asm.js.
+  if (!pc->useAsmOrInsideUseAsm()) {
+    if (!FoldConstants(context, &node, &handler)) {
+      return null();
+    }
   }
   funNode = &node->as<FunctionNode>();
 
@@ -2986,8 +3006,12 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneLazyFunction(
   }
 
   ParseNode* node = funNode;
-  if (!FoldConstants(context, &node, this)) {
-    return null();
+  // Don't constant-fold inside "use asm" code, as this could create a parse
+  // tree that doesn't type-check as asm.js.
+  if (!pc->useAsmOrInsideUseAsm()) {
+    if (!FoldConstants(context, &node, &handler)) {
+      return null();
+    }
   }
   funNode = &node->as<FunctionNode>();
 

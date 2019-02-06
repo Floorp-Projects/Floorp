@@ -3760,9 +3760,8 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceShorthandProperty(
                                name->template as<NameNode>().name(),
                                tokenizer_->pos(start)));
 
-  BINJS_TRY_DECL(result, factory_.newObjectMethodOrPropertyDefinition(
-                             propName, name, AccessorType::None));
-  result->setKind(ParseNodeKind::Shorthand);
+  BINJS_TRY_DECL(result,
+                 factory_.newShorthandPropertyDefinition(propName, name));
   return result;
 }
 
@@ -4191,24 +4190,24 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceVariableDeclaration(
   BINJS_MOZ_TRY_DECL(kind_, parseVariableDeclarationKind());
   // Restored by `kindGuard`.
   variableDeclarationKind_ = kind_;
-  BINJS_MOZ_TRY_DECL(declarators, parseListOfVariableDeclarator());
-
-  // By specification, the list may not be empty.
-  if (declarators->empty()) {
-    return raiseEmpty("VariableDeclaration");
-  }
-
-  ParseNodeKind pnk;
+  ParseNodeKind declarationListKind;
   switch (kind_) {
     case VariableDeclarationKind::Var:
-      pnk = ParseNodeKind::VarStmt;
+      declarationListKind = ParseNodeKind::VarStmt;
       break;
     case VariableDeclarationKind::Let:
       return raiseError("Let is not supported in this preview release");
     case VariableDeclarationKind::Const:
       return raiseError("Const is not supported in this preview release");
   }
-  declarators->setKind(pnk);
+  BINJS_MOZ_TRY_DECL(declarators,
+                     parseListOfVariableDeclarator(declarationListKind));
+
+  // By specification, the list may not be empty.
+  if (declarators->empty()) {
+    return raiseEmpty("VariableDeclaration");
+  }
+
   auto result = declarators;
   return result;
 }
@@ -4808,15 +4807,15 @@ JS::Result<ListNode*> BinASTParser<Tok>::parseListOfSwitchCase() {
 }
 
 template <typename Tok>
-JS::Result<ListNode*> BinASTParser<Tok>::parseListOfVariableDeclarator() {
+JS::Result<ListNode*> BinASTParser<Tok>::parseListOfVariableDeclarator(
+    ParseNodeKind declarationListKind) {
   uint32_t length;
   AutoList guard(*tokenizer_);
 
   const auto start = tokenizer_->offset();
   MOZ_TRY(tokenizer_->enterList(length, guard));
-  BINJS_TRY_DECL(result, factory_.newDeclarationList(
-                             ParseNodeKind::ConstDecl /* Placeholder */,
-                             tokenizer_->pos(start)));
+  BINJS_TRY_DECL(result, factory_.newDeclarationList(declarationListKind,
+                                                     tokenizer_->pos(start)));
 
   for (uint32_t i = 0; i < length; ++i) {
     BINJS_MOZ_TRY_DECL(item, parseVariableDeclarator());

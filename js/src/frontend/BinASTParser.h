@@ -475,7 +475,8 @@ class BinASTParser : public BinASTParserPerTokenizer<Tok> {
   JS::Result<ListNode*> parseListOfParameter();
   JS::Result<ListNode*> parseListOfStatement();
   JS::Result<ListNode*> parseListOfSwitchCase();
-  JS::Result<ListNode*> parseListOfVariableDeclarator();
+  JS::Result<ListNode*> parseListOfVariableDeclarator(
+      ParseNodeKind declarationListKind);
 
   // ----- Default values (by lexicographical order)
   JS::Result<ParseNode*> parseOptionalBinding();
