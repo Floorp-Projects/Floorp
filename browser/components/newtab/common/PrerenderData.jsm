@@ -38,9 +38,9 @@ class _PrerenderData {
   _isPrefEnabled(prefObj) {
     try {
       let data = JSON.parse(prefObj);
-      return data && data.enabled;
+      return (data && data.enabled) ? true : false;
     } catch (e) {
-      return null;
+      return false;
     }
   }
 
