@@ -231,7 +231,8 @@ public class ContentBlocking {
     /**
      * Block all known trackers.
      */
-    public static final int AT_ALL = (1 << 6) - 1;
+    public static final int AT_ALL =
+        AT_AD | AT_ANALYTIC | AT_SOCIAL | AT_CONTENT | AT_TEST;
 
     // Safe browsing
     /**
@@ -258,7 +259,8 @@ public class ContentBlocking {
      * Block all unsafe sites.
      * Blocks all {@link #SB_MALWARE SB_*} types.
      */
-    public static final int SB_ALL = ((1 << 14) - 1) ^ AT_ALL;
+    public static final int SB_ALL =
+        SB_MALWARE | SB_UNWANTED | SB_HARMFUL | SB_PHISHING;
 
     // Sync values with nsICookieService.idl.
     @Retention(RetentionPolicy.SOURCE)
