@@ -10,20 +10,17 @@ MAINTAINER Sebastian Kaspari "skaspari@mozilla.com"
 #-- Configuration -----------------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------------------------------
 
-ENV ANDROID_BUILD_TOOLS "28.0.3"
-ENV ANDROID_SDK_VERSION "3859397"
-ENV ANDROID_PLATFORM_VERSION "28"
-ENV PROJECT_REPOSITORY "https://github.com/mozilla-mobile/android-components.git"
+ENV ANDROID_BUILD_TOOLS="28.0.3" \
+  ANDROID_HOME=/build/android-sdk \
+  ANDROID_SDK_HOME=/build/android-sdk \
+  ANDROID_SDK_VERSION="3859397" \
+  ANDROID_PLATFORM_VERSION="28" \
+  GRADLE_OPTS=-Xmx4096m -Dorg.gradle.daemon=false \
+  LANG=en_US.UTF-8 \
+  PROJECT_REPOSITORY="https://github.com/mozilla-mobile/android-components.git" \
+  TERM=dumb
 
-ENV LANG en_US.UTF-8
-
-# Do not use fancy output on taskcluster
-ENV TERM dumb
-
-ENV GRADLE_OPTS -Xmx4096m -Dorg.gradle.daemon=false
-
-# Used to detect in scripts whether we are running on taskcluster
-ENV CI_TASKCLUSTER true
+ENV PATH=${PATH}:${ANDROID_SDK_HOME}/tools:${ANDROID_SDK_HOME}/tools/bin:${ANDROID_SDK_HOME}/platform-tools:/opt/tools:${ANDROID_SDK_HOME}/build-tools/${ANDROID_BUILD_TOOLS}
 
 #----------------------------------------------------------------------------------------------------------------------
 #-- System ------------------------------------------------------------------------------------------------------------
@@ -33,21 +30,16 @@ RUN apt-get update -qq \
     # We need to install tzdata before all of the other packages. Otherwise it will show an interactive dialog that
     # we cannot navigate while building the Docker image.
     && apt-get install -y tzdata \
-    && apt-get install -y openjdk-8-jdk \
-                          wget \
+    # python is still needed to fetch taskcluster secrets, for instance.
+    && apt-get install -y curl \
                           expect \
                           git \
-                          curl \
+                          locales \
+                          openjdk-8-jdk \
                           python \
                           python-pip \
-                          locales \
                           unzip \
     && apt-get clean
-
-RUN pip install --upgrade pip
-RUN pip install 'taskcluster>=4,<5'
-RUN pip install arrow
-RUN pip install pyyaml
 
 RUN locale-gen en_US.UTF-8
 
@@ -58,9 +50,8 @@ RUN locale-gen en_US.UTF-8
 RUN mkdir -p /build/android-sdk
 WORKDIR /build
 
-ENV ANDROID_HOME /build/android-sdk
-ENV ANDROID_SDK_HOME /build/android-sdk
-ENV PATH ${PATH}:${ANDROID_SDK_HOME}/tools:${ANDROID_SDK_HOME}/tools/bin:${ANDROID_SDK_HOME}/platform-tools:/opt/tools:${ANDROID_SDK_HOME}/build-tools/${ANDROID_BUILD_TOOLS}
+COPY requirements.txt requirements.txt
+RUN pip --no-cache-dir install --require-hashes --requirement requirements.txt
 
 RUN curl -L https://dl.google.com/android/repository/sdk-tools-linux-${ANDROID_SDK_VERSION}.zip > sdk.zip \
     && unzip sdk.zip -d ${ANDROID_SDK_HOME} \
@@ -87,4 +78,3 @@ RUN ./gradlew clean \
     && ./gradlew --no-daemon ktlint \
     && ./gradlew --no-daemon docs \
     && ./gradlew clean
-

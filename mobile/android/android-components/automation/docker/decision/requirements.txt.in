@@ -1,0 +1,8 @@
+arrow
+checksumdir
+pyyaml
+taskcluster>=4,<5
+
+# Needed to schedule cron tasks
+GitPython
+json-e

@@ -13,37 +13,51 @@ import os
 import taskcluster
 import sys
 
+from checksumdir import dirhash
+from datetime import datetime
+
 from lib.build_config import components_version, module_definitions
-from lib.tasks import TaskBuilder, schedule_task_graph
+from lib.tasks import (
+    craft_new_task_id,
+    DOCKER_IMAGE_ROUTE_HASH_PATTERN,
+    schedule_task_graph,
+    TaskBuilder,
+    TASKCLUSTER_DATE_ISO_FORMAT,
+)
 from lib.util import (
     populate_chain_of_trust_task_graph,
-    populate_chain_of_trust_required_but_unused_files
+    populate_chain_of_trust_required_but_unused_files,
 )
 
 
 REPO_URL = os.environ.get('MOBILE_HEAD_REPOSITORY')
 COMMIT = os.environ.get('MOBILE_HEAD_REV')
 PR_TITLE = os.environ.get('GITHUB_PULL_TITLE', '')
+TRUST_LEVEL = os.environ.get('TRUST_LEVEL', 1)
+
+PROJECT_FOLDER = os.path.abspath(os.path.join(os.path.abspath(__file__), '..', '..', '..'))
+DOCKER_FOLDER = os.path.join(PROJECT_FOLDER, 'automation', 'docker')
 
 # If we see this text inside a pull request title then we will not execute any tasks for this PR.
 SKIP_TASKS_TRIGGER = '[ci skip]'
 
 
 BUILDER = TaskBuilder(
-    task_id=os.environ.get('TASK_ID'),
-    repo_url=os.environ.get('MOBILE_HEAD_REPOSITORY'),
+    beetmover_worker_type=os.environ.get('BEETMOVER_WORKER_TYPE'),
     branch=os.environ.get('MOBILE_HEAD_BRANCH'),
     commit=COMMIT,
     owner="skaspari@mozilla.com",
-    source='{}/raw/{}/.taskcluster.yml'.format(REPO_URL, COMMIT),
+    push_date_time=os.environ.get('MOBILE_PUSH_DATE_TIME'),
+    repo_url=os.environ.get('MOBILE_HEAD_REPOSITORY'),
     scheduler_id=os.environ.get('SCHEDULER_ID', 'taskcluster-github'),
-    build_worker_type=os.environ.get('BUILD_WORKER_TYPE'),
-    beetmover_worker_type=os.environ.get('BEETMOVER_WORKER_TYPE'),
+    source='{}/raw/{}/.taskcluster.yml'.format(REPO_URL, COMMIT),
+    task_id=os.environ.get('TASK_ID'),
     tasks_priority=os.environ.get('TASKS_PRIORITY'),
+    trust_level=TRUST_LEVEL,
 )
 
 
-def create_module_tasks(module):
+def create_module_tasks(module, build_docker_image_task_id):
     def gradle_module_task_name(module, gradle_task_name):
         return "%s:%s" % (module, gradle_task_name)
 
@@ -66,6 +80,7 @@ def create_module_tasks(module):
             gradle_tasks=module_task,
             subtitle=subtitle + variant,
             run_coverage=True,
+            build_docker_image_task_id=build_docker_image_task_id,
         ), scheduled_lint
 
     # Takes list of variants and produces taskcluter task definitions.
@@ -135,6 +150,7 @@ def create_module_tasks(module):
                     gradle_tasks=gradle_module_task_name(module, lint_task),
                     subtitle="onlyLintRelease",
                     run_coverage=True,
+                    build_docker_image_task_id=build_docker_image_task_id,
                 )
             )
 
@@ -150,6 +166,7 @@ def create_module_tasks(module):
                 gradle_tasks=gradle_tasks,
                 subtitle="assembleAndTestAndCustomLintAll",
                 run_coverage=True,
+                build_docker_image_task_id=build_docker_image_task_id,
             )
         )
 
@@ -166,6 +183,7 @@ def create_module_tasks(module):
                 gradle_tasks=gradle_tasks,
                 subtitle="assembleAndTestAndLintReleaseAll",
                 run_coverage=True,
+                build_docker_image_task_id=build_docker_image_task_id,
             )
         )
 
@@ -180,18 +198,19 @@ def pr_or_push(artifacts_info):
 
     modules = [_get_gradle_module_name(artifact_info) for artifact_info in artifacts_info]
 
+    docker_images_tasks, build_docker_image_task_id = create_docker_tasks_if_needed()
     build_tasks = {}
     other_tasks = {}
 
     for module in modules:
-        tasks = create_module_tasks(module)
+        tasks = create_module_tasks(module, build_docker_image_task_id)
         for task in tasks:
-            build_tasks[taskcluster.slugId()] = task
+            build_tasks[craft_new_task_id()] = task
 
     for craft_function in (BUILDER.craft_detekt_task, BUILDER.craft_ktlint_task, BUILDER.craft_compare_locales_task):
-        other_tasks[taskcluster.slugId()] = craft_function()
+        other_tasks[craft_new_task_id()] = craft_function(build_docker_image_task_id)
 
-    return (build_tasks, other_tasks)
+    return (docker_images_tasks, build_tasks, other_tasks)
 
 
 def _get_gradle_module_name(artifact_info):
@@ -214,14 +233,15 @@ def _get_release_gradle_tasks(module_name, is_snapshot):
 def release(artifacts_info, version, is_snapshot, is_staging):
     version = components_version() if version is None else version
 
+    docker_images_tasks, build_docker_image_task_id = create_docker_tasks_if_needed(is_release=True)
     build_tasks = {}
     wait_on_builds_tasks = {}
     beetmover_tasks = {}
     other_tasks = {}
-    wait_on_builds_task_id = taskcluster.slugId()
+    wait_on_builds_task_id = craft_new_task_id()
 
     for artifact_info in artifacts_info:
-        build_task_id = taskcluster.slugId()
+        build_task_id = craft_new_task_id()
         module_name = _get_gradle_module_name(artifact_info)
         build_tasks[build_task_id] = BUILDER.craft_build_task(
             module_name=module_name,
@@ -229,21 +249,90 @@ def release(artifacts_info, version, is_snapshot, is_staging):
             subtitle='({}{})'.format(version, '-SNAPSHOT' if is_snapshot else ''),
             run_coverage=False,
             is_snapshot=is_snapshot,
-            artifact_info=artifact_info
+            artifact_info=artifact_info,
+            build_docker_image_task_id=build_docker_image_task_id,
         )
 
-        beetmover_tasks[taskcluster.slugId()] = BUILDER.craft_beetmover_task(
+        beetmover_tasks[craft_new_task_id()] = BUILDER.craft_beetmover_task(
             build_task_id, wait_on_builds_task_id, version, artifact_info['artifact'],
             artifact_info['name'], is_snapshot, is_staging
         )
 
-    wait_on_builds_tasks[wait_on_builds_task_id] = BUILDER.craft_wait_on_builds_task(build_tasks.keys())
+    wait_on_builds_tasks[wait_on_builds_task_id] = BUILDER.craft_wait_on_builds_task(
+        build_tasks.keys(), build_docker_image_task_id
+    )
 
     if is_snapshot:     # XXX These jobs perma-fail on release
         for craft_function in (BUILDER.craft_detekt_task, BUILDER.craft_ktlint_task, BUILDER.craft_compare_locales_task):
-            other_tasks[taskcluster.slugId()] = craft_function()
+            other_tasks[craft_new_task_id()] = craft_function(build_docker_image_task_id)
 
-    return (build_tasks, wait_on_builds_tasks, beetmover_tasks, other_tasks)
+    return (docker_images_tasks, build_tasks, wait_on_builds_tasks, beetmover_tasks, other_tasks)
+
+
+def create_docker_tasks_if_needed(is_release=False):
+    tasks = {}
+    docker_folders = [
+        os.path.join(DOCKER_FOLDER, f)
+        for f in os.listdir(DOCKER_FOLDER)
+        if os.path.isdir(os.path.join(DOCKER_FOLDER, f))
+    ]
+
+    for folder in docker_folders:
+        folder_name = os.path.basename(folder)
+        folder_hash = dirhash(folder, 'sha256')
+        try:
+            task_id = get_existing_task_in_index(TRUST_LEVEL, folder_name, folder_hash)
+            # This allows to automatically and regularly rebuild docker images.
+            # We don't want this on releases because, in the context of chemspills, time is
+            # important
+            if not is_release and is_task_too_old(task_id):
+                print(
+                    'Docker image "{}" has already a task "{}" for hash "{}". However, it is'
+                    'too old. Scheduling a new one...'.format(
+                        folder_name, task_id, folder_hash
+                    )
+                )
+                raise ValueError()
+        except ValueError:
+            task_id = craft_new_task_id()
+            tasks[task_id] = BUILDER.craft_docker_image_task(
+                image_name=folder_name, folder_hash=folder_hash
+            )
+
+        if folder_name == 'build':
+            build_docker_image_task_id = task_id
+
+
+    return tasks, build_docker_image_task_id
+
+
+# TODO retry this function
+def get_existing_task_in_index(trust_level, folder_name, folder_hash):
+    index = taskcluster.Index()
+
+    route = DOCKER_IMAGE_ROUTE_HASH_PATTERN.format(
+        trust_level=trust_level, image_name=folder_name, hash=folder_hash
+    )
+
+    route = route.lstrip('index.')
+
+    try:
+        return index.findTask(route)['taskId']
+    except taskcluster.exceptions.TaskclusterRestFailure as e:
+        if e.status_code == 404:
+            raise ValueError
+        else:
+            raise
+
+
+# TODO retry this function
+def is_task_too_old(task_id):
+    queue = taskcluster.Queue()
+    task_definition = queue.task(task_id)
+    task_created = datetime.strptime(task_definition['created'], TASKCLUSTER_DATE_ISO_FORMAT)
+    time_since_task_was_created = datetime.utcnow() - task_created
+    # We want to rebuild the docker image roughly once a month, at least:
+    return time_since_task_was_created.days > 30
 
 
 if __name__ == "__main__":
