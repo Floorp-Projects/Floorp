@@ -12,6 +12,7 @@
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/ipc/PBackgroundParent.h"
+#include "mozilla/dom/ContentParent.h"
 #include "mozilla/Unused.h"
 #include "nsThreadUtils.h"
 
@@ -399,6 +400,53 @@ StorageDBChild::ShutdownObserver::Observe(nsISupports* aSubject,
   }
 
   return NS_OK;
+}
+
+SessionStorageObserverChild::SessionStorageObserverChild(
+    SessionStorageObserver* aObserver)
+    : mObserver(aObserver) {
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(NextGenLocalStorageEnabled());
+  MOZ_ASSERT(aObserver);
+  aObserver->AssertIsOnOwningThread();
+
+  MOZ_COUNT_CTOR(SessionStorageObserverChild);
+}
+
+SessionStorageObserverChild::~SessionStorageObserverChild() {
+  AssertIsOnOwningThread();
+
+  MOZ_COUNT_DTOR(SessionStorageObserverChild);
+}
+
+void SessionStorageObserverChild::SendDeleteMeInternal() {
+  AssertIsOnOwningThread();
+
+  if (mObserver) {
+    mObserver->ClearActor();
+    mObserver = nullptr;
+
+    MOZ_ALWAYS_TRUE(PSessionStorageObserverChild::SendDeleteMe());
+  }
+}
+
+void SessionStorageObserverChild::ActorDestroy(ActorDestroyReason aWhy) {
+  AssertIsOnOwningThread();
+
+  if (mObserver) {
+    mObserver->ClearActor();
+    mObserver = nullptr;
+  }
+}
+
+mozilla::ipc::IPCResult SessionStorageObserverChild::RecvObserve(
+    const nsCString& aTopic, const nsString& aOriginAttributesPattern,
+    const nsCString& aOriginScope) {
+  AssertIsOnOwningThread();
+
+  StorageObserver::Self()->Notify(aTopic.get(), aOriginAttributesPattern,
+                                  aOriginScope);
+  return IPC_OK();
 }
 
 LocalStorageCacheParent::LocalStorageCacheParent(
@@ -1107,6 +1155,56 @@ nsresult StorageDBParent::ObserverSink::Observe(
   return NS_OK;
 }
 
+SessionStorageObserverParent::SessionStorageObserverParent()
+    : mActorDestroyed(false) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  StorageObserver* observer = StorageObserver::Self();
+  if (observer) {
+    observer->AddSink(this);
+  }
+}
+
+SessionStorageObserverParent::~SessionStorageObserverParent() {
+  MOZ_ASSERT(mActorDestroyed);
+
+  StorageObserver* observer = StorageObserver::Self();
+  if (observer) {
+    observer->RemoveSink(this);
+  }
+}
+
+void SessionStorageObserverParent::ActorDestroy(ActorDestroyReason aWhy) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!mActorDestroyed);
+
+  mActorDestroyed = true;
+}
+
+mozilla::ipc::IPCResult SessionStorageObserverParent::RecvDeleteMe() {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!mActorDestroyed);
+
+  IProtocol* mgr = Manager();
+  if (!PSessionStorageObserverParent::Send__delete__(this)) {
+    return IPC_FAIL_NO_REASON(mgr);
+  }
+  return IPC_OK();
+}
+
+nsresult SessionStorageObserverParent::Observe(
+    const char* aTopic, const nsAString& aOriginAttributesPattern,
+    const nsACString& aOriginScope) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!mActorDestroyed) {
+    mozilla::Unused << SendObserve(nsCString(aTopic),
+                                   nsString(aOriginAttributesPattern),
+                                   nsCString(aOriginScope));
+  }
+  return NS_OK;
+}
+
 /*******************************************************************************
  * Exported functions
  ******************************************************************************/
@@ -1186,6 +1284,36 @@ bool DeallocPBackgroundStorageParent(PBackgroundStorageParent* aActor) {
 
   StorageDBParent* actor = static_cast<StorageDBParent*>(aActor);
   actor->ReleaseIPDLReference();
+  return true;
+}
+
+PSessionStorageObserverParent* AllocPSessionStorageObserverParent() {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  RefPtr<SessionStorageObserverParent> actor =
+      new SessionStorageObserverParent();
+
+  // Transfer ownership to IPDL.
+  return actor.forget().take();
+}
+
+bool RecvPSessionStorageObserverConstructor(
+    PSessionStorageObserverParent* aActor) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aActor);
+
+  return true;
+}
+
+bool DeallocPSessionStorageObserverParent(
+    PSessionStorageObserverParent* aActor) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aActor);
+
+  // Transfer ownership back from IPDL.
+  RefPtr<SessionStorageObserverParent> actor =
+      dont_AddRef(static_cast<SessionStorageObserverParent*>(aActor));
+
   return true;
 }
 
