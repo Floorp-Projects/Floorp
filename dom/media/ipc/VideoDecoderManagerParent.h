@@ -42,9 +42,9 @@ class VideoDecoderManagerParent final : public PVideoDecoderManagerParent {
   bool DeallocPVideoDecoderParent(PVideoDecoderParent* actor);
 
   mozilla::ipc::IPCResult RecvReadback(const SurfaceDescriptorGPUVideo& aSD,
-                                       SurfaceDescriptor* aResult) override;
+                                       SurfaceDescriptor* aResult);
   mozilla::ipc::IPCResult RecvDeallocateSurfaceDescriptorGPUVideo(
-      const SurfaceDescriptorGPUVideo& aSD) override;
+      const SurfaceDescriptorGPUVideo& aSD);
 
   void ActorDestroy(mozilla::ipc::IProtocol::ActorDestroyReason) override;
 

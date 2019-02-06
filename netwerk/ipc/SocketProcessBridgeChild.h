@@ -27,7 +27,7 @@ class SocketProcessBridgeChild final : public PSocketProcessBridgeChild,
   static void EnsureSocketProcessBridge(std::function<void()>&& aOnSuccess,
                                         std::function<void()>&& aOnFailure);
 
-  mozilla::ipc::IPCResult RecvTest() override;
+  mozilla::ipc::IPCResult RecvTest();
   void ActorDestroy(ActorDestroyReason aWhy) override;
   void DeferredDestroy();
   bool IsShuttingDown() const { return mShuttingDown; };

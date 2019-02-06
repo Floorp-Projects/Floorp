@@ -36,29 +36,25 @@ class WyciwygChannelParent : public PWyciwygChannelParent,
  protected:
   virtual ~WyciwygChannelParent() = default;
 
-  virtual mozilla::ipc::IPCResult RecvInit(
+  mozilla::ipc::IPCResult RecvInit(
       const URIParams& uri, const ipc::PrincipalInfo& aRequestingPrincipalInfo,
       const ipc::PrincipalInfo& aTriggeringPrincipalInfo,
       const ipc::PrincipalInfo& aPrincipalToInheritInfo,
-      const uint32_t& aSecurityFlags,
-      const uint32_t& aContentPolicyType) override;
-  virtual mozilla::ipc::IPCResult RecvAsyncOpen(
+      const uint32_t& aSecurityFlags, const uint32_t& aContentPolicyType);
+  mozilla::ipc::IPCResult RecvAsyncOpen(
       const URIParams& original, const uint32_t& loadFlags,
       const IPC::SerializedLoadContext& loadContext,
-      const PBrowserOrId& parent) override;
-  virtual mozilla::ipc::IPCResult RecvWriteToCacheEntry(
-      const nsDependentSubstring& data) override;
-  virtual mozilla::ipc::IPCResult RecvCloseCacheEntry(
-      const nsresult& reason) override;
-  virtual mozilla::ipc::IPCResult RecvSetCharsetAndSource(
-      const int32_t& source, const nsCString& charset) override;
-  virtual mozilla::ipc::IPCResult RecvSetSecurityInfo(
-      const nsCString& securityInfo) override;
-  virtual mozilla::ipc::IPCResult RecvCancel(
-      const nsresult& statusCode) override;
-  virtual mozilla::ipc::IPCResult RecvAppData(
+      const PBrowserOrId& parent);
+  mozilla::ipc::IPCResult RecvWriteToCacheEntry(
+      const nsDependentSubstring& data);
+  mozilla::ipc::IPCResult RecvCloseCacheEntry(const nsresult& reason);
+  mozilla::ipc::IPCResult RecvSetCharsetAndSource(const int32_t& source,
+                                                  const nsCString& charset);
+  mozilla::ipc::IPCResult RecvSetSecurityInfo(const nsCString& securityInfo);
+  mozilla::ipc::IPCResult RecvCancel(const nsresult& statusCode);
+  mozilla::ipc::IPCResult RecvAppData(
       const IPC::SerializedLoadContext& loadContext,
-      const PBrowserOrId& parent) override;
+      const PBrowserOrId& parent);
 
   virtual void ActorDestroy(ActorDestroyReason why) override;
 

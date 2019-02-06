@@ -45,11 +45,10 @@ class GMPChild : public PGMPChild {
 
   bool GetUTF8LibPath(nsACString& aOutLibPath);
 
-  mozilla::ipc::IPCResult RecvProvideStorageId(
-      const nsCString& aStorageId) override;
+  mozilla::ipc::IPCResult RecvProvideStorageId(const nsCString& aStorageId);
 
-  mozilla::ipc::IPCResult AnswerStartPlugin(const nsString& aAdapter) override;
-  mozilla::ipc::IPCResult RecvPreloadLibs(const nsCString& aLibs) override;
+  mozilla::ipc::IPCResult AnswerStartPlugin(const nsString& aAdapter);
+  mozilla::ipc::IPCResult RecvPreloadLibs(const nsCString& aLibs);
 
   PGMPTimerChild* AllocPGMPTimerChild();
   bool DeallocPGMPTimerChild(PGMPTimerChild* aActor);
@@ -59,11 +58,11 @@ class GMPChild : public PGMPChild {
 
   void GMPContentChildActorDestroy(GMPContentChild* aGMPContentChild);
 
-  mozilla::ipc::IPCResult RecvCrashPluginNow() override;
-  mozilla::ipc::IPCResult RecvCloseActive() override;
+  mozilla::ipc::IPCResult RecvCrashPluginNow();
+  mozilla::ipc::IPCResult RecvCloseActive();
 
   mozilla::ipc::IPCResult RecvInitGMPContentChild(
-      Endpoint<PGMPContentChild>&& aEndpoint) override;
+      Endpoint<PGMPContentChild>&& aEndpoint);
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
   void ProcessingError(Result aCode, const char* aReason) override;

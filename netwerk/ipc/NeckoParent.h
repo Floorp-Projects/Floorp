@@ -152,17 +152,16 @@ class NeckoParent : public PNeckoParent {
       const OriginAttributes& aOriginAttributes,
       const uint32_t& flags) override;
   bool DeallocPDNSRequestParent(PDNSRequestParent*);
-  virtual mozilla::ipc::IPCResult RecvSpeculativeConnect(
-      const URIParams& aURI, const Principal& aPrincipal,
-      const bool& aAnonymous) override;
-  virtual mozilla::ipc::IPCResult RecvHTMLDNSPrefetch(
+  mozilla::ipc::IPCResult RecvSpeculativeConnect(const URIParams& aURI,
+                                                 const Principal& aPrincipal,
+                                                 const bool& aAnonymous);
+  mozilla::ipc::IPCResult RecvHTMLDNSPrefetch(
       const nsString& hostname, const bool& isHttps,
-      const OriginAttributes& aOriginAttributes,
-      const uint16_t& flags) override;
-  virtual mozilla::ipc::IPCResult RecvCancelHTMLDNSPrefetch(
+      const OriginAttributes& aOriginAttributes, const uint16_t& flags);
+  mozilla::ipc::IPCResult RecvCancelHTMLDNSPrefetch(
       const nsString& hostname, const bool& isHttps,
       const OriginAttributes& aOriginAttributes, const uint16_t& flags,
-      const nsresult& reason) override;
+      const nsresult& reason);
   PWebSocketEventListenerParent* AllocPWebSocketEventListenerParent(
       const uint64_t& aInnerWindowID);
   bool DeallocPWebSocketEventListenerParent(PWebSocketEventListenerParent*);
@@ -194,40 +193,38 @@ class NeckoParent : public PNeckoParent {
   PTransportProviderParent* AllocPTransportProviderParent();
   bool DeallocPTransportProviderParent(PTransportProviderParent* aActor);
 
-  virtual mozilla::ipc::IPCResult RecvOnAuthAvailable(
-      const uint64_t& aCallbackId, const nsString& aUser,
-      const nsString& aPassword, const nsString& aDomain) override;
-  virtual mozilla::ipc::IPCResult RecvOnAuthCancelled(
-      const uint64_t& aCallbackId, const bool& aUserCancel) override;
+  mozilla::ipc::IPCResult RecvOnAuthAvailable(const uint64_t& aCallbackId,
+                                              const nsString& aUser,
+                                              const nsString& aPassword,
+                                              const nsString& aDomain);
+  mozilla::ipc::IPCResult RecvOnAuthCancelled(const uint64_t& aCallbackId,
+                                              const bool& aUserCancel);
 
   /* Predictor Messages */
-  virtual mozilla::ipc::IPCResult RecvPredPredict(
+  mozilla::ipc::IPCResult RecvPredPredict(
       const ipc::OptionalURIParams& aTargetURI,
       const ipc::OptionalURIParams& aSourceURI,
       const PredictorPredictReason& aReason,
-      const OriginAttributes& aOriginAttributes,
-      const bool& hasVerifier) override;
+      const OriginAttributes& aOriginAttributes, const bool& hasVerifier);
 
-  virtual mozilla::ipc::IPCResult RecvPredLearn(
+  mozilla::ipc::IPCResult RecvPredLearn(
       const ipc::URIParams& aTargetURI,
       const ipc::OptionalURIParams& aSourceURI,
       const PredictorPredictReason& aReason,
-      const OriginAttributes& aOriginAttributes) override;
-  virtual mozilla::ipc::IPCResult RecvPredReset() override;
+      const OriginAttributes& aOriginAttributes);
+  mozilla::ipc::IPCResult RecvPredReset();
 
-  virtual mozilla::ipc::IPCResult RecvRequestContextLoadBegin(
-      const uint64_t& rcid) override;
-  virtual mozilla::ipc::IPCResult RecvRequestContextAfterDOMContentLoaded(
-      const uint64_t& rcid) override;
-  virtual mozilla::ipc::IPCResult RecvRemoveRequestContext(
-      const uint64_t& rcid) override;
+  mozilla::ipc::IPCResult RecvRequestContextLoadBegin(const uint64_t& rcid);
+  mozilla::ipc::IPCResult RecvRequestContextAfterDOMContentLoaded(
+      const uint64_t& rcid);
+  mozilla::ipc::IPCResult RecvRemoveRequestContext(const uint64_t& rcid);
 
   /* WebExtensions */
-  virtual mozilla::ipc::IPCResult RecvGetExtensionStream(
-      const URIParams& aURI, GetExtensionStreamResolver&& aResolve) override;
+  mozilla::ipc::IPCResult RecvGetExtensionStream(
+      const URIParams& aURI, GetExtensionStreamResolver&& aResolve);
 
-  virtual mozilla::ipc::IPCResult RecvGetExtensionFD(
-      const URIParams& aURI, GetExtensionFDResolver&& aResolve) override;
+  mozilla::ipc::IPCResult RecvGetExtensionFD(const URIParams& aURI,
+                                             GetExtensionFDResolver&& aResolve);
 
   PTrackingDummyChannelParent* AllocPTrackingDummyChannelParent(
       nsIURI* aURI, nsIURI* aTopWindowURI, const nsresult& aTopWindowURIResult,
@@ -240,8 +237,8 @@ class NeckoParent : public PNeckoParent {
       const nsresult& aTopWindowURIResult,
       const OptionalLoadInfoArgs& aLoadInfo) override;
 
-  virtual mozilla::ipc::IPCResult RecvInitSocketProcessBridge(
-      InitSocketProcessBridgeResolver&& aResolver) override;
+  mozilla::ipc::IPCResult RecvInitSocketProcessBridge(
+      InitSocketProcessBridgeResolver&& aResolver);
 };
 
 }  // namespace net

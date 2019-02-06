@@ -28,11 +28,11 @@ class MediaSystemResourceManagerParent final
  protected:
   mozilla::ipc::IPCResult RecvAcquire(
       const uint32_t& aId, const MediaSystemResourceType& aResourceType,
-      const bool& aWillWait) override;
+      const bool& aWillWait);
 
-  mozilla::ipc::IPCResult RecvRelease(const uint32_t& aId) override;
+  mozilla::ipc::IPCResult RecvRelease(const uint32_t& aId);
 
-  mozilla::ipc::IPCResult RecvRemoveResourceManager() override;
+  mozilla::ipc::IPCResult RecvRemoveResourceManager();
 
  private:
   void ActorDestroy(ActorDestroyReason aActorDestroyReason) override;

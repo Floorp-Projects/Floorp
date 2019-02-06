@@ -158,7 +158,7 @@ class GMPParent final : public PGMPParent {
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
   mozilla::ipc::IPCResult RecvInitCrashReporter(
-      Shmem&& shmem, const NativeThreadId& aThreadId) override;
+      Shmem&& shmem, const NativeThreadId& aThreadId);
 
   mozilla::ipc::IPCResult RecvPGMPStorageConstructor(
       PGMPStorageParent* actor) override;
@@ -170,7 +170,7 @@ class GMPParent final : public PGMPParent {
   PGMPTimerParent* AllocPGMPTimerParent();
   bool DeallocPGMPTimerParent(PGMPTimerParent* aActor);
 
-  mozilla::ipc::IPCResult RecvPGMPContentChildDestroyed() override;
+  mozilla::ipc::IPCResult RecvPGMPContentChildDestroyed();
   bool IsUsed() {
     return mGMPContentChildCount > 0 || !mGetContentParentPromises.IsEmpty();
   }

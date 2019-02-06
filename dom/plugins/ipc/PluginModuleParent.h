@@ -115,42 +115,36 @@ class PluginModuleParent : public PPluginModuleParent,
     return MediateRace(parent, child);
   }
 
-  virtual mozilla::ipc::IPCResult RecvBackUpXResources(
-      const FileDescriptor& aXSocketFd) override;
+  mozilla::ipc::IPCResult RecvBackUpXResources(
+      const FileDescriptor& aXSocketFd);
 
-  virtual mozilla::ipc::IPCResult AnswerProcessSomeEvents() override;
+  mozilla::ipc::IPCResult AnswerProcessSomeEvents();
 
-  virtual mozilla::ipc::IPCResult RecvProcessNativeEventsInInterruptCall()
-      override;
+  mozilla::ipc::IPCResult RecvProcessNativeEventsInInterruptCall();
 
-  virtual mozilla::ipc::IPCResult RecvPluginShowWindow(
+  mozilla::ipc::IPCResult RecvPluginShowWindow(
       const uint32_t& aWindowId, const bool& aModal, const int32_t& aX,
-      const int32_t& aY, const size_t& aWidth, const size_t& aHeight) override;
+      const int32_t& aY, const size_t& aWidth, const size_t& aHeight);
 
-  virtual mozilla::ipc::IPCResult RecvPluginHideWindow(
-      const uint32_t& aWindowId) override;
+  mozilla::ipc::IPCResult RecvPluginHideWindow(const uint32_t& aWindowId);
 
-  virtual mozilla::ipc::IPCResult RecvSetCursor(
-      const NSCursorInfo& aCursorInfo) override;
+  mozilla::ipc::IPCResult RecvSetCursor(const NSCursorInfo& aCursorInfo);
 
-  virtual mozilla::ipc::IPCResult RecvShowCursor(const bool& aShow) override;
+  mozilla::ipc::IPCResult RecvShowCursor(const bool& aShow);
 
-  virtual mozilla::ipc::IPCResult RecvPushCursor(
-      const NSCursorInfo& aCursorInfo) override;
+  mozilla::ipc::IPCResult RecvPushCursor(const NSCursorInfo& aCursorInfo);
 
-  virtual mozilla::ipc::IPCResult RecvPopCursor() override;
+  mozilla::ipc::IPCResult RecvPopCursor();
 
-  virtual mozilla::ipc::IPCResult RecvNPN_SetException(
-      const nsCString& aMessage) override;
+  mozilla::ipc::IPCResult RecvNPN_SetException(const nsCString& aMessage);
 
-  virtual mozilla::ipc::IPCResult RecvNPN_ReloadPlugins(
-      const bool& aReloadPages) override;
+  mozilla::ipc::IPCResult RecvNPN_ReloadPlugins(const bool& aReloadPages);
 
   static BrowserStreamParent* StreamCast(NPP instance, NPStream* s);
 
   virtual mozilla::ipc::IPCResult
   AnswerNPN_SetValue_NPPVpluginRequiresAudioDeviceChanges(
-      const bool& shouldRegister, NPError* result) override;
+      const bool& shouldRegister, NPError* result);
 
  protected:
   void SetChildTimeout(const int32_t aChildTimeout);
@@ -158,15 +152,15 @@ class PluginModuleParent : public PPluginModuleParent,
 
   virtual void UpdatePluginTimeout() {}
 
-  virtual mozilla::ipc::IPCResult RecvNotifyContentModuleDestroyed() override {
+  virtual mozilla::ipc::IPCResult RecvNotifyContentModuleDestroyed() {
     return IPC_OK();
   }
 
-  virtual mozilla::ipc::IPCResult RecvReturnClearSiteData(
-      const NPError& aRv, const uint64_t& aCallbackId) override;
+  mozilla::ipc::IPCResult RecvReturnClearSiteData(const NPError& aRv,
+                                                  const uint64_t& aCallbackId);
 
-  virtual mozilla::ipc::IPCResult RecvReturnSitesWithData(
-      nsTArray<nsCString>&& aSites, const uint64_t& aCallbackId) override;
+  mozilla::ipc::IPCResult RecvReturnSitesWithData(nsTArray<nsCString>&& aSites,
+                                                  const uint64_t& aCallbackId);
 
   void SetPluginFuncs(NPPluginFuncs* aFuncs);
 
@@ -461,12 +455,12 @@ class PluginModuleChromeParent : public PluginModuleParent,
 
   bool InitCrashReporter();
 
-  virtual mozilla::ipc::IPCResult RecvNotifyContentModuleDestroyed() override;
+  mozilla::ipc::IPCResult RecvNotifyContentModuleDestroyed() override;
 
   static void CachedSettingChanged(const char* aPref,
                                    PluginModuleChromeParent* aModule);
 
-  virtual mozilla::ipc::IPCResult
+  mozilla::ipc::IPCResult
   AnswerNPN_SetValue_NPPVpluginRequiresAudioDeviceChanges(
       const bool& shouldRegister, NPError* result) override;
 

@@ -37,7 +37,7 @@ class CacheStorageParent final : public PCacheStorageParent,
   virtual mozilla::ipc::IPCResult RecvPCacheOpConstructor(
       PCacheOpParent* actor, const CacheOpArgs& aOpArgs) override;
 
-  virtual mozilla::ipc::IPCResult RecvTeardown() override;
+  mozilla::ipc::IPCResult RecvTeardown();
 
   // PrincipalVerifier::Listener methods
   virtual void OnPrincipalVerified(nsresult aRv,

@@ -34,7 +34,7 @@ class CacheParent final : public PCacheParent {
   virtual mozilla::ipc::IPCResult RecvPCacheOpConstructor(
       PCacheOpParent* actor, const CacheOpArgs& aOpArgs) override;
 
-  virtual mozilla::ipc::IPCResult RecvTeardown() override;
+  mozilla::ipc::IPCResult RecvTeardown();
 
   RefPtr<cache::Manager> mManager;
   const CacheId mCacheId;

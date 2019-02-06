@@ -36,7 +36,7 @@ class PaymentRequestParent final : public PPaymentRequestParent {
 
  protected:
   mozilla::ipc::IPCResult RecvRequestPayment(
-      const IPCPaymentActionRequest& aRequest) override;
+      const IPCPaymentActionRequest& aRequest);
 
   mozilla::ipc::IPCResult Recv__delete__() override;
 

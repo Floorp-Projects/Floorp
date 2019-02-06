@@ -53,7 +53,7 @@ class RemoteWorkerChild final : public PRemoteWorkerChild {
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  mozilla::ipc::IPCResult RecvExecOp(const RemoteWorkerOp& aOp) override;
+  mozilla::ipc::IPCResult RecvExecOp(const RemoteWorkerOp& aOp);
 
   void RecvExecOpOnMainThread(const RemoteWorkerOp& aOp);
 

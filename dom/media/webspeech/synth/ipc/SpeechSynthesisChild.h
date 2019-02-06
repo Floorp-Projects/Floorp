@@ -24,19 +24,18 @@ class SpeechSynthesisChild : public PSpeechSynthesisChild {
  public:
   mozilla::ipc::IPCResult RecvInitialVoicesAndState(
       nsTArray<RemoteVoice>&& aVoices, nsTArray<nsString>&& aDefaults,
-      const bool& aIsSpeaking) override;
+      const bool& aIsSpeaking);
 
-  mozilla::ipc::IPCResult RecvVoiceAdded(const RemoteVoice& aVoice) override;
+  mozilla::ipc::IPCResult RecvVoiceAdded(const RemoteVoice& aVoice);
 
-  mozilla::ipc::IPCResult RecvVoiceRemoved(const nsString& aUri) override;
+  mozilla::ipc::IPCResult RecvVoiceRemoved(const nsString& aUri);
 
   mozilla::ipc::IPCResult RecvSetDefaultVoice(const nsString& aUri,
-                                              const bool& aIsDefault) override;
+                                              const bool& aIsDefault);
 
-  mozilla::ipc::IPCResult RecvIsSpeakingChanged(
-      const bool& aIsSpeaking) override;
+  mozilla::ipc::IPCResult RecvIsSpeakingChanged(const bool& aIsSpeaking);
 
-  mozilla::ipc::IPCResult RecvNotifyVoicesChanged() override;
+  mozilla::ipc::IPCResult RecvNotifyVoicesChanged();
 
  protected:
   SpeechSynthesisChild();

@@ -24,8 +24,7 @@ class WebBrowserPersistDocumentChild final
   void Start(nsIWebBrowserPersistDocument* aDocument);
   void Start(dom::Document* aDocument);
 
-  virtual mozilla::ipc::IPCResult RecvSetPersistFlags(
-      const uint32_t& aNewFlags) override;
+  mozilla::ipc::IPCResult RecvSetPersistFlags(const uint32_t& aNewFlags);
 
   PWebBrowserPersistResourcesChild* AllocPWebBrowserPersistResourcesChild();
   virtual mozilla::ipc::IPCResult RecvPWebBrowserPersistResourcesConstructor(

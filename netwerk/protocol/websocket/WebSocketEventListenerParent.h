@@ -28,7 +28,7 @@ class WebSocketEventListenerParent final : public PWebSocketEventListenerParent,
  private:
   ~WebSocketEventListenerParent();
 
-  virtual mozilla::ipc::IPCResult RecvClose() override;
+  mozilla::ipc::IPCResult RecvClose();
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 

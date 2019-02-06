@@ -191,14 +191,14 @@ class ImageBridgeChild final : public PImageBridgeChild,
   bool DeallocPMediaSystemResourceManagerChild(
       PMediaSystemResourceManagerChild* aActor);
 
-  virtual mozilla::ipc::IPCResult RecvParentAsyncMessages(
-      InfallibleTArray<AsyncParentMessageData>&& aMessages) override;
+  mozilla::ipc::IPCResult RecvParentAsyncMessages(
+      InfallibleTArray<AsyncParentMessageData>&& aMessages);
 
-  virtual mozilla::ipc::IPCResult RecvDidComposite(
-      InfallibleTArray<ImageCompositeNotification>&& aNotifications) override;
+  mozilla::ipc::IPCResult RecvDidComposite(
+      InfallibleTArray<ImageCompositeNotification>&& aNotifications);
 
-  virtual mozilla::ipc::IPCResult RecvReportFramesDropped(
-      const CompositableHandle& aHandle, const uint32_t& aFrames) override;
+  mozilla::ipc::IPCResult RecvReportFramesDropped(
+      const CompositableHandle& aHandle, const uint32_t& aFrames);
 
   // Create an ImageClient from any thread.
   RefPtr<ImageClient> CreateImageClient(CompositableType aType,

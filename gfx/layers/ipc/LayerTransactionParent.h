@@ -97,48 +97,43 @@ class LayerTransactionParent final : public PLayerTransactionParent,
   base::ProcessId GetChildProcessId() override { return OtherPid(); }
 
  protected:
-  mozilla::ipc::IPCResult RecvShutdown() override;
-  mozilla::ipc::IPCResult RecvShutdownSync() override;
+  mozilla::ipc::IPCResult RecvShutdown();
+  mozilla::ipc::IPCResult RecvShutdownSync();
 
-  mozilla::ipc::IPCResult RecvPaintTime(
-      const TransactionId& aTransactionId,
-      const TimeDuration& aPaintTime) override;
+  mozilla::ipc::IPCResult RecvPaintTime(const TransactionId& aTransactionId,
+                                        const TimeDuration& aPaintTime);
 
-  mozilla::ipc::IPCResult RecvUpdate(const TransactionInfo& aInfo) override;
+  mozilla::ipc::IPCResult RecvUpdate(const TransactionInfo& aInfo);
 
   mozilla::ipc::IPCResult RecvSetLayersObserverEpoch(
-      const LayersObserverEpoch& aChildEpoch) override;
-  mozilla::ipc::IPCResult RecvNewCompositable(
-      const CompositableHandle& aHandle, const TextureInfo& aInfo) override;
-  mozilla::ipc::IPCResult RecvReleaseLayer(const LayerHandle& aHandle) override;
+      const LayersObserverEpoch& aChildEpoch);
+  mozilla::ipc::IPCResult RecvNewCompositable(const CompositableHandle& aHandle,
+                                              const TextureInfo& aInfo);
+  mozilla::ipc::IPCResult RecvReleaseLayer(const LayerHandle& aHandle);
   mozilla::ipc::IPCResult RecvReleaseCompositable(
-      const CompositableHandle& aHandle) override;
+      const CompositableHandle& aHandle);
 
-  mozilla::ipc::IPCResult RecvClearCachedResources() override;
-  mozilla::ipc::IPCResult RecvScheduleComposite() override;
-  mozilla::ipc::IPCResult RecvSetTestSampleTime(
-      const TimeStamp& aTime) override;
-  mozilla::ipc::IPCResult RecvLeaveTestMode() override;
+  mozilla::ipc::IPCResult RecvClearCachedResources();
+  mozilla::ipc::IPCResult RecvScheduleComposite();
+  mozilla::ipc::IPCResult RecvSetTestSampleTime(const TimeStamp& aTime);
+  mozilla::ipc::IPCResult RecvLeaveTestMode();
   mozilla::ipc::IPCResult RecvGetAnimationValue(
-      const uint64_t& aCompositorAnimationsId, OMTAValue* aValue) override;
+      const uint64_t& aCompositorAnimationsId, OMTAValue* aValue);
   mozilla::ipc::IPCResult RecvGetTransform(const LayerHandle& aHandle,
-                                           MaybeTransform* aTransform) override;
+                                           MaybeTransform* aTransform);
   mozilla::ipc::IPCResult RecvSetAsyncScrollOffset(
-      const ScrollableLayerGuid::ViewID& aId, const float& aX,
-      const float& aY) override;
+      const ScrollableLayerGuid::ViewID& aId, const float& aX, const float& aY);
   mozilla::ipc::IPCResult RecvSetAsyncZoom(
-      const ScrollableLayerGuid::ViewID& aId, const float& aValue) override;
-  mozilla::ipc::IPCResult RecvFlushApzRepaints() override;
-  mozilla::ipc::IPCResult RecvGetAPZTestData(APZTestData* aOutData) override;
+      const ScrollableLayerGuid::ViewID& aId, const float& aValue);
+  mozilla::ipc::IPCResult RecvFlushApzRepaints();
+  mozilla::ipc::IPCResult RecvGetAPZTestData(APZTestData* aOutData);
   mozilla::ipc::IPCResult RecvRequestProperty(const nsString& aProperty,
-                                              float* aValue) override;
+                                              float* aValue);
   mozilla::ipc::IPCResult RecvSetConfirmedTargetAPZC(
-      const uint64_t& aBlockId,
-      nsTArray<ScrollableLayerGuid>&& aTargets) override;
-  mozilla::ipc::IPCResult RecvRecordPaintTimes(
-      const PaintTiming& aTiming) override;
+      const uint64_t& aBlockId, nsTArray<ScrollableLayerGuid>&& aTargets);
+  mozilla::ipc::IPCResult RecvRecordPaintTimes(const PaintTiming& aTiming);
   mozilla::ipc::IPCResult RecvGetTextureFactoryIdentifier(
-      TextureFactoryIdentifier* aIdentifier) override;
+      TextureFactoryIdentifier* aIdentifier);
 
   bool SetLayerAttributes(const OpSetLayerAttributes& aOp);
 
