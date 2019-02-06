@@ -655,7 +655,6 @@ class nsHttpChannel final : public HttpBaseChannel,
   uint32_t mCacheEntryIsWriteOnly : 1;
   // see WAIT_FOR_* constants above
   uint32_t mCacheEntriesToWaitFor : 2;
-  uint32_t mHasQueryString : 1;
   // whether cache entry data write was in progress during cache entry check
   // when true, after we finish read from cache we must check all data
   // had been loaded from cache. If not, then an error has to be propagated
