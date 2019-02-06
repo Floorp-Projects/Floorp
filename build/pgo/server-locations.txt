@@ -167,6 +167,8 @@ https://sub.sectest1.example.org:443
 http://malware.example.com:80
 http://unwanted.example.com:80
 http://tracking.example.com:80
+http://cryptomining.example.com:80
+http://fingerprinting.example.com:80
 http://not-tracking.example.com:80
 http://tracking.example.org:80
 http://another-tracking.example.net:80
@@ -177,6 +179,8 @@ http://trackertest.org:80
 https://malware.example.com:443
 https://unwanted.example.com:443
 https://tracking.example.com:443
+https://cryptomining.example.com:443
+https://fingerprinting.example.com:443
 https://not-tracking.example.com:443
 https://tracking.example.org:443
 https://another-tracking.example.net:443
