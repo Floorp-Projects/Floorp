@@ -606,7 +606,7 @@ class Editor extends PureComponent<Props, State> {
         <HighlightLine />
         <EmptyLines editor={editor} />
         <Breakpoints editor={editor} />
-        <Preview editor={editor} editorRef={this.$editorWrapper} />;
+        <Preview editor={editor} editorRef={this.$editorWrapper} />
         <Footer editor={editor} horizontal={horizontal} />
         <HighlightLines editor={editor} />
         {
