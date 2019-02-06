@@ -90,10 +90,13 @@ export CC_$(rust_cc_env_name)=$(CC)
 export CXX_$(rust_cc_env_name)=$(CXX)
 export AR_$(rust_cc_env_name)=$(AR)
 ifeq (,$(MOZ_ASAN)$(MOZ_TSAN)$(MOZ_UBSAN)$(CODE_COVERAGE_GCC)$(FUZZING_INTERFACES))
-export CFLAGS_$(rust_host_cc_env_name)=$(COMPUTED_HOST_CFLAGS)
-export CXXFLAGS_$(rust_host_cc_env_name)=$(COMPUTED_HOST_CXXFLAGS)
-export CFLAGS_$(rust_cc_env_name)=$(COMPUTED_CFLAGS)
-export CXXFLAGS_$(rust_cc_env_name)=$(COMPUTED_CXXFLAGS)
+# -DMOZILLA_CONFIG_H is added to prevent mozilla-config.h from injecting anything
+# in C/C++ compiles from rust. That's not needed in the other branch because the
+# base flags don't force-include mozilla-config.h.
+export CFLAGS_$(rust_host_cc_env_name)=$(COMPUTED_HOST_CFLAGS) -DMOZILLA_CONFIG_H
+export CXXFLAGS_$(rust_host_cc_env_name)=$(COMPUTED_HOST_CXXFLAGS) -DMOZILLA_CONFIG_H
+export CFLAGS_$(rust_cc_env_name)=$(COMPUTED_CFLAGS) -DMOZILLA_CONFIG_H
+export CXXFLAGS_$(rust_cc_env_name)=$(COMPUTED_CXXFLAGS) -DMOZILLA_CONFIG_H
 else
 # Because cargo doesn't allow to distinguish builds happening for build
 # scripts/procedural macros vs. those happening for the rust target,
