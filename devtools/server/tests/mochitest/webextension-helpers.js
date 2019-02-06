@@ -8,7 +8,6 @@
 const {require, loader} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 const {DebuggerClient} = require("devtools/shared/client/debugger-client");
 const {DebuggerServer} = require("devtools/server/main");
-const {TargetFactory} = require("devtools/client/framework/target");
 
 const {AddonTestUtils} = require("resource://testing-common/AddonTestUtils.jsm");
 const {ExtensionTestCommon} = require("resource://testing-common/ExtensionTestCommon.jsm");
@@ -96,18 +95,12 @@ async function attachAddon(addonId) {
   await client.connect();
 
   const addonFront = await client.mainRoot.getAddon({ id: addonId });
-  const addonTargetFront = await addonFront.connect();
+  const addonTarget = await addonFront.connect();
 
-  if (!addonTargetFront) {
+  if (!addonTarget) {
     client.close();
     throw new Error(`No WebExtension Actor found for ${addonId}`);
   }
-
-  const addonTarget = await TargetFactory.forRemoteTab({
-    activeTab: addonTargetFront,
-    client,
-    chrome: true,
-  });
 
   return addonTarget;
 }
