@@ -4,8 +4,8 @@ Change log
 All notable changes to this program is documented in this file.
 
 
-0.24.0 [917474f3473e] (2018-01-28)
-------------------------------------
+0.24.0 (2019-01-28, `917474f3473e`)
+-----------------------------------
 
 ### Added
 
@@ -20,7 +20,7 @@ All notable changes to this program is documented in this file.
 - Added new endpoint `GET /session/{session id}/moz/screenshot/full`
   for taking full document screenshots, thanks to Greg Fraley.
 
-- Added new `--marionette-host <HOSTNAME>` flag for binding to a
+- Added new `--marionette-host <hostname>` flag for binding to a
   particular interface/IP layer on the system.
 
 - Added new endpoint `POST /session/{session_id}/window/new`
@@ -37,8 +37,15 @@ All notable changes to this program is documented in this file.
 
 ### Removed
 
-- Turned off builds for arm7hf, which will no longer be released but
-  can still be built from the source.
+- ARMv7 HF builds have been discontinued
+
+  We [announced](https://lists.mozilla.org/pipermail/tools-marionette/2018-September/000035.html)
+  back in September 2018 that we would stop building for ARM,
+  but builds can be self-serviced by building from source.
+
+  To cross-compile from another host system, you can use this command:
+
+  	% cargo build --target armv7-unknown-linux-gnueabihf
 
 ### Changed
 
