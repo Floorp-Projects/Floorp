@@ -79,7 +79,7 @@ body.config-warning {
 
 #prefs > tr > td,
 #prefs > tr > th {
-  padding: 4px;
+  padding: 0;
   width: 50%;
   font-weight: inherit;
 }
