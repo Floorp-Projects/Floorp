@@ -987,8 +987,7 @@ BrowserGlue.prototype = {
     os.removeObserver(this, "sync-ui-state:update");
     os.removeObserver(this, "shield-init-complete");
 
-    Services.prefs.removeObserver("privacy.trackingprotection.enabled", this._matchCBCategory);
-    Services.prefs.removeObserver("privacy.trackingprotection.pbmode.enabled", this._matchCBCategory);
+    Services.prefs.removeObserver("privacy.trackingprotection", this._matchCBCategory);
     Services.prefs.removeObserver("urlclassifier.trackingTable", this._matchCBCategory);
     Services.prefs.removeObserver("network.cookie.cookieBehavior", this._matchCBCategory);
     Services.prefs.removeObserver(ContentBlockingCategoriesPrefs.PREF_CB_CATEGORY, this._updateCBCategory);
@@ -1363,8 +1362,8 @@ BrowserGlue.prototype = {
     PlacesUtils.favicons.setDefaultIconURIPreferredSize(16 * aWindow.devicePixelRatio);
 
     this._matchCBCategory();
-    Services.prefs.addObserver("privacy.trackingprotection.enabled", this._matchCBCategory);
-    Services.prefs.addObserver("privacy.trackingprotection.pbmode.enabled", this._matchCBCategory);
+    // This observes the entire privacy.trackingprotection.* pref tree.
+    Services.prefs.addObserver("privacy.trackingprotection", this._matchCBCategory);
     Services.prefs.addObserver("urlclassifier.trackingTable", this._matchCBCategory);
     Services.prefs.addObserver("network.cookie.cookieBehavior", this._matchCBCategory);
     Services.prefs.addObserver(ContentBlockingCategoriesPrefs.PREF_CB_CATEGORY, this._updateCBCategory);
@@ -2996,12 +2995,16 @@ var ContentBlockingCategoriesPrefs = {
       ["network.cookie.cookieBehavior", Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER],
       ["privacy.trackingprotection.pbmode.enabled", true],
       ["privacy.trackingprotection.enabled", true],
+      ["privacy.trackingprotection.fingerprinting.enabled", null],
+      ["privacy.trackingprotection.cryptomining.enabled", null],
     ],
     standard: [
       ["urlclassifier.trackingTable", null],
       ["network.cookie.cookieBehavior", null],
       ["privacy.trackingprotection.pbmode.enabled", null],
       ["privacy.trackingprotection.enabled", null],
+      ["privacy.trackingprotection.fingerprinting.enabled", null],
+      ["privacy.trackingprotection.cryptomining.enabled", null],
     ],
   },
   switchingCategory: false,
