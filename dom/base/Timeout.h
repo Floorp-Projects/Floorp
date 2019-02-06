@@ -89,6 +89,10 @@ class Timeout final : public LinkedListElement<RefPtr<Timeout>> {
   // when sync loops trigger nested firing.
   uint32_t mFiringId;
 
+#ifdef DEBUG
+  int64_t mFiringIndex;
+#endif
+
   // The popup state at timeout creation time if not created from
   // another timeout
   PopupBlocker::PopupControlState mPopupState;
