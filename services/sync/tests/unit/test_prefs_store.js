@@ -1,7 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const {LightweightThemeManager} = ChromeUtils.import("resource://gre/modules/LightweightThemeManager.jsm");
 const {Preferences} = ChromeUtils.import("resource://gre/modules/Preferences.jsm");
 const {PrefRec} = ChromeUtils.import("resource://services-sync/engines/prefs.js");
 const {Service} = ChromeUtils.import("resource://services-sync/service.js");
@@ -101,32 +100,6 @@ add_task(async function run_test() {
     Assert.equal(prefs.get("testing.unsynced.url"), "https://www.example.com/2");
     Assert.equal(Svc.Prefs.get("prefs.sync.testing.somepref"), true);
 
-    _("Enable persona");
-    // Ensure we don't go to the network to fetch personas and end up leaking
-    // stuff.
-    Services.io.offline = true;
-    Assert.equal(LightweightThemeManager.currentTheme.id, "default-theme@mozilla.org");
-
-    let persona1 = makePersona();
-    let persona2 = makePersona();
-    let usedThemes = JSON.stringify([persona1, persona2]);
-    record.value = {
-      "lightweightThemes.selectedThemeID": persona1.id,
-      "lightweightThemes.usedThemes": usedThemes,
-    };
-    await store.update(record);
-    Assert.equal(prefs.get("lightweightThemes.selectedThemeID"), persona1.id);
-    Assert.ok(Utils.deepEquals(LightweightThemeManager.currentTheme,
-              persona1));
-
-    _("Disable persona");
-    record.value = {
-      "lightweightThemes.selectedThemeID": null,
-      "lightweightThemes.usedThemes": usedThemes,
-    };
-    await store.update(record);
-    Assert.equal(LightweightThemeManager.currentTheme.id, "default-theme@mozilla.org");
-
     _("Only the current app's preferences are applied.");
     record = new PrefRec("prefs", "some-fake-app");
     record.value = {
@@ -134,38 +107,6 @@ add_task(async function run_test() {
     };
     await store.update(record);
     Assert.equal(prefs.get("testing.int"), 42);
-
-    _("The light-weight theme preference is handled correctly.");
-    let lastThemeID = undefined;
-    let orig_updateLightWeightTheme = store._updateLightWeightTheme;
-    store._updateLightWeightTheme = function(themeID) {
-      lastThemeID = themeID;
-    };
-    try {
-      record = new PrefRec("prefs", PREFS_GUID);
-      record.value = {
-        "testing.int": 42,
-      };
-      await store.update(record);
-      Assert.ok(lastThemeID === undefined,
-                "should not have tried to change the theme with an unrelated pref.");
-      Services.prefs.setCharPref("lightweightThemes.selectedThemeID", "foo");
-      record.value = {
-        "lightweightThemes.selectedThemeID": "foo",
-      };
-      await store.update(record);
-      Assert.ok(lastThemeID === undefined,
-                "should not have tried to change the theme when the incoming pref matches current value.");
-
-      record.value = {
-        "lightweightThemes.selectedThemeID": "bar",
-      };
-      await store.update(record);
-      Assert.equal(lastThemeID, "bar",
-                   "should have tried to change the theme when the incoming pref was different.");
-    } finally {
-      store._updateLightWeightTheme = orig_updateLightWeightTheme;
-    }
   } finally {
     prefs.resetBranch("");
   }
