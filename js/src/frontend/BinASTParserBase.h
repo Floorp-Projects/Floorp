@@ -46,8 +46,7 @@ class BinASTParserBase : private JS::AutoGCRooter {
 
  public:
   ParseNode* allocParseNode(size_t size) {
-    MOZ_ASSERT(size == sizeof(ParseNode));
-    return static_cast<ParseNode*>(nodeAlloc_.allocNode());
+    return static_cast<ParseNode*>(nodeAlloc_.allocNode(size));
   }
 
   JS_DECLARE_NEW_METHODS(new_, allocParseNode, inline)
