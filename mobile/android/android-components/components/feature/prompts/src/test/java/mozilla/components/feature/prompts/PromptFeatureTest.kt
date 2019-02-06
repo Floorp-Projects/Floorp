@@ -893,6 +893,99 @@ class PromptFeatureTest {
         session.promptRequest = Consumable.from(promptRequest)
     }
 
+    @Test
+    fun `calling onConfirm for a Confirm request will consume promptRequest`() {
+        val session = getSelectedSession()
+        var onPositiveButtonWasCalled = false
+        var onNegativeButtonWasCalled = false
+        var onNeutralButtonWasCalled = false
+
+        val onConfirmPositiveButton: (Boolean) -> Unit = {
+            onPositiveButtonWasCalled = true
+        }
+
+        val onConfirmNegativeButton: (Boolean) -> Unit = {
+            onNegativeButtonWasCalled = true
+        }
+
+        val onConfirmNeutralButton: (Boolean) -> Unit = {
+            onNeutralButtonWasCalled = true
+        }
+
+        val promptRequest = PromptRequest.Confirm(
+            "title",
+            "message",
+            false,
+            "positive",
+            "negative",
+            "neutral",
+            onConfirmPositiveButton,
+            onConfirmNegativeButton,
+            onConfirmNeutralButton
+        ) {}
+
+        stubContext()
+
+        promptFeature.start()
+
+        session.promptRequest = Consumable.from(promptRequest)
+
+        promptFeature.onConfirm(session.id, true to MultiButtonDialogFragment.ButtonType.POSITIVE)
+
+        assertTrue(session.promptRequest.isConsumed())
+        assertTrue(onPositiveButtonWasCalled)
+
+        session.promptRequest = Consumable.from(promptRequest)
+        promptFeature.onConfirm(session.id, true to MultiButtonDialogFragment.ButtonType.NEGATIVE)
+
+        assertTrue(session.promptRequest.isConsumed())
+        assertTrue(onNegativeButtonWasCalled)
+
+        session.promptRequest = Consumable.from(promptRequest)
+        promptFeature.onConfirm(session.id, true to MultiButtonDialogFragment.ButtonType.NEUTRAL)
+
+        assertTrue(session.promptRequest.isConsumed())
+        assertTrue(onNeutralButtonWasCalled)
+    }
+
+    @Test
+    fun `calling onCancel with a Confirm request will consume promptRequest`() {
+        val session = getSelectedSession()
+        var onCancelWasCalled = false
+
+        val onConfirm: (Boolean) -> Unit = { }
+
+        val onDismiss: () -> Unit = {
+            onCancelWasCalled = true
+        }
+
+        val promptRequest = PromptRequest.Confirm(
+            "title",
+            "message",
+            false,
+            "positive",
+            "negative",
+            "neutral",
+            onConfirm,
+            onConfirm,
+            onConfirm,
+            onDismiss
+        )
+
+        stubContext()
+
+        promptFeature.start()
+
+        session.promptRequest = Consumable.from(promptRequest)
+
+        promptFeature.onCancel(session.id)
+
+        assertTrue(session.promptRequest.isConsumed())
+        assertTrue(onCancelWasCalled)
+
+        session.promptRequest = Consumable.from(promptRequest)
+    }
+
     private fun getSelectedSession(): Session {
         val session = Session("")
         mockSessionManager.add(session)

@@ -263,6 +263,7 @@ class PromptFeature(
                 is Color -> it.onDismiss()
                 is TextPrompt -> it.onDismiss()
                 is PromptRequest.Popup -> it.onDeny()
+                is PromptRequest.Confirm -> it.onDismiss()
             }
             true
         }
@@ -299,6 +300,22 @@ class PromptFeature(
                 is TextPrompt -> {
                     val pair = value as Pair<Boolean, String>
                     it.onConfirm(pair.first, pair.second)
+                }
+
+                is PromptRequest.Confirm -> {
+                    val pair = value as Pair<Boolean, MultiButtonDialogFragment.ButtonType>
+                    when (pair.second) {
+
+                        MultiButtonDialogFragment.ButtonType.POSITIVE -> {
+                            it.onConfirmPositiveButton(pair.first)
+                        }
+                        MultiButtonDialogFragment.ButtonType.NEGATIVE -> {
+                            it.onConfirmNegativeButton(pair.first)
+                        }
+                        MultiButtonDialogFragment.ButtonType.NEUTRAL -> {
+                            it.onConfirmNeutralButton(pair.first)
+                        }
+                    }
                 }
             }
             true
@@ -456,6 +473,21 @@ class PromptFeature(
                         message = targetUri,
                         positiveButtonText = positiveLabel,
                         negativeButtonText = negativeLabel
+                    )
+                }
+            }
+
+            is PromptRequest.Confirm -> {
+
+                with(promptRequest) {
+                    MultiButtonDialogFragment.newInstance(
+                        session.id,
+                        title,
+                        message,
+                        hasShownManyDialogs,
+                        positiveButtonTitle,
+                        negativeButtonTitle,
+                        neutralButtonTitle
                     )
                 }
             }

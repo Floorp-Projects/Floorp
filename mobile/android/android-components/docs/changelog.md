@@ -13,6 +13,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **feature-prompts**, **browser-engine-gecko***
+  * Added support for [JavaScript Confirm dialogs](https://developer.mozilla.org/en-US/docs/Web/API/Window/confirm).
+
 * **feature-session**
   * Fixed an issue causing `EngineViewPresenter` to render a selected `Session` even though it was configured to show a fixed `Session`. This issue caused a crash (`IllegalStateException: Display already acquired`) in the [Reference Browser](https://github.com/mozilla-mobile/reference-browser) when a "Custom Tab" and the "Browser" tried to render the same `Session`.
   * Fixed an issue where back and forward button handling would not take place on the session whose ID was provided.

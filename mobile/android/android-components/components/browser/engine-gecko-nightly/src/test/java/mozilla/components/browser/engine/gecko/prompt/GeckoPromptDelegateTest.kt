@@ -39,6 +39,9 @@ import org.junit.Assert
 import org.junit.Assert.assertNotNull
 import org.mozilla.geckoview.AllowOrDeny
 import org.mozilla.geckoview.GeckoResult
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.BUTTON_TYPE_NEGATIVE
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.BUTTON_TYPE_NEUTRAL
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.BUTTON_TYPE_POSITIVE
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.TextCallback
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.DATETIME_TYPE_DATE
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.DATETIME_TYPE_DATETIME_LOCAL
@@ -208,14 +211,6 @@ class GeckoPromptDelegateTest {
     }
 
     @Test
-    fun `hitting functions not yet implemented`() {
-        val mockSession = GeckoEngineSession(Mockito.mock(GeckoRuntime::class.java))
-        val gecko = GeckoPromptDelegate(mockSession)
-        gecko.onButtonPrompt(mock(), "", "", null, mock())
-        gecko.onPopupRequest(mock(), "")
-    }
-
-    @Test
     fun `hitting default values`() {
         val mockSession = GeckoEngineSession(Mockito.mock(GeckoRuntime::class.java))
         val gecko = GeckoPromptDelegate(mockSession)
@@ -223,6 +218,7 @@ class GeckoPromptDelegateTest {
         gecko.onDateTimePrompt(mock(), null, DATETIME_TYPE_WEEK, null, null, null, mock())
         gecko.onDateTimePrompt(mock(), null, DATETIME_TYPE_MONTH, null, null, null, mock())
         gecko.onDateTimePrompt(mock(), null, DATETIME_TYPE_TIME, null, "", "", mock())
+        gecko.onButtonPrompt(mock(), null, null, arrayOf<String?>(null, null, null), mock())
     }
 
     @Test
@@ -916,6 +912,81 @@ class GeckoPromptDelegateTest {
 
         request!!.onDeny()
         assertTrue(onDenyWasCalled)
+    }
+
+    @Test
+    fun `onButtonPrompt must provide a Confirm PromptRequest`() {
+        val mockSession = GeckoEngineSession(Mockito.mock(GeckoRuntime::class.java))
+        var request: PromptRequest.Confirm? = null
+        var onPositiveButtonWasCalled = false
+        var onNegativeButtonWasCalled = false
+        var onNeutralButtonWasCalled = false
+        var dismissWasCalled = false
+        var setCheckboxValueWasCalled = false
+
+        val promptDelegate = GeckoPromptDelegate(mockSession)
+
+        mockSession.register(object : EngineSession.Observer {
+            override fun onPromptRequest(promptRequest: PromptRequest) {
+                request = promptRequest as PromptRequest.Confirm
+            }
+        })
+
+        val callback = object : GeckoSession.PromptDelegate.ButtonCallback {
+
+            override fun confirm(button: Int) {
+                when (button) {
+                    BUTTON_TYPE_POSITIVE -> onPositiveButtonWasCalled = true
+                    BUTTON_TYPE_NEGATIVE -> onNegativeButtonWasCalled = true
+                    BUTTON_TYPE_NEUTRAL -> onNeutralButtonWasCalled = true
+                }
+            }
+
+            override fun setCheckboxValue(value: Boolean) {
+                setCheckboxValueWasCalled = true
+            }
+
+            override fun dismiss() {
+                dismissWasCalled = true
+            }
+
+            override fun getCheckboxValue(): Boolean = false
+            override fun hasCheckbox(): Boolean = true
+            override fun getCheckboxMessage(): String = ""
+        }
+
+        promptDelegate.onButtonPrompt(
+            mock(),
+            "title",
+            "message",
+            arrayOf("positive", "neutral", "negative"),
+            callback
+        )
+
+        with(request!!) {
+
+            assertNotNull(request)
+            assertEquals(title, "title")
+            assertEquals(message, "message")
+            assertEquals(hasShownManyDialogs, true)
+            assertEquals(positiveButtonTitle, "positive")
+            assertEquals(negativeButtonTitle, "negative")
+            assertEquals(neutralButtonTitle, "neutral")
+
+            onConfirmPositiveButton(false)
+            assertTrue(onPositiveButtonWasCalled)
+
+            onConfirmNegativeButton(false)
+            assertTrue(onNegativeButtonWasCalled)
+
+            onConfirmNeutralButton(false)
+            assertTrue(onNeutralButtonWasCalled)
+
+            assertTrue(setCheckboxValueWasCalled)
+
+            onDismiss()
+            assertTrue(dismissWasCalled)
+        }
     }
 
     open class DefaultGeckoChoiceCallback : GeckoSession.PromptDelegate.ChoiceCallback {

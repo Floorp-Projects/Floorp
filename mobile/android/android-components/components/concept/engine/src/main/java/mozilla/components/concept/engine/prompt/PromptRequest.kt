@@ -150,8 +150,8 @@ sealed class PromptRequest {
     /**
      * Value type that represents a request for a selecting one or multiple files.
      * @property defaultColor true if the user can select more that one file false otherwise.
-     * @property onConfirm callback to notify that the user has selected a single file.
-     * @property onDismiss callback to notify that the user has canceled the file selection.
+     * @property onConfirm callback to notify that the user has selected a color.
+     * @property onDismiss callback to notify that the user has canceled the dialog.
      */
     data class Color(
         val defaultColor: String,
@@ -172,5 +172,35 @@ sealed class PromptRequest {
         val targetUri: String,
         val onAllow: () -> Unit,
         val onDeny: () -> Unit
+    ) : PromptRequest()
+
+    /**
+     * Value type that represents a request for showing a
+     * <a href="https://developer.mozilla.org/en-US/docs/Web/API/Window/confirm>confirm prompt</a>.
+     *
+     * The prompt can have up to three buttons, they could be positive, negative and neutral.
+     *
+     * @property title of the dialog.
+     * @property message the body of the dialog.
+     * @property hasShownManyDialogs tells if this page has shown multiple prompts within a short period of time.
+     * @property positiveButtonTitle optional title for the positive button.
+     * @property negativeButtonTitle optional title for the negative button.
+     * @property neutralButtonTitle optional title for the neutral button.
+     * @property onConfirmPositiveButton callback to notify that the user has clicked the positive button.
+     * @property onConfirmNegativeButton callback to notify that the user has clicked the negative button.
+     * @property onConfirmNeutralButton callback to notify that the user has clicked the neutral button.
+     * @property onDismiss callback to notify that the user has canceled the dialog.
+     */
+    data class Confirm(
+        val title: String,
+        val message: String,
+        val hasShownManyDialogs: Boolean = false,
+        val positiveButtonTitle: String = "",
+        val negativeButtonTitle: String = "",
+        val neutralButtonTitle: String = "",
+        val onConfirmPositiveButton: (Boolean) -> Unit,
+        val onConfirmNegativeButton: (Boolean) -> Unit,
+        val onConfirmNeutralButton: (Boolean) -> Unit,
+        val onDismiss: () -> Unit
     ) : PromptRequest()
 }

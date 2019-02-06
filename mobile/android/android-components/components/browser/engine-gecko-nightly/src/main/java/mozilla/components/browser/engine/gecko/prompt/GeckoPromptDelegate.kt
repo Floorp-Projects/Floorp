@@ -41,6 +41,9 @@ import org.mozilla.geckoview.GeckoSession.PromptDelegate.AuthOptions.AUTH_FLAG_P
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.AuthOptions.AUTH_LEVEL_NONE
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.AuthOptions.AUTH_LEVEL_PW_ENCRYPTED
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.AuthOptions.AUTH_LEVEL_SECURE
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.BUTTON_TYPE_NEGATIVE
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.BUTTON_TYPE_NEUTRAL
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.BUTTON_TYPE_POSITIVE
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.DATETIME_TYPE_DATE
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.DATETIME_TYPE_DATETIME_LOCAL
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.DATETIME_TYPE_MONTH
@@ -289,10 +292,51 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
     override fun onButtonPrompt(
         session: GeckoSession,
         title: String?,
-        msg: String?,
-        btnMsg: Array<out String>?,
+        message: String?,
+        buttonTitles: Array<out String?>?,
         callback: ButtonCallback
-    ) = Unit
+    ) {
+        val hasShownManyDialogs = callback.hasCheckbox()
+        val positiveButtonTitle = buttonTitles?.get(BUTTON_TYPE_POSITIVE) ?: ""
+        val negativeButtonTitle = buttonTitles?.get(BUTTON_TYPE_NEGATIVE) ?: ""
+        val neutralButtonTitle = buttonTitles?.get(BUTTON_TYPE_NEUTRAL) ?: ""
+
+        val onConfirmPositiveButton: (Boolean) -> Unit = { showMoreDialogs ->
+            callback.checkboxValue = showMoreDialogs
+            callback.confirm(BUTTON_TYPE_POSITIVE)
+        }
+
+        val onConfirmNegativeButton: (Boolean) -> Unit = { showMoreDialogs ->
+            callback.checkboxValue = showMoreDialogs
+            callback.confirm(BUTTON_TYPE_NEGATIVE)
+        }
+
+        val onConfirmNeutralButton: (Boolean) -> Unit = { showMoreDialogs ->
+            callback.checkboxValue = showMoreDialogs
+            callback.confirm(BUTTON_TYPE_NEUTRAL)
+        }
+
+        val onDismiss: () -> Unit = {
+            callback.dismiss()
+        }
+
+        geckoEngineSession.notifyObservers {
+            onPromptRequest(
+                PromptRequest.Confirm(
+                    title ?: "",
+                    message ?: "",
+                    hasShownManyDialogs,
+                    positiveButtonTitle,
+                    negativeButtonTitle,
+                    neutralButtonTitle,
+                    onConfirmPositiveButton,
+                    onConfirmNegativeButton,
+                    onConfirmNeutralButton,
+                    onDismiss
+                )
+            )
+        }
+    }
 
     private fun GeckoChoice.toChoice(): Choice {
         val choiceChildren = items?.map { it.toChoice() }?.toTypedArray()

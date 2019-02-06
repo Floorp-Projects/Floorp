@@ -122,5 +122,35 @@ class PromptRequestTest {
         assertEquals(popupRequest.targetUri, "http://mozilla.slack.com/")
         popupRequest.onAllow()
         popupRequest.onDeny()
+
+        val onConfirmPositiveButton: (Boolean) -> Unit = {
+        }
+
+        val onConfirmNegativeButton: (Boolean) -> Unit = {
+        }
+
+        val onConfirmNeutralButton: (Boolean) -> Unit = {
+        }
+
+        val confirmRequest = PromptRequest.Confirm(
+            "title",
+            "message",
+            false,
+            "positive",
+            "negative",
+            "neutral",
+            onConfirmPositiveButton,
+            onConfirmNegativeButton,
+            onConfirmNeutralButton
+        ) {}
+
+        assertEquals(confirmRequest.title, "title")
+        assertEquals(confirmRequest.message, "message")
+        assertEquals(confirmRequest.positiveButtonTitle, "positive")
+        assertEquals(confirmRequest.negativeButtonTitle, "negative")
+        assertEquals(confirmRequest.neutralButtonTitle, "neutral")
+        confirmRequest.onConfirmPositiveButton(true)
+        confirmRequest.onConfirmNegativeButton(true)
+        confirmRequest.onConfirmNeutralButton(true)
     }
 }

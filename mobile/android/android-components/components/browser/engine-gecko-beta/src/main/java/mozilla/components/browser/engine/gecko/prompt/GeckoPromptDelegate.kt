@@ -289,10 +289,51 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
     override fun onButtonPrompt(
         session: GeckoSession,
         title: String?,
-        msg: String?,
-        btnMsg: Array<out String>?,
+        message: String?,
+        buttonTitles: Array<out String?>?,
         callback: ButtonCallback
-    ) = Unit
+    ) {
+        val hasShownManyDialogs = callback.hasCheckbox()
+        val positiveButtonTitle = buttonTitles?.get(GeckoSession.PromptDelegate.BUTTON_TYPE_POSITIVE) ?: ""
+        val negativeButtonTitle = buttonTitles?.get(GeckoSession.PromptDelegate.BUTTON_TYPE_NEGATIVE) ?: ""
+        val neutralButtonTitle = buttonTitles?.get(GeckoSession.PromptDelegate.BUTTON_TYPE_NEUTRAL) ?: ""
+
+        val onConfirmPositiveButton: (Boolean) -> Unit = { showMoreDialogs ->
+            callback.checkboxValue = showMoreDialogs
+            callback.confirm(GeckoSession.PromptDelegate.BUTTON_TYPE_POSITIVE)
+        }
+
+        val onConfirmNegativeButton: (Boolean) -> Unit = { showMoreDialogs ->
+            callback.checkboxValue = showMoreDialogs
+            callback.confirm(GeckoSession.PromptDelegate.BUTTON_TYPE_NEGATIVE)
+        }
+
+        val onConfirmNeutralButton: (Boolean) -> Unit = { showMoreDialogs ->
+            callback.checkboxValue = showMoreDialogs
+            callback.confirm(GeckoSession.PromptDelegate.BUTTON_TYPE_NEUTRAL)
+        }
+
+        val onDismiss: () -> Unit = {
+            callback.dismiss()
+        }
+
+        geckoEngineSession.notifyObservers {
+            onPromptRequest(
+                PromptRequest.Confirm(
+                    title ?: "",
+                    message ?: "",
+                    hasShownManyDialogs,
+                    positiveButtonTitle,
+                    negativeButtonTitle,
+                    neutralButtonTitle,
+                    onConfirmPositiveButton,
+                    onConfirmNegativeButton,
+                    onConfirmNeutralButton,
+                    onDismiss
+                )
+            )
+        }
+    }
 
     private fun GeckoChoice.toChoice(): Choice {
         val choiceChildren = items?.map { it.toChoice() }?.toTypedArray()
