@@ -16,9 +16,8 @@ use gpu_cache::{GpuCache, GpuCacheHandle, ToGpuBlocks};
 use gpu_types::{BoxShadowStretchMode};
 use image::{self, Repetition};
 use intern;
-use internal_types::FastHashSet;
 use prim_store::{ClipData, ImageMaskData, SpaceMapper, VisibleMaskImageTile};
-use prim_store::{PointKey, PrimitiveInstance, SizeKey, RectangleKey};
+use prim_store::{PointKey, SizeKey, RectangleKey};
 use render_task::to_cache_size;
 use resource_cache::{ImageRequest, ResourceCache};
 use std::{cmp, u32};
@@ -436,7 +435,6 @@ pub struct ClipStore {
     pub clip_chain_nodes: Vec<ClipChainNode>,
     clip_node_instances: Vec<ClipNodeInstance>,
     clip_node_info: Vec<ClipNodeInfo>,
-    clip_node_collectors: Vec<ClipNodeCollector>,
 }
 
 // A clip chain instance is what gets built for a given clip
@@ -471,13 +469,58 @@ impl ClipChainInstance {
     }
 }
 
+/// Maintains a stack of clip chain ids that are currently active,
+/// when a clip exists on a picture that has no surface, and is passed
+/// on down to the child primitive(s).
+pub struct ClipChainStack {
+    // TODO(gw): Consider using SmallVec, or recycling the clip stacks here.
+    /// A stack of clip chain lists. Each time a new surface is pushed,
+    /// a new entry is added to the main stack. Each time a new picture
+    /// without surface is pushed, it adds the picture clip chain to the
+    /// current stack list.
+    pub stack: Vec<Vec<ClipChainId>>,
+}
+
+impl ClipChainStack {
+    pub fn new() -> Self {
+        ClipChainStack {
+            stack: vec![vec![]],
+        }
+    }
+
+    /// Push a clip chain root onto the currently active list.
+    pub fn push_clip(&mut self, clip_chain_id: ClipChainId) {
+        self.stack.last_mut().unwrap().push(clip_chain_id);
+    }
+
+    /// Pop a clip chain root from the currently active list.
+    pub fn pop_clip(&mut self) {
+        self.stack.last_mut().unwrap().pop().unwrap();
+    }
+
+    /// When a surface is created, it takes all clips and establishes a new
+    /// stack of clips to be propagated.
+    pub fn push_surface(&mut self) {
+        self.stack.push(Vec::new());
+    }
+
+    /// Pop a surface from the clip chain stack
+    pub fn pop_surface(&mut self) {
+        self.stack.pop().unwrap();
+    }
+
+    /// Get the list of currently active clip chains
+    pub fn current_clips(&self) -> &[ClipChainId] {
+        self.stack.last().unwrap()
+    }
+}
+
 impl ClipStore {
     pub fn new() -> Self {
         ClipStore {
             clip_chain_nodes: Vec::new(),
             clip_node_instances: Vec::new(),
             clip_node_info: Vec::new(),
-            clip_node_collectors: Vec::new(),
         }
     }
 
@@ -510,29 +553,11 @@ impl ClipStore {
         &self.clip_node_instances[(node_range.first + index) as usize]
     }
 
-    /// Notify the clip store that a new raster root has been created.
-    ///
-    /// This means any clips from an earlier root should be collected rather than
-    /// applied on the primitive itself.
-    ///
-    /// This is sound because raster roots are necessarily reference frames,
-    /// which establish fixed-positioning containing blocks in CSS.
-    pub fn push_raster_root(&mut self, spatial_node_index: SpatialNodeIndex) {
-        self.clip_node_collectors.push(
-            ClipNodeCollector::new(spatial_node_index),
-        );
-    }
-
-    /// Mark the end of a raster root.
-    pub fn pop_raster_root(&mut self) -> ClipNodeCollector {
-        self.clip_node_collectors.pop().unwrap()
-    }
-
     // The main interface other code uses. Given a local primitive, positioning
     // information, and a clip chain id, build an optimized clip chain instance.
     pub fn build_clip_chain_instance(
         &mut self,
-        prim_instance: &PrimitiveInstance,
+        clip_chains: &[ClipChainId],
         local_prim_rect: LayoutRect,
         local_prim_clip_rect: LayoutRect,
         spatial_node_index: SpatialNodeIndex,
@@ -543,7 +568,6 @@ impl ClipStore {
         resource_cache: &mut ResourceCache,
         device_pixel_scale: DevicePixelScale,
         world_rect: &WorldRect,
-        clip_node_collector: Option<&ClipNodeCollector>,
         clip_data_store: &mut ClipDataStore,
     ) -> Option<ClipChainInstance> {
         let mut local_clip_rect = local_prim_clip_rect;
@@ -552,50 +576,13 @@ impl ClipStore {
         // smallest possible local/device clip area.
 
         self.clip_node_info.clear();
-        let mut current_clip_chain_id = prim_instance.clip_chain_id;
 
-        // for each clip chain node
-        while current_clip_chain_id != ClipChainId::NONE {
-            let clip_chain_node = &self.clip_chain_nodes[current_clip_chain_id.0 as usize];
+        for clip_chain_root in clip_chains {
+            let mut current_clip_chain_id = *clip_chain_root;
 
-            // Check if any clip node index should actually be
-            // handled during compositing of a rasterization root.
-            match self.clip_node_collectors.iter_mut().find(|c| {
-                clip_chain_node.spatial_node_index < c.spatial_node_index
-            }) {
-                Some(collector) => {
-                    collector.insert(current_clip_chain_id);
-                }
-                None => {
-                    if prim_instance.is_chased() {
-                        println!("\t\tclip node (from chain) {:?} at {:?}",
-                            clip_chain_node.spatial_node_index, clip_chain_node.local_pos);
-                    }
-                    if !add_clip_node_to_current_chain(
-                        clip_chain_node,
-                        spatial_node_index,
-                        &mut local_clip_rect,
-                        &mut self.clip_node_info,
-                        clip_data_store,
-                        clip_scroll_tree,
-                    ) {
-                        return None;
-                    }
-                }
-            }
-
-            current_clip_chain_id = clip_chain_node.parent_clip_chain_id;
-        }
-
-        // Add any collected clips from primitives that should be
-        // handled as part of this rasterization root.
-        if let Some(clip_node_collector) = clip_node_collector {
-            for clip_chain_id in &clip_node_collector.clips {
-                let clip_chain_node = &self.clip_chain_nodes[clip_chain_id.0 as usize];
-                if prim_instance.is_chased() {
-                    println!("\t\tclip node (from collector) {:?} at {:?}",
-                        clip_chain_node.spatial_node_index, clip_chain_node.local_pos);
-                }
+            // for each clip chain node
+            while current_clip_chain_id != ClipChainId::NONE {
+                let clip_chain_node = &self.clip_chain_nodes[current_clip_chain_id.0 as usize];
 
                 if !add_clip_node_to_current_chain(
                     clip_chain_node,
@@ -607,6 +594,8 @@ impl ClipStore {
                 ) {
                     return None;
                 }
+
+                current_clip_chain_id = clip_chain_node.parent_clip_chain_id;
             }
         }
 
@@ -671,10 +660,6 @@ impl ClipStore {
                         gpu_cache,
                         resource_cache,
                     );
-
-                    if prim_instance.is_chased() {
-                        println!("\t\tpartial {:?}", node.item);
-                    }
 
                     // As a special case, a partial accept of a clip rect that is
                     // in the same coordinate system as the primitive doesn't need
@@ -1284,32 +1269,6 @@ pub fn project_inner_rect(
         WorldPoint::new(xs[1], ys[1]),
         WorldSize::new(xs[2] - xs[1], ys[2] - ys[1]),
     ))
-}
-
-// Collects a list of unique clips to be applied to a rasterization
-// root at the end of primitive preparation.
-#[derive(Debug, MallocSizeOf)]
-pub struct ClipNodeCollector {
-    spatial_node_index: SpatialNodeIndex,
-    clips: FastHashSet<ClipChainId>,
-}
-
-impl ClipNodeCollector {
-    pub fn new(
-        spatial_node_index: SpatialNodeIndex,
-    ) -> Self {
-        ClipNodeCollector {
-            spatial_node_index,
-            clips: FastHashSet::default(),
-        }
-    }
-
-    pub fn insert(
-        &mut self,
-        clip_chain_id: ClipChainId,
-    ) {
-        self.clips.insert(clip_chain_id);
-    }
 }
 
 // Add a clip node into the list of clips to be processed
