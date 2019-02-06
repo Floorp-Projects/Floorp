@@ -3732,17 +3732,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     END_CASE(JSOP_NEWARRAY)
 
     CASE(JSOP_NEWARRAY_COPYONWRITE) {
-      ReservedRooted<JSObject*> baseobj(
-          &rootObject0,
-          ObjectGroup::getOrFixupCopyOnWriteObject(cx, script, REGS.pc));
-      if (!baseobj) {
-        goto error;
-      }
-
-      ReservedRooted<JSObject*> obj(
-          &rootObject1, NewDenseCopyOnWriteArray(
-                            cx, ((RootedObject&)(baseobj)).as<ArrayObject>(),
-                            gc::DefaultHeap));
+      JSObject* obj = NewArrayCopyOnWriteOperation(cx, script, REGS.pc);
       if (!obj) {
         goto error;
       }
@@ -5255,6 +5245,20 @@ JSObject* js::NewArrayOperationWithTemplate(JSContext* cx,
              templateObject->as<ArrayObject>().lastProperty());
   obj->setGroup(templateObject->group());
   return obj;
+}
+
+ArrayObject* js::NewArrayCopyOnWriteOperation(JSContext* cx,
+                                              HandleScript script,
+                                              jsbytecode* pc) {
+  MOZ_ASSERT(*pc == JSOP_NEWARRAY_COPYONWRITE);
+
+  RootedArrayObject baseobj(
+      cx, ObjectGroup::getOrFixupCopyOnWriteObject(cx, script, pc));
+  if (!baseobj) {
+    return nullptr;
+  }
+
+  return NewDenseCopyOnWriteArray(cx, baseobj, gc::DefaultHeap);
 }
 
 void js::ReportRuntimeLexicalError(JSContext* cx, unsigned errorNumber,
