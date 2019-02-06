@@ -78,7 +78,7 @@ class Output(object):
 
                 for measurement_name, replicates in test.measurements.iteritems():
                     new_subtest = {}
-                    new_subtest['name'] = test.name + "-" + measurement_name
+                    new_subtest['name'] = measurement_name
                     new_subtest['replicates'] = replicates
                     new_subtest['lowerIsBetter'] = test.subtest_lower_is_better
                     new_subtest['alertThreshold'] = float(test.alert_threshold)
