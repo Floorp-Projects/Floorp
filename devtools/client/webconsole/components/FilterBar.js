@@ -4,7 +4,6 @@
 "use strict";
 
 const { Component } = require("devtools/client/shared/vendor/react");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { getAllFilters } = require("devtools/client/webconsole/selectors/filters");
@@ -20,6 +19,8 @@ const {
 
 const FilterButton = require("devtools/client/webconsole/components/FilterButton");
 const FilterCheckbox = require("devtools/client/webconsole/components/FilterCheckbox");
+
+loader.lazyRequireGetter(this, "PropTypes", "devtools/client/shared/vendor/react-prop-types");
 
 class FilterBar extends Component {
   static get propTypes() {
