@@ -422,12 +422,29 @@ bool MaybeCrossOriginObject<Base>::defineProperty(
 template <typename Base>
 JSObject* MaybeCrossOriginObject<Base>::enumerate(
     JSContext* cx, JS::Handle<JSObject*> proxy) const {
-  // We want to avoid any possible magic here and just do the BaseProxyHandler
-  // thing of using our property keys to enumerate.
+  // We need to be a little careful here.  We want to get our list of property
+  // keys in whatever Realm we're in right now (which might be different from
+  // the Realm of "proxy"), and invoke our ownPropertyKeys which will return the
+  // right list.  In particular we do NOT want to invoke
+  // ForwardingProxyHandler::enumerate here, because that will get the keys from
+  // our target, which may produce the wrong list.
   //
-  // Note that we do not need to enter the Realm of "proxy" here, nor do we want
-  // to: if this is a cross-origin access we want to handle it appropriately.
-  return js::BaseProxyHandler::enumerate(cx, proxy);
+  // Once we have the list, we want to create the iterator object targeting the
+  // representation of "proxy" in our current Realm, since that's what the
+  // caller is working with.
+  //
+  // We could handle parts of this this by overriding enumerate() in
+  // CrossOriginObjectWrapper, but we'd still need special-case code here, so
+  // let's just do all the work here.
+  //
+  // BaseProxyHandler::enumerate does the right thing, as long as we make sure
+  // we pass the right object to it.
+  JS::Rooted<JSObject*> self(cx, proxy);
+  if (!MaybeWrapObject(cx, &self)) {
+    return nullptr;
+  }
+
+  return js::BaseProxyHandler::enumerate(cx, self);
 }
 
 // Force instantiations of the out-of-line template methods we need.
