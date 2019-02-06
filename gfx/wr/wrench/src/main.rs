@@ -585,6 +585,12 @@ fn render<'a>(
                     }
                     winit::WindowEvent::CursorMoved { position: LogicalPosition { x, y }, .. } => {
                         cursor_position = WorldPoint::new(x as f32, y as f32);
+                        wrench.renderer.set_cursor_position(
+                            DeviceIntPoint::new(
+                                (cursor_position.x * wrench.device_pixel_ratio).round() as i32,
+                                (cursor_position.y * wrench.device_pixel_ratio).round() as i32,
+                            ),
+                        );
                         do_render = true;
                     }
                     winit::WindowEvent::KeyboardInput {
@@ -712,6 +718,11 @@ fn render<'a>(
                                 println!("  • {:?}", item);
                             }
                             println!("");
+                        }
+                        VirtualKeyCode::Z => {
+                            debug_flags.toggle(DebugFlags::ZOOM_DBG);
+                            wrench.api.send_debug_cmd(DebugCommand::SetFlags(debug_flags));
+                            do_render = true;
                         }
                         _ => {}
                     }
