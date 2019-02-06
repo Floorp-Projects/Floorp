@@ -385,8 +385,13 @@ span.img.marko {
   mask-size: 100%;
 }
 
-.img.toggle-panes {
-  mask: url("resource://devtools/client/debugger/new/images/toggle-panes.svg") no-repeat;
+.img.pane-collapse {
+  mask: url("resource://devtools/client/debugger/new/images/pane-collapse.svg") no-repeat;
+  mask-size: 100%;
+}
+
+.img.pane-expand {
+  mask: url("resource://devtools/client/debugger/new/images/pane-expand.svg") no-repeat;
   mask-size: 100%;
 }
 
