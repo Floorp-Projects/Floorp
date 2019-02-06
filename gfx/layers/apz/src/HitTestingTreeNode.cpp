@@ -29,7 +29,6 @@ HitTestingTreeNode::HitTestingTreeNode(AsyncPanZoomController* aApzc,
       mIsPrimaryApzcHolder(aIsPrimaryHolder),
       mLockCount(0),
       mLayersId(aLayersId),
-      mScrollbarAnimationId(0),
       mFixedPosTarget(ScrollableLayerGuid::NULL_SCROLL_ID),
       mIsBackfaceHidden(false),
       mOverride(EventRegionsOverride::NoOverride) {
@@ -91,8 +90,9 @@ void HitTestingTreeNode::SetLastChild(HitTestingTreeNode* aChild) {
   }
 }
 
-void HitTestingTreeNode::SetScrollbarData(const uint64_t& aScrollbarAnimationId,
-                                          const ScrollbarData& aScrollbarData) {
+void HitTestingTreeNode::SetScrollbarData(
+    const Maybe<uint64_t>& aScrollbarAnimationId,
+    const ScrollbarData& aScrollbarData) {
   mScrollbarAnimationId = aScrollbarAnimationId;
   mScrollbarData = aScrollbarData;
 }
@@ -123,7 +123,7 @@ ScrollableLayerGuid::ViewID HitTestingTreeNode::GetScrollTargetId() const {
   return mScrollbarData.mTargetViewId;
 }
 
-const uint64_t& HitTestingTreeNode::GetScrollbarAnimationId() const {
+Maybe<uint64_t> HitTestingTreeNode::GetScrollbarAnimationId() const {
   return mScrollbarAnimationId;
 }
 

@@ -412,7 +412,7 @@ APZCTreeManager::UpdateHitTestingTreeImpl(LayersId aRootLayerTreeId,
           AsyncPanZoomController* apzc = node->GetApzc();
           aLayerMetrics.SetApzc(apzc);
 
-          // GetScrollbarAnimationId is only non-zero when webrender is enabled,
+          // GetScrollbarAnimationId is only set when webrender is enabled,
           // which limits the extra thumb mapping work to the webrender-enabled
           // case where it is needed.
           // Note also that when webrender is enabled, a "valid" animation id
@@ -526,7 +526,7 @@ APZCTreeManager::UpdateHitTestingTreeImpl(LayersId aRootLayerTreeId,
       }
       HitTestingTreeNode* target = it->second;
       mScrollThumbInfo.emplace_back(
-          thumb->GetScrollbarAnimationId(), thumb->GetTransform(),
+          *(thumb->GetScrollbarAnimationId()), thumb->GetTransform(),
           thumb->GetScrollbarData(), targetGuid, target->GetTransform(),
           target->IsAncestorOf(thumb));
     }

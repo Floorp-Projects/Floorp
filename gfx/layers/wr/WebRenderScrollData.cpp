@@ -21,7 +21,6 @@ WebRenderLayerScrollData::WebRenderLayerScrollData()
     : mDescendantCount(-1),
       mTransformIsPerspective(false),
       mEventRegionsOverride(EventRegionsOverride::NoOverride),
-      mScrollbarAnimationId(0),
       mFixedPosScrollContainerId(ScrollableLayerGuid::NULL_SCROLL_ID) {}
 
 WebRenderLayerScrollData::~WebRenderLayerScrollData() {}
@@ -130,7 +129,8 @@ void WebRenderLayerScrollData::Dump(const WebRenderScrollData& aOwner) const {
     printf_stderr("  ref layers id: 0x%" PRIx64 "\n", uint64_t(*mReferentId));
   }
   printf_stderr("  scrollbar type: %d animation: %" PRIx64 "\n",
-                (int)mScrollbarData.mScrollbarLayerType, mScrollbarAnimationId);
+                (int)mScrollbarData.mScrollbarLayerType,
+                mScrollbarAnimationId.valueOr(0));
   printf_stderr("  fixed pos container: %" PRIu64 "\n",
                 mFixedPosScrollContainerId);
 }
