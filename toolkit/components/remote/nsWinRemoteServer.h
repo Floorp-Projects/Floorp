@@ -10,6 +10,8 @@
 
 #include "nsRemoteServer.h"
 
+#include <windows.h>
+
 class nsWinRemoteServer final : public nsRemoteServer {
  public:
   nsWinRemoteServer() = default;
@@ -17,6 +19,9 @@ class nsWinRemoteServer final : public nsRemoteServer {
 
   nsresult Startup(const char* aAppName, const char* aProfileName) override;
   void Shutdown() override;
+
+ private:
+  HWND mHandle;
 };
 
 #endif  // __nsWinRemoteService_h__
