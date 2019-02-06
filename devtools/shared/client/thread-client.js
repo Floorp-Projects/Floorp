@@ -53,7 +53,6 @@ ThreadClient.prototype = {
 
   _pauseOnExceptions: false,
   _ignoreCaughtExceptions: false,
-  _pauseOnDOMEvents: null,
 
   _actor: null,
   get actor() {
@@ -103,9 +102,6 @@ ThreadClient.prototype = {
       }
       if (this._ignoreCaughtExceptions) {
         packet.ignoreCaughtExceptions = this._ignoreCaughtExceptions;
-      }
-      if (this._pauseOnDOMEvents) {
-        packet.pauseOnDOMEvents = this._pauseOnDOMEvents;
       }
       return packet;
     },
@@ -305,37 +301,6 @@ ThreadClient.prototype = {
 
     onResponse();
     return promise.resolve();
-  },
-
-  /**
-   * Enable pausing when the specified DOM events are triggered. Disabling
-   * pausing on an event can be realized by calling this method with the updated
-   * array of events that doesn't contain it.
-   *
-   * @param array|string events
-   *        An array of strings, representing the DOM event types to pause on,
-   *        or "*" to pause on all DOM events. Pass an empty array to
-   *        completely disable pausing on DOM events.
-   * @param function onResponse
-   *        Called with the response packet in a future turn of the event loop.
-   */
-  pauseOnDOMEvents: function(events, onResponse = noop) {
-    this._pauseOnDOMEvents = events;
-    // If the debuggee is paused, the value of the array will be communicated in
-    // the next resumption. Otherwise we have to force a pause in order to send
-    // the array.
-    if (this.paused) {
-      DevToolsUtils.executeSoon(() => onResponse({}));
-      return {};
-    }
-    return this.interrupt(response => {
-      // Can't continue if pausing failed.
-      if (response.error) {
-        onResponse(response);
-        return response;
-      }
-      return this.resume(onResponse);
-    });
   },
 
   /**
