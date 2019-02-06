@@ -1124,7 +1124,8 @@ class AsyncPanZoomController {
    * any transform due to axis over-scroll.
    */
   AsyncTransformComponentMatrix GetCurrentAsyncTransformWithOverscroll(
-      AsyncTransformConsumer aMode) const;
+      AsyncTransformConsumer aMode,
+      AsyncTransformComponents aComponents = ScrollAndZoom) const;
 
   /**
    * Returns the "zoom" bits of the transform. This includes both the rasterized
