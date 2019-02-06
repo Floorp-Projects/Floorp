@@ -2081,7 +2081,6 @@ menuseparator {
   left: 0;
   right: 0;
   list-style-type: none;
-  font-family: var(--monospace-font-family);
   overflow: auto;
 }
 
@@ -3523,11 +3522,6 @@ html .breakpoints-list .breakpoint.paused {
 
 .breakpoints-list .breakpoint:hover {
   background-color: var(--search-overlays-semitransparent);
-}
-
-.breakpoints-list .breakpoint .breakpoint-line,
-.breakpoints-list .breakpoint-label {
-  font-family: var(--monospace-font-family);
 }
 
 .breakpoints-list .breakpoint .breakpoint-line {
