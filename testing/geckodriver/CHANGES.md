@@ -37,8 +37,15 @@ All notable changes to this program is documented in this file.
 
 ### Removed
 
-- Turned off builds for arm7hf, which will no longer be released but
-  can still be built from the source.
+- ARMv7 HF builds have been discontinued
+
+  We [announced](https://lists.mozilla.org/pipermail/tools-marionette/2018-September/000035.html)
+  back in September 2018 that we would stop building for ARM,
+  but builds can be self-serviced by building from source.
+
+  To cross-compile from another host system, you can use this command:
+
+  	% cargo build --target armv7-unknown-linux-gnueabihf
 
 ### Changed
 
