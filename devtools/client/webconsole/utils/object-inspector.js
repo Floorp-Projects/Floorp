@@ -4,13 +4,13 @@
 
 "use strict";
 
-const { createFactory } = require("devtools/client/shared/vendor/react");
+const { createFactory, createElement } = require("devtools/client/shared/vendor/react");
 
 const reps = require("devtools/client/shared/components/reps/reps");
 const { REPS, MODE, objectInspector } = reps;
 const ObjectInspector = createFactory(objectInspector.ObjectInspector);
 const { Grip } = REPS;
-const SmartTrace = createFactory(require("devtools/client/shared/components/SmartTrace"));
+loader.lazyRequireGetter(this, "SmartTrace", "devtools/client/shared/components/SmartTrace");
 
 /**
  * Create and return an ObjectInspector for the given grip.
@@ -53,7 +53,7 @@ function getObjectInspector(grip, serviceContainer, override = {}) {
     onViewSourceInDebugger: serviceContainer.onViewSourceInDebugger,
     recordTelemetryEvent: serviceContainer.recordTelemetryEvent,
     openLink: serviceContainer.openLink,
-    renderStacktrace: stacktrace => SmartTrace({
+    renderStacktrace: stacktrace => createElement(SmartTrace, {
       stacktrace,
       onViewSourceInDebugger: serviceContainer
         ? serviceContainer.onViewSourceInDebugger || serviceContainer.onViewSource

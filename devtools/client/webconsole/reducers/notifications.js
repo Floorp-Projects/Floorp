@@ -10,10 +10,8 @@ const {
   REMOVE_NOTIFICATION,
 } = require("devtools/client/webconsole/constants");
 
-const {
-  appendNotification,
-  removeNotificationWithValue,
-} = require("devtools/client/shared/components/NotificationBox");
+loader.lazyRequireGetter(this, "appendNotification", "devtools/client/shared/components/NotificationBox", true);
+loader.lazyRequireGetter(this, "removeNotificationWithValue", "devtools/client/shared/components/NotificationBox", true);
 
 /**
  * Create default initial state for this reducer. The state is composed

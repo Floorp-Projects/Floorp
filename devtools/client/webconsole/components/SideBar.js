@@ -3,17 +3,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Component, createFactory } = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const { Component, createElement } = require("devtools/client/shared/vendor/react");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
-const { getObjectInspector } = require("devtools/client/webconsole/utils/object-inspector");
-const actions = require("devtools/client/webconsole/actions/index");
-const SplitBox = createFactory(require("devtools/client/shared/components/splitter/SplitBox"));
-const { l10n } = require("devtools/client/webconsole/utils/messages");
 
-const reps = require("devtools/client/shared/components/reps/reps");
-const { MODE } = reps;
+loader.lazyRequireGetter(this, "dom", "devtools/client/shared/vendor/react-dom-factories");
+loader.lazyRequireGetter(this, "getObjectInspector", "devtools/client/webconsole/utils/object-inspector", true);
+loader.lazyRequireGetter(this, "actions", "devtools/client/webconsole/actions/index");
+loader.lazyRequireGetter(this, "PropTypes", "devtools/client/shared/vendor/react-prop-types");
+loader.lazyRequireGetter(this, "SplitBox", "devtools/client/shared/components/splitter/SplitBox");
+loader.lazyRequireGetter(this, "reps", "devtools/client/shared/components/reps/reps");
+loader.lazyRequireGetter(this, "l10n", "devtools/client/webconsole/utils/messages", true);
 
 class SideBar extends Component {
   static get propTypes() {
@@ -56,7 +55,7 @@ class SideBar extends Component {
 
     const objectInspector = getObjectInspector(grip, serviceContainer, {
       autoExpandDepth: 1,
-      mode: MODE.SHORT,
+      mode: reps.MODE.SHORT,
       autoFocusRoot: true,
     });
 
@@ -77,7 +76,7 @@ class SideBar extends Component {
       }, objectInspector)
     );
 
-    return SplitBox({
+    return createElement(SplitBox, {
       className: "sidebar",
       endPanel,
       endPanelControl: true,
