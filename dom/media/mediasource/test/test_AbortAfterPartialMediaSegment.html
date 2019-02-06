@@ -32,7 +32,7 @@ runWithMSE(async (ms, v) => {
 
   // start seeking.
   v.currentTime = 11;
-  v.addEventListener('seeked', () => {
+  v.addEventListener("seeked", () => {
     info("- seek completed -");
     SimpleTest.finish();
   });
@@ -43,7 +43,7 @@ runWithMSE(async (ms, v) => {
   sb.appendBuffer(new Uint8Array(arrayBuffer, 0, 3150));
   info("- wait for updateend -");
   await once(sb, "updateend");
-  info("- append media segment 10-15s -")
+  info("- append media segment 10-15s -");
   sb.appendBuffer(new Uint8Array(arrayBuffer, 159968, 72931));
 
   // We now wait for seek to complete
