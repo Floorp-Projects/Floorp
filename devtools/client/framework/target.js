@@ -87,10 +87,6 @@ exports.TargetFactory = {
     return client.mainRoot.getTab({ tab });
   },
 
-  forWorker: function(workerTargetFront) {
-    return workerTargetFront;
-  },
-
   /**
    * Creating a target for a tab that is being closed is a problem because it
    * allows a leak as a result of coming after the close event which normally
