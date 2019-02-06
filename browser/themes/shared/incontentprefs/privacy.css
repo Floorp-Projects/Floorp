@@ -34,6 +34,21 @@
   list-style-image: url("chrome://browser/skin/controlcenter/3rdpartycookies-disabled.svg");
 }
 
+#contentBlockingCryptominersCheckbox > .checkbox-label-box {
+  list-style-image: url("chrome://browser/skin/controlcenter/cryptominers.svg");
+}
+
+#contentBlockingCryptominersCheckbox[checked] > .checkbox-label-box {
+  list-style-image: url("chrome://browser/skin/controlcenter/cryptominers-disabled.svg");
+}
+
+#contentBlockingFingerprintersCheckbox > .checkbox-label-box {
+  list-style-image: url("chrome://browser/skin/controlcenter/fingerprinters.svg");
+}
+
+#contentBlockingFingerprintersCheckbox[checked] > .checkbox-label-box {
+  list-style-image: url("chrome://browser/skin/controlcenter/fingerprinters-disabled.svg");
+}
 
 .content-blocking-icon,
 .permission-icon {

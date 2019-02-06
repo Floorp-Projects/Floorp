@@ -41,9 +41,11 @@ XPCOMUtils.defineLazyGetter(this, "AlertsServiceDND", function() {
 });
 
 Preferences.addAll([
-  // Tracking Protection
+  // Content blocking / Tracking Protection
   { id: "privacy.trackingprotection.enabled", type: "bool" },
   { id: "privacy.trackingprotection.pbmode.enabled", type: "bool" },
+  { id: "privacy.trackingprotection.fingerprinting.enabled", type: "bool" },
+  { id: "privacy.trackingprotection.cryptomining.enabled", type: "bool" },
 
   // Button prefs
   { id: "pref.privacy.disable_button.cookie_exceptions", type: "bool" },
@@ -447,6 +449,14 @@ var gPrivacyPane = {
       gPrivacyPane.readBlockCookies.bind(gPrivacyPane));
     Preferences.get("browser.contentblocking.category").on("change",
       gPrivacyPane.highlightCBCategory);
+
+    let cryptoMinersOption = document.getElementById("contentBlockingCryptominersOption");
+    let fingerprintersOption = document.getElementById("contentBlockingFingerprintersOption");
+
+    cryptoMinersOption.hidden =
+      !Services.prefs.getBoolPref("browser.contentblocking.cryptomining.preferences.ui.enabled");
+    fingerprintersOption.hidden =
+      !Services.prefs.getBoolPref("browser.contentblocking.fingerprinting.preferences.ui.enabled");
 
     this.highlightCBCategory();
     this.readBlockCookies();
