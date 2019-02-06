@@ -54,17 +54,15 @@ class ServiceWorkerManagerParent final : public PServiceWorkerManagerParent {
 
   virtual mozilla::ipc::IPCResult RecvShutdown() override;
 
-  virtual PServiceWorkerUpdaterParent* AllocPServiceWorkerUpdaterParent(
-      const OriginAttributes& aOriginAttributes,
-      const nsCString& aScope) override;
+  PServiceWorkerUpdaterParent* AllocPServiceWorkerUpdaterParent(
+      const OriginAttributes& aOriginAttributes, const nsCString& aScope);
 
   virtual mozilla::ipc::IPCResult RecvPServiceWorkerUpdaterConstructor(
       PServiceWorkerUpdaterParent* aActor,
       const OriginAttributes& aOriginAttributes,
       const nsCString& aScope) override;
 
-  virtual bool DeallocPServiceWorkerUpdaterParent(
-      PServiceWorkerUpdaterParent* aActor) override;
+  bool DeallocPServiceWorkerUpdaterParent(PServiceWorkerUpdaterParent* aActor);
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 

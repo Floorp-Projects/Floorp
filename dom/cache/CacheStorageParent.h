@@ -30,10 +30,9 @@ class CacheStorageParent final : public PCacheStorageParent,
   // PCacheStorageParent methods
   virtual void ActorDestroy(ActorDestroyReason aReason) override;
 
-  virtual PCacheOpParent* AllocPCacheOpParent(
-      const CacheOpArgs& aOpArgs) override;
+  PCacheOpParent* AllocPCacheOpParent(const CacheOpArgs& aOpArgs);
 
-  virtual bool DeallocPCacheOpParent(PCacheOpParent* aActor) override;
+  bool DeallocPCacheOpParent(PCacheOpParent* aActor);
 
   virtual mozilla::ipc::IPCResult RecvPCacheOpConstructor(
       PCacheOpParent* actor, const CacheOpArgs& aOpArgs) override;

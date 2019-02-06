@@ -51,11 +51,11 @@ class GMPChild : public PGMPChild {
   mozilla::ipc::IPCResult AnswerStartPlugin(const nsString& aAdapter) override;
   mozilla::ipc::IPCResult RecvPreloadLibs(const nsCString& aLibs) override;
 
-  PGMPTimerChild* AllocPGMPTimerChild() override;
-  bool DeallocPGMPTimerChild(PGMPTimerChild* aActor) override;
+  PGMPTimerChild* AllocPGMPTimerChild();
+  bool DeallocPGMPTimerChild(PGMPTimerChild* aActor);
 
-  PGMPStorageChild* AllocPGMPStorageChild() override;
-  bool DeallocPGMPStorageChild(PGMPStorageChild* aActor) override;
+  PGMPStorageChild* AllocPGMPStorageChild();
+  bool DeallocPGMPStorageChild(PGMPStorageChild* aActor);
 
   void GMPContentChildActorDestroy(GMPContentChild* aGMPContentChild);
 

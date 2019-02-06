@@ -32,10 +32,10 @@ class SpeechSynthesisParent : public PSpeechSynthesisParent {
   PSpeechSynthesisRequestParent* AllocPSpeechSynthesisRequestParent(
       const nsString& aText, const nsString& aLang, const nsString& aUri,
       const float& aVolume, const float& aRate, const float& aPitch,
-      const bool& aIsChrome) override;
+      const bool& aIsChrome);
 
   bool DeallocPSpeechSynthesisRequestParent(
-      PSpeechSynthesisRequestParent* aActor) override;
+      PSpeechSynthesisRequestParent* aActor);
 
   mozilla::ipc::IPCResult RecvPSpeechSynthesisRequestConstructor(
       PSpeechSynthesisRequestParent* aActor, const nsString& aText,

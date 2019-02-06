@@ -407,16 +407,16 @@ class ContentParent final : public PContentParent,
   virtual mozilla::ipc::IPCResult RecvInitCrashReporter(
       Shmem&& aShmem, const NativeThreadId& aThreadId) override;
 
-  virtual PNeckoParent* AllocPNeckoParent() override;
+  PNeckoParent* AllocPNeckoParent();
 
   virtual mozilla::ipc::IPCResult RecvPNeckoConstructor(
       PNeckoParent* aActor) override {
     return PContentParent::RecvPNeckoConstructor(aActor);
   }
 
-  virtual PPrintingParent* AllocPPrintingParent() override;
+  PPrintingParent* AllocPPrintingParent();
 
-  virtual bool DeallocPPrintingParent(PPrintingParent* aActor) override;
+  bool DeallocPPrintingParent(PPrintingParent* aActor);
 
 #if defined(NS_PRINTING)
   /**
@@ -445,15 +445,14 @@ class ContentParent final : public PContentParent,
   virtual bool DeallocPParentToChildStreamParent(
       PParentToChildStreamParent* aActor) override;
 
-  virtual PHalParent* AllocPHalParent() override;
+  PHalParent* AllocPHalParent();
 
   virtual mozilla::ipc::IPCResult RecvPHalConstructor(
       PHalParent* aActor) override {
     return PContentParent::RecvPHalConstructor(aActor);
   }
 
-  virtual PHeapSnapshotTempFileHelperParent*
-  AllocPHeapSnapshotTempFileHelperParent() override;
+  PHeapSnapshotTempFileHelperParent* AllocPHeapSnapshotTempFileHelperParent();
 
   virtual PJavaScriptParent* AllocPJavaScriptParent() override;
 
@@ -462,8 +461,7 @@ class ContentParent final : public PContentParent,
     return PContentParent::RecvPJavaScriptConstructor(aActor);
   }
 
-  virtual PRemoteSpellcheckEngineParent* AllocPRemoteSpellcheckEngineParent()
-      override;
+  PRemoteSpellcheckEngineParent* AllocPRemoteSpellcheckEngineParent();
 
   virtual mozilla::ipc::IPCResult RecvRecordingDeviceEvents(
       const nsString& aRecordingStatus, const nsString& aPageURL,
@@ -482,34 +480,32 @@ class ContentParent final : public PContentParent,
 
   nsTArray<TabContext> GetManagedTabContext();
 
-  virtual POfflineCacheUpdateParent* AllocPOfflineCacheUpdateParent(
+  POfflineCacheUpdateParent* AllocPOfflineCacheUpdateParent(
       const URIParams& aManifestURI, const URIParams& aDocumentURI,
-      const PrincipalInfo& aLoadingPrincipalInfo,
-      const bool& aStickDocument) override;
+      const PrincipalInfo& aLoadingPrincipalInfo, const bool& aStickDocument);
 
   virtual mozilla::ipc::IPCResult RecvPOfflineCacheUpdateConstructor(
       POfflineCacheUpdateParent* aActor, const URIParams& aManifestURI,
       const URIParams& aDocumentURI, const PrincipalInfo& aLoadingPrincipal,
       const bool& stickDocument) override;
 
-  virtual bool DeallocPOfflineCacheUpdateParent(
-      POfflineCacheUpdateParent* aActor) override;
+  bool DeallocPOfflineCacheUpdateParent(POfflineCacheUpdateParent* aActor);
 
-  virtual mozilla::ipc::IPCResult RecvSetOfflinePermission(
+  mozilla::ipc::IPCResult RecvSetOfflinePermission(
       const IPC::Principal& principal) override;
 
   virtual mozilla::ipc::IPCResult RecvFinishShutdown() override;
 
   void MaybeInvokeDragSession(TabParent* aParent);
 
-  virtual PContentPermissionRequestParent* AllocPContentPermissionRequestParent(
+  PContentPermissionRequestParent* AllocPContentPermissionRequestParent(
       const InfallibleTArray<PermissionRequest>& aRequests,
       const IPC::Principal& aPrincipal,
       const IPC::Principal& aTopLevelPrincipal, const bool& aIsTrusted,
-      const TabId& aTabId) override;
+      const TabId& aTabId);
 
-  virtual bool DeallocPContentPermissionRequestParent(
-      PContentPermissionRequestParent* actor) override;
+  bool DeallocPContentPermissionRequestParent(
+      PContentPermissionRequestParent* actor);
 
   virtual bool HandleWindowsMessages(const Message& aMsg) const override;
 
@@ -558,29 +554,27 @@ class ContentParent final : public PContentParent,
   virtual int32_t Pid() const override;
 
   // PURLClassifierParent.
-  virtual PURLClassifierParent* AllocPURLClassifierParent(
-      const Principal& aPrincipal, bool* aSuccess) override;
+  PURLClassifierParent* AllocPURLClassifierParent(const Principal& aPrincipal,
+                                                  bool* aSuccess);
   virtual mozilla::ipc::IPCResult RecvPURLClassifierConstructor(
       PURLClassifierParent* aActor, const Principal& aPrincipal,
       bool* aSuccess) override;
 
   // PURLClassifierLocalParent.
-  virtual PURLClassifierLocalParent* AllocPURLClassifierLocalParent(
+  PURLClassifierLocalParent* AllocPURLClassifierLocalParent(
       const URIParams& aURI,
-      const nsTArray<IPCURLClassifierFeature>& aFeatures) override;
+      const nsTArray<IPCURLClassifierFeature>& aFeatures);
 
   virtual mozilla::ipc::IPCResult RecvPURLClassifierLocalConstructor(
       PURLClassifierLocalParent* aActor, const URIParams& aURI,
       nsTArray<IPCURLClassifierFeature>&& aFeatures) override;
 
-  virtual PLoginReputationParent* AllocPLoginReputationParent(
-      const URIParams& aURI) override;
+  PLoginReputationParent* AllocPLoginReputationParent(const URIParams& aURI);
 
   virtual mozilla::ipc::IPCResult RecvPLoginReputationConstructor(
       PLoginReputationParent* aActor, const URIParams& aURI) override;
 
-  virtual bool DeallocPLoginReputationParent(
-      PLoginReputationParent* aActor) override;
+  bool DeallocPLoginReputationParent(PLoginReputationParent* aActor);
 
   virtual bool SendActivate(PBrowserParent* aTab) override {
     return PContentParent::SendActivate(aTab);
@@ -590,11 +584,9 @@ class ContentParent final : public PContentParent,
     return PContentParent::SendDeactivate(aTab);
   }
 
-  virtual bool DeallocPURLClassifierLocalParent(
-      PURLClassifierLocalParent* aActor) override;
+  bool DeallocPURLClassifierLocalParent(PURLClassifierLocalParent* aActor);
 
-  virtual bool DeallocPURLClassifierParent(
-      PURLClassifierParent* aActor) override;
+  bool DeallocPURLClassifierParent(PURLClassifierParent* aActor);
 
   // Use the PHangMonitor channel to ask the child to repaint a tab.
   void PaintTabWhileInterruptingJS(TabParent* aTabParent, bool aForceRepaint,
@@ -610,11 +602,10 @@ class ContentParent final : public PContentParent,
 
   void OnCompositorDeviceReset() override;
 
-  virtual PClientOpenWindowOpParent* AllocPClientOpenWindowOpParent(
-      const ClientOpenWindowArgs& aArgs) override;
+  PClientOpenWindowOpParent* AllocPClientOpenWindowOpParent(
+      const ClientOpenWindowArgs& aArgs);
 
-  virtual bool DeallocPClientOpenWindowOpParent(
-      PClientOpenWindowOpParent* aActor) override;
+  bool DeallocPClientOpenWindowOpParent(PClientOpenWindowOpParent* aActor);
 
   static hal::ProcessPriority GetInitialProcessPriority(Element* aFrameElement);
 
@@ -847,8 +838,7 @@ class ContentParent final : public PContentParent,
   virtual bool DeallocPJavaScriptParent(
       mozilla::jsipc::PJavaScriptParent*) override;
 
-  virtual bool DeallocPRemoteSpellcheckEngineParent(
-      PRemoteSpellcheckEngineParent*) override;
+  bool DeallocPRemoteSpellcheckEngineParent(PRemoteSpellcheckEngineParent*);
 
   virtual PBrowserParent* AllocPBrowserParent(
       const TabId& aTabId, const TabId& aSameTabGroupAs,
@@ -880,75 +870,71 @@ class ContentParent final : public PContentParent,
       const URIParams& aURI, const bool& aActive,
       const OriginAttributes& aOriginAttributes) override;
 
-  virtual bool DeallocPHalParent(PHalParent*) override;
+  bool DeallocPHalParent(PHalParent*);
 
-  virtual bool DeallocPHeapSnapshotTempFileHelperParent(
-      PHeapSnapshotTempFileHelperParent*) override;
+  bool DeallocPHeapSnapshotTempFileHelperParent(
+      PHeapSnapshotTempFileHelperParent*);
 
-  virtual PCycleCollectWithLogsParent* AllocPCycleCollectWithLogsParent(
+  PCycleCollectWithLogsParent* AllocPCycleCollectWithLogsParent(
       const bool& aDumpAllTraces, const FileDescriptor& aGCLog,
-      const FileDescriptor& aCCLog) override;
+      const FileDescriptor& aCCLog);
 
-  virtual bool DeallocPCycleCollectWithLogsParent(
-      PCycleCollectWithLogsParent* aActor) override;
+  bool DeallocPCycleCollectWithLogsParent(PCycleCollectWithLogsParent* aActor);
 
-  virtual PTestShellParent* AllocPTestShellParent() override;
+  PTestShellParent* AllocPTestShellParent();
 
-  virtual bool DeallocPTestShellParent(PTestShellParent* shell) override;
+  bool DeallocPTestShellParent(PTestShellParent* shell);
 
-  virtual PScriptCacheParent* AllocPScriptCacheParent(
-      const FileDescOrError& cacheFile, const bool& wantCacheData) override;
+  PScriptCacheParent* AllocPScriptCacheParent(const FileDescOrError& cacheFile,
+                                              const bool& wantCacheData);
 
-  virtual bool DeallocPScriptCacheParent(PScriptCacheParent* shell) override;
+  bool DeallocPScriptCacheParent(PScriptCacheParent* shell);
 
-  virtual bool DeallocPNeckoParent(PNeckoParent* necko) override;
+  bool DeallocPNeckoParent(PNeckoParent* necko);
 
-  virtual PPSMContentDownloaderParent* AllocPPSMContentDownloaderParent(
-      const uint32_t& aCertType) override;
+  PPSMContentDownloaderParent* AllocPPSMContentDownloaderParent(
+      const uint32_t& aCertType);
 
-  virtual bool DeallocPPSMContentDownloaderParent(
-      PPSMContentDownloaderParent* aDownloader) override;
+  bool DeallocPPSMContentDownloaderParent(
+      PPSMContentDownloaderParent* aDownloader);
 
-  virtual PExternalHelperAppParent* AllocPExternalHelperAppParent(
+  PExternalHelperAppParent* AllocPExternalHelperAppParent(
       const OptionalURIParams& aUri, const nsCString& aMimeContentType,
       const nsCString& aContentDisposition,
       const uint32_t& aContentDispositionHint,
       const nsString& aContentDispositionFilename, const bool& aForceSave,
       const int64_t& aContentLength, const bool& aWasFileChannel,
-      const OptionalURIParams& aReferrer, PBrowserParent* aBrowser) override;
+      const OptionalURIParams& aReferrer, PBrowserParent* aBrowser);
 
-  virtual bool DeallocPExternalHelperAppParent(
-      PExternalHelperAppParent* aService) override;
+  bool DeallocPExternalHelperAppParent(PExternalHelperAppParent* aService);
 
-  virtual PHandlerServiceParent* AllocPHandlerServiceParent() override;
+  PHandlerServiceParent* AllocPHandlerServiceParent();
 
-  virtual bool DeallocPHandlerServiceParent(PHandlerServiceParent*) override;
+  bool DeallocPHandlerServiceParent(PHandlerServiceParent*);
 
-  virtual PMediaParent* AllocPMediaParent() override;
+  PMediaParent* AllocPMediaParent();
 
-  virtual bool DeallocPMediaParent(PMediaParent* aActor) override;
+  bool DeallocPMediaParent(PMediaParent* aActor);
 
-  virtual PPresentationParent* AllocPPresentationParent() override;
+  PPresentationParent* AllocPPresentationParent();
 
-  virtual bool DeallocPPresentationParent(PPresentationParent* aActor) override;
+  bool DeallocPPresentationParent(PPresentationParent* aActor);
 
   virtual mozilla::ipc::IPCResult RecvPPresentationConstructor(
       PPresentationParent* aActor) override;
 
-  virtual PSpeechSynthesisParent* AllocPSpeechSynthesisParent() override;
+  PSpeechSynthesisParent* AllocPSpeechSynthesisParent();
 
-  virtual bool DeallocPSpeechSynthesisParent(
-      PSpeechSynthesisParent* aActor) override;
+  bool DeallocPSpeechSynthesisParent(PSpeechSynthesisParent* aActor);
 
   virtual mozilla::ipc::IPCResult RecvPSpeechSynthesisConstructor(
       PSpeechSynthesisParent* aActor) override;
 
-  virtual PWebBrowserPersistDocumentParent*
-  AllocPWebBrowserPersistDocumentParent(
-      PBrowserParent* aBrowser, const uint64_t& aOuterWindowID) override;
+  PWebBrowserPersistDocumentParent* AllocPWebBrowserPersistDocumentParent(
+      PBrowserParent* aBrowser, const uint64_t& aOuterWindowID);
 
-  virtual bool DeallocPWebBrowserPersistDocumentParent(
-      PWebBrowserPersistDocumentParent* aActor) override;
+  bool DeallocPWebBrowserPersistDocumentParent(
+      PWebBrowserPersistDocumentParent* aActor);
 
   virtual mozilla::ipc::IPCResult RecvGetGfxVars(
       InfallibleTArray<GfxVarUpdate>* aVars) override;
@@ -1123,8 +1109,8 @@ class ContentParent final : public PContentParent,
   virtual bool DeallocPFileDescriptorSetParent(
       PFileDescriptorSetParent*) override;
 
-  virtual PWebrtcGlobalParent* AllocPWebrtcGlobalParent() override;
-  virtual bool DeallocPWebrtcGlobalParent(PWebrtcGlobalParent* aActor) override;
+  PWebrtcGlobalParent* AllocPWebrtcGlobalParent();
+  bool DeallocPWebrtcGlobalParent(PWebrtcGlobalParent* aActor);
 
   virtual mozilla::ipc::IPCResult RecvUpdateDropEffect(
       const uint32_t& aDragAction, const uint32_t& aDropEffect) override;

@@ -44,11 +44,10 @@ class InProcessChild : public PInProcessChild {
   static IProtocol* ParentActorFor(IProtocol* aActor);
 
  protected:
-  virtual mozilla::dom::PWindowGlobalChild* AllocPWindowGlobalChild(
-      const WindowGlobalInit& aInit) override;
+  mozilla::dom::PWindowGlobalChild* AllocPWindowGlobalChild(
+      const WindowGlobalInit& aInit);
 
-  virtual bool DeallocPWindowGlobalChild(
-      mozilla::dom::PWindowGlobalChild* aActor) override;
+  bool DeallocPWindowGlobalChild(mozilla::dom::PWindowGlobalChild* aActor);
 
  private:
   // NOTE: PInProcess lifecycle management is declared as staic methods and

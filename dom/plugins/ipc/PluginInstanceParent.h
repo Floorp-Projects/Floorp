@@ -70,20 +70,18 @@ class PluginInstanceParent : public PPluginInstanceParent {
 
   virtual void ActorDestroy(ActorDestroyReason why) override;
 
-  virtual PPluginScriptableObjectParent* AllocPPluginScriptableObjectParent()
-      override;
+  PPluginScriptableObjectParent* AllocPPluginScriptableObjectParent();
 
   virtual mozilla::ipc::IPCResult RecvPPluginScriptableObjectConstructor(
       PPluginScriptableObjectParent* aActor) override;
 
-  virtual bool DeallocPPluginScriptableObjectParent(
-      PPluginScriptableObjectParent* aObject) override;
-  virtual PBrowserStreamParent* AllocPBrowserStreamParent(
+  bool DeallocPPluginScriptableObjectParent(
+      PPluginScriptableObjectParent* aObject);
+  PBrowserStreamParent* AllocPBrowserStreamParent(
       const nsCString& url, const uint32_t& length,
       const uint32_t& lastmodified, PStreamNotifyParent* notifyData,
-      const nsCString& headers) override;
-  virtual bool DeallocPBrowserStreamParent(
-      PBrowserStreamParent* stream) override;
+      const nsCString& headers);
+  bool DeallocPBrowserStreamParent(PBrowserStreamParent* stream);
 
   virtual mozilla::ipc::IPCResult AnswerNPN_GetValue_NPNVnetscapeWindow(
       NativeWindowHandle* value, NPError* result) override;
@@ -132,17 +130,16 @@ class PluginInstanceParent : public PPluginInstanceParent {
                                                     const bool& file,
                                                     NPError* result) override;
 
-  virtual PStreamNotifyParent* AllocPStreamNotifyParent(
+  PStreamNotifyParent* AllocPStreamNotifyParent(
       const nsCString& url, const nsCString& target, const bool& post,
-      const nsCString& buffer, const bool& file, NPError* result) override;
+      const nsCString& buffer, const bool& file, NPError* result);
 
   virtual mozilla::ipc::IPCResult AnswerPStreamNotifyConstructor(
       PStreamNotifyParent* actor, const nsCString& url, const nsCString& target,
       const bool& post, const nsCString& buffer, const bool& file,
       NPError* result) override;
 
-  virtual bool DeallocPStreamNotifyParent(
-      PStreamNotifyParent* notifyData) override;
+  bool DeallocPStreamNotifyParent(PStreamNotifyParent* notifyData);
 
   virtual mozilla::ipc::IPCResult RecvNPN_InvalidateRect(
       const NPRect& rect) override;
@@ -167,11 +164,11 @@ class PluginInstanceParent : public PPluginInstanceParent {
       const NPRect& updatedRect, const SurfaceDescriptor& newSurface,
       SurfaceDescriptor* prevSurface) override;
 
-  virtual PPluginSurfaceParent* AllocPPluginSurfaceParent(
+  PPluginSurfaceParent* AllocPPluginSurfaceParent(
       const WindowsSharedMemoryHandle& handle,
-      const mozilla::gfx::IntSize& size, const bool& transparent) override;
+      const mozilla::gfx::IntSize& size, const bool& transparent);
 
-  virtual bool DeallocPPluginSurfaceParent(PPluginSurfaceParent* s) override;
+  bool DeallocPPluginSurfaceParent(PPluginSurfaceParent* s);
 
   virtual mozilla::ipc::IPCResult AnswerNPN_PushPopupsEnabledState(
       const bool& aState) override;
@@ -282,11 +279,10 @@ class PluginInstanceParent : public PPluginInstanceParent {
   typedef mozilla::layers::ImageContainer ImageContainer;
   ImageContainer* GetImageContainer();
 
-  virtual PPluginBackgroundDestroyerParent*
-  AllocPPluginBackgroundDestroyerParent() override;
+  PPluginBackgroundDestroyerParent* AllocPPluginBackgroundDestroyerParent();
 
-  virtual bool DeallocPPluginBackgroundDestroyerParent(
-      PPluginBackgroundDestroyerParent* aActor) override;
+  bool DeallocPPluginBackgroundDestroyerParent(
+      PPluginBackgroundDestroyerParent* aActor);
 
   bool InternalGetValueForNPObject(NPNVariable aVariable,
                                    PPluginScriptableObjectParent** aValue,

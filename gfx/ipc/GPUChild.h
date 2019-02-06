@@ -35,9 +35,8 @@ class GPUChild final : public PGPUChild, public gfxVarReceiver {
   bool EnsureGPUReady();
   base::ProcessHandle GetChildProcessHandle();
 
-  PAPZInputBridgeChild* AllocPAPZInputBridgeChild(
-      const LayersId& aLayersId) override;
-  bool DeallocPAPZInputBridgeChild(PAPZInputBridgeChild* aActor) override;
+  PAPZInputBridgeChild* AllocPAPZInputBridgeChild(const LayersId& aLayersId);
+  bool DeallocPAPZInputBridgeChild(PAPZInputBridgeChild* aActor);
 
   // gfxVarReceiver overrides.
   void OnVarChanged(const GfxVarUpdate& aVar) override;

@@ -92,9 +92,9 @@ class VRManagerChild : public PVRManagerChild {
   void Destroy();
   static void DeferredDestroy(RefPtr<VRManagerChild> aVRManagerChild);
 
-  virtual PVRLayerChild* AllocPVRLayerChild(const uint32_t& aDisplayID,
-                                            const uint32_t& aGroup) override;
-  virtual bool DeallocPVRLayerChild(PVRLayerChild* actor) override;
+  PVRLayerChild* AllocPVRLayerChild(const uint32_t& aDisplayID,
+                                    const uint32_t& aGroup);
+  bool DeallocPVRLayerChild(PVRLayerChild* actor);
 
   virtual mozilla::ipc::IPCResult RecvUpdateDisplayInfo(
       nsTArray<VRDisplayInfo>&& aDisplayUpdates) override;

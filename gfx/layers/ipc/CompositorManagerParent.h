@@ -55,9 +55,9 @@ class CompositorManagerParent final : public PCompositorManagerParent {
   void BindComplete();
   void ActorDestroy(ActorDestroyReason aReason) override;
 
-  bool DeallocPCompositorBridgeParent(PCompositorBridgeParent* aActor) override;
+  bool DeallocPCompositorBridgeParent(PCompositorBridgeParent* aActor);
   PCompositorBridgeParent* AllocPCompositorBridgeParent(
-      const CompositorBridgeOptions& aOpt) override;
+      const CompositorBridgeOptions& aOpt);
 
  private:
   static StaticRefPtr<CompositorManagerParent> sInstance;

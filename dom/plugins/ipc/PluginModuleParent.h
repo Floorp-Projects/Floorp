@@ -84,10 +84,9 @@ class PluginModuleParent : public PPluginModuleParent,
 
   PPluginInstanceParent* AllocPPluginInstanceParent(
       const nsCString& aMimeType, const InfallibleTArray<nsCString>& aNames,
-      const InfallibleTArray<nsCString>& aValues) override;
+      const InfallibleTArray<nsCString>& aValues);
 
-  virtual bool DeallocPPluginInstanceParent(
-      PPluginInstanceParent* aActor) override;
+  bool DeallocPPluginInstanceParent(PPluginInstanceParent* aActor);
 
  public:
   explicit PluginModuleParent(bool aIsChrome);
