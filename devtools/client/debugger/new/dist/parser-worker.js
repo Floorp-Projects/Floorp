@@ -23674,7 +23674,7 @@ function getAssignmentTarget(node, bindings) {
 // translates new bindings `var a = 3` into `self.a = 3`
 // and existing bindings `var a = 3` into `a = 3` for re-assignments
 function globalizeDeclaration(node, bindings) {
-  return node.declarations.map(declaration => t.expressionStatement(t.assignmentExpression("=", getAssignmentTarget(declaration.id, bindings), declaration.init)));
+  return node.declarations.map(declaration => t.expressionStatement(t.assignmentExpression("=", getAssignmentTarget(declaration.id, bindings), declaration.init || t.unaryExpression("void", t.numericLiteral(0)))));
 }
 
 // translates new bindings `a = 3` into `self.a = 3`
