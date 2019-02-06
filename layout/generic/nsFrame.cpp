@@ -3502,7 +3502,8 @@ void nsIFrame::BuildDisplayListForSimpleChild(nsDisplayListBuilder* aBuilder,
   CheckForApzAwareEventHandlers(aBuilder, aChild);
 
   aBuilder->BuildCompositorHitTestInfoIfNeeded(
-      aChild, aLists.BorderBackground(), false);
+      aChild, aLists.BorderBackground(),
+      buildingForChild.IsAnimatedGeometryRoot());
 
   aChild->MarkAbsoluteFramesForDisplayList(aBuilder);
   aBuilder->AdjustWindowDraggingRegion(aChild);
