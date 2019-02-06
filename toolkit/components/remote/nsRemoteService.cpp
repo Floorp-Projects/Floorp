@@ -17,6 +17,9 @@
 #    include "nsDBusRemoteServer.h"
 #    include "nsDBusRemoteClient.h"
 #  endif
+#elif defined(XP_WIN)
+#  include "nsWinRemoteServer.h"
+#  include "nsWinRemoteClient.h"
 #endif
 #include "nsRemoteService.h"
 
@@ -102,6 +105,11 @@ RemoteResult nsRemoteService::StartClient(const char* aDesktopStartupID) {
   if (useX11Remote) {
     client = new nsXRemoteClient();
   }
+#elif defined(XP_WIN)
+  client = new nsWinRemoteClient();
+#else
+  return REMOTE_NOT_FOUND;
+#endif
 
   nsresult rv = client ? client->Init() : NS_ERROR_FAILURE;
   if (NS_FAILED(rv)) return REMOTE_NOT_FOUND;
@@ -122,9 +130,6 @@ RemoteResult nsRemoteService::StartClient(const char* aDesktopStartupID) {
   if (NS_FAILED(rv)) return REMOTE_NOT_FOUND;
 
   return REMOTE_FOUND;
-#else
-  return REMOTE_NOT_FOUND;
-#endif
 }
 
 void nsRemoteService::StartupServer() {
@@ -147,6 +152,10 @@ void nsRemoteService::StartupServer() {
   if (useX11Remote) {
     mRemoteServer = MakeUnique<nsGTKRemoteServer>();
   }
+#elif defined(XP_WIN)
+  mRemoteServer = MakeUnique<nsWinRemoteServer>();
+#else
+  return;
 #endif
 
   nsresult rv = mRemoteServer->Startup(mProgram.get(), mProfile.get());

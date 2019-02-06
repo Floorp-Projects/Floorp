@@ -187,15 +187,8 @@
 #endif
 
 // for X remote support
-#if defined(MOZ_WIDGET_GTK)
-#  include "nsXRemoteClient.h"
+#if defined(MOZ_HAS_REMOTE)
 #  include "nsRemoteService.h"
-#  include "nsProfileLock.h"
-#  include "SpecialSystemDirectory.h"
-#  include <sched.h>
-#  ifdef MOZ_ENABLE_DBUS
-#    include "nsDBusRemoteClient.h"
-#  endif
 #endif
 
 #if defined(DEBUG) && defined(XP_WIN32)
@@ -309,6 +302,9 @@ void XRE_LibFuzzerSetDriver(LibFuzzerDriver aDriver) {
 }
 #  endif
 #endif  // FUZZING
+
+// Undo X11/X.h's definition of None
+#undef None
 
 namespace mozilla {
 int (*RunGTest)(int*, char**) = 0;
@@ -2854,9 +2850,12 @@ class XREMain {
   XREMain()
       : mStartOffline(false),
         mShuttingDown(false)
+#ifdef MOZ_HAS_REMOTE
+        ,
+        mDisableRemote(false)
+#endif
 #if defined(MOZ_WIDGET_GTK)
         ,
-        mDisableRemote(false),
         mGdkDisplay(nullptr)
 #endif
             {};
@@ -2878,7 +2877,7 @@ class XREMain {
   nsCOMPtr<nsIFile> mProfD;
   nsCOMPtr<nsIFile> mProfLD;
   nsCOMPtr<nsIProfileLock> mProfileLock;
-#if defined(MOZ_WIDGET_GTK)
+#if defined(MOZ_HAS_REMOTE)
   RefPtr<nsRemoteService> mRemoteService;
 #endif
 
@@ -2890,7 +2889,7 @@ class XREMain {
 
   bool mStartOffline;
   bool mShuttingDown;
-#if defined(MOZ_WIDGET_GTK)
+#if defined(MOZ_HAS_REMOTE)
   bool mDisableRemote;
 #endif
 
@@ -3406,14 +3405,14 @@ int XREMain::XRE_mainInit(bool* aExitFlag) {
   }
   if (ar == ARG_FOUND) {
     SaveToEnv("MOZ_NO_REMOTE=1");
-#ifdef MOZ_WIDGET_GTK
+#if defined(MOZ_HAS_REMOTE)
     mDisableRemote = true;
   } else if (EnvHasValue("MOZ_NO_REMOTE")) {
     mDisableRemote = true;
 #endif
   }
 
-#ifdef MOZ_WIDGET_GTK
+#if defined(MOZ_HAS_REMOTE)
   ar = CheckArg("new-instance", nullptr,
                 CheckArgFlag::CheckOSInt | CheckArgFlag::RemoveArg);
   if (ar == ARG_BAD) {
@@ -3822,6 +3821,12 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
     return result;
   }
 
+#ifdef MOZ_HAS_REMOTE
+  if (gfxPlatform::IsHeadless()) {
+    mDisableRemote = true;
+  }
+#endif
+
 #ifdef MOZ_X11
   // Init X11 in thread-safe mode. Must be called prior to the first call to
   // XOpenDisplay (called inside gdk_display_open). This is a requirement for
@@ -3892,11 +3897,9 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
           gdk_display_manager_open_display(gdk_display_manager_get(), nullptr);
     }
 #  endif
-  } else {
-    mDisableRemote = true;
   }
 #endif
-#if defined(MOZ_WIDGET_GTK)
+#if defined(MOZ_HAS_REMOTE)
   // handle --remote now that xpcom is fired up
   if (!mDisableRemote) {
     mRemoteService = new nsRemoteService(gAppData->remotingName);
@@ -4025,7 +4028,7 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
     return 1;
   }
 
-#if defined(MOZ_WIDGET_GTK)
+#if defined(MOZ_HAS_REMOTE)
   if (mRemoteService) {
     // We want a unique profile name to identify the remote instance.
     nsCString profileName;
@@ -4553,7 +4556,7 @@ nsresult XREMain::XRE_mainRun() {
   }
 
   if (!mShuttingDown) {
-#if defined(MOZ_WIDGET_GTK)
+#if defined(MOZ_HAS_REMOTE)
     // if we have X remote support, start listening for requests on the
     // proxy window.
     if (mRemoteService) {
@@ -4761,7 +4764,7 @@ int XREMain::XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig) {
   }
 
   if (!mShuttingDown) {
-#if defined(MOZ_WIDGET_GTK)
+#if defined(MOZ_HAS_REMOTE)
     // shut down the x remote proxy window
     if (mRemoteService) {
       mRemoteService->ShutdownServer();
