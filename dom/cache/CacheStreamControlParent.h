@@ -25,6 +25,8 @@ class StreamList;
 class CacheStreamControlParent final : public PCacheStreamControlParent,
                                        public StreamControl,
                                        Manager::Listener {
+  friend class PCacheStreamControlParent;
+
  public:
   CacheStreamControlParent();
   ~CacheStreamControlParent();

@@ -24,6 +24,8 @@ namespace net {
 class WebSocketChannelParent : public PWebSocketParent,
                                public nsIWebSocketListener,
                                public nsIInterfaceRequestor {
+  friend class PWebSocketParent;
+
   ~WebSocketChannelParent() = default;
 
  public:

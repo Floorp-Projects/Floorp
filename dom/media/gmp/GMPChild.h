@@ -20,6 +20,8 @@ namespace gmp {
 class GMPContentChild;
 
 class GMPChild : public PGMPChild {
+  friend class PGMPChild;
+
  public:
   GMPChild();
   virtual ~GMPChild();

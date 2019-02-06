@@ -44,6 +44,8 @@ class StreamFilterParent final : public PStreamFilterParent,
                                  public nsIThreadRetargetableStreamListener,
                                  public nsIRequest,
                                  public StreamFilterBase {
+  friend class PStreamFilterParent;
+
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSISTREAMLISTENER

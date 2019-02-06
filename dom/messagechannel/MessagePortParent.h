@@ -15,6 +15,8 @@ namespace dom {
 class MessagePortService;
 
 class MessagePortParent final : public PMessagePortParent {
+  friend class PMessagePortParent;
+
  public:
   explicit MessagePortParent(const nsID& aUUID);
   ~MessagePortParent();

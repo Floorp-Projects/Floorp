@@ -32,6 +32,8 @@ class VRLayerChild;
 class VRDisplayClient;
 
 class VRManagerChild : public PVRManagerChild {
+  friend class PVRManagerChild;
+
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VRManagerChild);
 

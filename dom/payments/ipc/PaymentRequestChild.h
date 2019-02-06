@@ -15,6 +15,8 @@ namespace dom {
 class PaymentRequest;
 
 class PaymentRequestChild final : public PPaymentRequestChild {
+  friend class PPaymentRequestChild;
+
  public:
   explicit PaymentRequestChild(PaymentRequest* aRequest);
 

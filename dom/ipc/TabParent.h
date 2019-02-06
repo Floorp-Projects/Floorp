@@ -87,6 +87,8 @@ class TabParent final : public PBrowserParent,
                         public LiveResizeListener {
   typedef mozilla::dom::ClonedMessageData ClonedMessageData;
 
+  friend class PBrowserParent;
+
   virtual ~TabParent();
 
  public:

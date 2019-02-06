@@ -23,6 +23,8 @@ class WorkerPrivate;
 class OptionalMessagePortIdentifier;
 
 class RemoteWorkerChild final : public PRemoteWorkerChild {
+  friend class PRemoteWorkerChild;
+
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RemoteWorkerChild)
 

@@ -27,6 +27,7 @@ class StreamFilter;
 class StreamFilterChild final : public PStreamFilterChild,
                                 public StreamFilterBase {
   friend class StreamFilter;
+  friend class PStreamFilterChild;
 
  public:
   NS_INLINE_DECL_REFCOUNTING(StreamFilterChild)

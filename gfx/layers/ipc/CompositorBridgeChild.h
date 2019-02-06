@@ -53,6 +53,8 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
                                     public TextureForwarder {
   typedef InfallibleTArray<AsyncParentMessageData> AsyncParentMessageArray;
 
+  friend class PCompositorBridgeChild;
+
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CompositorBridgeChild, override);
 

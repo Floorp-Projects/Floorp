@@ -19,6 +19,8 @@ namespace mozilla {
 namespace net {
 
 class CookieServiceParent : public PCookieServiceParent {
+  friend class PCookieServiceParent;
+
  public:
   CookieServiceParent();
   virtual ~CookieServiceParent() = default;

@@ -99,6 +99,8 @@ class FileSystemParams;
  *   (8) Call [HandlerCallback] to send the task result to the content page.
  */
 class FileSystemTaskChildBase : public PFileSystemRequestChild {
+  friend class PFileSystemRequestChild;
+
  public:
   NS_INLINE_DECL_REFCOUNTING(FileSystemTaskChildBase)
 

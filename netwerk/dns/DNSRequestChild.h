@@ -18,6 +18,8 @@ namespace mozilla {
 namespace net {
 
 class DNSRequestChild final : public PDNSRequestChild, public nsICancelable {
+  friend class PDNSRequestChild;
+
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSICANCELABLE

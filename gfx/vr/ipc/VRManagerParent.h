@@ -29,6 +29,8 @@ class VRControllerPuppet;
 class VRManagerParent final : public PVRManagerParent {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VRManagerParent);
 
+  friend class PVRManagerParent;
+
  public:
   explicit VRManagerParent(ProcessId aChildProcessId, bool aIsContentChild);
 

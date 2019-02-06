@@ -14,6 +14,8 @@ namespace devtools {
 
 class HeapSnapshotTempFileHelperParent
     : public PHeapSnapshotTempFileHelperParent {
+  friend class PHeapSnapshotTempFileHelperParent;
+
   explicit HeapSnapshotTempFileHelperParent() {}
   void ActorDestroy(ActorDestroyReason why) override {}
   mozilla::ipc::IPCResult RecvOpenHeapSnapshotTempFile(

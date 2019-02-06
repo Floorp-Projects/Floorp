@@ -19,6 +19,8 @@ class ManagerId;
 
 class CacheStorageParent final : public PCacheStorageParent,
                                  public PrincipalVerifier::Listener {
+  friend class PCacheStorageParent;
+
  public:
   CacheStorageParent(PBackgroundParent* aManagingActor, Namespace aNamespace,
                      const mozilla::ipc::PrincipalInfo& aPrincipalInfo);

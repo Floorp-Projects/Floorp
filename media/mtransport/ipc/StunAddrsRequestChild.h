@@ -27,6 +27,8 @@ class StunAddrsListener {
 };
 
 class StunAddrsRequestChild final : public PStunAddrsRequestChild {
+  friend class PStunAddrsRequestChild;
+
  public:
   explicit StunAddrsRequestChild(StunAddrsListener* listener,
                                  nsIEventTarget* mainThreadEventTarget);

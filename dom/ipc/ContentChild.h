@@ -85,6 +85,8 @@ class ContentChild final : public PContentChild,
   typedef mozilla::ipc::PFileDescriptorSetChild PFileDescriptorSetChild;
   typedef mozilla::ipc::URIParams URIParams;
 
+  friend class PContentChild;
+
  public:
   NS_DECL_NSIWINDOWPROVIDER
 

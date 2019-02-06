@@ -23,6 +23,8 @@ namespace net {
 class WyciwygChannelParent : public PWyciwygChannelParent,
                              public nsIStreamListener,
                              public nsIInterfaceRequestor {
+  friend class PWyciwygChannelParent;
+
  public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIREQUESTOBSERVER

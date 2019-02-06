@@ -24,6 +24,8 @@ class Cache;
 class CacheOpArgs;
 
 class CacheChild final : public PCacheChild, public ActorChild {
+  friend class PCacheChild;
+
  public:
   class MOZ_RAII AutoLock final {
     CacheChild* mActor;

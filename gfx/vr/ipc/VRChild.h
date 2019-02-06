@@ -22,6 +22,8 @@ class VRProcessParent;
 class VRChild;
 
 class VRChild final : public PVRChild, public gfxVarReceiver {
+  friend class PVRChild;
+
  public:
   explicit VRChild(VRProcessParent* aHost);
   ~VRChild() = default;

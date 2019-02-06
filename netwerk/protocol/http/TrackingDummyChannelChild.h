@@ -19,6 +19,8 @@ namespace mozilla {
 namespace net {
 
 class TrackingDummyChannelChild final : public PTrackingDummyChannelChild {
+  friend class PTrackingDummyChannelChild;
+
  public:
   static bool Create(nsIHttpChannel* aChannel, nsIURI* aURI,
                      const std::function<void(bool)>& aCallback);

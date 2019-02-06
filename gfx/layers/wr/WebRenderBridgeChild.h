@@ -59,6 +59,8 @@ class WebRenderBridgeChild final : public PWebRenderBridgeChild,
                                    public CompositableForwarder {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebRenderBridgeChild, override)
 
+  friend class PWebRenderBridgeChild;
+
  public:
   explicit WebRenderBridgeChild(const wr::PipelineId& aPipelineId);
 

@@ -91,6 +91,8 @@ class FileHandleThreadPool final {
 };
 
 class BackgroundMutableFileParentBase : public PBackgroundMutableFileParent {
+  friend PBackgroundMutableFileParent;
+
   nsTHashtable<nsPtrHashKey<FileHandle>> mFileHandles;
   nsCString mDirectoryId;
   nsString mFileName;

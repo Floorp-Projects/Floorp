@@ -31,6 +31,8 @@ class GMPContentParent;
 
 class ChromiumCDMParent final : public PChromiumCDMParent,
                                 public GMPCrashHelperHolder {
+  friend class PChromiumCDMParent;
+
  public:
   typedef MozPromise<bool, MediaResult, /* IsExclusive = */ true> InitPromise;
 

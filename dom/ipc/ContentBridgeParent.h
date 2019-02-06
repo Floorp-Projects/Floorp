@@ -18,6 +18,8 @@ namespace dom {
 class ContentBridgeParent : public PContentBridgeParent,
                             public nsIContentParent,
                             public nsIObserver {
+  friend class PContentBridgeParent;
+
  public:
   explicit ContentBridgeParent();
 
