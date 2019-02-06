@@ -8,7 +8,6 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.transition.TransitionInflater
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
@@ -82,13 +81,18 @@ class BrowserFragment : Fragment(), BackHandler {
         return view
     }
 
+    @SuppressLint("CheckResult")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        sharedElementEnterTransition = TransitionInflater.from(context).inflateTransition(android.R.transition.move)
+        getSafeManagedObservable<SearchAction>()
+            .subscribe {
+                if (it is SearchAction.ToolbarTapped) {
+                    navigateToSearch()
+                }
+            }
     }
 
-    @SuppressLint("CheckResult")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -148,13 +152,6 @@ class BrowserFragment : Fragment(), BackHandler {
             (toolbarComponent.uiView as ToolbarUIView).toolbarIntegration,
             customTabsToolbarFeature
         )
-
-        getSafeManagedObservable<SearchAction>()
-            .subscribe {
-                if (it is SearchAction.ToolbarTapped) {
-                    navigateToSearch()
-                }
-            }
     }
 
     override fun onDestroyView() {
