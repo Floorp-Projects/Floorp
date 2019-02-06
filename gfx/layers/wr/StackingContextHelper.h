@@ -27,12 +27,13 @@ namespace layers {
  */
 class MOZ_RAII StackingContextHelper {
  public:
-  StackingContextHelper(
-      const StackingContextHelper& aParentSC, const ActiveScrolledRoot* aAsr,
-      nsIFrame* aContainerFrame, nsDisplayItem* aContainerItem,
-      wr::DisplayListBuilder& aBuilder,
-      const wr::StackingContextParams& aParams = wr::StackingContextParams(),
-      const LayoutDeviceRect& aBounds = LayoutDeviceRect());
+  StackingContextHelper(const StackingContextHelper& aParentSC,
+                        const ActiveScrolledRoot* aAsr,
+                        nsIFrame* aContainerFrame,
+                        nsDisplayItem* aContainerItem,
+                        wr::DisplayListBuilder& aBuilder,
+                        const wr::StackingContextParams& aParams,
+                        const LayoutDeviceRect& aBounds = LayoutDeviceRect());
 
   // This version of the constructor should only be used at the root level
   // of the tree, so that we have a StackingContextHelper to pass down into

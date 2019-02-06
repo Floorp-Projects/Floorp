@@ -63,6 +63,7 @@ StackingContextHelper::StackingContextHelper(
           ? wr::RasterSpace::Local(std::max(mScale.width, mScale.height))
           : wr::RasterSpace::Screen();
 
+  MOZ_ASSERT(!aParams.clip.IsNone());
   mReferenceFrameId = mBuilder->PushStackingContext(
       aParams, wr::ToLayoutRect(aBounds), rasterSpace);
 
