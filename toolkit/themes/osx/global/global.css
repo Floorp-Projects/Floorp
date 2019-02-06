@@ -172,10 +172,6 @@ label[disabled="true"] {
   padding: 5px;
 }
 
-.spaced {
-  margin: 3px 5px 4px;
-}
-
 .text-link {
   color: -moz-nativehyperlinktext;
   cursor: pointer;
