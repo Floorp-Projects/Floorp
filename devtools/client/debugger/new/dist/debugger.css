@@ -570,6 +570,8 @@ html[dir="rtl"] .tree-node button.arrow {
 button {
   background: transparent;
   border: none;
+  font-family: inherit;
+  font-size: inherit;
 }
 
 button:hover,
@@ -1060,7 +1062,7 @@ html[dir="rtl"] .managed-tree .tree .node > div {
   height: 12px;
   /* makes span appear like an image */
   display: inline-block;
-  background: var(--theme-body-color);
+  background: var(--theme-icon-color);
   mask-size: 100%;
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -1159,19 +1161,11 @@ img.close::before {
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 .toggle-button {
-  transform: translate(0, 0px);
-  transition: transform 0.25s ease-in-out;
   padding: 5px;
-  height: inherit;
 }
 
 .toggle-button .img {
-  fill: var(--theme-comment);
-  vertical-align: 0;
-}
-
-:root.theme-dark .toggle-button .img {
-  fill: var(--theme-comment-alt);
+  vertical-align: middle;
 }
 
 .toggle-button.end {
@@ -1183,18 +1177,13 @@ img.close::before {
   margin-inline-start: 0px;
 }
 
-html:not([dir="rtl"]) .toggle-button.end .img,
-html[dir="rtl"] .toggle-button.start .img {
-  transform: rotate(180deg);
+html[dir="ltr"] .toggle-button:not(.vertical).end .img,
+html[dir="rtl"] .toggle-button:not(.vertical).start .img {
+  transform: scaleX(-1);
 }
 
-html .toggle-button.end.vertical .img {
+.toggle-button.end.vertical .img {
   transform: rotate(-90deg);
-}
-
-.toggle-button.start.collapsed,
-.toggle-button.end.collapsed {
-  transform: rotate(180deg);
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -1406,8 +1395,13 @@ span.img.marko {
   mask-size: 100%;
 }
 
-.img.toggle-panes {
-  mask: url("resource://devtools/client/debugger/new/images/toggle-panes.svg") no-repeat;
+.img.pane-collapse {
+  mask: url("resource://devtools/client/debugger/new/images/pane-collapse.svg") no-repeat;
+  mask-size: 100%;
+}
+
+.img.pane-expand {
+  mask: url("resource://devtools/client/debugger/new/images/pane-expand.svg") no-repeat;
   mask-size: 100%;
 }
 

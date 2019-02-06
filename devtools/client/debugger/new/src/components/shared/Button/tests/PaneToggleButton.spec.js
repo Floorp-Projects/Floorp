@@ -39,9 +39,9 @@ describe("PaneToggleButton", () => {
 
   it("handleClick is called", () => {
     const position = "testPosition";
-    const collapsed = "testCollapsed";
+    const collapsed = false;
     wrapper.setProps({ position, collapsed });
     wrapper.simulate("click");
-    expect(handleClickSpy).toBeCalledWith(position, collapsed);
+    expect(handleClickSpy).toBeCalledWith(position, true);
   });
 });
