@@ -501,6 +501,8 @@ bool DefFunOperation(JSContext* cx, HandleScript script, HandleObject envChain,
 JSObject* SingletonObjectLiteralOperation(JSContext* cx, HandleScript script,
                                           jsbytecode* pc);
 
+JSObject* ImportMetaOperation(JSContext* cx, HandleScript script);
+
 bool ThrowMsgOperation(JSContext* cx, const unsigned errorNum);
 
 bool GetAndClearException(JSContext* cx, MutableHandleValue res);
