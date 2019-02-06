@@ -397,7 +397,6 @@ def make_partials_artifacts(config, jobs):
         platform = job["attributes"]["build_platform"]
 
         if 'partials-signing' not in job['dependencies']:
-            logger.debug("beetmover-repackage partials finished, no partials")
             yield job
             continue
 
