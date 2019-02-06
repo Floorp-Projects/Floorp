@@ -10,6 +10,7 @@ import mozilla.components.concept.engine.EngineView
 import org.junit.Test
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 
@@ -45,5 +46,18 @@ class EngineViewPresenterTest {
         val engineViewPresenter = EngineViewPresenter(sessionManager, engineView)
         engineViewPresenter.stop()
         verify(sessionManager).unregister(engineViewPresenter)
+    }
+
+    @Test
+    fun `Presenter does not register or unregister if presenting fixed session`() {
+        val sessionId = "just-a-test"
+
+        val engineViewPresenter = EngineViewPresenter(sessionManager, engineView, sessionId)
+
+        engineViewPresenter.start()
+        verify(sessionManager, never()).register(engineViewPresenter)
+
+        engineViewPresenter.stop()
+        verify(sessionManager, never()).unregister(engineViewPresenter)
     }
 }

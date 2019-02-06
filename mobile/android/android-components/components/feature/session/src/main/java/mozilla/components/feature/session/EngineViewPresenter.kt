@@ -24,19 +24,20 @@ class EngineViewPresenter(
         val session = if (sessionId != null) {
             sessionManager.findSessionById(sessionId)
         } else {
+            sessionManager.register(this)
             sessionManager.selectedSession
         }
 
         session?.let { renderSession(it) }
-
-        sessionManager.register(this)
     }
 
     /**
      * Stop presenter from updating view.
      */
     fun stop() {
-        sessionManager.unregister(this)
+        if (sessionId == null) {
+            sessionManager.unregister(this)
+        }
     }
 
     /**

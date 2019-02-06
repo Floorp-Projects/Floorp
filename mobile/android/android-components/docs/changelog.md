@@ -13,6 +13,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **feature-session**
+  * Fixed an issue causing `EngineViewPresenter` to render a selected `Session` even though it was configured to show a fixed `Session`. This issue caused a crash (`IllegalStateException: Display already acquired`) in the [Reference Browser](https://github.com/mozilla-mobile/reference-browser) when a "Custom Tab" and the "Browser" tried to render the same `Session`.
+
 # 0.41.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.40.0...v0.41.0)
@@ -30,6 +33,7 @@ permalink: /changelog/
 
 * **feature-browser**
   * Added `BrowserToolbar` attributes to color the menu.
+
   ```xml
   <mozilla.components.browser.toolbar.BrowserToolbar
       android:id="@+id/toolbar"
@@ -50,6 +54,7 @@ permalink: /changelog/
 * **feature-downloads**
   * ⚠️ **This is a breaking API change!**
   * The required permissions are now passed to the `onNeedToRequestPermissions` callback.
+
   ```kotlin
   downloadsFeature = DownloadsFeature(
       requireContext(),
@@ -60,7 +65,9 @@ permalink: /changelog/
       }
   )
   ```
+
   * Removed the `onPermissionsGranted` method in favour of `onPermissionsResult` which handles both granted and denied permissions. This method should be invoked from `onRequestPermissionsResult`:
+  
   ```kotlin
    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
       when (requestCode) {
@@ -68,12 +75,14 @@ permalink: /changelog/
       }
     }
   ```
+
   * Fixed Downloads feature to work with Custom Tabs by passing in the session ID when applicable.
 
  * **feature-prompts**
    * ⚠️ **This is a breaking API change!**
    * These change are similar to the ones for feature-downloads above and aim to provide a consistent way of handling permission requests.
    * The required permissions are now passed to the `onNeedToRequestPermissions` callback.
+   
    ```kotlin
    promptFeature = PromptFeature(
       fragment = this,
@@ -84,7 +93,9 @@ permalink: /changelog/
       }
    )
    ```
+   
    * Renamed `onRequestsPermissionsResult` to `onPermissionResult` and allow applications to specify the permission request code. This method should be invoked from `onRequestPermissionsResult`:
+  
   ```kotlin
    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
       when (requestCode) {
