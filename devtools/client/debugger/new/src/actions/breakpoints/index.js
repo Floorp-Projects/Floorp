@@ -23,7 +23,7 @@ import {
 import {
   assertBreakpoint,
   createXHRBreakpoint,
-  makeSourceActorLocation
+  makeBreakpointLocation
 } from "../../utils/breakpoint";
 import {
   addBreakpoint,
@@ -49,19 +49,8 @@ import type {
 import { recordEvent } from "../../utils/telemetry";
 
 async function removeBreakpointsPromise(client, state, breakpoint) {
-  const sourceActors = getSourceActors(
-    state,
-    breakpoint.generatedLocation.sourceId
-  );
-  for (const sourceActor of sourceActors) {
-    const sourceActorLocation = makeSourceActorLocation(
-      sourceActor,
-      breakpoint.generatedLocation
-    );
-    if (client.getBreakpointByLocation(sourceActorLocation)) {
-      await client.removeBreakpoint(sourceActorLocation);
-    }
-  }
+  const breakpointLocation = makeBreakpointLocation(state, breakpoint.generatedLocation);
+  await client.removeBreakpoint(breakpointLocation);
 }
 
 /**
@@ -304,19 +293,8 @@ export function setBreakpointOptions(
       await dispatch(enableBreakpoint(bp));
     }
 
-    const sourceActors = getSourceActors(
-      getState(),
-      bp.generatedLocation.sourceId
-    );
-    for (const sourceActor of sourceActors) {
-      const sourceActorLocation = makeSourceActorLocation(
-        sourceActor,
-        bp.generatedLocation
-      );
-      if (client.getBreakpointByLocation(sourceActorLocation)) {
-        await client.setBreakpointOptions(sourceActorLocation, options);
-      }
-    }
+    const breakpointLocation = makeBreakpointLocation(getState(), bp.generatedLocation);
+    await client.setBreakpoint(breakpointLocation, options);
 
     const newBreakpoint = { ...bp, disabled: false, options };
 

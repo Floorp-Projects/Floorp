@@ -16,63 +16,63 @@ add_task(threadClientTest(({ threadClient, debuggee }) => {
         threadClient,
         packet.frame.where.actor
       );
-      const location = { line: debuggee.line0 + 2 };
+      const location = { sourceUrl: source.url, line: debuggee.line0 + 2 };
 
-      source.setBreakpoint(location).then(async function([response, bpClient]) {
-        const testCallbacks = [
-          function(packet) {
-            // Check that the stepping worked.
-            Assert.equal(packet.frame.where.line, debuggee.line0 + 5);
-            Assert.equal(packet.why.type, "resumeLimit");
-          },
-          function(packet) {
-            // Reached the breakpoint.
-            Assert.equal(packet.frame.where.line, location.line);
-            Assert.equal(packet.why.type, "breakpoint");
-            Assert.notEqual(packet.why.type, "resumeLimit");
-          },
-          function(packet) {
-            // Stepped to the closing brace of the function.
-            Assert.equal(packet.frame.where.line, debuggee.line0 + 3);
-            Assert.equal(packet.why.type, "resumeLimit");
-          },
-          function(packet) {
-            // The frame is about to be popped while stepping.
-            Assert.equal(packet.frame.where.line, debuggee.line0 + 3);
-            Assert.notEqual(packet.why.type, "breakpoint");
-            Assert.equal(packet.why.type, "resumeLimit");
-            Assert.equal(packet.why.frameFinished.return.type, "undefined");
-          },
-          function(packet) {
-            // Check that the debugger statement wasn't the reason for this pause.
-            Assert.equal(debuggee.a, 1);
-            Assert.equal(debuggee.b, undefined);
-            Assert.equal(packet.frame.where.line, debuggee.line0 + 6);
-            Assert.notEqual(packet.why.type, "debuggerStatement");
-            Assert.equal(packet.why.type, "resumeLimit");
-            Assert.equal(packet.poppedFrames.length, 1);
-          },
-          function(packet) {
-            // Check that the debugger statement wasn't the reason for this pause.
-            Assert.equal(packet.frame.where.line, debuggee.line0 + 7);
-            Assert.notEqual(packet.why.type, "debuggerStatement");
-            Assert.equal(packet.why.type, "resumeLimit");
-          },
-        ];
+      threadClient.setBreakpoint(location, {});
+      const testCallbacks = [
+        function(packet) {
+          // Check that the stepping worked.
+          Assert.equal(packet.frame.where.line, debuggee.line0 + 5);
+          Assert.equal(packet.why.type, "resumeLimit");
+        },
+        function(packet) {
+          // Reached the breakpoint.
+          Assert.equal(packet.frame.where.line, location.line);
+          Assert.equal(packet.why.type, "breakpoint");
+          Assert.notEqual(packet.why.type, "resumeLimit");
+        },
+        function(packet) {
+          // Stepped to the closing brace of the function.
+          Assert.equal(packet.frame.where.line, debuggee.line0 + 3);
+          Assert.equal(packet.why.type, "resumeLimit");
+        },
+        function(packet) {
+          // The frame is about to be popped while stepping.
+          Assert.equal(packet.frame.where.line, debuggee.line0 + 3);
+          Assert.notEqual(packet.why.type, "breakpoint");
+          Assert.equal(packet.why.type, "resumeLimit");
+          Assert.equal(packet.why.frameFinished.return.type, "undefined");
+        },
+        function(packet) {
+          // Check that the debugger statement wasn't the reason for this pause.
+          Assert.equal(debuggee.a, 1);
+          Assert.equal(debuggee.b, undefined);
+          Assert.equal(packet.frame.where.line, debuggee.line0 + 6);
+          Assert.notEqual(packet.why.type, "debuggerStatement");
+          Assert.equal(packet.why.type, "resumeLimit");
+          Assert.equal(packet.poppedFrames.length, 1);
+        },
+        function(packet) {
+          // Check that the debugger statement wasn't the reason for this pause.
+          Assert.equal(packet.frame.where.line, debuggee.line0 + 7);
+          Assert.notEqual(packet.why.type, "debuggerStatement");
+          Assert.equal(packet.why.type, "resumeLimit");
+        },
+      ];
 
-        for (const callback of testCallbacks) {
-          const waiter = waitForPause(threadClient);
-          threadClient.stepOver();
-          const packet = await waiter;
-          callback(packet);
-        }
-
-        // Remove the breakpoint and finish.
+      for (const callback of testCallbacks) {
         const waiter = waitForPause(threadClient);
         threadClient.stepOver();
-        await waiter;
-        bpClient.remove(() => threadClient.resume(resolve));
-      });
+        const packet = await waiter;
+        callback(packet);
+      }
+
+      // Remove the breakpoint and finish.
+      const waiter = waitForPause(threadClient);
+      threadClient.stepOver();
+      await waiter;
+      threadClient.removeBreakpoint(location);
+      threadClient.resume(resolve);
     });
 
     /* eslint-disable */

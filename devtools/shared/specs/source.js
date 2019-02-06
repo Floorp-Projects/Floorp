@@ -55,16 +55,6 @@ const sourceSpec = generateActorSpec({
     unblackbox: {
       request: { range: Arg(0, "nullable:json") },
     },
-    setBreakpoint: {
-      request: {
-        location: {
-          line: Arg(0, "number"),
-          column: Arg(1, "nullable:number"),
-        },
-        options: Arg(2, "nullable:json"),
-      },
-      response: RetVal("json"),
-    },
   },
 });
 

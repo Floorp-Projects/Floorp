@@ -18,7 +18,7 @@ add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
     threadClient,
     dbgStmt.frame.where.actor
   );
-  await source.setBreakpoint({ line: 7 });
+  await threadClient.setBreakpoint({ sourceUrl: source.url, line: 7 }, {});
 
   dumpn("Step in to innerFunction");
   const step1 = await stepIn(client, threadClient);
