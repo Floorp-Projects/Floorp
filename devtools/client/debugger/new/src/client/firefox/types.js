@@ -402,7 +402,7 @@ export type BreakpointClient = {
     line: number,
     column: ?number
   },
-  setOptions: (BreakpointOptions) => Promise<BreakpointClient>,
+  setOptions: BreakpointOptions => Promise<BreakpointClient>,
   // request: any,
   source: SourceClient,
   options: BreakpointOptions
