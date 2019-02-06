@@ -3596,7 +3596,8 @@ TypeScript::TypeScript(JSScript* script, ICScriptPtr&& icScript,
                        uint32_t numTypeSets)
     : icScript_(std::move(icScript)),
       numTypeSets_(numTypeSets),
-      bytecodeTypeMapHint_(0) {
+      bytecodeTypeMapHint_(0),
+      active_(false) {
   StackTypeSet* array = typeArray();
   for (unsigned i = 0; i < numTypeSets; i++) {
     new (&array[i]) StackTypeSet();
@@ -4743,7 +4744,8 @@ void ObjectGroup::sweep(const AutoSweepObjectGroup& sweep) {
 }
 
 void JSScript::maybeReleaseTypes() {
-  if (!types_ || zone()->types.keepTypeScripts || hasBaselineScript()) {
+  if (!types_ || zone()->types.keepTypeScripts || hasBaselineScript() ||
+      types_->active()) {
     return;
   }
 
