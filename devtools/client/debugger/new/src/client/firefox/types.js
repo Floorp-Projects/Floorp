@@ -333,6 +333,10 @@ export type SourceClient = {
     condition: ?string,
     noSliding: boolean
   }) => Promise<BreakpointResponse>,
+  getBreakpointPositionsCompressed: (range: {
+    start: { line: number },
+    end: { line: number }
+  }) => Promise<any>,
   prettyPrint: number => Promise<*>,
   disablePrettyPrint: () => Promise<*>,
   blackBox: (range?: Range) => Promise<*>,

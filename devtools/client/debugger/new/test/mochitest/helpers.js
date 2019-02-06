@@ -767,10 +767,13 @@ function findBreakpoint(dbg, url, line) {
   if (
     Services.prefs.getBoolPref("devtools.debugger.features.column-breakpoints")
   ) {
-    column = dbg.selectors.getFirstPausePointLocation(dbg.store.getState(), {
-      sourceId: source.id,
-      line
-    }).column;
+    ({ column } = dbg.selectors.getFirstVisibleBreakpointPosition(
+      dbg.store.getState(), 
+      {
+        sourceId: source.id, 
+        line
+      }
+    ));
   }
   return getBreakpoint(getState(), { sourceId: source.id, line, column });
 }

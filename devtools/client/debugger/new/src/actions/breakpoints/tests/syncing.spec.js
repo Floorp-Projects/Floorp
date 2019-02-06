@@ -135,6 +135,7 @@ describe("loading the debugger", () => {
       getState,
       threadClient,
       sourceMaps,
+      dispatch,
       reloadedSource.source.id,
       pendingBreakpoint()
     );
@@ -165,6 +166,7 @@ describe("loading the debugger", () => {
       getState,
       threadClient,
       sourceMaps,
+      dispatch,
       reloadedSource.source.id,
       pendingBreakpoint()
     );
@@ -209,6 +211,7 @@ describe("reloading debuggee", () => {
       getState,
       threadClient,
       sourceMaps,
+      dispatch,
       reloadedSource.source.id,
       pendingBreakpoint({ location: loc1 })
     );
@@ -252,6 +255,7 @@ describe("reloading debuggee", () => {
       getState,
       threadClient,
       sourceMaps,
+      dispatch,
       reloadedSource.source.id,
       pendingBreakpoint()
     );

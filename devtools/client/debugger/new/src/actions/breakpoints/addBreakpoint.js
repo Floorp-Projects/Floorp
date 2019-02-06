@@ -20,10 +20,13 @@ import {
   getSource,
   getSourceActors,
   getSymbols,
+  getFirstVisibleBreakpointPosition
 } from "../../selectors";
 import { getGeneratedLocation } from "../../utils/source-maps";
 import { getTextAtPosition } from "../../utils/source";
 import { recordEvent } from "../../utils/telemetry";
+import { features } from "../../utils/prefs";
+import { setBreakpointPositions } from "./breakpointPositions";
 
 import type {
   BreakpointOptions,
@@ -144,22 +147,27 @@ export function enableBreakpoint(breakpoint: Breakpoint) {
   };
 }
 
-/**
- * Add a new breakpoint
- *
- * @memberof actions/breakpoints
- * @static
- * @param {BreakpointOptions} options Any options for the new breakpoint.
- */
-
 export function addBreakpoint(
   location: SourceLocation,
   options: BreakpointOptions = {}
 ) {
-  return ({ dispatch, getState, sourceMaps, client }: ThunkArgs) => {
+  return async ({ dispatch, getState, sourceMaps, client }: ThunkArgs) => {
     recordEvent("add_breakpoint");
+    let breakpointPosition = location;
 
-    const breakpoint = createBreakpoint(location, options);
+    if (features.columnBreakpoints && location.column === undefined) {
+      await dispatch(setBreakpointPositions(location));
+      breakpointPosition = getFirstVisibleBreakpointPosition(
+        getState(),
+        location
+      );
+    }
+
+    if (!breakpointPosition) {
+      return;
+    }
+
+    const breakpoint = createBreakpoint(breakpointPosition, options);
 
     return dispatch({
       type: "ADD_BREAKPOINT",
