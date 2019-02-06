@@ -2,12 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+// @flow
+
+// $FlowIgnore
 global.Worker = require("workerjs");
 
 import path from "path";
 // import getConfig from "../../bin/getConfig";
 import { readFileSync } from "fs";
 import Enzyme from "enzyme";
+// $FlowIgnore
 import Adapter from "enzyme-adapter-react-16";
 import { setupHelper } from "../utils/dbg";
 import { prefs } from "../utils/prefs";
@@ -65,7 +69,8 @@ function formatException(reason, p) {
 
 beforeAll(() => {
   startSourceMapWorker(
-    path.join(rootPath, "node_modules/devtools-source-map/src/worker.js")
+    path.join(rootPath, "node_modules/devtools-source-map/src/worker.js"),
+    ""
   );
   startPrettyPrintWorker(
     path.join(rootPath, "src/workers/pretty-print/worker.js")

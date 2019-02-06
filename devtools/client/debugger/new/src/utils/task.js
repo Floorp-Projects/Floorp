@@ -4,12 +4,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+// @flow
+
 /**
  * This object provides the public module functions.
  */
 export const Task = {
   // XXX: Not sure if this works in all cases...
-  async: function(task) {
+  async: function(task: any) {
     return function() {
       return Task.spawn(task, this, arguments);
     };
@@ -20,7 +22,7 @@ export const Task = {
    * @param task A generator function
    * @return A promise, resolved when the task terminates
    */
-  spawn: function(task, scope, args) {
+  spawn: function(task: any, scope: any, args: any): Promise<any> {
     return new Promise(function(resolve, reject) {
       const iterator = task.apply(scope, args);
 

@@ -139,6 +139,7 @@ async function expandFrames(
         thread: originalFrame.thread,
         displayName: originalFrame.displayName,
         location: originalFrame.location,
+        source: null,
         scope: frame.scope,
         this: frame.this,
         isOriginal: true,

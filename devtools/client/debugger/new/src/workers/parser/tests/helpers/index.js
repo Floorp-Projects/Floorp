@@ -2,17 +2,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+// @flow
+
 import fs from "fs";
 import path from "path";
 
-export function getFixture(name, type = "js") {
+import { makeMockSource } from "../../../../utils/test-mockup";
+
+export function getFixture(name: string, type: string = "js") {
   return fs.readFileSync(
     path.join(__dirname, `../fixtures/${name}.${type}`),
     "utf8"
   );
 }
 
-export function getSource(name, type) {
+export function getSource(name: string, type: string = "js") {
   const text = getFixture(name, type);
   let contentType = "text/javascript";
   if (type === "html") {
@@ -25,14 +29,10 @@ export function getSource(name, type) {
     contentType = "text/typescript-jsx";
   }
 
-  return {
-    id: name,
-    text,
-    contentType
-  };
+  return makeMockSource(undefined, name, contentType, text);
 }
 
-export function getOriginalSource(name, type) {
+export function getOriginalSource(name: string, type: string = "js") {
   const source = getSource(name, type);
   return { ...source, id: `${name}/originalSource-1` };
 }
