@@ -528,9 +528,12 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
 
   /**
    * The nsComputedDOMStyle generation at the time we last resolved a style
-   * context and stored it in mComputedStyle.
+   * context and stored it in mComputedStyle, and the pres shell we got the
+   * style from. Should only be used together.
    */
-  uint64_t mComputedStyleGeneration;
+  uint64_t mComputedStyleGeneration = 0;
+
+  uint32_t mPresShellId = 0;
 
   bool mExposeVisitedStyle;
 
