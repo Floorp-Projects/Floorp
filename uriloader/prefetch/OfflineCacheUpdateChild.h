@@ -29,14 +29,14 @@ class OfflineCacheUpdateChild : public nsIOfflineCacheUpdate,
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOFFLINECACHEUPDATE
 
-  virtual mozilla::ipc::IPCResult RecvNotifyStateEvent(
-      const uint32_t& stateEvent, const uint64_t& byteProgress) override;
+  mozilla::ipc::IPCResult RecvNotifyStateEvent(const uint32_t& stateEvent,
+                                               const uint64_t& byteProgress);
 
-  virtual mozilla::ipc::IPCResult RecvAssociateDocuments(
-      const nsCString& cacheGroupId, const nsCString& cacheClientId) override;
+  mozilla::ipc::IPCResult RecvAssociateDocuments(
+      const nsCString& cacheGroupId, const nsCString& cacheClientId);
 
-  virtual mozilla::ipc::IPCResult RecvFinish(const bool& succeeded,
-                                             const bool& isUpgrade) override;
+  mozilla::ipc::IPCResult RecvFinish(const bool& succeeded,
+                                     const bool& isUpgrade);
 
   explicit OfflineCacheUpdateChild(nsPIDOMWindowInner* aWindow);
 

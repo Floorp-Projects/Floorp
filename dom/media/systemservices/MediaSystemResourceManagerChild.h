@@ -48,7 +48,7 @@ class MediaSystemResourceManagerChild final
 
  protected:
   mozilla::ipc::IPCResult RecvResponse(const uint32_t& aId,
-                                       const bool& aSuccess) override;
+                                       const bool& aSuccess);
 
  private:
   void ActorDestroy(ActorDestroyReason aActorDestroyReason) override;

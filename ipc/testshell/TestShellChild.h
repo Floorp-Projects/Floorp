@@ -21,7 +21,7 @@ class TestShellChild : public PTestShellChild {
  public:
   TestShellChild();
 
-  mozilla::ipc::IPCResult RecvExecuteCommand(const nsString& aCommand) override;
+  mozilla::ipc::IPCResult RecvExecuteCommand(const nsString& aCommand);
 
   PTestShellCommandChild* AllocPTestShellCommandChild(const nsString& aCommand);
 

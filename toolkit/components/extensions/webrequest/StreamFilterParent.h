@@ -88,13 +88,13 @@ class StreamFilterParent final : public PStreamFilterParent,
  protected:
   virtual ~StreamFilterParent();
 
-  virtual IPCResult RecvWrite(Data&& aData) override;
-  virtual IPCResult RecvFlushedData() override;
-  virtual IPCResult RecvSuspend() override;
-  virtual IPCResult RecvResume() override;
-  virtual IPCResult RecvClose() override;
-  virtual IPCResult RecvDisconnect() override;
-  virtual IPCResult RecvDestroy() override;
+  IPCResult RecvWrite(Data&& aData);
+  IPCResult RecvFlushedData();
+  IPCResult RecvSuspend();
+  IPCResult RecvResume();
+  IPCResult RecvClose();
+  IPCResult RecvDisconnect();
+  IPCResult RecvDestroy();
 
   virtual void DeallocPStreamFilterParent() override;
 

@@ -32,15 +32,15 @@ class SharedWorkerParent final : public mozilla::dom::PSharedWorkerParent {
 
   void ErrorPropagation(nsresult aError);
 
-  mozilla::ipc::IPCResult RecvClose() override;
+  mozilla::ipc::IPCResult RecvClose();
 
-  mozilla::ipc::IPCResult RecvSuspend() override;
+  mozilla::ipc::IPCResult RecvSuspend();
 
-  mozilla::ipc::IPCResult RecvResume() override;
+  mozilla::ipc::IPCResult RecvResume();
 
-  mozilla::ipc::IPCResult RecvFreeze() override;
+  mozilla::ipc::IPCResult RecvFreeze();
 
-  mozilla::ipc::IPCResult RecvThaw() override;
+  mozilla::ipc::IPCResult RecvThaw();
 
   bool IsSuspended() const { return mSuspended; }
 

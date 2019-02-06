@@ -36,23 +36,21 @@ class SocketProcessParent final : public PSocketProcessParent {
   static SocketProcessParent* GetSingleton();
 
   mozilla::ipc::IPCResult RecvInitCrashReporter(
-      Shmem&& aShmem, const NativeThreadId& aThreadId) override;
-  mozilla::ipc::IPCResult RecvAddMemoryReport(
-      const MemoryReport& aReport) override;
-  mozilla::ipc::IPCResult RecvFinishMemoryReport(
-      const uint32_t& aGeneration) override;
+      Shmem&& aShmem, const NativeThreadId& aThreadId);
+  mozilla::ipc::IPCResult RecvAddMemoryReport(const MemoryReport& aReport);
+  mozilla::ipc::IPCResult RecvFinishMemoryReport(const uint32_t& aGeneration);
   mozilla::ipc::IPCResult RecvAccumulateChildHistograms(
-      InfallibleTArray<HistogramAccumulation>&& aAccumulations) override;
+      InfallibleTArray<HistogramAccumulation>&& aAccumulations);
   mozilla::ipc::IPCResult RecvAccumulateChildKeyedHistograms(
-      InfallibleTArray<KeyedHistogramAccumulation>&& aAccumulations) override;
+      InfallibleTArray<KeyedHistogramAccumulation>&& aAccumulations);
   mozilla::ipc::IPCResult RecvUpdateChildScalars(
-      InfallibleTArray<ScalarAction>&& aScalarActions) override;
+      InfallibleTArray<ScalarAction>&& aScalarActions);
   mozilla::ipc::IPCResult RecvUpdateChildKeyedScalars(
-      InfallibleTArray<KeyedScalarAction>&& aScalarActions) override;
+      InfallibleTArray<KeyedScalarAction>&& aScalarActions);
   mozilla::ipc::IPCResult RecvRecordChildEvents(
-      nsTArray<ChildEventData>&& events) override;
+      nsTArray<ChildEventData>&& events);
   mozilla::ipc::IPCResult RecvRecordDiscardedData(
-      const DiscardedData& aDiscardedData) override;
+      const DiscardedData& aDiscardedData);
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
   bool SendRequestMemoryReport(const uint32_t& aGeneration,

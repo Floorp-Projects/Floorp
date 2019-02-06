@@ -30,8 +30,7 @@ class StreamNotifyParent : public PStreamNotifyParent {
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
  private:
-  mozilla::ipc::IPCResult RecvRedirectNotifyResponse(
-      const bool& allow) override;
+  mozilla::ipc::IPCResult RecvRedirectNotifyResponse(const bool& allow);
 
   bool* mDestructionFlag;
 };

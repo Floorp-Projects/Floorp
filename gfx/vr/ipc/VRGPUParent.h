@@ -25,8 +25,8 @@ class VRGPUParent final : public PVRGPUParent {
 
  protected:
   void Bind(Endpoint<PVRGPUParent>&& aEndpoint);
-  virtual mozilla::ipc::IPCResult RecvStartVRService() override;
-  virtual mozilla::ipc::IPCResult RecvStopVRService() override;
+  mozilla::ipc::IPCResult RecvStartVRService();
+  mozilla::ipc::IPCResult RecvStopVRService();
 
  private:
   explicit VRGPUParent(ProcessId aChildProcessId);

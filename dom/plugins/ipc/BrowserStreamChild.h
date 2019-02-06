@@ -29,11 +29,10 @@ class BrowserStreamChild : public PBrowserStreamChild, public AStream {
   NPError StreamConstructed(const nsCString& mimeType, const bool& seekable,
                             uint16_t* stype);
 
-  virtual mozilla::ipc::IPCResult RecvWrite(const int32_t& offset,
-                                            const uint32_t& newsize,
-                                            const Buffer& data) override;
-  virtual mozilla::ipc::IPCResult RecvNPP_DestroyStream(
-      const NPReason& reason) override;
+  mozilla::ipc::IPCResult RecvWrite(const int32_t& offset,
+                                    const uint32_t& newsize,
+                                    const Buffer& data);
+  mozilla::ipc::IPCResult RecvNPP_DestroyStream(const NPReason& reason);
   virtual mozilla::ipc::IPCResult Recv__delete__() override;
 
   void EnsureCorrectInstance(PluginInstanceChild* i) {

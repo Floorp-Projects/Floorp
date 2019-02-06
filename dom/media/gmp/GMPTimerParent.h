@@ -28,7 +28,7 @@ class GMPTimerParent : public PGMPTimerParent {
 
  protected:
   mozilla::ipc::IPCResult RecvSetTimer(const uint32_t& aTimerId,
-                                       const uint32_t& aTimeoutMs) override;
+                                       const uint32_t& aTimeoutMs);
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
  private:

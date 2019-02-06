@@ -86,21 +86,20 @@ class CookieServiceChild : public PCookieServiceChild,
 
   bool RequireThirdPartyCheck();
 
-  virtual mozilla::ipc::IPCResult RecvTrackCookiesLoad(
+  mozilla::ipc::IPCResult RecvTrackCookiesLoad(
+      nsTArray<CookieStruct> &&aCookiesList, const OriginAttributes &aAttrs);
+
+  mozilla::ipc::IPCResult RecvRemoveAll();
+
+  mozilla::ipc::IPCResult RecvRemoveBatchDeletedCookies(
       nsTArray<CookieStruct> &&aCookiesList,
-      const OriginAttributes &aAttrs) override;
+      nsTArray<OriginAttributes> &&aAttrsList);
 
-  virtual mozilla::ipc::IPCResult RecvRemoveAll() override;
+  mozilla::ipc::IPCResult RecvRemoveCookie(const CookieStruct &aCookie,
+                                           const OriginAttributes &aAttrs);
 
-  virtual mozilla::ipc::IPCResult RecvRemoveBatchDeletedCookies(
-      nsTArray<CookieStruct> &&aCookiesList,
-      nsTArray<OriginAttributes> &&aAttrsList) override;
-
-  virtual mozilla::ipc::IPCResult RecvRemoveCookie(
-      const CookieStruct &aCookie, const OriginAttributes &aAttrs) override;
-
-  virtual mozilla::ipc::IPCResult RecvAddCookie(
-      const CookieStruct &aCookie, const OriginAttributes &aAttrs) override;
+  mozilla::ipc::IPCResult RecvAddCookie(const CookieStruct &aCookie,
+                                        const OriginAttributes &aAttrs);
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 

@@ -79,24 +79,21 @@ class NeckoChild : public PNeckoChild {
   bool DeallocPChannelDiverterChild(PChannelDiverterChild* actor);
   PTransportProviderChild* AllocPTransportProviderChild();
   bool DeallocPTransportProviderChild(PTransportProviderChild* aActor);
-  virtual mozilla::ipc::IPCResult RecvAsyncAuthPromptForNestedFrame(
+  mozilla::ipc::IPCResult RecvAsyncAuthPromptForNestedFrame(
       const TabId& aNestedFrameId, const nsCString& aUri,
-      const nsString& aRealm, const uint64_t& aCallbackId) override;
+      const nsString& aRealm, const uint64_t& aCallbackId);
   PWebSocketEventListenerChild* AllocPWebSocketEventListenerChild(
       const uint64_t& aInnerWindowID);
   bool DeallocPWebSocketEventListenerChild(PWebSocketEventListenerChild*);
 
   /* Predictor Messsages */
-  virtual mozilla::ipc::IPCResult RecvPredOnPredictPrefetch(
-      const URIParams& aURI, const uint32_t& aHttpStatus) override;
-  virtual mozilla::ipc::IPCResult RecvPredOnPredictPreconnect(
-      const URIParams& aURI) override;
-  virtual mozilla::ipc::IPCResult RecvPredOnPredictDNS(
-      const URIParams& aURI) override;
+  mozilla::ipc::IPCResult RecvPredOnPredictPrefetch(
+      const URIParams& aURI, const uint32_t& aHttpStatus);
+  mozilla::ipc::IPCResult RecvPredOnPredictPreconnect(const URIParams& aURI);
+  mozilla::ipc::IPCResult RecvPredOnPredictDNS(const URIParams& aURI);
 
-  virtual mozilla::ipc::IPCResult RecvSpeculativeConnectRequest() override;
-  virtual mozilla::ipc::IPCResult RecvNetworkChangeNotification(
-      nsCString const& type) override;
+  mozilla::ipc::IPCResult RecvSpeculativeConnectRequest();
+  mozilla::ipc::IPCResult RecvNetworkChangeNotification(nsCString const& type);
 
   PTrackingDummyChannelChild* AllocPTrackingDummyChannelChild(
       nsIURI* aURI, nsIURI* aTopWindowURI, const nsresult& aTopWindowURIResult,
