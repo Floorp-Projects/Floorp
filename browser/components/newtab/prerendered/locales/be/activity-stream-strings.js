@@ -40,9 +40,9 @@ window.gActivityStreamStrings = {
   "section_disclaimer_topstories_buttontext": "Зразумела",
   "prefs_home_header": "Хатні экран Firefox",
   "prefs_home_description": "Выберыце пажаданае змесціва для хатняга экрана Firefox.",
-  "prefs_content_discovery_header": "Firefox Home",
-  "prefs_content_discovery_description": "Content Discovery in Firefox Home allows you to discover high-quality, relevant articles from across the web.",
-  "prefs_content_discovery_button": "Turn Off Content Discovery",
+  "prefs_content_discovery_header": "Хатняя старонка Firefox",
+  "prefs_content_discovery_description": "Выяўленне змесціва на хатняй старонцы Firefox дазволіць вам знаходзіць высакаякасныя рэлевантныя артыкулы з усяго сеціва.",
+  "prefs_content_discovery_button": "Адключыць выяўленне змесціва",
   "prefs_section_rows_option": "{num} радок;{num} радкі;{num} радкоў",
   "prefs_search_header": "Пошук у сеціве",
   "prefs_topsites_description": "Сайты, якія вы наведваеце найчасцей",
@@ -110,6 +110,5 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "паведамленнем аб прыватнасці",
   "firstrun_continue_to_login": "Працягнуць",
   "firstrun_skip_login": "Прапусціць гэты крок",
-  "context_menu_title": "Адкрыць меню",
-  "pocket_learn_more": "Падрабязней"
+  "context_menu_title": "Адкрыць меню"
 };

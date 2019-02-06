@@ -622,6 +622,15 @@ this.TelemetryFeed = class TelemetryFeed {
       this.setLoadTriggerInfo(port);
     }
 
+    let timestamp = data.topsites_first_painted_ts;
+
+    if (timestamp &&
+        session.page === "about:home" &&
+        !HomePage.overridden &&
+        Services.prefs.getIntPref("browser.startup.page") === 1) {
+      aboutNewTabService.maybeRecordTopsitesPainted(timestamp);
+    }
+
     Object.assign(session.perf, data);
   }
 

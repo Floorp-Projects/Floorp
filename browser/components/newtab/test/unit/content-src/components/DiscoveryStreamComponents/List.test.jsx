@@ -4,7 +4,7 @@ import React from "react";
 import {shallow} from "enzyme";
 
 describe("<List> presentation component", () => {
-  const ValidRecommendations = [{a: 1}, {a: 2}];
+  const ValidRecommendations = [{url: 1}, {url: 2}, {url: 3}];
   const ValidListProps = {
     DiscoveryStream: {
       feeds: {
@@ -47,6 +47,27 @@ describe("<List> presentation component", () => {
 
     const listItem = wrapper.find(ListItem);
     assert.lengthOf(listItem, ValidRecommendations.length);
+  });
+
+  it("should return fewer ListItems for fewer items", () => {
+    const wrapper = shallow(<List {...ValidListProps} items={1} />);
+
+    const listItem = wrapper.find(ListItem);
+    assert.lengthOf(listItem, 1);
+  });
+
+  it("should return fewer ListItems for starting point", () => {
+    const wrapper = shallow(<List {...ValidListProps} recStartingPoint={1} />);
+
+    const listItem = wrapper.find(ListItem);
+    assert.lengthOf(listItem, ValidRecommendations.length - 1);
+  });
+
+  it("should return expected ListItems when offset", () => {
+    const wrapper = shallow(<List {...ValidListProps} items={2} recStartingPoint={1} />);
+
+    const listItemUrls = wrapper.find(ListItem).map(i => i.prop("url"));
+    assert.sameOrderedMembers(listItemUrls, [ValidRecommendations[1].url, ValidRecommendations[2].url]);
   });
 });
 

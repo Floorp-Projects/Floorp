@@ -17,9 +17,10 @@
   "properties": {
     "bucket_id": {
       "type": "string",
-      "description": "Bucket identifier for the addon."
+      "description": "A bucket identifier for the addon. This is used in order to anonymize telemetry for history-sensitive targeting."
     },
     "notification_text": {
+      "description": "The text in the small blue chicklet that appears in the URL bar. This can be a reference to a localized string in Firefox or just a plain string.",
       "oneOf": [
         {
           "type": "string",
@@ -35,11 +36,11 @@
           },
           "required": ["string_id"]
         }
-      ],
-      "description": "Id of localized string or message override."
+      ]
     },
     "info_icon": {
       "type": "object",
+      "description": "The small icon displayed in the top right corner of the pop-over. Should be 19x19px, svg or png. Defaults to a small question mark." ,
       "properties": {
         "label": {
           "oneOf": [
@@ -79,6 +80,7 @@
       }
     },
     "heading_text": {
+      "description": "The larger heading text displayed in the pop-over. This can be a reference to a localized string in Firefox or just a plain string.",
       "oneOf": [
         {
           "type": "string",
@@ -94,10 +96,10 @@
           "required": ["string_id"],
           "description": "Id of localized string for extension doorhanger title"
         }
-      ],
-      "description": "Id of localized string or message override."
+      ]
     },
     "addon": {
+      "description": "Addon information including AMO URL.",
       "type": "object",
       "properties": {
         "id": {
@@ -119,6 +121,7 @@
           ]
         },
         "icon": {
+          "description": "The icon displayed in the pop-over. Should be 64x64px and png/svg.",
           "allOf": [
             {"$ref": "#/definitions/linkUrl"},
             {"description": "Addon icon"}
@@ -145,6 +148,7 @@
       "required": ["title", "author", "icon", "amo_url"]
     },
     "text": {
+      "description": "The body text displayed in the pop-over. This can be a reference to a localized string in Firefox or just a plain string.",
       "oneOf": [
         {
           "type": "string",
@@ -160,10 +164,10 @@
           },
           "required": ["string_id"]
         }
-      ],
-      "description": "Id of localized string or message override."
+      ]
     },
     "buttons": {
+      "description": "The label and functionality for the buttons in the pop-over.",
       "type": "object",
       "properties": {
         "primary": {
