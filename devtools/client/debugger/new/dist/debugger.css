@@ -1166,7 +1166,7 @@ img.close::before {
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 .toggle-button {
-  padding: 5px;
+  padding: 4px 6px;
 }
 
 .toggle-button .img {
@@ -1182,8 +1182,8 @@ img.close::before {
   margin-inline-start: 0px;
 }
 
-html[dir="ltr"] .toggle-button:not(.vertical).end .img,
-html[dir="rtl"] .toggle-button:not(.vertical).start .img {
+html[dir="rtl"] .toggle-button.start .img,
+html[dir="ltr"] .toggle-button.end:not(.vertical) .img {
   transform: scaleX(-1);
 }
 
@@ -4518,16 +4518,13 @@ html[dir="rtl"] .object-node {
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 .welcomebox {
-  width: calc(100% - 1px);
-
-  /* Offsetting it by 30px for the sources-header area */
-  height: calc(100% - 30px);
   position: absolute;
-  top: 30px;
+  top: var(--editor-header-height);
   left: 0;
+  bottom: 1px;
+  width: calc(100% - 1px);
   padding: 50px 0 0 0;
   text-align: center;
-  font-size: 1.25em;
   background-color: var(--theme-toolbar-background);
   font-weight: lighter;
   z-index: 10;
@@ -4551,6 +4548,7 @@ html[dir="rtl"] .object-node {
 .alignlabel {
   display: flex;
   white-space: nowrap;
+  font-size: 1.25em;
 }
 
 .shortcutKeys {
