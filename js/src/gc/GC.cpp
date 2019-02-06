@@ -8051,7 +8051,7 @@ void GCRuntime::mergeRealms(Realm* source, Realm* target) {
        script.next()) {
     MOZ_ASSERT(script->realm() == source);
     script->realm_ = target;
-    script->setTypesGeneration(target->zone()->types.generation);
+    MOZ_ASSERT(!script->types());
   }
 
   GlobalObject* global = target->maybeGlobal();

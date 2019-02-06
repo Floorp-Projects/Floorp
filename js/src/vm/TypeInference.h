@@ -31,6 +31,7 @@
 namespace js {
 
 class TypeConstraint;
+class TypeScript;
 class TypeZone;
 class CompilerConstraintList;
 class HeapTypeSetKey;
@@ -87,7 +88,8 @@ class MOZ_RAII AutoSweepObjectGroup : public AutoSweepBase {
 // reference to this class.
 class MOZ_RAII AutoSweepTypeScript : public AutoSweepBase {
 #ifdef DEBUG
-  JSScript* script_;
+  Zone* zone_;
+  TypeScript* typeScript_;
 #endif
 
  public:
@@ -95,7 +97,8 @@ class MOZ_RAII AutoSweepTypeScript : public AutoSweepBase {
 #ifdef DEBUG
   inline ~AutoSweepTypeScript();
 
-  JSScript* script() const { return script_; }
+  TypeScript* typeScript() const { return typeScript_; }
+  Zone* zone() const { return zone_; }
 #endif
 };
 
@@ -218,16 +221,62 @@ class TypeScript {
 
   // This field is used to avoid binary searches for the sought entry when
   // bytecode map queries are in linear order.
-  uint32_t bytecodeTypeMapHint_;
+  uint32_t bytecodeTypeMapHint_ = 0;
+
+  struct Flags {
+    // Flag set when discarding JIT code to indicate this script is on the stack
+    // and type information and JIT code should not be discarded.
+    bool active : 1;
+
+    // Generation for type sweeping. If out of sync with the TypeZone's
+    // generation, this TypeScript needs to be swept.
+    bool typesGeneration : 1;
+
+    // Whether freeze constraints for stack type sets have been generated.
+    bool hasFreezeConstraints : 1;
+  };
+  Flags flags_ = {};  // Zero-initialize flags.
 
   // Variable-size array. This is followed by the bytecode type map.
   StackTypeSet typeArray_[1];
 
+  StackTypeSet* typeArrayDontCheckGeneration() {
+    // Ensure typeArray_ is the last data member of TypeScript.
+    static_assert(sizeof(TypeScript) ==
+                      sizeof(typeArray_) + offsetof(TypeScript, typeArray_),
+                  "typeArray_ must be the last member of TypeScript");
+    return const_cast<StackTypeSet*>(typeArray_);
+  }
+
+  uint32_t typesGeneration() const { return uint32_t(flags_.typesGeneration); }
+  void setTypesGeneration(uint32_t generation) {
+    MOZ_ASSERT(generation <= 1);
+    flags_.typesGeneration = generation;
+  }
+
  public:
   TypeScript(JSScript* script, ICScriptPtr&& icScript, uint32_t numTypeSets);
 
-  RecompileInfoVector& inlinedCompilations() { return inlinedCompilations_; }
-  MOZ_MUST_USE bool addInlinedCompilation(RecompileInfo info) {
+  bool hasFreezeConstraints(const js::AutoSweepTypeScript& sweep) const {
+    MOZ_ASSERT(sweep.typeScript() == this);
+    return flags_.hasFreezeConstraints;
+  }
+  void setHasFreezeConstraints(const js::AutoSweepTypeScript& sweep) {
+    MOZ_ASSERT(sweep.typeScript() == this);
+    flags_.hasFreezeConstraints = true;
+  }
+
+  inline bool typesNeedsSweep(Zone* zone) const;
+  void sweepTypes(const js::AutoSweepTypeScript& sweep, Zone* zone);
+
+  RecompileInfoVector& inlinedCompilations(
+      const js::AutoSweepTypeScript& sweep) {
+    MOZ_ASSERT(sweep.typeScript() == this);
+    return inlinedCompilations_;
+  }
+  MOZ_MUST_USE bool addInlinedCompilation(const js::AutoSweepTypeScript& sweep,
+                                          RecompileInfo info) {
+    MOZ_ASSERT(sweep.typeScript() == this);
     if (!inlinedCompilations_.empty() && inlinedCompilations_.back() == info) {
       return true;
     }
@@ -238,17 +287,19 @@ class TypeScript {
 
   uint32_t* bytecodeTypeMapHint() { return &bytecodeTypeMapHint_; }
 
+  bool active() const { return flags_.active; }
+  void setActive() { flags_.active = true; }
+  void resetActive() { flags_.active = false; }
+
   jit::ICScript* icScript() const {
     MOZ_ASSERT(icScript_);
     return icScript_.get();
   }
 
   /* Array of type sets for variables and JOF_TYPESET ops. */
-  StackTypeSet* typeArray() const {
-    // Ensure typeArray_ is the last data member of TypeScript.
-    JS_STATIC_ASSERT(sizeof(TypeScript) ==
-                     sizeof(typeArray_) + offsetof(TypeScript, typeArray_));
-    return const_cast<StackTypeSet*>(typeArray_);
+  StackTypeSet* typeArray(const js::AutoSweepTypeScript& sweep) {
+    MOZ_ASSERT(sweep.typeScript() == this);
+    return typeArrayDontCheckGeneration();
   }
 
   uint32_t* bytecodeTypeMap() {
@@ -324,7 +375,7 @@ class TypeScript {
   }
 
 #ifdef DEBUG
-  void printTypes(JSContext* cx, HandleScript script) const;
+  void printTypes(JSContext* cx, HandleScript script);
 #endif
 };
 

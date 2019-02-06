@@ -2444,6 +2444,9 @@ const VMFunction NewArrayCopyOnWriteInfo = FunctionInfo<NewArrayCopyOnWriteFn>(
 
 template <>
 bool BaselineCompilerCodeGen::emit_JSOP_NEWARRAY_COPYONWRITE() {
+  // This is like the interpreter implementation, but we can call
+  // getOrFixupCopyOnWriteObject at compile-time.
+
   RootedScript scriptRoot(cx, handler.script());
   JSObject* obj =
       ObjectGroup::getOrFixupCopyOnWriteObject(cx, scriptRoot, handler.pc());
@@ -2466,9 +2469,27 @@ bool BaselineCompilerCodeGen::emit_JSOP_NEWARRAY_COPYONWRITE() {
   return true;
 }
 
+typedef ArrayObject* (*NewArrayCopyOnWriteOperationFn)(JSContext*, HandleScript,
+                                                       jsbytecode*);
+const VMFunction NewArrayCopyOnWriteOperationInfo =
+    FunctionInfo<NewArrayCopyOnWriteOperationFn>(
+        NewArrayCopyOnWriteOperation, "NewArrayCopyOnWriteOperation");
+
 template <>
 bool BaselineInterpreterCodeGen::emit_JSOP_NEWARRAY_COPYONWRITE() {
-  MOZ_CRASH("NYI: interpreter JSOP_NEWARRAY_COPYONWRITE");
+  prepareVMCall();
+
+  pushBytecodePCArg();
+  pushScriptArg(R2.scratchReg());
+
+  if (!callVM(NewArrayCopyOnWriteOperationInfo)) {
+    return false;
+  }
+
+  // Box and push return value.
+  masm.tagValue(JSVAL_TYPE_OBJECT, ReturnReg, R0);
+  frame.push(R0);
+  return true;
 }
 
 template <>
@@ -3291,9 +3312,35 @@ bool BaselineCompilerCodeGen::emit_JSOP_GETIMPORT() {
   return true;
 }
 
+typedef bool (*GetImportOperationFn)(JSContext*, HandleObject, HandleScript,
+                                     jsbytecode*, MutableHandleValue);
+static const VMFunction GetImportOperationInfo =
+    FunctionInfo<GetImportOperationFn>(GetImportOperation,
+                                       "GetImportOperation");
+
 template <>
 bool BaselineInterpreterCodeGen::emit_JSOP_GETIMPORT() {
-  MOZ_CRASH("NYI: interpreter JSOP_GETIMPORT");
+  frame.syncStack(0);
+
+  masm.loadPtr(frame.addressOfEnvironmentChain(), R0.scratchReg());
+
+  prepareVMCall();
+
+  pushBytecodePCArg();
+  pushScriptArg(R2.scratchReg());
+  pushArg(R0.scratchReg());
+
+  if (!callVM(GetImportOperationInfo)) {
+    return false;
+  }
+
+  // Enter the type monitor IC.
+  if (!emitNextIC()) {
+    return false;
+  }
+
+  frame.push(R0);
+  return true;
 }
 
 template <typename Handler>
@@ -5554,9 +5601,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_INITHOMEOBJECT() {
 template <>
 bool BaselineCompilerCodeGen::emit_JSOP_BUILTINPROTO() {
   // The builtin prototype is a constant for a given global.
-  JSProtoKey key = static_cast<JSProtoKey>(GET_UINT8(handler.pc()));
-  MOZ_ASSERT(key < JSProto_LIMIT);
-  JSObject* builtin = GlobalObject::getOrCreatePrototype(cx, key);
+  JSObject* builtin = BuiltinProtoOperation(cx, handler.pc());
   if (!builtin) {
     return false;
   }
@@ -5564,9 +5609,24 @@ bool BaselineCompilerCodeGen::emit_JSOP_BUILTINPROTO() {
   return true;
 }
 
+typedef JSObject* (*BuiltinProtoOperationFn)(JSContext*, jsbytecode*);
+static const VMFunction BuiltinProtoOperationInfo =
+    FunctionInfo<BuiltinProtoOperationFn>(BuiltinProtoOperation,
+                                          "BuiltinProtoOperation");
+
 template <>
 bool BaselineInterpreterCodeGen::emit_JSOP_BUILTINPROTO() {
-  MOZ_CRASH("NYI: interpreter JSOP_BUILTINPROTO");
+  prepareVMCall();
+
+  pushBytecodePCArg();
+
+  if (!callVM(BuiltinProtoOperationInfo)) {
+    return false;
+  }
+
+  masm.tagValue(JSVAL_TYPE_OBJECT, ReturnReg, R0);
+  frame.push(R0);
+  return true;
 }
 
 typedef JSObject* (*ObjectWithProtoOperationFn)(JSContext*, HandleValue);
@@ -5668,6 +5728,9 @@ static const VMFunction GetOrCreateModuleMetaObjectInfo =
 
 template <>
 bool BaselineCompilerCodeGen::emit_JSOP_IMPORTMETA() {
+  // Note: this is like the interpreter implementation, but optimized a bit by
+  // calling GetModuleObjectForScript at compile-time.
+
   RootedModuleObject module(cx, GetModuleObjectForScript(handler.script()));
   MOZ_ASSERT(module);
 
@@ -5684,9 +5747,24 @@ bool BaselineCompilerCodeGen::emit_JSOP_IMPORTMETA() {
   return true;
 }
 
+typedef JSObject* (*ImportMetaOperationFn)(JSContext*, HandleScript);
+static const VMFunction ImportMetaOperationInfo =
+    FunctionInfo<ImportMetaOperationFn>(ImportMetaOperation,
+                                        "ImportMetaOperation");
+
 template <>
 bool BaselineInterpreterCodeGen::emit_JSOP_IMPORTMETA() {
-  MOZ_CRASH("NYI: interpreter JSOP_IMPORTMETA");
+  prepareVMCall();
+
+  pushScriptArg(R2.scratchReg());
+
+  if (!callVM(ImportMetaOperationInfo)) {
+    return false;
+  }
+
+  masm.tagValue(JSVAL_TYPE_OBJECT, ReturnReg, R0);
+  frame.push(R0);
+  return true;
 }
 
 typedef JSObject* (*StartDynamicModuleImportFn)(JSContext*, HandleScript,

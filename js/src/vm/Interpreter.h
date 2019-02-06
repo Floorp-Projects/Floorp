@@ -501,6 +501,10 @@ bool DefFunOperation(JSContext* cx, HandleScript script, HandleObject envChain,
 JSObject* SingletonObjectLiteralOperation(JSContext* cx, HandleScript script,
                                           jsbytecode* pc);
 
+JSObject* ImportMetaOperation(JSContext* cx, HandleScript script);
+
+JSObject* BuiltinProtoOperation(JSContext* cx, jsbytecode* pc);
+
 bool ThrowMsgOperation(JSContext* cx, const unsigned errorNum);
 
 bool GetAndClearException(JSContext* cx, MutableHandleValue res);
@@ -543,6 +547,13 @@ JSObject* NewArrayOperation(JSContext* cx, HandleScript script, jsbytecode* pc,
 
 JSObject* NewArrayOperationWithTemplate(JSContext* cx,
                                         HandleObject templateObject);
+
+ArrayObject* NewArrayCopyOnWriteOperation(JSContext* cx, HandleScript script,
+                                          jsbytecode* pc);
+
+MOZ_MUST_USE bool GetImportOperation(JSContext* cx, HandleObject envChain,
+                                     HandleScript script, jsbytecode* pc,
+                                     MutableHandleValue vp);
 
 void ReportRuntimeLexicalError(JSContext* cx, unsigned errorNumber,
                                HandleId id);

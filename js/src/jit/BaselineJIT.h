@@ -252,11 +252,7 @@ struct BaselineScript final {
 
  public:
   enum Flag {
-    // (1 << 0) is unused.
-
-    // Flag set when discarding JIT code, to indicate this script is
-    // on the stack and should not be discarded.
-    ACTIVE = 1 << 1,
+    // (1 << 0) and (1 << 1) are unused.
 
     // Flag set when the script contains any writes to its on-stack
     // (rather than call object stored) arguments.
@@ -353,10 +349,6 @@ struct BaselineScript final {
                               size_t* data) const {
     *data += mallocSizeOf(this);
   }
-
-  bool active() const { return flags_ & ACTIVE; }
-  void setActive() { flags_ |= ACTIVE; }
-  void resetActive() { flags_ &= ~ACTIVE; }
 
   void setModifiesArguments() { flags_ |= MODIFIES_ARGUMENTS; }
   bool modifiesArguments() { return flags_ & MODIFIES_ARGUMENTS; }
@@ -632,9 +624,9 @@ MOZ_MUST_USE bool BailoutIonToBaseline(
     bool invalidate, BaselineBailoutInfo** bailoutInfo,
     const ExceptionBailoutInfo* exceptionInfo);
 
-// Mark baseline scripts on the stack as active, so that they are not discarded
+// Mark TypeScripts on the stack as active, so that they are not discarded
 // during GC.
-void MarkActiveBaselineScripts(Zone* zone);
+void MarkActiveTypeScripts(Zone* zone);
 
 MethodStatus BaselineCompile(JSContext* cx, JSScript* script,
                              bool forceDebugInstrumentation = false);

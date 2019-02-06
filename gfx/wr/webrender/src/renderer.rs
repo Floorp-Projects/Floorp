@@ -1566,6 +1566,13 @@ pub struct Renderer {
 
     framebuffer_size: Option<DeviceIntSize>,
 
+    /// A lazily created texture for the zoom debugging widget.
+    zoom_debug_texture: Option<Texture>,
+
+    /// The current mouse position. This is used for debugging
+    /// functionality only, such as the debug zoom widget.
+    cursor_position: DeviceIntPoint,
+
     #[cfg(feature = "capture")]
     read_fbo: FBOId,
     #[cfg(feature = "replay")]
@@ -2008,6 +2015,8 @@ impl Renderer {
             owned_external_images: FastHashMap::default(),
             notifications: Vec::new(),
             framebuffer_size: None,
+            zoom_debug_texture: None,
+            cursor_position: DeviceIntPoint::zero(),
         };
 
         // We initially set the flags to default and then now call set_debug_flags
@@ -2016,6 +2025,14 @@ impl Renderer {
 
         let sender = RenderApiSender::new(api_tx, payload_tx);
         Ok((renderer, sender))
+    }
+
+    /// Update the current position of the debug cursor.
+    pub fn set_cursor_position(
+        &mut self,
+        position: DeviceIntPoint,
+    ) {
+        self.cursor_position = position;
     }
 
     pub fn get_max_texture_size(&self) -> i32 {
@@ -3036,7 +3053,7 @@ impl Renderer {
         }
 
         self.device.bind_read_target(draw_target.into());
-        self.device.blit_render_target(src, dest);
+        self.device.blit_render_target(src, dest, TextureFilter::Linear);
 
         // Restore draw target to current pass render target + layer, and reset
         // the read target.
@@ -3088,6 +3105,7 @@ impl Renderer {
             self.device.blit_render_target(
                 source_rect,
                 blit.target_rect,
+                TextureFilter::Linear,
             );
         }
     }
@@ -3476,6 +3494,7 @@ impl Renderer {
                     self.device.blit_render_target(
                         src_rect,
                         dest_rect,
+                        TextureFilter::Linear,
                     );
                 }
 
@@ -3514,7 +3533,7 @@ impl Renderer {
 
                 self.device.bind_read_target(draw_target.into());
                 self.device.bind_external_draw_target(fbo_id);
-                self.device.blit_render_target(src_rect, dest_rect);
+                self.device.blit_render_target(src_rect, dest_rect, TextureFilter::Linear);
                 handler.unlock(output.pipeline_id);
             }
         }
@@ -4195,6 +4214,7 @@ impl Renderer {
             self.draw_render_target_debug(framebuffer_size);
             self.draw_texture_cache_debug(framebuffer_size);
             self.draw_gpu_cache_debug(framebuffer_size);
+            self.draw_zoom_debug(framebuffer_size);
         }
         self.draw_epoch_debug();
 
@@ -4301,6 +4321,106 @@ impl Renderer {
             framebuffer_size,
             0,
             &|_| [0.0, 1.0, 0.0, 1.0], // Use green for all RTs.
+        );
+    }
+
+    fn draw_zoom_debug(
+        &mut self,
+        framebuffer_size: DeviceIntSize,
+    ) {
+        if !self.debug_flags.contains(DebugFlags::ZOOM_DBG) {
+            return;
+        }
+
+        let debug_renderer = match self.debug.get_mut(&mut self.device) {
+            Some(render) => render,
+            None => return,
+        };
+
+        let source_size = DeviceIntSize::new(64, 64);
+        let target_size = DeviceIntSize::new(1024, 1024);
+
+        let source_origin = DeviceIntPoint::new(
+            (self.cursor_position.x - source_size.width / 2)
+                .min(framebuffer_size.width - source_size.width)
+                .max(0),
+            (self.cursor_position.y - source_size.height / 2)
+                .min(framebuffer_size.height - source_size.height)
+                .max(0),
+        );
+
+        let source_rect = DeviceIntRect::new(
+            source_origin,
+            source_size,
+        );
+
+        let target_rect = DeviceIntRect::new(
+            DeviceIntPoint::new(
+                framebuffer_size.width - target_size.width - 64,
+                framebuffer_size.height - target_size.height - 64,
+            ),
+            target_size,
+        );
+
+        let texture_rect = DeviceIntRect::new(
+            DeviceIntPoint::zero(),
+            source_rect.size,
+        );
+
+        debug_renderer.add_rect(
+            &target_rect.inflate(1, 1),
+            debug_colors::RED.into(),
+        );
+
+        if self.zoom_debug_texture.is_none() {
+            let texture = self.device.create_texture(
+                TextureTarget::Default,
+                ImageFormat::BGRA8,
+                source_rect.size.width,
+                source_rect.size.height,
+                TextureFilter::Nearest,
+                Some(RenderTargetInfo { has_depth: false }),
+                1,
+            );
+
+            self.zoom_debug_texture = Some(texture);
+        }
+
+        // Copy frame buffer into the zoom texture
+        self.device.bind_read_target(ReadTarget::Default);
+        self.device.bind_draw_target(DrawTarget::Texture {
+            texture: self.zoom_debug_texture.as_ref().unwrap(),
+            layer: 0,
+            with_depth: false,
+        });
+        self.device.blit_render_target(
+            DeviceIntRect::new(
+                DeviceIntPoint::new(
+                    source_rect.origin.x,
+                    framebuffer_size.height - source_rect.size.height - source_rect.origin.y,
+                ),
+                source_rect.size,
+            ),
+            texture_rect,
+            TextureFilter::Nearest,
+        );
+
+        // Draw the zoom texture back to the framebuffer
+        self.device.bind_read_target(ReadTarget::Texture {
+            texture: self.zoom_debug_texture.as_ref().unwrap(),
+            layer: 0,
+        });
+        self.device.bind_draw_target(DrawTarget::Default(framebuffer_size));
+        self.device.blit_render_target(
+            texture_rect,
+            DeviceIntRect::new(
+                DeviceIntPoint::new(
+                    target_rect.origin.x,
+                    framebuffer_size.height - target_rect.size.height - target_rect.origin.y,
+                ),
+                target_rect.size,
+            ),
+            TextureFilter::Nearest,
         );
     }
 
@@ -4524,6 +4644,9 @@ impl Renderer {
         self.gpu_cache_texture.deinit(&mut self.device);
         if let Some(dither_matrix_texture) = self.dither_matrix_texture {
             self.device.delete_texture(dither_matrix_texture);
+        }
+        if let Some(zoom_debug_texture) = self.zoom_debug_texture {
+            self.device.delete_texture(zoom_debug_texture);
         }
         self.transforms_texture.deinit(&mut self.device);
         self.prim_header_f_texture.deinit(&mut self.device);
