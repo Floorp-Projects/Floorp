@@ -60,8 +60,7 @@ this.LoginImport.prototype = {
     // Thus, merging with existing data is not a use case we support.  This
     // restriction might be removed to support re-importing passwords set by an
     // old version by flipping the import preference and restarting.
-    if (this.store.data.logins.length > 0 ||
-        this.store.data.disabledHosts.length > 0) {
+    if (this.store.data.logins.length > 0) {
       throw new Error("Unable to import saved passwords because some data " +
                       "has already been imported or saved.");
     }
@@ -145,17 +144,6 @@ this.LoginImport.prototype = {
           });
         } catch (ex) {
           Cu.reportError("Error importing login: " + ex);
-        }
-      }
-
-      rows = await connection.execute("SELECT * FROM moz_disabledHosts");
-      for (let row of rows) {
-        try {
-          let hostname = row.getResultByName("hostname");
-
-          this.store.data.disabledHosts.push(hostname);
-        } catch (ex) {
-          Cu.reportError("Error importing disabled host: " + ex);
         }
       }
     } finally {
