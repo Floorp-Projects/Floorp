@@ -15,9 +15,18 @@
  *
  * @param {Object} state
  *        Redux slice for tracked changes.
+ * @param {Object} filter
+ *        Object with optional filters to use. Has the following properties:
+ *        - sourceIds: {Array}
+ *          Use only subtrees of sources matching source ids from this array.
+ *        - ruleIds: {Array}
+ *          Use only rules matching rule ids from this array. If the array includes ids
+ *          of ancestor rules (@media, @supports), their nested rules will be included.
  * @return {Object}
  */
-function getChangesTree(state) {
+function getChangesTree(state, filter = {}) {
+  // Use or assign defaults of sourceId and ruleId arrays by which to filter the tree.
+  const { sourceIds: sourceIdsFilter = [], ruleIds: rulesIdsFilter = [] } = filter;
   /**
    * Recursively replace a rule's array of child rule ids with the referenced child rules.
    * Mark visited rules so as not to handle them (and their children) again.
@@ -44,34 +53,52 @@ function getChangesTree(state) {
     };
   }
 
-  return Object.entries(state).reduce((sourcesObj, [sourceId, source]) => {
-    const { rules } = source;
-    // Log of visited rules in this source. Helps avoid duplication when traversing the
-    // descendant rule tree. This Set is unique per source. It will be passed down to
-    // be populated with ids of rules once visited. This ensures that only visited rules
-    // unique to this source will be skipped and prevents skipping identical rules from
-    // other sources (ex: rules with the same selector and the same index).
-    const visitedRules = new Set();
+  return Object.entries(state)
+    .filter(([sourceId, source]) => {
+      // Use only matching sources if an array to filter by was provided.
+      if (sourceIdsFilter.length) {
+        return sourceIdsFilter.includes(sourceId);
+      }
 
-    // Build a new collection of sources keyed by source id.
-    sourcesObj[sourceId] = {
-      ...source,
-      // Build a new collection of rules keyed by rule id.
-      rules: Object.entries(rules).reduce((rulesObj, [ruleId, rule]) => {
-        // Expand the rule's array of child rule ids with the referenced child rules.
-        // Skip exposing null values which mean the rule was previously visited as part
-        // of an ancestor descendant tree.
-        const expandedRule = expandRuleChildren(ruleId, rule, rules, visitedRules);
-        if (expandedRule !== null) {
-          rulesObj[ruleId] = expandedRule;
-        }
+      return true;
+    })
+    .reduce((sourcesObj, [sourceId, source]) => {
+      const { rules } = source;
+      // Log of visited rules in this source. Helps avoid duplication when traversing the
+      // descendant rule tree. This Set is unique per source. It will be passed down to
+      // be populated with ids of rules once visited. This ensures that only visited rules
+      // unique to this source will be skipped and prevents skipping identical rules from
+      // other sources (ex: rules with the same selector and the same index).
+      const visitedRules = new Set();
 
-        return rulesObj;
-      }, {}),
-    };
+      // Build a new collection of sources keyed by source id.
+      sourcesObj[sourceId] = {
+        ...source,
+        // Build a new collection of rules keyed by rule id.
+        rules: Object.entries(rules)
+          .filter(([ruleId, rule]) => {
+            // Use only matching rules if an array to filter by was provided.
+            if (rulesIdsFilter.length) {
+              return rulesIdsFilter.includes(ruleId);
+            }
 
-    return sourcesObj;
-  }, {});
+            return true;
+          })
+          .reduce((rulesObj, [ruleId, rule]) => {
+            // Expand the rule's array of child rule ids with the referenced child rules.
+            // Skip exposing null values which mean the rule was previously visited
+            // as part of an ancestor descendant tree.
+            const expandedRule = expandRuleChildren(ruleId, rule, rules, visitedRules);
+            if (expandedRule !== null) {
+              rulesObj[ruleId] = expandedRule;
+            }
+
+            return rulesObj;
+          }, {}),
+      };
+
+      return sourcesObj;
+    }, {});
 }
 
 module.exports = {
