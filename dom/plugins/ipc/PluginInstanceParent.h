@@ -45,6 +45,7 @@ class PluginInstanceParent : public PPluginInstanceParent {
   friend class PluginModuleParent;
   friend class BrowserStreamParent;
   friend class StreamNotifyParent;
+  friend class PPluginInstanceParent;
 
 #if defined(XP_WIN)
  public:

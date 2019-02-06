@@ -38,6 +38,8 @@ class LayerTransactionParent final : public PLayerTransactionParent,
   typedef InfallibleTArray<OpDestroy> OpDestroyArray;
   typedef InfallibleTArray<PluginWindowData> PluginsArray;
 
+  friend class PLayerTransactionParent;
+
  public:
   LayerTransactionParent(HostLayerManager* aManager,
                          CompositorBridgeParentBase* aBridge,

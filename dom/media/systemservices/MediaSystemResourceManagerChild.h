@@ -24,6 +24,8 @@ namespace media {
  */
 class MediaSystemResourceManagerChild final
     : public PMediaSystemResourceManagerChild {
+  friend class PMediaSystemResourceManagerChild;
+
  public:
   struct ResourceListener {
     /* The resource is reserved and can be granted.

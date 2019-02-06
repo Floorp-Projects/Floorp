@@ -27,6 +27,7 @@ namespace layout {
 // DeallocPVsyncParent().
 class VsyncParent final : public PVsyncParent, public VsyncObserver {
   friend class mozilla::ipc::BackgroundParentImpl;
+  friend class PVsyncParent;
 
  private:
   static already_AddRefed<VsyncParent> Create();

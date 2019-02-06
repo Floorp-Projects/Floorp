@@ -124,6 +124,7 @@ class ContentParent final : public PContentParent,
   typedef mozilla::dom::ClonedMessageData ClonedMessageData;
 
   friend class mozilla::PreallocatedProcessManagerImpl;
+  friend class PContentParent;
 #ifdef FUZZING
   friend class mozilla::ipc::ProtocolFuzzerHelper;
 #endif

@@ -22,6 +22,8 @@ class ChannelEventQueue;
 class WebSocketChannelChild final : public BaseWebSocketChannel,
                                     public PWebSocketChild,
                                     public NeckoTargetHolder {
+  friend class PWebSocketChild;
+
  public:
   explicit WebSocketChannelChild(bool aSecure);
 

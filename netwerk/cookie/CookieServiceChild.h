@@ -31,6 +31,8 @@ class CookieServiceChild : public PCookieServiceChild,
                            public nsIObserver,
                            public nsITimerCallback,
                            public nsSupportsWeakReference {
+  friend class PCookieServiceChild;
+
  public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSICOOKIESERVICE

@@ -15,6 +15,8 @@ namespace dom {
 
 class ContentBridgeChild final : public PContentBridgeChild,
                                  public nsIContentChild {
+  friend class PContentBridgeChild;
+
  public:
   explicit ContentBridgeChild();
 

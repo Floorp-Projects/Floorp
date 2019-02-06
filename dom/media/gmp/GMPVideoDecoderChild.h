@@ -21,6 +21,8 @@ class GMPContentChild;
 class GMPVideoDecoderChild : public PGMPVideoDecoderChild,
                              public GMPVideoDecoderCallback,
                              public GMPSharedMemManager {
+  friend class PGMPVideoDecoderChild;
+
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GMPVideoDecoderChild);
 

@@ -16,6 +16,8 @@ class SourceSurface;
 
 class VideoDecoderManagerChild final : public PVideoDecoderManagerChild,
                                        public mozilla::ipc::IShmemAllocator {
+  friend class PVideoDecoderManagerChild;
+
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VideoDecoderManagerChild)
 

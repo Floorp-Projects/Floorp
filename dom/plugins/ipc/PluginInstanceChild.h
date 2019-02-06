@@ -52,6 +52,7 @@ class PluginInstanceChild : public PPluginInstanceChild {
   friend class PluginStreamChild;
   friend class StreamNotifyChild;
   friend class PluginScriptableObjectChild;
+  friend class PPluginInstanceChild;
 
 #ifdef OS_WIN
   friend LRESULT CALLBACK PluginWindowProc(HWND hWnd, UINT message,

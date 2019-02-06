@@ -28,6 +28,7 @@ class FileDescriptor;
 class FileDescriptorSetParent final : public PFileDescriptorSetParent {
   friend class BackgroundParentImpl;
   friend class mozilla::dom::nsIContentParent;
+  friend class PFileDescriptorSetParent;
 
   nsTArray<FileDescriptor> mFileDescriptors;
 

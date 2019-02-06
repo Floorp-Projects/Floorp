@@ -22,6 +22,7 @@ class HttpChannelChild;
 
 class HttpBackgroundChannelChild final : public PHttpBackgroundChannelChild {
   friend class BackgroundChannelCreateCallback;
+  friend class PHttpBackgroundChannelChild;
 
  public:
   explicit HttpBackgroundChannelChild();

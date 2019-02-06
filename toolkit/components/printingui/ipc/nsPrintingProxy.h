@@ -17,6 +17,8 @@ class PRemotePrintJobChild;
 
 class nsPrintingProxy final : public nsIPrintingPromptService,
                               public mozilla::embedding::PPrintingChild {
+  friend class mozilla::embedding::PPrintingChild;
+
  public:
   static already_AddRefed<nsPrintingProxy> GetInstance();
 

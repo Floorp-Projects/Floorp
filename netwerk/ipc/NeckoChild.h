@@ -16,6 +16,8 @@ namespace net {
 
 // Header file contents
 class NeckoChild : public PNeckoChild {
+  friend class PNeckoChild;
+
  public:
   NeckoChild() = default;
   virtual ~NeckoChild();

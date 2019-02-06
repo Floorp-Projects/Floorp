@@ -55,6 +55,8 @@ enum GMPState {
 class GMPContentParent;
 
 class GMPParent final : public PGMPParent {
+  friend class PGMPParent;
+
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GMPParent)
 

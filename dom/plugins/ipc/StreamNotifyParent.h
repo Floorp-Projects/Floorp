@@ -14,6 +14,7 @@ namespace plugins {
 
 class StreamNotifyParent : public PStreamNotifyParent {
   friend class PluginInstanceParent;
+  friend class PStreamNotifyParent;
 
   StreamNotifyParent() : mDestructionFlag(nullptr) {}
   ~StreamNotifyParent() {

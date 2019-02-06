@@ -17,6 +17,8 @@ namespace dom {
 
 class TemporaryIPCBlobParent final
     : public mozilla::ipc::PTemporaryIPCBlobParent {
+  friend class mozilla::ipc::PTemporaryIPCBlobParent;
+
  public:
   explicit TemporaryIPCBlobParent();
 

@@ -15,6 +15,8 @@ namespace dom {
 class RemoteWorkerController;
 
 class RemoteWorkerParent final : public PRemoteWorkerParent {
+  friend class PRemoteWorkerParent;
+
  public:
   NS_INLINE_DECL_REFCOUNTING(RemoteWorkerParent)
 
