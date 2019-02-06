@@ -89,18 +89,12 @@ bool AccessCheck::isChrome(JSObject* obj) {
   return isChrome(js::GetObjectCompartment(obj));
 }
 
-CrossOriginObjectType IdentifyCrossOriginObject(JSObject* obj) {
+bool IsCrossOriginAccessibleObject(JSObject* obj) {
   obj = js::UncheckedUnwrap(obj, /* stopAtWindowProxy = */ false);
   const js::Class* clasp = js::GetObjectClass(obj);
 
-  if (clasp->name[0] == 'L' && !strcmp(clasp->name, "Location")) {
-    return CrossOriginLocation;
-  }
-  if (clasp->name[0] == 'W' && !strcmp(clasp->name, "Window")) {
-    return CrossOriginWindow;
-  }
-
-  return CrossOriginOpaque;
+  return (clasp->name[0] == 'L' && !strcmp(clasp->name, "Location")) ||
+         (clasp->name[0] == 'W' && !strcmp(clasp->name, "Window"));
 }
 
 bool AccessCheck::checkPassToPrivilegedCode(JSContext* cx, HandleObject wrapper,
