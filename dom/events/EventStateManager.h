@@ -232,8 +232,8 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
                                     nsPresContext* aPresContext);
 
   nsresult SetCursor(StyleCursorKind aCursor, imgIContainer* aContainer,
-                     bool aHaveHotspot, float aHotspotX, float aHotspotY,
-                     nsIWidget* aWidget, bool aLockCursor);
+                     const Maybe<gfx::IntPoint>& aHotspot, nsIWidget* aWidget,
+                     bool aLockCursor);
 
   /**
    * StartHandlingUserInput() is called when we start to handle a user input.
