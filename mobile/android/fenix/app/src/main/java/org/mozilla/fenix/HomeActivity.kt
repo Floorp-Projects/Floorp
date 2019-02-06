@@ -9,13 +9,21 @@ import android.os.Bundle
 import android.util.AttributeSet
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import androidx.navigation.fragment.NavHostFragment
 import mozilla.components.concept.engine.EngineView
+import mozilla.components.feature.intent.IntentProcessor
+import mozilla.components.support.utils.SafeIntent
+import org.mozilla.fenix.browser.BrowserFragment
 import org.mozilla.fenix.ext.components
 
 open class HomeActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
+
+        if (intent?.extras?.getBoolean(OPEN_TO_BROWSER) == true) {
+            openToBrowser()
+        }
     }
 
     override fun onCreateView(
@@ -37,5 +45,18 @@ open class HomeActivity : AppCompatActivity() {
         }
 
         super.onBackPressed()
+    }
+
+    private fun openToBrowser() {
+        val sessionId = SafeIntent(intent).getStringExtra(IntentProcessor.ACTIVE_SESSION_ID)
+        val host = supportFragmentManager.findFragmentById(R.id.container) as NavHostFragment
+
+        host.navController.navigate(R.id.action_global_browser, Bundle().apply {
+            putString(BrowserFragment.SESSION_ID, sessionId)
+        })
+    }
+
+    companion object {
+        const val OPEN_TO_BROWSER = "open_to_browser"
     }
 }

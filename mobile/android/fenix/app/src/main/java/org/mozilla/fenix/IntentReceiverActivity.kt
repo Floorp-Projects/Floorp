@@ -18,15 +18,28 @@ class IntentReceiverActivity : Activity() {
         super.onCreate(savedInstanceState)
 
         components.utils.intentProcessor.process(intent)
+        var openToBrowser = false
 
         val intent = Intent(intent)
-        if (CustomTabConfig.isCustomTabIntent(SafeIntent(intent))) {
-            intent.setClassName(applicationContext, CustomTabActivity::class.java.name)
-        } else {
-            intent.setClassName(applicationContext, HomeActivity::class.java.name)
+        openToBrowser = when {
+            CustomTabConfig.isCustomTabIntent(SafeIntent(intent)) -> {
+                intent.setClassName(applicationContext, CustomTabActivity::class.java.name)
+                true
+            }
+            intent.action == Intent.ACTION_VIEW -> {
+                intent.setClassName(applicationContext, HomeActivity::class.java.name)
+                true
+            }
+            else -> {
+                intent.setClassName(applicationContext, HomeActivity::class.java.name)
+                false
+            }
         }
 
+        intent.putExtra(HomeActivity.OPEN_TO_BROWSER, openToBrowser)
+
         startActivity(intent)
+
         finish()
     }
 }
