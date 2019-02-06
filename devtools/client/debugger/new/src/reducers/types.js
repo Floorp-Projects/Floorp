@@ -21,7 +21,6 @@ import type { Record } from "../utils/makeRecord";
 import type { SourcesState } from "./sources";
 import type { TabList } from "./tabs";
 import type { UIState } from "./ui";
-import type { QuickOpenState } from "./quick-open";
 
 export type State = {
   ast: Record<ASTState>,
@@ -34,8 +33,7 @@ export type State = {
   projectTextSearch: ProjectTextSearchState,
   sources: SourcesState,
   tabs: TabList,
-  ui: Record<UIState>,
-  quickOpen: Record<QuickOpenState>
+  ui: Record<UIState>
 };
 
 export type Selector<T> = State => T;

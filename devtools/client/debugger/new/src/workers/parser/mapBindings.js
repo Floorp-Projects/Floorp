@@ -60,7 +60,7 @@ function globalizeDeclaration(node, bindings) {
       t.assignmentExpression(
         "=",
         getAssignmentTarget(declaration.id, bindings),
-        declaration.init || t.unaryExpression("void", t.numericLiteral(0))
+        declaration.init
       )
     )
   );

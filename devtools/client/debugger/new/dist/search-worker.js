@@ -584,11 +584,6 @@ function getMatches(query, text, modifiers) {
     let singleMatch;
     const line = lines[i];
     while ((singleMatch = regexQuery.exec(line)) !== null) {
-      // Flow doesn't understand the test above.
-      if (!singleMatch) {
-        throw new Error("no singleMatch");
-      }
-
       matchedLocations.push({ line: i, ch: singleMatch.index });
 
       // When the match is an empty string the regexQuery.lastIndex will not
@@ -624,7 +619,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function findSourceMatches(source, queryText) {
   const { id, loadedState, text } = source;
-  if (loadedState != "loaded" || typeof text != "string" || queryText == "") {
+  if (loadedState != "loaded" || !text || queryText == "") {
     return [];
   }
 

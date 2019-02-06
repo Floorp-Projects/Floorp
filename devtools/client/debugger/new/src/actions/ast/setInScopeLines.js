@@ -2,17 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import { getOutOfScopeLocations, getSelectedSource } from "../../selectors";
 import { getSourceLineCount } from "../../utils/source";
 
 import { range, flatMap, uniq, without } from "lodash";
 
-import type { ASTLocation } from "../../types";
-import type { ThunkArgs } from "../types";
-
-function getOutOfScopeLines(outOfScopeLocations: ASTLocation[]) {
+function getOutOfScopeLines(outOfScopeLocations: AstLocation[]) {
   if (!outOfScopeLocations) {
     return null;
   }

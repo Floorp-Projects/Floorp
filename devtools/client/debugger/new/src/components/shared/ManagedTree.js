@@ -40,7 +40,8 @@ class ManagedTree extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
     this.state = {
-      expanded: props.expanded || new Set()
+      expanded: props.expanded || new Set(),
+      focusedItem: null
     };
   }
 

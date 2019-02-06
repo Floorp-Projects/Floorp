@@ -2,11 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import { nodeHasChildren, isExactUrlMatch } from "./utils";
-
-import type { TreeDirectory } from "./types";
 
 /**
  * Look at the nodes in the source tree, and determine the index of where to
@@ -14,12 +10,9 @@ import type { TreeDirectory } from "./types";
  * @memberof utils/sources-tree
  * @static
  */
-export function sortEntireTree(
-  tree: TreeDirectory,
-  debuggeeUrl: string = ""
-): TreeDirectory {
+export function sortEntireTree(tree, debuggeeUrl = "") {
   if (nodeHasChildren(tree)) {
-    const contents = sortTree(tree, debuggeeUrl).map((subtree: any) =>
+    const contents = sortTree(tree, debuggeeUrl).map(subtree =>
       sortEntireTree(subtree)
     );
     return { ...tree, contents };
@@ -33,8 +26,8 @@ export function sortEntireTree(
  * @memberof utils/sources-tree
  * @static
  */
-export function sortTree(tree: TreeDirectory, debuggeeUrl: string = "") {
-  return (tree.contents: any).sort((previousNode, currentNode) => {
+export function sortTree(tree, debuggeeUrl = "") {
+  return tree.contents.sort((previousNode, currentNode) => {
     const currentNodeIsDir = nodeHasChildren(currentNode);
     const previousNodeIsDir = nodeHasChildren(previousNode);
     if (currentNode.name === "(index)") {

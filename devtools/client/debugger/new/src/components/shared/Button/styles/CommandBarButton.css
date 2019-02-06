@@ -23,10 +23,6 @@
   background: var(--theme-toolbar-background-hover);
 }
 
-.theme-dark .command-bar-button:not(.disabled):hover {
-  background: var(--theme-toolbar-hover);
-}
-
 :root.theme-dark .command-bar-button {
   color: var(--theme-body-color);
 }

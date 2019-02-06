@@ -12,41 +12,13 @@ exports[`Frames Blackboxed Frames filters blackboxed frames 1`] = `
       disableContextMenu={false}
       frame={
         Object {
-          "displayName": "display-1",
-          "generatedLocation": Object {
-            "line": 4,
-            "sourceId": "1",
-          },
-          "id": "1",
+          "id": 1,
           "location": Object {
-            "line": 4,
             "sourceId": "1",
-          },
-          "scope": Object {
-            "actor": "scope-actor",
-            "bindings": Object {
-              "arguments": Array [],
-              "variables": Object {},
-            },
-            "function": null,
-            "object": null,
-            "parent": null,
-            "type": "block",
           },
           "source": Object {
-            "contentType": "text/javascript",
             "id": "1",
-            "introductionUrl": null,
-            "isBlackBoxed": false,
-            "isPrettyPrinted": false,
-            "isWasm": false,
-            "loadedState": "unloaded",
-            "relativeUrl": "url",
-            "text": "",
-            "url": "url",
           },
-          "this": Object {},
-          "thread": "FakeThread",
         }
       }
       frameworkGroupingOn={false}
@@ -56,41 +28,10 @@ exports[`Frames Blackboxed Frames filters blackboxed frames 1`] = `
       selectable={false}
       selectedFrame={
         Object {
-          "displayName": "display-1",
-          "generatedLocation": Object {
-            "line": 4,
-            "sourceId": "1",
-          },
-          "id": "1",
+          "id": 1,
           "location": Object {
-            "line": 4,
             "sourceId": "1",
           },
-          "scope": Object {
-            "actor": "scope-actor",
-            "bindings": Object {
-              "arguments": Array [],
-              "variables": Object {},
-            },
-            "function": null,
-            "object": null,
-            "parent": null,
-            "type": "block",
-          },
-          "source": Object {
-            "contentType": "text/javascript",
-            "id": "1",
-            "introductionUrl": null,
-            "isBlackBoxed": false,
-            "isPrettyPrinted": false,
-            "isWasm": false,
-            "loadedState": "unloaded",
-            "relativeUrl": "url",
-            "text": "",
-            "url": "url",
-          },
-          "this": Object {},
-          "thread": "FakeThread",
         }
       }
       shouldMapDisplayName={true}
@@ -102,41 +43,13 @@ exports[`Frames Blackboxed Frames filters blackboxed frames 1`] = `
       disableContextMenu={false}
       frame={
         Object {
-          "displayName": "display-3",
-          "generatedLocation": Object {
-            "line": 4,
-            "sourceId": "1",
-          },
-          "id": "3",
+          "id": 3,
           "location": Object {
-            "line": 4,
             "sourceId": "1",
-          },
-          "scope": Object {
-            "actor": "scope-actor",
-            "bindings": Object {
-              "arguments": Array [],
-              "variables": Object {},
-            },
-            "function": null,
-            "object": null,
-            "parent": null,
-            "type": "block",
           },
           "source": Object {
-            "contentType": "text/javascript",
             "id": "1",
-            "introductionUrl": null,
-            "isBlackBoxed": false,
-            "isPrettyPrinted": false,
-            "isWasm": false,
-            "loadedState": "unloaded",
-            "relativeUrl": "url",
-            "text": "",
-            "url": "url",
           },
-          "this": Object {},
-          "thread": "FakeThread",
         }
       }
       frameworkGroupingOn={false}
@@ -146,41 +59,10 @@ exports[`Frames Blackboxed Frames filters blackboxed frames 1`] = `
       selectable={false}
       selectedFrame={
         Object {
-          "displayName": "display-1",
-          "generatedLocation": Object {
-            "line": 4,
-            "sourceId": "1",
-          },
-          "id": "1",
+          "id": 1,
           "location": Object {
-            "line": 4,
             "sourceId": "1",
           },
-          "scope": Object {
-            "actor": "scope-actor",
-            "bindings": Object {
-              "arguments": Array [],
-              "variables": Object {},
-            },
-            "function": null,
-            "object": null,
-            "parent": null,
-            "type": "block",
-          },
-          "source": Object {
-            "contentType": "text/javascript",
-            "id": "1",
-            "introductionUrl": null,
-            "isBlackBoxed": false,
-            "isPrettyPrinted": false,
-            "isWasm": false,
-            "loadedState": "unloaded",
-            "relativeUrl": "url",
-            "text": "",
-            "url": "url",
-          },
-          "this": Object {},
-          "thread": "FakeThread",
         }
       }
       shouldMapDisplayName={true}

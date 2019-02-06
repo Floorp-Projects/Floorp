@@ -15,6 +15,7 @@ import FrameMenu from "./FrameMenu";
 import FrameIndent from "./FrameIndent";
 
 import type { Frame } from "../../../types";
+import type { LocalFrame } from "./types";
 
 type FrameTitleProps = {
   frame: Frame,
@@ -27,7 +28,7 @@ function FrameTitle({ frame, options = {}, l10n }: FrameTitleProps) {
   return <span className="title">{displayName}</span>;
 }
 
-type FrameLocationProps = { frame: Frame, displayFullUrl: boolean };
+type FrameLocationProps = { frame: LocalFrame, displayFullUrl: boolean };
 
 function FrameLocation({ frame, displayFullUrl = false }: FrameLocationProps) {
   if (!frame.source) {
@@ -61,8 +62,8 @@ function FrameLocation({ frame, displayFullUrl = false }: FrameLocationProps) {
 FrameLocation.displayName = "FrameLocation";
 
 type FrameComponentProps = {
-  frame: Frame,
-  selectedFrame: Frame,
+  frame: LocalFrame,
+  selectedFrame: LocalFrame,
   copyStackTrace: Function,
   toggleFrameworkGrouping: Function,
   selectFrame: Function,
@@ -137,10 +138,6 @@ export default class FrameComponent extends Component<FrameComponentProps> {
     const className = classNames("frame", {
       selected: selectedFrame && selectedFrame.id === frame.id
     });
-
-    if (!frame.source) {
-      throw new Error("no frame source");
-    }
 
     const title = getFrameTitle
       ? getFrameTitle(

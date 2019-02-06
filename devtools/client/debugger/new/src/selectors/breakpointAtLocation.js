@@ -2,14 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 import { getSelectedSource } from "../reducers/sources";
 import { getBreakpointsList } from "../reducers/breakpoints";
 import { isGenerated } from "../utils/source";
-
-import type { Breakpoint } from "../types";
-import type { State } from "../reducers/types";
 
 function getColumn(column, selectedSource) {
   if (column) {
@@ -25,7 +20,10 @@ function getLocation(bp, selectedSource) {
     : bp.location;
 }
 
-function getBreakpointsForSource(state: State, selectedSource): Breakpoint[] {
+function getBreakpointsForSource(
+  state: OuterState,
+  selectedSource: Source
+): Breakpoint[] {
   const breakpoints = getBreakpointsList(state);
 
   return breakpoints.filter(bp => {
@@ -34,12 +32,10 @@ function getBreakpointsForSource(state: State, selectedSource): Breakpoint[] {
   });
 }
 
-type LineColumn = { line: number, column: ?number };
-
 function findBreakpointAtLocation(
   breakpoints,
   selectedSource,
-  { line, column }: LineColumn
+  { line, column }
 ) {
   return breakpoints.find(breakpoint => {
     const location = getLocation(breakpoint, selectedSource);
@@ -63,21 +59,15 @@ function findBreakpointAtLocation(
  * This is useful for finding a breakpoint when the
  * user clicks in the gutter or on a token.
  */
-export function getBreakpointAtLocation(state: State, location: LineColumn) {
+export function getBreakpointAtLocation(state, location) {
   const selectedSource = getSelectedSource(state);
-  if (!selectedSource) {
-    throw new Error("no selectedSource");
-  }
   const breakpoints = getBreakpointsForSource(state, selectedSource);
 
   return findBreakpointAtLocation(breakpoints, selectedSource, location);
 }
 
-export function getBreakpointsAtLine(state: State, line: number): Breakpoint[] {
+export function getBreakpointsAtLine(state: OuterState, line: number) {
   const selectedSource = getSelectedSource(state);
-  if (!selectedSource) {
-    throw new Error("no selectedSource");
-  }
   const breakpoints = getBreakpointsForSource(state, selectedSource);
 
   return breakpoints.filter(

@@ -11,9 +11,7 @@ import { CloseButton } from "../";
 describe("CloseButton", () => {
   it("renders with tooltip", () => {
     const tooltip = "testTooltip";
-    const wrapper = shallow(
-      <CloseButton tooltip={tooltip} handleClick={() => {}} />
-    );
+    const wrapper = shallow(<CloseButton tooltip={tooltip} />);
     expect(wrapper).toMatchSnapshot();
   });
 

@@ -187,14 +187,13 @@ export type Frame = {
   displayName: string,
   location: SourceLocation,
   generatedLocation: SourceLocation,
-  source: ?Source,
+  source?: Source,
   scope: Scope,
   // FIXME Define this type more clearly
   this: Object,
   framework?: string,
   isOriginal?: boolean,
-  originalDisplayName?: string,
-  library?: string
+  originalDisplayName?: string
 };
 
 export type ChromeFrame = {
