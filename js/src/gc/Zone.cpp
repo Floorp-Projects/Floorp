@@ -220,31 +220,30 @@ void Zone::discardJitCode(FreeOp* fop,
     jit::MarkActiveTypeScripts(this);
   }
 
-  /* Only mark OSI points if code is being discarded. */
+  // Invalidate all Ion code in this zone.
   jit::InvalidateAll(fop, this);
 
   for (auto script = cellIter<JSScript>(); !script.done(); script.next()) {
     jit::FinishInvalidation(fop, script);
 
-    /*
-     * Discard baseline script if it's not marked as active. Note that
-     * this also resets the active flag.
-     */
-    if (discardBaselineCode) {
-      jit::FinishDiscardBaselineScript(fop, script);
+    // Discard baseline script if it's not marked as active.
+    if (discardBaselineCode && script->hasBaselineScript()) {
+      if (script->types()->active()) {
+        // ICs will be purged so the script will need to warm back up before it
+        // can be inlined during Ion compilation.
+        script->baselineScript()->clearIonCompiledOrInlined();
+      } else {
+        jit::FinishDiscardBaselineScript(fop, script);
+      }
     }
 
-    /*
-     * Warm-up counter for scripts are reset on GC. After discarding code we
-     * need to let it warm back up to get information such as which
-     * opcodes are setting array holes or accessing getter properties.
-     */
+    // Warm-up counter for scripts are reset on GC. After discarding code we
+    // need to let it warm back up to get information such as which
+    // opcodes are setting array holes or accessing getter properties.
     script->resetWarmUpCounter();
 
-    /*
-     * Make it impossible to use the control flow graphs cached on the
-     * BaselineScript. They get deleted.
-     */
+    // Clear the BaselineScript's control flow graph. The LifoAlloc is purged
+    // below.
     if (script->hasBaselineScript()) {
       script->baselineScript()->setControlFlowGraph(nullptr);
     }

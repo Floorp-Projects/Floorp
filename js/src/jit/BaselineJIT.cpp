@@ -1138,16 +1138,8 @@ void jit::JitSpewBaselineICStats(JSScript* script, const char* dumpReason) {
 #endif
 
 void jit::FinishDiscardBaselineScript(FreeOp* fop, JSScript* script) {
-  if (!script->hasBaselineScript()) {
-    return;
-  }
-
-  if (script->types()->active()) {
-    // The baseline caches have been wiped out, so the script will need to
-    // warm back up before it can be inlined during Ion compilation.
-    script->baselineScript()->clearIonCompiledOrInlined();
-    return;
-  }
+  MOZ_ASSERT(script->hasBaselineScript());
+  MOZ_ASSERT(!script->types()->active());
 
   BaselineScript* baseline = script->baselineScript();
   script->setBaselineScript(fop->runtime(), nullptr);

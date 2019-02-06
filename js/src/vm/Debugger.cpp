@@ -2791,7 +2791,9 @@ static bool UpdateExecutionObservabilityOfScriptsInZone(
   // discard the BaselineScript on scripts that have no IonScript.
   for (size_t i = 0; i < scripts.length(); i++) {
     MOZ_ASSERT_IF(scripts[i]->isDebuggee(), observing);
-    FinishDiscardBaselineScript(fop, scripts[i]);
+    if (!scripts[i]->types()->active()) {
+      FinishDiscardBaselineScript(fop, scripts[i]);
+    }
     scripts[i]->types()->resetActive();
   }
 

@@ -3593,12 +3593,7 @@ static size_t NumTypeSets(JSScript* script) {
 
 TypeScript::TypeScript(JSScript* script, ICScriptPtr&& icScript,
                        uint32_t numTypeSets)
-    : icScript_(std::move(icScript)),
-      numTypeSets_(numTypeSets),
-      bytecodeTypeMapHint_(0),
-      active_(false),
-      typesGeneration_(false),
-      hasFreezeConstraints_(false) {
+    : icScript_(std::move(icScript)), numTypeSets_(numTypeSets) {
   setTypesGeneration(script->zone()->types.generation);
 
   StackTypeSet* array = typeArrayDontCheckGeneration();
@@ -4741,7 +4736,7 @@ void ObjectGroup::sweep(const AutoSweepObjectGroup& sweep) {
   if (types.hadOOMSweepingTypes()) {
     // It's possible we OOM'd while copying freeze constraints, so they
     // need to be regenerated.
-    hasFreezeConstraints_ = false;
+    flags_.hasFreezeConstraints = false;
   }
 }
 
