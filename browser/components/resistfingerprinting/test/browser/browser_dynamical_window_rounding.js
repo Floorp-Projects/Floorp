@@ -4,6 +4,10 @@
  *
  * Bug 1407366 - A test case for reassuring the size of the content viewport is
  *   rounded if the window is resized when letterboxing is enabled.
+ *
+ * A helpful note: if this test starts randomly failing; it may be because the
+ * zoom level was not reset by an earlier-run test. See Bug 1407366 for an
+ * example.
  */
 
 const TEST_PATH = "http://example.net/browser/browser/components/resistfingerprinting/test/browser/";
