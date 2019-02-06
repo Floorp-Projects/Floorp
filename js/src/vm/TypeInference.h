@@ -220,6 +220,10 @@ class TypeScript {
   // bytecode map queries are in linear order.
   uint32_t bytecodeTypeMapHint_;
 
+  // Flag set when discarding JIT code to indicate this script is on the stack
+  // and type information and JIT code should not be discarded.
+  bool active_;
+
   // Variable-size array. This is followed by the bytecode type map.
   StackTypeSet typeArray_[1];
 
@@ -237,6 +241,10 @@ class TypeScript {
   uint32_t numTypeSets() const { return numTypeSets_; }
 
   uint32_t* bytecodeTypeMapHint() { return &bytecodeTypeMapHint_; }
+
+  bool active() const { return active_; }
+  void setActive() { active_ = true; }
+  void resetActive() { active_ = false; }
 
   jit::ICScript* icScript() const {
     MOZ_ASSERT(icScript_);

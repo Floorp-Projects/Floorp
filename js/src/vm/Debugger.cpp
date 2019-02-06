@@ -2705,10 +2705,10 @@ class MOZ_RAII ExecutionObservableScript
   return true;
 }
 
-static inline void MarkBaselineScriptActiveIfObservable(
+static inline void MarkTypeScriptActiveIfObservable(
     JSScript* script, const Debugger::ExecutionObservableSet& obs) {
   if (obs.shouldRecompileOrInvalidate(script)) {
-    script->baselineScript()->setActive();
+    script->typesDontCheckGeneration()->setActive();
   }
 }
 
@@ -2772,13 +2772,13 @@ static bool UpdateExecutionObservabilityOfScriptsInZone(
       const JSJitFrameIter& frame = iter.frame();
       switch (frame.type()) {
         case FrameType::BaselineJS:
-          MarkBaselineScriptActiveIfObservable(frame.script(), obs);
+          MarkTypeScriptActiveIfObservable(frame.script(), obs);
           break;
         case FrameType::IonJS:
-          MarkBaselineScriptActiveIfObservable(frame.script(), obs);
+          MarkTypeScriptActiveIfObservable(frame.script(), obs);
           for (InlineFrameIterator inlineIter(cx, &frame); inlineIter.more();
                ++inlineIter) {
-            MarkBaselineScriptActiveIfObservable(inlineIter.script(), obs);
+            MarkTypeScriptActiveIfObservable(inlineIter.script(), obs);
           }
           break;
         default:;
@@ -2792,6 +2792,7 @@ static bool UpdateExecutionObservabilityOfScriptsInZone(
   for (size_t i = 0; i < scripts.length(); i++) {
     MOZ_ASSERT_IF(scripts[i]->isDebuggee(), observing);
     FinishDiscardBaselineScript(fop, scripts[i]);
+    scripts[i]->typesDontCheckGeneration()->resetActive();
   }
 
   // Iterate through all wasm instances to find ones that need to be updated.
