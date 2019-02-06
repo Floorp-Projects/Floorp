@@ -34,13 +34,7 @@ const testBreakpoint = async function(threadResponse, targetFront,
   // Set a breakpoint in the test source.
 
   const source = await getSource(threadClient, "test.js");
-  const [response ] = await setBreakpoint(source, {
-    line: 3,
-  });
-  ok(!response.error, "Shouldn't get an error setting the BP.");
-  ok(!response.actualLocation,
-     "Shouldn't get an actualLocation, the location we provided was good.");
-  const bpActor = response.actor;
+  setBreakpoint(threadClient, { sourceUrl: source.url, line: 3 });
 
   await resume(threadClient);
 
@@ -57,8 +51,6 @@ const testBreakpoint = async function(threadResponse, targetFront,
                                                           gClient);
   equal(bpPause1.why.type, "breakpoint",
         "Should pause because of hitting our breakpoint (not debugger statement).");
-  equal(bpPause1.why.actors[0], bpActor,
-        "And the breakpoint actor should be correct.");
   const dbgStmtPause1 = await executeOnNextTickAndWaitForPause(() => resume(threadClient),
                                                                gClient);
   equal(dbgStmtPause1.why.type, "debuggerStatement",
@@ -72,8 +64,6 @@ const testBreakpoint = async function(threadResponse, targetFront,
                                                           gClient);
   equal(bpPause2.why.type, "breakpoint",
         "Should pause because of hitting our breakpoint (not debugger statement).");
-  equal(bpPause2.why.actors[0], bpActor,
-        "And the breakpoint actor should be correct.");
   const dbgStmtPause2 = await executeOnNextTickAndWaitForPause(() => resume(threadClient),
                                                                gClient);
   equal(dbgStmtPause2.why.type, "debuggerStatement",

@@ -19,7 +19,6 @@ DevToolsModules(
     'function-call.js',
     'make-debugger.js',
     'shapes-utils.js',
-    'source-actor-store.js',
     'stack.js',
     'TabSources.js',
     'track-change-emitter.js',

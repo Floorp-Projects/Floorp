@@ -18,7 +18,6 @@ const { threadSpec } = require("devtools/shared/specs/script");
 
 loader.lazyRequireGetter(this, "findCssSelector", "devtools/shared/inspector/css-logic", true);
 loader.lazyRequireGetter(this, "EnvironmentActor", "devtools/server/actors/environment", true);
-loader.lazyRequireGetter(this, "SourceActorStore", "devtools/server/actors/utils/source-actor-store", true);
 loader.lazyRequireGetter(this, "BreakpointActorMap", "devtools/server/actors/utils/breakpoint-actor-map", true);
 loader.lazyRequireGetter(this, "PauseScopedObjectActor", "devtools/server/actors/pause-scoped", true);
 loader.lazyRequireGetter(this, "EventLoopStack", "devtools/server/actors/utils/event-loop", true);
@@ -66,8 +65,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       autoBlackBox: false,
     };
 
-    this.breakpointActorMap = new BreakpointActorMap();
-    this.sourceActorStore = new SourceActorStore();
+    this.breakpointActorMap = new BreakpointActorMap(this);
 
     this._debuggerSourcesSeen = null;
 
@@ -152,6 +150,10 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     return this._parent.sources;
   },
 
+  get breakpoints() {
+    return this._parent.breakpoints;
+  },
+
   get youngestFrame() {
     if (this.state != "paused") {
       return null;
@@ -208,11 +210,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     if (this._state == "paused") {
       this.onResume();
     }
-
-    // Blow away our source actor ID store because those IDs are only
-    // valid for this connection. This is ok because we never keep
-    // things like breakpoints across connections.
-    this._sourceActorStore = null;
 
     this._xhrBreakpoints = [];
     this._updateNetworkObserver();
@@ -314,6 +311,24 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
   _findXHRBreakpointIndex(p, m) {
     return this._xhrBreakpoints.findIndex(
       ({ path, method }) => path === p && method === m);
+  },
+
+  setBreakpoint(location, options) {
+    const actor = this.breakpointActorMap.getOrCreateBreakpointActor(location);
+    actor.setOptions(options);
+
+    const sourceActor = location.sourceUrl
+      ? this.sources.getSourceActorByURL(location.sourceUrl)
+      : this.sources.getSourceActorById(location.sourceId);
+
+    if (sourceActor) {
+      sourceActor.applyBreakpoint(actor);
+    }
+  },
+
+  removeBreakpoint(location) {
+    const actor = this.breakpointActorMap.getOrCreateBreakpointActor(location);
+    actor.delete();
   },
 
   removeXHRBreakpoint: function(path, method) {
@@ -1786,30 +1801,17 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       sourceActor = this.sources.createSourceActor(source);
     }
 
-    const bpActors = [...this.breakpointActorMap.findActors()]
-    .filter((actor) => {
-      const bpSource = actor.generatedLocation.generatedSourceActor;
-      return bpSource.source ? bpSource.source === source : bpSource.url === source.url;
-    });
-
-    // Bug 1225160: If addSource is called in response to a new script
-    // notification, and this notification was triggered by loading a JSM from
-    // chrome code, calling unsafeSynchronize could cause a debuggee timer to
-    // fire. If this causes the JSM to be loaded a second time, the browser
-    // will crash, because loading JSMS is not reentrant, and the first load
-    // has not completed yet.
-    //
-    // The root of the problem is that unsafeSynchronize can cause debuggee
-    // code to run. Unfortunately, fixing that is prohibitively difficult. The
-    // best we can do at the moment is disable source maps for the browser
-    // debugger, and carefully avoid the use of unsafeSynchronize in this
-    // function when source maps are disabled.
-    for (const actor of bpActors) {
-      actor.generatedLocation.generatedSourceActor._setBreakpoint(actor);
+    if (this._onLoadBreakpointURLs.has(source.url)) {
+      this.setBreakpoint({ sourceUrl: source.url, line: 1 }, {});
     }
 
-    if (this._onLoadBreakpointURLs.has(source.url)) {
-      sourceActor.setBreakpoint(1);
+    const bpActors = this.breakpointActorMap.findActors()
+    .filter((actor) => {
+      return actor.location.sourceUrl && actor.location.sourceUrl == source.url;
+    });
+
+    for (const actor of bpActors) {
+      sourceActor.applyBreakpoint(actor);
     }
 
     this._debuggerSourcesSeen.add(source);

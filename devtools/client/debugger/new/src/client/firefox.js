@@ -14,7 +14,7 @@ function createObjectClient(grip: Grip) {
   return DebuggerClient.createObjectClient(grip);
 }
 
-export async function onConnect(connection: any, actions: Object): Object {
+export async function onConnect(connection: any, actions: Object) {
   const {
     tabConnection: { tabTarget, threadClient, debuggerClient }
   } = connection;
@@ -22,13 +22,13 @@ export async function onConnect(connection: any, actions: Object): Object {
   DebuggerClient = debuggerClient;
 
   if (!tabTarget || !threadClient || !debuggerClient) {
-    return { bpClients: {} };
+    return;
   }
 
   const supportsWasm =
     features.wasm && !!debuggerClient.mainRoot.traits.wasmBinarySource;
 
-  const { bpClients } = setupCommands({
+  setupCommands({
     threadClient,
     tabTarget,
     debuggerClient,
@@ -69,8 +69,6 @@ export async function onConnect(connection: any, actions: Object): Object {
   if (pausedPacket) {
     clientEvents.paused(threadClient, "paused", pausedPacket);
   }
-
-  return { bpClients };
 }
 
 export { createObjectClient, clientCommands, clientEvents };

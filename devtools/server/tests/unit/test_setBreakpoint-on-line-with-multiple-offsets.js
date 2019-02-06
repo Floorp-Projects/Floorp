@@ -8,19 +8,16 @@ add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
   const { source } = await promise;
   const sourceClient = threadClient.source(source);
 
-  const location = { line: 4 };
-  let [packet, breakpointClient] = await setBreakpoint(sourceClient, location);
-  Assert.ok(!packet.isPending);
-  Assert.equal(false, "actualLocation" in packet);
+  const location = { sourceUrl: sourceClient.url, line: 4 };
+  setBreakpoint(threadClient, location);
 
-  packet = await executeOnNextTickAndWaitForPause(function() {
+  let packet = await executeOnNextTickAndWaitForPause(function() {
     Cu.evalInSandbox("f()", debuggee);
   }, client);
   Assert.equal(packet.type, "paused");
   let why = packet.why;
   Assert.equal(why.type, "breakpoint");
   Assert.equal(why.actors.length, 1);
-  Assert.equal(why.actors[0], breakpointClient.actor);
   let frame = packet.frame;
   let where = frame.where;
   Assert.equal(where.actor, source.actor);
@@ -36,7 +33,6 @@ add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
   why = packet.why;
   Assert.equal(why.type, "breakpoint");
   Assert.equal(why.actors.length, 1);
-  Assert.equal(why.actors[0], breakpointClient.actor);
   frame = packet.frame;
   where = frame.where;
   Assert.equal(where.actor, source.actor);

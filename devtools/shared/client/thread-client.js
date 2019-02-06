@@ -663,6 +663,17 @@ ThreadClient.prototype = {
     return this._lastPausePacket;
   },
 
+  setBreakpoint: DebuggerClient.requester({
+    type: "setBreakpoint",
+    location: arg(0),
+    options: arg(1),
+  }),
+
+  removeBreakpoint: DebuggerClient.requester({
+    type: "removeBreakpoint",
+    location: arg(0),
+  }),
+
   /**
    * Requests to set XHR breakpoint
    * @param string path

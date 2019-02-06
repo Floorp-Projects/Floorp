@@ -29,6 +29,16 @@ function loadFromPrefs(actions: Object) {
   }
 }
 
+async function syncBreakpoints() {
+  const breakpoints = await asyncStore.pendingBreakpoints;
+  const breakpointValues = (Object.values(breakpoints): any);
+  breakpointValues.forEach(({ disabled, options, generatedLocation }) => {
+    if (!disabled) {
+      firefox.clientCommands.setBreakpoint(generatedLocation, options);
+    }
+  });
+}
+
 function syncXHRBreakpoints() {
   asyncStore.xhrBreakpoints.then(bps => {
     bps.forEach(({ path, method, disabled }) => {
@@ -83,6 +93,7 @@ export async function onConnect(
   await client.onConnect(connection, actions);
 
   await loadFromPrefs(actions);
+  syncBreakpoints();
   syncXHRBreakpoints();
   setupHelper({
     store,
