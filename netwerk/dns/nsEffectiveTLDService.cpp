@@ -58,6 +58,22 @@ nsEffectiveTLDService::~nsEffectiveTLDService() {
   gService = nullptr;
 }
 
+// static
+already_AddRefed<nsEffectiveTLDService> nsEffectiveTLDService::GetInstance() {
+  if (gService) {
+    return do_AddRef(gService);
+  }
+  nsCOMPtr<nsIEffectiveTLDService> tldService =
+      do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
+  if (!tldService) {
+    return nullptr;
+  }
+  MOZ_ASSERT(
+      gService,
+      "gService must have been initialized in nsEffectiveTLDService::Init");
+  return do_AddRef(gService);
+}
+
 MOZ_DEFINE_MALLOC_SIZE_OF(EffectiveTLDServiceMallocSizeOf)
 
 // The amount of heap memory measured here is tiny. It used to be bigger when
@@ -94,12 +110,11 @@ nsEffectiveTLDService::GetPublicSuffix(nsIURI *aURI,
                                        nsACString &aPublicSuffix) {
   NS_ENSURE_ARG_POINTER(aURI);
 
-  nsCOMPtr<nsIURI> innerURI = NS_GetInnermostURI(aURI);
-  NS_ENSURE_ARG_POINTER(innerURI);
-
   nsAutoCString host;
-  nsresult rv = innerURI->GetAsciiHost(host);
-  if (NS_FAILED(rv)) return rv;
+  nsresult rv = NS_GetInnermostURIHost(aURI, host);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   return GetBaseDomainInternal(host, 0, aPublicSuffix);
 }
@@ -113,12 +128,11 @@ nsEffectiveTLDService::GetBaseDomain(nsIURI *aURI, uint32_t aAdditionalParts,
   NS_ENSURE_ARG_POINTER(aURI);
   NS_ENSURE_TRUE(((int32_t)aAdditionalParts) >= 0, NS_ERROR_INVALID_ARG);
 
-  nsCOMPtr<nsIURI> innerURI = NS_GetInnermostURI(aURI);
-  NS_ENSURE_ARG_POINTER(innerURI);
-
   nsAutoCString host;
-  nsresult rv = innerURI->GetAsciiHost(host);
-  if (NS_FAILED(rv)) return rv;
+  nsresult rv = NS_GetInnermostURIHost(aURI, host);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   return GetBaseDomainInternal(host, aAdditionalParts + 1, aBaseDomain);
 }
@@ -189,17 +203,16 @@ nsresult nsEffectiveTLDService::GetBaseDomainInternal(nsCString &aHostname,
   if (aHostname.IsEmpty() || aHostname.Last() == '.')
     return NS_ERROR_INVALID_ARG;
 
-  // Check if we're dealing with an IPv4/IPv6 hostname, and return
-  PRNetAddr addr;
-  PRStatus result = PR_StringToNetAddr(aHostname.get(), &addr);
-  if (result == PR_SUCCESS) return NS_ERROR_HOST_IS_IP_ADDRESS;
-
   // Lookup in the cache if this is a normal query. This is restricted to
   // main thread-only as the cache is not thread-safe.
   Maybe<TldCache::Entry> entry;
   if (aAdditionalParts == 1 && NS_IsMainThread()) {
     auto p = mMruTable.Lookup(aHostname);
     if (p) {
+      if (NS_FAILED(p.Data().mResult)) {
+        return p.Data().mResult;
+      }
+
       // There was a match, just return the cached value.
       aBaseDomain = p.Data().mBaseDomain;
       if (trailingDot) {
@@ -210,6 +223,19 @@ nsresult nsEffectiveTLDService::GetBaseDomainInternal(nsCString &aHostname,
     }
 
     entry = Some(p);
+  }
+
+  // Check if we're dealing with an IPv4/IPv6 hostname, and return
+  PRNetAddr addr;
+  PRStatus result = PR_StringToNetAddr(aHostname.get(), &addr);
+  if (result == PR_SUCCESS) {
+    // Update the MRU table if in use.
+    if (entry) {
+      entry->Set(TLDCacheEntry{aHostname, EmptyCString(),
+                               NS_ERROR_HOST_IS_IP_ADDRESS});
+    }
+
+    return NS_ERROR_HOST_IS_IP_ADDRESS;
   }
 
   // Walk up the domain tree, most specific to least specific,
@@ -225,7 +251,15 @@ nsresult nsEffectiveTLDService::GetBaseDomainInternal(nsCString &aHostname,
     // sanity check the string we're about to look up: it should not begin with
     // a '.'; this would mean the hostname began with a '.' or had an
     // embedded '..' sequence.
-    if (*currDomain == '.') return NS_ERROR_INVALID_ARG;
+    if (*currDomain == '.') {
+      // Update the MRU table if in use.
+      if (entry) {
+        entry->Set(
+            TLDCacheEntry{aHostname, EmptyCString(), NS_ERROR_INVALID_ARG});
+      }
+
+      return NS_ERROR_INVALID_ARG;
+    }
 
     // Perform the lookup.
     const int result = mGraph.Lookup(Substring(currDomain, end));
@@ -287,13 +321,21 @@ nsresult nsEffectiveTLDService::GetBaseDomainInternal(nsCString &aHostname,
     }
   }
 
-  if (aAdditionalParts != 0) return NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS;
+  if (aAdditionalParts != 0) {
+    // Update the MRU table if in use.
+    if (entry) {
+      entry->Set(TLDCacheEntry{aHostname, EmptyCString(),
+                               NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS});
+    }
+
+    return NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS;
+  }
 
   aBaseDomain = Substring(iter, end);
 
   // Update the MRU table if in use.
   if (entry) {
-    entry->Set(TLDCacheEntry{aHostname, nsCString(aBaseDomain)});
+    entry->Set(TLDCacheEntry{aHostname, nsCString(aBaseDomain), NS_OK});
   }
 
   // add on the trailing dot, if applicable

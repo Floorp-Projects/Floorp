@@ -148,6 +148,7 @@ class nsPermissionManager final : public nsIPermissionManager,
 
   nsPermissionManager();
   static already_AddRefed<nsIPermissionManager> GetXPCOMSingleton();
+  static nsPermissionManager* GetInstance();
   nsresult Init();
 
   // enums for AddInternal()

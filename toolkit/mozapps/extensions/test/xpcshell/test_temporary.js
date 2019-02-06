@@ -32,8 +32,7 @@ async function checkEvent(promise, {reason, params}) {
   }
 }
 
-let Monitor = SlightlyLessDodgyBootstrapMonitor;
-Monitor.init();
+BootstrapMonitor.init();
 
 const XPIS = {};
 
@@ -87,12 +86,12 @@ add_task(async function test_new_temporary() {
   Assert.ok(installingCalled);
   Assert.ok(installedCalled);
 
-  const install = Monitor.checkInstalled(ID, "1.0");
+  const install = BootstrapMonitor.checkInstalled(ID, "1.0");
   equal(install.reason, BOOTSTRAP_REASONS.ADDON_INSTALL);
 
-  Monitor.checkStarted(ID, "1.0");
+  BootstrapMonitor.checkStarted(ID, "1.0");
 
-  let info = Monitor.started.get(ID);
+  let info = BootstrapMonitor.started.get(ID);
   Assert.equal(info.reason, BOOTSTRAP_REASONS.ADDON_INSTALL);
 
   let addon = await promiseAddonByID(ID);
@@ -119,8 +118,8 @@ add_task(async function test_new_temporary() {
   let uninstall = await onUninstall;
   equal(uninstall.reason, BOOTSTRAP_REASONS.ADDON_UNINSTALL);
 
-  Monitor.checkNotInstalled(ID);
-  Monitor.checkNotStarted(ID);
+  BootstrapMonitor.checkNotInstalled(ID);
+  BootstrapMonitor.checkNotStarted(ID);
 
   addon = await promiseAddonByID(ID);
   Assert.equal(addon, null);
@@ -134,8 +133,8 @@ add_task(async function test_replace_temporary() {
   await promiseInstallFile(XPIS[2]);
   let addon = await promiseAddonByID(ID);
 
-  Monitor.checkInstalled(ID, "2.0");
-  Monitor.checkStarted(ID, "2.0");
+  BootstrapMonitor.checkInstalled(ID, "2.0");
+  BootstrapMonitor.checkStarted(ID, "2.0");
 
   checkAddon(ID, addon, {
     version: "2.0",
@@ -262,8 +261,8 @@ add_task(async function test_replace_temporary() {
         },
       });
 
-      Monitor.checkInstalled(ID, "2.0");
-      Monitor.checkStarted(ID, "2.0");
+      BootstrapMonitor.checkInstalled(ID, "2.0");
+      BootstrapMonitor.checkStarted(ID, "2.0");
 
       addon = await promiseAddonByID(ID);
 
@@ -287,8 +286,8 @@ add_task(async function test_replace_temporary() {
   // remove original add-on
   await addon.uninstall();
 
-  Monitor.checkNotInstalled(ID);
-  Monitor.checkNotStarted(ID);
+  BootstrapMonitor.checkNotInstalled(ID);
+  BootstrapMonitor.checkNotStarted(ID);
 
   await promiseRestartManager();
 });
@@ -370,8 +369,8 @@ add_task(async function test_replace_permanent() {
     },
   });
 
-  Monitor.checkInstalled(ID, "1.0");
-  Monitor.checkStarted(ID, "1.0");
+  BootstrapMonitor.checkInstalled(ID, "1.0");
+  BootstrapMonitor.checkStarted(ID, "1.0");
 
   let unpacked_addon = gTmpD.clone();
   unpacked_addon.append(ID);
@@ -420,8 +419,8 @@ add_task(async function test_replace_permanent() {
   Assert.ok(installingCalled);
   Assert.ok(installedCalled);
 
-  Monitor.checkInstalled(ID);
-  Monitor.checkStarted(ID);
+  BootstrapMonitor.checkInstalled(ID);
+  BootstrapMonitor.checkStarted(ID);
 
   // temporary add-on is installed and started
   checkAddon(ID, addon, {
@@ -437,8 +436,8 @@ add_task(async function test_replace_permanent() {
 
   await addon.uninstall();
 
-  Monitor.checkInstalled(ID);
-  Monitor.checkStarted(ID);
+  BootstrapMonitor.checkInstalled(ID);
+  BootstrapMonitor.checkStarted(ID);
 
   addon = await promiseAddonByID(ID);
 
@@ -457,8 +456,8 @@ add_task(async function test_replace_permanent() {
   unpacked_addon.remove(true);
   await addon.uninstall();
 
-  Monitor.checkNotInstalled(ID);
-  Monitor.checkNotStarted(ID);
+  BootstrapMonitor.checkNotInstalled(ID);
+  BootstrapMonitor.checkNotStarted(ID);
 
   await promiseRestartManager();
 });
@@ -616,7 +615,7 @@ add_task(async function test_replace_same_version() {
     },
   });
 
-  let info = Monitor.started.get(ID);
+  let info = BootstrapMonitor.started.get(ID);
   Assert.equal(info.reason, BOOTSTRAP_REASONS.ADDON_INSTALL);
 
   // Install it again.
@@ -660,13 +659,13 @@ add_task(async function test_replace_permanent_disabled() {
   await promiseInstallFile(XPIS[1]);
   let addon = await promiseAddonByID(ID);
 
-  Monitor.checkInstalled(ID, "1.0");
-  Monitor.checkStarted(ID, "1.0");
+  BootstrapMonitor.checkInstalled(ID, "1.0");
+  BootstrapMonitor.checkStarted(ID, "1.0");
 
   await addon.disable();
 
-  Monitor.checkInstalled(ID, "1.0");
-  Monitor.checkNotStarted(ID);
+  BootstrapMonitor.checkInstalled(ID, "1.0");
+  BootstrapMonitor.checkNotStarted(ID);
 
   let unpacked_addon = gTmpD.clone();
   unpacked_addon.append(ID);
@@ -693,8 +692,8 @@ add_task(async function test_replace_permanent_disabled() {
 
   Assert.ok(extInstallCalled);
 
-  Monitor.checkInstalled(ID, "2.0");
-  Monitor.checkStarted(ID);
+  BootstrapMonitor.checkInstalled(ID, "2.0");
+  BootstrapMonitor.checkStarted(ID);
 
   // temporary add-on is installed and started
   checkAddon(ID, tempAddon, {
@@ -715,8 +714,8 @@ add_task(async function test_replace_permanent_disabled() {
   await new Promise(executeSoon);
   addon = await promiseAddonByID(ID);
 
-  Monitor.checkInstalled(ID, "1.0");
-  Monitor.checkStarted(ID);
+  BootstrapMonitor.checkInstalled(ID, "1.0");
+  BootstrapMonitor.checkStarted(ID);
 
   // existing add-on is back
   checkAddon(ID, addon, {
@@ -732,8 +731,8 @@ add_task(async function test_replace_permanent_disabled() {
 
   await addon.uninstall();
 
-  Monitor.checkNotInstalled(ID);
-  Monitor.checkNotStarted(ID);
+  BootstrapMonitor.checkNotInstalled(ID);
+  BootstrapMonitor.checkNotStarted(ID);
 
   await promiseRestartManager();
 });
