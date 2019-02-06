@@ -1816,16 +1816,24 @@ impl PrimitiveStore {
                 frame_context.clip_scroll_tree,
             );
 
-            let (is_passthrough, prim_local_rect, clip_node_collector) = match prim_instance.kind {
+            let (is_passthrough, prim_local_rect) = match prim_instance.kind {
                 PrimitiveInstanceKind::Picture { pic_index, .. } => {
-                    if !self.pictures[pic_index.0].is_visible() {
-                        continue;
-                    }
+                    {
+                        let pic = &self.pictures[pic_index.0];
+                        if !pic.is_visible() {
+                            continue;
+                        }
 
-                    if let Some(ref raster_config) = self.pictures[pic_index.0].raster_config {
-                        if raster_config.establishes_raster_root {
-                            let surface = &frame_context.surfaces[raster_config.surface_index.0 as usize];
-                            frame_state.clip_store.push_raster_root(surface.surface_spatial_node_index);
+                        // If this picture has a surface, we will handle any active clips from parents
+                        // when compositing this surface. Otherwise, push the clip chain from this
+                        // picture on to the active stack for any child primitive(s) to include.
+                        match pic.raster_config {
+                            Some(_) => {
+                                frame_state.clip_chain_stack.push_surface();
+                            }
+                            None => {
+                                frame_state.clip_chain_stack.push_clip(prim_instance.clip_chain_id);
+                            }
                         }
                     }
 
@@ -1838,15 +1846,17 @@ impl PrimitiveStore {
 
                     let pic = &self.pictures[pic_index.0];
 
-                    let clip_node_collector = pic.raster_config.as_ref().and_then(|rc| {
-                        if rc.establishes_raster_root {
-                            Some(frame_state.clip_store.pop_raster_root())
-                        } else {
-                            None
+                    // Similar to above, pop either the clip chain or root entry off the current clip stack.
+                    match pic.raster_config {
+                        Some(_) => {
+                            frame_state.clip_chain_stack.pop_surface();
                         }
-                    });
+                        None => {
+                            frame_state.clip_chain_stack.pop_clip();
+                        }
+                    }
 
-                    (pic.raster_config.is_none(), pic.local_rect, clip_node_collector)
+                    (pic.raster_config.is_none(), pic.local_rect)
                 }
                 _ => {
                     let prim_data = &frame_state.data_stores.as_common_data(&prim_instance);
@@ -1856,7 +1866,7 @@ impl PrimitiveStore {
                         prim_data.prim_size,
                     );
 
-                    (false, prim_rect, None)
+                    (false, prim_rect)
                 }
             };
 
@@ -1900,9 +1910,13 @@ impl PrimitiveStore {
                     }
                 };
 
+                // Include the clip chain for this primitive in the current stack.
+                frame_state.clip_chain_stack.push_clip(prim_instance.clip_chain_id);
+
                 if let Some(ref mut tile_cache) = frame_state.tile_cache {
                     if !tile_cache.update_prim_dependencies(
                         prim_instance,
+                        &frame_state.clip_chain_stack,
                         prim_local_rect,
                         frame_context.clip_scroll_tree,
                         frame_state.data_stores,
@@ -1913,6 +1927,9 @@ impl PrimitiveStore {
                         &self.images,
                     ) {
                         prim_instance.visibility_info = PrimitiveVisibilityIndex::INVALID;
+                        // Ensure the primitive clip is popped - perhaps we can use
+                        // some kind of scope to do this automatically in future.
+                        frame_state.clip_chain_stack.pop_clip();
                         continue;
                     }
                 }
@@ -1920,7 +1937,7 @@ impl PrimitiveStore {
                 let clip_chain = frame_state
                     .clip_store
                     .build_clip_chain_instance(
-                        prim_instance,
+                        frame_state.clip_chain_stack.current_clips(),
                         local_rect,
                         prim_instance.local_clip_rect,
                         prim_context.spatial_node_index,
@@ -1931,9 +1948,11 @@ impl PrimitiveStore {
                         frame_state.resource_cache,
                         frame_context.device_pixel_scale,
                         &frame_context.screen_world_rect,
-                        clip_node_collector.as_ref(),
                         &mut frame_state.data_stores.clip,
                     );
+
+                // Ensure the primitive clip is popped
+                frame_state.clip_chain_stack.pop_clip();
 
                 let clip_chain = match clip_chain {
                     Some(clip_chain) => clip_chain,
@@ -2218,6 +2237,15 @@ impl PrimitiveStore {
                 // Mark whether this picture has a complex coordinate system.
                 let is_passthrough = pic_context_for_children.is_passthrough;
 
+                // Similar to the logic in the visibility pass, push either the
+                // picture clip chain or a new root, depending on whether this
+                // picture is backed by a surface.
+                if is_passthrough {
+                    frame_state.clip_chain_stack.push_clip(prim_instance.clip_chain_id);
+                } else {
+                    frame_state.clip_chain_stack.push_surface();
+                }
+
                 self.prepare_primitives(
                     &mut prim_list,
                     &pic_context_for_children,
@@ -2227,6 +2255,13 @@ impl PrimitiveStore {
                     data_stores,
                     scratch,
                 );
+
+                // And now undo the clip stack logic above.
+                if is_passthrough {
+                    frame_state.clip_chain_stack.pop_clip();
+                } else {
+                    frame_state.clip_chain_stack.pop_surface();
+                }
 
                 if !pic_state_for_children.is_cacheable {
                     pic_state.is_cacheable = false;
@@ -2249,6 +2284,9 @@ impl PrimitiveStore {
         };
 
         if !is_passthrough {
+            // Push the per-primitive clip chain onto the current active stack
+            frame_state.clip_chain_stack.push_clip(prim_instance.clip_chain_id);
+
             prim_instance.update_clip_task(
                 prim_context,
                 pic_context.raster_spatial_node_index,
@@ -2260,6 +2298,9 @@ impl PrimitiveStore {
                 data_stores,
                 scratch,
             );
+
+            // Pop the primitive clip chain.
+            frame_state.clip_chain_stack.pop_clip();
 
             if prim_instance.is_chased() {
                 println!("\tconsidered visible and ready with local pos {:?}", prim_instance.prim_origin);
@@ -3320,7 +3361,7 @@ impl PrimitiveInstance {
                 let segment_clip_chain = frame_state
                     .clip_store
                     .build_clip_chain_instance(
-                        self,
+                        frame_state.clip_chain_stack.current_clips(),
                         segment.local_rect.translate(&LayoutVector2D::new(
                             self.prim_origin.x,
                             self.prim_origin.y,
@@ -3334,7 +3375,6 @@ impl PrimitiveInstance {
                         frame_state.resource_cache,
                         frame_context.device_pixel_scale,
                         &dirty_world_rect,
-                        None,
                         &mut data_stores.clip,
                     );
 

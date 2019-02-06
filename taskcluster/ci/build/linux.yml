@@ -954,6 +954,7 @@ linux64-tup/opt:
         mozconfig-variant: tup
         tooltool-downloads: public
         need-xvfb: true
+    run-on-projects: []
     toolchains:
         - linux64-binutils
         - linux64-clang

@@ -391,6 +391,10 @@ bool TypeSet::mightBeMIRType(jit::MIRType type) const {
       return baseFlags() & TYPE_FLAG_STRING;
     case jit::MIRType::Symbol:
       return baseFlags() & TYPE_FLAG_SYMBOL;
+#ifdef ENABLE_BIGINT
+    case jit::MIRType::BigInt:
+      return baseFlags() & TYPE_FLAG_BIGINT;
+#endif
     case jit::MIRType::MagicOptimizedArguments:
       return baseFlags() & TYPE_FLAG_LAZYARGS;
     case jit::MIRType::MagicHole:
@@ -1709,6 +1713,10 @@ static inline jit::MIRType GetMIRTypeFromTypeFlags(TypeFlags flags) {
       return jit::MIRType::String;
     case TYPE_FLAG_SYMBOL:
       return jit::MIRType::Symbol;
+#ifdef ENABLE_BIGINT
+    case TYPE_FLAG_BIGINT:
+      return jit::MIRType::BigInt;
+#endif
     case TYPE_FLAG_LAZYARGS:
       return jit::MIRType::MagicOptimizedArguments;
     case TYPE_FLAG_ANYOBJECT:

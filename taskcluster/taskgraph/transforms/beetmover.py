@@ -170,8 +170,7 @@ def make_task_description(config, jobs):
             )
         )
 
-        dependent_kind = str(dep_job.kind)
-        dependencies = {dependent_kind: dep_job.label}
+        dependencies = {dep_job.kind: dep_job.label}
 
         if len(dep_job.dependencies) > 1:
             raise NotImplementedError(

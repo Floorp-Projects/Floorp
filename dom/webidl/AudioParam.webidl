@@ -55,3 +55,9 @@ partial interface AudioParam {
   [ChromeOnly]
   readonly attribute DOMString name;
 };
+
+partial interface AudioParam {
+  // This attribute is used for mochitest only.
+  [ChromeOnly]
+  readonly attribute boolean isStreamSuspended;
+};

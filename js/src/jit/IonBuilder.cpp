@@ -717,6 +717,11 @@ AbortReasonOr<Ok> IonBuilder::analyzeNewLoopTypes(
         case JSOP_DEC:
           type = inspector->expectedResultType(last);
           break;
+#ifdef ENABLE_BIGINT
+        case JSOP_BIGINT:
+          type = MIRType::BigInt;
+          break;
+#endif
         default:
           break;
       }
@@ -1337,6 +1342,9 @@ AbortReasonOr<Ok> IonBuilder::addOsrValueTypeBarrier(
     case MIRType::Double:
     case MIRType::String:
     case MIRType::Symbol:
+#ifdef ENABLE_BIGINT
+    case MIRType::BigInt:
+#endif
     case MIRType::Object:
       if (type != def->type()) {
         MUnbox* unbox = MUnbox::New(alloc(), def, type, MUnbox::Fallible);
@@ -3349,7 +3357,8 @@ AbortReasonOr<Ok> IonBuilder::bitnotTrySpecialized(bool* emitted,
   // of the operand.
 
   if (input->mightBeType(MIRType::Object) ||
-      input->mightBeType(MIRType::Symbol)) {
+      input->mightBeType(MIRType::Symbol) ||
+      IF_BIGINT(input->mightBeType(MIRType::BigInt), false)) {
     return Ok();
   }
 
@@ -6210,6 +6219,7 @@ static bool ObjectOrSimplePrimitive(MDefinition* op) {
   // Return true if op is either undefined/null/boolean/int32/symbol or an
   // object.
   return !op->mightBeType(MIRType::String) &&
+         IF_BIGINT(!op->mightBeType(MIRType::BigInt), true) &&
          !op->mightBeType(MIRType::Double) &&
          !op->mightBeType(MIRType::Float32) &&
          !op->mightBeType(MIRType::MagicOptimizedArguments) &&
@@ -7459,6 +7469,12 @@ JSObject* IonBuilder::testSingletonPropertyTypes(MDefinition* obj, jsid id) {
     case MIRType::Symbol:
       key = JSProto_Symbol;
       break;
+
+#ifdef ENABLE_BIGINT
+    case MIRType::BigInt:
+      key = JSProto_BigInt;
+      break;
+#endif
 
     case MIRType::Int32:
     case MIRType::Double:
