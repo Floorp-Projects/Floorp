@@ -1246,11 +1246,12 @@ ListOfSwitchCase:
     factory_.addCaseStatementToList(result, item);
 
 ListOfVariableDeclarator:
+  extra-params: ParseNodeKind declarationListKind
   type-ok:
     ListNode*
   init: |
     BINJS_TRY_DECL(result,
-                   factory_.newDeclarationList(ParseNodeKind::ConstDecl /* Placeholder */,
+                   factory_.newDeclarationList(declarationListKind,
                    tokenizer_->pos(start)));
 
 LiteralBooleanExpression:
@@ -1377,9 +1378,7 @@ ShorthandProperty:
                                                          tokenizer_->pos(start)));
 
     BINJS_TRY_DECL(result,
-                   factory_.newObjectMethodOrPropertyDefinition(propName, name,
-                                                                AccessorType::None));
-    result->setKind(ParseNodeKind::Shorthand);
+                   factory_.newShorthandPropertyDefinition(propName, name));
 
 SwitchCase:
   type-ok:
@@ -1577,6 +1576,18 @@ VariableDeclaration:
       after: |
         // Restored by `kindGuard`.
         variableDeclarationKind_ = kind_;
+        ParseNodeKind declarationListKind;
+        switch (kind_) {
+        case VariableDeclarationKind::Var:
+          declarationListKind = ParseNodeKind::VarStmt;
+          break;
+        case VariableDeclarationKind::Let:
+          return raiseError("Let is not supported in this preview release");
+        case VariableDeclarationKind::Const:
+          return raiseError("Const is not supported in this preview release");
+        }
+    declarators:
+      extra-args: declarationListKind
 
   build: |
     // By specification, the list may not be empty.
@@ -1584,17 +1595,6 @@ VariableDeclaration:
       return raiseEmpty("VariableDeclaration");
     }
 
-    ParseNodeKind pnk;
-    switch (kind_) {
-      case VariableDeclarationKind::Var:
-        pnk = ParseNodeKind::VarStmt;
-        break;
-      case VariableDeclarationKind::Let:
-        return raiseError("Let is not supported in this preview release");
-      case VariableDeclarationKind::Const:
-        return raiseError("Const is not supported in this preview release");
-    }
-    declarators->setKind(pnk);
     auto result = declarators;
 
 VariableDeclarator:

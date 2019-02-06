@@ -626,7 +626,7 @@ static inline bool IsMethodDefinitionKind(FunctionSyntaxKind kind) {
 }
 
 class ParseNode {
-  ParseNodeKind pn_type; /* ParseNodeKind::PNK_* type */
+  const ParseNodeKind pn_type; /* ParseNodeKind::PNK_* type */
 
   // pn_op is not declared as the correct enum type due to difficulties with
   // MS bitfield layout rules and a GCC bug.  See
@@ -671,10 +671,6 @@ class ParseNode {
   ParseNodeKind getKind() const {
     MOZ_ASSERT(pn_type < ParseNodeKind::Limit);
     return pn_type;
-  }
-  void setKind(ParseNodeKind kind) {
-    MOZ_ASSERT(kind < ParseNodeKind::Limit);
-    pn_type = kind;
   }
   bool isKind(ParseNodeKind kind) const { return getKind() == kind; }
 

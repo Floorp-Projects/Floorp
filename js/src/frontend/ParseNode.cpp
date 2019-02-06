@@ -78,7 +78,7 @@ ParseNode* ParseNode::appendOrCreateList(ParseNodeKind kind, ParseNode* left,
     // processed with a left fold because (+) is left-associative.
     //
     if (left->isKind(kind) &&
-        (kind == ParseNodeKind::PowExpr ? !left->pn_parens
+        (kind == ParseNodeKind::PowExpr ? !left->isInParens()
                                         : left->isBinaryOperation())) {
       ListNode* list = &left->as<ListNode>();
 
