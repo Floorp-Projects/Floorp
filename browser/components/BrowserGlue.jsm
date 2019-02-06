@@ -132,17 +132,6 @@ let ACTORS = {
     },
   },
 
-  LightWeightThemeInstall: {
-    child: {
-      module: "resource:///actors/LightWeightThemeInstallChild.jsm",
-      events: {
-        "InstallBrowserTheme": {wantUntrusted: true},
-        "PreviewBrowserTheme": {wantUntrusted: true},
-        "ResetBrowserThemePreview": {wantUntrusted: true},
-      },
-    },
-  },
-
   LightweightTheme: {
     child: {
       module: "resource:///actors/LightweightThemeChild.jsm",
