@@ -2423,6 +2423,8 @@ class JSScript : public js::gc::TenuredCell {
   inline js::TypeScript* types(const js::AutoSweepTypeScript& sweep);
   inline bool typesNeedsSweep() const;
 
+  js::TypeScript* typesDontCheckGeneration() { return types_; }
+
   void maybeReleaseTypes();
   void sweepTypes(const js::AutoSweepTypeScript& sweep);
 

@@ -206,17 +206,18 @@ void Zone::discardJitCode(FreeOp* fop,
     return;
   }
 
-  if (discardBaselineCode) {
+  if (discardBaselineCode || releaseTypes) {
 #ifdef DEBUG
-    /* Assert no baseline scripts are marked as active. */
+    // Assert no TypeScripts are marked as active.
     for (auto script = cellIter<JSScript>(); !script.done(); script.next()) {
-      MOZ_ASSERT_IF(script->hasBaselineScript(),
-                    !script->baselineScript()->active());
+      if (TypeScript* types = script->typesDontCheckGeneration()) {
+        MOZ_ASSERT(!types->active());
+      }
     }
 #endif
 
-    /* Mark baseline scripts on the stack as active. */
-    jit::MarkActiveBaselineScripts(this);
+    // Mark TypeScripts on the stack as active.
+    jit::MarkActiveTypeScripts(this);
   }
 
   /* Only mark OSI points if code is being discarded. */
@@ -261,6 +262,11 @@ void Zone::discardJitCode(FreeOp* fop,
     // purge stubs if we just destroyed the Typescript.
     if (discardBaselineCode && script->hasICScript()) {
       script->icScript()->purgeOptimizedStubs(script);
+    }
+
+    // Finally, reset the active flag.
+    if (TypeScript* types = script->typesDontCheckGeneration()) {
+      types->resetActive();
     }
   }
 
