@@ -3036,6 +3036,10 @@ menuseparator {
   line-height: 30px;
 }
 
+.conditional-breakpoint-panel input:not(:placeholder-shown) {
+  font-family: var(--monospace-font-family);
+}
+
 .conditional-breakpoint-panel input:focus {
   outline-width: 0;
 }
@@ -3745,8 +3749,8 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
   padding-inline-start: 10px;
 }
 
-.expression-input {
-  max-width: 50%;
+.input-expression:not(:placeholder-shown) {
+  font-family: var(--monospace-font-family);
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
