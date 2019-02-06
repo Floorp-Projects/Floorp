@@ -275,7 +275,6 @@ Structure:
             },
             ...
         },
-        persona: <string>, // id of the current persona
       },
       experiments: {
         "<experiment id>": { branch: "<branch>" },
@@ -464,6 +463,10 @@ For each experiment we collect the ``id`` and the ``branch`` the client is enrol
 
 Version History
 ---------------
+
+- Firefox 67:
+
+  - Removed ``persona``. The ``addons.activeAddons`` list should be used instead. (`bug 1525511 https://bugzilla.mozilla.org/show_bug.cgi?id=1525511>`_)
 
 - Firefox 61:
 
