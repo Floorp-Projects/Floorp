@@ -10,17 +10,13 @@ import { CommandBarButton, debugBtn } from "../";
 
 describe("CommandBarButton", () => {
   it("renders", () => {
-    const wrapper = shallow(
-      <CommandBarButton children={([]: any)} className={""} />
-    );
+    const wrapper = shallow(<CommandBarButton />);
     expect(wrapper).toMatchSnapshot();
   });
 
   it("renders children", () => {
     const children = [1, 2, 3, 4];
-    const wrapper = shallow(
-      <CommandBarButton children={(children: any)} className={""} />
-    );
+    const wrapper = shallow(<CommandBarButton children={children} />);
     expect(wrapper.find("button").children()).toHaveLength(4);
   });
 });

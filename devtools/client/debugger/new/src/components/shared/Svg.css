@@ -208,13 +208,8 @@ span.img.marko {
   mask-size: 100%;
 }
 
-.img.pane-collapse {
-  mask: url(/images/pane-collapse.svg) no-repeat;
-  mask-size: 100%;
-}
-
-.img.pane-expand {
-  mask: url(/images/pane-expand.svg) no-repeat;
+.img.toggle-panes {
+  mask: url(/images/toggle-panes.svg) no-repeat;
   mask-size: 100%;
 }
 

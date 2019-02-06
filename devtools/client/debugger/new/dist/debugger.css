@@ -548,15 +548,6 @@ html[dir="rtl"] .tree-node button.arrow {
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-:root {
-  /* header height is 28px + 1px for its border */
-  --editor-header-height: 29px;
-  /* footer height is 24px + 1px for its border */
-  --editor-footer-height: 25px;
-  /* searchbar height is 24px + 2px for its top and bottom borders */
-  --editor-searchbar-height: 26px;
-}
-
 :root.theme-light,
 :root .theme-light {
   --search-overlays-semitransparent: rgba(221, 225, 228, 0.66);
@@ -579,18 +570,11 @@ html[dir="rtl"] .tree-node button.arrow {
 button {
   background: transparent;
   border: none;
-  font-family: inherit;
-  font-size: inherit;
 }
 
 button:hover,
 button:focus {
   background-color: var(--theme-toolbar-background-hover);
-}
-
-.theme-dark button:hover,
-.theme-dark button:focus {
-  background-color: var(--theme-toolbar-hover);
 }
 
 .debugger {
@@ -603,9 +587,13 @@ button:focus {
   display: flex;
   position: relative;
   flex: 1;
-  background-color: var(--theme-body-background);
-  height: 100%;
+  background-color: var(--theme-tab-toolbar-background);
+  height: calc(100% - 1px);
   overflow: hidden;
+}
+
+.theme-dark .editor-pane {
+  background-color: var(--theme-toolbar-background);
 }
 
 .editor-container {
@@ -1072,7 +1060,7 @@ html[dir="rtl"] .managed-tree .tree .node > div {
   height: 12px;
   /* makes span appear like an image */
   display: inline-block;
-  background: var(--theme-icon-color);
+  background: var(--theme-body-color);
   mask-size: 100%;
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -1156,10 +1144,6 @@ img.close::before {
   background: var(--theme-toolbar-background-hover);
 }
 
-.theme-dark .command-bar-button:not(.disabled):hover {
-  background: var(--theme-toolbar-hover);
-}
-
 :root.theme-dark .command-bar-button {
   color: var(--theme-body-color);
 }
@@ -1175,11 +1159,19 @@ img.close::before {
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 .toggle-button {
-  padding: 4px 6px;
+  transform: translate(0, 0px);
+  transition: transform 0.25s ease-in-out;
+  padding: 5px;
+  height: inherit;
 }
 
 .toggle-button .img {
-  vertical-align: middle;
+  fill: var(--theme-comment);
+  vertical-align: 0;
+}
+
+:root.theme-dark .toggle-button .img {
+  fill: var(--theme-comment-alt);
 }
 
 .toggle-button.end {
@@ -1191,13 +1183,18 @@ img.close::before {
   margin-inline-start: 0px;
 }
 
-html[dir="rtl"] .toggle-button.start .img,
-html[dir="ltr"] .toggle-button.end:not(.vertical) .img {
-  transform: scaleX(-1);
+html:not([dir="rtl"]) .toggle-button.end .img,
+html[dir="rtl"] .toggle-button.start .img {
+  transform: rotate(180deg);
 }
 
-.toggle-button.end.vertical .img {
+html .toggle-button.end.vertical .img {
   transform: rotate(-90deg);
+}
+
+.toggle-button.start.collapsed,
+.toggle-button.end.collapsed {
+  transform: rotate(180deg);
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -1409,13 +1406,8 @@ span.img.marko {
   mask-size: 100%;
 }
 
-.img.pane-collapse {
-  mask: url("resource://devtools/client/debugger/new/images/pane-collapse.svg") no-repeat;
-  mask-size: 100%;
-}
-
-.img.pane-expand {
-  mask: url("resource://devtools/client/debugger/new/images/pane-expand.svg") no-repeat;
+.img.toggle-panes {
+  mask: url("resource://devtools/client/debugger/new/images/toggle-panes.svg") no-repeat;
   mask-size: 100%;
 }
 
@@ -2081,6 +2073,7 @@ menuseparator {
   left: 0;
   right: 0;
   list-style-type: none;
+  font-family: var(--monospace-font-family);
   overflow: auto;
 }
 
@@ -2381,58 +2374,58 @@ menuseparator {
   font-size: 12px;
   width: 100%;
   background: var(--theme-body-background);
+  border-top: 1px solid var(--theme-splitter-color);
   display: flex;
   -moz-user-select: none;
   user-select: none;
   box-sizing: border-box;
-  height: var(--editor-header-height);
+  height: 29px;
   margin: 0;
   padding: 0;
-  border-bottom: 1px solid var(--theme-splitter-color);
 }
 
 .source-outline-tabs .tab {
-  align-items: center;
   background-color: var(--theme-toolbar-background);
+  border-top: 2px solid transparent;
+  border-bottom: 1px solid var(--theme-splitter-color);
   color: var(--theme-toolbar-color);
   cursor: default;
   display: inline-flex;
   flex: 1;
   justify-content: center;
+  margin-bottom: 0px;
+  margin-top: -1px;
   overflow: hidden;
-  padding: 5px;
+  padding: 5px 8px 7px 8px;
   position: relative;
   transition: all 0.25s ease;
 }
 
-.source-outline-tabs .tab::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 2px;
-  background-color: var(--tab-line-color, transparent);
-  transition: transform 250ms var(--animation-curve), opacity 250ms var(--animation-curve);
-  opacity: 0;
-  transform: scaleX(0);
+.source-outline-tabs .tab:not(.active):hover {
+  background-color: var(--theme-toolbar-hover);
+  border-top: 2px solid rgba(0, 0, 0, 0.2);
+}
+
+.theme-dark .source-outline-tabs .tab:hover {
+  border-top: 2px solid var(--tab-line-hover-color);
 }
 
 .source-outline-tabs .tab.active {
-  --tab-line-color: var(--tab-line-selected-color);
+  border-top: 2px solid var(--tab-line-selected-color);
   color: var(--theme-toolbar-selected-color);
-  border-bottom-color: transparent;
 }
 
-.source-outline-tabs .tab:not(.active):hover {
-  --tab-line-color: var(--tab-line-hover-color);
-  background-color: var(--theme-toolbar-hover);
+.theme-dark .source-outline-tabs .tab.active {
+  color: var(--theme-toolbar-selected-color);
 }
 
-.source-outline-tabs .tab:hover::before,
-.source-outline-tabs .tab.active::before {
-  opacity: 1;
-  transform: scaleX(1);
+.theme-dark .source-outline-tabs .tab.active:hover {
+  border-top: 2px solid var(--tab-line-selected-color);
+}
+
+.source-outline-tabs .tab.active path,
+.source-outline-tabs .tab:hover path {
+  fill: var(--theme-body-color);
 }
 
 .source-outline-panel {
@@ -2540,7 +2533,7 @@ menuseparator {
   transition: opacity 200ms;
   border: none;
   background: transparent;
-  padding: 4px 6px;
+  padding: 6px;
 }
 
 .source-footer > .commands > .action .img {
@@ -2610,13 +2603,13 @@ menuseparator {
 .search-bar {
   display: flex;
   border: 1px solid transparent;
-  border-top-color: var(--theme-splitter-color);
+  border-top: 1px solid var(--theme-splitter-color);
   height: var(--editor-searchbar-height);
-  transition: border-color 200ms var(--animation-curve);
 }
 
 .search-bar.search-bar-focused {
-  border-color: var(--blue-50);
+  border: 1px solid var(--blue-50);
+  transition: border-color 0.2s ease-in-out;
 }
 
 .search-bar .search-field {
@@ -2968,7 +2961,7 @@ menuseparator {
 .column-breakpoint {
   display: inline;
   padding: 0;
-  padding-inline-end: 4px;
+  margin-inline-end: 4px;
 }
 
 .column-breakpoint:hover {
@@ -3049,10 +3042,6 @@ menuseparator {
   line-height: 30px;
 }
 
-.conditional-breakpoint-panel input:not(:placeholder-shown) {
-  font-family: var(--monospace-font-family);
-}
-
 .conditional-breakpoint-panel input:focus {
   outline-width: 0;
 }
@@ -3063,8 +3052,10 @@ menuseparator {
 .editor-wrapper {
   --debug-line-border: rgb(145, 188, 219);
   --debug-expression-background: rgba(202, 227, 255, 0.5);
+  --editor-searchbar-height: 27px;
   --debug-line-error-border: rgb(255, 0, 0);
   --debug-expression-error-background: rgba(231, 116, 113, 0.3);
+  --editor-header-height: 30px;
   --highlight-line-duration: 1500ms;
 }
 
@@ -3104,6 +3095,7 @@ menuseparator {
   width: calc(100% - 1px);
   top: var(--editor-header-height);
   left: 0px;
+  --editor-footer-height: 24px;
 }
 
 html[dir="rtl"] .editor-mount {
@@ -3524,6 +3516,11 @@ html .breakpoints-list .breakpoint.paused {
   background-color: var(--search-overlays-semitransparent);
 }
 
+.breakpoints-list .breakpoint .breakpoint-line,
+.breakpoints-list .breakpoint-label {
+  font-family: var(--monospace-font-family);
+}
+
 .breakpoints-list .breakpoint .breakpoint-line {
   font-size: 11px;
   color: var(--theme-comment);
@@ -3754,8 +3751,8 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
   padding-inline-start: 10px;
 }
 
-.input-expression:not(:placeholder-shown) {
-  font-family: var(--monospace-font-family);
+.expression-input {
+  max-width: 50%;
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -4237,8 +4234,7 @@ html[dir="rtl"] .command-bar {
   border-bottom: none;
   background-color: var(--theme-body-background);
   border-top: 1px solid var(--theme-splitter-color);
-  flex: none;
-  height: var(--editor-footer-height);
+  flex: 0 0 25px;
 }
 
 .command-bar.bottom {
@@ -4521,13 +4517,16 @@ html[dir="rtl"] .object-node {
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 .welcomebox {
-  position: absolute;
-  top: var(--editor-header-height);
-  left: 0;
-  bottom: 1px;
   width: calc(100% - 1px);
+
+  /* Offsetting it by 30px for the sources-header area */
+  height: calc(100% - 30px);
+  position: absolute;
+  top: 30px;
+  left: 0;
   padding: 50px 0 0 0;
   text-align: center;
+  font-size: 1.25em;
   background-color: var(--theme-toolbar-background);
   font-weight: lighter;
   z-index: 10;
@@ -4551,7 +4550,6 @@ html[dir="rtl"] .object-node {
 .alignlabel {
   display: flex;
   white-space: nowrap;
-  font-size: 1.25em;
 }
 
 .shortcutKeys {
@@ -4612,16 +4610,33 @@ html .welcomebox .toggle-button-end.collapsed {
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 .source-header {
-  display: flex;
-  width: 100%;
-  height: var(--editor-header-height);
   border-bottom: 1px solid var(--theme-splitter-color);
-  background-color: var(--theme-toolbar-background);
+  width: 100%;
+  height: 29px;
+  display: flex;
 }
 
 .source-header * {
   -moz-user-select: none;
   user-select: none;
+}
+
+.source-header .new-tab-btn {
+  padding: 4px;
+  margin-top: 4px;
+  margin-left: 2px;
+  fill: var(--theme-comment);
+  transition: 0.1s ease;
+  align-self: center;
+}
+
+.source-header .new-tab-btn:hover {
+  background-color: var(--theme-toolbar-background-hover);
+}
+
+.source-header .new-tab-btn svg {
+  width: 12px;
+  display: block;
 }
 
 .source-tabs {
@@ -4638,10 +4653,9 @@ html .welcomebox .toggle-button-end.collapsed {
   overflow: hidden;
   padding: 5px;
   cursor: default;
-  height: calc(var(--editor-header-height) - 1px);
+  height: 30px;
   font-size: 12px;
   background-color: transparent;
-  vertical-align: bottom;
 }
 
 .source-tab::before {
@@ -4651,27 +4665,44 @@ html .welcomebox .toggle-button-end.collapsed {
   left: 0;
   width: 100%;
   height: 2px;
-  background-color: var(--tab-line-color, transparent);
+  background: transparent;
   transition: transform 250ms var(--animation-curve), opacity 250ms var(--animation-curve);
   opacity: 0;
   transform: scaleX(0);
 }
 
+.source-tab:first-child {
+  margin-inline-start: 0;
+}
+
+.source-tab:not(.active):hover {
+  background: linear-gradient(var(--theme-toolbar-hover) 28px, transparent 1px);
+}
+
+.source-tab:not(.active):hover::before {
+  background: var(--tab-line-hover-color);
+  opacity: 1;
+  transform: scaleX(1);
+}
+
 .source-tab.active {
-  --tab-line-color: var(--tab-line-selected-color);
   color: var(--theme-toolbar-selected-color);
   border-bottom-color: transparent;
 }
 
-.source-tab:not(.active):hover {
-  --tab-line-color: var(--tab-line-hover-color);
-  background-color: var(--theme-toolbar-hover);
-}
-
-.source-tab:hover::before,
 .source-tab.active::before {
+  background: var(--tab-line-selected-color);
   opacity: 1;
   transform: scaleX(1);
+}
+
+.theme-dark .source-tab.active {
+  color: var(--theme-toolbar-selected-color);
+}
+
+.source-tab.active path,
+.source-tab:hover path {
+  fill: var(--theme-body-color);
 }
 
 .source-tab .source-icon {
@@ -4685,6 +4716,10 @@ html .welcomebox .toggle-button-end.collapsed {
   align-self: center;
 }
 
+.source-tab .prettyPrint path {
+  fill: var(--theme-textbox-box-shadow);
+}
+
 .source-tab .img.react {
   mask: url("resource://devtools/client/debugger/new/images/react.svg") no-repeat;
   mask-size: 100%;
@@ -4692,6 +4727,14 @@ html .welcomebox .toggle-button-end.collapsed {
   width: 14px;
   background: var(--theme-highlight-bluegrey);
   top: 0;
+}
+
+.source-tab .blackBox path {
+  fill: var(--theme-textbox-box-shadow);
+}
+
+.theme-dark .source-tab .blackBox circle {
+  fill: var(--theme-body-color);
 }
 
 .source-tab .filename {

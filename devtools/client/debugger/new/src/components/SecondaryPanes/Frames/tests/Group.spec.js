@@ -7,16 +7,14 @@
 import React from "react";
 import { shallow } from "enzyme";
 import Group from "../Group.js";
-import { makeMockFrame, makeMockSource } from "../../../../utils/test-mockup";
 
 import FrameMenu from "../FrameMenu";
 jest.mock("../FrameMenu", () => jest.fn());
 
 function render(overrides = {}) {
-  const frame = { ...makeMockFrame(), displayName: "foo", library: "Back" };
   const defaultProps = {
-    group: [frame],
-    selectedFrame: frame,
+    group: [{ displayName: "foo", library: "Back" }],
+    selectedFrame: {},
     frameworkGroupingOn: true,
     toggleFrameworkGrouping: jest.fn(),
     selectFrame: jest.fn(),
@@ -41,20 +39,39 @@ describe("Group", () => {
   });
 
   it("passes the getFrameTitle prop to the Frame components", () => {
-    const mahscripts = makeMockSource("http://myfile.com/mahscripts.js");
-    const back = makeMockSource("http://myfile.com/back.js");
     const group = [
       {
-        ...makeMockFrame("1", mahscripts, undefined, 55, "renderFoo"),
-        library: "Back"
+        id: 1,
+        library: "Back",
+        displayName: "renderFoo",
+        location: {
+          line: 55
+        },
+        source: {
+          url: "http://myfile.com/mahscripts.js"
+        }
       },
       {
-        ...makeMockFrame("2", back, undefined, 55, "a"),
-        library: "Back"
+        id: 2,
+        library: "Back",
+        displayName: "a",
+        location: {
+          line: 55
+        },
+        source: {
+          url: "http://myfile.com/back.js"
+        }
       },
       {
-        ...makeMockFrame("3", back, undefined, 55, "b"),
-        library: "Back"
+        id: 3,
+        library: "Back",
+        displayName: "b",
+        location: {
+          line: 55
+        },
+        source: {
+          url: "http://myfile.com/back.js"
+        }
       }
     ];
     const getFrameTitle = () => {};
@@ -71,20 +88,39 @@ describe("Group", () => {
   });
 
   it("renders group with anonymous functions", () => {
-    const mahscripts = makeMockSource("http://myfile.com/mahscripts.js");
-    const back = makeMockSource("http://myfile.com/back.js");
     const group = [
       {
-        ...makeMockFrame("1", mahscripts, undefined, 55),
-        library: "Back"
+        id: 1,
+        library: "Back",
+        displayName: "",
+        location: {
+          line: 55
+        },
+        source: {
+          url: "http://myfile.com/mahscripts.js"
+        }
       },
       {
-        ...makeMockFrame("2", back, undefined, 55),
-        library: "Back"
+        id: 2,
+        library: "Back",
+        displayName: "",
+        location: {
+          line: 55
+        },
+        source: {
+          url: "http://myfile.com/back.js"
+        }
       },
       {
-        ...makeMockFrame("3", back, undefined, 55),
-        library: "Back"
+        id: 3,
+        library: "Back",
+        displayName: "",
+        location: {
+          line: 55
+        },
+        source: {
+          url: "http://myfile.com/back.js"
+        }
       }
     ];
 

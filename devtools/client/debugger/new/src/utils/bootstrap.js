@@ -22,7 +22,6 @@ import App from "../components/App";
 import { asyncStore, prefs } from "./prefs";
 
 import type { Panel } from "../client/firefox/types";
-import typeof SourceMaps from "../../packages/devtools-source-map/src";
 
 function renderPanel(component, store) {
   const root = document.createElement("div");
@@ -42,7 +41,7 @@ function renderPanel(component, store) {
 
 export function bootstrapStore(
   client: any,
-  sourceMaps: SourceMaps,
+  sourceMaps: Object,
   panel: Panel,
   initialState: Object
 ) {

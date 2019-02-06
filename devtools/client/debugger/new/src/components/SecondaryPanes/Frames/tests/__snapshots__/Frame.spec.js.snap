@@ -16,40 +16,13 @@ exports[`Frame getFrameTitle 1`] = `
     frame={
       Object {
         "displayName": "renderFoo",
-        "generatedLocation": Object {
-          "line": 10,
-          "sourceId": "source",
-        },
-        "id": "1",
+        "id": 1,
         "location": Object {
           "line": 10,
-          "sourceId": "source",
-        },
-        "scope": Object {
-          "actor": "scope-actor",
-          "bindings": Object {
-            "arguments": Array [],
-            "variables": Object {},
-          },
-          "function": null,
-          "object": null,
-          "parent": null,
-          "type": "block",
         },
         "source": Object {
-          "contentType": "text/javascript",
-          "id": "source",
-          "introductionUrl": null,
-          "isBlackBoxed": false,
-          "isPrettyPrinted": false,
-          "isWasm": false,
-          "loadedState": "unloaded",
-          "relativeUrl": "https://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com/assets/src/js/foo-view.js",
-          "text": "",
           "url": "https://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com/assets/src/js/foo-view.js",
         },
-        "this": Object {},
-        "thread": "FakeThread",
       }
     }
     options={
@@ -68,40 +41,13 @@ exports[`Frame getFrameTitle 1`] = `
     frame={
       Object {
         "displayName": "renderFoo",
-        "generatedLocation": Object {
-          "line": 10,
-          "sourceId": "source",
-        },
-        "id": "1",
+        "id": 1,
         "location": Object {
           "line": 10,
-          "sourceId": "source",
-        },
-        "scope": Object {
-          "actor": "scope-actor",
-          "bindings": Object {
-            "arguments": Array [],
-            "variables": Object {},
-          },
-          "function": null,
-          "object": null,
-          "parent": null,
-          "type": "block",
         },
         "source": Object {
-          "contentType": "text/javascript",
-          "id": "source",
-          "introductionUrl": null,
-          "isBlackBoxed": false,
-          "isPrettyPrinted": false,
-          "isWasm": false,
-          "loadedState": "unloaded",
-          "relativeUrl": "https://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com/assets/src/js/foo-view.js",
-          "text": "",
           "url": "https://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com/assets/src/js/foo-view.js",
         },
-        "this": Object {},
-        "thread": "FakeThread",
       }
     }
   />
@@ -126,41 +72,16 @@ exports[`Frame library frame 1`] = `
     frame={
       Object {
         "displayName": "updateEvents",
-        "generatedLocation": Object {
-          "line": 12,
-          "sourceId": "source",
-        },
-        "id": "3",
+        "frameworkGroupingOn": false,
+        "id": 3,
         "library": "backbone",
         "location": Object {
           "line": 12,
-          "sourceId": "source",
-        },
-        "scope": Object {
-          "actor": "scope-actor",
-          "bindings": Object {
-            "arguments": Array [],
-            "variables": Object {},
-          },
-          "function": null,
-          "object": null,
-          "parent": null,
-          "type": "block",
         },
         "source": Object {
-          "contentType": "text/javascript",
-          "id": "source",
-          "introductionUrl": null,
-          "isBlackBoxed": false,
-          "isPrettyPrinted": false,
-          "isWasm": false,
-          "loadedState": "unloaded",
-          "relativeUrl": "backbone.js",
-          "text": "",
           "url": "backbone.js",
         },
-        "this": Object {},
-        "thread": "FakeThread",
+        "toggleFrameworkGrouping": [MockFunction],
       }
     }
     options={
@@ -179,41 +100,16 @@ exports[`Frame library frame 1`] = `
     frame={
       Object {
         "displayName": "updateEvents",
-        "generatedLocation": Object {
-          "line": 12,
-          "sourceId": "source",
-        },
-        "id": "3",
+        "frameworkGroupingOn": false,
+        "id": 3,
         "library": "backbone",
         "location": Object {
           "line": 12,
-          "sourceId": "source",
-        },
-        "scope": Object {
-          "actor": "scope-actor",
-          "bindings": Object {
-            "arguments": Array [],
-            "variables": Object {},
-          },
-          "function": null,
-          "object": null,
-          "parent": null,
-          "type": "block",
         },
         "source": Object {
-          "contentType": "text/javascript",
-          "id": "source",
-          "introductionUrl": null,
-          "isBlackBoxed": false,
-          "isPrettyPrinted": false,
-          "isWasm": false,
-          "loadedState": "unloaded",
-          "relativeUrl": "backbone.js",
-          "text": "",
           "url": "backbone.js",
         },
-        "this": Object {},
-        "thread": "FakeThread",
+        "toggleFrameworkGrouping": [MockFunction],
       }
     }
   />
@@ -238,40 +134,17 @@ exports[`Frame user frame (not selected) 1`] = `
     frame={
       Object {
         "displayName": "renderFoo",
-        "generatedLocation": Object {
-          "line": 10,
-          "sourceId": "source",
-        },
-        "id": "1",
+        "frameworkGroupingOn": false,
+        "id": 1,
+        "library": false,
         "location": Object {
           "line": 10,
-          "sourceId": "source",
-        },
-        "scope": Object {
-          "actor": "scope-actor",
-          "bindings": Object {
-            "arguments": Array [],
-            "variables": Object {},
-          },
-          "function": null,
-          "object": null,
-          "parent": null,
-          "type": "block",
         },
         "source": Object {
-          "contentType": "text/javascript",
-          "id": "source",
-          "introductionUrl": null,
           "isBlackBoxed": false,
-          "isPrettyPrinted": false,
-          "isWasm": false,
-          "loadedState": "unloaded",
-          "relativeUrl": "foo-view.js",
-          "text": "",
           "url": "foo-view.js",
         },
-        "this": Object {},
-        "thread": "FakeThread",
+        "toggleFrameworkGrouping": [MockFunction],
       }
     }
     options={
@@ -290,40 +163,17 @@ exports[`Frame user frame (not selected) 1`] = `
     frame={
       Object {
         "displayName": "renderFoo",
-        "generatedLocation": Object {
-          "line": 10,
-          "sourceId": "source",
-        },
-        "id": "1",
+        "frameworkGroupingOn": false,
+        "id": 1,
+        "library": false,
         "location": Object {
           "line": 10,
-          "sourceId": "source",
-        },
-        "scope": Object {
-          "actor": "scope-actor",
-          "bindings": Object {
-            "arguments": Array [],
-            "variables": Object {},
-          },
-          "function": null,
-          "object": null,
-          "parent": null,
-          "type": "block",
         },
         "source": Object {
-          "contentType": "text/javascript",
-          "id": "source",
-          "introductionUrl": null,
           "isBlackBoxed": false,
-          "isPrettyPrinted": false,
-          "isWasm": false,
-          "loadedState": "unloaded",
-          "relativeUrl": "foo-view.js",
-          "text": "",
           "url": "foo-view.js",
         },
-        "this": Object {},
-        "thread": "FakeThread",
+        "toggleFrameworkGrouping": [MockFunction],
       }
     }
   />
@@ -348,40 +198,17 @@ exports[`Frame user frame 1`] = `
     frame={
       Object {
         "displayName": "renderFoo",
-        "generatedLocation": Object {
-          "line": 10,
-          "sourceId": "source",
-        },
-        "id": "1",
+        "frameworkGroupingOn": false,
+        "id": 1,
+        "library": false,
         "location": Object {
           "line": 10,
-          "sourceId": "source",
-        },
-        "scope": Object {
-          "actor": "scope-actor",
-          "bindings": Object {
-            "arguments": Array [],
-            "variables": Object {},
-          },
-          "function": null,
-          "object": null,
-          "parent": null,
-          "type": "block",
         },
         "source": Object {
-          "contentType": "text/javascript",
-          "id": "source",
-          "introductionUrl": null,
           "isBlackBoxed": false,
-          "isPrettyPrinted": false,
-          "isWasm": false,
-          "loadedState": "unloaded",
-          "relativeUrl": "foo-view.js",
-          "text": "",
           "url": "foo-view.js",
         },
-        "this": Object {},
-        "thread": "FakeThread",
+        "toggleFrameworkGrouping": [MockFunction],
       }
     }
     options={
@@ -400,40 +227,17 @@ exports[`Frame user frame 1`] = `
     frame={
       Object {
         "displayName": "renderFoo",
-        "generatedLocation": Object {
-          "line": 10,
-          "sourceId": "source",
-        },
-        "id": "1",
+        "frameworkGroupingOn": false,
+        "id": 1,
+        "library": false,
         "location": Object {
           "line": 10,
-          "sourceId": "source",
-        },
-        "scope": Object {
-          "actor": "scope-actor",
-          "bindings": Object {
-            "arguments": Array [],
-            "variables": Object {},
-          },
-          "function": null,
-          "object": null,
-          "parent": null,
-          "type": "block",
         },
         "source": Object {
-          "contentType": "text/javascript",
-          "id": "source",
-          "introductionUrl": null,
           "isBlackBoxed": false,
-          "isPrettyPrinted": false,
-          "isWasm": false,
-          "loadedState": "unloaded",
-          "relativeUrl": "foo-view.js",
-          "text": "",
           "url": "foo-view.js",
         },
-        "this": Object {},
-        "thread": "FakeThread",
+        "toggleFrameworkGrouping": [MockFunction],
       }
     }
   />

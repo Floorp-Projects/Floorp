@@ -116,6 +116,6 @@
   padding-inline-start: 10px;
 }
 
-.input-expression:not(:placeholder-shown) {
-  font-family: var(--monospace-font-family);
+.expression-input {
+  max-width: 50%;
 }

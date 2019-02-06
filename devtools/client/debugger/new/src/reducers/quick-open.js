@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
-
 /**
  * Quick Open reducer
  * @module reducers/quick-open
@@ -16,13 +14,13 @@ import type { Record } from "../utils/makeRecord";
 
 export type QuickOpenType = "sources" | "functions" | "goto" | "gotoSource";
 
-export type QuickOpenState = {
+type QuickOpenState = {
   enabled: boolean,
   query: string,
   searchType: QuickOpenType
 };
 
-export const createQuickOpenState: () => Record<QuickOpenState> = makeRecord({
+export const createQuickOpenState = makeRecord({
   enabled: false,
   query: "",
   searchType: "sources"
