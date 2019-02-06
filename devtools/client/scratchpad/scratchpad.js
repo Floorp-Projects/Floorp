@@ -2017,11 +2017,8 @@ ScratchpadWindow.prototype = extend(ScratchpadTab.prototype, {
 
     const client = new DebuggerClient(DebuggerServer.connectPipe());
     await client.connect();
-    const front = await client.mainRoot.getMainProcess();
-    const target = await TargetFactory.forRemoteTab({
-      activeTab: front,
-      client,
-    });
+    const target = await client.mainRoot.getMainProcess();
+    await target.attach();
     return target;
   },
 });

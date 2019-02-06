@@ -12,7 +12,6 @@ var { loader, require } = ChromeUtils.import("resource://devtools/shared/Loader.
 loader.require("devtools/client/framework/devtools-browser");
 
 var { gDevTools } = require("devtools/client/framework/devtools");
-var { TargetFactory } = require("devtools/client/framework/target");
 var { Toolbox } = require("devtools/client/framework/toolbox");
 var Services = require("Services");
 var { DebuggerClient } = require("devtools/shared/client/debugger-client");
@@ -91,10 +90,10 @@ var connect = async function() {
   if (addonID) {
     const addonFront = await gClient.mainRoot.getAddon({ id: addonID });
     const addonTargetFront = await addonFront.connect();
-    await openToolbox({activeTab: addonTargetFront, chrome: true});
+    await openToolbox(addonTargetFront);
   } else {
     const front = await gClient.mainRoot.getMainProcess();
-    await openToolbox({activeTab: front, chrome: true});
+    await openToolbox(front);
   }
 };
 
@@ -141,16 +140,9 @@ function onCloseCommand(event) {
   window.close();
 }
 
-async function openToolbox({ activeTab, chrome }) {
-  const targetOptions = {
-    activeTab,
-    client: gClient,
-    chrome,
-  };
-
-  const form = activeTab.targetForm;
-  appendStatusMessage(`Create toolbox target: ${JSON.stringify({form, chrome}, null, 2)}`);
-  const target = await TargetFactory.forRemoteTab(targetOptions);
+async function openToolbox(target) {
+  const form = target.targetForm;
+  appendStatusMessage(`Create toolbox target: ${JSON.stringify({form}, null, 2)}`);
   const frame = document.getElementById("toolbox-iframe");
 
   // Remember the last panel that was used inside of this profile.
