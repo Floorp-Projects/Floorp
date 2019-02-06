@@ -439,7 +439,8 @@ class Document : public nsINode,
                  public nsIScriptObjectPrincipal,
                  public nsIApplicationCacheContainer,
                  public nsStubMutationObserver,
-                 public DispatcherTrait {
+                 public DispatcherTrait,
+                 public SupportsWeakPtr<Document> {
  protected:
   explicit Document(const char* aContentType);
   virtual ~Document();
@@ -451,6 +452,8 @@ class Document : public nsINode,
   typedef mozilla::dom::ExternalResourceMap::ExternalResourceLoad
       ExternalResourceLoad;
   typedef net::ReferrerPolicy ReferrerPolicyEnum;
+
+  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(Document)
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOCUMENT_IID)
 
@@ -611,6 +614,8 @@ class Document : public nsINode,
     return NS_ERROR_NOT_IMPLEMENTED;
   }
   nsresult CloneDocHelper(Document* clone) const;
+
+  Document* GetLatestStaticClone() const { return mLatestStaticClone; }
 
   /**
    * Signal that the document title may have changed
@@ -4244,6 +4249,11 @@ class Document : public nsINode,
 
   // Count of live static clones of this document.
   uint32_t mStaticCloneCount;
+
+  // If the document is currently printing (or in print preview) this will point
+  // to the current static clone of this document. This is weak since the clone
+  // also has a reference to this document.
+  WeakPtr<Document> mLatestStaticClone;
 
   // Array of nodes that have been blocked to prevent user tracking.
   // They most likely have had their nsIChannel canceled by the URL
