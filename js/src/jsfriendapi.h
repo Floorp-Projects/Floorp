@@ -2798,6 +2798,12 @@ extern JS_FRIEND_API void LogDtor(void* self, const char* type, uint32_t sz);
  */
 extern JS_FRIEND_API uint64_t GetGCHeapUsageForObjectZone(JSObject* obj);
 
+/**
+ * Create an iterator for the given list of props and the given object
+ * being iterated.
+ */
+extern JS_FRIEND_API JSObject* EnumeratedIdVectorToIterator(
+    JSContext* cx, JS::HandleObject obj, JS::AutoIdVector& props);
 } /* namespace js */
 
 #endif /* jsfriendapi_h */

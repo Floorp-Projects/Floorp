@@ -437,14 +437,21 @@ JSObject* MaybeCrossOriginObject<Base>::enumerate(
   // CrossOriginObjectWrapper, but we'd still need special-case code here, so
   // let's just do all the work here.
   //
-  // BaseProxyHandler::enumerate does the right thing, as long as we make sure
-  // we pass the right object to it.
+  // BaseProxyHandler::enumerate would do the right thing if we passed the right
+  // object to it, but it would assert that we've entered the policy of the
+  // proxy we passed it, which may be a CCW, not us, and the policy we actually
+  // entered is ours.  So we basically reimplemnt it, but without that assert.
   JS::Rooted<JSObject*> self(cx, proxy);
   if (!MaybeWrapObject(cx, &self)) {
     return nullptr;
   }
 
-  return js::BaseProxyHandler::enumerate(cx, self);
+  js::AutoIdVector props(cx);
+  if (!js::GetPropertyKeys(cx, self, 0, &props)) {
+    return nullptr;
+  }
+
+  return js::EnumeratedIdVectorToIterator(cx, self, props);
 }
 
 // Force instantiations of the out-of-line template methods we need.
