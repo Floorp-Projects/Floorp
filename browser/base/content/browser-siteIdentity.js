@@ -273,7 +273,9 @@ var gIdentityHandler = {
   recordClick(object) {
     let extra = {};
     for (let blocker of ContentBlocking.blockers) {
-      extra[blocker.telemetryIdentifier] = blocker.activated ? "true" : "false";
+      if (blocker.telemetryIdentifier) {
+        extra[blocker.telemetryIdentifier] = blocker.activated ? "true" : "false";
+      }
     }
     Services.telemetry.recordEvent("security.ui.identitypopup", "click", object, null, extra);
   },
@@ -869,7 +871,9 @@ var gIdentityHandler = {
 
     let extra = {};
     for (let blocker of ContentBlocking.blockers) {
-      extra[blocker.telemetryIdentifier] = blocker.activated ? "true" : "false";
+      if (blocker.telemetryIdentifier) {
+        extra[blocker.telemetryIdentifier] = blocker.activated ? "true" : "false";
+      }
     }
 
     let shieldStatus = ContentBlocking.iconBox.hasAttribute("active") ? "shield-showing" : "shield-hidden";
