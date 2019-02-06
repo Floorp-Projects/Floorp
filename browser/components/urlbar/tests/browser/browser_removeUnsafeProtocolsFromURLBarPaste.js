@@ -1,7 +1,12 @@
-function test() {
-  waitForExplicitFinish();
-  testNext();
-}
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
+"use strict";
+
+/**
+ * Ensures that pasting unsafe protocols in the urlbar have the protocol
+ * correctly stripped.
+ */
 
 var pairs = [
   ["javascript:", ""],
@@ -39,32 +44,27 @@ if (supportsReturnWithoutNewline) {
 
 var clipboardHelper = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
 
-function paste(input, cb) {
-  waitForClipboard(input, function() {
-    clipboardHelper.copyString(input);
-  }, function() {
-    document.commandDispatcher.getControllerForCommand("cmd_paste").doCommand("cmd_paste");
-    cb();
-  }, function() {
-    ok(false, "Failed to copy string '" + input + "' to clipboard");
-    cb();
-  });
-}
-
-function testNext() {
-  gURLBar.value = "";
-  if (!pairs.length) {
-    finish();
-    return;
+async function paste(input) {
+  try {
+    await SimpleTest.promiseClipboardChange(input, () => {
+      clipboardHelper.copyString(input);
+    });
+  } catch (ex) {
+    Assert.ok(false, "Failed to copy string '" + input + "' to clipboard");
   }
 
-  let [inputValue, expectedURL] = pairs.shift();
-
-  gURLBar.focus();
-  paste(inputValue, function() {
-    is(gURLBar.textValue, expectedURL, "entering '" + inputValue + "' strips relevant bits.");
-
-    setTimeout(testNext, 0);
-  });
+  document.commandDispatcher.getControllerForCommand("cmd_paste").doCommand("cmd_paste");
 }
 
+add_task(async function test_stripUnsafeProtocolPaste() {
+  for (let [inputValue, expectedURL] of pairs) {
+    gURLBar.value = "";
+    gURLBar.focus();
+    await paste(inputValue);
+
+    Assert.equal(gURLBar.textValue, expectedURL,
+      `entering ${inputValue} strips relevant bits.`);
+
+    await new Promise(resolve => setTimeout(resolve, 0));
+  }
+});
