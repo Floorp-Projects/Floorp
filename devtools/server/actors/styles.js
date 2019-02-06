@@ -1085,12 +1085,10 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
    */
   get metadata() {
     const data = {};
-    data.id = this.actorID;
     // Collect information about the rule's ancestors (@media, @supports, @keyframes).
     // Used to show context for this change in the UI and to match the rule for undo/redo.
     data.ancestors = this.ancestorRules.map(rule => {
       return {
-        id: rule.actorID,
         // Rule type as number defined by CSSRule.type (ex: 4, 7, 12)
         // @see https://developer.mozilla.org/en-US/docs/Web/API/CSSRule
         type: rule.rawRule.type,
@@ -1119,7 +1117,6 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
         // Used to differentiate between elements which match the same generated selector
         // but live in different documents (ex: host document and iframe).
         href: this.rawNode.baseURI,
-        id: this.pageStyle.walker.getNode(this.rawNode).actorID,
         // Element style attributes don't have a rule index; use the generated selector.
         index: data.selector,
         // Whether the element lives in a different frame than the host document.
@@ -1134,7 +1131,6 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
         // Inline stylesheets have a null href; Use window URL instead.
         type: this.sheetActor.href ? "stylesheet" : "inline",
         href: this.sheetActor.href || this.sheetActor.window.location.toString(),
-        id: this.sheetActor.actorID,
         index: this.sheetActor.styleSheetIndex,
         // Whether the stylesheet lives in a different frame than the host document.
         isFramed: this.sheetActor.ownerWindow !== this.sheetActor.window,
