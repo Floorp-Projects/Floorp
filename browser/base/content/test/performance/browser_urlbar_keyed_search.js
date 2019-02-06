@@ -21,7 +21,7 @@ if (AppConstants.platform != "macosx" &&
      AppConstants.platform == "win")) {
   EXPECTED_REFLOWS_FIRST_OPEN.push({
     stack: [
-      "_rebuild@chrome://browser/content/search/search-one-offs.js",
+      "__rebuild@chrome://browser/content/search/search-one-offs.js",
       /* This is limited to a one-line stack, because the next item is an async
          function and as such not supported on all trees, according to bug 1501761.
       "async*set popup@chrome://browser/content/search/search-one-offs.js",
