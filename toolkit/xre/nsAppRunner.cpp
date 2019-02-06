@@ -1416,10 +1416,12 @@ static void DumpHelp() {
       "  --profile <path>   Start with profile at <path>.\n"
       "  --migration        Start with migration wizard.\n"
       "  --ProfileManager   Start with ProfileManager.\n"
+#ifdef MOZ_HAS_REMOTE
       "  --no-remote        Do not accept or send remote commands; implies\n"
       "                     --new-instance.\n"
       "  --new-instance     Open new instance, not a new window in running "
       "instance.\n"
+#endif
       "  --UILocale <locale> Start with <locale> resources as UI Locale.\n"
       "  --safe-mode        Disables extensions and themes for this session.\n"
 #ifdef MOZ_BLOCK_PROFILE_DOWNGRADE
@@ -3322,6 +3324,7 @@ int XREMain::XRE_mainInit(bool* aExitFlag) {
   CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::SafeMode,
                                      gSafeMode);
 
+#if defined(MOZ_HAS_REMOTE)
   // Handle --no-remote and --new-instance command line arguments. Setup
   // the environment to better accommodate other components and various
   // restart scenarios.
@@ -3335,14 +3338,11 @@ int XREMain::XRE_mainInit(bool* aExitFlag) {
   }
   if (ar == ARG_FOUND) {
     SaveToEnv("MOZ_NO_REMOTE=1");
-#if defined(MOZ_HAS_REMOTE)
     mDisableRemote = true;
   } else if (EnvHasValue("MOZ_NO_REMOTE")) {
     mDisableRemote = true;
-#endif
   }
 
-#if defined(MOZ_HAS_REMOTE)
   ar = CheckArg("new-instance", nullptr,
                 CheckArgFlag::CheckOSInt | CheckArgFlag::RemoveArg);
   if (ar == ARG_BAD) {
