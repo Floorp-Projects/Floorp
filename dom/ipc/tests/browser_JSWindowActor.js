@@ -3,27 +3,28 @@
 "use strict";
 
 const URL = "about:blank";
+let windowActorOptions = {
+  parent: {
+    moduleURI: "resource://testing-common/TestParent.jsm",
+  },
+  child: {
+    moduleURI: "resource://testing-common/TestChild.jsm",
+  },
+};
 
 add_task(function test_registerWindowActor() {
-  let windowActorOptions = {
-    parent: {
-      moduleURI: "resource://testing-common/TestParent.jsm",
-    },
-    child: {
-      moduleURI: "resource://testing-common/TestChild.jsm",
-    },
-  };
-
   ok(ChromeUtils, "Should be able to get the ChromeUtils interface");
   ChromeUtils.registerWindowActor("Test", windowActorOptions);
   SimpleTest.doesThrow(() =>
     ChromeUtils.registerWindowActor("Test", windowActorOptions),
     "Should throw if register has duplicate name.");
+  ChromeUtils.unregisterWindowActor("Test");
 });
 
 add_task(async function() {
   await BrowserTestUtils.withNewTab({gBrowser, url: URL},
     async function(browser) {
+      ChromeUtils.registerWindowActor("Test", windowActorOptions);
       let parent = browser.browsingContext.currentWindowGlobal;
       isnot(parent, null, "WindowGlobalParent should have value.");
       let actorParent = parent.getActor("Test");
@@ -39,5 +40,6 @@ add_task(async function() {
           is(actorChild.show(), "TestChild", "actor show should have vaule.");
           is(actorChild.manager, child, "manager should match WindowGlobalChild.");
         });
+      ChromeUtils.unregisterWindowActor("Test");
     });
 });
