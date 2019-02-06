@@ -28,13 +28,9 @@ button:focus {
   display: flex;
   position: relative;
   flex: 1;
-  background-color: var(--theme-tab-toolbar-background);
-  height: calc(100% - 1px);
+  background-color: var(--theme-body-background);
+  height: 100%;
   overflow: hidden;
-}
-
-.theme-dark .editor-pane {
-  background-color: var(--theme-toolbar-background);
 }
 
 .editor-container {
