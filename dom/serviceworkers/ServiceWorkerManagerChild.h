@@ -28,20 +28,18 @@ class ServiceWorkerManagerChild final : public PServiceWorkerManagerChild {
 
   void ManagerShuttingDown() { mShuttingDown = true; }
 
-  virtual mozilla::ipc::IPCResult RecvNotifyRegister(
-      const ServiceWorkerRegistrationData& aData) override;
+  mozilla::ipc::IPCResult RecvNotifyRegister(
+      const ServiceWorkerRegistrationData& aData);
 
-  virtual mozilla::ipc::IPCResult RecvNotifySoftUpdate(
-      const OriginAttributes& aOriginAttributes,
-      const nsString& aScope) override;
+  mozilla::ipc::IPCResult RecvNotifySoftUpdate(
+      const OriginAttributes& aOriginAttributes, const nsString& aScope);
 
-  virtual mozilla::ipc::IPCResult RecvNotifyUnregister(
-      const PrincipalInfo& aPrincipalInfo, const nsString& aScope) override;
+  mozilla::ipc::IPCResult RecvNotifyUnregister(
+      const PrincipalInfo& aPrincipalInfo, const nsString& aScope);
 
-  virtual mozilla::ipc::IPCResult RecvNotifyRemove(
-      const nsCString& aHost) override;
+  mozilla::ipc::IPCResult RecvNotifyRemove(const nsCString& aHost);
 
-  virtual mozilla::ipc::IPCResult RecvNotifyRemoveAll() override;
+  mozilla::ipc::IPCResult RecvNotifyRemoveAll();
 
   PServiceWorkerUpdaterChild* AllocPServiceWorkerUpdaterChild(
       const OriginAttributes& originAttributes, const nsCString& scope);

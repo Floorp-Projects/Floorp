@@ -38,9 +38,9 @@ class SharedWorkerChild final : public mozilla::dom::PSharedWorkerChild {
  private:
   ~SharedWorkerChild();
 
-  mozilla::ipc::IPCResult RecvError(const ErrorValue& aValue) override;
+  mozilla::ipc::IPCResult RecvError(const ErrorValue& aValue);
 
-  mozilla::ipc::IPCResult RecvTerminate() override;
+  mozilla::ipc::IPCResult RecvTerminate();
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 

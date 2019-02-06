@@ -34,22 +34,23 @@ class RemotePrintJobParent final : public PRemotePrintJobParent {
   mozilla::ipc::IPCResult RecvInitializePrint(const nsString& aDocumentTitle,
                                               const nsString& aPrintToFile,
                                               const int32_t& aStartPage,
-                                              const int32_t& aEndPage) final;
+                                              const int32_t& aEndPage);
 
-  mozilla::ipc::IPCResult RecvProcessPage() final;
+  mozilla::ipc::IPCResult RecvProcessPage();
 
-  mozilla::ipc::IPCResult RecvFinalizePrint() final;
+  mozilla::ipc::IPCResult RecvFinalizePrint();
 
-  mozilla::ipc::IPCResult RecvAbortPrint(const nsresult& aRv) final;
+  mozilla::ipc::IPCResult RecvAbortPrint(const nsresult& aRv);
 
   mozilla::ipc::IPCResult RecvStateChange(const long& aStateFlags,
-                                          const nsresult& aStatus) final;
+                                          const nsresult& aStatus);
 
-  mozilla::ipc::IPCResult RecvProgressChange(
-      const long& aCurSelfProgress, const long& aMaxSelfProgress,
-      const long& aCurTotalProgress, const long& aMaxTotalProgress) final;
+  mozilla::ipc::IPCResult RecvProgressChange(const long& aCurSelfProgress,
+                                             const long& aMaxSelfProgress,
+                                             const long& aCurTotalProgress,
+                                             const long& aMaxTotalProgress);
 
-  mozilla::ipc::IPCResult RecvStatusChange(const nsresult& aStatus) final;
+  mozilla::ipc::IPCResult RecvStatusChange(const nsresult& aStatus);
 
   /**
    * Register a progress listener to receive print progress updates.

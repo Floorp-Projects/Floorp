@@ -53,31 +53,31 @@ class PresentationParent final : public PPresentationParent,
 
   virtual mozilla::ipc::IPCResult Recv__delete__() override;
 
-  virtual mozilla::ipc::IPCResult RecvRegisterAvailabilityHandler(
-      nsTArray<nsString>&& aAvailabilityUrls) override;
+  mozilla::ipc::IPCResult RecvRegisterAvailabilityHandler(
+      nsTArray<nsString>&& aAvailabilityUrls);
 
-  virtual mozilla::ipc::IPCResult RecvUnregisterAvailabilityHandler(
-      nsTArray<nsString>&& aAvailabilityUrls) override;
+  mozilla::ipc::IPCResult RecvUnregisterAvailabilityHandler(
+      nsTArray<nsString>&& aAvailabilityUrls);
 
-  virtual mozilla::ipc::IPCResult RecvRegisterSessionHandler(
-      const nsString& aSessionId, const uint8_t& aRole) override;
+  mozilla::ipc::IPCResult RecvRegisterSessionHandler(const nsString& aSessionId,
+                                                     const uint8_t& aRole);
 
-  virtual mozilla::ipc::IPCResult RecvUnregisterSessionHandler(
-      const nsString& aSessionId, const uint8_t& aRole) override;
+  mozilla::ipc::IPCResult RecvUnregisterSessionHandler(
+      const nsString& aSessionId, const uint8_t& aRole);
 
-  virtual mozilla::ipc::IPCResult RecvRegisterRespondingHandler(
-      const uint64_t& aWindowId) override;
+  mozilla::ipc::IPCResult RecvRegisterRespondingHandler(
+      const uint64_t& aWindowId);
 
-  virtual mozilla::ipc::IPCResult RecvUnregisterRespondingHandler(
-      const uint64_t& aWindowId) override;
+  mozilla::ipc::IPCResult RecvUnregisterRespondingHandler(
+      const uint64_t& aWindowId);
 
-  virtual mozilla::ipc::IPCResult RecvNotifyReceiverReady(
-      const nsString& aSessionId, const uint64_t& aWindowId,
-      const bool& aIsLoading) override;
+  mozilla::ipc::IPCResult RecvNotifyReceiverReady(const nsString& aSessionId,
+                                                  const uint64_t& aWindowId,
+                                                  const bool& aIsLoading);
 
-  virtual mozilla::ipc::IPCResult RecvNotifyTransportClosed(
-      const nsString& aSessionId, const uint8_t& aRole,
-      const nsresult& aReason) override;
+  mozilla::ipc::IPCResult RecvNotifyTransportClosed(const nsString& aSessionId,
+                                                    const uint8_t& aRole,
+                                                    const nsresult& aReason);
 
  private:
   virtual ~PresentationParent();

@@ -214,9 +214,9 @@ class WebRenderBridgeChild final : public PWebRenderBridgeChild,
 
   mozilla::ipc::IPCResult RecvWrUpdated(
       const wr::IdNamespace& aNewIdNamespace,
-      const TextureFactoryIdentifier& textureFactoryIdentifier) override;
+      const TextureFactoryIdentifier& textureFactoryIdentifier);
   mozilla::ipc::IPCResult RecvWrReleasedImages(
-      nsTArray<wr::ExternalImageKeyPair>&& aPairs) override;
+      nsTArray<wr::ExternalImageKeyPair>&& aPairs);
 
   void AddIPDLReference() {
     MOZ_ASSERT(mIPCOpen == false);

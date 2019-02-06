@@ -89,15 +89,15 @@ class StreamFilterChild final : public PStreamFilterChild,
   void RecvInitialized(bool aSuccess);
 
  protected:
-  virtual IPCResult RecvStartRequest() override;
-  virtual IPCResult RecvData(Data&& data) override;
-  virtual IPCResult RecvStopRequest(const nsresult& aStatus) override;
-  virtual IPCResult RecvError(const nsCString& aError) override;
+  IPCResult RecvStartRequest();
+  IPCResult RecvData(Data&& data);
+  IPCResult RecvStopRequest(const nsresult& aStatus);
+  IPCResult RecvError(const nsCString& aError);
 
-  virtual IPCResult RecvClosed() override;
-  virtual IPCResult RecvSuspended() override;
-  virtual IPCResult RecvResumed() override;
-  virtual IPCResult RecvFlushData() override;
+  IPCResult RecvClosed();
+  IPCResult RecvSuspended();
+  IPCResult RecvResumed();
+  IPCResult RecvFlushData();
 
   virtual void DeallocPStreamFilterChild() override;
 

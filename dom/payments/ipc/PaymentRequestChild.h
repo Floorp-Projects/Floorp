@@ -26,21 +26,22 @@ class PaymentRequestChild final : public PPaymentRequestChild {
 
  protected:
   mozilla::ipc::IPCResult RecvRespondPayment(
-      const IPCPaymentActionResponse& aResponse) override;
+      const IPCPaymentActionResponse& aResponse);
 
   mozilla::ipc::IPCResult RecvChangeShippingAddress(
-      const nsString& aRequestId, const IPCPaymentAddress& aAddress) override;
+      const nsString& aRequestId, const IPCPaymentAddress& aAddress);
 
-  mozilla::ipc::IPCResult RecvChangeShippingOption(
-      const nsString& aRequestId, const nsString& aOption) override;
+  mozilla::ipc::IPCResult RecvChangeShippingOption(const nsString& aRequestId,
+                                                   const nsString& aOption);
 
-  mozilla::ipc::IPCResult RecvChangePayerDetail(
-      const nsString& aRequestId, const nsString& aPayerName,
-      const nsString& aPayerEmail, const nsString& aPayerPhone) override;
+  mozilla::ipc::IPCResult RecvChangePayerDetail(const nsString& aRequestId,
+                                                const nsString& aPayerName,
+                                                const nsString& aPayerEmail,
+                                                const nsString& aPayerPhone);
 
   mozilla::ipc::IPCResult RecvChangePaymentMethod(
       const nsString& aRequestId, const nsString& aMethodName,
-      const IPCMethodChangeDetails& aMethodDetails) override;
+      const IPCMethodChangeDetails& aMethodDetails);
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 

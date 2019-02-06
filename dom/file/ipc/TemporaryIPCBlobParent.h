@@ -27,10 +27,10 @@ class TemporaryIPCBlobParent final
  private:
   ~TemporaryIPCBlobParent();
 
-  mozilla::ipc::IPCResult RecvOperationFailed() override;
+  mozilla::ipc::IPCResult RecvOperationFailed();
 
   mozilla::ipc::IPCResult RecvOperationDone(const nsCString& aContentType,
-                                            const FileDescriptor& aFD) override;
+                                            const FileDescriptor& aFD);
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 

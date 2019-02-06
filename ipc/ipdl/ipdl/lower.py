@@ -3157,7 +3157,9 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                     defaultRecv = MethodDefn(recvDecl)
                     defaultRecv.addstmt(StmtReturn(ExprCall(ExprVar('IPC_OK'))))
                     self.cls.addstmt(defaultRecv)
-                else:
+                elif (self.protocol.name, self.side) in VIRTUAL_CALL_CLASSES:
+                    # If we're using virtual calls, we need the methods to be
+                    # declared on the base class.
                     recvDecl.methodspec = MethodSpec.PURE
                     self.cls.addstmt(StmtDecl(recvDecl))
 

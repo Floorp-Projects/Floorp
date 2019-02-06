@@ -31,11 +31,11 @@ class RemoteWorkerParent final : public PRemoteWorkerParent {
 
   void ActorDestroy(mozilla::ipc::IProtocol::ActorDestroyReason) override;
 
-  mozilla::ipc::IPCResult RecvError(const ErrorValue& aValue) override;
+  mozilla::ipc::IPCResult RecvError(const ErrorValue& aValue);
 
-  mozilla::ipc::IPCResult RecvClose() override;
+  mozilla::ipc::IPCResult RecvClose();
 
-  mozilla::ipc::IPCResult RecvCreated(const bool& aStatus) override;
+  mozilla::ipc::IPCResult RecvCreated(const bool& aStatus);
 
   RefPtr<RemoteWorkerController> mController;
 };

@@ -96,23 +96,22 @@ class VRManagerChild : public PVRManagerChild {
                                     const uint32_t& aGroup);
   bool DeallocPVRLayerChild(PVRLayerChild* actor);
 
-  virtual mozilla::ipc::IPCResult RecvUpdateDisplayInfo(
-      nsTArray<VRDisplayInfo>&& aDisplayUpdates) override;
+  mozilla::ipc::IPCResult RecvUpdateDisplayInfo(
+      nsTArray<VRDisplayInfo>&& aDisplayUpdates);
 
-  virtual mozilla::ipc::IPCResult RecvDispatchSubmitFrameResult(
-      const uint32_t& aDisplayID,
-      const VRSubmitFrameResultInfo& aResult) override;
-  virtual mozilla::ipc::IPCResult RecvGamepadUpdate(
-      const GamepadChangeEvent& aGamepadEvent) override;
-  virtual mozilla::ipc::IPCResult RecvReplyGamepadVibrateHaptic(
-      const uint32_t& aPromiseID) override;
+  mozilla::ipc::IPCResult RecvDispatchSubmitFrameResult(
+      const uint32_t& aDisplayID, const VRSubmitFrameResultInfo& aResult);
+  mozilla::ipc::IPCResult RecvGamepadUpdate(
+      const GamepadChangeEvent& aGamepadEvent);
+  mozilla::ipc::IPCResult RecvReplyGamepadVibrateHaptic(
+      const uint32_t& aPromiseID);
 
-  virtual mozilla::ipc::IPCResult RecvReplyCreateVRServiceTestDisplay(
+  mozilla::ipc::IPCResult RecvReplyCreateVRServiceTestDisplay(
       const nsCString& aID, const uint32_t& aPromiseID,
-      const uint32_t& aDeviceID) override;
-  virtual mozilla::ipc::IPCResult RecvReplyCreateVRServiceTestController(
+      const uint32_t& aDeviceID);
+  mozilla::ipc::IPCResult RecvReplyCreateVRServiceTestController(
       const nsCString& aID, const uint32_t& aPromiseID,
-      const uint32_t& aDeviceID) override;
+      const uint32_t& aDeviceID);
   bool IsSameProcess() const { return OtherPid() == base::GetCurrentProcId(); }
 
  private:

@@ -29,7 +29,7 @@ class DNSRequestParent : public PDNSRequestParent, public nsIDNSListener {
   mozilla::ipc::IPCResult RecvCancelDNSRequest(
       const nsCString& hostName, const uint16_t& type,
       const OriginAttributes& originAttributes, const uint32_t& flags,
-      const nsresult& reason) override;
+      const nsresult& reason);
   mozilla::ipc::IPCResult Recv__delete__() override;
 
  protected:

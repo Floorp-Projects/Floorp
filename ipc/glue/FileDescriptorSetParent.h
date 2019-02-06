@@ -41,8 +41,8 @@ class FileDescriptorSetParent final : public PFileDescriptorSetParent {
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  virtual mozilla::ipc::IPCResult RecvAddFileDescriptor(
-      const FileDescriptor& aFileDescriptor) override;
+  mozilla::ipc::IPCResult RecvAddFileDescriptor(
+      const FileDescriptor& aFileDescriptor);
 };
 
 }  // namespace ipc

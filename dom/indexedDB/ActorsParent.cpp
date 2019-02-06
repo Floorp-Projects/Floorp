@@ -6439,7 +6439,7 @@ class MutableFile : public BackgroundMutableFileParentBase {
   mozilla::ipc::IPCResult RecvPBackgroundFileHandleConstructor(
       PBackgroundFileHandleParent* aActor, const FileMode& aMode) final;
 
-  mozilla::ipc::IPCResult RecvGetFileId(int64_t* aFileId) final;
+  mozilla::ipc::IPCResult RecvGetFileId(int64_t* aFileId) override;
 };
 
 class FactoryOp : public DatabaseOperationBase,

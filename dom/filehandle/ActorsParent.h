@@ -163,9 +163,9 @@ class BackgroundMutableFileParentBase : public PBackgroundMutableFileParent {
   virtual bool DeallocPBackgroundFileHandleParent(
       PBackgroundFileHandleParent* aActor);
 
-  mozilla::ipc::IPCResult RecvDeleteMe() final;
+  mozilla::ipc::IPCResult RecvDeleteMe();
 
-  mozilla::ipc::IPCResult RecvGetFileId(int64_t* aFileId) override;
+  virtual mozilla::ipc::IPCResult RecvGetFileId(int64_t* aFileId);
 };
 
 }  // namespace dom

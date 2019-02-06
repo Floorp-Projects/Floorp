@@ -47,9 +47,9 @@ class ContentBridgeChild final : public PContentBridgeChild,
   SendPChildToParentStreamConstructor(
       mozilla::ipc::PChildToParentStreamChild*) override;
 
-  virtual mozilla::ipc::IPCResult RecvActivate(PBrowserChild* aTab) override;
+  mozilla::ipc::IPCResult RecvActivate(PBrowserChild* aTab);
 
-  virtual mozilla::ipc::IPCResult RecvDeactivate(PBrowserChild* aTab) override;
+  mozilla::ipc::IPCResult RecvDeactivate(PBrowserChild* aTab);
 
   virtual already_AddRefed<nsIEventTarget> GetEventTargetFor(
       TabChild* aTabChild) override;
