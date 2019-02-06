@@ -323,6 +323,7 @@ void nsFontFaceLoader::Cancel() {
   MOZ_DIAGNOSTIC_ASSERT(mFontFaceSet);
 
   mUserFontEntry->LoadCanceled();
+  mUserFontEntry = nullptr;
   mFontFaceSet = nullptr;
   if (mLoadTimer) {
     mLoadTimer->Cancel();

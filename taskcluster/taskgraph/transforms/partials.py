@@ -57,8 +57,7 @@ def make_task_description(config, jobs):
         treeherder.setdefault('kind', 'build')
         treeherder.setdefault('tier', 1)
 
-        dependent_kind = str(dep_job.kind)
-        dependencies = {dependent_kind: dep_job.label}
+        dependencies = {dep_job.kind: dep_job.label}
 
         attributes = copy_attributes_from_dependent_job(dep_job)
         locale = dep_job.attributes.get('locale')
@@ -84,7 +83,7 @@ def make_task_description(config, jobs):
         if locale:
             locale_suffix = '{}/'.format(locale)
         artifact_path = "<{}/{}/{}target.complete.mar>".format(
-            dependent_kind, get_artifact_prefix(dep_job), locale_suffix,
+            dep_job.kind, get_artifact_prefix(dep_job), locale_suffix,
         )
         for build in sorted(builds):
             partial_info = {

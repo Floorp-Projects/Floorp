@@ -957,6 +957,15 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
     cmp32(Operand(scratch, JSString::offsetOfLength()), Imm32(0));
     return truthy ? Assembler::NotEqual : Assembler::Equal;
   }
+#ifdef ENABLE_BIGINT
+  Condition testBigIntTruthy(bool truthy, const ValueOperand& value) {
+    ScratchRegisterScope scratch(asMasm());
+    unboxBigInt(value, scratch);
+    cmpPtr(Operand(scratch, BigInt::offsetOfLengthSignAndReservedBits()),
+           ImmWord(0));
+    return truthy ? Assembler::NotEqual : Assembler::Equal;
+  }
+#endif
 
   template <typename T>
   inline void loadInt32OrDouble(const T& src, FloatRegister dest);

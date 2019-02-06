@@ -823,6 +823,13 @@ void MacroAssembler::branchTestBigIntImpl(Condition cond, const T& t,
   cond = testBigInt(cond, t);
   j(cond, label);
 }
+
+void MacroAssembler::branchTestBigIntTruthy(bool truthy,
+                                            const ValueOperand& value,
+                                            Label* label) {
+  Condition cond = testBigIntTruthy(truthy, value);
+  j(cond, label);
+}
 #endif
 
 void MacroAssembler::branchTestNull(Condition cond, Register tag,

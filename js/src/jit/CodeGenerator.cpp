@@ -786,9 +786,11 @@ void CodeGenerator::testValueTruthyKernel(
   bool mightBeString = valueMIR->mightBeType(MIRType::String);
   bool mightBeSymbol = valueMIR->mightBeType(MIRType::Symbol);
   bool mightBeDouble = valueMIR->mightBeType(MIRType::Double);
+  bool mightBeBigInt = IF_BIGINT(valueMIR->mightBeType(MIRType::BigInt), false);
   int tagCount = int(mightBeUndefined) + int(mightBeNull) +
                  int(mightBeBoolean) + int(mightBeInt32) + int(mightBeObject) +
-                 int(mightBeString) + int(mightBeSymbol) + int(mightBeDouble);
+                 int(mightBeString) + int(mightBeSymbol) + int(mightBeDouble) +
+                 int(mightBeBigInt);
 
   MOZ_ASSERT_IF(!valueMIR->emptyResultTypeSet(), tagCount > 0);
 
@@ -901,6 +903,25 @@ void CodeGenerator::testValueTruthyKernel(
     masm.bind(&notString);
     --tagCount;
   }
+
+#ifdef ENABLE_BIGINT
+  if (mightBeBigInt) {
+    MOZ_ASSERT(tagCount != 0);
+    Label notBigInt;
+    if (tagCount != 1) {
+      masm.branchTestBigInt(Assembler::NotEqual, tag, &notBigInt);
+    }
+    {
+      ScratchTagScopeRelease _(&tag);
+      masm.branchTestBigIntTruthy(false, value, ifFalsy);
+    }
+    if (tagCount != 1) {
+      masm.jump(ifTruthy);
+    }
+    masm.bind(&notBigInt);
+    --tagCount;
+  }
+#endif
 
   if (mightBeSymbol) {
     // All symbols are truthy.
@@ -1243,6 +1264,14 @@ void CodeGenerator::visitValueToString(LValueToString* lir) {
     masm.branchTestSymbol(Assembler::Equal, tag, &bail);
     bailoutFrom(&bail, lir->snapshot());
   }
+
+#ifdef ENABLE_BIGINT
+  // BigInt
+  if (lir->mir()->input()->mightBeType(MIRType::BigInt)) {
+    // No fastpath currently implemented.
+    masm.branchTestBigInt(Assembler::Equal, tag, ool->entry());
+  }
+#endif
 
 #ifdef DEBUG
   masm.assumeUnreachable("Unexpected type for MValueToString.");
@@ -5598,10 +5627,11 @@ void CodeGenerator::branchIfInvalidated(Register temp, Label* invalidated) {
 }
 
 #ifdef DEBUG
-void CodeGenerator::emitAssertObjectOrStringResult(
-    Register input, MIRType type, const TemporaryTypeSet* typeset) {
+void CodeGenerator::emitAssertGCThingResult(Register input, MIRType type,
+                                            const TemporaryTypeSet* typeset) {
   MOZ_ASSERT(type == MIRType::Object || type == MIRType::ObjectOrNull ||
-             type == MIRType::String || type == MIRType::Symbol);
+             type == MIRType::String || type == MIRType::Symbol ||
+             IF_BIGINT(type == MIRType::BigInt, false));
 
   AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
   regs.take(input);
@@ -5659,6 +5689,11 @@ void CodeGenerator::emitAssertObjectOrStringResult(
       case MIRType::Symbol:
         callee = JS_FUNC_TO_DATA_PTR(void*, AssertValidSymbolPtr);
         break;
+#  ifdef ENABLE_BIGINT
+      case MIRType::BigInt:
+        callee = JS_FUNC_TO_DATA_PTR(void*, AssertValidBigIntPtr);
+        break;
+#  endif
       default:
         MOZ_CRASH();
     }
@@ -5730,8 +5765,8 @@ void CodeGenerator::emitAssertResultV(const ValueOperand input,
   masm.pop(temp1);
 }
 
-void CodeGenerator::emitObjectOrStringResultChecks(LInstruction* lir,
-                                                   MDefinition* mir) {
+void CodeGenerator::emitGCThingResultChecks(LInstruction* lir,
+                                            MDefinition* mir) {
   if (lir->numDefs() == 0) {
     return;
   }
@@ -5742,7 +5777,7 @@ void CodeGenerator::emitObjectOrStringResultChecks(LInstruction* lir,
   }
 
   Register output = ToRegister(lir->getDef(0));
-  emitAssertObjectOrStringResult(output, mir->type(), mir->resultTypeSet());
+  emitAssertGCThingResult(output, mir->type(), mir->resultTypeSet());
 }
 
 void CodeGenerator::emitValueResultChecks(LInstruction* lir, MDefinition* mir) {
@@ -5773,7 +5808,10 @@ void CodeGenerator::emitDebugResultChecks(LInstruction* ins) {
     case MIRType::ObjectOrNull:
     case MIRType::String:
     case MIRType::Symbol:
-      emitObjectOrStringResultChecks(ins, mir);
+#  ifdef ENABLE_BIGINT
+    case MIRType::BigInt:
+#  endif
+      emitGCThingResultChecks(ins, mir);
       break;
     case MIRType::Value:
       emitValueResultChecks(ins, mir);
@@ -11162,11 +11200,14 @@ void CodeGenerator::visitTypeOfV(LTypeOfV* lir) {
   bool testNull = input->mightBeType(MIRType::Null);
   bool testString = input->mightBeType(MIRType::String);
   bool testSymbol = input->mightBeType(MIRType::Symbol);
+#ifdef ENABLE_BIGINT
+  bool testBigInt = input->mightBeType(MIRType::BigInt);
+#endif
 
   unsigned numTests = unsigned(testObject) + unsigned(testNumber) +
                       unsigned(testBoolean) + unsigned(testUndefined) +
                       unsigned(testNull) + unsigned(testString) +
-                      unsigned(testSymbol);
+                      unsigned(testSymbol) + unsigned(IF_BIGINT(testBigInt, 0));
 
   MOZ_ASSERT_IF(!input->emptyResultTypeSet(), numTests > 0);
 
@@ -11276,6 +11317,21 @@ void CodeGenerator::visitTypeOfV(LTypeOfV* lir) {
     masm.bind(&notSymbol);
     numTests--;
   }
+
+#ifdef ENABLE_BIGINT
+  if (testBigInt) {
+    Label notBigInt;
+    if (numTests > 1) {
+      masm.branchTestBigInt(Assembler::NotEqual, tag, &notBigInt);
+    }
+    masm.movePtr(ImmGCPtr(names.bigint), output);
+    if (numTests > 1) {
+      masm.jump(&done);
+    }
+    masm.bind(&notBigInt);
+    numTests--;
+  }
+#endif
 
   MOZ_ASSERT(numTests == 0);
 
@@ -12874,7 +12930,7 @@ void CodeGenerator::visitAssertResultT(LAssertResultT* ins) {
 #ifdef DEBUG
   Register input = ToRegister(ins->input());
   MDefinition* mir = ins->mirRaw();
-  emitAssertObjectOrStringResult(input, mir->type(), mir->resultTypeSet());
+  emitAssertGCThingResult(input, mir->type(), mir->resultTypeSet());
 #else
   MOZ_CRASH("LAssertResultT is debug only");
 #endif

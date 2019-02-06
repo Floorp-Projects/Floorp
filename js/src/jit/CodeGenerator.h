@@ -193,8 +193,8 @@ class CodeGenerator final : public CodeGeneratorSpecific {
 #ifdef DEBUG
   void emitAssertResultV(const ValueOperand output,
                          const TemporaryTypeSet* typeset);
-  void emitAssertObjectOrStringResult(Register input, MIRType type,
-                                      const TemporaryTypeSet* typeset);
+  void emitAssertGCThingResult(Register input, MIRType type,
+                               const TemporaryTypeSet* typeset);
 #endif
 
 #ifdef DEBUG
@@ -314,7 +314,7 @@ class CodeGenerator final : public CodeGeneratorSpecific {
 
 #ifdef DEBUG
   void emitDebugResultChecks(LInstruction* ins);
-  void emitObjectOrStringResultChecks(LInstruction* lir, MDefinition* mir);
+  void emitGCThingResultChecks(LInstruction* lir, MDefinition* mir);
   void emitValueResultChecks(LInstruction* lir, MDefinition* mir);
 #endif
 

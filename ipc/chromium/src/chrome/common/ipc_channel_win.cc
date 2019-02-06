@@ -18,6 +18,10 @@
 #include "chrome/common/ipc_message_utils.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 
+#ifdef FUZZING
+#include "mozilla/ipc/Faulty.h"
+#endif
+
 // ChannelImpl is used on the IPC thread, but constructed on a different thread,
 // so it has to hold the nsAutoOwningThread as a pointer, and we need a slightly
 // different macro.
@@ -147,6 +151,11 @@ bool Channel::ChannelImpl::Send(Message* message) {
   DLOG(INFO) << "sending message @" << message << " on channel @" << this
              << " with type " << message->type() << " (" << output_queue_.size()
              << " in queue)";
+#endif
+
+#ifdef FUZZING
+  message = mozilla::ipc::Faulty::instance().MutateIPCMessage(
+      "Channel::ChannelImpl::Send", message);
 #endif
 
   if (closed_) {

@@ -1468,7 +1468,7 @@ impl AlphaBatchBuilder {
                                     PrimitiveInstanceData::from(instance),
                                 );
                             }
-                            PictureCompositeMode::Blit => {
+                            PictureCompositeMode::Blit(_) => {
                                 let surface = ctx.surfaces[raster_config.surface_index.0]
                                     .surface
                                     .as_ref()
