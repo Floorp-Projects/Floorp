@@ -156,6 +156,14 @@ class UrlbarView {
     this._rows.appendChild(fragment);
 
     this._openPanel();
+
+    if (queryContext.preselected &&
+        queryContext.lastResultCount == 0 &&
+        queryContext.results.length > 0) {
+      // If we just selected the first result above, then tell the input about
+      // it because it may be an autofill result.
+      this.input.setValueFromResult(queryContext.results[0]);
+    }
   }
 
   /**
