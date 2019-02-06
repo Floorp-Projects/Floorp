@@ -25,6 +25,8 @@ class JSWindowActorService final {
                            const WindowActorOptions& aOptions,
                            ErrorResult& aRv);
 
+  void UnregisterWindowActor(const nsAString& aName);
+
   // Register child's Window Actor from JSWindowActorInfos for content process.
   void LoadJSWindowActorInfos(nsTArray<JSWindowActorInfo>& aInfos);
 
