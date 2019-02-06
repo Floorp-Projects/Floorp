@@ -49,6 +49,7 @@
   height: 30px;
   font-size: 12px;
   background-color: transparent;
+  vertical-align: bottom;
 }
 
 .source-tab::before {
