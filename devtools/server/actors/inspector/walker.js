@@ -36,7 +36,6 @@ loader.lazyRequireGetter(this, "SKIP_TO_SIBLING", "devtools/server/actors/inspec
 loader.lazyRequireGetter(this, "NodeActor", "devtools/server/actors/inspector/node", true);
 loader.lazyRequireGetter(this, "NodeListActor", "devtools/server/actors/inspector/node", true);
 loader.lazyRequireGetter(this, "LayoutActor", "devtools/server/actors/layout", true);
-loader.lazyRequireGetter(this, "findFlexOrGridParentContainerForNode", "devtools/server/actors/layout", true);
 loader.lazyRequireGetter(this, "getLayoutChangesObserver", "devtools/server/actors/reflow", true);
 loader.lazyRequireGetter(this, "releaseLayoutChangesObserver", "devtools/server/actors/reflow", true);
 loader.lazyRequireGetter(this, "WalkerSearch", "devtools/server/actors/utils/walker-search", true);
@@ -560,9 +559,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
       rawNode.nodeName === "SLOT" &&
       isDirectShadowHostChild(firstChild);
 
-    const isFlexItem =
-      !!firstChild &&
-      findFlexOrGridParentContainerForNode(firstChild, "flex", this);
+    const isFlexItem = !!(firstChild && firstChild.parentFlexElement);
 
     if (!firstChild ||
         walker.nextSibling() ||
