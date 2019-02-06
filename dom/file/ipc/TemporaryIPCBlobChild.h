@@ -25,6 +25,8 @@ class TemporaryIPCBlobChildCallback {
 
 class TemporaryIPCBlobChild final
     : public mozilla::ipc::PTemporaryIPCBlobChild {
+  friend class mozilla::ipc::PTemporaryIPCBlobChild;
+
  public:
   NS_INLINE_DECL_REFCOUNTING(TemporaryIPCBlobChild)
 

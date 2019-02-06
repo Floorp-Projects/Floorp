@@ -17,6 +17,8 @@ namespace cache {
 class Manager;
 
 class CacheParent final : public PCacheParent {
+  friend class PCacheParent;
+
  public:
   CacheParent(cache::Manager* aManager, CacheId aCacheId);
   virtual ~CacheParent();

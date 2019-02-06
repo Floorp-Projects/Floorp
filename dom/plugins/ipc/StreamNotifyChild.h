@@ -17,6 +17,7 @@ class BrowserStreamChild;
 class StreamNotifyChild : public PStreamNotifyChild {
   friend class PluginInstanceChild;
   friend class BrowserStreamChild;
+  friend class PStreamNotifyChild;
 
  public:
   explicit StreamNotifyChild(const nsCString& aURL)

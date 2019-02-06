@@ -19,6 +19,8 @@ class RemoteCompositorSession;
 
 class APZCTreeManagerChild : public IAPZCTreeManager,
                              public PAPZCTreeManagerChild {
+  friend class PAPZCTreeManagerChild;
+
  public:
   APZCTreeManagerChild();
 

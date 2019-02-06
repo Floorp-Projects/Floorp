@@ -77,6 +77,8 @@ class PluginModuleParent : public PPluginModuleParent,
                            public CrashReporter::InjectorCrashCallback
 #endif
 {
+  friend class PPluginModuleParent;
+
  protected:
   typedef mozilla::PluginLibrary PluginLibrary;
 

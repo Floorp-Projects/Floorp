@@ -26,6 +26,8 @@ class CacheWorkerHolder;
 class PCacheChild;
 
 class CacheStorageChild final : public PCacheStorageChild, public ActorChild {
+  friend class PCacheStorageChild;
+
  public:
   CacheStorageChild(CacheStorage* aListener, CacheWorkerHolder* aWorkerHolder);
   ~CacheStorageChild();

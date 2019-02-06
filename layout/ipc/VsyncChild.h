@@ -29,6 +29,7 @@ class VsyncChild final : public PVsyncChild {
   NS_INLINE_DECL_REFCOUNTING(VsyncChild)
 
   friend class mozilla::ipc::BackgroundChildImpl;
+  friend class PVsyncChild;
 
  public:
   // Hide the SendObserve/SendUnobserve in PVsyncChild. We add an flag

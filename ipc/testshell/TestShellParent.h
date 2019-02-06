@@ -22,6 +22,8 @@ namespace ipc {
 class TestShellCommandParent;
 
 class TestShellParent : public PTestShellParent {
+  friend class PTestShellParent;
+
  public:
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
@@ -34,6 +36,8 @@ class TestShellParent : public PTestShellParent {
 };
 
 class TestShellCommandParent : public PTestShellCommandParent {
+  friend class PTestShellCommandParent;
+
  public:
   TestShellCommandParent() {}
 

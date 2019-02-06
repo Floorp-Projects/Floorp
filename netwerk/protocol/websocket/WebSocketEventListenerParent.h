@@ -17,6 +17,8 @@ class WebSocketEventService;
 
 class WebSocketEventListenerParent final : public PWebSocketEventListenerParent,
                                            public nsIWebSocketEventListener {
+  friend class PWebSocketEventListenerParent;
+
  public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIWEBSOCKETEVENTLISTENER

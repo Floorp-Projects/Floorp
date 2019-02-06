@@ -19,6 +19,7 @@ class SpeechSynthesisRequestParent;
 class SpeechSynthesisParent : public PSpeechSynthesisParent {
   friend class ContentParent;
   friend class SpeechSynthesisRequestParent;
+  friend class PSpeechSynthesisParent;
 
  public:
   void ActorDestroy(ActorDestroyReason aWhy) override;

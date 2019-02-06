@@ -24,6 +24,8 @@ class ReadStream;
 class CacheStreamControlChild final : public PCacheStreamControlChild,
                                       public StreamControl,
                                       public ActorChild {
+  friend class PCacheStreamControlChild;
+
  public:
   CacheStreamControlChild();
   ~CacheStreamControlChild();

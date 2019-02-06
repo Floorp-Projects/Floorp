@@ -41,6 +41,8 @@ namespace plugins {
 class PluginInstanceChild;
 
 class PluginModuleChild : public PPluginModuleChild {
+  friend class PPluginModuleChild;
+
  protected:
   virtual mozilla::ipc::RacyInterruptPolicy MediateInterruptRace(
       const MessageInfo& parent, const MessageInfo& child) override {

@@ -19,6 +19,8 @@ namespace media {
  */
 class MediaSystemResourceManagerParent final
     : public PMediaSystemResourceManagerParent {
+  friend class PMediaSystemResourceManagerParent;
+
  public:
   MediaSystemResourceManagerParent();
   virtual ~MediaSystemResourceManagerParent();

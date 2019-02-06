@@ -21,6 +21,8 @@ using mozilla::ipc::FileDescriptor;
 using mozilla::ipc::IPCResult;
 
 class ScriptCacheParent final : public PScriptCacheParent {
+  friend class PScriptCacheParent;
+
  public:
   explicit ScriptCacheParent(bool wantCacheData)
       : mWantCacheData(wantCacheData) {}

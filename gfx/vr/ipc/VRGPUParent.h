@@ -16,6 +16,8 @@ namespace gfx {
 class VRGPUParent final : public PVRGPUParent {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VRGPUParent)
 
+  friend class PVRGPUParent;
+
  public:
   static RefPtr<VRGPUParent> CreateForGPU(Endpoint<PVRGPUParent>&& aEndpoint);
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;

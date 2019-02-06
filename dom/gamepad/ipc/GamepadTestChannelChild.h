@@ -14,6 +14,8 @@ namespace mozilla {
 namespace dom {
 
 class GamepadTestChannelChild final : public PGamepadTestChannelChild {
+  friend class PGamepadTestChannelChild;
+
  public:
   GamepadTestChannelChild() {}
   ~GamepadTestChannelChild() {}
