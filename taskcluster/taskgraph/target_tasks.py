@@ -470,7 +470,7 @@ def make_desktop_nightly_filter(platforms):
             filter_for_project(task, parameters),
             task.attributes.get('nightly', False),
             # Tests and nightly only builds don't have `shipping_product` set
-            task.attributes.get('shipping_product') in {None, "firefox"},
+            task.attributes.get('shipping_product') in {None, "firefox", "thunderbird"},
         ])
     return filter
 
