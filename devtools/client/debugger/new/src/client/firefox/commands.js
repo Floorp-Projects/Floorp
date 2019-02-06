@@ -456,6 +456,23 @@ function getMainThread() {
   return threadClient.actor;
 }
 
+async function getBreakpointPositions(
+  location: SourceActorLocation
+): Promise<Array<Number>> {
+  const {
+    sourceActor: { thread, actor },
+    line
+  } = location;
+  const sourceThreadClient = lookupThreadClient(thread);
+  const sourceClient = sourceThreadClient.source({ actor });
+  const { positions } = await sourceClient.getBreakpointPositionsCompressed({
+    start: { line },
+    end: { line }
+  });
+
+  return positions ? positions[line] : [];
+}
+
 const clientCommands = {
   autocomplete,
   blackBox,
@@ -476,6 +493,7 @@ const clientCommands = {
   sourceContents,
   getSourceForActor,
   getBreakpointByLocation,
+  getBreakpointPositions,
   setBreakpoint,
   setXHRBreakpoint,
   removeXHRBreakpoint,
