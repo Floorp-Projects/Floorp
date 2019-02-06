@@ -457,7 +457,7 @@ pref("media.navigator.mediadatadecoder_vpx_enabled", false);
 #if defined(ANDROID)
 pref("media.navigator.mediadatadecoder_h264_enabled", false); // bug 1509316
 #else
-pref("media.navigator.mediadatadecoder_h264_enabled", true);
+pref("media.navigator.mediadatadecoder_h264_enabled", false);
 #endif
 pref("media.peerconnection.video.vp9_enabled", true);
 pref("media.peerconnection.video.vp9_preferred", false);
