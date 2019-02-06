@@ -196,7 +196,7 @@ describe("SourcesTree", () => {
       await component
         .find(".sources-list")
         .simulate("keydown", { keyCode: 13 });
-      // expect(props.selectSource).toHaveBeenCalledWith(item.contents.id);
+      expect(props.selectSource).toHaveBeenCalledWith(item.contents.id);
     });
   });
 
@@ -370,7 +370,7 @@ function generateDefaults(overrides: Object) {
     autoExpandAll: true,
     selectSource: jest.fn(),
     setExpandedState: jest.fn(),
-    sources: { FakeThread: defaultSources },
+    sources: defaultSources,
     debuggeeUrl: "http://mdn.com",
     clearProjectDirectoryRoot: jest.fn(),
     setProjectDirectoryRoot: jest.fn(),
