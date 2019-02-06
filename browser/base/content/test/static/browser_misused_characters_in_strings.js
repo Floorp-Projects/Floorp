@@ -261,6 +261,26 @@ add_task(async function checkAllTheDTDs() {
   await checkDTD(dtdLocation);
 });
 
+add_task(async function checkAllTheFluents() {
+  let uris = await getAllTheFiles(".ftl");
+  let {FluentResource} = Cu.import("resource://gre/modules/Fluent.jsm", {});
+  let domParser = new DOMParser();
+  for (let uri of uris) {
+    let rawContents = await fetchFile(uri.spec);
+    let resource = FluentResource.fromString(rawContents);
+    if (!resource) {
+      return;
+    }
+
+    for (let [key, val] of resource) {
+      if (typeof val === "string") {
+        let stripped_val = domParser.parseFromString(val, "text/html").documentElement.textContent;
+        testForErrors(uri.spec, key, stripped_val);
+      }
+    }
+  }
+});
+
 add_task(async function ensureWhiteListIsEmpty() {
   is(gWhitelist.length, 0, "No remaining whitelist entries exist");
 });
