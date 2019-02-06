@@ -66,10 +66,11 @@ void TracingMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
   }
 }
 
-void IOMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
+void DiskIOMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
                                     const TimeStamp& aProcessStartTime,
                                     UniqueStacks& aUniqueStacks) {
-  StreamCommonProps("io", aWriter, aProcessStartTime, aUniqueStacks);
+  StreamCommonProps("DiskIO", aWriter, aProcessStartTime, aUniqueStacks);
+  aWriter.StringProperty("operation", mFilename.get());
   aWriter.StringProperty("source", mSource);
   if (mFilename) {
     aWriter.StringProperty("filename", mFilename.get());
