@@ -25,7 +25,9 @@ and debug JavaScript execution.
 Bugs
 ====
 
-Bugs are tracked in the `DevTools :: Remote Agent` component.
+Bugs are tracked under the `Remote Protocol`_ product.
+
+.. _Remote Protocol: https://bugzilla.mozilla.org/describecomponents.cgi?product=Remote%20Protocol
 
 
 Communication
