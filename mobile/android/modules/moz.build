@@ -24,7 +24,6 @@ EXTRA_JS_MODULES += [
     'ActionBarHandler.jsm',
     'BrowserActions.jsm',
     'dbg-browser-actors.js',
-    'DelayedInit.jsm',
     'DownloadNotifications.jsm',
     'FormAssistant.jsm',
     'FxAccountsWebChannel.jsm',
