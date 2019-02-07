@@ -58,11 +58,6 @@ pref("extensions.autoDisableScopes", 15);
 pref("extensions.startupScanScopes", 0);
 
 pref("extensions.geckoProfiler.acceptedExtensionIds", "geckoprofiler@mozilla.com,quantum-foxfooding@mozilla.com,raptor@mozilla.org");
-#if defined(XP_LINUX) || defined (XP_MACOSX)
-pref("extensions.geckoProfiler.getSymbolRules", "localBreakpad,nm");
-#else // defined(XP_WIN)
-pref("extensions.geckoProfiler.getSymbolRules", "localBreakpad,dump_syms.exe");
-#endif
 
 
 // Add-on content security policies.
