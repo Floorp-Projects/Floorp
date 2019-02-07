@@ -823,5 +823,10 @@ class DOMLocalization extends Localization {
   }
 }
 
-this.DOMLocalization = DOMLocalization;
-var EXPORTED_SYMBOLS = ["DOMLocalization"];
+/**
+ * Helper function which allows us to construct a new
+ * DOMLocalization from DocumentL10n.
+ */
+var getDOMLocalization = () => new DOMLocalization();
+
+var EXPORTED_SYMBOLS = ["DOMLocalization", "getDOMLocalization"];

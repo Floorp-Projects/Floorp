@@ -7,9 +7,10 @@
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
   <script type="application/javascript">
   "use strict";
-  const domLocalization =
-    Cc["@mozilla.org/intl/domlocalization;1"].createInstance(
-      Ci.mozIDOMLocalization);
+  const { getDOMLocalization } =
+    ChromeUtils.import("resource://gre/modules/DOMLocalization.jsm");
+  const domLocalization = getDOMLocalization();
+
   const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
   const { L10nRegistry, FileSource } =
     ChromeUtils.import("resource://gre/modules/L10nRegistry.jsm");
