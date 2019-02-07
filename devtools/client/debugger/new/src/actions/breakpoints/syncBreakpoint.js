@@ -188,34 +188,25 @@ export async function syncBreakpointPromise(
   // If we are not disabled, set the breakpoint on the server and get
   // that info so we can set it on our breakpoints.
 
-  const newGeneratedLocation = { ...scopedGeneratedLocation };
   for (const sourceActor of sourceActors) {
     const sourceActorLocation = makeSourceActorLocation(
       sourceActor,
       scopedGeneratedLocation
     );
-    const { actualLocation } = await client.setBreakpoint(
+    await client.setBreakpoint(
       sourceActorLocation,
       pendingBreakpoint.options,
       isOriginalId(sourceId)
     );
-    newGeneratedLocation.line = actualLocation.line;
-    newGeneratedLocation.column = actualLocation.column;
   }
 
-  // the breakpoint might have slid server side, so we want to get the location
-  // based on the server's return value
-  const newLocation = await sourceMaps.getOriginalLocation(
-    newGeneratedLocation
-  );
-
-  const originalText = getTextAtPosition(source, newLocation);
-  const text = getTextAtPosition(generatedSource, newGeneratedLocation);
+  const originalText = getTextAtPosition(source, scopedLocation);
+  const text = getTextAtPosition(generatedSource, scopedGeneratedLocation);
 
   return createSyncData(
     pendingBreakpoint,
-    newLocation,
-    newGeneratedLocation,
+    scopedLocation,
+    scopedGeneratedLocation,
     previousLocation,
     text,
     originalText

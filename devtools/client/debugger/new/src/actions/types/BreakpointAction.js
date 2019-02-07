@@ -13,11 +13,6 @@ import type {
 
 import type { PromiseAction } from "../utils/middleware/promise";
 
-type AddBreakpointResult = {
-  previousLocation: SourceLocation,
-  breakpoint: Breakpoint
-};
-
 export type BreakpointAction =
   | PromiseAction<
       {|
@@ -25,7 +20,7 @@ export type BreakpointAction =
         +breakpoint: Breakpoint,
         +condition?: string
       |},
-      AddBreakpointResult
+      Breakpoint
     >
   | PromiseAction<{|
       +type: "REMOVE_BREAKPOINT",
@@ -79,7 +74,7 @@ export type BreakpointAction =
         +type: "ENABLE_BREAKPOINT",
         +breakpoint: Breakpoint
       |},
-      AddBreakpointResult
+      Breakpoint
     >
   | {|
       +type: "DISABLE_BREAKPOINT",

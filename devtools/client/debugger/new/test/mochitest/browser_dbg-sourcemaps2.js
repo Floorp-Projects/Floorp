@@ -30,7 +30,7 @@ add_task(async function() {
   await selectSource(dbg, mainSrc);
 
   // Test that breakpoint is not off by a line.
-  await addBreakpoint(dbg, mainSrc, 4);
+  await addBreakpoint(dbg, mainSrc, 4, 2);
   is(getBreakpointCount(getState()), 1, "One breakpoint exists");
   ok(
     getBreakpoint(getState(), { sourceId: mainSrc.id, line: 4, column: 2 }),

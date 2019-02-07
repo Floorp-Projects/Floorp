@@ -207,7 +207,7 @@ function addBreakpoint(state, action): BreakpointsState {
   // when the action completes, we can commit the breakpoint
   if (action.status === "done") {
     const { value } = ((action: any): DonePromiseAction);
-    return syncBreakpoint(state, value);
+    return syncBreakpoint(state, { breakpoint: value, previousLocation: null });
   }
 
   // Remove the optimistic update
