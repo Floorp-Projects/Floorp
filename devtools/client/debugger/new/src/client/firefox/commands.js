@@ -32,7 +32,7 @@ import type { PausePointsMap } from "../../workers/parser";
 
 import { makeBreakpointActorId } from "../../utils/breakpoint";
 
-import { createSource, createBreakpointLocation, createWorker } from "./create";
+import { createSource, createWorker } from "./create";
 import { supportsWorkers, updateWorkerClients } from "./workers";
 
 import { features } from "../../utils/prefs";
@@ -189,9 +189,8 @@ function removeXHRBreakpoint(path: string, method: string) {
 
 function setBreakpoint(
   location: SourceActorLocation,
-  options: BreakpointOptions,
-  noSliding: boolean
-): Promise<BreakpointResult> {
+  options: BreakpointOptions
+) {
   const sourceThreadClient = lookupThreadClient(location.sourceActor.thread);
   const sourceClient = sourceThreadClient.source({
     actor: location.sourceActor.actor
@@ -202,17 +201,10 @@ function setBreakpoint(
       line: location.line,
       column: location.column,
       options,
-      noSliding
     })
-    .then(([{ actualLocation }, bpClient]) => {
-      actualLocation = createBreakpointLocation(location, actualLocation);
-
-      const id = makeBreakpointActorId(actualLocation);
+    .then(([, bpClient]) => {
+      const id = makeBreakpointActorId(location);
       bpClients[id] = bpClient;
-      bpClient.location.line = actualLocation.line;
-      bpClient.location.column = actualLocation.column;
-
-      return { id, actualLocation };
     });
 }
 

@@ -283,7 +283,7 @@ describe("reloading debuggee", () => {
       column: undefined
     };
 
-    const { breakpoint } = await dispatch(actions.addBreakpoint(location));
+    const breakpoint = await dispatch(actions.addBreakpoint(location));
     await dispatch(actions.disableBreakpoint(breakpoint));
 
     (getGeneratedLocation: any).mockImplementationOnce(() =>
