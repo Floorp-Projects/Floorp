@@ -1928,14 +1928,18 @@ gboolean nsWindow::OnExposeEvent(cairo_t *cr) {
 
   bool shaped = false;
   if (eTransparencyTransparent == GetTransparencyMode()) {
+    auto window = static_cast<nsWindow *>(GetTopLevelWidget());
     if (mTransparencyBitmapForTitlebar) {
-      static_cast<nsWindow *>(GetTopLevelWidget())
-          ->UpdateTitlebarTransparencyBitmap();
+      if (mSizeState == nsSizeMode_Normal) {
+        window->UpdateTitlebarTransparencyBitmap();
+      } else {
+        window->ClearTransparencyBitmap();
+      }
     } else {
       if (mHasAlphaVisual) {
         // Remove possible shape mask from when window manger was not
         // previously compositing.
-        static_cast<nsWindow *>(GetTopLevelWidget())->ClearTransparencyBitmap();
+        window->ClearTransparencyBitmap();
       } else {
         shaped = true;
       }
@@ -6134,7 +6138,7 @@ void nsWindow::SetDrawsInTitlebar(bool aState) {
   mDrawInTitlebar = aState;
 
   if (mTransparencyBitmapForTitlebar) {
-    if (mDrawInTitlebar) {
+    if (mDrawInTitlebar && mSizeState == nsSizeMode_Normal) {
       UpdateTitlebarTransparencyBitmap();
     } else {
       ClearTransparencyBitmap();
