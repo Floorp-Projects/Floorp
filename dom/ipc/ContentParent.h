@@ -570,14 +570,6 @@ class ContentParent final : public PContentParent,
 
   bool DeallocPLoginReputationParent(PLoginReputationParent* aActor);
 
-  PSessionStorageObserverParent* AllocPSessionStorageObserverParent();
-
-  virtual mozilla::ipc::IPCResult RecvPSessionStorageObserverConstructor(
-      PSessionStorageObserverParent* aActor) override;
-
-  bool DeallocPSessionStorageObserverParent(
-      PSessionStorageObserverParent* aActor);
-
   virtual bool SendActivate(PBrowserParent* aTab) override {
     return PContentParent::SendActivate(aTab);
   }
