@@ -376,7 +376,8 @@ class FormatUsageAuthority {
   bool IsInternalFormatEnumValid(GLenum internalFormat) const;
   bool AreUnpackEnumsValid(GLenum unpackFormat, GLenum unpackType) const;
 
-  void AllowRBFormat(GLenum sizedFormat, const FormatUsageInfo* usage);
+  void AllowRBFormat(GLenum sizedFormat, const FormatUsageInfo* usage,
+                     bool expectRenderable = true);
   void AllowSizedTexFormat(GLenum sizedFormat, const FormatUsageInfo* usage);
   void AllowUnsizedTexFormat(const PackingInfo& pi,
                              const FormatUsageInfo* usage);
