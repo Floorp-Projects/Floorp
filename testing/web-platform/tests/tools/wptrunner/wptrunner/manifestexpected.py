@@ -57,7 +57,8 @@ def prefs(node):
         if isinstance(ini_value, (str, unicode)):
             return tuple(pref_piece.strip() for pref_piece in ini_value.split(':', 1))
         else:
-            return (ini_value.strip(), None)
+            # this should be things like @Reset, which are apparently type 'object'
+            return (ini_value, None)
 
     try:
         node_prefs = node.get("prefs")
