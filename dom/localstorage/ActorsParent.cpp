@@ -2721,6 +2721,10 @@ class QuotaClient::MatchFunction final : public mozIStorageFunction {
  * Globals
  ******************************************************************************/
 
+#ifdef DEBUG
+bool gLocalStorageInitialized = false;
+#endif
+
 typedef nsTArray<PrepareDatastoreOp*> PrepareDatastoreOpArray;
 
 StaticAutoPtr<PrepareDatastoreOpArray> gPrepareDatastoreOps;
@@ -2947,6 +2951,16 @@ void SnapshotPrefillPrefChangedCallback(const char* aPrefName, void* aClosure) {
 /*******************************************************************************
  * Exported functions
  ******************************************************************************/
+
+void InitializeLocalStorage() {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!gLocalStorageInitialized);
+
+#ifdef DEBUG
+  gLocalStorageInitialized = true;
+#endif
+}
 
 PBackgroundLSDatabaseParent* AllocPBackgroundLSDatabaseParent(
     const PrincipalInfo& aPrincipalInfo, const uint32_t& aPrivateBrowsingId,
