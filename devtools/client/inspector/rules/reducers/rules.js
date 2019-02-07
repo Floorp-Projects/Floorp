@@ -40,6 +40,9 @@ function getDeclarationState(declaration, ruleId) {
     isDeclarationValid: declaration.isValid(),
     // Whether or not the declaration is enabled.
     isEnabled: declaration.enabled,
+    // Whether or not the declaration is invisible. In an inherited rule, only the
+    // inherited declarations are shown and the rest are considered invisible.
+    isInvisible: declaration.invisible,
     // Whether or not the declaration's property name is known.
     isKnownProperty: declaration.isKnownProperty,
     // Whether or not the property name is valid.
