@@ -101,7 +101,7 @@ function parseVueScript(code) {
 export function parseConsoleScript(text: string, opts?: Object): Object | null {
   try {
     return _parse(text, {
-      plugins: ["objectRestSpread"],
+      plugins: ["objectRestSpread", "dynamicImport"],
       ...opts,
       allowAwaitOutsideFunction: true
     });

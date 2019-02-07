@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+// @flow
+
 import { Component } from "react";
 import { connect } from "../../utils/connect";
 import { showMenu } from "devtools-contextmenu";
@@ -10,18 +12,25 @@ import { getSourceLocationFromMouseEvent } from "../../utils/editor";
 import { getPrettySource, getIsPaused } from "../../selectors";
 
 import { editorMenuItems, editorItemActions } from "./menus/editor";
-import type { EditorMenuActions } from "./menus/editor";
+
+import type { Source } from "../../types";
+import type { EditorItemActions } from "./menus/editor";
+import type SourceEditor from "../../utils/editor/source-editor";
 
 type Props = {
   contextMenu: ?MouseEvent,
-  editorActions: EditorMenuActions,
-  clearContextMenu: () => {}
+  editorActions: EditorItemActions,
+  clearContextMenu: () => void,
+  editor: SourceEditor,
+  hasPrettySource: boolean,
+  isPaused: boolean,
+  selectedSource: Source
 };
 
-class EditorMenu extends Component {
+class EditorMenu extends Component<Props> {
   props: Props;
 
-  componentWillUpdate(nextProps) {
+  componentWillUpdate(nextProps: Props) {
     this.props.clearContextMenu();
     if (nextProps.contextMenu) {
       this.showMenu(nextProps);
@@ -41,7 +50,8 @@ class EditorMenu extends Component {
     const location = getSourceLocationFromMouseEvent(
       editor,
       selectedSource,
-      event
+      // Use a coercion, as contextMenu is optional
+      (event: any)
     );
 
     showMenu(

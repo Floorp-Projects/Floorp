@@ -1,9 +1,11 @@
-import { getTokenLocation } from ".";
-import { isEqual } from "lodash";
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+// @flow
+
+import { getTokenLocation } from ".";
+import { isEqual } from "lodash";
 
 function isInvalidTarget(target: HTMLElement) {
   if (!target || !target.innerText) {
@@ -50,7 +52,7 @@ function invalidLeaveTarget(target: ?HTMLElement) {
   return false;
 }
 
-export function onMouseOver(codeMirror) {
+export function onMouseOver(codeMirror: any) {
   let prevTokenPos = null;
 
   function onMouseLeave(event) {
@@ -69,7 +71,7 @@ export function onMouseOver(codeMirror) {
     });
   }
 
-  return enterEvent => {
+  return (enterEvent: any) => {
     const { target } = enterEvent;
 
     if (isInvalidTarget(target)) {

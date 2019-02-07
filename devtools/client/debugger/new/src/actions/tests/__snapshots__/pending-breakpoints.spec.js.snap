@@ -21,6 +21,7 @@ Object {
     "location": Object {
       "column": undefined,
       "line": 5,
+      "sourceId": "",
       "sourceUrl": "http://localhost:8000/examples/bar.js",
     },
   },
@@ -33,6 +34,7 @@ Object {
     "index": 0,
     "name": undefined,
     "offset": Object {
+      "column": 0,
       "line": 7,
       "sourceId": "foo.js",
       "sourceUrl": "http://localhost:8000/examples/foo.js",
@@ -40,12 +42,12 @@ Object {
   },
   "disabled": false,
   "generatedLocation": Object {
-    "column": undefined,
+    "column": 0,
     "line": 7,
     "sourceUrl": "http://localhost:8000/examples/foo.js",
   },
   "location": Object {
-    "column": undefined,
+    "column": 0,
     "line": 7,
     "sourceUrl": "http://localhost:8000/examples/foo.js",
   },

@@ -36,7 +36,7 @@
   transition: opacity 200ms;
   border: none;
   background: transparent;
-  padding: 6px;
+  padding: 4px 6px;
 }
 
 .source-footer > .commands > .action .img {

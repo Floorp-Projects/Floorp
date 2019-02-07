@@ -7,11 +7,12 @@
 import React from "react";
 import { shallow, mount } from "enzyme";
 import Frame from "../Frame.js";
+import { makeMockFrame, makeMockSource } from "../../../../utils/test-mockup";
 
 import FrameMenu from "../FrameMenu";
 jest.mock("../FrameMenu", () => jest.fn());
 
-function frameProperties(frame, selectedFrame, overrides = {}) {
+function frameProperties(frame, selectedFrame: any, overrides = {}) {
   return {
     frame,
     selectedFrame,
@@ -28,20 +29,9 @@ function frameProperties(frame, selectedFrame, overrides = {}) {
 }
 
 function render(frameToSelect = {}, overrides = {}, propsOverrides = {}) {
-  const defaultFrame = {
-    id: 1,
-    source: {
-      url: "foo-view.js",
-      isBlackBoxed: false
-    },
-    displayName: "renderFoo",
-    frameworkGroupingOn: false,
-    toggleFrameworkGrouping: jest.fn(),
-    library: false,
-    location: {
-      line: 10
-    }
-  };
+  const source = makeMockSource("foo-view.js");
+  const defaultFrame = makeMockFrame("1", source, undefined, 10, "renderFoo");
+
   const frame = { ...defaultFrame, ...overrides };
   const selectedFrame = { ...frame, ...frameToSelect };
 
@@ -57,36 +47,26 @@ describe("Frame", () => {
   });
 
   it("user frame (not selected)", () => {
-    const { component } = render({ id: 2 });
+    const { component } = render({ id: "2" });
     expect(component).toMatchSnapshot();
   });
 
   it("library frame", () => {
+    const source = makeMockSource("backbone.js");
     const backboneFrame = {
-      id: 3,
-      source: { url: "backbone.js" },
-      displayName: "updateEvents",
-      library: "backbone",
-      location: {
-        line: 12
-      }
+      ...makeMockFrame("3", source, undefined, 12, "updateEvents"),
+      library: "backbone"
     };
 
-    const { component } = render({ id: 3 }, backboneFrame);
+    const { component } = render({ id: "3" }, backboneFrame);
     expect(component).toMatchSnapshot();
   });
 
-  fit("filename only", () => {
-    const frame = {
-      id: 1,
-      source: {
-        url: "https://firefox.com/assets/src/js/foo-view.js"
-      },
-      displayName: "renderFoo",
-      location: {
-        line: 10
-      }
-    };
+  it("filename only", () => {
+    const source = makeMockSource(
+      "https://firefox.com/assets/src/js/foo-view.js"
+    );
+    const frame = makeMockFrame("1", source, undefined, 10, "renderFoo");
 
     const props = frameProperties(frame, null);
     const component = mount(<Frame {...props} />);
@@ -95,16 +75,8 @@ describe("Frame", () => {
 
   it("full URL", () => {
     const url = `https://${"a".repeat(100)}.com/assets/src/js/foo-view.js`;
-    const frame = {
-      id: 1,
-      source: {
-        url
-      },
-      displayName: "renderFoo",
-      location: {
-        line: 10
-      }
-    };
+    const source = makeMockSource(url);
+    const frame = makeMockFrame("1", source, undefined, 10, "renderFoo");
 
     const props = frameProperties(frame, null, { displayFullUrl: true });
     const component = mount(<Frame {...props} />);
@@ -113,16 +85,8 @@ describe("Frame", () => {
 
   it("getFrameTitle", () => {
     const url = `https://${"a".repeat(100)}.com/assets/src/js/foo-view.js`;
-    const frame = {
-      id: 1,
-      source: {
-        url
-      },
-      displayName: "renderFoo",
-      location: {
-        line: 10
-      }
-    };
+    const source = makeMockSource(url);
+    const frame = makeMockFrame("1", source, undefined, 10, "renderFoo");
 
     const props = frameProperties(frame, null, {
       getFrameTitle: x => `Jump to ${x}`

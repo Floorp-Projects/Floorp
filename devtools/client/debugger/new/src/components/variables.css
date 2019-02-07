@@ -2,6 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+:root {
+  /* header height is 28px + 1px for its border */
+  --editor-header-height: 29px;
+  /* footer height is 24px + 1px for its border */
+  --editor-footer-height: 25px;
+  /* searchbar height is 24px + 2px for its top and bottom borders */
+  --editor-searchbar-height: 26px;
+}
+
 :root.theme-light,
 :root .theme-light {
   --search-overlays-semitransparent: rgba(221, 225, 228, 0.66);

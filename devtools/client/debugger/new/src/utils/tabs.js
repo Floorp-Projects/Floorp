@@ -5,7 +5,7 @@
 // @flow
 
 import type { Source } from "../types";
-import type { TabList } from "../reducers";
+import type { TabList } from "../reducers/tabs";
 
 type SourcesList = Source[];
 /*
@@ -41,7 +41,7 @@ export function getHiddenTabs(
   });
 }
 
-export function getFramework(tabs: TabList[], url: string) {
+export function getFramework(tabs: TabList, url: string) {
   const tab = tabs.find(t => t.url === url);
 
   if (tab) {

@@ -419,70 +419,93 @@ function isSlowBuffer (obj) {
 "use strict";
 
 
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.stopSourceMapWorker = exports.startSourceMapWorker = exports.isOriginalId = exports.isGeneratedId = exports.generatedToOriginalId = exports.originalToGeneratedId = exports.getOriginalStackFrames = exports.hasMappedSource = exports.clearSourceMaps = exports.applySourceMap = exports.getOriginalSourceText = exports.getLocationScopes = exports.getFileGeneratedRange = exports.getOriginalLocation = exports.getAllGeneratedLocations = exports.getGeneratedLocation = exports.getGeneratedRanges = exports.getOriginalRanges = exports.hasOriginalURL = exports.getOriginalURLs = exports.setAssetRootURL = exports.dispatcher = undefined;
+
+var _utils = __webpack_require__(3652);
+
+Object.defineProperty(exports, "originalToGeneratedId", {
+  enumerable: true,
+  get: function () {
+    return _utils.originalToGeneratedId;
+  }
+});
+Object.defineProperty(exports, "generatedToOriginalId", {
+  enumerable: true,
+  get: function () {
+    return _utils.generatedToOriginalId;
+  }
+});
+Object.defineProperty(exports, "isGeneratedId", {
+  enumerable: true,
+  get: function () {
+    return _utils.isGeneratedId;
+  }
+});
+Object.defineProperty(exports, "isOriginalId", {
+  enumerable: true,
+  get: function () {
+    return _utils.isOriginalId;
+  }
+});
+
+var _devtoolsSourceMap = __webpack_require__(3646);
+
+var self = _interopRequireWildcard(_devtoolsSourceMap);
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 const {
-  originalToGeneratedId,
-  generatedToOriginalId,
-  isGeneratedId,
-  isOriginalId
-} = __webpack_require__(3652);
-
-const {
   workerUtils: { WorkerDispatcher }
 } = __webpack_require__(3651);
 
-const dispatcher = new WorkerDispatcher();
+const dispatcher = exports.dispatcher = new WorkerDispatcher();
 
-const setAssetRootURL = dispatcher.task("setAssetRootURL");
-const getOriginalURLs = dispatcher.task("getOriginalURLs");
-const hasOriginalURL = dispatcher.task("hasOriginalURL");
-const getOriginalRanges = dispatcher.task("getOriginalRanges");
-const getGeneratedRanges = dispatcher.task("getGeneratedRanges", {
-  queue: true
-});
-const getGeneratedLocation = dispatcher.task("getGeneratedLocation", {
-  queue: true
-});
-const getAllGeneratedLocations = dispatcher.task("getAllGeneratedLocations", {
-  queue: true
-});
-const getOriginalLocation = dispatcher.task("getOriginalLocation");
-const getFileGeneratedRange = dispatcher.task("getFileGeneratedRange");
-const getLocationScopes = dispatcher.task("getLocationScopes");
-const getOriginalSourceText = dispatcher.task("getOriginalSourceText");
-const applySourceMap = dispatcher.task("applySourceMap");
-const clearSourceMaps = dispatcher.task("clearSourceMaps");
-const hasMappedSource = dispatcher.task("hasMappedSource");
-const getOriginalStackFrames = dispatcher.task("getOriginalStackFrames");
+const setAssetRootURL = exports.setAssetRootURL = async assetRoot => dispatcher.invoke("setAssetRootURL", assetRoot);
 
-module.exports = {
-  originalToGeneratedId,
-  generatedToOriginalId,
-  isGeneratedId,
-  isOriginalId,
-  hasMappedSource,
-  getOriginalURLs,
-  hasOriginalURL,
-  getOriginalRanges,
-  getGeneratedRanges,
-  getGeneratedLocation,
-  getAllGeneratedLocations,
-  getOriginalLocation,
-  getFileGeneratedRange,
-  getLocationScopes,
-  getOriginalSourceText,
-  applySourceMap,
-  clearSourceMaps,
-  getOriginalStackFrames,
-  startSourceMapWorker(url, assetRoot) {
-    dispatcher.start(url);
-    setAssetRootURL(assetRoot);
-  },
-  stopSourceMapWorker: dispatcher.stop.bind(dispatcher)
+const getOriginalURLs = exports.getOriginalURLs = async generatedSource => dispatcher.invoke("getOriginalURLs", generatedSource);
+
+const hasOriginalURL = exports.hasOriginalURL = async url => dispatcher.invoke("hasOriginalURL", url);
+
+const getOriginalRanges = exports.getOriginalRanges = async (sourceId, url) => dispatcher.invoke("getOriginalRanges", sourceId, url);
+
+const getGeneratedRanges = exports.getGeneratedRanges = async (location, originalSource) => dispatcher.task("getGeneratedRanges", {
+  queue: true
+})(location, originalSource);
+
+const getGeneratedLocation = exports.getGeneratedLocation = async (location, originalSource) => dispatcher.task("getGeneratedLocation", { queue: true })(location, originalSource);
+
+const getAllGeneratedLocations = exports.getAllGeneratedLocations = async (location, originalSource) => dispatcher.task("getAllGeneratedLocations", { queue: true })(location, originalSource);
+
+const getOriginalLocation = exports.getOriginalLocation = async (location, options = {}) => dispatcher.invoke("getOriginalLocation", location, options);
+
+const getFileGeneratedRange = exports.getFileGeneratedRange = async originalSource => dispatcher.invoke("getFileGeneratedRange", originalSource);
+
+const getLocationScopes = exports.getLocationScopes = dispatcher.task("getLocationScopes");
+
+const getOriginalSourceText = exports.getOriginalSourceText = async originalSource => dispatcher.invoke("getOriginalSourceText", originalSource);
+
+const applySourceMap = exports.applySourceMap = async (generatedId, url, code, mappings) => dispatcher.invoke("applySourceMap", generatedId, url, code, mappings);
+
+const clearSourceMaps = exports.clearSourceMaps = async () => dispatcher.invoke("clearSourceMaps");
+
+const hasMappedSource = exports.hasMappedSource = async location => dispatcher.invoke("hasMappedSource", location);
+
+const getOriginalStackFrames = exports.getOriginalStackFrames = async generatedLocation => dispatcher.invoke("getOriginalStackFrames", generatedLocation);
+
+const startSourceMapWorker = exports.startSourceMapWorker = (url, assetRoot) => {
+  dispatcher.start(url);
+  setAssetRootURL(assetRoot);
 };
+const stopSourceMapWorker = exports.stopSourceMapWorker = dispatcher.stop.bind(dispatcher);
+
+exports.default = self;
 
 /***/ }),
 

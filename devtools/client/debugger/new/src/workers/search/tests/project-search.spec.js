@@ -17,21 +17,21 @@ describe("project search", () => {
 
   it("throws on lack of source", () => {
     const needle = "test";
-    const source = null;
+    const source: any = null;
     const matches = () => findSourceMatches(source, needle);
     expect(matches).toThrow(TypeError);
   });
 
   it("handles empty source object", () => {
     const needle = "test";
-    const source = {};
+    const source: any = {};
     const matches = findSourceMatches(source, needle);
     expect(matches).toEqual(emptyResults);
   });
 
   it("finds matches", () => {
     const needle = "foo";
-    const source = {
+    const source: any = {
       text,
       loadedState: "loaded",
       id: "bar.js",
@@ -44,7 +44,7 @@ describe("project search", () => {
 
   it("finds no matches in source", () => {
     const needle = "test";
-    const source = {
+    const source: any = {
       text,
       loadedState: "loaded",
       id: "bar.js",

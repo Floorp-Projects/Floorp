@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+// @flow
+
 import React, { Component } from "react";
 
 import ColumnBreakpoint from "./ColumnBreakpoint";
@@ -17,13 +19,15 @@ import type { Source } from "../../types";
 // eslint-disable-next-line max-len
 import type { ColumnBreakpoint as ColumnBreakpointType } from "../../selectors/visibleColumnBreakpoints";
 
-class ColumnBreakpoints extends Component {
-  props: {
-    editor: Object,
-    selectedSource: Source,
-    columnBreakpoints: ColumnBreakpointType[],
-    breakpointActions: BreakpointItemActions
-  };
+type Props = {
+  editor: Object,
+  selectedSource: Source,
+  columnBreakpoints: ColumnBreakpointType[],
+  breakpointActions: BreakpointItemActions
+};
+
+class ColumnBreakpoints extends Component<Props> {
+  props: Props;
 
   render() {
     const {
