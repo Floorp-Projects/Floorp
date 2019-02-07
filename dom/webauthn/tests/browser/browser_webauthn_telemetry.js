@@ -10,8 +10,7 @@ ChromeUtils.defineModuleGetter(this, "TelemetryTestUtils",
 const TEST_URL = "https://example.com/";
 
 function getTelemetryForScalar(aName) {
-  let scalars = TelemetryTestUtils.getParentProcessScalars(
-    Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, true);
+  let scalars = TelemetryTestUtils.getProcessScalars("parent", true);
   return scalars[aName] || 0;
 }
 
