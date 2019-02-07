@@ -13,5 +13,4 @@ the following fields:
 | `device_manufacturer` | String | The manufacturer of the device |
 | `device_model` | String | The model name of the device |
 | `architecture` | String | The architecture of the device (e.g. "arm", "x86") |
-| `a11y_services` | StringList | List of the ids of the accessibility services enabled on the device |
 | `locale` | String | The locale of the application |

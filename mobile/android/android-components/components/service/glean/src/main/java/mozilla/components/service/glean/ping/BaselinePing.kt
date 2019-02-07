@@ -4,8 +4,6 @@
 
 package mozilla.components.service.glean.ping
 
-import android.view.accessibility.AccessibilityManager
-import android.accessibilityservice.AccessibilityServiceInfo
 import android.content.Context
 import android.os.Build
 import mozilla.components.service.glean.GleanMetrics.GleanBaseline
@@ -38,39 +36,7 @@ internal class BaselinePing(applicationContext: Context) {
         // Set the CPU architecture
         GleanBaseline.architecture.set(Build.SUPPORTED_ABIS[0])
 
-        // Set the enabled accessibility services
-        getEnabledAccessibilityServices(
-            applicationContext.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
-        ) ?.let {
-            GleanBaseline.a11yServices.set(it)
-        }
-
         GleanBaseline.locale.set(getLanguageTag())
-    }
-
-    /**
-     * Records a list of the currently enabled accessibility services.
-     *
-     * https://developer.android.com/reference/android/view/accessibility/AccessibilityManager.html
-     * @param accessibilityManager The system's [AccessibilityManager] as
-     * returned from applicationContext.getSystemService
-     * @returns services A list of ids of the enabled accessibility services. If
-     *     the accessibility manager is disabled, returns null.
-     */
-    internal fun getEnabledAccessibilityServices(
-        accessibilityManager: AccessibilityManager
-    ): List<String>? {
-        if (!accessibilityManager.isEnabled) {
-            logger.info("AccessibilityManager is disabled")
-            return null
-        }
-        return accessibilityManager.getEnabledAccessibilityServiceList(
-            AccessibilityServiceInfo.FEEDBACK_ALL_MASK
-        ).mapNotNull {
-            // Note that any reference in java code can be null, so we'd better
-            // check for null values here as well.
-            it.id
-        }
     }
 
     /**

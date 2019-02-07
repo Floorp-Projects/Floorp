@@ -89,19 +89,6 @@ glean.baseline:
     notification_emails:
       - telemetry-client-dev@mozilla.com
 
-  a11y_services:
-    type: string_list
-    description: |
-      List of accessibility services enabled on the device.
-    send_in_pings:
-      - baseline
-    bugs:
-      - 1497894
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1512938#c3
-    notification_emails:
-      - telemetry-client-dev@mozilla.com
-
   locale:
     type: string
     lifetime: application
