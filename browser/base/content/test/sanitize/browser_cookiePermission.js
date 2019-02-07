@@ -18,8 +18,9 @@ function checkDataForAboutURL() {
 }
 
 function createIndexedDB(host, originAttributes) {
-  return SiteDataTestUtils.addToIndexedDB("https://" + host, "foo", "bar",
-                                          originAttributes);
+  let uri = Services.io.newURI("https://" + host);
+  let principal = Services.scriptSecurityManager.createCodebasePrincipal(uri, originAttributes);
+  return SiteDataTestUtils.addToIndexedDB(principal.origin);
 }
 
 function checkIndexedDB(host, originAttributes) {
