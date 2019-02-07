@@ -225,6 +225,9 @@ static already_AddRefed<GLContextCGL> CreateOffscreenFBOContext(CreateContextFla
 
   std::vector<NSOpenGLPixelFormatAttribute> attribs;
 
+  if (!gfxPrefs::GLAllowHighPower()) {
+    flags &= ~CreateContextFlags::HIGH_POWER;
+  }
   if (flags & CreateContextFlags::ALLOW_OFFLINE_RENDERER ||
       !(flags & CreateContextFlags::HIGH_POWER)) {
     // This is really poorly named on Apple's part, but "AllowOfflineRenderers" means
