@@ -109,6 +109,25 @@ class TestGetDecisionParameters(unittest.TestCase):
             self.assertEqual(params['try_options'], None)
             self.assertEqual(params['try_task_config'], ttc)
 
+    def test_try_syntax_from_message_empty(self):
+        self.assertEqual(decision.try_syntax_from_message(''), '')
+
+    def test_try_syntax_from_message_no_try_syntax(self):
+        self.assertEqual(decision.try_syntax_from_message('abc | def'), '')
+
+    def test_try_syntax_from_message_initial_try_syntax(self):
+        self.assertEqual(decision.try_syntax_from_message('try: -f -o -o'), 'try: -f -o -o')
+
+    def test_try_syntax_from_message_initial_try_syntax_multiline(self):
+        self.assertEqual(
+            decision.try_syntax_from_message('try: -f -o -o\nabc\ndef'),
+            'try: -f -o -o')
+
+    def test_try_syntax_from_message_embedded_try_syntax_multiline(self):
+        self.assertEqual(
+            decision.try_syntax_from_message('some stuff\ntry: -f -o -o\nabc\ndef'),
+            'try: -f -o -o')
+
 
 if __name__ == '__main__':
     main()
