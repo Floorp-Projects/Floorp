@@ -368,29 +368,14 @@ class UrlbarInput {
    * @param {UrlbarResult} result The result that was selected.
    */
   setValueFromResult(result) {
-    let val;
-    switch (result.type) {
-      case UrlbarUtils.RESULT_TYPE.SEARCH:
-        val = result.payload.suggestion || result.payload.query;
-        break;
-      case UrlbarUtils.RESULT_TYPE.OMNIBOX:
-        val = result.payload.content;
-        break;
-      default: {
-        val = result.payload.url;
-        let uri;
-        try {
-          uri = Services.io.newURI(val);
-        } catch (ex) {}
-        if (uri) {
-          val = this.window.losslessDecodeURI(uri);
-        }
-        break;
-      }
+    if (result.autofill) {
+      this._setValueFromResultAutofill(result);
+    } else {
+      this.value = this._valueFromResultPayload(result);
     }
-    this.value = val;
+
     // Also update userTypedValue. See bug 287996.
-    this.window.gBrowser.userTypedValue = val;
+    this.window.gBrowser.userTypedValue = this.value;
 
     // The value setter clobbers the actiontype attribute, so update this after that.
     switch (result.type) {
@@ -483,27 +468,6 @@ class UrlbarInput {
     this.textbox.classList.remove("hidden-focus");
   }
 
-  /**
-   * Autofills the given value into the input.  That is, sets the input's value
-   * to the given value and selects the portion of the new value that comes
-   * after the current value.  The given value should therefore start with the
-   * input's current value.  If it doesn't, then this method doesn't do
-   * anything.
-   *
-   * @param {string} value
-   *   The value to autofill.
-   */
-  autofill(value) {
-    if (!value.toLocaleLowerCase()
-        .startsWith(this.textValue.toLocaleLowerCase())) {
-      return;
-    }
-    let len = this.textValue.length;
-    this.value = this.textValue + value.substring(len);
-    this.selectionStart = len;
-    this.selectionEnd = value.length;
-  }
-
   // Getters and Setters below.
 
   get focused() {
@@ -547,6 +511,30 @@ class UrlbarInput {
   }
 
   // Private methods below.
+
+  _setValueFromResultAutofill(result) {
+    this.value = result.autofill.value;
+    this.selectionStart = result.autofill.selectionStart;
+    this.selectionEnd = result.autofill.selectionEnd;
+  }
+
+  _valueFromResultPayload(result) {
+    switch (result.type) {
+      case UrlbarUtils.RESULT_TYPE.SEARCH:
+        return result.payload.suggestion || result.payload.query;
+      case UrlbarUtils.RESULT_TYPE.OMNIBOX:
+        return result.payload.content;
+    }
+
+    try {
+      let uri = Services.io.newURI(result.payload.url);
+      if (uri) {
+        return this.window.losslessDecodeURI(uri);
+      }
+    } catch (ex) {}
+
+    return "";
+  }
 
   _updateTextOverflow() {
     if (!this._overflowing) {
