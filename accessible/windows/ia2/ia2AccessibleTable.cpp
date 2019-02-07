@@ -137,11 +137,16 @@ ia2AccessibleTable::get_columnIndex(long aCellIdx, long* aColIdx) {
   *aColIdx = 0;
   if (!mTable) return CO_E_OBJNOTCONNECTED;
 
-  if (aCellIdx < 0 || static_cast<uint32_t>(aCellIdx) >=
-                          mTable->ColCount() * mTable->RowCount())
+  if (aCellIdx < 0) {
     return E_INVALIDARG;
+  }
 
-  *aColIdx = mTable->ColIndexAt(aCellIdx);
+  long colIdx = mTable->ColIndexAt(aCellIdx);
+  if (colIdx == -1) {  // Indicates an error.
+    return E_INVALIDARG;
+  }
+
+  *aColIdx = colIdx;
   return S_OK;
 }
 
@@ -246,11 +251,16 @@ ia2AccessibleTable::get_rowIndex(long aCellIdx, long* aRowIdx) {
   *aRowIdx = 0;
   if (!mTable) return CO_E_OBJNOTCONNECTED;
 
-  if (aCellIdx < 0 || static_cast<uint32_t>(aCellIdx) >=
-                          mTable->ColCount() * mTable->RowCount())
+  if (aCellIdx < 0) {
     return E_INVALIDARG;
+  }
 
-  *aRowIdx = mTable->RowIndexAt(aCellIdx);
+  long rowIdx = mTable->RowIndexAt(aCellIdx);
+  if (rowIdx == -1) {  // Indicates an error.
+    return E_INVALIDARG;
+  }
+
+  *aRowIdx = rowIdx;
   return S_OK;
 }
 
@@ -406,12 +416,16 @@ ia2AccessibleTable::get_rowColumnExtentsAtIndex(long aCellIdx, long* aRowIdx,
   *aIsSelected = false;
   if (!mTable) return CO_E_OBJNOTCONNECTED;
 
-  if (aCellIdx < 0 || static_cast<uint32_t>(aCellIdx) >=
-                          mTable->ColCount() * mTable->RowCount())
+  if (aCellIdx < 0) {
     return E_INVALIDARG;
+  }
 
   int32_t colIdx = 0, rowIdx = 0;
   mTable->RowAndColIndicesAt(aCellIdx, &rowIdx, &colIdx);
+  if (rowIdx == -1 || colIdx == -1) {  // Indicates an error.
+    return E_INVALIDARG;
+  }
+
   *aRowIdx = rowIdx;
   *aColIdx = colIdx;
   *aRowExtents = mTable->RowExtentAt(rowIdx, colIdx);

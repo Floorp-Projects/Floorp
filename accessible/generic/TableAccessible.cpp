@@ -263,3 +263,34 @@ Accessible* TableAccessible::CellInRowAt(Accessible* aRow, int32_t aColumn) {
 
   return cell;
 }
+
+int32_t TableAccessible::ColIndexAt(uint32_t aCellIdx) {
+  uint32_t colCount = ColCount();
+  if (colCount < 1 || aCellIdx >= colCount * RowCount()) {
+    return -1;  // Error: column count is 0 or index out of bounds.
+  }
+
+  return aCellIdx % colCount;
+}
+
+int32_t TableAccessible::RowIndexAt(uint32_t aCellIdx) {
+  uint32_t colCount = ColCount();
+  if (colCount < 1 || aCellIdx >= colCount * RowCount()) {
+    return -1;  // Error: column count is 0 or index out of bounds.
+  }
+
+  return aCellIdx / colCount;
+}
+
+void TableAccessible::RowAndColIndicesAt(uint32_t aCellIdx, int32_t* aRowIdx,
+                                         int32_t* aColIdx) {
+  uint32_t colCount = ColCount();
+  if (colCount < 1 || aCellIdx >= colCount * RowCount()) {
+    *aRowIdx = -1;
+    *aColIdx = -1;
+    return;  // Error: column count is 0 or index out of bounds.
+  }
+
+  *aRowIdx = aCellIdx / colCount;
+  *aColIdx = aCellIdx % colCount;
+}
