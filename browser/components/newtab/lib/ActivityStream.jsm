@@ -209,7 +209,7 @@ const PREFS_CONFIG = new Map([
       localProvider: "OnboardingMessageProvider",
       enabled: true,
       // Block specific messages from this local provider
-      exclude: ["RETURN_TO_AMO_1"],
+      exclude: [],
     }),
   }],
   // See browser/app/profile/firefox.js for other ASR preferences. They must be defined there to enable roll-outs.
