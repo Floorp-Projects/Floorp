@@ -548,9 +548,9 @@ class OffThreadPromiseRuntimeState {
   // OffThreadPromiseTask's destructor removes them from the set.
   OffThreadPromiseTaskSet live_;
 
-  // The allCancelled_ condition is waited on and notified during engine shutdown,
-  // communicating when all off-thread tasks in live_ are safe to be destroyed
-  // from the (shutting down) main thread. This condition is met when
+  // The allCancelled_ condition is waited on and notified during engine
+  // shutdown, communicating when all off-thread tasks in live_ are safe to be
+  // destroyed from the (shutting down) main thread. This condition is met when
   // live_.count() == numCanceled_ where "canceled" means "the
   // DispatchToEventLoopCallback failed after this task finished execution".
   ConditionVariable allCanceled_;
