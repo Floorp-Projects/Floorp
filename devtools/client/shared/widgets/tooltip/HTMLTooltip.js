@@ -894,7 +894,16 @@ HTMLTooltip.prototype = {
   },
 
   _getTopWindow: function() {
-    return this.doc.defaultView.top;
+    const win = this.doc.defaultView;
+    if (win.windowRoot) {
+      // In some situations (e.g. about:devtools-toolbox) the current document is loaded
+      // in a Window instead of a ChromeWindow.
+      // To get access to the topmost ChromeWindow, we need to use the chrome privileged
+      // windowRoot getter.
+      return win.windowRoot.ownerGlobal;
+    }
+    // win.top is used as fallback if we are not in a chrome privileged document.
+    return win.top;
   },
 
   /**
