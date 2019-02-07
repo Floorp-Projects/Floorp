@@ -427,10 +427,23 @@ function moveRealUpdater() {
   return (async function() {
     try {
       // Move away the real updater
-      let baseAppDir = getAppBaseDir();
-      let updater = baseAppDir.clone();
+      let greBinDir = getGREBinDir();
+      let updater = greBinDir.clone();
       updater.append(FILE_UPDATER_BIN);
-      updater.moveTo(baseAppDir, FILE_UPDATER_BIN_BAK);
+      updater.moveTo(greBinDir, FILE_UPDATER_BIN_BAK);
+
+      let greDir = getGREDir();
+      let updateSettingsIni = greDir.clone();
+      updateSettingsIni.append(FILE_UPDATE_SETTINGS_INI);
+      if (updateSettingsIni.exists()) {
+        updateSettingsIni.moveTo(greDir, FILE_UPDATE_SETTINGS_INI_BAK);
+      }
+
+      let precomplete = greDir.clone();
+      precomplete.append(FILE_PRECOMPLETE);
+      if (precomplete.exists()) {
+        precomplete.moveTo(greDir, FILE_PRECOMPLETE_BAK);
+      }
     } catch (e) {
       logTestInfo("Attempt to move the real updater out of the way failed... " +
                   "will try again, Exception: " + e);
@@ -451,7 +464,7 @@ function copyTestUpdater(attempt = 0) {
   return (async function() {
     try {
       // Copy the test updater
-      let baseAppDir = getAppBaseDir();
+      let greBinDir = getGREBinDir();
       let testUpdaterDir = Services.dirsvc.get("CurWorkD", Ci.nsIFile);
       let relPath = REL_PATH_DATA;
       let pathParts = relPath.split("/");
@@ -461,14 +474,22 @@ function copyTestUpdater(attempt = 0) {
 
       let testUpdater = testUpdaterDir.clone();
       testUpdater.append(FILE_UPDATER_BIN);
+      testUpdater.copyToFollowingLinks(greBinDir, FILE_UPDATER_BIN);
 
-      testUpdater.copyToFollowingLinks(baseAppDir, FILE_UPDATER_BIN);
+      let greDir = getGREDir();
+      let updateSettingsIni = greDir.clone();
+      updateSettingsIni.append(FILE_UPDATE_SETTINGS_INI);
+      writeFile(updateSettingsIni, UPDATE_SETTINGS_CONTENTS);
+
+      let precomplete = greDir.clone();
+      precomplete.append(FILE_PRECOMPLETE);
+      writeFile(precomplete, PRECOMPLETE_CONTENTS);
     } catch (e) {
       if (attempt < MAX_UPDATE_COPY_ATTEMPTS) {
         logTestInfo("Attempt to copy the test updater failed... " +
                     "will try again, Exception: " + e);
         await TestUtils.waitForTick();
-        await copyTestUpdater(attempt + 1);
+        await copyTestUpdater(attempt++);
       }
     }
   })();
@@ -480,16 +501,43 @@ function copyTestUpdater(attempt = 0) {
  * failed to restore the updater when the test has finished.
  */
 function restoreUpdaterBackup() {
-  let baseAppDir = getAppBaseDir();
-  let updater = baseAppDir.clone();
-  let updaterBackup = baseAppDir.clone();
+  let greBinDir = getGREBinDir();
+  let updater = greBinDir.clone();
+  let updaterBackup = greBinDir.clone();
   updater.append(FILE_UPDATER_BIN);
   updaterBackup.append(FILE_UPDATER_BIN_BAK);
   if (updaterBackup.exists()) {
     if (updater.exists()) {
       updater.remove(true);
     }
-    updaterBackup.moveTo(baseAppDir, FILE_UPDATER_BIN);
+    updaterBackup.moveTo(greBinDir, FILE_UPDATER_BIN);
+  }
+
+  let greDir = getGREDir();
+  let updateSettingsIniBackup = greDir.clone();
+  updateSettingsIniBackup.append(FILE_UPDATE_SETTINGS_INI_BAK);
+  if (updateSettingsIniBackup.exists()) {
+    let updateSettingsIni = greDir.clone();
+    updateSettingsIni.append(FILE_UPDATE_SETTINGS_INI);
+    if (updateSettingsIni.exists()) {
+      updateSettingsIni.remove(false);
+    }
+    updateSettingsIniBackup.moveTo(greDir, FILE_UPDATE_SETTINGS_INI);
+  }
+
+  let precomplete = greDir.clone();
+  let precompleteBackup = greDir.clone();
+  precomplete.append(FILE_PRECOMPLETE);
+  precompleteBackup.append(FILE_PRECOMPLETE_BAK);
+  if (precompleteBackup.exists()) {
+    if (precomplete.exists()) {
+      precomplete.remove(false);
+    }
+    precompleteBackup.moveTo(greDir, FILE_PRECOMPLETE);
+  } else if (precomplete.exists()) {
+    if (readFile(precomplete) == PRECOMPLETE_CONTENTS) {
+      precomplete.remove(false);
+    }
   }
 }
 
