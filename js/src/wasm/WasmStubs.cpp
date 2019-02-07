@@ -21,6 +21,7 @@
 #include "mozilla/ArrayUtils.h"
 
 #include "jit/RegisterAllocator.h"
+#include "js/Printf.h"
 #include "wasm/WasmCode.h"
 #include "wasm/WasmGenerator.h"
 #include "wasm/WasmInstance.h"
