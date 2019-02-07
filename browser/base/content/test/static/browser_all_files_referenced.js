@@ -181,6 +181,9 @@ var whitelist = [
   {file: "resource://gre-resources/featuregates/FeatureGate.jsm"},
   {file: "resource://gre-resources/featuregates/FeatureGateImplementation.jsm"},
   {file: "resource://gre-resources/featuregates/feature_definitions.json"},
+  // kvstore.jsm wraps the API in nsIKeyValue.idl in a more ergonomic API
+  // It landed in bug 1490496, and we expect to start using it shortly.
+  {file: "resource://gre/modules/kvstore.jsm"},
 ];
 
 whitelist = new Set(whitelist.filter(item =>

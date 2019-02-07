@@ -1,40 +1,68 @@
-# Changelog
-All notable changes to this project will be documented in this file.
+# Version 0.6.3
 
-The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
-and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
+- Add `AtomicCell`.
+- Improve documentation.
 
-## [Unreleased]
+# Version 0.6.2
 
-## [0.3.2] - 2018-03-12
-### Fixed
+- Add `Parker`.
+- Improve documentation.
+
+# Version 0.6.1
+
+- Fix a soundness bug in `Scope::spawn()`.
+- Remove the `T: 'scope` bound on `ScopedJoinHandle`.
+ 
+# Version 0.6.0
+
+- Move `AtomicConsume` to `atomic` module.
+- `scope()` returns a `Result` of thread joins.
+- Remove `spawn_unchecked`.
+- Fix a soundness bug due to incorrect lifetimes.
+- Improve documentation.
+- Support nested scoped spawns.
+- Implement `Copy`, `Hash`, `PartialEq`, and `Eq` for `CachePadded`.
+- Add `CachePadded::into_inner()`.
+
+# Version 0.5.0
+
+- Reorganize sub-modules and rename functions.
+
+# Version 0.4.1
+
+- Fix a documentation link.
+
+# Version 0.4.0
+
+- `CachePadded` supports types bigger than 64 bytes.
+- Fix a bug in scoped threads where unitialized memory was being dropped.
+- Minimum required Rust version is now 1.25.
+
+# Version 0.3.2
+
 - Mark `load_consume` with `#[inline]`.
 
-## [0.3.1] - 2018-03-12
-### Fixed
+# Version 0.3.1
+
 - `load_consume` on ARM and AArch64.
 
-## [0.3.0] - 2018-03-11
-### Added
-- `join` for scoped thread API.
-- `load_consume` for atomic load-consume memory ordering.
+# Version 0.3.0
 
-### Removed
-- `AtomicOption`.
+- Add `join` for scoped thread API.
+- Add `load_consume` for atomic load-consume memory ordering.
+- Remove `AtomicOption`.
 
-## [0.2.2] - 2018-01-14
-### Added
-- Support for Rust 1.12.1.
+# Version 0.2.2
 
-### Fixed
+- Support Rust 1.12.1.
 - Call `T::clone` when cloning a `CachePadded<T>`.
 
-## [0.2.1] - 2017-11-26
-### Added
+# Version 0.2.1
+
 - Add `use_std` feature.
 
-## [0.2.0] - 2017-11-17
-### Added
+# Version 0.2.0
+
 - Add `nightly` feature.
 - Use `repr(align(64))` on `CachePadded` with the `nightly` feature.
 - Implement `Drop` for `CachePadded<T>`.
@@ -43,17 +71,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Implement better `Debug` for `CachePadded<T>`.
 - Write more tests.
 - Add this changelog.
-
-### Changed
 - Change cache line length to 64 bytes.
-
-### Removed
 - Remove `ZerosValid`.
 
-## 0.1.0 - 2017-08-27
-### Added
-- Old implementation of `CachePadded` from `crossbeam` version 0.3.0
+# Version 0.1.0
 
-[Unreleased]: https://github.com/crossbeam-rs/crossbeam-utils/compare/v0.2.1...HEAD
-[0.2.1]: https://github.com/crossbeam-rs/crossbeam-utils/compare/v0.2.0...v0.2.1
-[0.2.0]: https://github.com/crossbeam-rs/crossbeam-utils/compare/v0.1.0...v0.2.0
+- Old implementation of `CachePadded` from `crossbeam` version 0.3.0

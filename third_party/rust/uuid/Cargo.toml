@@ -12,7 +12,7 @@
 
 [package]
 name = "uuid"
-version = "0.6.5"
+version = "0.7.1"
 authors = ["Ashley Mannix<ashleymannix@live.com.au>", "Christopher Armstrong", "Dylan DPC<dylan.dpc@gmail.com>", "Hunar Roop Kahlon<hunar.roop@gmail.com>"]
 exclude = [".github/**", ".travis.yml", "appveyor.yml", "bors.toml"]
 description = "A library to generate and parse UUIDs."
@@ -32,15 +32,12 @@ features = ["i128"]
 optional = true
 default-features = false
 
-[dependencies.cfg-if]
-version = "0.1.2"
-
 [dependencies.md5]
 version = "0.3"
 optional = true
 
 [dependencies.rand]
-version = "0.4"
+version = "0.5"
 optional = true
 
 [dependencies.serde]
@@ -55,6 +52,12 @@ optional = true
 [dependencies.slog]
 version = "2"
 optional = true
+[dev-dependencies.bincode]
+version = "1.0"
+
+[dev-dependencies.serde_json]
+version = "1.0"
+
 [dev-dependencies.serde_test]
 version = "1.0.56"
 
@@ -64,7 +67,6 @@ default = ["std"]
 nightly = []
 std = []
 u128 = ["byteorder"]
-use_std = ["std"]
 v1 = []
 v3 = ["md5", "rand"]
 v4 = ["rand"]

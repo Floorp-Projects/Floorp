@@ -90,8 +90,8 @@ where
         }
     }
 
-    pub fn get<'s>(&'s self, store: &'s IntegerStore, k: K) -> Result<Option<Value<'s>>, StoreError> {
-        self.inner.get(&store.inner, Key::new(k)?)
+    pub fn get(&self, store: IntegerStore, k: K) -> Result<Option<Value>, StoreError> {
+        self.inner.get(store.0, Key::new(k)?)
     }
 
     pub fn abort(self) {
@@ -116,12 +116,12 @@ where
         }
     }
 
-    pub fn get<'s>(&'s self, store: &'s IntegerStore, k: K) -> Result<Option<Value<'s>>, StoreError> {
-        self.inner.get(&store.inner, Key::new(k)?)
+    pub fn get(&self, store: IntegerStore, k: K) -> Result<Option<Value>, StoreError> {
+        self.inner.get(store.0, Key::new(k)?)
     }
 
-    pub fn put<'s>(&'s mut self, store: &'s IntegerStore, k: K, v: &Value) -> Result<(), StoreError> {
-        self.inner.put(&store.inner, Key::new(k)?, v)
+    pub fn put(&mut self, store: IntegerStore, k: K, v: &Value) -> Result<(), StoreError> {
+        self.inner.put(store.0, Key::new(k)?, v)
     }
 
     fn abort(self) {
@@ -133,15 +133,12 @@ where
     }
 }
 
-pub struct IntegerStore {
-    inner: Store,
-}
+#[derive(Copy, Clone)]
+pub struct IntegerStore(Store);
 
 impl IntegerStore {
     pub fn new(db: Database) -> IntegerStore {
-        IntegerStore {
-            inner: Store::new(db),
-        }
+        IntegerStore(Store::new(db))
     }
 }
 
@@ -164,11 +161,11 @@ mod tests {
 
         let mut writer = k.write_int::<u32>().expect("writer");
 
-        writer.put(&s, 123, &Value::Str("hello!")).expect("write");
-        assert_eq!(writer.get(&s, 123).expect("read"), Some(Value::Str("hello!")));
+        writer.put(s, 123, &Value::Str("hello!")).expect("write");
+        assert_eq!(writer.get(s, 123).expect("read"), Some(Value::Str("hello!")));
         writer.commit().expect("committed");
 
         let reader = k.read_int::<u32>().expect("reader");
-        assert_eq!(reader.get(&s, 123).expect("read"), Some(Value::Str("hello!")));
+        assert_eq!(reader.get(s, 123).expect("read"), Some(Value::Str("hello!")));
     }
 }
