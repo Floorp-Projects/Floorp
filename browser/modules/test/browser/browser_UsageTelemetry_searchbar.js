@@ -111,8 +111,7 @@ add_task(async function test_plainQuery() {
   await p;
 
   // Check if the scalars contain the expected values.
-  const scalars = TelemetryTestUtils.getParentProcessScalars(
-    Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, true, false);
+  const scalars = TelemetryTestUtils.getProcessScalars("parent", true, false);
   TelemetryTestUtils.assertKeyedScalar(scalars, SCALAR_SEARCHBAR, "search_enter", 1);
   Assert.equal(Object.keys(scalars[SCALAR_SEARCHBAR]).length, 1,
                "This search must only increment one entry in the scalar.");
@@ -159,8 +158,7 @@ add_task(async function test_oneOff_enter() {
   await p;
 
   // Check if the scalars contain the expected values.
-  const scalars = TelemetryTestUtils.getParentProcessScalars(
-    Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, true, false);
+  const scalars = TelemetryTestUtils.getProcessScalars("parent", true, false);
   TelemetryTestUtils.assertKeyedScalar(scalars, SCALAR_SEARCHBAR, "search_oneoff", 1);
   Assert.equal(Object.keys(scalars[SCALAR_SEARCHBAR]).length, 1,
                "This search must only increment one entry in the scalar.");
@@ -275,8 +273,7 @@ add_task(async function test_suggestion_click() {
   await p;
 
   // Check if the scalars contain the expected values.
-  const scalars = TelemetryTestUtils.getParentProcessScalars(
-    Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, true, false);
+  const scalars = TelemetryTestUtils.getProcessScalars("parent", true, false);
   TelemetryTestUtils.assertKeyedScalar(scalars, SCALAR_SEARCHBAR, "search_suggestion", 1);
   Assert.equal(Object.keys(scalars[SCALAR_SEARCHBAR]).length, 1,
                "This search must only increment one entry in the scalar.");

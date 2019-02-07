@@ -48,22 +48,25 @@ var TelemetryTestUtils = {
   },
 
   /**
-   * Returns a snapshot of scalars from the parent-process.
+   * Returns a snapshot of scalars from the specified process.
    *
-   * @param {Number} aChannel The channel dataset type from nsITelemetry.
+   * @param {String} aProcessName Name of the process. Could be parent or
+   *   something else.
    * @param {boolean} [aKeyed] Set to true if keyed scalars rather than normal
    *   scalars should be snapshotted.
    * @param {boolean} [aClear] Set to true to clear the scalars once the snapshot
    *   has been obtained.
+   * @param {Number} aChannel The channel dataset type from nsITelemetry.
    * @returns {Object} The snapshotted scalars from the parent process.
    */
-  getParentProcessScalars(aChannel, aKeyed = false, aClear = false) {
+  getProcessScalars(aProcessName, aKeyed = false, aClear = false,
+      aChannel = Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN) {
     const extended = aChannel == Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN;
     const currentExtended = Services.telemetry.canRecordExtended;
     Services.telemetry.canRecordExtended = extended;
     const scalars = aKeyed ?
-      Services.telemetry.getSnapshotForKeyedScalars("main", aClear).parent :
-      Services.telemetry.getSnapshotForScalars("main", aClear).parent;
+      Services.telemetry.getSnapshotForKeyedScalars("main", aClear)[aProcessName] :
+      Services.telemetry.getSnapshotForScalars("main", aClear)[aProcessName];
     Services.telemetry.canRecordExtended = currentExtended;
     return scalars || {};
   },
