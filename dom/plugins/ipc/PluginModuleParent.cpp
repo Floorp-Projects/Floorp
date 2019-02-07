@@ -2259,7 +2259,7 @@ void PluginModuleParent::ProcessRemoteNativeEventsInInterruptCall() {
 
 mozilla::ipc::IPCResult PluginModuleParent::RecvPluginShowWindow(
     const uint32_t& aWindowId, const bool& aModal, const int32_t& aX,
-    const int32_t& aY, const size_t& aWidth, const size_t& aHeight) {
+    const int32_t& aY, const double& aWidth, const double& aHeight) {
   PLUGIN_LOG_DEBUG(("%s", FULLFUNCTION));
 #if defined(XP_MACOSX)
   CGRect windowBound = ::CGRectMake(aX, aY, aWidth, aHeight);
