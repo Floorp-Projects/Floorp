@@ -31,6 +31,13 @@
  * nsCString -> TEXT (use UTF8TextVariant)
  * uint8_t[] -> BLOB (use BlobVariant)
  * nullptr   -> NULL (use NullVariant)
+ *
+ * The kvstore component also reuses this class as a common implementation
+ * of a simple threadsafe variant for the storage of primitive values only.
+ * The BooleanVariant type has been introduced for kvstore use cases and should
+ * be enhanced to provide full boolean variant support for mozStorage.
+ *
+ * Bug 1494102 tracks that work.
  */
 
 namespace mozilla {
@@ -78,6 +85,13 @@ struct variant_storage_traits {
 #define NO_CONVERSION return NS_ERROR_CANNOT_CONVERT_DATA;
 
 template <typename DataType, bool Adopting = false>
+struct variant_boolean_traits {
+  typedef typename variant_storage_traits<DataType, Adopting>::StorageType
+      StorageType;
+  static inline nsresult asBool(const StorageType &, bool *) { NO_CONVERSION }
+};
+
+template <typename DataType, bool Adopting = false>
 struct variant_integer_traits {
   typedef typename variant_storage_traits<DataType, Adopting>::StorageType
       StorageType;
@@ -121,6 +135,30 @@ struct variant_blob_traits {
 };
 
 #undef NO_CONVERSION
+
+/**
+ * BOOLEAN type
+ */
+
+template <>
+struct variant_traits<bool> {
+  static inline uint16_t type() { return nsIDataType::VTYPE_BOOL; }
+};
+template <>
+struct variant_boolean_traits<bool> {
+  static inline nsresult asBool(bool aValue, bool *_result) {
+    *_result = aValue;
+    return NS_OK;
+  }
+
+  // NB: It might be worth also providing conversions to int types.
+
+  // NB: It'd be nice to implement asBool conversions for 0 and 1, too.
+  // That would let us clean up some conversions in Places, such as:
+  // https://searchfox.org/mozilla-central/rev/0640ea80fbc8d48f8b197cd363e2535c95a15eb3/toolkit/components/places/SQLFunctions.cpp#564-565
+  // https://searchfox.org/mozilla-central/rev/0640ea80fbc8d48f8b197cd363e2535c95a15eb3/toolkit/components/places/SQLFunctions.cpp#1057
+  // https://searchfox.org/mozilla-central/rev/0640ea80fbc8d48f8b197cd363e2535c95a15eb3/toolkit/components/places/nsNavHistory.cpp#3189
+};
 
 /**
  * INTEGER types
@@ -347,6 +385,11 @@ class Variant final : public Variant_base {
   }
 
   uint16_t GetDataType() override { return variant_traits<DataType>::type(); }
+
+  NS_IMETHOD GetAsBool(bool *_boolean) override {
+    return variant_boolean_traits<DataType, Adopting>::asBool(mData, _boolean);
+  }
+
   NS_IMETHOD GetAsInt32(int32_t *_integer) override {
     return variant_integer_traits<DataType, Adopting>::asInt32(mData, _integer);
   }
@@ -379,6 +422,10 @@ class Variant final : public Variant_base {
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Handy typedefs!  Use these for the right mapping.
+
+// Currently, BooleanVariant is only useful for kvstore.
+// Bug 1494102 tracks implementing full boolean variant support for mozStorage.
+typedef Variant<bool> BooleanVariant;
 
 typedef Variant<int64_t> IntegerVariant;
 typedef Variant<double> FloatVariant;

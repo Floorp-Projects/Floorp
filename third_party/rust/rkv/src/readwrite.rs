@@ -28,7 +28,7 @@ use error::StoreError;
 
 use value::Value;
 
-fn read_transform<'x>(val: Result<&'x [u8], lmdb::Error>) -> Result<Option<Value<'x>>, StoreError> {
+fn read_transform(val: Result<&[u8], lmdb::Error>) -> Result<Option<Value>, StoreError> {
     match val {
         Ok(bytes) => Value::from_tagged_slice(bytes).map(Some).map_err(StoreError::DataError),
         Err(lmdb::Error::NotFound) => Ok(None),
@@ -68,23 +68,23 @@ where
         }
     }
 
-    pub fn get<'s>(&'s self, store: &'s Store, k: K) -> Result<Option<Value<'s>>, StoreError> {
-        let bytes = self.tx.get(store.db, &k.as_ref());
+    pub fn get(&self, store: Store, k: K) -> Result<Option<Value>, StoreError> {
+        let bytes = self.tx.get(store.0, &k);
         read_transform(bytes)
     }
 
     // TODO: flags
-    pub fn put<'s>(&'s mut self, store: &'s Store, k: K, v: &Value) -> Result<(), StoreError> {
+    pub fn put(&mut self, store: Store, k: K, v: &Value) -> Result<(), StoreError> {
         // TODO: don't allocate twice.
         let bytes = v.to_bytes()?;
-        self.tx.put(store.db, &k.as_ref(), &bytes, WriteFlags::empty()).map_err(StoreError::LmdbError)
+        self.tx.put(store.0, &k, &bytes, WriteFlags::empty()).map_err(StoreError::LmdbError)
     }
 
-    pub fn delete<'s>(&'s mut self, store: &'s Store, k: K) -> Result<(), StoreError> {
-        self.tx.del(store.db, &k.as_ref(), None).map_err(StoreError::LmdbError)
+    pub fn delete(&mut self, store: Store, k: K) -> Result<(), StoreError> {
+        self.tx.del(store.0, &k, None).map_err(StoreError::LmdbError)
     }
 
-    pub fn delete_value<'s>(&'s mut self, _store: &'s Store, _k: K, _v: &Value) -> Result<(), StoreError> {
+    pub fn delete_value(&mut self, _store: Store, _k: K, _v: &Value) -> Result<(), StoreError> {
         // Even better would be to make this a method only on a dupsort store —
         // it would need a little bit of reorganizing of types and traits,
         // but when I see "If the database does not support sorted duplicate
@@ -113,8 +113,8 @@ where
         }
     }
 
-    pub fn get<'s>(&'s self, store: &'s Store, k: K) -> Result<Option<Value<'s>>, StoreError> {
-        let bytes = self.tx.get(store.db, &k.as_ref());
+    pub fn get(&self, store: Store, k: K) -> Result<Option<Value>, StoreError> {
+        let bytes = self.tx.get(store.0, &k);
         read_transform(bytes)
     }
 
@@ -122,8 +122,8 @@ where
         self.tx.abort();
     }
 
-    pub fn iter_start<'s>(&'s self, store: &'s Store) -> Result<Iter<'s>, StoreError> {
-        let mut cursor = self.tx.open_ro_cursor(store.db).map_err(StoreError::LmdbError)?;
+    pub fn iter_start(&self, store: Store) -> Result<Iter, StoreError> {
+        let mut cursor = self.tx.open_ro_cursor(store.0).map_err(StoreError::LmdbError)?;
 
         // We call Cursor.iter() instead of Cursor.iter_start() because
         // the latter panics at "called `Result::unwrap()` on an `Err` value:
@@ -141,8 +141,8 @@ where
         })
     }
 
-    pub fn iter_from<'s>(&'s self, store: &'s Store, k: K) -> Result<Iter<'s>, StoreError> {
-        let mut cursor = self.tx.open_ro_cursor(store.db).map_err(StoreError::LmdbError)?;
+    pub fn iter_from(&self, store: Store, k: K) -> Result<Iter, StoreError> {
+        let mut cursor = self.tx.open_ro_cursor(store.0).map_err(StoreError::LmdbError)?;
         let iter = cursor.iter_from(k);
         Ok(Iter {
             iter,
@@ -154,7 +154,7 @@ where
 impl<'env> Iterator for Iter<'env> {
     type Item = (&'env [u8], Result<Option<Value<'env>>, StoreError>);
 
-    fn next(&mut self) -> Option<(&'env [u8], Result<Option<Value<'env>>, StoreError>)> {
+    fn next(&mut self) -> Option<Self::Item> {
         match self.iter.next() {
             None => None,
             Some((key, bytes)) => Some((key, read_transform(Ok(bytes)))),
@@ -162,17 +162,13 @@ impl<'env> Iterator for Iter<'env> {
     }
 }
 
-/// Wrapper around an `lmdb::Database`.  At this time, the underlying LMDB
+/// New type around an `lmdb::Database`.  At this time, the underlying LMDB
 /// handle (within lmdb-rs::Database) is a C integer, so Copy is automatic.
 #[derive(Copy, Clone)]
-pub struct Store {
-    db: Database,
-}
+pub struct Store(Database);
 
 impl Store {
     pub fn new(db: Database) -> Store {
-        Store {
-            db,
-        }
+        Store(db)
     }
 }

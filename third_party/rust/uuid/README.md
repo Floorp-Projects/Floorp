@@ -5,6 +5,7 @@ uuid
 [![Appveyor Status](https://ci.appveyor.com/api/projects/status/github/uuid-rs/uuid?branch=master&svg=true)](https://ci.appveyor.com/project/KodrAus/uuid) 
 [![Latest Version](https://img.shields.io/crates/v/uuid.svg)](https://crates.io/crates/uuid) 
 [![Join the chat at https://gitter.im/uuid-rs/Lobby](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/uuid-rs/Lobby?utm_source=badge&utm_medium=badge&utm_content=badge)
+![Minimum rustc version](https://img.shields.io/badge/rustc-1.22.0+-yellow.svg)
 
 A Rust library to generate and parse UUIDs.
 
@@ -29,7 +30,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-uuid = "0.6"
+uuid = "0.7"
 ```
 
 and this to your crate root:
@@ -68,7 +69,7 @@ you'll need to change how you depend on `uuid`:
 
 ```toml
 [dependencies]
-uuid = { version = "0.6", features = ["v4"] }
+uuid = { version = "0.7", features = ["v4"] }
 ```
 
 Next, you'll write:
@@ -88,7 +89,7 @@ you'll also need to change how you depend on `uuid`:
 
 ```toml
 [dependencies]
-uuid = { version = "0.6", features = ["v5"] }
+uuid = { version = "0.7", features = ["v5"] }
 ```
 
 Next, you'll write:
@@ -98,7 +99,7 @@ extern crate uuid;
 use uuid::Uuid;
 
 fn main() {
-    let my_uuid = Uuid::new_v5(&uuid::NAMESPACE_DNS, "foo");
+    let my_uuid = Uuid::new_v5(&Uuid::NAMESPACE_DNS, "foo".as_bytes());
     println!("{}", my_uuid);
 }
 ```
