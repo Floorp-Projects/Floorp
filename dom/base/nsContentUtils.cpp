@@ -5034,6 +5034,19 @@ bool nsContentUtils::IsInSameAnonymousTree(const nsINode* aNode,
 }
 
 /* static */
+bool nsContentUtils::IsInInteractiveHTMLContent(const Element* aElement,
+                                                const Element* aStop) {
+  const Element* element = aElement;
+  while (element && element != aStop) {
+    if (element->IsInteractiveHTMLContent(true)) {
+      return true;
+    }
+    element = element->GetFlattenedTreeParentElement();
+  }
+  return false;
+}
+
+/* static */
 void nsContentUtils::NotifyInstalledMenuKeyboardListener(bool aInstalling) {
   IMEStateManager::OnInstalledMenuKeyboardListener(aInstalling);
 }

@@ -61,18 +61,6 @@ void HTMLLabelElement::Focus(ErrorResult& aError) {
   }
 }
 
-static bool InInteractiveHTMLContent(nsIContent* aContent, nsIContent* aStop) {
-  nsIContent* content = aContent;
-  while (content && content != aStop) {
-    if (content->IsElement() &&
-        content->AsElement()->IsInteractiveHTMLContent(true)) {
-      return true;
-    }
-    content = content->GetParent();
-  }
-  return false;
-}
-
 nsresult HTMLLabelElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
   WidgetMouseEvent* mouseEvent = aVisitor.mEvent->AsMouseEvent();
   if (mHandlingEvent ||
@@ -85,8 +73,9 @@ nsresult HTMLLabelElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
     return NS_OK;
   }
 
-  nsCOMPtr<nsIContent> target = do_QueryInterface(aVisitor.mEvent->mTarget);
-  if (InInteractiveHTMLContent(target, this)) {
+  nsCOMPtr<Element> target = do_QueryInterface(
+      aVisitor.mEvent->GetOriginalDOMEventTarget());
+  if (nsContentUtils::IsInInteractiveHTMLContent(target, this)) {
     return NS_OK;
   }
 
