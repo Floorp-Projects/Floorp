@@ -80,6 +80,11 @@ class BrowserAwesomeBar @JvmOverloads constructor(
 
     @Synchronized
     override fun onInputStarted() {
+        // Make sure we're always displaying first suggestions at the top of the screen after input
+        // changes. Without this manual scroll, we might end with UI "scrolled" to a middle of the
+        // suggestions list.
+        scrollToPosition(0)
+
         providers.forEach { provider -> provider.onInputStarted() }
     }
 
@@ -87,7 +92,12 @@ class BrowserAwesomeBar @JvmOverloads constructor(
     override fun onInputChanged(text: String) {
         job?.cancel()
 
-        suggestionsAdapter.clearSuggestions()
+        // Make sure we're always displaying first suggestions at the top of the screen after input
+        // changes. Without this manual scroll, we might end with UI "scrolled" to a middle of the
+        // suggestions list.
+        scrollToPosition(0)
+
+        suggestionsAdapter.optionallyClearSuggestions()
 
         job = scope.launch {
             providers.forEach { provider ->

@@ -22,6 +22,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyString
+import org.mockito.Mockito.`when`
 import org.mockito.Mockito.doNothing
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
@@ -229,9 +230,9 @@ class SearchSuggestionProviderTest {
             doReturn(searchEngine).`when`(searchEngineManager).getDefaultSearchEngine(any(), any())
 
             val useCase = spy(SearchUseCases(
-                    RuntimeEnvironment.application,
-                    searchEngineManager,
-                    SessionManager(mock()).apply { add(Session("https://www.mozilla.org")) }
+                RuntimeEnvironment.application,
+                searchEngineManager,
+                SessionManager(mock()).apply { add(Session("https://www.mozilla.org")) }
             ).defaultSearch)
             doNothing().`when`(useCase).invoke(anyString(), any<Session>())
 

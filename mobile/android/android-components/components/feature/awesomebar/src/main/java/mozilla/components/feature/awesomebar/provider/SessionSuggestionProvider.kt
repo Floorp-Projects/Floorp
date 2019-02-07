@@ -7,6 +7,7 @@ package mozilla.components.feature.awesomebar.provider
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.feature.tabs.TabsUseCases
+import java.util.UUID
 
 /**
  * A [AwesomeBar.SuggestionProvider] implementation that provides suggestions based on the sessions in the
@@ -16,6 +17,8 @@ class SessionSuggestionProvider(
     private val sessionManager: SessionManager,
     private val selectTabUseCase: TabsUseCases.SelectTabUseCase
 ) : AwesomeBar.SuggestionProvider {
+    override val id: String = UUID.randomUUID().toString()
+
     override suspend fun onInputChanged(text: String): List<AwesomeBar.Suggestion> {
         if (text.isEmpty()) {
             return emptyList()
@@ -29,7 +32,8 @@ class SessionSuggestionProvider(
             ) {
                 suggestions.add(
                     AwesomeBar.Suggestion(
-                        id = "mozac-browser-session:${session.id}",
+                        provider = this,
+                        id = session.id,
                         title = session.title,
                         description = session.url,
                         onSuggestionClicked = { selectTabUseCase.invoke(session) }

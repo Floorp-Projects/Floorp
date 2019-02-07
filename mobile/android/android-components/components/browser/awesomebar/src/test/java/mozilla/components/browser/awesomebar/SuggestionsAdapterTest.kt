@@ -55,7 +55,7 @@ class SuggestionsAdapterTest {
 
         assertEquals(3, adapter.itemCount)
 
-        adapter.clearSuggestions()
+        adapter.optionallyClearSuggestions()
 
         assertEquals(0, adapter.itemCount)
     }
@@ -69,7 +69,7 @@ class SuggestionsAdapterTest {
 
         assertEquals(3, adapter.itemCount)
 
-        adapter.clearSuggestions()
+        adapter.optionallyClearSuggestions()
 
         assertEquals(3, adapter.itemCount)
 
@@ -79,7 +79,7 @@ class SuggestionsAdapterTest {
 
         assertEquals(7, adapter.itemCount)
 
-        adapter.clearSuggestions()
+        adapter.optionallyClearSuggestions()
 
         assertEquals(3, adapter.itemCount)
     }
@@ -89,13 +89,13 @@ class SuggestionsAdapterTest {
         val adapter = SuggestionsAdapter(mock())
 
         adapter.addSuggestions(mockProvider(), listOf(
-            AwesomeBar.Suggestion(title = "Hello", score = 10),
-            AwesomeBar.Suggestion(title = "World", score = 2),
-            AwesomeBar.Suggestion(title = "How", score = 7),
-            AwesomeBar.Suggestion(title = "is", score = 12),
-            AwesomeBar.Suggestion(title = "the", score = 0),
-            AwesomeBar.Suggestion(title = "weather", score = -2),
-            AwesomeBar.Suggestion(title = "tomorrow", score = 1000)))
+            AwesomeBar.Suggestion(mock(), title = "Hello", score = 10),
+            AwesomeBar.Suggestion(mock(), title = "World", score = 2),
+            AwesomeBar.Suggestion(mock(), title = "How", score = 7),
+            AwesomeBar.Suggestion(mock(), title = "is", score = 12),
+            AwesomeBar.Suggestion(mock(), title = "the", score = 0),
+            AwesomeBar.Suggestion(mock(), title = "weather", score = -2),
+            AwesomeBar.Suggestion(mock(), title = "tomorrow", score = 1000)))
 
         assertEquals(7, adapter.itemCount)
 
@@ -116,8 +116,8 @@ class SuggestionsAdapterTest {
         val adapter = SuggestionsAdapter(mock())
 
         adapter.addSuggestions(mockProvider(), listOf(
-            AwesomeBar.Suggestion(title = "Test"),
-            AwesomeBar.Suggestion(title = "World", chips = listOf(
+            AwesomeBar.Suggestion(mock(), title = "Test"),
+            AwesomeBar.Suggestion(mock(), title = "World", chips = listOf(
                 AwesomeBar.Suggestion.Chip("Chip1"),
                 AwesomeBar.Suggestion.Chip("Chip2")))))
 

@@ -24,6 +24,10 @@ internal class SuggestionsAdapter(
 ) : RecyclerView.Adapter<ViewHolderWrapper>() {
     internal var layout: SuggestionLayout = DefaultSuggestionLayout()
 
+    init {
+        setHasStableIds(true)
+    }
+
     /**
      * List of suggestions to be displayed by this adapter.
      */
@@ -64,7 +68,7 @@ internal class SuggestionsAdapter(
     /**
      * Removes all suggestions except the ones from providers that have set shouldClearSuggestions to false.
      */
-    fun clearSuggestions() = synchronized(suggestions) {
+    fun optionallyClearSuggestions() = synchronized(suggestions) {
         val updatedSuggestions = suggestions.toMutableList()
 
         suggestionMap.keys.forEach { provider ->
@@ -95,8 +99,13 @@ internal class SuggestionsAdapter(
         return ViewHolderWrapper(layout.createViewHolder(awesomeBar, view, viewType), view)
     }
 
+    override fun getItemId(position: Int): Long {
+        val suggestion = suggestions[position]
+        return suggestion.generatedUniqueId
+    }
+
     override fun getItemViewType(position: Int): Int = synchronized(suggestions) {
-        val suggestion = suggestions.get(position)
+        val suggestion = suggestions[position]
         return layout.getLayoutResource(suggestion)
     }
 

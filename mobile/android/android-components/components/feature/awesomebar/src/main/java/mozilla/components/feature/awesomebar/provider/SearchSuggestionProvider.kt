@@ -13,6 +13,7 @@ import mozilla.components.concept.fetch.success
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.support.base.log.logger.Logger
 import java.io.IOException
+import java.util.UUID
 import java.util.concurrent.TimeUnit
 
 /**
@@ -25,6 +26,8 @@ class SearchSuggestionProvider(
     private val fetchClient: Client,
     private val mode: Mode = Mode.SINGLE_SUGGESTION
 ) : AwesomeBar.SuggestionProvider {
+    override val id: String = UUID.randomUUID().toString()
+
     private val client = if (searchEngine.canProvideSearchSuggestions) {
         SearchSuggestionClient(searchEngine) {
             url -> fetch(url)
@@ -41,10 +44,9 @@ class SearchSuggestionProvider(
 
         val suggestions = fetchSuggestions(text)
 
-        return if (mode == Mode.SINGLE_SUGGESTION) {
-            createSingleSearchSuggestion(text, suggestions)
-        } else {
-            createMultipleSuggestions(text, suggestions)
+        return when (mode) {
+            Mode.MULTIPLE_SUGGESTIONS -> createMultipleSuggestions(text, suggestions)
+            Mode.SINGLE_SUGGESTION -> createSingleSearchSuggestion(text, suggestions)
         }
     }
 
@@ -78,6 +80,9 @@ class SearchSuggestionProvider(
 
         list.forEachIndexed { index, item ->
             suggestions.add(AwesomeBar.Suggestion(
+                provider = this,
+                // We always use the same ID for the entered text so that this suggestion gets replaced "in place".
+                id = if (item == text) ID_OF_ENTERED_TEXT else item,
                 title = item,
                 description = searchEngine.name,
                 icon = { _, _ ->
@@ -106,7 +111,8 @@ class SearchSuggestionProvider(
         }
 
         return listOf(AwesomeBar.Suggestion(
-            id = "mozac-browser-search-" + searchEngine.identifier,
+            provider = this,
+            id = text,
             title = searchEngine.name,
             chips = chips,
             score = Int.MAX_VALUE,
@@ -156,5 +162,6 @@ class SearchSuggestionProvider(
     companion object {
         private const val READ_TIMEOUT_IN_MS = 2000L
         private const val CONNECT_TIMEOUT_IN_MS = 1000L
+        private const val ID_OF_ENTERED_TEXT = "<@@@entered_text_id@@@>"
     }
 }

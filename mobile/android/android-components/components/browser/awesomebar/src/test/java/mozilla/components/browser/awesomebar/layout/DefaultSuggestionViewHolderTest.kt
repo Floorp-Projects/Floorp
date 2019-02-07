@@ -14,6 +14,7 @@ import mozilla.components.browser.awesomebar.R
 import mozilla.components.browser.awesomebar.widget.FlowLayout
 import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.support.ktx.android.content.res.pxToDp
+import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -35,6 +36,7 @@ class DefaultSuggestionViewHolderTest {
         val viewHolder = DefaultSuggestionViewHolder.Default(awesomeBar, view)
 
         val suggestion = AwesomeBar.Suggestion(
+            mock(),
             title = "Hello World",
             description = "https://www.mozilla.org")
 
@@ -59,6 +61,7 @@ class DefaultSuggestionViewHolderTest {
 
         var callbackExecuted = false
         val suggestion = AwesomeBar.Suggestion(
+            mock(),
             onSuggestionClicked = { callbackExecuted = true }
         )
 
@@ -82,6 +85,7 @@ class DefaultSuggestionViewHolderTest {
             BrowserAwesomeBar(context), view)
 
         val suggestion = AwesomeBar.Suggestion(
+            mock(),
             chips = listOf(
                 AwesomeBar.Suggestion.Chip("Hello"),
                 AwesomeBar.Suggestion.Chip("World"),
@@ -113,6 +117,7 @@ class DefaultSuggestionViewHolderTest {
         var chipClicked: String? = null
 
         val suggestion = AwesomeBar.Suggestion(
+            mock(),
             chips = listOf(
                 AwesomeBar.Suggestion.Chip("Hello"),
                 AwesomeBar.Suggestion.Chip("World"),

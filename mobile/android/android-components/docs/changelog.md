@@ -41,6 +41,12 @@ permalink: /changelog/
 * **browser-toolbar**
   * `BrowserToolbar` `cancelView` is now `clearView` with new text clearing behavior and color attribute updated from `browserToolbarCancelColor` to `browserToolbarClearColor`
 
+* **concept-awesomebar**
+  * ⚠️ **This is a breaking API change**: [AwesomeBar.Suggestion](https://mozac.org/api/mozilla.components.concept.awesomebar/-awesome-bar/-suggestion/) instances must now declare the provider that created them.
+
+* **browser-awesomebar**
+  * [BrowserAwesomeBar](https://mozac.org/api/mozilla.components.browser.awesomebar/-browser-awesome-bar/) is now replacing suggestions "in-place" if their ids match. Additionally `BrowserAwesomeBar` now automatically scrolls to the top whenever the entered text changes.
+
 # 0.44.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.43.0...v0.44.0)

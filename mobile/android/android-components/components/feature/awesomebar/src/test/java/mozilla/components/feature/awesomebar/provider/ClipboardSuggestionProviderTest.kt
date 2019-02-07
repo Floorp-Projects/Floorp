@@ -19,6 +19,7 @@ import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -155,6 +156,12 @@ class ClipboardSuggestionProviderTest {
         suggestion.onSuggestionClicked!!.invoke()
 
         verify(useCase).invoke(eq("https://www.mozilla.org"), any())
+    }
+
+    @Test
+    fun `Provider suggestion should not get cleared when text changes`() {
+        val provider = ClipboardSuggestionProvider(context, mock())
+        assertFalse(provider.shouldClearSuggestions)
     }
 
     private fun assertClipboardYieldsUrl(text: String, url: String) {

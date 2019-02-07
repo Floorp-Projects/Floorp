@@ -22,6 +22,7 @@ import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
+import java.util.UUID
 
 @RunWith(RobolectricTestRunner::class)
 class BrowserAwesomeBarTest {
@@ -97,6 +98,8 @@ class BrowserAwesomeBarTest {
             var providerCancelled = false
 
             val blockingProvider = object : AwesomeBar.SuggestionProvider {
+                override val id: String = UUID.randomUUID().toString()
+
                 override suspend fun onInputChanged(text: String): List<AwesomeBar.Suggestion> {
                     providerTriggered = true
 
@@ -137,6 +140,8 @@ class BrowserAwesomeBarTest {
             var providerCancelled = false
 
             val blockingProvider = object : AwesomeBar.SuggestionProvider {
+                override val id: String = UUID.randomUUID().toString()
+
                 override suspend fun onInputChanged(text: String): List<AwesomeBar.Suggestion> {
                     providerTriggered = true
 
@@ -177,6 +182,8 @@ class BrowserAwesomeBarTest {
             var timesProviderCalled = 0
 
             val provider = object : AwesomeBar.SuggestionProvider {
+                override val id: String = UUID.randomUUID().toString()
+
                 var isFirstCall = true
 
                 override suspend fun onInputChanged(text: String): List<AwesomeBar.Suggestion> {
@@ -228,20 +235,23 @@ class BrowserAwesomeBarTest {
             val awesomeBar = BrowserAwesomeBar(context)
             awesomeBar.scope = testMainScope
 
-            val inputSuggestions = listOf(AwesomeBar.Suggestion(title = "Tetst"))
+            val inputSuggestions = listOf(AwesomeBar.Suggestion(mock(), title = "Tetst"))
             val provider = object : AwesomeBar.SuggestionProvider {
+                override val id: String = UUID.randomUUID().toString()
+
                 override suspend fun onInputChanged(text: String): List<AwesomeBar.Suggestion> {
                     return inputSuggestions
                 }
             }
+
             awesomeBar.addProviders(provider)
 
             val adapter: SuggestionsAdapter = mock()
             awesomeBar.suggestionsAdapter = adapter
 
             val transformedSuggestions = listOf(
-                AwesomeBar.Suggestion(title = "Hello"),
-                AwesomeBar.Suggestion(title = "World")
+                AwesomeBar.Suggestion(provider, title = "Hello"),
+                AwesomeBar.Suggestion(provider, title = "World")
             )
 
             val transformer = spy(object : SuggestionTransformer {
@@ -282,6 +292,8 @@ class BrowserAwesomeBarTest {
     }
 
     private fun mockProvider(): AwesomeBar.SuggestionProvider = spy(object : AwesomeBar.SuggestionProvider {
+        override val id: String = UUID.randomUUID().toString()
+
         override suspend fun onInputChanged(text: String): List<AwesomeBar.Suggestion> {
             return emptyList()
         }

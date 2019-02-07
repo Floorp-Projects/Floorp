@@ -7,6 +7,7 @@ package mozilla.components.concept.awesomebar
 import android.graphics.Bitmap
 import android.view.View
 import java.util.UUID
+import java.util.zip.CRC32
 
 /**
  * Interface to be implemented by awesome bar implementations.
@@ -54,8 +55,9 @@ interface AwesomeBar {
     /**
      * A [Suggestion] to be displayed by an [AwesomeBar] implementation.
      *
-     * @property id A unique ID identifying this [Suggestion]. A stable ID but different data indicates to the
-     * [AwesomeBar] that this is the same [Suggestion] with new data. This will affect how the [AwesomeBar]
+     * @property provider The provider this suggestion came from.
+     * @property id A unique ID (provider scope) identifying this [Suggestion]. A stable ID but different data indicates
+     * to the [AwesomeBar] that this is the same [Suggestion] with new data. This will affect how the [AwesomeBar]
      * animates showing the new suggestion.
      * @property title A user-readable title for the [Suggestion].
      * @property description A user-readable description for the [Suggestion].
@@ -69,6 +71,7 @@ interface AwesomeBar {
      * score will be shown on top of suggestions with a lower score.
      */
     data class Suggestion(
+        val provider: SuggestionProvider,
         val id: String = UUID.randomUUID().toString(),
         val title: String? = null,
         val description: String? = null,
@@ -79,6 +82,21 @@ interface AwesomeBar {
         val onChipClicked: ((Chip) -> Unit)? = null,
         val score: Int = 0
     ) {
+        /**
+         * A generated unique ID ([Long]), based on the provider and suggestion id (having a reasonable expectation of
+         * generating mostly-non-colliding IDs).
+         */
+        val generatedUniqueId: Long by lazy {
+            // A non-cryptographic "hash-suitable" function is used for speed.
+            // CRC32 is quite fast - several orders of magnitude faster than md5, and likely
+            // good-enough for our purposes (having a reasonable expectation of generating
+            // mostly-non-colliding IDs).
+            val crc32 = CRC32()
+            crc32.update(provider.id.toByteArray())
+            crc32.update(id.toByteArray())
+            crc32.value
+        }
+
         /**
          * Chips are compact actions that are shown as part of a suggestion. For example a [Suggestion] from a search
          * engine may offer multiple search suggestion chips for different search terms.
@@ -117,6 +135,13 @@ interface AwesomeBar {
      * It returns a list of [Suggestion]s to be displayed by the [AwesomeBar].
      */
     interface SuggestionProvider {
+        /**
+         * A unique ID used for identifying this provider.
+         *
+         * The recommended approach for a [SuggestionProvider] implementation is to generate a UUID.
+         */
+        val id: String
+
         /**
          * Fired when the user starts interacting with the awesome bar by entering text in the toolbar.
          */

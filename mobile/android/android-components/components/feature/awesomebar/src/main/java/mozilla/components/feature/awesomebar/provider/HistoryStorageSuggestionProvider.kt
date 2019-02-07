@@ -8,6 +8,7 @@ import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.concept.storage.SearchResult
 import mozilla.components.feature.session.SessionUseCases
+import java.util.UUID
 
 private const val HISTORY_SUGGESTION_LIMIT = 20
 
@@ -20,6 +21,8 @@ class HistoryStorageSuggestionProvider(
     private val loadUrlUseCase: SessionUseCases.LoadUrlUseCase
 ) : AwesomeBar.SuggestionProvider {
 
+    override val id: String = UUID.randomUUID().toString()
+
     override suspend fun onInputChanged(text: String): List<AwesomeBar.Suggestion> {
         if (text.isEmpty()) {
             return emptyList()
@@ -27,9 +30,14 @@ class HistoryStorageSuggestionProvider(
         return historyStorage.getSuggestions(text, HISTORY_SUGGESTION_LIMIT).into()
     }
 
+    override val shouldClearSuggestions: Boolean
+        // We do not want the suggestion of this provider to disappear and re-appear when text changes.
+        get() = false
+
     private fun Iterable<SearchResult>.into(): List<AwesomeBar.Suggestion> {
         return this.map {
             AwesomeBar.Suggestion(
+                provider = this@HistoryStorageSuggestionProvider,
                 id = it.id,
                 title = it.title,
                 description = it.url,

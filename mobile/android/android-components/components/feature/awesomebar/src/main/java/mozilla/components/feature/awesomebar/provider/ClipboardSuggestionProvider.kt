@@ -11,6 +11,7 @@ import android.graphics.Bitmap
 import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.support.utils.WebURLFinder
+import java.util.UUID
 
 private const val MIME_TYPE_TEXT_PLAIN = "text/plain"
 
@@ -24,6 +25,8 @@ class ClipboardSuggestionProvider(
     private val icon: Bitmap? = null,
     private val title: String? = null
 ) : AwesomeBar.SuggestionProvider {
+    override val id: String = UUID.randomUUID().toString()
+
     private val clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
 
     override suspend fun onInputChanged(text: String): List<AwesomeBar.Suggestion> {
@@ -32,7 +35,8 @@ class ClipboardSuggestionProvider(
         } ?: return emptyList()
 
         return listOf(AwesomeBar.Suggestion(
-            id = "mozac-feature-awesomebar-clipboard",
+            provider = this,
+            id = url,
             description = url,
             flags = setOf(AwesomeBar.Suggestion.Flag.CLIPBOARD),
             icon = { _, _ -> icon },
@@ -42,6 +46,10 @@ class ClipboardSuggestionProvider(
             }
         ))
     }
+
+    override val shouldClearSuggestions: Boolean
+        // We do not want the suggestion of this provider to disappear and re-appear when text changes.
+        get() = false
 }
 
 private fun findUrl(text: String): String? {
