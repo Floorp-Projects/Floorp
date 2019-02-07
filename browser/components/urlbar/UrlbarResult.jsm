@@ -131,6 +131,9 @@ class UrlbarResult {
    * return values as the `payload` and `payloadHighlights` params of the
    * UrlbarResult constructor.
    *
+   * If the payload doesn't have a title or has an empty title, and it also has
+   * a URL, then this function also sets the title to the URL's domain.
+   *
    * @param {array} tokens The tokens that should be highlighted in each of the
    *        payload properties.
    * @param {object} payloadInfo An object that looks like this:
@@ -138,9 +141,25 @@ class UrlbarResult {
    *          payloadPropertyName: [payloadPropertyValue, shouldHighlight],
    *          ...
    *        }
+   *        payloadPropertyValue may be a string or an array of strings.  If
+   *        it's a string, then the payloadHighlights in the return value will
+   *        be an array of match highlights as described in
+   *        UrlbarUtils.getTokenMatches().  If it's an array, then
+   *        payloadHighlights will be an array of arrays of match highlights,
+   *        one element per element in payloadPropertyValue.
    * @returns {array} An array [payload, payloadHighlights].
    */
   static payloadAndSimpleHighlights(tokens, payloadInfo) {
+    if ((!payloadInfo.title || (payloadInfo.title && !payloadInfo.title[0])) &&
+        payloadInfo.url && typeof payloadInfo.url[0] == "string") {
+      // If there's no title, show the domain as the title.  Not all valid URLs
+      // have a domain.
+      payloadInfo.title = payloadInfo.title || ["", true];
+      try {
+        payloadInfo.title[0] = new URL(payloadInfo.url[0]).host;
+      } catch (e) {}
+    }
+
     let entries = Object.entries(payloadInfo);
     return [
       entries.reduce((payload, [name, [val, _]]) => {
