@@ -153,6 +153,11 @@ button.warning {
 
 /*** category selector ***/
 
+#categories {
+  /* Make room for outlines */
+  padding: 1px;
+}
+
 #categories > .category[disabled] {
   overflow: hidden;
   height: 0;
