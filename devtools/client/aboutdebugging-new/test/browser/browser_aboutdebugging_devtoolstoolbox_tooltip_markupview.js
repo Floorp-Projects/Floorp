@@ -14,27 +14,10 @@ add_task(async function() {
   prepareCollapsibilitiesTest();
 
   const { document, tab, window } = await openAboutDebugging();
-
-  info("Show about:devtools-toolbox page");
-  const target = findDebugTargetByText("about:debugging", document);
-  ok(target, "about:debugging tab target appeared");
-  const inspectButton = target.querySelector(".js-debug-target-inspect-button");
-  ok(inspectButton, "Inspect button for about:debugging appeared");
-  inspectButton.click();
-  await Promise.all([
-    waitUntil(() => tab.nextElementSibling),
-    waitForRequestsToSettle(window.AboutDebugging.store),
-    gDevTools.once("toolbox-ready"),
-  ]);
-
-  info("Wait for about:devtools-toolbox tab will be selected");
-  const devtoolsTab = tab.nextElementSibling;
-  await waitUntil(() => gBrowser.selectedTab === devtoolsTab);
+  const { devtoolsDocument, devtoolsTab, devtoolsWindow } =
+    await openAboutDevtoolsToolbox(document, tab, window);
 
   info("Select inspector tool");
-  const devtoolsBrowser = gBrowser.selectedBrowser;
-  const devtoolsDocument = devtoolsBrowser.contentDocument;
-  const devtoolsWindow = devtoolsBrowser.contentWindow;
   const toolbox = getToolbox(devtoolsWindow);
   await toolbox.selectTool("inspector");
 
@@ -54,11 +37,7 @@ add_task(async function() {
   await checkTooltipVisibility(
     inspector, eventBadge, rootDocument.querySelector("#titlebar"));
 
-  await removeTab(devtoolsTab);
-  await Promise.all([
-    waitForRequestsToSettle(window.AboutDebugging.store),
-    gDevTools.once("toolbox-destroyed"),
-  ]);
+  await closeAboutDevtoolsToolbox(devtoolsTab, window);
   await removeTab(tab);
 });
 
