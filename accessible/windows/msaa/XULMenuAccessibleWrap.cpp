@@ -46,6 +46,10 @@ XULMenuitemAccessibleWrap::get_accKeyboardShortcut(
                                                    pszKeyboardShortcut);
   }
 
+  if (IsDefunct()) {
+    return CO_E_OBJNOTCONNECTED;
+  }
+
   KeyBinding keyBinding = AccessKey();
   if (keyBinding.IsEmpty()) {
     return S_FALSE;
