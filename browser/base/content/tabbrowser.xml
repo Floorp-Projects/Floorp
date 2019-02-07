@@ -2255,18 +2255,6 @@
         ]]></body>
       </method>
 
-      <method name="startMediaBlockTimer">
-        <body><![CDATA[
-          TelemetryStopwatch.start("TAB_MEDIA_BLOCKING_TIME_MS", this);
-        ]]></body>
-      </method>
-
-       <method name="finishMediaBlockTimer">
-        <body><![CDATA[
-          TelemetryStopwatch.finish("TAB_MEDIA_BLOCKING_TIME_MS", this);
-        ]]></body>
-      </method>
-
       <method name="toggleMuteAudio">
         <parameter name="aMuteReason"/>
         <body>
@@ -2281,7 +2269,6 @@
 
             browser.resumeMedia();
             hist.add(3 /* unblockByClickingIcon */);
-            this.finishMediaBlockTimer();
           } else {
             if (browser.audioMuted) {
               if (this.linkedPanel) {
