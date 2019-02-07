@@ -12,6 +12,7 @@
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "nsQueryObject.h"
 #include "nsISupports.h"
+#include "nsImportModule.h"
 #include "nsContentUtils.h"
 #include "xpcprivate.h"
 
@@ -73,11 +74,12 @@ DocumentL10n::DocumentL10n(Document* aDocument)
 DocumentL10n::~DocumentL10n() {}
 
 bool DocumentL10n::Init(nsTArray<nsString>& aResourceIds) {
-  nsCOMPtr<mozIDOMLocalization> domL10n =
-      do_CreateInstance("@mozilla.org/intl/domlocalization;1");
-  if (NS_WARN_IF(!domL10n)) {
-    return false;
-  }
+  nsCOMPtr<mozIDOMLocalizationJSM> jsm =
+        do_ImportModule("resource://gre/modules/DOMLocalization.jsm");
+  MOZ_RELEASE_ASSERT(jsm);
+
+  Unused << jsm->GetDOMLocalization(getter_AddRefs(mDOMLocalization));
+  MOZ_RELEASE_ASSERT(mDOMLocalization);
 
   nsIGlobalObject* global = mDocument->GetScopeObject();
   if (!global) {
@@ -89,20 +91,24 @@ bool DocumentL10n::Init(nsTArray<nsString>& aResourceIds) {
   if (rv.Failed()) {
     return false;
   }
-  mDOMLocalization = domL10n;
 
   // The `aEager = true` here allows us to eagerly trigger
   // resource fetching to increase the chance that the l10n
   // resources will be ready by the time the document
   // is ready for localization.
   uint32_t ret;
-  mDOMLocalization->AddResourceIds(aResourceIds, true, &ret);
+  if (NS_FAILED(mDOMLocalization->AddResourceIds(aResourceIds, true, &ret))) {
+    return false;
+  }
 
   // Register observers for this instance of
-  // mozDOMLocalization to allow it to retranslate
+  // DOMLocalization to allow it to retranslate
   // the document when locale changes or pseudolocalization
   // gets turned on.
-  mDOMLocalization->RegisterObservers();
+  if (NS_FAILED(mDOMLocalization->RegisterObservers())) {
+    return false;
+  }
+
   return true;
 }
 
@@ -337,6 +343,10 @@ void DocumentL10n::TriggerInitialDocumentTranslation() {
 
   RefPtr<Promise> promise;
   mDOMLocalization->TranslateRoots(getter_AddRefs(promise));
+  if (!promise) {
+    return;
+  }
+
   RefPtr<PromiseNativeHandler> l10nReadyHandler =
       new L10nReadyHandler(mReady, this);
   promise->AppendNativeHandler(l10nReadyHandler);
