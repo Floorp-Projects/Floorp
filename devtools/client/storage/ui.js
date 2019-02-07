@@ -23,7 +23,9 @@ loader.lazyRequireGetter(this, "TreeWidget",
 loader.lazyRequireGetter(this, "TableWidget",
                          "devtools/client/shared/widgets/TableWidget", true);
 loader.lazyImporter(this, "VariablesView",
-  "resource://devtools/client/shared/widgets/VariablesView.jsm");
+                    "resource://devtools/client/shared/widgets/VariablesView.jsm");
+loader.lazyRequireGetter(this, "validator",
+                         "devtools/client/shared/vendor/stringvalidator/validator");
 
 /**
  * Localization convenience methods.
@@ -59,6 +61,7 @@ const COOKIE_KEY_MAP = {
 };
 
 const SAFE_HOSTS_PREFIXES_REGEX = /^(about:|https?:|file:|moz-extension:)/;
+const MATH_REGEX = /(?:(?:^|[-+_*/])(?:\s*-?\d+(\.\d+)?(?:[eE][+-]?\d+)?\s*))+$/;
 
 // Maximum length of item name to show in context menu label - will be
 // trimmed with ellipsis if it's longer.
@@ -827,31 +830,29 @@ class StorageUI {
     const value = (decodedValue && decodedValue !== originalValue)
       ? decodedValue : originalValue;
 
-    let json = null;
-    try {
-      json = JSOL.parse(value);
-    } catch (ex) {
-      json = null;
-    }
-
-    if (!json && value) {
-      json = this._extractKeyValPairs(value);
-    }
-
-    // return if json is null, or same as value, or just a string.
-    if (!json || json == value || typeof json == "string") {
+    if (!this._shouldParse(value)) {
       return;
     }
 
-    // One special case is a url which gets separated as key value pair on :
-    if ((json.length == 2 || Object.keys(json).length == 1) &&
-        ((json[0] || Object.keys(json)[0]) + "").match(/^(http|file|ftp)/)) {
+    let obj = null;
+    try {
+      obj = JSOL.parse(value);
+    } catch (ex) {
+      obj = null;
+    }
+
+    if (!obj && value) {
+      obj = this._extractKeyValPairs(value);
+    }
+
+    // return if obj is null, or same as value, or just a string.
+    if (!obj || obj === value || typeof obj === "string") {
       return;
     }
 
     const jsonObject = Object.create(null);
     const view = this.view;
-    jsonObject[name] = json;
+    jsonObject[name] = obj;
     const valueScope = view.getScopeAtIndex(1) ||
                       view.addScope(L10N.getStr("storage.parsedValue.label"));
     valueScope.expanded = true;
@@ -904,11 +905,52 @@ class StorageUI {
       const word = `[^${p}]*`;
       const wordList = `(${word}${p})+${word}`;
       const regex = new RegExp(`^${wordList}$`);
-      if (value.match && value.match(regex)) {
-        return value.split(p.replace(/\\*/g, ""));
+
+      if (regex.test(value)) {
+        const pNoBackslash = p.replace(/\\*/g, "");
+        return value.split(pNoBackslash);
       }
     }
     return null;
+  }
+
+  /**
+   * Check whether the value string represents something that should be
+   * displayed as text. If so then it shouldn't be parsed into a tree.
+   *
+   * @param  {String} value
+   *         The value to be parsed.
+   */
+  _shouldParse(value) {
+    const validators = [
+      "isBase64",
+      "isBoolean",
+      "isCurrency",
+      "isDataURI",
+      "isEmail",
+      "isFQDN",
+      "isHexColor",
+      "isIP",
+      "isISO8601",
+      "isMACAddress",
+      "isSemVer",
+      "isURL",
+    ];
+
+    // Check for minus calculations e.g. 8-3 because otherwise 5 will be displayed.
+    if (MATH_REGEX.test(value)) {
+      return false;
+    }
+
+    // Check for any other types that shouldn't be parsed.
+    for (const test of validators) {
+      if (validator[test](value)) {
+        return false;
+      }
+    }
+
+    // Seems like this is data that should be parsed.
+    return true;
   }
 
   /**
