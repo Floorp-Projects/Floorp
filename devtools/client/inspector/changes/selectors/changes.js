@@ -5,6 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+loader.lazyRequireGetter(this, "getTabPrefs", "devtools/shared/indentation", true);
+
+const { getSourceForDisplay } = require("../utils/changes-utils");
+
 /**
  * In the Redux state, changed CSS rules are grouped by source (stylesheet) and stored in
  * a single level array, regardless of nesting.
@@ -101,6 +105,107 @@ function getChangesTree(state, filter = {}) {
     }, {});
 }
 
+/**
+ * Build the CSS text of a stylesheet with the changes aggregated in the Redux state.
+ * If filters for rule id or source id are provided, restrict the changes to the matching
+ * sources and rules.
+ *
+ * Code comments with the source origin are put above of the CSS rule (or group of
+ * rules). Removed CSS declarations are written commented out. Added CSS declarations are
+ * written as-is.
+ *
+ * @param  {Object} state
+ *         Redux slice for tracked changes.
+ * @param  {Object} filter
+ *         Object with optional source and rule filters. See getChangesTree()
+ * @return {String}
+ *         CSS stylesheet text.
+ */
+
+ // For stylesheet sources, the stylesheet filename and full path are used:
+ //
+ // /* styles.css | https://example.com/styles.css */
+ //
+ // .selector {
+ //  /* property: oldvalue; */
+ //  property: value;
+ // }
+
+ // For inline stylesheet sources, the stylesheet index and host document URL are used:
+ //
+ // /* Inline #1 | https://example.com */
+ //
+ // .selector {
+ //  /* property: oldvalue; */
+ //  property: value;
+ // }
+
+ // For element style attribute sources, the unique selector generated for the element
+ // and the host document URL are used:
+ //
+ // /* Element (div) | https://example.com */
+ //
+ // div:nth-child(1) {
+ //  /* property: oldvalue; */
+ //  property: value;
+ // }
+function getChangesStylesheet(state, filter) {
+  const changeTree = getChangesTree(state, filter);
+  // Get user prefs about indentation style.
+  const { indentUnit, indentWithTabs } = getTabPrefs();
+  const indentChar = indentWithTabs ? "\t".repeat(indentUnit) : " ".repeat(indentUnit);
+
+  function writeRule(ruleId, rule, level) {
+    // Write nested rules, if any.
+    let ruleBody = rule.children.reduce((str, childRule) => {
+      str += writeRule(childRule.ruleId, childRule, level + 1);
+      return str;
+    }, "");
+
+    // Write changed CSS declarations.
+    ruleBody += writeDeclarations(rule.remove, rule.add, level + 1);
+
+    const indent = indentChar.repeat(level);
+    return `\n${indent}${rule.selector} {${ruleBody}\n${indent}}`;
+  }
+
+  function writeDeclarations(remove = [], add = [], level) {
+    const indent = indentChar.repeat(level);
+    const removals = remove
+      // Sort declarations in the order in which they exist in the original CSS rule.
+      .sort((a, b) => a.index > b.index)
+      .reduce((str, { property, value }) => {
+        str += `\n${indent}/* ${property}: ${value}; */`;
+        return str;
+      }, "");
+
+    const additions = add
+      // Sort declarations in the order in which they exist in the original CSS rule.
+      .sort((a, b) => a.index > b.index)
+      .reduce((str, { property, value }) => {
+        str += `\n${indent}${property}: ${value};`;
+        return str;
+      }, "");
+
+    return removals + additions;
+  }
+
+  // Iterate through all sources in the change tree and build a CSS stylesheet string.
+  return Object.entries(changeTree).reduce((stylesheetText, [sourceId, source]) => {
+    const { href, rules } = source;
+    // Write code comment with source origin
+    stylesheetText += `/* ${getSourceForDisplay(source)} | ${href} */\n`;
+    // Write CSS rules
+    stylesheetText += Object.entries(rules).reduce((str, [ruleId, rule]) => {
+      str += writeRule(ruleId, rule, 0);
+      return str;
+    }, "");
+
+    return stylesheetText;
+  }, "");
+}
+
 module.exports = {
   getChangesTree,
+  getChangesStylesheet,
 };
