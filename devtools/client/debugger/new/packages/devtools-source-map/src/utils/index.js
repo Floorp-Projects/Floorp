@@ -16,7 +16,7 @@ function generatedToOriginalId(generatedId: string, url: string) {
 }
 
 function isOriginalId(id: string) {
-  return !!id.match(/\/originalSource/);
+  return /\/originalSource/.test(id);
 }
 
 function isGeneratedId(id: string) {
