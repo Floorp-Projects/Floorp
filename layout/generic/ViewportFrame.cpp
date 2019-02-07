@@ -268,6 +268,11 @@ nsRect ViewportFrame::AdjustReflowInputAsContainingBlock(
       rect.Size() < ps->GetVisualViewportSize()) {
     rect.SizeTo(ps->GetVisualViewportSize());
   }
+  // Expand the size to the layout viewport size if necessary.
+  const nsSize layoutViewportSize = ps->GetLayoutViewportSize();
+  if (rect.Size() < layoutViewportSize) {
+    rect.SizeTo(layoutViewportSize);
+  }
   return rect;
 }
 
