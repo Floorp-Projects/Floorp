@@ -3,6 +3,11 @@
 const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+ChromeUtils.defineModuleGetter(this, "OfflineAppCacheHelper",
+                               "resource://gre/modules/offlineAppCache.jsm");
+ChromeUtils.defineModuleGetter(this, "ServiceWorkerCleanUp",
+                               "resource://gre/modules/ServiceWorkerCleanUp.jsm");
+
 var EXPORTED_SYMBOLS = [
   "SiteDataManager",
 ];
@@ -320,23 +325,6 @@ var SiteDataManager = {
     site.cookies = [];
   },
 
-  // Returns a list of permissions from the permission manager that
-  // we consider part of "site data and cookies".
-  _getDeletablePermissions() {
-    let perms = [];
-    let enumerator = Services.perms.enumerator;
-
-    while (enumerator.hasMoreElements()) {
-      let permission = enumerator.getNext().QueryInterface(Ci.nsIPermission);
-      if (permission.type == "persistent-storage" ||
-          permission.type == "storage-access") {
-        perms.push(permission);
-      }
-    }
-
-    return perms;
-  },
-
   /**
    * Removes all site data for the specified list of hosts.
    *
@@ -345,27 +333,34 @@ var SiteDataManager = {
    *          manager has been updated.
    */
   async remove(hosts) {
-    let perms = this._getDeletablePermissions();
+    // Make sure we have up-to-date information.
+    await this._getQuotaUsage();
+    this._updateAppCache();
+
+    let unknownHost = "";
     let promises = [];
     for (let host of hosts) {
-      promises.push(new Promise(function(resolve) {
-        Services.clearData.deleteDataFromHost(host, true,
-          Ci.nsIClearDataService.CLEAR_COOKIES |
-          Ci.nsIClearDataService.CLEAR_DOM_STORAGES |
-          Ci.nsIClearDataService.CLEAR_SECURITY_SETTINGS |
-          Ci.nsIClearDataService.CLEAR_PLUGIN_DATA |
-          Ci.nsIClearDataService.CLEAR_EME |
-          Ci.nsIClearDataService.CLEAR_ALL_CACHES, resolve);
-      }));
-
-      for (let perm of perms) {
-        if (Services.eTLD.hasRootDomain(perm.principal.URI.host, host)) {
-          Services.perms.removePermission(perm);
-        }
+      let site = this._sites.get(host);
+      if (site) {
+        // Clear localStorage & sessionStorage
+        Services.obs.notifyObservers(null, "extension:purge-localStorage", host);
+        Services.obs.notifyObservers(null, "browser:purge-sessionStorage", host);
+        this._removePermission(site);
+        this._removeAppCache(site);
+        this._removeCookies(site);
+        promises.push(ServiceWorkerCleanUp.removeFromHost(host));
+        promises.push(this._removeQuotaUsage(site));
+      } else {
+        unknownHost = host;
+        break;
       }
     }
 
     await Promise.all(promises);
+
+    if (unknownHost) {
+      throw `SiteDataManager: removing unknown site of ${unknownHost}`;
+    }
 
     return this.updateSites();
   },
@@ -410,41 +405,54 @@ var SiteDataManager = {
    * @returns a Promise that resolves when the data is cleared.
    */
   async removeAll() {
-    await this.removeCache();
+    this.removeCache();
     return this.removeSiteData();
   },
 
   /**
-   * Clears all caches.
-   *
-   * @returns a Promise that resolves when the data is cleared.
+   * Clears the entire network cache.
    */
   removeCache() {
-    return new Promise(function(resolve) {
-      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL_CACHES, resolve);
-    });
+    Services.cache2.clear();
   },
 
   /**
-   * Clears all site data, but not cache, because the UI offers
-   * that functionality separately.
+   * Clears all site data, which currently means
+   *   - Cookies
+   *   - AppCache
+   *   - LocalStorage
+   *   - ServiceWorkers
+   *   - Quota Managed Storage
+   *   - persistent-storage permissions
    *
-   * @returns a Promise that resolves when the data is cleared.
+   * @returns a Promise that resolves with the cache size on disk in bytes
    */
   async removeSiteData() {
-    await new Promise(function(resolve) {
-      Services.clearData.deleteData(
-        Ci.nsIClearDataService.CLEAR_COOKIES |
-        Ci.nsIClearDataService.CLEAR_DOM_STORAGES |
-        Ci.nsIClearDataService.CLEAR_SECURITY_SETTINGS |
-        Ci.nsIClearDataService.CLEAR_EME |
-        Ci.nsIClearDataService.CLEAR_PLUGIN_DATA, resolve);
-    });
+    // LocalStorage
+    Services.obs.notifyObservers(null, "extension:purge-localStorage");
 
-    for (let permission of this._getDeletablePermissions()) {
-      Services.perms.removePermission(permission);
+    Services.cookies.removeAll();
+    OfflineAppCacheHelper.clear();
+
+    await ServiceWorkerCleanUp.removeAll();
+
+    // Refresh sites using quota usage again.
+    // This is for the case:
+    //   1. User goes to the about:preferences Site Data section.
+    //   2. With the about:preferences opened, user visits another website.
+    //   3. The website saves to quota usage, like indexedDB.
+    //   4. User goes back to the Site Data section and commands to clear all site data.
+    // For this case, we should refresh the site list so not to miss the website in the step 3.
+    // We don't do "Clear All" on the quota manager like the cookie, appcache, http cache above
+    // because that would clear browser data as well too,
+    // see https://bugzilla.mozilla.org/show_bug.cgi?id=1312361#c9
+    this._sites.clear();
+    await this._getQuotaUsage();
+    let promises = [];
+    for (let site of this._sites.values()) {
+      this._removePermission(site);
+      promises.push(this._removeQuotaUsage(site));
     }
-
-    return this.updateSites();
+    return Promise.all(promises).then(() => this.updateSites());
   },
 };
