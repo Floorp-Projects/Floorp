@@ -15,8 +15,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "swm",
                                    "@mozilla.org/serviceworkers/manager;1",
                                    "nsIServiceWorkerManager");
 
-XPCOMUtils.defineLazyGlobalGetters(this, ["indexedDB", "Blob"]);
-
 /**
  * This module assists with tasks around testing functionality that shows
  * or clears site data.
@@ -27,44 +25,31 @@ XPCOMUtils.defineLazyGlobalGetters(this, ["indexedDB", "Blob"]);
 var SiteDataTestUtils = {
 
   /**
-   * Makes an origin have persistent data storage.
-   *
-   * @param {String} origin - the origin of the site to give persistent storage
-   *
-   * @returns a Promise that resolves when storage was persisted
-   */
-  persist(origin, value = Services.perms.ALLOW_ACTION) {
-    return new Promise(resolve => {
-      let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(origin);
-      Services.perms.addFromPrincipal(principal, "persistent-storage", value);
-      Services.qms.persist(principal).callback = () => resolve();
-    });
-  },
-
-  /**
-   * Adds a new blob entry to a dummy indexedDB database for the specified origin.
+   * Adds a new entry to a dummy indexedDB database for the specified origin.
    *
    * @param {String} origin - the origin of the site to add test data for
-   * @param {Number} size [optional] - the size of the entry in bytes
+   * @param {String} name [optional] - the entry key
+   * @param {String} value [optional] - the entry value
+   * @param {Object} originAttributes [optional] - the originAttributes
    *
    * @returns a Promise that resolves when the data was added successfully.
    */
-  addToIndexedDB(origin, size = 1024) {
+  addToIndexedDB(origin, key = "foo", value = "bar", originAttributes = {}) {
     return new Promise(resolve => {
-      let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(origin);
+      let uri = Services.io.newURI(origin);
+      let principal =
+        Services.scriptSecurityManager.createCodebasePrincipal(uri, originAttributes);
       let request = indexedDB.openForPrincipal(principal, "TestDatabase", 1);
       request.onupgradeneeded = function(e) {
         let db = e.target.result;
-        db.createObjectStore("TestStore");
+        db.createObjectStore("TestStore", { keyPath: "id" });
       };
       request.onsuccess = function(e) {
         let db = e.target.result;
         let tx = db.transaction("TestStore", "readwrite");
         let store = tx.objectStore("TestStore");
         tx.oncomplete = resolve;
-        let buffer = new ArrayBuffer(size);
-        let blob = new Blob([buffer]);
-        store.add(blob, Cu.now());
+        store.put({ id: key, description: value});
       };
     });
   },
@@ -78,8 +63,8 @@ var SiteDataTestUtils = {
    * @param {String} value [optional] - the cookie value
    */
   addToCookies(origin, name = "foo", value = "bar") {
-    let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(origin);
-    Services.cookies.add(principal.URI.host, principal.URI.pathQueryRef, name, value,
+    let uri = Services.io.newURI(origin);
+    Services.cookies.add(uri.host, uri.pathQueryRef, name, value,
       false, false, false, Date.now() + 24000 * 60 * 60, {},
       Ci.nsICookie2.SAMESITE_UNSET);
   },
@@ -136,7 +121,8 @@ var SiteDataTestUtils = {
    */
   getQuotaUsage(origin) {
     return new Promise(resolve => {
-      let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(origin);
+      let uri = Services.io.newURI(origin);
+      let principal = Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
       Services.qms.getUsageForPrincipal(principal, request => resolve(request.result.usage));
     });
   },
