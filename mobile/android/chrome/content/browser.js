@@ -4710,9 +4710,9 @@ Tab.prototype = {
       tabID: this.id,
       uri: truncate(fixedURI.displaySpec, MAX_URI_LENGTH),
       userRequested: this.userRequested || "",
-      baseDomain: baseDomain,
+      baseDomain,
       contentType: (contentType ? contentType : ""),
-      sameDocument: sameDocument,
+      sameDocument,
 
       canGoBack: webNav.canGoBack,
       canGoForward: webNav.canGoForward,
