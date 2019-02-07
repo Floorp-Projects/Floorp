@@ -35,9 +35,10 @@ import org.mozilla.fenix.components.FindInPageIntegration
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getSafeManagedObservable
 import org.mozilla.fenix.search.toolbar.SearchAction
-import org.mozilla.fenix.search.toolbar.SearchState
 import org.mozilla.fenix.search.toolbar.ToolbarComponent
+import org.mozilla.fenix.search.toolbar.SearchState
 import org.mozilla.fenix.search.toolbar.ToolbarUIView
+import org.mozilla.fenix.search.toolbar.ToolbarMenu
 
 class BrowserFragment : Fragment(), BackHandler {
 
@@ -87,8 +88,10 @@ class BrowserFragment : Fragment(), BackHandler {
 
         getSafeManagedObservable<SearchAction>()
             .subscribe {
-                if (it is SearchAction.ToolbarTapped) {
-                    navigateToSearch()
+                when (it) {
+                    is SearchAction.ToolbarTapped -> Navigation.findNavController(toolbar)
+                        .navigate(R.id.action_browserFragment_to_searchFragment, null, null)
+                    is SearchAction.ToolbarMenuItemTapped -> handleToolbarItemInteraction(it)
                 }
             }
     }
@@ -139,8 +142,7 @@ class BrowserFragment : Fragment(), BackHandler {
         customTabsToolbarFeature = CustomTabsToolbarFeature(
             sessionManager,
             toolbar,
-            sessionId,
-            requireComponents.toolbar.menuBuilder
+            sessionId
         ) { requireActivity().finish() }
 
         lifecycle.addObservers(
@@ -182,9 +184,18 @@ class BrowserFragment : Fragment(), BackHandler {
         promptsFeature.onActivityResult(requestCode, resultCode, data)
     }
 
-    private fun navigateToSearch() {
-        Navigation.findNavController(toolbar)
-            .navigate(R.id.action_browserFragment_to_searchFragment, null, null)
+    private fun handleToolbarItemInteraction(action: SearchAction.ToolbarMenuItemTapped) {
+        val sessionUseCases = requireComponents.useCases.sessionUseCases
+        when (action.item) {
+            is ToolbarMenu.Item.Back -> sessionUseCases.goBack.invoke()
+            is ToolbarMenu.Item.Forward -> sessionUseCases.goForward.invoke()
+            is ToolbarMenu.Item.Reload -> sessionUseCases.reload.invoke()
+            is ToolbarMenu.Item.Settings -> Navigation.findNavController(toolbar)
+                .navigate(R.id.action_browserFragment_to_settingsActivity, null, null)
+            is ToolbarMenu.Item.Library -> Navigation.findNavController(toolbar)
+                .navigate(R.id.action_browserFragment_to_libraryFragment, null, null)
+            else -> return
+        }
     }
 
     companion object {

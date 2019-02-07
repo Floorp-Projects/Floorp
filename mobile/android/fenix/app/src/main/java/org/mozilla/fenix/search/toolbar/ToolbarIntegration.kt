@@ -2,7 +2,7 @@
    License, v. 2.0. If a copy of the MPL was not distributed with this
    file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.components.toolbar
+package org.mozilla.fenix.search.toolbar
 
 import android.content.Context
 import androidx.lifecycle.Lifecycle
@@ -23,13 +23,14 @@ import org.mozilla.fenix.ext.components
 class ToolbarIntegration(
     context: Context,
     toolbar: BrowserToolbar,
+    toolbarMenu: ToolbarMenu,
     domainAutocompleteProvider: DomainAutocompleteProvider,
     historyStorage: HistoryStorage,
     sessionManager: SessionManager,
     sessionId: String? = null
 ) : LifecycleObserver {
     init {
-        toolbar.setMenuBuilder(context.components.toolbar.menuBuilder)
+        toolbar.setMenuBuilder(toolbarMenu.menuBuilder)
 
         val home = BrowserToolbar.Button(
             context.resources.getDrawable(R.drawable.ic_home, context.application.theme),

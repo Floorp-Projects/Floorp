@@ -1,44 +1,33 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+   License, v. 2.0. If a copy of the MPL was not distributed with this
+   file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.components.toolbar
+package org.mozilla.fenix.search.toolbar
 
 import android.content.Context
-import android.content.Intent
-import mozilla.components.browser.domains.autocomplete.ShippedDomainsProvider
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.BrowserMenuDivider
 import mozilla.components.browser.menu.item.BrowserMenuImageText
 import mozilla.components.browser.menu.item.BrowserMenuItemToolbar
 import mozilla.components.browser.menu.item.BrowserMenuSwitch
-import mozilla.components.browser.session.SessionManager
-import mozilla.components.feature.session.SessionUseCases
 import org.mozilla.fenix.R
-import org.mozilla.fenix.ext.share
-import org.mozilla.fenix.settings.SettingsActivity
-import org.mozilla.fenix.components.FindInPageIntegration
 
-/**
- * Component group for all functionality related to the browser toolbar.
- */
-class Toolbar(
-    private val context: Context,
-    private val sessionUseCases: SessionUseCases,
-    private val sessionManager: SessionManager
-) {
-
-    /**
-     * Helper class for building browser menus.app
-     */
-    val menuBuilder by lazy { BrowserMenuBuilder(menuItems) }
-
-    /**
-     * Provides autocomplete functionality for shipped / provided domain lists.
-     */
-    val shippedDomainsProvider by lazy {
-        ShippedDomainsProvider().also { it.initialize(context) }
+class ToolbarMenu(private val context: Context, private val onItemTapped: (Item) -> Unit = {}) {
+    sealed class Item {
+        object Help : Item()
+        object Settings : Item()
+        object Library : Item()
+        data class RequestDesktop(val isChecked: Boolean) : Item()
+        object FindInPage : Item()
+        object NewPrivateTab : Item()
+        object NewTab : Item()
+        object Share : Item()
+        object Back : Item()
+        object Forward : Item()
+        object Reload : Item()
     }
+
+    val menuBuilder by lazy { BrowserMenuBuilder(menuItems) }
 
     val menuToolbar by lazy {
         val back = BrowserMenuItemToolbar.Button(
@@ -46,7 +35,7 @@ class Toolbar(
             iconTintColorResource = R.color.icons,
             contentDescription = context.getString(R.string.browser_menu_back)
         ) {
-            sessionUseCases.goBack.invoke()
+            onItemTapped.invoke(Item.Back)
         }
 
         val forward = BrowserMenuItemToolbar.Button(
@@ -54,7 +43,7 @@ class Toolbar(
             iconTintColorResource = R.color.icons,
             contentDescription = context.getString(R.string.browser_menu_forward)
         ) {
-            sessionUseCases.goForward.invoke()
+            onItemTapped.invoke(Item.Forward)
         }
 
         val refresh = BrowserMenuItemToolbar.Button(
@@ -62,7 +51,7 @@ class Toolbar(
             iconTintColorResource = R.color.icons,
             contentDescription = context.getString(R.string.browser_menu_refresh)
         ) {
-            sessionUseCases.reload.invoke()
+            onItemTapped.invoke(Item.Reload)
         }
 
         BrowserMenuItemToolbar(listOf(back, forward, refresh))
@@ -76,7 +65,7 @@ class Toolbar(
                 context.getString(R.string.browser_menu_help),
                 R.color.icons
             ) {
-                // TODO Help
+                onItemTapped.invoke(Item.Help)
             },
 
             BrowserMenuImageText(
@@ -85,7 +74,7 @@ class Toolbar(
                 context.getString(R.string.browser_menu_settings),
                 R.color.icons
             ) {
-                openSettingsActivity()
+                onItemTapped.invoke(Item.Settings)
             },
 
             BrowserMenuImageText(
@@ -94,17 +83,15 @@ class Toolbar(
                 context.getString(R.string.browser_menu_library),
                 R.color.icons
             ) {
-                // TODO Your Library
+                onItemTapped.invoke(Item.Library)
             },
 
             BrowserMenuDivider(),
 
             BrowserMenuSwitch(context.getString(R.string.browser_menu_desktop_site), {
-                sessionManager.selectedSessionOrThrow.desktopMode
+                false
             }) { checked ->
-                sessionUseCases.requestDesktopSite.invoke(checked)
-            }.apply {
-                visible = { sessionManager.selectedSession != null }
+                onItemTapped.invoke(Item.RequestDesktop(checked))
             },
 
             BrowserMenuImageText(
@@ -113,9 +100,7 @@ class Toolbar(
                 context.getString(R.string.browser_menu_find_in_page),
                 R.color.icons
             ) {
-                FindInPageIntegration.launch?.invoke()
-            }.apply {
-                visible = { sessionManager.selectedSession != null }
+                onItemTapped.invoke(Item.FindInPage)
             },
 
             BrowserMenuImageText(
@@ -124,7 +109,7 @@ class Toolbar(
                 context.getString(R.string.browser_menu_private_tab),
                 R.color.icons
             ) {
-                // TODO Private Tab
+                onItemTapped.invoke(Item.NewPrivateTab)
             },
 
             BrowserMenuImageText(
@@ -133,7 +118,7 @@ class Toolbar(
                 context.getString(R.string.browser_menu_new_tab),
                 R.color.icons
             ) {
-                // TODO New Tab
+                onItemTapped.invoke(Item.NewTab)
             },
 
             BrowserMenuImageText(
@@ -142,21 +127,12 @@ class Toolbar(
                 context.getString(R.string.browser_menu_share),
                 R.color.icons
             ) {
-                val url = sessionManager.selectedSession?.url ?: ""
-                context.share(url)
-            }.apply {
-                visible = { sessionManager.selectedSession != null }
+                onItemTapped.invoke(Item.Share)
             },
 
             BrowserMenuDivider(),
 
             menuToolbar
         )
-    }
-
-    private fun openSettingsActivity() {
-        val intent = Intent(context, SettingsActivity::class.java)
-        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-        context.startActivity(intent)
     }
 }

@@ -40,6 +40,7 @@ sealed class SearchAction : Action {
     data class UrlCommitted(val url: String) : SearchAction()
     data class TextChanged(val query: String) : SearchAction()
     object ToolbarTapped : SearchAction()
+    data class ToolbarMenuItemTapped(val item: ToolbarMenu.Item) : SearchAction()
 }
 
 sealed class SearchChange : Change {

@@ -37,6 +37,13 @@
     </fragment>
 
     <fragment
+        android:id="@+id/libraryFragment"
+        android:name="org.mozilla.fenix.library.LibraryFragment"
+        android:label="fragment_library"
+        tools:layout="@layout/fragment_library">
+    </fragment>
+
+    <fragment
         android:id="@+id/browserFragment"
         android:name="org.mozilla.fenix.browser.BrowserFragment"
         android:label="fragment_browser"
@@ -48,10 +55,15 @@
             android:id="@+id/action_browserFragment_to_searchFragment"
             app:destination="@id/searchFragment" />
         <action
+            android:id="@+id/action_browserFragment_to_libraryFragment"
+            app:destination="@id/libraryFragment" />
+        <action
             android:id="@+id/action_browserFragment_to_settingsActivity"
             app:destination="@id/settingsActivity" />
+
         <argument android:name="session_id" app:argType="string" app:nullable="true" />
     </fragment>
+
     <activity
         android:id="@+id/settingsActivity"
         android:name="org.mozilla.fenix.settings.SettingsActivity"
