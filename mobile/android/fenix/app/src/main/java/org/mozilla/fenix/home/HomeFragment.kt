@@ -10,6 +10,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.motion.widget.MotionLayout
 import androidx.fragment.app.Fragment
 import androidx.navigation.Navigation
@@ -40,6 +41,8 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        (activity as AppCompatActivity).supportActionBar?.hide()
+
         layoutComponents(view.homeLayout)
 
         val searchIcon = requireComponents.search.searchEngineManager.getDefaultSearchEngine(requireContext()).let {
@@ -48,7 +51,7 @@ class HomeFragment : Fragment() {
 
         // Temporary so we can easily test settings
         view.menuButton.setOnClickListener {
-            Navigation.findNavController(it).navigate(R.id.action_homeFragment_to_settingsActivity, null, null)
+            Navigation.findNavController(it).navigate(R.id.action_homeFragment_to_settingsFragment, null, null)
         }
 
         view.toolbar.setCompoundDrawablesWithIntrinsicBounds(searchIcon, null, null, null)

@@ -9,7 +9,10 @@ import android.os.Bundle
 import android.util.AttributeSet
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
 import androidx.navigation.fragment.NavHostFragment
+import androidx.navigation.ui.AppBarConfiguration
+import androidx.navigation.ui.NavigationUI
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.feature.intent.IntentProcessor
 import mozilla.components.support.base.feature.BackHandler
@@ -35,6 +38,13 @@ open class HomeActivity : AppCompatActivity() {
         if (intent?.extras?.getBoolean(OPEN_TO_BROWSER) == true) {
             openToBrowser()
         }
+
+        val host = supportFragmentManager.findFragmentById(R.id.container) as NavHostFragment
+        val hostNavController = host.navController
+        val appBarConfiguration = AppBarConfiguration.Builder(setOf(R.id.libraryFragment)).build()
+        val navigationToolbar = findViewById<Toolbar>(R.id.navigationToolbar)
+        setSupportActionBar(navigationToolbar)
+        NavigationUI.setupWithNavController(navigationToolbar, hostNavController, appBarConfiguration)
     }
 
     override fun onCreateView(

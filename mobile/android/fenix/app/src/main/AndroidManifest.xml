@@ -64,12 +64,6 @@
                 <action android:name="android.support.customtabs.action.CustomTabsService" />
             </intent-filter>
         </service>
-
-        <activity
-            android:name=".settings.SettingsActivity"
-            android:label="@string/settings"
-            android:parentActivityName=".HomeActivity"
-            android:theme="@style/SettingsTheme"/>
     </application>
 
 </manifest>

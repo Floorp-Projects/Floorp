@@ -21,8 +21,11 @@
             android:id="@+id/action_homeFragment_to_browserFragment"
             app:destination="@id/browserFragment" />
         <action
-            android:id="@+id/action_homeFragment_to_settingsActivity"
-            app:destination="@id/settingsActivity" />
+            android:id="@+id/action_homeFragment_to_libraryFragment"
+            app:destination="@id/libraryFragment" />
+        <action
+            android:id="@+id/action_homeFragment_to_settingsFragment"
+            app:destination="@id/settingsFragment" />
     </fragment>
 
     <fragment
@@ -37,35 +40,36 @@
     </fragment>
 
     <fragment
-        android:id="@+id/libraryFragment"
-        android:name="org.mozilla.fenix.library.LibraryFragment"
-        android:label="fragment_library"
-        tools:layout="@layout/fragment_library">
-    </fragment>
-
-    <fragment
         android:id="@+id/browserFragment"
         android:name="org.mozilla.fenix.browser.BrowserFragment"
         android:label="fragment_browser"
         tools:layout="@layout/fragment_browser">
         <action
-                android:id="@+id/action_browserFragment_to_homeFragment"
-                app:destination="@id/homeFragment" app:popUpToInclusive="true" app:popUpTo="@+id/homeFragment"/>
+            android:id="@+id/action_browserFragment_to_homeFragment"
+            app:destination="@id/homeFragment"
+            app:popUpTo="@+id/homeFragment"
+            app:popUpToInclusive="true" />
         <action
             android:id="@+id/action_browserFragment_to_searchFragment"
             app:destination="@id/searchFragment" />
+        <argument
+            android:name="session_id"
+            app:argType="string"
+            app:nullable="true" />
+        <action
+            android:id="@+id/action_browserFragment_to_settingsFragment"
+            app:destination="@id/settingsFragment" />
         <action
             android:id="@+id/action_browserFragment_to_libraryFragment"
             app:destination="@id/libraryFragment" />
-        <action
-            android:id="@+id/action_browserFragment_to_settingsActivity"
-            app:destination="@id/settingsActivity" />
-
-        <argument android:name="session_id" app:argType="string" app:nullable="true" />
     </fragment>
-
-    <activity
-        android:id="@+id/settingsActivity"
-        android:name="org.mozilla.fenix.settings.SettingsActivity"
-        android:label="SettingsActivity" />
+    <fragment
+        android:id="@+id/libraryFragment"
+        android:name="org.mozilla.fenix.library.LibraryFragment"
+        android:label="@string/library_title"
+        tools:layout="@layout/fragment_library" />
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="org.mozilla.fenix.settings.SettingsFragment"
+        android:label="@string/settings_title" />
 </navigation>

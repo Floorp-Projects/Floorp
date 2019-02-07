@@ -14,6 +14,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.accessibility.AccessibilityManager
+import androidx.appcompat.app.AppCompatActivity
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
@@ -105,6 +106,8 @@ class BrowserFragment : Fragment(), BackHandler {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        (activity as AppCompatActivity).supportActionBar?.hide()
 
         val sessionId = arguments?.getString(SESSION_ID)
 
@@ -208,7 +211,7 @@ class BrowserFragment : Fragment(), BackHandler {
             is ToolbarMenu.Item.Forward -> sessionUseCases.goForward.invoke()
             is ToolbarMenu.Item.Reload -> sessionUseCases.reload.invoke()
             is ToolbarMenu.Item.Settings -> Navigation.findNavController(toolbar)
-                .navigate(R.id.action_browserFragment_to_settingsActivity, null, null)
+                .navigate(R.id.action_browserFragment_to_settingsFragment, null, null)
             is ToolbarMenu.Item.Library -> Navigation.findNavController(toolbar)
                 .navigate(R.id.action_browserFragment_to_libraryFragment, null, null)
             is ToolbarMenu.Item.RequestDesktop -> sessionUseCases.requestDesktopSite.invoke(action.item.isChecked)

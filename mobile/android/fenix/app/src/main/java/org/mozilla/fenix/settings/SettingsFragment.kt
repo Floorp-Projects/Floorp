@@ -8,6 +8,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.provider.Settings
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.Preference
 import androidx.preference.Preference.OnPreferenceClickListener
 import androidx.preference.PreferenceFragmentCompat
@@ -17,8 +18,9 @@ import org.mozilla.fenix.ext.getPreferenceKey
 
 class SettingsFragment : PreferenceFragmentCompat() {
 
-    interface ActionBarUpdater {
-        fun updateTitle(titleResId: Int)
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        (activity as AppCompatActivity).supportActionBar?.show()
     }
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
@@ -29,12 +31,8 @@ class SettingsFragment : PreferenceFragmentCompat() {
         super.onResume()
 
         setupPreferences()
-        getActionBarUpdater().apply {
-            updateTitle(R.string.settings)
-        }
     }
 
-    @Suppress("LongMethod") // Yep, this should be refactored.
     private fun setupPreferences() {
         val makeDefaultBrowserKey = context?.getPreferenceKey(pref_key_make_default_browser)
 
@@ -61,6 +59,4 @@ class SettingsFragment : PreferenceFragmentCompat() {
             defaultClickListener
         }
     }
-
-    private fun getActionBarUpdater() = activity as ActionBarUpdater
 }
