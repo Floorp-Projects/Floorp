@@ -46,7 +46,6 @@ include protocol PVideoDecoderManager;
 include protocol PRemoteDecoderManager;
 include protocol PProfiler;
 include protocol PScriptCache;
-include protocol PSessionStorageObserver;
 include DOMTypes;
 include JavaScriptTypes;
 include IPCBlob;
@@ -353,7 +352,6 @@ nested(upto inside_cpow) sync protocol PContent
     manages PURLClassifierLocal;
     manages PScriptCache;
     manages PLoginReputation;
-    manages PSessionStorageObserver;
 
 both:
     // Depending on exactly how the new browser is being created, it might be
@@ -842,8 +840,6 @@ parent:
     async PURLClassifierLocal(URIParams uri, IPCURLClassifierFeature[] features);
 
     async PLoginReputation(URIParams formURI);
-
-    async PSessionStorageObserver();
 
     // Services remoting
 
