@@ -150,7 +150,20 @@ class ManifestParser(object):
         # read the configuration
         sections = read_ini(fp=fp, variables=defaults, strict=self.strict,
                             handle_defaults=self._handle_defaults)
-        self.manifest_defaults[filename] = defaults
+        if parentmanifest and filename:
+            # A manifest can be read multiple times, via "include:", optionally
+            # with section-specific variables. These variables only apply to
+            # the included manifest when included via the same parent manifest,
+            # so they must be associated with (parentmanifest, filename).
+            #
+            # |defaults| is a combination of variables, in the following order:
+            # - The defaults of the ancestor manifests if self._handle_defaults
+            #   is True.
+            # - Any variables from the "[include:...]" section.
+            # - The defaults of the included manifest.
+            self.manifest_defaults[(parentmanifest, filename)] = defaults
+        else:
+            self.manifest_defaults[filename] = defaults
 
         parent_section_found = False
 
@@ -341,10 +354,17 @@ class ManifestParser(object):
     def manifests(self, tests=None):
         """
         return manifests in order in which they appear in the tests
+        If |tests| is not set, the order of the manifests is unspecified.
         """
         if tests is None:
+            manifests = []
             # Make sure to return all the manifests, even ones without tests.
-            return self.manifest_defaults.keys()
+            for manifest in self.manifest_defaults.keys():
+                if isinstance(manifest, tuple):
+                    parentmanifest, manifest = manifest
+                if manifest not in manifests:
+                    manifests.append(manifest)
+            return manifests
 
         manifests = []
         for test in tests:
