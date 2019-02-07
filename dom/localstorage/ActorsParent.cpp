@@ -2583,13 +2583,14 @@ class QuotaClient final : public mozilla::dom::quota::Client {
   class MatchFunction;
 
   static QuotaClient* sInstance;
-  static bool sObserversRegistered;
 
   Mutex mShadowDatabaseMutex;
   bool mShutdownRequested;
 
  public:
   QuotaClient();
+
+  static nsresult Initialize();
 
   static QuotaClient* GetInstance() {
     AssertIsOnBackgroundThread();
@@ -2613,7 +2614,8 @@ class QuotaClient final : public mozilla::dom::quota::Client {
     return QuotaManager::IsShuttingDown();
   }
 
-  static nsresult RegisterObservers(nsIEventTarget* aBackgroundEventTarget);
+  static nsresult SetBackgroundEventTarget(
+      nsIEventTarget* aBackgroundEventTarget);
 
   mozilla::Mutex& ShadowDatabaseMutex() {
     MOZ_ASSERT(IsOnIOThread() || IsOnConnectionThread());
@@ -2687,19 +2689,26 @@ class QuotaClient::ClearPrivateBrowsingRunnable final : public Runnable {
 };
 
 class QuotaClient::Observer final : public nsIObserver {
+  static Observer* sInstance;
+
   nsCOMPtr<nsIEventTarget> mBackgroundEventTarget;
 
  public:
-  explicit Observer(nsIEventTarget* aBackgroundEventTarget)
-      : mBackgroundEventTarget(aBackgroundEventTarget) {
-    MOZ_ASSERT(NS_IsMainThread());
-  }
+  static nsresult Initialize();
 
-  NS_DECL_ISUPPORTS
+  static nsresult SetBackgroundEventTarget(
+      nsIEventTarget* aBackgroundEventTarget);
 
  private:
+  Observer() { MOZ_ASSERT(NS_IsMainThread()); }
+
   ~Observer() { MOZ_ASSERT(NS_IsMainThread()); }
 
+  nsresult Init();
+
+  nsresult Shutdown();
+
+  NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
 };
 
@@ -2956,6 +2965,10 @@ void InitializeLocalStorage() {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!gLocalStorageInitialized);
+
+  if (NS_FAILED(QuotaClient::Initialize())) {
+    NS_WARNING("Failed to initialize quota client!");
+  }
 
   if (NS_FAILED(Preferences::AddAtomicUintVarCache(
           &gOriginLimitKB, kDefaultQuotaPref, kDefaultOriginLimitKB))) {
@@ -5650,7 +5663,7 @@ nsresult PrepareDatastoreOp::Open() {
     return NS_ERROR_FAILURE;
   }
 
-  nsresult rv = QuotaClient::RegisterObservers(OwningEventTarget());
+  nsresult rv = QuotaClient::SetBackgroundEventTarget(OwningEventTarget());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -7140,7 +7153,6 @@ ArchivedOriginScopeHelper::Run() {
  ******************************************************************************/
 
 QuotaClient* QuotaClient::sInstance = nullptr;
-bool QuotaClient::sObserversRegistered = false;
 
 QuotaClient::QuotaClient()
     : mShadowDatabaseMutex("LocalStorage mShadowDatabaseMutex"),
@@ -7158,34 +7170,31 @@ QuotaClient::~QuotaClient() {
   sInstance = nullptr;
 }
 
-mozilla::dom::quota::Client::Type QuotaClient::GetType() {
-  return QuotaClient::LS;
-}
-
 // static
-nsresult QuotaClient::RegisterObservers(
-    nsIEventTarget* aBackgroundEventTarget) {
+nsresult QuotaClient::Initialize() {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aBackgroundEventTarget);
 
-  if (!sObserversRegistered) {
-    nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-    if (NS_WARN_IF(!obs)) {
-      return NS_ERROR_FAILURE;
-    }
-
-    nsCOMPtr<nsIObserver> observer = new Observer(aBackgroundEventTarget);
-
-    nsresult rv =
-        obs->AddObserver(observer, kPrivateBrowsingObserverTopic, false);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    sObserversRegistered = true;
+  nsresult rv = Observer::Initialize();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
 
   return NS_OK;
+}
+
+// static
+nsresult QuotaClient::SetBackgroundEventTarget(
+    nsIEventTarget* aBackgroundEventTarget) {
+  nsresult rv = Observer::SetBackgroundEventTarget(aBackgroundEventTarget);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+mozilla::dom::quota::Client::Type QuotaClient::GetType() {
+  return QuotaClient::LS;
 }
 
 nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
@@ -7878,6 +7887,79 @@ QuotaClient::ClearPrivateBrowsingRunnable::Run() {
   return NS_OK;
 }
 
+QuotaClient::Observer* QuotaClient::Observer::sInstance = nullptr;
+
+// static
+nsresult QuotaClient::Observer::Initialize() {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  RefPtr<Observer> observer = new Observer();
+
+  nsresult rv = observer->Init();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  sInstance = observer;
+
+  return NS_OK;
+}
+
+// static
+nsresult QuotaClient::Observer::SetBackgroundEventTarget(
+    nsIEventTarget* aBackgroundEventTarget) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(sInstance);
+
+  sInstance->mBackgroundEventTarget = aBackgroundEventTarget;
+
+  return NS_OK;
+}
+
+nsresult QuotaClient::Observer::Init() {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  if (NS_WARN_IF(!obs)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsresult rv = obs->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = obs->AddObserver(this, kPrivateBrowsingObserverTopic, false);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+nsresult QuotaClient::Observer::Shutdown() {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  if (NS_WARN_IF(!obs)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  MOZ_ALWAYS_SUCCEEDS(obs->RemoveObserver(this, kPrivateBrowsingObserverTopic));
+  MOZ_ALWAYS_SUCCEEDS(obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID));
+
+  sInstance = nullptr;
+
+  // In general, the instance will have died after the latter removal call, so
+  // it's not safe to do anything after that point.
+  // However, Shutdown is currently called from Observe which is called by the
+  // Observer Service which holds a strong reference to the observer while the
+  // Observe method is being called.
+
+  return NS_OK;
+}
+
 NS_IMPL_ISUPPORTS(QuotaClient::Observer, nsIObserver)
 
 NS_IMETHODIMP
@@ -7885,12 +7967,25 @@ QuotaClient::Observer::Observe(nsISupports* aSubject, const char* aTopic,
                                const char16_t* aData) {
   MOZ_ASSERT(NS_IsMainThread());
 
+  nsresult rv;
+
   if (!strcmp(aTopic, kPrivateBrowsingObserverTopic)) {
     RefPtr<ClearPrivateBrowsingRunnable> runnable =
         new ClearPrivateBrowsingRunnable();
 
+    MOZ_ASSERT(mBackgroundEventTarget);
+
     MOZ_ALWAYS_SUCCEEDS(
         mBackgroundEventTarget->Dispatch(runnable, NS_DISPATCH_NORMAL));
+
+    return NS_OK;
+  }
+
+  if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
+    rv = Shutdown();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
     return NS_OK;
   }
