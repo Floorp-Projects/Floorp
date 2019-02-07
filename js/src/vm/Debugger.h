@@ -23,6 +23,7 @@
 #include "js/HashTable.h"
 #include "js/Utility.h"
 #include "js/Wrapper.h"
+#include "proxy/DeadObjectProxy.h"
 #include "vm/GeneratorObject.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSContext.h"
@@ -418,8 +419,9 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
           ctorName(ctorName),
           size(size),
           inNursery(inNursery) {
-      MOZ_ASSERT_IF(frame, UncheckedUnwrap(frame)->is<SavedFrame>());
-    };
+      MOZ_ASSERT_IF(frame, UncheckedUnwrap(frame)->is<SavedFrame>() ||
+                               IsDeadProxyObject(frame));
+    }
 
     HeapPtr<JSObject*> frame;
     mozilla::TimeStamp when;
