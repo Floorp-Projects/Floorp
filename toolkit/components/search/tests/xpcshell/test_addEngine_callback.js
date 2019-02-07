@@ -48,7 +48,7 @@ add_task(async function duplicate_failure_test() {
   } catch (ex) {
     let errorCode = ex.result;
     Assert.ok(!!errorCode);
-    Assert.equal(errorCode, Ci.nsISearchInstallCallback.ERROR_DUPLICATE_ENGINE);
+    Assert.equal(errorCode, Ci.nsISearchService.ERROR_DUPLICATE_ENGINE);
   } finally {
     Assert.ok(!engine);
   }
@@ -63,7 +63,7 @@ add_task(async function load_failure_test() {
   } catch (ex) {
     let errorCode = ex.result;
     Assert.ok(!!errorCode);
-    Assert.equal(errorCode, Ci.nsISearchInstallCallback.ERROR_UNKNOWN_FAILURE);
+    Assert.equal(errorCode, Ci.nsISearchService.ERROR_UNKNOWN_FAILURE);
   } finally {
     Assert.ok(!engine);
   }
