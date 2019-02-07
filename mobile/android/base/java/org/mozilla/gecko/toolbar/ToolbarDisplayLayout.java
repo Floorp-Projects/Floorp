@@ -306,7 +306,7 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
             return;
         }
 
-        final String baseDomain = tab.getBaseDomain();
+        final String baseDomain = tab.getHighlightDomain();
 
         String strippedURL = stripAboutReaderURL(url);
 
@@ -335,7 +335,7 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
         }
 
         int index = url.indexOf(baseDomain);
-        if (index == -1 || url.startsWith("javascript:")) {
+        if (index == -1) {
             setTitle(url);
             return;
         }

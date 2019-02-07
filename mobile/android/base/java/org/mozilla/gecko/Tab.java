@@ -49,6 +49,7 @@ public class Tab {
     private long mLastUsed;
     private String mUrl;
     private String mBaseDomain;
+    private String mHighlightDomain;
     private String mUserRequested; // The original url requested. May be typed by the user or sent by an extneral app for example.
     private String mTitle;
     private Bitmap mFavicon;
@@ -134,6 +135,7 @@ public class Tab {
         mId = id;
         mUrl = url;
         mBaseDomain = "";
+        mHighlightDomain = "";
         mUserRequested = "";
         mExternal = external;
         mParentId = parentId;
@@ -207,11 +209,18 @@ public class Tab {
     }
 
     /**
-     * Returns the base domain of the loaded uri. Note that if the page is
-     * a Reader mode uri, the base domain returned is that of the original uri.
+     * Returns the base domain based on the node principal of the loaded document. Note that if the
+     * page is a Reader mode URI, the base domain returned is that of the original URI.
      */
     public String getBaseDomain() {
         return mBaseDomain;
+    }
+
+    /**
+     * Return the base domain based on the display URI used in the URL bar.
+     */
+    public String getHighlightDomain() {
+        return mHighlightDomain;
     }
 
     public Bitmap getFavicon() {
@@ -656,6 +665,7 @@ public class Tab {
         setContentType(message.getString("contentType"));
         updateUserRequested(message.getString("userRequested"));
         mBaseDomain = message.getString("baseDomain", "");
+        mHighlightDomain = message.getString("highlightDomain", "");
 
         setHasFeeds(false);
         setManifestUrl(null);
