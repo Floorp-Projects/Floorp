@@ -77,10 +77,10 @@ def test_worker_caches(task, transform):
     add_cache(job, taskdesc, 'cache1', '/cache1')
     add_cache(job, taskdesc, 'cache2', '/cache2', skip_untrusted=True)
 
-    if impl != 'docker-worker':
+    if impl not in ('docker-worker', 'generic-worker'):
         pytest.xfail("caches not implemented for '{}'".format(impl))
 
-    key = 'caches'
+    key = 'caches' if impl == 'docker-worker' else 'mounts'
     assert key in taskdesc['worker']
     assert len(taskdesc['worker'][key]) == 2
 
