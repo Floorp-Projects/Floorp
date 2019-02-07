@@ -3294,6 +3294,15 @@ nsresult nsWindow::Create(nsIWidget *aParent, nsNativeWidget aNativeParent,
           // We use ARGB visual for mShell only and shape mask
           // for mContainer where is all our content drawn.
           mTransparencyBitmapForTitlebar = true;
+        }
+
+        // When mozilla.widget.use-argb-visuals is set don't use shape mask.
+        if (mTransparencyBitmapForTitlebar &&
+            Preferences::GetBool("mozilla.widget.use-argb-visuals", false)) {
+          mTransparencyBitmapForTitlebar = false;
+        }
+
+        if (mTransparencyBitmapForTitlebar) {
           mCSDSupportLevel = CSD_SUPPORT_CLIENT;
         }
       }
