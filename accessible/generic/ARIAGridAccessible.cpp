@@ -553,6 +553,11 @@ ARIAGridCellAccessible::NativeAttributes() {
   Accessible* thisRow = Row();
   if (!thisRow) return attributes.forget();
 
+  int32_t rowIdx = RowIndexFor(thisRow);
+  if (rowIdx == -1) {  // error
+    return attributes.forget();
+  }
+
   int32_t colIdx = 0, colCount = 0;
   uint32_t childCount = thisRow->ChildCount();
   for (uint32_t childIdx = 0; childIdx < childCount; childIdx++) {
@@ -564,8 +569,6 @@ ARIAGridCellAccessible::NativeAttributes() {
         role == roles::ROWHEADER || role == roles::COLUMNHEADER)
       colCount++;
   }
-
-  int32_t rowIdx = RowIndexFor(thisRow);
 
   nsAutoString stringIdx;
   stringIdx.AppendInt(rowIdx * colCount + colIdx);
