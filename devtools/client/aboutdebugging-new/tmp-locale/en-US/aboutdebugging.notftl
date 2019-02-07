@@ -70,7 +70,7 @@ about-debugging-connect-wifi =
 # Temporary text displayed when wifi support is turned off via preferences.
 # { $pref } is the name of the preference that enables wifi
 # Do not localize
-about-debugging-connect-wifi-disabled = WiFi debugging currently under development. You can enable it with the preference "{ $pref }".
+about-debugging-connect-wifi-disabled = WiFi debugging currently under development. You can enable it with the preference “{ $pref }”.
 
 # WiFi section step by step guide
 about-debugging-connect-wifi-step-same-network = Ensure that your browser and device are on the same network
@@ -109,7 +109,7 @@ about-debugging-connect-network =
 # Temporary text displayed when network location support is turned off via preferences.
 # { $pref } is the name of the preference that enables network locations
 # Do not localize
-about-debugging-connect-network-disabled = Network location support currently under development. You can enable it with the preference "{ $pref }".
+about-debugging-connect-network-disabled = Network location support currently under development. You can enable it with the preference “{ $pref }”.
 
 # Below are the titles for the various categories of debug targets that can be found
 # on "runtime" pages of about:debugging.

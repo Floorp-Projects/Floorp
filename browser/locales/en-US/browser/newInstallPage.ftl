@@ -28,5 +28,5 @@ sync-input =
   .placeholder = Email
 sync-button = Continue
 sync-terms = By proceeding, you agree to the <a data-l10n-name="terms">Terms of Service</a> and <a data-l10n-name="privacy">Privacy Notice</a>.
-sync-first = First time using { -sync-brand-name }? You'll need to sign in to every installation of Firefox to sync your information.
+sync-first = First time using { -sync-brand-name }? You’ll need to sign in to every installation of Firefox to sync your information.
 sync-learn = Learn more
