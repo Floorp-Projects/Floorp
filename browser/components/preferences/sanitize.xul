@@ -39,46 +39,34 @@
 
   <groupbox>
     <label><html:h2 data-l10n-id="history-section-label"/></label>
-    <grid flex="1">
-      <columns>
-        <column data-l10n-id="sanitize-prefs-style" data-l10n-attrs="style"/>
-        <column flex="1"/>
-      </columns>
-      <rows>
-        <row>
-          <checkbox data-l10n-id="item-history-and-downloads"
-                    preference="privacy.clearOnShutdown.history"/>
-          <checkbox data-l10n-id="item-cookies"
-                    preference="privacy.clearOnShutdown.cookies"/>
-        </row>
-        <row>
-          <checkbox data-l10n-id="item-active-logins"
-                    preference="privacy.clearOnShutdown.sessions"/>
-          <checkbox data-l10n-id="item-cache"
-                    preference="privacy.clearOnShutdown.cache"/>
-        </row>
-        <row>
-          <checkbox data-l10n-id="item-form-search-history"
-                    preference="privacy.clearOnShutdown.formdata"/>
-        </row>
-      </rows>
-    </grid>
+    <hbox>
+      <vbox data-l10n-id="sanitize-prefs-style" data-l10n-attrs="style">
+        <checkbox data-l10n-id="item-history-and-downloads"
+                  preference="privacy.clearOnShutdown.history"/>
+        <checkbox data-l10n-id="item-active-logins"
+                  preference="privacy.clearOnShutdown.sessions"/>
+        <checkbox data-l10n-id="item-form-search-history"
+                  preference="privacy.clearOnShutdown.formdata"/>
+      </vbox>
+      <vbox>
+        <checkbox data-l10n-id="item-cookies"
+                  preference="privacy.clearOnShutdown.cookies"/>
+        <checkbox data-l10n-id="item-cache"
+                  preference="privacy.clearOnShutdown.cache"/>
+      </vbox>
+    </hbox>
   </groupbox>
   <groupbox>
     <label><html:h2 data-l10n-id="data-section-label"/></label>
-    <grid flex="1">
-      <columns>
-        <column data-l10n-id="sanitize-prefs-style" data-l10n-attrs="style"/>
-        <column flex="1"/>
-      </columns>
-      <rows>
-        <row>
-          <checkbox data-l10n-id="item-site-preferences"
-                    preference="privacy.clearOnShutdown.siteSettings"/>
-          <checkbox data-l10n-id="item-offline-apps"
-                    preference="privacy.clearOnShutdown.offlineApps"/>
-        </row>
-      </rows>
-    </grid>
+    <hbox>
+      <box data-l10n-id="sanitize-prefs-style" data-l10n-attrs="style">
+        <checkbox data-l10n-id="item-site-preferences"
+                  preference="privacy.clearOnShutdown.siteSettings"/>
+      </box>
+      <box>
+        <checkbox data-l10n-id="item-offline-apps"
+                  preference="privacy.clearOnShutdown.offlineApps"/>
+      </box>
+    </hbox>
   </groupbox>
 </dialog>
