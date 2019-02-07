@@ -73,11 +73,11 @@ function checkOnlyLoginWasUsedTwice({ justChanged }) {
 
 // Begin popup notification (doorhanger) functions //
 
-const REMEMBER_BUTTON = 0;
-const NEVER_BUTTON = 2;
+const REMEMBER_BUTTON = "button";
+const NEVER_MENUITEM = 0;
 
-const CHANGE_BUTTON = 0;
-const DONT_CHANGE_BUTTON = 1;
+const CHANGE_BUTTON = "button";
+const DONT_CHANGE_BUTTON = "secondaryButton";
 
 /**
  * Checks if we have a password capture popup notification
@@ -117,15 +117,15 @@ function clickDoorhangerButton(aPopup, aButtonIndex) {
   ok(true, notifications.length + " notification(s)");
   let notification = notifications[0];
 
-  if (aButtonIndex == 0) {
+  if (aButtonIndex == "button") {
     ok(true, "Triggering main action");
     notification.button.doCommand();
-  } else if (aButtonIndex == 1) {
+  } else if (aButtonIndex == "secondaryButton") {
     ok(true, "Triggering secondary action");
     notification.secondaryButton.doCommand();
-  } else if (aButtonIndex <= aPopup.secondaryActions.length) {
-    ok(true, "Triggering secondary action " + aButtonIndex);
-    notification.children[aButtonIndex - 1].doCommand();
+  } else {
+    ok(true, "Triggering menuitem # " + aButtonIndex);
+    notification.menupopup.querySelectorAll("menuitem")[aButtonIndex].doCommand();
   }
 }
 

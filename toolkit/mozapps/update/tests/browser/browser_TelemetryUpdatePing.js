@@ -34,7 +34,7 @@ add_task(async function testUpdatePingReady() {
     },
     {
       notificationId: "update-restart",
-      button: "secondarybutton",
+      button: "secondaryButton",
       cleanup() {
         AppMenuNotifications.removeNotification(/.*/);
       },

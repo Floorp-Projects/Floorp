@@ -370,10 +370,8 @@ class TestClickNavigation(MarionetteTestCase):
     def close_notification(self):
         try:
             with self.marionette.using_context("chrome"):
-                popup = self.marionette.find_element(
-                    By.CSS_SELECTOR, "#notification-popup popupnotification")
-                popup.find_element(By.ANON_ATTRIBUTE,
-                                   {"anonid": "closebutton"}).click()
+                self.marionette.find_element(By.CSS_SELECTOR,
+                    "#notification-popup popupnotification .popup-notification-closebutton").click()
         except errors.NoSuchElementException:
             pass
 

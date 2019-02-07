@@ -8,7 +8,7 @@ add_task(async function testCompleteAndPartialPatchesWithBadCompleteSize() {
   await runUpdateTest(updateParams, 1, [
     {
       notificationId: "update-restart",
-      button: "secondarybutton",
+      button: "secondaryButton",
       cleanup() {
         AppMenuNotifications.removeNotification(/.*/);
       },

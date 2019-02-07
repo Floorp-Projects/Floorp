@@ -15,7 +15,7 @@
   margin-bottom: 0;
 }
 
-.extension-controlled-notification > popupnotificationcontent > description > .extension-controlled-icon {
+.extension-controlled-notification popupnotificationcontent > description > .extension-controlled-icon {
   height: 16px;
   width: 16px;
   vertical-align: bottom;

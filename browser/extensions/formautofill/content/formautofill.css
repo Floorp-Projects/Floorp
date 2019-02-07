@@ -46,17 +46,17 @@
 }
 
 /* Form Autofill Doorhanger */
-#autofill-address-notification > popupnotificationcontent > .desc-message-box,
-#autofill-credit-card-notification > popupnotificationcontent > .desc-message-box {
+#autofill-address-notification popupnotificationcontent > .desc-message-box,
+#autofill-credit-card-notification popupnotificationcontent > .desc-message-box {
   margin-block-end: 12px;
 }
-#autofill-credit-card-notification > popupnotificationcontent > .desc-message-box > image {
+#autofill-credit-card-notification popupnotificationcontent > .desc-message-box > image {
   margin-inline-start: 6px;
   width: 16px;
   height: 16px;
   list-style-image: url(chrome://formautofill/content/icon-credit-card-generic.svg);
 }
-#autofill-address-notification > popupnotificationcontent > .desc-message-box > description,
-#autofill-credit-card-notification > popupnotificationcontent > .desc-message-box > description {
+#autofill-address-notification popupnotificationcontent > .desc-message-box > description,
+#autofill-credit-card-notification popupnotificationcontent > .desc-message-box > description {
   font-style: italic;
 }
