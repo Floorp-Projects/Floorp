@@ -31,8 +31,8 @@ build = MozbuildObject.from_environment(cwd=here)
 
 
 PARAMETER_MISMATCH = """
-ERROR - The parameters being used to generate tasks differ from those defined
-in your working copy:
+ERROR - The parameters being used to generate tasks differ from those expected
+by your working copy:
 
     {}
 
