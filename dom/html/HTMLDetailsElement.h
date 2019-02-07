@@ -32,12 +32,17 @@ class HTMLDetailsElement final : public nsGenericHTMLElement {
 
   nsresult Clone(NodeInfo* aNodeInfo, nsINode** aResult) const override;
 
+  // Element
   nsChangeHint GetAttributeChangeHint(const nsAtom* aAttribute,
                                       int32_t aModType) const override;
 
   nsresult BeforeSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                          const nsAttrValueOrString* aValue,
                          bool aNotify) override;
+
+  bool IsInteractiveHTMLContent(bool aIgnoreTabindex) const override {
+    return true;
+  }
 
   // HTMLDetailsElement WebIDL
   bool Open() const { return GetBoolAttr(nsGkAtoms::open); }
