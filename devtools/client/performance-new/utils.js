@@ -3,6 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+const { OS } = require("resource://gre/modules/osfile.jsm");
+
 const recordingState = {
   // The initial state before we've queried the PerfActor
   NOT_YET_KNOWN: "not-yet-known",
@@ -174,10 +176,68 @@ function calculateOverhead(interval, bufferSize, features) {
   );
 }
 
+/**
+ * Given an array of absolute paths on the file system, return an array that
+ * doesn't contain the common prefix of the paths; in other words, if all paths
+ * share a common ancestor directory, cut off the path to that ancestor
+ * directory and only leave the path components that differ.
+ * This makes some lists look a little nicer. For example, this turns the list
+ * ["/Users/foo/code/obj-m-android-opt", "/Users/foo/code/obj-m-android-debug"]
+ * into the list ["obj-m-android-opt", "obj-m-android-debug"].
+ * @param {array of string} pathArray The array of absolute paths.
+ * @returns {array of string} A new array with the described adjustment.
+ */
+function withCommonPathPrefixRemoved(pathArray) {
+  if (pathArray.length === 0) {
+    return [];
+  }
+  const splitPaths = pathArray.map(path => OS.Path.split(path));
+  if (!splitPaths.every(sp => sp.absolute)) {
+    // We're expecting all paths to be absolute, so this is an unexpected case,
+    // return the original array.
+    return pathArray;
+  }
+  const [firstSplitPath, ...otherSplitPaths] = splitPaths;
+  if ("winDrive" in firstSplitPath) {
+    const winDrive = firstSplitPath.winDrive;
+    if (!otherSplitPaths.every(sp => sp.winDrive === winDrive)) {
+      return pathArray;
+    }
+  } else if (otherSplitPaths.some(sp => ("winDrive" in sp))) {
+    // Inconsistent winDrive property presence, bail out.
+    return pathArray;
+  }
+  // At this point we're either not on Windows or all paths are on the same
+  // winDrive. And all paths are absolute.
+  // Find the common prefix. Start by assuming the entire path except for the
+  // last folder is shared.
+  const prefix = firstSplitPath.components.slice(0, -1);
+  for (const sp of otherSplitPaths) {
+    prefix.length = Math.min(prefix.length, sp.components.length - 1);
+    for (let i = 0; i < prefix.length; i++) {
+      if (prefix[i] !== sp.components[i]) {
+        prefix.length = i;
+        break;
+      }
+    }
+  }
+  if (prefix.length === 0 || (prefix.length === 1 && prefix[0] === "")) {
+    // There is no shared prefix.
+    // We treat a prefix of [""] as "no prefix", too: Absolute paths on
+    // non-Windows start with a slash, so OS.Path.split(path) always returns an
+    // array whose first element is the empty string on those platforms.
+    // Stripping off a prefix of [""] from the split paths would simply remove
+    // the leading slash from the un-split paths, which is not useful.
+    return pathArray;
+  }
+  return splitPaths.map(sp => OS.Path.join(...sp.components.slice(prefix.length)));
+}
+
 module.exports = {
   formatFileSize,
   makeExponentialScale,
   scaleRangeWithClamping,
   calculateOverhead,
   recordingState,
+  withCommonPathPrefixRemoved,
 };
