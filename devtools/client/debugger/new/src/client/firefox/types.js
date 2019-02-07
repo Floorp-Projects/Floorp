@@ -330,8 +330,7 @@ export type SourceClient = {
   setBreakpoint: ({
     line: number,
     column: ?number,
-    condition: ?string,
-    noSliding: boolean
+    condition: ?string
   }) => Promise<BreakpointResponse>,
   getBreakpointPositionsCompressed: (range: {
     start: { line: number },
