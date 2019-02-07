@@ -39,6 +39,11 @@ nsresult HTMLSummaryElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
   }
 
   WidgetEvent* const event = aVisitor.mEvent;
+  nsCOMPtr<Element> target =
+      do_QueryInterface(event->GetOriginalDOMEventTarget());
+  if (nsContentUtils::IsInInteractiveHTMLContent(target, this)) {
+    return NS_OK;
+  }
 
   if (event->HasMouseEventMessage()) {
     WidgetMouseEvent* mouseEvent = event->AsMouseEvent();
