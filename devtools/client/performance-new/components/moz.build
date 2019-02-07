@@ -5,6 +5,7 @@
 
 DevToolsModules(
     'Description.js',
+    'DirectoryPicker.js',
     'Perf.js',
     'Range.js',
     'RecordingButton.js',

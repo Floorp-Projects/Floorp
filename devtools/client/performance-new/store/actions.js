@@ -93,6 +93,15 @@ exports.changeThreads = threads => _dispatchAndUpdatePreferences({
 });
 
 /**
+ * Updates the recording settings for the objdirs.
+ * @param {array} objdirs
+ */
+exports.changeObjdirs = objdirs => _dispatchAndUpdatePreferences({
+  type: "CHANGE_OBJDIRS",
+  objdirs,
+});
+
+/**
  * Receive the values to intialize the store. See the reducer for what values
  * are expected.
  * @param {object} threads
