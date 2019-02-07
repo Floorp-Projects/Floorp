@@ -12,7 +12,11 @@ import mozilla.components.browser.menu.item.BrowserMenuItemToolbar
 import mozilla.components.browser.menu.item.BrowserMenuSwitch
 import org.mozilla.fenix.R
 
-class ToolbarMenu(private val context: Context, private val onItemTapped: (Item) -> Unit = {}) {
+class ToolbarMenu(
+    private val context: Context,
+    private val requestDesktopStateProvider: () -> Boolean = { false },
+    private val onItemTapped: (Item) -> Unit = {}
+) {
     sealed class Item {
         object Help : Item()
         object Settings : Item()
@@ -88,11 +92,10 @@ class ToolbarMenu(private val context: Context, private val onItemTapped: (Item)
 
             BrowserMenuDivider(),
 
-            BrowserMenuSwitch(context.getString(R.string.browser_menu_desktop_site), {
-                false
-            }) { checked ->
-                onItemTapped.invoke(Item.RequestDesktop(checked))
-            },
+            BrowserMenuSwitch(context.getString(R.string.browser_menu_desktop_site),
+                requestDesktopStateProvider, { checked ->
+                    onItemTapped.invoke(Item.RequestDesktop(checked))
+            }),
 
             BrowserMenuImageText(
                 context.getString(R.string.browser_menu_find_in_page),

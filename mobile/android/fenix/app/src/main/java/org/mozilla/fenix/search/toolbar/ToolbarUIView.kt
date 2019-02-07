@@ -64,7 +64,10 @@ class ToolbarUIView(
             toolbarIntegration = ToolbarIntegration(
                 this,
                 view,
-                ToolbarMenu(this) { actionEmitter.onNext(SearchAction.ToolbarMenuItemTapped(it)) },
+                ToolbarMenu(this,
+                    requestDesktopStateProvider = { components.core.sessionManager.selectedSessionOrThrow.desktopMode },
+                    onItemTapped = { actionEmitter.onNext(SearchAction.ToolbarMenuItemTapped(it)) }
+                ),
                 ShippedDomainsProvider().also { it.initialize(this) },
                 components.core.historyStorage,
                 components.core.sessionManager,

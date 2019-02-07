@@ -32,6 +32,7 @@ import org.mozilla.fenix.ext.requireComponents
 import mozilla.components.feature.prompts.PromptFeature
 import org.mozilla.fenix.BackHandler
 import org.mozilla.fenix.components.FindInPageIntegration
+import org.mozilla.fenix.ext.share
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getSafeManagedObservable
 import org.mozilla.fenix.search.toolbar.SearchAction
@@ -184,6 +185,8 @@ class BrowserFragment : Fragment(), BackHandler {
         promptsFeature.onActivityResult(requestCode, resultCode, data)
     }
 
+    // This method triggers the complexity warning. However it's actually not that hard to understand.
+    @SuppressWarnings("ComplexMethod")
     private fun handleToolbarItemInteraction(action: SearchAction.ToolbarMenuItemTapped) {
         val sessionUseCases = requireComponents.useCases.sessionUseCases
         when (action.item) {
@@ -194,7 +197,9 @@ class BrowserFragment : Fragment(), BackHandler {
                 .navigate(R.id.action_browserFragment_to_settingsActivity, null, null)
             is ToolbarMenu.Item.Library -> Navigation.findNavController(toolbar)
                 .navigate(R.id.action_browserFragment_to_libraryFragment, null, null)
-            else -> return
+            is ToolbarMenu.Item.RequestDesktop -> sessionUseCases.requestDesktopSite.invoke(action.item.isChecked)
+            is ToolbarMenu.Item.Share -> requireComponents.core.sessionManager
+                .selectedSession?.url?.apply { requireContext().share(this) }
         }
     }
 
