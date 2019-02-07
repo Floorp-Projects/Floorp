@@ -697,12 +697,6 @@ DOMLocalization
 DOMLocalization extends :js:`Localization` with functionality to operate on HTML, XUL
 and the DOM directly including DOM Overlays and Mutation Observers.
 
-mozDOMLocalization
-------------------
-
-mozDOMLocalization is a wrapper on DOMLocalization which exposes it via XPIDL
-to allow DocumentL10n and Document to communicate with it.
-
 DocumentL10n
 ------------
 

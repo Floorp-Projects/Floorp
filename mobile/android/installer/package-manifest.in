@@ -232,9 +232,6 @@
 @BINPATH@/components/mozIntl.manifest
 @BINPATH@/components/mozIntl.js
 
-@BINPATH@/components/mozDOMLocalization.js
-@BINPATH@/components/mozDOMLocalization.manifest
-
 ; Modules
 @BINPATH@/modules/*
 @BINPATH@/actors/*
