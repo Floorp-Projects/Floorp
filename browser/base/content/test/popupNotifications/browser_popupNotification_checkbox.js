@@ -19,7 +19,7 @@ function checkCheckbox(checkbox, label, checked = false, hidden = false) {
 
 function checkMainAction(notification, disabled = false) {
   let mainAction = notification.button;
-  let warningLabel = document.getAnonymousElementByAttribute(notification, "class", "popup-notification-warning");
+  let warningLabel = notification.querySelector(".popup-notification-warning");
   is(warningLabel.hidden, !disabled, "Warning label should be shown");
   is(mainAction.disabled, disabled, "MainAction should be disabled");
 }

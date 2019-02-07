@@ -26,10 +26,7 @@ function clickDoorhangerButton(aButtonIndex) {
     notification.button.doCommand();
   } else if (aButtonIndex == PROMPT_NEVER_BUTTON) {
     ok(true, "Triggering secondary action (deny the permission permanently)");
-    // The menuitems in the dropdown are accessible as direct children of the panel,
-    // because they are injected into a <children> node in the XBL binding.
-    // The "never" button is the first menuitem in the dropdown.
-    notification.querySelector("menuitem").doCommand();
+    notification.menupopup.querySelector("menuitem").doCommand();
   } else {
     ok(true, "Triggering secondary action (deny the permission temporarily)");
     notification.secondaryButton.doCommand();

@@ -50,7 +50,7 @@ add_task(async function test_clickNever() {
        "Checking for login saving enabled");
 
     await checkDoorhangerUsernamePassword("notifyu1", "notifyp1");
-    clickDoorhangerButton(notif, NEVER_BUTTON);
+    clickDoorhangerButton(notif, NEVER_MENUITEM);
   });
 
   is(Services.logins.getAllLogins().length, 0, "Should not have any logins yet");

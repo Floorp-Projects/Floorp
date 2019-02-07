@@ -372,7 +372,7 @@ function waitForEvent(topic, status = null) {
 function getNotificationButton(win, notificationId, button) {
   let notification = win.document.getElementById(`appMenu-${notificationId}-notification`);
   is(notification.hidden, false, `${notificationId} notification is showing`);
-  return win.document.getAnonymousElementByAttribute(notification, "anonid", button);
+  return notification[button];
 }
 
 /**

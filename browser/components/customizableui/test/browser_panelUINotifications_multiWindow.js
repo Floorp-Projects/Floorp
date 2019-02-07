@@ -14,8 +14,6 @@ add_task(async function testDoesNotShowDoorhangerForBackgroundWindow() {
   };
 
   await BrowserTestUtils.withNewTab(options, async function(browser) {
-    let doc = browser.ownerDocument;
-
     let win = await BrowserTestUtils.openNewBrowserWindow();
     await SimpleTest.promiseFocus(win);
     let mainActionCalled = false;
@@ -34,7 +32,7 @@ add_task(async function testDoesNotShowDoorhangerForBackgroundWindow() {
     let doorhanger = notifications[0];
     is(doorhanger.id, "appMenu-update-manual-notification", "PanelUI is displaying the update-manual notification.");
 
-    let button = doc.getAnonymousElementByAttribute(doorhanger, "anonid", "button");
+    let button = doorhanger.button;
     button.click();
 
     ok(mainActionCalled, "Main action callback was called");
@@ -58,12 +56,10 @@ add_task(async function testBackgroundWindowNotificationsAreRemovedByForeground(
     let win = await BrowserTestUtils.openNewBrowserWindow();
     await SimpleTest.promiseFocus(win);
     AppMenuNotifications.showNotification("update-manual", {callback() {}});
-    let doc = win.gBrowser.ownerDocument;
     let notifications = [...win.PanelUI.notificationPanel.children].filter(n => !n.hidden);
     is(notifications.length, 1, "PanelUI doorhanger is only displaying one notification.");
     let doorhanger = notifications[0];
-    let button = doc.getAnonymousElementByAttribute(doorhanger, "anonid", "button");
-    button.click();
+    doorhanger.button.click();
 
     await BrowserTestUtils.closeWindow(win);
     await SimpleTest.promiseFocus(window);
@@ -89,11 +85,10 @@ add_task(async function testBackgroundWindowNotificationsAreDismissedByForegroun
     let win = await BrowserTestUtils.openNewBrowserWindow();
     await SimpleTest.promiseFocus(win);
     AppMenuNotifications.showNotification("update-manual", {callback() {}});
-    let doc = win.gBrowser.ownerDocument;
     let notifications = [...win.PanelUI.notificationPanel.children].filter(n => !n.hidden);
     is(notifications.length, 1, "PanelUI doorhanger is only displaying one notification.");
     let doorhanger = notifications[0];
-    let button = doc.getAnonymousElementByAttribute(doorhanger, "anonid", "secondarybutton");
+    let button = doorhanger.secondaryButton;
     button.click();
 
     await BrowserTestUtils.closeWindow(win);
@@ -116,11 +111,10 @@ add_task(async function testOpenWindowAfterShowingNotification() {
 
   let win = await BrowserTestUtils.openNewBrowserWindow();
   await SimpleTest.promiseFocus(win);
-  let doc = win.gBrowser.ownerDocument;
   let notifications = [...win.PanelUI.notificationPanel.children].filter(n => !n.hidden);
   is(notifications.length, 1, "PanelUI doorhanger is only displaying one notification.");
   let doorhanger = notifications[0];
-  let button = doc.getAnonymousElementByAttribute(doorhanger, "anonid", "secondarybutton");
+  let button = doorhanger.secondaryButton;
   button.click();
 
   await BrowserTestUtils.closeWindow(win);

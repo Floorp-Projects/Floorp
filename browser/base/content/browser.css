@@ -1007,10 +1007,6 @@ html|*#fullscreen-exit-button {
   -moz-stack-sizing: ignore;
 }
 
-#addon-progress-notification {
-  -moz-binding: url("chrome://browser/content/urlbarBindings.xml#addon-progress-notification");
-}
-
 browser[tabmodalPromptShowing] {
   -moz-user-focus: none !important;
 }
