@@ -9,11 +9,18 @@
 button {
   background: transparent;
   border: none;
+  font-family: inherit;
+  font-size: inherit;
 }
 
 button:hover,
 button:focus {
   background-color: var(--theme-toolbar-background-hover);
+}
+
+.theme-dark button:hover,
+.theme-dark button:focus {
+  background-color: var(--theme-toolbar-hover);
 }
 
 .debugger {
@@ -26,13 +33,9 @@ button:focus {
   display: flex;
   position: relative;
   flex: 1;
-  background-color: var(--theme-tab-toolbar-background);
-  height: calc(100% - 1px);
+  background-color: var(--theme-body-background);
+  height: 100%;
   overflow: hidden;
-}
-
-.theme-dark .editor-pane {
-  background-color: var(--theme-toolbar-background);
 }
 
 .editor-container {
