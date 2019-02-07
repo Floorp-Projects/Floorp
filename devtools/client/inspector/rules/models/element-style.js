@@ -74,6 +74,8 @@ class ElementStyle {
       if (rule.editor) {
         rule.editor.destroy();
       }
+
+      rule.destroy();
     }
 
     if (this.ruleView.isNewRulesView) {
@@ -122,6 +124,10 @@ class ElementStyle {
       this.markOverriddenAll();
 
       this._sortRulesForPseudoElement();
+
+      if (this.ruleView.isNewRulesView) {
+        this.subscribeRulesToLocationChange();
+      }
 
       // We're done with the previous list of rules.
       for (const r of existingRules) {
@@ -349,10 +355,10 @@ class ElementStyle {
   /**
    * Adds a new declaration to the rule.
    *
-   * @param {String} ruleId
-   *        The id of the Rule to be modified.
-   * @param {String} value
-   *        The new declaration value.
+   * @param  {String} ruleId
+   *         The id of the Rule to be modified.
+   * @param  {String} value
+   *         The new declaration value.
    */
   addNewDeclaration(ruleId, value) {
     const rule = this.getRule(ruleId);
@@ -525,10 +531,10 @@ class ElementStyle {
   /**
    * Modifies the existing rule's selector to the new given value.
    *
-   * @param {String} ruleId
-   *        The id of the Rule to be modified.
-   * @param {String} selector
-   *        The new selector value.
+   * @param  {String} ruleId
+   *         The id of the Rule to be modified.
+   * @param  {String} selector
+   *         The new selector value.
    */
   async modifySelector(ruleId, selector) {
     try {
@@ -590,12 +596,21 @@ class ElementStyle {
   }
 
   /**
+   * Subscribes all the rules to location changes.
+   */
+  subscribeRulesToLocationChange() {
+    for (const rule of this.rules) {
+      rule.subscribeToLocationChange();
+    }
+  }
+
+  /**
    * Toggles the enabled state of the given CSS declaration.
    *
-   * @param {String} ruleId
-   *        The Rule id of the given CSS declaration.
-   * @param {String} declarationId
-   *        The TextProperty id for the CSS declaration.
+   * @param  {String} ruleId
+   *         The Rule id of the given CSS declaration.
+   * @param  {String} declarationId
+   *         The TextProperty id for the CSS declaration.
    */
   toggleDeclaration(ruleId, declarationId) {
     const rule = this.getRule(ruleId);

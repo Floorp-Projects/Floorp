@@ -210,11 +210,12 @@
   unicode-bidi: embed
 }
 
-.ruleview-rule-source[unselectable],
+.ruleview-rule-source.disabled > .ruleview-rule-source-label,
 .ruleview-rule-source[unselectable] > .ruleview-rule-source-label {
   cursor: default;
 }
 
+.ruleview-rule-source:not(.unselectable):hover,
 .ruleview-rule-source:not([unselectable]):hover {
   text-decoration: underline;
 }
