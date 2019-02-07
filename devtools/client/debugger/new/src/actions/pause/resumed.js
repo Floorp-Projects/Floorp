@@ -23,7 +23,7 @@ export function resumed(packet: ResumedPacket) {
     const wasPausedInEval = inDebuggerEval(why);
     const wasStepping = isStepping(getState());
 
-    dispatch({ type: "RESUME", thread: packet.from });
+    dispatch({ type: "RESUME", thread: packet.from, wasStepping });
 
     if (!wasStepping && !wasPausedInEval) {
       await dispatch(evaluateExpressions());
