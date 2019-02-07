@@ -39,6 +39,10 @@ class Declarations extends PureComponent {
     return (
       dom.ul({ className: "ruleview-propertylist" },
         declarations.map(declaration => {
+          if (declaration.isInvisible) {
+            return null;
+          }
+
           return Declaration({
             key: declaration.id,
             declaration,
