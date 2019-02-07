@@ -163,6 +163,7 @@ const TEMP_INSTALL_ID_GEN_SESSION =
   new Uint8Array(Float64Array.of(Math.random()).buffer);
 
 const MSG_JAR_FLUSH = "AddonJarFlush";
+const MSG_MESSAGE_MANAGER_CACHES_FLUSH = "AddonMessageManagerCachesFlush";
 
 
 /**
@@ -609,6 +610,15 @@ var loadManifestFromFile = async function(aFile, aLocation, aOldAddon) {
  */
 function syncLoadManifestFromFile(aFile, aLocation, aOldAddon) {
   return XPIInternal.awaitPromise(loadManifestFromFile(aFile, aLocation, aOldAddon));
+}
+
+function flushChromeCaches() {
+  // Init this, so it will get the notification.
+  Services.obs.notifyObservers(null, "startupcache-invalidate");
+  // Flush message manager cached scripts
+  Services.obs.notifyObservers(null, "message-manager-flush-caches");
+  // Also dispatch this event to child processes
+  Services.mm.broadcastAsyncMessage(MSG_MESSAGE_MANAGER_CACHES_FLUSH, null);
 }
 
 /**
@@ -3190,6 +3200,7 @@ var XPIInstall = {
   installs: new Set(),
 
   createLocalInstall,
+  flushChromeCaches,
   flushJarCache,
   newVersionReason,
   recursiveRemove,
