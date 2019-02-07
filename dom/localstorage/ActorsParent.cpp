@@ -2220,7 +2220,6 @@ class PrepareDatastoreOp : public LSRequestBase, public OpenDirectoryListener {
   };
 
   nsCOMPtr<nsIEventTarget> mMainEventTarget;
-  RefPtr<ContentParent> mContentParent;
   RefPtr<PrepareDatastoreOp> mDelayedOp;
   RefPtr<DirectoryLock> mDirectoryLock;
   RefPtr<Connection> mConnection;
@@ -2252,8 +2251,8 @@ class PrepareDatastoreOp : public LSRequestBase, public OpenDirectoryListener {
 
  public:
   PrepareDatastoreOp(nsIEventTarget* aMainEventTarget,
-                     already_AddRefed<ContentParent> aContentParent,
-                     const LSRequestParams& aParams);
+                     const LSRequestParams& aParams,
+                     const Maybe<ContentParentId>& aContentParentId);
 
   bool OriginIsKnown() const {
     AssertIsOnOwningThread();
@@ -3131,11 +3130,15 @@ PBackgroundLSRequestParent* AllocPBackgroundLSRequestParent(
 
   switch (aParams.type()) {
     case LSRequestParams::TLSRequestPrepareDatastoreParams: {
-      RefPtr<ContentParent> contentParent =
-          BackgroundParent::GetContentParent(aBackgroundActor);
+      Maybe<ContentParentId> contentParentId;
+
+      uint64_t childID = BackgroundParent::GetChildID(aBackgroundActor);
+      if (childID) {
+        contentParentId = Some(ContentParentId(childID));
+      }
 
       RefPtr<PrepareDatastoreOp> prepareDatastoreOp = new PrepareDatastoreOp(
-          mainEventTarget, contentParent.forget(), aParams);
+          mainEventTarget, aParams, contentParentId);
 
       if (!gPrepareDatastoreOps) {
         gPrepareDatastoreOps = new PrepareDatastoreOpArray();
@@ -5580,13 +5583,13 @@ mozilla::ipc::IPCResult LSRequestBase::RecvFinish() {
 
 PrepareDatastoreOp::PrepareDatastoreOp(
     nsIEventTarget* aMainEventTarget,
-    already_AddRefed<ContentParent> aContentParent,
-    const LSRequestParams& aParams)
+    const LSRequestParams& aParams,
+    const Maybe<ContentParentId>& aContentParentId)
     : LSRequestBase(aMainEventTarget),
       mMainEventTarget(aMainEventTarget),
-      mContentParent(std::move(aContentParent)),
       mLoadDataOp(nullptr),
       mParams(aParams.get_LSRequestPrepareDatastoreParams()),
+      mContentParentId(aContentParentId),
       mPrivateBrowsingId(0),
       mUsage(0),
       mSizeOfKeys(0),
@@ -5602,10 +5605,6 @@ PrepareDatastoreOp::PrepareDatastoreOp(
 {
   MOZ_ASSERT(aParams.type() ==
              LSRequestParams::TLSRequestPrepareDatastoreParams);
-
-  if (mContentParent) {
-    mContentParentId = Some(mContentParent->ChildID());
-  }
 }
 
 PrepareDatastoreOp::~PrepareDatastoreOp() {
@@ -5619,10 +5618,6 @@ nsresult PrepareDatastoreOp::Open() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mState == State::Opening);
   MOZ_ASSERT(mNestedState == NestedState::BeforeNesting);
-
-  // Swap this to the stack now to ensure that we release it on this thread.
-  RefPtr<ContentParent> contentParent;
-  mContentParent.swap(contentParent);
 
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnNonBackgroundThread()) ||
       !MayProceedOnNonOwningThread()) {
