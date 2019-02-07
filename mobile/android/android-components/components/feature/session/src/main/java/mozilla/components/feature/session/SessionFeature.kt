@@ -16,7 +16,7 @@ class SessionFeature(
     private val sessionManager: SessionManager,
     private val sessionUseCases: SessionUseCases,
     engineView: EngineView,
-    sessionId: String? = null
+    private val sessionId: String? = null
 ) : LifecycleAwareFeature, BackHandler {
     internal val presenter = EngineViewPresenter(sessionManager, engineView, sessionId)
 
@@ -33,9 +33,13 @@ class SessionFeature(
      * @return true if the event was handled, otherwise false.
      */
     override fun onBackPressed(): Boolean {
-        sessionManager.selectedSession?.let { session ->
-            if (session.canGoBack) {
-                sessionUseCases.goBack.invoke()
+        val session = sessionId?.let {
+            sessionManager.findSessionById(it)
+        } ?: sessionManager.selectedSession
+
+        session?.let { it ->
+            if (it.canGoBack) {
+                sessionUseCases.goBack.invoke(it)
                 return true
             }
         }

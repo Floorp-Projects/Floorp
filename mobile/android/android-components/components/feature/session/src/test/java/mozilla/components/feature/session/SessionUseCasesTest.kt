@@ -13,13 +13,11 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
 class SessionUseCasesTest {
     private val sessionManager = mock(SessionManager::class.java)
     private val selectedEngineSession = mock(EngineSession::class.java)
@@ -84,12 +82,38 @@ class SessionUseCasesTest {
 
     @Test
     fun goBack() {
+        val engineSession = mock(EngineSession::class.java)
+        val session = mock(Session::class.java)
+
+        useCases.goBack.invoke(null)
+        verify(engineSession, never()).goBack()
+        verify(selectedEngineSession, never()).goBack()
+
+        `when`(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
+
+        useCases.goBack.invoke(session)
+        verify(engineSession).goBack()
+
+        `when`(sessionManager.getOrCreateEngineSession(selectedSession)).thenReturn(selectedEngineSession)
         useCases.goBack.invoke()
         verify(selectedEngineSession).goBack()
     }
 
     @Test
     fun goForward() {
+        val engineSession = mock(EngineSession::class.java)
+        val session = mock(Session::class.java)
+
+        useCases.goForward.invoke(null)
+        verify(engineSession, never()).goForward()
+        verify(selectedEngineSession, never()).goForward()
+
+        `when`(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
+
+        useCases.goForward.invoke(session)
+        verify(engineSession).goForward()
+
+        `when`(sessionManager.getOrCreateEngineSession(selectedSession)).thenReturn(selectedEngineSession)
         useCases.goForward.invoke()
         verify(selectedEngineSession).goForward()
     }

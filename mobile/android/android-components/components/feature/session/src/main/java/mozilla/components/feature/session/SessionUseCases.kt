@@ -115,9 +115,9 @@ class SessionUseCases(
         /**
          * Navigates back in the history of the currently selected session
          */
-        fun invoke() {
-            sessionManager.selectedSession?.let {
-                sessionManager.getOrCreateEngineSession(it).goBack()
+        fun invoke(session: Session? = sessionManager.selectedSession) {
+            if (session != null) {
+                sessionManager.getOrCreateEngineSession(session).goBack()
             }
         }
     }
@@ -128,9 +128,9 @@ class SessionUseCases(
         /**
          * Navigates forward in the history of the currently selected session
          */
-        fun invoke() {
-            sessionManager.selectedSession?.let {
-                sessionManager.getOrCreateEngineSession(it).goForward()
+        fun invoke(session: Session? = sessionManager.selectedSession) {
+            if (session != null) {
+                sessionManager.getOrCreateEngineSession(session).goForward()
             }
         }
     }
