@@ -24,7 +24,8 @@ BUILDER = lib.tasks.TaskBuilder(
     task_id=TASK_ID,
     owner="fenix-eng-notifications@mozilla.com",
     source='{}/raw/{}/.taskcluster.yml'.format(GITHUB_HTTP_REPOSITORY, HEAD_REV),
-    scheduler_id=SCHEDULER_ID
+    scheduler_id=SCHEDULER_ID,
+    build_worker_type=os.environ.get('BUILD_WORKER_TYPE'),
 )
 
 
@@ -50,7 +51,6 @@ def generate_build_task(apks, is_staging):
             "taskclusterProxy": True
         },
         artifacts=artifacts,
-        worker_type='android-components-g' if is_staging else 'gecko-focus',
         scopes=[
             "secrets:get:{}".format(sentry_secret)
         ]

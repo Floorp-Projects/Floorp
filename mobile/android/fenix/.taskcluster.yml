@@ -24,8 +24,8 @@ tasks:
           else: mobile-1-decision
         build_worker_type:
           $if: event.repository.html_url == 'https://github.com/mozilla-mobile/fenix'
-          then: gecko-focus
-          else: android-components-g
+          then: mobile-3-b-fenix
+          else: mobile-1-b-fenix
       in:
         taskId: ${decision_task_id}
         taskGroupId: ${decision_task_id}  # Must be explicit because of Chain of Trust
@@ -65,12 +65,13 @@ tasks:
             taskclusterProxy: true
             chainOfTrust: true
           env:
-            TASK_ID: ${decision_task_id}
-            SCHEDULER_ID: ${scheduler_id}
-            MOBILE_HEAD_REPOSITORY: ${repository}
+            BUILD_WORKER_TYPE: ${build_worker_type}
             MOBILE_HEAD_BRANCH: ${event.release.target_commitish}
+            MOBILE_HEAD_REPOSITORY: ${repository}
             MOBILE_HEAD_REV: ${event.release.tag_name}
             MOBILE_TRIGGERED_BY: ${event.sender.login}
+            SCHEDULER_ID: ${scheduler_id}
+            TASK_ID: ${decision_task_id}
           command:
             - /bin/bash
             - --login
