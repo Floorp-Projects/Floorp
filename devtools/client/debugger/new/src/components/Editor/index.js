@@ -124,7 +124,7 @@ class Editor extends PureComponent<Props, State> {
 
     this.state = {
       highlightedLineRange: null,
-      editor: null,
+      editor: (null: any),
       contextMenu: null
     };
   }
@@ -242,7 +242,7 @@ class Editor extends PureComponent<Props, State> {
     if (this.state.editor) {
       this.state.editor.destroy();
       this.state.editor.codeMirror.off("scroll", this.onEditorScroll);
-      this.setState({ editor: null });
+      this.setState({ editor: (null: any) });
     }
 
     const searchAgainKey = L10N.getStr("sourceSearch.search.again.key2");
@@ -606,7 +606,7 @@ class Editor extends PureComponent<Props, State> {
         <HighlightLine />
         <EmptyLines editor={editor} />
         <Breakpoints editor={editor} />
-        <Preview editor={editor} editorRef={this.$editorWrapper} />;
+        <Preview editor={editor} editorRef={this.$editorWrapper} />
         <Footer editor={editor} horizontal={horizontal} />
         <HighlightLines editor={editor} />
         {

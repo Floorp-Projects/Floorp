@@ -11,7 +11,7 @@ exports[`SourceFooter Component default case should render 1`] = `
     (2, 2)
   </span>
   <PaneToggleButton
-    collapsed={true}
+    collapsed={false}
     horizontal={false}
     key="toggle"
     position="end"
@@ -30,7 +30,7 @@ exports[`SourceFooter Component move cursor should render new cursor position 1`
     (6, 11)
   </span>
   <PaneToggleButton
-    collapsed={true}
+    collapsed={false}
     horizontal={false}
     key="toggle"
     position="end"

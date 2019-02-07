@@ -505,6 +505,24 @@ describe("mapExpression", () => {
       }
     },
     {
+      name: "await (no bindings, dynamic import)",
+      expression: `
+        var {rainbowLog} = await import("./cool-module.js");
+        rainbowLog("dynamic");`,
+      newExpression: `var rainbowLog;
+
+        (async () => {
+          ({rainbowLog} = await import("./cool-module.js"));
+          return rainbowLog("dynamic");
+        })()`,
+      shouldMapBindings: false,
+      expectedMapped: {
+        await: true,
+        bindings: false,
+        originalExpression: false
+      }
+    },
+    {
       name: "simple",
       expression: "a",
       newExpression: "a",

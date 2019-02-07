@@ -10,7 +10,13 @@ import { PaneToggleButton } from "../";
 
 describe("PaneToggleButton", () => {
   const handleClickSpy = jest.fn();
-  const wrapper = shallow(<PaneToggleButton handleClick={handleClickSpy} />);
+  const wrapper = shallow(
+    <PaneToggleButton
+      handleClick={handleClickSpy}
+      collapsed={false}
+      position={""}
+    />
+  );
 
   it("renders default", () => {
     expect(wrapper.hasClass("vertical")).toBe(true);
@@ -39,9 +45,9 @@ describe("PaneToggleButton", () => {
 
   it("handleClick is called", () => {
     const position = "testPosition";
-    const collapsed = "testCollapsed";
+    const collapsed = false;
     wrapper.setProps({ position, collapsed });
     wrapper.simulate("click");
-    expect(handleClickSpy).toBeCalledWith(position, collapsed);
+    expect(handleClickSpy).toBeCalledWith(position, true);
   });
 });

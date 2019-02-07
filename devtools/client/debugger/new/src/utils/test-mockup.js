@@ -108,13 +108,15 @@ function makeMockBreakpoint(
 function makeMockFrame(
   id: FrameId = "frame",
   source: Source = makeMockSource("url"),
-  scope: Scope = makeMockScope()
+  scope: Scope = makeMockScope(),
+  line: number = 4,
+  displayName: string = `display-${id}`
 ): Frame {
-  const location = { sourceId: source.id, line: 4 };
+  const location = { sourceId: source.id, line };
   return {
     id,
     thread: "FakeThread",
-    displayName: `display-${id}`,
+    displayName,
     location,
     generatedLocation: location,
     source,

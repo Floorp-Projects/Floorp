@@ -19,6 +19,14 @@ class SynchronousTask;
 
 namespace widget {
 
+struct WinCompositorWnds {
+  HWND mCompositorWnd;
+  HWND mInitialParentWnd;
+  WinCompositorWnds(HWND aCompositorWnd, HWND aInitialParentWnd)
+      : mCompositorWnd(aCompositorWnd),
+        mInitialParentWnd(aInitialParentWnd) {}
+};
+
 class WinCompositorWindowThread final {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_MAIN_THREAD_DESTRUCTION(
       WinCompositorWindowThread)
@@ -40,10 +48,10 @@ class WinCompositorWindowThread final {
   static bool IsInCompositorWindowThread();
 
   /// Can be called from any thread.
-  static HWND CreateCompositorWindow(HWND aParentWnd);
+  static WinCompositorWnds CreateCompositorWindow();
 
   /// Can be called from any thread.
-  static void DestroyCompositorWindow(HWND aWnd);
+  static void DestroyCompositorWindow(WinCompositorWnds aWnds);
 
  private:
   explicit WinCompositorWindowThread(base::Thread* aThread);

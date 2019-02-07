@@ -174,8 +174,8 @@ class Tabs extends PureComponent<Props, State> {
     return (
       <PaneToggleButton
         position="start"
-        collapsed={!this.props.startPanelCollapsed}
-        handleClick={this.props.togglePaneCollapse}
+        collapsed={this.props.startPanelCollapsed}
+        handleClick={(this.props.togglePaneCollapse: any)}
       />
     );
   }
@@ -189,8 +189,8 @@ class Tabs extends PureComponent<Props, State> {
     return (
       <PaneToggleButton
         position="end"
-        collapsed={!endPanelCollapsed}
-        handleClick={togglePaneCollapse}
+        collapsed={endPanelCollapsed}
+        handleClick={(togglePaneCollapse: any)}
         horizontal={horizontal}
       />
     );
