@@ -7,6 +7,7 @@ package mozilla.components.feature.toolbar
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.feature.session.SessionUseCases
+import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 
 /**
@@ -24,7 +25,7 @@ class ToolbarFeature(
     loadUrlUseCase: SessionUseCases.LoadUrlUseCase,
     searchUseCase: SearchUseCase? = null,
     sessionId: String? = null
-) : LifecycleAwareFeature {
+) : LifecycleAwareFeature, BackHandler {
     private val presenter = ToolbarPresenter(toolbar, sessionManager, sessionId)
     private val interactor = ToolbarInteractor(toolbar, loadUrlUseCase, searchUseCase)
 
@@ -41,7 +42,7 @@ class ToolbarFeature(
      *
      * @return true if the event was handled, otherwise false.
      */
-    fun handleBackPressed(): Boolean {
+    override fun onBackPressed(): Boolean {
         return toolbar.onBackPressed()
     }
 

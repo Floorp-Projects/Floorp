@@ -37,11 +37,11 @@ class SessionFeatureTest {
 
         val feature = SessionFeature(sessionManager, sessionUseCases, engineView)
 
-        feature.handleBackPressed()
+        feature.onBackPressed()
         verify(engineSession, never()).goBack()
 
         session.canGoBack = true
-        feature.handleBackPressed()
+        feature.onBackPressed()
         verify(engineSession).goBack()
     }
 

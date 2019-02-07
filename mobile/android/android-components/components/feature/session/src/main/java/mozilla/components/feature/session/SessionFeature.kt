@@ -6,6 +6,7 @@ package mozilla.components.feature.session
 
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.EngineView
+import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 
 /**
@@ -16,7 +17,7 @@ class SessionFeature(
     private val sessionUseCases: SessionUseCases,
     engineView: EngineView,
     sessionId: String? = null
-) : LifecycleAwareFeature {
+) : LifecycleAwareFeature, BackHandler {
     internal val presenter = EngineViewPresenter(sessionManager, engineView, sessionId)
 
     /**
@@ -31,7 +32,7 @@ class SessionFeature(
      *
      * @return true if the event was handled, otherwise false.
      */
-    fun handleBackPressed(): Boolean {
+    override fun onBackPressed(): Boolean {
         sessionManager.selectedSession?.let { session ->
             if (session.canGoBack) {
                 sessionUseCases.goBack.invoke()

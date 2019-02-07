@@ -11,11 +11,12 @@ import android.view.View
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.feature.findinpage.FindInPageFeature
 import mozilla.components.feature.findinpage.view.FindInPageView
+import mozilla.components.support.base.feature.BackHandler
 
 class FindInPageIntegration(
     private val sessionManager: SessionManager,
     private val view: FindInPageView
-) : LifecycleObserver {
+) : LifecycleObserver, BackHandler {
     private val feature = FindInPageFeature(sessionManager, view, ::onClose)
 
     @OnLifecycleEvent(Lifecycle.Event.ON_START)
@@ -32,7 +33,7 @@ class FindInPageIntegration(
         FindInPageIntegration.launch = null
     }
 
-    fun onBackPressed(): Boolean {
+    override fun onBackPressed(): Boolean {
         return feature.onBackPressed()
     }
 

@@ -20,6 +20,7 @@ import mozilla.components.browser.session.tab.CustomTabActionButtonConfig
 import mozilla.components.browser.session.tab.CustomTabMenuItem
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.concept.toolbar.Toolbar
+import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.ktx.android.content.share
 
@@ -33,7 +34,7 @@ class CustomTabsToolbarFeature(
     private val menuBuilder: BrowserMenuBuilder? = null,
     private val shareListener: (() -> Unit)? = null,
     private val closeListener: () -> Unit
-) : LifecycleAwareFeature {
+) : LifecycleAwareFeature, BackHandler {
     private val context = toolbar.context
     private var initialized = false
 
@@ -133,7 +134,7 @@ class CustomTabsToolbarFeature(
      * Removes the current Custom Tabs session when the back button is pressed and returns true.
      * Should be called when the back button is pressed.
      */
-    fun onBackPressed(): Boolean {
+    override fun onBackPressed(): Boolean {
         val result = sessionManager.runWithSession(sessionId) {
             closeListener.invoke()
             remove(it)

@@ -29,6 +29,7 @@ import mozilla.components.feature.session.WindowFeature
 import mozilla.components.feature.tabs.toolbar.TabsToolbarFeature
 import mozilla.components.feature.toolbar.ToolbarAutocompleteFeature
 import mozilla.components.feature.toolbar.ToolbarFeature
+import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.ktx.android.arch.lifecycle.addObservers
 import org.mozilla.samples.browser.ext.components
 import org.mozilla.samples.browser.integration.FindInPageIntegration
@@ -160,8 +161,8 @@ class BrowserFragment : Fragment(), BackHandler {
     override fun onBackPressed(): Boolean {
         return when {
             findInPageIntegration.onBackPressed() -> true
-            toolbarFeature.handleBackPressed() -> true
-            sessionFeature.handleBackPressed() -> true
+            toolbarFeature.onBackPressed() -> true
+            sessionFeature.onBackPressed() -> true
             customTabsToolbarFeature.onBackPressed() -> true
             else -> false
         }

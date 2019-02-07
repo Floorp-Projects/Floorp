@@ -10,6 +10,7 @@ import mozilla.components.browser.session.SessionManager
 import mozilla.components.feature.findinpage.internal.FindInPageInteractor
 import mozilla.components.feature.findinpage.internal.FindInPagePresenter
 import mozilla.components.feature.findinpage.view.FindInPageView
+import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 
 /**
@@ -19,7 +20,7 @@ class FindInPageFeature(
     sessionManager: SessionManager,
     view: FindInPageView,
     private val onClose: (() -> Unit)? = null
-) : LifecycleAwareFeature {
+) : LifecycleAwareFeature, BackHandler {
     @VisibleForTesting internal var presenter = FindInPagePresenter(view)
     @VisibleForTesting internal var interactor = FindInPageInteractor(this, sessionManager, view)
 
@@ -49,7 +50,7 @@ class FindInPageFeature(
     /**
      * Returns true if the back button press was handled and the feature unbound from a session.
      */
-    fun onBackPressed(): Boolean {
+    override fun onBackPressed(): Boolean {
         return if (session != null) {
             unbind()
             true

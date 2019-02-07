@@ -11,6 +11,7 @@ import android.view.View
 import android.view.ViewGroup
 import kotlinx.android.synthetic.main.fragment_tabstray.*
 import mozilla.components.feature.tabs.tabstray.TabsFeature
+import mozilla.components.support.base.feature.BackHandler
 import org.mozilla.samples.browser.ext.components
 
 /**
