@@ -2944,6 +2944,14 @@ void InitializeLocalStorage() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!gLocalStorageInitialized);
 
+  if (!QuotaManager::IsRunningGTests()) {
+    // This service has to be started on the main thread currently.
+    nsCOMPtr<mozIStorageService> ss;
+    if (NS_WARN_IF(!(ss = do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID)))) {
+      NS_WARNING("Failed to get storage service!");
+    }
+  }
+
   if (NS_FAILED(QuotaClient::Initialize())) {
     NS_WARNING("Failed to initialize quota client!");
   }
@@ -5650,12 +5658,6 @@ nsresult PrepareDatastoreOp::Open() {
     if (NS_WARN_IF(!mArchivedOriginScope)) {
       return NS_ERROR_FAILURE;
     }
-  }
-
-  // This service has to be started on the main thread currently.
-  nsCOMPtr<mozIStorageService> ss;
-  if (NS_WARN_IF(!(ss = do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID)))) {
-    return NS_ERROR_FAILURE;
   }
 
   mState = State::Nesting;
