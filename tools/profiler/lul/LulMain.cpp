@@ -1456,6 +1456,67 @@ void LUL::Unwind(/*OUT*/ uintptr_t* aFramePCs,
         }
       }
     }
+#elif defined(GP_ARCH_arm64)
+    // Here is an example of generated code for prologue and epilogue..
+    //
+    // stp     x29, x30, [sp, #-16]!
+    // mov     x29, sp
+    // ...
+    // ldp     x29, x30, [sp], #16
+    // ret
+    //
+    // Next is another example of generated code.
+    //
+    // stp     x20, x19, [sp, #-32]!
+    // stp     x29, x30, [sp, #16]
+    // add     x29, sp, #0x10
+    // ...
+    // ldp     x29, x30, [sp, #16]
+    // ldp     x20, x19, [sp], #32
+    // ret
+    //
+    // Previous x29 and x30 register are stored in the address of x29 register.
+    // But since sp register value depends on local variables, we cannot compute
+    // previous sp register from current sp/fp/lr register and there is no
+    // regular rule for sp register in prologue. But since return address is lr
+    // register, if x29 is valid, we will get return address without sp
+    // register.
+    //
+    // So we assume the following layout that if no rule set. x29 is frame
+    // pointer, so we will be able to compute x29 and x30 .
+    //
+    //   +----------+  <--- new_sp (cannot compute)
+    //   |   ....   |
+    //   +----------+
+    //   |  new_lr  |  (return address)
+    //   +----------+
+    //   |  new_fp  |  <--- old_fp
+    //   +----------+
+    //   |   ....   |
+    //   |   ....   |
+    //   +----------+  <---- old_sp (arbitrary, but unused)
+
+    TaggedUWord old_fp = regs.x29;
+    if (old_fp.Valid() && old_fp.IsAligned() && last_valid_sp.Valid() &&
+        last_valid_sp.Value() <= old_fp.Value()) {
+      TaggedUWord new_fp = DerefTUW(old_fp, aStackImg);
+      if (new_fp.Valid() && new_fp.IsAligned() &&
+          old_fp.Value() < new_fp.Value()) {
+        TaggedUWord old_fp_plus1 = old_fp + TaggedUWord(8);
+        TaggedUWord new_lr = DerefTUW(old_fp_plus1, aStackImg);
+        if (new_lr.Valid()) {
+          regs.x29 = new_fp;
+          regs.x30 = new_lr;
+          // When using frame pointer to walk stack, we cannot compute sp
+          // register since we cannot compute sp register from fp/lr/sp
+          // register, and there is no regular rule to compute previous sp
+          // register. So mark as invalid.
+          regs.sp = TaggedUWord();
+          (*aFramePointerFramesAcquired)++;
+          continue;
+        }
+      }
+    }
 #endif  // defined(GP_PLAT_amd64_linux) || defined(GP_PLAT_x86_linux)
 
     // We failed to recover a frame either using CFI or FP chasing, and we
