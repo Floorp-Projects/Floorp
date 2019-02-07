@@ -37,14 +37,6 @@ class TaskBuilder(object):
             "secrets:get:project/mobile/android-components/public-tokens"
         ] if run_coverage else []
 
-        checkout_command = (
-            "export TERM=dumb && git fetch {} {} --tags && "
-            "git config advice.detachedHead false && "
-            "git checkout {}".format(
-                self.repo_url, self.branch, self.commit
-            )
-        )
-
         snapshot_flag = '-Psnapshot ' if is_snapshot else ''
         coverage_flag = '-Pcoverage ' if run_coverage else ''
         gradle_command = (
@@ -53,10 +45,7 @@ class TaskBuilder(object):
 
         post_gradle_command = 'automation/taskcluster/action/upload_coverage_report.sh' if run_coverage else ''
 
-        full_command = ' && '.join(
-            command for command in (checkout_command, gradle_command, post_gradle_command)
-            if command
-        )
+        command = ' && '.join(cmd for cmd in (gradle_command, post_gradle_command) if cmd)
 
         features = {}
         if artifact_info is not None:
@@ -67,7 +56,7 @@ class TaskBuilder(object):
         return self._craft_build_ish_task(
             name='Android Components - Module {} {}'.format(module_name, subtitle),
             description='Execure Gradle tasks for module {}'.format(module_name),
-            command=full_command,
+            command=command,
             features=features,
             scopes=scopes,
             artifacts=artifacts
@@ -159,6 +148,16 @@ class TaskBuilder(object):
         scopes = [] if scopes is None else scopes
         routes = [] if routes is None else routes
         features = {} if features is None else features
+
+        checkout_command = (
+            "git fetch {} {} --tags && "
+            "git config advice.detachedHead false && "
+            "git checkout {}".format(
+                self.repo_url, self.branch, self.commit
+            )
+        )
+
+        command = '{} && {}'.format(checkout_command, command)
 
         payload = {
             "features": features,
