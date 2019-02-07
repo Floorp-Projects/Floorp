@@ -1718,6 +1718,7 @@ class nsIPresShell : public nsStubDocumentObserver {
   }
 
   nsPoint GetLayoutViewportOffset() const;
+  nsSize GetLayoutViewportSize() const;
 
   virtual void WindowSizeMoveDone() = 0;
   virtual void SysColorChanged() = 0;
