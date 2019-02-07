@@ -13339,24 +13339,12 @@
   },
   "TAB_AUDIO_INDICATOR_USED": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["alwu@mozilla.com"],
-    "expires_in_version": "58",
+    "alert_emails": ["alwu@mozilla.com", "nohlmeier@mozilla.com"],
+    "expires_in_version": "72",
     "kind": "enumerated",
     "n_values": 6,
-    "bug_numbers": [1314220],
+    "bug_numbers": [1314220, 1525374],
     "description": "The total usage amount of the operations of tab audio indicator, mute=0 , unmuted=1, unblockByVisitingTab=2, unblockingByClickingIcon=3",
-    "releaseChannelCollection": "opt-out"
-  },
-  "TAB_MEDIA_BLOCKING_TIME_MS": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["alwu@mozilla.com"],
-    "expires_in_version": "58",
-    "kind": "linear",
-    "low": 1000,
-    "high": 90000,
-    "n_buckets": 91,
-    "bug_numbers": [1314220],
-    "description": "The time duration from tab's media was blocked to unblocked. Now we record from 1 to 90 seconds, but the record by milliseconds, so the bucket is like [1000ms, 2000ms], [2000ms, 3000ms], e.t.c.",
     "releaseChannelCollection": "opt-out"
   },
   "MOZ_CHUNKED_ARRAYBUFFER_IN_XHR": {
