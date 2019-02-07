@@ -701,14 +701,14 @@ npnComplete:
   return true;
 }
 
-nsresult nsHttpConnection::OnTunnelNudged(TLSFilterTransaction *trans) {
+void nsHttpConnection::OnTunnelNudged(TLSFilterTransaction *trans) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   LOG(("nsHttpConnection::OnTunnelNudged %p\n", this));
   if (trans != mTLSFilter) {
-    return NS_OK;
+    return;
   }
   LOG(("nsHttpConnection::OnTunnelNudged %p Calling OnSocketWritable\n", this));
-  return OnSocketWritable();
+  Unused << OnSocketWritable();
 }
 
 // called on the socket thread
