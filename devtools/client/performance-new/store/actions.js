@@ -196,6 +196,53 @@ async function doesFileExistAtPath(path) {
 }
 
 /**
+ * Retrieve a symbol table from a binary on the host machine, by looking up
+ * relevant build artifacts in the specified objdirs.
+ * This is needed if the debuggee is a build running on a remote machine that
+ * was compiled by the developer on *this* machine (the "host machine"). In
+ * that case, the objdir will contain the compiled binary with full symbol and
+ * debug information, whereas the binary on the device may not exist in
+ * uncompressed form or may have been stripped of debug information and some
+ * symbol information.
+ * An objdir, or "object directory", is a directory on the host machine that's
+ * used to store build artifacts ("object files") from the compilation process.
+ *
+ * @param {array of string} objdirs An array of objdir paths on the host machine
+ *   that should be searched for relevant build artifacts.
+ * @param {string} filename The file name of the binary.
+ * @param {string} breakpadId The breakpad ID of the binary.
+ * @returns {Promise} The symbol table of the first encountered binary with a
+ *   matching breakpad ID, in SymbolTableAsTuple format. An exception is thrown (the
+ *   promise is rejected) if nothing was found.
+ */
+async function getSymbolTableFromLocalBinary(objdirs, filename, breakpadId) {
+  const candidatePaths = [];
+  for (const objdirPath of objdirs) {
+    // Binaries are usually expected to exist at objdir/dist/bin/filename.
+    candidatePaths.push(OS.Path.join(objdirPath, "dist", "bin", filename));
+    // Also search in the "objdir" directory itself (not just in dist/bin).
+    // If, for some unforeseen reason, the relevant binary is not inside the
+    // objdirs dist/bin/ directory, this provides a way out because it lets the
+    // user specify the actual location.
+    candidatePaths.push(OS.Path.join(objdirPath, filename));
+  }
+
+  for (const path of candidatePaths) {
+    if (await doesFileExistAtPath(path)) {
+      try {
+        return await ProfilerGetSymbols.getSymbolTable(path, path, breakpadId);
+      } catch (e) {
+        // ProfilerGetSymbols.getSymbolTable was unsuccessful. So either the
+        // file wasn't parseable or its contents didn't match the specified
+        // breakpadId, or some other error occurred.
+        // Advance to the next candidate path.
+      }
+    }
+  }
+  throw new Error("Could not find any matching binary.");
+}
+
+/**
  * Stops the profiler, and opens the profile in a new window.
  */
 exports.getProfileAndStopProfiler = () => {
@@ -206,7 +253,7 @@ exports.getProfileAndStopProfiler = () => {
 
     const libraryGetter = createLibraryMap(profile);
     async function getSymbolTable(debugName, breakpadId) {
-      const {path, debugPath} = libraryGetter(debugName, breakpadId);
+      const {name, path, debugPath} = libraryGetter(debugName, breakpadId);
       if (await doesFileExistAtPath(path)) {
         // This profile was obtained from this machine, and not from a
         // different device (e.g. an Android phone). Dump symbols from the file
@@ -214,13 +261,33 @@ exports.getProfileAndStopProfiler = () => {
         return ProfilerGetSymbols.getSymbolTable(path, debugPath, breakpadId);
       }
       // The file does not exist, which probably indicates that the profile was
-      // obtained on a different machine, i.e. the debuggee is truly remote.
-      // Try to obtain the symbol table on the debuggee.
-      // We also get into this branch if we're looking up symbol tables for
-      // Android system libraries, for example.
-      // For now, this path is not used on Windows, which is why we don't need
-      // to pass the library's debugPath.
-      return getSymbolTableFromDebuggee(perfFront, path, breakpadId);
+      // obtained on a different machine, i.e. the debuggee is truly remote
+      // (e.g. on an Android phone).
+      try {
+        // First, try to find a binary with a matching file name and breakpadId
+        // on the host machine. This works if the profiled build is a developer
+        // build that has been compiled on this machine, and if the binary is
+        // one of the Gecko binaries and not a system library.
+        // The other place where we could obtain symbols is the debuggee device;
+        // that's handled in the catch branch below.
+        // We check the host machine first, because if this is a developer
+        // build, then the objdir files will contain more symbol information
+        // than the files that get pushed to the device.
+        const objdirs = selectors.getObjdirs(getState());
+        return await getSymbolTableFromLocalBinary(objdirs, name, breakpadId);
+      } catch (e) {
+        // No matching file was found on the host machine.
+        // Try to obtain the symbol table on the debuggee. We get into this
+        // branch in the following cases:
+        //  - Android system libraries
+        //  - Firefox binaries that have no matching equivalent on the host
+        //    machine, for example because the user didn't point us at the
+        //    corresponding objdir, or if the build was compiled somewhere
+        //    else, or if the build on the device is outdated.
+        // For now, this path is not used on Windows, which is why we don't
+        // need to pass the library's debugPath.
+        return getSymbolTableFromDebuggee(perfFront, path, breakpadId);
+      }
     }
 
     selectors.getReceiveProfileFn(getState())(profile, getSymbolTable);
