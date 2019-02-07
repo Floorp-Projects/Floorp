@@ -3,10 +3,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/ModuleUtils.h"
-#include "nsCOMPtr.h"
 #include "nsProfiler.h"
 #include "nsProfilerCIID.h"
+
+#include "mozilla/ModuleUtils.h"
+#include "nsCOMPtr.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsProfiler, Init)
 

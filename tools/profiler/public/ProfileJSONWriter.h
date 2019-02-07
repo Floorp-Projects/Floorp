@@ -6,12 +6,12 @@
 #ifndef PROFILEJSONWRITER_H
 #define PROFILEJSONWRITER_H
 
-#include <ostream>
-#include <string>
-#include <string.h>
-
 #include "mozilla/JSONWriter.h"
 #include "mozilla/UniquePtr.h"
+
+#include <functional>
+#include <ostream>
+#include <string>
 
 class SpliceableChunkedJSONWriter;
 
@@ -120,6 +120,22 @@ class SpliceableChunkedJSONWriter : public SpliceableJSONWriter {
 
   // Adopts the chunks from aFunc without copying.
   virtual void TakeAndSplice(ChunkedJSONWriteFunc* aFunc) override;
+};
+
+class JSONSchemaWriter {
+  mozilla::JSONWriter& mWriter;
+  uint32_t mIndex;
+
+ public:
+  explicit JSONSchemaWriter(mozilla::JSONWriter& aWriter)
+      : mWriter(aWriter), mIndex(0) {
+    aWriter.StartObjectProperty("schema",
+                                SpliceableJSONWriter::SingleLineStyle);
+  }
+
+  void WriteField(const char* aName) { mWriter.IntProperty(aName, mIndex++); }
+
+  ~JSONSchemaWriter() { mWriter.EndObject(); }
 };
 
 #endif  // PROFILEJSONWRITER_H

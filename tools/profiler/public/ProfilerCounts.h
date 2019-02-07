@@ -17,6 +17,7 @@
 #  define AUTO_PROFILER_STATIC_COUNT(label, count)
 
 #else
+
 #  include "mozilla/Atomics.h"
 
 class BaseProfilerCount;

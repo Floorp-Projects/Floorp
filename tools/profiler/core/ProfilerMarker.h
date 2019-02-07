@@ -7,14 +7,14 @@
 #ifndef ProfilerMarker_h
 #define ProfilerMarker_h
 
-#include "mozilla/UniquePtrExtensions.h"
-
+#include "ProfileBufferEntry.h"
+#include "ProfileJSONWriter.h"
 #include "ProfilerMarkerPayload.h"
+
+#include "mozilla/UniquePtrExtensions.h"
 
 template <typename T>
 class ProfilerLinkedList;
-class SpliceableJSONWriter;
-class UniqueStacks;
 
 class ProfilerMarker {
   friend class ProfilerLinkedList<ProfilerMarker>;

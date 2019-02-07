@@ -6,12 +6,12 @@
 
 #include "ProfileBuffer.h"
 
-#include "mozilla/MathAlgorithms.h"
-
 #include "ProfilerMarker.h"
+
 #include "jsfriendapi.h"
-#include "nsScriptSecurityManager.h"
+#include "mozilla/MathAlgorithms.h"
 #include "nsJSPrincipals.h"
+#include "nsScriptSecurityManager.h"
 
 using namespace mozilla;
 
