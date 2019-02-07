@@ -13,6 +13,8 @@ const {AddonManager} = ChromeUtils.import("resource://gre/modules/AddonManager.j
 const {AddonRepository} = ChromeUtils.import("resource://gre/modules/addons/AddonRepository.jsm");
 const {AddonSettings} = ChromeUtils.import("resource://gre/modules/addons/AddonSettings.jsm");
 
+ChromeUtils.defineModuleGetter(this, "AMTelemetry",
+                               "resource://gre/modules/AddonManager.jsm");
 ChromeUtils.defineModuleGetter(this, "E10SUtils", "resource://gre/modules/E10SUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "Extension",
                                "resource://gre/modules/Extension.jsm");
@@ -150,10 +152,12 @@ function initialize(event) {
   let helpButton = document.getElementById("helpButton");
   let helpUrl = Services.urlFormatter.formatURLPref("app.support.baseURL") + "addons-help";
   helpButton.setAttribute("href", helpUrl);
+  helpButton.addEventListener("click", () => recordLinkTelemetry("support"));
 
   document.getElementById("preferencesButton")
     .addEventListener("click", () => {
       let mainWindow = getMainWindow();
+      recordLinkTelemetry("about:preferences");
       if ("switchToTabHavingURI" in mainWindow) {
         mainWindow.switchToTabHavingURI("about:preferences", true, {
           triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
@@ -226,6 +230,75 @@ function sendEMPong(aSubject, aTopic, aData) {
   Services.obs.notifyObservers(window, "EM-pong");
 }
 
+function recordLinkTelemetry(target) {
+  let extra = {view: getCurrentViewName()};
+  if (target == "search") {
+    let searchBar = document.getElementById("header-search");
+    extra.type = searchBar.getAttribute("data-addon-type");
+  }
+  AMTelemetry.recordLinkEvent({object: "aboutAddons", value: target, extra});
+}
+
+function recordActionTelemetry({action, value, view, addon}) {
+  view = view || getCurrentViewName();
+  AMTelemetry.recordActionEvent({
+    // The max-length for an object is 20, which it enough to be unique.
+    object: "aboutAddons",
+    value,
+    view,
+    action,
+    addon,
+  });
+}
+
+async function recordViewTelemetry(param) {
+  let type;
+  let addon;
+
+  if (param in AddonManager.addonTypes || ["recent", "available"].includes(param)) {
+    type = param;
+  } else if (param) {
+    let id = param.replace("/preferences", "");
+    addon = await AddonManager.getAddonByID(id);
+  }
+
+  AMTelemetry.recordViewEvent({view: getCurrentViewName(), addon, type});
+}
+
+function recordSetUpdatePolicyTelemetry() {
+  // Record telemetry for changing the update policy.
+  let updatePolicy = [];
+  if (AddonManager.autoUpdateDefault) {
+    updatePolicy.push("default");
+  }
+  if (AddonManager.updateEnabled) {
+    updatePolicy.push("enabled");
+  }
+  recordActionTelemetry({action: "setUpdatePolicy", value: updatePolicy.join(",")});
+}
+
+function recordSetAddonUpdateTelemetry(addon) {
+  let updates = addon.applyBackgroundUpdates;
+  let updatePolicy = "";
+  if (updates == "1") {
+    updatePolicy = "default";
+  } else if (updates == "2") {
+    updatePolicy = "enabled";
+  }
+  recordActionTelemetry({action: "setAddonUpdate", value: updatePolicy, addon});
+}
+
+function getCurrentViewName() {
+  let view = gViewController.currentViewObj;
+  let entries = Object.entries(gViewController.viewObjects);
+  let viewIndex = entries.findIndex(([name, viewObj]) => {
+    return viewObj == view;
+  });
+  if (viewIndex != -1)
+    return entries[viewIndex][0];
+  return "other";
+}
+
 // Used by external callers to load a specific view into the manager
 function loadView(aViewId) {
   if (!gViewController.initialViewSelected) {
@@ -293,6 +366,8 @@ function isDiscoverEnabled() {
 
 function setSearchLabel(type) {
   let searchLabel = document.getElementById("search-label");
+  document.getElementById("header-search")
+    .setAttribute("data-addon-type", type);
   let keyMap = {
     extension: "extension",
     shortcuts: "extension",
@@ -876,14 +951,18 @@ var gViewController = {
     this.displayedView = this.currentViewObj;
     this.currentViewObj.node.setAttribute("loading", "true");
 
+    recordViewTelemetry(view.param);
+
     let headingName = document.getElementById("heading-name");
+    let headingLabel;
     try {
-      headingName.textContent = gStrings.ext.GetStringFromName(`listHeading.${view.param}`);
-      setSearchLabel(view.param);
+      headingLabel = gStrings.ext.GetStringFromName(`listHeading.${view.param}`);
     } catch (e) {
-      // In tests we sometimes render this view with a type we don't support, that's fine.
-      headingName.textContent = "";
+      // Some views don't have a label, like the updates view.
+      headingLabel = "";
     }
+    headingName.textContent = headingLabel;
+    setSearchLabel(view.param);
 
 
     if (aViewId == aPreviousView)
@@ -973,6 +1052,8 @@ var gViewController = {
           // Toggle the auto pref to false, but don't touch the enabled check.
           AddonManager.autoUpdateDefault = false;
         }
+
+        recordSetUpdatePolicyTelemetry();
       },
     },
 
@@ -986,6 +1067,7 @@ var gViewController = {
           if ("applyBackgroundUpdates" in addon)
             addon.applyBackgroundUpdates = AddonManager.AUTOUPDATE_DEFAULT;
         }
+        recordActionTelemetry({action: "resetUpdatePolicy"});
       },
     },
 
@@ -1120,6 +1202,8 @@ var gViewController = {
           }
         }
 
+        recordActionTelemetry({action: "checkForUpdates"});
+
         if (pendingChecks == 0)
           updateStatus();
       },
@@ -1147,6 +1231,7 @@ var gViewController = {
         };
         gEventManager.delegateAddonEvent("onCheckingUpdate", [aAddon]);
         aAddon.findUpdates(listener, AddonManager.UPDATE_WHEN_USER_REQUESTED);
+        recordActionTelemetry({action: "checkForUpdate", addon: aAddon});
       },
     },
 
@@ -1161,11 +1246,17 @@ var gViewController = {
         return aAddon.type == "plugin" || aAddon.optionsType;
       },
       doCommand(aAddon) {
-        if (hasInlineOptions(aAddon)) {
+        let inline = hasInlineOptions(aAddon);
+        let view = getCurrentViewName();
+
+        if (inline) {
           gViewController.commands.cmd_showItemDetails.doCommand(aAddon, true);
         } else if (aAddon.optionsType == AddonManager.OPTIONS_TYPE_TAB) {
           openOptionsInTab(aAddon.optionsURL);
         }
+
+        let value = inline ? "inline" : "external";
+        recordActionTelemetry({action: "preferences", value, view, addon: aAddon});
       },
     },
 
@@ -1202,6 +1293,7 @@ var gViewController = {
           }
         }
         aAddon.enable();
+        recordActionTelemetry({action: "enable", addon: aAddon});
       },
       getTooltip(aAddon) {
         if (!aAddon)
@@ -1220,6 +1312,7 @@ var gViewController = {
       },
       doCommand(aAddon) {
         aAddon.disable();
+        recordActionTelemetry({action: "disable", addon: aAddon});
       },
       getTooltip(aAddon) {
         if (!aAddon)
@@ -1253,6 +1346,8 @@ var gViewController = {
         return hasPermission(aAddon, "uninstall");
       },
       async doCommand(aAddon) {
+        let view = getCurrentViewName();
+
         // Make sure we're on the list view, which supports undo.
         if (gViewController.currentViewObj != gListView) {
           await new Promise(resolve => {
@@ -1260,6 +1355,7 @@ var gViewController = {
             gViewController.loadView(`addons://list/${aAddon.type}`);
           });
         }
+        recordActionTelemetry({action: "uninstall", view, addon: aAddon});
         gViewController.currentViewObj.getListItemForID(aAddon.id).uninstall();
       },
       getTooltip(aAddon) {
@@ -1310,6 +1406,7 @@ var gViewController = {
           for (let file of fp.files) {
             let install = await AddonManager.getInstallForFile(file, null, installTelemetryInfo);
             AddonManager.installAddonFromAOM(browser, document.documentURIObject, install);
+            recordActionTelemetry({action: "installFromFile", value: install.installId});
           }
         });
       },
@@ -1321,6 +1418,7 @@ var gViewController = {
       },
       doCommand() {
         let mainWindow = getMainWindow();
+        recordLinkTelemetry("about:debugging");
         if ("switchToTabHavingURI" in mainWindow) {
           mainWindow.switchToTabHavingURI("about:debugging#addons", true, {
             triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
@@ -1350,6 +1448,7 @@ var gViewController = {
       },
       doCommand(aAddon) {
         openURL(aAddon.contributionURL);
+        recordActionTelemetry({action: "contribute", addon: aAddon});
       },
     },
 
@@ -1965,6 +2064,8 @@ var gHeader = {
         fromChrome: true,
         triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({}),
       });
+
+      recordLinkTelemetry("search");
     });
   },
 
@@ -2423,6 +2524,10 @@ var gListView = {
           item.showInDetailView();
       }
     });
+    this._listBox.addEventListener("Uninstall", (event) =>
+      recordActionTelemetry({action: "uninstall", view: "list", addon: event.target.mAddon}));
+    this._listBox.addEventListener("Undo", (event) =>
+      recordActionTelemetry({action: "undo", addon: event.target.mAddon}));
 
     document.getElementById("signing-learn-more").setAttribute("href", SUPPORT_URL + "unsigned-addons");
     document.getElementById("legacy-extensions-learnmore-link").addEventListener("click", evt => {
@@ -2669,12 +2774,13 @@ var gDetailView = {
 
   initialize() {
     this.node = document.getElementById("detail-view");
+    this.node.addEventListener("click", this.recordClickTelemetry);
     this.headingImage = this.node.querySelector(".card-heading-image");
 
     this._autoUpdate = document.getElementById("detail-autoUpdate");
-
     this._autoUpdate.addEventListener("command", () => {
       this._addon.applyBackgroundUpdates = this._autoUpdate.value;
+      recordSetAddonUpdateTelemetry(this._addon);
     }, true);
 
     document.getElementById("detail-private-browsing-learnmore-link")
@@ -2714,6 +2820,16 @@ var gDetailView = {
 
   onUpdateModeChanged() {
     this.onPropertyChanged(["applyBackgroundUpdates"]);
+  },
+
+  recordClickTelemetry(event) {
+    if (event.target.id == "detail-reviews") {
+      recordLinkTelemetry("rating");
+    } else if (event.target.id == "detail-homepage") {
+      recordLinkTelemetry("homepage");
+    } else if (event.originalTarget.getAttribute("anonid") == "creator-link") {
+      recordLinkTelemetry("author");
+    }
   },
 
   async _updateView(aAddon, aIsRemote, aScrollToPreferences) {
@@ -3409,6 +3525,9 @@ var gUpdatesView = {
     this._updateSelected = document.getElementById("update-selected-btn");
     this._updateSelected.addEventListener("command", function() {
       gUpdatesView.installSelected();
+    });
+    this.node.addEventListener("RelNotesShow", (event) => {
+      recordActionTelemetry({action: "releaseNotes", addon: event.target.mAddon});
     });
 
     this.updateAvailableCount(true);

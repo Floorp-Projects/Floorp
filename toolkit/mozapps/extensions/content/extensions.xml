@@ -1161,6 +1161,12 @@
       <method name="_fetchReleaseNotes">
         <parameter name="aURI"/>
         <body><![CDATA[
+          let sendToggleEvent = () => {
+            var event = document.createEvent("Events");
+            event.initEvent("RelNotesToggle", true, true);
+            this.dispatchEvent(event);
+          };
+
           if (!aURI || this._relNotesLoaded) {
             sendToggleEvent();
             return;
@@ -1171,12 +1177,6 @@
           this._relNotesLoaded = true;
           this._relNotesLoading.hidden = false;
           this._relNotesError.hidden = true;
-
-          let sendToggleEvent = () => {
-            var event = document.createEvent("Events");
-            event.initEvent("RelNotesToggle", true, true);
-            this.dispatchEvent(event);
-          };
 
           let showRelNotes = () => {
             if (!relNotesData || !transformData)
@@ -1251,7 +1251,7 @@
               "tooltiptext",
               this._relNotesToggle.getAttribute("showtooltip")
             );
-            var event = document.createEvent("Events");
+            let event = document.createEvent("Events");
             event.initEvent("RelNotesToggle", true, true);
             this.dispatchEvent(event);
           } else {
@@ -1270,6 +1270,11 @@
                       this.mManualUpdate.releaseNotesURI :
                       this.mAddon.releaseNotesURI;
             this._fetchReleaseNotes(uri);
+
+            // Dispatch an event so extensions.js can record telemetry.
+            let event = document.createEvent("Events");
+            event.initEvent("RelNotesShow", true, true);
+            this.dispatchEvent(event);
           }
         ]]></body>
       </method>
@@ -1297,6 +1302,11 @@
               this.setAttribute("pending", "uninstall");
             });
           }
+
+          // Dispatch an event so extensions.js can track telemetry.
+          var event = document.createEvent("Events");
+          event.initEvent("Uninstall", true, true);
+          this.dispatchEvent(event);
         ]]></body>
       </method>
 
@@ -1545,6 +1555,11 @@
             this.mAddon.cancelUninstall();
           else if (this.getAttribute("wasDisabled") != "true")
             this.mAddon.enable();
+
+          // Dispatch an event so extensions.js can record telemetry.
+          var event = document.createEvent("Events");
+          event.initEvent("Undo", true, true);
+          this.dispatchEvent(event);
 
           this.removeAttribute("pending");
         ]]></body>
