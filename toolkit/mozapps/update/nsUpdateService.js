@@ -3308,8 +3308,8 @@ Checker.prototype = {
                         .securityInfo.QueryInterface(Ci.nsITransportSecurityInfo);
       if (sslStatus && sslStatus.succeededCertChain) {
         let rootCert = null;
-        for (rootCert of XPCOMUtils.IterSimpleEnumerator(sslStatus.succeededCertChain.getEnumerator(),
-                                                         Ci.nsIX509Cert));
+        // The root cert is the last cert in the chain.
+        for (rootCert of sslStatus.succeededCertChain.getEnumerator());
         if (rootCert) {
           Services.prefs.setStringPref("security.pki.mitm_detected", !rootCert.isBuiltInRoot);
         }
