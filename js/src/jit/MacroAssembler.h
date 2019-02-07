@@ -456,6 +456,10 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void pushReturnAddress() DEFINED_ON(mips_shared, arm, arm64);
   void popReturnAddress() DEFINED_ON(mips_shared, arm, arm64);
 
+  // Useful for dealing with two-valued returns.
+  void moveRegPair(Register src0, Register src1, Register dst0, Register dst1,
+                   MoveOp::Type type = MoveOp::GENERAL);
+
  public:
   // ===============================================================
   // Patchable near/far jumps.
