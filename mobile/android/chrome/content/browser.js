@@ -3675,6 +3675,27 @@ function truncate(text, max) {
   return text.slice(0, max) + "…";
 }
 
+/**
+ * We want to extract base domains only from URIs using one of the following
+ * schemes.
+ */
+const PERMITTED_BASE_DOMAIN_SCHEMES = new Set(["http", "https", "ftp"]);
+
+function getBaseDomain(aURI) {
+  let baseDomain = "";
+  if (aURI && PERMITTED_BASE_DOMAIN_SCHEMES.has(aURI.scheme)) {
+    try {
+      baseDomain = Services.eTLD.getBaseDomainFromHost(aURI.displayHost);
+      if (!aURI.displayHost.endsWith(baseDomain)) {
+        // getBaseDomainFromHost converts its resultant to ACE.
+        let IDNService = Cc["@mozilla.org/network/idn-service;1"].getService(Ci.nsIIDNService);
+        baseDomain = IDNService.convertACEtoUTF8(baseDomain);
+      }
+    } catch (e) {}
+  }
+  return baseDomain;
+}
+
 Tab.prototype = {
   create: function(aURL, aParams) {
     if (this.browser)
@@ -4648,19 +4669,8 @@ Tab.prototype = {
       this.browser.messageManager.sendAsyncMessage("Reader:PushState", {isArticle: this.browser.isArticle});
     }
 
-    let baseDomain = "";
-    // For recognized scheme, get base domain from host.
-    let principalURI = contentWin.document.nodePrincipal.URI;
-    if (principalURI && ["http", "https", "ftp"].includes(principalURI.scheme) && principalURI.displayHost) {
-      try {
-        baseDomain = Services.eTLD.getBaseDomainFromHost(principalURI.displayHost);
-        if (!principalURI.displayHost.endsWith(baseDomain)) {
-          // getBaseDomainFromHost converts its resultant to ACE.
-          let IDNService = Cc["@mozilla.org/network/idn-service;1"].getService(Ci.nsIIDNService);
-          baseDomain = IDNService.convertACEtoUTF8(baseDomain);
-        }
-      } catch (e) {}
-    }
+    let baseDomain = getBaseDomain(contentWin.document.nodePrincipal.URI);
+    let highlightDomain = getBaseDomain(fixedURI);
 
     // If we are navigating to a new location with a different host,
     // clear any URL origin that might have been pinned to this tab.
@@ -4711,6 +4721,7 @@ Tab.prototype = {
       uri: truncate(fixedURI.displaySpec, MAX_URI_LENGTH),
       userRequested: this.userRequested || "",
       baseDomain,
+      highlightDomain,
       contentType: (contentType ? contentType : ""),
       sameDocument,
 
