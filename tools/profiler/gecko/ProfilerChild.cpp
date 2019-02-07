@@ -4,8 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "GeckoProfiler.h"
 #include "ProfilerChild.h"
+
+#include "GeckoProfiler.h"
+#include "platform.h"
+
 #include "nsThreadUtils.h"
 
 namespace mozilla {

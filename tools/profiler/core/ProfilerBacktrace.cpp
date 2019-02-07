@@ -6,11 +6,13 @@
 
 #include "ProfilerBacktrace.h"
 
+#include "ProfileBuffer.h"
+#include "ProfiledThreadData.h"
 #include "ProfileJSONWriter.h"
 #include "ThreadInfo.h"
 
 ProfilerBacktrace::ProfilerBacktrace(const char* aName, int aThreadId,
-                                     UniquePtr<ProfileBuffer> aBuffer)
+                                     mozilla::UniquePtr<ProfileBuffer> aBuffer)
     : mName(strdup(aName)), mThreadId(aThreadId), mBuffer(std::move(aBuffer)) {
   MOZ_COUNT_CTOR(ProfilerBacktrace);
 }
@@ -18,7 +20,7 @@ ProfilerBacktrace::ProfilerBacktrace(const char* aName, int aThreadId,
 ProfilerBacktrace::~ProfilerBacktrace() { MOZ_COUNT_DTOR(ProfilerBacktrace); }
 
 void ProfilerBacktrace::StreamJSON(SpliceableJSONWriter& aWriter,
-                                   const TimeStamp& aProcessStartTime,
+                                   const mozilla::TimeStamp& aProcessStartTime,
                                    UniqueStacks& aUniqueStacks) {
   // Unlike ProfiledThreadData::StreamJSON, we don't need to call
   // ProfileBuffer::AddJITInfoForRange because mBuffer does not contain any
@@ -26,7 +28,7 @@ void ProfilerBacktrace::StreamJSON(SpliceableJSONWriter& aWriter,
   // at sample time.
   StreamSamplesAndMarkers(mName.get(), mThreadId, *mBuffer.get(), aWriter,
                           aProcessStartTime,
-                          /* aRegisterTime */ TimeStamp(),
-                          /* aUnregisterTime */ TimeStamp(),
+                          /* aRegisterTime */ mozilla::TimeStamp(),
+                          /* aUnregisterTime */ mozilla::TimeStamp(),
                           /* aSinceTime */ 0, aUniqueStacks);
 }

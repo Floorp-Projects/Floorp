@@ -63,33 +63,23 @@
 
 #else  // !MOZ_GECKO_PROFILER
 
-#  include <functional>
-#  include <signal.h>
-#  include <stdarg.h>
-#  include <stdint.h>
-#  include <stdlib.h>
-
+#  include "js/ProfilingStack.h"
+#  include "js/RootingAPI.h"
+#  include "js/TypeDecls.h"
 #  include "mozilla/Assertions.h"
-#  include "mozilla/Attributes.h"
 #  include "mozilla/Atomics.h"
+#  include "mozilla/Attributes.h"
 #  include "mozilla/GuardObjects.h"
 #  include "mozilla/Maybe.h"
 #  include "mozilla/Sprintf.h"
 #  include "mozilla/ThreadLocal.h"
 #  include "mozilla/TimeStamp.h"
 #  include "mozilla/UniquePtr.h"
-#  include "js/ProfilingStack.h"
-#  include "js/RootingAPI.h"
-#  include "js/TypeDecls.h"
 #  include "nscore.h"
 #  include "nsID.h"
 #  include "nsString.h"
 
-// Make sure that we can use std::min here without the Windows headers messing
-// with us.
-#  ifdef min
-#    undef min
-#  endif
+#  include <stdint.h>
 
 class ProfilerBacktrace;
 class ProfilerMarkerPayload;
@@ -106,7 +96,6 @@ namespace mozilla {
 class MallocAllocPolicy;
 template <class T, size_t MinInlineCapacity, class AllocPolicy>
 class Vector;
-class TimeStamp;
 }  // namespace mozilla
 
 // Macros used by the AUTO_PROFILER_* macros below.

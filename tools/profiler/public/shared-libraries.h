@@ -11,14 +11,15 @@
 #  error This header does not have a useful implementation on your platform!
 #endif
 
-#include <algorithm>
-#include <vector>
-#include <string>
-#include <stdlib.h>
-#include <stdint.h>
-#include <nsID.h>
-#include "nsString.h"
 #include "nsNativeCharsetUtils.h"
+#include "nsString.h"
+#include <nsID.h>
+
+#include <algorithm>
+#include <stdint.h>
+#include <stdlib.h>
+#include <string>
+#include <vector>
 
 class SharedLibrary {
  public:

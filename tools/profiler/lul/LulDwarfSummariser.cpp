@@ -6,7 +6,10 @@
 
 #include "LulDwarfSummariser.h"
 
+#include "LulDwarfExt.h"
+
 #include "mozilla/Assertions.h"
+#include "mozilla/Sprintf.h"
 
 // Set this to 1 for verbose logging
 #define DEBUG_SUMMARISER 0

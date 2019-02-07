@@ -26,54 +26,60 @@
 //   ProfileBuffer. The sampling is done from off-thread, and so uses
 //   SuspendAndSampleAndResumeThread() to get the register values.
 
-#include <algorithm>
-#include <ostream>
-#include <fstream>
-#include <sstream>
-#include <errno.h>
-
 #include "platform.h"
-#include "PlatformMacros.h"
+
+#include "GeckoProfiler.h"
+#include "GeckoProfilerReporter.h"
+#include "PageInformation.h"
+#include "ProfiledThreadData.h"
+#include "ProfilerBacktrace.h"
+#include "ProfileBuffer.h"
+#include "ProfilerIOInterposeObserver.h"
+#include "ProfilerMarkerPayload.h"
+#include "ProfilerParent.h"
+#include "RegisteredThread.h"
+#include "shared-libraries.h"
+#include "ThreadInfo.h"
+#include "VTuneProfiler.h"
+
+#include "js/TraceLoggerAPI.h"
+#include "memory_hooks.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Atomics.h"
-#include "mozilla/Printf.h"
-#include "mozilla/UniquePtr.h"
-#include "mozilla/Vector.h"
-#include "GeckoProfiler.h"
-#include "VTuneProfiler.h"
-#include "GeckoProfilerReporter.h"
-#include "ProfilerIOInterposeObserver.h"
 #include "mozilla/AutoProfilerLabel.h"
 #include "mozilla/ExtensionPolicyService.h"
+#include "mozilla/extensions/WebExtensionPolicy.h"
+#include "mozilla/Printf.h"
+#include "mozilla/Services.h"
 #include "mozilla/StackWalk.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/SystemGroup.h"
 #include "mozilla/ThreadLocal.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Tuple.h"
-#include "mozilla/extensions/WebExtensionPolicy.h"
-#include "ThreadInfo.h"
+#include "mozilla/UniquePtr.h"
+#include "mozilla/Vector.h"
+#include "nsDirectoryServiceDefs.h"
+#include "nsDirectoryServiceUtils.h"
 #include "nsIHttpProtocolHandler.h"
 #include "nsIObserverService.h"
 #include "nsIPropertyBag2.h"
 #include "nsIXULAppInfo.h"
 #include "nsIXULRuntime.h"
-#include "nsDirectoryServiceUtils.h"
-#include "nsDirectoryServiceDefs.h"
 #include "nsJSPrincipals.h"
 #include "nsMemoryReporterManager.h"
-#include "nsScriptSecurityManager.h"
-#include "nsXULAppAPI.h"
 #include "nsProfilerStartParams.h"
-#include "ProfilerParent.h"
-#include "mozilla/Services.h"
+#include "nsScriptSecurityManager.h"
 #include "nsThreadUtils.h"
-#include "ProfilerMarkerPayload.h"
-#include "memory_hooks.h"
-#include "shared-libraries.h"
+#include "nsXULAppAPI.h"
 #include "prdtoa.h"
 #include "prtime.h"
-#include "js/TraceLoggerAPI.h"
+
+#include <algorithm>
+#include <errno.h>
+#include <fstream>
+#include <ostream>
+#include <sstream>
 
 #if defined(XP_WIN)
 #  include <processthreadsapi.h>  // for GetCurrentProcessId()

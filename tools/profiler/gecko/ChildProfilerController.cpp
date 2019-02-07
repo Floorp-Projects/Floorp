@@ -5,8 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ChildProfilerController.h"
-#include "nsThreadUtils.h"
+
 #include "ProfilerChild.h"
+
+#include "nsThreadUtils.h"
 
 using namespace mozilla::ipc;
 

@@ -398,14 +398,14 @@ void SecMap::PrepareRuleSets(uintptr_t aStart, size_t aLen) {
   // Is now usable for binary search.
   mUsable = true;
 
-  if (0) {
-    mLog("\nRulesets after preening\n");
-    for (size_t i = 0; i < mRuleSets.size(); ++i) {
-      mRuleSets[i].Print(mLog);
-      mLog("\n");
-    }
+#if 0
+  mLog("\nRulesets after preening\n");
+  for (size_t i = 0; i < mRuleSets.size(); ++i) {
+    mRuleSets[i].Print(mLog);
     mLog("\n");
   }
+  mLog("\n");
+#endif
 }
 
 bool SecMap::IsEmpty() { return mRuleSets.empty(); }
