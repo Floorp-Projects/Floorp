@@ -51,6 +51,11 @@ docker_image_schema = Schema({
 
     # List of package tasks this docker image depends on.
     Optional('packages'): [basestring],
+
+    Optional(
+        "cache",
+        description="Whether this image should be cached based on inputs.",
+    ): bool,
 })
 
 
@@ -229,7 +234,7 @@ def fill_template(config, tasks):
                 'task-reference': '<{}>'.format(parent),
             }
 
-        if not taskgraph.fast:
+        if task.get('cache', True) and not taskgraph.fast:
             taskdesc['cache'] = {
                 'type': 'docker-images.v2',
                 'name': image_name,
