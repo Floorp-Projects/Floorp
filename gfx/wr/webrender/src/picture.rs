@@ -598,6 +598,9 @@ pub struct TileCache {
     reference_prims: ReferencePrimitiveList,
     /// The root clip chain for this tile cache.
     root_clip_chain_id: ClipChainId,
+    /// If true, this tile cache is enabled. For now, it doesn't
+    /// support tile caching if the surface is not the main framebuffer.
+    pub is_enabled: bool,
 }
 
 /// Stores information about a primitive in the cache that we will
@@ -721,6 +724,7 @@ impl TileCache {
             root_clip_rect: WorldRect::max_rect(),
             reference_prims,
             root_clip_chain_id,
+            is_enabled: true,
         }
     }
 
@@ -758,7 +762,24 @@ impl TileCache {
         pic_rect: LayoutRect,
         frame_context: &FrameVisibilityContext,
         frame_state: &mut FrameVisibilityState,
+        surface_index: SurfaceIndex,
     ) {
+        // If the tile cache is the first surface on the root
+        // surface, then we can enable it. If the client has
+        // requested caching on an offscreen surface, we will
+        // need to disable it (for now).
+        self.is_enabled = surface_index == SurfaceIndex(1);
+        if !self.is_enabled {
+            // TODO(gw): It's technically possible that this tile cache
+            //           might have been enabled in a valid state, and
+            //           then got an offscreen surface. In this case,
+            //           there may be some pre-cached tiles still existing.
+            //           They will expire from the texture cache as normal,
+            //           but we should check this path a bit more carefully
+            //           to see if any other memory should be freed.
+            return;
+        }
+
         let DeviceIntSize { width: tile_width, height: tile_height, _unit: _ } =
             self.tile_dimensions(frame_context.config.testing);
 
@@ -1033,6 +1054,13 @@ impl TileCache {
         opacity_binding_store: &OpacityBindingStorage,
         image_instances: &ImageInstanceStorage,
     ) -> bool {
+        // If the tile cache is disabled, there's no need to update
+        // the primitive dependencies.
+        if !self.is_enabled {
+            // Return true to signal that we didn't early cull this primitive.
+            return true;
+        }
+
         self.map_local_to_world.set_target_spatial_node(
             prim_instance.spatial_node_index,
             clip_scroll_tree,
@@ -1352,6 +1380,11 @@ impl TileCache {
     ) -> LayoutRect {
         self.dirty_region.clear();
         self.pending_blits.clear();
+
+        // If the tile cache is disabled, just return a no-op local clip rect.
+        if !self.is_enabled {
+            return LayoutRect::max_rect();
+        }
 
         let dim = self.tile_dimensions(frame_context.config.testing);
         let descriptor = ImageDescriptor::new(
@@ -2369,8 +2402,12 @@ impl PicturePrimitive {
         // If this is a picture cache, push the dirty region to ensure any
         // child primitives are culled and clipped to the dirty rect(s).
         if let Some(ref tile_cache) = self.tile_cache {
-            frame_state.push_dirty_region(tile_cache.dirty_region.clone());
-            dirty_region_count += 1;
+            // If the tile cache is disabled, it doesn't have a valid
+            // dirty region to exclude primitives from.
+            if tile_cache.is_enabled {
+                frame_state.push_dirty_region(tile_cache.dirty_region.clone());
+                dirty_region_count += 1;
+            }
         }
 
         if inflation_factor > 0.0 {
