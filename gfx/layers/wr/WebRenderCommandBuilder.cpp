@@ -641,6 +641,7 @@ struct DIGroup {
 
     gfx::SurfaceFormat format = gfx::SurfaceFormat::B8G8R8A8;
     std::vector<RefPtr<ScaledFont>> fonts;
+    bool validFonts = true;
     RefPtr<WebRenderDrawEventRecorder> recorder =
         MakeAndAddRef<WebRenderDrawEventRecorder>(
             [&](MemStream& aStream,
@@ -648,10 +649,14 @@ struct DIGroup {
               size_t count = aScaledFonts.size();
               aStream.write((const char*)&count, sizeof(count));
               for (auto& scaled : aScaledFonts) {
-                BlobFont font = {
+                Maybe<wr::FontInstanceKey> key =
                     aWrManager->WrBridge()->GetFontKeyForScaledFont(
-                        scaled, &aResources),
-                    scaled};
+                        scaled, &aResources);
+                if (key.isNothing()) {
+                  validFonts = false;
+                  break;
+                }
+                BlobFont font = {key.value(), scaled};
                 aStream.write((const char*)&font, sizeof(font));
               }
               fonts = std::move(aScaledFonts);
@@ -688,6 +693,10 @@ struct DIGroup {
                          aWrManager->GetRenderRootStateManager(), aResources);
     bool hasItems = recorder->Finish();
     GP("%d Finish\n", hasItems);
+    if (!validFonts) {
+      gfxCriticalNote << "Failed serializing fonts for blob image";
+      return;
+    }
     Range<uint8_t> bytes((uint8_t*)recorder->mOutputStream.mData,
                          recorder->mOutputStream.mLength);
     if (!mKey) {
@@ -2120,7 +2129,7 @@ WebRenderCommandBuilder::GenerateFallbackData(
               ? wr::OpacityType::Opaque
               : wr::OpacityType::HasAlphaChannel;
       std::vector<RefPtr<ScaledFont>> fonts;
-
+      bool validFonts = true;
       RefPtr<WebRenderDrawEventRecorder> recorder =
           MakeAndAddRef<WebRenderDrawEventRecorder>(
               [&](MemStream& aStream,
@@ -2128,10 +2137,14 @@ WebRenderCommandBuilder::GenerateFallbackData(
                 size_t count = aScaledFonts.size();
                 aStream.write((const char*)&count, sizeof(count));
                 for (auto& scaled : aScaledFonts) {
-                  BlobFont font = {
+                  Maybe<wr::FontInstanceKey> key =
                       mManager->WrBridge()->GetFontKeyForScaledFont(
-                          scaled, &aResources),
-                      scaled};
+                          scaled, &aResources);
+                  if (key.isNothing()) {
+                    validFonts = false;
+                    break;
+                  }
+                  BlobFont font = {key.value(), scaled};
                   aStream.write((const char*)&font, sizeof(font));
                 }
                 fonts = std::move(aScaledFonts);
@@ -2151,6 +2164,11 @@ WebRenderCommandBuilder::GenerateFallbackData(
       TakeExternalSurfaces(recorder, fallbackData->mExternalSurfaces,
                            mManager->GetRenderRootStateManager(), aResources);
       recorder->Finish();
+
+      if (!validFonts) {
+        gfxCriticalNote << "Failed serializing fonts for blob image";
+        return nullptr;
+      }
 
       if (isInvalidated) {
         Range<uint8_t> bytes((uint8_t*)recorder->mOutputStream.mData,
@@ -2314,6 +2332,7 @@ Maybe<wr::WrImageMask> WebRenderCommandBuilder::BuildWrMaskImage(
     IntSize size = itemRect.Size().ToUnknownSize();
 
     std::vector<RefPtr<ScaledFont>> fonts;
+    bool validFonts = true;
     RefPtr<WebRenderDrawEventRecorder> recorder =
         MakeAndAddRef<WebRenderDrawEventRecorder>(
             [&](MemStream& aStream,
@@ -2322,9 +2341,14 @@ Maybe<wr::WrImageMask> WebRenderCommandBuilder::BuildWrMaskImage(
               aStream.write((const char*)&count, sizeof(count));
 
               for (auto& scaled : aScaledFonts) {
-                BlobFont font = {mManager->WrBridge()->GetFontKeyForScaledFont(
-                                     scaled, &aResources),
-                                 scaled};
+                Maybe<wr::FontInstanceKey> key =
+                    mManager->WrBridge()->GetFontKeyForScaledFont(
+                        scaled, &aResources);
+                if (key.isNothing()) {
+                  validFonts = false;
+                  break;
+                }
+                BlobFont font = {key.value(), scaled};
                 aStream.write((const char*)&font, sizeof(font));
               }
 
@@ -2354,6 +2378,11 @@ Maybe<wr::WrImageMask> WebRenderCommandBuilder::BuildWrMaskImage(
     TakeExternalSurfaces(recorder, maskData->mExternalSurfaces,
                          mManager->GetRenderRootStateManager(), aResources);
     recorder->Finish();
+
+    if (!validFonts) {
+      gfxCriticalNote << "Failed serializing fonts for blob mask image";
+      return Nothing();
+    }
 
     Range<uint8_t> bytes((uint8_t*)recorder->mOutputStream.mData,
                          recorder->mOutputStream.mLength);
