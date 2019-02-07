@@ -18,14 +18,11 @@ def test_lint_single_file(lint, paths):
     assert len(results) == 2
 
 
-def test_lint_custom_config(lint, paths):
+def test_lint_custom_config_ignored(lint, paths):
     results = lint(paths('custom'))
-    assert len(results) == 0
+    assert len(results) == 2
 
     results = lint(paths('custom/good.py'))
-    assert len(results) == 0
-
-    results = lint(paths('custom', 'bad.py'))
     assert len(results) == 2
 
 
