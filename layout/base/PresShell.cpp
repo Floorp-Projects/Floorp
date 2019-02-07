@@ -6517,15 +6517,8 @@ nsresult PresShell::EventHandler::HandleEvent(nsIFrame* aFrame,
     }
   }
 
-  if (aGUIEvent->mClass == eKeyboardEventClass && GetDocument() &&
-      GetDocument()->EventHandlingSuppressed()) {
-    if (aGUIEvent->mMessage == eKeyDown) {
-      mPresShell->mNoDelayedKeyEvents = true;
-    } else if (!mPresShell->mNoDelayedKeyEvents) {
-      auto event = MakeUnique<DelayedKeyEvent>(aGUIEvent->AsKeyboardEvent());
-      PushDelayedEventIntoQueue(std::move(event));
-    }
-    aGUIEvent->mFlags.mIsSuppressedOrDelayed = true;
+  if (MaybeDiscardOrDelayKeyboardEvent(aGUIEvent)) {
+    // The event is discarded or put into the delayed event queue.
     return NS_OK;
   }
 
@@ -7270,6 +7263,30 @@ bool PresShell::EventHandler::MaybeHandleEventWithAnotherPresShell(
   // We need to handle aGUIEvent with another PresShell.
   nsCOMPtr<nsIPresShell> shell = frame->PresContext()->GetPresShell();
   *aRv = shell->HandleEvent(frame, aGUIEvent, true, aEventStatus);
+  return true;
+}
+
+bool PresShell::EventHandler::MaybeDiscardOrDelayKeyboardEvent(
+    WidgetGUIEvent* aGUIEvent) {
+  MOZ_ASSERT(aGUIEvent);
+
+  if (aGUIEvent->mClass != eKeyboardEventClass) {
+    return false;
+  }
+
+  Document* document = GetDocument();
+  if (!document || !document->EventHandlingSuppressed()) {
+    return false;
+  }
+
+  if (aGUIEvent->mMessage == eKeyDown) {
+    mPresShell->mNoDelayedKeyEvents = true;
+  } else if (!mPresShell->mNoDelayedKeyEvents) {
+    UniquePtr<DelayedKeyEvent> delayedKeyEvent =
+        MakeUnique<DelayedKeyEvent>(aGUIEvent->AsKeyboardEvent());
+    PushDelayedEventIntoQueue(std::move(delayedKeyEvent));
+  }
+  aGUIEvent->mFlags.mIsSuppressedOrDelayed = true;
   return true;
 }
 

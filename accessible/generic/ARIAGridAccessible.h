@@ -114,6 +114,7 @@ class ARIAGridCellAccessible : public HyperTextAccessibleWrap,
 
   /**
    * Return index of the given row.
+   * Returns -1 upon error.
    */
   int32_t RowIndexFor(Accessible* aRow) const;
 
