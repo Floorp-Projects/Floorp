@@ -77,7 +77,7 @@ class IntentProcessor(
                     sessionUseCases.loadUrl.invoke(url, session)
                     true
                 } else {
-                    searchUseCases.defaultSearch.invoke(extraText, Source.ACTION_SEND, openNewTab)
+                    searchUseCases.newTabSearch.invoke(extraText, Source.ACTION_SEND, openNewTab)
                     true
                 }
             }

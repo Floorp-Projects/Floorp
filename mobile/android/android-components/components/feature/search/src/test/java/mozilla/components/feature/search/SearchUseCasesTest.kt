@@ -71,7 +71,7 @@ class SearchUseCasesTest {
         `when`(searchEngineManager.getDefaultSearchEngine(RuntimeEnvironment.application)).thenReturn(searchEngine)
         `when`(sessionManager.getOrCreateEngineSession(any())).thenReturn(engineSession)
 
-        useCases.defaultSearch.invoke(searchTerms, Session.Source.NEW_TAB)
+        useCases.newTabSearch.invoke(searchTerms, Session.Source.NEW_TAB)
         verify(engineSession).loadUrl(searchUrl)
     }
 

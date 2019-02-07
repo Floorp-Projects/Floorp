@@ -66,7 +66,7 @@ class AwesomeBarFeature(
      */
     fun addSearchProvider(
         searchEngine: SearchEngine,
-        searchUseCase: SearchUseCases.DefaultSearchUseCase,
+        searchUseCase: SearchUseCases.SearchUseCase,
         mode: SearchSuggestionProvider.Mode = SearchSuggestionProvider.Mode.SINGLE_SUGGESTION
     ): AwesomeBarFeature {
         awesomeBar.addProviders(SearchSuggestionProvider(searchEngine, searchUseCase, mode))

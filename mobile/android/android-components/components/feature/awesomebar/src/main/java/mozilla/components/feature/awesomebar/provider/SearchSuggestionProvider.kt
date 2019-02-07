@@ -19,7 +19,7 @@ import java.net.URL
  */
 class SearchSuggestionProvider(
     private val searchEngine: SearchEngine,
-    private val searchUseCase: SearchUseCases.DefaultSearchUseCase,
+    private val searchUseCase: SearchUseCases.SearchUseCase,
     private val mode: Mode = Mode.SINGLE_SUGGESTION
 ) : AwesomeBar.SuggestionProvider {
     private val client = if (searchEngine.canProvideSearchSuggestions) {

@@ -24,13 +24,22 @@ class SearchUseCases(
         Session(url).apply { sessionManager.add(this) }
     }
 ) {
+    interface SearchUseCase {
+        fun invoke(searchTerms: String)
+    }
 
     class DefaultSearchUseCase(
         private val context: Context,
         private val searchEngineManager: SearchEngineManager,
         private val sessionManager: SessionManager,
         private val onNoSession: (String) -> Session
-    ) {
+    ) : SearchUseCase {
+        /**
+         * Triggers a search in the currently selected session.
+         */
+        override fun invoke(searchTerms: String) {
+            invoke(searchTerms, sessionManager.selectedSession)
+        }
 
         /**
          * Triggers a search using the default search engine for the provided search terms.
@@ -47,6 +56,16 @@ class SearchUseCases(
             searchSession.searchTerms = searchTerms
 
             sessionManager.getOrCreateEngineSession(searchSession).loadUrl(searchUrl)
+        }
+    }
+
+    class NewTabSearchUseCase(
+        private val context: Context,
+        private val searchEngineManager: SearchEngineManager,
+        private val sessionManager: SessionManager
+    ) : SearchUseCase {
+        override fun invoke(searchTerms: String) {
+            invoke(searchTerms, source = Session.Source.NONE, selected = true)
         }
 
         /**
@@ -75,5 +94,9 @@ class SearchUseCases(
 
     val defaultSearch: DefaultSearchUseCase by lazy {
         DefaultSearchUseCase(context, searchEngineManager, sessionManager, onNoSession)
+    }
+
+    val newTabSearch: NewTabSearchUseCase by lazy {
+        NewTabSearchUseCase(context, searchEngineManager, sessionManager)
     }
 }
