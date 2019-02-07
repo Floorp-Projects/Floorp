@@ -3711,18 +3711,46 @@ var AMTelemetry = {
     }
   },
 
+  convertToString(value) {
+    if (value == null) {
+      // Convert null and undefined to empty strings.
+      return "";
+    }
+    switch (typeof(value)) {
+      case "string":
+        return value;
+      case "boolean":
+        return value ? "1" : "0";
+    }
+    return String(value);
+  },
+
   /**
    * Convert all the telemetry event's extra_vars into strings, if needed.
    *
    * @param {object} extraVars
+   * @returns {object} The formatted extra vars.
    */
-  formatExtraVars(extraVars) {
+  formatExtraVars({addon, ...extraVars}) {
+    if (addon) {
+      extraVars.addonId = addon.id;
+      extraVars.type = addon.type;
+    }
+
     // All the extra_vars in a telemetry event have to be strings.
-    for (var key of Object.keys(extraVars)) {
-      if (typeof(extraVars[key]) !== "string") {
-        extraVars[key] = String(extraVars[key]);
+    for (var [key, value] of Object.entries(extraVars)) {
+      if (value == undefined) {
+        delete extraVars[key];
+      } else {
+        extraVars[key] = this.convertToString(value);
       }
     }
+
+    if (extraVars.addonId) {
+      extraVars.addonId = this.getTrimmedString(extraVars.addonId);
+    }
+
+    return extraVars;
   },
 
   /**
@@ -3786,8 +3814,7 @@ var AMTelemetry = {
     }
 
     // All the extra vars in a telemetry event have to be strings.
-    extra = {...extraVars, ...extra};
-    this.formatExtraVars(extra);
+    extra = this.formatExtraVars({...extraVars, ...extra});
 
     this.recordEvent({method: eventMethod, object, value: installId, extra});
   },
@@ -3835,13 +3862,95 @@ var AMTelemetry = {
     extra = {...extraVars, ...extra};
 
     let hasExtraVars = Object.keys(extra).length > 0;
-    this.formatExtraVars(extra);
+    extra = this.formatExtraVars(extra);
 
     this.recordEvent({method, object, value, extra: hasExtraVars ? extra : null});
   },
 
+  /**
+   * Record an event for when a link is clicked.
+   *
+   * @param {object} opts
+   * @param {string} opts.object
+   *        The object of the event, should be an identifier for where the link
+   *        is located. The accepted values are listed in the
+   *        addonsManager.link object of the Events.yaml file.
+   * @param {string} opts.value The identifier for the link destination.
+   * @param {object} opts.extra
+   *        The extra data to be sent, all keys must be registered in the
+   *        extra_keys section of addonsManager.link in Events.yaml.
+   */
+  recordLinkEvent({object, value, extra = null}) {
+    this.recordEvent({method: "link", object, value, extra});
+  },
+
+  /**
+   * Record an event for an action that took place.
+   *
+   * @param {object} opts
+   * @param {string} opts.object
+   *        The object of the event, should an identifier for where the action
+   *        took place. The accepted values are listed in the
+   *        addonsManager.action object of the Events.yaml file.
+   * @param {string} opts.action The identifier for the action.
+   * @param {string} opts.value An optional value for the action.
+   * @param {AddonWrapper} opts.addon
+   *        An optional add-on object related to the event. Passing this will
+   *        set extra.addonId and extra.type based on the add-on.
+   * @param {string} opts.view The current view, when object is aboutAddons.
+   * @param {object} opts.extra
+   *        The extra data to be sent, all keys must be registered in the
+   *        extra_keys section of addonsManager.action in Events.yaml. If
+   *        opts.addon is passed then it will overwrite the addonId and type
+   *        properties in this object, if they are set.
+   */
+  recordActionEvent({object, action, value, addon, view, extra}) {
+    extra = {...extra, action, addon, view};
+    this.recordEvent({
+      method: "action",
+      object,
+      // Treat null and undefined as null.
+      value: value == null ? null : this.convertToString(value),
+      extra: this.formatExtraVars(extra),
+    });
+  },
+
+  /**
+   * Record an event for a view load in about:addons.
+   *
+   * @param {object} opts
+   * @param {string} opts.view
+   *        The identifier for the view. The accepted values are listed in the
+   *        object property of addonsManager.view object of the Events.yaml
+   *        file.
+   * @param {AddonWrapper} opts.addon
+   *        An optional add-on object related to the event.
+   * @param {string} opts.type
+   *        An optional type for the view. If opts.addon is set it will
+   *        overwrite this value with the type of the add-on.
+   */
+  recordViewEvent({view, addon, type}) {
+    this.recordEvent({
+      method: "view",
+      object: "aboutAddons",
+      value: view,
+      extra: this.formatExtraVars({type, addon}),
+    });
+  },
+
   recordEvent({method, object, value, extra}) {
-    Services.telemetry.recordEvent("addonsManager", method, object, value, extra);
+    if (typeof value != "string") {
+      // The value must be a string or null, make sure it's valid so sending
+      // the event doesn't fail.
+      value = null;
+    }
+    try {
+      Services.telemetry.recordEvent("addonsManager", method, object, value, extra);
+    } catch (err) {
+      // If the telemetry throws just log the error so it doesn't break any
+      // functionality.
+      Cu.reportError(err);
+    }
   },
 };
 

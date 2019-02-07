@@ -121,6 +121,63 @@ addonsManager:
     record_in_processes: ["main"]
     bug_numbers: [1433335, 1515697, 1523641]
     release_channel_collection: opt-out
+  link:
+    description: >
+      A link method event triggered when a user follows a link. The object is the page that the link is on:
+      aboutAddons or aboutPreferences. The value is where the link goes: about:addons, about:preferences,
+      about:debugging, support (on SUMO) or rating, search, author or homepage (on AMO).
+    objects:
+      - aboutAddons
+      - aboutPreferences
+      - customize
+    extra_keys:
+      view: The view the user was on (list, detail or updates).
+      type: "For search: the type of page for this view (especially extension or theme list)."
+    notification_emails: ["addons-dev-internal@mozilla.com"]
+    expiry_version: "73"
+    record_in_processes: ["main"]
+    bug_numbers: [1500147]
+    release_channel_collection: opt-out
+  view:
+    description: >
+      A view method event is triggered when a user views a page in about:addons. The object is always
+      aboutAddons. The value is the view name: discover, list, updates or detail.
+    objects:
+      - aboutAddons
+    extra_keys:
+      type: >
+        The type of the view, for about:addons views shared between the supported add-on types
+        it is set to an extension type, while for views related to updates it is set to
+        "recent" or "available".
+      source: The source of the installation for an add-on.
+      addonId: The id of the add-on being acted upon.
+    notification_emails: ["addons-dev-internal@mozilla.com"]
+    expiry_version: "73"
+    record_in_processes: ["main"]
+    bug_numbers: [1500147]
+    release_channel_collection: opt-out
+  action:
+    description: >
+      An action method event is triggered when a user performs an action through the UI on an add-on. The object is
+      where in the product the action was performed.
+    objects:
+      - aboutAddons
+      - browserAction
+      - customize
+      - pageAction
+    extra_keys:
+      action: >
+        The action that was performed. Options include disable, enable, uninstall, undo, contribute, preferences,
+        installFromFile, manage, checkForUpdates, checkForUpdate, setUpdatePolicy, setAddonUpdate, resetUpdatePolicy
+        and releaseNotes.
+      type: "For enable, disable, uninstall and undo: the add-on type that is being acted upon."
+      view: The view for the event, when object is aboutAddons.
+      addonId: The id of the add-on being acted upon.
+    notification_emails: ["addons-dev-internal@mozilla.com"]
+    expiry_version: "73"
+    record_in_processes: ["main"]
+    bug_numbers: [1500147]
+    release_channel_collection: opt-out
 
 extensions.data:
   migrateResult:
