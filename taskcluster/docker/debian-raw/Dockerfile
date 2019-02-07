@@ -1,0 +1,30 @@
+# %ARG BASE_IMAGE
+FROM $BASE_IMAGE
+MAINTAINER Mike Hommey <mhommey@mozilla.com>
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Set a default command useful for debugging
+CMD ["/bin/bash", "--login"]
+
+COPY setup_packages.sh /usr/local/sbin/
+COPY cloud-mirror-workaround.sh /usr/local/sbin/
+
+# %ARG DIST
+# %ARG SNAPSHOT
+# Set apt sources list to a snapshot.
+RUN for s in debian_$DIST debian_$DIST-updates debian_$DIST-backports debian-security_$DIST/updates; do \
+      echo "deb http://snapshot.debian.org/archive/${s%_*}/$SNAPSHOT/ ${s#*_} main"; \
+    done > /etc/apt/sources.list && \
+    ( echo 'quiet "true";'; \
+      echo 'APT::Get::Assume-Yes "true";'; \
+      echo 'APT::Install-Recommends "false";'; \
+      echo 'Acquire::Check-Valid-Until "false";'; \
+      echo 'Acquire::Retries "5";'; \
+      echo 'dir::bin::methods::https "/usr/local/sbin/cloud-mirror-workaround.sh";'; \
+    ) > /etc/apt/apt.conf.d/99taskcluster
+
+RUN apt-get update && \
+    apt-get install \
+      apt-transport-https \
+      ca-certificates
