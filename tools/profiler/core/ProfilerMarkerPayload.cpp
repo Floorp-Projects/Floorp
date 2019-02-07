@@ -3,16 +3,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <inttypes.h>
+#include "ProfilerMarkerPayload.h"
 
 #include "GeckoProfiler.h"
+#include "ProfileBufferEntry.h"
+#include "ProfileJSONWriter.h"
 #include "ProfilerBacktrace.h"
-#include "ProfilerMarkerPayload.h"
+
 #include "gfxASurface.h"
 #include "Layers.h"
-#include "mozilla/Sprintf.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/net/HttpBaseChannel.h"
+#include "mozilla/Sprintf.h"
+
+#include <inttypes.h>
 
 using namespace mozilla;
 
@@ -171,7 +175,6 @@ static const char* GetCacheState(
     default:
       return nullptr;
   }
-  return nullptr;
 }
 
 void NetworkMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,

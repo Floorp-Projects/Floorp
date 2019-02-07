@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "gtest/gtest.h"
-
 #include "ProfileBufferEntry.h"
 #include "ThreadInfo.h"
+
+#include "gtest/gtest.h"
 
 // Make sure we can record one entry and read it
 TEST(ThreadProfile, InsertOneEntry) {

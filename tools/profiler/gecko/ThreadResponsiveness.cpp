@@ -5,11 +5,11 @@
 
 #include "ThreadResponsiveness.h"
 
+#include "platform.h"
+
 #include "mozilla/Atomics.h"
 #include "mozilla/SystemGroup.h"
-
 #include "nsITimer.h"
-#include "platform.h"
 
 using namespace mozilla;
 
