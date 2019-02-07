@@ -72,6 +72,10 @@
 #  include "xpctest_private.h"
 #endif
 
+#ifdef USE_GLX_TEST
+bool fire_glxtest_process();
+#endif
+
 using namespace mozilla;
 using namespace JS;
 using mozilla::dom::AutoEntryScript;
@@ -1098,6 +1102,17 @@ int XRE_XPCShellMain(int argc, char** argv, char** envp,
     printf_stderr(
         "*** You are running in chaos test mode. See ChaosMode.h. ***\n");
   }
+
+#ifdef USE_GLX_TEST
+  // bug 639842 - it's very important to fire this process BEFORE we set up
+  // error handling. indeed, this process is expected to be crashy, and we
+  // don't want the user to see its crashes. That's the whole reason for
+  // doing this in a separate process.
+  //
+  // This call will cause a fork and the fork will terminate itself separately
+  // from the usual shutdown sequence
+  fire_glxtest_process();
+#endif
 
   // The provider needs to outlive the call to shutting down XPCOM.
   XPCShellDirProvider dirprovider;
