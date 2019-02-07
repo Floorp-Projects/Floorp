@@ -13,6 +13,8 @@ EXTRA_JS_MODULES.addons += [
     'LightweightThemeImageOptimizer.jsm',
     'LightweightThemePersister.jsm',
     'ProductAddonChecker.jsm',
+    'RDFDataSource.jsm',
+    'RDFManifestConverter.jsm',
     'XPIDatabase.jsm',
     'XPIInstall.jsm',
     'XPIProvider.jsm',
