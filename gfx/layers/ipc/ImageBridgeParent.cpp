@@ -360,7 +360,7 @@ already_AddRefed<ImageBridgeParent> ImageBridgeParent::GetInstance(
   MonitorAutoLock lock(*sImageBridgesLock);
   ImageBridgeMap::const_iterator i = sImageBridges.find(aId);
   if (i == sImageBridges.end()) {
-    NS_ASSERTION(false, "Cannot find image bridge for process!");
+    NS_WARNING("Cannot find image bridge for process!");
     return nullptr;
   }
   RefPtr<ImageBridgeParent> bridge = i->second;
