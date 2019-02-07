@@ -1450,6 +1450,8 @@ static void AssertValidArrayIndex(NativeObject* obj, jsid id) {
 /* static */ bool JSObject::setFlags(JSContext* cx, HandleObject obj,
                                      BaseShape::Flag flags,
                                      GenerateShape generateShape) {
+  MOZ_ASSERT(cx->compartment() == obj->compartment());
+
   if (obj->hasAllFlags(flags)) {
     return true;
   }
