@@ -13,14 +13,18 @@ const { generatedToOriginalId } = require("./index");
 const xScopes = new Map();
 
 type XScopeItem = any;
-type XScopeItemsIndex = Map<string, XScopeItem>;
+type XScopeItemsIndex = Map<string | number, XScopeItem>;
 
 function indexLinkingNames(items: XScopeItem[]): XScopeItemsIndex {
   const result = new Map();
   let queue = [...items];
   while (queue.length > 0) {
     const item = queue.shift();
-    if ("linkage_name" in item) {
+    if ("uid" in item) {
+      result.set(item.uid, item);
+    } else if ("linkage_name" in item) {
+      // TODO the linkage_name string value is used for compatibility
+      // with old format. Remove in favour of the uid referencing.
       result.set(item.linkage_name, item);
     }
     if ("children" in item) {
@@ -28,6 +32,19 @@ function indexLinkingNames(items: XScopeItem[]): XScopeItemsIndex {
     }
   }
   return result;
+}
+
+function getIndexedItem(
+  index: XScopeItemsIndex,
+  key: string | { uid: number }
+): XScopeItem {
+  if (typeof key === "object" && key != null) {
+    return index.get(key.uid);
+  }
+  if (typeof key === "string") {
+    return index.get(key);
+  }
+  return null;
 }
 
 type XScopeData = {
@@ -112,7 +129,7 @@ function filterScopes(
         break;
       case "inlined_subroutine":
         if (isInRange(item, pc)) {
-          const linkedItem = index.get(item.abstract_origin);
+          const linkedItem = getIndexedItem(index, item.abstract_origin);
           const s: FoundScope = {
             id: item.abstract_origin,
             name: linkedItem ? linkedItem.name : void 0

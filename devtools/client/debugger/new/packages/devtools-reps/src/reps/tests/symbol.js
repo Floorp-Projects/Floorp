@@ -37,3 +37,20 @@ describe("test Symbol without identifier", () => {
     expectActorAttribute(renderedComponent, stub.actor);
   });
 });
+
+describe("test Symbol with long string", () => {
+  const stub = stubs.get("SymbolWithLongString");
+
+  it("renders the expected content", () => {
+    const renderedComponent = shallow(
+      Rep({
+        object: stub
+      })
+    );
+
+    expect(renderedComponent.text()).toEqual(
+      "Symbol(aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa…)"
+    );
+    expectActorAttribute(renderedComponent, stub.actor);
+  });
+});

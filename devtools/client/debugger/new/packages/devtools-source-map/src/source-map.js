@@ -14,7 +14,11 @@ const { SourceMapConsumer, SourceMapGenerator } = require("source-map");
 
 const { createConsumer } = require("./utils/createConsumer");
 const assert = require("./utils/assert");
-const { fetchSourceMap } = require("./utils/fetchSourceMap");
+const {
+  fetchSourceMap,
+  hasOriginalURL,
+  clearOriginalURLs
+} = require("./utils/fetchSourceMap");
 const {
   getSourceMap,
   setSourceMap,
@@ -360,10 +364,12 @@ function applySourceMap(
 function clearSourceMaps() {
   clearSourceMapsRequests();
   clearWasmXScopes();
+  clearOriginalURLs();
 }
 
 module.exports = {
   getOriginalURLs,
+  hasOriginalURL,
   getOriginalRanges,
   getGeneratedRanges,
   getGeneratedLocation,

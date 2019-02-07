@@ -5,6 +5,7 @@
 
 const {
   getOriginalURLs,
+  hasOriginalURL,
   getOriginalRanges,
   getGeneratedRanges,
   getGeneratedLocation,
@@ -29,6 +30,7 @@ const {
 self.onmessage = workerHandler({
   setAssetRootURL,
   getOriginalURLs,
+  hasOriginalURL,
   getOriginalRanges,
   getGeneratedRanges,
   getGeneratedLocation,
