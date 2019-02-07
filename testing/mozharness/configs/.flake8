@@ -1,7 +1,7 @@
 [flake8]
 ignore =
     # From root
-    E121, E123, E126, E129, E133, E226, E241, E242, E704, W503, E402,
+    E121, E123, E126, E129, E133, E226, E241, E242, E704, W503, E402, W605, W504,
     # The following errors should be fixed eventually
     # line too long
     E501,
