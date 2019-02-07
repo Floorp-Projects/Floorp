@@ -62,7 +62,7 @@ const contentMap = {
  * @return String
  *         The content type.
  */
-function getContentType(url: string) {
+function getContentType(url: string): string {
   url = trimUrlQuery(url);
   const dot = url.lastIndexOf(".");
   if (dot >= 0) {
