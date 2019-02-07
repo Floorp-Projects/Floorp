@@ -2,6 +2,226 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+var Fingerprinting = {
+  PREF_ENABLED: "privacy.trackingprotection.fingerprinting.enabled",
+
+  strings: {
+    get subViewBlocked() {
+      delete this.subViewBlocked;
+      return this.subViewBlocked =
+        gNavigatorBundle.getString("contentBlocking.fingerprintersView.blocked.label");
+    },
+  },
+
+  init() {
+    XPCOMUtils.defineLazyPreferenceGetter(this, "enabled", this.PREF_ENABLED, false);
+    this.updateCategoryLabel();
+  },
+
+  get categoryItem() {
+    delete this.categoryItem;
+    return this.categoryItem =
+      document.getElementById("identity-popup-content-blocking-category-fingerprinters");
+  },
+
+  get categoryLabel() {
+    delete this.categoryLabel;
+    return this.categoryLabel =
+      document.getElementById("identity-popup-content-blocking-fingerprinters-state-label");
+  },
+
+  get subViewList() {
+    delete this.subViewList;
+    return this.subViewList = document.getElementById("identity-popup-fingerprintersView-list");
+  },
+
+  updateCategoryLabel() {
+    let label;
+    if (this.enabled) {
+      label = ContentBlocking.showBlockedLabels ? "contentBlocking.cryptominers.blocking.label" : null;
+    } else {
+      label = ContentBlocking.showAllowedLabels ? "contentBlocking.cryptominers.allowed.label" : null;
+    }
+    this.categoryLabel.textContent = label ? gNavigatorBundle.getString(label) : "";
+  },
+
+  isBlocking(state) {
+    return (state & Ci.nsIWebProgressListener.STATE_BLOCKED_FINGERPRINTING_CONTENT) != 0;
+  },
+
+  isAllowing(state) {
+    return this.enabled && (state & Ci.nsIWebProgressListener.STATE_LOADED_FINGERPRINTING_CONTENT) != 0;
+  },
+
+  isDetected(state) {
+    return this.isBlocking(state) || this.isAllowing(state);
+  },
+
+  async updateSubView() {
+    let contentBlockingLog = await gBrowser.selectedBrowser.getContentBlockingLog();
+    contentBlockingLog = JSON.parse(contentBlockingLog);
+
+    let fragment = document.createDocumentFragment();
+    for (let [origin, actions] of Object.entries(contentBlockingLog)) {
+      let listItem = this._createListItem(origin, actions);
+      if (listItem) {
+        fragment.appendChild(listItem);
+      }
+    }
+
+    this.subViewList.textContent = "";
+    this.subViewList.append(fragment);
+  },
+
+  _createListItem(origin, actions) {
+    let isAllowed = actions.some(([state]) => this.isAllowing(state));
+    let isDetected = isAllowed || actions.some(([state]) => this.isBlocking(state));
+
+    if (!isDetected) {
+      return null;
+    }
+
+    let uri = Services.io.newURI(origin);
+
+    let listItem = document.createXULElement("hbox");
+    listItem.className = "identity-popup-content-blocking-list-item";
+    listItem.classList.toggle("allowed", isAllowed);
+    // Repeat the host in the tooltip in case it's too long
+    // and overflows in our panel.
+    listItem.tooltipText = uri.host;
+
+    let image = document.createXULElement("image");
+    image.className = "identity-popup-fingerprintersView-icon";
+    image.classList.toggle("allowed", isAllowed);
+    listItem.append(image);
+
+    let label = document.createXULElement("label");
+    label.value = uri.host;
+    label.className = "identity-popup-content-blocking-list-host-label";
+    label.setAttribute("crop", "end");
+    listItem.append(label);
+
+    if (!isAllowed) {
+      let stateLabel = document.createXULElement("label");
+      stateLabel.value = this.strings.subViewBlocked;
+      stateLabel.className = "identity-popup-content-blocking-list-state-label";
+      listItem.append(stateLabel);
+    }
+
+    return listItem;
+  },
+};
+
+var Cryptomining = {
+  PREF_ENABLED: "privacy.trackingprotection.cryptomining.enabled",
+
+  strings: {
+    get subViewBlocked() {
+      delete this.subViewBlocked;
+      return this.subViewBlocked =
+        gNavigatorBundle.getString("contentBlocking.cryptominersView.blocked.label");
+    },
+  },
+
+  init() {
+    XPCOMUtils.defineLazyPreferenceGetter(this, "enabled", this.PREF_ENABLED, false);
+    this.updateCategoryLabel();
+  },
+
+  get categoryItem() {
+    delete this.categoryItem;
+    return this.categoryItem =
+      document.getElementById("identity-popup-content-blocking-category-cryptominers");
+  },
+
+  get categoryLabel() {
+    delete this.categoryLabel;
+    return this.categoryLabel =
+      document.getElementById("identity-popup-content-blocking-cryptominers-state-label");
+  },
+
+  get subViewList() {
+    delete this.subViewList;
+    return this.subViewList = document.getElementById("identity-popup-cryptominersView-list");
+  },
+
+  updateCategoryLabel() {
+    let label;
+    if (this.enabled) {
+      label = ContentBlocking.showBlockedLabels ? "contentBlocking.cryptominers.blocking.label" : null;
+    } else {
+      label = ContentBlocking.showAllowedLabels ? "contentBlocking.cryptominers.allowed.label" : null;
+    }
+    this.categoryLabel.textContent = label ? gNavigatorBundle.getString(label) : "";
+  },
+
+  isBlocking(state) {
+    return (state & Ci.nsIWebProgressListener.STATE_BLOCKED_CRYPTOMINING_CONTENT) != 0;
+  },
+
+  isAllowing(state) {
+    return this.enabled && (state & Ci.nsIWebProgressListener.STATE_LOADED_CRYPTOMINING_CONTENT) != 0;
+  },
+
+  isDetected(state) {
+    return this.isBlocking(state) || this.isAllowing(state);
+  },
+
+  async updateSubView() {
+    let contentBlockingLog = await gBrowser.selectedBrowser.getContentBlockingLog();
+    contentBlockingLog = JSON.parse(contentBlockingLog);
+
+    let fragment = document.createDocumentFragment();
+    for (let [origin, actions] of Object.entries(contentBlockingLog)) {
+      let listItem = this._createListItem(origin, actions);
+      if (listItem) {
+        fragment.appendChild(listItem);
+      }
+    }
+
+    this.subViewList.textContent = "";
+    this.subViewList.append(fragment);
+  },
+
+  _createListItem(origin, actions) {
+    let isAllowed = actions.some(([state]) => this.isAllowing(state));
+    let isDetected = isAllowed || actions.some(([state]) => this.isBlocking(state));
+
+    if (!isDetected) {
+      return null;
+    }
+
+    let uri = Services.io.newURI(origin);
+
+    let listItem = document.createXULElement("hbox");
+    listItem.className = "identity-popup-content-blocking-list-item";
+    listItem.classList.toggle("allowed", isAllowed);
+    // Repeat the host in the tooltip in case it's too long
+    // and overflows in our panel.
+    listItem.tooltipText = uri.host;
+
+    let image = document.createXULElement("image");
+    image.className = "identity-popup-cryptominersView-icon";
+    image.classList.toggle("allowed", isAllowed);
+    listItem.append(image);
+
+    let label = document.createXULElement("label");
+    label.value = uri.host;
+    label.className = "identity-popup-content-blocking-list-host-label";
+    label.setAttribute("crop", "end");
+    listItem.append(label);
+
+    if (!isAllowed) {
+      let stateLabel = document.createXULElement("label");
+      stateLabel.value = this.strings.subViewBlocked;
+      stateLabel.className = "identity-popup-content-blocking-list-state-label";
+      listItem.append(stateLabel);
+    }
+
+    return listItem;
+  },
+};
+
 var TrackingProtection = {
   reportBreakageLabel: "trackingprotection",
   telemetryIdentifier: "tp",
@@ -85,20 +305,12 @@ var TrackingProtection = {
     this.categoryLabel.textContent = label ? gNavigatorBundle.getString(label) : "";
   },
 
-  // FIXME This must change! Fingerprinting and cryptomining must have theirs
-  // own sections. See bug 1522566.
   isBlocking(state) {
-    return (state & Ci.nsIWebProgressListener.STATE_BLOCKED_TRACKING_CONTENT) != 0 ||
-           (state & Ci.nsIWebProgressListener.STATE_BLOCKED_FINGERPRINTING_CONTENT) != 0 ||
-           (state & Ci.nsIWebProgressListener.STATE_BLOCKED_CRYPTOMINING_CONTENT) != 0;
+    return (state & Ci.nsIWebProgressListener.STATE_BLOCKED_TRACKING_CONTENT) != 0;
   },
 
-  // FIXME This must change! Fingerprinting and cryptomining must have theirs
-  // own sections. See bug 1522566.
   isAllowing(state) {
-    return (state & Ci.nsIWebProgressListener.STATE_LOADED_TRACKING_CONTENT) != 0 ||
-           (state & Ci.nsIWebProgressListener.STATE_LOADED_FINGERPRINTING_CONTENT) != 0 ||
-           (state & Ci.nsIWebProgressListener.STATE_LOADED_CRYPTOMINING_CONTENT) != 0;
+    return (state & Ci.nsIWebProgressListener.STATE_LOADED_TRACKING_CONTENT) != 0;
   },
 
   isDetected(state) {
@@ -109,8 +321,8 @@ var TrackingProtection = {
     let previousURI = gBrowser.currentURI.spec;
     let previousWindow = gBrowser.selectedBrowser.innerWindowID;
 
-    let contentBlockingLogJSON = await gBrowser.selectedBrowser.getContentBlockingLog();
-    let contentBlockingLog = JSON.parse(contentBlockingLogJSON);
+    let contentBlockingLog = await gBrowser.selectedBrowser.getContentBlockingLog();
+    contentBlockingLog = JSON.parse(contentBlockingLog);
 
     // Don't tell the user to turn on TP if they are already blocking trackers.
     this.strictInfo.hidden = this.enabled;
@@ -177,12 +389,8 @@ var TrackingProtection = {
 
   async _createListItem(origin, actions) {
     // Figure out if this list entry was actually detected by TP or something else.
-    let isDetected = false;
-    let isAllowed = false;
-    for (let [state] of actions) {
-      isAllowed = isAllowed || this.isAllowing(state);
-      isDetected = isDetected || isAllowed || this.isBlocking(state);
-    }
+    let isAllowed = actions.some(([state]) => this.isAllowing(state));
+    let isDetected = isAllowed || actions.some(([state]) => this.isBlocking(state));
 
     if (!isDetected) {
       return null;
@@ -336,8 +544,8 @@ var ThirdPartyCookies = {
   },
 
   async updateSubView() {
-    let contentBlockingLogJSON = await gBrowser.selectedBrowser.getContentBlockingLog();
-    let contentBlockingLog = JSON.parse(contentBlockingLogJSON);
+    let contentBlockingLog = await gBrowser.selectedBrowser.getContentBlockingLog();
+    contentBlockingLog = JSON.parse(contentBlockingLog);
 
     let categories = this._processContentBlockingLog(contentBlockingLog);
 
@@ -630,11 +838,13 @@ var ContentBlocking = {
   // when blockable content is detected. A blocker must be an object
   // with at least the following two properties:
   //  - enabled: Whether the blocker is currently turned on.
+  //  - isDetected(state): Given a content blocking state, whether the blocker has
+  //                       either allowed or blocked elements.
   //  - categoryItem: The DOM item that represents the entry in the category list.
   //
   // It may also contain an init() and uninit() function, which will be called
   // on ContentBlocking.init() and ContentBlocking.uninit().
-  blockers: [TrackingProtection, ThirdPartyCookies],
+  blockers: [TrackingProtection, ThirdPartyCookies, Fingerprinting, Cryptomining],
 
   get _baseURIForChannelClassifier() {
     // Convert document URI into the format used by
@@ -811,6 +1021,16 @@ var ContentBlocking = {
   async showCookiesSubview() {
     await ThirdPartyCookies.updateSubView();
     this.identityPopupMultiView.showSubView("identity-popup-cookiesView");
+  },
+
+  async showFingerprintersSubview() {
+    await Fingerprinting.updateSubView();
+    this.identityPopupMultiView.showSubView("identity-popup-fingerprintersView");
+  },
+
+  async showCryptominersSubview() {
+    await Cryptomining.updateSubView();
+    this.identityPopupMultiView.showSubView("identity-popup-cryptominersView");
   },
 
   shieldHistogramAdd(value) {

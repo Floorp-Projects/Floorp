@@ -634,6 +634,11 @@ class ContentChild final : public PContentChild,
 
   bool DeallocPLoginReputationChild(PLoginReputationChild* aActor);
 
+  PSessionStorageObserverChild* AllocPSessionStorageObserverChild();
+
+  bool DeallocPSessionStorageObserverChild(
+      PSessionStorageObserverChild* aActor);
+
   nsTArray<LookAndFeelInt>& LookAndFeelCache() { return mLookAndFeelCache; }
 
   /**

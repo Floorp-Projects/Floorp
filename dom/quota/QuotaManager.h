@@ -104,6 +104,11 @@ class QuotaManager final : public BackgroundThreadObject {
     return kRunningXPCShellTests;
   }
 
+  static bool IsRunningGTests() {
+    static bool kRunningGTests = !!PR_GetEnv("MOZ_RUN_GTEST");
+    return kRunningGTests;
+  }
+
   static const char kReplaceChars[];
 
   static void GetOrCreate(nsIRunnable* aCallback,

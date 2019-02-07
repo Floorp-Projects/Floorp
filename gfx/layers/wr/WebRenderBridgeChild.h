@@ -146,10 +146,10 @@ class WebRenderBridgeChild final : public PWebRenderBridgeChild,
                   bool aBackfaceVisible,
                   const wr::GlyphOptions* aGlyphOptions = nullptr);
 
-  wr::FontInstanceKey GetFontKeyForScaledFont(
+  Maybe<wr::FontInstanceKey> GetFontKeyForScaledFont(
       gfx::ScaledFont* aScaledFont,
       wr::IpcResourceUpdateQueue* aResources = nullptr);
-  wr::FontKey GetFontKeyForUnscaledFont(
+  Maybe<wr::FontKey> GetFontKeyForUnscaledFont(
       gfx::UnscaledFont* aUnscaledFont,
       wr::IpcResourceUpdateQueue* aResources = nullptr);
   void RemoveExpiredFontKeys(wr::IpcResourceUpdateQueue& aResources);
