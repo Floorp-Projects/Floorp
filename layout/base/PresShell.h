@@ -673,6 +673,17 @@ class PresShell final : public nsIPresShell,
                                              nsEventStatus* aEventStatus);
 
     /**
+     * MaybeDiscardOrDelayKeyboardEvent() may discared or put aGUIEvent into
+     * the delayed event queue if it's a keyboard event and if we should do so.
+     * If aGUIEvent is not a keyboard event, this does nothing.
+     *
+     * @param aGUIEvent         The handling event.
+     * @return                  true if this method discard the event or
+     *                          put it into the delayed event queue.
+     */
+    bool MaybeDiscardOrDelayKeyboardEvent(WidgetGUIEvent* aGUIEvent);
+
+    /**
      * XXX Needs better name.
      * HandleEventInternal() dispatches aEvent into the DOM tree and
      * notify EventStateManager of that.
