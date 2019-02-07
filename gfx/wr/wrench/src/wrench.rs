@@ -121,9 +121,6 @@ pub trait WrenchThing {
     fn next_frame(&mut self);
     fn prev_frame(&mut self);
     fn do_frame(&mut self, &mut Wrench) -> u32;
-    fn queue_frames(&self) -> u32 {
-        0
-    }
 }
 
 impl WrenchThing for CapturedDocument {

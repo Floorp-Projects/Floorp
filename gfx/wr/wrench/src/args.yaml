@@ -115,6 +115,11 @@ subcommands:
           - play:
               long: play
               help: Play entire recording through, then quit (useful with --save) (binary recording only)
+          - keyframes:
+              short: k
+              long: keyframes
+              takes_value: true
+              help: Provide a keyframes file, that can be used to animate the yaml input file
           - INPUT:
               help: The input YAML, binary recording, or capture directory
               required: true
