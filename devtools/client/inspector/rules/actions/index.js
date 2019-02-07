@@ -34,4 +34,10 @@ createEnum([
   // Updates the rules state with the new list of CSS rules for the selected element.
   "UPDATE_RULES",
 
+  // Updates whether or not the source links are enabled.
+  "UPDATE_SOURCE_LINK_ENABLED",
+
+  // Updates the source link information for a given rule.
+  "UPDATE_SOURCE_LINK",
+
 ], module.exports);
