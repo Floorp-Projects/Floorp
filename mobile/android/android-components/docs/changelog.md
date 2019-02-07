@@ -15,6 +15,7 @@ permalink: /changelog/
 
 * **feature-session**
   * Fixed an issue causing `EngineViewPresenter` to render a selected `Session` even though it was configured to show a fixed `Session`. This issue caused a crash (`IllegalStateException: Display already acquired`) in the [Reference Browser](https://github.com/mozilla-mobile/reference-browser) when a "Custom Tab" and the "Browser" tried to render the same `Session`.
+  * Fixed an issue where back and forward button handling would not take place on the session whose ID was provided.
 
 * **feature-search**
   * Added `SearchUseCases.NewTabSearchUseCase` and interface `SearchUseCase` (implemented by `DefaultSearchUseCase` and `NewTabSearchUseCase`).
