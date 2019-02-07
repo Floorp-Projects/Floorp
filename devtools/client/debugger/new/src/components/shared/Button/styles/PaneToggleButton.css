@@ -3,19 +3,11 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 .toggle-button {
-  transform: translate(0, 0px);
-  transition: transform 0.25s ease-in-out;
-  padding: 5px;
-  height: inherit;
+  padding: 4px 6px;
 }
 
 .toggle-button .img {
-  fill: var(--theme-comment);
-  vertical-align: 0;
-}
-
-:root.theme-dark .toggle-button .img {
-  fill: var(--theme-comment-alt);
+  vertical-align: middle;
 }
 
 .toggle-button.end {
@@ -27,16 +19,11 @@
   margin-inline-start: 0px;
 }
 
-html:not([dir="rtl"]) .toggle-button.end .img,
-html[dir="rtl"] .toggle-button.start .img {
-  transform: rotate(180deg);
+html[dir="rtl"] .toggle-button.start .img,
+html[dir="ltr"] .toggle-button.end:not(.vertical) .img {
+  transform: scaleX(-1);
 }
 
-html .toggle-button.end.vertical .img {
+.toggle-button.end.vertical .img {
   transform: rotate(-90deg);
-}
-
-.toggle-button.start.collapsed,
-.toggle-button.end.collapsed {
-  transform: rotate(180deg);
 }

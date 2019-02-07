@@ -5,8 +5,7 @@
 // @flow
 import { showMenu } from "devtools-contextmenu";
 import { copyToTheClipboard } from "../../../utils/clipboard";
-import type { LocalFrame } from "./types";
-import type { ContextMenuItem } from "../../../types";
+import type { ContextMenuItem, Frame } from "../../../types";
 import { kebabCase } from "lodash";
 
 const blackboxString = "sourceFooter.blackbox";
@@ -57,7 +56,7 @@ function blackBoxSource(source, toggleBlackBox) {
 }
 
 export default function FrameMenu(
-  frame: LocalFrame,
+  frame: Frame,
   frameworkGroupingOn: boolean,
   callbacks: Object,
   event: SyntheticMouseEvent<HTMLElement>

@@ -33,6 +33,10 @@
   line-height: 30px;
 }
 
+.conditional-breakpoint-panel input:not(:placeholder-shown) {
+  font-family: var(--monospace-font-family);
+}
+
 .conditional-breakpoint-panel input:focus {
   outline-width: 0;
 }

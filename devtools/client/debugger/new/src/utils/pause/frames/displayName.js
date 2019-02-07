@@ -5,7 +5,7 @@
 // @flow
 
 // eslint-disable-next-line max-len
-import type { LocalFrame } from "../../../components/SecondaryPanes/Frames/types";
+import type { Frame } from "../../../types";
 import { getFilename } from "../../source";
 
 // Decodes an anonymous naming scheme that
@@ -73,8 +73,13 @@ function mapDisplayNames(frame, library) {
   );
 }
 
-function getFrameDisplayName(frame: LocalFrame): string {
-  const { displayName, originalDisplayName, userDisplayName, name } = frame;
+function getFrameDisplayName(frame: Frame): string {
+  const {
+    displayName,
+    originalDisplayName,
+    userDisplayName,
+    name
+  } = (frame: any);
   return originalDisplayName || userDisplayName || displayName || name;
 }
 
@@ -82,7 +87,7 @@ type formatDisplayNameParams = {
   shouldMapDisplayName: boolean
 };
 export function formatDisplayName(
-  frame: LocalFrame,
+  frame: Frame,
   { shouldMapDisplayName = true }: formatDisplayNameParams = {},
   l10n: typeof L10N
 ): string {
@@ -95,8 +100,11 @@ export function formatDisplayName(
   return simplifyDisplayName(displayName) || l10n.getStr("anonymousFunction");
 }
 
-export function formatCopyName(frame: LocalFrame, l10n: typeof L10N): string {
+export function formatCopyName(frame: Frame, l10n: typeof L10N): string {
   const displayName = formatDisplayName(frame, undefined, l10n);
+  if (!frame.source) {
+    throw new Error("no frame source");
+  }
   const fileName = getFilename(frame.source);
   const frameLocation = frame.location.line;
 

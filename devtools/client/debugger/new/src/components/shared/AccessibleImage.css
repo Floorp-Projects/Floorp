@@ -4,6 +4,6 @@
   height: 12px;
   /* makes span appear like an image */
   display: inline-block;
-  background: var(--theme-body-color);
+  background: var(--theme-icon-color);
   mask-size: 100%;
 }

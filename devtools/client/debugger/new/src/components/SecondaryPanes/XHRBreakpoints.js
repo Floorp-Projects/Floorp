@@ -59,6 +59,16 @@ class XHRBreakpoints extends Component<Props, State> {
     };
   }
 
+  componentDidMount() {
+    const { showInput } = this.props;
+
+    // Ensures that the input is focused when the "+"
+    // is clicked while the panel is collapsed
+    if (this._input && showInput) {
+      this._input.focus();
+    }
+  }
+
   componentDidUpdate(prevProps, prevState) {
     const input = this._input;
 

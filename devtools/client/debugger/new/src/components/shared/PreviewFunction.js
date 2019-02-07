@@ -25,7 +25,7 @@ type Props = { func: FunctionType };
 export default class PreviewFunction extends Component<Props> {
   renderFunctionName(func: FunctionType) {
     const { l10n } = this.context;
-    const name = formatDisplayName(func, undefined, l10n);
+    const name = formatDisplayName((func: any), undefined, l10n);
     return <span className="function-name">{name}</span>;
   }
 
