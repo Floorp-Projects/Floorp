@@ -11,14 +11,14 @@ import {selectLayoutRender} from "content-src/lib/selectLayoutRender";
 import {TopSites} from "content-src/components/DiscoveryStreamComponents/TopSites/TopSites";
 
 // According to the Pocket API endpoint specs, `component.properties.items` is a required property with following values:
-//   - List 1-6 items
+//   - List 1-12 items
 //   - Hero 1-5 items
-//   - CardGrid 1-8 items
+//   - CardGrid 1-16 items
 // To enforce that, we define various maximium items for individual components as an extra check.
 // Note that these values are subject to the future changes of the specs.
 const MAX_ROWS_HERO = 5;
-const MAX_ROWS_LIST = 6;
-const MAX_ROWS_CARDGRID = 8;
+const MAX_ROWS_LIST = 12;
+const MAX_ROWS_CARDGRID = 16;
 
 const ALLOWED_CSS_URL_PREFIXES = ["chrome://", "resource://", "https://img-getpocket.cdn.mozilla.net/"];
 const DUMMY_CSS_SELECTOR = "DUMMY#CSS.SELECTOR";
