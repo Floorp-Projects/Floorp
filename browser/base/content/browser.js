@@ -12,6 +12,7 @@ ChromeUtils.import("resource://gre/modules/NotificationDB.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
+  AMTelemetry: "resource://gre/modules/AddonManager.jsm",
   BrowserUsageTelemetry: "resource:///modules/BrowserUsageTelemetry.jsm",
   BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
@@ -6374,6 +6375,12 @@ var ToolbarContextMenu = {
     let btnFlags = BUTTON_POS_0 * titleString + BUTTON_POS_1 * titleCancel;
     let response = confirmEx(null, title, message, btnFlags, btnTitle, null, null, null,
                              {value: 0});
+    AMTelemetry.recordActionEvent({
+      object: "browserAction",
+      action: "uninstall",
+      value: response ? "cancelled" : "accepted",
+      extra: {addonId: addon.id},
+    });
     if (response == 0) {
       addon.uninstall();
     }
@@ -6384,6 +6391,11 @@ var ToolbarContextMenu = {
     if (id) {
       let viewID = "addons://detail/" + encodeURIComponent(id);
       BrowserOpenAddonsMgr(viewID);
+      AMTelemetry.recordActionEvent({
+        object: "browserAction",
+        action: "manage",
+        extra: {addonId: id},
+      });
     }
   },
 };
