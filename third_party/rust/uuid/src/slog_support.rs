@@ -9,8 +9,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use prelude::*;
 use slog;
-use Uuid;
 
 impl slog::Value for Uuid {
     fn serialize(
@@ -29,8 +29,8 @@ mod tests {
     #[test]
     fn test_slog_kv() {
         use slog;
-        use test_util;
         use slog::Drain;
+        use test_util;
 
         let root = slog::Logger::root(slog::Discard.fuse(), o!());
         let u1 = test_util::new();

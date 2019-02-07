@@ -242,7 +242,8 @@ impl EnvironmentBuilder {
     ///
     /// On UNIX, the database files will be opened with 644 permissions.
     ///
-    /// The path may not contain the null character.
+    /// The path may not contain the null character, Windows UNC (Uniform Naming Convention)
+    /// paths are not supported either.
     pub fn open(&self, path: &Path) -> Result<Environment> {
         self.open_with_permissions(path, 0o644)
     }
@@ -251,7 +252,8 @@ impl EnvironmentBuilder {
     ///
     /// On Windows, the permissions will be ignored.
     ///
-    /// The path may not contain the null character.
+    /// The path may not contain the null character, Windows UNC (Uniform Naming Convention)
+    /// paths are not supported either.
     pub fn open_with_permissions(&self, path: &Path, mode: ffi::mode_t) -> Result<Environment> {
         let mut env: *mut ffi::MDB_env = ptr::null_mut();
         unsafe {
