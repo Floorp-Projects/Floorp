@@ -30,7 +30,6 @@
   left: 0;
   right: 0;
   list-style-type: none;
-  font-family: var(--monospace-font-family);
   overflow: auto;
 }
 

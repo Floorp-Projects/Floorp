@@ -15,7 +15,7 @@ exports[`Breakpoint disabled 1`] = `
     type="checkbox"
   />
   <label
-    className="breakpoint-label cm-s-mozilla"
+    className="breakpoint-label cm-s-mozilla devtools-monospace"
     onClick={[Function]}
   >
     <span
@@ -30,7 +30,7 @@ exports[`Breakpoint disabled 1`] = `
     className="breakpoint-line-close"
   >
     <div
-      className="breakpoint-line"
+      className="breakpoint-line devtools-monospace"
     >
       53
     </div>
@@ -57,7 +57,7 @@ exports[`Breakpoint paused at a different 1`] = `
     type="checkbox"
   />
   <label
-    className="breakpoint-label cm-s-mozilla"
+    className="breakpoint-label cm-s-mozilla devtools-monospace"
     onClick={[Function]}
   >
     <span
@@ -72,7 +72,7 @@ exports[`Breakpoint paused at a different 1`] = `
     className="breakpoint-line-close"
   >
     <div
-      className="breakpoint-line"
+      className="breakpoint-line devtools-monospace"
     >
       53
     </div>
@@ -99,7 +99,7 @@ exports[`Breakpoint paused at a generatedLocation 1`] = `
     type="checkbox"
   />
   <label
-    className="breakpoint-label cm-s-mozilla"
+    className="breakpoint-label cm-s-mozilla devtools-monospace"
     onClick={[Function]}
   >
     <span
@@ -114,7 +114,7 @@ exports[`Breakpoint paused at a generatedLocation 1`] = `
     className="breakpoint-line-close"
   >
     <div
-      className="breakpoint-line"
+      className="breakpoint-line devtools-monospace"
     >
       53
     </div>
@@ -141,7 +141,7 @@ exports[`Breakpoint paused at an original location 1`] = `
     type="checkbox"
   />
   <label
-    className="breakpoint-label cm-s-mozilla"
+    className="breakpoint-label cm-s-mozilla devtools-monospace"
     onClick={[Function]}
   >
     <span
@@ -156,7 +156,7 @@ exports[`Breakpoint paused at an original location 1`] = `
     className="breakpoint-line-close"
   >
     <div
-      className="breakpoint-line"
+      className="breakpoint-line devtools-monospace"
     >
       5
     </div>
@@ -183,7 +183,7 @@ exports[`Breakpoint simple 1`] = `
     type="checkbox"
   />
   <label
-    className="breakpoint-label cm-s-mozilla"
+    className="breakpoint-label cm-s-mozilla devtools-monospace"
     onClick={[Function]}
   >
     <span
@@ -198,7 +198,7 @@ exports[`Breakpoint simple 1`] = `
     className="breakpoint-line-close"
   >
     <div
-      className="breakpoint-line"
+      className="breakpoint-line devtools-monospace"
     >
       53
     </div>

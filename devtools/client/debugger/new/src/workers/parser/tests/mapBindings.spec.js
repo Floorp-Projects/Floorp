@@ -45,6 +45,16 @@ describe("mapExpressionBindings", () => {
       newExpression: "self.a = 2; self.b = 3"
     },
     {
+      name: "declaration with separate assignment",
+      expression: "let a; a = 2;",
+      newExpression: "self.a = void 0; self.a = 2;"
+    },
+    {
+      name: "multiple declarations with no assignment",
+      expression: "let a = 2, b;",
+      newExpression: "self.a = 2; self.b = void 0;"
+    },
+    {
       name: "local bindings become assignments",
       bindings: ["a"],
       expression: "var a = 2;",

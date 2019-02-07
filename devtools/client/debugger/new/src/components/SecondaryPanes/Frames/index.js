@@ -26,8 +26,6 @@ import {
   getPauseReason
 } from "../../../selectors";
 
-import type { LocalFrame } from "./types";
-
 import "./Frames.css";
 
 const NUM_FRAMES_SHOWN = 7;
@@ -113,7 +111,7 @@ class Frames extends Component<Props, State> {
     toggleFrameworkGrouping(!frameworkGroupingOn);
   };
 
-  renderFrames(frames: LocalFrame[]) {
+  renderFrames(frames: Frame[]) {
     const {
       selectFrame,
       selectedFrame,
@@ -126,7 +124,7 @@ class Frames extends Component<Props, State> {
     } = this.props;
 
     const framesOrGroups = this.truncateFrames(this.collapseFrames(frames));
-    type FrameOrGroup = LocalFrame | LocalFrame[];
+    type FrameOrGroup = Frame | Frame[];
 
     // We're not using a <ul> because it adds new lines before and after when
     // the user copies the trace. Needed for the console which has several
@@ -137,7 +135,7 @@ class Frames extends Component<Props, State> {
           (frameOrGroup: FrameOrGroup) =>
             frameOrGroup.id ? (
               <FrameComponent
-                frame={frameOrGroup}
+                frame={(frameOrGroup: any)}
                 toggleFrameworkGrouping={this.toggleFrameworkGrouping}
                 copyStackTrace={this.copyStackTrace}
                 frameworkGroupingOn={frameworkGroupingOn}
@@ -152,7 +150,7 @@ class Frames extends Component<Props, State> {
               />
             ) : (
               <Group
-                group={frameOrGroup}
+                group={(frameOrGroup: any)}
                 toggleFrameworkGrouping={this.toggleFrameworkGrouping}
                 copyStackTrace={this.copyStackTrace}
                 frameworkGroupingOn={frameworkGroupingOn}
@@ -171,13 +169,13 @@ class Frames extends Component<Props, State> {
     );
   }
 
-  renderToggleButton(frames: LocalFrame[]) {
+  renderToggleButton(frames: Frame[]) {
     const { l10n } = this.context;
     const buttonMessage = this.state.showAllFrames
       ? l10n.getStr("callStack.collapse")
       : l10n.getStr("callStack.expand");
 
-    frames = this.collapseFrames(frames);
+    frames = (this.collapseFrames(frames): any);
     if (frames.length <= NUM_FRAMES_SHOWN) {
       return null;
     }

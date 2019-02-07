@@ -207,7 +207,7 @@ export class Outline extends Component<Props, State> {
     }
 
     return (
-      <ul className="outline-list">
+      <ul className="outline-list devtools-monospace">
         {namedFunctions.map(func => this.renderFunction(func))}
         {classes.map(klass => this.renderClassFunctions(klass, classFunctions))}
       </ul>
