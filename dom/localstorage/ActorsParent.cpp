@@ -30,7 +30,9 @@
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/dom/quota/QuotaObject.h"
 #include "mozilla/dom/quota/UsageInfo.h"
+#include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/BackgroundParent.h"
+#include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/ipc/PBackgroundParent.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "nsClassHashtable.h"
@@ -2578,7 +2580,6 @@ class ArchivedOriginScopeHelper : public Runnable {
 };
 
 class QuotaClient final : public mozilla::dom::quota::Client {
-  class ClearPrivateBrowsingRunnable;
   class Observer;
   class MatchFunction;
 
@@ -2613,9 +2614,6 @@ class QuotaClient final : public mozilla::dom::quota::Client {
 
     return QuotaManager::IsShuttingDown();
   }
-
-  static nsresult SetBackgroundEventTarget(
-      nsIEventTarget* aBackgroundEventTarget);
 
   mozilla::Mutex& ShadowDatabaseMutex() {
     MOZ_ASSERT(IsOnIOThread() || IsOnConnectionThread());
@@ -2675,29 +2673,9 @@ class QuotaClient final : public mozilla::dom::quota::Client {
                          ArchivedOriginScope* aArchivedOriginScope) const;
 };
 
-class QuotaClient::ClearPrivateBrowsingRunnable final : public Runnable {
- public:
-  ClearPrivateBrowsingRunnable()
-      : Runnable("mozilla::dom::ClearPrivateBrowsingRunnable") {
-    MOZ_ASSERT(NS_IsMainThread());
-  }
-
- private:
-  ~ClearPrivateBrowsingRunnable() = default;
-
-  NS_DECL_NSIRUNNABLE
-};
-
 class QuotaClient::Observer final : public nsIObserver {
-  static Observer* sInstance;
-
-  nsCOMPtr<nsIEventTarget> mBackgroundEventTarget;
-
  public:
   static nsresult Initialize();
-
-  static nsresult SetBackgroundEventTarget(
-      nsIEventTarget* aBackgroundEventTarget);
 
  private:
   Observer() { MOZ_ASSERT(NS_IsMainThread()); }
@@ -3255,6 +3233,23 @@ bool DeallocPBackgroundLSSimpleRequestParent(
   // Transfer ownership back from IPDL.
   RefPtr<LSSimpleRequestBase> actor =
       dont_AddRef(static_cast<LSSimpleRequestBase*>(aActor));
+
+  return true;
+}
+
+bool RecvLSClearPrivateBrowsing() {
+  AssertIsOnBackgroundThread();
+
+  if (gDatastores) {
+    for (auto iter = gDatastores->ConstIter(); !iter.Done(); iter.Next()) {
+      Datastore* datastore = iter.Data();
+      MOZ_ASSERT(datastore);
+
+      if (datastore->PrivateBrowsingId()) {
+        datastore->PrivateBrowsingClear();
+      }
+    }
+  }
 
   return true;
 }
@@ -5663,11 +5658,6 @@ nsresult PrepareDatastoreOp::Open() {
     return NS_ERROR_FAILURE;
   }
 
-  nsresult rv = QuotaClient::SetBackgroundEventTarget(OwningEventTarget());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
   mState = State::Nesting;
   mNestedState = NestedState::CheckExistingOperations;
 
@@ -7182,17 +7172,6 @@ nsresult QuotaClient::Initialize() {
   return NS_OK;
 }
 
-// static
-nsresult QuotaClient::SetBackgroundEventTarget(
-    nsIEventTarget* aBackgroundEventTarget) {
-  nsresult rv = Observer::SetBackgroundEventTarget(aBackgroundEventTarget);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  return NS_OK;
-}
-
 mozilla::dom::quota::Client::Type QuotaClient::GetType() {
   return QuotaClient::LS;
 }
@@ -7869,26 +7848,6 @@ nsresult QuotaClient::PerformDelete(
   return NS_OK;
 }
 
-NS_IMETHODIMP
-QuotaClient::ClearPrivateBrowsingRunnable::Run() {
-  AssertIsOnBackgroundThread();
-
-  if (gDatastores) {
-    for (auto iter = gDatastores->ConstIter(); !iter.Done(); iter.Next()) {
-      Datastore* datastore = iter.Data();
-      MOZ_ASSERT(datastore);
-
-      if (datastore->PrivateBrowsingId()) {
-        datastore->PrivateBrowsingClear();
-      }
-    }
-  }
-
-  return NS_OK;
-}
-
-QuotaClient::Observer* QuotaClient::Observer::sInstance = nullptr;
-
 // static
 nsresult QuotaClient::Observer::Initialize() {
   MOZ_ASSERT(NS_IsMainThread());
@@ -7899,19 +7858,6 @@ nsresult QuotaClient::Observer::Initialize() {
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
-
-  sInstance = observer;
-
-  return NS_OK;
-}
-
-// static
-nsresult QuotaClient::Observer::SetBackgroundEventTarget(
-    nsIEventTarget* aBackgroundEventTarget) {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(sInstance);
-
-  sInstance->mBackgroundEventTarget = aBackgroundEventTarget;
 
   return NS_OK;
 }
@@ -7949,8 +7895,6 @@ nsresult QuotaClient::Observer::Shutdown() {
   MOZ_ALWAYS_SUCCEEDS(obs->RemoveObserver(this, kPrivateBrowsingObserverTopic));
   MOZ_ALWAYS_SUCCEEDS(obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID));
 
-  sInstance = nullptr;
-
   // In general, the instance will have died after the latter removal call, so
   // it's not safe to do anything after that point.
   // However, Shutdown is currently called from Observe which is called by the
@@ -7970,13 +7914,15 @@ QuotaClient::Observer::Observe(nsISupports* aSubject, const char* aTopic,
   nsresult rv;
 
   if (!strcmp(aTopic, kPrivateBrowsingObserverTopic)) {
-    RefPtr<ClearPrivateBrowsingRunnable> runnable =
-        new ClearPrivateBrowsingRunnable();
+    PBackgroundChild* backgroundActor =
+        BackgroundChild::GetOrCreateForCurrentThread();
+    if (NS_WARN_IF(!backgroundActor)) {
+      return NS_ERROR_FAILURE;
+    }
 
-    MOZ_ASSERT(mBackgroundEventTarget);
-
-    MOZ_ALWAYS_SUCCEEDS(
-        mBackgroundEventTarget->Dispatch(runnable, NS_DISPATCH_NORMAL));
+    if (NS_WARN_IF(!backgroundActor->SendLSClearPrivateBrowsing())) {
+      return NS_ERROR_FAILURE;
+    }
 
     return NS_OK;
   }
