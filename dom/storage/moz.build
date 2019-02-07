@@ -29,6 +29,7 @@ UNIFIED_SOURCES += [
     'SessionStorage.cpp',
     'SessionStorageCache.cpp',
     'SessionStorageManager.cpp',
+    'SessionStorageObserver.cpp',
     'Storage.cpp',
     'StorageActivityService.cpp',
     'StorageDBThread.cpp',
@@ -42,6 +43,7 @@ UNIFIED_SOURCES += [
 IPDL_SOURCES += [
     'PBackgroundLocalStorageCache.ipdl',
     'PBackgroundStorage.ipdl',
+    'PSessionStorageObserver.ipdl',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')

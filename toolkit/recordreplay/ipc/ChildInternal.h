@@ -81,6 +81,9 @@ void AfterCheckpoint(const CheckpointId& aCheckpoint);
 // Get the ID of the last normal checkpoint.
 size_t LastNormalCheckpoint();
 
+// Whether to send a paint message for the last normal checkpoint reached.
+bool ShouldSendPaintMessage();
+
 }  // namespace navigation
 
 namespace child {

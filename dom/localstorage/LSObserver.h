@@ -38,13 +38,11 @@ class LSObserver final {
   const nsCString mOrigin;
 
  public:
-  explicit LSObserver(const nsACString& aOrigin);
-
   static LSObserver* Get(const nsACString& aOrigin);
 
   NS_INLINE_DECL_REFCOUNTING(LSObserver)
 
-  void AssertIsOnOwningThread() const { NS_ASSERT_OWNINGTHREAD(LSDatabase); }
+  void AssertIsOnOwningThread() const { NS_ASSERT_OWNINGTHREAD(LSObserver); }
 
   void SetActor(LSObserverChild* aActor);
 
@@ -56,6 +54,9 @@ class LSObserver final {
   }
 
  private:
+  // Only created by LSObject.
+  explicit LSObserver(const nsACString& aOrigin);
+
   ~LSObserver();
 };
 

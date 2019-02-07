@@ -246,6 +246,18 @@ CheckpointId GetLastSavedCheckpoint() {
   return gRewindInfo->mSavedCheckpoints.back().mCheckpoint;
 }
 
+CheckpointId
+GetLastSavedCheckpointPriorTo(const CheckpointId& aCheckpoint)
+{
+  MOZ_RELEASE_ASSERT(HasSavedCheckpoint());
+  for (size_t i = gRewindInfo->mSavedCheckpoints.length() - 1; i >= 1; i--) {
+    if (gRewindInfo->mSavedCheckpoints[i].mCheckpoint == aCheckpoint) {
+      return gRewindInfo->mSavedCheckpoints[i - 1].mCheckpoint;
+    }
+  }
+  MOZ_CRASH("GetLastSavedCheckpointPriorTo");
+}
+
 static bool gMainThreadShouldPause = false;
 
 bool MainThreadShouldPause() { return gMainThreadShouldPause; }

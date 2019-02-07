@@ -64,10 +64,10 @@ class RenderRootStateManager {
   /// Release TextureClient that is bounded to ImageKey.
   /// It is used for recycling TextureClient.
   void ReleaseTextureOfImage(const wr::ImageKey& aKey);
-  wr::FontInstanceKey GetFontKeyForScaledFont(
+  Maybe<wr::FontInstanceKey> GetFontKeyForScaledFont(
       gfx::ScaledFont* aScaledFont,
       wr::IpcResourceUpdateQueue* aResources = nullptr);
-  wr::FontKey GetFontKeyForUnscaledFont(
+  Maybe<wr::FontKey> GetFontKeyForUnscaledFont(
       gfx::UnscaledFont* aUnscaledFont,
       wr::IpcResourceUpdateQueue* aResources = nullptr);
 

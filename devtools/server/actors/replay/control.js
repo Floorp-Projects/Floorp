@@ -54,6 +54,7 @@ function ChildProcess(id, recording, role) {
 
   this._willSaveCheckpoints = [];
   this._majorCheckpoints = [];
+  this._minorCheckpoints = new Set();
 
   // Replaying processes always save the first checkpoint.
   if (!recording) {
@@ -83,6 +84,10 @@ ChildProcess.prototype = {
 
   addMajorCheckpoint(checkpointId) {
     this._majorCheckpoints.push(checkpointId);
+  },
+
+  addMinorCheckpoint(checkpointId) {
+    this._minorCheckpoints.add(checkpointId);
   },
 
   _unpause() {
@@ -149,6 +154,10 @@ ChildProcess.prototype = {
     return this._majorCheckpoints.some(major => major == id);
   },
 
+  isMinorCheckpoint(id) {
+    return this._minorCheckpoints.has(id);
+  },
+
   ensureCheckpointSaved(id, shouldSave) {
     const willSaveIndex = this._willSaveCheckpoints.indexOf(id);
     if (shouldSave != (willSaveIndex != -1)) {
@@ -175,9 +184,13 @@ ChildProcess.prototype = {
            this._willSaveCheckpoints.includes(id);
   },
 
-  hasSavedCheckpointsInRange(startId, endId) {
-    for (let i = startId; i <= endId; i++) {
-      if (!this.hasSavedCheckpoint(i)) {
+  // Return whether this child has saved all minor checkpoints between the last
+  // major checkpoint preceding to id and id itself. This is required in order
+  // for the child to rewind through this span of checkpoints.
+  canRewindFrom(id) {
+    const lastMajorCheckpoint = this.lastMajorCheckpointPreceding(id);
+    for (let i = lastMajorCheckpoint + 1; i <= id; i++) {
+      if (this.isMinorCheckpoint(i) && !this.hasSavedCheckpoint(i)) {
         return false;
       }
     }
@@ -212,6 +225,7 @@ ChildProcess.prototype = {
 
 const FlushMs = .5 * 1000;
 const MajorCheckpointMs = 2 * 1000;
+const MinorCheckpointMs = .25 * 1000;
 
 // This section describes the strategy used for managing child processes. When
 // recording, there is a single recording process and two replaying processes.
@@ -248,42 +262,43 @@ const MajorCheckpointMs = 2 * 1000;
 //
 // When the recording process is explicitly paused (via the debugger UI) at a
 // checkpoint or breakpoint, it is flushed and the replaying processes will
-// navigate around the recording to ensure all checkpoints going back at least
-// MajorCheckpointMs have been saved. These are the intermediate checkpoints.
-// No replaying process needs to rewind past its last major checkpoint, and a
-// given intermediate checkpoint will only ever be saved by the replaying
-// process with the most recent major checkpoint.
+// navigate around the recording to save a second set of checkpoints going back
+// at least MajorCheckpointSeconds, with the goal of making sure saved
+// checkpoints are no more than MinorCheckpointSeconds apart. No replaying
+// process needs to rewind past its last major checkpoint, and a given
+// minor checkpoint will only ever be saved by the replaying process with the
+// most recent major checkpoint.
 //
 // Active  Recording:    -----------------------
-// Standby Replaying #1: *---------*---------***
-// Standby Replaying #2: -----*---------*****
+// Standby Replaying #1: *---------*---------*-*
+// Standby Replaying #2: -----*---------*-*-*
 //
 // If the user starts rewinding, the replaying process with the most recent
-// major checkpoint (and which has been saving the most recent intermediate
+// major checkpoint (and which has been saving the most recent minor
 // checkpoints) becomes the active child.
 //
 // Inert   Recording:    -----------------------
-// Active  Replaying #1: *---------*---------**
-// Standby Replaying #2: -----*---------*****
+// Active  Replaying #1: *---------*---------*-
+// Standby Replaying #2: -----*---------*-*-*
 //
 // As the user continues rewinding, the replaying process stays active until it
 // goes past its most recent major checkpoint. At that time the other replaying
 // process (which has been saving checkpoints prior to that point) becomes the
 // active child and allows continuous rewinding. The first replaying process
-// rewinds to its last major checkpoint and begins saving older intermediate
+// rewinds to its last major checkpoint and begins saving older minor
 // checkpoints, attempting to maintain the invariant that we have saved (or are
 // saving) all checkpoints going back MajorCheckpointMs.
 //
 // Inert   Recording:    -----------------------
-// Standby Replaying #1: *---------*****
-// Active  Replaying #2: -----*---------**
+// Standby Replaying #1: *---------*-*-*
+// Active  Replaying #2: -----*---------*-
 //
 // Rewinding continues in this manner, alternating back and forth between the
 // replaying processes as the user continues going back in time.
 //
 // Inert   Recording:    -----------------------
-// Active  Replaying #1: *---------**
-// Standby Replaying #2: -----*****
+// Active  Replaying #1: *---------*-*
+// Standby Replaying #2: -----*-*-*
 //
 // If the user starts navigating forward, the replaying processes both run
 // forward and save checkpoints at the same major checkpoints as earlier.
@@ -291,8 +306,8 @@ const MajorCheckpointMs = 2 * 1000;
 // process (i.e. we started from a saved recording).
 //
 // Inert   Recording:    -----------------------
-// Active  Replaying #1: *---------**------
-// Standby Replaying #2: -----*****-----*--
+// Active  Replaying #1: *---------*-*-----
+// Standby Replaying #2: -----*-*-*-----*--
 //
 // If the user pauses at a checkpoint or breakpoint in the replay, we again
 // want to fill in all the checkpoints going back MajorCheckpointMs to allow
@@ -300,19 +315,19 @@ const MajorCheckpointMs = 2 * 1000;
 // recording process was active -- since we need to keep one of the replaying
 // processes at an up to date point and be the active one. This falls on the one
 // whose most recent major checkpoint is oldest, as the other is responsible for
-// saving the most recent intermediate checkpoints.
+// saving the most recent minor checkpoints.
 //
 // Inert   Recording:    -----------------------
-// Active  Replaying #1: *---------**------
-// Standby Replaying #2: -----*****-----***
+// Active  Replaying #1: *---------*-*-----
+// Standby Replaying #2: -----*-*-*-----*-*
 //
-// After the recent intermediate checkpoints have been saved the process which
-// took them can become active so the older intermediate checkpoints can be
+// After the recent minor checkpoints have been saved the process which
+// took them can become active so the older minor checkpoints can be
 // saved.
 //
 // Inert   Recording:    -----------------------
-// Standby Replaying #1: *---------*****
-// Active  Replaying #2: -----*****-----***
+// Standby Replaying #1: *---------*-*-*
+// Active  Replaying #2: -----*-*-*-----*-*
 //
 // Finally, if the replay plays forward to the end of the recording (the point
 // where the recording process is situated), the recording process takes over
@@ -320,8 +335,8 @@ const MajorCheckpointMs = 2 * 1000;
 // process.
 //
 // Active  Recording:    ----------------------------------------
-// Standby Replaying #1: *---------*****-----*---------*-------
-// Standby Replaying #2: -----*****-----***-------*---------*--
+// Standby Replaying #1: *---------*-*-*-----*---------*-------
+// Standby Replaying #2: -----*-*-*-----*-*-------*---------*--
 
 // Child processes that can participate in the above management.
 let gRecordingChild;
@@ -398,8 +413,8 @@ ChildRoleActive.prototype = {
 let gLastRecordingCheckpoint;
 
 // The role taken by replaying children trying to stay close to the active
-// child and save either major or intermediate checkpoints, depending on
-// whether the active child is paused or rewinding.
+// child and save either major or minor checkpoints, depending on whether the
+// active child is paused or rewinding.
 function ChildRoleStandby() {}
 
 ChildRoleStandby.prototype = {
@@ -426,11 +441,11 @@ ChildRoleStandby.prototype = {
       return;
     }
 
-    // Intermediate checkpoints are only saved when the active child is paused
+    // Minor checkpoints are only saved when the active child is paused
     // or rewinding.
     let targetCheckpoint = getActiveChildTargetCheckpoint();
     if (targetCheckpoint == undefined) {
-      // Intermediate checkpoints do not need to be saved. Run forward until we
+      // Minor checkpoints do not need to be saved. Run forward until we
       // reach either the active child's position, or the last checkpoint
       // included in the on-disk recording. Only save major checkpoints.
       if ((currentCheckpoint < gActiveChild.lastCheckpoint()) &&
@@ -452,7 +467,7 @@ ChildRoleStandby.prototype = {
     }
 
     // If we haven't reached the last major checkpoint, we need to run forward
-    // without saving intermediate checkpoints.
+    // without saving minor checkpoints.
     if (currentCheckpoint < lastMajorCheckpoint) {
       this.child.ensureMajorCheckpointSaved(currentCheckpoint + 1);
       this.child.sendResume({ forward: true });
@@ -470,10 +485,10 @@ ChildRoleStandby.prototype = {
       targetCheckpoint = otherMajorCheckpoint - 1;
     }
 
-    // Find the first checkpoint in the fill range which we have not saved.
+    // Find the first minor checkpoint in the fill range which we have not saved.
     let missingCheckpoint;
-    for (let i = lastMajorCheckpoint; i <= targetCheckpoint; i++) {
-      if (!this.child.hasSavedCheckpoint(i)) {
+    for (let i = lastMajorCheckpoint + 1; i <= targetCheckpoint; i++) {
+      if (this.child.isMinorCheckpoint(i) && !this.child.hasSavedCheckpoint(i)) {
         missingCheckpoint = i;
         break;
       }
@@ -484,21 +499,26 @@ ChildRoleStandby.prototype = {
       return;
     }
 
-    // We must have saved the checkpoint prior to the missing one and can
-    // restore it. missingCheckpoint cannot be lastMajorCheckpoint, because we
-    // always save major checkpoints, and the loop above checked that all
-    // prior checkpoints going back to lastMajorCheckpoint have been saved.
-    const restoreTarget = missingCheckpoint - 1;
-    assert(this.child.hasSavedCheckpoint(restoreTarget));
+    if (this.child.lastCheckpoint() < missingCheckpoint) {
+      // We can run forward to reach the missing checkpoint.
+    } else {
+      // We need to rewind in order to save the missing checkpoint. Find the
+      // last saved checkpoint prior to the missing one. This must be
+      // lastMajorCheckpoint or later, as we always save major checkpoints.
+      let restoreTarget = missingCheckpoint - 1;
+      while (!this.child.hasSavedCheckpoint(restoreTarget)) {
+        restoreTarget--;
+      }
+      assert(restoreTarget >= lastMajorCheckpoint);
 
-    // If we need to rewind to the restore target, do so.
-    if (currentCheckpoint != restoreTarget) {
       this.child.sendRestoreCheckpoint(restoreTarget);
       return;
     }
 
-    // Make sure the process will save the next checkpoint.
-    this.child.ensureCheckpointSaved(missingCheckpoint, true);
+    // Make sure the process will save minor checkpoints as it runs forward.
+    if (missingCheckpoint == this.child.lastCheckpoint() + 1) {
+      this.child.ensureCheckpointSaved(missingCheckpoint, true);
+    }
 
     // Run forward to the next checkpoint.
     this.child.sendResume({ forward: true });
@@ -603,7 +623,7 @@ function maybeSwitchToReplayingChild() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// Major Checkpoints
+// Major and Minor Checkpoints
 ////////////////////////////////////////////////////////////////////////////////
 
 // For each checkpoint N, this vector keeps track of the time intervals taken
@@ -611,9 +631,10 @@ function maybeSwitchToReplayingChild() {
 const gCheckpointTimes = [];
 
 // How much time has elapsed (per gCheckpointTimes) since the last flush or
-// major checkpoint was noted.
+// major/minor checkpoint was noted.
 let gTimeSinceLastFlush;
-let gTimeSinceLastMajorCheckpoint;
+let gTimeSinceLastMajorCheckpoint = 0;
+let gTimeSinceLastMinorCheckpoint = 0;
 
 // The replaying process that was given the last major checkpoint.
 let gLastAssignedMajorCheckpoint;
@@ -622,6 +643,11 @@ function assignMajorCheckpoint(child, checkpointId) {
   dumpv(`AssignMajorCheckpoint: #${child.id} Checkpoint ${checkpointId}`);
   child.addMajorCheckpoint(checkpointId);
   gLastAssignedMajorCheckpoint = child;
+}
+
+function assignMinorCheckpoint(child, checkpointId) {
+  dumpv(`AssignMinorCheckpoint: #${child.id} Checkpoint ${checkpointId}`);
+  child.addMinorCheckpoint(checkpointId);
 }
 
 function updateCheckpointTimes(msg) {
@@ -645,6 +671,7 @@ function updateCheckpointTimes(msg) {
   }
 
   gTimeSinceLastMajorCheckpoint += msg.duration;
+  gTimeSinceLastMinorCheckpoint += msg.duration;
 
   if (gTimeSinceLastMajorCheckpoint >= MajorCheckpointMs) {
     // Alternate back and forth between assigning major checkpoints to the
@@ -652,6 +679,10 @@ function updateCheckpointTimes(msg) {
     const child = otherReplayingChild(gLastAssignedMajorCheckpoint);
     assignMajorCheckpoint(child, msg.point.checkpoint + 1);
     gTimeSinceLastMajorCheckpoint = 0;
+  } else if (gTimeSinceLastMinorCheckpoint >= MinorCheckpointMs) {
+    // Assign a minor checkpoint to the process which saved the last major one.
+    assignMinorCheckpoint(gLastAssignedMajorCheckpoint, msg.point.checkpoint + 1);
+    gTimeSinceLastMinorCheckpoint = 0;
   }
 }
 
@@ -789,19 +820,12 @@ function HitExecutionPoint(id, msg) {
 // checkpoint that needs to be saved for the child to rewind.
 let gLastExplicitPause = FirstCheckpointId;
 
-// Any checkpoint we are trying to warp to and pause.
-let gTimeWarpTarget;
-
 // Returns a checkpoint if the active child is explicitly paused somewhere,
 // has started rewinding after being explicitly paused, or is attempting to
-// warp to an execution point. The checkpoint returned is the latest one which
-// should be saved, and standby roles must save all intermediate checkpoints
-// they are responsible for, in the range from their most recent major
-// checkpoint up to the returned checkpoint.
+// warp to an execution point. Standby roles will try to save minor checkpoints
+// in the range from their most recent major checkpoint up to the returned
+// checkpoint.
 function getActiveChildTargetCheckpoint() {
-  if (gTimeWarpTarget != undefined) {
-    return gTimeWarpTarget;
-  }
   if (gActiveChild.rewindTargetCheckpoint() <= gLastExplicitPause) {
     return gActiveChild.rewindTargetCheckpoint();
   }
@@ -817,16 +841,13 @@ function markExplicitPause() {
     // the recording.
     flushRecording();
   } else if (RecordReplayControl.canRewind()) {
-    // Make sure we have a replaying child that can rewind from this point.
-    // Switch to the other one if (a) this process is responsible for rewinding
-    // from this point, and (b) this process has not saved all intermediate
-    // checkpoints going back to its last major checkpoint.
+    // Make sure we have a replaying child that has saved the right checkpoints
+    // for rewinding from this point. Switch to the other one if (a) this process
+    // is responsible for rewinding from this point, and (b) this process has
+    // not saved all minor checkpoints going back to its last major checkpoint.
     if (gActiveChild ==
         replayingChildResponsibleForSavingCheckpoint(targetCheckpoint)) {
-      const lastMajorCheckpoint =
-        gActiveChild.lastMajorCheckpointPreceding(targetCheckpoint);
-      if (!gActiveChild.hasSavedCheckpointsInRange(lastMajorCheckpoint,
-                                                   targetCheckpoint)) {
+      if (!gActiveChild.canRewindFrom(targetCheckpoint)) {
         switchActiveChild(otherReplayingChild(gActiveChild));
       }
     }
@@ -874,10 +895,7 @@ function resume(forward) {
 
   maybeSendRepaintMessage();
 
-  // When rewinding, make sure the active child can rewind to the previous
-  // checkpoint.
-  if (!forward &&
-      !gActiveChild.hasSavedCheckpoint(gActiveChild.rewindTargetCheckpoint())) {
+  if (!forward) {
     const targetCheckpoint = gActiveChild.rewindTargetCheckpoint();
 
     // Don't rewind if we are at the beginning of the recording.
@@ -887,15 +905,23 @@ function resume(forward) {
       return;
     }
 
-    // Find the replaying child responsible for saving the target checkpoint.
-    // We should have explicitly paused before rewinding and given fill roles
-    // to the replaying children.
+    // Make sure the active child has saved minor checkpoints prior to its
+    // position.
     const targetChild =
       replayingChildResponsibleForSavingCheckpoint(targetCheckpoint);
-    assert(targetChild != gActiveChild);
-
-    waitUntilChildHasSavedCheckpoint(targetChild, targetCheckpoint);
-    switchActiveChild(targetChild);
+    if (targetChild == gActiveChild) {
+      // markExplicitPause() should ensure that we are only active if the child
+      // has saved the appropriate minor checkpoints.
+      assert(gActiveChild.canRewindFrom(targetCheckpoint));
+    } else {
+      let saveTarget = targetCheckpoint;
+      while (!targetChild.isMajorCheckpoint(saveTarget) &&
+             !targetChild.isMinorCheckpoint(saveTarget)) {
+        saveTarget--;
+      }
+      waitUntilChildHasSavedCheckpoint(targetChild, saveTarget);
+      switchActiveChild(targetChild);
+    }
   }
 
   if (forward) {
@@ -931,36 +957,32 @@ function timeWarp(targetPoint) {
   assert(gActiveChild.paused);
   const targetCheckpoint = targetPoint.checkpoint;
 
-  // Make sure the active child can rewind to the checkpoint prior to the
-  // warp target.
-  assert(gTimeWarpTarget == undefined);
-  gTimeWarpTarget = targetCheckpoint;
-
-  pokeChildren();
-
-  if (!gActiveChild.hasSavedCheckpoint(targetCheckpoint)) {
-    // Find the replaying child responsible for saving the target checkpoint.
-    const targetChild =
-      replayingChildResponsibleForSavingCheckpoint(targetCheckpoint);
-
-    if (targetChild == gActiveChild) {
-      // Switch to the other replaying child while this one saves the necessary
-      // checkpoint.
-      switchActiveChild(otherReplayingChild(gActiveChild));
-    }
-
-    waitUntilChildHasSavedCheckpoint(targetChild, targetCheckpoint);
-    switchActiveChild(targetChild, /* aRecoverPosition = */ false);
+  // Find the replaying child responsible for saving the target checkpoint.
+  const targetChild =
+    replayingChildResponsibleForSavingCheckpoint(targetCheckpoint);
+  if (targetChild != gActiveChild) {
+    switchActiveChild(otherReplayingChild(gActiveChild));
   }
 
-  gTimeWarpTarget = undefined;
+  // Rewind first if the child is past the warp target or if it is not paused
+  // at a checkpoint. RunToPoint can only be used when the child is at a
+  // checkpoint.
+  let restoreTarget;
+  if (gActiveChild.lastCheckpoint() >= targetCheckpoint) {
+    restoreTarget = targetCheckpoint;
+  } else if (gActiveChild.lastPausePoint.position) {
+    restoreTarget = gActiveChild.lastPausePoint.checkpoint;
+  }
 
-  if (gActiveChild.lastPausePoint.position ||
-      gActiveChild.lastCheckpoint() != targetCheckpoint) {
+  if (restoreTarget) {
+    while (!gActiveChild.hasSavedCheckpoint(restoreTarget)) {
+      restoreTarget--;
+    }
+
     assert(!gTimeWarpInProgress);
     gTimeWarpInProgress = true;
 
-    gActiveChild.sendRestoreCheckpoint(targetCheckpoint);
+    gActiveChild.sendRestoreCheckpoint(restoreTarget);
     gActiveChild.waitUntilPaused();
 
     gTimeWarpInProgress = false;
