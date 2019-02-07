@@ -25,7 +25,7 @@ platform(linux,mac) == perspective-mask.yaml perspective-mask.png
 rotate-clip.yaml rotate-clip-ref.yaml
 clip-translate.yaml clip-translate-ref.yaml
 platform(linux,mac) == perspective-clip.yaml perspective-clip.png
-platform(linux,mac) fuzzy(1,2) == perspective-clip-1.yaml perspective-clip-1.png
+platform(linux,mac) == perspective-clip-1.yaml perspective-clip-1.png
 platform(linux,mac) fuzzy(1,2) == perspective-shadow.yaml perspective-shadow.png
 == complex-preserve-3d.yaml blank.yaml
 platform(linux,mac) fuzzy(9,348) == perspective-border-radius.yaml perspective-border-radius.png
