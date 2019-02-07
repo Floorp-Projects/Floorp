@@ -467,6 +467,13 @@ const {
 
 const dispatcher = exports.dispatcher = new WorkerDispatcher();
 
+const _getGeneratedRanges = dispatcher.task("getGeneratedRanges", {
+  queue: true
+});
+
+const _getGeneratedLocation = dispatcher.task("getGeneratedLocation", { queue: true });
+const _getAllGeneratedLocations = dispatcher.task("getAllGeneratedLocations", { queue: true });
+
 const setAssetRootURL = exports.setAssetRootURL = async assetRoot => dispatcher.invoke("setAssetRootURL", assetRoot);
 
 const getOriginalURLs = exports.getOriginalURLs = async generatedSource => dispatcher.invoke("getOriginalURLs", generatedSource);
@@ -474,14 +481,11 @@ const getOriginalURLs = exports.getOriginalURLs = async generatedSource => dispa
 const hasOriginalURL = exports.hasOriginalURL = async url => dispatcher.invoke("hasOriginalURL", url);
 
 const getOriginalRanges = exports.getOriginalRanges = async (sourceId, url) => dispatcher.invoke("getOriginalRanges", sourceId, url);
+const getGeneratedRanges = exports.getGeneratedRanges = async (location, originalSource) => _getGeneratedRanges(location, originalSource);
 
-const getGeneratedRanges = exports.getGeneratedRanges = async (location, originalSource) => dispatcher.task("getGeneratedRanges", {
-  queue: true
-})(location, originalSource);
+const getGeneratedLocation = exports.getGeneratedLocation = async (location, originalSource) => _getGeneratedLocation(location, originalSource);
 
-const getGeneratedLocation = exports.getGeneratedLocation = async (location, originalSource) => dispatcher.task("getGeneratedLocation", { queue: true })(location, originalSource);
-
-const getAllGeneratedLocations = exports.getAllGeneratedLocations = async (location, originalSource) => dispatcher.task("getAllGeneratedLocations", { queue: true })(location, originalSource);
+const getAllGeneratedLocations = exports.getAllGeneratedLocations = async (location, originalSource) => _getAllGeneratedLocations(location, originalSource);
 
 const getOriginalLocation = exports.getOriginalLocation = async (location, options = {}) => dispatcher.invoke("getOriginalLocation", location, options);
 

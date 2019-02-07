@@ -14,6 +14,14 @@ import type { locationOptions } from "./source-map";
 
 export const dispatcher = new WorkerDispatcher();
 
+const _getGeneratedRanges = dispatcher.task("getGeneratedRanges", {
+  queue: true
+});
+
+const _getGeneratedLocation = dispatcher.task("getGeneratedLocation", { queue: true });
+const _getAllGeneratedLocations = dispatcher.task("getAllGeneratedLocations", { queue: true });
+
+
 export const setAssetRootURL = async (assetRoot: string): Promise<void> =>
   dispatcher.invoke("setAssetRootURL", assetRoot);
 
@@ -35,7 +43,6 @@ export const getOriginalRanges = async (
     columnEnd: number
   }>
 > => dispatcher.invoke("getOriginalRanges", sourceId, url);
-
 export const getGeneratedRanges = async (
   location: SourceLocation,
   originalSource: Source
@@ -46,27 +53,20 @@ export const getGeneratedRanges = async (
     columnEnd: number
   }>
 > =>
-  dispatcher.task("getGeneratedRanges", {
-    queue: true
-  })(location, originalSource);
+  _getGeneratedRanges(location, originalSource);
 
 export const getGeneratedLocation = async (
   location: SourceLocation,
   originalSource: Source
-): Promise<SourceLocation> =>
-  dispatcher.task("getGeneratedLocation", { queue: true })(
-    location,
-    originalSource
-  );
+): Promise<SourceLocation> => _getGeneratedLocation(location,originalSource);
 
 export const getAllGeneratedLocations = async (
   location: SourceLocation,
   originalSource: Source
-): Promise<Array<SourceLocation>> =>
-  dispatcher.task("getAllGeneratedLocations", { queue: true })(
-    location,
-    originalSource
-  );
+): Promise<Array<SourceLocation>> => _getAllGeneratedLocations(
+  location,
+  originalSource
+);
 
 export const getOriginalLocation = async (
   location: SourceLocation,
