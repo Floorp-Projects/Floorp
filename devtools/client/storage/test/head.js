@@ -535,7 +535,7 @@ async function selectTableItem(id) {
                  " .table-widget-cell[value='" + id + "']";
   const target = gPanelWindow.document.querySelector(selector);
 
-  ok(target, "table item found with ids " + id);
+  ok(target, `row found with id "${id}"`);
 
   if (!target) {
     showAvailableIds();
@@ -543,6 +543,7 @@ async function selectTableItem(id) {
 
   const updated = gUI.once("sidebar-updated");
 
+  info(`selecting row "${id}"`);
   await click(target);
   await updated;
 }
@@ -966,6 +967,20 @@ function toggleSidebar() {
 
 function sidebarToggleVisible() {
   return !gUI.sidebarToggleBtn.hidden;
+}
+
+/**
+ * Check whether the variables view in the sidebar contains a tree.
+ *
+ * @param  {Boolean} state
+ *         Should a tree be visible?
+ */
+function sidebarParseTreeVisible(state) {
+  if (state) {
+    ok(gUI.view._currHierarchy.size > 2, "Parse tree should be visible.");
+  } else {
+    ok(gUI.view._currHierarchy.size <= 2, "Parse tree should not be visible.");
+  }
 }
 
 /**
