@@ -239,14 +239,16 @@ void WebRenderBridgeChild::PushGlyphs(
     const wr::GlyphOptions* aGlyphOptions) {
   MOZ_ASSERT(aFont);
 
-  wr::WrFontInstanceKey key = GetFontKeyForScaledFont(aFont);
-  MOZ_ASSERT(key.mNamespace.mHandle && key.mHandle);
+  Maybe<wr::WrFontInstanceKey> key = GetFontKeyForScaledFont(aFont);
+  MOZ_ASSERT(key.isSome());
 
-  aBuilder.PushText(aBounds, aClip, aBackfaceVisible, aColor, key, aGlyphs,
-                    aGlyphOptions);
+  if (key.isSome()) {
+    aBuilder.PushText(aBounds, aClip, aBackfaceVisible, aColor, key.value(),
+                      aGlyphs, aGlyphOptions);
+  }
 }
 
-wr::FontInstanceKey WebRenderBridgeChild::GetFontKeyForScaledFont(
+Maybe<wr::FontInstanceKey> WebRenderBridgeChild::GetFontKeyForScaledFont(
     gfx::ScaledFont* aScaledFont, wr::IpcResourceUpdateQueue* aResources) {
   MOZ_ASSERT(!mDestroyed);
   MOZ_ASSERT(aScaledFont);
@@ -254,18 +256,17 @@ wr::FontInstanceKey WebRenderBridgeChild::GetFontKeyForScaledFont(
 
   wr::FontInstanceKey instanceKey = {wr::IdNamespace{0}, 0};
   if (mFontInstanceKeys.Get(aScaledFont, &instanceKey)) {
-    return instanceKey;
+    return Some(instanceKey);
   }
 
   Maybe<wr::IpcResourceUpdateQueue> resources =
       aResources ? Nothing() : Some(wr::IpcResourceUpdateQueue(this));
   aResources = resources.ptrOr(aResources);
 
-  wr::FontKey fontKey =
+  Maybe<wr::FontKey> fontKey =
       GetFontKeyForUnscaledFont(aScaledFont->GetUnscaledFont(), aResources);
-  wr::FontKey nullKey = {wr::IdNamespace{0}, 0};
-  if (fontKey == nullKey) {
-    return instanceKey;
+  if (fontKey.isNothing()) {
+    return Nothing();
   }
 
   instanceKey = GetNextFontInstanceKey();
@@ -277,7 +278,7 @@ wr::FontInstanceKey WebRenderBridgeChild::GetFontKeyForScaledFont(
                                         &variations);
 
   aResources->AddFontInstance(
-      instanceKey, fontKey, aScaledFont->GetSize(), options.ptrOr(nullptr),
+      instanceKey, fontKey.value(), aScaledFont->GetSize(), options.ptrOr(nullptr),
       platformOptions.ptrOr(nullptr),
       Range<const FontVariation>(variations.data(), variations.size()));
   if (resources.isSome()) {
@@ -286,10 +287,10 @@ wr::FontInstanceKey WebRenderBridgeChild::GetFontKeyForScaledFont(
 
   mFontInstanceKeys.Put(aScaledFont, instanceKey);
 
-  return instanceKey;
+  return Some(instanceKey);
 }
 
-wr::FontKey WebRenderBridgeChild::GetFontKeyForUnscaledFont(
+Maybe<wr::FontKey> WebRenderBridgeChild::GetFontKeyForUnscaledFont(
     gfx::UnscaledFont* aUnscaled, wr::IpcResourceUpdateQueue* aResources) {
   MOZ_ASSERT(!mDestroyed);
 
@@ -306,7 +307,7 @@ wr::FontKey WebRenderBridgeChild::GetFontKeyForUnscaledFont(
     // null font key.
     if (!aUnscaled->GetWRFontDescriptor(WriteFontDescriptor, &sink) &&
         !aUnscaled->GetFontFileData(WriteFontFileData, &sink)) {
-      return fontKey;
+      return Nothing();
     }
 
     if (resources.isSome()) {
@@ -316,7 +317,7 @@ wr::FontKey WebRenderBridgeChild::GetFontKeyForUnscaledFont(
     mFontKeys.Put(aUnscaled, fontKey);
   }
 
-  return fontKey;
+  return Some(fontKey);
 }
 
 void WebRenderBridgeChild::RemoveExpiredFontKeys(

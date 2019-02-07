@@ -118,6 +118,7 @@
 #include "mozilla/dom/RemoteWorkerService.h"
 #include "mozilla/dom/BlobURLProtocolHandler.h"
 #include "mozilla/dom/ReportingHeader.h"
+#include "mozilla/dom/localstorage/ActorsParent.h"
 #include "mozilla/net/UrlClassifierFeatureFactory.h"
 #include "nsThreadManager.h"
 #include "mozilla/css/ImageLoader.h"
@@ -301,6 +302,10 @@ nsresult nsLayoutStatics::Initialize() {
 
   // Reporting API.
   ReportingHeader::Initialize();
+
+  if (XRE_IsParentProcess()) {
+    InitializeLocalStorage();
+  }
 
   return NS_OK;
 }

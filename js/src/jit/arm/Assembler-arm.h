@@ -81,6 +81,44 @@ static constexpr Register CallTempNonArgRegs[] = {r5, r6, r7, r8};
 static const uint32_t NumCallTempNonArgRegs =
     mozilla::ArrayLength(CallTempNonArgRegs);
 
+// These register assignments for the 64-bit atomic ops are frequently too
+// constraining, but we have no way of expressing looser constraints to the
+// register allocator.
+
+// CompareExchange: Any two odd/even pairs would do for `new` and `out`, and any
+// pair would do for `old`, so long as none of them overlap.
+
+static constexpr Register CmpXchgOldLo = r4;
+static constexpr Register CmpXchgOldHi = r5;
+static constexpr Register64 CmpXchgOld64 =
+  Register64(CmpXchgOldHi, CmpXchgOldLo);
+static constexpr Register CmpXchgNewLo = IntArgReg2;
+static constexpr Register CmpXchgNewHi = IntArgReg3;
+static constexpr Register64 CmpXchgNew64 =
+  Register64(CmpXchgNewHi, CmpXchgNewLo);
+static constexpr Register CmpXchgOutLo = IntArgReg0;
+static constexpr Register CmpXchgOutHi = IntArgReg1;
+
+// Exchange: Any two non-equal odd/even pairs would do for `new` and `out`.
+
+static constexpr Register XchgNewLo = IntArgReg2;
+static constexpr Register XchgNewHi = IntArgReg3;
+static constexpr Register64 XchgNew64 = Register64(XchgNewHi, XchgNewLo);
+static constexpr Register XchgOutLo = IntArgReg0;
+static constexpr Register XchgOutHi = IntArgReg1;
+
+// Atomic rmw operations: Any two odd/even pairs would do for `tmp` and `out`,
+// and any pair would do for `val`, so long as none of them overlap.
+
+static constexpr Register FetchOpValLo = r4;
+static constexpr Register FetchOpValHi = r5;
+static constexpr Register64 FetchOpVal64 =
+  Register64(FetchOpValHi, FetchOpValLo);
+static constexpr Register FetchOpTmpLo = IntArgReg2;
+static constexpr Register FetchOpTmpHi = IntArgReg3;
+static constexpr Register FetchOpOutLo = IntArgReg0;
+static constexpr Register FetchOpOutHi = IntArgReg1;
+
 class ABIArgGenerator {
   unsigned intRegIndex_;
   unsigned floatRegIndex_;

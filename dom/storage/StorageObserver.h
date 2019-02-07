@@ -18,8 +18,10 @@ namespace dom {
 
 class StorageObserver;
 
-// Implementers are StorageManager and StorageDBParent to forward to
-// child processes.
+// Main-thread interface implemented by legacy LocalStorageManager and current
+// SessionStorageManager for direct consumption. Also implemented by legacy
+// StorageDBParent and current SessionStorageObserverParent for propagation to
+// content processes.
 class StorageObserverSink {
  public:
   virtual ~StorageObserverSink() {}

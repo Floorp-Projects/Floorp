@@ -560,18 +560,18 @@ ReplayDebugger.prototype = {
     return rv;
   },
 
+  // Convert a value we received from the child.
   _convertValue(value, options) {
     if (isNonNullObject(value)) {
       if (value.object) {
         return this._getObject(value.object, options);
-      } else if (value.special == "undefined") {
-        return undefined;
-      } else if (value.special == "NaN") {
-        return NaN;
-      } else if (value.special == "Infinity") {
-        return Infinity;
-      } else if (value.special == "-Infinity") {
-        return -Infinity;
+      }
+      switch (value.special) {
+      case "undefined": return undefined;
+      case "Infinity": return Infinity;
+      case "-Infinity": return -Infinity;
+      case "NaN": return NaN;
+      case "0": return -0;
       }
     }
     return value;
@@ -586,6 +586,21 @@ ReplayDebugger.prototype = {
     }
     ThrowError("Unexpected completion value");
     return null; // For eslint
+  },
+
+  // Convert a value for sending to the child.
+  _convertValueForChild(value) {
+    if (isNonNullObject(value)) {
+      assert(value instanceof ReplayDebuggerObject);
+      return { object: value._data.id };
+    } else if (value === undefined ||
+               value == Infinity ||
+               value == -Infinity ||
+               Object.is(value, NaN) ||
+               Object.is(value, -0)) {
+      return { special: "" + value };
+    }
+    return value;
   },
 
   /////////////////////////////////////////////////////////
@@ -885,12 +900,14 @@ function ReplayDebuggerObject(dbg, data, forConsole) {
   this._data = data;
   this._forConsole = forConsole;
   this._properties = null;
+  this._proxyData = null;
 }
 
 ReplayDebuggerObject.prototype = {
   _invalidate() {
     this._data = null;
     this._properties = null;
+    this._proxyData = null;
   },
 
   get callable() { return this._data.callable; },
@@ -913,7 +930,6 @@ ReplayDebuggerObject.prototype = {
   isExtensible() { return this._data.isExtensible; },
   isSealed() { return this._data.isSealed; },
   isFrozen() { return this._data.isFrozen; },
-  unwrap() { return this.isProxy ? NYI() : this; },
 
   get proto() {
     // Don't allow inspection of the prototypes of objects logged to the
@@ -940,7 +956,7 @@ ReplayDebuggerObject.prototype = {
   getOwnPropertyDescriptor(name) {
     this._ensureProperties();
     const desc = this._properties[name];
-    return desc ? this._convertPropertyDescriptor(desc) : null;
+    return desc ? this._convertPropertyDescriptor(desc) : undefined;
   },
 
   _ensureProperties() {
@@ -949,7 +965,7 @@ ReplayDebuggerObject.prototype = {
       const properties = this._forConsole
         ? this._dbg._sendRequest({ type: "getObjectPropertiesForConsole", id })
         : this._dbg._sendRequestAllowDiverge({ type: "getObjectProperties", id });
-      this._properties = {};
+      this._properties = Object.create(null);
       properties.forEach(({name, desc}) => { this._properties[name] = desc; });
     }
   },
@@ -968,16 +984,60 @@ ReplayDebuggerObject.prototype = {
     return rv;
   },
 
+  _ensureProxyData() {
+    if (!this._proxyData) {
+      const data = this._dbg._sendRequestAllowDiverge({
+        type: "objectProxyData",
+        id: this._data.id,
+      });
+      if (data.exception) {
+        throw new Error(data.exception);
+      }
+      this._proxyData = data;
+    }
+  },
+
+  unwrap() {
+    if (!this.isProxy) {
+      return this;
+    }
+    this._ensureProxyData();
+    return this._dbg._convertValue(this._proxyData.unwrapped);
+  },
+
+  get proxyTarget() {
+    this._ensureProxyData();
+    return this._dbg._convertValue(this._proxyData.target);
+  },
+
+  get proxyHandler() {
+    this._ensureProxyData();
+    return this._dbg._convertValue(this._proxyData.handler);
+  },
+
+  call(thisv, ...args) {
+    return this.apply(thisv, args);
+  },
+
+  apply(thisv, args) {
+    thisv = this._dbg._convertValueForChild(thisv);
+    args = (args || []).map(v => this._dbg._convertValueForChild(v));
+
+    const rv = this._dbg._sendRequestAllowDiverge({
+      type: "objectApply",
+      id: this._data.id,
+      thisv,
+      args,
+    });
+    return this._dbg._convertCompletionValue(rv);
+  },
+
   get allocationSite() { NYI(); },
   get errorMessageName() { NYI(); },
   get errorNotes() { NYI(); },
   get errorLineNumber() { NYI(); },
   get errorColumnNumber() { NYI(); },
-  get proxyTarget() { NYI(); },
-  get proxyHandler() { NYI(); },
   get isPromise() { NYI(); },
-  call: NYI,
-  apply: NYI,
   asEnvironment: NYI,
   executeInGlobal: NYI,
   executeInGlobalWithBindings: NYI,

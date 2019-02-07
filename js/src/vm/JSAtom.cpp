@@ -47,8 +47,8 @@ extern void InflateUTF8CharsToBufferAndTerminate(const InputCharsT src,
                                                  CharT* dst, size_t dstLen,
                                                  JS::SmallestEncoding encoding);
 
-template <typename CharT>
-extern bool UTF8EqualsChars(const JS::UTF8Chars utf8, const CharT* chars);
+template <typename CharT, typename CharsT>
+extern bool UTF8OrWTF8EqualsChars(const CharsT utf8, const CharT* chars);
 
 template <typename InputCharsT>
 extern bool GetUTF8AtomizationData(JSContext* cx, const InputCharsT utf8,
@@ -62,7 +62,7 @@ struct js::AtomHasher::Lookup {
     const char16_t* twoByteChars;
     const char* utf8Bytes;
   };
-  enum { TwoByteChar, Latin1, UTF8 } type;
+  enum { TwoByteChar, Latin1, UTF8, WTF8 } type;
   size_t length;
   size_t byteLength;
   const JSAtom* atom; /* Optional. */
@@ -130,7 +130,11 @@ MOZ_ALWAYS_INLINE bool js::AtomHasher::match(const AtomStateEntry& entry,
         return EqualChars(keyChars, lookup.twoByteChars, lookup.length);
       case Lookup::UTF8: {
         JS::UTF8Chars utf8(lookup.utf8Bytes, lookup.byteLength);
-        return UTF8EqualsChars(utf8, keyChars);
+        return UTF8OrWTF8EqualsChars(utf8, keyChars);
+      }
+      case Lookup::WTF8: {
+        JS::WTF8Chars wtf8(lookup.utf8Bytes, lookup.byteLength);
+        return UTF8OrWTF8EqualsChars(wtf8, keyChars);
       }
     }
   }
@@ -143,7 +147,11 @@ MOZ_ALWAYS_INLINE bool js::AtomHasher::match(const AtomStateEntry& entry,
       return mozilla::ArrayEqual(keyChars, lookup.twoByteChars, lookup.length);
     case Lookup::UTF8: {
       JS::UTF8Chars utf8(lookup.utf8Bytes, lookup.byteLength);
-      return UTF8EqualsChars(utf8, keyChars);
+      return UTF8OrWTF8EqualsChars(utf8, keyChars);
+    }
+    case Lookup::WTF8: {
+      JS::WTF8Chars wtf8(lookup.utf8Bytes, lookup.byteLength);
+      return UTF8OrWTF8EqualsChars(wtf8, keyChars);
     }
   }
 
@@ -996,6 +1004,9 @@ JSAtom* AtomizeUTF8OrWTF8Chars(JSContext* cx, const char* utf8Chars,
 
   AtomizeUTF8OrWTF8CharsWrapper<CharsT> chars(utf8, forCopy);
   AtomHasher::Lookup lookup(utf8Chars, utf8ByteLength, length, hash);
+  if (std::is_same<CharsT, WTF8Chars>::value) {
+    lookup.type = AtomHasher::Lookup::WTF8;
+  }
   return AtomizeAndCopyCharsFromLookup(cx, &chars, length, lookup, DoNotPinAtom,
                                        Nothing());
 }
