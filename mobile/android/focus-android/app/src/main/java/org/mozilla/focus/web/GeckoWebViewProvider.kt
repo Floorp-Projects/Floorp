@@ -352,7 +352,7 @@ class GeckoWebViewProvider : IWebViewProvider {
                     ) {
                         callback?.onLongPress(IWebView.HitTarget(true, uri, true, elementSrc))
                     } else if (elementSrc != null &&
-                               elementType == GeckoSession.ContentDelegate.ContextElement.TYPE_IMAGE) {
+                        elementType == GeckoSession.ContentDelegate.ContextElement.TYPE_IMAGE) {
                         callback?.onLongPress(IWebView.HitTarget(false, null, true, elementSrc))
                     } else if (uri != null) {
                         callback?.onLongPress(IWebView.HitTarget(true, uri, false, null))
