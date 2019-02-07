@@ -2957,6 +2957,17 @@ void InitializeLocalStorage() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!gLocalStorageInitialized);
 
+  if (NS_FAILED(Preferences::AddAtomicUintVarCache(
+          &gOriginLimitKB, kDefaultQuotaPref, kDefaultOriginLimitKB))) {
+    NS_WARNING("Unable to respond to default quota pref changes!");
+  }
+
+  Preferences::RegisterCallbackAndCall(ShadowWritesPrefChangedCallback,
+                                       kShadowWritesPref);
+
+  Preferences::RegisterCallbackAndCall(SnapshotPrefillPrefChangedCallback,
+                                       kSnapshotPrefillPref);
+
 #ifdef DEBUG
   gLocalStorageInitialized = true;
 #endif
@@ -7170,17 +7181,6 @@ nsresult QuotaClient::RegisterObservers(
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
-
-    if (NS_FAILED(Preferences::AddAtomicUintVarCache(
-            &gOriginLimitKB, kDefaultQuotaPref, kDefaultOriginLimitKB))) {
-      NS_WARNING("Unable to respond to default quota pref changes!");
-    }
-
-    Preferences::RegisterCallbackAndCall(ShadowWritesPrefChangedCallback,
-                                         kShadowWritesPref);
-
-    Preferences::RegisterCallbackAndCall(SnapshotPrefillPrefChangedCallback,
-                                         kSnapshotPrefillPref);
 
     sObserversRegistered = true;
   }
