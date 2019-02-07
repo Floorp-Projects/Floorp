@@ -386,17 +386,78 @@ void LIRGeneratorARM64::lowerTruncateFToInt32(MTruncateToInt32* ins) {
 
 void LIRGenerator::visitAtomicTypedArrayElementBinop(
     MAtomicTypedArrayElementBinop* ins) {
-  MOZ_CRASH("NYI");
+  MOZ_ASSERT(ins->arrayType() != Scalar::Uint8Clamped);
+  MOZ_ASSERT(ins->arrayType() != Scalar::Float32);
+  MOZ_ASSERT(ins->arrayType() != Scalar::Float64);
+
+  MOZ_ASSERT(ins->elements()->type() == MIRType::Elements);
+  MOZ_ASSERT(ins->index()->type() == MIRType::Int32);
+
+  const LUse elements = useRegister(ins->elements());
+  const LAllocation index = useRegisterOrConstant(ins->index());
+
+  LAllocation value = useRegister(ins->value());
+
+  LDefinition tempDef1 = temp();
+  LDefinition tempDef2 = LDefinition::BogusTemp();
+  if (ins->arrayType() == Scalar::Uint32) {
+    tempDef2 = temp();
+  }
+
+  LAtomicTypedArrayElementBinop* lir = new (alloc())
+      LAtomicTypedArrayElementBinop(elements, index, value, tempDef1, tempDef2);
+
+  define(lir, ins);
 }
 
 void LIRGenerator::visitCompareExchangeTypedArrayElement(
     MCompareExchangeTypedArrayElement* ins) {
-  MOZ_CRASH("NYI");
+  MOZ_ASSERT(ins->arrayType() != Scalar::Float32);
+  MOZ_ASSERT(ins->arrayType() != Scalar::Float64);
+
+  MOZ_ASSERT(ins->elements()->type() == MIRType::Elements);
+  MOZ_ASSERT(ins->index()->type() == MIRType::Int32);
+
+  const LUse elements = useRegister(ins->elements());
+  const LAllocation index = useRegisterOrConstant(ins->index());
+
+  // If the target is an FPReg then we need a temporary at the CodeGenerator
+  // level for creating the result.
+
+  const LAllocation newval = useRegister(ins->newval());
+  const LAllocation oldval = useRegister(ins->oldval());
+
+  LDefinition outTemp = LDefinition::BogusTemp();
+  if (ins->arrayType() == Scalar::Uint32) {
+    outTemp = temp();
+  }
+
+  LCompareExchangeTypedArrayElement* lir = new (alloc())
+      LCompareExchangeTypedArrayElement(elements, index, oldval, newval, outTemp);
+
+  define(lir, ins);
 }
 
 void LIRGenerator::visitAtomicExchangeTypedArrayElement(
     MAtomicExchangeTypedArrayElement* ins) {
-  MOZ_CRASH("NYI");
+  MOZ_ASSERT(ins->arrayType() <= Scalar::Uint32);
+
+  MOZ_ASSERT(ins->elements()->type() == MIRType::Elements);
+  MOZ_ASSERT(ins->index()->type() == MIRType::Int32);
+
+  const LUse elements = useRegister(ins->elements());
+  const LAllocation index = useRegisterOrConstant(ins->index());
+  const LAllocation value = useRegister(ins->value());
+
+  LDefinition tempDef = LDefinition::BogusTemp();
+  if (ins->arrayType() == Scalar::Uint32) {
+    tempDef = temp();
+  }
+
+  LAtomicExchangeTypedArrayElement* lir = new (alloc())
+      LAtomicExchangeTypedArrayElement(elements, index, value, tempDef);
+
+  define(lir, ins);
 }
 
 void LIRGenerator::visitSubstr(MSubstr* ins) {
