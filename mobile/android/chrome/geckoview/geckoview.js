@@ -5,6 +5,7 @@
 "use strict";
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/DelayedInit.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   E10SUtils: "resource://gre/modules/E10SUtils.jsm",
@@ -389,6 +390,10 @@ function createBrowser() {
   return browser;
 }
 
+function InitLater(fn, object, name) {
+  return DelayedInit.schedule(fn, object, name, 15000 /* 15s max wait */);
+}
+
 function startup() {
   GeckoViewUtils.initLogging("XUL", window);
 
@@ -449,6 +454,27 @@ function startup() {
       resource: "resource://gre/modules/GeckoViewTrackingProtection.jsm",
     },
   }]);
+
+  Services.tm.dispatchToMainThread(() => {
+    // This should always be the first thing we do here - any additional delayed
+    // initialisation tasks should be added between "browser-delayed-startup-finished"
+    // and "browser-idle-startup-tasks-finished".
+
+    // Bug 1496684: Various bits of platform stuff depend on this notification
+    // to learn when a browser window has finished its initial (chrome)
+    // initialisation, especially with regards to the very first window that is
+    // created. Therefore, GeckoView "windows" need to send this, too.
+    InitLater(() => Services.obs.notifyObservers(window, "browser-delayed-startup-finished"));
+
+    // This should always go last, since the idle tasks (except for the ones with
+    // timeouts) should execute in order. Note that this observer notification is
+    // not guaranteed to fire, since the window could close before we get here.
+
+    // This notification in particular signals the ScriptPreloader that we have
+    // finished startup, so it can now stop recording script usage and start
+    // updating the startup cache for faster script loading.
+    InitLater(() => Services.obs.notifyObservers(window, "browser-idle-startup-tasks-finished"));
+  });
 
   // Move focus to the content window at the end of startup,
   // so things like text selection can work properly.
