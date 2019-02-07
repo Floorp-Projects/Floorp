@@ -19,6 +19,9 @@ EXTRA_JS_MODULES += [
     'ParseBreakpadSymbols-worker.js',
     'ParseNMSymbols-worker.js',
     'ParseSymbols.jsm',
+    'profiler_get_symbols.js',
+    'ProfilerGetSymbols-worker.js',
+    'ProfilerGetSymbols.jsm',
 ]
 
 DIRS += ['schemas']
