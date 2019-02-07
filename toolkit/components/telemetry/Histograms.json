@@ -2842,22 +2842,6 @@
     "n_buckets": 50,
     "description": "Time to search cache (ms)"
   },
-  "CACHE_MEMORY_SEARCH_2": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "default",
-    "kind": "exponential",
-    "high": 10000,
-    "n_buckets": 50,
-    "description": "Time to search memory cache (ms)"
-  },
-  "CACHE_DISK_SEARCH_2": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "default",
-    "kind": "exponential",
-    "high": 10000,
-    "n_buckets": 50,
-    "description": "Time to search disk cache (ms)"
-  },
   "CACHE_OFFLINE_SEARCH_2": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",
@@ -2898,14 +2882,6 @@
     "kind": "enumerated",
     "n_values": 6,
     "description": "encoding removed: 0=unknown, 1=gzip, 2=deflate, 3=brotli"
-  },
-  "HTTP_DISK_CACHE_OVERHEAD": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "default",
-    "kind": "exponential",
-    "high": 32000000,
-    "n_buckets": 100,
-    "description": "HTTP Disk cache memory overhead (bytes)"
   },
   "CACHE_LM_INCONSISTENT": {
     "record_in_processes": ["main", "content"],
@@ -4695,14 +4671,6 @@
     "kind": "enumerated",
     "n_values": 16,
     "description": "Flags errors in startup calculation()"
-  },
-  "NETWORK_DISK_CACHE_OPEN": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "default",
-    "kind": "exponential",
-    "high": 10000,
-    "n_buckets": 10,
-    "description": "Time spent opening disk cache (ms)"
   },
   "NETWORK_DISK_CACHE_TRASHRENAME": {
     "record_in_processes": ["main", "content"],
