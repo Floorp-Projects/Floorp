@@ -1257,11 +1257,8 @@ static void FillArgumentArray(MacroAssembler& masm, unsigned funcImportIndex,
             masm.storeDouble(fpscratch, dst);
           } else {
             // Preserve the NaN pattern in the input.
-            ScratchFloat32Scope fpscratch(masm);
-            masm.moveFloat32(srcReg, fpscratch);
-            masm.canonicalizeFloat(fpscratch);
-            GenPrintF32(DebugChannel::Import, masm, fpscratch);
-            masm.storeFloat32(fpscratch, dst);
+            GenPrintF32(DebugChannel::Import, masm, srcReg);
+            masm.storeFloat32(srcReg, dst);
           }
         }
         break;
@@ -1616,7 +1613,7 @@ static bool GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi, un
   argOffset += sizeof(Value);
 
   // 5. Fill the arguments
-  unsigned offsetToCallerStackArgs = jitFramePushed + sizeof(Frame);
+  unsigned offsetToCallerStackArgs = jitFramePushed + sizeof(Frame) + frameAlignExtra;
   FillArgumentArray(masm, funcImportIndex, fi.funcType().args(), argOffset,
                     offsetToCallerStackArgs, scratch, ToValue(true));
   argOffset += fi.funcType().args().length() * sizeof(Value);
