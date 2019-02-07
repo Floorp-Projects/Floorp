@@ -55,6 +55,8 @@ void* MaybeGetBuiltinThunk(HandleFunction f, const FuncType& funcType);
 
 void ReleaseBuiltinThunks();
 
+void* AddressOf(SymbolicAddress imm, jit::ABIFunctionType* abiType);
+
 #ifdef WASM_CODEGEN_DEBUG
 void PrintI32(int32_t val);
 void PrintF32(float val);
