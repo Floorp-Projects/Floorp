@@ -12,6 +12,7 @@ const {ELEMENT_STYLE} = require("devtools/shared/specs/styles");
 const TextProperty = require("devtools/client/inspector/rules/models/text-property");
 const Services = require("Services");
 
+loader.lazyRequireGetter(this, "updateSourceLink", "devtools/client/inspector/rules/actions/rules", true);
 loader.lazyRequireGetter(this, "promiseWarn", "devtools/client/inspector/shared/utils", true);
 loader.lazyRequireGetter(this, "parseNamedDeclarations", "devtools/shared/css/parsing-utils", true);
 
@@ -50,6 +51,8 @@ class Rule {
 
     this.mediaText = this.domRule && this.domRule.mediaText ? this.domRule.mediaText : "";
     this.cssProperties = this.elementStyle.ruleView.cssProperties;
+    this.inspector = this.elementStyle.ruleView.inspector;
+    this.store = this.elementStyle.ruleView.store;
 
     // Populate the text properties with the style's current authoredText
     // value, and add in any disabled properties from the store.
@@ -57,6 +60,16 @@ class Rule {
     this.textProps = this.textProps.concat(this._getDisabledProperties());
 
     this.getUniqueSelector = this.getUniqueSelector.bind(this);
+    this.onLocationChanged = this.onLocationChanged.bind(this);
+    this.updateSourceLocation = this.updateSourceLocation.bind(this);
+  }
+
+  destroy() {
+    if (this.unsubscribeSourceMap) {
+      this.unsubscribeSourceMap();
+    }
+
+    this.domRule.off("location-changed", this.onLocationChanged);
   }
 
   get declarations() {
@@ -85,11 +98,29 @@ class Rule {
 
   get sourceLink() {
     return {
-      column: this.ruleColumn,
-      line: this.ruleLine,
-      mediaText: this.mediaText,
-      title: this.title,
+      label: this.getSourceText(CssLogic.shortSource({ href: this.sourceLocation.url })),
+      title: this.getSourceText(this.sourceLocation.url),
     };
+  }
+
+  get sourceMapURLService() {
+    return this.inspector.toolbox.sourceMapURLService;
+  }
+
+  /**
+   * Returns the original source location which includes the original URL, line and
+   * column numbers.
+   */
+  get sourceLocation() {
+    if (!this._sourceLocation) {
+      this._sourceLocation = {
+        column: this.ruleColumn,
+        line: this.ruleLine,
+        url: this.sheet ? this.sheet.href || this.sheet.nodeHref : null,
+      };
+    }
+
+    return this._sourceLocation;
   }
 
   get title() {
@@ -179,6 +210,31 @@ class Rule {
   }
 
   /**
+   * Returns a formatted source text of the given stylesheet URL with its source line
+   * and @media text.
+   *
+   * @param  {String} url
+   *         The stylesheet URL.
+   */
+  getSourceText(url) {
+    if (this.isSystem) {
+      return `${STYLE_INSPECTOR_L10N.getStr("rule.userAgentStyles")} ${this.title}`;
+    }
+
+    let sourceText = url;
+
+    if (this.sourceLocation.line > 0) {
+      sourceText += ":" + this.sourceLocation.line;
+    }
+
+    if (this.mediaText) {
+      sourceText += " @media " + this.mediaText;
+    }
+
+    return sourceText;
+  }
+
+  /**
    * Returns an unique selector for the CSS rule.
    */
   async getUniqueSelector() {
@@ -193,7 +249,7 @@ class Rule {
       selector = await this.inherited.getUniqueSelector();
     } else {
       // This is an inline style from the current node.
-      selector = this.elementStyle.ruleView.inspector.selectionCssSelector;
+      selector = this.inspector.selectionCssSelector;
     }
 
     return selector;
@@ -743,6 +799,57 @@ class Rule {
       }
     }
     return false;
+  }
+
+  /**
+   * Handler for "location-changed" events fired from the StyleRuleActor. This could
+   * occur by adding a new declaration to the rule. Updates the source location of the
+   * rule. This will overwrite the source map location.
+   */
+  onLocationChanged() {
+    const url = this.sheet ? this.sheet.href || this.sheet.nodeHref : null;
+    this.updateSourceLocation(url, this.ruleLine, this.ruleColumn);
+  }
+
+  /**
+   * Subscribes the rule to the source map service to map the the original source
+   * location.
+   */
+  subscribeToLocationChange() {
+    const { url, line, column } = this.sourceLocation;
+
+    if (url && !this.isSystem && this.domRule.type !== ELEMENT_STYLE) {
+      // Subscribe returns an unsubscribe function that can be called on destroy.
+      this.unsubscribeSourceMap = this.sourceMapURLService.subscribe(url, line, column,
+        (enabled, sourceUrl, sourceLine, sourceColumn) => {
+          if (enabled) {
+            // Only update the source location if source map is in use.
+            this.updateSourceLocation(sourceUrl, sourceLine, sourceColumn);
+          }
+        });
+    }
+
+    this.domRule.on("location-changed", this.onLocationChanged);
+  }
+
+  /**
+   * Handler for any location changes called from the SourceMapURLService and can also be
+   * called from onLocationChanged(). Updates the source location for the rule.
+   *
+   * @param  {String} url
+   *         The original URL.
+   * @param  {Number} line
+   *         The original line number.
+   * @param  {number} column
+   *         The original column number.
+   */
+  updateSourceLocation(url, line, column) {
+    this._sourceLocation = {
+      column,
+      line,
+      url,
+    };
+    this.store.dispatch(updateSourceLink(this.domRule.actorID, this.sourceLink));
   }
 }
 

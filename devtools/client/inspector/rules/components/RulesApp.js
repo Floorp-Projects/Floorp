@@ -30,6 +30,7 @@ class RulesApp extends PureComponent {
     return {
       onAddClass: PropTypes.func.isRequired,
       onAddRule: PropTypes.func.isRequired,
+      onOpenSourceLink: PropTypes.func.isRequired,
       onSetClassState: PropTypes.func.isRequired,
       onToggleClassPanelExpanded: PropTypes.func.isRequired,
       onToggleDeclaration: PropTypes.func.isRequired,
@@ -45,6 +46,7 @@ class RulesApp extends PureComponent {
 
   getRuleProps() {
     return {
+      onOpenSourceLink: this.props.onOpenSourceLink,
       onToggleDeclaration: this.props.onToggleDeclaration,
       onToggleSelectorHighlighter: this.props.onToggleSelectorHighlighter,
       showDeclarationNameEditor: this.props.showDeclarationNameEditor,
