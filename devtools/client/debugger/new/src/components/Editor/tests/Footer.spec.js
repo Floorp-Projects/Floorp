@@ -28,6 +28,7 @@ function generateDefaults(overrides) {
         on: jest.fn()
       }
     },
+    endPanelCollapsed: false,
     selectedSource: makeSource("foo").source,
     ...overrides
   };

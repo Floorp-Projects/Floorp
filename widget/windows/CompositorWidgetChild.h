@@ -28,13 +28,18 @@ class CompositorWidgetChild final : public PCompositorWidgetChild,
   void UpdateTransparency(nsTransparencyMode aMode) override;
   void ClearTransparentWindow() override;
   HDC GetTransparentDC() const override;
+  void SetParentWnd(const HWND aParentWnd) override;
 
   mozilla::ipc::IPCResult RecvObserveVsync() override;
   mozilla::ipc::IPCResult RecvUnobserveVsync() override;
+  mozilla::ipc::IPCResult RecvUpdateCompositorWnd(
+      const WindowsHandle& aCompositorWnd, const WindowsHandle& aParentWnd) override;
 
  private:
   RefPtr<CompositorVsyncDispatcher> mVsyncDispatcher;
   RefPtr<CompositorWidgetVsyncObserver> mVsyncObserver;
+  HWND mCompositorWnd;
+  HWND mParentWnd;
 };
 
 }  // namespace widget

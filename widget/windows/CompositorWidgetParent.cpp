@@ -58,6 +58,13 @@ RefPtr<VsyncObserver> CompositorWidgetParent::GetVsyncObserver() const {
   return mVsyncObserver;
 }
 
+void CompositorWidgetParent::UpdateCompositorWnd(
+    const HWND aCompositorWnd, const HWND aParentWnd) {
+  Unused << SendUpdateCompositorWnd(
+      reinterpret_cast<WindowsHandle>(aCompositorWnd),
+      reinterpret_cast<WindowsHandle>(aParentWnd));
+}
+
 void CompositorWidgetParent::ActorDestroy(ActorDestroyReason aWhy) {}
 
 }  // namespace widget

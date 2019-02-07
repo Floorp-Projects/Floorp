@@ -1688,10 +1688,7 @@ nsresult Navigator::GetUserAgent(nsPIDOMWindowInner* aWindow,
   // specific OS version, etc.
   if (!aIsCallerChrome && nsContentUtils::ShouldResistFingerprinting()) {
     nsAutoCString spoofedUA;
-    nsresult rv = nsRFPService::GetSpoofedUserAgent(spoofedUA, false);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    nsRFPService::GetSpoofedUserAgent(spoofedUA, false);
     CopyASCIItoUTF16(spoofedUA, aUserAgent);
     return NS_OK;
   }

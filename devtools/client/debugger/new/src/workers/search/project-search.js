@@ -2,13 +2,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+// @flow
+
 // Maybe reuse file search's functions?
 
 import getMatches from "./get-matches";
 
-export function findSourceMatches(source, queryText) {
+import type { Source } from "../../types";
+
+export function findSourceMatches(source: Source, queryText: string): Object[] {
   const { id, loadedState, text } = source;
-  if (loadedState != "loaded" || !text || queryText == "") {
+  if (loadedState != "loaded" || typeof text != "string" || queryText == "") {
     return [];
   }
 
