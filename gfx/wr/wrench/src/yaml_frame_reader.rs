@@ -13,6 +13,7 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::io::Read;
 use std::path::{Path, PathBuf};
+use std::usize;
 use webrender::api::*;
 use wrench::{FontDescriptor, Wrench, WrenchThing};
 use yaml_helper::{StringEnum, YamlHelper, make_perspective};
@@ -198,13 +199,11 @@ fn is_image_opaque(format: ImageFormat, bytes: &[u8]) -> bool {
 }
 
 pub struct YamlFrameReader {
-    frame_built: bool,
     yaml_path: PathBuf,
     aux_dir: PathBuf,
     frame_count: u32,
 
     display_lists: Vec<(PipelineId, LayoutSize, BuiltDisplayList)>,
-    queue_depth: u32,
 
     include_only: Vec<String>,
 
@@ -229,6 +228,12 @@ pub struct YamlFrameReader {
 
     clip_id_stack: Vec<ClipId>,
     spatial_id_stack: Vec<SpatialId>,
+
+    requested_frame: usize,
+    built_frame: usize,
+
+    yaml_string: String,
+    keyframes: Option<Yaml>,
 }
 
 impl YamlFrameReader {
@@ -236,12 +241,10 @@ impl YamlFrameReader {
         YamlFrameReader {
             watch_source: false,
             list_resources: false,
-            frame_built: false,
             yaml_path: yaml_path.to_owned(),
             aux_dir: yaml_path.parent().unwrap().to_owned(),
             frame_count: 0,
             display_lists: Vec::new(),
-            queue_depth: 1,
             include_only: vec![],
             scroll_offsets: HashMap::new(),
             fonts: HashMap::new(),
@@ -253,6 +256,10 @@ impl YamlFrameReader {
             user_spatial_id_map: HashMap::new(),
             clip_id_stack: Vec::new(),
             spatial_id_stack: Vec::new(),
+            yaml_string: String::new(),
+            requested_frame: 0,
+            built_frame: usize::MAX,
+            keyframes: None,
         }
     }
 
@@ -285,11 +292,18 @@ impl YamlFrameReader {
         let yaml_file = args.value_of("INPUT").map(|s| PathBuf::from(s)).unwrap();
 
         let mut y = YamlFrameReader::new(&yaml_file);
+
+        y.keyframes = args.value_of("keyframes").map(|path| {
+            let mut file = File::open(&path).unwrap();
+            let mut keyframes_string = String::new();
+            file.read_to_string(&mut keyframes_string).unwrap();
+            YamlLoader::load_from_str(&keyframes_string)
+                .expect("Failed to parse keyframes file")
+                .pop()
+                .unwrap()
+        });
         y.list_resources = args.is_present("list-resources");
         y.watch_source = args.is_present("watch");
-        y.queue_depth = args.value_of("queue")
-            .map(|s| s.parse::<u32>().unwrap())
-            .unwrap_or(1);
         y.include_only = args.values_of("include")
             .map(|v| v.map(|s| s.to_owned()).collect())
             .unwrap_or(vec![]);
@@ -301,12 +315,9 @@ impl YamlFrameReader {
         self.display_lists.clear();
     }
 
-    pub fn build(&mut self, wrench: &mut Wrench) {
-        let mut file = File::open(&self.yaml_path).unwrap();
-        let mut src = String::new();
-        file.read_to_string(&mut src).unwrap();
-
-        let mut yaml_doc = YamlLoader::load_from_str(&src).expect("Failed to parse YAML file");
+    fn build(&mut self, wrench: &mut Wrench) {
+        let mut yaml_doc = YamlLoader::load_from_str(&self.yaml_string)
+            .expect("Failed to parse YAML file");
         assert_eq!(yaml_doc.len(), 1);
 
         self.reset();
@@ -323,7 +334,7 @@ impl YamlFrameReader {
         self.build_pipeline(wrench, root_pipeline_id, &yaml["root"]);
     }
 
-    pub fn build_pipeline(
+    fn build_pipeline(
         &mut self,
         wrench: &mut Wrench,
         pipeline_id: PipelineId,
@@ -384,7 +395,7 @@ impl YamlFrameReader {
         }
     }
 
-    pub fn to_clip_id(&self, item: &Yaml, pipeline_id: PipelineId) -> Option<ClipId> {
+    fn to_clip_id(&self, item: &Yaml, pipeline_id: PipelineId) -> Option<ClipId> {
         match *item {
             Yaml::Integer(value) => Some(self.user_clip_id_map[&(value as u64)]),
             Yaml::String(ref id_string) if id_string == "root_clip" =>
@@ -393,7 +404,7 @@ impl YamlFrameReader {
         }
     }
 
-    pub fn to_spatial_id(&self, item: &Yaml, pipeline_id: PipelineId) -> SpatialId {
+    fn to_spatial_id(&self, item: &Yaml, pipeline_id: PipelineId) -> SpatialId {
         match *item {
             Yaml::Integer(value) => self.user_spatial_id_map[&(value as u64)],
             Yaml::String(ref id_string) if id_string == "root-reference-frame" =>
@@ -407,12 +418,12 @@ impl YamlFrameReader {
         }
     }
 
-    pub fn add_clip_id_mapping(&mut self, numeric_id: u64, real_id: ClipId) {
+    fn add_clip_id_mapping(&mut self, numeric_id: u64, real_id: ClipId) {
         assert_ne!(numeric_id, 0, "id=0 is reserved for the root clip");
         self.user_clip_id_map.insert(numeric_id, real_id);
     }
 
-    pub fn add_spatial_id_mapping(&mut self, numeric_id: u64, real_id: SpatialId) {
+    fn add_spatial_id_mapping(&mut self, numeric_id: u64, real_id: SpatialId) {
         assert_ne!(numeric_id, 0, "id=0 is reserved for the root reference frame");
         assert_ne!(numeric_id, 1, "id=1 is reserved for the root scroll node");
         self.user_spatial_id_map.insert(numeric_id, real_id);
@@ -478,7 +489,7 @@ impl YamlFrameReader {
 
     }
 
-    pub fn add_or_get_image(
+    fn add_or_get_image(
         &mut self,
         file: &Path,
         tiling: Option<i64>,
@@ -761,10 +772,8 @@ impl YamlFrameReader {
         } else {
             "bounds"
         };
-        info.rect = item[bounds_key]
-            .as_rect()
-            .expect("rect type must have bounds");
-        let color = item["color"].as_colorf().unwrap_or(ColorF::WHITE);
+        info.rect = self.resolve_rect(&item[bounds_key]);
+        let color = self.resolve_colorf(&item["color"], ColorF::BLACK);
         dl.push_rect(&info, &self.top_space_and_clip(), color);
     }
 
@@ -1070,7 +1079,7 @@ impl YamlFrameReader {
             .expect("box shadow must have bounds");
         info.rect = bounds;
         let box_bounds = item["box-bounds"].as_rect().unwrap_or(bounds);
-        let offset = item["offset"].as_vector().unwrap_or(LayoutVector2D::zero());
+        let offset = self.resolve_vector(&item["offset"], LayoutVector2D::zero());
         let color = item["color"]
             .as_colorf()
             .unwrap_or(ColorF::new(0.0, 0.0, 0.0, 1.0));
@@ -1361,7 +1370,7 @@ impl YamlFrameReader {
         dl.push_iframe(&info, &self.top_space_and_clip(), pipeline_id, ignore);
     }
 
-    pub fn get_complex_clip_for_item(&mut self, yaml: &Yaml) -> Option<ComplexClipRegion> {
+    fn get_complex_clip_for_item(&mut self, yaml: &Yaml) -> Option<ComplexClipRegion> {
         let complex_clip = &yaml["complex-clip"];
         if complex_clip.is_badvalue() {
             return None;
@@ -1369,7 +1378,7 @@ impl YamlFrameReader {
         Some(self.to_complex_clip_region(complex_clip))
     }
 
-    pub fn get_item_type_from_yaml(item: &Yaml) -> &str {
+    fn get_item_type_from_yaml(item: &Yaml) -> &str {
         let shorthands = [
             "rect",
             "image",
@@ -1389,7 +1398,7 @@ impl YamlFrameReader {
         item["type"].as_str().unwrap_or("unknown")
     }
 
-    pub fn add_display_list_items_from_yaml(
+    fn add_display_list_items_from_yaml(
         &mut self,
         dl: &mut DisplayListBuilder,
         wrench: &mut Wrench,
@@ -1485,7 +1494,7 @@ impl YamlFrameReader {
         }
     }
 
-    pub fn handle_scroll_frame(
+    fn handle_scroll_frame(
         &mut self,
         dl: &mut DisplayListBuilder,
         wrench: &mut Wrench,
@@ -1531,7 +1540,7 @@ impl YamlFrameReader {
         }
     }
 
-    pub fn handle_sticky_frame(
+    fn handle_sticky_frame(
         &mut self,
         dl: &mut DisplayListBuilder,
         wrench: &mut Wrench,
@@ -1565,7 +1574,54 @@ impl YamlFrameReader {
         }
     }
 
-    pub fn handle_push_shadow(
+    fn resolve_binding<'a>(
+        &'a self,
+        yaml: &'a Yaml,
+    ) -> &'a Yaml {
+        if let Some(ref keyframes) = self.keyframes {
+            if let Some(s) = yaml.as_str() {
+                let prefix: &str = "key(";
+                let suffix: &str = ")";
+                if s.starts_with(prefix) && s.ends_with(suffix) {
+                    let key = &s[prefix.len() .. s.len() - 1];
+                    return &keyframes[key][self.requested_frame];
+                }
+            }
+        }
+
+        yaml
+    }
+
+    fn resolve_colorf(
+        &self,
+        yaml: &Yaml,
+        default: ColorF,
+    ) -> ColorF {
+        self.resolve_binding(yaml)
+            .as_colorf()
+            .unwrap_or(default)
+    }
+
+    fn resolve_rect(
+        &self,
+        yaml: &Yaml,
+    ) -> LayoutRect {
+        self.resolve_binding(yaml)
+            .as_rect()
+            .expect(&format!("invalid rect {:?}", yaml))
+    }
+
+    fn resolve_vector(
+        &self,
+        yaml: &Yaml,
+        default: LayoutVector2D,
+    ) -> LayoutVector2D {
+        self.resolve_binding(yaml)
+            .as_vector()
+            .unwrap_or(default)
+    }
+
+    fn handle_push_shadow(
         &mut self,
         dl: &mut DisplayListBuilder,
         yaml: &Yaml,
@@ -1587,11 +1643,11 @@ impl YamlFrameReader {
         );
     }
 
-    pub fn handle_pop_all_shadows(&mut self, dl: &mut DisplayListBuilder) {
+    fn handle_pop_all_shadows(&mut self, dl: &mut DisplayListBuilder) {
         dl.pop_all_shadows();
     }
 
-    pub fn handle_clip_chain(&mut self, builder: &mut DisplayListBuilder, yaml: &Yaml) {
+    fn handle_clip_chain(&mut self, builder: &mut DisplayListBuilder, yaml: &Yaml) {
         let numeric_id = yaml["id"].as_i64().expect("clip chains must have an id");
         let clip_ids: Vec<ClipId> = yaml["clips"]
             .as_vec_u64()
@@ -1611,7 +1667,7 @@ impl YamlFrameReader {
         self.add_clip_id_mapping(numeric_id as u64, ClipId::ClipChain(real_id));
     }
 
-    pub fn handle_clip(&mut self, dl: &mut DisplayListBuilder, wrench: &mut Wrench, yaml: &Yaml) {
+    fn handle_clip(&mut self, dl: &mut DisplayListBuilder, wrench: &mut Wrench, yaml: &Yaml) {
         let clip_rect = yaml["bounds"].as_rect().expect("clip must have a bounds");
         let numeric_id = yaml["id"].as_i64();
         let complex_clips = self.to_complex_clip_regions(&yaml["complex"]);
@@ -1636,14 +1692,14 @@ impl YamlFrameReader {
         }
     }
 
-    pub fn get_root_size_from_yaml(&mut self, wrench: &mut Wrench, yaml: &Yaml) -> LayoutSize {
+    fn get_root_size_from_yaml(&mut self, wrench: &mut Wrench, yaml: &Yaml) -> LayoutSize {
         yaml["bounds"]
             .as_rect()
             .map(|rect| rect.size)
             .unwrap_or(wrench.window_size_f32())
     }
 
-    pub fn push_reference_frame(
+    fn push_reference_frame(
         &mut self,
         dl: &mut DisplayListBuilder,
         wrench: &mut Wrench,
@@ -1707,7 +1763,7 @@ impl YamlFrameReader {
         reference_frame_id
     }
 
-    pub fn handle_reference_frame(
+    fn handle_reference_frame(
         &mut self,
         dl: &mut DisplayListBuilder,
         wrench: &mut Wrench,
@@ -1724,7 +1780,7 @@ impl YamlFrameReader {
         dl.pop_reference_frame();
     }
 
-    pub fn add_stacking_context_from_yaml(
+    fn add_stacking_context_from_yaml(
         &mut self,
         dl: &mut DisplayListBuilder,
         wrench: &mut Wrench,
@@ -1797,14 +1853,29 @@ impl YamlFrameReader {
 
 impl WrenchThing for YamlFrameReader {
     fn do_frame(&mut self, wrench: &mut Wrench) -> u32 {
-        if !self.frame_built || self.watch_source {
-            self.build(wrench);
-            self.frame_built = false;
+        let mut should_build_yaml = false;
+
+        // If YAML isn't read yet, or watching source file, reload from disk.
+        if self.yaml_string.is_empty() || self.watch_source {
+            let mut file = File::open(&self.yaml_path).unwrap();
+            self.yaml_string.clear();
+            file.read_to_string(&mut self.yaml_string).unwrap();
+            should_build_yaml = true;
         }
 
-        self.frame_count += 1;
+        // Evaluate conditions that require parsing the YAML.
+        if self.built_frame != self.requested_frame {
+            // Requested frame has changed
+            should_build_yaml = true;
+        }
 
-        if !self.frame_built || wrench.should_rebuild_display_lists() {
+        // Build the DL from YAML if required
+        if should_build_yaml {
+            self.build(wrench);
+        }
+
+        // Determine whether to send a new DL, or just refresh.
+        if should_build_yaml || wrench.should_rebuild_display_lists() {
             wrench.begin_frame();
             wrench.send_lists(
                 self.frame_count,
@@ -1815,15 +1886,25 @@ impl WrenchThing for YamlFrameReader {
             wrench.refresh();
         }
 
-        self.frame_built = true;
+        self.frame_count += 1;
         self.frame_count
     }
 
-    fn next_frame(&mut self) {}
+    fn next_frame(&mut self) {
+        let mut max_frame_count = 0;
+        if let Some(ref keyframes) = self.keyframes {
+            for (_, values) in keyframes.as_hash().unwrap() {
+                max_frame_count = max_frame_count.max(values.as_vec().unwrap().len());
+            }
+        }
+        if self.requested_frame < max_frame_count - 1 {
+            self.requested_frame += 1;
+        }
+    }
 
-    fn prev_frame(&mut self) {}
-
-    fn queue_frames(&self) -> u32 {
-        self.queue_depth
+    fn prev_frame(&mut self) {
+        if self.requested_frame > 0 {
+            self.requested_frame -= 1;
+        }
     }
 }
