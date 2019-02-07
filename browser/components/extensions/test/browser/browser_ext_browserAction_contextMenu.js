@@ -44,6 +44,32 @@ let contextMenuItems = {
   "context-bookmarkpage": "hidden",
 };
 
+const TELEMETRY_CATEGORY = "addonsManager";
+const TELEMETRY_METHODS = new Set(["action", "link", "view"]);
+const type = "extension";
+
+function assertTelemetryMatches(events) {
+  let snapshot = Services.telemetry.snapshotEvents(
+    Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, true);
+
+  if (events.length == 0) {
+    ok(!snapshot.parent || snapshot.parent.length == 0, "There are no telemetry events");
+    return;
+  }
+
+  // Make sure we got some data.
+  ok(snapshot.parent && snapshot.parent.length > 0, "Got parent telemetry events in the snapshot");
+
+  // Only look at the related events after stripping the timestamp and category.
+  let relatedEvents = snapshot.parent
+    .filter(([timestamp, category, method]) =>
+      category == TELEMETRY_CATEGORY && TELEMETRY_METHODS.has(method))
+    .map(relatedEvent => relatedEvent.slice(2, 6));
+
+  // Events are now [method, object, value, extra] as expected.
+  Assert.deepEqual(relatedEvents, events, "The events are recorded correctly");
+}
+
 add_task(async function browseraction_popup_contextmenu() {
   let extension = ExtensionTestUtils.loadExtension(extData);
   await extension.startup();
@@ -245,9 +271,21 @@ add_task(async function browseraction_contextmenu_manage_extension() {
 
   info("Run tests in normal mode");
   await main(false);
+  assertTelemetryMatches([
+    ["action", "browserAction", null, {action: "manage", addonId: id}],
+    ["view", "aboutAddons", "detail", {addonId: id, type}],
+    ["action", "browserAction", null, {action: "manage", addonId: id}],
+    ["view", "aboutAddons", "detail", {addonId: id, type}],
+  ]);
 
   info("Run tests in customize mode");
   await main(true);
+  assertTelemetryMatches([
+    ["action", "browserAction", null, {action: "manage", addonId: id}],
+    ["view", "aboutAddons", "detail", {addonId: id, type}],
+    ["action", "browserAction", null, {action: "manage", addonId: id}],
+    ["view", "aboutAddons", "detail", {addonId: id, type}],
+  ]);
 
   info("Close the dummy tab and finish");
   win.gBrowser.removeTab(dummyTab);
@@ -348,8 +386,18 @@ add_task(async function browseraction_contextmenu_remove_extension() {
   info("Run tests in normal mode");
   await main(false);
 
+  assertTelemetryMatches([
+    ["action", "browserAction", "cancelled", {action: "uninstall", addonId: id}],
+    ["action", "browserAction", "cancelled", {action: "uninstall", addonId: id}],
+  ]);
+
   info("Run tests in customize mode");
   await main(true);
+
+  assertTelemetryMatches([
+    ["action", "browserAction", "cancelled", {action: "uninstall", addonId: id}],
+    ["action", "browserAction", "cancelled", {action: "uninstall", addonId: id}],
+  ]);
 
   let addon = await AddonManager.getAddonByID(id);
   ok(addon, "Addon is still installed");
@@ -366,6 +414,10 @@ add_task(async function browseraction_contextmenu_remove_extension() {
   });
   await testContextMenu("toolbar-context-menu", false);
   await uninstalled;
+
+  assertTelemetryMatches([
+    ["action", "browserAction", "accepted", {action: "uninstall", addonId: id}],
+  ]);
 
   addon = await AddonManager.getAddonByID(id);
   ok(!addon, "Addon has been uninstalled");
