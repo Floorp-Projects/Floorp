@@ -70,7 +70,7 @@ void DiskIOMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
                                     const TimeStamp& aProcessStartTime,
                                     UniqueStacks& aUniqueStacks) {
   StreamCommonProps("DiskIO", aWriter, aProcessStartTime, aUniqueStacks);
-  aWriter.StringProperty("operation", mFilename.get());
+  aWriter.StringProperty("operation", mOperation.get());
   aWriter.StringProperty("source", mSource);
   if (mFilename) {
     aWriter.StringProperty("filename", mFilename.get());
