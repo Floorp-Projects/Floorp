@@ -1515,7 +1515,7 @@ impl<'a> DisplayListFlattener<'a> {
         // If we're the first primitive within a stacking context, then we can guarantee that the
         // backdrop alpha will be 0, and then the blend equation collapses to just
         // Cs = Cs, and the blend mode isn't taken into account at all.
-        if let (Some(mix_blend_mode), false) = (stacking_context.composite_ops.mix_blend_mode, parent_is_empty) {
+        let has_mix_blend = if let (Some(mix_blend_mode), false) = (stacking_context.composite_ops.mix_blend_mode, parent_is_empty) {
             let composite_mode = Some(PictureCompositeMode::MixBlend(mix_blend_mode));
 
             let blend_pic_index = PictureIndex(self.prim_store.pictures
@@ -1551,16 +1551,14 @@ impl<'a> DisplayListFlattener<'a> {
             if cur_instance.is_chased() {
                 println!("\tis a mix-blend picture for a stacking context with {:?}", mix_blend_mode);
             }
-        }
+            true
+        } else {
+            false
+        };
 
         // Set the stacking context clip on the outermost picture in the chain,
         // unless we already set it on the leaf picture.
         cur_instance.clip_chain_id = stacking_context.clip_chain_id;
-
-        let has_mix_blend_on_secondary_framebuffer =
-            stacking_context.composite_ops.mix_blend_mode.is_some() &&
-            !parent_is_empty &&
-            self.sc_stack.len() > 2;
 
         // The primitive instance for the remainder of flat children of this SC
         // if it's a part of 3D hierarchy but not the root of it.
@@ -1571,12 +1569,11 @@ impl<'a> DisplayListFlattener<'a> {
             }
             // Regular parenting path
             Some(ref mut parent_sc) => {
-                // If we have a mix-blend-mode, and we aren't the primary framebuffer,
-                // the stacking context needs to be isolated to blend correctly as per
-                // the CSS spec.
+                // If we have a mix-blend-mode, the stacking context needs to be isolated
+                // to blend correctly as per the CSS spec.
                 // If not already isolated for some other reason,
                 // make this picture as isolated.
-                if has_mix_blend_on_secondary_framebuffer {
+                if has_mix_blend {
                     parent_sc.blit_reason |= BlitReason::ISOLATE;
                 }
                 parent_sc.primitives.push(cur_instance);
