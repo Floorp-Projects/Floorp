@@ -215,6 +215,7 @@ dependencies {
     armImplementation "org.mozilla.geckoview:geckoview-armeabi-v7a:${geckoview_version}"
     x86Implementation "org.mozilla.geckoview:geckoview-x86:${geckoview_version}"
     aarch64Implementation "org.mozilla.geckoview:geckoview-arm64-v8a:${geckoview_version}"
+    implementation "com.android.support:palette-v7:$support_libraries_version"
 
     testImplementation "org.junit.jupiter:junit-jupiter-api:5.3.1"
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:5.3.1"
