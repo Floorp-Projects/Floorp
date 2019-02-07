@@ -16,7 +16,6 @@ namespace mozilla {
 namespace dom {
 
 class SessionStorageCache;
-class SessionStorageObserver;
 
 class SessionStorageManager final : public nsIDOMStorageManager,
                                     public StorageObserverSink {
@@ -46,8 +45,6 @@ class SessionStorageManager final : public nsIDOMStorageManager,
   typedef nsRefPtrHashtable<nsCStringHashKey, SessionStorageCache>
       OriginKeyHashTable;
   nsClassHashtable<nsCStringHashKey, OriginKeyHashTable> mOATable;
-
-  RefPtr<SessionStorageObserver> mObserver;
 };
 
 }  // namespace dom

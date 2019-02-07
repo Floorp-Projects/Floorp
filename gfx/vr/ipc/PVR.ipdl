@@ -10,8 +10,6 @@ using mozilla::dom::NativeThreadId from "mozilla/dom/TabMessageUtils.h";
 include GraphicsMessages;
 include protocol PVRGPU;
 
-include "VRMessageUtils.h";
-
 namespace mozilla {
 namespace gfx {
 

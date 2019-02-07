@@ -10,7 +10,6 @@
 #include "ipc/IPCMessageUtils.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/GfxMessageUtils.h"
-#include "mozilla/dom/GamepadMessageUtils.h"
 #include "VRManager.h"
 
 #include "gfxVR.h"
