@@ -10,6 +10,8 @@ const { recordingState: {
   REQUEST_TO_GET_PROFILE_AND_STOP_PROFILER,
   REQUEST_TO_STOP_PROFILER,
 }} = require("devtools/client/performance-new/utils");
+const { OS } = require("resource://gre/modules/osfile.jsm");
+const { ProfilerGetSymbols } = require("resource://app/modules/ProfilerGetSymbols.jsm");
 
 /**
  * The recording state manages the current state of the recording panel.
@@ -113,13 +115,16 @@ exports.startRecording = () => {
 };
 
 /**
- * Returns a function getDebugPathFor(debugName, breakpadId) => string which
- * resolves a (debugName, breakpadId) pair to the library's debugPath, i.e.
- * the path on the file system where the binary is stored.
+ * Returns a function getDebugPathFor(debugName, breakpadId) => Library which
+ * resolves a (debugName, breakpadId) pair to the library's information, which
+ * contains the absolute paths on the file system where the binary and its
+ * optional pdb file are stored.
  *
  * This is needed for the following reason:
  *  - In order to obtain a symbol table for a system library, we need to know
- *    the library's absolute path on the file system.
+ *    the library's absolute path on the file system. On Windows, we
+ *    additionally need to know the absolute path to the library's PDB file,
+ *    which we call the binary's "debugPath".
  *  - Symbol tables are requested asynchronously, by the profiler UI, after the
  *    profile itself has been obtained.
  *  - When the symbol tables are requested, we don't want the profiler UI to
@@ -127,23 +132,23 @@ exports.startRecording = () => {
  *    potential information leaks.
  *  - Instead, when the UI requests symbol tables, it identifies the library
  *    with a (debugName, breakpadId) pair. We need to map that pair back to the
- *    absolute path of that library.
+ *    absolute paths.
  *  - We get the "trusted" paths from the "libs" sections of the profile. We
  *    trust these paths because we just obtained the profile directly from
  *    Gecko.
- *  - This function builds the (debugName, breakpadId) => debugPath mapping and
+ *  - This function builds the (debugName, breakpadId) => Library mapping and
  *    retains it on the returned closure so that it can be consulted after the
  *    profile has been passed to the UI.
  *
  * @param {object} profile - The profile JSON object
  */
-function createDebugPathMapForLibsInProfile(profile) {
+function createLibraryMap(profile) {
   const map = new Map();
   function fillMapForProcessRecursive(processProfile) {
     for (const lib of processProfile.libs) {
-      const { debugName, debugPath, breakpadId } = lib;
+      const { debugName, breakpadId } = lib;
       const key = [debugName, breakpadId].join(":");
-      map.set(key, debugPath);
+      map.set(key, lib);
     }
     for (const subprocess of processProfile.processes) {
       fillMapForProcessRecursive(subprocess);
@@ -151,10 +156,34 @@ function createDebugPathMapForLibsInProfile(profile) {
   }
 
   fillMapForProcessRecursive(profile);
-  return function getDebugPathFor(debugName, breakpadId) {
+  return function getLibraryFor(debugName, breakpadId) {
     const key = [debugName, breakpadId].join(":");
     return map.get(key);
   };
+}
+
+async function getSymbolTableFromDebuggee(perfFront, path, breakpadId) {
+  const [addresses, index, buffer] =
+    await perfFront.getSymbolTable(path, breakpadId);
+  // The protocol transmits these arrays as plain JavaScript arrays of
+  // numbers, but we want to pass them on as typed arrays. Convert them now.
+  return [
+    new Uint32Array(addresses),
+    new Uint32Array(index),
+    new Uint8Array(buffer),
+  ];
+}
+
+async function doesFileExistAtPath(path) {
+  try {
+    const result = await OS.File.stat(path);
+    return !result.isDir;
+  } catch (e) {
+    if (e instanceof OS.File.Error && e.becauseNoSuchFile) {
+      return false;
+    }
+    throw e;
+  }
 }
 
 /**
@@ -166,18 +195,23 @@ exports.getProfileAndStopProfiler = () => {
     dispatch(changeRecordingState(REQUEST_TO_GET_PROFILE_AND_STOP_PROFILER));
     const profile = await perfFront.getProfileAndStopProfiler();
 
-    const debugPathGetter = createDebugPathMapForLibsInProfile(profile);
+    const libraryGetter = createLibraryMap(profile);
     async function getSymbolTable(debugName, breakpadId) {
-      const debugPath = debugPathGetter(debugName, breakpadId);
-      const [addresses, index, buffer] =
-        await perfFront.getSymbolTable(debugPath, breakpadId);
-      // The protocol transmits these arrays as plain JavaScript arrays of
-      // numbers, but we want to pass them on as typed arrays. Convert them now.
-      return [
-        new Uint32Array(addresses),
-        new Uint32Array(index),
-        new Uint8Array(buffer),
-      ];
+      const {path, debugPath} = libraryGetter(debugName, breakpadId);
+      if (await doesFileExistAtPath(path)) {
+        // This profile was obtained from this machine, and not from a
+        // different device (e.g. an Android phone). Dump symbols from the file
+        // on this machine directly.
+        return ProfilerGetSymbols.getSymbolTable(path, debugPath, breakpadId);
+      }
+      // The file does not exist, which probably indicates that the profile was
+      // obtained on a different machine, i.e. the debuggee is truly remote.
+      // Try to obtain the symbol table on the debuggee.
+      // We also get into this branch if we're looking up symbol tables for
+      // Android system libraries, for example.
+      // For now, this path is not used on Windows, which is why we don't need
+      // to pass the library's debugPath.
+      return getSymbolTableFromDebuggee(perfFront, path, breakpadId);
     }
 
     selectors.getReceiveProfileFn(getState())(profile, getSymbolTable);
