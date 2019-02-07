@@ -37,6 +37,7 @@ class CustomTabsToolbarFeature(
 ) : LifecycleAwareFeature, BackHandler {
     private val context = toolbar.context
     private var initialized = false
+    internal var readableColor = Color.WHITE
 
     override fun start() {
         if (initialized) {
@@ -50,6 +51,10 @@ class CustomTabsToolbarFeature(
         session.customTabConfig?.let { config ->
             // Don't allow clickable toolbar so a custom tab can't switch to edit mode.
             toolbar.onUrlClicked = { false }
+            // If it's available, hold on to the readable colour for other assets.
+            config.toolbarColor?.let {
+                readableColor = getReadableTextColor(it)
+            }
             // Change the toolbar colour
             updateToolbarColor(config.toolbarColor)
             // Add navigation close action
@@ -69,7 +74,9 @@ class CustomTabsToolbarFeature(
     internal fun updateToolbarColor(toolbarColor: Int?) {
         toolbarColor?.let { color ->
             toolbar.setBackgroundColor(color)
-            toolbar.textColor = getReadableTextColor(color)
+            toolbar.textColor = readableColor
+            toolbar.siteSecurityColor = Pair(readableColor, readableColor)
+            toolbar.menuViewColor = readableColor
         }
     }
 
@@ -80,7 +87,9 @@ class CustomTabsToolbarFeature(
             R.drawable.mozac_ic_close
         )
 
-        drawableIcon?.let {
+        drawableIcon?.apply {
+            setTint(readableColor)
+        }.also {
             val button = Toolbar.ActionButton(
                 it, context.getString(R.string.mozac_feature_customtabs_exit_button)
             ) { closeListener.invoke() }
@@ -102,10 +111,11 @@ class CustomTabsToolbarFeature(
 
     @VisibleForTesting
     internal fun addShareButton(session: Session) {
-        val button = Toolbar.ActionButton(
-            ContextCompat.getDrawable(context, R.drawable.mozac_ic_share),
-            context.getString(R.string.mozac_feature_customtabs_share_link)
-        ) {
+        val drawable = ContextCompat.getDrawable(context, R.drawable.mozac_ic_share)?.apply {
+            setTint(readableColor)
+        }
+
+        val button = Toolbar.ActionButton(drawable, context.getString(R.string.mozac_feature_customtabs_share_link)) {
             val listener = shareListener ?: { context.share(session.url) }
             listener.invoke()
         }
@@ -117,14 +127,10 @@ class CustomTabsToolbarFeature(
     internal fun addMenuItems(menuItems: List<CustomTabMenuItem>) {
         menuItems.map {
             SimpleBrowserMenuItem(it.name) { it.pendingIntent.send() }
-        }.also {
-            val items = if (menuBuilder != null) {
-                menuBuilder.items + it
-            } else {
-                it
-            }
+        }.also { items ->
+            val combinedItems = menuBuilder?.let { builder -> builder.items + items } ?: items
 
-            toolbar.setMenuBuilder(BrowserMenuBuilder(items))
+            toolbar.setMenuBuilder(BrowserMenuBuilder(combinedItems))
         }
     }
 
@@ -134,14 +140,10 @@ class CustomTabsToolbarFeature(
      * Removes the current Custom Tabs session when the back button is pressed and returns true.
      * Should be called when the back button is pressed.
      */
-    override fun onBackPressed(): Boolean {
-        val result = sessionManager.runWithSession(sessionId) {
-            closeListener.invoke()
-            remove(it)
-            true
-        }
-
-        return result
+    override fun onBackPressed() = sessionManager.runWithSession(sessionId) {
+        closeListener.invoke()
+        remove(it)
+        true
     }
 
     companion object {

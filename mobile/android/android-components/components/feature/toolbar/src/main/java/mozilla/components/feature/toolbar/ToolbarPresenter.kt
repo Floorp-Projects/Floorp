@@ -41,8 +41,6 @@ class ToolbarPresenter(
             toolbar.url = session.url
 
             updateToolbarSecurity(session.securityInfo)
-
-            // TODO Apply remaining configurations: https://github.com/mozilla-mobile/android-components/issues/306
         }
     }
 

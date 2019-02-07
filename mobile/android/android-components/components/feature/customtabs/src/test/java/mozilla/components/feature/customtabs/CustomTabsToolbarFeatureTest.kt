@@ -340,4 +340,28 @@ class CustomTabsToolbarFeatureTest {
         assertFalse(result)
         assertFalse(closeExecuted)
     }
+
+    @Test
+    fun `keep readableColor if toolbarColor is provided`() {
+        val sessionManager: SessionManager = mock()
+        val toolbar = BrowserToolbar(RuntimeEnvironment.application)
+        val session: Session = mock()
+        val customTabConfig: CustomTabConfig = mock()
+        val feature = spy(CustomTabsToolbarFeature(sessionManager, toolbar, "") {})
+
+        assertEquals(Color.WHITE, feature.readableColor)
+
+        `when`(sessionManager.findSessionById(anyString())).thenReturn(session)
+        `when`(session.customTabConfig).thenReturn(customTabConfig)
+
+        feature.initialize(session)
+
+        assertEquals(Color.WHITE, feature.readableColor)
+
+        `when`(customTabConfig.toolbarColor).thenReturn(Color.WHITE)
+
+        feature.initialize(session)
+
+        assertEquals(Color.BLACK, feature.readableColor)
+    }
 }
