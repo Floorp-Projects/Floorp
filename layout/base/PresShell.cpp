@@ -10342,6 +10342,14 @@ nsPoint nsIPresShell::GetLayoutViewportOffset() const {
   return result;
 }
 
+nsSize nsIPresShell::GetLayoutViewportSize() const {
+  nsSize result;
+  if (nsIScrollableFrame* sf = GetRootScrollFrameAsScrollable()) {
+    result = sf->GetScrollPortRect().Size();
+  }
+  return result;
+}
+
 void nsIPresShell::RecomputeFontSizeInflationEnabled() {
   mFontSizeInflationEnabled = DetermineFontSizeInflationState();
 
