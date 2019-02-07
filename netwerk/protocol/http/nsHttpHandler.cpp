@@ -497,13 +497,8 @@ nsresult nsHttpHandler::Init() {
     mAppVersion.AssignLiteral(MOZ_APP_UA_VERSION);
   }
 
-  // Generating the spoofed User Agent for fingerprinting resistance.
-  rv = nsRFPService::GetSpoofedUserAgent(mSpoofedUserAgent, true);
-  if (NS_FAILED(rv)) {
-    // Empty mSpoofedUserAgent to make sure the unsuccessful spoofed UA string
-    // will not be used anywhere.
-    mSpoofedUserAgent.Truncate();
-  }
+  // Generate the spoofed User Agent for fingerprinting resistance.
+  nsRFPService::GetSpoofedUserAgent(mSpoofedUserAgent, true);
 
   mSessionStartTime = NowInSeconds();
   mHandlerActive = true;

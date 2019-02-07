@@ -5,13 +5,13 @@
 .search-bar {
   display: flex;
   border: 1px solid transparent;
-  border-top: 1px solid var(--theme-splitter-color);
+  border-top-color: var(--theme-splitter-color);
   height: var(--editor-searchbar-height);
+  transition: border-color 200ms var(--animation-curve);
 }
 
 .search-bar.search-bar-focused {
-  border: 1px solid var(--blue-50);
-  transition: border-color 0.2s ease-in-out;
+  border-color: var(--blue-50);
 }
 
 .search-bar .search-field {

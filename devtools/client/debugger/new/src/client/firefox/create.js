@@ -46,6 +46,7 @@ export function createFrame(thread: ThreadId, frame: FramePacket): ?Frame {
     location,
     generatedLocation: location,
     this: frame.this,
+    source: null,
     scope: frame.environment
   };
 }

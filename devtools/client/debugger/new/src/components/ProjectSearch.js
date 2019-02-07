@@ -54,7 +54,8 @@ type Item = Result | Match;
 
 type State = {
   inputValue: string,
-  inputFocused: boolean
+  inputFocused: boolean,
+  focusedItem: ?Item
 };
 
 type Props = {
@@ -81,23 +82,13 @@ function sanitizeQuery(query: string): string {
   return query.replace(/\\$/, "");
 }
 
-type FileItem = {
-  setExpanded: (Result, boolean) => mixed,
-  file: Result,
-  expanded: boolean
-};
-type MatchItem = {
-  expanded: null,
-  match: Match
-};
-
 export class ProjectSearch extends Component<Props, State> {
-  focusedItem: ?(FileItem | MatchItem);
   constructor(props: Props) {
     super(props);
     this.state = {
       inputValue: this.props.query || "",
-      inputFocused: false
+      inputFocused: false,
+      focusedItem: null
     };
   }
 
@@ -173,7 +164,7 @@ export class ProjectSearch extends Component<Props, State> {
     if (e.key !== "Enter") {
       return;
     }
-    this.focusedItem = null;
+    this.setState({ focusedItem: null });
     const query = sanitizeQuery(this.state.inputValue);
     if (query) {
       this.doSearch(query);
@@ -185,16 +176,21 @@ export class ProjectSearch extends Component<Props, State> {
   };
 
   onEnterPress = () => {
-    if (!this.focusedItem || this.state.inputFocused) {
+    if (
+      !this.isProjectSearchEnabled() ||
+      !this.state.focusedItem ||
+      this.state.inputFocused
+    ) {
       return;
     }
-    if (this.focusedItem.expanded !== null) {
-      // expanded is not null implies this is a `FileItem`
-      const { setExpanded, file, expanded } = this.focusedItem;
-      setExpanded(file, !expanded);
-    } else {
-      const { match } = this.focusedItem;
-      this.selectMatchItem(match);
+    if (this.state.focusedItem.type === "MATCH") {
+      this.selectMatchItem(this.state.focusedItem);
+    }
+  };
+
+  onFocus = (item: Item) => {
+    if (this.state.focusedItem !== item) {
+      this.setState({ focusedItem: item });
     }
   };
 
@@ -207,16 +203,7 @@ export class ProjectSearch extends Component<Props, State> {
     }
   };
 
-  renderFile = (
-    file: Result,
-    focused: boolean,
-    expanded: boolean,
-    setExpanded: Function
-  ) => {
-    if (focused) {
-      this.focusedItem = { setExpanded, file, expanded };
-    }
-
+  renderFile = (file: Result, focused: boolean, expanded: boolean) => {
     const matchesLength = file.matches.length;
     const matches = ` (${matchesLength} match${matchesLength > 1 ? "es" : ""})`;
 
@@ -234,9 +221,6 @@ export class ProjectSearch extends Component<Props, State> {
   };
 
   renderMatch = (match: Match, focused: boolean) => {
-    if (focused) {
-      this.focusedItem = { match, expanded: null };
-    }
     return (
       <div
         className={classnames("result", { focused })}
@@ -255,11 +239,10 @@ export class ProjectSearch extends Component<Props, State> {
     depth: number,
     focused: boolean,
     _: any,
-    expanded: boolean,
-    { setExpanded }: { setExpanded: Function }
+    expanded: boolean
   ) => {
     if (item.type === "RESULT") {
-      return this.renderFile(item, focused, expanded, setExpanded);
+      return this.renderFile(item, focused, expanded);
     }
     return this.renderMatch(item, focused);
   };
@@ -281,6 +264,8 @@ export class ProjectSearch extends Component<Props, State> {
           getParent={item => null}
           getPath={getFilePath}
           renderItem={this.renderItem}
+          focused={this.state.focusedItem}
+          onFocus={this.onFocus}
         />
       );
     }
