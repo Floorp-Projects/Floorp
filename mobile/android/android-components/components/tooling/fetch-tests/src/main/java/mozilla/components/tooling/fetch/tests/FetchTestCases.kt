@@ -4,6 +4,8 @@
 
 package mozilla.components.tooling.fetch.tests
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.MutableHeaders
 import mozilla.components.concept.fetch.Request
@@ -14,11 +16,13 @@ import okio.Buffer
 import okio.GzipSink
 import okio.Okio
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Test
 import java.io.File
 import java.io.IOException
+import java.lang.Exception
 import java.net.SocketTimeoutException
 import java.util.UUID
 import java.util.concurrent.TimeUnit
@@ -35,8 +39,13 @@ abstract class FetchTestCases {
      */
     abstract fun createNewClient(): Client
 
+    /**
+     * Creates a new [MockWebServer] to accept test requests.
+     */
+    open fun createWebServer(): MockWebServer = MockWebServer()
+
     @Test
-    fun `GET (200) with String body`() = withServerResponding(
+    open fun get200WithStringBody() = withServerResponding(
         MockResponse()
             .setBody("Hello World")
     ) { client ->
@@ -47,7 +56,7 @@ abstract class FetchTestCases {
     }
 
     @Test
-    fun ` GET (404) with body`() {
+    open fun get404WithBody() {
         withServerResponding(
             MockResponse()
                 .setResponseCode(404)
@@ -61,7 +70,7 @@ abstract class FetchTestCases {
     }
 
     @Test
-    fun `GET (200) default headers`() {
+    open fun get200WithDefaultHeaders() {
         withServerResponding(
             MockResponse()
         ) { client ->
@@ -74,7 +83,7 @@ abstract class FetchTestCases {
                 println(request.headers.name(i) + " = " + request.headers.value(i))
             }
 
-            assertEquals(5, request.headers.size())
+            assertEquals(6, request.headers.size())
 
             val names = request.headers.names()
             assertTrue(names.contains("Host"))
@@ -82,13 +91,14 @@ abstract class FetchTestCases {
             assertTrue(names.contains("Connection"))
             assertTrue(names.contains("Accept-Encoding"))
             assertTrue(names.contains("Accept"))
+            assertTrue(names.contains("Accept-Language"))
 
             val host = url("/").host()
             val port = url("/").port()
             assertEquals("$host:$port", request.getHeader("Host"))
 
             assertEquals("*/*", request.getHeader("Accept"))
-
+            assertEquals("*/*", request.getHeader("Accept-Language"))
             assertEquals("gzip", request.getHeader("Accept-Encoding"))
 
             // Ignoring case here: okhttp uses "Keep-Alive" and httpurlconnection uses "keep-alive".
@@ -99,7 +109,7 @@ abstract class FetchTestCases {
     }
 
     @Test
-    fun `GET (200) with headers`() {
+    open fun get200WithHeaders() {
         withServerResponding(
             MockResponse()
         ) { client ->
@@ -143,7 +153,7 @@ abstract class FetchTestCases {
     }
 
     @Test
-    fun `POST (200) with body`() {
+    open fun post200WithBody() {
         withServerResponding(
             MockResponse()
         ) { client ->
@@ -162,7 +172,7 @@ abstract class FetchTestCases {
     }
 
     @Test
-    fun `GET (200) user agent`() {
+    open fun get200WithUserAgent() {
         withServerResponding(
             MockResponse()
         ) { client ->
@@ -180,7 +190,7 @@ abstract class FetchTestCases {
     }
 
     @Test
-    fun `GET (200) gzipped body`() {
+    open fun get200WithGzippedBody() {
         withServerResponding(
             MockResponse()
                 .setBody(gzip("This is compressed"))
@@ -194,7 +204,7 @@ abstract class FetchTestCases {
     }
 
     @Test
-    fun `GET (302, 200) follow redirects`() {
+    open fun get302FollowRedirects() {
         withServerResponding(
             MockResponse().setResponseCode(302)
                 .addHeader("Location", "/x"),
@@ -211,7 +221,7 @@ abstract class FetchTestCases {
     }
 
     @Test
-    fun `GET (302) follow redirects disabled`() {
+    open fun get302FollowRedirectsDisabled() {
         withServerResponding(
             MockResponse().setResponseCode(302)
                 .addHeader("Location", "/x"),
@@ -225,24 +235,31 @@ abstract class FetchTestCases {
         }
     }
 
-    @Test(expected = SocketTimeoutException::class)
-    fun `GET (200) with read timeout`() {
+    @Test
+    open fun get200WithReadTimeout() {
         withServerResponding(
             MockResponse()
                 .setBody("Yep!")
                 .setBodyDelay(10, TimeUnit.SECONDS)
         ) { client ->
-            val response = client.fetch(
-                Request(
-                    url = rootUrl(),
-                    readTimeout = Pair(1, TimeUnit.SECONDS)))
+            try {
+                val response = client.fetch(
+                    Request(url = rootUrl(), readTimeout = Pair(1, TimeUnit.SECONDS)))
 
-            fail("Expected read timeout, but got response: ${response.status}")
+                // We're doing this the old-fashioned way instead of using the
+                // expected= attribute, because the test is launched on a different
+                // thread (using a different coroutine context) than this block.
+                fail("Expected read timeout (SocketTimeoutException), but got response: ${response.status}")
+            } catch (e: SocketTimeoutException) {
+                // expected
+            } catch (e: Exception) {
+                fail("Expected SocketTimeoutException")
+            }
         }
     }
 
     @Test
-    fun `PUT (201) file upload`() {
+    open fun put201FileUpload() {
         val file = File.createTempFile(UUID.randomUUID().toString(), UUID.randomUUID().toString())
         file.writer().use { it.write("I am an image file!") }
 
@@ -285,7 +302,7 @@ abstract class FetchTestCases {
     }
 
     @Test
-    fun `GET (200) duplicated cache control response headers`() {
+    open fun get200WithDuplicatedCacheControlResponseHeaders() {
         withServerResponding(
             MockResponse()
                 .addHeader("Cache-Control", "no-cache")
@@ -313,7 +330,7 @@ abstract class FetchTestCases {
     }
 
     @Test
-    fun `GET (200) with duplicated cache control request headers`() {
+    open fun get200WithDuplicatedCacheControlRequestHeaders() {
         withServerResponding(
             MockResponse()
         ) { client ->
@@ -328,15 +345,30 @@ abstract class FetchTestCases {
 
             val request = takeRequest()
 
-            val cacheHeaders = request.headers.values("Cache-Control")
+            var cacheHeaders = request.headers.values("Cache-Control")
+
+            assertFalse(cacheHeaders.isEmpty())
+
+            // If multiple headers with the same name are present we accept
+            // implementations that *request* a comma-separated list of values
+            // as well as those adding additional (duplicated) headers.
+            // Technically, comma-separate values are correct:
+            // https://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.2
+            // Web servers will understand both representations and for responses
+            // we already unify headers across implementations. So, this should
+            // be transparent to users.
+            if (cacheHeaders[0].contains(",")) {
+                cacheHeaders = cacheHeaders[0].split(",")
+            }
+
             assertEquals(2, cacheHeaders.size)
-            assertEquals("no-cache", cacheHeaders[0])
-            assertEquals("no-store", cacheHeaders[1])
+            assertEquals("no-cache", cacheHeaders[0].trim())
+            assertEquals("no-store", cacheHeaders[1].trim())
         }
     }
 
     @Test
-    fun `GET (200) Overriding default headers`() {
+    open fun get200OverridingDefaultHeaders() {
         withServerResponding(
             MockResponse()
         ) { client ->
@@ -363,16 +395,25 @@ abstract class FetchTestCases {
         }
     }
 
-    private inline fun withServerResponding(vararg responses: MockResponse, block: MockWebServer.(Client) -> Unit) {
-        val server = MockWebServer()
+    private inline fun withServerResponding(
+        vararg responses: MockResponse,
+        crossinline block: MockWebServer.(Client) -> Unit
+    ) {
+        val server = createWebServer()
 
         responses.forEach {
             server.enqueue(it)
         }
 
         try {
-            server.start()
-            server.block(createNewClient())
+            val client = createNewClient()
+            // Subclasses (implementation specific tests) might be instrumented
+            // and run on a device so we need to avoid network requests on the
+            // main thread.
+            runBlocking(Dispatchers.IO) {
+                server.start()
+                server.block(client)
+            }
         } finally {
             try { server.shutdown() } catch (e: IOException) {}
         }

@@ -50,6 +50,10 @@ abstract class Client {
         // We expect all clients to implement gzip decoding transparently.
         "Accept-Encoding" to "gzip",
 
+        // Unfortunately some implementations will always send a not removable Accept-Language header. Let's override
+        // it with a header that accepts everything.
+        "Accept-Language" to "*/*",
+
         // Default User Agent. Clients are expected to append their own tokens if needed.
         "User-Agent" to "MozacFetch/${BuildConfig.LIBRARY_VERSION}",
 

@@ -11,6 +11,7 @@ android {
     defaultConfig {
         minSdkVersion config.minSdkVersion
         targetSdkVersion config.targetSdkVersion
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
@@ -18,6 +19,10 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+    }
+
+    packagingOptions {
+        exclude 'META-INF/proguard/androidx-annotations.pro'
     }
 
     android {
@@ -30,24 +35,29 @@ android {
 
 dependencies {
     implementation project(':concept-engine')
+    implementation project(':concept-fetch')
     implementation project(':support-ktx')
     implementation project(path: ':support-utils')
+    implementation Dependencies.kotlin_stdlib
+    implementation Dependencies.kotlin_coroutines
 
     // We only compile against the ARM artifact. External module will decide which module to provide by build configuration.
     // As the Kotlin/Java API is the same for all ABIs it is not important which one we import here.
     compileOnly Gecko.geckoview_nightly_arm
     testImplementation Gecko.geckoview_nightly_arm
-
-    implementation Dependencies.kotlin_stdlib
-    implementation Dependencies.kotlin_coroutines
-
     testImplementation Dependencies.androidx_test_core
-
     testImplementation Dependencies.testing_junit
     testImplementation Dependencies.testing_robolectric
     testImplementation Dependencies.testing_mockito
-
+    testImplementation Dependencies.testing_mockwebserver
     testImplementation project(':support-test')
+    testImplementation project(':tooling-fetch-tests')
+
+    androidTestImplementation Dependencies.androidx_test_core
+    androidTestImplementation Dependencies.androidx_test_runner
+    androidTestImplementation Dependencies.androidx_test_rules
+    androidTestImplementation Gecko.geckoview_nightly_arm
+    androidTestImplementation project(':tooling-fetch-tests')
 }
 
 apply from: '../../../publish.gradle'

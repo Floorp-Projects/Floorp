@@ -46,6 +46,8 @@ object Dependencies {
     const val testing_mockwebserver = "com.squareup.okhttp3:mockwebserver:${Versions.mockwebserver}"
 
     const val androidx_test_core = "androidx.test:core-ktx:${Versions.androidx_test}"
+    const val androidx_test_runner = "androidx.test:runner:${Versions.androidx_test}"
+    const val androidx_test_rules = "androidx.test:rules:${Versions.androidx_test}"
 
     const val support_annotations = "com.android.support:support-annotations:${Versions.support_libraries}"
     const val support_cardview = "com.android.support:cardview-v7:${Versions.support_libraries}"

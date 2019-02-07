@@ -13,6 +13,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **engine-gecko-nightly**
+  * Now also serves as an implementation of `concept-fetch` by providing the new `GeckoViewFetchClient`. This allows applications to rely on Gecko's networking capabilities when issuing HTTP requests, even outside the browser view (GeckoView).
+  
 * **feature-prompts**, **browser-engine-gecko***
   * Added support for [JavaScript Confirm dialogs](https://developer.mozilla.org/en-US/docs/Web/API/Window/confirm).
 
