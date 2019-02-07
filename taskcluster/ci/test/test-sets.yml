@@ -354,7 +354,6 @@ android-common-tests:
     - cppunit
     - crashtest
     - geckoview-junit
-    # - jittest # not ready yet: bug 1098508
     - jsreftest
     - marionette
     - mochitest
@@ -362,10 +361,6 @@ android-common-tests:
     - mochitest-clipboard
     - mochitest-gpu
     - mochitest-media
-    # - mochitest-webgl1-core
-    # - mochitest-webgl1-ext
-    # - mochitest-webgl2-core
-    # - mochitest-webgl2-ext
     - reftest
     - test-verify
     - xpcshell
@@ -375,19 +370,19 @@ android-opt-tests:
     - robocop
 
 android-x86_64-opt-tests:
+    # crashtests failing on debug; bug 1524493
     - crashtest
+    # geckoview-junit perma-fail on opt and debug; bug 1521195
     - geckoview-junit
 
 android-x86_64-tests:
     - jsreftest
+    # various mochitest (plain) failures; bug 1460411
     # - mochitest
-    # - mochitest-chrome
     - mochitest-clipboard
     - mochitest-gpu
-    # - mochitest-media
-    # - mochitest-webgl1-core
+    # various reftest (plain) failures; bug 1501582
     # - reftest
-    # - test-verify
 
 android-x86-tests:
     - web-platform-tests
