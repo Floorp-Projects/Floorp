@@ -22,8 +22,7 @@ class BaseNotification(UIBaseLib):
 
         :returns: The close button.
         """
-        return self.element.find_element(By.ANON_ATTRIBUTE,
-                                         {'anonid': 'closebutton'})
+        return self.element.find_element(By.CSS_SELECTOR, ".popup-notification-closebutton")
 
     @property
     def label(self):

@@ -104,16 +104,14 @@ add_task(async function testExtensionControlledPopup() {
     let done;
     if (action == "ignore") {
       panel.hidePopup();
-    } else {
-      if (action == "button") {
-        done = TestUtils.waitForCondition(() => {
-          return ExtensionSettingsStore.getSetting(confirmedType, id, id).value;
-        });
-      } else if (action == "secondarybutton") {
-        done = awaitEvent("shutdown", id);
-      }
-      doc.getAnonymousElementByAttribute(
-        popupnotification, "anonid", action).click();
+    } else if (action == "button") {
+      done = TestUtils.waitForCondition(() => {
+        return ExtensionSettingsStore.getSetting(confirmedType, id, id).value;
+      });
+      popupnotification.button.click();
+    } else if (action == "secondarybutton") {
+      done = awaitEvent("shutdown", id);
+      popupnotification.secondaryButton.click();
     }
     return done;
   }
