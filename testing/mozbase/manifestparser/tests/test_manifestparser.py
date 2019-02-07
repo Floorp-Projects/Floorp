@@ -128,6 +128,147 @@ yellow = submarine"""  # noqa
         self.assertEqual(buffer.getvalue().strip(),
                          expected_output)
 
+    def test_include_manifest_defaults(self):
+        """
+        Test that manifest_defaults and manifests() are correctly populated
+        when includes are used.
+        """
+
+        include_example = os.path.join(here, 'include-example.ini')
+        noinclude_example = os.path.join(here, 'just-defaults.ini')
+        bar_path = os.path.join(here, 'include', 'bar.ini')
+        foo_path = os.path.join(here, 'include', 'foo.ini')
+
+        parser = ManifestParser(manifests=(include_example, noinclude_example))
+
+        # Standalone manifests must be appear as-is.
+        self.assertTrue(include_example in parser.manifest_defaults)
+        self.assertTrue(noinclude_example in parser.manifest_defaults)
+
+        # Included manifests must only appear together with the parent manifest
+        # that included the manifest.
+        self.assertFalse(bar_path in parser.manifest_defaults)
+        self.assertFalse(foo_path in parser.manifest_defaults)
+        self.assertTrue((include_example, bar_path) in parser.manifest_defaults)
+        self.assertTrue((include_example, foo_path) in parser.manifest_defaults)
+
+        # manifests() must only return file paths (strings).
+        manifests = parser.manifests()
+        self.assertEqual(len(manifests), 4)
+        self.assertIn(foo_path, manifests)
+        self.assertIn(bar_path, manifests)
+        self.assertIn(include_example, manifests)
+        self.assertIn(noinclude_example, manifests)
+
+    def test_include_handle_defaults_False(self):
+        """
+        Test that manifest_defaults and manifests() are correct even when
+        handle_defaults is set to False.
+        """
+        manifest = os.path.join(here, 'include-example.ini')
+        foo_path = os.path.join(here, 'include', 'foo.ini')
+
+        parser = ManifestParser(manifests=(manifest,), handle_defaults=False)
+
+        self.assertIn(manifest, parser.manifest_defaults)
+        self.assertNotIn(foo_path, parser.manifest_defaults)
+        self.assertIn((manifest, foo_path), parser.manifest_defaults)
+        self.assertEqual(parser.manifest_defaults[manifest],
+                         {
+                             'foo': 'bar',
+                             'here': here,
+                         })
+        self.assertEqual(parser.manifest_defaults[(manifest, foo_path)],
+                         {
+                             'here': os.path.join(here, 'include'),
+                             'red': 'roses',
+                             'blue': 'ocean',
+                             'yellow': 'daffodils',
+                         })
+
+    def test_include_repeated(self):
+        """
+        Test that repeatedly included manifests are independent of each other.
+        """
+        include_example = os.path.join(here, 'include-example.ini')
+        included_foo = os.path.join(here, 'include', 'foo.ini')
+
+        # In the expected output, blue and yellow have the values from foo.ini
+        # (ocean, submarine) instead of the ones from include-example.ini
+        # (violets, daffodils), because the defaults in the included file take
+        # precedence over the values from the parent.
+        include_output = """[include/crash-handling]
+foo = fleem
+
+[fleem]
+foo = bar
+
+[include/flowers]
+blue = ocean
+foo = bar
+red = roses
+yellow = submarine
+
+"""
+        included_output = """[include/flowers]
+blue = ocean
+yellow = submarine
+
+"""
+
+        parser = ManifestParser(manifests=(include_example, included_foo),
+                                rootdir=here)
+        self.assertEqual(parser.get('name'),
+                         ['crash-handling', 'fleem', 'flowers', 'flowers'])
+        self.assertEqual([(test['name'], os.path.basename(test['manifest']))
+                          for test in parser.tests],
+                         [('crash-handling', 'bar.ini'),
+                          ('fleem', 'include-example.ini'),
+                          ('flowers', 'foo.ini'),
+                          ('flowers', 'foo.ini')])
+        self.check_included_repeat(parser, parser.tests[3], parser.tests[2],
+                                   "%s%s" % (include_output, included_output))
+
+        # Same tests, but with the load order of the manifests swapped.
+        parser = ManifestParser(manifests=(included_foo, include_example),
+                                rootdir=here)
+        self.assertEqual(parser.get('name'),
+                         ['flowers', 'crash-handling', 'fleem', 'flowers'])
+        self.assertEqual([(test['name'], os.path.basename(test['manifest']))
+                          for test in parser.tests],
+                         [('flowers', 'foo.ini'),
+                          ('crash-handling', 'bar.ini'),
+                          ('fleem', 'include-example.ini'),
+                          ('flowers', 'foo.ini')])
+        self.check_included_repeat(parser, parser.tests[0], parser.tests[3],
+                                   "%s%s" % (included_output, include_output))
+
+    def check_included_repeat(self, parser, isolated_test, included_test,
+                              expected_output):
+        include_example = os.path.join(here, 'include-example.ini')
+        included_foo = os.path.join(here, 'include', 'foo.ini')
+        manifest_default_key = (include_example, included_foo)
+
+        self.assertFalse('ancestor-manifest' in isolated_test)
+        self.assertEqual(included_test['ancestor-manifest'],
+                         os.path.join(here, 'include-example.ini'))
+
+        self.assertTrue(include_example in parser.manifest_defaults)
+        self.assertTrue(included_foo in parser.manifest_defaults)
+        self.assertTrue(manifest_default_key in parser.manifest_defaults)
+        self.assertEqual(parser.manifest_defaults[manifest_default_key],
+                         {
+                             'foo': 'bar',
+                             'here': os.path.join(here, 'include'),
+                             'red': 'roses',
+                             'blue': 'ocean',
+                             'yellow': 'daffodils',
+                         })
+
+        buffer = StringIO()
+        parser.write(fp=buffer)
+        self.assertEqual(buffer.getvalue(), expected_output)
+
     def test_invalid_path(self):
         """
         Test invalid path should not throw when not strict
