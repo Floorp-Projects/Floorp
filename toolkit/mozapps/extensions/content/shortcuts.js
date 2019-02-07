@@ -28,9 +28,9 @@ function loadTemplates() {
 
   templates.card = document.getElementById("card-template");
   templates.row = document.getElementById("shortcut-row-template");
-  templates.empty = document.getElementById("shortcuts-empty-template");
   templates.noAddons = document.getElementById("shortcuts-no-addons");
   templates.expandRow = document.getElementById("expand-row-template");
+  templates.noShortcutAddons = document.getElementById("shortcuts-no-commands-template");
 }
 
 function extensionForAddonId(id) {
@@ -261,22 +261,36 @@ function onShortcutChange(e) {
   }
 }
 
+function renderNoShortcutAddons(addons) {
+  let fragment = document.importNode(templates.noShortcutAddons.content, true);
+  let list = fragment.querySelector(".shortcuts-no-commands-list");
+  for (let addon of addons) {
+    let addonItem = document.createElement("li");
+    addonItem.textContent = addon.name;
+    addonItem.setAttribute("addon-id", addon.id);
+    list.appendChild(addonItem);
+  }
+
+  return fragment;
+}
+
 async function renderAddons(addons) {
   let frag = document.createDocumentFragment();
+  let noShortcutAddons = [];
   for (let addon of addons) {
     let extension = extensionForAddonId(addon.id);
 
     // Skip this extension if it isn't a webextension.
     if (!extension) continue;
 
-    let card = document.importNode(
-      templates.card.content, true).firstElementChild;
-    let icon = AddonManager.getPreferredIconURL(addon, 24, window);
-    card.setAttribute("addon-id", addon.id);
-    card.querySelector(".addon-icon").src = icon || FALLBACK_ICON;
-    card.querySelector(".addon-name").textContent = addon.name;
-
     if (extension.shortcuts) {
+      let card = document.importNode(
+        templates.card.content, true).firstElementChild;
+      let icon = AddonManager.getPreferredIconURL(addon, 24, window);
+      card.setAttribute("addon-id", addon.id);
+      card.querySelector(".addon-icon").src = icon || FALLBACK_ICON;
+      card.querySelector(".addon-name").textContent = addon.name;
+
       let commands = await extension.shortcuts.allCommands();
 
       // Sort the commands so the ones with shortcuts are at the top.
@@ -353,12 +367,17 @@ async function renderAddons(addons) {
         });
         card.appendChild(row);
       }
-    } else {
-      card.appendChild(document.importNode(templates.empty.content, true));
-    }
 
-    frag.appendChild(card);
+      frag.appendChild(card);
+    } else {
+      noShortcutAddons.push({ id: addon.id, name: addon.name });
+    }
   }
+
+  if (noShortcutAddons.length > 0) {
+    frag.appendChild(renderNoShortcutAddons(noShortcutAddons));
+  }
+
   return frag;
 }
 
