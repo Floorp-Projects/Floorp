@@ -82,7 +82,7 @@ abstract class EngineSession(
             const val CONTENT: Int = 1 shl 4
             // This policy is just to align categories with GeckoView (which has AT_TEST = 1 << 5)
             const val TEST: Int = 1 shl 5
-            internal const val ALL: Int = (1 shl 6) - 1
+            internal const val ALL: Int = AD + ANALYTICS + SOCIAL + CONTENT + TEST
 
             fun none(): TrackingProtectionPolicy = TrackingProtectionPolicy(NONE)
             fun all() = TrackingProtectionPolicyForSessionTypes(ALL)
