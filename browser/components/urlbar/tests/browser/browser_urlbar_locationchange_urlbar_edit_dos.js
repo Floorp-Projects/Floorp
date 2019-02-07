@@ -27,6 +27,11 @@ async function checkURLBarValueStays(browser) {
 }
 
 add_task(async function() {
+  // Disable autofill so that when checkURLBarValueStays types "a", it's not
+  // autofilled to addons.mozilla.org (or anything else).
+  await SpecialPowers.pushPrefEnv({ set: [
+    ["browser.urlbar.autoFill", false],
+  ]});
   await BrowserTestUtils.withNewTab({
     gBrowser,
     url: TEST_URL,
