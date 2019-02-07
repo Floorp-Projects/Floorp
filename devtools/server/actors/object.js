@@ -837,7 +837,7 @@ const proto = {
 
     // Catch any errors if the source actor cannot be found
     try {
-      source = this.hooks.sources().getSourceActorByURL(stack.source);
+      source = this.hooks.sources().getSourceActorsByURL(stack.source)[0];
     } catch (e) {
       // ignored
     }
