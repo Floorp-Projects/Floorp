@@ -381,6 +381,11 @@ const nsAString& GfxDriverInfo::GetDeviceVendor(DeviceVendor id) {
     // Choose an arbitrary Qualcomm PCI VENdor ID for now.
     // TODO: This should be "QCOM" when Windows device ID parsing is reworked.
     DECLARE_VENDOR_ID(VendorQualcomm, "0x5143");
+    DECLARE_VENDOR_ID(VendorMesaAll, "mesa/all");
+    DECLARE_VENDOR_ID(VendorMesaLLVMPipe, "mesa/llvmpipe");
+    DECLARE_VENDOR_ID(VendorMesaSoftPipe, "mesa/softpipe");
+    DECLARE_VENDOR_ID(VendorMesaSWRast, "mesa/swrast");
+    DECLARE_VENDOR_ID(VendorMesaUnknown, "mesa/unknown");
     // Suppress a warning.
     DECLARE_VENDOR_ID(DeviceVendorMax, "");
   }
