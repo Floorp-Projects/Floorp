@@ -1,23 +1,20 @@
 <!DOCTYPE HTML>
 <html>
 <!--
-https://bugzilla.mozilla.org/show_bug.cgi?id=229925
+https://bugzilla.mozilla.org/show_bug.cgi?id=1524893
 -->
 <head>
-  <title>Test for Bug 229925</title>
+  <title>Test for Bug 1524893</title>
   <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=229925">Mozilla Bug 229925</a>
-<p id="display"></p>
-<form action="#">
-  <label>
-    <span id="text">label</span>
-    <input type="button" id="target" value="target">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1524893">Mozilla Bug 1524893</a>
 
+<details id="details">
+  <summary>
     <a class="yes" href="#">a</a>
     <audio class="yes" controls></audio>
     <button class="yes">button</button>
@@ -50,13 +47,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=229925
     <input class="no" type="hidden" tabindex="1">
     <object class="no" tabindex="1">object</object>
     <video class="no" tabindex="1"></video>
-  </label>
-</form>
+  </summary>
+  <div>This is details</div>
+</details>
 <script class="testbody" type="text/javascript">
 
-/** Test for Bug 229925 **/
+/** Test for Bug 1524893 **/
 
-var target = document.getElementById("target");
+var details = document.getElementById("details");
 
 var yes_nodes = Array.from(document.getElementsByClassName("yes"));
 
@@ -70,28 +68,26 @@ var yes_nodes_in_shadow_tree =
 
 var no_nodes = Array.from(document.getElementsByClassName("no"));
 
-var target_clicked = false;
-target.addEventListener("click", function() {
-  target_clicked = true;
-});
-
 var node;
 for (node of yes_nodes) {
-  target_clicked = false;
+  details.removeAttribute('open');
   node.click();
-  is(target_clicked, false, "mouse click on interactive content " + node.nodeName + " shouldn't dispatch event to label target");
+  ok(!details.hasAttribute('open'),
+     "mouse click on interactive content " + node.nodeName + " shouldn't not open details");
 }
 
 for (node of yes_nodes_in_shadow_tree) {
-  target_clicked = false;
+  details.removeAttribute('open');
   node.click();
-  is(target_clicked, false, "mouse click on content in shadow tree " + node.nodeName + " shouldn't dispatch event to label target");
+  ok(!details.hasAttribute('open'),
+     "mouse click on content in shadow tree " + node.nodeName + " shouldn't open details");
 }
 
 for (node of no_nodes) {
-  target_clicked = false;
+  details.removeAttribute('open');
   node.click();
-  is(target_clicked, true, "mouse click on non interactive content " + node.nodeName + " should dispatch event to label target");
+  ok(details.hasAttribute('open'),
+     "mouse click on non interactive content " + node.nodeName + " should open details");
 }
 
 </script>
