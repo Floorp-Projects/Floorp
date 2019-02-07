@@ -10,6 +10,7 @@ var EXPORTED_SYMBOLS = [ "LoginManagerContent",
 
 const PASSWORD_INPUT_ADDED_COALESCING_THRESHOLD_MS = 1;
 const AUTOCOMPLETE_AFTER_RIGHT_CLICK_THRESHOLD_MS = 400;
+const AUTOFILL_STATE = "-moz-autofill";
 
 const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -605,9 +606,9 @@ var LoginManagerContent = {
   },
 
   /**
-   * Listens for DOMAutoComplete and blur events on an input field.
+   * Listens for DOMAutoComplete event on login form.
    */
-  onUsernameInput(event) {
+  onDOMAutoComplete(event) {
     if (!event.isTrusted) {
       return;
     }
@@ -616,21 +617,27 @@ var LoginManagerContent = {
       return;
     }
 
-    var acInputField = event.target;
+    let acInputField = event.target;
 
     // This is probably a bit over-conservatative.
     if (ChromeUtils.getClassName(acInputField.ownerDocument) != "HTMLDocument") {
       return;
     }
 
-    if (!LoginHelper.isUsernameFieldType(acInputField)) {
+    if (!LoginFormFactory.createFromField(acInputField)) {
       return;
     }
 
-    var acForm = LoginFormFactory.createFromField(acInputField);
-    if (!acForm) {
-      return;
+    if (LoginHelper.isUsernameFieldType(acInputField)) {
+      this.onUsernameInput(event);
     }
+  },
+
+  /**
+   * Calls fill form on the username field.
+   */
+  onUsernameInput(event) {
+    let acInputField = event.target;
 
     // If the username is blank, bail out now -- we don't want
     // fillForm() to try filling in a login without a username
@@ -641,6 +648,7 @@ var LoginManagerContent = {
 
     log("onUsernameInput from", event.type);
 
+    let acForm = LoginFormFactory.createFromField(acInputField);
     let doc = acForm.ownerDocument;
     let formOrigin = LoginUtils._getPasswordOrigin(doc.documentURI);
     let recipes = LoginRecipesContent.getRecipes(formOrigin, doc.defaultView);
@@ -998,6 +1006,28 @@ var LoginManagerContent = {
                                     });
   },
 
+  /** Remove login field highlight when its value is cleared or overwritten.
+   */
+  _removeFillFieldHighlight(event) {
+    let winUtils = event.target.ownerGlobal.windowUtils;
+    winUtils.removeManuallyManagedState(event.target, AUTOFILL_STATE);
+  },
+
+  /**
+   * Highlight login fields on autocomplete or autofill on page load.
+   * @param {Node} element that needs highlighting.
+   */
+  _highlightFilledField(element) {
+    let winUtils = element.ownerGlobal.windowUtils;
+
+    winUtils.addManuallyManagedState(element, AUTOFILL_STATE);
+    // Remove highlighting when the field is changed.
+    element.addEventListener("input", this._removeFillFieldHighlight, {
+      mozSystemGroup: true,
+      once: true,
+    });
+  },
+
   /**
    * Attempt to find the username and password fields in a form, and fill them
    * in using the provided logins and recipes.
@@ -1248,8 +1278,12 @@ var LoginManagerContent = {
         let userEnteredDifferentCase = userTriggered && userNameDiffers &&
                usernameField.value.toLowerCase() == selectedLogin.username.toLowerCase();
 
-        if (!disabledOrReadOnly && !userEnteredDifferentCase && userNameDiffers) {
-          usernameField.setUserInput(selectedLogin.username);
+        if (!disabledOrReadOnly) {
+          if (!userEnteredDifferentCase && userNameDiffers) {
+            usernameField.setUserInput(selectedLogin.username);
+          }
+
+          this._highlightFilledField(usernameField);
         }
       }
 
@@ -1266,6 +1300,8 @@ var LoginManagerContent = {
         log("Saving autoFilledLogin", autoFilledLogin.guid, "for", form.rootElement);
         this.stateForDocument(doc).fillsByRootElement.set(form.rootElement, autoFilledLogin);
       }
+
+      this._highlightFilledField(passwordField);
 
       log("_fillForm succeeded");
       autofillResult = AUTOFILL_RESULT.FILLED;
