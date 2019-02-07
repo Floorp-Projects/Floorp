@@ -6,17 +6,11 @@ package org.mozilla.samples.browser
 
 import android.content.Intent
 import android.os.Bundle
-import android.support.design.widget.AppBarLayout
-import android.support.design.widget.AppBarLayout.LayoutParams.SCROLL_FLAG_ENTER_ALWAYS
-import android.support.design.widget.AppBarLayout.LayoutParams.SCROLL_FLAG_EXIT_UNTIL_COLLAPSED
-import android.support.design.widget.AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL
-import android.support.design.widget.AppBarLayout.LayoutParams.SCROLL_FLAG_SNAP
 import android.support.v4.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import kotlinx.android.synthetic.main.fragment_browser.view.*
-import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.feature.awesomebar.AwesomeBarFeature
 import mozilla.components.feature.contextmenu.ContextMenuCandidate
 import mozilla.components.feature.contextmenu.ContextMenuFeature
@@ -30,22 +24,18 @@ import mozilla.components.feature.tabs.toolbar.TabsToolbarFeature
 import mozilla.components.feature.toolbar.ToolbarAutocompleteFeature
 import mozilla.components.feature.toolbar.ToolbarFeature
 import mozilla.components.support.base.feature.BackHandler
+import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.arch.lifecycle.addObservers
 import org.mozilla.samples.browser.ext.components
 import org.mozilla.samples.browser.integration.FindInPageIntegration
 
 class BrowserFragment : Fragment(), BackHandler {
-    private lateinit var sessionFeature: SessionFeature
-    private lateinit var toolbarFeature: ToolbarFeature
-    private lateinit var toolbarAutocompleteFeature: ToolbarAutocompleteFeature
-    private lateinit var tabsToolbarFeature: TabsToolbarFeature
-    private lateinit var downloadsFeature: DownloadsFeature
-    private lateinit var scrollFeature: CoordinateScrollingFeature
-    private lateinit var contextMenuFeature: ContextMenuFeature
-    private lateinit var promptFeature: PromptFeature
-    private lateinit var windowFeature: WindowFeature
-    private lateinit var customTabsToolbarFeature: CustomTabsToolbarFeature
-    private lateinit var findInPageIntegration: FindInPageIntegration
+    private val sessionFeature = ViewBoundFeatureWrapper<SessionFeature>()
+    private val toolbarFeature = ViewBoundFeatureWrapper<ToolbarFeature>()
+    private val customTabsToolbarFeature = ViewBoundFeatureWrapper<CustomTabsToolbarFeature>()
+    private val downloadsFeature = ViewBoundFeatureWrapper<DownloadsFeature>()
+    private val promptFeature = ViewBoundFeatureWrapper<PromptFeature>()
+    private val findInPageIntegration = ViewBoundFeatureWrapper<FindInPageIntegration>()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val layout = inflater.inflate(R.layout.fragment_browser, container, false)
@@ -54,25 +44,31 @@ class BrowserFragment : Fragment(), BackHandler {
 
         val sessionId = arguments?.getString(SESSION_ID)
 
-        sessionFeature = SessionFeature(
+        sessionFeature.set(
+            feature = SessionFeature(
                 components.sessionManager,
                 components.sessionUseCases,
                 layout.engineView,
-                sessionId)
+                sessionId),
+            owner = this,
+            view = layout)
 
-        toolbarFeature = ToolbarFeature(
+        toolbarFeature.set(
+            feature = ToolbarFeature(
                 layout.toolbar,
                 components.sessionManager,
                 components.sessionUseCases.loadUrl,
                 components.defaultSearchUseCase,
-                sessionId)
+                sessionId),
+            owner = this,
+            view = layout)
 
-        toolbarAutocompleteFeature = ToolbarAutocompleteFeature(layout.toolbar).apply {
-            this.addHistoryStorageProvider(components.historyStorage)
-            this.addDomainProvider(components.shippedDomainsProvider)
+        ToolbarAutocompleteFeature(layout.toolbar).apply {
+            addHistoryStorageProvider(components.historyStorage)
+            addDomainProvider(components.shippedDomainsProvider)
         }
 
-        tabsToolbarFeature = TabsToolbarFeature(layout.toolbar, components.sessionManager, sessionId, ::showTabs)
+        TabsToolbarFeature(layout.toolbar, components.sessionManager, sessionId, ::showTabs)
 
         AwesomeBarFeature(layout.awesomeBar, layout.toolbar, layout.engineView)
             .addHistoryProvider(components.historyStorage, components.sessionUseCases.loadUrl)
@@ -82,18 +78,20 @@ class BrowserFragment : Fragment(), BackHandler {
                 components.searchUseCases.defaultSearch)
             .addClipboardProvider(requireContext(), components.sessionUseCases.loadUrl)
 
-        downloadsFeature = DownloadsFeature(
-            requireContext(),
-            sessionManager = components.sessionManager,
-            fragmentManager = childFragmentManager,
-            onNeedToRequestPermissions = { permissions ->
-                requestPermissions(permissions, REQUEST_CODE_DOWNLOAD_PERMISSIONS)
-            }
-        )
+        downloadsFeature.set(
+            feature = DownloadsFeature(
+                requireContext(),
+                sessionManager = components.sessionManager,
+                fragmentManager = childFragmentManager,
+                onNeedToRequestPermissions = { permissions ->
+                    requestPermissions(permissions, REQUEST_CODE_DOWNLOAD_PERMISSIONS)
+                }),
+            owner = this,
+            view = layout)
 
-        scrollFeature = CoordinateScrollingFeature(components.sessionManager, layout.engineView, layout.toolbar)
+        val scrollFeature = CoordinateScrollingFeature(components.sessionManager, layout.engineView, layout.toolbar)
 
-        contextMenuFeature = ContextMenuFeature(
+        val contextMenuFeature = ContextMenuFeature(
             requireFragmentManager(),
             components.sessionManager,
             ContextMenuCandidate.defaultCandidates(
@@ -102,37 +100,39 @@ class BrowserFragment : Fragment(), BackHandler {
                 layout),
             layout.engineView)
 
-        promptFeature = PromptFeature(
-            fragment = this,
-            sessionManager = components.sessionManager,
-            fragmentManager = requireFragmentManager(),
-            onNeedToRequestPermissions = { permissions ->
-                requestPermissions(permissions, REQUEST_CODE_PROMPT_PERMISSIONS)
-            }
-        )
+        promptFeature.set(
+            feature = PromptFeature(
+                fragment = this,
+                sessionManager = components.sessionManager,
+                fragmentManager = requireFragmentManager(),
+                onNeedToRequestPermissions = { permissions ->
+                    requestPermissions(permissions, REQUEST_CODE_PROMPT_PERMISSIONS)
+                }),
+            owner = this,
+            view = layout)
 
-        windowFeature = WindowFeature(components.engine, components.sessionManager)
+        val windowFeature = WindowFeature(components.engine, components.sessionManager)
 
-        customTabsToolbarFeature = CustomTabsToolbarFeature(
-            components.sessionManager,
-            layout.toolbar,
-            sessionId,
-            components.menuBuilder
-        ) { activity?.finish() }
+        customTabsToolbarFeature.set(
+            feature = CustomTabsToolbarFeature(
+                components.sessionManager,
+                layout.toolbar,
+                sessionId,
+                components.menuBuilder,
+                closeListener = { activity?.finish() }),
+            owner = this,
+            view = layout)
 
-        findInPageIntegration = FindInPageIntegration(components.sessionManager, layout.findInPage)
+        findInPageIntegration.set(
+            feature = FindInPageIntegration(components.sessionManager, layout.findInPage),
+            owner = this,
+            view = layout)
 
         // Observe the lifecycle for supported features
         lifecycle.addObservers(
-            sessionFeature,
-            toolbarFeature,
-            downloadsFeature,
             scrollFeature,
             contextMenuFeature,
-            promptFeature,
-            windowFeature,
-            customTabsToolbarFeature,
-            findInPageIntegration
+            windowFeature
         )
 
         return layout
@@ -145,17 +145,6 @@ class BrowserFragment : Fragment(), BackHandler {
             replace(R.id.container, TabsTrayFragment())
             commit()
         }
-    }
-
-    private fun disableToolBarScroll(toolbar: BrowserToolbar) {
-        val layoutParams = toolbar.layoutParams as (AppBarLayout.LayoutParams)
-        layoutParams.scrollFlags = 0
-    }
-
-    private fun enableToolBarScroll(toolbar: BrowserToolbar) {
-        val layoutParams = toolbar.layoutParams as (AppBarLayout.LayoutParams)
-        layoutParams.scrollFlags = SCROLL_FLAG_ENTER_ALWAYS or SCROLL_FLAG_SCROLL or
-            SCROLL_FLAG_EXIT_UNTIL_COLLAPSED or SCROLL_FLAG_SNAP
     }
 
     override fun onBackPressed(): Boolean {
@@ -182,12 +171,16 @@ class BrowserFragment : Fragment(), BackHandler {
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         when (requestCode) {
-            REQUEST_CODE_DOWNLOAD_PERMISSIONS -> downloadsFeature.onPermissionsResult(permissions, grantResults)
-            REQUEST_CODE_PROMPT_PERMISSIONS -> promptFeature.onPermissionsResult(permissions, grantResults)
+            REQUEST_CODE_DOWNLOAD_PERMISSIONS -> downloadsFeature.withFeature {
+                it.onPermissionsResult(permissions, grantResults)
+            }
+            REQUEST_CODE_PROMPT_PERMISSIONS -> promptFeature.withFeature {
+                it.onPermissionsResult(permissions, grantResults)
+            }
         }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        promptFeature.onActivityResult(requestCode, resultCode, data)
+        promptFeature.withFeature { onActivityResult(requestCode, resultCode, data) }
     }
 }

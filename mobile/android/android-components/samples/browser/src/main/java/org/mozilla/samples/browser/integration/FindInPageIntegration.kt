@@ -4,30 +4,26 @@
 
 package org.mozilla.samples.browser.integration
 
-import android.arch.lifecycle.Lifecycle
-import android.arch.lifecycle.LifecycleObserver
-import android.arch.lifecycle.OnLifecycleEvent
 import android.view.View
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.feature.findinpage.FindInPageFeature
 import mozilla.components.feature.findinpage.view.FindInPageView
 import mozilla.components.support.base.feature.BackHandler
+import mozilla.components.support.base.feature.LifecycleAwareFeature
 
 class FindInPageIntegration(
     private val sessionManager: SessionManager,
     private val view: FindInPageView
-) : LifecycleObserver, BackHandler {
+) : LifecycleAwareFeature, BackHandler {
     private val feature = FindInPageFeature(sessionManager, view, ::onClose)
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_START)
-    fun onStart() {
+    override fun start() {
         feature.start()
 
         FindInPageIntegration.launch = this::launch
     }
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
-    fun onStop() {
+    override fun stop() {
         feature.stop()
 
         FindInPageIntegration.launch = null
