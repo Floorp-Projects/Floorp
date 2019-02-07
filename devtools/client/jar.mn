@@ -191,6 +191,7 @@ devtools.jar:
     skin/images/debugging-workers.svg (themes/images/debugging-workers.svg)
     skin/images/datastore.svg (themes/images/datastore.svg)
     skin/images/globe.svg (themes/images/globe.svg)
+    skin/images/globe-small.svg (themes/images/globe-small.svg)
     skin/images/next.svg (themes/images/next.svg)
     skin/images/next-circle.svg (themes/images/next-circle.svg)
     skin/images/folder.svg (themes/images/folder.svg)
