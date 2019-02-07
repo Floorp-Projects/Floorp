@@ -156,6 +156,14 @@ function initialize(event) {
       }
     });
 
+  let categories = document.getElementById("categories");
+  document.addEventListener("keydown", () => {
+    categories.setAttribute("keyboard-navigation", "true");
+  });
+  categories.addEventListener("mousedown", () => {
+    categories.removeAttribute("keyboard-navigation");
+  });
+
   gViewController.initialize();
   gCategories.initialize();
   gHeader.initialize();
@@ -858,7 +866,6 @@ var gViewController = {
 
     this.displayedView = this.currentViewObj;
     this.currentViewObj.node.setAttribute("loading", "true");
-    this.currentViewObj.node.focus();
 
     let headingName = document.getElementById("heading-name");
     try {
