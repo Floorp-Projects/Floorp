@@ -12,6 +12,10 @@ tasks:
         expires_in: {$fromNow: '1 year'}
         repository: ${event.repository.html_url}
         scheduler_id: focus-nightly-sched
+
+        head_rev: ${event.release.tag_name}
+        head_branch: ${event.release.target_commitish}
+
         is_mozilla_mobile_repo:
           $eval: event.repository.html_url == 'https://github.com/mozilla-mobile/fenix'
         track:
@@ -26,6 +30,7 @@ tasks:
           $if: event.repository.html_url == 'https://github.com/mozilla-mobile/fenix'
           then: mobile-3-b-fenix
           else: mobile-1-b-fenix
+
       in:
         taskId: ${decision_task_id}
         taskGroupId: ${decision_task_id}  # Must be explicit because of Chain of Trust
@@ -66,9 +71,9 @@ tasks:
             chainOfTrust: true
           env:
             BUILD_WORKER_TYPE: ${build_worker_type}
-            MOBILE_HEAD_BRANCH: ${event.release.target_commitish}
+            MOBILE_HEAD_BRANCH: ${head_branch}
             MOBILE_HEAD_REPOSITORY: ${repository}
-            MOBILE_HEAD_REV: ${event.release.tag_name}
+            MOBILE_HEAD_REV: ${head_rev}
             MOBILE_TRIGGERED_BY: ${event.sender.login}
             SCHEDULER_ID: ${scheduler_id}
             TASK_ID: ${decision_task_id}
@@ -77,28 +82,28 @@ tasks:
             - --login
             - -cx
             - >-
-              cd ..
-              && git clone ${repository} repository
-              && cd repository
+              git fetch ${repository} ${head_branch}
+              && git config advice.detachedHead false
+              && git checkout ${head_rev}
               && python automation/taskcluster/decision_task_nightly.py \
                 --track ${track} \
                 --commit \
-                --output /opt/repository/app/build/outputs/apk \
+                --output /opt/fenix/app/build/outputs/apk \
                 --apk arm/release/app-arm-release-unsigned.apk \
                 --apk x86/release/app-x86-release-unsigned.apk \
                 --date ${now}
           artifacts:
             public/task-graph.json:
               type: file
-              path: /opt/repository/task-graph.json
+              path: /opt/fenix/task-graph.json
               expires: ${expires_in}
             public/actions.json:
               type: file
-              path: /opt/repository/actions.json
+              path: /opt/fenix/actions.json
               expires: ${expires_in}
             public/parameters.yml:
               type: file
-              path: /opt/repository/parameters.yml
+              path: /opt/fenix/parameters.yml
               expires: ${expires_in}
         extra:
           cron: {$json: {$eval: 'cron'}}
@@ -107,4 +112,4 @@ tasks:
           name: Fenix Nightly Decision Task
           description: Decision task scheduled by cron task [${cron.task_id}](https://tools.taskcluster.net/tasks/${cron.task_id})
           owner: ${event.sender.login}@users.noreply.github.com
-          source: ${repository}/raw/${event.release.tag_name}/.taskcluster.yml
+          source: ${repository}/raw/${head_rev}/.taskcluster.yml

@@ -19,6 +19,7 @@ TASK_ID = os.environ.get('TASK_ID')
 SCHEDULER_ID = os.environ.get('SCHEDULER_ID')
 GITHUB_HTTP_REPOSITORY = os.environ.get('MOBILE_HEAD_REPOSITORY')
 HEAD_REV = os.environ.get('MOBILE_HEAD_REV')
+HEAD_BRANCH = os.environ.get('MOBILE_HEAD_BRANCH')
 
 BUILDER = lib.tasks.TaskBuilder(
     task_id=TASK_ID,
@@ -36,13 +37,20 @@ def generate_build_task(apks, is_staging):
         "expires": taskcluster.stringDate(taskcluster.fromNow('1 year')),
     } for apk in apks}
 
-    checkout = 'git clone {} repository && cd repository'.format(GITHUB_HTTP_REPOSITORY)
+    checkout = (
+        "export TERM=dumb && git fetch {} {} --tags && "
+        "git config advice.detachedHead false && "
+        "git checkout {}".format(
+            GITHUB_HTTP_REPOSITORY, HEAD_BRANCH, HEAD_REV
+        )
+    )
     sentry_secret = '{}project/mobile/fenix/sentry'.format('garbage/staging/' if is_staging else '')
 
     return taskcluster.slugId(), BUILDER.build_task(
         name="(Fenix) Build task",
         description="Build Fenix from source code.",
-        command=('cd .. && ' + checkout +
+        command=(
+            checkout +
             ' && python automation/taskcluster/helper/get-secret.py'
             ' -s {} -k dsn -f .sentry_token'.format(sentry_secret) +
             ' && ./gradlew --no-daemon -PcrashReports=true clean test assembleRelease'),
