@@ -11,7 +11,10 @@ import {
 
 import { makeSourceActorLocation } from "../../utils/breakpoint";
 
-export function setBreakpointPositions(location) {
+import type { SourceLocation } from "../../types";
+import type { ThunkArgs } from "../../actions/types";
+
+export function setBreakpointPositions(location: SourceLocation) {
   return async ({ getState, dispatch, client }: ThunkArgs) => {
     if (
       getBreakpointPositionsForLine(
