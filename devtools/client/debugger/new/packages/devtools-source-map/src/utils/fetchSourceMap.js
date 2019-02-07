@@ -20,7 +20,7 @@ function clearOriginalURLs() {
   originalURLs.clear();
 }
 
-function hasOriginalURL(url: string) {
+function hasOriginalURL(url: string): boolean {
   return originalURLs.has(url);
 }
 
@@ -73,7 +73,7 @@ async function _resolveAndFetch(generatedSource: Source): SourceMapConsumer {
   return map;
 }
 
-function fetchSourceMap(generatedSource: Source) {
+function fetchSourceMap(generatedSource: Source): SourceMapConsumer {
   const existingRequest = getSourceMap(generatedSource.id);
 
   // If it has already been requested, return the request. Make sure
