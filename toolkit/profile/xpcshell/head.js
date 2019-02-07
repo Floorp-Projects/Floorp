@@ -366,7 +366,7 @@ async function readFile(file) {
 
 function checkStartupReason(expected = undefined) {
   const tId = "startup.profile_selection_reason";
-  let scalars = TelemetryTestUtils.getParentProcessScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTOUT);
+  let scalars = TelemetryTestUtils.getProcessScalars("parent");
 
   if (expected === undefined) {
     Assert.ok(!(tId in scalars), "Startup telemetry should not have been recorded.");
