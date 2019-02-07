@@ -7,6 +7,7 @@
 include protocol PCompositorBridge;
 
 using mozilla::gfx::IntSize from "mozilla/gfx/Point.h";
+using mozilla::WindowsHandle from "ipc/IPCMessageUtils.h";
 using nsTransparencyMode from "mozilla/widget/WidgetMessageUtils.h";
 
 namespace mozilla {
@@ -26,6 +27,7 @@ parent:
 child:
   async ObserveVsync();
   async UnobserveVsync();
+  async UpdateCompositorWnd(WindowsHandle aCompositorWnd, WindowsHandle aParentWnd);
 };
 
 } // namespace widget
