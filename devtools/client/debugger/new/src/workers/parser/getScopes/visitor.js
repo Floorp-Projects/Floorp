@@ -13,7 +13,6 @@ import type {
   Location as BabelLocation
 } from "@babel/types";
 
-import { isGeneratedId } from "devtools-source-map";
 import getFunctionName from "../utils/getFunctionName";
 import { getAst } from "../utils/ast";
 
@@ -152,6 +151,10 @@ type ScopeCollectionVisitorState = {
   scopeStack: Array<TempScope>,
   declarationBindingIds: Set<Node>
 };
+
+function isGeneratedId(id: string) {
+  return !/\/originalSource/.test(id);
+}
 
 export function parseSourceScopes(sourceId: SourceId): ?Array<ParsedScope> {
   const ast = getAst(sourceId);
