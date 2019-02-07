@@ -56,6 +56,40 @@ async function openAboutDebugging(page, win) {
   return { tab, document, window };
 }
 
+async function openAboutDevtoolsToolbox(doc, tab, win) {
+  info("Open about:devtools-toolbox page");
+  const target = findDebugTargetByText("about:debugging", doc);
+  ok(target, "about:debugging tab target appeared");
+  const inspectButton = target.querySelector(".js-debug-target-inspect-button");
+  ok(inspectButton, "Inspect button for about:debugging appeared");
+  inspectButton.click();
+  await Promise.all([
+    waitUntil(() => tab.nextElementSibling),
+    waitForRequestsToSettle(win.AboutDebugging.store),
+    gDevTools.once("toolbox-ready"),
+  ]);
+
+  info("Wait for about:devtools-toolbox tab will be selected");
+  const devtoolsTab = tab.nextElementSibling;
+  await waitUntil(() => gBrowser.selectedTab === devtoolsTab);
+  const devtoolsBrowser = gBrowser.selectedBrowser;
+
+  return {
+    devtoolsBrowser,
+    devtoolsDocument: devtoolsBrowser.contentDocument,
+    devtoolsTab,
+    devtoolsWindow: devtoolsBrowser.contentWindow,
+  };
+}
+
+async function closeAboutDevtoolsToolbox(devtoolsTab, win) {
+  await removeTab(devtoolsTab);
+  await Promise.all([
+    waitForRequestsToSettle(win.AboutDebugging.store),
+    gDevTools.once("toolbox-destroyed"),
+  ]);
+}
+
 async function reloadAboutDebugging(tab) {
   info("reload about:debugging");
 
