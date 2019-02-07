@@ -93,6 +93,7 @@ class ElfRelHackCode_Section : public ElfSection {
         parent(e),
         relhack_section(relhack_section),
         init(init),
+        init_trampoline(nullptr),
         mprotect_cb(mprotect_cb),
         sysconf_cb(sysconf_cb) {
     std::string file(rundir);
@@ -147,6 +148,22 @@ class ElfRelHackCode_Section : public ElfSection {
 
     // Get all relevant sections from the injected code object.
     add_code_section(sym->value.getSection());
+
+    // If the original init function is located too far away, we're going to
+    // need to use a trampoline. See comment in inject.c.
+    // Theoretically, we should check for (init - instr) > 0xffffff, where instr
+    // is the virtual address of the instruction that calls the original init,
+    // but we don't have it at this point, so punt to just init.
+    if (init > 0xffffff && parent.getMachine() == EM_ARM) {
+      Elf_SymValue *trampoline = symtab->lookup("init_trampoline");
+      if (!trampoline) {
+        throw std::runtime_error(
+            "Couldn't find an 'init_trampoline' symbol in the injected code");
+      }
+
+      init_trampoline = trampoline->value.getSection();
+      add_code_section(init_trampoline);
+    }
 
     // Adjust code sections offsets according to their size
     std::vector<ElfSection *>::iterator c = code.begin();
@@ -365,6 +382,12 @@ class ElfRelHackCode_Section : public ElfSection {
           ElfSection *ehdr = parent.getSection(1)->getPrevious()->getPrevious();
           addr = ehdr->getAddr();
         } else if (strcmp(name, "original_init") == 0) {
+          if (init_trampoline) {
+            addr = init_trampoline->getAddr();
+          } else {
+            addr = init;
+          }
+        } else if (strcmp(name, "real_original_init") == 0) {
           addr = init;
         } else if (relro && strcmp(name, "mprotect_cb") == 0) {
           addr = mprotect_cb;
@@ -428,6 +451,7 @@ class ElfRelHackCode_Section : public ElfSection {
   ElfRelHack_Section &relhack_section;
   std::vector<ElfSection *> code;
   unsigned int init;
+  ElfSection *init_trampoline;
   unsigned int mprotect_cb;
   unsigned int sysconf_cb;
   int entry_point;
