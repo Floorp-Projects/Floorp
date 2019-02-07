@@ -344,7 +344,7 @@ var SiteDataManager = {
       if (site) {
         // Clear localStorage & sessionStorage
         Services.obs.notifyObservers(null, "extension:purge-localStorage", host);
-        Services.obs.notifyObservers(null, "extension:purge-sessionStorage", host);
+        Services.obs.notifyObservers(null, "browser:purge-sessionStorage", host);
         this._removePermission(site);
         this._removeAppCache(site);
         this._removeCookies(site);
