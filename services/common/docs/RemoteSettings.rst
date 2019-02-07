@@ -75,7 +75,7 @@ The ``sync`` event allows to be notified when the remote settings are changed on
 
 .. note::
 
-    Currently, the synchronization of remote settings is triggered by its own timer every 24H (see the preference ``services.settings.poll_interval`` ).
+    Currently, the synchronization of remote settings is triggered via push notifications, and also by its own timer every 24H (see the preference ``services.settings.poll_interval`` ).
 
 File attachments
 ----------------
@@ -189,8 +189,14 @@ By default, the entries returned by ``.get()`` are filtered based on the JEXL ex
     });
 
 
-Debugging and testing
-=====================
+Debugging and manual testing
+============================
+
+Remote Settings Dev Tools
+-------------------------
+
+The Remote Settings Dev Tools extension provides some tooling to inspect synchronization statuses, to change the remote server or to switch to *preview* mode in order to sign-off pending changes. `More information on the dedicated repository <https://github.com/mozilla/remote-settings-devtools>`_.
+
 
 Trigger a synchronization manually
 ----------------------------------
@@ -210,6 +216,39 @@ The synchronization of a single client can be forced with the ``.sync()`` method
 .. important::
 
     The above methods are only relevant during development or debugging and should never be called in production code.
+
+
+Inspect local data
+------------------
+
+The internal IndexedDB of Remote Settings can be accessed via the Storage Inspector in the `browser toolbox <https://developer.mozilla.org/en-US/docs/Tools/Browser_Toolbox>`_.
+
+For example, the local data of the ``"key"`` collection can be accessed in the ``remote-settings`` database at *Browser Toolbox* > *Storage* > *IndexedDB* > *chrome*, in the ``records`` store.
+
+
+Unit Tests
+==========
+
+As a foreword, we would like to underline the fact that your tests should not test Remote Settings itself. Your tests should assume Remote Settings works, and should only run assertions on the integration part. For example, if you see yourself mocking the server responses, your tests may go over their responsability.
+
+If your code relies on the ``"sync"`` event, you are likely to be interested in faking this event and make sure your code runs as expected. If it relies on ``.get()``, you will probably want to insert some fake local data.
+
+
+Simulate ``"sync"`` events
+--------------------------
+
+You can forge a ``payload`` that contains the events attributes as described above, and emit it :)
+
+.. code-block:: js
+
+    const payload = {
+      current: [{ id: "", age: 43 }],
+      created: [],
+      updated: [{ old: { id: "abc", age: 42 }, new: { id: "abc", age: 43 }}],
+      deleted: [],
+    };
+
+    await RemoteSettings("a-key").emit("sync", { "data": payload });
 
 
 Manipulate local data
@@ -250,19 +289,10 @@ The local data can be flushed with ``clear()``:
 For further documentation in collection API, checkout the `kinto.js library <https://kintojs.readthedocs.io/>`_, which is in charge of the IndexedDB interactions behind-the-scenes.
 
 
-Inspect local data
-------------------
+Misc
+====
 
-The internal IndexedDB of Remote Settings can be accessed via the Storage Inspector in the `browser toolbox <https://developer.mozilla.org/en-US/docs/Tools/Browser_Toolbox>`_.
-
-For example, the local data of the ``"key"`` collection can be accessed in the ``remote-settings`` database at *Browser Toolbox* > *Storage* > *IndexedDB* > *chrome*, in the ``records`` store.
-
-
-Remote Settings Dev Tools
--------------------------
-
-The Remote Settings Dev Tools extension provides some tooling to inspect synchronization statuses, to change the remote server or to switch to *preview* mode in order to sign-off pending changes. `More information on the dedicated repository <https://github.com/mozilla/remote-settings-devtools>`_.
-
+We host more documentation on https://remote-settings.readthedocs.io/, on how to run a server locally, manage attachments, or use the REST API etc.
 
 About blocklists
 ----------------
