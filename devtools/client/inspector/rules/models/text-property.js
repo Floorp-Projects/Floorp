@@ -30,9 +30,10 @@ loader.lazyRequireGetter(this, "escapeCSSComment", "devtools/shared/css/parsing-
  * @param {Boolean} enabled
  *        Whether the property is enabled.
  * @param {Boolean} invisible
- *        Whether the property is invisible.  An invisible property
- *        does not show up in the UI; these are needed so that the
- *        index of a property in Rule.textProps is the same as the index
+ *        Whether the property is invisible. In an inherited rule, only show
+ *        the inherited declarations. The other declarations are considered
+ *        invisible and does not show up in the UI. These are needed so that
+ *        the index of a property in Rule.textProps is the same as the index
  *        coming from parseDeclarations.
  */
 function TextProperty(rule, name, value, priority, enabled = true,
