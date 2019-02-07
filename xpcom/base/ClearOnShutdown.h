@@ -48,7 +48,6 @@ enum class ShutdownPhase {
   WillShutdown,
   Shutdown,
   ShutdownThreads,
-  ShutdownLoaders,
   ShutdownFinal,
   ShutdownPhase_Length,  // never pass this value
   First = WillShutdown,  // for iteration
