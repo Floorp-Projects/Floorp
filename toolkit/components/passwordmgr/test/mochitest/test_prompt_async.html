@@ -176,19 +176,43 @@
         };
         await handlePrompt(state, action);
 
-        Object.assign(state, {
+        // We don't know what order these prompts appear in so get both states and check them.
+        // We can't use Promise.all here since we can't start the 2nd timer in chromeScript.js until
+        // the first timer is done since the timer variable gets clobbered, plus we don't want
+        // different actions racing each other.
+        let promptStates = [
+          await handlePromptWithoutChecks(action),
+          await handlePromptWithoutChecks(action),
+        ];
+
+        let expected1 = Object.assign({}, state, {
           msg: "http://example.com is requesting your username and password. WARNING: Your password will not be sent to the website you are currently visiting!",
           textValue: "user1name",
           passValue: "user1pass",
         });
-        await handlePrompt(state, action);
 
-        Object.assign(state, {
+        let expected2 = Object.assign({}, state, {
           msg: "http://example.org is requesting your username and password. WARNING: Your password will not be sent to the website you are currently visiting!",
           textValue: "user2name",
           passValue: "user2pass",
         });
-        await handlePrompt(state, action);
+
+        // The order isn't important.
+        let expectedPromptStates = [
+          expected1,
+          expected2,
+        ];
+
+        is(promptStates.length, expectedPromptStates.length,
+           "Check we handled the right number of prompts");
+        for (let promptState of promptStates) {
+          let expectedStateIndexForMessage = expectedPromptStates.findIndex(eps => {
+            return eps.msg == promptState.msg;
+          });
+          isnot(expectedStateIndexForMessage, -1, "Check state message was found in expected array");
+          let expectedPromptState = expectedPromptStates.splice(expectedStateIndexForMessage, 1)[0];
+          checkPromptState(promptState, expectedPromptState);
+        }
 
         let iframe1Doc = await iframe1DocPromise;
         let iframe2aDoc = await iframe2aDocPromise;
