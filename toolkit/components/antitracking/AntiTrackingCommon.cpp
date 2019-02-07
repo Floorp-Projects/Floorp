@@ -64,6 +64,9 @@ static const uint32_t kMaxConsoleOutputDelayMs = 100;
 
 namespace {
 
+UniquePtr<nsTArray<AntiTrackingCommon::AntiTrackingSettingsChangedCallback>>
+    gSettingsChangedCallbacks;
+
 bool GetParentPrincipalAndTrackingOrigin(
     nsGlobalWindowInner* a3rdPartyTrackingWindow,
     nsIPrincipal** aTopLevelStoragePrincipal, nsACString& aTrackingOrigin,
@@ -521,6 +524,77 @@ TemporaryAccessGrantObserver::Observe(nsISupports* aSubject, const char* aTopic,
   }
 
   return NS_OK;
+}
+
+class SettingsChangeObserver final : public nsIObserver {
+  ~SettingsChangeObserver() = default;
+
+ public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+
+  static void PrivacyPrefChanged(const char* aPref = nullptr, void* = nullptr);
+
+ private:
+  static void RunAntiTrackingSettingsChangedCallbacks();
+};
+
+NS_IMPL_ISUPPORTS(SettingsChangeObserver, nsIObserver)
+
+NS_IMETHODIMP SettingsChangeObserver::Observe(nsISupports* aSubject,
+                                              const char* aTopic,
+                                              const char16_t* aData) {
+  if (!strcmp(aTopic, "xpcom-shutdown")) {
+    nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+    if (obs) {
+      obs->RemoveObserver(this, "perm-added");
+      obs->RemoveObserver(this, "perm-changed");
+      obs->RemoveObserver(this, "perm-cleared");
+      obs->RemoveObserver(this, "perm-deleted");
+      obs->RemoveObserver(this, "xpcom-shutdown");
+
+      Preferences::UnregisterPrefixCallback(
+          SettingsChangeObserver::PrivacyPrefChanged,
+          "browser.contentblocking.");
+      Preferences::UnregisterPrefixCallback(
+          SettingsChangeObserver::PrivacyPrefChanged, "network.cookie.");
+      Preferences::UnregisterPrefixCallback(
+          SettingsChangeObserver::PrivacyPrefChanged, "privacy.");
+
+      gSettingsChangedCallbacks = nullptr;
+    }
+  } else {
+    nsCOMPtr<nsIPermission> perm = do_QueryInterface(aSubject);
+    if (perm) {
+      nsAutoCString type;
+      nsresult rv = perm->GetType(type);
+      if (NS_WARN_IF(NS_FAILED(rv)) ||
+          type.EqualsLiteral(USER_INTERACTION_PERM)) {
+        // Ignore failures or notifications that have been sent because of
+        // user interactions.
+        return NS_OK;
+      }
+    }
+
+    RunAntiTrackingSettingsChangedCallbacks();
+  }
+
+  return NS_OK;
+}
+
+// static
+void SettingsChangeObserver::PrivacyPrefChanged(const char* aPref,
+                                                void* aClosure) {
+  RunAntiTrackingSettingsChangedCallbacks();
+}
+
+// static
+void SettingsChangeObserver::RunAntiTrackingSettingsChangedCallbacks() {
+  if (gSettingsChangedCallbacks) {
+    for (auto& callback : *gSettingsChangedCallbacks) {
+      callback();
+    }
+  }
 }
 
 }  // namespace
@@ -1654,6 +1728,41 @@ nsresult AntiTrackingCommon::IsOnContentBlockingAllowList(
   }
 
   return result == nsIPermissionManager::ALLOW_ACTION;
+}
+
+// static
+void AntiTrackingCommon::OnAntiTrackingSettingsChanged(
+    const AntiTrackingCommon::AntiTrackingSettingsChangedCallback& aCallback) {
+  static bool initialized = false;
+  if (!initialized) {
+    // It is possible that while we have some data in our cache, something
+    // changes in our environment that causes the anti-tracking checks below to
+    // change their response.  Therefore, we need to clear our cache when we
+    // detect a related change.
+    Preferences::RegisterPrefixCallback(
+        SettingsChangeObserver::PrivacyPrefChanged, "browser.contentblocking.");
+    Preferences::RegisterPrefixCallback(
+        SettingsChangeObserver::PrivacyPrefChanged, "network.cookie.");
+    Preferences::RegisterPrefixCallback(
+        SettingsChangeObserver::PrivacyPrefChanged, "privacy.");
+
+    nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+    if (obs) {
+      RefPtr<SettingsChangeObserver> observer = new SettingsChangeObserver();
+      obs->AddObserver(observer, "perm-added", false);
+      obs->AddObserver(observer, "perm-changed", false);
+      obs->AddObserver(observer, "perm-cleared", false);
+      obs->AddObserver(observer, "perm-deleted", false);
+      obs->AddObserver(observer, "xpcom-shutdown", false);
+    }
+
+    gSettingsChangedCallbacks =
+        MakeUnique<nsTArray<AntiTrackingSettingsChangedCallback>>();
+
+    initialized = true;
+  }
+
+  gSettingsChangedCallbacks->AppendElement(aCallback);
 }
 
 /* static */ already_AddRefed<nsIURI>
