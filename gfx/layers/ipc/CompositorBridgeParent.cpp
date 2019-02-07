@@ -1732,6 +1732,12 @@ PWebRenderBridgeParent* CompositorBridgeParent::AllocPWebRenderBridgeParent(
   MOZ_ASSERT(!mCompositorScheduler);
   MOZ_ASSERT(mWidget);
 
+#  ifdef XP_WIN
+  if (mWidget && DeviceManagerDx::Get()->CanUseDComp()) {
+    mWidget->AsWindows()->EnsureCompositorWindow();
+  }
+#  endif
+
   RefPtr<widget::CompositorWidget> widget = mWidget;
   wr::WrWindowId windowId = wr::NewWindowId();
   if (mApzUpdater) {
@@ -1933,12 +1939,6 @@ CompositorBridgeParent::AllocPCompositorWidgetParent(
   widget::CompositorWidgetParent* widget =
       new widget::CompositorWidgetParent(aInitData, mOptions);
   widget->AddRef();
-
-#  ifdef XP_WIN
-  if (mOptions.UseWebRender() && DeviceManagerDx::Get()->CanUseDComp()) {
-    widget->AsWindows()->EnsureCompositorWindow();
-  }
-#  endif
 
   // Sending the constructor acts as initialization as well.
   mWidget = widget;

@@ -149,58 +149,58 @@
   font-size: 12px;
   width: 100%;
   background: var(--theme-body-background);
-  border-top: 1px solid var(--theme-splitter-color);
   display: flex;
   -moz-user-select: none;
   user-select: none;
   box-sizing: border-box;
-  height: 29px;
+  height: var(--editor-header-height);
   margin: 0;
   padding: 0;
+  border-bottom: 1px solid var(--theme-splitter-color);
 }
 
 .source-outline-tabs .tab {
+  align-items: center;
   background-color: var(--theme-toolbar-background);
-  border-top: 2px solid transparent;
-  border-bottom: 1px solid var(--theme-splitter-color);
   color: var(--theme-toolbar-color);
   cursor: default;
   display: inline-flex;
   flex: 1;
   justify-content: center;
-  margin-bottom: 0px;
-  margin-top: -1px;
   overflow: hidden;
-  padding: 5px 8px 7px 8px;
+  padding: 5px;
   position: relative;
   transition: all 0.25s ease;
 }
 
-.source-outline-tabs .tab:not(.active):hover {
-  background-color: var(--theme-toolbar-hover);
-  border-top: 2px solid rgba(0, 0, 0, 0.2);
-}
-
-.theme-dark .source-outline-tabs .tab:hover {
-  border-top: 2px solid var(--tab-line-hover-color);
+.source-outline-tabs .tab::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: var(--tab-line-color, transparent);
+  transition: transform 250ms var(--animation-curve), opacity 250ms var(--animation-curve);
+  opacity: 0;
+  transform: scaleX(0);
 }
 
 .source-outline-tabs .tab.active {
-  border-top: 2px solid var(--tab-line-selected-color);
+  --tab-line-color: var(--tab-line-selected-color);
   color: var(--theme-toolbar-selected-color);
+  border-bottom-color: transparent;
 }
 
-.theme-dark .source-outline-tabs .tab.active {
-  color: var(--theme-toolbar-selected-color);
+.source-outline-tabs .tab:not(.active):hover {
+  --tab-line-color: var(--tab-line-hover-color);
+  background-color: var(--theme-toolbar-hover);
 }
 
-.theme-dark .source-outline-tabs .tab.active:hover {
-  border-top: 2px solid var(--tab-line-selected-color);
-}
-
-.source-outline-tabs .tab.active path,
-.source-outline-tabs .tab:hover path {
-  fill: var(--theme-body-color);
+.source-outline-tabs .tab:hover::before,
+.source-outline-tabs .tab.active::before {
+  opacity: 1;
+  transform: scaleX(1);
 }
 
 .source-outline-panel {

@@ -30,8 +30,6 @@ ChromeUtils.defineModuleGetter(this, "CertUtils",
                                "resource://gre/modules/CertUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "ServiceRequest",
                                "resource://gre/modules/ServiceRequest.jsm");
-ChromeUtils.defineModuleGetter(this, "UpdateRDFConverter",
-                               "resource://gre/modules/addons/RDFManifestConverter.jsm");
 
 const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
 const LOGGER_ID = "addons.update-checker";
@@ -285,31 +283,11 @@ UpdateParser.prototype = {
       return;
     }
 
-    // Detect the manifest type by first attempting to parse it as
-    // JSON, and falling back to parsing it as XML if that fails.
-    let json;
-    try {
-      let data = request.responseText;
-      if (data.startsWith("<?xml")) {
-        logger.warn(`${this.url}: RDF update manifests are deprecated, ` +
-                    "and support will soon be removed");
-
-        json = UpdateRDFConverter.convertToJSON(request);
-        updateTypeHistogram.add("RDF");
-        Services.telemetry.keyedScalarAdd("extensions.updates.rdf", this.id, 1);
-      } else {
-        json = JSON.parse(data);
-        updateTypeHistogram.add("JSON");
-      }
-    } catch (e) {
-      logger.warn("onUpdateCheckComplete failed to determine manifest type");
-      this.notifyError(AddonManager.ERROR_UNKNOWN_FORMAT);
-      return;
-    }
-
     let results;
     try {
+      let json = JSON.parse(request.responseText);
       results = parseJSONManifest(this.id, request, json);
+      updateTypeHistogram.add("JSON");
     } catch (e) {
       logger.warn("onUpdateCheckComplete failed to parse update manifest", e);
       this.notifyError(AddonManager.ERROR_PARSE_ERROR);
