@@ -11230,7 +11230,9 @@
   },
   "CERT_PINNING_MOZ_RESULTS_BY_HOST": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["pinning@mozilla.org"],
+    "alert_emails": ["dkeeler@mozilla.com", "pinning@mozilla.org"],
+    "releaseChannelCollection": "opt-out",
+    "bug_numbers": [1007844, 1521940],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 512,
@@ -11238,7 +11240,9 @@
   },
   "CERT_PINNING_MOZ_TEST_RESULTS_BY_HOST": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["pinning@mozilla.org"],
+    "alert_emails": ["dkeeler@mozilla.com", "pinning@mozilla.org"],
+    "releaseChannelCollection": "opt-out",
+    "bug_numbers": [1007844, 1521940],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 512,
