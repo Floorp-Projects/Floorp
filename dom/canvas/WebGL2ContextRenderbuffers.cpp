@@ -62,23 +62,22 @@ void WebGL2Context::GetInternalformatParameter(JSContext* cx, GLenum target,
     ErrorInvalidEnum("`pname` must be SAMPLES.");
     return;
   }
-
-  GLint* samples = nullptr;
-  GLint sampleCount = 0;
-  gl->fGetInternalformativ(LOCAL_GL_RENDERBUFFER, internalformat,
-                           LOCAL_GL_NUM_SAMPLE_COUNTS, 1, &sampleCount);
-  if (sampleCount > 0) {
-    samples = new GLint[sampleCount];
+  std::vector<GLint> samples;
+  const auto maxSamples = usage->MaxSamples(*gl);
+  if (maxSamples) {  // It might be force-set to 0 for validation reasons!
+    GLint sampleCount = 0;
     gl->fGetInternalformativ(LOCAL_GL_RENDERBUFFER, internalformat,
-                             LOCAL_GL_SAMPLES, sampleCount, samples);
+                             LOCAL_GL_NUM_SAMPLE_COUNTS, 1, &sampleCount);
+    samples.resize(uint32_t(sampleCount));
+    gl->fGetInternalformativ(LOCAL_GL_RENDERBUFFER, internalformat,
+                             LOCAL_GL_SAMPLES, samples.size(), samples.data());
   }
 
-  JSObject* obj = dom::Int32Array::Create(cx, this, sampleCount, samples);
+  JSObject* obj =
+      dom::Int32Array::Create(cx, this, samples.size(), samples.data());
   if (!obj) {
     out_rv = NS_ERROR_OUT_OF_MEMORY;
   }
-
-  delete[] samples;
 
   retval.setObjectOrNull(obj);
 }
