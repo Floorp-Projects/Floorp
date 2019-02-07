@@ -494,7 +494,7 @@ void wasm::PrintText(const char* out)
 }
 #endif
 
-static void* AddressOf(SymbolicAddress imm, ABIFunctionType* abiType) {
+void* wasm::AddressOf(SymbolicAddress imm, ABIFunctionType* abiType) {
   switch (imm) {
     case SymbolicAddress::HandleDebugTrap:
       *abiType = Args_General0;
