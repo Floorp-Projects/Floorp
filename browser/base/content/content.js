@@ -61,7 +61,7 @@ addEventListener("DOMAutoComplete", function(event) {
   if (shouldIgnoreLoginManagerEvent(event)) {
     return;
   }
-  LoginManagerContent.onUsernameInput(event);
+  LoginManagerContent.onDOMAutoComplete(event);
 });
 
 ContentMetaHandler.init(this);

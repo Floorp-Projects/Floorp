@@ -214,15 +214,7 @@ BrowserCLH.prototype = {
       if (shouldIgnoreLoginManagerEvent(event)) {
         return;
       }
-      this.LoginManagerContent.onUsernameInput(event);
-    }, options);
-
-    aWindow.addEventListener("blur", event => {
-      if (ChromeUtils.getClassName(event.target) !== "HTMLInputElement" ||
-          shouldIgnoreLoginManagerEvent(event)) {
-        return;
-      }
-      this.LoginManagerContent.onUsernameInput(event);
+      this.LoginManagerContent.onDOMAutoComplete(event);
     }, options);
 
     aWindow.addEventListener("pageshow", event => {
