@@ -671,24 +671,21 @@ bool FormatUsageInfo::IsUnpackValid(
   return true;
 }
 
-void FormatUsageInfo::ResolveMaxSamples(gl::GLContext* gl) {
+void FormatUsageInfo::ResolveMaxSamples(gl::GLContext& gl) const {
+  MOZ_ASSERT(gl.IsCurrent());
   MOZ_ASSERT(!this->maxSamplesKnown);
-  MOZ_ASSERT(this->maxSamples == 0);
-  MOZ_ASSERT(gl->IsCurrent());
-
+  MOZ_ASSERT(!this->maxSamples);
   this->maxSamplesKnown = true;
 
   const GLenum internalFormat = this->format->sizedFormat;
   if (!internalFormat) return;
+  if (!gl.IsSupported(gl::GLFeature::internalformat_query)) return;
 
-  if (!gl->IsSupported(gl::GLFeature::internalformat_query))
-    return;  // Leave it at 0.
-
-  GLint maxSamplesGL = 0;
-  gl->fGetInternalformativ(LOCAL_GL_RENDERBUFFER, internalFormat,
-                           LOCAL_GL_SAMPLES, 1, &maxSamplesGL);
-
-  this->maxSamples = maxSamplesGL;
+  // GL_SAMPLES returns a list in descending order, so ask for just one elem to
+  // get the max.
+  gl.fGetInternalformativ(LOCAL_GL_RENDERBUFFER, internalFormat,
+                          LOCAL_GL_SAMPLES, 1,
+                          reinterpret_cast<GLint*>(&this->maxSamples));
 }
 
 ////////////////////////////////////////

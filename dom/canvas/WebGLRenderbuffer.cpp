@@ -170,12 +170,8 @@ void WebGLRenderbuffer::RenderbufferStorage(uint32_t samples,
     return;
   }
 
-  if (!usage->maxSamplesKnown) {
-    const_cast<webgl::FormatUsageInfo*>(usage)->ResolveMaxSamples(mContext->gl);
-  }
-  MOZ_ASSERT(usage->maxSamplesKnown);
-
-  if (samples > usage->maxSamples) {
+  const auto maxSamples = usage->MaxSamples(*mContext->gl);
+  if (samples > maxSamples) {
     mContext->ErrorInvalidOperation("`samples` is out of the valid range.");
     return;
   }
