@@ -140,11 +140,6 @@ html .breakpoints-list .breakpoint.paused {
   background-color: var(--search-overlays-semitransparent);
 }
 
-.breakpoints-list .breakpoint .breakpoint-line,
-.breakpoints-list .breakpoint-label {
-  font-family: var(--monospace-font-family);
-}
-
 .breakpoints-list .breakpoint .breakpoint-line {
   font-size: 11px;
   color: var(--theme-comment);
