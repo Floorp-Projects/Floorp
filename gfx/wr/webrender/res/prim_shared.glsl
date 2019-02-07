@@ -102,11 +102,15 @@ VertexInfo write_vertex(RectWithSize instance_rect,
     // Clamp to the two local clip rects.
     vec2 clamped_local_pos = clamp_rect(local_pos, local_clip_rect);
 
+    // Compute the visible rect to snap against. This ensures segments along the
+    // edges are snapped consistently with other nearby primitives.
+    RectWithSize visible_rect = intersect_rects(local_clip_rect, snap_rect);
+
     /// Compute the snapping offset.
     vec2 snap_offset = compute_snap_offset(
         clamped_local_pos,
         transform.m,
-        snap_rect,
+        visible_rect,
         task.common_data.device_pixel_scale
     );
 
