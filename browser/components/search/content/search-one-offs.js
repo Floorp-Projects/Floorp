@@ -1176,12 +1176,12 @@ class SearchOneOffs {
     if (target.classList.contains("addengine-item")) {
       // On success, hide the panel and tell event listeners to reshow it to
       // show the new engine.
-      let installCallback = {
-        onSuccess: engine => {
+      Services.search.addEngine(target.getAttribute("uri"), target.getAttribute("image"))
+        .then(engine => {
           this._rebuild();
-        },
-        onError(errorCode) {
-          if (errorCode != Ci.nsISearchInstallCallback.ERROR_DUPLICATE_ENGINE) {
+        })
+        .catch(errorCode => {
+          if (errorCode != Ci.nsISearchService.ERROR_DUPLICATE_ENGINE) {
             // Download error is shown by the search service
             return;
           }
@@ -1206,11 +1206,7 @@ class SearchOneOffs {
           prompt.QueryInterface(Ci.nsIWritablePropertyBag2);
           prompt.setPropertyAsBool("allowTabModal", true);
           prompt.alert(title, text);
-        },
-      };
-      Services.search.addEngine(target.getAttribute("uri"),
-                                target.getAttribute("image"), false,
-                                installCallback);
+        });
     }
 
     if (target.classList.contains("search-one-offs-context-open-in-new-tab")) {

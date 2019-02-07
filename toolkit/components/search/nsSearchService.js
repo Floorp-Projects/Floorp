@@ -1438,7 +1438,7 @@ Engine.prototype = {
      * Handle an error during the load of an engine by notifying the engine's
      * error callback, if any.
      */
-    function onError(errorCode = Ci.nsISearchInstallCallback.ERROR_UNKNOWN_FAILURE) {
+    function onError(errorCode = Ci.nsISearchService.ERROR_UNKNOWN_FAILURE) {
       // Notify the callback of the failure
       if (aEngine._installCallback) {
         aEngine._installCallback(errorCode);
@@ -1519,9 +1519,9 @@ Engine.prototype = {
         if (aEngine._confirm) {
           promptError({ error: "error_duplicate_engine_msg",
                         title: "error_invalid_engine_title",
-                      }, Ci.nsISearchInstallCallback.ERROR_DUPLICATE_ENGINE);
+                      }, Ci.nsISearchService.ERROR_DUPLICATE_ENGINE);
         } else {
-          onError(Ci.nsISearchInstallCallback.ERROR_DUPLICATE_ENGINE);
+          onError(Ci.nsISearchService.ERROR_DUPLICATE_ENGINE);
         }
         LOG("_onLoad: duplicate engine found, bailing");
         return;

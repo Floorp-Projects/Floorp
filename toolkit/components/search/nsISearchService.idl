@@ -198,47 +198,12 @@ interface nsISearchParseSubmissionResult : nsISupports
   readonly attribute long termsLength;
 };
 
-[scriptable, uuid(9fc39136-f08b-46d3-b232-96f4b7b0e235)]
-interface nsISearchInstallCallback : nsISupports
+[scriptable, uuid(0301834b-2630-440e-8b98-db8dc55f34b9)]
+interface nsISearchService : nsISupports
 {
   const unsigned long ERROR_UNKNOWN_FAILURE = 0x1;
   const unsigned long ERROR_DUPLICATE_ENGINE = 0x2;
 
-  /**
-   * Called to indicate that the engine addition process succeeded.
-   *
-   * @param engine
-   *        The nsISearchEngine object that was added (will not be null).
-   */
-  void onSuccess(in nsISearchEngine engine);
-
-  /**
-   * Called to indicate that the engine addition process failed.
-   *
-   * @param errorCode
-   *        One of the ERROR_* values described above indicating the cause of
-   *        the failure.
-   */
-  void onError(in unsigned long errorCode);
-};
-
-/**
- * Callback for asynchronous initialization of nsIBrowserSearchService
- */
-[scriptable, function, uuid(02256156-16e4-47f1-9979-76ff98ceb590)]
-interface nsIBrowserSearchInitObserver : nsISupports
-{
-  /**
-   * Called once initialization of the browser search service is complete.
-   *
-   * @param aStatus The status of that service.
-   */
-  void onInitComplete(in nsresult aStatus);
-};
-
-[scriptable, uuid(0301834b-2630-440e-8b98-db8dc55f34b9)]
-interface nsISearchService : nsISupports
-{
   /**
    * Start asynchronous initialization.
    *
