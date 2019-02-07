@@ -201,7 +201,6 @@ CompartmentPrivate::CompartmentPrivate(JS::Compartment* c,
       wasShutdown(false),
       mWrappedJSMap(JSObject2WrappedJSMap::newMap(XPC_JS_MAP_LENGTH)) {
   MOZ_COUNT_CTOR(xpc::CompartmentPrivate);
-  mozilla::PodArrayZero(wrapperDenialWarnings);
 }
 
 CompartmentPrivate::~CompartmentPrivate() {
@@ -218,7 +217,9 @@ void CompartmentPrivate::SystemIsBeingShutDown() {
   }
 }
 
-RealmPrivate::RealmPrivate(JS::Realm* realm) : scriptability(realm) {}
+RealmPrivate::RealmPrivate(JS::Realm* realm) : scriptability(realm) {
+  mozilla::PodArrayZero(wrapperDenialWarnings);
+}
 
 /* static */ void RealmPrivate::Init(HandleObject aGlobal,
                                      const SiteIdentifier& aSite) {
