@@ -187,7 +187,7 @@ bool OpaqueXrayTraits::resolveOwnProperty(
 
 bool ReportWrapperDenial(JSContext* cx, HandleId id, WrapperDenialType type,
                          const char* reason) {
-  CompartmentPrivate* priv = CompartmentPrivate::Get(CurrentGlobalOrNull(cx));
+  RealmPrivate* priv = RealmPrivate::Get(CurrentGlobalOrNull(cx));
   bool alreadyWarnedOnce = priv->wrapperDenialWarnings[type];
   priv->wrapperDenialWarnings[type] = true;
 
