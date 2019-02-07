@@ -5,7 +5,7 @@
 #       Not PSM style.
 # E302: expected 2 blank lines, found 1.
 #       Not really PSM style.
-ignore = E128,E261,E302
+ignore = E128,E261,E302,W605,W504
 
 # PSM style is to stick close to 80 chars, but 4 space indentation means we
 # sometimes need more space.
