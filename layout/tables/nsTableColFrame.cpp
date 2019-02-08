@@ -22,8 +22,9 @@ using namespace mozilla;
 
 using namespace mozilla;
 
-nsTableColFrame::nsTableColFrame(ComputedStyle* aStyle)
-    : nsSplittableFrame(aStyle, kClassID),
+nsTableColFrame::nsTableColFrame(ComputedStyle* aStyle,
+                                 nsPresContext* aPresContext)
+    : nsSplittableFrame(aStyle, aPresContext, kClassID),
       mMinCoord(0),
       mPrefCoord(0),
       mSpanMinCoord(0),
@@ -155,7 +156,7 @@ void nsTableColFrame::Dump(int32_t aIndent) {
 
 nsTableColFrame* NS_NewTableColFrame(nsIPresShell* aPresShell,
                                      ComputedStyle* aStyle) {
-  return new (aPresShell) nsTableColFrame(aStyle);
+  return new (aPresShell) nsTableColFrame(aStyle, aPresShell->GetPresContext());
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsTableColFrame)

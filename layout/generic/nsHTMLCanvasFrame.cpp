@@ -227,7 +227,8 @@ class nsDisplayCanvas final : public nsDisplayItem {
 
 nsIFrame* NS_NewHTMLCanvasFrame(nsIPresShell* aPresShell,
                                 ComputedStyle* aStyle) {
-  return new (aPresShell) nsHTMLCanvasFrame(aStyle);
+  return new (aPresShell)
+      nsHTMLCanvasFrame(aStyle, aPresShell->GetPresContext());
 }
 
 NS_QUERYFRAME_HEAD(nsHTMLCanvasFrame)

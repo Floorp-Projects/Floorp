@@ -326,8 +326,7 @@ add_task(async function test_doorhanger_homepage_button() {
   // Click Restore Settings.
   let popupHidden = promisePopupHidden(panel);
   let prefPromise = promisePrefChangeObserved(HOMEPAGE_URL_PREF);
-  document.getAnonymousElementByAttribute(
-    popupnotification, "anonid", "secondarybutton").click();
+  popupnotification.secondaryButton.click();
   await prefPromise;
   await popupHidden;
 
@@ -339,7 +338,7 @@ add_task(async function test_doorhanger_homepage_button() {
   // Click Restore Settings again.
   popupHidden = promisePopupHidden(panel);
   prefPromise = promisePrefChangeObserved(HOMEPAGE_URL_PREF);
-  document.getAnonymousElementByAttribute(popupnotification, "anonid", "secondarybutton").click();
+  popupnotification.secondaryButton.click();
   await popupHidden;
   await prefPromise;
 
@@ -399,7 +398,7 @@ add_task(async function test_doorhanger_new_window() {
   let popupHidden = promisePopupHidden(panel);
   let prefPromise = promisePrefChangeObserved(HOMEPAGE_URL_PREF);
   let popupnotification = doc.getElementById("extension-homepage-notification");
-  doc.getAnonymousElementByAttribute(popupnotification, "anonid", "secondarybutton").click();
+  popupnotification.secondaryButton.click();
   await prefPromise;
   await popupHidden;
 
@@ -412,7 +411,7 @@ add_task(async function test_doorhanger_new_window() {
      "The extension name is in the popup");
 
   // Click Keep Changes.
-  doc.getAnonymousElementByAttribute(popupnotification, "anonid", "button").click();
+  popupnotification.button.click();
   await TestUtils.waitForCondition(() => isConfirmed(ext1Id));
 
   ok(getHomePageURL().endsWith("ext1.html"), "The homepage is still the set");

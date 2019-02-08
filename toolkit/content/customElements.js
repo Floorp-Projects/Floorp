@@ -384,6 +384,7 @@ if (!isDummyDocument) {
   for (let script of [
     "chrome://global/content/elements/general.js",
     "chrome://global/content/elements/notificationbox.js",
+    "chrome://global/content/elements/popupnotification.js",
     "chrome://global/content/elements/radio.js",
     "chrome://global/content/elements/richlistbox.js",
     "chrome://global/content/elements/autocomplete-richlistitem.js",

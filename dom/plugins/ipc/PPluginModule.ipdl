@@ -124,7 +124,7 @@ parent:
   // when interposing system calls.
   async PluginShowWindow(uint32_t aWindowId, bool aModal,
                          int32_t aX, int32_t aY,
-                         size_t aWidth, size_t aHeight);
+                         double aWidth, double aHeight);
   async PluginHideWindow(uint32_t aWindowId);
 
   // OS X Specific calls to allow the plugin to manage the cursor.

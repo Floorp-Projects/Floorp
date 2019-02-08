@@ -2491,7 +2491,8 @@ NS_IMPL_FRAMEARENA_HELPERS(nsGridContainerFrame)
 
 nsContainerFrame* NS_NewGridContainerFrame(nsIPresShell* aPresShell,
                                            ComputedStyle* aStyle) {
-  return new (aPresShell) nsGridContainerFrame(aStyle);
+  return new (aPresShell)
+      nsGridContainerFrame(aStyle, aPresShell->GetPresContext());
 }
 
 //----------------------------------------------------------------------

@@ -32,8 +32,8 @@ class nsSVGFilterFrame final : public nsSVGContainerFrame {
                                         ComputedStyle* aStyle);
 
  protected:
-  explicit nsSVGFilterFrame(ComputedStyle* aStyle)
-      : nsSVGContainerFrame(aStyle, kClassID),
+  explicit nsSVGFilterFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
+      : nsSVGContainerFrame(aStyle, aPresContext, kClassID),
         mLoopFlag(false),
         mNoHRefURI(false) {
     AddStateBits(NS_FRAME_IS_NONDISPLAY);

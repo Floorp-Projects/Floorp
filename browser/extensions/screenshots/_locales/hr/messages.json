@@ -17,6 +17,9 @@
   "saveScreenshotSelectedArea": {
     "message": "Spremi"
   },
+  "uploadScreenshotSelectedArea": {
+    "message": "Učitaj"
+  },
   "saveScreenshotVisibleArea": {
     "message": "Spremi vidljivo"
   },
@@ -29,6 +32,30 @@
   "downloadScreenshot": {
     "message": "Preuzmi"
   },
+  "downloadScreenshotTitle": {
+    "message": "Preuzmite snimku zaslona"
+  },
+  "downloadOnlyNotice": {
+    "message": "Trenutno ste u načinu za preuzimanje."
+  },
+  "downloadOnlyDetails": {
+    "message": "Firefox Screenshots se automatski stavlja u način za preuzimanje u ovim situacijama:"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "U prozoru privatnog pretraživanja."
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "Kolačići trećih strana su onemogućeni."
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "“Nikad ne pamti povijest” je omogućeno."
+  },
+  "downloadOnlyDetailsESR": {
+    "message": "Koristite Firefox ESR."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "Prijenosi su onemogućeni."
+  },
   "notificationLinkCopiedTitle": {
     "message": "Poveznica je kopirana"
   },
@@ -36,6 +63,31 @@
     "message": "Poveznica do vaše snimke je kopirana u međuspremnik. Pristinite $META_KEY$-V da ju zalijepite.",
     "placeholders": {
       "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "Kopiraj"
+  },
+  "copyScreenshotTitle": {
+    "message": "Kopiraj snimku zaslona u međuspremnik"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "Snimka kopirana"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "Vaša snimka je kopirana u međuspremnik. Pritisnite $META_KEY$-V da ju zalijepite.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "imageCropPopupWarning": {
+    "message": "Spremljena slika biti će izrezana na visinu od $PIXELS$px.",
+    "placeholders": {
+      "pixels": {
         "content": "$1"
       }
     }
@@ -79,8 +131,8 @@
   "genericErrorDetails": {
     "message": "Nismo sigurno što se upravo dogodilo. Možete li pokušati ponovno ili snimiti drukčiju stranicu?"
   },
-  "tourBodyIntro": {
-    "message": "Snimite, spremite i dijelite snimke bez da napuštate Firefox."
+  "tourBodyIntroServerless": {
+    "message": "Snimite, kopirajte i preuzmite snimke bez da napuštate Firefox."
   },
   "tourHeaderPageAction": {
     "message": "Novi način za spremanje"
@@ -99,12 +151,6 @@
   },
   "tourBodyFullPage": {
     "message": "Spremite vaše odrezane snimke na Web kako biste ih jednostavnije dijelili, ili ih jednostavno skinite na vaše računalo. Također možete kliknuti gumb Moje snimke kako biste pronašli sve vaše dosadašnje snimke."
-  },
-  "tourHeaderDownloadUpload": {
-    "message": "Snimajte prozore ili cijele stranice"
-  },
-  "tourBodyDownloadUpload": {
-    "message": "Odaberite gumbove na gornjem desnom kutu kako biste snimili vidljivo područje u prozoru ili cijelu stranicu."
   },
   "tourSkip": {
     "message": "PRESKOČI"

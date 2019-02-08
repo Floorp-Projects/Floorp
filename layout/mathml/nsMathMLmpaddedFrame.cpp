@@ -30,7 +30,8 @@ using namespace mozilla;
 
 nsIFrame* NS_NewMathMLmpaddedFrame(nsIPresShell* aPresShell,
                                    ComputedStyle* aStyle) {
-  return new (aPresShell) nsMathMLmpaddedFrame(aStyle);
+  return new (aPresShell)
+      nsMathMLmpaddedFrame(aStyle, aPresShell->GetPresContext());
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsMathMLmpaddedFrame)

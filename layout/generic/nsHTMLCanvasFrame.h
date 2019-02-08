@@ -39,8 +39,9 @@ class nsHTMLCanvasFrame final : public nsContainerFrame {
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsHTMLCanvasFrame)
 
-  explicit nsHTMLCanvasFrame(ComputedStyle* aStyle)
-      : nsContainerFrame(aStyle, kClassID), mBorderPadding(GetWritingMode()) {}
+  explicit nsHTMLCanvasFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
+      : nsContainerFrame(aStyle, aPresContext, kClassID),
+        mBorderPadding(GetWritingMode()) {}
 
   virtual void Init(nsIContent* aContent, nsContainerFrame* aParent,
                     nsIFrame* aPrevInFlow) override;

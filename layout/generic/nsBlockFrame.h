@@ -410,8 +410,9 @@ class nsBlockFrame : public nsContainerFrame {
   void UpdateFirstLetterStyle(mozilla::ServoRestyleState& aRestyleState);
 
  protected:
-  explicit nsBlockFrame(ComputedStyle* aStyle, ClassID aID = kClassID)
-      : nsContainerFrame(aStyle, aID),
+  explicit nsBlockFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
+                        ClassID aID = kClassID)
+      : nsContainerFrame(aStyle, aPresContext, aID),
         mMinWidth(NS_INTRINSIC_WIDTH_UNKNOWN),
         mPrefWidth(NS_INTRINSIC_WIDTH_UNKNOWN) {
 #ifdef DEBUG

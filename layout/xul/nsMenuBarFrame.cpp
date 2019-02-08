@@ -38,7 +38,7 @@ using mozilla::dom::KeyboardEvent;
 // Wrapper for creating a new menu Bar container
 //
 nsIFrame* NS_NewMenuBarFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle) {
-  return new (aPresShell) nsMenuBarFrame(aStyle);
+  return new (aPresShell) nsMenuBarFrame(aStyle, aPresShell->GetPresContext());
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsMenuBarFrame)
@@ -50,8 +50,9 @@ NS_QUERYFRAME_TAIL_INHERITING(nsBoxFrame)
 //
 // nsMenuBarFrame cntr
 //
-nsMenuBarFrame::nsMenuBarFrame(ComputedStyle* aStyle)
-    : nsBoxFrame(aStyle, kClassID),
+nsMenuBarFrame::nsMenuBarFrame(ComputedStyle* aStyle,
+                               nsPresContext* aPresContext)
+    : nsBoxFrame(aStyle, aPresContext, kClassID),
       mStayActive(false),
       mIsActive(false),
       mActiveByKeyboard(false),

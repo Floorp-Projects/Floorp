@@ -187,39 +187,6 @@ add_task(async function test3c() {
 
   BrowserTestUtils.loadURI(gPrivateBrowser, gHttpTestRoot + "plugin_two_types.html");
   await BrowserTestUtils.browserLoaded(gPrivateBrowser);
-});
-
-add_task(async function test3d() {
-  let popupNotification = gPrivateWindow.PopupNotifications.getNotification("click-to-play-plugins", gPrivateBrowser);
-  ok(popupNotification, "Test 3d, Should have a click-to-play notification");
-
-  // Check the list item status
-  let promiseShown = BrowserTestUtils.waitForEvent(gPrivateWindow.PopupNotifications.panel,
-                                                   "Shown");
-  popupNotification.reshow();
-  await promiseShown;
-  for (let item of gPrivateWindow.PopupNotifications.panel.firstElementChild.children) {
-    let allowalways = item.openOrClosedShadowRoot.getElementById("allowalways");
-    ok(allowalways, "Test 3d, should have list item for allow always");
-    let allownow = item.openOrClosedShadowRoot.getElementById("allownow");
-    ok(allownow, "Test 3d, should have list item for allow now");
-    let block = item.openOrClosedShadowRoot.getElementById("block");
-    ok(block, "Test 3d, should have list item for block");
-
-    if (item.action.pluginName === "Test") {
-      is(item.value, "allowalways", "Test 3d, Plugin should bet set to 'allow always'");
-      ok(!allowalways.hidden, "Test 3d, Plugin set to 'always allow' should have a visible 'always allow' action.");
-      ok(allownow.hidden, "Test 3d, Plugin set to 'always allow' should have an invisible 'allow now' action.");
-      ok(block.hidden, "Test 3d, Plugin set to 'always allow' should have an invisible 'block' action.");
-    } else if (item.action.pluginName === "Second Test") {
-      is(item.value, "block", "Test 3d, Second plugin should bet set to 'block'");
-      ok(allowalways.hidden, "Test 3d, Plugin set to 'block' should have a visible 'always allow' action.");
-      ok(!allownow.hidden, "Test 3d, Plugin set to 'block' should have a visible 'allow now' action.");
-      ok(!block.hidden, "Test 3d, Plugin set to 'block' should have a visible 'block' action.");
-    } else {
-      ok(false, "Test 3d, Unexpected plugin '" + item.action.pluginName + "'");
-    }
-  }
 
   finishTest();
 });

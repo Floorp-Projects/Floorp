@@ -23,7 +23,8 @@ using namespace mozilla::layout;
 
 nsFirstLetterFrame* NS_NewFirstLetterFrame(nsIPresShell* aPresShell,
                                            ComputedStyle* aStyle) {
-  return new (aPresShell) nsFirstLetterFrame(aStyle);
+  return new (aPresShell)
+      nsFirstLetterFrame(aStyle, aPresShell->GetPresContext());
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsFirstLetterFrame)

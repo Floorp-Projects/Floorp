@@ -35,7 +35,7 @@ class nsMenuBarFrame final : public nsBoxFrame, public nsMenuParent {
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsMenuBarFrame)
 
-  explicit nsMenuBarFrame(ComputedStyle* aStyle);
+  explicit nsMenuBarFrame(ComputedStyle* aStyle, nsPresContext* aPresContext);
 
   // nsMenuParent interface
   virtual nsMenuFrame* GetCurrentMenuItem() override;

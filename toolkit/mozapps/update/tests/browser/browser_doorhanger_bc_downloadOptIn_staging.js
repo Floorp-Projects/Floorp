@@ -16,7 +16,7 @@ add_task(async function testBasicPrompt() {
     },
     {
       notificationId: "update-restart",
-      button: "secondarybutton",
+      button: "secondaryButton",
       cleanup() {
         AppMenuNotifications.removeNotification(/.*/);
       },

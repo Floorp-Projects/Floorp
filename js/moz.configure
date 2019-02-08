@@ -109,11 +109,10 @@ def disable_export_js(value):
 
 # Experimental BigInt support
 # =======================================================
-js_option('--enable-bigint',
-          default=False,
-          help='Enable BigInt')
+js_option('--disable-bigint',
+          help='{Enable|Disable} BigInt')
 
-@depends('--enable-bigint')
+@depends('--disable-bigint')
 def enable_bigint(value):
     if value:
         return True
@@ -123,10 +122,8 @@ set_define('ENABLE_BIGINT', enable_bigint)
 
 # JIT support
 # =======================================================
-@depends(target, '--enable-bigint')
-def ion_default(target, enable_bigint):
-    if enable_bigint:
-        return False
+@depends(target)
+def ion_default(target):
     if target.cpu in ('x86', 'x86_64', 'arm', 'aarch64', 'mips32', 'mips64'):
         return True
     return False

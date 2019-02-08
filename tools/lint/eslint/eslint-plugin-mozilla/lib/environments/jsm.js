@@ -16,5 +16,9 @@ module.exports = {
     "btoa": false,
     "debug": false,
     "dump": false,
+    // The WebAssembly global is available in most (if not all) contexts where
+    // JS can run. It's definitely available in JSMs. So even if this is not
+    // the perfect place to add it, it's not wrong, and we can move it later.
+    "WebAssembly": false,
   },
 };

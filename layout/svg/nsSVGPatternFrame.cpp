@@ -35,8 +35,9 @@ using namespace mozilla::image;
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGPatternFrame::nsSVGPatternFrame(ComputedStyle *aStyle)
-    : nsSVGPaintServerFrame(aStyle, kClassID),
+nsSVGPatternFrame::nsSVGPatternFrame(ComputedStyle *aStyle,
+                                     nsPresContext *aPresContext)
+    : nsSVGPaintServerFrame(aStyle, aPresContext, kClassID),
       mSource(nullptr),
       mLoopFlag(false),
       mNoHRefURI(false) {}
@@ -706,5 +707,6 @@ already_AddRefed<gfxPattern> nsSVGPatternFrame::GetPaintServerPattern(
 
 nsIFrame *NS_NewSVGPatternFrame(nsIPresShell *aPresShell,
                                 ComputedStyle *aStyle) {
-  return new (aPresShell) nsSVGPatternFrame(aStyle);
+  return new (aPresShell)
+      nsSVGPatternFrame(aStyle, aPresShell->GetPresContext());
 }

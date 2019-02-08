@@ -117,8 +117,9 @@ NS_QUERYFRAME_HEAD(nsTableRowFrame)
   NS_QUERYFRAME_ENTRY(nsTableRowFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
-nsTableRowFrame::nsTableRowFrame(ComputedStyle* aStyle, ClassID aID)
-    : nsContainerFrame(aStyle, aID),
+nsTableRowFrame::nsTableRowFrame(ComputedStyle* aStyle,
+                                 nsPresContext* aPresContext, ClassID aID)
+    : nsContainerFrame(aStyle, aPresContext, aID),
       mContentBSize(0),
       mStylePctBSize(0),
       mStyleFixedBSize(0),
@@ -1372,7 +1373,7 @@ void nsTableRowFrame::InvalidateFrameWithRect(const nsRect& aRect,
 
 nsTableRowFrame* NS_NewTableRowFrame(nsIPresShell* aPresShell,
                                      ComputedStyle* aStyle) {
-  return new (aPresShell) nsTableRowFrame(aStyle);
+  return new (aPresShell) nsTableRowFrame(aStyle, aPresShell->GetPresContext());
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsTableRowFrame)

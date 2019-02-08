@@ -53,8 +53,9 @@ class nsMathMLmactionFrame final : public nsMathMLSelectedFrame {
   };
 
  protected:
-  explicit nsMathMLmactionFrame(ComputedStyle* aStyle)
-      : nsMathMLSelectedFrame(aStyle, kClassID) {}
+  explicit nsMathMLmactionFrame(ComputedStyle* aStyle,
+                                nsPresContext* aPresContext)
+      : nsMathMLSelectedFrame(aStyle, aPresContext, kClassID) {}
   virtual ~nsMathMLmactionFrame();
 
  private:

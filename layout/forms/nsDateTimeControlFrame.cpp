@@ -29,7 +29,8 @@ using namespace mozilla::dom;
 
 nsIFrame* NS_NewDateTimeControlFrame(nsIPresShell* aPresShell,
                                      ComputedStyle* aStyle) {
-  return new (aPresShell) nsDateTimeControlFrame(aStyle);
+  return new (aPresShell)
+      nsDateTimeControlFrame(aStyle, aPresShell->GetPresContext());
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsDateTimeControlFrame)
@@ -38,8 +39,9 @@ NS_QUERYFRAME_HEAD(nsDateTimeControlFrame)
   NS_QUERYFRAME_ENTRY(nsDateTimeControlFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
-nsDateTimeControlFrame::nsDateTimeControlFrame(ComputedStyle* aStyle)
-    : nsContainerFrame(aStyle, kClassID) {}
+nsDateTimeControlFrame::nsDateTimeControlFrame(ComputedStyle* aStyle,
+                                               nsPresContext* aPresContext)
+    : nsContainerFrame(aStyle, aPresContext, kClassID) {}
 
 nscoord nsDateTimeControlFrame::GetMinISize(gfxContext* aRenderingContext) {
   nscoord result;

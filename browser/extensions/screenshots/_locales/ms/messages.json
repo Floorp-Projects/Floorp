@@ -17,6 +17,9 @@
   "saveScreenshotSelectedArea": {
     "message": "Simpan"
   },
+  "uploadScreenshotSelectedArea": {
+    "message": "Muat naik"
+  },
   "saveScreenshotVisibleArea": {
     "message": "Simpan yang terpapar"
   },

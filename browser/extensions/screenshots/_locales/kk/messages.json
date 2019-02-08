@@ -17,6 +17,9 @@
   "saveScreenshotSelectedArea": {
     "message": "Сақтау"
   },
+  "uploadScreenshotSelectedArea": {
+    "message": "Жүктеу"
+  },
   "saveScreenshotVisibleArea": {
     "message": "Көрінетінді сақтау"
   },
@@ -28,6 +31,9 @@
   },
   "downloadScreenshot": {
     "message": "Жүктеп алу"
+  },
+  "downloadScreenshotTitle": {
+    "message": "Скриншотты жүктеп алу"
   },
   "downloadOnlyNotice": {
     "message": "Сіз тек жүктеп алу режиміндесіз."
@@ -63,6 +69,9 @@
   },
   "copyScreenshot": {
     "message": "Көшіріп алу"
+  },
+  "copyScreenshotTitle": {
+    "message": "Скриншотты алмасу буферіне көшіріп алу"
   },
   "notificationImageCopiedTitle": {
     "message": "Скриншот көшірілді"
@@ -122,9 +131,6 @@
   "genericErrorDetails": {
     "message": "Не болғанын білмейміз. Қайталап көресіз бе, немесе басқа парақтың скриншотын түсіріп көресіз бе?"
   },
-  "tourBodyIntro": {
-    "message": "Firefox ішінен скриншоттарды түсіру, сақтау және олармен бөлісу."
-  },
   "tourHeaderPageAction": {
     "message": "Сақтаудың жаңа жолы"
   },
@@ -142,18 +148,6 @@
   },
   "tourBodyFullPage": {
     "message": "Жоғарғы оң жақта орналасқан батырмаларды терезенің көрінетін аймағын, немесе толық бетті түсіру үшін қолданыңыз."
-  },
-  "tourHeaderDownloadUpload": {
-    "message": "Өзіңізге керек түрде"
-  },
-  "tourBodyDownloadUpload": {
-    "message": "Қиылған скриншоттармен оңай бөлісу үшін оларды интернетте сақтауға, немесе сіздің компьютеріңізге жүктеп алуға болады. Сонымен қатар, сіз жасаған барлық скриншоттарды табу үшін Менің скриншоттарым батырмасына шерте аласыз."
-  },
-  "tourHeaderAccounts": {
-    "message": "Ұстап жүретін скриншоттар"
-  },
-  "tourBodyAccounts": {
-    "message": "Барлық құрылғыларыңыздаға скриншоттарға қатынау және таңдамалы скриншоттарыңызды мәңгі сақтау үшін өз Firefox тіркелгіңізге кіріңіз."
   },
   "tourSkip": {
     "message": "Аттап кету"

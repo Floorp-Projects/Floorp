@@ -22,7 +22,7 @@ using namespace mozilla;
 #define NS_MATHML_CHAR_STYLE_CONTEXT_INDEX 0
 
 nsIFrame* NS_NewMathMLmoFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle) {
-  return new (aPresShell) nsMathMLmoFrame(aStyle);
+  return new (aPresShell) nsMathMLmoFrame(aStyle, aPresShell->GetPresContext());
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsMathMLmoFrame)

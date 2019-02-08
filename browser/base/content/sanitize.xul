@@ -73,53 +73,41 @@
 
   <groupbox>
     <label><html:h2 data-l10n-id="history-section-label"/></label>
-    <grid flex="1">
-      <columns>
-        <column data-l10n-id="sanitize-prefs-style" data-l10n-attrs="style"/>
-        <column flex="1"/>
-      </columns>
-      <rows>
-        <row>
-          <checkbox data-l10n-id="item-history-and-downloads"
-                    preference="privacy.cpd.history"
-                    onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
-          <checkbox data-l10n-id="item-cookies"
-                    preference="privacy.cpd.cookies"
-                    onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
-        </row>
-        <row>
-          <checkbox data-l10n-id="item-active-logins"
-                    preference="privacy.cpd.sessions"
-                    onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
-          <checkbox data-l10n-id="item-cache"
-                    preference="privacy.cpd.cache"
-                    onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
-        </row>
-        <row>
-          <checkbox data-l10n-id="item-form-search-history"
-                    preference="privacy.cpd.formdata"
-                    onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
-        </row>
-      </rows>
-    </grid>
+    <hbox>
+      <vbox data-l10n-id="sanitize-prefs-style" data-l10n-attrs="style">
+        <checkbox data-l10n-id="item-history-and-downloads"
+                  preference="privacy.cpd.history"
+                  onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
+        <checkbox data-l10n-id="item-active-logins"
+                  preference="privacy.cpd.sessions"
+                  onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
+        <checkbox data-l10n-id="item-form-search-history"
+                  preference="privacy.cpd.formdata"
+                  onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
+      </vbox>
+      <vbox flex="1">
+        <checkbox data-l10n-id="item-cookies"
+                  preference="privacy.cpd.cookies"
+                  onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
+        <checkbox data-l10n-id="item-cache"
+                  preference="privacy.cpd.cache"
+                  onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
+      </vbox>
+    </hbox>
   </groupbox>
   <groupbox>
     <label><html:h2 data-l10n-id="data-section-label"/></label>
-    <grid flex="1">
-      <columns>
-        <column data-l10n-id="sanitize-prefs-style" data-l10n-attrs="style"/>
-        <column flex="1"/>
-      </columns>
-      <rows>
-        <row>
-          <checkbox data-l10n-id="item-site-preferences"
-                    preference="privacy.cpd.siteSettings"
-                    onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
-          <checkbox data-l10n-id="item-offline-apps"
-                    preference="privacy.cpd.offlineApps"
-                    onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
-        </row>
-      </rows>
-    </grid>
+    <hbox>
+      <box data-l10n-id="sanitize-prefs-style" data-l10n-attrs="style">
+        <checkbox data-l10n-id="item-site-preferences"
+                  preference="privacy.cpd.siteSettings"
+                  onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
+      </box>
+      <box flex="1">
+        <checkbox data-l10n-id="item-offline-apps"
+                  preference="privacy.cpd.offlineApps"
+                  onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
+      </box>
+    </hbox>
   </groupbox>
 </dialog>

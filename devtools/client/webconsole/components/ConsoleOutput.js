@@ -3,12 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+const { Component, createElement } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/redux/visibility-handler-connect");
 const {initialize} = require("devtools/client/webconsole/actions/ui");
-const {sortBy} = require("devtools/client/shared/vendor/lodash");
 
 const {
   getAllMessagesById,
@@ -19,7 +17,11 @@ const {
   getPausedExecutionPoint,
   getAllRepeatById,
 } = require("devtools/client/webconsole/selectors/messages");
-const MessageContainer = createFactory(require("devtools/client/webconsole/components/MessageContainer").MessageContainer);
+
+loader.lazyRequireGetter(this, "PropTypes", "devtools/client/shared/vendor/react-prop-types");
+loader.lazyRequireGetter(this, "sortBy", "devtools/client/shared/vendor/lodash", true);
+loader.lazyRequireGetter(this, "MessageContainer", "devtools/client/webconsole/components/MessageContainer", true);
+
 const {
   MESSAGE_TYPE,
 } = require("devtools/client/webconsole/constants");
@@ -168,22 +170,23 @@ class ConsoleOutput extends Component {
     const pausedMessage = getClosestMessage(
       visibleMessages, messages, pausedExecutionPoint);
 
-    const messageNodes = visibleMessages.map((messageId) => MessageContainer({
-      dispatch,
-      key: messageId,
-      messageId,
-      serviceContainer,
-      open: messagesUi.includes(messageId),
-      tableData: messagesTableData.get(messageId),
-      timestampsVisible,
-      repeat: messagesRepeat[messageId],
-      networkMessageUpdate: networkMessagesUpdate[messageId],
-      networkMessageActiveTabId,
-      pausedExecutionPoint,
-      getMessage: () => messages.get(messageId),
-      isPaused: !!pausedMessage && pausedMessage.id == messageId,
-      maybeScrollToBottom: this.maybeScrollToBottom,
-    }));
+    const messageNodes = visibleMessages.map((messageId) =>
+      createElement(MessageContainer, {
+        dispatch,
+        key: messageId,
+        messageId,
+        serviceContainer,
+        open: messagesUi.includes(messageId),
+        tableData: messagesTableData.get(messageId),
+        timestampsVisible,
+        repeat: messagesRepeat[messageId],
+        networkMessageUpdate: networkMessagesUpdate[messageId],
+        networkMessageActiveTabId,
+        pausedExecutionPoint,
+        getMessage: () => messages.get(messageId),
+        isPaused: !!pausedMessage && pausedMessage.id == messageId,
+        maybeScrollToBottom: this.maybeScrollToBottom,
+      }));
 
     return (
       dom.div({

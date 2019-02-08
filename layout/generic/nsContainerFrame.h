@@ -508,8 +508,9 @@ class nsContainerFrame : public nsSplittableFrame {
 #endif
 
  protected:
-  nsContainerFrame(ComputedStyle* aStyle, ClassID aID)
-      : nsSplittableFrame(aStyle, aID) {}
+  nsContainerFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
+                   ClassID aID)
+      : nsSplittableFrame(aStyle, aPresContext, aID) {}
 
   ~nsContainerFrame();
 

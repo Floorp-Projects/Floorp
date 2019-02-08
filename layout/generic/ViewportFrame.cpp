@@ -27,7 +27,7 @@ typedef nsAbsoluteContainingBlock::AbsPosReflowFlags AbsPosReflowFlags;
 
 ViewportFrame* NS_NewViewportFrame(nsIPresShell* aPresShell,
                                    ComputedStyle* aStyle) {
-  return new (aPresShell) ViewportFrame(aStyle);
+  return new (aPresShell) ViewportFrame(aStyle, aPresShell->GetPresContext());
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(ViewportFrame)
@@ -267,6 +267,11 @@ nsRect ViewportFrame::AdjustReflowInputAsContainingBlock(
   if (ps->IsVisualViewportSizeSet() &&
       rect.Size() < ps->GetVisualViewportSize()) {
     rect.SizeTo(ps->GetVisualViewportSize());
+  }
+  // Expand the size to the layout viewport size if necessary.
+  const nsSize layoutViewportSize = ps->GetLayoutViewportSize();
+  if (rect.Size() < layoutViewportSize) {
+    rect.SizeTo(layoutViewportSize);
   }
   return rect;
 }

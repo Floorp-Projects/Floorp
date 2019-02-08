@@ -20,8 +20,7 @@ Services.obs.notifyObservers(null, TELEMETRY_SUBSESSION_TOPIC);
  * Get a snapshot of the scalars and check them against the provided values.
  */
 let checkScalars = (countsObject) => {
-  const scalars = TelemetryTestUtils.getParentProcessScalars(
-    Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN);
+  const scalars = TelemetryTestUtils.getProcessScalars("parent");
 
   // Check the expected values. Scalars that are never set must not be reported.
   TelemetryTestUtils.assertScalar(scalars, MAX_CONCURRENT_TABS, countsObject.maxTabs,

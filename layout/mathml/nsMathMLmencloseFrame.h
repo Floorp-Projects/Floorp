@@ -79,7 +79,9 @@ class nsMathMLmencloseFrame : public nsMathMLContainerFrame {
   }
 
  protected:
-  explicit nsMathMLmencloseFrame(ComputedStyle* aStyle, ClassID aID = kClassID);
+  explicit nsMathMLmencloseFrame(ComputedStyle* aStyle,
+                                 nsPresContext* aPresContext,
+                                 ClassID aID = kClassID);
   virtual ~nsMathMLmencloseFrame();
 
   nsresult PlaceInternal(DrawTarget* aDrawTarget, bool aPlaceOrigin,

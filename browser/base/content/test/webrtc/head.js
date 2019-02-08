@@ -327,12 +327,17 @@ function activateSecondaryAction(aAction) {
   let notification = PopupNotifications.panel.firstElementChild;
   switch (aAction) {
     case kActionNever:
-      notification.checkbox.setAttribute("checked", true); // fallthrough
+      if (!notification.checkbox.checked) {
+        notification.checkbox.click();
+      }
+      // fallthrough
     case kActionDeny:
       notification.secondaryButton.click();
       break;
     case kActionAlways:
-      notification.checkbox.setAttribute("checked", true);
+      if (!notification.checkbox.checked) {
+        notification.checkbox.click();
+      }
       notification.button.click();
       break;
   }

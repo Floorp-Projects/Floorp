@@ -8,18 +8,18 @@
 const { Component } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const { l10n } = require("devtools/client/webconsole/utils/messages");
-const { PluralForm } = require("devtools/shared/plural-form");
-const { KeyCodes } = require("devtools/client/shared/keycodes");
-
-const actions = require("devtools/client/webconsole/actions/index");
 const {
   getReverseSearchTotalResults,
   getReverseSearchResultPosition,
   getReverseSearchResult,
 } = require("devtools/client/webconsole/selectors/history");
+
+loader.lazyRequireGetter(this, "PropTypes", "devtools/client/shared/vendor/react-prop-types");
+loader.lazyRequireGetter(this, "actions", "devtools/client/webconsole/actions/index");
+loader.lazyRequireGetter(this, "l10n", "devtools/client/webconsole/utils/messages", true);
+loader.lazyRequireGetter(this, "PluralForm", "devtools/shared/plural-form", true);
+loader.lazyRequireGetter(this, "KeyCodes", "devtools/client/shared/keycodes", true);
 
 const Services = require("Services");
 const isMacOS = Services.appinfo.OS === "Darwin";

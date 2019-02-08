@@ -39,6 +39,7 @@ DIRS += [
     'find',
     'fuzzyfox',
     'jsoncpp/src/lib_json',
+    'kvstore',
     'lz4',
     'mediasniffer',
     'mozintl',

@@ -15,13 +15,15 @@ using namespace mozilla;
 
 nsIFrame* NS_NewMathMLmsqrtFrame(nsIPresShell* aPresShell,
                                  ComputedStyle* aStyle) {
-  return new (aPresShell) nsMathMLmsqrtFrame(aStyle);
+  return new (aPresShell)
+      nsMathMLmsqrtFrame(aStyle, aPresShell->GetPresContext());
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsMathMLmsqrtFrame)
 
-nsMathMLmsqrtFrame::nsMathMLmsqrtFrame(ComputedStyle* aStyle)
-    : nsMathMLmencloseFrame(aStyle, kClassID) {}
+nsMathMLmsqrtFrame::nsMathMLmsqrtFrame(ComputedStyle* aStyle,
+                                       nsPresContext* aPresContext)
+    : nsMathMLmencloseFrame(aStyle, aPresContext, kClassID) {}
 
 nsMathMLmsqrtFrame::~nsMathMLmsqrtFrame() {}
 

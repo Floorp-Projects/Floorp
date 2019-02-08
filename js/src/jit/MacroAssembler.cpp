@@ -21,6 +21,7 @@
 #include "jit/JitOptions.h"
 #include "jit/Lowering.h"
 #include "jit/MIR.h"
+#include "jit/MoveEmitter.h"
 #include "js/Conversions.h"
 #include "js/Printf.h"
 #include "vm/TraceLogging.h"
@@ -3223,6 +3224,29 @@ void MacroAssembler::callDebugWithABI(wasm::SymbolicAddress imm,
 void MacroAssembler::linkExitFrame(Register cxreg, Register scratch) {
   loadPtr(Address(cxreg, JSContext::offsetOfActivation()), scratch);
   storeStackPtr(Address(scratch, JitActivation::offsetOfPackedExitFP()));
+}
+
+// ===============================================================
+// Simple value-shuffling helpers, to hide MoveResolver verbosity
+// in common cases.
+
+void MacroAssembler::moveRegPair(Register src0, Register src1, Register dst0,
+                                 Register dst1, MoveOp::Type type) {
+  MoveResolver& moves = moveResolver();
+  if (src0 != dst0) {
+    propagateOOM(moves.addMove(MoveOperand(src0), MoveOperand(dst0), type));
+  }
+  if (src1 != dst1) {
+    propagateOOM(moves.addMove(MoveOperand(src1), MoveOperand(dst1), type));
+  }
+  propagateOOM(moves.resolve());
+  if (oom()) {
+    return;
+  }
+
+  MoveEmitter emitter(*this);
+  emitter.emit(moves);
+  emitter.finish();
 }
 
 // ===============================================================

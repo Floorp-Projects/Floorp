@@ -94,12 +94,7 @@ async function testMainProcess() {
     Services.obs.addObserver(observe, "devtools-thread-instantiated");
   });
 
-  const targetFront = await client.mainRoot.getMainProcess();
-  const target = await TargetFactory.forRemoteTab({
-    client,
-    activeTab: targetFront,
-    chrome: true,
-  });
+  const target = await client.mainRoot.getMainProcess();
   await target.attach();
 
   const [, threadClient] = await target.attachThread();

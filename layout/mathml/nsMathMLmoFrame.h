@@ -69,8 +69,8 @@ class nsMathMLmoFrame final : public nsMathMLTokenFrame {
   }
 
  protected:
-  explicit nsMathMLmoFrame(ComputedStyle* aStyle)
-      : nsMathMLTokenFrame(aStyle, kClassID),
+  explicit nsMathMLmoFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
+      : nsMathMLTokenFrame(aStyle, aPresContext, kClassID),
         mFlags(0),
         mMinSize(0),
         mMaxSize(0) {}

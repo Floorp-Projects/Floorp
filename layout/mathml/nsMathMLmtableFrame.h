@@ -42,8 +42,9 @@ class nsMathMLmtableWrapperFrame final : public nsTableWrapperFrame,
   }
 
  protected:
-  explicit nsMathMLmtableWrapperFrame(ComputedStyle* aStyle)
-      : nsTableWrapperFrame(aStyle, kClassID) {}
+  explicit nsMathMLmtableWrapperFrame(ComputedStyle* aStyle,
+                                      nsPresContext* aPresContext)
+      : nsTableWrapperFrame(aStyle, aPresContext, kClassID) {}
 
   virtual ~nsMathMLmtableWrapperFrame();
 
@@ -132,8 +133,9 @@ class nsMathMLmtableFrame final : public nsTableFrame {
   bool GetUseCSSSpacing() { return mUseCSSSpacing; }
 
  protected:
-  explicit nsMathMLmtableFrame(ComputedStyle* aStyle)
-      : nsTableFrame(aStyle, kClassID),
+  explicit nsMathMLmtableFrame(ComputedStyle* aStyle,
+                               nsPresContext* aPresContext)
+      : nsTableFrame(aStyle, aPresContext, kClassID),
         mFrameSpacingX(0),
         mFrameSpacingY(0),
         mUseCSSSpacing(false) {}
@@ -193,8 +195,8 @@ class nsMathMLmtrFrame final : public nsTableRowFrame {
   }
 
  protected:
-  explicit nsMathMLmtrFrame(ComputedStyle* aStyle)
-      : nsTableRowFrame(aStyle, kClassID) {}
+  explicit nsMathMLmtrFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
+      : nsTableRowFrame(aStyle, aPresContext, kClassID) {}
 
   virtual ~nsMathMLmtrFrame();
 };  // class nsMathMLmtrFrame
@@ -275,7 +277,8 @@ class nsMathMLmtdInnerFrame final : public nsBlockFrame, public nsMathMLFrame {
   }
 
  protected:
-  explicit nsMathMLmtdInnerFrame(ComputedStyle* aStyle);
+  explicit nsMathMLmtdInnerFrame(ComputedStyle* aStyle,
+                                 nsPresContext* aPresContext);
   virtual ~nsMathMLmtdInnerFrame() {}
 
   mozilla::UniquePtr<nsStyleText> mUniqueStyleText;

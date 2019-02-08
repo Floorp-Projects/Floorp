@@ -14,7 +14,8 @@
 using namespace mozilla;
 
 nsIFrame* NS_NewXULLabelFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle) {
-  nsXULLabelFrame* it = new (aPresShell) nsXULLabelFrame(aStyle);
+  nsXULLabelFrame* it =
+      new (aPresShell) nsXULLabelFrame(aStyle, aPresShell->GetPresContext());
   it->AddStateBits(NS_BLOCK_FORMATTING_CONTEXT_STATE_BITS);
   return it;
 }

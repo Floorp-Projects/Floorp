@@ -68,11 +68,21 @@ add_task(async function testLazyTabs() {
     ok(tabs[i].multiselected, `Tab ${i} should be multiselected`);
   }
 
+  let tabsMoved = new Promise(resolve => {
+    // Tab tabs in the new window will be about:blank before swapping the docshells.
+    // The "EndSwapDocShells" event is not dispatched for lazy tabs, so listen for
+    // "TabClose" instead and await a tick.
+    let i = 0;
+    window.addEventListener("TabClose", async function listener() {
+      await Promise.resolve();
+      if (++i == numTabs) {
+        window.removeEventListener("TabClose", listener);
+        resolve();
+      }
+    });
+  });
   let newWindow = gBrowser.replaceTabsWithWindow(tabs[0]);
-
-  await TestUtils.waitForCondition(() => newWindow.gBrowser, `Wait for gBrowser`);
-  await TestUtils.waitForCondition(() => newWindow.gBrowser.visibleTabs.length == numTabs,
-    `Wait for all ${numTabs} tabs to get moved to the new window`);
+  await tabsMoved;
   tabs = newWindow.gBrowser.tabs;
 
   isnot(tabs[0].linkedPanel, "", `Tab 0 should continue not being lazy`);

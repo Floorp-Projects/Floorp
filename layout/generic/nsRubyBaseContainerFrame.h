@@ -58,8 +58,9 @@ class nsRubyBaseContainerFrame final : public nsContainerFrame {
   friend nsContainerFrame* NS_NewRubyBaseContainerFrame(
       nsIPresShell* aPresShell, ComputedStyle* aStyle);
 
-  explicit nsRubyBaseContainerFrame(ComputedStyle* aStyle)
-      : nsContainerFrame(aStyle, kClassID) {}
+  explicit nsRubyBaseContainerFrame(ComputedStyle* aStyle,
+                                    nsPresContext* aPresContext)
+      : nsContainerFrame(aStyle, aPresContext, kClassID) {}
 
   struct RubyReflowInput;
   nscoord ReflowColumns(const RubyReflowInput& aReflowInput,

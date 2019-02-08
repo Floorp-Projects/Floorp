@@ -23,9 +23,9 @@ add_task(async function() {
   await createWorkerInTab(tab, WORKER_URL);
 
   const { workers } = await listWorkers(target);
-  const workerTargetFront = findWorker(workers, WORKER_URL);
+  const workerTarget = findWorker(workers, WORKER_URL);
 
-  const toolbox = await gDevTools.showToolbox(TargetFactory.forWorker(workerTargetFront),
+  const toolbox = await gDevTools.showToolbox(workerTarget,
                                             "jsdebugger",
                                             Toolbox.HostType.WINDOW);
 
@@ -49,7 +49,7 @@ add_task(async function() {
     "Correct set of tools supported by worker");
 
   terminateWorkerInTab(tab, WORKER_URL);
-  await waitForWorkerClose(workerTargetFront);
+  await waitForWorkerClose(workerTarget);
   await target.destroy();
 
   await toolbox.destroy();

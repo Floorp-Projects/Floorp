@@ -289,7 +289,7 @@ NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(BlockEndEdgeOfChildrenProperty, nscoord)
 
 nsBlockFrame* NS_NewBlockFrame(nsIPresShell* aPresShell,
                                ComputedStyle* aStyle) {
-  return new (aPresShell) nsBlockFrame(aStyle);
+  return new (aPresShell) nsBlockFrame(aStyle, aPresShell->GetPresContext());
 }
 
 nsBlockFrame* NS_NewBlockFormattingContext(nsIPresShell* aPresShell,
@@ -6798,7 +6798,7 @@ void nsBlockFrame::CreateBulletFrameForListItem() {
       ResolveBulletStyle(pseudoType, shell->StyleSet());
 
   // Create bullet frame
-  nsBulletFrame* bullet = new (shell) nsBulletFrame(kidSC);
+  nsBulletFrame* bullet = new (shell) nsBulletFrame(kidSC, pc);
   bullet->Init(mContent, this, nullptr);
 
   // If the list bullet frame should be positioned inside then add

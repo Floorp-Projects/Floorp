@@ -34,7 +34,7 @@ using namespace mozilla;
 // Creates a new Toolbar frame and returns it
 //
 nsIFrame* NS_NewLeafBoxFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle) {
-  return new (aPresShell) nsLeafBoxFrame(aStyle);
+  return new (aPresShell) nsLeafBoxFrame(aStyle, aPresShell->GetPresContext());
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsLeafBoxFrame)

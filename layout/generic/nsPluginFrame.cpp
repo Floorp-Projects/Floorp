@@ -133,8 +133,8 @@ class PluginBackgroundSink : public ReadbackSink {
   nsPluginFrame* mFrame;
 };
 
-nsPluginFrame::nsPluginFrame(ComputedStyle* aStyle)
-    : nsFrame(aStyle, kClassID),
+nsPluginFrame::nsPluginFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
+    : nsFrame(aStyle, aPresContext, kClassID),
       mInstanceOwner(nullptr),
       mOuterView(nullptr),
       mInnerView(nullptr),
@@ -1685,7 +1685,7 @@ nsIObjectFrame* nsPluginFrame::GetNextObjectFrame(nsPresContext* aPresContext,
 }
 
 nsIFrame* NS_NewObjectFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle) {
-  return new (aPresShell) nsPluginFrame(aStyle);
+  return new (aPresShell) nsPluginFrame(aStyle, aPresShell->GetPresContext());
 }
 
 bool nsPluginFrame::IsPaintedByGecko() const {

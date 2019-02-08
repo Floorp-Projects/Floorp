@@ -228,7 +228,7 @@ class ExtensionControlledPopup {
     // Setup the command handler.
     let handleCommand = async (event) => {
       panel.hidePopup();
-      if (event.originalTarget.getAttribute("anonid") == "button") {
+      if (event.originalTarget == popupnotification.button) {
         // Main action is to keep changes.
         await this.setConfirmation(extensionId);
       } else {
@@ -271,7 +271,7 @@ class ExtensionControlledPopup {
     let anchor = doc.getAnonymousElementByAttribute(
       anchorButton, "class", "toolbarbutton-icon");
     panel.hidden = false;
-    popupnotification.hidden = false;
+    popupnotification.show();
     panel.openPopup(anchor);
   }
 

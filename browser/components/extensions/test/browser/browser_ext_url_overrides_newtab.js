@@ -17,15 +17,11 @@ function getNewTabDoorhanger() {
 }
 
 function clickKeepChanges(notification) {
-  let button = document.getAnonymousElementByAttribute(
-    notification, "anonid", "button");
-  button.click();
+  notification.button.click();
 }
 
 function clickRestoreSettings(notification) {
-  let button = document.getAnonymousElementByAttribute(
-    notification, "anonid", "secondarybutton");
-  button.click();
+  notification.secondaryButton.click();
 }
 
 function waitForNewTab() {
@@ -217,7 +213,7 @@ add_task(async function test_new_tab_keep_settings() {
      "The New Tab notification is not set for this extension");
   is(panel.anchorNode.closest("toolbarbutton").id, "PanelUI-menu-button",
      "The doorhanger is anchored to the menu icon");
-  is(panel.querySelector("description").textContent,
+  is(panel.querySelector("#extension-new-tab-notification-description").textContent,
      "An extension,  New Tab Add-on, changed the page you see when you open a new tab.Learn more",
      "The description includes the add-on name");
 

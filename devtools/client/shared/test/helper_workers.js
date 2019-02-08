@@ -182,7 +182,7 @@ async function initWorkerDebugger(TAB_URL, WORKER_URL) {
   const { workers } = await listWorkers(target);
   const workerTargetFront = findWorker(workers, WORKER_URL);
 
-  const toolbox = await gDevTools.showToolbox(TargetFactory.forWorker(workerTargetFront),
+  const toolbox = await gDevTools.showToolbox(workerTargetFront,
                                             "jsdebugger",
                                             Toolbox.HostType.WINDOW);
 

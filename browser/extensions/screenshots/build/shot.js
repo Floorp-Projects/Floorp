@@ -332,6 +332,14 @@ class AbstractShot {
     this._origin = val || undefined;
   }
 
+  get isOwner() {
+    return this._isOwner;
+  }
+
+  set isOwner(val) {
+    this._isOwner = val || undefined;
+  }
+
   get filename() {
     let filenameTitle = this.title;
     const date = new Date(this.createdDate);

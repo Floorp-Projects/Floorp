@@ -573,14 +573,17 @@ class nsIFrame : public nsQueryFrame {
 
   NS_DECL_QUERYFRAME_TARGET(nsIFrame)
 
-  explicit nsIFrame(ClassID aID)
+  explicit nsIFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
+                    ClassID aID)
       : mRect(),
         mContent(nullptr),
-        mComputedStyle(nullptr),
+        mComputedStyle(aStyle),
+        mPresContext(aPresContext),
         mParent(nullptr),
         mNextSibling(nullptr),
         mPrevSibling(nullptr),
         mState(NS_FRAME_FIRST_REFLOW | NS_FRAME_IS_DIRTY),
+        mWritingMode(aStyle),
         mClass(aID),
         mMayHaveRoundedCorners(false),
         mHasImageRequest(false),
@@ -598,10 +601,12 @@ class nsIFrame : public nsQueryFrame {
         mMayHaveOpacityAnimation(false),
         mAllDescendantsAreInvisible(false),
         mInScrollAnchorChain(false) {
+    MOZ_ASSERT(mComputedStyle);
+    MOZ_ASSERT(mPresContext);
     mozilla::PodZero(&mOverflow);
   }
 
-  nsPresContext* PresContext() const { return Style()->PresContextForFrame(); }
+  nsPresContext* PresContext() const { return mPresContext; }
 
   nsIPresShell* PresShell() const { return PresContext()->PresShell(); }
 
@@ -777,8 +782,6 @@ class nsIFrame : public nsQueryFrame {
    */
   void SetComputedStyleWithoutNotification(ComputedStyle* aStyle) {
     if (aStyle != mComputedStyle) {
-      MOZ_DIAGNOSTIC_ASSERT(PresShell() ==
-                            aStyle->PresContextForFrame()->PresShell());
       mComputedStyle = aStyle;
     }
   }
@@ -4162,6 +4165,7 @@ class nsIFrame : public nsQueryFrame {
   RefPtr<ComputedStyle> mComputedStyle;
 
  private:
+  nsPresContext* const mPresContext;
   nsContainerFrame* mParent;
   nsIFrame* mNextSibling;  // doubly-linked list of frames
   nsIFrame* mPrevSibling;  // Do not touch outside SetNextSibling!

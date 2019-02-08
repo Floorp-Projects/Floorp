@@ -22,8 +22,9 @@ class nsMathMLsemanticsFrame final : public nsMathMLSelectedFrame {
                                               ComputedStyle* aStyle);
 
  protected:
-  explicit nsMathMLsemanticsFrame(ComputedStyle* aStyle)
-      : nsMathMLSelectedFrame(aStyle, kClassID) {}
+  explicit nsMathMLsemanticsFrame(ComputedStyle* aStyle,
+                                  nsPresContext* aPresContext)
+      : nsMathMLSelectedFrame(aStyle, aPresContext, kClassID) {}
   virtual ~nsMathMLsemanticsFrame();
 
   nsIFrame* GetSelectedFrame() override;

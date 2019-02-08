@@ -36,7 +36,7 @@
 using namespace mozilla;
 
 nsIFrame* NS_NewDeckFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle) {
-  return new (aPresShell) nsDeckFrame(aStyle);
+  return new (aPresShell) nsDeckFrame(aStyle, aPresShell->GetPresContext());
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsDeckFrame)
@@ -45,8 +45,8 @@ NS_QUERYFRAME_HEAD(nsDeckFrame)
   NS_QUERYFRAME_ENTRY(nsDeckFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsBoxFrame)
 
-nsDeckFrame::nsDeckFrame(ComputedStyle* aStyle)
-    : nsBoxFrame(aStyle, kClassID), mIndex(0) {
+nsDeckFrame::nsDeckFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
+    : nsBoxFrame(aStyle, aPresContext, kClassID), mIndex(0) {
   nsCOMPtr<nsBoxLayout> layout;
   NS_NewStackLayout(layout);
   SetXULLayoutManager(layout);

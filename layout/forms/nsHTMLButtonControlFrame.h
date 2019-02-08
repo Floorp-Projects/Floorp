@@ -18,8 +18,9 @@ class nsPresContext;
 class nsHTMLButtonControlFrame : public nsContainerFrame,
                                  public nsIFormControlFrame {
  public:
-  explicit nsHTMLButtonControlFrame(ComputedStyle* aStyle)
-      : nsHTMLButtonControlFrame(aStyle, kClassID) {}
+  explicit nsHTMLButtonControlFrame(ComputedStyle* aStyle,
+                                    nsPresContext* aPresContext)
+      : nsHTMLButtonControlFrame(aStyle, aPresContext, kClassID) {}
 
   ~nsHTMLButtonControlFrame();
 
@@ -97,7 +98,8 @@ class nsHTMLButtonControlFrame : public nsContainerFrame,
   void AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult) override;
 
  protected:
-  nsHTMLButtonControlFrame(ComputedStyle* aStyle, nsIFrame::ClassID aID);
+  nsHTMLButtonControlFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
+                           nsIFrame::ClassID aID);
 
   virtual bool IsInput() { return false; }
 

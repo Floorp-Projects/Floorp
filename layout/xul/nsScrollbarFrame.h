@@ -23,8 +23,8 @@ nsIFrame* NS_NewScrollbarFrame(nsIPresShell* aPresShell,
 class nsScrollbarFrame final : public nsBoxFrame,
                                public nsIAnonymousContentCreator {
  public:
-  explicit nsScrollbarFrame(ComputedStyle* aStyle)
-      : nsBoxFrame(aStyle, kClassID),
+  explicit nsScrollbarFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
+      : nsBoxFrame(aStyle, aPresContext, kClassID),
         mIncrement(0),
         mSmoothScroll(false),
         mScrollbarMediator(nullptr),
