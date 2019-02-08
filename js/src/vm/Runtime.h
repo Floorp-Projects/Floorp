@@ -972,6 +972,18 @@ struct JSRuntime : public js::MallocProvider<JSRuntime> {
   js::MainThreadData<JS::ScriptPrivateReferenceHook> scriptPrivateAddRefHook;
   js::MainThreadData<JS::ScriptPrivateReferenceHook> scriptPrivateReleaseHook;
 
+  void addRefScriptPrivate(const JS::Value& value) {
+    if (!value.isUndefined() && scriptPrivateAddRefHook) {
+      scriptPrivateAddRefHook(value);
+    }
+  }
+
+  void releaseScriptPrivate(const JS::Value& value) {
+    if (!value.isUndefined() && scriptPrivateReleaseHook) {
+      scriptPrivateReleaseHook(value);
+    }
+  }
+
  public:
 #if defined(JS_BUILD_BINAST)
   js::BinaryASTSupport& binast() { return binast_; }
