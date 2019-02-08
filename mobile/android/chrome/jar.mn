@@ -53,7 +53,6 @@ chrome.jar:
 
 # L10n resource overrides.
 % override chrome://global/locale/aboutReader.properties chrome://browser/locale/overrides/aboutReader.properties
-% override chrome://global/locale/aboutRights.dtd chrome://browser/locale/overrides/aboutRights.dtd
 % override chrome://global/locale/charsetMenu.properties chrome://browser/locale/overrides/charsetMenu.properties
 % override chrome://global/locale/commonDialogs.properties chrome://browser/locale/overrides/commonDialogs.properties
 % override chrome://global/locale/intl.properties chrome://browser/locale/overrides/intl.properties
