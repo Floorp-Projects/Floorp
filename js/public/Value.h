@@ -1313,9 +1313,7 @@ class HeapBase<JS::Value, Wrapper>
  * the pointer. If the Value is not a GC type, calls F::defaultValue.
  */
 template <typename F, typename... Args>
-auto DispatchTyped(F f, const JS::Value& val, Args&&... args)
-    -> decltype(f(static_cast<JSObject*>(nullptr),
-                  std::forward<Args>(args)...)) {
+auto DispatchTyped(F f, const JS::Value& val, Args&&... args) {
   if (val.isString()) {
     JSString* str = val.toString();
     MOZ_ASSERT(gc::IsCellPointerValid(str));

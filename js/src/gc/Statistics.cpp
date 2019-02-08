@@ -43,14 +43,11 @@ using mozilla::TimeStamp;
 JS_STATIC_ASSERT(JS::GCReason::NUM_TELEMETRY_REASONS >=
                  JS::GCReason::NUM_REASONS);
 
-using PhaseKindRange =
-    decltype(mozilla::MakeEnumeratedRange(PhaseKind::FIRST, PhaseKind::LIMIT));
-
-static inline PhaseKindRange AllPhaseKinds() {
+static inline auto AllPhaseKinds() {
   return mozilla::MakeEnumeratedRange(PhaseKind::FIRST, PhaseKind::LIMIT);
 }
 
-static inline PhaseKindRange MajorGCPhaseKinds() {
+static inline auto MajorGCPhaseKinds() {
   return mozilla::MakeEnumeratedRange(PhaseKind::GC_BEGIN,
                                       PhaseKind(size_t(PhaseKind::GC_END) + 1));
 }
@@ -188,8 +185,7 @@ Phase Statistics::lookupChildPhase(PhaseKind phaseKind) const {
   return phase;
 }
 
-inline decltype(mozilla::MakeEnumeratedRange(Phase::FIRST, Phase::LIMIT))
-AllPhases() {
+inline auto AllPhases() {
   return mozilla::MakeEnumeratedRange(Phase::FIRST, Phase::LIMIT);
 }
 

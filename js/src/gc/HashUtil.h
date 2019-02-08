@@ -73,9 +73,7 @@ struct DependentAddPtr {
 
 template <typename T, typename Lookup>
 inline auto MakeDependentAddPtr(const JSContext* cx, T& table,
-                                const Lookup& lookup)
-    -> DependentAddPtr<
-        typename mozilla::RemoveReference<decltype(table)>::Type> {
+                                const Lookup& lookup) {
   using Ptr =
       DependentAddPtr<typename mozilla::RemoveReference<decltype(table)>::Type>;
   return Ptr(cx, table, lookup);

@@ -87,20 +87,19 @@ class CrossCompartmentKey {
   }
 
   template <typename F>
-  auto applyToWrapped(F f) -> decltype(f(static_cast<JSObject**>(nullptr))) {
-    using ReturnType = decltype(f(static_cast<JSObject**>(nullptr)));
+  auto applyToWrapped(F f) {
     struct WrappedMatcher {
       F f_;
       explicit WrappedMatcher(F f) : f_(f) {}
-      ReturnType match(JSObject*& obj) { return f_(&obj); }
-      ReturnType match(JSString*& str) { return f_(&str); }
-      ReturnType match(DebuggerAndScript& tpl) {
+      auto match(JSObject*& obj) { return f_(&obj); }
+      auto match(JSString*& str) { return f_(&str); }
+      auto match(DebuggerAndScript& tpl) {
         return f_(&mozilla::Get<1>(tpl));
       }
-      ReturnType match(DebuggerAndLazyScript& tpl) {
+      auto match(DebuggerAndLazyScript& tpl) {
         return f_(&mozilla::Get<1>(tpl));
       }
-      ReturnType match(DebuggerAndObject& tpl) {
+      auto match(DebuggerAndObject& tpl) {
         return f_(&mozilla::Get<1>(tpl));
       }
     } matcher(f);
@@ -108,8 +107,7 @@ class CrossCompartmentKey {
   }
 
   template <typename F>
-  auto applyToDebugger(F f)
-      -> decltype(f(static_cast<NativeObject**>(nullptr))) {
+  auto applyToDebugger(F f) {
     using ReturnType = decltype(f(static_cast<NativeObject**>(nullptr)));
     struct DebuggerMatcher {
       F f_;
