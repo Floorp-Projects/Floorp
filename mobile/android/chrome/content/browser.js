@@ -986,7 +986,7 @@ var BrowserApp = {
   },
 
   _migrateUI: function() {
-    const UI_VERSION = 4;
+    const UI_VERSION = 3;
     let currentUIVersion = Services.prefs.getIntPref("browser.migration.version", 0);
     if (currentUIVersion >= UI_VERSION) {
       return;
@@ -1053,12 +1053,6 @@ var BrowserApp = {
         // only in about:config
         Services.prefs.clearUserPref(kOldSafeBrowsingPref);
       }
-    }
-
-    if (currentUIVersion < 4) {
-      // The handler app service will read this. We need to wait with migrating
-      // until the handler service has started up, so just set a pref here.
-      Services.prefs.setCharPref("browser.handlers.migrations", "30boxes");
     }
 
     // Update the migration version.

@@ -54,7 +54,6 @@ HandlerService.prototype = {
       this.__store.ensureDataReady();
 
       this._injectDefaultProtocolHandlersIfNeeded();
-      this._migrateProtocolHandlersIfNeeded();
 
       Services.obs.notifyObservers(null, "handlersvc-store-initialized");
     }
@@ -144,66 +143,6 @@ HandlerService.prototype = {
       }
 
       this.store(protoInfo);
-    }
-  },
-
-  /**
-   * Execute any migrations. Migrations are defined here for any changes or removals for
-   * existing handlers. Additions are still handled via the localized prefs infrastructure.
-   *
-   * This depends on the browser.handlers.migrations pref being set by migrateUI in
-   * nsBrowserGlue (for Fx Desktop) or similar mechanisms for other products.
-   * This is a comma-separated list of identifiers of migrations that need running.
-   * This avoids both re-running older migrations and keeping an additional
-   * pref around permanently.
-   */
-  _migrateProtocolHandlersIfNeeded() {
-    const kMigrations = {
-      "30boxes": () => {
-        const k30BoxesRegex = /^https?:\/\/(?:www\.)?30boxes.com\/external\/widget/i;
-        let webcalHandler = gExternalProtocolService.getProtocolHandlerInfo("webcal");
-        if (this.exists(webcalHandler)) {
-          this.fillHandlerInfo(webcalHandler, "");
-          let shouldStore = false;
-          // First remove 30boxes from possible handlers.
-          let handlers = webcalHandler.possibleApplicationHandlers;
-          for (let i = handlers.length - 1; i >= 0; i--) {
-            let app = handlers.queryElementAt(i, Ci.nsIHandlerApp);
-            if (app instanceof Ci.nsIWebHandlerApp &&
-                k30BoxesRegex.test(app.uriTemplate)) {
-              shouldStore = true;
-              handlers.removeElementAt(i);
-            }
-          }
-          // Then remove as a preferred handler.
-          if (webcalHandler.preferredApplicationHandler) {
-            let app = webcalHandler.preferredApplicationHandler;
-            if (app instanceof Ci.nsIWebHandlerApp &&
-                k30BoxesRegex.test(app.uriTemplate)) {
-              webcalHandler.preferredApplicationHandler = null;
-              shouldStore = true;
-            }
-          }
-          // Then store, if we changed anything.
-          if (shouldStore) {
-            this.store(webcalHandler);
-          }
-        }
-      },
-    };
-    let migrationsToRun = Services.prefs.getCharPref("browser.handlers.migrations", "");
-    migrationsToRun = migrationsToRun ? migrationsToRun.split(",") : [];
-    for (let migration of migrationsToRun) {
-      migration.trim();
-      try {
-        kMigrations[migration]();
-      } catch (ex) {
-        Cu.reportError(ex);
-      }
-    }
-
-    if (migrationsToRun.length) {
-      Services.prefs.clearUserPref("browser.handlers.migrations");
     }
   },
 
