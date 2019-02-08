@@ -373,5 +373,21 @@ class TestLint(unittest.TestCase):
                           '`help` should contain "{Enable|Disable}" because of '
                           'non-constant default')
 
+    def test_undefined_global(self):
+        with self.assertRaisesFromLine(NameError, 6) as e:
+            with self.moz_configure('''
+                option(env='FOO', help='foo')
+                @depends('FOO')
+                def foo(value):
+                    if value:
+                        return unknown
+                    return value
+            '''):
+                self.lint_test()
+
+        self.assertEquals(e.exception.message,
+                          "global name 'unknown' is not defined")
+
+
 if __name__ == '__main__':
     main()
