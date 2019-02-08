@@ -4813,12 +4813,10 @@ bool BaselineCodeGen<Handler>::emit_JSOP_ITER() {
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_MOREITER() {
   frame.syncStack(0);
-  masm.loadValue(frame.addressOfStackValue(-1), R0);
 
-  if (!emitNextIC()) {
-    return false;
-  }
+  masm.unboxObject(frame.addressOfStackValue(-1), R1.scratchReg());
 
+  masm.iteratorMore(R1.scratchReg(), R0, R2.scratchReg());
   frame.push(R0);
   return true;
 }
@@ -4850,10 +4848,17 @@ template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_ENDITER() {
   frame.popRegsAndSync(1);
 
-  if (!emitNextIC()) {
-    return false;
-  }
+  AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
+  regs.take(BaselineFrameReg);
 
+  Register obj = R0.scratchReg();
+  regs.take(obj);
+  masm.unboxObject(R0, obj);
+
+  Register temp1 = regs.takeAny();
+  Register temp2 = regs.takeAny();
+  Register temp3 = regs.takeAny();
+  masm.iteratorClose(obj, temp1, temp2, temp3);
   return true;
 }
 
