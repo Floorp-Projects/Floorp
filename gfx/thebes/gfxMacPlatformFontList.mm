@@ -1466,8 +1466,8 @@ bool gfxMacPlatformFontList::FindAndAddFamilies(const nsACString& aFamily,
 }
 
 void gfxMacPlatformFontList::LookupSystemFont(LookAndFeel::FontID aSystemFontID,
-                                              nsACString& aSystemFontName, gfxFontStyle& aFontStyle,
-                                              float aDevPixPerCSSPixel) {
+                                              nsACString& aSystemFontName,
+                                              gfxFontStyle& aFontStyle) {
   // code moved here from widget/cocoa/nsLookAndFeel.mm
   NSFont* font = nullptr;
   char* systemFontName = nullptr;
@@ -1528,8 +1528,7 @@ void gfxMacPlatformFontList::LookupSystemFont(LookAndFeel::FontID aSystemFontID,
       (traits & NSFontExpandedTrait)
           ? FontStretch::Expanded()
           : (traits & NSFontCondensedTrait) ? FontStretch::Condensed() : FontStretch::Normal();
-  // convert size from css pixels to device pixels
-  aFontStyle.size = [font pointSize] * aDevPixPerCSSPixel;
+  aFontStyle.size = [font pointSize];
   aFontStyle.systemFont = true;
 }
 
