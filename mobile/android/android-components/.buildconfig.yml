@@ -148,6 +148,10 @@ projects:
     path: components/ui/colors
     description: 'The standard set of Photon colors.'
     publish: true
+  ui-doorhanger:
+    path: components/ui/doorhanger
+    description: 'A generic floating heads-up popup that can be anchored to a view.'
+    publish: true
   ui-fonts:
     path: components/ui/fonts
     description: 'Convenience accessor for fonts used by Mozilla.'

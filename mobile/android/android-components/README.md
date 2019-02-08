@@ -136,6 +136,8 @@ _Generic low-level UI components for building apps._
 
 * 🔵 [**Colors**](components/ui/colors/README.md) - The standard set of [Photon](https://design.firefox.com/photon/) colors.
 
+* ⚪ [**Doorhanger**](components/ui/doorhanger/README.md) - A generic floating heads-up popup that can be anchored to a view.
+
 * 🔵 [**Fonts**](components/ui/fonts/README.md) - The standard set of fonts used by Mozilla Android products.
 
 * 🔵 [**Icons**](components/ui/icons/README.md) - A collection of often used browser icons.
