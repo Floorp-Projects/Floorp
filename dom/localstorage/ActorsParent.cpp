@@ -2228,7 +2228,7 @@ class PrepareDatastoreOp : public LSRequestBase, public OpenDirectoryListener {
   LoadDataOp* mLoadDataOp;
   nsDataHashtable<nsStringHashKey, nsString> mValues;
   nsTArray<LSItemInfo> mOrderedItems;
-  const LSRequestPrepareDatastoreParams mParams;
+  const LSRequestCommonParams mParams;
   Maybe<ContentParentId> mContentParentId;
   nsCString mSuffix;
   nsCString mGroup;
@@ -2241,6 +2241,7 @@ class PrepareDatastoreOp : public LSRequestBase, public OpenDirectoryListener {
   int64_t mSizeOfKeys;
   int64_t mSizeOfItems;
   NestedState mNestedState;
+  const bool mCreateIfNotExists;
   bool mDatabaseNotAvailable;
   bool mRequestedDirectoryLock;
   bool mInvalidated;
@@ -3130,9 +3131,20 @@ bool VerifyRequestParams(const LSRequestParams& aParams) {
   MOZ_ASSERT(aParams.type() != LSRequestParams::T__None);
 
   switch (aParams.type()) {
+    case LSRequestParams::TLSRequestPreloadDatastoreParams: {
+      const LSRequestCommonParams& params =
+          aParams.get_LSRequestPreloadDatastoreParams().commonParams();
+
+      if (NS_WARN_IF(!VerifyPrincipalInfo(params.principalInfo()))) {
+        ASSERT_UNLESS_FUZZING();
+        return false;
+      }
+      break;
+    }
+
     case LSRequestParams::TLSRequestPrepareDatastoreParams: {
-      const LSRequestPrepareDatastoreParams& params =
-          aParams.get_LSRequestPrepareDatastoreParams();
+      const LSRequestCommonParams& params =
+          aParams.get_LSRequestPrepareDatastoreParams().commonParams();
 
       if (NS_WARN_IF(!VerifyPrincipalInfo(params.principalInfo()))) {
         ASSERT_UNLESS_FUZZING();
@@ -3190,6 +3202,7 @@ PBackgroundLSRequestParent* AllocPBackgroundLSRequestParent(
   RefPtr<LSRequestBase> actor;
 
   switch (aParams.type()) {
+    case LSRequestParams::TLSRequestPreloadDatastoreParams:
     case LSRequestParams::TLSRequestPrepareDatastoreParams: {
       Maybe<ContentParentId> contentParentId;
 
@@ -5684,13 +5697,18 @@ PrepareDatastoreOp::PrepareDatastoreOp(
     : LSRequestBase(aMainEventTarget),
       mMainEventTarget(aMainEventTarget),
       mLoadDataOp(nullptr),
-      mParams(aParams.get_LSRequestPrepareDatastoreParams()),
+      mParams(
+          aParams.type() == LSRequestParams::TLSRequestPreloadDatastoreParams
+              ? aParams.get_LSRequestPreloadDatastoreParams().commonParams()
+              : aParams.get_LSRequestPrepareDatastoreParams().commonParams()),
       mContentParentId(aContentParentId),
       mPrivateBrowsingId(0),
       mUsage(0),
       mSizeOfKeys(0),
       mSizeOfItems(0),
       mNestedState(NestedState::BeforeNesting),
+      mCreateIfNotExists(aParams.type() ==
+                         LSRequestParams::TLSRequestPrepareDatastoreParams),
       mDatabaseNotAvailable(false),
       mRequestedDirectoryLock(false),
       mInvalidated(false)
@@ -5699,8 +5717,9 @@ PrepareDatastoreOp::PrepareDatastoreOp(
       mDEBUGUsage(0)
 #endif
 {
-  MOZ_ASSERT(aParams.type() ==
-             LSRequestParams::TLSRequestPrepareDatastoreParams);
+  MOZ_ASSERT(
+      aParams.type() == LSRequestParams::TLSRequestPreloadDatastoreParams ||
+      aParams.type() == LSRequestParams::TLSRequestPrepareDatastoreParams);
 }
 
 PrepareDatastoreOp::~PrepareDatastoreOp() {
@@ -6016,7 +6035,7 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
 
   bool hasDataForMigration = mArchivedOriginScope->HasMatches(gArchivedOrigins);
 
-  bool createIfNotExists = mParams.createIfNotExists() || hasDataForMigration;
+  bool createIfNotExists = mCreateIfNotExists || hasDataForMigration;
 
   nsCOMPtr<nsIFile> directoryEntry;
   rv = quotaManager->EnsureOriginIsInitialized(
@@ -6462,12 +6481,11 @@ void PrepareDatastoreOp::GetResponse(LSRequestResponse& aResponse) {
   MOZ_ASSERT(NS_SUCCEEDED(ResultCode()));
 
   if (mDatabaseNotAvailable) {
-    MOZ_ASSERT(!mParams.createIfNotExists());
+    MOZ_ASSERT(!mCreateIfNotExists);
 
-    LSRequestPrepareDatastoreResponse prepareDatastoreResponse;
-    prepareDatastoreResponse.datastoreId() = null_t();
+    LSRequestPreloadDatastoreResponse preloadDatastoreResponse;
 
-    aResponse = prepareDatastoreResponse;
+    aResponse = preloadDatastoreResponse;
 
     return;
   }
@@ -6501,7 +6519,7 @@ void PrepareDatastoreOp::GetResponse(LSRequestResponse& aResponse) {
 
   nsAutoPtr<PreparedDatastore> preparedDatastore(
       new PreparedDatastore(mDatastore, mContentParentId, mOrigin, datastoreId,
-                            /* aForPreload */ !mParams.createIfNotExists()));
+                            /* aForPreload */ !mCreateIfNotExists));
 
   if (!gPreparedDatastores) {
     gPreparedDatastores = new PreparedDatastoreHashtable();
@@ -6514,10 +6532,16 @@ void PrepareDatastoreOp::GetResponse(LSRequestResponse& aResponse) {
 
   preparedDatastore.forget();
 
-  LSRequestPrepareDatastoreResponse prepareDatastoreResponse;
-  prepareDatastoreResponse.datastoreId() = datastoreId;
+  if (mCreateIfNotExists) {
+    LSRequestPrepareDatastoreResponse prepareDatastoreResponse;
+    prepareDatastoreResponse.datastoreId() = datastoreId;
 
-  aResponse = prepareDatastoreResponse;
+    aResponse = prepareDatastoreResponse;
+  } else {
+    LSRequestPreloadDatastoreResponse preloadDatastoreResponse;
+
+    aResponse = preloadDatastoreResponse;
+  }
 }
 
 void PrepareDatastoreOp::Cleanup() {

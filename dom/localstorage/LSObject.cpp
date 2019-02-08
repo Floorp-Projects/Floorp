@@ -746,10 +746,11 @@ nsresult LSObject::EnsureDatabase() {
     return NS_ERROR_FAILURE;
   }
 
-  LSRequestPrepareDatastoreParams params;
-  params.principalInfo() = *mPrincipalInfo;
-  params.originKey() = mOriginKey;
-  params.createIfNotExists() = true;
+  LSRequestCommonParams commonParams;
+  commonParams.principalInfo() = *mPrincipalInfo;
+  commonParams.originKey() = mOriginKey;
+
+  LSRequestPrepareDatastoreParams params(commonParams);
 
   LSRequestResponse response;
 
@@ -764,10 +765,7 @@ nsresult LSObject::EnsureDatabase() {
   const LSRequestPrepareDatastoreResponse& prepareDatastoreResponse =
       response.get_LSRequestPrepareDatastoreResponse();
 
-  const NullableDatastoreId& datastoreId =
-      prepareDatastoreResponse.datastoreId();
-
-  MOZ_ASSERT(datastoreId.type() == NullableDatastoreId::Tuint64_t);
+  uint64_t datastoreId = prepareDatastoreResponse.datastoreId();
 
   // The datastore is now ready on the parent side (prepared by the asynchronous
   // request on the DOM File thread).
