@@ -5606,11 +5606,7 @@ void LSRequestBase::Dispatch() {
 
   mState = State::Opening;
 
-  if (mMainEventTarget) {
-    MOZ_ALWAYS_SUCCEEDS(mMainEventTarget->Dispatch(this, NS_DISPATCH_NORMAL));
-  } else {
-    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(this));
-  }
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(this));
 }
 
 nsresult LSRequestBase::NestedRun() { return NS_OK; }
@@ -5779,11 +5775,11 @@ PrepareDatastoreOp::~PrepareDatastoreOp() {
 }
 
 nsresult PrepareDatastoreOp::Open() {
-  MOZ_ASSERT(NS_IsMainThread());
+  AssertIsOnOwningThread();
   MOZ_ASSERT(mState == State::Opening);
   MOZ_ASSERT(mNestedState == NestedState::BeforeNesting);
 
-  if (NS_WARN_IF(QuotaClient::IsShuttingDownOnNonBackgroundThread()) ||
+  if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread()) ||
       !MayProceedOnNonOwningThread()) {
     return NS_ERROR_FAILURE;
   }
@@ -5795,18 +5791,8 @@ nsresult PrepareDatastoreOp::Open() {
   } else {
     MOZ_ASSERT(principalInfo.type() == PrincipalInfo::TContentPrincipalInfo);
 
-    nsresult rv;
-    nsCOMPtr<nsIPrincipal> principal =
-        PrincipalInfoToPrincipal(principalInfo, &rv);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    rv = QuotaManager::GetInfoFromPrincipal(principal, &mSuffix, &mGroup,
-                                            &mMainThreadOrigin);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    QuotaManager::GetInfoFromValidatedPrincipalInfo(
+        principalInfo, &mSuffix, &mGroup, &mMainThreadOrigin);
   }
 
   mState = State::Nesting;
@@ -6814,10 +6800,10 @@ PrepareObserverOp::PrepareObserverOp(nsIEventTarget* aMainEventTarget,
 }
 
 nsresult PrepareObserverOp::Open() {
-  MOZ_ASSERT(NS_IsMainThread());
+  AssertIsOnOwningThread();
   MOZ_ASSERT(mState == State::Opening);
 
-  if (NS_WARN_IF(QuotaClient::IsShuttingDownOnNonBackgroundThread()) ||
+  if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread()) ||
       !MayProceedOnNonOwningThread()) {
     return NS_ERROR_FAILURE;
   }
@@ -6829,18 +6815,8 @@ nsresult PrepareObserverOp::Open() {
   } else {
     MOZ_ASSERT(principalInfo.type() == PrincipalInfo::TContentPrincipalInfo);
 
-    nsresult rv;
-    nsCOMPtr<nsIPrincipal> principal =
-        PrincipalInfoToPrincipal(principalInfo, &rv);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    rv = QuotaManager::GetInfoFromPrincipal(principal, nullptr, nullptr,
-                                            &mOrigin);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    QuotaManager::GetInfoFromValidatedPrincipalInfo(principalInfo, nullptr,
+                                                    nullptr, &mOrigin);
   }
 
   mState = State::SendingReadyMessage;
@@ -6886,7 +6862,7 @@ void LSSimpleRequestBase::Dispatch() {
 
   mState = State::Opening;
 
-  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(this));
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(this));
 }
 
 void LSSimpleRequestBase::SendResults() {
@@ -6965,10 +6941,10 @@ PreloadedOp::PreloadedOp(const LSSimpleRequestParams& aParams)
 }
 
 nsresult PreloadedOp::Open() {
-  MOZ_ASSERT(NS_IsMainThread());
+  AssertIsOnOwningThread();
   MOZ_ASSERT(mState == State::Opening);
 
-  if (NS_WARN_IF(QuotaClient::IsShuttingDownOnNonBackgroundThread()) ||
+  if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread()) ||
       !MayProceedOnNonOwningThread()) {
     return NS_ERROR_FAILURE;
   }
@@ -6980,18 +6956,8 @@ nsresult PreloadedOp::Open() {
   } else {
     MOZ_ASSERT(principalInfo.type() == PrincipalInfo::TContentPrincipalInfo);
 
-    nsresult rv;
-    nsCOMPtr<nsIPrincipal> principal =
-        PrincipalInfoToPrincipal(principalInfo, &rv);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    rv = QuotaManager::GetInfoFromPrincipal(principal, nullptr, nullptr,
-                                            &mOrigin);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    QuotaManager::GetInfoFromValidatedPrincipalInfo(principalInfo, nullptr,
+                                                    nullptr, &mOrigin);
   }
 
   mState = State::SendingResults;
