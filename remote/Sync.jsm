@@ -47,7 +47,6 @@ function EventPromise(listener, type, options = {
     wantsUntrusted: false,
     mozSystemGroup: false,
   }) {
-
   if (!listener || !("addEventListener" in listener)) {
     throw new TypeError();
   }
