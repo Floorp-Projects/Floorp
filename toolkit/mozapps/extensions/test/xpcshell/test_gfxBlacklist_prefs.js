@@ -34,6 +34,7 @@ async function run_test() {
   }
 
   gfxInfo.QueryInterface(Ci.nsIGfxInfoDebug);
+  gfxInfo.fireTestProcess();
 
   // Set the vendor/device ID, etc, to match the test file.
   switch (Services.appinfo.OS) {
