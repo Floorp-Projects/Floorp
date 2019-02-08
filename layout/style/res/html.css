@@ -544,13 +544,11 @@ small {
 sub {
   vertical-align: sub;
   font-size: smaller;
-  line-height: normal;
 }
 
 sup {
   vertical-align: super;
   font-size: smaller;
-  line-height: normal;
 }
 
 nobr {

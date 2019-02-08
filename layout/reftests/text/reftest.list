@@ -360,3 +360,6 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == segment-break-transforma
 == letter-spacing-nolig-2.html letter-spacing-nolig-2.html
 
 == ethiopic-wordspace.html ethiopic-wordspace-ref.html
+
+# sub and sup elements should be influenced by their container's line-height - bug 1524897
+== sub-sup-and-line-height.html sub-sup-and-line-height-ref.html
