@@ -63,6 +63,9 @@ user_pref("extensions.update.url", "http://127.0.0.1/extensions-dummy/updateURL"
 user_pref("extensions.webservice.discoverURL", "http://127.0.0.1/extensions-dummy/discoveryURL");
 user_pref("identity.fxaccounts.auth.uri", "https://127.0.0.1/fxa-dummy/");
 user_pref("identity.fxaccounts.migrateToDevEdition", false);
+// Avoid idle-daily notifications, to avoid expensive operations that may
+// cause unexpected test timeouts.
+user_pref("idle.lastDailyNotification", -1);
 // Make tests run consistently on DevEdition (which has a lightweight theme
 // selected by default).
 user_pref("lightweightThemes.selectedThemeID", "");
