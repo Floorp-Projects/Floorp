@@ -3276,35 +3276,31 @@ ChromeUtils.defineModuleGetter(this, "PageActions",
 
 var LightWeightThemeStuff = {
   init: function sh_init() {
+    ChromeUtils.defineModuleGetter(this, "LightweightThemeManager",
+                                   "resource://gre/modules/LightweightThemeManager.jsm");
+
+    if (ParentalControls.parentalControlsEnabled &&
+        ParentalControls.isAllowed(ParentalControls.DEFAULT_THEME)) {
+      // We are using the DEFAULT_THEME restriction to differentiate between restricted profiles & guest mode - Bug 1199596
+      let {theme} = this.LightweightThemeManager.themeData;
+      if (!theme || theme.id == "default-theme@mozilla.org") {
+        this._installParentalControlsTheme();
+      }
+    }
+
     let {LightweightThemeConsumer} =
         ChromeUtils.import("resource://gre/modules/LightweightThemeConsumer.jsm");
     new LightweightThemeConsumer(document);
-
-    if (ParentalControls.parentalControlsEnabled &&
-        !this._manager.currentTheme &&
-        ParentalControls.isAllowed(ParentalControls.DEFAULT_THEME)) {
-      // We are using the DEFAULT_THEME restriction to differentiate between restricted profiles & guest mode - Bug 1199596
-      this._installParentalControlsTheme();
-    }
-  },
-
-  get _manager () {
-    let {LightweightThemeManager} =
-        ChromeUtils.import("resource://gre/modules/LightweightThemeManager.jsm");
-    delete this._manager;
-    return this._manager = LightweightThemeManager;
   },
 
   _installParentalControlsTheme: function() {
-    let mgr = this._manager;
-    let parentalControlsTheme = {
-      "headerURL": "resource://android/assets/parental_controls_theme.png",
-      "name": "Parental Controls Theme",
-      "id": "parental-controls-theme@mozilla.org"
+    this.LightweightThemeManager.fallbackThemeData = {
+      theme: {
+        "headerURL": "resource://android/assets/parental_controls_theme.png",
+        "name": "Parental Controls Theme",
+        "id": "parental-controls-theme@mozilla.org",
+      },
     };
-
-    mgr.addBuiltInTheme(parentalControlsTheme);
-    mgr.themeChanged(parentalControlsTheme);
   },
 };
 
