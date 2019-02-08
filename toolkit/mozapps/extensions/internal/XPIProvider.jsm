@@ -2266,6 +2266,10 @@ var XPIProvider = {
 
       AddonManagerPrivate.markProviderSafe(this);
 
+      this.maybeInstallBuiltinAddon(
+          "default-theme@mozilla.org", "1.0",
+          "resource://gre/modules/themes/default/");
+
       resolveProviderReady(Promise.all(this.startupPromises));
 
       if (AppConstants.MOZ_CRASHREPORTER) {

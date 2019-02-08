@@ -84,6 +84,8 @@ const PREF_XPI_WHITELIST_REQUIRED     = "xpinstall.whitelist.required";
 
 const TOOLKIT_ID                      = "toolkit@mozilla.org";
 
+const DEFAULT_THEME_ID = "default-theme@mozilla.org";
+
 /* globals BOOTSTRAP_REASONS, KEY_APP_SYSTEM_ADDONS, KEY_APP_SYSTEM_DEFAULTS, PREF_BRANCH_INSTALLED_ADDON, PREF_SYSTEM_ADDON_SET, TEMPORARY_ADDON_SUFFIX, XPI_PERMISSION, XPIStates, getURIForResourceInFile, iterDirectory */
 const XPI_INTERNAL_SYMBOLS = [
   "BOOTSTRAP_REASONS",
@@ -3677,6 +3679,17 @@ var XPIInstall = {
 
     let addon = await loadManifest(pkg, XPIInternal.BuiltInLocation);
     addon.rootURI = base;
+
+    // Themes are disabled by default at install time. However, we
+    // always want one theme to be active, falling back to the default
+    // theme when the active theme is disabled. The first time we
+    // install the default theme, though, there likely aren't any other
+    // theme add-ons installed yet, in which case we want to enable it
+    // immediately.
+    if (addon.id === DEFAULT_THEME_ID &&
+        !XPIDatabase.getAddonsByType("theme").some(theme => !theme.disabled)) {
+      addon.userDisabled = false;
+    }
     await this._activateAddon(addon);
   },
 
@@ -3714,8 +3727,13 @@ var XPIInstall = {
 
     let install = () => {
       addon.visible = true;
-      addon.active = true;
-      addon.userDisabled = false;
+      // Themes are generally not enabled by default at install time,
+      // unless enabled by the front-end code. If they are meant to be
+      // enabled, they will already have been enabled by this point.
+      if (addon.type !== "theme" || addon.location.isTemporary) {
+        addon.userDisabled = false;
+      }
+      addon.active = !addon.disabled;
 
       addon = XPIDatabase.addToDatabase(addon, addon._sourceBundle ? addon._sourceBundle.path : null);
 
@@ -3748,7 +3766,7 @@ var XPIInstall = {
     AddonManagerPrivate.callAddonListeners("onInstalled", addon.wrapper);
 
     // Notify providers that a new theme has been enabled.
-    if (addon.type === "theme")
+    if (addon.type === "theme" && !addon.userDisabled)
       AddonManagerPrivate.notifyAddonChanged(addon.id, addon.type, false);
   },
 

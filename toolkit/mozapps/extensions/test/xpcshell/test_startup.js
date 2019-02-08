@@ -7,8 +7,7 @@
 
 // Enable loading extensions from the user and system scopes
 Services.prefs.setIntPref("extensions.enabledScopes",
-                          AddonManager.SCOPE_PROFILE + AddonManager.SCOPE_USER +
-                          AddonManager.SCOPE_SYSTEM);
+                          AddonManager.SCOPE_PROFILE | AddonManager.SCOPE_USER);
 
 function getID(n) { return `addon${n}@tests.mozilla.org`; }
 function initialVersion(n) { return `${n}.0`; }

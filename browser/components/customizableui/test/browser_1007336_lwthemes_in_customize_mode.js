@@ -60,7 +60,7 @@ add_task(async function() {
   is(header.nextElementSibling.nextElementSibling.nextElementSibling.theme.id, DARK_THEME_ID,
      "The third theme should be the dark theme");
 
-  let themeChangedPromise = promiseObserverNotified("lightweight-theme-changed");
+  let themeChangedPromise = promiseObserverNotified("lightweight-theme-styling-update");
   header.nextElementSibling.nextElementSibling.doCommand(); // Select light theme
   info("Clicked on light theme");
   await themeChangedPromise;
@@ -87,7 +87,7 @@ add_task(async function() {
 
   let firstLWTheme = footer.previousElementSibling;
   let firstLWThemeId = firstLWTheme.theme.id;
-  themeChangedPromise = promiseObserverNotified("lightweight-theme-changed");
+  themeChangedPromise = promiseObserverNotified("lightweight-theme-styling-update");
   firstLWTheme.doCommand();
   info("Clicked on first theme");
   await themeChangedPromise;
@@ -118,8 +118,6 @@ add_task(async function() {
   let defaultTheme = header.nextElementSibling;
   defaultTheme.doCommand();
   await new Promise(SimpleTest.executeSoon);
-  is(Services.prefs.getCharPref("lightweightThemes.selectedThemeID"),
-     DEFAULT_THEME_ID, "Default theme should be selected");
 
   // ensure current theme isn't set to "Default"
   popupShownPromise = popupShown(popup);
