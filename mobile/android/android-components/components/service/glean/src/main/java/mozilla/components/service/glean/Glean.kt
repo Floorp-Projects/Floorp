@@ -269,6 +269,15 @@ open class GleanInternalAPI internal constructor () {
             }
         }
     }
+
+    /**
+     * Test only function to clear all storages and metrics.  Note that this also includes 'user'
+     * lifetime metrics so be aware that things like clientId will be wiped as well.
+     */
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    fun testClearAllData() {
+        storageEngineManager.clearAllStores()
+    }
 }
 
 object Glean : GleanInternalAPI() {

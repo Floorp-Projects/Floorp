@@ -12,12 +12,14 @@ import mozilla.components.service.glean.StringListMetricType.Companion.MAX_STRIN
 import mozilla.components.service.glean.storages.StringListsStorageEngine
 import mozilla.components.service.glean.storages.StringListsStorageEngineImplementation
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
+import org.junit.Assert.assertFalse
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import java.lang.NullPointerException
 
 @ObsoleteCoroutinesApi
 @ExperimentalCoroutinesApi
@@ -72,22 +74,22 @@ class StringListMetricTypeTest {
         stringListMetric.add("value3")
 
         // Check that data was properly recorded.
-        val snapshot = StringListsStorageEngine.getSnapshot("store1", false)
-        assertEquals(1, snapshot!!.size)
-        assertEquals(true, snapshot.containsKey("telemetry.string_list_metric"))
-        assertEquals("value1", snapshot["telemetry.string_list_metric"]?.get(0))
-        assertEquals("value2", snapshot["telemetry.string_list_metric"]?.get(1))
-        assertEquals("value3", snapshot["telemetry.string_list_metric"]?.get(2))
+        val snapshot = stringListMetric.testGetValue()
+        assertEquals(3, snapshot.size)
+        assertTrue(stringListMetric.testHasValue())
+        assertEquals("value1", snapshot[0])
+        assertEquals("value2", snapshot[1])
+        assertEquals("value3", snapshot[2])
 
         // Use set() to see that the first list is replaced by the new list
         stringListMetric.set(listOf("other1", "other2", "other3"))
         // Check that data was properly recorded.
-        val snapshot2 = StringListsStorageEngine.getSnapshot("store1", false)
-        assertEquals(1, snapshot2!!.size)
-        assertEquals(true, snapshot2.containsKey("telemetry.string_list_metric"))
-        assertEquals("other1", snapshot2["telemetry.string_list_metric"]?.get(0))
-        assertEquals("other2", snapshot2["telemetry.string_list_metric"]?.get(1))
-        assertEquals("other3", snapshot2["telemetry.string_list_metric"]?.get(2))
+        val snapshot2 = stringListMetric.testGetValue()
+        assertEquals(3, snapshot2.size)
+        assertTrue(stringListMetric.testHasValue())
+        assertEquals("other1", snapshot2[0])
+        assertEquals("other2", snapshot2[1])
+        assertEquals("other3", snapshot2[2])
     }
 
     @Test
@@ -105,23 +107,23 @@ class StringListMetricTypeTest {
         stringListMetric.set(listOf("value1", "value2", "value3"))
 
         // Check that data was properly recorded.
-        val snapshot = StringListsStorageEngine.getSnapshot("store1", false)
-        assertEquals(1, snapshot!!.size)
-        assertEquals(true, snapshot.containsKey("telemetry.string_list_metric"))
-        assertEquals("value1", snapshot["telemetry.string_list_metric"]?.get(0))
-        assertEquals("value2", snapshot["telemetry.string_list_metric"]?.get(1))
-        assertEquals("value3", snapshot["telemetry.string_list_metric"]?.get(2))
+        val snapshot = stringListMetric.testGetValue()
+        assertEquals(3, snapshot.size)
+        assertTrue(stringListMetric.testHasValue())
+        assertEquals("value1", snapshot[0])
+        assertEquals("value2", snapshot[1])
+        assertEquals("value3", snapshot[2])
 
         // Use set() to see that the first list is replaced by the new list
         stringListMetric.add("added1")
         // Check that data was properly recorded.
-        val snapshot2 = StringListsStorageEngine.getSnapshot("store1", false)
-        assertEquals(1, snapshot2!!.size)
-        assertEquals(true, snapshot2.containsKey("telemetry.string_list_metric"))
-        assertEquals("value1", snapshot2["telemetry.string_list_metric"]?.get(0))
-        assertEquals("value2", snapshot2["telemetry.string_list_metric"]?.get(1))
-        assertEquals("value3", snapshot2["telemetry.string_list_metric"]?.get(2))
-        assertEquals("added1", snapshot2["telemetry.string_list_metric"]?.get(3))
+        val snapshot2 = stringListMetric.testGetValue()
+        assertEquals(4, snapshot2.size)
+        assertTrue(stringListMetric.testHasValue())
+        assertEquals("value1", snapshot2[0])
+        assertEquals("value2", snapshot2[1])
+        assertEquals("value3", snapshot2[2])
+        assertEquals("added1", snapshot2[3])
     }
 
     @Test
@@ -139,23 +141,17 @@ class StringListMetricTypeTest {
 
         // Check that data was truncated via add() method.
         stringListMetric.add(longString)
-        var snapshot = StringListsStorageEngine.getSnapshot("store1", false)
-        assertEquals(1, snapshot!!.size)
-        assertEquals(true, snapshot.containsKey("telemetry.string_list_metric"))
-        assertEquals(
-            longString.take(MAX_STRING_LENGTH),
-            snapshot["telemetry.string_list_metric"]?.get(0)
-        )
+        var snapshot = stringListMetric.testGetValue()
+        assertEquals(1, snapshot.size)
+        assertTrue(stringListMetric.testHasValue())
+        assertEquals(longString.take(MAX_STRING_LENGTH), snapshot[0])
 
         // Check that data was truncated via set() method.
         stringListMetric.set(listOf(longString))
-        snapshot = StringListsStorageEngine.getSnapshot("store1", false)
-        assertEquals(1, snapshot!!.size)
-        assertEquals(true, snapshot.containsKey("telemetry.string_list_metric"))
-        assertEquals(
-            longString.take(MAX_STRING_LENGTH),
-            snapshot["telemetry.string_list_metric"]?.get(0)
-        )
+        snapshot = stringListMetric.testGetValue()
+        assertEquals(1, snapshot.size)
+        assertTrue(stringListMetric.testHasValue())
+        assertEquals(longString.take(MAX_STRING_LENGTH), snapshot[0])
     }
 
     @Test
@@ -174,12 +170,11 @@ class StringListMetricTypeTest {
         }
 
         // Check that list was truncated.
-        val snapshot = StringListsStorageEngine.getSnapshot("store1", false)
-        assertEquals(1, snapshot!!.size)
-        assertEquals(true, snapshot.containsKey("telemetry.string_list_metric"))
+        val snapshot = stringListMetric.testGetValue()
+        assertTrue(stringListMetric.testHasValue())
         assertEquals(
             StringListsStorageEngineImplementation.MAX_LIST_LENGTH_VALUE,
-            snapshot["telemetry.string_list_metric"]?.count()
+            snapshot.count()
         )
     }
 
@@ -198,14 +193,14 @@ class StringListMetricTypeTest {
         // Attempt to store the string list using set
         stringListMetric.set(listOf("value1", "value2", "value3"))
         // Check that nothing was recorded.
-        val snapshot = StringListsStorageEngine.getSnapshot("store1", false)
-        assertNull("StringLists must not be recorded if they are disabled", snapshot)
+        assertFalse("StringLists without a lifetime should not record data",
+            stringListMetric.testHasValue())
 
-        // Attempt to store the stringlist using add.
+        // Attempt to store the string list using add.
         stringListMetric.add("value4")
         // Check that nothing was recorded.
-        val snapshot2 = StringListsStorageEngine.getSnapshot("store1", false)
-        assertNull("StringLists must not be recorded if they are disabled", snapshot2)
+        assertFalse("StringLists without a lifetime should not record data",
+            stringListMetric.testHasValue())
     }
 
     @Test
@@ -223,13 +218,60 @@ class StringListMetricTypeTest {
         // Attempt to store the string list using set.
         stringListMetric.set(listOf("value1", "value2", "value3"))
         // Check that nothing was recorded.
-        val snapshot = StringListsStorageEngine.getSnapshot("store1", false)
-        assertNull("StringLists must not be recorded if they are disabled", snapshot)
+        assertFalse("StringLists must not be recorded if they are disabled",
+            stringListMetric.testHasValue())
 
         // Attempt to store the string list using add.
         stringListMetric.add("value4")
         // Check that nothing was recorded.
-        val snapshot2 = StringListsStorageEngine.getSnapshot("store1", false)
-        assertNull("StringLists must not be recorded if they are disabled", snapshot2)
+        assertFalse("StringLists must not be recorded if they are disabled",
+            stringListMetric.testHasValue())
+    }
+
+    @Test(expected = NullPointerException::class)
+    fun `testGetValue() throws NullPointerException if nothing is stored`() {
+        val stringListMetric = StringListMetricType(
+            disabled = true,
+            category = "telemetry",
+            lifetime = Lifetime.Application,
+            name = "string_list_metric",
+            sendInPings = listOf("store1")
+        )
+        stringListMetric.testGetValue()
+    }
+
+    @Test
+    fun `The API saves to secondary pings`() {
+        // Define a 'stringMetric' string metric, which will be stored in "store1" and "store2"
+        val stringListMetric = StringListMetricType(
+            disabled = false,
+            category = "telemetry",
+            lifetime = Lifetime.Application,
+            name = "string_list_metric",
+            sendInPings = listOf("store1", "store2")
+        )
+
+        // Record two lists using add and set
+        stringListMetric.add("value1")
+        stringListMetric.add("value2")
+        stringListMetric.add("value3")
+
+        // Check that data was properly recorded in the second ping.
+        assertTrue(stringListMetric.testHasValue("store2"))
+        val snapshot = stringListMetric.testGetValue("store2")
+        assertEquals(3, snapshot.size)
+        assertEquals("value1", snapshot[0])
+        assertEquals("value2", snapshot[1])
+        assertEquals("value3", snapshot[2])
+
+        // Use set() to see that the first list is replaced by the new list.
+        stringListMetric.set(listOf("other1", "other2", "other3"))
+        // Check that data was properly recorded in the second ping.
+        assertTrue(stringListMetric.testHasValue("store2"))
+        val snapshot2 = stringListMetric.testGetValue("store2")
+        assertEquals(3, snapshot2.size)
+        assertEquals("other1", snapshot2[0])
+        assertEquals("other2", snapshot2[1])
+        assertEquals("other3", snapshot2[2])
     }
 }

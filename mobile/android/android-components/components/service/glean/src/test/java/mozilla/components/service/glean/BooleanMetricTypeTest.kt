@@ -9,13 +9,15 @@ import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import mozilla.components.service.glean.storages.BooleansStorageEngine
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.Assert.assertFalse
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import java.lang.NullPointerException
 
 @ObsoleteCoroutinesApi
 @ExperimentalCoroutinesApi
@@ -64,19 +66,14 @@ class BooleanMetricTypeTest {
 
         // Record two booleans of the same type, with a little delay.
         booleanMetric.set(true)
-
         // Check that data was properly recorded.
-        val snapshot = BooleansStorageEngine.getSnapshot(storeName = "store1", clearStore = false)
-        assertEquals(1, snapshot!!.size)
-        assertEquals(true, snapshot.containsKey("telemetry.boolean_metric"))
-        assertEquals(true, snapshot.get("telemetry.boolean_metric"))
+        assertTrue(booleanMetric.testHasValue())
+        assertTrue(booleanMetric.testGetValue())
 
         booleanMetric.set(false)
         // Check that data was properly recorded.
-        val snapshot2 = BooleansStorageEngine.getSnapshot(storeName = "store1", clearStore = false)
-        assertEquals(1, snapshot2!!.size)
-        assertEquals(true, snapshot2.containsKey("telemetry.boolean_metric"))
-        assertEquals(false, snapshot2.get("telemetry.boolean_metric"))
+        assertTrue(booleanMetric.testHasValue())
+        assertFalse(booleanMetric.testGetValue())
     }
 
     @Test
@@ -94,7 +91,43 @@ class BooleanMetricTypeTest {
         // Attempt to store the boolean.
         booleanMetric.set(true)
         // Check that nothing was recorded.
-        val snapshot = BooleansStorageEngine.getSnapshot(storeName = "store1", clearStore = false)
-        assertNull("Booleans must not be recorded if they are disabled", snapshot)
+        assertFalse(booleanMetric.testHasValue())
+    }
+
+    @Test(expected = NullPointerException::class)
+    fun `testGetValue() throws NullPointerException if nothing is stored`() {
+        // Define a 'booleanMetric' boolean metric to have an instance to call
+        // testGetValue() on
+        val booleanMetric = BooleanMetricType(
+            disabled = true,
+            category = "telemetry",
+            lifetime = Lifetime.Application,
+            name = "booleanMetric",
+            sendInPings = listOf("store1")
+        )
+        booleanMetric.testGetValue()
+    }
+
+    @Test
+    fun `The API saves to secondary pings`() {
+        // Define a 'booleanMetric' boolean metric, which will be stored in "store1" and "store2"
+        val booleanMetric = BooleanMetricType(
+            disabled = false,
+            category = "telemetry",
+            lifetime = Lifetime.Application,
+            name = "boolean_metric",
+            sendInPings = listOf("store1", "store2")
+        )
+
+        // Record two booleans of the same type, with a little delay.
+        booleanMetric.set(true)
+        // Check that data was properly recorded in the second ping
+        assertTrue(booleanMetric.testHasValue("store2"))
+        assertTrue(booleanMetric.testGetValue("store2"))
+
+        booleanMetric.set(false)
+        // Check that data was properly recorded in the second ping.
+        assertTrue(booleanMetric.testHasValue("store2"))
+        assertFalse(booleanMetric.testGetValue("store2"))
     }
 }

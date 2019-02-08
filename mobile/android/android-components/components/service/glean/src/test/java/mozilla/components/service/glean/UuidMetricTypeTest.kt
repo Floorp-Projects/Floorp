@@ -10,12 +10,14 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import mozilla.components.service.glean.storages.UuidsStorageEngine
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
+import org.junit.Assert.assertFalse
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import java.lang.NullPointerException
 import java.util.UUID
 
 @ObsoleteCoroutinesApi
@@ -54,19 +56,15 @@ class UuidMetricTypeTest {
         val uuid = uuidMetric.generateAndSet()
 
         // Check that data was properly recorded.
-        val snapshot = UuidsStorageEngine.getSnapshot(storeName = "store1", clearStore = false)
-        assertEquals(1, snapshot!!.size)
-        assertEquals(true, snapshot.containsKey("telemetry.uuid_metric"))
-        assertEquals(uuid, snapshot.get("telemetry.uuid_metric"))
+        assertTrue(uuidMetric.testHasValue())
+        assertEquals(uuid, uuidMetric.testGetValue())
 
         val uuid2 = UUID.fromString("ce2adeb8-843a-4232-87a5-a099ed1e7bb3")
         uuidMetric.set(uuid2)
 
         // Check that data was properly recorded.
-        val snapshot2 = UuidsStorageEngine.getSnapshot(storeName = "store1", clearStore = false)
-        assertEquals(1, snapshot2!!.size)
-        assertEquals(true, snapshot2.containsKey("telemetry.uuid_metric"))
-        assertEquals(uuid2, snapshot2.get("telemetry.uuid_metric"))
+        assertTrue(uuidMetric.testHasValue())
+        assertEquals(uuid2, uuidMetric.testGetValue())
     }
 
     @Test
@@ -84,8 +82,8 @@ class UuidMetricTypeTest {
         // Attempt to store the uuid.
         uuidMetric.generateAndSet()
         // Check that nothing was recorded.
-        val snapshot = UuidsStorageEngine.getSnapshot(storeName = "store1", clearStore = false)
-        assertNull("Uuids must not be recorded if they are disabled", snapshot)
+        assertFalse("Uuids must not be recorded if they have no lifetime",
+            uuidMetric.testHasValue())
     }
 
     @Test
@@ -103,7 +101,45 @@ class UuidMetricTypeTest {
         // Attempt to store the uuid.
         uuidMetric.generateAndSet()
         // Check that nothing was recorded.
-        val snapshot = UuidsStorageEngine.getSnapshot(storeName = "store1", clearStore = false)
-        assertNull("Uuids must not be recorded if they are disabled", snapshot)
+        assertFalse("Uuids must not be recorded if they are disabled",
+            uuidMetric.testHasValue())
+    }
+
+    @Test(expected = NullPointerException::class)
+    fun `testGetValue() throws NullPointerException if nothing is stored`() {
+        val uuidMetric = UuidMetricType(
+            disabled = true,
+            category = "telemetry",
+            lifetime = Lifetime.Application,
+            name = "uuidMetric",
+            sendInPings = listOf("store1")
+        )
+        uuidMetric.testGetValue()
+    }
+
+    @Test
+    fun `The API saves to secondary pings`() {
+        // Define a 'uuidMetric' uuid metric, which will be stored in "store1" and "store2"
+        val uuidMetric = UuidMetricType(
+            disabled = false,
+            category = "telemetry",
+            lifetime = Lifetime.Application,
+            name = "uuid_metric",
+            sendInPings = listOf("store1", "store2")
+        )
+
+        // Record two uuids of the same type, with a little delay.
+        val uuid = uuidMetric.generateAndSet()
+
+        // Check that data was properly recorded.
+        assertTrue(uuidMetric.testHasValue("store2"))
+        assertEquals(uuid, uuidMetric.testGetValue("store2"))
+
+        val uuid2 = UUID.fromString("ce2adeb8-843a-4232-87a5-a099ed1e7bb3")
+        uuidMetric.set(uuid2)
+
+        // Check that data was properly recorded.
+        assertTrue(uuidMetric.testHasValue("store2"))
+        assertEquals(uuid2, uuidMetric.testGetValue("store2"))
     }
 }

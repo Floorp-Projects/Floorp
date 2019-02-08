@@ -10,12 +10,14 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import mozilla.components.service.glean.storages.CountersStorageEngine
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import java.lang.NullPointerException
 
 @ObsoleteCoroutinesApi
 @ExperimentalCoroutinesApi
@@ -67,18 +69,14 @@ class CounterMetricTypeTest {
         counterMetric.add()
 
         // Check that the count was incremented and properly recorded.
-        val snapshot = CountersStorageEngine.getSnapshot(storeName = "store1", clearStore = false)
-        assertEquals(1, snapshot!!.size)
-        assertEquals(true, snapshot.containsKey("telemetry.counter_metric"))
-        assertEquals(1, snapshot["telemetry.counter_metric"])
+        assertTrue(counterMetric.testHasValue())
+        assertEquals(1, counterMetric.testGetValue())
 
         counterMetric.add(10)
         // Check that count was incremented and properly recorded.  This second call will check
         // calling add() with 10 to test increment by other amount
-        val snapshot2 = CountersStorageEngine.getSnapshot(storeName = "store1", clearStore = false)
-        assertEquals(1, snapshot2!!.size)
-        assertEquals(true, snapshot2.containsKey("telemetry.counter_metric"))
-        assertEquals(11, snapshot2["telemetry.counter_metric"])
+        assertTrue(counterMetric.testHasValue())
+        assertEquals(11, counterMetric.testGetValue())
     }
 
     @Test
@@ -96,8 +94,8 @@ class CounterMetricTypeTest {
         // Attempt to increment the counter
         counterMetric.add(1)
         // Check that nothing was recorded.
-        val snapshot = CountersStorageEngine.getSnapshot(storeName = "store1", clearStore = false)
-        assertNull("Counters must not be recorded if they are disabled", snapshot)
+        assertFalse("Counters must not be recorded if they are disabled",
+            counterMetric.testHasValue())
     }
 
     @Test
@@ -114,14 +112,14 @@ class CounterMetricTypeTest {
         // Attempt to increment the counter with zero
         counterMetric.add(0)
         // Check that nothing was recorded.
-        var snapshot = CountersStorageEngine.getSnapshot(storeName = "store1", clearStore = false)
-        assertNull("Counters must not be recorded if incremented with zero", snapshot)
+        assertFalse("Counters must not be recorded if incremented with zero",
+            counterMetric.testHasValue())
 
         // Attempt to increment the counter with negative
         counterMetric.add(-1)
         // Check that nothing was recorded.
-        snapshot = CountersStorageEngine.getSnapshot(storeName = "store1", clearStore = false)
-        assertNull("Counters must not be recorded if incremented with negative", snapshot)
+        assertFalse("Counters must not be recorded if incremented with negative",
+            counterMetric.testHasValue())
     }
 
     @Test
@@ -139,7 +137,45 @@ class CounterMetricTypeTest {
         // Attempt to store the counter.
         counterMetric.add()
         // Check that nothing was recorded.
-        val snapshot = CountersStorageEngine.getSnapshot(storeName = "store1", clearStore = false)
-        assertNull("Counters must not be recorded if they are disabled", snapshot)
+        assertFalse("Counters must not be recorded if they are disabled",
+            counterMetric.testHasValue())
+    }
+
+    @Test(expected = NullPointerException::class)
+    fun `testGetValue() throws NullPointerException if nothing is stored`() {
+        val counterMetric = CounterMetricType(
+            disabled = true,
+            category = "telemetry",
+            lifetime = Lifetime.Application,
+            name = "counter_metric",
+            sendInPings = listOf("store1")
+        )
+        counterMetric.testGetValue()
+    }
+
+    @Test
+    fun `The API saves to secondary pings`() {
+        // Define a 'counterMetric' counter metric, which will be stored in "store1" and "store2"
+        val counterMetric = CounterMetricType(
+            disabled = false,
+            category = "telemetry",
+            lifetime = Lifetime.Application,
+            name = "counter_metric",
+            sendInPings = listOf("store1", "store2")
+        )
+
+        // Add to the counter a couple of times with a little delay.  The first call will check
+        // calling add() without parameters to test increment by 1.
+        counterMetric.add()
+
+        // Check that the count was incremented and properly recorded for the second ping.
+        assertTrue(counterMetric.testHasValue("store2"))
+        assertEquals(1, counterMetric.testGetValue("store2"))
+
+        counterMetric.add(10)
+        // Check that count was incremented and properly recorded for the second ping.
+        // This second call will check calling add() with 10 to test increment by other amount
+        assertTrue(counterMetric.testHasValue("store2"))
+        assertEquals(11, counterMetric.testGetValue("store2"))
     }
 }

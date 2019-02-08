@@ -67,7 +67,7 @@ class GleanTest {
                 name = "string_metric",
                 sendInPings = listOf("store1")
         )
-        StringsStorageEngine.clearAllStores()
+        Glean.testClearAllData()
         Glean.setUploadEnabled(false)
         assertEquals(false, Glean.getUploadEnabled())
         stringMetric.set("foo")
@@ -87,9 +87,9 @@ class GleanTest {
                 sendInPings = listOf("store1"),
                 objects = listOf("buttonA")
         )
-        EventsStorageEngine.clearAllStores()
-        Glean.setUploadEnabled(true)
+        Glean.testClearAllData()
         assertEquals(true, Glean.getUploadEnabled())
+        Glean.setUploadEnabled(true)
         eventMetric.record("buttonA", "event1")
         val snapshot1 = EventsStorageEngine.getSnapshot(storeName = "store1", clearStore = false)
         assertEquals(1, snapshot1!!.size)
@@ -335,7 +335,7 @@ class GleanTest {
             name = "string_metric",
             sendInPings = listOf("store1")
         )
-        StringsStorageEngine.clearAllStores()
+        Glean.testClearAllData()
         Glean.initialized = false
         stringMetric.set("foo")
         assertNull(
@@ -371,7 +371,7 @@ class GleanTest {
         val server = MockWebServer()
         server.enqueue(MockResponse().setBody("OK"))
 
-        EventsStorageEngine.clearAllStores()
+        Glean.testClearAllData()
 
         resetGlean(config = Glean.configuration.copy(
             serverEndpoint = "http://" + server.hostName + ":" + server.port

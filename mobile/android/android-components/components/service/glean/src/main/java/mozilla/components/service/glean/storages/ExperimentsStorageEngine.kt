@@ -136,8 +136,8 @@ internal object ExperimentsStorageEngine : StorageEngine {
     override val sendAsTopLevelField: Boolean
         get() = true
 
-    @VisibleForTesting
-    internal fun clearAllStores() {
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    override fun clearAllStores() {
         experiments.clear()
     }
 }

@@ -4,6 +4,7 @@
 
 package mozilla.components.service.glean
 
+import android.support.annotation.VisibleForTesting
 import mozilla.components.service.glean.storages.TimespansStorageEngine
 import mozilla.components.support.base.log.logger.Logger
 
@@ -62,5 +63,32 @@ data class TimespanMetricType(
         }
 
         TimespansStorageEngine.cancel(this)
+    }
+
+    /**
+     * Tests whether a value is stored for the metric for testing purposes only
+     *
+     * @param pingName represents the name of the ping to retrieve the metric for.  Defaults
+     *                 to the either the first value in [defaultStorageDestinations] or the first
+     *                 value in [sendInPings]
+     * @return true if metric value exists, otherwise false
+     */
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    fun testHasValue(pingName: String = getStorageNames().first()): Boolean {
+        return TimespansStorageEngine.getSnapshot(pingName, false)?.get(identifier) != null
+    }
+
+    /**
+     * Returns the stored value for testing purposes only
+     *
+     * @param pingName represents the name of the ping to retrieve the metric for.  Defaults
+     *                 to the either the first value in [defaultStorageDestinations] or the first
+     *                 value in [sendInPings]
+     * @return value of the stored metric
+     * @throws [NullPointerException] if no value is stored
+     */
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    fun testGetValue(pingName: String = getStorageNames().first()): Long {
+        return TimespansStorageEngine.getSnapshot(pingName, false)!![identifier]!!
     }
 }

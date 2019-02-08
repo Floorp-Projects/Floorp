@@ -4,8 +4,10 @@
 
 package mozilla.components.service.glean
 
+import android.support.annotation.VisibleForTesting
 import kotlinx.coroutines.launch
 import mozilla.components.service.glean.storages.EventsStorageEngine
+import mozilla.components.service.glean.storages.RecordedEventData
 import mozilla.components.support.base.log.logger.Logger
 
 /**
@@ -107,6 +109,38 @@ data class EventMetricType(
                 value = truncatedValue,
                 extra = truncatedExtraKeys
             )
+        }
+    }
+
+    /**
+     * Tests whether a value is stored for the metric for testing purposes only
+     *
+     * @param pingName represents the name of the ping to retrieve the metric for.  Defaults
+     *                 to the either the first value in [defaultStorageDestinations] or the first
+     *                 value in [sendInPings]
+     * @return true if metric value exists, otherwise false
+     */
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    fun testHasValue(pingName: String = getStorageNames().first()): Boolean {
+        val snapshot = EventsStorageEngine.getSnapshot(pingName, false) ?: return false
+        return snapshot.any { event ->
+            event.identifier == identifier
+        }
+    }
+
+    /**
+     * Returns the stored value for testing purposes only
+     *
+     * @param pingName represents the name of the ping to retrieve the metric for.  Defaults
+     *                 to the either the first value in [defaultStorageDestinations] or the first
+     *                 value in [sendInPings]
+     * @return value of the stored metric
+     * @throws [NullPointerException] if no value is stored
+     */
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    fun testGetValue(pingName: String = getStorageNames().first()): List<RecordedEventData> {
+        return EventsStorageEngine.getSnapshot(pingName, false)!!.filter { event ->
+            event.identifier == identifier
         }
     }
 }

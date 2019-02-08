@@ -10,12 +10,14 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import mozilla.components.service.glean.storages.StringsStorageEngine
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import java.lang.NullPointerException
 
 @ObsoleteCoroutinesApi
 @ExperimentalCoroutinesApi
@@ -66,17 +68,13 @@ class StringMetricTypeTest {
         stringMetric.set("value")
 
         // Check that data was properly recorded.
-        val snapshot = StringsStorageEngine.getSnapshot(storeName = "store1", clearStore = false)
-        assertEquals(1, snapshot!!.size)
-        assertEquals(true, snapshot.containsKey("telemetry.string_metric"))
-        assertEquals("value", snapshot.get("telemetry.string_metric"))
+        assertTrue(stringMetric.testHasValue())
+        assertEquals("value", stringMetric.testGetValue())
 
         stringMetric.set("overriddenValue")
         // Check that data was properly recorded.
-        val snapshot2 = StringsStorageEngine.getSnapshot(storeName = "store1", clearStore = false)
-        assertEquals(1, snapshot2!!.size)
-        assertEquals(true, snapshot2.containsKey("telemetry.string_metric"))
-        assertEquals("overriddenValue", snapshot2.get("telemetry.string_metric"))
+        assertTrue(stringMetric.testHasValue())
+        assertEquals("overriddenValue", stringMetric.testGetValue())
     }
 
     @Test
@@ -92,12 +90,10 @@ class StringMetricTypeTest {
 
         stringMetric.set("0123456789012345678901234567890123456789012345678901234567890123456789")
         // Check that data was truncated.
-        val snapshot = StringsStorageEngine.getSnapshot(storeName = "store1", clearStore = false)
-        assertEquals(1, snapshot!!.size)
-        assertEquals(true, snapshot.containsKey("telemetry.string_metric"))
+        assertTrue(stringMetric.testHasValue())
         assertEquals(
             "01234567890123456789012345678901234567890123456789",
-            snapshot.get("telemetry.string_metric")
+            stringMetric.testGetValue()
         )
     }
 
@@ -116,8 +112,8 @@ class StringMetricTypeTest {
         // Attempt to store the string.
         stringMetric.set("value")
         // Check that nothing was recorded.
-        val snapshot = StringsStorageEngine.getSnapshot(storeName = "store1", clearStore = false)
-        assertNull("Strings must not be recorded if they are disabled", snapshot)
+        assertFalse("Strings must not be recorded if they have no lifetime",
+            stringMetric.testHasValue())
     }
 
     @Test
@@ -135,7 +131,43 @@ class StringMetricTypeTest {
         // Attempt to store the string.
         stringMetric.set("value")
         // Check that nothing was recorded.
-        val snapshot = StringsStorageEngine.getSnapshot(storeName = "store1", clearStore = false)
-        assertNull("Strings must not be recorded if they are disabled", snapshot)
+        assertFalse("Strings must not be recorded if they are disabled",
+            stringMetric.testHasValue())
+    }
+
+    @Test(expected = NullPointerException::class)
+    fun `testGetValue() throws NullPointerException if nothing is stored`() {
+        val stringMetric = StringMetricType(
+            disabled = true,
+            category = "telemetry",
+            lifetime = Lifetime.Application,
+            name = "stringMetric",
+            sendInPings = listOf("store1")
+        )
+        stringMetric.testGetValue()
+    }
+
+    @Test
+    fun `The API saves to secondary pings`() {
+        // Define a 'stringMetric' string metric, which will be stored in "store1" and "store2"
+        val stringMetric = StringMetricType(
+            disabled = false,
+            category = "telemetry",
+            lifetime = Lifetime.Application,
+            name = "string_metric",
+            sendInPings = listOf("store1", "store2")
+        )
+
+        // Record two strings of the same type, with a little delay.
+        stringMetric.set("value")
+
+        // Check that data was properly recorded in the second ping.
+        assertTrue(stringMetric.testHasValue("store2"))
+        assertEquals("value", stringMetric.testGetValue("store2"))
+
+        stringMetric.set("overriddenValue")
+        // Check that data was properly recorded in the second ping.
+        assertTrue(stringMetric.testHasValue("store2"))
+        assertEquals("overriddenValue", stringMetric.testGetValue("store2"))
     }
 }

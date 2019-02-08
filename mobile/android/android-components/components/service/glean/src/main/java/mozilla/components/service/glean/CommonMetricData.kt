@@ -35,6 +35,8 @@ interface CommonMetricData {
     val name: String
     val sendInPings: List<String>
 
+    val identifier: String get() = if (category.isEmpty()) { name } else { "$category.$name" }
+
     companion object {
         internal const val DEFAULT_STORAGE_NAME = "default"
     }

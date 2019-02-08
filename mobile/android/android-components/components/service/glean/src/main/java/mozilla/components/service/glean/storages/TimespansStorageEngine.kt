@@ -7,6 +7,7 @@ package mozilla.components.service.glean.storages
 import android.annotation.SuppressLint
 import android.content.SharedPreferences
 import android.os.SystemClock
+import android.support.annotation.VisibleForTesting
 import mozilla.components.service.glean.CommonMetricData
 import mozilla.components.service.glean.TimeUnit
 
@@ -138,7 +139,7 @@ internal open class TimespansStorageEngineImplementation(
      * @param metricData the metric information for the timespan
      */
     fun start(metricData: CommonMetricData) {
-        val timespanName = getStoredName(metricData)
+        val timespanName = metricData.identifier
 
         if (timespanName in uncommittedStartTimes) {
             // TODO report errors if already tracking time through internal metrics. See bug 1499761.
@@ -165,7 +166,7 @@ internal open class TimespansStorageEngineImplementation(
     ) {
         // TODO report errors if not tracking time through internal metrics. See bug 1499761.
         // Look for the start time: if it's there, commit the timespan.
-        val timespanName = getStoredName(metricData)
+        val timespanName = metricData.identifier
         uncommittedStartTimes.remove(timespanName)?.let { startTime ->
             val elapsedNanos = getElapsedNanos() - startTime
 
@@ -190,7 +191,7 @@ internal open class TimespansStorageEngineImplementation(
      */
     @Synchronized
     fun cancel(metricData: CommonMetricData) {
-        uncommittedStartTimes.remove(getStoredName(metricData))
+        uncommittedStartTimes.remove(metricData.identifier)
     }
 
     /**
@@ -253,6 +254,7 @@ internal open class TimespansStorageEngineImplementation(
     /**
      * Test-only method used to clear the timespans stores.
      */
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     override fun clearAllStores() {
         super.clearAllStores()
         timeUnitsMap.clear()

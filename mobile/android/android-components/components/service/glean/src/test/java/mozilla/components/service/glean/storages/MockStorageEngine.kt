@@ -17,6 +17,10 @@ internal class MockStorageEngine(
     private val sampleJSON: Any,
     private val sampleStore: String = "test"
 ) : StorageEngine {
+    override fun clearAllStores() {
+        // Nothing to do here for a mocked storage engine
+    }
+
     override lateinit var applicationContext: Context
 
     override fun getSnapshotAsJSON(storeName: String, clearStore: Boolean): Any? {

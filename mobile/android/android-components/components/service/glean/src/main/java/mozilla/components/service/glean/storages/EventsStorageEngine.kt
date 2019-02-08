@@ -34,15 +34,6 @@ internal object EventsStorageEngine : StorageEngine {
     // to the docs, the used clock is guaranteed to be monotonic.
     private val startTime: Long = SystemClock.elapsedRealtime()
 
-    data class RecordedEventData(
-        val category: String,
-        val name: String,
-        val objectId: String,
-        val msSinceStart: Long,
-        val value: String? = null,
-        val extra: Map<String, String>? = null
-    )
-
     /**
      * Record an event in the desired stores.
      *
@@ -55,7 +46,7 @@ internal object EventsStorageEngine : StorageEngine {
      *              context if needed
      */
     @Suppress("LongParameterList")
-    public fun record(
+    fun record(
         stores: List<String>,
         category: String,
         name: String,
@@ -88,7 +79,7 @@ internal object EventsStorageEngine : StorageEngine {
      * @return the list of events recorded in the requested store
      */
     @Synchronized
-    public fun getSnapshot(storeName: String, clearStore: Boolean): List<RecordedEventData>? {
+    fun getSnapshot(storeName: String, clearStore: Boolean): List<RecordedEventData>? {
         if (clearStore) {
             return eventStores.remove(storeName)
         }
@@ -124,8 +115,20 @@ internal object EventsStorageEngine : StorageEngine {
     override val sendAsTopLevelField: Boolean
         get() = true
 
-    @VisibleForTesting
-    internal fun clearAllStores() {
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    override fun clearAllStores() {
         eventStores.clear()
     }
 }
+
+@VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+data class RecordedEventData(
+    val category: String,
+    val name: String,
+    val objectId: String,
+    val msSinceStart: Long,
+    val value: String? = null,
+    val extra: Map<String, String>? = null,
+
+    internal val identifier: String = if (category.isEmpty()) { name } else { "$category.$name" }
+)

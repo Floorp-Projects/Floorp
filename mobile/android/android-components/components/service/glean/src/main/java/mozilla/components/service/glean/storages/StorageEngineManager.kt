@@ -5,6 +5,7 @@
 package mozilla.components.service.glean.storages
 
 import android.content.Context
+import android.support.annotation.VisibleForTesting
 import org.json.JSONObject
 
 /**
@@ -54,5 +55,12 @@ internal class StorageEngineManager(
         }
 
         return jsonPing
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    fun clearAllStores() {
+        for (storageEngine in storageEngines) {
+            storageEngine.value.clearAllStores()
+        }
     }
 }
