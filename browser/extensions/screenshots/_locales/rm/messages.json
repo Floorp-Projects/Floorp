@@ -17,6 +17,9 @@
   "saveScreenshotSelectedArea": {
     "message": "Memorisar"
   },
+  "uploadScreenshotSelectedArea": {
+    "message": "Transferir"
+  },
   "saveScreenshotVisibleArea": {
     "message": "Memorisar la regiun visibla"
   },
@@ -28,6 +31,9 @@
   },
   "downloadScreenshot": {
     "message": "Telechargiar"
+  },
+  "downloadScreenshotTitle": {
+    "message": "Telechargiar il maletg dal visur"
   },
   "downloadOnlyNotice": {
     "message": "Ti es actualmain en il modus che permetta mo da telechargiar."
@@ -63,6 +69,9 @@
   },
   "copyScreenshot": {
     "message": "Copiar"
+  },
+  "copyScreenshotTitle": {
+    "message": "Copiar il maletg dal visur en l'archiv provisoric"
   },
   "notificationImageCopiedTitle": {
     "message": "Copià il maletg"
@@ -122,8 +131,8 @@
   "genericErrorDetails": {
     "message": "Nus na savain betg tge ch'è gist capità. Vuls empruvar anc ina giada, forsa cun in'autra pagina?"
   },
-  "tourBodyIntro": {
-    "message": "Far, memorisar e cundivider maletgs da visur senza bandunar Firefox."
+  "tourBodyIntroServerless": {
+    "message": "Far, copiar e telechargiar maletgs dal visur senza bandunar Firefox."
   },
   "tourHeaderPageAction": {
     "message": "Ina nova pussaivladad da memorisar"
@@ -142,12 +151,6 @@
   },
   "tourBodyFullPage": {
     "message": "Tscherna il buttun sura dretg per far in maletg da la part visibla en la fanestra u per far in maletg da la pagina cumpletta."
-  },
-  "tourHeaderDownloadUpload": {
-    "message": "Co che ti prefereschas"
-  },
-  "tourBodyDownloadUpload": {
-    "message": "Memorisescha ils maletgs da visur en il web per als pudair cundivider u telechargiar sin tes computer. Ti pos era cliccar sin il buttun «Mes maletgs da visur» per vesair tut ils maletgs dal visur che ti has fatg."
   },
   "tourSkip": {
     "message": "Sursiglir"

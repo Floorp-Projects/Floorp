@@ -183,8 +183,7 @@ function checkPopup(popup, notifyObj) {
   let notification = notifications[0];
   if (!notification)
     return;
-  let icon = document.getAnonymousElementByAttribute(notification, "class",
-                                                     "popup-notification-icon");
+  let icon = notification.querySelector(".popup-notification-icon");
   if (notifyObj.id == "geolocation") {
     isnot(icon.boxObject.width, 0, "icon for geo displayed");
     ok(popup.anchorNode.classList.contains("notification-anchor-icon"),
@@ -218,7 +217,7 @@ function checkPopup(popup, notifyObj) {
   }
   // Additional secondary actions appear as menu items.
   let actualExtraSecondaryActions =
-    Array.filter(notification.childNodes, child => child.nodeName == "menuitem");
+    Array.filter(notification.menupopup.childNodes, child => child.nodeName == "menuitem");
   let extraSecondaryActions = notifyObj.secondaryActions ? notifyObj.secondaryActions.slice(1) : [];
   is(actualExtraSecondaryActions.length, extraSecondaryActions.length,
      "number of extra secondary actions matches");

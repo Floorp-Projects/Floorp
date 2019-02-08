@@ -108,6 +108,14 @@ class AntiTrackingCommon final {
 
   static bool HasUserInteraction(nsIPrincipal* aPrincipal);
 
+  // This API allows consumers to get notified when the anti-tracking component
+  // settings change.  After this callback is called, an anti-tracking check
+  // that has been previously performed with the same parameters may now return
+  // a different result.
+  typedef std::function<void()> AntiTrackingSettingsChangedCallback;
+  static void OnAntiTrackingSettingsChanged(
+      const AntiTrackingSettingsChangedCallback& aCallback);
+
   // For IPC only.
   typedef MozPromise<nsresult, bool, true> FirstPartyStorageAccessGrantPromise;
   static RefPtr<FirstPartyStorageAccessGrantPromise>

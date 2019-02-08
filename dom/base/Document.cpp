@@ -7498,6 +7498,10 @@ void Document::Destroy() {
 
   mIsGoingAway = true;
 
+  if (mDocumentL10n) {
+    mDocumentL10n->Destroy();
+  }
+
   ScriptLoader()->Destroy();
   SetScriptGlobalObject(nullptr);
   RemovedFromDocShell();

@@ -17,6 +17,9 @@
   "saveScreenshotSelectedArea": {
     "message": "Lagre"
   },
+  "uploadScreenshotSelectedArea": {
+    "message": "Last opp"
+  },
   "saveScreenshotVisibleArea": {
     "message": "Lagre synlig område"
   },

@@ -328,13 +328,7 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
     const client = new DebuggerClient(transport);
 
     await client.connect();
-    const front = await client.mainRoot.getProcess(processId);
-    const options = {
-      activeTab: front,
-      client,
-      chrome: true,
-    };
-    const target = await TargetFactory.forRemoteTab(options);
+    const target = await client.mainRoot.getProcess(processId);
     // Ensure closing the connection in order to cleanup
     // the debugger client and also the server created in the
     // content process
@@ -389,10 +383,9 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
    * @param  {String} toolId (optional)
    *        The id of the default tool to show
    */
-  async openWorkerToolbox(workerTargetFront, toolId) {
-    const workerTarget = TargetFactory.forWorker(workerTargetFront);
+  async openWorkerToolbox(workerTarget, toolId) {
     const toolbox = await gDevTools.showToolbox(workerTarget, toolId, Toolbox.HostType.WINDOW);
-    toolbox.once("destroy", () => workerTargetFront.detach());
+    toolbox.once("destroy", () => workerTarget.detach());
   },
 
   /**

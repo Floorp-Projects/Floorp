@@ -36,8 +36,9 @@ class nsAtomicContainerFrame : public nsContainerFrame {
   }
 
  protected:
-  nsAtomicContainerFrame(ComputedStyle* aStyle, ClassID aID)
-      : nsContainerFrame(aStyle, aID) {}
+  nsAtomicContainerFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
+                         ClassID aID)
+      : nsContainerFrame(aStyle, aPresContext, aID) {}
 };
 
 #endif  // nsAtomicContainerFrame_h___

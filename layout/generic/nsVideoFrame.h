@@ -38,7 +38,7 @@ class nsVideoFrame final : public nsContainerFrame,
   typedef mozilla::layers::LayerManager LayerManager;
   typedef mozilla::ContainerLayerParameters ContainerLayerParameters;
 
-  explicit nsVideoFrame(ComputedStyle* aStyle);
+  explicit nsVideoFrame(ComputedStyle*, nsPresContext*);
 
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsVideoFrame)

@@ -3,8 +3,6 @@
 const {AppMenuNotifications} = ChromeUtils.import("resource://gre/modules/AppMenuNotifications.jsm");
 
 add_task(async function testFullscreen() {
-  let doc = document;
-
   is(PanelUI.notificationPanel.state, "closed", "update-manual doorhanger is closed.");
   let mainActionCalled = false;
   let mainAction = {
@@ -35,8 +33,7 @@ add_task(async function testFullscreen() {
   isnot(PanelUI.notificationPanel.state, "closed", "update-manual doorhanger is showing.");
   isnot(PanelUI.menuButton.getAttribute("badge-status"), "update-manual", "Badge is not displaying on PanelUI button.");
 
-  let mainActionButton = doc.getAnonymousElementByAttribute(doorhanger, "anonid", "button");
-  mainActionButton.click();
+  doorhanger.button.click();
   ok(mainActionCalled, "Main action callback was called");
   is(PanelUI.notificationPanel.state, "closed", "update-manual doorhanger is closed.");
   is(PanelUI.menuButton.hasAttribute("badge-status"), false, "Should not have a badge status");

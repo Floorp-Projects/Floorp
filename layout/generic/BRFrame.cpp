@@ -69,8 +69,9 @@ class BRFrame final : public nsFrame {
 #endif
 
  protected:
-  explicit BRFrame(ComputedStyle* aStyle)
-      : nsFrame(aStyle, kClassID), mAscent(NS_INTRINSIC_WIDTH_UNKNOWN) {}
+  explicit BRFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
+      : nsFrame(aStyle, aPresContext, kClassID),
+        mAscent(NS_INTRINSIC_WIDTH_UNKNOWN) {}
 
   virtual ~BRFrame();
 
@@ -80,7 +81,7 @@ class BRFrame final : public nsFrame {
 }  // namespace mozilla
 
 nsIFrame* NS_NewBRFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle) {
-  return new (aPresShell) BRFrame(aStyle);
+  return new (aPresShell) BRFrame(aStyle, aPresShell->GetPresContext());
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(BRFrame)

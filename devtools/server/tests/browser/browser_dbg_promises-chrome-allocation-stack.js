@@ -38,12 +38,7 @@ add_task(async function test() {
 
   const client = new DebuggerClient(DebuggerServer.connectPipe());
   await client.connect();
-  const targetFront = await client.mainRoot.getMainProcess();
-  const target = await TargetFactory.forRemoteTab({
-    client,
-    activeTab: targetFront,
-    chrome: true,
-  });
+  const target = await client.mainRoot.getMainProcess();
   await target.attach();
 
   await testGetAllocationStack(client, target, () => {

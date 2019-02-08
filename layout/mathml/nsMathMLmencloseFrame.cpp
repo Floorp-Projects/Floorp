@@ -41,13 +41,16 @@ static const uint8_t kPhasorangleWidth = 8;
 
 nsIFrame* NS_NewMathMLmencloseFrame(nsIPresShell* aPresShell,
                                     ComputedStyle* aStyle) {
-  return new (aPresShell) nsMathMLmencloseFrame(aStyle);
+  return new (aPresShell)
+      nsMathMLmencloseFrame(aStyle, aPresShell->GetPresContext());
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsMathMLmencloseFrame)
 
-nsMathMLmencloseFrame::nsMathMLmencloseFrame(ComputedStyle* aStyle, ClassID aID)
-    : nsMathMLContainerFrame(aStyle, aID),
+nsMathMLmencloseFrame::nsMathMLmencloseFrame(ComputedStyle* aStyle,
+                                             nsPresContext* aPresContext,
+                                             ClassID aID)
+    : nsMathMLContainerFrame(aStyle, aPresContext, aID),
       mRuleThickness(0),
       mRadicalRuleThickness(0),
       mLongDivCharIndex(-1),

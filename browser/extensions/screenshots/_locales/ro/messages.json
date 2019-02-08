@@ -17,6 +17,9 @@
   "saveScreenshotSelectedArea": {
     "message": "Salvează"
   },
+  "uploadScreenshotSelectedArea": {
+    "message": "Încarcă"
+  },
   "saveScreenshotVisibleArea": {
     "message": "Salvează porțiunea vizibilă"
   },
@@ -28,6 +31,9 @@
   },
   "downloadScreenshot": {
     "message": "Descarcă"
+  },
+  "downloadScreenshotTitle": {
+    "message": "Descarcă captura de ecran"
   },
   "downloadOnlyNotice": {
     "message": "În prezent ești în modul numai descărcare."
@@ -42,7 +48,7 @@
     "message": "Atunci când cookie-urile terțe sunt dezactivate."
   },
   "downloadOnlyDetailsNeverRemember": {
-    "message": "Atunci când este activată opțiunea „Nu memora istoricul”."
+    "message": "Atunci când este activată opțiunea „Nu va memora istoricul niciodată”."
   },
   "downloadOnlyDetailsESR": {
     "message": "Acum folosești Firefox ESR."
@@ -54,7 +60,7 @@
     "message": "Link copiat"
   },
   "notificationLinkCopiedDetails": {
-    "message": "Linkul către captura ta a fost copiat în clipboard. Apasă $META_KEY$-V pentru lipire.",
+    "message": "Linkul către captura ta a fost copiat în clipboard. Apasă $META_KEY$-V pentru a lipi.",
     "placeholders": {
       "meta_key": {
         "content": "$1"
@@ -64,11 +70,14 @@
   "copyScreenshot": {
     "message": "Copiază"
   },
+  "copyScreenshotTitle": {
+    "message": "Copiază captura de ecran în clipboard"
+  },
   "notificationImageCopiedTitle": {
     "message": "Captură copiată"
   },
   "notificationImageCopiedDetails": {
-    "message": "Captura a fost copiată în clipboard. Apasă $META_KEY$-V pentru a lipi.",
+    "message": "Captura ți-a fost copiată în clipboard. Apasă $META_KEY$-V pentru a lipi.",
     "placeholders": {
       "meta_key": {
         "content": "$1"
@@ -102,7 +111,7 @@
     "message": "Nu putem realiza o captură de ecran a acestei pagini."
   },
   "unshootablePageErrorDetails": {
-    "message": "Aceasta este o pagină web standard așa că nu putem lua o captură a acesteia."
+    "message": "Aceasta nu este o pagină web standard, deci nu poți realiza o captură de ecran a acesteia."
   },
   "selfScreenshotErrorTitle": {
     "message": "Nu poți realiza o captură a paginii Firefox Screenshots!"
@@ -117,43 +126,31 @@
     "message": "Ne pare rău pentru inconveniență. Lucrăm să introducem această funcție în versiunile viitoare."
   },
   "genericErrorTitle": {
-    "message": "Ups! Firefox Screenshots a întâmpinat o eroare."
+    "message": "Aaah! Firefox Screenshots a întâmpinat o eroare."
   },
   "genericErrorDetails": {
-    "message": "Nu știm ce s-a întâmplat. Poți încerca să iei o nouă captură sau o captură de la o altă pagină?"
+    "message": "Nu știm sigur ce s-a întâmplat. Ai vrea să încerci din nou sau realizezi o captură a altei pagini?"
   },
-  "tourBodyIntro": {
-    "message": "Preia, salvează și împărtășește capturi de ecran fără a părăsi Firefox."
+  "tourBodyIntroServerless": {
+    "message": "Fă, copiază și descarcă capturi de ecran fără să ieși din Firefox."
   },
   "tourHeaderPageAction": {
     "message": "O nouă modalitate de salvare"
   },
   "tourBodyPageAction": {
-    "message": "Extinde meniul de acțiuni ale paginii în bara de adrese oricând vrei să faci o captură."
+    "message": "Extinde meniul de acțiuni pe pagină în bara de adresă oricând vrei să realizezi o captură de ecran."
   },
   "tourHeaderClickAndDrag": {
     "message": "Capturează întocmai ceea ce vrei"
   },
   "tourBodyClickAndDrag": {
-    "message": "Clic și trage pentru a captura doar o porțiune a unei pagini. Poți și să poziționezi cursorul peste porțiune pentru a evidenția selecția."
+    "message": "Dă clic și trage pentru a captura doar o porțiune a unei pagini. Poți și să poziționezi cursorul deasupra pentru a evidenția selecția."
   },
   "tourHeaderFullPage": {
     "message": "Capturează ferestre sau pagini întregi"
   },
   "tourBodyFullPage": {
     "message": "Selectează butoanele din partea dreaptă sus pentru a captura zona vizibilă din fereastră sau pentru a captura o pagină întreagă."
-  },
-  "tourHeaderDownloadUpload": {
-    "message": "Pe placul tău"
-  },
-  "tourBodyDownloadUpload": {
-    "message": "Salvează capturile decupate pe web pentru a le împărtăși mai ușor, sau descarcă-le pe calculator. Mai poți face clic pe butonul My Shots (capturile mele) pentru a găsi toate capturile luate."
-  },
-  "tourHeaderAccounts": {
-    "message": "Capturi de ecran de luat cu tine"
-  },
-  "tourBodyAccounts": {
-    "message": "Autentifică-te în contul Firefox pentru accesarea capturilor de pe toate dispozitivele și salvează definitiv capturile favorite."
   },
   "tourSkip": {
     "message": "OMITE"

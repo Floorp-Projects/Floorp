@@ -16,6 +16,17 @@
   overflow: hidden;
 }
 
+#urlbar[pageproxystate="invalid"] > #identity-box > #blocked-permissions-container,
+#urlbar[pageproxystate="invalid"] > #identity-box > #notification-popup-box,
+#urlbar[pageproxystate="invalid"] > #identity-box > #identity-icon-labels {
+  display: none;
+}
+
+#urlbar[pageproxystate="invalid"] > #identity-box {
+  pointer-events: none;
+  -moz-user-focus: ignore;
+}
+
 #identity-box:hover:not(.no-hover):not([open=true]) {
   background-color: hsla(0,0%,70%,.2);
   fill-opacity: .8;

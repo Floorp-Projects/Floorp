@@ -323,7 +323,8 @@ class nsListControlFrame final : public nsHTMLScrollFrame,
    */
   virtual void ResetList(bool aAllowScrolling);
 
-  explicit nsListControlFrame(ComputedStyle* aStyle);
+  explicit nsListControlFrame(ComputedStyle* aStyle,
+                              nsPresContext* aPresContext);
   virtual ~nsListControlFrame();
 
   /**

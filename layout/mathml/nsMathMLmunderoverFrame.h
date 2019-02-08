@@ -45,8 +45,9 @@ class nsMathMLmunderoverFrame final : public nsMathMLContainerFrame,
   void ReflowCallbackCanceled() override;
 
  protected:
-  explicit nsMathMLmunderoverFrame(ComputedStyle* aStyle)
-      : nsMathMLContainerFrame(aStyle, kClassID),
+  explicit nsMathMLmunderoverFrame(ComputedStyle* aStyle,
+                                   nsPresContext* aPresContext)
+      : nsMathMLContainerFrame(aStyle, aPresContext, kClassID),
         mIncrementUnder(false),
         mIncrementOver(false) {}
 

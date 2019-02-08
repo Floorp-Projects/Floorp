@@ -17,6 +17,9 @@
   "saveScreenshotSelectedArea": {
     "message": "Захаваць"
   },
+  "uploadScreenshotSelectedArea": {
+    "message": "Зацягнуць"
+  },
   "saveScreenshotVisibleArea": {
     "message": "Захаваць бачную вобласць"
   },

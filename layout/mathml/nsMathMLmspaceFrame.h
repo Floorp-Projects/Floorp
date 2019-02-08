@@ -34,8 +34,9 @@ class nsMathMLmspaceFrame final : public nsMathMLContainerFrame {
                       nsReflowStatus& aStatus) override;
 
  protected:
-  explicit nsMathMLmspaceFrame(ComputedStyle* aStyle)
-      : nsMathMLContainerFrame(aStyle, kClassID),
+  explicit nsMathMLmspaceFrame(ComputedStyle* aStyle,
+                               nsPresContext* aPresContext)
+      : nsMathMLContainerFrame(aStyle, aPresContext, kClassID),
         mWidth(0),
         mHeight(0),
         mDepth(0) {}

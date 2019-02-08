@@ -36,9 +36,11 @@ class nsIHandleReportCallback;
 struct nsXPTInterfaceInfo;
 
 namespace mozilla {
+class BasePrincipal;
+
 namespace dom {
 class Exception;
-}
+}  // namespace dom
 }  // namespace mozilla
 
 typedef void (*xpcGCCallback)(JSGCStatus status);
@@ -409,8 +411,7 @@ bool StringToJsval(JSContext* cx, mozilla::dom::DOMString& str,
   return NonVoidStringToJsval(cx, str, rval);
 }
 
-nsIPrincipal* GetCompartmentPrincipal(JS::Compartment* compartment);
-nsIPrincipal* GetRealmPrincipal(JS::Realm* realm);
+mozilla::BasePrincipal* GetRealmPrincipal(JS::Realm* realm);
 
 void NukeAllWrappersForRealm(JSContext* cx, JS::Realm* realm,
                              js::NukeReferencesToWindow nukeReferencesToWindow =

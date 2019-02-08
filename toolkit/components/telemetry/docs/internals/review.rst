@@ -69,6 +69,10 @@ Considerations for all changes
   - Consider all our platforms: Windows, Mac, Linux, Android.
   - Consider all our products: Firefox, Fennec, GeckoView, Glean.
 
+- Does this fall afoul of common architectural failures?
+
+  - Prefer APIs that take non-String types unless writing a parser.
+
 - Sanity checking:
 
   - How does this behave in a release build? Have you tested this?

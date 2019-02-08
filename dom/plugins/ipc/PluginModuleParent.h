@@ -124,7 +124,7 @@ class PluginModuleParent : public PPluginModuleParent,
 
   mozilla::ipc::IPCResult RecvPluginShowWindow(
       const uint32_t& aWindowId, const bool& aModal, const int32_t& aX,
-      const int32_t& aY, const size_t& aWidth, const size_t& aHeight);
+      const int32_t& aY, const double& aWidth, const double& aHeight);
 
   mozilla::ipc::IPCResult RecvPluginHideWindow(const uint32_t& aWindowId);
 

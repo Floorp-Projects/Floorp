@@ -16,8 +16,8 @@ use bincode::{
 };
 
 use uuid::{
+    Bytes,
     Uuid,
-    UuidBytes,
 };
 
 use error::DataError;
@@ -43,7 +43,7 @@ pub enum Type {
 /// We use manual tagging, because <https://github.com/serde-rs/serde/issues/610>.
 impl Type {
     pub fn from_tag(tag: u8) -> Result<Type, DataError> {
-        Type::from_primitive(tag).ok_or(DataError::UnknownType(tag))
+        Type::from_primitive(tag).ok_or_else(|| DataError::UnknownType(tag))
     }
 
     pub fn to_tag(self) -> u8 {
@@ -89,15 +89,14 @@ pub enum Value<'s> {
     I64(i64),
     F64(OrderedFloat<f64>),
     Instant(i64), // Millisecond-precision timestamp.
-    Uuid(&'s UuidBytes),
+    Uuid(&'s Bytes),
     Str(&'s str),
     Json(&'s str),
     Blob(&'s [u8]),
 }
 
-// TODO: implement conversion between the two types of `Value` wrapper.
-// This might be unnecessary: we'll probably jump straight to primitives.
-enum OwnedValue {
+#[derive(Debug, PartialEq)]
+pub enum OwnedValue {
     Bool(bool),
     U64(u64),
     I64(i64),
@@ -109,7 +108,7 @@ enum OwnedValue {
     Blob(Vec<u8>),
 }
 
-fn uuid<'s>(bytes: &'s [u8]) -> Result<Value<'s>, DataError> {
+fn uuid(bytes: &[u8]) -> Result<Value, DataError> {
     if bytes.len() == 16 {
         Ok(Value::Uuid(array_ref![bytes, 0, 16]))
     } else {
@@ -180,5 +179,21 @@ impl<'s> Value<'s> {
                 serialize(&(Type::Uuid.to_tag(), v))
             },
         }.map_err(DataError::EncodingError)
+    }
+}
+
+impl<'s> From<&'s Value<'s>> for OwnedValue {
+    fn from(value: &Value) -> OwnedValue {
+        match value {
+            Value::Bool(ref v) => OwnedValue::Bool(*v),
+            Value::U64(ref v) => OwnedValue::U64(*v),
+            Value::I64(ref v) => OwnedValue::I64(*v),
+            Value::F64(ref v) => OwnedValue::F64(**v),
+            Value::Instant(ref v) => OwnedValue::Instant(*v),
+            Value::Uuid(ref v) => OwnedValue::Uuid(Uuid::from_bytes(**v)),
+            Value::Str(ref v) => OwnedValue::Str(v.to_string()),
+            Value::Json(ref v) => OwnedValue::Json(v.to_string()),
+            Value::Blob(ref v) => OwnedValue::Blob(v.to_vec()),
+        }
     }
 }

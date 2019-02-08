@@ -24,8 +24,10 @@ class nsSVGClipPathFrame final : public nsSVGContainerFrame {
   typedef mozilla::image::imgDrawingParams imgDrawingParams;
 
  protected:
-  explicit nsSVGClipPathFrame(ComputedStyle* aStyle)
-      : nsSVGContainerFrame(aStyle, kClassID), mIsBeingProcessed(false) {
+  explicit nsSVGClipPathFrame(ComputedStyle* aStyle,
+                              nsPresContext* aPresContext)
+      : nsSVGContainerFrame(aStyle, aPresContext, kClassID),
+        mIsBeingProcessed(false) {
     AddStateBits(NS_FRAME_IS_NONDISPLAY);
   }
 

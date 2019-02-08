@@ -231,7 +231,7 @@ class nsPluginFrame final : public nsFrame,
       nsDisplayListBuilder* aDisplayListBuilder);
 
  protected:
-  explicit nsPluginFrame(ComputedStyle* aStyle);
+  explicit nsPluginFrame(ComputedStyle* aStyle, nsPresContext* aPresContext);
   virtual ~nsPluginFrame();
 
   // NOTE:  This frame class does not inherit from |nsLeafFrame|, so

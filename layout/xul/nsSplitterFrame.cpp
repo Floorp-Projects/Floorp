@@ -196,13 +196,14 @@ nsSplitterFrameInner::State nsSplitterFrameInner::GetState() {
 // Creates a new Toolbar frame and returns it
 //
 nsIFrame* NS_NewSplitterFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle) {
-  return new (aPresShell) nsSplitterFrame(aStyle);
+  return new (aPresShell) nsSplitterFrame(aStyle, aPresShell->GetPresContext());
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsSplitterFrame)
 
-nsSplitterFrame::nsSplitterFrame(ComputedStyle* aStyle)
-    : nsBoxFrame(aStyle, kClassID), mInner(0) {}
+nsSplitterFrame::nsSplitterFrame(ComputedStyle* aStyle,
+                                 nsPresContext* aPresContext)
+    : nsBoxFrame(aStyle, aPresContext, kClassID), mInner(0) {}
 
 void nsSplitterFrame::DestroyFrom(nsIFrame* aDestructRoot,
                                   PostDestroyData& aPostDestroyData) {

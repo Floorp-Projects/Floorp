@@ -13,8 +13,6 @@ add_task(async function testMainActionCalled() {
   };
 
   await BrowserTestUtils.withNewTab(options, function(browser) {
-    let doc = browser.ownerDocument;
-
     is(PanelUI.notificationPanel.state, "closed", "update-manual doorhanger is closed.");
     let mainActionCalled = false;
     let mainAction = {
@@ -28,7 +26,7 @@ add_task(async function testMainActionCalled() {
     let doorhanger = notifications[0];
     is(doorhanger.id, "appMenu-update-manual-notification", "PanelUI is displaying the update-manual notification.");
 
-    let button = doc.getAnonymousElementByAttribute(doorhanger, "anonid", "button");
+    let button = doorhanger.button;
     button.click();
 
     ok(mainActionCalled, "Main action callback was called");
@@ -50,8 +48,6 @@ add_task(async function testSecondaryActionWorkflow() {
   };
 
   await BrowserTestUtils.withNewTab(options, async function(browser) {
-    let doc = browser.ownerDocument;
-
     is(PanelUI.notificationPanel.state, "closed", "update-manual doorhanger is closed.");
 
     let mainActionCalled = false;
@@ -66,7 +62,7 @@ add_task(async function testSecondaryActionWorkflow() {
     let doorhanger = notifications[0];
     is(doorhanger.id, "appMenu-update-manual-notification", "PanelUI is displaying the update-manual notification.");
 
-    let secondaryActionButton = doc.getAnonymousElementByAttribute(doorhanger, "anonid", "secondarybutton");
+    let secondaryActionButton = doorhanger.secondaryButton;
     secondaryActionButton.click();
 
     is(PanelUI.notificationPanel.state, "closed", "update-manual doorhanger is closed.");
@@ -98,8 +94,6 @@ add_task(async function testSecondaryActionWorkflow() {
  */
 add_task(async function testInteractionWithBadges() {
   await BrowserTestUtils.withNewTab("about:blank", async function(browser) {
-    let doc = browser.ownerDocument;
-
     AppMenuNotifications.showBadgeOnlyNotification("fxa-needs-authentication");
     is(PanelUI.menuButton.getAttribute("badge-status"), "fxa-needs-authentication", "Fxa badge is shown on PanelUI button.");
     is(PanelUI.notificationPanel.state, "closed", "update-manual doorhanger is closed.");
@@ -117,7 +111,7 @@ add_task(async function testInteractionWithBadges() {
     let doorhanger = notifications[0];
     is(doorhanger.id, "appMenu-update-manual-notification", "PanelUI is displaying the update-manual notification.");
 
-    let secondaryActionButton = doc.getAnonymousElementByAttribute(doorhanger, "anonid", "secondarybutton");
+    let secondaryActionButton = doorhanger.secondaryButton;
     secondaryActionButton.click();
 
     is(PanelUI.notificationPanel.state, "closed", "update-manual doorhanger is closed.");
@@ -144,8 +138,6 @@ add_task(async function testInteractionWithBadges() {
  */
 add_task(async function testAddingBadgeWhileDoorhangerIsShowing() {
   await BrowserTestUtils.withNewTab("about:blank", function(browser) {
-    let doc = browser.ownerDocument;
-
     is(PanelUI.notificationPanel.state, "closed", "update-manual doorhanger is closed.");
     let mainActionCalled = false;
     let mainAction = {
@@ -161,7 +153,7 @@ add_task(async function testAddingBadgeWhileDoorhangerIsShowing() {
     let doorhanger = notifications[0];
     is(doorhanger.id, "appMenu-update-manual-notification", "PanelUI is displaying the update-manual notification.");
 
-    let mainActionButton = doc.getAnonymousElementByAttribute(doorhanger, "anonid", "button");
+    let mainActionButton = doorhanger.button;
     mainActionButton.click();
 
     ok(mainActionCalled, "Main action callback was called");
@@ -214,8 +206,6 @@ add_task(async function testMultipleBadges() {
  */
 add_task(async function testMultipleNonBadges() {
   await BrowserTestUtils.withNewTab("about:blank", async function(browser) {
-    let doc = browser.ownerDocument;
-
     is(PanelUI.notificationPanel.state, "closed", "update-manual doorhanger is closed.");
 
     let updateManualAction = {
@@ -246,7 +236,7 @@ add_task(async function testMultipleNonBadges() {
     doorhanger = notifications[0];
     is(doorhanger.id, "appMenu-update-restart-notification", "PanelUI is displaying the update-restart notification.");
 
-    let secondaryActionButton = doc.getAnonymousElementByAttribute(doorhanger, "anonid", "secondarybutton");
+    let secondaryActionButton = doorhanger.secondaryButton;
     secondaryActionButton.click();
 
     is(PanelUI.notificationPanel.state, "closed", "update-manual doorhanger is closed.");

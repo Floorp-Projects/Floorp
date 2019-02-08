@@ -36,7 +36,7 @@ using namespace mozilla::layout;
 
 nsInlineFrame* NS_NewInlineFrame(nsIPresShell* aPresShell,
                                  ComputedStyle* aStyle) {
-  return new (aPresShell) nsInlineFrame(aStyle);
+  return new (aPresShell) nsInlineFrame(aStyle, aPresShell->GetPresContext());
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsInlineFrame)
@@ -931,7 +931,8 @@ void nsInlineFrame::UpdateStyleOfOwnedAnonBoxesForIBSplit(
 
 nsFirstLineFrame* NS_NewFirstLineFrame(nsIPresShell* aPresShell,
                                        ComputedStyle* aStyle) {
-  return new (aPresShell) nsFirstLineFrame(aStyle);
+  return new (aPresShell)
+      nsFirstLineFrame(aStyle, aPresShell->GetPresContext());
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsFirstLineFrame)

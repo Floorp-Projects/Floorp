@@ -1,6 +1,7 @@
-use libc::{c_void, size_t, c_uint};
-use std::{fmt, ptr, result, slice};
 use std::marker::PhantomData;
+use std::{fmt, mem, ptr, result, slice};
+
+use libc::{EINVAL, c_void, size_t, c_uint};
 
 use database::Database;
 use error::{Error, Result, lmdb_result};
@@ -19,11 +20,7 @@ pub trait Cursor<'txn> {
 
     /// Retrieves a key/data pair from the cursor. Depending on the cursor op,
     /// the current key may be returned.
-    fn get(&self,
-           key: Option<&[u8]>,
-           data: Option<&[u8]>,
-           op: c_uint)
-           -> Result<(Option<&'txn [u8]>, &'txn [u8])> {
+    fn get(&self, key: Option<&[u8]>, data: Option<&[u8]>, op: c_uint) -> Result<(Option<&'txn [u8]>, &'txn [u8])> {
         unsafe {
             let mut key_val = slice_to_val(key);
             let mut data_val = slice_to_val(data);
@@ -52,8 +49,7 @@ pub trait Cursor<'txn> {
     /// duplicate data items of each key will be returned before moving on to
     /// the next key.
     fn iter_start(&mut self) -> Iter<'txn> {
-        self.get(None, None, ffi::MDB_FIRST).unwrap();
-        Iter::new(self.cursor(), ffi::MDB_GET_CURRENT, ffi::MDB_NEXT)
+        Iter::new(self.cursor(), ffi::MDB_FIRST, ffi::MDB_NEXT)
     }
 
     /// Iterate over database items starting from the given key.
@@ -63,10 +59,9 @@ pub trait Cursor<'txn> {
     /// the next key.
     fn iter_from<K>(&mut self, key: K) -> Iter<'txn> where K: AsRef<[u8]> {
         match self.get(Some(key.as_ref()), None, ffi::MDB_SET_RANGE) {
-            Err(Error::NotFound) => Ok(()),
-            Err(error) => Err(error),
-            Ok(_) => Ok(()),
-        }.unwrap();
+            Ok(_) | Err(Error::NotFound) => (),
+            Err(error) => panic!("mdb_cursor_get returned an unexpected error: {}", error),
+        };
         Iter::new(self.cursor(), ffi::MDB_GET_CURRENT, ffi::MDB_NEXT)
     }
 
@@ -80,27 +75,26 @@ pub trait Cursor<'txn> {
     /// Iterate over duplicate database items starting from the beginning of the
     /// database. Each item will be returned as an iterator of its duplicates.
     fn iter_dup_start(&mut self) -> IterDup<'txn> {
-        self.get(None, None, ffi::MDB_FIRST).unwrap();
-        IterDup::new(self.cursor(), ffi::MDB_GET_CURRENT)
+        IterDup::new(self.cursor(), ffi::MDB_FIRST)
     }
 
     /// Iterate over duplicate items in the database starting from the given
     /// key. Each item will be returned as an iterator of its duplicates.
     fn iter_dup_from<K>(&mut self, key: &K) -> IterDup<'txn> where K: AsRef<[u8]> {
         match self.get(Some(key.as_ref()), None, ffi::MDB_SET_RANGE) {
-            Err(Error::NotFound) => Ok(()),
-            Err(error) => Err(error),
-            Ok(_) => Ok(()),
-        }.unwrap();
+            Ok(_) | Err(Error::NotFound) => (),
+            Err(error) => panic!("mdb_cursor_get returned an unexpected error: {}", error),
+        };
         IterDup::new(self.cursor(), ffi::MDB_GET_CURRENT)
     }
 
-    /// Iterate over the duplicates of the item in the database with the given
-    /// key.
-    fn iter_dup_of<K>(&mut self, key: &K) -> Result<Iter<'txn>> where K:
-        AsRef<[u8]> {
-        self.get(Some(key.as_ref()), None, ffi::MDB_SET)?;
-        Ok(Iter::new(self.cursor(), ffi::MDB_GET_CURRENT, ffi::MDB_NEXT_DUP))
+    /// Iterate over the duplicates of the item in the database with the given key.
+    fn iter_dup_of<K>(&mut self, key: &K) -> Iter<'txn> where K: AsRef<[u8]> {
+        match self.get(Some(key.as_ref()), None, ffi::MDB_SET) {
+            Ok(_) | Err(Error::NotFound) => (),
+            Err(error) => panic!("mdb_cursor_get returned an unexpected error: {}", error),
+        };
+        Iter::new(self.cursor(), ffi::MDB_GET_CURRENT, ffi::MDB_NEXT_DUP)
     }
 }
 
@@ -249,20 +243,14 @@ impl <'txn> Iterator for Iter<'txn> {
     fn next(&mut self) -> Option<(&'txn [u8], &'txn [u8])> {
         let mut key = ffi::MDB_val { mv_size: 0, mv_data: ptr::null_mut() };
         let mut data = ffi::MDB_val { mv_size: 0, mv_data: ptr::null_mut() };
-
+        let op = mem::replace(&mut self.op, self.next_op);
         unsafe {
-            let err_code = ffi::mdb_cursor_get(self.cursor, &mut key, &mut data, self.op);
-            // Set the operation for the next get
-            self.op = self.next_op;
-            if err_code == ffi::MDB_SUCCESS {
-                Some((val_to_slice(key), val_to_slice(data)))
-            } else {
-                // The documentation for mdb_cursor_get specifies that it may fail with MDB_NOTFOUND
-                // and MDB_EINVAL (and we shouldn't be passing in invalid parameters).
-                // TODO: validate that these are the only failures possible.
-                debug_assert!(err_code == ffi::MDB_NOTFOUND,
-                              "Unexpected LMDB error {:?}.", Error::from_err_code(err_code));
-                None
+            match ffi::mdb_cursor_get(self.cursor, &mut key, &mut data, op) {
+                ffi::MDB_SUCCESS => Some((val_to_slice(key), val_to_slice(data))),
+                // EINVAL can occur when the cursor was previously seeked to a non-existent value,
+                // e.g. iter_from with a key greater than all values in the database.
+                ffi::MDB_NOTFOUND | EINVAL => None,
+                error => panic!("mdb_cursor_get returned an unexpected error: {}", error),
             }
         }
     }
@@ -299,12 +287,12 @@ impl <'txn> Iterator for IterDup<'txn> {
     fn next(&mut self) -> Option<Iter<'txn>> {
         let mut key = ffi::MDB_val { mv_size: 0, mv_data: ptr::null_mut() };
         let mut data = ffi::MDB_val { mv_size: 0, mv_data: ptr::null_mut() };
+        let op = mem::replace(&mut self.op, ffi::MDB_NEXT_NODUP);
         let err_code = unsafe {
-            ffi::mdb_cursor_get(self.cursor, &mut key, &mut data, self.op)
+            ffi::mdb_cursor_get(self.cursor, &mut key, &mut data, op)
         };
 
         if err_code == ffi::MDB_SUCCESS {
-            self.op = ffi::MDB_NEXT;
             Some(Iter::new(self.cursor, ffi::MDB_GET_CURRENT, ffi::MDB_NEXT_DUP))
         } else {
             None
@@ -464,6 +452,36 @@ mod test {
     }
 
     #[test]
+    fn test_iter_empty_database() {
+        let dir = TempDir::new("test").unwrap();
+        let env = Environment::new().open(dir.path()).unwrap();
+        let db = env.open_db(None).unwrap();
+        let txn = env.begin_ro_txn().unwrap();
+        let mut cursor = txn.open_ro_cursor(db).unwrap();
+
+        assert_eq!(0, cursor.iter().count());
+        assert_eq!(0, cursor.iter_start().count());
+        assert_eq!(0, cursor.iter_from(b"foo").count());
+    }
+
+    #[test]
+    fn test_iter_empty_dup_database() {
+        let dir = TempDir::new("test").unwrap();
+        let env = Environment::new().open(dir.path()).unwrap();
+        let db = env.create_db(None, DatabaseFlags::DUP_SORT).unwrap();
+        let txn = env.begin_ro_txn().unwrap();
+        let mut cursor = txn.open_ro_cursor(db).unwrap();
+
+        assert_eq!(0, cursor.iter().count());
+        assert_eq!(0, cursor.iter_start().count());
+        assert_eq!(0, cursor.iter_from(b"foo").count());
+        assert_eq!(0, cursor.iter_dup().count());
+        assert_eq!(0, cursor.iter_dup_start().count());
+        assert_eq!(0, cursor.iter_dup_from(b"foo").count());
+        assert_eq!(0, cursor.iter_dup_of(b"foo").count());
+    }
+
+    #[test]
     fn test_iter_dup() {
         let dir = TempDir::new("test").unwrap();
         let env = Environment::new().open(dir.path()).unwrap();
@@ -514,9 +532,9 @@ mod test {
                    cursor.iter_dup_from(b"f").flat_map(|x| x).collect::<Vec<_>>());
 
         assert_eq!(items.clone().into_iter().skip(3).take(3).collect::<Vec<(&[u8], &[u8])>>(),
-                   cursor.iter_dup_of(b"b").unwrap().collect::<Vec<_>>());
+                   cursor.iter_dup_of(b"b").collect::<Vec<_>>());
 
-        assert!(cursor.iter_dup_of(b"foo").is_err());
+        assert_eq!(0, cursor.iter_dup_of(b"foo").count());
     }
 
     #[test]

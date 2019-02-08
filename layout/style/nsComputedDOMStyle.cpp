@@ -290,7 +290,6 @@ nsComputedDOMStyle::nsComputedDOMStyle(dom::Element* aElement,
       mInnerFrame(nullptr),
       mPresShell(nullptr),
       mStyleType(aStyleType),
-      mComputedStyleGeneration(0),
       mExposeVisitedStyle(false),
       mResolvedComputedStyle(false)
 #ifdef DEBUG
@@ -746,6 +745,7 @@ void nsComputedDOMStyle::SetResolvedComputedStyle(
   }
   mComputedStyle = aContext;
   mComputedStyleGeneration = aGeneration;
+  mPresShellId = mPresShell->GetPresShellId();
 }
 
 void nsComputedDOMStyle::SetFrameComputedStyle(mozilla::ComputedStyle* aStyle,
@@ -753,6 +753,7 @@ void nsComputedDOMStyle::SetFrameComputedStyle(mozilla::ComputedStyle* aStyle,
   ClearComputedStyle();
   mComputedStyle = aStyle;
   mComputedStyleGeneration = aGeneration;
+  mPresShellId = mPresShell->GetPresShellId();
 }
 
 bool nsComputedDOMStyle::NeedsToFlush(Document* aDocument) const {
@@ -845,6 +846,7 @@ void nsComputedDOMStyle::UpdateCurrentStyleSources(bool aNeedsLayoutFlush) {
     //
     // So we always need to update the style to ensure it it up-to-date.
     if (mComputedStyleGeneration == currentGeneration &&
+        mPresShellId == mPresShell->GetPresShellId() &&
         mElement->IsInComposedDoc()) {
       // Our cached style is still valid.
       return;

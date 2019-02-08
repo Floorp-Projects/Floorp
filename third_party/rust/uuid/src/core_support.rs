@@ -9,17 +9,9 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use core::{fmt, str};
+use parser;
 use prelude::*;
-
-cfg_if! {
-    if #[cfg(feature = "std")] {
-        use std::fmt;
-        use std::str;
-    } else {
-        use core::fmt;
-        use core::str;
-    }
-}
 
 impl fmt::Display for Uuid {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -27,38 +19,51 @@ impl fmt::Display for Uuid {
     }
 }
 
-impl fmt::Display for UuidVariant {
+impl fmt::Display for Variant {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            UuidVariant::NCS => write!(f, "NCS"),
-            UuidVariant::RFC4122 => write!(f, "RFC4122"),
-            UuidVariant::Microsoft => write!(f, "Microsoft"),
-            UuidVariant::Future => write!(f, "Future"),
+            Variant::NCS => write!(f, "NCS"),
+            Variant::RFC4122 => write!(f, "RFC4122"),
+            Variant::Microsoft => write!(f, "Microsoft"),
+            Variant::Future => write!(f, "Future"),
         }
+    }
+}
+
+impl fmt::Display for ::BytesError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "invalid bytes length: expected {}, found {}",
+            self.expected(),
+            self.found()
+        )
     }
 }
 
 impl fmt::LowerHex for Uuid {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        <super::Hyphenated as fmt::LowerHex>::fmt(&self.hyphenated(), f)
+        fmt::LowerHex::fmt(&self.to_hyphenated_ref(), f)
     }
 }
 
 impl fmt::UpperHex for Uuid {
+    #[inline]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        <super::Hyphenated as fmt::UpperHex>::fmt(&self.hyphenated(), f)
+        fmt::UpperHex::fmt(&self.to_hyphenated_ref(), f)
     }
 }
 
 impl str::FromStr for Uuid {
-    type Err = super::ParseError;
+    type Err = parser::ParseError;
 
-    fn from_str(uuid_str: &str) -> Result<Uuid, super::ParseError> {
+    fn from_str(uuid_str: &str) -> Result<Self, Self::Err> {
         Uuid::parse_str(uuid_str)
     }
 }
 
 impl Default for Uuid {
+    #[inline]
     fn default() -> Self {
         Uuid::nil()
     }
@@ -109,7 +114,7 @@ mod tests {
         let s = uuid.to_string();
         let mut buffer = String::new();
 
-        assert_eq!(s, uuid.hyphenated().to_string());
+        assert_eq!(s, uuid.to_hyphenated().to_string());
 
         check!(buffer, "{}", uuid, 36, |c| c.is_lowercase()
             || c.is_digit(10)
@@ -128,6 +133,7 @@ mod tests {
             || c == '-');
     }
 
+    // noinspection RsAssertEqual
     #[test]
     fn test_uuid_operator_eq() {
         let uuid1 = test_util::new();

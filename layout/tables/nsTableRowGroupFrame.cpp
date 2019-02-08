@@ -49,8 +49,9 @@ struct TableRowGroupReflowInput {
 
 }  // namespace mozilla
 
-nsTableRowGroupFrame::nsTableRowGroupFrame(ComputedStyle* aStyle)
-    : nsContainerFrame(aStyle, kClassID) {
+nsTableRowGroupFrame::nsTableRowGroupFrame(ComputedStyle* aStyle,
+                                           nsPresContext* aPresContext)
+    : nsContainerFrame(aStyle, aPresContext, kClassID) {
   SetRepeatable(false);
 }
 
@@ -1627,7 +1628,8 @@ bool nsTableRowGroupFrame::HasInternalBreakAfter() const {
 
 nsTableRowGroupFrame* NS_NewTableRowGroupFrame(nsIPresShell* aPresShell,
                                                ComputedStyle* aStyle) {
-  return new (aPresShell) nsTableRowGroupFrame(aStyle);
+  return new (aPresShell)
+      nsTableRowGroupFrame(aStyle, aPresShell->GetPresContext());
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsTableRowGroupFrame)

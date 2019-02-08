@@ -74,8 +74,6 @@ EXPORTS += [
 EXPORTS.mozilla += [
     'AccessibleCaretEventHub.h',
     'ArenaObjectID.h',
-    'ArenaRefPtr.h',
-    'ArenaRefPtrInlines.h',
     'GeometryUtils.h',
     'OverflowChangedTracker.h',
     'PresShell.h',

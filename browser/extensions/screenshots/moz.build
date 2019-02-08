@@ -97,10 +97,6 @@ FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["el"] += [
   '_locales/el/messages.json'
 ]
 
-FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["en_CA"] += [
-  '_locales/en_CA/messages.json'
-]
-
 FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["en_GB"] += [
   '_locales/en_GB/messages.json'
 ]
@@ -345,6 +341,10 @@ FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["sr"] += [
   '_locales/sr/messages.json'
 ]
 
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["su"] += [
+  '_locales/su/messages.json'
+]
+
 FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["sv_SE"] += [
   '_locales/sv_SE/messages.json'
 ]
@@ -429,6 +429,7 @@ FINAL_TARGET_FILES.features['screenshots@mozilla.org']["icons"] += [
   'icons/copied-notification.svg',
   'icons/copy.svg',
   'icons/done.svg',
+  'icons/download-white.svg',
   'icons/download.svg',
   'icons/help-16.svg',
   'icons/icon-highlight-32-v2.svg',
@@ -441,9 +442,7 @@ FINAL_TARGET_FILES.features['screenshots@mozilla.org']["icons"] += [
   'icons/onboarding-1.png',
   'icons/onboarding-2.png',
   'icons/onboarding-3.png',
-  'icons/onboarding-4.png',
-  'icons/onboarding-5.png',
-  'icons/onboarding-6.png'
+  'icons/onboarding-4.png'
 ]
 
 FINAL_TARGET_FILES.features['screenshots@mozilla.org']["onboarding"] += [
@@ -458,12 +457,6 @@ FINAL_TARGET_FILES.features['screenshots@mozilla.org']["selector"] += [
   'selector/ui.js',
   'selector/uicontrol.js',
   'selector/util.js'
-]
-
-FINAL_TARGET_FILES.features['screenshots@mozilla.org']["test"]["browser"] += [
-  'test/browser/.eslintrc.yml',
-  'test/browser/browser.ini',
-  'test/browser/browser_screenshots_ui_check.js'
 ]
 
 # AUTOMATIC INSERTION END

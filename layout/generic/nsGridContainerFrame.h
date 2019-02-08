@@ -276,8 +276,9 @@ class nsGridContainerFrame final : public nsContainerFrame {
   struct TranslatedLineRange;
   friend nsContainerFrame* NS_NewGridContainerFrame(nsIPresShell* aPresShell,
                                                     ComputedStyle* aStyle);
-  explicit nsGridContainerFrame(ComputedStyle* aStyle)
-      : nsContainerFrame(aStyle, kClassID),
+  explicit nsGridContainerFrame(ComputedStyle* aStyle,
+                                nsPresContext* aPresContext)
+      : nsContainerFrame(aStyle, aPresContext, kClassID),
         mCachedMinISize(NS_INTRINSIC_WIDTH_UNKNOWN),
         mCachedPrefISize(NS_INTRINSIC_WIDTH_UNKNOWN) {
     mBaseline[0][0] = NS_INTRINSIC_WIDTH_UNKNOWN;

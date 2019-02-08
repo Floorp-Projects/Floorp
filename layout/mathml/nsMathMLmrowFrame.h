@@ -44,8 +44,8 @@ class nsMathMLmrowFrame final : public nsMathMLContainerFrame {
   }
 
  protected:
-  explicit nsMathMLmrowFrame(ComputedStyle* aStyle)
-      : nsMathMLContainerFrame(aStyle, kClassID) {}
+  explicit nsMathMLmrowFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
+      : nsMathMLContainerFrame(aStyle, aPresContext, kClassID) {}
   virtual ~nsMathMLmrowFrame();
 };
 

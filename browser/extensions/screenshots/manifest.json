@@ -1,10 +1,11 @@
 {
   "manifest_version": 2,
   "name": "Firefox Screenshots",
-  "version": "35.0.0",
+  "version": "37.1.0",
   "description": "__MSG_addonDescription__",
   "author": "__MSG_addonAuthorsList__",
   "homepage_url": "https://github.com/mozilla-services/screenshots",
+  "incognito": "spanning",
   "applications": {
     "gecko": {
       "id": "screenshots@mozilla.org",
@@ -17,6 +18,14 @@
       "build/buildSettings.js",
       "background/startBackground.js"
     ]
+  },
+  "commands": {
+    "take-screenshot": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+S"
+      },
+      "description": "Open the Firefox Screenshots UI"
+    }
   },
   "content_scripts": [
     {

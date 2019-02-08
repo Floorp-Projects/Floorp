@@ -18,8 +18,8 @@ class nsPopupSetFrame final : public nsBoxFrame {
  public:
   NS_DECL_FRAMEARENA_HELPERS(nsPopupSetFrame)
 
-  explicit nsPopupSetFrame(ComputedStyle* aStyle)
-      : nsBoxFrame(aStyle, kClassID) {}
+  explicit nsPopupSetFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
+      : nsBoxFrame(aStyle, aPresContext, kClassID) {}
 
   ~nsPopupSetFrame() {}
 

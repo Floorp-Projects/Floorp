@@ -355,8 +355,7 @@ const LayoutActor = ActorClassWithSpec(layoutSpec, {
           return new FlexboxActor(this, node);
         }
 
-        const container = findFlexOrGridParentContainerForNode(node, type, this.walker);
-
+        const container = node.parentFlexElement;
         if (container) {
           return new FlexboxActor(this, container);
         }
@@ -372,10 +371,11 @@ const LayoutActor = ActorClassWithSpec(layoutSpec, {
     // Note that text nodes that are children of flex/grid containers are wrapped in
     // anonymous containers, so even if their displayType getter returns null we still
     // want to walk up the chain to find their container.
-    const container = findFlexOrGridParentContainerForNode(node, type, this.walker);
-    if (container && flexType) {
-      return new FlexboxActor(this, container);
+    const parentFlexElement = node.parentFlexElement;
+    if (parentFlexElement && flexType) {
+      return new FlexboxActor(this, parentFlexElement);
     }
+    const container = findGridParentContainerForNode(node, this.walker);
     if (container && gridType) {
       return new GridActor(this, container);
     }
@@ -457,24 +457,18 @@ function isNodeDead(node) {
 }
 
 /**
- * If the provided node is a grid of flex item, then return its parent grid or flex
- * container.
+ * If the provided node is a grid item, then return its parent grid.
  *
  * @param  {DOMNode} node
- *         The node that is supposedly a grid or flex item.
- * @param  {String} type
- *         The type of container/item to look for: "flex" or "grid".
+ *         The node that is supposedly a grid item.
  * @param  {WalkerActor} walkerActor
  *         The current instance of WalkerActor.
  * @return {DOMNode|null}
- *         The parent grid or flex container if found, null otherwise.
+ *         The parent grid if found, null otherwise.
  */
-function findFlexOrGridParentContainerForNode(node, type, walker) {
+function findGridParentContainerForNode(node, walker) {
   const treeWalker = walker.getDocumentWalker(node, SHOW_ELEMENT);
   let currentNode = treeWalker.currentNode;
-
-  const flexType = type === "flex";
-  const gridType = type === "grid";
 
   try {
     while ((currentNode = treeWalker.parentNode())) {
@@ -483,11 +477,7 @@ function findFlexOrGridParentContainerForNode(node, type, walker) {
         break;
       }
 
-      if (flexType && displayType.includes("flex")) {
-        if (isNodeAFlexItemInContainer(node, currentNode, walker)) {
-          return currentNode;
-        }
-      } else if (gridType && displayType.includes("grid")) {
+      if (displayType.includes("grid")) {
         return currentNode;
       } else if (displayType === "contents") {
         // Continue walking up the tree since the parent node is a content element.
@@ -503,36 +493,7 @@ function findFlexOrGridParentContainerForNode(node, type, walker) {
   return null;
 }
 
-/**
- * Returns whether or not the given node is actually considered a flex item by its
- * container.
- *
- * @param  {Node|NodeActor} supposedItem
- *         The node that might be a flex item of its container.
- * @param  {Node} container
- *         The node's container.
- * @return {Boolean}
- *         Whether or not the node we are looking at is a flex item of its container.
- */
-function isNodeAFlexItemInContainer(supposedItem, container, walker) {
-  const containerDisplayType = walker.getNode(container).displayType;
-
-  if (containerDisplayType.includes("flex")) {
-    const containerFlex = container.getAsFlexContainer();
-
-    for (const line of containerFlex.getLines()) {
-      for (const item of line.getItems()) {
-        if (item.node === supposedItem) {
-          return true;
-        }
-      }
-    }
-  }
-
-  return false;
-}
-
-exports.findFlexOrGridParentContainerForNode = findFlexOrGridParentContainerForNode;
+exports.findGridParentContainerForNode = findGridParentContainerForNode;
 exports.FlexboxActor = FlexboxActor;
 exports.FlexItemActor = FlexItemActor;
 exports.GridActor = GridActor;

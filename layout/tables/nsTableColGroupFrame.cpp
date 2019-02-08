@@ -401,7 +401,8 @@ void nsTableColGroupFrame::GetContinuousBCBorderWidth(WritingMode aWM,
 
 nsTableColGroupFrame* NS_NewTableColGroupFrame(nsIPresShell* aPresShell,
                                                ComputedStyle* aStyle) {
-  return new (aPresShell) nsTableColGroupFrame(aStyle);
+  return new (aPresShell)
+      nsTableColGroupFrame(aStyle, aPresShell->GetPresContext());
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsTableColGroupFrame)

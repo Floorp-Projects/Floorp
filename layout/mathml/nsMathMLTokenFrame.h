@@ -53,8 +53,10 @@ class nsMathMLTokenFrame : public nsMathMLContainerFrame {
                          ReflowOutput& aDesiredSize) override;
 
  protected:
-  explicit nsMathMLTokenFrame(ComputedStyle* aStyle, ClassID aID = kClassID)
-      : nsMathMLContainerFrame(aStyle, aID) {}
+  explicit nsMathMLTokenFrame(ComputedStyle* aStyle,
+                              nsPresContext* aPresContext,
+                              ClassID aID = kClassID)
+      : nsMathMLContainerFrame(aStyle, aPresContext, aID) {}
   virtual ~nsMathMLTokenFrame();
 
   void MarkTextFramesAsTokenMathML();

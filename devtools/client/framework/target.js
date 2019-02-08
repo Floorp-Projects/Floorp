@@ -88,35 +88,6 @@ exports.TargetFactory = {
   },
 
   /**
-   * Return a promise of a Target for a remote tab.
-   * @param {Object} options
-   *        The options object has the following properties:
-   *        {
-   *          activeTab: front for this tab target,
-   *          client: a DebuggerClient instance
-   *                  (caller owns this and is responsible for closing),
-   *          chrome: true if the remote target is the whole process
-   *        }
-   *
-   * @return A promise of a target object
-   */
-  forRemoteTab: function({ activeTab, client, chrome }) {
-    const target = activeTab;
-    if (chrome) {
-      target.forceChrome();
-    }
-    const targetPromise = target.attach().then(() => target);
-    targetPromise.catch(e => {
-      console.error("Exception while attaching target", e);
-    });
-    return targetPromise;
-  },
-
-  forWorker: function(workerTargetFront) {
-    return workerTargetFront;
-  },
-
-  /**
    * Creating a target for a tab that is being closed is a problem because it
    * allows a leak as a result of coming after the close event which normally
    * clears things up. This function allows us to ask if there is a known

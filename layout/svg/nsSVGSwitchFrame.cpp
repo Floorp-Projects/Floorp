@@ -20,8 +20,8 @@ class nsSVGSwitchFrame final : public nsSVGGFrame {
                                         ComputedStyle* aStyle);
 
  protected:
-  explicit nsSVGSwitchFrame(ComputedStyle* aStyle)
-      : nsSVGGFrame(aStyle, kClassID) {}
+  explicit nsSVGSwitchFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
+      : nsSVGGFrame(aStyle, aPresContext, kClassID) {}
 
  public:
   NS_DECL_FRAMEARENA_HELPERS(nsSVGSwitchFrame)
@@ -58,7 +58,8 @@ class nsSVGSwitchFrame final : public nsSVGGFrame {
 
 nsIFrame* NS_NewSVGSwitchFrame(nsIPresShell* aPresShell,
                                ComputedStyle* aStyle) {
-  return new (aPresShell) nsSVGSwitchFrame(aStyle);
+  return new (aPresShell)
+      nsSVGSwitchFrame(aStyle, aPresShell->GetPresContext());
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsSVGSwitchFrame)

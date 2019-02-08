@@ -23,8 +23,9 @@ class nsSVGGenericContainerFrame final : public nsSVGDisplayContainerFrame {
                                                   ComputedStyle* aStyle);
 
  protected:
-  explicit nsSVGGenericContainerFrame(ComputedStyle* aStyle)
-      : nsSVGDisplayContainerFrame(aStyle, kClassID) {}
+  explicit nsSVGGenericContainerFrame(ComputedStyle* aStyle,
+                                      nsPresContext* aPresContext)
+      : nsSVGDisplayContainerFrame(aStyle, aPresContext, kClassID) {}
 
  public:
   NS_DECL_FRAMEARENA_HELPERS(nsSVGGenericContainerFrame)

@@ -34,8 +34,8 @@ class nsXULLabelFrame final : public nsBlockFrame {
 #endif
 
  protected:
-  explicit nsXULLabelFrame(ComputedStyle* aStyle)
-      : nsBlockFrame(aStyle, kClassID) {}
+  explicit nsXULLabelFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
+      : nsBlockFrame(aStyle, aPresContext, kClassID) {}
 
   nsresult RegUnregAccessKey(bool aDoReg);
 };

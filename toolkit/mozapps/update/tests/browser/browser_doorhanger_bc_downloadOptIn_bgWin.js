@@ -27,7 +27,7 @@ add_task(async function testUpdatesBackgroundWindow() {
     },
     {
       notificationId: "update-restart",
-      button: "secondarybutton",
+      button: "secondaryButton",
       cleanup() {
         AppMenuNotifications.removeNotification(/.*/);
       },

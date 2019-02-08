@@ -53,7 +53,8 @@ class ColumnSetWrapperFrame final : public nsBlockFrame {
   void MarkIntrinsicISizesDirty() override;
 
  private:
-  explicit ColumnSetWrapperFrame(ComputedStyle* aStyle);
+  explicit ColumnSetWrapperFrame(ComputedStyle* aStyle,
+                                 nsPresContext* aPresContext);
   ~ColumnSetWrapperFrame() override = default;
 
 #ifdef DEBUG

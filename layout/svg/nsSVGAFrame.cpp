@@ -21,8 +21,8 @@ class nsSVGAFrame final : public nsSVGDisplayContainerFrame {
                                    ComputedStyle* aStyle);
 
  protected:
-  explicit nsSVGAFrame(ComputedStyle* aStyle)
-      : nsSVGDisplayContainerFrame(aStyle, kClassID) {}
+  explicit nsSVGAFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
+      : nsSVGDisplayContainerFrame(aStyle, aPresContext, kClassID) {}
 
  public:
   NS_DECL_FRAMEARENA_HELPERS(nsSVGAFrame)
@@ -47,7 +47,7 @@ class nsSVGAFrame final : public nsSVGDisplayContainerFrame {
 // Implementation
 
 nsIFrame* NS_NewSVGAFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle) {
-  return new (aPresShell) nsSVGAFrame(aStyle);
+  return new (aPresShell) nsSVGAFrame(aStyle, aPresShell->GetPresContext());
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsSVGAFrame)

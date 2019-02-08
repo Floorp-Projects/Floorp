@@ -51,13 +51,15 @@ nsresult nsButtonBoxFrame::nsButtonBoxListener::HandleEvent(
 //
 nsIFrame* NS_NewButtonBoxFrame(nsIPresShell* aPresShell,
                                ComputedStyle* aStyle) {
-  return new (aPresShell) nsButtonBoxFrame(aStyle);
+  return new (aPresShell)
+      nsButtonBoxFrame(aStyle, aPresShell->GetPresContext());
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsButtonBoxFrame)
 
-nsButtonBoxFrame::nsButtonBoxFrame(ComputedStyle* aStyle, ClassID aID)
-    : nsBoxFrame(aStyle, aID, false),
+nsButtonBoxFrame::nsButtonBoxFrame(ComputedStyle* aStyle,
+                                   nsPresContext* aPresContext, ClassID aID)
+    : nsBoxFrame(aStyle, aPresContext, aID, false),
       mButtonBoxListener(nullptr),
       mIsHandlingKeyEvent(false) {
   UpdateMouseThrough();

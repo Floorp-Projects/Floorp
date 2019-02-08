@@ -26,13 +26,15 @@ using namespace mozilla::layout;
 
 nsContainerFrame* NS_NewFieldSetFrame(nsIPresShell* aPresShell,
                                       ComputedStyle* aStyle) {
-  return new (aPresShell) nsFieldSetFrame(aStyle);
+  return new (aPresShell) nsFieldSetFrame(aStyle, aPresShell->GetPresContext());
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsFieldSetFrame)
 
-nsFieldSetFrame::nsFieldSetFrame(ComputedStyle* aStyle)
-    : nsContainerFrame(aStyle, kClassID), mLegendRect(GetWritingMode()) {
+nsFieldSetFrame::nsFieldSetFrame(ComputedStyle* aStyle,
+                                 nsPresContext* aPresContext)
+    : nsContainerFrame(aStyle, aPresContext, kClassID),
+      mLegendRect(GetWritingMode()) {
   mLegendSpace = 0;
 }
 

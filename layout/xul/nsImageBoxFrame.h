@@ -105,7 +105,7 @@ class nsImageBoxFrame final : public nsLeafBoxFrame {
   nsRect GetDestRect(const nsPoint& aOffset, Maybe<nsPoint>& aAnchorPoint);
 
  protected:
-  explicit nsImageBoxFrame(ComputedStyle* aStyle);
+  explicit nsImageBoxFrame(ComputedStyle* aStyle, nsPresContext* aPresContext);
 
   virtual void GetImageSize();
 

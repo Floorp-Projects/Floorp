@@ -10,8 +10,10 @@ const { createFactory, createElement } = require("devtools/client/shared/vendor/
 const { Provider } = require("devtools/client/shared/vendor/react-redux");
 
 loader.lazyRequireGetter(this, "ChangesContextMenu", "devtools/client/inspector/changes/ChangesContextMenu");
+loader.lazyRequireGetter(this, "clipboardHelper", "devtools/shared/platform/clipboard");
 
 const ChangesApp = createFactory(require("./components/ChangesApp"));
+const { getChangesStylesheet } = require("./selectors/changes");
 
 const {
   TELEMETRY_SCALAR_CONTEXTMENU,
@@ -30,6 +32,7 @@ class ChangesView {
     this.inspector = inspector;
     this.store = this.inspector.store;
     this.telemetry = this.inspector.telemetry;
+    this.window = window;
 
     this.onAddChange = this.onAddChange.bind(this);
     this.onClearChanges = this.onClearChanges.bind(this);
@@ -100,6 +103,32 @@ class ChangesView {
     }
   }
 
+  /**
+   * Handler for the "Copy Changes" option from the context menu.
+   * Builds a CSS text with the changes aggregated for the target rule and copies it to
+   * the clipboard.
+   *
+   * @param {String} ruleId
+   *        Rule id of the target rule.
+   * @param {String} sourceId
+   *        Source id of the target rule.
+   */
+  copyChanges(ruleId, sourceId) {
+    const state = this.store.getState().changes || {};
+    const filter = { ruleIds: [ruleId], sourceIds: [sourceId] };
+    const text = getChangesStylesheet(state, filter);
+    clipboardHelper.copyString(text);
+  }
+
+  /**
+   * Handler for the "Copy" option from the context menu.
+   * Copies the current text selection to the clipboard.
+   */
+  copySelection() {
+    clipboardHelper.copyString(this.window.getSelection().toString());
+    this.telemetry.scalarAdd(TELEMETRY_SCALAR_CONTEXTMENU_COPY, 1);
+  }
+
   onAddChange(change) {
     // Turn data into a suitable change to send to the store.
     this.store.dispatch(trackChange(change));
@@ -116,14 +145,6 @@ class ChangesView {
   onContextMenu(e) {
     this.contextMenu.show(e);
     this.telemetry.scalarAdd(TELEMETRY_SCALAR_CONTEXTMENU, 1);
-  }
-
-  /**
-   * Callback function ran after the "Copy" option from the context menu is used.
-   * This is not an event handler. The copy event cannot be prevented from this method.
-   */
-  onContextMenuCopy() {
-    this.telemetry.scalarAdd(TELEMETRY_SCALAR_CONTEXTMENU_COPY, 1);
   }
 
   /**

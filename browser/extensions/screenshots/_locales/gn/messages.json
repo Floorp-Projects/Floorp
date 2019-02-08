@@ -17,6 +17,9 @@
   "saveScreenshotSelectedArea": {
     "message": "Ñongatu"
   },
+  "uploadScreenshotSelectedArea": {
+    "message": "Hupi"
+  },
   "saveScreenshotVisibleArea": {
     "message": "Ñongatu hechapy"
   },
@@ -28,6 +31,9 @@
   },
   "downloadScreenshot": {
     "message": "Mboguejy"
+  },
+  "downloadScreenshotTitle": {
+    "message": "Emboguejy mba’erechaha japyhypyre"
   },
   "downloadOnlyNotice": {
     "message": "Ko’ag̃aite eime ñemboguejy ayvúpe año."
@@ -63,6 +69,9 @@
   },
   "copyScreenshot": {
     "message": "Monguatia"
+  },
+  "copyScreenshotTitle": {
+    "message": "Embohasa mba’erechaha japyhypyre kuatiajokohápe"
   },
   "notificationImageCopiedTitle": {
     "message": "Japyhypy monguatiapyre"
@@ -122,8 +131,8 @@
   "genericErrorDetails": {
     "message": "Ndoroikuaái mba'etépa pe oikóva. ¿Ejapose jeýpa térã ejapyhy peteĩ kuatiarogue ambuévagui?"
   },
-  "tourBodyIntro": {
-    "message": "Ejapo, eñongatu ha emoherakuã mba'erechaha japyhypy eheja'ỹre Firefox."
+  "tourBodyIntroServerless": {
+    "message": "Ejapo, emboguejy ha embokuatia mba’erechaha japyhypyre esẽ’ỹre Firefox-gui."
   },
   "tourHeaderPageAction": {
     "message": "Ñongatu ambue hendáicha"
@@ -142,18 +151,6 @@
   },
   "tourBodyFullPage": {
     "message": "Eiporavo umi votõ yvate akatúa gotyogua ejapyhy hag̃ua ovetãme térã kuatiarogue tuichaháicha."
-  },
-  "tourHeaderDownloadUpload": {
-    "message": "Nde eipotaháicha"
-  },
-  "tourBodyDownloadUpload": {
-    "message": "Eñongatu nde japyhypy kytĩmbyre ñandutígui moherakuãrã térã ñemboguejyrã ne mohendahápe. Ikatu avei ehesakutu pe votõ Che japyhypy ejuhu hag̃ua opaite japyhypy ejapova'kue."
-  },
-  "tourHeaderAccounts": {
-    "message": "Ejapyhy mba'erechaha eho hag̃ua"
-  },
-  "tourBodyAccounts": {
-    "message": "Emoñepyrũ tembiapo ne mba’ete Firefox pegua ndive ehecha hag̃ua ne ra’anga opaite mba’e’okápe ha eñongatu ne ra’anga eguerohoryvéva opa árape g̃uarã."
   },
   "tourSkip": {
     "message": "SKIP"

@@ -5,7 +5,6 @@
 "use strict";
 
 var Services = require("Services");
-loader.lazyRequireGetter(this, "TargetFactory", "devtools/client/framework/target", true);
 loader.lazyRequireGetter(this, "Tools", "devtools/client/definitions", true);
 loader.lazyRequireGetter(this, "gDevTools", "devtools/client/framework/devtools", true);
 loader.lazyRequireGetter(this, "DebuggerServer", "devtools/server/main", true);
@@ -136,8 +135,7 @@ HUDService.prototype = {
 
       const client = new DebuggerClient(DebuggerServer.connectPipe());
       await client.connect();
-      const front = await client.mainRoot.getMainProcess();
-      return { activeTab: front, client, chrome: true };
+      return client.mainRoot.getMainProcess();
     }
 
     async function openWindow(t) {
@@ -156,8 +154,8 @@ HUDService.prototype = {
     // Temporarily cache the async startup sequence so that if toggleBrowserConsole
     // gets called again we can return this console instead of opening another one.
     this._browserConsoleInitializing = (async () => {
-      const connection = await connect();
-      const target = await TargetFactory.forRemoteTab(connection);
+      const target = await connect();
+      await target.attach();
       const {iframeWindow, chromeWindow} = await openWindow(target);
       const browserConsole =
         await this.openBrowserConsole(target, iframeWindow, chromeWindow);

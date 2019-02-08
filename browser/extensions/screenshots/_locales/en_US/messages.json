@@ -17,6 +17,9 @@
   "saveScreenshotSelectedArea": {
     "message": "Save"
   },
+  "uploadScreenshotSelectedArea": {
+    "message": "Upload"
+  },
   "saveScreenshotVisibleArea": {
     "message": "Save visible"
   },
@@ -28,6 +31,9 @@
   },
   "downloadScreenshot": {
     "message": "Download"
+  },
+  "downloadScreenshotTitle": {
+    "message": "Download screenshot"
   },
   "downloadOnlyNotice": {
     "message": "You are currently in Download-Only mode."
@@ -63,6 +69,9 @@
   },
   "copyScreenshot": {
     "message": "Copy"
+  },
+  "copyScreenshotTitle": {
+    "message": "Copy screenshot to clipboard"
   },
   "notificationImageCopiedTitle": {
     "message": "Shot Copied"
@@ -122,8 +131,8 @@
   "genericErrorDetails": {
     "message": "We’re not sure what just happened. Care to try again or take a shot of a different page?"
   },
-  "tourBodyIntro": {
-    "message": "Take, save, and share screenshots without leaving Firefox."
+  "tourBodyIntroServerless": {
+    "message": "Take, copy, and download screenshots without leaving Firefox."
   },
   "tourHeaderPageAction": {
     "message": "A new way to save"
@@ -142,18 +151,6 @@
   },
   "tourBodyFullPage": {
     "message": "Select the buttons in the upper right to capture the visible area in the window or to capture an entire page."
-  },
-  "tourHeaderDownloadUpload": {
-    "message": "As You Like It"
-  },
-  "tourBodyDownloadUpload": {
-    "message": "Save your cropped shots to the web for easier sharing, or download them to your computer. You also can click on the My Shots button to find all the shots you’ve taken."
-  },
-  "tourHeaderAccounts": {
-    "message": "Screenshots to Go"
-  },
-  "tourBodyAccounts": {
-    "message": "Sign in with your Firefox Account to access your shots on all of your devices and save your favorite shots forever."
   },
   "tourSkip": {
     "message": "SKIP"

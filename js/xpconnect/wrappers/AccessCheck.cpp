@@ -7,7 +7,6 @@
 #include "AccessCheck.h"
 
 #include "nsJSPrincipals.h"
-#include "BasePrincipal.h"
 #include "nsDOMWindowList.h"
 #include "nsGlobalWindow.h"
 
@@ -16,6 +15,7 @@
 #include "FilteringWrapper.h"
 
 #include "jsfriendapi.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/LocationBinding.h"
@@ -30,20 +30,9 @@ using namespace js;
 
 namespace xpc {
 
-nsIPrincipal* GetCompartmentPrincipal(JS::Compartment* compartment) {
-  // System compartments may contain multiple system realms, but we can't call
-  // JS_DeprecatedGetCompartmentPrincipals on compartments with more than one
-  // realm so we special-case this here.
-  if (js::IsSystemCompartment(compartment)) {
-    return nsXPConnect::SystemPrincipal();
-  }
-
-  JSPrincipals* p = JS_DeprecatedGetCompartmentPrincipals(compartment);
-  return nsJSPrincipals::get(p);
-}
-
-nsIPrincipal* GetRealmPrincipal(JS::Realm* realm) {
-  return nsJSPrincipals::get(JS::GetRealmPrincipals(realm));
+BasePrincipal* GetRealmPrincipal(JS::Realm* realm) {
+  return BasePrincipal::Cast(
+      nsJSPrincipals::get(JS::GetRealmPrincipals(realm)));
 }
 
 nsIPrincipal* GetObjectPrincipal(JSObject* obj) {
@@ -56,21 +45,19 @@ bool AccessCheck::subsumes(JSObject* a, JSObject* b) {
 }
 
 // Same as above, but considering document.domain.
-bool AccessCheck::subsumesConsideringDomain(JS::Compartment* a,
-                                            JS::Compartment* b) {
+bool AccessCheck::subsumesConsideringDomain(JS::Realm* a, JS::Realm* b) {
   MOZ_ASSERT(OriginAttributes::IsRestrictOpenerAccessForFPI());
-  nsIPrincipal* aprin = GetCompartmentPrincipal(a);
-  nsIPrincipal* bprin = GetCompartmentPrincipal(b);
-  return BasePrincipal::Cast(aprin)->FastSubsumesConsideringDomain(bprin);
+  BasePrincipal* aprin = GetRealmPrincipal(a);
+  BasePrincipal* bprin = GetRealmPrincipal(b);
+  return aprin->FastSubsumesConsideringDomain(bprin);
 }
 
-bool AccessCheck::subsumesConsideringDomainIgnoringFPD(JS::Compartment* a,
-                                                       JS::Compartment* b) {
+bool AccessCheck::subsumesConsideringDomainIgnoringFPD(JS::Realm* a,
+                                                       JS::Realm* b) {
   MOZ_ASSERT(!OriginAttributes::IsRestrictOpenerAccessForFPI());
-  nsIPrincipal* aprin = GetCompartmentPrincipal(a);
-  nsIPrincipal* bprin = GetCompartmentPrincipal(b);
-  return BasePrincipal::Cast(aprin)->FastSubsumesConsideringDomainIgnoringFPD(
-      bprin);
+  BasePrincipal* aprin = GetRealmPrincipal(a);
+  BasePrincipal* bprin = GetRealmPrincipal(b);
+  return aprin->FastSubsumesConsideringDomainIgnoringFPD(bprin);
 }
 
 // Does the compartment of the wrapper subsumes the compartment of the wrappee?
@@ -83,6 +70,10 @@ bool AccessCheck::wrapperSubsumes(JSObject* wrapper) {
 
 bool AccessCheck::isChrome(JS::Compartment* compartment) {
   return js::IsSystemCompartment(compartment);
+}
+
+bool AccessCheck::isChrome(JS::Realm* realm) {
+  return isChrome(JS::GetCompartmentForRealm(realm));
 }
 
 bool AccessCheck::isChrome(JSObject* obj) {

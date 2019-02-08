@@ -313,31 +313,30 @@ struct FormatUsageInfo {
   const FormatInfo* const format;
 
  private:
-  bool isRenderable;
+  bool isRenderable = false;
 
  public:
-  bool isFilterable;
+  bool isFilterable = false;
 
   std::map<PackingInfo, DriverUnpackInfo> validUnpacks;
-  const DriverUnpackInfo* idealUnpack;
+  const DriverUnpackInfo* idealUnpack = nullptr;
 
-  const GLint* textureSwizzleRGBA;
+  const GLint* textureSwizzleRGBA = nullptr;
 
-  bool maxSamplesKnown;
-  uint32_t maxSamples;
+ private:
+  mutable bool maxSamplesKnown = false;
+  mutable uint32_t maxSamples = 0;
 
+ public:
   static const GLint kLuminanceSwizzleRGBA[4];
   static const GLint kAlphaSwizzleRGBA[4];
   static const GLint kLumAlphaSwizzleRGBA[4];
 
-  explicit FormatUsageInfo(const FormatInfo* _format)
-      : format(_format),
-        isRenderable(false),
-        isFilterable(false),
-        idealUnpack(nullptr),
-        textureSwizzleRGBA(nullptr),
-        maxSamplesKnown(false),
-        maxSamples(0) {}
+  explicit FormatUsageInfo(const FormatInfo* const _format) : format(_format) {
+    if (format->IsColorFormat() && format->baseType != TextureBaseType::Float) {
+      maxSamplesKnown = true;
+    }
+  }
 
   bool IsRenderable() const { return isRenderable; }
   void SetRenderable();
@@ -345,7 +344,16 @@ struct FormatUsageInfo {
   bool IsUnpackValid(const PackingInfo& key,
                      const DriverUnpackInfo** const out_value) const;
 
-  void ResolveMaxSamples(gl::GLContext* gl);
+ private:
+  void ResolveMaxSamples(gl::GLContext& gl) const;
+
+ public:
+  uint32_t MaxSamples(gl::GLContext& gl) const {
+    if (!maxSamplesKnown) {
+      ResolveMaxSamples(gl);
+    }
+    return maxSamples;
+  }
 };
 
 class FormatUsageAuthority {

@@ -15,11 +15,13 @@
 class nsSVGGFrame : public nsSVGDisplayContainerFrame {
   friend nsIFrame* NS_NewSVGGFrame(nsIPresShell* aPresShell,
                                    ComputedStyle* aStyle);
-  explicit nsSVGGFrame(ComputedStyle* aStyle) : nsSVGGFrame(aStyle, kClassID) {}
+  explicit nsSVGGFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
+      : nsSVGGFrame(aStyle, aPresContext, kClassID) {}
 
  protected:
-  nsSVGGFrame(ComputedStyle* aStyle, nsIFrame::ClassID aID)
-      : nsSVGDisplayContainerFrame(aStyle, aID) {}
+  nsSVGGFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
+              nsIFrame::ClassID aID)
+      : nsSVGDisplayContainerFrame(aStyle, aPresContext, aID) {}
 
  public:
   NS_DECL_FRAMEARENA_HELPERS(nsSVGGFrame)

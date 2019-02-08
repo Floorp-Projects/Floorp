@@ -17,6 +17,9 @@
   "saveScreenshotSelectedArea": {
     "message": "Shrani"
   },
+  "uploadScreenshotSelectedArea": {
+    "message": "Prenesi"
+  },
   "saveScreenshotVisibleArea": {
     "message": "Shrani vidno"
   },
