@@ -46,15 +46,6 @@ Compartment::Compartment(Zone* zone, bool invisibleToDebugger)
 
 #ifdef JSGC_HASH_TABLE_CHECKS
 
-namespace {
-struct CheckGCThingAfterMovingGCFunctor {
-  template <class T>
-  void operator()(T* t) {
-    CheckGCThingAfterMovingGC(*t);
-  }
-};
-}  // namespace
-
 void Compartment::checkWrapperMapAfterMovingGC() {
   /*
    * Assert that the postbarriers have worked and that nothing is left in
@@ -62,8 +53,9 @@ void Compartment::checkWrapperMapAfterMovingGC() {
    * are discoverable.
    */
   for (WrapperMap::Enum e(crossCompartmentWrappers); !e.empty(); e.popFront()) {
-    e.front().mutableKey().applyToWrapped(CheckGCThingAfterMovingGCFunctor());
-    e.front().mutableKey().applyToDebugger(CheckGCThingAfterMovingGCFunctor());
+    auto checkGCThing = [](auto tp) { CheckGCThingAfterMovingGC(*tp); };
+    e.front().mutableKey().applyToWrapped(checkGCThing);
+    e.front().mutableKey().applyToDebugger(checkGCThing);
 
     WrapperMap::Ptr ptr = crossCompartmentWrappers.lookup(e.front().key());
     MOZ_RELEASE_ASSERT(ptr.found() && &*ptr == &e.front());
@@ -444,32 +436,18 @@ void Compartment::sweepCrossCompartmentWrappers() {
   crossCompartmentWrappers.sweep();
 }
 
-namespace {
-struct TraceRootFunctor {
-  JSTracer* trc;
-  const char* name;
-  TraceRootFunctor(JSTracer* trc, const char* name) : trc(trc), name(name) {}
-  template <class T>
-  void operator()(T* t) {
-    return TraceRoot(trc, t, name);
-  }
-};
-struct NeedsSweepUnbarrieredFunctor {
-  template <class T>
-  bool operator()(T* t) const {
-    return IsAboutToBeFinalizedUnbarriered(t);
-  }
-};
-}  // namespace
-
 void CrossCompartmentKey::trace(JSTracer* trc) {
-  applyToWrapped(TraceRootFunctor(trc, "CrossCompartmentKey::wrapped"));
-  applyToDebugger(TraceRootFunctor(trc, "CrossCompartmentKey::debugger"));
+  applyToWrapped([trc](auto tp) {
+    TraceRoot(trc, tp, "CrossCompartmentKey::wrapped");
+  });
+  applyToDebugger([trc](auto tp) {
+    TraceRoot(trc, tp, "CrossCompartmentKey::debugger");
+  });
 }
 
 bool CrossCompartmentKey::needsSweep() {
-  return applyToWrapped(NeedsSweepUnbarrieredFunctor()) ||
-         applyToDebugger(NeedsSweepUnbarrieredFunctor());
+  auto needsSweep = [](auto tp) { return IsAboutToBeFinalizedUnbarriered(tp); };
+  return applyToWrapped(needsSweep) || applyToDebugger(needsSweep);
 }
 
 /* static */ void Compartment::fixupCrossCompartmentWrappersAfterMovingGC(

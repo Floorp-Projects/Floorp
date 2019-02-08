@@ -129,26 +129,6 @@ void js::TraceChildren(JSTracer* trc, void* thing, JS::TraceKind kind) {
   DispatchTraceKindTyped(f, kind, trc, thing);
 }
 
-namespace {
-struct TraceIncomingFunctor {
-  JSTracer* trc_;
-  const JS::CompartmentSet& compartments_;
-  TraceIncomingFunctor(JSTracer* trc, const JS::CompartmentSet& compartments)
-      : trc_(trc), compartments_(compartments) {}
-  template <typename T>
-  void operator()(T tp) {
-    if (!compartments_.has((*tp)->compartment())) {
-      return;
-    }
-    TraceManuallyBarrieredEdge(trc_, tp, "cross-compartment wrapper");
-  }
-  // StringWrappers are just used to avoid copying strings
-  // across zones multiple times, and don't hold a strong
-  // reference.
-  void operator()(JSString** tp) {}
-};
-}  // namespace
-
 JS_PUBLIC_API void JS::TraceIncomingCCWs(
     JSTracer* trc, const JS::CompartmentSet& compartments) {
   for (js::CompartmentsIter comp(trc->runtime()); !comp.done(); comp.next()) {
@@ -158,8 +138,12 @@ JS_PUBLIC_API void JS::TraceIncomingCCWs(
 
     for (Compartment::WrapperEnum e(comp); !e.empty(); e.popFront()) {
       mozilla::DebugOnly<const CrossCompartmentKey> prior = e.front().key();
-      e.front().mutableKey().applyToWrapped(
-          TraceIncomingFunctor(trc, compartments));
+      e.front().mutableKey().applyToWrapped([trc, &compartments](auto tp) {
+        Compartment* comp = (*tp)->maybeCompartment();
+        if (comp && compartments.has(comp)) {
+          TraceManuallyBarrieredEdge(trc, tp, "cross-compartment wrapper");
+        }
+      });
       MOZ_ASSERT(e.front().key() == prior);
     }
   }
