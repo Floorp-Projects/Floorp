@@ -128,24 +128,24 @@ function waitForUpdateXMLFilesFinished() {
                MSG_SHOULD_EQUAL);
 
   let oldDir = getOldUpdatesRootDir();
-  let newDir = getUpdatesRootDir();
+  let newDir = getUpdateDirFile();
   if (oldDir.path != newDir.path) {
     Assert.ok(!oldDir.exists(),
               "Old update directory should have been deleted after migration");
   }
 
-  let log = getUpdateLog(FILE_UPDATE_LOG);
+  let log = getUpdateDirFile(FILE_UPDATE_LOG);
   Assert.ok(!log.exists(), MSG_SHOULD_NOT_EXIST);
 
-  log = getUpdateLog(FILE_LAST_UPDATE_LOG);
+  log = getUpdateDirFile(FILE_LAST_UPDATE_LOG);
   Assert.ok(log.exists(), MSG_SHOULD_EXIST);
   Assert.equal(readFile(log), "Last Update Log",
                "the last update log contents" + MSG_SHOULD_EQUAL);
 
-  log = getUpdateLog(FILE_BACKUP_UPDATE_LOG);
+  log = getUpdateDirFile(FILE_BACKUP_UPDATE_LOG);
   Assert.ok(!log.exists(), MSG_SHOULD_NOT_EXIST);
 
-  let dir = getUpdatesPatchDir();
+  let dir = getUpdateDirFile(DIR_PATCH);
   Assert.ok(dir.exists(), MSG_SHOULD_EXIST);
 
   doTestFinish();

@@ -16,7 +16,7 @@ function run_test() {
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);
   writeStatusFile(STATE_SUCCEEDED);
 
-  let log = getUpdateLog(FILE_UPDATE_LOG);
+  let log = getUpdateDirFile(FILE_UPDATE_LOG);
   writeFile(log, "Last Update Log");
 
   standardInit();
@@ -37,18 +37,18 @@ function waitForUpdateXMLFilesFinished() {
                "the " + PREF_APP_UPDATE_CANCELATIONS + " preference " +
                MSG_SHOULD_EQUAL);
 
-  let log = getUpdateLog(FILE_UPDATE_LOG);
+  let log = getUpdateDirFile(FILE_UPDATE_LOG);
   Assert.ok(!log.exists(), MSG_SHOULD_NOT_EXIST);
 
-  log = getUpdateLog(FILE_LAST_UPDATE_LOG);
+  log = getUpdateDirFile(FILE_LAST_UPDATE_LOG);
   Assert.ok(log.exists(), MSG_SHOULD_EXIST);
   Assert.equal(readFile(log), "Last Update Log",
                "the last update log contents" + MSG_SHOULD_EQUAL);
 
-  log = getUpdateLog(FILE_BACKUP_UPDATE_LOG);
+  log = getUpdateDirFile(FILE_BACKUP_UPDATE_LOG);
   Assert.ok(!log.exists(), MSG_SHOULD_NOT_EXIST);
 
-  let dir = getUpdatesPatchDir();
+  let dir = getUpdateDirFile(DIR_PATCH);
   Assert.ok(dir.exists(), MSG_SHOULD_EXIST);
 
   doTestFinish();
