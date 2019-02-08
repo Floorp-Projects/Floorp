@@ -1678,12 +1678,6 @@ JSObject* js::CallModuleResolveHook(JSContext* cx,
 
 JSObject* js::StartDynamicModuleImport(JSContext* cx, HandleScript script,
                                        HandleValue specifierArg) {
-  RootedValue referencingPrivate(cx,
-                                 script->sourceObject()->canonicalPrivate());
-  cx->runtime()->addRefScriptPrivate(referencingPrivate);
-  auto releasePrivate = mozilla::MakeScopeExit([&] {
-    cx->runtime()->releaseScriptPrivate(referencingPrivate);
-  });
 
   RootedObject promiseConstructor(cx, JS::GetPromiseConstructor(cx));
   if (!promiseConstructor) {
@@ -1715,17 +1709,27 @@ JSObject* js::StartDynamicModuleImport(JSContext* cx, HandleScript script,
     return promise;
   }
 
-  if (!importHook(cx, referencingPrivate, specifier, promise)) {
-    // If there's no exception pending then the script is terminating
-    // anyway, so just return nullptr.
-    if (!cx->isExceptionPending() ||
-        !RejectPromiseWithPendingError(cx, promise)) {
-      return nullptr;
+  {
+    RootedValue referencingPrivate(cx,
+                                   script->sourceObject()->canonicalPrivate());
+    cx->runtime()->addRefScriptPrivate(referencingPrivate);
+    auto releasePrivate = mozilla::MakeScopeExit([&] {
+      cx->runtime()->releaseScriptPrivate(referencingPrivate);
+    });
+
+    if (!importHook(cx, referencingPrivate, specifier, promise)) {
+      // If there's no exception pending then the script is terminating
+      // anyway, so just return nullptr.
+      if (!cx->isExceptionPending() ||
+          !RejectPromiseWithPendingError(cx, promise)) {
+        return nullptr;
+      }
+      return promise;
     }
-    return promise;
+
+    releasePrivate.release();
   }
 
-  releasePrivate.release();
   return promise;
 }
 
