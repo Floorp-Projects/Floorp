@@ -2078,6 +2078,28 @@ var AddonManagerInternal = {
                                .installBuiltinAddon(aBase);
   },
 
+  /**
+   * Like `installBuiltinAddon`, but only installs the addon at `aBase`
+   * if an existing built-in addon with the ID `aID` and version doesn't
+   * already exist.
+   *
+   * @param {string} aID
+   *        The ID of the add-on being registered.
+   * @param {string} aVersion
+   *        The version of the add-on being registered.
+   * @param {string} aBase
+   *        A string containing the base URL.  Must be a resource: URL.
+   * @returns a Promise that resolves when the addon is installed.
+   */
+  maybeInstallBuiltinAddon(aID, aVersion, aBase) {
+    if (!gStarted)
+      throw Components.Exception("AddonManager is not initialized",
+                                 Cr.NS_ERROR_NOT_INITIALIZED);
+
+    return AddonManagerInternal._getProviderByName("XPIProvider")
+                               .maybeInstallBuiltinAddon(aID, aVersion, aBase);
+  },
+
    syncGetAddonIDByInstanceID(aInstanceID) {
      if (!gStarted)
        throw Components.Exception("AddonManager is not initialized",
@@ -3362,6 +3384,10 @@ var AddonManager = {
 
   installBuiltinAddon(aBase) {
     return AddonManagerInternal.installBuiltinAddon(aBase);
+  },
+
+  maybeInstallBuiltinAddon(aID, aVersion, aBase) {
+    return AddonManagerInternal.maybeInstallBuiltinAddon(aID, aVersion, aBase);
   },
 
   addManagerListener(aListener) {

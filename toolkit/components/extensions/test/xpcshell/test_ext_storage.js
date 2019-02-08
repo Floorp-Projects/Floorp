@@ -7,6 +7,8 @@ ChromeUtils.defineModuleGetter(this, "ExtensionStorageIDB",
 
 const STORAGE_SYNC_PREF = "webextensions.storage.sync.enabled";
 
+AddonTestUtils.init(this);
+
 add_task(async function setup() {
   await ExtensionTestUtils.startAddonManager();
 });

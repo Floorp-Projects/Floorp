@@ -1968,6 +1968,8 @@ var XPIProvider = {
   // Have we started shutting down bootstrap add-ons?
   _closing: false,
 
+  startupPromises: [],
+
   // Check if the XPIDatabase has been loaded (without actually
   // triggering unwanted imports or I/O)
   get isDBLoaded() {
@@ -2573,6 +2575,13 @@ var XPIProvider = {
     }
 
     return changed;
+  },
+
+  maybeInstallBuiltinAddon(aID, aVersion, aBase) {
+    let existing = BuiltInLocation.get(aID);
+    if (!existing || existing.version != aVersion) {
+      this.startupPromises.push(this.installBuiltinAddon(aBase));
+    }
   },
 
   getDependentAddons(aAddon) {
