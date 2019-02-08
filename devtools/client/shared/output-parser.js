@@ -36,7 +36,6 @@ const BASIC_SHAPE_FUNCTIONS = ["polygon", "circle", "ellipse", "inset"];
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
-const FLEXBOX_HIGHLIGHTER_ENABLED_PREF = "devtools.inspector.flexboxHighlighter.enabled";
 const CSS_SHAPES_ENABLED_PREF = "devtools.inspector.shapesHighlighter.enabled";
 
 /**
@@ -384,8 +383,7 @@ OutputParser.prototype = {
           if (options.expectCubicBezier &&
               BEZIER_KEYWORDS.includes(token.text)) {
             this._appendCubicBezier(token.text, options);
-          } else if (this._isDisplayFlex(text, token, options) &&
-                     Services.prefs.getBoolPref(FLEXBOX_HIGHLIGHTER_ENABLED_PREF)) {
+          } else if (this._isDisplayFlex(text, token, options)) {
             this._appendHighlighterToggle(token.text, options.flexClass);
           } else if (this._isDisplayGrid(text, token, options)) {
             this._appendHighlighterToggle(token.text, options.gridClass);
