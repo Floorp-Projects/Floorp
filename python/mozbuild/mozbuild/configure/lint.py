@@ -127,7 +127,7 @@ class LintSandbox(ConfigureSandbox):
             all_args.append(func_args.varargs)
         used_args = set()
 
-        for op, arg in disassemble_as_iter(func):
+        for op, arg, _ in disassemble_as_iter(func):
             if op in ('LOAD_FAST', 'LOAD_CLOSURE'):
                 if arg in all_args:
                     used_args.add(arg)
@@ -156,7 +156,7 @@ class LintSandbox(ConfigureSandbox):
             # - don't use global variables
             if func in self._has_imports or func.func_closure:
                 return True
-            for op, arg in disassemble_as_iter(func):
+            for op, arg, _ in disassemble_as_iter(func):
                 if op in ('LOAD_GLOBAL', 'STORE_GLOBAL'):
                     # There is a fake os module when one is not imported,
                     # and it's allowed for functions without a --help
@@ -289,3 +289,27 @@ class LintSandbox(ConfigureSandbox):
             self._has_imports.add(func)
             return wrapper(func)
         return decorator
+
+    def _prepare_function(self, func, update_globals=None):
+        wrapped = super(LintSandbox, self)._prepare_function(func, update_globals)
+        _, glob = self.unwrap(wrapped)
+        imports = set()
+        for _from, _import, _as in self._imports.get(func, ()):
+            if _as:
+                imports.add(_as)
+            else:
+                what = _import.split('.')[0]
+                imports.add(what)
+        for op, arg, line in disassemble_as_iter(func):
+            code = func.func_code
+            if op == 'LOAD_GLOBAL' and \
+                    arg not in glob and \
+                    arg not in imports and \
+                    arg not in glob['__builtins__'] and \
+                    arg not in code.co_varnames[:code.co_argcount]:
+                # Raise the same kind of error as what would happen during
+                # execution.
+                e = NameError("global name '{}' is not defined".format(arg))
+                self._raise_from(e, func, line)
+
+        return wrapped
