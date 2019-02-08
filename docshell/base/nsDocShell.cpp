@@ -8542,130 +8542,102 @@ bool nsDocShell::JustStartedNetworkLoad() {
   return mDocumentRequest && mDocumentRequest != GetCurrentDocChannel();
 }
 
-nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
-                                  nsIDocShell** aDocShell,
-                                  nsIRequest** aRequest) {
+nsresult nsDocShell::MaybeHandleLoadDelegate(nsDocShellLoadState* aLoadState,
+                                             uint32_t aWindowType,
+                                             bool* aDidHandleLoad) {
+  MOZ_ASSERT(aLoadState);
+  MOZ_ASSERT(aDidHandleLoad);
+  MOZ_ASSERT(aWindowType == nsIBrowserDOMWindow::OPEN_NEWWINDOW ||
+             aWindowType == nsIBrowserDOMWindow::OPEN_CURRENTWINDOW);
+
+  *aDidHandleLoad = false;
+  // If we don't have a delegate or we're trying to load the error page, we
+  // shouldn't be trying to do sandbox loads.
+  if (!mLoadURIDelegate || aLoadState->LoadType() == LOAD_ERROR_PAGE) {
+    return NS_OK;
+  }
+
+  // Dispatch only load requests for the current or a new window to the
+  // delegate, e.g., to allow for GeckoView apps to handle the load event
+  // outside of Gecko.
+  Document* doc = mContentViewer ? mContentViewer->GetDocument() : nullptr;
+  const bool isDocumentAuxSandboxed =
+      doc && (doc->GetSandboxFlags() & SANDBOXED_AUXILIARY_NAVIGATION);
+
+  if (aWindowType == nsIBrowserDOMWindow::OPEN_NEWWINDOW &&
+      isDocumentAuxSandboxed) {
+    // At this point, the load is invalid, and we can consider "handled", so
+    // we'll exit from InternalLoad.
+    *aDidHandleLoad = true;
+    return NS_ERROR_DOM_INVALID_ACCESS_ERR;
+  }
+
+  return mLoadURIDelegate->LoadURI(
+      aLoadState->URI(), aWindowType, aLoadState->LoadFlags(),
+      aLoadState->TriggeringPrincipal(), aDidHandleLoad);
+}
+
+// The contentType will be INTERNAL_(I)FRAME if this docshell is for a
+// non-toplevel browsing context in spec terms. (frame, iframe, <object>,
+// <embed>, etc)
+//
+// This return value will be used when we call NS_CheckContentLoadPolicy, and
+// later when we call DoURILoad.
+uint32_t nsDocShell::DetermineContentType() {
+  if (!IsFrame()) {
+    return nsIContentPolicy::TYPE_DOCUMENT;
+  }
+
+  nsCOMPtr<Element> requestingElement =
+      mScriptGlobal->AsOuter()->GetFrameElementInternal();
+  if (requestingElement) {
+    return requestingElement->IsHTMLElement(nsGkAtoms::iframe)
+               ? nsIContentPolicy::TYPE_INTERNAL_IFRAME
+               : nsIContentPolicy::TYPE_INTERNAL_FRAME;
+  }
+  // If we have lost our frame element by now, just assume we're
+  // an iframe since that's more common.
+  return nsIContentPolicy::TYPE_INTERNAL_IFRAME;
+}
+
+nsresult nsDocShell::PerformRetargeting(nsDocShellLoadState* aLoadState,
+                                        nsIDocShell** aDocShell,
+                                        nsIRequest** aRequest) {
   MOZ_ASSERT(aLoadState, "need a load state!");
-  MOZ_ASSERT(aLoadState->TriggeringPrincipal(),
-             "need a valid TriggeringPrincipal");
+  MOZ_ASSERT(!aLoadState->Target().IsEmpty(), "should have a target here!");
 
-  if (mUseStrictSecurityChecks && !aLoadState->TriggeringPrincipal()) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsresult rv = NS_OK;
-  mOriginalUriString.Truncate();
-
-  MOZ_LOG(gDocShellLeakLog, LogLevel::Debug,
-          ("DOCSHELL %p InternalLoad %s\n", this,
-           aLoadState->URI()->GetSpecOrDefault().get()));
-
-  // Initialize aDocShell/aRequest
-  if (aDocShell) {
-    *aDocShell = nullptr;
-  }
-  if (aRequest) {
-    *aRequest = nullptr;
-  }
-
-  NS_ENSURE_TRUE(IsValidLoadType(aLoadState->LoadType()), NS_ERROR_INVALID_ARG);
-
-  NS_ENSURE_TRUE(!mIsBeingDestroyed, NS_ERROR_NOT_AVAILABLE);
-
-  rv = EnsureScriptEnvironment();
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  // wyciwyg urls can only be loaded through history. Any normal load of
-  // wyciwyg through docshell is  illegal. Disallow such loads.
-  if ((aLoadState->LoadType() & LOAD_CMD_NORMAL) &&
-      SchemeIsWYCIWYG(aLoadState->URI())) {
-    return NS_ERROR_FAILURE;
-  }
-
-  bool isJavaScript = SchemeIsJavascript(aLoadState->URI());
-
-  bool isTargetTopLevelDocShell = false;
+  nsresult rv;
   nsCOMPtr<nsIDocShell> targetDocShell;
-  if (!aLoadState->Target().IsEmpty()) {
-    // Locate the target DocShell.
-    nsCOMPtr<nsIDocShellTreeItem> targetItem;
-    // Only _self, _parent, and _top are supported in noopener case.  But we
-    // have to be careful to not apply that to the noreferrer case.  See bug
-    // 1358469.
-    bool allowNamedTarget =
-        !aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_NO_OPENER) ||
-        aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_DONT_SEND_REFERRER);
-    if (allowNamedTarget ||
-        aLoadState->Target().LowerCaseEqualsLiteral("_self") ||
-        aLoadState->Target().LowerCaseEqualsLiteral("_parent") ||
-        aLoadState->Target().LowerCaseEqualsLiteral("_top")) {
-      rv = FindItemWithName(aLoadState->Target(), nullptr, this, false,
-                            getter_AddRefs(targetItem));
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
 
-    targetDocShell = do_QueryInterface(targetItem);
-    if (targetDocShell) {
-      // If the targetDocShell and the rootDocShell are the same, then the
-      // targetDocShell is the top level document and hence we should
-      // consider this TYPE_DOCUMENT
-      //
-      // For example:
-      // 1. target="_top"
-      // 2. target="_parent", where this docshell is in the 2nd level of
-      //    docshell tree.
-      nsCOMPtr<nsIDocShellTreeItem> sameTypeRoot;
-      targetDocShell->GetSameTypeRootTreeItem(getter_AddRefs(sameTypeRoot));
-      NS_ASSERTION(sameTypeRoot,
-                   "No document shell root tree item from targetDocShell!");
-      nsCOMPtr<nsIDocShell> rootShell = do_QueryInterface(sameTypeRoot);
-      NS_ASSERTION(rootShell,
-                   "No root docshell from document shell root tree item.");
-      isTargetTopLevelDocShell = targetDocShell == rootShell;
-    } else {
-      // If the targetDocShell doesn't exist, then this is a new docShell
-      // and we should consider this a TYPE_DOCUMENT load
-      //
-      // For example, when target="_blank"
-      isTargetTopLevelDocShell = true;
-    }
+  // Locate the target DocShell.
+  nsCOMPtr<nsIDocShellTreeItem> targetItem;
+  // Only _self, _parent, and _top are supported in noopener case.  But we
+  // have to be careful to not apply that to the noreferrer case.  See bug
+  // 1358469.
+  bool allowNamedTarget =
+      !aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_NO_OPENER) ||
+      aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_DONT_SEND_REFERRER);
+  if (allowNamedTarget ||
+      aLoadState->Target().LowerCaseEqualsLiteral("_self") ||
+      aLoadState->Target().LowerCaseEqualsLiteral("_parent") ||
+      aLoadState->Target().LowerCaseEqualsLiteral("_top")) {
+    rv = FindItemWithName(aLoadState->Target(), nullptr, this, false,
+                          getter_AddRefs(targetItem));
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  // The contentType will be INTERNAL_(I)FRAME if:
-  // 1. This docshell is for iframe.
-  // 2. AND aLoadState->Target() is not a new window, nor a top-level window.
-  //
-  // This variable will be used when we call NS_CheckContentLoadPolicy, and
-  // later when we call DoURILoad.
-  uint32_t contentType;
-  if (IsFrame() && !isTargetTopLevelDocShell) {
-    nsCOMPtr<Element> requestingElement =
-        mScriptGlobal->AsOuter()->GetFrameElementInternal();
-    if (requestingElement) {
-      contentType = requestingElement->IsHTMLElement(nsGkAtoms::iframe)
-                        ? nsIContentPolicy::TYPE_INTERNAL_IFRAME
-                        : nsIContentPolicy::TYPE_INTERNAL_FRAME;
-    } else {
-      // If we have lost our frame element by now, just assume we're
-      // an iframe since that's more common.
-      contentType = nsIContentPolicy::TYPE_INTERNAL_IFRAME;
-    }
-  } else {
-    contentType = nsIContentPolicy::TYPE_DOCUMENT;
-    isTargetTopLevelDocShell = true;
-  }
+  targetDocShell = do_QueryInterface(targetItem);
+  if (!targetDocShell) {
+    // If the targetDocShell doesn't exist, then this is a new docShell
+    // and we should consider this a TYPE_DOCUMENT load
+    //
+    // For example, when target="_blank"
 
-  // If there's no targetDocShell, that means we are about to create a new
-  // window (or aLoadState->Target() is empty). Perform a content policy check
-  // before creating the window. Please note for all other docshell loads
-  // content policy checks are performed within the contentSecurityManager when
-  // the channel is about to be openend.
-  if (!targetDocShell && !aLoadState->Target().IsEmpty()) {
-    MOZ_ASSERT(contentType == nsIContentPolicy::TYPE_DOCUMENT,
-               "opening a new window requires type to be TYPE_DOCUMENT");
-
+    // If there's no targetDocShell, that means we are about to create a new
+    // window. Perform a content policy check before creating the window. Please
+    // note for all other docshell loads content policy checks are performed
+    // within the contentSecurityManager when the channel is about to be
+    // openend.
     nsISupports* requestingContext = nullptr;
     if (XRE_IsContentProcess()) {
       // In e10s the child process doesn't have access to the element that
@@ -8707,31 +8679,17 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
     }
   }
 
-  Document* doc = mContentViewer ? mContentViewer->GetDocument() : nullptr;
-
-  const bool isDocumentAuxSandboxed =
-      doc && (doc->GetSandboxFlags() & SANDBOXED_AUXILIARY_NAVIGATION);
-
-  if (mLoadURIDelegate && aLoadState->LoadType() != LOAD_ERROR_PAGE &&
-      (!targetDocShell || targetDocShell == static_cast<nsIDocShell*>(this))) {
-    // Dispatch only load requests for the current or a new window to the
-    // delegate, e.g., to allow for GeckoView apps to handle the load event
-    // outside of Gecko.
-    const int where = (aLoadState->Target().IsEmpty() || targetDocShell)
-                          ? nsIBrowserDOMWindow::OPEN_CURRENTWINDOW
-                          : nsIBrowserDOMWindow::OPEN_NEWWINDOW;
-
-    if (where == nsIBrowserDOMWindow::OPEN_NEWWINDOW &&
-        isDocumentAuxSandboxed) {
-      return NS_ERROR_DOM_INVALID_ACCESS_ERR;
+  if ((!targetDocShell || targetDocShell == static_cast<nsIDocShell*>(this))) {
+    bool handled;
+    rv = MaybeHandleLoadDelegate(aLoadState,
+                                 targetDocShell ?
+                                 nsIBrowserDOMWindow::OPEN_CURRENTWINDOW :
+                                 nsIBrowserDOMWindow::OPEN_NEWWINDOW,
+                                 &handled);
+    if (NS_FAILED(rv)) {
+      return rv;
     }
-
-    bool loadURIHandled = false;
-    rv = mLoadURIDelegate->LoadURI(
-        aLoadState->URI(), where, aLoadState->LoadFlags(),
-        aLoadState->TriggeringPrincipal(), &loadURIHandled);
-    if (NS_SUCCEEDED(rv) && loadURIHandled) {
-      // The request has been handled, nothing to do here.
+    if (handled) {
       return NS_OK;
     }
   }
@@ -8741,178 +8699,210 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
   // If the load has been targeted to another DocShell, then transfer the
   // load to it...
   //
-  if (!aLoadState->Target().IsEmpty()) {
-    // We've already done our owner-inheriting.  Mask out that bit, so we
-    // don't try inheriting an owner from the target window if we came up
-    // with a null owner above.
-    aLoadState->UnsetLoadFlag(INTERNAL_LOAD_FLAGS_INHERIT_PRINCIPAL);
 
-    bool isNewWindow = false;
-    if (!targetDocShell) {
-      // If the docshell's document is sandboxed, only open a new window
-      // if the document's SANDBOXED_AUXILLARY_NAVIGATION flag is not set.
-      // (i.e. if allow-popups is specified)
-      NS_ENSURE_TRUE(mContentViewer, NS_ERROR_FAILURE);
-      if (isDocumentAuxSandboxed) {
-        return NS_ERROR_DOM_INVALID_ACCESS_ERR;
-      }
+  // We've already done our owner-inheriting.  Mask out that bit, so we
+  // don't try inheriting an owner from the target window if we came up
+  // with a null owner above.
+  aLoadState->UnsetLoadFlag(INTERNAL_LOAD_FLAGS_INHERIT_PRINCIPAL);
 
-      nsCOMPtr<nsPIDOMWindowOuter> win = GetWindow();
-      NS_ENSURE_TRUE(win, NS_ERROR_NOT_AVAILABLE);
+  if (!targetDocShell) {
+    // If the docshell's document is sandboxed, only open a new window
+    // if the document's SANDBOXED_AUXILLARY_NAVIGATION flag is not set.
+    // (i.e. if allow-popups is specified)
+    NS_ENSURE_TRUE(mContentViewer, NS_ERROR_FAILURE);
+    Document* doc = mContentViewer->GetDocument();
 
-      nsCOMPtr<nsPIDOMWindowOuter> newWin;
-      nsAutoCString spec;
-      aLoadState->URI()->GetSpec(spec);
+    const bool isDocumentAuxSandboxed =
+      doc && (doc->GetSandboxFlags() & SANDBOXED_AUXILIARY_NAVIGATION);
 
-      // If we are a noopener load, we just hand the whole thing over to our
-      // window.
-      if (aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_NO_OPENER)) {
-        // Various asserts that we know to hold because NO_OPENER loads can only
-        // happen for links.
-        MOZ_ASSERT(!aLoadState->LoadReplace());
-        MOZ_ASSERT(aLoadState->PrincipalToInherit() ==
-                   aLoadState->TriggeringPrincipal());
-        MOZ_ASSERT((aLoadState->LoadFlags() &
-                    ~INTERNAL_LOAD_FLAGS_IS_USER_TRIGGERED) ==
-                       INTERNAL_LOAD_FLAGS_NO_OPENER ||
-                   (aLoadState->LoadFlags() &
-                    ~INTERNAL_LOAD_FLAGS_IS_USER_TRIGGERED) ==
-                       (INTERNAL_LOAD_FLAGS_NO_OPENER |
-                        INTERNAL_LOAD_FLAGS_DONT_SEND_REFERRER));
-        MOZ_ASSERT(!aLoadState->PostDataStream());
-        MOZ_ASSERT(!aLoadState->HeadersStream());
-        // If OnLinkClickSync was invoked inside the onload handler, the load
-        // type would be set to LOAD_NORMAL_REPLACE; otherwise it should be
-        // LOAD_LINK.
-        MOZ_ASSERT(aLoadState->LoadType() == LOAD_LINK ||
-                   aLoadState->LoadType() == LOAD_NORMAL_REPLACE);
-        MOZ_ASSERT(!aLoadState->SHEntry());
-        MOZ_ASSERT(
-            aLoadState->FirstParty());  // Windowwatcher will assume this.
-
-        RefPtr<nsDocShellLoadState> loadState =
-            new nsDocShellLoadState(aLoadState->URI());
-
-        // Set up our loadinfo so it will do the load as much like we would have
-        // as possible.
-        loadState->SetReferrer(aLoadState->Referrer());
-        loadState->SetReferrerPolicy(
-            (mozilla::net::ReferrerPolicy)aLoadState->ReferrerPolicy());
-        loadState->SetSendReferrer(!(
-            aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_DONT_SEND_REFERRER)));
-        loadState->SetOriginalURI(aLoadState->OriginalURI());
-
-        Maybe<nsCOMPtr<nsIURI>> resultPrincipalURI;
-        aLoadState->GetMaybeResultPrincipalURI(resultPrincipalURI);
-
-        loadState->SetMaybeResultPrincipalURI(resultPrincipalURI);
-        loadState->SetKeepResultPrincipalURIIfSet(
-            aLoadState->KeepResultPrincipalURIIfSet());
-        // LoadReplace will always be false due to asserts above, skip setting
-        // it.
-        loadState->SetTriggeringPrincipal(aLoadState->TriggeringPrincipal());
-        loadState->SetInheritPrincipal(
-            aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_INHERIT_PRINCIPAL));
-        // Explicit principal because we do not want any guesses as to what the
-        // principal to inherit is: it should be aTriggeringPrincipal.
-        loadState->SetPrincipalIsExplicit(true);
-        loadState->SetLoadType(LOAD_LINK);
-        loadState->SetForceAllowDataURI(
-            aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_FORCE_ALLOW_DATA_URI));
-
-        rv = win->Open(NS_ConvertUTF8toUTF16(spec),
-                       aLoadState->Target(),  // window name
-                       EmptyString(),         // Features
-                       loadState,
-                       true,  // aForceNoOpener
-                       getter_AddRefs(newWin));
-        MOZ_ASSERT(!newWin);
-        return rv;
-      }
-
-      rv = win->OpenNoNavigate(NS_ConvertUTF8toUTF16(spec),
-                               aLoadState->Target(),  // window name
-                               EmptyString(),         // Features
-                               getter_AddRefs(newWin));
-
-      // In some cases the Open call doesn't actually result in a new
-      // window being opened.  We can detect these cases by examining the
-      // document in |newWin|, if any.
-      nsCOMPtr<nsPIDOMWindowOuter> piNewWin = newWin;
-      if (piNewWin) {
-        RefPtr<Document> newDoc = piNewWin->GetExtantDoc();
-        if (!newDoc || newDoc->IsInitialDocument()) {
-          isNewWindow = true;
-          aLoadState->SetLoadFlag(INTERNAL_LOAD_FLAGS_FIRST_LOAD);
-        }
-      }
-
-      nsCOMPtr<nsIWebNavigation> webNav = do_GetInterface(newWin);
-      targetDocShell = do_QueryInterface(webNav);
+    if (isDocumentAuxSandboxed) {
+      return NS_ERROR_DOM_INVALID_ACCESS_ERR;
     }
 
-    //
-    // Transfer the load to the target DocShell... Pass empty string as the
-    // window target name from to prevent recursive retargeting!
-    //
-    if (NS_SUCCEEDED(rv) && targetDocShell) {
-      nsDocShell* docShell = nsDocShell::Cast(targetDocShell);
-      // No window target
-      aLoadState->SetTarget(EmptyString());
-      // No forced download
-      aLoadState->SetFileName(VoidString());
-      rv = docShell->InternalLoad(aLoadState, aDocShell, aRequest);
+    nsCOMPtr<nsPIDOMWindowOuter> win = GetWindow();
+    NS_ENSURE_TRUE(win, NS_ERROR_NOT_AVAILABLE);
 
-      if (rv == NS_ERROR_NO_CONTENT) {
-        // XXXbz except we never reach this code!
-        if (isNewWindow) {
-          //
-          // At this point, a new window has been created, but the
-          // URI did not have any data associated with it...
-          //
-          // So, the best we can do, is to tear down the new window
-          // that was just created!
-          //
-          if (nsCOMPtr<nsPIDOMWindowOuter> domWin =
-                  targetDocShell->GetWindow()) {
-            domWin->Close();
-          }
-        }
-        //
-        // NS_ERROR_NO_CONTENT should not be returned to the
-        // caller... This is an internal error code indicating that
-        // the URI had no data associated with it - probably a
-        // helper-app style protocol (ie. mailto://)
-        //
-        rv = NS_OK;
-      } else if (isNewWindow) {
-        // XXX: Once new windows are created hidden, the new
-        //      window will need to be made visible...  For now,
-        //      do nothing.
-      }
+    nsCOMPtr<nsPIDOMWindowOuter> newWin;
+    nsAutoCString spec;
+    aLoadState->URI()->GetSpec(spec);
 
-      if (NS_SUCCEEDED(rv)) {
-        // Switch to target tab if we're currently focused window.
-        // Take loadDivertedInBackground into account so the behavior would be
-        // the same as how the tab first opened.
-        bool isTargetActive = false;
-        targetDocShell->GetIsActive(&isTargetActive);
-        nsCOMPtr<nsPIDOMWindowOuter> domWin = targetDocShell->GetWindow();
-        if (mIsActive && !isTargetActive && domWin &&
-            !Preferences::GetBool("browser.tabs.loadDivertedInBackground",
-                                  false)) {
-          if (NS_FAILED(nsContentUtils::DispatchFocusChromeEvent(domWin))) {
-            return NS_ERROR_FAILURE;
-          }
-        }
+    // If we are a noopener load, we just hand the whole thing over to our
+    // window.
+    if (aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_NO_OPENER)) {
+      // Various asserts that we know to hold because NO_OPENER loads can only
+      // happen for links.
+      MOZ_ASSERT(!aLoadState->LoadReplace());
+      MOZ_ASSERT(aLoadState->PrincipalToInherit() ==
+                 aLoadState->TriggeringPrincipal());
+      MOZ_ASSERT(
+          (aLoadState->LoadFlags() & ~INTERNAL_LOAD_FLAGS_IS_USER_TRIGGERED) ==
+              INTERNAL_LOAD_FLAGS_NO_OPENER ||
+          (aLoadState->LoadFlags() & ~INTERNAL_LOAD_FLAGS_IS_USER_TRIGGERED) ==
+              (INTERNAL_LOAD_FLAGS_NO_OPENER |
+               INTERNAL_LOAD_FLAGS_DONT_SEND_REFERRER));
+      MOZ_ASSERT(!aLoadState->PostDataStream());
+      MOZ_ASSERT(!aLoadState->HeadersStream());
+      // If OnLinkClickSync was invoked inside the onload handler, the load
+      // type would be set to LOAD_NORMAL_REPLACE; otherwise it should be
+      // LOAD_LINK.
+      MOZ_ASSERT(aLoadState->LoadType() == LOAD_LINK ||
+                 aLoadState->LoadType() == LOAD_NORMAL_REPLACE);
+      MOZ_ASSERT(!aLoadState->SHEntry());
+      MOZ_ASSERT(aLoadState->FirstParty());  // Windowwatcher will assume this.
+
+      RefPtr<nsDocShellLoadState> loadState =
+          new nsDocShellLoadState(aLoadState->URI());
+
+      // Set up our loadinfo so it will do the load as much like we would have
+      // as possible.
+      loadState->SetReferrer(aLoadState->Referrer());
+      loadState->SetReferrerPolicy(
+          (mozilla::net::ReferrerPolicy)aLoadState->ReferrerPolicy());
+      loadState->SetSendReferrer(
+          !(aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_DONT_SEND_REFERRER)));
+      loadState->SetOriginalURI(aLoadState->OriginalURI());
+
+      Maybe<nsCOMPtr<nsIURI>> resultPrincipalURI;
+      aLoadState->GetMaybeResultPrincipalURI(resultPrincipalURI);
+
+      loadState->SetMaybeResultPrincipalURI(resultPrincipalURI);
+      loadState->SetKeepResultPrincipalURIIfSet(
+          aLoadState->KeepResultPrincipalURIIfSet());
+      // LoadReplace will always be false due to asserts above, skip setting
+      // it.
+      loadState->SetTriggeringPrincipal(aLoadState->TriggeringPrincipal());
+      loadState->SetInheritPrincipal(
+          aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_INHERIT_PRINCIPAL));
+      // Explicit principal because we do not want any guesses as to what the
+      // principal to inherit is: it should be aTriggeringPrincipal.
+      loadState->SetPrincipalIsExplicit(true);
+      loadState->SetLoadType(LOAD_LINK);
+      loadState->SetForceAllowDataURI(
+          aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_FORCE_ALLOW_DATA_URI));
+
+      rv = win->Open(NS_ConvertUTF8toUTF16(spec),
+                     aLoadState->Target(),  // window name
+                     EmptyString(),         // Features
+                     loadState,
+                     true,  // aForceNoOpener
+                     getter_AddRefs(newWin));
+      MOZ_ASSERT(!newWin);
+      return rv;
+    }
+
+    rv = win->OpenNoNavigate(NS_ConvertUTF8toUTF16(spec),
+                             aLoadState->Target(),  // window name
+                             EmptyString(),         // Features
+                             getter_AddRefs(newWin));
+
+    // In some cases the Open call doesn't actually result in a new
+    // window being opened.  We can detect these cases by examining the
+    // document in |newWin|, if any.
+    nsCOMPtr<nsPIDOMWindowOuter> piNewWin = newWin;
+    if (piNewWin) {
+      RefPtr<Document> newDoc = piNewWin->GetExtantDoc();
+      if (!newDoc || newDoc->IsInitialDocument()) {
+        aLoadState->SetLoadFlag(INTERNAL_LOAD_FLAGS_FIRST_LOAD);
       }
     }
 
-    // Else we ran out of memory, or were a popup and got blocked,
-    // or something.
+    nsCOMPtr<nsIWebNavigation> webNav = do_GetInterface(newWin);
+    targetDocShell = do_QueryInterface(webNav);
+  }
 
+  //
+  // Transfer the load to the target DocShell... Pass empty string as the
+  // window target name from to prevent recursive retargeting!
+  //
+  if (NS_SUCCEEDED(rv) && targetDocShell) {
+    nsDocShell* docShell = nsDocShell::Cast(targetDocShell);
+    // No window target
+    aLoadState->SetTarget(EmptyString());
+    // No forced download
+    aLoadState->SetFileName(VoidString());
+    rv = docShell->InternalLoad(aLoadState, aDocShell, aRequest);
+
+    if (NS_SUCCEEDED(rv)) {
+      // Switch to target tab if we're currently focused window.
+      // Take loadDivertedInBackground into account so the behavior would be
+      // the same as how the tab first opened.
+      bool isTargetActive = false;
+      targetDocShell->GetIsActive(&isTargetActive);
+      nsCOMPtr<nsPIDOMWindowOuter> domWin = targetDocShell->GetWindow();
+      if (mIsActive && !isTargetActive && domWin &&
+          !Preferences::GetBool("browser.tabs.loadDivertedInBackground",
+                                false)) {
+        if (NS_FAILED(nsContentUtils::DispatchFocusChromeEvent(domWin))) {
+          return NS_ERROR_FAILURE;
+        }
+      }
+    }
+  }
+
+  // Else we ran out of memory, or were a popup and got blocked,
+  // or something.
+
+  return rv;
+}
+
+nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
+                                  nsIDocShell** aDocShell,
+                                  nsIRequest** aRequest) {
+  MOZ_ASSERT(aLoadState, "need a load state!");
+  MOZ_ASSERT(aLoadState->TriggeringPrincipal(),
+             "need a valid TriggeringPrincipal");
+
+  if (mUseStrictSecurityChecks && !aLoadState->TriggeringPrincipal()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  mOriginalUriString.Truncate();
+
+  MOZ_LOG(gDocShellLeakLog, LogLevel::Debug,
+          ("DOCSHELL %p InternalLoad %s\n", this,
+           aLoadState->URI()->GetSpecOrDefault().get()));
+
+  // Initialize aDocShell/aRequest
+  if (aDocShell) {
+    *aDocShell = nullptr;
+  }
+  if (aRequest) {
+    *aRequest = nullptr;
+  }
+
+  NS_ENSURE_TRUE(IsValidLoadType(aLoadState->LoadType()), NS_ERROR_INVALID_ARG);
+
+  NS_ENSURE_TRUE(!mIsBeingDestroyed, NS_ERROR_NOT_AVAILABLE);
+
+  nsresult rv = EnsureScriptEnvironment();
+  if (NS_FAILED(rv)) {
     return rv;
   }
+
+  // wyciwyg urls can only be loaded through history. Any normal load of
+  // wyciwyg through docshell is  illegal. Disallow such loads.
+  if ((aLoadState->LoadType() & LOAD_CMD_NORMAL) &&
+      SchemeIsWYCIWYG(aLoadState->URI())) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // If we have a target to move to, do that now.
+  if (!aLoadState->Target().IsEmpty()) {
+    return PerformRetargeting(aLoadState, aDocShell, aRequest);
+  }
+
+  // If we don't have a target, we're loading into ourselves, and our load
+  // delegate may want to intercept that load.
+  bool handled;
+  rv = MaybeHandleLoadDelegate(
+      aLoadState, nsIBrowserDOMWindow::OPEN_CURRENTWINDOW, &handled);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  if (handled) {
+    return NS_OK;
+  }
+
 
   // If we are loading a URI that should inherit a security context (basically
   // javascript: at this point), and the caller has said that principal
@@ -9323,6 +9313,8 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
   // XXXbz mTiming should know what channel it's for, so we don't
   // need this hackery.
   bool toBeReset = false;
+  bool isJavaScript = SchemeIsJavascript(aLoadState->URI());
+
   if (!isJavaScript) {
     toBeReset = MaybeInitTiming();
   }
@@ -9480,8 +9472,8 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
     srcdoc = VoidString();
   }
 
-  bool isTopLevelDoc = mItemType == typeContent &&
-                       (isTargetTopLevelDocShell || GetIsMozBrowser());
+  bool isTopLevelDoc =
+      mItemType == typeContent && (!IsFrame() || GetIsMozBrowser());
 
   OriginAttributes attrs = GetOriginAttributes();
   attrs.SetFirstPartyDomain(isTopLevelDoc, aLoadState->URI());
