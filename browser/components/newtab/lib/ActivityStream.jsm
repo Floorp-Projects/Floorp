@@ -215,16 +215,27 @@ const PREFS_CONFIG = new Map([
   // See browser/app/profile/firefox.js for other ASR preferences. They must be defined there to enable roll-outs.
   ["discoverystream.config", {
     title: "Configuration for the new pocket new tab",
-    value: JSON.stringify({
-      enabled: false,
-      show_spocs: true,
-      // This is currently an exmple layout used for dev purposes.
-      layout_endpoint: "https://getpocket.com/v3/newtab/layout?version=1&consumer_key=40249-e88c401e1b1f2242d9e441c4&layout_variant=basic",
-    }),
+    getValue: ({geo, locale}) => {
+      const locales = ({
+        "US": ["en-CA", "en-GB", "en-US", "en-ZA"],
+        "CA": ["en-CA", "en-GB", "en-US", "en-ZA"],
+      })[geo];
+      const isEnabled = IS_NIGHTLY_OR_UNBRANDED_BUILD && locales && locales.includes(locale);
+      return JSON.stringify({
+        enabled: isEnabled,
+        show_spocs: geo === "US",
+        // This is currently an exmple layout used for dev purposes.
+        layout_endpoint: "https://getpocket.com/v3/newtab/layout?version=1&consumer_key=40249-e88c401e1b1f2242d9e441c4&layout_variant=basic",
+      });
+    },
   }],
   ["discoverystream.optOut.0", {
     title: "Opt out of new layout v0",
     value: false,
+  }],
+  ["discoverystream.spoc.impressions", {
+    title: "Track spoc impressions",
+    value: "{}",
   }],
   ["darkModeMessage", {
     title: "Boolean flag that decides whether to show the dark Mode message or not.",

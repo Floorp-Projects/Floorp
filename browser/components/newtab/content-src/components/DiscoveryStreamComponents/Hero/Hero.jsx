@@ -57,7 +57,7 @@ export class Hero extends React.PureComponent {
     let list = (
       <List
         recStartingPoint={1}
-        feed={this.props.feed}
+        data={data}
         hasImages={true}
         hasBorders={this.props.border === `border`}
         items={this.props.items - 1}
@@ -74,7 +74,7 @@ export class Hero extends React.PureComponent {
             </div>
             <div className="meta">
               <header>{heroRec.title}</header>
-              <p>{heroRec.excerpt}</p>
+              <p className="excerpt">{heroRec.excerpt}</p>
               {heroRec.context ? (
                 <p className="context">{heroRec.context}</p>
               ) : (
