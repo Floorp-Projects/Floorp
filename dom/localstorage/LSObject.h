@@ -67,6 +67,7 @@ class LSObject final : public Storage {
 
   uint32_t mPrivateBrowsingId;
   nsCString mOrigin;
+  nsCString mOriginKey;
   nsString mDocumentURI;
 
   bool mInExplicitSnapshot;

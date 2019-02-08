@@ -220,10 +220,9 @@ nsresult LSObject::CreateForWindow(nsPIDOMWindowInner* aWindow,
   // localStorage is not available on some pages on purpose, for example
   // about:home. Match the old implementation by using GenerateOriginKey
   // for the check.
-  nsCString dummyOriginAttrSuffix;
-  nsCString dummyOriginKey;
-  nsresult rv =
-      GenerateOriginKey(principal, dummyOriginAttrSuffix, dummyOriginKey);
+  nsCString originAttrSuffix;
+  nsCString originKey;
+  nsresult rv = GenerateOriginKey(principal, originAttrSuffix, originKey);
   if (NS_FAILED(rv)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -236,11 +235,14 @@ nsresult LSObject::CreateForWindow(nsPIDOMWindowInner* aWindow,
 
   MOZ_ASSERT(principalInfo->type() == PrincipalInfo::TContentPrincipalInfo);
 
+  nsCString suffix;
   nsCString origin;
-  rv = QuotaManager::GetInfoFromPrincipal(principal, nullptr, nullptr, &origin);
+  rv = QuotaManager::GetInfoFromPrincipal(principal, &suffix, nullptr, &origin);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
+
+  MOZ_ASSERT(originAttrSuffix == suffix);
 
   uint32_t privateBrowsingId;
   rv = principal->GetPrivateBrowsingId(&privateBrowsingId);
@@ -260,6 +262,7 @@ nsresult LSObject::CreateForWindow(nsPIDOMWindowInner* aWindow,
   object->mPrincipalInfo = std::move(principalInfo);
   object->mPrivateBrowsingId = privateBrowsingId;
   object->mOrigin = origin;
+  object->mOriginKey = originKey;
   object->mDocumentURI = documentURI;
 
   object.forget(aStorage);
@@ -275,10 +278,9 @@ nsresult LSObject::CreateForPrincipal(nsPIDOMWindowInner* aWindow,
   MOZ_ASSERT(aPrincipal);
   MOZ_ASSERT(aObject);
 
-  nsCString dummyOriginAttrSuffix;
-  nsCString dummyOriginKey;
-  nsresult rv =
-      GenerateOriginKey(aPrincipal, dummyOriginAttrSuffix, dummyOriginKey);
+  nsCString originAttrSuffix;
+  nsCString originKey;
+  nsresult rv = GenerateOriginKey(aPrincipal, originAttrSuffix, originKey);
   if (NS_FAILED(rv)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -292,22 +294,26 @@ nsresult LSObject::CreateForPrincipal(nsPIDOMWindowInner* aWindow,
   MOZ_ASSERT(principalInfo->type() == PrincipalInfo::TContentPrincipalInfo ||
              principalInfo->type() == PrincipalInfo::TSystemPrincipalInfo);
 
+  nsCString suffix;
   nsCString origin;
 
   if (principalInfo->type() == PrincipalInfo::TSystemPrincipalInfo) {
-    QuotaManager::GetInfoForChrome(nullptr, nullptr, &origin);
+    QuotaManager::GetInfoForChrome(&suffix, nullptr, &origin);
   } else {
-    rv = QuotaManager::GetInfoFromPrincipal(aPrincipal, nullptr, nullptr,
+    rv = QuotaManager::GetInfoFromPrincipal(aPrincipal, &suffix, nullptr,
                                             &origin);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
   }
 
+  MOZ_ASSERT(originAttrSuffix == suffix);
+
   RefPtr<LSObject> object = new LSObject(aWindow, aPrincipal);
   object->mPrincipalInfo = std::move(principalInfo);
   object->mPrivateBrowsingId = aPrivate ? 1 : 0;
   object->mOrigin = origin;
+  object->mOriginKey = originKey;
   object->mDocumentURI = aDocumentURI;
 
   object.forget(aObject);
@@ -734,6 +740,7 @@ nsresult LSObject::EnsureDatabase() {
 
   LSRequestPrepareDatastoreParams params;
   params.principalInfo() = *mPrincipalInfo;
+  params.originKey() = mOriginKey;
   params.createIfNotExists() = true;
 
   LSRequestResponse response;
@@ -1012,20 +1019,22 @@ nsresult RequestHelper::StartAndReturnResponse(LSRequestResponse& aResponse) {
         return rv;
       }
 
-      MOZ_ALWAYS_TRUE(SpinEventLoopUntil([&]() {
-        if (!mWaiting) {
-          return true;
-        }
+      MOZ_ALWAYS_TRUE(SpinEventLoopUntil(
+          [&]() {
+            if (!mWaiting) {
+              return true;
+            }
 
-        {
-          StaticMutexAutoLock lock(gRequestHelperMutex);
-          if (NS_WARN_IF(gPendingSyncMessage)) {
-            return true;
-          }
-        }
+            {
+              StaticMutexAutoLock lock(gRequestHelperMutex);
+              if (NS_WARN_IF(gPendingSyncMessage)) {
+                return true;
+              }
+            }
 
-        return false;
-      }, thread));
+            return false;
+          },
+          thread));
     }
 
     // If mWaiting is still set to true, it means that the event loop spinning
