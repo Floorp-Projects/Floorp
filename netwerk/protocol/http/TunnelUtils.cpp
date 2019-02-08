@@ -47,7 +47,7 @@ TLSFilterTransaction::TLSFilterTransaction(nsAHttpTransaction *aWrapped,
       mSegmentWriter(aWriter),
       mFilterReadCode(NS_ERROR_NOT_INITIALIZED),
       mForce(false),
-      mReadSegmentBlocked(false),
+      mReadSegmentReturnValue(NS_OK),
       mNudgeCounter(0) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   LOG(("TLSFilterTransaction ctor %p\n", this));
@@ -149,7 +149,7 @@ nsresult TLSFilterTransaction::OnReadSegment(const char *aData, uint32_t aCount,
   LOG(("TLSFilterTransaction %p OnReadSegment %d (buffered %d)\n", this, aCount,
        mEncryptedTextUsed));
 
-  mReadSegmentBlocked = false;
+  mReadSegmentReturnValue = NS_OK;
   MOZ_ASSERT(mSegmentReader);
   if (!mSecInfo) {
     return NS_ERROR_FAILURE;
@@ -196,17 +196,12 @@ nsresult TLSFilterTransaction::OnReadSegment(const char *aData, uint32_t aCount,
         return NS_OK;
       }
       // mTransaction ReadSegments actually obscures this code, so
-      // keep it in a member var for this::ReadSegments to insepct. Similar
+      // keep it in a member var for this::ReadSegments to inspect. Similar
       // to nsHttpConnection::mSocketOutCondition
       PRErrorCode code = PR_GetError();
-      mReadSegmentBlocked = (code == PR_WOULD_BLOCK_ERROR);
-      if (mReadSegmentBlocked) {
-        return NS_BASE_STREAM_WOULD_BLOCK;
-      }
+      mReadSegmentReturnValue = ErrorAccordingToNSPR(code);
 
-      nsresult rv = ErrorAccordingToNSPR(code);
-      Close(rv);
-      return rv;
+      return mReadSegmentReturnValue;
     }
     aCount -= written;
     aData += written;
@@ -287,9 +282,14 @@ nsresult TLSFilterTransaction::OnWriteSegment(char *aData, uint32_t aCount,
     if (code == PR_WOULD_BLOCK_ERROR) {
       return NS_BASE_STREAM_WOULD_BLOCK;
     }
-    nsresult rv = ErrorAccordingToNSPR(code);
-    Close(rv);
-    return rv;
+    // If reading from the socket succeeded (NS_SUCCEEDED(mFilterReadCode)),
+    // but the nss layer encountered an error remember the error.
+    if (NS_SUCCEEDED(mFilterReadCode)) {
+      mFilterReadCode = ErrorAccordingToNSPR(code);
+      LOG(("TLSFilterTransaction::OnWriteSegment %p nss error %" PRIx32 ".\n",
+           this, static_cast<uint32_t>(mFilterReadCode)));
+    }
+    return mFilterReadCode;
   }
   *outCountRead = bytesRead;
 
@@ -320,7 +320,7 @@ int32_t TLSFilterTransaction::FilterInput(char *aBuf, int32_t aAmount) {
          " read=%d input from net "
          "1 layer stripped, 1 still on\n",
          static_cast<uint32_t>(mFilterReadCode), outCountRead));
-    if (mReadSegmentBlocked) {
+    if (mReadSegmentReturnValue == NS_BASE_STREAM_WOULD_BLOCK) {
       mNudgeCounter = 0;
     }
   }
@@ -341,19 +341,18 @@ nsresult TLSFilterTransaction::ReadSegments(nsAHttpSegmentReader *aReader,
     return NS_ERROR_UNEXPECTED;
   }
 
-  mReadSegmentBlocked = false;
+  mReadSegmentReturnValue = NS_OK;
   mSegmentReader = aReader;
   nsresult rv = mTransaction->ReadSegments(this, aCount, outCountRead);
   LOG(("TLSFilterTransaction %p called trans->ReadSegments rv=%" PRIx32 " %d\n",
        this, static_cast<uint32_t>(rv), *outCountRead));
-  if (NS_SUCCEEDED(rv) && mReadSegmentBlocked) {
-    rv = NS_BASE_STREAM_WOULD_BLOCK;
+  if (NS_SUCCEEDED(rv) && (mReadSegmentReturnValue == NS_BASE_STREAM_WOULD_BLOCK)) {
     LOG(("TLSFilterTransaction %p read segment blocked found rv=%" PRIx32 "\n",
          this, static_cast<uint32_t>(rv)));
     Unused << Connection()->ForceSend();
   }
 
-  return rv;
+  return NS_SUCCEEDED(rv) ? mReadSegmentReturnValue : rv;
 }
 
 nsresult TLSFilterTransaction::WriteSegments(nsAHttpSegmentWriter *aWriter,
@@ -456,8 +455,10 @@ TLSFilterTransaction::Notify(nsITimer *timer) {
   if (timer != mTimer) {
     return NS_ERROR_UNEXPECTED;
   }
-  DebugOnly<nsresult> rv = StartTimerCallback();
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
+  nsresult rv = StartTimerCallback();
+  if (NS_FAILED(rv)) {
+    Close(rv);
+  }
   return NS_OK;
 }
 
@@ -475,7 +476,7 @@ nsresult TLSFilterTransaction::StartTimerCallback() {
     // This class can be called re-entrantly, so cleanup m* before ->on()
     RefPtr<NudgeTunnelCallback> cb(mNudgeCallback);
     mNudgeCallback = nullptr;
-    cb->OnTunnelNudged(this);
+    return cb->OnTunnelNudged(this);
   }
   return NS_OK;
 }
