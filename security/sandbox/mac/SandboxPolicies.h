@@ -809,7 +809,8 @@ static const char flashPluginSandboxRules[] = R"SANDBOX_LITERAL(
   (allow file-read* file-write-create file-write-data
       (literal "/Library/Application Support/Macromedia/mms.cfg")
       (home-library-literal "/Application Support/Macromedia/mms.cfg")
-      (home-library-subpath "/Caches/Adobe/Flash Player")
+      (home-library-subpath "/Caches/Adobe/Flash Player"))
+  (allow file-read* file-write-create file-write-data file-write-unlink
       (home-library-subpath "/Preferences/Macromedia/Flash Player"))
 
   (allow file-read*
