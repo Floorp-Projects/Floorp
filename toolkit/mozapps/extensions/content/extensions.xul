@@ -180,7 +180,7 @@
       <!-- view port -->
       <deck id="view-port" flex="1" selectedIndex="0">
         <!-- discover view -->
-        <deck id="discover-view" flex="1" class="view-pane" selectedIndex="0" tabindex="0">
+        <deck id="discover-view" flex="1" class="view-pane" selectedIndex="0">
           <vbox id="discover-loading" align="center" pack="stretch" flex="1" class="alert-container">
             <spacer class="alert-spacer-before"/>
             <hbox class="alert loading" align="center">
@@ -293,7 +293,7 @@
 
           <deck id="headered-views-content" flex="1" selectedIndex="0">
             <!-- list view -->
-            <vbox id="list-view" flex="1" class="view-pane" align="stretch" tabindex="0">
+            <vbox id="list-view" flex="1" class="view-pane" align="stretch">
               <!-- info UI for add-ons that have been disabled for being unsigned -->
               <vbox id="disabled-unsigned-addons-info" hidden="true">
                 <label id="disabled-unsigned-addons-heading" data-l10n-id="disabled-unsigned-heading"/>
@@ -369,7 +369,7 @@
             <browser id="shortcuts-view" type="content" flex="1" disablehistory="true"/>
 
             <!-- legacy extensions view -->
-            <vbox id="legacy-view" flex="1" class="view-pane" align="stretch" tabindex="0">
+            <vbox id="legacy-view" flex="1" class="view-pane" align="stretch">
               <vbox id="legacy-extensions-info">
                 <label id="legacy-extensions-heading" data-l10n-id="legacy-extensions"/>
                 <description data-l10n-id="legacy-extensions-description">
@@ -380,7 +380,7 @@
             </vbox>
 
             <!-- updates view -->
-            <vbox id="updates-view" flex="1" class="view-pane" tabindex="0">
+            <vbox id="updates-view" flex="1" class="view-pane">
               <hbox class="view-header global-warning-container" align="center">
                 <!-- global warnings -->
                 <hbox class="global-warning" flex="1">
