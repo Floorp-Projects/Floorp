@@ -131,6 +131,11 @@ const SIGNED_TYPES = new Set([
 // Time to wait before async save of XPI JSON database, in milliseconds
 const ASYNC_SAVE_DELAY_MS = 20;
 
+const LOCALE_BUNDLES = [
+  "chrome://global/locale/global-extension-fields.properties",
+  "chrome://global/locale/app-extension-fields.properties",
+].map(url => Services.strings.createBundle(url));
+
 /**
  * Schedules an idle task, and returns a promise which resolves to an
  * IdleDeadline when an idle slice is available. The caller should
@@ -1079,6 +1084,15 @@ function chooseValue(aAddon, aObj, aProp) {
   if (repositoryAddon && aProp in repositoryAddon &&
       (aProp === "creator" || objValue == null)) {
     return [repositoryAddon[aProp], true];
+  }
+
+  let id = `extension.${aAddon.id}.${aProp}`;
+  for (let bundle of LOCALE_BUNDLES) {
+    try {
+      return [bundle.GetStringFromName(id), false];
+    } catch (e) {
+      // Ignore missing overrides.
+    }
   }
 
   return [objValue, false];
