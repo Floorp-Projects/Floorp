@@ -97,6 +97,7 @@ def valid_windows_sdk_dir_result(value):
 @depends(c_compiler, windows_sdk_dir, valid_windows_version, 'WINDOWSSDKDIR')
 @checking('for Windows SDK', valid_windows_sdk_dir_result)
 @imports(_from='__builtin__', _import='sorted')
+@imports(_from='__builtin__', _import='Exception')
 @imports(_from='textwrap', _import='dedent')
 def valid_windows_sdk_dir(compiler, windows_sdk_dir, target_version,
                           windows_sdk_dir_env):
