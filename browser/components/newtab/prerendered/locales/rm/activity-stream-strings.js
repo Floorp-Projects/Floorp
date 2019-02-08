@@ -94,7 +94,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Administrar la secziun",
   "section_menu_action_manage_webext": "Administrar l'extensiun",
   "section_menu_action_add_topsite": "Agiuntar ina pagina principala",
-  "section_menu_action_add_search_engine": "Agiuntar questa maschina da tschertgar",
+  "section_menu_action_add_search_engine": "Agiuntar maschina da tschertgar",
   "section_menu_action_move_up": "Spustar ensi",
   "section_menu_action_move_down": "Spustar engiu",
   "section_menu_action_privacy_notice": "Infurmaziuns davart la protecziun da datas",

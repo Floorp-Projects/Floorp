@@ -1,6 +1,7 @@
 import {actionCreators as ac} from "common/Actions.jsm";
 import {connect} from "react-redux";
 import React from "react";
+import {SpocIntersectionObserver} from "content-src/components/DiscoveryStreamComponents/SpocIntersectionObserver/SpocIntersectionObserver";
 
 /**
  * @note exported for testing only
@@ -31,16 +32,26 @@ export class ListItem extends React.PureComponent {
 
   render() {
     return (
-      <li className="ds-list-item">
-        <a className="ds-list-item-link" href={this.props.url} onClick={this.onLinkClick}>
-          <div className="ds-list-item-text">
-            <div className="ds-list-item-title">{this.props.title}</div>
-            {this.props.excerpt && <div className="ds-list-item-excerpt">{this.props.excerpt}</div>}
-            <div className="ds-list-item-info">{this.props.domain}</div>
-          </div>
-          <div className="ds-list-image" style={{backgroundImage: `url(${this.props.image_src})`}} />
-        </a>
-      </li>
+      <SpocIntersectionObserver campaignId={this.props.campaignId} dispatch={this.props.dispatch}>
+        <li className="ds-list-item">
+          <a className="ds-list-item-link" href={this.props.url} onClick={this.onLinkClick}>
+            <div className="ds-list-item-text">
+              <div className="ds-list-item-title">{this.props.title}</div>
+              {this.props.excerpt && <div className="ds-list-item-excerpt">{this.props.excerpt}</div>}
+              <p>
+                {this.props.context && (
+                  <span>
+                    <span className="ds-list-item-context">{this.props.context}</span>
+                    <br />
+                  </span>
+                )}
+                <span className="ds-list-item-info">{this.props.domain}</span>
+              </p>
+            </div>
+            <div className="ds-list-image" style={{backgroundImage: `url(${this.props.image_src})`}} />
+          </a>
+        </li>
+      </SpocIntersectionObserver>
     );
   }
 }
@@ -49,17 +60,15 @@ export class ListItem extends React.PureComponent {
  * @note exported for testing only
  */
 export function _List(props) {
-  const feed = props.DiscoveryStream.feeds[props.feed.url];
-
-  if (!feed || !feed.data || !feed.data.recommendations) {
+  const feed = props.data;
+  if (!feed || !feed.recommendations) {
     return null;
   }
-
-  const recs = feed.data.recommendations;
-
+  const recs = feed.recommendations;
   let recMarkup = recs.slice(props.recStartingPoint,
                              props.recStartingPoint + props.items).map((rec, index) => (
     <ListItem key={`ds-list-item-${index}`}
+      campaignId={rec.campaign_id}
       dispatch={props.dispatch}
       domain={rec.domain}
       excerpt={rec.excerpt}
@@ -67,10 +76,10 @@ export function _List(props) {
       image_src={rec.image_src}
       index={index}
       title={rec.title}
+      context={rec.context}
       type={props.type}
       url={rec.url} />)
   );
-
   const listStyles = [
     "ds-list",
     props.fullWidth ? "ds-list-full-width" : "",
