@@ -14,7 +14,8 @@ PR_BEGIN_EXTERN_C
 ** functions.
 */
 #if defined(_WIN32) && (_MSC_VER >= 1300) && \
-    (defined(_M_IX86) || defined(_M_AMD64) || defined(_M_ARM))
+    (defined(_M_IX86) || defined(_M_X64) || defined(_M_ARM) || \
+     defined(_M_ARM64))
 # include <intrin.h>
 # pragma  intrinsic(_BitScanForward,_BitScanReverse)
   __forceinline static int __prBitScanForward32(unsigned int val)
@@ -33,7 +34,8 @@ PR_BEGIN_EXTERN_C
 # define pr_bitscan_clz32(val)  __prBitScanReverse32(val)
 # define  PR_HAVE_BUILTIN_BITSCAN32
 #elif ((__GNUC__ >= 4) || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4)) && \
-       (defined(__i386__) || defined(__x86_64__) || defined(__arm__))
+       (defined(__i386__) || defined(__x86_64__) || defined(__arm__) || \
+        defined(__aarch64__))
 # define pr_bitscan_ctz32(val)  __builtin_ctz(val)
 # define pr_bitscan_clz32(val)  __builtin_clz(val)
 # define  PR_HAVE_BUILTIN_BITSCAN32
@@ -136,7 +138,7 @@ NSPR_API(PRIntn) PR_FloorLog2(PRUint32 i);
 */
 
 #if defined(_MSC_VER) && (defined(_M_IX86) || defined(_M_AMD64) || \
-    defined(_M_X64) || defined(_M_ARM))
+    defined(_M_X64) || defined(_M_ARM) || defined(_M_ARM64))
 #include <stdlib.h>
 #pragma intrinsic(_rotl, _rotr)
 #define PR_ROTATE_LEFT32(a, bits) _rotl(a, bits)

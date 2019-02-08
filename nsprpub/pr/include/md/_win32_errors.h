@@ -83,7 +83,7 @@ extern void _MD_win32_map_accept_error(PRInt32 err);
 extern void _MD_win32_map_acceptex_error(PRInt32 err);
 #define	_PR_MD_MAP_ACCEPTEX_ERROR	_MD_win32_map_acceptex_error
 
-extern PRInt32 _MD_win32_map_connect_error(PRInt32 err);
+extern void _MD_win32_map_connect_error(PRInt32 err);
 #define	_PR_MD_MAP_CONNECT_ERROR	_MD_win32_map_connect_error
 
 extern void _MD_win32_map_bind_error(PRInt32 err);

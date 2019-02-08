@@ -15,7 +15,7 @@ dnl ========================================================
 dnl = Defaults
 dnl ========================================================
 MOD_MAJOR_VERSION=4
-MOD_MINOR_VERSION=20
+MOD_MINOR_VERSION=21
 MOD_PATCH_VERSION=0
 NSPR_MODNAME=nspr20
 _HAVE_PTHREADS=
@@ -147,21 +147,6 @@ mipsel-*android*)
     ;;
 esac
 
-dnl ========================================================
-dnl = Gonk is a fork of Android used for Mozilla's B2G project.
-dnl = Configuration is done largely by the top level config
-dnl = and the specified gonk directory doesn't matter here.
-dnl ========================================================
-
-AC_ARG_WITH(gonk,
-[  --with-gonk=DIR         location of gonk dir],
-    gonkdir=$withval)
-
-if test -n "$gonkdir" ; then
-    dnl Most things are directly configured by env vars when building for gonk
-
-    AC_DEFINE(ANDROID)
-else
 case "$target" in
 *-android*|*-linuxandroid*)
     if test -z "$android_ndk" ; then
@@ -246,7 +231,6 @@ case "$target" in
     AC_DEFINE(ANDROID)
     ;;
 esac
-fi
 
 dnl ========================================================
 dnl =
