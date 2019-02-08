@@ -291,7 +291,8 @@ class UrlbarView {
     item.className = "urlbarView-row";
     item.setAttribute("resultIndex", resultIndex);
 
-    if (result.type == UrlbarUtils.RESULT_TYPE.SEARCH) {
+    if (result.type == UrlbarUtils.RESULT_TYPE.SEARCH &&
+        !result.payload.isKeywordOffer) {
       item.setAttribute("type", "search");
     } else if (result.type == UrlbarUtils.RESULT_TYPE.REMOTE_TAB) {
       item.setAttribute("type", "remotetab");

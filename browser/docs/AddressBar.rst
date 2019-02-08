@@ -388,7 +388,7 @@ The following RESULT_TYPEs are supported:
 
     // Payload: { icon, url, userContextId }
     TAB_SWITCH: 1,
-    // Payload: { icon, suggestion, keyword, query }
+    // Payload: { icon, suggestion, keyword, query, isKeywordOffer }
     SEARCH: 2,
     // Payload: { icon, url, title, tags }
     URL: 3,
