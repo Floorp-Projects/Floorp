@@ -7,8 +7,8 @@
 #ifndef ProfilerParent_h
 #define ProfilerParent_h
 
-#include "mozilla/RefPtr.h"
 #include "mozilla/PProfilerParent.h"
+#include "mozilla/RefPtr.h"
 
 class nsIProfilerStartParams;
 

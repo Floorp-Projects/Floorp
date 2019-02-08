@@ -748,10 +748,10 @@ class LinuxSimpleCrossToolchainTest(BaseToolchainTest):
     def test_cross_clang(self):
         self.do_toolchain_test(self.PATHS, {
             'c_compiler': self.DEFAULT_CLANG_RESULT + {
-                'flags': ['--target=i686-linux-gnu'],
+                'flags': ['-m32']
             },
             'cxx_compiler': self.DEFAULT_CLANGXX_RESULT + {
-                'flags': ['--target=i686-linux-gnu'],
+                'flags': ['-m32']
             },
             'host_c_compiler': self.DEFAULT_CLANG_RESULT,
             'host_cxx_compiler': self.DEFAULT_CLANGXX_RESULT,
@@ -789,10 +789,10 @@ class LinuxX86_64CrossToolchainTest(BaseToolchainTest):
     def test_cross_clang(self):
         self.do_toolchain_test(self.PATHS, {
             'c_compiler': self.DEFAULT_CLANG_RESULT + {
-                'flags': ['--target=x86_64-linux-gnu'],
+                'flags': ['-m64']
             },
             'cxx_compiler': self.DEFAULT_CLANGXX_RESULT + {
-                'flags': ['--target=x86_64-linux-gnu'],
+                'flags': ['-m64']
             },
             'host_c_compiler': self.DEFAULT_CLANG_RESULT,
             'host_cxx_compiler': self.DEFAULT_CLANGXX_RESULT,

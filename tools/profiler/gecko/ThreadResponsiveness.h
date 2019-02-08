@@ -6,10 +6,10 @@
 #ifndef ThreadResponsiveness_h
 #define ThreadResponsiveness_h
 
-#include "nsISupports.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/TimeStamp.h"
+#include "nsISupports.h"
 
 class CheckResponsivenessTask;
 class nsIEventTarget;

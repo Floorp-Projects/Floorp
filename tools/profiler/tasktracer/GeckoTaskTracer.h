@@ -7,14 +7,14 @@
 #ifndef GECKO_TASK_TRACER_H
 #define GECKO_TASK_TRACER_H
 
-#include <stdarg.h>
-
-#include "mozilla/UniquePtr.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"
 #include "nsStringFwd.h"
 #include "nsTArrayForwardDeclare.h"
+
+#include <stdarg.h>
 
 /**
  * TaskTracer provides a way to trace the correlation between different tasks

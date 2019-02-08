@@ -6,11 +6,11 @@
 
 #include "ProfilerParent.h"
 
+#include "nsProfiler.h"
+
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Unused.h"
-
-#include "nsProfiler.h"
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
 

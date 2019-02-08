@@ -6,12 +6,10 @@
 #ifndef MOZ_PROFILE_BUFFER_H
 #define MOZ_PROFILE_BUFFER_H
 
-#include "platform.h"
 #include "ProfileBufferEntry.h"
 #include "ProfilerMarker.h"
-#include "ProfileJSONWriter.h"
-#include "mozilla/RefPtr.h"
-#include "mozilla/RefCounted.h"
+
+#include "mozilla/Maybe.h"
 
 // A fixed-capacity circular buffer.
 // This class is used as a queue of entries which, after construction, never

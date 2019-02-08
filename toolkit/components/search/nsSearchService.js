@@ -1438,7 +1438,7 @@ Engine.prototype = {
      * Handle an error during the load of an engine by notifying the engine's
      * error callback, if any.
      */
-    function onError(errorCode = Ci.nsISearchInstallCallback.ERROR_UNKNOWN_FAILURE) {
+    function onError(errorCode = Ci.nsISearchService.ERROR_UNKNOWN_FAILURE) {
       // Notify the callback of the failure
       if (aEngine._installCallback) {
         aEngine._installCallback(errorCode);
@@ -1519,9 +1519,9 @@ Engine.prototype = {
         if (aEngine._confirm) {
           promptError({ error: "error_duplicate_engine_msg",
                         title: "error_invalid_engine_title",
-                      }, Ci.nsISearchInstallCallback.ERROR_DUPLICATE_ENGINE);
+                      }, Ci.nsISearchService.ERROR_DUPLICATE_ENGINE);
         } else {
-          onError(Ci.nsISearchInstallCallback.ERROR_DUPLICATE_ENGINE);
+          onError(Ci.nsISearchService.ERROR_DUPLICATE_ENGINE);
         }
         LOG("_onLoad: duplicate engine found, bailing");
         return;
@@ -2724,8 +2724,8 @@ SearchService.prototype = {
   // Get the original Engine object that is the default for this region,
   // ignoring changes the user may have subsequently made.
   get originalDefaultEngine() {
-    let defaultEngine = this.getVerifiedGlobalAttr("searchDefault");
-    if (!defaultEngine) {
+    let defaultEngineName = this.getVerifiedGlobalAttr("searchDefault");
+    if (!defaultEngineName) {
       // We only allow the old defaultenginename pref for distributions
       // We can't use isPartnerBuild because we need to allow reading
       // of the defaultengine name pref for funnelcakes.
@@ -2734,21 +2734,28 @@ SearchService.prototype = {
         let nsIPLS = Ci.nsIPrefLocalizedString;
 
         try {
-          defaultEngine = defaultPrefB.getComplexValue("defaultenginename", nsIPLS).data;
+          defaultEngineName = defaultPrefB.getComplexValue("defaultenginename", nsIPLS).data;
         } catch (ex) {
           // If the default pref is invalid (e.g. an add-on set it to a bogus value)
           // use the default engine from the list.json.
           // This should eventually be the common case. We should only have the
           // defaultenginename pref for distributions.
           // Worst case, getEngineByName will just return null, which is the best we can do.
-          defaultEngine = this._searchDefault;
+          defaultEngineName = this._searchDefault;
         }
       } else {
-        defaultEngine = this._searchDefault;
+        defaultEngineName = this._searchDefault;
       }
     }
 
-    return this.getEngineByName(defaultEngine);
+    let defaultEngine = this.getEngineByName(defaultEngineName);
+    if (!defaultEngine) {
+      // Something unexpected as happened. In order to recover the original default engine,
+      // use the first visible engine which us what currentEngine will use.
+      return this._getSortedEngines(false)[0];
+    }
+
+    return defaultEngine;
   },
 
   resetToOriginalDefaultEngine: function SRCH_SVC__resetToOriginalDefaultEngine() {

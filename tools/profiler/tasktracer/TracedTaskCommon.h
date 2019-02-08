@@ -8,6 +8,7 @@
 #define TRACED_TASK_COMMON_H
 
 #include "GeckoTaskTracer.h"
+
 #include "nsCOMPtr.h"
 #include "nsThreadUtils.h"
 

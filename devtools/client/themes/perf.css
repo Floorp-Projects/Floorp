@@ -218,3 +218,30 @@
 .perf-settings-subtext {
   font-weight: bold;
 }
+
+.perf-settings-dir-list {
+  box-sizing: border-box;
+  width: 100%;
+  height: 100px;
+  border: 1px solid var(--grey-30);
+  padding: 0;
+  overflow-y: auto;
+  background-color: white;
+}
+
+.pref-settings-dir-list-item {
+  padding: 3px 5px;
+}
+
+.pref-settings-dir-list-item::before {
+  content: url(chrome://devtools/skin/images/folder.svg);
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-inline-end: 4px;
+  vertical-align: -2px;
+}
+
+.perf-settings-dir-list-button-group {
+  padding: 4px 2px;
+}

@@ -60,6 +60,8 @@ const FILE_APPLICATION_INI           = "application.ini";
 const FILE_BACKUP_UPDATE_LOG         = "backup-update.log";
 const FILE_BT_RESULT                 = "update.bt";
 const FILE_LAST_UPDATE_LOG           = "last-update.log";
+const FILE_PRECOMPLETE               = "precomplete";
+const FILE_PRECOMPLETE_BAK           = "precomplete.bak";
 const FILE_UPDATE_SETTINGS_INI       = "update-settings.ini";
 const FILE_UPDATE_SETTINGS_INI_BAK   = "update-settings.ini.bak";
 const FILE_UPDATER_INI               = "updater.ini";
@@ -73,6 +75,7 @@ const FILE_UPDATE_VERSION            = "update.version";
 
 const UPDATE_SETTINGS_CONTENTS = "[Settings]\n" +
                                  "ACCEPTED_MAR_CHANNEL_IDS=xpcshell-test\n";
+const PRECOMPLETE_CONTENTS = "rmdir \"nonexistent_dir/\"\n";
 
 const PR_RDWR        = 0x04;
 const PR_CREATE_FILE = 0x08;

@@ -155,6 +155,11 @@ pref("devtools.performance.ui.experimental", false);
 // This isn't exposed directly to the user.
 pref("devtools.performance.recording.ui-base-url", "https://perf-html.io");
 
+// A JSON array of strings, where each string is a file path to an objdir on
+// the host machine. This is used in order to look up symbol information from
+// build artifacts of local builds.
+pref("devtools.performance.recording.objdirs", "[]");
+
 // The default cache UI setting
 pref("devtools.cache.disabled", false);
 

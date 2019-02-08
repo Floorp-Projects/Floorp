@@ -158,19 +158,19 @@ amManager.prototype = {
 
   _addAddonListener(target) {
     if (!this.addonListeners.has(target)) {
-      let handler = (event, id, needsRestart) => {
-        target.sendAsyncMessage(MSG_ADDON_EVENT, {event, id, needsRestart});
+      let handler = (event, id) => {
+        target.sendAsyncMessage(MSG_ADDON_EVENT, {event, id});
       };
       let listener = {
-        onEnabling: (addon, needsRestart) => handler("onEnabling", addon.id, needsRestart),
-        onEnabled: (addon) => handler("onEnabled", addon.id, false),
-        onDisabling: (addon, needsRestart) => handler("onDisabling", addon.id, needsRestart),
-        onDisabled: (addon) => handler("onDisabled", addon.id, false),
-        onInstalling: (addon, needsRestart) => handler("onInstalling", addon.id, needsRestart),
-        onInstalled: (addon) => handler("onInstalled", addon.id, false),
-        onUninstalling: (addon, needsRestart) => handler("onUninstalling", addon.id, needsRestart),
-        onUninstalled: (addon) => handler("onUninstalled", addon.id, false),
-        onOperationCancelled: (addon) => handler("onOperationCancelled", addon.id, false),
+        onEnabling: addon => handler("onEnabling", addon.id),
+        onEnabled: addon => handler("onEnabled", addon.id),
+        onDisabling: addon => handler("onDisabling", addon.id),
+        onDisabled: addon => handler("onDisabled", addon.id),
+        onInstalling: addon => handler("onInstalling", addon.id),
+        onInstalled: addon => handler("onInstalled", addon.id),
+        onUninstalling: addon => handler("onUninstalling", addon.id),
+        onUninstalled: addon => handler("onUninstalled", addon.id),
+        onOperationCancelled: addon => handler("onOperationCancelled", addon.id),
       };
       this.addonListeners.set(target, listener);
       AddonManager.addAddonListener(listener);

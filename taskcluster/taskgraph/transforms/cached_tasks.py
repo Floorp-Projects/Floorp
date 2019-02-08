@@ -62,7 +62,11 @@ def cache_task(config, tasks):
             digests[task.label] = format_task_digest(task.attributes['cached_task'])
 
     for task in order_tasks(config, tasks):
-        cache = task.pop('cache')
+        cache = task.pop('cache', None)
+        if cache is None:
+            yield task
+            continue
+
         dependency_digests = []
         for p in task.get('dependencies', {}).values():
             if p in digests:

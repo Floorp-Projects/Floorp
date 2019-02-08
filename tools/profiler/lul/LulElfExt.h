@@ -46,11 +46,14 @@ using lul::SecMap;
 
 namespace lul {
 
+class UniqueStringUniverse;
+
 // Find all the unwind information in OBJ_FILE, an ELF executable
 // or shared library, and add it to SMAP.
 bool ReadSymbolData(const std::string& obj_file,
                     const std::vector<std::string>& debug_dirs, SecMap* smap,
-                    void* rx_avma, size_t rx_size, void (*log)(const char*));
+                    void* rx_avma, size_t rx_size, UniqueStringUniverse* usu,
+                    void (*log)(const char*));
 
 // The same as ReadSymbolData, except that OBJ_FILE is assumed to
 // point to a mapped-in image of OBJ_FILENAME.
@@ -58,6 +61,7 @@ bool ReadSymbolDataInternal(const uint8_t* obj_file,
                             const std::string& obj_filename,
                             const std::vector<std::string>& debug_dirs,
                             SecMap* smap, void* rx_avma, size_t rx_size,
+                            UniqueStringUniverse* usu,
                             void (*log)(const char*));
 
 }  // namespace lul

@@ -253,7 +253,6 @@ function runTestDefaultWaitForWindowClosed() {
 
     gCloseWindowTimeoutCounter = 0;
 
-    setupFiles();
     setupPrefs();
     gEnv.set("MOZ_TEST_SKIP_UPDATE_STAGE", "1");
     removeUpdateDirsAndFiles();
@@ -653,23 +652,6 @@ function verifyTestsRan() {
 }
 
 /**
- * Creates a backup of files the tests need to modify so they can be restored to
- * the original file when the test has finished and then modifies the files.
- */
-function setupFiles() {
-  // Backup the updater-settings.ini file if it exists by moving it.
-  let baseAppDir = getGREDir();
-  let updateSettingsIni = baseAppDir.clone();
-  updateSettingsIni.append(FILE_UPDATE_SETTINGS_INI);
-  if (updateSettingsIni.exists()) {
-    updateSettingsIni.moveTo(baseAppDir, FILE_UPDATE_SETTINGS_INI_BAK);
-  }
-  updateSettingsIni = baseAppDir.clone();
-  updateSettingsIni.append(FILE_UPDATE_SETTINGS_INI);
-  writeFile(updateSettingsIni, UPDATE_SETTINGS_CONTENTS);
-}
-
-/**
  * For tests that use the test updater restores the backed up real updater if
  * it exists and tries again on failure since Windows debug builds at times
  * leave the file in use. After success moveRealUpdater is called to continue
@@ -701,10 +683,23 @@ function setupTestUpdater() {
 function moveRealUpdater() {
   try {
     // Move away the real updater
-    let baseAppDir = getAppBaseDir();
-    let updater = baseAppDir.clone();
+    let greBinDir = getGREBinDir();
+    let updater = greBinDir.clone();
     updater.append(FILE_UPDATER_BIN);
-    updater.moveTo(baseAppDir, FILE_UPDATER_BIN_BAK);
+    updater.moveTo(greBinDir, FILE_UPDATER_BIN_BAK);
+
+    let greDir = getGREDir();
+    let updateSettingsIni = greDir.clone();
+    updateSettingsIni.append(FILE_UPDATE_SETTINGS_INI);
+    if (updateSettingsIni.exists()) {
+      updateSettingsIni.moveTo(greDir, FILE_UPDATE_SETTINGS_INI_BAK);
+    }
+
+    let precomplete = greDir.clone();
+    precomplete.append(FILE_PRECOMPLETE);
+    if (precomplete.exists()) {
+      precomplete.moveTo(greDir, FILE_PRECOMPLETE_BAK);
+    }
   } catch (e) {
     logTestInfo("Attempt to move the real updater out of the way failed... " +
                 "will try again, Exception: " + e);
@@ -723,7 +718,7 @@ function moveRealUpdater() {
 function copyTestUpdater() {
   try {
     // Copy the test updater
-    let baseAppDir = getAppBaseDir();
+    let greBinDir = getGREBinDir();
     let testUpdaterDir = Services.dirsvc.get("CurWorkD", Ci.nsIFile);
     let relPath = REL_PATH_DATA;
     let pathParts = relPath.split("/");
@@ -733,7 +728,16 @@ function copyTestUpdater() {
 
     let testUpdater = testUpdaterDir.clone();
     testUpdater.append(FILE_UPDATER_BIN);
-    testUpdater.copyToFollowingLinks(baseAppDir, FILE_UPDATER_BIN);
+    testUpdater.copyToFollowingLinks(greBinDir, FILE_UPDATER_BIN);
+
+    let greDir = getGREDir();
+    let updateSettingsIni = greDir.clone();
+    updateSettingsIni.append(FILE_UPDATE_SETTINGS_INI);
+    writeFile(updateSettingsIni, UPDATE_SETTINGS_CONTENTS);
+
+    let precomplete = greDir.clone();
+    precomplete.append(FILE_PRECOMPLETE);
+    writeFile(precomplete, PRECOMPLETE_CONTENTS);
   } catch (e) {
     logTestInfo("Attempt to copy the test updater failed... " +
                 "will try again, Exception: " + e);
@@ -752,16 +756,43 @@ function copyTestUpdater() {
  * finished.
  */
 function restoreUpdaterBackup() {
-  let baseAppDir = getAppBaseDir();
-  let updater = baseAppDir.clone();
-  let updaterBackup = baseAppDir.clone();
+  let greBinDir = getGREBinDir();
+  let updater = greBinDir.clone();
+  let updaterBackup = greBinDir.clone();
   updater.append(FILE_UPDATER_BIN);
   updaterBackup.append(FILE_UPDATER_BIN_BAK);
   if (updaterBackup.exists()) {
     if (updater.exists()) {
       updater.remove(true);
     }
-    updaterBackup.moveTo(baseAppDir, FILE_UPDATER_BIN);
+    updaterBackup.moveTo(greBinDir, FILE_UPDATER_BIN);
+  }
+
+  let greDir = getGREDir();
+  let updateSettingsIniBackup = greDir.clone();
+  updateSettingsIniBackup.append(FILE_UPDATE_SETTINGS_INI_BAK);
+  if (updateSettingsIniBackup.exists()) {
+    let updateSettingsIni = greDir.clone();
+    updateSettingsIni.append(FILE_UPDATE_SETTINGS_INI);
+    if (updateSettingsIni.exists()) {
+      updateSettingsIni.remove(false);
+    }
+    updateSettingsIniBackup.moveTo(greDir, FILE_UPDATE_SETTINGS_INI);
+  }
+
+  let precomplete = greDir.clone();
+  let precompleteBackup = greDir.clone();
+  precomplete.append(FILE_PRECOMPLETE);
+  precompleteBackup.append(FILE_PRECOMPLETE_BAK);
+  if (precompleteBackup.exists()) {
+    if (precomplete.exists()) {
+      precomplete.remove(false);
+    }
+    precompleteBackup.moveTo(greDir, FILE_PRECOMPLETE);
+  } else if (precomplete.exists()) {
+    if (readFile(precomplete) == PRECOMPLETE_CONTENTS) {
+      precomplete.remove(false);
+    }
   }
 }
 
@@ -822,14 +853,6 @@ function setupPrefs() {
  * Restores files that were backed up for the tests and general file cleanup.
  */
 function resetFiles() {
-  // Restore the backed up updater-settings.ini if it exists.
-  let baseAppDir = getGREDir();
-  let updateSettingsIni = baseAppDir.clone();
-  updateSettingsIni.append(FILE_UPDATE_SETTINGS_INI_BAK);
-  if (updateSettingsIni.exists()) {
-    updateSettingsIni.moveTo(baseAppDir, FILE_UPDATE_SETTINGS_INI);
-  }
-
   // Not being able to remove the "updated" directory will not adversely affect
   // subsequent tests so wrap it in a try block and don't test whether its
   // removal was successful.

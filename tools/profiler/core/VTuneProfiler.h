@@ -24,16 +24,16 @@
 
 #else
 
-#  include <stddef.h>
-#  include <unordered_map>
-#  include <string>
-
 #  include "GeckoProfiler.h"
 
 // This is the regular Intel header, these functions are actually defined for
 // us inside js/src/vtune by an intel C file which actually dynamically resolves
 // them to the correct DLL. Through libxul these will 'magically' resolve.
 #  include "vtune/ittnotify.h"
+
+#  include <stddef.h>
+#  include <unordered_map>
+#  include <string>
 
 class VTuneProfiler {
  public:

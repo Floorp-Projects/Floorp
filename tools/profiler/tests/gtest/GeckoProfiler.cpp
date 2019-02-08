@@ -9,17 +9,19 @@
 // happens when calling these functions. They don't do much inspection of
 // profiler internals.
 
-#include "gtest/gtest.h"
-
 #include "GeckoProfiler.h"
-#include "ProfilerMarkerPayload.h"
-#include "jsapi.h"
-#include "js/Initialization.h"
-#include "mozilla/UniquePtrExtensions.h"
+#include "platform.h"
 #include "ProfileBuffer.h"
 #include "ProfileJSONWriter.h"
+#include "ProfilerMarkerPayload.h"
+
+#include "js/Initialization.h"
+#include "jsapi.h"
+#include "mozilla/UniquePtrExtensions.h"
 #include "nsIThread.h"
 #include "nsThreadUtils.h"
+
+#include "gtest/gtest.h"
 
 #include <string.h>
 
