@@ -235,6 +235,10 @@ nsresult LSObject::CreateForWindow(nsPIDOMWindowInner* aWindow,
 
   MOZ_ASSERT(principalInfo->type() == PrincipalInfo::TContentPrincipalInfo);
 
+  if (NS_WARN_IF(!QuotaManager::IsPrincipalInfoValid(*principalInfo))) {
+    return NS_ERROR_FAILURE;
+  }
+
   nsCString suffix;
   nsCString origin;
   rv = QuotaManager::GetInfoFromPrincipal(principal, &suffix, nullptr, &origin);
@@ -293,6 +297,10 @@ nsresult LSObject::CreateForPrincipal(nsPIDOMWindowInner* aWindow,
 
   MOZ_ASSERT(principalInfo->type() == PrincipalInfo::TContentPrincipalInfo ||
              principalInfo->type() == PrincipalInfo::TSystemPrincipalInfo);
+
+  if (NS_WARN_IF(!QuotaManager::IsPrincipalInfoValid(*principalInfo))) {
+    return NS_ERROR_FAILURE;
+  }
 
   nsCString suffix;
   nsCString origin;

@@ -367,7 +367,7 @@ BackgroundParentImpl::AllocPBackgroundLSSimpleRequestParent(
   AssertIsInMainOrSocketProcess();
   AssertIsOnBackgroundThread();
 
-  return mozilla::dom::AllocPBackgroundLSSimpleRequestParent(aParams);
+  return mozilla::dom::AllocPBackgroundLSSimpleRequestParent(this, aParams);
 }
 
 mozilla::ipc::IPCResult

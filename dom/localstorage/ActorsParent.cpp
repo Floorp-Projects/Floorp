@@ -3114,11 +3114,69 @@ bool DeallocPBackgroundLSObserverParent(PBackgroundLSObserverParent* aActor) {
   return true;
 }
 
+bool VerifyPrincipalInfo(const PrincipalInfo& aPrincipalInfo) {
+  AssertIsOnBackgroundThread();
+
+  if (NS_WARN_IF(!QuotaManager::IsPrincipalInfoValid(aPrincipalInfo))) {
+    ASSERT_UNLESS_FUZZING();
+    return false;
+  }
+
+  return true;
+}
+
+bool VerifyRequestParams(const LSRequestParams& aParams) {
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aParams.type() != LSRequestParams::T__None);
+
+  switch (aParams.type()) {
+    case LSRequestParams::TLSRequestPrepareDatastoreParams: {
+      const LSRequestPrepareDatastoreParams& params =
+          aParams.get_LSRequestPrepareDatastoreParams();
+
+      if (NS_WARN_IF(!VerifyPrincipalInfo(params.principalInfo()))) {
+        ASSERT_UNLESS_FUZZING();
+        return false;
+      }
+      break;
+    }
+
+    case LSRequestParams::TLSRequestPrepareObserverParams: {
+      const LSRequestPrepareObserverParams& params =
+          aParams.get_LSRequestPrepareObserverParams();
+
+      if (NS_WARN_IF(!VerifyPrincipalInfo(params.principalInfo()))) {
+        ASSERT_UNLESS_FUZZING();
+        return false;
+      }
+      break;
+    }
+
+    default:
+      MOZ_CRASH("Should never get here!");
+  }
+
+  return true;
+}
+
 PBackgroundLSRequestParent* AllocPBackgroundLSRequestParent(
     PBackgroundParent* aBackgroundActor, const LSRequestParams& aParams) {
   AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aParams.type() != LSRequestParams::T__None);
 
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread())) {
+    return nullptr;
+  }
+
+#ifdef DEBUG
+  // Always verify parameters in DEBUG builds!
+  bool trustParams = false;
+#else
+  bool trustParams = !BackgroundParent::IsOtherProcessActor(aBackgroundActor);
+#endif
+
+  if (!trustParams && NS_WARN_IF(!VerifyRequestParams(aParams))) {
+    ASSERT_UNLESS_FUZZING();
     return nullptr;
   }
 
@@ -3196,11 +3254,47 @@ bool DeallocPBackgroundLSRequestParent(PBackgroundLSRequestParent* aActor) {
   return true;
 }
 
-PBackgroundLSSimpleRequestParent* AllocPBackgroundLSSimpleRequestParent(
-    const LSSimpleRequestParams& aParams) {
+bool VerifyRequestParams(const LSSimpleRequestParams& aParams) {
   AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aParams.type() != LSSimpleRequestParams::T__None);
+
+  switch (aParams.type()) {
+    case LSSimpleRequestParams::TLSSimpleRequestPreloadedParams: {
+      const LSSimpleRequestPreloadedParams& params =
+          aParams.get_LSSimpleRequestPreloadedParams();
+
+      if (NS_WARN_IF(!VerifyPrincipalInfo(params.principalInfo()))) {
+        ASSERT_UNLESS_FUZZING();
+        return false;
+      }
+      break;
+    }
+
+    default:
+      MOZ_CRASH("Should never get here!");
+  }
+
+  return true;
+}
+
+PBackgroundLSSimpleRequestParent* AllocPBackgroundLSSimpleRequestParent(
+    PBackgroundParent* aBackgroundActor, const LSSimpleRequestParams& aParams) {
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aParams.type() != LSSimpleRequestParams::T__None);
 
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread())) {
+    return nullptr;
+  }
+
+#ifdef DEBUG
+  // Always verify parameters in DEBUG builds!
+  bool trustParams = false;
+#else
+  bool trustParams = !BackgroundParent::IsOtherProcessActor(aBackgroundActor);
+#endif
+
+  if (!trustParams && NS_WARN_IF(!VerifyRequestParams(aParams))) {
+    ASSERT_UNLESS_FUZZING();
     return nullptr;
   }
 
