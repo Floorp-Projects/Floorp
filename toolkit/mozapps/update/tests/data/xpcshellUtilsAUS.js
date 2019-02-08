@@ -150,7 +150,6 @@ var gHandle;
 
 var gGREDirOrig;
 var gGREBinDirOrig;
-var gAppDirOrig;
 
 var gPIDPersistProcess;
 
@@ -805,7 +804,6 @@ function setupTestCommon(aAppUpdateAutoEnabled = false) {
 
   gGREDirOrig = getGREDir();
   gGREBinDirOrig = getGREBinDir();
-  gAppDirOrig = getAppBaseDir();
 
   let applyDir = getApplyDirFile().parent;
 
@@ -3836,7 +3834,6 @@ function adjustGeneralPaths() {
   let ds = Services.dirsvc.QueryInterface(Ci.nsIDirectoryService);
   ds.QueryInterface(Ci.nsIProperties).undefine(NS_GRE_DIR);
   ds.QueryInterface(Ci.nsIProperties).undefine(NS_GRE_BIN_DIR);
-  ds.QueryInterface(Ci.nsIProperties).undefine(XRE_EXECUTABLE_FILE);
   ds.registerProvider(dirProvider);
   registerCleanupFunction(function AGP_cleanup() {
     debugDump("start - unregistering directory provider");
