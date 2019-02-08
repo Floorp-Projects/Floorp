@@ -17,7 +17,6 @@ import mozilla.components.concept.engine.EngineView
 import mozilla.components.feature.intent.IntentProcessor
 import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.utils.SafeIntent
-import org.mozilla.fenix.browser.BrowserFragment
 import org.mozilla.fenix.ext.components
 
 open class HomeActivity : AppCompatActivity() {
@@ -71,10 +70,8 @@ open class HomeActivity : AppCompatActivity() {
     private fun openToBrowser() {
         val sessionId = SafeIntent(intent).getStringExtra(IntentProcessor.ACTIVE_SESSION_ID)
         val host = supportFragmentManager.findFragmentById(R.id.container) as NavHostFragment
-
-        host.navController.navigate(R.id.action_global_browser, Bundle().apply {
-            putString(BrowserFragment.SESSION_ID, sessionId)
-        })
+        val directions = NavGraphDirections.actionGlobalBrowser(sessionId)
+        host.navController.navigate(directions)
     }
 
     companion object {

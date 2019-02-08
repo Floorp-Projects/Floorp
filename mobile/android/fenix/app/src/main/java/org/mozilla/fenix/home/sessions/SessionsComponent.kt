@@ -24,7 +24,7 @@ class SessionsComponent(
 
     override val reducer: (SessionsState, SessionsChange) -> SessionsState = { state, change ->
         when (change) {
-            is SessionsChange.SessionsChanged -> state // copy state with changes here
+            is SessionsChange.Changed -> state // copy state with changes here
         }
     }
 
@@ -42,5 +42,5 @@ sealed class SessionsAction : Action {
 }
 
 sealed class SessionsChange : Change {
-    object SessionsChanged : SessionsChange()
+    object Changed : SessionsChange()
 }

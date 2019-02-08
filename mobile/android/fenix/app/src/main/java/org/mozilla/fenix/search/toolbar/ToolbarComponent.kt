@@ -20,6 +20,7 @@ import org.mozilla.fenix.mvi.ViewState
 class ToolbarComponent(
     private val container: ViewGroup,
     bus: ActionBusFactory,
+    private val sessionId: String?,
     override var initialState: SearchState = SearchState("", false)
 ) :
     UIComponent<SearchState, SearchAction, SearchChange>(
@@ -33,7 +34,7 @@ class ToolbarComponent(
         }
     }
 
-    override fun initView() = ToolbarUIView(container, actionEmitter, changesObservable)
+    override fun initView() = ToolbarUIView(sessionId, container, actionEmitter, changesObservable)
     init {
         render(reducer)
         applyTheme()

@@ -18,6 +18,7 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.mvi.UIView
 
 class ToolbarUIView(
+    sessionId: String?,
     container: ViewGroup,
     actionEmitter: Observer<SearchAction>,
     changesObservable: Observable<SearchChange>
@@ -51,11 +52,12 @@ class ToolbarUIView(
 
             setOnEditListener(object : mozilla.components.concept.toolbar.Toolbar.OnEditListener {
                 override fun onTextChanged(text: String) {
+                    url = text
                     actionEmitter.onNext(SearchAction.TextChanged(text))
                 }
 
                 override fun onStopEditing() {
-                    actionEmitter.onNext(SearchAction.UrlCommitted("foo"))
+                    actionEmitter.onNext(SearchAction.UrlCommitted(url))
                 }
             })
         }
@@ -71,7 +73,7 @@ class ToolbarUIView(
                 ShippedDomainsProvider().also { it.initialize(this) },
                 components.core.historyStorage,
                 components.core.sessionManager,
-                components.core.sessionManager.selectedSession?.id
+                sessionId ?: components.core.sessionManager.selectedSession?.id
             )
         }
     }

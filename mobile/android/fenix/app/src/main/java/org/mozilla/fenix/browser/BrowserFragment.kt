@@ -55,17 +55,19 @@ class BrowserFragment : Fragment(), BackHandler {
     private val findInPageIntegration = ViewBoundFeatureWrapper<FindInPageIntegration>()
     private val customTabsToolbarFeature = ViewBoundFeatureWrapper<CustomTabsToolbarFeature>()
     private val toolbarIntegration = ViewBoundFeatureWrapper<ToolbarIntegration>()
+    var sessionId: String? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        sessionId = BrowserFragmentArgs.fromBundle(arguments!!).sessionId
         val view = inflater.inflate(R.layout.fragment_browser, container, false)
 
         toolbarComponent = ToolbarComponent(
             view.browserLayout,
-            ActionBusFactory.get(this),
+            ActionBusFactory.get(this), sessionId,
             SearchState("", isEditing = false)
         )
 
@@ -98,7 +100,7 @@ class BrowserFragment : Fragment(), BackHandler {
             .subscribe {
                 when (it) {
                     is SearchAction.ToolbarTapped -> Navigation.findNavController(toolbar)
-                        .navigate(R.id.action_browserFragment_to_searchFragment, null, null)
+                        .navigate(BrowserFragmentDirections.actionBrowserFragmentToSearchFragment(null))
                     is SearchAction.ToolbarMenuItemTapped -> handleToolbarItemInteraction(it)
                 }
             }
@@ -108,8 +110,6 @@ class BrowserFragment : Fragment(), BackHandler {
         super.onViewCreated(view, savedInstanceState)
 
         (activity as AppCompatActivity).supportActionBar?.hide()
-
-        val sessionId = arguments?.getString(SESSION_ID)
 
         val sessionManager = requireComponents.core.sessionManager
 
@@ -182,8 +182,6 @@ class BrowserFragment : Fragment(), BackHandler {
         if (sessionFeature.onBackPressed()) return true
         if (customTabsToolbarFeature.onBackPressed()) return true
 
-        // We'll want to improve this when we add multitasking
-        requireComponents.core.sessionManager.remove()
         return false
     }
 
@@ -211,9 +209,9 @@ class BrowserFragment : Fragment(), BackHandler {
             is ToolbarMenu.Item.Forward -> sessionUseCases.goForward.invoke()
             is ToolbarMenu.Item.Reload -> sessionUseCases.reload.invoke()
             is ToolbarMenu.Item.Settings -> Navigation.findNavController(toolbar)
-                .navigate(R.id.action_browserFragment_to_settingsFragment, null, null)
+                .navigate(BrowserFragmentDirections.actionBrowserFragmentToSettingsFragment())
             is ToolbarMenu.Item.Library -> Navigation.findNavController(toolbar)
-                .navigate(R.id.action_browserFragment_to_libraryFragment, null, null)
+                .navigate(BrowserFragmentDirections.actionBrowserFragmentToLibraryFragment())
             is ToolbarMenu.Item.RequestDesktop -> sessionUseCases.requestDesktopSite.invoke(action.item.isChecked)
             is ToolbarMenu.Item.Share -> requireComponents.core.sessionManager
                 .selectedSession?.url?.apply { requireContext().share(this) }
@@ -231,7 +229,6 @@ class BrowserFragment : Fragment(), BackHandler {
     }
 
     companion object {
-        const val SESSION_ID = "session_id"
         private const val REQUEST_CODE_DOWNLOAD_PERMISSIONS = 1
         private const val REQUEST_CODE_PROMPT_PERMISSIONS = 2
         private const val TOOLBAR_HEIGHT = 56f

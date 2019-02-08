@@ -19,6 +19,7 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.mvi.UIView
 
 class AwesomeBarUIView(
+    useNewTab: Boolean,
     container: ViewGroup,
     actionEmitter: Observer<AwesomeBarAction>,
     changesObservable: Observable<AwesomeBarChange>
@@ -32,7 +33,11 @@ class AwesomeBarUIView(
         with(container.context) {
             view.addProviders(ClipboardSuggestionProvider(
                 this,
-                components.useCases.sessionUseCases.loadUrl,
+                if (useNewTab) {
+                    components.useCases.tabsUseCases.addTab
+                } else {
+                    components.useCases.sessionUseCases.loadUrl
+                },
                 getDrawable(R.drawable.ic_link).toBitmap(),
                 getString(R.string.awesomebar_clipboard_title)
                 )

@@ -74,4 +74,16 @@
                 android:textSize="14sp" />
     </org.mozilla.fenix.home.SearchView>
 
+    <View
+            android:id="@+id/homeDivider"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/photonGrey30"
+            app:layout_constraintTop_toBottomOf="@id/toolbar_wrapper"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="30dp"
+            android:layout_marginStart="40dp"
+            android:layout_marginEnd="40dp"/>
+
 </androidx.constraintlayout.motion.widget.MotionLayout>

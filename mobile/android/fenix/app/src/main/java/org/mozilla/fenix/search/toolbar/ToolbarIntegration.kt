@@ -16,6 +16,7 @@ import mozilla.components.feature.toolbar.ToolbarFeature
 import org.mozilla.fenix.DefaultThemeManager
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import org.mozilla.fenix.R
+import org.mozilla.fenix.browser.BrowserFragmentDirections
 import org.mozilla.fenix.ext.application
 import org.mozilla.fenix.ext.components
 
@@ -38,7 +39,8 @@ class ToolbarIntegration(
             context.getString(R.string.browser_home_button),
             visible = { sessionManager.runWithSession(sessionId) { it.isCustomTabSession().not() } }
         ) {
-            Navigation.findNavController(toolbar).navigate(R.id.action_browserFragment_to_homeFragment)
+            Navigation.findNavController(toolbar)
+                .navigate(BrowserFragmentDirections.actionBrowserFragmentToHomeFragment())
         }
 
         toolbar.addBrowserAction(home)

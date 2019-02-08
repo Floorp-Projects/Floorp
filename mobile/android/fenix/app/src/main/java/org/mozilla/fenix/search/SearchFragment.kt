@@ -15,10 +15,12 @@ import androidx.navigation.Navigation
 import kotlinx.android.synthetic.main.fragment_search.view.*
 import org.mozilla.fenix.R
 import org.mozilla.fenix.mvi.ActionBusFactory
+import org.mozilla.fenix.mvi.getManagedEmitter
 import org.mozilla.fenix.mvi.getSafeManagedObservable
 import org.mozilla.fenix.search.awesomebar.AwesomeBarAction
 import org.mozilla.fenix.search.awesomebar.AwesomeBarChange
 import org.mozilla.fenix.search.awesomebar.AwesomeBarComponent
+import org.mozilla.fenix.search.awesomebar.AwesomeBarState
 import org.mozilla.fenix.search.toolbar.SearchAction
 import org.mozilla.fenix.search.toolbar.SearchState
 import org.mozilla.fenix.search.toolbar.ToolbarComponent
@@ -33,13 +35,18 @@ class SearchFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        val sessionId = SearchFragmentArgs.fromBundle(arguments!!).sessionId
         val view = inflater.inflate(R.layout.fragment_search, container, false)
         toolbarComponent = ToolbarComponent(
             view.toolbar_wrapper,
             ActionBusFactory.get(this),
+            sessionId,
             SearchState("", isEditing = true)
         )
-        awesomeBarComponent = AwesomeBarComponent(view.search_layout, ActionBusFactory.get(this))
+        awesomeBarComponent = AwesomeBarComponent(
+            view.search_layout, ActionBusFactory.get(this),
+            AwesomeBarState("", sessionId == null)
+        )
         ActionBusFactory.get(this).logMergedObservables()
         return view
     }
@@ -61,8 +68,7 @@ class SearchFragment : Fragment() {
                 when (it) {
                     is SearchAction.UrlCommitted -> transitionToBrowser()
                     is SearchAction.TextChanged -> {
-                        ActionBusFactory.get(this)
-                            .emit(AwesomeBarChange::class.java, AwesomeBarChange.UpdateQuery(it.query))
+                        getManagedEmitter<AwesomeBarChange>().onNext(AwesomeBarChange.UpdateQuery(it.query))
                     }
                 }
             }
@@ -76,7 +82,8 @@ class SearchFragment : Fragment() {
     }
 
     private fun transitionToBrowser() {
-        Navigation.findNavController(view!!.search_layout)
-            .navigate(R.id.action_searchFragment_to_browserFragment, null, null)
+        val sessionId = SearchFragmentArgs.fromBundle(arguments!!).sessionId
+        val directions = SearchFragmentDirections.actionSearchFragmentToBrowserFragment(sessionId)
+        Navigation.findNavController(view!!.search_layout).navigate(directions)
     }
 }

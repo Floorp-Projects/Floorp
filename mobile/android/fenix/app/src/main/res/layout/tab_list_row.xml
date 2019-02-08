@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="8dp"
+    android:layout_marginBottom="8dp"
+    android:padding="10dp"
+    android:elevation="5dp"
+    app:cardCornerRadius="10dp">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/item_tab"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:paddingTop="10dp">
+
+        <ImageView android:id="@+id/favicon_image"
+                   android:layout_width="wrap_content"
+                   android:layout_height="wrap_content"
+                   android:src="@drawable/ic_link"
+                   android:tint="@android:color/black"
+                   android:paddingStart="10dp"
+                   android:paddingEnd="10dp"
+                   app:layout_constraintStart_toStartOf="parent"
+                   app:layout_constraintTop_toTopOf="parent"
+                   android:contentDescription="@string/favicon_content_description"/>
+
+        <TextView android:id="@+id/text_url"
+                  android:textSize="18sp"
+                  android:maxLines="1"
+                  android:ellipsize="end"
+                  android:layout_width="0dp"
+                  android:layout_height="wrap_content"
+                  android:layout_marginBottom="4dp"
+                  app:layout_constraintHorizontal_bias="0"
+                  app:layout_constraintTop_toTopOf="parent"
+                  app:layout_constraintStart_toEndOf="@id/favicon_image"
+                  app:layout_constraintEnd_toStartOf="@id/close_tab_button"/>
+
+        <ImageView android:id="@+id/close_tab_button"
+                   android:layout_width="wrap_content"
+                   android:layout_height="wrap_content"
+                   android:src="@drawable/ic_close_black_24dp"
+                   android:paddingEnd="10dp"
+                   android:contentDescription="@string/close_tab"
+                   app:layout_constraintBottom_toBottomOf="@id/text_url"
+                   app:layout_constraintEnd_toEndOf="parent"/>
+
+        <ImageView android:layout_width="0dp"
+                   android:layout_height="100dp"
+                   android:src="@color/photonBlue40"
+                   app:layout_constraintTop_toBottomOf="@id/text_url"
+                   app:layout_constraintBottom_toBottomOf="parent"
+                   app:layout_constraintStart_toStartOf="parent"
+                   app:layout_constraintEnd_toEndOf="parent"
+                   android:contentDescription="TODO"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.cardview.widget.CardView>

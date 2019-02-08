@@ -37,6 +37,7 @@
             android:id="@+id/action_searchFragment_to_browserFragment"
             app:destination="@id/browserFragment"
             app:popUpTo="@id/homeFragment" />
+        <argument android:name="session_id" app:argType="string" app:nullable="true"/>
     </fragment>
 
     <fragment
