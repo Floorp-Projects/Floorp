@@ -902,6 +902,12 @@ class nsDocShell final : public nsDocLoader,
   nsresult MaybeHandleLoadDelegate(nsDocShellLoadState* aLoadState,
                                    uint32_t aWindowType, bool* aDidHandleLoad);
 
+  // Check to see if we're loading a prior history entry in the same document.
+  // If so, handle the scrolling or other action required instead of continuing
+  // with new document navigation.
+  nsresult MaybeHandleSameDocumentNavigation(nsDocShellLoadState* aLoadState,
+                                             bool* aWasSameDocument);
+
  private:  // data members
   static nsIURIFixup* sURIFixup;
 

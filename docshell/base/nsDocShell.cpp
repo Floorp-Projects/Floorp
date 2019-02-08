@@ -8845,6 +8845,297 @@ nsresult nsDocShell::PerformRetargeting(nsDocShellLoadState* aLoadState,
   return rv;
 }
 
+nsresult nsDocShell::MaybeHandleSameDocumentNavigation(
+    nsDocShellLoadState* aLoadState, bool* aWasSameDocument) {
+  MOZ_ASSERT(aLoadState);
+  MOZ_ASSERT(aWasSameDocument);
+  *aWasSameDocument = false;
+  if (!(aLoadState->LoadType() == LOAD_NORMAL ||
+        aLoadState->LoadType() == LOAD_STOP_CONTENT ||
+        LOAD_TYPE_HAS_FLAGS(aLoadState->LoadType(),
+                            LOAD_FLAGS_REPLACE_HISTORY) ||
+        aLoadState->LoadType() == LOAD_HISTORY ||
+        aLoadState->LoadType() == LOAD_LINK)) {
+    return NS_OK;
+  }
+  nsresult rv;
+  nsCOMPtr<nsIURI> currentURI = mCurrentURI;
+
+  nsAutoCString curHash, newHash;
+  bool curURIHasRef = false, newURIHasRef = false;
+
+  nsresult rvURINew = aLoadState->URI()->GetRef(newHash);
+  if (NS_SUCCEEDED(rvURINew)) {
+    rvURINew = aLoadState->URI()->GetHasRef(&newURIHasRef);
+  }
+
+  bool sameExceptHashes = false;
+  if (currentURI && NS_SUCCEEDED(rvURINew)) {
+    nsresult rvURIOld = currentURI->GetRef(curHash);
+    if (NS_SUCCEEDED(rvURIOld)) {
+      rvURIOld = currentURI->GetHasRef(&curURIHasRef);
+    }
+    if (NS_SUCCEEDED(rvURIOld)) {
+      if (NS_FAILED(currentURI->EqualsExceptRef(aLoadState->URI(),
+                                                &sameExceptHashes))) {
+        sameExceptHashes = false;
+      }
+    }
+  }
+
+  if (!sameExceptHashes && sURIFixup && currentURI && NS_SUCCEEDED(rvURINew)) {
+    // Maybe aLoadState->URI() came from the exposable form of currentURI?
+    nsCOMPtr<nsIURI> currentExposableURI;
+    rv = sURIFixup->CreateExposableURI(currentURI,
+                                       getter_AddRefs(currentExposableURI));
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsresult rvURIOld = currentExposableURI->GetRef(curHash);
+    if (NS_SUCCEEDED(rvURIOld)) {
+      rvURIOld = currentExposableURI->GetHasRef(&curURIHasRef);
+    }
+    if (NS_SUCCEEDED(rvURIOld)) {
+      if (NS_FAILED(currentExposableURI->EqualsExceptRef(aLoadState->URI(),
+                                                         &sameExceptHashes))) {
+        sameExceptHashes = false;
+      }
+    }
+  }
+
+  bool historyNavBetweenSameDoc = false;
+  if (mOSHE && aLoadState->SHEntry()) {
+    // We're doing a history load.
+
+    mOSHE->SharesDocumentWith(aLoadState->SHEntry(), &historyNavBetweenSameDoc);
+
+#ifdef DEBUG
+    if (historyNavBetweenSameDoc) {
+      nsCOMPtr<nsIInputStream> currentPostData = mOSHE->GetPostData();
+      NS_ASSERTION(currentPostData == aLoadState->PostDataStream(),
+                   "Different POST data for entries for the same page?");
+    }
+#endif
+  }
+
+  // A same document navigation happens when we navigate between two SHEntries
+  // for the same document. We do a same document navigation under two
+  // circumstances. Either
+  //
+  //  a) we're navigating between two different SHEntries which share a
+  //     document, or
+  //
+  //  b) we're navigating to a new shentry whose URI differs from the
+  //     current URI only in its hash, the new hash is non-empty, and
+  //     we're not doing a POST.
+  //
+  // The restriction that the SHEntries in (a) must be different ensures
+  // that history.go(0) and the like trigger full refreshes, rather than
+  // same document navigations.
+  bool doSameDocumentNavigation =
+      (historyNavBetweenSameDoc && mOSHE != aLoadState->SHEntry()) ||
+      (!aLoadState->SHEntry() && !aLoadState->PostDataStream() &&
+       sameExceptHashes && newURIHasRef);
+
+  if (!doSameDocumentNavigation) {
+    return NS_OK;
+  }
+
+  // Save the position of the scrollers.
+  nsPoint scrollPos = GetCurScrollPos();
+
+  // Reset mLoadType to its original value once we exit this block, because this
+  // same document navigation might have started after a normal, network load,
+  // and we don't want to clobber its load type. See bug 737307.
+  AutoRestore<uint32_t> loadTypeResetter(mLoadType);
+
+  // If a non-same-document-navigation (i.e., a network load) is pending, make
+  // this a replacement load, so that we don't add a SHEntry here and the
+  // network load goes into the SHEntry it expects to.
+  if (JustStartedNetworkLoad() && (aLoadState->LoadType() & LOAD_CMD_NORMAL)) {
+    mLoadType = LOAD_NORMAL_REPLACE;
+  } else {
+    mLoadType = aLoadState->LoadType();
+  }
+
+  mURIResultedInDocument = true;
+
+  nsCOMPtr<nsISHEntry> oldLSHE = mLSHE;
+
+  // we need to assign aLoadState->SHEntry() to mLSHE right here, so that on
+  // History loads, SetCurrentURI() called from OnNewURI() will send proper
+  // onLocationChange() notifications to the browser to update back/forward
+  // buttons.
+  SetHistoryEntry(&mLSHE, aLoadState->SHEntry());
+
+  // Set the doc's URI according to the new history entry's URI.
+  RefPtr<Document> doc = GetDocument();
+  NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
+  doc->SetDocumentURI(aLoadState->URI());
+
+  /* This is a anchor traversal within the same page.
+   * call OnNewURI() so that, this traversal will be
+   * recorded in session and global history.
+   */
+  nsCOMPtr<nsIPrincipal> newURITriggeringPrincipal, newURIPrincipalToInherit;
+  if (mOSHE) {
+    newURITriggeringPrincipal = mOSHE->GetTriggeringPrincipal();
+    newURIPrincipalToInherit = mOSHE->GetPrincipalToInherit();
+  } else {
+    newURITriggeringPrincipal = aLoadState->TriggeringPrincipal();
+    newURIPrincipalToInherit = doc->NodePrincipal();
+  }
+  // Pass true for aCloneSHChildren, since we're not
+  // changing documents here, so all of our subframes are
+  // still relevant to the new session history entry.
+  //
+  // It also makes OnNewURI(...) set LOCATION_CHANGE_SAME_DOCUMENT
+  // flag on firing onLocationChange(...).
+  // Anyway, aCloneSHChildren param is simply reflecting
+  // doSameDocumentNavigation in this scope.
+  OnNewURI(aLoadState->URI(), nullptr, newURITriggeringPrincipal,
+           newURIPrincipalToInherit, mLoadType, true, true, true);
+
+  nsCOMPtr<nsIInputStream> postData;
+  uint32_t cacheKey = 0;
+
+  bool scrollRestorationIsManual = false;
+  if (mOSHE) {
+    /* save current position of scroller(s) (bug 59774) */
+    mOSHE->SetScrollPosition(scrollPos.x, scrollPos.y);
+    scrollRestorationIsManual = mOSHE->GetScrollRestorationIsManual();
+    // Get the postdata and page ident from the current page, if
+    // the new load is being done via normal means.  Note that
+    // "normal means" can be checked for just by checking for
+    // LOAD_CMD_NORMAL, given the loadType and allowScroll check
+    // above -- it filters out some LOAD_CMD_NORMAL cases that we
+    // wouldn't want here.
+    if (aLoadState->LoadType() & LOAD_CMD_NORMAL) {
+      postData = mOSHE->GetPostData();
+      cacheKey = mOSHE->GetCacheKey();
+
+      // Link our new SHEntry to the old SHEntry's back/forward
+      // cache data, since the two SHEntries correspond to the
+      // same document.
+      if (mLSHE) {
+        if (!aLoadState->SHEntry()) {
+          // If we're not doing a history load, scroll restoration
+          // should be inherited from the previous session history entry.
+          mLSHE->SetScrollRestorationIsManual(scrollRestorationIsManual);
+        }
+        mLSHE->AdoptBFCacheEntry(mOSHE);
+      }
+    }
+  }
+
+  // If we're doing a history load, use its scroll restoration state.
+  if (aLoadState->SHEntry()) {
+    scrollRestorationIsManual =
+        aLoadState->SHEntry()->GetScrollRestorationIsManual();
+  }
+
+  /* Assign mLSHE to mOSHE. This will either be a new entry created
+   * by OnNewURI() for normal loads or aLoadState->SHEntry() for history
+   * loads.
+   */
+  if (mLSHE) {
+    SetHistoryEntry(&mOSHE, mLSHE);
+    // Save the postData obtained from the previous page
+    // in to the session history entry created for the
+    // anchor page, so that any history load of the anchor
+    // page will restore the appropriate postData.
+    if (postData) {
+      mOSHE->SetPostData(postData);
+    }
+
+    // Make sure we won't just repost without hitting the
+    // cache first
+    if (cacheKey != 0) {
+      mOSHE->SetCacheKey(cacheKey);
+    }
+  }
+
+  /* Restore the original LSHE if we were loading something
+   * while same document navigation was initiated.
+   */
+  SetHistoryEntry(&mLSHE, oldLSHE);
+  /* Set the title for the SH entry for this target url. so that
+   * SH menus in go/back/forward buttons won't be empty for this.
+   */
+  if (mSessionHistory) {
+    int32_t index = mSessionHistory->Index();
+    nsCOMPtr<nsISHEntry> shEntry;
+    mSessionHistory->LegacySHistory()->GetEntryAtIndex(index,
+                                                       getter_AddRefs(shEntry));
+    NS_ENSURE_TRUE(shEntry, NS_ERROR_FAILURE);
+    shEntry->SetTitle(mTitle);
+  }
+
+  /* Set the title for the Global History entry for this anchor url.
+   */
+  UpdateGlobalHistoryTitle(aLoadState->URI());
+
+  SetDocCurrentStateObj(mOSHE);
+
+  // Inform the favicon service that the favicon for oldURI also
+  // applies to aLoadState->URI().
+  CopyFavicon(currentURI, aLoadState->URI(), doc->NodePrincipal(),
+              UsePrivateBrowsing());
+
+  RefPtr<nsGlobalWindowOuter> scriptGlobal = mScriptGlobal;
+  RefPtr<nsGlobalWindowInner> win =
+      scriptGlobal ? scriptGlobal->GetCurrentInnerWindowInternal() : nullptr;
+
+  // ScrollToAnchor doesn't necessarily cause us to scroll the window;
+  // the function decides whether a scroll is appropriate based on the
+  // arguments it receives.  But even if we don't end up scrolling,
+  // ScrollToAnchor performs other important tasks, such as informing
+  // the presShell that we have a new hash.  See bug 680257.
+  rv = ScrollToAnchor(curURIHasRef, newURIHasRef, newHash,
+                      aLoadState->LoadType());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  /* restore previous position of scroller(s), if we're moving
+   * back in history (bug 59774)
+   */
+  nscoord bx = 0;
+  nscoord by = 0;
+  bool needsScrollPosUpdate = false;
+  if (mOSHE &&
+      (aLoadState->LoadType() == LOAD_HISTORY ||
+       aLoadState->LoadType() == LOAD_RELOAD_NORMAL) &&
+      !scrollRestorationIsManual) {
+    needsScrollPosUpdate = true;
+    mOSHE->GetScrollPosition(&bx, &by);
+  }
+
+  // Dispatch the popstate and hashchange events, as appropriate.
+  //
+  // The event dispatch below can cause us to re-enter script and
+  // destroy the docshell, nulling out mScriptGlobal. Hold a stack
+  // reference to avoid null derefs. See bug 914521.
+  if (win) {
+    // Fire a hashchange event URIs differ, and only in their hashes.
+    bool doHashchange = sameExceptHashes && (curURIHasRef != newURIHasRef ||
+                                             !curHash.Equals(newHash));
+
+    if (historyNavBetweenSameDoc || doHashchange) {
+      win->DispatchSyncPopState();
+    }
+
+    if (needsScrollPosUpdate && win->AsInner()->HasActiveDocument()) {
+      SetCurScrollPosEx(bx, by);
+    }
+
+    if (doHashchange) {
+      // Note that currentURI hasn't changed because it's on the
+      // stack, so we can just use it directly as the old URI.
+      win->DispatchAsyncHashchange(currentURI, aLoadState->URI());
+    }
+  }
+
+  *aWasSameDocument = true;
+  return NS_OK;
+}
+
 nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
                                   nsIDocShell** aDocShell,
                                   nsIRequest** aRequest) {
@@ -9014,289 +9305,13 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
       aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP);
   mURIResultedInDocument = false;  // reset the clock...
 
-  if (aLoadState->LoadType() == LOAD_NORMAL ||
-      aLoadState->LoadType() == LOAD_STOP_CONTENT ||
-      LOAD_TYPE_HAS_FLAGS(aLoadState->LoadType(), LOAD_FLAGS_REPLACE_HISTORY) ||
-      aLoadState->LoadType() == LOAD_HISTORY ||
-      aLoadState->LoadType() == LOAD_LINK) {
-    nsCOMPtr<nsIURI> currentURI = mCurrentURI;
-
-    nsAutoCString curHash, newHash;
-    bool curURIHasRef = false, newURIHasRef = false;
-
-    nsresult rvURINew = aLoadState->URI()->GetRef(newHash);
-    if (NS_SUCCEEDED(rvURINew)) {
-      rvURINew = aLoadState->URI()->GetHasRef(&newURIHasRef);
-    }
-
-    bool sameExceptHashes = false;
-    if (currentURI && NS_SUCCEEDED(rvURINew)) {
-      nsresult rvURIOld = currentURI->GetRef(curHash);
-      if (NS_SUCCEEDED(rvURIOld)) {
-        rvURIOld = currentURI->GetHasRef(&curURIHasRef);
-      }
-      if (NS_SUCCEEDED(rvURIOld)) {
-        if (NS_FAILED(currentURI->EqualsExceptRef(aLoadState->URI(),
-                                                  &sameExceptHashes))) {
-          sameExceptHashes = false;
-        }
-      }
-    }
-
-    if (!sameExceptHashes && sURIFixup && currentURI &&
-        NS_SUCCEEDED(rvURINew)) {
-      // Maybe aLoadState->URI() came from the exposable form of currentURI?
-      nsCOMPtr<nsIURI> currentExposableURI;
-      rv = sURIFixup->CreateExposableURI(currentURI,
-                                         getter_AddRefs(currentExposableURI));
-      NS_ENSURE_SUCCESS(rv, rv);
-      nsresult rvURIOld = currentExposableURI->GetRef(curHash);
-      if (NS_SUCCEEDED(rvURIOld)) {
-        rvURIOld = currentExposableURI->GetHasRef(&curURIHasRef);
-      }
-      if (NS_SUCCEEDED(rvURIOld)) {
-        if (NS_FAILED(currentExposableURI->EqualsExceptRef(
-                aLoadState->URI(), &sameExceptHashes))) {
-          sameExceptHashes = false;
-        }
-      }
-    }
-
-    bool historyNavBetweenSameDoc = false;
-    if (mOSHE && aLoadState->SHEntry()) {
-      // We're doing a history load.
-
-      mOSHE->SharesDocumentWith(aLoadState->SHEntry(),
-                                &historyNavBetweenSameDoc);
-
-#ifdef DEBUG
-      if (historyNavBetweenSameDoc) {
-        nsCOMPtr<nsIInputStream> currentPostData = mOSHE->GetPostData();
-        NS_ASSERTION(currentPostData == aLoadState->PostDataStream(),
-                     "Different POST data for entries for the same page?");
-      }
-#endif
-    }
-
-    // A short-circuited load happens when we navigate between two SHEntries
-    // for the same document.  We do a short-circuited load under two
-    // circumstances.  Either
-    //
-    //  a) we're navigating between two different SHEntries which share a
-    //     document, or
-    //
-    //  b) we're navigating to a new shentry whose URI differs from the
-    //     current URI only in its hash, the new hash is non-empty, and
-    //     we're not doing a POST.
-    //
-    // The restriction tha the SHEntries in (a) must be different ensures
-    // that history.go(0) and the like trigger full refreshes, rather than
-    // short-circuited loads.
-    bool doShortCircuitedLoad =
-        (historyNavBetweenSameDoc && mOSHE != aLoadState->SHEntry()) ||
-        (!aLoadState->SHEntry() && !aLoadState->PostDataStream() &&
-         sameExceptHashes && newURIHasRef);
-
-    if (doShortCircuitedLoad) {
-      // Save the position of the scrollers.
-      nsPoint scrollPos = GetCurScrollPos();
-
-      // Reset mLoadType to its original value once we exit this block,
-      // because this short-circuited load might have started after a
-      // normal, network load, and we don't want to clobber its load type.
-      // See bug 737307.
-      AutoRestore<uint32_t> loadTypeResetter(mLoadType);
-
-      // If a non-short-circuit load (i.e., a network load) is pending,
-      // make this a replacement load, so that we don't add a SHEntry here
-      // and the network load goes into the SHEntry it expects to.
-      if (JustStartedNetworkLoad() &&
-          (aLoadState->LoadType() & LOAD_CMD_NORMAL)) {
-        mLoadType = LOAD_NORMAL_REPLACE;
-      } else {
-        mLoadType = aLoadState->LoadType();
-      }
-
-      mURIResultedInDocument = true;
-
-      nsCOMPtr<nsISHEntry> oldLSHE = mLSHE;
-
-      // we need to assign aLoadState->SHEntry() to mLSHE right here, so that on
-      // History loads, SetCurrentURI() called from OnNewURI() will send proper
-      // onLocationChange() notifications to the browser to update back/forward
-      // buttons.
-      SetHistoryEntry(&mLSHE, aLoadState->SHEntry());
-
-      // Set the doc's URI according to the new history entry's URI.
-      RefPtr<Document> doc = GetDocument();
-      NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
-      doc->SetDocumentURI(aLoadState->URI());
-
-      /* This is a anchor traversal with in the same page.
-       * call OnNewURI() so that, this traversal will be
-       * recorded in session and global history.
-       */
-      nsCOMPtr<nsIPrincipal> newURITriggeringPrincipal,
-          newURIPrincipalToInherit;
-      if (mOSHE) {
-        newURITriggeringPrincipal = mOSHE->GetTriggeringPrincipal();
-        newURIPrincipalToInherit = mOSHE->GetPrincipalToInherit();
-      } else {
-        newURITriggeringPrincipal = aLoadState->TriggeringPrincipal();
-        newURIPrincipalToInherit = doc->NodePrincipal();
-      }
-      // Pass true for aCloneSHChildren, since we're not
-      // changing documents here, so all of our subframes are
-      // still relevant to the new session history entry.
-      //
-      // It also makes OnNewURI(...) set LOCATION_CHANGE_SAME_DOCUMENT
-      // flag on firing onLocationChange(...).
-      // Anyway, aCloneSHChildren param is simply reflecting
-      // doShortCircuitedLoad in this scope.
-      OnNewURI(aLoadState->URI(), nullptr, newURITriggeringPrincipal,
-               newURIPrincipalToInherit, mLoadType, true, true, true);
-
-      nsCOMPtr<nsIInputStream> postData;
-      uint32_t cacheKey = 0;
-
-      bool scrollRestorationIsManual = false;
-      if (mOSHE) {
-        /* save current position of scroller(s) (bug 59774) */
-        mOSHE->SetScrollPosition(scrollPos.x, scrollPos.y);
-        scrollRestorationIsManual = mOSHE->GetScrollRestorationIsManual();
-        // Get the postdata and page ident from the current page, if
-        // the new load is being done via normal means.  Note that
-        // "normal means" can be checked for just by checking for
-        // LOAD_CMD_NORMAL, given the loadType and allowScroll check
-        // above -- it filters out some LOAD_CMD_NORMAL cases that we
-        // wouldn't want here.
-        if (aLoadState->LoadType() & LOAD_CMD_NORMAL) {
-          postData = mOSHE->GetPostData();
-          cacheKey = mOSHE->GetCacheKey();
-
-          // Link our new SHEntry to the old SHEntry's back/forward
-          // cache data, since the two SHEntries correspond to the
-          // same document.
-          if (mLSHE) {
-            if (!aLoadState->SHEntry()) {
-              // If we're not doing a history load, scroll restoration
-              // should be inherited from the previous session history entry.
-              mLSHE->SetScrollRestorationIsManual(scrollRestorationIsManual);
-            }
-            mLSHE->AdoptBFCacheEntry(mOSHE);
-          }
-        }
-      }
-
-      // If we're doing a history load, use its scroll restoration state.
-      if (aLoadState->SHEntry()) {
-        scrollRestorationIsManual =
-            aLoadState->SHEntry()->GetScrollRestorationIsManual();
-      }
-
-      /* Assign mLSHE to mOSHE. This will either be a new entry created
-       * by OnNewURI() for normal loads or aLoadState->SHEntry() for history
-       * loads.
-       */
-      if (mLSHE) {
-        SetHistoryEntry(&mOSHE, mLSHE);
-        // Save the postData obtained from the previous page
-        // in to the session history entry created for the
-        // anchor page, so that any history load of the anchor
-        // page will restore the appropriate postData.
-        if (postData) {
-          mOSHE->SetPostData(postData);
-        }
-
-        // Make sure we won't just repost without hitting the
-        // cache first
-        if (cacheKey != 0) {
-          mOSHE->SetCacheKey(cacheKey);
-        }
-      }
-
-      /* Restore the original LSHE if we were loading something
-       * while short-circuited load was initiated.
-       */
-      SetHistoryEntry(&mLSHE, oldLSHE);
-      /* Set the title for the SH entry for this target url. so that
-       * SH menus in go/back/forward buttons won't be empty for this.
-       */
-      if (mSessionHistory) {
-        int32_t index = mSessionHistory->Index();
-        nsCOMPtr<nsISHEntry> shEntry;
-        mSessionHistory->LegacySHistory()->GetEntryAtIndex(
-            index, getter_AddRefs(shEntry));
-        NS_ENSURE_TRUE(shEntry, NS_ERROR_FAILURE);
-        shEntry->SetTitle(mTitle);
-      }
-
-      /* Set the title for the Global History entry for this anchor url.
-       */
-      UpdateGlobalHistoryTitle(aLoadState->URI());
-
-      SetDocCurrentStateObj(mOSHE);
-
-      // Inform the favicon service that the favicon for oldURI also
-      // applies to aLoadState->URI().
-      CopyFavicon(currentURI, aLoadState->URI(), doc->NodePrincipal(),
-                  UsePrivateBrowsing());
-
-      RefPtr<nsGlobalWindowOuter> scriptGlobal = mScriptGlobal;
-      RefPtr<nsGlobalWindowInner> win =
-          scriptGlobal ? scriptGlobal->GetCurrentInnerWindowInternal()
-                       : nullptr;
-
-      // ScrollToAnchor doesn't necessarily cause us to scroll the window;
-      // the function decides whether a scroll is appropriate based on the
-      // arguments it receives.  But even if we don't end up scrolling,
-      // ScrollToAnchor performs other important tasks, such as informing
-      // the presShell that we have a new hash.  See bug 680257.
-      rv = ScrollToAnchor(curURIHasRef, newURIHasRef, newHash,
-                          aLoadState->LoadType());
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      /* restore previous position of scroller(s), if we're moving
-       * back in history (bug 59774)
-       */
-      nscoord bx = 0;
-      nscoord by = 0;
-      bool needsScrollPosUpdate = false;
-      if (mOSHE &&
-          (aLoadState->LoadType() == LOAD_HISTORY ||
-           aLoadState->LoadType() == LOAD_RELOAD_NORMAL) &&
-          !scrollRestorationIsManual) {
-        needsScrollPosUpdate = true;
-        mOSHE->GetScrollPosition(&bx, &by);
-      }
-
-      // Dispatch the popstate and hashchange events, as appropriate.
-      //
-      // The event dispatch below can cause us to re-enter script and
-      // destroy the docshell, nulling out mScriptGlobal. Hold a stack
-      // reference to avoid null derefs. See bug 914521.
-      if (win) {
-        // Fire a hashchange event URIs differ, and only in their hashes.
-        bool doHashchange = sameExceptHashes && (curURIHasRef != newURIHasRef ||
-                                                 !curHash.Equals(newHash));
-
-        if (historyNavBetweenSameDoc || doHashchange) {
-          win->DispatchSyncPopState();
-        }
-
-        if (needsScrollPosUpdate && win->AsInner()->HasActiveDocument()) {
-          SetCurScrollPosEx(bx, by);
-        }
-
-        if (doHashchange) {
-          // Note that currentURI hasn't changed because it's on the
-          // stack, so we can just use it directly as the old URI.
-          win->DispatchAsyncHashchange(currentURI, aLoadState->URI());
-        }
-      }
-
-      return NS_OK;
-    }
+  // See if this is actually a load between two history entries for the same
+  // document. If the process fails, or if we successfully navigate within the
+  // same document, return.
+  bool wasSameDocument;
+  rv = MaybeHandleSameDocumentNavigation(aLoadState, &wasSameDocument);
+  if (NS_FAILED(rv) || wasSameDocument) {
+    return rv;
   }
 
   // mContentViewer->PermitUnload can destroy |this| docShell, which
