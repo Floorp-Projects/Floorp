@@ -43,10 +43,6 @@ const declaration = exports.declaration = {
   // Whether or not the declaration is enabled.
   isEnabled: PropTypes.bool,
 
-  // Whether or not the declaration is invisible. In an inherited rule, only the
-  // inherited declarations are shown and the rest are considered invisible.
-  isInvisible: PropTypes.bool,
-
   // Whether or not the declaration's property name is known.
   isKnownProperty: PropTypes.bool,
 
