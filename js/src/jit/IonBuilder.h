@@ -24,6 +24,9 @@
 #include "jit/OptimizationTracking.h"
 
 namespace js {
+
+class TypedArrayObject;
+
 namespace jit {
 
 class CodeGenerator;
@@ -492,6 +495,8 @@ class IonBuilder : public MIRGenerator,
   enum BoundsChecking { DoBoundsCheck, SkipBoundsCheck };
 
   MInstruction* addArrayBufferByteLength(MDefinition* obj);
+
+  TypedArrayObject* tryTypedArrayEmbedConstantElements(MDefinition* obj);
 
   // Add instructions to compute a typed array's length and data.  Also
   // optionally convert |*index| into a bounds-checked definition, if

@@ -1979,15 +1979,16 @@ namespace {
 class ConstraintDataFreezeObjectForTypedArrayData {
   NativeObject* obj;
 
-  uintptr_t viewData;
+  void* viewData;
   uint32_t length;
 
  public:
   explicit ConstraintDataFreezeObjectForTypedArrayData(TypedArrayObject& tarray)
       : obj(&tarray),
-        viewData(tarray.dataPointerEither().unwrapValue()),
+        viewData(tarray.dataPointerUnshared()),
         length(tarray.length()) {
     MOZ_ASSERT(tarray.isSingleton());
+    MOZ_ASSERT(!tarray.isSharedMemory());
   }
 
   const char* kind() { return "freezeObjectForTypedArrayData"; }
@@ -1998,8 +1999,7 @@ class ConstraintDataFreezeObjectForTypedArrayData {
                                   ObjectGroup* group) {
     MOZ_ASSERT(obj->group() == group);
     TypedArrayObject& tarr = obj->as<TypedArrayObject>();
-    return tarr.dataPointerEither().unwrapValue() != viewData ||
-           tarr.length() != length;
+    return tarr.dataPointerUnshared() != viewData || tarr.length() != length;
   }
 
   bool constraintHolds(const AutoSweepObjectGroup& sweep, JSContext* cx,
