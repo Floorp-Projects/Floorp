@@ -131,9 +131,7 @@ class WrappedPtrOperations<TaggedProto, Wrapper> {
 // If the TaggedProto is a JSObject pointer, convert to that type and call |f|
 // with the pointer. If the TaggedProto is lazy, calls F::defaultValue.
 template <typename F, typename... Args>
-auto DispatchTyped(F f, const TaggedProto& proto, Args&&... args)
-    -> decltype(f(static_cast<JSObject*>(nullptr),
-                  std::forward<Args>(args)...)) {
+auto DispatchTyped(F f, const TaggedProto& proto, Args&&... args) {
   if (proto.isObject()) {
     return f(proto.toObject(), std::forward<Args>(args)...);
   }
