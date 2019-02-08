@@ -79,6 +79,7 @@
 .urlbarView-favicon {
   display: inline-block;
   vertical-align: middle;
+  transform: translateY(-2px);
   width: 16px;
   height: 16px;
   margin-inline-end: @urlbarViewIconMarginEnd@;
@@ -87,6 +88,13 @@
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
   fill-opacity: 0.6;
+}
+
+@media (min-resolution: 2dppx) {
+  .urlbarView-type-icon,
+  .urlbarView-favicon {
+    transform: translateY(-1.5px);
+  }
 }
 
 .urlbarView-row[type=bookmark] > .urlbarView-row-inner > .urlbarView-type-icon {
