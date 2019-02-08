@@ -239,8 +239,14 @@ function makeUrlbarResult(tokens, info) {
             engine: [action.params.engineName, true],
             suggestion: [action.params.searchSuggestion, true],
             keyword: [action.params.alias, true],
-            query: [action.params.searchQuery, true],
+            query: [action.params.searchQuery.trim(), true],
             icon: [info.icon, false],
+            isKeywordOffer: [
+              action.params.alias &&
+                !action.params.searchQuery.trim() &&
+                !info.style.includes("heuristic"),
+              false,
+            ],
           })
         );
       case "keyword":
