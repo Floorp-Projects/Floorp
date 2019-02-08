@@ -3923,7 +3923,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceSwitchStatement(
 #endif  // defined(DEBUG)
 
   BINJS_MOZ_TRY_DECL(discriminant, parseExpression());
-
+  ParseContext::Statement stmt(parseContext_, StatementKind::Switch);
   BINJS_MOZ_TRY_DECL(cases, parseListOfSwitchCase());
 
   BINJS_TRY_DECL(scope, factory_.newLexicalScope(nullptr, cases));
@@ -3947,7 +3947,7 @@ BinASTParser<Tok>::parseInterfaceSwitchStatementWithDefault(
 #endif  // defined(DEBUG)
 
   BINJS_MOZ_TRY_DECL(discriminant, parseExpression());
-
+  ParseContext::Statement stmt(parseContext_, StatementKind::Switch);
   BINJS_MOZ_TRY_DECL(preDefaultCases, parseListOfSwitchCase());
 
   BINJS_MOZ_TRY_DECL(defaultCase, parseSwitchDefault());
