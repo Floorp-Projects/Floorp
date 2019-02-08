@@ -16,6 +16,7 @@
     locale/browser/bookmarks.html                  (bookmarks.html)
 
     locale/browser/accounts.properties             (%chrome/browser/accounts.properties)
+    locale/browser/app-extension-fields.properties (%chrome/browser/app-extension-fields.properties)
     locale/browser/browser.dtd                     (%chrome/browser/browser.dtd)
     locale/browser/baseMenuOverlay.dtd             (%chrome/browser/baseMenuOverlay.dtd)
     locale/browser/browser.properties              (%chrome/browser/browser.properties)

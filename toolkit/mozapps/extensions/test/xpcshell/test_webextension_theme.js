@@ -19,6 +19,9 @@ const DEFAULT_THEME = THEME_IDS[2];
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
 
+Services.prefs.setIntPref("extensions.enabledScopes",
+                          AddonManager.SCOPE_PROFILE | AddonManager.SCOPE_APPLICATION);
+
 // We remember the last/ currently active theme for tracking events.
 var gActiveTheme = null;
 
@@ -91,6 +94,7 @@ async function setDisabledStateAndCheck(which, disabled = false) {
   // Set the state of the theme to change.
   let theme = await promiseAddonByID(which);
   prepare_test(expectedEvents);
+  let enabledPromise = promiseAddonEvent("onEnabled");
   if (disabled) {
     await theme.disable();
   } else {
@@ -107,6 +111,8 @@ async function setDisabledStateAndCheck(which, disabled = false) {
     Assert.equal(theme.isActive, !isDisabled,
       `Theme '${theme.id} should be ${isDisabled ? "in" : ""}active`);
   }
+
+  await enabledPromise;
 
   await promiseRestartManager();
 

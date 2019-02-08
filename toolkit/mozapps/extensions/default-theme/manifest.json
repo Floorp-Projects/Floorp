@@ -1,0 +1,19 @@
+{
+  "manifest_version": 2,
+
+  "applications": {
+    "gecko": {
+      "id": "default-theme@mozilla.org"
+    }
+  },
+
+  "name": "Default",
+  "description": "A theme with the operating system color scheme.",
+  "author": "Mozilla",
+  "version": "1.0",
+
+  "icons": {"32": "icon.svg"},
+
+  "theme": {
+  }
+}

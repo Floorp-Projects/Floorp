@@ -109,6 +109,7 @@ add_task(async function test_management_themes() {
 
   await theme.startup();
   is(await extension.awaitMessage("onInstalled"), "Simple theme test", "webextension theme installed");
+  is(await extension.awaitMessage("onDisabled"), "Default", "default disabled");
 
   extension.sendMessage("test");
   is(await extension.awaitMessage("onEnabled"), "Default", "default enabled");
