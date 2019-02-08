@@ -14,8 +14,6 @@ const BIN_SUFFIX = (AppConstants.platform == "win" ? ".exe" : "");
 const FILE_UPDATER_BIN = "updater" + (AppConstants.platform == "macosx" ? ".app" : BIN_SUFFIX);
 const FILE_UPDATER_BIN_BAK = FILE_UPDATER_BIN + ".bak";
 
-var DEBUG_AUS_TEST = true;
-
 const LOG_FUNCTION = info;
 
 const MAX_UPDATE_COPY_ATTEMPTS = 10;
@@ -31,6 +29,11 @@ const URL_MANUAL_UPDATE = gURLData + "downloadPage.html";
 Services.scriptloader.loadSubScript(DATA_URI_SPEC + "shared.js", this);
 
 let gOriginalUpdateAutoValue = null;
+
+// Set to true to log additional information for debugging. To log additional
+// information for individual tests set gDebugTest to false here and to true in
+// the test's onload function.
+gDebugTest = true;
 
 /**
  * Creates the continue file used to signal that update staging or the mock http
@@ -180,7 +183,7 @@ async function setAppUpdateAutoEnabledHelper(enabled) {
 add_task(async function setDefaults() {
   await SpecialPowers.pushPrefEnv({
     set: [
-      [PREF_APP_UPDATE_LOG, DEBUG_AUS_TEST],
+      [PREF_APP_UPDATE_LOG, gDebugTest],
       // See bug 1505790 - uses a very large value to prevent the sync code
       // from running since it has nothing to do with these tests.
       ["services.sync.autoconnectDelay", 600000],

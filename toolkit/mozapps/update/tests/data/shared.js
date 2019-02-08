@@ -6,7 +6,7 @@
 
 // Definitions needed to run eslint on this file.
 /* global AppConstants, DATA_URI_SPEC, LOG_FUNCTION */
-/* global Services, URL_HOST, DEBUG_AUS_TEST */
+/* global Services, URL_HOST */
 
 const {FileUtils} = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
 const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -90,6 +90,7 @@ const PR_CREATE_FILE = 0x08;
 const PR_TRUNCATE    = 0x20;
 
 var gChannel;
+var gDebugTest = false;
 
 /* import-globals-from sharedUpdateXML.js */
 Services.scriptloader.loadSubScript(DATA_URI_SPEC + "sharedUpdateXML.js", this);
@@ -761,7 +762,7 @@ function logTestInfo(aText, aCaller) {
 }
 
 /**
- * Logs TEST-INFO messages when DEBUG_AUS_TEST evaluates to true.
+ * Logs TEST-INFO messages when gDebugTest evaluates to true.
  *
  * @param  aText
  *         The text to log.
@@ -770,7 +771,7 @@ function logTestInfo(aText, aCaller) {
  *         Components.stack.caller will be used.
  */
 function debugDump(aText, aCaller) {
-  if (DEBUG_AUS_TEST) {
+  if (gDebugTest) {
     let caller = aCaller ? aCaller : Components.stack.caller;
     logTestInfo(aText, caller);
   }
