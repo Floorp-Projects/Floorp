@@ -425,8 +425,8 @@ IonBuilder::InliningResult IonBuilder::inlineNativeGetter(CallInfo& callInfo,
 
   // Try to optimize typed array lengths.
   if (TypedArrayObject::isOriginalLengthGetter(native)) {
-    Scalar::Type type = thisTypes->getTypedArrayType(constraints());
-    if (type == Scalar::MaxTypedArrayViewType) {
+    if (thisTypes->forAllClasses(constraints(), IsTypedArrayClass) !=
+        TemporaryTypeSet::ForAllResult::ALL_TRUE) {
       return InliningStatus_NotInlined;
     }
 
