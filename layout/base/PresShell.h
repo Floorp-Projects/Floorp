@@ -723,6 +723,54 @@ class PresShell final : public nsIPresShell,
                                             bool* aIsCaptureRetargeted);
 
     /**
+     * ComputeRootFrameToHandleEventWithPopup() returns popup frame if there
+     * is a popup and we should handle the event in it.  Otherwise, returns
+     * aRootFrameToHandleEvent.
+     *
+     * @param aRootFrameToHandleEvent           Candidate root frame to handle
+     *                                          the event.
+     * @param aGUIEvent                         The handling event.
+     * @param aCapturingContent                 Capturing content if there is.
+     *                                          nullptr, otherwise.
+     * @param aIsCapturingContentIgnored        [out] true if aCapturingContent
+     *                                          is not nullptr but it should be
+     *                                          ignored to handle the event.
+     * @return                                  A popup frame if there is a
+     *                                          popup and we should handle the
+     *                                          event in it.  Otherwise,
+     *                                          aRootFrameToHandleEvent.
+     *                                          I.e., never returns nullptr.
+     */
+    nsIFrame* ComputeRootFrameToHandleEventWithPopup(
+        nsIFrame* aRootFrameToHandleEvent, WidgetGUIEvent* aGUIEvent,
+        nsIContent* aCapturingContent, bool* aIsCapturingContentIgnored);
+
+    /**
+     * ComputeRootFrameToHandleEventWithCapturingContent() returns root frame
+     * to handle event for the capturing content, or aRootFrameToHandleEvent
+     * if it should be ignored.
+     *
+     * @param aRootFrameToHandleEvent           Candidate root frame to handle
+     *                                          the event.
+     * @param aCapturingContent                 Capturing content.  nullptr is
+     *                                          not allowed.
+     * @param aIsCapturingContentIgnored        [out] true if aCapturingContent
+     *                                          is not nullptr but it should be
+     *                                          ignored to handle the event.
+     * @param aIsCaptureRetargeted              [out] true if aCapturingContent
+     *                                          is not nullptr but it's
+     *                                          retargeted.
+     * @return                                  A popup frame if there is a
+     *                                          popup and we should handle the
+     *                                          event in it.  Otherwise,
+     *                                          aRootFrameToHandleEvent.
+     *                                          I.e., never returns nullptr.
+     */
+    nsIFrame* ComputeRootFrameToHandleEventWithCapturingContent(
+        nsIFrame* aRootFrameToHandleEvent, nsIContent* aCapturingContent,
+        bool* aIsCapturingContentIgnored, bool* aIsCaptureRetargeted);
+
+    /**
      * XXX Needs better name.
      * HandleEventInternal() dispatches aEvent into the DOM tree and
      * notify EventStateManager of that.
