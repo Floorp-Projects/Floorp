@@ -30,8 +30,8 @@ class nsRubyBaseFrame final : public nsRubyContentFrame {
  protected:
   friend nsContainerFrame* NS_NewRubyBaseFrame(nsIPresShell* aPresShell,
                                                ComputedStyle* aStyle);
-  explicit nsRubyBaseFrame(ComputedStyle* aStyle)
-      : nsRubyContentFrame(aStyle, kClassID) {}
+  explicit nsRubyBaseFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
+      : nsRubyContentFrame(aStyle, aPresContext, kClassID) {}
 };
 
 #endif /* nsRubyBaseFrame_h___ */

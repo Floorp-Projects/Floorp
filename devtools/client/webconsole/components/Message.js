@@ -7,25 +7,19 @@
 "use strict";
 
 // React & Redux
-const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+const { Component, createFactory, createElement } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { l10n } =
-  require("devtools/client/webconsole/utils/messages");
-const actions =
-  require("devtools/client/webconsole/actions/index");
-const { MESSAGE_SOURCE, MESSAGE_TYPE } =
-  require("devtools/client/webconsole/constants");
-const CollapseButton =
-  require("devtools/client/webconsole/components/CollapseButton");
-const { MessageIndent } =
-  require("devtools/client/webconsole/components/MessageIndent");
-const MessageIcon =
-  require("devtools/client/webconsole/components/MessageIcon");
-const MessageRepeat =
-  require("devtools/client/webconsole/components/MessageRepeat");
+const { l10n } = require("devtools/client/webconsole/utils/messages");
+const actions = require("devtools/client/webconsole/actions/index");
+const { MESSAGE_SOURCE, MESSAGE_TYPE } = require("devtools/client/webconsole/constants");
+const { MessageIndent } = require("devtools/client/webconsole/components/MessageIndent");
+const MessageIcon = require("devtools/client/webconsole/components/MessageIcon");
 const FrameView = createFactory(require("devtools/client/shared/components/Frame"));
-const SmartTrace = createFactory(require("devtools/client/shared/components/SmartTrace"));
+
+loader.lazyRequireGetter(this, "CollapseButton", "devtools/client/webconsole/components/CollapseButton");
+loader.lazyRequireGetter(this, "MessageRepeat", "devtools/client/webconsole/components/MessageRepeat");
+loader.lazyRequireGetter(this, "PropTypes", "devtools/client/shared/vendor/react-prop-types");
+loader.lazyRequireGetter(this, "SmartTrace", "devtools/client/shared/components/SmartTrace");
 
 class Message extends Component {
   static get propTypes() {
@@ -204,7 +198,7 @@ class Message extends Component {
         {
           className: "stacktrace devtools-monospace",
         },
-        SmartTrace({
+        createElement(SmartTrace, {
           stacktrace,
           onViewSourceInDebugger: serviceContainer.onViewSourceInDebugger
             || serviceContainer.onViewSource,
@@ -220,7 +214,7 @@ class Message extends Component {
     // If there is an expandable part, make it collapsible.
     let collapse = null;
     if (collapsible) {
-      collapse = CollapseButton({
+      collapse = createElement(CollapseButton, {
         open,
         title: collapseTitle,
         onClick: this.toggleMessage,
@@ -250,8 +244,9 @@ class Message extends Component {
       notesNodes = [];
     }
 
-    const repeat = this.props.repeat && this.props.repeat > 1 ?
-      MessageRepeat({repeat: this.props.repeat}) : null;
+    const repeat = this.props.repeat && this.props.repeat > 1
+      ? createElement(MessageRepeat, {repeat: this.props.repeat})
+      : null;
 
     let onFrameClick;
     if (serviceContainer && frame) {

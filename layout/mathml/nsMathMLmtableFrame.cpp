@@ -654,7 +654,8 @@ NS_QUERYFRAME_TAIL_INHERITING(nsTableWrapperFrame)
 
 nsContainerFrame* NS_NewMathMLmtableOuterFrame(nsIPresShell* aPresShell,
                                                ComputedStyle* aStyle) {
-  return new (aPresShell) nsMathMLmtableWrapperFrame(aStyle);
+  return new (aPresShell)
+      nsMathMLmtableWrapperFrame(aStyle, aPresShell->GetPresContext());
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsMathMLmtableWrapperFrame)
@@ -878,7 +879,8 @@ void nsMathMLmtableWrapperFrame::Reflow(nsPresContext* aPresContext,
 
 nsContainerFrame* NS_NewMathMLmtableFrame(nsIPresShell* aPresShell,
                                           ComputedStyle* aStyle) {
-  return new (aPresShell) nsMathMLmtableFrame(aStyle);
+  return new (aPresShell)
+      nsMathMLmtableFrame(aStyle, aPresShell->GetPresContext());
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsMathMLmtableFrame)
@@ -1031,7 +1033,8 @@ NS_QUERYFRAME_TAIL_INHERITING(nsTableFrame)
 
 nsContainerFrame* NS_NewMathMLmtrFrame(nsIPresShell* aPresShell,
                                        ComputedStyle* aStyle) {
-  return new (aPresShell) nsMathMLmtrFrame(aStyle);
+  return new (aPresShell)
+      nsMathMLmtrFrame(aStyle, aPresShell->GetPresContext());
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsMathMLmtrFrame)
@@ -1169,13 +1172,15 @@ NS_QUERYFRAME_TAIL_INHERITING(nsBlockFrame)
 
 nsContainerFrame* NS_NewMathMLmtdInnerFrame(nsIPresShell* aPresShell,
                                             ComputedStyle* aStyle) {
-  return new (aPresShell) nsMathMLmtdInnerFrame(aStyle);
+  return new (aPresShell)
+      nsMathMLmtdInnerFrame(aStyle, aPresShell->GetPresContext());
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsMathMLmtdInnerFrame)
 
-nsMathMLmtdInnerFrame::nsMathMLmtdInnerFrame(ComputedStyle* aStyle)
-    : nsBlockFrame(aStyle, kClassID)
+nsMathMLmtdInnerFrame::nsMathMLmtdInnerFrame(ComputedStyle* aStyle,
+                                             nsPresContext* aPresContext)
+    : nsBlockFrame(aStyle, aPresContext, kClassID)
       // Make a copy of the parent nsStyleText for later modification.
       ,
       mUniqueStyleText(MakeUnique<nsStyleText>(*StyleText())) {}

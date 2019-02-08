@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { TargetFactory } = require("devtools/client/framework/target");
 const EventEmitter = require("devtools/shared/event-emitter");
 const { Connection } = require("devtools/shared/client/connection-manager");
 
@@ -155,12 +154,7 @@ TabStore.prototype = {
       await store.listTabs();
 
       const { outerWindowID } = store._selectedTab;
-      const activeTabFront = await store._connection.client.mainRoot.getTab({ outerWindowID });
-      return TargetFactory.forRemoteTab({
-        activeTab: activeTabFront,
-        client: store._connection.client,
-        chrome: false,
-      });
+      return store._connection.client.mainRoot.getTab({ outerWindowID });
     })();
     this._selectedTabTargetPromise.then(target => {
       target.once("close", () => {

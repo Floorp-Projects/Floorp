@@ -8,7 +8,7 @@
 
 // React & Redux
 const { Component } = require("devtools/client/shared/vendor/react");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+loader.lazyRequireGetter(this, "PropTypes", "devtools/client/shared/vendor/react-prop-types");
 
 const {
   MESSAGE_SOURCE,

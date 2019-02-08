@@ -1451,7 +1451,8 @@ nsresult nsMathMLContainerFrame::ReportInvalidChildError(nsAtom* aChildTag) {
 
 nsContainerFrame* NS_NewMathMLmathBlockFrame(nsIPresShell* aPresShell,
                                              ComputedStyle* aStyle) {
-  auto newFrame = new (aPresShell) nsMathMLmathBlockFrame(aStyle);
+  auto newFrame = new (aPresShell)
+      nsMathMLmathBlockFrame(aStyle, aPresShell->GetPresContext());
   newFrame->AddStateBits(NS_BLOCK_FORMATTING_CONTEXT_STATE_BITS);
   return newFrame;
 }
@@ -1464,7 +1465,8 @@ NS_QUERYFRAME_TAIL_INHERITING(nsBlockFrame)
 
 nsContainerFrame* NS_NewMathMLmathInlineFrame(nsIPresShell* aPresShell,
                                               ComputedStyle* aStyle) {
-  return new (aPresShell) nsMathMLmathInlineFrame(aStyle);
+  return new (aPresShell)
+      nsMathMLmathInlineFrame(aStyle, aPresShell->GetPresContext());
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsMathMLmathInlineFrame)

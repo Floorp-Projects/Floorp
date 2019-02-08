@@ -11,7 +11,6 @@
 
 #include "nsIMemoryReporter.h"
 #include <algorithm>
-#include "mozilla/ArenaObjectID.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/CachedInheritingStyles.h"
 #include "mozilla/Maybe.h"
@@ -84,19 +83,6 @@ class ComputedStyle {
                 CSSPseudoElementType aPseudoType,
                 ServoComputedDataForgotten aComputedValues);
 
-  // FIXME(emilio, bug 548397): This will need to go away. Don't add new callers
-  // of this methed.
-  nsPresContext* PresContextForFrame() const { return mPresContext; }
-  const ServoComputedData* ComputedData() const { return &mSource; }
-
-  // These two methods are for use by ArenaRefPtr.
-  //
-  // FIXME(emilio): Think this can go away.
-  static mozilla::ArenaObjectID ArenaObjectID() {
-    return mozilla::eArenaObjectID_GeckoComputedStyle;
-  }
-  nsIPresShell* Arena();
-
   void AddRef() { Servo_ComputedStyle_AddRef(this); }
   void Release() { Servo_ComputedStyle_Release(this); }
 
@@ -115,7 +101,7 @@ class ComputedStyle {
   // both (1) lead to a privacy leak and (2) lead to dynamic change bugs
   // related to the Peek code in ComputedStyle::CalcStyleDifference.
   ComputedStyle* GetStyleIfVisited() const {
-    return ComputedData()->visited_style.mPtr;
+    return mSource.visited_style.mPtr;
   }
 
   bool IsLazilyCascadedPseudoElement() const {
@@ -298,8 +284,6 @@ class ComputedStyle {
   friend void ::Gecko_ComputedStyle_Destroy(ComputedStyle*);
 
   ~ComputedStyle() = default;
-
-  nsPresContext* const mPresContext;
 
   ServoComputedData mSource;
 

@@ -796,7 +796,7 @@ const PanelUI = {
     }
 
     popupnotification.notification = notification;
-    popupnotification.hidden = false;
+    popupnotification.show();
   },
 
   _showBadge(notification) {
@@ -899,15 +899,9 @@ function getLocale() {
   return Services.locale.appLocaleAsLangTag;
 }
 
+/**
+ * Given a DOM node inside a <popupnotification>, return the parent <popupnotification>.
+ */
 function getNotificationFromElement(aElement) {
-  // Need to find the associated notification object, which is a bit tricky
-  // since it isn't associated with the element directly - this is kind of
-  // gross and very dependent on the structure of the popupnotification
-  // binding's content.
-  let notificationEl;
-  let parent = aElement;
-  while (parent && (parent = aElement.ownerDocument.getBindingParent(parent))) {
-    notificationEl = parent;
-  }
-  return notificationEl;
+  return aElement.closest("popupnotification");
 }

@@ -43,8 +43,8 @@ class nsRubyFrame final : public nsInlineFrame {
  protected:
   friend nsContainerFrame* NS_NewRubyFrame(nsIPresShell* aPresShell,
                                            ComputedStyle* aStyle);
-  explicit nsRubyFrame(ComputedStyle* aStyle)
-      : nsInlineFrame(aStyle, kClassID) {}
+  explicit nsRubyFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
+      : nsInlineFrame(aStyle, aPresContext, kClassID) {}
 
   void ReflowSegment(nsPresContext* aPresContext,
                      const ReflowInput& aReflowInput,

@@ -17,6 +17,9 @@
   "saveScreenshotSelectedArea": {
     "message": "Enrollañ"
   },
+  "uploadScreenshotSelectedArea": {
+    "message": "Pellgas"
+  },
   "saveScreenshotVisibleArea": {
     "message": "Enrollañ ar pezh a vez gwelet"
   },
@@ -28,6 +31,9 @@
   },
   "downloadScreenshot": {
     "message": "Pellgargañ"
+  },
+  "downloadScreenshotTitle": {
+    "message": "Pellgargañ an dapadenn-skramm"
   },
   "downloadOnlyNotice": {
     "message": "E mod pellgargañ hepken emaoc'h bremañ."
@@ -63,6 +69,9 @@
   },
   "copyScreenshot": {
     "message": "Eilañ"
+  },
+  "copyScreenshotTitle": {
+    "message": "Eilañ an dapadenn-skramm er golver"
   },
   "notificationImageCopiedTitle": {
     "message": "Tapadenn eilet"
@@ -122,8 +131,8 @@
   "genericErrorDetails": {
     "message": "N'omp ket sur eus ar pezh a zo c'hoarvezet. Gallout a rit adklask pe kemer ur dapadenn eus ur bajenn all."
   },
-  "tourBodyIntro": {
-    "message": "Kemerit, enrollit ha skignit tapadennoù-skramm he kuitaat Firefox."
+  "tourBodyIntroServerless": {
+    "message": "Skeudennit, eilit ha pellgargit tapadennoù-skramm hep kuitaat Firefox."
   },
   "tourHeaderPageAction": {
     "message": "Un doare nevez da enrollañ"
@@ -142,18 +151,6 @@
   },
   "tourBodyFullPage": {
     "message": "Diuzit an afelloù a-us a-zehou evit skeudenniñ ar vaezienn welus er prenestr pe evit skeudenniñ ar bajenn a-bezh."
-  },
-  "tourHeaderDownloadUpload": {
-    "message": "Evel ma fell deoc'h"
-  },
-  "tourBodyDownloadUpload": {
-    "message": "Enrollit ho tapadennoù didroc'het evit ar web evit skignañ aesoc'h, pe pellgargit anezho war ho urzhiataer. Gallout a rit ivez klikañ war an afell Ma zapadennoù evit kavout an holl dapadennoù kemeret ganeoc'h."
-  },
-  "tourHeaderAccounts": {
-    "message": "Tapadennoù da gas ganeoc'h"
-  },
-  "tourBodyAccounts": {
-    "message": "Kennaskit gant ho kont Firefox evit haeziñ ho tapadennoù war ho holl trevnadoù hag enrollañ pennrolloù da viken."
   },
   "tourSkip": {
     "message": "TREMEN"

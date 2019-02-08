@@ -45,7 +45,7 @@ using namespace mozilla::layers;
 
 nsCanvasFrame* NS_NewCanvasFrame(nsIPresShell* aPresShell,
                                  ComputedStyle* aStyle) {
-  return new (aPresShell) nsCanvasFrame(aStyle);
+  return new (aPresShell) nsCanvasFrame(aStyle, aPresShell->GetPresContext());
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsCanvasFrame)

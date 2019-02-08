@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {TargetFactory} = require("devtools/client/framework/target");
 const Services = require("Services");
 const {FileUtils} = require("resource://gre/modules/FileUtils.jsm");
 const EventEmitter = require("devtools/shared/event-emitter");
@@ -252,13 +251,7 @@ var AppManager = exports.AppManager = {
 
   getTarget: function() {
     if (this.selectedProject.type == "mainProcess") {
-      return this.connection.client.mainRoot.getMainProcess().then(front => {
-        return TargetFactory.forRemoteTab({
-          activeTab: front,
-          client: this.connection.client,
-          chrome: true,
-        });
-      });
+      return this.connection.client.mainRoot.getMainProcess();
     }
 
     if (this.selectedProject.type == "tab") {

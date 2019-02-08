@@ -51,7 +51,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=667388
       frames[2].document.domain = 'example.org';
       frames[3].document.domain = 'example.org';
       return runContentContentTest(window.frames[2], window.frames[3],
-                                   true, "Should be able to clone cross-origin with document.domain")
+                                   false, "Should be able to clone cross-origin with document.domain, but can't because of cached CCWs")
     }, reject).then(SimpleTest.finish.bind(SimpleTest), reject);
   }
 

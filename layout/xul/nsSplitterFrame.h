@@ -23,7 +23,7 @@ class nsSplitterFrame final : public nsBoxFrame {
  public:
   NS_DECL_FRAMEARENA_HELPERS(nsSplitterFrame)
 
-  explicit nsSplitterFrame(ComputedStyle* aStyle);
+  explicit nsSplitterFrame(ComputedStyle* aStyle, nsPresContext* aPresContext);
   virtual void DestroyFrom(nsIFrame* aDestructRoot,
                            PostDestroyData& aPostDestroyData) override;
 

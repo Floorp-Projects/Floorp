@@ -65,6 +65,7 @@ class DocumentL10n final : public nsWrapperCache {
  public:
   explicit DocumentL10n(Document* aDocument);
   bool Init(nsTArray<nsString>& aResourceIds);
+  void Destroy();
 
  protected:
   virtual ~DocumentL10n();

@@ -11636,6 +11636,7 @@ channelsdvr.net
 
 // Fastly Inc. : http://www.fastly.com/
 // Submitted by Fastly Security <security@fastly.com>
+fastly-terrarium.com
 fastlylb.net
 map.fastlylb.net
 freetls.fastly.net
@@ -11670,6 +11671,12 @@ mydobiss.com
 // Filegear Inc. : https://www.filegear.com
 // Submitted by Jason Zhu <jason@owtware.com>
 filegear.me
+filegear-au.me
+filegear-de.me
+filegear-gb.me
+filegear-ie.me
+filegear-jp.me
+filegear-sg.me
 
 // Firebase, Inc.
 // Submitted by Chris Raynor <chris@firebase.com>
@@ -11853,6 +11860,19 @@ moonscale.net
 // Submitted by Hannu Aronsson <haa@iki.fi>
 iki.fi
 
+// Individual Network Berlin e.V. : https://www.in-berlin.de/
+// Submitted by Christian Seitz <chris@in-berlin.de>
+dyn-berlin.de
+in-berlin.de
+in-brb.de
+in-butter.de
+in-dsl.de
+in-dsl.net
+in-dsl.org
+in-vpn.de
+in-vpn.net
+in-vpn.org
+
 // info.at : http://www.info.at/
 biz.at
 info.at
@@ -11944,6 +11964,16 @@ svn-repos.de
 leadpages.co
 lpages.co
 lpusercontent.com
+
+// Lifetime Hosting : https://Lifetime.Hosting/
+// Submitted by Mike Fillator <support@lifetime.hosting>
+co.business
+co.education
+co.events
+co.financial
+co.network
+co.place
+co.technology
 
 // Lightmaker Property Manager, Inc. : https://app.lmpm.com/
 // Submitted by Greg Holland <greg.holland@lmpm.com>
@@ -12499,6 +12529,10 @@ spacekit.io
 // Submitted by Stefan Neufeind <info@speedpartner.de>
 customer.speedpartner.de
 
+// Standard Library : https://stdlib.com
+// Submitted by Jacob Lee <jacob@stdlib.com>
+api.stdlib.com
+
 // Storj Labs Inc. : https://storj.io/
 // Submitted by Philip Hutchins <hostmaster@storj.io>
 storj.farm
@@ -12510,6 +12544,11 @@ utwente.io
 // Sub 6 Limited: http://www.sub6.com
 // Submitted by Dan Miller <dm@sub6.com>
 temp-dns.com
+
+// Swisscom Application Cloud: https://developer.swisscom.com
+// Submitted by Matthias.Winzeler <matthias.winzeler@swisscom.com>
+applicationcloud.io
+scapp.io
 
 // Synology, Inc. : https://www.synology.com/
 // Submitted by Rony Weng <ronyweng@synology.com>
@@ -12703,6 +12742,10 @@ za.org
 // Zeit, Inc. : https://zeit.domains/
 // Submitted by Olli Vanhoja <olli@zeit.co>
 now.sh
+
+// Zine EOOD : https://zine.bg/
+// Submitted by Martin Angelov <martin@zine.bg>
+bss.design
 
 // Zone.id : https://zone.id/
 // Submitted by Su Hendro <admin@zone.id>

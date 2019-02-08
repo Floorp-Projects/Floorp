@@ -301,8 +301,8 @@ window:not([chromehidden~="toolbar"]) #nav-bar[nonemptyoverflow] > .overflow-but
 
 
 %ifdef MENUBAR_CAN_AUTOHIDE
-#toolbar-menubar:not([autohide=true]) + #TabsToolbar > .titlebar-buttonbox-container,
-#toolbar-menubar:not([autohide=true]) + #TabsToolbar .titlebar-spacer,
+:root:not([chromehidden~="menubar"]) #toolbar-menubar:not([autohide=true]) + #TabsToolbar > .titlebar-buttonbox-container,
+:root:not([chromehidden~="menubar"]) #toolbar-menubar:not([autohide=true]) + #TabsToolbar .titlebar-spacer,
 %endif
 %ifndef MOZ_WIDGET_COCOA
 %ifndef MOZ_WIDGET_GTK
@@ -780,22 +780,13 @@ html|input.urlbar-input {
 #identity-box.chromeUI ~ #page-action-buttons > .urlbar-page-action:not(#star-button-box),
 .urlbar-history-dropmarker[usertyping],
 .urlbar-go-button:not([usertyping]),
-.urlbar-go-button:not([parentfocused="true"]),
-#urlbar[pageproxystate="invalid"] > #identity-box > #blocked-permissions-container,
-#urlbar[pageproxystate="invalid"] > #identity-box > #notification-popup-box,
-#urlbar[pageproxystate="invalid"] > #identity-box > #identity-icon-labels {
+.urlbar-go-button:not([parentfocused="true"]) {
   display: none;
 }
 
 #identity-box {
   -moz-user-focus: normal;
 }
-
-#urlbar[pageproxystate="invalid"] > #identity-box {
-  pointer-events: none;
-  -moz-user-focus: ignore;
-}
-
 
 /* We leave 49ch plus whatever space the download button will need when it
  * appears. Normally this should be 16px for the icon, plus 2 * 2px padding
@@ -1014,10 +1005,6 @@ html|*#fullscreen-exit-button {
   opacity: 0;
   pointer-events: none;
   -moz-stack-sizing: ignore;
-}
-
-#addon-progress-notification {
-  -moz-binding: url("chrome://browser/content/urlbarBindings.xml#addon-progress-notification");
 }
 
 browser[tabmodalPromptShowing] {

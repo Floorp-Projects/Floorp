@@ -112,6 +112,15 @@ bool DocumentL10n::Init(nsTArray<nsString>& aResourceIds) {
   return true;
 }
 
+void DocumentL10n::Destroy() {
+  if (mDOMLocalization) {
+    Element* elem = mDocument->GetDocumentElement();
+    if (elem) {
+      mDOMLocalization->DisconnectRoot(elem);
+    }
+  }
+}
+
 JSObject* DocumentL10n::WrapObject(JSContext* aCx,
                                    JS::Handle<JSObject*> aGivenProto) {
   return DocumentL10n_Binding::Wrap(aCx, this, aGivenProto);

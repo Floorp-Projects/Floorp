@@ -287,9 +287,6 @@ void EventListenerManager::AddEventListenerInternal(
       nsCOMPtr<Document> doc = window->GetExtantDoc();
       if (doc) {
         doc->WarnOnceAbout(Document::eMutationEvent);
-        if (aEventMessage == eLegacyAttrModified) {
-          doc->WarnOnceAbout(Document::eDOMAttrModifiedEvent);
-        }
       }
       // If aEventMessage is eLegacySubtreeModified, we need to listen all
       // mutations. nsContentUtils::HasMutationListeners relies on this.

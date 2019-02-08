@@ -18,8 +18,9 @@ class SVGFEUnstyledLeafFrame final : public nsFrame {
                                                 ComputedStyle* aStyle);
 
  protected:
-  explicit SVGFEUnstyledLeafFrame(ComputedStyle* aStyle)
-      : nsFrame(aStyle, kClassID) {
+  explicit SVGFEUnstyledLeafFrame(ComputedStyle* aStyle,
+                                  nsPresContext* aPresContext)
+      : nsFrame(aStyle, aPresContext, kClassID) {
     AddStateBits(NS_FRAME_SVG_LAYOUT | NS_FRAME_IS_NONDISPLAY);
   }
 
@@ -54,7 +55,8 @@ class SVGFEUnstyledLeafFrame final : public nsFrame {
 
 nsIFrame* NS_NewSVGFEUnstyledLeafFrame(nsIPresShell* aPresShell,
                                        ComputedStyle* aStyle) {
-  return new (aPresShell) SVGFEUnstyledLeafFrame(aStyle);
+  return new (aPresShell)
+      SVGFEUnstyledLeafFrame(aStyle, aPresShell->GetPresContext());
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(SVGFEUnstyledLeafFrame)

@@ -17,6 +17,9 @@
   "saveScreenshotSelectedArea": {
     "message": "Mentés"
   },
+  "uploadScreenshotSelectedArea": {
+    "message": "Feltöltés"
+  },
   "saveScreenshotVisibleArea": {
     "message": "Látható rész mentése"
   },
@@ -28,6 +31,9 @@
   },
   "downloadScreenshot": {
     "message": "Letöltés"
+  },
+  "downloadScreenshotTitle": {
+    "message": "Képernyőkép letöltése"
   },
   "downloadOnlyNotice": {
     "message": "Jelenleg csak letöltési módban van."
@@ -63,6 +69,9 @@
   },
   "copyScreenshot": {
     "message": "Másolás"
+  },
+  "copyScreenshotTitle": {
+    "message": "Képernyőkép másolása a vágólapra"
   },
   "notificationImageCopiedTitle": {
     "message": "Képernyőkép másolva"
@@ -122,8 +131,8 @@
   "genericErrorDetails": {
     "message": "Nem vagyunk benne biztosak, hogy mi történt. Próbálja újra, vagy készítsen képet egy másik oldalról."
   },
-  "tourBodyIntro": {
-    "message": "Készítsen, mentsen és osszon meg képernyőképeket, anélkül, hogy elhagyná a Firefoxot."
+  "tourBodyIntroServerless": {
+    "message": "Készítsen, másoljon és töltsön le képernyőképet a Firefox elhagyása nélkül."
   },
   "tourHeaderPageAction": {
     "message": "A mentés új módja"
@@ -142,18 +151,6 @@
   },
   "tourBodyFullPage": {
     "message": "Válassza a jobb felső sarokban lévő gombokat, hogy egy látható területet mentsen az ablakból, vagy elmentsen egy teljes oldalt."
-  },
-  "tourHeaderDownloadUpload": {
-    "message": "Ahogy tetszik"
-  },
-  "tourBodyDownloadUpload": {
-    "message": "Mentse a kivágott képeket a webre a könnyebb megosztáshoz, vagy töltse le a számítógépére. Rá is kattinthat a Képernyőképek gombra, hogy megtalálja az összes képét."
-  },
-  "tourHeaderAccounts": {
-    "message": "Hordozható képernyőképek"
-  },
-  "tourBodyAccounts": {
-    "message": "Jelentkezzen be a Firefox fiókjával, hogy elérje az összes képernyőképét az összes eszközén, és örökre elmentse a kedvenceit."
   },
   "tourSkip": {
     "message": "Kihagyás"

@@ -17,6 +17,9 @@
   "saveScreenshotSelectedArea": {
     "message": "שמירה"
   },
+  "uploadScreenshotSelectedArea": {
+    "message": "העלאה"
+  },
   "saveScreenshotVisibleArea": {
     "message": "שמירת התחום המוצג"
   },
@@ -39,7 +42,7 @@
     "message": "בחלון גלישה פרטית."
   },
   "downloadOnlyDetailsThirdParty": {
-    "message": "כשעוגיות צד שלישי מנוטרלות."
+    "message": "עוגיות צד שלישי מנוטרלות."
   },
   "downloadOnlyDetailsNeverRemember": {
     "message": "„לא לזכור היסטוריה” פעיל."
@@ -54,7 +57,7 @@
     "message": "הקישור הועתק"
   },
   "notificationLinkCopiedDetails": {
-    "message": "הקישור לתמונה שלך הועתק ללוח. נא ללחוץ על $META_KEY$-V כדי להדביק.",
+    "message": "הקישור לתמונה שלך הועתק ללוח. יש ללחוץ על $META_KEY$-V כדי להדביק.",
     "placeholders": {
       "meta_key": {
         "content": "$1"
@@ -65,7 +68,7 @@
     "message": "העתקה"
   },
   "notificationImageCopiedTitle": {
-    "message": "צילום המסך הועתק"
+    "message": "הצילום הועתק"
   },
   "notificationImageCopiedDetails": {
     "message": "צילום המסך שלך הועתק ללוח העריכה. יש ללחוץ על $META_KEY$-V כדי להדביק.",
@@ -75,8 +78,13 @@
       }
     }
   },
-  "imageCroppedWarning": {
-    "message": "תמונה זו נחתכה לגודל של {pixels} פיקסלים."
+  "imageCropPopupWarning": {
+    "message": "התמונה שנשמרה תקוצר לגובה של $PIXELS$ פיקסלים.",
+    "placeholders": {
+      "pixels": {
+        "content": "$1"
+      }
+    }
   },
   "requestErrorTitle": {
     "message": "לא תקין."
@@ -142,7 +150,7 @@
     "message": "לפי טעמך"
   },
   "tourBodyDownloadUpload": {
-    "message": "שמירת הצילומים החתוכים שלך לאחסון מקוון לצורך שיתוף פשוט יותר, או להוריד אותם למחשב שלך. ניתן גם ללחוץ על כפתור הצילומים שלי כדי למצוא את כל הצילומים שצילמת."
+    "message": "ניתן לשמור את הצילומים החתוכים שלך באחסון מקוון לצורך שיתוף פשוט יותר, או להוריד אותם למחשב שלך. באפשרותך גם ללחוץ על הכפתור 'צילומי המסך שלי' כדי למצוא את כל הצילומים שצילמת."
   },
   "tourSkip": {
     "message": "דילוג"

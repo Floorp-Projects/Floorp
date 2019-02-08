@@ -28,7 +28,7 @@ NS_IMPL_FRAMEARENA_HELPERS(nsRubyBaseFrame)
 
 nsContainerFrame* NS_NewRubyBaseFrame(nsIPresShell* aPresShell,
                                       ComputedStyle* aStyle) {
-  return new (aPresShell) nsRubyBaseFrame(aStyle);
+  return new (aPresShell) nsRubyBaseFrame(aStyle, aPresShell->GetPresContext());
 }
 
 //----------------------------------------------------------------------

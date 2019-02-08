@@ -44,7 +44,7 @@ class nsSliderFrame final : public nsBoxFrame {
 
   friend class nsSliderMediator;
 
-  explicit nsSliderFrame(ComputedStyle* aStyle);
+  explicit nsSliderFrame(ComputedStyle* aStyle, nsPresContext* aPresContext);
   virtual ~nsSliderFrame();
 
 #ifdef DEBUG_FRAME_DUMP

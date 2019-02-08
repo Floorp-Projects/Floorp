@@ -4774,7 +4774,6 @@ window._gBrowser = {
       if (!tab.hasAttribute("activemedia-blocked")) {
         tab.setAttribute("activemedia-blocked", true);
         this._tabAttrModified(tab, ["activemedia-blocked"]);
-        tab.startMediaBlockTimer();
       }
     });
 
@@ -4789,7 +4788,6 @@ window._gBrowser = {
         this._tabAttrModified(tab, ["activemedia-blocked"]);
         let hist = Services.telemetry.getHistogramById("TAB_AUDIO_INDICATOR_USED");
         hist.add(2 /* unblockByVisitingTab */ );
-        tab.finishMediaBlockTimer();
       }
     });
 

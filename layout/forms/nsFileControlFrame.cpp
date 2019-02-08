@@ -34,13 +34,15 @@ using namespace mozilla::dom;
 
 nsIFrame* NS_NewFileControlFrame(nsIPresShell* aPresShell,
                                  ComputedStyle* aStyle) {
-  return new (aPresShell) nsFileControlFrame(aStyle);
+  return new (aPresShell)
+      nsFileControlFrame(aStyle, aPresShell->GetPresContext());
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsFileControlFrame)
 
-nsFileControlFrame::nsFileControlFrame(ComputedStyle* aStyle)
-    : nsBlockFrame(aStyle, kClassID) {
+nsFileControlFrame::nsFileControlFrame(ComputedStyle* aStyle,
+                                       nsPresContext* aPresContext)
+    : nsBlockFrame(aStyle, aPresContext, kClassID) {
   AddStateBits(NS_BLOCK_FLOAT_MGR);
 }
 

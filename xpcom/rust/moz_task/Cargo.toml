@@ -1,0 +1,11 @@
+[package]
+name = "moz_task"
+version = "0.1.0"
+authors = ["Myk Melez <myk@mykzilla.org>"]
+license = "MPL-2.0"
+description = "Rust wrappers around XPCOM threading functions"
+
+[dependencies]
+nserror = { path = "../nserror" }
+nsstring = { path = "../nsstring" }
+xpcom = { path = "../xpcom" }

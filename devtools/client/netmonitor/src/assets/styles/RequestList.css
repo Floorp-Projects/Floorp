@@ -349,6 +349,10 @@
   height: 16px;
   margin: 0 4px;
   vertical-align: text-bottom;
+  background-position: center;
+  background-repeat: no-repeat;
+  -moz-context-properties: fill;
+  fill: currentColor;
 }
 
 .request-list-item.selected .requests-security-state-icon {
@@ -372,7 +376,7 @@
 }
 
 .security-state-local {
-  background-image: url(chrome://devtools/skin/images/globe.svg);
+  background-image: url(chrome://devtools/skin/images/globe-small.svg);
 }
 
 .tracking-resource {

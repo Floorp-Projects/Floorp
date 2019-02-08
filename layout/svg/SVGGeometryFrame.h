@@ -47,13 +47,11 @@ class SVGGeometryFrame : public nsFrame, public nsSVGDisplayableFrame {
   friend class ::nsDisplaySVGGeometry;
 
  protected:
-  SVGGeometryFrame(ComputedStyle* aStyle, nsIFrame::ClassID aID)
-      : nsFrame(aStyle, aID) {
+  SVGGeometryFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
+                   nsIFrame::ClassID aID = kClassID)
+      : nsFrame(aStyle, aPresContext, aID) {
     AddStateBits(NS_FRAME_SVG_LAYOUT | NS_FRAME_MAY_BE_TRANSFORMED);
   }
-
-  explicit SVGGeometryFrame(ComputedStyle* aStyle)
-      : SVGGeometryFrame(aStyle, kClassID) {}
 
  public:
   NS_DECL_QUERYFRAME

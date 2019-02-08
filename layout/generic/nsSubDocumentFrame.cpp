@@ -59,8 +59,9 @@ static Document* GetDocumentFromView(nsView* aView) {
   return ps ? ps->GetDocument() : nullptr;
 }
 
-nsSubDocumentFrame::nsSubDocumentFrame(ComputedStyle* aStyle)
-    : nsAtomicContainerFrame(aStyle, kClassID),
+nsSubDocumentFrame::nsSubDocumentFrame(ComputedStyle* aStyle,
+                                       nsPresContext* aPresContext)
+    : nsAtomicContainerFrame(aStyle, aPresContext, kClassID),
       mOuterView(nullptr),
       mInnerView(nullptr),
       mIsInline(false),
@@ -876,7 +877,8 @@ nsresult nsSubDocumentFrame::AttributeChanged(int32_t aNameSpaceID,
 
 nsIFrame* NS_NewSubDocumentFrame(nsIPresShell* aPresShell,
                                  ComputedStyle* aStyle) {
-  return new (aPresShell) nsSubDocumentFrame(aStyle);
+  return new (aPresShell)
+      nsSubDocumentFrame(aStyle, aPresShell->GetPresContext());
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsSubDocumentFrame)

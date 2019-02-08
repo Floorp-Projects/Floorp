@@ -65,7 +65,8 @@ class nsHTMLFramesetFrame final : public nsContainerFrame {
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsHTMLFramesetFrame)
 
-  explicit nsHTMLFramesetFrame(ComputedStyle* aStyle);
+  explicit nsHTMLFramesetFrame(ComputedStyle* aStyle,
+                               nsPresContext* aPresContext);
 
   virtual ~nsHTMLFramesetFrame();
 

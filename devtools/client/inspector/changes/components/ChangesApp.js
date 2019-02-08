@@ -74,6 +74,7 @@ class ChangesApp extends PureComponent {
       {
         key: ruleId,
         className: "rule devtools-monospace",
+        "data-ruleid": ruleId,
         style: {
           "--diff-level": level,
         },
@@ -109,6 +110,7 @@ class ChangesApp extends PureComponent {
       return dom.div(
         {
           key: sourceId,
+          "data-sourceid": sourceId,
           className: "source",
         },
         dom.div(

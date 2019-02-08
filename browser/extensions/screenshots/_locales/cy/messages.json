@@ -17,6 +17,9 @@
   "saveScreenshotSelectedArea": {
     "message": "Cadw"
   },
+  "uploadScreenshotSelectedArea": {
+    "message": "Llwytho"
+  },
   "saveScreenshotVisibleArea": {
     "message": "Cadw'r gweladwy"
   },
@@ -28,6 +31,9 @@
   },
   "downloadScreenshot": {
     "message": "Llwytho i Lawr"
+  },
+  "downloadScreenshotTitle": {
+    "message": "Llwytho i lawr llun sgrin"
   },
   "downloadOnlyNotice": {
     "message": "Rydych yn y modd Llwytho i Lawr yn Unig."
@@ -63,6 +69,9 @@
   },
   "copyScreenshot": {
     "message": "Copïo"
+  },
+  "copyScreenshotTitle": {
+    "message": "Copïo llun sgrin i'r clipfwrdd"
   },
   "notificationImageCopiedTitle": {
     "message": "Copïwyd y Llun"
@@ -122,8 +131,8 @@
   "genericErrorDetails": {
     "message": "Nid ydym yn gwybod beth sydd wedi ddigwydd. Ceisiwch eto neu dynnu llun o dudalen wahanol?"
   },
-  "tourBodyIntro": {
-    "message": "Cymryd, cadw a rhannu lluniau sgrin heb adael Firefox."
+  "tourBodyIntroServerless": {
+    "message": "Cymryd, cadw a llwytho i lawr lluniau sgrin heb adael Firefox."
   },
   "tourHeaderPageAction": {
     "message": "Ffordd newydd i gadw"
@@ -142,18 +151,6 @@
   },
   "tourBodyFullPage": {
     "message": "Dewiswch y botymau ar y dde uchod i gipio ardal gweladwy mewn ffenestr neu i gipio tudalen gyfan."
-  },
-  "tourHeaderDownloadUpload": {
-    "message": "Yn Ôl eich Dewis"
-  },
-  "tourBodyDownloadUpload": {
-    "message": "Cadwch eich lluniau wedi eu golygu i'r We ar gyfer rhannu haws, neu eu llwytho i lawr i'ch cyfrifiadur. Gallwch hefyd glicio ar Fy Lluniau i weld pob llun sydd gennych."
-  },
-  "tourHeaderAccounts": {
-    "message": "Lluniau i Fynd"
-  },
-  "tourBodyAccounts": {
-    "message": "Mewngofnodwch gyda'ch Cyfrif Firefox i gael mynediad i'ch lluniau ar eich holl ddyfeisiau a chadw eich hoff luniau am byth."
   },
   "tourSkip": {
     "message": "SKIP"

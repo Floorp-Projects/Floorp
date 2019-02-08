@@ -36,7 +36,8 @@ class nsTextControlFrame final : public nsContainerFrame,
 
   NS_DECLARE_FRAME_PROPERTY_DELETABLE(ContentScrollPos, nsPoint)
 
-  explicit nsTextControlFrame(ComputedStyle* aStyle);
+  explicit nsTextControlFrame(ComputedStyle* aStyle,
+                              nsPresContext* aPresContext);
   virtual ~nsTextControlFrame();
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot,

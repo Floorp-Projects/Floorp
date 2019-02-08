@@ -17,7 +17,7 @@ using namespace mozilla::dom;
 // Implementation
 
 nsIFrame* NS_NewSVGUseFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle) {
-  return new (aPresShell) nsSVGUseFrame(aStyle);
+  return new (aPresShell) nsSVGUseFrame(aStyle, aPresShell->GetPresContext());
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsSVGUseFrame)

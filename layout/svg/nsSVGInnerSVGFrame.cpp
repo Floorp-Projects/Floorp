@@ -11,7 +11,8 @@ using namespace mozilla;
 
 nsIFrame* NS_NewSVGInnerSVGFrame(nsIPresShell* aPresShell,
                                  ComputedStyle* aStyle) {
-  return new (aPresShell) nsSVGInnerSVGFrame(aStyle);
+  return new (aPresShell)
+      nsSVGInnerSVGFrame(aStyle, aPresShell->GetPresContext());
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsSVGInnerSVGFrame)

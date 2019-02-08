@@ -15,6 +15,8 @@ use libc;
 
 use interfaces::nsrefcnt;
 
+use threadbound::ThreadBound;
+
 /// A trait representing a type which can be reference counted invasively.
 /// The object is responsible for freeing its backing memory when its
 /// reference count reaches 0.
@@ -107,6 +109,35 @@ impl <T: RefCounted + 'static> Clone for RefPtr<T> {
     #[inline]
     fn clone(&self) -> RefPtr<T> {
         RefPtr::new(self)
+    }
+}
+
+/// A wrapper that binds a RefCounted value to its original thread,
+/// preventing retrieval from other threads and panicking if the value
+/// is dropped on a different thread.
+///
+/// These limitations enable values of this type to be Send + Sync, which is
+/// useful when creating a struct that holds a RefPtr<T> type while being
+/// Send + Sync.  Such a struct can hold a ThreadBoundRefPtr<T> type instead.
+pub struct ThreadBoundRefPtr<T: RefCounted + 'static>(ThreadBound<*const T>);
+
+impl<T: RefCounted + 'static> ThreadBoundRefPtr<T> {
+    pub fn new(ptr: RefPtr<T>) -> Self {
+        let raw: *const T = &*ptr;
+        mem::forget(ptr);
+        ThreadBoundRefPtr(ThreadBound::new(raw))
+    }
+
+    pub fn get_ref(&self) -> Option<&T> {
+        self.0.get_ref().map(|raw| unsafe { &**raw })
+    }
+}
+
+impl<T: RefCounted + 'static> Drop for ThreadBoundRefPtr<T> {
+    fn drop(&mut self) {
+        unsafe {
+            RefPtr::from_raw_dont_addref(self.get_ref().expect("drop() called on wrong thread!"));
+        }
     }
 }
 

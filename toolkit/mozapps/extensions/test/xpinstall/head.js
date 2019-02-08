@@ -246,7 +246,7 @@ var Harness = {
       if (event.target == PanelUI.notificationPanel) {
         PanelUI.notificationPanel.hidePopup();
       } else if (event.target.firstElementChild) {
-        let popupId = event.target.getAttribute("popupid");
+        let popupId = event.target.firstElementChild.getAttribute("popupid");
         if (popupId === "addon-webext-permissions") {
           this.popupReady(event.target.firstElementChild);
         } else if (popupId === "addon-install-failed") {

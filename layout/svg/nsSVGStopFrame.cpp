@@ -22,7 +22,8 @@ class nsSVGStopFrame : public nsFrame {
                                       ComputedStyle* aStyle);
 
  protected:
-  explicit nsSVGStopFrame(ComputedStyle* aStyle) : nsFrame(aStyle, kClassID) {
+  explicit nsSVGStopFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
+      : nsFrame(aStyle, aPresContext, kClassID) {
     AddStateBits(NS_FRAME_IS_NONDISPLAY);
   }
 
@@ -93,5 +94,5 @@ nsresult nsSVGStopFrame::AttributeChanged(int32_t aNameSpaceID,
 // -------------------------------------------------------------------------
 
 nsIFrame* NS_NewSVGStopFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle) {
-  return new (aPresShell) nsSVGStopFrame(aStyle);
+  return new (aPresShell) nsSVGStopFrame(aStyle, aPresShell->GetPresContext());
 }

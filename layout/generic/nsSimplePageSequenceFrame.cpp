@@ -38,13 +38,15 @@ mozilla::LazyLogModule gLayoutPrintingLog("printing-layout");
 
 nsSimplePageSequenceFrame* NS_NewSimplePageSequenceFrame(
     nsIPresShell* aPresShell, ComputedStyle* aStyle) {
-  return new (aPresShell) nsSimplePageSequenceFrame(aStyle);
+  return new (aPresShell)
+      nsSimplePageSequenceFrame(aStyle, aPresShell->GetPresContext());
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsSimplePageSequenceFrame)
 
-nsSimplePageSequenceFrame::nsSimplePageSequenceFrame(ComputedStyle* aStyle)
-    : nsContainerFrame(aStyle, kClassID),
+nsSimplePageSequenceFrame::nsSimplePageSequenceFrame(
+    ComputedStyle* aStyle, nsPresContext* aPresContext)
+    : nsContainerFrame(aStyle, aPresContext, kClassID),
       mTotalPages(-1),
       mCalledBeginPage(false),
       mCurrentCanvasListSetup(false) {

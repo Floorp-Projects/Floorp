@@ -103,7 +103,7 @@ class nsSimplePageSequenceFrame final : public nsContainerFrame,
 #endif
 
  protected:
-  explicit nsSimplePageSequenceFrame(ComputedStyle* aStyle);
+  nsSimplePageSequenceFrame(ComputedStyle*, nsPresContext*);
   virtual ~nsSimplePageSequenceFrame();
 
   void SetPageNumberFormat(const char* aPropName, const char* aDefPropVal,

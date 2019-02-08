@@ -1075,6 +1075,28 @@ impl AlphaBatchBuilder {
 
                         match raster_config.composite_mode {
                             PictureCompositeMode::TileCache { .. } => {
+                                let tile_cache = picture.tile_cache.as_ref().unwrap();
+
+                                // If the tile cache is disabled, just recurse into the
+                                // picture like a normal pass-through picture, adding
+                                // any child primitives into the parent surface batches.
+                                if !tile_cache.is_enabled {
+                                    self.add_pic_to_batch(
+                                        picture,
+                                        task_id,
+                                        ctx,
+                                        gpu_cache,
+                                        render_tasks,
+                                        deferred_resolves,
+                                        prim_headers,
+                                        transforms,
+                                        root_spatial_node_index,
+                                        z_generator,
+                                    );
+
+                                    return;
+                                }
+
                                 // Construct a local clip rect that ensures we only draw pixels where
                                 // the local bounds of the picture extend to within the edge tiles.
                                 let local_clip_rect = prim_info
@@ -1091,8 +1113,6 @@ impl AlphaBatchBuilder {
                                     let kind = BatchKind::Brush(
                                         BrushBatchKind::Image(ImageBufferKind::Texture2DArray)
                                     );
-
-                                    let tile_cache = picture.tile_cache.as_ref().unwrap();
 
                                     for tile_index in &tile_cache.tiles_to_draw {
                                         let tile = &tile_cache.tiles[tile_index.0];

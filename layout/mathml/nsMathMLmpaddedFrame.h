@@ -41,8 +41,9 @@ class nsMathMLmpaddedFrame final : public nsMathMLContainerFrame {
   }
 
  protected:
-  explicit nsMathMLmpaddedFrame(ComputedStyle* aStyle)
-      : nsMathMLContainerFrame(aStyle, kClassID),
+  explicit nsMathMLmpaddedFrame(ComputedStyle* aStyle,
+                                nsPresContext* aPresContext)
+      : nsMathMLContainerFrame(aStyle, aPresContext, kClassID),
         mWidthSign(0),
         mHeightSign(0),
         mDepthSign(0),

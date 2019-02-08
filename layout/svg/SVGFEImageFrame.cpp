@@ -22,7 +22,8 @@ class SVGFEImageFrame final : public nsFrame {
                                          ComputedStyle* aStyle);
 
  protected:
-  explicit SVGFEImageFrame(ComputedStyle* aStyle) : nsFrame(aStyle, kClassID) {
+  explicit SVGFEImageFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
+      : nsFrame(aStyle, aPresContext, kClassID) {
     AddStateBits(NS_FRAME_SVG_LAYOUT | NS_FRAME_IS_NONDISPLAY);
 
     // This frame isn't actually displayed, but it contains an image and we want
@@ -69,7 +70,7 @@ class SVGFEImageFrame final : public nsFrame {
 
 nsIFrame* NS_NewSVGFEImageFrame(nsIPresShell* aPresShell,
                                 ComputedStyle* aStyle) {
-  return new (aPresShell) SVGFEImageFrame(aStyle);
+  return new (aPresShell) SVGFEImageFrame(aStyle, aPresShell->GetPresContext());
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(SVGFEImageFrame)

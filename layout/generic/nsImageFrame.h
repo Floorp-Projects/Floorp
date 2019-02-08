@@ -202,14 +202,14 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
   friend nsIFrame* NS_NewImageFrameForGeneratedContentIndex(nsIPresShell*,
                                                             ComputedStyle*);
 
-  nsImageFrame(ComputedStyle* aStyle, Kind aKind)
-      : nsImageFrame(aStyle, kClassID, aKind) {}
+  nsImageFrame(ComputedStyle* aStyle, nsPresContext* aPresContext, Kind aKind)
+      : nsImageFrame(aStyle, aPresContext, kClassID, aKind) {}
 
-  nsImageFrame(ComputedStyle*, ClassID, Kind);
+  nsImageFrame(ComputedStyle*, nsPresContext* aPresContext, ClassID, Kind);
 
  protected:
-  nsImageFrame(ComputedStyle* aStyle, ClassID aID)
-      : nsImageFrame(aStyle, aID, Kind::ImageElement) {}
+  nsImageFrame(ComputedStyle* aStyle, nsPresContext* aPresContext, ClassID aID)
+      : nsImageFrame(aStyle, aPresContext, aID, Kind::ImageElement) {}
 
   virtual ~nsImageFrame();
 

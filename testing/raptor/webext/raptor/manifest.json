@@ -27,6 +27,7 @@
                   "*://*.paypal.com/*",
                   "*://*.pinterest.com/*",
                   "*://*.reddit.com/*",
+                  "*://*.tumblr.com/*",
                   "*://*.twitter.com/*",
                   "*://*.vice.com/*",
                   "*://*.wikia.com/*",

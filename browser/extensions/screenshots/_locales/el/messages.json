@@ -17,6 +17,9 @@
   "saveScreenshotSelectedArea": {
     "message": "Αποθήκευση"
   },
+  "uploadScreenshotSelectedArea": {
+    "message": "Μεταφόρτωση"
+  },
   "saveScreenshotVisibleArea": {
     "message": "Αποθήκευση ορατής περιοχής"
   },
@@ -28,6 +31,9 @@
   },
   "downloadScreenshot": {
     "message": "Λήψη"
+  },
+  "downloadScreenshotTitle": {
+    "message": "Λήψη στιγμιότυπου"
   },
   "downloadOnlyNotice": {
     "message": "Αυτή τη στιγμή βρίσκεστε σε λειτουργία \"Μόνο-λήψη\"."
@@ -63,6 +69,9 @@
   },
   "copyScreenshot": {
     "message": "Αντιγραφή"
+  },
+  "copyScreenshotTitle": {
+    "message": "Αντιγραφή στιγμιότυπου στο πρόχειρο"
   },
   "notificationImageCopiedTitle": {
     "message": "Το στιγμιότυπο αντιγράφηκε"
@@ -122,8 +131,8 @@
   "genericErrorDetails": {
     "message": "Δεν είμαστε σίγουροι για το τι ακριβώς συνέβη. Προσπαθήστε ξανά ή κάντε λήψη σε μια άλλη σελίδα."
   },
-  "tourBodyIntro": {
-    "message": "Λήψη, αποθήκευση και διαμοιρασμός στιγμιοτύπων μέσα από το Firefox."
+  "tourBodyIntroServerless": {
+    "message": "Δημιουργία, αντιγραφή και λήψη στιγμιότυπων μέσα από το Firefox."
   },
   "tourHeaderPageAction": {
     "message": "Ένας νέος τρόπος αποθήκευσης"
@@ -142,12 +151,6 @@
   },
   "tourBodyFullPage": {
     "message": "Επιλέξτε τα κουμπιά επάνω δεξιά για να καταγράψετε την ορατή περιοχή του παραθύρου ή να καταγράψετε μια ολόκληρη σελίδα."
-  },
-  "tourHeaderDownloadUpload": {
-    "message": "Ακριβώς όπως το θέλετε"
-  },
-  "tourBodyDownloadUpload": {
-    "message": "Αποθηκεύστε της λήψεις σας στο Διαδίκτυο για ευκολότερο διαμοιρασμό, η λήψη τους στον υπολογιστή σας. Μπορείτε να βρείτε όλες τις λήψεις σας πατώντας στο κουμπί «Οι λήψεις μου»."
   },
   "tourSkip": {
     "message": "Παράβλεψη"

@@ -40,8 +40,9 @@ class nsSVGContainerFrame : public nsContainerFrame {
                                            ComputedStyle* aStyle);
 
  protected:
-  nsSVGContainerFrame(ComputedStyle* aStyle, ClassID aID)
-      : nsContainerFrame(aStyle, aID) {
+  nsSVGContainerFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
+                      ClassID aID)
+      : nsContainerFrame(aStyle, aPresContext, aID) {
     AddStateBits(NS_FRAME_SVG_LAYOUT);
   }
 
@@ -106,8 +107,9 @@ class nsSVGContainerFrame : public nsContainerFrame {
 class nsSVGDisplayContainerFrame : public nsSVGContainerFrame,
                                    public nsSVGDisplayableFrame {
  protected:
-  nsSVGDisplayContainerFrame(ComputedStyle* aStyle, nsIFrame::ClassID aID)
-      : nsSVGContainerFrame(aStyle, aID) {
+  nsSVGDisplayContainerFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
+                             nsIFrame::ClassID aID)
+      : nsSVGContainerFrame(aStyle, aPresContext, aID) {
     AddStateBits(NS_FRAME_MAY_BE_TRANSFORMED);
   }
 

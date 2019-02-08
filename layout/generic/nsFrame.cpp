@@ -467,14 +467,13 @@ void WeakFrame::Init(nsIFrame* aFrame) {
 }
 
 nsIFrame* NS_NewEmptyFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle) {
-  return new (aPresShell) nsFrame(aStyle);
+  return new (aPresShell) nsFrame(aStyle, aPresShell->GetPresContext());
 }
 
-nsFrame::nsFrame(ComputedStyle* aStyle, ClassID aID) : nsBox(aID) {
+nsFrame::nsFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
+                 ClassID aID)
+    : nsBox(aStyle, aPresContext, aID) {
   MOZ_COUNT_CTOR(nsFrame);
-
-  mComputedStyle = aStyle;
-  mWritingMode = WritingMode(mComputedStyle);
 }
 
 nsFrame::~nsFrame() {
@@ -1201,8 +1200,6 @@ void nsIFrame::MarkNeedsDisplayItemRebuild() {
 
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
 void nsIFrame::AssertNewStyleIsSane(ComputedStyle& aNewStyle) {
-  MOZ_DIAGNOSTIC_ASSERT(PresShell() ==
-                        aNewStyle.PresContextForFrame()->PresShell());
   MOZ_DIAGNOSTIC_ASSERT(
       aNewStyle.GetPseudo() == mComputedStyle->GetPseudo() ||
       // ::first-line continuations are weird, this should probably be fixed via

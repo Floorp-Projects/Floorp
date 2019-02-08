@@ -5,12 +5,13 @@
 
 const { Component, createFactory } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const ObjectClient = require("devtools/shared/client/object-client");
 const actions = require("devtools/client/webconsole/actions/messages");
 const { l10n } = require("devtools/client/webconsole/utils/messages");
 const { MODE } = require("devtools/client/shared/components/reps/reps");
 const GripMessageBody = createFactory(require("devtools/client/webconsole/components/GripMessageBody"));
+
+loader.lazyRequireGetter(this, "PropTypes", "devtools/client/shared/vendor/react-prop-types");
 
 const TABLE_ROW_MAX_ITEMS = 1000;
 const TABLE_COLUMN_MAX_ITEMS = 10;

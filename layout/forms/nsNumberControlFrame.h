@@ -40,7 +40,8 @@ class nsNumberControlFrame final : public nsContainerFrame,
   typedef mozilla::WidgetEvent WidgetEvent;
   typedef mozilla::WidgetGUIEvent WidgetGUIEvent;
 
-  explicit nsNumberControlFrame(ComputedStyle* aStyle);
+  explicit nsNumberControlFrame(ComputedStyle* aStyle,
+                                nsPresContext* aPresContext);
 
  public:
   NS_DECL_QUERYFRAME

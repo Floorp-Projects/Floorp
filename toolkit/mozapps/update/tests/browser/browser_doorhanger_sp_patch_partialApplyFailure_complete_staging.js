@@ -15,7 +15,7 @@ add_task(async function testPartialPatchApplyFailureWithCompleteAvailable() {
   await runUpdateProcessingTest(updates, [
     {
       notificationId: "update-restart",
-      button: "secondarybutton",
+      button: "secondaryButton",
       cleanup() {
         AppMenuNotifications.removeNotification(/.*/);
       },

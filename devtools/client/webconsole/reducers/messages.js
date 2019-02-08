@@ -17,9 +17,10 @@ const {
   MESSAGE_TYPE,
   MESSAGE_SOURCE,
 } = constants;
-const { getGripPreviewItems } = require("devtools/client/shared/components/reps/reps");
-const { getUnicodeUrlPath } = require("devtools/client/shared/unicode-url");
-const { getSourceNames } = require("devtools/client/shared/source-utils");
+
+loader.lazyRequireGetter(this, "getGripPreviewItems", "devtools/client/shared/components/reps/reps", true);
+loader.lazyRequireGetter(this, "getUnicodeUrlPath", "devtools/client/shared/unicode-url", true);
+loader.lazyRequireGetter(this, "getSourceNames", "devtools/client/shared/source-utils", true);
 
 const {
   UPDATE_REQUEST,
