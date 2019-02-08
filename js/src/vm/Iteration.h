@@ -329,6 +329,10 @@ class PropertyIteratorObject : public NativeObject {
  public:
   static const Class class_;
 
+  // We don't use the fixed slot but the JITs use this constant to load the
+  // private value (the NativeIterator*).
+  static const uint32_t NUM_FIXED_SLOTS = 1;
+
   NativeIterator* getNativeIterator() const {
     return static_cast<js::NativeIterator*>(getPrivate());
   }
