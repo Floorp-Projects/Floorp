@@ -348,7 +348,8 @@ class UrlbarView {
     let setURL = () => {
       url = this._createElement("span");
       url.className = "urlbarView-secondary urlbarView-url";
-      this._addTextContentWithHighlights(url, result.payload.url || "",
+      let val = this.window.trimURL(result.payload.url || "");
+      this._addTextContentWithHighlights(url, val,
                                          result.payloadHighlights.url || []);
     };
     switch (result.type) {
