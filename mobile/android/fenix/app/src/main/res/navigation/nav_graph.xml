@@ -64,11 +64,27 @@
             android:id="@+id/action_browserFragment_to_libraryFragment"
             app:destination="@id/libraryFragment" />
     </fragment>
+
+
     <fragment
         android:id="@+id/libraryFragment"
         android:name="org.mozilla.fenix.library.LibraryFragment"
         android:label="@string/library_title"
-        tools:layout="@layout/fragment_library" />
+        tools:layout="@layout/fragment_library">
+        <action
+            android:id="@+id/action_libraryFragment_to_historyFragment"
+            app:destination="@+id/historyFragment" />
+    </fragment>
+
+
+
+    <fragment
+        android:id="@+id/historyFragment"
+        android:name="org.mozilla.fenix.library.history.HistoryFragment"
+        android:label="@string/library_history"
+        tools:layout="@layout/fragment_history" />
+
+
     <fragment
         android:id="@+id/settingsFragment"
         android:name="org.mozilla.fenix.settings.SettingsFragment"

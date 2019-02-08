@@ -18,6 +18,7 @@ class LibraryListItem @JvmOverloads constructor(
 ) : ConstraintLayout(context, attrs, defStyleAttr) {
     init {
         LayoutInflater.from(context).inflate(R.layout.library_list_item, this, true)
+
         attrs.let {
             context.theme.obtainStyledAttributes(
                 it,

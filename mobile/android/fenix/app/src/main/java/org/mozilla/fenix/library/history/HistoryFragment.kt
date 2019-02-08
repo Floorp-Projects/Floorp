@@ -2,10 +2,9 @@
    License, v. 2.0. If a copy of the MPL was not distributed with this
    file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.library
+package org.mozilla.fenix.library.history
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuInflater
@@ -13,36 +12,24 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
-import androidx.constraintlayout.widget.Group
 import androidx.fragment.app.Fragment
 import androidx.navigation.Navigation
-import kotlinx.android.synthetic.main.fragment_library.*
-import org.jetbrains.anko.constraint.layout.group
-import org.jetbrains.anko.view
 import org.mozilla.fenix.R
 
-class LibraryFragment : Fragment() {
+class HistoryFragment : Fragment() {
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.fragment_library, container, false)
+        return inflater.inflate(R.layout.fragment_history, container, false)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
         (activity as AppCompatActivity).supportActionBar?.show()
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        libraryHistory.setOnClickListener {
-            Navigation.findNavController(it).navigate(R.id.action_libraryFragment_to_historyFragment)
-        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -52,8 +39,7 @@ class LibraryFragment : Fragment() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.libraryClose -> {
-                Navigation.findNavController(requireActivity(), R.id.container)
-                    .popBackStack(R.id.browserFragment, false)
+                Navigation.findNavController(requireActivity(), R.id.container).popBackStack(R.id.browserFragment, false)
                 true
             }
             R.id.librarySearch -> {
