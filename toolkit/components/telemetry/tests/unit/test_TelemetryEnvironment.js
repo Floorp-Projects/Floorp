@@ -253,7 +253,7 @@ function createMockAddonProvider(aName) {
     },
 
     async getAddonsByTypes(aTypes) {
-      return this._addons.map(a => new MockAddonWrapper(a));
+      return this._addons.filter(a => !aTypes || aTypes.includes(a.type)).map(a => new MockAddonWrapper(a));
     },
 
     shutdown() {
@@ -1447,6 +1447,7 @@ add_task(async function test_collectionWithbrokenAddonData() {
     origin: "https://telemetry-test2.example.com",
     version: 1, // This is intentionally not a string.
     signedState: AddonManager.SIGNEDSTATE_SIGNED,
+    type: "extension",
   };
 
   const ADDON_INSTALL_URL = gDataRoot + "restartless.xpi";

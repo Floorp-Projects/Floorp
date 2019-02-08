@@ -32,7 +32,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
 
   Blocklist: "resource://gre/modules/Blocklist.jsm",
-  LightweightThemeManager: "resource://gre/modules/LightweightThemeManager.jsm",
   UpdateChecker: "resource://gre/modules/addons/XPIInstall.jsm",
   XPIInstall: "resource://gre/modules/addons/XPIInstall.jsm",
   XPIInternal: "resource://gre/modules/addons/XPIProvider.jsm",
@@ -621,7 +620,7 @@ class AddonInternal {
     if (!this.appDisabled) {
       if (this.userDisabled || this.softDisabled) {
         permissions |= AddonManager.PERM_CAN_ENABLE;
-      } else {
+      } else if (this.type != "theme" || this.id != DEFAULT_THEME_ID) {
         permissions |= AddonManager.PERM_CAN_DISABLE;
       }
     }
@@ -1625,20 +1624,21 @@ this.XPIDatabase = {
     if (aType !== "theme")
       return;
 
+    let enableTheme;
+
     let addons = this.getAddonsByType("theme");
     for (let theme of addons) {
-      if (theme.visible && theme.id != aId)
-        await this.updateAddonDisabledState(theme, true, undefined, true);
+      if (theme.visible) {
+        if (!aId && theme.id == DEFAULT_THEME_ID) {
+          enableTheme = theme;
+        } else if (theme.id != aId) {
+          this.updateAddonDisabledState(theme, true, undefined, true);
+        }
+      }
     }
 
-    if (!aId && (!LightweightThemeManager.currentTheme ||
-                 LightweightThemeManager.currentTheme !== DEFAULT_THEME_ID)) {
-      let theme = LightweightThemeManager.getUsedTheme(DEFAULT_THEME_ID);
-      // This can only ever be null in tests.
-      // This can all go away once lightweight themes are gone.
-      if (theme) {
-        LightweightThemeManager.currentTheme = theme;
-      }
+    if (enableTheme) {
+      await this.updateAddonDisabledState(enableTheme, false, undefined, true);
     }
   },
 

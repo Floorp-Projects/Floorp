@@ -33,7 +33,7 @@ add_task(async function test_management_getAll() {
     });
 
     let addons = await browser.management.getAll();
-    browser.test.assertEq(addons.length, 3, "management.getAll returned three add-ons.");
+    browser.test.assertEq(2, addons.length, "management.getAll returned correct number of add-ons.");
     browser.test.sendMessage("addons", addons);
   }
 
