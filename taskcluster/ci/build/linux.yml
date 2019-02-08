@@ -21,7 +21,6 @@ linux64/opt:
         secrets: true
         tooltool-downloads: public
         need-xvfb: true
-    run-on-projects: ['mozilla-central', 'try']
     toolchains:
         - linux64-binutils
         - linux64-clang
@@ -56,7 +55,7 @@ linux64-plain/opt:
         extra-config:
             disable_package_metrics: true
         mozconfig-variant: plain-opt
-    run-on-projects: ['mozilla-central', 'try']
+    run-on-projects: [trunk]
     toolchains:
         - linux64-binutils
         - linux64-clang
