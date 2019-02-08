@@ -9,7 +9,6 @@
 #define __GfxInfoX11_h__
 
 #include "GfxInfoBase.h"
-#include "nsString.h"
 
 namespace mozilla {
 namespace widget {
@@ -61,21 +60,17 @@ class GfxInfo final : public GfxInfoBase {
       OperatingSystem* aOS = nullptr) override;
   virtual const nsTArray<GfxDriverInfo>& GetGfxDriverInfo() override;
 
-  virtual bool DoesVendorMatch(const nsAString& aBlocklistVendor,
-                               const nsAString& aAdapterVendor) override;
-
  private:
-  nsCString mVendorId;
-  nsCString mDeviceId;
-  nsCString mDriverVersion;
+  nsCString mVendor;
+  nsCString mRenderer;
+  nsCString mVersion;
   nsCString mAdapterDescription;
-  nsCString mAdapterRAM;
   nsCString mOS;
   nsCString mOSRelease;
+  bool mIsMesa, mIsNVIDIA, mIsFGLRX, mIsNouveau, mIsIntel, mIsOldSwrast,
+      mIsLlvmpipe;
   bool mHasTextureFromPixmap;
-  unsigned int mGLMajorVersion, mGLMinorVersion;
-  bool mIsMesa;
-  bool mIsAccelerated;
+  int mGLMajorVersion, mMajorVersion, mMinorVersion, mRevisionVersion;
 
   void AddCrashReportAnnotations();
 };
