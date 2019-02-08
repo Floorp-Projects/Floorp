@@ -36,6 +36,12 @@ namespace mozilla {
 
 class OriginAttributes;
 
+namespace ipc {
+
+class PrincipalInfo;
+
+}  // namespace ipc
+
 }  // namespace mozilla
 
 BEGIN_QUOTA_NAMESPACE
@@ -85,6 +91,7 @@ class QuotaManager final : public BackgroundThreadObject {
   friend class OriginInfo;
   friend class QuotaObject;
 
+  typedef mozilla::ipc::PrincipalInfo PrincipalInfo;
   typedef nsClassHashtable<nsCStringHashKey, nsTArray<DirectoryLockImpl*>>
       DirectoryLockTable;
 
@@ -326,6 +333,8 @@ class QuotaManager final : public BackgroundThreadObject {
   static void GetStorageId(PersistenceType aPersistenceType,
                            const nsACString& aOrigin, Client::Type aClientType,
                            nsACString& aDatabaseId);
+
+  static bool IsPrincipalInfoValid(const PrincipalInfo& aPrincipalInfo);
 
   static nsresult GetInfoFromPrincipal(nsIPrincipal* aPrincipal,
                                        nsACString* aSuffix, nsACString* aGroup,
