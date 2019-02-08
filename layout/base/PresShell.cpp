@@ -1171,7 +1171,9 @@ void PresShell::Destroy() {
     }
   }
   if (mPresContext) {
-    if (gfxUserFontSet* fs = mPresContext->GetUserFontSet()) {
+    const bool mayFlushUserFontSet = false;
+    gfxUserFontSet* fs = mPresContext->GetUserFontSet(mayFlushUserFontSet);
+    if (fs) {
       uint32_t fontCount;
       uint64_t fontSize;
       fs->GetLoadStatistics(fontCount, fontSize);

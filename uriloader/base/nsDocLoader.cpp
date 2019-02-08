@@ -639,8 +639,8 @@ void nsDocLoader::DocLoaderIsEmpty(bool aFlushLayout) {
         // since the reflow is what starts font loads.
         mozilla::FlushType flushType = mozilla::FlushType::Style;
         // Be safe in case this presshell is in teardown now
-        doc->FlushUserFontSet();
-        if (doc->GetUserFontSet()) {
+        nsPresContext* presContext = doc->GetPresContext();
+        if (presContext && presContext->GetUserFontSet()) {
           flushType = mozilla::FlushType::Layout;
         }
         mDontFlushLayout = mIsFlushingLayout = true;

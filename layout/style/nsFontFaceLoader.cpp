@@ -101,7 +101,7 @@ void nsFontFaceLoader::StartedLoading(nsIStreamLoader* aStreamLoader) {
 
   MOZ_DIAGNOSTIC_ASSERT(!loader->mInLoadTimerCallback);
   MOZ_DIAGNOSTIC_ASSERT(!loader->mInStreamComplete);
-  AutoRestore<bool> scope { loader->mInLoadTimerCallback };
+  AutoRestore<bool> scope{loader->mInLoadTimerCallback};
   loader->mInLoadTimerCallback = true;
 
   if (!loader->mFontFaceSet) {
@@ -201,10 +201,8 @@ nsFontFaceLoader::OnStreamComplete(nsIStreamLoader* aLoader,
   MOZ_DIAGNOSTIC_ASSERT(!mInLoadTimerCallback);
   MOZ_DIAGNOSTIC_ASSERT(!mInStreamComplete);
 
-  AutoRestore<bool> scope { mInStreamComplete };
+  AutoRestore<bool> scope{mInStreamComplete};
   mInStreamComplete = true;
-
-  DropChannel();
 
   if (!mFontFaceSet) {
     // We've been canceled
@@ -313,7 +311,6 @@ NS_IMETHODIMP
 nsFontFaceLoader::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
                                 nsresult aStatusCode) {
   MOZ_ASSERT(NS_IsMainThread());
-  DropChannel();
   return NS_OK;
 }
 
@@ -323,14 +320,12 @@ void nsFontFaceLoader::Cancel() {
   MOZ_DIAGNOSTIC_ASSERT(mFontFaceSet);
 
   mUserFontEntry->LoadCanceled();
-  mUserFontEntry = nullptr;
   mFontFaceSet = nullptr;
   if (mLoadTimer) {
     mLoadTimer->Cancel();
     mLoadTimer = nullptr;
   }
-  nsCOMPtr<nsIChannel> channel = mChannel.forget();
-  channel->Cancel(NS_BINDING_ABORTED);
+  mChannel->Cancel(NS_BINDING_ABORTED);
 }
 
 StyleFontDisplay nsFontFaceLoader::GetFontDisplay() {
