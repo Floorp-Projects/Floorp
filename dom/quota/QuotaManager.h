@@ -336,6 +336,10 @@ class QuotaManager final : public BackgroundThreadObject {
 
   static bool IsPrincipalInfoValid(const PrincipalInfo& aPrincipalInfo);
 
+  static void GetInfoFromValidatedPrincipalInfo(
+      const PrincipalInfo& aPrincipalInfo, nsACString* aSuffix,
+      nsACString* aGroup, nsACString* aOrigin);
+
   static nsresult GetInfoFromPrincipal(nsIPrincipal* aPrincipal,
                                        nsACString* aSuffix, nsACString* aGroup,
                                        nsACString* aOrigin);
