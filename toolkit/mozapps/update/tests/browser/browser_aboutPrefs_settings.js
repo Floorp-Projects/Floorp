@@ -27,7 +27,7 @@ async function changeAndVerifyPref(tab, newConfigValue) {
   is(configValueRead, newConfigValue,
      "Value returned should have matched the expected value");
 
-  let configFile = getUpdateConfigFile();
+  let configFile = getUpdateDirFile(FILE_UPDATE_CONFIG_JSON);
   let decoder = new TextDecoder();
   let fileContents = await OS.File.read(configFile.path);
   let saveObject = JSON.parse(decoder.decode(fileContents));

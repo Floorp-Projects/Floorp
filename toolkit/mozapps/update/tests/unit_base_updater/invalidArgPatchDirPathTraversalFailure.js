@@ -22,7 +22,7 @@ function run_test() {
  * Called after the call to setupUpdaterTest finishes.
  */
 function setupUpdaterTestFinished() {
-  let path = getUpdatesPatchDir();
+  let path = getUpdateDirFile(DIR_PATCH);
   if (AppConstants.platform == "win") {
     path = path + "\\..\\";
   } else {

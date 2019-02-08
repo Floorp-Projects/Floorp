@@ -30,7 +30,7 @@ function setupUpdaterTestFinished() {
   let updateProps = {appVersion: "0.9"};
   let updates = getLocalUpdateString(updateProps, patches);
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);
-  getUpdateLog(FILE_UPDATE_LOG).create(Ci.nsIFile.NORMAL_FILE_TYPE, PERMS_FILE);
+  getUpdateDirFile(FILE_UPDATE_LOG).create(Ci.nsIFile.NORMAL_FILE_TYPE, PERMS_FILE);
   writeStatusFile(STATE_AFTER_STAGE);
   // Create the version file with an older version to simulate installing a new
   // version of the application while there is an update that has been staged.
@@ -58,19 +58,19 @@ function waitForUpdateXMLFilesFinished() {
   checkUpdateManager(STATE_NONE, false, STATE_FAILED,
                      ERR_OLDER_VERSION_OR_SAME_BUILD, 1);
 
-  let updatesDir = getUpdatesPatchDir();
+  let updatesDir = getUpdateDirFile(DIR_PATCH);
   Assert.ok(updatesDir.exists(),
             MSG_SHOULD_EXIST + getMsgPath(updatesDir.path));
 
-  let log = getUpdateLog(FILE_UPDATE_LOG);
+  let log = getUpdateDirFile(FILE_UPDATE_LOG);
   Assert.ok(!log.exists(),
             MSG_SHOULD_NOT_EXIST + getMsgPath(log.path));
 
-  log = getUpdateLog(FILE_LAST_UPDATE_LOG);
+  log = getUpdateDirFile(FILE_LAST_UPDATE_LOG);
   Assert.ok(log.exists(),
             MSG_SHOULD_EXIST + getMsgPath(log.path));
 
-  log = getUpdateLog(FILE_BACKUP_UPDATE_LOG);
+  log = getUpdateDirFile(FILE_BACKUP_UPDATE_LOG);
   Assert.ok(!log.exists(),
             MSG_SHOULD_NOT_EXIST + getMsgPath(log.path));
 
