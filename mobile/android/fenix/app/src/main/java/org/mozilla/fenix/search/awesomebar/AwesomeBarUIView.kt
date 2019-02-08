@@ -10,6 +10,7 @@ import io.reactivex.Observer
 import io.reactivex.functions.Consumer
 import mozilla.components.browser.awesomebar.BrowserAwesomeBar
 import mozilla.components.feature.awesomebar.provider.ClipboardSuggestionProvider
+import mozilla.components.feature.awesomebar.provider.HistoryStorageSuggestionProvider
 import mozilla.components.feature.awesomebar.provider.SearchSuggestionProvider
 import mozilla.components.feature.awesomebar.provider.SessionSuggestionProvider
 import mozilla.components.support.ktx.android.graphics.drawable.toBitmap
@@ -36,13 +37,14 @@ class AwesomeBarUIView(
                 getString(R.string.awesomebar_clipboard_title)
                 )
             )
+
             view.addProviders(SessionSuggestionProvider(components.core.sessionManager,
-                components.useCases.tabsUseCases.selectTab))
-            view.addProviders(SearchSuggestionProvider(
-                components.search.searchEngineManager.getDefaultSearchEngine(this),
-                components.useCases.searchUseCases.defaultSearch,
-                SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS)
-            )
+                components.useCases.tabsUseCases.selectTab),
+                HistoryStorageSuggestionProvider(components.core.historyStorage,
+                    components.useCases.sessionUseCases.loadUrl),
+                SearchSuggestionProvider(components.search.searchEngineManager.getDefaultSearchEngine(this),
+                    components.useCases.searchUseCases.defaultSearch,
+                    SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS))
 
             view.setOnStopListener { actionEmitter.onNext(AwesomeBarAction.ItemSelected) }
         }
