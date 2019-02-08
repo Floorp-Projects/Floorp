@@ -14,7 +14,6 @@
 #include "mozilla/SharedThreadPool.h"
 #include "mozilla/VideoDecoderManagerChild.h"
 #include "mozilla/XPCOM.h"
-#include "mozJSComponentLoader.h"
 #include "nsXULAppAPI.h"
 
 #ifndef ANDROID
@@ -592,6 +591,7 @@ nsresult ShutdownXPCOM(nsIServiceManager* aServMgr) {
   }
 
   nsresult rv;
+  nsCOMPtr<nsISimpleEnumerator> moduleLoaders;
 
   // Notify observers of xpcom shutting down
   {
@@ -662,7 +662,13 @@ nsresult ShutdownXPCOM(nsIServiceManager* aServMgr) {
     // xpcshell tests replacing the service) modules being unloaded.
     mozilla::InitLateWriteChecks();
 
+    // We save the "xpcom-shutdown-loaders" observers to notify after
+    // the observerservice is gone.
     if (observerService) {
+      mozilla::KillClearOnShutdown(ShutdownPhase::ShutdownLoaders);
+      observerService->EnumerateObservers(NS_XPCOM_SHUTDOWN_LOADERS_OBSERVER_ID,
+                                          getter_AddRefs(moduleLoaders));
+
       observerService->Shutdown();
     }
   }
@@ -692,11 +698,28 @@ nsresult ShutdownXPCOM(nsIServiceManager* aServMgr) {
   free(gGREBinPath);
   gGREBinPath = nullptr;
 
-  // FIXME: This can cause harmless writes from sqlite committing
-  // log files. We have to ignore them before we can move
-  // the mozilla::PoisonWrite call before this point. See bug
-  // 834945 for the details.
-  mozJSComponentLoader::Unload();
+  if (moduleLoaders) {
+    bool more;
+    nsCOMPtr<nsISupports> el;
+    while (NS_SUCCEEDED(moduleLoaders->HasMoreElements(&more)) && more) {
+      moduleLoaders->GetNext(getter_AddRefs(el));
+
+      // Don't worry about weak-reference observers here: there is
+      // no reason for weak-ref observers to register for
+      // xpcom-shutdown-loaders
+
+      // FIXME: This can cause harmless writes from sqlite committing
+      // log files. We have to ignore them before we can move
+      // the mozilla::PoisonWrite call before this point. See bug
+      // 834945 for the details.
+      nsCOMPtr<nsIObserver> obs(do_QueryInterface(el));
+      if (obs) {
+        obs->Observe(nullptr, NS_XPCOM_SHUTDOWN_LOADERS_OBSERVER_ID, nullptr);
+      }
+    }
+
+    moduleLoaders = nullptr;
+  }
 
   // Clear the profiler's JS context before cycle collection. The profiler will
   // notify the JS engine that it can let go of any data it's holding on to for
