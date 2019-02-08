@@ -518,8 +518,8 @@ class SandboxProxyHandler : public js::Wrapper {
   virtual bool getOwnEnumerablePropertyKeys(
       JSContext* cx, JS::Handle<JSObject*> proxy,
       JS::AutoIdVector& props) const override;
-  virtual JSObject* enumerate(JSContext* cx,
-                              JS::Handle<JSObject*> proxy) const override;
+  virtual bool enumerate(JSContext* cx, JS::Handle<JSObject*> proxy,
+                         JS::AutoIdVector& props) const override;
 
  private:
   // Implements the custom getPropertyDescriptor behavior. If the getOwn
@@ -799,9 +799,9 @@ bool SandboxProxyHandler::getOwnEnumerablePropertyKeys(
   return BaseProxyHandler::getOwnEnumerablePropertyKeys(cx, proxy, props);
 }
 
-JSObject* SandboxProxyHandler::enumerate(JSContext* cx,
-                                         JS::Handle<JSObject*> proxy) const {
-  return BaseProxyHandler::enumerate(cx, proxy);
+bool SandboxProxyHandler::enumerate(JSContext* cx, JS::Handle<JSObject*> proxy,
+                                    JS::AutoIdVector& props) const {
+  return BaseProxyHandler::enumerate(cx, proxy, props);
 }
 
 bool xpc::GlobalProperties::Parse(JSContext* cx, JS::HandleObject obj) {

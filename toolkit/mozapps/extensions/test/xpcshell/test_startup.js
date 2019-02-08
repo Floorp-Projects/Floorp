@@ -43,16 +43,6 @@ function check_startup_changes(aType, aIds) {
   Assert.equal(JSON.stringify(ids), JSON.stringify(changes));
 }
 
-function promiseCacheInvalidated() {
-  return new Promise(resolve => {
-    let observer = () => {
-      Services.obs.removeObserver(observer, "startupcache-invalidate");
-      resolve();
-    };
-    Services.obs.addObserver(observer, "startupcache-invalidate");
-  });
-}
-
 function createWebExtension(id, version) {
   return createTempWebExtensionFile({
     manifest: {
@@ -91,7 +81,6 @@ add_task(async function test_scan_profile() {
   }
 
   await Promise.all([
-    promiseCacheInvalidated(),
     promiseRestartManager(),
   ]);
 
@@ -147,7 +136,6 @@ add_task(async function test_modify() {
   await OS.File.remove(OS.Path.join(profileDir.path, `${ID3}.xpi`));
 
   await Promise.all([
-    promiseCacheInvalidated(),
     promiseStartupManager(),
   ]);
 
@@ -203,7 +191,6 @@ add_task(async function test_reveal() {
   xpi.copyTo(profileDir, `${ID4}.xpi`);
 
   await Promise.all([
-    promiseCacheInvalidated(),
     promiseStartupManager(),
   ]);
 
@@ -255,7 +242,6 @@ add_task(async function test_disable_location() {
   Services.prefs.setIntPref("extensions.enabledScopes", AddonManager.SCOPE_SYSTEM);
 
   await Promise.all([
-    promiseCacheInvalidated(),
     promiseRestartManager(),
   ]);
 
@@ -289,7 +275,6 @@ add_task(async function test_disable_location2() {
   Services.prefs.setIntPref("extensions.enabledScopes", AddonManager.SCOPE_USER);
 
   await Promise.all([
-    promiseCacheInvalidated(),
     promiseRestartManager(),
   ]);
 
@@ -330,7 +315,6 @@ add_task(async function test_enable_location() {
   Services.prefs.clearUserPref("extensions.enabledScopes");
 
   await Promise.all([
-    promiseCacheInvalidated(),
     promiseRestartManager(),
   ]);
 
@@ -377,7 +361,6 @@ add_task(async function test_profile_hiding() {
   await OS.File.remove(OS.Path.join(userDir.path, `${ID2}.xpi`));
 
   await Promise.all([
-    promiseCacheInvalidated(),
     promiseStartupManager(),
   ]);
 
@@ -420,7 +403,6 @@ add_task(async function test_disable3() {
   Services.prefs.setIntPref("extensions.enabledScopes", 0);
 
   await Promise.all([
-    promiseCacheInvalidated(),
     await promiseRestartManager(),
   ]);
 
@@ -463,7 +445,6 @@ add_task(async function test_reval() {
   xpi.copyTo(profileDir, `${ID2}.xpi`);
 
   await Promise.all([
-    promiseCacheInvalidated(),
     promiseStartupManager(),
   ]);
 
@@ -509,7 +490,6 @@ add_task(async function test_move() {
   xpi.copyTo(userDir, `${ID1}.xpi`);
 
   await Promise.all([
-    promiseCacheInvalidated(),
     promiseStartupManager(),
   ]);
 
@@ -550,7 +530,6 @@ add_task(async function test_remove() {
   await OS.File.remove(OS.Path.join(profileDir.path, `${ID2}.xpi`));
 
   await Promise.all([
-    promiseCacheInvalidated(),
     promiseStartupManager(),
   ]);
 

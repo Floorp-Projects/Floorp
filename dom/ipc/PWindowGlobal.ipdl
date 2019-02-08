@@ -26,6 +26,9 @@ async protocol PWindowGlobal
 child:
   async __delete__();
 
+both:
+  async AsyncMessage(nsString aActorName, nsString aMessage, ClonedMessageData aData);
+
 parent:
   /// Update the URI of the document in this WindowGlobal.
   async UpdateDocumentURI(nsIURI aUri);

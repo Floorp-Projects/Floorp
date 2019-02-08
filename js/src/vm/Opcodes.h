@@ -753,7 +753,7 @@
      *   Operands:
      *   Stack: iter => iter, val
      */ \
-    MACRO(JSOP_MOREITER, 76, "moreiter", NULL, 1, 1, 2, JOF_BYTE|JOF_IC) \
+    MACRO(JSOP_MOREITER, 76, "moreiter", NULL, 1, 1, 2, JOF_BYTE) \
     /*
      * Pushes a boolean indicating whether the value on top of the stack is
      * MagicValue(JS_NO_ITER_VALUE).
@@ -773,7 +773,7 @@
      *   Operands:
      *   Stack: iter =>
      */ \
-    MACRO(JSOP_ENDITER, 78, "enditer", NULL, 1, 1, 0, JOF_BYTE|JOF_IC) \
+    MACRO(JSOP_ENDITER, 78, "enditer", NULL, 1, 1, 0, JOF_BYTE) \
     /*
      * Invokes 'callee' with 'this' and 'args', pushes return value onto the
      * stack.

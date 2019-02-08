@@ -62,6 +62,10 @@ class WindowGlobalParent final : public nsISupports,
   // |nullptr| if the actor has been torn down, or is in-process.
   already_AddRefed<TabParent> GetTabParent();
 
+  void HandleAsyncMessage(const nsString& aActorName,
+                          const nsString& aMessageName,
+                          ipc::StructuredCloneData& aData);
+
   // The principal of this WindowGlobal. This value will not change over the
   // lifetime of the WindowGlobal object, even to reflect changes in
   // |document.domain|.
@@ -102,6 +106,9 @@ class WindowGlobalParent final : public nsISupports,
   mozilla::ipc::IPCResult RecvUpdateDocumentURI(nsIURI* aURI);
   mozilla::ipc::IPCResult RecvBecomeCurrentWindowGlobal();
   mozilla::ipc::IPCResult RecvDestroy();
+  mozilla::ipc::IPCResult RecvAsyncMessage(const nsString& aActorName,
+                                           const nsString& aMessageName,
+                                           const ClonedMessageData& aData);
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 

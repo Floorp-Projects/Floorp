@@ -268,17 +268,14 @@ bool BaseProxyHandler::getOwnEnumerablePropertyKeys(JSContext* cx,
   return true;
 }
 
-JSObject* BaseProxyHandler::enumerate(JSContext* cx, HandleObject proxy) const {
+bool BaseProxyHandler::enumerate(JSContext* cx, HandleObject proxy,
+                                 AutoIdVector& props) const {
   assertEnteredPolicy(cx, proxy, JSID_VOID, ENUMERATE);
 
   // GetPropertyKeys will invoke getOwnEnumerablePropertyKeys along the proto
   // chain for us.
-  AutoIdVector props(cx);
-  if (!GetPropertyKeys(cx, proxy, 0, &props)) {
-    return nullptr;
-  }
-
-  return EnumeratedIdVectorToIterator(cx, proxy, props);
+  MOZ_ASSERT(props.empty());
+  return GetPropertyKeys(cx, proxy, 0, &props);
 }
 
 bool BaseProxyHandler::call(JSContext* cx, HandleObject proxy,

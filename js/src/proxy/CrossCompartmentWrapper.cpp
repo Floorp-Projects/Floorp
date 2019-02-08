@@ -211,68 +211,10 @@ bool CrossCompartmentWrapper::getOwnEnumerablePropertyKeys(
          MarkAtoms(cx, props));
 }
 
-/*
- * We can reify non-escaping iterator objects instead of having to wrap them.
- * This allows fast iteration over objects across a compartment boundary.
- */
-static bool CanReify(HandleObject obj) {
-  return obj->is<PropertyIteratorObject>();
-}
-
-static JSObject* Reify(JSContext* cx, JS::Compartment* origin,
-                       HandleObject iter) {
-  // Ensure iterator gets closed.
-  auto autoCloseIterator = mozilla::MakeScopeExit([=] { CloseIterator(iter); });
-
-  NativeIterator* ni = iter->as<PropertyIteratorObject>().getNativeIterator();
-  RootedObject obj(cx, ni->objectBeingIterated());
-
-  // Wrap iteratee.
-  if (!origin->wrap(cx, &obj)) {
-    return nullptr;
-  }
-
-  // Wrap the elements in the iterator's snapshot.
-  size_t length = ni->numKeys();
-  AutoIdVector keys(cx);
-  if (length > 0) {
-    if (!keys.reserve(length)) {
-      return nullptr;
-    }
-    RootedId id(cx);
-    RootedValue v(cx);
-    for (size_t i = 0; i < length; ++i) {
-      v.setString(ni->propertiesBegin()[i]);
-      if (!ValueToId<CanGC>(cx, v, &id)) {
-        return nullptr;
-      }
-      cx->markId(id);
-      keys.infallibleAppend(id);
-    }
-  }
-
-  // Return iterator in current compartment.
-  return EnumeratedIdVectorToIterator(cx, obj, keys);
-}
-
-JSObject* CrossCompartmentWrapper::enumerate(JSContext* cx,
-                                             HandleObject wrapper) const {
-  RootedObject res(cx);
-  {
-    AutoRealm call(cx, wrappedObject(wrapper));
-    res = Wrapper::enumerate(cx, wrapper);
-    if (!res) {
-      return nullptr;
-    }
-  }
-
-  if (CanReify(res)) {
-    return Reify(cx, cx->compartment(), res);
-  }
-  if (!cx->compartment()->wrap(cx, &res)) {
-    return nullptr;
-  }
-  return res;
+bool CrossCompartmentWrapper::enumerate(JSContext* cx, HandleObject wrapper,
+                                        AutoIdVector& props) const {
+  PIERCE(cx, wrapper, NOTHING, Wrapper::enumerate(cx, wrapper, props),
+         MarkAtoms(cx, props));
 }
 
 bool CrossCompartmentWrapper::call(JSContext* cx, HandleObject wrapper,

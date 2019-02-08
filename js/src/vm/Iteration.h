@@ -329,6 +329,10 @@ class PropertyIteratorObject : public NativeObject {
  public:
   static const Class class_;
 
+  // We don't use the fixed slot but the JITs use this constant to load the
+  // private value (the NativeIterator*).
+  static const uint32_t NUM_FIXED_SLOTS = 1;
+
   NativeIterator* getNativeIterator() const {
     return static_cast<js::NativeIterator*>(getPrivate());
   }
@@ -365,11 +369,10 @@ class RegExpStringIteratorObject : public NativeObject {
 RegExpStringIteratorObject* NewRegExpStringIteratorObject(
     JSContext* cx, NewObjectKind newKind = GenericObject);
 
-JSObject* GetIterator(JSContext* cx, HandleObject obj);
+MOZ_MUST_USE bool EnumerateProperties(JSContext* cx, HandleObject obj,
+                                      AutoIdVector& props);
 
 PropertyIteratorObject* LookupInIteratorCache(JSContext* cx, HandleObject obj);
-
-JSObject* NewEmptyPropertyIterator(JSContext* cx);
 
 JSObject* ValueToIterator(JSContext* cx, HandleValue vp);
 
@@ -388,8 +391,11 @@ extern bool SuppressDeletedElement(JSContext* cx, HandleObject obj,
  * IteratorMore() returns the next iteration value. If no value is available,
  * MagicValue(JS_NO_ITER_VALUE) is returned.
  */
-extern bool IteratorMore(JSContext* cx, HandleObject iterobj,
-                         MutableHandleValue rval);
+inline Value IteratorMore(JSObject* iterobj) {
+  NativeIterator* ni =
+      iterobj->as<PropertyIteratorObject>().getNativeIterator();
+  return ni->nextIteratedValueAndAdvance();
+}
 
 /*
  * Create an object of the form { value: VALUE, done: DONE }.

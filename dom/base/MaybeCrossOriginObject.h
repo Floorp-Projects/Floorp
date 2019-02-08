@@ -315,7 +315,8 @@ class MaybeCrossOriginObject : public Base,
   /**
    * Spidermonkey-internal hook for enumerating objects.
    */
-  JSObject* enumerate(JSContext* cx, JS::Handle<JSObject*> proxy) const final;
+  bool enumerate(JSContext* cx, JS::Handle<JSObject*> proxy,
+                 JS::AutoIdVector& props) const final;
 
   /**
    * Spidermonkey-internal hook used by Object.prototype.toString.  Subclasses

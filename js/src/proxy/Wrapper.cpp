@@ -75,13 +75,13 @@ bool ForwardingProxyHandler::delete_(JSContext* cx, HandleObject proxy,
   return DeleteProperty(cx, target, id, result);
 }
 
-JSObject* ForwardingProxyHandler::enumerate(JSContext* cx,
-                                            HandleObject proxy) const {
+bool ForwardingProxyHandler::enumerate(JSContext* cx, HandleObject proxy,
+                                       AutoIdVector& props) const {
   assertEnteredPolicy(cx, proxy, JSID_VOID, ENUMERATE);
   MOZ_ASSERT(
       !hasPrototype());  // Should never be called if there's a prototype.
   RootedObject target(cx, proxy->as<ProxyObject>().target());
-  return GetIterator(cx, target);
+  return EnumerateProperties(cx, target, props);
 }
 
 bool ForwardingProxyHandler::getPrototype(JSContext* cx, HandleObject proxy,

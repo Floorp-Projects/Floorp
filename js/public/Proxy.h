@@ -337,7 +337,8 @@ class JS_FRIEND_API BaseProxyHandler {
                          const CallArgs& args) const;
 
   /* SpiderMonkey extensions. */
-  virtual JSObject* enumerate(JSContext* cx, HandleObject proxy) const;
+  virtual bool enumerate(JSContext* cx, HandleObject proxy,
+                         AutoIdVector& props) const;
   virtual bool hasOwn(JSContext* cx, HandleObject proxy, HandleId id,
                       bool* bp) const;
   virtual bool getOwnEnumerablePropertyKeys(JSContext* cx, HandleObject proxy,

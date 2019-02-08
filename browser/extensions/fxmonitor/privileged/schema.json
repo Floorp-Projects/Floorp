@@ -1,0 +1,13 @@
+[
+  {
+    "namespace": "fxmonitor",
+    "functions": [
+      {
+        "name": "start",
+        "type": "function",
+        "async": true,
+        "parameters": []
+      }
+    ]
+  }
+]
