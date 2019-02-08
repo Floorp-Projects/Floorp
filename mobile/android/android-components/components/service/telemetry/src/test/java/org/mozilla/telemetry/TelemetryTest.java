@@ -483,6 +483,81 @@ public class TelemetryTest {
     }
 
     @Test
+    public void testPocketEventsAreQueuedToPocketPing() throws Exception {
+        final MockWebServer server = new MockWebServer();
+        server.enqueue(new MockResponse().setBody("OK"));
+
+        final TelemetryConfiguration configuration = new TelemetryConfiguration(RuntimeEnvironment.application)
+                .setAppName("TelemetryTest")
+                .setAppVersion("13.1.3")
+                .setUpdateChannel("test")
+                .setBuildId("789")
+                .setServerEndpoint("http://" + server.getHostName() + ":" + server.getPort())
+                .setUserAgent(TEST_USER_AGENT);
+
+        final TelemetryPingSerializer serializer = new JSONPingSerializer();
+        final FileTelemetryStorage storage = new FileTelemetryStorage(configuration, serializer);
+
+        final TelemetryClient client = spy(new TelemetryClient(httpClient));
+        final TelemetryScheduler scheduler = new JobSchedulerTelemetryScheduler();
+
+        final TelemetryPocketEventPingBuilder pocketPingBuilder = spy(new TelemetryPocketEventPingBuilder(configuration));
+        doReturn("ffffffff-0000-0000-ffff-ffffffffffff").when(pocketPingBuilder).generateDocumentId();
+
+        final TelemetryMobileEventPingBuilder eventPingBuilder = spy(new TelemetryMobileEventPingBuilder(configuration));
+        doReturn("ffffffff-0000-0000-ffff-ffffffffffff").when(eventPingBuilder).generateDocumentId();
+
+        final Telemetry telemetry = new Telemetry(configuration, storage, client, scheduler)
+                .addPingBuilder(eventPingBuilder).addPingBuilder(pocketPingBuilder);
+
+        TelemetryHolder.set(telemetry);
+
+        {
+            final TelemetryMobileEventPingBuilder moPingBuilder =
+                    (TelemetryMobileEventPingBuilder) telemetry.getPingBuilder(TelemetryMobileEventPingBuilder.TYPE);
+
+            assertNotNull(moPingBuilder);
+
+            pocketPingBuilder.getEventsMeasurement()
+                    .add(TelemetryEvent.create("action", "type", "search_bar"))
+                    .add(TelemetryEvent.create("action", "type_query", "search_bar"))
+                    .add(TelemetryEvent.create("action", "click", "erase_button"));
+
+        }
+
+        {
+            final TelemetryPocketEventPingBuilder poPingBuilder =
+                    (TelemetryPocketEventPingBuilder) telemetry.getPingBuilder(TelemetryPocketEventPingBuilder.TYPE);
+
+            assertNotNull(poPingBuilder);
+
+            pocketPingBuilder.getEventsMeasurement()
+                    .add(TelemetryEvent.create("action", "click", "video_id"))
+                    .add(TelemetryEvent.create("action", "click", "video_id"))
+                    .add(TelemetryEvent.create("action", "impression", "video_id"));
+        }
+
+        telemetry.queuePing(TelemetryPocketEventPingBuilder.TYPE);
+        telemetry.queuePing(TelemetryMobileEventPingBuilder.TYPE);
+        telemetry.scheduleUpload();
+
+        TestUtils.waitForExecutor(telemetry);
+
+        assertJobIsScheduled();
+
+        executePendingJob(TelemetryPocketEventPingBuilder.TYPE);
+
+        final RecordedRequest pocketRequest = server.takeRequest();
+
+        final JSONObject pocketObject = new JSONObject(pocketRequest.getBody().readUtf8());
+
+        final JSONArray pocketEvents = pocketObject.getJSONArray("events");
+        assertEquals(3, pocketEvents.length());
+
+        server.shutdown();
+    }
+
+    @Test
     public void testPingIsQueuedIfEventLimitIsReached() throws Exception {
         final TelemetryConfiguration configuration = new TelemetryConfiguration(RuntimeEnvironment.application);
 
