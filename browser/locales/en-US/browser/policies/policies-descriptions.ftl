@@ -84,6 +84,8 @@ policy-EnableTrackingProtection = Enable or disable Content Blocking and optiona
 # English or translate them as verbs.
 policy-Extensions = Install, uninstall or lock extensions. The Install option takes URLs or paths as parameters. The Uninstall and Locked options take extension IDs.
 
+policy-ExtensionUpdate = Enable or disable automatic extension updates.
+
 policy-FlashPlugin = Allow or deny usage of the Flash plugin.
 
 policy-HardwareAcceleration = If false, turn off hardware acceleration.
