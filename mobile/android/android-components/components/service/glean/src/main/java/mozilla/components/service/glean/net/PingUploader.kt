@@ -12,7 +12,7 @@ import java.util.TimeZone
 /**
  * The interface defining how to send pings.
  */
-interface PingUploader {
+internal interface PingUploader {
     fun upload(path: String, data: String): Boolean
 
     fun createDateHeaderValue(): String {

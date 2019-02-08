@@ -36,7 +36,7 @@ internal typealias ScalarRecordingCombiner<T> = (currentValue: T?, newValue: T) 
  * A base class for 'scalar' like metrics. This allows sharing the common
  * store managing and lifetime behaviours.
  */
-abstract class GenericScalarStorageEngine<ScalarType> : StorageEngine {
+internal abstract class GenericScalarStorageEngine<ScalarType> : StorageEngine {
     override lateinit var applicationContext: Context
 
     // Let derived class define a logger so that they can provide a proper name,

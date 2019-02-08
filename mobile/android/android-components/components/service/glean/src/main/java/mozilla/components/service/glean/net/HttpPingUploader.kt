@@ -21,7 +21,7 @@ import org.json.JSONObject
  * A simple ping Uploader, which implements a "send once" policy, never
  * storing or attempting to send the ping again.
  */
-class HttpPingUploader(configuration: Configuration) : PingUploader {
+internal class HttpPingUploader(configuration: Configuration) : PingUploader {
     private val config = configuration
     private val logger = Logger("glean/HttpPingUploader")
 
