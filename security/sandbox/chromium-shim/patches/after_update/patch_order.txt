@@ -5,3 +5,4 @@ consult_PermissionsService_for_file_access.patch
 allow_flash_temporary_files.patch
 use_STARTF_FORCEOFFFEEDBACK_flag.patch
 remove_dynamic_GetUserDefaultLocaleName_call.patch
+arm64_set_LoaderThreads.patch

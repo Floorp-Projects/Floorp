@@ -1,0 +1,122 @@
+# HG changeset patch
+# User Bob Owen <bobowencode@gmail.com>
+# Date 1549645620 0
+#      Fri Feb 08 17:07:00 2019 +0000
+# Node ID fb5e7c1090a7ddfde22fd2fb5f8a957ccc61fa64
+# Parent  5ef34aa8c8918649528048dd60907862a4355e29
+Bug 1515088 Part 2: Set LoaderThreads to 1 in the RTL_USER_PROCESS_PARAMETERS structure on child process start-up. r=aklotz
+
+diff --git a/security/sandbox/chromium/sandbox/win/src/nt_internals.h b/security/sandbox/chromium/sandbox/win/src/nt_internals.h
+--- a/security/sandbox/chromium/sandbox/win/src/nt_internals.h
++++ b/security/sandbox/chromium/sandbox/win/src/nt_internals.h
+@@ -312,16 +312,18 @@ typedef enum _PROCESSINFOCLASS {
+ // Partial definition only.
+ typedef struct _PEB {
+   BYTE InheritedAddressSpace;
+   BYTE ReadImageFileExecOptions;
+   BYTE BeingDebugged;
+   BYTE SpareBool;
+   PVOID Mutant;
+   PVOID ImageBaseAddress;
++  PVOID Ldr;
++  PVOID ProcessParameters;
+ } PEB, *PPEB;
+ 
+ typedef LONG KPRIORITY;
+ 
+ typedef struct _PROCESS_BASIC_INFORMATION {
+   union {
+     NTSTATUS ExitStatus;
+     PVOID padding_for_x64_0;
+diff --git a/security/sandbox/chromium/sandbox/win/src/win_utils.cc b/security/sandbox/chromium/sandbox/win/src/win_utils.cc
+--- a/security/sandbox/chromium/sandbox/win/src/win_utils.cc
++++ b/security/sandbox/chromium/sandbox/win/src/win_utils.cc
+@@ -453,21 +453,22 @@ bool GetNtPathFromWin32Path(const base::
+   if (file == INVALID_HANDLE_VALUE)
+     return false;
+   bool rv = GetPathFromHandle(file, nt_path);
+   ::CloseHandle(file);
+   return rv;
+ }
+ 
+ bool WriteProtectedChildMemory(HANDLE child_process, void* address,
+-                               const void* buffer, size_t length) {
++                               const void* buffer, size_t length,
++                               DWORD writeProtection) {
+   // First, remove the protections.
+   DWORD old_protection;
+   if (!::VirtualProtectEx(child_process, address, length,
+-                          PAGE_WRITECOPY, &old_protection))
++                          writeProtection, &old_protection))
+     return false;
+ 
+   SIZE_T written;
+   bool ok = ::WriteProcessMemory(child_process, address, buffer, length,
+                                  &written) && (length == written);
+ 
+   // Always attempt to restore the original protection.
+   if (!::VirtualProtectEx(child_process, address, length,
+@@ -511,16 +512,40 @@ void* GetProcessBaseAddress(HANDLE proce
+                            &bytes_read) ||
+       (sizeof(magic) != bytes_read)) {
+     return nullptr;
+   }
+ 
+   if (magic[0] != 'M' || magic[1] != 'Z')
+     return nullptr;
+ 
++#if defined(_M_ARM64)
++  // Windows 10 on ARM64 has multi-threaded DLL loading that does not work with
++  // the sandbox. (On x86 this gets disabled by hook detection code that was not
++  // ported to ARM64). This overwrites the LoaderThreads value in the process
++  // parameters part of the PEB, if it is set to the default of 0 (which
++  // actually means it defaults to 4 loading threads). This is an undocumented
++  // field so there is a, probably small, risk that it might change or move in
++  // the future. In order to slightly guard against that we only update if the
++  // value is currently 0.
++  uint8_t* processParameters = static_cast<uint8_t*>(peb.ProcessParameters);
++  const uint32_t loaderThreadsOffset = 0x40c;
++  uint32_t maxLoaderThreads = 0;
++  BOOL memoryRead = ::ReadProcessMemory(
++      process, processParameters + loaderThreadsOffset, &maxLoaderThreads,
++      sizeof(maxLoaderThreads), &bytes_read);
++  if (memoryRead && (sizeof(maxLoaderThreads) == bytes_read) &&
++      (maxLoaderThreads == 0)) {
++    maxLoaderThreads = 1;
++    WriteProtectedChildMemory(process, processParameters + loaderThreadsOffset,
++                              &maxLoaderThreads, sizeof(maxLoaderThreads),
++                              PAGE_READWRITE);
++  }
++#endif
++
+   return base_address;
+ }
+ 
+ };  // namespace sandbox
+ 
+ void ResolveNTFunctionPtr(const char* name, void* ptr) {
+   static volatile HMODULE ntdll = NULL;
+ 
+diff --git a/security/sandbox/chromium/sandbox/win/src/win_utils.h b/security/sandbox/chromium/sandbox/win/src/win_utils.h
+--- a/security/sandbox/chromium/sandbox/win/src/win_utils.h
++++ b/security/sandbox/chromium/sandbox/win/src/win_utils.h
+@@ -102,17 +102,18 @@ HKEY GetReservedKeyFromName(const base::
+ // \\registry\\machine\\software\\microsoft. Returns false if the path
+ // cannot be resolved.
+ bool ResolveRegistryName(base::string16 name, base::string16* resolved_name);
+ 
+ // Writes |length| bytes from the provided |buffer| into the address space of
+ // |child_process|, at the specified |address|, preserving the original write
+ // protection attributes. Returns true on success.
+ bool WriteProtectedChildMemory(HANDLE child_process, void* address,
+-                               const void* buffer, size_t length);
++                               const void* buffer, size_t length,
++                               DWORD writeProtection = PAGE_WRITECOPY);
+ 
+ // Returns true if the provided path points to a pipe.
+ bool IsPipe(const base::string16& path);
+ 
+ // Converts a NTSTATUS code to a Win32 error code.
+ DWORD GetLastErrorFromNtStatus(NTSTATUS status);
+ 
+ // Returns the address of the main exe module in memory taking in account

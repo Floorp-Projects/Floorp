@@ -107,7 +107,8 @@ bool ResolveRegistryName(base::string16 name, base::string16* resolved_name);
 // |child_process|, at the specified |address|, preserving the original write
 // protection attributes. Returns true on success.
 bool WriteProtectedChildMemory(HANDLE child_process, void* address,
-                               const void* buffer, size_t length);
+                               const void* buffer, size_t length,
+                               DWORD writeProtection = PAGE_WRITECOPY);
 
 // Returns true if the provided path points to a pipe.
 bool IsPipe(const base::string16& path);
