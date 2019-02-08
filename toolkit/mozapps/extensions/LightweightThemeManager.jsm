@@ -7,18 +7,10 @@
 var EXPORTED_SYMBOLS = ["LightweightThemeManager"];
 
 const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {AddonManager, AddonManagerPrivate} = ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
-/* globals AddonManagerPrivate*/
+const {AddonManager} = ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const ID_SUFFIX              = "@personas.mozilla.org";
-const ADDON_TYPE             = "theme";
-const ADDON_TYPE_WEBEXT      = "webextension-theme";
-
-const URI_EXTENSION_STRINGS  = "chrome://mozapps/locale/extensions/extensions.properties";
-
 const DEFAULT_THEME_ID = "default-theme@mozilla.org";
-const DEFAULT_MAX_USED_THEMES_COUNT = 30;
 
 const MAX_PREVIEW_SECONDS = 30;
 
@@ -41,29 +33,9 @@ XPCOMUtils.defineLazyGetter(this, "_prefs", () => {
   return Services.prefs.getBranch("lightweightThemes.");
 });
 
-Object.defineProperty(this, "_maxUsedThemes", {
-  get() {
-    delete this._maxUsedThemes;
-    this._maxUsedThemes = _prefs.getIntPref("maxUsedThemes", DEFAULT_MAX_USED_THEMES_COUNT);
-    return this._maxUsedThemes;
-  },
-
-  set(val) {
-    delete this._maxUsedThemes;
-    return this._maxUsedThemes = val;
-  },
-  configurable: true,
-});
-
 XPCOMUtils.defineLazyPreferenceGetter(this, "requireSecureUpdates",
                                       "extensions.checkUpdateSecurity", true);
 
-
-// Holds the ID of the theme being enabled or disabled while sending out the
-// events so cached AddonWrapper instances can return correct values for
-// permissions and pendingOperations
-var _themeIDBeingEnabled = null;
-var _themeIDBeingDisabled = null;
 
 // Holds optional fallback theme data that will be returned when no data for an
 // active theme can be found. This the case for WebExtension Themes, for example.
@@ -77,10 +49,6 @@ var _defaultThemeIsInDarkMode = false;
 var _defaultDarkThemeID = null;
 
 var LightweightThemeManager = {
-  get name() {
-    return "LightweightThemeManager";
-  },
-
   set fallbackThemeData(data) {
     if (data && Object.getOwnPropertyNames(data).length) {
       _fallbackThemeData = Object.assign({}, data);
@@ -194,17 +162,12 @@ var LightweightThemeManager = {
     if (!theme || LightweightThemeManager._builtInThemes.has(theme.id))
       return;
 
-    let wrapper = new AddonWrapper(theme);
-    AddonManagerPrivate.callAddonListeners("onUninstalling", wrapper, false);
-
     var currentTheme = this.currentTheme;
     if (currentTheme && currentTheme.id == aId) {
       this.themeChanged(null);
-      AddonManagerPrivate.notifyAddonChanged(null, ADDON_TYPE, false);
     }
 
     _updateUsedThemes(_usedThemesExceptId(aId));
-    AddonManagerPrivate.callAddonListeners("onUninstalled", wrapper);
   },
 
   addBuiltInTheme(theme, { useInDarkMode } = {}) {
@@ -426,71 +389,6 @@ var LightweightThemeManager = {
   },
 
   /**
-   * Starts the Addons provider and enables the new lightweight theme if
-   * necessary.
-   */
-  startup() {
-    _prefs.addObserver("", _prefObserver);
-  },
-
-  /**
-   * Shuts down the provider.
-   */
-  shutdown() {
-    _prefs.removeObserver("", _prefObserver);
-  },
-
-  /**
-   * Called when a new add-on has been enabled when only one add-on of that type
-   * can be enabled.
-   *
-   * @param  aId
-   *         The ID of the newly enabled add-on
-   * @param  aType
-   *         The type of the newly enabled add-on
-   */
-  addonChanged(aId, aType) {
-    if (aType != ADDON_TYPE && aType != ADDON_TYPE_WEBEXT)
-      return;
-
-    let id = _getInternalID(aId);
-    let current = this.currentTheme;
-
-    if (current && id == current.id) {
-      AddonManagerPrivate.callAddonListeners("onOperationCancelled",
-                                             new AddonWrapper(current));
-      return;
-    }
-
-    if (current) {
-      if (current.id == id || (!aId && current.id == DEFAULT_THEME_ID))
-        return;
-      _themeIDBeingDisabled = current.id;
-      let wrapper = new AddonWrapper(current);
-
-      AddonManagerPrivate.callAddonListeners("onDisabling", wrapper, false);
-      _prefs.setCharPref("selectedThemeID", "");
-      AddonManagerPrivate.callAddonListeners("onDisabled", wrapper);
-      _themeIDBeingDisabled = null;
-    }
-
-    if (id) {
-      let theme = this.getUsedTheme(id);
-      // WebExtension themes have an ID, but no LWT wrapper, so bail out here.
-      if (!theme)
-        return;
-      _themeIDBeingEnabled = id;
-      let wrapper = new AddonWrapper(theme);
-
-      AddonManagerPrivate.callAddonListeners("onEnabling", wrapper, false);
-      this.themeChanged(theme);
-      AddonManagerPrivate.callAddonListeners("onEnabled", wrapper);
-
-      _themeIDBeingEnabled = null;
-    }
-  },
-
-  /**
    * Called when the system has either switched to, or switched away from a dark
    * theme.
    *
@@ -541,245 +439,7 @@ var LightweightThemeManager = {
       this.systemThemeChanged(aEvent);
     }
   },
-
-  /**
-   * Called to get an Addon with a particular ID.
-   *
-   * @param  aId
-   *         The ID of the add-on to retrieve
-   */
-  async getAddonByID(aId) {
-    let id = _getInternalID(aId);
-    if (!id) {
-      return null;
-     }
-
-    let theme = this.getUsedTheme(id);
-    if (!theme) {
-      return null;
-    }
-
-    return new AddonWrapper(theme);
-  },
-
-  /**
-   * Called to get Addons of a particular type.
-   *
-   * @param  aTypes
-   *         An array of types to fetch. Can be null to get all types.
-   */
-  getAddonsByTypes(aTypes) {
-    if (aTypes && !aTypes.includes(ADDON_TYPE)) {
-      return [];
-    }
-
-    return this.usedThemes.map(a => new AddonWrapper(a));
-  },
 };
-
-const wrapperMap = new WeakMap();
-let themeFor = wrapper => wrapperMap.get(wrapper);
-
-/**
- * The AddonWrapper wraps lightweight theme to provide the data visible to
- * consumers of the AddonManager API.
- */
-function AddonWrapper(aTheme) {
-  wrapperMap.set(this, aTheme);
-}
-
-AddonWrapper.prototype = {
-  get id() {
-    return _getExternalID(themeFor(this).id);
-  },
-
-  get type() {
-    return ADDON_TYPE;
-  },
-
-  get isActive() {
-    let current = LightweightThemeManager.currentTheme;
-    if (current)
-      return themeFor(this).id == current.id;
-    return false;
-  },
-
-  get name() {
-    return themeFor(this).name;
-  },
-
-  get version() {
-    let theme = themeFor(this);
-    return "version" in theme ? theme.version : "";
-  },
-
-  get creator() {
-    let theme = themeFor(this);
-    return "author" in theme ? new AddonManagerPrivate.AddonAuthor(theme.author) : null;
-  },
-
-  get screenshots() {
-    let url = themeFor(this).previewURL;
-    return [new AddonManagerPrivate.AddonScreenshot(url)];
-  },
-
-  get pendingOperations() {
-    let pending = AddonManager.PENDING_NONE;
-    if (this.isActive == this.userDisabled)
-      pending |= this.isActive ? AddonManager.PENDING_DISABLE : AddonManager.PENDING_ENABLE;
-    return pending;
-  },
-
-  get operationsRequiringRestart() {
-    return AddonManager.OP_NEEDS_RESTART_NONE;
-  },
-
-  get permissions() {
-    let permissions = 0;
-
-    // Do not allow uninstall of builtIn themes.
-    if (!LightweightThemeManager._builtInThemes.has(themeFor(this).id))
-      permissions = AddonManager.PERM_CAN_UNINSTALL;
-    if (this.userDisabled)
-      permissions |= AddonManager.PERM_CAN_ENABLE;
-    else if (themeFor(this).id != DEFAULT_THEME_ID)
-      permissions |= AddonManager.PERM_CAN_DISABLE;
-    return permissions;
-  },
-
-  get userDisabled() {
-    let id = themeFor(this).id;
-    if (_themeIDBeingEnabled == id)
-      return false;
-    if (_themeIDBeingDisabled == id)
-      return true;
-
-    let current = LightweightThemeManager.currentTheme;
-    return !current || current.id != id;
-  },
-
-  set userDisabled(val) {
-    this.setUserDisabled(val);
-  },
-
-  async setUserDisabled(val) {
-    if (val == this.userDisabled)
-      return;
-
-    await LightweightThemeManager.setCurrentTheme(val ? null : themeFor(this));
-  },
-
-  enable() {
-    return this.setUserDisabled(false);
-  },
-  disable() {
-    return this.setUserDisabled(true);
-  },
-
-  // Lightweight themes are never disabled by the application
-  get appDisabled() {
-    return false;
-  },
-
-  // Lightweight themes are always compatible
-  get isCompatible() {
-    return true;
-  },
-
-  get isPlatformCompatible() {
-    return true;
-  },
-
-  get scope() {
-    return AddonManager.SCOPE_PROFILE;
-  },
-
-  get foreignInstall() {
-    return false;
-  },
-
-  get installTelemetryInfo() {
-    if (LightweightThemeManager.isBuiltIn(themeFor(this))) {
-      return {source: "builtin-theme"};
-    }
-
-    return {source: "lightweight-theme"};
-  },
-
-  uninstall() {
-    LightweightThemeManager.forgetUsedTheme(themeFor(this).id);
-  },
-
-  cancelUninstall() {
-    throw new Error("Theme is not marked to be uninstalled");
-  },
-
-  findUpdates(listener, reason, appVersion, platformVersion) {
-    AddonManagerPrivate.callNoUpdateListeners(this, listener, reason, appVersion, platformVersion);
-  },
-
-  // Lightweight themes are always compatible
-  isCompatibleWith(appVersion, platformVersion) {
-    return true;
-  },
-
-  // Lightweight themes are always securely updated
-  get providesUpdatesSecurely() {
-    return true;
-  },
-
-  // Lightweight themes are never blocklisted
-  get blocklistState() {
-    return Ci.nsIBlocklistService.STATE_NOT_BLOCKED;
-  },
-};
-
-["description", "homepageURL", "iconURL"].forEach(function(prop) {
-  Object.defineProperty(AddonWrapper.prototype, prop, {
-    get() {
-      let theme = themeFor(this);
-      return prop in theme ? theme[prop] : null;
-    },
-    enumarable: true,
-  });
-});
-
-["installDate", "updateDate"].forEach(function(prop) {
-  Object.defineProperty(AddonWrapper.prototype, prop, {
-    get() {
-      let theme = themeFor(this);
-      return prop in theme ? new Date(theme[prop]) : null;
-    },
-    enumarable: true,
-  });
-});
-
-/**
- * Converts the ID used by the public AddonManager API to an lightweight theme
- * ID.
- *
- * @param   id
- *          The ID to be converted
- *
- * @return  the lightweight theme ID or null if the ID was not for a lightweight
- *          theme.
- */
-function _getInternalID(id) {
-  if (!id)
-    return null;
-  if (LightweightThemeManager._builtInThemes.has(id))
-    return id;
-  let len = id.length - ID_SUFFIX.length;
-  if (len > 0 && id.substring(len) == ID_SUFFIX)
-    return id.substring(0, len);
-  return null;
-}
-
-function _getExternalID(id) {
-  if (LightweightThemeManager._builtInThemes.has(id))
-    return id;
-  return id + ID_SUFFIX;
-}
 
 function _setCurrentTheme(aData, aLocal) {
   aData = _sanitizeTheme(aData, null, aLocal);
@@ -790,8 +450,6 @@ function _setCurrentTheme(aData, aLocal) {
     Services.obs.notifyObservers(cancel, "lightweight-theme-change-requested",
                                  JSON.stringify(aData));
 
-    let notify = true;
-
     if (aData) {
       let theme = LightweightThemeManager.getUsedTheme(aData.id);
       let isInstall = !theme || theme.version != aData.version;
@@ -801,12 +459,6 @@ function _setCurrentTheme(aData, aLocal) {
           aData.installDate = theme.installDate;
         else
           aData.installDate = aData.updateDate;
-
-        var oldWrapper = theme ? new AddonWrapper(theme) : null;
-        var wrapper = new AddonWrapper(aData);
-        AddonManagerPrivate.callInstallListeners("onExternalInstall", null,
-                                                 wrapper, oldWrapper, false);
-        AddonManagerPrivate.callAddonListeners("onInstalling", wrapper, false);
       }
 
       let current = LightweightThemeManager.currentTheme;
@@ -814,24 +466,13 @@ function _setCurrentTheme(aData, aLocal) {
       if (current && current.id != aData.id) {
         usedThemes.splice(1, 0, aData);
       } else {
-        if (current && current.id == aData.id) {
-          notify = false;
-        }
         usedThemes.unshift(aData);
       }
       _updateUsedThemes(usedThemes);
-
-      if (isInstall)
-        AddonManagerPrivate.callAddonListeners("onInstalled", wrapper);
     }
 
     if (cancel.data)
       return null;
-
-    if (notify) {
-      await AddonManagerPrivate.notifyAddonChanged(aData ? _getExternalID(aData.id) : null,
-                                                   ADDON_TYPE, false);
-    }
 
     return LightweightThemeManager.currentTheme;
   })();
@@ -910,14 +551,6 @@ function _updateUsedThemes(aList) {
   // Remove app-specific themes before saving them to the usedThemes pref.
   aList = aList.filter(theme => !LightweightThemeManager._builtInThemes.has(theme.id));
 
-  // Send uninstall events for all themes that need to be removed.
-  while (aList.length > _maxUsedThemes) {
-    let wrapper = new AddonWrapper(aList[aList.length - 1]);
-    AddonManagerPrivate.callAddonListeners("onUninstalling", wrapper, false);
-    aList.pop();
-    AddonManagerPrivate.callAddonListeners("onUninstalled", wrapper);
-  }
-
   _prefs.setStringPref("usedThemes", JSON.stringify(aList));
 
   Services.obs.notifyObservers(null, "lightweight-theme-list-changed");
@@ -948,29 +581,9 @@ var _previewTimerCallback = {
   },
 };
 
-/**
- * Called when any of the lightweightThemes preferences are changed.
- */
-function _prefObserver(aSubject, aTopic, aData) {
-  switch (aData) {
-    case "maxUsedThemes":
-      _maxUsedThemes = _prefs.getIntPref(aData, DEFAULT_MAX_USED_THEMES_COUNT);
-
-      // Update the theme list to remove any themes over the number we keep
-      _updateUsedThemes(LightweightThemeManager.usedThemes);
-      break;
-  }
-}
-
 function _persistImages(aData, aCallback) {
   if (AppConstants.platform != "android") {
     // On Android, the LightweightThemeConsumer is responsible for doing this.
     LightweightThemePersister.persistImages(aData, aCallback);
   }
 }
-
-AddonManagerPrivate.registerProvider(LightweightThemeManager, [
-  new AddonManagerPrivate.AddonType("theme", URI_EXTENSION_STRINGS,
-                                    "type.themes.name",
-                                    AddonManager.VIEW_TYPE_LIST, 5000),
-]);

@@ -68,7 +68,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AddonRepository: "resource://gre/modules/addons/AddonRepository.jsm",
   Extension: "resource://gre/modules/Extension.jsm",
   FileUtils: "resource://gre/modules/FileUtils.jsm",
-  LightweightThemeManager: "resource://gre/modules/LightweightThemeManager.jsm",
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(this, "WEBEXT_PERMISSION_PROMPTS",
@@ -90,7 +89,6 @@ const CATEGORY_PROVIDER_MODULE = "addon-provider-module";
 // A list of providers to load by default
 const DEFAULT_PROVIDERS = [
   "resource://gre/modules/addons/XPIProvider.jsm",
-  "resource://gre/modules/LightweightThemeManager.jsm",
 ];
 
 const {Log} = ChromeUtils.import("resource://gre/modules/Log.jsm");
@@ -1252,8 +1250,6 @@ var AddonManagerInternal = {
         // Keep track of all the async add-on updates happening in parallel
         let updates = [];
 
-        updates.push(LightweightThemeManager.updateThemes());
-
         let allAddons = await this.getAllAddons();
 
         // Repopulate repository cache first, to ensure compatibility overrides
@@ -1499,11 +1495,9 @@ var AddonManagerInternal = {
     // considered unsafe (and therefore disallowed by AddonManager.jsm) to
     // access providers that haven't been initialized yet. Since this is when
     // XPIProvider is starting up, XPIProvider can't access itself via APIs
-    // going through AddonManager.jsm. Furthermore, LightweightThemeManager may
-    // not be initialized until after XPIProvider is, and therefore would also
-    // be unaccessible during XPIProvider startup. Thankfully, these are the
-    // only two uses of this API, and we know it's safe to use this API with
-    // both providers; so we have this hack to allow bypassing the normal
+    // going through AddonManager.jsm. Thankfully, this is the only use
+    // of this API, and we know it's safe to use this API with both
+    // providers; so we have this hack to allow bypassing the normal
     // safetey guard.
     // The notifyAddonChanged/addonChanged API will be unneeded and therefore
     // removed by bug 520124, so this is a temporary quick'n'dirty hack.
