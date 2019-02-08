@@ -14,4 +14,4 @@
 
 -brand-short-name = Nightly
 -brand-full-name = Mozilla Nightly
-
+-vendor-short-name = Mozilla
