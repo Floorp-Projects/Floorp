@@ -699,6 +699,30 @@ class PresShell final : public nsIPresShell,
     nsIFrame* MaybeFlushThrottledStyles(nsIFrame* aFrameForPresShell);
 
     /**
+     * ComputeRootFrameToHandleEvent() returns root frame to handle the event.
+     * For example, if there is a popup, this returns the popup frame.
+     * If there is capturing content and it's in a scrolled frame, returns
+     * the scrolled frame.
+     *
+     * @param aFrameForPresShell                The frame for mPresShell.
+     * @param aGUIEvent                         The handling event.
+     * @param aCapturingContent                 Capturing content if there is.
+     *                                          nullptr, otherwise.
+     * @param aIsCapturingContentIgnored        [out] true if aCapturingContent
+     *                                          is not nullptr but it should be
+     *                                          ignored to handle the event.
+     * @param aIsCaptureRetargeted              [out] true if aCapturingContent
+     *                                          is not nullptr but it's
+     *                                          retargeted.
+     * @return                                  Root frame to handle the event.
+     */
+    nsIFrame* ComputeRootFrameToHandleEvent(nsIFrame* aFrameForPresShell,
+                                            WidgetGUIEvent* aGUIEvent,
+                                            nsIContent* aCapturingContent,
+                                            bool* aIsCapturingContentIgnored,
+                                            bool* aIsCaptureRetargeted);
+
+    /**
      * XXX Needs better name.
      * HandleEventInternal() dispatches aEvent into the DOM tree and
      * notify EventStateManager of that.
