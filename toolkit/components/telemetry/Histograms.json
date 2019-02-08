@@ -13352,15 +13352,6 @@
     "releaseChannelCollection": "opt-out",
     "description": "XMLHttpRequest.responseType set to moz-chunked-arraybuffer"
   },
-  "BUSY_TAB_ABANDONED": {
-    "record_in_processes": ["main"],
-    "alert_emails": ["hkirschner@mozilla.com"],
-    "expires_in_version": "68",
-    "kind": "categorical",
-    "bug_numbers": [1307689],
-    "description": "Records a value each time a tab that is showing the loading throbber is interrupted. Desktop only.",
-    "labels": ["stop", "back", "forward", "historyNavigation", "reload", "tabClosed", "newURI"]
-  },
   "EXTENSION_INSTALL_PROMPT_RESULT": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["aswan@mozilla.com", "andym@mozilla.com"],
