@@ -14,4 +14,4 @@
 
 -brand-short-name = Fennec
 -brand-full-name = Mozilla Fennec
-
+-vendor-short-name = Mozilla
