@@ -11,8 +11,6 @@ const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const DEFAULT_THEME_ID = "default-theme@mozilla.org";
 
-const MAX_PREVIEW_SECONDS = 30;
-
 const MANDATORY = ["id", "name"];
 const OPTIONAL = ["headerURL", "textcolor", "accentcolor",
                   "iconURL", "previewURL", "author", "description",
@@ -196,35 +194,6 @@ var LightweightThemeManager = {
     }
   },
 
-  previewTheme(aData) {
-    aData = _substituteDefaultThemeIfNeeded(aData);
-
-    let cancel = Cc["@mozilla.org/supports-PRBool;1"].createInstance(Ci.nsISupportsPRBool);
-    cancel.data = false;
-    Services.obs.notifyObservers(cancel, "lightweight-theme-preview-requested",
-                                 JSON.stringify(aData));
-    if (cancel.data)
-      return;
-
-    if (_previewTimer)
-      _previewTimer.cancel();
-    else
-      _previewTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-    _previewTimer.initWithCallback(_previewTimerCallback,
-                                   MAX_PREVIEW_SECONDS * 1000,
-                                   _previewTimer.TYPE_ONE_SHOT);
-
-    _notifyWindows(aData);
-  },
-
-  resetPreview() {
-    if (_previewTimer) {
-      _previewTimer.cancel();
-      _previewTimer = null;
-      _notifyWindows(this.currentThemeWithPersistedData);
-    }
-  },
-
   parseTheme(aString, aBaseURI) {
     try {
       return _sanitizeTheme(JSON.parse(aString), aBaseURI, false);
@@ -240,11 +209,6 @@ var LightweightThemeManager = {
    *         The lightweight theme to switch to
    */
   themeChanged(aData) {
-    if (_previewTimer) {
-      _previewTimer.cancel();
-      _previewTimer = null;
-    }
-
     if (aData) {
       _prefs.setCharPref("selectedThemeID", aData.id);
     } else {
@@ -451,13 +415,6 @@ function _substituteDefaultThemeIfNeeded(aThemeData) {
 
   return aThemeData;
 }
-
-var _previewTimer;
-var _previewTimerCallback = {
-  notify() {
-    LightweightThemeManager.resetPreview();
-  },
-};
 
 function _persistImages(aData, aCallback) {
   if (AppConstants.platform != "android") {
