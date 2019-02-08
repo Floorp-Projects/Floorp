@@ -307,6 +307,8 @@ nsresult nsLayoutStatics::Initialize() {
     InitializeLocalStorage();
   }
 
+  ThirdPartyUtil::Startup();
+
   return NS_OK;
 }
 
