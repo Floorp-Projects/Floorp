@@ -7,6 +7,7 @@
 #include "builtin/ModuleObject.h"
 
 #include "mozilla/EnumSet.h"
+#include "mozilla/ScopeExit.h"
 
 #include "builtin/Promise.h"
 #include "builtin/SelfHostingDefines.h"
@@ -1680,9 +1681,6 @@ JSObject* js::CallModuleResolveHook(JSContext* cx,
 
 JSObject* js::StartDynamicModuleImport(JSContext* cx, HandleScript script,
                                        HandleValue specifierArg) {
-  RootedValue referencingPrivate(cx,
-                                 script->sourceObject()->canonicalPrivate());
-
   RootedObject promiseConstructor(cx, JS::GetPromiseConstructor(cx));
   if (!promiseConstructor) {
     return nullptr;
@@ -1713,7 +1711,13 @@ JSObject* js::StartDynamicModuleImport(JSContext* cx, HandleScript script,
     return promise;
   }
 
+  RootedValue referencingPrivate(cx,
+                                 script->sourceObject()->canonicalPrivate());
+  cx->runtime()->addRefScriptPrivate(referencingPrivate);
+
   if (!importHook(cx, referencingPrivate, specifier, promise)) {
+    cx->runtime()->releaseScriptPrivate(referencingPrivate);
+
     // If there's no exception pending then the script is terminating
     // anyway, so just return nullptr.
     if (!cx->isExceptionPending() ||
@@ -1731,6 +1735,10 @@ bool js::FinishDynamicModuleImport(JSContext* cx,
                                    HandleString specifier,
                                    HandleObject promiseArg) {
   Handle<PromiseObject*> promise = promiseArg.as<PromiseObject>();
+
+  auto releasePrivate = mozilla::MakeScopeExit([&] {
+    cx->runtime()->releaseScriptPrivate(referencingPrivate);
+  });
 
   if (cx->isExceptionPending()) {
     return RejectPromiseWithPendingError(cx, promise);
