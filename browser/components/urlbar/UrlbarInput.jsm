@@ -521,7 +521,8 @@ class UrlbarInput {
   _valueFromResultPayload(result) {
     switch (result.type) {
       case UrlbarUtils.RESULT_TYPE.SEARCH:
-        return result.payload.suggestion || result.payload.query;
+        return (result.payload.keyword ? result.payload.keyword + " " : "") +
+               (result.payload.suggestion || result.payload.query);
       case UrlbarUtils.RESULT_TYPE.OMNIBOX:
         return result.payload.content;
     }
