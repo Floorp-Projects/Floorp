@@ -1,0 +1,64 @@
+:root {
+  --section-width: 664px;
+}
+
+#main {
+  margin-inline-start: 28px;
+  margin-bottom: 28px;
+  max-width: var(--section-width);
+}
+
+/* List sections */
+
+.list-section-heading {
+  font-size: 17px;
+  font-weight: 600;
+  margin-block: 16px;
+}
+
+/* The margin is set on the main heading, no need on the first subheading. */
+.list-section-heading:first-of-type {
+  margin-top: 0;
+}
+
+/* Add-on cards */
+
+.addon.card {
+  margin-bottom: 16px;
+  display: flex;
+}
+
+.addon.card:hover {
+  box-shadow: var(--card-shadow);
+}
+
+.card-heading-icon {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  margin-inline-end: 16px;
+}
+
+.card-contents {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.card-actions {
+  flex-shrink: 0;
+}
+
+.addon-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--grey-90);
+  line-height: 1;
+}
+
+.addon-description {
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--grey-60);
+  font-weight: 400;
+}

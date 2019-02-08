@@ -39,6 +39,8 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "allowPrivateBrowsingByDefault",
 
 XPCOMUtils.defineLazyPreferenceGetter(this, "SUPPORT_URL", "app.support.baseURL",
                                       "", null, val => Services.urlFormatter.formatURL(val));
+XPCOMUtils.defineLazyPreferenceGetter(this, "useHtmlViews",
+                                      "extensions.htmlaboutaddons.enabled");
 
 const PREF_DISCOVERURL = "extensions.webservice.discoverURL";
 const PREF_DISCOVER_ENABLED = "extensions.getAddons.showPane";
@@ -705,11 +707,16 @@ var gViewController = {
     this.backButton = document.getElementById("go-back");
 
     this.viewObjects.discover = gDiscoverView;
-    this.viewObjects.list = gListView;
     this.viewObjects.legacy = gLegacyView;
     this.viewObjects.detail = gDetailView;
     this.viewObjects.updates = gUpdatesView;
     this.viewObjects.shortcuts = gShortcutsView;
+
+    if (useHtmlViews) {
+      this.viewObjects.list = htmlView("list");
+    } else {
+      this.viewObjects.list = gListView;
+    }
 
     for (let type in this.viewObjects) {
       let view = this.viewObjects[type];
@@ -3709,4 +3716,47 @@ var gBrowser = {
   window.addEventListener("scroll", () => {
     updatePositionTask.arm();
   }, true);
+}
+
+// View wrappers for the HTML version of about:addons. These delegate to an
+// HTML browser that renders the actual views.
+let htmlBrowser;
+let htmlBrowserLoaded;
+function getHtmlBrowser() {
+  if (!htmlBrowser) {
+    htmlBrowser = document.getElementById("html-view-browser");
+    htmlBrowser.loadURI("chrome://mozapps/content/extensions/aboutaddons.html", {
+      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+    });
+    htmlBrowserLoaded = new Promise(
+      resolve => htmlBrowser.addEventListener("load", resolve, {once: true})
+    ).then(() => htmlBrowser.contentWindow.initialize());
+  }
+  return htmlBrowser;
+}
+
+function htmlView(type) {
+  return {
+    node: null,
+    isRoot: true,
+
+    initialize() {
+      this.node = getHtmlBrowser();
+    },
+
+    async show(param, request, state, refresh) {
+      await htmlBrowserLoaded;
+      await this.node.contentWindow.show(type, param);
+      gViewController.notifyViewChanged();
+    },
+
+    async hide() {
+      await htmlBrowserLoaded;
+      return this.node.contentWindow.hide();
+    },
+
+    getSelectedAddon() {
+      return null;
+    },
+  };
 }
