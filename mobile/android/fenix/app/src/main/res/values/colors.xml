@@ -3,8 +3,8 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources>
-    <color name="colorPrimary">#008577</color>
-    <color name="colorPrimaryDark">#00574B</color>
+    <color name="colorPrimary">#544CD9</color>
+    <color name="colorPrimaryDark">#202340</color>
     <color name="colorAccent">#D81B60</color>
 
     <color name="searchDarkBackground">#F2F2F5</color>
