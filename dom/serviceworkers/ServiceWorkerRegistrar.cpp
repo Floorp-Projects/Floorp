@@ -9,6 +9,7 @@
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/net/MozURL.h"
 
+#include "mozIThirdPartyUtil.h"
 #include "nsIEventTarget.h"
 #include "nsIInputStream.h"
 #include "nsILineInputStream.h"
@@ -53,7 +54,8 @@ static const uint32_t kInvalidGeneration = static_cast<uint32_t>(-1);
 
 StaticRefPtr<ServiceWorkerRegistrar> gServiceWorkerRegistrar;
 
-nsresult GetOrigin(const nsACString& aURL, nsACString& aOrigin) {
+nsresult GetOriginAndBaseDomain(const nsACString& aURL, nsACString& aOrigin,
+                                nsACString& aBaseDomain) {
   RefPtr<net::MozURL> url;
   nsresult rv = net::MozURL::Init(getter_AddRefs(url), aURL);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -61,6 +63,25 @@ nsresult GetOrigin(const nsACString& aURL, nsACString& aOrigin) {
   }
 
   url->Origin(aOrigin);
+
+  if (url->Scheme() == "file") {
+    // The file scheme is not handled by third party utils properly, use the
+    // origin string for now.
+    aBaseDomain = aOrigin;
+  } else {
+    nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
+        do_GetService(THIRDPARTYUTIL_CONTRACTID);
+    if (!thirdPartyUtil) {
+      return NS_ERROR_FAILURE;
+    }
+
+    rv = thirdPartyUtil->GetBaseDomainFromSchemeHost(url->Scheme(), url->Host(),
+                                                     aBaseDomain);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
   return NS_OK;
 }
 
@@ -106,7 +127,8 @@ nsresult CreatePrincipalInfo(nsILineInputStream* aStream,
   }
 
   nsCString origin;
-  rv = GetOrigin(aEntry->scope(), origin);
+  nsCString baseDomain;
+  rv = GetOriginAndBaseDomain(aEntry->scope(), origin, baseDomain);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -114,7 +136,8 @@ nsresult CreatePrincipalInfo(nsILineInputStream* aStream,
   // CSP will be applied during the script load.
   nsTArray<mozilla::ipc::ContentSecurityPolicy> policies;
   aEntry->principal() = mozilla::ipc::ContentPrincipalInfo(
-      attrs, origin, aEntry->scope(), Nothing(), std::move(policies));
+      attrs, origin, aEntry->scope(), Nothing(), std::move(policies),
+      baseDomain);
 
   return NS_OK;
 }
