@@ -118,6 +118,7 @@ void TransceiverImpl::Shutdown_m() {
   mReceivePipeline = nullptr;
   mTransmitPipeline = nullptr;
   mTransportHandler = nullptr;
+  mReceiveTrack = nullptr;
   mSendTrack = nullptr;
   if (mConduit) {
     mConduit->DeleteStreams();
