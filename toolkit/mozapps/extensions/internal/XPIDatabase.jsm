@@ -2328,6 +2328,12 @@ this.XPIDatabaseReconcile = {
     // Load the manifest if necessary and sanity check the add-on ID
     let unsigned;
     try {
+      // Do not allow third party installs if xpinstall is disabled by policy
+      if (isDetectedInstall && Services.policies &&
+          !Services.policies.isAllowed("xpinstall")) {
+        throw new Error("Extension installs are disabled by enterprise policy.");
+      }
+
       if (!aNewAddon) {
         // Load the manifest from the add-on.
         let file = new nsIFile(aAddonState.path);
