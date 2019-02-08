@@ -2126,10 +2126,9 @@ bool XrayWrapper<Base, Traits>::getOwnEnumerablePropertyKeys(
 }
 
 template <typename Base, typename Traits>
-JSObject* XrayWrapper<Base, Traits>::enumerate(JSContext* cx,
-                                               HandleObject wrapper) const {
+bool XrayWrapper<Base, Traits>::enumerate(JSContext* cx, HandleObject wrapper,
+                                          JS::AutoIdVector& props) const {
   MOZ_CRASH("Shouldn't be called: we return true for hasPrototype()");
-  return nullptr;
 }
 
 template <typename Base, typename Traits>

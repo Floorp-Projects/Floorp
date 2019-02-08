@@ -365,11 +365,10 @@ class RegExpStringIteratorObject : public NativeObject {
 RegExpStringIteratorObject* NewRegExpStringIteratorObject(
     JSContext* cx, NewObjectKind newKind = GenericObject);
 
-JSObject* GetIterator(JSContext* cx, HandleObject obj);
+MOZ_MUST_USE bool EnumerateProperties(JSContext* cx, HandleObject obj,
+                                      AutoIdVector& props);
 
 PropertyIteratorObject* LookupInIteratorCache(JSContext* cx, HandleObject obj);
-
-JSObject* NewEmptyPropertyIterator(JSContext* cx);
 
 JSObject* ValueToIterator(JSContext* cx, HandleValue vp);
 
