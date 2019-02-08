@@ -13,6 +13,17 @@ const { createConsumer } = require("./createConsumer");
 
 import type { Source } from "debugger-html";
 
+// URLs which have been seen in a completed source map request.
+const originalURLs = new Set();
+
+function clearOriginalURLs() {
+  originalURLs.clear();
+}
+
+function hasOriginalURL(url: string): boolean {
+  return originalURLs.has(url);
+}
+
 function _resolveSourceMapURL(source: Source) {
   const { url = "", sourceMapURL = "" } = source;
 
@@ -55,10 +66,14 @@ async function _resolveAndFetch(generatedSource: Source): SourceMapConsumer {
     }
   }
 
+  if (map && map.sources) {
+    map.sources.forEach(url => originalURLs.add(url));
+  }
+
   return map;
 }
 
-function fetchSourceMap(generatedSource: Source) {
+function fetchSourceMap(generatedSource: Source): SourceMapConsumer {
   const existingRequest = getSourceMap(generatedSource.id);
 
   // If it has already been requested, return the request. Make sure
@@ -84,4 +99,4 @@ function fetchSourceMap(generatedSource: Source) {
   return req;
 }
 
-module.exports = { fetchSourceMap };
+module.exports = { fetchSourceMap, hasOriginalURL, clearOriginalURLs };

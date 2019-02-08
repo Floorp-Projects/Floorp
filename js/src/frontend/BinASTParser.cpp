@@ -2037,18 +2037,21 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceBreakStatement(
     if (!IsIdentifier(label)) {
       return raiseError("Invalid identifier");
     }
+  }
 
-    auto validity = parseContext_->checkBreakStatement(label->asPropertyName());
-
-    if (validity.isErr()) {
-      switch (validity.unwrapErr()) {
-        case ParseContext::BreakStatementError::ToughBreak:
-          return raiseError(kind, "Not in a loop");
-        case ParseContext::BreakStatementError::LabelNotFound:
-          return raiseError(kind, "Label not found");
-      }
+  auto validity = parseContext_->checkBreakStatement(
+      label ? label->asPropertyName() : nullptr);
+  if (validity.isErr()) {
+    switch (validity.unwrapErr()) {
+      case ParseContext::BreakStatementError::ToughBreak:
+        this->error(JSMSG_TOUGH_BREAK);
+        return cx_->alreadyReportedError();
+      case ParseContext::BreakStatementError::LabelNotFound:
+        this->error(JSMSG_LABEL_NOT_FOUND);
+        return cx_->alreadyReportedError();
     }
   }
+
   BINJS_TRY_DECL(result, factory_.newBreakStatement(
                              label ? label->asPropertyName() : nullptr,
                              tokenizer_->pos(start)));
@@ -2322,16 +2325,18 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceContinueStatement(
     if (!IsIdentifier(label)) {
       return raiseError("ContinueStatement - Label MUST be an identifier");
     }
+  }
 
-    auto validity = parseContext_->checkContinueStatement(
-        label ? label->asPropertyName() : nullptr);
-    if (validity.isErr()) {
-      switch (validity.unwrapErr()) {
-        case ParseContext::ContinueStatementError::NotInALoop:
-          return raiseError(kind, "Not in a loop");
-        case ParseContext::ContinueStatementError::LabelNotFound:
-          return raiseError(kind, "Label not found");
-      }
+  auto validity = parseContext_->checkContinueStatement(
+      label ? label->asPropertyName() : nullptr);
+  if (validity.isErr()) {
+    switch (validity.unwrapErr()) {
+      case ParseContext::ContinueStatementError::NotInALoop:
+        this->error(JSMSG_BAD_CONTINUE);
+        return cx_->alreadyReportedError();
+      case ParseContext::ContinueStatementError::LabelNotFound:
+        this->error(JSMSG_LABEL_NOT_FOUND);
+        return cx_->alreadyReportedError();
     }
   }
 
@@ -3923,7 +3928,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceSwitchStatement(
 #endif  // defined(DEBUG)
 
   BINJS_MOZ_TRY_DECL(discriminant, parseExpression());
-
+  ParseContext::Statement stmt(parseContext_, StatementKind::Switch);
   BINJS_MOZ_TRY_DECL(cases, parseListOfSwitchCase());
 
   BINJS_TRY_DECL(scope, factory_.newLexicalScope(nullptr, cases));
@@ -3947,7 +3952,7 @@ BinASTParser<Tok>::parseInterfaceSwitchStatementWithDefault(
 #endif  // defined(DEBUG)
 
   BINJS_MOZ_TRY_DECL(discriminant, parseExpression());
-
+  ParseContext::Statement stmt(parseContext_, StatementKind::Switch);
   BINJS_MOZ_TRY_DECL(preDefaultCases, parseListOfSwitchCase());
 
   BINJS_MOZ_TRY_DECL(defaultCase, parseSwitchDefault());

@@ -14,7 +14,7 @@ namespace {
 
 void AssertOnOwningThread(void* aThread) {
   if (MOZ_UNLIKELY(aThread != GetCurrentVirtualThread())) {
-    MOZ_CRASH_UNSAFE_OOL("WorkerHolder on the wrong thread.");
+    MOZ_CRASH_UNSAFE("WorkerHolder on the wrong thread.");
   }
 }
 

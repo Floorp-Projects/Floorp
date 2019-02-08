@@ -28,43 +28,13 @@ Object {
 }
 `;
 
-exports[`invalid breakpoint location a corrected corresponding pending breakpoint is added 1`] = `
-Object {
-  "astLocation": Object {
-    "index": 0,
-    "name": undefined,
-    "offset": Object {
-      "column": 0,
-      "line": 7,
-      "sourceId": "foo.js",
-      "sourceUrl": "http://localhost:8000/examples/foo.js",
-    },
-  },
-  "disabled": false,
-  "generatedLocation": Object {
-    "column": 0,
-    "line": 7,
-    "sourceUrl": "http://localhost:8000/examples/foo.js",
-  },
-  "location": Object {
-    "column": 0,
-    "line": 7,
-    "sourceUrl": "http://localhost:8000/examples/foo.js",
-  },
-  "options": Object {
-    "condition": null,
-    "hidden": false,
-    "logValue": null,
-  },
-}
-`;
-
 exports[`when adding breakpoints a corresponding pending breakpoint should be added 1`] = `
 Object {
   "astLocation": Object {
     "index": 0,
     "name": undefined,
     "offset": Object {
+      "column": 0,
       "line": 5,
       "sourceId": "foo.js/originalSource",
       "sourceUrl": "http://localhost:8000/examples/foo.js",
@@ -77,7 +47,7 @@ Object {
     "sourceUrl": "http://localhost:8000/examples/foo.js",
   },
   "location": Object {
-    "column": undefined,
+    "column": 0,
     "line": 5,
     "sourceUrl": "http://localhost:8000/examples/foo.js",
   },
@@ -95,6 +65,7 @@ Object {
     "index": 0,
     "name": undefined,
     "offset": Object {
+      "column": 0,
       "line": 5,
       "sourceId": "foo/originalSource",
       "sourceUrl": "http://localhost:8000/examples/foo",
@@ -107,7 +78,7 @@ Object {
     "sourceUrl": "http://localhost:8000/examples/foo",
   },
   "location": Object {
-    "column": undefined,
+    "column": 0,
     "line": 5,
     "sourceUrl": "http://localhost:8000/examples/foo",
   },
@@ -125,6 +96,7 @@ Object {
     "index": 0,
     "name": undefined,
     "offset": Object {
+      "column": 0,
       "line": 5,
       "sourceId": "foo2/originalSource",
       "sourceUrl": "http://localhost:8000/examples/foo2",
@@ -137,7 +109,7 @@ Object {
     "sourceUrl": "http://localhost:8000/examples/foo2",
   },
   "location": Object {
-    "column": undefined,
+    "column": 0,
     "line": 5,
     "sourceUrl": "http://localhost:8000/examples/foo2",
   },

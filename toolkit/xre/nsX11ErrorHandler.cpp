@@ -131,7 +131,7 @@ int X11Error(Display *display, XErrorEvent *event) {
 #  endif
 #endif
 
-  MOZ_CRASH_UNSAFE_OOL(notes.get());
+  MOZ_CRASH_UNSAFE(notes.get());
 }
 }
 

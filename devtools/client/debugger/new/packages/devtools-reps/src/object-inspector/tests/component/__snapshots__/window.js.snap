@@ -9,12 +9,7 @@ exports[`ObjectInspector - dimTopLevelWindow renders collapsed top-level window 
   onKeyPress={[Function]}
   onKeyUp={[Function]}
   role="tree"
-  style={
-    Object {
-      "margin": 0,
-      "padding": 0,
-    }
-  }
+  style={Object {}}
   tabIndex="0"
 >
   <div
@@ -68,12 +63,7 @@ exports[`ObjectInspector - dimTopLevelWindow renders sub-level window 1`] = `
   onKeyPress={[Function]}
   onKeyUp={[Function]}
   role="tree"
-  style={
-    Object {
-      "margin": 0,
-      "padding": 0,
-    }
-  }
+  style={Object {}}
   tabIndex="0"
 >
   <div
@@ -154,12 +144,7 @@ exports[`ObjectInspector - dimTopLevelWindow renders window as expected when dim
   onKeyPress={[Function]}
   onKeyUp={[Function]}
   role="tree"
-  style={
-    Object {
-      "margin": 0,
-      "padding": 0,
-    }
-  }
+  style={Object {}}
   tabIndex="0"
 >
   <div
@@ -213,12 +198,7 @@ exports[`ObjectInspector - dimTopLevelWindow renders window as expected when dim
   onKeyPress={[Function]}
   onKeyUp={[Function]}
   role="tree"
-  style={
-    Object {
-      "margin": 0,
-      "padding": 0,
-    }
-  }
+  style={Object {}}
   tabIndex="0"
 >
   <div

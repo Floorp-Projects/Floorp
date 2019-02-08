@@ -232,30 +232,6 @@ export function getPausePoint(
   }
 }
 
-export function getFirstPausePointLocation(
-  state: OuterState,
-  location: SourceLocation
-): SourceLocation {
-  const { sourceId } = location;
-  const pausePoints = getPausePoints(state, location.sourceId);
-  if (!pausePoints) {
-    return location;
-  }
-
-  const pausesAtLine = pausePoints.filter(
-    point => point.location.line == location.line
-  );
-
-  if (pausesAtLine) {
-    const values: PausePoint[] = (Object.values(pausesAtLine): any);
-    const firstPausePoint = values.find(pausePoint => pausePoint.types.break);
-    if (firstPausePoint) {
-      return { ...firstPausePoint.location, sourceId };
-    }
-  }
-  return location;
-}
-
 export function hasPausePoints(state: OuterState, sourceId: string): boolean {
   const pausePoints = getPausePoints(state, sourceId);
   return !!pausePoints;

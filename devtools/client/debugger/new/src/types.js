@@ -441,3 +441,8 @@ export type Cancellable = {
 export type EventListenerBreakpoints = string[];
 
 export type SourceDocuments = { [string]: Object };
+
+export type BreakpointPosition = { line: number, string: number };
+export type BreakpointLinePositions = Array<BreakpointPosition>;
+export type BreakpointSourcePositions = { [number]: BreakpointLinePositions };
+export type BreakpointPositions = { [string]: BreakpointSourcePositions };
