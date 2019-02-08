@@ -11,6 +11,18 @@ class TestChild extends JSWindowActorChild {
      super();
   }
 
+  recvAsyncMessage(aMessage) {
+    switch (aMessage.name) {
+      case "toChild":
+        aMessage.data.toChild = true;
+        this.sendAsyncMessage("Test", "toParent", aMessage.data);
+        break;
+      case "done":
+        this.done(aMessage.data);
+        break;
+    }
+  }
+
   show() {
     return "TestChild";
   }

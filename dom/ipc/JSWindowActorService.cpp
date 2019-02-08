@@ -140,5 +140,45 @@ void JSWindowActorService::ConstructActor(const nsAString& aName,
   }
 }
 
+void JSWindowActorService::ReceiveMessage(JS::RootedObject& aObj,
+                                          const nsString& aMessageName,
+                                          ipc::StructuredCloneData& aData) {
+  IgnoredErrorResult error;
+  AutoEntryScript aes(js::CheckedUnwrap(aObj),
+                      "WindowGlobalChild Message Handler");
+  JSContext* cx = aes.cx();
+
+  // We passed the unwrapped object to AutoEntryScript so we now need to
+  // enter the realm of the global object that represents the realm of our
+  // callback.
+  JSAutoRealm ar(cx, aObj);
+  JS::RootedValue json(cx, JS::NullValue());
+
+  // Deserialize our data into a JS object in the correct compartment.
+  aData.Read(aes.cx(), &json, error);
+  if (NS_WARN_IF(error.Failed())) {
+    JS_ClearPendingException(cx);
+    return;
+  }
+
+  RootedDictionary<ReceiveMessageArgument> argument(cx);
+  argument.mObjects = JS_NewPlainObject(cx);
+  argument.mName = aMessageName;
+  argument.mData = json;
+  argument.mJson = json;
+  JS::RootedValue argv(cx);
+  if (NS_WARN_IF(!ToJSValue(cx, argument, &argv))) {
+    return;
+  }
+
+  // Now that we have finished, call the recvAsyncMessage callback.
+  JS::RootedValue dummy(cx);
+  if (NS_WARN_IF(!JS_CallFunctionName(cx, aObj, "recvAsyncMessage",
+                                      JS::HandleValueArray(argv), &dummy))) {
+    JS_ClearPendingException(cx);
+    return;
+  }
+}
+
 }  // namespace dom
 }  // namespace mozilla

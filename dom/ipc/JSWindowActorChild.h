@@ -46,6 +46,10 @@ class JSWindowActorChild final : public nsWrapperCache {
 
   WindowGlobalChild* Manager() const;
   void Init(WindowGlobalChild* aManager);
+  void SendAsyncMessage(JSContext* aCx, const nsAString& aActorName,
+                        const nsAString& aMessageName,
+                        JS::Handle<JS::Value> aObj,
+                        JS::Handle<JS::Value> aTransfers, ErrorResult& aRv);
 
  private:
   RefPtr<WindowGlobalChild> mManager;

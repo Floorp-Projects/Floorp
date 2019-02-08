@@ -153,19 +153,43 @@ IPCResult WindowGlobalParent::RecvDestroy() {
   return IPC_OK();
 }
 
-bool WindowGlobalParent::IsCurrentGlobal() {
-  return !mIPCClosed && mBrowsingContext->GetCurrentWindowGlobal() == this;
+IPCResult WindowGlobalParent::RecvAsyncMessage(const nsString& aActorName,
+                                               const nsString& aMessageName,
+                                               const ClonedMessageData& aData) {
+  StructuredCloneData data;
+  data.BorrowFromClonedMessageDataForParent(aData);
+  HandleAsyncMessage(aActorName, aMessageName, data);
+  return IPC_OK();
 }
 
-void WindowGlobalParent::ActorDestroy(ActorDestroyReason aWhy) {
-  mIPCClosed = true;
-  gWindowGlobalParentsById->Remove(mInnerWindowId);
-  mBrowsingContext->UnregisterWindowGlobal(this);
-
-  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-  if (obs) {
-    obs->NotifyObservers(this, "window-global-destroyed", nullptr);
+void WindowGlobalParent::HandleAsyncMessage(const nsString& aActorName,
+                                            const nsString& aMessageName,
+                                            StructuredCloneData& aData) {
+  if (NS_WARN_IF(mIPCClosed)) {
+    return;
   }
+
+  // Force creation of the actor if it hasn't been created yet.
+  IgnoredErrorResult rv;
+  RefPtr<JSWindowActorParent> actor = GetActor(aActorName, rv);
+  if (NS_WARN_IF(rv.Failed())) {
+    return;
+  }
+
+  // Get the JSObject for the named actor.
+  JS::RootedObject obj(RootingCx(), actor->GetWrapper());
+  if (NS_WARN_IF(!obj)) {
+    // If we don't have a preserved wrapper, there won't be any receiver
+    // method to call.
+    return;
+  }
+
+  RefPtr<JSWindowActorService> actorSvc = JSWindowActorService::GetSingleton();
+  if (NS_WARN_IF(!actorSvc)) {
+    return;
+  }
+
+  actorSvc->ReceiveMessage(obj, aMessageName, aData);
 }
 
 already_AddRefed<JSWindowActorParent> WindowGlobalParent::GetActor(
@@ -199,6 +223,21 @@ already_AddRefed<JSWindowActorParent> WindowGlobalParent::GetActor(
   actor->Init(this);
   mWindowActors.Put(aName, actor);
   return actor.forget();
+}
+
+bool WindowGlobalParent::IsCurrentGlobal() {
+  return !mIPCClosed && mBrowsingContext->GetCurrentWindowGlobal() == this;
+}
+
+void WindowGlobalParent::ActorDestroy(ActorDestroyReason aWhy) {
+  mIPCClosed = true;
+  gWindowGlobalParentsById->Remove(mInnerWindowId);
+  mBrowsingContext->UnregisterWindowGlobal(this);
+
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  if (obs) {
+    obs->NotifyObservers(this, "window-global-destroyed", nullptr);
+  }
 }
 
 WindowGlobalParent::~WindowGlobalParent() {
