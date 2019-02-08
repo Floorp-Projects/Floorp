@@ -270,26 +270,6 @@ bool Pickle::ReadLength(PickleIterator* iter, int* result) const {
   return ((*result) >= 0);
 }
 
-// Always written as a 64-bit value since the size for this type can
-// differ between architectures.
-bool Pickle::ReadSize(PickleIterator* iter, size_t* result) const {
-  DCHECK(iter);
-
-  uint64_t big_result = 0;
-  if (IteratorHasRoomFor(*iter, sizeof(big_result))) {
-    iter->CopyInto(&big_result);
-    UpdateIter(iter, sizeof(big_result));
-  } else {
-    if (!ReadBytesInto(iter, &big_result, sizeof(big_result))) {
-      return false;
-    }
-  }
-  DCHECK(big_result <= std::numeric_limits<size_t>::max());
-  *result = static_cast<size_t>(big_result);
-
-  return true;
-}
-
 bool Pickle::ReadInt32(PickleIterator* iter, int32_t* result) const {
   DCHECK(iter);
 
@@ -577,15 +557,6 @@ bool Pickle::WriteULong(unsigned long value) {
   // differ between architectures.
 #ifdef FUZZING
   mozilla::ipc::Faulty::instance().FuzzULong(&value);
-#endif
-  return WriteUInt64(uint64_t(value));
-}
-
-bool Pickle::WriteSize(size_t value) {
-  // Always written as a 64-bit value since the size for this type can
-  // differ between architectures.
-#ifdef FUZZING
-  mozilla::ipc::Faulty::instance().FuzzSize(&value);
 #endif
   return WriteUInt64(uint64_t(value));
 }
