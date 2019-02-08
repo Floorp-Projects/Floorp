@@ -6407,9 +6407,8 @@ class DebuggerScriptGetOffsetLocationMatcher {
       column = flowData[r.frontOffset()].column();
     }
 
-    RootedId id(cx_, NameToId(cx_->names().lineNumber));
     RootedValue value(cx_, NumberValue(lineno));
-    if (!DefineDataProperty(cx_, result_, id, value)) {
+    if (!DefineDataProperty(cx_, result_, cx_->names().lineNumber, value)) {
       return false;
     }
 
@@ -6457,9 +6456,8 @@ class DebuggerScriptGetOffsetLocationMatcher {
       return false;
     }
 
-    RootedId id(cx_, NameToId(cx_->names().lineNumber));
     RootedValue value(cx_, NumberValue(lineno));
-    if (!DefineDataProperty(cx_, result_, id, value)) {
+    if (!DefineDataProperty(cx_, result_, cx_->names().lineNumber, value)) {
       return false;
     }
 
@@ -6677,9 +6675,8 @@ class DebuggerScriptGetAllColumnOffsetsMatcher {
       return false;
     }
 
-    RootedId id(cx_, NameToId(cx_->names().lineNumber));
     RootedValue value(cx_, NumberValue(lineno));
-    if (!DefineDataProperty(cx_, entry, id, value)) {
+    if (!DefineDataProperty(cx_, entry, cx_->names().lineNumber, value)) {
       return false;
     }
 
@@ -6688,9 +6685,8 @@ class DebuggerScriptGetAllColumnOffsetsMatcher {
       return false;
     }
 
-    id = NameToId(cx_->names().offset);
     value = NumberValue(offset);
-    if (!DefineDataProperty(cx_, entry, id, value)) {
+    if (!DefineDataProperty(cx_, entry, cx_->names().offset, value)) {
       return false;
     }
 
