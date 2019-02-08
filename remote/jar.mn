@@ -8,7 +8,6 @@ remote.jar:
   content/Collections.jsm (Collections.jsm)
   content/Connection.jsm (Connection.jsm)
   content/ConsoleServiceObserver.jsm (ConsoleServiceObserver.jsm)
-  content/Debugger.jsm (Debugger.jsm)
   content/Domain.jsm (Domain.jsm)
   content/Error.jsm (Error.jsm)
   content/EventEmitter.jsm (EventEmitter.jsm)
@@ -21,6 +20,7 @@ remote.jar:
   content/Session.jsm (Session.jsm)
   content/Sync.jsm (Sync.jsm)
   content/Target.jsm (Target.jsm)
+  content/TargetListener.jsm (TargetListener.jsm)
   content/WindowManager.jsm (WindowManager.jsm)
 
   # domains
