@@ -110,6 +110,10 @@ LOCAL_INCLUDES += [
 ]
 
 SOURCES += [
+    '/nsprpub/pr/src/io/prpolevt.c', # conflicting definition of PRFilePrivate
+]
+
+UNIFIED_SOURCES += [
     '/nsprpub/pr/src/io/prfdcach.c',
     '/nsprpub/pr/src/io/priometh.c',
     '/nsprpub/pr/src/io/pripv6.c',
@@ -118,7 +122,6 @@ SOURCES += [
     '/nsprpub/pr/src/io/prmapopt.c',
     '/nsprpub/pr/src/io/prmmap.c',
     '/nsprpub/pr/src/io/prmwait.c',
-    '/nsprpub/pr/src/io/prpolevt.c',
     '/nsprpub/pr/src/io/prprf.c',
     '/nsprpub/pr/src/io/prscanf.c',
     '/nsprpub/pr/src/io/prstdio.c',
@@ -158,7 +161,7 @@ SOURCES += [
 
 if CONFIG['OS_TARGET'] != 'WINNT':
     DEFINES['_PR_PTHREADS'] = True
-    SOURCES += [
+    UNIFIED_SOURCES += [
         '/nsprpub/pr/src/md/unix/unix.c',
         '/nsprpub/pr/src/md/unix/unix_errors.c',
         '/nsprpub/pr/src/md/unix/uxproces.c',
@@ -172,12 +175,16 @@ if CONFIG['OS_TARGET'] != 'WINNT':
     ]
 else:
     SOURCES += [
+        # ntinrval.c needs windows.h without WIN32_LEAN_AND_MEAN, so it can't be
+        # unified after any file that pulled in windows.h in lean-and-mean mode.
+        '/nsprpub/pr/src/md/windows/ntinrval.c',
+    ]
+    UNIFIED_SOURCES += [
         '/nsprpub/pr/src/io/prdir.c',
         '/nsprpub/pr/src/io/prfile.c',
         '/nsprpub/pr/src/io/prio.c',
         '/nsprpub/pr/src/io/prsocket.c',
         '/nsprpub/pr/src/md/windows/ntgc.c',
-        '/nsprpub/pr/src/md/windows/ntinrval.c',
         '/nsprpub/pr/src/md/windows/ntmisc.c',
         '/nsprpub/pr/src/md/windows/ntsec.c',
         '/nsprpub/pr/src/md/windows/ntsem.c',
