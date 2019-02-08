@@ -8,6 +8,7 @@
 
 #include "mozIStorageConnection.h"
 #include "mozIStorageService.h"
+#include "mozIThirdPartyUtil.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
 #include "nsIFile.h"
@@ -43,6 +44,7 @@
 #include "mozilla/dom/StorageDBUpdater.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/BackgroundUtils.h"
+#include "mozilla/net/MozURL.h"
 #include "mozilla/IntegerRange.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Preferences.h"
@@ -118,6 +120,7 @@ namespace dom {
 namespace quota {
 
 using namespace mozilla::ipc;
+using mozilla::net::MozURL;
 
 // We want profiles to be platform-independent so we always need to replace
 // the same characters on every platform. Windows has the most extensive set
@@ -5351,6 +5354,107 @@ void QuotaManager::GetStorageId(PersistenceType aPersistenceType,
   str.AppendInt(aClientType);
 
   aDatabaseId = str;
+}
+
+// static
+bool QuotaManager::IsPrincipalInfoValid(const PrincipalInfo& aPrincipalInfo) {
+  switch (aPrincipalInfo.type()) {
+    // A system principal is acceptable.
+    case PrincipalInfo::TSystemPrincipalInfo: {
+      return true;
+    }
+
+    // Validate content principals to ensure that the spec, originNoSuffix and
+    // baseDomain are sane.
+    case PrincipalInfo::TContentPrincipalInfo: {
+      const ContentPrincipalInfo& info =
+          aPrincipalInfo.get_ContentPrincipalInfo();
+
+      // Verify the principal spec parses.
+      RefPtr<MozURL> specURL;
+      nsresult rv = MozURL::Init(getter_AddRefs(specURL), info.spec());
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return false;
+      }
+
+      nsDependentCSubstring scheme = specURL->Scheme();
+
+      // Verify the principal originNoSuffix parses.
+      RefPtr<MozURL> originNoSuffixURL;
+      rv = MozURL::Init(getter_AddRefs(originNoSuffixURL),
+                        info.originNoSuffix());
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return false;
+      }
+
+      // Verify the principal originNoSuffix matches spec. Skip the check for
+      // some special schemes which are not supported by MozURL::Origin yet.
+      if (!scheme.EqualsLiteral("file") &&
+          !scheme.EqualsLiteral("indexeddb") &&
+          !scheme.EqualsLiteral("moz-extension") &&
+          !scheme.EqualsLiteral("moz-safe-about") &&
+          !scheme.EqualsLiteral("resource")) {
+        nsCString originNoSuffix;
+        specURL->Origin(originNoSuffix);
+
+        if (NS_WARN_IF(info.originNoSuffix() != originNoSuffix)) {
+          return false;
+        }
+      }
+
+      if (NS_WARN_IF(info.originNoSuffix().EqualsLiteral(kChromeOrigin))) {
+        return false;
+      }
+
+      // Verify the principal baseDomain exists.
+      if (NS_WARN_IF(info.baseDomain().IsVoid())) {
+        return false;
+      }
+
+      // Verify the principal baseDomain parses.
+      nsCString baseDomainForParsing;
+      if (!scheme.EqualsLiteral("indexeddb") &&
+          !scheme.EqualsLiteral("moz-safe-about")) {
+        baseDomainForParsing = scheme + NS_LITERAL_CSTRING("://");
+      }
+      baseDomainForParsing.Append(info.baseDomain());
+
+      RefPtr<MozURL> baseDomainURL;
+      rv = MozURL::Init(getter_AddRefs(baseDomainURL), baseDomainForParsing);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return false;
+      }
+
+      // Verify the principal baseDomain matches spec. Skip the check for
+      // some special schemes which are not handled by
+      // mozIThirdPartyUtil::GetBaseDomainFromSchemeHost.
+      if (!scheme.EqualsLiteral("file") &&
+          !scheme.EqualsLiteral("indexeddb") &&
+          !scheme.EqualsLiteral("moz-safe-about")) {
+        nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
+            do_GetService(THIRDPARTYUTIL_CONTRACTID);
+
+        nsCString baseDomain;
+        rv = thirdPartyUtil->GetBaseDomainFromSchemeHost(specURL->Scheme(),
+                                                         specURL->Host(),
+                                                         baseDomain);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return false;
+        }
+
+        if (NS_WARN_IF(info.baseDomain() != baseDomain)) {
+          return false;
+        }
+      }
+
+      return true;
+    }
+
+    default: { break; }
+  }
+
+  // Null and expanded principals are not acceptable.
+  return false;
 }
 
 // static
