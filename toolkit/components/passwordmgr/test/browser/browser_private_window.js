@@ -506,6 +506,9 @@ add_task(async function test_private_http_basic_auth() {
   Services.logins.removeAllLogins();
   clearHttpAuths();
 
+  const capturePrefValue = Services.prefs.getBoolPref(PRIVATE_BROWSING_CAPTURE_PREF);
+  ok(capturePrefValue, `Expect ${PRIVATE_BROWSING_CAPTURE_PREF} to default to true`);
+
   await BrowserTestUtils.withNewTab({
     gBrowser: privateWin.gBrowser,
     url: "https://example.com",
@@ -516,8 +519,9 @@ add_task(async function test_private_http_basic_auth() {
     is(fieldValues.password, "testpass", "Checking authorized password");
 
     let notif = getCaptureDoorhanger("password-save", PopupNotifications, browser);
-    ok(!notif, "got no notification popup");
+    ok(notif, "got notification popup");
     if (notif) {
+      ok(notif.wasDismissed, "notification should be dismissed");
       notif.remove();
     }
   });
@@ -526,6 +530,9 @@ add_task(async function test_private_http_basic_auth() {
 add_task(async function test_private_http_basic_auth_no_capture_pref() {
   info("test private/basic-auth: verify that we don't get a doorhanger after basic-auth login" +
        "with capture pref off");
+
+  const capturePrefValue = Services.prefs.getBoolPref(PRIVATE_BROWSING_CAPTURE_PREF);
+  Services.prefs.setBoolPref(PRIVATE_BROWSING_CAPTURE_PREF, false);
 
   Services.logins.removeAllLogins();
   clearHttpAuths();
@@ -540,6 +547,9 @@ add_task(async function test_private_http_basic_auth_no_capture_pref() {
     is(fieldValues.password, "testpass", "Checking authorized password");
 
     let notif = getCaptureDoorhanger("password-save", PopupNotifications, browser);
+    // restore the pref to its original value
+    Services.prefs.setBoolPref(PRIVATE_BROWSING_CAPTURE_PREF, capturePrefValue);
+
     ok(!notif, "got no notification popup");
     if (notif) {
       notif.remove();

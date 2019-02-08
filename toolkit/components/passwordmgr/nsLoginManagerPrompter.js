@@ -357,10 +357,8 @@ LoginManagerPrompter.prototype = {
 
     // If hostname is null, we can't save this login.
     if (hostname) {
-      var canRememberLogin;
-      if (this._inPrivateBrowsing) {
-        canRememberLogin = false;
-      } else {
+      var canRememberLogin = false;
+      if (this._allowRememberLogin) {
         canRememberLogin = (aSavePassword ==
                             Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY) &&
                            Services.logins.getLoginSavingEnabled(hostname);
@@ -608,7 +606,7 @@ LoginManagerPrompter.prototype = {
       }
 
       var canRememberLogin = Services.logins.getLoginSavingEnabled(hostname);
-      if (this._inPrivateBrowsing) {
+      if (!this._allowRememberLogin) {
         canRememberLogin = false;
       }
 
@@ -667,7 +665,9 @@ LoginManagerPrompter.prototype = {
                  " @ " + hostname + " (" + httpRealm + ")");
 
         if (notifyObj) {
-          this._showLoginCaptureDoorhanger(newLogin, "password-save");
+          this._showLoginCaptureDoorhanger(newLogin, "password-save", {
+            dismissed: this._inPrivateBrowsing,
+          });
           Services.obs.notifyObservers(newLogin, "passwordmgr-prompt-save");
         } else {
           Services.logins.addLogin(newLogin);
