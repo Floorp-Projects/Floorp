@@ -6,6 +6,7 @@ from __future__ import absolute_import, print_function
 import copy
 import os
 import sys
+import time
 
 from mozlog.commandline import setup_logging
 from talos import utils, test
