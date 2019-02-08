@@ -62,7 +62,6 @@ const sourceSpec = generateActorSpec({
           column: Arg(1, "nullable:number"),
         },
         options: Arg(2, "nullable:json"),
-        noSliding: Arg(3, "nullable:boolean"),
       },
       response: RetVal("json"),
     },
