@@ -9982,54 +9982,12 @@ void CodeGenerator::visitGetIteratorCache(LGetIteratorCache* lir) {
   addIC(lir, allocateIC(ic));
 }
 
-static void LoadNativeIterator(MacroAssembler& masm, Register obj,
-                               Register dest, Label* failures) {
-  MOZ_ASSERT(obj != dest);
-
-  // Test class.
-  masm.branchTestObjClass(Assembler::NotEqual, obj,
-                          &PropertyIteratorObject::class_, dest, obj, failures);
-
-  // Load NativeIterator object.
-  masm.loadObjPrivate(obj, JSObject::ITER_CLASS_NFIXED_SLOTS, dest);
-}
-
-typedef bool (*IteratorMoreFn)(JSContext*, HandleObject, MutableHandleValue);
-static const VMFunction IteratorMoreInfo =
-    FunctionInfo<IteratorMoreFn>(IteratorMore, "IteratorMore");
-
 void CodeGenerator::visitIteratorMore(LIteratorMore* lir) {
   const Register obj = ToRegister(lir->object());
   const ValueOperand output = ToOutValue(lir);
   const Register temp = ToRegister(lir->temp());
 
-  OutOfLineCode* ool =
-      oolCallVM(IteratorMoreInfo, lir, ArgList(obj), StoreValueTo(output));
-
-  Register outputScratch = output.scratchReg();
-  LoadNativeIterator(masm, obj, outputScratch, ool->entry());
-
-  // If propertyCursor_ < propertiesEnd_, load the next string and advance
-  // the cursor.  Otherwise return MagicValue(JS_NO_ITER_VALUE).
-  Label iterDone;
-  Address cursorAddr(outputScratch, NativeIterator::offsetOfPropertyCursor());
-  Address cursorEndAddr(outputScratch, NativeIterator::offsetOfPropertiesEnd());
-  masm.loadPtr(cursorAddr, temp);
-  masm.branchPtr(Assembler::BelowOrEqual, cursorEndAddr, temp, &iterDone);
-
-  // Get next string.
-  masm.loadPtr(Address(temp, 0), temp);
-
-  // Increase the cursor.
-  masm.addPtr(Imm32(sizeof(GCPtrFlatString)), cursorAddr);
-
-  masm.tagValue(JSVAL_TYPE_STRING, temp, output);
-  masm.jump(ool->rejoin());
-
-  masm.bind(&iterDone);
-  masm.moveValue(MagicValue(JS_NO_ITER_VALUE), output);
-
-  masm.bind(ool->rejoin());
+  masm.iteratorMore(obj, output, temp);
 }
 
 void CodeGenerator::visitIsNoIterAndBranch(LIsNoIterAndBranch* lir) {
@@ -10044,46 +10002,13 @@ void CodeGenerator::visitIsNoIterAndBranch(LIsNoIterAndBranch* lir) {
   }
 }
 
-typedef void (*CloseIteratorFromIonFn)(JSContext*, JSObject*);
-static const VMFunction CloseIteratorFromIonInfo =
-    FunctionInfo<CloseIteratorFromIonFn>(CloseIteratorFromIon,
-                                         "CloseIteratorFromIon");
-
 void CodeGenerator::visitIteratorEnd(LIteratorEnd* lir) {
   const Register obj = ToRegister(lir->object());
   const Register temp1 = ToRegister(lir->temp1());
   const Register temp2 = ToRegister(lir->temp2());
   const Register temp3 = ToRegister(lir->temp3());
 
-  OutOfLineCode* ool =
-      oolCallVM(CloseIteratorFromIonInfo, lir, ArgList(obj), StoreNothing());
-
-  LoadNativeIterator(masm, obj, temp1, ool->entry());
-
-  // Clear active bit.
-  masm.and32(Imm32(~NativeIterator::Flags::Active),
-             Address(temp1, NativeIterator::offsetOfFlags()));
-
-  // Reset property cursor.
-  masm.loadPtr(Address(temp1, NativeIterator::offsetOfGuardsEnd()), temp2);
-  masm.storePtr(temp2,
-                Address(temp1, NativeIterator::offsetOfPropertyCursor()));
-
-  // Unlink from the iterator list.
-  const Register next = temp2;
-  const Register prev = temp3;
-  masm.loadPtr(Address(temp1, NativeIterator::offsetOfNext()), next);
-  masm.loadPtr(Address(temp1, NativeIterator::offsetOfPrev()), prev);
-  masm.storePtr(prev, Address(next, NativeIterator::offsetOfPrev()));
-  masm.storePtr(next, Address(prev, NativeIterator::offsetOfNext()));
-#ifdef DEBUG
-  masm.storePtr(ImmPtr(nullptr),
-                Address(temp1, NativeIterator::offsetOfNext()));
-  masm.storePtr(ImmPtr(nullptr),
-                Address(temp1, NativeIterator::offsetOfPrev()));
-#endif
-
-  masm.bind(ool->rejoin());
+  masm.iteratorClose(obj, temp1, temp2, temp3);
 }
 
 void CodeGenerator::visitArgumentsLength(LArgumentsLength* lir) {

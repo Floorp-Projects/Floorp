@@ -441,49 +441,45 @@ bool Proxy::getOwnEnumerablePropertyKeys(JSContext* cx, HandleObject proxy,
   return handler->getOwnEnumerablePropertyKeys(cx, proxy, props);
 }
 
-JSObject* Proxy::enumerate(JSContext* cx, HandleObject proxy) {
+bool Proxy::enumerate(JSContext* cx, HandleObject proxy, AutoIdVector& props) {
   if (!CheckRecursionLimit(cx)) {
-    return nullptr;
+    return false;
   }
 
   const BaseProxyHandler* handler = proxy->as<ProxyObject>().handler();
   if (handler->hasPrototype()) {
-    AutoIdVector props(cx);
     if (!Proxy::getOwnEnumerablePropertyKeys(cx, proxy, props)) {
-      return nullptr;
+      return false;
     }
 
     RootedObject proto(cx);
     if (!GetPrototype(cx, proxy, &proto)) {
-      return nullptr;
+      return false;
     }
     if (!proto) {
-      return EnumeratedIdVectorToIterator(cx, proxy, props);
+      return true;
     }
+
     cx->check(proxy, proto);
 
     AutoIdVector protoProps(cx);
     if (!GetPropertyKeys(cx, proto, 0, &protoProps)) {
-      return nullptr;
+      return false;
     }
-    if (!AppendUnique(cx, props, protoProps)) {
-      return nullptr;
-    }
-    return EnumeratedIdVectorToIterator(cx, proxy, props);
+    return AppendUnique(cx, props, protoProps);
   }
 
   AutoEnterPolicy policy(cx, handler, proxy, JSID_VOIDHANDLE,
                          BaseProxyHandler::ENUMERATE, true);
 
   // If the policy denies access but wants us to return true, we need
-  // to hand a valid (empty) iterator object to the caller.
+  // to return an empty |props| list.
   if (!policy.allowed()) {
-    if (!policy.returnValue()) {
-      return nullptr;
-    }
-    return NewEmptyPropertyIterator(cx);
+    MOZ_ASSERT(props.empty());
+    return policy.returnValue();
   }
-  return handler->enumerate(cx, proxy);
+
+  return handler->enumerate(cx, proxy, props);
 }
 
 bool Proxy::call(JSContext* cx, HandleObject proxy, const CallArgs& args) {

@@ -628,7 +628,7 @@ static PropertyIteratorObject* NewPropertyIteratorObject(JSContext* cx) {
   // inside the nursery when deciding whether a barrier is necessary.
   MOZ_ASSERT(!js::gc::IsInsideNursery(res));
 
-  MOZ_ASSERT(res->numFixedSlots() == JSObject::ITER_CLASS_NFIXED_SLOTS);
+  MOZ_ASSERT(res->numFixedSlots() == PropertyIteratorObject::NUM_FIXED_SLOTS);
   return res;
 }
 
@@ -794,32 +794,6 @@ NativeIterator::NativeIterator(JSContext* cx,
   MOZ_ASSERT(!*hadError);
 }
 
-static inline PropertyIteratorObject* VectorToKeyIterator(JSContext* cx,
-                                                          HandleObject obj,
-                                                          AutoIdVector& props,
-                                                          uint32_t numGuards) {
-  MOZ_ASSERT(cx->compartment() == obj->compartment(),
-             "We may end up allocating shapes in the wrong zone!");
-  if (obj->isSingleton() && !JSObject::setIteratedSingleton(cx, obj)) {
-    return nullptr;
-  }
-  MarkObjectGroupFlags(cx, obj, OBJECT_FLAG_ITERATED);
-
-  return CreatePropertyIterator(cx, obj, props, numGuards, 0);
-}
-
-JS_FRIEND_API JSObject* js::EnumeratedIdVectorToIterator(JSContext* cx,
-                                                         HandleObject obj,
-                                                         AutoIdVector& props) {
-  return VectorToKeyIterator(cx, obj, props, 0);
-}
-
-// Mainly used for .. in over null/undefined
-JSObject* js::NewEmptyPropertyIterator(JSContext* cx) {
-  AutoIdVector props(cx);  // Empty
-  return CreatePropertyIterator(cx, nullptr, props, 0, 0);
-}
-
 /* static */ bool IteratorHashPolicy::match(PropertyIteratorObject* obj,
                                             const Lookup& lookup) {
   NativeIterator* ni = obj->getNativeIterator();
@@ -944,7 +918,22 @@ static MOZ_MUST_USE bool StoreInIteratorCache(JSContext* cx, JSObject* obj,
   return true;
 }
 
-JSObject* js::GetIterator(JSContext* cx, HandleObject obj) {
+bool js::EnumerateProperties(JSContext* cx, HandleObject obj,
+                             AutoIdVector& props) {
+  MOZ_ASSERT(props.empty());
+
+  if (MOZ_UNLIKELY(obj->is<ProxyObject>())) {
+    return Proxy::enumerate(cx, obj, props);
+  }
+
+  return Snapshot(cx, obj, 0, &props);
+}
+
+static JSObject* GetIterator(JSContext* cx, HandleObject obj) {
+  MOZ_ASSERT(!obj->is<PropertyIteratorObject>());
+  MOZ_ASSERT(cx->compartment() == obj->compartment(),
+             "We may end up allocating shapes in the wrong zone!");
+
   uint32_t numGuards = 0;
   if (PropertyIteratorObject* iterobj =
           LookupInIteratorCache(cx, obj, &numGuards)) {
@@ -958,23 +947,22 @@ JSObject* js::GetIterator(JSContext* cx, HandleObject obj) {
     numGuards = 0;
   }
 
-  MOZ_ASSERT(!obj->is<PropertyIteratorObject>());
-
-  if (MOZ_UNLIKELY(obj->is<ProxyObject>())) {
-    return Proxy::enumerate(cx, obj);
-  }
-
   AutoIdVector keys(cx);
-  if (!Snapshot(cx, obj, 0, &keys)) {
+  if (!EnumerateProperties(cx, obj, keys)) {
     return nullptr;
   }
 
-  JSObject* res = VectorToKeyIterator(cx, obj, keys, numGuards);
-  if (!res) {
+  if (obj->isSingleton() && !JSObject::setIteratedSingleton(cx, obj)) {
+    return nullptr;
+  }
+  MarkObjectGroupFlags(cx, obj, OBJECT_FLAG_ITERATED);
+
+  PropertyIteratorObject* iterobj =
+      CreatePropertyIterator(cx, obj, keys, numGuards, 0);
+  if (!iterobj) {
     return nullptr;
   }
 
-  PropertyIteratorObject* iterobj = &res->as<PropertyIteratorObject>();
   cx->check(iterobj);
 
   // Cache the iterator object.
@@ -1272,7 +1260,8 @@ JSObject* js::ValueToIterator(JSContext* cx, HandleValue vp) {
      * that |for (var p in <null or undefined>) <loop>;| never executes
      * <loop>, per ES5 12.6.4.
      */
-    return NewEmptyPropertyIterator(cx);
+    AutoIdVector props(cx);  // Empty
+    return CreatePropertyIterator(cx, nullptr, props, 0, 0);
   } else {
     obj = ToObject(cx, vp);
     if (!obj) {
@@ -1508,37 +1497,6 @@ bool js::SuppressDeletedElement(JSContext* cx, HandleObject obj,
     return false;
   }
   return SuppressDeletedPropertyHelper(cx, obj, str);
-}
-
-bool js::IteratorMore(JSContext* cx, HandleObject iterobj,
-                      MutableHandleValue rval) {
-  // Fast path for native iterators.
-  if (MOZ_LIKELY(iterobj->is<PropertyIteratorObject>())) {
-    NativeIterator* ni =
-        iterobj->as<PropertyIteratorObject>().getNativeIterator();
-    rval.set(ni->nextIteratedValueAndAdvance());
-    return true;
-  }
-
-  if (JS_IsDeadWrapper(iterobj)) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DEAD_OBJECT);
-    return false;
-  }
-
-  MOZ_ASSERT(IsWrapper(iterobj));
-
-  RootedObject obj(cx, CheckedUnwrap(iterobj));
-  if (!obj) {
-    return false;
-  }
-
-  MOZ_RELEASE_ASSERT(obj->is<PropertyIteratorObject>());
-  {
-    AutoRealm ar(cx, obj);
-    NativeIterator* ni = obj->as<PropertyIteratorObject>().getNativeIterator();
-    rval.set(ni->nextIteratedValueAndAdvance());
-  }
-  return cx->compartment()->wrap(cx, rval);
 }
 
 static const JSFunctionSpec iterator_proto_methods[] = {

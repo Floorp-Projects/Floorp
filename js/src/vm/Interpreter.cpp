@@ -2243,11 +2243,8 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     CASE(JSOP_MOREITER) {
       MOZ_ASSERT(REGS.stackDepth() >= 1);
       MOZ_ASSERT(REGS.sp[-1].isObject());
-      PUSH_NULL();
-      ReservedRooted<JSObject*> obj(&rootObject0, &REGS.sp[-2].toObject());
-      if (!IteratorMore(cx, obj, REGS.stackHandleAt(-1))) {
-        goto error;
-      }
+      Value v = IteratorMore(&REGS.sp[-1].toObject());
+      PUSH_COPY(v);
     }
     END_CASE(JSOP_MOREITER)
 

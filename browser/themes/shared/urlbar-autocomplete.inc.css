@@ -5,9 +5,9 @@
 %endif
 
 %filter substitution
-%define urlbarViewPadding 5px
-%define urlbarViewIconMarginEnd .6em
-%define urlbarViewFaviconOffset (@urlbarViewPadding@ + 16px /* action icon width */ + @urlbarViewIconMarginEnd@)
+%define urlbarViewPadding 4px
+%define urlbarViewIconMarginEnd 8px
+%define urlbarViewFaviconOffset (@urlbarViewPadding@ + 16px /* type icon width */ + @urlbarViewIconMarginEnd@)
 
 :root {
   --autocomplete-popup-background: -moz-field;
@@ -32,7 +32,6 @@
   background: var(--autocomplete-popup-background);
   color: var(--autocomplete-popup-color);
   border: 1px solid var(--autocomplete-popup-border-color);
-  font: menu;
 }
 
 .urlbarView-body-inner {
@@ -47,14 +46,15 @@
 
 .urlbarView-row {
   border-radius: 2px;
-  padding: 7px;
-  padding-inline-start: calc(var(--item-padding-start, calc(7px + @urlbarViewFaviconOffset@)) - @urlbarViewFaviconOffset@);
-  padding-inline-end: var(--item-padding-end, 7px);
+  padding-top: 5px;
+  padding-bottom: 5px;
+  padding-inline-start: calc(var(--item-padding-start, calc(5px + @urlbarViewFaviconOffset@)) - @urlbarViewFaviconOffset@);
+  padding-inline-end: var(--item-padding-end, 5px);
 }
 
 :root[uidensity=touch] .urlbarView-row {
-  padding-top: 17px;
-  padding-bottom: 17px;
+  padding-top: 15px;
+  padding-bottom: 15px;
 }
 
 .urlbarView-row-inner {
@@ -98,10 +98,6 @@
   background-image: url(chrome://browser/skin/tab.svg);
 }
 
-.urlbarView-title {
-  font-size: 1.05em;
-}
-
 .urlbarView-secondary::before {
   content: "\2014";
   color: var(--panel-disabled-color);
@@ -114,7 +110,7 @@
 
 .urlbarView-secondary {
   color: var(--urlbar-popup-action-color);
-  font-size: 0.9em;
+  font-size: .85em;
 }
 
 .urlbarView-url {

@@ -97,7 +97,6 @@ class BaselineInspector {
   bool hasSeenNegativeIndexGetElement(jsbytecode* pc);
   bool hasSeenAccessedGetter(jsbytecode* pc);
   bool hasSeenDoubleResult(jsbytecode* pc);
-  bool hasSeenNonStringIterMore(jsbytecode* pc);
 
   MOZ_MUST_USE bool isOptimizableConstStringSplit(jsbytecode* pc,
                                                   JSString** strOut,

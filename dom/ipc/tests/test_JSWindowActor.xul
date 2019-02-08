@@ -37,13 +37,23 @@
   add_task(async function getActor() {
     // Test in-process getActor function
     ChromeUtils.registerWindowActor("Test", windowActorOptions);
+    SimpleTest.doesThrow(() =>
+      ChromeUtils.registerWindowActor("Test", windowActorOptions),
+      "Should throw if register has duplicate name.");
+    ChromeUtils.unregisterWindowActor("Test");
+  });
+
+  add_task(async function getActor() {
+    // Test in-process getActor function
+    ChromeUtils.registerWindowActor("Test", windowActorOptions);
     let parent = this.window.docShell.browsingContext.currentWindowGlobal;
-    isnot(parent, null, "WindowGlobalParent should have value.");
+    ok(parent, "WindowGlobalParent should have value.");
     let actorParent = parent.getActor("Test");
     is(actorParent.show(), "TestParent", "actor show should have vaule.");
     is(actorParent.manager, parent, "manager should match WindowGlobalParent.");
 
     let child = this.window.getWindowGlobalChild();
+    ok(child, "WindowGlobalChild should have value.");
     is(child.isInProcess, true, "Actor should be in-process.");
     let actorChild = child.getActor("Test");
 
@@ -51,6 +61,24 @@
     is(actorChild.manager, child, "manager should match WindowGlobalChild.");
     ok(parent.childActor===child, "Actor should be the same.");
     ok(parent.childActor.getActor("Test")===child.getActor("Test"), "GetActor should be the same.");
+    ChromeUtils.unregisterWindowActor("Test");
+  });
+
+  add_task(async function asyncMessage() {
+    // Test in-process send/recvAsyncMessage function
+    ChromeUtils.registerWindowActor("Test", windowActorOptions);
+    let child = this.window.getWindowGlobalChild();
+    let actorChild = child.getActor("Test");
+    let promise = new Promise(resolve => {
+      actorChild.sendAsyncMessage("Test", "init", {});
+      actorChild.done = (data) => resolve(data);
+    }).then(data => {
+      ok(data.initial, "Initial should be true.");
+      ok(data.toParent, "ToParent should be true.");
+      ok(data.toChild, "ToChild should be true.");
+    });
+
+    await promise;
     ChromeUtils.unregisterWindowActor("Test");
   });
   ]]></script>

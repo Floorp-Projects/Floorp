@@ -1173,8 +1173,6 @@ JSString* TypeOfObject(JSObject* obj, JSRuntime* rt);
 bool GetPrototypeOf(JSContext* cx, HandleObject target,
                     MutableHandleValue rval);
 
-void CloseIteratorFromIon(JSContext* cx, JSObject* obj);
-
 bool DoConcatStringObject(JSContext* cx, HandleValue lhs, HandleValue rhs,
                           MutableHandleValue res);
 
