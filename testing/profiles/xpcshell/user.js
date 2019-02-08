@@ -16,6 +16,3 @@ user_pref("toolkit.telemetry.server", "https://%(server)s/telemetry-dummy");
 // all processes would run at low priority, which is not desirable, so we
 // disable the process priority manager entirely here.
 user_pref("dom.ipc.processPriorityManager.enabled", false);
-// Avoid idle-daily notifications, to avoid expensive operations that may
-// cause unexpected test timeouts.
-user_pref("idle.lastDailyNotification", -1);
