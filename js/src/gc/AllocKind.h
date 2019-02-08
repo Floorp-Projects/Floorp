@@ -128,25 +128,20 @@ inline bool IsShapeAllocKind(AllocKind kind) {
 
 // Returns a sequence for use in a range-based for loop,
 // to iterate over all alloc kinds.
-inline decltype(mozilla::MakeEnumeratedRange(AllocKind::FIRST,
-                                             AllocKind::LIMIT))
-AllAllocKinds() {
+inline auto AllAllocKinds() {
   return mozilla::MakeEnumeratedRange(AllocKind::FIRST, AllocKind::LIMIT);
 }
 
 // Returns a sequence for use in a range-based for loop,
 // to iterate over all object alloc kinds.
-inline decltype(mozilla::MakeEnumeratedRange(AllocKind::OBJECT_FIRST,
-                                             AllocKind::OBJECT_LIMIT))
-ObjectAllocKinds() {
+inline auto ObjectAllocKinds() {
   return mozilla::MakeEnumeratedRange(AllocKind::OBJECT_FIRST,
                                       AllocKind::OBJECT_LIMIT);
 }
 
 // Returns a sequence for use in a range-based for loop,
 // to iterate over alloc kinds from |first| to |limit|, exclusive.
-inline decltype(mozilla::MakeEnumeratedRange(AllocKind::FIRST,
-                                             AllocKind::LIMIT))
+inline auto
 SomeAllocKinds(AllocKind first = AllocKind::FIRST,
                AllocKind limit = AllocKind::LIMIT) {
   MOZ_ASSERT(IsAllocKind(first), "|first| is not a valid AllocKind!");
