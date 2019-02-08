@@ -748,6 +748,8 @@ var AddonTestUtils = {
 
     this.emit("addon-manager-started");
 
+    await Promise.all(XPIScope.XPIProvider.startupPromises);
+
     // Load the add-ons list as it was after extension registration
     await this.loadAddonsList(true);
 

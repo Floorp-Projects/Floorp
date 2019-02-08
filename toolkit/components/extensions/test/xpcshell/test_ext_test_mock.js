@@ -17,6 +17,8 @@ async function checkExtensionStartupAndUnload(ext) {
   Assert.ok(ext.uuid, "Extension UUID exists after unload");
 }
 
+AddonTestUtils.init(this);
+
 add_task(async function setup() {
   await ExtensionTestUtils.startAddonManager();
 });

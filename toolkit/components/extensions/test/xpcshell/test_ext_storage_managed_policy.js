@@ -15,6 +15,8 @@ registerCleanupFunction(() => {
 // Load policy engine
 Services.policies; // eslint-disable-line no-unused-expressions
 
+AddonTestUtils.init(this);
+
 add_task(async function test_storage_managed_policy() {
   await ExtensionTestUtils.startAddonManager();
 
