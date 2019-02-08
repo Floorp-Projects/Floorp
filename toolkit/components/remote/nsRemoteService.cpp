@@ -60,15 +60,6 @@ nsRemoteService::Startup(const char* aAppName, const char* aProfileName) {
 }
 
 NS_IMETHODIMP
-nsRemoteService::RegisterWindow(mozIDOMWindow* aWindow) {
-  // Note: RegisterWindow() is not implemented/needed by DBus service.
-  if (mGtkRemoteService) {
-    mGtkRemoteService->RegisterWindow(aWindow);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsRemoteService::Shutdown() {
 #if defined(MOZ_ENABLE_DBUS)
   if (mDBusRemoteService) {
@@ -140,7 +131,6 @@ static bool FindExtensionParameterInCommand(const char* aParameterName,
 }
 
 const char* nsRemoteService::HandleCommandLine(const char* aBuffer,
-                                               nsIDOMWindow* aWindow,
                                                uint32_t aTimestamp) {
   nsCOMPtr<nsICommandLineRunner> cmdline(new nsCommandLine());
 
@@ -181,8 +171,6 @@ const char* nsRemoteService::HandleCommandLine(const char* aBuffer,
   if (NS_FAILED(rv)) {
     return "509 internal error";
   }
-
-  if (aWindow) cmdline->SetWindowContext(aWindow);
 
   SetDesktopStartupIDOrTimestamp(desktopStartupID, aTimestamp);
 

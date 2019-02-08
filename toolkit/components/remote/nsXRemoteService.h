@@ -14,7 +14,6 @@
 #include <X11/X.h>
 
 class nsIDOMWindow;
-class nsIWeakReference;
 
 #ifdef IS_BIG_ENDIAN
 #  define TO_LITTLE_ENDIAN32(x)                           \
@@ -31,8 +30,7 @@ class nsXRemoteService {
  protected:
   nsXRemoteService();
   static bool HandleNewProperty(Window aWindowId, Display* aDisplay,
-                                Time aEventTime, Atom aChangedAtom,
-                                nsIWeakReference* aDomWindow);
+                                Time aEventTime, Atom aChangedAtom);
   void XRemoteBaseStartup(const char* aAppName, const char* aProfileName);
   void HandleCommandsFor(Window aWindowId);
 

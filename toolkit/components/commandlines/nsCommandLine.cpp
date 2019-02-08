@@ -187,18 +187,6 @@ nsCommandLine::GetWorkingDirectory(nsIFile** aResult) {
 }
 
 NS_IMETHODIMP
-nsCommandLine::GetWindowContext(nsIDOMWindow** aResult) {
-  NS_IF_ADDREF(*aResult = mWindowContext);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCommandLine::SetWindowContext(nsIDOMWindow* aValue) {
-  mWindowContext = aValue;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsCommandLine::ResolveFile(const nsAString& aArgument, nsIFile** aResult) {
   NS_ENSURE_TRUE(mWorkingDir, NS_ERROR_NOT_INITIALIZED);
 

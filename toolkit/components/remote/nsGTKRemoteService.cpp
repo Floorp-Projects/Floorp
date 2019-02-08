@@ -16,8 +16,6 @@
 #include "nsPIDOMWindow.h"
 #include "mozilla/ModuleUtils.h"
 #include "nsIServiceManager.h"
-#include "nsIWeakReferenceUtils.h"
-#include "nsIWidget.h"
 #include "nsIAppShellService.h"
 #include "nsAppShellCID.h"
 
@@ -37,43 +35,7 @@ nsGTKRemoteService::Startup(const char* aAppName, const char* aProfileName) {
 
   mServerWindow = gtk_invisible_new();
   gtk_widget_realize(mServerWindow);
-  HandleCommandsFor(mServerWindow, nullptr);
-
-  for (auto iter = mWindows.Iter(); !iter.Done(); iter.Next()) {
-    HandleCommandsFor(iter.Key(), iter.UserData());
-  }
-
-  return NS_OK;
-}
-
-static nsIWidget* GetMainWidget(nsPIDOMWindowInner* aWindow) {
-  // get the native window for this instance
-  nsCOMPtr<nsIBaseWindow> baseWindow(do_QueryInterface(aWindow->GetDocShell()));
-  NS_ENSURE_TRUE(baseWindow, nullptr);
-
-  nsCOMPtr<nsIWidget> mainWidget;
-  baseWindow->GetMainWidget(getter_AddRefs(mainWidget));
-  return mainWidget;
-}
-
-NS_IMETHODIMP
-nsGTKRemoteService::RegisterWindow(mozIDOMWindow* aWindow) {
-  nsIWidget* mainWidget = GetMainWidget(nsPIDOMWindowInner::From(aWindow));
-  NS_ENSURE_TRUE(mainWidget, NS_ERROR_FAILURE);
-
-  GtkWidget* widget =
-      (GtkWidget*)mainWidget->GetNativeData(NS_NATIVE_SHELLWIDGET);
-  NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);
-
-  nsWeakPtr weak = do_GetWeakReference(aWindow);
-  NS_ENSURE_TRUE(weak, NS_ERROR_FAILURE);
-
-  mWindows.Put(widget, weak);
-
-  // If Startup() has already been called, immediately register this window.
-  if (mServerWindow) {
-    HandleCommandsFor(widget, weak);
-  }
+  HandleCommandsFor(mServerWindow);
 
   return NS_OK;
 }
@@ -88,10 +50,9 @@ nsGTKRemoteService::Shutdown() {
   return NS_OK;
 }
 
-void nsGTKRemoteService::HandleCommandsFor(GtkWidget* widget,
-                                           nsIWeakReference* aWindow) {
+void nsGTKRemoteService::HandleCommandsFor(GtkWidget* widget) {
   g_signal_connect(G_OBJECT(widget), "property_notify_event",
-                   G_CALLBACK(HandlePropertyChange), aWindow);
+                   G_CALLBACK(HandlePropertyChange), nullptr);
 
   gtk_widget_add_events(widget, GDK_PROPERTY_CHANGE_MASK);
 
@@ -101,14 +62,14 @@ void nsGTKRemoteService::HandleCommandsFor(GtkWidget* widget,
 
 gboolean nsGTKRemoteService::HandlePropertyChange(GtkWidget* aWidget,
                                                   GdkEventProperty* pevent,
-                                                  nsIWeakReference* aThis) {
+                                                  void* aData) {
   if (pevent->state == GDK_PROPERTY_NEW_VALUE) {
     Atom changedAtom = gdk_x11_atom_to_xatom(pevent->atom);
 
     XID window = gdk_x11_window_get_xid(gtk_widget_get_window(aWidget));
     return HandleNewProperty(window,
                              GDK_DISPLAY_XDISPLAY(gdk_display_get_default()),
-                             pevent->time, changedAtom, aThis);
+                             pevent->time, changedAtom);
   }
   return FALSE;
 }
