@@ -2412,14 +2412,6 @@
     "n_values": 16,
     "description": "Websockets Handshake Results (ws-ok-plain, ws-ok-proxy, ws-failed-plain, ws-failed-proxy, wss-ok-plain, wss-ok-proxy, wss-failed-plain, wss-failed-proxy)"
   },
-  "SPDY_VERSION2": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["necko@mozilla.com"],
-    "expires_in_version": "never",
-    "kind": "enumerated",
-    "n_values": 48,
-    "description": "SPDY: Protocol Version Used"
-  },
   "HTTP_RESPONSE_VERSION": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["necko@mozilla.com"],
