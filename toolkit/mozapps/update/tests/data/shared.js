@@ -2,11 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* Shared code for xpcshell and mochitests-chrome */
-/* eslint-disable no-undef */
+/* Shared code for xpcshell, mochitests-chrome, and mochitest-browser-chrome. */
 
-var {FileUtils} = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
-var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+// Definitions needed to run eslint on this file.
+/* global AppConstants, DATA_URI_SPEC, LOG_FUNCTION */
+/* global Services, URL_HOST, DEBUG_AUS_TEST */
+
+const {FileUtils} = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+
 ChromeUtils.defineModuleGetter(this, "ctypes",
                                "resource://gre/modules/ctypes.jsm");
 ChromeUtils.defineModuleGetter(this, "UpdateUtils",
@@ -22,6 +26,8 @@ const PREF_APP_UPDATE_DOWNLOADPROMPTATTEMPTS     = "app.update.download.attempts
 const PREF_APP_UPDATE_DOWNLOADPROMPT_MAXATTEMPTS = "app.update.download.maxAttempts";
 const PREF_APP_UPDATE_DISABLEDFORTESTING         = "app.update.disabledForTesting";
 const PREF_APP_UPDATE_IDLETIME                   = "app.update.idletime";
+const PREF_APP_UPDATE_INTERVAL                   = "app.update.interval";
+const PREF_APP_UPDATE_LASTUPDATETIME             = "app.update.lastUpdateTime.background-update-timer";
 const PREF_APP_UPDATE_LOG                        = "app.update.log";
 const PREF_APP_UPDATE_NOTIFIEDUNSUPPORTED        = "app.update.notifiedUnsupported";
 const PREF_APP_UPDATE_PROMPTWAITTIME             = "app.update.promptWaitTime";
@@ -37,7 +43,6 @@ const PREF_APP_UPDATE_URL_MANUAL                 = "app.update.url.manual";
 const PREFBRANCH_APP_PARTNER         = "app.partner.";
 const PREF_DISTRIBUTION_ID           = "distribution.id";
 const PREF_DISTRIBUTION_VERSION      = "distribution.version";
-const PREF_DISABLE_SECURITY          = "security.turn_off_all_security_so_that_viruses_can_take_over_this_computer";
 
 const CONFIG_APP_UPDATE_AUTO         = "app.update.auto";
 
@@ -53,25 +58,26 @@ const XRE_UPDATE_ROOT_DIR          = "UpdRootD";
 const DIR_PATCH        = "0";
 const DIR_TOBEDELETED  = "tobedeleted";
 const DIR_UPDATES      = "updates";
-const DIR_UPDATED      = IS_MACOSX ? "Updated.app" : "updated";
+const DIR_UPDATED      = AppConstants.platform == "macosx" ? "Updated.app"
+                                                           : "updated";
 
 const FILE_ACTIVE_UPDATE_XML         = "active-update.xml";
 const FILE_APPLICATION_INI           = "application.ini";
 const FILE_BACKUP_UPDATE_LOG         = "backup-update.log";
-const FILE_BT_RESULT                 = "update.bt";
+const FILE_BT_RESULT                 = "bt.result";
 const FILE_LAST_UPDATE_LOG           = "last-update.log";
 const FILE_PRECOMPLETE               = "precomplete";
 const FILE_PRECOMPLETE_BAK           = "precomplete.bak";
-const FILE_UPDATE_SETTINGS_INI       = "update-settings.ini";
-const FILE_UPDATE_SETTINGS_INI_BAK   = "update-settings.ini.bak";
-const FILE_UPDATER_INI               = "updater.ini";
-const FILE_UPDATES_XML               = "updates.xml";
-const FILE_UPDATE_CONFIG             = "update-config.json";
+const FILE_UPDATE_CONFIG_JSON        = "update-config.json";
 const FILE_UPDATE_LOG                = "update.log";
 const FILE_UPDATE_MAR                = "update.mar";
+const FILE_UPDATE_SETTINGS_INI       = "update-settings.ini";
+const FILE_UPDATE_SETTINGS_INI_BAK   = "update-settings.ini.bak";
 const FILE_UPDATE_STATUS             = "update.status";
 const FILE_UPDATE_TEST               = "update.test";
 const FILE_UPDATE_VERSION            = "update.version";
+const FILE_UPDATER_INI               = "updater.ini";
+const FILE_UPDATES_XML               = "updates.xml";
 
 const UPDATE_SETTINGS_CONTENTS = "[Settings]\n" +
                                  "ACCEPTED_MAR_CHANNEL_IDS=xpcshell-test\n";
@@ -83,7 +89,7 @@ const PR_TRUNCATE    = 0x20;
 
 var gChannel;
 
-/* import-globals-from ../data/sharedUpdateXML.js */
+/* import-globals-from sharedUpdateXML.js */
 Services.scriptloader.loadSubScript(DATA_URI_SPEC + "sharedUpdateXML.js", this);
 
 const PERMS_FILE      = FileUtils.PERMS_FILE;
@@ -257,7 +263,7 @@ function writeVersionFile(aVersion) {
  *         platforms.
  */
 function setAppUpdateAutoSync(aEnabled) {
-  if (IS_WIN) {
+  if (AppConstants.platform == "win") {
     let file = getUpdateConfigFile();
     if (aEnabled === undefined || aEnabled === null) {
       if (file.exists()) {
@@ -645,7 +651,7 @@ function getGREBinDir() {
  */
 function getUpdateConfigFile() {
   let configFile = getUpdatesRootDir();
-  configFile.append(FILE_UPDATE_CONFIG);
+  configFile.append(FILE_UPDATE_CONFIG_JSON);
   return configFile;
 }
 
@@ -656,7 +662,7 @@ function getUpdateConfigFile() {
  * @throws If the function is called on a platform other than Windows.
  */
 function getPerInstallationMutexName() {
-  if (!IS_WIN) {
+  if (AppConstants.platform != "win") {
     throw new Error("Windows only function called by a different platform!");
   }
 
@@ -682,7 +688,7 @@ function getPerInstallationMutexName() {
  * @throws If the function is called on a platform other than Windows.
  */
 function closeHandle(aHandle) {
-  if (!IS_WIN) {
+  if (AppConstants.platform != "win") {
     throw new Error("Windows only function called by a different platform!");
   }
 
@@ -704,7 +710,7 @@ function closeHandle(aHandle) {
  * @throws If the function is called on a platform other than Windows.
  */
 function createMutex(aName) {
-  if (!IS_WIN) {
+  if (AppConstants.platform != "win") {
     throw new Error("Windows only function called by a different platform!");
   }
 
