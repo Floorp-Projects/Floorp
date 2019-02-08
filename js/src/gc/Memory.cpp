@@ -749,6 +749,8 @@ bool MarkPagesUnused(void* region, size_t length) {
                       DWORD(PageAccess::ReadWrite)) == region;
 #elif defined(XP_DARWIN)
   return madvise(region, length, MADV_FREE) == 0;
+#elif defined(XP_SOLARIS)
+  return posix_madvise(region, length, POSIX_MADV_DONTNEED) == 0;
 #else
   return madvise(region, length, MADV_DONTNEED) == 0;
 #endif
