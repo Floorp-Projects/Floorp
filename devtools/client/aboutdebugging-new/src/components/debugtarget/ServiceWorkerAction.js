@@ -18,6 +18,7 @@ const InspectAction = createFactory(require("./InspectAction"));
 
 const Actions = require("../../actions/index");
 const Types = require("../../types/index");
+const { SERVICE_WORKER_STATUSES } = require("../../constants");
 
 /**
  * This component displays buttons for service worker.
@@ -105,25 +106,29 @@ class ServiceWorkerAction extends PureComponent {
   }
 
   _renderAction() {
-    const { isActive, isRunning } = this.props.target.details;
+    const { status } = this.props.target.details;
 
-    if (!isRunning) {
-      return [
-        this._renderUnregisterButton(),
-        this._renderStartButton(),
-      ];
+    switch (status) {
+      case SERVICE_WORKER_STATUSES.RUNNING:
+        return [
+          this._renderUnregisterButton(),
+          this._renderPushButton(),
+          this._renderInspectAction(),
+        ];
+      case SERVICE_WORKER_STATUSES.REGISTERING:
+        // Only inspect is available if the service worker is not active.
+        return [
+          this._renderInspectAction(),
+        ];
+      case SERVICE_WORKER_STATUSES.STOPPED:
+        return [
+          this._renderUnregisterButton(),
+          this._renderStartButton(),
+        ];
+      default:
+        console.error("Unexpected service worker status: " + status);
+        return [];
     }
-
-    if (!isActive) {
-      // Only inspect is available if the service worker is not active.
-      return [this._renderInspectAction()];
-    }
-
-    return [
-      this._renderUnregisterButton(),
-      this._renderPushButton(),
-      this._renderInspectAction(),
-    ];
   }
 
   render() {

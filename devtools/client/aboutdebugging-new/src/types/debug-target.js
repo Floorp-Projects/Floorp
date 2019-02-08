@@ -27,10 +27,6 @@ const tabTargetDetails = {
 const workerTargetDetails = {
   // (service worker specific) one of "LISTENING", "NOT_LISTENING". undefined otherwise.
   fetch: PropTypes.string,
-  // (service worker specific) true if they reached the activated state.
-  isActive: PropTypes.bool,
-  // (service worker specific) true if they are currently running.
-  isRunning: PropTypes.bool,
   // front for the ServiceWorkerRegistration related to this service worker.
   registrationFront: PropTypes.object,
   // (service worker specific) scope of the service worker registration.
