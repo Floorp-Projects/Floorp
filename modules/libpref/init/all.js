@@ -5141,6 +5141,9 @@ pref("extensions.webextensions.enablePerformanceCounters", true);
 // reset, so we reduce memory footprint.
 pref("extensions.webextensions.performanceCountersMaxAge", 1000);
 
+// The HTML about:addons page.
+pref("extensions.htmlaboutaddons.enabled", false);
+
 // Report Site Issue button
 // Note that on enabling the button in other release channels, make sure to
 // disable it in problematic tests, see disableNonReleaseActions() inside

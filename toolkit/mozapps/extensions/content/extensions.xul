@@ -648,6 +648,8 @@
                 <spacer flex="1"/>
               </hbox>
             </scrollbox>
+
+            <browser id="html-view-browser" type="content" flex="1" disablehistory="true"/>
           </deck>
         </vbox>
       </deck>
