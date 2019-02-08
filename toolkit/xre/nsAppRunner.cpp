@@ -2886,7 +2886,6 @@ class XREMain {
   UniquePtr<XREAppData> mAppData;
 
   nsXREDirProvider mDirProvider;
-  nsAutoCString mProfileName;
   nsAutoCString mDesktopStartupID;
 
   bool mStartOffline;
@@ -4099,13 +4098,6 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
     } else {
       NS_WARNING("Profile reset failed.");
       return 1;
-    }
-  }
-
-  if (profile) {
-    rv = profile->GetName(mProfileName);
-    if (NS_FAILED(rv)) {
-      mProfileName.Truncate(0);
     }
   }
 
