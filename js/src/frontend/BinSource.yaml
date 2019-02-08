@@ -1392,6 +1392,10 @@ SwitchDefault:
                    factory_.newCaseOrDefault(start, nullptr, consequent));
 
 SwitchStatement:
+  fields:
+    discriminant:
+      after: |
+        ParseContext::Statement stmt(parseContext_, StatementKind::Switch);
   build: |
     BINJS_TRY_DECL(scope, factory_.newLexicalScope(nullptr, cases));
     BINJS_TRY_DECL(result,
@@ -1399,6 +1403,10 @@ SwitchStatement:
                                                /* hasDefault = */ false));
 
 SwitchStatementWithDefault:
+  fields:
+    discriminant:
+      after: |
+        ParseContext::Statement stmt(parseContext_, StatementKind::Switch);
   build: |
     // Concatenate `preDefaultCase`, `defaultCase`, `postDefaultCase`
     auto cases = preDefaultCases;
