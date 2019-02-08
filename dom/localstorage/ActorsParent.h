@@ -62,6 +62,7 @@ bool RecvPBackgroundLSRequestConstructor(PBackgroundLSRequestParent* aActor,
 bool DeallocPBackgroundLSRequestParent(PBackgroundLSRequestParent* aActor);
 
 PBackgroundLSSimpleRequestParent* AllocPBackgroundLSSimpleRequestParent(
+    mozilla::ipc::PBackgroundParent* aBackgroundActor,
     const LSSimpleRequestParams& aParams);
 
 bool RecvPBackgroundLSSimpleRequestConstructor(
