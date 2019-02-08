@@ -22,7 +22,7 @@ function run_test() {
  * Called after the call to setupUpdaterTest finishes.
  */
 function setupUpdaterTestFinished() {
-  let path = getUpdatesPatchDir().parent.path;
+  let path = getUpdateDirFile(DIR_PATCH).parent.path;
   runUpdate(STATE_AFTER_RUNUPDATE, false, 1, true, path, null, null, null);
 }
 

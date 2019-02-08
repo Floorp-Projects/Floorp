@@ -252,7 +252,7 @@ function runTestDefaultWaitForWindowClosed() {
 
     setupPrefs();
     gEnv.set("MOZ_TEST_SKIP_UPDATE_STAGE", "1");
-    removeUpdateDirsAndFiles();
+    removeUpdateFiles(true);
     setupTimer(gTestTimeout);
     SimpleTest.executeSoon(setupTestUpdater);
   }
@@ -281,9 +281,8 @@ function finishTestDefault() {
 
   resetPrefs();
   gEnv.set("MOZ_TEST_SKIP_UPDATE_STAGE", "");
-  resetFiles();
-  removeUpdateDirsAndFiles();
   reloadUpdateManagerData(true);
+  removeUpdateFiles(true);
 
   Services.ww.unregisterNotification(gWindowObserver);
   if (gDocElem) {
@@ -488,7 +487,7 @@ function getContinueFile() {
  */
 function createContinueFile() {
   debugDump("creating 'continue' file for slow mar downloads");
-  writeFile(getContinueFile(), "");
+  getContinueFile().create(Ci.nsIFile.NORMAL_FILE_TYPE, PERMS_FILE);
 }
 
 /**
@@ -818,7 +817,7 @@ function setupPrefs() {
   Services.prefs.setBoolPref(PREF_APP_UPDATE_DISABLEDFORTESTING, false);
 
   if (AppConstants.platform == "win") {
-    let configFile = getUpdateConfigFile();
+    let configFile = getUpdateDirFile(FILE_UPDATE_CONFIG_JSON);
     if (configFile.exists()) {
       let configData = JSON.parse(readFileBytes(configFile));
       gAppUpdateAuto = !!configData[CONFIG_APP_UPDATE_AUTO];
@@ -844,31 +843,6 @@ function setupPrefs() {
   Services.prefs.setIntPref(PREF_APP_UPDATE_PROMPTWAITTIME, 0);
   Services.prefs.setBoolPref(PREF_APP_UPDATE_SILENT, false);
   Services.prefs.setBoolPref(PREF_APP_UPDATE_DOORHANGER, false);
-}
-
-/**
- * Restores files that were backed up for the tests and general file cleanup.
- */
-function resetFiles() {
-  // Not being able to remove the "updated" directory will not adversely affect
-  // subsequent tests so wrap it in a try block and don't test whether its
-  // removal was successful.
-  let updatedDir;
-  if (AppConstants.platform == "macosx") {
-    updatedDir = getUpdatesDir();
-    updatedDir.append(DIR_PATCH);
-  } else {
-    updatedDir = getAppBaseDir();
-  }
-  updatedDir.append(DIR_UPDATED);
-  if (updatedDir.exists()) {
-    try {
-      removeDirRecursive(updatedDir);
-    } catch (e) {
-      logTestInfo("Unable to remove directory. Path: " + updatedDir.path +
-                  ", Exception: " + e);
-    }
-  }
 }
 
 /**
