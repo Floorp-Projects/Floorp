@@ -5508,7 +5508,8 @@ bool ICIteratorMore_Native::Compiler::generateStubCode(MacroAssembler& masm) {
   masm.branchTestObjClass(Assembler::NotEqual, obj,
                           &PropertyIteratorObject::class_, scratch, obj,
                           &failure);
-  masm.loadObjPrivate(obj, JSObject::ITER_CLASS_NFIXED_SLOTS, nativeIterator);
+  masm.loadObjPrivate(obj, PropertyIteratorObject::NUM_FIXED_SLOTS,
+                      nativeIterator);
 
   // If propertyCursor_ < propertiesEnd_, load the next string and advance
   // the cursor.  Otherwise return MagicValue(JS_NO_ITER_VALUE).
