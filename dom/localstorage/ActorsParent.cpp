@@ -2492,6 +2492,9 @@ class ArchivedOriginScope {
  public:
   static ArchivedOriginScope* CreateFromOrigin(nsIPrincipal* aPrincipal);
 
+  static ArchivedOriginScope* CreateFromOrigin(
+      const nsACString& aOriginAttrSuffix, const nsACString& aOriginKey);
+
   static ArchivedOriginScope* CreateFromPrefix(nsIPrincipal* aPrincipal);
 
   static ArchivedOriginScope* CreateFromPattern(
@@ -5642,16 +5645,6 @@ nsresult PrepareDatastoreOp::Open() {
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
-
-    rv = principal->GetPrivateBrowsingId(&mPrivateBrowsingId);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    mArchivedOriginScope = ArchivedOriginScope::CreateFromOrigin(principal);
-    if (NS_WARN_IF(!mArchivedOriginScope)) {
-      return NS_ERROR_FAILURE;
-    }
   }
 
   mState = State::Nesting;
@@ -5673,6 +5666,27 @@ nsresult PrepareDatastoreOp::CheckExistingOperations() {
     return NS_ERROR_FAILURE;
   }
 
+  const PrincipalInfo& principalInfo = mParams.principalInfo();
+
+  nsCString originAttrSuffix;
+  uint32_t privateBrowsingId;
+
+  if (principalInfo.type() == PrincipalInfo::TSystemPrincipalInfo) {
+    privateBrowsingId = 0;
+  } else {
+    MOZ_ASSERT(principalInfo.type() == PrincipalInfo::TContentPrincipalInfo);
+
+    const ContentPrincipalInfo& info = principalInfo.get_ContentPrincipalInfo();
+    const OriginAttributes& attrs = info.attrs();
+    attrs.CreateSuffix(originAttrSuffix);
+
+    privateBrowsingId = attrs.mPrivateBrowsingId;
+  }
+
+  mArchivedOriginScope = ArchivedOriginScope::CreateFromOrigin(
+      originAttrSuffix, mParams.originKey());
+  MOZ_ASSERT(mArchivedOriginScope);
+
   // Normally it's safe to access member variables without a mutex because even
   // though we hop between threads, the variables are never accessed by multiple
   // threads at the same time.
@@ -5682,6 +5696,8 @@ nsresult PrepareDatastoreOp::CheckExistingOperations() {
   mOrigin = mMainThreadOrigin;
 
   MOZ_ASSERT(!mOrigin.IsEmpty());
+
+  mPrivateBrowsingId = privateBrowsingId;
 
   mNestedState = NestedState::CheckClosingDatastore;
 
@@ -6856,6 +6872,13 @@ ArchivedOriginScope* ArchivedOriginScope::CreateFromOrigin(
 
   return new ArchivedOriginScope(
       std::move(Origin(originAttrSuffix, originKey)));
+}
+
+// static
+ArchivedOriginScope* ArchivedOriginScope::CreateFromOrigin(
+    const nsACString& aOriginAttrSuffix, const nsACString& aOriginKey) {
+  return new ArchivedOriginScope(
+      std::move(Origin(aOriginAttrSuffix, aOriginKey)));
 }
 
 // static
