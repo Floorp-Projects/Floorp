@@ -3,6 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include PBackgroundSharedTypes;
+include ProtocolTypes;
 
 namespace mozilla {
 namespace dom {
@@ -21,11 +22,13 @@ struct LSRequestPreloadDatastoreParams
 struct LSRequestPrepareDatastoreParams
 {
   LSRequestCommonParams commonParams;
+  nsID? clientId;
 };
 
 struct LSRequestPrepareObserverParams
 {
   PrincipalInfo principalInfo;
+  nsID? clientId;
 };
 
 union LSRequestParams
