@@ -62,14 +62,10 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         WIN32_EXE_LDFLAGS += ['-municode']
 
 TEST_HARNESS_FILES.testing.mochitest.browser.toolkit.mozapps.update.tests.browser += [
-    'data/shared.js',
-    'data/sharedUpdateXML.js',
     'data/simple.mar',
 ]
 
 TEST_HARNESS_FILES.testing.mochitest.chrome.toolkit.mozapps.update.tests.chrome += [
-    'data/shared.js',
-    'data/sharedUpdateXML.js',
     'data/simple.mar',
 ]
 
@@ -100,11 +96,8 @@ FINAL_TARGET_FILES += [
     'data/partial_removed-files_mac',
     'data/partial_update_manifest',
     'data/replace_log_success',
-    'data/shared.js',
-    'data/sharedUpdateXML.js',
     'data/simple.mar',
     'data/wrong_product_channel.mar',
-    'data/xpcshellUtilsAUS.js',
     'TestAUSReadStrings1.ini',
     'TestAUSReadStrings2.ini',
     'TestAUSReadStrings3.ini',
