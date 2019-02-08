@@ -17,9 +17,19 @@ import org.mozilla.fenix.browser.BrowserFragment
 import org.mozilla.fenix.ext.components
 
 open class HomeActivity : AppCompatActivity() {
+    val themeManager = DefaultThemeManager().also {
+        it.onThemeChange = { theme ->
+            setTheme(theme)
+            recreate()
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
+
+        setTheme(themeManager.currentTheme)
+        DefaultThemeManager.applyStatusBarTheme(window, themeManager, this)
 
         if (intent?.extras?.getBoolean(OPEN_TO_BROWSER) == true) {
             openToBrowser()

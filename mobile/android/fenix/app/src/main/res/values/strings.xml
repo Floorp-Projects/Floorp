@@ -13,6 +13,16 @@
     <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
     <string name="content_description_private_browsing_button">Enable Private Browsing</string>
 
+    <!-- Private browsing -->
+    <!-- Title for private session option -->
+    <string name="private_browsing_title">Private Session</string>
+    <!-- Explanation for private browsing displayed to users on home view when they first enable private mode -->
+    <string name="private_browsing_explanation">Fenix clears your search and browsing history when you close all
+        Private Sessions tabs. While this doesn\'t make you anonymous to websites or your internet service provider,
+        it makes it easier to keep what you do online private from anyone else who uses this device.</string>
+    <!-- Delete session button to erase your history in a private session -->
+    <string name="private_browsing_delete_session">Delete Session</string>
+
     <!-- Browser Menu -->
     <string name="browser_menu_back">Back</string>
     <string name="browser_menu_forward">Forward</string>

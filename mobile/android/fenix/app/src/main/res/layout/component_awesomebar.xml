@@ -15,7 +15,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toTopOf="@id/pill_wrapper"
-        mozac:awesomeBarTitleTextColor="#212121"
-        mozac:awesomeBarDescriptionTextColor="#6b6b6b"
-        mozac:awesomeBarChipTextColor="#ffffff"
-        mozac:awesomeBarChipBackgroundColor="#444444" />
+        mozac:awesomeBarTitleTextColor="?attr/awesomeBarTitleTextColor"
+        mozac:awesomeBarDescriptionTextColor="?attr/awesomeBarDescriptionTextColor"
+        mozac:awesomeBarChipTextColor="@color/offwhite"
+        mozac:awesomeBarChipBackgroundColor="@color/photonBlue40" />

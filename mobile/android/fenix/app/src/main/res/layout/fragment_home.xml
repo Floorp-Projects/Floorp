@@ -8,6 +8,7 @@
     android:id="@+id/homeLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="?attr/homeBackgroundGradient"
     app:layoutDescription="@xml/home_scene"
     tools:context=".home.HomeFragment">
 
@@ -18,6 +19,7 @@
         android:layout_marginTop="16dp"
         android:background="?android:attr/selectableItemBackgroundBorderless"
         android:src="@drawable/ic_menu"
+        android:tint="?attr/menuButtonTint"
         android:contentDescription="@string/content_description_menu"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -26,7 +28,7 @@
         android:id="@+id/privateBrowsingButton"
         android:layout_width="@dimen/glyph_button_height"
         android:layout_height="@dimen/glyph_button_height"
-        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:background="?attr/privateBrowsingButtonBackground"
         android:src="@drawable/ic_private_browsing"
         android:contentDescription="@string/content_description_private_browsing_button"
         app:layout_constraintEnd_toStartOf="@id/menuButton"
@@ -38,7 +40,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginTop="42dp"
-        android:src="@drawable/ic_logo_wordmark"
+        android:src="?attr/fenixLogo"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/menuButton" />
 
@@ -50,7 +52,7 @@
             android:layout_marginTop="64dp"
             android:layout_marginStart="16dp"
             android:elevation="@dimen/toolbar_elevation"
-            android:background="@drawable/home_search_background_light"
+            android:background="?attr/toolbarWrapperBackground"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/wordmark">
@@ -68,7 +70,7 @@
                 android:focusable="true"
                 android:gravity="center_vertical"
                 android:text="@string/search_hint"
-                android:textColor="@color/searchText"
+                android:textColor="?attr/toolbarTextColor"
                 android:textSize="14sp" />
     </org.mozilla.fenix.home.SearchView>
 

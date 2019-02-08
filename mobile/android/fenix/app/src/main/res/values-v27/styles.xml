@@ -3,16 +3,39 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources>
-    <style name="LightAppTheme" parent="Theme.AppCompat.Light.NoActionBar">
-        <!-- style the statusbar -->
+    <style name="PrivateTheme" parent="PrivateThemeBase">
+        <!-- Style the status bar -->
+        <!-- We have to pull in the changes from v23/styles.xml to make
+            sure we also get them in 27+ -->
+        <item name="android:statusBarColor">@color/private_browsing_top_gradient</item>
+        <item name="android:windowLightStatusBar">false</item>
+
+        <!-- Style the navigation bar -->
+        <item name="android:navigationBarDividerColor">@android:color/transparent</item>
+        <item name="android:windowLightNavigationBar">false</item>
+    </style>
+
+    <style name="LightTheme" parent="LightThemeBase">
+        <!-- Style the status bar -->
         <!-- We have to pull in the changes from v23/styles.xml to make
             sure we also get them in 27+ -->
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:windowLightStatusBar">true</item>
 
         <!-- Style the navigation bar -->
-        <item name="android:navigationBarColor">@android:color/transparent</item>
-        <item name="android:navigationBarDividerColor">@android:color/black</item>
+        <item name="android:navigationBarDividerColor">@android:color/transparent</item>
+        <item name="android:windowLightNavigationBar">true</item>
+    </style>
+
+    <style name="SettingsTheme" parent="SettingsThemeBase">
+        <!-- Style the status bar -->
+        <!-- We have to pull in the changes from v23/styles.xml to make
+            sure we also get them in 27+ -->
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">true</item>
+
+        <!-- Style the navigation bar -->
+        <item name="android:navigationBarDividerColor">@android:color/transparent</item>
         <item name="android:windowLightNavigationBar">true</item>
     </style>
 </resources>

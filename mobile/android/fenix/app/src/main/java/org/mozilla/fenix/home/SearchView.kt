@@ -11,31 +11,60 @@ import android.widget.FrameLayout
 import org.mozilla.fenix.R
 
 class SearchView(context: Context, attrs: AttributeSet) : FrameLayout(context, attrs) {
+
+    var isPrivateModeEnabled = false
+
     private val lightDrawable = resources.getDrawable(R.drawable.home_search_background_light)
+    private val privateLightDrawable = resources.getDrawable(R.drawable.home_search_background_private)
     private val darkDrawable = resources.getDrawable(R.drawable.home_search_background_dark)
+    private val privateDarkDrawable = resources.getDrawable(R.drawable.home_search_background_private_dark)
     private val darkNoBorderDrawable = resources.getDrawable(R.drawable.home_search_background_dark_no_border)
+    private val privateDarkNoBorderDrawable =
+        resources.getDrawable(R.drawable.home_search_background_private_dark_no_border)
 
     private val lightToDark = TransitionDrawable(arrayOf(lightDrawable, darkDrawable))
     private val darkToNoBorder = TransitionDrawable(arrayOf(darkDrawable, darkNoBorderDrawable))
+    private val privateLightToDark = TransitionDrawable(arrayOf(privateLightDrawable, privateDarkDrawable))
+    private val privateDarkToNoBorder = TransitionDrawable(arrayOf(privateDarkDrawable, privateDarkNoBorderDrawable))
 
     fun transitionToLight() {
-        background = lightToDark
-        lightToDark.reverseTransition(transitionDurationMs)
+        if (isPrivateModeEnabled) {
+            background = privateLightToDark
+            privateLightToDark.reverseTransition(transitionDurationMs)
+        } else {
+            background = lightToDark
+            lightToDark.reverseTransition(transitionDurationMs)
+        }
     }
 
     fun transitionToDark() {
-        background = lightToDark
-        lightToDark.startTransition(transitionDurationMs)
+        if (isPrivateModeEnabled) {
+            background = privateLightToDark
+            privateLightToDark.startTransition(transitionDurationMs)
+        } else {
+            background = lightToDark
+            lightToDark.startTransition(transitionDurationMs)
+        }
     }
 
     fun transitionToDarkFromNoBorder() {
-        background = darkToNoBorder
-        darkToNoBorder.reverseTransition(transitionDurationMs)
+        if (isPrivateModeEnabled) {
+            background = privateDarkToNoBorder
+            privateDarkToNoBorder.reverseTransition(transitionDurationMs)
+        } else {
+            background = darkToNoBorder
+            darkToNoBorder.reverseTransition(transitionDurationMs)
+        }
     }
 
     fun transitionToDarkNoBorder() {
-        background = darkToNoBorder
-        darkToNoBorder.startTransition(transitionDurationMs)
+        if (isPrivateModeEnabled) {
+            background = privateDarkToNoBorder
+            privateDarkToNoBorder.startTransition(transitionDurationMs)
+        } else {
+            background = darkToNoBorder
+            darkToNoBorder.startTransition(transitionDurationMs)
+        }
     }
 
     companion object {

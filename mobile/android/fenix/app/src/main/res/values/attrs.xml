@@ -7,4 +7,28 @@
         <attr name="listItemTitle" format="reference" />
         <attr name="listItemIcon" format="reference" />
     </declare-styleable>
+
+    <attr name="searchBarColor" format="reference"/>
+    <attr name="fenixPrimary" format="reference"/>
+
+    <!-- Home fragment -->
+    <attr name="homeBackgroundTopGradient" format="reference"/>
+    <attr name="homeBackgroundBottomGradient" format="reference"/>
+    <attr name="homeBackgroundGradient" format="reference"/>
+    <attr name="privateBrowsingButtonBackground" format="reference"/>
+    <attr name="privateBrowsingButtonTint" format="reference"/>
+    <attr name="fenixLogo" format="reference"/>
+    <attr name="menuButtonTint" format="reference"/>
+    <attr name="toolbarWrapperBackground" format="reference"/>
+    <attr name="toolbarTextColor" format="reference"/>
+
+    <!-- Search fragment -->
+    <attr name="searchBackground" format="reference"/>
+    <attr name="searchShortcutsTextColor" format="reference"/>
+    <attr name="pillWrapperBackground" format="reference"/>
+
+    <!-- Browser fragment -->
+    <attr name="browserToolbarBackground" format="reference"/>
+    <attr name="browserToolbarIcons" format="reference"/>
+    <attr name="browserToolbarHomeIcon" format="reference"/>
 </resources>

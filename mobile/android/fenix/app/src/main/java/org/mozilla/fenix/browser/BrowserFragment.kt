@@ -8,6 +8,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.preference.PreferenceManager
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
@@ -29,6 +30,7 @@ import mozilla.components.feature.session.SessionFeature
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.support.ktx.android.arch.lifecycle.addObservers
 import org.mozilla.fenix.BackHandler
+import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FindInPageIntegration
 import org.mozilla.fenix.ext.requireComponents
@@ -57,6 +59,7 @@ class BrowserFragment : Fragment(), BackHandler {
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_browser, container, false)
+
         toolbarComponent = ToolbarComponent(
             view.browserLayout,
             ActionBusFactory.get(this),
@@ -64,7 +67,8 @@ class BrowserFragment : Fragment(), BackHandler {
         )
 
         toolbarComponent.uiView.view.apply {
-            setBackgroundColor(ContextCompat.getColor(view.context, R.color.offwhite))
+            setBackgroundColor(ContextCompat.getColor(view.context,
+                DefaultThemeManager.resolveAttribute(R.attr.browserToolbarBackground, context)))
 
             (layoutParams as CoordinatorLayout.LayoutParams).apply {
                 // Stop toolbar from collapsing if TalkBack is enabled
@@ -200,6 +204,11 @@ class BrowserFragment : Fragment(), BackHandler {
             is ToolbarMenu.Item.RequestDesktop -> sessionUseCases.requestDesktopSite.invoke(action.item.isChecked)
             is ToolbarMenu.Item.Share -> requireComponents.core.sessionManager
                 .selectedSession?.url?.apply { requireContext().share(this) }
+            is ToolbarMenu.Item.NewPrivateTab -> {
+                PreferenceManager.getDefaultSharedPreferences(context)
+                    .edit().putBoolean(context!!.getString(R.string.pref_key_private_mode),
+                    !PreferenceManager.getDefaultSharedPreferences(context)
+                        .getBoolean(context!!.getString(R.string.pref_key_private_mode), false)).apply() }
             is ToolbarMenu.Item.ReportIssue -> requireComponents.core.sessionManager
                 .selectedSession?.url?.apply {
                 val reportUrl = String.format(REPORT_SITE_ISSUE_URL, this)

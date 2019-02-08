@@ -10,6 +10,6 @@
     android:clickable="true"
     android:focusable="true"
     android:focusableInTouchMode="true"
-    app:browserToolbarInsecureColor="@color/icons"
-    app:browserToolbarMenuColor="@color/icons"
-    app:browserToolbarSecureColor="@color/icons" />
+    app:browserToolbarInsecureColor="?attr/browserToolbarIcons"
+    app:browserToolbarMenuColor="?attr/browserToolbarIcons"
+    app:browserToolbarSecureColor="?attr/browserToolbarIcons" />

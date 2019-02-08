@@ -5,6 +5,11 @@
 package org.mozilla.fenix.search.toolbar
 
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
+import kotlinx.android.synthetic.main.component_search.*
+import mozilla.components.browser.toolbar.BrowserToolbar
+import org.mozilla.fenix.DefaultThemeManager
+import org.mozilla.fenix.R
 import org.mozilla.fenix.mvi.Action
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.Change
@@ -31,6 +36,16 @@ class ToolbarComponent(
     override fun initView() = ToolbarUIView(container, actionEmitter, changesObservable)
     init {
         render(reducer)
+        applyTheme()
+    }
+
+    fun getView(): BrowserToolbar = uiView.toolbar
+
+    private fun applyTheme() {
+        getView().textColor = ContextCompat.getColor(container.context,
+            DefaultThemeManager.resolveAttribute(R.attr.awesomeBarTitleTextColor, container.context))
+        getView().hintColor = ContextCompat.getColor(container.context,
+            DefaultThemeManager.resolveAttribute(R.attr.awesomeBarDescriptionTextColor, container.context))
     }
 }
 

@@ -3,18 +3,95 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <style name="LightAppTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
-        <!-- Customize your theme here. -->
-        <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorAccent">@color/colorAccent</item>
+
+    <style name="LightThemeBase" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="android:statusBarColor">@android:color/black</item>
+        <item name="android:windowAnimationStyle">@style/WindowAnimationTransition</item>
+        <item name="android:colorPrimary">@color/offwhite</item>
+
+        <!-- Style the navigation bar -->
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+
+        <!-- Home fragment colors -->
+        <item name="homeBackgroundTopGradient">@color/offwhite</item>
+        <item name="homeBackgroundBottomGradient">@color/offwhite</item>
+        <item name="homeBackgroundGradient">@drawable/home_background_gradient</item>
+        <item name="privateBrowsingButtonBackground">@drawable/private_browsing_button_white_background</item>
+        <item name="privateBrowsingButtonTint">@color/offwhite</item>
+        <item name="fenixLogo">@drawable/ic_logo_wordmark</item>
+        <item name="menuButtonTint">@android:color/black</item>
+        <item name="toolbarWrapperBackground">@drawable/home_search_background_light</item>
+        <item name="toolbarTextColor">@color/searchText</item>
+
+        <!-- Search fragment colors -->
+        <item name="searchBackground">@color/offwhite</item>
+        <item name="searchShortcutsTextColor">@color/awesomeBarTitleColor</item>
+        <item name="pillWrapperBackground">@color/offwhite</item>
+        <item name="awesomeBarTitleTextColor">@color/awesomeBarTitleColor</item>
+        <item name="awesomeBarDescriptionTextColor">@color/awesomeBarDescriptionColor</item>
+
+        <!-- Browser fragment colors -->
+        <item name="browserToolbarBackground">@color/offwhite</item>
+        <item name="browserToolbarIcons">@color/icons</item>
+        <item name="browserToolbarHomeIcon">@drawable/ic_home</item>
     </style>
 
-    <style name="SettingsAppTheme" parent="Theme.MaterialComponents.Light">
+    <style name="LightTheme" parent="LightThemeBase">
+
+    </style>
+
+    <style name="PrivateThemeBase" parent="Theme.AppCompat.NoActionBar">
+        <item name="android:statusBarColor">@color/private_browsing_top_gradient</item>
+        <item name="android:windowAnimationStyle">@style/WindowAnimationTransition</item>
+        <item name="android:textColorHighlight">@color/private_browsing_primary</item>
+        <item name="android:colorPrimary">@color/private_browsing_primary</item>
+
+        <!-- Style the navigation bar -->
+        <item name="android:navigationBarColor">@color/private_browsing_bottom_gradient</item>
+
+        <!-- Home fragment colors -->
+        <item name="homeBackgroundTopGradient">@color/private_browsing_top_gradient</item>
+        <item name="homeBackgroundBottomGradient">@color/private_browsing_bottom_gradient</item>
+        <item name="homeBackgroundGradient">@drawable/home_background_gradient</item>
+        <item name="privateBrowsingButtonBackground">@drawable/private_browsing_button_background</item>
+        <item name="privateBrowsingButtonTint">@color/offwhite</item>
+        <item name="fenixLogo">@drawable/ic_logo_wordmark_white</item>
+        <item name="menuButtonTint">@color/offwhite</item>
+        <item name="toolbarWrapperBackground">@drawable/home_search_background_private</item>
+        <item name="toolbarTextColor">@color/offwhite</item>
+
+        <!-- Search fragment colors -->
+        <item name="searchBackground">@color/private_browsing_bottom_gradient</item>
+        <item name="searchShortcutsTextColor">@color/offwhite</item>
+        <item name="pillWrapperBackground">@color/private_browsing_top_gradient</item>
+        <item name="awesomeBarTitleTextColor">@color/offwhite</item>
+        <item name="awesomeBarDescriptionTextColor">@color/photonGrey40</item>
+
+        <!-- Browser fragment colors -->
+        <item name="browserToolbarBackground">@color/private_browsing_bottom_gradient</item>
+        <item name="browserToolbarIcons">@color/offwhite</item>
+        <item name="browserToolbarHomeIcon">@drawable/ic_home_white</item>
+    </style>
+
+    <style name="PrivateTheme" parent="PrivateThemeBase">
+
+    </style>
+
+    <!-- Fade animation for theme switching -->
+    <style name="WindowAnimationTransition">
+        <item name="android:windowEnterAnimation">@android:anim/fade_in</item>
+        <item name="android:windowExitAnimation">@android:anim/fade_out</item>
+    </style>
+
+    <style name="SettingsThemeBase" parent="Theme.MaterialComponents.Light">
         <item name="colorPrimary">@color/offwhite</item>
         <item name="colorPrimaryDark">@color/offwhite</item>
         <item name="colorAccent">@color/icons</item>
-        <item name="android:windowLightStatusBar" tools:targetApi="m">true</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+    </style>
+
+    <style name="SettingsTheme" parent="SettingsThemeBase">
+
     </style>
 
     <style name="search_pill" parent="Widget.AppCompat.Button.Borderless">

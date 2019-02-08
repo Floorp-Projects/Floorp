@@ -7,10 +7,16 @@
     <color name="colorPrimaryDark">#202340</color>
     <color name="colorAccent">#D81B60</color>
 
+    <color name="awesomeBarTitleColor">#212121</color>
+    <color name="awesomeBarDescriptionColor">#6b6b6b</color>
     <color name="searchDarkBackground">#F2F2F5</color>
     <color name="searchDarkBackgroundAlternative">#E9E9ED</color>
+    <color name="searchPrivateBackground">#4f4e75</color>
+    <color name="searchDarkPrivateBackground">#42416b</color>
+    <color name="searchDarkPrivateBackgroundAlternative">#393863</color>
     <color name="searchStroke">#c5c8d7</color>
     <color name="searchStrokeAlternative">#0A202340</color>
+    <color name="searchStrokePrivate">#2d2e5f</color>
     <color name="searchText">#0C0C0D</color>
     <color name="offwhite">#f9f9fa</color>
     <color name="url_box_view">#E9E9ED</color>
@@ -19,6 +25,10 @@
     <color name="session_list_empty_bg">#1A665BFD</color>
     <color name="session_list_empty_fg">#544CD9</color>
     <color name="session_list_header">#6D6D6E</color>
+
+    <color name="private_browsing_primary">#ad3bff</color>
+    <color name="private_browsing_top_gradient">#242251</color>
+    <color name="private_browsing_bottom_gradient">#393862</color>
 
     <color name="searchPillBackground">#FAFAFC</color>
     <color name="searchPillPrimary">#202340</color>

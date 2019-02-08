@@ -16,4 +16,6 @@
     <string name="pref_key_about" translatable="false">pref_key_about</string>
     <string name="pref_key_account" translatable="false">pref_key_account</string>
     <string name="pref_key_sign_in" translatable="false">pref_key_sign_in</string>
+    <string name="pref_key_private_mode" translatable="false">pref_key_private_mode</string>
+    <string name="pref_key_theme" translatable="false">pref_key_theme</string>
 </resources>

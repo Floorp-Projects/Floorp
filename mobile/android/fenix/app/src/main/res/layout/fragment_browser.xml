@@ -26,10 +26,11 @@
             android:layout_height="wrap_content"
             android:padding="4dp"
             android:visibility="gone"
+            android:background="@color/private_browsing_top_gradient"
             mozac:awesomeBarChipBackgroundColor="#444444"
             mozac:awesomeBarChipTextColor="#ffffff"
-            mozac:awesomeBarDescriptionTextColor="#dddddd"
-            mozac:awesomeBarTitleTextColor="#ffffff" />
+            mozac:awesomeBarDescriptionTextColor="?attr/awesomeBarDescriptionTextColor"
+            mozac:awesomeBarTitleTextColor="?attr/awesomeBarTitleTextColor" />
     </FrameLayout>
 
     <mozilla.components.feature.findinpage.view.FindInPageBar
@@ -38,8 +39,8 @@
             android:layout_height="56dp"
             android:layout_gravity="bottom"
             android:background="@color/offwhite"
-            mozac:findInPageResultCountTextColor="@color/colorPrimary"
-            mozac:findInPageButtonsTint="@color/colorPrimary"
+            mozac:findInPageResultCountTextColor="?android:attr/colorPrimary"
+            mozac:findInPageButtonsTint="?android:attr/colorPrimary"
             android:visibility="gone"
             app:layout_behavior="org.mozilla.fenix.components.FindInPageBarBehavior" />
 
