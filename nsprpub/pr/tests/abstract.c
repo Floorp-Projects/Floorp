@@ -151,7 +151,7 @@ main()
 int
 main()
 {
-  printf("PASS\n");
+  prinf("PASS\n");
   return 0;
 }
 #endif
