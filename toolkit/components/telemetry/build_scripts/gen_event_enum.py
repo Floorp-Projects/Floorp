@@ -21,11 +21,11 @@ file_header = """\
 #define mozilla_TelemetryEventEnums_h
 namespace mozilla {
 namespace Telemetry {
-namespace EventID {
+enum class EventID : uint32_t {\
 """
 
 file_footer = """\
-} // namespace EventID
+};
 } // namespace mozilla
 } // namespace Telemetry
 #endif // mozilla_TelemetryEventEnums_h
@@ -59,21 +59,16 @@ def main(output, *filenames):
     for category, indexed in grouped.iteritems():
         category_cpp = indexed[0][1].category_cpp
 
-        print("// category: %s" % category, file=output)
-        print("enum class %s : uint32_t {" % category_cpp, file=output)
+        print("  // category: %s" % category, file=output)
 
         for event_index, e in indexed:
             if e.record_on_os(buildconfig.substs["OS_TARGET"]):
                 for offset, label in enumerate(e.enum_labels):
-                    print("  %s = %d," % (label, event_index + offset), file=output)
+                    print(" %s_%s = %d,"
+                          % (category_cpp, label, event_index + offset), file=output)
 
-        print("};\n", file=output)
-
-    print("#if defined(_MSC_VER) && !defined(__clang__)", file=output)
-    print("const uint32_t EventCount = %d;" % index, file=output)
-    print("#else", file=output)
-    print("constexpr uint32_t EventCount = %d;" % index, file=output)
-    print("#endif\n", file=output)
+    print("  // meta", file=output)
+    print("  EventCount = %d," % index, file=output)
 
     print(file_footer, file=output)
 
