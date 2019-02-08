@@ -10,14 +10,12 @@ import android.support.annotation.VisibleForTesting
 import mozilla.components.service.glean.BuildConfig
 import mozilla.components.service.glean.storages.StorageEngineManager
 import mozilla.components.service.glean.storages.ExperimentsStorageEngine
+import mozilla.components.service.glean.utils.getISOTimeString
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.org.json.mergeWith
 import org.json.JSONException
 import org.json.JSONObject
-import java.lang.StringBuilder
-import java.text.SimpleDateFormat
 import java.util.Date
-import java.util.Locale
 
 internal class PingMaker(
     private val storageManager: StorageEngineManager,
@@ -25,32 +23,12 @@ internal class PingMaker(
 ) {
     private val logger = Logger("glean/PingMaker")
     private val pingStartTimes: MutableMap<String, String> = mutableMapOf()
-    private val objectStartTime = getISOTimeString()
+    private val objectStartTime = getISOTimeString(Date())
     internal val sharedPreferences: SharedPreferences? by lazy {
         applicationContext.getSharedPreferences(
             this.javaClass.simpleName,
             Context.MODE_PRIVATE
         )
-    }
-
-    /**
-     * Generate an ISO8601 compliant time string for the current time.
-     *
-     * @return a string containing the date and time.
-     */
-    private fun getISOTimeString(): String {
-        val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mmZ", Locale.US)
-        val timeString = StringBuilder(dateFormat.format(Date()))
-
-        // Due to limitations of SDK version 21, there isn't a way to properly output the time
-        // offset with a ':' character:
-        // 2018-12-19T12:36-0600    --  This is what we get
-        // 2018-12-19T12:36-06:00   -- This is what GCP will expect
-        //
-        // In order to satisfy time offset requirements of GCP, we manually insert the ":"
-        timeString.insert(timeString.length - 2, ":")
-
-        return timeString.toString()
     }
 
     /**
@@ -101,7 +79,7 @@ internal class PingMaker(
         // date the object was initialized.
         val startTime = if (pingName in pingStartTimes) pingStartTimes[pingName] else objectStartTime
         pingInfo.put("start_time", startTime)
-        val endTime = getISOTimeString()
+        val endTime = getISOTimeString(Date())
         pingInfo.put("end_time", endTime)
         // Update the start time with the current time.
         pingStartTimes[pingName] = endTime

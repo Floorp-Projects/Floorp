@@ -19,6 +19,7 @@ internal class StorageEngineManager(
     private val storageEngines: Map<String, StorageEngine> = mapOf(
         "boolean" to BooleansStorageEngine,
         "counter" to CountersStorageEngine,
+        "datetime" to DatetimesStorageEngine,
         "events" to EventsStorageEngine,
         "string" to StringsStorageEngine,
         "string_list" to StringListsStorageEngine,
