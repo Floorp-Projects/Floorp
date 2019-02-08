@@ -2634,8 +2634,7 @@ this.XPIDatabaseReconcile = {
   /**
    * Compares the add-ons that are currently installed to those that were
    * known to be installed when the application last ran and applies any
-   * changes found to the database. Also sends "startupcache-invalidate" signal to
-   * observerservice if it detects that data may have changed.
+   * changes found to the database.
    * Always called after XPIDatabase.jsm and extensions.json have been loaded.
    *
    * @param {Object} aManifests
@@ -2777,9 +2776,6 @@ this.XPIDatabaseReconcile = {
       }
 
       AddonManagerPrivate.addStartupChange(AddonManager.STARTUP_CHANGE_UNINSTALLED, id);
-    }
-    if (previousVisible.size) {
-      XPIInstall.flushChromeCaches();
     }
 
     // Finally update XPIStates to match everything
