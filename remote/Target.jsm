@@ -6,9 +6,9 @@
 
 var EXPORTED_SYMBOLS = ["Target"];
 
-const {Debugger} = ChromeUtils.import("chrome://remote/content/Debugger.jsm");
 const {EventEmitter} = ChromeUtils.import("chrome://remote/content/EventEmitter.jsm");
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {TargetListener} = ChromeUtils.import("chrome://remote/content/TargetListener.jsm");
 const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "Favicons",
@@ -18,7 +18,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "Favicons",
 this.Target = class {
   constructor(browser) {
     this.browser = browser;
-    this.debugger = new Debugger(this);
+    this.debugger = new TargetListener(this);
 
     EventEmitter.decorate(this);
   }
