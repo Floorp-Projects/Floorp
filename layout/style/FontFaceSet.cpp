@@ -172,6 +172,9 @@ FontFaceSet::~FontFaceSet() {
   MOZ_ASSERT(!ServoStyleSet::IsInServoTraversal());
 
   Disconnect();
+  for (auto it = mLoaders.Iter(); !it.Done(); it.Next()) {
+    it.Get()->GetKey()->Cancel();
+  }
 }
 
 JSObject* FontFaceSet::WrapObject(JSContext* aContext,
@@ -188,12 +191,6 @@ void FontFaceSet::Disconnect() {
     // been unlinked from the document.
     mDocument->CSSLoader()->RemoveObserver(this);
   }
-
-  for (auto it = mLoaders.Iter(); !it.Done(); it.Next()) {
-    it.Get()->GetKey()->Cancel();
-  }
-
-  mLoaders.Clear();
 }
 
 void FontFaceSet::RemoveDOMContentLoadedListener() {
@@ -584,7 +581,6 @@ nsresult FontFaceSet::StartLoad(gfxUserFontEntry* aUserFontEntry,
 
   RefPtr<nsFontFaceLoader> fontLoader = new nsFontFaceLoader(
       aUserFontEntry, aFontFaceSrc->mURI->get(), this, channel);
-  mLoaders.PutEntry(fontLoader);
 
   if (LOG_ENABLED()) {
     LOG(
@@ -642,6 +638,7 @@ nsresult FontFaceSet::StartLoad(gfxUserFontEntry* aUserFontEntry,
   }
 
   if (NS_SUCCEEDED(rv)) {
+    mLoaders.PutEntry(fontLoader);
     fontLoader->StartedLoading(streamLoader);
     // let the font entry remember the loader, in case we need to cancel it
     aUserFontEntry->SetLoader(fontLoader);
