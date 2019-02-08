@@ -247,7 +247,7 @@ static PRInt32 PR_CALLBACK Ipv6ToIpv4SocketRecvFrom(PRFileDesc *fd, void *buf,
 
 #if defined(_PR_INET6_PROBE)
 static PRBool ipv6_is_present;
-extern PRBool _pr_test_ipv6_socket(void);
+PR_EXTERN(PRBool) _pr_test_ipv6_socket(void);
 
 #if !defined(_PR_INET6) && defined(_PR_HAVE_GETIPNODEBYNAME)
 extern PRStatus _pr_find_getipnodebyname(void);

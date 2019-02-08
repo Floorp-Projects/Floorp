@@ -783,7 +783,6 @@ with_android_ndk
 with_android_toolchain
 with_android_version
 with_android_platform
-with_gonk
 with_dist_prefix
 with_dist_bindir
 with_dist_includedir
@@ -873,6 +872,7 @@ datadir='${datarootdir}'
 sysconfdir='${prefix}/etc'
 sharedstatedir='${prefix}/com'
 localstatedir='${prefix}/var'
+
 includedir='${prefix}/include'
 oldincludedir='/usr/include'
 docdir='${datarootdir}/doc/${PACKAGE}'
@@ -1484,7 +1484,6 @@ Optional Packages:
                           Android platform version, default 5 for arm, 9 for x86/mips
   --with-android-platform=DIR
                           location of platform dir
-  --with-gonk=DIR         location of gonk dir
   --with-dist-prefix=DIST_PREFIX
                           place build files in DIST_PREFIX dist
   --with-dist-bindir=DIR  build execuatables in DIR DIST_PREFIX/bin
@@ -2488,7 +2487,7 @@ test -n "$target_alias" &&
   program_prefix=${target_alias}-
 
 MOD_MAJOR_VERSION=4
-MOD_MINOR_VERSION=20
+MOD_MINOR_VERSION=21
 MOD_PATCH_VERSION=0
 NSPR_MODNAME=nspr20
 _HAVE_PTHREADS=
@@ -2656,19 +2655,6 @@ mipsel-*android*)
     ;;
 esac
 
-
-
-# Check whether --with-gonk was given.
-if test "${with_gonk+set}" = set; then :
-  withval=$with_gonk; gonkdir=$withval
-fi
-
-
-if test -n "$gonkdir" ; then
-
-    $as_echo "#define ANDROID 1" >>confdefs.h
-
-else
 case "$target" in
 *-android*|*-linuxandroid*)
     if test -z "$android_ndk" ; then
@@ -2754,7 +2740,6 @@ $as_echo "$android_platform" >&6; }
 
     ;;
 esac
-fi
 
 dist_prefix='${MOD_DEPTH}/dist'
 dist_bindir='${dist_prefix}/bin'
