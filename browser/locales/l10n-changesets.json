@@ -1107,7 +1107,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "5035f220fc30"
+        "revision": "371e6cfd45fd"
     },
     "ms": {
         "platforms": [
@@ -1549,7 +1549,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "dc710c940270"
+        "revision": "10dc5a54d872"
     },
     "uk": {
         "platforms": [
