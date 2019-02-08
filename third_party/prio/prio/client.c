@@ -287,9 +287,6 @@ PrioClient_encode(const_PrioConfig cfg, const bool* data_in,
   *for_server_a = NULL;
   *for_server_b = NULL;
 
-  P_CHECKA(pA = PrioPacketClient_new(cfg, PRIO_SERVER_A));
-  P_CHECKA(pB = PrioPacketClient_new(cfg, PRIO_SERVER_B));
-
   msgpack_sbuffer sbufA, sbufB;
   msgpack_packer packerA, packerB;
 
@@ -297,6 +294,9 @@ PrioClient_encode(const_PrioConfig cfg, const bool* data_in,
   msgpack_sbuffer_init(&sbufB);
   msgpack_packer_init(&packerA, &sbufA, msgpack_sbuffer_write);
   msgpack_packer_init(&packerB, &sbufB, msgpack_sbuffer_write);
+
+  P_CHECKA(pA = PrioPacketClient_new(cfg, PRIO_SERVER_A));
+  P_CHECKA(pB = PrioPacketClient_new(cfg, PRIO_SERVER_B));
 
   P_CHECKC(PrioPacketClient_set_data(cfg, data_in, pA, pB));
   P_CHECKC(serial_write_packet_client(&packerA, pA, cfg));
@@ -343,7 +343,9 @@ PrioPacketClient_decrypt(PrioPacketClient p, const_PrioConfig cfg,
 {
   SECStatus rv = SECSuccess;
   msgpack_unpacker upk;
-  P_CHECKCB(msgpack_unpacker_init(&upk, data_len));
+  if (!msgpack_unpacker_init(&upk, data_len)) {
+    return SECFailure;
+  }
 
   // Decrypt the ciphertext into dec_buf
   unsigned int bytes_decrypted;
