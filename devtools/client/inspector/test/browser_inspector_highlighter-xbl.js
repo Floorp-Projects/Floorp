@@ -12,11 +12,11 @@ add_task(async function() {
 
   await startPicker(toolbox);
 
-  info("Selecting the host element");
-  await moveMouseOver("#xbl-host");
+  info("Selecting the tree");
+  await moveMouseOver("#tree");
   await doKeyPick({key: "VK_RETURN", options: {}});
-  is(inspector.selection.nodeFront.className, "xbl-anon",
-     "The .xbl-anon inside the box was selected");
+  is(inspector.selection.nodeFront.className, "tree-bodybox",
+     "The .tree-bodybox inside the tree was selected");
 
   function doKeyPick(msg) {
     info("Key pressed. Waiting for element to be picked");
