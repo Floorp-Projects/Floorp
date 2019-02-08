@@ -18,8 +18,8 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
   virtual nsresult NativeGetColor(ColorID aID, nscolor& aResult) override;
   virtual nsresult GetIntImpl(IntID aID, int32_t& aResult) override;
   virtual nsresult GetFloatImpl(FloatID aID, float& aResult) override;
-  virtual bool GetFontImpl(FontID aID, nsString& aName, gfxFontStyle& aStyle,
-                           float aDevPixPerCSSPixel) override;
+  virtual bool GetFontImpl(FontID aID, nsString& aName,
+                           gfxFontStyle& aStyle) override;
   virtual bool GetEchoPasswordImpl() override;
   virtual uint32_t GetPasswordMaskDelayImpl() override;
   virtual char16_t GetPasswordCharacterImpl() override;

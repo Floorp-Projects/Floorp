@@ -28,8 +28,7 @@ class HeadlessLookAndFeel : public nsXPLookAndFeel {
   virtual nsresult GetIntImpl(IntID aID, int32_t &aResult) override;
   virtual nsresult GetFloatImpl(FloatID aID, float &aResult) override;
   virtual bool GetFontImpl(FontID aID, nsString &aFontName,
-                           gfxFontStyle &aFontStyle,
-                           float aDevPixPerCSSPixel) override;
+                           gfxFontStyle &aFontStyle) override;
 
   virtual void RefreshImpl() override;
   virtual char16_t GetPasswordCharacterImpl() override;

@@ -432,13 +432,12 @@ nsresult nsLookAndFeel::GetFloatImpl(FloatID aID, float& aResult) {
 
 /*virtual*/
 bool nsLookAndFeel::GetFontImpl(FontID aID, nsString& aFontName,
-                                gfxFontStyle& aFontStyle,
-                                float aDevPixPerCSSPixel) {
+                                gfxFontStyle& aFontStyle) {
   aFontName.AssignLiteral("\"Roboto\"");
   aFontStyle.style = FontSlantStyle::Normal();
   aFontStyle.weight = FontWeight::Normal();
   aFontStyle.stretch = FontStretch::Normal();
-  aFontStyle.size = 9.0 * 96.0f / 72.0f * aDevPixPerCSSPixel;
+  aFontStyle.size = 9.0 * 96.0f / 72.0f;
   aFontStyle.systemFont = true;
   return true;
 }

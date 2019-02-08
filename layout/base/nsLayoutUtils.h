@@ -2972,7 +2972,6 @@ class nsLayoutUtils {
 
   static void ComputeSystemFont(nsFont* aSystemFont,
                                 mozilla::LookAndFeel::FontID aFontID,
-                                const nsPresContext* aPresContext,
                                 const nsFont* aDefaultVariableFont);
 
   static void ComputeFontFeatures(const nsCSSValuePairList* aFeaturesList,
