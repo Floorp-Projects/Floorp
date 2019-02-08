@@ -254,6 +254,13 @@ nsresult LSObject::CreateForWindow(nsPIDOMWindowInner* aWindow,
     return rv;
   }
 
+  Maybe<ClientInfo> clientInfo = aWindow->GetClientInfo();
+  if (clientInfo.isNothing()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  Maybe<nsID> clientId = Some(clientInfo.ref().Id());
+
   nsString documentURI;
   if (nsCOMPtr<Document> doc = aWindow->GetExtantDoc()) {
     rv = doc->GetDocumentURI(documentURI);
@@ -265,6 +272,7 @@ nsresult LSObject::CreateForWindow(nsPIDOMWindowInner* aWindow,
   RefPtr<LSObject> object = new LSObject(aWindow, principal);
   object->mPrincipalInfo = std::move(principalInfo);
   object->mPrivateBrowsingId = privateBrowsingId;
+  object->mClientId = clientId;
   object->mOrigin = origin;
   object->mOriginKey = originKey;
   object->mDocumentURI = documentURI;
@@ -317,9 +325,20 @@ nsresult LSObject::CreateForPrincipal(nsPIDOMWindowInner* aWindow,
 
   MOZ_ASSERT(originAttrSuffix == suffix);
 
+  Maybe<nsID> clientId;
+  if (aWindow) {
+    Maybe<ClientInfo> clientInfo = aWindow->GetClientInfo();
+    if (clientInfo.isNothing()) {
+      return NS_ERROR_FAILURE;
+    }
+
+    clientId = Some(clientInfo.ref().Id());
+  }
+
   RefPtr<LSObject> object = new LSObject(aWindow, aPrincipal);
   object->mPrincipalInfo = std::move(principalInfo);
   object->mPrivateBrowsingId = aPrivate ? 1 : 0;
+  object->mClientId = clientId;
   object->mOrigin = origin;
   object->mOriginKey = originKey;
   object->mDocumentURI = aDocumentURI;
@@ -750,7 +769,9 @@ nsresult LSObject::EnsureDatabase() {
   commonParams.principalInfo() = *mPrincipalInfo;
   commonParams.originKey() = mOriginKey;
 
-  LSRequestPrepareDatastoreParams params(commonParams);
+  LSRequestPrepareDatastoreParams params;
+  params.commonParams() = commonParams;
+  params.clientId() = mClientId;
 
   LSRequestResponse response;
 
@@ -814,6 +835,7 @@ nsresult LSObject::EnsureObserver() {
 
   LSRequestPrepareObserverParams params;
   params.principalInfo() = *mPrincipalInfo;
+  params.clientId() = mClientId;
 
   LSRequestResponse response;
 

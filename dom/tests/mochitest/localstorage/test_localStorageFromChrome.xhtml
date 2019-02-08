@@ -7,8 +7,10 @@
 
 <script type="text/javascript">
 
-function startTest()
+async function startTest()
 {
+  await SpecialPowers.pushPrefEnv({"set": [["dom.storage.client_validation", false]]});
+
   var url = "http://example.com/tests/dom/tests/mochitest/localstorage/frameChromeSlave.html";
   var ios = Components.classes["@mozilla.org/network/io-service;1"]
     .getService(Components.interfaces.nsIIOService);
