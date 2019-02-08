@@ -54,29 +54,12 @@ var LightweightThemeManager = {
     return _fallbackThemeData;
   },
 
-  // Themes that can be added for an application.  They can't be removed, and
-  // will always show up at the top of the list.
-  _builtInThemes: new Map(),
-
-  isBuiltIn(theme) {
-    return this._builtInThemes.has(theme.id);
-  },
-
-  get selectedThemeID() {
-    return _prefs.getStringPref("selectedThemeID") || DEFAULT_THEME_ID;
-  },
-
-  get defaultDarkThemeID() {
-    return _defaultDarkThemeID;
-  },
-
   get usedThemes() {
     let themes = [];
     try {
       themes = JSON.parse(_prefs.getStringPref("usedThemes"));
     } catch (e) { }
 
-    themes.push(...this._builtInThemes.values());
     return themes;
   },
 
@@ -151,7 +134,7 @@ var LightweightThemeManager = {
 
   forgetUsedTheme(aId) {
     let theme = this.getUsedTheme(aId);
-    if (!theme || LightweightThemeManager._builtInThemes.has(theme.id))
+    if (!theme)
       return;
 
     var currentTheme = this.currentTheme;
@@ -160,38 +143,6 @@ var LightweightThemeManager = {
     }
 
     _updateUsedThemes(_usedThemesExceptId(aId));
-  },
-
-  addBuiltInTheme(theme, { useInDarkMode } = {}) {
-    if (!theme || !theme.id || this.usedThemes.some(t => t.id == theme.id)) {
-      throw new Error("Trying to add invalid builtIn theme");
-    }
-
-    this._builtInThemes.set(theme.id, theme);
-
-    if (_prefs.getStringPref("selectedThemeID", DEFAULT_THEME_ID) == theme.id) {
-      this.currentTheme = theme;
-    }
-
-    if (useInDarkMode) {
-      _defaultDarkThemeID = theme.id;
-    }
-  },
-
-  forgetBuiltInTheme(id) {
-    if (!this._builtInThemes.has(id)) {
-      let currentTheme = this.currentTheme;
-      if (currentTheme && currentTheme.id == id) {
-        this.currentTheme = null;
-      }
-    }
-    return this._builtInThemes.delete(id);
-  },
-
-  clearBuiltInThemes() {
-    for (let id of this._builtInThemes.keys()) {
-      this.forgetBuiltInTheme(id);
-    }
   },
 
   parseTheme(aString, aBaseURI) {
@@ -390,9 +341,6 @@ function _makeURI(aURL, aBaseURI) {
 }
 
 function _updateUsedThemes(aList) {
-  // Remove app-specific themes before saving them to the usedThemes pref.
-  aList = aList.filter(theme => !LightweightThemeManager._builtInThemes.has(theme.id));
-
   _prefs.setStringPref("usedThemes", JSON.stringify(aList));
 
   Services.obs.notifyObservers(null, "lightweight-theme-list-changed");
