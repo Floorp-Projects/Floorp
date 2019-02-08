@@ -477,7 +477,12 @@ class SyncTelemetryImpl {
     this.lastSubmissionTime = Telemetry.msSinceProcessStart();
     this.lastUID = EMPTY_UID;
     this.lastDeviceID = undefined;
-    let sessionStartDate = Services.startup.getStartupInfo().main;
+    // Note that the sessionStartDate is somewhat arbitrary - the telemetry
+    // modules themselves just use `new Date()`. This means that our startDate
+    // isn't going to be the same as the sessionStartDate in the main pings,
+    // but that's OK for now - if it's a problem we'd need to change the
+    // telemetry modules to expose what it thinks the sessionStartDate is.
+    let sessionStartDate = new Date();
     this.sessionStartDate = TelemetryUtils.toLocalTimeISOString(
       TelemetryUtils.truncateToHours(sessionStartDate));
   }
