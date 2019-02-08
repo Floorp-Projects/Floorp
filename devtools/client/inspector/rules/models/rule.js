@@ -24,49 +24,44 @@ const STYLE_INSPECTOR_L10N = new LocalizationHelper(STYLE_INSPECTOR_PROPERTIES);
  *   Manages a single style declaration or rule.
  *   Applies changes to the properties in a rule.
  *   Maintains a list of TextProperty objects.
- *
- * @param {ElementStyle} elementStyle
- *        The ElementStyle to which this rule belongs.
- * @param {Object} options
- *        The information used to construct this rule.  Properties include:
- *          rule: A StyleRuleActor
- *          inherited: An element this rule was inherited from.  If omitted,
- *            the rule applies directly to the current element.
- *          isSystem: Is this a user agent style?
- *          isUnmatched: True if the rule does not match the current selected
- *            element, otherwise, false.
  */
-function Rule(elementStyle, options) {
-  this.elementStyle = elementStyle;
-  this.domRule = options.rule;
-  this.matchedSelectors = options.matchedSelectors || [];
-  this.pseudoElement = options.pseudoElement || "";
+class Rule {
+  /**
+   * @param {ElementStyle} elementStyle
+   *        The ElementStyle to which this rule belongs.
+   * @param {Object} options
+   *        The information used to construct this rule. Properties include:
+   *          rule: A StyleRuleActor
+   *          inherited: An element this rule was inherited from. If omitted,
+   *            the rule applies directly to the current element.
+   *          isSystem: Is this a user agent style?
+   *          isUnmatched: True if the rule does not match the current selected
+   *            element, otherwise, false.
+   */
+  constructor(elementStyle, options) {
+    this.elementStyle = elementStyle;
+    this.domRule = options.rule;
+    this.matchedSelectors = options.matchedSelectors || [];
+    this.pseudoElement = options.pseudoElement || "";
+    this.isSystem = options.isSystem;
+    this.isUnmatched = options.isUnmatched || false;
+    this.inherited = options.inherited || null;
+    this.keyframes = options.keyframes || null;
 
-  this.isSystem = options.isSystem;
-  this.isUnmatched = options.isUnmatched || false;
-  this.inherited = options.inherited || null;
-  this.keyframes = options.keyframes || null;
+    this.mediaText = this.domRule && this.domRule.mediaText ? this.domRule.mediaText : "";
+    this.cssProperties = this.elementStyle.ruleView.cssProperties;
 
-  if (this.domRule && this.domRule.mediaText) {
-    this.mediaText = this.domRule.mediaText;
+    // Populate the text properties with the style's current authoredText
+    // value, and add in any disabled properties from the store.
+    this.textProps = this._getTextProperties();
+    this.textProps = this.textProps.concat(this._getDisabledProperties());
+
+    this.getUniqueSelector = this.getUniqueSelector.bind(this);
   }
-
-  this.cssProperties = this.elementStyle.ruleView.cssProperties;
-
-  // Populate the text properties with the style's current authoredText
-  // value, and add in any disabled properties from the store.
-  this.textProps = this._getTextProperties();
-  this.textProps = this.textProps.concat(this._getDisabledProperties());
-
-  this.getUniqueSelector = this.getUniqueSelector.bind(this);
-}
-
-Rule.prototype = {
-  mediaText: "",
 
   get declarations() {
     return this.textProps;
-  },
+  }
 
   get inheritance() {
     if (!this.inherited) {
@@ -77,7 +72,7 @@ Rule.prototype = {
       inherited: this.inherited,
       inheritedSource: this.inheritedSource,
     };
-  },
+  }
 
   get selector() {
     return {
@@ -86,7 +81,7 @@ Rule.prototype = {
       selectors: this.domRule.selectors,
       selectorText: this.keyframes ? this.domRule.keyText : this.selectorText,
     };
-  },
+  }
 
   get sourceLink() {
     return {
@@ -95,7 +90,7 @@ Rule.prototype = {
       mediaText: this.mediaText,
       title: this.title,
     };
-  },
+  }
 
   get title() {
     let title = CssLogic.shortSource(this.sheet);
@@ -104,7 +99,7 @@ Rule.prototype = {
     }
 
     return title + (this.mediaText ? " @media " + this.mediaText : "");
-  },
+  }
 
   get inheritedSource() {
     if (this._inheritedSource) {
@@ -120,7 +115,7 @@ Rule.prototype = {
         STYLE_INSPECTOR_L10N.getFormatStr("rule.inheritedFrom", eltText);
     }
     return this._inheritedSource;
-  },
+  }
 
   get keyframesName() {
     if (this._keyframesName) {
@@ -132,7 +127,7 @@ Rule.prototype = {
         STYLE_INSPECTOR_L10N.getFormatStr("rule.keyframe", this.keyframes.name);
     }
     return this._keyframesName;
-  },
+  }
 
   get keyframesRule() {
     if (!this.keyframes) {
@@ -143,33 +138,33 @@ Rule.prototype = {
       id: this.keyframes.actorID,
       keyframesName: this.keyframesName,
     };
-  },
+  }
 
   get selectorText() {
     return this.domRule.selectors ? this.domRule.selectors.join(", ") :
       CssLogic.l10n("rule.sourceElement");
-  },
+  }
 
   /**
    * The rule's stylesheet.
    */
   get sheet() {
     return this.domRule ? this.domRule.parentStyleSheet : null;
-  },
+  }
 
   /**
    * The rule's line within a stylesheet
    */
   get ruleLine() {
     return this.domRule ? this.domRule.line : -1;
-  },
+  }
 
   /**
    * The rule's column within a stylesheet
    */
   get ruleColumn() {
     return this.domRule ? this.domRule.column : null;
-  },
+  }
 
   /**
    * Returns the TextProperty with the given id or undefined if it cannot be found.
@@ -179,9 +174,9 @@ Rule.prototype = {
    * @return {TextProperty|undefined} with the given id in the current Rule or undefined
    * if it cannot be found.
    */
-  getDeclaration: function(id) {
+  getDeclaration(id) {
     return this.textProps.find(textProp => textProp.id === id);
-  },
+  }
 
   /**
    * Returns an unique selector for the CSS rule.
@@ -202,7 +197,7 @@ Rule.prototype = {
     }
 
     return selector;
-  },
+  }
 
   /**
    * Returns true if the rule matches the creation options
@@ -211,9 +206,9 @@ Rule.prototype = {
    * @param {Object} options
    *        Creation options. See the Rule constructor for documentation.
    */
-  matches: function(options) {
+  matches(options) {
     return this.domRule === options.rule;
-  },
+  }
 
   /**
    * Create a new TextProperty to include in the rule.
@@ -229,7 +224,7 @@ Rule.prototype = {
    * @param {TextProperty} siblingProp
    *        Optional, property next to which the new property will be added.
    */
-  createProperty: function(name, value, priority, enabled, siblingProp) {
+  createProperty(name, value, priority, enabled, siblingProp) {
     const prop = new TextProperty(this, name, value, priority, enabled);
 
     let ind;
@@ -249,14 +244,14 @@ Rule.prototype = {
     });
 
     return prop;
-  },
+  }
 
   /**
    * Helper function for applyProperties that is called when the actor
    * does not support as-authored styles.  Store disabled properties
    * in the element style's store.
    */
-  _applyPropertiesNoAuthored: function(modifications) {
+  _applyPropertiesNoAuthored(modifications) {
     this.elementStyle.markOverriddenAll();
 
     const disabledProps = [];
@@ -317,14 +312,14 @@ Rule.prototype = {
         textProp.priority = cssProp.priority;
       }
     });
-  },
+  }
 
   /**
    * A helper for applyProperties that applies properties in the "as
    * authored" case; that is, when the StyleRuleActor supports
    * setRuleText.
    */
-  _applyPropertiesAuthored: function(modifications) {
+  _applyPropertiesAuthored(modifications) {
     return modifications.apply().then(() => {
       // The rewriting may have required some other property values to
       // change, e.g., to insert some needed terminators.  Update the
@@ -341,7 +336,7 @@ Rule.prototype = {
         }
       }
     });
-  },
+  }
 
   /**
    * Reapply all the properties in this rule, and update their
@@ -355,7 +350,7 @@ Rule.prototype = {
    * @return {Promise} a promise which will resolve when the edit
    *        is complete
    */
-  applyProperties: function(modifier) {
+  applyProperties(modifier) {
     // If there is already a pending modification, we have to wait
     // until it settles before applying the next modification.
     const resultPromise =
@@ -378,7 +373,7 @@ Rule.prototype = {
 
     this._applyingModifications = resultPromise;
     return resultPromise;
-  },
+  }
 
   /**
    * Renames a property.
@@ -389,7 +384,7 @@ Rule.prototype = {
    *        The new property name (such as "background" or "border-top").
    * @return {Promise}
    */
-  setPropertyName: function(property, name) {
+  setPropertyName(property, name) {
     if (name === property.name) {
       return Promise.resolve();
     }
@@ -400,7 +395,7 @@ Rule.prototype = {
     return this.applyProperties(modifications => {
       modifications.renameProperty(index, oldName, name);
     });
-  },
+  }
 
   /**
    * Sets the value and priority of a property, then reapply all properties.
@@ -413,7 +408,7 @@ Rule.prototype = {
    *        The property's priority (either "important" or an empty string).
    * @return {Promise}
    */
-  setPropertyValue: function(property, value, priority) {
+  setPropertyValue(property, value, priority) {
     if (value === property.value && priority === property.priority) {
       return Promise.resolve();
     }
@@ -425,7 +420,7 @@ Rule.prototype = {
     return this.applyProperties(modifications => {
       modifications.setProperty(index, property.name, value, priority);
     });
-  },
+  }
 
   /**
    * Just sets the value and priority of a property, in order to preview its
@@ -439,7 +434,7 @@ Rule.prototype = {
    *        The property's priority (either "important" or an empty string).
    **@return {Promise}
    */
-  previewPropertyValue: function(property, value, priority) {
+  previewPropertyValue(property, value, priority) {
     const modifications = this.domRule.startModifyingProperties(this.cssProperties);
     modifications.setProperty(this.textProps.indexOf(property),
                               property.name, value, priority);
@@ -448,7 +443,7 @@ Rule.prototype = {
       // also for previews
       this.elementStyle._changed();
     });
-  },
+  }
 
   /**
    * Disables or enables given TextProperty.
@@ -457,7 +452,7 @@ Rule.prototype = {
    *        The property to enable/disable
    * @param {Boolean} value
    */
-  setPropertyEnabled: function(property, value) {
+  setPropertyEnabled(property, value) {
     if (property.enabled === !!value) {
       return;
     }
@@ -466,7 +461,7 @@ Rule.prototype = {
     this.applyProperties((modifications) => {
       modifications.setPropertyEnabled(index, property.name, property.enabled);
     });
-  },
+  }
 
   /**
    * Remove a given TextProperty from the rule and update the rule
@@ -475,7 +470,7 @@ Rule.prototype = {
    * @param {TextProperty} property
    *        The property to be removed
    */
-  removeProperty: function(property) {
+  removeProperty(property) {
     const index = this.textProps.indexOf(property);
     this.textProps.splice(index, 1);
     // Need to re-apply properties in case removing this TextProperty
@@ -483,13 +478,13 @@ Rule.prototype = {
     this.applyProperties((modifications) => {
       modifications.removeProperty(index, property.name);
     });
-  },
+  }
 
   /**
    * Get the list of TextProperties from the style. Needs
    * to parse the style's authoredText.
    */
-  _getTextProperties: function() {
+  _getTextProperties() {
     const textProps = [];
     const store = this.elementStyle.store;
 
@@ -519,12 +514,12 @@ Rule.prototype = {
     }
 
     return textProps;
-  },
+  }
 
   /**
    * Return the list of disabled properties from the store for this rule.
    */
-  _getDisabledProperties: function() {
+  _getDisabledProperties() {
     const store = this.elementStyle.store;
 
     // Include properties from the disabled property store, if any.
@@ -544,13 +539,13 @@ Rule.prototype = {
     }
 
     return textProps;
-  },
+  }
 
   /**
    * Reread the current state of the rules and rebuild text
    * properties as needed.
    */
-  refresh: function(options) {
+  refresh(options) {
     this.matchedSelectors = options.matchedSelectors || [];
     const newTextProps = this._getTextProperties();
 
@@ -602,7 +597,7 @@ Rule.prototype = {
     if (this.editor) {
       this.editor.populate();
     }
-  },
+  }
 
   /**
    * Update the current TextProperties that match a given property
@@ -626,7 +621,7 @@ Rule.prototype = {
    * @return {Boolean} true if a property was updated, false if no properties
    *         were updated.
    */
-  _updateTextProperty: function(newProp) {
+  _updateTextProperty(newProp) {
     const match = { rank: 0, prop: null };
 
     for (const prop of this.textProps) {
@@ -677,7 +672,7 @@ Rule.prototype = {
     }
 
     return false;
-  },
+  }
 
   /**
    * Jump between editable properties in the UI. If the focus direction is
@@ -691,7 +686,7 @@ Rule.prototype = {
    * @param {Number} direction
    *        The move focus direction number.
    */
-  editClosestTextProperty: function(textProperty, direction) {
+  editClosestTextProperty(textProperty, direction) {
     let index = this.textProps.indexOf(textProperty);
 
     if (direction === Services.focus.MOVEFOCUS_FORWARD) {
@@ -717,12 +712,12 @@ Rule.prototype = {
         this.textProps[index].editor.valueSpan.click();
       }
     }
-  },
+  }
 
   /**
    * Return a string representation of the rule.
    */
-  stringifyRule: function() {
+  stringifyRule() {
     const selectorText = this.selectorText;
     let cssText = "";
     const terminator = Services.appinfo.OS === "WINNT" ? "\r\n" : "\n";
@@ -734,21 +729,21 @@ Rule.prototype = {
     }
 
     return selectorText + " {" + terminator + cssText + "}";
-  },
+  }
 
   /**
    * See whether this rule has any non-invisible properties.
    * @return {Boolean} true if there is any visible property, or false
    *         if all properties are invisible
    */
-  hasAnyVisibleProperties: function() {
+  hasAnyVisibleProperties() {
     for (const prop of this.textProps) {
       if (!prop.invisible) {
         return true;
       }
     }
     return false;
-  },
-};
+  }
+}
 
 module.exports = Rule;
