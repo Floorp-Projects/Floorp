@@ -14,7 +14,11 @@ const { SourceMapConsumer, SourceMapGenerator } = require("source-map");
 
 const { createConsumer } = require("./utils/createConsumer");
 const assert = require("./utils/assert");
-const { fetchSourceMap } = require("./utils/fetchSourceMap");
+const {
+  fetchSourceMap,
+  hasOriginalURL,
+  clearOriginalURLs
+} = require("./utils/fetchSourceMap");
 const {
   getSourceMap,
   setSourceMap,
@@ -31,7 +35,9 @@ const { clearWasmXScopes } = require("./utils/wasmXScopes");
 
 import type { SourceLocation, Source, SourceId } from "debugger-html";
 
-async function getOriginalURLs(generatedSource: Source) {
+async function getOriginalURLs(
+  generatedSource: Source
+): Promise<SourceMapConsumer> {
   const map = await fetchSourceMap(generatedSource);
   return map && map.sources;
 }
@@ -39,7 +45,16 @@ async function getOriginalURLs(generatedSource: Source) {
 const COMPUTED_SPANS = new WeakSet();
 
 const SOURCE_MAPPINGS = new WeakMap();
-async function getOriginalRanges(sourceId: SourceId, url: string) {
+async function getOriginalRanges(
+  sourceId: SourceId,
+  url: string
+): Promise<
+  Array<{
+    line: number,
+    columnStart: number,
+    columnEnd: number
+  }>
+> {
   if (!isOriginalId(sourceId)) {
     return [];
   }
@@ -231,7 +246,7 @@ async function getAllGeneratedLocations(
   }));
 }
 
-type locationOptions = {
+export type locationOptions = {
   search?: "LEAST_UPPER_BOUND" | "GREATEST_LOWER_BOUND"
 };
 async function getOriginalLocation(
@@ -285,7 +300,12 @@ async function getOriginalLocation(
   };
 }
 
-async function getOriginalSourceText(originalSource: Source) {
+async function getOriginalSourceText(
+  originalSource: Source
+): Promise<?{
+  text: string,
+  contentType: string
+}> {
   assert(isOriginalId(originalSource.id), "Source is not an original source");
 
   const generatedSourceId = originalToGeneratedId(originalSource.id);
@@ -306,7 +326,9 @@ async function getOriginalSourceText(originalSource: Source) {
   };
 }
 
-async function getFileGeneratedRange(originalSource: Source) {
+async function getFileGeneratedRange(
+  originalSource: Source
+): Promise<?{ start: any, end: any }> {
   assert(isOriginalId(originalSource.id), "Source is not an original source");
 
   const map = await getSourceMap(originalToGeneratedId(originalSource.id));
@@ -360,10 +382,12 @@ function applySourceMap(
 function clearSourceMaps() {
   clearSourceMapsRequests();
   clearWasmXScopes();
+  clearOriginalURLs();
 }
 
 module.exports = {
   getOriginalURLs,
+  hasOriginalURL,
   getOriginalRanges,
   getGeneratedRanges,
   getGeneratedLocation,

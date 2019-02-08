@@ -8,7 +8,8 @@ import {
   isEvaluatingExpression,
   getSelectedFrame,
   getSources,
-  getLastCommand
+  getLastCommand,
+  wasStepping
 } from "../../selectors";
 
 import { mapFrames } from ".";
@@ -81,7 +82,10 @@ export function paused(pauseInfo: Pause) {
       await dispatch(selectLocation(selectedFrame.location));
     }
 
-    dispatch(togglePaneCollapse("end", false));
+    if (!wasStepping(getState())) {
+      dispatch(togglePaneCollapse("end", false));
+    }
+
     await dispatch(fetchScopes());
 
     // Run after fetching scoping data so that it may make use of the sourcemap
