@@ -28,7 +28,7 @@ function run_test() {
  */
 function setupUpdaterTestFinished() {
   let path = "123456789";
-  if (AppConstants.platform == "win") {
+  if (IS_WIN) {
     path = "C:\\" + path + "\\..\\" + path;
   } else {
     path = "/" + path + "/../" + path;

@@ -84,7 +84,7 @@ function waitForUpdateXMLFilesFinished() {
  * Setup symlinks for the test.
  */
 function setupSymLinks() {
-  if (AppConstants.platform == "macosx" || AppConstants.platform == "linux") {
+  if (IS_UNIX) {
     removeSymlink();
     createSymlink();
     registerCleanupFunction(removeSymlink);
@@ -107,7 +107,7 @@ function setupSymLinks() {
  * Checks the state of the symlinks for the test.
  */
 function checkSymLinks() {
-  if (AppConstants.platform == "macosx" || AppConstants.platform == "linux") {
+  if (IS_UNIX) {
     checkSymlink();
   }
 }

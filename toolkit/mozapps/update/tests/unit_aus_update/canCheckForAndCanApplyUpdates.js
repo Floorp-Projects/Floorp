@@ -15,7 +15,7 @@ function run_test() {
   testFile.remove(false);
   Assert.ok(!testFile.exists(), MSG_SHOULD_NOT_EXIST);
 
-  if (AppConstants.platform == "win") {
+  if (IS_WIN) {
     // Create a mutex to prevent being able to check for or apply updates.
     debugDump("attempting to create mutex");
     let handle = createMutex(getPerInstallationMutexName());
@@ -40,7 +40,7 @@ function run_test() {
   // Check if updates can be applied
   Assert.ok(gAUS.canApplyUpdates, "should be able to apply updates");
 
-  if (AppConstants.platform == "win") {
+  if (IS_WIN) {
     // Attempt to create a mutex when application update has already created one
     // with the same name.
     debugDump("attempting to create mutex");
