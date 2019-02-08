@@ -14,7 +14,12 @@ const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm")
 XPCOMUtils.defineLazyServiceGetter(this, "Favicons",
     "@mozilla.org/browser/favicon-service;1", "nsIFaviconService");
 
-/** A debugging target. */
+/**
+ * A debugging target.
+ *
+ * Targets can be a document (page), an OOP frame, a background
+ * document, or a worker.  They can all run in dedicated process or frame.
+ */
 this.Target = class {
   constructor(browser) {
     this.browser = browser;
