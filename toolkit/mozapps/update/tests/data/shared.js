@@ -329,38 +329,6 @@ function readFile(aFile) {
   return text;
 }
 
-/**
- * Reads the binary contents of a file and returns it as a string.
- *
- * @param  aFile
- *         The file to read from.
- * @return The contents of the file as a string.
- */
-function readFileBytes(aFile) {
-  debugDump("attempting to read file, path: " + aFile.path);
-  let fis = Cc["@mozilla.org/network/file-input-stream;1"].
-            createInstance(Ci.nsIFileInputStream);
-  // Specifying -1 for ioFlags will open the file with the default of PR_RDONLY.
-  // Specifying -1 for perm will open the file with the default of 0.
-  fis.init(aFile, -1, -1, Ci.nsIFileInputStream.CLOSE_ON_EOF);
-  let bis = Cc["@mozilla.org/binaryinputstream;1"].
-            createInstance(Ci.nsIBinaryInputStream);
-  bis.setInputStream(fis);
-  let data = [];
-  let count = fis.available();
-  while (count > 0) {
-    let bytes = bis.readByteArray(Math.min(65535, count));
-    data.push(String.fromCharCode.apply(null, bytes));
-    count -= bytes.length;
-    if (bytes.length == 0) {
-      throw "Nothing read from input stream!";
-    }
-  }
-  data = data.join("");
-  fis.close();
-  return data.toString();
-}
-
 /* Returns human readable status text from the updates.properties bundle */
 function getStatusText(aErrCode) {
   return getString("check_error-" + aErrCode);
@@ -451,7 +419,7 @@ function getStageDirFile(aRelPath) {
   if (AppConstants.platform == "macosx") {
     file = getUpdateDirFile(DIR_PATCH);
   } else {
-    file = getAppBaseDir();
+    file = getGREBinDir();
   }
   file.append(DIR_UPDATED);
   if (aRelPath) {
@@ -578,15 +546,6 @@ function removeDirRecursive(aDir) {
  */
 function getCurrentProcessDir() {
   return Services.dirsvc.get(NS_XPCOM_CURRENT_PROCESS_DIR, Ci.nsIFile);
-}
-
-/**
- * Gets the application base directory.
- *
- * @return  nsIFile object for the application base directory.
- */
-function getAppBaseDir() {
-  return Services.dirsvc.get(XRE_EXECUTABLE_FILE, Ci.nsIFile).parent;
 }
 
 /**

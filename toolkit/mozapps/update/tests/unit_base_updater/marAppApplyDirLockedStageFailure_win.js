@@ -17,7 +17,7 @@ function run_test() {
   gTestFiles = gTestFilesCompleteSuccess;
   gTestDirs = gTestDirsCompleteSuccess;
   setTestFilesAndDirsForFailure();
-  createUpdateInProgressLockFile(getAppBaseDir());
+  createUpdateInProgressLockFile(getGREBinDir());
   setupUpdaterTest(FILE_COMPLETE_MAR, false);
 }
 
@@ -32,7 +32,7 @@ function setupUpdaterTestFinished() {
  * Called after the call to stageUpdate finishes.
  */
 function stageUpdateFinished() {
-  removeUpdateInProgressLockFile(getAppBaseDir());
+  removeUpdateInProgressLockFile(getGREBinDir());
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateFailure(getApplyDirFile);
   checkUpdateLogContains(PERFORMING_STAGED_UPDATE);
