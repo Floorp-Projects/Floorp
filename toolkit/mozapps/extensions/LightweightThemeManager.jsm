@@ -6,13 +6,8 @@
 
 var EXPORTED_SYMBOLS = ["LightweightThemeManager"];
 
-ChromeUtils.defineModuleGetter(this, "LightweightThemePersister",
-  "resource://gre/modules/addons/LightweightThemePersister.jsm");
 ChromeUtils.defineModuleGetter(this, "LightweightThemeImageOptimizer",
   "resource://gre/modules/addons/LightweightThemeImageOptimizer.jsm");
-ChromeUtils.defineModuleGetter(this, "AppConstants",
-  "resource://gre/modules/AppConstants.jsm");
-
 
 // Holds optional fallback theme data that will be returned when no data for an
 // active theme can be found. This the case for WebExtension Themes, for example.
@@ -22,10 +17,7 @@ var LightweightThemeManager = {
   set fallbackThemeData(data) {
     if (data && Object.getOwnPropertyNames(data).length) {
       _fallbackThemeData = Object.assign({}, data);
-      if (LightweightThemePersister.persistEnabled) {
-        LightweightThemeImageOptimizer.purge();
-        _persistImages(_fallbackThemeData, () => {});
-      }
+      LightweightThemeImageOptimizer.purge();
     } else {
       _fallbackThemeData = null;
     }
@@ -43,24 +35,6 @@ var LightweightThemeManager = {
     return _fallbackThemeData;
   },
 
-  /*
-   * Returns the currently active theme, taking the fallback theme into account
-   * if we'd be using the default theme otherwise.
-   *
-   * This will rewrite the theme data to use locally persisted resources if
-   * available.
-   *
-   * Unless you have any special requirements, this is what you normally want
-   * to use in order to retrieve the currently active theme for use in the UI.
-   */
-  get currentThemeWithPersistedData() {
-    let data = this.currentThemeWithFallback;
-    if (data && LightweightThemePersister.persistEnabled) {
-      data = LightweightThemePersister.getPersistedData(data);
-    }
-    return data;
-  },
-
   systemThemeChanged() {
   },
 
@@ -76,10 +50,3 @@ var LightweightThemeManager = {
     }
   },
 };
-
-function _persistImages(aData, aCallback) {
-  if (AppConstants.platform != "android") {
-    // On Android, the LightweightThemeConsumer is responsible for doing this.
-    LightweightThemePersister.persistImages(aData, aCallback);
-  }
-}

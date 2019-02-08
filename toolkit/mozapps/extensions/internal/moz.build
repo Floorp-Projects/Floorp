@@ -11,19 +11,21 @@ EXTRA_JS_MODULES.addons += [
     'Content.js',
     'GMPProvider.jsm',
     'LightweightThemeImageOptimizer.jsm',
-    'LightweightThemePersister.jsm',
     'ProductAddonChecker.jsm',
     'XPIDatabase.jsm',
     'XPIInstall.jsm',
     'XPIProvider.jsm',
 ]
 
-TESTING_JS_MODULES += [
-    'AddonTestUtils.jsm',
-]
-
-# Don't ship unused providers on Android
-if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
+    EXTRA_JS_MODULES.addons += [
+        'LightweightThemePersister.jsm',
+    ]
+else:
     EXTRA_JS_MODULES.addons += [
         'PluginProvider.jsm',
     ]
+
+TESTING_JS_MODULES += [
+    'AddonTestUtils.jsm',
+]
