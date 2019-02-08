@@ -261,12 +261,12 @@ void FatalError(const char* aMsg, bool aIsParent) {
   } else {
     formattedMessage.AppendLiteral("\". abort()ing as a result.");
 #ifndef FUZZING
-    MOZ_CRASH_UNSAFE_OOL(formattedMessage.get());
+    MOZ_CRASH_UNSAFE(formattedMessage.get());
 #endif
   }
 }
 
-void LogicError(const char* aMsg) { MOZ_CRASH_UNSAFE_OOL(aMsg); }
+void LogicError(const char* aMsg) { MOZ_CRASH_UNSAFE(aMsg); }
 
 void ActorIdReadError(const char* aActorDescription) {
 #ifndef FUZZING

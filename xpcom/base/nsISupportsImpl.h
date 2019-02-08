@@ -50,11 +50,10 @@ class nsAutoOwningThread {
   nsAutoOwningThread();
 
   // We move the actual assertion checks out-of-line to minimize code bloat,
-  // but that means we have to pass a non-literal string to
-  // MOZ_CRASH_UNSAFE_OOL.  To make that more safe, the public interface
-  // requires a literal string and passes that to the private interface; we
-  // can then be assured that we effectively are passing a literal string
-  // to MOZ_CRASH_UNSAFE_OOL.
+  // but that means we have to pass a non-literal string to MOZ_CRASH_UNSAFE.
+  // To make that more safe, the public interface requires a literal string
+  // and passes that to the private interface; we can then be assured that we
+  // effectively are passing a literal string to MOZ_CRASH_UNSAFE.
   template <int N>
   void AssertOwnership(const char (&aMsg)[N]) const {
     AssertCurrentThreadOwnsMe(aMsg);

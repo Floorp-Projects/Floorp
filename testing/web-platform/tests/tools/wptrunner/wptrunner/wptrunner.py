@@ -57,22 +57,19 @@ def get_loader(test_paths, product, debug=None, run_info_extras=None, **kwargs):
                                                manifest_download=kwargs["manifest_download"]).load()
 
     manifest_filters = []
-    meta_filters = []
 
-    if kwargs["include"] or kwargs["exclude"] or kwargs["include_manifest"]:
+    if kwargs["include"] or kwargs["exclude"] or kwargs["include_manifest"] or kwargs["default_exclude"]:
         manifest_filters.append(testloader.TestFilter(include=kwargs["include"],
                                                       exclude=kwargs["exclude"],
                                                       manifest_path=kwargs["include_manifest"],
-                                                      test_manifests=test_manifests))
-    if kwargs["tags"]:
-        meta_filters.append(testloader.TagFilter(tags=kwargs["tags"]))
+                                                      test_manifests=test_manifests,
+                                                      explicit=kwargs["default_exclude"]))
 
     ssl_enabled = sslutils.get_cls(kwargs["ssl_type"]).ssl_enabled
     test_loader = testloader.TestLoader(test_manifests,
                                         kwargs["test_types"],
                                         run_info,
                                         manifest_filters=manifest_filters,
-                                        meta_filters=meta_filters,
                                         chunk_type=kwargs["chunk_type"],
                                         total_chunks=kwargs["total_chunks"],
                                         chunk_number=kwargs["this_chunk"],
@@ -169,7 +166,7 @@ def run_tests(config, test_paths, product, **kwargs):
         test_total = 0
         unexpected_total = 0
 
-        if len(test_loader.test_ids) == 0:
+        if len(test_loader.test_ids) == 0 and kwargs["test_list"]:
             logger.error("Unable to find any tests at the path(s):")
             for path in kwargs["test_list"]:
                 logger.error("  %s" % path)
@@ -299,8 +296,12 @@ def run_tests(config, test_paths, product, **kwargs):
         if skipped_tests > 0:
             logger.warning("All requested tests were skipped")
         else:
-            logger.error("No tests ran")
-            return False
+            if kwargs["default_exclude"]:
+                logger.info("No tests ran")
+                return True
+            else:
+                logger.error("No tests ran")
+                return False
 
     if unexpected_total and not kwargs["fail_on_unexpected"]:
         logger.info("Tolerating %s unexpected results" % unexpected_total)

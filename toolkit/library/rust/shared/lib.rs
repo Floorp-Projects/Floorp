@@ -155,9 +155,9 @@ pub extern "C" fn intentional_panic(message: *const c_char) {
 }
 
 extern "C" {
-    // We can't use MOZ_CrashOOL directly because it may be weakly linked
+    // We can't use MOZ_Crash directly because it may be weakly linked
     // to libxul, and rust can't handle that.
-    fn GeckoCrashOOL(filename: *const c_char, line: c_int, reason: *const c_char) -> !;
+    fn GeckoCrash(filename: *const c_char, line: c_int, reason: *const c_char) -> !;
 }
 
 /// Truncate a string at the closest unicode character boundary
@@ -226,16 +226,16 @@ fn panic_hook(info: &panic::PanicInfo) {
     };
     // Copy the message and filename to the stack in order to safely add
     // a terminating nul character (since rust strings don't come with one
-    // and GeckoCrashOOL wants one).
+    // and GeckoCrash wants one).
     let message = ArrayCString::<[_; 512]>::from(message);
     let filename = ArrayCString::<[_; 512]>::from(filename);
     unsafe {
-        GeckoCrashOOL(filename.as_ptr() as *const c_char, line as c_int,
-                      message.as_ptr() as *const c_char);
+        GeckoCrash(filename.as_ptr() as *const c_char, line as c_int,
+                   message.as_ptr() as *const c_char);
     }
 }
 
-/// Configure a panic hook to redirect rust panics to Gecko's MOZ_CrashOOL.
+/// Configure a panic hook to redirect rust panics to Gecko's MOZ_Crash.
 #[no_mangle]
 pub extern "C" fn install_rust_panic_hook() {
     panic::set_hook(Box::new(panic_hook));

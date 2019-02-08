@@ -4,9 +4,7 @@
 
 // @flow
 
-import { isOriginalId } from "devtools-source-map";
 import {
-  locationMoved,
   breakpointExists,
   assertBreakpoint,
   createBreakpoint,
@@ -20,10 +18,13 @@ import {
   getSource,
   getSourceActors,
   getSymbols,
+  getFirstVisibleBreakpointPosition
 } from "../../selectors";
 import { getGeneratedLocation } from "../../utils/source-maps";
 import { getTextAtPosition } from "../../utils/source";
 import { recordEvent } from "../../utils/telemetry";
+import { features } from "../../utils/prefs";
+import { setBreakpointPositions } from "./breakpointPositions";
 
 import type {
   BreakpointOptions,
@@ -67,58 +68,40 @@ async function addBreakpointPromise(getState, client, sourceMaps, breakpoint) {
   if (breakpointExists(state, location)) {
     const newBreakpoint = { ...breakpoint, location, generatedLocation };
     assertBreakpoint(newBreakpoint);
-    return { breakpoint: newBreakpoint };
+    return newBreakpoint;
   }
 
   const sourceActors = getSourceActors(state, generatedSource.id);
-  const newGeneratedLocation = { ...generatedLocation };
 
   for (const sourceActor of sourceActors) {
     const sourceActorLocation = makeSourceActorLocation(
       sourceActor,
       generatedLocation
     );
-    const { actualLocation } = await client.setBreakpoint(
-      sourceActorLocation,
-      breakpoint.options,
-      isOriginalId(location.sourceId)
-    );
-    newGeneratedLocation.line = actualLocation.line;
-    newGeneratedLocation.column = actualLocation.column;
+    await client.setBreakpoint(sourceActorLocation, breakpoint.options);
   }
 
-  const newLocation = await sourceMaps.getOriginalLocation(
-    newGeneratedLocation
-  );
-
   const symbols = getSymbols(getState(), source);
-  const astLocation = await getASTLocation(source, symbols, newLocation);
+  const astLocation = await getASTLocation(source, symbols, location);
 
   const originalText = getTextAtPosition(source, location);
-  const text = getTextAtPosition(generatedSource, newGeneratedLocation);
+  const text = getTextAtPosition(generatedSource, generatedLocation);
 
   const newBreakpoint = {
     id: makeBreakpointId(generatedLocation),
     disabled: false,
     loading: false,
     options: breakpoint.options,
-    location: newLocation,
+    location,
     astLocation,
-    generatedLocation: newGeneratedLocation,
+    generatedLocation,
     text,
     originalText
   };
 
   assertBreakpoint(newBreakpoint);
 
-  const previousLocation = locationMoved(location, newLocation)
-    ? location
-    : null;
-
-  return {
-    breakpoint: newBreakpoint,
-    previousLocation
-  };
+  return newBreakpoint;
 }
 
 export function addHiddenBreakpoint(location: SourceLocation) {
@@ -144,22 +127,26 @@ export function enableBreakpoint(breakpoint: Breakpoint) {
   };
 }
 
-/**
- * Add a new breakpoint
- *
- * @memberof actions/breakpoints
- * @static
- * @param {BreakpointOptions} options Any options for the new breakpoint.
- */
-
 export function addBreakpoint(
   location: SourceLocation,
   options: BreakpointOptions = {}
 ) {
-  return ({ dispatch, getState, sourceMaps, client }: ThunkArgs) => {
+  return async ({ dispatch, getState, sourceMaps, client }: ThunkArgs) => {
     recordEvent("add_breakpoint");
+    let breakpointPosition = location;
+    if (features.columnBreakpoints && location.column === undefined) {
+      await dispatch(setBreakpointPositions(location));
+      breakpointPosition = getFirstVisibleBreakpointPosition(
+        getState(),
+        location
+      );
+    }
 
-    const breakpoint = createBreakpoint(location, options);
+    if (!breakpointPosition) {
+      return;
+    }
+
+    const breakpoint = createBreakpoint(breakpointPosition, options);
 
     return dispatch({
       type: "ADD_BREAKPOINT",

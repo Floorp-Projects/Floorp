@@ -50,9 +50,9 @@ MOZ_FORMAT_PRINTF(3, 4) void MOZ_CrashPrintf(const char* aFilename, int aLine,
       ret >= 0 && size_t(ret) < sPrintfCrashReasonSize,
       "Could not write the explanation string to the supplied buffer!");
 #ifdef DEBUG
-  MOZ_CrashOOL(aFilename, aLine, sPrintfCrashReason);
+  MOZ_Crash(aFilename, aLine, sPrintfCrashReason);
 #else
-  MOZ_CrashOOL(nullptr, aLine, sPrintfCrashReason);
+  MOZ_Crash(nullptr, aLine, sPrintfCrashReason);
 #endif
 }
 
