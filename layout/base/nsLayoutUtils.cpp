@@ -9688,13 +9688,10 @@ already_AddRefed<nsFontMetrics> nsLayoutUtils::GetMetricsFor(
 
 /* static */ void nsLayoutUtils::ComputeSystemFont(
     nsFont* aSystemFont, LookAndFeel::FontID aFontID,
-    const nsPresContext* aPresContext, const nsFont* aDefaultVariableFont) {
+    const nsFont* aDefaultVariableFont) {
   gfxFontStyle fontStyle;
-  float devPerCSS =
-      (float)AppUnitsPerCSSPixel() /
-      aPresContext->DeviceContext()->AppUnitsPerDevPixelAtUnitFullZoom();
   nsAutoString systemFontName;
-  if (LookAndFeel::GetFont(aFontID, systemFontName, fontStyle, devPerCSS)) {
+  if (LookAndFeel::GetFont(aFontID, systemFontName, fontStyle)) {
     systemFontName.Trim("\"'");
     aSystemFont->fontlist =
         FontFamilyList(NS_ConvertUTF16toUTF8(systemFontName), eUnquotedName);
@@ -9703,9 +9700,7 @@ already_AddRefed<nsFontMetrics> nsLayoutUtils::GetMetricsFor(
     aSystemFont->systemFont = fontStyle.systemFont;
     aSystemFont->weight = fontStyle.weight;
     aSystemFont->stretch = fontStyle.stretch;
-    aSystemFont->size = NSFloatPixelsToAppUnits(
-        fontStyle.size,
-        aPresContext->DeviceContext()->AppUnitsPerDevPixelAtUnitFullZoom());
+    aSystemFont->size = CSSPixel::ToAppUnits(fontStyle.size);
     // aSystemFont->langGroup = fontStyle.langGroup;
     aSystemFont->sizeAdjust = fontStyle.sizeAdjust;
 

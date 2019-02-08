@@ -53,8 +53,7 @@ class gfxPlatformMac : public gfxPlatform {
   // the name and style characteristics
   static void LookupSystemFont(mozilla::LookAndFeel::FontID aSystemFontID,
                                nsACString& aSystemFontName,
-                               gfxFontStyle& aFontStyle,
-                               float aDevPixPerCSSPixel);
+                               gfxFontStyle& aFontStyle);
 
   virtual bool SupportsApzWheelInput() const override { return true; }
 
