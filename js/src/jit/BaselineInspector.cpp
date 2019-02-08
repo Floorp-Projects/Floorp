@@ -741,19 +741,6 @@ bool BaselineInspector::hasSeenAccessedGetter(jsbytecode* pc) {
   return false;
 }
 
-bool BaselineInspector::hasSeenNonStringIterMore(jsbytecode* pc) {
-  MOZ_ASSERT(JSOp(*pc) == JSOP_MOREITER);
-
-  if (!hasICScript()) {
-    return false;
-  }
-
-  const ICEntry& entry = icEntryFromPC(pc);
-  ICStub* stub = entry.fallbackStub();
-
-  return stub->toIteratorMore_Fallback()->hasNonStringResult();
-}
-
 bool BaselineInspector::hasSeenDoubleResult(jsbytecode* pc) {
   if (!hasICScript()) {
     return false;

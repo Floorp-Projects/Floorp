@@ -387,8 +387,11 @@ extern bool SuppressDeletedElement(JSContext* cx, HandleObject obj,
  * IteratorMore() returns the next iteration value. If no value is available,
  * MagicValue(JS_NO_ITER_VALUE) is returned.
  */
-extern bool IteratorMore(JSContext* cx, HandleObject iterobj,
-                         MutableHandleValue rval);
+inline Value IteratorMore(JSObject* iterobj) {
+  NativeIterator* ni =
+      iterobj->as<PropertyIteratorObject>().getNativeIterator();
+  return ni->nextIteratedValueAndAdvance();
+}
 
 /*
  * Create an object of the form { value: VALUE, done: DONE }.
