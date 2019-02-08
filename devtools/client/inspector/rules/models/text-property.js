@@ -18,40 +18,39 @@ loader.lazyRequireGetter(this, "escapeCSSComment", "devtools/shared/css/parsing-
  *     property declaration.
  *   Changes to the TextProperty are sent to its related Rule for
  *     application.
+ *
+ * @param {Rule} rule
+ *        The rule this TextProperty came from.
+ * @param {String} name
+ *        The text property name (such as "background" or "border-top").
+ * @param {String} value
+ *        The property's value (not including priority).
+ * @param {String} priority
+ *        The property's priority (either "important" or an empty string).
+ * @param {Boolean} enabled
+ *        Whether the property is enabled.
+ * @param {Boolean} invisible
+ *        Whether the property is invisible.  An invisible property
+ *        does not show up in the UI; these are needed so that the
+ *        index of a property in Rule.textProps is the same as the index
+ *        coming from parseDeclarations.
  */
-class TextProperty {
-  /**
-   * @param {Rule} rule
-   *        The rule this TextProperty came from.
-   * @param {String} name
-   *        The text property name (such as "background" or "border-top").
-   * @param {String} value
-   *        The property's value (not including priority).
-   * @param {String} priority
-   *        The property's priority (either "important" or an empty string).
-   * @param {Boolean} enabled
-   *        Whether the property is enabled.
-   * @param {Boolean} invisible
-   *        Whether the property is invisible. In an inherited rule, only show
-   *        the inherited declarations. The other declarations are considered
-   *        invisible and does not show up in the UI. These are needed so that
-   *        the index of a property in Rule.textProps is the same as the index
-   *        coming from parseDeclarations.
-   */
-  constructor(rule, name, value, priority, enabled = true, invisible = false) {
-    this.id = name + "_" + generateUUID().toString();
-    this.rule = rule;
-    this.name = name;
-    this.value = value;
-    this.priority = priority;
-    this.enabled = !!enabled;
-    this.invisible = invisible;
-    this.cssProperties = this.rule.elementStyle.ruleView.cssProperties;
-    this.panelDoc = this.rule.elementStyle.ruleView.inspector.panelDoc;
+function TextProperty(rule, name, value, priority, enabled = true,
+                      invisible = false) {
+  this.id = name + "_" + generateUUID().toString();
+  this.rule = rule;
+  this.name = name;
+  this.value = value;
+  this.priority = priority;
+  this.enabled = !!enabled;
+  this.invisible = invisible;
+  this.cssProperties = this.rule.elementStyle.ruleView.cssProperties;
+  this.panelDoc = this.rule.elementStyle.ruleView.inspector.panelDoc;
 
-    this.updateComputed();
-  }
+  this.updateComputed();
+}
 
+TextProperty.prototype = {
   get computedProperties() {
     return this.computed
       .filter(computed => computed.name !== this.name)
@@ -63,7 +62,7 @@ class TextProperty {
           value: computed.value,
         };
       });
-  }
+  },
 
   /**
    * See whether this property's name is known.
@@ -72,22 +71,22 @@ class TextProperty {
    */
   get isKnownProperty() {
     return this.cssProperties.isKnown(this.name);
-  }
+  },
 
   /**
    * Update the editor associated with this text property,
    * if any.
    */
-  updateEditor() {
+  updateEditor: function() {
     if (this.editor) {
       this.editor.update();
     }
-  }
+  },
 
   /**
    * Update the list of computed properties for this text property.
    */
-  updateComputed() {
+  updateComputed: function() {
     if (!this.name) {
       return;
     }
@@ -115,7 +114,7 @@ class TextProperty {
         priority: dummyStyle.getPropertyPriority(prop),
       });
     }
-  }
+  },
 
   /**
    * Set all the values from another TextProperty instance into
@@ -124,7 +123,7 @@ class TextProperty {
    * @param {TextProperty} prop
    *        The other TextProperty instance.
    */
-  set(prop) {
+  set: function(prop) {
     let changed = false;
     for (const item of ["name", "value", "priority", "enabled"]) {
       if (this[item] !== prop[item]) {
@@ -136,9 +135,9 @@ class TextProperty {
     if (changed) {
       this.updateEditor();
     }
-  }
+  },
 
-  setValue(value, priority, force = false) {
+  setValue: function(value, priority, force = false) {
     const store = this.rule.elementStyle.store;
 
     if (this.editor && value !== this.editor.committed.value || force) {
@@ -147,7 +146,7 @@ class TextProperty {
 
     return this.rule.setPropertyValue(this, value, priority)
       .then(() => this.updateEditor());
-  }
+  },
 
   /**
    * Called when the property's value has been updated externally, and
@@ -156,14 +155,14 @@ class TextProperty {
    * @param {String} value
    *        Property value
    */
-  updateValue(value) {
+  updateValue: function(value) {
     if (value !== this.value) {
       this.value = value;
       this.updateEditor();
     }
-  }
+  },
 
-  async setName(name) {
+  setName: async function(name) {
     if (name !== this.name && this.editor) {
       const store = this.rule.elementStyle.store;
       store.userProperties.setProperty(this.rule.domRule, name,
@@ -172,21 +171,21 @@ class TextProperty {
 
     await this.rule.setPropertyName(this, name);
     this.updateEditor();
-  }
+  },
 
-  setEnabled(value) {
+  setEnabled: function(value) {
     this.rule.setPropertyEnabled(this, value);
     this.updateEditor();
-  }
+  },
 
-  remove() {
+  remove: function() {
     this.rule.removeProperty(this);
-  }
+  },
 
   /**
    * Return a string representation of the rule property.
    */
-  stringifyProperty() {
+  stringifyProperty: function() {
     // Get the displayed property value
     let declaration = this.name + ": " + this.editor.valueSpan.textContent +
       ";";
@@ -197,7 +196,7 @@ class TextProperty {
     }
 
     return declaration;
-  }
+  },
 
   /**
    * Validate this property. Does it make sense for this value to be assigned
@@ -205,7 +204,7 @@ class TextProperty {
    *
    * @return {Boolean} true if the whole CSS declaration is valid, false otherwise.
    */
-  isValid() {
+  isValid: function() {
     const selfIndex = this.rule.textProps.indexOf(this);
 
     // When adding a new property in the rule-view, the TextProperty object is
@@ -217,14 +216,14 @@ class TextProperty {
     }
 
     return this.rule.domRule.declarations[selfIndex].isValid;
-  }
+  },
 
   /**
    * Validate the name of this property.
    *
    * @return {Boolean} true if the property name is valid, false otherwise.
    */
-  isNameValid() {
+  isNameValid: function() {
     const selfIndex = this.rule.textProps.indexOf(this);
 
     // When adding a new property in the rule-view, the TextProperty object is
@@ -241,7 +240,7 @@ class TextProperty {
     return (this.rule.domRule.declarations[selfIndex].isNameValid !== undefined)
       ? this.rule.domRule.declarations[selfIndex].isNameValid
       : true;
-  }
-}
+  },
+};
 
 module.exports = TextProperty;
