@@ -10,6 +10,7 @@
 #include "ClientOpPromise.h"
 #include "mozilla/dom/PClientSourceParent.h"
 #include "mozilla/dom/ServiceWorkerDescriptor.h"
+#include "mozilla/dom/ipc/IdType.h"
 #include "mozilla/MozPromise.h"
 
 namespace mozilla {
@@ -21,6 +22,7 @@ class ClientManagerService;
 class ClientSourceParent final : public PClientSourceParent {
   ClientInfo mClientInfo;
   Maybe<ServiceWorkerDescriptor> mController;
+  const Maybe<ContentParentId> mContentParentId;
   RefPtr<ClientManagerService> mService;
   nsTArray<ClientHandleParent*> mHandleList;
   MozPromiseHolder<GenericPromise> mExecutionReadyPromise;
@@ -54,7 +56,8 @@ class ClientSourceParent final : public PClientSourceParent {
   bool DeallocPClientSourceOpParent(PClientSourceOpParent* aActor) override;
 
  public:
-  explicit ClientSourceParent(const ClientSourceConstructorArgs& aArgs);
+  explicit ClientSourceParent(const ClientSourceConstructorArgs& aArgs,
+                              const Maybe<ContentParentId>& aContentParentId);
   ~ClientSourceParent();
 
   void Init();
@@ -70,6 +73,10 @@ class ClientSourceParent final : public PClientSourceParent {
   const Maybe<ServiceWorkerDescriptor>& GetController() const;
 
   void ClearController();
+
+  bool IsOwnedByProcess(ContentParentId aContentParentId) const {
+    return mContentParentId && mContentParentId.value() == aContentParentId;
+  }
 
   void AttachHandle(ClientHandleParent* aClientSource);
 
