@@ -6511,26 +6511,13 @@ nsresult PresShell::EventHandler::HandleEvent(nsIFrame* aFrame,
     //     content outdated?
     nsCOMPtr<nsIContent> capturingContent =
         EventHandler::GetCapturingContentFor(aGUIEvent);
-    nsIFrame* frameForPresShell = aFrame;
-    if (GetDocument()) {
-      if (aGUIEvent->mClass == eTouchEventClass) {
-        Document::UnlockPointer();
-      }
 
-      AutoWeakFrame weakFrame(frameForPresShell);
-      {  // scope for scriptBlocker.
-        nsAutoScriptBlocker scriptBlocker;
-        FlushThrottledStyles(mPresShell->GetRootPresShell()->GetDocument(),
-                             nullptr);
-      }
-
-      if (!weakFrame.IsAlive()) {
-        frameForPresShell = GetNearestFrameContainingPresShell(mPresShell);
-      }
+    if (GetDocument() && aGUIEvent->mClass == eTouchEventClass) {
+      Document::UnlockPointer();
     }
 
-    if (!frameForPresShell) {
-      NS_WARNING("Nothing to handle this event!");
+    nsIFrame* frameForPresShell = MaybeFlushThrottledStyles(aFrame);
+    if (NS_WARN_IF(!frameForPresShell)) {
       return NS_OK;
     }
 
@@ -7281,6 +7268,30 @@ bool PresShell::EventHandler::MaybeDiscardOrDelayKeyboardEvent(
   }
   aGUIEvent->mFlags.mIsSuppressedOrDelayed = true;
   return true;
+}
+
+nsIFrame* PresShell::EventHandler::MaybeFlushThrottledStyles(
+    nsIFrame* aFrameForPresShell) {
+
+  if (!GetDocument()) {
+    // XXX Only when mPresShell has document, we'll try to look for a frame
+    //     containing mPresShell even if given frame is nullptr.  Does this
+    //     make sense?
+    return aFrameForPresShell;
+  }
+
+  AutoWeakFrame weakFrameForPresShell(aFrameForPresShell);
+  {  // scope for scriptBlocker.
+    nsAutoScriptBlocker scriptBlocker;
+    FlushThrottledStyles(mPresShell->GetRootPresShell()->GetDocument(),
+                         nullptr);
+  }
+
+  if (weakFrameForPresShell.IsAlive()) {
+    return aFrameForPresShell;
+  }
+
+  return GetNearestFrameContainingPresShell(mPresShell);
 }
 
 Document* PresShell::GetPrimaryContentDocument() {
