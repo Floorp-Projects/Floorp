@@ -1,18 +1,22 @@
-/* Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/ */
-
-"use strict";
-
-const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+var {FileUtils} = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
+var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 ChromeUtils.defineModuleGetter(this, "AppMenuNotifications",
                                "resource://gre/modules/AppMenuNotifications.jsm");
 ChromeUtils.defineModuleGetter(this, "UpdateListener",
                                "resource://gre/modules/UpdateListener.jsm");
 
-const BIN_SUFFIX = (AppConstants.platform == "win" ? ".exe" : "");
-const FILE_UPDATER_BIN = "updater" + (AppConstants.platform == "macosx" ? ".app" : BIN_SUFFIX);
+const IS_MACOSX = ("nsILocalFileMac" in Ci);
+const IS_WIN = ("@mozilla.org/windows-registry-key;1" in Cc);
+
+const BIN_SUFFIX = (IS_WIN ? ".exe" : "");
+const FILE_UPDATER_BIN = "updater" + (IS_MACOSX ? ".app" : BIN_SUFFIX);
 const FILE_UPDATER_BIN_BAK = FILE_UPDATER_BIN + ".bak";
+
+const PREF_APP_UPDATE_INTERVAL = "app.update.interval";
+const PREF_APP_UPDATE_LASTUPDATETIME = "app.update.lastUpdateTime.background-update-timer";
+
+const DATA_URI_SPEC =  "chrome://mochitests/content/browser/toolkit/mozapps/update/tests/browser/";
 
 var DEBUG_AUS_TEST = true;
 
@@ -20,15 +24,16 @@ const LOG_FUNCTION = info;
 
 const MAX_UPDATE_COPY_ATTEMPTS = 10;
 
-const DATA_URI_SPEC = "chrome://mochitests/content/browser/toolkit/mozapps/update/tests/browser/";
 /* import-globals-from testConstants.js */
 Services.scriptloader.loadSubScript(DATA_URI_SPEC + "testConstants.js", this);
+/* import-globals-from ../data/shared.js */
+Services.scriptloader.loadSubScript(DATA_URI_SPEC + "shared.js", this);
 
 var gURLData = URL_HOST + "/" + REL_PATH_DATA;
 const URL_MANUAL_UPDATE = gURLData + "downloadPage.html";
 
-/* import-globals-from ../data/shared.js */
-Services.scriptloader.loadSubScript(DATA_URI_SPEC + "shared.js", this);
+const gEnv = Cc["@mozilla.org/process/environment;1"].
+             getService(Ci.nsIEnvironment);
 
 let gOriginalUpdateAutoValue = null;
 
@@ -97,7 +102,7 @@ async function continueFileHandler(leafName) {
  * @throws If the function is called on a platform other than Windows.
  */
 function lockWriteTestFile() {
-  if (AppConstants.platform != "win") {
+  if (!IS_WIN) {
     throw new Error("Windows only test function called");
   }
   let file = getUpdatesRootDir();
@@ -120,7 +125,7 @@ function lockWriteTestFile() {
 }
 
 function setOtherInstanceHandlingUpdates() {
-  if (AppConstants.platform != "win") {
+  if (!IS_WIN) {
     throw new Error("Windows only test function called");
   }
   gAUS.observe(null, "test-close-handle-update-mutex", "");

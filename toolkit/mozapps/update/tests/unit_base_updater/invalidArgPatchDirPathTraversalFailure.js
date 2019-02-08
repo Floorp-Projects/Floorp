@@ -23,7 +23,7 @@ function run_test() {
  */
 function setupUpdaterTestFinished() {
   let path = getUpdatesPatchDir();
-  if (AppConstants.platform == "win") {
+  if (IS_WIN) {
     path = path + "\\..\\";
   } else {
     path = path + "/../";
