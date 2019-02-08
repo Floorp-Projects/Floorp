@@ -481,7 +481,7 @@ var gPrivacyPane = {
   },
 
   highlightCBCategory() {
-    let value = document.getElementById("contentBlockingCategoryRadio").value;
+    let value = Preferences.get("browser.contentblocking.category").value;
     let standardEl = document.getElementById("contentBlockingOptionStandard");
     let strictEl = document.getElementById("contentBlockingOptionStrict");
     let customEl = document.getElementById("contentBlockingOptionCustom");
@@ -490,14 +490,16 @@ var gPrivacyPane = {
     customEl.classList.remove("selected");
 
     switch (value) {
-      case "standard":
-        standardEl.classList.add("selected");
-        break;
       case "strict":
         strictEl.classList.add("selected");
         break;
       case "custom":
         customEl.classList.add("selected");
+        break;
+      case "standard":
+        /* fall through */
+      default:
+        standardEl.classList.add("selected");
         break;
     }
   },
