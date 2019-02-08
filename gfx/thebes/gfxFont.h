@@ -149,6 +149,11 @@ struct gfxFontStyle {
   // The style of font
   FontSlantStyle style;
 
+  // Whether face-selection properties weight/style/stretch are all 'normal'
+  bool IsNormalStyle() const {
+    return weight.IsNormal() && style.IsNormal() && stretch.IsNormal();
+  }
+
   // We pack these two small-integer fields into a single byte to avoid
   // overflowing an 8-byte boundary [in a 64-bit build] and ending up with
   // 7 bytes of padding at the end of the struct.
