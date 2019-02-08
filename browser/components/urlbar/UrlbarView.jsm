@@ -239,7 +239,7 @@ class UrlbarView {
 
     this._alignPanel();
 
-    this.panel.openPopup(this.input.textbox.closest("toolbar"), "after_end", 0, -1);
+    this.panel.openPopup(this.input.textbox.closest("toolbar"), "after_end");
   }
 
   _alignPanel() {
