@@ -19,7 +19,7 @@ const {SocketListener} = ChromeUtils.import("chrome://remote/content/server/Sock
  * There can be multiple sessions per target.
  * The session's lifetime is equal to the lifetime of the debugger connection.
  */
-this.Debugger = class {
+this.TargetListener = class {
   constructor(target) {
     this.target = target;
     this.listener = null;
