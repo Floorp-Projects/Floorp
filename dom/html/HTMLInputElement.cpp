@@ -2608,8 +2608,12 @@ nsresult HTMLInputElement::SetValueInternal(const nsAString& aValue,
         if (!mInputData.mState->SetValue(value, aOldValue, aFlags)) {
           return NS_ERROR_OUT_OF_MEMORY;
         }
-        if (mType == NS_FORM_INPUT_EMAIL) {
-          UpdateAllValidityStates(!mDoneCreating);
+        // If the caller won't dispatch "input" event via
+        // nsContentUtils::DispatchInputEvent(), we need to modify
+        // validationMessage value here.
+        if (aFlags & (nsTextEditorState::eSetValue_Internal |
+                      nsTextEditorState::eSetValue_ByContent)) {
+          MaybeUpdateAllValidityStates();
         }
       } else {
         free(mInputData.mValue);
