@@ -38,8 +38,8 @@ this.RemoteAgentActorChild = class extends ActorChild {
 // TODO(ato): This can eventually be replaced by ActorChild and IPDL generation
 // TODO(ato): Can we find a shorter name?
 this.MessageChannelActorChild = class extends RemoteAgentActorChild {
-  constructor(despatcher) {
-    super(despatcher);
+  constructor(dispatcher) {
+    super(dispatcher);
     this.name = `RemoteAgent:${this.constructor.name}`;
   }
 

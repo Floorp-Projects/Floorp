@@ -17,7 +17,7 @@ this.Session = class {
 
     this.domains = new Domains(this);
 
-    this.connection.onmessage = this.despatch.bind(this);
+    this.connection.onmessage = this.dispatch.bind(this);
   }
 
   destructor() {
@@ -25,7 +25,7 @@ this.Session = class {
     this.domains.clear();
   }
 
-  async despatch({id, method, params}) {
+  async dispatch({id, method, params}) {
     try {
       if (typeof id == "undefined") {
         throw new TypeError("Message missing 'id' field");
