@@ -21,7 +21,6 @@ var LightweightThemeManager = {
     } else {
       _fallbackThemeData = null;
     }
-    return _fallbackThemeData;
   },
 
   /*
@@ -32,21 +31,10 @@ var LightweightThemeManager = {
    * locally persisted resources.
    */
   get currentThemeWithFallback() {
-    return _fallbackThemeData;
+    return _fallbackThemeData && _fallbackThemeData.theme;
   },
 
-  systemThemeChanged() {
-  },
-
-  /**
-   * Handles system theme changes.
-   *
-   * @param  aEvent
-   *         The MediaQueryListEvent associated with the system theme change.
-   */
-  handleEvent(aEvent) {
-    if (aEvent.media == "(-moz-system-dark-theme)") {
-      // Meh.
-    }
+  get themeData() {
+    return _fallbackThemeData || {theme: null};
   },
 };
