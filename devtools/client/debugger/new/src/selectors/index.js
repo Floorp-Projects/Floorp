@@ -30,7 +30,8 @@ export {
 } from "./breakpointAtLocation";
 export {
   getVisibleBreakpoints,
-  getFirstVisibleBreakpoints
+  getFirstVisibleBreakpoints,
+  getFirstVisibleBreakpointPosition
 } from "./visibleBreakpoints";
 export { inComponent } from "./inComponent";
 export { isSelectedFrameVisible } from "./isSelectedFrameVisible";

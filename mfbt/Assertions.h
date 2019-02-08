@@ -293,27 +293,27 @@ MOZ_NoReturn(int aLine) {
 #endif
 
 /*
- * MOZ_CRASH_UNSAFE_OOL(explanation-string) can be used if the explanation
- * string cannot be a string literal (but no other processing needs to be done
- * on it). A regular MOZ_CRASH() is preferred wherever possible, as passing
- * arbitrary strings from a potentially compromised process is not without risk.
- * If the string being passed is the result of a printf-style function,
- * consider using MOZ_CRASH_UNSAFE_PRINTF instead.
+ * MOZ_CRASH_UNSAFE(explanation-string) can be used if the explanation string
+ * cannot be a string literal (but no other processing needs to be done on it).
+ * A regular MOZ_CRASH() is preferred wherever possible, as passing arbitrary
+ * strings from a potentially compromised process is not without risk. If the
+ * string being passed is the result of a printf-style function, consider using
+ * MOZ_CRASH_UNSAFE_PRINTF instead.
  *
  * @note This macro causes data collection because crash strings are annotated
  * to crash-stats and are publicly visible. Firefox data stewards must do data
  * review on usages of this macro.
  */
-static inline MOZ_COLD MOZ_NORETURN void MOZ_CrashOOL(const char* aFilename,
-                                                      int aLine,
-                                                      const char* aReason) {
+static inline MOZ_COLD MOZ_NORETURN void MOZ_Crash(const char* aFilename,
+                                                   int aLine,
+                                                   const char* aReason) {
 #ifdef DEBUG
   MOZ_ReportCrash(aReason, aFilename, aLine);
 #endif
   MOZ_CRASH_ANNOTATE(aReason);
   MOZ_REALLY_CRASH(aLine);
 }
-#define MOZ_CRASH_UNSAFE_OOL(reason) MOZ_CrashOOL(__FILE__, __LINE__, reason)
+#define MOZ_CRASH_UNSAFE(reason) MOZ_Crash(__FILE__, __LINE__, reason)
 
 static const size_t sPrintfMaxArgs = 4;
 static const size_t sPrintfCrashReasonSize = 1024;

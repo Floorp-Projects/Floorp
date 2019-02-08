@@ -16,7 +16,7 @@ function generatedToOriginalId(generatedId: string, url: string) {
 }
 
 function isOriginalId(id: string) {
-  return !!id.match(/\/originalSource/);
+  return /\/originalSource/.test(id);
 }
 
 function isGeneratedId(id: string) {
@@ -62,7 +62,7 @@ const contentMap = {
  * @return String
  *         The content type.
  */
-function getContentType(url: string) {
+function getContentType(url: string): string {
   url = trimUrlQuery(url);
   const dot = url.lastIndexOf(".");
   if (dot >= 0) {

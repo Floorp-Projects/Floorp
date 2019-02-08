@@ -2751,7 +2751,7 @@ void MessageChannel::DebugAbort(const char* file, int line, const char* cond,
     pending.popFirst();
   }
 
-  MOZ_CRASH_UNSAFE_OOL(why);
+  MOZ_CRASH_UNSAFE(why);
 }
 
 void MessageChannel::DumpInterruptStack(const char* const pfx) const {

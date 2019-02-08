@@ -4,7 +4,7 @@
 
 .frames [role="list"] {
   list-style: none;
-  margin: 0;
+  margin-top: 4px;
   padding: 0;
 }
 
@@ -106,7 +106,6 @@
   mask-size: 100%;
   display: inline-block;
   width: 12px;
-  margin-inline-start: 4px;
 }
 
 :root.theme-dark .annotation-logo:not(.angular) svg path {

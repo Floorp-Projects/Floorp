@@ -877,13 +877,26 @@ function getClosestNonBucketNode(item: Node): Node | null {
   return getClosestNonBucketNode(parent);
 }
 
-function getNonPrototypeParentGripValue(item: Node | null): Node | null {
+function getParentGripNode(item: Node | null): Node | null {
   const parentNode = getParent(item);
   if (!parentNode) {
     return null;
   }
 
-  const parentGripNode = getClosestGripNode(parentNode);
+  return getClosestGripNode(parentNode);
+}
+
+function getParentGripValue(item: Node | null): any {
+  const parentGripNode = getParentGripNode(item);
+  if (!parentGripNode) {
+    return null;
+  }
+
+  return getValue(parentGripNode);
+}
+
+function getNonPrototypeParentGripValue(item: Node | null): Node | null {
+  const parentGripNode = getParentGripNode(item);
   if (!parentGripNode) {
     return null;
   }
@@ -905,6 +918,7 @@ module.exports = {
   getClosestGripNode,
   getClosestNonBucketNode,
   getParent,
+  getParentGripValue,
   getNonPrototypeParentGripValue,
   getNumericalPropertiesCount,
   getValue,

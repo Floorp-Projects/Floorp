@@ -5193,10 +5193,10 @@ void XRE_EnableSameExecutableForContentProc() {
 // malloc_handle_oom for it.
 extern "C" void GeckoHandleOOM(size_t size) { mozalloc_handle_oom(size); }
 
-// Similarly, this wraps MOZ_CrashOOL
-extern "C" void GeckoCrashOOL(const char* aFilename, int aLine,
-                              const char* aReason) {
-  MOZ_CrashOOL(aFilename, aLine, aReason);
+// Similarly, this wraps MOZ_Crash
+extern "C" void GeckoCrash(const char* aFilename, int aLine,
+                           const char* aReason) {
+  MOZ_Crash(aFilename, aLine, aReason);
 }
 
 // From toolkit/library/rust/shared/lib.rs

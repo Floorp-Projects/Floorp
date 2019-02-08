@@ -18,7 +18,8 @@ export type PauseAction =
   | {|
       +type: "RESUME",
       +thread: string,
-      +value: void
+      +value: void,
+      +wasStepping: boolean
     |}
   | {|
       +type: "PAUSED",

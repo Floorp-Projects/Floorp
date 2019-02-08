@@ -6,10 +6,32 @@ exports[`SourcesTree After changing expanded nodes Shows the tree with four.js, 
   key="pane"
 >
   <div
-    className="no-sources-message"
-    key="empty"
+    className="sources-list"
+    key="tree"
+    onKeyDown={[Function]}
   >
-    This page has no sources
+    <ManagedTree
+      autoExpandAll={false}
+      autoExpandDepth={0}
+      expanded={
+        Array [
+          "four.js",
+          "five.js",
+          "six.js",
+        ]
+      }
+      getChildren={[Function]}
+      getParent={[Function]}
+      getPath={[Function]}
+      getRoots={[Function]}
+      itemHeight={21}
+      key="full"
+      onCollapse={[Function]}
+      onExpand={[Function]}
+      onFocus={[Function]}
+      preventBlur={true}
+      renderItem={[Function]}
+    />
   </div>
 </div>
 `;
@@ -20,10 +42,25 @@ exports[`SourcesTree Should show the tree with nothing expanded 1`] = `
   key="pane"
 >
   <div
-    className="no-sources-message"
-    key="empty"
+    className="sources-list"
+    key="tree"
+    onKeyDown={[Function]}
   >
-    This page has no sources
+    <ManagedTree
+      autoExpandAll={false}
+      autoExpandDepth={1}
+      getChildren={[Function]}
+      getParent={[Function]}
+      getPath={[Function]}
+      getRoots={[Function]}
+      itemHeight={21}
+      key="full"
+      onCollapse={[Function]}
+      onExpand={[Function]}
+      onFocus={[Function]}
+      preventBlur={true}
+      renderItem={[Function]}
+    />
   </div>
 </div>
 `;
@@ -34,10 +71,32 @@ exports[`SourcesTree When loading initial source Shows the tree with one.js, two
   key="pane"
 >
   <div
-    className="no-sources-message"
-    key="empty"
+    className="sources-list"
+    key="tree"
+    onKeyDown={[Function]}
   >
-    This page has no sources
+    <ManagedTree
+      autoExpandAll={false}
+      autoExpandDepth={0}
+      expanded={
+        Array [
+          "one.js",
+          "two.js",
+          "three.js",
+        ]
+      }
+      getChildren={[Function]}
+      getParent={[Function]}
+      getPath={[Function]}
+      getRoots={[Function]}
+      itemHeight={21}
+      key="full"
+      onCollapse={[Function]}
+      onExpand={[Function]}
+      onFocus={[Function]}
+      preventBlur={true}
+      renderItem={[Function]}
+    />
   </div>
 </div>
 `;
@@ -48,8 +107,9 @@ exports[`SourcesTree on receiving new props updates highlighted items updates hi
   key="pane"
 >
   <div
-    className="no-sources-message"
-    key="empty"
+    className="sources-list"
+    key="tree"
+    onKeyDown={[Function]}
   >
     <ManagedTree
       autoExpandAll={false}

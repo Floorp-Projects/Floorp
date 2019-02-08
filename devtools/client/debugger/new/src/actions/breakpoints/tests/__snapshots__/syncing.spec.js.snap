@@ -179,7 +179,7 @@ Object {
       "column": undefined,
       "line": 3,
       "sourceId": "magic.js",
-      "sourceUrl": "http://localhost:8000/magic.js",
+      "sourceUrl": "http://localhost:8000/examples/magic.js",
     },
     "options": Object {
       "condition": null,

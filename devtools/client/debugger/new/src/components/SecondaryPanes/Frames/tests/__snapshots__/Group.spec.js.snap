@@ -65,6 +65,9 @@ exports[`Group displays a group 1`] = `
     <Badge>
       1
     </Badge>
+    <br
+      className="clipboard-only"
+    />
   </div>
 </div>
 `;
@@ -134,11 +137,16 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
     <Badge>
       3
     </Badge>
+    <br
+      className="clipboard-only"
+    />
   </div>
   <div
     className="frames-list"
   >
-    <FrameIndent />
+    <FrameIndent
+      key="frame-indent-0"
+    />
     <Frame
       copyStackTrace={[MockFunction]}
       disableContextMenu={false}
@@ -233,7 +241,9 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
       toggleBlackBox={[MockFunction]}
       toggleFrameworkGrouping={[MockFunction]}
     />
-    <FrameIndent />
+    <FrameIndent
+      key="frame-indent-1"
+    />
     <Frame
       copyStackTrace={[MockFunction]}
       disableContextMenu={false}
@@ -328,7 +338,9 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
       toggleBlackBox={[MockFunction]}
       toggleFrameworkGrouping={[MockFunction]}
     />
-    <FrameIndent />
+    <FrameIndent
+      key="frame-indent-2"
+    />
     <Frame
       copyStackTrace={[MockFunction]}
       disableContextMenu={false}
@@ -492,6 +504,9 @@ exports[`Group renders group with anonymous functions 1`] = `
     <Badge>
       3
     </Badge>
+    <br
+      className="clipboard-only"
+    />
   </div>
 </div>
 `;
@@ -561,11 +576,16 @@ exports[`Group renders group with anonymous functions 2`] = `
     <Badge>
       3
     </Badge>
+    <br
+      className="clipboard-only"
+    />
   </div>
   <div
     className="frames-list"
   >
-    <FrameIndent />
+    <FrameIndent
+      key="frame-indent-0"
+    />
     <Frame
       copyStackTrace={[MockFunction]}
       disableContextMenu={false}
@@ -659,7 +679,9 @@ exports[`Group renders group with anonymous functions 2`] = `
       toggleBlackBox={[MockFunction]}
       toggleFrameworkGrouping={[MockFunction]}
     />
-    <FrameIndent />
+    <FrameIndent
+      key="frame-indent-1"
+    />
     <Frame
       copyStackTrace={[MockFunction]}
       disableContextMenu={false}
@@ -753,7 +775,9 @@ exports[`Group renders group with anonymous functions 2`] = `
       toggleBlackBox={[MockFunction]}
       toggleFrameworkGrouping={[MockFunction]}
     />
-    <FrameIndent />
+    <FrameIndent
+      key="frame-indent-2"
+    />
     <Frame
       copyStackTrace={[MockFunction]}
       disableContextMenu={false}
