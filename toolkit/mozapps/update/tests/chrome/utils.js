@@ -136,13 +136,13 @@ var gDocElem;
 var gPrefToCheck;
 var gUseTestUpdater = false;
 
-// Set to true to log additional information for debugging. To log additional
-// information for an individual test set DEBUG_AUS_TEST to true in the test's
-// onload function.
-var DEBUG_AUS_TEST = true;
-
 /* import-globals-from ../data/shared.js */
 Services.scriptloader.loadSubScript(DATA_URI_SPEC + "shared.js", this);
+
+// Set to true to log additional information for debugging. To log additional
+// information for individual tests set gDebugTest to false here and to true in
+// the test's onload function.
+gDebugTest = true;
 
 /**
  * The current test in TESTS array.
@@ -799,7 +799,7 @@ function restoreUpdaterBackup() {
  * finished.
  */
 function setupPrefs() {
-  if (DEBUG_AUS_TEST) {
+  if (gDebugTest) {
     Services.prefs.setBoolPref(PREF_APP_UPDATE_LOG, true);
   }
 

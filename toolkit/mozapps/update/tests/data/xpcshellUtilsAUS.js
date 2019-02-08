@@ -183,9 +183,9 @@ const DATA_URI_SPEC = Services.io.newFileURI(do_get_file("", false)).spec;
 load("shared.js");
 
 // Set to true to log additional information for debugging. To log additional
-// information for an individual test set DEBUG_AUS_TEST to true in the test's
-// run_test function.
-var DEBUG_AUS_TEST = true;
+// information for individual tests set gDebugTest to false here and to true in
+// the test's onload function.
+gDebugTest = true;
 
 // Setting gDebugTestLog to true will create log files for the tests in
 // <objdir>/_tests/xpcshell/toolkit/mozapps/update/tests/<testdir>/ except for
@@ -1003,7 +1003,7 @@ function dumpOverride(aText) {
  * inspected.
  */
 function doTestFinish() {
-  if (DEBUG_AUS_TEST) {
+  if (gDebugTest) {
     // This prevents do_print errors from being printed by the xpcshell test
     // harness due to nsUpdateService.js logging to the console when the
     // app.update.log preference is true.
@@ -1028,7 +1028,7 @@ function doTestFinish() {
  */
 function setDefaultPrefs() {
   Services.prefs.setBoolPref(PREF_APP_UPDATE_DISABLEDFORTESTING, false);
-  if (DEBUG_AUS_TEST) {
+  if (gDebugTest) {
     // Enable Update logging
     Services.prefs.setBoolPref(PREF_APP_UPDATE_LOG, true);
   } else {
