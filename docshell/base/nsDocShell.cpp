@@ -9163,7 +9163,10 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
 
   NS_ENSURE_TRUE(IsValidLoadType(aLoadState->LoadType()), NS_ERROR_INVALID_ARG);
 
-  NS_ENSURE_TRUE(!mIsBeingDestroyed, NS_ERROR_NOT_AVAILABLE);
+  // Cancel loads coming from Docshells that are being destroyed.
+  if (mIsBeingDestroyed) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
 
   nsresult rv = EnsureScriptEnvironment();
   if (NS_FAILED(rv)) {
@@ -9199,14 +9202,6 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
   if (aLoadState->SourceDocShell() &&
       aLoadState->SourceDocShell()->IsSandboxedFrom(this)) {
     return NS_ERROR_DOM_INVALID_ACCESS_ERR;
-  }
-
-  //
-  // Load is being targetted at this docshell so return an error if the
-  // docshell is in the process of being destroyed.
-  //
-  if (mIsBeingDestroyed) {
-    return NS_ERROR_FAILURE;
   }
 
   NS_ENSURE_STATE(!HasUnloadedParent());
