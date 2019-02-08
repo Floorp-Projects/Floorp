@@ -3,25 +3,27 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <AvailabilityMacros.h>
-#include <mach-o/arch.h>
-#include <mach-o/loader.h>
-#include <mach-o/dyld_images.h>
-#include <mach-o/dyld.h>
-#include <mach/task_info.h>
-#include <mach/task.h>
-#include <mach/mach_init.h>
-#include <mach/mach_traps.h>
-#include <dlfcn.h>
-#include <string.h>
-#include <stdlib.h>
-#include <vector>
-#include <sstream>
+#include "shared-libraries.h"
+
+#include "ClearOnShutdown.h"
+#include "mozilla/StaticMutex.h"
 #include "mozilla/Unused.h"
 #include "nsNativeCharsetUtils.h"
-#include "ClearOnShutdown.h"
+#include <AvailabilityMacros.h>
 
-#include "shared-libraries.h"
+#include <dlfcn.h>
+#include <mach-o/arch.h>
+#include <mach-o/dyld_images.h>
+#include <mach-o/dyld.h>
+#include <mach-o/loader.h>
+#include <mach/mach_init.h>
+#include <mach/mach_traps.h>
+#include <mach/task_info.h>
+#include <mach/task.h>
+#include <sstream>
+#include <stdlib.h>
+#include <string.h>
+#include <vector>
 
 // Architecture specific abstraction.
 #if defined(GP_ARCH_x86)
@@ -43,7 +45,7 @@ struct NativeSharedLibrary {
   std::string path;
 };
 static std::vector<NativeSharedLibrary> *sSharedLibrariesList = nullptr;
-static StaticMutex sSharedLibrariesMutex;
+static mozilla::StaticMutex sSharedLibrariesMutex;
 
 static void SharedLibraryAddImage(const struct mach_header *mh,
                                   intptr_t vmaddr_slide) {
@@ -57,7 +59,7 @@ static void SharedLibraryAddImage(const struct mach_header *mh,
     return;
   }
 
-  StaticMutexAutoLock lock(sSharedLibrariesMutex);
+  mozilla::StaticMutexAutoLock lock(sSharedLibrariesMutex);
   if (!sSharedLibrariesList) {
     return;
   }
@@ -73,7 +75,7 @@ static void SharedLibraryRemoveImage(const struct mach_header *mh,
   // it to the right type here.
   auto header = reinterpret_cast<const platform_mach_header *>(mh);
 
-  StaticMutexAutoLock lock(sSharedLibrariesMutex);
+  mozilla::StaticMutexAutoLock lock(sSharedLibrariesMutex);
   if (!sSharedLibrariesList) {
     return;
   }
@@ -172,7 +174,7 @@ static void addSharedLibrary(const platform_mach_header *header,
 // Translate the statically stored sSharedLibrariesList information into a
 // SharedLibraryInfo object.
 SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
-  StaticMutexAutoLock lock(sSharedLibrariesMutex);
+  mozilla::StaticMutexAutoLock lock(sSharedLibrariesMutex);
   SharedLibraryInfo sharedLibraryInfo;
 
   for (auto &info : *sSharedLibrariesList) {

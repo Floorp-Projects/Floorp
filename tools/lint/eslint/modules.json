@@ -170,6 +170,7 @@
   "prefs.js": ["PrefsEngine", "PrefRec"],
   "prefs.jsm": ["Preference"],
   "pretty-fast.js": ["prettyFast"],
+  "profiler_get_symbols.js": ["wasm_bindgen"],
   "PromiseWorker.jsm": ["BasePromiseWorker"],
   "PushCrypto.jsm": ["PushCrypto", "concatArray"],
   "quit.js": ["goQuitApplication"],

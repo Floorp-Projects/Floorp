@@ -20,6 +20,31 @@
 #  define Elf_Addr Elf32_Addr
 #endif
 
+// On ARM, PC-relative function calls have a limit in how far they can jump,
+// which might not be enough for e.g. libxul.so. The easy way out would be
+// to use the long_call attribute, which forces the compiler to generate code
+// that can call anywhere, but clang doesn't support the attribute yet
+// (https://bugs.llvm.org/show_bug.cgi?id=40623), and while the command-line
+// equivalent does exist, it's currently broken
+// (https://bugs.llvm.org/show_bug.cgi?id=40624). So we create a manual
+// trampoline, corresponding to the code GCC generates with long_call.
+#ifdef __arm__
+__attribute__((section(".text._init_trampoline"), naked)) int init_trampoline(
+    int argc, char **argv, char **env) {
+  __asm__ __volatile__(
+      // thumb doesn't allow to use r12/ip with ldr, and thus would require an
+      // additional push/pop to save/restore the modified register, which would
+      // also change the call into a blx. It's simpler to switch to arm.
+      ".arm\n"
+      "  ldr ip, .LADDR\n"
+      ".LAFTER:\n"
+      "  add ip, pc, ip\n"
+      "  bx ip\n"
+      ".LADDR:\n"
+      "  .word real_original_init-(.LAFTER+8)\n");
+}
+#endif
+
 extern __attribute__((visibility("hidden"))) void original_init(int argc,
                                                                 char **argv,
                                                                 char **env);

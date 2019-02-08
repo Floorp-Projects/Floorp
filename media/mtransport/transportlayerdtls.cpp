@@ -801,7 +801,11 @@ std::vector<uint16_t> TransportLayerDtls::GetDefaultSrtpCiphers() {
   // we don't really enough entropy to prefer this over 128 bit
   ciphers.push_back(kDtlsSrtpAeadAes256Gcm);
   ciphers.push_back(kDtlsSrtpAes128CmHmacSha1_80);
+#ifndef NIGHTLY_BUILD
+  // To support bug 1491583 lets try to find out if we get bug reports if we no
+  // longer offer this in Nightly builds.
   ciphers.push_back(kDtlsSrtpAes128CmHmacSha1_32);
+#endif
 
   return ciphers;
 }

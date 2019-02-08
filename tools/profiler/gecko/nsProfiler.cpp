@@ -4,32 +4,35 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <string>
-#include <sstream>
-#include "GeckoProfiler.h"
-#include "nsIFileStreams.h"
 #include "nsProfiler.h"
+
+#include "GeckoProfiler.h"
 #include "nsProfilerStartParams.h"
-#include "nsMemory.h"
-#include "nsString.h"
-#include "mozilla/Services.h"
-#include "nsIObserverService.h"
-#include "nsIInterfaceRequestor.h"
-#include "nsILoadContext.h"
-#include "nsIWebNavigation.h"
-#include "nsIInterfaceRequestorUtils.h"
-#include "shared-libraries.h"
+#include "platform.h"
+#include "ProfilerParent.h"
+
 #include "js/JSON.h"
 #include "js/Value.h"
-#include "mozilla/ErrorResult.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/TypedArray.h"
+#include "mozilla/ErrorResult.h"
 #include "mozilla/Move.h"
+#include "mozilla/Services.h"
 #include "mozilla/SystemGroup.h"
+#include "nsIFileStreams.h"
+#include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
+#include "nsILoadContext.h"
+#include "nsIObserverService.h"
+#include "nsIWebNavigation.h"
 #include "nsLocalFile.h"
+#include "nsMemory.h"
+#include "nsString.h"
 #include "nsThreadUtils.h"
-#include "ProfilerParent.h"
-#include "platform.h"
+#include "shared-libraries.h"
+
+#include <string>
+#include <sstream>
 
 using namespace mozilla;
 

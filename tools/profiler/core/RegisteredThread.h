@@ -7,11 +7,15 @@
 #ifndef RegisteredThread_h
 #define RegisteredThread_h
 
-#include "mozilla/UniquePtrExtensions.h"
-
 #include "platform.h"
+#include "ProfilerMarker.h"
+#include "ProfilerMarkerPayload.h"
 #include "ThreadInfo.h"
+
 #include "js/TraceLoggerAPI.h"
+#include "jsapi.h"
+#include "mozilla/UniquePtr.h"
+#include "nsIEventTarget.h"
 
 // This class contains the state for a single thread that is accessible without
 // protection from gPSMutex in platform.cpp. Because there is no external
@@ -150,7 +154,7 @@ class RacyRegisteredThread final {
   // Accesses to this atomic are not recorded by web replay as they may occur
   // at non-deterministic points.
   mozilla::Atomic<bool, mozilla::MemoryOrdering::Relaxed,
-                  recordreplay::Behavior::DontPreserve>
+                  mozilla::recordreplay::Behavior::DontPreserve>
       mIsBeingProfiled;
 };
 

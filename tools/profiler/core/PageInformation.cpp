@@ -6,6 +6,8 @@
 
 #include "PageInformation.h"
 
+#include "ProfileJSONWriter.h"
+
 PageInformation::PageInformation(const nsID& aDocShellId,
                                  uint32_t aDocShellHistoryId,
                                  const nsCString& aUrl, bool aIsSubFrame)

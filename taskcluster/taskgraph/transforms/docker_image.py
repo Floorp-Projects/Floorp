@@ -23,6 +23,7 @@ from voluptuous import (
     Optional,
     Required,
 )
+from .task import task_description_schema
 
 DIGEST_RE = re.compile('^[0-9a-f]{64}$')
 
@@ -51,6 +52,16 @@ docker_image_schema = Schema({
 
     # List of package tasks this docker image depends on.
     Optional('packages'): [basestring],
+
+    Optional(
+        "index",
+        description="information for indexing this build so its artifacts can be discovered",
+    ): task_description_schema['index'],
+
+    Optional(
+        "cache",
+        description="Whether this image should be cached based on inputs.",
+    ): bool,
 })
 
 
@@ -228,8 +239,10 @@ def fill_template(config, tasks):
             worker['env']['DOCKER_IMAGE_PARENT_TASK'] = {
                 'task-reference': '<{}>'.format(parent),
             }
+        if 'index' in task:
+            taskdesc['index'] = task['index']
 
-        if not taskgraph.fast:
+        if task.get('cache', True) and not taskgraph.fast:
             taskdesc['cache'] = {
                 'type': 'docker-images.v2',
                 'name': image_name,

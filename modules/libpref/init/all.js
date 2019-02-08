@@ -4836,6 +4836,7 @@ pref("gl.multithreaded", true);
 #endif
 pref("gl.ignore-dx-interop2-blacklist", false);
 pref("gl.use-tls-is-current", 0);
+pref("gl.allow-high-power", true);
 
 #ifdef XP_MACOSX
 pref("webgl.1.allow-core-profiles", true);
@@ -4850,6 +4851,7 @@ pref("webgl.min_capability_mode", false);
 pref("webgl.disable-extensions", false);
 pref("webgl.msaa-force", false);
 pref("webgl.prefer-16bpp", false);
+pref("webgl.default-low-power", false);
 pref("webgl.default-no-alpha", false);
 pref("webgl.force-layers-readback", false);
 pref("webgl.force-index-validation", 0);

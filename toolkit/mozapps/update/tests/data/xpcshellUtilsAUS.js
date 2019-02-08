@@ -181,6 +181,11 @@ var gEnvXPCOMMemLeakLog;
 var gEnvDyldLibraryPath;
 var gEnvLdLibraryPath;
 
+const DATA_URI_SPEC = Services.io.newFileURI(do_get_file("", false)).spec;
+
+/* import-globals-from shared.js */
+load("shared.js");
+
 // Set to true to log additional information for debugging. To log additional
 // information for an individual test set DEBUG_AUS_TEST to true in the test's
 // run_test function.
@@ -198,10 +203,6 @@ var gDebugTestLog = false;
 var gTestsToLog = [];
 var gRealDump;
 var gFOS;
-
-const DATA_URI_SPEC = Services.io.newFileURI(do_get_file("../data", false)).spec;
-/* import-globals-from ../data/shared.js */
-Services.scriptloader.loadSubScript(DATA_URI_SPEC + "shared.js", this);
 
 ChromeUtils.defineModuleGetter(this, "MockRegistrar",
                                "resource://testing-common/MockRegistrar.jsm");

@@ -33,6 +33,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=229925
     <textarea class="yes" cols="1" rows="1"></textarea>
     <video class="yes" controls></video>
 
+    <!-- Tests related to shadow tree. -->
+    <div id="root1"> <!-- content will be added by script below. --> </div>
+    <button><div id="root2"> <!-- content will be added by script below. --> </div></button>
+
     <a class="no">a</a>
     <audio class="no"></audio>
     <img class="no" src="data:image/png,">
@@ -56,6 +60,14 @@ var target = document.getElementById("target");
 
 var yes_nodes = Array.from(document.getElementsByClassName("yes"));
 
+var root1 = document.getElementById("root1");
+root1.attachShadow({ mode: "open" }).innerHTML = "<button class=yes>button in shadow tree</button>";
+var root2 = document.getElementById("root2");
+root2.attachShadow({ mode: "open" }).innerHTML = "<div class=yes>text in shadow tree</div>";
+var yes_nodes_in_shadow_tree =
+  Array.from(root1.shadowRoot.getElementsByClassName("yes")).concat(
+    Array.from(root2.shadowRoot.getElementsByClassName("yes")));
+
 var no_nodes = Array.from(document.getElementsByClassName("no"));
 
 var target_clicked = false;
@@ -68,6 +80,12 @@ for (node of yes_nodes) {
   target_clicked = false;
   node.click();
   is(target_clicked, false, "mouse click on interactive content " + node.nodeName + " shouldn't dispatch event to label target");
+}
+
+for (node of yes_nodes_in_shadow_tree) {
+  target_clicked = false;
+  node.click();
+  is(target_clicked, false, "mouse click on content in shadow tree " + node.nodeName + " shouldn't dispatch event to label target");
 }
 
 for (node of no_nodes) {

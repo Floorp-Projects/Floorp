@@ -184,7 +184,7 @@ struct LExpr {
 
   // Print a rule for recovery of |aNewReg| whose recovered value
   // is this LExpr.
-  string ShowRule(const char* aNewReg) const;
+  std::string ShowRule(const char* aNewReg) const;
 
   // Evaluate this expression, producing a TaggedUWord.  |aOldRegs|
   // holds register values that may be referred to by the expression.

@@ -1,7 +1,0 @@
-[flake8]
-exclude =
-    __init__.py,
-    disti/*,
-    build/*,
-    marionette_harness/runner/mixins/*,
-    marionette_harness/tests/*,

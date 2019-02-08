@@ -7,10 +7,13 @@
 #ifndef PageInformation_h
 #define PageInformation_h
 
+#include "mozilla/Maybe.h"
+#include "mozilla/MemoryReporting.h"
 #include "nsID.h"
+#include "nsISupportsImpl.h"
 #include "nsString.h"
-#include "platform.h"
-#include "ProfileJSONWriter.h"
+
+class SpliceableJSONWriter;
 
 // This class contains information that's relevant to a single page only
 // while the page information is important and registered with the profiler,

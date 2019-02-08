@@ -7,6 +7,8 @@
 #include "GeckoTaskTracer.h"
 #include "GeckoTaskTracerImpl.h"
 
+#include "platform.h"
+
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/StaticMutex.h"
@@ -14,10 +16,8 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
-
 #include "nsString.h"
 #include "nsThreadUtils.h"
-#include "platform.h"
 #include "prtime.h"
 
 #include <stdarg.h>
