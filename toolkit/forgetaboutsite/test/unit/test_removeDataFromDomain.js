@@ -437,6 +437,8 @@ async function test_storage_cleared() {
     return Services.domStorageManager.createStorage(null, principal, "");
   }
 
+  Services.prefs.setBoolPref("dom.storage.client_validation", false);
+
   let s = [
     getStorageForURI(Services.io.newURI("http://mozilla.org")),
     getStorageForURI(Services.io.newURI("http://my.mozilla.org")),

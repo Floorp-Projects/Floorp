@@ -17,6 +17,7 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/ClientManagerService.h"
 #include "mozilla/dom/PBackgroundLSDatabaseParent.h"
 #include "mozilla/dom/PBackgroundLSObserverParent.h"
 #include "mozilla/dom/PBackgroundLSRequestParent.h"
@@ -184,6 +185,7 @@ const char kPrivateBrowsingObserverTopic[] = "last-pb-context-exited";
 const uint32_t kDefaultOriginLimitKB = 5 * 1024;
 const uint32_t kDefaultShadowWrites = true;
 const uint32_t kDefaultSnapshotPrefill = 4096;
+const uint32_t kDefaultClientValidation = true;
 /**
  * LocalStorage data limit as determined by summing up the lengths of all string
  * keys and values.  This is consistent with the legacy implementation and other
@@ -208,6 +210,8 @@ const char kShadowWritesPref[] = "dom.storage.shadow_writes";
  * sent.  See `Snapshot`.
  */
 const char kSnapshotPrefillPref[] = "dom.storage.snapshot_prefill";
+
+const char kClientValidationPref[] = "dom.storage.client_validation";
 
 /**
  * The amount of time a PreparedDatastore instance should stick around after a
@@ -2750,6 +2754,7 @@ StaticAutoPtr<ObserverHashtable> gObservers;
 Atomic<uint32_t, Relaxed> gOriginLimitKB(kDefaultOriginLimitKB);
 Atomic<bool> gShadowWrites(kDefaultShadowWrites);
 Atomic<int32_t, Relaxed> gSnapshotPrefill(kDefaultSnapshotPrefill);
+Atomic<bool> gClientValidation(kDefaultClientValidation);
 
 typedef nsDataHashtable<nsCStringHashKey, int64_t> UsageHashtable;
 
@@ -2936,6 +2941,15 @@ void SnapshotPrefillPrefChangedCallback(const char* aPrefName, void* aClosure) {
   gSnapshotPrefill = snapshotPrefill;
 }
 
+void ClientValidationPrefChangedCallback(const char* aPrefName,
+                                         void* aClosure) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!strcmp(aPrefName, kClientValidationPref));
+  MOZ_ASSERT(!aClosure);
+
+  gClientValidation = Preferences::GetBool(aPrefName, kDefaultClientValidation);
+}
+
 }  // namespace
 
 /*******************************************************************************
@@ -2969,6 +2983,9 @@ void InitializeLocalStorage() {
 
   Preferences::RegisterCallbackAndCall(SnapshotPrefillPrefChangedCallback,
                                        kSnapshotPrefillPref);
+
+  Preferences::RegisterCallbackAndCall(ClientValidationPrefChangedCallback,
+                                       kClientValidationPref);
 
 #ifdef DEBUG
   gLocalStorageInitialized = true;
@@ -3115,7 +3132,9 @@ bool DeallocPBackgroundLSObserverParent(PBackgroundLSObserverParent* aActor) {
   return true;
 }
 
-bool VerifyPrincipalInfo(const PrincipalInfo& aPrincipalInfo) {
+bool VerifyPrincipalInfo(const Maybe<ContentParentId>& aContentParentId,
+                         const PrincipalInfo& aPrincipalInfo,
+                         const Maybe<nsID>& aClientId) {
   AssertIsOnBackgroundThread();
 
   if (NS_WARN_IF(!QuotaManager::IsPrincipalInfoValid(aPrincipalInfo))) {
@@ -3123,10 +3142,20 @@ bool VerifyPrincipalInfo(const PrincipalInfo& aPrincipalInfo) {
     return false;
   }
 
+  if (aClientId.isSome() && gClientValidation) {
+    RefPtr<ClientManagerService> svc = ClientManagerService::GetInstance();
+    if (svc &&
+        !svc->HasWindow(aContentParentId, aPrincipalInfo, aClientId.ref())) {
+      ASSERT_UNLESS_FUZZING();
+      return false;
+    }
+  }
+
   return true;
 }
 
-bool VerifyRequestParams(const LSRequestParams& aParams) {
+bool VerifyRequestParams(const Maybe<ContentParentId>& aContentParentId,
+                         const LSRequestParams& aParams) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aParams.type() != LSRequestParams::T__None);
 
@@ -3135,7 +3164,8 @@ bool VerifyRequestParams(const LSRequestParams& aParams) {
       const LSRequestCommonParams& params =
           aParams.get_LSRequestPreloadDatastoreParams().commonParams();
 
-      if (NS_WARN_IF(!VerifyPrincipalInfo(params.principalInfo()))) {
+      if (NS_WARN_IF(!VerifyPrincipalInfo(aContentParentId,
+                                          params.principalInfo(), Nothing()))) {
         ASSERT_UNLESS_FUZZING();
         return false;
       }
@@ -3143,10 +3173,14 @@ bool VerifyRequestParams(const LSRequestParams& aParams) {
     }
 
     case LSRequestParams::TLSRequestPrepareDatastoreParams: {
-      const LSRequestCommonParams& params =
-          aParams.get_LSRequestPrepareDatastoreParams().commonParams();
+      const LSRequestPrepareDatastoreParams& params =
+          aParams.get_LSRequestPrepareDatastoreParams();
 
-      if (NS_WARN_IF(!VerifyPrincipalInfo(params.principalInfo()))) {
+      const LSRequestCommonParams& commonParams = params.commonParams();
+
+      if (NS_WARN_IF(!VerifyPrincipalInfo(aContentParentId,
+                                          commonParams.principalInfo(),
+                                          params.clientId()))) {
         ASSERT_UNLESS_FUZZING();
         return false;
       }
@@ -3157,7 +3191,9 @@ bool VerifyRequestParams(const LSRequestParams& aParams) {
       const LSRequestPrepareObserverParams& params =
           aParams.get_LSRequestPrepareObserverParams();
 
-      if (NS_WARN_IF(!VerifyPrincipalInfo(params.principalInfo()))) {
+      if (NS_WARN_IF(!VerifyPrincipalInfo(aContentParentId,
+                                          params.principalInfo(),
+                                          params.clientId()))) {
         ASSERT_UNLESS_FUZZING();
         return false;
       }
@@ -3187,7 +3223,15 @@ PBackgroundLSRequestParent* AllocPBackgroundLSRequestParent(
   bool trustParams = !BackgroundParent::IsOtherProcessActor(aBackgroundActor);
 #endif
 
-  if (!trustParams && NS_WARN_IF(!VerifyRequestParams(aParams))) {
+  Maybe<ContentParentId> contentParentId;
+
+  uint64_t childID = BackgroundParent::GetChildID(aBackgroundActor);
+  if (childID) {
+    contentParentId = Some(ContentParentId(childID));
+  }
+
+  if (!trustParams &&
+      NS_WARN_IF(!VerifyRequestParams(contentParentId, aParams))) {
     ASSERT_UNLESS_FUZZING();
     return nullptr;
   }
@@ -3204,13 +3248,6 @@ PBackgroundLSRequestParent* AllocPBackgroundLSRequestParent(
   switch (aParams.type()) {
     case LSRequestParams::TLSRequestPreloadDatastoreParams:
     case LSRequestParams::TLSRequestPrepareDatastoreParams: {
-      Maybe<ContentParentId> contentParentId;
-
-      uint64_t childID = BackgroundParent::GetChildID(aBackgroundActor);
-      if (childID) {
-        contentParentId = Some(ContentParentId(childID));
-      }
-
       RefPtr<PrepareDatastoreOp> prepareDatastoreOp =
           new PrepareDatastoreOp(mainEventTarget, aParams, contentParentId);
 
@@ -3267,7 +3304,8 @@ bool DeallocPBackgroundLSRequestParent(PBackgroundLSRequestParent* aActor) {
   return true;
 }
 
-bool VerifyRequestParams(const LSSimpleRequestParams& aParams) {
+bool VerifyRequestParams(const Maybe<ContentParentId>& aContentParentId,
+                         const LSSimpleRequestParams& aParams) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aParams.type() != LSSimpleRequestParams::T__None);
 
@@ -3276,7 +3314,9 @@ bool VerifyRequestParams(const LSSimpleRequestParams& aParams) {
       const LSSimpleRequestPreloadedParams& params =
           aParams.get_LSSimpleRequestPreloadedParams();
 
-      if (NS_WARN_IF(!VerifyPrincipalInfo(params.principalInfo()))) {
+      if (NS_WARN_IF(!VerifyPrincipalInfo(aContentParentId,
+                                          params.principalInfo(),
+                                          Nothing()))) {
         ASSERT_UNLESS_FUZZING();
         return false;
       }
@@ -3306,9 +3346,18 @@ PBackgroundLSSimpleRequestParent* AllocPBackgroundLSSimpleRequestParent(
   bool trustParams = !BackgroundParent::IsOtherProcessActor(aBackgroundActor);
 #endif
 
-  if (!trustParams && NS_WARN_IF(!VerifyRequestParams(aParams))) {
-    ASSERT_UNLESS_FUZZING();
-    return nullptr;
+  if (!trustParams) {
+    Maybe<ContentParentId> contentParentId;
+
+    uint64_t childID = BackgroundParent::GetChildID(aBackgroundActor);
+    if (childID) {
+      contentParentId = Some(ContentParentId(childID));
+    }
+
+    if (NS_WARN_IF(!VerifyRequestParams(contentParentId, aParams))) {
+      ASSERT_UNLESS_FUZZING();
+      return nullptr;
+    }
   }
 
   RefPtr<LSSimpleRequestBase> actor;
