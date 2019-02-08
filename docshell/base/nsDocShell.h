@@ -885,6 +885,24 @@ class nsDocShell final : public nsDocLoader,
   // function comments for in-depth logic descriptions.
   void MaybeHandleSubframeHistory(nsDocShellLoadState* aLoadState);
 
+  // If we are passed a named target during InternalLoad, this method handles
+  // moving the load to the browsing context the target name resolves to.
+  nsresult PerformRetargeting(nsDocShellLoadState* aLoadState,
+                              nsIDocShell** aDocShell, nsIRequest** aRequest);
+
+  // Returns one of nsIContentPolicy::TYPE_DOCUMENT,
+  // nsIContentPolicy::TYPE_INTERNAL_IFRAME, or
+  // nsIContentPolicy::TYPE_INTERNAL_FRAME depending on who is responsible for
+  // this docshell.
+  uint32_t DetermineContentType();
+
+  // In cases where we have a LoadURIDelegate (loading external links via
+  // GeckoView), a load may need to be handled through the delegate. aWindowType
+  // is either nsIBrowserDOMWindow::OPEN_CURRENTWINDOW or
+  // nsIBrowserDOMWindow::OPEN_NEWWINDOW.
+  nsresult MaybeHandleLoadDelegate(nsDocShellLoadState* aLoadState,
+                                   uint32_t aWindowType, bool* aDidHandleLoad);
+
  private:  // data members
   static nsIURIFixup* sURIFixup;
 
