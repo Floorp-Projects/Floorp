@@ -40,7 +40,7 @@ public class TelemetryPocketEventPingBuilder extends TelemetryPingBuilder {
         addMeasurement(new OperatingSystemVersionMeasurement());
         addMeasurement(new CreatedTimestampMeasurement());
         addMeasurement(new TimezoneOffsetMeasurement());
-        addMeasurement(eventsMeasurement = new EventsMeasurement(configuration));
+        addMeasurement(eventsMeasurement = new EventsMeasurement(configuration, "pocket-events"));
     }
 
     @Override

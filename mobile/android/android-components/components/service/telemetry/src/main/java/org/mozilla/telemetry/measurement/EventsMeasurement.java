@@ -36,12 +36,18 @@ public class EventsMeasurement extends TelemetryMeasurement {
 
     private TelemetryConfiguration configuration;
     private Logger logger;
+    private String filename;
 
     public EventsMeasurement(TelemetryConfiguration configuration) {
+        this(configuration, "events");
+    }
+
+    public EventsMeasurement(TelemetryConfiguration configuration, String filename) {
         super(FIELD_NAME);
 
         this.configuration = configuration;
         this.logger = new Logger("telemetry/events");
+        this.filename = filename;
     }
 
     public EventsMeasurement add(final TelemetryEvent event) {
@@ -103,7 +109,7 @@ public class EventsMeasurement extends TelemetryMeasurement {
     }
 
     @VisibleForTesting File getEventFile() {
-        return new File(configuration.getDataDirectory(), "events" + VERSION);
+        return new File(configuration.getDataDirectory(), filename + VERSION);
     }
 
     private synchronized void saveEventToDisk(TelemetryEvent event) {

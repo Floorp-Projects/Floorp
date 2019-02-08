@@ -508,7 +508,7 @@ public class TelemetryTest {
         doReturn("ffffffff-0000-0000-ffff-ffffffffffff").when(eventPingBuilder).generateDocumentId();
 
         final Telemetry telemetry = new Telemetry(configuration, storage, client, scheduler)
-                .addPingBuilder(eventPingBuilder).addPingBuilder(pocketPingBuilder);
+                .addPingBuilder(pocketPingBuilder).addPingBuilder(eventPingBuilder);
 
         TelemetryHolder.set(telemetry);
 
@@ -518,7 +518,7 @@ public class TelemetryTest {
 
             assertNotNull(moPingBuilder);
 
-            pocketPingBuilder.getEventsMeasurement()
+            moPingBuilder.getEventsMeasurement()
                     .add(TelemetryEvent.create("action", "type", "search_bar"))
                     .add(TelemetryEvent.create("action", "type_query", "search_bar"))
                     .add(TelemetryEvent.create("action", "click", "erase_button"));
@@ -531,10 +531,10 @@ public class TelemetryTest {
 
             assertNotNull(poPingBuilder);
 
-            pocketPingBuilder.getEventsMeasurement()
+            poPingBuilder.getEventsMeasurement()
                     .add(TelemetryEvent.create("action", "click", "video_id"))
-                    .add(TelemetryEvent.create("action", "click", "video_id"))
-                    .add(TelemetryEvent.create("action", "impression", "video_id"));
+                    .add(TelemetryEvent.create("action", "impression", "video_id"))
+                    .add(TelemetryEvent.create("action", "click", "video_id"));
         }
 
         telemetry.queuePing(TelemetryPocketEventPingBuilder.TYPE);
@@ -553,6 +553,27 @@ public class TelemetryTest {
 
         final JSONArray pocketEvents = pocketObject.getJSONArray("events");
         assertEquals(3, pocketEvents.length());
+
+        final JSONArray event1 = pocketEvents.getJSONArray(0);
+        assertEquals(4, event1.length());
+        assertTrue(event1.getLong(0) >= 0);
+        assertEquals("action", event1.getString(1));
+        assertEquals("click", event1.getString(2));
+        assertEquals("video_id", event1.getString(3));
+
+        final JSONArray event2 = pocketEvents.getJSONArray(1);
+        assertEquals(4, event2.length());
+        assertTrue(event2.getLong(0) >= 0);
+        assertEquals("action", event2.getString(1));
+        assertEquals("impression", event2.getString(2));
+        assertEquals("video_id", event2.getString(3));
+
+        final JSONArray event3 = pocketEvents.getJSONArray(2);
+        assertEquals(4, event3.length());
+        assertTrue(event3.getLong(0) >= 0);
+        assertEquals("action", event3.getString(1));
+        assertEquals("click", event3.getString(2));
+        assertEquals("video_id", event3.getString(3));
 
         server.shutdown();
     }
