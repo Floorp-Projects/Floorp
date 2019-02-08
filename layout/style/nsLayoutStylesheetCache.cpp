@@ -274,7 +274,7 @@ static void ErrorLoadingSheet(nsIURI* aURI, const char* aMsg,
     }
   }
 
-  MOZ_CRASH_UNSAFE_OOL(errorMessage.get());
+  MOZ_CRASH_UNSAFE(errorMessage.get());
 }
 
 void nsLayoutStylesheetCache::LoadSheet(nsIURI* aURI,

@@ -189,7 +189,7 @@ static void AssertActivityIsLegal() {
   }
   if (gActivityTLS == BAD_TLS_INDEX || PR_GetThreadPrivate(gActivityTLS)) {
     if (PR_GetEnv("MOZ_FATAL_STATIC_XPCOM_CTORS_DTORS")) {
-      MOZ_CRASH_UNSAFE_OOL(kStaticCtorDtorWarning);
+      MOZ_CRASH_UNSAFE(kStaticCtorDtorWarning);
     } else {
       NS_WARNING(kStaticCtorDtorWarning);
     }

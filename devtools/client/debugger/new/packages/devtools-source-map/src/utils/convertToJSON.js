@@ -17,7 +17,7 @@ function convertDwarf(wasm, instance) {
   );
   const resultPtr = alloc_mem(12);
   const enableXScopes = true;
-  convert_dwarf(
+  const success = convert_dwarf(
     wasmPtr,
     wasm.byteLength,
     resultPtr,
@@ -29,6 +29,9 @@ function convertDwarf(wasm, instance) {
   const outputPtr = resultView.getUint32(0, true),
     outputLen = resultView.getUint32(4, true);
   free_mem(resultPtr);
+  if (!success) {
+    throw new Error("Unable to convert from DWARF sections");
+  }
   if (!utf8Decoder) {
     utf8Decoder = new TextDecoder("utf-8");
   }

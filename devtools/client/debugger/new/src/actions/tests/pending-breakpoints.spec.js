@@ -10,10 +10,7 @@ import {
   mockPendingBreakpoint
 } from "./helpers/breakpoints.js";
 
-import {
-  simulateCorrectThreadClient,
-  simpleMockThreadClient
-} from "./helpers/threadClient.js";
+import { simpleMockThreadClient } from "./helpers/threadClient.js";
 
 import { asyncStore } from "../../utils/prefs";
 
@@ -45,8 +42,7 @@ import {
   selectors,
   actions,
   makeOriginalSource,
-  waitForState,
-  makeSource
+  waitForState
 } from "../../utils/test-head";
 
 import { makePendingLocationId } from "../../utils/breakpoint";
@@ -348,33 +344,5 @@ describe("adding sources", () => {
     await waitForState(store, state => selectors.getBreakpointCount(state) > 0);
 
     expect(selectors.getBreakpointCount(getState())).toEqual(1);
-  });
-});
-
-describe("invalid breakpoint location", () => {
-  it("a corrected corresponding pending breakpoint is added", async () => {
-    // setup
-    const bp = generateBreakpoint("foo.js");
-    const {
-      correctedThreadClient,
-      correctedLocation
-    } = simulateCorrectThreadClient(2, bp.location);
-    const { dispatch, getState } = createStore(correctedThreadClient);
-    const correctedPendingId = makePendingLocationId(correctedLocation);
-
-    // test
-    const csr = makeSource("foo.js");
-    await dispatch(actions.newSource(csr));
-    await dispatch(actions.loadSourceText(csr.source));
-
-    // Fixup the breakpoint so that its location can be loaded.
-    bp.location.sourceId = "foo.js";
-    bp.generatedLocation = { ...bp.location };
-
-    await dispatch(actions.addBreakpoint(bp.location));
-    const pendingBps = selectors.getPendingBreakpoints(getState());
-
-    const pendingBp = pendingBps[correctedPendingId];
-    expect(pendingBp).toMatchSnapshot();
   });
 });

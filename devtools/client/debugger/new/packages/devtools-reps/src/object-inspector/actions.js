@@ -104,11 +104,19 @@ function releaseActors(state, client) {
   }
 }
 
-function invokeGetter(node: Node, grip: object, getterName: string) {
+function invokeGetter(
+  node: Node,
+  targetGrip: object,
+  receiverId: string | null,
+  getterName: string
+) {
   return async ({ dispatch, client, getState }: ThunkArg) => {
     try {
-      const objectClient = client.createObjectClient(grip);
-      const result = await objectClient.getPropertyValue(getterName);
+      const objectClient = client.createObjectClient(targetGrip);
+      const result = await objectClient.getPropertyValue(
+        getterName,
+        receiverId
+      );
       dispatch({
         type: "GETTER_INVOKED",
         data: {

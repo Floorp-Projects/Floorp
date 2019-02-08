@@ -148,7 +148,7 @@ static already_AddRefed<nsIPrincipal> GetRequestingPrincipal(
 // We prefer to crash on the parent, so we get the reason in the crash report.
 static MOZ_COLD void CrashWithReason(const char* reason) {
 #ifndef RELEASE_OR_BETA
-  MOZ_CRASH_UNSAFE_OOL(reason);
+  MOZ_CRASH_UNSAFE(reason);
 #endif
 }
 

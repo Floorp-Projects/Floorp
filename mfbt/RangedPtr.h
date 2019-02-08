@@ -211,7 +211,7 @@ class RangedPtr {
     return *this;
   }
 
-  T& operator[](int aIndex) const {
+  T& operator[](ptrdiff_t aIndex) const {
     MOZ_ASSERT(size_t(aIndex > 0 ? aIndex : -aIndex) <= size_t(-1) / sizeof(T));
     return *create(mPtr + aIndex);
   }
