@@ -338,6 +338,14 @@ MozElements.Notification = class Notification extends MozXULElement {
   }
 
   /**
+   * Changes the text of an existing notification. If the notification was
+   * created with a custom fragment, it will be overwritten with plain text.
+   */
+  set label(value) {
+    this.messageText.textContent = value;
+  }
+
+  /**
    * This method should only be called when the user has manually closed the
    * notification. If you want to programmatically close the notification, you
    * should call close() instead.
