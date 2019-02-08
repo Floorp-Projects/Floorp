@@ -418,7 +418,8 @@ notification[value="translation"] menulist > .menulist-dropmarker {
   border-top: 1px solid ThreeDShadow;
 }
 
-.ac-title {
+.ac-title,
+.urlbarView-results {
   font-size: 1.05em;
 }
 
