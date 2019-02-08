@@ -1957,7 +1957,7 @@ gfxFont* gfxFontGroup::GetDefaultFont() {
     mFamilyList.ToString(familiesString);
     SprintfLiteral(msg, "unable to find a usable font (%.220s)",
                    familiesString.get());
-    MOZ_CRASH_UNSAFE_OOL(msg);
+    MOZ_CRASH_UNSAFE(msg);
   }
 
   return mDefaultFont.get();

@@ -4,14 +4,14 @@
 
 // @flow
 
-import type { Breakpoint, SourceLocation, XHRBreakpoint } from "../../types";
+import type {
+  Breakpoint,
+  SourceLocation,
+  XHRBreakpoint,
+  BreakpointLinePositions
+} from "../../types";
 
 import type { PromiseAction } from "../utils/middleware/promise";
-
-type AddBreakpointResult = {
-  previousLocation: SourceLocation,
-  breakpoint: Breakpoint
-};
 
 export type BreakpointAction =
   | PromiseAction<
@@ -20,7 +20,7 @@ export type BreakpointAction =
         +breakpoint: Breakpoint,
         +condition?: string
       |},
-      AddBreakpointResult
+      Breakpoint
     >
   | PromiseAction<{|
       +type: "REMOVE_BREAKPOINT",
@@ -74,7 +74,7 @@ export type BreakpointAction =
         +type: "ENABLE_BREAKPOINT",
         +breakpoint: Breakpoint
       |},
-      AddBreakpointResult
+      Breakpoint
     >
   | {|
       +type: "DISABLE_BREAKPOINT",
@@ -91,4 +91,9 @@ export type BreakpointAction =
   | {|
       +type: "REMAP_BREAKPOINTS",
       +breakpoints: Breakpoint[]
+    |}
+  | {|
+      type: "ADD_BREAKPOINT_POSITIONS",
+      positions: BreakpointLinePositions,
+      location: SourceLocation
     |};

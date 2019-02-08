@@ -37,7 +37,8 @@ const {
   nodeIsLongString,
   nodeHasFullText,
   nodeHasGetter,
-  getNonPrototypeParentGripValue
+  getNonPrototypeParentGripValue,
+  getParentGripValue
 } = Utils.node;
 
 type Props = {
@@ -167,11 +168,17 @@ class ObjectInspectorItem extends Component<Props> {
       }
 
       if (nodeHasGetter(item)) {
-        const parentGrip = getNonPrototypeParentGripValue(item);
-        if (parentGrip) {
+        const targetGrip = getParentGripValue(item);
+        const receiverGrip = getNonPrototypeParentGripValue(item);
+        if (targetGrip && receiverGrip) {
           Object.assign(repProps, {
             onInvokeGetterButtonClick: () =>
-              this.props.invokeGetter(item, parentGrip, item.name)
+              this.props.invokeGetter(
+                item,
+                targetGrip,
+                receiverGrip.actor,
+                item.name
+              )
           });
         }
       }

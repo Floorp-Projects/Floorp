@@ -51,7 +51,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use storage;
 use util::{ScaleOffset, MatrixHelpers, MaxRect, Recycler, TransformedRectKind};
 use util::{pack_as_float, project_rect, raster_rect_to_device_pixels};
-use util::{scale_factors, clamp_to_scale_factor, RectHelpers};
+use util::{scale_factors, clamp_to_scale_factor};
 use smallvec::SmallVec;
 
 pub mod borders;
@@ -3536,9 +3536,9 @@ fn compute_snap_offset_impl(
     )
 }
 
-/// Retrieve the exact device space rectangle for a primitive, taking
-/// into account the snapping that the shaders will apply if the transform
-/// is axis-aligned.
+/// Retrieve the exact unsnapped device space rectangle for a primitive.
+/// If the transform is axis-aligned, compute the snapping offsets that
+/// the shaders will apply.
 fn get_unclipped_device_rect(
     prim_spatial_node_index: SpatialNodeIndex,
     root_spatial_node_index: SpatialNodeIndex,
@@ -3583,11 +3583,7 @@ fn get_unclipped_device_rect(
                 bottom_right,
             };
 
-            let p0 = unclipped_device_rect.origin + top_left;
-            let p1 = unclipped_device_rect.bottom_right() + bottom_right;
-            let unclipped = DeviceRect::from_floats(p0.x, p0.y, p1.x, p1.y);
-
-            Some((unclipped, snap_offsets))
+            Some((unclipped_device_rect, snap_offsets))
         }
         TransformedRectKind::Complex => {
             Some((unclipped_device_rect, SnapOffsets::empty()))

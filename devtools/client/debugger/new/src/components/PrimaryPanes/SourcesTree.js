@@ -98,7 +98,6 @@ class SourcesTree extends Component<Props, State> {
 
   componentWillReceiveProps(nextProps: Props) {
     const {
-      thread,
       projectRoot,
       debuggeeUrl,
       sources,

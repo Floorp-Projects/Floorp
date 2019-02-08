@@ -35,15 +35,6 @@ function enableBreakpoints(dbg, count) {
   return enabled;
 }
 
-function findBreakpoint(dbg, url, line) {
-  const {
-    selectors: { getBreakpoint },
-    getState
-  } = dbg;
-  const source = findSource(dbg, url);
-  return getBreakpoint(getState(), { sourceId: source.id, line });
-}
-
 // Test enabling and disabling a breakpoint using the check boxes
 add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html", "simple2");

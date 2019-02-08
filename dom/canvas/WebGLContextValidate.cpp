@@ -428,25 +428,35 @@ bool WebGLContext::InitAndValidateGL(FailureReason* const out_failReason) {
   ////////////////
 
   if (gl->IsGLES()) {
-    mGLMaxFragmentUniformVectors = gl->GetIntAs<uint32_t>(LOCAL_GL_MAX_FRAGMENT_UNIFORM_VECTORS);
-    mGLMaxVertexUniformVectors = gl->GetIntAs<uint32_t>(LOCAL_GL_MAX_VERTEX_UNIFORM_VECTORS);
+    mGLMaxFragmentUniformVectors =
+        gl->GetIntAs<uint32_t>(LOCAL_GL_MAX_FRAGMENT_UNIFORM_VECTORS);
+    mGLMaxVertexUniformVectors =
+        gl->GetIntAs<uint32_t>(LOCAL_GL_MAX_VERTEX_UNIFORM_VECTORS);
     if (gl->Version() >= 300) {
-      mGLMaxVertexOutputVectors = gl->GetIntAs<uint32_t>(LOCAL_GL_MAX_VERTEX_OUTPUT_COMPONENTS) / 4;
-      mGLMaxFragmentInputVectors = gl->GetIntAs<uint32_t>(LOCAL_GL_MAX_FRAGMENT_INPUT_COMPONENTS) / 4;
+      mGLMaxVertexOutputVectors =
+          gl->GetIntAs<uint32_t>(LOCAL_GL_MAX_VERTEX_OUTPUT_COMPONENTS) / 4;
+      mGLMaxFragmentInputVectors =
+          gl->GetIntAs<uint32_t>(LOCAL_GL_MAX_FRAGMENT_INPUT_COMPONENTS) / 4;
     } else {
-      mGLMaxFragmentInputVectors = gl->GetIntAs<uint32_t>(LOCAL_GL_MAX_VARYING_VECTORS);
+      mGLMaxFragmentInputVectors =
+          gl->GetIntAs<uint32_t>(LOCAL_GL_MAX_VARYING_VECTORS);
       mGLMaxVertexOutputVectors = mGLMaxFragmentInputVectors;
     }
   } else {
-    mGLMaxFragmentUniformVectors = gl->GetIntAs<uint32_t>(LOCAL_GL_MAX_FRAGMENT_UNIFORM_COMPONENTS) / 4;
-    mGLMaxVertexUniformVectors = gl->GetIntAs<uint32_t>(LOCAL_GL_MAX_VERTEX_UNIFORM_COMPONENTS) / 4;
+    mGLMaxFragmentUniformVectors =
+        gl->GetIntAs<uint32_t>(LOCAL_GL_MAX_FRAGMENT_UNIFORM_COMPONENTS) / 4;
+    mGLMaxVertexUniformVectors =
+        gl->GetIntAs<uint32_t>(LOCAL_GL_MAX_VERTEX_UNIFORM_COMPONENTS) / 4;
 
     if (gl->Version() >= 320) {
-      mGLMaxVertexOutputVectors = gl->GetIntAs<uint32_t>(LOCAL_GL_MAX_VERTEX_OUTPUT_COMPONENTS) / 4;
-      mGLMaxFragmentInputVectors = gl->GetIntAs<uint32_t>(LOCAL_GL_MAX_FRAGMENT_INPUT_COMPONENTS) / 4;
+      mGLMaxVertexOutputVectors =
+          gl->GetIntAs<uint32_t>(LOCAL_GL_MAX_VERTEX_OUTPUT_COMPONENTS) / 4;
+      mGLMaxFragmentInputVectors =
+          gl->GetIntAs<uint32_t>(LOCAL_GL_MAX_FRAGMENT_INPUT_COMPONENTS) / 4;
     } else {
       // Same enum val as GL2's GL_MAX_VARYING_FLOATS.
-      mGLMaxFragmentInputVectors = gl->GetIntAs<uint32_t>(LOCAL_GL_MAX_VARYING_COMPONENTS) / 4;
+      mGLMaxFragmentInputVectors =
+          gl->GetIntAs<uint32_t>(LOCAL_GL_MAX_VARYING_COMPONENTS) / 4;
       mGLMaxVertexOutputVectors = mGLMaxFragmentInputVectors;
     }
   }
