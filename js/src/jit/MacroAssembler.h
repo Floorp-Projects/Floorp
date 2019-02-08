@@ -2729,6 +2729,10 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   void branchIfNativeIteratorNotReusable(Register ni, Label* notReusable);
 
+  void iteratorMore(Register obj, ValueOperand output, Register temp);
+  void iteratorClose(Register obj, Register temp1, Register temp2,
+                     Register temp3);
+
   using MacroAssemblerSpecific::extractTag;
   MOZ_MUST_USE Register extractTag(const TypedOrValueRegister& reg,
                                    Register scratch) {

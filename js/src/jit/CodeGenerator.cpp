@@ -9982,53 +9982,12 @@ void CodeGenerator::visitGetIteratorCache(LGetIteratorCache* lir) {
   addIC(lir, allocateIC(ic));
 }
 
-static void LoadNativeIterator(MacroAssembler& masm, Register obj,
-                               Register dest) {
-  MOZ_ASSERT(obj != dest);
-
-#ifdef DEBUG
-  // Assert we have a PropertyIteratorObject.
-  Label ok;
-  masm.branchTestObjClass(Assembler::Equal, obj,
-                          &PropertyIteratorObject::class_, dest, obj, &ok);
-  masm.assumeUnreachable("Expected PropertyIteratorObject!");
-  masm.bind(&ok);
-#endif
-
-  // Load NativeIterator object.
-  masm.loadObjPrivate(obj, PropertyIteratorObject::NUM_FIXED_SLOTS, dest);
-}
-
 void CodeGenerator::visitIteratorMore(LIteratorMore* lir) {
   const Register obj = ToRegister(lir->object());
   const ValueOperand output = ToOutValue(lir);
   const Register temp = ToRegister(lir->temp());
 
-  Label done;
-  Register outputScratch = output.scratchReg();
-  LoadNativeIterator(masm, obj, outputScratch);
-
-  // If propertyCursor_ < propertiesEnd_, load the next string and advance
-  // the cursor.  Otherwise return MagicValue(JS_NO_ITER_VALUE).
-  Label iterDone;
-  Address cursorAddr(outputScratch, NativeIterator::offsetOfPropertyCursor());
-  Address cursorEndAddr(outputScratch, NativeIterator::offsetOfPropertiesEnd());
-  masm.loadPtr(cursorAddr, temp);
-  masm.branchPtr(Assembler::BelowOrEqual, cursorEndAddr, temp, &iterDone);
-
-  // Get next string.
-  masm.loadPtr(Address(temp, 0), temp);
-
-  // Increase the cursor.
-  masm.addPtr(Imm32(sizeof(GCPtrFlatString)), cursorAddr);
-
-  masm.tagValue(JSVAL_TYPE_STRING, temp, output);
-  masm.jump(&done);
-
-  masm.bind(&iterDone);
-  masm.moveValue(MagicValue(JS_NO_ITER_VALUE), output);
-
-  masm.bind(&done);
+  masm.iteratorMore(obj, output, temp);
 }
 
 void CodeGenerator::visitIsNoIterAndBranch(LIsNoIterAndBranch* lir) {
@@ -10049,30 +10008,7 @@ void CodeGenerator::visitIteratorEnd(LIteratorEnd* lir) {
   const Register temp2 = ToRegister(lir->temp2());
   const Register temp3 = ToRegister(lir->temp3());
 
-  LoadNativeIterator(masm, obj, temp1);
-
-  // Clear active bit.
-  masm.and32(Imm32(~NativeIterator::Flags::Active),
-             Address(temp1, NativeIterator::offsetOfFlags()));
-
-  // Reset property cursor.
-  masm.loadPtr(Address(temp1, NativeIterator::offsetOfGuardsEnd()), temp2);
-  masm.storePtr(temp2,
-                Address(temp1, NativeIterator::offsetOfPropertyCursor()));
-
-  // Unlink from the iterator list.
-  const Register next = temp2;
-  const Register prev = temp3;
-  masm.loadPtr(Address(temp1, NativeIterator::offsetOfNext()), next);
-  masm.loadPtr(Address(temp1, NativeIterator::offsetOfPrev()), prev);
-  masm.storePtr(prev, Address(next, NativeIterator::offsetOfPrev()));
-  masm.storePtr(next, Address(prev, NativeIterator::offsetOfNext()));
-#ifdef DEBUG
-  masm.storePtr(ImmPtr(nullptr),
-                Address(temp1, NativeIterator::offsetOfNext()));
-  masm.storePtr(ImmPtr(nullptr),
-                Address(temp1, NativeIterator::offsetOfPrev()));
-#endif
+  masm.iteratorClose(obj, temp1, temp2, temp3);
 }
 
 void CodeGenerator::visitArgumentsLength(LArgumentsLength* lir) {
