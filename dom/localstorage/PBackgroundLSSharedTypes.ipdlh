@@ -7,11 +7,20 @@ include PBackgroundSharedTypes;
 namespace mozilla {
 namespace dom {
 
-struct LSRequestPrepareDatastoreParams
+struct LSRequestCommonParams
 {
   PrincipalInfo principalInfo;
   nsCString originKey;
-  bool createIfNotExists;
+};
+
+struct LSRequestPreloadDatastoreParams
+{
+  LSRequestCommonParams commonParams;
+};
+
+struct LSRequestPrepareDatastoreParams
+{
+  LSRequestCommonParams commonParams;
 };
 
 struct LSRequestPrepareObserverParams
@@ -21,6 +30,7 @@ struct LSRequestPrepareObserverParams
 
 union LSRequestParams
 {
+  LSRequestPreloadDatastoreParams;
   LSRequestPrepareDatastoreParams;
   LSRequestPrepareObserverParams;
 };

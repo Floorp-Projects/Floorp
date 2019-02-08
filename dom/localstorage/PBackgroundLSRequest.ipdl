@@ -10,15 +10,13 @@ using struct mozilla::null_t
 namespace mozilla {
 namespace dom {
 
-union NullableDatastoreId
+struct LSRequestPreloadDatastoreResponse
 {
-  null_t;
-  uint64_t;
 };
 
 struct LSRequestPrepareDatastoreResponse
 {
-  NullableDatastoreId datastoreId;
+  uint64_t datastoreId;
 };
 
 struct LSRequestPrepareObserverResponse
@@ -33,6 +31,7 @@ struct LSRequestPrepareObserverResponse
 union LSRequestResponse
 {
   nsresult;
+  LSRequestPreloadDatastoreResponse;
   LSRequestPrepareDatastoreResponse;
   LSRequestPrepareObserverResponse;
 };

@@ -27,7 +27,7 @@ class RequestResolver final : public LSRequestChildCallback {
 
   void HandleResponse(nsresult aResponse);
 
-  void HandleResponse(const NullableDatastoreId& aDatastoreId);
+  void HandleResponse();
 
   // LSRequestChildCallback
   void OnResponse(const LSRequestResponse& aResponse) override;
@@ -192,7 +192,18 @@ LocalStorageManager2::Preload(nsIPrincipal* aPrincipal, JSContext* aContext,
   MOZ_ASSERT(aPrincipal);
   MOZ_ASSERT(_retval);
 
-  nsresult rv;
+  nsCString originAttrSuffix;
+  nsCString originKey;
+  nsresult rv = GenerateOriginKey(aPrincipal, originAttrSuffix, originKey);
+  if (NS_FAILED(rv)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  nsAutoPtr<PrincipalInfo> principalInfo(new PrincipalInfo());
+  rv = CheckedPrincipalToPrincipalInfo(aPrincipal, *principalInfo);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   RefPtr<Promise> promise;
 
@@ -203,13 +214,11 @@ LocalStorageManager2::Preload(nsIPrincipal* aPrincipal, JSContext* aContext,
     }
   }
 
-  LSRequestPrepareDatastoreParams params;
-  params.createIfNotExists() = false;
+  LSRequestCommonParams commonParams;
+  commonParams.principalInfo() = *principalInfo;
+  commonParams.originKey() = originKey;
 
-  rv = CheckedPrincipalToPrincipalInfo(aPrincipal, params.principalInfo());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  LSRequestPreloadDatastoreParams params(commonParams);
 
   rv = StartRequest(promise, params);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -303,25 +312,14 @@ void RequestResolver::HandleResponse(nsresult aResponse) {
   mPromise->MaybeReject(aResponse);
 }
 
-void RequestResolver::HandleResponse(const NullableDatastoreId& aDatastoreId) {
+void RequestResolver::HandleResponse() {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!mPromise) {
     return;
   }
 
-  switch (aDatastoreId.type()) {
-    case NullableDatastoreId::Tnull_t:
-      mPromise->MaybeResolve(JS::NullHandleValue);
-      break;
-
-    case NullableDatastoreId::Tuint64_t:
-      mPromise->MaybeResolve(aDatastoreId.get_uint64_t());
-      break;
-
-    default:
-      MOZ_CRASH("Unknown datastore id type!");
-  }
+  mPromise->MaybeResolveWithUndefined();
 }
 
 void RequestResolver::OnResponse(const LSRequestResponse& aResponse) {
@@ -332,9 +330,8 @@ void RequestResolver::OnResponse(const LSRequestResponse& aResponse) {
       HandleResponse(aResponse.get_nsresult());
       break;
 
-    case LSRequestResponse::TLSRequestPrepareDatastoreResponse:
-      HandleResponse(
-          aResponse.get_LSRequestPrepareDatastoreResponse().datastoreId());
+    case LSRequestResponse::TLSRequestPreloadDatastoreResponse:
+      HandleResponse();
       break;
     default:
       MOZ_CRASH("Unknown response type!");
