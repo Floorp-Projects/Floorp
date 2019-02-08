@@ -749,6 +749,10 @@ RefPtr<GenericPromise> ScriptLoader::StartFetchingModuleAndDependencies(
 }
 
 static ScriptLoader* GetCurrentScriptLoader(JSContext* aCx) {
+  auto reportError = mozilla::MakeScopeExit([aCx]() {
+    JS_ReportErrorASCII(aCx, "No ScriptLoader found for the current context");
+  });
+
   JSObject* object = JS::CurrentGlobalOrNull(aCx);
   if (!object) {
     return nullptr;
@@ -775,6 +779,7 @@ static ScriptLoader* GetCurrentScriptLoader(JSContext* aCx) {
     return nullptr;
   }
 
+  reportError.release();
   return loader;
 }
 
