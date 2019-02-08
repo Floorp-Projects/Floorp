@@ -684,6 +684,21 @@ class PresShell final : public nsIPresShell,
     bool MaybeDiscardOrDelayKeyboardEvent(WidgetGUIEvent* aGUIEvent);
 
     /**
+     * MaybeFlushThrottledStyles() tries to flush pending animation.  If it's
+     * flushed and then aFrameForPresShell is destroyed, returns new frame
+     * which contains mPresShell.
+     *
+     * @param aFrameForPresShell        The frame for mPresShell.  This can be
+     *                                  nullptr.
+     * @return                          Maybe new frame for mPresShell.
+     *                                  If aFrameForPresShell is not nullptr
+     *                                  and hasn't been destroyed, returns
+     *                                  aFrameForPresShell as-is.
+     */
+    MOZ_CAN_RUN_SCRIPT
+    nsIFrame* MaybeFlushThrottledStyles(nsIFrame* aFrameForPresShell);
+
+    /**
      * XXX Needs better name.
      * HandleEventInternal() dispatches aEvent into the DOM tree and
      * notify EventStateManager of that.

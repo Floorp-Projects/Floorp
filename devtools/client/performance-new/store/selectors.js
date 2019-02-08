@@ -11,6 +11,7 @@ const getEntries = state => state.entries;
 const getFeatures = state => state.features;
 const getThreads = state => state.threads;
 const getThreadsString = state => getThreads(state).join(",");
+const getObjdirs = state => state.objdirs;
 
 const getRecordingSettings = state => {
   return {
@@ -18,6 +19,7 @@ const getRecordingSettings = state => {
     interval: getInterval(state),
     features: getFeatures(state),
     threads: getThreads(state),
+    objdirs: getObjdirs(state),
   };
 };
 
@@ -43,6 +45,7 @@ module.exports = {
   getFeatures,
   getThreads,
   getThreadsString,
+  getObjdirs,
   getRecordingSettings,
   getInitializedValues,
   getPerfFront,

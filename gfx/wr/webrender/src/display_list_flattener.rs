@@ -1319,22 +1319,26 @@ impl<'a> DisplayListFlattener<'a> {
         // (b) It's useful for the initial version of picture caching in gecko, by enabling
         //     is to just look for interesting scroll roots on the root stacking context,
         //     without having to consider cuts at stacking context boundaries.
-        if let Some(parent_sc) = self.sc_stack.last_mut() {
-            if stacking_context.is_redundant(
-                parent_sc,
-                self.clip_scroll_tree,
-            ) {
-                // If the parent context primitives list is empty, it's faster
-                // to assign the storage of the popped context instead of paying
-                // the copying cost for extend.
-                if parent_sc.primitives.is_empty() {
-                    parent_sc.primitives = stacking_context.primitives;
-                } else {
-                    parent_sc.primitives.extend(stacking_context.primitives);
+        let parent_is_empty = match self.sc_stack.last_mut() {
+            Some(parent_sc) => {
+                if stacking_context.is_redundant(
+                    parent_sc,
+                    self.clip_scroll_tree,
+                ) {
+                    // If the parent context primitives list is empty, it's faster
+                    // to assign the storage of the popped context instead of paying
+                    // the copying cost for extend.
+                    if parent_sc.primitives.is_empty() {
+                        parent_sc.primitives = stacking_context.primitives;
+                    } else {
+                        parent_sc.primitives.extend(stacking_context.primitives);
+                    }
+                    return;
                 }
-                return;
-            }
-        }
+                parent_sc.primitives.is_empty()
+            },
+            None => true,
+        };
 
         if stacking_context.create_tile_cache {
             self.setup_picture_caching(
@@ -1499,8 +1503,19 @@ impl<'a> DisplayListFlattener<'a> {
             self.prim_store.optimize_picture_if_possible(current_pic_index);
         }
 
-        // Same for mix-blend-mode.
-        if let Some(mix_blend_mode) = stacking_context.composite_ops.mix_blend_mode {
+        // Same for mix-blend-mode, except we can skip if this primitive is the first in the parent
+        // stacking context.
+        // From https://drafts.fxtf.org/compositing-1/#generalformula, the formula for blending is:
+        // Cs = (1 - ab) x Cs + ab x Blend(Cb, Cs)
+        // where
+        // Cs = Source color
+        // ab = Backdrop alpha
+        // Cb = Backdrop color
+        //
+        // If we're the first primitive within a stacking context, then we can guarantee that the
+        // backdrop alpha will be 0, and then the blend equation collapses to just
+        // Cs = Cs, and the blend mode isn't taken into account at all.
+        let has_mix_blend = if let (Some(mix_blend_mode), false) = (stacking_context.composite_ops.mix_blend_mode, parent_is_empty) {
             let composite_mode = Some(PictureCompositeMode::MixBlend(mix_blend_mode));
 
             let blend_pic_index = PictureIndex(self.prim_store.pictures
@@ -1536,15 +1551,14 @@ impl<'a> DisplayListFlattener<'a> {
             if cur_instance.is_chased() {
                 println!("\tis a mix-blend picture for a stacking context with {:?}", mix_blend_mode);
             }
-        }
+            true
+        } else {
+            false
+        };
 
         // Set the stacking context clip on the outermost picture in the chain,
         // unless we already set it on the leaf picture.
         cur_instance.clip_chain_id = stacking_context.clip_chain_id;
-
-        let has_mix_blend_on_secondary_framebuffer =
-            stacking_context.composite_ops.mix_blend_mode.is_some() &&
-            self.sc_stack.len() > 2;
 
         // The primitive instance for the remainder of flat children of this SC
         // if it's a part of 3D hierarchy but not the root of it.
@@ -1555,12 +1569,11 @@ impl<'a> DisplayListFlattener<'a> {
             }
             // Regular parenting path
             Some(ref mut parent_sc) => {
-                // If we have a mix-blend-mode, and we aren't the primary framebuffer,
-                // the stacking context needs to be isolated to blend correctly as per
-                // the CSS spec.
+                // If we have a mix-blend-mode, the stacking context needs to be isolated
+                // to blend correctly as per the CSS spec.
                 // If not already isolated for some other reason,
                 // make this picture as isolated.
-                if has_mix_blend_on_secondary_framebuffer {
+                if has_mix_blend {
                     parent_sc.blit_reason |= BlitReason::ISOLATE;
                 }
                 parent_sc.primitives.push(cur_instance);
@@ -2629,7 +2642,14 @@ impl FlattenedStackingContext {
         }
 
         // If there are filters / mix-blend-mode
-        if !self.composite_ops.is_empty() {
+        if !self.composite_ops.filters.is_empty() {
+            return false;
+        }
+
+        // We can skip mix-blend modes if they are the first primitive in a stacking context,
+        // see pop_stacking_context for a full explanation.
+        if !self.composite_ops.mix_blend_mode.is_none() &&
+           !parent.primitives.is_empty() {
             return false;
         }
 

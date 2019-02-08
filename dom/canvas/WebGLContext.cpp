@@ -9,6 +9,7 @@
 #include <queue>
 
 #include "AccessCheck.h"
+#include "gfxConfig.h"
 #include "gfxContext.h"
 #include "gfxCrashReporterUtils.h"
 #include "gfxPattern.h"
@@ -483,6 +484,10 @@ bool WebGLContext::CreateAndInitGL(
     case dom::WebGLPowerPreference::Low_power:
       break;
 
+    case dom::WebGLPowerPreference::High_performance:
+      flags |= gl::CreateContextFlags::HIGH_POWER;
+      break;
+
       // Eventually add a heuristic, but for now default to high-performance.
       // We can even make it dynamic by holding on to a
       // ForceDiscreteGPUHelperCGL iff we decide it's a high-performance
@@ -491,10 +496,16 @@ bool WebGLContext::CreateAndInitGL(
       // - Many draw calls
       // - Same origin with root page (try to stem bleeding from WebGL
       // ads/trackers)
-    case dom::WebGLPowerPreference::High_performance:
     default:
-      flags |= gl::CreateContextFlags::HIGH_POWER;
+      if (!gfxPrefs::WebGLDefaultLowPower()) {
+        flags |= gl::CreateContextFlags::HIGH_POWER;
+      }
       break;
+  }
+
+  // If "Use hardware acceleration when available" option is disabled:
+  if (!gfxConfig::IsEnabled(Feature::HW_COMPOSITING)) {
+    flags &= ~gl::CreateContextFlags::HIGH_POWER;
   }
 
 #ifdef XP_MACOSX

@@ -1167,8 +1167,11 @@ void jit::ToggleBaselineProfiling(JSRuntime* runtime, bool enable) {
   }
 
   for (ZonesIter zone(runtime, SkipAtoms); !zone.done(); zone.next()) {
-    for (auto script = zone->cellIter<JSScript>(); !script.done();
-         script.next()) {
+    for (auto iter = zone->cellIter<JSScript>(); !iter.done(); iter.next()) {
+      JSScript* script = iter;
+      if (gc::IsAboutToBeFinalizedUnbarriered(&script)) {
+        continue;
+      }
       if (!script->hasBaselineScript()) {
         continue;
       }
@@ -1181,8 +1184,11 @@ void jit::ToggleBaselineProfiling(JSRuntime* runtime, bool enable) {
 #ifdef JS_TRACE_LOGGING
 void jit::ToggleBaselineTraceLoggerScripts(JSRuntime* runtime, bool enable) {
   for (ZonesIter zone(runtime, SkipAtoms); !zone.done(); zone.next()) {
-    for (auto script = zone->cellIter<JSScript>(); !script.done();
-         script.next()) {
+    for (auto iter = zone->cellIter<JSScript>(); !iter.done(); iter.next()) {
+      JSScript* script = iter;
+      if (gc::IsAboutToBeFinalizedUnbarriered(&script)) {
+        continue;
+      }
       if (!script->hasBaselineScript()) {
         continue;
       }
@@ -1193,8 +1199,11 @@ void jit::ToggleBaselineTraceLoggerScripts(JSRuntime* runtime, bool enable) {
 
 void jit::ToggleBaselineTraceLoggerEngine(JSRuntime* runtime, bool enable) {
   for (ZonesIter zone(runtime, SkipAtoms); !zone.done(); zone.next()) {
-    for (auto script = zone->cellIter<JSScript>(); !script.done();
-         script.next()) {
+    for (auto iter = zone->cellIter<JSScript>(); !iter.done(); iter.next()) {
+      JSScript* script = iter;
+      if (gc::IsAboutToBeFinalizedUnbarriered(&script)) {
+        continue;
+      }
       if (!script->hasBaselineScript()) {
         continue;
       }

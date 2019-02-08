@@ -4,6 +4,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "memory_hooks.h"
+
+#include "nscore.h"
+
+#include "mozilla/Assertions.h"
+#include "mozilla/IntegerPrintfMacros.h"
+#include "mozilla/JSONWriter.h"
+#include "mozilla/MemoryReporting.h"
+#include "mozilla/ProfilerCounts.h"
+
+#include "replace_malloc.h"
+
 #include <ctype.h>
 #include <errno.h>
 #include <limits.h>
@@ -24,18 +36,6 @@
 #ifdef ANDROID
 #  include <android/log.h>
 #endif
-
-#include "memory_hooks.h"
-
-#include "nscore.h"
-
-#include "mozilla/Assertions.h"
-#include "mozilla/IntegerPrintfMacros.h"
-#include "mozilla/JSONWriter.h"
-#include "mozilla/MemoryReporting.h"
-#include "mozilla/ProfilerCounts.h"
-
-#include "replace_malloc.h"
 
 static mozilla::UniquePtr<ProfilerCounterTotal> sCounter;
 

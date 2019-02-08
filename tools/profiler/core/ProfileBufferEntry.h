@@ -7,25 +7,19 @@
 #ifndef ProfileBufferEntry_h
 #define ProfileBufferEntry_h
 
-#include <ostream>
-#include "GeckoProfiler.h"
-#include "platform.h"
 #include "ProfileJSONWriter.h"
-#include "ProfilerBacktrace.h"
-#include "mozilla/RefPtr.h"
-#include <string>
-#include <map>
+
+#include "gtest/MozGtestFriend.h"
 #include "js/ProfilingFrameIterator.h"
 #include "js/TrackedOptimizationInfo.h"
-#include "nsHashKeys.h"
-#include "nsDataHashtable.h"
-#include "mozilla/Maybe.h"
-#include "mozilla/Vector.h"
-#include "gtest/MozGtestFriend.h"
 #include "mozilla/HashFunctions.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/UniquePtr.h"
-#include "nsClassHashtable.h"
 #include "mozilla/Variant.h"
+#include "mozilla/Vector.h"
+#include "nsClassHashtable.h"
+#include "nsDataHashtable.h"
+#include "nsHashKeys.h"
 #include "nsTArray.h"
 
 class ProfilerMarker;

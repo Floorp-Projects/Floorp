@@ -1001,6 +1001,15 @@ class nsContentUtils {
   static bool IsInSameAnonymousTree(const nsINode* aNode,
                                     const nsIContent* aContent);
 
+  /*
+   * Traverse the parent chain from aElement up to aStop, and return true if
+   * there's an interactive html content; false otherwise.
+   *
+   * Note: This crosses shadow boundaries but not document boundaries.
+   */
+  static bool IsInInteractiveHTMLContent(const Element* aElement,
+                                         const Element* aStop);
+
   /**
    * Return the nsIXPConnect service.
    */
