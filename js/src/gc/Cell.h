@@ -153,6 +153,11 @@ class TenuredCell : public Cell {
   static MOZ_ALWAYS_INLINE TenuredCell* fromPointer(void* ptr);
   static MOZ_ALWAYS_INLINE const TenuredCell* fromPointer(const void* ptr);
 
+  MOZ_ALWAYS_INLINE bool isTenured() const {
+    MOZ_ASSERT(!IsInsideNursery(this));
+    return true;
+  }
+
   // Mark bit management.
   MOZ_ALWAYS_INLINE bool isMarkedAny() const;
   MOZ_ALWAYS_INLINE bool isMarkedBlack() const;

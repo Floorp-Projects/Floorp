@@ -130,19 +130,7 @@ class CrossCompartmentKey {
   }
 
   JS::Compartment* compartment() {
-    struct GetCompartmentFunctor {
-      JS::Compartment* operator()(JSObject** tp) const {
-        return (*tp)->compartment();
-      }
-      JS::Compartment* operator()(JSScript** tp) const {
-        return (*tp)->compartment();
-      }
-      JS::Compartment* operator()(LazyScript** tp) const {
-        return (*tp)->compartment();
-      }
-      JS::Compartment* operator()(JSString** tp) const { return nullptr; }
-    };
-    return applyToWrapped(GetCompartmentFunctor());
+    return applyToWrapped([](auto tp) { return (*tp)->maybeCompartment(); });
   }
 
   struct Hasher : public DefaultHasher<CrossCompartmentKey> {
@@ -178,15 +166,8 @@ class CrossCompartmentKey {
   };
 
   bool isTenured() const {
-    struct IsTenuredFunctor {
-      using ReturnType = bool;
-      ReturnType operator()(JSObject** tp) { return !IsInsideNursery(*tp); }
-      ReturnType operator()(JSScript** tp) { return true; }
-      ReturnType operator()(LazyScript** tp) { return true; }
-      ReturnType operator()(JSString** tp) { return !IsInsideNursery(*tp); }
-    };
-    return const_cast<CrossCompartmentKey*>(this)->applyToWrapped(
-        IsTenuredFunctor());
+    auto self = const_cast<CrossCompartmentKey*>(this);
+    return self->applyToWrapped([](auto tp) { return (*tp)->isTenured(); });
   }
 
   void trace(JSTracer* trc);
