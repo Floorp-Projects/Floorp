@@ -282,7 +282,7 @@ class ConfigureSandbox(dict):
         b: getattr(__builtin__, b)
         for b in ('None', 'False', 'True', 'int', 'bool', 'any', 'all', 'len',
                   'list', 'tuple', 'set', 'dict', 'isinstance', 'getattr',
-                  'hasattr', 'enumerate', 'range', 'zip')
+                  'hasattr', 'enumerate', 'range', 'zip', 'AssertionError')
     }, __import__=forbidden_import, str=unicode)
 
     # Expose a limited set of functions from os.path
