@@ -107,7 +107,7 @@ class TestTargetAndroid(TargetTest):
     def test_target(self):
         self.assertEqual(
             self.get_target(['--enable-project=mobile/android']),
-            'armv7a-unknown-linux-androideabi')
+            'arm-unknown-linux-androideabi')
         self.assertEqual(
             self.get_target(['--enable-project=mobile/android', '--target=i686']),
             'i686-unknown-linux-android')
