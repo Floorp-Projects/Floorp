@@ -6369,6 +6369,21 @@ void CodeGenerator::visitNewTypedArrayFromArray(LNewTypedArrayFromArray* lir) {
   callVM(TypedArrayCreateWithTemplateInfo, lir);
 }
 
+typedef TypedArrayObject* (*TypedArrayCreateFromArrayBufferWithTemplateFn)(
+    JSContext*, HandleObject, HandleObject, HandleValue, HandleValue);
+static const VMFunction TypedArrayCreateFromArrayBufferWithTemplateInfo =
+    FunctionInfo<TypedArrayCreateFromArrayBufferWithTemplateFn>(
+        js::TypedArrayCreateWithTemplate, "TypedArrayCreateWithTemplate");
+
+void CodeGenerator::visitNewTypedArrayFromArrayBuffer(
+    LNewTypedArrayFromArrayBuffer* lir) {
+  pushArg(ToValue(lir, LNewTypedArrayFromArrayBuffer::LengthIndex));
+  pushArg(ToValue(lir, LNewTypedArrayFromArrayBuffer::ByteOffsetIndex));
+  pushArg(ToRegister(lir->arrayBuffer()));
+  pushArg(ImmGCPtr(lir->mir()->templateObject()));
+  callVM(TypedArrayCreateFromArrayBufferWithTemplateInfo, lir);
+}
+
 // Out-of-line object allocation for JSOP_NEWOBJECT.
 class OutOfLineNewObject : public OutOfLineCodeBase<CodeGenerator> {
   LNewObject* lir_;

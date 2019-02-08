@@ -211,6 +211,22 @@ void LIRGenerator::visitNewTypedArrayFromArray(MNewTypedArrayFromArray* ins) {
   assignSafepoint(lir, ins);
 }
 
+void LIRGenerator::visitNewTypedArrayFromArrayBuffer(
+    MNewTypedArrayFromArrayBuffer* ins) {
+  MDefinition* arrayBuffer = ins->arrayBuffer();
+  MDefinition* byteOffset = ins->byteOffset();
+  MDefinition* length = ins->length();
+  MOZ_ASSERT(arrayBuffer->type() == MIRType::Object);
+  MOZ_ASSERT(byteOffset->type() == MIRType::Value);
+  MOZ_ASSERT(length->type() == MIRType::Value);
+
+  auto* lir = new (alloc()) LNewTypedArrayFromArrayBuffer(
+      useRegisterAtStart(arrayBuffer), useBoxAtStart(byteOffset),
+      useBoxAtStart(length));
+  defineReturn(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
 void LIRGenerator::visitNewObject(MNewObject* ins) {
   LNewObject* lir = new (alloc()) LNewObject(temp());
   define(lir, ins);
