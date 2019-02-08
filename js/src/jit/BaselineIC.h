@@ -2464,12 +2464,6 @@ class ICIteratorMore_Fallback : public ICFallbackStub {
       : ICFallbackStub(ICStub::IteratorMore_Fallback, stubCode) {}
 
  public:
-  void setHasNonStringResult() { extra_ = 1; }
-  bool hasNonStringResult() const {
-    MOZ_ASSERT(extra_ <= 1);
-    return extra_;
-  }
-
   class Compiler : public ICStubCompiler {
    protected:
     MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm) override;
