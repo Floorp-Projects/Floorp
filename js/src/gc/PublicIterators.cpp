@@ -155,16 +155,23 @@ static void IterateScriptsImpl(JSContext* cx, Realm* realm, void* data,
 
   if (realm) {
     Zone* zone = realm->zone();
-    for (auto script = zone->cellIter<T>(empty); !script.done();
-         script.next()) {
-      if (script->realm() == realm) {
-        DoScriptCallback(cx, data, script, scriptCallback, nogc);
+    for (auto iter = zone->cellIter<T>(empty); !iter.done(); iter.next()) {
+      T* script = iter;
+      if (gc::IsAboutToBeFinalizedUnbarriered(&script)) {
+        continue;
       }
+      if (script->realm() != realm) {
+        continue;
+      }
+      DoScriptCallback(cx, data, script, scriptCallback, nogc);
     }
   } else {
     for (ZonesIter zone(cx->runtime(), SkipAtoms); !zone.done(); zone.next()) {
-      for (auto script = zone->cellIter<T>(empty); !script.done();
-           script.next()) {
+      for (auto iter = zone->cellIter<T>(empty); !iter.done(); iter.next()) {
+        T* script = iter;
+        if (gc::IsAboutToBeFinalizedUnbarriered(&script)) {
+          continue;
+        }
         DoScriptCallback(cx, data, script, scriptCallback, nogc);
       }
     }

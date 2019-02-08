@@ -321,6 +321,9 @@ class ZoneCellIter<TenuredCell> {
 // by specializing on a GCType that is never allocated in the nursery, or
 // explicitly by passing in a trailing AutoAssertEmptyNursery argument.
 //
+// NOTE: This class can return items that are about to be swept/finalized.
+//       You shouldn't keep pointers to such items across GCs.
+//
 /* clang-format on */
 template <typename GCType>
 class ZoneCellIter : public ZoneCellIter<TenuredCell> {
