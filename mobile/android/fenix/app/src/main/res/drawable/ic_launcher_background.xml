@@ -8,7 +8,7 @@
     <path android:fillType="evenOdd"
         android:pathData="M0,0h108v108h-108z">
         <aapt:attr name="android:fillColor">
-            <solid android:color="@color/colorAccent"/>
+            <solid android:color="@color/color_accent"/>
         </aapt:attr>
     </path>
 </vector>

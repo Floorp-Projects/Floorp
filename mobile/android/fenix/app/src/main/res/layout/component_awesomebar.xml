@@ -17,5 +17,5 @@
         app:layout_constraintBottom_toTopOf="@id/pill_wrapper"
         mozac:awesomeBarTitleTextColor="?attr/awesomeBarTitleTextColor"
         mozac:awesomeBarDescriptionTextColor="?attr/awesomeBarDescriptionTextColor"
-        mozac:awesomeBarChipTextColor="@color/offwhite"
-        mozac:awesomeBarChipBackgroundColor="@color/photonBlue40" />
+        mozac:awesomeBarChipTextColor="@color/off_white"
+        mozac:awesomeBarChipBackgroundColor="@color/photonBlue40"/>

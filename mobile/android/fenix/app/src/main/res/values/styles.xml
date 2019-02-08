@@ -7,31 +7,31 @@
     <style name="LightThemeBase" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="android:statusBarColor">@android:color/black</item>
         <item name="android:windowAnimationStyle">@style/WindowAnimationTransition</item>
-        <item name="android:colorPrimary">@color/offwhite</item>
+        <item name="android:colorPrimary">@color/off_white</item>
 
         <!-- Style the navigation bar -->
         <item name="android:navigationBarColor">@android:color/transparent</item>
 
         <!-- Home fragment colors -->
-        <item name="homeBackgroundTopGradient">@color/offwhite</item>
-        <item name="homeBackgroundBottomGradient">@color/offwhite</item>
+        <item name="homeBackgroundTopGradient">@color/off_white</item>
+        <item name="homeBackgroundBottomGradient">@color/off_white</item>
         <item name="homeBackgroundGradient">@drawable/home_background_gradient</item>
         <item name="privateBrowsingButtonBackground">@drawable/private_browsing_button_white_background</item>
-        <item name="privateBrowsingButtonTint">@color/offwhite</item>
+        <item name="privateBrowsingButtonTint">@color/off_white</item>
         <item name="fenixLogo">@drawable/ic_logo_wordmark</item>
         <item name="menuButtonTint">@android:color/black</item>
         <item name="toolbarWrapperBackground">@drawable/home_search_background_light</item>
-        <item name="toolbarTextColor">@color/searchText</item>
+        <item name="toolbarTextColor">@color/search_text</item>
 
         <!-- Search fragment colors -->
-        <item name="searchBackground">@color/offwhite</item>
-        <item name="searchShortcutsTextColor">@color/awesomeBarTitleColor</item>
-        <item name="pillWrapperBackground">@color/offwhite</item>
-        <item name="awesomeBarTitleTextColor">@color/awesomeBarTitleColor</item>
-        <item name="awesomeBarDescriptionTextColor">@color/awesomeBarDescriptionColor</item>
+        <item name="searchBackground">@color/off_white</item>
+        <item name="searchShortcutsTextColor">@color/awesome_bar_title_color</item>
+        <item name="pillWrapperBackground">@color/off_white</item>
+        <item name="awesomeBarTitleTextColor">@color/awesome_bar_title_color</item>
+        <item name="awesomeBarDescriptionTextColor">@color/awesome_bar_description_color</item>
 
         <!-- Browser fragment colors -->
-        <item name="browserToolbarBackground">@color/offwhite</item>
+        <item name="browserToolbarBackground">@color/off_white</item>
         <item name="browserToolbarIcons">@color/icons</item>
         <item name="browserToolbarHomeIcon">@drawable/ic_home</item>
     </style>
@@ -54,22 +54,22 @@
         <item name="homeBackgroundBottomGradient">@color/private_browsing_bottom_gradient</item>
         <item name="homeBackgroundGradient">@drawable/home_background_gradient</item>
         <item name="privateBrowsingButtonBackground">@drawable/private_browsing_button_background</item>
-        <item name="privateBrowsingButtonTint">@color/offwhite</item>
+        <item name="privateBrowsingButtonTint">@color/off_white</item>
         <item name="fenixLogo">@drawable/ic_logo_wordmark_white</item>
-        <item name="menuButtonTint">@color/offwhite</item>
+        <item name="menuButtonTint">@color/off_white</item>
         <item name="toolbarWrapperBackground">@drawable/home_search_background_private</item>
-        <item name="toolbarTextColor">@color/offwhite</item>
+        <item name="toolbarTextColor">@color/off_white</item>
 
         <!-- Search fragment colors -->
         <item name="searchBackground">@color/private_browsing_bottom_gradient</item>
-        <item name="searchShortcutsTextColor">@color/offwhite</item>
+        <item name="searchShortcutsTextColor">@color/off_white</item>
         <item name="pillWrapperBackground">@color/private_browsing_top_gradient</item>
-        <item name="awesomeBarTitleTextColor">@color/offwhite</item>
+        <item name="awesomeBarTitleTextColor">@color/off_white</item>
         <item name="awesomeBarDescriptionTextColor">@color/photonGrey40</item>
 
         <!-- Browser fragment colors -->
         <item name="browserToolbarBackground">@color/private_browsing_bottom_gradient</item>
-        <item name="browserToolbarIcons">@color/offwhite</item>
+        <item name="browserToolbarIcons">@color/off_white</item>
         <item name="browserToolbarHomeIcon">@drawable/ic_home_white</item>
     </style>
 
@@ -84,8 +84,8 @@
     </style>
 
     <style name="SettingsThemeBase" parent="Theme.MaterialComponents.Light">
-        <item name="colorPrimary">@color/offwhite</item>
-        <item name="colorPrimaryDark">@color/offwhite</item>
+        <item name="colorPrimary">@color/off_white</item>
+        <item name="colorPrimaryDark">@color/off_white</item>
         <item name="colorAccent">@color/icons</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
     </style>

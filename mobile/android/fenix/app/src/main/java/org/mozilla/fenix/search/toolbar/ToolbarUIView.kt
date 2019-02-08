@@ -44,10 +44,10 @@ class ToolbarUIView(
             browserActionMargin = resources.pxToDp(browserActionMarginDp)
             urlBoxView = urlBackground
 
-            textColor = ContextCompat.getColor(context, R.color.searchText)
+            textColor = ContextCompat.getColor(context, R.color.search_text)
             textSize = toolbarTextSizeSp
             hint = context.getString(R.string.search_hint)
-            hintColor = ContextCompat.getColor(context, R.color.searchText)
+            hintColor = ContextCompat.getColor(context, R.color.search_text)
 
             setOnEditListener(object : mozilla.components.concept.toolbar.Toolbar.OnEditListener {
                 override fun onTextChanged(text: String) {

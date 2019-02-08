@@ -3,22 +3,22 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources>
-    <color name="colorPrimary">#544CD9</color>
-    <color name="colorPrimaryDark">#202340</color>
-    <color name="colorAccent">#D81B60</color>
+    <color name="color_primary">#544CD9</color>
+    <color name="color_primary_dark">#202340</color>
+    <color name="color_accent">#D81B60</color>
 
-    <color name="awesomeBarTitleColor">#212121</color>
-    <color name="awesomeBarDescriptionColor">#6b6b6b</color>
-    <color name="searchDarkBackground">#F2F2F5</color>
-    <color name="searchDarkBackgroundAlternative">#E9E9ED</color>
-    <color name="searchPrivateBackground">#4f4e75</color>
-    <color name="searchDarkPrivateBackground">#42416b</color>
-    <color name="searchDarkPrivateBackgroundAlternative">#393863</color>
-    <color name="searchStroke">#c5c8d7</color>
-    <color name="searchStrokeAlternative">#0A202340</color>
-    <color name="searchStrokePrivate">#2d2e5f</color>
-    <color name="searchText">#0C0C0D</color>
-    <color name="offwhite">#f9f9fa</color>
+    <color name="awesome_bar_title_color">#212121</color>
+    <color name="awesome_bar_description_color">#6b6b6b</color>
+    <color name="search_dark_background">#F2F2F5</color>
+    <color name="search_dark_background_alternative">#E9E9ED</color>
+    <color name="search_private_background">#4f4e75</color>
+    <color name="search_dark_private_background">#42416b</color>
+    <color name="search_dark_private_background_alternative">#393863</color>
+    <color name="search_stroke">#c5c8d7</color>
+    <color name="search_stroke_alternative">#0A202340</color>
+    <color name="search_stroke_private">#2d2e5f</color>
+    <color name="search_text">#0C0C0D</color>
+    <color name="off_white">#f9f9fa</color>
     <color name="url_box_view">#E9E9ED</color>
     <color name="icons">#20233E</color>
 
