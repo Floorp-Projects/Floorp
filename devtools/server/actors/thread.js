@@ -1805,13 +1805,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     // debugger, and carefully avoid the use of unsafeSynchronize in this
     // function when source maps are disabled.
     for (const actor of bpActors) {
-      if (actor.isPending) {
-        actor.generatedLocation.generatedSourceActor._setBreakpoint(actor);
-      } else {
-        actor.generatedLocation.generatedSourceActor._setBreakpointAtGeneratedLocation(
-          actor, actor.generatedLocation
-        );
-      }
+      actor.generatedLocation.generatedSourceActor._setBreakpoint(actor);
     }
 
     if (this._onLoadBreakpointURLs.has(source.url)) {
