@@ -32,8 +32,10 @@ add_task(async function test_maximum_reported_blocks() {
     gBrowser.getNotificationBox().getNotificationWithValue("popup-blocked"));
 
   // Slightly hacky way to ensure we show the correct message in this case.
-  ok(notification.label.includes("more than"), "Notification label has 'more than'");
-  ok(notification.label.includes("5"), "Notification label shows the maximum number of popups");
+  ok(notification.messageText.textContent.includes("more than"),
+     "Notification label has 'more than'");
+  ok(notification.messageText.textContent.includes("5"),
+     "Notification label shows the maximum number of popups");
 
   gBrowser.removeTab(tab);
 
