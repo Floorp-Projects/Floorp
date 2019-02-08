@@ -470,32 +470,22 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
    *        Column to break on.
    * @param Object options
    *        Any options for the breakpoint.
-   * @param Boolean noSliding
-   *        If true, disables breakpoint sliding.
    *
    * @returns Promise
    *          A promise that resolves to a JSON object representing the
    *          response.
    */
-  setBreakpoint: function(line, column, options, noSliding) {
+  setBreakpoint: function(line, column, options) {
     const location = new GeneratedLocation(this, line, column);
     const actor = this._getOrCreateBreakpointActor(
       location,
-      options,
-      noSliding
+      options
     );
 
-    const response = {
+    return {
       actor: actor.actorID,
       isPending: actor.isPending,
     };
-
-    const actualLocation = actor.generatedLocation;
-    if (!actualLocation.equals(location)) {
-      response.actualLocation = actualLocation.toJSON();
-    }
-
-    return response;
   },
 
   /**
@@ -508,13 +498,11 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
    *        the generated source.
    * @param Object options
    *        Any options for the breakpoint.
-   * @param Boolean noSliding
-   *        If true, disables breakpoint sliding.
    *
    * @returns BreakpointActor
    *          A BreakpointActor representing the breakpoint.
    */
-  _getOrCreateBreakpointActor: function(generatedLocation, options, noSliding) {
+  _getOrCreateBreakpointActor: function(generatedLocation, options) {
     let actor = this.breakpointActorMap.getActor(generatedLocation);
     if (!actor) {
       actor = new BreakpointActor(this.threadActor, generatedLocation);
@@ -524,141 +512,22 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
 
     actor.setOptions(options);
 
-    return this._setBreakpoint(actor, noSliding);
+    this._setBreakpoint(actor);
+    return actor;
   },
 
   /*
    * Ensure the given BreakpointActor is set as a breakpoint handler on all
    * scripts that match its location in the generated source.
    *
-   * If there are no scripts that match the location of the BreakpointActor,
-   * we slide its location to the next closest line (for line breakpoints) or
-   * column (for column breakpoint) that does.
-   *
-   * If breakpoint sliding fails, then either there are no scripts that contain
-   * any code for the given location, or they were all garbage collected before
-   * the debugger started running. We cannot distinguish between these two
-   * cases, so we insert the BreakpointActor in the BreakpointActorMap as
-   * a pending breakpoint. Whenever a new script is introduced, this method is
-   * called again for each pending breakpoint.
-   *
    * @param BreakpointActor actor
    *        The BreakpointActor to be set as a breakpoint handler.
-   * @param Boolean noSliding
-   *        If true, disables breakpoint sliding.
    *
    * @returns A Promise that resolves to the given BreakpointActor.
    */
-  _setBreakpoint: function(actor, noSliding) {
+  _setBreakpoint: function(actor) {
     const { generatedLocation } = actor;
-    const { generatedLine, generatedSourceActor } = generatedLocation;
 
-    const isWasm = this.source && this.source.introductionType === "wasm";
-    if (!this._setBreakpointAtGeneratedLocation(actor, generatedLocation) &&
-        !noSliding &&
-        !isWasm) {
-      const scripts = this._findDebuggeeScripts({ line: generatedLine });
-
-      // Never do breakpoint sliding for column breakpoints.
-      // Additionally, never do breakpoint sliding if no scripts
-      // exist on this line.
-      //
-      // Sliding can go horribly wrong if we always try to find the
-      // next line with valid entry points in the entire file.
-      // Scripts may be completely GCed and we never knew they
-      // existed, so we end up sliding through whole functions to
-      // the user's bewilderment.
-      //
-      // We can slide reliably if any scripts exist, however, due
-      // to how scripts are kept alive. A parent Debugger.Script
-      // keeps all of its children alive, so as long as we have a
-      // valid script, we can slide through it and know we won't
-      // slide through any of its child scripts. Additionally, if a
-      // script gets GCed, that means that all parents scripts are
-      // GCed as well, and no scripts will exist on those lines
-      // anymore. We will never slide through a GCed script.
-      if (generatedLocation.generatedColumn || scripts.length === 0) {
-        return actor;
-      }
-
-      // Find the script that spans the largest amount of code to
-      // determine the bounds for sliding.
-      const largestScript = scripts.reduce((largestScr, script) => {
-        if (script.lineCount > largestScr.lineCount) {
-          return script;
-        }
-        return largestScr;
-      });
-      const maxLine = largestScript.startLine + largestScript.lineCount - 1;
-
-      let actualLine = generatedLine;
-      for (; actualLine <= maxLine; actualLine++) {
-        const loc = new GeneratedLocation(this, actualLine);
-        if (this._setBreakpointAtGeneratedLocation(actor, loc)) {
-          break;
-        }
-      }
-
-      // The above loop should never complete. We only did breakpoint sliding
-      // because we found scripts on the line we started from,
-      // which means there must be valid entry points somewhere
-      // within those scripts.
-      if (actualLine > maxLine) {
-        // eslint-disable-next-line no-throw-literal
-        throw {
-          error: "noCodeAtLineColumn",
-          message:
-            "Could not find any entry points to set a breakpoint on, " +
-            "even though I was told a script existed on the line I started " +
-            "the search with.",
-        };
-      }
-
-      // Update the actor to use the new location (reusing a
-      // previous breakpoint if it already exists on that line).
-      const actualLocation = new GeneratedLocation(generatedSourceActor, actualLine);
-      const existingActor = this.breakpointActorMap.getActor(actualLocation);
-      this.breakpointActorMap.deleteActor(generatedLocation);
-      if (existingActor) {
-        actor.delete();
-        actor = existingActor;
-      } else {
-        actor.generatedLocation = actualLocation;
-        this.breakpointActorMap.setActor(actualLocation, actor);
-      }
-    }
-
-    return actor;
-  },
-
-  _setBreakpointAtAllGeneratedLocations: function(actor, generatedLocations) {
-    let success = false;
-    for (const generatedLocation of generatedLocations) {
-      if (this._setBreakpointAtGeneratedLocation(
-        actor,
-        generatedLocation
-      )) {
-        success = true;
-      }
-    }
-    return success;
-  },
-
-  /*
-   * Ensure the given BreakpointActor is set as breakpoint handler on all
-   * scripts that match the given location in the generated source.
-   *
-   * @param BreakpointActor actor
-   *        The BreakpointActor to be set as a breakpoint handler.
-   * @param GeneratedLocation generatedLocation
-   *        A GeneratedLocation representing the location in the generated
-   *        source for which the given BreakpointActor is to be set as a
-   *        breakpoint handler.
-   *
-   * @returns A Boolean that is true if the BreakpointActor was set as a
-   *          breakpoint handler on at least one script, and false otherwise.
-   */
-  _setBreakpointAtGeneratedLocation: function(actor, generatedLocation) {
     const {
       generatedSourceActor,
       generatedLine,
@@ -739,12 +608,7 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
       }
     }
 
-    if (entryPoints.length === 0) {
-      return false;
-    }
-
     setBreakpointAtEntryPoints(actor, entryPoints);
-    return true;
   },
 });
 
