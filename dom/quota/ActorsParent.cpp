@@ -5494,28 +5494,11 @@ nsresult QuotaManager::GetInfoFromPrincipal(nsIPrincipal* aPrincipal,
   if (aGroup) {
     nsCString baseDomain;
     rv = aPrincipal->GetBaseDomain(baseDomain);
-    if (NS_FAILED(rv)) {
-      // A hack for JetPack.
-
-      nsCOMPtr<nsIURI> uri;
-      rv = aPrincipal->GetURI(getter_AddRefs(uri));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      bool isIndexedDBURI = false;
-      rv = uri->SchemeIs("indexedDB", &isIndexedDBURI);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      if (isIndexedDBURI) {
-        rv = NS_OK;
-      }
-    }
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (baseDomain.IsEmpty()) {
-      aGroup->Assign(origin);
-    } else {
-      aGroup->Assign(baseDomain + suffix);
-    }
+    MOZ_ASSERT(!baseDomain.IsEmpty());
+
+    aGroup->Assign(baseDomain + suffix);
   }
 
   if (aOrigin) {
