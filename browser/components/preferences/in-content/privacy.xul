@@ -381,14 +381,17 @@
           <vbox class="indent">
             <checkbox id="rememberHistory"
                       data-l10n-id="history-remember-browser-option"
+                      onsyncfrompreference="return gPrivacyPane.ensurePrivacyMicroControlUncheckedWhenDisabled(this)"
                       preference="places.history.enabled"/>
             <checkbox id="rememberForms"
                       data-l10n-id="history-remember-search-option"
+                      onsyncfrompreference="return gPrivacyPane.ensurePrivacyMicroControlUncheckedWhenDisabled(this)"
                       preference="browser.formfill.enable"/>
             <hbox id="clearDataBox"
                   align="center">
               <checkbox id="alwaysClear"
                         preference="privacy.sanitize.sanitizeOnShutdown"
+                        onsyncfrompreference="return gPrivacyPane.ensurePrivacyMicroControlUncheckedWhenDisabled(this)"
                         data-l10n-id="history-clear-on-close-option"
                         flex="1" />
             </hbox>
