@@ -17,11 +17,12 @@ class nsIURI;
 
 class ThirdPartyUtil final : public mozIThirdPartyUtil {
  public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_MOZITHIRDPARTYUTIL
 
   nsresult Init();
 
+  static void Startup();
   static ThirdPartyUtil* GetInstance();
 
  private:
