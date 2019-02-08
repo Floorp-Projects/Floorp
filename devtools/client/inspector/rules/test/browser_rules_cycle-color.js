@@ -31,7 +31,6 @@ add_task(async function() {
 
   await checkColorCycling(view);
   await checkAlphaColorCycling(inspector, view);
-  await checkColorCyclingPersist(inspector, view);
   await checkColorCyclingWithDifferentDefaultType(inspector, view);
 });
 
@@ -77,24 +76,6 @@ async function checkAlphaColorCycling(inspector, view) {
   }]);
 }
 
-async function checkColorCyclingPersist(inspector, view) {
-  await selectNode("span", inspector);
-  let { valueSpan } = getRuleViewProperty(view, "span", "color");
-
-  checkColorValue(valueSpan, "blue", "Color displayed as color name, its authored type");
-
-  await checkSwatchShiftClick(view, valueSpan, "#00f", "Color displayed as a hex value");
-
-  info("Select the body and reselect the span to see if the new color unit persisted");
-  await selectNode("body", inspector);
-  await selectNode("span", inspector);
-
-  // We have to query for the value span and the swatch again because they've been
-  // re-generated.
-  ({ valueSpan } = getRuleViewProperty(view, "span", "color"));
-  checkColorValue(valueSpan, "#00f", "Color is still displayed as a hex value");
-}
-
 async function checkColorCyclingWithDifferentDefaultType(inspector, view) {
   info("Change the default color type pref to hex");
   await pushPref("devtools.defaultColorUnit", "hex");
@@ -136,7 +117,6 @@ async function checkSwatchShiftClick(view, valueSpan, expectedValue, comment) {
   const colorNode = valueSpan.querySelector(".ruleview-color");
 
   info("Shift-click the color swatch and wait for the color type and ruleview to update");
-  const onRuleViewChanged = view.once("ruleview-changed");
   const onUnitChange = swatchNode.once("unit-change");
 
   EventUtils.synthesizeMouseAtCenter(swatchNode, {
@@ -145,7 +125,6 @@ async function checkSwatchShiftClick(view, valueSpan, expectedValue, comment) {
   }, view.styleWindow);
 
   await onUnitChange;
-  await onRuleViewChanged;
 
   is(colorNode.textContent, expectedValue, comment);
 }

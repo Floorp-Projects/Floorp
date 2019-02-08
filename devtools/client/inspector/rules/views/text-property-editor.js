@@ -472,7 +472,6 @@ TextPropertyEditor.prototype = {
           onCommit: this._onSwatchCommit,
           onRevert: this._onSwatchRevert,
         });
-        span.on("unit-change", this._onSwatchCommit);
         const title = l10n("rule.colorSwatch.tooltip");
         span.setAttribute("title", title);
         span.dataset.propertyName = this.nameSpan.textContent;
