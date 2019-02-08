@@ -2323,13 +2323,17 @@ var SessionStoreInternal = {
       return; // Not a document load.
     }
 
-    let browsingContext = aChannel.loadInfo.browsingContext;
-    if (!browsingContext) {
-      return; // Not loading in a browsing context.
+    let cpType = aChannel.loadInfo.externalContentPolicyType;
+    let toplevel = cpType == Ci.nsIContentPolicy.TYPE_DOCUMENT;
+    if (!toplevel) {
+      return; // Not loading a toplevel document.
     }
 
-    if (browsingContext.parent) {
-      return; // Not a toplevel load, can't flip procs.
+    let browsingContext = toplevel
+        ? aChannel.loadInfo.browsingContext
+        : aChannel.loadInfo.frameBrowsingContext;
+    if (!browsingContext) {
+      return; // Not loading in a browsing context.
     }
 
     // Get principal for a document already loaded in the BrowsingContext.
