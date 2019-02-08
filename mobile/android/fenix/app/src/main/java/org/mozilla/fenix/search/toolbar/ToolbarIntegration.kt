@@ -5,9 +5,6 @@
 package org.mozilla.fenix.search.toolbar
 
 import android.content.Context
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleObserver
-import androidx.lifecycle.OnLifecycleEvent
 import androidx.navigation.Navigation
 import mozilla.components.browser.domains.autocomplete.DomainAutocompleteProvider
 import mozilla.components.browser.session.SessionManager
@@ -17,6 +14,7 @@ import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.feature.toolbar.ToolbarAutocompleteFeature
 import mozilla.components.feature.toolbar.ToolbarFeature
 import org.mozilla.fenix.DefaultThemeManager
+import mozilla.components.support.base.feature.LifecycleAwareFeature
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.application
 import org.mozilla.fenix.ext.components
@@ -29,7 +27,7 @@ class ToolbarIntegration(
     historyStorage: HistoryStorage,
     sessionManager: SessionManager,
     sessionId: String? = null
-) : LifecycleObserver {
+) : LifecycleAwareFeature {
     init {
         toolbar.setMenuBuilder(toolbarMenu.menuBuilder)
 
@@ -59,18 +57,11 @@ class ToolbarIntegration(
         sessionId
     )
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_START)
-    fun start() {
+    override fun start() {
         toolbarFeature.start()
     }
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
-    fun stop() {
+    override fun stop() {
         toolbarFeature.stop()
-    }
-
-    companion object {
-        const val browserActionMarginDp = 8
-        const val urlBoxMargin = 8
     }
 }

@@ -28,9 +28,9 @@ import mozilla.components.feature.downloads.DownloadsFeature
 import mozilla.components.feature.prompts.PromptFeature
 import mozilla.components.feature.session.SessionFeature
 import mozilla.components.feature.session.SessionUseCases
-import mozilla.components.support.ktx.android.arch.lifecycle.addObservers
-import org.mozilla.fenix.BackHandler
 import org.mozilla.fenix.DefaultThemeManager
+import mozilla.components.support.base.feature.BackHandler
+import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FindInPageIntegration
 import org.mozilla.fenix.ext.requireComponents
@@ -38,20 +38,22 @@ import org.mozilla.fenix.ext.share
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getSafeManagedObservable
 import org.mozilla.fenix.search.toolbar.SearchAction
-import org.mozilla.fenix.search.toolbar.ToolbarComponent
 import org.mozilla.fenix.search.toolbar.SearchState
-import org.mozilla.fenix.search.toolbar.ToolbarUIView
+import org.mozilla.fenix.search.toolbar.ToolbarComponent
+import org.mozilla.fenix.search.toolbar.ToolbarIntegration
 import org.mozilla.fenix.search.toolbar.ToolbarMenu
+import org.mozilla.fenix.search.toolbar.ToolbarUIView
 
 class BrowserFragment : Fragment(), BackHandler {
-
-    private lateinit var contextMenuFeature: ContextMenuFeature
-    private lateinit var downloadsFeature: DownloadsFeature
-    private lateinit var findInPageIntegration: FindInPageIntegration
-    private lateinit var promptsFeature: PromptFeature
-    private lateinit var sessionFeature: SessionFeature
     private lateinit var toolbarComponent: ToolbarComponent
-    private lateinit var customTabsToolbarFeature: CustomTabsToolbarFeature
+
+    private val sessionFeature = ViewBoundFeatureWrapper<SessionFeature>()
+    private val contextMenuFeature = ViewBoundFeatureWrapper<ContextMenuFeature>()
+    private val downloadsFeature = ViewBoundFeatureWrapper<DownloadsFeature>()
+    private val promptsFeature = ViewBoundFeatureWrapper<PromptFeature>()
+    private val findInPageIntegration = ViewBoundFeatureWrapper<FindInPageIntegration>()
+    private val customTabsToolbarFeature = ViewBoundFeatureWrapper<CustomTabsToolbarFeature>()
+    private val toolbarIntegration = ViewBoundFeatureWrapper<ToolbarIntegration>()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -108,63 +110,67 @@ class BrowserFragment : Fragment(), BackHandler {
 
         val sessionManager = requireComponents.core.sessionManager
 
-        contextMenuFeature = ContextMenuFeature(
-            requireFragmentManager(),
-            sessionManager,
-            ContextMenuCandidate.defaultCandidates(
+        contextMenuFeature.set(
+            feature = ContextMenuFeature(
+                requireFragmentManager(),
+                sessionManager,
+                ContextMenuCandidate.defaultCandidates(
+                    requireContext(),
+                    requireComponents.useCases.tabsUseCases,
+                    view),
+                view.engineView),
+            owner = this,
+            view = view)
+
+        downloadsFeature.set(
+            feature = DownloadsFeature(
                 requireContext(),
-                requireComponents.useCases.tabsUseCases,
-                view),
-            view.engineView)
+                sessionManager = sessionManager,
+                fragmentManager = childFragmentManager,
+                onNeedToRequestPermissions = { permissions ->
+                    requestPermissions(permissions, REQUEST_CODE_DOWNLOAD_PERMISSIONS)
+                }),
+            owner = this,
+            view = view)
 
-        downloadsFeature = DownloadsFeature(
-            requireContext(),
-            sessionManager = sessionManager,
-            fragmentManager = childFragmentManager,
-            onNeedToRequestPermissions = { permissions ->
-                requestPermissions(permissions, REQUEST_CODE_DOWNLOAD_PERMISSIONS)
-            }
-        )
+        promptsFeature.set(
+            feature = PromptFeature(
+                fragment = this,
+                sessionManager = sessionManager,
+                fragmentManager = requireFragmentManager(),
+                onNeedToRequestPermissions = { permissions ->
+                    requestPermissions(permissions, REQUEST_CODE_PROMPT_PERMISSIONS)
+                }),
+            owner = this,
+            view = view)
 
-        promptsFeature = PromptFeature(
-            fragment = this,
-            sessionManager = sessionManager,
-            fragmentManager = requireFragmentManager(),
-            onNeedToRequestPermissions = { permissions ->
-                requestPermissions(permissions, REQUEST_CODE_PROMPT_PERMISSIONS)
-            }
-        )
+        sessionFeature.set(
+            feature = SessionFeature(
+                sessionManager,
+                SessionUseCases(sessionManager),
+                view.engineView,
+                sessionId),
+            owner = this,
+            view = view)
 
-        sessionFeature = SessionFeature(
-            sessionManager,
-            SessionUseCases(sessionManager),
-            view.engineView,
-            sessionId
-        )
+        findInPageIntegration.set(
+            feature = FindInPageIntegration(requireComponents.core.sessionManager, view.findInPageView),
+            owner = this,
+            view = view)
 
-        findInPageIntegration = FindInPageIntegration(requireComponents.core.sessionManager, view.findInPageView)
+        customTabsToolbarFeature.set(
+            feature = CustomTabsToolbarFeature(
+                sessionManager,
+                toolbar,
+                sessionId,
+                closeListener = { requireActivity().finish() }),
+            owner = this,
+            view = view)
 
-        customTabsToolbarFeature = CustomTabsToolbarFeature(
-            sessionManager,
-            toolbar,
-            sessionId
-        ) { requireActivity().finish() }
-
-        lifecycle.addObservers(
-            contextMenuFeature,
-            downloadsFeature,
-            findInPageIntegration,
-            promptsFeature,
-            sessionFeature,
-            (toolbarComponent.uiView as ToolbarUIView).toolbarIntegration,
-            customTabsToolbarFeature
-        )
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-
-        lifecycle.removeObserver(sessionFeature)
+        toolbarIntegration.set(
+            feature = (toolbarComponent.uiView as ToolbarUIView).toolbarIntegration,
+            owner = this,
+            view = view)
     }
 
     @SuppressWarnings("ReturnCount")
@@ -180,13 +186,17 @@ class BrowserFragment : Fragment(), BackHandler {
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         when (requestCode) {
-            REQUEST_CODE_DOWNLOAD_PERMISSIONS -> downloadsFeature.onPermissionsResult(permissions, grantResults)
-            REQUEST_CODE_PROMPT_PERMISSIONS -> promptsFeature.onPermissionsResult(permissions, grantResults)
+            REQUEST_CODE_DOWNLOAD_PERMISSIONS -> downloadsFeature.withFeature {
+                it.onPermissionsResult(permissions, grantResults)
+            }
+            REQUEST_CODE_PROMPT_PERMISSIONS -> promptsFeature.withFeature {
+                it.onPermissionsResult(permissions, grantResults)
+            }
         }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        promptsFeature.onActivityResult(requestCode, resultCode, data)
+        promptsFeature.withFeature { it.onActivityResult(requestCode, resultCode, data) }
     }
 
     // This method triggers the complexity warning. However it's actually not that hard to understand.

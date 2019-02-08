@@ -12,6 +12,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.fragment.NavHostFragment
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.feature.intent.IntentProcessor
+import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.utils.SafeIntent
 import org.mozilla.fenix.browser.BrowserFragment
 import org.mozilla.fenix.ext.components
