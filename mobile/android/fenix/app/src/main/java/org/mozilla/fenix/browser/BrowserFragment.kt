@@ -166,7 +166,7 @@ class BrowserFragment : Fragment(), BackHandler {
     @SuppressWarnings("ReturnCount")
     override fun onBackPressed(): Boolean {
         if (findInPageIntegration.onBackPressed()) return true
-        if (sessionFeature.handleBackPressed()) return true
+        if (sessionFeature.onBackPressed()) return true
         if (customTabsToolbarFeature.onBackPressed()) return true
 
         // We'll want to improve this when we add multitasking

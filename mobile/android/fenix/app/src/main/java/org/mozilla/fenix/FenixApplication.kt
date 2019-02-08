@@ -35,7 +35,7 @@ class FenixApplication : Application() {
 
     private fun setupGlean(context: Context) {
         Glean.initialize(context)
-        Glean.setMetricsEnabled(BuildConfig.TELEMETRY)
+        Glean.setUploadEnabled(BuildConfig.TELEMETRY)
     }
 
     private fun loadExperiments() {
