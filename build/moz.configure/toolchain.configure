@@ -1628,8 +1628,6 @@ def lto(value, pgo, c_compiler):
                 cflags.append("-flto")
             else:
                 cflags.append("-flto=thin")
-                # Workaround for https://bugs.llvm.org/show_bug.cgi?id=40414
-                cflags.append("-fsplit-lto-unit")
             # With clang-cl, -flto can only be used with -c or -fuse-ld=lld.
             # AC_TRY_LINKs during configure don't have -c, so pass -fuse-ld=lld.
             cflags.append("-fuse-ld=lld");
