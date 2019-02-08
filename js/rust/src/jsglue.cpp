@@ -38,7 +38,8 @@ struct ProxyTraps {
   bool (*delete_)(JSContext* cx, JS::HandleObject proxy, JS::HandleId id,
                   JS::ObjectOpResult& result);
 
-  JSObject* (*enumerate)(JSContext* cx, JS::HandleObject proxy);
+  bool (*enumerate)(JSContext* cx, JS::HandleObject proxy,
+                    JS::AutoIdVector& props);
 
   bool (*getPrototypeIfOrdinary)(JSContext* cx, JS::HandleObject proxy,
                                  bool* isOrdinary,
@@ -99,10 +100,10 @@ static int HandlerFamily;
 #define DEFER_TO_TRAP_OR_BASE_CLASS(_base)                                    \
                                                                               \
   /* Standard internal methods. */                                            \
-  virtual JSObject* enumerate(JSContext* cx, JS::HandleObject proxy)          \
-      const override {                                                        \
-    return mTraps.enumerate ? mTraps.enumerate(cx, proxy)                     \
-                            : _base::enumerate(cx, proxy);                    \
+  virtual bool enumerate(JSContext* cx, JS::HandleObject proxy,               \
+                         JS::AutoIdVector& props) const override {            \
+    return mTraps.enumerate ? mTraps.enumerate(cx, proxy, props)              \
+                            : _base::enumerate(cx, proxy, props);             \
   }                                                                           \
                                                                               \
   virtual bool has(JSContext* cx, JS::HandleObject proxy, JS::HandleId id,    \

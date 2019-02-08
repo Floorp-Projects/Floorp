@@ -447,12 +447,6 @@ class JSObject : public js::gc::Cell {
 
  public:
   /*
-   * Iterator-specific getters and setters.
-   */
-
-  static const uint32_t ITER_CLASS_NFIXED_SLOTS = 1;
-
-  /*
    * Back to generic stuff.
    */
   MOZ_ALWAYS_INLINE bool isCallable() const;

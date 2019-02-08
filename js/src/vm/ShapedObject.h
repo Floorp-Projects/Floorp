@@ -44,9 +44,16 @@ class ShapedObject : public JSObject {
   // some non-native objects. After creating an object, the objects for which
   // the shape pointer is invalid need to overwrite this pointer before a GC
   // can occur.
-  void initShape(Shape* shape) { shapeRef().init(shape); }
-
-  void setShape(Shape* shape) { shapeRef() = shape; }
+  void initShape(Shape* shape) {
+    // Note: JSObject::zone() uses the group and we require it to be
+    // initialized before the shape.
+    MOZ_ASSERT(zone() == shape->zone());
+    shapeRef().init(shape);
+  }
+  void setShape(Shape* shape) {
+    MOZ_ASSERT(zone() == shape->zone());
+    shapeRef() = shape;
+  }
   Shape* shape() const { return shapeRef(); }
 
   void traceShape(JSTracer* trc) { TraceEdge(trc, shapePtr(), "shape"); }
