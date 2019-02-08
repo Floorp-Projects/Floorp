@@ -669,6 +669,7 @@ var Policies = {
         if (!param.Default) {
           blockAboutPage(manager, "about:debugging");
           setAndLockPref("browser.newtabpage.activity-stream.asrouter.userprefs.cfr", false);
+          manager.disallowFeature("xpinstall");
         }
       }
     },
