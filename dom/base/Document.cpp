@@ -1248,6 +1248,7 @@ Document::Document(const char* aContentType)
       mDidDocumentOpen(false),
       mHasDisplayDocument(false),
       mFontFaceSetDirty(true),
+      mGetUserFontSetCalled(false),
       mDidFireDOMContentLoaded(true),
       mHasScrollLinkedEffect(false),
       mFrameRequestCallbacksScheduled(false),
@@ -11601,7 +11602,33 @@ nsAutoSyncOperation::~nsAutoSyncOperation() {
   }
 }
 
-gfxUserFontSet* Document::GetUserFontSet() {
+gfxUserFontSet* Document::GetUserFontSet(bool aFlushUserFontSet) {
+  // We want to initialize the user font set lazily the first time the
+  // user asks for it, rather than building it too early and forcing
+  // rule cascade creation.  Thus we try to enforce the invariant that
+  // we *never* build the user font set until the first call to
+  // GetUserFontSet.  However, once it's been requested, we can't wait
+  // for somebody to call GetUserFontSet in order to rebuild it (see
+  // comments below in MarkUserFontSetDirty for why).
+#ifdef DEBUG
+  bool userFontSetGottenBefore = mGetUserFontSetCalled;
+#endif
+  // Set mGetUserFontSetCalled up front, so that FlushUserFontSet will actually
+  // flush.
+  mGetUserFontSetCalled = true;
+  if (mFontFaceSetDirty && aFlushUserFontSet) {
+    // If this assertion fails, and there have actually been changes to
+    // @font-face rules, then we will call StyleChangeReflow in
+    // FlushUserFontSet.  If we're in the middle of reflow,
+    // that's a bad thing to do, and the caller was responsible for
+    // flushing first.  If we're not (e.g., in frame construction), it's
+    // ok.
+    NS_ASSERTION(!userFontSetGottenBefore || !GetShell() ||
+                     !GetShell()->IsReflowLocked(),
+                 "FlushUserFontSet should have been called first");
+    FlushUserFontSet();
+  }
+
   if (!mFontFaceSet) {
     return nullptr;
   }
@@ -11610,6 +11637,12 @@ gfxUserFontSet* Document::GetUserFontSet() {
 }
 
 void Document::FlushUserFontSet() {
+  if (!mGetUserFontSetCalled) {
+    return;  // No one cares about this font set yet, but we want to be careful
+             // to not unset our mFontFaceSetDirty bit, so when someone really
+             // does we'll create it.
+  }
+
   if (!mFontFaceSetDirty) {
     return;
   }
@@ -11646,20 +11679,22 @@ void Document::FlushUserFontSet() {
 }
 
 void Document::MarkUserFontSetDirty() {
-  if (mFontFaceSetDirty) {
+  if (!mGetUserFontSetCalled) {
+    // We want to lazily build the user font set the first time it's
+    // requested (so we don't force creation of rule cascades too
+    // early), so don't do anything now.
     return;
   }
+
   mFontFaceSetDirty = true;
-  if (nsIPresShell* shell = GetShell()) {
-    shell->EnsureStyleFlush();
-  }
 }
 
 FontFaceSet* Document::Fonts() {
   if (!mFontFaceSet) {
     nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(GetScopeObject());
     mFontFaceSet = new FontFaceSet(window, this);
-    FlushUserFontSet();
+    GetUserFontSet();  // this will cause the user font set to be
+                       // created/updated
   }
   return mFontFaceSet;
 }

@@ -3486,8 +3486,6 @@ bool CanvasRenderingContext2D::SetFontInternal(const nsAString& aFont,
   resizedFont.size =
       (fontStyle->mSize * c->AppUnitsPerDevPixel()) / AppUnitsPerCSSPixel();
 
-  c->Document()->FlushUserFontSet();
-
   nsFontMetrics::Params params;
   params.language = fontStyle->mLanguage;
   params.explicitLanguage = fontStyle->mExplicitLanguage;
@@ -4028,7 +4026,6 @@ nsresult CanvasRenderingContext2D::DrawOrMeasureText(
   nsPresContext* presContext = presShell->GetPresContext();
 
   // ensure user font set is up to date
-  presContext->Document()->FlushUserFontSet();
   currentFontStyle->SetUserFontSet(presContext->GetUserFontSet());
 
   if (currentFontStyle->GetStyle()->size == 0.0F) {
