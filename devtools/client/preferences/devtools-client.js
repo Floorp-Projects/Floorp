@@ -66,9 +66,7 @@ pref("devtools.inspector.scrollable-badges.enabled", false);
 #endif
 
 // Flexbox preferences
-pref("devtools.inspector.flexboxHighlighter.enabled", true);
-pref("devtools.flexboxinspector.enabled", true);
-
+// Whether or not to show the combined flexbox and box model highlighter.
 #if defined(NIGHTLY_BUILD) || defined(MOZ_DEV_EDITION)
 pref("devtools.inspector.flexboxHighlighter.combine", true);
 #else

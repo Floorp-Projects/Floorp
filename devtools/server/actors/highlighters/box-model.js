@@ -34,7 +34,6 @@ const GUIDE_STROKE_WIDTH = 1;
 // FIXME: add ":visited" and ":link" after bug 713106 is fixed
 const PSEUDO_CLASSES = [":hover", ":active", ":focus", ":focus-within"];
 
-const FLEXBOX_HIGHLIGHTER_ENABLED_PREF = "devtools.inspector.flexboxHighlighter.enabled";
 const FLEXBOX_HIGHLIGHTER_COMBINE_PREF = "devtools.inspector.flexboxHighlighter.combine";
 
 /**
@@ -129,7 +128,6 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
   get showCombinedFlexboxHighlighter() {
     if (typeof this._showCombinedFlexboxHighlighter === "undefined") {
       this._showCombinedFlexboxHighlighter =
-        Services.prefs.getBoolPref(FLEXBOX_HIGHLIGHTER_ENABLED_PREF) &&
         Services.prefs.getBoolPref(FLEXBOX_HIGHLIGHTER_COMBINE_PREF);
     }
 
