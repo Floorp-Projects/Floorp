@@ -5458,6 +5458,46 @@ bool QuotaManager::IsPrincipalInfoValid(const PrincipalInfo& aPrincipalInfo) {
 }
 
 // static
+void QuotaManager::GetInfoFromValidatedPrincipalInfo(
+    const PrincipalInfo& aPrincipalInfo, nsACString* aSuffix,
+    nsACString* aGroup, nsACString* aOrigin) {
+  MOZ_ASSERT(IsPrincipalInfoValid(aPrincipalInfo));
+
+  switch (aPrincipalInfo.type()) {
+    case PrincipalInfo::TSystemPrincipalInfo: {
+      GetInfoForChrome(aSuffix, aGroup, aOrigin);
+      return;
+    }
+
+    case PrincipalInfo::TContentPrincipalInfo: {
+      const ContentPrincipalInfo& info =
+          aPrincipalInfo.get_ContentPrincipalInfo();
+
+      nsCString suffix;
+      info.attrs().CreateSuffix(suffix);
+
+      if (aSuffix) {
+        aSuffix->Assign(suffix);
+      }
+
+      if (aGroup) {
+        aGroup->Assign(info.baseDomain() + suffix);
+      }
+
+      if (aOrigin) {
+        aOrigin->Assign(info.originNoSuffix() + suffix);
+      }
+
+      return;
+    }
+
+    default: { break; }
+  }
+
+  MOZ_CRASH("Should never get here!");
+}
+
+// static
 nsresult QuotaManager::GetInfoFromPrincipal(nsIPrincipal* aPrincipal,
                                             nsACString* aSuffix,
                                             nsACString* aGroup,
@@ -5531,9 +5571,6 @@ nsresult QuotaManager::GetInfoFromWindow(nsPIDOMWindowOuter* aWindow,
 // static
 void QuotaManager::GetInfoForChrome(nsACString* aSuffix, nsACString* aGroup,
                                     nsACString* aOrigin) {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(nsContentUtils::LegacyIsCallerChromeOrNativeCode());
-
   if (aSuffix) {
     aSuffix->Assign(EmptyCString());
   }
