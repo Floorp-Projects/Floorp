@@ -58,12 +58,14 @@ static SECStatus
 serial_read_mp_int(msgpack_unpacker* upk, mp_int* n, const mp_int* max)
 {
   SECStatus rv = SECSuccess;
+
+  msgpack_unpacked res;
+  msgpack_unpacked_init(&res);
+
   P_CHECKCB(upk != NULL);
   P_CHECKCB(n != NULL);
   P_CHECKCB(max != NULL);
 
-  msgpack_unpacked res;
-  msgpack_unpacked_init(&res);
   UP_CHECK(msgpack_unpacker_next(upk, &res))
 
   msgpack_object obj = res.data;
@@ -79,11 +81,13 @@ static SECStatus
 serial_read_int(msgpack_unpacker* upk, int* n)
 {
   SECStatus rv = SECSuccess;
-  P_CHECKCB(upk != NULL);
-  P_CHECKCB(n != NULL);
 
   msgpack_unpacked res;
   msgpack_unpacked_init(&res);
+
+  P_CHECKCB(upk != NULL);
+  P_CHECKCB(n != NULL);
+
   UP_CHECK(msgpack_unpacker_next(upk, &res))
 
   msgpack_object obj = res.data;
@@ -118,12 +122,14 @@ serial_read_mp_array(msgpack_unpacker* upk, MPArray arr, size_t len,
                      const mp_int* max)
 {
   SECStatus rv = SECSuccess;
+
+  msgpack_unpacked res;
+  msgpack_unpacked_init(&res);
+
   P_CHECKCB(upk != NULL);
   P_CHECKCB(arr != NULL);
   P_CHECKCB(max != NULL);
 
-  msgpack_unpacked res;
-  msgpack_unpacked_init(&res);
   UP_CHECK(msgpack_unpacker_next(upk, &res))
 
   msgpack_object obj = res.data;
@@ -223,11 +229,13 @@ static SECStatus
 serial_read_prg_seed(msgpack_unpacker* upk, PrioPRGSeed* seed)
 {
   SECStatus rv = SECSuccess;
-  P_CHECKCB(upk != NULL);
-  P_CHECKCB(seed != NULL);
 
   msgpack_unpacked res;
   msgpack_unpacked_init(&res);
+
+  P_CHECKCB(upk != NULL);
+  P_CHECKCB(seed != NULL);
+
   UP_CHECK(msgpack_unpacker_next(upk, &res))
 
   msgpack_object obj = res.data;
@@ -322,10 +330,13 @@ serial_read_packet_client(msgpack_unpacker* upk, PrioPacketClient p,
                           const_PrioConfig cfg)
 {
   SECStatus rv = SECSuccess;
-  P_CHECKCB(upk != NULL);
-  P_CHECKCB(p != NULL);
+
   msgpack_unpacked res;
   msgpack_unpacked_init(&res);
+
+  P_CHECKCB(upk != NULL);
+  P_CHECKCB(p != NULL);
+
   UP_CHECK(msgpack_unpacker_next(upk, &res))
 
   msgpack_object obj = res.data;
