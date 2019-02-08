@@ -1499,15 +1499,6 @@ bool js::SuppressDeletedElement(JSContext* cx, HandleObject obj,
   return SuppressDeletedPropertyHelper(cx, obj, str);
 }
 
-bool js::IteratorMore(JSContext* cx, HandleObject iterobj,
-                      MutableHandleValue rval) {
-  NativeIterator* ni =
-      iterobj->as<PropertyIteratorObject>().getNativeIterator();
-
-  rval.set(ni->nextIteratedValueAndAdvance());
-  return true;
-}
-
 static const JSFunctionSpec iterator_proto_methods[] = {
     JS_SELF_HOSTED_SYM_FN(iterator, "IteratorIdentity", 0, 0), JS_FS_END};
 

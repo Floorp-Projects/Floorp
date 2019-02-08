@@ -5458,16 +5458,11 @@ static bool DoIteratorMoreFallback(JSContext* cx, BaselineFrame* frame,
 
   FallbackICSpew(cx, stub, "IteratorMore");
 
-  if (!IteratorMore(cx, iterObj, res)) {
-    return false;
-  }
+  res.set(IteratorMore(iterObj));
 
-  if (!res.isMagic(JS_NO_ITER_VALUE) && !res.isString()) {
-    stub->setHasNonStringResult();
-  }
+  MOZ_ASSERT(iterObj->is<PropertyIteratorObject>());
 
-  if (iterObj->is<PropertyIteratorObject>() &&
-      !stub->hasStub(ICStub::IteratorMore_Native)) {
+  if (!stub->hasStub(ICStub::IteratorMore_Native)) {
     ICIteratorMore_Native::Compiler compiler(cx);
     ICStub* newStub = compiler.getStub(compiler.getStubSpace(frame->script()));
     if (!newStub) {
