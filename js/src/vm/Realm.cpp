@@ -885,8 +885,11 @@ void Realm::clearScriptNames() { scriptNameMap.reset(); }
 
 void Realm::clearBreakpointsIn(FreeOp* fop, js::Debugger* dbg,
                                HandleObject handler) {
-  for (auto script = zone()->cellIter<JSScript>(); !script.done();
-       script.next()) {
+  for (auto iter = zone()->cellIter<JSScript>(); !iter.done(); iter.next()) {
+    JSScript* script = iter;
+    if (gc::IsAboutToBeFinalizedUnbarriered(&script)) {
+      continue;
+    }
     if (script->realm() == this && script->hasAnyBreakpointsOrStepMode()) {
       script->clearBreakpointsIn(fop, dbg, handler);
     }

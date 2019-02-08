@@ -2748,8 +2748,10 @@ static bool UpdateExecutionObservabilityOfScriptsInZone(
     } else {
       for (auto iter = zone->cellIter<JSScript>(); !iter.done(); iter.next()) {
         JSScript* script = iter;
-        if (obs.shouldRecompileOrInvalidate(script) &&
-            !gc::IsAboutToBeFinalizedUnbarriered(&script)) {
+        if (gc::IsAboutToBeFinalizedUnbarriered(&script)) {
+          continue;
+        }
+        if (obs.shouldRecompileOrInvalidate(script)) {
           if (!AppendAndInvalidateScript(cx, zone, script, scripts)) {
             return false;
           }
