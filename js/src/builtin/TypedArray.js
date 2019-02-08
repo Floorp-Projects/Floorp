@@ -1373,7 +1373,10 @@ function TypedArraySubarray(begin, end) {
     }
 
     // Steps 4-6.
-    var buffer = TypedArrayBuffer(obj);
+    var buffer = ViewedArrayBufferIfReified(obj);
+    if (buffer === null) {
+        buffer = TypedArrayBuffer(obj);
+    }
     var srcLength = TypedArrayLength(obj);
 
     // Step 14 (Reordered because otherwise it'd be observable that we reset
