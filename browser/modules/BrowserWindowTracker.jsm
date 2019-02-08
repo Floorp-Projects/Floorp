@@ -19,7 +19,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 // Constants
 const TAB_EVENTS = ["TabBrowserInserted", "TabSelect"];
-const WINDOW_EVENTS = ["activate", "sizemodechange", "unload"];
+const WINDOW_EVENTS = ["activate", "unload"];
 const DEBUG = false;
 
 // Variables
@@ -63,9 +63,6 @@ function _handleEvent(event) {
       break;
     case "activate":
       WindowHelper.onActivate(event.target);
-      break;
-    case "sizemodechange":
-      WindowHelper.onSizemodeChange(event.target);
       break;
     case "unload":
       WindowHelper.removeWindow(event.currentTarget);
@@ -143,14 +140,6 @@ var WindowHelper = {
     _trackWindowOrder(window);
 
     _updateCurrentContentOuterWindowID(window.gBrowser.selectedBrowser);
-  },
-
-  onSizemodeChange(window) {
-    if (window.windowState == window.STATE_MINIMIZED) {
-      // Make sure to have the minimized window behind unminimized windows.
-      _untrackWindowOrder(window);
-      _trackWindowOrder(window);
-    }
   },
 };
 
