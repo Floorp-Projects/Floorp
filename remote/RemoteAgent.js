@@ -73,8 +73,6 @@ class ParentRemoteAgent {
     this.tabs = new TabObserver({registerExisting: true});
     this.tabs.on("open", tab => this.targets.connect(tab.linkedBrowser));
     this.tabs.on("close", tab => this.targets.disconnect(tab.linkedBrowser));
-
-    Services.ppmm.addMessageListener("RemoteAgent:IsRunning", this);
   }
 
   // nsIRemoteAgent
@@ -209,19 +207,6 @@ class ParentRemoteAgent {
            "                     listen on port 9222.\n";
   }
 
-  // nsIMessageListener
-
-  receiveMessage({name}) {
-    switch (name) {
-      case "RemoteAgent:IsRunning":
-        return this.listening;
-
-      default:
-        log.warn(`Unknown IPC message to parent process: ${name}`);
-        return null;
-    }
-  }
-
   // XPCOM
 
   get QueryInterface() {
@@ -287,41 +272,6 @@ class Targets {
   }
 }
 
-class ChildRemoteAgent {
-  get listening() {
-    const reply = Services.cpmm.sendSyncMessage("RemoteAgent:IsListening");
-    if (reply.length == 0) {
-      log.error("No reply from parent process");
-      throw Cr.NS_ERROR_ABORT;
-    }
-    return reply[0];
-  }
-
-  listen() {
-    throw Cr.NS_ERROR_NOT_AVAILABLE;
-  }
-
-  close() {
-    throw Cr.NS_ERROR_NOT_AVAILABLE;
-  }
-
-  get scheme() {
-    Preferences.get(SCHEME, null);
-  }
-  get host() {
-    Preferences.get(HOST, null);
-  }
-  get port() {
-    Preferences.get(PORT, null);
-  }
-
-  // XPCOM
-
-  get QueryInterface() {
-    return ChromeUtils.generateQI([Ci.nsIRemoteAgent]);
-  }
-}
-
 const RemoteAgentFactory = {
   instance_: null,
 
@@ -333,14 +283,13 @@ const RemoteAgentFactory = {
       return null;
     }
 
-    if (!this.instance_) {
-      if (Services.appinfo.processType == Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT) {
-        this.instance_ = new ChildRemoteAgent();
-      } else {
-        this.instance_ = new ParentRemoteAgent();
-      }
+    if (Services.appinfo.processType == Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT) {
+      throw Cr.NS_ERROR_NOT_IMPLEMENTED;
     }
 
+    if (!this.instance_) {
+      this.instance_ = new ParentRemoteAgent();
+    }
     return this.instance_.QueryInterface(iid);
   },
 };
