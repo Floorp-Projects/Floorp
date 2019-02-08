@@ -2,8 +2,13 @@
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
 
 <window title="Test that the picker works correctly with XBL anonymous nodes"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<tree id="tree" style="background:red"/>
+<xbl:bindings xmlns:xbl="http://www.mozilla.org/xbl">
+<xbl:binding id="foo"><xbl:content><xul:box class="xbl-anon">Anonymous</xul:box></xbl:content></xbl:binding>
+</xbl:bindings>
+
+<box id="xbl-host" style="background:red; -moz-binding: url(#foo)"/>
 
 </window>
