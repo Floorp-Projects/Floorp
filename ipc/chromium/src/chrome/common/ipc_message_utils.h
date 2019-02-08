@@ -311,27 +311,10 @@ struct ParamTraitsFixed<uint64_t> {
   }
 };
 
-// Other standard C types.
-
-template <class P>
-struct ParamTraitsLibC : ParamTraitsFixed<P> {};
-
-template <>
-struct ParamTraitsLibC<size_t> {
-  typedef size_t param_type;
-  static void Write(Message* m, const param_type& p) { m->WriteSize(p); }
-  static bool Read(const Message* m, PickleIterator* iter, param_type* r) {
-    return m->ReadSize(iter, r);
-  }
-  static void Log(const param_type& p, std::wstring* l) {
-    l->append(StringPrintf(L"%u", p));
-  }
-};
-
 // std::* types.
 
 template <class P>
-struct ParamTraitsStd : ParamTraitsLibC<P> {};
+struct ParamTraitsStd : ParamTraitsFixed<P> {};
 
 template <>
 struct ParamTraitsStd<std::string> {
