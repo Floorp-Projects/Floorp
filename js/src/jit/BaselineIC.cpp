@@ -3398,12 +3398,8 @@ static bool GetTemplateObjectForNative(JSContext* cx, HandleFunction target,
     }
 
     case InlinableNative::TypedArrayConstructor: {
-      if (args.length() != 1) {
-        return true;
-      }
-
       return TypedArrayObject::GetTemplateObjectForNative(cx, target->native(),
-                                                          args[0], res);
+                                                          args, res);
     }
 
     default:
