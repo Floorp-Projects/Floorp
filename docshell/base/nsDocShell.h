@@ -523,21 +523,20 @@ class nsDocShell final : public nsDocLoader,
   //
 
   // Actually open a channel and perform a URI load. Callers need to pass a
-  // non-null aTriggeringPrincipal which initiated the URI load. Please note
-  // that aTriggeringPrincipal will be used for performing security checks.
-  // If the argument aURI is provided by the web, then please do not pass a
-  // SystemPrincipal as the triggeringPrincipal. If principalToInherit is
-  // null, then no inheritance of any sort will happen and the load will
-  // get a principal based on the URI being loaded.
-  // If aSrcdoc is not void, the load will be considered as a srcdoc load,
-  // and the contents of aSrcdoc will be loaded instead of aURI.
-  // aOriginalURI will be set as the originalURI on the channel that does the
-  // load. If aOriginalURI is null, aURI will be set as the originalURI.
-  // If aLoadReplace is true, LOAD_REPLACE flag will be set to the nsIChannel.
+  // non-null aLoadState->TriggeringPrincipal() which initiated the URI load.
+  // Please note that the TriggeringPrincipal will be used for performing
+  // security checks. If aLoadState->URI() is provided by the web, then please
+  // do not pass a SystemPrincipal as the triggeringPrincipal. If
+  // aLoadState()->PrincipalToInherit is null, then no inheritance of any sort
+  // will happen and the load will get a principal based on the URI being
+  // loaded. If the Srcdoc flag is set (INTERNAL_LOAD_FLAGS_IS_SRCDOC), the load
+  // will be considered as a srcdoc load, and the contents of Srcdoc will be
+  // loaded instead of the URI. aLoadState->OriginalURI() will be set as the
+  // originalURI on the channel that does the load. If OriginalURI is null, URI
+  // will be set as the originalURI. If LoadReplace is true, LOAD_REPLACE flag
+  // will be set on the nsIChannel.
   nsresult DoURILoad(nsDocShellLoadState* aLoadState, bool aLoadFromExternal,
-                     nsIDocShell** aDocShell, nsIRequest** aRequest,
-                     const nsAString& aSrcdoc,
-                     nsContentPolicyType aContentPolicyType);
+                     nsIDocShell** aDocShell, nsIRequest** aRequest);
 
   nsresult AddHeadersToChannel(nsIInputStream* aHeadersData,
                                nsIChannel* aChannel);
