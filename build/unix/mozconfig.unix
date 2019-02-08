@@ -13,8 +13,15 @@ else
     CC="$TOOLTOOL_DIR/clang/bin/clang"
     CXX="$TOOLTOOL_DIR/clang/bin/clang++"
     export ENABLE_CLANG_PLUGIN=1
-    export CFLAGS="$CFLAGS -fcrash-diagnostics-dir=${UPLOAD_PATH}"
-    export CXXFLAGS="$CXXFLAGS -fcrash-diagnostics-dir=${UPLOAD_PATH}"
+    case "$PERFHERDER_EXTRA_OPTIONS" in
+    base-toolchains*)
+      # Clang versions < 7.0 don't support the -fcrash-diagnostics-dir flag.
+      ;;
+    *)
+      export CFLAGS="$CFLAGS -fcrash-diagnostics-dir=${UPLOAD_PATH}"
+      export CXXFLAGS="$CXXFLAGS -fcrash-diagnostics-dir=${UPLOAD_PATH}"
+      ;;
+    esac
 
     if [ -n "$MOZ_PGO" ]; then
         if [ -z "$USE_ARTIFACT" ]; then
