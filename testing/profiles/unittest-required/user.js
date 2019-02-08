@@ -153,9 +153,6 @@ user_pref("gfx.logging.level", 1);
 user_pref("identity.fxaccounts.auth.uri", "https://{server}/fxa-dummy/");
 // Ditto for all the FxA content root URI.
 user_pref("identity.fxaccounts.remote.root", "https://{server}/");
-// Avoid idle-daily notifications, to avoid expensive operations that may
-// cause unexpected test timeouts.
-user_pref("idle.lastDailyNotification", -1);
 user_pref("javascript.options.showInConsole", true);
 user_pref("layout.accessiblecaret.enabled_on_touch", false);
 // Make sure CSS error reporting is enabled for tests

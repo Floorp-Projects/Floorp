@@ -142,6 +142,11 @@ def set_webserver(config):
 
 @validator
 def update_prefs(config):
+    config.setdefault('preferences', {}).update({
+        # Bug 1383896 - reduces noise in tests
+        'idle.lastDailyNotification': int(time.time()),
+    })
+
     # update prefs from command line
     prefs = config.pop('extraPrefs')
     if prefs:
