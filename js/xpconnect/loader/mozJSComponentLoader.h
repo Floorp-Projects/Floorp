@@ -14,6 +14,7 @@
 #include "mozilla/StaticPtr.h"
 #include "nsAutoPtr.h"
 #include "nsISupports.h"
+#include "nsIObserver.h"
 #include "nsIURI.h"
 #include "nsClassHashtable.h"
 #include "nsDataHashtable.h"
@@ -33,9 +34,12 @@ class ScriptPreloader;
 #  define STARTUP_RECORDER_ENABLED
 #endif
 
-class mozJSComponentLoader final {
+class mozJSComponentLoader final : public nsIObserver {
  public:
-  NS_INLINE_DECL_REFCOUNTING(mozJSComponentLoader);
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+
+  mozJSComponentLoader();
 
   void GetLoadedModules(nsTArray<nsCString>& aLoadedModules);
   void GetLoadedComponents(nsTArray<nsCString>& aLoadedComponents);
@@ -49,7 +53,6 @@ class mozJSComponentLoader final {
   void FindTargetObject(JSContext* aCx, JS::MutableHandleObject aTargetObject);
 
   static void InitStatics();
-  static void Unload();
   static void Shutdown();
 
   static mozJSComponentLoader* Get() {
@@ -81,8 +84,7 @@ class mozJSComponentLoader final {
   nsresult AnnotateCrashReport();
 
  protected:
-  mozJSComponentLoader();
-  ~mozJSComponentLoader();
+  virtual ~mozJSComponentLoader();
 
   friend class XPCJSRuntime;
 
