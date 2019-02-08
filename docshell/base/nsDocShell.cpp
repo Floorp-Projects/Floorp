@@ -9465,13 +9465,6 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
     }
   }
 
-  nsAutoString srcdoc;
-  if (aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_IS_SRCDOC)) {
-    srcdoc = aLoadState->SrcdocData();
-  } else {
-    srcdoc = VoidString();
-  }
-
   bool isTopLevelDoc =
       mItemType == typeContent && (!IsFrame() || GetIsMozBrowser());
 
@@ -9483,12 +9476,8 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
   PredictorPredict(aLoadState->URI(), nullptr,
                    nsINetworkPredictor::PREDICT_LOAD, attrs, nullptr);
 
-  Maybe<nsCOMPtr<nsIURI>> resultPrincipalURI;
-  aLoadState->GetMaybeResultPrincipalURI(resultPrincipalURI);
-
   nsCOMPtr<nsIRequest> req;
-  rv = DoURILoad(aLoadState, loadFromExternal, aDocShell, getter_AddRefs(req),
-                 srcdoc, contentType);
+  rv = DoURILoad(aLoadState, loadFromExternal, aDocShell, getter_AddRefs(req));
   if (req && aRequest) {
     NS_ADDREF(*aRequest = req);
   }
@@ -9613,8 +9602,7 @@ static bool IsConsideredSameOriginForUIR(nsIPrincipal* aTriggeringPrincipal,
 
 nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
                                bool aLoadFromExternal, nsIDocShell** aDocShell,
-                               nsIRequest** aRequest, const nsAString& aSrcdoc,
-                               nsContentPolicyType aContentPolicyType) {
+                               nsIRequest** aRequest) {
   // Double-check that we're still around to load this URI.
   if (mIsBeingDestroyed) {
     // Return NS_OK despite not doing anything to avoid throwing exceptions
@@ -9629,9 +9617,11 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
   }
 
   nsresult rv;
+  uint32_t contentPolicyType = DetermineContentType();
+
   if (IsFrame()) {
-    MOZ_ASSERT(aContentPolicyType == nsIContentPolicy::TYPE_INTERNAL_IFRAME ||
-                   aContentPolicyType == nsIContentPolicy::TYPE_INTERNAL_FRAME,
+    MOZ_ASSERT(contentPolicyType == nsIContentPolicy::TYPE_INTERNAL_IFRAME ||
+                   contentPolicyType == nsIContentPolicy::TYPE_INTERNAL_FRAME,
                "DoURILoad thinks this is a frame and InternalLoad does not");
 
     if (StaticPrefs::dom_block_external_protocol_in_iframes()) {
@@ -9684,14 +9674,20 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
       nestedURI = do_QueryInterface(tempURI);
     }
   } else {
-    MOZ_ASSERT(aContentPolicyType == nsIContentPolicy::TYPE_DOCUMENT,
+    MOZ_ASSERT(contentPolicyType == nsIContentPolicy::TYPE_DOCUMENT,
                "DoURILoad thinks this is a document and InternalLoad does not");
   }
 
   // open a channel for the url
   nsCOMPtr<nsIChannel> channel;
 
-  bool isSrcdoc = !aSrcdoc.IsVoid();
+  nsAutoString srcdoc;
+  bool isSrcdoc = aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_IS_SRCDOC);
+  if (isSrcdoc) {
+    srcdoc = aLoadState->SrcdocData();
+  } else {
+    srcdoc = VoidString();
+  }
 
   // If we have a pending channel, use the channel we've already created here.
   // We don't need to set up load flags for our channel, as it has already been
@@ -9733,7 +9729,7 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
   nsCOMPtr<nsIPrincipal> loadingPrincipal;
   nsCOMPtr<nsISupports> topLevelLoadingContext;
 
-  if (aContentPolicyType == nsIContentPolicy::TYPE_DOCUMENT) {
+  if (contentPolicyType == nsIContentPolicy::TYPE_DOCUMENT) {
     loadingNode = nullptr;
     loadingPrincipal = nullptr;
     loadingWindow = mScriptGlobal->AsOuter();
@@ -9827,11 +9823,11 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
   }
 
   RefPtr<LoadInfo> loadInfo =
-      (aContentPolicyType == nsIContentPolicy::TYPE_DOCUMENT)
+      (contentPolicyType == nsIContentPolicy::TYPE_DOCUMENT)
           ? new LoadInfo(loadingWindow, aLoadState->TriggeringPrincipal(),
                          topLevelLoadingContext, securityFlags)
           : new LoadInfo(loadingPrincipal, aLoadState->TriggeringPrincipal(),
-                         loadingNode, securityFlags, aContentPolicyType);
+                         loadingNode, securityFlags, contentPolicyType);
 
   if (aLoadState->PrincipalToInherit()) {
     loadInfo->SetPrincipalToInherit(aLoadState->PrincipalToInherit());
@@ -9846,7 +9842,7 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
   // OriginAttributes of the parent document. Or in case there isn't a
   // parent document.
   bool isTopLevelDoc = mItemType == typeContent &&
-                       (aContentPolicyType == nsIContentPolicy::TYPE_DOCUMENT ||
+                       (contentPolicyType == nsIContentPolicy::TYPE_DOCUMENT ||
                         GetIsMozBrowser());
 
   OriginAttributes attrs;
@@ -9916,11 +9912,11 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
     nsViewSourceHandler* vsh = nsViewSourceHandler::GetInstance();
     NS_ENSURE_TRUE(vsh, NS_ERROR_FAILURE);
 
-    rv = vsh->NewSrcdocChannel(aLoadState->URI(), baseURI, aSrcdoc, loadInfo,
+    rv = vsh->NewSrcdocChannel(aLoadState->URI(), baseURI, srcdoc, loadInfo,
                                getter_AddRefs(channel));
   } else {
     rv = NS_NewInputStreamChannelInternal(
-        getter_AddRefs(channel), aLoadState->URI(), aSrcdoc,
+        getter_AddRefs(channel), aLoadState->URI(), srcdoc,
         NS_LITERAL_CSTRING("text/html"), loadInfo, true);
     NS_ENSURE_SUCCESS(rv, rv);
     nsCOMPtr<nsIInputStreamChannel> isc = do_QueryInterface(channel);
