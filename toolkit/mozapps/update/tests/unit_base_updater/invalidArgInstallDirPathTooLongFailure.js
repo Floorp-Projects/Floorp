@@ -28,7 +28,7 @@ function run_test() {
  */
 function setupUpdaterTestFinished() {
   let path = "123456789";
-  if (IS_WIN) {
+  if (AppConstants.platform == "win") {
     path = "\\" + path;
     path = path.repeat(30); // 300 characters
     path = "C:" + path;
