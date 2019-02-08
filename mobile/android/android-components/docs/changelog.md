@@ -28,6 +28,7 @@ permalink: /changelog/
 
 * **feature-customtabs**
   * Fixed an issue causing the `closeListener` to be invoked even when the current session isn't a Custom Tab.
+  * Fixed an issue with the image resources in the toolbar were not tinted when an app provided a light colour for the background.
 
 * **support-base**
   * Added `ViewBoundFeatureWrapper` for wrapping `LifecycleAwareFeature` references that will automatically be cleared if the provided `View` gets detached. This is helpful for fragments that want to keep a reference to a `LifecycleAwareFeature` (e.g. to be able call `onBackPressed()`) that itself has strong references to `View` objects. In cases where the fragment gets detached (e.g. to be added to the backstack) and the `View` gets detached (and destroyed) the wrapper will automatically stop the `LifecycleAwareFeature`  and clear all references..
