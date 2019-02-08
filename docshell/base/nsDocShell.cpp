@@ -8903,36 +8903,11 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
     return NS_OK;
   }
 
-
-  // If we are loading a URI that should inherit a security context (basically
-  // javascript: at this point), and the caller has said that principal
-  // inheritance is allowed, there are a few possible cases:
-  //
-  // 1) We are provided with the principal to inherit. In that case, we just use
-  //    it.
-  //
-  // 2) The load is coming from some other application. In this case we don't
-  //    want to inherit from whatever document we have loaded now, since the
-  //    load is unrelated to it.
-  //
-  // 3) It's a load from our application, but does not provide an explicit
-  //    principal to inherit. In that case, we want to inherit the principal of
-  //    our current document, or of our parent document (if any) if we don't
-  //    have a current document.
-  {
-    bool inherits;
-
-    if (aLoadState->LoadType() != LOAD_NORMAL_EXTERNAL &&
-        !aLoadState->PrincipalToInherit() &&
-        (aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_INHERIT_PRINCIPAL)) &&
-        NS_SUCCEEDED(nsContentUtils::URIInheritsSecurityContext(
-            aLoadState->URI(), &inherits)) &&
-        inherits) {
-      aLoadState->SetPrincipalToInherit(GetInheritedPrincipal(true));
-    }
-    // If principalToInherit is still null (e.g. if some of the conditions of
-    // were not satisfied), then no inheritance of any sort will happen: the
-    // load will just get a principal based on the URI being loaded.
+  // If a source docshell has been passed, check to see if we are sandboxed
+  // from it as the result of an iframe or CSP sandbox.
+  if (aLoadState->SourceDocShell() &&
+      aLoadState->SourceDocShell()->IsSandboxedFrom(this)) {
+    return NS_ERROR_DOM_INVALID_ACCESS_ERR;
   }
 
   //
@@ -8972,11 +8947,35 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
     return NS_OK;
   }
 
-  // If a source docshell has been passed, check to see if we are sandboxed
-  // from it as the result of an iframe or CSP sandbox.
-  if (aLoadState->SourceDocShell() &&
-      aLoadState->SourceDocShell()->IsSandboxedFrom(this)) {
-    return NS_ERROR_DOM_INVALID_ACCESS_ERR;
+  // If we are loading a URI that should inherit a security context (basically
+  // javascript: at this point), and the caller has said that principal
+  // inheritance is allowed, there are a few possible cases:
+  //
+  // 1) We are provided with the principal to inherit. In that case, we just use
+  //    it.
+  //
+  // 2) The load is coming from some other application. In this case we don't
+  //    want to inherit from whatever document we have loaded now, since the
+  //    load is unrelated to it.
+  //
+  // 3) It's a load from our application, but does not provide an explicit
+  //    principal to inherit. In that case, we want to inherit the principal of
+  //    our current document, or of our parent document (if any) if we don't
+  //    have a current document.
+  {
+    bool inherits;
+
+    if (aLoadState->LoadType() != LOAD_NORMAL_EXTERNAL &&
+        !aLoadState->PrincipalToInherit() &&
+        (aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_INHERIT_PRINCIPAL)) &&
+        NS_SUCCEEDED(nsContentUtils::URIInheritsSecurityContext(
+            aLoadState->URI(), &inherits)) &&
+        inherits) {
+      aLoadState->SetPrincipalToInherit(GetInheritedPrincipal(true));
+    }
+    // If principalToInherit is still null (e.g. if some of the conditions of
+    // were not satisfied), then no inheritance of any sort will happen: the
+    // load will just get a principal based on the URI being loaded.
   }
 
   // If this docshell is owned by a frameloader, make sure to cancel
