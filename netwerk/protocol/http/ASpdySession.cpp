@@ -36,9 +36,6 @@ ASpdySession *ASpdySession::NewSpdySession(net::SpdyVersion version,
   // from a list provided in the SERVER HELLO filtered by our acceptable
   // versions, so there is no risk of the server ignoring our prefs.
 
-  Telemetry::Accumulate(Telemetry::SPDY_VERSION2,
-                        static_cast<uint32_t>(version));
-
   return new Http2Session(aTransport, version, attemptingEarlyData);
 }
 
