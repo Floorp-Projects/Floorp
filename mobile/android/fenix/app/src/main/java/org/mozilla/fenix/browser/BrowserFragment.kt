@@ -24,22 +24,18 @@ import mozilla.components.feature.contextmenu.ContextMenuCandidate
 import mozilla.components.feature.contextmenu.ContextMenuFeature
 import mozilla.components.feature.customtabs.CustomTabsToolbarFeature
 import mozilla.components.feature.downloads.DownloadsFeature
+import mozilla.components.feature.prompts.PromptFeature
 import mozilla.components.feature.session.SessionFeature
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.support.ktx.android.arch.lifecycle.addObservers
-import org.mozilla.fenix.R
-import org.mozilla.fenix.ext.requireComponents
-import mozilla.components.feature.prompts.PromptFeature
 import org.mozilla.fenix.BackHandler
+import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FindInPageIntegration
+import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.share
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getSafeManagedObservable
-import org.mozilla.fenix.search.toolbar.SearchAction
-import org.mozilla.fenix.search.toolbar.ToolbarComponent
-import org.mozilla.fenix.search.toolbar.SearchState
-import org.mozilla.fenix.search.toolbar.ToolbarUIView
-import org.mozilla.fenix.search.toolbar.ToolbarMenu
+import org.mozilla.fenix.search.toolbar.*
 
 class BrowserFragment : Fragment(), BackHandler {
 
@@ -200,6 +196,11 @@ class BrowserFragment : Fragment(), BackHandler {
             is ToolbarMenu.Item.RequestDesktop -> sessionUseCases.requestDesktopSite.invoke(action.item.isChecked)
             is ToolbarMenu.Item.Share -> requireComponents.core.sessionManager
                 .selectedSession?.url?.apply { requireContext().share(this) }
+            is ToolbarMenu.Item.ReportIssue -> requireComponents.core.sessionManager
+                .selectedSession?.url?.apply {
+                val reportUrl = String.format(REPORT_SITE_ISSUE_URL, this)
+                sessionUseCases.loadUrl.invoke(reportUrl)
+            }
         }
     }
 
@@ -208,5 +209,6 @@ class BrowserFragment : Fragment(), BackHandler {
         private const val REQUEST_CODE_DOWNLOAD_PERMISSIONS = 1
         private const val REQUEST_CODE_PROMPT_PERMISSIONS = 2
         private const val TOOLBAR_HEIGHT = 56f
+        private const val REPORT_SITE_ISSUE_URL = "https://webcompat.com/issues/new?url=%s&label=browser-fenix"
     }
 }

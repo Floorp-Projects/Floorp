@@ -24,7 +24,7 @@
     <string name="browser_menu_find_in_page">Find in Page</string>
     <string name="browser_menu_private_tab">Private Tab</string>
     <string name="browser_menu_new_tab">New Tab</string>
-    <string name="browser_menu_report_issue">Report Issue</string>
+    <string name="browser_menu_report_issue">Report Site Issue</string>
     <string name="browser_menu_share">Share</string>
 
     <string name="sessions_intro_description">Fenix will collect your browsing sessions on your Home Screen for you to retrieve later.</string>

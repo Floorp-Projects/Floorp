@@ -29,6 +29,7 @@ class ToolbarMenu(
         object Back : Item()
         object Forward : Item()
         object Reload : Item()
+        object ReportIssue : Item()
     }
 
     val menuBuilder by lazy { BrowserMenuBuilder(menuItems) }
@@ -131,6 +132,15 @@ class ToolbarMenu(
                 R.color.icons
             ) {
                 onItemTapped.invoke(Item.Share)
+            },
+
+            BrowserMenuImageText(
+                context.getString(R.string.browser_menu_report_issue),
+                R.drawable.ic_report_issues,
+                context.getString(R.string.browser_menu_report_issue),
+                R.color.icons
+            ) {
+                onItemTapped.invoke(Item.ReportIssue)
             },
 
             BrowserMenuDivider(),
