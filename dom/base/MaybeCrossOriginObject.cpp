@@ -435,38 +435,20 @@ bool MaybeCrossOriginObject<Base>::defineProperty(
 }
 
 template <typename Base>
-JSObject* MaybeCrossOriginObject<Base>::enumerate(
-    JSContext* cx, JS::Handle<JSObject*> proxy) const {
-  // We need to be a little careful here.  We want to get our list of property
-  // keys in whatever Realm we're in right now (which might be different from
-  // the Realm of "proxy"), and invoke our ownPropertyKeys which will return the
-  // right list.  In particular we do NOT want to invoke
-  // ForwardingProxyHandler::enumerate here, because that will get the keys from
-  // our target, which may produce the wrong list.
-  //
-  // Once we have the list, we want to create the iterator object targeting the
-  // representation of "proxy" in our current Realm, since that's what the
-  // caller is working with.
-  //
-  // We could handle parts of this this by overriding enumerate() in
-  // CrossOriginObjectWrapper, but we'd still need special-case code here, so
-  // let's just do all the work here.
-  //
-  // BaseProxyHandler::enumerate would do the right thing if we passed the right
-  // object to it, but it would assert that we've entered the policy of the
-  // proxy we passed it, which may be a CCW, not us, and the policy we actually
-  // entered is ours.  So we basically reimplemnt it, but without that assert.
+bool MaybeCrossOriginObject<Base>::enumerate(JSContext* cx,
+                                             JS::Handle<JSObject*> proxy,
+                                             JS::AutoIdVector& props) const {
+  // Just get the property keys from ourselves, in whatever Realm we happen to
+  // be in. It's important to not enter the Realm of "proxy" here, because that
+  // would affect the list of keys we claim to have. We wrap the proxy in the
+  // current compartment just to be safe; it doesn't affect behavior as far as
+  // CrossOriginObjectWrapper and MaybeCrossOriginObject are concerned.
   JS::Rooted<JSObject*> self(cx, proxy);
   if (!MaybeWrapObject(cx, &self)) {
-    return nullptr;
+    return false;
   }
 
-  js::AutoIdVector props(cx);
-  if (!js::GetPropertyKeys(cx, self, 0, &props)) {
-    return nullptr;
-  }
-
-  return js::EnumeratedIdVectorToIterator(cx, self, props);
+  return js::GetPropertyKeys(cx, self, 0, &props);
 }
 
 // Force instantiations of the out-of-line template methods we need.

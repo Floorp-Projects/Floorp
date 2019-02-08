@@ -32,8 +32,8 @@ class FilteringWrapper : public Base {
   virtual bool getOwnEnumerablePropertyKeys(
       JSContext* cx, JS::Handle<JSObject*> wrapper,
       JS::AutoIdVector& props) const override;
-  virtual JSObject* enumerate(JSContext* cx,
-                              JS::Handle<JSObject*> wrapper) const override;
+  virtual bool enumerate(JSContext* cx, JS::Handle<JSObject*> wrapper,
+                         JS::AutoIdVector& props) const override;
 
   virtual bool call(JSContext* cx, JS::Handle<JSObject*> wrapper,
                     const JS::CallArgs& args) const override;
