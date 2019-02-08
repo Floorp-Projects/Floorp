@@ -74,7 +74,12 @@ var SessionHistoryInternal = {
     let webNavigation = docShell.QueryInterface(Ci.nsIWebNavigation);
     let history = webNavigation.sessionHistory;
 
-    let data = {entries: [], userContextId: loadContext.originAttributes.userContextId };
+    let data = {
+      entries: [],
+      userContextId: loadContext.originAttributes.userContextId,
+      requestedIndex: history.legacySHistory.requestedIndex + 1,
+    };
+
     // We want to keep track how many entries we *could* have collected and
     // how many we skipped, so we can sanitiy-check the current history index
     // and also determine whether we need to get any fallback data or not.
