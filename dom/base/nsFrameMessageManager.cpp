@@ -380,9 +380,11 @@ void nsFrameMessageManager::GetDelayedScripts(
   }
 }
 
-static bool GetParamsForMessage(JSContext* aCx, const JS::Value& aValue,
-                                const JS::Value& aTransfer,
-                                StructuredCloneData& aData) {
+/* static */
+bool nsFrameMessageManager::GetParamsForMessage(JSContext* aCx,
+                                                const JS::Value& aValue,
+                                                const JS::Value& aTransfer,
+                                                StructuredCloneData& aData) {
   // First try to use structured clone on the whole thing.
   JS::RootedValue v(aCx, aValue);
   JS::RootedValue t(aCx, aTransfer);

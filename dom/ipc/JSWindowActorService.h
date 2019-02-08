@@ -40,6 +40,9 @@ class JSWindowActorService final {
   void ConstructActor(const nsAString& aName, bool aParentSide,
                       JS::MutableHandleObject aActor, ErrorResult& aRv);
 
+  void ReceiveMessage(JS::RootedObject& aObj, const nsString& aMessageName,
+                      ipc::StructuredCloneData& aData);
+
  private:
   JSWindowActorService();
   ~JSWindowActorService();

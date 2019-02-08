@@ -277,6 +277,10 @@ class nsFrameMessageManager : public nsIMessageSender {
     sChildProcessManager = aManager;
   }
 
+  static bool GetParamsForMessage(JSContext* aCx, const JS::Value& aValue,
+                                  const JS::Value& aTransfer,
+                                  StructuredCloneData& aData);
+
   void SetInitialProcessData(JS::HandleValue aInitialData);
 
   void LoadPendingScripts();
