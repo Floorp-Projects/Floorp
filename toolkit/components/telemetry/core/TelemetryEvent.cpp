@@ -100,7 +100,7 @@ namespace TelemetryIPCAccumulator = mozilla::TelemetryIPCAccumulator;
 namespace {
 
 const uint32_t kEventCount =
-      static_cast<uint32_t>(mozilla::Telemetry::EventID::EventCount);
+    static_cast<uint32_t>(mozilla::Telemetry::EventID::EventCount);
 // This is a special event id used to mark expired events, to make expiry checks
 // cheap at runtime.
 const uint32_t kExpiredEventId = std::numeric_limits<uint32_t>::max();
@@ -936,6 +936,63 @@ nsresult TelemetryEvent::RecordEvent(const nsACString& aCategory,
     }
     default:
       return NS_OK;
+  }
+}
+
+void TelemetryEvent::RecordEventNative(
+    mozilla::Telemetry::EventID aId, const mozilla::Maybe<nsCString>& aValue,
+    const mozilla::Maybe<ExtraArray>& aExtra) {
+  // Truncate aValue if present and necessary.
+  mozilla::Maybe<nsCString> value;
+  if (aValue) {
+    nsCString valueStr = aValue.ref();
+    if (valueStr.Length() > kMaxValueByteLength) {
+      TruncateToByteLength(valueStr, kMaxValueByteLength);
+    }
+    value = mozilla::Some(valueStr);
+  }
+
+  // Truncate any over-long extra values.
+  ExtraArray extra;
+  if (aExtra) {
+    extra = aExtra.ref();
+    for (auto& item : extra) {
+      if (item.value.Length() > kMaxExtraValueByteLength) {
+        TruncateToByteLength(item.value, kMaxExtraValueByteLength);
+      }
+    }
+  }
+
+  const EventInfo& info = gEventInfo[static_cast<uint32_t>(aId)];
+  const nsCString category(info.common_info.category());
+  const nsCString method(info.method());
+  const nsCString object(info.object());
+  if (!XRE_IsParentProcess()) {
+    RecordEventResult res;
+    {
+      StaticMutexAutoLock lock(gTelemetryEventsMutex);
+      res = ::ShouldRecordChildEvent(lock, category, method, object);
+    }
+
+    if (res == RecordEventResult::Ok) {
+      TelemetryIPCAccumulator::RecordChildEvent(TimeStamp::NowLoRes(), category,
+                                                method, object, value, extra);
+    }
+  } else {
+    StaticMutexAutoLock lock(gTelemetryEventsMutex);
+
+    if (!gInitDone) {
+      return;
+    }
+
+    // Get the current time.
+    double timestamp = -1;
+    if (NS_WARN_IF(NS_FAILED(MsSinceProcessStart(&timestamp)))) {
+      return;
+    }
+
+    ::RecordEvent(lock, ProcessID::Parent, timestamp, category, method, object,
+                  value, extra);
   }
 }
 
