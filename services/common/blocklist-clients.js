@@ -9,6 +9,7 @@ var EXPORTED_SYMBOLS = [
 ];
 
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { RemoteSecuritySettings } = ChromeUtils.import("resource://gre/modules/psm/RemoteSecuritySettings.jsm");
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 ChromeUtils.defineModuleGetter(this, "RemoteSettings", "resource://services-settings/remote-settings.js");
@@ -171,6 +172,7 @@ var GfxBlocklistClient;
 var OneCRLBlocklistClient;
 var PinningBlocklistClient;
 var PluginBlocklistClient;
+var RemoteSecuritySettingsClient;
 
 function initialize() {
   OneCRLBlocklistClient = RemoteSettings(Services.prefs.getCharPref(PREF_BLOCKLIST_ONECRL_COLLECTION), {
@@ -208,11 +210,16 @@ function initialize() {
   });
   PinningBlocklistClient.on("sync", updatePinningList);
 
+  // In Bug 1526018 this will move into its own service, as it's not quite like
+  // the others.
+  RemoteSecuritySettingsClient = new RemoteSecuritySettings();
+
   return {
     OneCRLBlocklistClient,
     AddonBlocklistClient,
     PluginBlocklistClient,
     GfxBlocklistClient,
     PinningBlocklistClient,
+    RemoteSecuritySettingsClient,
   };
 }

@@ -159,4 +159,5 @@ pref("security.remote_settings.intermediates.enabled", false);
 pref("security.remote_settings.intermediates.bucket", "security-state");
 pref("security.remote_settings.intermediates.collection", "intermediates");
 pref("security.remote_settings.intermediates.checked", 0);
+pref("security.remote_settings.intermediates.downloads_per_poll", 100);
 pref("security.remote_settings.intermediates.signer", "onecrl.content-signature.mozilla.org");

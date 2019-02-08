@@ -59,8 +59,11 @@ XPCOM_MANIFESTS += [
 # ship them with the browser.
 TESTING_JS_MODULES.psm += [
     'DER.jsm',
-    'RemoteSecuritySettings.jsm',
     'X509.jsm',
+]
+
+EXTRA_JS_MODULES.psm += [
+    'RemoteSecuritySettings.jsm',
 ]
 
 EXPORTS += [
