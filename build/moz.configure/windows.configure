@@ -266,7 +266,7 @@ def vc_path(c_compiler, toolchain_search_path):
         next, p = os.path.split(result)
         if next == result:
             die('Cannot determine the Visual C++ directory the compiler (%s) '
-                'is in' % cl)
+                'is in' % vc_program)
         result = next
         if p.lower() == 'bin':
             break

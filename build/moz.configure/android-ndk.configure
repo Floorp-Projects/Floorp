@@ -222,7 +222,7 @@ def android_toolchain(target, host, ndk, toolchain):
                                         host.kernel.lower(), host.cpu)
         log.debug('Trying %s' % quote(toolchain))
         if not isdir(toolchain) and host.cpu == 'x86_64':
-            toolchain = toolchain_format % (ndk, target_base, version,
+            toolchain = toolchain_format % (ndk, target_base,
                                             host.kernel.lower(), 'x86')
             log.debug('Trying %s' % quote(toolchain))
         if isdir(toolchain):
@@ -339,11 +339,10 @@ def android_clang_compiler(host, ndk):
     if not ndk:
         return
 
-    llvm_path = '%s/toolchains/llvm/prebuilt/%s-%s/bin' % (ndk,
-                                                           host.kernel.lower(),
-                                                           host.cpu)
+    llvm_format = '%s/toolchains/llvm/prebuilt/%s-%s/bin'
+    llvm_path = llvm_format % (ndk, host.kernel.lower(), host.cpu)
     if not isdir(llvm_path) and host.cpu == 'x86_64':
-        llvm_path = toolchain_format % (ndk, host.kernel.lower(), 'x86')
+        llvm_path = llvm_format % (ndk, host.kernel.lower(), 'x86')
 
     if not isdir(llvm_path):
         die("Couldn't find path to LLVM toolchain at %s" % llvm_path)
