@@ -346,6 +346,14 @@ class HTMLInputElement final : public nsGenericHTMLFormElementWithState,
   // as needed.  aNotify controls whether the element state update
   // needs to notify.
   void UpdateAllValidityStates(bool aNotify);
+  void MaybeUpdateAllValidityStates() {
+    // If you need to add new type which supports validationMessage, you should
+    // add test cases into test_MozEditableElement_setUserInput.html.
+    if (mType == NS_FORM_INPUT_EMAIL) {
+      UpdateAllValidityStates(!mDoneCreating);
+    }
+  }
+
   // Update all our validity states without updating element state.
   // This should be called instead of UpdateAllValidityStates any time
   // we're guaranteed that element state will be updated anyway.

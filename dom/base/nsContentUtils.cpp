@@ -4162,6 +4162,15 @@ nsresult nsContentUtils::DispatchInputEvent(Element* aEventTargetElement,
   }
 #endif  // #ifdef DEBUG
 
+  // If the event target is an <input> element, we need to update
+  // validationMessage value before dispatching "input" event because
+  // "input" event listener may need to check it.
+  HTMLInputElement* inputElement =
+      HTMLInputElement::FromNode(aEventTargetElement);
+  if (inputElement) {
+    inputElement->MaybeUpdateAllValidityStates();
+  }
+
   if (!useInputEvent) {
     MOZ_ASSERT(aEditorInputType == EditorInputType::eUnknown);
     // Dispatch "input" event with Event instance.

@@ -236,6 +236,75 @@ SimpleTest.waitForFocus(() => {
     target.removeEventListener("input", onInput);
   }
 
+  function testValidationMessage(aType, aInvalidValue, aValidValue) {
+    let tag = `<input type="${aType}">`
+    content.innerHTML = tag;
+    content.scrollTop; // Flush pending layout.
+    let target = content.firstChild;
+
+    let inputEvents = [];
+    let validationMessage = "";
+
+    function reset() {
+      inputEvents = [];
+      validationMessage = "";
+    }
+
+    function onInput(aEvent) {
+      inputEvents.push(aEvent);
+      validationMessage = aEvent.target.validationMessage;
+    }
+    target.addEventListener("input", onInput);
+
+    reset();
+    SpecialPowers.wrap(target).setUserInput(aInvalidValue);
+    is(inputEvents.length, 1,
+       `Only one "input" event should be dispatched when setUserInput("${aInvalidValue}") is called before ${tag} gets focus`);
+    isnot(validationMessage, "",
+          `${tag}.validationMessage should not be empty when setUserInput("${aInvalidValue}") is called before ${tag} gets focus`);
+
+    reset();
+    SpecialPowers.wrap(target).setUserInput(aValidValue);
+    is(inputEvents.length, 1,
+       `Only one "input" event should be dispatched when setUserInput("${aValidValue}") is called before ${tag} gets focus`);
+    is(validationMessage, "",
+       `${tag}.validationMessage should be empty when setUserInput("${aValidValue}") is called before ${tag} gets focus`);
+
+    reset();
+    SpecialPowers.wrap(target).setUserInput(aInvalidValue);
+    is(inputEvents.length, 1,
+       `Only one "input" event should be dispatched again when setUserInput("${aInvalidValue}") is called before ${tag} gets focus`);
+    isnot(validationMessage, "",
+          `${tag}.validationMessage should not be empty again when setUserInput("${aInvalidValue}") is called before ${tag} gets focus`);
+
+    target.value = "";
+    target.focus();
+
+    reset();
+    SpecialPowers.wrap(target).setUserInput(aInvalidValue);
+    is(inputEvents.length, 1,
+       `Only one "input" event should be dispatched when setUserInput("${aInvalidValue}") is called after ${tag} gets focus`);
+    isnot(validationMessage, "",
+          `${tag}.validationMessage should not be empty when setUserInput("${aInvalidValue}") is called after ${tag} gets focus`);
+
+    reset();
+    SpecialPowers.wrap(target).setUserInput(aValidValue);
+    is(inputEvents.length, 1,
+       `Only one "input" event should be dispatched when setUserInput("${aValidValue}") is called after ${tag} gets focus`);
+    is(validationMessage, "",
+       `${tag}.validationMessage should be empty when setUserInput("${aValidValue}") is called after ${tag} gets focus`);
+
+    reset();
+    SpecialPowers.wrap(target).setUserInput(aInvalidValue);
+    is(inputEvents.length, 1,
+       `Only one "input" event should be dispatched again when setUserInput("${aInvalidValue}") is called after ${tag} gets focus`);
+    isnot(validationMessage, "",
+          `${tag}.validationMessage should not be empty again when setUserInput("${aInvalidValue}") is called after ${tag} gets focus`);
+
+    target.removeEventListener("input", onInput);
+  }
+  testValidationMessage("email", "f", "foo@example.com");
+
   SimpleTest.finish();
 });
 </script>
