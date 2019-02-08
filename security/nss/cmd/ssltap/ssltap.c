@@ -2260,7 +2260,6 @@ print_hex(int amt, unsigned char *buf)
 void
 Usage(void)
 {
-    PR_fprintf(PR_STDERR, "SSLTAP (C) 1997, 1998 Netscape Communications Corporation.\n");
     PR_fprintf(PR_STDERR, "Usage: ssltap [-vhfsxl] [-p port] hostname:port\n");
     PR_fprintf(PR_STDERR, "   -v      [prints version string]\n");
     PR_fprintf(PR_STDERR, "   -h      [outputs hex instead of ASCII]\n");
