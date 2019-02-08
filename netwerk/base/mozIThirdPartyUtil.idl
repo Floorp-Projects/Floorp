@@ -143,6 +143,26 @@ interface mozIThirdPartyUtil : nsISupports
   AUTF8String getBaseDomain(in nsIURI aHostURI);
 
   /**
+   * NOTE: Long term, this method won't be needed once bug 922464 is fixed which
+   * will make it possible to parse all URI's off the main thread.
+   *
+   * getBaseDomainFromSchemeHost
+   *
+   * Get the base domain for aScheme and aHost. Otherwise identical to
+   * getBaseDomain().
+   *
+   * @param aScheme
+   *        The scheme to analyze.
+   *
+   * @param aAsciiHost
+   *        The host to analyze.
+   *
+   * @return the base domain.
+   */
+  AUTF8String getBaseDomainFromSchemeHost(in AUTF8String aScheme,
+                                          in AUTF8String aAsciiHost);
+
+  /**
    * getURIFromWindow
    *
    * Returns the URI associated with the script object principal for the
