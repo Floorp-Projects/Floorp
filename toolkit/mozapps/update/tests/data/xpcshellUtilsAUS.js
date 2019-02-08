@@ -32,31 +32,22 @@
 
 /* eslint-disable no-undef */
 
+const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {TestUtils} = ChromeUtils.import("resource://testing-common/TestUtils.jsm");
+
+ChromeUtils.defineModuleGetter(this, "MockRegistrar",
+                               "resource://testing-common/MockRegistrar.jsm");
+
 const Cm = Components.manager;
 
-const URL_HTTP_UPDATE_SJS = "http://test_details/";
-
-/* global INSTALL_LOCALE, MOZ_APP_NAME, BIN_SUFFIX, MOZ_APP_VENDOR */
-/* global MOZ_APP_BASENAME, APP_BIN_SUFFIX, APP_INFO_NAME, APP_INFO_VENDOR */
-/* global IS_WIN, IS_MACOSX, IS_UNIX, MOZ_VERIFY_MAR_SIGNATURE */
-/* global IS_AUTHENTICODE_CHECK_ENABLED */
+/* global MOZ_APP_VENDOR, MOZ_APP_BASENAME */
+/* global MOZ_VERIFY_MAR_SIGNATURE, IS_AUTHENTICODE_CHECK_ENABLED */
 load("../data/xpcshellConstantsPP.js");
 
-function getLogSuffix() {
-  if (IS_WIN) {
-    return "_win";
-  }
-  if (IS_MACOSX) {
-    return "_mac";
-  }
-  return "_linux";
-}
-
-ChromeUtils.import("resource://gre/modules/Services.jsm", this);
-
-const DIR_MACOS = IS_MACOSX ? "Contents/MacOS/" : "";
-const DIR_RESOURCES = IS_MACOSX ? "Contents/Resources/" : "";
-const TEST_FILE_SUFFIX = IS_MACOSX ? "_mac" : "";
+const DIR_MACOS = AppConstants.platform == "macosx" ? "Contents/MacOS/" : "";
+const DIR_RESOURCES = AppConstants.platform == "macosx" ? "Contents/Resources/" : "";
+const TEST_FILE_SUFFIX = AppConstants.platform == "macosx" ? "_mac" : "";
 const FILE_COMPLETE_MAR = "complete" + TEST_FILE_SUFFIX + ".mar";
 const FILE_PARTIAL_MAR = "partial" + TEST_FILE_SUFFIX + ".mar";
 const FILE_COMPLETE_PRECOMPLETE = "complete_precomplete" + TEST_FILE_SUFFIX;
@@ -64,24 +55,28 @@ const FILE_PARTIAL_PRECOMPLETE = "partial_precomplete" + TEST_FILE_SUFFIX;
 const FILE_COMPLETE_REMOVEDFILES = "complete_removed-files" + TEST_FILE_SUFFIX;
 const FILE_PARTIAL_REMOVEDFILES = "partial_removed-files" + TEST_FILE_SUFFIX;
 const FILE_UPDATE_IN_PROGRESS_LOCK = "updated.update_in_progress.lock";
-const COMPARE_LOG_SUFFIX = getLogSuffix();
+const COMPARE_LOG_SUFFIX = "_" + mozinfo.os;
 const LOG_COMPLETE_SUCCESS = "complete_log_success" + COMPARE_LOG_SUFFIX;
 const LOG_PARTIAL_SUCCESS = "partial_log_success" + COMPARE_LOG_SUFFIX;
 const LOG_PARTIAL_FAILURE = "partial_log_failure" + COMPARE_LOG_SUFFIX;
 const LOG_REPLACE_SUCCESS = "replace_log_success";
 
-const USE_EXECV = IS_UNIX && !IS_MACOSX;
+const USE_EXECV = AppConstants.platform == "linux";
 
 const URL_HOST = "http://localhost";
 
-const FILE_APP_BIN = MOZ_APP_NAME + APP_BIN_SUFFIX;
+const APP_INFO_NAME = "XPCShell";
+const APP_INFO_VENDOR = "Mozilla";
+
+const APP_BIN_SUFFIX = AppConstants.platform == "linux" ? "-bin" : mozinfo.bin_suffix;
+const FILE_APP_BIN = AppConstants.MOZ_APP_NAME + APP_BIN_SUFFIX;
 const FILE_COMPLETE_EXE = "complete.exe";
-const FILE_HELPER_BIN = "TestAUSHelper" + BIN_SUFFIX;
+const FILE_HELPER_BIN = "TestAUSHelper" + mozinfo.bin_suffix;
 const FILE_MAINTENANCE_SERVICE_BIN = "maintenanceservice.exe";
 const FILE_MAINTENANCE_SERVICE_INSTALLER_BIN = "maintenanceservice_installer.exe";
 const FILE_OLD_VERSION_MAR = "old_version.mar";
 const FILE_PARTIAL_EXE = "partial.exe";
-const FILE_UPDATER_BIN = "updater" + BIN_SUFFIX;
+const FILE_UPDATER_BIN = "updater" + mozinfo.bin_suffix;
 const FILE_WRONG_CHANNEL_MAR = "wrong_product_channel.mar";
 
 const PERFORMING_STAGED_UPDATE = "Performing a staged update";
@@ -124,7 +119,7 @@ const APP_TIMER_TIMEOUT = 120000;
 const FILE_IN_USE_MAX_TIMEOUT_RUNS = 60;
 const FILE_IN_USE_TIMEOUT_MS = 1000;
 
-const PIPE_TO_NULL = IS_WIN ? ">nul" : "> /dev/null 2>&1";
+const PIPE_TO_NULL = AppConstants.platform == "win" ? ">nul" : "> /dev/null 2>&1";
 
 const LOG_FUNCTION = info;
 
@@ -161,9 +156,9 @@ var gPIDPersistProcess;
 
 // Variables are used instead of contants so tests can override these values if
 // necessary.
-var gCallbackBinFile = "callback_app" + BIN_SUFFIX;
+var gCallbackBinFile = "callback_app" + mozinfo.bin_suffix;
 var gCallbackArgs = ["./", "callback.log", "Test Arg 2", "Test Arg 3"];
-var gPostUpdateBinFile = "postup_app" + BIN_SUFFIX;
+var gPostUpdateBinFile = "postup_app" + mozinfo.bin_suffix;
 var gSvcOriginalLogContents;
 // Some update staging failures can remove the update. This allows tests to
 // specify that the status file and the active update should not be checked
@@ -181,6 +176,7 @@ var gEnvXPCOMMemLeakLog;
 var gEnvDyldLibraryPath;
 var gEnvLdLibraryPath;
 
+const URL_HTTP_UPDATE_SJS = "http://test_details/";
 const DATA_URI_SPEC = Services.io.newFileURI(do_get_file("", false)).spec;
 
 /* import-globals-from shared.js */
@@ -203,9 +199,6 @@ var gDebugTestLog = false;
 var gTestsToLog = [];
 var gRealDump;
 var gFOS;
-
-ChromeUtils.defineModuleGetter(this, "MockRegistrar",
-                               "resource://testing-common/MockRegistrar.jsm");
 
 var gTestFiles = [];
 var gTestDirs = [];
@@ -838,12 +831,10 @@ function setupTestCommon(aAppUpdateAutoEnabled = false) {
     }
   }
 
-  if (IS_WIN) {
+  if (AppConstants.platform == "win") {
     Services.prefs.setBoolPref(PREF_APP_UPDATE_SERVICE_ENABLED, !!IS_SERVICE_TEST);
   }
 
-  // adjustGeneralPaths registers a cleanup function that calls end_test when
-  // it is defined as a function.
   adjustGeneralPaths();
   createWorldWritableAppUpdateDir();
 
@@ -866,7 +857,7 @@ function setupTestCommon(aAppUpdateAutoEnabled = false) {
   // outside of the application directory after the call to adjustGeneralPaths
   // has set it up. Since the test hasn't ran yet and the directory shouldn't
   // exist this is non-fatal for the test.
-  if (IS_WIN || IS_MACOSX) {
+  if (AppConstants.platform == "win" || AppConstants.platform == "macosx") {
     let updatesDir = getMockUpdRootD();
     if (updatesDir.exists()) {
       debugDump("attempting to remove directory. Path: " + updatesDir.path);
@@ -898,12 +889,12 @@ function cleanupTestCommon() {
 
   gTestserver = null;
 
-  if (IS_UNIX) {
+  if (AppConstants.platform == "macosx" || AppConstants.platform == "linux") {
     // This will delete the launch script if it exists.
     getLaunchScript();
   }
 
-  if (IS_WIN && MOZ_APP_BASENAME) {
+  if (AppConstants.platform == "win" && MOZ_APP_BASENAME) {
     let appDir = getApplyDirFile(null, true);
     let vendor = MOZ_APP_VENDOR ? MOZ_APP_VENDOR : "Mozilla";
     const REG_PATH = "SOFTWARE\\" + vendor + "\\" + MOZ_APP_BASENAME +
@@ -930,7 +921,7 @@ function cleanupTestCommon() {
 
   // The updates directory is located outside of the application directory and
   // needs to be removed on Windows and Mac OS X.
-  if (IS_WIN || IS_MACOSX) {
+  if (AppConstants.platform == "win" || AppConstants.platform == "macosx") {
     let updatesDir = getMockUpdRootD();
     // Try to remove the directory used to apply updates. Since the test has
     // already finished this is non-fatal for the test.
@@ -942,7 +933,7 @@ function cleanupTestCommon() {
         logTestInfo("non-fatal error removing directory. Path: " +
                     updatesDir.path + ", Exception: " + e);
       }
-      if (IS_MACOSX) {
+      if (AppConstants.platform == "macosx") {
         let updatesRootDir = gUpdatesRootDir.clone();
         while (updatesRootDir.path != updatesDir.path) {
           if (updatesDir.exists()) {
@@ -1085,7 +1076,7 @@ function preventDistributionFiles() {
  * update has been successfully applied (bug 600098).
  */
 function setAppBundleModTime() {
-  if (!IS_MACOSX) {
+  if (AppConstants.platform != "macosx") {
     return;
   }
   let now = Date.now();
@@ -1100,7 +1091,7 @@ function setAppBundleModTime() {
  * (bug 600098).
  */
 function checkAppBundleModTime() {
-  if (!IS_MACOSX) {
+  if (AppConstants.platform != "macosx") {
     return;
   }
   let now = Date.now();
@@ -1241,7 +1232,7 @@ function waitForUpdateXMLFiles(aActiveUpdateExists = false, aUpdatesExists = tru
  *          Whether the post update '.running' file should exist.
  */
 function checkPostUpdateRunningFile(aShouldExist) {
-  if (!IS_WIN && !IS_MACOSX) {
+  if (AppConstants.platform == "linux") {
     return;
   }
   let postUpdateRunningFile = getPostUpdateFile(".running");
@@ -1350,7 +1341,7 @@ function getApplyDirFile(aRelPath, aAllowNonexistent) {
  *          directory does not exist.
  */
 function getStageDirFile(aRelPath, aAllowNonexistent) {
-  if (IS_MACOSX) {
+  if (AppConstants.platform == "macosx") {
     let file = getMockUpdRootD();
     file.append(DIR_UPDATES);
     file.append(DIR_PATCH);
@@ -1409,9 +1400,10 @@ function getTestDirFile(aRelPath, aAllowNonExists) {
  * directory on Windows.
  *
  * @return  The nsIFile for the maintenance service directory.
+ * @throws  If called from a platform other than Windows.
  */
 function getMaintSvcDir() {
-  if (!IS_WIN) {
+  if (AppConstants.platform != "win") {
     do_throw("Windows only function called by a different platform!");
   }
 
@@ -1449,7 +1441,7 @@ function getMaintSvcDir() {
  * @throws  If called from a platform other than Windows.
  */
 function getSpecialFolderDir(aCSIDL) {
-  if (!IS_WIN) {
+  if (AppConstants.platform != "win") {
     do_throw("Windows only function called by a different platform!");
   }
 
@@ -1477,7 +1469,7 @@ function getSpecialFolderDir(aCSIDL) {
 }
 
 XPCOMUtils.defineLazyGetter(this, "gInstallDirPathHash", function test_gIDPH() {
-  if (!IS_WIN) {
+  if (AppConstants.platform != "win") {
     do_throw("Windows only function called by a different platform!");
   }
 
@@ -1516,7 +1508,7 @@ XPCOMUtils.defineLazyGetter(this, "gInstallDirPathHash", function test_gIDPH() {
 });
 
 XPCOMUtils.defineLazyGetter(this, "gLocalAppDataDir", function test_gLADD() {
-  if (!IS_WIN) {
+  if (AppConstants.platform != "win") {
     do_throw("Windows only function called by a different platform!");
   }
 
@@ -1525,7 +1517,7 @@ XPCOMUtils.defineLazyGetter(this, "gLocalAppDataDir", function test_gLADD() {
 });
 
 XPCOMUtils.defineLazyGetter(this, "gCommonAppDataDir", function test_gCDD() {
-  if (!IS_WIN) {
+  if (AppConstants.platform != "win") {
     do_throw("Windows only function called by a different platform!");
   }
 
@@ -1534,7 +1526,7 @@ XPCOMUtils.defineLazyGetter(this, "gCommonAppDataDir", function test_gCDD() {
 });
 
 XPCOMUtils.defineLazyGetter(this, "gProgFilesDir", function test_gPFD() {
-  if (!IS_WIN) {
+  if (AppConstants.platform != "win") {
     do_throw("Windows only function called by a different platform!");
   }
 
@@ -1553,11 +1545,11 @@ XPCOMUtils.defineLazyGetter(this, "gProgFilesDir", function test_gPFD() {
  * the old (pre-migration) update directory is returned.
  */
 function getMockUpdRootD(aGetOldLocation = false) {
-  if (IS_WIN) {
+  if (AppConstants.platform == "win") {
     return getMockUpdRootDWin(aGetOldLocation);
   }
 
-  if (IS_MACOSX) {
+  if (AppConstants.platform == "macosx") {
     return getMockUpdRootDMac();
   }
 
@@ -1569,9 +1561,11 @@ function getMockUpdRootD(aGetOldLocation = false) {
  * returns the same directory as returned by nsXREDirProvider::GetUpdateRootDir
  * in nsXREDirProvider.cpp so an application will be able to find the update
  * when running a test that launches the application.
+ *
+ * @throws  If called from a platform other than Windows.
  */
 function getMockUpdRootDWin(aGetOldLocation) {
-  if (!IS_WIN) {
+  if (AppConstants.platform != "win") {
     do_throw("Windows only function called by a different platform!");
   }
 
@@ -1598,7 +1592,7 @@ function getMockUpdRootDWin(aGetOldLocation) {
 
 function createWorldWritableAppUpdateDir() {
   // This function is only necessary in Windows
-  if (IS_WIN) {
+  if (AppConstants.platform == "win") {
     let installDir = Services.dirsvc.get(XRE_EXECUTABLE_FILE, Ci.nsIFile).parent;
     let exitValue = runTestHelperSync(["create-update-dir", installDir.path]);
     Assert.equal(exitValue, 0, "The helper process exit value should be 0");
@@ -1606,7 +1600,7 @@ function createWorldWritableAppUpdateDir() {
 }
 
 XPCOMUtils.defineLazyGetter(this, "gUpdatesRootDir", function test_gURD() {
-  if (!IS_MACOSX) {
+  if (AppConstants.platform != "macosx") {
     do_throw("Mac OS X only function called by a different platform!");
   }
 
@@ -1628,7 +1622,7 @@ XPCOMUtils.defineLazyGetter(this, "gUpdatesRootDir", function test_gURD() {
  * when running a test that launches the application.
  */
 function getMockUpdRootDMac() {
-  if (!IS_MACOSX) {
+  if (AppConstants.platform != "macosx") {
     do_throw("Mac OS X only function called by a different platform!");
   }
 
@@ -1650,9 +1644,10 @@ function getMockUpdRootDMac() {
  *
  * @param   aDir
  *          The nsIFile for the directory where the lock file should be created.
+ * @throws  If called from a platform other than Windows.
  */
 function createUpdateInProgressLockFile(aDir) {
-  if (!IS_WIN) {
+  if (AppConstants.platform != "win") {
     do_throw("Windows only function called by a different platform!");
   }
 
@@ -1674,9 +1669,10 @@ function createUpdateInProgressLockFile(aDir) {
  *
  * @param   aDir
  *          The nsIFile for the directory where the lock file is located.
+ * @throws  If called from a platform other than Windows.
  */
 function removeUpdateInProgressLockFile(aDir) {
-  if (!IS_WIN) {
+  if (AppConstants.platform != "win") {
     do_throw("Windows only function called by a different platform!");
   }
 
@@ -1731,7 +1727,7 @@ function copyTestUpdaterToBinDir() {
  * @return  nsIFIle for the copied test updater.
  */
 function copyTestUpdaterForRunUsingUpdater() {
-  if (IS_WIN) {
+  if (AppConstants.platform == "win") {
     return copyTestUpdaterToBinDir();
   }
 
@@ -1742,7 +1738,7 @@ function copyTestUpdaterForRunUsingUpdater() {
     testUpdater.copyToFollowingLinks(updater.parent, updater.leafName);
   }
 
-  if (IS_MACOSX) {
+  if (AppConstants.platform == "macosx") {
     updater.append("Contents");
     updater.append("MacOS");
     updater.append("org.mozilla.updater");
@@ -2105,7 +2101,7 @@ function stageUpdate(aCheckSvcLog) {
  *          The update state received by the observer notification.
  */
 function checkUpdateStagedState(aUpdateState) {
-  if (IS_WIN) {
+  if (AppConstants.platform == "win") {
     if (IS_SERVICE_TEST) {
       waitForServiceStop(false);
     } else {
@@ -2169,9 +2165,10 @@ function checkUpdateStagedState(aUpdateState) {
  * run. See bug 711660 for more details.
  *
  * @return true if the test should run and false if it shouldn't.
+ * @throws  If called from a platform other than Windows.
  */
 function shouldRunServiceTest() {
-  if (!IS_WIN) {
+  if (AppConstants.platform != "win") {
     do_throw("Windows only function called by a different platform!");
   }
 
@@ -2304,7 +2301,7 @@ function setupAppFiles() {
                    inGreDir: true}];
 
   // On Linux the updater.png must also be copied
-  if (IS_UNIX && !IS_MACOSX) {
+  if (AppConstants.platform == "linux") {
     appFiles.push({relPath: "icons/updater.png",
                    inGreDir: true});
   }
@@ -2366,7 +2363,7 @@ function copyFileToTestAppDir(aFileRelPath, aInGreDir) {
     }
   }
 
-  if (IS_MACOSX && !srcFile.exists()) {
+  if (AppConstants.platform == "macosx" && !srcFile.exists()) {
     debugDump("unable to copy file since it doesn't exist! Checking if " +
               fileRelPath + ".app exists. Path: " + srcFile.path);
     // gGREDirOrig and gGREBinDirOrig must always be cloned when changing its
@@ -2400,11 +2397,11 @@ function copyFileToTestAppDir(aFileRelPath, aInGreDir) {
             destFile.remove(true);
           } catch (ex) {
             logTestInfo("unable to remove file that failed to copy! Path: " +
-                        destFile.path);
+                        destFile.path + ", Exception: " + ex);
           }
         }
         do_throw("Unable to copy file! Path: " + srcFile.path +
-                 ", Exception: " + ex);
+                 ", Exception: " + e);
       }
     }
   } else {
@@ -2436,9 +2433,10 @@ function copyFileToTestAppDir(aFileRelPath, aInGreDir) {
  * @return true if the installed service is from this build. If the installed
  *         service is not from this build the test will fail instead of
  *         returning false.
+ * @throws  If called from a platform other than Windows.
  */
 function attemptServiceInstall() {
-  if (!IS_WIN) {
+  if (AppConstants.platform != "win") {
     do_throw("Windows only function called by a different platform!");
   }
 
@@ -2485,9 +2483,11 @@ function attemptServiceInstall() {
 /**
  * Waits for the applications that are launched by the maintenance service to
  * stop.
+ *
+ * @throws  If called from a platform other than Windows.
  */
 function waitServiceApps() {
-  if (!IS_WIN) {
+  if (AppConstants.platform != "win") {
     do_throw("Windows only function called by a different platform!");
   }
 
@@ -2501,9 +2501,11 @@ function waitServiceApps() {
 
 /**
  * Waits for the maintenance service to stop.
+ *
+ * @throws  If called from a platform other than Windows.
  */
 function waitForServiceStop(aFailTest) {
-  if (!IS_WIN) {
+  if (AppConstants.platform != "win") {
     do_throw("Windows only function called by a different platform!");
   }
 
@@ -2533,9 +2535,10 @@ function waitForServiceStop(aFailTest) {
  *
  * @param   aApplication
  *          The application binary name to wait until it has stopped.
+ * @throws  If called from a platform other than Windows.
  */
 function waitForApplicationStop(aApplication) {
-  if (!IS_WIN) {
+  if (AppConstants.platform != "win") {
     do_throw("Windows only function called by a different platform!");
   }
 
@@ -2560,7 +2563,7 @@ function waitForApplicationStop(aApplication) {
  */
 function getLaunchBin() {
   let launchBin;
-  if (IS_WIN) {
+  if (AppConstants.platform == "win") {
     launchBin = Services.dirsvc.get("WinD", Ci.nsIFile);
     launchBin.append("System32");
     launchBin.append("cmd.exe");
@@ -2581,9 +2584,10 @@ function getLaunchBin() {
  *
  * @param   aDirPath
  *          The test file object that describes the file to make in use.
+ * @throws  If called from a platform other than Windows.
  */
 function lockDirectory(aDirPath) {
-  if (!IS_WIN) {
+  if (AppConstants.platform != "win") {
     do_throw("Windows only function called by a different platform!");
   }
 
@@ -2690,7 +2694,7 @@ function runHelperLockFile(aTestFile) {
   // Strip off the first two directories so the path has to be from the helper's
   // working directory.
   let lockFileRelPath = aTestFile.relPathDir.split("/");
-  if (IS_MACOSX) {
+  if (AppConstants.platform == "macosx") {
     lockFileRelPath = lockFileRelPath.slice(2);
   }
   lockFileRelPath = lockFileRelPath.join("/") + "/" + aTestFile.fileName;
@@ -2842,7 +2846,7 @@ function setupUpdaterTest(aMarFile, aPostUpdateAsync,
 
       // Skip these tests on Windows since chmod doesn't really set permissions
       // on Windows.
-      if (!IS_WIN && aTestFile.originalPerms) {
+      if (AppConstants.platform != "win" && aTestFile.originalPerms) {
         testFile.permissions = aTestFile.originalPerms;
         // Store the actual permissions on the file for reference later after
         // setting the permissions.
@@ -2936,7 +2940,7 @@ function createUpdaterINI(aIsExeAsync, aExeRelPathPrefix) {
     }
   }
 
-  if (aExeRelPathPrefix && IS_WIN) {
+  if (AppConstants.platform == "win" && aExeRelPathPrefix) {
     aExeRelPathPrefix = aExeRelPathPrefix.replace("/", "\\");
   }
 
@@ -2986,20 +2990,20 @@ function replaceLogPaths(aLogContents) {
   // Remove the majority of the path up to the test directory. This is needed
   // since Assert.equal won't print long strings to the test logs.
   let testDirPath = do_get_file(gTestID, false).path;
-  if (IS_WIN) {
+  if (AppConstants.platform == "win") {
     // Replace \\ with \\\\ so the regexp works.
     testDirPath = testDirPath.replace(/\\/g, "\\\\");
   }
   logContents = logContents.replace(new RegExp(testDirPath, "g"),
                                     "<test_dir_path>/" + gTestID);
   let updatesDirPath = getMockUpdRootD().path;
-  if (IS_WIN) {
+  if (AppConstants.platform == "win") {
     // Replace \\ with \\\\ so the regexp works.
     updatesDirPath = updatesDirPath.replace(/\\/g, "\\\\");
   }
   logContents = logContents.replace(new RegExp(updatesDirPath, "g"),
                                     "<update_dir_path>/" + gTestID);
-  if (IS_WIN) {
+  if (AppConstants.platform == "win") {
     // Replace \ with /
     logContents = logContents.replace(/\\/g, "/");
   }
@@ -3022,7 +3026,7 @@ function replaceLogPaths(aLogContents) {
  */
 function checkUpdateLogContents(aCompareLogFile, aStaged = false,
                                 aReplace = false, aExcludeDistDir = false) {
-  if (IS_UNIX) {
+  if (AppConstants.platform == "macosx" || AppConstants.platform == "linux") {
     // The order that files are returned when enumerating the file system on
     // Linux and Mac is not deterministic so skip checking the logs.
     return;
@@ -3056,7 +3060,7 @@ function checkUpdateLogContents(aCompareLogFile, aStaged = false,
   // Remove carriage returns.
   updateLogContents = updateLogContents.replace(/\r/g, "");
 
-  if (IS_WIN) {
+  if (AppConstants.platform == "win") {
     // The FindFile results when enumerating the filesystem on Windows is not
     // determistic so the results matching the following need to be fixed.
     let re = new RegExp("([^\n]* 7\/7text1[^\n]*)\n" +
@@ -3194,7 +3198,7 @@ function checkFilesAfterUpdateSuccess(aGetFileFunc, aStageDirExists = false,
 
       // Skip these tests on Windows since chmod doesn't really set permissions
       // on Windows.
-      if (!IS_WIN && aTestFile.comparePerms) {
+      if (AppConstants.platform != "win" && aTestFile.comparePerms) {
         // Check if the permssions as set in the complete mar file are correct.
         Assert.equal(testFile.permissions & 0xfff,
                      aTestFile.comparePerms & 0xfff,
@@ -3293,7 +3297,7 @@ function checkFilesAfterUpdateFailure(aGetFileFunc, aStageDirExists = false,
 
       // Skip these tests on Windows since chmod doesn't really set permissions
       // on Windows.
-      if (!IS_WIN && aTestFile.comparePerms) {
+      if (AppConstants.platform != "win" && aTestFile.comparePerms) {
         // Check the original permssions are retained on the file.
         Assert.equal(testFile.permissions & 0xfff,
                      aTestFile.comparePerms & 0xfff,
@@ -3381,7 +3385,8 @@ function checkFilesAfterUpdateCommon(aGetFileFunc, aStageDirExists,
               MSG_SHOULD_NOT_EXIST + getMsgPath(stageDir.path));
   }
 
-  let toBeDeletedDirExists = IS_WIN ? aToBeDeletedDirExists : false;
+  let toBeDeletedDirExists =
+    AppConstants.platform == "win" ? aToBeDeletedDirExists : false;
   let toBeDeletedDir = getApplyDirFile(DIR_TOBEDELETED, true);
   if (toBeDeletedDirExists) {
     Assert.ok(toBeDeletedDir.exists(),
@@ -3487,7 +3492,7 @@ function getPostUpdateFile(aSuffix) {
  */
 function checkPostUpdateAppLog() {
   // Only Mac OS X and Windows support post update.
-  if (IS_MACOSX || IS_WIN) {
+  if (AppConstants.platform == "macosx" || AppConstants.platform == "win") {
     gTimeoutRuns++;
     let postUpdateLog = getPostUpdateFile(".log");
     if (!postUpdateLog.exists()) {
@@ -3532,9 +3537,10 @@ function checkPostUpdateAppLog() {
  * @param   aFile
  *          An nsIFile for the file to be checked if it is in use.
  * @return  true if the file can't be deleted and false otherwise.
+ * @throws  If called from a platform other than Windows.
  */
 function isFileInUse(aFile) {
-  if (!IS_WIN) {
+  if (AppConstants.platform != "win") {
     do_throw("Windows only function called by a different platform!");
   }
 
@@ -3573,7 +3579,7 @@ function isFileInUse(aFile) {
  * then calls doTestFinish to end the test.
  */
 function waitForFilesInUse() {
-  if (IS_WIN) {
+  if (AppConstants.platform == "win") {
     let fileNames = [FILE_APP_BIN, FILE_UPDATER_BIN,
                      FILE_MAINTENANCE_SERVICE_INSTALLER_BIN];
     for (let i = 0; i < fileNames.length; ++i) {
@@ -3641,7 +3647,6 @@ function checkFilesInDirRecursive(aDir, aCallback) {
  *          The callback to call if the update prompt component is called.
  */
 function overrideUpdatePrompt(aCallback) {
-  const {MockRegistrar} = ChromeUtils.import("resource://testing-common/MockRegistrar.jsm");
   MockRegistrar.register("@mozilla.org/updates/update-prompt;1", UpdatePrompt, [aCallback]);
 }
 
@@ -3796,7 +3801,7 @@ function createAppInfo(aID, aName, aVersion, aPlatformVersion) {
   const XULAPPINFO_CONTRACTID = "@mozilla.org/xre/app-info;1";
   const XULAPPINFO_CID = Components.ID("{c763b610-9d49-455a-bbd2-ede71682a1ac}");
   let ifaces = [Ci.nsIXULAppInfo, Ci.nsIPlatformInfo, Ci.nsIXULRuntime];
-  if (IS_WIN) {
+  if (AppConstants.platform == "win") {
     ifaces.push(Ci.nsIWinAppHelper);
   }
   const XULAppInfo = {
@@ -3860,7 +3865,7 @@ function getProcessArgs(aExtraArgs) {
   }
 
   let args;
-  if (IS_UNIX) {
+  if (AppConstants.platform == "macosx" || AppConstants.platform == "linux") {
     let launchScript = getLaunchScript();
     // Precreate the script with executable permissions
     launchScript.create(Ci.nsIFile.NORMAL_FILE_TYPE, PERMS_DIRECTORY);
@@ -3992,12 +3997,6 @@ function adjustGeneralPaths() {
       }
     }
 
-    // Call end_test first before the directory provider is unregistered
-    if (typeof end_test == typeof Function) {
-      debugDump("calling end_test");
-      end_test();
-    }
-
     ds.unregisterProvider(dirProvider);
     cleanupTestCommon();
 
@@ -4055,7 +4054,7 @@ function runUpdateUsingApp(aExpectedStatus) {
   function afterAppExits() {
     gTimeoutRuns++;
 
-    if (IS_WIN) {
+    if (AppConstants.platform == "win") {
       waitForApplicationStop(FILE_UPDATER_BIN);
     }
 
@@ -4248,7 +4247,7 @@ IncrementalDownload.prototype = {
  * launched.
  */
 function setEnvironment() {
-  if (IS_WIN) {
+  if (AppConstants.platform == "win") {
     // The tests use nsIProcess to launch the updater and it is simpler to just
     // set an environment variable and have the test updater set the current
     // working directory than it is to set the current working directory in the
@@ -4263,19 +4262,19 @@ function setEnvironment() {
 
   gShouldResetEnv = true;
 
-  if (IS_WIN && !gEnv.exists("XRE_NO_WINDOWS_CRASH_DIALOG")) {
+  if (AppConstants.platform == "win" && !gEnv.exists("XRE_NO_WINDOWS_CRASH_DIALOG")) {
     gAddedEnvXRENoWindowsCrashDialog = true;
     debugDump("setting the XRE_NO_WINDOWS_CRASH_DIALOG environment " +
               "variable to 1... previously it didn't exist");
     gEnv.set("XRE_NO_WINDOWS_CRASH_DIALOG", "1");
   }
 
-  if (IS_UNIX) {
+  if (AppConstants.platform == "macosx" || AppConstants.platform == "linux") {
     let appGreBinDir = gGREBinDirOrig.clone();
     let envGreBinDir = Cc["@mozilla.org/file/local;1"].
                        createInstance(Ci.nsIFile);
     let shouldSetEnv = true;
-    if (IS_MACOSX) {
+    if (AppConstants.platform == "macosx") {
       if (gEnv.exists("DYLD_LIBRARY_PATH")) {
         gEnvDyldLibraryPath = gEnv.get("DYLD_LIBRARY_PATH");
         envGreBinDir.initWithPath(gEnvDyldLibraryPath);
@@ -4359,8 +4358,8 @@ function resetEnvironment() {
     gEnv.set("XPCOM_DEBUG_BREAK", "");
   }
 
-  if (IS_UNIX) {
-    if (IS_MACOSX) {
+  if (AppConstants.platform == "macosx" || AppConstants.platform == "linux") {
+    if (AppConstants.platform == "macosx") {
       if (gEnvDyldLibraryPath) {
         debugDump("setting DYLD_LIBRARY_PATH environment variable value " +
                   "back to " + gEnvDyldLibraryPath);
@@ -4379,7 +4378,7 @@ function resetEnvironment() {
     }
   }
 
-  if (IS_WIN && gAddedEnvXRENoWindowsCrashDialog) {
+  if (AppConstants.platform == "win" && gAddedEnvXRENoWindowsCrashDialog) {
     debugDump("removing the XRE_NO_WINDOWS_CRASH_DIALOG environment " +
               "variable");
     gEnv.set("XRE_NO_WINDOWS_CRASH_DIALOG", "");
