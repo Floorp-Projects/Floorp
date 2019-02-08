@@ -130,6 +130,15 @@ already_AddRefed<nsIPrincipal> PrincipalInfoToPrincipal(
         principal->SetCsp(csp);
       }
 
+      if (!info.baseDomain().IsVoid()) {
+        nsAutoCString baseDomain;
+        rv = principal->GetBaseDomain(baseDomain);
+        if (NS_WARN_IF(NS_FAILED(rv)) ||
+            !info.baseDomain().Equals(baseDomain)) {
+          MOZ_CRASH("Base domain must be available when deserialized");
+        }
+      }
+
       return principal.forget();
     }
 
@@ -312,9 +321,16 @@ nsresult PrincipalToPrincipalInfo(nsIPrincipal* aPrincipal,
     PopulateContentSecurityPolicies(csp, policies);
   }
 
+  // This attribute is not crucial.
+  nsCString baseDomain;
+  if (NS_FAILED(aPrincipal->GetBaseDomain(baseDomain))) {
+    NS_WARNING("Failed to get base domain!");
+    baseDomain.SetIsVoid(true);
+  }
+
   *aPrincipalInfo =
       ContentPrincipalInfo(aPrincipal->OriginAttributesRef(), originNoSuffix,
-                           spec, domain, std::move(policies));
+                           spec, domain, std::move(policies), baseDomain);
   return NS_OK;
 }
 
