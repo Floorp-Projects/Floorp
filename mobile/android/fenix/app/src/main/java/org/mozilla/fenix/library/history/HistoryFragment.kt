@@ -14,16 +14,20 @@ import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.navigation.Navigation
+import kotlinx.android.synthetic.main.fragment_history.view.*
 import org.mozilla.fenix.R
+import org.mozilla.fenix.mvi.ActionBusFactory
 
 class HistoryFragment : Fragment() {
-
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.fragment_history, container, false)
+        val view = inflater.inflate(R.layout.fragment_history, container, false)
+        HistoryComponent(view.history_layout, ActionBusFactory.get(this), initialState = HistoryState(emptyList()))
+
+        return view
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
