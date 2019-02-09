@@ -210,9 +210,7 @@ struct BarrierMethods<jsid> {
 // If the jsid is a GC pointer type, convert to that type and call |f| with
 // the pointer. If the jsid is not a GC type, calls F::defaultValue.
 template <typename F, typename... Args>
-auto DispatchTyped(F f, const jsid& id, Args&&... args)
-    -> decltype(f(static_cast<JSString*>(nullptr),
-                  std::forward<Args>(args)...)) {
+auto DispatchTyped(F f, const jsid& id, Args&&... args) {
   if (JSID_IS_STRING(id)) {
     return f(JSID_TO_STRING(id), std::forward<Args>(args)...);
   }
