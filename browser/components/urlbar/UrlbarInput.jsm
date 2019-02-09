@@ -310,8 +310,15 @@ class UrlbarInput {
       allowInheritPrincipal: false,
     };
 
-    // TODO bug 1521702: Call _maybeCanonizeURL for autofilled results with the
-    // typed string (not the autofilled one).
+    if (result.autofill) {
+      // For autofilled results, the value that should be canonized is not the
+      // autofilled value but the value that the user typed.
+      let canonizedUrl = this._maybeCanonizeURL(event, this._lastSearchString);
+      if (canonizedUrl) {
+        this._loadURL(canonizedUrl, where, openParams);
+        return;
+      }
+    }
 
     switch (result.type) {
       case UrlbarUtils.RESULT_TYPE.TAB_SWITCH: {

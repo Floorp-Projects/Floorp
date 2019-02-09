@@ -303,6 +303,12 @@ LoginManagerPrompter.prototype = {
     return true;
   },
 
+  get _allowRememberLogin() {
+    if (!this._inPrivateBrowsing) {
+      return true;
+    }
+    return LoginHelper.privateBrowsingCaptureEnabled;
+  },
 
 
 
@@ -351,10 +357,8 @@ LoginManagerPrompter.prototype = {
 
     // If hostname is null, we can't save this login.
     if (hostname) {
-      var canRememberLogin;
-      if (this._inPrivateBrowsing) {
-        canRememberLogin = false;
-      } else {
+      var canRememberLogin = false;
+      if (this._allowRememberLogin) {
         canRememberLogin = (aSavePassword ==
                             Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY) &&
                            Services.logins.getLoginSavingEnabled(hostname);
@@ -602,7 +606,7 @@ LoginManagerPrompter.prototype = {
       }
 
       var canRememberLogin = Services.logins.getLoginSavingEnabled(hostname);
-      if (this._inPrivateBrowsing) {
+      if (!this._allowRememberLogin) {
         canRememberLogin = false;
       }
 
@@ -661,7 +665,9 @@ LoginManagerPrompter.prototype = {
                  " @ " + hostname + " (" + httpRealm + ")");
 
         if (notifyObj) {
-          this._showLoginCaptureDoorhanger(newLogin, "password-save");
+          this._showLoginCaptureDoorhanger(newLogin, "password-save", {
+            dismissed: this._inPrivateBrowsing,
+          });
           Services.obs.notifyObservers(newLogin, "passwordmgr-prompt-save");
         } else {
           Services.logins.addLogin(newLogin);
@@ -772,7 +778,9 @@ LoginManagerPrompter.prototype = {
     this.log("promptToSavePassword");
     var notifyObj = this._getPopupNote();
     if (notifyObj) {
-      this._showLoginCaptureDoorhanger(aLogin, "password-save");
+      this._showLoginCaptureDoorhanger(aLogin, "password-save", {
+        dismissed: this._inPrivateBrowsing,
+      });
       Services.obs.notifyObservers(aLogin, "passwordmgr-prompt-save");
     } else {
       this._showSaveLoginDialog(aLogin);
@@ -789,7 +797,7 @@ LoginManagerPrompter.prototype = {
    *        This is "password-save" or "password-change" depending on the
    *        original notification type. This is used for telemetry and tests.
    */
-  _showLoginCaptureDoorhanger(login, type) {
+  _showLoginCaptureDoorhanger(login, type, options = {}) {
     let { browser } = this._getNotifyWindow();
     if (!browser) {
       return;
@@ -1004,7 +1012,7 @@ LoginManagerPrompter.prototype = {
       "password-notification-icon",
       mainAction,
       secondaryActions,
-      {
+      Object.assign({
         timeout: Date.now() + 10000,
         persistWhileVisible: true,
         passwordNotificationType: type,
@@ -1053,7 +1061,7 @@ LoginManagerPrompter.prototype = {
           }
           return false;
         },
-      }
+      }, options),
     );
   },
 

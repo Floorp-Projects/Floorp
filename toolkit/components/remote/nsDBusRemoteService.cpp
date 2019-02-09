@@ -30,12 +30,6 @@
 
 NS_IMPL_ISUPPORTS(nsDBusRemoteService, nsIRemoteService)
 
-NS_IMETHODIMP
-nsDBusRemoteService::RegisterWindow(mozIDOMWindow *aWindow) {
-  // We don't listen for property change events on DBus remote
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 const char *introspect_template =
     "<!DOCTYPE node PUBLIC \"-//freedesktop//DTD D-BUS Object Introspection "
     "1.0//EN\"\n"
@@ -88,7 +82,7 @@ DBusHandlerResult nsDBusRemoteService::OpenURL(DBusMessage *msg) {
     if (timestamp == GDK_CURRENT_TIME) {
       timestamp = guint32(g_get_monotonic_time() / 1000);
     }
-    nsRemoteService::HandleCommandLine(commandLine, nullptr, timestamp);
+    nsRemoteService::HandleCommandLine(commandLine, timestamp);
     reply = dbus_message_new_method_return(msg);
   }
 

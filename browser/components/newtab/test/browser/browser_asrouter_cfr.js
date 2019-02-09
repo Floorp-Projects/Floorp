@@ -18,6 +18,7 @@ function trigger_cfr_panel(browser, trigger, action = {type: "FOO"}) { // a fake
           sumo_path: "extensionrecommendations",
         },
         addon: {
+          id: "addon-id",
           title: "Addon name",
           icon: "foo",
           author: "Author name",
@@ -32,7 +33,7 @@ function trigger_cfr_panel(browser, trigger, action = {type: "FOO"}) { // a fake
             },
             action: {
               type: action.type,
-              data: {url: action.url},
+              data: {},
             },
           },
           secondary: [{
@@ -61,12 +62,12 @@ function trigger_cfr_panel(browser, trigger, action = {type: "FOO"}) { // a fake
 
 add_task(async function setup() {
   // Store it in order to restore to the original value
-  const {_maybeAddAddonInstallURL} = CFRPageActions;
+  const {_fetchLatestAddonVersion} = CFRPageActions;
   // Prevent fetching the real addon url and making a network request
-  CFRPageActions._maybeAddAddonInstallURL = x => x;
+  CFRPageActions._fetchLatestAddonVersion = x => "http://example.com";
 
   registerCleanupFunction(() => {
-    CFRPageActions._maybeAddAddonInstallURL = _maybeAddAddonInstallURL;
+    CFRPageActions._fetchLatestAddonVersion = _fetchLatestAddonVersion;
   });
 });
 
@@ -104,7 +105,7 @@ add_task(async function test_cfr_addon_install() {
   await BrowserTestUtils.loadURI(browser, "http://example.com/");
   await BrowserTestUtils.browserLoaded(browser, false, "http://example.com/");
 
-  const response = await trigger_cfr_panel(browser, "example.com", {type: "INSTALL_ADDON_FROM_URL", url: "http://example.com"});
+  const response = await trigger_cfr_panel(browser, "example.com", {type: "INSTALL_ADDON_FROM_URL"});
   Assert.ok(response, "Should return true if addRecommendation checks were successful");
 
   const showPanel = BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown");

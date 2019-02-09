@@ -35,12 +35,10 @@ function run_test() {
  * Called after the call to waitForUpdateXMLFiles finishes.
  */
 function waitForUpdateXMLFilesFinished() {
-  let dir = getUpdatesDir();
-  dir.append(DIR_PATCH);
+  let dir = getUpdateDirFile(DIR_PATCH);
   Assert.ok(dir.exists(), MSG_SHOULD_EXIST);
 
-  let versionFile = dir.clone();
-  versionFile.append(FILE_UPDATE_VERSION);
+  let versionFile = getUpdateDirFile(FILE_UPDATE_VERSION);
   Assert.ok(!versionFile.exists(), MSG_SHOULD_NOT_EXIST);
 
   doTestFinish();

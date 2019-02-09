@@ -88,7 +88,6 @@ const nsTArray<RefPtr<nsINode>>* Gecko_GetAssignedNodes(
 void Gecko_DestroyAnonymousContentList(nsTArray<nsIContent*>* anon_content);
 
 void Gecko_ComputedStyle_Init(mozilla::ComputedStyle* context,
-                              RawGeckoPresContextBorrowed pres_context,
                               ServoComputedDataBorrowed values,
                               mozilla::CSSPseudoElementType pseudo_type,
                               nsAtom* pseudo_tag);

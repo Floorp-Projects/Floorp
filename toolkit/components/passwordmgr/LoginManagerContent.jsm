@@ -933,7 +933,8 @@ var LoginManagerContent = {
     var doc = form.ownerDocument;
     var win = doc.defaultView;
 
-    if (PrivateBrowsingUtils.isContentWindowPrivate(win)) {
+    if (PrivateBrowsingUtils.isContentWindowPrivate(win) &&
+        !LoginHelper.privateBrowsingCaptureEnabled) {
       // We won't do anything in private browsing mode anyway,
       // so there's no need to perform further checks.
       log("(form submission ignored in private browsing mode)");

@@ -43,7 +43,6 @@ class nsCommandLine final : public nsICommandLineRunner {
   nsTArray<nsString> mArgs;
   uint32_t mState;
   nsCOMPtr<nsIFile> mWorkingDir;
-  nsCOMPtr<nsIDOMWindow> mWindowContext;
   bool mPreventDefault;
 };
 
