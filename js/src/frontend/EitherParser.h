@@ -64,7 +64,7 @@ struct GetParser {
 
 template <class Parser>
 struct GetTokenStream {
-  static auto get(Parser* parser) -> decltype(&parser->tokenStream) {
+  static auto get(Parser* parser) {
     return &parser->tokenStream;
   }
 };
@@ -73,21 +73,21 @@ struct GetTokenStream {
 
 template <class Parser>
 struct ParserOptions {
-  static constexpr auto get() -> decltype(&Parser::options) {
+  static constexpr auto get() {
     return &Parser::options;
   }
 };
 
 template <class Parser>
 struct ParserNewObjectBox {
-  static constexpr auto get() -> decltype(&Parser::newObjectBox) {
+  static constexpr auto get() {
     return &Parser::newObjectBox;
   }
 };
 
 template <class TokenStream>
 struct TokenStreamComputeLineAndColumn {
-  static constexpr auto get() -> decltype(&TokenStream::computeLineAndColumn) {
+  static constexpr auto get() {
     return &TokenStream::computeLineAndColumn;
   }
 };

@@ -15,7 +15,6 @@ const reasons = {
   breakpoint: "whyPaused.breakpoint",
   exception: "whyPaused.exception",
   resumeLimit: "whyPaused.resumeLimit",
-  pauseOnDOMEvents: "whyPaused.pauseOnDOMEvents",
   breakpointConditionThrown: "whyPaused.breakpointConditionThrown",
 
   // V8

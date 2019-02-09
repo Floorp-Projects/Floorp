@@ -168,6 +168,9 @@ pkix_NameConstraintsChecker_Check(
         PKIX_PL_CertNameConstraints *mergedNameConstraints = NULL;
         PKIX_Boolean selfIssued = PKIX_FALSE;
         PKIX_Boolean lastCert = PKIX_FALSE;
+        PKIX_Boolean treatCommonNameAsDNSName = PKIX_FALSE;
+        PKIX_List *extKeyUsageList = NULL;
+        PKIX_PL_OID *serverAuthOID = NULL;
 
         PKIX_ENTER(CERTCHAINCHECKER, "pkix_NameConstraintsChecker_Check");
         PKIX_NULLCHECK_THREE(checker, cert, pNBIOContext);
@@ -185,11 +188,38 @@ pkix_NameConstraintsChecker_Check(
         PKIX_CHECK(pkix_IsCertSelfIssued(cert, &selfIssued, plContext),
                     PKIX_ISCERTSELFISSUEDFAILED);
 
+        if (lastCert) {
+            /* For the last cert, treat the CN as a DNS name for name
+             * constraint check.  But only if EKU has id-kp-serverAuth
+             * or EKU is absent.  It does not make sense to treat CN
+             * as a DNS name for an OCSP signing certificate, for example.
+             */
+            PKIX_CHECK(PKIX_PL_Cert_GetExtendedKeyUsage
+                       (cert, &extKeyUsageList, plContext),
+                       PKIX_CERTGETEXTENDEDKEYUSAGEFAILED);
+            if (extKeyUsageList == NULL) {
+                treatCommonNameAsDNSName = PKIX_TRUE;
+            } else {
+                PKIX_CHECK(PKIX_PL_OID_Create
+                        (PKIX_KEY_USAGE_SERVER_AUTH_OID,
+                        &serverAuthOID,
+                        plContext),
+                        PKIX_OIDCREATEFAILED);
+
+                PKIX_CHECK(pkix_List_Contains
+                           (extKeyUsageList,
+                            (PKIX_PL_Object *) serverAuthOID,
+                            &treatCommonNameAsDNSName,
+                            plContext),
+                           PKIX_LISTCONTAINSFAILED);
+            }
+        }
+
         /* Check on non self-issued and if so only for last cert */
         if (selfIssued == PKIX_FALSE ||
             (selfIssued == PKIX_TRUE && lastCert)) {
                 PKIX_CHECK(PKIX_PL_Cert_CheckNameConstraints
-                    (cert, state->nameConstraints, lastCert,
+                    (cert, state->nameConstraints, treatCommonNameAsDNSName,
                       plContext),
                     PKIX_CERTCHECKNAMECONSTRAINTSFAILED);
         }
@@ -241,6 +271,8 @@ pkix_NameConstraintsChecker_Check(
 cleanup:
 
         PKIX_DECREF(state);
+        PKIX_DECREF(extKeyUsageList);
+        PKIX_DECREF(serverAuthOID);
 
         PKIX_RETURN(CERTCHAINCHECKER);
 }
