@@ -72,7 +72,7 @@ function waitForUpdateXMLFilesFinished() {
 function setupSymLinks() {
   // Don't test symlinks on Mac OS X in this test since it tends to timeout.
   // It is tested on Mac OS X in marAppInUseStageSuccessComplete_unix.js
-  if (IS_UNIX && !IS_MACOSX) {
+  if (AppConstants.platform == "linux") {
     removeSymlink();
     createSymlink();
     registerCleanupFunction(removeSymlink);
@@ -97,7 +97,7 @@ function setupSymLinks() {
 function checkSymLinks() {
   // Don't test symlinks on Mac OS X in this test since it tends to timeout.
   // It is tested on Mac OS X in marAppInUseStageSuccessComplete_unix.js
-  if (IS_UNIX && !IS_MACOSX) {
+  if (AppConstants.platform == "linux") {
     checkSymlink();
   }
 }

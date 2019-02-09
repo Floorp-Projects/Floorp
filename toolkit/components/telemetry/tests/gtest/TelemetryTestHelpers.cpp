@@ -102,6 +102,93 @@ void CheckNumberOfProperties(const char* aName, JSContext* aCx,
       << "The scalar must report the expected number of properties.";
 }
 
+bool EventPresent(JSContext* aCx, const JS::RootedValue& aSnapshot,
+                  const nsACString& aCategory, const nsACString& aMethod,
+                  const nsACString& aObject) {
+  EXPECT_FALSE(aSnapshot.isNullOrUndefined())
+      << "Event snapshot must not be null/undefined.";
+  bool isArray = false;
+  EXPECT_TRUE(JS_IsArrayObject(aCx, aSnapshot, &isArray) && isArray)
+      << "The snapshot must be an array.";
+  JS::RootedObject arrayObj(aCx, &aSnapshot.toObject());
+  uint32_t arrayLength = 0;
+  EXPECT_TRUE(JS_GetArrayLength(aCx, arrayObj, &arrayLength))
+      << "Array must have a length.";
+  EXPECT_TRUE(arrayLength > 0) << "Array must have at least one element.";
+
+  for (uint32_t arrayIdx = 0; arrayIdx < arrayLength; ++arrayIdx) {
+    JS::Rooted<JS::Value> element(aCx);
+    EXPECT_TRUE(JS_GetElement(aCx, arrayObj, arrayIdx, &element))
+        << "Must be able to get element.";
+    EXPECT_TRUE(JS_IsArrayObject(aCx, element, &isArray) && isArray)
+        << "Element must be an array.";
+    JS::RootedObject eventArray(aCx, &element.toObject());
+    uint32_t eventLength;
+    EXPECT_TRUE(JS_GetArrayLength(aCx, eventArray, &eventLength))
+        << "Event array must have a length.";
+    EXPECT_TRUE(eventLength >= 4)
+        << "Event array must have at least 4 elements (timestamp, category, "
+           "method, object).";
+
+    JS::Rooted<JS::Value> str(aCx);
+    nsAutoJSString jsStr;
+    EXPECT_TRUE(JS_GetElement(aCx, eventArray, 1, &str))
+        << "Must be able to get category.";
+    EXPECT_TRUE(str.isString()) << "Category must be a string.";
+    EXPECT_TRUE(jsStr.init(aCx, str))
+        << "Category must be able to be init'd to a jsstring.";
+    if (NS_ConvertUTF16toUTF8(jsStr) != aCategory) {
+      continue;
+    }
+
+    EXPECT_TRUE(JS_GetElement(aCx, eventArray, 2, &str))
+        << "Must be able to get method.";
+    EXPECT_TRUE(str.isString()) << "Method must be a string.";
+    EXPECT_TRUE(jsStr.init(aCx, str))
+        << "Method must be able to be init'd to a jsstring.";
+    if (NS_ConvertUTF16toUTF8(jsStr) != aMethod) {
+      continue;
+    }
+
+    EXPECT_TRUE(JS_GetElement(aCx, eventArray, 3, &str))
+        << "Must be able to get object.";
+    EXPECT_TRUE(str.isString()) << "Object must be a string.";
+    EXPECT_TRUE(jsStr.init(aCx, str))
+        << "Object must be able to be init'd to a jsstring.";
+    if (NS_ConvertUTF16toUTF8(jsStr) != aObject) {
+      continue;
+    }
+
+    // We found it!
+    return true;
+  }
+
+  // We didn't find it!
+  return false;
+}
+
+void GetEventSnapshot(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
+                      ProcessID aProcessType = ProcessID::Parent) {
+  nsCOMPtr<nsITelemetry> telemetry =
+      do_GetService("@mozilla.org/base/telemetry;1");
+
+  JS::RootedValue eventSnapshot(aCx);
+  nsresult rv;
+  rv = telemetry->SnapshotEvents(1 /* OPTIN */, false /* clear */,
+                                 0 /* eventLimit */, aCx, 1 /* argc */,
+                                 &eventSnapshot);
+  ASSERT_EQ(rv, NS_OK) << "Snapshotting events must not fail.";
+  ASSERT_TRUE(eventSnapshot.isObject()) << "The snapshot must be an object.";
+
+  JS::RootedValue processEvents(aCx);
+  JS::RootedObject eventObj(aCx, &eventSnapshot.toObject());
+  Unused << JS_GetProperty(aCx, eventObj,
+                           Telemetry::Common::GetNameForProcessID(aProcessType),
+                           &processEvents);
+
+  aResult.set(processEvents);
+}
+
 void GetScalarsSnapshot(bool aKeyed, JSContext* aCx,
                         JS::MutableHandle<JS::Value> aResult,
                         ProcessID aProcessType) {

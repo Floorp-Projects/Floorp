@@ -67,19 +67,6 @@ BigInt* BigIntObject::unbox() const {
   return getFixedSlot(PRIMITIVE_VALUE_SLOT).toBigInt();
 }
 
-bool js::intrinsic_ToBigInt(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 1);
-
-  BigInt* result = ToBigInt(cx, args[0]);
-  if (!result) {
-    return false;
-  }
-
-  args.rval().setBigInt(result);
-  return true;
-}
-
 // BigInt proposal section 5.3.4
 bool BigIntObject::valueOf_impl(JSContext* cx, const CallArgs& args) {
   // Step 1.
@@ -166,12 +153,12 @@ bool BigIntObject::asUintN(JSContext* cx, unsigned argc, Value* vp) {
 
   // Step 1.
   uint64_t bits;
-  if (!ToIndex(cx, args[0], &bits)) {
+  if (!ToIndex(cx, args.get(0), &bits)) {
     return false;
   }
 
   // Step 2.
-  RootedBigInt bi(cx, ToBigInt(cx, args[1]));
+  RootedBigInt bi(cx, ToBigInt(cx, args.get(1)));
   if (!bi) {
     return false;
   }
@@ -192,12 +179,12 @@ bool BigIntObject::asIntN(JSContext* cx, unsigned argc, Value* vp) {
 
   // Step 1.
   uint64_t bits;
-  if (!ToIndex(cx, args[0], &bits)) {
+  if (!ToIndex(cx, args.get(0), &bits)) {
     return false;
   }
 
   // Step 2.
-  RootedBigInt bi(cx, ToBigInt(cx, args[1]));
+  RootedBigInt bi(cx, ToBigInt(cx, args.get(1)));
   if (!bi) {
     return false;
   }

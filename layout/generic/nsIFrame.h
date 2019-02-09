@@ -2881,6 +2881,18 @@ class nsIFrame : public nsQueryFrame {
   bool IsBlockWrapper() const;
 
   /**
+   * Returns true if the frame is an instance of nsBlockFrame or one of its
+   * subclasses.
+   *
+   * XXXdholbert this is non-const because it uses nsIFrame::QueryFrame which
+   * is non-const.  If we need this accessor to be 'const' down the road, the
+   * right way to do it would be to make the QueryFrame machinery
+   * const-friendly. But it may not be worth the trouble, because we rarely
+   * handle const frame pointers anyway.
+   */
+  bool IsBlockFrameOrSubclass();
+
+  /**
    * Get this frame's CSS containing block.
    *
    * The algorithm is defined in

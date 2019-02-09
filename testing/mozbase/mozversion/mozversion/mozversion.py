@@ -5,6 +5,7 @@
 from __future__ import absolute_import
 
 import argparse
+import io
 import os
 from six.moves import configparser
 import sys
@@ -63,14 +64,14 @@ class LocalFennecVersion(Version):
         for type, section in INI_DATA_MAPPING:
             filename = "%s.ini" % type
             if filename in archive_list:
-                self._parse_ini_file(archive.open(filename), type,
-                                     section)
+                fp = io.TextIOWrapper(archive.open(filename))
+                self._parse_ini_file(fp, type, section)
             else:
                 self._logger.warning('Unable to find %s' % filename)
 
         if "package-name.txt" in archive_list:
-            self._info["package_name"] = \
-                archive.open("package-name.txt").readlines()[0].strip()
+            fp = io.TextIOWrapper(archive.open("package-name.txt"))
+            self._info["package_name"] = fp.readlines()[0].strip()
 
 
 class LocalVersion(Version):

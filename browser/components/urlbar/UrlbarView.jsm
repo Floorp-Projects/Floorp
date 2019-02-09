@@ -239,7 +239,7 @@ class UrlbarView {
 
     this._alignPanel();
 
-    this.panel.openPopup(this.input.textbox.closest("toolbar"), "after_end", 0, -1);
+    this.panel.openPopup(this.input.textbox.closest("toolbar"), "after_end");
   }
 
   _alignPanel() {
@@ -291,7 +291,8 @@ class UrlbarView {
     item.className = "urlbarView-row";
     item.setAttribute("resultIndex", resultIndex);
 
-    if (result.type == UrlbarUtils.RESULT_TYPE.SEARCH) {
+    if (result.type == UrlbarUtils.RESULT_TYPE.SEARCH &&
+        !result.payload.isKeywordOffer) {
       item.setAttribute("type", "search");
     } else if (result.type == UrlbarUtils.RESULT_TYPE.REMOTE_TAB) {
       item.setAttribute("type", "remotetab");
@@ -348,7 +349,8 @@ class UrlbarView {
     let setURL = () => {
       url = this._createElement("span");
       url.className = "urlbarView-secondary urlbarView-url";
-      this._addTextContentWithHighlights(url, result.payload.url || "",
+      let val = this.window.trimURL(result.payload.url || "");
+      this._addTextContentWithHighlights(url, val,
                                          result.payloadHighlights.url || []);
     };
     switch (result.type) {

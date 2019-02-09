@@ -2,10 +2,6 @@
 <!DOCTYPE html [
   <!ENTITY % htmlDTD PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
   %htmlDTD;
-  <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
-  %brandDTD;
-  <!ENTITY % aboutRightsDTD SYSTEM "chrome://global/locale/aboutRights.dtd">
-  %aboutRightsDTD;
 ]>
 
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
@@ -16,34 +12,36 @@
 
 <head>
   <meta http-equiv="Content-Security-Policy" content="default-src chrome:" />
-  <title>&rights.title;</title>
+  <title data-l10n-id="rights-title"></title>
   <link rel="stylesheet" href="chrome://global/skin/in-content/info-pages.css" type="text/css"/>
+  <link rel="localization" href="branding/brand.ftl"/>
+  <link rel="localization" href="toolkit/about/aboutRights.ftl"/>
 </head>
 
-<body id="your-rights" dir="&rights.locale-direction;" class="aboutPageWideContainer">
+<body id="your-rights" class="aboutPageWideContainer">
 <div class="container">
-  <h1>&rights.title;</h1>
+  <h1 data-l10n-id="rights-title"></h1>
 
-  <p>&rights.intro;</p>
+  <p data-l10n-id="rights-intro"></p>
 
   <ul>
-    <li>&rights.intro-point1a;<a href="http://www.mozilla.org/MPL/">&rights.intro-point1b;</a>&rights.intro-point1c;</li>
+    <li data-l10n-id="rights-intro-point-1"><a href="http://www.mozilla.org/MPL/" data-l10n-name="mozilla-public-license-link"></a></li>
   <!-- Point 2 discusses Mozilla trademarks, and isn't needed when the build is unbranded.
-    - Point 3 discusses privacy policy, unbranded builds get a placeholder (for the vendor to replace)
-    - Point 4 discusses web service terms, unbranded builds gets a placeholder (for the vendor to replace) -->
-    <li>&rights.intro-point3-unbranded;</li>
-    <li>&rights.intro-point4a-unbranded;<a href="about:rights#webservices" id="showWebServices">&rights.intro-point4b-unbranded;</a>&rights.intro-point4c-unbranded;</li>
+    - Point 4 discusses privacy policy, unbranded builds get a placeholder (for the vendor to replace)
+    - Point 5 discusses web service terms, unbranded builds gets a placeholder (for the vendor to replace) -->
+    <li data-l10n-id="rights-intro-point-4-unbranded"></li>
+    <li data-l10n-id="rights-intro-point-5-unbranded"><a href="about:rights#webservices" id="showWebServices" data-l10n-name="mozilla-website-services-link"></a></li>
   </ul>
 
   <div id="webservices-container">
     <a name="webservices"/>
-    <h3>&rights2.webservices-header;</h3>
+    <h3 data-l10n-id="rights-webservices-header"></h3>
 
-    <p>&rights.webservices-unbranded;</p>
+    <p data-l10n-id="rights-webservices-unbranded"></p>
 
     <ol>
   <!-- Terms only apply to official builds, unbranded builds get a placeholder. -->
-      <li>&rights.webservices-term1-unbranded;</li>
+      <li data-l10n-id="rights-webservices-term-unbranded"></li>
     </ol>
   </div>
 </div>
