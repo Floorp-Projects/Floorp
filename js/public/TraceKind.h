@@ -226,18 +226,31 @@ auto DispatchTraceKindTyped(F f, JS::TraceKind traceKind, Args&&... args) {
 }
 #undef JS_DEPENDENT_TEMPLATE_HINT
 
-template <typename F, typename... Args>
-auto DispatchTraceKindTyped(F f, void* thing, JS::TraceKind traceKind,
-                            Args&&... args) {
+// Given a GC thing specified by pointer and trace kind, calls the functor |f|
+// with a template argument of the actual type of the pointer and returns the
+// result.
+template <typename F>
+auto MapGCThingTyped(void* thing, JS::TraceKind traceKind, F&& f) {
   switch (traceKind) {
 #define JS_EXPAND_DEF(name, type, _) \
   case JS::TraceKind::name:          \
-    return f(static_cast<type*>(thing), std::forward<Args>(args)...);
+    return f(static_cast<type*>(thing));
     JS_FOR_EACH_TRACEKIND(JS_EXPAND_DEF);
 #undef JS_EXPAND_DEF
     default:
-      MOZ_CRASH("Invalid trace kind in DispatchTraceKindTyped.");
+      MOZ_CRASH("Invalid trace kind in MapGCThingTyped.");
   }
+}
+
+// Given a GC thing specified by pointer and trace kind, calls the functor |f|
+// with a template argument of the actual type of the pointer and ignores the
+// result.
+template <typename F>
+void ApplyGCThingTyped(void* thing, JS::TraceKind traceKind, F&& f) {
+  // This function doesn't do anything but is supplied for symmetry with other
+  // MapGCThingTyped/ApplyGCThingTyped implementations that have to wrap the
+  // functor to return a dummy value that is ignored.
+  MapGCThingTyped(thing, traceKind, std::move(f));
 }
 
 }  // namespace JS

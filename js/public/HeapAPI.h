@@ -344,19 +344,29 @@ class JS_FRIEND_API GCCellPtr {
   uintptr_t ptr;
 };
 
-// Unwraps the given GCCellPtr and calls the given functor with a template
-// argument of the actual type of the pointer.
-template <typename F, typename... Args>
-auto DispatchTyped(F f, GCCellPtr thing, Args&&... args) {
+// Unwraps the given GCCellPtr, calls the functor |f| with a template argument
+// of the actual type of the pointer, and returns the result.
+template <typename F>
+auto MapGCThingTyped(GCCellPtr thing, F&& f) {
   switch (thing.kind()) {
 #define JS_EXPAND_DEF(name, type, _) \
   case JS::TraceKind::name:          \
-    return f(&thing.as<type>(), std::forward<Args>(args)...);
+    return f(&thing.as<type>());
     JS_FOR_EACH_TRACEKIND(JS_EXPAND_DEF);
 #undef JS_EXPAND_DEF
     default:
-      MOZ_CRASH("Invalid trace kind in DispatchTyped for GCCellPtr.");
+      MOZ_CRASH("Invalid trace kind in MapGCThingTyped for GCCellPtr.");
   }
+}
+
+// Unwraps the given GCCellPtr and calls the functor |f| with a template
+// argument of the actual type of the pointer. Doesn't return anything.
+template <typename F>
+void ApplyGCThingTyped(GCCellPtr thing, F&& f) {
+  // This function doesn't do anything but is supplied for symmetry with other
+  // MapGCThingTyped/ApplyGCThingTyped implementations that have to wrap the
+  // functor to return a dummy value that is ignored.
+  MapGCThingTyped(thing, f);
 }
 
 } /* namespace JS */

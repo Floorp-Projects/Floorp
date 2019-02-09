@@ -183,15 +183,6 @@ void js::DtoaCache::checkCacheAfterMovingGC() {
   MOZ_ASSERT(!s || !IsForwarded(s));
 }
 
-namespace {
-struct CheckGCThingAfterMovingGCFunctor {
-  template <class T>
-  void operator()(T* t) {
-    CheckGCThingAfterMovingGC(*t);
-  }
-};
-}  // namespace
-
 #endif  // JSGC_HASH_TABLE_CHECKS
 
 LexicalEnvironmentObject*
@@ -463,24 +454,6 @@ void ObjectRealm::sweepNativeIterators() {
 void Realm::sweepObjectRealm() { objects_.sweepNativeIterators(); }
 
 void Realm::sweepVarNames() { varNames_.sweep(); }
-
-namespace {
-struct TraceRootFunctor {
-  JSTracer* trc;
-  const char* name;
-  TraceRootFunctor(JSTracer* trc, const char* name) : trc(trc), name(name) {}
-  template <class T>
-  void operator()(T* t) {
-    return TraceRoot(trc, t, name);
-  }
-};
-struct NeedsSweepUnbarrieredFunctor {
-  template <class T>
-  bool operator()(T* t) const {
-    return IsAboutToBeFinalizedUnbarriered(t);
-  }
-};
-}  // namespace
 
 void Realm::sweepTemplateObjects() {
   if (mappedArgumentsTemplate_ &&

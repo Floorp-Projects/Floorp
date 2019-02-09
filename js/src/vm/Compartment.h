@@ -23,10 +23,6 @@
 
 namespace js {
 
-namespace gc {
-struct ZoneComponentFinder;
-}  // namespace gc
-
 class CrossCompartmentKey {
  public:
   enum DebuggerObjectKind : uint8_t {
@@ -558,7 +554,7 @@ class JS::Compartment {
   static void fixupCrossCompartmentWrappersAfterMovingGC(JSTracer* trc);
   void fixupAfterMovingGC();
 
-  void findOutgoingEdges(js::gc::ZoneComponentFinder& finder);
+  MOZ_MUST_USE bool findSweepGroupEdges();
 };
 
 namespace js {

@@ -8,11 +8,11 @@
  * Store of CSSStyleDeclarations mapped to properties that have been changed by
  * the user.
  */
-function UserProperties() {
-  this.map = new Map();
-}
+class UserProperties {
+  constructor() {
+    this.map = new Map();
+  }
 
-UserProperties.prototype = {
   /**
    * Get a named property for a given CSSStyleDeclaration.
    *
@@ -26,7 +26,7 @@ UserProperties.prototype = {
    *        The property value if it has previously been set by the user, null
    *        otherwise.
    */
-  getProperty: function(style, name, value) {
+  getProperty(style, name, value) {
     const key = this.getKey(style);
     const entry = this.map.get(key, null);
 
@@ -34,7 +34,7 @@ UserProperties.prototype = {
       return entry[name];
     }
     return value;
-  },
+  }
 
   /**
    * Set a named property for a given CSSStyleDeclaration.
@@ -46,7 +46,7 @@ UserProperties.prototype = {
    * @param {String} userValue
    *        The value of the property to set.
    */
-  setProperty: function(style, name, userValue) {
+  setProperty(style, name, userValue) {
     const key = this.getKey(style, name);
     const entry = this.map.get(key, null);
 
@@ -57,7 +57,7 @@ UserProperties.prototype = {
       props[name] = userValue;
       this.map.set(key, props);
     }
-  },
+  }
 
   /**
    * Check whether a named property for a given CSSStyleDeclaration is stored.
@@ -67,19 +67,19 @@ UserProperties.prototype = {
    * @param {String} name
    *        The name of the property to check.
    */
-  contains: function(style, name) {
+  contains(style, name) {
     const key = this.getKey(style, name);
     const entry = this.map.get(key, null);
     return !!entry && name in entry;
-  },
+  }
 
-  getKey: function(style, name) {
+  getKey(style, name) {
     return style.actorID + ":" + name;
-  },
+  }
 
-  clear: function() {
+  clear() {
     this.map.clear();
-  },
-};
+  }
+}
 
 module.exports = UserProperties;
