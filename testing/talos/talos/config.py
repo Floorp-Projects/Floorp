@@ -6,7 +6,6 @@ from __future__ import absolute_import, print_function
 import copy
 import os
 import sys
-import time
 
 from mozlog.commandline import setup_logging
 from talos import utils, test
@@ -142,10 +141,7 @@ def set_webserver(config):
 
 @validator
 def update_prefs(config):
-    config.setdefault('preferences', {}).update({
-        # Bug 1383896 - reduces noise in tests
-        'idle.lastDailyNotification': int(time.time()),
-    })
+    config.setdefault('preferences', {})
 
     # update prefs from command line
     prefs = config.pop('extraPrefs')

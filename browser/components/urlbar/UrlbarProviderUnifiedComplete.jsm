@@ -27,7 +27,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "unifiedComplete",
   "nsIAutoCompleteSearch");
 
 XPCOMUtils.defineLazyGetter(this, "logger",
-  () => Log.repository.getLogger("Places.Urlbar.Provider.UnifiedComplete"));
+  () => Log.repository.getLogger("Urlbar.Provider.UnifiedComplete"));
 
 // See UnifiedComplete.
 const TITLE_TAGS_SEPARATOR = " \u2013 ";

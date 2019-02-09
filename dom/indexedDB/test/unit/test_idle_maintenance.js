@@ -15,9 +15,8 @@ function* testSteps()
 
   Services.perms.add(uri, "indexedDB", Ci.nsIPermissionManager.ALLOW_ACTION);
 
-  info("Setting idle preferences to prevent real 'idle-daily' notification");
-
-  Services.prefs.setIntPref("idle.lastDailyNotification", (Date.now() / 1000) - 10);
+  // The idle-daily notification is disabled in xpchsell tests, so we don't
+  // need to do anything special to disable it for this test.
 
   info("Activating real idle service");
 
