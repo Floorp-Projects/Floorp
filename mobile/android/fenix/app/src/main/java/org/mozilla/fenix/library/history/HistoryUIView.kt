@@ -5,16 +5,10 @@
 
 package org.mozilla.fenix.library.history
 
-import android.content.Context
-import android.graphics.Color
-import android.os.Build
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.RelativeLayout
 import android.widget.TextView
-import androidx.annotation.RequiresApi
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import io.reactivex.Observable
@@ -36,7 +30,7 @@ class HistoryUIView(
 
     init {
         view.apply {
-            adapter = HistoryAdapter(context)
+            adapter = HistoryAdapter(actionEmitter)
             layoutManager = LinearLayoutManager(container.context)
         }
     }
@@ -46,12 +40,29 @@ class HistoryUIView(
     }
 }
 
-private class HistoryAdapter(val context: Context) : RecyclerView.Adapter<HistoryAdapter.HistoryListItemViewHolder>() {
-    class HistoryListItemViewHolder(val view: View) : RecyclerView.ViewHolder(view) {
+private class HistoryAdapter(
+    private val actionEmitter: Observer<HistoryAction>
+) : RecyclerView.Adapter<HistoryAdapter.HistoryListItemViewHolder>() {
+    class HistoryListItemViewHolder(
+        view: View,
+        private val actionEmitter: Observer<HistoryAction>
+    ) : RecyclerView.ViewHolder(view) {
+
         private var title = view.findViewById<TextView>(R.id.history_title)
         private var url = view.findViewById<TextView>(R.id.history_url)
+        private var item: HistoryItem? = null
+
+        init {
+            view.setOnClickListener {
+                item?.apply {
+                    actionEmitter.onNext(HistoryAction.Select(this))
+                }
+            }
+        }
 
         fun bind(item: HistoryItem) {
+            this.item = item
+
             title.text = item.title
             url.text = item.url
         }
@@ -71,7 +82,7 @@ private class HistoryAdapter(val context: Context) : RecyclerView.Adapter<Histor
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): HistoryListItemViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(viewType, parent, false)
 
-        return HistoryListItemViewHolder(view)
+        return HistoryListItemViewHolder(view, actionEmitter)
     }
 
     override fun getItemViewType(position: Int): Int {

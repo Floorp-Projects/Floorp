@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.library.history
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.Menu
@@ -22,6 +23,7 @@ import kotlinx.coroutines.launch
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.mvi.ActionBusFactory
+import org.mozilla.fenix.mvi.getSafeManagedObservable
 import kotlin.coroutines.CoroutineContext
 
 class HistoryFragment : Fragment(), CoroutineScope {
@@ -41,12 +43,23 @@ class HistoryFragment : Fragment(), CoroutineScope {
         return view
     }
 
+    @SuppressLint("CheckResult")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         job = Job()
 
         setHasOptionsMenu(true)
         (activity as AppCompatActivity).supportActionBar?.show()
+
+        getSafeManagedObservable<HistoryAction>()
+            .subscribe {
+                if (it is HistoryAction.Select) {
+                    Navigation.findNavController(requireActivity(), R.id.container)
+                        .popBackStack(R.id.browserFragment, false)
+
+                    requireComponents.useCases.sessionUseCases.loadUrl.invoke(it.item.url)
+                }
+            }
     }
 
     override fun onDestroy() {

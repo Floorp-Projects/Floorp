@@ -15,6 +15,7 @@ data class HistoryItem(val url: String) {
     val title: String
         get() = siteTitle()
 
+    @SuppressWarnings("TooGenericExceptionCaught")
     private fun siteTitle(): String {
         return try {
             URL(url).host
@@ -50,7 +51,7 @@ class HistoryComponent(
 data class HistoryState(val items: List<HistoryItem>) : ViewState
 
 sealed class HistoryAction : Action {
-    object Select : HistoryAction()
+    data class Select(val item: HistoryItem) : HistoryAction()
 }
 
 sealed class HistoryChange : Change {
