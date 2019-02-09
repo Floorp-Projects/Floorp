@@ -4828,14 +4828,16 @@ static void DropStringWrappers(JSRuntime* rt) {
 /*
  * Group zones that must be swept at the same time.
  *
- * If compartment A has an edge to an unmarked object in compartment B, then we
- * must not sweep A in a later slice than we sweep B. That's because a write
- * barrier in A could lead to the unmarked object in B becoming marked.
- * However, if we had already swept that object, we would be in trouble.
+ * From the point of view of the mutator, groups of zones transition atomically
+ * from marking to sweeping. If compartment A has an edge to an unmarked object
+ * in compartment B, then we must not start sweeping A in a later slice than we
+ * start sweeping B. That's because a write barrier in A could lead to the
+ * unmarked object in B becoming marked. However, if we had already swept that
+ * object, we would be in trouble.
  *
  * If we consider these dependencies as a graph, then all the compartments in
- * any strongly-connected component of this graph must be swept in the same
- * slice.
+ * any strongly-connected component of this graph must start sweeping in the
+ * same slice.
  *
  * Tarjan's algorithm is used to calculate the components.
  */
@@ -4848,7 +4850,8 @@ bool Compartment::findSweepGroupEdges() {
     MOZ_ASSERT(!key.is<JSString*>());
 
     // Add edge to wrapped object zone if wrapped object is not marked black to
-    // indicate that wrapper zone not be swept after wrapped compartment.
+    // ensure that wrapper zone not finish marking after we start sweeping the
+    // wrapped zone.
 
     if (key.is<JSObject*>() &&
         key.as<JSObject*>()->asTenured().isMarkedBlack()) {
