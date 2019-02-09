@@ -38,6 +38,10 @@ bool WebGLExtensionDrawBuffers::IsSupported(const WebGLContext* webgl) {
   if (webgl->IsWebGL2()) return false;
 
   gl::GLContext* gl = webgl->GL();
+  if (gl->IsGLES() && gl->Version() >= 300) {
+    // ANGLE's shader translator can't translate ESSL1 exts to ESSL3. (bug 1524804)
+    return false;
+  }
   return gl->IsSupported(gl::GLFeature::draw_buffers);
 }
 
