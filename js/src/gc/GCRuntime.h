@@ -615,7 +615,7 @@ class GCRuntime {
 
   void beginSweepPhase(JS::GCReason reason, AutoGCSession& session);
   void groupZonesForSweeping(JS::GCReason reason);
-  MOZ_MUST_USE bool findInterZoneEdges();
+  MOZ_MUST_USE bool findSweepGroupEdges();
   void getNextSweepGroup();
   IncrementalProgress markGrayReferencesInCurrentGroup(FreeOp* fop,
                                                        SliceBudget& budget);
