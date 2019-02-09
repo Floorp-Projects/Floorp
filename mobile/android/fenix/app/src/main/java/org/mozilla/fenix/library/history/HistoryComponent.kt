@@ -9,8 +9,20 @@ import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.Change
 import org.mozilla.fenix.mvi.UIComponent
 import org.mozilla.fenix.mvi.ViewState
+import java.net.URL
 
-data class HistoryItem(val url: String)
+data class HistoryItem(val url: String) {
+    val title: String
+        get() = siteTitle()
+
+    private fun siteTitle(): String {
+        return try {
+            URL(url).host
+        } catch (e: Exception) {
+            url
+        }
+    }
+}
 
 class HistoryComponent(
     private val container: ViewGroup,

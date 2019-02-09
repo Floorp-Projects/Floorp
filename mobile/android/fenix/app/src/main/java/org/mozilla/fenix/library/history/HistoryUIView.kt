@@ -9,10 +9,12 @@ import android.content.Context
 import android.graphics.Color
 import android.os.Build
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import android.widget.RelativeLayout
 import android.widget.TextView
 import androidx.annotation.RequiresApi
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import io.reactivex.Observable
@@ -44,8 +46,20 @@ class HistoryUIView(
     }
 }
 
-private class HistoryAdapter(val context: Context) : RecyclerView.Adapter<HistoryAdapter.ViewHolder>() {
-    class ViewHolder(val textView: TextView) : RecyclerView.ViewHolder(textView)
+private class HistoryAdapter(val context: Context) : RecyclerView.Adapter<HistoryAdapter.HistoryListItemViewHolder>() {
+    class HistoryListItemViewHolder(val view: View) : RecyclerView.ViewHolder(view) {
+        private var title = view.findViewById<TextView>(R.id.history_title)
+        private var url = view.findViewById<TextView>(R.id.history_url)
+
+        fun bind(item: HistoryItem) {
+            title.text = item.title
+            url.text = item.url
+        }
+
+        companion object {
+            const val LAYOUT_ID = R.layout.history_list_item
+        }
+    }
 
     private var items: List<HistoryItem> = emptyList()
 
@@ -54,23 +68,20 @@ private class HistoryAdapter(val context: Context) : RecyclerView.Adapter<Histor
         notifyDataSetChanged()
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val textView = TextView(context).apply {
-            val lp = RelativeLayout.LayoutParams(
-                RelativeLayout.LayoutParams.WRAP_CONTENT, // Width of TextView
-                RelativeLayout.LayoutParams.WRAP_CONTENT
-            )
-            setLayoutParams(lp)
-            setText("This is a sample TextView...")
-            setTextColor(Color.parseColor("#ff0000"))
-        }
-        return ViewHolder(textView)
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): HistoryListItemViewHolder {
+        val view = LayoutInflater.from(parent.context).inflate(viewType, parent, false)
+
+        return HistoryListItemViewHolder(view)
+    }
+
+    override fun getItemViewType(position: Int): Int {
+        return HistoryListItemViewHolder.LAYOUT_ID
     }
 
     override fun getItemCount(): Int = items.count()
 
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.textView.text = "Cell: ${items[position]}"
+    override fun onBindViewHolder(holder: HistoryListItemViewHolder, position: Int) {
+        val item = items[position]
+        holder.bind(item)
     }
 }
