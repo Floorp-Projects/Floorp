@@ -272,25 +272,11 @@ struct InternalBarrierMethods<T*> {
 #endif
 };
 
-template <typename S>
-struct PreBarrierFunctor : public VoidDefaultAdaptor<S> {
-  template <typename T>
-  void operator()(T* t);
-};
-
-template <typename S>
-struct ReadBarrierFunctor : public VoidDefaultAdaptor<S> {
-  template <typename T>
-  void operator()(T* t);
-};
-
 template <>
 struct InternalBarrierMethods<Value> {
   static bool isMarkable(const Value& v) { return v.isGCThing(); }
 
-  static void preBarrier(const Value& v) {
-    DispatchTyped(PreBarrierFunctor<Value>(), v);
-  }
+  static void preBarrier(const Value& v);
 
   static MOZ_ALWAYS_INLINE void postBarrier(Value* vp, const Value& prev,
                                             const Value& next) {
@@ -319,9 +305,7 @@ struct InternalBarrierMethods<Value> {
     }
   }
 
-  static void readBarrier(const Value& v) {
-    DispatchTyped(ReadBarrierFunctor<Value>(), v);
-  }
+  static void readBarrier(const Value& v);
 
 #ifdef DEBUG
   static void assertThingIsNotGray(const Value& v) {
@@ -333,9 +317,7 @@ struct InternalBarrierMethods<Value> {
 template <>
 struct InternalBarrierMethods<jsid> {
   static bool isMarkable(jsid id) { return JSID_IS_GCTHING(id); }
-  static void preBarrier(jsid id) {
-    DispatchTyped(PreBarrierFunctor<jsid>(), id);
-  }
+  static void preBarrier(jsid id);
   static void postBarrier(jsid* idp, jsid prev, jsid next) {}
 #ifdef DEBUG
   static void assertThingIsNotGray(jsid id) { JS::AssertIdIsNotGray(id); }
