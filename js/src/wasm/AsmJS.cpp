@@ -1981,7 +1981,7 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidator
 
   AsmJSParser<Unit>& parser() const { return parser_; }
 
-  auto tokenStream() const -> decltype(parser_.tokenStream)& {
+  auto& tokenStream() const {
     return parser_.tokenStream;
   }
 
