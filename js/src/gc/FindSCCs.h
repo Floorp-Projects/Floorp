@@ -12,23 +12,21 @@
 #include "jsfriendapi.h"
 #include "jsutil.h"
 
+#include "js/HashTable.h"
+
 namespace js {
 namespace gc {
 
-template <class Node>
+template <typename Node>
 struct GraphNodeBase {
-  Node* gcNextGraphNode;
-  Node* gcNextGraphComponent;
-  unsigned gcDiscoveryTime;
-  unsigned gcLowLink;
+  using NodeSet =
+      js::HashSet<Node*, js::DefaultHasher<Node*>, js::SystemAllocPolicy>;
 
-  GraphNodeBase()
-      : gcNextGraphNode(nullptr),
-        gcNextGraphComponent(nullptr),
-        gcDiscoveryTime(0),
-        gcLowLink(0) {}
-
-  ~GraphNodeBase() {}
+  NodeSet gcGraphEdges;
+  Node* gcNextGraphNode = nullptr;
+  Node* gcNextGraphComponent = nullptr;
+  unsigned gcDiscoveryTime = 0;
+  unsigned gcLowLink = 0;
 
   Node* nextNodeInGroup() const {
     if (gcNextGraphNode &&
@@ -45,41 +43,31 @@ struct GraphNodeBase {
  * Find the strongly connected components of a graph using Tarjan's algorithm,
  * and return them in topological order.
  *
- * Nodes derive from GraphNodeBase and implement findGraphEdges, which calls
- * finder.addEdgeTo to describe the outgoing edges from that node:
+ * Nodes derive from GraphNodeBase and add target edge pointers to
+ * sourceNode.gcGraphEdges to describe the graph:
  *
- * struct MyComponentFinder;
- *
- * struct MyGraphNode : public GraphNodeBase
+ * struct MyGraphNode : public GraphNodeBase<MyGraphNode>
  * {
- *     void findOutgoingEdges(MyComponentFinder& finder)
- *     {
- *         for edge in my_outgoing_edges:
- *             if is_relevant(edge):
- *                 finder.addEdgeTo(edge.destination)
- *     }
+ *   ...
  * }
  *
- * struct MyComponentFinder : public ComponentFinder<MyGraphNode,
- *                                                   MyComponentFinder>
- * {
- *     ...
- * };
+ * MyGraphNode node1, node2, node3;
+ * node1.gcGraphEdges.put(node2); // Error checking elided.
+ * node2.gcGraphEdges.put(node3);
+ * node3.gcGraphEdges.put(node2);
  *
- * MyComponentFinder finder;
- * finder.addNode(v);
+ * ComponentFinder<MyGraphNode> finder;
+ * finder.addNode(node1);
+ * finder.addNode(node2);
+ * finder.addNode(node3);
+ * MyGraphNode* result = finder.getResultsList();
  */
 
-template <typename Node, typename Derived>
+template <typename Node>
 class ComponentFinder {
  public:
   explicit ComponentFinder(uintptr_t sl)
-      : clock(1),
-        stack(nullptr),
-        firstComponent(nullptr),
-        cur(nullptr),
-        stackLimit(sl),
-        stackFull(false) {}
+      : stackLimit(sl) {}
 
   ~ComponentFinder() {
     MOZ_ASSERT(!stack);
@@ -131,8 +119,14 @@ class ComponentFinder {
     }
   }
 
- public:
-  /* Call from implementation of GraphNodeBase::findOutgoingEdges(). */
+ private:
+  // Constant used to indicate an unprocessed vertex.
+  static const unsigned Undefined = 0;
+
+  // Constant used to indicate a processed vertex that is no longer on the
+  // stack.
+  static const unsigned Finished = (unsigned)-1;
+
   void addEdgeTo(Node* w) {
     if (w->gcDiscoveryTime == Undefined) {
       processNode(w);
@@ -141,14 +135,6 @@ class ComponentFinder {
       cur->gcLowLink = Min(cur->gcLowLink, w->gcDiscoveryTime);
     }
   }
-
- private:
-  /* Constant used to indicate an unprocessed vertex. */
-  static const unsigned Undefined = 0;
-
-  // Constant used to indicate an processed vertex that is no longer on the
-  // stack.
-  static const unsigned Finished = (unsigned)-1;
 
   void processNode(Node* v) {
     v->gcDiscoveryTime = clock;
@@ -166,7 +152,9 @@ class ComponentFinder {
 
     Node* old = cur;
     cur = v;
-    cur->findOutgoingEdges(*static_cast<Derived*>(this));
+    for (auto r = cur->gcGraphEdges.all(); !r.empty(); r.popFront()) {
+      addEdgeTo(r.front());
+    }
     cur = old;
 
     if (stackFull) {
@@ -201,12 +189,12 @@ class ComponentFinder {
   }
 
  private:
-  unsigned clock;
-  Node* stack;
-  Node* firstComponent;
-  Node* cur;
+  unsigned clock = 1;
+  Node* stack = nullptr;
+  Node* firstComponent = nullptr;
+  Node* cur = nullptr;
   uintptr_t stackLimit;
-  bool stackFull;
+  bool stackFull = false;
 };
 
 } /* namespace gc */

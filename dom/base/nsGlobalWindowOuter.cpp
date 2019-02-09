@@ -2080,7 +2080,7 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
         return NS_ERROR_FAILURE;
       }
 
-      JS::Rooted<JSObject*> obj(cx, GetWrapperPreserveColor());
+      JS::Rooted<JSObject*> obj(cx, GetWrapper());
 
       MOZ_ASSERT(js::IsWindowProxy(obj));
 

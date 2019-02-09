@@ -3366,8 +3366,7 @@ void Debugger::trace(JSTracer* trc) {
   }
 }
 
-/* static */ void Debugger::findZoneEdges(Zone* zone,
-                                          js::gc::ZoneComponentFinder& finder) {
+/* static */ bool Debugger::findSweepGroupEdges(Zone* zone) {
   JSRuntime* rt = zone->runtimeFromMainThread();
   for (Debugger* dbg : rt->debuggerList()) {
     Zone* debuggerZone = dbg->object->zone();
@@ -3381,7 +3380,9 @@ void Debugger::trace(JSTracer* trc) {
       for (auto e = dbg->debuggeeZones.all(); !e.empty(); e.popFront()) {
         Zone* debuggeeZone = e.front();
         if (debuggeeZone->isGCMarking()) {
-          finder.addEdgeTo(debuggeeZone);
+          if (!zone->addSweepGroupEdgeTo(debuggeeZone)) {
+            return false;
+          }
         }
       }
     } else {
@@ -3397,10 +3398,13 @@ void Debugger::trace(JSTracer* trc) {
           dbg->environments.hasKeyInZone(zone) ||
           dbg->wasmInstanceScripts.hasKeyInZone(zone) ||
           dbg->wasmInstanceSources.hasKeyInZone(zone)) {
-        finder.addEdgeTo(debuggerZone);
+        if (!zone->addSweepGroupEdgeTo(debuggerZone)) {
+          return false;
+        }
       }
     }
   }
+  return true;
 }
 
 const ClassOps Debugger::classOps_ = {nullptr, /* addProperty */

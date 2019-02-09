@@ -161,7 +161,6 @@ tab_test("(table.init 1 (i32.const 7) (i32.const 0) (i32.const 4)) \n" +
          "(table.copy (i32.const 19) (i32.const 20) (i32.const 5))",
          [e,e,3,1,4, 1,e,2,7,1, 8,e,7,e,7, 5,2,7,e,9, e,7,e,8,8, e,e,e,e,e]);
 
-
 // And now a simplified version of the above, for memory.{init,drop,copy}.
 
 function gen_mem_mod_t(insn)
@@ -297,6 +296,44 @@ checkNoDataCount([I32ConstCode, 0,
 
 checkNoDataCount([MiscPrefix, DataDropCode, 0],
                  /data.drop requires a DataCount section/);
+
+// Verification that we can handle encoding errors for passive element segments
+// properly.
+
+function checkPassiveElemSegment(mangle, err) {
+    let bin = moduleWithSections(
+        [v2vSigSection, declSection([0]), // One function
+         tableSection(1),                 // One table
+         { name: elemId,                  // One passive segment
+           body: (function () {
+               let body = [];
+               body.push(1);           // 1 element segment
+               body.push(1);           // Flag: Passive
+               body.push(AnyFuncCode + (mangle == "type" ? 1 : 0)); // always anyfunc
+               body.push(1);           // Element count
+               body.push(PlaceholderRefFunc + (mangle == "ref.func" ? 1 : 0)); // always ref.func
+               body.push(0);           // func index
+               body.push(EndCode + (mangle == "end" ? 1 : 0));
+               return body;
+           })() },
+         bodySection(                   // Empty function
+             [funcBody(
+                 {locals:[],
+                  body:[]})])
+        ]);
+    if (err) {
+        assertErrorMessage(() => new WebAssembly.Module(bin),
+                           WebAssembly.CompileError,
+                           err);
+    } else {
+        new WebAssembly.Module(bin);
+    }
+}
+
+checkPassiveElemSegment("");
+checkPassiveElemSegment("type", /passive segments can only contain function references/);
+checkPassiveElemSegment("ref.func", /failed to read ref.func operation/);
+checkPassiveElemSegment("end", /failed to read end of ref.func expression/);
 
 //---------------------------------------------------------------------//
 //---------------------------------------------------------------------//

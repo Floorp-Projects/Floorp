@@ -82,34 +82,17 @@ AutoTouchingGrayThings::~AutoTouchingGrayThings() {
 
 #endif  // DEBUG
 
-template <typename S>
-template <typename T>
-void ReadBarrierFunctor<S>::operator()(T* t) {
-  InternalBarrierMethods<T*>::readBarrier(t);
+/* static */ void InternalBarrierMethods<Value>::readBarrier(const Value& v) {
+  ApplyGCThingTyped(v, [](auto t) { t->readBarrier(t); });
 }
 
-// All GC things may be held in a Value, either publicly or as a private GC
-// thing.
-#define JS_EXPAND_DEF(name, type, _) \
-  template void ReadBarrierFunctor<JS::Value>::operator()<type>(type*);
-JS_FOR_EACH_TRACEKIND(JS_EXPAND_DEF);
-#undef JS_EXPAND_DEF
-
-template <typename S>
-template <typename T>
-void PreBarrierFunctor<S>::operator()(T* t) {
-  InternalBarrierMethods<T*>::preBarrier(t);
+/* static */ void InternalBarrierMethods<Value>::preBarrier(const Value& v) {
+  ApplyGCThingTyped(v, [](auto t) { t->writeBarrierPre(t); });
 }
 
-// All GC things may be held in a Value, either publicly or as a private GC
-// thing.
-#define JS_EXPAND_DEF(name, type, _) \
-  template void PreBarrierFunctor<JS::Value>::operator()<type>(type*);
-JS_FOR_EACH_TRACEKIND(JS_EXPAND_DEF);
-#undef JS_EXPAND_DEF
-
-template void PreBarrierFunctor<jsid>::operator()<JS::Symbol>(JS::Symbol*);
-template void PreBarrierFunctor<jsid>::operator()<JSString>(JSString*);
+/* static */ void InternalBarrierMethods<jsid>::preBarrier(jsid id) {
+  ApplyGCThingTyped(id, [](auto t) { t->writeBarrierPre(t); });
+}
 
 template <typename T>
 /* static */ bool MovableCellHasher<T>::hasHash(const Lookup& l) {

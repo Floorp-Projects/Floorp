@@ -28,23 +28,23 @@ const CLASSES = new WeakMap();
  * @param {Inspector} inspector
  *        The current inspector instance.
  */
-function ClassList(inspector) {
-  EventEmitter.decorate(this);
+class ClassList {
+  constructor(inspector) {
+    EventEmitter.decorate(this);
 
-  this.inspector = inspector;
+    this.inspector = inspector;
 
-  this.onMutations = this.onMutations.bind(this);
-  this.inspector.on("markupmutation", this.onMutations);
+    this.onMutations = this.onMutations.bind(this);
+    this.inspector.on("markupmutation", this.onMutations);
 
-  this.classListProxyNode = this.inspector.panelDoc.createElement("div");
-}
+    this.classListProxyNode = this.inspector.panelDoc.createElement("div");
+  }
 
-ClassList.prototype = {
   destroy() {
     this.inspector.off("markupmutation", this.onMutations);
     this.inspector = null;
     this.classListProxyNode = null;
-  },
+  }
 
   /**
    * The current node selection (which only returns if the node is an ELEMENT_NODE type
@@ -56,7 +56,7 @@ ClassList.prototype = {
       return this.inspector.selection.nodeFront;
     }
     return null;
-  },
+  }
 
   /**
    * The class states for the current node selection. See the documentation of the CLASSES
@@ -79,7 +79,7 @@ ClassList.prototype = {
     }
 
     return CLASSES.get(this.currentNode);
-  },
+  }
 
   /**
    * Same as currentClasses, but returns it in the form of a className string, where only
@@ -89,7 +89,7 @@ ClassList.prototype = {
     return this.currentClasses.filter(({ isApplied }) => isApplied)
                               .map(({ name }) => name)
                               .join(" ");
-  },
+  }
 
   /**
    * Set the state for a given class on the current node.
@@ -106,7 +106,7 @@ ClassList.prototype = {
     nodeClasses.find(({ name: cName }) => cName === name).isApplied = isApplied;
 
     return this.applyClassState();
-  },
+  }
 
   /**
    * Add several classes to the current node at once.
@@ -120,7 +120,7 @@ ClassList.prototype = {
     return Promise.all([...new Set([...this.classListProxyNode.classList])].map(name => {
       return this.addClass(name);
     }));
-  },
+  }
 
   /**
    * Add a class to the current node at once.
@@ -139,7 +139,7 @@ ClassList.prototype = {
     this.currentClasses.push({ name, isApplied: true });
 
     return this.applyClassState();
-  },
+  }
 
   /**
    * Used internally by other functions like addClass or setClassState. Actually applies
@@ -165,7 +165,7 @@ ClassList.prototype = {
     const mod = this.currentNode.startModifyingAttributes();
     mod.setAttribute("class", this.currentClassesPreview);
     return mod.apply();
-  },
+  }
 
   onMutations(mutations) {
     for (const {type, target, attributeName} of mutations) {
@@ -185,7 +185,7 @@ ClassList.prototype = {
         }
       }
     }
-  },
-};
+  }
+}
 
 module.exports = ClassList;

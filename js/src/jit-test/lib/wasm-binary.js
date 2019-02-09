@@ -99,6 +99,7 @@ const I64DivUCode      = 0x80;
 const I64RemSCode      = 0x81;
 const I64RemUCode      = 0x82;
 const RefNull          = 0xd0;
+const PlaceholderRefFunc = 0xd2;
 
 const FirstInvalidOpcode = 0xc5;
 const LastInvalidOpcode = 0xfb;

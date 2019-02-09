@@ -2324,13 +2324,26 @@ static bool DecodeElemSection(Decoder& d, ModuleEnvironment* env) {
 
     seg->tableIndex = tableIndex;
 
-    if (initializerKind == InitializerKind::Active ||
-        initializerKind == InitializerKind::ActiveWithIndex) {
-      InitExpr offset;
-      if (!DecodeInitializerExpression(d, env, ValType::I32, &offset)) {
-        return false;
+    switch (initializerKind) {
+      case InitializerKind::Active:
+      case InitializerKind::ActiveWithIndex: {
+        InitExpr offset;
+        if (!DecodeInitializerExpression(d, env, ValType::I32, &offset)) {
+          return false;
+        }
+        seg->offsetIfActive.emplace(offset);
+        break;
       }
-      seg->offsetIfActive.emplace(offset);
+      case InitializerKind::Passive: {
+        uint8_t form;
+        if (!d.readFixedU8(&form)) {
+          return d.fail("expected type form");
+        }
+        if (form != uint8_t(TypeCode::AnyFunc)) {
+          return d.fail("passive segments can only contain function references");
+        }
+        break;
+      }
     }
 
     uint32_t numElems;
@@ -2355,7 +2368,18 @@ static bool DecodeElemSection(Decoder& d, ModuleEnvironment* env) {
                          env->tables[tableIndex].importedOrExported;
 #endif
 
+    // For passive segments we should use DecodeInitializerExpression() but we
+    // don't really want to generalize that function yet, so instead read the
+    // required Ref.Func and End here.
+
     for (uint32_t i = 0; i < numElems; i++) {
+      if (initializerKind == InitializerKind::Passive) {
+        OpBytes op;
+        if (!d.readOp(&op) || op.b0 != PlaceholderRefFunc) {
+          return d.fail("failed to read ref.func operation");
+        }
+      }
+
       uint32_t funcIndex;
       if (!d.readVarU32(&funcIndex)) {
         return d.fail("failed to read element function index");
@@ -2371,6 +2395,13 @@ static bool DecodeElemSection(Decoder& d, ModuleEnvironment* env) {
         return false;
       }
 #endif
+
+      if (initializerKind == InitializerKind::Passive) {
+        OpBytes end;
+        if (!d.readOp(&end) || end.b0 != uint16_t(Op::End)) {
+          return d.fail("failed to read end of ref.func expression");
+        }
+      }
 
       seg->elemFuncIndices.infallibleAppend(funcIndex);
     }

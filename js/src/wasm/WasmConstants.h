@@ -357,6 +357,11 @@ enum class Op {
   Limit = 0x100
 };
 
+// TODO: RefFunc can't be incorporated into the opcode table until we're willing
+// to handle it generally and we've renumbered RefEq, but we need it to express
+// passive element segments.
+constexpr uint16_t PlaceholderRefFunc = 0xd2;
+
 inline bool IsPrefixByte(uint8_t b) { return b >= uint8_t(Op::FirstPrefix); }
 
 // Opcodes in the "miscellaneous" opcode space.
