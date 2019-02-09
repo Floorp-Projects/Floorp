@@ -54,7 +54,7 @@ PRVersionDescription VERSION_DESC_NAME =
     /* filename         */  _PRODUCTION,        /* the produced library name */
     /* description      */ "Portable runtime",  /* what we are */
     /* security         */ "N/A",               /* not applicable here */
-    /* copywrite        */  "Copyright (c) 1998 Netscape Communications Corporation. All Rights Reserved",
+    /* copywrite        */ "This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain one at http://mozilla.org/MPL/2.0/.",
     /* comment          */  "License information: http://www.mozilla.org/MPL/",
     /* specialString    */ ""
 };
