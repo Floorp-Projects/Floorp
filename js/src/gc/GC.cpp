@@ -4840,71 +4840,61 @@ static void DropStringWrappers(JSRuntime* rt) {
  * Tarjan's algorithm is used to calculate the components.
  */
 
-void Compartment::findOutgoingEdges(ZoneComponentFinder& finder) {
+bool Compartment::findSweepGroupEdges() {
+  Zone* source = zone();
   for (js::WrapperMap::Enum e(crossCompartmentWrappers); !e.empty();
        e.popFront()) {
     CrossCompartmentKey& key = e.front().mutableKey();
     MOZ_ASSERT(!key.is<JSString*>());
+
+    // Add edge to wrapped object zone if wrapped object is not marked black to
+    // indicate that wrapper zone not be swept after wrapped compartment.
+
     if (key.is<JSObject*>() &&
         key.as<JSObject*>()->asTenured().isMarkedBlack()) {
       // CCW target is already marked, so we don't need to watch out for
       // later marking of the CCW.
       continue;
     }
-    key.applyToWrapped([&finder](auto tp) {
-      /*
-       * Add edge to wrapped object compartment if wrapped object is not
-       * marked black to indicate that wrapper compartment not be swept
-       * after wrapped compartment.
-       */
-      JS::Zone* zone = (*tp)->asTenured().zone();
-      if (zone->isGCMarking()) {
-        finder.addEdgeTo(zone);
-      }
+
+    Zone* target = key.applyToWrapped([](auto tp) {
+      return (*tp)->asTenured().zone();
     });
-  }
-}
-
-void Zone::findOutgoingEdges(ZoneComponentFinder& finder) {
-  /*
-   * Any compartment may have a pointer to an atom in the atoms
-   * compartment, and these aren't in the cross compartment map.
-   */
-  if (Zone* zone = finder.maybeAtomsZone) {
-    MOZ_ASSERT(zone->isCollecting());
-    finder.addEdgeTo(zone);
-  }
-
-  for (CompartmentsInZoneIter comp(this); !comp.done(); comp.next()) {
-    comp->findOutgoingEdges(finder);
-  }
-
-  for (ZoneSet::Range r = gcSweepGroupEdges().all(); !r.empty(); r.popFront()) {
-    if (r.front()->isGCMarking()) {
-      finder.addEdgeTo(r.front());
+    if (!target->isGCMarking()) {
+      continue;
     }
-  }
 
-  Debugger::findZoneEdges(this, finder);
-}
-
-bool GCRuntime::findInterZoneEdges() {
-  /*
-   * Weakmaps which have keys with delegates in a different zone introduce the
-   * need for zone edges from the delegate's zone to the weakmap zone.
-   *
-   * Since the edges point into and not away from the zone the weakmap is in
-   * we must find these edges in advance and store them in a set on the Zone.
-   * If we run out of memory, we fall back to sweeping everything in one
-   * group.
-   */
-
-  for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
-    if (!WeakMapBase::findInterZoneEdges(zone)) {
+    if (!source->addSweepGroupEdgeTo(target)) {
       return false;
     }
   }
 
+  return true;
+}
+
+bool Zone::findSweepGroupEdges(Zone* atomsZone) {
+  // Any zone may have a pointer to an atom in the atoms zone, and these aren't
+  // in the cross compartment map.
+  if (atomsZone->wasGCStarted() && !addSweepGroupEdgeTo(atomsZone)) {
+    return false;
+  }
+
+  for (CompartmentsInZoneIter comp(this); !comp.done(); comp.next()) {
+    if (!comp->findSweepGroupEdges()) {
+      return false;
+    }
+  }
+
+  return WeakMapBase::findSweepGroupEdges(this) &&
+         Debugger::findSweepGroupEdges(this);
+}
+
+bool GCRuntime::findSweepGroupEdges() {
+  for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
+    if (!zone->findSweepGroupEdges(atomsZone)) {
+      return false;
+    }
+  }
   return true;
 }
 
@@ -4916,10 +4906,8 @@ void GCRuntime::groupZonesForSweeping(JS::GCReason reason) {
 #endif
 
   JSContext* cx = rt->mainContextFromOwnThread();
-  Zone* maybeAtomsZone = atomsZone->wasGCStarted() ? atomsZone.ref() : nullptr;
-  ZoneComponentFinder finder(cx->nativeStackLimit[JS::StackForSystemCode],
-                             maybeAtomsZone);
-  if (!isIncremental || !findInterZoneEdges()) {
+  ZoneComponentFinder finder(cx->nativeStackLimit[JS::StackForSystemCode]);
+  if (!isIncremental || !findSweepGroupEdges()) {
     finder.useOneComponent();
   }
 
@@ -4939,7 +4927,7 @@ void GCRuntime::groupZonesForSweeping(JS::GCReason reason) {
   sweepGroupIndex = 1;
 
   for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
-    zone->gcSweepGroupEdges().clear();
+    zone->clearSweepGroupEdges();
   }
 
 #ifdef DEBUG
