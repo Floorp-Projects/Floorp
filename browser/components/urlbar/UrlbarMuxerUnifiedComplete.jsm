@@ -19,7 +19,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 XPCOMUtils.defineLazyGetter(this, "logger", () =>
-  Log.repository.getLogger("Places.Urlbar.UrlbarMuxerUnifiedComplete"));
+  Log.repository.getLogger("Urlbar.Muxer.UnifiedComplete"));
 
 const RESULT_TYPE_TO_GROUP = new Map([
   [ UrlbarUtils.RESULT_TYPE.TAB_SWITCH, UrlbarUtils.RESULT_GROUP.GENERAL ],
