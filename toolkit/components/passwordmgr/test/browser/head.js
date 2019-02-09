@@ -12,6 +12,7 @@ registerCleanupFunction(async function cleanup_removeAllLoginsAndResetRecipes() 
   await SpecialPowers.popPrefEnv();
 
   Services.logins.removeAllLogins();
+  clearHttpAuths();
 
   let recipeParent = LoginTestUtils.recipes.getRecipeParent();
   if (!recipeParent) {
@@ -70,6 +71,13 @@ function checkOnlyLoginWasUsedTwice({ justChanged }) {
     is(logins[0].timeCreated, logins[0].timePasswordChanged, "timeChanged not updated");
   }
 }
+
+function clearHttpAuths() {
+  let authMgr = Cc["@mozilla.org/network/http-auth-manager;1"].
+              getService(Ci.nsIHttpAuthManager);
+  authMgr.clearAll();
+}
+
 
 // Begin popup notification (doorhanger) functions //
 

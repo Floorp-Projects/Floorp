@@ -40,9 +40,7 @@ function runTest() {
 }
 
 function getWriteTestFile() {
-  let file = getUpdatesRootDir();
-  file.append(FILE_UPDATE_TEST);
-  file.QueryInterface(Ci.nsILocalFileWin);
+  let file = getUpdateDirFile(FILE_UPDATE_TEST).QueryInterface(Ci.nsILocalFileWin);
   if (file.exists()) {
     file.fileAttributesWin |= file.WFA_READWRITE;
     file.fileAttributesWin &= ~file.WFA_READONLY;

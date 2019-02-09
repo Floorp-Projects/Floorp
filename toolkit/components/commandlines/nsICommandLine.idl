@@ -115,12 +115,6 @@ interface nsICommandLine : nsISupports
   readonly attribute nsIFile workingDirectory;
 
   /**
-   * A window to be targeted by this command line. In most cases, this will
-   * be null (xremote will sometimes set this attribute).
-   */
-  readonly attribute nsIDOMWindow windowContext;
-
-  /**
    * Resolve a file-path argument into an nsIFile. This method gracefully
    * handles relative or absolute file paths, according to the working
    * directory of this command line.

@@ -35,11 +35,6 @@ interface nsICommandLineRunner : nsICommandLine
             in nsIFile workingDir, in unsigned long state);
 
   /**
-   * Set the windowContext parameter.
-   */
-  void setWindowContext(in nsIDOMWindow aWindow);
-
-  /**
    * Process the command-line handlers in the proper order, calling "handle()" on
    * each.
    *

@@ -65,7 +65,7 @@ async function continueFileHandler(leafName) {
     // total time to wait with the default interval of 100 is approximately 10
     // seconds. The test updater uses the same values.
     retries = 100;
-    continueFile = getUpdatesPatchDir();
+    continueFile = getUpdateDirFile(DIR_PATCH);
     continueFile.append(leafName);
   } else {
     debugDump("creating " + leafName + " file for slow http server requests");
@@ -100,9 +100,7 @@ function lockWriteTestFile() {
   if (AppConstants.platform != "win") {
     throw new Error("Windows only test function called");
   }
-  let file = getUpdatesRootDir();
-  file.append(FILE_UPDATE_TEST);
-  file.QueryInterface(Ci.nsILocalFileWin);
+  let file = getUpdateDirFile(FILE_UPDATE_TEST).QueryInterface(Ci.nsILocalFileWin);
   // Remove the file if it exists just in case.
   if (file.exists()) {
     file.fileAttributesWin |= file.WFA_READWRITE;
@@ -150,7 +148,7 @@ function getVersionParams(aAppVersion) {
  */
 function cleanUpUpdates() {
   reloadUpdateManagerData(true);
-  removeUpdateDirsAndFiles();
+  removeUpdateFiles(true);
 }
 
 /**
@@ -218,7 +216,7 @@ function runUpdateTest(updateParams, checkAttempts, steps) {
 
     gEnv.set("MOZ_TEST_SKIP_UPDATE_STAGE", "1");
     setUpdateTimerPrefs();
-    removeUpdateDirsAndFiles();
+    removeUpdateFiles(true);
     await SpecialPowers.pushPrefEnv({
       set: [
         [PREF_APP_UPDATE_DOWNLOADPROMPTATTEMPTS, 0],
@@ -274,7 +272,7 @@ function runUpdateProcessingTest(updates, steps) {
 
     gEnv.set("MOZ_TEST_SKIP_UPDATE_STAGE", "1");
     setUpdateTimerPrefs();
-    removeUpdateDirsAndFiles();
+    removeUpdateFiles(true);
     await SpecialPowers.pushPrefEnv({
       set: [
         [PREF_APP_UPDATE_DOWNLOADPROMPTATTEMPTS, 0],
@@ -678,7 +676,7 @@ function runAboutDialogUpdateTest(updateParams, backgroundUpdate, steps) {
 
     gEnv.set("MOZ_TEST_SLOW_SKIP_UPDATE_STAGE", "1");
     setUpdateTimerPrefs();
-    removeUpdateDirsAndFiles();
+    removeUpdateFiles(true);
 
     await setupTestUpdater();
     registerCleanupFunction(async () => {
@@ -817,7 +815,7 @@ function runAboutPrefsUpdateTest(updateParams, backgroundUpdate, steps) {
 
     gEnv.set("MOZ_TEST_SLOW_SKIP_UPDATE_STAGE", "1");
     setUpdateTimerPrefs();
-    removeUpdateDirsAndFiles();
+    removeUpdateFiles(true);
 
     await setupTestUpdater();
     registerCleanupFunction(async () => {

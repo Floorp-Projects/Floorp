@@ -1668,6 +1668,7 @@ pref("extensions.pocket.oAuthConsumerKey", "40249-e88c401e1b1f2242d9e441c4");
 pref("extensions.pocket.site", "getpocket.com");
 
 pref("signon.schemeUpgrades", true);
+pref("signon.privateBrowsingCapture.enabled", true);
 
 // Enable the "Simplify Page" feature in Print Preview. This feature
 // is disabled by default in toolkit.

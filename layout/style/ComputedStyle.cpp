@@ -42,7 +42,7 @@ namespace mozilla {
 
 //----------------------------------------------------------------------
 
-ComputedStyle::ComputedStyle(nsPresContext* aPresContext, nsAtom* aPseudoTag,
+ComputedStyle::ComputedStyle(nsAtom* aPseudoTag,
                              CSSPseudoElementType aPseudoType,
                              ServoComputedDataForgotten aComputedValues)
     : mSource(aComputedValues),

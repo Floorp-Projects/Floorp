@@ -8,7 +8,7 @@ async function runTestOnPrivacyPrefPane(testFunc) {
   info("loaded about:preferences");
   browser.contentWindow.gotoPref("panePrivacy");
   info("viewing privacy pane, executing testFunc");
-  testFunc(browser.contentWindow);
+  await testFunc(browser.contentWindow);
   BrowserTestUtils.removeTab(tab);
 }
 
@@ -205,7 +205,7 @@ function test_dependent_clearonclose_elements(win) {
   expect_disabled(true);
 }
 
-function test_dependent_prefs(win) {
+async function test_dependent_prefs(win) {
   let historymode = win.document.getElementById("historyMode");
   ok(historymode, "history mode menulist should exist");
   let controls = [
@@ -226,6 +226,8 @@ function test_dependent_prefs(win) {
   // controls should be checked in remember mode
   historymode.value = "remember";
   controlChanged(historymode);
+  // Initial updates from prefs are not sync, so wait:
+  await TestUtils.waitForCondition(() => controls[0].getAttribute("checked") == "true");
   expect_checked(true);
 
   // even if they're unchecked in custom mode
