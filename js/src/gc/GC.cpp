@@ -3674,21 +3674,16 @@ void GCRuntime::freeFromBackgroundThread(AutoLockHelperThreadState& lock) {
 
 void GCRuntime::waitBackgroundFreeEnd() { freeTask.join(); }
 
-struct IsAboutToBeFinalizedFunctor {
-  template <typename T>
-  bool operator()(Cell** t) {
-    mozilla::DebugOnly<const Cell*> prior = *t;
-    bool result = IsAboutToBeFinalizedUnbarriered(reinterpret_cast<T**>(t));
+/* static */ bool UniqueIdGCPolicy::needsSweep(Cell** cellp, uint64_t*) {
+  Cell* cell = *cellp;
+  return MapGCThingTyped(cell, cell->getTraceKind(), [](auto t) {
+    mozilla::DebugOnly<const Cell*> prior = t;
+    bool result = IsAboutToBeFinalizedUnbarriered(&t);
     // Sweep should not have to deal with moved pointers, since moving GC
     // handles updating the UID table manually.
-    MOZ_ASSERT(*t == prior);
+    MOZ_ASSERT(t == prior);
     return result;
-  }
-};
-
-/* static */ bool UniqueIdGCPolicy::needsSweep(Cell** cell, uint64_t*) {
-  return DispatchTraceKindTyped(IsAboutToBeFinalizedFunctor(),
-                                (*cell)->getTraceKind(), cell);
+  });
 }
 
 void JS::Zone::sweepUniqueIds() { uniqueIds().sweep(); }
@@ -4037,13 +4032,6 @@ static bool InCrossCompartmentMap(JSObject* src, JS::GCCellPtr dst) {
   return false;
 }
 
-struct MaybeCompartmentFunctor {
-  template <typename T>
-  JS::Compartment* operator()(T* t) {
-    return t->maybeCompartment();
-  }
-};
-
 void CompartmentCheckTracer::onChild(const JS::GCCellPtr& thing) {
   Compartment* comp = MapGCThingTyped(thing, [](auto t) {
     return t->maybeCompartment();
@@ -4074,8 +4062,9 @@ void GCRuntime::checkForCompartmentMismatches() {
            i.next()) {
         trc.src = i.getCell();
         trc.srcKind = MapAllocToTraceKind(thingKind);
-        trc.compartment = DispatchTraceKindTyped(MaybeCompartmentFunctor(),
-                                                 trc.src, trc.srcKind);
+        trc.compartment = MapGCThingTyped(trc.src, trc.srcKind, [](auto t) {
+          return t->maybeCompartment();
+        });
         js::TraceChildren(&trc, trc.src, trc.srcKind);
       }
     }
