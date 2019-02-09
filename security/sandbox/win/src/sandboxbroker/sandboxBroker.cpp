@@ -601,7 +601,7 @@ void SandboxBroker::SetSecurityLevelForGPUProcess(int32_t aSandboxLevel) {
     accessTokenLevel = sandbox::USER_LIMITED;
     initialIntegrityLevel = sandbox::INTEGRITY_LEVEL_LOW;
     delayedIntegrityLevel = sandbox::INTEGRITY_LEVEL_LOW;
-  } else {    
+  } else if (aSandboxLevel == 1) {
     jobLevel = sandbox::JOB_NONE;
     accessTokenLevel = sandbox::USER_NON_ADMIN;
     initialIntegrityLevel = sandbox::INTEGRITY_LEVEL_LOW;
