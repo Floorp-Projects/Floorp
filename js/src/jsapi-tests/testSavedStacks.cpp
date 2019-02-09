@@ -99,14 +99,14 @@ BEGIN_TEST(testSavedStacks_RangeBasedForLoops) {
   // Stack string
   const char* SpiderMonkeyStack =
       "three@filename.js:4:14\n"
-      "two@filename.js:5:6\n"
-      "one@filename.js:6:4\n"
-      "@filename.js:7:2\n";
+      "two@filename.js:3:22\n"
+      "one@filename.js:2:20\n"
+      "@filename.js:1:11\n";
   const char* V8Stack =
       "    at three (filename.js:4:14)\n"
-      "    at two (filename.js:5:6)\n"
-      "    at one (filename.js:6:4)\n"
-      "    at filename.js:7:2";
+      "    at two (filename.js:3:22)\n"
+      "    at one (filename.js:2:20)\n"
+      "    at filename.js:1:11";
   struct {
     js::StackFormat format;
     const char* expected;
@@ -155,9 +155,9 @@ BEGIN_TEST(testSavedStacks_ErrorStackSpiderMonkey) {
   // Stack string
   const char* SpiderMonkeyStack =
       "three@filename.js:4:14\n"
-      "two@filename.js:5:6\n"
-      "one@filename.js:6:4\n"
-      "@filename.js:7:2\n";
+      "two@filename.js:3:22\n"
+      "one@filename.js:2:20\n"
+      "@filename.js:1:11\n";
   JSLinearString* lin = stack->ensureLinear(cx);
   CHECK(lin);
   CHECK(js::StringEqualsAscii(lin, SpiderMonkeyStack));
@@ -187,9 +187,9 @@ BEGIN_TEST(testSavedStacks_ErrorStackV8) {
   const char* V8Stack =
       "Error: foo\n"
       "    at three (filename.js:4:14)\n"
-      "    at two (filename.js:5:6)\n"
-      "    at one (filename.js:6:4)\n"
-      "    at filename.js:7:2";
+      "    at two (filename.js:3:22)\n"
+      "    at one (filename.js:2:20)\n"
+      "    at filename.js:1:11";
   JSLinearString* lin = stack->ensureLinear(cx);
   CHECK(lin);
   CHECK(js::StringEqualsAscii(lin, V8Stack));

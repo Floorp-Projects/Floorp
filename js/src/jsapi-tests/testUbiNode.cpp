@@ -248,16 +248,16 @@ BEGIN_TEST(test_ubiStackFrame) {
 
   ubiFrame = ubiFrame.parent();
   CHECK(checkString("two", bufferFunctionDisplayName, getFunctionDisplayName));
-  CHECK(ubiFrame.line() == 5);
+  CHECK(ubiFrame.line() == 3);
 
   ubiFrame = ubiFrame.parent();
   CHECK(checkString("one", bufferFunctionDisplayName, getFunctionDisplayName));
-  CHECK(ubiFrame.line() == 6);
+  CHECK(ubiFrame.line() == 2);
 
   ubiFrame = ubiFrame.parent();
   CHECK(ubiFrame.functionDisplayName().is<JSAtom*>());
   CHECK(ubiFrame.functionDisplayName().as<JSAtom*>() == nullptr);
-  CHECK(ubiFrame.line() == 7);
+  CHECK(ubiFrame.line() == 1);
 
   ubiFrame = ubiFrame.parent();
   CHECK(!ubiFrame);
