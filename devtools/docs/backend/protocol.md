@@ -905,12 +905,6 @@ The thread stopped at the watchpoints represented by the given actors.
 
 The expression given in the client's prior `clientEvaluate` command has completed execution; *completion* is a [completion value](#completion-values) describing how it completed. The frame created for the `clientEvaluate` resumption has been popped from the stack. See [Evaluating Source-Language Expressions](#evaluating-source-language-expressions) for details.
 
-```
-{ "type":"pauseOnDOMEvents" }
-```
-
-The client resumed the thread with a `"resume"` packet that included a `pauseOnDOMEvents` property, and the thread stopped because it executed an event in that list.
-
 ### Resuming a Thread
 
 If a thread is in the **Paused** state, the client can resume it by sending a packet of the following form:
@@ -990,23 +984,7 @@ where *exception* is a grip on the exception object.
 
 To request that execution pause on a DOM event, the client may send a request of the form:
 
-```
-{ "to":<thread>, "type":"resume", "pauseOnDOMEvents": [<event-type>, ... ] }
-```
-
-The `pauseOnDOMEvents` property contains an array of the types of DOM events that should pause execution. Execution pauses immediately after the frame for the call to the listener has been pushed, and before the listener has begun execution.
-
-A request to pause on all kinds of events can be made using the "*" wildcard event type:
-
-```
-{ "to":<thread>, "type":"resume", "pauseOnDOMEvents": "*" }
-```
-
-A `pauseOnDOMEvents` applies only until the next pause. In order to change the types of events that should pause execution, a new array of event types should be sent to the server. Any events not present in the new list will no longer trigger pauses. Consequently, sending an empty array or simply omitting the `pauseOnDOMEvents` property disables pausing on DOM events.
-
-When a thread pauses because a DOM event was triggered, the "paused" packet's *reason* will have a type of `"pauseOnDOMEvents"`.
-
-If a `"forceCompletion"` property is present in a `"resume"` packet, along with `"resumeLimit"`, `"pauseOnExceptions"` or `"pauseOnDOMEvents"`, the thread will respond with an error:
+If a `"forceCompletion"` property is present in a `"resume"` packet, along with `"resumeLimit"`, or `"pauseOnExceptions"`, the thread will respond with an error:
 
 ```
 { "from":<thread>, "error":"badParameterType", "message":<message> }
