@@ -4,8 +4,13 @@
 package org.mozilla.fenix.library.history
 
 import android.view.ViewGroup
-import org.mozilla.fenix.home.sessions.SessionsUIView
-import org.mozilla.fenix.mvi.*
+import org.mozilla.fenix.mvi.Action
+import org.mozilla.fenix.mvi.ActionBusFactory
+import org.mozilla.fenix.mvi.Change
+import org.mozilla.fenix.mvi.UIComponent
+import org.mozilla.fenix.mvi.ViewState
+
+data class HistoryItem(val url: String)
 
 class HistoryComponent(
     private val container: ViewGroup,
@@ -19,7 +24,7 @@ class HistoryComponent(
 
     override val reducer: (HistoryState, HistoryChange) -> HistoryState = { state, change ->
         when (change) {
-            is HistoryChange.Changed -> state // copy state with changes here
+            is HistoryChange.Change -> state.copy(items = change.list)
         }
     }
 
@@ -30,12 +35,12 @@ class HistoryComponent(
     }
 }
 
-data class HistoryState(val items: List<String>) : ViewState
+data class HistoryState(val items: List<HistoryItem>) : ViewState
 
 sealed class HistoryAction : Action {
     object Select : HistoryAction()
 }
 
 sealed class HistoryChange : Change {
-    object Changed : HistoryChange()
+    data class Change(val list: List<HistoryItem>) : HistoryChange()
 }
