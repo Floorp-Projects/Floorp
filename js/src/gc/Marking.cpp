@@ -6,6 +6,7 @@
 
 #include "gc/Marking-inl.h"
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/IntegerRange.h"
 #include "mozilla/ReentrancyGuard.h"
@@ -512,40 +513,40 @@ template void js::TraceProcessGlobalRoot<JSAtom>(JSTracer*, JSAtom*,
 template void js::TraceProcessGlobalRoot<JS::Symbol>(JSTracer*, JS::Symbol*,
                                                      const char*);
 
-// A typed functor adaptor for TraceRoot.
-struct TraceRootFunctor {
-  template <typename T>
-  void operator()(JSTracer* trc, Cell** thingp, const char* name) {
-    TraceRoot(trc, reinterpret_cast<T**>(thingp), name);
-  }
-};
-
 void js::TraceGenericPointerRoot(JSTracer* trc, Cell** thingp,
                                  const char* name) {
   MOZ_ASSERT(thingp);
-  if (!*thingp) {
+  Cell* thing = *thingp;
+  if (!thing) {
     return;
   }
-  TraceRootFunctor f;
-  DispatchTraceKindTyped(f, (*thingp)->getTraceKind(), trc, thingp, name);
-}
 
-// A typed functor adaptor for TraceManuallyBarrieredEdge.
-struct TraceManuallyBarrieredEdgeFunctor {
-  template <typename T>
-  void operator()(JSTracer* trc, Cell** thingp, const char* name) {
-    TraceManuallyBarrieredEdge(trc, reinterpret_cast<T**>(thingp), name);
+  auto traced = MapGCThingTyped(thing, thing->getTraceKind(),
+                                [trc, name](auto t) -> Cell* {
+    TraceRoot(trc, &t, name);
+    return t;
+  });
+  if (traced != thing) {
+    *thingp = traced;
   }
-};
+}
 
 void js::TraceManuallyBarrieredGenericPointerEdge(JSTracer* trc, Cell** thingp,
                                                   const char* name) {
   MOZ_ASSERT(thingp);
+  Cell* thing = *thingp;
   if (!*thingp) {
     return;
   }
-  TraceManuallyBarrieredEdgeFunctor f;
-  DispatchTraceKindTyped(f, (*thingp)->getTraceKind(), trc, thingp, name);
+
+  auto traced = MapGCThingTyped(thing, thing->getTraceKind(),
+                                [trc, name](auto t) -> Cell* {
+    TraceManuallyBarrieredEdge(trc, &t, name);
+    return t;
+  });
+  if (traced != thing) {
+    *thingp = traced;
+  }
 }
 
 // This method is responsible for dynamic dispatch to the real tracer
