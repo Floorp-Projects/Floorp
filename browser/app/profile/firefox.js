@@ -1032,7 +1032,7 @@ pref("security.sandbox.windows.log.stackTraceDepth", 0);
 // For information on what the level number means, see
 // SetSecurityLevelForGPUProcess() in
 // security/sandbox/win/src/sandboxbroker/sandboxBroker.cpp
-pref("security.sandbox.gpu.level", 1);
+pref("security.sandbox.gpu.level", 0);
 
 // Controls whether we disable win32k for the processes.
 // true means that win32k system calls are not permitted.
