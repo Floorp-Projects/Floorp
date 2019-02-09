@@ -15,6 +15,7 @@
 #include "mozilla/EndianUtils.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Likely.h"
+#include "mozilla/Maybe.h"
 
 #include <limits> /* for std::numeric_limits */
 
@@ -1308,54 +1309,48 @@ class HeapBase<JS::Value, Wrapper>
   }
 };
 
-/*
- * If the Value is a GC pointer type, convert to that type and call |f| with
- * the pointer. If the Value is not a GC type, calls F::defaultValue.
- */
-template <typename F, typename... Args>
-auto DispatchTyped(F f, const JS::Value& val, Args&&... args) {
+
+// If the Value is a GC pointer type, call |f| with the pointer cast to that
+// type and return the result wrapped in a Maybe, otherwise return None().
+template <typename F>
+auto MapGCThingTyped(const JS::Value& val, F&& f) {
   if (val.isString()) {
     JSString* str = val.toString();
     MOZ_ASSERT(gc::IsCellPointerValid(str));
-    return f(str, std::forward<Args>(args)...);
+    return mozilla::Some(f(str));
   }
   if (val.isObject()) {
     JSObject* obj = &val.toObject();
     MOZ_ASSERT(gc::IsCellPointerValid(obj));
-    return f(obj, std::forward<Args>(args)...);
+    return mozilla::Some(f(obj));
   }
   if (val.isSymbol()) {
     JS::Symbol* sym = val.toSymbol();
     MOZ_ASSERT(gc::IsCellPointerValid(sym));
-    return f(sym, std::forward<Args>(args)...);
+    return mozilla::Some(f(sym));
   }
 #ifdef ENABLE_BIGINT
   if (val.isBigInt()) {
     JS::BigInt* bi = val.toBigInt();
     MOZ_ASSERT(gc::IsCellPointerValid(bi));
-    return f(bi, std::forward<Args>(args)...);
+    return mozilla::Some(f(bi));
   }
 #endif
   if (MOZ_UNLIKELY(val.isPrivateGCThing())) {
     MOZ_ASSERT(gc::IsCellPointerValid(val.toGCThing()));
-    return DispatchTyped(f, val.toGCCellPtr(), std::forward<Args>(args)...);
+    return mozilla::Some(MapGCThingTyped(val.toGCCellPtr(), std::move(f)));
   }
   MOZ_ASSERT(!val.isGCThing());
-  return F::defaultValue(val);
+  using ReturnType = decltype(f(static_cast<JSObject*>(nullptr)));
+  return mozilla::Maybe<ReturnType>();
 }
 
-template <class S>
-struct VoidDefaultAdaptor {
-  static void defaultValue(const S&) {}
-};
-template <class S>
-struct IdentityDefaultAdaptor {
-  static S defaultValue(const S& v) { return v; }
-};
-template <class S, bool v>
-struct BoolDefaultAdaptor {
-  static bool defaultValue(const S&) { return v; }
-};
+// If the Value is a GC pointer type, call |f| with the pointer cast to that
+// type. Return whether this happened.
+template <typename F>
+bool ApplyGCThingTyped(const JS::Value& val, F&& f) {
+  return MapGCThingTyped(val, [&f](auto t) { f(t); return true; }).isSome();
+}
 
 static inline JS::Value PoisonedObjectValue(uintptr_t poison) {
   JS::Value v;

@@ -42,7 +42,7 @@
 
 using namespace js;
 
-using JS::DispatchTyped;
+using JS::ApplyGCThingTyped;
 using JS::HandleValue;
 using JS::Value;
 using JS::ZoneSet;
@@ -153,20 +153,12 @@ Node::Size Concrete<void>::size(mozilla::MallocSizeOf mallocSizeof) const {
   MOZ_CRASH("null ubi::Node");
 }
 
-struct Node::ConstructFunctor : public js::BoolDefaultAdaptor<Value, false> {
-  template <typename T>
-  bool operator()(T* t, Node* node) {
-    node->construct(t);
-    return true;
-  }
-};
-
 Node::Node(const JS::GCCellPtr& thing) {
-  DispatchTyped(ConstructFunctor(), thing, this);
+  ApplyGCThingTyped(thing, [this](auto t) { this->construct(t); });
 }
 
 Node::Node(HandleValue value) {
-  if (!DispatchTyped(ConstructFunctor(), value, this)) {
+  if (!ApplyGCThingTyped(value, [this](auto t) { this->construct(t); })) {
     construct<void>(nullptr);
   }
 }

@@ -277,17 +277,9 @@ void js::CheckTracedThing(JSTracer* trc, T* thing) {
 #endif
 }
 
-template <typename S>
-struct CheckTracedFunctor : public VoidDefaultAdaptor<S> {
-  template <typename T>
-  void operator()(T* t, JSTracer* trc) {
-    CheckTracedThing(trc, t);
-  }
-};
-
 template <typename T>
 void js::CheckTracedThing(JSTracer* trc, T thing) {
-  DispatchTyped(CheckTracedFunctor<T>(), thing, trc);
+  ApplyGCThingTyped(thing, [](auto t) { CheckTracedThing(t); });
 }
 
 namespace js {
@@ -407,6 +399,8 @@ void js::gc::AssertRootMarkingPhase(JSTracer* trc) {
 
 /*** Tracing Interface ******************************************************/
 
+template <typename T>
+T* DoCallback(JS::CallbackTracer* trc, T** thingp, const char* name);
 template <typename T>
 T DoCallback(JS::CallbackTracer* trc, T* thingp, const char* name);
 template <typename T>
@@ -742,17 +736,9 @@ void DoMarking(GCMarker* gcmarker, T* thing) {
   SetMaybeAliveFlag(thing);
 }
 
-template <typename S>
-struct DoMarkingFunctor : public VoidDefaultAdaptor<S> {
-  template <typename T>
-  void operator()(T* t, GCMarker* gcmarker) {
-    DoMarking(gcmarker, t);
-  }
-};
-
 template <typename T>
 void DoMarking(GCMarker* gcmarker, const T& thing) {
-  DispatchTyped(DoMarkingFunctor<T>(), thing, gcmarker);
+  ApplyGCThingTyped(thing, [gcmarker](auto t) { DoMarking(gcmarker, t); });
 }
 
 template <typename T>
@@ -934,17 +920,11 @@ void js::GCMarker::traverseEdge(S source, T* target) {
   traverse(target);
 }
 
-template <typename V, typename S>
-struct TraverseEdgeFunctor : public VoidDefaultAdaptor<V> {
-  template <typename T>
-  void operator()(T t, GCMarker* gcmarker, S s) {
-    return gcmarker->traverseEdge(s, t);
-  }
-};
-
 template <typename S, typename T>
 void js::GCMarker::traverseEdge(S source, const T& thing) {
-  DispatchTyped(TraverseEdgeFunctor<T, S>(), thing, this, source);
+  ApplyGCThingTyped(thing, [this, source](auto t) {
+                             this->traverseEdge(source, t);
+                           });
 }
 
 namespace {
@@ -2760,19 +2740,17 @@ void TenuringTracer::traverse(JSString** strp) {
   }
 }
 
-template <typename S>
-struct TenuringTraversalFunctor : public IdentityDefaultAdaptor<S> {
-  template <typename T>
-  S operator()(T* t, TenuringTracer* trc) {
-    trc->traverse(&t);
-    return js::gc::RewrapTaggedPointer<S, T>::wrap(t);
-  }
-};
-
 template <typename T>
 void TenuringTracer::traverse(T* thingp) {
-  *thingp = DispatchTyped(TenuringTraversalFunctor<T>(), *thingp, this);
+  auto tenured = MapGCThingTyped(*thingp, [this](auto t) {
+    this->traverse(&t);
+    return TaggedPtr<T>::wrap(t);
+  });
+  if (tenured.isSome() && tenured.value() != *thingp) {
+    *thingp = tenured.value();
+  }
 }
+
 }  // namespace js
 
 template <typename T>
@@ -3360,36 +3338,30 @@ bool js::gc::IsMarkedBlackInternal(JSRuntime* rt, T** thingp) {
   return (*thingp)->asTenured().isMarkedBlack();
 }
 
-template <typename S>
-struct IsMarkedFunctor : public IdentityDefaultAdaptor<S> {
-  template <typename T>
-  S operator()(T* t, JSRuntime* rt, bool* rv) {
-    *rv = IsMarkedInternal(rt, &t);
-    return js::gc::RewrapTaggedPointer<S, T>::wrap(t);
-  }
-};
-
 template <typename T>
 bool js::gc::IsMarkedInternal(JSRuntime* rt, T* thingp) {
-  bool rv = true;
-  *thingp = DispatchTyped(IsMarkedFunctor<T>(), *thingp, rt, &rv);
-  return rv;
-}
-
-template <typename S>
-struct IsMarkedBlackFunctor : public IdentityDefaultAdaptor<S> {
-  template <typename T>
-  S operator()(T* t, JSRuntime* rt, bool* rv) {
-    *rv = IsMarkedBlackInternal(rt, &t);
-    return js::gc::RewrapTaggedPointer<S, T>::wrap(t);
+  bool marked = true;
+  auto thing = MapGCThingTyped(*thingp, [rt, &marked](auto t) {
+    marked = IsMarkedInternal(rt, &t);
+    return TaggedPtr<T>::wrap(t);
+  });
+  if (thing.isSome() && thing.value() != *thingp) {
+    *thingp = thing.value();
   }
-};
+  return marked;
+}
 
 template <typename T>
 bool js::gc::IsMarkedBlackInternal(JSRuntime* rt, T* thingp) {
-  bool rv = true;
-  *thingp = DispatchTyped(IsMarkedBlackFunctor<T>(), *thingp, rt, &rv);
-  return rv;
+  bool marked = true;
+  auto thing = MapGCThingTyped(*thingp, [rt, &marked](auto t) {
+    marked = IsMarkedBlackInternal(rt, &t);
+    return TaggedPtr<T>::wrap(t);
+  });
+  if (thing.isSome() && thing.value() != *thingp) {
+    *thingp = thing.value();
+  }
+  return marked;
 }
 
 bool js::gc::IsAboutToBeFinalizedDuringSweep(TenuredCell& tenured) {
@@ -3426,21 +3398,17 @@ bool js::gc::IsAboutToBeFinalizedInternal(T** thingp) {
   return false;
 }
 
-template <typename S>
-struct IsAboutToBeFinalizedInternalFunctor : public IdentityDefaultAdaptor<S> {
-  template <typename T>
-  S operator()(T* t, bool* rv) {
-    *rv = IsAboutToBeFinalizedInternal(&t);
-    return js::gc::RewrapTaggedPointer<S, T>::wrap(t);
-  }
-};
-
 template <typename T>
 bool js::gc::IsAboutToBeFinalizedInternal(T* thingp) {
-  bool rv = false;
-  *thingp =
-      DispatchTyped(IsAboutToBeFinalizedInternalFunctor<T>(), *thingp, &rv);
-  return rv;
+  bool dying = false;
+  auto thing = MapGCThingTyped(*thingp, [&dying](auto t) {
+    dying = IsAboutToBeFinalizedInternal(&t);
+    return TaggedPtr<T>::wrap(t);
+  });
+  if (thing.isSome() && thing.value() != *thingp) {
+    *thingp = thing.value();
+  }
+  return dying;
 }
 
 namespace js {
