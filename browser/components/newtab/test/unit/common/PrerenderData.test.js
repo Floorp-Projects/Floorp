@@ -103,14 +103,14 @@ describe("_PrerenderData", () => {
 
       assert.isFalse(instance.arePrefsValid(getPrefs));
     });
-    it("should return false if any of jsonPrefs group doesn't have valid json", () => {
+    it("should treat invalid json as having the component disabled", () => {
       FAKE_PREFS = {foo: true, bar: "{\"enabled\": true}", baz: {}};
       const instance = new _PrerenderData({
         initialPrefs: {foo: true, bar: {"enabled": true}, baz: {"enabled": false}},
         validation: ["foo", {jsonPrefs: ["baz", "bar"]}],
       });
 
-      assert.isFalse(instance.arePrefsValid(getPrefs));
+      assert.isTrue(instance.arePrefsValid(getPrefs));
     });
     it("should return true if all of jsonPrefs group enabled value matches", () => {
       FAKE_PREFS = {foo: true, bar: "{\"enabled\": true}", baz: "{\"enabled\": false}"};

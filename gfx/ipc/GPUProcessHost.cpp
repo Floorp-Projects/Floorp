@@ -36,7 +36,16 @@ bool GPUProcessHost::Launch(StringVector aExtraOpts) {
   MOZ_ASSERT(!gfxPlatform::IsHeadless());
 
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
-  mSandboxLevel = Preferences::GetInt("security.sandbox.gpu.level");
+  // If the user disables the VR process, the VR thread will run in the 
+  // the GPU process. The GPU sandbox may not work and should be disabled in 
+  // this case.
+  // This is a temporary workaround until VR process is stable. It should be
+  // removed once VR process is firmly in release.
+  if (gfxPrefs::VRProcessEnabled()) {
+    mSandboxLevel = Preferences::GetInt("security.sandbox.gpu.level");
+  } else {
+    mSandboxLevel = 0;
+  }
 #endif
 
   mLaunchPhase = LaunchPhase::Waiting;

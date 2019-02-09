@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="chrome://global/skin/in-content/common.css" type="text/css"/>
+    <link rel="stylesheet" href="chrome://mozapps/content/extensions/aboutaddons.css" type="text/css"/>
+
+    <link rel="localization" href="branding/brand.ftl"/>
+    <link rel="localization" href="toolkit/about/aboutAddons.ftl"/>
+
+    <script type="application/javascript" src="chrome://mozapps/content/extensions/aboutaddons.js"></script>
+  </head>
+  <body>
+    <div id="main">
+    </div>
+
+    <template name="list">
+      <div class="list-section" type="enabled">
+        <h2 class="list-section-heading" data-l10n-id="addons-enabled-heading"></h2>
+      </div>
+
+      <div class="list-section" type="disabled">
+        <h2 class="list-section-heading" data-l10n-id="addons-disabled-heading"></h2>
+      </div>
+    </template>
+
+    <template name="card">
+      <div class="card addon">
+        <img class="card-heading-icon addon-icon"/>
+        <div class="card-contents">
+          <span class="addon-name"></span>
+          <span class="addon-description"></span>
+        </div>
+        <div class="card-actions">
+          <button action="toggle-disabled"></button><button action="remove" data-l10n-id="remove-addon-button"></button>
+        </div>
+      </div>
+    </template>
+  </body>
+</html>

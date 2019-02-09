@@ -7239,6 +7239,11 @@ bool nsIFrame::IsBlockWrapper() const {
           pseudoType == nsCSSAnonBoxes::cellContent());
 }
 
+bool nsIFrame::IsBlockFrameOrSubclass() {
+  nsBlockFrame* thisAsBlock = do_QueryFrame(this);
+  return !!thisAsBlock;
+}
+
 static nsIFrame* GetNearestBlockContainer(nsIFrame* frame) {
   // The block wrappers we use to wrap blocks inside inlines aren't
   // described in the CSS spec.  We need to make them not be containing

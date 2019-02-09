@@ -7,7 +7,9 @@
 "use strict";
 do_get_profile(); // must be called before getting nsIX509CertDB
 
-const { RemoteSecuritySettings } = ChromeUtils.import("resource://testing-common/psm/RemoteSecuritySettings.jsm");
+const {RemoteSecuritySettings} = ChromeUtils.import("resource://gre/modules/psm/RemoteSecuritySettings.jsm");
+const {RemoteSettings} = ChromeUtils.import("resource://services-settings/remote-settings.js");
+const {TestUtils} = ChromeUtils.import("resource://testing-common/TestUtils.jsm");
 
 let remoteSecSetting = new RemoteSecuritySettings();
 let server;
@@ -15,7 +17,8 @@ let server;
 let intermediate1Data;
 let intermediate2Data;
 
-let currentTime = 0;
+const INTERMEDIATES_DL_PER_POLL_PREF     = "security.remote_settings.intermediates.downloads_per_poll";
+const INTERMEDIATES_ENABLED_PREF         = "security.remote_settings.intermediates.enabled";
 
 function cyclingIteratorGenerator(items, count = null) {
   return () => cyclingIterator(items, count);
@@ -30,11 +33,6 @@ function* cyclingIterator(items, count = null) {
   }
 }
 
-function getTime() {
-  currentTime = currentTime + 1000 * 60 * 60 * 12;
-  return currentTime;
-}
-
 function getHash(aStr) {
   let hasher = Cc["@mozilla.org/security/hash;1"].createInstance(Ci.nsICryptoHash);
   hasher.init(Ci.nsICryptoHash.SHA256);
@@ -43,7 +41,20 @@ function getHash(aStr) {
   hasher.updateFromStream(stringStream, -1);
 
   // convert the binary hash data to a hex string.
-  return hasher.finish(true);
+  return hexify(hasher.finish(false));
+}
+
+function syncAndPromiseUpdate() {
+  let updatedPromise = TestUtils.topicObserved("remote-security-settings:intermediates-updated");
+
+  // sync() requires us to implement the whole kinto changes-observing interface,
+  // so let's use maybeSync().
+  return remoteSecSetting.maybeSync()
+  // maybeSync() doesn't send the poll-end notification, so we have to fake it
+  .then(r => Services.obs.notifyObservers(null, "remote-settings:changes-poll-end"))
+  .then(r => updatedPromise)
+  // topicObserved gives back a 2-array
+  .then(results => results[1]);
 }
 
 function setupKintoPreloadServer(certGenerator, options = {
@@ -131,9 +142,9 @@ function setupKintoPreloadServer(certGenerator, options = {
         },
         "whitelist": false,
         "pubKeyHash": cert.sha256Fingerprint,
-        "crlite_enrolled": "true",
+        "crlite_enrolled": true,
         "id": `78cf8900-fdea-4ce5-f8fb-${count}`,
-        "last_modified": 1000,
+        "last_modified": Date.now(),
       });
 
       count++;
@@ -184,7 +195,7 @@ function setupKintoPreloadServer(certGenerator, options = {
 }
 
 add_task(async function test_preload_empty() {
-  Services.prefs.setBoolPref("security.remote_settings.intermediates.enabled", true);
+  Services.prefs.setBoolPref(INTERMEDIATES_ENABLED_PREF, true);
 
   let countDownloadAttempts = 0;
   setupKintoPreloadServer(
@@ -201,10 +212,9 @@ add_task(async function test_preload_empty() {
   let ee_cert = constructCertFromFile("test_intermediate_preloads/ee.pem");
   notEqual(ee_cert, null, "EE cert should have successfully loaded");
 
-  // sync to the kinto server.
-  await remoteSecSetting.maybeSync(getTime());
+  equal(await syncAndPromiseUpdate(), "success", "Preloading update should have run");
 
-  Assert.equal(countDownloadAttempts, 0, "There should have been no downloads");
+  equal(countDownloadAttempts, 0, "There should have been no downloads");
 
   // check that ee cert 1 is unknown
   await checkCertErrorGeneric(certDB, ee_cert, SEC_ERROR_UNKNOWN_ISSUER,
@@ -212,7 +222,7 @@ add_task(async function test_preload_empty() {
 });
 
 add_task(async function test_preload_disabled() {
-  Services.prefs.setBoolPref("security.remote_settings.intermediates.enabled", false);
+  Services.prefs.setBoolPref(INTERMEDIATES_ENABLED_PREF, false);
 
   let countDownloadAttempts = 0;
   setupKintoPreloadServer(
@@ -220,28 +230,27 @@ add_task(async function test_preload_disabled() {
     {attachmentCB: (identifier, attachmentFound) => { countDownloadAttempts++; }}
   );
 
-  // sync to the kinto server.
-  await remoteSecSetting.maybeSync(getTime());
+  equal(await syncAndPromiseUpdate(), "disabled", "Preloading update should not have run");
 
-  Assert.equal(countDownloadAttempts, 0, "There should have been no downloads");
+  equal(countDownloadAttempts, 0, "There should have been no downloads");
 });
 
 add_task(async function test_preload_invalid_hash() {
-  Services.prefs.setBoolPref("security.remote_settings.intermediates.enabled", true);
+  Services.prefs.setBoolPref(INTERMEDIATES_ENABLED_PREF, true);
+  const invalidHash = "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d";
 
   let countDownloadAttempts = 0;
   setupKintoPreloadServer(
     cyclingIteratorGenerator([intermediate1Data]),
     {
       attachmentCB: (identifier, attachmentFound) => { countDownloadAttempts++; },
-      hashFunc: data => "invalidHash",
+      hashFunc: data => invalidHash,
     }
   );
 
-  // sync to the kinto server.
-  await remoteSecSetting.maybeSync(getTime());
+  equal(await syncAndPromiseUpdate(), "success", "Preloading update should have run");
 
-  Assert.equal(countDownloadAttempts, 1, "There should have been one download attempt");
+  equal(countDownloadAttempts, 1, "There should have been one download attempt");
 
   let certDB = Cc["@mozilla.org/security/x509certdb;1"]
                .getService(Ci.nsIX509CertDB);
@@ -258,7 +267,7 @@ add_task(async function test_preload_invalid_hash() {
 });
 
 add_task(async function test_preload_invalid_length() {
-  Services.prefs.setBoolPref("security.remote_settings.intermediates.enabled", true);
+  Services.prefs.setBoolPref(INTERMEDIATES_ENABLED_PREF, true);
 
   let countDownloadAttempts = 0;
   setupKintoPreloadServer(
@@ -269,10 +278,9 @@ add_task(async function test_preload_invalid_length() {
     }
   );
 
-  // sync to the kinto server.
-  await remoteSecSetting.maybeSync(getTime());
+  equal(await syncAndPromiseUpdate(), "success", "Preloading update should have run");
 
-  Assert.equal(countDownloadAttempts, 1, "There should have been one download attempt");
+  equal(countDownloadAttempts, 1, "There should have been one download attempt");
 
   let certDB = Cc["@mozilla.org/security/x509certdb;1"]
                .getService(Ci.nsIX509CertDB);
@@ -289,7 +297,8 @@ add_task(async function test_preload_invalid_length() {
 });
 
 add_task(async function test_preload_basic() {
-  Services.prefs.setBoolPref("security.remote_settings.intermediates.enabled", true);
+  Services.prefs.setBoolPref(INTERMEDIATES_ENABLED_PREF, true);
+  Services.prefs.setIntPref(INTERMEDIATES_DL_PER_POLL_PREF, 100);
 
   let countDownloadAttempts = 0;
   setupKintoPreloadServer(
@@ -317,10 +326,9 @@ add_task(async function test_preload_basic() {
   await checkCertErrorGeneric(certDB, ee_cert_2, SEC_ERROR_UNKNOWN_ISSUER,
                               certificateUsageSSLServer);
 
-  // sync to the kinto server.
-  await remoteSecSetting.maybeSync(getTime());
+  equal(await syncAndPromiseUpdate(), "success", "Preloading update should have run");
 
-  Assert.equal(countDownloadAttempts, 2, "There should have been 2 downloads");
+  equal(countDownloadAttempts, 2, "There should have been 2 downloads");
 
   // check that ee cert 1 verifies now the update has happened and there is
   // an intermediate
@@ -335,7 +343,8 @@ add_task(async function test_preload_basic() {
 
 
 add_task(async function test_preload_200() {
-  Services.prefs.setBoolPref("security.remote_settings.intermediates.enabled", true);
+  Services.prefs.setBoolPref(INTERMEDIATES_ENABLED_PREF, true);
+  Services.prefs.setIntPref(INTERMEDIATES_DL_PER_POLL_PREF, 100);
 
   let countDownloadedAttachments = 0;
   let countMissingAttachments = 0;
@@ -352,19 +361,15 @@ add_task(async function test_preload_200() {
     }
   );
 
-  // sync to the kinto server.
-  await remoteSecSetting.maybeSync(getTime());
+  equal(await syncAndPromiseUpdate(), "success", "Preloading update should have run");
 
-  Assert.equal(countMissingAttachments, 0, "There should have been no missing attachments");
-  Assert.equal(countDownloadedAttachments, 100, "There should have been only 100 downloaded");
+  equal(countMissingAttachments, 0, "There should have been no missing attachments");
+  equal(countDownloadedAttachments, 100, "There should have been only 100 downloaded");
 
-  // sync to the kinto server again
-  await remoteSecSetting.maybeSync(getTime());
+  equal(await syncAndPromiseUpdate(), "success", "Preloading update should have run");
 
-  await Promise.resolve();
-
-  Assert.equal(countMissingAttachments, 0, "There should have been no missing attachments");
-  Assert.equal(countDownloadedAttachments, 198, "There should have been now 198 downloaded, because 2 existed in an earlier test");
+  equal(countMissingAttachments, 0, "There should have been no missing attachments");
+  equal(countDownloadedAttachments, 198, "There should have been now 198 downloaded, because 2 existed in an earlier test");
 });
 
 

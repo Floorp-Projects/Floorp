@@ -144,10 +144,6 @@ add_task(async function inputDoesntMatchHeuristicResult() {
 // Selecting a non-heuristic (non-first) search engine result with an alias and
 // empty query should put the alias in the urlbar and highlight it.
 add_task(async function nonHeuristicAliases() {
-  // TODO Bug 1524714 - This currently isn't working correctly in QuantumBar.
-  if (UrlbarPrefs.get("quantumbar")) {
-    return;
-  }
   // Get the list of token alias engines (those with aliases that start with
   // "@").
   let tokenEngines = [];
@@ -169,6 +165,14 @@ add_task(async function nonHeuristicAliases() {
   info("Got token alias engines: " +
        tokenEngines.map(({ engine }) => engine.name));
 
+  // Search results, including these search alias results, aren't shown in
+  // quantumbar unless search suggestions are enabled.
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.urlbar.suggest.searches", true],
+    ],
+  });
+
   // Populate the results with the list of token alias engines by searching for
   // "@".
   gURLBar.search("@");
@@ -184,6 +188,8 @@ add_task(async function nonHeuristicAliases() {
 
   await UrlbarTestUtils.promisePopupClose(window,
     () => EventUtils.synthesizeKey("KEY_Escape"));
+
+  await SpecialPowers.popPrefEnv();
 });
 
 

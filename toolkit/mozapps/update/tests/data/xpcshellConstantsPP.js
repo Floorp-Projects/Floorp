@@ -6,10 +6,6 @@
 
 /* Preprocessed constants used by xpcshell tests */
 
-const INSTALL_LOCALE = "@AB_CD@";
-const MOZ_APP_NAME = "@MOZ_APP_NAME@";
-const BIN_SUFFIX = "@BIN_SUFFIX@";
-
 // MOZ_APP_VENDOR is optional.
 #ifdef MOZ_APP_VENDOR
 const MOZ_APP_VENDOR = "@MOZ_APP_VENDOR@";
@@ -19,32 +15,6 @@ const MOZ_APP_VENDOR = "";
 
 // MOZ_APP_BASENAME is not optional for tests.
 const MOZ_APP_BASENAME = "@MOZ_APP_BASENAME@";
-#ifdef XP_LINUX
-const APP_BIN_SUFFIX = "-bin";
-#else
-const APP_BIN_SUFFIX = "@BIN_SUFFIX@";
-#endif
-
-const APP_INFO_NAME = "XPCShell";
-const APP_INFO_VENDOR = "Mozilla";
-
-#ifdef XP_WIN
-const IS_WIN = true;
-#else
-const IS_WIN = false;
-#endif
-
-#ifdef XP_MACOSX
-const IS_MACOSX = true;
-#else
-const IS_MACOSX = false;
-#endif
-
-#ifdef XP_UNIX
-const IS_UNIX = true;
-#else
-const IS_UNIX = false;
-#endif
 
 #ifdef MOZ_VERIFY_MAR_SIGNATURE
 const MOZ_VERIFY_MAR_SIGNATURE = true;

@@ -15,6 +15,7 @@ UNIFIED_SOURCES = [
     'TelemetryTestHelpers.cpp',
     'TestCombinedStacks.cpp',
     'TestCounters.cpp',
+    'TestEvents.cpp',
     'TestHistograms.cpp',
     'TestScalars.cpp'
 ]

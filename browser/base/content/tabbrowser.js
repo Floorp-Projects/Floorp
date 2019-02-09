@@ -2832,7 +2832,6 @@ window._gBrowser = {
       TelemetryStopwatch.start("FX_TAB_CLOSE_TIME_ANIM_MS", aTab);
       TelemetryStopwatch.start("FX_TAB_CLOSE_TIME_NO_ANIM_MS", aTab);
     }
-    window.maybeRecordAbandonmentTelemetry(aTab, "tabClosed");
 
     // Handle requests for synchronously removing an already
     // asynchronously closing tab.

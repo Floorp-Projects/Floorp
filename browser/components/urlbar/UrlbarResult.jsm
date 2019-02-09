@@ -107,6 +107,9 @@ class UrlbarResult {
                [this.payload.title, this.payloadHighlights.title] :
                [this.payload.url || "", this.payloadHighlights.url || []];
       case UrlbarUtils.RESULT_TYPE.SEARCH:
+        if (this.payload.isKeywordOffer) {
+          return [this.payload.keyword, this.payloadHighlights.keyword];
+        }
         return this.payload.suggestion ?
                [this.payload.suggestion, this.payloadHighlights.suggestion] :
                [this.payload.query, this.payloadHighlights.query];
