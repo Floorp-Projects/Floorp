@@ -71,7 +71,7 @@ bool WeakMapBase::markZoneIteratively(JS::Zone* zone, GCMarker* marker) {
   return markedAny;
 }
 
-bool WeakMapBase::findInterZoneEdges(JS::Zone* zone) {
+bool WeakMapBase::findSweepGroupEdges(JS::Zone* zone) {
   for (WeakMapBase* m : zone->gcWeakMapList()) {
     if (!m->findZoneEdges()) {
       return false;
@@ -149,7 +149,7 @@ bool ObjectValueMap::findZoneEdges() {
     if (delegateZone == zone() || !delegateZone->isGCMarking()) {
       continue;
     }
-    if (!delegateZone->gcSweepGroupEdges().put(key->zone())) {
+    if (!delegateZone->addSweepGroupEdgeTo(key->zone())) {
       return false;
     }
   }
