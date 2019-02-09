@@ -312,6 +312,10 @@ WebConsoleConnectionProxy.prototype = {
     this.dispatchMessageAdd(packet);
   },
 
+  /**
+   * Virtual console log packets come from log point hits and are converted into
+   * normal console API packets.
+   */
   _onVirtualConsoleLog: function(type, packet) {
     if (!this.webConsoleUI) {
       return;
@@ -320,7 +324,10 @@ WebConsoleConnectionProxy.prototype = {
       type: "consoleAPICall",
       message: {
         executionPoint: packet.executionPoint,
-        "arguments": [packet.url + ":" + packet.line, packet.message],
+        "arguments": [packet.message],
+        filename: packet.url,
+        lineNumber: packet.line,
+        columnNumber: packet.column,
       },
     });
   },
