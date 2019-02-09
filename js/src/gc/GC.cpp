@@ -4045,7 +4045,9 @@ struct MaybeCompartmentFunctor {
 };
 
 void CompartmentCheckTracer::onChild(const JS::GCCellPtr& thing) {
-  Compartment* comp = DispatchTyped(MaybeCompartmentFunctor(), thing);
+  Compartment* comp = MapGCThingTyped(thing, [](auto t) {
+    return t->maybeCompartment();
+  });
   if (comp && compartment) {
     MOZ_ASSERT(comp == compartment ||
                (srcKind == JS::TraceKind::Object &&
@@ -8643,20 +8645,13 @@ JS_PUBLIC_API void JS::IncrementalPreWriteBarrier(JSObject* obj) {
   JSObject::writeBarrierPre(obj);
 }
 
-struct IncrementalReadBarrierFunctor {
-  template <typename T>
-  void operator()(T* t) {
-    T::readBarrier(t);
-  }
-};
-
 JS_PUBLIC_API void JS::IncrementalReadBarrier(GCCellPtr thing) {
   if (!thing) {
     return;
   }
 
   MOZ_ASSERT(!JS::RuntimeHeapIsMajorCollecting());
-  DispatchTyped(IncrementalReadBarrierFunctor(), thing);
+  ApplyGCThingTyped(thing, [](auto t) { t->readBarrier(t); });
 }
 
 JS_PUBLIC_API bool JS::WasIncrementalGC(JSRuntime* rt) {
