@@ -879,18 +879,25 @@ var DownloadObserver = {
    *        The type of prompt notification depending on the observer.
    */
   _confirmCancelDownloads: function DO_confirmCancelDownload(
-    aCancel, aDownloadsCount, aPrompter, aPromptType) {
-    // If user has already dismissed the request, then do nothing.
-    if ((aCancel instanceof Ci.nsISupportsPRBool) && aCancel.data) {
-      return;
-    }
+    aCancel, aDownloadsCount, aPromptType) {
     // Handle test mode
     if (gCombinedDownloadIntegration._testPromptDownloads) {
       gCombinedDownloadIntegration._testPromptDownloads = aDownloadsCount;
       return;
     }
 
-    aCancel.data = aPrompter.confirmCancelDownloads(aDownloadsCount, aPromptType);
+    if (!aDownloadsCount) {
+      return;
+    }
+
+    // If user has already dismissed the request, then do nothing.
+    if ((aCancel instanceof Ci.nsISupportsPRBool) && aCancel.data) {
+      return;
+    }
+
+    let prompter = DownloadUIHelper.getPrompter();
+    aCancel.data = prompter.confirmCancelDownloads(aDownloadsCount,
+                                                   prompter[aPromptType]);
   },
 
   /**
@@ -908,22 +915,21 @@ var DownloadObserver = {
   // nsIObserver
   observe: function DO_observe(aSubject, aTopic, aData) {
     let downloadsCount;
-    let p = DownloadUIHelper.getPrompter();
     switch (aTopic) {
       case "quit-application-requested":
         downloadsCount = this._publicInProgressDownloads.size +
                          this._privateInProgressDownloads.size;
-        this._confirmCancelDownloads(aSubject, downloadsCount, p, p.ON_QUIT);
+        this._confirmCancelDownloads(aSubject, downloadsCount, "ON_QUIT");
         break;
       case "offline-requested":
         downloadsCount = this._publicInProgressDownloads.size +
                          this._privateInProgressDownloads.size;
-        this._confirmCancelDownloads(aSubject, downloadsCount, p, p.ON_OFFLINE);
+        this._confirmCancelDownloads(aSubject, downloadsCount, "ON_OFFLINE");
         break;
       case "last-pb-context-exiting":
         downloadsCount = this._privateInProgressDownloads.size;
-        this._confirmCancelDownloads(aSubject, downloadsCount, p,
-                                     p.ON_LEAVE_PRIVATE_BROWSING);
+        this._confirmCancelDownloads(aSubject, downloadsCount,
+                                     "ON_LEAVE_PRIVATE_BROWSING");
         break;
       case "last-pb-context-exited":
         let promise = (async function() {
