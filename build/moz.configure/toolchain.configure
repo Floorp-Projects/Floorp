@@ -442,6 +442,7 @@ def try_preprocess(compiler, language, source):
 @imports(_from='mozbuild.configure.constants',
          _import='OS_preprocessor_checks')
 @imports(_from='textwrap', _import='dedent')
+@imports(_from='__builtin__', _import='Exception')
 def get_compiler_info(compiler, language):
     '''Returns information about the given `compiler` (command line in the
     form of a list or tuple), in the given `language`.
@@ -1627,8 +1628,6 @@ def lto(value, pgo, c_compiler):
                 cflags.append("-flto")
             else:
                 cflags.append("-flto=thin")
-                # Workaround for https://bugs.llvm.org/show_bug.cgi?id=40414
-                cflags.append("-fsplit-lto-unit")
             # With clang-cl, -flto can only be used with -c or -fuse-ld=lld.
             # AC_TRY_LINKs during configure don't have -c, so pass -fuse-ld=lld.
             cflags.append("-fuse-ld=lld");

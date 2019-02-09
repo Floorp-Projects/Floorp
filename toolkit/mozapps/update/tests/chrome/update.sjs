@@ -178,32 +178,3 @@ function parseQueryString(aQueryString) {
 
   return params;
 }
-
-/**
- * Reads the binary contents of a file and returns it as a string.
- *
- * @param  aFile
- *         The file to read from.
- * @return The contents of the file as a string.
- */
-function readFileBytes(aFile) {
-  let fis = Cc["@mozilla.org/network/file-input-stream;1"].
-            createInstance(Ci.nsIFileInputStream);
-  fis.init(aFile, -1, -1, false);
-  let bis = Cc["@mozilla.org/binaryinputstream;1"].
-            createInstance(Ci.nsIBinaryInputStream);
-  bis.setInputStream(fis);
-  let data = [];
-  let count = fis.available();
-  while (count > 0) {
-    let bytes = bis.readByteArray(Math.min(65535, count));
-    data.push(String.fromCharCode.apply(null, bytes));
-    count -= bytes.length;
-    if (bytes.length == 0) {
-      throw "Nothing read from input stream!";
-    }
-  }
-  data.join('');
-  fis.close();
-  return data.toString();
-}

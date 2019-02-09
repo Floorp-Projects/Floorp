@@ -22,10 +22,7 @@ case "$target" in
     CXXFLAGS="-fno-short-enums -fno-exceptions $CXXFLAGS $stlport_cppflags"
     ASFLAGS="$directory_include_args -DANDROID $ASFLAGS"
 
-    dnl Add --allow-shlib-undefined, because libGLESv2 links to an
-    dnl undefined symbol (present on the hardware, just not in the
-    dnl NDK.)
-    LDFLAGS="-L$android_platform/usr/lib -Wl,-rpath-link=$android_platform/usr/lib --sysroot=$android_platform -Wl,--allow-shlib-undefined $LDFLAGS"
+    LDFLAGS="-L$android_platform/usr/lib -Wl,-rpath-link=$android_platform/usr/lib --sysroot=$android_platform $LDFLAGS"
     ANDROID_PLATFORM="${android_platform}"
 
     AC_DEFINE(ANDROID)

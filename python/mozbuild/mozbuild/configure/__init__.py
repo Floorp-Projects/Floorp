@@ -282,7 +282,7 @@ class ConfigureSandbox(dict):
         b: getattr(__builtin__, b)
         for b in ('None', 'False', 'True', 'int', 'bool', 'any', 'all', 'len',
                   'list', 'tuple', 'set', 'dict', 'isinstance', 'getattr',
-                  'hasattr', 'enumerate', 'range', 'zip')
+                  'hasattr', 'enumerate', 'range', 'zip', 'AssertionError')
     }, __import__=forbidden_import, str=unicode)
 
     # Expose a limited set of functions from os.path
@@ -478,7 +478,7 @@ class ConfigureSandbox(dict):
             raise KeyError('Cannot reassign builtins')
 
         if inspect.isfunction(value) and value not in self._templates:
-            value, _ = self._prepare_function(value)
+            value = self._prepare_function(value)
 
         elif (not isinstance(value, SandboxDependsFunction) and
                 value not in self._templates and
@@ -705,7 +705,7 @@ class ConfigureSandbox(dict):
             if inspect.isgeneratorfunction(func):
                 raise ConfigureError(
                     'Cannot decorate generator functions with @depends')
-            func, glob = self._prepare_function(func)
+            func = self._prepare_function(func)
             depends = DependsFunction(self, func, dependencies, when=when)
             return depends.sandboxed
 
@@ -734,12 +734,14 @@ class ConfigureSandbox(dict):
         Templates allow to simplify repetitive constructs, or to implement
         helper decorators and somesuch.
         '''
-        template, glob = self._prepare_function(func)
-        glob.update(
-            (k[:-len('_impl')], getattr(self, k))
-            for k in dir(self) if k.endswith('_impl') and k != 'template_impl'
-        )
-        glob.update((k, v) for k, v in self.iteritems() if k not in glob)
+        def update_globals(glob):
+            glob.update(
+                (k[:-len('_impl')], getattr(self, k))
+                for k in dir(self) if k.endswith('_impl') and k != 'template_impl'
+            )
+            glob.update((k, v) for k, v in self.iteritems() if k not in glob)
+
+        template = self._prepare_function(func, update_globals)
 
         # Any function argument to the template must be prepared to be sandboxed.
         # If the template itself returns a function (in which case, it's very
@@ -750,8 +752,7 @@ class ConfigureSandbox(dict):
 
             def maybe_prepare_function(obj):
                 if isfunction(obj):
-                    func, _ = self._prepare_function(obj)
-                    return func
+                    return self._prepare_function(obj)
                 return obj
 
             # The following function may end up being prepared to be sandboxed,
@@ -1016,14 +1017,14 @@ class ConfigureSandbox(dict):
             when=when,
         ))
 
-    def _prepare_function(self, func):
+    def _prepare_function(self, func, update_globals=None):
         '''Alter the given function global namespace with the common ground
         for @depends, and @template.
         '''
         if not inspect.isfunction(func):
             raise TypeError("Unexpected type: '%s'" % type(func).__name__)
         if func in self._prepared_functions:
-            return func, func.func_globals
+            return func
 
         glob = SandboxedGlobal(
             (k, v) for k, v in func.func_globals.iteritems()
@@ -1037,6 +1038,8 @@ class ConfigureSandbox(dict):
             os=self.OS,
             log=self.log_impl,
         )
+        if update_globals:
+            update_globals(glob)
 
         # The execution model in the sandbox doesn't guarantee the execution
         # order will always be the same for a given function, and if it uses
@@ -1070,4 +1073,4 @@ class ConfigureSandbox(dict):
             return new_func(*args, **kwargs)
 
         self._prepared_functions.add(wrapped)
-        return wrapped, glob
+        return wrapped

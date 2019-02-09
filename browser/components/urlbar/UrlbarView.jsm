@@ -142,12 +142,22 @@ class UrlbarView {
       fragment.appendChild(this._createRow(resultIndex));
     }
 
-    if (queryContext.preselected) {
-      this._selected = fragment.firstElementChild;
+    if (queryContext.lastResultCount == 0) {
+      if (queryContext.preselected) {
+        this._selected = fragment.firstElementChild;
+        this._selected.toggleAttribute("selected", true);
+      } else if (this._selected) {
+        // Clear the selection when we get a new set of results.
+        this._selected.toggleAttribute("selected", false);
+        this._selected = null;
+      }
+    } else if (this._selected) {
+      // Ensure the selection is stable.
+      // TODO bug 1523602: the selection should stay on the node that had it, if
+      // it's still in the current result set.
+      let resultIndex = this._selected.getAttribute("resultIndex");
+      this._selected = fragment.children[resultIndex];
       this._selected.toggleAttribute("selected", true);
-    } else if (queryContext.lastResultCount == 0) {
-      // Clear the selection when we get a new set of results.
-      this._selected = null;
     }
 
     // TODO bug 1523602: For now, clear the results for each set received.
