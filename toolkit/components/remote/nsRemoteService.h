@@ -21,7 +21,6 @@ class nsRemoteService final : public nsIRemoteService, public nsIObserver {
   NS_DECL_NSIOBSERVER
 
   static const char* HandleCommandLine(const char* aBuffer,
-                                       nsIDOMWindow* aWindow,
                                        uint32_t aTimestamp);
 
   nsCOMPtr<nsIRemoteService> mDBusRemoteService;

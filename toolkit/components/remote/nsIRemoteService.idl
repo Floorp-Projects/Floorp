@@ -32,13 +32,6 @@ interface nsIRemoteService : nsISupports
   void startup(in string appName, in string profileName);
 
   /**
-   * Register a XUL window with the xremote service. The window will be
-   * configured to accept incoming remote requests. If this method is called
-   * before startup(), the registration will happen once startup() is called.
-   */
-  void registerWindow(in mozIDOMWindow aWindow);
-
-  /**
    * Stop the remote service from accepting additional requests.
    */
   void shutdown();

@@ -79,8 +79,7 @@ class ComputedStyle {
   using Bit = ComputedStyleBit;
 
  public:
-  ComputedStyle(nsPresContext* aPresContext, nsAtom* aPseudoTag,
-                CSSPseudoElementType aPseudoType,
+  ComputedStyle(nsAtom* aPseudoTag, CSSPseudoElementType aPseudoType,
                 ServoComputedDataForgotten aComputedValues);
 
   void AddRef() { Servo_ComputedStyle_AddRef(this); }

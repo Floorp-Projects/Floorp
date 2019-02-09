@@ -183,15 +183,12 @@ const nsTArray<RefPtr<nsINode>>* Gecko_GetAssignedNodes(
   return &static_cast<const HTMLSlotElement*>(aElement)->AssignedNodes();
 }
 
-void Gecko_ComputedStyle_Init(mozilla::ComputedStyle* aStyle,
-                              RawGeckoPresContextBorrowed aPresContext,
+void Gecko_ComputedStyle_Init(ComputedStyle* aStyle,
                               const ServoComputedData* aValues,
-                              mozilla::CSSPseudoElementType aPseudoType,
+                              CSSPseudoElementType aPseudoType,
                               nsAtom* aPseudoTag) {
-  auto* presContext = const_cast<nsPresContext*>(aPresContext);
-  new (KnownNotNull, aStyle)
-      mozilla::ComputedStyle(presContext, aPseudoTag, aPseudoType,
-                             ServoComputedDataForgotten(aValues));
+  new (KnownNotNull, aStyle) ComputedStyle(aPseudoTag, aPseudoType,
+                                           ServoComputedDataForgotten(aValues));
 }
 
 ServoComputedData::ServoComputedData(const ServoComputedDataForgotten aValue) {
@@ -230,7 +227,7 @@ void ServoComputedData::AddSizeOfExcludingThis(nsWindowSizes& aSizes) const {
   // - font_computation_data
 }
 
-void Gecko_ComputedStyle_Destroy(mozilla::ComputedStyle* aStyle) {
+void Gecko_ComputedStyle_Destroy(ComputedStyle* aStyle) {
   aStyle->~ComputedStyle();
 }
 

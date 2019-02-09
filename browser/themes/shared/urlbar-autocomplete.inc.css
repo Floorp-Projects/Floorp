@@ -46,6 +46,8 @@
 
 .urlbarView-row {
   border-radius: 2px;
+  fill: currentColor;
+  fill-opacity: .6;
   padding-top: 5px;
   padding-bottom: 5px;
   padding-inline-start: calc(var(--item-padding-start, calc(5px + @urlbarViewFaviconOffset@)) - @urlbarViewFaviconOffset@);
@@ -73,20 +75,27 @@
 .urlbarView-row[selected] {
   background: var(--autocomplete-popup-highlight-background);
   color: var(--autocomplete-popup-highlight-color);
+  fill-opacity: 1;
 }
 
 .urlbarView-type-icon,
 .urlbarView-favicon {
   display: inline-block;
   vertical-align: middle;
+  transform: translateY(-2px);
   width: 16px;
   height: 16px;
   margin-inline-end: @urlbarViewIconMarginEnd@;
   background-repeat: no-repeat;
   background-size: contain;
   -moz-context-properties: fill, fill-opacity;
-  fill: currentColor;
-  fill-opacity: 0.6;
+}
+
+@media (min-resolution: 2dppx) {
+  .urlbarView-type-icon,
+  .urlbarView-favicon {
+    transform: translateY(-1.5px);
+  }
 }
 
 .urlbarView-row[type=bookmark] > .urlbarView-row-inner > .urlbarView-type-icon {
