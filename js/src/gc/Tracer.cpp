@@ -12,7 +12,6 @@
 #include "NamespaceImports.h"
 
 #include "gc/GCInternals.h"
-#include "gc/Marking.h"
 #include "gc/PublicIterators.h"
 #include "gc/Zone.h"
 #include "util/Text.h"
@@ -25,6 +24,7 @@
 #include "vm/SymbolType.h"
 
 #include "gc/GC-inl.h"
+#include "gc/Marking-inl.h"
 #include "vm/ObjectGroup-inl.h"
 #include "vm/Realm-inl.h"
 #include "vm/TypeInference-inl.h"
@@ -41,56 +41,33 @@ void CheckTracedThing(JSTracer* trc, T thing);
 /*** Callback Tracer Dispatch ***********************************************/
 
 template <typename T>
-T DoCallback(JS::CallbackTracer* trc, T* thingp, const char* name) {
+T* DoCallback(JS::CallbackTracer* trc, T** thingp, const char* name) {
   CheckTracedThing(trc, *thingp);
   JS::AutoTracingName ctx(trc, name);
   trc->dispatchToOnEdge(thingp);
   return *thingp;
 }
 #define INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS(name, type, _) \
-  template type* DoCallback<type*>(JS::CallbackTracer*, type**, const char*);
+  template type* DoCallback<type>(JS::CallbackTracer*, type**, const char*);
 JS_FOR_EACH_TRACEKIND(INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS);
 #undef INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS
 
-template <typename S>
-struct DoCallbackFunctor : public IdentityDefaultAdaptor<S> {
-  template <typename T>
-  S operator()(T* t, JS::CallbackTracer* trc, const char* name) {
-    return js::gc::RewrapTaggedPointer<S, T>::wrap(DoCallback(trc, &t, name));
-  }
-};
-
-template <>
-Value DoCallback<Value>(JS::CallbackTracer* trc, Value* vp, const char* name) {
-  // Only update *vp if the value changed, to avoid TSan false positives for
+template <typename T>
+T DoCallback(JS::CallbackTracer* trc, T* thingp, const char* name) {
+  auto thing = MapGCThingTyped(*thingp, [trc, name](auto t) {
+    return TaggedPtr<T>::wrap(DoCallback(trc, &t, name));
+  });
+  // Only update *thingp if the value changed, to avoid TSan false positives for
   // template objects when using DumpHeapTracer or UbiNode tracers while Ion
   // compiling off-thread.
-  Value v = DispatchTyped(DoCallbackFunctor<Value>(), *vp, trc, name);
-  if (*vp != v) {
-    *vp = v;
+  if (thing.isSome() && thing.value() != *thingp) {
+    *thingp = thing.value();
   }
-  return v;
+  return *thingp;
 }
-
-template <>
-jsid DoCallback<jsid>(JS::CallbackTracer* trc, jsid* idp, const char* name) {
-  jsid id = DispatchTyped(DoCallbackFunctor<jsid>(), *idp, trc, name);
-  if (*idp != id) {
-    *idp = id;
-  }
-  return id;
-}
-
-template <>
-TaggedProto DoCallback<TaggedProto>(JS::CallbackTracer* trc,
-                                    TaggedProto* protop, const char* name) {
-  TaggedProto proto =
-      DispatchTyped(DoCallbackFunctor<TaggedProto>(), *protop, trc, name);
-  if (*protop != proto) {
-    *protop = proto;
-  }
-  return proto;
-}
+template JS::Value DoCallback<JS::Value>(JS::CallbackTracer*, JS::Value*, const char*);
+template JS::PropertyKey DoCallback<JS::PropertyKey>(JS::CallbackTracer*, JS::PropertyKey*, const char*);
+template TaggedProto DoCallback<TaggedProto>(JS::CallbackTracer*, TaggedProto*, const char*);
 
 void JS::CallbackTracer::getTracingEdgeName(char* buffer, size_t bufferSize) {
   MOZ_ASSERT(bufferSize > 0);
@@ -111,22 +88,14 @@ JS_PUBLIC_API void JS::TraceChildren(JSTracer* trc, GCCellPtr thing) {
   js::TraceChildren(trc, thing.asCell(), thing.kind());
 }
 
-struct TraceChildrenFunctor {
-  template <typename T>
-  void operator()(JSTracer* trc, void* thingArg) {
-    T* thing = static_cast<T*>(thingArg);
-    MOZ_ASSERT_IF(thing->runtimeFromAnyThread() != trc->runtime(),
-                  ThingIsPermanentAtomOrWellKnownSymbol(thing) ||
-                      thing->zoneFromAnyThread()->isSelfHostingZone());
-
-    thing->traceChildren(trc);
-  }
-};
-
 void js::TraceChildren(JSTracer* trc, void* thing, JS::TraceKind kind) {
   MOZ_ASSERT(thing);
-  TraceChildrenFunctor f;
-  DispatchTraceKindTyped(f, kind, trc, thing);
+  ApplyGCThingTyped(thing, kind, [trc](auto t) {
+    MOZ_ASSERT_IF(t->runtimeFromAnyThread() != trc->runtime(),
+                  ThingIsPermanentAtomOrWellKnownSymbol(t) ||
+                  t->zoneFromAnyThread()->isSelfHostingZone());
+    t->traceChildren(trc);
+  });
 }
 
 JS_PUBLIC_API void JS::TraceIncomingCCWs(

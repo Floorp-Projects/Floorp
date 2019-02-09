@@ -9,14 +9,52 @@
 
 #include "gc/Marking.h"
 
+#include "mozilla/Maybe.h"
+
 #include "gc/RelocationOverlay.h"
 
 #ifdef ENABLE_BIGINT
 #  include "vm/BigIntType.h"
 #endif
 
+#include "vm/RegExpShared.h"
+
 namespace js {
 namespace gc {
+
+// An abstraction to re-wrap any kind of typed pointer back to the tagged pointer
+// it came from with |TaggedPtr<TargetType>::wrap(sourcePtr)|.
+template <typename T>
+struct TaggedPtr {};
+
+template <>
+struct TaggedPtr<JS::Value> {
+  static JS::Value wrap(JSObject* obj) { return JS::ObjectOrNullValue(obj); }
+  static JS::Value wrap(JSString* str) { return JS::StringValue(str); }
+  static JS::Value wrap(JS::Symbol* sym) { return JS::SymbolValue(sym); }
+#ifdef ENABLE_BIGINT
+  static JS::Value wrap(JS::BigInt* bi) { return JS::BigIntValue(bi); }
+#endif
+  template <typename T>
+  static JS::Value wrap(T* priv) {
+    static_assert(mozilla::IsBaseOf<Cell, T>::value,
+                  "Type must be a GC thing derived from js::gc::Cell");
+    return JS::PrivateGCThingValue(priv);
+  }
+};
+
+template <>
+struct TaggedPtr<jsid> {
+  static jsid wrap(JSString* str) {
+    return NON_INTEGER_ATOM_TO_JSID(&str->asAtom());
+  }
+  static jsid wrap(JS::Symbol* sym) { return SYMBOL_TO_JSID(sym); }
+};
+
+template <>
+struct TaggedPtr<TaggedProto> {
+  static TaggedProto wrap(JSObject* obj) { return TaggedProto(obj); }
+};
 
 template <typename T>
 struct MightBeForwarded {
@@ -45,15 +83,9 @@ inline bool IsForwarded(const T* t) {
   return t->isForwarded();
 }
 
-struct IsForwardedFunctor : public BoolDefaultAdaptor<Value, false> {
-  template <typename T>
-  bool operator()(const T* t) {
-    return IsForwarded(t);
-  }
-};
-
 inline bool IsForwarded(const JS::Value& value) {
-  return DispatchTyped(IsForwardedFunctor(), value);
+  auto isForwarded = [](auto t) { return IsForwarded(t); };
+  return MapGCThingTyped(value, isForwarded).valueOr(false);
 }
 
 template <typename T>
@@ -63,15 +95,9 @@ inline T* Forwarded(const T* t) {
   return reinterpret_cast<T*>(overlay->forwardingAddress());
 }
 
-struct ForwardedFunctor : public IdentityDefaultAdaptor<Value> {
-  template <typename T>
-  inline Value operator()(const T* t) {
-    return js::gc::RewrapTaggedPointer<Value, T>::wrap(Forwarded(t));
-  }
-};
-
 inline Value Forwarded(const JS::Value& value) {
-  return DispatchTyped(ForwardedFunctor(), value);
+  auto forward = [](auto t) { return TaggedPtr<Value>::wrap(Forwarded(t)); };
+  return MapGCThingTyped(value, forward).valueOr(value);
 }
 
 template <typename T>
@@ -113,15 +139,8 @@ inline void CheckGCThingAfterMovingGC(const ReadBarriered<T*>& t) {
   CheckGCThingAfterMovingGC(t.unbarrieredGet());
 }
 
-struct CheckValueAfterMovingGCFunctor : public VoidDefaultAdaptor<Value> {
-  template <typename T>
-  void operator()(T* t) {
-    CheckGCThingAfterMovingGC(t);
-  }
-};
-
 inline void CheckValueAfterMovingGC(const JS::Value& value) {
-  DispatchTyped(CheckValueAfterMovingGCFunctor(), value);
+  ApplyGCThingTyped(value, [](auto t) { CheckGCThingAfterMovingGC(t); });
 }
 
 #endif  // JSGC_HASH_TABLE_CHECKS

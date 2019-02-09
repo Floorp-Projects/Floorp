@@ -1250,6 +1250,7 @@ class AstElemSegment : public AstNode {
 
   AstRef targetTable() const { return targetTable_; }
   AstRef& targetTableRef() { return targetTable_; }
+  bool isPassive() const { return offsetIfActive_ == nullptr; }
   AstExpr* offsetIfActive() const { return offsetIfActive_; }
   AstRefVector& elems() { return elems_; }
   const AstRefVector& elems() const { return elems_; }
