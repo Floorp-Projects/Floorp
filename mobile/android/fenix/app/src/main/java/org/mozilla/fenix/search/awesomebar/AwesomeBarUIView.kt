@@ -43,16 +43,28 @@ class AwesomeBarUIView(
                 )
             )
 
-            view.addProviders(SessionSuggestionProvider(components.core.sessionManager,
-                components.useCases.tabsUseCases.selectTab),
-                HistoryStorageSuggestionProvider(components.core.historyStorage,
-                    components.useCases.sessionUseCases.loadUrl),
-                SearchSuggestionProvider(components.search.searchEngineManager.getDefaultSearchEngine(this),
-                    components.useCases.searchUseCases.defaultSearch,
-                    SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS))
-
-            view.setOnStopListener { actionEmitter.onNext(AwesomeBarAction.ItemSelected) }
+            view.addProviders(
+                SessionSuggestionProvider(
+                    components.core.sessionManager,
+                    components.useCases.tabsUseCases.selectTab
+                ),
+                HistoryStorageSuggestionProvider(
+                    components.core.historyStorage,
+                    if (useNewTab) {
+                        components.useCases.tabsUseCases.addTab
+                    } else components.useCases.sessionUseCases.loadUrl
+                ),
+                SearchSuggestionProvider(
+                    components.search.searchEngineManager.getDefaultSearchEngine(this),
+                    if (useNewTab) {
+                        components.useCases.searchUseCases.newTabSearch
+                    } else components.useCases.searchUseCases.defaultSearch,
+                    SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS
+                )
+            )
         }
+
+        view.setOnStopListener { actionEmitter.onNext(AwesomeBarAction.ItemSelected) }
     }
 
     override fun updateView() = Consumer<AwesomeBarState> {

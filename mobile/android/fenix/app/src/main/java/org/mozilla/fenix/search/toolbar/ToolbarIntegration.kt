@@ -37,7 +37,8 @@ class ToolbarIntegration(
                 .getDrawable(DefaultThemeManager.resolveAttribute(R.attr.browserToolbarHomeIcon, context),
                     context.application.theme),
             context.getString(R.string.browser_home_button),
-            visible = { sessionManager.runWithSession(sessionId) { it.isCustomTabSession().not() } }
+            visible = { sessionId == null ||
+                    sessionManager.runWithSession(sessionId) { it.isCustomTabSession().not() } }
         ) {
             Navigation.findNavController(toolbar)
                 .navigate(BrowserFragmentDirections.actionBrowserFragmentToHomeFragment())
@@ -54,8 +55,12 @@ class ToolbarIntegration(
     private val toolbarFeature: ToolbarFeature = ToolbarFeature(
         toolbar,
         context.components.core.sessionManager,
-        context.components.useCases.sessionUseCases.loadUrl,
-        { searchTerms -> context.components.useCases.searchUseCases.defaultSearch.invoke(searchTerms) },
+        if (sessionId == null) {
+            context.components.useCases.tabsUseCases.addTab
+        } else context.components.useCases.sessionUseCases.loadUrl,
+        { searchTerms -> if (sessionId == null) {
+            context.components.useCases.searchUseCases.newTabSearch.invoke(searchTerms)
+        } else context.components.useCases.searchUseCases.defaultSearch.invoke(searchTerms) },
         sessionId
     )
 

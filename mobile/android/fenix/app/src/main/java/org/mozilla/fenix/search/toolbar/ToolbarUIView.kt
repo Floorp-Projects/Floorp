@@ -73,7 +73,7 @@ class ToolbarUIView(
                 ShippedDomainsProvider().also { it.initialize(this) },
                 components.core.historyStorage,
                 components.core.sessionManager,
-                sessionId ?: components.core.sessionManager.selectedSession?.id
+                sessionId
             )
         }
     }

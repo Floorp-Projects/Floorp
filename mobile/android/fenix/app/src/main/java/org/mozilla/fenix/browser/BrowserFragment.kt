@@ -100,7 +100,9 @@ class BrowserFragment : Fragment(), BackHandler {
             .subscribe {
                 when (it) {
                     is SearchAction.ToolbarTapped -> Navigation.findNavController(toolbar)
-                        .navigate(BrowserFragmentDirections.actionBrowserFragmentToSearchFragment(null))
+                        .navigate(BrowserFragmentDirections.actionBrowserFragmentToSearchFragment(
+                            requireComponents.core.sessionManager.selectedSession?.id
+                        ))
                     is SearchAction.ToolbarMenuItemTapped -> handleToolbarItemInteraction(it)
                 }
             }
@@ -108,6 +110,8 @@ class BrowserFragment : Fragment(), BackHandler {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        sessionId = BrowserFragmentArgs.fromBundle(arguments!!).sessionId
 
         (activity as AppCompatActivity).supportActionBar?.hide()
 
