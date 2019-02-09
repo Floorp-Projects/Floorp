@@ -22,7 +22,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 XPCOMUtils.defineLazyGetter(this, "logger",
-  () => Log.repository.getLogger("Places.Urlbar.Provider.OpenTabs"));
+  () => Log.repository.getLogger("Urlbar.Provider.OpenTabs"));
 
 /**
  * Class used to create the provider.

@@ -224,7 +224,7 @@ def try_invoke_compiler(compiler, language, source, flags=None, onerror=None):
 
     if not isinstance(flags, (list, tuple)):
         die("Flags provided to try_compile must be a list of strings, "
-            "not %r", paths)
+            "not %r", flags)
 
     suffix = {
         'C': '.c',

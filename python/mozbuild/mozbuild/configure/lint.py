@@ -45,26 +45,89 @@ class LintSandbox(ConfigureSandbox):
         for dep in self._depends.itervalues():
             self._check_dependencies(dep)
 
+    def _raise_from(self, exception, obj, line=0):
+        '''
+        Raises the given exception as if it were emitted from the given
+        location.
+
+        The location is determined from the values of obj and line.
+        - `obj` can be a function or DependsFunction, in which case
+          `line` corresponds to the line within the function the exception
+          will be raised from (as an offset from the function's firstlineno).
+        - `obj` can be a stack frame, in which case `line` is ignored.
+        '''
+        def thrower(e):
+            raise e
+
+        if isinstance(obj, DependsFunction):
+            obj, _ = self.unwrap(obj._func)
+
+        if inspect.isfunction(obj):
+            funcname = obj.__name__
+            filename = obj.func_code.co_filename
+            firstline = obj.func_code.co_firstlineno
+            line += firstline
+        elif inspect.isframe(obj):
+            funcname = obj.f_code.co_name
+            filename = obj.f_code.co_filename
+            firstline = obj.f_code.co_firstlineno
+            line = obj.f_lineno
+        else:
+            # Don't know how to handle the given location, still raise the
+            # exception.
+            raise exception
+
+        # Create a new function from the above thrower that pretends
+        # the `def` line is on the first line of the function given as
+        # argument, and the `raise` line is on the line given as argument.
+
+        offset = line - firstline
+        # co_lnotab is a string where each pair of consecutive character is
+        # (chr(byte_increment), chr(line_increment)), mapping bytes in co_code
+        # to line numbers relative to co_firstlineno.
+        # If the offset we need to encode is larger than 255, we need to split it.
+        co_lnotab = (chr(0) + chr(255)) * (offset / 255) + chr(0) + chr(offset % 255)
+        code = thrower.func_code
+        code = types.CodeType(
+            code.co_argcount,
+            code.co_nlocals,
+            code.co_stacksize,
+            code.co_flags,
+            code.co_code,
+            code.co_consts,
+            code.co_names,
+            code.co_varnames,
+            filename,
+            funcname,
+            firstline,
+            co_lnotab
+        )
+        thrower = types.FunctionType(
+            code,
+            thrower.func_globals,
+            funcname,
+            thrower.func_defaults,
+            thrower.func_closure
+        )
+        thrower(exception)
+
     def _check_dependencies(self, obj):
         if isinstance(obj, CombinedDependsFunction) or obj in (self._always,
                                                                self._never):
             return
         func, glob = self.unwrap(obj._func)
-        loc = '%s:%d' % (func.func_code.co_filename,
-                         func.func_code.co_firstlineno)
         func_args = inspect.getargspec(func)
         if func_args.keywords:
-            raise ConfigureError(
-                '%s: Keyword arguments are not allowed in @depends functions'
-                % loc
-            )
+            e = ConfigureError(
+                    'Keyword arguments are not allowed in @depends functions')
+            self._raise_from(e, func)
 
         all_args = list(func_args.args)
         if func_args.varargs:
             all_args.append(func_args.varargs)
         used_args = set()
 
-        for op, arg in disassemble_as_iter(func):
+        for op, arg, _ in disassemble_as_iter(func):
             if op in ('LOAD_FAST', 'LOAD_CLOSURE'):
                 if arg in all_args:
                     used_args.add(arg)
@@ -77,10 +140,8 @@ class LintSandbox(ConfigureSandbox):
                         dep = dep.name
                     else:
                         dep = dep.option
-                    raise ConfigureError(
-                        '%s: The dependency on `%s` is unused.'
-                        % (loc, dep)
-                    )
+                    e = ConfigureError('The dependency on `%s` is unused' % dep)
+                    self._raise_from(e, func)
 
     def _need_help_dependency(self, obj):
         if isinstance(obj, (CombinedDependsFunction, TrivialDependsFunction)):
@@ -95,7 +156,7 @@ class LintSandbox(ConfigureSandbox):
             # - don't use global variables
             if func in self._has_imports or func.func_closure:
                 return True
-            for op, arg in disassemble_as_iter(func):
+            for op, arg, _ in disassemble_as_iter(func):
                 if op in ('LOAD_GLOBAL', 'STORE_GLOBAL'):
                     # There is a fake os module when one is not imported,
                     # and it's allowed for functions without a --help
@@ -119,13 +180,13 @@ class LintSandbox(ConfigureSandbox):
         if with_help:
             for arg in obj.dependencies:
                 if self._missing_help_dependency(arg):
-                    raise ConfigureError(
-                        "`%s` depends on '--help' and `%s`. "
-                        "`%s` must depend on '--help'"
-                        % (obj.name, arg.name, arg.name))
+                    e = ConfigureError(
+                        "Missing '--help' dependency because `%s` depends on "
+                        "'--help' and `%s`" % (obj.name, arg.name))
+                    self._raise_from(e, arg)
         elif self._missing_help_dependency(obj):
-            raise ConfigureError("Missing @depends for `%s`: '--help'" %
-                                 obj.name)
+            e = ConfigureError("Missing '--help' dependency")
+            self._raise_from(e, obj)
         return super(LintSandbox, self)._value_for_depends(obj)
 
     def option_impl(self, *args, **kwargs):
@@ -166,14 +227,18 @@ class LintSandbox(ConfigureSandbox):
         }
         for prefix, replacement in table[default].iteritems():
             if name.startswith('--{}-'.format(prefix)):
-                raise ConfigureError(('{} should be used instead of '
-                                      '{} with default={}').format(
-                                          name.replace('--{}-'.format(prefix),
-                                                       '--{}-'.format(replacement)),
-                                          name, default))
+                frame = inspect.currentframe()
+                while frame and frame.f_code.co_name != self.option_impl.__name__:
+                    frame = frame.f_back
+                e = ConfigureError('{} should be used instead of '
+                                   '{} with default={}'.format(
+                                       name.replace('--{}-'.format(prefix),
+                                                    '--{}-'.format(replacement)),
+                                       name, default))
+                self._raise_from(e, frame.f_back if frame else None)
+
 
     def _check_help_for_option_with_func_default(self, option, *args, **kwargs):
-        name = args[0]
         default = kwargs['default']
 
         if not isinstance(default, SandboxDependsFunction):
@@ -196,8 +261,13 @@ class LintSandbox(ConfigureSandbox):
         else:
             rule = '{With|Without}'
 
-        raise ConfigureError(('{} has a non-constant default. '
-                              'Its help should contain "{}"').format(name, rule))
+        frame = inspect.currentframe()
+        while frame and frame.f_code.co_name != self.option_impl.__name__:
+            frame = frame.f_back
+        e = ConfigureError(
+            '`help` should contain "{}" because of non-constant default'
+            .format(rule))
+        self._raise_from(e, frame.f_back if frame else None)
 
     def unwrap(self, func):
         glob = func.func_globals
@@ -219,3 +289,27 @@ class LintSandbox(ConfigureSandbox):
             self._has_imports.add(func)
             return wrapper(func)
         return decorator
+
+    def _prepare_function(self, func, update_globals=None):
+        wrapped = super(LintSandbox, self)._prepare_function(func, update_globals)
+        _, glob = self.unwrap(wrapped)
+        imports = set()
+        for _from, _import, _as in self._imports.get(func, ()):
+            if _as:
+                imports.add(_as)
+            else:
+                what = _import.split('.')[0]
+                imports.add(what)
+        for op, arg, line in disassemble_as_iter(func):
+            code = func.func_code
+            if op == 'LOAD_GLOBAL' and \
+                    arg not in glob and \
+                    arg not in imports and \
+                    arg not in glob['__builtins__'] and \
+                    arg not in code.co_varnames[:code.co_argcount]:
+                # Raise the same kind of error as what would happen during
+                # execution.
+                e = NameError("global name '{}' is not defined".format(arg))
+                self._raise_from(e, func, line)
+
+        return wrapped

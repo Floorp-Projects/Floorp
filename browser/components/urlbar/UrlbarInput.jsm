@@ -15,6 +15,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ReaderMode: "resource://gre/modules/ReaderMode.jsm",
   Services: "resource://gre/modules/Services.jsm",
   UrlbarController: "resource:///modules/UrlbarController.jsm",
+  UrlbarEventBufferer: "resource:///modules/UrlbarEventBufferer.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarQueryContext: "resource:///modules/UrlbarUtils.jsm",
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
@@ -102,18 +103,21 @@ class UrlbarInput {
       return new UrlbarValueFormatter(this);
     });
 
+    // The event bufferer handles some events, queues them up, and calls back
+    // our handleEvent at the right time.
+    this.eventBufferer = new UrlbarEventBufferer(this);
+    this.inputField.addEventListener("blur", this.eventBufferer);
+    this.inputField.addEventListener("keydown", this.eventBufferer);
+
+    const inputFieldEvents = [
+      "focus", "input", "keyup", "mouseover", "paste", "scrollend", "select",
+      "overflow", "underflow",
+    ];
+    for (let name of inputFieldEvents) {
+      this.inputField.addEventListener(name, this);
+    }
+
     this.addEventListener("mousedown", this);
-    this.inputField.addEventListener("blur", this);
-    this.inputField.addEventListener("focus", this);
-    this.inputField.addEventListener("input", this);
-    this.inputField.addEventListener("mouseover", this);
-    this.inputField.addEventListener("overflow", this);
-    this.inputField.addEventListener("underflow", this);
-    this.inputField.addEventListener("paste", this);
-    this.inputField.addEventListener("scrollend", this);
-    this.inputField.addEventListener("select", this);
-    this.inputField.addEventListener("keydown", this);
-    this.inputField.addEventListener("keyup", this);
     this.view.panel.addEventListener("popupshowing", this);
     this.view.panel.addEventListener("popuphidden", this);
 

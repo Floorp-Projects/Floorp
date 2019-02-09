@@ -6,7 +6,7 @@
 
 // Definitions needed to run eslint on this file.
 /* global AppConstants, DATA_URI_SPEC, LOG_FUNCTION */
-/* global Services, URL_HOST, DEBUG_AUS_TEST */
+/* global Services, URL_HOST */
 
 const {FileUtils} = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
 const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -90,6 +90,7 @@ const PR_CREATE_FILE = 0x08;
 const PR_TRUNCATE    = 0x20;
 
 var gChannel;
+var gDebugTest = false;
 
 /* import-globals-from sharedUpdateXML.js */
 Services.scriptloader.loadSubScript(DATA_URI_SPEC + "sharedUpdateXML.js", this);
@@ -328,38 +329,6 @@ function readFile(aFile) {
   return text;
 }
 
-/**
- * Reads the binary contents of a file and returns it as a string.
- *
- * @param  aFile
- *         The file to read from.
- * @return The contents of the file as a string.
- */
-function readFileBytes(aFile) {
-  debugDump("attempting to read file, path: " + aFile.path);
-  let fis = Cc["@mozilla.org/network/file-input-stream;1"].
-            createInstance(Ci.nsIFileInputStream);
-  // Specifying -1 for ioFlags will open the file with the default of PR_RDONLY.
-  // Specifying -1 for perm will open the file with the default of 0.
-  fis.init(aFile, -1, -1, Ci.nsIFileInputStream.CLOSE_ON_EOF);
-  let bis = Cc["@mozilla.org/binaryinputstream;1"].
-            createInstance(Ci.nsIBinaryInputStream);
-  bis.setInputStream(fis);
-  let data = [];
-  let count = fis.available();
-  while (count > 0) {
-    let bytes = bis.readByteArray(Math.min(65535, count));
-    data.push(String.fromCharCode.apply(null, bytes));
-    count -= bytes.length;
-    if (bytes.length == 0) {
-      throw "Nothing read from input stream!";
-    }
-  }
-  data = data.join("");
-  fis.close();
-  return data.toString();
-}
-
 /* Returns human readable status text from the updates.properties bundle */
 function getStatusText(aErrCode) {
   return getString("check_error-" + aErrCode);
@@ -450,7 +419,7 @@ function getStageDirFile(aRelPath) {
   if (AppConstants.platform == "macosx") {
     file = getUpdateDirFile(DIR_PATCH);
   } else {
-    file = getAppBaseDir();
+    file = getGREBinDir();
   }
   file.append(DIR_UPDATED);
   if (aRelPath) {
@@ -577,15 +546,6 @@ function removeDirRecursive(aDir) {
  */
 function getCurrentProcessDir() {
   return Services.dirsvc.get(NS_XPCOM_CURRENT_PROCESS_DIR, Ci.nsIFile);
-}
-
-/**
- * Gets the application base directory.
- *
- * @return  nsIFile object for the application base directory.
- */
-function getAppBaseDir() {
-  return Services.dirsvc.get(XRE_EXECUTABLE_FILE, Ci.nsIFile).parent;
 }
 
 /**
@@ -761,7 +721,7 @@ function logTestInfo(aText, aCaller) {
 }
 
 /**
- * Logs TEST-INFO messages when DEBUG_AUS_TEST evaluates to true.
+ * Logs TEST-INFO messages when gDebugTest evaluates to true.
  *
  * @param  aText
  *         The text to log.
@@ -770,7 +730,7 @@ function logTestInfo(aText, aCaller) {
  *         Components.stack.caller will be used.
  */
 function debugDump(aText, aCaller) {
-  if (DEBUG_AUS_TEST) {
+  if (gDebugTest) {
     let caller = aCaller ? aCaller : Components.stack.caller;
     logTestInfo(aText, caller);
   }
