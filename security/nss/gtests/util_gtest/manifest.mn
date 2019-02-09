@@ -3,29 +3,30 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 CORE_DEPTH = ../..
-DEPTH      = ../..
+DEPTH = ../..
 MODULE = nss
 
 CPPSRCS = \
-	util_utf8_unittest.cc \
-	util_b64_unittest.cc \
-	util_pkcs11uri_unittest.cc \
-	util_aligned_malloc_unittest.cc \
-	util_memcmpzero_unittest.cc \
-	$(NULL)
+        util_aligned_malloc_unittest.cc \
+        util_b64_unittest.cc \
+        util_gtests.cc \
+        util_memcmpzero_unittest.cc \
+        util_pkcs11uri_unittest.cc \
+        util_utf8_unittest.cc \
+        $(NULL)
 
 INCLUDES += \
-	-I$(CORE_DEPTH)/gtests/google_test/gtest/include \
-	-I$(CORE_DEPTH)/gtests/common \
-	-I$(CORE_DEPTH)/cpputil \
-	$(NULL)
+        -I$(CORE_DEPTH)/gtests/google_test/gtest/include \
+        -I$(CORE_DEPTH)/gtests/common \
+        -I$(CORE_DEPTH)/cpputil \
+        $(NULL)
 
 REQUIRES = nspr gtest
 
 PROGRAM = util_gtest
 
 EXTRA_LIBS = \
-	$(DIST)/lib/$(LIB_PREFIX)gtest.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)nssutil.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)gtestutil.$(LIB_SUFFIX) \
-	$(NULL)
+        $(DIST)/lib/$(LIB_PREFIX)gtest.$(LIB_SUFFIX) \
+        $(DIST)/lib/$(LIB_PREFIX)nssutil.$(LIB_SUFFIX) \
+        $(DIST)/lib/$(LIB_PREFIX)gtestutil.$(LIB_SUFFIX) \
+        $(NULL)

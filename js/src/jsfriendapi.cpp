@@ -544,29 +544,16 @@ JS_FRIEND_API bool js::IsCompartmentZoneSweepingOrCompacting(
   return comp->zone()->isGCSweepingOrCompacting();
 }
 
-namespace {
-struct VisitGrayCallbackFunctor {
-  GCThingCallback callback_;
-  void* closure_;
-  VisitGrayCallbackFunctor(GCThingCallback callback, void* closure)
-      : callback_(callback), closure_(closure) {}
-
-  template <class T>
-  void operator()(T tp) const {
-    if ((*tp)->isMarkedGray()) {
-      callback_(closure_, JS::GCCellPtr(*tp));
-    }
-  }
-};
-}  // namespace
-
 JS_FRIEND_API void js::VisitGrayWrapperTargets(Zone* zone,
                                                GCThingCallback callback,
                                                void* closure) {
   for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next()) {
     for (Compartment::WrapperEnum e(comp); !e.empty(); e.popFront()) {
-      e.front().mutableKey().applyToWrapped(
-          VisitGrayCallbackFunctor(callback, closure));
+      e.front().mutableKey().applyToWrapped([callback, closure](auto tp) {
+        if ((*tp)->isMarkedGray()) {
+          callback(closure, JS::GCCellPtr(*tp));
+        }
+      });
     }
   }
 }

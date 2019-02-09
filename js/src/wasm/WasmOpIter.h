@@ -331,6 +331,7 @@ class MOZ_STACK_CLASS OpIter : private Policy {
   MOZ_MUST_USE bool readFixedF32(float* out) { return d_.readFixedF32(out); }
   MOZ_MUST_USE bool readFixedF64(double* out) { return d_.readFixedF64(out); }
 
+  MOZ_MUST_USE bool readMemOrTableIndex(bool isMem, uint32_t* index);
   MOZ_MUST_USE bool readLinearMemoryAddress(uint32_t byteSize,
                                             LinearMemoryAddress<Value>* addr);
   MOZ_MUST_USE bool readLinearMemoryAddressAligned(
@@ -1219,6 +1220,33 @@ inline bool OpIter<Policy>::readComparison(ValType operandType, Value* lhs,
   return true;
 }
 
+// For memories, the index is currently always a placeholder zero byte.
+//
+// For tables, the index is a placeholder zero byte until we get multi-table
+// with the reftypes proposal.
+//
+// The zero-ness of the value must be checked by the caller.
+template <typename Policy>
+inline bool OpIter<Policy>::readMemOrTableIndex(bool isMem, uint32_t* index) {
+#ifdef ENABLE_WASM_REFTYPES
+  bool readByte = isMem;
+#else
+  bool readByte = true;
+#endif
+  if (readByte) {
+    uint8_t indexTmp;
+    if (!readFixedU8(&indexTmp)) {
+      return false;
+    }
+    *index = indexTmp;
+  } else {
+    if (!readVarU32(index)) {
+      return false;
+    }
+  }
+  return true;
+}
+
 template <typename Policy>
 inline bool OpIter<Policy>::readLinearMemoryAddress(
     uint32_t byteSize, LinearMemoryAddress<Value>* addr) {
@@ -1876,10 +1904,10 @@ inline bool OpIter<Policy>::readMemOrTableCopy(bool isMem,
 
   // We use (dest, src) everywhere in code but the spec requires (src, dest)
   // encoding order for the immediates.
-  if (!readVarU32(srcMemOrTableIndex)) {
+  if (!readMemOrTableIndex(isMem, srcMemOrTableIndex)) {
     return false;
   }
-  if (!readVarU32(dstMemOrTableIndex)) {
+  if (!readMemOrTableIndex(isMem, dstMemOrTableIndex)) {
     return false;
   }
 
@@ -1955,8 +1983,8 @@ inline bool OpIter<Policy>::readMemFill(Value* start, Value* val, Value* len) {
     return fail("can't touch memory without memory");
   }
 
-  uint32_t memoryIndex;
-  if (!readVarU32(&memoryIndex)) {
+  uint8_t memoryIndex;
+  if (!readFixedU8(&memoryIndex)) {
     return false;
   }
   if (!env_.usesMemory()) {
@@ -2006,7 +2034,7 @@ inline bool OpIter<Policy>::readMemOrTableInit(bool isMem, uint32_t* segIndex,
   }
 
   uint32_t memOrTableIndex = 0;
-  if (!readVarU32(&memOrTableIndex)) {
+  if (!readMemOrTableIndex(isMem, &memOrTableIndex)) {
     return false;
   }
   if (isMem) {

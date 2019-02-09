@@ -100,7 +100,7 @@ function tab_test_nofail(insn1, insn2) {
 }
 
 
-//---- memory.{drop,init} -------------------------------------------------
+//---- memory.{drop,init,copy} -------------------------------------------------
 
 // drop with no memory
 mem_test("data.drop 3", "",
@@ -197,7 +197,7 @@ mem_test("(memory.init 1 (i32.const 1) (i32.const 1))", "",
     }}}
 }
 
-
+//
 //---- table.{drop,init} --------------------------------------------------
 
 // drop with no table

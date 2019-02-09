@@ -51,7 +51,7 @@ function setBreakpoint(packet, threadClient, client) {
     );
     client.addOneTimeListener("resumed", resolve);
 
-    source.setBreakpoint({ line: 2 }).then(() => {
+    source.setBreakpoint({ line: 3 }).then(() => {
       threadClient.resume();
     });
   });

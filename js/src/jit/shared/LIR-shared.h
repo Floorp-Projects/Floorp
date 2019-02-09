@@ -402,6 +402,30 @@ class LNewTypedArrayFromArray : public LCallInstructionHelper<1, 1, 0> {
   }
 };
 
+class LNewTypedArrayFromArrayBuffer
+    : public LCallInstructionHelper<1, 1 + 2 * BOX_PIECES, 0> {
+ public:
+  LIR_HEADER(NewTypedArrayFromArrayBuffer)
+
+  LNewTypedArrayFromArrayBuffer(const LAllocation& arrayBuffer,
+                                const LBoxAllocation& byteOffset,
+                                const LBoxAllocation& length)
+      : LCallInstructionHelper(classOpcode) {
+    setOperand(0, arrayBuffer);
+    setBoxOperand(ByteOffsetIndex, byteOffset);
+    setBoxOperand(LengthIndex, length);
+  }
+
+  static const size_t ByteOffsetIndex = 1;
+  static const size_t LengthIndex = 1 + BOX_PIECES;
+
+  const LAllocation* arrayBuffer() { return getOperand(0); }
+
+  MNewTypedArrayFromArrayBuffer* mir() const {
+    return mir_->toNewTypedArrayFromArrayBuffer();
+  }
+};
+
 class LNewObject : public LInstructionHelper<1, 0, 1> {
  public:
   LIR_HEADER(NewObject)

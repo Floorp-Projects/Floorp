@@ -17,15 +17,12 @@ const { assert, dumpn } = DevToolsUtils;
 const { threadSpec } = require("devtools/shared/specs/script");
 
 loader.lazyRequireGetter(this, "findCssSelector", "devtools/shared/inspector/css-logic", true);
-loader.lazyRequireGetter(this, "BreakpointActor", "devtools/server/actors/breakpoint", true);
-loader.lazyRequireGetter(this, "setBreakpointAtEntryPoints", "devtools/server/actors/breakpoint", true);
 loader.lazyRequireGetter(this, "EnvironmentActor", "devtools/server/actors/environment", true);
 loader.lazyRequireGetter(this, "SourceActorStore", "devtools/server/actors/utils/source-actor-store", true);
 loader.lazyRequireGetter(this, "BreakpointActorMap", "devtools/server/actors/utils/breakpoint-actor-map", true);
 loader.lazyRequireGetter(this, "PauseScopedObjectActor", "devtools/server/actors/pause-scoped", true);
 loader.lazyRequireGetter(this, "EventLoopStack", "devtools/server/actors/utils/event-loop", true);
 loader.lazyRequireGetter(this, "FrameActor", "devtools/server/actors/frame", true);
-loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 loader.lazyRequireGetter(this, "throttle", "devtools/shared/throttle", true);
 
 /**
@@ -62,7 +59,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     this._threadLifetimePool = null;
     this._parentClosed = false;
     this._scripts = null;
-    this._pauseOnDOMEvents = null;
     this._xhrBreakpoints = [];
     this._observingNetwork = false;
 
@@ -75,17 +71,12 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
 
     this._debuggerSourcesSeen = null;
 
-    // A map of actorID -> actor for breakpoints created and managed by the
-    // server.
-    this._hiddenBreakpoints = new Map();
-
     // A Set of URLs string to watch for when new sources are found by
     // the debugger instance.
     this._onLoadBreakpointURLs = new Set();
 
     this.global = global;
 
-    this._allEventsListener = this._allEventsListener.bind(this);
     this.onNewSourceEvent = this.onNewSourceEvent.bind(this);
     this.onUpdatedSourceEvent = this.onUpdatedSourceEvent.bind(this);
 
@@ -95,9 +86,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     this.onNewScript = this.onNewScript.bind(this);
     this.objectGrip = this.objectGrip.bind(this);
     this.pauseObjectGrip = this.pauseObjectGrip.bind(this);
-    this._onWindowReady = this._onWindowReady.bind(this);
     this._onOpeningRequest = this._onOpeningRequest.bind(this);
-    EventEmitter.on(this._parent, "window-ready", this._onWindowReady);
 
     if (Services.obs) {
       // Set a wrappedJSObject property so |this| can be sent via the observer svc
@@ -228,7 +217,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     this._xhrBreakpoints = [];
     this._updateNetworkObserver();
 
-    EventEmitter.off(this._parent, "window-ready", this._onWindowReady);
     this.sources.off("newSource", this.onNewSourceEvent);
     this.sources.off("updatedSource", this.onUpdatedSourceEvent);
     this.clearDebuggees();
@@ -861,33 +849,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
   },
 
   /**
-   * Listen to the debuggee's DOM events if we received a request to do so.
-   *
-   * @param Object request
-   *        The resume request packet received over the RDP.
-   */
-  _maybeListenToEvents: function(request) {
-    // Break-on-DOMEvents is only supported in content debugging.
-    const events = request.pauseOnDOMEvents;
-    if (this.global && events &&
-        (events == "*" ||
-        (Array.isArray(events) && events.length))) {
-      this._pauseOnDOMEvents = events;
-      Services.els.addListenerForAllEvents(this.global, this._allEventsListener, true);
-    }
-  },
-
-  /**
-   * If we are tasked with breaking on the load event, we have to add the
-   * listener early enough.
-   */
-  _onWindowReady: function() {
-    this._maybeListenToEvents({
-      pauseOnDOMEvents: this._pauseOnDOMEvents,
-    });
-  },
-
-  /**
    * Handle a protocol request to resume execution of the debuggee.
    */
   onResume: function(request) {
@@ -934,7 +895,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
         this._options.pauseOnExceptions = request.pauseOnExceptions;
         this._options.ignoreCaughtExceptions = request.ignoreCaughtExceptions;
         this.maybePauseOnExceptions();
-        this._maybeListenToEvents(request);
       }
 
       // When replaying execution in a separate process we need to explicitly
@@ -1010,107 +970,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
   maybePauseOnExceptions: function() {
     if (this._options.pauseOnExceptions) {
       this.dbg.onExceptionUnwind = this.onExceptionUnwind.bind(this);
-    }
-  },
-
-  /**
-   * A listener that gets called for every event fired on the page, when a list
-   * of interesting events was provided with the pauseOnDOMEvents property. It
-   * is used to set server-managed breakpoints on any existing event listeners
-   * for those events.
-   *
-   * @param Event event
-   *        The event that was fired.
-   */
-  _allEventsListener: function(event) {
-    if (this._pauseOnDOMEvents == "*" ||
-        this._pauseOnDOMEvents.includes(event.type)) {
-      for (const listener of this._getAllEventListeners(event.target)) {
-        if (event.type == listener.type || this._pauseOnDOMEvents == "*") {
-          this._breakOnEnter(listener.script);
-        }
-      }
-    }
-  },
-
-  /**
-   * Return an array containing all the event listeners attached to the
-   * specified event target and its ancestors in the event target chain.
-   *
-   * @param EventTarget eventTarget
-   *        The target the event was dispatched on.
-   * @returns Array
-   */
-  _getAllEventListeners: function(eventTarget) {
-    const targets = Services.els.getEventTargetChainFor(eventTarget, true);
-    const listeners = [];
-
-    for (const target of targets) {
-      const handlers = Services.els.getListenerInfoFor(target);
-      for (const handler of handlers) {
-        // Null is returned for all-events handlers, and native event listeners
-        // don't provide any listenerObject, which makes them not that useful to
-        // a JS debugger.
-        if (!handler || !handler.listenerObject || !handler.type) {
-          continue;
-        }
-        // Create a listener-like object suitable for our purposes.
-        const l = Object.create(null);
-        l.type = handler.type;
-        const listener = handler.listenerObject;
-        let listenerDO = this.globalDebugObject.makeDebuggeeValue(listener);
-        // If the listener is not callable, assume it is an event handler object.
-        if (!listenerDO.callable) {
-          // For some events we don't have permission to access the
-          // 'handleEvent' property when running in content scope.
-          if (!listenerDO.unwrap()) {
-            continue;
-          }
-          let heDesc;
-          while (!heDesc && listenerDO) {
-            heDesc = listenerDO.getOwnPropertyDescriptor("handleEvent");
-            listenerDO = listenerDO.proto;
-          }
-          if (heDesc && heDesc.value) {
-            listenerDO = heDesc.value;
-          }
-        }
-        // When the listener is a bound function, we are actually interested in
-        // the target function.
-        while (listenerDO.isBoundFunction) {
-          listenerDO = listenerDO.boundTargetFunction;
-        }
-        l.script = listenerDO.script;
-        // Chrome listeners won't be converted to debuggee values, since their
-        // compartment is not added as a debuggee.
-        if (!l.script) {
-          continue;
-        }
-        listeners.push(l);
-      }
-    }
-    return listeners;
-  },
-
-  /**
-   * Set a breakpoint on the first line of the given script that has an entry
-   * point.
-   */
-  _breakOnEnter: function(script) {
-    const offsets = script.getAllOffsets();
-    for (let line = 0, n = offsets.length; line < n; line++) {
-      if (offsets[line]) {
-        // N.B. Hidden breakpoints do not have an original location, and are not
-        // stored in the breakpoint actor map.
-        const actor = new BreakpointActor(this);
-        this.threadLifetimePool.addActor(actor);
-
-        const scripts = this.dbg.findScripts({ source: script.source, line: line });
-        const entryPoints = findEntryPointsForLine(scripts, line);
-        setBreakpointAtEntryPoints(actor, entryPoints);
-        this._hiddenBreakpoints.set(actor.actorID, actor);
-        break;
-      }
     }
   },
 
@@ -1431,20 +1290,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     this.dbg.replayingOnPopFrame = undefined;
     this.dbg.onExceptionUnwind = undefined;
     this._clearSteppingHooks();
-
-    // Clear DOM event breakpoints.
-    // XPCShell tests don't use actual DOM windows for globals and cause
-    // removeListenerForAllEvents to throw.
-    if (!isWorker &&
-        this.global &&
-        !this.dbg.replaying &&
-        !this.global.toString().includes("Sandbox")) {
-      Services.els.removeListenerForAllEvents(this.global, this._allEventsListener, true);
-      for (const [, bp] of this._hiddenBreakpoints) {
-        bp.delete();
-      }
-      this._hiddenBreakpoints.clear();
-    }
 
     this._state = "paused";
 
@@ -1960,13 +1805,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     // debugger, and carefully avoid the use of unsafeSynchronize in this
     // function when source maps are disabled.
     for (const actor of bpActors) {
-      if (actor.isPending) {
-        actor.generatedLocation.generatedSourceActor._setBreakpoint(actor);
-      } else {
-        actor.generatedLocation.generatedSourceActor._setBreakpointAtGeneratedLocation(
-          actor, actor.generatedLocation
-        );
-      }
+      actor.generatedLocation.generatedSourceActor._setBreakpoint(actor);
     }
 
     if (this._onLoadBreakpointURLs.has(source.url)) {
@@ -2085,30 +1924,6 @@ this.reportError = function(error, prefix = "") {
   oldReportError(msg);
   dumpn(msg);
 };
-
-/**
- * Find the scripts which contain offsets that are an entry point to the given
- * line.
- *
- * @param Array scripts
- *        The set of Debugger.Scripts to consider.
- * @param Number line
- *        The line we are searching for entry points into.
- * @returns Array of objects of the form { script, offsets } where:
- *          - script is a Debugger.Script
- *          - offsets is an array of offsets that are entry points into the
- *            given line.
- */
-function findEntryPointsForLine(scripts, line) {
-  const entryPoints = [];
-  for (const script of scripts) {
-    const offsets = script.getLineOffsets(line);
-    if (offsets.length) {
-      entryPoints.push({ script, offsets });
-    }
-  }
-  return entryPoints;
-}
 
 function findPausePointForLocation(pausePoints, location) {
   const { generatedLine: line, generatedColumn: column } = location;
