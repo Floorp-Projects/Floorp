@@ -88,22 +88,14 @@ JS_PUBLIC_API void JS::TraceChildren(JSTracer* trc, GCCellPtr thing) {
   js::TraceChildren(trc, thing.asCell(), thing.kind());
 }
 
-struct TraceChildrenFunctor {
-  template <typename T>
-  void operator()(JSTracer* trc, void* thingArg) {
-    T* thing = static_cast<T*>(thingArg);
-    MOZ_ASSERT_IF(thing->runtimeFromAnyThread() != trc->runtime(),
-                  ThingIsPermanentAtomOrWellKnownSymbol(thing) ||
-                      thing->zoneFromAnyThread()->isSelfHostingZone());
-
-    thing->traceChildren(trc);
-  }
-};
-
 void js::TraceChildren(JSTracer* trc, void* thing, JS::TraceKind kind) {
   MOZ_ASSERT(thing);
-  TraceChildrenFunctor f;
-  DispatchTraceKindTyped(f, kind, trc, thing);
+  ApplyGCThingTyped(thing, kind, [trc](auto t) {
+    MOZ_ASSERT_IF(t->runtimeFromAnyThread() != trc->runtime(),
+                  ThingIsPermanentAtomOrWellKnownSymbol(t) ||
+                  t->zoneFromAnyThread()->isSelfHostingZone());
+    t->traceChildren(trc);
+  });
 }
 
 JS_PUBLIC_API void JS::TraceIncomingCCWs(
