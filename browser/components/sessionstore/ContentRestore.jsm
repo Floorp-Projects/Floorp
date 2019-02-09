@@ -185,8 +185,7 @@ ContentRestoreInternal.prototype = {
         // If the load was started in another process, and the in-flight channel
         // was redirected into this process, resume that load within our process.
         if (loadArguments.redirectLoadSwitchId) {
-          webNavigation.resumeRedirectedLoad(loadArguments.redirectLoadSwitchId,
-                                             loadArguments.redirectHistoryIndex);
+          webNavigation.resumeRedirectedLoad(loadArguments.redirectLoadSwitchId);
           return true;
         }
 
