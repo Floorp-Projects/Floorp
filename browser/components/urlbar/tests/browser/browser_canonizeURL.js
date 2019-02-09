@@ -8,11 +8,11 @@
 const TEST_ENGINE_BASENAME = "searchSuggestionEngine.xml";
 
 add_task(async function checkCtrlWorks() {
+  let defaultEngine = await Services.search.getDefault();
   let testcases = [
     ["example", "http://www.example.com/", { ctrlKey: true }],
     // Check that a direct load is not overwritten by a previous canonization.
     ["http://example.com/test/", "http://example.com/test/", {}],
-
     ["ex-ample", "http://www.ex-ample.com/", { ctrlKey: true }],
     ["  example ", "http://www.example.com/", { ctrlKey: true }],
     [" example/foo ", "http://www.example.com/foo", { ctrlKey: true }],
@@ -25,8 +25,8 @@ add_task(async function checkCtrlWorks() {
     ["1.1.1.1", "http://1.1.1.1/", { ctrlKey: true }],
     ["ftp://example", "ftp://example/", { ctrlKey: true }],
     ["ftp.example.bar", "http://ftp.example.bar/", { ctrlKey: true }],
-    ["ex ample", (await Services.search.getDefault()).getSubmission("ex ample", null, "keyword").uri.spec,
-      { ctrlKey: true }],
+    ["ex ample", defaultEngine.getSubmission("ex ample", null, "keyword").uri.spec,
+     { ctrlKey: true }],
   ];
 
   // Disable autoFill for this test, since it could mess up the results.
@@ -36,6 +36,7 @@ add_task(async function checkCtrlWorks() {
   ]});
 
   for (let [inputValue, expectedURL, options] of testcases) {
+    info(`Testing input string: "${inputValue}" - expected: "${expectedURL}"`);
     let promiseLoad =
       BrowserTestUtils.waitForDocLoadAndStopIt(expectedURL, gBrowser.selectedBrowser);
     gURLBar.focus();

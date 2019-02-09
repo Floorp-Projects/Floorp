@@ -23,7 +23,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 XPCOMUtils.defineLazyGetter(this, "logger", () =>
-  Log.repository.getLogger("Places.Urlbar.ProvidersManager"));
+  Log.repository.getLogger("Urlbar.ProvidersManager"));
 
 // List of available local providers, each is implemented in its own jsm module
 // and will track different queries internally by queryContext.
