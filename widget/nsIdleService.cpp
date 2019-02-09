@@ -156,8 +156,17 @@ void nsIdleServiceDaily::Init() {
   // get ready to send an idle-daily event. Otherwise set a timer targeted
   // at 24 hours past the last idle-daily we sent.
 
-  int32_t nowSec = static_cast<int32_t>(PR_Now() / PR_USEC_PER_SEC);
   int32_t lastDaily = Preferences::GetInt(PREF_LAST_DAILY, 0);
+  // Setting the pref to -1 allows to disable idle-daily, and it's particularly
+  // useful in tests. Normally there should be no need for the user to set
+  // this value.
+  if (lastDaily == -1) {
+    MOZ_LOG(sLog, LogLevel::Debug,
+            ("nsIdleServiceDaily: Init: disabled idle-daily"));
+    return;
+  }
+
+  int32_t nowSec = static_cast<int32_t>(PR_Now() / PR_USEC_PER_SEC);
   if (lastDaily < 0 || lastDaily > nowSec) {
     // The time is bogus, use default.
     lastDaily = 0;
