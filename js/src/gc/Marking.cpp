@@ -1500,20 +1500,16 @@ void js::GCMarker::lazilyMarkChildren(ObjectGroup* group) {
 void JS::BigInt::traceChildren(JSTracer* trc) { return; }
 #endif
 
-struct TraverseObjectFunctor {
-  template <typename T>
-  void operator()(T* thing, GCMarker* gcmarker, JSObject* src) {
-    gcmarker->traverseEdge(src, *thing);
-  }
-};
+template <typename Functor>
+static void VisitTraceList(const Functor& f, const int32_t* traceList,
+                           uint8_t* memory);
 
 // Call the trace hook set on the object, if present. If further tracing of
 // NativeObject fields is required, this will return the native object.
 enum class CheckGeneration { DoChecks, NoChecks };
-template <typename Functor, typename... Args>
-static inline NativeObject* CallTraceHook(Functor f, JSTracer* trc,
-                                          JSObject* obj, CheckGeneration check,
-                                          Args&&... args) {
+template <typename Functor>
+static inline NativeObject* CallTraceHook(Functor&& f, JSTracer* trc,
+                                          JSObject* obj, CheckGeneration check) {
   const Class* clasp = obj->getClass();
   MOZ_ASSERT(clasp);
   MOZ_ASSERT(obj->isNative() == clasp->isNative());
@@ -1524,12 +1520,12 @@ static inline NativeObject* CallTraceHook(Functor f, JSTracer* trc,
 
   if (clasp->isTrace(InlineTypedObject::obj_trace)) {
     Shape** pshape = obj->as<InlineTypedObject>().addressOfShapeFromGC();
-    f(pshape, std::forward<Args>(args)...);
+    f(pshape);
 
     InlineTypedObject& tobj = obj->as<InlineTypedObject>();
     if (tobj.typeDescr().hasTraceList()) {
       VisitTraceList(f, tobj.typeDescr().traceList(),
-                     tobj.inlineTypedMemForGC(), std::forward<Args>(args)...);
+                     tobj.inlineTypedMemForGC());
     }
 
     return nullptr;
@@ -1538,7 +1534,7 @@ static inline NativeObject* CallTraceHook(Functor f, JSTracer* trc,
   if (clasp == &UnboxedPlainObject::class_) {
     JSObject** pexpando = obj->as<UnboxedPlainObject>().addressOfExpando();
     if (*pexpando) {
-      f(pexpando, std::forward<Args>(args)...);
+      f(pexpando);
     }
 
     UnboxedPlainObject& unboxed = obj->as<UnboxedPlainObject>();
@@ -1546,8 +1542,7 @@ static inline NativeObject* CallTraceHook(Functor f, JSTracer* trc,
                                       ? unboxed.layout()
                                       : unboxed.layoutDontCheckGeneration();
     if (layout.traceList()) {
-      VisitTraceList(f, layout.traceList(), unboxed.data(),
-                     std::forward<Args>(args)...);
+      VisitTraceList(f, layout.traceList(), unboxed.data());
     }
 
     return nullptr;
@@ -1561,26 +1556,24 @@ static inline NativeObject* CallTraceHook(Functor f, JSTracer* trc,
   return &obj->as<NativeObject>();
 }
 
-template <typename F, typename... Args>
-static void VisitTraceList(F f, const int32_t* traceList, uint8_t* memory,
-                           Args&&... args) {
+template <typename Functor>
+static void VisitTraceList(const Functor& f, const int32_t* traceList,
+                           uint8_t* memory) {
   while (*traceList != -1) {
-    f(reinterpret_cast<JSString**>(memory + *traceList),
-      std::forward<Args>(args)...);
+    f(reinterpret_cast<JSString**>(memory + *traceList));
     traceList++;
   }
   traceList++;
   while (*traceList != -1) {
     JSObject** objp = reinterpret_cast<JSObject**>(memory + *traceList);
     if (*objp) {
-      f(objp, std::forward<Args>(args)...);
+      f(objp);
     }
     traceList++;
   }
   traceList++;
   while (*traceList != -1) {
-    f(reinterpret_cast<Value*>(memory + *traceList),
-      std::forward<Args>(args)...);
+    f(reinterpret_cast<Value*>(memory + *traceList));
     traceList++;
   }
 }
@@ -1810,8 +1803,9 @@ scan_obj : {
   ObjectGroup* group = obj->groupFromGC();
   traverseEdge(obj, group);
 
-  NativeObject* nobj = CallTraceHook(TraverseObjectFunctor(), this, obj,
-                                     CheckGeneration::DoChecks, this, obj);
+  NativeObject* nobj = CallTraceHook([this, obj](auto thingp) {
+                                       this->traverseEdge(obj, *thingp);
+                                     }, this, obj, CheckGeneration::DoChecks);
   if (!nobj) {
     return;
   }
@@ -2917,17 +2911,11 @@ void js::gc::StoreBuffer::ValueEdge::trace(TenuringTracer& mover) const {
   }
 }
 
-struct TenuringFunctor {
-  template <typename T>
-  void operator()(T* thing, TenuringTracer& mover) {
-    mover.traverse(thing);
-  }
-};
-
 // Visit all object children of the object and trace them.
 void js::TenuringTracer::traceObject(JSObject* obj) {
-  NativeObject* nobj = CallTraceHook(TenuringFunctor(), this, obj,
-                                     CheckGeneration::NoChecks, *this);
+  NativeObject* nobj = CallTraceHook([this](auto thingp) {
+                                       this->traverse(thingp);
+                                     }, this, obj, CheckGeneration::NoChecks);
   if (!nobj) {
     return;
   }
