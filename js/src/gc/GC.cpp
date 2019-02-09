@@ -4009,18 +4009,6 @@ class CompartmentCheckTracer : public JS::CallbackTracer {
   Compartment* compartment;
 };
 
-namespace {
-struct IsDestComparatorFunctor {
-  JS::GCCellPtr dst_;
-  explicit IsDestComparatorFunctor(JS::GCCellPtr dst) : dst_(dst) {}
-
-  template <typename T>
-  bool operator()(T* t) {
-    return (*t) == dst_.asCell();
-  }
-};
-}  // namespace
-
 static bool InCrossCompartmentMap(JSObject* src, JS::GCCellPtr dst) {
   Compartment* srccomp = src->compartment();
 
@@ -4038,8 +4026,10 @@ static bool InCrossCompartmentMap(JSObject* src, JS::GCCellPtr dst) {
    * know the right hashtable key, so we have to iterate.
    */
   for (Compartment::WrapperEnum e(srccomp); !e.empty(); e.popFront()) {
-    if (e.front().mutableKey().applyToWrapped(IsDestComparatorFunctor(dst)) &&
-        ToMarkable(e.front().value().unbarrieredGet()) == src) {
+    auto& key = e.front().mutableKey();
+    const auto& value = e.front().value();
+    if (key.applyToWrapped([dst](auto tp) { return *tp == dst.asCell(); }) &&
+        ToMarkable(value.unbarrieredGet()) == src) {
       return true;
     }
   }
@@ -4849,27 +4839,6 @@ static void DropStringWrappers(JSRuntime* rt) {
  *
  * Tarjan's algorithm is used to calculate the components.
  */
-namespace {
-struct AddOutgoingEdgeFunctor {
-  ZoneComponentFinder& finder_;
-
-  explicit AddOutgoingEdgeFunctor(ZoneComponentFinder& finder)
-      : finder_(finder) {}
-
-  template <typename T>
-  void operator()(T tp) {
-    /*
-     * Add edge to wrapped object compartment if wrapped object is not
-     * marked black to indicate that wrapper compartment not be swept
-     * after wrapped compartment.
-     */
-    JS::Zone* zone = (*tp)->asTenured().zone();
-    if (zone->isGCMarking()) {
-      finder_.addEdgeTo(zone);
-    }
-  }
-};
-}  // namespace
 
 void Compartment::findOutgoingEdges(ZoneComponentFinder& finder) {
   for (js::WrapperMap::Enum e(crossCompartmentWrappers); !e.empty();
@@ -4882,7 +4851,17 @@ void Compartment::findOutgoingEdges(ZoneComponentFinder& finder) {
       // later marking of the CCW.
       continue;
     }
-    key.applyToWrapped(AddOutgoingEdgeFunctor(finder));
+    key.applyToWrapped([&finder](auto tp) {
+      /*
+       * Add edge to wrapped object compartment if wrapped object is not
+       * marked black to indicate that wrapper compartment not be swept
+       * after wrapped compartment.
+       */
+      JS::Zone* zone = (*tp)->asTenured().zone();
+      if (zone->isGCMarking()) {
+        finder.addEdgeTo(zone);
+      }
+    });
   }
 }
 

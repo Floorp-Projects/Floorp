@@ -1709,43 +1709,57 @@ void gfxFontFamily::FindFontForChar(GlobalFontMatch* aMatchData) {
                                         LAYOUT, charAndName);
 #endif
 
-  gfxFontEntry* fe =
-      FindFontForStyle(aMatchData->mStyle, /*aIgnoreSizeTolerance*/ true);
-  if (!fe || fe->SkipDuringSystemFallback()) {
+  AutoTArray<gfxFontEntry*,4> entries;
+  FindAllFontsForStyle(aMatchData->mStyle, entries,
+                       /*aIgnoreSizeTolerance*/ true);
+  if (entries.IsEmpty()) {
     return;
   }
 
+  gfxFontEntry* fe = nullptr;
   float distance = INFINITY;
 
-  if (fe->HasCharacter(aMatchData->mCh)) {
-    aMatchData->mCount++;
-
-    LogModule* log = gfxPlatform::GetLog(eGfxLog_textrun);
-
-    if (MOZ_UNLIKELY(MOZ_LOG_TEST(log, LogLevel::Debug))) {
-      uint32_t unicodeRange = FindCharUnicodeRange(aMatchData->mCh);
-      Script script = GetScriptCode(aMatchData->mCh);
-      MOZ_LOG(log, LogLevel::Debug,
-              ("(textrun-systemfallback-fonts) char: u+%6.6x "
-               "unicode-range: %d script: %d match: [%s]\n",
-               aMatchData->mCh, unicodeRange, int(script), fe->Name().get()));
+  for (auto e : entries) {
+    if (e->SkipDuringSystemFallback()) {
+      continue;
     }
 
-    distance = WeightStyleStretchDistance(fe, aMatchData->mStyle);
-  } else if (!fe->IsNormalStyle()) {
+    aMatchData->mCmapsTested++;
+    if (e->HasCharacter(aMatchData->mCh)) {
+      aMatchData->mCount++;
+
+      LogModule* log = gfxPlatform::GetLog(eGfxLog_textrun);
+
+      if (MOZ_UNLIKELY(MOZ_LOG_TEST(log, LogLevel::Debug))) {
+        uint32_t unicodeRange = FindCharUnicodeRange(aMatchData->mCh);
+        Script script = GetScriptCode(aMatchData->mCh);
+        MOZ_LOG(log, LogLevel::Debug,
+                ("(textrun-systemfallback-fonts) char: u+%6.6x "
+                 "unicode-range: %d script: %d match: [%s]\n",
+                 aMatchData->mCh, unicodeRange, int(script),
+                 e->Name().get()));
+      }
+
+      fe = e;
+      distance = WeightStyleStretchDistance(fe, aMatchData->mStyle);
+      break;
+    }
+  }
+
+  if (!fe && !aMatchData->mStyle.IsNormalStyle()) {
     // If style/weight/stretch was not Normal, see if we can
     // fall back to a next-best face (e.g. Arial Black -> Bold,
     // or Arial Narrow -> Regular).
     GlobalFontMatch data(aMatchData->mCh, aMatchData->mStyle);
     SearchAllFontsForChar(&data);
-    if (std::isfinite(data.mMatchDistance)) {
-      fe = data.mBestMatch;
-      distance = data.mMatchDistance;
+    if (!data.mBestMatch) {
+      return;
     }
+    fe = data.mBestMatch;
+    distance = data.mMatchDistance;
   }
-  aMatchData->mCmapsTested++;
 
-  if (std::isinf(distance)) {
+  if (!fe) {
     return;
   }
 

@@ -2203,6 +2203,45 @@ class MNewTypedArrayFromArray : public MUnaryInstruction,
   bool possiblyCalls() const override { return true; }
 };
 
+// Create a new TypedArray from an ArrayBuffer (or SharedArrayBuffer).
+class MNewTypedArrayFromArrayBuffer
+    : public MTernaryInstruction,
+      public MixPolicy<ObjectPolicy<0>, BoxPolicy<1>, BoxPolicy<2>>::Data {
+  CompilerObject templateObject_;
+  gc::InitialHeap initialHeap_;
+
+  MNewTypedArrayFromArrayBuffer(TempAllocator& alloc,
+                                CompilerConstraintList* constraints,
+                                JSObject* templateObject,
+                                gc::InitialHeap initialHeap,
+                                MDefinition* arrayBuffer,
+                                MDefinition* byteOffset, MDefinition* length)
+      : MTernaryInstruction(classOpcode, arrayBuffer, byteOffset, length),
+        templateObject_(templateObject),
+        initialHeap_(initialHeap) {
+    MOZ_ASSERT(!templateObject->isSingleton());
+    setGuard();  // Can throw during construction.
+    setResultType(MIRType::Object);
+    setResultTypeSet(MakeSingletonTypeSet(alloc, constraints, templateObject));
+  }
+
+ public:
+  INSTRUCTION_HEADER(NewTypedArrayFromArrayBuffer)
+  TRIVIAL_NEW_WRAPPERS_WITH_ALLOC
+
+  MDefinition* arrayBuffer() const { return getOperand(0); }
+  MDefinition* byteOffset() const { return getOperand(1); }
+  MDefinition* length() const { return getOperand(2); }
+  JSObject* templateObject() const { return templateObject_; }
+  gc::InitialHeap initialHeap() const { return initialHeap_; }
+
+  bool appendRoots(MRootList& roots) const override {
+    return roots.append(templateObject_);
+  }
+
+  bool possiblyCalls() const override { return true; }
+};
+
 class MNewObject : public MUnaryInstruction, public NoTypePolicy::Data {
  public:
   enum Mode { ObjectLiteral, ObjectCreate };
