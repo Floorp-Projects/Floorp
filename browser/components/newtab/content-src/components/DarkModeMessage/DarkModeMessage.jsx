@@ -23,7 +23,7 @@ export class _DarkModeMessage extends React.PureComponent {
     return (<div className="ds-message-container">
         <p>
           <span className="icon icon-info" />
-          <span>This version of New Tab doesn not support dark mode yet.</span>
+          <span>This version of New Tab doesn't support dark mode yet.</span>
         </p>
         <div className="ds-message-actions actions">
           <button onClick={this.handleCancel}>

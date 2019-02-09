@@ -38,7 +38,6 @@
 # keep this file list in sync with l10n.toml and filter.py
 relativesrcdir toolkit/locales:
   locale/@AB_CD@/browser/overrides/aboutReader.properties          (%chrome/global/aboutReader.properties)
-  locale/@AB_CD@/browser/overrides/aboutRights.dtd                 (%chrome/global/aboutRights.dtd)
   locale/@AB_CD@/browser/overrides/charsetMenu.properties          (%chrome/global/charsetMenu.properties)
   locale/@AB_CD@/browser/overrides/commonDialogs.properties        (%chrome/global/commonDialogs.properties)
   locale/@AB_CD@/browser/overrides/intl.properties                 (%chrome/global/intl.properties)
@@ -81,6 +80,8 @@ relativesrcdir toolkit/locales:
   toolkit/about                                    (%toolkit/about/*About.ftl)
 #about:support
   toolkit/about                                    (%toolkit/about/*Support.ftl)
+#about:rights
+  toolkit/about                                    (%toolkit/about/*Rights.ftl)
 #endif
 # Do not add files below the endif. Reviewers, expand more context above
 # for comments.

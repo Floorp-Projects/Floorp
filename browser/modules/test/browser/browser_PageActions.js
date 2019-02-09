@@ -1262,6 +1262,8 @@ add_task(async function removeRetainState() {
 // Opens the context menu on a non-built-in action.  (The context menu for
 // built-in actions is tested in browser_page_action_menu.js.)
 add_task(async function contextMenu() {
+  Services.telemetry.clearEvents();
+
   // Add a test action.
   let action = PageActions.addAction(new PageActions.Action({
     id: "test-contextMenu",
@@ -1444,6 +1446,20 @@ add_task(async function contextMenu() {
 
   // Done, clean up.
   action.remove();
+
+  // Check the telemetry was collected properly.
+  let snapshot = Services.telemetry.snapshotEvents(
+    Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, true);
+  ok(snapshot.parent && snapshot.parent.length > 0,
+     "Got parent telemetry events in the snapshot");
+  let relatedEvents = snapshot.parent
+    .filter(([timestamp, category, method]) =>
+      category == "addonsManager" && method == "action")
+    .map(relatedEvent => relatedEvent.slice(3, 6));
+  Assert.deepEqual(relatedEvents, [
+    ["pageAction", null, {action: "manage"}],
+    ["pageAction", null, {action: "manage"}],
+  ]);
 
   // urlbar tests that run after this one can break if the mouse is left over
   // the area where the urlbar popup appears, which seems to happen due to the

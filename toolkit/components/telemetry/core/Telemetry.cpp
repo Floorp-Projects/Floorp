@@ -102,6 +102,7 @@ using namespace mozilla;
 using mozilla::dom::AutoJSAPI;
 using mozilla::dom::Promise;
 using mozilla::Telemetry::CombinedStacks;
+using mozilla::Telemetry::EventExtraEntry;
 using mozilla::Telemetry::TelemetryIOInterposeObserver;
 using Telemetry::Common::AutoHashtable;
 using Telemetry::Common::GetCurrentProduct;
@@ -2124,6 +2125,16 @@ void ScalarSet(mozilla::Telemetry::ScalarID aId, const nsAString& aKey,
 void ScalarSetMaximum(mozilla::Telemetry::ScalarID aId, const nsAString& aKey,
                       uint32_t aVal) {
   TelemetryScalar::SetMaximum(aId, aKey, aVal);
+}
+
+void RecordEvent(mozilla::Telemetry::EventID aId,
+                 const mozilla::Maybe<nsCString>& aValue,
+                 const mozilla::Maybe<nsTArray<EventExtraEntry>>& aExtra) {
+  TelemetryEvent::RecordEventNative(aId, aValue, aExtra);
+}
+
+void SetEventRecordingEnabled(const nsACString& aCategory, bool aEnabled) {
+  TelemetryEvent::SetEventRecordingEnabled(aCategory, aEnabled);
 }
 
 }  // namespace Telemetry

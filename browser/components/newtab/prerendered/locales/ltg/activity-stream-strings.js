@@ -94,7 +94,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "Porvaldēt sadaļu",
   "section_menu_action_manage_webext": "Porvaldēt paplašinōjumu",
   "section_menu_action_add_topsite": "Jauna lopa topā",
-  "section_menu_action_add_search_engine": "Daīvīnōt mekleitōji",
+  "section_menu_action_add_search_engine": "Davīnōt mekleitōji",
   "section_menu_action_move_up": "Porvītōt iz augšu",
   "section_menu_action_move_down": "Porvītōt iz zamušku",
   "section_menu_action_privacy_notice": "Privatuma pīzeime",

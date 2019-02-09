@@ -94,7 +94,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_manage_section": "বিভাগটি পরিচালনা করুন",
   "section_menu_action_manage_webext": "এক্সটেনশনটি পরিচালনা করুন",
   "section_menu_action_add_topsite": "উপরে সাইট যোগ করুন",
-  "section_menu_action_add_search_engine": "অনুসন্ধান ইঞ্জিন যোগ করুন",
+  "section_menu_action_add_search_engine": "অনুসন্ধানের ইঞ্জিন যোগ করুন",
   "section_menu_action_move_up": "উপরে স্থানান্তর",
   "section_menu_action_move_down": "নীচে স্থানান্তর",
   "section_menu_action_privacy_notice": "গোপনীয়তা সংক্রান্ত নীতি",

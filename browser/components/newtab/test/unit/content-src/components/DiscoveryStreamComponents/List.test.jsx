@@ -4,16 +4,10 @@ import React from "react";
 import {shallow} from "enzyme";
 
 describe("<List> presentation component", () => {
-  const ValidRecommendations = [{url: 1}, {url: 2}, {url: 3}];
+  const ValidRecommendations = [{url: 1}, {url: 2}, {campaign_id: 11, context: "test spoc", url: 3}];
   const ValidListProps = {
-    DiscoveryStream: {
-      feeds: {
-        fakeFeedUrl: {
-          data: {
-            recommendations: ValidRecommendations,
-          },
-        },
-      },
+    data: {
+      recommendations: ValidRecommendations,
     },
     feed: {
       url: "fakeFeedUrl",
@@ -25,12 +19,10 @@ describe("<List> presentation component", () => {
 
   it("should return null if feed.data is falsy", () => {
     const ListProps = {
-      DiscoveryStream: {feeds: {a: "stuff"}},
-      feed: {url: "a"},
+      data: {feeds: {a: "stuff"}},
     };
 
     const wrapper = shallow(<List {...ListProps} />);
-
     assert.isNull(wrapper.getElement());
   });
 
@@ -69,6 +61,16 @@ describe("<List> presentation component", () => {
     const listItemUrls = wrapper.find(ListItem).map(i => i.prop("url"));
     assert.sameOrderedMembers(listItemUrls, [ValidRecommendations[1].url, ValidRecommendations[2].url]);
   });
+
+  it("should return expected spoc ListItem", () => {
+    const wrapper = shallow(<List {...ValidListProps} items={3} recStartingPoint={0} />);
+
+    const listItemCampaigns = wrapper.find(ListItem).map(i => i.prop("campaignId"));
+    assert.sameOrderedMembers(listItemCampaigns, [undefined, undefined, ValidRecommendations[2].campaign_id]);
+
+    const listItemContext = wrapper.find(ListItem).map(i => i.prop("context"));
+    assert.sameOrderedMembers(listItemContext, [undefined, undefined, ValidRecommendations[2].context]);
+  });
 });
 
 describe("<ListItem> presentation component", () => {
@@ -78,7 +80,13 @@ describe("<ListItem> presentation component", () => {
     domain: "example.com",
     image_src: "FAKE_IMAGE_SRC",
   };
-
+  const ValidLSpocListItemProps = {
+    url: "FAKE_URL",
+    title: "FAKE_TITLE",
+    domain: "example.com",
+    image_src: "FAKE_IMAGE_SRC",
+    context: "FAKE_CONTEXT",
+  };
   let globals;
 
   beforeEach(() => {
@@ -102,5 +110,19 @@ describe("<ListItem> presentation component", () => {
 
     const imageStyle = wrapper.find(".ds-list-image").prop("style");
     assert.propertyVal(imageStyle, "backgroundImage", `url(${ValidListItemProps.image_src})`);
+  });
+
+  it("should not contain 'span.ds-list-item-context' without props.context", () => {
+    const wrapper = shallow(<ListItem {...ValidListItemProps} />);
+
+    const contextEl = wrapper.find("span.ds-list-item-context");
+    assert.lengthOf(contextEl, 0);
+  });
+
+  it("should contain 'span.ds-list-item-context' spoc element", () => {
+    const wrapper = shallow(<ListItem {...ValidLSpocListItemProps} />);
+
+    const contextEl = wrapper.find("span.ds-list-item-context");
+    assert.lengthOf(contextEl, 1);
   });
 });

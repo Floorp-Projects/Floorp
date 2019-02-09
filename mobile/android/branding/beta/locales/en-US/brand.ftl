@@ -14,4 +14,4 @@
 
 -brand-short-name = Firefox Beta
 -brand-full-name = Mozilla Firefox Beta
-
+-vendor-short-name = Mozilla

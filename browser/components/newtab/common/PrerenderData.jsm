@@ -38,7 +38,7 @@ class _PrerenderData {
   _isPrefEnabled(prefObj) {
     try {
       let data = JSON.parse(prefObj);
-      return (data && data.enabled) ? true : false;
+      return (data && data.enabled) ? true : false; // eslint-disable-line no-unneeded-ternary
     } catch (e) {
       return false;
     }

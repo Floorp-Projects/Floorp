@@ -21,4 +21,7 @@ toolkit.jar:
   content/mozapps/extensions/pluginPrefs.xul                    (content/pluginPrefs.xul)
   content/mozapps/extensions/pluginPrefs.js                     (content/pluginPrefs.js)
   content/mozapps/extensions/OpenH264-license.txt               (content/OpenH264-license.txt)
+  content/mozapps/extensions/aboutaddons.html                   (content/aboutaddons.html)
+  content/mozapps/extensions/aboutaddons.js                     (content/aboutaddons.js)
+  content/mozapps/extensions/aboutaddons.css                    (content/aboutaddons.css)
 #endif

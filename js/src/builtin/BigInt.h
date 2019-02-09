@@ -47,8 +47,6 @@ class BigIntObject : public NativeObject {
 
 extern JSObject* InitBigIntClass(JSContext* cx, Handle<GlobalObject*> global);
 
-extern bool intrinsic_ToBigInt(JSContext* cx, unsigned argc, JS::Value* vp);
-
 }  // namespace js
 
 #endif

@@ -69,15 +69,16 @@
 
 "use strict";
 
+// Definitions needed to run eslint on this file.
 /* globals TESTS, runTest, finishTest */
 
-ChromeUtils.import("resource://gre/modules/Services.jsm", this);
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+
+const DATA_URI_SPEC = "chrome://mochitests/content/chrome/toolkit/mozapps/update/tests/chrome/";
 
 /* import-globals-from testConstants.js */
-Services.scriptloader.loadSubScript("chrome://mochitests/content/chrome/toolkit/mozapps/update/tests/chrome/testConstants.js", this);
-
-const IS_MACOSX = ("nsILocalFileMac" in Ci);
-const IS_WIN = ("@mozilla.org/windows-registry-key;1" in Cc);
+Services.scriptloader.loadSubScript(DATA_URI_SPEC + "testConstants.js", this);
 
 // The tests have to use the pageid instead of the pageIndex due to the
 // app update wizard's access method being random.
@@ -103,13 +104,10 @@ const URL_HTTPS_UPDATE_XML = "https://example.com" + URL_PATH_UPDATE_XML;
 
 const URI_UPDATE_PROMPT_DIALOG  = "chrome://mozapps/content/update/updates.xul";
 
-const PREF_APP_UPDATE_INTERVAL = "app.update.interval";
-const PREF_APP_UPDATE_LASTUPDATETIME = "app.update.lastUpdateTime.background-update-timer";
-
 const LOG_FUNCTION = info;
 
-const BIN_SUFFIX = (IS_WIN ? ".exe" : "");
-const FILE_UPDATER_BIN = "updater" + (IS_MACOSX ? ".app" : BIN_SUFFIX);
+const BIN_SUFFIX = (AppConstants.platform == "win" ? ".exe" : "");
+const FILE_UPDATER_BIN = "updater" + (AppConstants.platform == "macosx" ? ".app" : BIN_SUFFIX);
 const FILE_UPDATER_BIN_BAK = FILE_UPDATER_BIN + ".bak";
 
 var gURLData = URL_HOST + "/" + REL_PATH_DATA + "/";
@@ -143,7 +141,6 @@ var gUseTestUpdater = false;
 // onload function.
 var DEBUG_AUS_TEST = true;
 
-const DATA_URI_SPEC = "chrome://mochitests/content/chrome/toolkit/mozapps/update/tests/chrome/";
 /* import-globals-from ../data/shared.js */
 Services.scriptloader.loadSubScript(DATA_URI_SPEC + "shared.js", this);
 
@@ -820,7 +817,7 @@ function setupPrefs() {
   }
   Services.prefs.setBoolPref(PREF_APP_UPDATE_DISABLEDFORTESTING, false);
 
-  if (IS_WIN) {
+  if (AppConstants.platform == "win") {
     let configFile = getUpdateConfigFile();
     if (configFile.exists()) {
       let configData = JSON.parse(readFileBytes(configFile));
@@ -857,7 +854,7 @@ function resetFiles() {
   // subsequent tests so wrap it in a try block and don't test whether its
   // removal was successful.
   let updatedDir;
-  if (IS_MACOSX) {
+  if (AppConstants.platform == "macosx") {
     updatedDir = getUpdatesDir();
     updatedDir.append(DIR_PATCH);
   } else {
