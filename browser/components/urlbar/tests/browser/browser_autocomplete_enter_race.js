@@ -1,3 +1,12 @@
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
+
+"use strict";
+
+/**
+ * Tests what happens when the enter key is pressed quickly after entering text.
+ */
+
 // The order of these tests matters!
 
 add_task(async function setup() {
@@ -34,7 +43,7 @@ add_task(taskWithNewTab(async function test_sametext() {
   info("synthesize input event");
   let event = document.createEvent("Events");
   event.initEvent("input", true, true);
-  gURLBar.dispatchEvent(event);
+  gURLBar.inputField.dispatchEvent(event);
   EventUtils.synthesizeKey("KEY_Enter");
 
   info("wait for the page to load");
@@ -109,7 +118,7 @@ add_task(taskWithNewTab(async function test_delay() {
   Assert.ok((Date.now() - start) < TIMEOUT);
 
   start = Date.now();
-  gURLBar.closePopup();
+  await UrlbarTestUtils.promisePopupClose(window);
   gURLBar.focus();
   gURLBar.value = "e";
   EventUtils.sendString("x");
