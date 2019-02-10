@@ -337,7 +337,7 @@ linux64-base-toolchains-clang/opt:
         secrets: true
         tooltool-downloads: public
         need-xvfb: true
-    run-on-projects: [] # FIXME: Fails on some revisions somewhat arbitrarily.
+    run-on-projects: []  # FIXME: Fails on some revisions somewhat arbitrarily.
     toolchains:
         - linux64-clang-4.0
         - linux64-rust-1.31
@@ -371,7 +371,7 @@ linux64-base-toolchains-clang/debug:
         mozconfig-variant: debug
         tooltool-downloads: public
         need-xvfb: true
-    run-on-projects: [] # FIXME: Fails on some revisions somewhat arbitrarily.
+    run-on-projects: []  # FIXME: Fails on some revisions somewhat arbitrarily.
     toolchains:
         - linux64-clang-4.0
         - linux64-rust-1.31
