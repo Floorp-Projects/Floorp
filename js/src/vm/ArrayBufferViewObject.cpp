@@ -166,28 +166,23 @@ bool ArrayBufferViewObject::init(JSContext* cx,
 /* JS Friend API */
 
 JS_FRIEND_API bool JS_IsArrayBufferViewObject(JSObject* obj) {
-  obj = CheckedUnwrap(obj);
-  return obj && obj->is<ArrayBufferViewObject>();
+  return obj->canUnwrapAs<ArrayBufferViewObject>();
 }
 
 JS_FRIEND_API JSObject* js::UnwrapArrayBufferView(JSObject* obj) {
-  if (JSObject* unwrapped = CheckedUnwrap(obj)) {
-    return unwrapped->is<ArrayBufferViewObject>() ? unwrapped : nullptr;
-  }
-  return nullptr;
+  return obj->maybeUnwrapIf<ArrayBufferViewObject>();
 }
 
 JS_FRIEND_API void* JS_GetArrayBufferViewData(JSObject* obj,
                                               bool* isSharedMemory,
                                               const JS::AutoRequireNoGC&) {
-  obj = CheckedUnwrap(obj);
-  if (!obj) {
+  ArrayBufferViewObject* view = obj->maybeUnwrapAs<ArrayBufferViewObject>();
+  if (!view) {
     return nullptr;
   }
 
-  ArrayBufferViewObject& view = obj->as<ArrayBufferViewObject>();
-  *isSharedMemory = view.isSharedMemory();
-  return view.dataPointerEither().unwrap(
+  *isSharedMemory = view->isSharedMemory();
+  return view->dataPointerEither().unwrap(
       /*safe - caller sees isSharedMemory flag*/);
 }
 
@@ -225,7 +220,7 @@ JS_FRIEND_API JSObject* JS_GetArrayBufferViewBuffer(JSContext* cx,
 }
 
 JS_FRIEND_API uint32_t JS_GetArrayBufferViewByteLength(JSObject* obj) {
-  obj = CheckedUnwrap(obj);
+  obj = obj->maybeUnwrapAs<ArrayBufferViewObject>();
   if (!obj) {
     return 0;
   }
@@ -234,7 +229,7 @@ JS_FRIEND_API uint32_t JS_GetArrayBufferViewByteLength(JSObject* obj) {
 }
 
 JS_FRIEND_API uint32_t JS_GetArrayBufferViewByteOffset(JSObject* obj) {
-  obj = CheckedUnwrap(obj);
+  obj = obj->maybeUnwrapAs<ArrayBufferViewObject>();
   if (!obj) {
     return 0;
   }
@@ -246,10 +241,8 @@ JS_FRIEND_API JSObject* JS_GetObjectAsArrayBufferView(JSObject* obj,
                                                       uint32_t* length,
                                                       bool* isSharedMemory,
                                                       uint8_t** data) {
-  if (!(obj = CheckedUnwrap(obj))) {
-    return nullptr;
-  }
-  if (!(obj->is<ArrayBufferViewObject>())) {
+  obj = obj->maybeUnwrapIf<ArrayBufferViewObject>();
+  if (!obj) {
     return nullptr;
   }
 

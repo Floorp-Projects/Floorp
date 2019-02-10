@@ -76,7 +76,7 @@ static MOZ_MUST_USE ReadableStreamReader* UnwrapReaderFromStreamNoThrow(
       return nullptr;
     }
 
-    readerObj = CheckedUnwrap(readerObj);
+    readerObj = readerObj->maybeUnwrapAs<ReadableStreamReader>();
     if (!readerObj) {
       return nullptr;
     }
@@ -4422,10 +4422,7 @@ static MOZ_MUST_USE bool MakeSizeAlgorithmFromSizeFunction(JSContext* cx,
 /*** API entry points *******************************************************/
 
 JS_FRIEND_API JSObject* js::UnwrapReadableStream(JSObject* obj) {
-  if (JSObject* unwrapped = CheckedUnwrap(obj)) {
-    return unwrapped->is<ReadableStream>() ? unwrapped : nullptr;
-  }
-  return nullptr;
+  return obj->maybeUnwrapIf<ReadableStream>();
 }
 
 JS_PUBLIC_API JSObject* JS::NewReadableDefaultStreamObject(
