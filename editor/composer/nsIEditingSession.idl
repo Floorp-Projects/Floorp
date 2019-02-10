@@ -81,17 +81,6 @@ interface nsIEditingSession : nsISupports
                               in nsIEditor aEditor);
 
   /**
-   * Disable scripts and plugins in aWindow.
-   */
-  void disableJSAndPlugins(in mozIDOMWindowProxy aWindow);
-
-  /**
-   * Restore JS and plugins (enable/disable them) according to the state they
-   * were before the last call to disableJSAndPlugins.
-   */
-  void restoreJSAndPlugins(in mozIDOMWindowProxy aWindow);
-
-  /**
    * Removes all the editor's controllers/listeners etc and makes the window
    * uneditable.
    */
@@ -102,11 +91,6 @@ interface nsIEditingSession : nsISupports
    * to the window.
    */
   void reattachToWindow(in mozIDOMWindowProxy aWindow);
-
-  /**
-   * Whether this session has disabled JS and plugins.
-   */
-  readonly attribute boolean jsAndPluginsDisabled;
 
 %{C++
   /**
