@@ -207,6 +207,8 @@ void EditorEventListener::Disconnect() {
 }
 
 void EditorEventListener::UninstallFromEditor() {
+  CleanupDragDropCaret();
+
   nsCOMPtr<EventTarget> piTarget = mEditorBase->GetDOMEventTarget();
   if (!piTarget) {
     return;
