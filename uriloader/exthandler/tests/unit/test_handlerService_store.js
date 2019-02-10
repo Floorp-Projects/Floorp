@@ -543,15 +543,6 @@ function assertAllHandlerInfosMatchDefaultHandlers() {
     }],
   });
 
-  HandlerServiceTestUtils.assertHandlerInfoMatches(handlerInfos.shift(), {
-    type: "webcal",
-    preferredActionOSDependent: true,
-    possibleApplicationHandlers: [{
-      name: "30 Boxes",
-      uriTemplate: "https://30boxes.com/external/widget?refer=ff&url=%s",
-    }],
-  });
-
   Assert.equal(handlerInfos.length, 0);
 }
 
