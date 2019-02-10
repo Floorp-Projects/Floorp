@@ -1961,40 +1961,6 @@ extern JS_FRIEND_API bool JS_IsDetachedArrayBufferObject(JSObject* obj);
 JS_FRIEND_API JSObject* JS_NewDataView(JSContext* cx, JS::HandleObject buffer,
                                        uint32_t byteOffset, int32_t byteLength);
 
-/**
- * Return the byte offset of a data view into its array buffer. |obj| must be a
- * DataView.
- *
- * |obj| must have passed a JS_IsDataViewObject test, or somehow be known that
- * it would pass such a test: it is a data view or a wrapper of a data view,
- * and the unwrapping will succeed.
- */
-JS_FRIEND_API uint32_t JS_GetDataViewByteOffset(JSObject* obj);
-
-/**
- * Return the byte length of a data view.
- *
- * |obj| must have passed a JS_IsDataViewObject test, or somehow be known that
- * it would pass such a test: it is a data view or a wrapper of a data view,
- * and the unwrapping will succeed. If cx is nullptr, then DEBUG builds may be
- * unable to assert when unwrapping should be disallowed.
- */
-JS_FRIEND_API uint32_t JS_GetDataViewByteLength(JSObject* obj);
-
-/**
- * Return a pointer to the beginning of the data referenced by a DataView.
- *
- * |obj| must have passed a JS_IsDataViewObject test, or somehow be known that
- * it would pass such a test: it is a data view or a wrapper of a data view,
- * and the unwrapping will succeed. If cx is nullptr, then DEBUG builds may be
- * unable to assert when unwrapping should be disallowed.
- *
- * |*isSharedMemory| will be set to true if the DataView maps a
- * SharedArrayBuffer, otherwise to false.
- */
-JS_FRIEND_API void* JS_GetDataViewData(JSObject* obj, bool* isSharedMemory,
-                                       const JS::AutoRequireNoGC&);
-
 namespace js {
 namespace jit {
 
