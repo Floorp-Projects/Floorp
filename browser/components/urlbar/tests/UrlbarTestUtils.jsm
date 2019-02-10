@@ -335,7 +335,9 @@ class UrlbarAbstraction {
     let details = {};
     if (this.quantumbar) {
       let context = await this.urlbar.lastQueryContextPromise;
-      details.url = (UrlbarUtils.getUrlFromResult(context.results[index])).url;
+      let {url, postData} = UrlbarUtils.getUrlFromResult(context.results[index]);
+      details.url = url;
+      details.postData = postData;
       details.type = context.results[index].type;
       details.autofill = index == 0 && context.results[index].autofill;
       details.image = element.getElementsByClassName("urlbarView-favicon")[0].src;
@@ -355,6 +357,7 @@ class UrlbarAbstraction {
       }
     } else {
       details.url = this.urlbar.controller.getFinalCompleteValueAt(index);
+
       let style = this.urlbar.controller.getStyleAt(index);
       let action = PlacesUtils.parseActionUrl(this.urlbar.controller.getValueAt(index));
       details.type = getType(style, action);

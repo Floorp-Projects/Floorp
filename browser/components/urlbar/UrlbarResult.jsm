@@ -99,6 +99,7 @@ class UrlbarResult {
    */
   get _titleAndHighlights() {
     switch (this.type) {
+      case UrlbarUtils.RESULT_TYPE.KEYWORD:
       case UrlbarUtils.RESULT_TYPE.TAB_SWITCH:
       case UrlbarUtils.RESULT_TYPE.URL:
       case UrlbarUtils.RESULT_TYPE.OMNIBOX:

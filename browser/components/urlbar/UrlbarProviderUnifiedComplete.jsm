@@ -17,6 +17,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Log: "resource://gre/modules/Log.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
+  Services: "resource://gre/modules/Services.jsm",
   UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
   UrlbarResult: "resource:///modules/UrlbarResult.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
@@ -28,6 +29,9 @@ XPCOMUtils.defineLazyServiceGetter(this, "unifiedComplete",
 
 XPCOMUtils.defineLazyGetter(this, "logger",
   () => Log.repository.getLogger("Urlbar.Provider.UnifiedComplete"));
+
+XPCOMUtils.defineLazyGetter(this, "bundle",
+  () => Services.strings.createBundle("chrome://global/locale/autocomplete.properties"));
 
 // See UnifiedComplete.
 const TITLE_TAGS_SEPARATOR = " \u2013 ";
@@ -249,17 +253,25 @@ function makeUrlbarResult(tokens, info) {
             ],
           })
         );
-      case "keyword":
+      case "keyword": {
+        let title = info.comment;
+        if (tokens && tokens.length > 1) {
+          title = bundle.formatStringFromName("bookmarkKeywordSearch",
+            [info.comment, tokens.slice(1).map(t => t.value).join(" ")], 2);
+        }
         return new UrlbarResult(
           UrlbarUtils.RESULT_TYPE.KEYWORD,
           UrlbarUtils.RESULT_SOURCE.BOOKMARKS,
           ...UrlbarResult.payloadAndSimpleHighlights(tokens, {
+            title: [title, true],
             url: [action.params.url, true],
-            keyword: [info.firstToken, true],
+            keyword: [info.firstToken.value, true],
+            input: [action.params.input, false],
             postData: [action.params.postData, false],
             icon: [info.icon, false],
           })
         );
+      }
       case "extension":
         return new UrlbarResult(
           UrlbarUtils.RESULT_TYPE.OMNIBOX,
