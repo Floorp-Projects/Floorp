@@ -271,7 +271,7 @@ linux64-base-toolchains/opt:
         tooltool-downloads: public
         need-xvfb: true
     toolchains:
-        - linux64-clang-3.9
+        - linux64-clang-4.0
         - linux64-gcc-6
         - linux64-rust-1.31
         - linux64-cbindgen
@@ -306,7 +306,7 @@ linux64-base-toolchains/debug:
         tooltool-downloads: public
         need-xvfb: true
     toolchains:
-        - linux64-clang-3.9
+        - linux64-clang-4.0
         - linux64-gcc-6
         - linux64-rust-1.31
         - linux64-cbindgen
@@ -338,7 +338,7 @@ linux64-base-toolchains-clang/opt:
         tooltool-downloads: public
         need-xvfb: true
     toolchains:
-        - linux64-clang-3.9
+        - linux64-clang-4.0
         - linux64-rust-1.31
         - linux64-cbindgen
         - linux64-sccache
@@ -371,7 +371,7 @@ linux64-base-toolchains-clang/debug:
         tooltool-downloads: public
         need-xvfb: true
     toolchains:
-        - linux64-clang-3.9
+        - linux64-clang-4.0
         - linux64-rust-1.31
         - linux64-cbindgen
         - linux64-sccache
