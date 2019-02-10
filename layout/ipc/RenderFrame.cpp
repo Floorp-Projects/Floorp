@@ -8,7 +8,6 @@
 
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/TabParent.h"
-#include "mozilla/dom/RemoteFrameChild.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/layers/LayerTransactionParent.h"
@@ -29,32 +28,43 @@ using namespace mozilla::layers;
 namespace mozilla {
 namespace layout {
 
-static already_AddRefed<LayerManager> GetLayerManager(TabParent* aTabParent) {
-  if (Element* element = aTabParent->GetOwnerElement()) {
-    return nsContentUtils::LayerManagerForContent(element);
+static already_AddRefed<LayerManager> GetLayerManager(
+    nsFrameLoader* aFrameLoader) {
+  if (nsIContent* content = aFrameLoader->GetOwnerContent()) {
+    RefPtr<LayerManager> lm = nsContentUtils::LayerManagerForContent(content);
+    if (lm) {
+      return lm.forget();
+    }
   }
-  return nullptr;
+
+  Document* doc = aFrameLoader->GetOwnerDoc();
+  if (!doc) {
+    return nullptr;
+  }
+  return nsContentUtils::LayerManagerForDocument(doc);
 }
 
 RenderFrame::RenderFrame()
     : mLayersId{0},
-      mTabParent(nullptr),
+      mFrameLoader(nullptr),
       mLayerManager(nullptr),
       mInitialized(false),
       mLayersConnected(false) {}
 
 RenderFrame::~RenderFrame() {}
 
-bool RenderFrame::Initialize(TabParent* aTabParent) {
-  if (mInitialized || !aTabParent) {
+bool RenderFrame::Initialize(nsFrameLoader* aFrameLoader) {
+  if (mInitialized || !aFrameLoader) {
     return false;
   }
 
-  mTabParent = aTabParent;
-  RefPtr<LayerManager> lm = GetLayerManager(mTabParent);
+  mFrameLoader = aFrameLoader;
+  RefPtr<LayerManager> lm = GetLayerManager(mFrameLoader);
   PCompositorBridgeChild* compositor =
       lm ? lm->GetCompositorBridgeChild() : nullptr;
-  mTabProcessId = mTabParent->Manager()->AsContentParent()->OtherPid();
+
+  TabParent* browser = TabParent::GetFrom(aFrameLoader);
+  mTabProcessId = browser->Manager()->AsContentParent()->OtherPid();
 
   // Our remote frame will push layers updates to the compositor,
   // and we'll keep an indirect reference to that tree.
@@ -71,12 +81,12 @@ void RenderFrame::Destroy() {
     GPUProcessManager::Get()->UnmapLayerTreeId(mLayersId, mTabProcessId);
   }
 
-  mTabParent = nullptr;
+  mFrameLoader = nullptr;
   mLayerManager = nullptr;
 }
 
 void RenderFrame::EnsureLayersConnected(CompositorOptions* aCompositorOptions) {
-  RefPtr<LayerManager> lm = GetLayerManager(mTabParent);
+  RefPtr<LayerManager> lm = GetLayerManager(mFrameLoader);
   if (!lm) {
     return;
   }
@@ -92,8 +102,8 @@ void RenderFrame::EnsureLayersConnected(CompositorOptions* aCompositorOptions) {
 
 LayerManager* RenderFrame::AttachLayerManager() {
   RefPtr<LayerManager> lm;
-  if (mTabParent) {
-    lm = GetLayerManager(mTabParent);
+  if (mFrameLoader) {
+    lm = GetLayerManager(mFrameLoader);
   }
 
   // Perhaps the document containing this frame currently has no presentation?
@@ -107,11 +117,17 @@ LayerManager* RenderFrame::AttachLayerManager() {
   return mLayerManager;
 }
 
-void RenderFrame::OwnerContentChanged() { Unused << AttachLayerManager(); }
+void RenderFrame::OwnerContentChanged(nsIContent* aContent) {
+  MOZ_ASSERT(!mFrameLoader || mFrameLoader->GetOwnerContent() == aContent,
+             "Don't build new map if owner is same!");
+
+  Unused << AttachLayerManager();
+}
 
 void RenderFrame::GetTextureFactoryIdentifier(
     TextureFactoryIdentifier* aTextureFactoryIdentifier) const {
-  RefPtr<LayerManager> lm = mTabParent ? GetLayerManager(mTabParent) : nullptr;
+  RefPtr<LayerManager> lm =
+      mFrameLoader ? GetLayerManager(mFrameLoader) : nullptr;
   // Perhaps the document containing this frame currently has no presentation?
   if (lm) {
     *aTextureFactoryIdentifier = lm->GetTextureFactoryIdentifier();
@@ -169,10 +185,10 @@ nsDisplayRemote::nsDisplayRemote(nsDisplayListBuilder* aBuilder,
     mEventRegionsOverride |= EventRegionsOverride::ForceDispatchToContent;
   }
 
-  if (nsFrameLoader* frameLoader = GetFrameLoader()) {
-    // TODO: We need to handle acquiring a TabId in the remote sub-frame case
-    // for fission.
-    if (TabParent* browser = TabParent::GetFrom(frameLoader)) {
+  nsFrameLoader* frameLoader = GetRenderFrame()->GetFrameLoader();
+  if (frameLoader) {
+    TabParent* browser = TabParent::GetFrom(frameLoader);
+    if (browser) {
       mTabId = browser->GetTabId();
     }
   }
@@ -189,12 +205,13 @@ mozilla::LayerState nsDisplayRemote::GetLayerState(
 
 bool nsDisplayRemote::HasDeletedFrame() const {
   // RenderFrame might change without invalidating nsSubDocumentFrame.
-  return !GetFrameLoader() || nsDisplayItem::HasDeletedFrame();
+  return !GetRenderFrame() || nsDisplayItem::HasDeletedFrame();
 }
 
 already_AddRefed<Layer> nsDisplayRemote::BuildLayer(
     nsDisplayListBuilder* aBuilder, LayerManager* aManager,
     const ContainerLayerParameters& aContainerParameters) {
+  MOZ_ASSERT(GetRenderFrame());
   MOZ_ASSERT(mFrame, "Makes no sense to have a shadow tree without a frame");
 
   if (IsTempLayerManager(aManager)) {
@@ -210,7 +227,7 @@ already_AddRefed<Layer> nsDisplayRemote::BuildLayer(
     return nullptr;
   }
 
-  LayersId remoteId = GetRemoteLayersId();
+  LayersId remoteId = GetRenderFrame()->GetLayersId();
 
   if (!remoteId.IsValid()) {
     return nullptr;
@@ -295,12 +312,11 @@ bool nsDisplayRemote::UpdateScrollData(
 }
 
 LayersId nsDisplayRemote::GetRemoteLayersId() const {
-  nsFrameLoader* frameLoader = GetFrameLoader();
-  MOZ_ASSERT(frameLoader && frameLoader->IsRemoteFrame());
-  return frameLoader->GetLayersId();
+  MOZ_ASSERT(GetRenderFrame());
+  return GetRenderFrame()->GetLayersId();
 }
 
-nsFrameLoader* nsDisplayRemote::GetFrameLoader() const {
-  return mFrame ? static_cast<nsSubDocumentFrame*>(mFrame)->FrameLoader()
+mozilla::layout::RenderFrame* nsDisplayRemote::GetRenderFrame() const {
+  return mFrame ? static_cast<nsSubDocumentFrame*>(mFrame)->GetRenderFrame()
                 : nullptr;
 }
