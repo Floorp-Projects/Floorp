@@ -63,13 +63,13 @@ need to download a Marionette client or use the in-tree client.
   * [Download and setup the Marionette JS client][6]
   * [Protocol definition][7]
 
-[1]: http://marionette-client.readthedocs.io/en/latest/
-[2]: http://marionette-client.readthedocs.io/en/latest/interactive.html
-[3]: ./PythonTests.md
-[4]: ./Debugging.md
+[1]: ../../python/marionette_driver.html
+[2]: ../../python/marionette_driver.html
+[3]: ./PythonTests.html
+[4]: ./Debugging.html
 [5]: https://developer.mozilla.org/en-US/docs/Marionette/Builds
 [6]: https://github.com/mozilla-b2g/marionette_js_client
-[7]: ./Protocol.md
+[7]: ./Protocol.html
 
 
 Bugs
