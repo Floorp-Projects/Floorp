@@ -44,6 +44,9 @@ function ChildProcess(id, recording, role) {
 
   this.lastPausePoint = null;
   this.lastPauseAtRecordingEndpoint = false;
+
+  // The pauseNeeded flag indicates that background replaying children should
+  // not resume execution once the process has paused.
   this.pauseNeeded = false;
 
   // All currently installed breakpoints
@@ -221,7 +224,28 @@ ChildProcess.prototype = {
     this.debuggerRequests.push(request);
     return RecordReplayControl.sendDebuggerRequest(this.id, request);
   },
+
+  // When a background child pauses, it does not immediately resume. This will
+  // asynchronously let the role know that it may be able to make progress,
+  // depending on where the active child is and what it is doing.
+  pokeSoon() {
+    if (!this.recording) {
+      Services.tm.dispatchToMainThread(() => {
+        if (this.paused) {
+          this.role.poke();
+        }
+      });
+    }
+  },
 };
+
+function pokeChildren() {
+  for (const child of gChildren) {
+    if (child) {
+      child.pokeSoon();
+    }
+  }
+}
 
 const FlushMs = .5 * 1000;
 const MajorCheckpointMs = 2 * 1000;
@@ -393,6 +417,11 @@ ChildRoleActive.prototype = {
     // the same point.
     if (msg.recordingEndpoint) {
       resume(true);
+
+      // When resuming at the end of the recording, we will either switch to a
+      // recording child or stay paused at the endpoint. In either case, this
+      // process will stay paused.
+      assert(this.child.paused);
       return;
     }
 
@@ -420,16 +449,14 @@ function ChildRoleStandby() {}
 ChildRoleStandby.prototype = {
   name: "Standby",
 
-  initialize(child, { startup }) {
+  initialize(child) {
     this.child = child;
-    if (!startup) {
-      this.poke();
-    }
+    this.child.pokeSoon();
   },
 
   hitExecutionPoint(msg) {
     assert(!msg.point.position);
-    this.poke();
+    this.child.pokeSoon();
   },
 
   poke() {
@@ -536,15 +563,6 @@ ChildRoleInert.prototype = {
   poke() {},
 };
 
-function pokeChildren() {
-  for (const child of gChildren) {
-    if (child && !child.recording && child.paused) {
-      child.pauseNeeded = false;
-      child.role.poke();
-    }
-  }
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // Child Switching
 ////////////////////////////////////////////////////////////////////////////////
@@ -555,9 +573,7 @@ function switchActiveChild(child, recoverPosition = true) {
   assert(gActiveChild.paused);
 
   const oldActiveChild = gActiveChild;
-  child.pauseNeeded = true;
   child.waitUntilPaused();
-  child.pauseNeeded = false;
 
   // Move the installed breakpoints from the old child to the new child.
   assert(child.breakpoints.length == 0);
@@ -708,17 +724,17 @@ function flushRecording() {
   // All replaying children must be paused while the recording is flushed.
   for (const child of gChildren) {
     if (child && !child.recording) {
-      child.pauseNeeded = true;
       child.waitUntilPaused();
     }
   }
 
   gActiveChild.sendFlushRecording();
 
+  // Clear out pauseNeeded state set by any earlier maybeFlushRecording().
   for (const child of gChildren) {
     if (child && !child.recording) {
       child.pauseNeeded = false;
-      child.role.poke();
+      child.pokeSoon();
     }
   }
 
@@ -880,9 +896,7 @@ function maybeSendRepaintMessage() {
 
 function waitUntilChildHasSavedCheckpoint(child, checkpoint) {
   while (true) {
-    child.pauseNeeded = true;
     child.waitUntilPaused();
-    child.pauseNeeded = false;
     if (child.hasSavedCheckpoint(checkpoint)) {
       return;
     }
@@ -1018,23 +1032,6 @@ const gControl = {
 ////////////////////////////////////////////////////////////////////////////////
 
 let gSearchChild;
-let gSearchRestartNeeded;
-
-function maybeRestartSearch() {
-  if (gSearchRestartNeeded && gSearchChild.paused) {
-    if (gSearchChild.lastPausePoint.checkpoint != FirstCheckpointId ||
-        gSearchChild.lastPausePoint.position) {
-      gSearchChild.sendRestoreCheckpoint(FirstCheckpointId);
-      gSearchChild.waitUntilPaused();
-    }
-    gSearchChild.sendClearBreakpoints();
-    gDebugger._forEachSearch(pos => gSearchChild.sendAddBreakpoint(pos));
-    gSearchRestartNeeded = false;
-    gSearchChild.sendResume({ forward: true });
-    return true;
-  }
-  return false;
-}
 
 function ChildRoleSearch() {}
 
@@ -1046,21 +1043,17 @@ ChildRoleSearch.prototype = {
   },
 
   hitExecutionPoint({ point, recordingEndpoint }) {
-    if (maybeRestartSearch()) {
-      return;
-    }
-
     if (point.position) {
       gDebugger._onSearchPause(point);
     }
 
     if (!recordingEndpoint) {
-      this.poke();
+      this.child.pokeSoon();
     }
   },
 
   poke() {
-    if (!gSearchRestartNeeded && !this.child.pauseNeeded) {
+    if (!this.child.pauseNeeded) {
       this.child.sendResume({ forward: true });
     }
   },
@@ -1081,8 +1074,16 @@ function maybeResumeSearch() {
 const gSearchControl = {
   reset() {
     ensureHasSearchChild();
-    gSearchRestartNeeded = true;
-    maybeRestartSearch();
+    gSearchChild.waitUntilPaused();
+
+    if (gSearchChild.lastPausePoint.checkpoint != FirstCheckpointId ||
+        gSearchChild.lastPausePoint.position) {
+      gSearchChild.sendRestoreCheckpoint(FirstCheckpointId);
+      gSearchChild.waitUntilPaused();
+    }
+    gSearchChild.sendClearBreakpoints();
+    gDebugger._forEachSearch(pos => gSearchChild.sendAddBreakpoint(pos));
+    gSearchChild.sendResume({ forward: true });
   },
 
   sendRequest(request) { return gSearchChild.sendDebuggerRequest(request); },
