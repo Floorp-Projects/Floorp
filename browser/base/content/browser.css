@@ -233,19 +233,13 @@ panelview[mainview] > .panel-header {
   z-index: 2;
 }
 
-/* The next 3 rules allow dragging tabs slightly outside of the tabstrip
- * to make it easier to drag tabs. */
-#navigator-toolbox[movingtab] > #titlebar > #TabsToolbar {
-  padding-bottom: 15px;
-}
-
-#navigator-toolbox[movingtab] #tabbrowser-tabs {
+/* Make it easier to drag tabs by expanding the drag area downwards. */
+#tabbrowser-tabs[movingtab] {
   padding-bottom: 15px;
   margin-bottom: -15px;
 }
 
 #navigator-toolbox[movingtab] > #nav-bar {
-  margin-top: -15px;
   pointer-events: none;
 }
 
