@@ -146,6 +146,8 @@ enum class ReparentingDirection {
  */
 class nsLayoutUtils {
   typedef mozilla::ComputedStyle ComputedStyle;
+  typedef mozilla::LengthPercentage LengthPercentage;
+  typedef mozilla::LengthPercentageOrAuto LengthPercentageOrAuto;
   typedef mozilla::dom::DOMRectList DOMRectList;
   typedef mozilla::layers::Layer Layer;
   typedef mozilla::layers::StackingContextHelper StackingContextHelper;
@@ -1461,16 +1463,29 @@ class nsLayoutUtils {
                                             uint32_t aFlags = 0);
 
   /*
-   * Convert nsStyleCoord to nscoord when percentages depend on the
+   * Convert LengthPercentage to nscoord when percentages depend on the
    * containing block size.
    * @param aPercentBasis The width or height of the containing block
    * (whichever the client wants to use for resolving percentages).
    */
   static nscoord ComputeCBDependentValue(nscoord aPercentBasis,
-                                         const nsStyleCoord& aCoord);
+                                         const LengthPercentage& aCoord) {
+    NS_WARNING_ASSERTION(
+        aPercentBasis != NS_UNCONSTRAINEDSIZE,
+        "have unconstrained width or height; this should only result from very "
+        "large sizes, not attempts at intrinsic size calculation");
+    return aCoord.Resolve(aPercentBasis);
+  }
+  static nscoord ComputeCBDependentValue(nscoord aPercentBasis,
+                                         const LengthPercentageOrAuto& aCoord) {
+    if (aCoord.IsAuto()) {
+      return 0;
+    }
+    return ComputeCBDependentValue(aPercentBasis, aCoord.AsLengthPercentage());
+  }
 
   static nscoord ComputeBSizeDependentValue(nscoord aContainingBlockBSize,
-                                            const nsStyleCoord& aCoord);
+                                            const LengthPercentageOrAuto&);
 
   static nscoord ComputeBSizeValue(nscoord aContainingBlockBSize,
                                    nscoord aContentEdgeToBoxSizingBoxEdge,
@@ -1501,25 +1516,13 @@ class nsLayoutUtils {
            (aCBBSize == nscoord_MAX && aCoord.HasPercent());
   }
 
-  static bool IsPaddingZero(const nsStyleCoord& aCoord) {
-    return (aCoord.GetUnit() == eStyleUnit_Coord &&
-            aCoord.GetCoordValue() == 0) ||
-           (aCoord.GetUnit() == eStyleUnit_Percent &&
-            aCoord.GetPercentValue() == 0.0f) ||
-           (aCoord.IsCalcUnit() &&
-            // clamp negative calc() to 0
-            aCoord.ComputeCoordPercentCalc(nscoord_MAX) <= 0 &&
-            aCoord.ComputeCoordPercentCalc(0) <= 0);
+  static bool IsPaddingZero(const LengthPercentage& aLength) {
+    // clamp negative calc() to 0
+    return aLength.Resolve(nscoord_MAX) <= 0 && aLength.Resolve(0) <= 0;
   }
 
-  static bool IsMarginZero(const nsStyleCoord& aCoord) {
-    return (aCoord.GetUnit() == eStyleUnit_Coord &&
-            aCoord.GetCoordValue() == 0) ||
-           (aCoord.GetUnit() == eStyleUnit_Percent &&
-            aCoord.GetPercentValue() == 0.0f) ||
-           (aCoord.IsCalcUnit() &&
-            aCoord.ComputeCoordPercentCalc(nscoord_MAX) == 0 &&
-            aCoord.ComputeCoordPercentCalc(0) == 0);
+  static bool IsMarginZero(const LengthPercentage& aLength) {
+    return aLength.Resolve(nscoord_MAX) == 0 && aLength.Resolve(0) == 0;
   }
 
   static void MarkDescendantsDirty(nsIFrame* aSubtreeRoot);
@@ -2986,6 +2989,18 @@ class nsLayoutUtils {
    * need to create a MobileViewportManager.
    */
   static bool ShouldHandleMetaViewport(mozilla::dom::Document*);
+
+  /**
+   * Resolve a CSS <length-percentage> value to a definite size.
+   */
+  template <bool clampNegativeResultToZero>
+  static nscoord ResolveToLength(const LengthPercentage& aLengthPercentage,
+                                 nscoord aPercentageBasis) {
+    nscoord value = (aPercentageBasis == NS_UNCONSTRAINEDSIZE)
+                        ? aLengthPercentage.Resolve(0)
+                        : aLengthPercentage.Resolve(aPercentageBasis);
+    return clampNegativeResultToZero ? std::max(0, value) : value;
+  }
 
   /**
    * Resolve a CSS <length-percentage> value to a definite size.

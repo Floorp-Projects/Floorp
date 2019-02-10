@@ -13,6 +13,7 @@
 
 #include "mozilla/EnumTypeTraits.h"
 #include "mozilla/gfx/Types.h"
+#include "Units.h"
 #include "nsCoord.h"
 #include "nsISupportsImpl.h"
 #include "nsStyleConsts.h"
@@ -24,7 +25,7 @@ class WritingMode;
 // Logical axis, edge, side and corner constants for use in various places.
 enum LogicalAxis { eLogicalAxisBlock = 0x0, eLogicalAxisInline = 0x1 };
 enum LogicalEdge { eLogicalEdgeStart = 0x0, eLogicalEdgeEnd = 0x1 };
-enum LogicalSide {
+enum LogicalSide : uint8_t {
   eLogicalSideBStart = (eLogicalAxisBlock << 1) | eLogicalEdgeStart,   // 0x0
   eLogicalSideBEnd = (eLogicalAxisBlock << 1) | eLogicalEdgeEnd,       // 0x1
   eLogicalSideIStart = (eLogicalAxisInline << 1) | eLogicalEdgeStart,  // 0x2
@@ -37,6 +38,102 @@ enum LogicalCorner {
   eLogicalCornerBEndIEnd = 2,
   eLogicalCornerBEndIStart = 3
 };
+
+using LengthPercentage = StyleLengthPercentage;
+using LengthPercentageOrAuto = StyleLengthPercentageOrAuto;
+using NonNegativeLengthPercentage = StyleNonNegativeLengthPercentage;
+
+constexpr LengthPercentage LengthPercentage::Zero() {
+  return {{0.}, {0.}, StyleAllowedNumericType::All, false, false};
+}
+
+bool LengthPercentage::HasPercent() const { return has_percentage; }
+
+bool LengthPercentage::ConvertsToLength() const { return !HasPercent(); }
+
+nscoord LengthPercentage::ToLength() const {
+  MOZ_ASSERT(ConvertsToLength());
+  return CSSPixel::ToAppUnits(length._0);
+}
+
+bool LengthPercentage::ConvertsToPercentage() const {
+  return has_percentage && length._0 == 0.0f;
+}
+
+float LengthPercentage::ToPercentage() const {
+  MOZ_ASSERT(ConvertsToPercentage());
+  return Percentage();
+}
+
+CSSCoord LengthPercentage::LengthInCSSPixels() const { return length._0; }
+
+float LengthPercentage::Percentage() const { return percentage._0; }
+
+CSSCoord LengthPercentage::ResolveToCSSPixels(CSSCoord aPercentageBasis) const {
+  return LengthInCSSPixels() + Percentage() * aPercentageBasis;
+}
+
+template <typename T>
+CSSCoord LengthPercentage::ResolveToCSSPixelsWith(T aPercentageGetter) const {
+  static_assert(std::is_same<decltype(aPercentageGetter()), CSSCoord>::value,
+                "Should return CSS pixels");
+  if (ConvertsToLength()) {
+    return LengthInCSSPixels();
+  }
+  return ResolveToCSSPixels(aPercentageGetter());
+}
+
+nscoord LengthPercentage::Resolve(nscoord aPercentageBasis) const {
+  NS_WARNING_ASSERTION(aPercentageBasis >= 0, "nscoord overflow?");
+  return CSSPixel::ToAppUnits(LengthInCSSPixels()) +
+         NSToCoordFloorClamped(aPercentageBasis * Percentage());
+}
+
+template <typename T>
+nscoord LengthPercentage::ResolveWith(T aPercentageGetter) const {
+  static_assert(std::is_same<decltype(aPercentageGetter()), nscoord>::value,
+                "Should return app units");
+  if (ConvertsToLength()) {
+    return ToLength();
+  }
+  return Resolve(aPercentageGetter());
+}
+
+template <>
+inline const LengthPercentage& LengthPercentageOrAuto::AsLengthPercentage()
+    const {
+  MOZ_ASSERT(IsLengthPercentage());
+  return length_percentage._0;
+}
+
+template <>
+inline bool LengthPercentageOrAuto::ConvertsToLength() const {
+  return IsLengthPercentage() && AsLengthPercentage().ConvertsToLength();
+}
+
+template <>
+inline bool LengthPercentageOrAuto::HasPercent() const {
+  return IsLengthPercentage() && AsLengthPercentage().HasPercent();
+}
+
+template <typename T>
+const T& StyleRect<T>::Get(mozilla::Side aSide) const {
+  static_assert(sizeof(StyleRect<T>) == sizeof(T) * 4, "");
+  static_assert(alignof(StyleRect<T>) == alignof(T), "");
+  return reinterpret_cast<const T*>(this)[aSide];
+}
+
+template <typename T>
+template <typename Predicate>
+bool StyleRect<T>::All(Predicate aPredicate) const {
+  return aPredicate(_0) && aPredicate(_1) && aPredicate(_2) && aPredicate(_3);
+}
+
+template <typename T>
+template <typename Predicate>
+bool StyleRect<T>::Any(Predicate aPredicate) const {
+  return aPredicate(_0) || aPredicate(_1) || aPredicate(_2) || aPredicate(_3);
+}
 
 }  // namespace mozilla
 

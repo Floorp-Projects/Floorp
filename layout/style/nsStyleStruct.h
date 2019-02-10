@@ -772,11 +772,16 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleMargin {
   nsChangeHint CalcDifference(const nsStyleMargin& aNewData) const;
 
   bool GetMargin(nsMargin& aMargin) const {
-    if (!mMargin.ConvertsToLength()) {
+    bool convertsToLength = mMargin.All(
+        [](const auto& aLength) { return aLength.ConvertsToLength(); });
+
+    if (!convertsToLength) {
       return false;
     }
 
-    NS_FOR_CSS_SIDES(side) { aMargin.Side(side) = mMargin.ToLength(side); }
+    NS_FOR_CSS_SIDES(side) {
+      aMargin.Side(side) = mMargin.Get(side).AsLengthPercentage().ToLength();
+    }
     return true;
   }
 
@@ -785,7 +790,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleMargin {
   inline bool HasBlockAxisAuto(mozilla::WritingMode aWM) const;
   inline bool HasInlineAxisAuto(mozilla::WritingMode aWM) const;
 
-  nsStyleSides mMargin;  // coord, percent, calc, auto
+  mozilla::StyleRect<mozilla::LengthPercentageOrAuto> mMargin;
 };
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePadding {
@@ -797,18 +802,21 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePadding {
 
   nsChangeHint CalcDifference(const nsStylePadding& aNewData) const;
 
-  nsStyleSides mPadding;  // coord, percent, calc
+  mozilla::StyleRect<mozilla::NonNegativeLengthPercentage> mPadding;
 
-  bool IsWidthDependent() const { return !mPadding.ConvertsToLength(); }
+  inline bool IsWidthDependent() const {
+    return !mPadding.All(
+        [](const auto& aLength) { return aLength.ConvertsToLength(); });
+  }
 
   bool GetPadding(nsMargin& aPadding) const {
-    if (!mPadding.ConvertsToLength()) {
+    if (IsWidthDependent()) {
       return false;
     }
 
     NS_FOR_CSS_SIDES(side) {
       // Clamp negative calc() to 0.
-      aPadding.Side(side) = std::max(mPadding.ToLength(side), 0);
+      aPadding.Side(side) = std::max(mPadding.Get(side).ToLength(), 0);
     }
     return true;
   }
@@ -1314,7 +1322,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePosition {
   uint8_t UsedJustifySelf(mozilla::ComputedStyle* aParent) const;
 
   mozilla::Position mObjectPosition;
-  nsStyleSides mOffset;              // coord, percent, calc, auto
+  mozilla::StyleRect<mozilla::LengthPercentageOrAuto> mOffset;
   nsStyleCoord mWidth;               // coord, percent, enum, calc, auto
   nsStyleCoord mMinWidth;            // coord, percent, enum, calc
   nsStyleCoord mMaxWidth;            // coord, percent, enum, calc, none
@@ -1521,11 +1529,11 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleText {
   mozilla::StyleComplexColor mWebkitTextFillColor;
   mozilla::StyleComplexColor mWebkitTextStrokeColor;
 
-  nsStyleCoord mTabSize;           // coord, factor, calc
-  nsStyleCoord mWordSpacing;       // coord, percent, calc
-  nsStyleCoord mLetterSpacing;     // coord, normal
-  nsStyleCoord mLineHeight;        // coord, factor, normal
-  nsStyleCoord mTextIndent;        // coord, percent, calc
+  nsStyleCoord mTabSize;        // coord, factor, calc
+  nsStyleCoord mWordSpacing;    // coord, percent, calc
+  nsStyleCoord mLetterSpacing;  // coord, normal
+  nsStyleCoord mLineHeight;     // coord, factor, normal
+  mozilla::LengthPercentage mTextIndent;
   nscoord mWebkitTextStrokeWidth;  // coord
 
   RefPtr<nsCSSShadowArray> mTextShadow;  // nullptr in case of a zero-length
@@ -2033,7 +2041,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
   float mShapeImageThreshold = 0.0f;
 
   // The margin around a shape-outside: <image>.
-  nsStyleCoord mShapeMargin;
+  mozilla::NonNegativeLengthPercentage mShapeMargin;
 
   mozilla::StyleShapeSource mShapeOutside;
 

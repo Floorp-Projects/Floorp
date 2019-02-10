@@ -12,7 +12,7 @@
 
 [package]
 name = "bindgen"
-version = "0.43.0"
+version = "0.43.2"
 authors = ["Jyun-Yan You <jyyou.tw@gmail.com>", "Emilio Cobos Álvarez <emilio@crisal.io>", "Nick Fitzgerald <fitzgen@gmail.com>", "The Servo project developers"]
 build = "build.rs"
 include = ["LICENSE", "README.md", "Cargo.toml", "build.rs", "src/*.rs", "src/**/*.rs"]
@@ -49,7 +49,7 @@ features = ["runtime", "clang_6_0"]
 version = "2"
 
 [dependencies.env_logger]
-version = "0.5"
+version = "0.6"
 optional = true
 
 [dependencies.lazy_static]
