@@ -118,21 +118,6 @@ const selector = exports.selector = {
 };
 
 /**
- * A CSS rule's stylesheet source.
- */
-const sourceLink = exports.sourceLink = {
-  // The CSS rule's column number within the stylesheet.
-  column: PropTypes.number,
-  // The CSS rule's line number within the stylesheet.
-  line: PropTypes.number,
-  // The media query text within a @media rule.
-  // Note: Abstract this to support other at-rules in the future.
-  mediaText: PropTypes.string,
-  // The title used for the stylesheet source.
-  title: PropTypes.string,
-};
-
-/**
  * A CSS Rule.
  */
 exports.rule = {
@@ -171,7 +156,12 @@ exports.rule = {
   selector: PropTypes.shape(selector),
 
   // An object containing information about the CSS rule's stylesheet source.
-  sourceLink: PropTypes.shape(sourceLink),
+  sourceLink: PropTypes.shape({
+    // The label used for the stylesheet source
+    label: PropTypes.string,
+    // The title used for the stylesheet source.
+    title: PropTypes.string,
+  }),
 
   // The CSS rule type.
   type: PropTypes.number,
