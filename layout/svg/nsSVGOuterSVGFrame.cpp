@@ -79,8 +79,8 @@ nsSVGOuterSVGFrame::nsSVGOuterSVGFrame(ComputedStyle* aStyle,
 // helper
 static inline bool DependsOnIntrinsicSize(const nsIFrame* aEmbeddingFrame) {
   const nsStylePosition* pos = aEmbeddingFrame->StylePosition();
-  const nsStyleCoord& width = pos->mWidth;
-  const nsStyleCoord& height = pos->mHeight;
+  const auto& width = pos->mWidth;
+  const auto& height = pos->mHeight;
 
   // XXX it would be nice to know if the size of aEmbeddingFrame's containing
   // block depends on aEmbeddingFrame, then we'd know if we can return false

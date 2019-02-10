@@ -47,6 +47,14 @@ constexpr LengthPercentage LengthPercentage::Zero() {
   return {{0.}, {0.}, StyleAllowedNumericType::All, false, false};
 }
 
+LengthPercentage LengthPercentage::FromAppUnits(nscoord aCoord) {
+  return {{CSSPixel::FromAppUnits(aCoord)},
+          {0.},
+          StyleAllowedNumericType::All,
+          false,
+          false};
+}
+
 bool LengthPercentage::HasPercent() const { return has_percentage; }
 
 bool LengthPercentage::ConvertsToLength() const { return !HasPercent(); }
@@ -63,6 +71,10 @@ bool LengthPercentage::ConvertsToPercentage() const {
 float LengthPercentage::ToPercentage() const {
   MOZ_ASSERT(ConvertsToPercentage());
   return Percentage();
+}
+
+bool LengthPercentage::HasLengthAndPercentage() const {
+  return !ConvertsToLength() && !ConvertsToPercentage();
 }
 
 CSSCoord LengthPercentage::LengthInCSSPixels() const { return length._0; }
@@ -99,21 +111,76 @@ nscoord LengthPercentage::ResolveWith(T aPercentageGetter) const {
   return Resolve(aPercentageGetter());
 }
 
+#define IMPL_LENGTHPERCENTAGE_FORWARDS(ty_)                                 \
+  template <>                                                               \
+  inline const LengthPercentage& ty_::AsLengthPercentage() const {          \
+    MOZ_ASSERT(IsLengthPercentage());                                       \
+    return length_percentage._0;                                            \
+  }                                                                         \
+  template <>                                                               \
+  inline bool ty_::HasPercent() const {                                     \
+    return IsLengthPercentage() && AsLengthPercentage().HasPercent();       \
+  }                                                                         \
+  template <>                                                               \
+  inline bool ty_::ConvertsToLength() const {                               \
+    return IsLengthPercentage() && AsLengthPercentage().ConvertsToLength(); \
+  }                                                                         \
+  template <>                                                               \
+  inline bool ty_::HasLengthAndPercentage() const {                         \
+    return IsLengthPercentage() &&                                          \
+           AsLengthPercentage().HasLengthAndPercentage();                   \
+  }                                                                         \
+  template <>                                                               \
+  inline nscoord ty_::ToLength() const {                                    \
+    MOZ_ASSERT(ConvertsToLength());                                         \
+    return AsLengthPercentage().ToLength();                                 \
+  }                                                                         \
+  template <>                                                               \
+  inline bool ty_::ConvertsToPercentage() const {                           \
+    return IsLengthPercentage() &&                                          \
+           AsLengthPercentage().ConvertsToPercentage();                     \
+  }                                                                         \
+  template <>                                                               \
+  inline float ty_::ToPercentage() const {                                  \
+    MOZ_ASSERT(ConvertsToPercentage());                                     \
+    return AsLengthPercentage().ToPercentage();                             \
+  }
+
+IMPL_LENGTHPERCENTAGE_FORWARDS(LengthPercentageOrAuto)
+IMPL_LENGTHPERCENTAGE_FORWARDS(StyleSize)
+IMPL_LENGTHPERCENTAGE_FORWARDS(StyleMaxSize)
+
 template <>
-inline const LengthPercentage& LengthPercentageOrAuto::AsLengthPercentage()
-    const {
-  MOZ_ASSERT(IsLengthPercentage());
-  return length_percentage._0;
+inline const StyleSize& StyleFlexBasis::AsSize() const {
+  MOZ_ASSERT(IsSize());
+  return size._0;
 }
 
 template <>
-inline bool LengthPercentageOrAuto::ConvertsToLength() const {
-  return IsLengthPercentage() && AsLengthPercentage().ConvertsToLength();
+inline bool StyleFlexBasis::IsAuto() const {
+  return IsSize() && AsSize().IsAuto();
 }
 
 template <>
-inline bool LengthPercentageOrAuto::HasPercent() const {
-  return IsLengthPercentage() && AsLengthPercentage().HasPercent();
+inline StyleExtremumLength StyleSize::AsExtremumLength() const {
+  MOZ_ASSERT(IsExtremumLength());
+  return extremum_length._0;
+}
+
+template <>
+inline bool StyleSize::BehavesLikeInitialValueOnBlockAxis() const {
+  return IsAuto() || IsExtremumLength();
+}
+
+template <>
+inline bool StyleMaxSize::BehavesLikeInitialValueOnBlockAxis() const {
+  return IsNone() || IsExtremumLength();
+}
+
+template <>
+inline StyleExtremumLength StyleMaxSize::AsExtremumLength() const {
+  MOZ_ASSERT(IsExtremumLength());
+  return extremum_length._0;
 }
 
 template <typename T>
