@@ -903,33 +903,6 @@ const JSPropertySpec DataViewObject::properties[] = {
     JS_PSG("byteOffset", DataViewObject::byteOffsetGetter, 0),
     JS_STRING_SYM_PS(toStringTag, "DataView", JSPROP_READONLY), JS_PS_END};
 
-JS_FRIEND_API uint32_t JS_GetDataViewByteOffset(JSObject* obj) {
-  obj = CheckedUnwrap(obj);
-  if (!obj) {
-    return 0;
-  }
-  return obj->as<DataViewObject>().byteOffset();
-}
-
-JS_FRIEND_API void* JS_GetDataViewData(JSObject* obj, bool* isSharedMemory,
-                                       const JS::AutoRequireNoGC&) {
-  obj = CheckedUnwrap(obj);
-  if (!obj) {
-    return nullptr;
-  }
-  DataViewObject& dv = obj->as<DataViewObject>();
-  *isSharedMemory = dv.isSharedMemory();
-  return dv.dataPointerEither().unwrap(/*safe - caller sees isSharedMemory*/);
-}
-
-JS_FRIEND_API uint32_t JS_GetDataViewByteLength(JSObject* obj) {
-  obj = CheckedUnwrap(obj);
-  if (!obj) {
-    return 0;
-  }
-  return obj->as<DataViewObject>().byteLength();
-}
-
 JS_FRIEND_API JSObject* JS_NewDataView(JSContext* cx, HandleObject buffer,
                                        uint32_t byteOffset,
                                        int32_t byteLength) {
