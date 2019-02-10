@@ -147,7 +147,7 @@ class DOMIntersectionObserver final : public nsISupports,
   RefPtr<Document> mDocument;
   RefPtr<mozilla::dom::IntersectionCallback> mCallback;
   RefPtr<Element> mRoot;
-  nsStyleSides mRootMargin;
+  StyleRect<LengthPercentage> mRootMargin;
   nsTArray<double> mThresholds;
 
   // Holds raw pointers which are explicitly cleared by UnlinkTarget().

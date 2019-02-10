@@ -666,6 +666,7 @@ impl CodeGenerator for Type {
                     .through_type_refs()
                     .resolve(ctx);
                 let name = item.canonical_name(ctx);
+                let path = item.canonical_path(ctx);
 
                 {
                     let through_type_aliases = inner.into_resolver()
@@ -678,7 +679,7 @@ impl CodeGenerator for Type {
                     // typedef struct foo { ... } foo;
                     //
                     // here, and also other more complex cases like #946.
-                    if through_type_aliases.canonical_name(ctx) == name {
+                    if through_type_aliases.canonical_path(ctx) == path {
                         return;
                     }
                 }
@@ -1044,6 +1045,7 @@ impl<'a> FieldCodegen<'a> for FieldData {
         let field_item = self.ty().into_resolver().through_type_refs().resolve(ctx);
         let field_ty = field_item.expect_type();
         let mut ty = self.ty().to_rust_ty_or_opaque(ctx, &());
+        ty.append_implicit_template_params(ctx, field_item);
 
         // NB: If supported, we use proper `union` types.
         let ty = if parent.is_union() && !parent.can_be_rust_union(ctx) {
@@ -1071,7 +1073,6 @@ impl<'a> FieldCodegen<'a> for FieldData {
                 }
             }
         } else {
-            ty.append_implicit_template_params(ctx, field_item);
             ty
         };
 
@@ -3377,17 +3378,19 @@ impl CodeGenerator for Function {
             attributes.push(attributes::doc(comment));
         }
 
-        if let Some(mangled) = mangled_name {
-            attributes.push(attributes::link_name(mangled));
-        } else if name != canonical_name {
-            attributes.push(attributes::link_name(name));
-        }
-
         // Handle overloaded functions by giving each overload its own unique
         // suffix.
         let times_seen = result.overload_number(&canonical_name);
         if times_seen > 0 {
             write!(&mut canonical_name, "{}", times_seen).unwrap();
+        }
+
+        if let Some(mangled) = mangled_name {
+            if canonical_name != mangled {
+                attributes.push(attributes::link_name(mangled));
+            }
+        } else if name != canonical_name {
+            attributes.push(attributes::link_name(name));
         }
 
         let abi = match signature.abi() {

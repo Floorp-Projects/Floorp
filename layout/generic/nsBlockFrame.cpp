@@ -272,11 +272,6 @@ static void RecordReflowStatus(bool aChildIsBlock,
 }
 #endif
 
-static nscoord ResolveTextIndent(const nsStyleCoord& aStyle,
-                                 nscoord aPercentageBasis) {
-  return nsLayoutUtils::ResolveToLength<false>(aStyle, aPercentageBasis);
-}
-
 NS_DECLARE_FRAME_PROPERTY_WITH_DTOR_NEVER_CALLED(OverflowLinesProperty,
                                                  nsBlockFrame::FrameLines)
 NS_DECLARE_FRAME_PROPERTY_FRAMELIST(OverflowOutOfFlowsProperty)
@@ -769,7 +764,7 @@ void nsBlockFrame::CheckIntrinsicCacheAgainstShrinkWrapState() {
       } else {
         if (!curFrame->GetPrevContinuation() &&
             line == curFrame->LinesBegin()) {
-          data.mCurrentLine += ::ResolveTextIndent(StyleText()->mTextIndent, 0);
+          data.mCurrentLine += StyleText()->mTextIndent.Resolve(0);
         }
         data.mLine = &line;
         data.SetLineContainer(curFrame);
@@ -856,7 +851,7 @@ void nsBlockFrame::CheckIntrinsicCacheAgainstShrinkWrapState() {
       } else {
         if (!curFrame->GetPrevContinuation() &&
             line == curFrame->LinesBegin()) {
-          nscoord indent = ::ResolveTextIndent(StyleText()->mTextIndent, 0);
+          nscoord indent = StyleText()->mTextIndent.Resolve(0);
           data.mCurrentLine += indent;
           // XXXmats should the test below be indent > 0?
           if (indent != nscoord(0)) {
@@ -922,7 +917,7 @@ nsRect nsBlockFrame::ComputeTightBounds(DrawTarget* aDrawTarget) const {
       } else {
         if (!curFrame->GetPrevContinuation() &&
             line == curFrame->LinesBegin()) {
-          data.mCurrentLine += ::ResolveTextIndent(StyleText()->mTextIndent, 0);
+          data.mCurrentLine += StyleText()->mTextIndent.Resolve(0);
         }
         data.mLine = &line;
         data.SetLineContainer(curFrame);
@@ -1905,10 +1900,11 @@ static inline bool IsAlignedLeft(uint8_t aAlignment, uint8_t aDirection,
 
 void nsBlockFrame::PrepareResizeReflow(BlockReflowInput& aState) {
   // See if we can try and avoid marking all the lines as dirty
+  // FIXME(emilio): This should be writing-mode aware, I guess.
   bool tryAndSkipLines =
       // The left content-edge must be a constant distance from the left
       // border-edge.
-      !StylePadding()->mPadding.GetLeft().HasPercent();
+      !StylePadding()->mPadding.Get(eSideLeft).HasPercent();
 
 #ifdef DEBUG
   if (gDisableResizeOpt) {

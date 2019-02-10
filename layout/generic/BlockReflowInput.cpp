@@ -686,7 +686,7 @@ static nscoord FloatMarginISize(const ReflowInput& aCBReflowInput,
 struct ShapeInvalidationData {
   StyleShapeSource mShapeOutside;
   float mShapeImageThreshold = 0.0;
-  nsStyleCoord mShapeMargin;
+  mozilla::LengthPercentage mShapeMargin;
 
   ShapeInvalidationData() = default;
 

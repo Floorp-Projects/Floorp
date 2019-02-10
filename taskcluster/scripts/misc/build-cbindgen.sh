@@ -3,7 +3,7 @@ set -x -e -v
 
 # If you update this, make sure to update the minimum version in
 # build/moz.configure/bindgen.configure as well.
-CBINDGEN_VERSION=v0.6.8
+CBINDGEN_REVISION=fbe9eff351c15c6ef348c33016fb72ad3520f32b # v0.7.1
 TARGET="$1"
 
 case "$(uname -s)" in
@@ -60,7 +60,7 @@ git clone https://github.com/eqrion/cbindgen cbindgen
 
 cd $_
 
-git checkout $CBINDGEN_VERSION
+git checkout $CBINDGEN_REVISION
 
 cargo build --verbose --release --target "$TARGET"
 
