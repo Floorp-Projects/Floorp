@@ -140,17 +140,6 @@ interface nsIEditorSpellCheck : nsISupports
   void          setFilterType(in unsigned long filterType);
 
   /**
-   * Like CheckCurrentWord, checks the word you give it, returning true if it's
-   * misspelled. This is faster than CheckCurrentWord because it does not
-   * compute any suggestions.
-   *
-   * Watch out: this does not clear any suggestions left over from previous
-   * calls to CheckCurrentWord, so there may be suggestions, but they will be
-   * invalid.
-   */
-  boolean       CheckCurrentWordNoSuggest(in AString suggestedWord);
-
-  /**
    * Update the dictionary in use to be sure it corresponds to what the editor
    * needs.  The update is asynchronous and is not complete until the given
    * callback is called.
