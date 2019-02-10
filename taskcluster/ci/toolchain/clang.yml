@@ -10,15 +10,15 @@ job-defaults:
         resources:
             - 'build/build-clang/build-clang.py'
 
-linux64-clang-3.9:
-    description: "Clang 3.9 toolchain build"
+linux64-clang-4.0:
+    description: "Clang 4.0 toolchain build"
     treeherder:
-        symbol: TL(clang3.9)
+        symbol: TL(clang4.0)
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux-large
     run:
-        script: build-clang-3.9-linux.sh
+        script: build-clang-4.0-linux.sh
         resources:
-            - 'build/build-clang/clang-3.9-linux64.json'
+            - 'build/build-clang/clang-4.0-linux64.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/clang.tar.xz
     toolchains:
