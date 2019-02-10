@@ -24,7 +24,6 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ParentSHistory.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/layers/LayersTypes.h"
 #include "nsStubMutationObserver.h"
 #include "Units.h"
 #include "nsIFrame.h"
@@ -59,7 +58,6 @@ class ProcessMessageManager;
 class Promise;
 class TabParent;
 class MutableTabContext;
-class RemoteFrameChild;
 
 namespace ipc {
 class StructuredCloneData;
@@ -272,26 +270,23 @@ class nsFrameLoader final : public nsStubMutationObserver,
     return mOwnerContent ? mOwnerContent->OwnerDoc() : nullptr;
   }
 
-  /**
-   * Returns whether this frame is a remote frame.
-   *
-   * This is true for either a top-level remote browser in the parent process,
-   * or a remote subframe in the child process.
-   */
-  bool IsRemoteFrame();
-
-  /**
-   * Returns the IPDL actor used if this is a top-level remote browser, or null
-   * otherwise.
-   */
   PBrowserParent* GetRemoteBrowser() const;
 
   /**
-   * Returns the layers ID that this remote frame is using to render.
+   * The "current" render frame is the one on which the most recent
+   * remote layer-tree transaction was executed.  If no content has
+   * been drawn yet, or the remote browser doesn't have any drawn
+   * content for whatever reason, return nullptr.  The returned render
+   * frame has an associated shadow layer tree.
    *
-   * This must only be called if this is a remote frame.
+   * Note that the returned render frame might not be a frame
+   * constructed for this->GetURL().  This can happen, e.g., if the
+   * <browser> was just navigated to a new URL, but hasn't painted the
+   * new page yet.  A render frame for the previous page may be
+   * returned.  (In-process <browser> behaves similarly, and this
+   * behavior seems desirable.)
    */
-  mozilla::layers::LayersId GetLayersId() const;
+  RenderFrame* GetCurrentRenderFrame() const;
 
   mozilla::dom::ChromeMessageSender* GetFrameMessageManager() {
     return mMessageManager;
@@ -362,6 +357,11 @@ class nsFrameLoader final : public nsStubMutationObserver,
   void SetOwnerContent(mozilla::dom::Element* aContent);
 
   bool ShouldUseRemoteProcess();
+
+  /**
+   * Return true if the frame is a remote frame. Return false otherwise
+   */
+  bool IsRemoteFrame();
 
   bool IsForJSPlugin() { return mJSPluginID != nsFakePluginTag::NOT_JSPLUGIN; }
 
@@ -455,9 +455,6 @@ class nsFrameLoader final : public nsStubMutationObserver,
 
   TabParent* mRemoteBrowser;
   uint64_t mChildID;
-
-  // This is used when this refers to a remote sub frame
-  RefPtr<mozilla::dom::RemoteFrameChild> mRemoteFrameChild;
 
   int32_t mJSPluginID;
 
