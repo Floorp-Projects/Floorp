@@ -335,17 +335,27 @@ class UrlbarAbstraction {
     let details = {};
     if (this.quantumbar) {
       let context = await this.urlbar.lastQueryContextPromise;
+      if (index >= context.results.length) {
+        throw new Error("Requested index not found in results");
+      }
       let {url, postData} = UrlbarUtils.getUrlFromResult(context.results[index]);
       details.url = url;
       details.postData = postData;
       details.type = context.results[index].type;
+      details.heuristic = context.results[index].heuristic;
       details.autofill = index == 0 && context.results[index].autofill;
       details.image = element.getElementsByClassName("urlbarView-favicon")[0].src;
       details.title = context.results[index].title;
+      details.tags = "tags" in context.results[index].payload ?
+        context.results[index].payload.tags :
+        [];
       let actions = element.getElementsByClassName("urlbarView-action");
+      let typeIcon = element.querySelector(".urlbarView-type-icon");
+      let typeIconStyle = this.window.getComputedStyle(typeIcon);
       details.displayed = {
         title: element.getElementsByClassName("urlbarView-title")[0].textContent,
         action: actions.length > 0 ? actions[0].textContent : null,
+        typeIcon: typeIconStyle["background-image"],
       };
       if (details.type == UrlbarUtils.RESULT_TYPE.SEARCH) {
         details.searchParams = {
@@ -361,12 +371,17 @@ class UrlbarAbstraction {
       let style = this.urlbar.controller.getStyleAt(index);
       let action = PlacesUtils.parseActionUrl(this.urlbar.controller.getValueAt(index));
       details.type = getType(style, action);
+      details.heuristic = style.includes("heuristic");
       details.autofill = style.includes("autofill");
       details.image = element.getAttribute("image");
       details.title = element.getAttribute("title");
+      details.tags = [...element.getElementsByClassName("ac-tags")].map(e =>
+        e.textContent);
+      let typeIconStyle = this.window.getComputedStyle(element._typeIcon);
       details.displayed = {
         title: element._titleText.textContent,
         action: element._actionText.textContent,
+        typeIcon: typeIconStyle.listStyleImage,
       };
       if (details.type == UrlbarUtils.RESULT_TYPE.SEARCH) {
         details.searchParams = {

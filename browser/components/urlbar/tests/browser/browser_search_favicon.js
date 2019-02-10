@@ -1,3 +1,12 @@
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
+
+"use strict";
+
+/**
+ * Tests that a restyled search result is correctly displayed.
+ */
+
 var gOriginalEngine;
 var gEngine;
 var gRestyleSearchesPref = "browser.urlbar.restyleSearches";
@@ -25,30 +34,25 @@ add_task(async function() {
   gOriginalEngine = await Services.search.getDefault();
   await Services.search.setDefault(gEngine);
 
-  let uri = NetUtil.newURI("http://s.example.com/search?q=foobar&client=1");
-  await PlacesTestUtils.addVisits({ uri, title: "Foo - SearchEngine Search" });
+  await PlacesTestUtils.addVisits({
+    uri: "http://s.example.com/search?q=foobar&client=1",
+    title: "Foo - SearchEngine Search",
+  });
 
   await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:mozilla");
 
   // The first autocomplete result has the action searchengine, while
   // the second result is the "search favicon" element.
   await promiseAutocompleteResultPopup("foo");
-  let result = await waitForAutocompleteResultAt(1);
-  isnot(result, null, "Expect a search result");
-  is(result.getAttribute("type"), "searchengine", "Expect correct `type` attribute");
+  let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
 
-  let titleHbox = result._titleText.parentNode.parentNode;
-  ok(titleHbox.classList.contains("ac-title"), "Title hbox sanity check");
-  is_element_visible(titleHbox, "Title element should be visible");
+  Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.SEARCH);
+  Assert.equal(result.displayed.title, "foobar");
 
-  let urlHbox = result._urlText.parentNode.parentNode;
-  ok(urlHbox.classList.contains("ac-url"), "URL hbox sanity check");
-  is_element_hidden(urlHbox, "URL element should be hidden");
-
-  let actionHbox = result._actionText.parentNode.parentNode;
-  ok(actionHbox.classList.contains("ac-action"), "Action hbox sanity check");
-  is_element_hidden(actionHbox, "Action element should be hidden because it is not selected");
-  is(result._actionText.textContent, "Search with SearchEngine", "Action text should be as expected");
+  let bundle = Services.strings.createBundle("chrome://global/locale/autocomplete.properties");
+  Assert.equal(result.displayed.action,
+    bundle.formatStringFromName("searchWithEngine", ["SearchEngine"], 1),
+    "Should have the correct action text");
 
   gBrowser.removeCurrentTab();
 });
