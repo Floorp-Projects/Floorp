@@ -49,6 +49,7 @@ MozURLSpecSlice mozurl_username(const mozilla::net::MozURL*);
 MozURLSpecSlice mozurl_password(const mozilla::net::MozURL*);
 MozURLSpecSlice mozurl_host(const mozilla::net::MozURL*);
 int32_t mozurl_port(const mozilla::net::MozURL*);
+int32_t mozurl_real_port(const mozilla::net::MozURL*);
 MozURLSpecSlice mozurl_host_port(const mozilla::net::MozURL*);
 MozURLSpecSlice mozurl_filepath(const mozilla::net::MozURL*);
 MozURLSpecSlice mozurl_path(const mozilla::net::MozURL*);
@@ -56,6 +57,7 @@ MozURLSpecSlice mozurl_query(const mozilla::net::MozURL*);
 MozURLSpecSlice mozurl_fragment(const mozilla::net::MozURL*);
 
 bool mozurl_has_fragment(const mozilla::net::MozURL*);
+MozURLSpecSlice mozurl_directory(const mozilla::net::MozURL*);
 void mozurl_origin(const mozilla::net::MozURL*, nsACString* aResult);
 
 nsresult mozurl_common_base(const mozilla::net::MozURL* aUrl1,

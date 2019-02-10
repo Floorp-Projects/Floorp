@@ -198,6 +198,14 @@ pub extern "C" fn mozurl_port(url: &MozURL) -> i32 {
 }
 
 #[no_mangle]
+pub extern "C" fn mozurl_real_port(url: &MozURL) -> i32 {
+  url.port()
+     .or_else(|| default_port(url.scheme()))
+     .map(|p| p as i32)
+     .unwrap_or(-1)
+}
+
+#[no_mangle]
 pub extern "C" fn mozurl_host_port(url: &MozURL) -> SpecSlice {
   (&url[Position::BeforeHost..Position::BeforePath]).into()
 }
@@ -225,6 +233,15 @@ pub extern "C" fn mozurl_fragment(url: &MozURL) -> SpecSlice {
 #[no_mangle]
 pub extern "C" fn mozurl_has_fragment(url: &MozURL) -> bool {
   url.fragment().is_some()
+}
+
+#[no_mangle]
+pub extern "C" fn mozurl_directory(url: &MozURL) -> SpecSlice {
+  if let Some(position) = url.path().rfind('/') {
+    url.path()[..position + 1].into()
+  } else {
+    url.path().into()
+  }
 }
 
 #[no_mangle]
