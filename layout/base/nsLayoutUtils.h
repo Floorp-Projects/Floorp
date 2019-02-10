@@ -1489,30 +1489,29 @@ class nsLayoutUtils {
 
   static nscoord ComputeBSizeValue(nscoord aContainingBlockBSize,
                                    nscoord aContentEdgeToBoxSizingBoxEdge,
-                                   const nsStyleCoord& aCoord) {
+                                   const LengthPercentage& aCoord) {
     MOZ_ASSERT(aContainingBlockBSize != nscoord_MAX || !aCoord.HasPercent(),
                "caller must deal with %% of unconstrained block-size");
-    MOZ_ASSERT(aCoord.IsCoordPercentCalcUnit());
 
-    nscoord result = aCoord.ComputeCoordPercentCalc(aContainingBlockBSize);
+    nscoord result = aCoord.Resolve(aContainingBlockBSize);
     // Clamp calc(), and the subtraction for box-sizing.
     return std::max(0, result - aContentEdgeToBoxSizingBoxEdge);
   }
 
-  static bool IsAutoBSize(const nsStyleCoord& aCoord, nscoord aCBBSize) {
-    nsStyleUnit unit = aCoord.GetUnit();
-    return unit == eStyleUnit_Auto ||  // only for 'height'
-           unit == eStyleUnit_None ||  // only for 'max-height'
-           // The enumerated values were originally aimed at inline-size
-           // (or width, as it was before logicalization). For now, let them
-           // return true here, so that we don't call ComputeBSizeValue with
-           // value types that it doesn't understand. (See bug 1113216.)
-           //
-           // FIXME (bug 567039, bug 527285)
-           // This isn't correct for the 'fill' value or for the 'min-*' or
-           // 'max-*' properties, which need to be handled differently by
-           // the callers of IsAutoBSize().
-           unit == eStyleUnit_Enumerated ||
+  /**
+   * The "extremum length" values (see ExtremumLength) were originally aimed at
+   * inline-size (or width, as it was before logicalization). For now, we return
+   * true for those here, so that we don't call ComputeBSizeValue with value
+   * types that it doesn't understand. (See bug 1113216.)
+   *
+   * FIXME (bug 567039, bug 527285)
+   * This isn't correct for the 'fill' value or for the 'min-*' or 'max-*'
+   * properties, which need to be handled differently by the callers of
+   * IsAutoBSize().
+   */
+  template <typename SizeOrMaxSize>
+  static bool IsAutoBSize(const SizeOrMaxSize& aCoord, nscoord aCBBSize) {
+    return aCoord.BehavesLikeInitialValueOnBlockAxis() ||
            (aCBBSize == nscoord_MAX && aCoord.HasPercent());
   }
 

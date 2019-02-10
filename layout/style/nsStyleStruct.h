@@ -1299,6 +1299,15 @@ struct nsStyleGridTemplate {
 };
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePosition {
+  using LengthPercentageOrAuto = mozilla::LengthPercentageOrAuto;
+  using Position = mozilla::Position;
+  template<typename T>
+  using StyleRect = mozilla::StyleRect<T>;
+  using StyleSize = mozilla::StyleSize;
+  using StyleMaxSize = mozilla::StyleMaxSize;
+  using StyleFlexBasis = mozilla::StyleFlexBasis;
+  using WritingMode = mozilla::WritingMode;
+
   explicit nsStylePosition(const mozilla::dom::Document&);
   nsStylePosition(const nsStylePosition& aOther);
   ~nsStylePosition();
@@ -1321,15 +1330,15 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePosition {
    */
   uint8_t UsedJustifySelf(mozilla::ComputedStyle* aParent) const;
 
-  mozilla::Position mObjectPosition;
-  mozilla::StyleRect<mozilla::LengthPercentageOrAuto> mOffset;
-  nsStyleCoord mWidth;               // coord, percent, enum, calc, auto
-  nsStyleCoord mMinWidth;            // coord, percent, enum, calc
-  nsStyleCoord mMaxWidth;            // coord, percent, enum, calc, none
-  nsStyleCoord mHeight;              // coord, percent, calc, auto
-  nsStyleCoord mMinHeight;           // coord, percent, calc
-  nsStyleCoord mMaxHeight;           // coord, percent, calc, none
-  nsStyleCoord mFlexBasis;           // coord, percent, enum, calc, auto
+  Position mObjectPosition;
+  StyleRect<LengthPercentageOrAuto> mOffset;
+  StyleSize mWidth;
+  StyleSize mMinWidth;
+  StyleMaxSize mMaxWidth;
+  StyleSize mHeight;
+  StyleSize mMinHeight;
+  StyleMaxSize mMaxHeight;
+  StyleFlexBasis mFlexBasis;
   nsStyleCoord mGridAutoColumnsMin;  // coord, percent, enum, calc, flex
   nsStyleCoord mGridAutoColumnsMax;  // coord, percent, enum, calc, flex
   nsStyleCoord mGridAutoRowsMin;     // coord, percent, enum, calc, flex
@@ -1382,37 +1391,42 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePosition {
   // given a WritingMode value. The definitions of these methods are
   // found in WritingModes.h (after the WritingMode class is fully
   // declared).
-  inline nsStyleCoord& ISize(mozilla::WritingMode aWM);
-  inline nsStyleCoord& MinISize(mozilla::WritingMode aWM);
-  inline nsStyleCoord& MaxISize(mozilla::WritingMode aWM);
-  inline nsStyleCoord& BSize(mozilla::WritingMode aWM);
-  inline nsStyleCoord& MinBSize(mozilla::WritingMode aWM);
-  inline nsStyleCoord& MaxBSize(mozilla::WritingMode aWM);
-  inline const nsStyleCoord& ISize(mozilla::WritingMode aWM) const;
-  inline const nsStyleCoord& MinISize(mozilla::WritingMode aWM) const;
-  inline const nsStyleCoord& MaxISize(mozilla::WritingMode aWM) const;
-  inline const nsStyleCoord& BSize(mozilla::WritingMode aWM) const;
-  inline const nsStyleCoord& MinBSize(mozilla::WritingMode aWM) const;
-  inline const nsStyleCoord& MaxBSize(mozilla::WritingMode aWM) const;
-  inline bool ISizeDependsOnContainer(mozilla::WritingMode aWM) const;
-  inline bool MinISizeDependsOnContainer(mozilla::WritingMode aWM) const;
-  inline bool MaxISizeDependsOnContainer(mozilla::WritingMode aWM) const;
-  inline bool BSizeDependsOnContainer(mozilla::WritingMode aWM) const;
-  inline bool MinBSizeDependsOnContainer(mozilla::WritingMode aWM) const;
-  inline bool MaxBSizeDependsOnContainer(mozilla::WritingMode aWM) const;
+  inline const StyleSize& ISize(WritingMode) const;
+  inline const StyleSize& MinISize(WritingMode) const;
+  inline const StyleMaxSize& MaxISize(WritingMode) const;
+  inline const StyleSize& BSize(WritingMode) const;
+  inline const StyleSize& MinBSize(WritingMode) const;
+  inline const StyleMaxSize& MaxBSize(WritingMode) const;
+  inline bool ISizeDependsOnContainer(WritingMode) const;
+  inline bool MinISizeDependsOnContainer(WritingMode) const;
+  inline bool MaxISizeDependsOnContainer(WritingMode) const;
+  inline bool BSizeDependsOnContainer(WritingMode) const;
+  inline bool MinBSizeDependsOnContainer(WritingMode) const;
+  inline bool MaxBSizeDependsOnContainer(WritingMode) const;
 
   const nsStyleGridTemplate& GridTemplateColumns() const;
   const nsStyleGridTemplate& GridTemplateRows() const;
 
  private:
-  static bool ISizeCoordDependsOnContainer(const nsStyleCoord& aCoord) {
-    return aCoord.HasPercent() ||
-           (aCoord.GetUnit() == eStyleUnit_Enumerated &&
-            (aCoord.GetIntValue() == NS_STYLE_WIDTH_FIT_CONTENT ||
-             aCoord.GetIntValue() == NS_STYLE_WIDTH_AVAILABLE));
+  template <typename SizeOrMaxSize>
+  static bool ISizeCoordDependsOnContainer(const SizeOrMaxSize& aCoord) {
+    if (aCoord.IsLengthPercentage()) {
+      return aCoord.AsLengthPercentage().HasPercent();
+    }
+
+    if (!aCoord.IsExtremumLength()) {
+      return false;
+    }
+
+    auto keyword = aCoord.AsExtremumLength();
+    return keyword == mozilla::StyleExtremumLength::MozFitContent ||
+           keyword == mozilla::StyleExtremumLength::MozAvailable;
   }
-  static bool BSizeCoordDependsOnContainer(const nsStyleCoord& aCoord) {
-    return aCoord.HasPercent();
+
+  template <typename SizeOrMaxSize>
+  static bool BSizeCoordDependsOnContainer(const SizeOrMaxSize& aCoord) {
+    return aCoord.IsLengthPercentage() &&
+           aCoord.AsLengthPercentage().HasPercent();
   }
 };
 
