@@ -49,6 +49,7 @@ class MozURL final {
   nsDependentCSubstring Host() const { return mozurl_host(this); }
   // Will return the port number, if specified, or -1
   int32_t Port() const { return mozurl_port(this); }
+  int32_t RealPort() const { return mozurl_real_port(this); }
   // If the URL's port number is equal to the default port, will only return the
   // hostname, otherwise it will return a string of the form `{host}:{port}`
   // See: https://url.spec.whatwg.org/#default-port
@@ -58,6 +59,7 @@ class MozURL final {
   nsDependentCSubstring Query() const { return mozurl_query(this); }
   nsDependentCSubstring Ref() const { return mozurl_fragment(this); }
   bool HasFragment() const { return mozurl_has_fragment(this); }
+  nsDependentCSubstring Directory() const { return mozurl_directory(this); }
 
   // WARNING: This does not match the definition of origins in nsIPrincipal for
   // all URIs.
