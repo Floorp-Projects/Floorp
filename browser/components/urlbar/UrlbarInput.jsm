@@ -531,6 +531,8 @@ class UrlbarInput {
 
   _valueFromResultPayload(result) {
     switch (result.type) {
+      case UrlbarUtils.RESULT_TYPE.KEYWORD:
+        return result.payload.input;
       case UrlbarUtils.RESULT_TYPE.SEARCH:
         return (result.payload.keyword ? result.payload.keyword + " " : "") +
                (result.payload.suggestion || result.payload.query);
