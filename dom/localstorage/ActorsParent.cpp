@@ -2495,12 +2495,10 @@ class ArchivedOriginScope {
   DataType mData;
 
  public:
-  static ArchivedOriginScope* CreateFromOrigin(nsIPrincipal* aPrincipal);
-
   static ArchivedOriginScope* CreateFromOrigin(
       const nsACString& aOriginAttrSuffix, const nsACString& aOriginKey);
 
-  static ArchivedOriginScope* CreateFromPrefix(nsIPrincipal* aPrincipal);
+  static ArchivedOriginScope* CreateFromPrefix(const nsACString& aOriginKey);
 
   static ArchivedOriginScope* CreateFromPattern(
       const OriginAttributesPattern& aPattern);
@@ -2553,37 +2551,6 @@ class ArchivedOriginScope {
   explicit ArchivedOriginScope(const Prefix&& aPrefix) : mData(aPrefix) {}
 
   explicit ArchivedOriginScope(const Null&& aNull) : mData(aNull) {}
-};
-
-class ArchivedOriginScopeHelper : public Runnable {
-  Monitor mMonitor;
-  const OriginAttributes mAttrs;
-  const nsCString mSpec;
-  nsAutoPtr<ArchivedOriginScope> mArchivedOriginScope;
-  nsresult mMainThreadResultCode;
-  bool mWaiting;
-  bool mPrefix;
-
- public:
-  ArchivedOriginScopeHelper(const nsACString& aSpec,
-                            const OriginAttributes& aAttrs, bool aPrefix)
-      : Runnable("dom::localstorage::ArchivedOriginScopeHelper"),
-        mMonitor("ArchivedOriginScopeHelper::mMonitor"),
-        mAttrs(aAttrs),
-        mSpec(aSpec),
-        mMainThreadResultCode(NS_OK),
-        mWaiting(true),
-        mPrefix(aPrefix) {
-    AssertIsOnIOThread();
-  }
-
-  nsresult BlockAndReturnArchivedOriginScope(
-      nsAutoPtr<ArchivedOriginScope>& aArchivedOriginScope);
-
- private:
-  nsresult RunOnMainThread();
-
-  NS_DECL_NSIRUNNABLE
 };
 
 class QuotaClient final : public mozilla::dom::quota::Client {
@@ -3154,6 +3121,28 @@ bool VerifyPrincipalInfo(const Maybe<ContentParentId>& aContentParentId,
   return true;
 }
 
+bool VerifyOriginKey(const nsACString& aOriginKey,
+                     const PrincipalInfo& aPrincipalInfo) {
+  AssertIsOnBackgroundThread();
+
+  nsCString originAttrSuffix;
+  nsCString originKey;
+  nsresult rv = GenerateOriginKey2(aPrincipalInfo, originAttrSuffix, originKey);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    ASSERT_UNLESS_FUZZING();
+    return false;
+  }
+
+  if (NS_WARN_IF(originKey != aOriginKey)) {
+    LS_WARNING("originKey (%s) doesn't match passed one (%s)!", originKey.get(),
+               nsCString(aOriginKey).get());
+    ASSERT_UNLESS_FUZZING();
+    return false;
+  }
+
+  return true;
+}
+
 bool VerifyRequestParams(const Maybe<ContentParentId>& aContentParentId,
                          const LSRequestParams& aParams) {
   AssertIsOnBackgroundThread();
@@ -3169,6 +3158,12 @@ bool VerifyRequestParams(const Maybe<ContentParentId>& aContentParentId,
         ASSERT_UNLESS_FUZZING();
         return false;
       }
+
+      if (NS_WARN_IF(
+              !VerifyOriginKey(params.originKey(), params.principalInfo()))) {
+        ASSERT_UNLESS_FUZZING();
+        return false;
+      }
       break;
     }
 
@@ -3181,6 +3176,12 @@ bool VerifyRequestParams(const Maybe<ContentParentId>& aContentParentId,
       if (NS_WARN_IF(!VerifyPrincipalInfo(aContentParentId,
                                           commonParams.principalInfo(),
                                           params.clientId()))) {
+        ASSERT_UNLESS_FUZZING();
+        return false;
+      }
+
+      if (NS_WARN_IF(!VerifyOriginKey(commonParams.originKey(),
+                                      commonParams.principalInfo()))) {
         ASSERT_UNLESS_FUZZING();
         return false;
       }
@@ -6992,23 +6993,6 @@ void PreloadedOp::GetResponse(LSSimpleRequestResponse& aResponse) {
 
 // static
 ArchivedOriginScope* ArchivedOriginScope::CreateFromOrigin(
-    nsIPrincipal* aPrincipal) {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aPrincipal);
-
-  nsCString originAttrSuffix;
-  nsCString originKey;
-  nsresult rv = GenerateOriginKey(aPrincipal, originAttrSuffix, originKey);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return nullptr;
-  }
-
-  return new ArchivedOriginScope(
-      std::move(Origin(originAttrSuffix, originKey)));
-}
-
-// static
-ArchivedOriginScope* ArchivedOriginScope::CreateFromOrigin(
     const nsACString& aOriginAttrSuffix, const nsACString& aOriginKey) {
   return new ArchivedOriginScope(
       std::move(Origin(aOriginAttrSuffix, aOriginKey)));
@@ -7016,18 +7000,8 @@ ArchivedOriginScope* ArchivedOriginScope::CreateFromOrigin(
 
 // static
 ArchivedOriginScope* ArchivedOriginScope::CreateFromPrefix(
-    nsIPrincipal* aPrincipal) {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aPrincipal);
-
-  nsCString originAttrSuffix;
-  nsCString originKey;
-  nsresult rv = GenerateOriginKey(aPrincipal, originAttrSuffix, originKey);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return nullptr;
-  }
-
-  return new ArchivedOriginScope(std::move(Prefix(originKey)));
+    const nsACString& aOriginKey) {
+  return new ArchivedOriginScope(std::move(Prefix(aOriginKey)));
 }
 
 // static
@@ -7220,74 +7194,6 @@ void ArchivedOriginScope::RemoveMatches(
   };
 
   mData.match(Matcher(aHashtable));
-}
-
-/*******************************************************************************
- * ArchivedOriginScopeHelper
- ******************************************************************************/
-
-nsresult ArchivedOriginScopeHelper::BlockAndReturnArchivedOriginScope(
-    nsAutoPtr<ArchivedOriginScope>& aArchivedOriginScope) {
-  AssertIsOnIOThread();
-
-  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(this));
-
-  mozilla::MonitorAutoLock lock(mMonitor);
-  while (mWaiting) {
-    lock.Wait();
-  }
-
-  if (NS_WARN_IF(NS_FAILED(mMainThreadResultCode))) {
-    return mMainThreadResultCode;
-  }
-
-  aArchivedOriginScope = std::move(mArchivedOriginScope);
-  return NS_OK;
-}
-
-nsresult ArchivedOriginScopeHelper::RunOnMainThread() {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_NewURI(getter_AddRefs(uri), mSpec);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  nsCOMPtr<nsIPrincipal> principal =
-      BasePrincipal::CreateCodebasePrincipal(uri, mAttrs);
-  if (NS_WARN_IF(!principal)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  if (mPrefix) {
-    mArchivedOriginScope = ArchivedOriginScope::CreateFromPrefix(principal);
-  } else {
-    mArchivedOriginScope = ArchivedOriginScope::CreateFromOrigin(principal);
-  }
-  if (NS_WARN_IF(!mArchivedOriginScope)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-ArchivedOriginScopeHelper::Run() {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  nsresult rv = RunOnMainThread();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    mMainThreadResultCode = rv;
-  }
-
-  mozilla::MonitorAutoLock lock(mMonitor);
-  MOZ_ASSERT(mWaiting);
-
-  mWaiting = false;
-  lock.Notify();
-
-  return NS_OK;
 }
 
 /*******************************************************************************
@@ -7928,13 +7834,21 @@ nsresult QuotaClient::CreateArchivedOriginScope(
       return NS_ERROR_FAILURE;
     }
 
-    RefPtr<ArchivedOriginScopeHelper> helper =
-        new ArchivedOriginScopeHelper(spec, attrs, /* aPrefix */ false);
+    ContentPrincipalInfo contentPrincipalInfo;
+    contentPrincipalInfo.attrs() = attrs;
+    contentPrincipalInfo.spec() = spec;
 
-    rv = helper->BlockAndReturnArchivedOriginScope(archivedOriginScope);
+    PrincipalInfo principalInfo(contentPrincipalInfo);
+
+    nsCString originAttrSuffix;
+    nsCString originKey;
+    rv = GenerateOriginKey2(principalInfo, originAttrSuffix, originKey);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
+
+    archivedOriginScope =
+        ArchivedOriginScope::CreateFromOrigin(originAttrSuffix, originKey);
   } else if (aOriginScope.IsPrefix()) {
     nsCString spec;
     OriginAttributes attrs;
@@ -7943,13 +7857,20 @@ nsresult QuotaClient::CreateArchivedOriginScope(
       return NS_ERROR_FAILURE;
     }
 
-    RefPtr<ArchivedOriginScopeHelper> helper =
-        new ArchivedOriginScopeHelper(spec, attrs, /* aPrefix */ true);
+    ContentPrincipalInfo contentPrincipalInfo;
+    contentPrincipalInfo.attrs() = attrs;
+    contentPrincipalInfo.spec() = spec;
 
-    rv = helper->BlockAndReturnArchivedOriginScope(archivedOriginScope);
+    PrincipalInfo principalInfo(contentPrincipalInfo);
+
+    nsCString originAttrSuffix;
+    nsCString originKey;
+    rv = GenerateOriginKey2(principalInfo, originAttrSuffix, originKey);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
+
+    archivedOriginScope = ArchivedOriginScope::CreateFromPrefix(originKey);
   } else if (aOriginScope.IsPattern()) {
     archivedOriginScope =
         ArchivedOriginScope::CreateFromPattern(aOriginScope.GetPattern());
