@@ -1,9 +1,12 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-function is_selected(index) {
-  is(gURLBar.popup.richlistbox.selectedIndex, index, `Item ${index + 1} should be selected`);
-}
+"use strict";
+
+/**
+ * This tests that changing away from a keyword result and back again, still
+ * operates correctly.
+ */
 
 add_task(async function() {
   let bookmarks = [];
@@ -14,7 +17,7 @@ add_task(async function() {
   await PlacesUtils.keywords.insert({ keyword: "keyword",
                                       url: "http://example.com/?q=%s" });
 
-  // This item only needed so we can select the keyword item, select something
+  // This item is only needed so we can select the keyword item, select something
   // else, then select the keyword item again.
   bookmarks.push((await PlacesUtils.bookmarks
                                    .insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
@@ -32,24 +35,37 @@ add_task(async function() {
   await waitForAutocompleteResultAt(1);
 
   // First item should already be selected
-  is_selected(0);
+  Assert.equal(UrlbarTestUtils.getSelectedIndex(window), 0,
+    "Should have the first item selected");
+
   // Select next one (important!)
   EventUtils.synthesizeKey("KEY_ArrowDown");
-  is_selected(1);
+  Assert.equal(UrlbarTestUtils.getSelectedIndex(window), 1,
+    "Should have the second item selected");
+
   // Re-select keyword item
   EventUtils.synthesizeKey("KEY_ArrowUp");
-  is_selected(0);
+  Assert.equal(UrlbarTestUtils.getSelectedIndex(window), 0,
+    "Should have the first item selected");
 
   EventUtils.sendString("b");
   await promiseSearchComplete();
 
-  is(gURLBar.textValue, "keyword ab", "urlbar should have expected input");
-  let result = await waitForAutocompleteResultAt(0);
-  isnot(result, null, "Should have first item");
-  let uri = NetUtil.newURI(result.getAttribute("url"));
-  is(uri.spec, PlacesUtils.mozActionURI("keyword", {url: "http://example.com/?q=ab", input: "keyword ab"}), "Expect correct url");
+  Assert.equal(gURLBar.textValue, "keyword ab", "urlbar should have expected input");
 
-  EventUtils.synthesizeKey("KEY_Escape");
-  await promisePopupHidden(gURLBar.popup);
+  let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
+
+  Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.KEYWORD,
+    "Should have a result of type keyword");
+  if (UrlbarPrefs.get("quantumbar")) {
+    Assert.equal(result.url, "http://example.com/?q=ab",
+      "Should have the correct url");
+  } else {
+    Assert.equal(result.url,
+      PlacesUtils.mozActionURI("keyword", {url: "http://example.com/?q=ab", input: "keyword ab"}),
+      "Should have the correct url");
+  }
+
+  await UrlbarTestUtils.promisePopupClose(window);
   gBrowser.removeTab(tab);
 });
