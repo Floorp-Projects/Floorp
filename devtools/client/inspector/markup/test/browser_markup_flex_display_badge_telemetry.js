@@ -16,8 +16,6 @@ const TEST_URI = `
 `;
 
 add_task(async function() {
-  await pushPref("devtools.inspector.flexboxHighlighter.enabled", true);
-  await pushPref("devtools.flexboxinspector.enabled", true);
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   startTelemetry();
   const { inspector } = await openLayoutView();
