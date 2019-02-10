@@ -181,7 +181,17 @@
  * interface.
  */
 
+#include "mozilla/Attributes.h"
+#include "nsString.h"
+
 namespace mozilla {
+
+namespace ipc {
+
+class PrincipalInfo;
+
+}  // namespace ipc
+
 namespace dom {
 
 extern const char16_t* kLocalStorageType;
@@ -219,6 +229,10 @@ bool NextGenLocalStorageEnabled();
  * Cached any-thread version of NextGenLocalStorageEnabled().
  */
 bool CachedNextGenLocalStorageEnabled();
+
+nsresult GenerateOriginKey2(const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
+                            nsACString& aOriginAttrSuffix,
+                            nsACString& aOriginKey);
 
 }  // namespace dom
 }  // namespace mozilla
