@@ -1165,13 +1165,11 @@ template <typename T>
   if (!isWrapped) {
     srcArray = &other->as<TypedArrayObject>();
   } else {
-    RootedObject unwrapped(cx, CheckedUnwrap(other));
-    if (!unwrapped) {
+    srcArray = other->maybeUnwrapAs<TypedArrayObject>();
+    if (!srcArray) {
       ReportAccessDenied(cx);
       return nullptr;
     }
-
-    srcArray = &unwrapped->as<TypedArrayObject>();
   }
 
   // To keep things simpler, we always reify the array buffer for cross-realm or
@@ -2260,7 +2258,7 @@ struct ExternalTypeOf<uint8_clamped> {
   }                                                                          \
                                                                              \
   JS_FRIEND_API JSObject* js::Unwrap##Name##Array(JSObject* obj) {           \
-    obj = CheckedUnwrap(obj);                                                \
+    obj = obj->maybeUnwrapIf<TypedArrayObject>();                            \
     if (!obj) {                                                              \
       return nullptr;                                                        \
     }                                                                        \
@@ -2297,11 +2295,10 @@ struct ExternalTypeOf<uint8_clamped> {
                                                                              \
   JS_FRIEND_API ExternalTypeOf<NativeType>::Type* JS_Get##Name##ArrayData(   \
       JSObject* obj, bool* isSharedMemory, const JS::AutoRequireNoGC&) {     \
-    obj = CheckedUnwrap(obj);                                                \
-    if (!obj) {                                                              \
+    TypedArrayObject* tarr = obj->maybeUnwrapAs<TypedArrayObject>();         \
+    if (!tarr) {                                                             \
       return nullptr;                                                        \
     }                                                                        \
-    TypedArrayObject* tarr = &obj->as<TypedArrayObject>();                   \
     MOZ_ASSERT(tarr->type() == TypeIDOfType<NativeType>::id);                \
     *isSharedMemory = tarr->isSharedMemory();                                \
     return static_cast<ExternalTypeOf<NativeType>::Type*>(                   \
@@ -2316,47 +2313,47 @@ JS_FRIEND_API bool JS_IsTypedArrayObject(JSObject* obj) {
 }
 
 JS_FRIEND_API uint32_t JS_GetTypedArrayLength(JSObject* obj) {
-  obj = CheckedUnwrap(obj);
-  if (!obj) {
+  TypedArrayObject* tarr = obj->maybeUnwrapAs<TypedArrayObject>();
+  if (!tarr) {
     return 0;
   }
-  return obj->as<TypedArrayObject>().length();
+  return tarr->length();
 }
 
 JS_FRIEND_API uint32_t JS_GetTypedArrayByteOffset(JSObject* obj) {
-  obj = CheckedUnwrap(obj);
-  if (!obj) {
+  TypedArrayObject* tarr = obj->maybeUnwrapAs<TypedArrayObject>();
+  if (!tarr) {
     return 0;
   }
-  return obj->as<TypedArrayObject>().byteOffset();
+  return tarr->byteOffset();
 }
 
 JS_FRIEND_API uint32_t JS_GetTypedArrayByteLength(JSObject* obj) {
-  obj = CheckedUnwrap(obj);
-  if (!obj) {
+  TypedArrayObject* tarr = obj->maybeUnwrapAs<TypedArrayObject>();
+  if (!tarr) {
     return 0;
   }
-  return obj->as<TypedArrayObject>().byteLength();
+  return tarr->byteLength();
 }
 
 JS_FRIEND_API bool JS_GetTypedArraySharedness(JSObject* obj) {
-  obj = CheckedUnwrap(obj);
-  if (!obj) {
+  TypedArrayObject* tarr = obj->maybeUnwrapAs<TypedArrayObject>();
+  if (!tarr) {
     return false;
   }
-  return obj->as<TypedArrayObject>().isSharedMemory();
+  return tarr->isSharedMemory();
 }
 
 JS_FRIEND_API js::Scalar::Type JS_GetArrayBufferViewType(JSObject* obj) {
-  obj = CheckedUnwrap(obj);
-  if (!obj) {
+  ArrayBufferViewObject* view = obj->maybeUnwrapAs<ArrayBufferViewObject>();
+  if (!view) {
     return Scalar::MaxTypedArrayViewType;
   }
 
-  if (obj->is<TypedArrayObject>()) {
-    return obj->as<TypedArrayObject>().type();
+  if (view->is<TypedArrayObject>()) {
+    return view->as<TypedArrayObject>().type();
   }
-  if (obj->is<DataViewObject>()) {
+  if (view->is<DataViewObject>()) {
     return Scalar::MaxTypedArrayViewType;
   }
   MOZ_CRASH("invalid ArrayBufferView type");

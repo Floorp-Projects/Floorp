@@ -663,12 +663,12 @@ const JSFunctionSpec WasmModuleObject::static_methods[] = {
 }
 
 static bool IsModuleObject(JSObject* obj, const Module** module) {
-  JSObject* unwrapped = CheckedUnwrap(obj);
-  if (!unwrapped || !unwrapped->is<WasmModuleObject>()) {
+  WasmModuleObject* mobj = obj->maybeUnwrapIf<WasmModuleObject>();
+  if (!mobj) {
     return false;
   }
 
-  *module = &unwrapped->as<WasmModuleObject>().module();
+  *module = &mobj->module();
   return true;
 }
 
@@ -1023,7 +1023,7 @@ static bool GetBufferSource(JSContext* cx, JSObject* obj, unsigned errorNumber,
     return false;
   }
 
-  JSObject* unwrapped = CheckedUnwrap(obj);
+  JSObject* unwrapped = CheckedUnwrapStatic(obj);
 
   SharedMem<uint8_t*> dataPointer;
   size_t byteLength;
@@ -1954,9 +1954,8 @@ bool WasmMemoryObject::addMovingGrowObserver(JSContext* cx,
 }
 
 bool js::wasm::IsSharedWasmMemoryObject(JSObject* obj) {
-  obj = CheckedUnwrap(obj);
-  return obj && obj->is<WasmMemoryObject>() &&
-         obj->as<WasmMemoryObject>().isShared();
+  WasmMemoryObject* mobj = obj->maybeUnwrapIf<WasmMemoryObject>();
+  return mobj && mobj->isShared();
 }
 
 // ============================================================================

@@ -10538,12 +10538,10 @@ static MOZ_MUST_USE bool ReportUnhandledRejections(JSContext* cx) {
     }
 
     RootedObject obj(cx, &resultObj->getDenseElement(0).toObject());
-    obj = CheckedUnwrap(obj);
-    if (!obj) {
+    Rooted<PromiseObject*> promise(cx, obj->maybeUnwrapAs<PromiseObject>());
+    if (!promise) {
       return false;
     }
-
-    Handle<PromiseObject*> promise = obj.as<PromiseObject>();
 
     AutoRealm ar2(cx, promise);
 

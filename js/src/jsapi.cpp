@@ -3926,12 +3926,12 @@ JS_PUBLIC_API JSObject* JS::GetPromisePrototype(JSContext* cx) {
 
 JS_PUBLIC_API JS::PromiseState JS::GetPromiseState(
     JS::HandleObject promiseObj_) {
-  JSObject* promiseObj = CheckedUnwrap(promiseObj_);
-  if (!promiseObj || !promiseObj->is<PromiseObject>()) {
+  PromiseObject* promiseObj = promiseObj_->maybeUnwrapIf<PromiseObject>();
+  if (!promiseObj) {
     return JS::PromiseState::Pending;
   }
 
-  return promiseObj->as<PromiseObject>().state();
+  return promiseObj->state();
 }
 
 JS_PUBLIC_API uint64_t JS::GetPromiseID(JS::HandleObject promise) {
@@ -3988,7 +3988,7 @@ JS_PUBLIC_API JSObject* JS::CallOriginalPromiseResolve(
 
   RootedObject promise(cx,
                        PromiseObject::unforgeableResolve(cx, resolutionValue));
-  MOZ_ASSERT_IF(promise, CheckedUnwrap(promise)->is<PromiseObject>());
+  MOZ_ASSERT_IF(promise, promise->canUnwrapAs<PromiseObject>());
   return promise;
 }
 
@@ -4000,7 +4000,7 @@ JS_PUBLIC_API JSObject* JS::CallOriginalPromiseReject(
 
   RootedObject promise(cx,
                        PromiseObject::unforgeableReject(cx, rejectionValue));
-  MOZ_ASSERT_IF(promise, CheckedUnwrap(promise)->is<PromiseObject>());
+  MOZ_ASSERT_IF(promise, promise->canUnwrapAs<PromiseObject>());
   return promise;
 }
 
@@ -4015,12 +4015,11 @@ static bool ResolveOrRejectPromise(JSContext* cx, JS::HandleObject promiseObj,
   Rooted<PromiseObject*> promise(cx);
   RootedValue resultOrReason(cx, resultOrReason_);
   if (IsWrapper(promiseObj)) {
-    JSObject* unwrappedPromiseObj = CheckedUnwrap(promiseObj);
-    if (!unwrappedPromiseObj) {
+    promise = promiseObj->maybeUnwrapAs<PromiseObject>();
+    if (!promise) {
       ReportAccessDenied(cx);
       return false;
     }
-    promise = &unwrappedPromiseObj->as<PromiseObject>();
     ar.emplace(cx, promise);
     if (!cx->compartment()->wrap(cx, &resultOrReason)) {
       return false;
@@ -4087,16 +4086,15 @@ JS_PUBLIC_API bool JS::AddPromiseReactions(JSContext* cx,
 
 JS_PUBLIC_API JS::PromiseUserInputEventHandlingState
 JS::GetPromiseUserInputEventHandlingState(JS::HandleObject promiseObj_) {
-  JSObject* promiseObj = CheckedUnwrap(promiseObj_);
-  if (!promiseObj || !promiseObj->is<PromiseObject>()) {
+  PromiseObject* promise = promiseObj_->maybeUnwrapIf<PromiseObject>();
+  if (!promise) {
     return JS::PromiseUserInputEventHandlingState::DontCare;
   }
 
-  auto& promise = promiseObj->as<PromiseObject>();
-  if (!promise.requiresUserInteractionHandling()) {
+  if (!promise->requiresUserInteractionHandling()) {
     return JS::PromiseUserInputEventHandlingState::DontCare;
   }
-  if (promise.hadUserInteractionUponCreation()) {
+  if (promise->hadUserInteractionUponCreation()) {
     return JS::PromiseUserInputEventHandlingState::HadUserInteractionAtCreation;
   }
   return JS::PromiseUserInputEventHandlingState::
@@ -4106,25 +4104,23 @@ JS::GetPromiseUserInputEventHandlingState(JS::HandleObject promiseObj_) {
 JS_PUBLIC_API bool JS::SetPromiseUserInputEventHandlingState(
     JS::HandleObject promiseObj_,
     JS::PromiseUserInputEventHandlingState state) {
-  JSObject* promiseObj = CheckedUnwrap(promiseObj_);
-  if (!promiseObj || !promiseObj->is<PromiseObject>()) {
+  PromiseObject* promise = promiseObj_->maybeUnwrapIf<PromiseObject>();
+  if (!promise) {
     return false;
   }
 
-  auto& promise = promiseObj->as<PromiseObject>();
-
   switch (state) {
     case JS::PromiseUserInputEventHandlingState::DontCare:
-      promise.setRequiresUserInteractionHandling(false);
+      promise->setRequiresUserInteractionHandling(false);
       break;
     case JS::PromiseUserInputEventHandlingState::HadUserInteractionAtCreation:
-      promise.setRequiresUserInteractionHandling(true);
-      promise.setHadUserInteractionUponCreation(true);
+      promise->setRequiresUserInteractionHandling(true);
+      promise->setHadUserInteractionUponCreation(true);
       break;
     case JS::PromiseUserInputEventHandlingState::
         DidntHaveUserInteractionAtCreation:
-      promise.setRequiresUserInteractionHandling(true);
-      promise.setHadUserInteractionUponCreation(false);
+      promise->setRequiresUserInteractionHandling(true);
+      promise->setHadUserInteractionUponCreation(false);
       break;
     default:
       MOZ_ASSERT_UNREACHABLE(
@@ -6015,17 +6011,13 @@ JS_PUBLIC_API void JS::SetAsmJSCacheOps(JSContext* cx,
 }
 
 bool JS::IsWasmModuleObject(HandleObject obj) {
-  JSObject* unwrapped = CheckedUnwrap(obj);
-  if (!unwrapped) {
-    return false;
-  }
-  return unwrapped->is<WasmModuleObject>();
+  return obj->canUnwrapAs<WasmModuleObject>();
 }
 
 JS_PUBLIC_API RefPtr<JS::WasmModule> JS::GetWasmModule(HandleObject obj) {
   MOZ_ASSERT(JS::IsWasmModuleObject(obj));
-  return const_cast<wasm::Module*>(
-      &CheckedUnwrap(obj)->as<WasmModuleObject>().module());
+  WasmModuleObject& mobj = obj->unwrapAs<WasmModuleObject>();
+  return const_cast<wasm::Module*>(&mobj.module());
 }
 
 JS_PUBLIC_API RefPtr<JS::WasmModule> JS::DeserializeWasmModule(
