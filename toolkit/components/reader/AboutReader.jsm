@@ -66,7 +66,7 @@ var AboutReader = function(mm, win, articlePromise) {
   doc.addEventListener("click", this);
 
   win.addEventListener("pagehide", this);
-  win.addEventListener("scroll", this);
+  win.addEventListener("mozvisualscroll", this, { mozSystemGroup: true });
   win.addEventListener("resize", this);
 
   Services.obs.addObserver(this, "inner-window-destroyed");
@@ -249,14 +249,15 @@ AboutReader.prototype = {
           this._closeDropdowns();
         }
         break;
-      case "scroll":
+      case "mozvisualscroll":
         this._closeDropdowns(true);
-        if (!gIsFirefoxDesktop && this._scrollOffset != aEvent.pageY) {
-          let isScrollingUp = this._scrollOffset > aEvent.pageY;
+        const vv = aEvent.originalTarget; // VisualViewport
+        if (!gIsFirefoxDesktop && this._scrollOffset != vv.pageTop) {
+          let isScrollingUp = this._scrollOffset > vv.pageTop;
           this._setSystemUIVisibility(isScrollingUp);
           this._setToolbarVisibility(isScrollingUp);
         }
-        this._scrollOffset = aEvent.pageY;
+        this._scrollOffset = vv.pageTop;
         break;
       case "resize":
         this._updateImageMargins();
