@@ -674,11 +674,19 @@ void nsContainerFrame::SyncFrameViewAfterReflow(
   }
 }
 
-static nscoord GetCoord(const nsStyleCoord& aCoord, nscoord aIfNotCoord) {
+static nscoord GetCoord(const LengthPercentage& aCoord, nscoord aIfNotCoord) {
   if (aCoord.ConvertsToLength()) {
-    return aCoord.ComputeCoordPercentCalc(0);
+    return aCoord.ToLength();
   }
   return aIfNotCoord;
+}
+
+static nscoord GetCoord(const LengthPercentageOrAuto& aCoord,
+                        nscoord aIfNotCoord) {
+  if (aCoord.IsAuto()) {
+    return aIfNotCoord;
+  }
+  return GetCoord(aCoord.AsLengthPercentage(), aIfNotCoord);
 }
 
 void nsContainerFrame::DoInlineIntrinsicISize(

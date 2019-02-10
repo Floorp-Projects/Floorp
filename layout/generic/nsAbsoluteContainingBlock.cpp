@@ -218,13 +218,13 @@ void nsAbsoluteContainingBlock::Reflow(nsContainerFrame* aDelegatingFrame,
   aReflowStatus.MergeCompletionStatusFrom(reflowStatus);
 }
 
-static inline bool IsFixedPaddingSize(const nsStyleCoord& aCoord) {
+static inline bool IsFixedPaddingSize(const LengthPercentage& aCoord) {
   return aCoord.ConvertsToLength();
 }
-static inline bool IsFixedMarginSize(const nsStyleCoord& aCoord) {
+static inline bool IsFixedMarginSize(const LengthPercentageOrAuto& aCoord) {
   return aCoord.ConvertsToLength();
 }
-static inline bool IsFixedOffset(const nsStyleCoord& aCoord) {
+static inline bool IsFixedOffset(const LengthPercentageOrAuto& aCoord) {
   return aCoord.ConvertsToLength();
 }
 
@@ -243,10 +243,10 @@ bool nsAbsoluteContainingBlock::FrameDependsOnContainer(nsIFrame* f,
   //    whichever of them is not auto and the width).
   // See ReflowInput::InitAbsoluteConstraints -- these are the
   // only cases when we call CalculateHypotheticalBox().
-  if ((pos->mOffset.GetTopUnit() == eStyleUnit_Auto &&
-       pos->mOffset.GetBottomUnit() == eStyleUnit_Auto) ||
-      (pos->mOffset.GetLeftUnit() == eStyleUnit_Auto &&
-       pos->mOffset.GetRightUnit() == eStyleUnit_Auto)) {
+  if ((pos->mOffset.Get(eSideTop).IsAuto() &&
+       pos->mOffset.Get(eSideBottom).IsAuto()) ||
+      (pos->mOffset.Get(eSideLeft).IsAuto() ||
+       pos->mOffset.Get(eSideRight).IsAuto())) {
     return true;
   }
   if (!aCBWidthChanged && !aCBHeightChanged) {
@@ -288,8 +288,8 @@ bool nsAbsoluteContainingBlock::FrameDependsOnContainer(nsIFrame* f,
     // Note that borders never depend on the parent bsize.
     if ((pos->BSizeDependsOnContainer(wm) &&
          !(pos->BSize(wm).GetUnit() == eStyleUnit_Auto &&
-           pos->mOffset.GetBEndUnit(wm) == eStyleUnit_Auto &&
-           pos->mOffset.GetBStartUnit(wm) != eStyleUnit_Auto)) ||
+           pos->mOffset.GetBEnd(wm).IsAuto() &&
+           !pos->mOffset.GetBStart(wm).IsAuto())) ||
         pos->MinBSizeDependsOnContainer(wm) ||
         pos->MaxBSizeDependsOnContainer(wm) ||
         !IsFixedPaddingSize(padding->mPadding.GetBStart(wm)) ||
@@ -311,7 +311,7 @@ bool nsAbsoluteContainingBlock::FrameDependsOnContainer(nsIFrame* f,
   // sides (left and top) that we use to store coordinates, these tests
   // are easier to do using physical coordinates rather than logical.
   if (aCBWidthChanged) {
-    if (!IsFixedOffset(pos->mOffset.GetLeft())) {
+    if (!IsFixedOffset(pos->mOffset.Get(eSideLeft))) {
       return true;
     }
     // Note that even if 'left' is a length, our position can still
@@ -323,17 +323,17 @@ bool nsAbsoluteContainingBlock::FrameDependsOnContainer(nsIFrame* f,
     // sure of.
     if ((wm.GetInlineDir() == WritingMode::eInlineRTL ||
          wm.GetBlockDir() == WritingMode::eBlockRL) &&
-        pos->mOffset.GetRightUnit() != eStyleUnit_Auto) {
+        !pos->mOffset.Get(eSideRight).IsAuto()) {
       return true;
     }
   }
   if (aCBHeightChanged) {
-    if (!IsFixedOffset(pos->mOffset.GetTop())) {
+    if (!IsFixedOffset(pos->mOffset.Get(eSideTop))) {
       return true;
     }
     // See comment above for width changes.
     if (wm.GetInlineDir() == WritingMode::eInlineBTT &&
-        pos->mOffset.GetBottomUnit() != eStyleUnit_Auto) {
+        !pos->mOffset.Get(eSideBottom).IsAuto()) {
       return true;
     }
   }

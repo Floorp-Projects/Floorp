@@ -1866,11 +1866,12 @@ bool BuildTextRunsScanner::ContinueTextRunAcrossFrames(nsTextFrame* aFrame1,
         //
         // 1. Any of margin/border/padding separating the two typographic
         //    character units in the inline axis is non-zero.
-        const nsStyleCoord& margin = ctx->StyleMargin()->mMargin.Get(aSide);
-        if (!margin.ConvertsToLength() || margin.ToLength() != 0) {
+        const auto& margin = ctx->StyleMargin()->mMargin.Get(aSide);
+        if (!margin.ConvertsToLength() ||
+            margin.AsLengthPercentage().ToLength() != 0) {
           return true;
         }
-        const nsStyleCoord& padding = ctx->StylePadding()->mPadding.Get(aSide);
+        const auto& padding = ctx->StylePadding()->mPadding.Get(aSide);
         if (!padding.ConvertsToLength() || padding.ToLength() != 0) {
           return true;
         }

@@ -201,9 +201,8 @@ use style::use_counters::UseCounters;
 use style::values::animated::{Animate, Procedure, ToAnimatedZero};
 use style::values::computed::{self, Context, QuotePair, ToComputedValue};
 use style::values::distance::ComputeSquaredDistance;
-use style::values::generics::rect::Rect;
 use style::values::specified;
-use style::values::specified::gecko::{IntersectionObserverRootMargin, PixelOrPercentage};
+use style::values::specified::gecko::IntersectionObserverRootMargin;
 use style::values::specified::source_size_list::SourceSizeList;
 use style::values::{CustomIdent, KeyframesName};
 use style_traits::{CssType, CssWriter, ParsingMode, StyleParseErrorKind, ToCss};
@@ -4437,8 +4436,9 @@ pub extern "C" fn Servo_DeclarationBlock_SetPixelValue(
     use style::properties::{LonghandId, PropertyDeclaration};
     use style::values::generics::length::MozLength;
     use style::values::generics::NonNegative;
+    use style::values::generics::length::LengthPercentageOrAuto;
     use style::values::specified::length::NonNegativeLengthPercentage;
-    use style::values::specified::length::{LengthPercentage, LengthPercentageOrAuto};
+    use style::values::specified::length::{LengthPercentage};
     use style::values::specified::length::{NoCalcLength, NonNegativeLength};
     use style::values::specified::{BorderCornerRadius, BorderSideWidth};
 
@@ -4447,8 +4447,8 @@ pub extern "C" fn Servo_DeclarationBlock_SetPixelValue(
     let lp = LengthPercentage::Length(nocalc);
     let lp_or_auto = LengthPercentageOrAuto::LengthPercentage(lp.clone());
     let prop = match_wrap_declared! { long,
-        Height => MozLength::LengthPercentageOrAuto(lp_or_auto),
-        Width => MozLength::LengthPercentageOrAuto(lp_or_auto),
+        Height => MozLength::LengthPercentage(NonNegative(lp)),
+        Width => MozLength::LengthPercentage(NonNegative(lp)),
         BorderTopWidth => BorderSideWidth::Length(nocalc.into()),
         BorderRightWidth => BorderSideWidth::Length(nocalc.into()),
         BorderBottomWidth => BorderSideWidth::Length(nocalc.into()),
@@ -4496,10 +4496,11 @@ pub extern "C" fn Servo_DeclarationBlock_SetLengthValue(
 ) {
     use style::properties::longhands::_moz_script_min_size::SpecifiedValue as MozScriptMinSize;
     use style::properties::{LonghandId, PropertyDeclaration};
+    use style::values::generics::NonNegative;
     use style::values::generics::length::MozLength;
     use style::values::specified::length::NoCalcLength;
     use style::values::specified::length::{AbsoluteLength, FontRelativeLength};
-    use style::values::specified::length::{LengthPercentage, LengthPercentageOrAuto};
+    use style::values::specified::length::LengthPercentage;
 
     let long = get_longhand_from_id!(property);
     let nocalc = match unit {
@@ -4524,9 +4525,7 @@ pub extern "C" fn Servo_DeclarationBlock_SetLengthValue(
     };
 
     let prop = match_wrap_declared! { long,
-        Width => MozLength::LengthPercentageOrAuto(LengthPercentageOrAuto::LengthPercentage(
-                LengthPercentage::Length(nocalc)
-        )),
+        Width => MozLength::LengthPercentage(NonNegative(LengthPercentage::Length(nocalc))),
         FontSize => LengthPercentage::from(nocalc).into(),
         MozScriptMinSize => MozScriptMinSize(nocalc),
     };
@@ -4565,16 +4564,18 @@ pub extern "C" fn Servo_DeclarationBlock_SetPercentValue(
 ) {
     use style::properties::{LonghandId, PropertyDeclaration};
     use style::values::computed::Percentage;
-    use style::values::generics::length::MozLength;
-    use style::values::specified::length::{LengthPercentage, LengthPercentageOrAuto};
+    use style::values::generics::NonNegative;
+    use style::values::generics::length::{MozLength, LengthPercentageOrAuto};
+    use style::values::specified::length::LengthPercentage;
 
     let long = get_longhand_from_id!(property);
     let pc = Percentage(value);
-    let lp_or_auto = LengthPercentageOrAuto::LengthPercentage(LengthPercentage::Percentage(pc));
+    let lp = LengthPercentage::Percentage(pc);
+    let lp_or_auto = LengthPercentageOrAuto::LengthPercentage(lp.clone());
 
     let prop = match_wrap_declared! { long,
-        Height => MozLength::LengthPercentageOrAuto(lp_or_auto),
-        Width => MozLength::LengthPercentageOrAuto(lp_or_auto),
+        Height => MozLength::LengthPercentage(NonNegative(lp)),
+        Width => MozLength::LengthPercentage(NonNegative(lp)),
         MarginTop => lp_or_auto,
         MarginRight => lp_or_auto,
         MarginBottom => lp_or_auto,
@@ -4592,7 +4593,7 @@ pub extern "C" fn Servo_DeclarationBlock_SetAutoValue(
     property: nsCSSPropertyID,
 ) {
     use style::properties::{LonghandId, PropertyDeclaration};
-    use style::values::specified::{LengthPercentageOrAuto, MozLength};
+    use style::values::generics::length::{LengthPercentageOrAuto, MozLength};
 
     let long = get_longhand_from_id!(property);
     let auto = LengthPercentageOrAuto::Auto;
@@ -6002,7 +6003,7 @@ pub extern "C" fn Servo_ComputeColor(
 #[no_mangle]
 pub unsafe extern "C" fn Servo_IntersectionObserverRootMargin_Parse(
     value: *const nsAString,
-    result: *mut structs::nsStyleSides,
+    result: *mut IntersectionObserverRootMargin,
 ) -> bool {
     let value = value.as_ref().unwrap().to_string();
     let result = result.as_mut().unwrap();
@@ -6024,7 +6025,7 @@ pub unsafe extern "C" fn Servo_IntersectionObserverRootMargin_Parse(
     let margin = parser.parse_entirely(|p| IntersectionObserverRootMargin::parse(&context, p));
     match margin {
         Ok(margin) => {
-            margin.0.to_gecko_rect(result);
+            *result = margin;
             true
         },
         Err(..) => false,
@@ -6033,13 +6034,11 @@ pub unsafe extern "C" fn Servo_IntersectionObserverRootMargin_Parse(
 
 #[no_mangle]
 pub unsafe extern "C" fn Servo_IntersectionObserverRootMargin_ToString(
-    rect: *const structs::nsStyleSides,
+    root_margin: *const IntersectionObserverRootMargin,
     result: *mut nsAString,
 ) {
-    let rect = Rect::<PixelOrPercentage>::from_gecko_rect(rect.as_ref().unwrap()).unwrap();
-    let root_margin = IntersectionObserverRootMargin(rect);
-    let mut writer = CssWriter::new(result.as_mut().unwrap());
-    root_margin.to_css(&mut writer).unwrap();
+    let mut writer = CssWriter::new(&mut *result);
+    (*root_margin).to_css(&mut writer).unwrap();
 }
 
 #[no_mangle]

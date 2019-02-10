@@ -933,11 +933,12 @@ bool Servo_ComputeColor(RawServoStyleSetBorrowedOrNull set,
                         nscolor* result_color, bool* was_current_color,
                         mozilla::css::Loader* loader);
 
-bool Servo_IntersectionObserverRootMargin_Parse(const nsAString* value,
-                                                nsStyleSides* result);
+bool Servo_IntersectionObserverRootMargin_Parse(
+    const nsAString* value,
+    mozilla::StyleIntersectionObserverRootMargin* result);
 
-void Servo_IntersectionObserverRootMargin_ToString(const nsStyleSides* rect,
-                                                   nsAString* result);
+void Servo_IntersectionObserverRootMargin_ToString(
+    const mozilla::StyleIntersectionObserverRootMargin*, nsAString* result);
 
 // Returning false means the parsed transform contains relative lengths or
 // percentage value, so we cannot compute the matrix. In this case, we keep

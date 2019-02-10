@@ -212,8 +212,7 @@ void nsLineLayout::BeginLineReflow(nscoord aICoord, nscoord aBCoord,
 
   if (0 == mLineNumber && !HasPrevInFlow(mBlockReflowInput->mFrame)) {
     nscoord pctBasis = mBlockReflowInput->ComputedISize();
-    mTextIndent = nsLayoutUtils::ResolveToLength<false>(mStyleText->mTextIndent,
-                                                        pctBasis);
+    mTextIndent = mStyleText->mTextIndent.Resolve(pctBasis);
     psd->mICoord += mTextIndent;
   }
 
@@ -667,11 +666,9 @@ bool nsLineLayout::LineIsBreakable() const {
 // only be used for things (margin, padding) where percentages on top
 // and bottom depend on the *width* just like percentages on left and
 // right.
-static bool HasPercentageUnitSide(const nsStyleSides& aSides) {
-  NS_FOR_CSS_SIDES(side) {
-    if (aSides.Get(side).HasPercent()) return true;
-  }
-  return false;
+template <typename T>
+static bool HasPercentageUnitSide(const StyleRect<T>& aSides) {
+  return aSides.Any([](const auto& aLength) { return aLength.HasPercent(); });
 }
 
 static bool IsPercentageAware(const nsIFrame* aFrame, WritingMode aWM) {
