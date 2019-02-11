@@ -105,17 +105,31 @@ class ChangesView {
 
   /**
    * Handler for the "Copy Changes" option from the context menu.
-   * Builds a CSS text with the changes aggregated for the target rule and copies it to
-   * the clipboard.
+   * Builds a CSS text with the aggregated changes and copies it to the clipboard.
    *
-   * @param {String} ruleId
-   *        Rule id of the target rule.
-   * @param {String} sourceId
-   *        Source id of the target rule.
+   * Optional rule and source ids can be used to filter the scope of the operation:
+   * - if both a rule id and source id are provided, copy only the changes to the
+   * matching rule within the matching source.
+   * - if only a source id is provided, copy the changes to all rules within the
+   * matching source.
+   * - if neither rule id nor source id are provided, copy the changes too all rules
+   * within all sources.
+   *
+   * @param {String|null} ruleId
+   *        Optional rule id.
+   * @param {String|null} sourceId
+   *        Optional source id.
    */
   copyChanges(ruleId, sourceId) {
     const state = this.store.getState().changes || {};
-    const filter = { ruleIds: [ruleId], sourceIds: [sourceId] };
+    const filter = {};
+    if (ruleId) {
+      filter.ruleIds = [ruleId];
+    }
+    if (sourceId) {
+      filter.sourceIds = [sourceId];
+    }
+
     const text = getChangesStylesheet(state, filter);
     clipboardHelper.copyString(text);
   }
