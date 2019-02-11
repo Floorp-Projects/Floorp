@@ -28,12 +28,13 @@ add_task(async function() {
   // first reverse step takes us to the start of that line.
   await reverseStepOverToLine(threadClient, 19);
   await reverseStepOverToLine(threadClient, 18);
-  await setBreakpoint(threadClient, "doc_rr_error.html", 12);
+  const bp = await setBreakpoint(threadClient, "doc_rr_error.html", 12);
   await rewindToLine(threadClient, 12);
   await checkEvaluateInTopFrame(threadClient, "number", 4);
   await resumeToLine(threadClient, 12);
   await checkEvaluateInTopFrame(threadClient, "number", 5);
 
+  await threadClient.removeBreakpoint(bp);
   await toolbox.destroy();
   await gBrowser.removeTab(tab);
 });

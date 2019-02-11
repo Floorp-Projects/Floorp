@@ -249,9 +249,9 @@ function waitForProperty(dbg, property) {
   });
 }
 
-function setBreakpoint(sourceClient, location) {
+function setBreakpoint(threadClient, location) {
   dump("Setting breakpoint.\n");
-  return sourceClient.setBreakpoint(location);
+  return threadClient.setBreakpoint(location, {});
 }
 
 function getPrototypeAndProperties(objClient) {

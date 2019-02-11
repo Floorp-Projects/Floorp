@@ -9,6 +9,17 @@ const threadSpec = generateActorSpec({
   typeName: "context",
 
   methods: {
+    setBreakpoint: {
+      request: {
+        location: Arg(0, "json"),
+        options: Arg(1, "json"),
+      },
+    },
+    removeBreakpoint: {
+      request: {
+        location: Arg(0, "json"),
+      },
+    },
     setXHRBreakpoint: {
       request: {
         path: Arg(0, "string"),

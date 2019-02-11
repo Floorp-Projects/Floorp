@@ -49,8 +49,9 @@ async function setBreakpoint(threadClient, expectedFile, lineno) {
   const {sources} = await threadClient.getSources();
   ok(sources.length == 1, "Got one source");
   ok(RegExp(expectedFile).test(sources[0].url), "Source is " + expectedFile);
-  const sourceClient = threadClient.source(sources[0]);
-  await sourceClient.setBreakpoint({ line: lineno });
+  const location = { sourceUrl: sources[0].url, line: lineno };
+  await threadClient.setBreakpoint(location, {});
+  return location;
 }
 
 function resumeThenPauseAtLineFunctionFactory(method) {
@@ -142,3 +143,8 @@ async function warpToMessage(hud, threadClient, text) {
 
   return message;
 }
+
+const { PromiseTestUtils } = scopedCuImport(
+  "resource://testing-common/PromiseTestUtils.jsm"
+);
+PromiseTestUtils.whitelistRejectionsGlobally(/NS_ERROR_NOT_INITIALIZED/);

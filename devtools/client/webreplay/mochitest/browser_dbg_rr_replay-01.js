@@ -29,7 +29,7 @@ add_task(async function() {
 
   const toolbox = await attachDebugger(replayingTab), client = toolbox.threadClient;
   await client.interrupt();
-  await setBreakpoint(client, "doc_rr_basic.html", 21);
+  const bp = await setBreakpoint(client, "doc_rr_basic.html", 21);
   await rewindToLine(client, 21);
   await checkEvaluateInTopFrame(client, "number", 10);
   await rewindToLine(client, 21);
@@ -37,6 +37,7 @@ add_task(async function() {
   await resumeToLine(client, 21);
   await checkEvaluateInTopFrame(client, "number", 10);
 
+  await client.removeBreakpoint(bp);
   await toolbox.destroy();
   await gBrowser.removeTab(recordingTab);
   await gBrowser.removeTab(replayingTab);

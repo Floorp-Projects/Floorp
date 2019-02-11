@@ -31,8 +31,8 @@ function run_test() {
     const { sources } = await getSources(threadClient);
     const sourceClient = threadClient.source(sources[0]);
 
-    await setBreakpoint(sourceClient, { line: 7 });
-    await setBreakpoint(sourceClient, { line: 11 });
+    await setBreakpoint(threadClient, { sourceUrl: sourceClient.url, line: 7 });
+    await setBreakpoint(threadClient, { sourceUrl: sourceClient.url, line: 11 });
 
     // 1. lets blackbox function a, and assert that we pause in b
     const range = {start: { line: 6, column: 0 }, end: { line: 8, colum: 1 }};

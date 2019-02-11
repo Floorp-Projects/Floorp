@@ -11,7 +11,6 @@
 var gDebuggee;
 var gClient;
 var gThreadClient;
-var gBpClient;
 
 function run_test() {
   initTestDebuggerServer();
@@ -33,8 +32,7 @@ const SOURCE_URL = "http://example.com/source.js";
 function test_black_box() {
   gClient.addOneTimeListener("paused", async function(event, packet) {
     const source = await getSourceById(gThreadClient, packet.frame.where.actor);
-    const [, bpClient] = await source.setBreakpoint({ line: 4 });
-    gBpClient = bpClient;
+    gThreadClient.setBreakpoint({ sourceUrl: source.url, line: 4 }, {});
     await gThreadClient.resume();
     test_black_box_dbg_statement();
   });
@@ -79,7 +77,9 @@ function test_black_box_dbg_statement() {
       Assert.equal(packet.why.type, "breakpoint",
                    "We should pass over the debugger statement.");
 
-      await gBpClient.remove();
+      const source = await getSourceById(gThreadClient, packet.frame.where.actor);
+      gThreadClient.removeBreakpoint({ sourceUrl: source.url, line: 4 }, {});
+
       await gThreadClient.resume();
       await test_unblack_box_dbg_statement(sourceClient);
     });
