@@ -728,17 +728,14 @@ inline nsresult NS_GetInnermostURIHost(nsIURI *aURI, nsACString &aHost) {
   // This block is optimized in order to avoid the overhead of calling
   // NS_GetInnermostURI() which incurs a lot of overhead in terms of
   // AddRef/Release calls.
-  nsINestedURI *nestedURI = nullptr;
-  nsresult rv = CallQueryInterface(aURI, &nestedURI);
-  if (NS_SUCCEEDED(rv)) {
+  nsCOMPtr<nsINestedURI> nestedURI = do_QueryInterface(aURI);
+  if (nestedURI) {
     // We have a nested URI!
     nsCOMPtr<nsIURI> uri;
-    rv = nestedURI->GetInnermostURI(getter_AddRefs(uri));
+    nsresult rv = nestedURI->GetInnermostURI(getter_AddRefs(uri));
     if (NS_FAILED(rv)) {
       return rv;
     }
-
-    NS_RELEASE(nestedURI);
 
     rv = uri->GetAsciiHost(aHost);
     if (NS_FAILED(rv)) {
@@ -746,7 +743,7 @@ inline nsresult NS_GetInnermostURIHost(nsIURI *aURI, nsACString &aHost) {
     }
   } else {
     // We have a non-nested URI!
-    rv = aURI->GetAsciiHost(aHost);
+    nsresult rv = aURI->GetAsciiHost(aHost);
     if (NS_FAILED(rv)) {
       return rv;
     }
