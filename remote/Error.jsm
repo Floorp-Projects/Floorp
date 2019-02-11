@@ -7,6 +7,7 @@
 var EXPORTED_SYMBOLS = [
   "FatalError",
   "UnsupportedError",
+  "formatError",
 ];
 
 const {Log} = ChromeUtils.import("chrome://remote/content/Log.jsm");
