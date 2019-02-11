@@ -1415,6 +1415,13 @@ class alignas(JS::Value) PrivateScriptData final {
                                  uint32_t ntrynotes, uint32_t nscopenotes,
                                  uint32_t nresumeoffsets, uint32_t* dataSize);
 
+  template <XDRMode mode>
+  static MOZ_MUST_USE XDRResult XDR(js::XDRState<mode>* xdr,
+                                    js::HandleScript script,
+                                    js::HandleScriptSourceObject sourceObject,
+                                    js::HandleScope scriptEnclosingScope,
+                                    js::HandleFunction fun);
+
   void traceChildren(JSTracer* trc);
 };
 
@@ -1818,6 +1825,12 @@ class JSScript : public js::gc::TenuredCell {
   template <js::XDRMode mode>
   friend js::XDRResult js::SharedScriptData::XDR(js::XDRState<mode>* xdr,
                                                  js::HandleScript script);
+
+  template <js::XDRMode mode>
+  friend js::XDRResult js::PrivateScriptData::XDR(
+      js::XDRState<mode>* xdr, js::HandleScript script,
+      js::HandleScriptSourceObject sourceObject,
+      js::HandleScope scriptEnclosingScope, js::HandleFunction fun);
 
   friend bool js::detail::CopyScript(
       JSContext* cx, js::HandleScript src, js::HandleScript dst,
