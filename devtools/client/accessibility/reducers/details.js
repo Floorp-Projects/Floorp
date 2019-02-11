@@ -39,12 +39,12 @@ function onUpdateDetails(state, action) {
     return state;
   }
 
-  const [ DOMNode, relationObjects, audit ] = response;
+  const [ DOMNode, relationObjects ] = response;
   const relations = {};
   relationObjects.forEach(({ type, targets }) => {
     relations[type] = targets.length === 1 ? targets[0] : targets;
   });
-  return { accessible, DOMNode, relations, audit };
+  return { accessible, DOMNode, relations };
 }
 
 exports.details = details;

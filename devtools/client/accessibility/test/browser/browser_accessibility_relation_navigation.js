@@ -18,7 +18,7 @@ const TEST_URI = `<html>
  * Test data has the format of:
  * {
  *   desc     {String}    description for better logging
- *   setup   {Function}  An optional setup that needs to be performed before
+ *   action   {Function}  An optional action that needs to be performed before
  *                        the state of the tree and the sidebar can be checked.
  *   expected {JSON}      An expected states for the tree and the sidebar.
  * }
@@ -44,7 +44,7 @@ const tests = [{
   },
 }, {
   desc: "Expand first tree node.",
-  setup: async ({ doc }) => toggleRow(doc, 0),
+  action: async ({ doc }) => toggleRow(doc, 0),
   expected: {
     tree: [{
       role: "document",
@@ -59,7 +59,7 @@ const tests = [{
   },
 }, {
   desc: "Select second tree node.",
-  setup: async ({ doc }) => selectRow(doc, 1),
+  action: async ({ doc }) => selectRow(doc, 1),
   expected: {
     sidebar: {
       name: "Top level header",
@@ -81,7 +81,7 @@ const tests = [{
   },
 }, {
   desc: "Select containing document.",
-  setup: async ({ doc, win }) => {
+  action: async ({ doc, win }) => {
     const relations = await selectProperty(doc, "/relations");
     EventUtils.sendMouseEvent({ type: "click" }, relations.querySelector(".arrow"), win);
     const containingDocRelation =

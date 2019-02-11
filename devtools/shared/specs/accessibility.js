@@ -80,12 +80,6 @@ const accessibleSpec = generateActorSpec({
   },
 
   methods: {
-    audit: {
-      request: {},
-      response: {
-        audit: RetVal("nullable:json"),
-      },
-    },
     children: {
       request: {},
       response: {

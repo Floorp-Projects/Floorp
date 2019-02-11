@@ -15,7 +15,7 @@ const TEST_URI = `<html>
  * Test data has the format of:
  * {
  *   desc     {String}    description for better logging
- *   setup   {Function}  An optional setup that needs to be performed before
+ *   action   {Function}  An optional action that needs to be performed before
  *                        the state of the tree and the sidebar can be checked.
  *   expected {JSON}      An expected states for the tree and the sidebar.
  * }
@@ -37,7 +37,7 @@ const tests = [{
   },
 }, {
   desc: "Mark document as disabled for accessibility.",
-  setup: async ({ browser }) => ContentTask.spawn(browser, {}, () =>
+  action: async ({ browser }) => ContentTask.spawn(browser, {}, () =>
     content.document.body.setAttribute("aria-disabled", true)),
   expected: {
     sidebar: {
@@ -46,7 +46,7 @@ const tests = [{
   },
 }, {
   desc: "Append a new child to the document.",
-  setup: async ({ browser }) => ContentTask.spawn(browser, {}, () => {
+  action: async ({ browser }) => ContentTask.spawn(browser, {}, () => {
     const doc = content.document;
     const button = doc.createElement("button");
     button.textContent = "Press Me!";

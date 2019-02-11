@@ -80,7 +80,6 @@ cp build/dist/react-dom.development.js <gecko-dev>/devtools/client/shared/vendor
 cp build/dist/react-dom-server.browser.development.js <gecko-dev>/devtools/client/shared/vendor/react-dom-server-dev.js
 cp build/dist/react-dom-test-utils.development.js <gecko-dev>/devtools/client/shared/vendor/react-dom-test-utils-dev.js
 cp build/dist/react-test-renderer-shallow.production.min.js <gecko-dev>/devtools/client/shared/vendor/react-test-renderer-shallow.js
-cp build/dist/react-test-renderer.production.min.js <gecko-dev>/devtools/client/shared/vendor/react-test-renderer.js
 ```
 
 From this point we will no longer need your react repository so feel free to delete it.

@@ -7,8 +7,6 @@ DevToolsModules(
     'AccessibilityTree.js',
     'Accessible.js',
     'Button.js',
-    'Checks.js',
-    'ColorContrastAccessibility.js',
     'Description.js',
     'LearnMoreLink.js',
     'MainFrame.js',
