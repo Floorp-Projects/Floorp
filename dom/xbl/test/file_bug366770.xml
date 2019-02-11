@@ -4,7 +4,7 @@
     <content>PASS</content>
     <implementation>
       <constructor>
-        var win = XPCNativeWrapper.unwrap(window);
+        var win = window;
         win.document.bindingConstructorRan = true;
         win.ok(true, "binding URI with no fragment applied");
         win.SimpleTest.finish();

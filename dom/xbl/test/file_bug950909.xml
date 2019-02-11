@@ -4,12 +4,9 @@
     <implementation implements="nsIObserver">
       <constructor>
       <![CDATA[
-        // This binding gets applied to a content object, and thus is actually
-        // running in a content XBL scope.
-        var win = XPCNativeWrapper.unwrap(window);
+        var win = window;
         var SpecialPowers = win.SpecialPowers;
         var ok = SpecialPowers.unwrap(SpecialPowers.wrap(window).parent.ok);
-        ok(win != window, "Should be running in an XBL scope with Xrays");
 
         // Generate an XPCWrappedJS for the reflector. We need to do this
         // explicitly with a testing helper, because we're converging on

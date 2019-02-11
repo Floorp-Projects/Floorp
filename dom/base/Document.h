@@ -4759,22 +4759,11 @@ inline mozilla::dom::Document* nsINode::GetOwnerDocument() const {
 
 inline nsINode* nsINode::OwnerDocAsNode() const { return OwnerDoc(); }
 
-// ShouldUseXBLScope is defined here as a template so that we can get the faster
-// version of IsInAnonymousSubtree if we're statically known to be an
-// nsIContent.  we could try defining ShouldUseXBLScope separately on nsINode
-// and nsIContent, but then we couldn't put its nsINode implementation here
-// (because this header does not include nsIContent) and we can't put it in
-// nsIContent.h, because the definition of nsIContent::IsInAnonymousSubtree is
-// in nsIContentInlines.h.  And then we get include hell from people trying to
-// call nsINode::GetParentObject but not including nsIContentInlines.h and with
-// no really good way to include it.
-template <typename T>
-inline bool ShouldUseXBLScope(const T* aNode) {
-  return aNode->IsInAnonymousSubtree();
+inline bool ShouldUseNACScope(const nsINode* aNode) {
+  return aNode->IsInNativeAnonymousSubtree();
 }
 
-template <typename T>
-inline bool ShouldUseUAWidgetScope(const T* aNode) {
+inline bool ShouldUseUAWidgetScope(const nsINode* aNode) {
   return aNode->IsInUAWidget();
 }
 
@@ -4782,8 +4771,8 @@ inline mozilla::dom::ParentObject nsINode::GetParentObject() const {
   mozilla::dom::ParentObject p(OwnerDoc());
   // Note that mReflectionScope is a no-op for chrome, and other places
   // where we don't check this value.
-  if (ShouldUseXBLScope(this)) {
-    p.mReflectionScope = mozilla::dom::ReflectionScope::XBL;
+  if (ShouldUseNACScope(this)) {
+    p.mReflectionScope = mozilla::dom::ReflectionScope::NAC;
   } else if (ShouldUseUAWidgetScope(this)) {
     p.mReflectionScope = mozilla::dom::ReflectionScope::UAWidget;
   }

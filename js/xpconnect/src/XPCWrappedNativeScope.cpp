@@ -79,15 +79,11 @@ XPCWrappedNativeScope::XPCWrappedNativeScope(JS::Compartment* aCompartment,
   // Determine whether we would allow an XBL scope in this situation.
   // In addition to being pref-controlled, we also disable XBL scopes for
   // remote XUL domains, _except_ if we have an additional pref override set.
+  //
+  // Note that we can't quite remove this yet, even though we never actually
+  // use XBL scopes, because some code (including the security manager) uses
+  // this boolean to make decisions that we rely on in our test infrastructure.
   mAllowContentXBLScope = !RemoteXULForbidsXBLScope(aFirstGlobal);
-
-  // Determine whether to use an XBL scope.
-  mUseContentXBLScope = mAllowContentXBLScope;
-  if (mUseContentXBLScope) {
-    const js::Class* clasp = js::GetObjectClass(aFirstGlobal);
-    mUseContentXBLScope =
-        !AccessCheck::isChrome(mCompartment) && !strcmp(clasp->name, "Window");
-  }
 }
 
 // static
@@ -206,58 +202,10 @@ JSObject* XPCWrappedNativeScope::EnsureContentXBLScope(JSContext* cx) {
   MOZ_ASSERT(strcmp(js::GetObjectClass(global)->name,
                     "nsXBLPrototypeScript compilation scope"));
 
-  // If this scope doesn't need an XBL scope, just return the global.
-  if (!mUseContentXBLScope) {
-    return global;
-  }
-
-  // Given the status of in-content XBL, release assert we have a single realm
-  // for now so we don't have to worry about the multiple-realms case.
-  // See bug 1515582.
-  js::AssertCompartmentHasSingleRealm(Compartment());
-
-  // If we already have a special XBL scope object, we know what to use.
-  if (mContentXBLScope) {
-    return mContentXBLScope;
-  }
-
-  // Set up the sandbox options. Note that we use the DOM global as the
-  // sandboxPrototype so that the XBL scope can access all the DOM objects
-  // it's accustomed to accessing.
-  //
-  // In general wantXrays shouldn't matter much here, but there are weird
-  // cases when adopting bound content between same-origin globals where a
-  // <destructor> in one content XBL scope sees anonymous content in another
-  // content XBL scope. When that happens, we hit LookupBindingMember for an
-  // anonymous element that lives in a content XBL scope, which isn't a tested
-  // or audited codepath. So let's avoid hitting that case by opting out of
-  // same-origin Xrays.
-  SandboxOptions options;
-  options.wantXrays = false;
-  options.wantComponents = false;
-  options.proto = global;
-  options.sameZoneAs = global;
-  options.isContentXBLScope = true;
-
-  // Use an ExpandedPrincipal to create asymmetric security.
-  nsIPrincipal* principal = xpc::GetObjectPrincipal(global);
-  MOZ_ASSERT(!nsContentUtils::IsExpandedPrincipal(principal));
-  nsTArray<nsCOMPtr<nsIPrincipal>> principalAsArray(1);
-  principalAsArray.AppendElement(principal);
-  RefPtr<ExpandedPrincipal> ep = ExpandedPrincipal::Create(
-      principalAsArray, principal->OriginAttributesRef());
-
-  // Create the sandbox.
-  RootedValue v(cx);
-  nsresult rv = CreateSandboxObject(
-      cx, &v, static_cast<nsIExpandedPrincipal*>(ep), options);
-  NS_ENSURE_SUCCESS(rv, nullptr);
-  mContentXBLScope = &v.toObject();
-
-  MOZ_ASSERT(xpc::IsInContentXBLScope(js::UncheckedUnwrap(mContentXBLScope)));
-
-  // Good to go!
-  return mContentXBLScope;
+  // We can probably remove EnsureContentXBLScope and clean up all its callers,
+  // but a bunch (all?) of those callers will just go away when we remove XBL
+  // support, so it's simpler to just leave it here as a no-op.
+  return global;
 }
 
 bool XPCWrappedNativeScope::AllowContentXBLScope(Realm* aRealm) {
@@ -307,16 +255,6 @@ bool AllowContentXBLScope(JS::Realm* realm) {
   JS::Compartment* comp = GetCompartmentForRealm(realm);
   XPCWrappedNativeScope* scope = CompartmentPrivate::Get(comp)->scope;
   return scope && scope->AllowContentXBLScope(realm);
-}
-
-bool UseContentXBLScope(JS::Realm* realm) {
-  JS::Compartment* comp = GetCompartmentForRealm(realm);
-  XPCWrappedNativeScope* scope = CompartmentPrivate::Get(comp)->scope;
-  return scope && scope->UseContentXBLScope();
-}
-
-void ClearContentXBLScope(JSObject* global) {
-  CompartmentPrivate::Get(global)->scope->ClearContentXBLScope();
 }
 
 } /* namespace xpc */
@@ -414,22 +352,10 @@ void XPCWrappedNativeScope::UpdateWeakPointersAfterGC() {
   // Update our pointer to the compartment in case we finalized all globals.
   if (js::gc::AllRealmsNeedSweep(mCompartment)) {
     mCompartment = nullptr;
-    JSContext* cx = dom::danger::GetJSContext();
-    mContentXBLScope.finalize(cx);
     GetWrappedNativeMap()->Clear();
     mWrappedNativeProtoMap->Clear();
     return;
   }
-
-#ifdef DEBUG
-  // These are traced, so no updates are necessary.
-  if (mContentXBLScope) {
-    JSObject* prev = mContentXBLScope.unbarrieredGet();
-    mContentXBLScope.updateWeakPointerAfterGC();
-    MOZ_ASSERT(prev == mContentXBLScope.unbarrieredGet());
-    MOZ_ASSERT_IF(prev, js::GetObjectCompartment(prev) == mCompartment);
-  }
-#endif
 
   // Sweep mWrappedNativeMap for dying flat JS objects. Moving has already
   // been handled by XPCWrappedNative::FlatJSObjectMoved.

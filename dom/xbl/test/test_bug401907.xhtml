@@ -11,7 +11,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=401907
     <binding id="binding">
       <implementation>
         <constructor>
-          var win = XPCNativeWrapper.unwrap(window);
+          var win = window;
           win.ok(true, "First binding with ID 'binding' should be used!");
           win.testRun = true;
           if (win.needsFinish) {
@@ -23,7 +23,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=401907
     <binding id="binding">
       <implementation>
         <constructor>
-          var win = XPCNativeWrapper.unwrap(window);
+          var win = window;
           win.ok(false, "First binding with ID 'binding' should be used!");
           win.testRun = true;
           if (win.needsFinish) {

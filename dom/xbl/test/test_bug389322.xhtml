@@ -17,7 +17,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=389322
                var success = true;
              }
              catch (e) { success = false; }
-             XPCNativeWrapper.unwrap(window).report("XBL fields", success)
+             window.report("XBL fields", success)
              return ""
            }())
         ]]></field>
@@ -28,7 +28,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=389322
                var success = true;
              }
              catch (e) { success = false; }
-             XPCNativeWrapper.unwrap(window).report("XBL property getters", success)
+             window.report("XBL property getters", success)
              return 1
            ]]></getter>
           <setter><![CDATA[
@@ -37,7 +37,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=389322
               var success = true
             }
             catch (e) { success = false }
-            XPCNativeWrapper.unwrap(window).report("XBL property setters", success)
+            window.report("XBL property setters", success)
             return val
           ]]></setter>
         </property>
@@ -49,7 +49,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=389322
 
             }
             catch (e) { success = false; }
-            XPCNativeWrapper.unwrap(window).report("XBL methods", success)
+            window.report("XBL methods", success)
           ]]></body>
         </method>
         <constructor><![CDATA[
@@ -61,7 +61,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=389322
             var success = true
           }
           catch (e) { success = false }
-          var win = XPCNativeWrapper.unwrap(window);
+          var win = window;
           win.report("XBL constructors", success)
         
           var ev = document.createEvent("Events")

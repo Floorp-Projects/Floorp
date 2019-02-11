@@ -1385,7 +1385,6 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 495385-2b.html 495385-2-
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 495385-2c.html 495385-2-ref.html # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 495385-2d.html 495385-2-ref.html # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 495385-2e.html 495385-2-ref.html # Bug 1392106
-pref(dom.use_xbl_scopes_for_remote_xul,true) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 495385-2f.xhtml 495385-2-ref.html # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 495385-2g.html 495385-2-ref.html # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 495385-2h.html 495385-2-ref.html # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 495385-2i.html 495385-2-ref.html # Bug 1392106

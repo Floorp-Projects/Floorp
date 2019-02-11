@@ -16,7 +16,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=526178
     <binding id="binding">
       <implementation>
         <constructor>
-          var win = XPCNativeWrapper.unwrap(window);
+          var win = window;
           win.logString += this.localName;
           win.bindingDone();
         </constructor>
