@@ -171,12 +171,17 @@ class JSErrorNotes {
   // Create a deep copy of notes.
   js::UniquePtr<JSErrorNotes> copy(JSContext* cx);
 
-  class iterator final
-      : public std::iterator<std::input_iterator_tag, js::UniquePtr<Note>> {
+  class iterator final {
    private:
     js::UniquePtr<Note>* note_;
 
    public:
+    using iterator_category = std::input_iterator_tag;
+    using value_type = js::UniquePtr<Note>;
+    using difference_type = ptrdiff_t;
+    using pointer = value_type*;
+    using reference = value_type&;
+
     explicit iterator(js::UniquePtr<Note>* note = nullptr) : note_(note) {}
 
     bool operator==(iterator other) const { return note_ == other.note_; }
