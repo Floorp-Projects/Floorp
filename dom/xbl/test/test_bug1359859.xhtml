@@ -9,11 +9,15 @@
       <binding id="testBinding">
         <implementation>
           <constructor>
-            XPCNativeWrapper.unwrap(window).running();
+            window.running();
             this.constructed = true;
+            SimpleTest.expectUncaughtException();
             throw new Error("Constructor threw");
           </constructor>
-          <field name="throwingField">throw new Error("field threw")</field>
+          <field name="throwingField">
+            SimpleTest.expectUncaughtException();
+            throw new Error("field threw")
+          </field>
           <field name="normalField">"hello"</field>
         </implementation>
       </binding>

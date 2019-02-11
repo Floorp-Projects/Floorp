@@ -5,8 +5,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=419527
 -->
 <head>
   <title>Test for Bug 419527</title>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
   <bindings xmlns="http://www.mozilla.org/xbl"
             xmlns:html="http://www.w3.org/1999/xhtml">
     <binding id="rangebinding">
@@ -14,14 +14,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=419527
       </content>
       <implementation>
         <constructor>
-          var win = XPCNativeWrapper.unwrap(window);
+          var win = window;
           var span = document.getAnonymousNodes(this)[0];
           win.ok(span.localName == "span", "Wrong anon node!");
           var range = document.createRange();
           range.selectNode(span.firstChild);
           win.ok(range.startContainer == span, "Wrong start container!");
           win.ok(range.endContainer == span, "Wrong end container!");
-          var newSubTree = XPCNativeWrapper(win.newSubTree);
+          var newSubTree = win.newSubTree;
           newSubTree.appendChild(this);
           range.setStart(newSubTree.firstChild, 0);
           win.ok(range.startContainer == newSubTree.firstChild,
