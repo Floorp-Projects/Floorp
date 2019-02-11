@@ -9,7 +9,6 @@ const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm")
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   ActorManagerParent: "resource://gre/modules/ActorManagerParent.jsm",
-  ConsoleServiceObserver: "chrome://remote/content/ConsoleServiceObserver.jsm",
   HttpServer: "chrome://remote/content/server/HTTPD.jsm",
   Log: "chrome://remote/content/Log.jsm",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
@@ -34,41 +33,10 @@ const DEFAULT_HOST = "localhost";
 const DEFAULT_PORT = 9222;
 const LOOPBACKS = ["localhost", "127.0.0.1", "::1"];
 
-const ACTORS = {
-  DOM: {
-    child: {
-      module: "chrome://remote/content/actor/DOMChild.jsm",
-      events: {
-        DOMContentLoaded: {},
-        DOMWindowCreated: {once: true},
-        pageshow: {mozSystemGroup: true},
-        pagehide: {mozSystemGroup: true},
-      },
-    },
-  },
-
-  Log: {
-    child: {
-      module: "chrome://remote/content/actor/LogChild.jsm",
-      observers: [
-        "console-api-log-event",
-      ],
-    },
-  },
-};
-
 class ParentRemoteAgent {
   constructor() {
     this.server = null;
     this.targets = new Targets();
-
-    // TODO(ato): We need a way to dynamically load actors,
-    // otherwise these actors may risk being instantiated
-    // without the remote agent running!
-    ActorManagerParent.addActors(ACTORS);
-    ActorManagerParent.flush();
-
-    this.consoleService = new ConsoleServiceObserver();
 
     this.tabs = new TabObserver({registerExisting: true});
     this.tabs.on("open", tab => this.targets.connect(tab.linkedBrowser));
@@ -127,7 +95,6 @@ class ParentRemoteAgent {
         Preferences.resetBranch(HTTPD);
         Preferences.reset(Object.keys(RecommendedPreferences));
 
-        this.consoleService.stop();
         this.tabs.stop();
         this.targets.clear();
       } catch (e) {
@@ -189,8 +156,6 @@ class ParentRemoteAgent {
 
     await Observer.once("sessionstore-windows-restored");
     await this.tabs.start();
-
-    this.consoleService.start();
 
     try {
       this.listen(addr);

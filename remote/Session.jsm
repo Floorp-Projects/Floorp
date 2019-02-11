@@ -15,14 +15,25 @@ class Session {
     this.connection = connection;
     this.target = target;
 
-    this.domains = new Domains(this);
+    this.browsingContext = target.browser.browsingContext;
+    this.messageManager = target.browser.messageManager;
+    this.messageManager.loadFrameScript("chrome://remote/content/frame-script.js", false);
+    this.messageManager.addMessageListener("remote-protocol:event", this);
+    this.messageManager.addMessageListener("remote-protocol:result", this);
+    this.messageManager.addMessageListener("remote-protocol:error", this);
 
     this.connection.onmessage = this.dispatch.bind(this);
   }
 
   destructor() {
     this.connection.onmessage = null;
-    this.domains.clear();
+
+    this.messageManager.sendAsyncMessage("remote-protocol:destroy", {
+      browsingContextId: this.browsingContext.id,
+    });
+    this.messageManager.removeMessageListener("remote-protocol:event", this);
+    this.messageManager.removeMessageListener("remote-protocol:result", this);
+    this.messageManager.removeMessageListener("remote-protocol:error", this);
   }
 
   async dispatch({id, method, params}) {
@@ -37,24 +48,32 @@ class Session {
       const [domainName, methodName] = split(method, ".", 1);
       assertSchema(domainName, methodName, params);
 
-      const inst = this.domains.get(domainName);
-      const methodFn = inst[methodName];
-      if (!methodFn || typeof methodFn != "function") {
-        throw new Error(`Method implementation of ${method} missing`);
-      }
-
-      const result = await methodFn.call(inst, params);
-      this.connection.send({id, result});
+      this.messageManager.sendAsyncMessage("remote-protocol:request", {
+        browsingContextId: this.browsingContext.id,
+        request: { id, domainName, methodName, params },
+      });
     } catch (e) {
       const error = formatError(e, {stack: true});
       this.connection.send({id, error});
     }
   }
 
-  // EventEmitter
-
-  onevent(eventName, params) {
-    this.connection.send({method: eventName, params});
+  receiveMessage({ name, data }) {
+    switch (name) {
+      case "remote-protocol:result":
+        this.connection.send({
+          id: data.id,
+          result: data.result,
+        });
+        break;
+      case "remote-protocol:event":
+        this.connection.send(data.event);
+        break;
+      case "remote-protocol:error":
+        const error = formatError(data.error, {stack: true});
+        this.connection.send({id: data.id, error});
+        break;
+    }
   }
 };
 
@@ -73,53 +92,6 @@ function assertSchema(domainName, methodName, params) {
     const {errorType, propertyName, propertyValue} = details;
     throw new TypeError(`${domainName}.${methodName} called ` +
         `with ${errorType} ${propertyName}: ${propertyValue}`);
-  }
-}
-
-class Domains extends Map {
-  constructor(session) {
-    super();
-    this.session = session;
-  }
-
-  get(name) {
-    let inst = super.get(name);
-    if (!inst) {
-      inst = this.new(name);
-      this.set(inst);
-    }
-    return inst;
-  }
-
-  set(domain) {
-    super.set(domain.name, domain);
-  }
-
-  new(name) {
-    const Cls = Domain[name];
-    if (!Cls) {
-      throw new Error("No such domain: " + name);
-    }
-
-    const inst = new Cls(this.session, this.session.target);
-    inst.on("*", this.session);
-
-    return inst;
-  }
-
-  delete(name) {
-    const inst = super.get(name);
-    if (inst) {
-      inst.off("*");
-      inst.destructor();
-      super.delete(inst.name);
-    }
-  }
-
-  clear() {
-    for (const domainName of this.keys()) {
-      this.delete(domainName);
-    }
   }
 }
 

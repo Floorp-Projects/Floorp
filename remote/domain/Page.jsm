@@ -21,18 +21,33 @@ class Page extends Domain {
     this.disable();
   }
 
+  QueryInterface(iid) {
+    if (iid.equals(Ci.nsIWebProgressListener) ||
+      iid.equals(Ci.nsISupportsWeakReference) ||
+      iid.equals(Ci.nsIObserver)) {
+      return this;
+    }
+    throw Cr.NS_ERROR_NO_INTERFACE;
+  }
+
   // commands
 
   async enable() {
     if (!this.enabled) {
       this.enabled = true;
-      Services.mm.addMessageListener("RemoteAgent:DOM:OnEvent", this);
+      this.chromeEventHandler.addEventListener("DOMContentLoaded", this,
+        {mozSystemGroup: true});
+      this.chromeEventHandler.addEventListener("pageshow", this,
+        {mozSystemGroup: true});
     }
   }
 
   disable() {
     if (this.enabled) {
-      Services.mm.removeMessageListener("RemoteAgent:DOM:OnEvent", this);
+      this.chromeEventHandler.removeEventListener("DOMContentLoaded", this,
+        {mozSystemGroup: true});
+      this.chromeEventHandler.removeEventListener("pageshow", this,
+        {mozSystemGroup: true});
       this.enabled = false;
     }
   }
@@ -45,18 +60,19 @@ class Page extends Domain {
     const opts = {
       loadFlags: transitionToLoadFlag(transitionType),
       referrerURI: referrer,
-      triggeringPrincipal: this.browser.contentPrincipal,
+      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
     };
-    this.browser.webNavigation.loadURI(url, opts);
+    this.docShell.QueryInterface(Ci.nsIWebNavigation);
+    this.docShell.loadURI(url, opts);
 
     return {frameId: "42"};
   }
 
   url() {
-    return this.browsrer.currentURI.spec;
+    return this.content.location.href;
   }
 
-  onDOMEvent({type}) {
+  handleEvent({type}) {
     const timestamp = Date.now();
 
     switch (type) {
@@ -66,20 +82,6 @@ class Page extends Domain {
 
     case "pageshow":
       this.emit("Page.loadEventFired", {timestamp});
-      break;
-    }
-  }
-
-  // nsIMessageListener
-
-  receiveMessage({target, name, data}) {
-    if (target !== this.target.browser) {
-      return;
-    }
-
-    switch (name) {
-    case "RemoteAgent:DOM:OnEvent":
-      this.onDOMEvent(data);
       break;
     }
   }
