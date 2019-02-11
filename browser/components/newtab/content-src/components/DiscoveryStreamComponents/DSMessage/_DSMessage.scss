@@ -1,0 +1,41 @@
+.ds-message {
+  margin: 8px 0 0;
+
+  .title {
+    display: flex;
+    align-items: center;
+
+    img {
+      width: 16px;
+      height: 16px;
+      margin: 0 6px 0 0;
+    }
+
+    span {
+      line-height: 24px;
+      font-size: 17px;
+      color: $grey-90;
+      font-weight: 600;
+    }
+  }
+
+  .subtitle {
+    line-height: 20px;
+    font-size: 14px;
+    color: $grey-50;
+    margin: 0;
+
+    span::after {
+      content: ' ';
+    }
+
+    a:hover,
+    a:focus {
+      text-decoration: underline;
+    }
+  }
+
+  .ds-hr {
+    margin: 16px 0 8px;
+  }
+}
