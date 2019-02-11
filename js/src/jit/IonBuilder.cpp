@@ -9156,6 +9156,21 @@ void IonBuilder::addTypedArrayLengthAndData(MDefinition* obj,
   }
 }
 
+MInstruction* IonBuilder::addTypedArrayByteOffset(MDefinition* obj) {
+  MInstruction* byteOffset;
+  if (TypedArrayObject* tarr = tryTypedArrayEmbedConstantElements(obj)) {
+    obj->setImplicitlyUsedUnchecked();
+
+    int32_t offset = AssertedCast<int32_t>(tarr->byteOffset());
+    byteOffset = MConstant::New(alloc(), Int32Value(offset));
+  } else {
+    byteOffset = MTypedArrayByteOffset::New(alloc(), obj);
+  }
+
+  current->add(byteOffset);
+  return byteOffset;
+}
+
 AbortReasonOr<Ok> IonBuilder::jsop_getelem_typed(MDefinition* obj,
                                                  MDefinition* index,
                                                  Scalar::Type arrayType) {

@@ -43,6 +43,9 @@ class TypedArrayObject : public ArrayBufferViewObject {
   static constexpr int lengthOffset() {
     return NativeObject::getFixedSlotOffset(LENGTH_SLOT);
   }
+  static constexpr int byteOffsetOffset() {
+    return NativeObject::getFixedSlotOffset(BYTEOFFSET_SLOT);
+  }
   static constexpr int dataOffset() {
     return NativeObject::getPrivateDataOffset(DATA_SLOT);
   }
@@ -147,6 +150,8 @@ class TypedArrayObject : public ArrayBufferViewObject {
   static constexpr uint32_t SINGLETON_BYTE_LENGTH = 1024 * 1024 * 10;
 
   static bool isOriginalLengthGetter(Native native);
+
+  static bool isOriginalByteOffsetGetter(Native native);
 
   static void finalize(FreeOp* fop, JSObject* obj);
   static size_t objectMoved(JSObject* obj, JSObject* old);
