@@ -244,6 +244,7 @@ function transformPageErrorPacket(packet) {
     messageText: pageError.errorMessage,
     stacktrace: pageError.stacktrace ? pageError.stacktrace : null,
     frame,
+    errorMessageName: pageError.errorMessageName,
     exceptionDocURL: pageError.exceptionDocURL,
     timeStamp: pageError.timeStamp,
     notes: pageError.notes,
@@ -275,6 +276,7 @@ function transformNetworkEventPacket(packet) {
 function transformEvaluationResultPacket(packet) {
   let {
     exceptionMessage,
+    errorMessageName,
     exceptionDocURL,
     exception,
     frame,
@@ -310,6 +312,7 @@ function transformEvaluationResultPacket(packet) {
     level,
     messageText: exceptionMessage,
     parameters: [parameter],
+    errorMessageName,
     exceptionDocURL,
     frame,
     timeStamp,

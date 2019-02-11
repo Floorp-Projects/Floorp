@@ -62,6 +62,7 @@ stubPreparedMessages.set(`ReferenceError: asdf is not defined`, new ConsoleMessa
     "column": 5
   },
   "groupId": null,
+  "errorMessageName": "JSMSG_NOT_DEFINED",
   "exceptionDocURL": "https://developer.mozilla.org/docs/Web/JavaScript/Reference/Errors/Not_defined?utm_source=mozilla&utm_medium=firefox-console-errors&utm_campaign=default",
   "userProvidedStyles": null,
   "notes": null,
@@ -101,6 +102,7 @@ stubPreparedMessages.set(`SyntaxError: redeclaration of let a`, new ConsoleMessa
     "column": 9
   },
   "groupId": null,
+  "errorMessageName": "JSMSG_REDECLARED_VAR",
   "userProvidedStyles": null,
   "notes": [
     {
@@ -159,6 +161,7 @@ stubPreparedMessages.set(`TypeError longString message`, new ConsoleMessage({
     "column": 7
   },
   "groupId": null,
+  "errorMessageName": "",
   "userProvidedStyles": null,
   "notes": null,
   "indent": 0,
@@ -180,6 +183,7 @@ stubPreparedMessages.set(`throw ""`, new ConsoleMessage({
   "stacktrace": null,
   "frame": null,
   "groupId": null,
+  "errorMessageName": "JSMSG_UNCAUGHT_EXCEPTION",
   "userProvidedStyles": null,
   "notes": null,
   "indent": 0,
@@ -201,6 +205,7 @@ stubPreparedMessages.set(`throw "tomato"`, new ConsoleMessage({
   "stacktrace": null,
   "frame": null,
   "groupId": null,
+  "errorMessageName": "JSMSG_UNCAUGHT_EXCEPTION",
   "userProvidedStyles": null,
   "notes": null,
   "indent": 0,
