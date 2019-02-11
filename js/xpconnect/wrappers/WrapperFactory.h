@@ -99,8 +99,6 @@ class WrapperFactory {
   static bool WaiveXrayAndWrap(JSContext* cx, JS::MutableHandleObject object);
 };
 
-extern const js::Wrapper XrayWaiver;
-
 }  // namespace xpc
 
 #endif /* _xpc_WRAPPERFACTORY_H */
