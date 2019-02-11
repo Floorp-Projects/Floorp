@@ -2473,23 +2473,24 @@ static void UpdateThreadFunc(void *param) {
         NS_tchar continueFilePath[MAXPATHLEN] = {NS_T('\0')};
         NS_tsnprintf(continueFilePath,
                      sizeof(continueFilePath) / sizeof(continueFilePath[0]),
-                     NS_T("%s/continueStaging"), gPatchDirPath);
+                     NS_T("%s/continueStaging"), gInstallDirPath);
         // Use 100 retries for staging requests to lessen the likelihood of
         // tests intermittently failing on debug builds due to launching the
         // updater. The total time to wait with the default interval of 100 ms
-        // is approximately 10 seconds. The tests use the same values.
-        const int max_retries = 100;
-        int retries = 1;
+        // is approximately 5 seconds. The total time for tests is longer to
+        // account for the extra time it takes for the updater to launch.
+        const int max_retries = 50;
+        int retries = 0;
         while (retries++ < max_retries) {
 #  ifdef XP_WIN
           Sleep(100);
 #  else
           usleep(100000);
 #  endif
-          // Continue after the continue file exists and it is successfully
-          // removed.
-          if (!NS_taccess(continueFilePath, F_OK) &&
-              !NS_tremove(continueFilePath)) {
+          // Continue after the continue file exists.
+          if (!NS_taccess(continueFilePath, F_OK)) {
+            // Remove the continue file.
+            NS_tremove(continueFilePath);
             break;
           }
         }
