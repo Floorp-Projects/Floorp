@@ -6,7 +6,6 @@
 const OutputParser = require("devtools/client/shared/output-parser");
 const {initCssProperties, getCssProperties} = require("devtools/shared/fronts/css-properties");
 const { CSS_PROPERTIES_DB} = require("devtools/shared/css/properties-db");
-const CSS_SHAPES_ENABLED_PREF = "devtools.inspector.shapesHighlighter.enabled";
 
 add_task(async function() {
   await addTab("about:blank");
@@ -308,7 +307,7 @@ function testParseAngle(doc, parser) {
 
 function testParseShape(doc, parser) {
   info("Test shape parsing");
-  pushPref(CSS_SHAPES_ENABLED_PREF, true);
+
   const tests = [
     {
       desc: "Polygon shape",
