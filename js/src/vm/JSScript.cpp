@@ -748,22 +748,28 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
 
   /* NB: Keep this in sync with CopyScript. */
 
-  enum ScriptBits {
+  enum XDRScriptFlags {
     OwnSource,
     HasLazyScript,
   };
 
-  uint32_t lineno, column, nfixed, nslots;
-  uint32_t prologueLength;
-  uint32_t funLength = 0;
-  uint32_t numBytecodeTypeSets = 0;
-  uint32_t scriptBits = 0;
+  uint8_t xdrScriptFlags = 0;
+
+  uint32_t lineno = 0;
+  uint32_t column = 0;
+  uint32_t mainOffset = 0;
+  uint32_t nfixed = 0;
+  uint32_t nslots = 0;
   uint32_t bodyScopeIndex = 0;
-  uint32_t immutableFlags = 0;
   uint32_t sourceStart = 0;
   uint32_t sourceEnd = 0;
   uint32_t toStringStart = 0;
   uint32_t toStringEnd = 0;
+  uint32_t immutableFlags = 0;
+  uint16_t funLength = 0;
+  uint16_t numBytecodeTypeSets = 0;
+
+  // NOTE: |mutableFlags| are not preserved by XDR.
 
   JSContext* cx = xdr->cx();
   RootedScript script(cx);
@@ -784,45 +790,49 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
         return xdr->fail(JS::TranscodeResult_Failure_RunOnceNotSupported);
       }
     }
+
+    if (!sourceObjectArg) {
+      xdrScriptFlags |= (1 << OwnSource);
+    }
+    if (script->isRelazifiableIgnoringJitCode()) {
+      xdrScriptFlags |= (1 << HasLazyScript);
+    }
   }
 
+  MOZ_TRY(xdr->codeUint8(&xdrScriptFlags));
+
   if (mode == XDR_ENCODE) {
-    prologueLength = script->mainOffset();
     lineno = script->lineno();
     column = script->column();
+    mainOffset = script->mainOffset();
     nfixed = script->nfixed();
     nslots = script->nslots();
-
     bodyScopeIndex = script->bodyScopeIndex();
-
-    immutableFlags = script->immutableFlags_;
 
     sourceStart = script->sourceStart();
     sourceEnd = script->sourceEnd();
     toStringStart = script->toStringStart();
     toStringEnd = script->toStringEnd();
 
-    numBytecodeTypeSets = script->numBytecodeTypeSets();
-    funLength = script->funLength();
+    immutableFlags = script->immutableFlags_;
 
-    if (!sourceObjectArg) {
-      scriptBits |= (1 << OwnSource);
-    }
-    if (script->isRelazifiableIgnoringJitCode()) {
-      scriptBits |= (1 << HasLazyScript);
-    }
+    funLength = script->funLength();
+    numBytecodeTypeSets = script->numBytecodeTypeSets();
   }
 
-  MOZ_TRY(xdr->codeUint32(&prologueLength));
-
-  MOZ_TRY(xdr->codeUint32(&numBytecodeTypeSets));
-  MOZ_TRY(xdr->codeUint32(&funLength));
-  MOZ_TRY(xdr->codeUint32(&scriptBits));
-  MOZ_TRY(xdr->codeUint32(&immutableFlags));
+  MOZ_TRY(xdr->codeUint32(&lineno));
+  MOZ_TRY(xdr->codeUint32(&column));
+  MOZ_TRY(xdr->codeUint32(&mainOffset));
+  MOZ_TRY(xdr->codeUint32(&nfixed));
+  MOZ_TRY(xdr->codeUint32(&nslots));
+  MOZ_TRY(xdr->codeUint32(&bodyScopeIndex));
   MOZ_TRY(xdr->codeUint32(&sourceStart));
   MOZ_TRY(xdr->codeUint32(&sourceEnd));
   MOZ_TRY(xdr->codeUint32(&toStringStart));
   MOZ_TRY(xdr->codeUint32(&toStringEnd));
+  MOZ_TRY(xdr->codeUint32(&immutableFlags));
+  MOZ_TRY(xdr->codeUint16(&funLength));
+  MOZ_TRY(xdr->codeUint16(&numBytecodeTypeSets));
 
   RootedScriptSourceObject sourceObject(cx, sourceObjectArg);
   Maybe<CompileOptions> options;
@@ -835,7 +845,7 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
     bool noScriptRval =
         !!(immutableFlags & uint32_t(ImmutableFlags::NoScriptRval));
     bool selfHosted = !!(immutableFlags & uint32_t(ImmutableFlags::SelfHosted));
-    if (xdr->hasOptions() && (scriptBits & (1 << OwnSource))) {
+    if (xdr->hasOptions() && (xdrScriptFlags & (1 << OwnSource))) {
       options.emplace(xdr->cx(), xdr->options());
       if (options->noScriptRval != noScriptRval ||
           options->selfHostingMode != selfHosted) {
@@ -847,7 +857,7 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
     }
   }
 
-  if (scriptBits & (1 << OwnSource)) {
+  if (xdrScriptFlags & (1 << OwnSource)) {
     Rooted<ScriptSourceHolder> ssHolder(cx);
 
     // We are relying on the script's ScriptSource so the caller should not
@@ -889,43 +899,29 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
     if (!script) {
       return xdr->fail(JS::TranscodeResult_Throw);
     }
-
-    // Set the script in its function now so that inner scripts to be
-    // decoded may iterate the static scope chain.
-    if (fun) {
-      fun->initScript(script);
-    }
-
-    MOZ_ASSERT(!script->mainOffset());
-    script->mainOffset_ = prologueLength;
-    script->funLength_ = funLength;
-
-    MOZ_ASSERT(numBytecodeTypeSets <= UINT16_MAX);
-    script->numBytecodeTypeSets_ = uint16_t(numBytecodeTypeSets);
-
     scriptp.set(script);
 
+    script->lineno_ = lineno;
+    script->column_ = column;
+    script->mainOffset_ = mainOffset;
+    script->nfixed_ = nfixed;
+    script->nslots_ = nslots;
+    script->bodyScopeIndex_ = bodyScopeIndex;
     script->immutableFlags_ = immutableFlags;
+    script->funLength_ = funLength;
+    script->numBytecodeTypeSets_ = numBytecodeTypeSets;
 
     if (script->hasFlag(ImmutableFlags::ArgsHasVarBinding)) {
       // Call setArgumentsHasVarBinding to initialize the
       // NeedsArgsAnalysis flag.
       script->setArgumentsHasVarBinding();
     }
-  }
 
-  MOZ_TRY(xdr->codeUint32(&lineno));
-  MOZ_TRY(xdr->codeUint32(&column));
-  MOZ_TRY(xdr->codeUint32(&nfixed));
-  MOZ_TRY(xdr->codeUint32(&nslots));
-  MOZ_TRY(xdr->codeUint32(&bodyScopeIndex));
-
-  if (mode == XDR_DECODE) {
-    script->lineno_ = lineno;
-    script->column_ = column;
-    script->nfixed_ = nfixed;
-    script->nslots_ = nslots;
-    script->bodyScopeIndex_ = bodyScopeIndex;
+    // Set the script in its function now so that inner scripts to be
+    // decoded may iterate the static scope chain.
+    if (fun) {
+      fun->initScript(script);
+    }
   }
 
   // If XDR operation fails, we must call JSScript::freeScriptData in order
@@ -949,7 +945,7 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
     }
   }
 
-  if (scriptBits & (1 << HasLazyScript)) {
+  if (xdrScriptFlags & (1 << HasLazyScript)) {
     Rooted<LazyScript*> lazy(cx);
     if (mode == XDR_ENCODE) {
       lazy = script->maybeLazyScript();
@@ -964,8 +960,6 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
   }
 
   if (mode == XDR_DECODE) {
-    scriptp.set(script);
-
     /* see BytecodeEmitter::tellDebuggerAboutCompiledScript */
     if (!fun && !cx->helperThread()) {
       Debugger::onNewScript(cx, script);
