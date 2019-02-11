@@ -1,6 +1,12 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
+/**
+ * Tests navigation between results using ctrl-n/p.
+ */
+
 const ONEOFF_URLBAR_PREF = "browser.urlbar.oneOffSearches";
 
 function repeat(limit, func) {
@@ -9,12 +15,13 @@ function repeat(limit, func) {
   }
 }
 
-function is_selected(index) {
-  is(gURLBar.popup.richlistbox.selectedIndex, index, `Item ${index + 1} should be selected`);
+function assertSelected(index) {
+  Assert.equal(UrlbarTestUtils.getSelectedIndex(window), index,
+    "Should have the correct item selected");
 
   // This is true because although both the listbox and the one-offs can have
   // selections, the test doesn't check that.
-  is(gURLBar.popup.oneOffSearchButtons.selectedButton, null,
+  Assert.equal(UrlbarTestUtils.getOneOffSearchButtons(window).selectedButton, null,
      "A result is selected, so the one-offs should not have a selection");
 }
 
@@ -39,20 +46,18 @@ add_task(async function() {
   await promiseAutocompleteResultPopup("example.com/autocomplete");
   await waitForAutocompleteResultAt(maxResults - 1);
 
-  let popup = gURLBar.popup;
-  let results = popup.richlistbox.children;
-  is(results.length, maxResults,
+
+  Assert.equal(UrlbarTestUtils.getResultCount(window), maxResults,
      "Should get maxResults=" + maxResults + " results");
-  is_selected(0);
+  assertSelected(0);
 
   info("Ctrl-n to select the next item");
   EventUtils.synthesizeKey("n", {ctrlKey: true});
-  is_selected(1);
+  assertSelected(1);
 
   info("Ctrl-p to select the previous item");
   EventUtils.synthesizeKey("p", {ctrlKey: true});
-  is_selected(0);
+  assertSelected(0);
 
-  EventUtils.synthesizeKey("KEY_Escape");
-  await promisePopupHidden(gURLBar.popup);
+  await UrlbarTestUtils.promisePopupClose(window);
 });

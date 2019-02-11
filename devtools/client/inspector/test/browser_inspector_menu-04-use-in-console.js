@@ -44,6 +44,6 @@ add_task(async function() {
     isnot(result.textContent.indexOf('<p id="console-var-multi">'), -1,
           "variable temp1 references correct node");
 
-    hud.ui.consoleOutput.dispatchClearHistory();
+    hud.ui.wrapper.dispatchClearHistory();
   }
 });

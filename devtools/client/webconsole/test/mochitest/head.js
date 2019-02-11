@@ -75,7 +75,7 @@ async function openNewTabAndConsole(url, clearJstermHistory = true) {
 
   if (clearJstermHistory) {
     // Clearing history that might have been set in previous tests.
-    await hud.ui.consoleOutput.dispatchClearHistory();
+    await hud.ui.wrapper.dispatchClearHistory();
   }
 
   return hud;
@@ -89,7 +89,7 @@ async function openNewTabAndConsole(url, clearJstermHistory = true) {
  * @param object hud
  */
 function logAllStoreChanges(hud) {
-  const store = hud.ui.consoleOutput.getStore();
+  const store = hud.ui.wrapper.getStore();
   // Adding logging each time the store is modified in order to check
   // the store state in case of failure.
   store.subscribe(() => {
@@ -272,10 +272,10 @@ function findMessages(hud, text, selector = ".message") {
  * @return promise
  */
 async function openContextMenu(hud, element) {
-  const onConsoleMenuOpened = hud.ui.consoleOutput.once("menu-open");
+  const onConsoleMenuOpened = hud.ui.wrapper.once("menu-open");
   synthesizeContextMenuEvent(element);
   await onConsoleMenuOpened;
-  const doc = hud.ui.consoleOutput.owner.chromeWindow.document;
+  const doc = hud.ui.wrapper.owner.chromeWindow.document;
   return doc.getElementById("webconsole-menu");
 }
 
@@ -288,7 +288,7 @@ async function openContextMenu(hud, element) {
  * @return promise
  */
 function hideContextMenu(hud) {
-  const doc = hud.ui.consoleOutput.owner.chromeWindow.document;
+  const doc = hud.ui.wrapper.owner.chromeWindow.document;
   const popup = doc.getElementById("webconsole-menu");
   if (!popup) {
     return Promise.resolve();
@@ -901,7 +901,7 @@ async function setFilterState(hud, settings) {
 async function resetFilters(hud) {
   info("Resetting filters to their default state");
 
-  const store = hud.ui.consoleOutput.getStore();
+  const store = hud.ui.wrapper.getStore();
   store.dispatch(wcActions.filtersClear());
 }
 

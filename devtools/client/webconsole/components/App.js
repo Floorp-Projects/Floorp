@@ -114,7 +114,7 @@ class App extends Component {
 
     // Do not focus if something other than the output region was clicked
     // (including e.g. the clear messages button in toolbar)
-    if (!target.closest(".webconsole-output-wrapper")) {
+    if (!target.closest(".webconsole-app")) {
       return;
     }
 
@@ -202,7 +202,7 @@ class App extends Component {
       reverseSearchInitialValue,
     } = this.props;
 
-    const classNames = ["webconsole-output-wrapper"];
+    const classNames = ["webconsole-app"];
     if (jstermCodeMirror) {
       classNames.push("jsterm-cm");
     }

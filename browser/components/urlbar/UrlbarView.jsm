@@ -376,6 +376,11 @@ class UrlbarView {
         setAction(bundle.formatStringFromName("searchWithEngine",
                                               [result.payload.engine], 1));
         break;
+      case UrlbarUtils.RESULT_TYPE.KEYWORD:
+        if (result.payload.input.trim() == result.payload.keyword) {
+          setAction(bundle.GetStringFromName("visit"));
+        }
+        break;
       default:
         if (resultIndex == 0) {
           setAction(bundle.GetStringFromName("visit"));

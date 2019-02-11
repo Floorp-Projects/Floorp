@@ -848,13 +848,12 @@ static bool WasmExtractCode(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  JSObject* unwrapped = CheckedUnwrap(&args.get(0).toObject());
-  if (!unwrapped || !unwrapped->is<WasmModuleObject>()) {
+  Rooted<WasmModuleObject*> module(
+      cx, args[0].toObject().maybeUnwrapIf<WasmModuleObject>());
+  if (!module) {
     JS_ReportErrorASCII(cx, "argument is not a WebAssembly.Module");
     return false;
   }
-
-  Rooted<WasmModuleObject*> module(cx, &unwrapped->as<WasmModuleObject>());
 
   bool stableTier = false;
   bool bestTier = false;
@@ -909,13 +908,13 @@ static bool WasmHasTier2CompilationCompleted(JSContext* cx, unsigned argc,
     return false;
   }
 
-  JSObject* unwrapped = CheckedUnwrap(&args.get(0).toObject());
-  if (!unwrapped || !unwrapped->is<WasmModuleObject>()) {
+  Rooted<WasmModuleObject*> module(
+      cx, args[0].toObject().maybeUnwrapIf<WasmModuleObject>());
+  if (!module) {
     JS_ReportErrorASCII(cx, "argument is not a WebAssembly.Module");
     return false;
   }
 
-  Rooted<WasmModuleObject*> module(cx, &unwrapped->as<WasmModuleObject>());
   args.rval().set(BooleanValue(!module->module().testingTier2Active()));
   return true;
 }

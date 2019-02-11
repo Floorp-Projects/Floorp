@@ -115,7 +115,7 @@ async function openRequestBeforeUpdates(target, hud, tab) {
   ok(messageNode, "Network message found.");
 
   // Set the default panel.
-  const state = hud.ui.consoleOutput.getStore().getState();
+  const state = hud.ui.wrapper.getStore().getState();
   state.ui.networkMessageActiveTabId = tab.id;
 
   // Expand network log

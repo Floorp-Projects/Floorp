@@ -364,12 +364,12 @@ JSErrorReport* js::ErrorFromException(JSContext* cx, HandleObject objArg) {
 }
 
 JS_PUBLIC_API JSObject* JS::ExceptionStackOrNull(HandleObject objArg) {
-  JSObject* obj = CheckedUnwrap(objArg);
-  if (!obj || !obj->is<ErrorObject>()) {
+  ErrorObject* obj = objArg->maybeUnwrapIf<ErrorObject>();
+  if (!obj) {
     return nullptr;
   }
 
-  return obj->as<ErrorObject>().stack();
+  return obj->stack();
 }
 
 JS_PUBLIC_API uint64_t JS::ExceptionTimeWarpTarget(JS::HandleValue value) {
@@ -377,12 +377,12 @@ JS_PUBLIC_API uint64_t JS::ExceptionTimeWarpTarget(JS::HandleValue value) {
     return 0;
   }
 
-  JSObject* obj = CheckedUnwrap(&value.toObject());
-  if (!obj || !obj->is<ErrorObject>()) {
+  ErrorObject* obj = value.toObject().maybeUnwrapIf<ErrorObject>();
+  if (!obj) {
     return 0;
   }
 
-  return obj->as<ErrorObject>().timeWarpTarget();
+  return obj->timeWarpTarget();
 }
 
 bool Error(JSContext* cx, unsigned argc, Value* vp) {

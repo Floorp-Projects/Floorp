@@ -55,7 +55,7 @@ add_task(async function task() {
     const onConsoleMenuOpened = [
       rightClickMouseEvent,
       rightClickCtrlOrCmdKeyMouseEvent,
-    ].includes(clickEvent) ? hud.ui.consoleOutput.once("menu-open") : null;
+    ].includes(clickEvent) ? hud.ui.wrapper.once("menu-open") : null;
 
     const { link, where } = await simulateLinkClick(statusCodeNode, testCase.clickEvent);
     is(link, testCase.link, `Clicking the provided link opens ${link}`);

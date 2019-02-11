@@ -184,6 +184,7 @@ linux-qr-tests:
     - jsreftest
     - mochitest
     - mochitest-a11y
+    - mochitest-chrome
     - mochitest-gpu
     - mochitest-media
     - mochitest-webgl1-core

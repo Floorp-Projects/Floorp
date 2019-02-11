@@ -86,7 +86,7 @@ JSTerm.prototype = {
                         response.message);
           return;
         }
-        this.hud.consoleOutput.dispatchMessageAdd(response, true).then(resolve);
+        this.hud.wrapper.dispatchMessageAdd(response, true).then(resolve);
       };
 
       const options = {

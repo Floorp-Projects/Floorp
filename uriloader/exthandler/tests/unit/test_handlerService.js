@@ -235,7 +235,6 @@ function run_test() {
   handlerSvc.store(handlerInfo2);
   var handlerTypes = ["nonexistent/type", "nonexistent/type2"];
   if (haveDefaultHandlersVersion) {
-    handlerTypes.push("webcal");
     handlerTypes.push("mailto");
     handlerTypes.push("irc");
     handlerTypes.push("ircs");
