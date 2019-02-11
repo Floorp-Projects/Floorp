@@ -29,6 +29,7 @@ dependencies {
     implementation Dependencies.kotlin_stdlib
 
     implementation Dependencies.support_appcompat
+    implementation Dependencies.support_constraintlayout
     implementation Dependencies.support_cardview
 
     testImplementation project(':support-test')
