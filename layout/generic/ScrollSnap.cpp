@@ -250,8 +250,8 @@ static void ProcessScrollSnapCoordinates(
 
 Maybe<nsPoint> ScrollSnapUtils::GetSnapPointForDestination(
     const ScrollSnapInfo& aSnapInfo, nsIScrollableFrame::ScrollUnit aUnit,
-    const nsSize& aScrollPortSize, const nsRect& aScrollRange,
-    const nsPoint& aStartPos, const nsPoint& aDestination) {
+    const nsRect& aScrollRange, const nsPoint& aStartPos,
+    const nsPoint& aDestination) {
   if (aSnapInfo.mScrollSnapTypeY == StyleScrollSnapType::None &&
       aSnapInfo.mScrollSnapTypeX == StyleScrollSnapType::None) {
     return Nothing();
