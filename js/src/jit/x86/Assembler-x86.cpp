@@ -18,6 +18,7 @@ ABIArg ABIArgGenerator::next(MIRType type) {
     case MIRType::Int32:
     case MIRType::Float32:
     case MIRType::Pointer:
+    case MIRType::RefOrNull:
       current_ = ABIArg(stackOffset_);
       stackOffset_ += sizeof(uint32_t);
       break;
