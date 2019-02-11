@@ -9,6 +9,7 @@
 from __future__ import print_function
 import os
 import posixpath
+import re
 import sys
 import traceback
 from collections import namedtuple
@@ -409,7 +410,7 @@ def find_tests(substring=None, run_binast=False):
 
 
 def run_test_remote(test, device, prefix, options):
-    from mozdevice import ADBDevice, ADBProcessError, ADBTimeoutError
+    from mozdevice import ADBDevice, ADBProcessError
 
     if options.test_reflect_stringify:
         raise ValueError("can't run Reflect.stringify tests remotely")
@@ -429,15 +430,23 @@ def run_test_remote(test, device, prefix, options):
     cmd = ADBDevice._escape_command_line(cmd)
     start = datetime.now()
     try:
+        # Allow ADBError or ADBTimeoutError to terminate the test run,
+        # but handle ADBProcessError in order to support the use of
+        # non-zero exit codes in the JavaScript shell tests.
         out = device.shell_output(cmd, env=env,
                                   cwd=options.remote_test_root,
                                   timeout=int(options.timeout))
         returncode = 0
-    except ADBTimeoutError:
-        raise
     except ADBProcessError as e:
+        # Treat ignorable intermittent adb communication errors as
+        # skipped tests.
         out = str(e.adb_process.stdout)
         returncode = e.adb_process.exitcode
+        re_ignore = re.compile(r'error: (closed|device .* not found)')
+        if returncode == 1 and re_ignore.search(out):
+            print("Skipping {} due to ignorable adb error {}".format(test.path, out))
+            test.skip_if_cond = "true"
+            returncode = test.SKIPPED_EXIT_STATUS
 
     elapsed = (datetime.now() - start).total_seconds()
 
@@ -793,39 +802,49 @@ def init_remote_dir(device, path, root=True):
 
 def run_tests_remote(tests, num_tests, prefix, options, slog):
     # Setup device with everything needed to run our tests.
-    from mozdevice import ADBDevice
-    device = ADBDevice(device=options.device_serial,
-                       test_root=options.remote_test_root)
+    from mozdevice import ADBDevice, ADBError, ADBTimeoutError
+    try:
+        device = ADBDevice(device=options.device_serial,
+                           test_root=options.remote_test_root)
 
-    init_remote_dir(device, options.remote_test_root)
+        init_remote_dir(device, options.remote_test_root)
 
-    # Update the test root to point to our test directory.
-    jit_tests_dir = posixpath.join(options.remote_test_root, 'jit-tests')
-    options.remote_test_root = posixpath.join(jit_tests_dir, 'jit-tests')
+        # Update the test root to point to our test directory.
+        jit_tests_dir = posixpath.join(options.remote_test_root, 'jit-tests')
+        options.remote_test_root = posixpath.join(jit_tests_dir, 'jit-tests')
 
-    # Push js shell and libraries.
-    init_remote_dir(device, jit_tests_dir)
-    push_libs(options, device)
-    push_progs(options, device, [prefix[0]])
-    device.chmod(options.remote_test_root, recursive=True, root=True)
+        # Push js shell and libraries.
+        init_remote_dir(device, jit_tests_dir)
+        push_libs(options, device)
+        push_progs(options, device, [prefix[0]])
+        device.chmod(options.remote_test_root, recursive=True, root=True)
 
-    JitTest.CacheDir = posixpath.join(options.remote_test_root, '.js-cache')
-    init_remote_dir(device, JitTest.CacheDir)
+        JitTest.CacheDir = posixpath.join(options.remote_test_root, '.js-cache')
+        init_remote_dir(device, JitTest.CacheDir)
 
-    jtd_tests = posixpath.join(jit_tests_dir, 'tests')
-    init_remote_dir(device, jtd_tests)
-    device.push(JS_TESTS_DIR, jtd_tests, timeout=600)
-    device.chmod(jtd_tests, recursive=True, root=True)
+        jtd_tests = posixpath.join(jit_tests_dir, 'tests')
+        init_remote_dir(device, jtd_tests)
+        device.push(JS_TESTS_DIR, jtd_tests, timeout=600)
+        device.chmod(jtd_tests, recursive=True, root=True)
 
-    device.push(os.path.dirname(TEST_DIR), options.remote_test_root,
-                timeout=600)
-    device.chmod(options.remote_test_root, recursive=True, root=True)
-    prefix[0] = os.path.join(options.remote_test_root, 'js')
+        device.push(os.path.dirname(TEST_DIR), options.remote_test_root,
+                    timeout=600)
+        device.chmod(options.remote_test_root, recursive=True, root=True)
+        prefix[0] = os.path.join(options.remote_test_root, 'js')
+    except (ADBError, ADBTimeoutError):
+        print("TEST-UNEXPECTED-FAIL | jit_test.py" +
+              " : Device initialization failed")
+        raise
 
     # Run all tests.
     pb = create_progressbar(num_tests, options)
-    gen = get_remote_results(tests, device, prefix, options)
-    ok = process_test_results(gen, num_tests, pb, options, slog)
+    try:
+        gen = get_remote_results(tests, device, prefix, options)
+        ok = process_test_results(gen, num_tests, pb, options, slog)
+    except (ADBError, ADBTimeoutError):
+        print("TEST-UNEXPECTED-FAIL | jit_test.py" +
+              " : Device error during test")
+        raise
     return ok
 
 
