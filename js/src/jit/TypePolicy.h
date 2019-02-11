@@ -70,7 +70,7 @@ class NoTypePolicy {
 class BoxInputsPolicy final : public TypePolicy {
  public:
   constexpr BoxInputsPolicy() {}
-  SPECIALIZATION_DATA_;
+  EMPTY_DATA_;
   static MOZ_MUST_USE bool staticAdjustInputs(TempAllocator& alloc,
                                               MInstruction* def);
   MOZ_MUST_USE bool adjustInputs(TempAllocator& alloc,
