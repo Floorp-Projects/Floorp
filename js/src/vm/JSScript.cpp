@@ -367,7 +367,108 @@ static inline uint32_t FindScopeIndex(JSScript* script, Scope& scope) {
   return FindScopeIndex(script->scopes(), scope);
 }
 
-enum XDRClassKind { CK_RegexpObject, CK_JSFunction, CK_JSObject };
+template <XDRMode mode>
+static XDRResult XDRInnerObject(XDRState<mode>* xdr,
+                                js::PrivateScriptData* data,
+                                HandleScriptSourceObject sourceObject,
+                                MutableHandleObject inner) {
+  enum class ClassKind { RegexpObject, JSFunction, JSObject, ArrayObject };
+  JSContext* cx = xdr->cx();
+
+  ClassKind classk;
+
+  if (mode == XDR_ENCODE) {
+    if (inner->is<RegExpObject>()) {
+      classk = ClassKind::RegexpObject;
+    } else if (inner->is<JSFunction>()) {
+      classk = ClassKind::JSFunction;
+    } else if (inner->is<PlainObject>()) {
+      classk = ClassKind::JSObject;
+    } else if (inner->is<ArrayObject>()) {
+      classk = ClassKind::ArrayObject;
+    } else {
+      MOZ_CRASH("Cannot encode this class of object.");
+    }
+  }
+
+  MOZ_TRY(xdr->codeEnum32(&classk));
+
+  switch (classk) {
+    case ClassKind::RegexpObject: {
+      Rooted<RegExpObject*> regexp(cx);
+      if (mode == XDR_ENCODE) {
+        regexp = &inner->as<RegExpObject>();
+      }
+      MOZ_TRY(XDRScriptRegExpObject(xdr, &regexp));
+      if (mode == XDR_DECODE) {
+        inner.set(regexp);
+      }
+      break;
+    }
+
+    case ClassKind::JSFunction: {
+      /* Code the nested function's enclosing scope. */
+      uint32_t funEnclosingScopeIndex = 0;
+      RootedScope funEnclosingScope(cx);
+
+      if (mode == XDR_ENCODE) {
+        RootedFunction function(cx, &inner->as<JSFunction>());
+
+        if (function->isInterpretedLazy()) {
+          funEnclosingScope = function->lazyScript()->enclosingScope();
+        } else if (function->isInterpreted()) {
+          funEnclosingScope = function->nonLazyScript()->enclosingScope();
+        } else {
+          MOZ_ASSERT(function->isAsmJSNative());
+          return xdr->fail(JS::TranscodeResult_Failure_AsmJSNotSupported);
+        }
+
+        funEnclosingScopeIndex =
+            FindScopeIndex(data->scopes(), *funEnclosingScope);
+      }
+
+      MOZ_TRY(xdr->codeUint32(&funEnclosingScopeIndex));
+
+      if (mode == XDR_DECODE) {
+        funEnclosingScope = data->scopes()[funEnclosingScopeIndex];
+      }
+
+      // Code nested function and script.
+      RootedFunction tmp(cx);
+      if (mode == XDR_ENCODE) {
+        tmp = &inner->as<JSFunction>();
+      }
+      MOZ_TRY(
+          XDRInterpretedFunction(xdr, funEnclosingScope, sourceObject, &tmp));
+      if (mode == XDR_DECODE) {
+        inner.set(tmp);
+      }
+      break;
+    }
+
+    case ClassKind::JSObject:
+    case ClassKind::ArrayObject: {
+      /* Code object literal. */
+      RootedObject tmp(cx);
+      if (mode == XDR_ENCODE) {
+        tmp = inner.get();
+      }
+      MOZ_TRY(XDRObjectLiteral(xdr, &tmp));
+      if (mode == XDR_DECODE) {
+        inner.set(tmp);
+      }
+      break;
+    }
+
+    default: {
+      // Fail in debug, but only soft-fail in release
+      MOZ_ASSERT(false, "Bad XDR class kind");
+      return xdr->fail(JS::TranscodeResult_Failure_BadDecode);
+    }
+  }
+
+  return Ok();
+}
 
 template <XDRMode mode>
 static XDRResult XDRScope(XDRState<mode>* xdr, js::PrivateScriptData* data,
@@ -798,92 +899,13 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
    */
   if (nobjects) {
     for (GCPtrObject& elem : data->objects()) {
-      XDRClassKind classk;
-
+      RootedObject inner(cx);
       if (mode == XDR_ENCODE) {
-        JSObject* obj = elem.get();
-        if (obj->is<RegExpObject>()) {
-          classk = CK_RegexpObject;
-        } else if (obj->is<JSFunction>()) {
-          classk = CK_JSFunction;
-        } else if (obj->is<PlainObject>() || obj->is<ArrayObject>()) {
-          classk = CK_JSObject;
-        } else {
-          MOZ_CRASH("Cannot encode this class of object.");
-        }
+        inner = elem;
       }
-
-      MOZ_TRY(xdr->codeEnum32(&classk));
-
-      switch (classk) {
-        case CK_RegexpObject: {
-          Rooted<RegExpObject*> regexp(cx);
-          if (mode == XDR_ENCODE) {
-            regexp = &elem->as<RegExpObject>();
-          }
-          MOZ_TRY(XDRScriptRegExpObject(xdr, &regexp));
-          if (mode == XDR_DECODE) {
-            elem.init(regexp);
-          }
-          break;
-        }
-
-        case CK_JSFunction: {
-          /* Code the nested function's enclosing scope. */
-          uint32_t funEnclosingScopeIndex = 0;
-          RootedScope funEnclosingScope(cx);
-          if (mode == XDR_ENCODE) {
-            RootedFunction function(cx, &elem->as<JSFunction>());
-
-            if (function->isInterpretedLazy()) {
-              funEnclosingScope = function->lazyScript()->enclosingScope();
-            } else if (function->isInterpreted()) {
-              funEnclosingScope = function->nonLazyScript()->enclosingScope();
-            } else {
-              MOZ_ASSERT(function->isAsmJSNative());
-              return xdr->fail(JS::TranscodeResult_Failure_AsmJSNotSupported);
-            }
-
-            funEnclosingScopeIndex = FindScopeIndex(script, *funEnclosingScope);
-          }
-
-          MOZ_TRY(xdr->codeUint32(&funEnclosingScopeIndex));
-
-          if (mode == XDR_DECODE) {
-            funEnclosingScope = script->getScope(funEnclosingScopeIndex);
-          }
-
-          // Code nested function and script.
-          RootedFunction tmp(cx);
-          if (mode == XDR_ENCODE) {
-            tmp = &elem->as<JSFunction>();
-          }
-          MOZ_TRY(XDRInterpretedFunction(xdr, funEnclosingScope, sourceObject,
-                                         &tmp));
-          if (mode == XDR_DECODE) {
-            elem.init(tmp);
-          }
-          break;
-        }
-
-        case CK_JSObject: {
-          /* Code object literal. */
-          RootedObject tmp(cx);
-          if (mode == XDR_ENCODE) {
-            tmp = elem.get();
-          }
-          MOZ_TRY(XDRObjectLiteral(xdr, &tmp));
-          if (mode == XDR_DECODE) {
-            elem.init(tmp);
-          }
-          break;
-        }
-
-        default: {
-          // Fail in debug, but only soft-fail in release
-          MOZ_ASSERT(false, "Bad XDR class kind");
-          return xdr->fail(JS::TranscodeResult_Failure_BadDecode);
-        }
+      MOZ_TRY(XDRInnerObject(xdr, script->data_, sourceObject, &inner));
+      if (mode == XDR_DECODE) {
+        elem.init(inner);
       }
     }
   }
