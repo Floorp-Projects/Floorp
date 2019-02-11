@@ -443,7 +443,7 @@ nsresult MediaEngineWebRTCMicrophoneSource::Deallocate(
     const RefPtr<const AllocationHandle>&) {
   AssertIsOnOwningThread();
 
-  MOZ_ASSERT(mState == kStopped || mStream == kAllocated);
+  MOZ_ASSERT(mState == kStopped);
 
   class EndTrackMessage : public ControlMessage {
    public:
