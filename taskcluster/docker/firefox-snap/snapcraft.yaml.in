@@ -54,6 +54,7 @@ parts:
       - ffmpeg
       - libc-bin
       - locales-all
+      - libcurl3-gnutls
     after: [desktop-gtk3]
 
   xdg-open:
