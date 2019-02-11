@@ -3542,63 +3542,6 @@ extern JS_PUBLIC_API StackFormat GetStackFormat(JSContext* cx);
 
 namespace JS {
 
-/*
- * This callback represents a request by the JS engine to open for reading the
- * existing cache entry for the given global and char range that may contain a
- * module. If a cache entry exists, the callback shall return 'true' and return
- * the size, base address and an opaque file handle as outparams. If the
- * callback returns 'true', the JS engine guarantees a call to
- * CloseAsmJSCacheEntryForReadOp, passing the same base address, size and
- * handle.
- */
-using OpenAsmJSCacheEntryForReadOp =
-    bool (*)(HandleObject global, const char16_t* begin, const char16_t* limit,
-             size_t* size, const uint8_t** memory, intptr_t* handle);
-using CloseAsmJSCacheEntryForReadOp = void (*)(size_t size,
-                                               const uint8_t* memory,
-                                               intptr_t handle);
-
-/** The list of reasons why an asm.js module may not be stored in the cache. */
-enum AsmJSCacheResult {
-  AsmJSCache_Success,
-  AsmJSCache_MIN = AsmJSCache_Success,
-  AsmJSCache_ModuleTooSmall,
-  AsmJSCache_SynchronousScript,
-  AsmJSCache_QuotaExceeded,
-  AsmJSCache_StorageInitFailure,
-  AsmJSCache_Disabled_Internal,
-  AsmJSCache_Disabled_ShellFlags,
-  AsmJSCache_Disabled_JitInspector,
-  AsmJSCache_InternalError,
-  AsmJSCache_Disabled_PrivateBrowsing,
-  AsmJSCache_LIMIT
-};
-
-/*
- * This callback represents a request by the JS engine to open for writing a
- * cache entry of the given size for the given global and char range containing
- * the just-compiled module. If cache entry space is available, the callback
- * shall return 'true' and return the base address and an opaque file handle as
- * outparams. If the callback returns 'true', the JS engine guarantees a call
- * to CloseAsmJSCacheEntryForWriteOp passing the same base address, size and
- * handle.
- */
-using OpenAsmJSCacheEntryForWriteOp = AsmJSCacheResult (*)(
-    HandleObject global, const char16_t* begin, const char16_t* end,
-    size_t size, uint8_t** memory, intptr_t* handle);
-using CloseAsmJSCacheEntryForWriteOp = void (*)(size_t size, uint8_t* memory,
-                                                intptr_t handle);
-
-struct AsmJSCacheOps {
-  OpenAsmJSCacheEntryForReadOp openEntryForRead = nullptr;
-  CloseAsmJSCacheEntryForReadOp closeEntryForRead = nullptr;
-  OpenAsmJSCacheEntryForWriteOp openEntryForWrite = nullptr;
-  CloseAsmJSCacheEntryForWriteOp closeEntryForWrite = nullptr;
-};
-
-extern JS_PUBLIC_API void SetAsmJSCacheOps(JSContext* cx,
-                                           const AsmJSCacheOps* callbacks);
-
 /**
  * The WasmModule interface allows the embedding to hold a reference to the
  * underying C++ implementation of a JS WebAssembly.Module object for purposes

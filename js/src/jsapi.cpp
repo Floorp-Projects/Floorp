@@ -97,7 +97,6 @@
 #include "vm/SymbolType.h"
 #include "vm/WrapperObject.h"
 #include "vm/Xdr.h"
-#include "wasm/AsmJS.h"
 #include "wasm/WasmModule.h"
 
 #include "vm/Compartment-inl.h"
@@ -6003,11 +6002,6 @@ JS_PUBLIC_API bool JS::FinishIncrementalEncoding(JSContext* cx,
     return false;
   }
   return true;
-}
-
-JS_PUBLIC_API void JS::SetAsmJSCacheOps(JSContext* cx,
-                                        const JS::AsmJSCacheOps* ops) {
-  cx->runtime()->asmJSCacheOps = *ops;
 }
 
 bool JS::IsWasmModuleObject(HandleObject obj) {
