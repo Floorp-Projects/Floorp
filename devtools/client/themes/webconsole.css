@@ -667,11 +667,11 @@ a.learn-more-link.webconsole-learn-more-link {
   --console-output-indent-border-color: var(--theme-body-color);
 }
 
-.webconsole-output-wrapper .message-flex-body > .message-body {
+.webconsole-app .message-flex-body > .message-body {
   overflow: hidden;
 }
 
-.webconsole-output-wrapper .message-body > * {
+.webconsole-app .message-body > * {
   flex-shrink: 0;
   vertical-align: top;
 }
@@ -683,17 +683,17 @@ a.learn-more-link.webconsole-learn-more-link {
 }
 
 /* Prefix text that can be set by ConsoleAPI option */
-.webconsole-output-wrapper .console-message-prefix {
+.webconsole-app .console-message-prefix {
   color: var(--theme-comment);
 }
 
 /* Network Messages */
 
-.webconsole-output-wrapper .message.network .method {
+.webconsole-app .message.network .method {
   margin-inline-end: 1ch;
 }
 
-.webconsole-output-wrapper .message.network .xhr {
+.webconsole-app .message.network .xhr {
   background-color: var(--theme-comment);
   color: white;
   border-radius: 2px;
@@ -701,12 +701,12 @@ a.learn-more-link.webconsole-learn-more-link {
   line-height: inherit;
 }
 
-.webconsole-output-wrapper .message.network .url {
+.webconsole-app .message.network .url {
   color: var(--theme-comment);
   font-style: inherit;
 }
 
-.webconsole-output-wrapper .message.network .status {
+.webconsole-app .message.network .status {
   color: var(--theme-highlight-blue);
   font-style: inherit;
 }
@@ -742,7 +742,7 @@ a.learn-more-link.webconsole-learn-more-link {
  * Open DOMNode in inspector button. Style need to be reset in the new
  * console since its style is already defined in reps.css .
  */
-.webconsole-output-wrapper .open-inspector {
+.webconsole-app .open-inspector {
   background-image: unset;
 }
 
@@ -819,7 +819,7 @@ body {
  *  |                              |              |
  *  +------------------------------+--------------+
  */
-.webconsole-output-wrapper {
+.webconsole-app {
   --object-inspector-hover-background: transparent;
   --attachment-margin-block-end: 3px;
   --primary-toolbar-height: 29px;
@@ -855,11 +855,11 @@ body {
   min-height: 19px;
 }
 
-.webconsole-output-wrapper #webconsole-notificationbox {
+.webconsole-app #webconsole-notificationbox {
   flex-shrink: 0;
 }
 
-.webconsole-output-wrapper .jsterm-input-container {
+.webconsole-app .jsterm-input-container {
   min-height: 28px;
   overflow-y: auto;
   overflow-x: hidden;
@@ -875,16 +875,16 @@ body {
 }
 
 /* Object Inspector */
-.webconsole-output-wrapper .object-inspector.tree {
+.webconsole-app .object-inspector.tree {
   display: inline-block;
   max-width: 100%;
 }
 
-.webconsole-output-wrapper .object-inspector.tree .tree-indent {
+.webconsole-app .object-inspector.tree .tree-indent {
   border-inline-start-color: var(--console-output-indent-border-color);
 }
 
-.webconsole-output-wrapper .object-inspector.tree .tree-node:hover:not(.focused) {
+.webconsole-app .object-inspector.tree .tree-node:hover:not(.focused) {
   background-color: var(--object-inspector-hover-background);
 }
 
@@ -951,8 +951,8 @@ body {
 }
 
 /* Apply a style similar to collapse-button for the object tree arrows */
-.webconsole-output-wrapper .tree .arrow,
-.webconsole-output-wrapper .object-inspector .tree-node .arrow {
+.webconsole-app .tree .arrow,
+.webconsole-app .object-inspector .tree-node .arrow {
   width: 10px;
   height: 10px;
   background: url("chrome://devtools/skin/images/arrow.svg") no-repeat center;

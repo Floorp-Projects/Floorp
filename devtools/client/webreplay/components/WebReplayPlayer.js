@@ -124,7 +124,7 @@ class WebReplayPlayer extends Component {
     this.toolbox.getPanelWhenReady("webconsole").then(panel => {
       const consoleFrame = panel.hud.ui;
       consoleFrame.on("message-hover", this.onConsoleMessageHover.bind(this));
-      consoleFrame.consoleOutput.subscribeToStore(
+      consoleFrame.wrapper.subscribeToStore(
         this.onConsoleUpdate.bind(this)
       );
     });

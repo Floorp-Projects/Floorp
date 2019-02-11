@@ -2079,7 +2079,7 @@ Toolbox.prototype = {
     }
 
     // Cold webconsole event message_count is handled in
-    // devtools/client/webconsole/webconsole-output-wrapper.js
+    // devtools/client/webconsole/webconsole-wrapper.js
     if (!cold && id === "webconsole") {
       this.telemetry.addEventProperty(
         this, "enter", "webconsole", null, "message_count", 0);

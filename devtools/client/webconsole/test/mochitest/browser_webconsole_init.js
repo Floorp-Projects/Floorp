@@ -13,7 +13,7 @@ add_task(async function() {
   const {ui} = hud;
 
   ok(ui.jsterm, "jsterm exists");
-  ok(ui.consoleOutput, "consoleOutput exists");
+  ok(ui.wrapper, "wrapper exists");
 
   const receievedMessages = waitForMessages({
     hud,
