@@ -131,11 +131,14 @@ enum JSTryNoteKind {
  * Exception handling record.
  */
 struct JSTryNote {
-  uint8_t kind;        /* one of JSTryNoteKind */
+  uint32_t kind;       /* one of JSTryNoteKind */
   uint32_t stackDepth; /* stack depth upon exception handler entry */
   uint32_t start;      /* start of the try statement or loop relative
                           to script->code() */
   uint32_t length;     /* length of the try statement or loop */
+
+  template <js::XDRMode mode>
+  js::XDRResult XDR(js::XDRState<mode>* xdr);
 };
 
 namespace js {
@@ -167,6 +170,9 @@ struct ScopeNote {
                     // relative to script->code().
   uint32_t length;  // Bytecode length of scope.
   uint32_t parent;  // Index of parent block scope in notes, or NoScopeNote.
+
+  template <js::XDRMode mode>
+  js::XDRResult XDR(js::XDRState<mode>* xdr);
 };
 
 class ScriptCounts {
