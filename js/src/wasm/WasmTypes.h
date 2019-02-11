@@ -138,18 +138,6 @@ typedef Vector<UniqueChars, 0, SystemAllocPolicy> UniqueCharsVector;
   const uint8_t* deserialize(const uint8_t* cursor); \
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
-#define WASM_DECLARE_SERIALIZABLE_VIRTUAL(Type)              \
-  virtual size_t serializedSize() const;                     \
-  virtual uint8_t* serialize(uint8_t* cursor) const;         \
-  virtual const uint8_t* deserialize(const uint8_t* cursor); \
-  virtual size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
-
-#define WASM_DECLARE_SERIALIZABLE_OVERRIDE(Type)              \
-  size_t serializedSize() const override;                     \
-  uint8_t* serialize(uint8_t* cursor) const override;         \
-  const uint8_t* deserialize(const uint8_t* cursor) override; \
-  size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const override;
-
 template <class T>
 struct SerializableRefPtr : RefPtr<T> {
   using RefPtr<T>::operator=;
