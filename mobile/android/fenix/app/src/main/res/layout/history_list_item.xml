@@ -1,22 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="56dp"
     android:clickable="true"
     android:focusable="true"
     android:padding="4dp"
     android:paddingStart="20dp"
     android:background="?android:attr/selectableItemBackground"
     xmlns:app="http://schemas.android.com/apk/res-auto">
+    
+    <ImageView
+        android:id="@+id/history_favicon"
+        android:layout_width="@dimen/history_favicon_width_height"
+        android:layout_height="@dimen/history_favicon_width_height"
+        android:background="@drawable/history_favicon_background"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"/>
 
     <TextView
         android:id="@+id/history_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
+        android:layout_marginStart="16dp"
         android:textColor="@color/history_title"
         android:textSize="18sp"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintStart_toEndOf="@id/history_favicon"
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
@@ -27,12 +36,24 @@
         android:textSize="12sp"
         android:layout_marginTop="4dp"
         android:layout_marginBottom="8dp"
+        android:layout_marginStart="16dp"
         android:singleLine="true"
         android:layout_marginEnd="20dp"
         android:textAlignment="viewStart"
         android:ellipsize="end"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintStart_toEndOf="@id/history_favicon"
         app:layout_constraintTop_toBottomOf="@id/history_title"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/overflow_button"
         app:layout_constraintBottom_toBottomOf="parent" />
+
+    <ImageButton
+        android:id="@+id/overflow_button"
+        android:layout_width="@dimen/glyph_button_height"
+        android:layout_height="@dimen/glyph_button_height"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:src="@drawable/ic_menu"
+        android:tint="?attr/menuButtonTint"
+        android:contentDescription="@string/content_description_history_menu"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>
