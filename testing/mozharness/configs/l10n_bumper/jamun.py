@@ -12,6 +12,7 @@ if sys.platform.startswith("linux"):
 
 config = {
     "log_name": "l10n_bumper",
+    "log_type": "multi",
     "exes": EXES,
 
     "gecko_pull_url": "https://hg.mozilla.org/{}".format(MULTI_REPO),

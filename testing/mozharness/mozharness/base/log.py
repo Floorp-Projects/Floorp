@@ -28,6 +28,7 @@ from datetime import datetime
 import logging
 import os
 import sys
+import time
 import traceback
 
 # Define our own FATAL_LEVEL
@@ -50,6 +51,9 @@ LOG_LEVELS = {
 
 # mozharness root logger
 ROOT_LOGGER = logging.getLogger()
+
+# Force logging to use UTC timestamps
+logging.Formatter.converter = time.gmtime
 
 
 # LogMixin {{{1
@@ -446,7 +450,7 @@ class BaseLogger(object):
         if not name:
             name = self.__class__.__name__
         self.log_message("%s online at %s in %s" %
-                         (name, datetime.now().strftime("%Y%m%d %H:%M:%S"),
+                         (name, datetime.utcnow().strftime("%Y%m%d %H:%M:%SZ"),
                           os.getcwd()))
 
     def get_logger_level(self, level=None):
@@ -677,6 +681,44 @@ class MultiFileLogger(BaseLogger):
                 self.add_file_handler(os.path.join(self.abs_log_dir,
                                                    self.log_files[level]),
                                       log_level=level)
+
+
+# ConsoleLogger {{{1
+class ConsoleLogger(BaseLogger):
+    """Subclass of the BaseLogger.
+
+    Output logs to stderr.
+    """
+
+    def __init__(self,
+                 log_format='%(levelname)8s - %(message)s',
+                 log_date_format='%H:%M:%S',
+                 logger_name='Console', **kwargs):
+        """ ConsoleLogger constructor. Calls its superclass constructor,
+        creates a new logger instance and log an init message.
+
+        Args:
+            log_format (str, optional): message format string to instantiate a
+                                       `logging.Formatter`. Defaults to
+                                       '%(levelname)8s - %(message)s'
+            **kwargs: Arbitrary keyword arguments passed to the BaseLogger
+                      constructor
+        """
+
+        BaseLogger.__init__(self, logger_name=logger_name,
+                            log_format=log_format, **kwargs)
+        self.new_logger()
+        self.init_message()
+
+    def new_logger(self):
+        """ Create a new logger based on the ROOT_LOGGER instance. By default
+        there are no handlers.  The new logger becomes a member variable of the
+        current instance as `self.logger`.
+        """
+        self.logger = ROOT_LOGGER
+        self.logger.setLevel(self.get_logger_level())
+        self._clear_handlers()
+        self.add_console_handler()
 
 
 def numeric_log_level(level):

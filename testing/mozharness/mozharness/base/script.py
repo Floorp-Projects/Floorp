@@ -55,7 +55,7 @@ from io import BytesIO
 import mozinfo
 from mozprocess import ProcessHandler
 from mozharness.base.config import BaseConfig
-from mozharness.base.log import SimpleFileLogger, MultiFileLogger, \
+from mozharness.base.log import MultiFileLogger, SimpleFileLogger, ConsoleLogger, \
     LogMixin, OutputParser, DEBUG, INFO, ERROR, FATAL
 
 
@@ -2173,15 +2173,17 @@ class BaseScript(ScriptMixin, LogMixin, object):
             "log_to_console": True,
             "append_to_log": False,
         }
-        log_type = self.config.get("log_type", "multi")
+        log_type = self.config.get("log_type", "console")
         for key in log_config.keys():
             value = self.config.get(key, None)
             if value is not None:
                 log_config[key] = value
         if log_type == "multi":
             self.log_obj = MultiFileLogger(**log_config)
-        else:
+        elif log_type == "simple":
             self.log_obj = SimpleFileLogger(**log_config)
+        else:
+            self.log_obj = ConsoleLogger(**log_config)
 
     def action_message(self, message):
         self.info("[mozharness: %sZ] %s" % (
