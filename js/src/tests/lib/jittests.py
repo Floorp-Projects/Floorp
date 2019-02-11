@@ -30,7 +30,6 @@ TOP_SRC_DIR = os.path.dirname(os.path.dirname(JS_DIR))
 TEST_DIR = os.path.join(JS_DIR, 'jit-test', 'tests')
 LIB_DIR = os.path.join(JS_DIR, 'jit-test', 'lib') + os.path.sep
 MODULE_DIR = os.path.join(JS_DIR, 'jit-test', 'modules') + os.path.sep
-JS_CACHE_DIR = os.path.join(JS_DIR, 'jit-test', '.js-cache')
 JS_TESTS_DIR = posixpath.join(JS_DIR, 'tests')
 
 # Backported from Python 3.1 posixpath.py
@@ -196,7 +195,6 @@ class JitTest:
 
     # We would use 500019 (5k19), but quit() only accepts values up to 127, due to fuzzers
     SKIPPED_EXIT_STATUS = 59
-    CacheDir = JS_CACHE_DIR
     Directives = {}
 
     @classmethod
@@ -345,7 +343,7 @@ class JitTest:
 
         # We may have specified '-a' or '-d' twice: once via --jitflags, once
         # via the "|jit-test|" line.  Remove dups because they are toggles.
-        cmd = prefix + ['--js-cache', JitTest.CacheDir]
+        cmd = prefix + []
         cmd += list(set(self.jitflags))
         for expr in exprs:
             cmd += ['-e', expr]
@@ -818,9 +816,6 @@ def run_tests_remote(tests, num_tests, prefix, options, slog):
         push_libs(options, device)
         push_progs(options, device, [prefix[0]])
         device.chmod(options.remote_test_root, recursive=True, root=True)
-
-        JitTest.CacheDir = posixpath.join(options.remote_test_root, '.js-cache')
-        init_remote_dir(device, JitTest.CacheDir)
 
         jtd_tests = posixpath.join(jit_tests_dir, 'tests')
         init_remote_dir(device, jtd_tests)

@@ -353,10 +353,6 @@ def main(argv):
 
     prefix += ['-f', prologue]
 
-    # Clean up any remnants from previous crashes etc
-    shutil.rmtree(jittests.JS_CACHE_DIR, ignore_errors=True)
-    os.mkdir(jittests.JS_CACHE_DIR)
-
     if options.debugger:
         if job_count > 1:
             print('Multiple tests match command line'
