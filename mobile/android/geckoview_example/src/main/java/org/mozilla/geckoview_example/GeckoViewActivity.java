@@ -66,6 +66,7 @@ public class GeckoViewActivity extends AppCompatActivity {
     private boolean mFullAccessibilityTree;
     private boolean mUseTrackingProtection;
     private boolean mUsePrivateBrowsing;
+    private boolean mEnableRemoteDebugging;
     private boolean mKillProcessOnDestroy;
 
     private LocationView mLocationView;
@@ -109,6 +110,7 @@ public class GeckoViewActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
 
         mUseMultiprocess = getIntent().getBooleanExtra(USE_MULTIPROCESS_EXTRA, true);
+        mEnableRemoteDebugging = true;
         mFullAccessibilityTree = getIntent().getBooleanExtra(FULL_ACCESSIBILITY_TREE_EXTRA, false);
         mProgressView = (ProgressBar) findViewById(R.id.page_progress);
 
@@ -128,7 +130,7 @@ public class GeckoViewActivity extends AppCompatActivity {
             }
             runtimeSettingsBuilder
                     .useContentProcessHint(mUseMultiprocess)
-                    .remoteDebuggingEnabled(true)
+                    .remoteDebuggingEnabled(mEnableRemoteDebugging)
                     .consoleOutput(true)
                     .contentBlocking(new ContentBlocking.Settings.Builder()
                         .categories(ContentBlocking.AT_ALL | ContentBlocking.SB_ALL)
@@ -248,6 +250,7 @@ public class GeckoViewActivity extends AppCompatActivity {
         menu.findItem(R.id.action_e10s).setChecked(mUseMultiprocess);
         menu.findItem(R.id.action_tp).setChecked(mUseTrackingProtection);
         menu.findItem(R.id.action_pb).setChecked(mUsePrivateBrowsing);
+        menu.findItem(R.id.action_remote_debugging).setChecked(mEnableRemoteDebugging);
         menu.findItem(R.id.action_forward).setEnabled(mCanGoForward);
         return true;
     }
@@ -273,6 +276,10 @@ public class GeckoViewActivity extends AppCompatActivity {
             case R.id.action_pb:
                 mUsePrivateBrowsing = !mUsePrivateBrowsing;
                 recreateSession();
+                break;
+            case R.id.action_remote_debugging:
+                mEnableRemoteDebugging = !mEnableRemoteDebugging;
+                sGeckoRuntime.getSettings().setRemoteDebuggingEnabled(mEnableRemoteDebugging);
                 break;
             default:
                 return super.onOptionsItemSelected(item);
