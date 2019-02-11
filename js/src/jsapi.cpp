@@ -1159,12 +1159,12 @@ JS_PUBLIC_API void JS_RemoveExtraGCRootsTracer(JSContext* cx,
 
 JS_PUBLIC_API bool JS::IsIdleGCTaskNeeded(JSRuntime* rt) {
   // Currently, we only collect nursery during idle time.
-  return rt->gc.nursery().needIdleTimeCollection();
+  return rt->gc.nursery().shouldCollect();
 }
 
 JS_PUBLIC_API void JS::RunIdleTimeGCTask(JSRuntime* rt) {
   gc::GCRuntime& gc = rt->gc;
-  if (gc.nursery().needIdleTimeCollection()) {
+  if (gc.nursery().shouldCollect()) {
     gc.minorGC(JS::GCReason::IDLE_TIME_COLLECTION);
   }
 }

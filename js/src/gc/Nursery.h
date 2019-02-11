@@ -362,7 +362,7 @@ class Nursery {
     minorGCTriggerReason_ = JS::GCReason::NO_REASON;
   }
 
-  bool needIdleTimeCollection() const;
+  bool shouldCollect() const;
 
   bool enableProfiling() const { return enableProfiling_; }
 
