@@ -65,21 +65,18 @@ window.onload = async function() {
     }
 
     const href = "http://example.com/";
-    const className = "test-class";
     const l10n = new MockL10N({
       message: "This is a message that contains a link. %S",
       link: "Learn more",
     });
     const learnMoreLink = LearnMoreLink(
-      { href, className, l10n, learnMoreStringKey: "link", messageStringKey: "message" });
+      { href, l10n, learnMoreStringKey: "link", messageStringKey: "message" });
     ok(LearnMoreLink, "Should be able to create LearnMoreLink instances");
 
     ReactDOM.render(learnMoreLink, document.body);
     const p = document.querySelector("p");
     is(p.textContent, "This is a message that contains a link. Learn more",
       "Text content for the whole paragraph is correct");
-
-    is(p.className, className, "Class name is set correctly.");
 
     const link = p.querySelector(".link");
     ok(link, "Link was rendered");

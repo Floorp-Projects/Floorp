@@ -3,8 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 /* eslint no-unused-vars: [2, {"vars": "local"}] */
 
-/* global _snapshots */
-
 "use strict";
 
 var { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
@@ -32,14 +30,8 @@ const TestUtils = browserRequire("devtools/client/shared/vendor/react-dom-test-u
 
 const ShallowRenderer =
   browserRequire("devtools/client/shared/vendor/react-test-renderer-shallow");
-const TestRenderer =
-  browserRequire("devtools/client/shared/vendor/react-test-renderer");
 
 var EXAMPLE_URL = "http://example.com/browser/browser/devtools/shared/test/";
-
-SimpleTest.registerCleanupFunction(() => {
-  window._snapshots = null;
-});
 
 function forceRender(comp) {
   return setState(comp, {})
@@ -266,30 +258,4 @@ async function waitFor(condition = () => true, delay = 50) {
     }
     await new Promise(resolve => setTimeout(resolve, delay));
   } while (true);
-}
-
-/**
- * Matches a component tree rendererd using TestRenderer to a given expected JSON
- * snapshot.
- * @param  {String} name
- *         Name of the function derived from a test [step] name.
- * @param  {Object} el
- *         React element to be rendered using TestRenderer.
- */
-function matchSnapshot(name, el) {
-  if (!_snapshots) {
-    is(false, "No snapshots were loaded into test.");
-  }
-
-  const snapshot = _snapshots[name];
-  if (!snapshot) {
-    is(false, `Snapshot for "${name}" not found.`);
-  }
-
-  const renderer = TestRenderer.create(el, {});
-  const tree = renderer.toJSON();
-
-  is(JSON.stringify(tree, (key, value) =>
-    (typeof value === "function") ? value.toString() : value),
-     JSON.stringify(snapshot), name);
 }

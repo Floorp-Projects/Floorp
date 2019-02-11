@@ -18,14 +18,14 @@ const TEST_URI = `<html>
  * Test data has the format of:
  * {
  *   desc     {String}    description for better logging
- *   setup   {Function}  An optional setup that needs to be performed before
+ *   action   {Function}  An optional action that needs to be performed before
  *                        the state of the tree and the sidebar can be checked.
  *   expected {JSON}      An expected states for the tree and the sidebar.
  * }
  */
 const tests = [{
   desc: "Expand first and second rows, select third row.",
-  setup: async ({ doc }) => {
+  action: async ({ doc }) => {
     await toggleRow(doc, 0);
     await toggleRow(doc, 1);
     selectRow(doc, 3);
@@ -58,7 +58,7 @@ const tests = [{
   },
 }, {
   desc: "Remove a child from a document.",
-  setup: async ({ doc, browser }) => {
+  action: async ({ doc, browser }) => {
     is(doc.querySelectorAll(".treeRow").length, 4, "Tree size is correct.");
     await ContentTask.spawn(browser, {}, () =>
       content.document.getElementById("p").remove());
@@ -83,7 +83,7 @@ const tests = [{
   },
 }, {
   desc: "Update child's text content.",
-  setup: async ({ browser }) => {
+  action: async ({ browser }) => {
     await ContentTask.spawn(browser, {}, () => {
       content.document.getElementById("h1").textContent = "New Header";
     });
@@ -102,7 +102,7 @@ const tests = [{
   },
 }, {
   desc: "Select third row in the tree.",
-  setup: ({ doc }) => selectRow(doc, 1),
+  action: ({ doc }) => selectRow(doc, 1),
   expected: {
     sidebar: {
       name: "New Header",
