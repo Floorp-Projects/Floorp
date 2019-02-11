@@ -1,4 +1,4 @@
-// Copyright 2018 Mozilla
+// Copyright 2018-2019 Mozilla
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not use
 // this file except in compliance with the License. You may obtain a copy of the
@@ -11,9 +11,10 @@
 use std::path::PathBuf;
 
 use bincode;
+use failure::Fail;
 use lmdb;
 
-use value::Type;
+use crate::value::Type;
 
 #[derive(Debug, Fail)]
 pub enum DataError {

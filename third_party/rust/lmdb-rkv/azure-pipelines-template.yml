@@ -1,0 +1,49 @@
+jobs:
+- job: ${{ parameters.name }}
+  pool:
+    vmImage: ${{ parameters.vmImage }}
+  strategy:
+    matrix:
+      stable:
+        rustup_toolchain: stable
+      beta:
+        rustup_toolchain: beta
+      nightly:
+        rustup_toolchain: nightly
+  steps:
+  # Linux and macOS.
+  - ${{ if ne(parameters.name, 'Windows') }}:
+    - script: |
+        curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain $RUSTUP_TOOLCHAIN
+        echo "##vso[task.setvariable variable=PATH;]$PATH:$HOME/.cargo/bin"
+      displayName: Install rust
+  # Windows.
+  - ${{ if eq(parameters.name, 'Windows') }}:
+    - script: |
+        curl -sSf -o rustup-init.exe https://win.rustup.rs
+        rustup-init.exe -y --default-toolchain %RUSTUP_TOOLCHAIN%
+        set PATH=%PATH%;%USERPROFILE%\.cargo\bin
+        echo "##vso[task.setvariable variable=PATH;]%PATH%;%USERPROFILE%\.cargo\bin"
+      displayName: Install rust (windows)
+  # All platforms.
+  - script: |
+        rustc -Vv
+        cargo -V
+    displayName: Query rust and cargo versions
+  - script: cargo build
+    displayName: Build
+  # Linux and macOS w/nightly toolchain.
+  # Ideally we'd only run the script for the nightly toolchain, but I can't
+  # figure out how to determine that within the Azure Pipelines conditional.
+  - ${{ if ne(parameters.name, 'Windows') }}:
+    - script: |
+        if [ "$RUSTUP_TOOLCHAIN" = 'nightly' ]
+          then cargo test
+        fi
+      displayName: Test
+  # Windows w/nightly toolchain.
+  # Ideally we'd only run the script for the nightly toolchain, but I can't
+  # figure out how to determine that within the Azure Pipelines conditional.
+  - ${{ if eq(parameters.name, 'Windows') }}:
+    - script: if "%RUSTUP_TOOLCHAIN%" == "nightly" cargo test
+      displayName: Test

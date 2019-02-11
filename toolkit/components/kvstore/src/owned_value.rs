@@ -24,7 +24,7 @@ pub enum OwnedValue {
     Str(String),
 }
 
-pub fn value_to_owned<'a>(value: Option<Value<'a>>) -> Result<OwnedValue, KeyValueError> {
+pub fn value_to_owned(value: Option<Value>) -> Result<OwnedValue, KeyValueError> {
     match value {
         Some(Value::Bool(val)) => Ok(OwnedValue::Bool(val)),
         Some(Value::I64(val)) => Ok(OwnedValue::I64(val)),
@@ -70,8 +70,6 @@ pub fn variant_to_owned(variant: &nsIVariant) -> Result<Option<OwnedValue>, KeyV
             Ok(Some(OwnedValue::Bool(val)))
         }
         DATA_TYPE_EMPTY | DATA_TYPE_VOID => Ok(None),
-        unsupported_type => {
-            return Err(KeyValueError::UnsupportedType(unsupported_type));
-        }
+        unsupported_type => Err(KeyValueError::UnsupportedType(unsupported_type)),
     }
 }
