@@ -117,14 +117,7 @@ TabSources.prototype = {
       contentType: contentType,
     });
 
-    const sourceActorStore = this._thread.sourceActorStore;
-    const id = sourceActorStore.getReusableActorId(source, originalUrl);
-    if (id) {
-      actor.actorID = id;
-    }
-
     this._thread.threadLifetimePool.addActor(actor);
-    sourceActorStore.setReusableActorId(source, originalUrl, actor.actorID);
 
     if (this._autoBlackBox &&
         !this.neverAutoBlackBoxSources.has(actor.url) &&
@@ -182,8 +175,16 @@ TabSources.prototype = {
         return this._htmlDocumentSourceActors[url];
       }
     }
+    return null;
+  },
 
-    throw new Error("getSourceActorByURL: could not find source for " + url);
+  getSourceActorById(actorId) {
+    for (const [, actor] of this._sourceActors) {
+      if (actor.actorID == actorId) {
+        return actor;
+      }
+    }
+    return null;
   },
 
   /**

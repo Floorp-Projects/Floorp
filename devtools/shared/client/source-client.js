@@ -5,7 +5,6 @@
 "use strict";
 
 const {arg, DebuggerClient} = require("devtools/shared/client/debugger-client");
-loader.lazyRequireGetter(this, "BreakpointClient", "devtools/shared/client/breakpoint-client");
 
 const noop = () => {};
 
@@ -146,87 +145,6 @@ SourceClient.prototype = {
         contentType: contentType,
       };
       return newResponse;
-    });
-  },
-
-  /**
-   * Request to set a breakpoint in the specified location.
-   *
-   * @param object location
-   *        The location and options of the breakpoint in
-   *        the form of { line[, column, options] }.
-   */
-  setBreakpoint: function({ line, column, options }) {
-    // A helper function that sets the breakpoint.
-    const doSetBreakpoint = callback => {
-      const location = {
-        line,
-        column,
-      };
-
-      const packet = {
-        to: this.actor,
-        type: "setBreakpoint",
-        location,
-        options,
-      };
-
-      // Older servers only support conditions, not a more general options
-      // object. Transform the packet to support the older format.
-      if (options && !this._client.mainRoot.traits.nativeLogpoints) {
-        delete packet.options;
-        if (options.logValue) {
-          // Emulate log points by setting a condition with a call to console.log,
-          // which always returns false so the server will never pause.
-          packet.condition = `console.log(${options.logValue})`;
-        } else {
-          packet.condition = options.condition;
-        }
-      }
-
-      return this._client.request(packet).then(response => {
-        // Ignoring errors, since the user may be setting a breakpoint in a
-        // dead script that will reappear on a page reload.
-        let bpClient;
-        if (response.actor) {
-          bpClient = new BreakpointClient(
-            this._client,
-            this,
-            response.actor,
-            location,
-            options
-          );
-        }
-        if (callback) {
-          callback();
-        }
-        return [response, bpClient];
-      });
-    };
-
-    // With async sourcemap processing removed from the server, it is not
-    // necessary for clients to pause the debuggee before adding breakpoints.
-    if (this._client.mainRoot.traits.breakpointWhileRunning) {
-      return doSetBreakpoint();
-    }
-
-    // If the debuggee is paused, just set the breakpoint.
-    if (this._activeThread.paused) {
-      return doSetBreakpoint();
-    }
-    // Otherwise, force a pause in order to set the breakpoint.
-    return this._activeThread.interrupt().then(response => {
-      if (response.error) {
-        // Can't set the breakpoint if pausing failed.
-        return response;
-      }
-
-      const { type, why } = response;
-      const cleanUp = type == "paused" && why.type == "interrupted"
-            ? () => this._activeThread.resume()
-            : noop;
-
-      return doSetBreakpoint(cleanUp);
     });
   },
 

@@ -36,7 +36,7 @@ const testBlackBox = async function() {
     packet.frame.where.actor
   );
 
-  await setBreakpoint(bpSource, { line: 2 });
+  await setBreakpoint(gThreadClient, { sourceUrl: bpSource.url, line: 2 });
   await resume(gThreadClient);
 
   let sourceForm = await getSourceForm(gThreadClient, BLACK_BOXED_URL);

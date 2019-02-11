@@ -4,6 +4,13 @@
 // Tests the breakpoint gutter and making sure breakpoint icons exist
 // correctly
 
+// FIXME bug 1524374 removing breakpoints in this test can cause uncaught
+// rejections and make bug 1512742 permafail.
+const { PromiseTestUtils } = scopedCuImport(
+  "resource://testing-common/PromiseTestUtils.jsm"
+);
+PromiseTestUtils.whitelistRejectionsGlobally(/NS_ERROR_NOT_INITIALIZED/);
+
 // Utilities for interacting with the editor
 function clickGutter(dbg, line) {
   clickElement(dbg, "gutter", line);
