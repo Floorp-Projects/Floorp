@@ -582,6 +582,32 @@ class PresShell final : public nsIPresShell,
         PresShell& aPresShell);
 
     /**
+     * MaybeFlushPendingNotifications() maybe flush pending notifications if
+     * aGUIEvent should be handled with the latest layout.
+     *
+     * @param aGUIEvent                 The handling event.
+     * @return                          true if this actually flushes pending
+     *                                  layout and that has caused changing the
+     *                                  layout.
+     */
+    MOZ_CAN_RUN_SCRIPT
+    bool MaybeFlushPendingNotifications(WidgetGUIEvent* aGUIEvent);
+
+    /**
+     * GetFrameToHandleNonTouchEvent() returns a frame to handle the event.
+     * This may flush pending layout if the target is in child PresShell.
+     *
+     * @param aRootFrameToHandleEvent   The root frame to handle the event.
+     * @param aGUIEvent                 The handling event.
+     * @return                          The frame which should handle the
+     *                                  event.  nullptr if the caller should
+     *                                  stop handling the event.
+     */
+    MOZ_CAN_RUN_SCRIPT
+    nsIFrame* GetFrameToHandleNonTouchEvent(nsIFrame* aRootFrameToHandleEvent,
+                                            WidgetGUIEvent* aGUIEvent);
+
+    /**
      * MaybeDiscardEvent() checks whether it's safe to handle aGUIEvent right
      * now.  If it's not safe, this may notify somebody of discarding event if
      * necessary.
