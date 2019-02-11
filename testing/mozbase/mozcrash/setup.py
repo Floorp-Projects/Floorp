@@ -7,7 +7,7 @@ from __future__ import absolute_import
 from setuptools import setup
 
 PACKAGE_NAME = 'mozcrash'
-PACKAGE_VERSION = '1.0'
+PACKAGE_VERSION = '1.1.0'
 
 # dependencies
 deps = ['mozfile >= 1.0',
@@ -19,7 +19,7 @@ setup(name=PACKAGE_NAME,
       "left behind by crashed processes",
       long_description="see https://firefox-source-docs.mozilla.org/mozbase/index.html",
       classifiers=['Programming Language :: Python :: 2.7',
-                   'Programming Language :: Python :: 2 :: Only'],
+                   'Programming Language :: Python :: 3.5'],
       # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
       keywords='mozilla',
       author='Mozilla Automation and Tools team',
