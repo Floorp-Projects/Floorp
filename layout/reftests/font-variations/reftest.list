@@ -5,7 +5,7 @@ default-preferences pref(layout.css.font-variations.enabled,true)
 
 # We're not running recent enough Windows/macOS/Linux versions in CI yet, so this will fail until they are updated.
 # Also fails under webrender (bug 1441323, bug 1442693).
-fails-if(OSX<1012) fails-if(winWidget) fails-if(gtkWidget) != font-optical-sizing-1.html font-optical-sizing-1-notref.html
+fails-if(OSX<1012) fails-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fails-if(gtkWidget) != font-optical-sizing-1.html font-optical-sizing-1-notref.html
 
 # reset the default preferences
 default-preferences

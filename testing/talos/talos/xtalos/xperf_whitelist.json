@@ -74,6 +74,18 @@
   "c:\\windows\\prefetch\\{prefetch}.pf": {
     "ignore": true
   },
+  "c:\\windows\\system32\\inputhost.dll": {
+    "mincount": 0,
+    "maxcount": 2,
+    "minbytes": 0,
+    "maxbytes": 32768
+  },
+  "c:\\windows\\system32\\advapi32.dll": {
+    "mincount": 0,
+    "maxcount": 2,
+    "minbytes": 0,
+    "maxbytes": 24576
+  },
   "c:\\windows\\system32\\apphelp.dll": {
     "mincount": 0,
     "maxcount": 2,
