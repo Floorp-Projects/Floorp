@@ -3,9 +3,9 @@
 
 from __future__ import absolute_import
 
-import urlparse
 import zipfile
-import StringIO
+from six import BytesIO
+from six.moves.urllib.parse import urlunsplit
 
 import mozhttpd
 import mozunit
@@ -34,7 +34,7 @@ def test_symbols_path_url(check_for_crashes, minidump_files):
     data = {"retrieved": False}
 
     def make_zipfile():
-        data = StringIO.StringIO()
+        data = BytesIO()
         z = zipfile.ZipFile(data, 'w')
         z.writestr("symbols.txt", "abc/xyz")
         z.close()
@@ -51,8 +51,8 @@ def test_symbols_path_url(check_for_crashes, minidump_files):
                                             'path': '/symbols',
                                             'function': get_symbols}])
     httpd.start()
-    symbol_url = urlparse.urlunsplit(('http', '%s:%d' % httpd.httpd.server_address,
-                                      '/symbols', '', ''))
+    symbol_url = urlunsplit(('http', '%s:%d' % httpd.httpd.server_address,
+                             '/symbols', '', ''))
 
     assert 1 == check_for_crashes(symbols_path=symbol_url)
     assert data["retrieved"]
