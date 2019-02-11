@@ -3454,8 +3454,6 @@ class GLContext : public GLLibraryLoader,
   static bool ListHasExtension(const GLubyte* extensions,
                                const char* extension);
 
-  GLint GetMaxTextureImageSize() { return mMaxTextureImageSize; }
-
  public:
   std::map<GLuint, SharedSurface*> mFBOMapping;
 
@@ -3586,7 +3584,6 @@ class GLContext : public GLLibraryLoader,
   uint32_t mMaxTexOrRbSize = 0;
   GLint mMaxTextureSize = 0;
   GLint mMaxCubeMapTextureSize = 0;
-  GLint mMaxTextureImageSize = 0;
   GLint mMaxRenderbufferSize = 0;
   GLint mMaxViewportDims[2] = {};
   GLsizei mMaxSamples = 0;
