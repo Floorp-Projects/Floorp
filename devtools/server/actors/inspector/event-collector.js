@@ -571,7 +571,7 @@ class ReactEventCollector extends MainEventCollector {
     if (props) {
       for (const [name, prop] of Object.entries(props)) {
         if (REACT_EVENT_NAMES.includes(name)) {
-          const listener = prop.__reactBoundMethod || prop;
+          const listener = prop && prop.__reactBoundMethod || prop;
 
           if (typeof listener !== "function") {
             continue;
@@ -614,7 +614,7 @@ class ReactEventCollector extends MainEventCollector {
         if (value.memoizedProps) {
           return value.memoizedProps; // React 16
         }
-        return value._currentElement.props; // React 15
+        return value && value._currentElement && value._currentElement.props; // React 15
       }
     }
     return null;
