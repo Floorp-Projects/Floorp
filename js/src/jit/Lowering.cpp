@@ -2848,6 +2848,13 @@ void LIRGenerator::visitTypedArrayElements(MTypedArrayElements* ins) {
          ins);
 }
 
+void LIRGenerator::visitTypedArrayElementShift(MTypedArrayElementShift* ins) {
+  MOZ_ASSERT(ins->object()->type() == MIRType::Object);
+  define(new (alloc())
+             LTypedArrayElementShift(useRegisterAtStart(ins->object())),
+         ins);
+}
+
 void LIRGenerator::visitSetDisjointTypedElements(
     MSetDisjointTypedElements* ins) {
   MOZ_ASSERT(ins->type() == MIRType::None);

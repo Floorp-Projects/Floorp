@@ -279,7 +279,7 @@ bool DefineTypedArrayElement(JSContext* cx, HandleObject arr, uint64_t index,
                              Handle<PropertyDescriptor> desc,
                              ObjectOpResult& result);
 
-static inline unsigned TypedArrayShift(Scalar::Type viewType) {
+static inline constexpr unsigned TypedArrayShift(Scalar::Type viewType) {
   switch (viewType) {
     case Scalar::Int8:
     case Scalar::Uint8:
@@ -295,9 +295,9 @@ static inline unsigned TypedArrayShift(Scalar::Type viewType) {
     case Scalar::Int64:
     case Scalar::Float64:
       return 3;
-    default:;
+    default:
+      MOZ_CRASH("Unexpected array type");
   }
-  MOZ_CRASH("Unexpected array type");
 }
 
 static inline unsigned TypedArrayElemSize(Scalar::Type viewType) {
