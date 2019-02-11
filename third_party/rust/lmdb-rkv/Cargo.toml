@@ -12,7 +12,7 @@
 
 [package]
 name = "lmdb-rkv"
-version = "0.9.0"
+version = "0.11.2"
 authors = ["Dan Burkert <dan@danburkert.com>"]
 description = "Idiomatic and safe LMDB wrapper."
 documentation = "https://docs.rs/lmdb-rkv"
@@ -30,8 +30,8 @@ version = "1"
 [dependencies.libc]
 version = "0.2"
 
-[dependencies.lmdb-sys]
-version = "0.8.0"
+[dependencies.lmdb-rkv-sys]
+version = "0.8.2"
 [dev-dependencies.byteorder]
 version = "1.0"
 

@@ -1,4 +1,4 @@
-// Copyright 2018 Mozilla
+// Copyright 2018-2019 Mozilla
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not use
 // this file except in compliance with the License. You may obtain a copy of the
@@ -18,26 +18,27 @@ use std::path::{
 use lmdb;
 
 use lmdb::{
+    Database,
     DatabaseFlags,
     Environment,
     EnvironmentBuilder,
+    Stat,
 };
 
-use error::StoreError;
-
-use integer::{
-    IntegerReader,
+use crate::error::StoreError;
+use crate::readwrite::{
+    Reader,
+    Writer,
+};
+use crate::store::integer::{
     IntegerStore,
-    IntegerWriter,
-    Key,
     PrimitiveInt,
 };
 
-use readwrite::{
-    Reader,
-    Store,
-    Writer,
-};
+use crate::store::integermulti::MultiIntegerStore;
+use crate::store::multi::MultiStore;
+use crate::store::single::SingleStore;
+use crate::store::Options as StoreOptions;
 
 pub static DEFAULT_MAX_DBS: c_uint = 5;
 
@@ -55,6 +56,7 @@ impl Rkv {
     }
 
     /// Return a new Rkv environment that supports up to `DEFAULT_MAX_DBS` open databases.
+    #[allow(clippy::new_ret_no_self)]
     pub fn new(path: &Path) -> Result<Rkv, StoreError> {
         Rkv::with_capacity(path, DEFAULT_MAX_DBS)
     }
@@ -90,118 +92,137 @@ impl Rkv {
 
 /// Store creation methods.
 impl Rkv {
-    pub fn open_or_create_default(&self) -> Result<Store, StoreError> {
-        self.open_or_create(None)
-    }
-
-    pub fn open_or_create<'s, T>(&self, name: T) -> Result<Store, StoreError>
+    /// Create or Open an existing database in (&[u8] -> Single Value) mode.
+    /// Note: that create=true cannot be called concurrently with other operations
+    /// so if you are sure that the database exists, call this with create=false.
+    pub fn open_single<'s, T>(&self, name: T, opts: StoreOptions) -> Result<SingleStore, StoreError>
     where
         T: Into<Option<&'s str>>,
     {
-        let flags = DatabaseFlags::empty();
-        self.open_or_create_with_flags(name, flags)
+        self.open(name, opts).map(SingleStore::new)
     }
 
-    pub fn open_or_create_integer<'s, T>(&self, name: T) -> Result<IntegerStore, StoreError>
+    /// Create or Open an existing database in (Integer -> Single Value) mode.
+    /// Note: that create=true cannot be called concurrently with other operations
+    /// so if you are sure that the database exists, call this with create=false.
+    pub fn open_integer<'s, T, K: PrimitiveInt>(
+        &self,
+        name: T,
+        mut opts: StoreOptions,
+    ) -> Result<IntegerStore<K>, StoreError>
     where
         T: Into<Option<&'s str>>,
     {
-        let mut flags = DatabaseFlags::empty();
-        flags.toggle(DatabaseFlags::INTEGER_KEY);
-        let db = self.env.create_db(name.into(), flags).map_err(|e| match e {
-            lmdb::Error::BadRslot => StoreError::open_during_transaction(),
-            _ => e.into(),
-        })?;
-        Ok(IntegerStore::new(db))
+        opts.flags.set(DatabaseFlags::INTEGER_KEY, true);
+        self.open(name, opts).map(IntegerStore::new)
     }
 
-    pub fn open_or_create_with_flags<'s, T>(&self, name: T, flags: DatabaseFlags) -> Result<Store, StoreError>
+    /// Create or Open an existing database in (&[u8] -> Multiple Values) mode.
+    /// Note: that create=true cannot be called concurrently with other operations
+    /// so if you are sure that the database exists, call this with create=false.
+    pub fn open_multi<'s, T>(&self, name: T, mut opts: StoreOptions) -> Result<MultiStore, StoreError>
     where
         T: Into<Option<&'s str>>,
     {
-        let db = self.env.create_db(name.into(), flags).map_err(|e| match e {
-            lmdb::Error::BadRslot => StoreError::open_during_transaction(),
-            _ => e.into(),
-        })?;
-        Ok(Store::new(db))
+        opts.flags.set(DatabaseFlags::DUP_SORT, true);
+        self.open(name, opts).map(MultiStore::new)
     }
 
-    /// Open an existing database, unlike other `open_or_create_*` functions, it
-    /// opens the given database by using a read transaction, which means other
-    /// in-flight write transaction will not block this call. This is preferred
-    /// to be used in the read_only scenarios.
-    pub fn open<'s, T>(&self, name: T) -> Result<Store, StoreError>
+    /// Create or Open an existing database in (Integer -> Multiple Values) mode.
+    /// Note: that create=true cannot be called concurrently with other operations
+    /// so if you are sure that the database exists, call this with create=false.
+    pub fn open_multi_integer<'s, T, K: PrimitiveInt>(
+        &self,
+        name: T,
+        mut opts: StoreOptions,
+    ) -> Result<MultiIntegerStore<K>, StoreError>
     where
         T: Into<Option<&'s str>>,
     {
-        let db = self.env.open_db(name.into()).map_err(|e| match e {
-            lmdb::Error::BadRslot => StoreError::open_during_transaction(),
-            _ => e.into(),
-        })?;
-        Ok(Store::new(db))
+        opts.flags.set(DatabaseFlags::INTEGER_KEY, true);
+        opts.flags.set(DatabaseFlags::DUP_SORT, true);
+        self.open(name, opts).map(MultiIntegerStore::new)
+    }
+
+    fn open<'s, T>(&self, name: T, opts: StoreOptions) -> Result<Database, StoreError>
+    where
+        T: Into<Option<&'s str>>,
+    {
+        if opts.create {
+            self.env.create_db(name.into(), opts.flags).map_err(|e| match e {
+                lmdb::Error::BadRslot => StoreError::open_during_transaction(),
+                _ => e.into(),
+            })
+        } else {
+            self.env.open_db(name.into()).map_err(|e| match e {
+                lmdb::Error::BadRslot => StoreError::open_during_transaction(),
+                _ => e.into(),
+            })
+        }
     }
 }
 
 /// Read and write accessors.
 impl Rkv {
-    pub fn read<K>(&self) -> Result<Reader<K>, StoreError>
-    where
-        K: AsRef<[u8]>,
-    {
-        let txn = self.env.begin_ro_txn()?;
-        Ok(Reader::new(txn))
+    /// Create a read transaction.  There can be multiple concurrent readers
+    /// for an environment, up to the maximum specified by LMDB (default 126),
+    /// and you can open readers while a write transaction is active.
+    pub fn read(&self) -> Result<Reader, StoreError> {
+        Ok(Reader::new(self.env.begin_ro_txn().map_err(StoreError::from)?))
     }
 
-    pub fn write<K>(&self) -> Result<Writer<K>, StoreError>
-    where
-        K: AsRef<[u8]>,
-    {
-        let txn = self.env.begin_rw_txn()?;
-        Ok(Writer::new(txn))
-    }
-
-    pub fn read_int<K>(&self) -> Result<IntegerReader<K>, StoreError>
-    where
-        K: PrimitiveInt,
-    {
-        let reader = self.read::<Key<K>>()?;
-        Ok(IntegerReader::new(reader))
-    }
-
-    pub fn write_int<K>(&self) -> Result<IntegerWriter<K>, StoreError>
-    where
-        K: PrimitiveInt,
-    {
-        let write = self.write::<Key<K>>()?;
-        Ok(IntegerWriter::new(write))
+    /// Create a write transaction.  There can be only one write transaction
+    /// active at any given time, so trying to create a second one will block
+    /// until the first is committed or aborted.
+    pub fn write(&self) -> Result<Writer, StoreError> {
+        Ok(Writer::new(self.env.begin_rw_txn().map_err(StoreError::from)?))
     }
 }
 
+/// Other environment methods.
+impl Rkv {
+    /// Flush the data buffers to disk. This call is only useful, when the environment
+    /// was open with either `NO_SYNC`, `NO_META_SYNC` or `MAP_ASYNC` (see below).
+    /// The call is not valid if the environment was opened with `READ_ONLY`.
+    ///
+    /// Data is always written to disk when `transaction.commit()` is called,
+    /// but the operating system may keep it buffered.
+    /// LMDB always flushes the OS buffers upon commit as well,
+    /// unless the environment was opened with `NO_SYNC` or in part `NO_META_SYNC`.
+    ///
+    /// `force`: if true, force a synchronous flush.
+    /// Otherwise if the environment has the `NO_SYNC` flag set the flushes will be omitted,
+    /// and with `MAP_ASYNC` they will be asynchronous.
+    pub fn sync(&self, force: bool) -> Result<(), StoreError> {
+        self.env.sync(force).map_err(|e| e.into())
+    }
+
+    /// Retrieves statistics about this environment.
+    pub fn stat(&self) -> Result<Stat, StoreError> {
+        self.env.stat().map_err(|e| e.into())
+    }
+}
+
+#[allow(clippy::cyclomatic_complexity)]
 #[cfg(test)]
 mod tests {
-    extern crate byteorder;
-    extern crate tempfile;
-
-    use self::byteorder::{
+    use byteorder::{
         ByteOrder,
         LittleEndian,
     };
-
-    use self::tempfile::Builder;
-
     use std::{
         fs,
         str,
+        sync::{
+            Arc,
+            RwLock,
+        },
         thread,
     };
-
-    use std::sync::{
-        Arc,
-        RwLock,
-    };
+    use tempfile::Builder;
 
     use super::*;
-    use *;
+    use crate::*;
 
     /// We can't open a directory that doesn't exist.
     #[test]
@@ -222,12 +243,12 @@ mod tests {
     }
 
     fn check_rkv(k: &Rkv) {
-        let _ = k.open_or_create_default().expect("created default");
+        let _ = k.open_single("default", StoreOptions::create()).expect("created default");
 
-        let yyy = k.open_or_create("yyy").expect("opened");
+        let yyy = k.open_single("yyy", StoreOptions::create()).expect("opened");
         let reader = k.read().expect("reader");
 
-        let result = reader.get(yyy, "foo");
+        let result = yyy.get(&reader, "foo");
         assert_eq!(None, result.expect("success but no value"));
     }
 
@@ -251,7 +272,7 @@ mod tests {
         assert!(root.path().is_dir());
 
         let mut builder = Rkv::environment_builder();
-        builder.set_max_dbs(1);
+        builder.set_max_dbs(2);
         let k = Rkv::from_env(root.path(), builder).expect("rkv");
 
         check_rkv(&k);
@@ -274,7 +295,7 @@ mod tests {
         // (plus the default database, which doesn't count against the limit).
         // This should really return an error rather than panicking, per
         // <https://github.com/mozilla/lmdb-rs/issues/6>.
-        let _zzz = k.open_or_create("zzz").expect("opened");
+        let _zzz = k.open_single("zzz", StoreOptions::create()).expect("opened");
     }
 
     fn get_larger_than_default_map_size_value() -> usize {
@@ -299,13 +320,13 @@ mod tests {
         assert!(root.path().is_dir());
 
         let k = Rkv::new(root.path()).expect("new succeeded");
-        let sk: Store = k.open_or_create_default().expect("opened");
+        let sk: SingleStore = k.open_single("test", StoreOptions::create()).expect("opened");
 
         // Writing a large enough value should cause LMDB to fail on MapFull.
         // We write a string that is larger than the default map size.
         let val = "x".repeat(get_larger_than_default_map_size_value());
         let mut writer = k.write().expect("writer");
-        writer.put(sk, "foo", &Value::Str(&val)).expect("wrote");
+        sk.put(&mut writer, "foo", &Value::Str(&val)).expect("wrote");
     }
 
     #[test]
@@ -319,16 +340,17 @@ mod tests {
         // Set the map size to the size of the value we'll store in it + 100KiB,
         // which ensures that there's enough space for the value and metadata.
         builder.set_map_size(get_larger_than_default_map_size_value() + 100 * 1024 /* 100KiB */);
+        builder.set_max_dbs(2);
         let k = Rkv::from_env(root.path(), builder).unwrap();
-        let sk: Store = k.open_or_create_default().expect("opened");
+        let sk: SingleStore = k.open_single("test", StoreOptions::create()).expect("opened");
         let val = "x".repeat(get_larger_than_default_map_size_value());
 
         let mut writer = k.write().expect("writer");
-        writer.put(sk, "foo", &Value::Str(&val)).expect("wrote");
+        sk.put(&mut writer, "foo", &Value::Str(&val)).expect("wrote");
         writer.commit().expect("committed");
 
         let reader = k.read().unwrap();
-        assert_eq!(reader.get(sk, "foo").expect("read"), Some(Value::Str(&val)));
+        assert_eq!(sk.get(&reader, "foo").expect("read"), Some(Value::Str(&val)));
     }
 
     #[test]
@@ -337,43 +359,43 @@ mod tests {
         fs::create_dir_all(root.path()).expect("dir created");
         let k = Rkv::new(root.path()).expect("new succeeded");
 
-        let sk: Store = k.open_or_create("sk").expect("opened");
+        let sk: SingleStore = k.open_single("sk", StoreOptions::create()).expect("opened");
 
         {
             let mut writer = k.write().expect("writer");
-            writer.put(sk, "foo", &Value::I64(1234)).expect("wrote");
-            writer.put(sk, "noo", &Value::F64(1234.0.into())).expect("wrote");
-            writer.put(sk, "bar", &Value::Bool(true)).expect("wrote");
-            writer.put(sk, "baz", &Value::Str("héllo, yöu")).expect("wrote");
-            assert_eq!(writer.get(sk, "foo").expect("read"), Some(Value::I64(1234)));
-            assert_eq!(writer.get(sk, "noo").expect("read"), Some(Value::F64(1234.0.into())));
-            assert_eq!(writer.get(sk, "bar").expect("read"), Some(Value::Bool(true)));
-            assert_eq!(writer.get(sk, "baz").expect("read"), Some(Value::Str("héllo, yöu")));
+            sk.put(&mut writer, "foo", &Value::I64(1234)).expect("wrote");
+            sk.put(&mut writer, "noo", &Value::F64(1234.0.into())).expect("wrote");
+            sk.put(&mut writer, "bar", &Value::Bool(true)).expect("wrote");
+            sk.put(&mut writer, "baz", &Value::Str("héllo, yöu")).expect("wrote");
+            assert_eq!(sk.get(&writer, "foo").expect("read"), Some(Value::I64(1234)));
+            assert_eq!(sk.get(&writer, "noo").expect("read"), Some(Value::F64(1234.0.into())));
+            assert_eq!(sk.get(&writer, "bar").expect("read"), Some(Value::Bool(true)));
+            assert_eq!(sk.get(&writer, "baz").expect("read"), Some(Value::Str("héllo, yöu")));
 
             // Isolation. Reads won't return values.
             let r = &k.read().unwrap();
-            assert_eq!(r.get(sk, "foo").expect("read"), None);
-            assert_eq!(r.get(sk, "bar").expect("read"), None);
-            assert_eq!(r.get(sk, "baz").expect("read"), None);
+            assert_eq!(sk.get(r, "foo").expect("read"), None);
+            assert_eq!(sk.get(r, "bar").expect("read"), None);
+            assert_eq!(sk.get(r, "baz").expect("read"), None);
         }
 
         // Dropped: tx rollback. Reads will still return nothing.
 
         {
             let r = &k.read().unwrap();
-            assert_eq!(r.get(sk, "foo").expect("read"), None);
-            assert_eq!(r.get(sk, "bar").expect("read"), None);
-            assert_eq!(r.get(sk, "baz").expect("read"), None);
+            assert_eq!(sk.get(r, "foo").expect("read"), None);
+            assert_eq!(sk.get(r, "bar").expect("read"), None);
+            assert_eq!(sk.get(r, "baz").expect("read"), None);
         }
 
         {
             let mut writer = k.write().expect("writer");
-            writer.put(sk, "foo", &Value::I64(1234)).expect("wrote");
-            writer.put(sk, "bar", &Value::Bool(true)).expect("wrote");
-            writer.put(sk, "baz", &Value::Str("héllo, yöu")).expect("wrote");
-            assert_eq!(writer.get(sk, "foo").expect("read"), Some(Value::I64(1234)));
-            assert_eq!(writer.get(sk, "bar").expect("read"), Some(Value::Bool(true)));
-            assert_eq!(writer.get(sk, "baz").expect("read"), Some(Value::Str("héllo, yöu")));
+            sk.put(&mut writer, "foo", &Value::I64(1234)).expect("wrote");
+            sk.put(&mut writer, "bar", &Value::Bool(true)).expect("wrote");
+            sk.put(&mut writer, "baz", &Value::Str("héllo, yöu")).expect("wrote");
+            assert_eq!(sk.get(&writer, "foo").expect("read"), Some(Value::I64(1234)));
+            assert_eq!(sk.get(&writer, "bar").expect("read"), Some(Value::Bool(true)));
+            assert_eq!(sk.get(&writer, "baz").expect("read"), Some(Value::Str("héllo, yöu")));
 
             writer.commit().expect("committed");
         }
@@ -381,44 +403,44 @@ mod tests {
         // Committed. Reads will succeed.
         {
             let r = k.read().unwrap();
-            assert_eq!(r.get(sk, "foo").expect("read"), Some(Value::I64(1234)));
-            assert_eq!(r.get(sk, "bar").expect("read"), Some(Value::Bool(true)));
-            assert_eq!(r.get(sk, "baz").expect("read"), Some(Value::Str("héllo, yöu")));
+            assert_eq!(sk.get(&r, "foo").expect("read"), Some(Value::I64(1234)));
+            assert_eq!(sk.get(&r, "bar").expect("read"), Some(Value::Bool(true)));
+            assert_eq!(sk.get(&r, "baz").expect("read"), Some(Value::Str("héllo, yöu")));
         }
 
         {
             let mut writer = k.write().expect("writer");
-            writer.delete(sk, "foo").expect("deleted");
-            writer.delete(sk, "bar").expect("deleted");
-            writer.delete(sk, "baz").expect("deleted");
-            assert_eq!(writer.get(sk, "foo").expect("read"), None);
-            assert_eq!(writer.get(sk, "bar").expect("read"), None);
-            assert_eq!(writer.get(sk, "baz").expect("read"), None);
+            sk.delete(&mut writer, "foo").expect("deleted");
+            sk.delete(&mut writer, "bar").expect("deleted");
+            sk.delete(&mut writer, "baz").expect("deleted");
+            assert_eq!(sk.get(&writer, "foo").expect("read"), None);
+            assert_eq!(sk.get(&writer, "bar").expect("read"), None);
+            assert_eq!(sk.get(&writer, "baz").expect("read"), None);
 
             // Isolation. Reads still return values.
             let r = k.read().unwrap();
-            assert_eq!(r.get(sk, "foo").expect("read"), Some(Value::I64(1234)));
-            assert_eq!(r.get(sk, "bar").expect("read"), Some(Value::Bool(true)));
-            assert_eq!(r.get(sk, "baz").expect("read"), Some(Value::Str("héllo, yöu")));
+            assert_eq!(sk.get(&r, "foo").expect("read"), Some(Value::I64(1234)));
+            assert_eq!(sk.get(&r, "bar").expect("read"), Some(Value::Bool(true)));
+            assert_eq!(sk.get(&r, "baz").expect("read"), Some(Value::Str("héllo, yöu")));
         }
 
         // Dropped: tx rollback. Reads will still return values.
 
         {
             let r = k.read().unwrap();
-            assert_eq!(r.get(sk, "foo").expect("read"), Some(Value::I64(1234)));
-            assert_eq!(r.get(sk, "bar").expect("read"), Some(Value::Bool(true)));
-            assert_eq!(r.get(sk, "baz").expect("read"), Some(Value::Str("héllo, yöu")));
+            assert_eq!(sk.get(&r, "foo").expect("read"), Some(Value::I64(1234)));
+            assert_eq!(sk.get(&r, "bar").expect("read"), Some(Value::Bool(true)));
+            assert_eq!(sk.get(&r, "baz").expect("read"), Some(Value::Str("héllo, yöu")));
         }
 
         {
             let mut writer = k.write().expect("writer");
-            writer.delete(sk, "foo").expect("deleted");
-            writer.delete(sk, "bar").expect("deleted");
-            writer.delete(sk, "baz").expect("deleted");
-            assert_eq!(writer.get(sk, "foo").expect("read"), None);
-            assert_eq!(writer.get(sk, "bar").expect("read"), None);
-            assert_eq!(writer.get(sk, "baz").expect("read"), None);
+            sk.delete(&mut writer, "foo").expect("deleted");
+            sk.delete(&mut writer, "bar").expect("deleted");
+            sk.delete(&mut writer, "baz").expect("deleted");
+            assert_eq!(sk.get(&writer, "foo").expect("read"), None);
+            assert_eq!(sk.get(&writer, "bar").expect("read"), None);
+            assert_eq!(sk.get(&writer, "baz").expect("read"), None);
 
             writer.commit().expect("committed");
         }
@@ -426,10 +448,46 @@ mod tests {
         // Committed. Reads will succeed but return None to indicate a missing value.
         {
             let r = k.read().unwrap();
-            assert_eq!(r.get(sk, "foo").expect("read"), None);
-            assert_eq!(r.get(sk, "bar").expect("read"), None);
-            assert_eq!(r.get(sk, "baz").expect("read"), None);
+            assert_eq!(sk.get(&r, "foo").expect("read"), None);
+            assert_eq!(sk.get(&r, "bar").expect("read"), None);
+            assert_eq!(sk.get(&r, "baz").expect("read"), None);
         }
+    }
+
+    #[test]
+    fn test_multi_put_get_del() {
+        let root = Builder::new().prefix("test_multi_put_get_del").tempdir().expect("tempdir");
+        fs::create_dir_all(root.path()).expect("dir created");
+        let k = Rkv::new(root.path()).expect("new succeeded");
+        let multistore = k.open_multi("multistore", StoreOptions::create()).unwrap();
+        let mut writer = k.write().unwrap();
+        multistore.put(&mut writer, "str1", &Value::Str("str1 foo")).unwrap();
+        multistore.put(&mut writer, "str1", &Value::Str("str1 bar")).unwrap();
+        multistore.put(&mut writer, "str2", &Value::Str("str2 foo")).unwrap();
+        multistore.put(&mut writer, "str2", &Value::Str("str2 bar")).unwrap();
+        multistore.put(&mut writer, "str3", &Value::Str("str3 foo")).unwrap();
+        multistore.put(&mut writer, "str3", &Value::Str("str3 bar")).unwrap();
+        writer.commit().unwrap();
+        let writer = k.write().unwrap();
+        {
+            let mut iter = multistore.get(&writer, "str1").unwrap();
+            let (id, val) = iter.next().unwrap().unwrap();
+            assert_eq!((id, val), (&b"str1"[..], Some(Value::Str("str1 bar"))));
+            let (id, val) = iter.next().unwrap().unwrap();
+            assert_eq!((id, val), (&b"str1"[..], Some(Value::Str("str1 foo"))));
+        }
+        writer.commit().unwrap();
+        let mut writer = k.write().unwrap();
+
+        multistore.delete(&mut writer, "str1", &Value::Str("str1 foo")).unwrap();
+        assert_eq!(multistore.get_first(&writer, "str1").unwrap(), Some(Value::Str("str1 bar")));
+
+        multistore.delete(&mut writer, "str2", &Value::Str("str2 bar")).unwrap();
+        assert_eq!(multistore.get_first(&writer, "str2").unwrap(), Some(Value::Str("str2 foo")));
+
+        multistore.delete_all(&mut writer, "str3").unwrap();
+        assert_eq!(multistore.get_first(&writer, "str3").unwrap(), None);
+        writer.commit().unwrap();
     }
 
     #[test]
@@ -438,17 +496,17 @@ mod tests {
         fs::create_dir_all(root.path()).expect("dir created");
         let k = Rkv::new(root.path()).expect("new succeeded");
         // First create the store, and start a write transaction on it.
-        let sk = k.open_or_create("sk").expect("opened");
+        let sk = k.open_single("sk", StoreOptions::create()).expect("opened");
         let mut writer = k.write().expect("writer");
-        writer.put(sk, "foo", &Value::Str("bar")).expect("write");
+        sk.put(&mut writer, "foo", &Value::Str("bar")).expect("write");
 
         // Open the same store for read, note that the write transaction is still in progress,
         // it should not block the reader though.
-        let sk_readonly = k.open("sk").expect("opened");
+        let sk_readonly = k.open_single("sk", StoreOptions::default()).expect("opened");
         writer.commit().expect("commit");
         // Now the write transaction is committed, any followed reads should see its change.
         let reader = k.read().expect("reader");
-        assert_eq!(reader.get(sk_readonly, "foo").expect("read"), Some(Value::Str("bar")));
+        assert_eq!(sk_readonly.get(&reader, "foo").expect("read"), Some(Value::Str("bar")));
     }
 
     #[test]
@@ -457,7 +515,7 @@ mod tests {
         let root = Builder::new().prefix("test_open_a_missing_store").tempdir().expect("tempdir");
         fs::create_dir_all(root.path()).expect("dir created");
         let k = Rkv::new(root.path()).expect("new succeeded");
-        let _sk = k.open("sk").expect("open a missing store");
+        let _sk = k.open("sk", StoreOptions::default()).expect("open a missing store");
     }
 
     #[test]
@@ -466,11 +524,11 @@ mod tests {
         fs::create_dir_all(root.path()).expect("dir created");
         let k = Rkv::new(root.path()).expect("new succeeded");
         // First create the store
-        let _sk = k.open_or_create("sk").expect("opened");
+        let _sk = k.open_single("sk", StoreOptions::create()).expect("opened");
         // Open a reader on this store
-        let _reader = k.read::<&str>().expect("reader");
+        let _reader = k.read().expect("reader");
         // Open the same store for read while the reader is in progress will panic
-        let store: Result<Store, StoreError> = k.open("sk");
+        let store: Result<SingleStore, StoreError> = k.open_single("sk", StoreOptions::default());
         match store {
             Err(StoreError::OpenAttemptedDuringTransaction(_thread_id)) => assert!(true),
             _ => panic!("should panic"),
@@ -482,15 +540,15 @@ mod tests {
         let root = Builder::new().prefix("test_read_before_write_num").tempdir().expect("tempdir");
         fs::create_dir_all(root.path()).expect("dir created");
         let k = Rkv::new(root.path()).expect("new succeeded");
-        let sk: Store = k.open_or_create("sk").expect("opened");
+        let sk: SingleStore = k.open_single("sk", StoreOptions::create()).expect("opened");
 
         // Test reading a number, modifying it, and then writing it back.
         // We have to be done with the Value::I64 before calling Writer::put,
         // as the Value::I64 borrows an immutable reference to the Writer.
         // So we extract and copy its primitive value.
 
-        fn get_existing_foo(writer: &Writer<&str>, store: Store) -> Option<i64> {
-            match writer.get(store, "foo").expect("read") {
+        fn get_existing_foo(writer: &Writer, store: SingleStore) -> Option<i64> {
+            match store.get(writer, "foo").expect("read") {
                 Some(Value::I64(val)) => Some(val),
                 _ => None,
             }
@@ -499,7 +557,7 @@ mod tests {
         let mut writer = k.write().expect("writer");
         let mut existing = get_existing_foo(&writer, sk).unwrap_or(99);
         existing += 1;
-        writer.put(sk, "foo", &Value::I64(existing)).expect("success");
+        sk.put(&mut writer, "foo", &Value::I64(existing)).expect("success");
 
         let updated = get_existing_foo(&writer, sk).unwrap_or(99);
         assert_eq!(updated, 100);
@@ -511,7 +569,7 @@ mod tests {
         let root = Builder::new().prefix("test_read_before_write_str").tempdir().expect("tempdir");
         fs::create_dir_all(root.path()).expect("dir created");
         let k = Rkv::new(root.path()).expect("new succeeded");
-        let sk: Store = k.open_or_create("sk").expect("opened");
+        let sk: SingleStore = k.open_single("sk", StoreOptions::create()).expect("opened");
 
         // Test reading a string, modifying it, and then writing it back.
         // We have to be done with the Value::Str before calling Writer::put,
@@ -519,12 +577,13 @@ mod tests {
         // reference to the Writer.  So we copy it to a String.
 
         let mut writer = k.write().expect("writer");
-        let mut existing = match writer.get(sk, "foo").expect("read") {
+        let mut existing = match sk.get(&writer, "foo").expect("read") {
             Some(Value::Str(val)) => val,
             _ => "",
-        }.to_string();
+        }
+        .to_string();
         existing.push('…');
-        writer.put(sk, "foo", &Value::Str(&existing)).expect("write");
+        sk.put(&mut writer, "foo", &Value::Str(&existing)).expect("write");
         writer.commit().expect("commit");
     }
 
@@ -534,8 +593,8 @@ mod tests {
         fs::create_dir_all(root.path()).expect("dir created");
         let k = Rkv::new(root.path()).expect("new succeeded");
 
-        let _first = k.read::<&str>().expect("reader");
-        let second = k.read::<&str>();
+        let _first = k.read().expect("reader");
+        let second = k.read();
 
         match second {
             Err(StoreError::ReadTransactionAlreadyExists(t)) => {
@@ -552,41 +611,41 @@ mod tests {
         let root = Builder::new().prefix("test_isolation").tempdir().expect("tempdir");
         fs::create_dir_all(root.path()).expect("dir created");
         let k = Rkv::new(root.path()).expect("new succeeded");
-        let s: Store = k.open_or_create("s").expect("opened");
+        let s: SingleStore = k.open_single("s", StoreOptions::create()).expect("opened");
 
         // Add one field.
         {
             let mut writer = k.write().expect("writer");
-            writer.put(s, "foo", &Value::I64(1234)).expect("wrote");
+            s.put(&mut writer, "foo", &Value::I64(1234)).expect("wrote");
             writer.commit().expect("committed");
         }
 
         {
             let reader = k.read().unwrap();
-            assert_eq!(reader.get(s, "foo").expect("read"), Some(Value::I64(1234)));
+            assert_eq!(s.get(&reader, "foo").expect("read"), Some(Value::I64(1234)));
         }
 
         // Establish a long-lived reader that outlasts a writer.
         let reader = k.read().expect("reader");
-        assert_eq!(reader.get(s, "foo").expect("read"), Some(Value::I64(1234)));
+        assert_eq!(s.get(&reader, "foo").expect("read"), Some(Value::I64(1234)));
 
         // Start a write transaction.
         let mut writer = k.write().expect("writer");
-        writer.put(s, "foo", &Value::I64(999)).expect("wrote");
+        s.put(&mut writer, "foo", &Value::I64(999)).expect("wrote");
 
         // The reader and writer are isolated.
-        assert_eq!(reader.get(s, "foo").expect("read"), Some(Value::I64(1234)));
-        assert_eq!(writer.get(s, "foo").expect("read"), Some(Value::I64(999)));
+        assert_eq!(s.get(&reader, "foo").expect("read"), Some(Value::I64(1234)));
+        assert_eq!(s.get(&writer, "foo").expect("read"), Some(Value::I64(999)));
 
         // If we commit the writer, we still have isolation.
         writer.commit().expect("committed");
-        assert_eq!(reader.get(s, "foo").expect("read"), Some(Value::I64(1234)));
+        assert_eq!(s.get(&reader, "foo").expect("read"), Some(Value::I64(1234)));
 
         // A new reader sees the committed value. Note that LMDB doesn't allow two
         // read transactions to exist in the same thread, so we abort the previous one.
         reader.abort();
         let reader = k.read().expect("reader");
-        assert_eq!(reader.get(s, "foo").expect("read"), Some(Value::I64(999)));
+        assert_eq!(s.get(&reader, "foo").expect("read"), Some(Value::I64(999)));
     }
 
     #[test]
@@ -594,12 +653,12 @@ mod tests {
         let root = Builder::new().prefix("test_round_trip_blob").tempdir().expect("tempdir");
         fs::create_dir_all(root.path()).expect("dir created");
         let k = Rkv::new(root.path()).expect("new succeeded");
-        let sk: Store = k.open_or_create("sk").expect("opened");
+        let sk: SingleStore = k.open_single("sk", StoreOptions::create()).expect("opened");
         let mut writer = k.write().expect("writer");
 
-        assert_eq!(writer.get(sk, "foo").expect("read"), None);
-        writer.put(sk, "foo", &Value::Blob(&[1, 2, 3, 4])).expect("wrote");
-        assert_eq!(writer.get(sk, "foo").expect("read"), Some(Value::Blob(&[1, 2, 3, 4])));
+        assert_eq!(sk.get(&writer, "foo").expect("read"), None);
+        sk.put(&mut writer, "foo", &Value::Blob(&[1, 2, 3, 4])).expect("wrote");
+        assert_eq!(sk.get(&writer, "foo").expect("read"), Some(Value::Blob(&[1, 2, 3, 4])));
 
         fn u16_to_u8(src: &[u16]) -> Vec<u8> {
             let mut dst = vec![0; 2 * src.len()];
@@ -617,9 +676,9 @@ mod tests {
         // their [u16] backing storage to [u8].  Test that converting, writing,
         // reading, and converting back works as expected.
         let u16_array = [1000, 10000, 54321, 65535];
-        assert_eq!(writer.get(sk, "bar").expect("read"), None);
-        writer.put(sk, "bar", &Value::Blob(&u16_to_u8(&u16_array))).expect("wrote");
-        let u8_array = match writer.get(sk, "bar").expect("read") {
+        assert_eq!(sk.get(&writer, "bar").expect("read"), None);
+        sk.put(&mut writer, "bar", &Value::Blob(&u16_to_u8(&u16_array))).expect("wrote");
+        let u8_array = match sk.get(&writer, "bar").expect("read") {
             Some(Value::Blob(val)) => val,
             _ => &[],
         };
@@ -627,17 +686,47 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "not yet implemented")]
-    fn test_delete_value() {
-        let root = Builder::new().prefix("test_delete_value").tempdir().expect("tempdir");
+    fn test_sync() {
+        let root = Builder::new().prefix("test_sync").tempdir().expect("tempdir");
+        fs::create_dir_all(root.path()).expect("dir created");
+        let mut builder = Rkv::environment_builder();
+        builder.set_max_dbs(1);
+        builder.set_flags(EnvironmentFlags::NO_SYNC);
+        {
+            let k = Rkv::from_env(root.path(), builder).expect("new succeeded");
+            let sk: SingleStore = k.open_single("sk", StoreOptions::create()).expect("opened");
+
+            {
+                let mut writer = k.write().expect("writer");
+                sk.put(&mut writer, "foo", &Value::I64(1234)).expect("wrote");
+                writer.commit().expect("committed");
+                k.sync(true).expect("synced");
+            }
+        }
+        let k = Rkv::from_env(root.path(), builder).expect("new succeeded");
+        let sk: SingleStore = k.open_single("sk", StoreOptions::default()).expect("opened");
+        let reader = k.read().expect("reader");
+        assert_eq!(sk.get(&reader, "foo").expect("read"), Some(Value::I64(1234)));
+    }
+
+    #[test]
+    fn test_stat() {
+        let root = Builder::new().prefix("test_sync").tempdir().expect("tempdir");
         fs::create_dir_all(root.path()).expect("dir created");
         let k = Rkv::new(root.path()).expect("new succeeded");
-        let sk: Store = k.open_or_create_with_flags("sk", DatabaseFlags::DUP_SORT).expect("opened");
-
-        let mut writer = k.write().expect("writer");
-        writer.put(sk, "foo", &Value::I64(1234)).expect("wrote");
-        writer.put(sk, "foo", &Value::I64(1235)).expect("wrote");
-        writer.delete_value(sk, "foo", &Value::I64(1234)).expect("deleted");
+        for i in 0..5 {
+            let sk: IntegerStore<u32> =
+                k.open_integer(&format!("sk{}", i)[..], StoreOptions::create()).expect("opened");
+            {
+                let mut writer = k.write().expect("writer");
+                sk.put(&mut writer, i, &Value::I64(i64::from(i))).expect("wrote");
+                writer.commit().expect("committed");
+            }
+        }
+        assert_eq!(k.stat().expect("stat").depth(), 1);
+        assert_eq!(k.stat().expect("stat").entries(), 5);
+        assert_eq!(k.stat().expect("stat").branch_pages(), 0);
+        assert_eq!(k.stat().expect("stat").leaf_pages(), 1);
     }
 
     #[test]
@@ -645,46 +734,46 @@ mod tests {
         let root = Builder::new().prefix("test_iter").tempdir().expect("tempdir");
         fs::create_dir_all(root.path()).expect("dir created");
         let k = Rkv::new(root.path()).expect("new succeeded");
-        let sk: Store = k.open_or_create("sk").expect("opened");
+        let sk: SingleStore = k.open_single("sk", StoreOptions::create()).expect("opened");
 
         // An iterator over an empty store returns no values.
         {
-            let reader = k.read::<&str>().unwrap();
-            let mut iter = reader.iter_start(sk).unwrap();
+            let reader = k.read().unwrap();
+            let mut iter = sk.iter_start(&reader).unwrap();
             assert!(iter.next().is_none());
         }
 
         let mut writer = k.write().expect("writer");
-        writer.put(sk, "foo", &Value::I64(1234)).expect("wrote");
-        writer.put(sk, "noo", &Value::F64(1234.0.into())).expect("wrote");
-        writer.put(sk, "bar", &Value::Bool(true)).expect("wrote");
-        writer.put(sk, "baz", &Value::Str("héllo, yöu")).expect("wrote");
-        writer.put(sk, "héllò, töűrîst", &Value::Str("Emil.RuleZ!")).expect("wrote");
-        writer.put(sk, "你好，遊客", &Value::Str("米克規則")).expect("wrote");
+        sk.put(&mut writer, "foo", &Value::I64(1234)).expect("wrote");
+        sk.put(&mut writer, "noo", &Value::F64(1234.0.into())).expect("wrote");
+        sk.put(&mut writer, "bar", &Value::Bool(true)).expect("wrote");
+        sk.put(&mut writer, "baz", &Value::Str("héllo, yöu")).expect("wrote");
+        sk.put(&mut writer, "héllò, töűrîst", &Value::Str("Emil.RuleZ!")).expect("wrote");
+        sk.put(&mut writer, "你好，遊客", &Value::Str("米克規則")).expect("wrote");
         writer.commit().expect("committed");
 
         let reader = k.read().unwrap();
 
         // Reader.iter() returns (key, value) tuples ordered by key.
-        let mut iter = reader.iter_start(sk).unwrap();
-        let (key, val) = iter.next().unwrap();
+        let mut iter = sk.iter_start(&reader).unwrap();
+        let (key, val) = iter.next().unwrap().unwrap();
         assert_eq!(str::from_utf8(key).expect("key"), "bar");
-        assert_eq!(val.expect("value"), Some(Value::Bool(true)));
-        let (key, val) = iter.next().unwrap();
+        assert_eq!(val, Some(Value::Bool(true)));
+        let (key, val) = iter.next().unwrap().unwrap();
         assert_eq!(str::from_utf8(key).expect("key"), "baz");
-        assert_eq!(val.expect("value"), Some(Value::Str("héllo, yöu")));
-        let (key, val) = iter.next().unwrap();
+        assert_eq!(val, Some(Value::Str("héllo, yöu")));
+        let (key, val) = iter.next().unwrap().unwrap();
         assert_eq!(str::from_utf8(key).expect("key"), "foo");
-        assert_eq!(val.expect("value"), Some(Value::I64(1234)));
-        let (key, val) = iter.next().unwrap();
+        assert_eq!(val, Some(Value::I64(1234)));
+        let (key, val) = iter.next().unwrap().unwrap();
         assert_eq!(str::from_utf8(key).expect("key"), "héllò, töűrîst");
-        assert_eq!(val.expect("value"), Some(Value::Str("Emil.RuleZ!")));
-        let (key, val) = iter.next().unwrap();
+        assert_eq!(val, Some(Value::Str("Emil.RuleZ!")));
+        let (key, val) = iter.next().unwrap().unwrap();
         assert_eq!(str::from_utf8(key).expect("key"), "noo");
-        assert_eq!(val.expect("value"), Some(Value::F64(1234.0.into())));
-        let (key, val) = iter.next().unwrap();
+        assert_eq!(val, Some(Value::F64(1234.0.into())));
+        let (key, val) = iter.next().unwrap().unwrap();
         assert_eq!(str::from_utf8(key).expect("key"), "你好，遊客");
-        assert_eq!(val.expect("value"), Some(Value::Str("米克規則")));
+        assert_eq!(val, Some(Value::Str("米克規則")));
         assert!(iter.next().is_none());
 
         // Iterators don't loop.  Once one returns None, additional calls
@@ -693,24 +782,24 @@ mod tests {
 
         // Reader.iter_from() begins iteration at the first key equal to
         // or greater than the given key.
-        let mut iter = reader.iter_from(sk, "moo").unwrap();
-        let (key, val) = iter.next().unwrap();
+        let mut iter = sk.iter_from(&reader, "moo").unwrap();
+        let (key, val) = iter.next().unwrap().unwrap();
         assert_eq!(str::from_utf8(key).expect("key"), "noo");
-        assert_eq!(val.expect("value"), Some(Value::F64(1234.0.into())));
-        let (key, val) = iter.next().unwrap();
+        assert_eq!(val, Some(Value::F64(1234.0.into())));
+        let (key, val) = iter.next().unwrap().unwrap();
         assert_eq!(str::from_utf8(key).expect("key"), "你好，遊客");
-        assert_eq!(val.expect("value"), Some(Value::Str("米克規則")));
+        assert_eq!(val, Some(Value::Str("米克規則")));
         assert!(iter.next().is_none());
 
         // Reader.iter_from() works as expected when the given key is a prefix
         // of a key in the store.
-        let mut iter = reader.iter_from(sk, "no").unwrap();
-        let (key, val) = iter.next().unwrap();
+        let mut iter = sk.iter_from(&reader, "no").unwrap();
+        let (key, val) = iter.next().unwrap().unwrap();
         assert_eq!(str::from_utf8(key).expect("key"), "noo");
-        assert_eq!(val.expect("value"), Some(Value::F64(1234.0.into())));
-        let (key, val) = iter.next().unwrap();
+        assert_eq!(val, Some(Value::F64(1234.0.into())));
+        let (key, val) = iter.next().unwrap().unwrap();
         assert_eq!(str::from_utf8(key).expect("key"), "你好，遊客");
-        assert_eq!(val.expect("value"), Some(Value::Str("米克規則")));
+        assert_eq!(val, Some(Value::Str("米克規則")));
         assert!(iter.next().is_none());
     }
 
@@ -719,17 +808,17 @@ mod tests {
         let root = Builder::new().prefix("test_iter_from_key_greater_than_existing").tempdir().expect("tempdir");
         fs::create_dir_all(root.path()).expect("dir created");
         let k = Rkv::new(root.path()).expect("new succeeded");
-        let sk: Store = k.open_or_create("sk").expect("opened");
+        let sk: SingleStore = k.open_single("sk", StoreOptions::create()).expect("opened");
 
         let mut writer = k.write().expect("writer");
-        writer.put(sk, "foo", &Value::I64(1234)).expect("wrote");
-        writer.put(sk, "noo", &Value::F64(1234.0.into())).expect("wrote");
-        writer.put(sk, "bar", &Value::Bool(true)).expect("wrote");
-        writer.put(sk, "baz", &Value::Str("héllo, yöu")).expect("wrote");
+        sk.put(&mut writer, "foo", &Value::I64(1234)).expect("wrote");
+        sk.put(&mut writer, "noo", &Value::F64(1234.0.into())).expect("wrote");
+        sk.put(&mut writer, "bar", &Value::Bool(true)).expect("wrote");
+        sk.put(&mut writer, "baz", &Value::Str("héllo, yöu")).expect("wrote");
         writer.commit().expect("committed");
 
         let reader = k.read().unwrap();
-        let mut iter = reader.iter_from(sk, "nuu").unwrap();
+        let mut iter = sk.iter_from(&reader, "nuu").unwrap();
         assert!(iter.next().is_none());
     }
 
@@ -739,38 +828,38 @@ mod tests {
         fs::create_dir_all(root.path()).expect("dir created");
         let k = Rkv::new(root.path()).expect("new succeeded");
 
-        let s1: Store = k.open_or_create("store_1").expect("opened");
-        let s2: Store = k.open_or_create("store_2").expect("opened");
-        let s3: Store = k.open_or_create("store_3").expect("opened");
+        let s1: SingleStore = k.open_single("store_1", StoreOptions::create()).expect("opened");
+        let s2: SingleStore = k.open_single("store_2", StoreOptions::create()).expect("opened");
+        let s3: SingleStore = k.open_single("store_3", StoreOptions::create()).expect("opened");
 
         let mut writer = k.write().expect("writer");
-        writer.put(s1, "foo", &Value::Str("bar")).expect("wrote");
-        writer.put(s2, "foo", &Value::I64(123)).expect("wrote");
-        writer.put(s3, "foo", &Value::Bool(true)).expect("wrote");
+        s1.put(&mut writer, "foo", &Value::Str("bar")).expect("wrote");
+        s2.put(&mut writer, "foo", &Value::I64(123)).expect("wrote");
+        s3.put(&mut writer, "foo", &Value::Bool(true)).expect("wrote");
 
-        assert_eq!(writer.get(s1, "foo").expect("read"), Some(Value::Str("bar")));
-        assert_eq!(writer.get(s2, "foo").expect("read"), Some(Value::I64(123)));
-        assert_eq!(writer.get(s3, "foo").expect("read"), Some(Value::Bool(true)));
+        assert_eq!(s1.get(&writer, "foo").expect("read"), Some(Value::Str("bar")));
+        assert_eq!(s2.get(&writer, "foo").expect("read"), Some(Value::I64(123)));
+        assert_eq!(s3.get(&writer, "foo").expect("read"), Some(Value::Bool(true)));
 
         writer.commit().expect("committed");
 
         let reader = k.read().expect("unbound_reader");
-        assert_eq!(reader.get(s1, "foo").expect("read"), Some(Value::Str("bar")));
-        assert_eq!(reader.get(s2, "foo").expect("read"), Some(Value::I64(123)));
-        assert_eq!(reader.get(s3, "foo").expect("read"), Some(Value::Bool(true)));
+        assert_eq!(s1.get(&reader, "foo").expect("read"), Some(Value::Str("bar")));
+        assert_eq!(s2.get(&reader, "foo").expect("read"), Some(Value::I64(123)));
+        assert_eq!(s3.get(&reader, "foo").expect("read"), Some(Value::Bool(true)));
         reader.abort();
 
         // test delete across multiple stores
         let mut writer = k.write().expect("writer");
-        writer.delete(s1, "foo").expect("deleted");
-        writer.delete(s2, "foo").expect("deleted");
-        writer.delete(s3, "foo").expect("deleted");
+        s1.delete(&mut writer, "foo").expect("deleted");
+        s2.delete(&mut writer, "foo").expect("deleted");
+        s3.delete(&mut writer, "foo").expect("deleted");
         writer.commit().expect("committed");
 
         let reader = k.read().expect("reader");
-        assert_eq!(reader.get(s1, "key").expect("value"), None);
-        assert_eq!(reader.get(s2, "key").expect("value"), None);
-        assert_eq!(reader.get(s3, "key").expect("value"), None);
+        assert_eq!(s1.get(&reader, "key").expect("value"), None);
+        assert_eq!(s2.get(&reader, "key").expect("value"), None);
+        assert_eq!(s3.get(&reader, "key").expect("value"), None);
     }
 
     #[test]
@@ -778,110 +867,110 @@ mod tests {
         let root = Builder::new().prefix("test_multiple_store_iter").tempdir().expect("tempdir");
         fs::create_dir_all(root.path()).expect("dir created");
         let k = Rkv::new(root.path()).expect("new succeeded");
-        let s1: Store = k.open_or_create("store_1").expect("opened");
-        let s2: Store = k.open_or_create("store_2").expect("opened");
+        let s1: SingleStore = k.open_single("store_1", StoreOptions::create()).expect("opened");
+        let s2: SingleStore = k.open_single("store_2", StoreOptions::create()).expect("opened");
 
         let mut writer = k.write().expect("writer");
         // Write to "s1"
-        writer.put(s1, "foo", &Value::I64(1234)).expect("wrote");
-        writer.put(s1, "noo", &Value::F64(1234.0.into())).expect("wrote");
-        writer.put(s1, "bar", &Value::Bool(true)).expect("wrote");
-        writer.put(s1, "baz", &Value::Str("héllo, yöu")).expect("wrote");
-        writer.put(s1, "héllò, töűrîst", &Value::Str("Emil.RuleZ!")).expect("wrote");
-        writer.put(s1, "你好，遊客", &Value::Str("米克規則")).expect("wrote");
-        // Writer to "s2"
-        writer.put(s2, "foo", &Value::I64(1234)).expect("wrote");
-        writer.put(s2, "noo", &Value::F64(1234.0.into())).expect("wrote");
-        writer.put(s2, "bar", &Value::Bool(true)).expect("wrote");
-        writer.put(s2, "baz", &Value::Str("héllo, yöu")).expect("wrote");
-        writer.put(s2, "héllò, töűrîst", &Value::Str("Emil.RuleZ!")).expect("wrote");
-        writer.put(s2, "你好，遊客", &Value::Str("米克規則")).expect("wrote");
+        s1.put(&mut writer, "foo", &Value::I64(1234)).expect("wrote");
+        s1.put(&mut writer, "noo", &Value::F64(1234.0.into())).expect("wrote");
+        s1.put(&mut writer, "bar", &Value::Bool(true)).expect("wrote");
+        s1.put(&mut writer, "baz", &Value::Str("héllo, yöu")).expect("wrote");
+        s1.put(&mut writer, "héllò, töűrîst", &Value::Str("Emil.RuleZ!")).expect("wrote");
+        s1.put(&mut writer, "你好，遊客", &Value::Str("米克規則")).expect("wrote");
+        // &mut writer to "s2"
+        s2.put(&mut writer, "foo", &Value::I64(1234)).expect("wrote");
+        s2.put(&mut writer, "noo", &Value::F64(1234.0.into())).expect("wrote");
+        s2.put(&mut writer, "bar", &Value::Bool(true)).expect("wrote");
+        s2.put(&mut writer, "baz", &Value::Str("héllo, yöu")).expect("wrote");
+        s2.put(&mut writer, "héllò, töűrîst", &Value::Str("Emil.RuleZ!")).expect("wrote");
+        s2.put(&mut writer, "你好，遊客", &Value::Str("米克規則")).expect("wrote");
         writer.commit().expect("committed");
 
         let reader = k.read().unwrap();
 
         // Iterate through the whole store in "s1"
-        let mut iter = reader.iter_start(s1).unwrap();
-        let (key, val) = iter.next().unwrap();
+        let mut iter = s1.iter_start(&reader).unwrap();
+        let (key, val) = iter.next().unwrap().unwrap();
         assert_eq!(str::from_utf8(key).expect("key"), "bar");
-        assert_eq!(val.expect("value"), Some(Value::Bool(true)));
-        let (key, val) = iter.next().unwrap();
+        assert_eq!(val, Some(Value::Bool(true)));
+        let (key, val) = iter.next().unwrap().unwrap();
         assert_eq!(str::from_utf8(key).expect("key"), "baz");
-        assert_eq!(val.expect("value"), Some(Value::Str("héllo, yöu")));
-        let (key, val) = iter.next().unwrap();
+        assert_eq!(val, Some(Value::Str("héllo, yöu")));
+        let (key, val) = iter.next().unwrap().unwrap();
         assert_eq!(str::from_utf8(key).expect("key"), "foo");
-        assert_eq!(val.expect("value"), Some(Value::I64(1234)));
-        let (key, val) = iter.next().unwrap();
+        assert_eq!(val, Some(Value::I64(1234)));
+        let (key, val) = iter.next().unwrap().unwrap();
         assert_eq!(str::from_utf8(key).expect("key"), "héllò, töűrîst");
-        assert_eq!(val.expect("value"), Some(Value::Str("Emil.RuleZ!")));
-        let (key, val) = iter.next().unwrap();
+        assert_eq!(val, Some(Value::Str("Emil.RuleZ!")));
+        let (key, val) = iter.next().unwrap().unwrap();
         assert_eq!(str::from_utf8(key).expect("key"), "noo");
-        assert_eq!(val.expect("value"), Some(Value::F64(1234.0.into())));
-        let (key, val) = iter.next().unwrap();
+        assert_eq!(val, Some(Value::F64(1234.0.into())));
+        let (key, val) = iter.next().unwrap().unwrap();
         assert_eq!(str::from_utf8(key).expect("key"), "你好，遊客");
-        assert_eq!(val.expect("value"), Some(Value::Str("米克規則")));
+        assert_eq!(val, Some(Value::Str("米克規則")));
         assert!(iter.next().is_none());
 
         // Iterate through the whole store in "s2"
-        let mut iter = reader.iter_start(s2).unwrap();
-        let (key, val) = iter.next().unwrap();
+        let mut iter = s2.iter_start(&reader).unwrap();
+        let (key, val) = iter.next().unwrap().unwrap();
         assert_eq!(str::from_utf8(key).expect("key"), "bar");
-        assert_eq!(val.expect("value"), Some(Value::Bool(true)));
-        let (key, val) = iter.next().unwrap();
+        assert_eq!(val, Some(Value::Bool(true)));
+        let (key, val) = iter.next().unwrap().unwrap();
         assert_eq!(str::from_utf8(key).expect("key"), "baz");
-        assert_eq!(val.expect("value"), Some(Value::Str("héllo, yöu")));
-        let (key, val) = iter.next().unwrap();
+        assert_eq!(val, Some(Value::Str("héllo, yöu")));
+        let (key, val) = iter.next().unwrap().unwrap();
         assert_eq!(str::from_utf8(key).expect("key"), "foo");
-        assert_eq!(val.expect("value"), Some(Value::I64(1234)));
-        let (key, val) = iter.next().unwrap();
+        assert_eq!(val, Some(Value::I64(1234)));
+        let (key, val) = iter.next().unwrap().unwrap();
         assert_eq!(str::from_utf8(key).expect("key"), "héllò, töűrîst");
-        assert_eq!(val.expect("value"), Some(Value::Str("Emil.RuleZ!")));
-        let (key, val) = iter.next().unwrap();
+        assert_eq!(val, Some(Value::Str("Emil.RuleZ!")));
+        let (key, val) = iter.next().unwrap().unwrap();
         assert_eq!(str::from_utf8(key).expect("key"), "noo");
-        assert_eq!(val.expect("value"), Some(Value::F64(1234.0.into())));
-        let (key, val) = iter.next().unwrap();
+        assert_eq!(val, Some(Value::F64(1234.0.into())));
+        let (key, val) = iter.next().unwrap().unwrap();
         assert_eq!(str::from_utf8(key).expect("key"), "你好，遊客");
-        assert_eq!(val.expect("value"), Some(Value::Str("米克規則")));
+        assert_eq!(val, Some(Value::Str("米克規則")));
         assert!(iter.next().is_none());
 
         // Iterate from a given key in "s1"
-        let mut iter = reader.iter_from(s1, "moo").unwrap();
-        let (key, val) = iter.next().unwrap();
+        let mut iter = s1.iter_from(&reader, "moo").unwrap();
+        let (key, val) = iter.next().unwrap().unwrap();
         assert_eq!(str::from_utf8(key).expect("key"), "noo");
-        assert_eq!(val.expect("value"), Some(Value::F64(1234.0.into())));
-        let (key, val) = iter.next().unwrap();
+        assert_eq!(val, Some(Value::F64(1234.0.into())));
+        let (key, val) = iter.next().unwrap().unwrap();
         assert_eq!(str::from_utf8(key).expect("key"), "你好，遊客");
-        assert_eq!(val.expect("value"), Some(Value::Str("米克規則")));
+        assert_eq!(val, Some(Value::Str("米克規則")));
         assert!(iter.next().is_none());
 
         // Iterate from a given key in "s2"
-        let mut iter = reader.iter_from(s2, "moo").unwrap();
-        let (key, val) = iter.next().unwrap();
+        let mut iter = s2.iter_from(&reader, "moo").unwrap();
+        let (key, val) = iter.next().unwrap().unwrap();
         assert_eq!(str::from_utf8(key).expect("key"), "noo");
-        assert_eq!(val.expect("value"), Some(Value::F64(1234.0.into())));
-        let (key, val) = iter.next().unwrap();
+        assert_eq!(val, Some(Value::F64(1234.0.into())));
+        let (key, val) = iter.next().unwrap().unwrap();
         assert_eq!(str::from_utf8(key).expect("key"), "你好，遊客");
-        assert_eq!(val.expect("value"), Some(Value::Str("米克規則")));
+        assert_eq!(val, Some(Value::Str("米克規則")));
         assert!(iter.next().is_none());
 
         // Iterate from a given prefix in "s1"
-        let mut iter = reader.iter_from(s1, "no").unwrap();
-        let (key, val) = iter.next().unwrap();
+        let mut iter = s1.iter_from(&reader, "no").unwrap();
+        let (key, val) = iter.next().unwrap().unwrap();
         assert_eq!(str::from_utf8(key).expect("key"), "noo");
-        assert_eq!(val.expect("value"), Some(Value::F64(1234.0.into())));
-        let (key, val) = iter.next().unwrap();
+        assert_eq!(val, Some(Value::F64(1234.0.into())));
+        let (key, val) = iter.next().unwrap().unwrap();
         assert_eq!(str::from_utf8(key).expect("key"), "你好，遊客");
-        assert_eq!(val.expect("value"), Some(Value::Str("米克規則")));
+        assert_eq!(val, Some(Value::Str("米克規則")));
         assert!(iter.next().is_none());
 
         // Iterate from a given prefix in "s2"
-        let mut iter = reader.iter_from(s2, "no").unwrap();
-        let (key, val) = iter.next().unwrap();
+        let mut iter = s2.iter_from(&reader, "no").unwrap();
+        let (key, val) = iter.next().unwrap().unwrap();
         assert_eq!(str::from_utf8(key).expect("key"), "noo");
-        assert_eq!(val.expect("value"), Some(Value::F64(1234.0.into())));
-        let (key, val) = iter.next().unwrap();
+        assert_eq!(val, Some(Value::F64(1234.0.into())));
+        let (key, val) = iter.next().unwrap().unwrap();
         assert_eq!(str::from_utf8(key).expect("key"), "你好，遊客");
-        assert_eq!(val.expect("value"), Some(Value::Str("米克規則")));
+        assert_eq!(val, Some(Value::Str("米克規則")));
         assert!(iter.next().is_none());
     }
 
@@ -890,7 +979,7 @@ mod tests {
         let root = Builder::new().prefix("test_multiple_thread").tempdir().expect("tempdir");
         fs::create_dir_all(root.path()).expect("dir created");
         let rkv_arc = Arc::new(RwLock::new(Rkv::new(root.path()).expect("new succeeded")));
-        let store = rkv_arc.read().unwrap().open_or_create_default().expect("opened");
+        let store = rkv_arc.read().unwrap().open_single("test", StoreOptions::create()).expect("opened");
 
         let num_threads = 10;
         let mut write_handles = Vec::with_capacity(num_threads as usize);
@@ -907,7 +996,7 @@ mod tests {
             write_handles.push(thread::spawn(move || {
                 let rkv = rkv_arc.write().expect("rkv");
                 let mut writer = rkv.write().expect("writer");
-                writer.put(store, i.to_string(), &Value::U64(i)).expect("written");
+                store.put(&mut writer, i.to_string(), &Value::U64(i)).expect("written");
                 writer.commit().unwrap();
             }));
         }
@@ -922,7 +1011,7 @@ mod tests {
             read_handles.push(thread::spawn(move || {
                 let rkv = rkv_arc.read().expect("rkv");
                 let reader = rkv.read().expect("reader");
-                let value = match reader.get(store, i.to_string()) {
+                let value = match store.get(&reader, i.to_string()) {
                     Ok(Some(Value::U64(value))) => value,
                     Ok(Some(_)) => panic!("value type unexpected"),
                     Ok(None) => panic!("value not found"),

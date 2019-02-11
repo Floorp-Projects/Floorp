@@ -9,6 +9,16 @@ This includes anything requiring heap allocations, like vectors or hash maps,
 as well as anything that requires non-const function calls to be computed.
 
 [![Travis-CI Status](https://travis-ci.org/rust-lang-nursery/lazy-static.rs.svg?branch=master)](https://travis-ci.org/rust-lang-nursery/lazy-static.rs)
+[![Latest version](https://img.shields.io/crates/v/lazy_static.svg)](https://crates.io/crates/lazy_static)
+[![Documentation](https://docs.rs/lazy_static/badge.svg)](https://docs.rs/lazy_static)
+[![License](https://img.shields.io/crates/l/lazy_static.svg)](https://github.com/rust-lang-nursery/lazy-static.rs#license)
+
+## Minimum supported `rustc`
+
+`1.24.1+`
+
+This version is explicitly tested in CI and may only be bumped in new minor versions. Any changes to the supported minimum version will be called out in the release notes.
+
 
 # Getting Started
 
@@ -21,7 +31,7 @@ Add the following dependency to your Cargo manifest...
 
 ```toml
 [dependencies]
-lazy_static = "1.0"
+lazy_static = "1.2.0"
 ```
 
 ...and see the [docs](https://docs.rs/lazy_static) for how to use it.

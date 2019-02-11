@@ -332,12 +332,22 @@ impl <'env> RwTransaction<'env> {
         let data_val: Option<ffi::MDB_val> =
             data.map(|data| ffi::MDB_val { mv_size: data.len() as size_t,
                                            mv_data: data.as_ptr() as *mut c_void });
-        unsafe {
-            lmdb_result(ffi::mdb_del(self.txn(),
-                                     database.dbi(),
-                                     &mut key_val,
-                                     data_val.map(|mut data_val| &mut data_val as *mut _)
-                                             .unwrap_or(ptr::null_mut())))
+
+        if let Some(mut d) = data_val {
+            unsafe {
+                lmdb_result(ffi::mdb_del(self.txn(),
+                                         database.dbi(),
+                                         &mut key_val,
+                                         &mut d))
+
+            }
+        } else {
+            unsafe {
+                lmdb_result(ffi::mdb_del(self.txn(),
+                                         database.dbi(),
+                                         &mut key_val,
+                                         ptr::null_mut()))
+            }
         }
     }
 
@@ -392,6 +402,7 @@ mod test {
     use flags::*;
     use super::*;
     use test_utils::*;
+    use cursor::Cursor;
 
     #[test]
     fn test_put_get_del() {
@@ -414,6 +425,53 @@ mod test {
         txn.del(db, b"key1", None).unwrap();
         assert_eq!(txn.get(db, b"key1"), Err(Error::NotFound));
     }
+
+    #[test]
+    fn test_put_get_del_multi() {
+        let dir = TempDir::new("test").unwrap();
+        let env = Environment::new().open(dir.path()).unwrap();
+        let db = env.create_db(None, DatabaseFlags::DUP_SORT).unwrap();
+
+        let mut txn = env.begin_rw_txn().unwrap();
+        txn.put(db, b"key1", b"val1", WriteFlags::empty()).unwrap();
+        txn.put(db, b"key1", b"val2", WriteFlags::empty()).unwrap();
+        txn.put(db, b"key1", b"val3", WriteFlags::empty()).unwrap();
+        txn.put(db, b"key2", b"val1", WriteFlags::empty()).unwrap();
+        txn.put(db, b"key2", b"val2", WriteFlags::empty()).unwrap();
+        txn.put(db, b"key2", b"val3", WriteFlags::empty()).unwrap();
+        txn.put(db, b"key3", b"val1", WriteFlags::empty()).unwrap();
+        txn.put(db, b"key3", b"val2", WriteFlags::empty()).unwrap();
+        txn.put(db, b"key3", b"val3", WriteFlags::empty()).unwrap();
+        txn.commit().unwrap();
+
+        let txn = env.begin_rw_txn().unwrap();
+        {
+            let mut cur = txn.open_ro_cursor(db).unwrap();
+            let iter = cur.iter_dup_of(b"key1");
+            let vals = iter.map(|x| x.unwrap()).map(|(_,x)| x).collect::<Vec<_>>();
+            assert_eq!(vals, vec![b"val1", b"val2", b"val3"]);
+
+        }
+        txn.commit().unwrap();
+
+        let mut txn = env.begin_rw_txn().unwrap();
+        txn.del(db, b"key1", Some(b"val2")).unwrap();
+        txn.del(db, b"key2", None).unwrap();
+        txn.commit().unwrap();
+
+        let txn = env.begin_rw_txn().unwrap();
+        {
+            let mut cur = txn.open_ro_cursor(db).unwrap();
+            let iter = cur.iter_dup_of(b"key1");
+            let vals = iter.map(|x| x.unwrap()).map(|(_,x)| x).collect::<Vec<_>>();
+            assert_eq!(vals, vec![b"val1", b"val3"]);
+
+            let iter = cur.iter_dup_of(b"key2");
+            assert_eq!(0, iter.count());
+        }
+        txn.commit().unwrap();
+    }
+
 
     #[test]
     fn test_reserve() {
