@@ -789,7 +789,7 @@ nsFormFillController::HandleEvent(Event* aEvent) {
     case eKeyPress:
       return KeyPress(aEvent);
     case eEditorInput: {
-      nsCOMPtr<nsINode> input = do_QueryInterface(aEvent->GetComposedTarget());
+      nsCOMPtr<nsINode> input = do_QueryInterface(aEvent->GetTarget());
       if (!IsTextControl(input)) {
         return NS_OK;
       }
@@ -927,7 +927,7 @@ void nsFormFillController::MaybeStartControllingInput(
 }
 
 nsresult nsFormFillController::Focus(Event* aEvent) {
-  nsCOMPtr<nsIContent> input = do_QueryInterface(aEvent->GetComposedTarget());
+  nsCOMPtr<nsIContent> input = do_QueryInterface(aEvent->GetTarget());
   MaybeStartControllingInput(HTMLInputElement::FromNodeOrNull(input));
 
   // Bail if we didn't start controlling the input.
@@ -1094,7 +1094,7 @@ nsresult nsFormFillController::MouseDown(Event* aEvent) {
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsINode> targetNode = do_QueryInterface(aEvent->GetComposedTarget());
+  nsCOMPtr<nsINode> targetNode = do_QueryInterface(aEvent->GetTarget());
   if (!HTMLInputElement::FromNodeOrNull(targetNode)) {
     return NS_OK;
   }
