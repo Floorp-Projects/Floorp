@@ -1,5 +1,6 @@
 "use strict";
 
+ChromeUtils.import('resource://gre/modules/Services.jsm');
 const gPrefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
 
 function symmetricEquality(expect, a, b)
@@ -312,9 +313,9 @@ add_test(function test_percentDecoding()
   var url = stringToURL("http://%70%61%73%74%65%62%69%6E.com");
   Assert.equal(url.spec, "http://pastebin.com/");
 
-  // We shouldn't unescape characters that are not allowed in the hostname.
-  url = stringToURL("http://example.com%0a%23.google.com/");
-  Assert.equal(url.spec, "http://example.com%0a%23.google.com/");
+  // Disallowed hostname characters are rejected even when percent encoded
+  Assert.throws(() => { url = stringToURL("http://example.com%0a%23.google.com/"); },
+                /NS_ERROR_MALFORMED_URI/, "invalid characters are not allowed");
   run_next_test();
 });
 
@@ -693,6 +694,20 @@ add_test(function test_idna_host() {
   url = stringToURL("http://user:password@www.ält.com:8080/path?query#etc");
   url = url.mutate().setRef("").finalize();
   equal(url.spec, "http://user:password@www.xn--lt-uia.com:8080/path?query");
+
+  run_next_test();
+});
+
+add_test(function test_bug1517025() {
+  Assert.throws(() => { let other = stringToURL("https://b%9a/"); },
+                /NS_ERROR_UNEXPECTED/, "bad URI");
+
+  Assert.throws(() => { let other = stringToURL("https://b%9ª/"); },
+                /NS_ERROR_MALFORMED_URI/, "bad URI");
+
+  let base = stringToURL("https://bug1517025.bmoattachments.org/attachment.cgi?id=9033787");
+  Assert.throws(() => { let uri = Services.io.newURI("/\\b%9ª", "windows-1252", base); },
+                /NS_ERROR_MALFORMED_URI/, "bad URI");
 
   run_next_test();
 });
