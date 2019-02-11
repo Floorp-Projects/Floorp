@@ -209,17 +209,17 @@ class BrowserFragment : Fragment(), BackHandler {
     private fun handleToolbarItemInteraction(action: SearchAction.ToolbarMenuItemTapped) {
         val sessionUseCases = requireComponents.useCases.sessionUseCases
         Do exhaustive when (action.item) {
-            is ToolbarMenu.Item.Back -> sessionUseCases.goBack.invoke()
-            is ToolbarMenu.Item.Forward -> sessionUseCases.goForward.invoke()
-            is ToolbarMenu.Item.Reload -> sessionUseCases.reload.invoke()
-            is ToolbarMenu.Item.Settings -> Navigation.findNavController(toolbar)
+            ToolbarMenu.Item.Back -> sessionUseCases.goBack.invoke()
+            ToolbarMenu.Item.Forward -> sessionUseCases.goForward.invoke()
+            ToolbarMenu.Item.Reload -> sessionUseCases.reload.invoke()
+            ToolbarMenu.Item.Settings -> Navigation.findNavController(toolbar)
                 .navigate(BrowserFragmentDirections.actionBrowserFragmentToSettingsFragment())
-            is ToolbarMenu.Item.Library -> Navigation.findNavController(toolbar)
+            ToolbarMenu.Item.Library -> Navigation.findNavController(toolbar)
                 .navigate(BrowserFragmentDirections.actionBrowserFragmentToLibraryFragment())
             is ToolbarMenu.Item.RequestDesktop -> sessionUseCases.requestDesktopSite.invoke(action.item.isChecked)
-            is ToolbarMenu.Item.Share -> requireComponents.core.sessionManager
+            ToolbarMenu.Item.Share -> requireComponents.core.sessionManager
                 .selectedSession?.url?.apply { requireContext().share(this) }
-            is ToolbarMenu.Item.NewPrivateTab -> {
+            ToolbarMenu.Item.NewPrivateTab -> {
                 PreferenceManager.getDefaultSharedPreferences(context)
                     .edit().putBoolean(
                         context!!.getString(R.string.pref_key_private_mode),
@@ -227,8 +227,8 @@ class BrowserFragment : Fragment(), BackHandler {
                             .getBoolean(context!!.getString(R.string.pref_key_private_mode), false)
                     ).apply()
             }
-            is ToolbarMenu.Item.FindInPage -> FindInPageIntegration.launch?.invoke()
-            is ToolbarMenu.Item.ReportIssue -> requireComponents.core.sessionManager
+            ToolbarMenu.Item.FindInPage -> FindInPageIntegration.launch?.invoke()
+            ToolbarMenu.Item.ReportIssue -> requireComponents.core.sessionManager
                 .selectedSession?.url?.apply {
                 val reportUrl = String.format(REPORT_SITE_ISSUE_URL, this)
                 sessionUseCases.loadUrl.invoke(reportUrl)
