@@ -30,7 +30,7 @@ class HistoryFragment : Fragment(), CoroutineScope {
 
     lateinit var job: Job
     override val coroutineContext: CoroutineContext
-        get() = Dispatchers.Main + job
+        get() = Dispatchers.Default + job
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -76,7 +76,7 @@ class HistoryFragment : Fragment(), CoroutineScope {
 
         val eventEmitter = ActionBusFactory.get(this)
 
-        launch {
+        launch(Dispatchers.IO) {
             val items = requireComponents.core.historyStorage.getVisited().map { HistoryItem(it) }
 
             launch(Dispatchers.Main) {
