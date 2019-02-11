@@ -20,7 +20,7 @@ use intern::ItemUid;
 use internal_types::{FastHashMap, FastHashSet, PlaneSplitter};
 use frame_builder::{FrameBuildingContext, FrameBuildingState, PictureState, PictureContext};
 use gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle};
-use gpu_types::{TransformPalette, TransformPaletteId, UvRectKind};
+use gpu_types::{TransformPalette, UvRectKind};
 use plane_split::{Clipper, Polygon, Splitter};
 use prim_store::{PictureIndex, PrimitiveInstance, SpaceMapper, VisibleFace, PrimitiveInstanceKind};
 use prim_store::{get_raster_rects, PrimitiveScratchBuffer, VectorKey, PointKey};
@@ -1913,7 +1913,7 @@ pub enum Picture3DContext<C> {
 #[derive(Clone, Debug)]
 pub struct OrderedPictureChild {
     pub anchor: usize,
-    pub transform_id: TransformPaletteId,
+    pub spatial_node_index: SpatialNodeIndex,
     pub gpu_address: GpuCacheAddress,
 }
 
@@ -2521,7 +2521,6 @@ impl PicturePrimitive {
         &mut self,
         splitter: &mut PlaneSplitter,
         frame_state: &mut FrameBuildingState,
-        clip_scroll_tree: &ClipScrollTree,
     ) {
         let ordered = match self.context_3d {
             Picture3DContext::In { root_data: Some(ref mut list), .. } => list,
@@ -2533,13 +2532,7 @@ impl PicturePrimitive {
         // Z axis is directed at the screen, `sort` is ascending, and we need back-to-front order.
         for poly in splitter.sort(vec3(0.0, 0.0, 1.0)) {
             let spatial_node_index = self.prim_list.prim_instances[poly.anchor].spatial_node_index;
-
             let transform = frame_state.transforms.get_world_inv_transform(spatial_node_index);
-            let transform_id = frame_state.transforms.get_id(
-                spatial_node_index,
-                ROOT_SPATIAL_NODE_INDEX,
-                clip_scroll_tree,
-            );
 
             let local_points = [
                 transform.transform_point3d(&poly.points[0].cast()).unwrap(),
@@ -2556,7 +2549,7 @@ impl PicturePrimitive {
 
             ordered.push(OrderedPictureChild {
                 anchor: poly.anchor,
-                transform_id,
+                spatial_node_index,
                 gpu_address,
             });
         }
@@ -2844,11 +2837,7 @@ impl PicturePrimitive {
         let (mut pic_state_for_children, pic_context) = self.take_state_and_context();
 
         if let Some(ref mut splitter) = pic_state_for_children.plane_splitter {
-            self.resolve_split_planes(
-                splitter,
-                frame_state,
-                frame_context.clip_scroll_tree,
-            );
+            self.resolve_split_planes(splitter, frame_state);
         }
 
         let raster_config = match self.raster_config {
