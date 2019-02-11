@@ -962,7 +962,7 @@ impl AlphaBatchBuilder {
             PrimitiveInstanceKind::Picture { pic_index, .. } => {
                 let picture = &ctx.prim_store.pictures[pic_index.0];
                 let non_segmented_blend_mode = BlendMode::PremultipliedAlpha;
-                let prim_cache_address = gpu_cache.get_address(&ctx.globals.default_image_handle);
+                let prim_cache_address = gpu_cache.get_address(&picture.gpu_location);
 
                 let prim_header = PrimitiveHeader {
                     local_rect: picture.local_rect,
@@ -1906,7 +1906,7 @@ impl AlphaBatchBuilder {
                             image_data.alpha_type,
                             get_shader_opacity(opacity_binding),
                         ) {
-                            let prim_cache_address = gpu_cache.get_address(&ctx.globals.default_image_handle);
+                            let prim_cache_address = gpu_cache.get_address(&tile.handle);
                             let prim_header = PrimitiveHeader {
                                 specific_prim_address: prim_cache_address,
                                 local_rect: tile.local_rect,
