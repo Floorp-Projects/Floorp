@@ -20,7 +20,8 @@ ABIArg ABIArgGenerator::next(MIRType type) {
   switch (type) {
     case MIRType::Int32:
     case MIRType::Int64:
-    case MIRType::Pointer: {
+    case MIRType::Pointer:
+    case MIRType::RefOrNull: {
       Register destReg;
       if (GetIntArgReg(usedArgSlots_, &destReg)) {
         current_ = ABIArg(destReg);

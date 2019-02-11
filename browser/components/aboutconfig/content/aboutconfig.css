@@ -79,7 +79,7 @@ body.config-warning {
 
 #prefs > tr > td,
 #prefs > tr > th {
-  padding: 0;
+  padding: 4px;
   width: 50%;
   font-weight: inherit;
 }
@@ -92,6 +92,11 @@ body.config-warning {
 #prefs > tr.deleted > th {
   font-weight: bold;
   opacity: 0.4;
+}
+
+#prefs > tr > td.cell-edit,
+#prefs > tr > td.cell-reset {
+  padding: 0;
 }
 
 .cell-value {

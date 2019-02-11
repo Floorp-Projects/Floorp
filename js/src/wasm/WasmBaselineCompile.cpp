@@ -1036,7 +1036,7 @@ void BaseLocalIter::settle() {
       case MIRType::Int64:
       case MIRType::Double:
       case MIRType::Float32:
-      case MIRType::Pointer:
+      case MIRType::RefOrNull:
         if (argsIter_->argInRegister()) {
           frameOffset_ = pushLocal(MIRTypeToSize(mirType_));
         } else {
@@ -2145,7 +2145,7 @@ struct StackMapGenerator {
     }
 
     for (ABIArgIter<const ValTypeVector> i(args); !i.done(); i++) {
-      if (!i->argInRegister() || i.mirType() != MIRType::Pointer) {
+      if (!i->argInRegister() || i.mirType() != MIRType::RefOrNull) {
         continue;
       }
 
@@ -2520,10 +2520,10 @@ class BaseCompiler final : public BaseCompilerInterface {
   MIRTypeVector SigPI_;
   MIRTypeVector SigPL_;
   MIRTypeVector SigPII_;
-  MIRTypeVector SigPIPI_;
+  MIRTypeVector SigPIRI_;
   MIRTypeVector SigPIII_;
   MIRTypeVector SigPIIL_;
-  MIRTypeVector SigPIIP_;
+  MIRTypeVector SigPIIR_;
   MIRTypeVector SigPILL_;
   MIRTypeVector SigPIIII_;
   MIRTypeVector SigPIIIII_;
@@ -2931,7 +2931,7 @@ class BaseCompiler final : public BaseCompilerInterface {
   }
 
   void loadLocalRef(const Stk& src, RegPtr dest) {
-    fr.loadLocalPtr(localFromSlot(src.slot(), MIRType::Pointer), dest);
+    fr.loadLocalPtr(localFromSlot(src.slot(), MIRType::RefOrNull), dest);
   }
 
   void loadRegisterRef(const Stk& src, RegPtr dest) {
@@ -4050,11 +4050,9 @@ class BaseCompiler final : public BaseCompilerInterface {
 
     for (ABIArgIter<const ValTypeVector> i(argTys); !i.done(); i++) {
       ABIArg argLoc = *i;
-      if (argLoc.kind() != ABIArg::Stack) {
-        continue;
-      }
       const ValType& ty = argTys[i.index()];
-      if (!ty.isReference()) {
+      MOZ_ASSERT(ToMIRType(ty) != MIRType::Pointer);
+      if (argLoc.kind() != ABIArg::Stack || !ty.isReference()) {
         continue;
       }
       uint32_t offset = argLoc.offsetFromArgBase();
@@ -4145,7 +4143,7 @@ class BaseCompiler final : public BaseCompilerInterface {
         case MIRType::Int64:
           fr.storeLocalI64(RegI64(i->gpr64()), l);
           break;
-        case MIRType::Pointer: {
+        case MIRType::RefOrNull: {
           uint32_t offs = fr.localOffset(l);
           MOZ_ASSERT(0 == (offs % sizeof(void*)));
           fr.storeLocalPtr(RegPtr(i->gpr()), l);
@@ -4550,7 +4548,7 @@ class BaseCompiler final : public BaseCompilerInterface {
       }
       case ValType::Ref:
       case ValType::AnyRef: {
-        ABIArg argLoc = call->abi.next(MIRType::Pointer);
+        ABIArg argLoc = call->abi.next(MIRType::RefOrNull);
         if (argLoc.kind() == ABIArg::Stack) {
           ScratchPtr scratch(*this);
           loadRef(arg, scratch);
@@ -9057,7 +9055,7 @@ bool BaseCompiler::emitSetOrTeeLocal(uint32_t slot) {
     case ValType::AnyRef: {
       RegPtr rv = popRef();
       syncLocal(slot);
-      fr.storeLocalPtr(rv, localFromSlot(slot, MIRType::Pointer));
+      fr.storeLocalPtr(rv, localFromSlot(slot, MIRType::RefOrNull));
       if (isSetLocal) {
         freeRef(rv);
       } else {
@@ -9762,7 +9760,7 @@ bool BaseCompiler::emitInstanceCall(uint32_t lineOrBytecode,
       case MIRType::Int64:
         t = ValType::I64;
         break;
-      case MIRType::Pointer:
+      case MIRType::RefOrNull:
         t = ValType::AnyRef;
         break;
       default:
@@ -10367,7 +10365,7 @@ bool BaseCompiler::emitTableGrow() {
   //
   // infallible.
   pushI32(tableIndex);
-  return emitInstanceCall(lineOrBytecode, SigPIPI_, ExprType::I32,
+  return emitInstanceCall(lineOrBytecode, SigPIRI_, ExprType::I32,
                           SymbolicAddress::TableGrow);
 }
 
@@ -10386,7 +10384,7 @@ bool BaseCompiler::emitTableSet() {
   //
   // Returns -1 on range error, otherwise 0 (which is then ignored).
   pushI32(tableIndex);
-  if (!emitInstanceCall(lineOrBytecode, SigPIPI_, ExprType::Void,
+  if (!emitInstanceCall(lineOrBytecode, SigPIRI_, ExprType::Void,
                         SymbolicAddress::TableSet)) {
     return false;
   }
@@ -10770,7 +10768,7 @@ bool BaseCompiler::emitStructNarrow() {
   pushI32(mustUnboxAnyref);
   pushI32(outputStruct.moduleIndex_);
   pushRef(rp);
-  return emitInstanceCall(lineOrBytecode, SigPIIP_, ExprType::AnyRef,
+  return emitInstanceCall(lineOrBytecode, SigPIIR_, ExprType::AnyRef,
                           SymbolicAddress::StructNarrow);
 }
 
@@ -11861,8 +11859,9 @@ bool BaseCompiler::init() {
       !SigPII_.append(MIRType::Int32)) {
     return false;
   }
-  if (!SigPIPI_.append(MIRType::Pointer) || !SigPIPI_.append(MIRType::Int32) ||
-      !SigPIPI_.append(MIRType::Pointer) || !SigPIPI_.append(MIRType::Int32)) {
+  if (!SigPIRI_.append(MIRType::Pointer) || !SigPIRI_.append(MIRType::Int32) ||
+      !SigPIRI_.append(MIRType::RefOrNull) ||
+      !SigPIRI_.append(MIRType::Int32)) {
     return false;
   }
   if (!SigPIII_.append(MIRType::Pointer) || !SigPIII_.append(MIRType::Int32) ||
@@ -11873,8 +11872,9 @@ bool BaseCompiler::init() {
       !SigPIIL_.append(MIRType::Int32) || !SigPIIL_.append(MIRType::Int64)) {
     return false;
   }
-  if (!SigPIIP_.append(MIRType::Pointer) || !SigPIIP_.append(MIRType::Int32) ||
-      !SigPIIP_.append(MIRType::Int32) || !SigPIIP_.append(MIRType::Pointer)) {
+  if (!SigPIIR_.append(MIRType::Pointer) || !SigPIIR_.append(MIRType::Int32) ||
+      !SigPIIR_.append(MIRType::Int32) ||
+      !SigPIIR_.append(MIRType::RefOrNull)) {
     return false;
   }
   if (!SigPILL_.append(MIRType::Pointer) || !SigPILL_.append(MIRType::Int32) ||
