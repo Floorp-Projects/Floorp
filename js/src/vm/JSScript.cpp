@@ -346,6 +346,69 @@ static inline uint32_t FindScopeIndex(JSScript* script, Scope& scope) {
 enum XDRClassKind { CK_RegexpObject, CK_JSFunction, CK_JSObject };
 
 template <XDRMode mode>
+/* static */ XDRResult SharedScriptData::XDR(XDRState<mode>* xdr,
+                                             HandleScript script) {
+  uint32_t natoms = 0;
+  uint32_t codeLength = 0;
+  uint32_t noteLength = 0;
+
+  JSContext* cx = xdr->cx();
+  SharedScriptData* ssd = nullptr;
+
+  if (mode == XDR_ENCODE) {
+    ssd = script->scriptData();
+
+    natoms = ssd->natoms();
+    codeLength = ssd->codeLength();
+    noteLength = ssd->numNotes();
+  }
+
+  MOZ_TRY(xdr->codeUint32(&natoms));
+  MOZ_TRY(xdr->codeUint32(&codeLength));
+  MOZ_TRY(xdr->codeUint32(&noteLength));
+
+  if (mode == XDR_DECODE) {
+    if (!script->createSharedScriptData(cx, codeLength, noteLength, natoms)) {
+      return xdr->fail(JS::TranscodeResult_Throw);
+    }
+    ssd = script->scriptData();
+  }
+
+  JS_STATIC_ASSERT(sizeof(jsbytecode) == 1);
+  JS_STATIC_ASSERT(sizeof(jssrcnote) == 1);
+
+  jsbytecode* code = ssd->code();
+  jssrcnote* notes = ssd->notes();
+  MOZ_TRY(xdr->codeBytes(code, codeLength));
+  MOZ_TRY(xdr->codeBytes(notes, noteLength));
+
+  {
+    RootedAtom atom(cx);
+    GCPtrAtom* vector = ssd->atoms();
+
+    for (uint32_t i = 0; i != natoms; ++i) {
+      if (mode == XDR_ENCODE) {
+        atom = vector[i];
+      }
+      MOZ_TRY(XDRAtom(xdr, &atom));
+      if (mode == XDR_DECODE) {
+        vector[i].init(atom);
+      }
+    }
+  }
+
+  return Ok();
+}
+
+template
+    /* static */ XDRResult
+    SharedScriptData::XDR(XDRState<XDR_ENCODE>* xdr, HandleScript script);
+
+template
+    /* static */ XDRResult
+    SharedScriptData::XDR(XDRState<XDR_DECODE>* xdr, HandleScript script);
+
+template <XDRMode mode>
 XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
                         HandleScriptSourceObject sourceObjectArg,
                         HandleFunction fun, MutableHandleScript scriptp) {
@@ -358,8 +421,7 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
     HasLazyScript,
   };
 
-  uint32_t length, lineno, column, nfixed, nslots;
-  uint32_t natoms, nsrcnotes;
+  uint32_t lineno, column, nfixed, nslots;
   uint32_t nconsts, nobjects, nscopes, nregexps, ntrynotes, nscopenotes,
       nresumeoffsets;
   uint32_t prologueLength;
@@ -375,7 +437,6 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
 
   JSContext* cx = xdr->cx();
   RootedScript script(cx);
-  natoms = nsrcnotes = 0;
   nconsts = nobjects = nscopes = nregexps = ntrynotes = nscopenotes =
       nresumeoffsets = 0;
 
@@ -398,11 +459,6 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
   }
 
   if (mode == XDR_ENCODE) {
-    length = script->length();
-  }
-  MOZ_TRY(xdr->codeUint32(&length));
-
-  if (mode == XDR_ENCODE) {
     prologueLength = script->mainOffset();
     lineno = script->lineno();
     column = script->column();
@@ -410,7 +466,6 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
     nslots = script->nslots();
 
     bodyScopeIndex = script->bodyScopeIndex();
-    natoms = script->natoms();
 
     immutableFlags = script->immutableFlags_;
 
@@ -418,8 +473,6 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
     sourceEnd = script->sourceEnd();
     toStringStart = script->toStringStart();
     toStringEnd = script->toStringEnd();
-
-    nsrcnotes = script->numNotes();
 
     nscopes = script->scopes().size();
     if (script->hasConsts()) {
@@ -454,8 +507,6 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
   MOZ_TRY(xdr->codeUint32(&prologueLength));
 
   // To fuse allocations, we need lengths of all embedded arrays early.
-  MOZ_TRY(xdr->codeUint32(&natoms));
-  MOZ_TRY(xdr->codeUint32(&nsrcnotes));
   MOZ_TRY(xdr->codeUint32(&nconsts));
   MOZ_TRY(xdr->codeUint32(&nobjects));
   MOZ_TRY(xdr->codeUint32(&nscopes));
@@ -570,9 +621,6 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
     }
   }
 
-  JS_STATIC_ASSERT(sizeof(jsbytecode) == 1);
-  JS_STATIC_ASSERT(sizeof(jssrcnote) == 1);
-
   MOZ_TRY(xdr->codeUint32(&lineno));
   MOZ_TRY(xdr->codeUint32(&column));
   MOZ_TRY(xdr->codeUint32(&nfixed));
@@ -587,12 +635,6 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
     script->bodyScopeIndex_ = bodyScopeIndex;
   }
 
-  if (mode == XDR_DECODE) {
-    if (!script->createSharedScriptData(cx, length, nsrcnotes, natoms)) {
-      return xdr->fail(JS::TranscodeResult_Throw);
-    }
-  }
-
   // If XDR operation fails, we must call JSScript::freeScriptData in order
   // to neuter the script. Various things that iterate raw scripts in a GC
   // arena use the presense of this data to detect if initialization is
@@ -603,20 +645,8 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
     }
   });
 
-  jsbytecode* code = script->code();
-  MOZ_TRY(xdr->codeBytes(code, length));
-  MOZ_TRY(xdr->codeBytes(code + length, nsrcnotes));
-
-  for (uint32_t i = 0; i != natoms; ++i) {
-    if (mode == XDR_DECODE) {
-      RootedAtom tmp(cx);
-      MOZ_TRY(XDRAtom(xdr, &tmp));
-      script->atoms()[i].init(tmp);
-    } else {
-      RootedAtom tmp(cx, script->atoms()[i]);
-      MOZ_TRY(XDRAtom(xdr, &tmp));
-    }
-  }
+  // NOTE: The shared script data is rooted by the script.
+  MOZ_TRY(SharedScriptData::XDR<mode>(xdr, script));
 
   if (mode == XDR_DECODE) {
     if (!script->shareScriptData(cx)) {
