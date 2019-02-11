@@ -5,10 +5,12 @@
 let reference = [
    ["www.example.com%e2%88%95www.mozill%d0%b0.com%e2%81%84www.mozilla.org",
     "www.example.xn--comwww-re3c.xn--mozill-8nf.xn--comwww-rq0c.mozilla.org"],
-   ["www.mozill%61%2f.org", "www.mozilla%2f.org"], // a slash is not valid in the hostname
-   ["www.e%00xample.com%e2%88%95www.mozill%d0%b0.com%e2%81%84www.mozill%61.org",
-    "www.e%00xample.xn--comwww-re3c.xn--mozill-8nf.xn--comwww-rq0c.mozilla.org"],
 ];
+
+let badURIs = [
+   ["www.mozill%61%2f.org"], // a slash is not valid in the hostname
+   ["www.e%00xample.com%e2%88%95www.mozill%d0%b0.com%e2%81%84www.mozill%61.org"],
+]
 
 let prefData =
   [
@@ -74,5 +76,10 @@ function run_test() {
     } catch (e) {
       ok(false, "Error testing "+reference[i][0]);
     }
+  }
+
+  for (let i = 0; i < badURIs.length; ++i) {
+    Assert.throws(() => { let result = stringToURL("http://" + badURIs[i][0]).host; },
+                /NS_ERROR_MALFORMED_URI/, "bad escaped character");
   }
 }
