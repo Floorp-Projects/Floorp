@@ -773,6 +773,10 @@ class WithScope : public Scope {
 
  public:
   static WithScope* create(JSContext* cx, HandleScope enclosing);
+
+  template <XDRMode mode>
+  static XDRResult XDR(XDRState<mode>* xdr, HandleScope enclosing,
+                       MutableHandleScope scope);
 };
 
 //
