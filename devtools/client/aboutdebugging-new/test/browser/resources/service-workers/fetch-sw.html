@@ -1,0 +1,30 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Service worker test</title>
+</head>
+<body>
+<script type="text/javascript">
+"use strict";
+
+let registration;
+
+const registerServiceWorker = async function() {
+  try {
+    registration = await navigator.serviceWorker.register("fetch-sw.js");
+    dump("Empty service worker registered\n");
+  } catch (e) {
+    dump("Empty service worker not registered: " + e + "\n");
+  }
+};
+
+// Helper called from helper-serviceworker.js to unregister the service worker.
+window.getRegistration = function() {
+  return registration;
+};
+// Register the service worker.
+registerServiceWorker();
+</script>
+</body>
+</html>
