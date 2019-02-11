@@ -1099,6 +1099,12 @@ void wasm::GenerateDirectCallFromJit(MacroAssembler& masm, const FuncExport& fe,
   masm.callJit(ImmPtr(callee));
   masm.assertStackAlignment(WasmStackAlignment);
 
+#ifdef JS_CODEGEN_ARM64
+  // WASM does not use the emulated stack pointer, so reinitialize it as it
+  // might be clobbered either by WASM or by any C++ calls within.
+  masm.initPseudoStackPtr();
+#endif
+
   masm.branchPtr(Assembler::Equal, FramePointer, Imm32(wasm::FailFP),
                  masm.exceptionLabel());
 

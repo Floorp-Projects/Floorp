@@ -110,7 +110,7 @@ static const uintptr_t CLEAR_CONSTRUCTOR_CODE_TOKEN = 0x1;
   masm.Str(PseudoStackPointer64, vixl::MemOperand(sp, -16, vixl::PreIndex));
 
   // Initialize the PSP from the SP.
-  masm.initStackPtr();
+  masm.initPseudoStackPtr();
 #endif
 
   MOZ_ASSERT(propertiesReg.volatile_());
