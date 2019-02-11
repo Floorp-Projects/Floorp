@@ -6,9 +6,6 @@
 
 var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-// This is exported by preferences.js but we can't import that in a subdialog.
-let {getAvailableLocales} = window.top;
-
 ChromeUtils.defineModuleGetter(this, "AddonManager",
                                "resource://gre/modules/AddonManager.jsm");
 ChromeUtils.defineModuleGetter(this, "AddonRepository",
@@ -280,8 +277,8 @@ class SortedItemSelectList {
   }
 }
 
-async function getLocaleDisplayInfo(localeCodes) {
-  let availableLocales = new Set(await getAvailableLocales());
+function getLocaleDisplayInfo(localeCodes) {
+  let availableLocales = new Set(Services.locale.availableLocales);
   let packagedLocales = new Set(Services.locale.packagedLocales);
   let localeNames = Services.intl.getLocaleDisplayNames(undefined, localeCodes);
   return localeCodes.map((code, i) => {
@@ -352,7 +349,7 @@ var gBrowserLanguagesDialog = {
     // The first time this dialog is opened, populate with appLocalesAsBCP47.
     let selectedLocales = this.selectedLocales || Services.locale.appLocalesAsBCP47;
     let selectedLocaleSet = new Set(selectedLocales);
-    let available = await getAvailableLocales();
+    let available = Services.locale.availableLocales;
     let availableSet = new Set(available);
 
     // Filter selectedLocales since the user may select a locale when it is
@@ -361,13 +358,13 @@ var gBrowserLanguagesDialog = {
     // Nothing in available should be in selectedSet.
     available = available.filter(locale => !selectedLocaleSet.has(locale));
 
-    await this.initSelectedLocales(selectedLocales);
+    this.initSelectedLocales(selectedLocales);
     await this.initAvailableLocales(available, search);
 
     this.initialized = true;
   },
 
-  async initSelectedLocales(selectedLocales) {
+  initSelectedLocales(selectedLocales) {
     this._selectedLocales = new OrderedListBox({
       richlistbox: document.getElementById("selectedLocales"),
       upButton: document.getElementById("up"),
@@ -376,7 +373,7 @@ var gBrowserLanguagesDialog = {
       onRemove: (item) => this.selectedLocaleRemoved(item),
       onReorder: () => this.recordTelemetry("reorder"),
     });
-    this._selectedLocales.setItems(await getLocaleDisplayInfo(selectedLocales));
+    this._selectedLocales.setItems(getLocaleDisplayInfo(selectedLocales));
   },
 
   async initAvailableLocales(available, search) {
@@ -433,13 +430,13 @@ var gBrowserLanguagesDialog = {
     }
 
     // Remove the installed locales from the available ones.
-    let installedLocales = new Set(await getAvailableLocales());
+    let installedLocales = new Set(Services.locale.availableLocales);
     let notInstalledLocales = availableLangpacks
       .filter(({target_locale}) => !installedLocales.has(target_locale))
       .map(lang => lang.target_locale);
 
     // Create the rows for the remote locales.
-    let availableItems = await getLocaleDisplayInfo(notInstalledLocales);
+    let availableItems = getLocaleDisplayInfo(notInstalledLocales);
     availableItems.push({
       label: await document.l10n.formatValue("browser-languages-available-label"),
       className: "label-item",
@@ -460,7 +457,7 @@ var gBrowserLanguagesDialog = {
   async loadLocalesFromInstalled(available) {
     let items;
     if (available.length > 0) {
-      items = await getLocaleDisplayInfo(available);
+      items = getLocaleDisplayInfo(available);
       items.push(await this.createInstalledLabel());
     } else {
       items = [];
@@ -475,9 +472,9 @@ var gBrowserLanguagesDialog = {
   },
 
   async availableLanguageSelected(item) {
-    if ((await getAvailableLocales()).includes(item.value)) {
+    if (Services.locale.availableLocales.includes(item.value)) {
       this.recordTelemetry("add");
-      await this.requestLocalLanguage(item);
+      this.requestLocalLanguage(item);
     } else if (this.availableLangpacks.has(item.value)) {
       // Telemetry is tracked in requestRemoteLanguage.
       await this.requestRemoteLanguage(item);
@@ -486,10 +483,10 @@ var gBrowserLanguagesDialog = {
     }
   },
 
-  async requestLocalLanguage(item, available) {
+  requestLocalLanguage(item, available) {
     this._selectedLocales.addItem(item);
     let selectedCount = this._selectedLocales.items.length;
-    let availableCount = (await getAvailableLocales()).length;
+    let availableCount = Services.locale.availableLocales.length;
     if (selectedCount == availableCount) {
       // Remove the installed label, they're all installed.
       this._availableLocales.items.shift();
