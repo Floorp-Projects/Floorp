@@ -13,7 +13,6 @@ import android.util.Log;
 import org.mozilla.geckoview.BuildConfig;
 
 import com.google.android.exoplayer2.C;
-import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.Format;
 import com.google.android.exoplayer2.RendererCapabilities;
 import com.google.android.exoplayer2.decoder.DecoderInputBuffer;
@@ -103,7 +102,7 @@ public class GeckoHlsAudioRenderer extends GeckoHlsRendererBase {
     }
 
     @Override
-    protected void handleFormatRead(DecoderInputBuffer bufferForRead) throws ExoPlaybackException {
+    protected void handleFormatRead(DecoderInputBuffer bufferForRead) {
         onInputFormatChanged(mFormatHolder.format);
     }
 

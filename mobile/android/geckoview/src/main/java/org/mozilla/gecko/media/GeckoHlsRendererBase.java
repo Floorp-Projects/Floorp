@@ -11,7 +11,6 @@ import org.mozilla.geckoview.BuildConfig;
 import com.google.android.exoplayer2.BaseRenderer;
 import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.decoder.DecoderInputBuffer;
-import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.Format;
 import com.google.android.exoplayer2.FormatHolder;
 
@@ -42,9 +41,9 @@ public abstract class GeckoHlsRendererBase extends BaseRenderer {
     protected boolean mInputStreamEnded = false;
     protected long mFirstSampleStartTime = Long.MIN_VALUE;
 
-    protected abstract void createInputBuffer() throws ExoPlaybackException;
+    protected abstract void createInputBuffer();
     protected abstract void handleReconfiguration(DecoderInputBuffer bufferForRead);
-    protected abstract void handleFormatRead(DecoderInputBuffer bufferForRead) throws ExoPlaybackException;
+    protected abstract void handleFormatRead(DecoderInputBuffer bufferForRead);
     protected abstract void handleEndOfStream(DecoderInputBuffer bufferForRead);
     protected abstract void handleSamplePreparation(DecoderInputBuffer bufferForRead);
     protected abstract void resetRenderer();
@@ -146,7 +145,7 @@ public abstract class GeckoHlsRendererBase extends BaseRenderer {
         // do nothing.
     }
 
-    protected void onInputFormatChanged(Format newFormat) throws ExoPlaybackException {
+    protected void onInputFormatChanged(Format newFormat) {
         Format oldFormat;
         try {
             oldFormat = mFormats.get(mFormats.size() - 1);
@@ -171,17 +170,13 @@ public abstract class GeckoHlsRendererBase extends BaseRenderer {
         notifyPlayerInputFormatChanged(newFormat);
     }
 
-    protected void maybeInitRenderer() throws ExoPlaybackException {
+    protected void maybeInitRenderer() {
         if (mInitialized || mFormats.size() == 0) {
             return;
         }
         if (DEBUG) { Log.d(LOGTAG, "Initializing ... "); }
-        try {
-            createInputBuffer();
-            mInitialized = true;
-        } catch (OutOfMemoryError e) {
-            throw ExoPlaybackException.createForRenderer(new RuntimeException(e), getIndex());
-        }
+        createInputBuffer();
+        mInitialized = true;
     }
 
     /*
@@ -194,7 +189,7 @@ public abstract class GeckoHlsRendererBase extends BaseRenderer {
      * situation 1) not initialized 2) input stream is ended 3) queue is full.
      * 4) format changed. 5) exception happened.
      */
-    protected synchronized boolean feedInputBuffersQueue() throws ExoPlaybackException {
+    protected synchronized boolean feedInputBuffersQueue() {
         if (!mInitialized || mInputStreamEnded || isQueuedEnoughData()) {
             // Need to reinitialize the renderer or the input stream has ended
             // or we just reached the maximum queue size.
@@ -249,7 +244,7 @@ public abstract class GeckoHlsRendererBase extends BaseRenderer {
         }
     }
 
-    private void readFormat() throws ExoPlaybackException {
+    private void readFormat() {
         mflagsOnlyBuffer.clear();
         int result = readSource(mFormatHolder, mflagsOnlyBuffer, true);
         if (result == C.RESULT_FORMAT_READ) {
@@ -293,7 +288,7 @@ public abstract class GeckoHlsRendererBase extends BaseRenderer {
      * calls renderer.render by passing its wall clock time.
      */
     @Override
-    public void render(long positionUs, long elapsedRealtimeUs) throws ExoPlaybackException {
+    public void render(long positionUs, long elapsedRealtimeUs) {
         if (BuildConfig.DEBUG_BUILD) {
             Log.d(LOGTAG, "positionUs = " + positionUs +
                           ", mInputStreamEnded = " + mInputStreamEnded);
