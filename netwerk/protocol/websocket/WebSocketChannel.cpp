@@ -3699,7 +3699,8 @@ WebSocketChannel::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext) {
       do_QueryInterface(mHttpChannel);
   uint32_t versionMajor, versionMinor;
   rv = internalChannel->GetResponseVersion(&versionMajor, &versionMinor);
-  if (NS_FAILED(rv) || (versionMajor != 1 && versionMajor != 2) ||
+  if (NS_FAILED(rv) ||
+      !((versionMajor == 1 && versionMinor != 0) || versionMajor == 2) ||
       (versionMajor == 1 && status != 101) ||
       (versionMajor == 2 && status != 200)) {
     AbortSession(NS_ERROR_CONNECTION_REFUSED);
