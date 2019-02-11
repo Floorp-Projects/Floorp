@@ -33,7 +33,8 @@ class WorkerDetail extends PureComponent {
 
   renderFetch() {
     const { fetch } = this.props.target.details;
-    const localizationId = fetch === SERVICE_WORKER_FETCH_STATES.LISTENING
+    const isListening = fetch === SERVICE_WORKER_FETCH_STATES.LISTENING;
+    const localizationId = isListening
                     ? "about-debugging-worker-fetch-listening"
                     : "about-debugging-worker-fetch-not-listening";
 
@@ -47,8 +48,10 @@ class WorkerDetail extends PureComponent {
       },
       FieldPair(
         {
-          slug: "fetch",
+          className: isListening ?
+            "js-worker-fetch-listening" : "js-worker-fetch-not-listening",
           label: "Fetch",
+          slug: "fetch",
           value: "about-debugging-worker-fetch-value",
         }
       )
