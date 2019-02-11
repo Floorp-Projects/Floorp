@@ -129,15 +129,9 @@ inline JSObject* GetXBLScopeOrGlobal(JSContext* cx, JSObject* obj) {
 // in this compartment. See the comment around mAllowContentXBLScope.
 bool AllowContentXBLScope(JS::Realm* realm);
 
-// Returns whether we will use an XBL scope for this realm. This is
-// semantically equivalent to comparing global != GetXBLScope(global), but it
-// does not have the side-effect of eagerly creating the XBL scope if it does
-// not already exist.
-bool UseContentXBLScope(JS::Realm* realm);
-
-// Clear out the content XBL scope (if any) on the given global.  This will
-// force creation of a new one if one is needed again.
-void ClearContentXBLScope(JSObject* global);
+// Get the scope for creating reflectors for native anonymous content
+// whose normal global would be the given global.
+JSObject* NACScope(JSObject* global);
 
 bool IsSandboxPrototypeProxy(JSObject* obj);
 

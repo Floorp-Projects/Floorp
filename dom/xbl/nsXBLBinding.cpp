@@ -218,16 +218,8 @@ void nsXBLBinding::SetBoundElement(Element* aElement) {
     return;
   }
 
-  // Compute whether we're using an XBL scope.
-  //
-  // We disable XBL scopes for remote XUL, where we care about compat more
-  // than security. So we need to know whether we're using an XBL scope so that
-  // we can decide what to do about untrusted events when "allowuntrusted"
-  // is not given in the handler declaration.
-  nsCOMPtr<nsIGlobalObject> go = mBoundElement->OwnerDoc()->GetScopeObject();
-  NS_ENSURE_TRUE_VOID(go && go->GetGlobalJSObject());
-  mUsingContentXBLScope = xpc::UseContentXBLScope(
-      JS::GetObjectRealmOrNull(go->GetGlobalJSObject()));
+  // mUsingContentXBLScope can go away.  See bug 1527116.
+  mUsingContentXBLScope = false;
 }
 
 bool nsXBLBinding::HasStyleSheets() const {

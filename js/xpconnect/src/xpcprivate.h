@@ -842,9 +842,6 @@ class XPCWrappedNativeScope final {
   static void TraceWrappedNativesInAllScopes(JSTracer* trc);
 
   void TraceInside(JSTracer* trc) {
-    if (mContentXBLScope) {
-      mContentXBLScope.trace(trc, "XPCWrappedNativeScope::mXBLScope");
-    }
     if (mXrayExpandos.initialized()) {
       mXrayExpandos.trace(trc);
     }
@@ -915,8 +912,6 @@ class XPCWrappedNativeScope final {
     return xpc::IsContentXBLCompartment(Compartment());
   }
   bool AllowContentXBLScope(JS::Realm* aRealm);
-  bool UseContentXBLScope() { return mUseContentXBLScope; }
-  void ClearContentXBLScope() { mContentXBLScope = nullptr; }
 
   // ID Object prototype caches.
   JS::ObjectPtr mIDProto;
@@ -938,26 +933,12 @@ class XPCWrappedNativeScope final {
   XPCWrappedNativeScope* mNext;
   JS::Compartment* mCompartment;
 
-  // XBL Scope. This is is a lazily-created sandbox for non-system scopes.
-  // EnsureContentXBLScope() decides whether it needs to be created or not.
-  // This reference is wrapped into the compartment of mGlobalJSObject.
-  JS::ObjectPtr mContentXBLScope;
-
   JS::WeakMapPtr<JSObject*, JSObject*> mXrayExpandos;
 
   // For remote XUL domains, we run all XBL in the content scope for compat
-  // reasons (though we sometimes pref this off for automation). We separately
-  // track the result of this decision (mAllowContentXBLScope), from the
-  // decision of whether to actually _use_ an XBL scope (mUseContentXBLScope),
-  // which depends on the type of global and whether the compartment is system
-  // principal or not.
-  //
-  // This distinction is useful primarily because, if true, we know that we
-  // have no way of distinguishing XBL script from content script for the
-  // given scope. In these (unsupported) situations, we just always claim to
-  // be XBL.
+  // reasons (though we sometimes pref this off for automation). We
+  // track the result of this decision (mAllowContentXBLScope) for now.
   bool mAllowContentXBLScope;
-  bool mUseContentXBLScope;
 };
 
 /***************************************************************************/
