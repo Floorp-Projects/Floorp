@@ -14,7 +14,7 @@ add_task(async function() {
                                             { waitForRecording: true });
   const {threadClient, tab, toolbox} = dbg;
 
-  await setBreakpoint(threadClient, "doc_rr_basic.html", 21);
+  const bp = await setBreakpoint(threadClient, "doc_rr_basic.html", 21);
   await rewindToLine(threadClient, 21);
   await checkEvaluateInTopFrame(threadClient, "number", 10);
   await checkEvaluateInTopFrameThrows(threadClient, "window.alert(3)");
@@ -23,6 +23,7 @@ add_task(async function() {
   await checkEvaluateInTopFrame(threadClient, "number", 10);
   await checkEvaluateInTopFrame(threadClient, "testStepping2()", undefined);
 
+  await threadClient.removeBreakpoint(bp);
   await toolbox.destroy();
   await gBrowser.removeTab(tab);
 });

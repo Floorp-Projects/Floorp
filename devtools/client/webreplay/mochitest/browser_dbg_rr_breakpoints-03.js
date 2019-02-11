@@ -14,18 +14,21 @@ add_task(async function() {
   const {threadClient, tab, toolbox} = dbg;
 
   await threadClient.interrupt();
-  await setBreakpoint(threadClient, "doc_rr_continuous.html", 19);
+  const bp1 = await setBreakpoint(threadClient, "doc_rr_continuous.html", 19);
   await resumeToLine(threadClient, 19);
   await reverseStepOverToLine(threadClient, 18);
   await checkEvaluateInTopFrame(threadClient,
     "SpecialPowers.Cu.recordReplayDirective(/* AlwaysTakeTemporarySnapshots */ 3)",
     undefined);
   await stepInToLine(threadClient, 22);
-  await setBreakpoint(threadClient, "doc_rr_continuous.html", 24);
+  const bp2 = await setBreakpoint(threadClient, "doc_rr_continuous.html", 24);
   await resumeToLine(threadClient, 24);
-  await setBreakpoint(threadClient, "doc_rr_continuous.html", 22);
+  const bp3 = await setBreakpoint(threadClient, "doc_rr_continuous.html", 22);
   await rewindToLine(threadClient, 22);
 
+  await threadClient.removeBreakpoint(bp1);
+  await threadClient.removeBreakpoint(bp2);
+  await threadClient.removeBreakpoint(bp3);
   await toolbox.destroy();
   await gBrowser.removeTab(tab);
 });
