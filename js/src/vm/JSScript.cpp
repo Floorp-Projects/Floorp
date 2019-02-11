@@ -724,12 +724,7 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
           MOZ_TRY(LexicalScope::XDR(xdr, scopeKind, enclosing, &scope));
           break;
         case ScopeKind::With:
-          if (mode == XDR_DECODE) {
-            scope = WithScope::create(cx, enclosing);
-            if (!scope) {
-              return xdr->fail(JS::TranscodeResult_Throw);
-            }
-          }
+          MOZ_TRY(WithScope::XDR(xdr, enclosing, &scope));
           break;
         case ScopeKind::Eval:
         case ScopeKind::StrictEval:
