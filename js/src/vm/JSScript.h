@@ -458,6 +458,8 @@ struct SourceTypeTraits<char16_t> {
   }
 };
 
+class ScriptSourceHolder;
+
 class ScriptSource {
   friend class SourceCompressionTask;
 
@@ -1009,12 +1011,6 @@ class ScriptSource {
 
   void setCompressedSourceFromTask(SharedImmutableString compressed);
 
- public:
-  // XDR handling
-  template <XDRMode mode>
-  static MOZ_MUST_USE XDRResult performXDR(XDRState<mode>* xdr,
-                                           ScriptSource* ss);
-
  private:
   // It'd be better to make this function take <XDRMode, Unit>, as both
   // specializations of this function contain nested Unit-parametrized
@@ -1102,6 +1098,11 @@ class ScriptSource {
     parseEnded_ = ReallyNow();
   }
 
+  template <XDRMode mode>
+  static MOZ_MUST_USE XDRResult
+  XDR(XDRState<mode>* xdr, const mozilla::Maybe<JS::CompileOptions>& options,
+      MutableHandle<ScriptSourceHolder> ss);
+
   void trace(JSTracer* trc);
 };
 
@@ -1127,6 +1128,8 @@ class ScriptSourceHolder {
     ss = newss;
   }
   ScriptSource* get() const { return ss; }
+
+  void trace(JSTracer* trc) { ss->trace(trc); }
 };
 
 // [SMDOC] ScriptSourceObject
