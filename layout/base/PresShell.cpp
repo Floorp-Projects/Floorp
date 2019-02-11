@@ -6506,6 +6506,16 @@ nsresult PresShell::EventHandler::HandleEvent(nsIFrame* aFrame,
   }
 
   if (aGUIEvent->IsUsingCoordinates()) {
+    // Flush pending notifications to handle the event with the latest layout.
+    // But if it causes destroying the frame for mPresShell, stop handling the
+    // event. (why?)
+    AutoWeakFrame weakFrame(aFrame);
+    MaybeFlushPendingNotifications(aGUIEvent);
+    if (!weakFrame.IsAlive()) {
+      *aEventStatus = nsEventStatus_eIgnore;
+      return NS_OK;
+    }
+
     // XXX Retrieving capturing content here.  However, some of the following
     //     methods allow to run script.  So, isn't it possible the capturing
     //     content outdated?
@@ -6601,18 +6611,11 @@ nsresult PresShell::EventHandler::HandleEvent(nsIFrame* aFrame,
         frameToHandleEvent = TouchManager::SetupTarget(
             aGUIEvent->AsTouchEvent(), rootFrameToHandleEvent);
       } else {
-        uint32_t flags = 0;
-        nsPoint eventPoint = nsLayoutUtils::GetEventCoordinatesRelativeTo(
-            aGUIEvent, rootFrameToHandleEvent);
-
-        if (mouseEvent && mouseEvent->mClass == eMouseEventClass &&
-            mouseEvent->mIgnoreRootScrollFrame) {
-          flags |= INPUT_IGNORE_ROOT_SCROLL_FRAME;
-        }
-        nsIFrame* target = FindFrameTargetedByInputEvent(
-            aGUIEvent, rootFrameToHandleEvent, eventPoint, flags);
-        if (target) {
-          frameToHandleEvent = target;
+        frameToHandleEvent =
+            GetFrameToHandleNonTouchEvent(rootFrameToHandleEvent, aGUIEvent);
+        if (!frameToHandleEvent) {
+          *aEventStatus = nsEventStatus_eIgnore;
+          return NS_OK;
         }
       }
     }
@@ -6939,6 +6942,81 @@ nsresult PresShell::EventHandler::HandleEvent(nsIFrame* aFrame,
   }
 
   return rv;
+}
+
+bool PresShell::EventHandler::MaybeFlushPendingNotifications(
+    WidgetGUIEvent* aGUIEvent) {
+  MOZ_ASSERT(aGUIEvent);
+
+  switch (aGUIEvent->mMessage) {
+    case eMouseDown:
+    case eMouseUp: {
+      RefPtr<nsPresContext> presContext = mPresShell->GetPresContext();
+      if (NS_WARN_IF(!presContext)) {
+        return false;
+      }
+      uint64_t framesConstructedCount = presContext->FramesConstructedCount();
+      uint64_t framesReflowedCount = presContext->FramesReflowedCount();
+
+      mPresShell->FlushPendingNotifications(FlushType::Layout);
+      return framesConstructedCount != presContext->FramesConstructedCount() ||
+             framesReflowedCount != presContext->FramesReflowedCount();
+    }
+    default:
+      return false;
+  }
+}
+
+nsIFrame* PresShell::EventHandler::GetFrameToHandleNonTouchEvent(
+    nsIFrame* aRootFrameToHandleEvent, WidgetGUIEvent* aGUIEvent) {
+  MOZ_ASSERT(aGUIEvent);
+  MOZ_ASSERT(aGUIEvent->mClass != eTouchEventClass);
+
+  nsPoint eventPoint = nsLayoutUtils::GetEventCoordinatesRelativeTo(
+      aGUIEvent, aRootFrameToHandleEvent);
+
+  uint32_t flags = 0;
+  if (aGUIEvent->mClass == eMouseEventClass) {
+    WidgetMouseEvent* mouseEvent = aGUIEvent->AsMouseEvent();
+    if (mouseEvent && mouseEvent->mIgnoreRootScrollFrame) {
+      flags |= INPUT_IGNORE_ROOT_SCROLL_FRAME;
+    }
+  }
+
+  nsIFrame* targetFrame = FindFrameTargetedByInputEvent(
+      aGUIEvent, aRootFrameToHandleEvent, eventPoint, flags);
+  if (!targetFrame) {
+    return aRootFrameToHandleEvent;
+  }
+
+  if (targetFrame->PresShell() == mPresShell) {
+    // If found target is in mPresShell, we've already found it in the latest
+    // layout so that we can use it.
+    return targetFrame;
+  }
+
+  // If target is in a child document, we've not flushed its layout yet.
+  PresShell* childPresShell = static_cast<PresShell*>(targetFrame->PresShell());
+  EventHandler childEventHandler(*childPresShell);
+  AutoWeakFrame weakFrame(aRootFrameToHandleEvent);
+  bool layoutChanged =
+      childEventHandler.MaybeFlushPendingNotifications(aGUIEvent);
+  if (!weakFrame.IsAlive()) {
+    // Stop handling the event if the root frame to handle event is destroyed
+    // by the reflow. (but why?)
+    return nullptr;
+  }
+  if (!layoutChanged) {
+    // If the layout in the child PresShell hasn't been changed, we don't
+    // need to recompute the target.
+    return targetFrame;
+  }
+
+  // Finally, we need to recompute the target with the latest layout.
+  targetFrame = FindFrameTargetedByInputEvent(
+      aGUIEvent, aRootFrameToHandleEvent, eventPoint, flags);
+
+  return targetFrame ? targetFrame : aRootFrameToHandleEvent;
 }
 
 bool PresShell::EventHandler::MaybeHandleEventWithAccessibleCaret(

@@ -383,8 +383,22 @@ var focusEditableField = async function(ruleView, editable, xOffset = 1,
     yOffset = 1, options = {}) {
   const onFocus = once(editable.parentNode, "focus", true);
   info("Clicking on editable field to turn to edit mode");
-  EventUtils.synthesizeMouse(editable, xOffset, yOffset, options,
-    editable.ownerDocument.defaultView);
+  if (options.type === undefined) {
+    // "mousedown" and "mouseup" flushes any pending layout.  Therefore,
+    // if the caller wants to click an element, e.g., closebrace to add new
+    // property, we need to guarantee that the element is clicked here even
+    // if it's moved by flushing the layout because whether the UI is useful
+    // or not when there is pending reflow is not scope of the tests.
+    options.type = "mousedown";
+    EventUtils.synthesizeMouse(editable, xOffset, yOffset, options,
+      editable.ownerGlobal);
+    options.type = "mouseup";
+    EventUtils.synthesizeMouse(editable, xOffset, yOffset, options,
+      editable.ownerGlobal);
+  } else {
+    EventUtils.synthesizeMouse(editable, xOffset, yOffset, options,
+      editable.ownerGlobal);
+  }
   await onFocus;
 
   info("Editable field gained focus, returning the input field now");
