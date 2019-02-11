@@ -1012,7 +1012,12 @@ impl AlphaBatchBuilder {
                                 task_address,
                                 specific_prim_address: GpuCacheAddress::invalid(),
                                 clip_task_address,
-                                transform_id: child.transform_id,
+                                transform_id: transforms
+                                    .get_id(
+                                        child.spatial_node_index,
+                                        root_spatial_node_index,
+                                        ctx.clip_scroll_tree,
+                                    ),
                             };
 
                             let raster_config = pic
