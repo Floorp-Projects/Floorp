@@ -361,15 +361,7 @@ def trigger_action_callback(task_group_id, task_id, input, callback, parameters,
     if not test:
         sanity_check_task_scope(callback, parameters, graph_config)
 
-    # fetch the target task, if taskId was given
-    # FIXME: many actions don't need this, so move this fetch into the callbacks
-    # that do need it
-    if task_id:
-        task = taskcluster.get_task_definition(task_id)
-    else:
-        task = None
-
-    cb(Parameters(**parameters), graph_config, input, task_group_id, task_id, task)
+    cb(Parameters(**parameters), graph_config, input, task_group_id, task_id)
 
 
 def _load(graph_config):

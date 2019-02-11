@@ -19,6 +19,8 @@ from taskgraph.util.taskcluster import (
     get_root_url,
 )
 from .registry import register_callback_action
+from taskgraph.util import taskcluster
+
 
 logger = logging.getLogger(__name__)
 
@@ -101,12 +103,13 @@ def context(params):
         'additionalProperties': False,
     },
 )
-def create_interactive_action(parameters, graph_config, input, task_group_id, task_id, task):
+def create_interactive_action(parameters, graph_config, input, task_group_id, task_id):
     # fetch the original task definition from the taskgraph, to avoid
     # creating interactive copies of unexpected tasks.  Note that this only applies
     # to docker-worker tasks, so we can assume the docker-worker payload format.
     decision_task_id, full_task_graph, label_to_taskid = fetch_graph_and_labels(
         parameters, graph_config)
+    task = taskcluster.get_task_definition(task_id)
     label = task['metadata']['name']
 
     def edit(task):
