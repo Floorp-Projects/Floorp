@@ -196,7 +196,7 @@ static void SetupABIArguments(MacroAssembler& masm, const FuncExport& fe,
           masm.load32(src, iter->gpr());
         } else if (type == MIRType::Int64) {
           masm.load64(src, iter->gpr64());
-        } else if (type == MIRType::Pointer) {
+        } else if (type == MIRType::RefOrNull) {
           masm.loadPtr(src, iter->gpr());
         } else {
           MOZ_CRASH("unknown GPR type");
@@ -250,7 +250,7 @@ static void SetupABIArguments(MacroAssembler& masm, const FuncExport& fe,
 #endif
             break;
           }
-          case MIRType::Pointer:
+          case MIRType::RefOrNull:
             masm.loadPtr(src, scratch);
             masm.storePtr(scratch, Address(masm.getStackPointer(),
                                            iter->offsetFromArgBase()));
@@ -1166,7 +1166,7 @@ static void StackCopy(MacroAssembler& masm, MIRType type, Register scratch,
     GenPrintIsize(DebugChannel::Import, masm, scratch);
     masm.store64(scratch64, dst);
 #endif
-  } else if (type == MIRType::Pointer) {
+  } else if (type == MIRType::RefOrNull) {
     masm.loadPtr(src, scratch);
     GenPrintPtr(DebugChannel::Import, masm, scratch);
     masm.storePtr(scratch, dst);
@@ -1175,12 +1175,13 @@ static void StackCopy(MacroAssembler& masm, MIRType type, Register scratch,
     masm.loadFloat32(src, fpscratch);
     GenPrintF32(DebugChannel::Import, masm, fpscratch);
     masm.storeFloat32(fpscratch, dst);
-  } else {
-    MOZ_ASSERT(type == MIRType::Double);
+  } else if (type == MIRType::Double) {
     ScratchDoubleScope fpscratch(masm);
     masm.loadDouble(src, fpscratch);
     GenPrintF64(DebugChannel::Import, masm, fpscratch);
     masm.storeDouble(fpscratch, dst);
+  } else {
+    MOZ_CRASH("StackCopy: unexpected type");
   }
 }
 
@@ -1213,12 +1214,14 @@ static void FillArgumentArray(MacroAssembler& masm, unsigned funcImportIndex,
             GenPrintI64(DebugChannel::Import, masm, i->gpr64());
             masm.store64(i->gpr64(), dst);
           }
-        } else if (type == MIRType::Pointer) {
+        } else if (type == MIRType::RefOrNull) {
           if (toValue) {
             MOZ_CRASH("generating a jit exit for anyref NYI");
           }
           GenPrintPtr(DebugChannel::Import, masm, i->gpr());
           masm.storePtr(i->gpr(), dst);
+        } else {
+          MOZ_CRASH("FillArgumentArray, ABIArg::GPR: unexpected type");
         }
         break;
 #ifdef JS_CODEGEN_REGISTER_PAIR
@@ -1274,10 +1277,9 @@ static void FillArgumentArray(MacroAssembler& masm, unsigned funcImportIndex,
           } else if (type == MIRType::Int64) {
             // We can't box int64 into Values (yet).
             masm.breakpoint();
-          } else if (type == MIRType::Pointer) {
+          } else if (type == MIRType::RefOrNull) {
             MOZ_CRASH("generating a jit exit for anyref NYI");
-          } else {
-            MOZ_ASSERT(IsFloatingPointType(type));
+          } else if (IsFloatingPointType(type)) {
             ScratchDoubleScope dscratch(masm);
             FloatRegister fscratch = dscratch.asSingle();
             if (type == MIRType::Float32) {
@@ -1289,6 +1291,8 @@ static void FillArgumentArray(MacroAssembler& masm, unsigned funcImportIndex,
             masm.canonicalizeDouble(dscratch);
             GenPrintF64(DebugChannel::Import, masm, dscratch);
             masm.storeDouble(dscratch, dst);
+          } else {
+            MOZ_CRASH("FillArgumentArray, ABIArg::Stack: unexpected type");
           }
         } else {
           StackCopy(masm, type, scratch, src, dst);
