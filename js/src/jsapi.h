@@ -3384,6 +3384,7 @@ extern JS_PUBLIC_API void JS_SetOffthreadIonCompilationEnabled(JSContext* cx,
   Register(FULL_DEBUG_CHECKS, "jit.full-debug-checks") \
   Register(JUMP_THRESHOLD, "jump-threshold") \
   Register(TRACK_OPTIMIZATIONS, "jit.track-optimizations")\
+  Register(UNBOXED_OBJECTS, "unboxed_objects") \
   Register(SIMULATOR_ALWAYS_INTERRUPT, "simulator.always-interrupt") \
   Register(SPECTRE_INDEX_MASKING, "spectre.index-masking") \
   Register(SPECTRE_OBJECT_MITIGATIONS_BARRIERS, "spectre.object-mitigations.barriers") \
