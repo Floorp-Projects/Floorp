@@ -26,7 +26,7 @@ DevToolsModules(
     'webconsole-connection-proxy.js',
     'webconsole-frame.js',
     'webconsole-l10n.js',
-    'webconsole-output-wrapper.js',
+    'webconsole-wrapper.js',
     'webconsole.js',
 )
 with Files('**'):

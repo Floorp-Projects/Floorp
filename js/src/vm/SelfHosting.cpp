@@ -990,13 +990,13 @@ static bool intrinsic_PossiblyWrappedArrayBufferByteLength(JSContext* cx,
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 1);
 
-  JSObject* obj = CheckedUnwrap(&args[0].toObject());
+  T* obj = args[0].toObject().maybeUnwrapAs<T>();
   if (!obj) {
     ReportAccessDenied(cx);
     return false;
   }
 
-  uint32_t length = obj->as<T>().byteLength();
+  uint32_t length = obj->byteLength();
   args.rval().setInt32(mozilla::AssertedCast<int32_t>(length));
   return true;
 }
@@ -1017,12 +1017,11 @@ static bool intrinsic_ArrayBufferCopyData(JSContext* cx, unsigned argc,
   } else {
     JSObject* wrapped = &args[0].toObject();
     MOZ_ASSERT(wrapped->is<WrapperObject>());
-    RootedObject toBufferObj(cx, CheckedUnwrap(wrapped));
-    if (!toBufferObj) {
+    toBuffer = wrapped->maybeUnwrapAs<T>();
+    if (!toBuffer) {
       ReportAccessDenied(cx);
       return false;
     }
-    toBuffer = toBufferObj.as<T>();
   }
   uint32_t toIndex = uint32_t(args[1].toInt32());
   Rooted<T*> fromBuffer(cx, &args[2].toObject().as<T>());
@@ -1041,19 +1040,18 @@ static bool intrinsic_SharedArrayBuffersMemorySame(JSContext* cx, unsigned argc,
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 2);
 
-  JSObject* lhs = CheckedUnwrap(&args[0].toObject());
+  auto* lhs = args[0].toObject().maybeUnwrapAs<SharedArrayBufferObject>();
   if (!lhs) {
     ReportAccessDenied(cx);
     return false;
   }
-  JSObject* rhs = CheckedUnwrap(&args[1].toObject());
+  auto* rhs = args[1].toObject().maybeUnwrapAs<SharedArrayBufferObject>();
   if (!rhs) {
     ReportAccessDenied(cx);
     return false;
   }
 
-  args.rval().setBoolean(lhs->as<SharedArrayBufferObject>().rawBufferObject() ==
-                         rhs->as<SharedArrayBufferObject>().rawBufferObject());
+  args.rval().setBoolean(lhs->rawBufferObject() == rhs->rawBufferObject());
   return true;
 }
 
@@ -1159,14 +1157,13 @@ static bool intrinsic_PossiblyWrappedTypedArrayLength(JSContext* cx,
   MOZ_ASSERT(args.length() == 1);
   MOZ_ASSERT(args[0].isObject());
 
-  JSObject* obj = CheckedUnwrap(&args[0].toObject());
+  TypedArrayObject* obj = args[0].toObject().maybeUnwrapAs<TypedArrayObject>();
   if (!obj) {
     ReportAccessDenied(cx);
     return false;
   }
 
-  MOZ_ASSERT(obj->is<TypedArrayObject>());
-  uint32_t typedArrayLength = obj->as<TypedArrayObject>().length();
+  uint32_t typedArrayLength = obj->length();
   args.rval().setInt32(mozilla::AssertedCast<int32_t>(typedArrayLength));
   return true;
 }
@@ -1178,14 +1175,13 @@ static bool intrinsic_PossiblyWrappedTypedArrayHasDetachedBuffer(JSContext* cx,
   MOZ_ASSERT(args.length() == 1);
   MOZ_ASSERT(args[0].isObject());
 
-  JSObject* obj = CheckedUnwrap(&args[0].toObject());
+  TypedArrayObject* obj = args[0].toObject().maybeUnwrapAs<TypedArrayObject>();
   if (!obj) {
     ReportAccessDenied(cx);
     return false;
   }
 
-  MOZ_ASSERT(obj->is<TypedArrayObject>());
-  bool detached = obj->as<TypedArrayObject>().hasDetachedBuffer();
+  bool detached = obj->hasDetachedBuffer();
   args.rval().setBoolean(detached);
   return true;
 }
@@ -1261,31 +1257,16 @@ static TypedArrayObject* DangerouslyUnwrapTypedArray(JSContext* cx,
                                                      JSObject* obj) {
   // An unwrapped pointer to an object potentially on the other side of a
   // compartment boundary!  Isn't this such fun?
-  JSObject* unwrapped = CheckedUnwrap(obj);
+  TypedArrayObject* unwrapped = obj->maybeUnwrapAs<TypedArrayObject>();
   if (!unwrapped) {
     ReportAccessDenied(cx);
-    return nullptr;
-  }
-
-  if (!unwrapped->is<TypedArrayObject>()) {
-    // By *appearances* this can't happen, as self-hosted code
-    // checked this.  But.  Who's to say a GC couldn't happen between
-    // the check that this value was a typed array, and this extraction
-    // occurring?  A GC might turn a cross-compartment wrapper |obj| into
-    // |unwrapped == obj|, a dead object no longer connected its typed
-    // array.
-    //
-    // Yeah, yeah, it's pretty unlikely.  Are you willing to stake a
-    // sec-critical bug on that assessment, now and forever, against
-    // all changes those pesky GC and JIT people might make?
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DEAD_OBJECT);
     return nullptr;
   }
 
   // Be super-duper careful using this, as we've just punched through
   // the compartment boundary, and things like buffer() on this aren't
   // same-compartment with anything else in the calling method.
-  return &unwrapped->as<TypedArrayObject>();
+  return unwrapped;
 }
 
 // ES6 draft 20150403 22.2.3.22.2, steps 12-24, 29.

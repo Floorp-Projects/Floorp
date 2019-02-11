@@ -904,8 +904,6 @@ bool GLContext::InitWithPrefixImpl(const char* prefix, bool trygl) {
   }
 #endif
 
-  mMaxTextureImageSize = mMaxTextureSize;
-
   if (IsSupported(GLFeature::framebuffer_multisample)) {
     fGetIntegerv(LOCAL_GL_MAX_SAMPLES, (GLint*)&mMaxSamples);
   }

@@ -2846,6 +2846,8 @@ static bool GenerateLcovInfo(JSContext* cx, JS::Realm* realm,
                              GenericPrinter& out) {
   JSRuntime* rt = cx->runtime();
 
+  AutoRealmUnchecked ar(cx, realm);
+
   // Collect the list of scripts which are part of the current realm.
   { js::gc::AutoPrepareForTracing apft(cx); }
 

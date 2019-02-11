@@ -1599,22 +1599,19 @@ bool JSObject::is<js::ArrayBufferObjectMaybeShared>() const {
 }
 
 JS_FRIEND_API uint32_t JS_GetArrayBufferByteLength(JSObject* obj) {
-  obj = CheckedUnwrap(obj);
-  return obj ? AsArrayBuffer(obj).byteLength() : 0;
+  ArrayBufferObject* aobj = obj->maybeUnwrapAs<ArrayBufferObject>();
+  return aobj ? aobj->byteLength() : 0;
 }
 
 JS_FRIEND_API uint8_t* JS_GetArrayBufferData(JSObject* obj,
                                              bool* isSharedMemory,
                                              const JS::AutoRequireNoGC&) {
-  obj = CheckedUnwrap(obj);
-  if (!obj) {
-    return nullptr;
-  }
-  if (!IsArrayBuffer(obj)) {
+  ArrayBufferObject* aobj = obj->maybeUnwrapIf<ArrayBufferObject>();
+  if (!aobj) {
     return nullptr;
   }
   *isSharedMemory = false;
-  return AsArrayBuffer(obj).dataPointer();
+  return aobj->dataPointer();
 }
 
 JS_FRIEND_API bool JS_DetachArrayBuffer(JSContext* cx, HandleObject obj) {
@@ -1646,13 +1643,12 @@ JS_FRIEND_API bool JS_DetachArrayBuffer(JSContext* cx, HandleObject obj) {
 }
 
 JS_FRIEND_API bool JS_IsDetachedArrayBufferObject(JSObject* obj) {
-  obj = CheckedUnwrap(obj);
-  if (!obj) {
+  ArrayBufferObject* aobj = obj->maybeUnwrapIf<ArrayBufferObject>();
+  if (!aobj) {
     return false;
   }
 
-  return obj->is<ArrayBufferObject>() &&
-         obj->as<ArrayBufferObject>().isDetached();
+  return aobj->isDetached();
 }
 
 JS_FRIEND_API JSObject* JS_NewArrayBuffer(JSContext* cx, uint32_t nbytes) {
@@ -1707,26 +1703,19 @@ JS_PUBLIC_API JSObject* JS_NewArrayBufferWithExternalContents(JSContext* cx,
 }
 
 JS_FRIEND_API bool JS_IsArrayBufferObject(JSObject* obj) {
-  obj = CheckedUnwrap(obj);
-  return obj && obj->is<ArrayBufferObject>();
+  return obj->canUnwrapAs<ArrayBufferObject>();
 }
 
 JS_FRIEND_API bool JS_ArrayBufferHasData(JSObject* obj) {
-  return CheckedUnwrap(obj)->as<ArrayBufferObject>().hasData();
+  return obj->unwrapAs<ArrayBufferObject>().hasData();
 }
 
 JS_FRIEND_API JSObject* js::UnwrapArrayBuffer(JSObject* obj) {
-  if (JSObject* unwrapped = CheckedUnwrap(obj)) {
-    return unwrapped->is<ArrayBufferObject>() ? unwrapped : nullptr;
-  }
-  return nullptr;
+  return obj->maybeUnwrapIf<ArrayBufferObject>();
 }
 
 JS_FRIEND_API JSObject* js::UnwrapSharedArrayBuffer(JSObject* obj) {
-  if (JSObject* unwrapped = CheckedUnwrap(obj)) {
-    return unwrapped->is<SharedArrayBufferObject>() ? unwrapped : nullptr;
-  }
-  return nullptr;
+  return obj->maybeUnwrapIf<SharedArrayBufferObject>();
 }
 
 JS_PUBLIC_API void* JS_ExternalizeArrayBufferContents(JSContext* cx,
@@ -1834,29 +1823,26 @@ JS_PUBLIC_API void JS_ReleaseMappedArrayBufferContents(void* contents,
 }
 
 JS_FRIEND_API bool JS_IsMappedArrayBufferObject(JSObject* obj) {
-  obj = CheckedUnwrap(obj);
-  if (!obj) {
+  ArrayBufferObject* aobj = obj->maybeUnwrapIf<ArrayBufferObject>();
+  if (!aobj) {
     return false;
   }
 
-  return obj->is<ArrayBufferObject>() &&
-         obj->as<ArrayBufferObject>().isMapped();
+  return aobj->isMapped();
 }
 
 JS_FRIEND_API JSObject* JS_GetObjectAsArrayBuffer(JSObject* obj,
                                                   uint32_t* length,
                                                   uint8_t** data) {
-  if (!(obj = CheckedUnwrap(obj))) {
-    return nullptr;
-  }
-  if (!IsArrayBuffer(obj)) {
+  ArrayBufferObject* aobj = obj->maybeUnwrapIf<ArrayBufferObject>();
+  if (!aobj) {
     return nullptr;
   }
 
-  *length = AsArrayBuffer(obj).byteLength();
-  *data = AsArrayBuffer(obj).dataPointer();
+  *length = aobj->byteLength();
+  *data = aobj->dataPointer();
 
-  return obj;
+  return aobj;
 }
 
 JS_FRIEND_API void js::GetArrayBufferLengthAndData(JSObject* obj,

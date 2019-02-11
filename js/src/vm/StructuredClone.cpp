@@ -1199,7 +1199,7 @@ inline void JSStructuredCloneWriter::checkStack() {
  */
 bool JSStructuredCloneWriter::writeTypedArray(HandleObject obj) {
   Rooted<TypedArrayObject*> tarr(context(),
-                                 &CheckedUnwrap(obj)->as<TypedArrayObject>());
+                                 obj->maybeUnwrapAs<TypedArrayObject>());
   JSAutoRealm ar(context(), tarr);
 
   if (!TypedArrayObject::ensureHasBuffer(context(), tarr)) {
@@ -1224,8 +1224,7 @@ bool JSStructuredCloneWriter::writeTypedArray(HandleObject obj) {
 }
 
 bool JSStructuredCloneWriter::writeDataView(HandleObject obj) {
-  Rooted<DataViewObject*> view(context(),
-                               &CheckedUnwrap(obj)->as<DataViewObject>());
+  Rooted<DataViewObject*> view(context(), obj->maybeUnwrapAs<DataViewObject>());
   JSAutoRealm ar(context(), view);
 
   if (!out.writePair(SCTAG_DATA_VIEW_OBJECT, view->byteLength())) {
@@ -1242,8 +1241,8 @@ bool JSStructuredCloneWriter::writeDataView(HandleObject obj) {
 }
 
 bool JSStructuredCloneWriter::writeArrayBuffer(HandleObject obj) {
-  Rooted<ArrayBufferObject*> buffer(
-      context(), &CheckedUnwrap(obj)->as<ArrayBufferObject>());
+  Rooted<ArrayBufferObject*> buffer(context(),
+                                    obj->maybeUnwrapAs<ArrayBufferObject>());
   JSAutoRealm ar(context(), buffer);
 
   return out.writePair(SCTAG_ARRAY_BUFFER_OBJECT, buffer->byteLength()) &&
@@ -1251,8 +1250,7 @@ bool JSStructuredCloneWriter::writeArrayBuffer(HandleObject obj) {
 }
 
 bool JSStructuredCloneWriter::writeSharedArrayBuffer(HandleObject obj) {
-  MOZ_ASSERT(CheckedUnwrap(obj) &&
-             CheckedUnwrap(obj)->is<SharedArrayBufferObject>());
+  MOZ_ASSERT(obj->canUnwrapAs<SharedArrayBufferObject>());
 
   if (!cloneDataPolicy.isSharedArrayBufferAllowed()) {
     JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
@@ -1271,7 +1269,7 @@ bool JSStructuredCloneWriter::writeSharedArrayBuffer(HandleObject obj) {
   }
 
   Rooted<SharedArrayBufferObject*> sharedArrayBuffer(
-      context(), &CheckedUnwrap(obj)->as<SharedArrayBufferObject>());
+      context(), obj->maybeUnwrapAs<SharedArrayBufferObject>());
   SharedArrayRawBuffer* rawbuf = sharedArrayBuffer->rawBufferObject();
 
   if (!out.buf.refsHeld_.acquire(context(), rawbuf)) {
@@ -1291,7 +1289,7 @@ bool JSStructuredCloneWriter::writeSharedArrayBuffer(HandleObject obj) {
 }
 
 bool JSStructuredCloneWriter::writeSharedWasmMemory(HandleObject obj) {
-  MOZ_ASSERT(CheckedUnwrap(obj) && CheckedUnwrap(obj)->is<WasmMemoryObject>());
+  MOZ_ASSERT(obj->canUnwrapAs<WasmMemoryObject>());
 
   // Check the policy here so that we can report a sane error.
   if (!cloneDataPolicy.isSharedArrayBufferAllowed()) {
@@ -1303,8 +1301,8 @@ bool JSStructuredCloneWriter::writeSharedWasmMemory(HandleObject obj) {
   // If this changes, might need to change what we write.
   MOZ_ASSERT(WasmMemoryObject::RESERVED_SLOTS == 2);
 
-  Rooted<WasmMemoryObject*> memoryObj(
-      context(), &CheckedUnwrap(obj)->as<WasmMemoryObject>());
+  Rooted<WasmMemoryObject*> memoryObj(context(),
+                                      &obj->unwrapAs<WasmMemoryObject>());
   Rooted<SharedArrayBufferObject*> sab(
       context(), &memoryObj->buffer().as<SharedArrayBufferObject>());
 
@@ -1447,7 +1445,7 @@ bool JSStructuredCloneWriter::traverseMap(HandleObject obj) {
   Rooted<GCVector<Value>> newEntries(context(), GCVector<Value>(context()));
   {
     // If there is no wrapper, the compartment munging is a no-op.
-    RootedObject unwrapped(context(), CheckedUnwrap(obj));
+    RootedObject unwrapped(context(), obj->maybeUnwrapAs<MapObject>());
     MOZ_ASSERT(unwrapped);
     JSAutoRealm ar(context(), unwrapped);
     if (!MapObject::getKeysAndValuesInterleaved(unwrapped, &newEntries)) {
@@ -1479,7 +1477,7 @@ bool JSStructuredCloneWriter::traverseSet(HandleObject obj) {
   Rooted<GCVector<Value>> keys(context(), GCVector<Value>(context()));
   {
     // If there is no wrapper, the compartment munging is a no-op.
-    RootedObject unwrapped(context(), CheckedUnwrap(obj));
+    RootedObject unwrapped(context(), obj->maybeUnwrapAs<SetObject>());
     MOZ_ASSERT(unwrapped);
     JSAutoRealm ar(context(), unwrapped);
     if (!SetObject::keys(context(), unwrapped, &keys)) {
@@ -1527,10 +1525,8 @@ bool JSStructuredCloneWriter::traverseSet(HandleObject obj) {
 // Notice how the end-of-children marker for key1 is sandwiched between the
 // value1 beginning and end.
 bool JSStructuredCloneWriter::traverseSavedFrame(HandleObject obj) {
-  RootedObject unwrapped(context(), js::CheckedUnwrap(obj));
-  MOZ_ASSERT(unwrapped && unwrapped->is<SavedFrame>());
-
-  RootedSavedFrame savedFrame(context(), &unwrapped->as<SavedFrame>());
+  RootedSavedFrame savedFrame(context(), obj->maybeUnwrapAs<SavedFrame>());
+  MOZ_ASSERT(savedFrame);
 
   RootedObject parent(context(), savedFrame->getParent());
   if (!context()->compartment()->wrap(context(), &parent)) {
@@ -1843,7 +1839,7 @@ bool JSStructuredCloneWriter::transferOwnership() {
       // The current setup of the array buffer inheritance hierarchy doesn't
       // lend itself well to generic manipulation via proxies.
       Rooted<ArrayBufferObject*> arrayBuffer(
-          cx, &CheckedUnwrap(obj)->as<ArrayBufferObject>());
+          cx, obj->maybeUnwrapAs<ArrayBufferObject>());
       JSAutoRealm ar(cx, arrayBuffer);
 
       if (arrayBuffer->isDetached()) {
@@ -3224,10 +3220,10 @@ JS_PUBLIC_API bool JS_WriteTypedArray(JSStructuredCloneWriter* w,
   w->context()->check(v);
   RootedObject obj(w->context(), &v.toObject());
 
-  // Note: writeTypedArray also does a CheckedUnwrap but it assumes this
+  // Note: writeTypedArray also does a maybeUnwrapAs but it assumes this
   // returns non-null. This isn't guaranteed for JSAPI users so we do our
   // own unwrapping here.
-  obj = CheckedUnwrap(obj);
+  obj = obj->maybeUnwrapAs<TypedArrayObject>();
   if (!obj) {
     ReportAccessDenied(w->context());
     return false;

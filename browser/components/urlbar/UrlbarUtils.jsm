@@ -245,10 +245,15 @@ var UrlbarUtils = {
   getUrlFromResult(result) {
     switch (result.type) {
       case UrlbarUtils.RESULT_TYPE.URL:
-      case UrlbarUtils.RESULT_TYPE.KEYWORD:
       case UrlbarUtils.RESULT_TYPE.REMOTE_TAB:
       case UrlbarUtils.RESULT_TYPE.TAB_SWITCH:
         return {url: result.payload.url, postData: null};
+      case UrlbarUtils.RESULT_TYPE.KEYWORD:
+        return {
+          url: result.payload.url,
+          postData: result.payload.postData ?
+            this.getPostDataStream(result.payload.postData) : null,
+        };
       case UrlbarUtils.RESULT_TYPE.SEARCH: {
         const engine = Services.search.getEngineByName(result.payload.engine);
         let [url, postData] = getSearchQueryUrl(

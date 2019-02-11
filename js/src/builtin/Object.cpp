@@ -515,7 +515,7 @@ static bool GetBuiltinTagSlow(JSContext* cx, HandleObject obj,
     default:
       if (obj->isCallable()) {
         // Non-standard: Prevent <object> from showing up as Function.
-        RootedObject unwrapped(cx, CheckedUnwrap(obj));
+        RootedObject unwrapped(cx, CheckedUnwrapDynamic(obj, cx));
         if (!unwrapped || !unwrapped->getClass()->isDOMClass()) {
           builtinTag.set(cx->names().objectFunction);
           return true;
