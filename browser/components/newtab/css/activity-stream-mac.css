@@ -2342,6 +2342,33 @@ main {
   .ds-card .context {
     color: #008EA4; }
 
+.ds-message {
+  margin: 8px 0 0; }
+  .ds-message .title {
+    display: flex;
+    align-items: center; }
+    .ds-message .title img {
+      width: 16px;
+      height: 16px;
+      margin: 0 6px 0 0; }
+    .ds-message .title span {
+      line-height: 24px;
+      font-size: 17px;
+      color: #0C0C0D;
+      font-weight: 600; }
+  .ds-message .subtitle {
+    line-height: 20px;
+    font-size: 14px;
+    color: #737373;
+    margin: 0; }
+    .ds-message .subtitle span::after {
+      content: ' '; }
+    .ds-message .subtitle a:hover,
+    .ds-message .subtitle a:focus {
+      text-decoration: underline; }
+  .ds-message .ds-hr {
+    margin: 16px 0 8px; }
+
 .ASRouterButton {
   font-weight: 600;
   font-size: 14px;

@@ -7163,6 +7163,45 @@ CardGrid_CardGrid.defaultProps = {
 // EXTERNAL MODULE: external "ReactRedux"
 var external_ReactRedux_ = __webpack_require__(24);
 
+// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/DSMessage/DSMessage.jsx
+
+
+class DSMessage_DSMessage extends external_React_default.a.PureComponent {
+  render() {
+    let hasSubtitleAndOrLink = this.props.link_text && this.props.link_url;
+    hasSubtitleAndOrLink = hasSubtitleAndOrLink || this.props.subtitle;
+
+    return external_React_default.a.createElement(
+      "div",
+      { className: "ds-message" },
+      this.props.title && external_React_default.a.createElement(
+        "header",
+        { className: "title" },
+        this.props.icon && external_React_default.a.createElement("img", { src: this.props.icon }),
+        external_React_default.a.createElement(
+          "span",
+          null,
+          this.props.title
+        )
+      ),
+      hasSubtitleAndOrLink && external_React_default.a.createElement(
+        "p",
+        { className: "subtitle" },
+        this.props.subtitle && external_React_default.a.createElement(
+          "span",
+          null,
+          this.props.subtitle
+        ),
+        this.props.link_text && this.props.link_url && external_React_default.a.createElement(
+          "a",
+          { href: this.props.link_url },
+          this.props.link_text
+        )
+      ),
+      external_React_default.a.createElement("hr", { className: "ds-hr" })
+    );
+  }
+}
 // CONCATENATED MODULE: ./content-src/lib/truncate-text.js
 function truncateText(text = "", cap) {
   return text.substring(0, cap).trim() + (text.length > cap ? "…" : "");
@@ -7688,6 +7727,7 @@ const TopSites_TopSites_TopSites = Object(external_ReactRedux_["connect"])(state
 
 
 
+
 // According to the Pocket API endpoint specs, `component.properties.items` is a required property with following values:
 //   - List 1-12 items
 //   - Hero 1-5 items
@@ -7804,6 +7844,13 @@ class DiscoveryStreamBase_DiscoveryStreamBase extends external_React_default.a.P
     switch (component.type) {
       case "TopSites":
         return external_React_default.a.createElement(TopSites_TopSites_TopSites, { header: component.header });
+      case "Message":
+        return external_React_default.a.createElement(DSMessage_DSMessage, {
+          title: component.header && component.header.title,
+          subtitle: component.header && component.header.subtitle,
+          link_text: component.header && component.header.link_text,
+          link_url: component.header && component.header.link_url,
+          icon: component.header && component.header.icon });
       case "SectionTitle":
         return external_React_default.a.createElement(SectionTitle_SectionTitle, {
           header: component.header });

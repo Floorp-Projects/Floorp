@@ -1,5 +1,6 @@
 import {CardGrid} from "content-src/components/DiscoveryStreamComponents/CardGrid/CardGrid";
 import {connect} from "react-redux";
+import {DSMessage} from "content-src/components/DiscoveryStreamComponents/DSMessage/DSMessage";
 import {Hero} from "content-src/components/DiscoveryStreamComponents/Hero/Hero";
 import {HorizontalRule} from "content-src/components/DiscoveryStreamComponents/HorizontalRule/HorizontalRule";
 import {ImpressionStats} from "content-src/components/DiscoveryStreamImpressionStats/ImpressionStats";
@@ -127,6 +128,15 @@ export class _DiscoveryStreamBase extends React.PureComponent {
     switch (component.type) {
       case "TopSites":
         return (<TopSites header={component.header} />);
+      case "Message":
+        return (
+          <DSMessage
+            title={component.header && component.header.title}
+            subtitle={component.header && component.header.subtitle}
+            link_text={component.header && component.header.link_text}
+            link_url={component.header && component.header.link_url}
+            icon={component.header && component.header.icon} />
+        );
       case "SectionTitle":
         return (
           <SectionTitle
