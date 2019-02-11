@@ -134,6 +134,7 @@ class PrefRow {
     nameCell.setAttribute("scope", "row");
     this.valueCell.className = "cell-value";
     this.editCell.className = "cell-edit";
+    this.resetCell.className = "cell-reset";
 
     // Add <wbr> behind dots to prevent line breaking in random mid-word places.
     let parts = this.name.split(".");
