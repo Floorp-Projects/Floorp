@@ -99,8 +99,8 @@ a:active {
 }
 
 p {
-  /* reset for the default <p> styles */
-  margin: initial;
+  /* remove default browser margins on <p> elements */
+  margin: 0;
 }
 
 
