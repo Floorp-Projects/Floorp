@@ -23,7 +23,6 @@ DevToolsModules(
     'react-redux.js',
     'react-router-dom.js',
     'react-test-renderer-shallow.js',
-    'react-test-renderer.js',
     'react.js',
     'redux.js',
     'reselect.js',
