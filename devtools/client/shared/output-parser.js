@@ -36,6 +36,8 @@ const BASIC_SHAPE_FUNCTIONS = ["polygon", "circle", "ellipse", "inset"];
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
+const CSS_SHAPES_ENABLED_PREF = "devtools.inspector.shapesHighlighter.enabled";
+
 /**
  * This module is used to process text for output by developer tools. This means
  * linking JS files with the debugger, CSS files with the style editor, JS
@@ -366,6 +368,7 @@ OutputParser.prototype = {
                          colorUtils.isValidCSSColor(functionText, this.cssColor4)) {
                 this._appendColor(functionText, options);
               } else if (options.expectShape &&
+                         Services.prefs.getBoolPref(CSS_SHAPES_ENABLED_PREF) &&
                          BASIC_SHAPE_FUNCTIONS.includes(token.text)) {
                 this._appendShape(functionText, options);
               } else {
