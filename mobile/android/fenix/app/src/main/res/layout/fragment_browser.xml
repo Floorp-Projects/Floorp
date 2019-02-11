@@ -33,9 +33,9 @@
         android:layout_width="match_parent"
         android:layout_height="56dp"
         android:layout_gravity="bottom"
-        android:background="@color/off_white"
-        mozac:findInPageResultCountTextColor="?android:attr/colorPrimary"
-        mozac:findInPageButtonsTint="?android:attr/colorPrimary"
+        android:background="?attr/browserToolbarBackground"
+        mozac:findInPageResultCountTextColor="?attr/browserToolbarIcons"
+        mozac:findInPageButtonsTint="?attr/browserToolbarIcons"
         android:visibility="gone"
         app:layout_behavior="org.mozilla.fenix.components.FindInPageBarBehavior" />
 
