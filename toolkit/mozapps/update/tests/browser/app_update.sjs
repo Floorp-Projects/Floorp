@@ -2,13 +2,22 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+"use strict";
+
 /**
  * Server side http server script for application update tests.
  */
 
+// ChromeUtils isn't available in sjs files so disable the eslint rule for it.
+/* eslint-disable mozilla/use-chromeutils-import */
+
+// Definitions from test and other files used by the tests
+/* global getState */
+
+Cu.import("resource://gre/modules/Services.jsm");
+
 function getTestDataFile(aFilename) {
-  let file = Cc["@mozilla.org/file/directory_service;1"].
-             getService(Ci.nsIProperties).get("CurWorkD", Ci.nsIFile);
+  let file = Services.dirsvc.get("CurWorkD", Ci.nsIFile);
   let pathParts = REL_PATH_DATA.split("/");
   for (let i = 0; i < pathParts.length; ++i) {
     file.append(pathParts[i]);
@@ -20,26 +29,28 @@ function getTestDataFile(aFilename) {
 }
 
 function loadHelperScript(aScriptFile) {
-  let io = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-  let scriptSpec = io.newFileURI(aScriptFile).spec;
-  let scriptloader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
-                     getService(Ci.mozIJSSubScriptLoader);
-  scriptloader.loadSubScript(scriptSpec, this);
+  let scriptSpec = Services.io.newFileURI(aScriptFile).spec;
+  Services.scriptloader.loadSubScript(scriptSpec, this);
 }
 
-var scriptFile = Cc['@mozilla.org/file/local;1'].createInstance(Ci.nsIFile);
+var scriptFile = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
 scriptFile.initWithPath(getState("__LOCATION__"));
 scriptFile = scriptFile.parent;
+/* import-globals-from testConstants.js */
 scriptFile.append("testConstants.js");
 loadHelperScript(scriptFile);
 
+/* import-globals-from ../data/sharedUpdateXML.js */
 scriptFile = getTestDataFile("sharedUpdateXML.js");
 loadHelperScript(scriptFile);
 
 const SERVICE_URL = URL_HOST + "/" + REL_PATH_DATA + FILE_SIMPLE_MAR;
 const BAD_SERVICE_URL = URL_HOST + "/" + REL_PATH_DATA + "not_here.mar";
 
-const SLOW_RESPONSE_INTERVAL = 10;
+// A value of 10 caused the tests to intermittently fail on Mac OS X so be
+// careful when changing this value.
+const SLOW_RESPONSE_INTERVAL = 100;
+const MAX_SLOW_RESPONSE_RETRIES = 50;
 var gSlowDownloadTimer;
 var gSlowCheckTimer;
 
@@ -60,20 +71,25 @@ function handleRequest(aRequest, aResponse) {
   // mar will be downloaded asynchronously which will allow the ui to load
   // before the download completes.
   if (params.slowDownloadMar) {
+    let retries = 0;
     aResponse.processAsync();
     aResponse.setHeader("Content-Type", "binary/octet-stream");
     aResponse.setHeader("Content-Length", SIZE_SIMPLE_MAR);
-    var continueFile = getTestDataFile(CONTINUE_DOWNLOAD);
-    var contents = readFileBytes(getTestDataFile(FILE_SIMPLE_MAR));
     gSlowDownloadTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
     gSlowDownloadTimer.initWithCallback(function(aTimer) {
-      if (continueFile.exists()) {
+      let continueFile = getTestDataFile(CONTINUE_DOWNLOAD);
+      retries++;
+      if (continueFile.exists() || retries == MAX_SLOW_RESPONSE_RETRIES) {
         try {
           // If the continue file is in use try again the next time the timer
-          // fires.
-          continueFile.remove(false);
+          // fires unless the retries has reached the value defined by
+          // MAX_SLOW_RESPONSE_RETRIES in which case let the test remove the
+          // continue file.
+          if (retries < MAX_SLOW_RESPONSE_RETRIES) {
+            continueFile.remove(false);
+          }
           gSlowDownloadTimer.cancel();
-          aResponse.write(contents);
+          aResponse.write(readFileBytes(getTestDataFile(FILE_SIMPLE_MAR)));
           aResponse.finish();
         } catch (e) {
         }
@@ -114,23 +130,23 @@ function handleRequest(aRequest, aResponse) {
   let patches = "";
   let url = "";
   if (params.useSlowDownloadMar) {
-    url = URL_HTTP_UPDATE_SJS + "?slowDownloadMar=1"
+    url = URL_HTTP_UPDATE_SJS + "?slowDownloadMar=1";
   } else {
-    url = params.badURL ? BAD_SERVICE_URL : SERVICE_URL
+    url = params.badURL ? BAD_SERVICE_URL : SERVICE_URL;
   }
   if (!params.partialPatchOnly) {
     size = SIZE_SIMPLE_MAR + (params.invalidCompleteSize ? "1" : "");
     let patchProps = {type: "complete",
-                      url: url,
-                      size: size};
+                      url,
+                      size};
     patches += getRemotePatchString(patchProps);
   }
 
   if (!params.completePatchOnly) {
     size = SIZE_SIMPLE_MAR + (params.invalidPartialSize ? "1" : "");
     let patchProps = {type: "partial",
-                      url: url,
-                      size: size};
+                      url,
+                      size};
     patches += getRemotePatchString(patchProps);
   }
 
@@ -166,15 +182,21 @@ function handleRequest(aRequest, aResponse) {
 
 function respond(aResponse, aParams, aResponseString) {
   if (aParams.slowUpdateCheck) {
+    let retries = 0;
     aResponse.processAsync();
-    var continueFile = getTestDataFile(CONTINUE_CHECK);
     gSlowCheckTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
     gSlowCheckTimer.initWithCallback(function(aTimer) {
-      if (continueFile.exists()) {
+      retries++;
+      let continueFile = getTestDataFile(CONTINUE_CHECK);
+      if (continueFile.exists() || retries == MAX_SLOW_RESPONSE_RETRIES) {
         try {
           // If the continue file is in use try again the next time the timer
-          // fires.
-          continueFile.remove(false);
+          // fires unless the retries has reached the value defined by
+          // MAX_SLOW_RESPONSE_RETRIES in which case let the test remove the
+          // continue file.
+          if (retries < MAX_SLOW_RESPONSE_RETRIES) {
+            continueFile.remove(false);
+          }
           gSlowCheckTimer.cancel();
           aResponse.write(aResponseString);
           aResponse.finish();

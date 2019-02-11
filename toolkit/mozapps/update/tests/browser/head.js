@@ -37,6 +37,9 @@ let gOriginalUpdateAutoValue = null;
 // the test's onload function.
 gDebugTest = true;
 
+// This is to accommodate the TV task which runs the tests with --verify.
+requestLongerTimeout(10);
+
 /**
  * Common tasks to perform for all tests before each one has started.
  */
@@ -88,27 +91,27 @@ registerCleanupFunction(async () => {
  *         CONTINUE_DOWNLOAD
  *         CONTINUE_STAGING
  * @return Promise
- *         Resolves when the file is deleted.
- *         Rejects if timeout is exceeded or condition ever throws.
+ *         Resolves when the file is deleted or if the file is not deleted when
+ *         the check for the file's existence times out. If the file isn't
+ *         deleted before the check for the file's existence times out it will
+ *         be deleted when the test ends so it doesn't affect tests that run
+ *         after the test that created the continue file.
  * @throws If the file already exists.
  */
 async function continueFileHandler(leafName) {
-  // The default number of retries of 50 in TestUtils.waitForCondition is
-  // sufficient for test http server requests. The total time to wait with the
-  // default interval of 100 is approximately 5 seconds.
-  let retries = undefined;
+  // The total time to wait with 200 retries and the default interval of 100 is
+  // approximately 20 seconds.
+  let interval = 100;
+  let retries = 200;
   let continueFile;
   if (leafName == CONTINUE_STAGING) {
-    debugDump("creating " + leafName + " file for slow update staging");
-    // Use 100 retries for staging requests to lessen the likelihood of tests
-    // intermittently failing on debug builds due to launching the updater. The
-    // total time to wait with the default interval of 100 is approximately 10
-    // seconds. The test updater uses the same values.
-    retries = 100;
-    continueFile = getUpdateDirFile(DIR_PATCH);
+    // The total time to wait with 600 retries and an interval of 200 is
+    // approximately 120 seconds.
+    interval = 200;
+    retries = 600;
+    continueFile = getGREBinDir();
     continueFile.append(leafName);
   } else {
-    debugDump("creating " + leafName + " file for slow http server requests");
     continueFile = Services.dirsvc.get("CurWorkD", Ci.nsIFile);
     let continuePath = REL_PATH_DATA + leafName;
     let continuePathParts = continuePath.split("/");
@@ -120,6 +123,7 @@ async function continueFileHandler(leafName) {
     throw new Error("The continue file should not exist, path: " +
                     continueFile.path);
   }
+  debugDump("Creating continue file, path: " + continueFile.path);
   continueFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, PERMS_FILE);
   // If for whatever reason the continue file hasn't been removed when a test
   // has finished remove it during cleanup so it doesn't affect tests that run
@@ -131,10 +135,14 @@ async function continueFileHandler(leafName) {
       continueFile.remove(false);
     }
   });
-  return BrowserTestUtils.waitForCondition(() =>
-    (!continueFile.exists()),
+  return BrowserTestUtils.waitForCondition(() => (
+    !continueFile.exists()),
     "Waiting for file to be deleted, path: " + continueFile.path,
-    undefined, retries);
+    interval, retries
+  ).catch(e => {
+    logTestInfo("Continue file was not removed after checking " +
+                retries + " times, path: " + continueFile.path);
+  });
 }
 
 /**
@@ -640,7 +648,8 @@ function runAboutDialogUpdateTest(updateParams, backgroundUpdate, steps) {
       await BrowserTestUtils.waitForCondition(() =>
         (updateDeck.selectedPanel && updateDeck.selectedPanel.id == panelId),
         "Waiting for expected panel ID - got: \"" +
-        updateDeck.selectedPanel.id + "\", expected \"" + panelId + "\"");
+        updateDeck.selectedPanel.id + "\", expected \"" + panelId + "\"",
+        undefined, 200);
       let selectedPanel = updateDeck.selectedPanel;
       is(selectedPanel.id, panelId, "The panel ID should equal " + panelId);
 
@@ -755,7 +764,8 @@ function runAboutPrefsUpdateTest(updateParams, backgroundUpdate, steps) {
         await ContentTaskUtils.waitForCondition(() =>
           (updateDeck.selectedPanel && updateDeck.selectedPanel.id == panelId),
           "Waiting for expected panel ID - got: \"" +
-          updateDeck.selectedPanel.id + "\", expected \"" + panelId + "\"");
+          updateDeck.selectedPanel.id + "\", expected \"" + panelId + "\"",
+          undefined, 200);
         is(updateDeck.selectedPanel.id, panelId,
            "The panel ID should equal " + panelId);
       });
