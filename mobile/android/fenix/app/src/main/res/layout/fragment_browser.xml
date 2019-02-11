@@ -11,37 +11,32 @@
     android:layout_height="match_parent"
     tools:context="browser.BrowserFragment">
 
-    <FrameLayout
+    <mozilla.components.concept.engine.EngineView
+        android:id="@+id/engineView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent" />
 
-        <mozilla.components.concept.engine.EngineView
-            android:id="@+id/engineView"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
-
-        <mozilla.components.browser.awesomebar.BrowserAwesomeBar
-            android:id="@+id/awesomeBar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="4dp"
-            android:visibility="gone"
-            android:background="@color/private_browsing_top_gradient"
-            mozac:awesomeBarChipBackgroundColor="#444444"
-            mozac:awesomeBarChipTextColor="#ffffff"
-            mozac:awesomeBarDescriptionTextColor="?attr/awesomeBarDescriptionTextColor"
-            mozac:awesomeBarTitleTextColor="?attr/awesomeBarTitleTextColor" />
-    </FrameLayout>
+    <mozilla.components.browser.awesomebar.BrowserAwesomeBar
+        android:id="@+id/awesomeBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="4dp"
+        android:visibility="gone"
+        android:background="@color/private_browsing_top_gradient"
+        mozac:awesomeBarChipBackgroundColor="#444444"
+        mozac:awesomeBarChipTextColor="#ffffff"
+        mozac:awesomeBarDescriptionTextColor="?attr/awesomeBarDescriptionTextColor"
+        mozac:awesomeBarTitleTextColor="?attr/awesomeBarTitleTextColor" />
 
     <mozilla.components.feature.findinpage.view.FindInPageBar
-            android:id="@+id/findInPageView"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:layout_gravity="bottom"
-            android:background="@color/off_white"
-            mozac:findInPageResultCountTextColor="?android:attr/colorPrimary"
-            mozac:findInPageButtonsTint="?android:attr/colorPrimary"
-            android:visibility="gone"
-            app:layout_behavior="org.mozilla.fenix.components.FindInPageBarBehavior" />
+        android:id="@+id/findInPageView"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:layout_gravity="bottom"
+        android:background="@color/off_white"
+        mozac:findInPageResultCountTextColor="?android:attr/colorPrimary"
+        mozac:findInPageButtonsTint="?android:attr/colorPrimary"
+        android:visibility="gone"
+        app:layout_behavior="org.mozilla.fenix.components.FindInPageBarBehavior" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

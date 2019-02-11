@@ -80,7 +80,7 @@ class BrowserFragment : Fragment(), BackHandler {
                 val accessibilityManager = context
                     ?.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
 
-                if (!accessibilityManager.isEnabled) {
+                if (!accessibilityManager.isTouchExplorationEnabled) {
                     behavior = BrowserToolbarBottomBehavior(view.context, null)
                 }
 
