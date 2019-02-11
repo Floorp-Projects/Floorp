@@ -351,8 +351,8 @@ XDRResult ScopeNote::XDR(XDRState<mode>* xdr) {
   return Ok();
 }
 
-static inline uint32_t FindScopeIndex(JSScript* script, Scope& scope) {
-  auto scopes = script->scopes();
+static inline uint32_t FindScopeIndex(mozilla::Span<const GCPtrScope> scopes,
+                                      Scope& scope) {
   unsigned length = scopes.size();
   for (uint32_t i = 0; i < length; ++i) {
     if (scopes[i] == &scope) {
@@ -363,7 +363,89 @@ static inline uint32_t FindScopeIndex(JSScript* script, Scope& scope) {
   MOZ_CRASH("Scope not found");
 }
 
+static inline uint32_t FindScopeIndex(JSScript* script, Scope& scope) {
+  return FindScopeIndex(script->scopes(), scope);
+}
+
 enum XDRClassKind { CK_RegexpObject, CK_JSFunction, CK_JSObject };
+
+template <XDRMode mode>
+static XDRResult XDRScope(XDRState<mode>* xdr, js::PrivateScriptData* data,
+                          HandleScope scriptEnclosingScope, HandleFunction fun,
+                          uint32_t scopeIndex, MutableHandleScope scope) {
+  JSContext* cx = xdr->cx();
+
+  ScopeKind scopeKind;
+  RootedScope enclosing(cx);
+  uint32_t enclosingIndex = 0;
+
+  // The enclosingScope is encoded using an integer index into the scope array.
+  // This means that scopes must be topologically sorted.
+  if (mode == XDR_ENCODE) {
+    scopeKind = scope->kind();
+
+    if (scopeIndex == 0) {
+      enclosingIndex = UINT32_MAX;
+    } else {
+      MOZ_ASSERT(scope->enclosing());
+      enclosingIndex = FindScopeIndex(data->scopes(), *scope->enclosing());
+    }
+  }
+
+  MOZ_TRY(xdr->codeEnum32(&scopeKind));
+  MOZ_TRY(xdr->codeUint32(&enclosingIndex));
+
+  if (mode == XDR_DECODE) {
+    if (scopeIndex == 0) {
+      MOZ_ASSERT(enclosingIndex == UINT32_MAX);
+      enclosing = scriptEnclosingScope;
+    } else {
+      MOZ_ASSERT(enclosingIndex < scopeIndex);
+      enclosing = data->scopes()[enclosingIndex];
+    }
+  }
+
+  switch (scopeKind) {
+    case ScopeKind::Function:
+      MOZ_TRY(FunctionScope::XDR(xdr, fun, enclosing, scope));
+      break;
+    case ScopeKind::FunctionBodyVar:
+    case ScopeKind::ParameterExpressionVar:
+      MOZ_TRY(VarScope::XDR(xdr, scopeKind, enclosing, scope));
+      break;
+    case ScopeKind::Lexical:
+    case ScopeKind::SimpleCatch:
+    case ScopeKind::Catch:
+    case ScopeKind::NamedLambda:
+    case ScopeKind::StrictNamedLambda:
+      MOZ_TRY(LexicalScope::XDR(xdr, scopeKind, enclosing, scope));
+      break;
+    case ScopeKind::With:
+      MOZ_TRY(WithScope::XDR(xdr, enclosing, scope));
+      break;
+    case ScopeKind::Eval:
+    case ScopeKind::StrictEval:
+      MOZ_TRY(EvalScope::XDR(xdr, scopeKind, enclosing, scope));
+      break;
+    case ScopeKind::Global:
+    case ScopeKind::NonSyntactic:
+      MOZ_TRY(GlobalScope::XDR(xdr, scopeKind, scope));
+      break;
+    case ScopeKind::Module:
+    case ScopeKind::WasmInstance:
+      MOZ_CRASH("NYI");
+      break;
+    case ScopeKind::WasmFunction:
+      MOZ_CRASH("wasm functions cannot be nested in JSScripts");
+      break;
+    default:
+      // Fail in debug, but only soft-fail in release
+      MOZ_ASSERT(false, "Bad XDR scope kind");
+      return xdr->fail(JS::TranscodeResult_Failure_BadDecode);
+  }
+
+  return Ok();
+}
 
 template <XDRMode mode>
 /* static */ XDRResult SharedScriptData::XDR(XDRState<mode>* xdr,
@@ -690,83 +772,15 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
   }
 
   {
-    MOZ_ASSERT(nscopes != 0);
+    MOZ_ASSERT(nscopes > 0);
     GCPtrScope* vector = data->scopes().data();
-    RootedScope scope(cx);
-    RootedScope enclosing(cx);
-    ScopeKind scopeKind;
-    uint32_t enclosingScopeIndex = 0;
-    for (uint32_t i = 0; i != nscopes; ++i) {
+    for (uint32_t i = 0; i < nscopes; ++i) {
+      RootedScope scope(cx);
       if (mode == XDR_ENCODE) {
         scope = vector[i];
-        scopeKind = scope->kind();
-      } else {
-        scope = nullptr;
       }
-
-      MOZ_TRY(xdr->codeEnum32(&scopeKind));
-
-      if (mode == XDR_ENCODE) {
-        if (i == 0) {
-          enclosingScopeIndex = UINT32_MAX;
-        } else {
-          MOZ_ASSERT(scope->enclosing());
-          enclosingScopeIndex = FindScopeIndex(script, *scope->enclosing());
-        }
-      }
-
-      MOZ_TRY(xdr->codeUint32(&enclosingScopeIndex));
-
-      if (mode == XDR_DECODE) {
-        if (i == 0) {
-          MOZ_ASSERT(enclosingScopeIndex == UINT32_MAX);
-          enclosing = scriptEnclosingScope;
-        } else {
-          MOZ_ASSERT(enclosingScopeIndex < i);
-          enclosing = vector[enclosingScopeIndex];
-        }
-      }
-
-      switch (scopeKind) {
-        case ScopeKind::Function:
-          MOZ_ASSERT(i == script->bodyScopeIndex());
-          MOZ_TRY(FunctionScope::XDR(xdr, fun, enclosing, &scope));
-          break;
-        case ScopeKind::FunctionBodyVar:
-        case ScopeKind::ParameterExpressionVar:
-          MOZ_TRY(VarScope::XDR(xdr, scopeKind, enclosing, &scope));
-          break;
-        case ScopeKind::Lexical:
-        case ScopeKind::SimpleCatch:
-        case ScopeKind::Catch:
-        case ScopeKind::NamedLambda:
-        case ScopeKind::StrictNamedLambda:
-          MOZ_TRY(LexicalScope::XDR(xdr, scopeKind, enclosing, &scope));
-          break;
-        case ScopeKind::With:
-          MOZ_TRY(WithScope::XDR(xdr, enclosing, &scope));
-          break;
-        case ScopeKind::Eval:
-        case ScopeKind::StrictEval:
-          MOZ_TRY(EvalScope::XDR(xdr, scopeKind, enclosing, &scope));
-          break;
-        case ScopeKind::Global:
-        case ScopeKind::NonSyntactic:
-          MOZ_TRY(GlobalScope::XDR(xdr, scopeKind, &scope));
-          break;
-        case ScopeKind::Module:
-        case ScopeKind::WasmInstance:
-          MOZ_CRASH("NYI");
-          break;
-        case ScopeKind::WasmFunction:
-          MOZ_CRASH("wasm functions cannot be nested in JSScripts");
-          break;
-        default:
-          // Fail in debug, but only soft-fail in release
-          MOZ_ASSERT(false, "Bad XDR scope kind");
-          return xdr->fail(JS::TranscodeResult_Failure_BadDecode);
-      }
-
+      MOZ_TRY(
+          XDRScope(xdr, script->data_, scriptEnclosingScope, fun, i, &scope));
       if (mode == XDR_DECODE) {
         vector[i].init(scope);
       }
