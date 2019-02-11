@@ -87,7 +87,8 @@ class NullPrincipal final : public BasePrincipal {
 
   bool SubsumesInternal(nsIPrincipal* aOther,
                         DocumentDomainConsideration aConsideration) override {
-    return aOther == this;
+    MOZ_ASSERT(aOther);
+    return FastEquals(aOther);
   }
 
   bool MayLoadInternal(nsIURI* aURI) override;

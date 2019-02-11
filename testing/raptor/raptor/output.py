@@ -606,11 +606,6 @@ class Output(object):
 
     def output(self, test_names):
         """output to file and perfherder data json """
-        if self.summarized_results == {}:
-            LOG.error("error: no summarized raptor results found for %s" %
-                      ', '.join(test_names))
-            return False
-
         if os.environ['MOZ_UPLOAD_DIR']:
             # i.e. testing/mozharness/build/raptor.json locally; in production it will
             # be at /tasks/task_*/build/ (where it will be picked up by mozharness later
@@ -623,15 +618,24 @@ class Output(object):
             results_path = os.path.join(os.getcwd(), 'raptor.json')
             screenshot_path = os.path.join(os.getcwd(), 'screenshots.html')
 
-        with open(results_path, 'w') as f:
-            for result in self.summarized_results:
-                f.write("%s\n" % result)
+        if self.summarized_results == {}:
+            LOG.error("error: no summarized raptor results found for %s" %
+                      ', '.join(test_names))
+        else:
+            with open(results_path, 'w') as f:
+                for result in self.summarized_results:
+                    f.write("%s\n" % result)
 
         if len(self.summarized_screenshots) > 0:
             with open(screenshot_path, 'w') as f:
                 for result in self.summarized_screenshots:
                     f.write("%s\n" % result)
             LOG.info("screen captures can be found locally at: %s" % screenshot_path)
+
+        # now that we've checked for screen captures too, if there were no actual
+        # test results we can bail out here
+        if self.summarized_results == {}:
+            return False
 
         # when gecko_profiling, we don't want results ingested by Perfherder
         extra_opts = self.summarized_results['suites'][0].get('extraOptions', [])

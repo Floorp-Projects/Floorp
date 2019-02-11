@@ -29,6 +29,7 @@ extern crate audioipc_client;
 extern crate audioipc_server;
 extern crate env_logger;
 extern crate u2fhid;
+extern crate gkrust_utils;
 extern crate log;
 extern crate cosec;
 extern crate rsdparsa_capi;

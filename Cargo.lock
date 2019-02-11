@@ -1123,6 +1123,7 @@ dependencies = [
  "encoding_glue 0.1.0",
  "env_logger 0.5.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "geckoservo 0.0.1",
+ "gkrust_utils 0.1.0",
  "jsrust_shared 0.1.0",
  "kvstore 0.1.0",
  "log 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1138,6 +1139,14 @@ dependencies = [
  "u2fhid 0.2.3",
  "webrender_bindings 0.1.0",
  "xpcom 0.1.0",
+]
+
+[[package]]
+name = "gkrust_utils"
+version = "0.1.0"
+dependencies = [
+ "nsstring 0.1.0",
+ "uuid 0.6.5 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]

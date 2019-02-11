@@ -100,7 +100,6 @@ class Pickle {
   MOZ_MUST_USE bool ReadLong(PickleIterator* iter, long* result) const;
   MOZ_MUST_USE bool ReadULong(PickleIterator* iter,
                               unsigned long* result) const;
-  MOZ_MUST_USE bool ReadSize(PickleIterator* iter, size_t* result) const;
   MOZ_MUST_USE bool ReadInt32(PickleIterator* iter, int32_t* result) const;
   MOZ_MUST_USE bool ReadUInt32(PickleIterator* iter, uint32_t* result) const;
   MOZ_MUST_USE bool ReadInt64(PickleIterator* iter, int64_t* result) const;
@@ -162,7 +161,6 @@ class Pickle {
   bool WriteInt(int value);
   bool WriteLong(long value);
   bool WriteULong(unsigned long value);
-  bool WriteSize(size_t value);
   bool WriteInt32(int32_t value);
   bool WriteUInt32(uint32_t value);
   bool WriteInt64(int64_t value);

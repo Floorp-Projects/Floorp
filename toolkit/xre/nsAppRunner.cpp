@@ -1792,12 +1792,60 @@ class ReturnAbortOnError {
 
 }  // namespace
 
+static nsresult ProfileMissingDialog(nsINativeAppSupport* aNative) {
+  nsresult rv;
+
+  ScopedXPCOMStartup xpcom;
+  rv = xpcom.Initialize();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = xpcom.SetWindowCreator(aNative);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+
+  {  // extra scoping is needed so we release these components before xpcom
+     // shutdown
+    nsCOMPtr<nsIStringBundleService> sbs =
+        mozilla::services::GetStringBundleService();
+    NS_ENSURE_TRUE(sbs, NS_ERROR_FAILURE);
+
+    nsCOMPtr<nsIStringBundle> sb;
+    sbs->CreateBundle(kProfileProperties, getter_AddRefs(sb));
+    NS_ENSURE_TRUE_LOG(sbs, NS_ERROR_FAILURE);
+
+    NS_ConvertUTF8toUTF16 appName(gAppData->name);
+    const char16_t* params[] = {appName.get(), appName.get()};
+
+    // profileMissing
+    nsAutoString missingMessage;
+    rv = sb->FormatStringFromName("profileMissing", params, 2, missingMessage);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_ABORT);
+
+    nsAutoString missingTitle;
+    rv = sb->FormatStringFromName("profileMissingTitle", params, 1,
+                                  missingTitle);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_ABORT);
+
+    nsCOMPtr<nsIPromptService> ps(do_GetService(NS_PROMPTSERVICE_CONTRACTID));
+    NS_ENSURE_TRUE(ps, NS_ERROR_FAILURE);
+
+    ps->Alert(nullptr, missingTitle.get(), missingMessage.get());
+
+    return NS_ERROR_ABORT;
+  }
+}
+
 static ReturnAbortOnError ProfileLockedDialog(nsIFile* aProfileDir,
                                               nsIFile* aProfileLocalDir,
                                               nsIProfileUnlocker* aUnlocker,
                                               nsINativeAppSupport* aNative,
                                               nsIProfileLock** aResult) {
   nsresult rv;
+
+  bool exists;
+  aProfileDir->Exists(&exists);
+  if (!exists) {
+    return ProfileMissingDialog(aNative);
+  }
 
   ScopedXPCOMStartup xpcom;
   rv = xpcom.Initialize();
@@ -1891,48 +1939,6 @@ static ReturnAbortOnError ProfileLockedDialog(nsIFile* aProfileDir,
   }
 }
 
-static nsresult ProfileMissingDialog(nsINativeAppSupport* aNative) {
-  nsresult rv;
-
-  ScopedXPCOMStartup xpcom;
-  rv = xpcom.Initialize();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = xpcom.SetWindowCreator(aNative);
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
-
-  {  // extra scoping is needed so we release these components before xpcom
-     // shutdown
-    nsCOMPtr<nsIStringBundleService> sbs =
-        mozilla::services::GetStringBundleService();
-    NS_ENSURE_TRUE(sbs, NS_ERROR_FAILURE);
-
-    nsCOMPtr<nsIStringBundle> sb;
-    sbs->CreateBundle(kProfileProperties, getter_AddRefs(sb));
-    NS_ENSURE_TRUE_LOG(sbs, NS_ERROR_FAILURE);
-
-    NS_ConvertUTF8toUTF16 appName(gAppData->name);
-    const char16_t* params[] = {appName.get(), appName.get()};
-
-    // profileMissing
-    nsAutoString missingMessage;
-    rv = sb->FormatStringFromName("profileMissing", params, 2, missingMessage);
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_ABORT);
-
-    nsAutoString missingTitle;
-    rv = sb->FormatStringFromName("profileMissingTitle", params, 1,
-                                  missingTitle);
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_ABORT);
-
-    nsCOMPtr<nsIPromptService> ps(do_GetService(NS_PROMPTSERVICE_CONTRACTID));
-    NS_ENSURE_TRUE(ps, NS_ERROR_FAILURE);
-
-    ps->Alert(nullptr, missingTitle.get(), missingMessage.get());
-
-    return NS_ERROR_ABORT;
-  }
-}
-
 static nsresult ProfileLockedDialog(nsIToolkitProfile* aProfile,
                                     nsIProfileUnlocker* aUnlocker,
                                     nsINativeAppSupport* aNative,
@@ -1940,12 +1946,6 @@ static nsresult ProfileLockedDialog(nsIToolkitProfile* aProfile,
   nsCOMPtr<nsIFile> profileDir;
   nsresult rv = aProfile->GetRootDir(getter_AddRefs(profileDir));
   if (NS_FAILED(rv)) return rv;
-
-  bool exists;
-  profileDir->Exists(&exists);
-  if (!exists) {
-    return ProfileMissingDialog(aNative);
-  }
 
   nsCOMPtr<nsIFile> profileLocalDir;
   rv = aProfile->GetLocalDir(getter_AddRefs(profileLocalDir));

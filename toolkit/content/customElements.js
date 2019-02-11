@@ -313,7 +313,7 @@ const BaseControlMixin = Base => {
 };
 MozElements.BaseControl = BaseControlMixin(MozXULElement);
 
-const BaseTextMixin = Base => class extends Base {
+const BaseTextMixin = Base => class extends BaseControlMixin(Base) {
   set label(val) {
     this.setAttribute("label", val);
     return val;

@@ -1020,6 +1020,32 @@ template
   return static_cast<WithScope*>(scope);
 }
 
+template <XDRMode mode>
+/* static */ XDRResult WithScope::XDR(XDRState<mode>* xdr,
+                                      HandleScope enclosing,
+                                      MutableHandleScope scope) {
+  JSContext* cx = xdr->cx();
+
+  if (mode == XDR_DECODE) {
+    scope.set(create(cx, enclosing));
+    if (!scope) {
+      return xdr->fail(JS::TranscodeResult_Throw);
+    }
+  }
+
+  return Ok();
+}
+
+template
+    /* static */ XDRResult
+    WithScope::XDR(XDRState<XDR_ENCODE>* xdr, HandleScope enclosing,
+                   MutableHandleScope scope);
+
+template
+    /* static */ XDRResult
+    WithScope::XDR(XDRState<XDR_DECODE>* xdr, HandleScope enclosing,
+                   MutableHandleScope scope);
+
 static const uint32_t EvalScopeEnvShapeFlags =
     BaseShape::QUALIFIED_VAROBJ | BaseShape::DELEGATE;
 

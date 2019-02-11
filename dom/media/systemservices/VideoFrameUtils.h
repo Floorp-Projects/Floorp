@@ -24,7 +24,7 @@ class VideoFrameUtils {
  public:
   // Returns the total number of bytes necessary to copy a VideoFrame's buffer
   // across all planes.
-  static size_t TotalRequiredBufferSize(const webrtc::VideoFrame& frame);
+  static uint32_t TotalRequiredBufferSize(const webrtc::VideoFrame& frame);
 
   // Initializes a camera::VideoFrameProperties from a VideoFrameBuffer
   static void InitFrameBufferProperties(

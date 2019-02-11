@@ -98,7 +98,7 @@ union GfxVarValue
 
 struct GfxVarUpdate
 {
-  size_t index;
+  uint32_t index;
   GfxVarValue value;
 };
 

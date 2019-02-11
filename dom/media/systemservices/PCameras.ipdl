@@ -30,7 +30,7 @@ struct VideoFrameProperties
 {
   // Size of image data within the ShMem,
   // the ShMem is at least this large
-  size_t bufferSize;
+  uint32_t bufferSize;
   // From webrtc::VideoFrame
   uint32_t timeStamp;
   int64_t ntpTimeMs;
