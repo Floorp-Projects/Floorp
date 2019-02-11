@@ -17,9 +17,9 @@ add_task(threadClientTest(async ({ threadClient, debuggee }) => {
       packet.frame.where.actor
     );
 
-    const location = { line: debuggee.line0 + 3 };
+    const location = { sourceUrl: source.url, line: debuggee.line0 + 3 };
 
-    const [, bpClient] = await source.setBreakpoint(location);
+    threadClient.setBreakpoint(location, {});
 
     await threadClient.resume();
     packet = await waitForPause(threadClient);
@@ -29,13 +29,11 @@ add_task(threadClientTest(async ({ threadClient, debuggee }) => {
     Assert.equal(packet.frame.where.actor, source.actor);
     Assert.equal(packet.frame.where.line, location.line);
     Assert.equal(packet.why.type, "breakpoint");
-    Assert.equal(packet.why.actors[0], bpClient.actor);
 
     info("Check that the breakpoint worked.");
     Assert.equal(debuggee.a, 1);
     Assert.equal(debuggee.b, undefined);
 
-    await bpClient.remove();
     await threadClient.resume();
   })();
 

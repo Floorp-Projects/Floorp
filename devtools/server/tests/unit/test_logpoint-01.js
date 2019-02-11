@@ -34,10 +34,10 @@ function test_simple_breakpoint() {
     );
 
     // Set a logpoint which should invoke console.log.
-    await source.setBreakpoint({
+    gThreadClient.setBreakpoint({
+      sourceUrl: source.url,
       line: 4,
-      options: { logValue: "a" },
-    });
+    }, { logValue: "a" });
 
     // Execute the rest of the code.
     gThreadClient.resume();

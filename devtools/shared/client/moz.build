@@ -6,7 +6,6 @@
 
 DevToolsModules(
     'array-buffer-client.js',
-    'breakpoint-client.js',
     'connection-manager.js',
     'constants.js',
     'debugger-client.js',

@@ -6,7 +6,7 @@
 
 import { sortBy } from "lodash";
 
-import { getBreakpoint } from "../../selectors";
+import { getBreakpoint, getSource, getSourceActors } from "../../selectors";
 import { isGenerated } from "../source";
 
 import assert from "../assert";
@@ -22,6 +22,7 @@ import type {
   SourceActorLocation,
   PendingLocation,
   Breakpoint,
+  BreakpointLocation,
   PendingBreakpoint
 } from "../../types";
 
@@ -66,6 +67,24 @@ export function makePendingLocationId(location: SourceLocation) {
   const columnString = column || "";
 
   return `${sourceUrlString}:${line}:${columnString}`;
+}
+
+export function makeBreakpointLocation(state: State, location: SourceLocation): BreakpointLocation {
+  const source = getSource(state, location.sourceId);
+  if (!source) {
+    throw new Error("no source");
+  }
+  const breakpointLocation: any = {
+    line: location.line,
+    column: location.column
+  };
+  if (source.url) {
+    breakpointLocation.sourceUrl = source.url;
+  } else {
+    const sourceActors = getSourceActors(state, location.sourceId);
+    breakpointLocation.sourceId = sourceActors[0].actor;
+  }
+  return breakpointLocation;
 }
 
 export function makeSourceActorLocation(

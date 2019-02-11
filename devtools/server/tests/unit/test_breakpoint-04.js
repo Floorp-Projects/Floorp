@@ -15,32 +15,27 @@ add_task(threadClientTest(({ threadClient, debuggee }) => {
         threadClient,
         packet.frame.where.actor
       );
-      const location = { line: debuggee.line0 + 3 };
+      const location = { sourceUrl: source.url, line: debuggee.line0 + 3 };
 
-      source.setBreakpoint(location).then(function([response, bpClient]) {
-        // actualLocation is not returned when breakpoints don't skip forward.
-        Assert.equal(response.actualLocation, undefined);
+      threadClient.setBreakpoint(location, {});
 
-        threadClient.addOneTimeListener("paused", function(event, packet) {
-          // Check the return value.
-          Assert.equal(packet.type, "paused");
-          Assert.equal(packet.frame.where.actor, source.actor);
-          Assert.equal(packet.frame.where.line, location.line);
-          Assert.equal(packet.why.type, "breakpoint");
-          Assert.equal(packet.why.actors[0], bpClient.actor);
-          // Check that the breakpoint worked.
-          Assert.equal(debuggee.a, 1);
-          Assert.equal(debuggee.b, undefined);
+      threadClient.addOneTimeListener("paused", function(event, packet) {
+        // Check the return value.
+        Assert.equal(packet.type, "paused");
+        Assert.equal(packet.frame.where.actor, source.actor);
+        Assert.equal(packet.frame.where.line, location.line);
+        Assert.equal(packet.why.type, "breakpoint");
+        // Check that the breakpoint worked.
+        Assert.equal(debuggee.a, 1);
+        Assert.equal(debuggee.b, undefined);
 
-          // Remove the breakpoint.
-          bpClient.remove(function(response) {
-            threadClient.resume(resolve);
-          });
-        });
-
-        // Continue until the breakpoint is hit.
-        threadClient.resume();
+        // Remove the breakpoint.
+        threadClient.removeBreakpoint(location);
+        threadClient.resume(resolve);
       });
+
+      // Continue until the breakpoint is hit.
+      threadClient.resume();
     });
 
     /* eslint-disable */
