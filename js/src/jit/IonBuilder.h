@@ -516,6 +516,10 @@ class IonBuilder : public MIRGenerator,
     return length;
   }
 
+  // Add an instruction to compute a typed array's byte offset to the current
+  // block.
+  MInstruction* addTypedArrayByteOffset(MDefinition* obj);
+
   AbortReasonOr<Ok> improveThisTypesForCall();
 
   MDefinition* getCallee();
@@ -783,6 +787,7 @@ class IonBuilder : public MIRGenerator,
   InliningResult inlineIsPossiblyWrappedTypedArray(CallInfo& callInfo);
   InliningResult inlineTypedArrayLength(CallInfo& callInfo);
   InliningResult inlinePossiblyWrappedTypedArrayLength(CallInfo& callInfo);
+  InliningResult inlineTypedArrayByteOffset(CallInfo& callInfo);
   InliningResult inlineSetDisjointTypedElements(CallInfo& callInfo);
 
   // TypedObject intrinsics and natives.
