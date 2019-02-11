@@ -485,6 +485,11 @@ static bool GuardType(CacheIRReader& reader,
     case CacheOp::GuardIsSymbol:
       guardType[guardOperand] = MIRType::Symbol;
       break;
+#ifdef ENABLE_BIGINT
+    case CacheOp::GuardIsBigInt:
+      guardType[guardOperand] = MIRType::BigInt;
+      break;
+#endif
     case CacheOp::GuardIsNumber:
       guardType[guardOperand] = MIRType::Double;
       break;
