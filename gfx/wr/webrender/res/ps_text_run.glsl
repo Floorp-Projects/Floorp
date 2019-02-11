@@ -71,7 +71,7 @@ VertexInfo write_text_vertex(RectWithSize local_clip_rect,
                              vec2 snap_bias) {
     // The offset to snap the glyph rect to a device pixel
     vec2 snap_offset = vec2(0.0);
-    mat2 local_transform;
+    mat2 local_transform = mat2(1.0);
 
 #ifdef WR_FEATURE_GLYPH_TRANSFORM
     bool remove_subpx_offset = true;
