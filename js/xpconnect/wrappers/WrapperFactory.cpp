@@ -44,107 +44,107 @@ namespace xpc {
 // operating on it.  But since the compartments are the same, there's
 // no need to wrap values or objects or anything like that; we're just
 // entering the right Realm so security checks will work correctly.
-#define IMPL_PROXY_METHOD(returntype, name, typedargs, args)            \
-  returntype name typedargs const override {                            \
-    MOZ_ASSERT(js::GetObjectCompartment(wrapper) ==                     \
-               js::GetObjectCompartment(wrappedObject(wrapper)));       \
-    JSAutoRealm ar(cx, wrappedObject(wrapper));                         \
-    return Wrapper::name args;                                          \
+#define IMPL_PROXY_METHOD(returntype, name, typedargs, args)      \
+  returntype name typedargs const override {                      \
+    MOZ_ASSERT(js::GetObjectCompartment(wrapper) ==               \
+               js::GetObjectCompartment(wrappedObject(wrapper))); \
+    JSAutoRealm ar(cx, wrappedObject(wrapper));                   \
+    return Wrapper::name args;                                    \
   }
-  
+
 class XrayWaiver : public Wrapper {
-public:
+ public:
   explicit constexpr XrayWaiver()
-  : Wrapper(WrapperFactory::WAIVE_XRAY_WRAPPER_FLAG) {
-  }
+      : Wrapper(WrapperFactory::WAIVE_XRAY_WRAPPER_FLAG) {}
 
   // We have to override all the things that CrossCompartmentWrapper overrides.
 
   /* Standard internal methods */
   IMPL_PROXY_METHOD(bool, getOwnPropertyDescriptor,
-                    (JSContext* cx, HandleObject wrapper, HandleId id,
+                    (JSContext * cx, HandleObject wrapper, HandleId id,
                      MutableHandle<PropertyDescriptor> desc),
                     (cx, wrapper, id, desc))
 
   IMPL_PROXY_METHOD(bool, defineProperty,
-                    (JSContext* cx, HandleObject wrapper, HandleId id,
-                     Handle<PropertyDescriptor> desc,
-                     ObjectOpResult& result),
+                    (JSContext * cx, HandleObject wrapper, HandleId id,
+                     Handle<PropertyDescriptor> desc, ObjectOpResult& result),
                     (cx, wrapper, id, desc, result))
 
   IMPL_PROXY_METHOD(bool, ownPropertyKeys,
-                    (JSContext* cx, HandleObject wrapper,
-                     AutoIdVector& props),
+                    (JSContext * cx, HandleObject wrapper, AutoIdVector& props),
                     (cx, wrapper, props))
 
   IMPL_PROXY_METHOD(bool, delete_,
-                    (JSContext* cx, HandleObject wrapper, HandleId id,
+                    (JSContext * cx, HandleObject wrapper, HandleId id,
                      ObjectOpResult& result),
                     (cx, wrapper, id, result))
 
   IMPL_PROXY_METHOD(bool, enumerate,
-                    (JSContext* cx, HandleObject wrapper, AutoIdVector& props),
+                    (JSContext * cx, HandleObject wrapper, AutoIdVector& props),
                     (cx, wrapper, props))
 
   IMPL_PROXY_METHOD(bool, getPrototype,
-                    (JSContext* cx, HandleObject wrapper,
+                    (JSContext * cx, HandleObject wrapper,
                      MutableHandleObject protop),
                     (cx, wrapper, protop))
 
   IMPL_PROXY_METHOD(bool, setPrototype,
-                    (JSContext* cx, HandleObject wrapper,
-                     HandleObject proto, ObjectOpResult& result),
+                    (JSContext * cx, HandleObject wrapper, HandleObject proto,
+                     ObjectOpResult& result),
                     (cx, wrapper, proto, result))
 
   IMPL_PROXY_METHOD(bool, getPrototypeIfOrdinary,
-                    (JSContext* cx, HandleObject wrapper, bool* isOrdinary,
+                    (JSContext * cx, HandleObject wrapper, bool* isOrdinary,
                      MutableHandleObject protop),
                     (cx, wrapper, isOrdinary, protop))
 
   IMPL_PROXY_METHOD(bool, setImmutablePrototype,
-                    (JSContext* cx, HandleObject wrapper,
-                     bool* succeeded),
+                    (JSContext * cx, HandleObject wrapper, bool* succeeded),
                     (cx, wrapper, succeeded))
 
   IMPL_PROXY_METHOD(bool, preventExtensions,
-                    (JSContext* cx, HandleObject wrapper,
+                    (JSContext * cx, HandleObject wrapper,
                      ObjectOpResult& result),
                     (cx, wrapper, result))
 
   IMPL_PROXY_METHOD(bool, isExtensible,
-                    (JSContext* cx, HandleObject wrapper, bool* extensible),
+                    (JSContext * cx, HandleObject wrapper, bool* extensible),
                     (cx, wrapper, extensible))
-                    
+
   IMPL_PROXY_METHOD(bool, has,
-                    (JSContext* cx, HandleObject wrapper, HandleId id, bool* bp),
+                    (JSContext * cx, HandleObject wrapper, HandleId id,
+                     bool* bp),
                     (cx, wrapper, id, bp))
 
   IMPL_PROXY_METHOD(bool, get,
-                    (JSContext* cx, HandleObject wrapper, HandleValue receiver,
+                    (JSContext * cx, HandleObject wrapper, HandleValue receiver,
                      HandleId id, MutableHandleValue vp),
                     (cx, wrapper, receiver, id, vp))
 
   IMPL_PROXY_METHOD(bool, set,
-                    (JSContext* cx, HandleObject wrapper, HandleId id,
+                    (JSContext * cx, HandleObject wrapper, HandleId id,
                      HandleValue v, HandleValue receiver,
                      ObjectOpResult& result),
                     (cx, wrapper, id, v, receiver, result))
 
   IMPL_PROXY_METHOD(bool, call,
-                    (JSContext* cx, HandleObject wrapper, const CallArgs& args),
+                    (JSContext * cx, HandleObject wrapper,
+                     const CallArgs& args),
                     (cx, wrapper, args))
 
   IMPL_PROXY_METHOD(bool, construct,
-                    (JSContext* cx, HandleObject wrapper, const CallArgs& args),
+                    (JSContext * cx, HandleObject wrapper,
+                     const CallArgs& args),
                     (cx, wrapper, args))
 
   /* SpiderMonkey extensions. */
   IMPL_PROXY_METHOD(bool, hasOwn,
-                    (JSContext* cx, HandleObject wrapper, HandleId id, bool* bp),
+                    (JSContext * cx, HandleObject wrapper, HandleId id,
+                     bool* bp),
                     (cx, wrapper, id, bp))
 
   IMPL_PROXY_METHOD(bool, getOwnEnumerablePropertyKeys,
-                    (JSContext* cx, HandleObject wrapper, AutoIdVector& props),
+                    (JSContext * cx, HandleObject wrapper, AutoIdVector& props),
                     (cx, wrapper, props))
 
   // nativeCall is the one thing that's not handed a wrapper directly.
@@ -155,31 +155,30 @@ public:
   }
 
   IMPL_PROXY_METHOD(bool, hasInstance,
-                    (JSContext* cx, HandleObject wrapper,
-                     MutableHandleValue v, bool* bp),
+                    (JSContext * cx, HandleObject wrapper, MutableHandleValue v,
+                     bool* bp),
                     (cx, wrapper, v, bp))
 
   IMPL_PROXY_METHOD(const char*, className,
-                    (JSContext* cx, HandleObject wrapper),
-                    (cx, wrapper))
+                    (JSContext * cx, HandleObject wrapper), (cx, wrapper))
 
   IMPL_PROXY_METHOD(JSString*, fun_toString,
-                    (JSContext* cx, HandleObject wrapper, bool isToSource),
+                    (JSContext * cx, HandleObject wrapper, bool isToSource),
                     (cx, wrapper, isToSource))
 
   IMPL_PROXY_METHOD(RegExpShared*, regexp_toShared,
-                    (JSContext* cx, HandleObject wrapper),
-                    (cx, wrapper))
+                    (JSContext * cx, HandleObject wrapper), (cx, wrapper))
 
   IMPL_PROXY_METHOD(bool, boxedValue_unbox,
-                    (JSContext* cx, HandleObject wrapper, MutableHandleValue vp),
+                    (JSContext * cx, HandleObject wrapper,
+                     MutableHandleValue vp),
                     (cx, wrapper, vp))
 
   static const XrayWaiver singleton;
 };
 
 #undef IMPL_PROXY_METHOD
-  
+
 const XrayWaiver XrayWaiver::singleton;
 
 // When objects for which we waived the X-ray wrapper cross into
@@ -614,7 +613,8 @@ static const Wrapper* SelectWrapper(bool securityWrapper, XrayType xrayType,
 
 JSObject* WrapperFactory::Rewrap(JSContext* cx, HandleObject existing,
                                  HandleObject obj) {
-  MOZ_ASSERT(!IsWrapper(obj) || GetProxyHandler(obj) == &XrayWaiver::singleton ||
+  MOZ_ASSERT(!IsWrapper(obj) ||
+                 GetProxyHandler(obj) == &XrayWaiver::singleton ||
                  js::IsWindowProxy(obj),
              "wrapped object passed to rewrap");
   MOZ_ASSERT(!js::IsWindow(obj));
