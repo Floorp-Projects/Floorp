@@ -378,8 +378,7 @@ android-x86_64-opt-tests:
 
 android-x86_64-tests:
     - jsreftest
-    # various mochitest (plain) failures; bug 1460411
-    # - mochitest
+    - mochitest
     - mochitest-clipboard
     - mochitest-gpu
     # various reftest (plain) failures; bug 1501582
