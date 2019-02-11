@@ -91,6 +91,7 @@ void LayerManagerMLGPU::Destroy() {
   }
 
   LayerManager::Destroy();
+  mProfilerScreenshotGrabber.Destroy();
 
   if (mDevice && mDevice->IsValid()) {
     mDevice->Flush();
@@ -264,6 +265,7 @@ void LayerManagerMLGPU::Composite() {
   // will tell us if we still need to render.
   if (!mSwapChain->ApplyNewInvalidRegion(std::move(mInvalidRegion),
                                          diagnosticRect)) {
+    mProfilerScreenshotGrabber.NotifyEmptyFrame();
     return;
   }
 
@@ -346,6 +348,9 @@ void LayerManagerMLGPU::RenderLayers() {
 
   // Execute all render passes.
   builder.Render();
+
+  mProfilerScreenshotGrabber.MaybeGrabScreenshot(
+      mDevice, builder.GetWidgetRT()->GetTexture());
   mCurrentFrame = nullptr;
 
   if (mDrawDiagnostics) {
@@ -505,6 +510,7 @@ bool LayerManagerMLGPU::PreRender() {
 
 void LayerManagerMLGPU::PostRender() {
   mWidget->PostRender(mWidgetContext.ptr());
+  mProfilerScreenshotGrabber.MaybeProcessQueue();
   mWidgetContext = Nothing();
 }
 

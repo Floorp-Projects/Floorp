@@ -66,6 +66,8 @@ class FrameBuilder final {
   // Hold a layer alive until the frame ends.
   void RetainTemporaryLayer(LayerMLGPU* aLayer);
 
+  MLGRenderTarget* GetWidgetRT();
+
  private:
   void AssignLayer(Layer* aLayer, RenderViewMLGPU* aView,
                    const RenderTargetIntRect& aClipRect,

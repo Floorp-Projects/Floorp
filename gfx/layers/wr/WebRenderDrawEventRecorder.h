@@ -8,6 +8,7 @@
 
 #include "mozilla/gfx/DrawEventRecorder.h"
 #include "mozilla/gfx/InlineTranslator.h"
+#include "mozilla/webrender/webrender_ffi.h"
 
 namespace mozilla {
 namespace layers {
