@@ -15,6 +15,7 @@ from .registry import register_callback_action
 from .util import find_decision_task, create_tasks, combine_task_graph_files
 from taskgraph.util.taskcluster import get_artifact_from_index
 from taskgraph.taskgraph import TaskGraph
+from taskgraph.util import taskcluster
 
 PUSHLOG_TMPL = '{}/json-pushes?version=2&startID={}&endID={}'
 INDEX_TMPL = 'gecko.v2.{}.pushlog-id.{}.decision'
@@ -37,7 +38,8 @@ logger = logging.getLogger(__name__)
     schema={},
     available=lambda parameters: True
 )
-def geckoprofile_action(parameters, graph_config, input, task_group_id, task_id, task):
+def geckoprofile_action(parameters, graph_config, input, task_group_id, task_id):
+    task = taskcluster.get_task_definition(task_id)
     label = task['metadata']['name']
     pushes = []
     depth = 2

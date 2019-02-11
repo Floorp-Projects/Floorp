@@ -16,6 +16,7 @@ from .util import (
 )
 from ..util.parameterization import resolve_task_references
 from .registry import register_callback_action
+from taskgraph.util import taskcluster
 
 logger = logging.getLogger(__name__)
 
@@ -81,7 +82,8 @@ logger = logging.getLogger(__name__)
         'required': ['path']
     }
 )
-def mochitest_retrigger_action(parameters, graph_config, input, task_group_id, task_id, task):
+def mochitest_retrigger_action(parameters, graph_config, input, task_group_id, task_id):
+    task = taskcluster.get_task_definition(task_id)
     decision_task_id, full_task_graph, label_to_taskid = fetch_graph_and_labels(
         parameters, graph_config)
 
