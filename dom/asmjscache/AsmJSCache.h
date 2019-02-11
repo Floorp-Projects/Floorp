@@ -14,6 +14,25 @@
 
 class nsIPrincipal;
 
+namespace JS {
+
+enum AsmJSCacheResult {
+  AsmJSCache_Success,
+  AsmJSCache_MIN = AsmJSCache_Success,
+  AsmJSCache_ModuleTooSmall,
+  AsmJSCache_SynchronousScript,
+  AsmJSCache_QuotaExceeded,
+  AsmJSCache_StorageInitFailure,
+  AsmJSCache_Disabled_Internal,
+  AsmJSCache_Disabled_ShellFlags,
+  AsmJSCache_Disabled_JitInspector,
+  AsmJSCache_InternalError,
+  AsmJSCache_Disabled_PrivateBrowsing,
+  AsmJSCache_LIMIT
+};
+
+}  // namespace JS
+
 namespace mozilla {
 
 namespace ipc {
