@@ -178,6 +178,7 @@ void UiCompositorControllerChild::Destroy() {
 
   if (mIsOpen) {
     // Close the underlying IPC channel.
+    mWidget = nullptr;
     PUiCompositorControllerChild::Close();
     mIsOpen = false;
   }
