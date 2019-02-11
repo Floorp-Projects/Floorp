@@ -20,12 +20,16 @@ class Domain {
 
   destructor() {}
 
-  get browser() {
-    return this.target.browser;
+  get content() {
+    return this.session.content;
   }
 
-  get mm() {
-    return this.browser.mm;
+  get docShell() {
+    return this.session.docShell;
+  }
+
+  get chromeEventHandler() {
+    return this.docShell.chromeEventHandler;
   }
 };
 

@@ -7,8 +7,9 @@ remote.jar:
   content/Actor.jsm (Actor.jsm)
   content/Collections.jsm (Collections.jsm)
   content/Connection.jsm (Connection.jsm)
-  content/ConsoleServiceObserver.jsm (ConsoleServiceObserver.jsm)
+  content/ContentProcessSession.jsm (ContentProcessSession.jsm)
   content/Domain.jsm (Domain.jsm)
+  content/Domains.jsm (Domains.jsm)
   content/Error.jsm (Error.jsm)
   content/EventEmitter.jsm (EventEmitter.jsm)
   content/Handler.jsm (Handler.jsm)
@@ -23,15 +24,14 @@ remote.jar:
   content/TargetListener.jsm (TargetListener.jsm)
   content/WindowManager.jsm (WindowManager.jsm)
 
+  # Frame scripts
+  content/frame-script.js (frame-script.js)
+
   # domains
   content/domain/Log.jsm (domain/Log.jsm)
   content/domain/Network.jsm (domain/Network.jsm)
   content/domain/Page.jsm (domain/Page.jsm)
   content/domain/Runtime.jsm (domain/Runtime.jsm)
-
-  # actors
-  content/actor/DOMChild.jsm (actor/DOMChild.jsm)
-  content/actor/LogChild.jsm (actor/LogChild.jsm)
 
   # transport layer
   content/server/HTTPD.jsm (../netwerk/test/httpserver/httpd.js)
