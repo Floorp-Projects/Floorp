@@ -256,7 +256,7 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
       Mov(vixl::sp, GetStackPointer64());
     }
   }
-  void initStackPtr() {
+  void initPseudoStackPtr() {
     if (!GetStackPointer64().Is(vixl::sp)) {
       Mov(GetStackPointer64(), vixl::sp);
     }

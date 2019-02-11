@@ -2993,9 +2993,10 @@ RefPtr<RTCStatsQueryPromise> PeerConnectionImpl::ExecuteStatsQuery_s(
     transportId = query->transportId;
   }
   auto report = std::move(query->report);
+  auto now = query->now;
 
   return aTransportHandler
-      ->GetIceStats(transportId, query->now, std::move(report))
+      ->GetIceStats(transportId, now, std::move(report))
       ->Then(
           GetMainThreadSerialEventTarget(), __func__,
           [query = std::move(query)](

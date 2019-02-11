@@ -649,9 +649,7 @@ bool JitRuntime::generateVMWrapper(JSContext* cx, MacroAssembler& masm,
   }
 
   // SP is used to transfer stack across call boundaries.
-  if (!masm.GetStackPointer64().Is(vixl::sp)) {
-    masm.Mov(masm.GetStackPointer64(), vixl::sp);
-  }
+  masm.initPseudoStackPtr();
 
   // Test for failure.
   switch (f.failType()) {

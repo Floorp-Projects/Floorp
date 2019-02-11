@@ -9,6 +9,10 @@ job-defaults:
         by-test-platform:
             android-hw.*: /builds/worker
             default: /home/cltbld
+    run-on-projects:
+        by-test-platform:
+            windows10-64-ux: ['try', 'mozilla-central']
+            default: ['try', 'trunk', 'mozilla-beta']
     tier:
         by-test-platform:
             windows10-64-ccov/.*: 3
@@ -40,10 +44,6 @@ raptor-tp6-1-firefox:
     description: "Raptor tp6-1 on Firefox"
     try-name: raptor-tp6-1-firefox
     treeherder-symbol: Rap(tp6-1)
-    run-on-projects:
-        by-test-platform:
-            windows10-64-ux: ['try', 'mozilla-central']
-            default: built-projects
     mozharness:
         extra-options:
             - --test=raptor-tp6-1
@@ -76,7 +76,6 @@ raptor-tp6-2-firefox:
     description: "Raptor tp6-2 on Firefox"
     try-name: raptor-tp6-2-firefox
     treeherder-symbol: Rap(tp6-2)
-    run-on-projects: built-projects
     mozharness:
         extra-options:
             - --test=raptor-tp6-2
@@ -108,7 +107,6 @@ raptor-tp6-3-firefox:
     description: "Raptor tp6-3 on Firefox"
     try-name: raptor-tp6-3-firefox
     treeherder-symbol: Rap(tp6-3)
-    run-on-projects: built-projects
     mozharness:
         extra-options:
             - --test=raptor-tp6-3
@@ -141,7 +139,6 @@ raptor-tp6-4-firefox:
     description: "Raptor tp6-4 on Firefox"
     try-name: raptor-tp6-4-firefox
     treeherder-symbol: Rap(tp6-4)
-    run-on-projects: built-projects
     mozharness:
         extra-options:
             - --test=raptor-tp6-4
@@ -173,7 +170,6 @@ raptor-tp6-5-firefox:
     description: "Raptor tp6-5 on Firefox"
     try-name: raptor-tp6-5-firefox
     treeherder-symbol: Rap(tp6-5)
-    run-on-projects: built-projects
     mozharness:
         extra-options:
             - --test=raptor-tp6-5
@@ -205,7 +201,6 @@ raptor-tp6-6-firefox:
     description: "Raptor tp6-6 on Firefox"
     try-name: raptor-tp6-6-firefox
     treeherder-symbol: Rap(tp6-6)
-    run-on-projects: built-projects
     mozharness:
         extra-options:
             - --test=raptor-tp6-6
@@ -370,7 +365,6 @@ raptor-tp6m-1-geckoview:
     try-name: raptor-tp6m-1-geckoview
     treeherder-symbol: Rap(tp6m-1)
     target: geckoview_example.apk
-    run-on-projects: built-projects
     tier: 2
     mozharness:
         extra-options:
@@ -382,10 +376,6 @@ raptor-speedometer-firefox:
     description: "Raptor Speedometer on Firefox"
     try-name: raptor-speedometer-firefox
     treeherder-symbol: Rap(sp)
-    run-on-projects:
-        by-test-platform:
-            windows10-64-ux: ['try', 'mozilla-central']
-            default: built-projects
     mozharness:
         extra-options:
             - --test=raptor-speedometer
@@ -409,7 +399,7 @@ raptor-speedometer-geckoview:
     target: geckoview_example.apk
     run-on-projects:
         by-test-platform:
-            android-hw.*: built-projects
+            android-hw.*: ['try', 'trunk', 'mozilla-beta']
     max-run-time: 900
     mozharness:
         extra-options:
@@ -442,7 +432,7 @@ raptor-speedometer-fennec:
     target: target.apk
     run-on-projects:
         by-test-platform:
-            android-hw.*: built-projects
+            android-hw.*: ['try', 'trunk', 'mozilla-beta']
     tier: 3
     max-run-time: 900
     mozharness:
@@ -467,10 +457,6 @@ raptor-stylebench-firefox:
     description: "Raptor StyleBench on Firefox"
     try-name: raptor-stylebench-firefox
     treeherder-symbol: Rap(sb)
-    run-on-projects:
-        by-test-platform:
-            windows10-64-ux: ['try', 'mozilla-central']
-            default: built-projects
     mozharness:
         extra-options:
             - --test=raptor-stylebench
@@ -502,10 +488,6 @@ raptor-motionmark-htmlsuite-firefox:
     description: "Raptor MotionMark HtmlSuite on Firefox"
     try-name: raptor-motionmark-htmlsuite-firefox
     treeherder-symbol: Rap(mm-h)
-    run-on-projects:
-        by-test-platform:
-            windows10-64-ux: ['try', 'mozilla-central']
-            default: built-projects
     mozharness:
         extra-options:
             - --test=raptor-motionmark-htmlsuite
@@ -537,10 +519,6 @@ raptor-motionmark-animometer-firefox:
     description: "Raptor MotionMark Animometer on Firefox"
     try-name: raptor-motionmark-animometer-firefox
     treeherder-symbol: Rap(mm-a)
-    run-on-projects:
-        by-test-platform:
-            windows10-64-ux: ['try', 'mozilla-central']
-            default: built-projects
     mozharness:
         extra-options:
             - --test=raptor-motionmark-animometer
@@ -572,10 +550,6 @@ raptor-webaudio-firefox:
     description: "Raptor WebAudio on Firefox"
     try-name: raptor-webaudio-firefox
     treeherder-symbol: Rap(wa)
-    run-on-projects:
-        by-test-platform:
-            windows10-64-ux: ['try', 'mozilla-central']
-            default: built-projects
     mozharness:
         extra-options:
             - --test=raptor-webaudio
@@ -601,19 +575,11 @@ raptor-webaudio-chrome:
         extra-options:
             - --test=raptor-webaudio
             - --app=chrome
-    run-on-projects:
-        by-test-platform:
-            windows10-64-ux: ['try', 'mozilla-central']
-            default: built-projects
 
 raptor-sunspider-firefox:
     description: "Raptor SunSpider on Firefox"
     try-name: raptor-sunspider-firefox
     treeherder-symbol: Rap(ss)
-    run-on-projects:
-        by-test-platform:
-            windows10-64-ux: ['try', 'mozilla-central']
-            default: built-projects
     mozharness:
         extra-options:
             - --test=raptor-sunspider
@@ -645,10 +611,6 @@ raptor-unity-webgl-firefox:
     description: "Raptor Unity WebGL on Firefox"
     try-name: raptor-unity-webgl-firefox
     treeherder-symbol: Rap(ugl)
-    run-on-projects:
-        by-test-platform:
-            windows10-64-ux: ['try', 'mozilla-central']
-            default: built-projects
     mozharness:
         extra-options:
             - --test=raptor-unity-webgl
@@ -678,7 +640,7 @@ raptor-unity-webgl-geckoview:
     target: geckoview_example.apk
     run-on-projects:
         by-test-platform:
-            android-hw.*: built-projects
+            android-hw.*: ['try', 'trunk', 'mozilla-beta']
     max-run-time: 900
     mozharness:
         extra-options:
@@ -707,10 +669,6 @@ raptor-wasm-misc-firefox:
     description: "Raptor WASM Misc on Firefox"
     try-name: raptor-wasm-misc-firefox
     treeherder-symbol: Rap(wm)
-    run-on-projects:
-        by-test-platform:
-            windows10-64-ux: ['try', 'mozilla-central']
-            default: built-projects
     mozharness:
         extra-options:
             - --test=raptor-wasm-misc
@@ -737,10 +695,6 @@ raptor-wasm-misc-baseline-firefox:
     description: "Raptor WASM Misc on Firefox with baseline JIT"
     try-name: raptor-wasm-misc-baseline-firefox
     treeherder-symbol: Rap(wm-b)
-    run-on-projects:
-        by-test-platform:
-            windows10-64-ux: ['try', 'mozilla-central']
-            default: built-projects
     mozharness:
         extra-options:
             - --test=raptor-wasm-misc-baseline
@@ -767,10 +721,6 @@ raptor-wasm-misc-ion-firefox:
     description: "Raptor WASM Misc on Firefox with ION Monkey"
     try-name: raptor-wasm-misc-ion-firefox
     treeherder-symbol: Rap(wm-i)
-    run-on-projects:
-        by-test-platform:
-            windows10-64-ux: ['try', 'mozilla-central']
-            default: built-projects
     mozharness:
         extra-options:
             - --test=raptor-wasm-misc-ion
@@ -811,10 +761,6 @@ raptor-assorted-dom-firefox:
     description: "Raptor Assorted-Dom on Firefox"
     try-name: raptor-assorted-dom-firefox
     treeherder-symbol: Rap(dom)
-    run-on-projects:
-        by-test-platform:
-            windows10-64-ux: ['try', 'mozilla-central']
-            default: built-projects
     max-run-time:
         by-test-platform:
             .*-qr/.*: 2100
@@ -861,10 +807,6 @@ raptor-wasm-godot-firefox:
     description: "Raptor Wasm Godot on Firefox"
     try-name: raptor-wasm-godot-firefox
     treeherder-symbol: Rap(godot)
-    run-on-projects:
-        by-test-platform:
-            windows10-64-ux: ['try', 'mozilla-central']
-            default: built-projects
     max-run-time:
         by-test-platform:
             .*-qr/.*: 2100
@@ -902,10 +844,6 @@ raptor-wasm-godot-baseline-firefox:
     description: "Raptor Wasm Godot on Firefox with baseline JIT"
     try-name: raptor-wasm-godot-baseline-firefox
     treeherder-symbol: Rap(godot-b)
-    run-on-projects:
-        by-test-platform:
-            windows10-64-ux: ['try', 'mozilla-central']
-            default: built-projects
     max-run-time:
         by-test-platform:
             .*-qr/.*: 2100
@@ -931,10 +869,6 @@ raptor-wasm-godot-ion-firefox:
     description: "Raptor WASM godot on Firefox with ION Monkey"
     try-name: raptor-wasm-godot-ion-firefox
     treeherder-symbol: Rap(godot-i)
-    run-on-projects:
-        by-test-platform:
-            windows10-64-ux: ['try', 'mozilla-central']
-            default: built-projects
     max-run-time:
         by-test-platform:
             .*-qr/.*: 2100

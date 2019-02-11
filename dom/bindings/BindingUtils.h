@@ -1171,8 +1171,14 @@ inline bool WrapNewBindingNonWrapperCachedObject(
       if (!JS_WrapObject(cx, &proto)) {
         return false;
       }
+    } else {
+      // cx and scope are same-compartment, but they might still be
+      // different-Realm.  Enter the Realm of scope, since that's
+      // where we want to create our object.
+      ar.emplace(cx, scope);
     }
 
+    MOZ_ASSERT_IF(proto, js::IsObjectInContextCompartment(proto, cx));
     MOZ_ASSERT(js::IsObjectInContextCompartment(scope, cx));
     if (!value->WrapObject(cx, proto, &obj)) {
       return false;
@@ -1223,8 +1229,14 @@ inline bool WrapNewBindingNonWrapperCachedObject(
       if (!JS_WrapObject(cx, &proto)) {
         return false;
       }
+    } else {
+      // cx and scope are same-compartment, but they might still be
+      // different-Realm.  Enter the Realm of scope, since that's
+      // where we want to create our object.
+      ar.emplace(cx, scope);
     }
 
+    MOZ_ASSERT_IF(proto, js::IsObjectInContextCompartment(proto, cx));
     MOZ_ASSERT(js::IsObjectInContextCompartment(scope, cx));
     if (!value->WrapObject(cx, proto, &obj)) {
       return false;

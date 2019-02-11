@@ -279,13 +279,11 @@ inline bool BasePrincipal::FastEquals(nsIPrincipal* aOther) {
   // Two principals are considered to be equal if their origins are the same.
   // If the two principals are codebase principals, their origin attributes
   // (aka the origin suffix) must also match.
-  // If the two principals are null principals, they're only equal if they're
-  // the same object.
-  if (Kind() == eNullPrincipal || Kind() == eSystemPrincipal) {
+  if (Kind() == eSystemPrincipal) {
     return this == other;
   }
 
-  if (Kind() == eCodebasePrincipal) {
+  if (Kind() == eCodebasePrincipal || Kind() == eNullPrincipal) {
     return mOriginNoSuffix == other->mOriginNoSuffix &&
            mOriginSuffix == other->mOriginSuffix;
   }
@@ -308,13 +306,6 @@ inline bool BasePrincipal::FastEqualsConsideringDomain(nsIPrincipal* aOther) {
 
 inline bool BasePrincipal::FastSubsumes(nsIPrincipal* aOther) {
   // If two principals are equal, then they both subsume each other.
-  // We deal with two special cases first:
-  // Null principals only subsume each other if they are equal, and are only
-  // equal if they're the same object.
-  auto other = Cast(aOther);
-  if (Kind() == eNullPrincipal && other->Kind() == eNullPrincipal) {
-    return this == other;
-  }
   if (FastEquals(aOther)) {
     return true;
   }

@@ -464,9 +464,10 @@ class XDRState : public XDRCoderBase {
         return fail(JS::TranscodeResult_Throw);
       }
       memcpy(ptr, *sp, len);
+      MOZ_ASSERT(ptr[len-1] == '\0');
     } else {
       const uint8_t* ptr = buf.read(len);
-      if (!ptr || ptr[len] != '\0') {
+      if (!ptr || ptr[len-1] != '\0') {
         return fail(JS::TranscodeResult_Failure_BadDecode);
       }
       *sp = reinterpret_cast<const char*>(ptr);

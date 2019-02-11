@@ -171,7 +171,9 @@ bool NullPrincipal::MayLoadInternal(nsIURI* aURI) {
   nsCOMPtr<nsIPrincipal> blobPrincipal;
   if (dom::BlobURLProtocolHandler::GetBlobURLPrincipal(
           aURI, getter_AddRefs(blobPrincipal))) {
-    return blobPrincipal == this;
+    MOZ_ASSERT(blobPrincipal);
+    return SubsumesInternal(blobPrincipal,
+                            BasePrincipal::ConsiderDocumentDomain);
   }
 
   return false;

@@ -395,7 +395,7 @@ function addXULBrowserDecorations(browser) {
   if (browser.remoteType == undefined) {
     Object.defineProperty(browser, "remoteType", {
       get() {
-        return this.getAttribute("remoteType");
+        return this.messageManager.remoteType;
       },
       configurable: true,
       enumerable: true,

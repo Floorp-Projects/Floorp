@@ -14,7 +14,7 @@ add_task(async function() {
   const jstermHistory = [
     `document`,
     `document
-       .querySelectorAll("*")
+       .querySelectorAll("span")
        .forEach(console.log)`,
     `Dog = "Snoopy"`,
   ];
