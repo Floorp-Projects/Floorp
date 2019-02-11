@@ -153,12 +153,14 @@ pub unsafe extern "C" fn sdp_add_media_section(session: *mut SdpSession,
     };
     let protocol = match protocol {
         20 => SdpProtocolValue::RtpSavpf,        // Protocol::kRtpSavpf
-        24 => SdpProtocolValue::UdpTlsRtpSavpf,  // Protocol::kUdpTlsRtpSavpf
-        25 => SdpProtocolValue::TcpTlsRtpSavpf,  // Protocol::kTcpTlsRtpSavpf
-        26 => SdpProtocolValue::TcpDtlsRtpSavpf,  // Protocol::kTcpTlsRtpSavpf
-        38 => SdpProtocolValue::DtlsSctp,        // Protocol::kDtlsSctp
-        39 => SdpProtocolValue::UdpDtlsSctp,     // Protocol::kUdpDtlsSctp
-        40 => SdpProtocolValue::TcpDtlsSctp,     // Protocol::kTcpDtlsSctp
+        21 => SdpProtocolValue::UdpTlsRtpSavp,   // Protocol::kUdpTlsRtpSavp
+        23 => SdpProtocolValue::TcpDtlsRtpSavp,  // Protocol::kTcpDtlsRtpSavp
+        25 => SdpProtocolValue::UdpTlsRtpSavpf,  // Protocol::kUdpTlsRtpSavpf
+        26 => SdpProtocolValue::TcpTlsRtpSavpf,  // Protocol::kTcpTlsRtpSavpf
+        27 => SdpProtocolValue::TcpDtlsRtpSavpf,  // Protocol::kTcpTlsRtpSavpf
+        39 => SdpProtocolValue::DtlsSctp,        // Protocol::kDtlsSctp
+        40 => SdpProtocolValue::UdpDtlsSctp,     // Protocol::kUdpDtlsSctp
+        41 => SdpProtocolValue::TcpDtlsSctp,     // Protocol::kTcpDtlsSctp
         _ => {
           return NS_ERROR_INVALID_ARG;
       }

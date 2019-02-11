@@ -36,6 +36,8 @@ impl fmt::Display for SdpMediaValue {
 #[cfg_attr(feature="serialize", derive(Serialize))]
 pub enum SdpProtocolValue {
     RtpSavpf,
+    UdpTlsRtpSavp,
+    TcpDtlsRtpSavp,
     UdpTlsRtpSavpf,
     TcpTlsRtpSavpf,
     TcpDtlsRtpSavpf,
@@ -48,6 +50,8 @@ impl fmt::Display for SdpProtocolValue {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let printable = match *self {
             SdpProtocolValue::RtpSavpf => "Rtp/Savpf",
+            SdpProtocolValue::UdpTlsRtpSavp => "Udp/Tls/Rtp/Savp",
+            SdpProtocolValue::TcpDtlsRtpSavp => "Tcp/Dtls/Rtp/Savp",
             SdpProtocolValue::UdpTlsRtpSavpf => "Udp/Tls/Rtp/Savpf",
             SdpProtocolValue::TcpTlsRtpSavpf => "Tcp/Tls/Rtp/Savpf",
             SdpProtocolValue::TcpDtlsRtpSavpf => "Tcp/Dtls/Rtp/Savpf",
@@ -270,7 +274,8 @@ fn test_parse_media_token() {
 fn parse_protocol_token(value: &str) -> Result<SdpProtocolValue, SdpParserInternalError> {
     Ok(match value.to_uppercase().as_ref() {
            "RTP/SAVPF" => SdpProtocolValue::RtpSavpf,
-           "UDP/TLS/RTP/SAVPF" => SdpProtocolValue::UdpTlsRtpSavpf,
+           "UDP/TLS/RTP/SAVP" => SdpProtocolValue::UdpTlsRtpSavp,
+           "TCP/DTLS/RTP/SAVP" => SdpProtocolValue::TcpDtlsRtpSavp,
            "TCP/TLS/RTP/SAVPF" => SdpProtocolValue::TcpTlsRtpSavpf,
            "TCP/DTLS/RTP/SAVPF" => SdpProtocolValue::TcpDtlsRtpSavpf,
            "DTLS/SCTP" => SdpProtocolValue::DtlsSctp,
@@ -288,6 +293,12 @@ fn test_parse_protocol_token() {
     let rtps = parse_protocol_token("rtp/savpf");
     assert!(rtps.is_ok());
     assert_eq!(rtps.unwrap(), SdpProtocolValue::RtpSavpf);
+    let udps = parse_protocol_token("udp/tls/rtp/savp");
+    assert!(udps.is_ok());
+    assert_eq!(udps.unwrap(), SdpProtocolValue::UdpTlsRtpSavp);
+    let tcps = parse_protocol_token("tcp/dtls/rtp/savp");
+    assert!(tcps.is_ok());
+    assert_eq!(tcps.unwrap(), SdpProtocolValue::TcpDtlsRtpSavp);
     let udps = parse_protocol_token("udp/tls/rtp/savpf");
     assert!(udps.is_ok());
     assert_eq!(udps.unwrap(), SdpProtocolValue::UdpTlsRtpSavpf);

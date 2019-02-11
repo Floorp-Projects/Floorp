@@ -61,6 +61,10 @@ SdpMediaSection::Protocol RsdparsaSdpMediaSection::GetProtocol() const {
   switch (sdp_get_media_protocol(mSection)) {
     case RustSdpProtocolValue::kRustRtpSavpf:
       return kRtpSavpf;
+    case RustSdpProtocolValue::kRustUdpTlsRtpSavp:
+      return kUdpTlsRtpSavp;
+    case RustSdpProtocolValue::kRustTcpDtlsRtpSavp:
+      return kTcpDtlsRtpSavp;
     case RustSdpProtocolValue::kRustUdpTlsRtpSavpf:
       return kUdpTlsRtpSavpf;
     case RustSdpProtocolValue::kRustTcpTlsRtpSavpf:
