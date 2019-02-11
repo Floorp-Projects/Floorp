@@ -29,9 +29,9 @@ import mozilla.components.feature.downloads.DownloadsFeature
 import mozilla.components.feature.prompts.PromptFeature
 import mozilla.components.feature.session.SessionFeature
 import mozilla.components.feature.session.SessionUseCases
-import org.mozilla.fenix.DefaultThemeManager
 import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
+import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FindInPageIntegration
 import org.mozilla.fenix.ext.requireComponents
@@ -208,7 +208,7 @@ class BrowserFragment : Fragment(), BackHandler {
     @SuppressWarnings("ComplexMethod")
     private fun handleToolbarItemInteraction(action: SearchAction.ToolbarMenuItemTapped) {
         val sessionUseCases = requireComponents.useCases.sessionUseCases
-        when (action.item) {
+        Do exhaustive when (action.item) {
             is ToolbarMenu.Item.Back -> sessionUseCases.goBack.invoke()
             is ToolbarMenu.Item.Forward -> sessionUseCases.goForward.invoke()
             is ToolbarMenu.Item.Reload -> sessionUseCases.reload.invoke()
@@ -221,15 +221,31 @@ class BrowserFragment : Fragment(), BackHandler {
                 .selectedSession?.url?.apply { requireContext().share(this) }
             is ToolbarMenu.Item.NewPrivateTab -> {
                 PreferenceManager.getDefaultSharedPreferences(context)
-                    .edit().putBoolean(context!!.getString(R.string.pref_key_private_mode),
-                    !PreferenceManager.getDefaultSharedPreferences(context)
-                        .getBoolean(context!!.getString(R.string.pref_key_private_mode), false)).apply() }
+                    .edit().putBoolean(
+                        context!!.getString(R.string.pref_key_private_mode),
+                        !PreferenceManager.getDefaultSharedPreferences(context)
+                            .getBoolean(context!!.getString(R.string.pref_key_private_mode), false)
+                    ).apply()
+            }
+            is ToolbarMenu.Item.FindInPage -> FindInPageIntegration.launch?.invoke()
             is ToolbarMenu.Item.ReportIssue -> requireComponents.core.sessionManager
                 .selectedSession?.url?.apply {
                 val reportUrl = String.format(REPORT_SITE_ISSUE_URL, this)
                 sessionUseCases.loadUrl.invoke(reportUrl)
             }
+            ToolbarMenu.Item.Help -> {
+                // TODO Help
+            }
+            ToolbarMenu.Item.NewTab -> {
+                val directions =
+                    BrowserFragmentDirections.actionBrowserFragmentToSearchFragment(null)
+                Navigation.findNavController(view!!).navigate(directions)
+            }
         }
+    }
+
+    object Do {
+        inline infix fun <reified T> exhaustive(any: T?) = any
     }
 
     companion object {
