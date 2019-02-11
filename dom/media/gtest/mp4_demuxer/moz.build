@@ -42,6 +42,7 @@ TEST_HARNESS_FILES.gtest += [
     'test_case_1389527.mp4',
     'test_case_1395244.mp4',
     'test_case_1410565.mp4',
+    'test_case_1513651-2-sample-description-entries.mp4',
     'test_case_1519617-cenc-init-with-track_id-0.mp4',
     'test_case_1519617-track2-trafs-removed.mp4',
     'test_case_1519617-video-has-track_id-0.mp4',
@@ -53,6 +54,7 @@ TEST_HARNESS_FILES.gtest += [
 ]
 LOCAL_INCLUDES += [
     '../../mp4',
+    '/toolkit/components/telemetry/tests/gtest',
 ]
 
 FINAL_LIBRARY = 'xul-gtest'

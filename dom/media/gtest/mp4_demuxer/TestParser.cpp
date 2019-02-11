@@ -7,9 +7,12 @@
 #include "MediaData.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/Tuple.h"
 #include "BufferStream.h"
 #include "MP4Metadata.h"
 #include "MoofParser.h"
+#include "TelemetryFixture.h"
+#include "TelemetryTestHelpers.h"
 
 class TestStream;
 namespace mozilla {
@@ -766,4 +769,211 @@ TEST(MP4Metadata, EmptyCTTS) {
   // We can seek anywhere in any MPEG4.
   EXPECT_TRUE(metadata.CanSeek());
   EXPECT_FALSE(metadata.Crypto().Ref()->valid);
+}
+
+// Fixture so we test telemetry probes.
+class MP4MetadataTelemetryFixture : public TelemetryTestFixture {};
+
+TEST_F(MP4MetadataTelemetryFixture, Telemetry) {
+  // Helper to fetch the metadata from a file and send telemetry in the process.
+  auto UpdateMetadataAndHistograms = [](const char* testFileName) {
+    nsTArray<uint8_t> buffer = ReadTestFile(testFileName);
+    ASSERT_FALSE(buffer.IsEmpty());
+    RefPtr<ByteStream> stream =
+        new TestStream(buffer.Elements(), buffer.Length());
+
+    MP4Metadata::ResultAndByteBuffer metadataBuffer =
+        MP4Metadata::Metadata(stream);
+    EXPECT_EQ(NS_OK, metadataBuffer.Result());
+    EXPECT_TRUE(metadataBuffer.Ref());
+
+    MP4Metadata metadata(stream);
+    nsresult res = metadata.Parse();
+    EXPECT_TRUE(NS_SUCCEEDED(res));
+    auto audioTrackCount = metadata.GetNumberTracks(TrackInfo::kAudioTrack);
+    ASSERT_NE(audioTrackCount.Ref(), MP4Metadata::NumberTracksError());
+    auto videoTrackCount = metadata.GetNumberTracks(TrackInfo::kVideoTrack);
+    ASSERT_NE(videoTrackCount.Ref(), MP4Metadata::NumberTracksError());
+
+    // Need to read the track data to get telemetry to fire.
+    for (uint32_t i = 0; i < audioTrackCount.Ref(); i++) {
+      metadata.GetTrackInfo(TrackInfo::kAudioTrack, i);
+    }
+    for (uint32_t i = 0; i < videoTrackCount.Ref(); i++) {
+      metadata.GetTrackInfo(TrackInfo::kVideoTrack, i);
+    }
+  };
+
+  AutoJSContextWithGlobal cx(mCleanGlobal);
+
+  // Checks the current state of the histograms relating to sample description
+  // entries and verifies they're in an expected state.
+  // aExpectedMultipleCodecCounts is a tuple where the first value represents
+  // the number of expected 'false' count, and the second the expected 'true'
+  // count for the sample description entries have multiple codecs histogram.
+  // aExpectedMultipleCryptoCounts is the same, but for the sample description
+  // entires have multiple crypto histogram.
+  // aExpectedSampleDescriptionEntryCounts is a tuple with 6 values, each is
+  // the expected number of sample description seen. I.e, the first value in the
+  // tuple is the number of tracks we've seen with 0 sample descriptions, the
+  // second value with 1 sample description, and so on up to 5 sample
+  // descriptions. aFileName is the name of the most recent file we've parsed,
+  // and is used to log if our telem counts are not in an expected state.
+  auto CheckHistograms =
+      [this, &cx](
+          const Tuple<uint32_t, uint32_t>& aExpectedMultipleCodecCounts,
+          const Tuple<uint32_t, uint32_t>& aExpectedMultipleCryptoCounts,
+          const Tuple<uint32_t, uint32_t, uint32_t, uint32_t, uint32_t,
+                      uint32_t>& aExpectedSampleDescriptionEntryCounts,
+          const char* aFileName) {
+        // Get a snapshot of the current histograms
+        JS::RootedValue snapshot(cx.GetJSContext());
+        TelemetryTestHelpers::GetSnapshots(cx.GetJSContext(), mTelemetry,
+                                           "" /* this string is unused */,
+                                           &snapshot, false /* is_keyed */);
+
+        // We'll use these to pull values out of the histograms.
+        JS::RootedValue values(cx.GetJSContext());
+        JS::RootedValue value(cx.GetJSContext());
+
+        // Verify our multiple codecs count histogram.
+        JS::RootedValue multipleCodecsHistogram(cx.GetJSContext());
+        TelemetryTestHelpers::GetProperty(
+            cx.GetJSContext(),
+            "MEDIA_MP4_PARSE_SAMPLE_DESCRIPTION_ENTRIES_HAVE_MULTIPLE_CODECS",
+            snapshot, &multipleCodecsHistogram);
+        ASSERT_TRUE(multipleCodecsHistogram.isObject())
+            << "Multiple codecs histogram should exist!";
+
+        TelemetryTestHelpers::GetProperty(cx.GetJSContext(), "values",
+                                          multipleCodecsHistogram, &values);
+        // False count.
+        TelemetryTestHelpers::GetElement(cx.GetJSContext(), 0, values, &value);
+        uint32_t uValue = 0;
+        JS::ToUint32(cx.GetJSContext(), value, &uValue);
+        EXPECT_EQ(Get<0>(aExpectedMultipleCodecCounts), uValue)
+            << "Unexpected number of false multiple codecs after parsing "
+            << aFileName;
+        // True count.
+        TelemetryTestHelpers::GetElement(cx.GetJSContext(), 1, values, &value);
+        JS::ToUint32(cx.GetJSContext(), value, &uValue);
+        EXPECT_EQ(Get<1>(aExpectedMultipleCodecCounts), uValue)
+            << "Unexpected number of true multiple codecs after parsing "
+            << aFileName;
+
+        // Verify our multiple crypto count histogram.
+        JS::RootedValue multipleCryptoHistogram(cx.GetJSContext());
+        TelemetryTestHelpers::GetProperty(
+            cx.GetJSContext(),
+            "MEDIA_MP4_PARSE_SAMPLE_DESCRIPTION_ENTRIES_HAVE_MULTIPLE_CRYPTO",
+            snapshot, &multipleCryptoHistogram);
+        ASSERT_TRUE(multipleCryptoHistogram.isObject())
+            << "Multiple crypto histogram should exist!";
+
+        TelemetryTestHelpers::GetProperty(cx.GetJSContext(), "values",
+                                          multipleCryptoHistogram, &values);
+        // False count.
+        TelemetryTestHelpers::GetElement(cx.GetJSContext(), 0, values, &value);
+        JS::ToUint32(cx.GetJSContext(), value, &uValue);
+        EXPECT_EQ(Get<0>(aExpectedMultipleCryptoCounts), uValue)
+            << "Unexpected number of false multiple cryptos after parsing "
+            << aFileName;
+        // True count.
+        TelemetryTestHelpers::GetElement(cx.GetJSContext(), 1, values, &value);
+        JS::ToUint32(cx.GetJSContext(), value, &uValue);
+        EXPECT_EQ(Get<1>(aExpectedMultipleCryptoCounts), uValue)
+            << "Unexpected number of true multiple cryptos after parsing "
+            << aFileName;
+
+        // Verify our sample description entry count histogram.
+        JS::RootedValue numSamplesHistogram(cx.GetJSContext());
+        TelemetryTestHelpers::GetProperty(
+            cx.GetJSContext(), "MEDIA_MP4_PARSE_NUM_SAMPLE_DESCRIPTION_ENTRIES",
+            snapshot, &numSamplesHistogram);
+        ASSERT_TRUE(numSamplesHistogram.isObject())
+            << "Num sample description entries histogram should exist!";
+
+        TelemetryTestHelpers::GetProperty(cx.GetJSContext(), "values",
+                                          numSamplesHistogram, &values);
+
+        TelemetryTestHelpers::GetElement(cx.GetJSContext(), 0, values, &value);
+        JS::ToUint32(cx.GetJSContext(), value, &uValue);
+        EXPECT_EQ(Get<0>(aExpectedSampleDescriptionEntryCounts), uValue)
+            << "Unexpected number of 0 sample entry descriptions after parsing "
+            << aFileName;
+        TelemetryTestHelpers::GetElement(cx.GetJSContext(), 1, values, &value);
+        JS::ToUint32(cx.GetJSContext(), value, &uValue);
+        EXPECT_EQ(Get<1>(aExpectedSampleDescriptionEntryCounts), uValue)
+            << "Unexpected number of 1 sample entry descriptions after parsing "
+            << aFileName;
+        TelemetryTestHelpers::GetElement(cx.GetJSContext(), 2, values, &value);
+        JS::ToUint32(cx.GetJSContext(), value, &uValue);
+        EXPECT_EQ(Get<2>(aExpectedSampleDescriptionEntryCounts), uValue)
+            << "Unexpected number of 2 sample entry descriptions after parsing "
+            << aFileName;
+        TelemetryTestHelpers::GetElement(cx.GetJSContext(), 3, values, &value);
+        JS::ToUint32(cx.GetJSContext(), value, &uValue);
+        EXPECT_EQ(Get<3>(aExpectedSampleDescriptionEntryCounts), uValue)
+            << "Unexpected number of 3 sample entry descriptions after parsing "
+            << aFileName;
+        TelemetryTestHelpers::GetElement(cx.GetJSContext(), 4, values, &value);
+        JS::ToUint32(cx.GetJSContext(), value, &uValue);
+        EXPECT_EQ(Get<4>(aExpectedSampleDescriptionEntryCounts), uValue)
+            << "Unexpected number of 4 sample entry descriptions after parsing "
+            << aFileName;
+        TelemetryTestHelpers::GetElement(cx.GetJSContext(), 5, values, &value);
+        JS::ToUint32(cx.GetJSContext(), value, &uValue);
+        EXPECT_EQ(Get<5>(aExpectedSampleDescriptionEntryCounts), uValue)
+            << "Unexpected number of 5 sample entry descriptions after parsing "
+            << aFileName;
+      };
+
+  // Clear histograms
+  TelemetryTestHelpers::GetAndClearHistogram(
+      cx.GetJSContext(), mTelemetry,
+      NS_LITERAL_CSTRING(
+          "MEDIA_MP4_PARSE_SAMPLE_DESCRIPTION_ENTRIES_HAVE_MULTIPLE_CODECS"),
+      false /* is_keyed */);
+
+  TelemetryTestHelpers::GetAndClearHistogram(
+      cx.GetJSContext(), mTelemetry,
+      NS_LITERAL_CSTRING(
+          "MEDIA_MP4_PARSE_SAMPLE_DESCRIPTION_ENTRIES_HAVE_MULTIPLE_CRYPTO"),
+      false /* is_keyed */);
+
+  TelemetryTestHelpers::GetAndClearHistogram(
+      cx.GetJSContext(), mTelemetry,
+      NS_LITERAL_CSTRING("MEDIA_MP4_PARSE_NUM_SAMPLE_DESCRIPTION_ENTRIES"),
+      false /* is_keyed */);
+
+  // The snapshot won't have any data in it until we populate our histograms, so
+  // we don't check for a baseline here. Just read out first MP4 metadata.
+
+  // Grab one of the test cases we know should parse and parse it, this should
+  // trigger telemetry gathering.
+
+  // This file contains 2 moovs, each with a video and audio track with one
+  // sample description entry. So we should see 4 tracks, each with a single
+  // codec, no crypto, and a single sample description entry.
+  UpdateMetadataAndHistograms("test_case_1185230.mp4");
+
+  // Verify our histograms are updated.
+  CheckHistograms(
+      MakeTuple<uint32_t, uint32_t>(4, 0), MakeTuple<uint32_t, uint32_t>(4, 0),
+      MakeTuple<uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t>(
+          0, 4, 0, 0, 0, 0),
+      "test_case_1185230.mp4");
+
+  // Parse another test case. This one has a single moov with a single video
+  // track. However, the track has two sample description entries, and our
+  // updated telemetry should reflect that.
+  UpdateMetadataAndHistograms(
+      "test_case_1513651-2-sample-description-entries.mp4");
+
+  // Verify our histograms are updated.
+  CheckHistograms(
+      MakeTuple<uint32_t, uint32_t>(5, 0), MakeTuple<uint32_t, uint32_t>(5, 0),
+      MakeTuple<uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t>(
+          0, 4, 1, 0, 0, 0),
+      "test_case_1513651-2-sample-description-entries.mp4");
 }
