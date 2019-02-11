@@ -549,6 +549,135 @@ static XDRResult XDRScope(XDRState<mode>* xdr, js::PrivateScriptData* data,
 }
 
 template <XDRMode mode>
+/* static */ XDRResult js::PrivateScriptData::XDR(
+    XDRState<mode>* xdr, HandleScript script,
+    HandleScriptSourceObject sourceObject, HandleScope scriptEnclosingScope,
+    HandleFunction fun) {
+  uint32_t nconsts = 0;
+  uint32_t nobjects = 0;
+  uint32_t nscopes = 0;
+  uint32_t ntrynotes = 0;
+  uint32_t nscopenotes = 0;
+  uint32_t nresumeoffsets = 0;
+
+  JSContext* cx = xdr->cx();
+  PrivateScriptData* data = nullptr;
+
+  if (mode == XDR_ENCODE) {
+    data = script->data_;
+
+    nscopes = data->scopes().size();
+    if (data->hasConsts()) {
+      nconsts = data->consts().size();
+    }
+    if (data->hasObjects()) {
+      nobjects = data->objects().size();
+    }
+    if (data->hasTryNotes()) {
+      ntrynotes = data->tryNotes().size();
+    }
+    if (data->hasScopeNotes()) {
+      nscopenotes = data->scopeNotes().size();
+    }
+    if (data->hasResumeOffsets()) {
+      nresumeoffsets = data->resumeOffsets().size();
+    }
+  }
+
+  MOZ_TRY(xdr->codeUint32(&nscopes));
+  MOZ_TRY(xdr->codeUint32(&nconsts));
+  MOZ_TRY(xdr->codeUint32(&nobjects));
+  MOZ_TRY(xdr->codeUint32(&ntrynotes));
+  MOZ_TRY(xdr->codeUint32(&nscopenotes));
+  MOZ_TRY(xdr->codeUint32(&nresumeoffsets));
+
+  if (mode == XDR_DECODE) {
+    if (!JSScript::createPrivateScriptData(cx, script, nscopes, nconsts,
+                                           nobjects, ntrynotes, nscopenotes,
+                                           nresumeoffsets)) {
+      return xdr->fail(JS::TranscodeResult_Throw);
+    }
+
+    data = script->data_;
+  }
+
+  if (nconsts) {
+    RootedValue val(cx);
+    for (GCPtrValue& elem : data->consts()) {
+      if (mode == XDR_ENCODE) {
+        val = elem.get();
+      }
+      MOZ_TRY(XDRScriptConst(xdr, &val));
+      if (mode == XDR_DECODE) {
+        elem.init(val);
+      }
+    }
+  }
+
+  {
+    MOZ_ASSERT(nscopes > 0);
+    GCPtrScope* vector = data->scopes().data();
+    for (uint32_t i = 0; i < nscopes; ++i) {
+      RootedScope scope(cx);
+      if (mode == XDR_ENCODE) {
+        scope = vector[i];
+      }
+      MOZ_TRY(
+          XDRScope(xdr, script->data_, scriptEnclosingScope, fun, i, &scope));
+      if (mode == XDR_DECODE) {
+        vector[i].init(scope);
+      }
+    }
+
+    // Verify marker to detect data corruption after decoding scope data. A
+    // mismatch here indicates we will almost certainly crash in release.
+    MOZ_TRY(xdr->codeMarker(0x48922BAB));
+  }
+
+  /*
+   * Here looping from 0-to-length to xdr objects is essential to ensure that
+   * all references to enclosing blocks (via FindScopeIndex below) happen
+   * after the enclosing block has been XDR'd.
+   */
+  if (nobjects) {
+    for (GCPtrObject& elem : data->objects()) {
+      RootedObject inner(cx);
+      if (mode == XDR_ENCODE) {
+        inner = elem;
+      }
+      MOZ_TRY(XDRInnerObject(xdr, script->data_, sourceObject, &inner));
+      if (mode == XDR_DECODE) {
+        elem.init(inner);
+      }
+    }
+  }
+
+  // Verify marker to detect data corruption after decoding object data. A
+  // mismatch here indicates we will almost certainly crash in release.
+  MOZ_TRY(xdr->codeMarker(0xF83B989A));
+
+  if (ntrynotes) {
+    for (JSTryNote& elem : data->tryNotes()) {
+      MOZ_TRY(elem.XDR(xdr));
+    }
+  }
+
+  if (nscopenotes) {
+    for (ScopeNote& elem : data->scopeNotes()) {
+      MOZ_TRY(elem.XDR(xdr));
+    }
+  }
+
+  if (nresumeoffsets) {
+    for (uint32_t& elem : data->resumeOffsets()) {
+      MOZ_TRY(xdr->codeUint32(&elem));
+    }
+  }
+
+  return Ok();
+}
+
+template <XDRMode mode>
 /* static */ XDRResult SharedScriptData::XDR(XDRState<mode>* xdr,
                                              HandleScript script) {
   uint32_t natoms = 0;
@@ -625,8 +754,6 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
   };
 
   uint32_t lineno, column, nfixed, nslots;
-  uint32_t nconsts, nobjects, nscopes, nregexps, ntrynotes, nscopenotes,
-      nresumeoffsets;
   uint32_t prologueLength;
   uint32_t funLength = 0;
   uint32_t numBytecodeTypeSets = 0;
@@ -640,8 +767,6 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
 
   JSContext* cx = xdr->cx();
   RootedScript script(cx);
-  nconsts = nobjects = nscopes = nregexps = ntrynotes = nscopenotes =
-      nresumeoffsets = 0;
 
   if (mode == XDR_ENCODE) {
     script = scriptp.get();
@@ -677,23 +802,6 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
     toStringStart = script->toStringStart();
     toStringEnd = script->toStringEnd();
 
-    nscopes = script->scopes().size();
-    if (script->hasConsts()) {
-      nconsts = script->consts().size();
-    }
-    if (script->hasObjects()) {
-      nobjects = script->objects().size();
-    }
-    if (script->hasTrynotes()) {
-      ntrynotes = script->trynotes().size();
-    }
-    if (script->hasScopeNotes()) {
-      nscopenotes = script->scopeNotes().size();
-    }
-    if (script->hasResumeOffsets()) {
-      nresumeoffsets = script->resumeOffsets().size();
-    }
-
     numBytecodeTypeSets = script->numBytecodeTypeSets();
     funLength = script->funLength();
 
@@ -709,13 +817,6 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
 
   MOZ_TRY(xdr->codeUint32(&prologueLength));
 
-  // To fuse allocations, we need lengths of all embedded arrays early.
-  MOZ_TRY(xdr->codeUint32(&nconsts));
-  MOZ_TRY(xdr->codeUint32(&nobjects));
-  MOZ_TRY(xdr->codeUint32(&nscopes));
-  MOZ_TRY(xdr->codeUint32(&ntrynotes));
-  MOZ_TRY(xdr->codeUint32(&nscopenotes));
-  MOZ_TRY(xdr->codeUint32(&nresumeoffsets));
   MOZ_TRY(xdr->codeUint32(&numBytecodeTypeSets));
   MOZ_TRY(xdr->codeUint32(&funLength));
   MOZ_TRY(xdr->codeUint32(&scriptBits));
@@ -800,12 +901,6 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
       fun->initScript(script);
     }
 
-    if (!JSScript::createPrivateScriptData(cx, script, nscopes, nconsts,
-                                           nobjects, ntrynotes, nscopenotes,
-                                           nresumeoffsets)) {
-      return xdr->fail(JS::TranscodeResult_Throw);
-    }
-
     MOZ_ASSERT(!script->mainOffset());
     script->mainOffset_ = prologueLength;
     script->funLength_ = funLength;
@@ -848,87 +943,14 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
     }
   });
 
-  // NOTE: The shared script data is rooted by the script.
+  // NOTE: The script data is rooted by the script.
+  MOZ_TRY(PrivateScriptData::XDR<mode>(xdr, script, sourceObject,
+                                       scriptEnclosingScope, fun));
   MOZ_TRY(SharedScriptData::XDR<mode>(xdr, script));
 
   if (mode == XDR_DECODE) {
     if (!script->shareScriptData(cx)) {
       return xdr->fail(JS::TranscodeResult_Throw);
-    }
-  }
-
-  js::PrivateScriptData* data = script->data_;
-
-  if (nconsts) {
-    RootedValue val(cx);
-    for (GCPtrValue& elem : data->consts()) {
-      if (mode == XDR_ENCODE) {
-        val = elem.get();
-      }
-      MOZ_TRY(XDRScriptConst(xdr, &val));
-      if (mode == XDR_DECODE) {
-        elem.init(val);
-      }
-    }
-  }
-
-  {
-    MOZ_ASSERT(nscopes > 0);
-    GCPtrScope* vector = data->scopes().data();
-    for (uint32_t i = 0; i < nscopes; ++i) {
-      RootedScope scope(cx);
-      if (mode == XDR_ENCODE) {
-        scope = vector[i];
-      }
-      MOZ_TRY(
-          XDRScope(xdr, script->data_, scriptEnclosingScope, fun, i, &scope));
-      if (mode == XDR_DECODE) {
-        vector[i].init(scope);
-      }
-    }
-
-    // Verify marker to detect data corruption after decoding scope data. A
-    // mismatch here indicates we will almost certainly crash in release.
-    MOZ_TRY(xdr->codeMarker(0x48922BAB));
-  }
-
-  /*
-   * Here looping from 0-to-length to xdr objects is essential to ensure that
-   * all references to enclosing blocks (via FindScopeIndex below) happen
-   * after the enclosing block has been XDR'd.
-   */
-  if (nobjects) {
-    for (GCPtrObject& elem : data->objects()) {
-      RootedObject inner(cx);
-      if (mode == XDR_ENCODE) {
-        inner = elem;
-      }
-      MOZ_TRY(XDRInnerObject(xdr, script->data_, sourceObject, &inner));
-      if (mode == XDR_DECODE) {
-        elem.init(inner);
-      }
-    }
-  }
-
-  // Verify marker to detect data corruption after decoding object data. A
-  // mismatch here indicates we will almost certainly crash in release.
-  MOZ_TRY(xdr->codeMarker(0xF83B989A));
-
-  if (ntrynotes) {
-    for (JSTryNote& elem : data->tryNotes()) {
-      MOZ_TRY(elem.XDR(xdr));
-    }
-  }
-
-  if (nscopenotes) {
-    for (ScopeNote& elem : data->scopeNotes()) {
-      MOZ_TRY(elem.XDR(xdr));
-    }
-  }
-
-  if (nresumeoffsets) {
-    for (uint32_t& elem : data->resumeOffsets()) {
-      MOZ_TRY(xdr->codeUint32(&elem));
     }
   }
 
