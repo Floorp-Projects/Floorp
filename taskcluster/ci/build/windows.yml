@@ -1,3 +1,8 @@
+job-defaults:
+    run:
+        using: mozharness
+        use-caches: false
+
 win32/debug:
     description: "Win32 Debug"
     index:
@@ -15,7 +20,6 @@ win32/debug:
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/releng.manifest"
     run:
-        using: mozharness
         options: [append-env-variables-from-configs]
         script: mozharness/scripts/fx_desktop_build.py
         config:
@@ -49,7 +53,6 @@ win32/opt:
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/releng.manifest"
     run:
-        using: mozharness
         options: [append-env-variables-from-configs]
         script: mozharness/scripts/fx_desktop_build.py
         config:
@@ -83,7 +86,6 @@ win32/pgo:
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/releng.manifest"
     run:
-        using: mozharness
         options: [enable-pgo, append-env-variables-from-configs]
         script: mozharness/scripts/fx_desktop_build.py
         config:
@@ -117,7 +119,6 @@ win64/debug:
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
     run:
-        using: mozharness
         options: [append-env-variables-from-configs]
         script: mozharness/scripts/fx_desktop_build.py
         config:
@@ -152,7 +153,6 @@ win64-fuzzing/debug:
             PERFHERDER_EXTRA_OPTIONS: fuzzing
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
     run:
-        using: mozharness
         options: [append-env-variables-from-configs]
         script: mozharness/scripts/fx_desktop_build.py
         config:
@@ -186,7 +186,6 @@ win64-plain/debug:
             PERFHERDER_EXTRA_OPTIONS: plain
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
     run:
-        using: mozharness
         options: [append-env-variables-from-configs]
         script: mozharness/scripts/fx_desktop_build.py
         config:
@@ -221,7 +220,6 @@ win64/opt:
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
     run:
-        using: mozharness
         options: [append-env-variables-from-configs]
         script: mozharness/scripts/fx_desktop_build.py
         config:
@@ -254,7 +252,6 @@ win64-plain/opt:
             PERFHERDER_EXTRA_OPTIONS: plain
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
     run:
-        using: mozharness
         actions: [build]
         options: [append-env-variables-from-configs]
         script: mozharness/scripts/fx_desktop_build.py
@@ -301,7 +298,6 @@ win32-nightly/opt:
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/releng.manifest"
     run:
-        using: mozharness
         actions: [build, check-test]
         options: [append-env-variables-from-configs]
         script: mozharness/scripts/fx_desktop_build.py
@@ -341,7 +337,6 @@ win64-nightly/opt:
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
     run:
-        using: mozharness
         actions: [build, check-test]
         options: [append-env-variables-from-configs]
         script: mozharness/scripts/fx_desktop_build.py
@@ -377,7 +372,6 @@ win64/pgo:
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
     run:
-        using: mozharness
         options: [enable-pgo, append-env-variables-from-configs]
         script: mozharness/scripts/fx_desktop_build.py
         config:
@@ -409,7 +403,6 @@ win32-add-on-devel/opt:
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/releng.manifest"
     run:
-        using: mozharness
         options: [append-env-variables-from-configs]
         script: "mozharness/scripts/fx_desktop_build.py"
         config:
@@ -443,7 +436,6 @@ win64-add-on-devel/opt:
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
     run:
-        using: mozharness
         options: [append-env-variables-from-configs]
         script: "mozharness/scripts/fx_desktop_build.py"
         config:
@@ -477,7 +469,6 @@ win64-noopt/debug:
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
     run:
-        using: mozharness
         options: [append-env-variables-from-configs]
         script: mozharness/scripts/fx_desktop_build.py
         config:
@@ -510,7 +501,6 @@ win32-noopt/debug:
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/releng.manifest"
     run:
-        using: mozharness
         options: [append-env-variables-from-configs]
         script: mozharness/scripts/fx_desktop_build.py
         config:
@@ -544,7 +534,6 @@ win32-rusttests/opt:
             PERFHERDER_EXTRA_OPTIONS: rusttests
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/releng.manifest"
     run:
-        using: mozharness
         actions: [build]
         options: [append-env-variables-from-configs]
         script: mozharness/scripts/fx_desktop_build.py
@@ -582,7 +571,6 @@ win32-rusttests/debug:
             PERFHERDER_EXTRA_OPTIONS: rusttests
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/releng.manifest"
     run:
-        using: mozharness
         actions: [build]
         options: [append-env-variables-from-configs]
         script: mozharness/scripts/fx_desktop_build.py
@@ -620,7 +608,6 @@ win64-rusttests/opt:
             PERFHERDER_EXTRA_OPTIONS: rusttests
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
     run:
-        using: mozharness
         options: [append-env-variables-from-configs]
         script: mozharness/scripts/fx_desktop_build.py
         config:
@@ -653,7 +640,6 @@ win64-rusttests/debug:
             PERFHERDER_EXTRA_OPTIONS: rusttests
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
     run:
-        using: mozharness
         options: [append-env-variables-from-configs]
         script: mozharness/scripts/fx_desktop_build.py
         config:
@@ -689,7 +675,6 @@ win64-ccov/debug:
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
     run:
-        using: mozharness
         options: [append-env-variables-from-configs]
         script: mozharness/scripts/fx_desktop_build.py
         config:
@@ -726,7 +711,6 @@ win64-asan/debug:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
             PERFHERDER_EXTRA_OPTIONS: "debug asan"
     run:
-        using: mozharness
         options: [append-env-variables-from-configs]
         script: mozharness/scripts/fx_desktop_build.py
         config:
@@ -760,7 +744,6 @@ win64-asan/opt:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
             PERFHERDER_EXTRA_OPTIONS: "opt asan"
     run:
-        using: mozharness
         options: [append-env-variables-from-configs]
         script: mozharness/scripts/fx_desktop_build.py
         config:
@@ -801,7 +784,6 @@ win64-asan-reporter-nightly/opt:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
             PERFHERDER_EXTRA_OPTIONS: "asan-reporter"
     run:
-        using: mozharness
         options: [append-env-variables-from-configs]
         script: mozharness/scripts/fx_desktop_build.py
         config:
@@ -837,7 +819,6 @@ win64-asan-fuzzing/opt:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
             PERFHERDER_EXTRA_OPTIONS: fuzzing-asan
     run:
-        using: mozharness
         options: [append-env-variables-from-configs]
         script: mozharness/scripts/fx_desktop_build.py
         config:
@@ -884,7 +865,6 @@ win32-devedition-nightly/opt:
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/releng.manifest"
     run:
-        using: mozharness
         script: mozharness/scripts/fx_desktop_build.py
         options: [enable-pgo, append-env-variables-from-configs]
         config:
@@ -925,7 +905,6 @@ win64-devedition-nightly/opt:
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
     run:
-        using: mozharness
         options: [append-env-variables-from-configs]
         script: mozharness/scripts/fx_desktop_build.py
         config:
@@ -961,7 +940,6 @@ win32-msvc/debug:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/releng.manifest"
             PERFHERDER_EXTRA_OPTIONS: msvc
     run:
-        using: mozharness
         options: [append-env-variables-from-configs]
         script: mozharness/scripts/fx_desktop_build.py
         config:
@@ -993,7 +971,6 @@ win32-msvc/opt:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/releng.manifest"
             PERFHERDER_EXTRA_OPTIONS: msvc
     run:
-        using: mozharness
         options: [append-env-variables-from-configs]
         script: mozharness/scripts/fx_desktop_build.py
         config:
@@ -1026,7 +1003,6 @@ win64-msvc/debug:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
             PERFHERDER_EXTRA_OPTIONS: msvc
     run:
-        using: mozharness
         options: [append-env-variables-from-configs]
         script: mozharness/scripts/fx_desktop_build.py
         config:
@@ -1058,7 +1034,6 @@ win64-msvc/opt:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
             PERFHERDER_EXTRA_OPTIONS: msvc
     run:
-        using: mozharness
         options: [append-env-variables-from-configs]
         script: mozharness/scripts/fx_desktop_build.py
         config:
@@ -1093,7 +1068,6 @@ win64-aarch64/debug:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/aarch64.manifest"
             PERFHERDER_EXTRA_OPTIONS: aarch64
     run:
-        using: mozharness
         actions: [get-secrets, build]
         options: [append-env-variables-from-configs]
         script: mozharness/scripts/fx_desktop_build.py
@@ -1129,7 +1103,6 @@ win64-aarch64/opt:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/aarch64.manifest"
             PERFHERDER_EXTRA_OPTIONS: aarch64
     run:
-        using: mozharness
         actions: [get-secrets, build]
         options: [append-env-variables-from-configs]
         script: mozharness/scripts/fx_desktop_build.py
@@ -1168,7 +1141,6 @@ win64-aarch64-nightly/opt:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/aarch64.manifest"
             PERFHERDER_EXTRA_OPTIONS: aarch64
     run:
-        using: mozharness
         actions: [get-secrets, build]
         options: [append-env-variables-from-configs]
         script: mozharness/scripts/fx_desktop_build.py
@@ -1202,7 +1174,6 @@ win32-mingwclang/opt:
         env:
             PERFHERDER_EXTRA_OPTIONS: "opt 32 clang"
     run:
-        using: mozharness
         actions: [build]
         script: mozharness/scripts/fx_desktop_build.py
         config:
@@ -1238,7 +1209,6 @@ win32-mingwclang/debug:
         env:
             PERFHERDER_EXTRA_OPTIONS: "debug 32 clang"
     run:
-        using: mozharness
         actions: [build]
         script: mozharness/scripts/fx_desktop_build.py
         config:
@@ -1274,7 +1244,6 @@ win64-mingwclang/opt:
         env:
             PERFHERDER_EXTRA_OPTIONS: "opt 64 clang"
     run:
-        using: mozharness
         actions: [build]
         script: mozharness/scripts/fx_desktop_build.py
         config:
@@ -1310,7 +1279,6 @@ win64-mingwclang/debug:
         env:
             PERFHERDER_EXTRA_OPTIONS: "debug 64 clang"
     run:
-        using: mozharness
         actions: [build]
         script: mozharness/scripts/fx_desktop_build.py
         config:
