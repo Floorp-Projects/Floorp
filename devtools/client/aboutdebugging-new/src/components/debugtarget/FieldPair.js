@@ -14,8 +14,9 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 class FieldPair extends PureComponent {
   static get propTypes() {
     return {
-      slug: PropTypes.string.isRequired,
+      className: PropTypes.string,
       label: PropTypes.node.isRequired,
+      slug: PropTypes.string.isRequired,
       value: PropTypes.node,
     };
   }
@@ -24,7 +25,10 @@ class FieldPair extends PureComponent {
     const { slug, label, value } = this.props;
     return [
       dom.dt(
-        { key: `${slug}-dt` },
+        {
+          key: `${slug}-dt`,
+          className: this.props.className ? this.props.className : "",
+        },
         label
       ),
       value ? dom.dd(
