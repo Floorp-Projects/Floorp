@@ -329,8 +329,9 @@ void nsFontFaceLoader::Cancel() {
     mLoadTimer->Cancel();
     mLoadTimer = nullptr;
   }
-  nsCOMPtr<nsIChannel> channel = mChannel.forget();
-  channel->Cancel(NS_BINDING_ABORTED);
+  if (nsCOMPtr<nsIChannel> channel = mChannel.forget()) {
+    channel->Cancel(NS_BINDING_ABORTED);
+  }
 }
 
 StyleFontDisplay nsFontFaceLoader::GetFontDisplay() {
