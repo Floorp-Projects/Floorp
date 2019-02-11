@@ -1901,7 +1901,7 @@ var AddonManagerInternal = {
         this.installNotifyObservers("addon-install-disabled", topBrowser,
                                     aInstallingPrincipal.URI, aInstall);
         return;
-      } else if (!aBrowser.contentPrincipal || !aInstallingPrincipal.subsumes(aBrowser.contentPrincipal)) {
+      } else if (aInstallingPrincipal.isNullPrincipal || !aBrowser.contentPrincipal || !aInstallingPrincipal.subsumes(aBrowser.contentPrincipal)) {
         aInstall.cancel();
 
         this.installNotifyObservers("addon-install-origin-blocked", topBrowser,
