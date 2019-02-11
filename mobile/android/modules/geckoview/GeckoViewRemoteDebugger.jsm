@@ -47,6 +47,25 @@ var GeckoViewRemoteDebugger = {
     debug `onInit`;
     this._isEnabled = false;
     this._usbDebugger = new USBRemoteDebugger();
+
+    // For GeckoView-consuming Apps (including Fennec), we want "remote
+    // debugging" to encapsulate "Marionette" completely.  It's possible for
+    // consumers to manage the Marionette pref independently, but we don't
+    // condone or accommodate such management.
+    Services.prefs.setBoolPref("marionette.enabled", false);
+
+    // We never want Marionette to set prefs recommended for automation.
+    Services.prefs.setBoolPref("marionette.prefs.recommended", false);
+
+    // This lets Marionette start listening (when it's enabled).  Both
+    // GeckoView and Marionette do most of their initialization in
+    // "profile-after-change", and there is no order enforced between
+    // them.  Therefore we defer asking Marionette to startup until
+    // after all "profile-after-change" handlers (including this one)
+    // have completed.
+    Services.tm.dispatchToMainThread(() => {
+        Services.obs.notifyObservers(null, "marionette-startup-requested");
+    });
   },
 
   onEnable() {
@@ -75,7 +94,7 @@ var GeckoViewRemoteDebugger = {
     if (packageName) {
       packageName = packageName + "/";
     } else {
-      warn `Missing env MOZ_ANDROID_PACKAGE_NAME. Unable to get pacakge name`;
+      warn `Missing env MOZ_ANDROID_PACKAGE_NAME. Unable to get package name`;
     }
 
     this._isEnabled = true;
@@ -83,6 +102,8 @@ var GeckoViewRemoteDebugger = {
 
     const portOrPath = packageName + "firefox-debugger-socket";
     this._usbDebugger.start(portOrPath);
+
+    Services.prefs.setBoolPref("marionette.enabled", true);
   },
 
   onDisable() {
@@ -93,6 +114,8 @@ var GeckoViewRemoteDebugger = {
     debug `onDisable`;
     this._isEnabled = false;
     this._usbDebugger.stop();
+
+    Services.prefs.setBoolPref("marionette.enabled", false);
   },
 };
 
