@@ -788,6 +788,7 @@ class IonBuilder : public MIRGenerator,
   InliningResult inlineTypedArrayLength(CallInfo& callInfo);
   InliningResult inlinePossiblyWrappedTypedArrayLength(CallInfo& callInfo);
   InliningResult inlineTypedArrayByteOffset(CallInfo& callInfo);
+  InliningResult inlineTypedArrayElementShift(CallInfo& callInfo);
   InliningResult inlineSetDisjointTypedElements(CallInfo& callInfo);
 
   // TypedObject intrinsics and natives.

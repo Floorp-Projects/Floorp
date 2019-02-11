@@ -373,6 +373,8 @@ IonBuilder::InliningResult IonBuilder::inlineNativeCall(CallInfo& callInfo,
       return inlineTypedArrayLength(callInfo);
     case InlinableNative::IntrinsicTypedArrayByteOffset:
       return inlineTypedArrayByteOffset(callInfo);
+    case InlinableNative::IntrinsicTypedArrayElementShift:
+      return inlineTypedArrayElementShift(callInfo);
     case InlinableNative::IntrinsicSetDisjointTypedElements:
       return inlineSetDisjointTypedElements(callInfo);
 
@@ -3226,6 +3228,29 @@ IonBuilder::InliningResult IonBuilder::inlineTypedArrayByteOffset(
 
   MInstruction* byteOffset = addTypedArrayByteOffset(callInfo.getArg(0));
   current->push(byteOffset);
+
+  callInfo.setImplicitlyUsedUnchecked();
+  return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningResult IonBuilder::inlineTypedArrayElementShift(
+    CallInfo& callInfo) {
+  MOZ_ASSERT(!callInfo.constructing());
+  MOZ_ASSERT(callInfo.argc() == 1);
+  if (callInfo.getArg(0)->type() != MIRType::Object) {
+    return InliningStatus_NotInlined;
+  }
+  if (getInlineReturnType() != MIRType::Int32) {
+    return InliningStatus_NotInlined;
+  }
+
+  if (!IsTypedArrayObject(constraints(), callInfo.getArg(0))) {
+    return InliningStatus_NotInlined;
+  }
+
+  auto* ins = MTypedArrayElementShift::New(alloc(), callInfo.getArg(0));
+  current->add(ins);
+  current->push(ins);
 
   callInfo.setImplicitlyUsedUnchecked();
   return InliningStatus_Inlined;

@@ -7,6 +7,7 @@
 #include "jit/RangeAnalysis.h"
 
 #include "mozilla/MathAlgorithms.h"
+#include "mozilla/TemplateLib.h"
 
 #include "jit/Ion.h"
 #include "jit/IonAnalysis.h"
@@ -1757,6 +1758,20 @@ void MTypedArrayLength::computeRange(TempAllocator& alloc) {
 
 void MTypedArrayByteOffset::computeRange(TempAllocator& alloc) {
   setRange(Range::NewUInt32Range(alloc, 0, INT32_MAX));
+}
+
+void MTypedArrayElementShift::computeRange(TempAllocator& alloc) {
+  using mozilla::tl::FloorLog2;
+
+  constexpr auto MaxTypedArrayShift = FloorLog2<sizeof(double)>::value;
+
+#define ASSERT_MAX_SHIFT(T, N)                                     \
+  static_assert(FloorLog2<sizeof(T)>::value <= MaxTypedArrayShift, \
+                "unexpected typed array type exceeding 64-bits storage");
+  JS_FOR_EACH_TYPED_ARRAY(ASSERT_MAX_SHIFT)
+#undef ASSERT_MAX_SHIFT
+
+  setRange(Range::NewUInt32Range(alloc, 0, MaxTypedArrayShift));
 }
 
 void MStringLength::computeRange(TempAllocator& alloc) {

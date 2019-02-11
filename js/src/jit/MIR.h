@@ -7194,6 +7194,28 @@ class MTypedArrayElements : public MUnaryInstruction,
   ALLOW_CLONE(MTypedArrayElements)
 };
 
+// Return the element shift of a typed array, i.e. the shift value so that
+// |1 << shift| is equal to the element size.
+class MTypedArrayElementShift : public MUnaryInstruction,
+                                public SingleObjectPolicy::Data {
+  explicit MTypedArrayElementShift(MDefinition* obj)
+      : MUnaryInstruction(classOpcode, obj) {
+    setResultType(MIRType::Int32);
+    setMovable();
+  }
+
+ public:
+  INSTRUCTION_HEADER(TypedArrayElementShift)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, object))
+
+  bool congruentTo(const MDefinition* ins) const override {
+    return congruentIfOperandsEqual(ins);
+  }
+
+  void computeRange(TempAllocator& alloc) override;
+};
+
 class MSetDisjointTypedElements : public MTernaryInstruction,
                                   public NoTypePolicy::Data {
   explicit MSetDisjointTypedElements(MDefinition* target,
