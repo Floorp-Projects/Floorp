@@ -52,8 +52,8 @@ add_task(async function() {
 
   info("Click the close button");
   const closeButton = hud.ui.document.querySelector(".sidebar-close-button");
-  const wrapper = hud.ui.document.querySelector(".webconsole-output-wrapper");
-  let onSidebarShown = waitForNodeMutation(wrapper, { childList: true });
+  const appNode = hud.ui.document.querySelector(".webconsole-app");
+  let onSidebarShown = waitForNodeMutation(appNode, { childList: true });
   closeButton.click();
   await onSidebarShown;
   sidebar = hud.ui.document.querySelector(".sidebar");
@@ -62,7 +62,7 @@ add_task(async function() {
   await showSidebar(hud);
 
   info("Send escape to hide sidebar");
-  onSidebarShown = waitForNodeMutation(wrapper, { childList: true });
+  onSidebarShown = waitForNodeMutation(appNode, { childList: true });
   EventUtils.synthesizeKey("KEY_Escape");
   await onSidebarShown;
   sidebar = hud.ui.document.querySelector(".sidebar");
@@ -78,8 +78,8 @@ async function showSidebar(hud) {
   await onMessage;
 
   const objectNode = hud.ui.outputNode.querySelector(".object-inspector .objectBox");
-  const wrapper = hud.ui.document.querySelector(".webconsole-output-wrapper");
-  const onSidebarShown = waitForNodeMutation(wrapper, { childList: true });
+  const appNode = hud.ui.document.querySelector(".webconsole-app");
+  const onSidebarShown = waitForNodeMutation(appNode, { childList: true });
 
   const contextMenu = await openContextMenu(hud, objectNode);
   const openInSidebar = contextMenu.querySelector("#console-menu-open-sidebar");
@@ -89,5 +89,5 @@ async function showSidebar(hud) {
 
   // Let's wait for the object inside the sidebar to be expanded.
   await waitFor(() =>
-    wrapper.querySelectorAll(".sidebar .tree-node").length > 1, null, 100);
+    appNode.querySelectorAll(".sidebar .tree-node").length > 1, null, 100);
 }
