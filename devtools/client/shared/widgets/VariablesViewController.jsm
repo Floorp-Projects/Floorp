@@ -13,14 +13,6 @@ var promise = require("promise");
 var defer = require("devtools/shared/defer");
 var {LocalizationHelper, ELLIPSIS} = require("devtools/shared/l10n");
 
-Object.defineProperty(this, "WebConsoleUtils", {
-  get: function() {
-    return require("devtools/client/webconsole/utils").Utils;
-  },
-  configurable: true,
-  enumerable: true,
-});
-
 XPCOMUtils.defineLazyGetter(this, "VARIABLES_SORTING_ENABLED", () =>
   Services.prefs.getBoolPref("devtools.debugger.ui.variables-sorting-enabled")
 );
@@ -562,7 +554,7 @@ VariablesViewController.prototype = {
     }
 
     // If the source is a long string then show the arrow.
-    if (WebConsoleUtils.isActorGrip(aSource) && aSource.type == "longString") {
+    if (isActorGrip(aSource) && aSource.type == "longString") {
       aTarget.showArrow();
     }
 
@@ -577,7 +569,7 @@ VariablesViewController.prototype = {
 
     // Register all the actors that this controller now depends on.
     for (const grip of [aTarget.value, aTarget.getter, aTarget.setter]) {
-      if (WebConsoleUtils.isActorGrip(grip)) {
+      if (isActorGrip(grip)) {
         this._actors.add(grip.actor);
       }
     }
@@ -850,3 +842,15 @@ var StackFrameUtils = this.StackFrameUtils = {
     return label;
   },
 };
+
+/**
+ * Check if the given value is a grip with an actor.
+ *
+ * @param mixed grip
+ *        Value you want to check if it is a grip with an actor.
+ * @return boolean
+ *         True if the given value is a grip with an actor.
+ */
+function isActorGrip(grip) {
+  return grip && typeof (grip) == "object" && grip.actor;
+}
