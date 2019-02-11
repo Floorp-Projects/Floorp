@@ -10,7 +10,6 @@ var blacklist = {
     'crash': true,
     'readline': true,
     'terminate': true,
-    'nestedShell': true,
     'nukeAllCCWs': true,
 };
 

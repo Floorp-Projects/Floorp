@@ -508,8 +508,6 @@ static uint32_t gZealBits = 0;
 static uint32_t gZealFrequency = 0;
 #endif
 static bool printTiming = false;
-static const char* jsCacheDir = nullptr;
-static const char* jsCacheAsmJSPath = nullptr;
 static RCFile* gErrFile = nullptr;
 static RCFile* gOutFile = nullptr;
 static bool reportWarnings = true;
@@ -522,9 +520,6 @@ static bool defaultToSameCompartment = true;
 static bool dumpEntrainedVariables = false;
 static bool OOM_printAllocationCount = false;
 #endif
-
-// Shell state this is only accessed on the main thread.
-mozilla::Atomic<bool> jsCacheOpened(false);
 
 static bool SetTimeoutValue(JSContext* cx, double t);
 
@@ -5640,9 +5635,6 @@ static bool runOffThreadDecodedScript(JSContext* cx, unsigned argc, Value* vp) {
   return JS_ExecuteScript(cx, script, args.rval());
 }
 
-static int sArgc;
-static char** sArgv;
-
 class AutoCStringVector {
   Vector<char*> argv_;
 
@@ -5713,112 +5705,6 @@ static bool EscapeForShell(JSContext* cx, AutoCStringVector& argv) {
   return true;
 }
 #endif
-
-static Vector<const char*, 4, js::SystemAllocPolicy> sPropagatedFlags;
-
-#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
-static bool PropagateFlagToNestedShells(const char* flag) {
-  return sPropagatedFlags.append(flag);
-}
-#endif
-
-static bool NestedShell(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-
-  AutoCStringVector argv(cx);
-
-  // The first argument to the shell is its path, which we assume is our own
-  // argv[0].
-  if (sArgc < 1) {
-    JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr,
-                              JSSMSG_NESTED_FAIL);
-    return false;
-  }
-  UniqueChars shellPath = DuplicateString(cx, sArgv[0]);
-  if (!shellPath || !argv.append(std::move(shellPath))) {
-    return false;
-  }
-
-  // Propagate selected flags from the current shell
-  for (unsigned i = 0; i < sPropagatedFlags.length(); i++) {
-    UniqueChars flags = DuplicateString(cx, sPropagatedFlags[i]);
-    if (!flags || !argv.append(std::move(flags))) {
-      return false;
-    }
-  }
-
-  // The arguments to nestedShell are stringified and append to argv.
-  for (unsigned i = 0; i < args.length(); i++) {
-    JSString* str = ToString(cx, args[i]);
-    if (!str) {
-      return false;
-    }
-
-    JSLinearString* linear = str->ensureLinear(cx);
-    if (!linear) {
-      return false;
-    }
-
-    UniqueChars arg;
-    if (StringEqualsAscii(linear, "--js-cache") && jsCacheDir) {
-      // As a special case, if the caller passes "--js-cache", use
-      // "--js-cache=$(jsCacheDir)" instead.
-      arg = JS_smprintf("--js-cache=%s", jsCacheDir);
-      if (!arg) {
-        JS_ReportOutOfMemory(cx);
-        return false;
-      }
-    } else {
-      arg = JS_EncodeStringToLatin1(cx, str);
-      if (!arg) {
-        return false;
-      }
-    }
-
-    if (!argv.append(std::move(arg))) {
-      return false;
-    }
-  }
-
-  // execv assumes argv is null-terminated
-  if (!argv.append(nullptr)) {
-    return false;
-  }
-
-  int status = 0;
-#if defined(XP_WIN)
-  if (!EscapeForShell(cx, argv)) {
-    return false;
-  }
-  status = _spawnv(_P_WAIT, sArgv[0], argv.get());
-#else
-  pid_t pid = fork();
-  switch (pid) {
-    case -1:
-      JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr,
-                                JSSMSG_NESTED_FAIL);
-      return false;
-    case 0:
-      (void)execv(sArgv[0], argv.get());
-      exit(-1);
-    default: {
-      while (waitpid(pid, &status, 0) < 0 && errno == EINTR) {
-        continue;
-      }
-      break;
-    }
-  }
-#endif
-
-  if (status != 0) {
-    JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr,
-                              JSSMSG_NESTED_FAIL);
-    return false;
-  }
-
-  args.rval().setUndefined();
-  return true;
-}
 
 static bool ReadAll(int fd, wasm::Bytes* bytes) {
   size_t lastLength = bytes->length();
@@ -5916,8 +5802,11 @@ class AutoPipe {
   }
 };
 
+static int sArgc;
+static char** sArgv;
 static const char sWasmCompileAndSerializeFlag[] =
     "--wasm-compile-and-serialize";
+static Vector<const char*, 4, js::SystemAllocPolicy> sCompilerProcessFlags;
 
 static bool CompileAndSerializeInSeparateProcess(JSContext* cx,
                                                  const uint8_t* bytecode,
@@ -5935,10 +5824,10 @@ static bool CompileAndSerializeInSeparateProcess(JSContext* cx,
     return false;
   }
 
-  // Propagate shell flags first, since they must precede the non-option
+  // Put compiler flags first since they must precede the non-option
   // file-descriptor args (passed on Windows, below).
-  for (unsigned i = 0; i < sPropagatedFlags.length(); i++) {
-    UniqueChars flags = DuplicateString(cx, sPropagatedFlags[i]);
+  for (unsigned i = 0; i < sCompilerProcessFlags.length(); i++) {
+    UniqueChars flags = DuplicateString(cx, sCompilerProcessFlags[i]);
     if (!flags || !argv.append(std::move(flags))) {
       return false;
     }
@@ -8838,14 +8727,6 @@ static const JSFunctionSpecWithHelp fuzzing_unsafe_functions[] = {
 "pc2line(fun[, pc])",
 "  Map PC to line number."),
 
-    JS_FN_HELP("nestedShell", NestedShell, 0, 0,
-"nestedShell(shellArgs...)",
-"  Execute the given code in a new JS shell process, passing this nested shell\n"
-"  the arguments passed to nestedShell. argv[0] of the nested shell will be argv[0]\n"
-"  of the current shell (which is assumed to be the actual path to the shell.\n"
-"  arguments[0] (of the call to nestedShell) will be argv[1], arguments[1] will\n"
-"  be argv[2], etc."),
-
     JS_INLINABLE_FN_HELP("assertFloat32", testingFunc_assertFloat32, 2, 0, TestAssertFloat32,
 "assertFloat32(value, isFloat32)",
 "  In IonMonkey only, asserts that value has (resp. hasn't) the MIRType::Float32 if isFloat32 is true (resp. false)."),
@@ -9643,9 +9524,7 @@ static bool ShellBuildId(JS::BuildIdCharVector* buildId) {
   // libxul.so and other shared modules -- so this isn't a big deal. Not so
   // for the statically-linked JS shell. To avoid recompiling js.cpp and
   // re-linking 'js' on every 'make', we use a constant buildid and rely on
-  // the shell user to manually clear the cache (deleting the dir passed to
-  // --js-cache) between cache-breaking updates. Note: jit_tests.py does this
-  // on every run).
+  // the shell user to manually clear any caches between cache-breaking updates.
   const char buildid[] = "JS-shell";
   return buildId->append(buildid, sizeof(buildid));
 }
@@ -10290,20 +10169,6 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   cx->runtime()->profilingScripts =
       enableCodeCoverage || enableDisassemblyDumps;
 
-  if (const char* jsCacheOpt = op.getStringOption("js-cache")) {
-    UniqueChars jsCacheChars;
-    if (!op.getBoolOption("no-js-cache-per-process")) {
-      jsCacheChars = JS_smprintf("%s/%u", jsCacheOpt, (unsigned)getpid());
-    } else {
-      jsCacheChars = DuplicateString(jsCacheOpt);
-    }
-    if (!jsCacheChars) {
-      return false;
-    }
-    jsCacheDir = jsCacheChars.release();
-    jsCacheAsmJSPath = JS_smprintf("%s/asmjs.cache", jsCacheDir).release();
-  }
-
 #ifdef DEBUG
   dumpEntrainedVariables = op.getBoolOption("dump-entrained-variables");
 #endif
@@ -10540,17 +10405,6 @@ static int Shell(JSContext* cx, OptionParser* op, char** envp) {
     }
   }
 
-  if (!op->getBoolOption("no-js-cache-per-process")) {
-    if (jsCacheAsmJSPath) {
-      unlink(jsCacheAsmJSPath);
-      JS_free(cx, const_cast<char*>(jsCacheAsmJSPath));
-    }
-    if (jsCacheDir) {
-      rmdir(jsCacheDir);
-      JS_free(cx, const_cast<char*>(jsCacheDir));
-    }
-  }
-
   /*
    * Dump remaining type inference results while we still have a context.
    * This printing depends on atoms still existing.
@@ -10693,17 +10547,6 @@ int main(int argc, char** argv, char** envp) {
                         "Dump bytecode with exec count for all scripts") ||
       !op.addBoolOption('b', "print-timing",
                         "Print sub-ms runtime for each file that's run") ||
-      !op.addStringOption(
-          '\0', "js-cache", "[path]",
-          "Enable the JS cache by specifying the path of the directory to use "
-          "to hold cache files") ||
-      !op.addBoolOption(
-          '\0', "no-js-cache-per-process",
-          "Deactivates cache per process. Otherwise, generate a separate cache"
-          "sub-directory for this process inside the cache directory"
-          "specified by --js-cache. This cache directory will be removed"
-          "when the js shell exits. This is useful for running tests in"
-          "parallel.") ||
       !op.addBoolOption('\0', "code-coverage",
                         "Enable code coverage instrumentation.")
 #ifdef DEBUG
@@ -10970,15 +10813,21 @@ int main(int argc, char** argv, char** envp) {
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
   if (op.getBoolOption("no-sse3")) {
     js::jit::CPUInfo::SetSSE3Disabled();
-    PropagateFlagToNestedShells("--no-sse3");
+    if (!sCompilerProcessFlags.append("--no-sse3")) {
+      return EXIT_SUCCESS;
+    }
   }
   if (op.getBoolOption("no-sse4")) {
     js::jit::CPUInfo::SetSSE4Disabled();
-    PropagateFlagToNestedShells("--no-sse4");
+    if (!sCompilerProcessFlags.append("--no-sse4")) {
+      return EXIT_SUCCESS;
+    }
   }
   if (op.getBoolOption("enable-avx")) {
     js::jit::CPUInfo::SetAVXEnabled();
-    PropagateFlagToNestedShells("--enable-avx");
+    if (!sCompilerProcessFlags.append("--enable-avx")) {
+      return EXIT_SUCCESS;
+    }
   }
 #endif
 
