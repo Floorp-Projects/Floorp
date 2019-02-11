@@ -29,6 +29,7 @@
     testMixin();
     testBaseControl();
     testBaseControlMixin();
+    testBaseText();
     testParseXULToFragment();
     testInherits();
     await testCustomInterface();
@@ -61,6 +62,14 @@
     let MixedHTMLSpanElement = MozElementMixin(HTMLSpanElement);
     let HTMLSpanBaseControl = BaseControlMixin(MixedHTMLSpanElement);
     ok("disabled" in HTMLSpanBaseControl.prototype, "Mixed in class prototype contains base control attributes");
+  }
+
+  function testBaseText() {
+    ok(MozElements.BaseText, "BaseText exists");
+    ok("label" in MozElements.BaseText.prototype,
+      "BaseText prototype inherits BaseText attributes");
+    ok("disabled" in MozElements.BaseText.prototype,
+      "BaseText prototype inherits BaseControl attributes");
   }
 
   function testParseXULToFragment() {
