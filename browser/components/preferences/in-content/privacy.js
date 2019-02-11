@@ -840,10 +840,14 @@ var gPrivacyPane = {
    * Initialize the starting state for the auto-start private browsing mode pref reverter.
    */
   initAutoStartPrivateBrowsingReverter() {
+    // We determine the mode in initializeHistoryMode, which is guaranteed to have been
+    // called before now, so this is up-to-date.
     let mode = document.getElementById("historyMode");
-    let autoStart = document.getElementById("privateBrowsingAutoStart");
     this._lastMode = mode.selectedIndex;
-    this._lastCheckState = autoStart.hasAttribute("checked");
+    // The value of the autostart pref, on the other hand, is gotten from Preferences,
+    // which updates the DOM asynchronously, so we can't rely on the DOM. Get it directly
+    // from the prefs.
+    this._lastCheckState = Preferences.get("browser.privatebrowsing.autostart").value;
   },
 
   _lastMode: null,
