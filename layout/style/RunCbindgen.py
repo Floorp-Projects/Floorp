@@ -10,6 +10,8 @@ import subprocess
 
 CARGO_LOCK = mozpath.join(buildconfig.topsrcdir, "Cargo.lock")
 
+# cbindgen_crate_path needs to match the crate name
+# EG: /xpcom/rust/gkrust_utils is the path for the "gkrust_utils" crate
 def generate(output, cbindgen_crate_path, *in_tree_dependencies):
     env = os.environ.copy()
     env['CARGO'] = str(buildconfig.substs['CARGO'])
