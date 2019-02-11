@@ -565,8 +565,8 @@ class JSTerm extends Component {
       return null;
     }
 
-    if (this.hud.consoleOutput) {
-      return this.hud.consoleOutput.dispatchMessageAdd(response, true);
+    if (this.hud.wrapper) {
+      return this.hud.wrapper.dispatchMessageAdd(response, true);
     }
 
     return null;
@@ -574,7 +574,7 @@ class JSTerm extends Component {
 
   screenshotNotify(results) {
     const wrappedResults = results.map(message => ({ message, type: "logMessage" }));
-    this.hud.consoleOutput.dispatchMessagesAdd(wrappedResults);
+    this.hud.wrapper.dispatchMessagesAdd(wrappedResults);
   }
 
   /**

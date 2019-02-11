@@ -306,7 +306,7 @@ async function generateConsoleApiStubs() {
   const hud = toolbox.getCurrentPanel().hud;
   const {ui} = hud;
   ok(ui.jsterm, "jsterm exists");
-  ok(ui.consoleOutput, "consoleOutput exists");
+  ok(ui.wrapper, "wrapper exists");
 
   for (const [key, {keys, code}] of consoleApi) {
     const received = new Promise(resolve => {

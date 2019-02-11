@@ -26,7 +26,7 @@ The main files used to run the WebConsole are:
 The WebConsole UI is built using [React](http://docs.firefox-dev.tools/frontend/react.html)
 components (in `components/`).
 
-The React application is rendered from `webconsole-output-wrapper.js`.
+The React application is rendered from `webconsole-wrapper.js`.
 It contains 4 top components:
 * **ConsoleOutput** (in `ConsoleOutput.js`) is the component where messages are rendered.
 * **FilterBar** (in `FilterBar.js`) is the component for the filter bars (filter input and toggle buttons).

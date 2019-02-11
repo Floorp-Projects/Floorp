@@ -15,12 +15,10 @@ const {
   getPrivatePacket,
 } = require("devtools/client/webconsole/test/helpers");
 
-const WebConsoleOutputWrapper =
-  require("devtools/client/webconsole/webconsole-output-wrapper");
-const { messagesAdd } =
-  require("devtools/client/webconsole/actions/messages");
+const WebConsoleWrapper = require("devtools/client/webconsole/webconsole-wrapper");
+const { messagesAdd } = require("devtools/client/webconsole/actions/messages");
 
-async function getWebConsoleOutputWrapper() {
+async function getWebConsoleWrapper() {
   const hud = {
     proxy: {
       releaseActor: () => {},
@@ -31,14 +29,14 @@ async function getWebConsoleOutputWrapper() {
   };
 
   const owner = { target: {client: {} } };
-  const wcow = new WebConsoleOutputWrapper(null, hud, null, owner);
+  const wcow = new WebConsoleWrapper(null, hud, null, owner);
   await wcow.init();
   return wcow;
 }
 
 describe("WebConsoleOutputWrapper", () => {
   it("clears queues when dispatchMessagesClear is called", async () => {
-    const ncow = await getWebConsoleOutputWrapper();
+    const ncow = await getWebConsoleWrapper();
     ncow.queuedMessageAdds.push({fakePacket: "message"});
     ncow.queuedMessageUpdates.push({fakePacket: "message-update"});
     ncow.queuedRequestUpdates.push({fakePacket: "request-update"});
@@ -52,7 +50,7 @@ describe("WebConsoleOutputWrapper", () => {
 
   it("removes private packets from message queue on dispatchPrivateMessagesClear",
     async () => {
-      const ncow = await getWebConsoleOutputWrapper();
+      const ncow = await getWebConsoleWrapper();
 
       const publicLog = stubPackets.get("console.log('mymap')");
       ncow.queuedMessageAdds.push(
@@ -67,7 +65,7 @@ describe("WebConsoleOutputWrapper", () => {
 
   it("removes private packets from network update queue on dispatchPrivateMessagesClear",
     async () => {
-      const ncow = await getWebConsoleOutputWrapper();
+      const ncow = await getWebConsoleWrapper();
       const publicLog = stubPackets.get("console.log('mymap')");
       ncow.queuedMessageAdds.push(
         getPrivatePacket("console.trace()"),
@@ -106,7 +104,7 @@ describe("WebConsoleOutputWrapper", () => {
 
   it("removes private packets from network request queue on dispatchPrivateMessagesClear",
     async () => {
-      const ncow = await getWebConsoleOutputWrapper();
+      const ncow = await getWebConsoleWrapper();
 
       ncow.getStore().dispatch(messagesAdd([
         stubPackets.get("GET request"),

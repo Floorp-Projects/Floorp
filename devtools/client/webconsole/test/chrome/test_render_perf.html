@@ -24,8 +24,7 @@ const NUM_STREAMING = 100;
 const {FileUtils} = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
 const Services = browserRequire("Services");
 Services.prefs.setIntPref("devtools.hud.loglimit", NUM_MESSAGES);
-const WebConsoleOutputWrapper = browserRequire(
-  "devtools/client/webconsole/webconsole-output-wrapper");
+const WebConsoleWrapper = browserRequire("devtools/client/webconsole/webconsole-wrapper");
 const actions =
   browserRequire("devtools/client/webconsole/actions/index");
 const EventEmitter = browserRequire("devtools/shared/event-emitter");
@@ -170,7 +169,7 @@ window.onload = async function() {
   // It doesn't run in automation
   SimpleTest.requestLongerTimeout(3);
 
-  const wrapper = new WebConsoleOutputWrapper(
+  const wrapper = new WebConsoleWrapper(
     document.getElementById("output"),
     {hud: EventEmitter.decorate({proxy: {}}), focus: () => {}},
     {},

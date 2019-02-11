@@ -28,7 +28,7 @@ add_task(async function() {
   await pushPref("devtools.source-map.client-service.enabled", true);
 
   const hud = await openNewTabAndConsole(PAGE_URL);
-  const toolbox = hud.ui.consoleOutput.toolbox;
+  const toolbox = hud.ui.wrapper.toolbox;
 
   info("Finding \"here\" message and waiting for source map to be applied");
   await waitFor(() => {

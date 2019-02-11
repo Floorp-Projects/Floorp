@@ -35,7 +35,7 @@ add_task(async function() {
     await messagesAdded;
     info("Checking if 'inspect($0)' was evaluated");
 
-    const state = webconsoleUI.consoleOutput.getStore().getState();
+    const state = webconsoleUI.wrapper.getStore().getState();
     ok(getHistoryEntries(state)[0] === "inspect($0)");
     await toolbox.toggleSplitConsole();
   }
