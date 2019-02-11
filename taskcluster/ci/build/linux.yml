@@ -273,7 +273,7 @@ linux64-base-toolchains/opt:
     toolchains:
         - linux64-clang-4.0
         - linux64-gcc-6
-        - linux64-rust-1.31
+        - linux64-rust-1.32
         - linux64-cbindgen
         - linux64-sccache
         - linux64-node
@@ -308,7 +308,7 @@ linux64-base-toolchains/debug:
     toolchains:
         - linux64-clang-4.0
         - linux64-gcc-6
-        - linux64-rust-1.31
+        - linux64-rust-1.32
         - linux64-cbindgen
         - linux64-sccache
         - linux64-node
