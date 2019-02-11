@@ -20,11 +20,15 @@ AntiTracking.runTest("IndexedDB in workers",
 
     await new Promise((resolve, reject) => {
       worker.onmessage = function(e) {
-        if (e) {
+        if (e.data) {
           resolve();
         } else {
           reject();
         }
+      };
+
+      worker.onerror = function(e) {
+        reject();
       };
     });
   },
@@ -45,11 +49,15 @@ AntiTracking.runTest("IndexedDB in workers",
 
     await new Promise((resolve, reject) => {
       worker.onmessage = function(e) {
-        if (e) {
+        if (e.data) {
           resolve();
         } else {
           reject();
         }
+      };
+
+      worker.onerror = function(e) {
+        reject();
       };
     });
   },
@@ -88,11 +96,15 @@ AntiTracking.runTest("IndexedDB in workers and Storage Access API",
 
     await new Promise((resolve, reject) => {
       worker.onmessage = function(e) {
-        if (e) {
+        if (e.data) {
           resolve();
         } else {
           reject();
         }
+      };
+
+      worker.onerror = function(e) {
+        reject();
       };
     });
 
@@ -114,11 +126,15 @@ AntiTracking.runTest("IndexedDB in workers and Storage Access API",
 
     await new Promise((resolve, reject) => {
       worker.onmessage = function(e) {
-        if (e) {
+        if (e.data) {
           resolve();
         } else {
           reject();
         }
+      };
+
+      worker.onerror = function(e) {
+        reject();
       };
     });
   },
@@ -142,11 +158,15 @@ AntiTracking.runTest("IndexedDB in workers and Storage Access API",
 
     await new Promise((resolve, reject) => {
       worker.onmessage = function(e) {
-        if (e) {
+        if (e.data) {
           resolve();
         } else {
           reject();
         }
+      };
+
+      worker.onerror = function(e) {
+        reject();
       };
     });
 
@@ -160,11 +180,15 @@ AntiTracking.runTest("IndexedDB in workers and Storage Access API",
 
     await new Promise((resolve, reject) => {
       worker.onmessage = function(e) {
-        if (e) {
+        if (e.data) {
           resolve();
         } else {
           reject();
         }
+      };
+
+      worker.onerror = function(e) {
+        reject();
       };
     });
   },

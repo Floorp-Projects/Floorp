@@ -12,9 +12,9 @@ import signal
 import subprocess
 import sys
 import tempfile
-import urllib2
 import zipfile
 from collections import namedtuple
+from six.moves.urllib.request import urlopen
 
 import mozfile
 import mozinfo
@@ -110,7 +110,9 @@ def check_for_crashes(dump_directory,
                 sig=signature,
                 out="\n".join(stackwalk_output),
                 err="\n".join(info.stackwalk_errors))
-            print(output.encode("utf-8"))
+            if sys.stdout.encoding != 'UTF-8':
+                output = output.encode('utf-8')
+            print(output)
 
     return crash_count
 
@@ -179,7 +181,7 @@ class CrashInfo(object):
             self.remove_symbols = True
             self.logger.info("Downloading symbols from: %s" % self.symbols_path)
             # Get the symbols and write them to a temporary zipfile
-            data = urllib2.urlopen(self.symbols_path)
+            data = urlopen(self.symbols_path)
             with tempfile.TemporaryFile() as symbols_file:
                 symbols_file.write(data.read())
                 # extract symbols to a temporary directory (which we'll delete after

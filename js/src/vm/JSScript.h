@@ -131,11 +131,14 @@ enum JSTryNoteKind {
  * Exception handling record.
  */
 struct JSTryNote {
-  uint8_t kind;        /* one of JSTryNoteKind */
+  uint32_t kind;       /* one of JSTryNoteKind */
   uint32_t stackDepth; /* stack depth upon exception handler entry */
   uint32_t start;      /* start of the try statement or loop relative
                           to script->code() */
   uint32_t length;     /* length of the try statement or loop */
+
+  template <js::XDRMode mode>
+  js::XDRResult XDR(js::XDRState<mode>* xdr);
 };
 
 namespace js {
@@ -167,6 +170,9 @@ struct ScopeNote {
                     // relative to script->code().
   uint32_t length;  // Bytecode length of scope.
   uint32_t parent;  // Index of parent block scope in notes, or NoScopeNote.
+
+  template <js::XDRMode mode>
+  js::XDRResult XDR(js::XDRState<mode>* xdr);
 };
 
 class ScriptCounts {
@@ -451,6 +457,8 @@ struct SourceTypeTraits<char16_t> {
     return UniqueTwoByteChars(std::move(str));
   }
 };
+
+class ScriptSourceHolder;
 
 class ScriptSource {
   friend class SourceCompressionTask;
@@ -1003,11 +1011,6 @@ class ScriptSource {
 
   void setCompressedSourceFromTask(SharedImmutableString compressed);
 
- public:
-  // XDR handling
-  template <XDRMode mode>
-  MOZ_MUST_USE XDRResult performXDR(XDRState<mode>* xdr);
-
  private:
   // It'd be better to make this function take <XDRMode, Unit>, as both
   // specializations of this function contain nested Unit-parametrized
@@ -1095,6 +1098,11 @@ class ScriptSource {
     parseEnded_ = ReallyNow();
   }
 
+  template <XDRMode mode>
+  static MOZ_MUST_USE XDRResult
+  XDR(XDRState<mode>* xdr, const mozilla::Maybe<JS::CompileOptions>& options,
+      MutableHandle<ScriptSourceHolder> ss);
+
   void trace(JSTracer* trc);
 };
 
@@ -1120,6 +1128,8 @@ class ScriptSourceHolder {
     ss = newss;
   }
   ScriptSource* get() const { return ss; }
+
+  void trace(JSTracer* trc) { ss->trace(trc); }
 };
 
 // [SMDOC] ScriptSourceObject
@@ -1409,6 +1419,13 @@ class alignas(JS::Value) PrivateScriptData final {
                                  uint32_t ntrynotes, uint32_t nscopenotes,
                                  uint32_t nresumeoffsets, uint32_t* dataSize);
 
+  template <XDRMode mode>
+  static MOZ_MUST_USE XDRResult XDR(js::XDRState<mode>* xdr,
+                                    js::HandleScript script,
+                                    js::HandleScriptSourceObject sourceObject,
+                                    js::HandleScope scriptEnclosingScope,
+                                    js::HandleFunction fun);
+
   void traceChildren(JSTracer* trc);
 };
 
@@ -1477,6 +1494,10 @@ class SharedScriptData {
   static constexpr size_t offsetOfNatoms() {
     return offsetof(SharedScriptData, natoms_);
   }
+
+  template <XDRMode mode>
+  static MOZ_MUST_USE XDRResult XDR(js::XDRState<mode>* xdr,
+                                    js::HandleScript script);
 
  private:
   SharedScriptData() = delete;
@@ -1804,6 +1825,16 @@ class JSScript : public js::gc::TenuredCell {
                                      js::HandleScriptSourceObject sourceObject,
                                      js::HandleFunction fun,
                                      js::MutableHandleScript scriptp);
+
+  template <js::XDRMode mode>
+  friend js::XDRResult js::SharedScriptData::XDR(js::XDRState<mode>* xdr,
+                                                 js::HandleScript script);
+
+  template <js::XDRMode mode>
+  friend js::XDRResult js::PrivateScriptData::XDR(
+      js::XDRState<mode>* xdr, js::HandleScript script,
+      js::HandleScriptSourceObject sourceObject,
+      js::HandleScope scriptEnclosingScope, js::HandleFunction fun);
 
   friend bool js::detail::CopyScript(
       JSContext* cx, js::HandleScript src, js::HandleScript dst,

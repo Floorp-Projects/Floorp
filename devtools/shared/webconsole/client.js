@@ -229,24 +229,6 @@ WebConsoleClient.prototype = {
   },
 
   /**
-   * Inspect the properties of an object.
-   *
-   * @param string actor
-   *        The WebConsoleObjectActor ID to send the request to.
-   * @param function onResponse
-   *        The function invoked when the response is received.
-   * @return request
-   *         Request object that implements both Promise and EventEmitter interfaces
-   */
-  inspectObjectProperties: function(actor, onResponse) {
-    const packet = {
-      to: actor,
-      type: "inspectProperties",
-    };
-    return this._client.request(packet, onResponse);
-  },
-
-  /**
    * Evaluate a JavaScript expression.
    *
    * @param string string

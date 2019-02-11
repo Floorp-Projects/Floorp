@@ -28,9 +28,7 @@ Types = (
     'intptr_t',
     'uintptr_t',
 
-    # stddef types
-    'size_t',
-    'ssize_t',
+    # You may be tempted to add size_t. Do not! See bug 1525199.
 
     # Mozilla types: "less" standard things we know how serialize/deserialize
     'nsresult',

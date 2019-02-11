@@ -350,7 +350,7 @@ struct OpWindowOverlayChanged { };
 struct ShmemSection {
   Shmem shmem;
   uint32_t offset;
-  size_t size;
+  uint32_t size;
 };
 
 struct CrossProcessSemaphoreDescriptor {

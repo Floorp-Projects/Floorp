@@ -396,9 +396,13 @@ async function nextCycle() {
     }
 }
 
-function timeoutAlarmListener() {
+async function timeoutAlarmListener() {
   console.error("raptor-page-timeout on %s" % testURL);
   postToControlServer("raptor-page-timeout", [testName, testURL]);
+  // take a screen capture
+  if (screenCapture) {
+    await getScreenCapture();
+  }
   // call clean-up to shutdown gracefully
   cleanUp();
 }

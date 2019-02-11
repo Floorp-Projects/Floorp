@@ -51,8 +51,7 @@ menucaption {
 /* menuitems with icons */
 .menuitem-iconic,
 .menu-iconic,
-menuitem[image],
-menuitem[src] {
+menuitem[image] {
   /* 2px higher than those without icons */
   padding-top: 1px;
   padding-bottom: 3px;
@@ -60,8 +59,7 @@ menuitem[src] {
 
 .menuitem-iconic > .menu-iconic-left > .menu-iconic-icon,
 .menu-iconic > .menu-iconic-left > .menu-iconic-icon,
-menuitem[image] > .menu-iconic-left > .menu-iconic-icon,
-menuitem[src] > .menu-iconic-left > .menu-iconic-icon {
+menuitem[image] > .menu-iconic-left > .menu-iconic-icon {
   margin-inline-start: 0;
   width: 16px;
 }

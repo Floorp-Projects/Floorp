@@ -36,6 +36,7 @@ exclude = [
   "media/mp4parse-rust/mp4parse",
   "media/mp4parse-rust/mp4parse_capi",
   "media/mp4parse-rust/mp4parse_fallible",
+  "xpcom/rust/gkrust_utils",
 ]
 
 # Explicitly specify what our profiles use.  The opt-level setting here is
