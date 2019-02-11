@@ -430,7 +430,10 @@ nsFaviconService::ReplaceFaviconData(nsIURI* aFaviconURI, const uint8_t* aData,
   }
 
   // Note we can't set rootIcon here, because don't know the page it will be
-  // associated with. We'll do that later in SetAndFetchFaviconForPage.
+  // associated with. We'll do that later in SetAndFetchFaviconForPage if the
+  // icon doesn't exist; otherwise, if AsyncReplaceFaviconData updates an
+  // existing icon, it will take care of not overwriting an existing
+  // root = 1 value.
 
   IconPayload payload;
   payload.mimeType = aMimeType;

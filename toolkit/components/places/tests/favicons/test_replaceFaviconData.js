@@ -242,3 +242,36 @@ add_task(async function test_replaceFaviconData_twiceReplace() {
 
   await PlacesUtils.history.clear();
 });
+
+add_task(async function test_replaceFaviconData_rootOverwrite() {
+  info("test replaceFaviconData doesn't overwrite root = 1");
+
+  async function getRootValue(url) {
+    let db = await PlacesUtils.promiseDBConnection();
+    let rows = await db.execute("SELECT root FROM moz_icons WHERE icon_url = :url",
+                                {url});
+    return rows[0].getResultByName("root");
+  }
+
+  const PAGE_URL = "http://rootoverwrite.bar/";
+  let pageURI = Services.io.newURI(PAGE_URL);
+  const ICON_URL = "http://rootoverwrite.bar/favicon.ico";
+  let iconURI = Services.io.newURI(ICON_URL);
+
+  await PlacesTestUtils.addVisits(pageURI);
+
+  let icon = createFavicon("favicon9.png");
+  PlacesUtils.favicons.replaceFaviconData(iconURI, icon.data, icon.data.length,
+                                          icon.mimetype);
+  await PlacesTestUtils.addFavicons(new Map([[PAGE_URL, ICON_URL]]));
+
+  Assert.equal(await getRootValue(ICON_URL), 1, "Check root == 1");
+  let icon2 = createFavicon("favicon10.png");
+  PlacesUtils.favicons.replaceFaviconData(iconURI, icon2.data, icon2.data.length,
+                                          icon2.mimetype);
+  // replaceFaviconData doesn't have a callback, but we must wait its updated.
+  await PlacesTestUtils.promiseAsyncUpdates();
+  Assert.equal(await getRootValue(ICON_URL), 1, "Check root did not change");
+
+  await PlacesUtils.history.clear();
+});

@@ -831,15 +831,7 @@ var clear = async function(db) {
     // Expire orphan icons.
     await db.executeCached(`DELETE FROM moz_pages_w_icons
                             WHERE page_url_hash NOT IN (SELECT url_hash FROM moz_places)`);
-    await db.executeCached(`DELETE FROM moz_icons WHERE id IN (
-                              SELECT id FROM moz_icons WHERE root = 0
-                              EXCEPT
-                              SELECT icon_id FROM moz_icons_to_pages
-                            )`);
-    await db.executeCached(`DELETE FROM moz_icons
-                            WHERE root = 1
-                              AND get_host_and_port(icon_url) NOT IN (SELECT host FROM moz_origins)
-                              AND fixup_url(get_host_and_port(icon_url)) NOT IN (SELECT host FROM moz_origins)`);
+    await removeOrphanIcons(db);
 
     // Expire annotations.
     await db.execute(`DELETE FROM moz_annos WHERE NOT EXISTS (
@@ -920,21 +912,32 @@ var cleanupPages = async function(db, pages) {
   let hashesToRemove = pagesToRemove.map(p => p.hash);
   await db.executeCached(`DELETE FROM moz_pages_w_icons
                           WHERE page_url_hash IN (${sqlList(hashesToRemove)})`);
-  await db.executeCached(`DELETE FROM moz_icons WHERE id IN (
-                            SELECT id FROM moz_icons WHERE root = 0
-                            EXCEPT
-                            SELECT icon_id FROM moz_icons_to_pages
-                          )`);
-  await db.executeCached(`DELETE FROM moz_icons
-                          WHERE root = 1
-                            AND get_host_and_port(icon_url) NOT IN (SELECT host FROM moz_origins)
-                            AND fixup_url(get_host_and_port(icon_url)) NOT IN (SELECT host FROM moz_origins)`);
+  await removeOrphanIcons(db);
 
   await db.execute(`DELETE FROM moz_annos
                     WHERE place_id IN ( ${ idsList } )`);
   await db.execute(`DELETE FROM moz_inputhistory
                     WHERE place_id IN ( ${ idsList } )`);
 };
+
+/**
+ * Remove icons whose origin is not in moz_origins, unless referenced.
+ * @param db: (Sqlite connection)
+ *      The database.
+ */
+function removeOrphanIcons(db) {
+  return db.executeCached(`
+    DELETE FROM moz_icons WHERE id IN (
+      SELECT id FROM moz_icons WHERE root = 0
+      UNION ALL
+      SELECT id FROM moz_icons
+      WHERE root = 1
+        AND get_host_and_port(icon_url) NOT IN (SELECT host FROM moz_origins)
+        AND fixup_url(get_host_and_port(icon_url)) NOT IN (SELECT host FROM moz_origins)
+      EXCEPT
+      SELECT icon_id FROM moz_icons_to_pages
+    )`);
+}
 
 /**
  * Notify observers that pages have been removed/updated.
