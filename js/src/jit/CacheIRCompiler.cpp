@@ -1477,6 +1477,24 @@ bool CacheIRCompiler::emitGuardIsSymbol() {
   return true;
 }
 
+#ifdef ENABLE_BIGINT
+bool CacheIRCompiler::emitGuardIsBigInt() {
+  JitSpew(JitSpew_Codegen, __FUNCTION__);
+  ValOperandId inputId = reader.valOperandId();
+  if (allocator.knownType(inputId) == JSVAL_TYPE_BIGINT) {
+    return true;
+  }
+
+  ValueOperand input = allocator.useValueRegister(masm, inputId);
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+  masm.branchTestBigInt(Assembler::NotEqual, input, failure->label());
+  return true;
+}
+#endif
+
 bool CacheIRCompiler::emitGuardIsInt32() {
   JitSpew(JitSpew_Codegen, __FUNCTION__);
   ValOperandId inputId = reader.valOperandId();

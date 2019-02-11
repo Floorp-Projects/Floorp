@@ -5443,7 +5443,8 @@ bool CompareIRGenerator::tryAttachPrimitiveUndefined(ValOperandId lhsId,
   // The set of primitive cases we want to handle here (excluding null,
   // undefined)
   auto isPrimitive = [](HandleValue& x) {
-    return x.isString() || x.isSymbol() || x.isBoolean() || x.isNumber();
+    return x.isString() || x.isSymbol() || x.isBoolean() || x.isNumber() ||
+           IF_BIGINT(x.isBigInt(), false);
   };
 
   if (!(lhsVal_.isNullOrUndefined() && isPrimitive(rhsVal_)) &&
@@ -5463,6 +5464,11 @@ bool CompareIRGenerator::tryAttachPrimitiveUndefined(ValOperandId lhsId,
       case JSVAL_TYPE_SYMBOL:
         writer.guardIsSymbol(id);
         return;
+#ifdef ENABLE_BIGINT
+      case JSVAL_TYPE_BIGINT:
+        writer.guardIsBigInt(id);
+        return;
+#endif
       case JSVAL_TYPE_STRING:
         writer.guardIsString(id);
         return;
