@@ -190,6 +190,7 @@ bitflags! {
 // in a contiguous array in the clip store. They are
 // identified by a simple index into that array.
 #[derive(Clone, Copy, Debug, Eq, MallocSizeOf, PartialEq, Hash)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
 pub struct ClipChainId(pub u32);
 
 // The root of each clip chain is the NONE id. The
@@ -204,6 +205,7 @@ impl ClipChainId {
 // A clip chain node is an id for a range of clip sources,
 // and a link to a parent clip chain node, or ClipChainId::NONE.
 #[derive(Clone, Debug, MallocSizeOf)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
 pub struct ClipChainNode {
     pub handle: ClipDataHandle,
     pub local_pos: LayoutPoint,
@@ -245,6 +247,7 @@ pub struct ClipNodeRange {
 //  separate arrays for matrices
 //  cache and only build as needed.
 #[derive(Debug, MallocSizeOf)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
 enum ClipSpaceConversion {
     Local,
     ScaleOffset(ScaleOffset),
@@ -254,6 +257,7 @@ enum ClipSpaceConversion {
 // Temporary information that is cached and reused
 // during building of a clip chain instance.
 #[derive(MallocSizeOf)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
 struct ClipNodeInfo {
     conversion: ClipSpaceConversion,
     handle: ClipDataHandle,
@@ -431,6 +435,7 @@ impl ClipNode {
 
 /// The main clipping public interface that other modules access.
 #[derive(MallocSizeOf)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
 pub struct ClipStore {
     pub clip_chain_nodes: Vec<ClipChainNode>,
     clip_node_instances: Vec<ClipNodeInstance>,

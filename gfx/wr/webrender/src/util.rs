@@ -96,6 +96,7 @@ impl<T> VecHelper<T> for Vec<T> {
 //           but it's a bit tricky to do that now with the
 //           way the current clip-scroll tree works.
 #[derive(Debug, Clone, Copy, MallocSizeOf)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
 pub struct ScaleOffset {
     pub scale: Vector2D<f32>,
     pub offset: Vector2D<f32>,

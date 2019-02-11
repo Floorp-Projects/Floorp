@@ -35,6 +35,7 @@ impl<T> Index<T> {
 }
 
 #[derive(Debug)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
 pub struct Range<T> {
     pub start: Index<T>,
     pub end: Index<T>,
@@ -64,6 +65,7 @@ impl<T> Range<T> {
     }
 }
 
+#[cfg_attr(feature = "capture", derive(Serialize))]
 pub struct Storage<T> {
     data: Vec<T>,
 }
