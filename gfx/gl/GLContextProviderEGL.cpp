@@ -361,10 +361,6 @@ bool GLContextEGL::Init() {
     return false;
   }
 
-  static_assert(sizeof(GLint) >= sizeof(int32_t),
-                "GLint is smaller than int32_t");
-  mMaxTextureImageSize = INT32_MAX;
-
   mShareWithEGLImage = mEgl->HasKHRImageBase() &&
                        mEgl->HasKHRImageTexture2D() &&
                        IsExtensionSupported(OES_EGL_image);
