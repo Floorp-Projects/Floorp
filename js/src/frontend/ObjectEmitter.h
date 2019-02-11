@@ -249,24 +249,15 @@ class MOZ_STACK_CLASS PropertyEmitter {
 
   // @param key
   //        Property key
-  // @param isPropertyAnonFunctionOrClass
-  //        True if the property value is an anonymous function or
-  //        an anonymous class
-  // @param anonFunction
-  //        The anonymous function object for property value
-  MOZ_MUST_USE bool emitInitProp(
-      JS::Handle<JSAtom*> key, bool isPropertyAnonFunctionOrClass = false,
-      JS::Handle<JSFunction*> anonFunction = nullptr);
+  MOZ_MUST_USE bool emitInitProp(JS::Handle<JSAtom*> key);
   MOZ_MUST_USE bool emitInitGetter(JS::Handle<JSAtom*> key);
   MOZ_MUST_USE bool emitInitSetter(JS::Handle<JSAtom*> key);
 
-  MOZ_MUST_USE bool emitInitIndexProp(
-      bool isPropertyAnonFunctionOrClass = false);
+  MOZ_MUST_USE bool emitInitIndexProp();
   MOZ_MUST_USE bool emitInitIndexGetter();
   MOZ_MUST_USE bool emitInitIndexSetter();
 
-  MOZ_MUST_USE bool emitInitComputedProp(
-      bool isPropertyAnonFunctionOrClass = false);
+  MOZ_MUST_USE bool emitInitComputedProp();
   MOZ_MUST_USE bool emitInitComputedGetter();
   MOZ_MUST_USE bool emitInitComputedSetter();
 
@@ -276,21 +267,10 @@ class MOZ_STACK_CLASS PropertyEmitter {
 
   // @param op
   //        Opcode for initializing property
-  // @param prefixKind
-  //        None, Get, or Set
   // @param key
   //        Atom of the property if the property key is not computed
-  // @param isPropertyAnonFunctionOrClass
-  //        True if the property is either an anonymous function or an
-  //        anonymous class
-  // @param anonFunction
-  //        Anonymous function object for the property
-  MOZ_MUST_USE bool emitInit(JSOp op, JS::Handle<JSAtom*> key,
-                             bool isPropertyAnonFunctionOrClass,
-                             JS::Handle<JSFunction*> anonFunction);
-  MOZ_MUST_USE bool emitInitIndexOrComputed(JSOp op,
-                                            FunctionPrefixKind prefixKind,
-                                            bool isPropertyAnonFunctionOrClass);
+  MOZ_MUST_USE bool emitInit(JSOp op, JS::Handle<JSAtom*> key);
+  MOZ_MUST_USE bool emitInitIndexOrComputed(JSOp op);
 
   MOZ_MUST_USE bool emitPopClassConstructor();
 };
@@ -320,7 +300,7 @@ class MOZ_STACK_CLASS PropertyEmitter {
 //
 //     oe.prepareForPropValue(Some(offset_of_prop));
 //     emit(function);
-//     oe.emitInitProp(atom_of_prop, true, function_object);
+//     oe.emitInitProp(atom_of_prop);
 //
 //     oe.emitEnd();
 //
@@ -346,7 +326,7 @@ class MOZ_STACK_CLASS PropertyEmitter {
 //     emit(1);
 //     oe.prepareForIndexPropValue();
 //     emit(10);
-//     oe.emitInitIndexedProp(atom_of_prop);
+//     oe.emitInitIndexedProp();
 //
 //     oe.prepareForIndexPropKey(Some(offset_of_opening_bracket));
 //     emit(2);
@@ -460,7 +440,7 @@ class MOZ_RAII AutoSaveLocalStrictMode {
 //
 //   `class {}`
 //     ClassEmitter ce(this);
-//     ce.emitClass();
+//     ce.emitClass(nullptr, nullptr, false);
 //
 //     ce.emitInitDefaultConstructor(Some(offset_of_class),
 //                                   Some(offset_of_closing_bracket));
@@ -469,7 +449,7 @@ class MOZ_RAII AutoSaveLocalStrictMode {
 //
 //   `class { constructor() { ... } }`
 //     ClassEmitter ce(this);
-//     ce.emitClass();
+//     ce.emitClass(nullptr, nullptr, false);
 //
 //     emit(function_for_constructor);
 //     ce.emitInitConstructor(/* needsHomeObject = */ false);
@@ -479,7 +459,7 @@ class MOZ_RAII AutoSaveLocalStrictMode {
 //   `class X { constructor() { ... } }`
 //     ClassEmitter ce(this);
 //     ce.emitScopeForNamedClass(scopeBindingForName);
-//     ce.emitClass(atom_of_X);
+//     ce.emitClass(atom_of_X, nullptr, false);
 //
 //     ce.emitInitDefaultConstructor(Some(offset_of_class),
 //                                   Some(offset_of_closing_bracket));
@@ -489,7 +469,7 @@ class MOZ_RAII AutoSaveLocalStrictMode {
 //   `class X { constructor() { ... } }`
 //     ClassEmitter ce(this);
 //     ce.emitScopeForNamedClass(scopeBindingForName);
-//     ce.emitClass(atom_of_X);
+//     ce.emitClass(atom_of_X, nullptr, false);
 //
 //     emit(function_for_constructor);
 //     ce.emitInitConstructor(/* needsHomeObject = */ false);
@@ -501,7 +481,7 @@ class MOZ_RAII AutoSaveLocalStrictMode {
 //     ce.emitScopeForNamedClass(scopeBindingForName);
 //
 //     emit(Y);
-//     ce.emitDerivedClass(atom_of_X);
+//     ce.emitDerivedClass(atom_of_X, nullptr, false);
 //
 //     emit(function_for_constructor);
 //     ce.emitInitConstructor(/* needsHomeObject = */ false);
@@ -513,7 +493,7 @@ class MOZ_RAII AutoSaveLocalStrictMode {
 //     ce.emitScopeForNamedClass(scopeBindingForName);
 //
 //     emit(Y);
-//     ce.emitDerivedClass(atom_of_X);
+//     ce.emitDerivedClass(atom_of_X, nullptr, false);
 //
 //     emit(function_for_constructor);
 //     // pass true if constructor contains super.prop access
@@ -680,6 +660,8 @@ class MOZ_STACK_CLASS ClassEmitter : public PropertyEmitter {
 #endif
 
   JS::Rooted<JSAtom*> name_;
+  JS::Rooted<JSAtom*> nameForAnonymousClass_;
+  bool hasNameOnStack_ = false;
 
  public:
   explicit ClassEmitter(BytecodeEmitter* bce);
@@ -689,8 +671,16 @@ class MOZ_STACK_CLASS ClassEmitter : public PropertyEmitter {
 
   // @param name
   //        Name of the class (nullptr if this is anonymous class)
-  MOZ_MUST_USE bool emitClass(JS::Handle<JSAtom*> name);
-  MOZ_MUST_USE bool emitDerivedClass(JS::Handle<JSAtom*> name);
+  // @param nameForAnonymousClass
+  //        Statically inferred name of the class (only for anonymous classes)
+  // @param hasNameOnStack
+  //        If true the name is on the stack (only for anonymous classes)
+  MOZ_MUST_USE bool emitClass(JS::Handle<JSAtom*> name,
+                              JS::Handle<JSAtom*> nameForAnonymousClass,
+                              bool hasNameOnStack);
+  MOZ_MUST_USE bool emitDerivedClass(JS::Handle<JSAtom*> name,
+                                     JS::Handle<JSAtom*> nameForAnonymousClass,
+                                     bool hasNameOnStack);
 
   // @param needsHomeObject
   //        True if the constructor contains `super.foo`
@@ -712,7 +702,7 @@ class MOZ_STACK_CLASS ClassEmitter : public PropertyEmitter {
   MOZ_MUST_USE bool emitEnd(Kind kind);
 
  private:
-  void setName(JS::Handle<JSAtom*> name);
+  MOZ_MUST_USE bool emitSetEmptyClassConstructorNameForDefaultCtor();
   MOZ_MUST_USE bool initProtoAndCtor();
 };
 
