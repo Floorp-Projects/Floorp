@@ -13,7 +13,6 @@ import android.util.Log;
 import org.mozilla.geckoview.BuildConfig;
 
 import com.google.android.exoplayer2.C;
-import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.Format;
 import com.google.android.exoplayer2.decoder.DecoderInputBuffer;
 import com.google.android.exoplayer2.mediacodec.MediaCodecInfo;
@@ -135,7 +134,7 @@ public class GeckoHlsVideoRenderer extends GeckoHlsRendererBase {
     }
 
     @Override
-    protected final void createInputBuffer() throws ExoPlaybackException {
+    protected final void createInputBuffer() {
         assertTrue(mFormats.size() > 0);
         // Calculate maximum size which might be used for target format.
         Format currentFormat = mFormats.get(mFormats.size() - 1);
@@ -145,12 +144,7 @@ public class GeckoHlsVideoRenderer extends GeckoHlsRendererBase {
         // creating DecoderInputBuffer with specific BufferReplacementMode, we
         // still allocate a calculated max size buffer for it at first to reduce
         // runtime overhead.
-        try {
-            mInputBuffer = ByteBuffer.wrap(new byte[mCodecMaxValues.inputSize]);
-        } catch (OutOfMemoryError e) {
-            Log.e(LOGTAG, "cannot allocate input buffer of size " + mCodecMaxValues.inputSize, e);
-            throw ExoPlaybackException.createForRenderer(new Exception(e), getIndex());
-        }
+        mInputBuffer = ByteBuffer.wrap(new byte[mCodecMaxValues.inputSize]);
     }
 
     @Override
@@ -187,7 +181,7 @@ public class GeckoHlsVideoRenderer extends GeckoHlsRendererBase {
     }
 
     @Override
-    protected void handleFormatRead(DecoderInputBuffer bufferForRead) throws ExoPlaybackException {
+    protected void handleFormatRead(DecoderInputBuffer bufferForRead) {
         if (mRendererReconfigurationState == RECONFIGURATION_STATE.QUEUE_PENDING) {
             if (DEBUG) { Log.d(LOGTAG, "[feedInput][QUEUE_PENDING] 2 formats in a row."); }
             // We received two formats in a row. Clear the current buffer of any reconfiguration data
