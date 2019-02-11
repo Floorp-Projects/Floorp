@@ -7449,6 +7449,12 @@ void CodeGenerator::visitTypedArrayLength(LTypedArrayLength* lir) {
   masm.unboxInt32(Address(obj, TypedArrayObject::lengthOffset()), out);
 }
 
+void CodeGenerator::visitTypedArrayByteOffset(LTypedArrayByteOffset* lir) {
+  Register obj = ToRegister(lir->object());
+  Register out = ToRegister(lir->output());
+  masm.unboxInt32(Address(obj, TypedArrayObject::byteOffsetOffset()), out);
+}
+
 void CodeGenerator::visitTypedArrayElements(LTypedArrayElements* lir) {
   Register obj = ToRegister(lir->object());
   Register out = ToRegister(lir->output());

@@ -1755,6 +1755,10 @@ void MTypedArrayLength::computeRange(TempAllocator& alloc) {
   setRange(Range::NewUInt32Range(alloc, 0, INT32_MAX));
 }
 
+void MTypedArrayByteOffset::computeRange(TempAllocator& alloc) {
+  setRange(Range::NewUInt32Range(alloc, 0, INT32_MAX));
+}
+
 void MStringLength::computeRange(TempAllocator& alloc) {
   static_assert(JSString::MAX_LENGTH <= UINT32_MAX,
                 "NewUInt32Range requires a uint32 value");
