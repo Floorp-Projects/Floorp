@@ -1,5 +1,3 @@
-#![cfg_attr(feature="nightly", feature(const_fn))]
-
 #[macro_use]
 extern crate lazy_static;
 use std::collections::HashMap;

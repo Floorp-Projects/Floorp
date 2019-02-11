@@ -77,7 +77,10 @@ pub struct InitTaskRunnable {
 }
 
 impl TaskRunnable {
-    pub fn new(name: &'static str, task: Box<dyn Task + Send + Sync>) -> Result<RefPtr<TaskRunnable>, nsresult> {
+    pub fn new(
+        name: &'static str,
+        task: Box<dyn Task + Send + Sync>,
+    ) -> Result<RefPtr<TaskRunnable>, nsresult> {
         assert!(is_main_thread());
         Ok(TaskRunnable::allocate(InitTaskRunnable {
             name,
@@ -94,14 +97,16 @@ impl TaskRunnable {
 
     xpcom_method!(run => Run());
     fn run(&self) -> Result<(), nsresult> {
-        match self.has_run.load(Ordering::Acquire) {
-            false => {
+        match self
+            .has_run
+            .compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire)
+        {
+            Ok(_) => {
                 assert!(!is_main_thread());
-                self.has_run.store(true, Ordering::Release);
                 self.task.run();
                 self.dispatch(get_main_thread()?)
             }
-            true => {
+            Err(_) => {
                 assert!(is_main_thread());
                 self.task.done()
             }

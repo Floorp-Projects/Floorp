@@ -29,7 +29,7 @@ use moz_task::{create_thread, TaskRunnable};
 use nserror::{nsresult, NS_ERROR_FAILURE, NS_ERROR_NO_AGGREGATION, NS_OK};
 use nsstring::{nsACString, nsCString};
 use owned_value::{owned_to_variant, variant_to_owned, OwnedValue};
-use rkv::{Rkv, Store};
+use rkv::{Rkv, SingleStore};
 use std::{
     ptr,
     sync::{Arc, RwLock},
@@ -43,6 +43,8 @@ use xpcom::{
     },
     nsIID, RefPtr, ThreadBoundRefPtr,
 };
+
+type KeyValuePairResult = Result<(String, OwnedValue), KeyValueError>;
 
 #[no_mangle]
 pub unsafe extern "C" fn nsKeyValueServiceConstructor(
@@ -134,14 +136,14 @@ impl KeyValueService {
 #[refcnt = "atomic"]
 pub struct InitKeyValueDatabase {
     rkv: Arc<RwLock<Rkv>>,
-    store: Store,
+    store: SingleStore,
     thread: ThreadBoundRefPtr<nsIThread>,
 }
 
 impl KeyValueDatabase {
     fn new(
         rkv: Arc<RwLock<Rkv>>,
-        store: Store,
+        store: SingleStore,
         thread: ThreadBoundRefPtr<nsIThread>,
     ) -> RefPtr<KeyValueDatabase> {
         KeyValueDatabase::allocate(InitKeyValueDatabase { rkv, store, thread })
@@ -272,21 +274,11 @@ impl KeyValueDatabase {
 #[xpimplements(nsIKeyValueEnumerator)]
 #[refcnt = "atomic"]
 pub struct InitKeyValueEnumerator {
-    iter: AtomicRefCell<
-        IntoIter<(
-            Result<String, KeyValueError>,
-            Result<OwnedValue, KeyValueError>,
-        )>,
-    >,
+    iter: AtomicRefCell<IntoIter<KeyValuePairResult>>,
 }
 
 impl KeyValueEnumerator {
-    fn new(
-        pairs: Vec<(
-            Result<String, KeyValueError>,
-            Result<OwnedValue, KeyValueError>,
-        )>,
-    ) -> RefPtr<KeyValueEnumerator> {
+    fn new(pairs: Vec<KeyValuePairResult>) -> RefPtr<KeyValueEnumerator> {
         KeyValueEnumerator::allocate(InitKeyValueEnumerator {
             iter: AtomicRefCell::new(pairs.into_iter()),
         })
@@ -302,13 +294,15 @@ impl KeyValueEnumerator {
 
     fn get_next(&self) -> Result<RefPtr<nsIKeyValuePair>, KeyValueError> {
         let mut iter = self.iter.borrow_mut();
-        let (key, value) = iter.next().ok_or(KeyValueError::from(NS_ERROR_FAILURE))?;
+        let (key, value) = iter
+            .next()
+            .ok_or_else(|| KeyValueError::from(NS_ERROR_FAILURE))??;
 
         // We fail on retrieval of the key/value pair if the key isn't valid
         // UTF-*, if the value is unexpected, or if we encountered a store error
         // while retrieving the pair.
         Ok(RefPtr::new(
-            KeyValuePair::new(key?, value?).coerce::<nsIKeyValuePair>(),
+            KeyValuePair::new(key, value).coerce::<nsIKeyValuePair>(),
         ))
     }
 }

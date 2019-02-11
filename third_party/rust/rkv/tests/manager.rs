@@ -1,4 +1,4 @@
-// Copyright 2018 Mozilla
+// Copyright 2018-2019 Mozilla
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not use
 // this file except in compliance with the License. You may obtain a copy of the
@@ -8,19 +8,15 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
-extern crate rkv;
-extern crate tempfile;
-
 use rkv::{
     Manager,
     Rkv,
 };
-
-use self::tempfile::Builder;
-
-use std::fs;
-
-use std::sync::Arc;
+use std::{
+    fs,
+    sync::Arc,
+};
+use tempfile::Builder;
 
 #[test]
 // Identical to the same-named unit test, but this one confirms that it works

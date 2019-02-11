@@ -34,24 +34,17 @@ interface nsIKeyValueVoidCallback;
 interface nsIKeyValueService : nsISupports {
     /**
      * Get a handle to an existing database or a newly-created one
-     * at the specified path and with the given name.  If no name is given,
-     * the default database is returned.
+     * at the specified path and with the given name.
      *
      * The service supports multiple named databases at the same path
      * (i.e. within the same storage file), so you can call this method
      * multiple times with the same path and different names to retrieve
      * multiple databases stored in the same location on disk.
-     *
-     * Because the backing storage engine stores information about named
-     * databases in the default database, it's tricky to use both the default
-     * and named databases at the same path.  Thus you should generally use
-     * either the default database or named databases, but not both, for a
-     * given path.
      */
     void getOrCreate(
         in nsIKeyValueDatabaseCallback callback,
         in AUTF8String path,
-        [optional] in AUTF8String name);
+        in AUTF8String name);
 };
 
 /**

@@ -7,13 +7,13 @@ authors = ["Myk Melez <myk@mykzilla.org>"]
 atomic_refcell = "0.1"
 crossbeam-utils = "0.6.3"
 libc = "0.2"
-lmdb-rkv = "0.9"
+lmdb-rkv = "0.11.2"
 log = "0.4"
 moz_task = { path = "../../../xpcom/rust/moz_task" }
 nserror = { path = "../../../xpcom/rust/nserror" }
 nsstring = { path = "../../../xpcom/rust/nsstring" }
 ordered-float = "1"
-rkv = "0.7"
+rkv = "0.9.2"
 storage_variant = { path = "../../../storage/variant" }
 xpcom = { path = "../../../xpcom/rust/xpcom" }
 
