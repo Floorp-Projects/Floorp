@@ -60,6 +60,7 @@
 #  define AUTO_PROFILER_TRACING(categoryString, markerName, category)
 #  define AUTO_PROFILER_TRACING_DOCSHELL(categoryString, markerName, category, \
                                          docShell)
+#  define AUTO_PROFILER_TEXT_MARKER_CAUSE(markerName, text, category, cause)
 #  define AUTO_PROFILER_TEXT_MARKER_DOCSHELL(markerName, text, category, \
                                              docShell)
 #  define AUTO_PROFILER_TEXT_MARKER_DOCSHELL_CAUSE(markerName, text, category, \
@@ -748,6 +749,12 @@ class MOZ_RAII AutoProfilerTextMarker {
   const mozilla::Maybe<nsID> mDocShellId;
   const mozilla::Maybe<uint32_t> mDocShellHistoryId;
 };
+
+#  define AUTO_PROFILER_TEXT_MARKER_CAUSE(markerName, text, category,    \
+                                          cause)                         \
+    AutoProfilerTextMarker PROFILER_RAII(                                \
+        markerName, text, js::ProfilingStackFrame::Category::category,   \
+        Nothing(), Nothing(), cause)
 
 #  define AUTO_PROFILER_TEXT_MARKER_DOCSHELL(markerName, text, category, \
                                              docShell)                   \
