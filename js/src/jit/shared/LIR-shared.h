@@ -3858,6 +3858,19 @@ class LTypedArrayElements : public LInstructionHelper<1, 1, 0> {
   const LAllocation* object() { return getOperand(0); }
 };
 
+// Return the element shift of a typed array.
+class LTypedArrayElementShift : public LInstructionHelper<1, 1, 0> {
+ public:
+  LIR_HEADER(TypedArrayElementShift)
+
+  explicit LTypedArrayElementShift(const LAllocation& obj)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, obj);
+  }
+
+  const LAllocation* object() { return getOperand(0); }
+};
+
 // Assign
 //
 //   target[targetOffset..targetOffset + source.length] =

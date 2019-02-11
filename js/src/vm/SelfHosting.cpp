@@ -2605,7 +2605,8 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("TypedArrayBuffer", intrinsic_TypedArrayBuffer, 1, 0),
     JS_INLINABLE_FN("TypedArrayByteOffset", intrinsic_TypedArrayByteOffset, 1,
                     0, IntrinsicTypedArrayByteOffset),
-    JS_FN("TypedArrayElementShift", intrinsic_TypedArrayElementShift, 1, 0),
+    JS_INLINABLE_FN("TypedArrayElementShift", intrinsic_TypedArrayElementShift,
+                    1, 0, IntrinsicTypedArrayElementShift),
 
     JS_INLINABLE_FN("TypedArrayLength", intrinsic_TypedArrayLength, 1, 0,
                     IntrinsicTypedArrayLength),
