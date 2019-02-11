@@ -11,14 +11,18 @@ from taskgraph.transforms.task import taskref_or_string
 from taskgraph.transforms.job import run_job_using
 from taskgraph.util.schema import Schema
 from taskgraph.transforms.job.common import support_vcs_checkout
-from voluptuous import Required, Any
+from voluptuous import Any, Optional, Required
 
 run_task_schema = Schema({
     Required('using'): 'run-task',
 
     # if true, add a cache at ~worker/.cache, which is where things like pip
     # tend to hide their caches.  This cache is never added for level-1 jobs.
+    # TODO Once bug 1526028 is fixed, this and 'use-caches' should be merged.
     Required('cache-dotcache'): bool,
+
+    # Whether or not to use caches.
+    Optional('use-caches'): bool,
 
     # if true (the default), perform a checkout of gecko on the worker
     Required('checkout'): bool,
