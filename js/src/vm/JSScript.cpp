@@ -885,7 +885,7 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
   }
 
   if (scriptBits & (1 << OwnSource)) {
-    MOZ_TRY(sourceObject->source()->performXDR<mode>(xdr));
+    MOZ_TRY(ScriptSource::performXDR<mode>(xdr, sourceObject->source()));
   }
 
   if (mode == XDR_DECODE) {
@@ -2449,21 +2449,22 @@ XDRResult ScriptSource::xdrUncompressedSource<XDR_ENCODE>(
 }  // namespace js
 
 template <XDRMode mode>
-XDRResult ScriptSource::performXDR(XDRState<mode>* xdr) {
-  uint8_t hasSource = hasSourceText();
+/* static */ XDRResult ScriptSource::performXDR(XDRState<mode>* xdr,
+                                                ScriptSource* ss) {
+  uint8_t hasSource = ss->hasSourceText();
   MOZ_TRY(xdr->codeUint8(&hasSource));
 
-  uint8_t hasBinSource = hasBinASTSource();
+  uint8_t hasBinSource = ss->hasBinASTSource();
   MOZ_TRY(xdr->codeUint8(&hasBinSource));
 
-  uint8_t retrievable = sourceRetrievable_;
+  uint8_t retrievable = ss->sourceRetrievable_;
   MOZ_TRY(xdr->codeUint8(&retrievable));
-  sourceRetrievable_ = retrievable;
+  ss->sourceRetrievable_ = retrievable;
 
-  if ((hasSource || hasBinSource) && !sourceRetrievable_) {
+  if ((hasSource || hasBinSource) && !retrievable) {
     uint32_t uncompressedLength = 0;
     if (mode == XDR_ENCODE) {
-      uncompressedLength = length();
+      uncompressedLength = ss->length();
     }
     MOZ_TRY(xdr->codeUint32(&uncompressedLength));
 
@@ -2477,7 +2478,8 @@ XDRResult ScriptSource::performXDR(XDRState<mode>* xdr) {
         }
         MOZ_TRY(xdr->codeBytes(bytes.get(), uncompressedLength));
 
-        if (!setBinASTSource(xdr->cx(), std::move(bytes), uncompressedLength)) {
+        if (!ss->setBinASTSource(xdr->cx(), std::move(bytes),
+                                 uncompressedLength)) {
           return xdr->fail(JS::TranscodeResult_Throw);
         }
 #else
@@ -2485,20 +2487,20 @@ XDRResult ScriptSource::performXDR(XDRState<mode>* xdr) {
         return xdr->fail(JS::TranscodeResult_Throw);
 #endif /* JS_BUILD_BINAST */
       } else {
-        void* bytes = binASTData();
+        void* bytes = ss->binASTData();
         MOZ_TRY(xdr->codeBytes(bytes, uncompressedLength));
       }
     } else {
       // A compressed length of 0 indicates source is uncompressed
       uint32_t compressedLength;
       if (mode == XDR_ENCODE) {
-        compressedLength = compressedLengthOrZero();
+        compressedLength = ss->compressedLengthOrZero();
       }
       MOZ_TRY(xdr->codeUint32(&compressedLength));
 
       uint8_t srcCharSize;
       if (mode == XDR_ENCODE) {
-        srcCharSize = sourceCharSize();
+        srcCharSize = ss->sourceCharSize();
       }
       MOZ_TRY(xdr->codeUint8(&srcCharSize));
 
@@ -2519,33 +2521,36 @@ XDRResult ScriptSource::performXDR(XDRState<mode>* xdr) {
           }
           MOZ_TRY(xdr->codeBytes(bytes.get(), compressedLength));
 
-          if (!(srcCharSize == 1 ? setCompressedSource<Utf8Unit>(
+          if (!(srcCharSize == 1 ? ss->setCompressedSource<Utf8Unit>(
                                        xdr->cx(), std::move(bytes),
                                        compressedLength, uncompressedLength)
-                                 : setCompressedSource<char16_t>(
+                                 : ss->setCompressedSource<char16_t>(
                                        xdr->cx(), std::move(bytes),
                                        compressedLength, uncompressedLength))) {
             return xdr->fail(JS::TranscodeResult_Throw);
           }
         } else {
-          void* bytes = srcCharSize == 1 ? compressedData<Utf8Unit>()
-                                         : compressedData<char16_t>();
+          void* bytes = srcCharSize == 1 ? ss->compressedData<Utf8Unit>()
+                                         : ss->compressedData<char16_t>();
           MOZ_TRY(xdr->codeBytes(bytes, compressedLength));
         }
       } else {
-        MOZ_TRY(xdrUncompressedSource(xdr, srcCharSize, uncompressedLength));
+        MOZ_TRY(
+            ss->xdrUncompressedSource(xdr, srcCharSize, uncompressedLength));
       }
     }
 
-    uint8_t hasMetadata = !!binASTMetadata_;
+    uint8_t hasMetadata = !!ss->binASTMetadata_;
     MOZ_TRY(xdr->codeUint8(&hasMetadata));
     if (hasMetadata) {
 #if defined(JS_BUILD_BINAST)
+      UniquePtr<frontend::BinASTSourceMetadata>& binASTMetadata =
+          ss->binASTMetadata_;
       uint32_t numBinKinds;
       uint32_t numStrings;
       if (mode == XDR_ENCODE) {
-        numBinKinds = binASTMetadata_->numBinKinds();
-        numStrings = binASTMetadata_->numStrings();
+        numBinKinds = binASTMetadata->numBinKinds();
+        numStrings = binASTMetadata->numStrings();
       }
       MOZ_TRY(xdr->codeUint32(&numBinKinds));
       MOZ_TRY(xdr->codeUint32(&numStrings));
@@ -2560,23 +2565,23 @@ XDRResult ScriptSource::performXDR(XDRState<mode>* xdr) {
           return xdr->fail(JS::TranscodeResult_Throw);
         }
         new (metadata) frontend::BinASTSourceMetadata(numBinKinds, numStrings);
-        setBinASTSourceMetadata(metadata);
+        ss->setBinASTSourceMetadata(metadata);
       }
 
       for (uint32_t i = 0; i < numBinKinds; i++) {
-        frontend::BinKind* binKindBase = binASTMetadata_->binKindBase();
+        frontend::BinKind* binKindBase = binASTMetadata->binKindBase();
         MOZ_TRY(xdr->codeEnum32(&binKindBase[i]));
       }
 
       RootedAtom atom(xdr->cx());
-      JSAtom** atomsBase = binASTMetadata_->atomsBase();
-      auto slices = binASTMetadata_->sliceBase();
-      auto sourceBase = reinterpret_cast<const char*>(binASTSource());
+      JSAtom** atomsBase = binASTMetadata->atomsBase();
+      auto slices = binASTMetadata->sliceBase();
+      auto sourceBase = reinterpret_cast<const char*>(ss->binASTSource());
 
       for (uint32_t i = 0; i < numStrings; i++) {
         uint8_t isNull;
         if (mode == XDR_ENCODE) {
-          atom = binASTMetadata_->getAtom(i);
+          atom = binASTMetadata->getAtom(i);
           isNull = !atom;
         }
         MOZ_TRY(xdr->codeUint8(&isNull));
@@ -2592,7 +2597,7 @@ XDRResult ScriptSource::performXDR(XDRState<mode>* xdr) {
         uint64_t sliceOffset;
         uint32_t sliceLen;
         if (mode == XDR_ENCODE) {
-          auto& slice = binASTMetadata_->getSlice(i);
+          auto& slice = binASTMetadata->getSlice(i);
           sliceOffset = slice.begin() - sourceBase;
           sliceLen = slice.byteLen_;
         }
@@ -2613,93 +2618,97 @@ XDRResult ScriptSource::performXDR(XDRState<mode>* xdr) {
     }
   }
 
-  uint8_t haveSourceMap = hasSourceMapURL();
+  uint8_t haveSourceMap = ss->hasSourceMapURL();
   MOZ_TRY(xdr->codeUint8(&haveSourceMap));
 
   if (haveSourceMap) {
+    UniqueTwoByteChars& sourceMapURL(ss->sourceMapURL_);
     uint32_t sourceMapURLLen =
-        (mode == XDR_DECODE) ? 0 : js_strlen(sourceMapURL_.get());
+        (mode == XDR_DECODE) ? 0 : js_strlen(sourceMapURL.get());
     MOZ_TRY(xdr->codeUint32(&sourceMapURLLen));
 
     if (mode == XDR_DECODE) {
-      sourceMapURL_ =
+      sourceMapURL =
           xdr->cx()->template make_pod_array<char16_t>(sourceMapURLLen + 1);
-      if (!sourceMapURL_) {
+      if (!sourceMapURL) {
         return xdr->fail(JS::TranscodeResult_Throw);
       }
     }
     auto guard = mozilla::MakeScopeExit([&] {
       if (mode == XDR_DECODE) {
-        sourceMapURL_ = nullptr;
+        sourceMapURL = nullptr;
       }
     });
-    MOZ_TRY(xdr->codeChars(sourceMapURL_.get(), sourceMapURLLen));
+    MOZ_TRY(xdr->codeChars(sourceMapURL.get(), sourceMapURLLen));
     guard.release();
-    sourceMapURL_[sourceMapURLLen] = '\0';
+    sourceMapURL[sourceMapURLLen] = '\0';
   }
 
-  uint8_t haveDisplayURL = hasDisplayURL();
+  uint8_t haveDisplayURL = ss->hasDisplayURL();
   MOZ_TRY(xdr->codeUint8(&haveDisplayURL));
 
   if (haveDisplayURL) {
+    UniqueTwoByteChars& displayURL(ss->displayURL_);
     uint32_t displayURLLen =
-        (mode == XDR_DECODE) ? 0 : js_strlen(displayURL_.get());
+        (mode == XDR_DECODE) ? 0 : js_strlen(displayURL.get());
     MOZ_TRY(xdr->codeUint32(&displayURLLen));
 
     if (mode == XDR_DECODE) {
-      displayURL_ =
+      displayURL =
           xdr->cx()->template make_pod_array<char16_t>(displayURLLen + 1);
-      if (!displayURL_) {
+      if (!displayURL) {
         return xdr->fail(JS::TranscodeResult_Throw);
       }
     }
     auto guard = mozilla::MakeScopeExit([&] {
       if (mode == XDR_DECODE) {
-        displayURL_ = nullptr;
+        displayURL = nullptr;
       }
     });
-    MOZ_TRY(xdr->codeChars(displayURL_.get(), displayURLLen));
+    MOZ_TRY(xdr->codeChars(displayURL.get(), displayURLLen));
     guard.release();
-    displayURL_[displayURLLen] = '\0';
+    displayURL[displayURLLen] = '\0';
   }
 
-  uint8_t haveFilename = !!filename_;
+  uint8_t haveFilename = !!ss->filename_;
   MOZ_TRY(xdr->codeUint8(&haveFilename));
 
   if (haveFilename) {
-    const char* fn = filename();
+    const char* fn = ss->filename();
     MOZ_TRY(xdr->codeCString(&fn));
     // Note: If the decoder has an option, then the filename is defined by
     // the CompileOption from the document.
-    MOZ_ASSERT_IF(mode == XDR_DECODE && xdr->hasOptions(), filename());
+    MOZ_ASSERT_IF(mode == XDR_DECODE && xdr->hasOptions(), ss->filename());
     if (mode == XDR_DECODE && !xdr->hasOptions() &&
-        !setFilename(xdr->cx(), fn)) {
+        !ss->setFilename(xdr->cx(), fn)) {
       return xdr->fail(JS::TranscodeResult_Throw);
     }
 
     // Note the content of sources decoded when recording or replaying.
-    if (mode == XDR_DECODE && hasSourceText() &&
+    if (mode == XDR_DECODE && ss->hasSourceText() &&
         mozilla::recordreplay::IsRecordingOrReplaying()) {
       UncompressedSourceCache::AutoHoldEntry holder;
 
-      if (hasSourceType<Utf8Unit>()) {
+      if (ss->hasSourceType<Utf8Unit>()) {
         // UTF-8 source text.
-        ScriptSource::PinnedUnits<Utf8Unit> units(xdr->cx(), this, holder, 0,
-                                                  length());
+        ScriptSource::PinnedUnits<Utf8Unit> units(xdr->cx(), ss, holder, 0,
+                                                  ss->length());
         if (!units.get()) {
           return xdr->fail(JS::TranscodeResult_Throw);
         }
-        mozilla::recordreplay::NoteContentParse(
-            this, filename(), "application/javascript", units.get(), length());
+        mozilla::recordreplay::NoteContentParse(ss, ss->filename(),
+                                                "application/javascript",
+                                                units.get(), ss->length());
       } else {
         // UTF-16 source text.
-        ScriptSource::PinnedUnits<char16_t> units(xdr->cx(), this, holder, 0,
-                                                  length());
+        ScriptSource::PinnedUnits<char16_t> units(xdr->cx(), ss, holder, 0,
+                                                  ss->length());
         if (!units.get()) {
           return xdr->fail(JS::TranscodeResult_Throw);
         }
-        mozilla::recordreplay::NoteContentParse(
-            this, filename(), "application/javascript", units.get(), length());
+        mozilla::recordreplay::NoteContentParse(ss, ss->filename(),
+                                                "application/javascript",
+                                                units.get(), ss->length());
       }
     }
   }
