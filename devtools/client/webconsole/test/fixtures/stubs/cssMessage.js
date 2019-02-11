@@ -31,6 +31,7 @@ stubPreparedMessages.set(`Unknown property ‘such-unknown-property’.  Declara
     "column": 25
   },
   "groupId": null,
+  "errorMessageName": "",
   "userProvidedStyles": null,
   "notes": null,
   "indent": 0,
@@ -56,6 +57,7 @@ stubPreparedMessages.set(`Error in parsing value for ‘padding-top’.  Declara
     "column": 16
   },
   "groupId": null,
+  "errorMessageName": "",
   "userProvidedStyles": null,
   "notes": null,
   "indent": 0,
