@@ -210,17 +210,19 @@ about-debugging-worker-action-start = Start
 # This string is displayed as a label of the button that unregisters a service worker.
 about-debugging-worker-action-unregister = Unregister
 
-# Displayed for service workers in runtime pages,
+# Reused for the service worker fetch status labels.
 # "Fetch" is an event type and should not be localized.
-# The status is used to indicate whether the service worker is currently listening
-# or not to "fetch" events.
-about-debugging-worker-fetch =
-  .label = Fetch
-  .value =
-    { $status ->
-      [listening] Listening for fetch events
-     *[not-listening] Not listening for fetch events
-    }
+-worker-fetch-label = Fetch
+
+# Displayed for service workers in runtime pages that listen to Fetch events.
+about-debugging-worker-fetch-listening =
+  .label = { -worker-fetch-label }
+  .value = Listening for fetch events
+
+# Displayed for service workers in runtime pages that do not listen to Fetch events.
+about-debugging-worker-fetch-not-listening =
+  .label = { -worker-fetch-label }
+  .value = Not listening for fetch events
 
 # Displayed for service workers in runtime pages, to indicate the status of a worker.
 # For workers for which no registration could be found yet, they are considered as
