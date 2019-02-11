@@ -51,6 +51,7 @@ async function submitForm(event) {
   appendParams(requestURL, {
     "service": "sync",
     "action": "email",
+    "context": CONTEXT,
     "utm_campaign": CAMPAIGN,
     "email": input.value,
     "flow_id": flowId,
