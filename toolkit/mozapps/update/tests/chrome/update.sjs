@@ -2,13 +2,22 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+"use strict";
+
 /**
  * Server side http server script for application update tests.
  */
 
+// ChromeUtils isn't available in sjs files so disable the eslint rule for it.
+/* eslint-disable mozilla/use-chromeutils-import */
+
+// Definitions from files used by this file
+/* global getState */
+
+Cu.import("resource://gre/modules/Services.jsm");
+
 function getTestDataFile(aFilename) {
-  let file = Cc["@mozilla.org/file/directory_service;1"].
-             getService(Ci.nsIProperties).get("CurWorkD", Ci.nsIFile);
+  let file = Services.dirsvc.get("CurWorkD", Ci.nsIFile);
   let pathParts = REL_PATH_DATA.split("/");
   for (let i = 0; i < pathParts.length; ++i) {
     file.append(pathParts[i]);
@@ -20,19 +29,18 @@ function getTestDataFile(aFilename) {
 }
 
 function loadHelperScript(aScriptFile) {
-  let io = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-  let scriptSpec = io.newFileURI(aScriptFile).spec;
-  let scriptloader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
-                     getService(Ci.mozIJSSubScriptLoader);
-  scriptloader.loadSubScript(scriptSpec, this);
+  let scriptSpec = Services.io.newFileURI(aScriptFile).spec;
+  Services.scriptloader.loadSubScript(scriptSpec, this);
 }
 
-var scriptFile = Cc['@mozilla.org/file/local;1'].createInstance(Ci.nsIFile);
+var scriptFile = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
 scriptFile.initWithPath(getState("__LOCATION__"));
 scriptFile = scriptFile.parent;
+/* import-globals-from testConstants.js */
 scriptFile.append("testConstants.js");
 loadHelperScript(scriptFile);
 
+/* import-globals-from ../data/sharedUpdateXML.js */
 scriptFile = getTestDataFile("sharedUpdateXML.js");
 loadHelperScript(scriptFile);
 
@@ -113,16 +121,16 @@ function handleRequest(aRequest, aResponse) {
   if (!params.partialPatchOnly) {
     size = SIZE_SIMPLE_MAR + (params.invalidCompleteSize ? "1" : "");
     let patchProps = {type: "complete",
-                      url: url,
-                      size: size};
+                      url,
+                      size};
     patches += getRemotePatchString(patchProps);
   }
 
   if (!params.completePatchOnly) {
     size = SIZE_SIMPLE_MAR + (params.invalidPartialSize ? "1" : "");
     let patchProps = {type: "partial",
-                      url: url,
-                      size: size};
+                      url,
+                      size};
     patches += getRemotePatchString(patchProps);
   }
 
