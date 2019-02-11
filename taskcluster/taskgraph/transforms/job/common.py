@@ -30,13 +30,20 @@ def add_cache(job, taskdesc, name, mount_point, skip_untrusted=False):
 
     worker = job['worker']
 
-    if worker['implementation'] in ('docker-worker', 'docker-engine'):
+    if worker['implementation'] == 'docker-worker':
         taskdesc['worker'].setdefault('caches', []).append({
             'type': 'persistent',
             'name': name,
             'mount-point': mount_point,
             'skip-untrusted': skip_untrusted,
         })
+
+    elif worker['implementation'] == 'generic-worker':
+        taskdesc['worker'].setdefault('mounts', []).append({
+            'cache-name': name,
+            'directory': mount_point,
+        })
+
     else:
         # Caches not implemented
         pass
