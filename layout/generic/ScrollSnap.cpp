@@ -17,35 +17,19 @@ namespace mozilla {
 using layers::ScrollSnapInfo;
 
 /**
- * Stores candidate snapping edges.
- */
-class SnappingEdgeCallback {
- public:
-  virtual void AddHorizontalEdge(nscoord aEdge) = 0;
-  virtual void AddVerticalEdge(nscoord aEdge) = 0;
-  virtual void AddHorizontalEdgeInterval(const nsRect& aScrollRange,
-                                         nscoord aInterval,
-                                         nscoord aOffset) = 0;
-  virtual void AddVerticalEdgeInterval(const nsRect& aScrollRange,
-                                       nscoord aInterval, nscoord aOffset) = 0;
-};
-
-/**
  * Keeps track of the current best edge to snap to. The criteria for
  * adding an edge depends on the scrolling unit.
  */
-class CalcSnapPoints : public SnappingEdgeCallback {
+class CalcSnapPoints final {
  public:
   CalcSnapPoints(nsIScrollableFrame::ScrollUnit aUnit,
                  const nsPoint& aDestination, const nsPoint& aStartPos);
-  virtual void AddHorizontalEdge(nscoord aEdge) override;
-  virtual void AddVerticalEdge(nscoord aEdge) override;
-  virtual void AddHorizontalEdgeInterval(const nsRect& aScrollRange,
-                                         nscoord aInterval,
-                                         nscoord aOffset) override;
-  virtual void AddVerticalEdgeInterval(const nsRect& aScrollRange,
-                                       nscoord aInterval,
-                                       nscoord aOffset) override;
+  void AddHorizontalEdge(nscoord aEdge);
+  void AddVerticalEdge(nscoord aEdge);
+  void AddHorizontalEdgeInterval(const nsRect& aScrollRange, nscoord aInterval,
+                                 nscoord aOffset);
+  void AddVerticalEdgeInterval(const nsRect& aScrollRange, nscoord aInterval,
+                               nscoord aOffset);
   void AddEdge(nscoord aEdge, nscoord aDestination, nscoord aStartPos,
                nscoord aScrollingDirection, nscoord* aBestEdge,
                bool* aEdgeFound);
@@ -236,15 +220,15 @@ void CalcSnapPoints::AddEdgeInterval(nscoord aInterval, nscoord aMinPos,
 }
 
 static void ProcessScrollSnapCoordinates(
-    SnappingEdgeCallback& aCallback,
+    CalcSnapPoints& aCalcSnapPoint,
     const nsTArray<nsPoint>& aScrollSnapCoordinates,
     const nsPoint& aScrollSnapDestination) {
   for (nsPoint snapCoords : aScrollSnapCoordinates) {
     // Make them relative to the scroll snap destination.
     snapCoords -= aScrollSnapDestination;
 
-    aCallback.AddVerticalEdge(snapCoords.x);
-    aCallback.AddHorizontalEdge(snapCoords.y);
+    aCalcSnapPoint.AddVerticalEdge(snapCoords.x);
+    aCalcSnapPoint.AddHorizontalEdge(snapCoords.y);
   }
 }
 
