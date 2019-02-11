@@ -1012,7 +1012,8 @@ class ScriptSource {
  public:
   // XDR handling
   template <XDRMode mode>
-  MOZ_MUST_USE XDRResult performXDR(XDRState<mode>* xdr);
+  static MOZ_MUST_USE XDRResult performXDR(XDRState<mode>* xdr,
+                                           ScriptSource* ss);
 
  private:
   // It'd be better to make this function take <XDRMode, Unit>, as both
