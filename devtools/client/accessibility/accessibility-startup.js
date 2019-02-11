@@ -53,9 +53,14 @@ class AccessibilityStartup {
         await this.target.actorHasMethod("accessibility", "enable");
 
       if (this._supports.enableDisable) {
-        ([ this._supports.relations, this._supports.snapshot ] = await Promise.all([
+        ([
+          this._supports.relations,
+          this._supports.snapshot,
+          this._supports.audit,
+        ] = await Promise.all([
           this.target.actorHasMethod("accessible", "getRelations"),
           this.target.actorHasMethod("accessible", "snapshot"),
+          this.target.actorHasMethod("accessible", "audit"),
         ]));
 
         await this._accessibility.bootstrap();
