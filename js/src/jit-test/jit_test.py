@@ -10,7 +10,6 @@ import os
 import platform
 import posixpath
 import shlex
-import shutil
 import subprocess
 import sys
 import traceback
@@ -29,8 +28,6 @@ add_libdir_to_path()
 import jittests
 from tests import get_jitflags, valid_jitflags, get_cpu_count, get_environment_overlay, \
     change_env
-
-# Python 3.3 added shutil.which, but we can't use that yet.
 
 
 def which(name):
