@@ -115,6 +115,7 @@ EXPORTS.mozilla += [
     'DeferredFinalize.h',
     'EnumeratedArrayCycleCollection.h',
     'ErrorNames.h',
+    'GkRustUtils.h',
     'HoldDropJSObjects.h',
     'IntentionalCrash.h',
     'JSObjectHolder.h',
@@ -149,6 +150,7 @@ UNIFIED_SOURCES += [
     'DebuggerOnGCRunnable.cpp',
     'DeferredFinalize.cpp',
     'ErrorNames.cpp',
+    'GkRustUtils.cpp',
     'HoldDropJSObjects.cpp',
     'JSObjectHolder.cpp',
     'LogCommandLineHandler.cpp',
@@ -213,6 +215,21 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     SOURCES += [
         'nsCrashOnException.cpp',
+    ]
+
+if CONFIG['COMPILE_ENVIRONMENT']:
+    GENERATED_FILES += [
+        'gk_rust_utils_ffi_generated.h',
+    ]
+
+    EXPORTS.mozilla += [
+        '!gk_rust_utils_ffi_generated.h',
+    ]
+
+    ffi_generated = GENERATED_FILES['gk_rust_utils_ffi_generated.h']
+    ffi_generated.script = '/layout/style/RunCbindgen.py:generate'
+    ffi_generated.inputs = [
+        '/xpcom/rust/gkrust_utils',
     ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
