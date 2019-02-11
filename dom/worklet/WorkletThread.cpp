@@ -285,7 +285,6 @@ WorkletThread::DelayedDispatch(already_AddRefed<nsIRunnable>, uint32_t aFlags) {
   // FIXME: JSSettings
   // FIXME: JS_SetNativeStackQuota
   // FIXME: JS_SetSecurityCallbacks
-  // FIXME: JS::SetAsmJSCacheOps
   // FIXME: JS::SetAsyncTaskCallbacks
   // FIXME: JS_AddInterruptCallback
   // FIXME: JS::SetCTypesActivityCallback

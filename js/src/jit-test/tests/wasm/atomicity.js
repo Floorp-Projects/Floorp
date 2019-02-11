@@ -1,8 +1,3 @@
-// |jit-test| slow;
-//
-// Temporarily marked as slow - they time out on the build systems even with
-// reduced iteration count.
-//
 // Test that wasm atomic operations implement correct mutual exclusion.
 //
 // We have several agents that attempt to hammer on a shared location with rmw
@@ -20,9 +15,22 @@ const ITERATIONS = 100000;
 const NUMWORKERS = 2;
 const NUMAGENTS = NUMWORKERS + 1;
 
+// Need at least one thread per agent.
+
 if (!wasmThreadsSupported() || helperThreadCount() < NUMWORKERS) {
     if (DEBUG > 0)
         print("Threads not supported");
+    quit(0);
+}
+
+// Unless there are enough actual cores the spinning threads will not interact
+// in the desired way (we'll be waiting on preemption to advance), and this
+// makes the test pointless and also will usually make it time out.  So bail out
+// if we can't have one core per agent.
+
+if (getCoreCount() < NUMAGENTS) {
+    if (DEBUG > 0)
+        print("Fake or feeble hardware");
     quit(0);
 }
 
