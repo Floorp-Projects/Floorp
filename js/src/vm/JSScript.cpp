@@ -368,6 +368,10 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
   uint32_t scriptBits = 0;
   uint32_t bodyScopeIndex = 0;
   uint32_t immutableFlags = 0;
+  uint32_t sourceStart = 0;
+  uint32_t sourceEnd = 0;
+  uint32_t toStringStart = 0;
+  uint32_t toStringEnd = 0;
 
   JSContext* cx = xdr->cx();
   RootedScript script(cx);
@@ -409,6 +413,11 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
     natoms = script->natoms();
 
     immutableFlags = script->immutableFlags_;
+
+    sourceStart = script->sourceStart();
+    sourceEnd = script->sourceEnd();
+    toStringStart = script->toStringStart();
+    toStringEnd = script->toStringEnd();
 
     nsrcnotes = script->numNotes();
 
@@ -457,6 +466,10 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
   MOZ_TRY(xdr->codeUint32(&funLength));
   MOZ_TRY(xdr->codeUint32(&scriptBits));
   MOZ_TRY(xdr->codeUint32(&immutableFlags));
+  MOZ_TRY(xdr->codeUint32(&sourceStart));
+  MOZ_TRY(xdr->codeUint32(&sourceEnd));
+  MOZ_TRY(xdr->codeUint32(&toStringStart));
+  MOZ_TRY(xdr->codeUint32(&toStringEnd));
 
   MOZ_ASSERT(!!(scriptBits & (1 << OwnSource)) == !sourceObjectArg);
   RootedScriptSourceObject sourceObject(cx, sourceObjectArg);
@@ -521,7 +534,8 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
   }
 
   if (mode == XDR_DECODE) {
-    script = JSScript::Create(cx, *options, sourceObject, 0, 0, 0, 0);
+    script = JSScript::Create(cx, *options, sourceObject, sourceStart,
+                              sourceEnd, toStringStart, toStringEnd);
     if (!script) {
       return xdr->fail(JS::TranscodeResult_Throw);
     }
@@ -559,10 +573,6 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
   JS_STATIC_ASSERT(sizeof(jsbytecode) == 1);
   JS_STATIC_ASSERT(sizeof(jssrcnote) == 1);
 
-  MOZ_TRY(xdr->codeUint32(&script->sourceStart_));
-  MOZ_TRY(xdr->codeUint32(&script->sourceEnd_));
-  MOZ_TRY(xdr->codeUint32(&script->toStringStart_));
-  MOZ_TRY(xdr->codeUint32(&script->toStringEnd_));
   MOZ_TRY(xdr->codeUint32(&lineno));
   MOZ_TRY(xdr->codeUint32(&column));
   MOZ_TRY(xdr->codeUint32(&nfixed));
