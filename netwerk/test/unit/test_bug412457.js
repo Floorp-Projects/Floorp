@@ -29,17 +29,17 @@ function run_test() {
   newURI = newURI.mutate().setSpec("http://example.com/foo").finalize();
   Assert.equal(newURI.asciiHost, "example.com");
 
-  // Characters that are invalid in the host, shouldn't be decoded.
-  newURI = newURI.mutate().setSpec("http://example.com%3ffoo").finalize();
-  Assert.equal(newURI.asciiHost, "example.com%3ffoo");
-  newURI = newURI.mutate().setSpec("http://example.com%23foo").finalize();
-  Assert.equal(newURI.asciiHost, "example.com%23foo");
-  newURI = newURI.mutate().setSpec("http://example.com%3bfoo").finalize();
-  Assert.equal(newURI.asciiHost, "example.com%3bfoo");
-  newURI = newURI.mutate().setSpec("http://example.com%3a80").finalize();
-  Assert.equal(newURI.asciiHost, "example.com%3a80");
-  newURI = newURI.mutate().setSpec("http://example.com%2ffoo").finalize();
-  Assert.equal(newURI.asciiHost, "example.com%2ffoo");
-  newURI = newURI.mutate().setSpec("http://example.com%00").finalize();
-  Assert.equal(newURI.asciiHost, "example.com%00");
+  // Characters that are invalid in the host
+  Assert.throws(() => { newURI = newURI.mutate().setSpec("http://example.com%3ffoo").finalize(); },
+                /NS_ERROR_MALFORMED_URI/, "bad escaped character");
+  Assert.throws(() => { newURI = newURI.mutate().setSpec("http://example.com%23foo").finalize(); },
+                /NS_ERROR_MALFORMED_URI/, "bad escaped character");
+  Assert.throws(() => { newURI = newURI.mutate().setSpec("http://example.com%3bfoo").finalize(); },
+                /NS_ERROR_MALFORMED_URI/, "bad escaped character");
+  Assert.throws(() => { newURI = newURI.mutate().setSpec("http://example.com%3a80").finalize(); },
+                /NS_ERROR_MALFORMED_URI/, "bad escaped character");
+  Assert.throws(() => { newURI = newURI.mutate().setSpec("http://example.com%2ffoo").finalize(); },
+                /NS_ERROR_MALFORMED_URI/, "bad escaped character");
+  Assert.throws(() => { newURI = newURI.mutate().setSpec("http://example.com%00").finalize(); },
+                /NS_ERROR_MALFORMED_URI/, "bad escaped character");
 }
