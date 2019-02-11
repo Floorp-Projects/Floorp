@@ -15,6 +15,7 @@ from taskgraph.util.taskcluster import (
 )
 from .registry import register_callback_action
 from .util import fetch_graph_and_labels
+from taskgraph.util import taskcluster
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +40,8 @@ RERUN_STATES = ('exception', 'failed')
         'properties': {}
     }
 )
-def rerun_action(parameters, graph_config, input, task_group_id, task_id, task):
+def rerun_action(parameters, graph_config, input, task_group_id, task_id):
+    task = taskcluster.get_task_definition(task_id)
     parameters = dict(parameters)
     decision_task_id, full_task_graph, label_to_taskid = fetch_graph_and_labels(
         parameters, graph_config)

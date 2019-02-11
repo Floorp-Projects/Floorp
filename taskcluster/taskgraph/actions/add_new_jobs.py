@@ -45,7 +45,7 @@ from .util import (
         }
     }
 )
-def add_new_jobs_action(parameters, graph_config, input, task_group_id, task_id, task):
+def add_new_jobs_action(parameters, graph_config, input, task_group_id, task_id):
     decision_task_id, full_task_graph, label_to_taskid = fetch_graph_and_labels(
         parameters, graph_config)
 
