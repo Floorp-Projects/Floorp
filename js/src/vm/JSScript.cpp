@@ -331,6 +331,26 @@ static XDRResult XDRRelazificationInfo(XDRState<mode>* xdr, HandleFunction fun,
   return Ok();
 }
 
+template <XDRMode mode>
+XDRResult JSTryNote::XDR(XDRState<mode>* xdr) {
+  MOZ_TRY(xdr->codeUint32(&kind));
+  MOZ_TRY(xdr->codeUint32(&stackDepth));
+  MOZ_TRY(xdr->codeUint32(&start));
+  MOZ_TRY(xdr->codeUint32(&length));
+
+  return Ok();
+}
+
+template <XDRMode mode>
+XDRResult ScopeNote::XDR(XDRState<mode>* xdr) {
+  MOZ_TRY(xdr->codeUint32(&index));
+  MOZ_TRY(xdr->codeUint32(&start));
+  MOZ_TRY(xdr->codeUint32(&length));
+  MOZ_TRY(xdr->codeUint32(&parent));
+
+  return Ok();
+}
+
 static inline uint32_t FindScopeIndex(JSScript* script, Scope& scope) {
   auto scopes = script->scopes();
   unsigned length = scopes.size();
@@ -860,19 +880,13 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
 
   if (ntrynotes) {
     for (JSTryNote& elem : data->tryNotes()) {
-      MOZ_TRY(xdr->codeUint8(&elem.kind));
-      MOZ_TRY(xdr->codeUint32(&elem.stackDepth));
-      MOZ_TRY(xdr->codeUint32(&elem.start));
-      MOZ_TRY(xdr->codeUint32(&elem.length));
+      MOZ_TRY(elem.XDR(xdr));
     }
   }
 
   if (nscopenotes) {
     for (ScopeNote& elem : data->scopeNotes()) {
-      MOZ_TRY(xdr->codeUint32(&elem.index));
-      MOZ_TRY(xdr->codeUint32(&elem.start));
-      MOZ_TRY(xdr->codeUint32(&elem.length));
-      MOZ_TRY(xdr->codeUint32(&elem.parent));
+      MOZ_TRY(elem.XDR(xdr));
     }
   }
 
