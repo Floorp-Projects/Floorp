@@ -392,7 +392,7 @@ struct Metadata : public ShareableBase<Metadata>, public MetadataCacheablePod {
     return getFuncName(NameContext::BeforeLocation, funcIndex, name);
   }
 
-  WASM_DECLARE_SERIALIZABLE_VIRTUAL(Metadata);
+  WASM_DECLARE_SERIALIZABLE(Metadata);
 };
 
 typedef RefPtr<Metadata> MutableMetadata;

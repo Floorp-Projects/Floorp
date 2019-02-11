@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-const pdfjsVersion = '2.1.243';
-const pdfjsBuild = 'c0d6e46e';
+const pdfjsVersion = '2.2.8';
+const pdfjsBuild = 'dfe7d9bc';
 
 const pdfjsCoreWorker = __w_pdfjs_require__(1);
 
@@ -375,7 +375,7 @@ var WorkerMessageHandler = {
     var cancelXHRs = null;
     var WorkerTasks = [];
     let apiVersion = docParams.apiVersion;
-    let workerVersion = '2.1.243';
+    let workerVersion = '2.2.8';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -21483,7 +21483,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
               }
             }
 
-            toUnicode[charcode] = String.fromCharCode(code);
+            toUnicode[charcode] = String.fromCodePoint(code);
           }
 
           continue;
@@ -21583,7 +21583,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
               str.push(((w1 & 0x3ff) << 10) + (w2 & 0x3ff) + 0x10000);
             }
 
-            map[charCode] = String.fromCharCode.apply(String, str);
+            map[charCode] = String.fromCodePoint.apply(String, str);
           });
           return new _fonts.ToUnicodeMap(map);
         });

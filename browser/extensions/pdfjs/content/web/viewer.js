@@ -3649,16 +3649,7 @@ class PDFSidebar {
         return false;
 
       case SidebarView.THUMBS:
-        this.thumbnailButton.classList.add('toggled');
-        this.outlineButton.classList.remove('toggled');
-        this.attachmentsButton.classList.remove('toggled');
-        this.thumbnailView.classList.remove('hidden');
-        this.outlineView.classList.add('hidden');
-        this.attachmentsView.classList.add('hidden');
-
         if (this.isOpen && isViewChanged) {
-          this._updateThumbnailViewer();
-
           shouldForceRendering = true;
         }
 
@@ -3669,12 +3660,6 @@ class PDFSidebar {
           return false;
         }
 
-        this.thumbnailButton.classList.remove('toggled');
-        this.outlineButton.classList.add('toggled');
-        this.attachmentsButton.classList.remove('toggled');
-        this.thumbnailView.classList.add('hidden');
-        this.outlineView.classList.remove('hidden');
-        this.attachmentsView.classList.add('hidden');
         break;
 
       case SidebarView.ATTACHMENTS:
@@ -3682,12 +3667,6 @@ class PDFSidebar {
           return false;
         }
 
-        this.thumbnailButton.classList.remove('toggled');
-        this.outlineButton.classList.remove('toggled');
-        this.attachmentsButton.classList.add('toggled');
-        this.thumbnailView.classList.add('hidden');
-        this.outlineView.classList.add('hidden');
-        this.attachmentsView.classList.remove('hidden');
         break;
 
       default:
@@ -3695,7 +3674,13 @@ class PDFSidebar {
         return false;
     }
 
-    this.active = view | 0;
+    this.active = view;
+    this.thumbnailButton.classList.toggle('toggled', view === SidebarView.THUMBS);
+    this.outlineButton.classList.toggle('toggled', view === SidebarView.OUTLINE);
+    this.attachmentsButton.classList.toggle('toggled', view === SidebarView.ATTACHMENTS);
+    this.thumbnailView.classList.toggle('hidden', view !== SidebarView.THUMBS);
+    this.outlineView.classList.toggle('hidden', view !== SidebarView.OUTLINE);
+    this.attachmentsView.classList.toggle('hidden', view !== SidebarView.ATTACHMENTS);
 
     if (forceOpen && !this.isOpen) {
       this.open();
@@ -3703,6 +3688,8 @@ class PDFSidebar {
     }
 
     if (shouldForceRendering) {
+      this._updateThumbnailViewer();
+
       this._forceRendering();
     }
 
@@ -3722,8 +3709,7 @@ class PDFSidebar {
 
     this.isOpen = true;
     this.toggleButton.classList.add('toggled');
-    this.outerContainer.classList.add('sidebarMoving');
-    this.outerContainer.classList.add('sidebarOpen');
+    this.outerContainer.classList.add('sidebarMoving', 'sidebarOpen');
 
     if (this.active === SidebarView.THUMBS) {
       this._updateThumbnailViewer();
@@ -6887,12 +6873,11 @@ class PDFOutlineViewer {
     div.insertBefore(toggler, div.firstChild);
   }
 
-  _toggleOutlineItem(root, show) {
+  _toggleOutlineItem(root, show = false) {
     this.lastToggleIsShow = show;
-    let togglers = root.querySelectorAll('.outlineItemToggler');
 
-    for (let i = 0, ii = togglers.length; i < ii; ++i) {
-      togglers[i].classList[show ? 'remove' : 'add']('outlineItemsHidden');
+    for (const toggler of root.querySelectorAll('.outlineItemToggler')) {
+      toggler.classList.toggle('outlineItemsHidden', !show);
     }
   }
 
@@ -10595,43 +10580,22 @@ class SecondaryToolbar {
   }
 
   _bindCursorToolsListener(buttons) {
-    this.eventBus.on('cursortoolchanged', function (evt) {
-      buttons.cursorSelectToolButton.classList.remove('toggled');
-      buttons.cursorHandToolButton.classList.remove('toggled');
-
-      switch (evt.tool) {
-        case _pdf_cursor_tools.CursorTool.SELECT:
-          buttons.cursorSelectToolButton.classList.add('toggled');
-          break;
-
-        case _pdf_cursor_tools.CursorTool.HAND:
-          buttons.cursorHandToolButton.classList.add('toggled');
-          break;
-      }
+    this.eventBus.on('cursortoolchanged', function ({
+      tool
+    }) {
+      buttons.cursorSelectToolButton.classList.toggle('toggled', tool === _pdf_cursor_tools.CursorTool.SELECT);
+      buttons.cursorHandToolButton.classList.toggle('toggled', tool === _pdf_cursor_tools.CursorTool.HAND);
     });
   }
 
   _bindScrollModeListener(buttons) {
-    function scrollModeChanged(evt) {
-      buttons.scrollVerticalButton.classList.remove('toggled');
-      buttons.scrollHorizontalButton.classList.remove('toggled');
-      buttons.scrollWrappedButton.classList.remove('toggled');
-
-      switch (evt.mode) {
-        case _ui_utils.ScrollMode.VERTICAL:
-          buttons.scrollVerticalButton.classList.add('toggled');
-          break;
-
-        case _ui_utils.ScrollMode.HORIZONTAL:
-          buttons.scrollHorizontalButton.classList.add('toggled');
-          break;
-
-        case _ui_utils.ScrollMode.WRAPPED:
-          buttons.scrollWrappedButton.classList.add('toggled');
-          break;
-      }
-
-      const isScrollModeHorizontal = evt.mode === _ui_utils.ScrollMode.HORIZONTAL;
+    function scrollModeChanged({
+      mode
+    }) {
+      buttons.scrollVerticalButton.classList.toggle('toggled', mode === _ui_utils.ScrollMode.VERTICAL);
+      buttons.scrollHorizontalButton.classList.toggle('toggled', mode === _ui_utils.ScrollMode.HORIZONTAL);
+      buttons.scrollWrappedButton.classList.toggle('toggled', mode === _ui_utils.ScrollMode.WRAPPED);
+      const isScrollModeHorizontal = mode === _ui_utils.ScrollMode.HORIZONTAL;
       buttons.spreadNoneButton.disabled = isScrollModeHorizontal;
       buttons.spreadOddButton.disabled = isScrollModeHorizontal;
       buttons.spreadEvenButton.disabled = isScrollModeHorizontal;
@@ -10648,24 +10612,12 @@ class SecondaryToolbar {
   }
 
   _bindSpreadModeListener(buttons) {
-    function spreadModeChanged(evt) {
-      buttons.spreadNoneButton.classList.remove('toggled');
-      buttons.spreadOddButton.classList.remove('toggled');
-      buttons.spreadEvenButton.classList.remove('toggled');
-
-      switch (evt.mode) {
-        case _ui_utils.SpreadMode.NONE:
-          buttons.spreadNoneButton.classList.add('toggled');
-          break;
-
-        case _ui_utils.SpreadMode.ODD:
-          buttons.spreadOddButton.classList.add('toggled');
-          break;
-
-        case _ui_utils.SpreadMode.EVEN:
-          buttons.spreadEvenButton.classList.add('toggled');
-          break;
-      }
+    function spreadModeChanged({
+      mode
+    }) {
+      buttons.spreadNoneButton.classList.toggle('toggled', mode === _ui_utils.SpreadMode.NONE);
+      buttons.spreadOddButton.classList.toggle('toggled', mode === _ui_utils.SpreadMode.ODD);
+      buttons.spreadEvenButton.classList.toggle('toggled', mode === _ui_utils.SpreadMode.EVEN);
     }
 
     this.eventBus.on('spreadmodechanged', spreadModeChanged);
