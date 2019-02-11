@@ -134,6 +134,12 @@
     "minbytes": 0,
     "maxbytes": 114688
   },
+  "c:\\windows\\system32\\gdi32full.dll": {
+    "mincount": 0,
+    "maxcount": 2,
+    "minbytes": 0,
+    "maxbytes": 24576
+  },
   "c:\\windows\\system32\\kernel32.dll": {
     "mincount": 0,
     "maxcount": 2,
