@@ -653,12 +653,10 @@ static MOZ_MUST_USE bool SavedFrame_checkThis(JSContext* cx, CallArgs& args,
     return false;
   }
 
-  JSObject* thisObject = CheckedUnwrap(&thisValue.toObject());
-  if (!thisObject || !thisObject->is<SavedFrame>()) {
-    JS_ReportErrorNumberASCII(
-        cx, GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
-        SavedFrame::class_.name, fnName,
-        thisObject ? thisObject->getClass()->name : "object");
+  if (!thisValue.toObject().canUnwrapAs<SavedFrame>()) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_INCOMPATIBLE_PROTO, SavedFrame::class_.name,
+                              fnName, "object");
     return false;
   }
 
@@ -698,13 +696,11 @@ static inline js::SavedFrame* UnwrapSavedFrame(JSContext* cx,
     return nullptr;
   }
 
-  RootedObject savedFrameObj(cx, CheckedUnwrap(obj));
-  if (!savedFrameObj) {
+  js::RootedSavedFrame frame(cx, obj->maybeUnwrapAs<js::SavedFrame>());
+  if (!frame) {
     return nullptr;
   }
 
-  MOZ_RELEASE_ASSERT(savedFrameObj->is<js::SavedFrame>());
-  js::RootedSavedFrame frame(cx, &savedFrameObj->as<js::SavedFrame>());
   return GetFirstSubsumedFrame(cx, principals, frame, selfHosted, skippedAsync);
 }
 
@@ -1193,10 +1189,10 @@ bool SavedStacks::copyAsyncStack(JSContext* cx, HandleObject asyncStack,
     return false;
   }
 
-  RootedObject asyncStackObj(cx, CheckedUnwrap(asyncStack));
+  RootedSavedFrame asyncStackObj(cx,
+                                 asyncStack->maybeUnwrapAs<js::SavedFrame>());
   MOZ_RELEASE_ASSERT(asyncStackObj);
-  MOZ_RELEASE_ASSERT(asyncStackObj->is<js::SavedFrame>());
-  adoptedStack.set(&asyncStackObj->as<js::SavedFrame>());
+  adoptedStack.set(asyncStackObj);
 
   if (!adoptAsyncStack(cx, adoptedStack, asyncCauseAtom, maxFrameCount)) {
     return false;

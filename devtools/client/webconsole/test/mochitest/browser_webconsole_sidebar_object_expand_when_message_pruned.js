@@ -68,8 +68,8 @@ add_task(async function() {
 });
 
 async function showSidebarWithContextMenu(hud, node) {
-  const wrapper = hud.ui.document.querySelector(".webconsole-output-wrapper");
-  const onSidebarShown = waitFor(() => wrapper.querySelector(".sidebar"));
+  const appNode = hud.ui.document.querySelector(".webconsole-app");
+  const onSidebarShown = waitFor(() => appNode.querySelector(".sidebar"));
 
   const contextMenu = await openContextMenu(hud, node);
   const openInSidebar = contextMenu.querySelector("#console-menu-open-sidebar");

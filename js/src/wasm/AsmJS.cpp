@@ -7252,16 +7252,7 @@ static JSFunction* MaybeWrappedNativeFunction(const Value& v) {
     return nullptr;
   }
 
-  JSObject* obj = CheckedUnwrap(&v.toObject());
-  if (!obj) {
-    return nullptr;
-  }
-
-  if (!obj->is<JSFunction>()) {
-    return nullptr;
-  }
-
-  return &obj->as<JSFunction>();
+  return v.toObject().maybeUnwrapIf<JSFunction>();
 }
 
 bool js::IsAsmJSModule(JSContext* cx, unsigned argc, Value* vp) {

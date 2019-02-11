@@ -27,27 +27,27 @@ loader.lazyRequireGetter(this, "getElementText", "devtools/client/webconsole/uti
 
 let store = null;
 
-function WebConsoleOutputWrapper(parentNode, hud, toolbox, owner, document) {
-  EventEmitter.decorate(this);
+class WebConsoleWrapper {
+  constructor(parentNode, hud, toolbox, owner, document) {
+    EventEmitter.decorate(this);
 
-  this.parentNode = parentNode;
-  this.hud = hud;
-  this.toolbox = toolbox;
-  this.owner = owner;
-  this.document = document;
+    this.parentNode = parentNode;
+    this.hud = hud;
+    this.toolbox = toolbox;
+    this.owner = owner;
+    this.document = document;
 
-  this.init = this.init.bind(this);
+    this.init = this.init.bind(this);
 
-  this.queuedMessageAdds = [];
-  this.queuedMessageUpdates = [];
-  this.queuedRequestUpdates = [];
-  this.throttledDispatchPromise = null;
+    this.queuedMessageAdds = [];
+    this.queuedMessageUpdates = [];
+    this.queuedRequestUpdates = [];
+    this.throttledDispatchPromise = null;
 
-  this.telemetry = new Telemetry();
-}
+    this.telemetry = new Telemetry();
+  }
 
-WebConsoleOutputWrapper.prototype = {
-  init: function() {
+  init() {
     return new Promise((resolve) => {
       const attachRefToHud = (id, node) => {
         this.hud[id] = node;
@@ -332,9 +332,9 @@ WebConsoleOutputWrapper.prototype = {
         resolve();
       }
     });
-  },
+  }
 
-  dispatchMessageAdd: function(packet, waitForResponse) {
+  dispatchMessageAdd(packet, waitForResponse) {
     // Wait for the message to render to resolve with the DOM node.
     // This is just for backwards compatibility with old tests, and should
     // be removed once it's not needed anymore.
@@ -363,13 +363,13 @@ WebConsoleOutputWrapper.prototype = {
 
     this.batchedMessageAdd(packet);
     return promise;
-  },
+  }
 
-  dispatchMessagesAdd: function(messages) {
+  dispatchMessagesAdd(messages) {
     this.batchedMessagesAdd(messages);
-  },
+  }
 
-  dispatchMessagesClear: function() {
+  dispatchMessagesClear() {
     // We might still have pending message additions and updates when the clear action is
     // triggered, so we need to flush them to make sure we don't have unexpected behavior
     // in the ConsoleOutput.
@@ -378,9 +378,9 @@ WebConsoleOutputWrapper.prototype = {
     this.queuedRequestUpdates = [];
     store.dispatch(actions.messagesClear());
     this.hud.emit("messages-cleared");
-  },
+  }
 
-  dispatchPrivateMessagesClear: function() {
+  dispatchPrivateMessagesClear() {
     // We might still have pending private message additions when the private messages
     // clear action is triggered. We need to remove any private-window-issued packets from
     // the queue so they won't appear in the output.
@@ -421,25 +421,25 @@ WebConsoleOutputWrapper.prototype = {
     this.queuedMessageAdds = this.queuedMessageAdds.filter(p => !isPacketPrivate(p));
 
     store.dispatch(actions.privateMessagesClear());
-  },
+  }
 
-  dispatchTimestampsToggle: function(enabled) {
+  dispatchTimestampsToggle(enabled) {
     store.dispatch(actions.timestampsToggle(enabled));
-  },
+  }
 
-  dispatchPaused: function(_, packet) {
+  dispatchPaused(_, packet) {
     if (packet.executionPoint) {
       store.dispatch(actions.setPauseExecutionPoint(packet.executionPoint));
     }
-  },
+  }
 
-  dispatchProgress: function(_, packet) {
+  dispatchProgress(_, packet) {
     const {executionPoint, recording} = packet;
     const point = recording ? null : executionPoint;
     store.dispatch(actions.setPauseExecutionPoint(point));
-  },
+  }
 
-  dispatchMessageUpdate: function(message, res) {
+  dispatchMessageUpdate(message, res) {
     // network-message-updated will emit when all the update message arrives.
     // Since we can't ensure the order of the network update, we check
     // that networkInfo.updates has all we need.
@@ -461,22 +461,22 @@ WebConsoleOutputWrapper.prototype = {
     if (res.networkInfo.updates.length === expectedLength) {
       this.batchedMessageUpdates({ res, message });
     }
-  },
+  }
 
-  dispatchRequestUpdate: function(id, data) {
+  dispatchRequestUpdate(id, data) {
     this.batchedRequestUpdates({ id, data });
-  },
+  }
 
-  dispatchSidebarClose: function() {
+  dispatchSidebarClose() {
     store.dispatch(actions.sidebarClose());
-  },
+  }
 
-  dispatchSplitConsoleCloseButtonToggle: function() {
+  dispatchSplitConsoleCloseButtonToggle() {
     store.dispatch(actions.splitConsoleCloseButtonToggle(
       this.toolbox && this.toolbox.currentToolId !== "webconsole"));
-  },
+  }
 
-  dispatchTabWillNavigate: function(packet) {
+  dispatchTabWillNavigate(packet) {
     const { ui } = store.getState();
 
     // For the browser console, we receive tab navigation
@@ -495,43 +495,43 @@ WebConsoleOutputWrapper.prototype = {
         type: Constants.WILL_NAVIGATE,
       });
     }
-  },
+  }
 
-  batchedMessageUpdates: function(info) {
+  batchedMessageUpdates(info) {
     this.queuedMessageUpdates.push(info);
     this.setTimeoutIfNeeded();
-  },
+  }
 
-  batchedRequestUpdates: function(message) {
+  batchedRequestUpdates(message) {
     this.queuedRequestUpdates.push(message);
     this.setTimeoutIfNeeded();
-  },
+  }
 
-  batchedMessageAdd: function(message) {
+  batchedMessageAdd(message) {
     this.queuedMessageAdds.push(message);
     this.setTimeoutIfNeeded();
-  },
+  }
 
-  batchedMessagesAdd: function(messages) {
+  batchedMessagesAdd(messages) {
     this.queuedMessageAdds = this.queuedMessageAdds.concat(messages);
     this.setTimeoutIfNeeded();
-  },
+  }
 
-  dispatchClearHistory: function() {
+  dispatchClearHistory() {
     store.dispatch(actions.clearHistory());
-  },
+  }
 
   /**
    * Returns a Promise that resolves once any async dispatch is finally dispatched.
    */
-  waitAsyncDispatches: function() {
+  waitAsyncDispatches() {
     if (!this.throttledDispatchPromise) {
       return Promise.resolve();
     }
     return this.throttledDispatchPromise;
-  },
+  }
 
-  setTimeoutIfNeeded: function() {
+  setTimeoutIfNeeded() {
     if (this.throttledDispatchPromise) {
       return;
     }
@@ -585,22 +585,22 @@ WebConsoleOutputWrapper.prototype = {
         done();
       }, 50);
     });
-  },
+  }
 
   // Should be used for test purpose only.
-  getStore: function() {
+  getStore() {
     return store;
-  },
+  }
 
-  subscribeToStore: function(callback) {
+  subscribeToStore(callback) {
     store.subscribe(() => callback(store.getState()));
-  },
+  }
 
   // Called by pushing close button.
   closeSplitConsole() {
     this.toolbox.closeSplitConsole();
-  },
-};
+  }
+}
 
 // Exports from this module
-module.exports = WebConsoleOutputWrapper;
+module.exports = WebConsoleWrapper;

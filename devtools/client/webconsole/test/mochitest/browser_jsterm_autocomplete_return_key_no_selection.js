@@ -62,7 +62,7 @@ async function performTests() {
   EventUtils.synthesizeKey("KEY_Enter");
   is(jsterm.getInputValue(), "", "input is empty after KEY_Enter");
 
-  const state = ui.consoleOutput.getStore().getState();
+  const state = ui.wrapper.getStore().getState();
   const entries = getHistoryEntries(state);
   is(entries[entries.length - 1], "window.testBugA", "jsterm history is correct");
 }

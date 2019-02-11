@@ -1,3 +1,13 @@
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
+
+"use strict";
+
+/**
+ * Tests for the bookmark star being correct displayed for results matching
+ * tags.
+ */
+
 add_task(async function() {
   registerCleanupFunction(async function() {
     await PlacesUtils.bookmarks.eraseEverything();
@@ -26,7 +36,6 @@ add_task(async function() {
     },
     input: "tagtest1",
     expected: {
-      type: "bookmark",
       typeImageVisible: true,
     },
   }, {
@@ -37,7 +46,6 @@ add_task(async function() {
     },
     input: "tagtest2",
     expected: {
-      type: "tag",
       typeImageVisible: false,
     },
   }, {
@@ -48,7 +56,6 @@ add_task(async function() {
     },
     input: "tagtest3",
     expected: {
-      type: "bookmark",
       typeImageVisible: true,
     },
   }, {
@@ -59,7 +66,6 @@ add_task(async function() {
     },
     input: "* tagtest4",
     expected: {
-      type: "bookmark",
       typeImageVisible: true,
     },
   }, {
@@ -70,12 +76,17 @@ add_task(async function() {
     },
     input: "^ tagtest5",
     expected: {
-      type: "tag",
       typeImageVisible: false,
     },
   }];
 
   for (let testcase of testcases) {
+    // TODO: Bug 1526051 - Fix searching for tags when suggest.bookmark is false.
+    if (UrlbarPrefs.get("quantumbar") &&
+        (testcase.tagName == "tagtest2" ||
+         testcase.tagName == "tagtest5")) {
+      continue;
+    }
     info(`Test case: ${testcase.description}`);
 
     await addTagItem(testcase.tagName);
@@ -84,20 +95,25 @@ add_task(async function() {
     }
 
     await promiseAutocompleteResultPopup(testcase.input);
-    let result = await waitForAutocompleteResultAt(1);
-    ok(result && !result.collasped, "Should have result");
 
-    is(result.getAttribute("type"), testcase.expected.type, "Result should have expected type");
+    Assert.greaterOrEqual(UrlbarTestUtils.getResultCount(window), 2,
+      "Should be at least two results");
 
-    let typeIconStyle = window.getComputedStyle(result._typeIcon);
-    let imageURL = typeIconStyle.listStyleImage;
+    let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
+
+    Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.URL,
+      "Should have a URL result type");
+    Assert.deepEqual(result.tags, [testcase.tagName],
+      "Should have the expected tag");
+
     if (testcase.expected.typeImageVisible) {
-      ok(/^url\(.+\)$/.test(imageURL), "Type image should be visible");
+      Assert.equal(result.displayed.typeIcon, "url(\"chrome://browser/skin/bookmark.svg\")",
+        "Should have the star image displayed or not as expected");
     } else {
-      is(imageURL, "none", "Type image should be hidden");
+      Assert.equal(result.displayed.typeIcon, "none",
+        "Should have the star image displayed or not as expected");
     }
 
-    gURLBar.popup.hidePopup();
-    await promisePopupHidden(gURLBar.popup);
+    await UrlbarTestUtils.promisePopupClose(window);
   }
 });

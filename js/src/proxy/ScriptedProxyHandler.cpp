@@ -1433,7 +1433,7 @@ const char ScriptedProxyHandler::family = 0;
 const ScriptedProxyHandler ScriptedProxyHandler::singleton;
 
 bool IsRevokedScriptedProxy(JSObject* obj) {
-  obj = CheckedUnwrap(obj);
+  obj = CheckedUnwrapStatic(obj);
   return obj && IsScriptedProxy(obj) && !obj->as<ProxyObject>().target();
 }
 
