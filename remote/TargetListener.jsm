@@ -4,7 +4,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["Debugger"];
+var EXPORTED_SYMBOLS = ["TargetListener"];
 
 const {Connection} = ChromeUtils.import("chrome://remote/content/Connection.jsm");
 const {Session} = ChromeUtils.import("chrome://remote/content/Session.jsm");
