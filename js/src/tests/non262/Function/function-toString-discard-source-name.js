@@ -92,7 +92,7 @@ this.classDecl = classDecl;
 
 assertFunctionName(classDecl, "classDecl");
 assertFunctionName(classExpr, "C");
-assertFunctionName(classExprAnon, "classExprAnon");
+assertFunctionName(classExprAnon, undefined);
 
 
 // Class declarations and expressions (explicit constructor).
