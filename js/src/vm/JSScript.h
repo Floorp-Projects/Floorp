@@ -1478,6 +1478,10 @@ class SharedScriptData {
     return offsetof(SharedScriptData, natoms_);
   }
 
+  template <XDRMode mode>
+  static MOZ_MUST_USE XDRResult XDR(js::XDRState<mode>* xdr,
+                                    js::HandleScript script);
+
  private:
   SharedScriptData() = delete;
   SharedScriptData(const SharedScriptData&) = delete;
@@ -1804,6 +1808,10 @@ class JSScript : public js::gc::TenuredCell {
                                      js::HandleScriptSourceObject sourceObject,
                                      js::HandleFunction fun,
                                      js::MutableHandleScript scriptp);
+
+  template <js::XDRMode mode>
+  friend js::XDRResult js::SharedScriptData::XDR(js::XDRState<mode>* xdr,
+                                                 js::HandleScript script);
 
   friend bool js::detail::CopyScript(
       JSContext* cx, js::HandleScript src, js::HandleScript dst,
