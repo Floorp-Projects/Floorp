@@ -19,7 +19,7 @@ add_task(async function() {
 
   let toolbox = await attachDebugger(recordingTab), client = toolbox.threadClient;
   await client.interrupt();
-  await setBreakpoint(client, "doc_rr_continuous.html", 14);
+  let bp = await setBreakpoint(client, "doc_rr_continuous.html", 14);
   await resumeToLine(client, 14);
   await resumeToLine(client, 14);
   await reverseStepOverToLine(client, 13);
@@ -30,6 +30,7 @@ add_task(async function() {
   ok(tabParent.saveRecording(recordingFile), "Saved recording");
   await once(Services.ppmm, "SaveRecordingFinished");
 
+  await client.removeBreakpoint(bp);
   await toolbox.destroy();
   await gBrowser.removeTab(recordingTab);
 
@@ -43,12 +44,13 @@ add_task(async function() {
   await client.interrupt();
   await checkEvaluateInTopFrame(client, "number", lastNumberValue);
   await reverseStepOverToLine(client, 13);
-  await setBreakpoint(client, "doc_rr_continuous.html", 14);
+  bp = await setBreakpoint(client, "doc_rr_continuous.html", 14);
   await rewindToLine(client, 14);
   await checkEvaluateInTopFrame(client, "number", lastNumberValue - 1);
   await resumeToLine(client, 14);
   await checkEvaluateInTopFrame(client, "number", lastNumberValue);
 
+  await client.removeBreakpoint(bp);
   await toolbox.destroy();
   await gBrowser.removeTab(replayingTab);
 });
