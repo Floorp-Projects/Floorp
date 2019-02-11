@@ -697,7 +697,7 @@ inline void js::Nursery::endProfile(ProfileKey key) {
   totalDurations_[key] += profileDurations_[key];
 }
 
-bool js::Nursery::needIdleTimeCollection() const {
+bool js::Nursery::shouldCollect() const {
   uint32_t threshold = tunables().nurseryFreeThresholdForIdleCollection();
   return minorGCRequested() || freeSpace() < threshold;
 }
