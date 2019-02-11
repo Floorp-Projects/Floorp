@@ -7,6 +7,7 @@
 const { Component, createFactory } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const { scrollIntoView } = require("devtools/client/shared/scroll");
 
 const AUTO_EXPAND_DEPTH = 0;
 const NUMBER_OF_OFFSCREEN_ITEMS = 1;
@@ -429,22 +430,14 @@ class Tree extends Component {
    * @param {Object|undefined} item
    *        The item to be focused, or undefined to focus no item.
    */
-  _focus(index, item) {
-    if (item !== undefined) {
-      const itemStartPosition = index * this.props.itemHeight;
-      const itemEndPosition = (index + 1) * this.props.itemHeight;
-
-      // Note that if the height of the viewport (this.state.height) is less
-      // than `this.props.itemHeight`, we could accidentally try and scroll both
-      // up and down in a futile attempt to make both the item's start and end
-      // positions visible. Instead, give priority to the start of the item by
-      // checking its position first, and then using an "else if", rather than
-      // a separate "if", for the end position.
-      if (this.state.scroll > itemStartPosition) {
-        this.refs.tree.scrollTo(0, itemStartPosition);
-      } else if ((this.state.scroll + this.state.height) < itemEndPosition) {
-        this.refs.tree.scrollTo(0, itemEndPosition - this.state.height);
-      }
+  _focus(index, item, options = {}) {
+    if (item !== undefined && !options.preventAutoScroll) {
+      const treeElement = this.refs.tree;
+      const element = document.getElementById(this.props.getKey(item));
+      scrollIntoView(element, {
+        ...options,
+        container: treeElement,
+      });
     }
 
     if (this.props.onFocus) {
@@ -553,13 +546,13 @@ class Tree extends Component {
 
   _focusFirstNode() {
     const traversal = this._dfsFromRoots();
-    this._focus(0, traversal[0].item);
+    this._focus(0, traversal[0].item, { alignTo: "top" });
   }
 
   _focusLastNode() {
     const traversal = this._dfsFromRoots();
     const lastIndex = traversal.length - 1;
-    this._focus(lastIndex, traversal[lastIndex].item);
+    this._focus(lastIndex, traversal[lastIndex].item, { alignTo: "bottom" });
   }
 
   /**
@@ -588,7 +581,7 @@ class Tree extends Component {
       return;
     }
 
-    this._focus(prevIndex, prev);
+    this._focus(prevIndex, prev, { alignTo: "top" });
   }
 
   /**
@@ -612,7 +605,7 @@ class Tree extends Component {
     }
 
     if (i + 1 < traversal.length) {
-      this._focus(i + 1, traversal[i + 1].item);
+      this._focus(i + 1, traversal[i + 1].item, { alignTo: "bottom" });
     }
   }
 
@@ -635,7 +628,7 @@ class Tree extends Component {
       }
     }
 
-    this._focus(parentIndex, parent);
+    this._focus(parentIndex, parent, { alignTo: "top" });
   }
 
   render() {
@@ -687,7 +680,9 @@ class Tree extends Component {
         hasChildren: !!this.props.getChildren(item).length,
         onExpand: this._onExpand,
         onCollapse: this._onCollapse,
-        onClick: () => this._focus(begin + i, item),
+        // Since the user just clicked the node, there's no need to check if
+        // it should be scrolled into view.
+        onClick: () => this._focus(begin + i, item, { preventAutoScroll: true }),
       }));
     }
 
