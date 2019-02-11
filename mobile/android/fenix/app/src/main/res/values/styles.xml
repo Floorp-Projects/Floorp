@@ -31,6 +31,7 @@
         <item name="awesomeBarDescriptionTextColor">@color/awesome_bar_description_color</item>
 
         <!-- Browser fragment colors -->
+        <item name="browserUrlBarBackground">@drawable/home_search_background_dark</item>
         <item name="browserToolbarBackground">@color/off_white</item>
         <item name="browserToolbarIcons">@color/icons</item>
         <item name="browserToolbarHomeIcon">@drawable/ic_home</item>
@@ -47,7 +48,7 @@
         <item name="android:colorPrimary">@color/private_browsing_primary</item>
 
         <!-- Style the navigation bar -->
-        <item name="android:navigationBarColor">@color/private_browsing_bottom_gradient</item>
+        <item name="android:navigationBarColor">@color/private_browsing_top_gradient</item>
 
         <!-- Home fragment colors -->
         <item name="homeBackgroundTopGradient">@color/private_browsing_top_gradient</item>
@@ -68,7 +69,8 @@
         <item name="awesomeBarDescriptionTextColor">@color/photonGrey40</item>
 
         <!-- Browser fragment colors -->
-        <item name="browserToolbarBackground">@color/private_browsing_bottom_gradient</item>
+        <item name="browserUrlBarBackground">@drawable/home_search_background_private_dark</item>
+        <item name="browserToolbarBackground">@color/private_browsing_top_gradient</item>
         <item name="browserToolbarIcons">@color/off_white</item>
         <item name="browserToolbarHomeIcon">@drawable/ic_home_white</item>
     </style>

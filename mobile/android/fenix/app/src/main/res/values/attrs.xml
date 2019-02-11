@@ -28,6 +28,7 @@
     <attr name="pillWrapperBackground" format="reference"/>
 
     <!-- Browser fragment -->
+    <attr name="browserUrlBarBackground" format="reference"/>
     <attr name="browserToolbarBackground" format="reference"/>
     <attr name="browserToolbarIcons" format="reference"/>
     <attr name="browserToolbarHomeIcon" format="reference"/>
