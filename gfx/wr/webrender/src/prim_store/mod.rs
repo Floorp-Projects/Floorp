@@ -2350,6 +2350,17 @@ impl PrimitiveStore {
                 } else {
                     prim_instance.visibility_info = PrimitiveVisibilityIndex::INVALID;
                 }
+
+                if let Some(mut request) = frame_state.gpu_cache.request(&mut pic.gpu_location) {
+                    request.push(PremultipliedColorF::WHITE);
+                    request.push(PremultipliedColorF::WHITE);
+                    request.push([
+                        -1.0,       // -ve means use prim rect for stretch size
+                        0.0,
+                        0.0,
+                        0.0,
+                    ]);
+                }
             }
             PrimitiveInstanceKind::TextRun { .. } |
             PrimitiveInstanceKind::Clear { .. } |
@@ -2758,8 +2769,16 @@ impl PrimitiveStore {
                                     frame_state.gpu_cache,
                                 );
 
+                                let mut handle = GpuCacheHandle::new();
+                                if let Some(mut request) = frame_state.gpu_cache.request(&mut handle) {
+                                    request.push(PremultipliedColorF::WHITE);
+                                    request.push(PremultipliedColorF::WHITE);
+                                    request.push([tile.rect.size.width, tile.rect.size.height, 0.0, 0.0]);
+                                }
+
                                 image_instance.visible_tiles.push(VisibleImageTile {
                                     tile_offset: tile.offset,
+                                    handle,
                                     edge_flags: tile.edge_flags & edge_flags,
                                     local_rect: tile.rect,
                                     local_clip_rect: tight_clip_rect,
