@@ -8,8 +8,6 @@ ChromeUtils.defineModuleGetter(this, "NewTabUtils",
                                "resource://gre/modules/NewTabUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "PanelMultiView",
                                "resource:///modules/PanelMultiView.jsm");
-ChromeUtils.defineModuleGetter(this, "ScrollbarSampler",
-                               "resource:///modules/ScrollbarSampler.jsm");
 
 /**
  * Maintains the state and dispatches events for the main menu panel.
@@ -49,7 +47,6 @@ const PanelUI = {
 
     this.menuButton.addEventListener("mousedown", this);
     this.menuButton.addEventListener("keypress", this);
-    this._overlayScrollListenerBoundFn = this._overlayScrollListener.bind(this);
 
     Services.obs.addObserver(this, "fullscreen-nav-toolbox");
     Services.obs.addObserver(this, "appMenu-notifications");
@@ -88,7 +85,6 @@ const PanelUI = {
       });
 
     window.addEventListener("activate", this);
-    window.matchMedia("(-moz-overlay-scrollbars)").addListener(this._overlayScrollListenerBoundFn);
     CustomizableUI.addListener(this);
 
     for (let event of this.kEvents) {
@@ -159,9 +155,7 @@ const PanelUI = {
     window.removeEventListener("activate", this);
     this.menuButton.removeEventListener("mousedown", this);
     this.menuButton.removeEventListener("keypress", this);
-    window.matchMedia("(-moz-overlay-scrollbars)").removeListener(this._overlayScrollListenerBoundFn);
     CustomizableUI.removeListener(this);
-    this._overlayScrollListenerBoundFn = null;
     this.libraryView.removeEventListener("ViewShowing", this);
   },
 
@@ -672,12 +666,6 @@ const PanelUI = {
     let tooltipString = CustomizableUI.getLocalizedProperty({x: tooltipId}, "x", stringArgs);
     let quitButton = document.getElementById("PanelUI-quit");
     quitButton.setAttribute("tooltiptext", tooltipString);
-  },
-
-  _overlayScrollListenerBoundFn: null,
-  _overlayScrollListener(aMQL) {
-    ScrollbarSampler.resetSystemScrollbarWidth();
-    this._scrollWidth = null;
   },
 
   _hidePopup() {

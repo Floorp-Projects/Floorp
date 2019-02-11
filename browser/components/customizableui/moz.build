@@ -20,7 +20,6 @@ EXTRA_JS_MODULES += [
     'CustomizeMode.jsm',
     'DragPositionManager.jsm',
     'PanelMultiView.jsm',
-    'ScrollbarSampler.jsm',
     'SearchWidgetTracker.jsm',
 ]
 
