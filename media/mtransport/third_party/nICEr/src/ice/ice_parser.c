@@ -492,7 +492,7 @@ nr_ice_peer_ctx_parse_global_attributes(nr_ice_peer_ctx *pctx, char **attrs, int
         }
         else if (!strncasecmp(str, "ice-lite", 8)) {
             pctx->peer_lite = 1;
-            pctx->controlling = 0;
+            pctx->controlling = 1;
 
             fast_forward(&str, 8);
         }
