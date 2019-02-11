@@ -3185,7 +3185,7 @@ void CodeGenerator::emitLambdaInit(Register output, Register envChain,
 typedef bool (*SetFunNameFn)(JSContext*, HandleFunction, HandleValue,
                              FunctionPrefixKind);
 static const VMFunction SetFunNameInfo =
-    FunctionInfo<SetFunNameFn>(js::SetFunctionName, "SetFunName");
+    FunctionInfo<SetFunNameFn>(js::SetFunctionNameIfNoOwnName, "SetFunName");
 
 void CodeGenerator::visitSetFunName(LSetFunName* lir) {
   pushArg(Imm32(lir->mir()->prefixKind()));

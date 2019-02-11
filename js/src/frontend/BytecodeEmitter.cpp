@@ -3079,49 +3079,19 @@ bool BytecodeEmitter::emitDefault(ParseNode* defaultExpr, ParseNode* pattern) {
   return true;
 }
 
-bool BytecodeEmitter::emitAnonymousFunctionWithName(ParseNode* node,
-                                                    HandleAtom name) {
-  MOZ_ASSERT(node->isDirectRHSAnonFunction());
+bool BytecodeEmitter::setOrEmitSetFunName(ParseNode* maybeFun,
+                                          HandleAtom name) {
+  MOZ_ASSERT(maybeFun->isDirectRHSAnonFunction());
 
-  if (node->is<FunctionNode>()) {
-    if (!emitTree(node)) {
-      return false;
-    }
-
+  if (maybeFun->is<FunctionNode>()) {
     // Function doesn't have 'name' property at this point.
     // Set function's name at compile time.
-    return setFunName(node->as<FunctionNode>().funbox()->function(), name);
+    return setFunName(maybeFun->as<FunctionNode>().funbox()->function(), name);
   }
 
-  MOZ_ASSERT(node->is<ClassNode>());
+  MOZ_ASSERT(maybeFun->isKind(ParseNodeKind::ClassDecl));
 
-  return emitClass(&node->as<ClassNode>(), ClassNameKind::InferredName, name);
-}
-
-bool BytecodeEmitter::emitAnonymousFunctionWithComputedName(
-    ParseNode* node, FunctionPrefixKind prefixKind) {
-  MOZ_ASSERT(node->isDirectRHSAnonFunction());
-
-  if (node->is<FunctionNode>()) {
-    if (!emitTree(node)) {
-      //            [stack] NAME FUN
-      return false;
-    }
-    if (!emitDupAt(1)) {
-      //            [stack] NAME FUN NAME
-      return false;
-    }
-    if (!emit2(JSOP_SETFUNNAME, uint8_t(prefixKind))) {
-      //            [stack] NAME FUN
-      return false;
-    }
-    return true;
-  }
-
-  MOZ_ASSERT(node->is<ClassNode>());
-  MOZ_ASSERT(prefixKind == FunctionPrefixKind::None);
-
-  return emitClass(&node->as<ClassNode>(), ClassNameKind::ComputedName);
+  return emitSetClassConstructorName(name);
 }
 
 bool BytecodeEmitter::setFunName(JSFunction* fun, JSAtom* name) {
@@ -3139,16 +3109,33 @@ bool BytecodeEmitter::setFunName(JSFunction* fun, JSAtom* name) {
   return true;
 }
 
+bool BytecodeEmitter::emitSetClassConstructorName(JSAtom* name) {
+  uint32_t nameIndex;
+  if (!makeAtomIndex(name, &nameIndex)) {
+    return false;
+  }
+  if (!emitIndexOp(JSOP_STRING, nameIndex)) {
+    //              [stack] FUN NAME
+    return false;
+  }
+  uint8_t kind = uint8_t(FunctionPrefixKind::None);
+  if (!emit2(JSOP_SETFUNNAME, kind)) {
+    //              [stack] FUN
+    return false;
+  }
+  return true;
+}
+
 bool BytecodeEmitter::emitInitializer(ParseNode* initializer,
                                       ParseNode* pattern) {
+  if (!emitTree(initializer)) {
+    return false;
+  }
+
   if (initializer->isDirectRHSAnonFunction()) {
     MOZ_ASSERT(!pattern->isInParens());
     RootedAtom name(cx, pattern->as<NameNode>().name());
-    if (!emitAnonymousFunctionWithName(initializer, name)) {
-      return false;
-    }
-  } else {
-    if (!emitTree(initializer)) {
+    if (!setOrEmitSetFunName(initializer, name)) {
       return false;
     }
   }
@@ -4074,18 +4061,17 @@ bool BytecodeEmitter::emitAssignment(ParseNode* lhs, JSOp compoundOp,
       return false;
     }
 
+    // Emit the RHS. If we emitted a BIND[G]NAME, then the scope is on
+    // the top of the stack and we need to pick the right RHS value.
+    uint8_t offset = noe.emittedBindOp() ? 2 : 1;
+    if (!EmitAssignmentRhs(this, rhs, offset)) {
+      //            [stack] ENV? VAL? RHS
+      return false;
+    }
     if (rhs && rhs->isDirectRHSAnonFunction()) {
       MOZ_ASSERT(!nameNode->isInParens());
       MOZ_ASSERT(!isCompound);
-      if (!emitAnonymousFunctionWithName(rhs, name)) {
-        //          [stack] ENV? VAL? RHS
-        return false;
-      }
-    } else {
-      // Emit the RHS. If we emitted a BIND[G]NAME, then the scope is on
-      // the top of the stack and we need to pick the right RHS value.
-      uint8_t offset = noe.emittedBindOp() ? 2 : 1;
-      if (!EmitAssignmentRhs(this, rhs, offset)) {
+      if (!setOrEmitSetFunName(rhs, name)) {
         //          [stack] ENV? VAL? RHS
         return false;
       }
@@ -7675,54 +7661,17 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
 
     ParseNode* key = prop->left();
     ParseNode* propVal = prop->right();
+    bool isPropertyAnonFunctionOrClass = propVal->isDirectRHSAnonFunction();
     JSOp op = propdef->getOp();
     MOZ_ASSERT(op == JSOP_INITPROP || op == JSOP_INITPROP_GETTER ||
                op == JSOP_INITPROP_SETTER);
 
-    auto emitValue = [this, &key, &propVal, op, &pe]() {
+    auto emitValue = [this, &propVal, &pe]() {
       //            [stack] CTOR? OBJ CTOR? KEY?
 
-      if (propVal->isDirectRHSAnonFunction()) {
-        if (key->isKind(ParseNodeKind::NumberExpr)) {
-          MOZ_ASSERT(op == JSOP_INITPROP);
-
-          NumericLiteral* literal = &key->as<NumericLiteral>();
-          RootedAtom keyAtom(cx, NumberToAtom(cx, literal->value()));
-          if (!keyAtom) {
-            return false;
-          }
-          if (!emitAnonymousFunctionWithName(propVal, keyAtom)) {
-            //      [stack] CTOR? OBJ CTOR? KEY VAL
-            return false;
-          }
-        } else if (key->isKind(ParseNodeKind::ObjectPropertyName) ||
-                   key->isKind(ParseNodeKind::StringExpr)) {
-          MOZ_ASSERT(op == JSOP_INITPROP);
-
-          RootedAtom keyAtom(cx, key->as<NameNode>().atom());
-          if (!emitAnonymousFunctionWithName(propVal, keyAtom)) {
-            //      [stack] CTOR? OBJ CTOR? VAL
-            return false;
-          }
-        } else {
-          MOZ_ASSERT(key->isKind(ParseNodeKind::ComputedName));
-
-          FunctionPrefixKind prefix = op == JSOP_INITPROP
-                                          ? FunctionPrefixKind::None
-                                          : op == JSOP_INITPROP_GETTER
-                                                ? FunctionPrefixKind::Get
-                                                : FunctionPrefixKind::Set;
-
-          if (!emitAnonymousFunctionWithComputedName(propVal, prefix)) {
-            //      [stack] CTOR? OBJ CTOR? KEY VAL
-            return false;
-          }
-        }
-      } else {
-        if (!emitTree(propVal)) {
-          //        [stack] CTOR? OBJ CTOR? KEY? VAL
-          return false;
-        }
+      if (!emitTree(propVal)) {
+        //          [stack] CTOR? OBJ CTOR? KEY? VAL
+        return false;
       }
 
       if (propVal->is<FunctionNode>() &&
@@ -7763,18 +7712,20 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
 
       switch (op) {
         case JSOP_INITPROP:
-          if (!pe.emitInitIndexProp()) {
+          if (!pe.emitInitIndexProp(isPropertyAnonFunctionOrClass)) {
             //      [stack] CTOR? OBJ
             return false;
           }
           break;
         case JSOP_INITPROP_GETTER:
+          MOZ_ASSERT(!isPropertyAnonFunctionOrClass);
           if (!pe.emitInitIndexGetter()) {
             //      [stack] CTOR? OBJ
             return false;
           }
           break;
         case JSOP_INITPROP_SETTER:
+          MOZ_ASSERT(!isPropertyAnonFunctionOrClass);
           if (!pe.emitInitIndexSetter()) {
             //      [stack] CTOR? OBJ
             return false;
@@ -7807,21 +7758,43 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
         return false;
       }
 
+      RootedFunction anonFunction(cx);
+      if (isPropertyAnonFunctionOrClass) {
+        MOZ_ASSERT(op == JSOP_INITPROP);
+
+        if (propVal->is<FunctionNode>()) {
+          // When the value is function, we set the function's name
+          // at the compile-time, instead of emitting SETFUNNAME.
+          FunctionBox* funbox = propVal->as<FunctionNode>().funbox();
+          anonFunction = funbox->function();
+        } else {
+          // Only object literal can have a property where key is
+          // name and value is an anonymous class.
+          //
+          //   ({ foo: class {} });
+          MOZ_ASSERT(type == ObjectLiteral);
+          MOZ_ASSERT(propVal->isKind(ParseNodeKind::ClassDecl));
+        }
+      }
+
       RootedAtom keyAtom(cx, key->as<NameNode>().atom());
       switch (op) {
         case JSOP_INITPROP:
-          if (!pe.emitInitProp(keyAtom)) {
+          if (!pe.emitInitProp(keyAtom, isPropertyAnonFunctionOrClass,
+                               anonFunction)) {
             //      [stack] CTOR? OBJ
             return false;
           }
           break;
         case JSOP_INITPROP_GETTER:
+          MOZ_ASSERT(!isPropertyAnonFunctionOrClass);
           if (!pe.emitInitGetter(keyAtom)) {
             //      [stack] CTOR? OBJ
             return false;
           }
           break;
         case JSOP_INITPROP_SETTER:
+          MOZ_ASSERT(!isPropertyAnonFunctionOrClass);
           if (!pe.emitInitSetter(keyAtom)) {
             //      [stack] CTOR? OBJ
             return false;
@@ -7857,18 +7830,20 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
 
     switch (op) {
       case JSOP_INITPROP:
-        if (!pe.emitInitComputedProp()) {
+        if (!pe.emitInitComputedProp(isPropertyAnonFunctionOrClass)) {
           //        [stack] CTOR? OBJ
           return false;
         }
         break;
       case JSOP_INITPROP_GETTER:
+        MOZ_ASSERT(isPropertyAnonFunctionOrClass);
         if (!pe.emitInitComputedGetter()) {
           //        [stack] CTOR? OBJ
           return false;
         }
         break;
       case JSOP_INITPROP_SETTER:
+        MOZ_ASSERT(isPropertyAnonFunctionOrClass);
         if (!pe.emitInitComputedSetter()) {
           //        [stack] CTOR? OBJ
           return false;
@@ -8525,27 +8500,18 @@ static MOZ_ALWAYS_INLINE FunctionNode* FindConstructor(JSContext* cx,
 
 // This follows ES6 14.5.14 (ClassDefinitionEvaluation) and ES6 14.5.15
 // (BindingClassDeclarationEvaluation).
-bool BytecodeEmitter::emitClass(
-    ClassNode* classNode,
-    ClassNameKind nameKind /* = ClassNameKind::BindingName */,
-    HandleAtom nameForAnonymousClass /* = nullptr */) {
-  MOZ_ASSERT((nameKind == ClassNameKind::InferredName) ==
-             (nameForAnonymousClass != nullptr));
-
+bool BytecodeEmitter::emitClass(ClassNode* classNode) {
+  ClassNames* names = classNode->names();
   ParseNode* heritageExpression = classNode->heritage();
   ListNode* classMembers = classNode->memberList();
   FunctionNode* constructor = FindConstructor(cx, classMembers);
 
-  // If |nameKind != ClassNameKind::ComputedName|
   //                [stack]
-  // Else
-  //                [stack] NAME
 
   ClassEmitter ce(this);
   RootedAtom innerName(cx);
   ClassEmitter::Kind kind = ClassEmitter::Kind::Expression;
-  if (ClassNames* names = classNode->names()) {
-    MOZ_ASSERT(nameKind == ClassNameKind::BindingName);
+  if (names) {
     innerName = names->innerBinding()->name();
     MOZ_ASSERT(innerName);
 
@@ -8566,19 +8532,17 @@ bool BytecodeEmitter::emitClass(
   // on top for EmitPropertyList, because we expect static properties to be
   // rarer. The result is a few more swaps than we would like. Such is life.
   bool isDerived = !!heritageExpression;
-  bool hasNameOnStack = nameKind == ClassNameKind::ComputedName;
   if (isDerived) {
     if (!emitTree(heritageExpression)) {
       //            [stack] HERITAGE
       return false;
     }
-    if (!ce.emitDerivedClass(innerName, nameForAnonymousClass,
-                             hasNameOnStack)) {
+    if (!ce.emitDerivedClass(innerName)) {
       //            [stack] HERITAGE HOMEOBJ
       return false;
     }
   } else {
-    if (!ce.emitClass(innerName, nameForAnonymousClass, hasNameOnStack)) {
+    if (!ce.emitClass(innerName)) {
       //            [stack] HOMEOBJ
       return false;
     }
@@ -8592,12 +8556,6 @@ bool BytecodeEmitter::emitClass(
     if (!emitFunction(constructor, isDerived)) {
       //            [stack] HOMEOBJ CTOR
       return false;
-    }
-    if (nameKind == ClassNameKind::InferredName) {
-      if (!setFunName(constructor->funbox()->function(),
-                      nameForAnonymousClass)) {
-        return false;
-      }
     }
     if (!ce.emitInitConstructor(needsHomeObject)) {
       //            [stack] CTOR HOMEOBJ
@@ -8628,23 +8586,21 @@ bool BytecodeEmitter::emitClass(
 bool BytecodeEmitter::emitExportDefault(BinaryNode* exportNode) {
   MOZ_ASSERT(exportNode->isKind(ParseNodeKind::ExportDefaultStmt));
 
-  ParseNode* valueNode = exportNode->left();
-  if (valueNode->isDirectRHSAnonFunction()) {
-    MOZ_ASSERT(exportNode->right());
-
-    HandlePropertyName name = cx->names().default_;
-    if (!emitAnonymousFunctionWithName(valueNode, name)) {
-      return false;
-    }
-  } else {
-    if (!emitTree(valueNode)) {
-      return false;
-    }
+  ParseNode* nameNode = exportNode->left();
+  if (!emitTree(nameNode)) {
+    return false;
   }
 
   if (ParseNode* binding = exportNode->right()) {
     if (!emitLexicalInitialization(&binding->as<NameNode>())) {
       return false;
+    }
+
+    if (nameNode->isDirectRHSAnonFunction()) {
+      HandlePropertyName name = cx->names().default_;
+      if (!setOrEmitSetFunName(nameNode, name)) {
+        return false;
+      }
     }
 
     if (!emit1(JSOP_POP)) {
