@@ -1,0 +1,25 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>Keystore.createEncryptCipher - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.lib.dataprotect</a>&nbsp;/&nbsp;<a href="index.html">Keystore</a>&nbsp;/&nbsp;<a href="./create-encrypt-cipher.html">createEncryptCipher</a><br/>
+<br/>
+<h1>createEncryptCipher</h1>
+<a name="mozilla.components.lib.dataprotect.Keystore$createEncryptCipher()"></a>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">createEncryptCipher</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://developer.android.com/reference/javax/crypto/Cipher.html"><span class="identifier">Cipher</span></a></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/lib/dataprotect/src/main/java/mozilla/components/lib/dataprotect/Keystore.kt#L261">(source)</a>
+<p>Create a cipher initialized for encrypting data with the managed key.</p>
+<p>This "low-level" method is useful when a cryptographic context is needed to integrate with
+other APIs, such as the <code>FingerprintManager</code>.</p>
+<p><strong>NOTE:</strong> The caller is responsible for associating certain encryption factors, such as
+the initialization vector and/or additional authentication data (AAD), with the resulting
+ciphertext or decryption will fail.</p>
+<h3>Exceptions</h3>
+<p><a name="GeneralSecurityException"></a>
+<code>GeneralSecurityException</code> - If the Cipher could not be created and initialized</p>
+<p><strong>Return</strong><br/>
+The <a href="https://developer.android.com/reference/javax/crypto/Cipher.html">Cipher</a>, initialized and ready to encrypt data with.</p>
+</BODY>
+</HTML>

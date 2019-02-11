@@ -1,0 +1,179 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>FindInPageBar - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.feature.findinpage.view</a>&nbsp;/&nbsp;<a href="./index.html">FindInPageBar</a><br/>
+<br/>
+<h1>FindInPageBar</h1>
+<code><span class="keyword">class </span><span class="identifier">FindInPageBar</span>&nbsp;<span class="symbol">:</span>&nbsp;<span class="identifier">ConstraintLayout</span><span class="symbol">, </span><a href="../-find-in-page-view/index.html"><span class="identifier">FindInPageView</span></a></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/feature/findinpage/src/main/java/mozilla/components/feature/findinpage/view/FindInPageBar.kt#L29">(source)</a>
+<p>A customizable "Find in page" bar implementing <a href="../-find-in-page-view/index.html">FindInPageView</a>.</p>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">FindInPageBar</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.feature.findinpage.view.FindInPageBar$<init>(android.content.Context, android.util.AttributeSet, kotlin.Int)/context">context</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/content/Context.html"><span class="identifier">Context</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.feature.findinpage.view.FindInPageBar$<init>(android.content.Context, android.util.AttributeSet, kotlin.Int)/attrs">attrs</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/util/AttributeSet.html"><span class="identifier">AttributeSet</span></a><span class="symbol">?</span>&nbsp;<span class="symbol">=</span>&nbsp;null<span class="symbol">, </span><span class="identifier" id="mozilla.components.feature.findinpage.view.FindInPageBar$<init>(android.content.Context, android.util.AttributeSet, kotlin.Int)/defStyleAttr">defStyleAttr</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a>&nbsp;<span class="symbol">=</span>&nbsp;0<span class="symbol">)</span></code>
+<p>A customizable "Find in page" bar implementing <a href="../-find-in-page-view/index.html">FindInPageView</a>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="listener.html">listener</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">listener</span><span class="symbol">: </span><a href="../-find-in-page-view/-listener/index.html"><span class="identifier">Listener</span></a><span class="symbol">?</span></code>
+<p>Listener to be invoked after the user performs certain actions (e.g. "find next result").</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="clear.html">clear</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">clear</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Clears the UI state.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="display-result.html">displayResult</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">displayResult</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.feature.findinpage.view.FindInPageBar$displayResult(mozilla.components.browser.session.Session.FindResult)/result">result</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.browser.session/-session/-find-result/index.html"><span class="identifier">FindResult</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Displays the given <a href="../../mozilla.components.browser.session/-session/-find-result/index.html">Session.FindResult</a> state in the view.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="focus.html">focus</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">focus</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Requests focus for the input element the user can type their query into.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Inherited Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../-find-in-page-view/as-view.html">asView</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">asView</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a></code>
+<p>Casts this <a href="../-find-in-page-view/index.html">FindInPageView</a> interface to an actual Android <a href="https://developer.android.com/reference/android/view/View.html">View</a> object.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Extension Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../../mozilla.components.support.ktx.android.view/android.view.-view/is-l-t-r.html">isLTR</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">.</span><span class="identifier">isLTR</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Is the horizontal layout direction of this view from Left to Right?</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.support.ktx.android.view/android.view.-view/is-r-t-l.html">isRTL</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">.</span><span class="identifier">isRTL</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Is the horizontal layout direction of this view from Right to Left?</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Extension Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../../mozilla.components.support.ktx.android.view/android.view.-view-group/for-each.html">forEach</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><a href="https://developer.android.com/reference/android/view/ViewGroup.html"><span class="identifier">ViewGroup</span></a><span class="symbol">.</span><span class="identifier">forEach</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.support.ktx.android.view$forEach(android.view.ViewGroup, kotlin.Function1((android.view.View, kotlin.Unit)))/action">action</span><span class="symbol">:</span>&nbsp;<span class="symbol">(</span><a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Performs the given action on each View in this ViewGroup.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.support.ktx.android.view/android.view.-view/hide-keyboard.html">hideKeyboard</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">.</span><span class="identifier">hideKeyboard</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Hides the soft input window.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.support.ktx.android.view/android.view.-view/is-gone.html">isGone</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">.</span><span class="identifier">isGone</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Returns true if this view's visibility is set to View.GONE.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.support.ktx.android.view/android.view.-view/is-invisible.html">isInvisible</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">.</span><span class="identifier">isInvisible</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Returns true if this view's visibility is set to View.INVISIBLE.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.support.ktx.android.view/android.view.-view/is-visible.html">isVisible</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">.</span><span class="identifier">isVisible</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Returns true if this view's visibility is set to View.VISIBLE.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.support.ktx.android.view/android.view.-view/set-padding.html">setPadding</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">.</span><span class="identifier">setPadding</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.support.ktx.android.view$setPadding(android.view.View, mozilla.components.support.base.android.Padding)/padding">padding</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.support.base.android/-padding/index.html"><span class="identifier">Padding</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Set a padding using <a href="../../mozilla.components.support.base.android/-padding/index.html">Padding</a> object.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.support.ktx.android.view/android.view.-view/show-keyboard.html">showKeyboard</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">.</span><span class="identifier">showKeyboard</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.support.ktx.android.view$showKeyboard(android.view.View, kotlin.Int)/flags">flags</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a>&nbsp;<span class="symbol">=</span>&nbsp;InputMethodManager.SHOW_IMPLICIT<span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Tries to focus this view and show the soft input window for it.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

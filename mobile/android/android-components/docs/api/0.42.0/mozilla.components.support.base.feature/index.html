@@ -1,0 +1,46 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>mozilla.components.support.base.feature - android-components</title>
+<link rel="stylesheet" href="../../style.css">
+</HEAD>
+<BODY>
+<a href="../index.html">android-components</a>&nbsp;/&nbsp;<a href="./index.html">mozilla.components.support.base.feature</a><br/>
+<br/>
+<h2>Package mozilla.components.support.base.feature</h2>
+<h3>Types</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-back-handler/index.html">BackHandler</a></p>
+</td>
+<td>
+<code><span class="keyword">interface </span><span class="identifier">BackHandler</span></code>
+<p>Generic interface for fragments, features and other components that want to handle 'back' button presses.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-lifecycle-aware-feature/index.html">LifecycleAwareFeature</a></p>
+</td>
+<td>
+<code><span class="keyword">interface </span><span class="identifier">LifecycleAwareFeature</span>&nbsp;<span class="symbol">:</span>&nbsp;<span class="identifier">LifecycleObserver</span></code>
+<p>An interface for all entry points to feature components to implement in order to make them lifecycle aware.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-view-bound-feature-wrapper/index.html">ViewBoundFeatureWrapper</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">ViewBoundFeatureWrapper</span><span class="symbol">&lt;</span><span class="identifier">T</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-lifecycle-aware-feature/index.html"><span class="identifier">LifecycleAwareFeature</span></a><span class="symbol">&gt;</span></code>
+<p>Wrapper for <a href="-lifecycle-aware-feature/index.html">LifecycleAwareFeature</a> instances that keep a strong references to a <a href="https://developer.android.com/reference/android/view/View.html">View</a>. This wrapper is helpful
+when the lifetime of the <a href="https://developer.android.com/reference/android/view/View.html">View</a> may be shorter than the <a href="#">Lifecycle</a> and you need to keep a reference to the
+<a href="-lifecycle-aware-feature/index.html">LifecycleAwareFeature</a> that may outlive the <a href="https://developer.android.com/reference/android/view/View.html">View</a>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

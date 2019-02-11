@@ -1,0 +1,102 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>PermissionRequest - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.concept.engine.permission</a>&nbsp;/&nbsp;<a href="./index.html">PermissionRequest</a><br/>
+<br/>
+<h1>PermissionRequest</h1>
+<code><span class="keyword">interface </span><span class="identifier">PermissionRequest</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/permission/PermissionRequest.kt#L14">(source)</a>
+<p>Represents a permission request, used when engines need access to protected
+resources. Every request must be handled by either calling <a href="grant.html">grant</a> or <a href="reject.html">reject</a>.</p>
+<h3>Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="permissions.html">permissions</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">val </span><span class="identifier">permissions</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html"><span class="identifier">List</span></a><span class="symbol">&lt;</span><a href="../-permission/index.html"><span class="identifier">Permission</span></a><span class="symbol">&gt;</span></code>
+<p>List of requested permissions.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="uri.html">uri</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">val </span><span class="identifier">uri</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span></code>
+<p>The origin URI which caused the permissions to be requested.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="contains-video-and-audio-sources.html">containsVideoAndAudioSources</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">containsVideoAndAudioSources</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="grant.html">grant</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">grant</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.engine.permission.PermissionRequest$grant(kotlin.collections.List((mozilla.components.concept.engine.permission.Permission)))/permissions">permissions</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html"><span class="identifier">List</span></a><span class="symbol">&lt;</span><a href="../-permission/index.html"><span class="identifier">Permission</span></a><span class="symbol">&gt;</span>&nbsp;<span class="symbol">=</span>&nbsp;this.permissions<span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Grants the provided permissions, or all requested permissions, if none
+are provided.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="grant-if.html">grantIf</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">grantIf</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.engine.permission.PermissionRequest$grantIf(kotlin.Function1((mozilla.components.concept.engine.permission.Permission, kotlin.Boolean)))/predicate">predicate</span><span class="symbol">:</span>&nbsp;<span class="symbol">(</span><a href="../-permission/index.html"><span class="identifier">Permission</span></a><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Grants this permission request if the provided predicate is true
+for any of the requested permissions.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="reject.html">reject</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">reject</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Rejects the requested permissions.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Inheritors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../../mozilla.components.browser.engine.gecko.permission/-gecko-permission-request/index.html">GeckoPermissionRequest</a></p>
+</td>
+<td>
+<code><span class="keyword">sealed</span> <span class="keyword">class </span><span class="identifier">GeckoPermissionRequest</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">PermissionRequest</span></a></code>
+<p>Gecko-based implementation of <a href="./index.html">PermissionRequest</a>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.browser.engine.system.permission/-system-permission-request/index.html">SystemPermissionRequest</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">SystemPermissionRequest</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">PermissionRequest</span></a></code>
+<p>WebView-based implementation of <a href="./index.html">PermissionRequest</a>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

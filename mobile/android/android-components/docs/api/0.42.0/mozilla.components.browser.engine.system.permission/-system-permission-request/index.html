@@ -1,0 +1,109 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>SystemPermissionRequest - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.browser.engine.system.permission</a>&nbsp;/&nbsp;<a href="./index.html">SystemPermissionRequest</a><br/>
+<br/>
+<h1>SystemPermissionRequest</h1>
+<code><span class="keyword">class </span><span class="identifier">SystemPermissionRequest</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.concept.engine.permission/-permission-request/index.html"><span class="identifier">PermissionRequest</span></a></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-system/src/main/java/mozilla/components/browser/engine/system/permission/SystemPermissionRequest.kt#L18">(source)</a>
+<p>WebView-based implementation of <a href="../../mozilla.components.concept.engine.permission/-permission-request/index.html">PermissionRequest</a>.</p>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">SystemPermissionRequest</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.engine.system.permission.SystemPermissionRequest$<init>(android.webkit.PermissionRequest)/nativeRequest">nativeRequest</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/webkit/PermissionRequest.html"><span class="identifier">PermissionRequest</span></a><span class="symbol">)</span></code>
+<p>WebView-based implementation of <a href="../../mozilla.components.concept.engine.permission/-permission-request/index.html">PermissionRequest</a>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="permissions.html">permissions</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">permissions</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html"><span class="identifier">List</span></a><span class="symbol">&lt;</span><a href="../../mozilla.components.concept.engine.permission/-permission/index.html"><span class="identifier">Permission</span></a><span class="symbol">&gt;</span></code>
+<p>List of requested permissions.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="uri.html">uri</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">uri</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code>
+<p>The origin URI which caused the permissions to be requested.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="grant.html">grant</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">grant</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.engine.system.permission.SystemPermissionRequest$grant(kotlin.collections.List((mozilla.components.concept.engine.permission.Permission)))/permissions">permissions</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html"><span class="identifier">List</span></a><span class="symbol">&lt;</span><a href="../../mozilla.components.concept.engine.permission/-permission/index.html"><span class="identifier">Permission</span></a><span class="symbol">&gt;</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Grants the provided permissions, or all requested permissions, if none
+are provided.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="reject.html">reject</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">reject</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Rejects the requested permissions.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Inherited Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../../mozilla.components.concept.engine.permission/-permission-request/contains-video-and-audio-sources.html">containsVideoAndAudioSources</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">containsVideoAndAudioSources</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.concept.engine.permission/-permission-request/grant-if.html">grantIf</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">grantIf</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.engine.permission.PermissionRequest$grantIf(kotlin.Function1((mozilla.components.concept.engine.permission.Permission, kotlin.Boolean)))/predicate">predicate</span><span class="symbol">:</span>&nbsp;<span class="symbol">(</span><a href="../../mozilla.components.concept.engine.permission/-permission/index.html"><span class="identifier">Permission</span></a><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Grants this permission request if the provided predicate is true
+for any of the requested permissions.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Companion Object Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="permissions-map.html">permissionsMap</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">permissionsMap</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/index.html"><span class="identifier">Map</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">,</span>&nbsp;<a href="../../mozilla.components.concept.engine.permission/-permission/index.html"><span class="identifier">Permission</span></a><span class="symbol">&gt;</span></code></td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

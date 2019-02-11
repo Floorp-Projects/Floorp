@@ -1,0 +1,202 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>mozilla.components.service.fxa - android-components</title>
+<link rel="stylesheet" href="../../style.css">
+</HEAD>
+<BODY>
+<a href="../index.html">android-components</a>&nbsp;/&nbsp;<a href="./index.html">mozilla.components.service.fxa</a><br/>
+<br/>
+<h2>Package mozilla.components.service.fxa</h2>
+<h3>Types</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-access-token-info/index.html">AccessTokenInfo</a></p>
+</td>
+<td>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">AccessTokenInfo</span></code>
+<p>The result of authentication with FxA via an OAuth flow.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-account-observer/index.html">AccountObserver</a></p>
+</td>
+<td>
+<code><span class="keyword">interface </span><span class="identifier">AccountObserver</span></code>
+<p>Observer interface which lets its users monitor account state changes and major events.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-account-state/index.html">AccountState</a></p>
+</td>
+<td>
+<code><span class="keyword">enum</span> <span class="keyword">class </span><span class="identifier">AccountState</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="-account-storage/index.html">AccountStorage</a></p>
+</td>
+<td>
+<code><span class="keyword">interface </span><span class="identifier">AccountStorage</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="-avatar/index.html">Avatar</a></p>
+</td>
+<td>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">Avatar</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="-firefox-account/index.html">FirefoxAccount</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">FirefoxAccount</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-firefox-account-shaped/index.html"><span class="identifier">FirefoxAccountShaped</span></a></code>
+<p>FirefoxAccount represents the authentication state of a client.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-firefox-account-shaped/index.html">FirefoxAccountShaped</a></p>
+</td>
+<td>
+<code><span class="keyword">interface </span><span class="identifier">FirefoxAccountShaped</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/java/lang/AutoCloseable.html"><span class="identifier">AutoCloseable</span></a></code>
+<p>Facilitates testing consumers of FirefoxAccount.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-fxa-account-manager/index.html">FxaAccountManager</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">class </span><span class="identifier">FxaAccountManager</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/java/io/Closeable.html"><span class="identifier">Closeable</span></a><span class="symbol">, </span><a href="../mozilla.components.support.base.observer/-observable/index.html"><span class="identifier">Observable</span></a><span class="symbol">&lt;</span><a href="-account-observer/index.html"><span class="identifier">AccountObserver</span></a><span class="symbol">&gt;</span></code>
+<p>An account manager which encapsulates various internal details of an account lifecycle and provides
+an observer interface along with a public API for interacting with an account.
+The internal state machine abstracts over state space as exposed by the fxaclient library, not
+the internal states experienced by lower-level representation of a Firefox Account; those are opaque to us.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-o-auth-scoped-key/index.html">OAuthScopedKey</a></p>
+</td>
+<td>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">OAuthScopedKey</span></code>
+<p>Scoped key data.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-profile/index.html">Profile</a></p>
+</td>
+<td>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">Profile</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="-shared-pref-account-storage/index.html">SharedPrefAccountStorage</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">SharedPrefAccountStorage</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-account-storage/index.html"><span class="identifier">AccountStorage</span></a></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Exceptions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-failed-to-load-account-exception/index.html">FailedToLoadAccountException</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">FailedToLoadAccountException</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-exception/index.html"><span class="identifier">Exception</span></a></code>
+<p>Propagated via <a href="-account-observer/on-error.html">AccountObserver.onError</a> if we fail to load a locally stored account during
+initialization. No action is necessary from consumers.
+Account state has been re-initialized.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Type Aliases</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-config.html">Config</a></p>
+</td>
+<td>
+<code><span class="keyword">typealias </span><span class="identifier">Config</span>&nbsp;<span class="symbol">=</span>&nbsp;<span class="identifier">Config</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="-fxa-exception.html">FxaException</a></p>
+</td>
+<td>
+<code><span class="keyword">typealias </span><span class="identifier">FxaException</span>&nbsp;<span class="symbol">=</span>&nbsp;<span class="identifier">FxaException</span></code>
+<p>High-level exception class for the exceptions thrown in the Rust library.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-fxa-network-exception.html">FxaNetworkException</a></p>
+</td>
+<td>
+<code><span class="keyword">typealias </span><span class="identifier">FxaNetworkException</span>&nbsp;<span class="symbol">=</span>&nbsp;<span class="identifier">Network</span></code>
+<p>Thrown on a network error.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-fxa-panic-exception.html">FxaPanicException</a></p>
+</td>
+<td>
+<code><span class="keyword">typealias </span><span class="identifier">FxaPanicException</span>&nbsp;<span class="symbol">=</span>&nbsp;<span class="identifier">Panic</span></code>
+<p>Thrown when the Rust library hits an assertion or panic (this is always a bug).</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-fxa-unauthorized-exception.html">FxaUnauthorizedException</a></p>
+</td>
+<td>
+<code><span class="keyword">typealias </span><span class="identifier">FxaUnauthorizedException</span>&nbsp;<span class="symbol">=</span>&nbsp;<span class="identifier">Unauthorized</span></code>
+<p>Thrown when the operation requires additional authorization.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-fxa-unspecified-exception.html">FxaUnspecifiedException</a></p>
+</td>
+<td>
+<code><span class="keyword">typealias </span><span class="identifier">FxaUnspecifiedException</span>&nbsp;<span class="symbol">=</span>&nbsp;<span class="identifier">Unspecified</span></code>
+<p>Thrown when the Rust library hits an unexpected error that isn't a panic.
+This may indicate library misuse, network errors, etc.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-f-x-a_-s-t-a-t-e_-k-e-y.html">FXA_STATE_KEY</a></p>
+</td>
+<td>
+<code><span class="keyword">const</span> <span class="keyword">val </span><span class="identifier">FXA_STATE_KEY</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="-f-x-a_-s-t-a-t-e_-p-r-e-f-s_-k-e-y.html">FXA_STATE_PREFS_KEY</a></p>
+</td>
+<td>
+<code><span class="keyword">const</span> <span class="keyword">val </span><span class="identifier">FXA_STATE_PREFS_KEY</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code></td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

@@ -1,0 +1,20 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>ViewBoundFeatureWrapper.set - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.support.base.feature</a>&nbsp;/&nbsp;<a href="index.html">ViewBoundFeatureWrapper</a>&nbsp;/&nbsp;<a href="./set.html">set</a><br/>
+<br/>
+<h1>set</h1>
+<a name="mozilla.components.support.base.feature.ViewBoundFeatureWrapper$set(mozilla.components.support.base.feature.ViewBoundFeatureWrapper.T, android.arch.lifecycle.LifecycleOwner, android.view.View)"></a>
+<code><span class="identifier">@Synchronized</span> <span class="keyword">fun </span><span class="identifier">set</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.support.base.feature.ViewBoundFeatureWrapper$set(mozilla.components.support.base.feature.ViewBoundFeatureWrapper.T, android.arch.lifecycle.LifecycleOwner, android.view.View)/feature">feature</span><span class="symbol">:</span>&nbsp;<a href="index.html#T"><span class="identifier">T</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.support.base.feature.ViewBoundFeatureWrapper$set(mozilla.components.support.base.feature.ViewBoundFeatureWrapper.T, android.arch.lifecycle.LifecycleOwner, android.view.View)/owner">owner</span><span class="symbol">:</span>&nbsp;<span class="identifier">LifecycleOwner</span><span class="symbol">, </span><span class="identifier" id="mozilla.components.support.base.feature.ViewBoundFeatureWrapper$set(mozilla.components.support.base.feature.ViewBoundFeatureWrapper.T, android.arch.lifecycle.LifecycleOwner, android.view.View)/view">view</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/feature/ViewBoundFeatureWrapper.kt#L84">(source)</a>
+<p>Sets the <a href="../-lifecycle-aware-feature/index.html">LifecycleAwareFeature</a> reference and binds it to the <a href="#">Lifecycle</a> of the <a href="#">LifecycleObserver</a> as well
+as the <a href="https://developer.android.com/reference/android/view/View.html">View</a>.</p>
+<p>The wrapper will take care of subscribing to the <a href="#">Lifecycle</a> and forwarding start/stop events to the
+<a href="../-lifecycle-aware-feature/index.html">LifecycleAwareFeature</a>.</p>
+<p>Once the <a href="https://developer.android.com/reference/android/view/View.html">View</a> gets detached the <a href="../-lifecycle-aware-feature/index.html">LifecycleAwareFeature</a> will be stopped and the wrapper will clear all
+internal references.</p>
+</BODY>
+</HTML>

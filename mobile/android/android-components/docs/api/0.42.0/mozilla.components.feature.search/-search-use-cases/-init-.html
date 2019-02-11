@@ -1,0 +1,22 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>SearchUseCases.<init> - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.feature.search</a>&nbsp;/&nbsp;<a href="index.html">SearchUseCases</a>&nbsp;/&nbsp;<a href="./-init-.html">&lt;init&gt;</a><br/>
+<br/>
+<h1>&lt;init&gt;</h1>
+<a name="mozilla.components.feature.search.SearchUseCases$&lt;init&gt;(android.content.Context, mozilla.components.browser.search.SearchEngineManager, mozilla.components.browser.session.SessionManager, kotlin.Function1((kotlin.String, mozilla.components.browser.session.Session)))"></a>
+<code><span class="identifier">SearchUseCases</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.feature.search.SearchUseCases$<init>(android.content.Context, mozilla.components.browser.search.SearchEngineManager, mozilla.components.browser.session.SessionManager, kotlin.Function1((kotlin.String, mozilla.components.browser.session.Session)))/context">context</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/content/Context.html"><span class="identifier">Context</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.feature.search.SearchUseCases$<init>(android.content.Context, mozilla.components.browser.search.SearchEngineManager, mozilla.components.browser.session.SessionManager, kotlin.Function1((kotlin.String, mozilla.components.browser.session.Session)))/searchEngineManager">searchEngineManager</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.browser.search/-search-engine-manager/index.html"><span class="identifier">SearchEngineManager</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.feature.search.SearchUseCases$<init>(android.content.Context, mozilla.components.browser.search.SearchEngineManager, mozilla.components.browser.session.SessionManager, kotlin.Function1((kotlin.String, mozilla.components.browser.session.Session)))/sessionManager">sessionManager</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.browser.session/-session-manager/index.html"><span class="identifier">SessionManager</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.feature.search.SearchUseCases$<init>(android.content.Context, mozilla.components.browser.search.SearchEngineManager, mozilla.components.browser.session.SessionManager, kotlin.Function1((kotlin.String, mozilla.components.browser.session.Session)))/onNoSession">onNoSession</span><span class="symbol">:</span>&nbsp;<span class="symbol">(</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="../../mozilla.components.browser.session/-session/index.html"><span class="identifier">Session</span></a>&nbsp;<span class="symbol">=</span>&nbsp;{ url -&gt;
+        Session(url).apply { sessionManager.add(this) }
+    }<span class="symbol">)</span></code>
+<p>Contains use cases related to the search feature.</p>
+<h3>Parameters</h3>
+<p><a name="onNoSession"></a>
+<code>onNoSession</code> - When invoking a use case that requires a (selected) <a href="../../mozilla.components.browser.session/-session/index.html">Session</a> and when no <a href="../../mozilla.components.browser.session/-session/index.html">Session</a> is available
+this (optional) lambda will be invoked to create a <a href="../../mozilla.components.browser.session/-session/index.html">Session</a>. The default implementation creates a <a href="../../mozilla.components.browser.session/-session/index.html">Session</a> and adds
+it to the <a href="../../mozilla.components.browser.session/-session-manager/index.html">SessionManager</a>.</p>
+</BODY>
+</HTML>

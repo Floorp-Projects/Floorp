@@ -1,0 +1,46 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>mozilla.components.browser.toolbar - android-components</title>
+<link rel="stylesheet" href="../../style.css">
+</HEAD>
+<BODY>
+<a href="../index.html">android-components</a>&nbsp;/&nbsp;<a href="./index.html">mozilla.components.browser.toolbar</a><br/>
+<br/>
+<h2>Package mozilla.components.browser.toolbar</h2>
+<h3>Types</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-async-autocomplete-delegate/index.html">AsyncAutocompleteDelegate</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">AsyncAutocompleteDelegate</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../mozilla.components.concept.toolbar/-autocomplete-delegate/index.html"><span class="identifier">AutocompleteDelegate</span></a><span class="symbol">, </span><span class="identifier">CoroutineScope</span></code>
+<p>An autocomplete delegate which is aware of its parent scope (to check for cancellations).
+Responsible for processing autocompletion results and discarding stale results when <a href="#">urlView</a> moved on.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-async-filter-listener/index.html">AsyncFilterListener</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">AsyncFilterListener</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../mozilla.components.ui.autocomplete/-on-filter-listener.html"><span class="identifier">OnFilterListener</span></a><span class="symbol">, </span><span class="identifier">CoroutineScope</span></code>
+<p>Wraps <a href="#">filter</a> execution in a coroutine context, cancelling prior executions on every invocation.
+<a href="-async-filter-listener/coroutine-context.html">coroutineContext</a> must be of type that doesn't propagate cancellation of its children upwards.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-browser-toolbar/index.html">BrowserToolbar</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">BrowserToolbar</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/view/ViewGroup.html"><span class="identifier">ViewGroup</span></a><span class="symbol">, </span><a href="../mozilla.components.concept.toolbar/-toolbar/index.html"><span class="identifier">Toolbar</span></a></code>
+<p>A customizable toolbar for browsers.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

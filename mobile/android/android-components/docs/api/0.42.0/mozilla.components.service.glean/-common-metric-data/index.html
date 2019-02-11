@@ -1,0 +1,164 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>CommonMetricData - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.service.glean</a>&nbsp;/&nbsp;<a href="./index.html">CommonMetricData</a><br/>
+<br/>
+<h1>CommonMetricData</h1>
+<code><span class="keyword">interface </span><span class="identifier">CommonMetricData</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/CommonMetricData.kt#L31">(source)</a>
+<p>This defines the common set of data shared across all the different
+metric types.</p>
+<h3>Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="category.html">category</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">val </span><span class="identifier">category</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="default-storage-destinations.html">defaultStorageDestinations</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">val </span><span class="identifier">defaultStorageDestinations</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html"><span class="identifier">List</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">&gt;</span></code>
+<p>Defines the names of the storages the metric defaults to when
+"default" is used as the destination storage.
+Note that every metric type will need to override this.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="disabled.html">disabled</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">val </span><span class="identifier">disabled</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="identifier.html">identifier</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">val </span><span class="identifier">identifier</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="lifetime.html">lifetime</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">val </span><span class="identifier">lifetime</span><span class="symbol">: </span><a href="../-lifetime/index.html"><span class="identifier">Lifetime</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="name.html">name</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">val </span><span class="identifier">name</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="send-in-pings.html">sendInPings</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">val </span><span class="identifier">sendInPings</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html"><span class="identifier">List</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">&gt;</span></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="get-storage-names.html">getStorageNames</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">getStorageNames</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html"><span class="identifier">List</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">&gt;</span></code>
+<p>Get the list of storage names the metric will record to. This
+automatically expands <a href="#">DEFAULT_STORAGE_NAME</a> to the list of default
+storages for the metric.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="should-record.html">shouldRecord</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">shouldRecord</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.glean.CommonMetricData$shouldRecord(mozilla.components.support.base.log.logger.Logger)/logger">logger</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.support.base.log.logger/-logger/index.html"><span class="identifier">Logger</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Inheritors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../-boolean-metric-type/index.html">BooleanMetricType</a></p>
+</td>
+<td>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">BooleanMetricType</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">CommonMetricData</span></a></code>
+<p>This implements the developer facing API for recording boolean metrics.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../-counter-metric-type/index.html">CounterMetricType</a></p>
+</td>
+<td>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">CounterMetricType</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">CommonMetricData</span></a></code>
+<p>This implements the developer facing API for recording counter metrics.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../-event-metric-type/index.html">EventMetricType</a></p>
+</td>
+<td>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">EventMetricType</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">CommonMetricData</span></a></code>
+<p>This implements the developer facing API for recording events.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../-string-list-metric-type/index.html">StringListMetricType</a></p>
+</td>
+<td>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">StringListMetricType</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">CommonMetricData</span></a></code>
+<p>This implements the developer facing API for recording string list metrics.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../-string-metric-type/index.html">StringMetricType</a></p>
+</td>
+<td>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">StringMetricType</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">CommonMetricData</span></a></code>
+<p>This implements the developer facing API for recording string metrics.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../-timespan-metric-type/index.html">TimespanMetricType</a></p>
+</td>
+<td>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">TimespanMetricType</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">CommonMetricData</span></a></code>
+<p>This implements the developer facing API for recording timespans.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../-uuid-metric-type/index.html">UuidMetricType</a></p>
+</td>
+<td>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">UuidMetricType</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">CommonMetricData</span></a></code>
+<p>This implements the developer facing API for recording uuids.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

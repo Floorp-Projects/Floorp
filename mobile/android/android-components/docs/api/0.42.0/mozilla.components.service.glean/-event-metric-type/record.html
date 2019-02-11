@@ -1,0 +1,26 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>EventMetricType.record - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.service.glean</a>&nbsp;/&nbsp;<a href="index.html">EventMetricType</a>&nbsp;/&nbsp;<a href="./record.html">record</a><br/>
+<br/>
+<h1>record</h1>
+<a name="mozilla.components.service.glean.EventMetricType$record(kotlin.String, kotlin.String, kotlin.collections.Map((kotlin.String, )))"></a>
+<code><span class="keyword">fun </span><span class="identifier">record</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.glean.EventMetricType$record(kotlin.String, kotlin.String, kotlin.collections.Map((kotlin.String, )))/objectId">objectId</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.service.glean.EventMetricType$record(kotlin.String, kotlin.String, kotlin.collections.Map((kotlin.String, )))/value">value</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span>&nbsp;<span class="symbol">=</span>&nbsp;null<span class="symbol">, </span><span class="identifier" id="mozilla.components.service.glean.EventMetricType$record(kotlin.String, kotlin.String, kotlin.collections.Map((kotlin.String, )))/extra">extra</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/index.html"><span class="identifier">Map</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">,</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">&gt;</span><span class="symbol">?</span>&nbsp;<span class="symbol">=</span>&nbsp;null<span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/EventMetricType.kt#L55">(source)</a>
+<p>Record an event by using the information provided by the instance of this class.</p>
+<h3>Parameters</h3>
+<p><a name="objectId"></a>
+<code>objectId</code> - the object the event occurred on, e.g. 'reload_button'. The maximum
+    length of this string is defined by <a href="#">MAX_LENGTH_OBJECT_ID</a></p>
+<p><a name="value"></a>
+<code>value</code> - optional. This is a user defined value, providing context for the event. The
+    maximum length of this string is defined by <a href="#">MAX_LENGTH_VALUE</a></p>
+<p><a name="extra"></a>
+<code>extra</code> - optional. This is map, both keys and values need to be strings, keys are
+    identifiers. This is used for events where additional richer context is needed.
+    The maximum length for values is defined by <a href="#">MAX_LENGTH_EXTRA_KEY_VALUE</a></p>
+</BODY>
+</HTML>

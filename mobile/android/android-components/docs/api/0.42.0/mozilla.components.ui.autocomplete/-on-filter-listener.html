@@ -1,0 +1,28 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>OnFilterListener - android-components</title>
+<link rel="stylesheet" href="../../style.css">
+</HEAD>
+<BODY>
+<a href="../index.html">android-components</a>&nbsp;/&nbsp;<a href="index.html">mozilla.components.ui.autocomplete</a>&nbsp;/&nbsp;<a href="./-on-filter-listener.html">OnFilterListener</a><br/>
+<br/>
+<h1>OnFilterListener</h1>
+<code><span class="keyword">typealias </span><span class="identifier">OnFilterListener</span>&nbsp;<span class="symbol">=</span>&nbsp;<span class="symbol">(</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/ui/autocomplete/src/main/java/mozilla/components/ui/autocomplete/InlineAutocompleteEditText.kt#L35">(source)</a>
+<h3>Inheritors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../mozilla.components.browser.toolbar/-async-filter-listener/index.html">AsyncFilterListener</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">AsyncFilterListener</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./-on-filter-listener.html"><span class="identifier">OnFilterListener</span></a><span class="symbol">, </span><span class="identifier">CoroutineScope</span></code>
+<p>Wraps <a href="#">filter</a> execution in a coroutine context, cancelling prior executions on every invocation.
+<a href="../mozilla.components.browser.toolbar/-async-filter-listener/coroutine-context.html">coroutineContext</a> must be of type that doesn't propagate cancellation of its children upwards.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

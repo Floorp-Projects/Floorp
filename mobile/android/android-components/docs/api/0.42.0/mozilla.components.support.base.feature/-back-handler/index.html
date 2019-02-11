@@ -1,0 +1,78 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>BackHandler - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.support.base.feature</a>&nbsp;/&nbsp;<a href="./index.html">BackHandler</a><br/>
+<br/>
+<h1>BackHandler</h1>
+<code><span class="keyword">interface </span><span class="identifier">BackHandler</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/feature/BackHandler.kt#L10">(source)</a>
+<p>Generic interface for fragments, features and other components that want to handle 'back' button presses.</p>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="on-back-pressed.html">onBackPressed</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">onBackPressed</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Called when this <a href="./index.html">BackHandler</a> gets the option to handle the user pressing the back key.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Inheritors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../../mozilla.components.feature.customtabs/-custom-tabs-toolbar-feature/index.html">CustomTabsToolbarFeature</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">CustomTabsToolbarFeature</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../-lifecycle-aware-feature/index.html"><span class="identifier">LifecycleAwareFeature</span></a><span class="symbol">, </span><a href="./index.html"><span class="identifier">BackHandler</span></a></code>
+<p>Initializes and resets the Toolbar for a Custom Tab based on the CustomTabConfig.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.feature.findinpage/-find-in-page-feature/index.html">FindInPageFeature</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">FindInPageFeature</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../-lifecycle-aware-feature/index.html"><span class="identifier">LifecycleAwareFeature</span></a><span class="symbol">, </span><a href="./index.html"><span class="identifier">BackHandler</span></a></code>
+<p>Feature implementation that will keep a <a href="../../mozilla.components.feature.findinpage.view/-find-in-page-view/index.html">FindInPageView</a> in sync with a bound <a href="../../mozilla.components.browser.session/-session/index.html">Session</a>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.feature.session/-full-screen-feature/index.html">FullScreenFeature</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">class </span><span class="identifier">FullScreenFeature</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.browser.session/-selection-aware-session-observer/index.html"><span class="identifier">SelectionAwareSessionObserver</span></a><span class="symbol">, </span><a href="../-lifecycle-aware-feature/index.html"><span class="identifier">LifecycleAwareFeature</span></a><span class="symbol">, </span><a href="./index.html"><span class="identifier">BackHandler</span></a></code>
+<p>Feature implementation for handling fullscreen mode (exiting and back button presses).</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.feature.session/-session-feature/index.html">SessionFeature</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">SessionFeature</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../-lifecycle-aware-feature/index.html"><span class="identifier">LifecycleAwareFeature</span></a><span class="symbol">, </span><a href="./index.html"><span class="identifier">BackHandler</span></a></code>
+<p>Feature implementation for connecting the engine module with the session module.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.feature.toolbar/-toolbar-feature/index.html">ToolbarFeature</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">ToolbarFeature</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../-lifecycle-aware-feature/index.html"><span class="identifier">LifecycleAwareFeature</span></a><span class="symbol">, </span><a href="./index.html"><span class="identifier">BackHandler</span></a></code>
+<p>Feature implementation for connecting a toolbar implementation with the session module.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

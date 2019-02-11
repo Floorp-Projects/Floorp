@@ -1,0 +1,86 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>SystemWindowRequest - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.browser.engine.system.window</a>&nbsp;/&nbsp;<a href="./index.html">SystemWindowRequest</a><br/>
+<br/>
+<h1>SystemWindowRequest</h1>
+<code><span class="keyword">class </span><span class="identifier">SystemWindowRequest</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.concept.engine.window/-window-request/index.html"><span class="identifier">WindowRequest</span></a></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-system/src/main/java/mozilla/components/browser/engine/system/window/SystemWindowRequest.kt#L22">(source)</a>
+<p>WebView-based implementation of <a href="../../mozilla.components.concept.engine.window/-window-request/index.html">WindowRequest</a>.</p>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">SystemWindowRequest</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.engine.system.window.SystemWindowRequest$<init>(android.webkit.WebView, android.webkit.WebView, kotlin.Boolean, kotlin.Boolean, android.os.Message)/webView">webView</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/webkit/WebView.html"><span class="identifier">WebView</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.engine.system.window.SystemWindowRequest$<init>(android.webkit.WebView, android.webkit.WebView, kotlin.Boolean, kotlin.Boolean, android.os.Message)/newWebView">newWebView</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/webkit/WebView.html"><span class="identifier">WebView</span></a><span class="symbol">?</span>&nbsp;<span class="symbol">=</span>&nbsp;null<span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.engine.system.window.SystemWindowRequest$<init>(android.webkit.WebView, android.webkit.WebView, kotlin.Boolean, kotlin.Boolean, android.os.Message)/openAsDialog">openAsDialog</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a>&nbsp;<span class="symbol">=</span>&nbsp;false<span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.engine.system.window.SystemWindowRequest$<init>(android.webkit.WebView, android.webkit.WebView, kotlin.Boolean, kotlin.Boolean, android.os.Message)/triggeredByUser">triggeredByUser</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a>&nbsp;<span class="symbol">=</span>&nbsp;false<span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.engine.system.window.SystemWindowRequest$<init>(android.webkit.WebView, android.webkit.WebView, kotlin.Boolean, kotlin.Boolean, android.os.Message)/resultMsg">resultMsg</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/os/Message.html"><span class="identifier">Message</span></a><span class="symbol">?</span>&nbsp;<span class="symbol">=</span>&nbsp;null<span class="symbol">)</span></code>
+<p>WebView-based implementation of <a href="../../mozilla.components.concept.engine.window/-window-request/index.html">WindowRequest</a>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="open-as-dialog.html">openAsDialog</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">openAsDialog</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>whether or not the window should be opened as a dialog, defaults to false.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="triggered-by-user.html">triggeredByUser</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">triggeredByUser</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>whether or not the request was triggered by the user, defaults to false.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="url.html">url</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">url</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code>
+<p>The URL which should be opened in a new window. May be
+empty if the request was created from JavaScript (using
+window.open()).</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="prepare.html">prepare</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">prepare</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.engine.system.window.SystemWindowRequest$prepare(mozilla.components.concept.engine.EngineSession)/engineSession">engineSession</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.concept.engine/-engine-session/index.html"><span class="identifier">EngineSession</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Prepares the provided <a href="../../mozilla.components.concept.engine/-engine-session/index.html">EngineSession</a> for the window request. This
+is used to attach state (e.g. a native session) to the engine session.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="start.html">start</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">start</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Starts the window request.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

@@ -1,0 +1,22 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>UuidMetricType.testHasValue - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.service.glean</a>&nbsp;/&nbsp;<a href="index.html">UuidMetricType</a>&nbsp;/&nbsp;<a href="./test-has-value.html">testHasValue</a><br/>
+<br/>
+<h1>testHasValue</h1>
+<a name="mozilla.components.service.glean.UuidMetricType$testHasValue(kotlin.String)"></a>
+<code><span class="keyword">fun </span><span class="identifier">testHasValue</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.glean.UuidMetricType$testHasValue(kotlin.String)/pingName">pingName</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a>&nbsp;<span class="symbol">=</span>&nbsp;getStorageNames().first()<span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/UuidMetricType.kt#L82">(source)</a>
+<p>Tests whether a value is stored for the metric for testing purposes only</p>
+<h3>Parameters</h3>
+<p><a name="pingName"></a>
+<code>pingName</code> - represents the name of the ping to retrieve the metric for.  Defaults
+    to the either the first value in <a href="default-storage-destinations.html">defaultStorageDestinations</a> or the first
+    value in <a href="send-in-pings.html">sendInPings</a></p>
+<p><strong>Return</strong><br/>
+true if metric value exists, otherwise false</p>
+</BODY>
+</HTML>

@@ -1,0 +1,60 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>PromptRequest.Color - android-components</title>
+<link rel="stylesheet" href="../../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../../index.html">mozilla.components.concept.engine.prompt</a>&nbsp;/&nbsp;<a href="../index.html">PromptRequest</a>&nbsp;/&nbsp;<a href="./index.html">Color</a><br/>
+<br/>
+<h1>Color</h1>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">Color</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../index.html"><span class="identifier">PromptRequest</span></a></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/prompt/PromptRequest.kt#L156">(source)</a>
+<p>Value type that represents a request for a selecting one or multiple files.</p>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">Color</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.engine.prompt.PromptRequest.Color$<init>(kotlin.String, kotlin.Function1((kotlin.String, kotlin.Unit)), kotlin.Function0((kotlin.Unit)))/defaultColor">defaultColor</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.engine.prompt.PromptRequest.Color$<init>(kotlin.String, kotlin.Function1((kotlin.String, kotlin.Unit)), kotlin.Function0((kotlin.Unit)))/onConfirm">onConfirm</span><span class="symbol">:</span>&nbsp;<span class="symbol">(</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.engine.prompt.PromptRequest.Color$<init>(kotlin.String, kotlin.Function1((kotlin.String, kotlin.Unit)), kotlin.Function0((kotlin.Unit)))/onDismiss">onDismiss</span><span class="symbol">:</span>&nbsp;<span class="symbol">(</span><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a><span class="symbol">)</span></code>
+<p>Value type that represents a request for a selecting one or multiple files.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="default-color.html">defaultColor</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">defaultColor</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code>
+<p>true if the user can select more that one file false otherwise.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="on-confirm.html">onConfirm</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">onConfirm</span><span class="symbol">: </span><span class="symbol">(</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>callback to notify that the user has selected a color.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="on-dismiss.html">onDismiss</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">onDismiss</span><span class="symbol">: </span><span class="symbol">(</span><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>callback to notify that the user has canceled the dialog.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

@@ -1,0 +1,21 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>PublicSuffixList.getPublicSuffixPlusOne - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.lib.publicsuffixlist</a>&nbsp;/&nbsp;<a href="index.html">PublicSuffixList</a>&nbsp;/&nbsp;<a href="./get-public-suffix-plus-one.html">getPublicSuffixPlusOne</a><br/>
+<br/>
+<h1>getPublicSuffixPlusOne</h1>
+<a name="mozilla.components.lib.publicsuffixlist.PublicSuffixList$getPublicSuffixPlusOne(kotlin.String)"></a>
+<code><span class="keyword">fun </span><span class="identifier">getPublicSuffixPlusOne</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.lib.publicsuffixlist.PublicSuffixList$getPublicSuffixPlusOne(kotlin.String)/domain">domain</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><span class="identifier">Deferred</span><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span><span class="symbol">&gt;</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/lib/publicsuffixlist/src/main/java/mozilla/components/lib/publicsuffixlist/PublicSuffixList.kt#L72">(source)</a>
+<p>Returns the public suffix and one more level; known as the effective top-level domain (eTLD). Returns <code>null</code> if
+<a href="get-public-suffix-plus-one.html#mozilla.components.lib.publicsuffixlist.PublicSuffixList$getPublicSuffixPlusOne(kotlin.String)/domain">domain</a> is a public suffix itself.</p>
+<p>E.g.:</p>
+<pre><code>wwww.mozilla.org -&gt; mozilla.org
+www.bcc.co.uk    -&gt; bbc.co.uk
+a.b.ide.kyoto.jp -&gt; b.ide.kyoto.jp
+</code></pre>
+</BODY>
+</HTML>

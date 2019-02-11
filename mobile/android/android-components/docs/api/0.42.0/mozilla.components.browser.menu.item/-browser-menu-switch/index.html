@@ -1,0 +1,79 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>BrowserMenuSwitch - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.browser.menu.item</a>&nbsp;/&nbsp;<a href="./index.html">BrowserMenuSwitch</a><br/>
+<br/>
+<h1>BrowserMenuSwitch</h1>
+<code><span class="keyword">class </span><span class="identifier">BrowserMenuSwitch</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../-browser-menu-compound-button/index.html"><span class="identifier">BrowserMenuCompoundButton</span></a></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/item/BrowserMenuSwitch.kt#L18">(source)</a>
+<p>A simple browser menu switch.</p>
+<h3>Parameters</h3>
+<p><a name="label"></a>
+<code>label</code> - The visible label of this menu item.</p>
+<p><a name="initialState"></a>
+<code>initialState</code> - The initial value the checkbox should have.</p>
+<p><a name="listener"></a>
+<code>listener</code> - Callback to be invoked when this menu item is checked.</p>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">BrowserMenuSwitch</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.menu.item.BrowserMenuSwitch$<init>(kotlin.String, kotlin.Function0((kotlin.Boolean)), kotlin.Function1((kotlin.Boolean, kotlin.Unit)))/label">label</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.menu.item.BrowserMenuSwitch$<init>(kotlin.String, kotlin.Function0((kotlin.Boolean)), kotlin.Function1((kotlin.Boolean, kotlin.Unit)))/initialState">initialState</span><span class="symbol">:</span>&nbsp;<span class="symbol">(</span><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a>&nbsp;<span class="symbol">=</span>&nbsp;{ false }<span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.menu.item.BrowserMenuSwitch$<init>(kotlin.String, kotlin.Function0((kotlin.Boolean)), kotlin.Function1((kotlin.Boolean, kotlin.Unit)))/listener">listener</span><span class="symbol">:</span>&nbsp;<span class="symbol">(</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a><span class="symbol">)</span></code>
+<p>A simple browser menu switch.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Inherited Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../-browser-menu-compound-button/visible.html">visible</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">var </span><span class="identifier">visible</span><span class="symbol">: </span><span class="symbol">(</span><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Lambda expression that returns true if this item should be shown in the menu. Returns false
+if this item should be hidden.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="get-layout-resource.html">getLayoutResource</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">getLayoutResource</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a></code>
+<p>Returns the layout resource ID of the layout to be inflated for showing a menu item of this
+type.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Inherited Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../-browser-menu-compound-button/bind.html">bind</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">bind</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.menu.item.BrowserMenuCompoundButton$bind(mozilla.components.browser.menu.BrowserMenu, android.view.View)/menu">menu</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.browser.menu/-browser-menu/index.html"><span class="identifier">BrowserMenu</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.menu.item.BrowserMenuCompoundButton$bind(mozilla.components.browser.menu.BrowserMenu, android.view.View)/view">view</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Called by the browser menu to display the data of this item using the passed view.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

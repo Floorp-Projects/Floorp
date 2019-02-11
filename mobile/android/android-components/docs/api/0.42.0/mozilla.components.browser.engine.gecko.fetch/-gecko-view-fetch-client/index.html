@@ -1,0 +1,68 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>GeckoViewFetchClient - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.browser.engine.gecko.fetch</a>&nbsp;/&nbsp;<a href="./index.html">GeckoViewFetchClient</a><br/>
+<br/>
+<h1>GeckoViewFetchClient</h1>
+<code><span class="keyword">class </span><span class="identifier">GeckoViewFetchClient</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.concept.fetch/-client/index.html"><span class="identifier">Client</span></a></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-nightly/src/main/java/mozilla/components/browser/engine/gecko/fetch/GeckoViewFetchClient.kt#L29">(source)</a>
+<p>GeckoView (<a href="#">GeckoWebExecutor</a>) based implementation of <a href="../../mozilla.components.concept.fetch/-client/index.html">Client</a>.</p>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">GeckoViewFetchClient</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.engine.gecko.fetch.GeckoViewFetchClient$<init>(android.content.Context, org.mozilla.geckoview.GeckoRuntime, kotlin.Pair((kotlin.Long, java.util.concurrent.TimeUnit)))/context">context</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/content/Context.html"><span class="identifier">Context</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.engine.gecko.fetch.GeckoViewFetchClient$<init>(android.content.Context, org.mozilla.geckoview.GeckoRuntime, kotlin.Pair((kotlin.Long, java.util.concurrent.TimeUnit)))/runtime">runtime</span><span class="symbol">:</span>&nbsp;<span class="identifier">GeckoRuntime</span>&nbsp;<span class="symbol">=</span>&nbsp;GeckoRuntime.getDefault(context)<span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.engine.gecko.fetch.GeckoViewFetchClient$<init>(android.content.Context, org.mozilla.geckoview.GeckoRuntime, kotlin.Pair((kotlin.Long, java.util.concurrent.TimeUnit)))/maxReadTimeOut">maxReadTimeOut</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-pair/index.html"><span class="identifier">Pair</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html"><span class="identifier">Long</span></a><span class="symbol">,</span>&nbsp;<a href="https://developer.android.com/reference/java/util/concurrent/TimeUnit.html"><span class="identifier">TimeUnit</span></a><span class="symbol">&gt;</span>&nbsp;<span class="symbol">=</span>&nbsp;Pair(MAX_READ_TIMEOUT_MINUTES, TimeUnit.MINUTES)<span class="symbol">)</span></code>
+<p>GeckoView (<a href="#">GeckoWebExecutor</a>) based implementation of <a href="../../mozilla.components.concept.fetch/-client/index.html">Client</a>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Inherited Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../../mozilla.components.concept.fetch/-client/default-headers.html">defaultHeaders</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">defaultHeaders</span><span class="symbol">: </span><a href="../../mozilla.components.concept.fetch/-headers/index.html"><span class="identifier">Headers</span></a></code>
+<p>List of default headers that should be added to every request unless overridden by the headers in the request.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="fetch.html">fetch</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">fetch</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.engine.gecko.fetch.GeckoViewFetchClient$fetch(mozilla.components.concept.fetch.Request)/request">request</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.concept.fetch/-request/index.html"><span class="identifier">Request</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="../../mozilla.components.concept.fetch/-response/index.html"><span class="identifier">Response</span></a></code>
+<p>Starts the process of fetching a resource from the network as described by the <a href="../../mozilla.components.concept.fetch/-request/index.html">Request</a> object.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Companion Object Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-m-a-x_-r-e-a-d_-t-i-m-e-o-u-t_-m-i-n-u-t-e-s.html">MAX_READ_TIMEOUT_MINUTES</a></p>
+</td>
+<td>
+<code><span class="keyword">const</span> <span class="keyword">val </span><span class="identifier">MAX_READ_TIMEOUT_MINUTES</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html"><span class="identifier">Long</span></a></code></td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

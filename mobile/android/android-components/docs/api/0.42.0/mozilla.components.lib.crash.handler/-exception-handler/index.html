@@ -1,0 +1,40 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>ExceptionHandler - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.lib.crash.handler</a>&nbsp;/&nbsp;<a href="./index.html">ExceptionHandler</a><br/>
+<br/>
+<h1>ExceptionHandler</h1>
+<code><span class="keyword">class </span><span class="identifier">ExceptionHandler</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/java/lang/Thread/UncaughtExceptionHandler.html"><span class="identifier">UncaughtExceptionHandler</span></a></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/src/main/java/mozilla/components/lib/crash/handler/ExceptionHandler.kt#L15">(source)</a>
+<p><a href="https://developer.android.com/reference/java/lang/Thread/UncaughtExceptionHandler.html">Thread.UncaughtExceptionHandler</a> implementation that forwards crashes to the <a href="../../mozilla.components.lib.crash/-crash-reporter/index.html">CrashReporter</a> instance.</p>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">ExceptionHandler</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.lib.crash.handler.ExceptionHandler$<init>(android.content.Context, mozilla.components.lib.crash.CrashReporter, java.lang.Thread.UncaughtExceptionHandler)/context">context</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/content/Context.html"><span class="identifier">Context</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.lib.crash.handler.ExceptionHandler$<init>(android.content.Context, mozilla.components.lib.crash.CrashReporter, java.lang.Thread.UncaughtExceptionHandler)/crashReporter">crashReporter</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.lib.crash/-crash-reporter/index.html"><span class="identifier">CrashReporter</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.lib.crash.handler.ExceptionHandler$<init>(android.content.Context, mozilla.components.lib.crash.CrashReporter, java.lang.Thread.UncaughtExceptionHandler)/defaultExceptionHandler">defaultExceptionHandler</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/java/lang/Thread/UncaughtExceptionHandler.html"><span class="identifier">UncaughtExceptionHandler</span></a><span class="symbol">?</span>&nbsp;<span class="symbol">=</span>&nbsp;null<span class="symbol">)</span></code>
+<p><a href="https://developer.android.com/reference/java/lang/Thread/UncaughtExceptionHandler.html">Thread.UncaughtExceptionHandler</a> implementation that forwards crashes to the <a href="../../mozilla.components.lib.crash/-crash-reporter/index.html">CrashReporter</a> instance.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="uncaught-exception.html">uncaughtException</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">uncaughtException</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.lib.crash.handler.ExceptionHandler$uncaughtException(java.lang.Thread, kotlin.Throwable)/thread">thread</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/java/lang/Thread.html"><span class="identifier">Thread</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.lib.crash.handler.ExceptionHandler$uncaughtException(java.lang.Thread, kotlin.Throwable)/throwable">throwable</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-throwable/index.html"><span class="identifier">Throwable</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

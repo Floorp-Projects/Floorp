@@ -1,0 +1,25 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>GleanInternalAPI.setExperimentActive - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.service.glean</a>&nbsp;/&nbsp;<a href="index.html">GleanInternalAPI</a>&nbsp;/&nbsp;<a href="./set-experiment-active.html">setExperimentActive</a><br/>
+<br/>
+<h1>setExperimentActive</h1>
+<a name="mozilla.components.service.glean.GleanInternalAPI$setExperimentActive(kotlin.String, kotlin.String, kotlin.collections.Map((kotlin.String, )))"></a>
+<code><span class="keyword">fun </span><span class="identifier">setExperimentActive</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.glean.GleanInternalAPI$setExperimentActive(kotlin.String, kotlin.String, kotlin.collections.Map((kotlin.String, )))/experimentId">experimentId</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.service.glean.GleanInternalAPI$setExperimentActive(kotlin.String, kotlin.String, kotlin.collections.Map((kotlin.String, )))/branch">branch</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.service.glean.GleanInternalAPI$setExperimentActive(kotlin.String, kotlin.String, kotlin.collections.Map((kotlin.String, )))/extra">extra</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/index.html"><span class="identifier">Map</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">,</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">&gt;</span><span class="symbol">?</span>&nbsp;<span class="symbol">=</span>&nbsp;null<span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/Glean.kt#L132">(source)</a>
+<p>Indicate that an experiment is running. Glean will then add an
+experiment annotation to the environment which is sent with pings. This
+information is not persisted between runs.</p>
+<h3>Parameters</h3>
+<p><a name="experimentId"></a>
+<code>experimentId</code> - The id of the active experiment (maximum
+    30 bytes)</p>
+<p><a name="branch"></a>
+<code>branch</code> - The experiment branch (maximum 30 bytes)</p>
+<p><a name="extra"></a>
+<code>extra</code> - Optional metadata to output with the ping</p>
+</BODY>
+</HTML>

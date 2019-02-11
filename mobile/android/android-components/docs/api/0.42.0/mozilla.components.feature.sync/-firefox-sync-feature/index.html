@@ -1,0 +1,61 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>FirefoxSyncFeature - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.feature.sync</a>&nbsp;/&nbsp;<a href="./index.html">FirefoxSyncFeature</a><br/>
+<br/>
+<h1>FirefoxSyncFeature</h1>
+<code><span class="keyword">class </span><span class="identifier">FirefoxSyncFeature</span><span class="symbol">&lt;</span><span class="identifier">AuthType</span><span class="symbol">&gt;</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.support.base.observer/-observable/index.html"><span class="identifier">Observable</span></a><span class="symbol">&lt;</span><a href="../-sync-status-observer/index.html"><span class="identifier">SyncStatusObserver</span></a><span class="symbol">&gt;</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/feature/sync/src/main/java/mozilla/components/feature/sync/FirefoxSyncFeature.kt#L53">(source)</a>
+<p>A feature implementation which orchestrates data synchronization of a set of <a href="../../mozilla.components.concept.storage/-syncable-store/index.html">SyncableStore</a> which
+all share a common <a href="index.html#AuthType">AuthType</a>.</p>
+<p><a href="index.html#AuthType">AuthType</a> provides us with a layer of indirection that allows consumers of <a href="./index.html">FirefoxSyncFeature</a>
+to use entirely different types of <a href="../../mozilla.components.concept.storage/-syncable-store/index.html">SyncableStore</a>, without this feature needing to depend on
+their specific implementations. Those implementations might have heavy native dependencies
+(e.g. places and logins depend on native libraries), and we do not want to force a consumer which
+only cares about syncing logins to have to import a places native library.</p>
+<h3>Parameters</h3>
+<p><a name="reifyAuth"></a>
+<code>reifyAuth</code> - A conversion method which reifies a generic <a href="../-fxa-auth-info/index.html">FxaAuthInfo</a> into an object of
+type <a href="index.html#AuthType">AuthType</a>.</p>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">FirefoxSyncFeature</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.feature.sync.FirefoxSyncFeature$<init>(kotlin.collections.Map((kotlin.String, mozilla.components.concept.storage.SyncableStore((mozilla.components.feature.sync.FirefoxSyncFeature.AuthType)))), kotlin.SuspendFunction1((mozilla.components.feature.sync.FxaAuthInfo, mozilla.components.feature.sync.FirefoxSyncFeature.AuthType)))/syncableStores">syncableStores</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/index.html"><span class="identifier">Map</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">,</span>&nbsp;<a href="../../mozilla.components.concept.storage/-syncable-store/index.html"><span class="identifier">SyncableStore</span></a><span class="symbol">&lt;</span><a href="index.html#AuthType"><span class="identifier">AuthType</span></a><span class="symbol">&gt;</span><span class="symbol">&gt;</span><span class="symbol">, </span><span class="identifier" id="mozilla.components.feature.sync.FirefoxSyncFeature$<init>(kotlin.collections.Map((kotlin.String, mozilla.components.concept.storage.SyncableStore((mozilla.components.feature.sync.FirefoxSyncFeature.AuthType)))), kotlin.SuspendFunction1((mozilla.components.feature.sync.FxaAuthInfo, mozilla.components.feature.sync.FirefoxSyncFeature.AuthType)))/reifyAuth">reifyAuth</span><span class="symbol">:</span>&nbsp;<span class="keyword">suspend </span><span class="symbol">(</span><span class="identifier">authInfo</span><span class="symbol">:</span>&nbsp;<a href="../-fxa-auth-info/index.html"><span class="identifier">FxaAuthInfo</span></a><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="index.html#AuthType"><span class="identifier">AuthType</span></a><span class="symbol">)</span></code>
+<p>A feature implementation which orchestrates data synchronization of a set of <a href="../../mozilla.components.concept.storage/-syncable-store/index.html">SyncableStore</a> which
+all share a common <a href="index.html#AuthType">AuthType</a>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="sync.html">sync</a></p>
+</td>
+<td>
+<code><span class="keyword">suspend</span> <span class="keyword">fun </span><span class="identifier">sync</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.feature.sync.FirefoxSyncFeature$sync(mozilla.components.service.fxa.FirefoxAccountShaped)/account">account</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.service.fxa/-firefox-account-shaped/index.html"><span class="identifier">FirefoxAccountShaped</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="../-sync-result.html"><span class="identifier">SyncResult</span></a></code>
+<p>Performs a sync of configured <a href="../../mozilla.components.concept.storage/-syncable-store/index.html">SyncableStore</a> history instance. This method guarantees that
+only one sync may be running at any given time.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="sync-running.html">syncRunning</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">syncRunning</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

@@ -1,0 +1,152 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>GeckoPermissionRequest - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.browser.engine.gecko.permission</a>&nbsp;/&nbsp;<a href="./index.html">GeckoPermissionRequest</a><br/>
+<br/>
+<h1>GeckoPermissionRequest</h1>
+<code><span class="keyword">sealed</span> <span class="keyword">class </span><span class="identifier">GeckoPermissionRequest</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.concept.engine.permission/-permission-request/index.html"><span class="identifier">PermissionRequest</span></a></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/permission/GeckoPermissionRequest.kt#L33">(source)</a>
+<p>Gecko-based implementation of <a href="../../mozilla.components.concept.engine.permission/-permission-request/index.html">PermissionRequest</a>.</p>
+<h3>Types</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-app/index.html">App</a></p>
+</td>
+<td>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">App</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">GeckoPermissionRequest</span></a></code>
+<p>Represents a gecko-based application permission request.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-content/index.html">Content</a></p>
+</td>
+<td>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">Content</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">GeckoPermissionRequest</span></a></code>
+<p>Represents a gecko-based content permission request.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-media/index.html">Media</a></p>
+</td>
+<td>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">Media</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">GeckoPermissionRequest</span></a></code>
+<p>Represents a gecko-based media permission request.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="permissions.html">permissions</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">val </span><span class="identifier">permissions</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html"><span class="identifier">List</span></a><span class="symbol">&lt;</span><a href="../../mozilla.components.concept.engine.permission/-permission/index.html"><span class="identifier">Permission</span></a><span class="symbol">&gt;</span></code>
+<p>the list of requested permissions.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Inherited Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../../mozilla.components.concept.engine.permission/-permission-request/uri.html">uri</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">val </span><span class="identifier">uri</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span></code>
+<p>The origin URI which caused the permissions to be requested.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="grant.html">grant</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">grant</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.engine.gecko.permission.GeckoPermissionRequest$grant(kotlin.collections.List((mozilla.components.concept.engine.permission.Permission)))/permissions">permissions</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html"><span class="identifier">List</span></a><span class="symbol">&lt;</span><a href="../../mozilla.components.concept.engine.permission/-permission/index.html"><span class="identifier">Permission</span></a><span class="symbol">&gt;</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Grants the provided permissions, or all requested permissions, if none
+are provided.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="reject.html">reject</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">reject</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Rejects the requested permissions.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Inherited Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../../mozilla.components.concept.engine.permission/-permission-request/contains-video-and-audio-sources.html">containsVideoAndAudioSources</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">containsVideoAndAudioSources</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.concept.engine.permission/-permission-request/grant-if.html">grantIf</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">grantIf</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.engine.permission.PermissionRequest$grantIf(kotlin.Function1((mozilla.components.concept.engine.permission.Permission, kotlin.Boolean)))/predicate">predicate</span><span class="symbol">:</span>&nbsp;<span class="symbol">(</span><a href="../../mozilla.components.concept.engine.permission/-permission/index.html"><span class="identifier">Permission</span></a><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Grants this permission request if the provided predicate is true
+for any of the requested permissions.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Inheritors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-app/index.html">App</a></p>
+</td>
+<td>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">App</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">GeckoPermissionRequest</span></a></code>
+<p>Represents a gecko-based application permission request.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-content/index.html">Content</a></p>
+</td>
+<td>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">Content</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">GeckoPermissionRequest</span></a></code>
+<p>Represents a gecko-based content permission request.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-media/index.html">Media</a></p>
+</td>
+<td>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">Media</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">GeckoPermissionRequest</span></a></code>
+<p>Represents a gecko-based media permission request.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

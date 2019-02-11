@@ -1,0 +1,51 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>AutocompleteDelegate - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.concept.toolbar</a>&nbsp;/&nbsp;<a href="./index.html">AutocompleteDelegate</a><br/>
+<br/>
+<h1>AutocompleteDelegate</h1>
+<code><span class="keyword">interface </span><span class="identifier">AutocompleteDelegate</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/concept/toolbar/src/main/java/mozilla/components/concept/toolbar/AutocompleteDelegate.kt#L11">(source)</a>
+<p>Describes an object to which a <a href="../-autocomplete-result/index.html">AutocompleteResult</a> may be applied.
+Usually, this will delegate to a specific text view.</p>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="apply-autocomplete-result.html">applyAutocompleteResult</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">applyAutocompleteResult</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.toolbar.AutocompleteDelegate$applyAutocompleteResult(mozilla.components.concept.toolbar.AutocompleteResult)/result">result</span><span class="symbol">:</span>&nbsp;<a href="../-autocomplete-result/index.html"><span class="identifier">AutocompleteResult</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="no-autocomplete-result.html">noAutocompleteResult</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">noAutocompleteResult</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.toolbar.AutocompleteDelegate$noAutocompleteResult(kotlin.String)/input">input</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Autocompletion was invoked and no match was returned.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Inheritors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../../mozilla.components.browser.toolbar/-async-autocomplete-delegate/index.html">AsyncAutocompleteDelegate</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">AsyncAutocompleteDelegate</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">AutocompleteDelegate</span></a><span class="symbol">, </span><span class="identifier">CoroutineScope</span></code>
+<p>An autocomplete delegate which is aware of its parent scope (to check for cancellations).
+Responsible for processing autocompletion results and discarding stale results when <a href="#">urlView</a> moved on.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

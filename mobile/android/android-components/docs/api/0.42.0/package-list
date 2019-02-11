@@ -1,0 +1,176 @@
+$dokka.format:html
+$dokka.linkExtension:html
+$dokka.location:mozilla.components.browser.engine.system.matcher$reverse(kotlin.String)mozilla.components.browser.engine.system.matcher/kotlin.-string/reverse.html
+$dokka.location:mozilla.components.browser.engine.system.matcher$reversible(kotlin.String)mozilla.components.browser.engine.system.matcher/kotlin.-string/reversible.html
+$dokka.location:mozilla.components.lib.jexl.ext$toJexl(kotlin.Boolean)mozilla.components.lib.jexl.ext/kotlin.-boolean/to-jexl.html
+$dokka.location:mozilla.components.lib.jexl.ext$toJexl(kotlin.Double)mozilla.components.lib.jexl.ext/kotlin.-double/to-jexl.html
+$dokka.location:mozilla.components.lib.jexl.ext$toJexl(kotlin.Float)mozilla.components.lib.jexl.ext/kotlin.-float/to-jexl.html
+$dokka.location:mozilla.components.lib.jexl.ext$toJexl(kotlin.Int)mozilla.components.lib.jexl.ext/kotlin.-int/to-jexl.html
+$dokka.location:mozilla.components.lib.jexl.ext$toJexl(kotlin.String)mozilla.components.lib.jexl.ext/kotlin.-string/to-jexl.html
+$dokka.location:mozilla.components.lib.jexl.ext$toJexlArray(kotlin.collections.List((mozilla.components.lib.jexl.ext.toJexlArray.T)))mozilla.components.lib.jexl.ext/kotlin.collections.-list/to-jexl-array.html
+$dokka.location:mozilla.components.support.ktx.android.arch.lifecycle$addObservers(android.arch.lifecycle.Lifecycle, kotlin.Array((android.arch.lifecycle.LifecycleObserver)))mozilla.components.support.ktx.android.arch.lifecycle/android.arch.lifecycle.-lifecycle/add-observers.html
+$dokka.location:mozilla.components.support.ktx.android.content$appVersionName#android.content.Contextmozilla.components.support.ktx.android.content/android.content.-context/app-version-name.html
+$dokka.location:mozilla.components.support.ktx.android.content$isOSOnLowMemory(android.content.Context)mozilla.components.support.ktx.android.content/android.content.-context/is-o-s-on-low-memory.html
+$dokka.location:mozilla.components.support.ktx.android.content$isPermissionGranted(android.content.Context, kotlin.Array((kotlin.String)))mozilla.components.support.ktx.android.content/android.content.-context/is-permission-granted.html
+$dokka.location:mozilla.components.support.ktx.android.content$share(android.content.Context, kotlin.String, kotlin.String)mozilla.components.support.ktx.android.content/android.content.-context/share.html
+$dokka.location:mozilla.components.support.ktx.android.content$systemService(android.content.Context, kotlin.String)mozilla.components.support.ktx.android.content/android.content.-context/system-service.html
+$dokka.location:mozilla.components.support.ktx.android.content.res$pxToDp(android.content.res.Resources, kotlin.Int)mozilla.components.support.ktx.android.content.res/android.content.res.-resources/px-to-dp.html
+$dokka.location:mozilla.components.support.ktx.android.content.res$readJSONObject(android.content.res.AssetManager, kotlin.String)mozilla.components.support.ktx.android.content.res/android.content.res.-asset-manager/read-j-s-o-n-object.html
+$dokka.location:mozilla.components.support.ktx.android.graphics$toDataUri(android.graphics.Bitmap)mozilla.components.support.ktx.android.graphics/android.graphics.-bitmap/to-data-uri.html
+$dokka.location:mozilla.components.support.ktx.android.graphics$withRoundedCorners(android.graphics.Bitmap, kotlin.Float)mozilla.components.support.ktx.android.graphics/android.graphics.-bitmap/with-rounded-corners.html
+$dokka.location:mozilla.components.support.ktx.android.graphics.drawable$toBitmap(android.graphics.drawable.Drawable, android.graphics.Bitmap.Config)mozilla.components.support.ktx.android.graphics.drawable/android.graphics.drawable.-drawable/to-bitmap.html
+$dokka.location:mozilla.components.support.ktx.android.org.json$asSequence(org.json.JSONArray)mozilla.components.support.ktx.android.org.json/org.json.-j-s-o-n-array/as-sequence.html
+$dokka.location:mozilla.components.support.ktx.android.org.json$mergeWith(org.json.JSONObject, org.json.JSONObject)mozilla.components.support.ktx.android.org.json/org.json.-j-s-o-n-object/merge-with.html
+$dokka.location:mozilla.components.support.ktx.android.org.json$putIfNotNull(org.json.JSONObject, kotlin.String, kotlin.Any)mozilla.components.support.ktx.android.org.json/org.json.-j-s-o-n-object/put-if-not-null.html
+$dokka.location:mozilla.components.support.ktx.android.org.json$sortKeys(org.json.JSONObject)mozilla.components.support.ktx.android.org.json/org.json.-j-s-o-n-object/sort-keys.html
+$dokka.location:mozilla.components.support.ktx.android.org.json$toJSON(kotlin.collections.Map((kotlin.String, )))mozilla.components.support.ktx.android.org.json/kotlin.collections.-map/to-j-s-o-n.html
+$dokka.location:mozilla.components.support.ktx.android.org.json$toList(org.json.JSONArray)mozilla.components.support.ktx.android.org.json/org.json.-j-s-o-n-array/to-list.html
+$dokka.location:mozilla.components.support.ktx.android.org.json$tryGetInt(org.json.JSONObject, kotlin.String)mozilla.components.support.ktx.android.org.json/org.json.-j-s-o-n-object/try-get-int.html
+$dokka.location:mozilla.components.support.ktx.android.org.json$tryGetLong(org.json.JSONObject, kotlin.String)mozilla.components.support.ktx.android.org.json/org.json.-j-s-o-n-object/try-get-long.html
+$dokka.location:mozilla.components.support.ktx.android.org.json$tryGetString(org.json.JSONObject, kotlin.String)mozilla.components.support.ktx.android.org.json/org.json.-j-s-o-n-object/try-get-string.html
+$dokka.location:mozilla.components.support.ktx.android.os$resetAfter(android.os.StrictMode.ThreadPolicy, kotlin.Function0((mozilla.components.support.ktx.android.os.resetAfter.R)))mozilla.components.support.ktx.android.os/android.os.-strict-mode.-thread-policy/reset-after.html
+$dokka.location:mozilla.components.support.ktx.android.view$enterToImmersiveMode(android.app.Activity)mozilla.components.support.ktx.android.view/android.app.-activity/enter-to-immersive-mode.html
+$dokka.location:mozilla.components.support.ktx.android.view$exitImmersiveModeIfNeeded(android.app.Activity)mozilla.components.support.ktx.android.view/android.app.-activity/exit-immersive-mode-if-needed.html
+$dokka.location:mozilla.components.support.ktx.android.view$forEach(android.view.ViewGroup, kotlin.Function1((android.view.View, kotlin.Unit)))mozilla.components.support.ktx.android.view/android.view.-view-group/for-each.html
+$dokka.location:mozilla.components.support.ktx.android.view$hideKeyboard(android.view.View)mozilla.components.support.ktx.android.view/android.view.-view/hide-keyboard.html
+$dokka.location:mozilla.components.support.ktx.android.view$isGone(android.view.View)mozilla.components.support.ktx.android.view/android.view.-view/is-gone.html
+$dokka.location:mozilla.components.support.ktx.android.view$isInvisible(android.view.View)mozilla.components.support.ktx.android.view/android.view.-view/is-invisible.html
+$dokka.location:mozilla.components.support.ktx.android.view$isLTR#android.view.Viewmozilla.components.support.ktx.android.view/android.view.-view/is-l-t-r.html
+$dokka.location:mozilla.components.support.ktx.android.view$isRTL#android.view.Viewmozilla.components.support.ktx.android.view/android.view.-view/is-r-t-l.html
+$dokka.location:mozilla.components.support.ktx.android.view$isVisible(android.view.View)mozilla.components.support.ktx.android.view/android.view.-view/is-visible.html
+$dokka.location:mozilla.components.support.ktx.android.view$setPadding(android.view.View, mozilla.components.support.base.android.Padding)mozilla.components.support.ktx.android.view/android.view.-view/set-padding.html
+$dokka.location:mozilla.components.support.ktx.android.view$showKeyboard(android.view.View, kotlin.Int)mozilla.components.support.ktx.android.view/android.view.-view/show-keyboard.html
+$dokka.location:mozilla.components.support.ktx.kotlin$ELLIPSIS#kotlin.Char.Companionmozilla.components.support.ktx.kotlin/kotlin.-char/-e-l-l-i-p-s-i-s.html
+$dokka.location:mozilla.components.support.ktx.kotlin$isEmail(kotlin.String)mozilla.components.support.ktx.kotlin/kotlin.-string/is-email.html
+$dokka.location:mozilla.components.support.ktx.kotlin$isGeoLocation(kotlin.String)mozilla.components.support.ktx.kotlin/kotlin.-string/is-geo-location.html
+$dokka.location:mozilla.components.support.ktx.kotlin$isPhone(kotlin.String)mozilla.components.support.ktx.kotlin/kotlin.-string/is-phone.html
+$dokka.location:mozilla.components.support.ktx.kotlin$isUrl(kotlin.String)mozilla.components.support.ktx.kotlin/kotlin.-string/is-url.html
+$dokka.location:mozilla.components.support.ktx.kotlin$toBundle(kotlin.collections.Map((mozilla.components.support.ktx.kotlin.toBundle.K, mozilla.components.support.ktx.kotlin.toBundle.V)))mozilla.components.support.ktx.kotlin/kotlin.collections.-map/to-bundle.html
+$dokka.location:mozilla.components.support.ktx.kotlin$toDate(kotlin.String, kotlin.String, java.util.Locale)mozilla.components.support.ktx.kotlin/kotlin.-string/to-date.html
+$dokka.location:mozilla.components.support.ktx.kotlin$toNormalizedUrl(kotlin.String)mozilla.components.support.ktx.kotlin/kotlin.-string/to-normalized-url.html
+mozilla.components.browser.awesomebar
+mozilla.components.browser.awesomebar.layout
+mozilla.components.browser.awesomebar.transform
+mozilla.components.browser.domains
+mozilla.components.browser.domains.autocomplete
+mozilla.components.browser.engine.gecko
+mozilla.components.browser.engine.gecko.fetch
+mozilla.components.browser.engine.gecko.permission
+mozilla.components.browser.engine.gecko.prompt
+mozilla.components.browser.engine.servo
+mozilla.components.browser.engine.system
+mozilla.components.browser.engine.system.matcher
+mozilla.components.browser.engine.system.permission
+mozilla.components.browser.engine.system.window
+mozilla.components.browser.errorpages
+mozilla.components.browser.menu
+mozilla.components.browser.menu.item
+mozilla.components.browser.search
+mozilla.components.browser.search.provider
+mozilla.components.browser.search.provider.filter
+mozilla.components.browser.search.provider.localization
+mozilla.components.browser.search.suggestions
+mozilla.components.browser.session
+mozilla.components.browser.session.storage
+mozilla.components.browser.session.tab
+mozilla.components.browser.storage.memory
+mozilla.components.browser.storage.sync
+mozilla.components.browser.tabstray
+mozilla.components.browser.toolbar
+mozilla.components.browser.toolbar.behavior
+mozilla.components.browser.toolbar.edit
+mozilla.components.concept.awesomebar
+mozilla.components.concept.engine
+mozilla.components.concept.engine.history
+mozilla.components.concept.engine.permission
+mozilla.components.concept.engine.prompt
+mozilla.components.concept.engine.request
+mozilla.components.concept.engine.window
+mozilla.components.concept.fetch
+mozilla.components.concept.storage
+mozilla.components.concept.tabstray
+mozilla.components.concept.toolbar
+mozilla.components.feature.accounts
+mozilla.components.feature.awesomebar
+mozilla.components.feature.awesomebar.provider
+mozilla.components.feature.contextmenu
+mozilla.components.feature.customtabs
+mozilla.components.feature.downloads
+mozilla.components.feature.findinpage
+mozilla.components.feature.findinpage.view
+mozilla.components.feature.intent
+mozilla.components.feature.prompts
+mozilla.components.feature.search
+mozilla.components.feature.session
+mozilla.components.feature.session.bundling
+mozilla.components.feature.sitepermissions
+mozilla.components.feature.sync
+mozilla.components.feature.tabs
+mozilla.components.feature.tabs.tabstray
+mozilla.components.feature.tabs.toolbar
+mozilla.components.feature.toolbar
+mozilla.components.lib.crash
+mozilla.components.lib.crash.handler
+mozilla.components.lib.crash.prompt
+mozilla.components.lib.crash.service
+mozilla.components.lib.dataprotect
+mozilla.components.lib.fetch.httpurlconnection
+mozilla.components.lib.fetch.okhttp
+mozilla.components.lib.jexl
+mozilla.components.lib.jexl.ast
+mozilla.components.lib.jexl.evaluator
+mozilla.components.lib.jexl.ext
+mozilla.components.lib.jexl.grammar
+mozilla.components.lib.jexl.lexer
+mozilla.components.lib.jexl.parser
+mozilla.components.lib.jexl.value
+mozilla.components.lib.publicsuffixlist
+mozilla.components.service.fretboard
+mozilla.components.service.fretboard.scheduler.jobscheduler
+mozilla.components.service.fretboard.scheduler.workmanager
+mozilla.components.service.fretboard.source.kinto
+mozilla.components.service.fretboard.storage.flatfile
+mozilla.components.service.fxa
+mozilla.components.service.glean
+mozilla.components.service.glean.config
+mozilla.components.service.glean.storages
+mozilla.components.service.sync.logins
+mozilla.components.support.base.android
+mozilla.components.support.base.facts
+mozilla.components.support.base.facts.processor
+mozilla.components.support.base.feature
+mozilla.components.support.base.log
+mozilla.components.support.base.log.logger
+mozilla.components.support.base.log.sink
+mozilla.components.support.base.observer
+mozilla.components.support.ktx.android.arch.lifecycle
+mozilla.components.support.ktx.android.content
+mozilla.components.support.ktx.android.content.res
+mozilla.components.support.ktx.android.graphics
+mozilla.components.support.ktx.android.graphics.drawable
+mozilla.components.support.ktx.android.org.json
+mozilla.components.support.ktx.android.os
+mozilla.components.support.ktx.android.util
+mozilla.components.support.ktx.android.view
+mozilla.components.support.ktx.kotlin
+mozilla.components.support.rustlog
+mozilla.components.support.test
+mozilla.components.support.test.robolectric
+mozilla.components.support.utils
+mozilla.components.tooling.fetch.tests
+mozilla.components.tooling.lint
+mozilla.components.ui.autocomplete
+mozilla.components.ui.doorhanger
+mozilla.components.ui.progress
+mozilla.components.ui.tabcounter
+org.mozilla.telemetry
+org.mozilla.telemetry.config
+org.mozilla.telemetry.event
+org.mozilla.telemetry.measurement
+org.mozilla.telemetry.net
+org.mozilla.telemetry.ping
+org.mozilla.telemetry.schedule
+org.mozilla.telemetry.schedule.jobscheduler
+org.mozilla.telemetry.serialize
+org.mozilla.telemetry.storage
+org.mozilla.telemetry.util

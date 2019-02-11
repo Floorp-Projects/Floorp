@@ -1,0 +1,26 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>Keystore.encryptBytes - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.lib.dataprotect</a>&nbsp;/&nbsp;<a href="index.html">Keystore</a>&nbsp;/&nbsp;<a href="./encrypt-bytes.html">encryptBytes</a><br/>
+<br/>
+<h1>encryptBytes</h1>
+<a name="mozilla.components.lib.dataprotect.Keystore$encryptBytes(kotlin.ByteArray)"></a>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">encryptBytes</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.lib.dataprotect.Keystore$encryptBytes(kotlin.ByteArray)/plain">plain</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-byte-array/index.html"><span class="identifier">ByteArray</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-byte-array/index.html"><span class="identifier">ByteArray</span></a></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/lib/dataprotect/src/main/java/mozilla/components/lib/dataprotect/Keystore.kt#L212">(source)</a>
+<p>Encrypts data using the managed key.</p>
+<p>The output of this method includes the input factors (i.e., initialization vector),
+ciphertext, and authentication tag as a single byte string; this output can be passed
+directly to <a href="decrypt-bytes.html">decryptBytes</a>.</p>
+<h3>Parameters</h3>
+<p><a name="plain"></a>
+<code>plain</code> - The "plaintext" data to encrypt</p>
+<h3>Exceptions</h3>
+<p><a name="GeneralSecurityException"></a>
+<code>GeneralSecurityException</code> - If the data could not be encrypted</p>
+<p><strong>Return</strong><br/>
+The encrypted data to be stored</p>
+</BODY>
+</HTML>

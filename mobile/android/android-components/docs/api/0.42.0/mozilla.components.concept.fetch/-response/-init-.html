@@ -1,0 +1,25 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>Response.<init> - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.concept.fetch</a>&nbsp;/&nbsp;<a href="index.html">Response</a>&nbsp;/&nbsp;<a href="./-init-.html">&lt;init&gt;</a><br/>
+<br/>
+<h1>&lt;init&gt;</h1>
+<a name="mozilla.components.concept.fetch.Response$&lt;init&gt;(kotlin.String, kotlin.Int, mozilla.components.concept.fetch.Headers, mozilla.components.concept.fetch.Response.Body)"></a>
+<code><span class="identifier">Response</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.fetch.Response$<init>(kotlin.String, kotlin.Int, mozilla.components.concept.fetch.Headers, mozilla.components.concept.fetch.Response.Body)/url">url</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.fetch.Response$<init>(kotlin.String, kotlin.Int, mozilla.components.concept.fetch.Headers, mozilla.components.concept.fetch.Response.Body)/status">status</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.fetch.Response$<init>(kotlin.String, kotlin.Int, mozilla.components.concept.fetch.Headers, mozilla.components.concept.fetch.Response.Body)/headers">headers</span><span class="symbol">:</span>&nbsp;<a href="../-headers/index.html"><span class="identifier">Headers</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.fetch.Response$<init>(kotlin.String, kotlin.Int, mozilla.components.concept.fetch.Headers, mozilla.components.concept.fetch.Response.Body)/body">body</span><span class="symbol">:</span>&nbsp;<a href="-body/index.html"><span class="identifier">Body</span></a><span class="symbol">)</span></code>
+<p>The <a href="index.html">Response</a> data class represents a reponse to a <a href="../-request/index.html">Request</a> send by a <a href="../-client/index.html">Client</a>.</p>
+<p>You can create a <a href="index.html">Response</a> object using the constructor, but you are more likely to encounter a <a href="index.html">Response</a> object
+being returned as the result of calling <a href="../-client/fetch.html">Client.fetch</a>.</p>
+<p>A <a href="index.html">Response</a> may hold references to other resources (e.g. streams). Therefore it's important to always close the
+<a href="index.html">Response</a> object or its <a href="-body/index.html">Body</a>. This can be done by either consuming the content of the <a href="-body/index.html">Body</a> with one of the
+available methods or by using Kotlin's extension methods for using <a href="https://developer.android.com/reference/java/io/Closeable.html">Closeable</a> implementations (like <code>use()</code>):</p>
+<pre><code class="lang-Kotlin">val response = ...
+response.use {
+   // Use response. Resources will get released automatically at the end of the block.
+}
+</code></pre>
+</BODY>
+</HTML>

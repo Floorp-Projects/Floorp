@@ -1,0 +1,332 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>SelectionAwareSessionObserver - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.browser.session</a>&nbsp;/&nbsp;<a href="./index.html">SelectionAwareSessionObserver</a><br/>
+<br/>
+<h1>SelectionAwareSessionObserver</h1>
+<code><span class="keyword">abstract</span> <span class="keyword">class </span><span class="identifier">SelectionAwareSessionObserver</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../-session-manager/-observer/index.html"><span class="identifier">Observer</span></a><span class="symbol">, </span><a href="../-session/-observer/index.html"><span class="identifier">Observer</span></a></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/SelectionAwareSessionObserver.kt#L19">(source)</a>
+<p>This class is a combination of <a href="../-session/-observer/index.html">Session.Observer</a> and
+<a href="../-session-manager/-observer/index.html">SessionManager.Observer</a>. It provides functionality to observe changes to a
+specified or selected session, and can automatically take care of switching
+over the observer in case a different session gets selected (see
+<a href="observe-fixed.html">observeFixed</a> and <a href="observe-selected.html">observeSelected</a>).</p>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">SelectionAwareSessionObserver</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.session.SelectionAwareSessionObserver$<init>(mozilla.components.browser.session.SessionManager)/sessionManager">sessionManager</span><span class="symbol">:</span>&nbsp;<a href="../-session-manager/index.html"><span class="identifier">SessionManager</span></a><span class="symbol">)</span></code>
+<p>This class is a combination of <a href="../-session/-observer/index.html">Session.Observer</a> and
+<a href="../-session-manager/-observer/index.html">SessionManager.Observer</a>. It provides functionality to observe changes to a
+specified or selected session, and can automatically take care of switching
+over the observer in case a different session gets selected (see
+<a href="observe-fixed.html">observeFixed</a> and <a href="observe-selected.html">observeSelected</a>).</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="active-session.html">activeSession</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">var </span><span class="identifier">activeSession</span><span class="symbol">: </span><a href="../-session/index.html"><span class="identifier">Session</span></a><span class="symbol">?</span></code>
+<p>the currently observed session</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="observe-fixed.html">observeFixed</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">observeFixed</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.session.SelectionAwareSessionObserver$observeFixed(mozilla.components.browser.session.Session)/session">session</span><span class="symbol">:</span>&nbsp;<a href="../-session/index.html"><span class="identifier">Session</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Starts observing changes to the specified session.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="observe-selected.html">observeSelected</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">observeSelected</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Starts observing changes to the selected session (see
+<a href="../-session-manager/selected-session.html">SessionManager.selectedSession</a>). If a different session is selected
+the observer will automatically be switched over and only notified of
+changes to the newly selected session.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="on-session-selected.html">onSessionSelected</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onSessionSelected</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.session.SelectionAwareSessionObserver$onSessionSelected(mozilla.components.browser.session.Session)/session">session</span><span class="symbol">:</span>&nbsp;<a href="../-session/index.html"><span class="identifier">Session</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>The selection has changed and the given session is now the selected session.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="stop.html">stop</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">stop</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Stops the observer.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Inherited Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../-session-manager/-observer/on-all-sessions-removed.html">onAllSessionsRemoved</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onAllSessionsRemoved</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>All sessions have been removed. Note that this will callback will be invoked whenever
+removeAll() or removeSessions have been called on the
+SessionManager. This callback will NOT be invoked when just the last
+session has been removed by calling remove() on the SessionManager.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../-session/-observer/on-app-permission-requested.html">onAppPermissionRequested</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onAppPermissionRequested</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.session.Session.Observer$onAppPermissionRequested(mozilla.components.browser.session.Session, mozilla.components.concept.engine.permission.PermissionRequest)/session">session</span><span class="symbol">:</span>&nbsp;<a href="../-session/index.html"><span class="identifier">Session</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.session.Session.Observer$onAppPermissionRequested(mozilla.components.browser.session.Session, mozilla.components.concept.engine.permission.PermissionRequest)/permissionRequest">permissionRequest</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.concept.engine.permission/-permission-request/index.html"><span class="identifier">PermissionRequest</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="../-session/-observer/on-close-window-requested.html">onCloseWindowRequested</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onCloseWindowRequested</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.session.Session.Observer$onCloseWindowRequested(mozilla.components.browser.session.Session, mozilla.components.concept.engine.window.WindowRequest)/session">session</span><span class="symbol">:</span>&nbsp;<a href="../-session/index.html"><span class="identifier">Session</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.session.Session.Observer$onCloseWindowRequested(mozilla.components.browser.session.Session, mozilla.components.concept.engine.window.WindowRequest)/windowRequest">windowRequest</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.concept.engine.window/-window-request/index.html"><span class="identifier">WindowRequest</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="../-session/-observer/on-content-permission-requested.html">onContentPermissionRequested</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onContentPermissionRequested</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.session.Session.Observer$onContentPermissionRequested(mozilla.components.browser.session.Session, mozilla.components.concept.engine.permission.PermissionRequest)/session">session</span><span class="symbol">:</span>&nbsp;<a href="../-session/index.html"><span class="identifier">Session</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.session.Session.Observer$onContentPermissionRequested(mozilla.components.browser.session.Session, mozilla.components.concept.engine.permission.PermissionRequest)/permissionRequest">permissionRequest</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.concept.engine.permission/-permission-request/index.html"><span class="identifier">PermissionRequest</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="../-session/-observer/on-custom-tab-config-changed.html">onCustomTabConfigChanged</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onCustomTabConfigChanged</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.session.Session.Observer$onCustomTabConfigChanged(mozilla.components.browser.session.Session, mozilla.components.browser.session.tab.CustomTabConfig)/session">session</span><span class="symbol">:</span>&nbsp;<a href="../-session/index.html"><span class="identifier">Session</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.session.Session.Observer$onCustomTabConfigChanged(mozilla.components.browser.session.Session, mozilla.components.browser.session.tab.CustomTabConfig)/customTabConfig">customTabConfig</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.browser.session.tab/-custom-tab-config/index.html"><span class="identifier">CustomTabConfig</span></a><span class="symbol">?</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="../-session/-observer/on-desktop-mode-changed.html">onDesktopModeChanged</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onDesktopModeChanged</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.session.Session.Observer$onDesktopModeChanged(mozilla.components.browser.session.Session, kotlin.Boolean)/session">session</span><span class="symbol">:</span>&nbsp;<a href="../-session/index.html"><span class="identifier">Session</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.session.Session.Observer$onDesktopModeChanged(mozilla.components.browser.session.Session, kotlin.Boolean)/enabled">enabled</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="../-session/-observer/on-download.html">onDownload</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onDownload</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.session.Session.Observer$onDownload(mozilla.components.browser.session.Session, mozilla.components.browser.session.Download)/session">session</span><span class="symbol">:</span>&nbsp;<a href="../-session/index.html"><span class="identifier">Session</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.session.Session.Observer$onDownload(mozilla.components.browser.session.Session, mozilla.components.browser.session.Download)/download">download</span><span class="symbol">:</span>&nbsp;<a href="../-download/index.html"><span class="identifier">Download</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="../-session/-observer/on-find-result.html">onFindResult</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onFindResult</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.session.Session.Observer$onFindResult(mozilla.components.browser.session.Session, mozilla.components.browser.session.Session.FindResult)/session">session</span><span class="symbol">:</span>&nbsp;<a href="../-session/index.html"><span class="identifier">Session</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.session.Session.Observer$onFindResult(mozilla.components.browser.session.Session, mozilla.components.browser.session.Session.FindResult)/result">result</span><span class="symbol">:</span>&nbsp;<a href="../-session/-find-result/index.html"><span class="identifier">FindResult</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="../-session/-observer/on-full-screen-changed.html">onFullScreenChanged</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onFullScreenChanged</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.session.Session.Observer$onFullScreenChanged(mozilla.components.browser.session.Session, kotlin.Boolean)/session">session</span><span class="symbol">:</span>&nbsp;<a href="../-session/index.html"><span class="identifier">Session</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.session.Session.Observer$onFullScreenChanged(mozilla.components.browser.session.Session, kotlin.Boolean)/enabled">enabled</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="../-session/-observer/on-loading-state-changed.html">onLoadingStateChanged</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onLoadingStateChanged</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.session.Session.Observer$onLoadingStateChanged(mozilla.components.browser.session.Session, kotlin.Boolean)/session">session</span><span class="symbol">:</span>&nbsp;<a href="../-session/index.html"><span class="identifier">Session</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.session.Session.Observer$onLoadingStateChanged(mozilla.components.browser.session.Session, kotlin.Boolean)/loading">loading</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="../-session/-observer/on-long-press.html">onLongPress</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onLongPress</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.session.Session.Observer$onLongPress(mozilla.components.browser.session.Session, mozilla.components.concept.engine.HitResult)/session">session</span><span class="symbol">:</span>&nbsp;<a href="../-session/index.html"><span class="identifier">Session</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.session.Session.Observer$onLongPress(mozilla.components.browser.session.Session, mozilla.components.concept.engine.HitResult)/hitResult">hitResult</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.concept.engine/-hit-result/index.html"><span class="identifier">HitResult</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="../-session/-observer/on-navigation-state-changed.html">onNavigationStateChanged</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onNavigationStateChanged</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.session.Session.Observer$onNavigationStateChanged(mozilla.components.browser.session.Session, kotlin.Boolean, kotlin.Boolean)/session">session</span><span class="symbol">:</span>&nbsp;<a href="../-session/index.html"><span class="identifier">Session</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.session.Session.Observer$onNavigationStateChanged(mozilla.components.browser.session.Session, kotlin.Boolean, kotlin.Boolean)/canGoBack">canGoBack</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.session.Session.Observer$onNavigationStateChanged(mozilla.components.browser.session.Session, kotlin.Boolean, kotlin.Boolean)/canGoForward">canGoForward</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="../-session/-observer/on-open-window-requested.html">onOpenWindowRequested</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onOpenWindowRequested</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.session.Session.Observer$onOpenWindowRequested(mozilla.components.browser.session.Session, mozilla.components.concept.engine.window.WindowRequest)/session">session</span><span class="symbol">:</span>&nbsp;<a href="../-session/index.html"><span class="identifier">Session</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.session.Session.Observer$onOpenWindowRequested(mozilla.components.browser.session.Session, mozilla.components.concept.engine.window.WindowRequest)/windowRequest">windowRequest</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.concept.engine.window/-window-request/index.html"><span class="identifier">WindowRequest</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="../-session/-observer/on-progress.html">onProgress</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onProgress</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.session.Session.Observer$onProgress(mozilla.components.browser.session.Session, kotlin.Int)/session">session</span><span class="symbol">:</span>&nbsp;<a href="../-session/index.html"><span class="identifier">Session</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.session.Session.Observer$onProgress(mozilla.components.browser.session.Session, kotlin.Int)/progress">progress</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="../-session/-observer/on-prompt-requested.html">onPromptRequested</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onPromptRequested</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.session.Session.Observer$onPromptRequested(mozilla.components.browser.session.Session, mozilla.components.concept.engine.prompt.PromptRequest)/session">session</span><span class="symbol">:</span>&nbsp;<a href="../-session/index.html"><span class="identifier">Session</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.session.Session.Observer$onPromptRequested(mozilla.components.browser.session.Session, mozilla.components.concept.engine.prompt.PromptRequest)/promptRequest">promptRequest</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.concept.engine.prompt/-prompt-request/index.html"><span class="identifier">PromptRequest</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="../-session/-observer/on-search.html">onSearch</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onSearch</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.session.Session.Observer$onSearch(mozilla.components.browser.session.Session, kotlin.String)/session">session</span><span class="symbol">:</span>&nbsp;<a href="../-session/index.html"><span class="identifier">Session</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.session.Session.Observer$onSearch(mozilla.components.browser.session.Session, kotlin.String)/searchTerms">searchTerms</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="../-session/-observer/on-security-changed.html">onSecurityChanged</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onSecurityChanged</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.session.Session.Observer$onSecurityChanged(mozilla.components.browser.session.Session, mozilla.components.browser.session.Session.SecurityInfo)/session">session</span><span class="symbol">:</span>&nbsp;<a href="../-session/index.html"><span class="identifier">Session</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.session.Session.Observer$onSecurityChanged(mozilla.components.browser.session.Session, mozilla.components.browser.session.Session.SecurityInfo)/securityInfo">securityInfo</span><span class="symbol">:</span>&nbsp;<a href="../-session/-security-info/index.html"><span class="identifier">SecurityInfo</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="../-session-manager/-observer/on-session-added.html">onSessionAdded</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onSessionAdded</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.session.SessionManager.Observer$onSessionAdded(mozilla.components.browser.session.Session)/session">session</span><span class="symbol">:</span>&nbsp;<a href="../-session/index.html"><span class="identifier">Session</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>The given session has been added.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../-session-manager/-observer/on-session-removed.html">onSessionRemoved</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onSessionRemoved</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.session.SessionManager.Observer$onSessionRemoved(mozilla.components.browser.session.Session)/session">session</span><span class="symbol">:</span>&nbsp;<a href="../-session/index.html"><span class="identifier">Session</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>The given session has been removed.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../-session-manager/-observer/on-sessions-restored.html">onSessionsRestored</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onSessionsRestored</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Sessions have been restored via a snapshot. This callback is invoked at the end of the
+call to read, after every session in the snapshot was added, and
+appropriate session was selected.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../-session/-observer/on-thumbnail-changed.html">onThumbnailChanged</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onThumbnailChanged</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.session.Session.Observer$onThumbnailChanged(mozilla.components.browser.session.Session, android.graphics.Bitmap)/session">session</span><span class="symbol">:</span>&nbsp;<a href="../-session/index.html"><span class="identifier">Session</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.session.Session.Observer$onThumbnailChanged(mozilla.components.browser.session.Session, android.graphics.Bitmap)/bitmap">bitmap</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/graphics/Bitmap.html"><span class="identifier">Bitmap</span></a><span class="symbol">?</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="../-session/-observer/on-title-changed.html">onTitleChanged</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onTitleChanged</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.session.Session.Observer$onTitleChanged(mozilla.components.browser.session.Session, kotlin.String)/session">session</span><span class="symbol">:</span>&nbsp;<a href="../-session/index.html"><span class="identifier">Session</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.session.Session.Observer$onTitleChanged(mozilla.components.browser.session.Session, kotlin.String)/title">title</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="../-session/-observer/on-tracker-blocked.html">onTrackerBlocked</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onTrackerBlocked</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.session.Session.Observer$onTrackerBlocked(mozilla.components.browser.session.Session, kotlin.String, kotlin.collections.List((kotlin.String)))/session">session</span><span class="symbol">:</span>&nbsp;<a href="../-session/index.html"><span class="identifier">Session</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.session.Session.Observer$onTrackerBlocked(mozilla.components.browser.session.Session, kotlin.String, kotlin.collections.List((kotlin.String)))/blocked">blocked</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.session.Session.Observer$onTrackerBlocked(mozilla.components.browser.session.Session, kotlin.String, kotlin.collections.List((kotlin.String)))/all">all</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html"><span class="identifier">List</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">&gt;</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="../-session/-observer/on-tracker-blocking-enabled-changed.html">onTrackerBlockingEnabledChanged</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onTrackerBlockingEnabledChanged</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.session.Session.Observer$onTrackerBlockingEnabledChanged(mozilla.components.browser.session.Session, kotlin.Boolean)/session">session</span><span class="symbol">:</span>&nbsp;<a href="../-session/index.html"><span class="identifier">Session</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.session.Session.Observer$onTrackerBlockingEnabledChanged(mozilla.components.browser.session.Session, kotlin.Boolean)/blockingEnabled">blockingEnabled</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="../-session/-observer/on-url-changed.html">onUrlChanged</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onUrlChanged</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.session.Session.Observer$onUrlChanged(mozilla.components.browser.session.Session, kotlin.String)/session">session</span><span class="symbol">:</span>&nbsp;<a href="../-session/index.html"><span class="identifier">Session</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.session.Session.Observer$onUrlChanged(mozilla.components.browser.session.Session, kotlin.String)/url">url</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Inheritors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../../mozilla.components.feature.session/-coordinate-scrolling-feature/index.html">CoordinateScrollingFeature</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">CoordinateScrollingFeature</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">SelectionAwareSessionObserver</span></a><span class="symbol">, </span><a href="../../mozilla.components.support.base.feature/-lifecycle-aware-feature/index.html"><span class="identifier">LifecycleAwareFeature</span></a></code>
+<p>Feature implementation for connecting an <a href="../../mozilla.components.concept.engine/-engine-view/index.html">EngineView</a> with any View that you want to coordinate scrolling
+behavior with.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.feature.downloads/-downloads-feature/index.html">DownloadsFeature</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">DownloadsFeature</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">SelectionAwareSessionObserver</span></a><span class="symbol">, </span><a href="../../mozilla.components.support.base.feature/-lifecycle-aware-feature/index.html"><span class="identifier">LifecycleAwareFeature</span></a></code>
+<p>Feature implementation to provide download functionality for the selected
+session. The feature will subscribe to the selected session and listen
+for downloads.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.feature.session/-full-screen-feature/index.html">FullScreenFeature</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">class </span><span class="identifier">FullScreenFeature</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">SelectionAwareSessionObserver</span></a><span class="symbol">, </span><a href="../../mozilla.components.support.base.feature/-lifecycle-aware-feature/index.html"><span class="identifier">LifecycleAwareFeature</span></a><span class="symbol">, </span><a href="../../mozilla.components.support.base.feature/-back-handler/index.html"><span class="identifier">BackHandler</span></a></code>
+<p>Feature implementation for handling fullscreen mode (exiting and back button presses).</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.feature.toolbar/-toolbar-presenter/index.html">ToolbarPresenter</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">ToolbarPresenter</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">SelectionAwareSessionObserver</span></a></code>
+<p>Presenter implementation for a toolbar implementation in order to update the toolbar whenever
+the state of the selected session changes.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

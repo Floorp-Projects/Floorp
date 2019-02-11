@@ -1,0 +1,65 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>AutocompleteView - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.ui.autocomplete</a>&nbsp;/&nbsp;<a href="./index.html">AutocompleteView</a><br/>
+<br/>
+<h1>AutocompleteView</h1>
+<code><span class="keyword">interface </span><span class="identifier">AutocompleteView</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/ui/autocomplete/src/main/java/mozilla/components/ui/autocomplete/InlineAutocompleteEditText.kt#L47">(source)</a>
+<p>Aids in testing functionality which relies on some aspects of InlineAutocompleteEditText.</p>
+<h3>Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="original-text.html">originalText</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">val </span><span class="identifier">originalText</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code>
+<p>Current text.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="apply-autocomplete-result.html">applyAutocompleteResult</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">applyAutocompleteResult</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.ui.autocomplete.AutocompleteView$applyAutocompleteResult(mozilla.components.ui.autocomplete.InlineAutocompleteEditText.AutocompleteResult)/result">result</span><span class="symbol">:</span>&nbsp;<a href="../-inline-autocomplete-edit-text/-autocomplete-result/index.html"><span class="identifier">AutocompleteResult</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Apply provided <a href="apply-autocomplete-result.html#mozilla.components.ui.autocomplete.AutocompleteView$applyAutocompleteResult(mozilla.components.ui.autocomplete.InlineAutocompleteEditText.AutocompleteResult)/result">result</a> autocomplete result.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="no-autocomplete-result.html">noAutocompleteResult</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">noAutocompleteResult</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Notify that there is no autocomplete result available.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Inheritors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../-inline-autocomplete-edit-text/index.html">InlineAutocompleteEditText</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">class </span><span class="identifier">InlineAutocompleteEditText</span>&nbsp;<span class="symbol">:</span>&nbsp;<span class="identifier">AppCompatEditText</span><span class="symbol">, </span><a href="./index.html"><span class="identifier">AutocompleteView</span></a></code>
+<p>A UI edit text component which supports inline autocompletion.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

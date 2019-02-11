@@ -1,0 +1,54 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>AsyncFilterListener - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.browser.toolbar</a>&nbsp;/&nbsp;<a href="./index.html">AsyncFilterListener</a><br/>
+<br/>
+<h1>AsyncFilterListener</h1>
+<code><span class="keyword">class </span><span class="identifier">AsyncFilterListener</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.ui.autocomplete/-on-filter-listener.html"><span class="identifier">OnFilterListener</span></a><span class="symbol">, </span><span class="identifier">CoroutineScope</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/browser/toolbar/src/main/java/mozilla/components/browser/toolbar/BrowserToolbar.kt#L540">(source)</a>
+<p>Wraps <a href="#">filter</a> execution in a coroutine context, cancelling prior executions on every invocation.
+<a href="coroutine-context.html">coroutineContext</a> must be of type that doesn't propagate cancellation of its children upwards.</p>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">AsyncFilterListener</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.toolbar.AsyncFilterListener$<init>(mozilla.components.ui.autocomplete.AutocompleteView, kotlin.coroutines.CoroutineContext, kotlin.SuspendFunction2((kotlin.String, mozilla.components.concept.toolbar.AutocompleteDelegate, kotlin.Unit)), kotlin.coroutines.CoroutineContext)/urlView">urlView</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.ui.autocomplete/-autocomplete-view/index.html"><span class="identifier">AutocompleteView</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.toolbar.AsyncFilterListener$<init>(mozilla.components.ui.autocomplete.AutocompleteView, kotlin.coroutines.CoroutineContext, kotlin.SuspendFunction2((kotlin.String, mozilla.components.concept.toolbar.AutocompleteDelegate, kotlin.Unit)), kotlin.coroutines.CoroutineContext)/coroutineContext">coroutineContext</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-coroutine-context/index.html"><span class="identifier">CoroutineContext</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.toolbar.AsyncFilterListener$<init>(mozilla.components.ui.autocomplete.AutocompleteView, kotlin.coroutines.CoroutineContext, kotlin.SuspendFunction2((kotlin.String, mozilla.components.concept.toolbar.AutocompleteDelegate, kotlin.Unit)), kotlin.coroutines.CoroutineContext)/filter">filter</span><span class="symbol">:</span>&nbsp;<span class="keyword">suspend </span><span class="symbol">(</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">,</span>&nbsp;<a href="../../mozilla.components.concept.toolbar/-autocomplete-delegate/index.html"><span class="identifier">AutocompleteDelegate</span></a><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.toolbar.AsyncFilterListener$<init>(mozilla.components.ui.autocomplete.AutocompleteView, kotlin.coroutines.CoroutineContext, kotlin.SuspendFunction2((kotlin.String, mozilla.components.concept.toolbar.AutocompleteDelegate, kotlin.Unit)), kotlin.coroutines.CoroutineContext)/uiContext">uiContext</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-coroutine-context/index.html"><span class="identifier">CoroutineContext</span></a>&nbsp;<span class="symbol">=</span>&nbsp;Dispatchers.Main<span class="symbol">)</span></code>
+<p>Wraps <a href="-init-.html#mozilla.components.browser.toolbar.AsyncFilterListener$<init>(mozilla.components.ui.autocomplete.AutocompleteView, kotlin.coroutines.CoroutineContext, kotlin.SuspendFunction2((kotlin.String, mozilla.components.concept.toolbar.AutocompleteDelegate, kotlin.Unit)), kotlin.coroutines.CoroutineContext)/filter">filter</a> execution in a coroutine context, cancelling prior executions on every invocation.
+<a href="-init-.html#mozilla.components.browser.toolbar.AsyncFilterListener$<init>(mozilla.components.ui.autocomplete.AutocompleteView, kotlin.coroutines.CoroutineContext, kotlin.SuspendFunction2((kotlin.String, mozilla.components.concept.toolbar.AutocompleteDelegate, kotlin.Unit)), kotlin.coroutines.CoroutineContext)/coroutineContext">coroutineContext</a> must be of type that doesn't propagate cancellation of its children upwards.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="coroutine-context.html">coroutineContext</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">coroutineContext</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-coroutine-context/index.html"><span class="identifier">CoroutineContext</span></a></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="invoke.html">invoke</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">invoke</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.toolbar.AsyncFilterListener$invoke(kotlin.String)/text">text</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

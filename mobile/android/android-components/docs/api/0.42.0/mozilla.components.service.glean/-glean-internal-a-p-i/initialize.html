@@ -1,0 +1,26 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>GleanInternalAPI.initialize - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.service.glean</a>&nbsp;/&nbsp;<a href="index.html">GleanInternalAPI</a>&nbsp;/&nbsp;<a href="./initialize.html">initialize</a><br/>
+<br/>
+<h1>initialize</h1>
+<a name="mozilla.components.service.glean.GleanInternalAPI$initialize(android.content.Context, mozilla.components.service.glean.config.Configuration)"></a>
+<code><span class="keyword">fun </span><span class="identifier">initialize</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.glean.GleanInternalAPI$initialize(android.content.Context, mozilla.components.service.glean.config.Configuration)/applicationContext">applicationContext</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/content/Context.html"><span class="identifier">Context</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.service.glean.GleanInternalAPI$initialize(android.content.Context, mozilla.components.service.glean.config.Configuration)/configuration">configuration</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.service.glean.config/-configuration/index.html"><span class="identifier">Configuration</span></a>&nbsp;<span class="symbol">=</span>&nbsp;Configuration()<span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/Glean.kt#L72">(source)</a>
+<p>Initialize glean.</p>
+<p>This should only be initialized once by the application, and not by
+libraries using glean. A message is logged to error and no changes are made
+to the state if initialize is called a more than once.</p>
+<p>A LifecycleObserver will be added to send pings when the application goes
+into the background.</p>
+<h3>Parameters</h3>
+<p><a name="applicationContext"></a>
+<code>applicationContext</code> - <a href="https://developer.android.com/reference/android/content/Context.html">Context</a> to access application features, such
+as shared preferences</p>
+<p><a name="configuration"></a>
+<code>configuration</code> - A Glean <a href="../../mozilla.components.service.glean.config/-configuration/index.html">Configuration</a> object with global settings.</p>
+</BODY>
+</HTML>

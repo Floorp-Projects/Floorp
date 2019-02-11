@@ -1,0 +1,33 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>OkHttpClient.fetch - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.lib.fetch.okhttp</a>&nbsp;/&nbsp;<a href="index.html">OkHttpClient</a>&nbsp;/&nbsp;<a href="./fetch.html">fetch</a><br/>
+<br/>
+<h1>fetch</h1>
+<a name="mozilla.components.lib.fetch.okhttp.OkHttpClient$fetch(mozilla.components.concept.fetch.Request)"></a>
+<code><span class="keyword">fun </span><span class="identifier">fetch</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.lib.fetch.okhttp.OkHttpClient$fetch(mozilla.components.concept.fetch.Request)/request">request</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.concept.fetch/-request/index.html"><span class="identifier">Request</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="../../mozilla.components.concept.fetch/-response/index.html"><span class="identifier">Response</span></a></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/lib/fetch-okhttp/src/main/java/mozilla/components/lib/fetch/okhttp/OkHttpClient.kt#L23">(source)</a>
+<p>Overrides <a href="../../mozilla.components.concept.fetch/-client/fetch.html">Client.fetch</a></p>
+<p>Starts the process of fetching a resource from the network as described by the <a href="../../mozilla.components.concept.fetch/-request/index.html">Request</a> object.</p>
+<p>A <a href="../../mozilla.components.concept.fetch/-response/index.html">Response</a> may keep references to open streams. Therefore it's important to always close the <a href="../../mozilla.components.concept.fetch/-response/index.html">Response</a> or
+its <a href="../../mozilla.components.concept.fetch/-response/-body/index.html">Response.Body</a>.</p>
+<p>Use the <code>use()</code> extension method when performing multiple operations on the <a href="../../mozilla.components.concept.fetch/-response/index.html">Response</a> object:</p>
+<pre><code class="lang-Kotlin">client.fetch(request).use { response -&gt;
+    // Use response. Resources will get released automatically at the end of the block.
+}
+</code></pre>
+<p>Alternatively you can use multiple <code>use*()</code> methods on the <a href="../../mozilla.components.concept.fetch/-response/-body/index.html">Response.Body</a> object.</p>
+<h3>Parameters</h3>
+<p><a name="request"></a>
+<code>request</code> - The request to be executed by this <a href="../../mozilla.components.concept.fetch/-client/index.html">Client</a>.</p>
+<h3>Exceptions</h3>
+<p><a name="IOException"></a>
+<code>IOException</code> - if the request could not be executed due to cancellation, a connectivity problem or a
+timeout.</p>
+<p><strong>Return</strong><br/>
+The <a href="../../mozilla.components.concept.fetch/-response/index.html">Response</a> returned by the server.</p>
+</BODY>
+</HTML>

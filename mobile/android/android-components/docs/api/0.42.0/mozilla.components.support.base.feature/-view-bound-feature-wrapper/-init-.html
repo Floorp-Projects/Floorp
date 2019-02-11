@@ -1,0 +1,52 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>ViewBoundFeatureWrapper.<init> - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.support.base.feature</a>&nbsp;/&nbsp;<a href="index.html">ViewBoundFeatureWrapper</a>&nbsp;/&nbsp;<a href="./-init-.html">&lt;init&gt;</a><br/>
+<br/>
+<h1>&lt;init&gt;</h1>
+<a name="mozilla.components.support.base.feature.ViewBoundFeatureWrapper$&lt;init&gt;(mozilla.components.support.base.feature.ViewBoundFeatureWrapper.T, android.arch.lifecycle.LifecycleOwner, android.view.View)"></a>
+<code><span class="identifier">ViewBoundFeatureWrapper</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.support.base.feature.ViewBoundFeatureWrapper$<init>(mozilla.components.support.base.feature.ViewBoundFeatureWrapper.T, android.arch.lifecycle.LifecycleOwner, android.view.View)/feature">feature</span><span class="symbol">:</span>&nbsp;<a href="index.html#T"><span class="identifier">T</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.support.base.feature.ViewBoundFeatureWrapper$<init>(mozilla.components.support.base.feature.ViewBoundFeatureWrapper.T, android.arch.lifecycle.LifecycleOwner, android.view.View)/owner">owner</span><span class="symbol">:</span>&nbsp;<span class="identifier">LifecycleOwner</span><span class="symbol">, </span><span class="identifier" id="mozilla.components.support.base.feature.ViewBoundFeatureWrapper$<init>(mozilla.components.support.base.feature.ViewBoundFeatureWrapper.T, android.arch.lifecycle.LifecycleOwner, android.view.View)/view">view</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">)</span></code>
+<p>Convenient constructor for creating a wrapper instance and calling <a href="set.html">set</a> immediately.</p>
+<a name="mozilla.components.support.base.feature.ViewBoundFeatureWrapper$&lt;init&gt;()"></a>
+<code><span class="identifier">ViewBoundFeatureWrapper</span><span class="symbol">(</span><span class="symbol">)</span></code>
+<p>Wrapper for <a href="../-lifecycle-aware-feature/index.html">LifecycleAwareFeature</a> instances that keep a strong references to a <a href="https://developer.android.com/reference/android/view/View.html">View</a>. This wrapper is helpful
+when the lifetime of the <a href="https://developer.android.com/reference/android/view/View.html">View</a> may be shorter than the <a href="#">Lifecycle</a> and you need to keep a reference to the
+<a href="../-lifecycle-aware-feature/index.html">LifecycleAwareFeature</a> that may outlive the <a href="https://developer.android.com/reference/android/view/View.html">View</a>.</p>
+<p><a href="index.html">ViewBoundFeatureWrapper</a> takes care of stopping <a href="../-lifecycle-aware-feature/index.html">LifecycleAwareFeature</a> and clearing references once the bound
+<a href="https://developer.android.com/reference/android/view/View.html">View</a> get detached.</p>
+<p>A common use case is a <code>Fragment</code> that needs to keep a reference to a <a href="../-lifecycle-aware-feature/index.html">LifecycleAwareFeature</a> (e.g. to invoke
+<code>onBackPressed()</code> and the <a href="../-lifecycle-aware-feature/index.html">LifecycleAwareFeature</a> holds a reference to <a href="https://developer.android.com/reference/android/view/View.html">View</a> instances. Once the <code>Fragment</code> gets
+detached and not destroyed (e.g. when pushed to the back stack) it will still keep the reference to the
+<a href="../-lifecycle-aware-feature/index.html">LifecycleAwareFeature</a> and therefore to the (now detached) <a href="https://developer.android.com/reference/android/view/View.html">View</a> (-&gt; Leak). When the <code>Fragment</code> gets re-attached a
+new <a href="https://developer.android.com/reference/android/view/View.html">View</a> and matching <a href="../-lifecycle-aware-feature/index.html">LifecycleAwareFeature</a> is getting created leading to multiple concurrent
+<a href="../-lifecycle-aware-feature/index.html">LifecycleAwareFeature</a> and (off-screen) <a href="https://developer.android.com/reference/android/view/View.html">View</a> instances existing in memory.</p>
+<p>Example integration:</p>
+<pre><code>class MyFragment : Fragment {
+    val myFeature = ViewBoundFeatureWrapper&lt;MyFeature&gt;()
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        // Bind wrapper to feature and view. Feature will be stopped and internal reference will be cleared
+        // when the view gets detached.
+        myFeature.set(
+            feature = MyFeature(..., view),
+            owner = this,
+            view = view
+        )
+    }
+
+    fun doSomething() {
+        // Get will return the feature instance or null if the instance was cleared (e.g. the fragment is detached)
+        myFeature.get()?.doSomething()
+    }
+
+    override fun onBackPressed(): Boolean {
+        return myFeature.onBackPressed()
+    }
+}
+</code></pre>
+</BODY>
+</HTML>

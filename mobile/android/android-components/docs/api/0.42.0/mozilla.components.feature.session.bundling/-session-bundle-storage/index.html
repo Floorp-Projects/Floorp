@@ -1,0 +1,121 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>SessionBundleStorage - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.feature.session.bundling</a>&nbsp;/&nbsp;<a href="./index.html">SessionBundleStorage</a><br/>
+<br/>
+<h1>SessionBundleStorage</h1>
+<code><span class="keyword">class </span><span class="identifier">SessionBundleStorage</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.browser.session.storage/-auto-save/-storage/index.html"><span class="identifier">Storage</span></a></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session-bundling/src/main/java/mozilla/components/feature/session/bundling/SessionBundleStorage.kt#L29">(source)</a>
+<p>A <a href="../../mozilla.components.browser.session/-session/index.html">Session</a> storage implementation that saves snapshots as a <a href="../-session-bundle/index.html">SessionBundle</a>.</p>
+<h3>Parameters</h3>
+<p><a name="bundleLifetime"></a>
+<code>bundleLifetime</code> - The lifetime of a bundle controls whether a bundle will be restored or whether this bundle is
+considered expired and a new bundle will be used.</p>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">SessionBundleStorage</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.feature.session.bundling.SessionBundleStorage$<init>(android.content.Context, kotlin.Pair((kotlin.Long, java.util.concurrent.TimeUnit)))/context">context</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/content/Context.html"><span class="identifier">Context</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.feature.session.bundling.SessionBundleStorage$<init>(android.content.Context, kotlin.Pair((kotlin.Long, java.util.concurrent.TimeUnit)))/bundleLifetime">bundleLifetime</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-pair/index.html"><span class="identifier">Pair</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html"><span class="identifier">Long</span></a><span class="symbol">,</span>&nbsp;<a href="https://developer.android.com/reference/java/util/concurrent/TimeUnit.html"><span class="identifier">TimeUnit</span></a><span class="symbol">&gt;</span><span class="symbol">)</span></code>
+<p>A <a href="../../mozilla.components.browser.session/-session/index.html">Session</a> storage implementation that saves snapshots as a <a href="../-session-bundle/index.html">SessionBundle</a>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="auto-save.html">autoSave</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">autoSave</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.feature.session.bundling.SessionBundleStorage$autoSave(mozilla.components.browser.session.SessionManager, kotlin.Long, java.util.concurrent.TimeUnit)/sessionManager">sessionManager</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.browser.session/-session-manager/index.html"><span class="identifier">SessionManager</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.feature.session.bundling.SessionBundleStorage$autoSave(mozilla.components.browser.session.SessionManager, kotlin.Long, java.util.concurrent.TimeUnit)/interval">interval</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html"><span class="identifier">Long</span></a>&nbsp;<span class="symbol">=</span>&nbsp;AutoSave.DEFAULT_INTERVAL_MILLISECONDS<span class="symbol">, </span><span class="identifier" id="mozilla.components.feature.session.bundling.SessionBundleStorage$autoSave(mozilla.components.browser.session.SessionManager, kotlin.Long, java.util.concurrent.TimeUnit)/unit">unit</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/java/util/concurrent/TimeUnit.html"><span class="identifier">TimeUnit</span></a>&nbsp;<span class="symbol">=</span>&nbsp;TimeUnit.MILLISECONDS<span class="symbol">)</span><span class="symbol">: </span><a href="../../mozilla.components.browser.session.storage/-auto-save/index.html"><span class="identifier">AutoSave</span></a></code>
+<p>Starts configuring automatic saving of the state.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="bundles.html">bundles</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">bundles</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.feature.session.bundling.SessionBundleStorage$bundles(kotlin.Int)/limit">limit</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a>&nbsp;<span class="symbol">=</span>&nbsp;20<span class="symbol">)</span><span class="symbol">: </span><span class="identifier">LiveData</span><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html"><span class="identifier">List</span></a><span class="symbol">&lt;</span><a href="../-session-bundle/index.html"><span class="identifier">SessionBundle</span></a><span class="symbol">&gt;</span><span class="symbol">&gt;</span></code>
+<p>Returns the last saved <a href="../-session-bundle/index.html">SessionBundle</a> instances (up to <a href="bundles.html#mozilla.components.feature.session.bundling.SessionBundleStorage$bundles(kotlin.Int)/limit">limit</a>) as a <a href="#">LiveData</a> list.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="bundles-paged.html">bundlesPaged</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">bundlesPaged</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><span class="identifier">Factory</span><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">,</span>&nbsp;<a href="../-session-bundle/index.html"><span class="identifier">SessionBundle</span></a><span class="symbol">&gt;</span></code>
+<p>Returns all saved <a href="../-session-bundle/index.html">SessionBundle</a> instances as a <a href="#">DataSource.Factory</a>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="current.html">current</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">current</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="../-session-bundle/index.html"><span class="identifier">SessionBundle</span></a><span class="symbol">?</span></code>
+<p>Returns the currently used <a href="../-session-bundle/index.html">SessionBundle</a> for saving <a href="../../mozilla.components.browser.session/-session-manager/-snapshot/index.html">SessionManager.Snapshot</a> instances. Or null if no bundle
+is in use currently.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="remove.html">remove</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">remove</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.feature.session.bundling.SessionBundleStorage$remove(mozilla.components.feature.session.bundling.SessionBundle)/bundle">bundle</span><span class="symbol">:</span>&nbsp;<a href="../-session-bundle/index.html"><span class="identifier">SessionBundle</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Removes the given <a href="../-session-bundle/index.html">SessionBundle</a> permanently. If this is the active bundle then a new one will be created the
+next time a <a href="../../mozilla.components.browser.session/-session-manager/-snapshot/index.html">SessionManager.Snapshot</a> is saved.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="remove-all.html">removeAll</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">removeAll</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Removes all saved <a href="../-session-bundle/index.html">SessionBundle</a> instances permanently.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="restore.html">restore</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">restore</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="../-session-bundle/index.html"><span class="identifier">SessionBundle</span></a><span class="symbol">?</span></code>
+<p>Restores the last <a href="../-session-bundle/index.html">SessionBundle</a> if there is one without expired lifetime.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="save.html">save</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">save</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.feature.session.bundling.SessionBundleStorage$save(mozilla.components.browser.session.SessionManager.Snapshot)/snapshot">snapshot</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.browser.session/-session-manager/-snapshot/index.html"><span class="identifier">Snapshot</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Saves the <a href="../../mozilla.components.browser.session/-session-manager/-snapshot/index.html">SessionManager.Snapshot</a> as a bundle. If a bundle was restored previously then this bundle will be
+updated with the data from the snapshot. If no bundle was restored a new bundle will be created.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="use.html">use</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">use</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.feature.session.bundling.SessionBundleStorage$use(mozilla.components.feature.session.bundling.SessionBundle)/bundle">bundle</span><span class="symbol">:</span>&nbsp;<a href="../-session-bundle/index.html"><span class="identifier">SessionBundle</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Explicitly uses the given <a href="../-session-bundle/index.html">SessionBundle</a> (even if not active) to save <a href="../../mozilla.components.browser.session/-session-manager/-snapshot/index.html">SessionManager.Snapshot</a> instances to.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

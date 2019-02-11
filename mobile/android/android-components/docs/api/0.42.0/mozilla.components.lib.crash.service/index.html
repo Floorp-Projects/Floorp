@@ -1,0 +1,56 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>mozilla.components.lib.crash.service - android-components</title>
+<link rel="stylesheet" href="../../style.css">
+</HEAD>
+<BODY>
+<a href="../index.html">android-components</a>&nbsp;/&nbsp;<a href="./index.html">mozilla.components.lib.crash.service</a><br/>
+<br/>
+<h2>Package mozilla.components.lib.crash.service</h2>
+<h3>Types</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-crash-reporter-service/index.html">CrashReporterService</a></p>
+</td>
+<td>
+<code><span class="keyword">interface </span><span class="identifier">CrashReporterService</span></code>
+<p>Interface to be implemented by external services that accept crash reports.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-mozilla-socorro-service/index.html">MozillaSocorroService</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">MozillaSocorroService</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-crash-reporter-service/index.html"><span class="identifier">CrashReporterService</span></a></code>
+<p>A <a href="-crash-reporter-service/index.html">CrashReporterService</a> implementation uploading crash reports to crash-stats.mozilla.com.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-sentry-service/index.html">SentryService</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">SentryService</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-crash-reporter-service/index.html"><span class="identifier">CrashReporterService</span></a></code>
+<p>A <a href="-crash-reporter-service/index.html">CrashReporterService</a> implementation that uploads crash reports to a Sentry server.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Type Aliases</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-gecko-crash-reporter.html">GeckoCrashReporter</a></p>
+</td>
+<td>
+<code><span class="keyword">typealias </span><span class="identifier">GeckoCrashReporter</span>&nbsp;<span class="symbol">=</span>&nbsp;<span class="identifier">CrashReporter</span></code></td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

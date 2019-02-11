@@ -1,0 +1,153 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>LifecycleAwareFeature - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.support.base.feature</a>&nbsp;/&nbsp;<a href="./index.html">LifecycleAwareFeature</a><br/>
+<br/>
+<h1>LifecycleAwareFeature</h1>
+<code><span class="keyword">interface </span><span class="identifier">LifecycleAwareFeature</span>&nbsp;<span class="symbol">:</span>&nbsp;<span class="identifier">LifecycleObserver</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/feature/LifecycleAwareFeature.kt#L16">(source)</a>
+<p>An interface for all entry points to feature components to implement in order to make them lifecycle aware.</p>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="start.html">start</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">start</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="stop.html">stop</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">stop</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Inheritors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../../mozilla.components.feature.contextmenu/-context-menu-feature/index.html">ContextMenuFeature</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">ContextMenuFeature</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">LifecycleAwareFeature</span></a></code>
+<p>Feature for displaying a context menu after long-pressing web content.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.feature.session/-coordinate-scrolling-feature/index.html">CoordinateScrollingFeature</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">CoordinateScrollingFeature</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.browser.session/-selection-aware-session-observer/index.html"><span class="identifier">SelectionAwareSessionObserver</span></a><span class="symbol">, </span><a href="./index.html"><span class="identifier">LifecycleAwareFeature</span></a></code>
+<p>Feature implementation for connecting an <a href="../../mozilla.components.concept.engine/-engine-view/index.html">EngineView</a> with any View that you want to coordinate scrolling
+behavior with.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.feature.customtabs/-custom-tabs-toolbar-feature/index.html">CustomTabsToolbarFeature</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">CustomTabsToolbarFeature</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">LifecycleAwareFeature</span></a><span class="symbol">, </span><a href="../-back-handler/index.html"><span class="identifier">BackHandler</span></a></code>
+<p>Initializes and resets the Toolbar for a Custom Tab based on the CustomTabConfig.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.feature.downloads/-downloads-feature/index.html">DownloadsFeature</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">DownloadsFeature</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.browser.session/-selection-aware-session-observer/index.html"><span class="identifier">SelectionAwareSessionObserver</span></a><span class="symbol">, </span><a href="./index.html"><span class="identifier">LifecycleAwareFeature</span></a></code>
+<p>Feature implementation to provide download functionality for the selected
+session. The feature will subscribe to the selected session and listen
+for downloads.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.feature.findinpage/-find-in-page-feature/index.html">FindInPageFeature</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">FindInPageFeature</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">LifecycleAwareFeature</span></a><span class="symbol">, </span><a href="../-back-handler/index.html"><span class="identifier">BackHandler</span></a></code>
+<p>Feature implementation that will keep a <a href="../../mozilla.components.feature.findinpage.view/-find-in-page-view/index.html">FindInPageView</a> in sync with a bound <a href="../../mozilla.components.browser.session/-session/index.html">Session</a>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.feature.session/-full-screen-feature/index.html">FullScreenFeature</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">class </span><span class="identifier">FullScreenFeature</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.browser.session/-selection-aware-session-observer/index.html"><span class="identifier">SelectionAwareSessionObserver</span></a><span class="symbol">, </span><a href="./index.html"><span class="identifier">LifecycleAwareFeature</span></a><span class="symbol">, </span><a href="../-back-handler/index.html"><span class="identifier">BackHandler</span></a></code>
+<p>Feature implementation for handling fullscreen mode (exiting and back button presses).</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.feature.prompts/-prompt-feature/index.html">PromptFeature</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">PromptFeature</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">LifecycleAwareFeature</span></a></code>
+<p>Feature for displaying native dialogs for html elements like: input type
+date, file, time, color, option, menu, authentication, confirmation and alerts.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.feature.session/-session-feature/index.html">SessionFeature</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">SessionFeature</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">LifecycleAwareFeature</span></a><span class="symbol">, </span><a href="../-back-handler/index.html"><span class="identifier">BackHandler</span></a></code>
+<p>Feature implementation for connecting the engine module with the session module.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.feature.sitepermissions/-site-permissions-feature/index.html">SitePermissionsFeature</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">SitePermissionsFeature</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">LifecycleAwareFeature</span></a></code>
+<p>This feature will subscribe to the currently selected <a href="../../mozilla.components.browser.session/-session/index.html">Session</a> and display
+a suitable dialogs based on <a href="../../mozilla.components.browser.session/-session/-observer/on-app-permission-requested.html">Session.Observer.onAppPermissionRequested</a> or
+<a href="../../mozilla.components.browser.session/-session/-observer/on-content-permission-requested.html">Session.Observer.onContentPermissionRequested</a>  events.
+Once the dialog is closed the <a href="../../mozilla.components.concept.engine.permission/-permission-request/index.html">PermissionRequest</a> will be consumed.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.feature.tabs.tabstray/-tabs-feature/index.html">TabsFeature</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">TabsFeature</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">LifecycleAwareFeature</span></a></code>
+<p>Feature implementation for connecting a tabs tray implementation with the session module.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.feature.toolbar/-toolbar-feature/index.html">ToolbarFeature</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">ToolbarFeature</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">LifecycleAwareFeature</span></a><span class="symbol">, </span><a href="../-back-handler/index.html"><span class="identifier">BackHandler</span></a></code>
+<p>Feature implementation for connecting a toolbar implementation with the session module.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.feature.session/-window-feature/index.html">WindowFeature</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">WindowFeature</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">LifecycleAwareFeature</span></a></code>
+<p>Feature implementation for handling window requests.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

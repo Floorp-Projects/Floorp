@@ -1,0 +1,76 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>FindInPageFeature - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.feature.findinpage</a>&nbsp;/&nbsp;<a href="./index.html">FindInPageFeature</a><br/>
+<br/>
+<h1>FindInPageFeature</h1>
+<code><span class="keyword">class </span><span class="identifier">FindInPageFeature</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.support.base.feature/-lifecycle-aware-feature/index.html"><span class="identifier">LifecycleAwareFeature</span></a><span class="symbol">, </span><a href="../../mozilla.components.support.base.feature/-back-handler/index.html"><span class="identifier">BackHandler</span></a></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/feature/findinpage/src/main/java/mozilla/components/feature/findinpage/FindInPageFeature.kt#L19">(source)</a>
+<p>Feature implementation that will keep a <a href="../../mozilla.components.feature.findinpage.view/-find-in-page-view/index.html">FindInPageView</a> in sync with a bound <a href="../../mozilla.components.browser.session/-session/index.html">Session</a>.</p>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">FindInPageFeature</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.feature.findinpage.FindInPageFeature$<init>(mozilla.components.browser.session.SessionManager, mozilla.components.feature.findinpage.view.FindInPageView, kotlin.Function0((kotlin.Unit)))/sessionManager">sessionManager</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.browser.session/-session-manager/index.html"><span class="identifier">SessionManager</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.feature.findinpage.FindInPageFeature$<init>(mozilla.components.browser.session.SessionManager, mozilla.components.feature.findinpage.view.FindInPageView, kotlin.Function0((kotlin.Unit)))/view">view</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.feature.findinpage.view/-find-in-page-view/index.html"><span class="identifier">FindInPageView</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.feature.findinpage.FindInPageFeature$<init>(mozilla.components.browser.session.SessionManager, mozilla.components.feature.findinpage.view.FindInPageView, kotlin.Function0((kotlin.Unit)))/onClose">onClose</span><span class="symbol">:</span>&nbsp;<span class="symbol">(</span><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a>&nbsp;<span class="symbol">=</span>&nbsp;null<span class="symbol">)</span></code>
+<p>Feature implementation that will keep a <a href="../../mozilla.components.feature.findinpage.view/-find-in-page-view/index.html">FindInPageView</a> in sync with a bound <a href="../../mozilla.components.browser.session/-session/index.html">Session</a>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="bind.html">bind</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">bind</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.feature.findinpage.FindInPageFeature$bind(mozilla.components.browser.session.Session)/session">session</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.browser.session/-session/index.html"><span class="identifier">Session</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Binds this feature to the given <a href="../../mozilla.components.browser.session/-session/index.html">Session</a>. Until unbound the <a href="../../mozilla.components.feature.findinpage.view/-find-in-page-view/index.html">FindInPageView</a> will be updated presenting the
+current "Find in Page" state.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="on-back-pressed.html">onBackPressed</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">onBackPressed</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Returns true if the back button press was handled and the feature unbound from a session.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="start.html">start</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">start</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="stop.html">stop</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">stop</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="unbind.html">unbind</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">unbind</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Unbinds the feature from a previously bound <a href="../../mozilla.components.browser.session/-session/index.html">Session</a>. The <a href="../../mozilla.components.feature.findinpage.view/-find-in-page-view/index.html">FindInPageView</a> will be cleared and not be updated
+to present the "Find in Page" state anymore.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

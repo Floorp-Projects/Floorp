@@ -1,0 +1,232 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>PromptRequest - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.concept.engine.prompt</a>&nbsp;/&nbsp;<a href="./index.html">PromptRequest</a><br/>
+<br/>
+<h1>PromptRequest</h1>
+<code><span class="keyword">sealed</span> <span class="keyword">class </span><span class="identifier">PromptRequest</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/prompt/PromptRequest.kt#L14">(source)</a>
+<p>Value type that represents a request for showing a native dialog for prompt web content.</p>
+<h3>Types</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-alert/index.html">Alert</a></p>
+</td>
+<td>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">Alert</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">PromptRequest</span></a></code>
+<p>Value type that represents a request for an alert prompt.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-authentication/index.html">Authentication</a></p>
+</td>
+<td>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">Authentication</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">PromptRequest</span></a></code>
+<p>Value type that represents a request for an authentication prompt.
+For more related info take a look at
+&lt;a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Authentication&gt;MDN docs</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-color/index.html">Color</a></p>
+</td>
+<td>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">Color</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">PromptRequest</span></a></code>
+<p>Value type that represents a request for a selecting one or multiple files.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-confirm/index.html">Confirm</a></p>
+</td>
+<td>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">Confirm</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">PromptRequest</span></a></code>
+<p>Value type that represents a request for showing a
+&lt;a href="https://developer.mozilla.org/en-US/docs/Web/API/Window/confirm&gt;confirm prompt.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-file/index.html">File</a></p>
+</td>
+<td>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">File</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">PromptRequest</span></a></code>
+<p>Value type that represents a request for a selecting one or multiple files.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-menu-choice/index.html">MenuChoice</a></p>
+</td>
+<td>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">MenuChoice</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">PromptRequest</span></a></code>
+<p>Value type that represents a request for a menu choice prompt.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-multiple-choice/index.html">MultipleChoice</a></p>
+</td>
+<td>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">MultipleChoice</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">PromptRequest</span></a></code>
+<p>Value type that represents a request for a multiple choice prompt.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-popup/index.html">Popup</a></p>
+</td>
+<td>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">Popup</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">PromptRequest</span></a></code>
+<p>Value type that represents a request for showing a pop-pup prompt.
+This occurs when content attempts to open a new window,
+in a way that doesn't appear to be the result of user input.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-single-choice/index.html">SingleChoice</a></p>
+</td>
+<td>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">SingleChoice</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">PromptRequest</span></a></code>
+<p>Value type that represents a request for a single choice prompt.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-text-prompt/index.html">TextPrompt</a></p>
+</td>
+<td>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">TextPrompt</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">PromptRequest</span></a></code>
+<p>Value type that represents a request for an alert prompt to enter a message.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-time-selection/index.html">TimeSelection</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">TimeSelection</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">PromptRequest</span></a></code>
+<p>Value type that represents a request for a date prompt for picking a year, month, and day.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Inheritors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-alert/index.html">Alert</a></p>
+</td>
+<td>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">Alert</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">PromptRequest</span></a></code>
+<p>Value type that represents a request for an alert prompt.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-authentication/index.html">Authentication</a></p>
+</td>
+<td>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">Authentication</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">PromptRequest</span></a></code>
+<p>Value type that represents a request for an authentication prompt.
+For more related info take a look at
+&lt;a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Authentication&gt;MDN docs</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-color/index.html">Color</a></p>
+</td>
+<td>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">Color</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">PromptRequest</span></a></code>
+<p>Value type that represents a request for a selecting one or multiple files.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-confirm/index.html">Confirm</a></p>
+</td>
+<td>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">Confirm</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">PromptRequest</span></a></code>
+<p>Value type that represents a request for showing a
+&lt;a href="https://developer.mozilla.org/en-US/docs/Web/API/Window/confirm&gt;confirm prompt.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-file/index.html">File</a></p>
+</td>
+<td>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">File</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">PromptRequest</span></a></code>
+<p>Value type that represents a request for a selecting one or multiple files.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-menu-choice/index.html">MenuChoice</a></p>
+</td>
+<td>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">MenuChoice</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">PromptRequest</span></a></code>
+<p>Value type that represents a request for a menu choice prompt.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-multiple-choice/index.html">MultipleChoice</a></p>
+</td>
+<td>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">MultipleChoice</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">PromptRequest</span></a></code>
+<p>Value type that represents a request for a multiple choice prompt.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-popup/index.html">Popup</a></p>
+</td>
+<td>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">Popup</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">PromptRequest</span></a></code>
+<p>Value type that represents a request for showing a pop-pup prompt.
+This occurs when content attempts to open a new window,
+in a way that doesn't appear to be the result of user input.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-single-choice/index.html">SingleChoice</a></p>
+</td>
+<td>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">SingleChoice</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">PromptRequest</span></a></code>
+<p>Value type that represents a request for a single choice prompt.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-text-prompt/index.html">TextPrompt</a></p>
+</td>
+<td>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">TextPrompt</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">PromptRequest</span></a></code>
+<p>Value type that represents a request for an alert prompt to enter a message.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-time-selection/index.html">TimeSelection</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">TimeSelection</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">PromptRequest</span></a></code>
+<p>Value type that represents a request for a date prompt for picking a year, month, and day.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

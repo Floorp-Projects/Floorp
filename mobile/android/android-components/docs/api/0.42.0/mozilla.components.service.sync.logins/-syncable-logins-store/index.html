@@ -1,0 +1,74 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>SyncableLoginsStore - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.service.sync.logins</a>&nbsp;/&nbsp;<a href="./index.html">SyncableLoginsStore</a><br/>
+<br/>
+<h1>SyncableLoginsStore</h1>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">SyncableLoginsStore</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.concept.storage/-syncable-store/index.html"><span class="identifier">SyncableStore</span></a><span class="symbol">&lt;</span><a href="../-sync-unlock-info.html"><span class="identifier">SyncUnlockInfo</span></a><span class="symbol">&gt;</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/AsyncLoginsStorage.kt#L369">(source)</a>
+<p>Wraps <a href="../-async-logins-storage/index.html">AsyncLoginsStorage</a> instance along with a lazy encryption key.</p>
+<p>This helper class lives here and not alongside <a href="../-async-logins-storage/index.html">AsyncLoginsStorage</a> because we don't want to
+force a <code>service-sync-logins</code> dependency (which has a heavy native library dependency) on
+consumers of <a href="#">FirefoxSyncFeature</a>.</p>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">SyncableLoginsStore</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.sync.logins.SyncableLoginsStore$<init>(mozilla.components.service.sync.logins.AsyncLoginsStorage, kotlin.Function0((kotlinx.coroutines.Deferred((kotlin.String)))))/store">store</span><span class="symbol">:</span>&nbsp;<a href="../-async-logins-storage/index.html"><span class="identifier">AsyncLoginsStorage</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.service.sync.logins.SyncableLoginsStore$<init>(mozilla.components.service.sync.logins.AsyncLoginsStorage, kotlin.Function0((kotlinx.coroutines.Deferred((kotlin.String)))))/key">key</span><span class="symbol">:</span>&nbsp;<span class="symbol">(</span><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<span class="identifier">Deferred</span><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">&gt;</span><span class="symbol">)</span></code>
+<p>Wraps <a href="../-async-logins-storage/index.html">AsyncLoginsStorage</a> instance along with a lazy encryption key.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="key.html">key</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">key</span><span class="symbol">: </span><span class="symbol">(</span><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<span class="identifier">Deferred</span><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">&gt;</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="store.html">store</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">store</span><span class="symbol">: </span><a href="../-async-logins-storage/index.html"><span class="identifier">AsyncLoginsStorage</span></a></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="sync.html">sync</a></p>
+</td>
+<td>
+<code><span class="keyword">suspend</span> <span class="keyword">fun </span><span class="identifier">sync</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.sync.logins.SyncableLoginsStore$sync(mozilla.appservices.logins.SyncUnlockInfo)/authInfo">authInfo</span><span class="symbol">:</span>&nbsp;<a href="../-sync-unlock-info.html"><span class="identifier">SyncUnlockInfo</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="../../mozilla.components.concept.storage/-sync-status.html"><span class="identifier">SyncStatus</span></a></code>
+<p>Performs a sync.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="with-unlocked.html">withUnlocked</a></p>
+</td>
+<td>
+<code><span class="keyword">suspend</span> <span class="keyword">fun </span><span class="symbol">&lt;</span><span class="identifier">T</span><span class="symbol">&gt;</span> <span class="identifier">withUnlocked</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.sync.logins.SyncableLoginsStore$withUnlocked(kotlin.SuspendFunction1((mozilla.components.service.sync.logins.AsyncLoginsStorage, mozilla.components.service.sync.logins.SyncableLoginsStore.withUnlocked.T)))/block">block</span><span class="symbol">:</span>&nbsp;<span class="keyword">suspend </span><span class="symbol">(</span><a href="../-async-logins-storage/index.html"><span class="identifier">AsyncLoginsStorage</span></a><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="with-unlocked.html#T"><span class="identifier">T</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="with-unlocked.html#T"><span class="identifier">T</span></a></code>
+<p>Run some <a href="with-unlocked.html#mozilla.components.service.sync.logins.SyncableLoginsStore$withUnlocked(kotlin.SuspendFunction1((mozilla.components.service.sync.logins.AsyncLoginsStorage, mozilla.components.service.sync.logins.SyncableLoginsStore.withUnlocked.T)))/block">block</a> which operates over an unlocked instance of <a href="../-async-logins-storage/index.html">AsyncLoginsStorage</a>.
+Database is locked once <a href="with-unlocked.html#mozilla.components.service.sync.logins.SyncableLoginsStore$withUnlocked(kotlin.SuspendFunction1((mozilla.components.service.sync.logins.AsyncLoginsStorage, mozilla.components.service.sync.logins.SyncableLoginsStore.withUnlocked.T)))/block">block</a> is done.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

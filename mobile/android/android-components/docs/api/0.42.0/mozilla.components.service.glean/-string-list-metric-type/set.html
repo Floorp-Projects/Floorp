@@ -1,0 +1,22 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>StringListMetricType.set - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.service.glean</a>&nbsp;/&nbsp;<a href="index.html">StringListMetricType</a>&nbsp;/&nbsp;<a href="./set.html">set</a><br/>
+<br/>
+<h1>set</h1>
+<a name="mozilla.components.service.glean.StringListMetricType$set(kotlin.collections.List((kotlin.String)))"></a>
+<code><span class="keyword">fun </span><span class="identifier">set</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.glean.StringListMetricType$set(kotlin.collections.List((kotlin.String)))/value">value</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html"><span class="identifier">List</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">&gt;</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/StringListMetricType.kt#L82">(source)</a>
+<p>Sets a string list to one or more metric stores.</p>
+<h3>Parameters</h3>
+<p><a name="value"></a>
+<code>value</code> - This is a user defined string list. The maximum length of each string in the
+    list is defined by <a href="-m-a-x_-s-t-r-i-n-g_-l-e-n-g-t-h.html">MAX_STRING_LENGTH</a>, while the maximum length of the list itself is
+    defined by <a href="#">StringListsStorageEngine.MAX_LIST_LENGTH_VALUE</a>.  If a longer list is passed
+    into this function, then the additional values will be dropped from the list and the list,
+    up to the <a href="#">StringListsStorageEngine.MAX_LIST_LENGTH_VALUE</a>, will still be recorded.</p>
+</BODY>
+</HTML>

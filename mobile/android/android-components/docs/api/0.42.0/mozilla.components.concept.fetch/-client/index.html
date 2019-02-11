@@ -1,0 +1,91 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>Client - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.concept.fetch</a>&nbsp;/&nbsp;<a href="./index.html">Client</a><br/>
+<br/>
+<h1>Client</h1>
+<code><span class="keyword">abstract</span> <span class="keyword">class </span><span class="identifier">Client</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Client.kt#L17">(source)</a>
+<p>A generic <a href="./index.html">Client</a> for fetching resources via HTTP/s.</p>
+<p>Abstract base class / interface for clients implementing the <code>concept-fetch</code> component.</p>
+<p>The <a href="../-request/index.html">Request</a>/<a href="../-response/index.html">Response</a> API is inspired by the Web Fetch API:
+https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API</p>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">Client</span><span class="symbol">(</span><span class="symbol">)</span></code>
+<p>A generic <a href="./index.html">Client</a> for fetching resources via HTTP/s.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="default-headers.html">defaultHeaders</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">defaultHeaders</span><span class="symbol">: </span><a href="../-headers/index.html"><span class="identifier">Headers</span></a></code>
+<p>List of default headers that should be added to every request unless overridden by the headers in the request.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="fetch.html">fetch</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">fetch</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.fetch.Client$fetch(mozilla.components.concept.fetch.Request)/request">request</span><span class="symbol">:</span>&nbsp;<a href="../-request/index.html"><span class="identifier">Request</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="../-response/index.html"><span class="identifier">Response</span></a></code>
+<p>Starts the process of fetching a resource from the network as described by the <a href="../-request/index.html">Request</a> object.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Inheritors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../../mozilla.components.browser.engine.gecko.fetch/-gecko-view-fetch-client/index.html">GeckoViewFetchClient</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">GeckoViewFetchClient</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">Client</span></a></code>
+<p>GeckoView (<a href="#">GeckoWebExecutor</a>) based implementation of <a href="./index.html">Client</a>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.lib.fetch.httpurlconnection/-http-u-r-l-connection-client/index.html">HttpURLConnectionClient</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">HttpURLConnectionClient</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">Client</span></a></code>
+<p><a href="https://developer.android.com/reference/java/net/HttpURLConnection.html">HttpURLConnection</a> implementation of <a href="./index.html">Client</a>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.lib.fetch.okhttp/-ok-http-client/index.html">OkHttpClient</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">OkHttpClient</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">Client</span></a></code>
+<p><a href="./index.html">Client</a> implementation using OkHttp.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

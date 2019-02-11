@@ -1,0 +1,63 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>AsyncAutocompleteDelegate - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.browser.toolbar</a>&nbsp;/&nbsp;<a href="./index.html">AsyncAutocompleteDelegate</a><br/>
+<br/>
+<h1>AsyncAutocompleteDelegate</h1>
+<code><span class="keyword">class </span><span class="identifier">AsyncAutocompleteDelegate</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.concept.toolbar/-autocomplete-delegate/index.html"><span class="identifier">AutocompleteDelegate</span></a><span class="symbol">, </span><span class="identifier">CoroutineScope</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/browser/toolbar/src/main/java/mozilla/components/browser/toolbar/BrowserToolbar.kt#L561">(source)</a>
+<p>An autocomplete delegate which is aware of its parent scope (to check for cancellations).
+Responsible for processing autocompletion results and discarding stale results when <a href="#">urlView</a> moved on.</p>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">AsyncAutocompleteDelegate</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.toolbar.AsyncAutocompleteDelegate$<init>(mozilla.components.ui.autocomplete.AutocompleteView, kotlinx.coroutines.CoroutineScope, kotlin.coroutines.CoroutineContext, mozilla.components.support.base.log.logger.Logger)/urlView">urlView</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.ui.autocomplete/-autocomplete-view/index.html"><span class="identifier">AutocompleteView</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.toolbar.AsyncAutocompleteDelegate$<init>(mozilla.components.ui.autocomplete.AutocompleteView, kotlinx.coroutines.CoroutineScope, kotlin.coroutines.CoroutineContext, mozilla.components.support.base.log.logger.Logger)/parentScope">parentScope</span><span class="symbol">:</span>&nbsp;<span class="identifier">CoroutineScope</span><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.toolbar.AsyncAutocompleteDelegate$<init>(mozilla.components.ui.autocomplete.AutocompleteView, kotlinx.coroutines.CoroutineScope, kotlin.coroutines.CoroutineContext, mozilla.components.support.base.log.logger.Logger)/coroutineContext">coroutineContext</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-coroutine-context/index.html"><span class="identifier">CoroutineContext</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.toolbar.AsyncAutocompleteDelegate$<init>(mozilla.components.ui.autocomplete.AutocompleteView, kotlinx.coroutines.CoroutineScope, kotlin.coroutines.CoroutineContext, mozilla.components.support.base.log.logger.Logger)/logger">logger</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.support.base.log.logger/-logger/index.html"><span class="identifier">Logger</span></a>&nbsp;<span class="symbol">=</span>&nbsp;Logger("AsyncAutocompleteDelegate")<span class="symbol">)</span></code>
+<p>An autocomplete delegate which is aware of its parent scope (to check for cancellations).
+Responsible for processing autocompletion results and discarding stale results when <a href="-init-.html#mozilla.components.browser.toolbar.AsyncAutocompleteDelegate$<init>(mozilla.components.ui.autocomplete.AutocompleteView, kotlinx.coroutines.CoroutineScope, kotlin.coroutines.CoroutineContext, mozilla.components.support.base.log.logger.Logger)/urlView">urlView</a> moved on.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="coroutine-context.html">coroutineContext</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">coroutineContext</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-coroutine-context/index.html"><span class="identifier">CoroutineContext</span></a></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="apply-autocomplete-result.html">applyAutocompleteResult</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">applyAutocompleteResult</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.toolbar.AsyncAutocompleteDelegate$applyAutocompleteResult(mozilla.components.concept.toolbar.AutocompleteResult)/result">result</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.concept.toolbar/-autocomplete-result/index.html"><span class="identifier">AutocompleteResult</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="no-autocomplete-result.html">noAutocompleteResult</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">noAutocompleteResult</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.toolbar.AsyncAutocompleteDelegate$noAutocompleteResult(kotlin.String)/input">input</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Autocompletion was invoked and no match was returned.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

@@ -1,0 +1,55 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>TelemetryEvent - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">org.mozilla.telemetry.event</a>&nbsp;/&nbsp;<a href="./index.html">TelemetryEvent</a><br/>
+<br/>
+<h1>TelemetryEvent</h1>
+<code><span class="keyword">open</span> <span class="keyword">class </span><span class="identifier">TelemetryEvent</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/service/telemetry/src/main/java/org/mozilla/telemetry/event/TelemetryEvent.java#L26">(source)</a>
+<p>TelemetryEvent specifies a common events data format, which allows for broader, shared usage of data processing tools.</p>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="create.html">create</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">static</span> <span class="keyword">fun </span><span class="identifier">create</span><span class="symbol">(</span><span class="identifier" id="org.mozilla.telemetry.event.TelemetryEvent$create(kotlin.String, kotlin.String, kotlin.String)/category">category</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="org.mozilla.telemetry.event.TelemetryEvent$create(kotlin.String, kotlin.String, kotlin.String)/method">method</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="org.mozilla.telemetry.event.TelemetryEvent$create(kotlin.String, kotlin.String, kotlin.String)/object">object</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">TelemetryEvent</span></a></code>
+<p>Create a new event with mandatory category, method and object.</p>
+<code><span class="keyword">open</span> <span class="keyword">static</span> <span class="keyword">fun </span><span class="identifier">create</span><span class="symbol">(</span><span class="identifier" id="org.mozilla.telemetry.event.TelemetryEvent$create(kotlin.String, kotlin.String, kotlin.String, kotlin.String)/category">category</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="org.mozilla.telemetry.event.TelemetryEvent$create(kotlin.String, kotlin.String, kotlin.String, kotlin.String)/method">method</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="org.mozilla.telemetry.event.TelemetryEvent$create(kotlin.String, kotlin.String, kotlin.String, kotlin.String)/object">object</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span><span class="symbol">, </span><span class="identifier" id="org.mozilla.telemetry.event.TelemetryEvent$create(kotlin.String, kotlin.String, kotlin.String, kotlin.String)/value">value</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">TelemetryEvent</span></a></code>
+<p>Create a new event with mandatory category, method, object and value.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="extra.html">extra</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">extra</span><span class="symbol">(</span><span class="identifier" id="org.mozilla.telemetry.event.TelemetryEvent$extra(kotlin.String, kotlin.String)/key">key</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="org.mozilla.telemetry.event.TelemetryEvent$extra(kotlin.String, kotlin.String)/value">value</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">TelemetryEvent</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="queue.html">queue</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">queue</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Queue this event to be sent with the next event ping.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="to-j-s-o-n.html">toJSON</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">toJSON</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code>
+<p>Create a JSON representation of this event for storing and sending it.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

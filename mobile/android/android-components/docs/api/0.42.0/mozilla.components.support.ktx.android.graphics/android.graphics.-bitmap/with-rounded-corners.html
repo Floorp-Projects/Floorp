@@ -1,0 +1,21 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>withRoundedCorners - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.support.ktx.android.graphics</a>&nbsp;/&nbsp;<a href="index.html">android.graphics.Bitmap</a>&nbsp;/&nbsp;<a href="./with-rounded-corners.html">withRoundedCorners</a><br/>
+<br/>
+<h1>withRoundedCorners</h1>
+<a name="mozilla.components.support.ktx.android.graphics$withRoundedCorners(android.graphics.Bitmap, kotlin.Float)"></a>
+<code><span class="identifier">@CheckResult</span> <span class="keyword">fun </span><a href="https://developer.android.com/reference/android/graphics/Bitmap.html"><span class="identifier">Bitmap</span></a><span class="symbol">.</span><span class="identifier">withRoundedCorners</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.support.ktx.android.graphics$withRoundedCorners(android.graphics.Bitmap, kotlin.Float)/cornerRadiusPx">cornerRadiusPx</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-float/index.html"><span class="identifier">Float</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://developer.android.com/reference/android/graphics/Bitmap.html"><span class="identifier">Bitmap</span></a></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/support/ktx/src/main/java/mozilla/components/support/ktx/android/graphics/Bitmap.kt#L36">(source)</a>
+<p>Returns a new bitmap that is the receiver Bitmap with four rounded corners;
+the receiver is unmodified.</p>
+<p>This operation is expensive: it requires allocating an identical Bitmap and copying
+all of the Bitmap's pixels. Consider these theoretically cheaper alternatives:</p>
+<ul><li>android:background= a drawable with rounded corners</li>
+<li>Wrap your bitmap's ImageView with a layout that masks your view with rounded corners (e.g. CardView)</li>
+</ul>
+</BODY>
+</HTML>
