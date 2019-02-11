@@ -554,6 +554,7 @@ bool SdpHelper::HasRtcp(SdpMediaSection::Protocol proto) const {
     case SdpMediaSection::kDccpRtpSavp:
     case SdpMediaSection::kUdpTlsRtpSavp:
     case SdpMediaSection::kTcpTlsRtpSavp:
+    case SdpMediaSection::kTcpDtlsRtpSavp:
     case SdpMediaSection::kDccpTlsRtpSavp:
     case SdpMediaSection::kUdpMbmsFecRtpAvp:
     case SdpMediaSection::kUdpMbmsFecRtpSavp:

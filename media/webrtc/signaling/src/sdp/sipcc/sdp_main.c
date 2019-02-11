@@ -270,6 +270,7 @@ const sdp_namearray_t sdp_transport[SDP_MAX_TRANSPORT_TYPES] =
     {"UDP/TLS/RTP/SAVP", sizeof("UDP/TLS/RTP/SAVP")},
     {"UDP/TLS/RTP/SAVPF", sizeof("UDP/TLS/RTP/SAVPF")},
     {"TCP/TLS/RTP/SAVP", sizeof("TCP/TLS/RTP/SAVP")},
+    {"TCP/DTLS/RTP/SAVP", sizeof("TCP/DTLS/RTP/SAVP")},
     {"TCP/TLS/RTP/SAVPF", sizeof("TCP/TLS/RTP/SAVPF")},
     {"TCP/DTLS/RTP/SAVPF", sizeof("TCP/DTLS/RTP/SAVPF")},
     {"UDP/DTLS/SCTP",    sizeof("UDP/DTLS/SCTP")},
