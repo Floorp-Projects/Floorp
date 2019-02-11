@@ -1,0 +1,93 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+"use strict";
+
+var EXPORTED_SYMBOLS = ["ContentProcessSession"];
+
+const {Domains} = ChromeUtils.import("chrome://remote/content/Domains.jsm");
+
+class ContentProcessSession {
+  constructor(messageManager, browsingContext, content, docShell) {
+    this.messageManager = messageManager;
+    this.browsingContext = browsingContext;
+    this.content = content;
+    this.docShell = docShell;
+
+    this.domains = new Domains(this);
+    this.messageManager.addMessageListener("remote-protocol:request", this);
+    this.messageManager.addMessageListener("remote-protocol:destroy", this);
+
+    this.destroy = this.destroy.bind(this);
+    this.content.addEventListener("unload", this.destroy);
+  }
+
+  destroy() {
+    this.content.addEventListener("unload", this.destroy);
+    this.messageManager.removeMessageListener("remote-protocol:request", this);
+    this.messageManager.removeMessageListener("remote-protocol:destroy", this);
+  }
+
+  async receiveMessage({ name, data }) {
+    const { browsingContextId } = data;
+
+    // We may have more than one tab loaded in the same process,
+    // and debug the two at the same time. We want to ensure not
+    // mixing up the requests made against two such tabs.
+    // Each tab is going to have its own frame script instance
+    // and two communication channels are going to be set up via
+    // the two message managers.
+    if (browsingContextId != this.browsingContext.id) {
+      return;
+    }
+
+    switch (name) {
+      case "remote-protocol:request":
+        try {
+          const { id, domainName, methodName, params } = data.request;
+          const inst = this.domains.get(domainName);
+          const methodFn = inst[methodName];
+          if (!methodFn || typeof methodFn != "function") {
+            throw new Error(`Method implementation of ${methodName} missing`);
+          }
+
+          const result = await methodFn.call(inst, params);
+
+          this.messageManager.sendAsyncMessage("remote-protocol:result", {
+            browsingContextId,
+            id,
+            result,
+          });
+        } catch (e) {
+          this.messageManager.sendAsyncMessage("remote-protocol:error", {
+            browsingContextId,
+            id: data.request.id,
+            error: {
+              name: e.name || "exception",
+              message: e.message || String(e),
+              stack: e.stack,
+            },
+          });
+        }
+        break;
+      case "remote-protocol:destroy":
+        this.destroy();
+        break;
+    }
+  }
+
+  // EventEmitter
+
+  // This method is called when any Domain emit any event
+  // Domains register "*" listener on each instantiated Domain.
+  onevent(eventName, params) {
+    this.messageManager.sendAsyncMessage("remote-protocol:event", {
+      browsingContextId: this.browsingContext.id,
+      event: {
+        method: eventName,
+        params,
+      },
+    });
+  }
+}
