@@ -168,11 +168,15 @@
     "); " \
     /* Add the origin's new contribution to frecency stats */ \
     UPDATE_ORIGIN_FRECENCY_STATS("+") "; " \
-    "DELETE FROM moz_icons " \
-    "WHERE fixed_icon_url_hash = hash(fixup_url(OLD.host || '/favicon.ico')) " \
-      "AND fixup_url(icon_url) = fixup_url(OLD.host || '/favicon.ico') " \
-      "AND NOT EXISTS (SELECT 1 FROM moz_origins WHERE host = OLD.host " \
-                                                   "OR host = fixup_url(OLD.host)); " \
+    "DELETE FROM moz_icons WHERE id IN ( " \
+      "SELECT id FROM moz_icons " \
+      "WHERE fixed_icon_url_hash = hash(fixup_url(OLD.host || '/favicon.ico')) " \
+        "AND fixup_url(icon_url) = fixup_url(OLD.host || '/favicon.ico') " \
+        "AND NOT EXISTS (SELECT 1 FROM moz_origins WHERE host = OLD.host " \
+                                                     "OR host = fixup_url(OLD.host)) " \
+      "EXCEPT " \
+      "SELECT icon_id FROM moz_icons_to_pages " \
+    "); " \
   "END" \
 )
 
