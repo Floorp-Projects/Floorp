@@ -153,6 +153,7 @@ row[unsupported="true"] {
 }
 #detail-name, #detail-desc, #detail-fulldesc {
   -moz-user-select: text;
+  word-wrap: break-word;
 }
 
 #detail-name-container {
