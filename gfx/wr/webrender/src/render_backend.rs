@@ -1635,6 +1635,8 @@ impl RenderBackend {
                 config.serialize(&rendered_document.frame, file_name);
                 let file_name = format!("clip-scroll-{}-{}", (id.0).0, id.1);
                 config.serialize_tree(&doc.clip_scroll_tree, file_name);
+                let file_name = format!("builder-{}-{}", (id.0).0, id.1);
+                config.serialize(doc.frame_builder.as_ref().unwrap(), file_name);
             }
 
             let data_stores_name = format!("data-stores-{}-{}", (id.0).0, id.1);

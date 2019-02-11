@@ -845,6 +845,7 @@ use intern_types::prim::Handle as PrimitiveDataHandle;
 // that avoids allocating an intermediate surface for most common
 // uses of opacity filters.
 #[derive(Debug)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
 pub struct OpacityBinding {
     pub bindings: Vec<PropertyBinding<f32>>,
     pub current: f32,
@@ -887,6 +888,7 @@ pub struct VisibleMaskImageTile {
 }
 
 #[derive(Debug)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
 pub struct VisibleGradientTile {
     pub handle: GpuCacheHandle,
     pub local_rect: LayoutRect,
@@ -1301,6 +1303,7 @@ impl CreateShadow for PrimitiveKeyKind {
 pub struct PrimitiveDebugId(pub usize);
 
 #[derive(Clone, Debug)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
 pub enum PrimitiveInstanceKind {
     /// Direct reference to a Picture
     Picture {
@@ -1373,6 +1376,7 @@ pub enum PrimitiveInstanceKind {
 }
 
 #[derive(Debug, Copy, Clone, PartialEq)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
 pub struct PrimitiveVisibilityIndex(pub u32);
 
 impl PrimitiveVisibilityIndex {
@@ -1404,6 +1408,7 @@ pub struct PrimitiveVisibility {
 }
 
 #[derive(Clone, Debug)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
 pub struct PrimitiveInstance {
     /// Identifies the kind of primitive this
     /// instance is, and references to where
@@ -1674,6 +1679,7 @@ impl PrimitiveStoreStats {
     }
 }
 
+#[cfg_attr(feature = "capture", derive(Serialize))]
 pub struct PrimitiveStore {
     pub pictures: Vec<PicturePrimitive>,
     pub text_runs: TextRunStorage,
