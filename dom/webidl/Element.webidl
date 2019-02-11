@@ -148,13 +148,6 @@ interface Element : Node {
   Attr? setAttributeNodeNS(Attr newAttr);
 
   [ChromeOnly]
-  /**
-   * Scrolls the element by (dx, dy) CSS pixels without doing any
-   * layout flushing.
-   */
-  boolean scrollByNoFlush(long dx, long dy);
-
-  [ChromeOnly]
   DOMMatrixReadOnly getTransformToAncestor(Element ancestor);
   [ChromeOnly]
   DOMMatrixReadOnly getTransformToParent();
