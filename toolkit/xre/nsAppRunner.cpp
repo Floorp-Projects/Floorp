@@ -3836,9 +3836,7 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
 
   SetShutdownChecks();
 
-  // Enable Telemetry IO Reporting on DEBUG, nightly and local builds,
-  // but disable it on FUZZING builds.
-#ifndef FUZZING
+  // Enable Telemetry IO Reporting on DEBUG, nightly and local builds
 #ifdef DEBUG
   mozilla::Telemetry::InitIOReporting(gAppData->xreDirectory);
 #else
@@ -3850,7 +3848,6 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
     }
   }
 #endif /* DEBUG */
-#endif /* FUZZING */
 
 #if defined(XP_WIN)
   // Enable the HeapEnableTerminationOnCorruption exploit mitigation. We ignore
