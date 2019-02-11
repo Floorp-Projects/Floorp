@@ -11,6 +11,7 @@ import android.support.annotation.VisibleForTesting
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import mozilla.components.service.glean.GleanMetrics.GleanBaseline
 
 import java.util.UUID
 
@@ -218,6 +219,7 @@ open class GleanInternalAPI internal constructor () {
         if (firstRunDetector.isFirstRun()) {
             val uuid = UUID.randomUUID()
             UuidsStorageEngine.record(GleanInternalMetrics.clientId, uuid)
+            GleanBaseline.firstRunDate.set()
         }
 
         try {
@@ -310,7 +312,7 @@ object Glean : GleanInternalAPI() {
         Default
     }
 
-    internal const val SCHEMA_VERSION = 1
+    internal const val SCHEMA_VERSION = 2
 
     /**
     * The name of the directory, inside the application's directory,

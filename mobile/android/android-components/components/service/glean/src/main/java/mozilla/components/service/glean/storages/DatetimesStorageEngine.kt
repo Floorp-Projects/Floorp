@@ -7,41 +7,49 @@ package mozilla.components.service.glean.storages
 import android.annotation.SuppressLint
 import android.content.SharedPreferences
 import mozilla.components.service.glean.CommonMetricData
-import mozilla.components.service.glean.TimeUnit
 import mozilla.components.service.glean.utils.getISOTimeString
 import mozilla.components.service.glean.utils.parseISOTimeString
-
 import mozilla.components.support.base.log.logger.Logger
-import java.util.concurrent.TimeUnit as AndroidTimeUnit
+import java.util.Calendar
 import java.util.Date
 
 /**
  * This singleton handles the in-memory storage logic for datetimes. It is meant to be used by
- * the Specific Datetime API and the ping assembling objects. No validation on the stored data
- * is performed at this point: validation must be performed by the Specific Datetime API.
- *
- * This class contains a reference to the Android application Context. While the IDE warns
- * us that this could leak, the application context lives as long as the application and this
- * object. For this reason, we should be safe to suppress the IDE warning.
+ * the Specific Datetime API and the ping assembling objects.
+
+ * This stores dates both in-memory and on-disk as Strings, not Date objects. We do
+ * this because we need to preserve the timezone offset value at the time the value
+ * was set.  The [Date]/[Calendar] API in pre-Java 8 unfortunately does not allow
+ * round-tripping the timezone offset when parsing a datetime string.  Since we don't
+ * actually ever need to operate on the datetime's in a meaningful way, it's easiest
+ * to just store the strings and treat them as opaque for everything but the testing API.
  */
 @SuppressLint("StaticFieldLeak")
 internal object DatetimesStorageEngine : DatetimesStorageEngineImplementation()
 
 internal open class DatetimesStorageEngineImplementation(
     override val logger: Logger = Logger("glean/DatetimesStorageEngine")
-) : GenericScalarStorageEngine<Date>() {
+) : GenericScalarStorageEngine<String>() {
 
-    override fun deserializeSingleMetric(metricName: String, value: Any?): Date? {
-        return if (value is String) parseISOTimeString(value) else null
+    override fun deserializeSingleMetric(metricName: String, value: Any?): String? {
+        // This parses the date strings on ingestion as a sanity check, but we
+        // don't actually need their results, and that would throw away the
+        // timezone offset information.
+        (value as? String)?.let {
+            stringValue -> parseISOTimeString(stringValue)?.let {
+                return stringValue
+            }
+        }
+        return null
     }
 
     override fun serializeSingleMetric(
         userPreferences: SharedPreferences.Editor?,
         storeName: String,
-        value: Date,
+        value: String,
         extraSerializationData: Any?
     ) {
-        userPreferences?.putString(storeName, getISOTimeString(value))
+        userPreferences?.putString(storeName, value)
     }
 
     /**
@@ -51,9 +59,18 @@ internal open class DatetimesStorageEngineImplementation(
      * @param date the date value to set this metric to
      * @param metricData the metric information for the datetime
      */
-    fun set(date: Date, metricData: CommonMetricData) {
-        // TODO: truncate the date given the precision in metricData.time_unit
-        val truncatedDate = date
-        super.recordScalar(metricData, truncatedDate)
+    fun set(metricData: CommonMetricData, date: Date = Date()) {
+        super.recordScalar(metricData, getISOTimeString(date))
+    }
+
+    /**
+     * Set the metric to the provided date/time, truncating it to the
+     * metric's resolution.
+     *
+     * @param date the date value to set this metric to
+     * @param metricData the metric information for the datetime
+     */
+    fun set(metricData: CommonMetricData, calendar: Calendar) {
+        super.recordScalar(metricData, getISOTimeString(calendar))
     }
 }

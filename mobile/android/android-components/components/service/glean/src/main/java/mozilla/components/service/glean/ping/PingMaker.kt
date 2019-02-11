@@ -15,7 +15,6 @@ import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.org.json.mergeWith
 import org.json.JSONException
 import org.json.JSONObject
-import java.util.Date
 
 internal class PingMaker(
     private val storageManager: StorageEngineManager,
@@ -23,7 +22,7 @@ internal class PingMaker(
 ) {
     private val logger = Logger("glean/PingMaker")
     private val pingStartTimes: MutableMap<String, String> = mutableMapOf()
-    private val objectStartTime = getISOTimeString(Date())
+    private val objectStartTime = getISOTimeString()
     internal val sharedPreferences: SharedPreferences? by lazy {
         applicationContext.getSharedPreferences(
             this.javaClass.simpleName,
@@ -79,7 +78,7 @@ internal class PingMaker(
         // date the object was initialized.
         val startTime = if (pingName in pingStartTimes) pingStartTimes[pingName] else objectStartTime
         pingInfo.put("start_time", startTime)
-        val endTime = getISOTimeString(Date())
+        val endTime = getISOTimeString()
         pingInfo.put("end_time", endTime)
         // Update the start time with the current time.
         pingStartTimes[pingName] = endTime
