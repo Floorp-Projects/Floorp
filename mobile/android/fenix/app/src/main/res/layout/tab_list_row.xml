@@ -42,7 +42,7 @@
         <ImageView android:id="@+id/close_tab_button"
                    android:layout_width="wrap_content"
                    android:layout_height="wrap_content"
-                   android:src="@drawable/ic_close_black_24dp"
+                   android:src="@drawable/ic_close"
                    android:paddingEnd="10dp"
                    android:contentDescription="@string/close_tab"
                    app:layout_constraintBottom_toBottomOf="@id/text_url"

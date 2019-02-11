@@ -2,79 +2,83 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<androidx.constraintlayout.motion.widget.MotionLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/homeLayout"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="?attr/homeBackgroundGradient"
-    app:layoutDescription="@xml/home_scene"
-    tools:context=".home.HomeFragment">
+    android:layout_height="match_parent">
+    <androidx.constraintlayout.motion.widget.MotionLayout
+        android:id="@+id/homeLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="?attr/homeBackgroundGradient"
+        app:layoutDescription="@xml/home_scene"
+        tools:context=".home.HomeFragment">
 
-    <ImageButton
-        android:id="@+id/menuButton"
-        android:layout_width="@dimen/glyph_button_height"
-        android:layout_height="@dimen/glyph_button_height"
-        android:layout_marginTop="16dp"
-        android:background="?android:attr/selectableItemBackgroundBorderless"
-        android:src="@drawable/ic_menu"
-        android:tint="?attr/menuButtonTint"
-        android:contentDescription="@string/content_description_menu"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <ImageButton
-        android:id="@+id/privateBrowsingButton"
-        android:layout_width="@dimen/glyph_button_height"
-        android:layout_height="@dimen/glyph_button_height"
-        android:background="?attr/privateBrowsingButtonBackground"
-        android:src="@drawable/ic_private_browsing"
-        android:contentDescription="@string/content_description_private_browsing_button"
-        app:layout_constraintEnd_toStartOf="@id/menuButton"
-        app:layout_constraintTop_toTopOf="@id/menuButton" />
-
-    <ImageView
-        android:id="@+id/wordmark"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="42dp"
-        android:src="?attr/fenixLogo"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/menuButton" />
-
-    <org.mozilla.fenix.home.SearchView
-            android:id="@+id/toolbar_wrapper"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="16dp"
-            android:layout_marginTop="64dp"
-            android:layout_marginStart="16dp"
-            android:elevation="@dimen/toolbar_elevation"
-            android:background="?attr/toolbarWrapperBackground"
+        <ImageButton
+            android:id="@+id/menuButton"
+            android:layout_width="@dimen/glyph_button_height"
+            android:layout_height="@dimen/glyph_button_height"
+            android:layout_marginTop="16dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_menu"
+            android:tint="?attr/menuButtonTint"
+            android:contentDescription="@string/content_description_menu"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageButton
+            android:id="@+id/privateBrowsingButton"
+            android:layout_width="@dimen/glyph_button_height"
+            android:layout_height="@dimen/glyph_button_height"
+            android:background="?attr/privateBrowsingButtonBackground"
+            android:src="@drawable/ic_private_browsing"
+            android:contentDescription="@string/content_description_private_browsing_button"
+            app:layout_constraintEnd_toStartOf="@id/menuButton"
+            app:layout_constraintTop_toTopOf="@id/menuButton" />
+
+        <ImageView
+            android:id="@+id/wordmark"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="42dp"
+            android:src="?attr/fenixLogo"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/wordmark">
+            app:layout_constraintTop_toBottomOf="@id/menuButton" />
 
-        <TextView
-                android:id="@+id/toolbar"
-                android:layout_width="match_parent"
+        <org.mozilla.fenix.home.SearchView
+                android:id="@+id/toolbar_wrapper"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:paddingStart="12sp"
-                android:paddingEnd="12sp"
-                android:paddingTop="16sp"
-                android:paddingBottom="16sp"
-                android:drawablePadding="12sp"
-                android:clickable="true"
-                android:focusable="true"
-                android:gravity="center_vertical"
-                android:text="@string/search_hint"
-                android:textColor="?attr/toolbarTextColor"
-                android:textSize="14sp" />
-    </org.mozilla.fenix.home.SearchView>
+                android:layout_marginEnd="16dp"
+                android:layout_marginTop="64dp"
+                android:layout_marginStart="16dp"
+                android:elevation="@dimen/toolbar_elevation"
+                android:background="?attr/toolbarWrapperBackground"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/wordmark">
 
-    <View
+            <TextView
+                    android:id="@+id/toolbar"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingStart="12sp"
+                    android:paddingEnd="12sp"
+                    android:paddingTop="16sp"
+                    android:paddingBottom="16sp"
+                    android:drawablePadding="12sp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:text="@string/search_hint"
+                    android:textColor="?attr/toolbarTextColor"
+                    android:textSize="14sp" />
+        </org.mozilla.fenix.home.SearchView>
+
+        <View
             android:id="@+id/homeDivider"
             android:layout_width="match_parent"
             android:layout_height="1dp"
@@ -86,4 +90,5 @@
             android:layout_marginStart="40dp"
             android:layout_marginEnd="40dp"/>
 
-</androidx.constraintlayout.motion.widget.MotionLayout>
+    </androidx.constraintlayout.motion.widget.MotionLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

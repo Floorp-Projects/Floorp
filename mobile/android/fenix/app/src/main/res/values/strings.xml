@@ -139,4 +139,10 @@
 <p>%1$s puts you in control.</p>
 <p>%1$s is produced by Mozilla. Our mission is to foster a healthy, open Internet.<br/>
     ]]></string>
+
+    <!-- Current session overflow menu -->
+    <string name="current_session_delete">Delete</string>
+    <string name="current_session_archive">Archive</string>
+    <string name="current_session_send_and_share">Send and Share</string>
+    <string name="current_session_image">Current session image</string>
 </resources>

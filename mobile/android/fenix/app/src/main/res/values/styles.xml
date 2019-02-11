@@ -116,4 +116,13 @@
         <item name="android:minHeight">0dp</item>
         <item name="android:background">@drawable/search_pill_background</item>
     </style>
+
+    <style name="CurrentSessionBottomSheetDialogTheme" parent="Theme.Design.Light.BottomSheetDialog">
+        <item name="bottomSheetStyle">@style/CurrentSessionBottomSheetStyle</item>
+    </style>
+
+    <style name="CurrentSessionBottomSheetStyle" parent="Widget.Design.BottomSheet.Modal">
+        <item name="android:background">@android:color/transparent</item>
+        <item name="android:textColor">@android:color/black</item>
+    </style>
 </resources>
