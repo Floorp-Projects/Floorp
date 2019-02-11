@@ -10,6 +10,7 @@
   --accessibility-toolbar-focus-alpha30: rgba(10, 132, 255, 0.3);
   --accessibility-full-length-minus-splitter: calc(100% - 1px);
   --accessibility-horizontal-padding: 5px;
+  --accessibility-horizontal-indent: 14px;
   --accessibility-properties-item-width: calc(100% - var(--accessibility-horizontal-padding));
   --accessibility-arrow-horizontal-padding: 4px;
   --accessibility-tree-row-height: 21px;
@@ -19,9 +20,9 @@
   --accessibility-link-color-active: var(--blue-70);
   --accessible-role-active-background-color: var(--blue-50);
   --accessible-role-active-border-color: #FFFFFFB3;
-  --accessible-role-background-color: white;
-  --accessible-role-border-color: #CACAD1;
-  --accessible-role-color: var(--grey-60);
+  --accessible-label-background-color: white;
+  --accessible-label-border-color: #CACAD1;
+  --accessible-label-color: var(--grey-60);
 }
 
 :root.theme-dark {
@@ -31,9 +32,9 @@
   --accessibility-link-color-active: var(--blue-40);
   --accessible-role-active-background-color: var(--blue-60);
   --accessible-role-active-border-color: #FFF6;
-  --accessible-role-background-color: var(--grey-80);
-  --accessible-role-border-color: var(--grey-50);
-  --accessible-role-color: var(--grey-40);
+  --accessible-label-background-color: var(--grey-80);
+  --accessible-label-border-color: var(--grey-50);
+  --accessible-label-color: var(--grey-40);
 }
 
 /* General */
@@ -412,9 +413,9 @@ body {
 }
 
 .accessible .tree .objectBox-accessible .accessible-role {
-  background-color: var(--accessible-role-background-color);
-  color: var(--accessible-role-color);
-  border: 1px solid var(--accessible-role-border-color);
+  background-color: var(--accessible-label-background-color);
+  color: var(--accessible-label-color);
+  border: 1px solid var(--accessible-label-border-color);
   border-radius: 3px;
   padding: 0px 2px;
   margin-inline-start: 5px;
@@ -475,4 +476,126 @@ body {
   padding-inline-start: var(--accessibility-arrow-horizontal-padding);
   height: var(--accessibility-toolbar-height-tall);
   line-height: var(--accessibility-toolbar-height-tall);
+}
+
+/* Color Contrast */
+.accessibility-color-contrast-check,
+.accessibility-color-contrast {
+  position: relative;
+  display: flex;
+  cursor: default;
+  height: inherit;
+}
+
+.accessibility-color-contrast-check {
+  flex-direction: column;
+  padding: 4px var(--accessibility-horizontal-indent);
+  line-height: 20px;
+}
+
+.accessibility-color-contrast {
+  align-items: baseline;
+}
+
+.accessibility-color-contrast-header {
+  margin: 0;
+  font-weight: bold;
+  font-size: var(--accessibility-font-size);
+  line-height: var(--accessibility-toolbar-height);
+}
+
+.accessibility-color-contrast-annotation {
+  margin: 0;
+  white-space: normal;
+  color: var(--accessible-label-color);
+}
+
+.accessibility-color-contrast-annotation .link {
+  color: var(--accessibility-link-color);
+  cursor: pointer;
+  outline: 0;
+  white-space: nowrap;
+  font-style: normal;
+}
+
+.accessibility-color-contrast-annotation .link:hover:not(:focus) {
+  text-decoration: underline;
+}
+
+.accessibility-color-contrast-annotation .link:focus:not(:active) {
+  box-shadow: 0 0 0 2px var(--accessibility-toolbar-focus), 0 0 0 4px var(--accessibility-toolbar-focus-alpha30);
+  border-radius: 2px;
+}
+
+.accessibility-color-contrast-annotation .link:active {
+  color: var(--accessibility-link-color-active);
+  text-decoration: underline;
+}
+
+.accessibility-color-contrast-large-text {
+  background-color: var(--accessible-label-background-color);
+  color: var(--accessible-label-color);
+  outline: 1px solid var(--accessible-label-border-color);
+  -moz-outline-radius: 3px;
+  padding: 0px 2px;
+  margin-inline-start: 6px;
+  line-height: initial;
+}
+
+.accessibility-color-contrast .accessibility-contrast-value:not(:empty) {
+  margin-block-end: 4px;
+}
+
+.accessibility-color-contrast .accessibility-contrast-value:not(:empty):before {
+  content: "";
+  height: 14px;
+  width: 14px;
+  display: inline-flex;
+  background-color: var(--accessibility-contrast-color);
+  box-shadow: 0 0 0 1px var(--grey-40), 6px 5px var(--accessibility-contrast-bg), 6px 5px 0 1px var(--grey-40);
+  margin-inline-end: 11px;
+}
+
+.accessibility-color-contrast .accessibility-contrast-value:first-child:not(:empty):before {
+  margin-inline-start: 1px;
+}
+
+.accessibility-color-contrast .accessibility-contrast-value:not(:first-child):not(:empty):before {
+  margin-inline-start: 4px;
+}
+
+.accessibility-color-contrast .accessibility-contrast-value:not(:empty):after {
+  margin-inline-start: 4px;
+}
+
+.accessibility-color-contrast .accessibility-contrast-value:not(:empty).AA:after,
+.accessibility-color-contrast .accessibility-contrast-value:not(:empty).AAA:after {
+  color: var(--theme-highlight-green);
+}
+
+.accessibility-color-contrast .accessibility-contrast-value:not(:empty).fail:after {
+  color: #E57180;
+  content: "⚠️";
+}
+
+.accessibility-color-contrast .accessibility-contrast-value:not(:empty).AA:after {
+  content: "AA\2713";
+}
+
+.accessibility-color-contrast .accessibility-contrast-value:not(:empty).AAA:after {
+  content: "AAA\2713";
+}
+
+.accessibility-color-contrast .accessibility-color-contrast-label:after {
+  content: ":";
+}
+
+.accessibility-color-contrast .accessibility-color-contrast-label,
+.accessibility-color-contrast .accessibility-color-contrast-separator:before {
+  margin-inline-end: 3px;
+}
+
+.accessibility-color-contrast .accessibility-color-contrast-separator:before {
+  content: "-";
+  margin-inline-start: 4px;
 }
