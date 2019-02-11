@@ -158,7 +158,7 @@ class Browser extends PureComponent {
           mozbrowser: "true",
           noisolation: "true",
           remote: "true",
-          remotetype: "web",
+          remoteType: "web",
           src: "about:blank",
           usercontextid: userContextId,
           width: "100%",
