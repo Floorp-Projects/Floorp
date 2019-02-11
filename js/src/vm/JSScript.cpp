@@ -460,6 +460,7 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
 
   MOZ_ASSERT(!!(scriptBits & (1 << OwnSource)) == !sourceObjectArg);
   RootedScriptSourceObject sourceObject(cx, sourceObjectArg);
+  Maybe<CompileOptions> options;
 
   if (mode == XDR_DECODE) {
     // When loading from the bytecode cache, we get the CompileOptions from
@@ -469,7 +470,6 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
     bool noScriptRval =
         !!(immutableFlags & uint32_t(ImmutableFlags::NoScriptRval));
     bool selfHosted = !!(immutableFlags & uint32_t(ImmutableFlags::SelfHosted));
-    mozilla::Maybe<CompileOptions> options;
     if (xdr->hasOptions() && (scriptBits & (1 << OwnSource))) {
       options.emplace(xdr->cx(), xdr->options());
       if (options->noScriptRval != noScriptRval ||
@@ -512,7 +512,15 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
         return xdr->fail(JS::TranscodeResult_Throw);
       }
     }
+  } else {
+    sourceObject = script->sourceObject();
+  }
 
+  if (scriptBits & (1 << OwnSource)) {
+    MOZ_TRY(sourceObject->source()->performXDR<mode>(xdr));
+  }
+
+  if (mode == XDR_DECODE) {
     script = JSScript::Create(cx, *options, sourceObject, 0, 0, 0, 0);
     if (!script) {
       return xdr->fail(JS::TranscodeResult_Throw);
@@ -523,11 +531,7 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
     if (fun) {
       fun->initScript(script);
     }
-  } else {
-    sourceObject = script->sourceObject();
-  }
 
-  if (mode == XDR_DECODE) {
     if (!JSScript::createPrivateScriptData(cx, script, nscopes, nconsts,
                                            nobjects, ntrynotes, nscopenotes,
                                            nresumeoffsets)) {
@@ -555,9 +559,6 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
   JS_STATIC_ASSERT(sizeof(jsbytecode) == 1);
   JS_STATIC_ASSERT(sizeof(jssrcnote) == 1);
 
-  if (scriptBits & (1 << OwnSource)) {
-    MOZ_TRY(sourceObject->source()->performXDR<mode>(xdr));
-  }
   MOZ_TRY(xdr->codeUint32(&script->sourceStart_));
   MOZ_TRY(xdr->codeUint32(&script->sourceEnd_));
   MOZ_TRY(xdr->codeUint32(&script->toStringStart_));

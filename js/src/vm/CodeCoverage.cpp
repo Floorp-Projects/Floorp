@@ -620,7 +620,7 @@ bool LCovRuntime::fillWithFilename(char* name, size_t length) {
   int len = snprintf(name, length, "%s/%" PRId64 "-%" PRIu32 "-%zu.info",
                      outDir, timestamp, pid_, rid);
   if (len < 0 || size_t(len) >= length) {
-    fprintf(stderr, "Warning: LCovRuntime::init: Cannot serialize file name.");
+    fprintf(stderr, "Warning: LCovRuntime::init: Cannot serialize file name.\n");
     return false;
   }
 
@@ -635,7 +635,7 @@ void LCovRuntime::init() {
 
   // If we cannot open the file, report a warning.
   if (!out_.init(name)) {
-    fprintf(stderr, "Warning: LCovRuntime::init: Cannot open file named '%s'.",
+    fprintf(stderr, "Warning: LCovRuntime::init: Cannot open file named '%s'.\n",
             name);
   }
   isEmpty_ = true;
