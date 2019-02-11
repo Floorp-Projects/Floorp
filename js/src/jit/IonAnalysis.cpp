@@ -3206,6 +3206,7 @@ static bool IsResumableMIRType(MIRType type) {
     case MIRType::Doublex2:  // NYI, see also RSimdBox::recover
     case MIRType::SinCosDouble:
     case MIRType::Int64:
+    case MIRType::RefOrNull:
       return false;
   }
   MOZ_CRASH("Unknown MIRType.");
