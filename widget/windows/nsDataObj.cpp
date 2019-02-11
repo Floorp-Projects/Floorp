@@ -24,6 +24,7 @@
 #include "nsIURL.h"
 #include "nsNetUtil.h"
 #include "mozilla/Services.h"
+#include "mozilla/Unused.h"
 #include "nsIOutputStream.h"
 #include "nscore.h"
 #include "nsDirectoryServiceDefs.h"
@@ -1964,9 +1965,8 @@ HRESULT nsDataObj::GetDownloadDetails(nsIURI** aSourceURI,
 
   nsAutoString srcFileName;
   nsCOMPtr<nsISupports> fileNamePrimitive;
-  rv = mTransferable->GetTransferData(kFilePromiseDestFilename,
-                                      getter_AddRefs(fileNamePrimitive));
-  NS_ENSURE_SUCCESS(rv, E_FAIL);
+  Unused << mTransferable->GetTransferData(kFilePromiseDestFilename,
+                                           getter_AddRefs(fileNamePrimitive));
   nsCOMPtr<nsISupportsString> srcFileNamePrimitive =
       do_QueryInterface(fileNamePrimitive);
   if (srcFileNamePrimitive) {
