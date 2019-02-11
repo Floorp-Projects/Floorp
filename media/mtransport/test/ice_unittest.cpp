@@ -722,6 +722,7 @@ class IceTestPeer : public sigslot::has_slots<> {
     ice_failed_ = false;
     ice_reached_checking_ = false;
     res = ice_ctx_->ParseGlobalAttributes(remote->GetGlobalAttributes());
+    ASSERT_FALSE(remote->simulate_ice_lite_ && (ice_ctx_->GetControlling() == NrIceCtx::ICE_CONTROLLED));
     ASSERT_TRUE(NS_SUCCEEDED(res));
 
     for (size_t i = 0; i < stream_counter_; ++i) {
