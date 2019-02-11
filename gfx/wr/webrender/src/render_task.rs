@@ -1108,6 +1108,7 @@ pub struct RenderTaskCacheEntry {
 }
 
 #[derive(Debug, MallocSizeOf)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
 pub enum RenderTaskCacheMarker {}
 
 // A cache of render tasks that are stored in the texture

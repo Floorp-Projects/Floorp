@@ -58,6 +58,7 @@ pub struct FrameBuilderConfig {
 }
 
 /// A builder structure for `tiling::Frame`
+#[cfg_attr(feature = "capture", derive(Serialize))]
 pub struct FrameBuilder {
     screen_rect: DeviceIntRect,
     background_color: Option<ColorF>,
@@ -68,6 +69,7 @@ pub struct FrameBuilder {
     pending_retained_tiles: RetainedTiles,
     pub prim_store: PrimitiveStore,
     pub clip_store: ClipStore,
+    #[cfg_attr(feature = "capture", serde(skip))] //TODO
     pub hit_testing_runs: Vec<HitTestingRun>,
     pub config: FrameBuilderConfig,
 }
@@ -157,7 +159,7 @@ pub struct PictureState {
     pub map_pic_to_world: SpaceMapper<PicturePixel, WorldPixel>,
     pub map_pic_to_raster: SpaceMapper<PicturePixel, RasterPixel>,
     pub map_raster_to_world: SpaceMapper<RasterPixel, WorldPixel>,
-    /// If the plane splitter, the primitives get added to it insted of
+    /// If the plane splitter, the primitives get added to it instead of
     /// batching into their parent pictures.
     pub plane_splitter: Option<PlaneSplitter>,
 }

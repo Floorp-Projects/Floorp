@@ -58,8 +58,10 @@ struct PictureInfo {
 
 /// Stores a list of cached picture tiles that are retained
 /// between new scenes.
+#[cfg_attr(feature = "capture", derive(Serialize))]
 pub struct RetainedTiles {
     /// The tiles retained between display lists.
+    #[cfg_attr(feature = "capture", serde(skip))] //TODO
     pub tiles: Vec<Tile>,
     /// List of reference primitives that we will compare
     /// to try and correlate the positioning of items
@@ -1765,6 +1767,7 @@ impl<'a> PictureUpdateState<'a> {
 }
 
 #[derive(Debug, Copy, Clone, PartialEq)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
 pub struct SurfaceIndex(pub usize);
 
 pub const ROOT_SURFACE_INDEX: SurfaceIndex = SurfaceIndex(0);
@@ -1838,6 +1841,7 @@ impl SurfaceInfo {
 }
 
 #[derive(Debug)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
 pub struct RasterConfig {
     /// How this picture should be composited into
     /// the parent surface.
@@ -1851,6 +1855,7 @@ pub struct RasterConfig {
 
 bitflags! {
     /// A set of flags describing why a picture may need a backing surface.
+    #[cfg_attr(feature = "capture", derive(Serialize))]
     pub struct BlitReason: u32 {
         /// Mix-blend-mode on a child that requires isolation.
         const ISOLATE = 1;
@@ -1865,6 +1870,7 @@ bitflags! {
 /// onto the target it belongs to.
 #[allow(dead_code)]
 #[derive(Debug, Copy, Clone, PartialEq)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
 pub enum PictureCompositeMode {
     /// Apply CSS mix-blend-mode effect.
     MixBlend(MixBlendMode),
@@ -1892,6 +1898,7 @@ pub enum PictureSurface {
 
 /// Enum value describing the place of a picture in a 3D context.
 #[derive(Clone, Debug)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
 pub enum Picture3DContext<C> {
     /// The picture is not a part of 3D context sub-hierarchy.
     Out,
@@ -1911,6 +1918,7 @@ pub enum Picture3DContext<C> {
 /// Information about a preserve-3D hierarchy child that has been plane-split
 /// and ordered according to the view direction.
 #[derive(Clone, Debug)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
 pub struct OrderedPictureChild {
     pub anchor: usize,
     pub spatial_node_index: SpatialNodeIndex,
@@ -1933,6 +1941,7 @@ struct PrimitiveClusterKey {
 
 /// Descriptor for a cluster of primitives. For now, this is quite basic but will be
 /// extended to handle more spatial clustering of primitives.
+#[cfg_attr(feature = "capture", derive(Serialize))]
 pub struct PrimitiveCluster {
     /// The positioning node for this cluster.
     spatial_node_index: SpatialNodeIndex,
@@ -1967,6 +1976,7 @@ impl PrimitiveCluster {
 pub struct PrimitiveClusterIndex(pub u32);
 
 #[derive(Debug, Copy, Clone)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
 pub struct ClusterIndex(pub u16);
 
 impl ClusterIndex {
@@ -1981,6 +1991,7 @@ pub type PictureList = SmallVec<[(PictureIndex, ClipChainId); 4]>;
 /// This ensures we can keep a list of primitives that
 /// are pictures, for a fast initial traversal of the picture
 /// tree without walking the instance list.
+#[cfg_attr(feature = "capture", derive(Serialize))]
 pub struct PrimitiveList {
     /// The primitive instances, in render order.
     pub prim_instances: Vec<PrimitiveInstance>,
@@ -2113,6 +2124,7 @@ impl PrimitiveList {
 }
 
 /// Defines configuration options for a given picture primitive.
+#[cfg_attr(feature = "capture", derive(Serialize))]
 pub struct PictureOptions {
     /// If true, WR should inflate the bounding rect of primitives when
     /// using a filter effect that requires inflation.
@@ -2127,10 +2139,12 @@ impl Default for PictureOptions {
     }
 }
 
+#[cfg_attr(feature = "capture", derive(Serialize))]
 pub struct PicturePrimitive {
     /// List of primitives, and associated info for this picture.
     pub prim_list: PrimitiveList,
 
+    #[cfg_attr(feature = "capture", serde(skip))]
     pub state: Option<(PictureState, PictureContext)>,
 
     // The pipeline that the primitives on this picture belong to.
@@ -2180,6 +2194,7 @@ pub struct PicturePrimitive {
     pub gpu_location: GpuCacheHandle,
 
     /// If Some(..) the tile cache that is associated with this picture.
+    #[cfg_attr(feature = "capture", serde(skip))] //TODO
     pub tile_cache: Option<TileCache>,
 
     /// The config options for this picture.

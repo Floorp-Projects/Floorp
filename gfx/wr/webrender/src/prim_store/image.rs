@@ -60,6 +60,7 @@ pub struct ImageCacheKey {
 ///     now to reduce the number of changes, and because image
 ///     tiling is very rare on real pages.
 #[derive(Debug)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
 pub struct ImageInstance {
     pub opacity_binding_index: OpacityBindingIndex,
     pub segment_instance_index: SegmentInstanceIndex,
