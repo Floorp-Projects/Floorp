@@ -163,7 +163,7 @@ add_task(async function test_fetchSignedObjects_canonical_mismatch() {
 
 // Test validation errors due to validation throwing an exception (e.g. when
 // parameters passed to validation are malformed).
-add_task(async function test_fetchSignedObjects_validation_error() {
+add_task(withMockApiServer(async function test_fetchSignedObjects_validation_error() {
   const getApiUrl = sinon.stub(NormandyApi, "getApiUrl").resolves("http://localhost/object/");
 
   // Mock two URLs: object and the x5u
@@ -193,7 +193,7 @@ add_task(async function test_fetchSignedObjects_validation_error() {
 
   getApiUrl.restore();
   get.restore();
-});
+}));
 
 // Test validation errors due to validation returning false (e.g. when parameters
 // passed to validation are correctly formed, but not valid for the data).
