@@ -2817,7 +2817,8 @@ class StaticAnalysis(MachCommandBase):
                             # Supported extension and accepted path
                             path_list.append(f_in_dir)
             else:
-                if f.endswith(extensions):
+                # Make sure that the file exists and it has a supported extension
+                if os.path.isfile(f) and f.endswith(extensions):
                     path_list.append(f)
 
         return path_list
