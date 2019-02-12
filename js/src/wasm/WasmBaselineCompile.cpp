@@ -9555,7 +9555,7 @@ bool BaseCompiler::emitSelect() {
   BranchState b(&done);
   emitBranchSetup(&b);
 
-  switch (NonAnyToValType(type).code()) {
+  switch (NonTVarToValType(type).code()) {
     case ValType::I32: {
       RegI32 r, rs;
       pop2xI32(&r, &rs);
