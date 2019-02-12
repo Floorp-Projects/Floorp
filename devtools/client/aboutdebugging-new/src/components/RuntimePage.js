@@ -16,6 +16,7 @@ const ConnectionPromptSetting = createFactory(require("./ConnectionPromptSetting
 const DebugTargetPane = createFactory(require("./debugtarget/DebugTargetPane"));
 const ExtensionDetail = createFactory(require("./debugtarget/ExtensionDetail"));
 const InspectAction = createFactory(require("./debugtarget/InspectAction"));
+const ProfilerDialog = createFactory(require("./ProfilerDialog"));
 const RuntimeInfo = createFactory(require("./RuntimeInfo"));
 const ServiceWorkerAction = createFactory(require("./debugtarget/ServiceWorkerAction"));
 const ServiceWorkersWarning = createFactory(require("./ServiceWorkersWarning"));
@@ -44,6 +45,7 @@ class RuntimePage extends PureComponent {
       runtimeId: PropTypes.string.isRequired,
       serviceWorkers: PropTypes.arrayOf(PropTypes.object).isRequired,
       sharedWorkers: PropTypes.arrayOf(PropTypes.object).isRequired,
+      showProfilerDialog: PropTypes.bool.isRequired,
       tabs: PropTypes.arrayOf(PropTypes.object).isRequired,
       temporaryExtensions: PropTypes.arrayOf(PropTypes.object).isRequired,
       temporaryInstallError: PropTypes.string,
@@ -57,16 +59,44 @@ class RuntimePage extends PureComponent {
     dispatch(Actions.selectPage(PAGE_TYPES.RUNTIME, runtimeId));
   }
 
-  renderConnectionPromptSetting() {
-    const { runtimeDetails, dispatch } = this.props;
+  onProfilerButtonClick() {
+    this.props.dispatch(Actions.showProfilerDialog());
+  }
+
+  renderRemoteRuntimeActions() {
+    const { runtimeDetails, runtimeId, dispatch } = this.props;
     const { connectionPromptEnabled } = runtimeDetails;
 
-    return dom.div(
-      {
-        className: "connection-prompt-setting",
-      },
-      ConnectionPromptSetting({ connectionPromptEnabled, dispatch }),
-    );
+    if (runtimeId === RUNTIMES.THIS_FIREFOX) {
+      // Connection prompt and Profiling are only available on remote runtimes.
+      return null;
+    }
+
+    return [
+      dom.div(
+        {
+          className: "connection-prompt-setting",
+          key: "connection-prompt-setting",
+        },
+        ConnectionPromptSetting({ connectionPromptEnabled, dispatch }),
+      ),
+      dom.p(
+        {},
+        Localized(
+          {
+            id: "about-debugging-runtime-profile-button",
+            key: "profile-runtime-button",
+          },
+          dom.button(
+            {
+              className: "default-button js-profile-runtime-button",
+              onClick: () => this.onProfilerButtonClick(),
+            },
+            "Profile Runtime"
+          ),
+        ),
+      ),
+    ];
   }
 
   renderDebugTargetPane(name, targets, actionComponent,
@@ -100,9 +130,9 @@ class RuntimePage extends PureComponent {
       installedExtensions,
       otherWorkers,
       runtimeDetails,
-      runtimeId,
       serviceWorkers,
       sharedWorkers,
+      showProfilerDialog,
       tabs,
       temporaryExtensions,
       temporaryInstallError,
@@ -114,19 +144,13 @@ class RuntimePage extends PureComponent {
       return null;
     }
 
-    // do not show the connection prompt setting in 'This Firefox'
-    const shallShowPromptSetting = runtimeId !== RUNTIMES.THIS_FIREFOX;
-
     const { type } = runtimeDetails.info;
     return dom.article(
       {
         className: "page js-runtime-page",
       },
       RuntimeInfo(runtimeDetails.info),
-      shallShowPromptSetting
-        ? this.renderConnectionPromptSetting()
-        : null,
-
+      this.renderRemoteRuntimeActions(),
       runtimeDetails.serviceWorkersAvailable ? null : ServiceWorkersWarning(),
       isSupportedDebugTargetPane(type, DEBUG_TARGET_PANE.TEMPORARY_EXTENSION)
         ? TemporaryExtensionInstaller({
@@ -169,6 +193,8 @@ class RuntimePage extends PureComponent {
                                  WorkerDetail,
                                  DEBUG_TARGET_PANE.OTHER_WORKER,
                                  "about-debugging-runtime-other-workers"),
+
+      showProfilerDialog ? ProfilerDialog({ dispatch, runtimeDetails }) : null,
     );
   }
 }
@@ -181,6 +207,7 @@ const mapStateToProps = state => {
     runtimeDetails: getCurrentRuntimeDetails(state.runtimes),
     serviceWorkers: state.debugTargets.serviceWorkers,
     sharedWorkers: state.debugTargets.sharedWorkers,
+    showProfilerDialog: state.ui.showProfilerDialog,
     tabs: state.debugTargets.tabs,
     temporaryExtensions: state.debugTargets.temporaryExtensions,
     temporaryInstallError: state.ui.temporaryInstallError,

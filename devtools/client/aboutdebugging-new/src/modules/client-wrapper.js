@@ -154,6 +154,18 @@ class ClientWrapper {
   isClosed() {
     return this.client._closed;
   }
+
+  // This method will be mocked to return a dummy URL during mochitests
+  getPerformancePanelUrl() {
+    return "chrome://devtools/content/performance-new/index.xhtml";
+  }
+
+  async loadPerformanceProfiler(win) {
+    const preferenceFront = await this.getFront("preference");
+    const perfFront = await this.getFront("perf");
+    const perfActorVersion = this.client.mainRoot.traits.perfActorVersion;
+    win.gInit(perfFront, preferenceFront, perfActorVersion);
+  }
 }
 
 exports.ClientWrapper = ClientWrapper;

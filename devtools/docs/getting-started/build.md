@@ -63,6 +63,8 @@ Then run this:
 ./mach build
 ```
 
+Please note, if this fails it might be possible you need to run the `bootstrap.py` script first. Download the [bootstrap.py script](https://hg.mozilla.org/mozilla-central/raw-file/default/python/mozboot/bin/bootstrap.py) and save it in your project directory. Then run `python bootstrap.py` and follow the prompted steps.
+
 **Note:** if using Windows, you might need to type the commands without the `./`:
 
 ```bash

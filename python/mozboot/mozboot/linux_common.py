@@ -49,10 +49,12 @@ class ClangStaticAnalysisInstall(object):
     def __init__(self, **kwargs):
         pass
 
-    def ensure_clang_static_analysis_package(self, checkout_root):
+    def ensure_clang_static_analysis_package(self, state_dir, checkout_root):
         if is_non_x86_64():
             print('Cannot install static analysis tools from taskcluster.\n'
                   'Please install these tools manually.')
             return
 
-        self.install_toolchain_static_analysis(checkout_root)
+        from mozboot import static_analysis
+        self.install_toolchain_static_analysis(
+            state_dir, checkout_root, static_analysis.LINUX_CLANG_TIDY)
