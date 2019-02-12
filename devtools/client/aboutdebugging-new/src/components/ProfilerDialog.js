@@ -30,14 +30,16 @@ class ProfilerDialog extends PureComponent {
   }
 
   render() {
+    const { clientWrapper } = this.props.runtimeDetails;
+
     return dom.div(
       {
-        className: "profiler-dialog__mask",
+        className: "profiler-dialog__mask js-profiler-dialog-mask",
         onClick: () => this.hide(),
       },
       dom.article(
         {
-          className: "profiler-dialog__inner",
+          className: "profiler-dialog__inner js-profiler-dialog",
           onClick: e => e.stopPropagation(),
         },
         dom.header(
@@ -57,7 +59,7 @@ class ProfilerDialog extends PureComponent {
           ),
           dom.button(
             {
-              className: "ghost-button",
+              className: "ghost-button js-profiler-dialog-close",
               onClick: () => this.hide(),
             },
             dom.img(
@@ -69,9 +71,8 @@ class ProfilerDialog extends PureComponent {
         ),
         dom.iframe({
           className: "profiler-dialog__frame",
-          src: "chrome://devtools/content/performance-new/index.xhtml",
+          src: clientWrapper.getPerformancePanelUrl(),
           onLoad: (e) => {
-            const { clientWrapper } = this.props.runtimeDetails;
             clientWrapper.loadPerformanceProfiler(e.target.contentWindow);
           },
         })
