@@ -9,7 +9,8 @@ with Files("**"):
 
 XPIDL_SOURCES += [
     'nsIContentSecurityManager.idl',
-    'nsIContentSecurityPolicy.idl'
+    'nsIContentSecurityPolicy.idl',
+    'nsIReferrerInfo.idl'
 ]
 
 XPIDL_MODULE = 'dom_security'
