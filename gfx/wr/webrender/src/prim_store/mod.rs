@@ -2270,10 +2270,6 @@ impl PrimitiveStore {
                     frame_state.clip_chain_stack.pop_surface();
                 }
 
-                if !pic_state_for_children.is_cacheable {
-                    pic_state.is_cacheable = false;
-                }
-
                 // Restore the dependencies (borrow check dance)
                 self.pictures[pic_context_for_children.pic_index.0]
                     .restore_context(
@@ -2318,11 +2314,6 @@ impl PrimitiveStore {
         {
             prim_instance.prepared_frame_id = frame_state.render_tasks.frame_id();
         }
-
-        pic_state.is_cacheable &= prim_instance.is_cacheable(
-            &data_stores,
-            frame_state.resource_cache,
-        );
 
         match prim_instance.kind {
             PrimitiveInstanceKind::Picture { pic_index, .. } => {
