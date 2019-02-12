@@ -100,10 +100,14 @@ var ReaderMode = {
       return;
     }
     let flags = webNav.LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL;
+    let ReferrerInfo = Components.Constructor("@mozilla.org/referrer-info;1",
+                                              "nsIReferrerInfo",
+                                              "init");
     let loadURIOptions = {
       triggeringPrincipal: principal,
       loadFlags: flags,
-      referrerURI,
+      referrerInfo: new ReferrerInfo(
+        Ci.nsIHttpChannel.REFERRER_POLICY_UNSET, true, referrerURI),
     };
     webNav.loadURI(originalURL, loadURIOptions);
   },

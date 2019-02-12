@@ -13,6 +13,8 @@ ChromeUtils.defineModuleGetter(this, "Utils",
   "resource://gre/modules/sessionstore/Utils.jsm");
 ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "E10SUtils",
+  "resource://gre/modules/E10SUtils.jsm");
 
 function makeURI(url) {
   return Services.io.newURI(url);
@@ -94,8 +96,7 @@ RemoteWebNavigation.prototype = {
     this._sendMessage("WebNavigation:LoadURI", {
       uri: aURI,
       flags: aLoadURIOptions.loadFlags,
-      referrer: aLoadURIOptions.referrerURI ? aLoadURIOptions.referrerURI.spec : null,
-      referrerPolicy: aLoadURIOptions.referrerPolicy,
+      referrerInfo: E10SUtils.serializeReferrerInfo(aLoadURIOptions.referrerInfo),
       postData: aLoadURIOptions.postData ? Utils.serializeInputStream(aLoadURIOptions.postData) : null,
       headers: aLoadURIOptions.headers ? Utils.serializeInputStream(aLoadURIOptions.headers) : null,
       baseURI: aLoadURIOptions.baseURI ? aLoadURIOptions.baseURI.spec : null,

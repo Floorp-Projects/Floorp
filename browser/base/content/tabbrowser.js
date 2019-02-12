@@ -2615,12 +2615,16 @@ window._gBrowser = {
       if (!allowInheritPrincipal) {
         flags |= Ci.nsIWebNavigation.LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL;
       }
+
+      let ReferrerInfo = Components.Constructor("@mozilla.org/referrer-info;1",
+                                                "nsIReferrerInfo",
+                                                "init");
       try {
         b.loadURI(aURI, {
           flags,
           triggeringPrincipal,
-          referrerURI: noReferrer ? null : referrerURI,
-          referrerPolicy,
+          referrerInfo: new ReferrerInfo(
+            referrerPolicy, !noReferrer, referrerURI),
           charset,
           postData,
         });

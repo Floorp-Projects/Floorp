@@ -1041,9 +1041,8 @@ function _loadURI(browser, uri, params = {}) {
 
   let {
     flags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE,
-    referrerURI,
-    referrerPolicy = Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
     triggeringPrincipal,
+    referrerInfo,
     postData,
     userContextId,
   } = params || {};
@@ -1076,8 +1075,7 @@ function _loadURI(browser, uri, params = {}) {
   let loadURIOptions = {
     triggeringPrincipal,
     loadFlags: flags,
-    referrerURI,
-    referrerPolicy,
+    referrerInfo,
     postData,
   };
   try {
@@ -1106,8 +1104,7 @@ function _loadURI(browser, uri, params = {}) {
           ? gSerializationHelper.serializeToString(triggeringPrincipal)
           : null,
         flags,
-        referrer: referrerURI ? referrerURI.spec : null,
-        referrerPolicy,
+        referrerInfo: E10SUtils.serializeReferrerInfo(referrerInfo),
         remoteType: requiredRemoteType,
         postData,
         newFrameloader,
