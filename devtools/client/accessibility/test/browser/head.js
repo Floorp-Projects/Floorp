@@ -5,7 +5,7 @@
 /* import-globals-from ../../../inspector/test/shared-head.js */
 
 /* global waitUntilState, gBrowser */
-/* exported addTestTab, checkTreeState, checkSidebarState, selectRow,
+/* exported addTestTab, checkTreeState, checkSidebarState, checkAuditState, selectRow,
             toggleRow, addA11yPanelTestsTask, reload, navigate */
 
 "use strict";
@@ -205,6 +205,52 @@ function relationsMatch(relations, expected) {
 }
 
 /**
+ * When comparing numerical values (for example contrast), we only care about the 2
+ * decimal points.
+ * @param  {String} _
+ *         Key of the property that is parsed.
+ * @param  {Any} value
+ *         Value of the property that is parsed.
+ * @return {Any}
+ *         Newly formatted value in case of the numeric value.
+ */
+function parseNumReplacer(_, value) {
+  if (typeof value === "number") {
+    return value.toFixed(2);
+  }
+
+  return value;
+}
+
+/**
+ * Check the state of the accessibility sidebar audit(checks).
+ * @param  {Object} store         React store for the panel (includes store for
+ *                                the audit).
+ * @param  {Object} expectedState Expected state of the sidebar audit(checks).
+ */
+async function checkAuditState(store, expectedState) {
+  info("Checking audit state.");
+  await waitUntilState(store, ({ details }) => {
+    const { audit } = details;
+
+    for (const key in expectedState) {
+      const expected = expectedState[key];
+      if (expected && typeof expected === "object") {
+        if (JSON.stringify(audit[key], parseNumReplacer) !==
+            JSON.stringify(expected, parseNumReplacer)) {
+          return false;
+        }
+      } else if (audit && audit[key] !== expected) {
+        return false;
+      }
+    }
+
+    ok(true, "Audit state is correct.");
+    return true;
+  });
+}
+
+/**
  * Check the state of the accessibility sidebar.
  * @param  {Object} store         React store for the panel (includes store for
  *                                the sidebar).
@@ -303,7 +349,8 @@ function selectRow(doc, rowNumber) {
  */
 async function toggleRow(doc, rowNumber) {
   const win = doc.defaultView;
-  const twisty = doc.querySelectorAll(".theme-twisty")[rowNumber];
+  const row = doc.querySelectorAll(".treeRow")[rowNumber];
+  const twisty = row.querySelector(".theme-twisty");
   const expected = !twisty.classList.contains("open");
 
   info(`${expected ? "Expanding" : "Collapsing"} row ${rowNumber}.`);
@@ -315,12 +362,12 @@ async function toggleRow(doc, rowNumber) {
 }
 
 /**
- * Iterate over actions/tests structure and test the state of the
+ * Iterate over setups/tests structure and test the state of the
  * accessibility panel.
  * @param  {JSON}   tests test data that has the format of:
  *                    {
  *                      desc     {String}    description for better logging
- *                      action   {Function}  An optional action that needs to be
+ *                      setup    {Function}  An optional setup that needs to be
  *                                           performed before the state of the
  *                                           tree and the sidebar can be checked
  *                      expected {JSON}      An expected states for the tree and
@@ -330,20 +377,24 @@ async function toggleRow(doc, rowNumber) {
  *                       structure as the return value of 'addTestTab' funciton)
  */
 async function runA11yPanelTests(tests, env) {
-  for (const { desc, action, expected } of tests) {
+  for (const { desc, setup, expected } of tests) {
     info(desc);
 
-    if (action) {
-      await action(env);
+    if (setup) {
+      await setup(env);
     }
 
-    const { tree, sidebar } = expected;
+    const { tree, sidebar, audit } = expected;
     if (tree) {
       await checkTreeState(env.doc, tree);
     }
 
     if (sidebar) {
       await checkSidebarState(env.store, sidebar);
+    }
+
+    if (typeof audit !== "undefined") {
+      await checkAuditState(env.store, audit);
     }
   }
 }
@@ -362,7 +413,7 @@ function buildURL(uri) {
  * @param  {JSON}   tests  test data that has the format of:
  *                    {
  *                      desc     {String}    description for better logging
- *                      action   {Function}  An optional action that needs to be
+ *                      setup   {Function}   An optional setup that needs to be
  *                                           performed before the state of the
  *                                           tree and the sidebar can be checked
  *                      expected {JSON}      An expected states for the tree and
