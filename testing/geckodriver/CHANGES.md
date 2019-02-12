@@ -25,7 +25,8 @@ All notable changes to this program is documented in this file.
 
 - Added new endpoint `POST /session/{session_id}/window/new`
   for the [New Window] command to create a new top-level browsing
-  context, which can be either a window or a tab.
+  context, which can be either a window or a tab. The first version
+  of Firefox supporting this command is Firefox 66.0.
 
 - When using the preference `devtools.console.stdout.content` set to
   `true` logging of console API calls like `info()`, `warn()`, and
