@@ -173,6 +173,51 @@ function decodeRequestPayload(request) {
   return payload;
 }
 
+function checkPingFormat(aPing, aType, aHasClientId, aHasEnvironment) {
+  const APP_VERSION = "1";
+  const APP_NAME = "XPCShell";
+  const PING_FORMAT_VERSION = 4;
+  const PLATFORM_VERSION = "1.9.2";
+  const MANDATORY_PING_FIELDS = [
+    "type", "id", "creationDate", "version", "application", "payload",
+  ];
+
+  const APPLICATION_TEST_DATA = {
+    buildId: gAppInfo.appBuildID,
+    name: APP_NAME,
+    version: APP_VERSION,
+    displayVersion: AppConstants.MOZ_APP_VERSION_DISPLAY,
+    vendor: "Mozilla",
+    platformVersion: PLATFORM_VERSION,
+    xpcomAbi: "noarch-spidermonkey",
+  };
+
+  // Check that the ping contains all the mandatory fields.
+  for (let f of MANDATORY_PING_FIELDS) {
+    Assert.ok(f in aPing, f + " must be available.");
+  }
+
+  Assert.equal(aPing.type, aType, "The ping must have the correct type.");
+  Assert.equal(aPing.version, PING_FORMAT_VERSION, "The ping must have the correct version.");
+
+  // Test the application section.
+  for (let f in APPLICATION_TEST_DATA) {
+    Assert.equal(aPing.application[f], APPLICATION_TEST_DATA[f],
+                 f + " must have the correct value.");
+  }
+
+  // We can't check the values for channel and architecture. Just make
+  // sure they are in.
+  Assert.ok("architecture" in aPing.application,
+            "The application section must have an architecture field.");
+  Assert.ok("channel" in aPing.application,
+            "The application section must have a channel field.");
+
+  // Check the clientId and environment fields, as needed.
+  Assert.equal("clientId" in aPing, aHasClientId);
+  Assert.equal("environment" in aPing, aHasEnvironment);
+}
+
 function wrapWithExceptionHandler(f) {
   function wrapper(...args) {
     try {
