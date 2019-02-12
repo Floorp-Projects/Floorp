@@ -601,7 +601,11 @@ var GMPProvider = {
     try {
       let greDir = Services.dirsvc.get(NS_GRE_DIR,
                                        Ci.nsIFile);
-      let clearkeyPath = OS.Path.join(greDir.path,
+      let path = greDir.path;
+      if (GMPUtils._isWindowsOnARM64()) {
+        path = OS.Path.join(path, "i686");
+      }
+      let clearkeyPath = OS.Path.join(path,
                                       CLEARKEY_PLUGIN_ID,
                                       CLEARKEY_VERSION);
       this._log.info("startup - adding clearkey CDM directory " +
