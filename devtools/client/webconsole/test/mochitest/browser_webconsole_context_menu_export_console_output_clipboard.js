@@ -60,24 +60,24 @@ add_task(async function() {
 
 // Here we should have:
 //   -------------------------------------------------------------------
-//   hello test.js:4:17
+//   hello test.js:4:9
 //   -------------------------------------------------------------------
 //   myObject:
 //   Object { a: 1 }
 //    myArray:
 //   Array [ "b", "c"]
-//   test.js:5:17
+//   test.js:5:9
 //   -------------------------------------------------------------------
 //   Error: "error object":
 //       wrapper test.js:5
-//       logStuff test.js:17
-//   test.js:6:17
+//       logStuff test.js:9
+//   test.js:6:9
 //   -------------------------------------------------------------------
 //   console.trace() myConsoleTrace test.js:7:9
 //       wrapper test.js:7
-//       logStuff test.js:17
+//       logStuff test.js:9
 //   -------------------------------------------------------------------
-//   world ! test.js:8:17
+//   world ! test.js:8:9
 //   -------------------------------------------------------------------
 
   info("Check if all messages where copied to clipboard");
@@ -86,28 +86,28 @@ add_task(async function() {
   is(clipboardLines[clipboardLines.length - 1], "", "Last line is empty");
 
   info("Check simple text message");
-  is(clipboardLines[0], "hello test.js:4:17", "Simple log has expected text");
+  is(clipboardLines[0], "hello test.js:4:9", "Simple log has expected text");
 
   info("Check multiple logged items message");
   is(clipboardLines[1], `myObject: `);
   is(clipboardLines[2], `Object { a: 1 }`);
   is(clipboardLines[3], ` myArray: `);
   is(clipboardLines[4], `Array [ "b", "c" ]`);
-  is(clipboardLines[5], `test.js:5:17`);
+  is(clipboardLines[5], `test.js:5:9`);
 
   info("Check logged error object");
   is(clipboardLines[6], `Error: "error object"`);
   is(clipboardLines[7], `    wrapper ${TEST_URI}test.js:6`);
   is(clipboardLines[8], `    logStuff ${TEST_URI}test.js:10`);
-  is(clipboardLines[9], `test.js:6:17`);
+  is(clipboardLines[9], `test.js:6:9`);
 
   info("Check console.trace message");
-  is(clipboardLines[10], `console.trace() myConsoleTrace test.js:7:17`);
+  is(clipboardLines[10], `console.trace() myConsoleTrace test.js:7:9`);
   is(clipboardLines[11], `    wrapper ${TEST_URI}test.js:7`);
   is(clipboardLines[12], `    logStuff ${TEST_URI}test.js:10`);
 
   info("Check console.info message");
-  is(clipboardLines[13], `world ! test.js:8:17`);
+  is(clipboardLines[13], `world ! test.js:8:9`);
 });
 
 /**
