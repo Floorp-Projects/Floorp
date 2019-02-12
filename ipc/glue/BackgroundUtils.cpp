@@ -711,7 +711,8 @@ nsresult MergeParentLoadInfoForwarder(
     aLoadInfo->MaybeIncreaseTainting(aForwarderArgs.tainting());
   }
 
-  // TODO: merge openerPolicy
+  MOZ_ALWAYS_SUCCEEDS(
+      aLoadInfo->SetOpenerPolicy(aForwarderArgs.openerPolicy()));
 
   MOZ_ALWAYS_SUCCEEDS(aLoadInfo->SetDocumentHasUserInteracted(
       aForwarderArgs.documentHasUserInteracted()));

@@ -9831,8 +9831,6 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
     securityFlags |= nsILoadInfo::SEC_SANDBOXED;
   }
 
-  // TODO: pass openerPolicy through loadInfo?
-
   RefPtr<LoadInfo> loadInfo =
       (contentPolicyType == nsIContentPolicy::TYPE_DOCUMENT)
           ? new LoadInfo(loadingWindow, aLoadState->TriggeringPrincipal(),
@@ -9855,6 +9853,12 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
   bool isTopLevelDoc = mItemType == typeContent &&
                        (contentPolicyType == nsIContentPolicy::TYPE_DOCUMENT ||
                         GetIsMozBrowser());
+
+  if (isTopLevelDoc && GetDocument() && GetDocument()->GetChannel()) {
+    nsCOMPtr<nsILoadInfo> oldLoadInfo =
+        GetDocument()->GetChannel()->GetLoadInfo();
+    loadInfo->SetOpenerPolicy(oldLoadInfo->GetOpenerPolicy());
+  }
 
   OriginAttributes attrs;
 
