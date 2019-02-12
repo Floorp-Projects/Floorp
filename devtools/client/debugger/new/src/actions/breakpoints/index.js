@@ -370,8 +370,34 @@ export function addBreakpointAtLine(line: number) {
 
 export function removeBreakpointsAtLine(sourceId: string, line: number) {
   return ({ dispatch, getState, client, sourceMaps }: ThunkArgs) => {
-    const breakpoints = getBreakpointsForSource(getState(), sourceId, line);
-    return dispatch(removeBreakpoints(breakpoints));
+    const breakpointsAtLine = getBreakpointsForSource(
+      getState(),
+      sourceId,
+      line
+    );
+    return dispatch(removeBreakpoints(breakpointsAtLine));
+  };
+}
+
+export function disableBreakpointsAtLine(sourceId: string, line: number) {
+  return ({ dispatch, getState, client, sourceMaps }: ThunkArgs) => {
+    const breakpointsAtLine = getBreakpointsForSource(
+      getState(),
+      sourceId,
+      line
+    );
+    return dispatch(toggleBreakpoints(true, breakpointsAtLine));
+  };
+}
+
+export function enableBreakpointsAtLine(sourceId: string, line: number) {
+  return ({ dispatch, getState, client, sourceMaps }: ThunkArgs) => {
+    const breakpointsAtLine = getBreakpointsForSource(
+      getState(),
+      sourceId,
+      line
+    );
+    return dispatch(toggleBreakpoints(false, breakpointsAtLine));
   };
 }
 
