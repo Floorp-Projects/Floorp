@@ -1263,26 +1263,14 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetImageLayerPosition(
   return valueList.forget();
 }
 
-void nsComputedDOMStyle::SetValueToPositionCoord(
-    const Position::Coord& aCoord, nsROCSSPrimitiveValue* aValue) {
-  if (!aCoord.mHasPercent) {
-    MOZ_ASSERT(aCoord.mPercent == 0.0f, "Shouldn't have mPercent!");
-    aValue->SetAppUnits(aCoord.mLength);
-  } else if (aCoord.mLength == 0) {
-    aValue->SetPercent(aCoord.mPercent);
-  } else {
-    SetValueToCalc(&aCoord, aValue);
-  }
-}
-
 void nsComputedDOMStyle::SetValueToPosition(const Position& aPosition,
                                             nsDOMCSSValueList* aValueList) {
   RefPtr<nsROCSSPrimitiveValue> valX = new nsROCSSPrimitiveValue;
-  SetValueToPositionCoord(aPosition.mXPosition, valX);
+  SetValueToLengthPercentage(valX, aPosition.horizontal, false);
   aValueList->AppendCSSValue(valX.forget());
 
   RefPtr<nsROCSSPrimitiveValue> valY = new nsROCSSPrimitiveValue;
-  SetValueToPositionCoord(aPosition.mYPosition, valY);
+  SetValueToLengthPercentage(valY, aPosition.vertical, false);
   aValueList->AppendCSSValue(valY.forget());
 }
 
