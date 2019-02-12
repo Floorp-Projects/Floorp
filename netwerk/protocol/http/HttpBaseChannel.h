@@ -296,6 +296,7 @@ class HttpBaseChannel : public nsHashPropertyBag,
   NS_IMETHOD SetFetchCacheMode(uint32_t aFetchCacheMode) override;
   NS_IMETHOD GetTopWindowURI(nsIURI **aTopWindowURI) override;
   NS_IMETHOD SetTopWindowURIIfUnknown(nsIURI *aTopWindowURI) override;
+  NS_IMETHOD SetTopWindowPrincipal(nsIPrincipal *aTopWindowPrincipal) override;
   NS_IMETHOD GetProxyURI(nsIURI **proxyURI) override;
   virtual void SetCorsPreflightParameters(
       const nsTArray<nsCString> &unsafeHeaders) override;
@@ -455,6 +456,7 @@ class HttpBaseChannel : public nsHashPropertyBag,
 
  protected:
   nsresult GetTopWindowURI(nsIURI *aURIBeingLoaded, nsIURI **aTopWindowURI);
+  nsresult GetTopWindowPrincipal(nsIPrincipal **aTopWindowPrincipal);
 
   // Handle notifying listener, removing from loadgroup if request failed.
   void DoNotifyListener();
@@ -550,6 +552,7 @@ class HttpBaseChannel : public nsHashPropertyBag,
   nsCOMPtr<nsIURI> mProxyURI;
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsCOMPtr<nsIURI> mTopWindowURI;
+  nsCOMPtr<nsIPrincipal> mTopWindowPrincipal;
   nsCOMPtr<nsIStreamListener> mListener;
   nsCOMPtr<nsISupports> mListenerContext;
   // An instance of nsHTTPCompressConv
