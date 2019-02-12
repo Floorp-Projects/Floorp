@@ -34,6 +34,7 @@ implementation "org.mozilla.components:feature-sitepermissions:{latest-version}"
   }
 
   val sitePermissionsFeature = SitePermissionsFeature(
+        anchorView = toolbar,
         sessionManager = components.sessionManager,
         fragmentManager = requireFragmentManager(),
         onNeedToRequestPermissions = onNeedToRequestPermissions

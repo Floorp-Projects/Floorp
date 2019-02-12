@@ -25,6 +25,7 @@ dependencies {
     implementation project(':browser-session')
     implementation project(':concept-engine')
     implementation project(':ui-icons')
+    implementation project(':ui-doorhanger')
 
     implementation Dependencies.kotlin_stdlib
     implementation Dependencies.support_constraintlayout

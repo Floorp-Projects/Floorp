@@ -7,6 +7,8 @@ package mozilla.components.ui.doorhanger
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.drawable.Drawable
+import android.support.annotation.VisibleForTesting
+import android.support.annotation.VisibleForTesting.PRIVATE
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -30,7 +32,7 @@ class DoorhangerPrompt(
     private val title: String,
     private val icon: Drawable? = null,
     private val controlGroups: List<ControlGroup> = listOf(),
-    private val buttons: List<Button> = listOf(),
+    @VisibleForTesting(otherwise = PRIVATE) val buttons: List<Button> = listOf(),
     private val onDismiss: (() -> Unit)? = null
 ) {
     /**

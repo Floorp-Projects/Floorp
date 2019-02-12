@@ -6,9 +6,13 @@ package mozilla.components.feature.sitepermissions
 
 import android.content.pm.PackageManager.PERMISSION_DENIED
 import android.content.pm.PackageManager.PERMISSION_GRANTED
+import android.view.View
+import androidx.test.core.app.ApplicationProvider
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.Engine
+import mozilla.components.concept.engine.permission.Permission
+import mozilla.components.concept.engine.permission.Permission.ContentGeoLocation
 import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.support.base.observer.Consumable
 import mozilla.components.support.test.mock
@@ -19,11 +23,14 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.doReturn
 import org.robolectric.RobolectricTestRunner
+import java.security.InvalidParameterException
 
 @RunWith(RobolectricTestRunner::class)
 class SitePermissionsFeatureTest {
 
+    private lateinit var anchorView: View
     private lateinit var mockSessionManager: SessionManager
     private lateinit var sitePermissionFeature: SitePermissionsFeature
     private lateinit var mockOnNeedToRequestPermissions: OnNeedToRequestPermissions
@@ -31,24 +38,26 @@ class SitePermissionsFeatureTest {
     @Before
     fun setup() {
         val engine = Mockito.mock(Engine::class.java)
-
+        anchorView = View(ApplicationProvider.getApplicationContext())
         mockSessionManager = Mockito.spy(SessionManager(engine))
         mockOnNeedToRequestPermissions = mock()
 
         sitePermissionFeature = SitePermissionsFeature(
+            anchorView = anchorView,
             sessionManager = mockSessionManager,
             onNeedToRequestPermissions = mockOnNeedToRequestPermissions
         )
     }
 
     @Test
-    fun `a new onAppPermissionRequested will call mockOnNeedToRequestPermissions`() {
+    fun `a new onAppPermissionRequested will call onNeedToRequestPermissions`() {
 
         val session = getSelectedSession()
 
         var wasCalled = false
 
         sitePermissionFeature = SitePermissionsFeature(
+            anchorView = anchorView,
             sessionManager = mockSessionManager,
             onNeedToRequestPermissions = {
                 wasCalled = true
@@ -62,68 +71,110 @@ class SitePermissionsFeatureTest {
         assertTrue(wasCalled)
     }
 
+    @Test(expected = InvalidParameterException::class)
+    fun `requesting an invalid content permission request will throw an exception`() {
+        val session = getSelectedSession()
+
+        sitePermissionFeature = SitePermissionsFeature(
+            anchorView = anchorView,
+            sessionManager = mockSessionManager,
+            onNeedToRequestPermissions = {
+            })
+
+        sitePermissionFeature.start()
+
+        val mockPermissionRequest: PermissionRequest = mock()
+
+        doReturn(listOf(Permission.Generic("", ""))).`when`(mockPermissionRequest).permissions
+
+        session.contentPermissionRequest = Consumable.from(mockPermissionRequest)
+    }
+
+    @Test
+    fun `after calling stop the feature will not be notified by new incoming permissionRequests`() {
+
+        val session = getSelectedSession()
+
+        var wasCalled = false
+
+        sitePermissionFeature = SitePermissionsFeature(
+            anchorView = anchorView,
+            sessionManager = mockSessionManager,
+            onNeedToRequestPermissions = {
+                wasCalled = true
+            })
+
+        sitePermissionFeature.start()
+
+        val mockPermissionRequest: PermissionRequest = mock()
+        session.appPermissionRequest = Consumable.from(mockPermissionRequest)
+
+        assertTrue(wasCalled)
+
+        wasCalled = false
+
+        sitePermissionFeature.stop()
+        session.appPermissionRequest = Consumable.from(mockPermissionRequest)
+
+        assertFalse(wasCalled)
+    }
+
     @Test
     fun `granting a content permission must call grant and consume contentPermissionRequest`() {
         val session = getSelectedSession()
+        var grantWasCalled = false
 
-        val mockPermissionRequest: PermissionRequest = mock()
+        val permissionRequest: PermissionRequest = object : PermissionRequest {
+            override val uri: String?
+                get() = "http://www.mozilla.org"
+            override val permissions: List<Permission>
+                get() = listOf(ContentGeoLocation())
 
-        sitePermissionFeature.start()
+            override fun grant(permissions: List<Permission>) {
+                grantWasCalled = true
+            }
 
-        session.contentPermissionRequest = Consumable.from(mockPermissionRequest)
+            override fun reject() = Unit
+        }
 
-        sitePermissionFeature.onContentPermissionGranted(session.id, session.url, emptyList())
+        session.contentPermissionRequest = Consumable.from(permissionRequest)
 
-        verify(mockPermissionRequest).grant(emptyList())
+        val prompt = sitePermissionFeature.onContentPermissionRequested(session, permissionRequest)
+
+        val positiveButton = prompt.buttons.find { it.positive }
+        positiveButton?.onClick?.invoke()
+
+        assertTrue(grantWasCalled)
         assertTrue(session.contentPermissionRequest.isConsumed())
     }
 
     @Test
-    fun `granting a content permission with an unknown session will no consume pending contentPermissionRequest`() {
+    fun `rejecting a location content permission must call reject and consume contentPermissionRequest`() {
         val session = getSelectedSession()
-        val mockPermissionRequest: PermissionRequest = mock()
+        var grantWasCalled = false
 
-        sitePermissionFeature.start()
+        val permissionRequest: PermissionRequest = object : PermissionRequest {
+            override val uri: String?
+                get() = "http://www.mozilla.org"
+            override val permissions: List<Permission>
+                get() = listOf(ContentGeoLocation())
 
-        session.contentPermissionRequest = Consumable.from(mockPermissionRequest)
+            override fun reject() {
+                grantWasCalled = true
+            }
 
-        assertFalse(session.contentPermissionRequest.isConsumed())
+            override fun grant(permissions: List<Permission>) = Unit
+        }
 
-        sitePermissionFeature.onContentPermissionGranted("unknown_session", session.url, emptyList())
+        session.contentPermissionRequest = Consumable.from(permissionRequest)
 
-        assertFalse(session.contentPermissionRequest.isConsumed())
-    }
+        val prompt = sitePermissionFeature.onContentPermissionRequested(session, permissionRequest)
 
-    @Test
-    fun `rejecting a content permission must call reject and consume contentPermissionRequest`() {
-        val session = getSelectedSession()
+        val negativeButton = prompt.buttons.find { !it.positive }
+        negativeButton!!.onClick!!.invoke()
 
-        val mockPermissionRequest: PermissionRequest = mock()
-
-        sitePermissionFeature.start()
-
-        session.contentPermissionRequest = Consumable.from(mockPermissionRequest)
-
-        sitePermissionFeature.onContentPermissionDeny(session.id, session.url)
-
-        verify(mockPermissionRequest).reject()
+        assertTrue(grantWasCalled)
         assertTrue(session.contentPermissionRequest.isConsumed())
-    }
-
-    @Test
-    fun `rejecting a content permission with an unknown session will no consume pending contentPermissionRequest`() {
-        val session = getSelectedSession()
-        val mockPermissionRequest: PermissionRequest = mock()
-
-        sitePermissionFeature.start()
-
-        session.contentPermissionRequest = Consumable.from(mockPermissionRequest)
-
-        assertFalse(session.contentPermissionRequest.isConsumed())
-
-        sitePermissionFeature.onContentPermissionDeny("unknown_session", session.url)
-
-        assertFalse(session.contentPermissionRequest.isConsumed())
     }
 
     @Test

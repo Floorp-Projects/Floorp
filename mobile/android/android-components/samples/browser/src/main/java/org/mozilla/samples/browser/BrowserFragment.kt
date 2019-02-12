@@ -117,6 +117,7 @@ class BrowserFragment : Fragment(), BackHandler {
 
         sitePermissionsFeature.set(
             feature = SitePermissionsFeature(
+                anchorView = layout.toolbar,
                 sessionManager = components.sessionManager
             ) { permissions ->
                 requestPermissions(permissions, REQUEST_CODE_APP_PERMISSIONS)
