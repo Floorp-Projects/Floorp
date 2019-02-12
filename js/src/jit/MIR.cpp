@@ -459,33 +459,6 @@ static bool MaybeCallable(CompilerConstraintList* constraints,
   return types->maybeCallable(constraints);
 }
 
-/* static */ const char* AliasSet::Name(size_t flag) {
-  switch (flag) {
-    case 0:
-      return "ObjectFields";
-    case 1:
-      return "Element";
-    case 2:
-      return "UnboxedElement";
-    case 3:
-      return "DynamicSlot";
-    case 4:
-      return "FixedSlot";
-    case 5:
-      return "DOMProperty";
-    case 6:
-      return "FrameArgument";
-    case 7:
-      return "WasmGlobalVar";
-    case 8:
-      return "WasmHeap";
-    case 9:
-      return "TypedArrayLength";
-    default:
-      MOZ_CRASH("Unknown flag");
-  }
-}
-
 void MTest::cacheOperandMightEmulateUndefined(
     CompilerConstraintList* constraints) {
   MOZ_ASSERT(operandMightEmulateUndefined());

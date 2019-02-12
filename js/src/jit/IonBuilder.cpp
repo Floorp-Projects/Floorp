@@ -9076,6 +9076,45 @@ MInstruction* IonBuilder::addArrayBufferByteLength(MDefinition* obj) {
   return ins;
 }
 
+TypedArrayObject* IonBuilder::tryTypedArrayEmbedConstantElements(
+    MDefinition* obj) {
+  JSObject* object = nullptr;
+  if (MConstant* objConst = obj->maybeConstantValue()) {
+    if (objConst->type() == MIRType::Object) {
+      object = &objConst->toObject();
+    }
+  } else if (TemporaryTypeSet* types = obj->resultTypeSet()) {
+    object = types->maybeSingleton();
+  }
+  if (!object || !object->isSingleton()) {
+    return nullptr;
+  }
+
+  TypedArrayObject* tarr = &object->as<TypedArrayObject>();
+
+  // TypedArrays are only singletons when created with a (Shared)ArrayBuffer
+  // and a length greater or equal to |SINGLETON_BYTE_LENGTH|.
+  MOZ_ASSERT(tarr->hasBuffer());
+  MOZ_ASSERT(tarr->byteLength() >= TypedArrayObject::SINGLETON_BYTE_LENGTH ||
+             tarr->hasDetachedBuffer());
+
+  // TypedArrays using an ArrayBuffer don't have nursery-allocated data, see
+  // |ArrayBufferViewObject::init(...)|.
+  MOZ_ASSERT(!tarr->runtimeFromMainThread()->gc.nursery().isInside(
+      tarr->dataPointerEither()));
+
+  // The 'data' pointer of TypedArrayObject can change in rare circumstances
+  // (ArrayBufferObject::setNewData).
+  TypeSet::ObjectKey* tarrKey = TypeSet::ObjectKey::get(tarr);
+  if (tarrKey->unknownProperties()) {
+    return nullptr;
+  }
+  if (!tarr->isSharedMemory()) {
+    tarrKey->watchStateChangeForTypedArrayData(constraints());
+  }
+  return tarr;
+}
+
 void IonBuilder::addTypedArrayLengthAndData(MDefinition* obj,
                                             BoundsChecking checking,
                                             MDefinition** index,
@@ -9083,49 +9122,25 @@ void IonBuilder::addTypedArrayLengthAndData(MDefinition* obj,
                                             MInstruction** elements) {
   MOZ_ASSERT((index != nullptr) == (elements != nullptr));
 
-  JSObject* tarr = nullptr;
-
-  if (MConstant* objConst = obj->maybeConstantValue()) {
-    if (objConst->type() == MIRType::Object) {
-      tarr = &objConst->toObject();
-    }
-  } else if (TemporaryTypeSet* types = obj->resultTypeSet()) {
-    tarr = types->maybeSingleton();
-  }
-
-  if (tarr) {
-    SharedMem<void*> data = tarr->as<TypedArrayObject>().dataPointerEither();
+  if (TypedArrayObject* tarr = tryTypedArrayEmbedConstantElements(obj)) {
     // Bug 979449 - Optimistically embed the elements and use TI to
     //              invalidate if we move them.
-    bool isTenured =
-        !tarr->runtimeFromMainThread()->gc.nursery().isInside(data);
-    if (isTenured && tarr->isSingleton()) {
-      // The 'data' pointer of TypedArrayObject can change in rare circumstances
-      // (ArrayBufferObject::changeContents).
-      TypeSet::ObjectKey* tarrKey = TypeSet::ObjectKey::get(tarr);
-      if (!tarrKey->unknownProperties()) {
-        if (tarr->is<TypedArrayObject>()) {
-          tarrKey->watchStateChangeForTypedArrayData(constraints());
-        }
 
-        obj->setImplicitlyUsedUnchecked();
+    obj->setImplicitlyUsedUnchecked();
 
-        int32_t len =
-            AssertedCast<int32_t>(tarr->as<TypedArrayObject>().length());
-        *length = MConstant::New(alloc(), Int32Value(len));
-        current->add(*length);
+    int32_t len = AssertedCast<int32_t>(tarr->length());
+    *length = MConstant::New(alloc(), Int32Value(len));
+    current->add(*length);
 
-        if (index) {
-          if (checking == DoBoundsCheck) {
-            *index = addBoundsCheck(*index, *length);
-          }
-
-          *elements = MConstantElements::New(alloc(), data);
-          current->add(*elements);
-        }
-        return;
+    if (index) {
+      if (checking == DoBoundsCheck) {
+        *index = addBoundsCheck(*index, *length);
       }
+
+      *elements = MConstantElements::New(alloc(), tarr->dataPointerEither());
+      current->add(*elements);
     }
+    return;
   }
 
   *length = MTypedArrayLength::New(alloc(), obj);
@@ -9139,6 +9154,21 @@ void IonBuilder::addTypedArrayLengthAndData(MDefinition* obj,
     *elements = MTypedArrayElements::New(alloc(), obj);
     current->add(*elements);
   }
+}
+
+MInstruction* IonBuilder::addTypedArrayByteOffset(MDefinition* obj) {
+  MInstruction* byteOffset;
+  if (TypedArrayObject* tarr = tryTypedArrayEmbedConstantElements(obj)) {
+    obj->setImplicitlyUsedUnchecked();
+
+    int32_t offset = AssertedCast<int32_t>(tarr->byteOffset());
+    byteOffset = MConstant::New(alloc(), Int32Value(offset));
+  } else {
+    byteOffset = MTypedArrayByteOffset::New(alloc(), obj);
+  }
+
+  current->add(byteOffset);
+  return byteOffset;
 }
 
 AbortReasonOr<Ok> IonBuilder::jsop_getelem_typed(MDefinition* obj,

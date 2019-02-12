@@ -30,6 +30,7 @@
 #include "mozilla/dom/PaymentRequestChild.h"
 #include "mozilla/dom/PBrowser.h"
 #include "mozilla/dom/WindowProxyHolder.h"
+#include "mozilla/dom/RemoteFrameChild.h"
 #include "mozilla/gfx/CrossProcessPaint.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/ipc/URIUtils.h"
@@ -3176,6 +3177,18 @@ PWindowGlobalChild* TabChild::AllocPWindowGlobalChild(const WindowGlobalInit&) {
 bool TabChild::DeallocPWindowGlobalChild(PWindowGlobalChild* aActor) {
   // This reference was added in WindowGlobalChild::Create.
   static_cast<WindowGlobalChild*>(aActor)->Release();
+  return true;
+}
+
+PRemoteFrameChild* TabChild::AllocPRemoteFrameChild(const nsString&,
+                                                    const nsString&) {
+  MOZ_CRASH("We should never be manually allocating PRemoteFrameChild actors");
+  return nullptr;
+}
+
+bool TabChild::DeallocPRemoteFrameChild(PRemoteFrameChild* aActor) {
+  // This reference was added in RemoteFrameChild::Create.
+  static_cast<RemoteFrameChild*>(aActor)->Release();
   return true;
 }
 

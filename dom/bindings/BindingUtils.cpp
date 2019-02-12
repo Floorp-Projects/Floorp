@@ -1403,6 +1403,12 @@ static bool XrayResolveAttribute(JSContext* cx, JS::Handle<JSObject*> wrapper,
     return true;
   }
 
+  MOZ_ASSERT(attrSpec.isAccessor(),
+             "Bad JSPropertySpec declaration: not an accessor property");
+  MOZ_ASSERT(
+      !attrSpec.isSelfHosted(),
+      "Bad JSPropertySpec declaration: unsupported self-hosted accessor");
+
   cacheOnHolder = true;
 
   // Because of centralization, we need to make sure we fault in the JitInfos as

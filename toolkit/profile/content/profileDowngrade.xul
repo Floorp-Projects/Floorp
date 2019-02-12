@@ -9,8 +9,10 @@
 <!DOCTYPE dialog [
 <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
 %brandDTD;
+#ifdef MOZ_SERVICES_SYNC
 <!ENTITY % syncBrandDTD SYSTEM "chrome://browser/locale/syncBrand.dtd">
 %syncBrandDTD;
+#endif
 <!ENTITY % profileDTD SYSTEM "chrome://mozapps/locale/profile/profileDowngrade.dtd">
 %profileDTD;
 ]>
@@ -32,7 +34,9 @@
     <image id="info" role="presentation"/>
     <vbox flex="1">
       <description id="nosync">&window.nosync;</description>
+#ifdef MOZ_SERVICES_SYNC
       <description id="sync">&window.sync;</description>
+#endif
     </vbox>
   </hbox>
 

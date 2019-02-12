@@ -317,12 +317,16 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     const actor = this.breakpointActorMap.getOrCreateBreakpointActor(location);
     actor.setOptions(options);
 
-    const sourceActor = location.sourceUrl
-      ? this.sources.getSourceActorByURL(location.sourceUrl)
-      : this.sources.getSourceActorById(location.sourceId);
-
-    if (sourceActor) {
-      sourceActor.applyBreakpoint(actor);
+    if (location.sourceUrl) {
+      // There can be multiple source actors for a URL if there are multiple
+      // inline sources on an HTML page.
+      const sourceActors = this.sources.getSourceActorsByURL(location.sourceUrl);
+      sourceActors.map(sourceActor => sourceActor.applyBreakpoint(actor));
+    } else {
+      const sourceActor = this.sources.getSourceActorById(location.sourceId);
+      if (sourceActor) {
+        sourceActor.applyBreakpoint(actor);
+      }
     }
   },
 
