@@ -31,6 +31,10 @@ let gFilterPrefsTask = new DeferredTask(() => filterPrefs(), SEARCH_TIMEOUT_MS);
 let gExistingPrefs = new Map();
 let gDeletedPrefs = new Map();
 
+/**
+ * Also cache several values to improve the performance of common use cases.
+ */
+let gSortedExistingPrefs = null;
 let gSearchInput = null;
 let gPrefsTable = null;
 
@@ -60,12 +64,18 @@ class PrefRow {
       this.hasDefaultValue = false;
       this.hasUserValue = false;
       this.isLocked = false;
-      gExistingPrefs.delete(this.name);
+      if (gExistingPrefs.has(this.name)) {
+        gExistingPrefs.delete(this.name);
+        gSortedExistingPrefs = null;
+      }
       gDeletedPrefs.set(this.name, this);
       return;
     }
 
-    gExistingPrefs.set(this.name, this);
+    if (!gExistingPrefs.has(this.name)) {
+      gExistingPrefs.set(this.name, this);
+      gSortedExistingPrefs = null;
+    }
     gDeletedPrefs.delete(this.name);
 
     try {
@@ -396,11 +406,16 @@ function filterPrefs() {
 
   let searchName = gSearchInput.value.trim();
   gFilterString = searchName.toLowerCase();
-  let prefArray = [...gExistingPrefs.values()];
+
+  if (!gSortedExistingPrefs) {
+    gSortedExistingPrefs = [...gExistingPrefs.values()];
+    gSortedExistingPrefs.sort((a, b) => a.name > b.name);
+  }
+
+  let prefArray = gSortedExistingPrefs;
   if (gFilterString) {
     prefArray = prefArray.filter(pref => pref.matchesFilter);
   }
-  prefArray.sort((a, b) => a.name > b.name);
   if (searchName && !gExistingPrefs.has(searchName)) {
     prefArray.push(new PrefRow(searchName));
   }
