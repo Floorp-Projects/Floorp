@@ -10,8 +10,8 @@
   --accessibility-toolbar-focus-alpha30: rgba(10, 132, 255, 0.3);
   --accessibility-full-length-minus-splitter: calc(100% - 1px);
   --accessibility-horizontal-padding: 5px;
-  --accessibility-horizontal-indent: 14px;
-  --accessibility-properties-item-width: calc(100% - var(--accessibility-horizontal-padding));
+  --accessibility-horizontal-indent: 20px;
+  --accessibility-properties-item-width: calc(100% - var(--accessibility-horizontal-indent));
   --accessibility-arrow-horizontal-padding: 4px;
   --accessibility-tree-row-height: 21px;
   --accessibility-unfocused-tree-focused-node-background: var(--grey-20);
@@ -54,6 +54,10 @@ body {
   from {
     background: var(--theme-contrast-background);
   }
+}
+
+.accessible .tree .node .theme-twisty {
+  width: var(--accessibility-horizontal-indent);
 }
 
 .accessible .tree .node.focused .theme-twisty,
@@ -345,7 +349,7 @@ body {
    be exactly the same as the value of TREE_ROW_HEIGHT constant in
    devtools/client/accessibility/constants.js */
 .accessible .tree .node {
-  padding: 0 var(--accessibility-horizontal-padding);
+  padding: 0 var(--accessibility-horizontal-indent);
   position: relative;
   display: flex;
   height: var(--accessibility-tree-row-height);
@@ -452,6 +456,7 @@ body {
 .accessible .tree .objectBox-node .open-inspector{
   width: 17px;
   cursor: pointer;
+  flex-shrink: 0;
 }
 
 .accessible .tree .objectBox-object,
@@ -476,6 +481,14 @@ body {
   padding-inline-start: var(--accessibility-arrow-horizontal-padding);
   height: var(--accessibility-toolbar-height-tall);
   line-height: var(--accessibility-toolbar-height-tall);
+}
+
+.checks-empty {
+  font-style: italic;
+  padding: 0.5em 20px;
+  -moz-user-select: none;
+  font-size: 12px;
+  white-space: initial;
 }
 
 /* Color Contrast */
