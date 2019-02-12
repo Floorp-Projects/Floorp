@@ -265,6 +265,7 @@ static DataChannelConnection *GetConnectionFromSocket(struct socket *sock) {
 static int threshold_event(struct socket *sock, uint32_t sb_free) {
   DataChannelConnection *connection = GetConnectionFromSocket(sock);
   if (connection) {
+    MutexAutoLock lock(connection->mLock);
     connection->SendDeferredMessages();
   } else {
     LOG(("Can't find connection for socket %p", sock));
@@ -841,7 +842,6 @@ void DataChannelConnection::SctpDtlsInput(const std::string &aTransportId,
     }
   }
   // Pass the data to SCTP
-  MutexAutoLock lock(mLock);
   usrsctp_conninput(static_cast<void *>(this), packet.data(), packet.len(), 0);
 }
 
@@ -2313,7 +2313,7 @@ int DataChannelConnection::ReceiveCallback(struct socket *sock, void *data,
   if (!data) {
     LOG(("ReceiveCallback: SCTP has finished shutting down"));
   } else {
-    mLock.AssertCurrentThreadOwns();
+    MutexAutoLock lock(mLock);
     if (flags & MSG_NOTIFICATION) {
       HandleNotification(static_cast<union sctp_notification *>(data), datalen);
     } else {
