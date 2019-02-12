@@ -315,7 +315,7 @@ vec4 evaluate_color_for_style_in_edge(
         case BORDER_STYLE_DOUBLE: {
             float d = -1.0;
             float partial_width = dot(vPartialWidths.xy, edge_axis);
-            if (partial_width > 1.0) {
+            if (partial_width >= 1.0) {
                 vec2 ref = vec2(
                     dot(vEdgeReference.xy, edge_axis) + partial_width,
                     dot(vEdgeReference.zw, edge_axis) - partial_width
