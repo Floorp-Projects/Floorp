@@ -768,9 +768,9 @@ function findBreakpoint(dbg, url, line) {
     Services.prefs.getBoolPref("devtools.debugger.features.column-breakpoints")
   ) {
     ({ column } = dbg.selectors.getFirstVisibleBreakpointPosition(
-      dbg.store.getState(), 
+      dbg.store.getState(),
       {
-        sourceId: source.id, 
+        sourceId: source.id,
         line
       }
     ));
@@ -1106,7 +1106,7 @@ const selectors = {
   scopeValue: i =>
     `.scopes-list .tree-node:nth-child(${i}) .object-delimiter + *`,
   frame: i => `.frames [role="list"] [role="listitem"]:nth-child(${i})`,
-  frames: `.frames [role="list"] [role="listitem"]`,
+  frames: '.frames [role="list"] [role="listitem"]',
   gutter: i => `.CodeMirror-code *:nth-child(${i}) .CodeMirror-linenumber`,
   // These work for bobth the breakpoint listing and gutter marker
   gutterContextMenu: {

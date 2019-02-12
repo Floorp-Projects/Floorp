@@ -69,7 +69,10 @@ export function makePendingLocationId(location: SourceLocation) {
   return `${sourceUrlString}:${line}:${columnString}`;
 }
 
-export function makeBreakpointLocation(state: State, location: SourceLocation): BreakpointLocation {
+export function makeBreakpointLocation(
+  state: State,
+  location: SourceLocation
+): BreakpointLocation {
   const source = getSource(state, location.sourceId);
   if (!source) {
     throw new Error("no source");
