@@ -57,7 +57,11 @@ body.config-warning {
   border-spacing: 0;
 }
 
-#prefs > tr:nth-child(odd) {
+#prefs > tr.hidden {
+  display: none;
+}
+
+#prefs > tr.odd {
   background-color: var(--in-content-box-background-odd);
 }
 
