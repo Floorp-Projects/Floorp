@@ -288,6 +288,35 @@ class SessionStorageTest {
     }
 
     @Test
+    fun `AutoSave - when no sessions left`() {
+        runBlocking {
+            val session = Session("https://www.firefox.com")
+            val sessionManager = SessionManager(mock())
+            sessionManager.add(session)
+
+            val sessionStorage: SessionStorage = mock()
+
+            val autoSave = AutoSave(
+                    sessionManager = sessionManager,
+                    sessionStorage = sessionStorage,
+                    minimumIntervalMs = 0
+            ).whenSessionsChange()
+
+            assertNull(autoSave.saveJob)
+            verify(sessionStorage, never()).save(any())
+
+            // We didn't specify a default session lambda so this will
+            // leave us without a session
+            sessionManager.remove(session)
+            assertEquals(0, sessionManager.size)
+
+            autoSave.saveJob?.join()
+
+            verify(sessionStorage).save(any())
+        }
+    }
+
+    @Test
     fun `AutoSave - when session gets selected`() {
         runBlocking {
             val sessionManager = SessionManager(mock())

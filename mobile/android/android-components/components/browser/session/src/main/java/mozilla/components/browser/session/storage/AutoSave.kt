@@ -108,9 +108,7 @@ class AutoSave(
 
             try {
                 val snapshot = sessionManager.createSnapshot()
-                if (snapshot != null) {
-                    sessionStorage.save(snapshot)
-                }
+                sessionStorage.save(snapshot)
             } finally {
                 val took = now() - start
                 logger.debug("Saved state to disk [${took}ms]")

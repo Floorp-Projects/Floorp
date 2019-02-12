@@ -300,7 +300,7 @@ class SessionManagerTest {
     @Test
     fun `createSnapshot works when manager has no sessions`() {
         val manager = SessionManager(mock())
-        assertNull(manager.createSnapshot())
+        assertTrue(manager.createSnapshot().isEmpty())
     }
 
     @Test
@@ -309,7 +309,7 @@ class SessionManagerTest {
         val session = Session("http://mozilla.org", true)
         manager.add(session)
 
-        assertNull(manager.createSnapshot())
+        assertTrue(manager.createSnapshot().isEmpty())
     }
 
     @Test
@@ -319,7 +319,7 @@ class SessionManagerTest {
         session.customTabConfig = Mockito.mock(CustomTabConfig::class.java)
         manager.add(session)
 
-        assertNull(manager.createSnapshot())
+        assertTrue(manager.createSnapshot().isEmpty())
     }
 
     @Test
@@ -329,7 +329,7 @@ class SessionManagerTest {
         session.customTabConfig = Mockito.mock(CustomTabConfig::class.java)
         manager.add(session)
 
-        assertNull(manager.createSnapshot())
+        assertTrue(manager.createSnapshot().isEmpty())
     }
 
     @Test(expected = IllegalArgumentException::class)

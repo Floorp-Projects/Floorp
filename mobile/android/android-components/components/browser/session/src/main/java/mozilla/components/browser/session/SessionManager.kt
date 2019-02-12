@@ -37,11 +37,11 @@ class SessionManager(
      * Produces a snapshot of this manager's state, suitable for restoring via [SessionManager.restore].
      * Only regular sessions are included in the snapshot. Private and Custom Tab sessions are omitted.
      *
-     * @return [Snapshot] or null if no sessions are present.
+     * @return [Snapshot] of the current session state.
      */
-    fun createSnapshot(): Snapshot? = synchronized(values) {
+    fun createSnapshot(): Snapshot = synchronized(values) {
         if (values.isEmpty()) {
-            return null
+            return Snapshot.empty()
         }
 
         // Filter out CustomTab and private sessions.
@@ -60,7 +60,7 @@ class SessionManager(
 
         // We might have some sessions (private, custom tab) but none we'd include in the snapshot.
         if (sessionStateTuples.isEmpty()) {
-            return null
+            return Snapshot.empty()
         }
 
         // We need to find out the index of our selected session in the filtered list. If we have a
@@ -530,6 +530,10 @@ class SessionManager(
             val engineSession: EngineSession? = null,
             val engineSessionState: EngineSessionState? = null
         )
+
+        companion object {
+            fun empty() = Snapshot(emptyList(), NO_SELECTION)
+        }
     }
 }
 
