@@ -7,11 +7,17 @@
 #ifndef js_Promise_h
 #define js_Promise_h
 
+#include "mozilla/Attributes.h"
+#include "mozilla/GuardObjects.h"
+
 #include "jspubtd.h"
 #include "js/RootingAPI.h"
 #include "js/TypeDecls.h"
+#include "js/UniquePtr.h"
 
 namespace JS {
+
+class JS_PUBLIC_API AutoDebuggerJobQueueInterruption;
 
 /**
  * Abstract base class for an ECMAScript Job Queue:
@@ -57,6 +63,11 @@ class JS_PUBLIC_API JobQueue {
    * when it should "perform a microtask checkpoint"), and doing so at other
    * times can incompatibly change the semantics of programs that use promises
    * or other microtask-based features.
+   *
+   * This method is called only via AutoDebuggerJobQueueInterruption, used by
+   * the Debugger API implementation to ensure that the debuggee's job queue is
+   * protected from the debugger's own activity. See the comments on
+   * AutoDebuggerJobQueueInterruption.
    */
   virtual void runJobs(JSContext* cx) = 0;
 
@@ -64,6 +75,33 @@ class JS_PUBLIC_API JobQueue {
    * Return true if the job queue is empty, false otherwise.
    */
   virtual bool empty() const = 0;
+
+ protected:
+  friend class AutoDebuggerJobQueueInterruption;
+
+  /**
+   * A saved job queue, represented however the JobQueue implementation pleases.
+   * Use AutoDebuggerJobQueueInterruption rather than trying to construct one of
+   * these directly; see documentation there.
+   *
+   * Destructing an instance of this class should assert that the current queue
+   * is empty, and then restore the queue the instance captured.
+   */
+  class SavedJobQueue {
+   public:
+    virtual ~SavedJobQueue() = default;
+  };
+
+  /**
+   * Capture this JobQueue's current job queue as a SavedJobQueue and return it,
+   * leaving the JobQueue's job queue empty. Destroying the returned object
+   * should assert that this JobQueue's current job queue is empty, and restore
+   * the original queue.
+   *
+   * On OOM, this should call JS_ReportOutOfMemory on the given JSContext,
+   * and return a null UniquePtr.
+   */
+  virtual js::UniquePtr<SavedJobQueue> saveJobQueue(JSContext*) = 0;
 };
 
 /**
@@ -73,6 +111,151 @@ class JS_PUBLIC_API JobQueue {
  * responsibility to clean it up after the runtime is destroyed.
  */
 extern JS_PUBLIC_API void SetJobQueue(JSContext* cx, JobQueue* queue);
+
+/**
+ * [SMDOC] Protecting the debuggee's job/microtask queue from debugger activity.
+ *
+ * When the JavaScript debugger interrupts the execution of some debuggee code
+ * (for a breakpoint, for example), the debuggee's execution must be paused
+ * while the developer takes time to look at it. During this interruption, other
+ * tabs should remain active and usable. If the debuggee shares a main thread
+ * with non-debuggee tabs, that means that the thread will have to process
+ * non-debuggee HTML tasks and microtasks as usual, even as the debuggee's are
+ * on hold until the debugger lets it continue execution. (Letting debuggee
+ * microtasks run during the interruption would mean that, from the debuggee's
+ * point of view, their side effects would take place wherever the breakpoint
+ * was set - in general, not a place other code should ever run, and a violation
+ * of the run-to-completion rule.)
+ *
+ * This means that, even though the timing and ordering of microtasks is
+ * carefully specified by the standard - and important to preserve for
+ * compatibility and predictability - debugger use may, correctly, have the
+ * effect of reordering microtasks. During the interruption, microtasks enqueued
+ * by non-debuggee tabs must run immediately alongside their HTML tasks as
+ * usual, whereas any debuggee microtasks that were in the queue when the
+ * interruption began must wait for the debuggee to be continued - and thus run
+ * after microtasks enqueued after they were.
+ *
+ * Fortunately, this reordering is visible olny at the global level: when
+ * implemented correctly, it is not detectable by an individual debuggee. Note
+ * that a debuggee should generally be a complete unit of similar-origin related
+ * browsing contexts. Since non-debuggee activity falls outside that unit, it
+ * should never be visible to the debuggee (except via mechanisms that are
+ * already asynchronous, like events), so the debuggee should be unable to
+ * detect non-debuggee microtasks running when they normally would not. As long
+ * as behavior *visible to the debuggee* is unaffected by the interruption, we
+ * have respected the spirit of the rule.
+ *
+ * Of course, even as we accept the general principle that interrupting the
+ * debuggee should have as little detectable effect as possible, we still permit
+ * the developer to do things like evaluate expressions at the console that have
+ * arbitrary effects on the debuggee's state—effects that could never occur
+ * naturally at that point in the program. But since these are explicitly
+ * requested by the developer, who presumably knows what they're doing, we
+ * support this as best we can. If the developer evaluates an expression in the
+ * console that resolves a promise, it seems most natural for the promise's
+ * reaction microtasks to run immediately, within the interruption. This is an
+ * 'unnatural' time for the microtasks to run, but no more unnatural than the
+ * evaluation that triggered them.
+ *
+ * So the overall behavior we need is as follows:
+ *
+ * - When the debugger interrupts a debuggee, the debuggee's microtask queue
+ *   must be saved.
+ *
+ * - When debuggee execution resumes, the debuggee's microtask queue must be
+ *   restored exactly as it was when the interruption occurred.
+ *
+ * - Non-debuggee task and microtask execution must take place normally during
+ *   the interruption.
+ *
+ * Since each HTML task begins with an empty microtask queue, and it should not
+ * be possible for a task to mix debuggee and non-debuggee code, interrupting a
+ * debuggee should always find a microtask queue containing exclusively debuggee
+ * microtasks, if any. So saving and restoring the microtask queue should affect
+ * only the debuggee, not any non-debuggee content.
+ *
+ * AutoDebuggerJobQueueInterruption
+ * --------------------------------
+ *
+ * AutoDebuggerJobQueueInterruption is an RAII class, meant for use by the
+ * Debugger API implementation, that takes care of saving and restoring the
+ * queue.
+ *
+ * Constructing and initializing an instance of AutoDebuggerJobQueueInterruption
+ * sets aside the given JSContext's job queue, leaving the JSContext's queue
+ * empty. When the AutoDebuggerJobQueueInterruption instance is destroyed, it
+ * asserts that the JSContext's current job queue (holding jobs enqueued while
+ * the AutoDebuggerJobQueueInterruption was alive) is empty, and restores the
+ * saved queue to the JSContext.
+ *
+ * Since the Debugger API's behavior is up to us, we can specify that Debugger
+ * hooks begin execution with an empty job queue, and that we drain the queue
+ * after each hook function has run. This drain will be visible to debugger
+ * hooks, and makes hook calls resemble HTML tasks, with their own automatic
+ * microtask checkpoint. But, the drain will be invisible to the debuggee, as
+ * its queue is preserved across the hook invocation.
+ *
+ * To protect the debuggee's job queue, Debugger takes care to invoke callback
+ * functions only within the scope of an AutoDebuggerJobQueueInterruption
+ * instance.
+ *
+ * Why not let the hook functions themselves take care of this?
+ * ------------------------------------------------------------
+ *
+ * Certainly, we could leave responsibility for saving and restoring the job
+ * queue to the Debugger hook functions themselves.
+ *
+ * In fact, early versions of this change tried making the devtools server save
+ * and restore the queue explicitly, but because hooks are set and changed in
+ * numerous places, it was hard to be confident that every case had been
+ * covered, and it seemed that future changes could easily introduce new holes.
+ *
+ * Later versions of this change modified the accessor properties on the
+ * Debugger objects' prototypes to automatically protect the job queue when
+ * calling hooks, but the effect was essentially a monkeypatch applied to an API
+ * we defined and control, which doesn't make sense.
+ *
+ * In the end, since promises have become such a pervasive part of JavaScript
+ * programming, almost any imaginable use of Debugger would need to provide some
+ * kind of protection for the debuggee's job queue, so it makes sense to simply
+ * handle it once, carefully, in the implementation of Debugger itself.
+ */
+class MOZ_RAII JS_PUBLIC_API AutoDebuggerJobQueueInterruption {
+ public:
+  explicit AutoDebuggerJobQueueInterruption(
+      MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM);
+  ~AutoDebuggerJobQueueInterruption();
+
+  bool init(JSContext* cx);
+  bool initialized() const { return !!saved; }
+
+  /**
+   * Drain the job queue. (In HTML terminology, perform a microtask checkpoint.)
+   *
+   * To make Debugger hook calls more like HTML tasks or ECMAScript jobs,
+   * Debugger promises that each hook begins execution with a clean microtask
+   * queue, and that a microtask checkpoint (queue drain) takes place after each
+   * hook returns, successfully or otherwise.
+   *
+   * To ensure these debugger-introduced microtask checkpoints serve only the
+   * hook's microtasks, and never affect the debuggee's, the Debugger API
+   * implementation uses only this method to perform the checkpoints, thereby
+   * statically ensuring that an AutoDebuggerJobQueueInterruption is in scope to
+   * protect the debuggee.
+   *
+   * SavedJobQueue implementations are required to assert that the queue is
+   * empty before restoring the debuggee's queue. If the Debugger API ever fails
+   * to perform a microtask checkpoint after calling a hook, that assertion will
+   * fail, catching the mistake.
+   */
+  void runJobs();
+
+ private:
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER;
+  JSContext* cx;
+  js::UniquePtr<JobQueue::SavedJobQueue> saved;
+};
 
 enum class PromiseRejectionHandlingState { Unhandled, Handled };
 
