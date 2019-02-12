@@ -712,6 +712,22 @@ class PresShell final : public nsIPresShell,
     bool MaybeDiscardOrDelayKeyboardEvent(WidgetGUIEvent* aGUIEvent);
 
     /**
+     * MaybeDiscardOrDelayMouseEvent() may discard or put aGUIEvent into the
+     * delayed event queue if it's a mouse event and if we should do so.
+     * If aGUIEvent is not a mouse event, this does nothing.
+     * If there is suppressed event listener like debugger of devtools, this
+     * notifies it of the event after discard or put it into the delayed
+     * event queue.
+     *
+     * @param aFrameToHandleEvent       The frame to handle aGUIEvent.
+     * @param aGUIEvent                 The handling event.
+     * @return                          true if this method discard the event
+     *                                  or put it into the delayed event queue.
+     */
+    bool MaybeDiscardOrDelayMouseEvent(nsIFrame* aFrameToHandleEvent,
+                                       WidgetGUIEvent* aGUIEvent);
+
+    /**
      * MaybeFlushThrottledStyles() tries to flush pending animation.  If it's
      * flushed and then aFrameForPresShell is destroyed, returns new frame
      * which contains mPresShell.

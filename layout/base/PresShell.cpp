@@ -6617,51 +6617,13 @@ nsresult PresShell::EventHandler::HandleEvent(nsIFrame* aFrame,
       }
     }
 
-    // Suppress mouse event if it's being targeted at an element inside
-    // a document which needs events suppressed
-    if (aGUIEvent->mClass == eMouseEventClass &&
-        frameToHandleEvent->PresContext()
-            ->Document()
-            ->EventHandlingSuppressed()) {
-      if (aGUIEvent->mMessage == eMouseDown) {
-        mPresShell->mNoDelayedMouseEvents = true;
-      } else if (!mPresShell->mNoDelayedMouseEvents &&
-                 (aGUIEvent->mMessage == eMouseUp ||
-                  // contextmenu is triggered after right mouseup on Windows and
-                  // right mousedown on other platforms.
-                  aGUIEvent->mMessage == eContextMenu)) {
-        auto event = MakeUnique<DelayedMouseEvent>(aGUIEvent->AsMouseEvent());
-        PushDelayedEventIntoQueue(std::move(event));
-      }
-
-      // If there is a suppressed event listener associated with the document,
-      // notify it about the suppressed mouse event. This allows devtools
-      // features to continue receiving mouse events even when the devtools
-      // debugger has paused execution in a page.
-      RefPtr<EventListener> suppressedListener =
-          frameToHandleEvent->PresContext()
-              ->Document()
-              ->GetSuppressedEventListener();
-      if (suppressedListener && aGUIEvent->AsMouseEvent()->mReason !=
-                                    WidgetMouseEvent::eSynthesized) {
-        nsCOMPtr<nsIContent> targetContent;
-        frameToHandleEvent->GetContentForEvent(aGUIEvent,
-                                               getter_AddRefs(targetContent));
-        if (targetContent) {
-          aGUIEvent->mTarget = targetContent;
-        }
-
-        nsCOMPtr<EventTarget> et = aGUIEvent->mTarget;
-        RefPtr<Event> event = EventDispatcher::CreateEvent(
-            et, frameToHandleEvent->PresContext(), aGUIEvent, EmptyString());
-
-        suppressedListener->HandleEvent(*event);
-      }
-
+    if (NS_WARN_IF(!frameToHandleEvent)) {
       return NS_OK;
     }
 
-    if (NS_WARN_IF(!frameToHandleEvent)) {
+    // Suppress mouse event if it's being targeted at an element inside
+    // a document which needs events suppressed
+    if (MaybeDiscardOrDelayMouseEvent(frameToHandleEvent, aGUIEvent)) {
       return NS_OK;
     }
 
@@ -7257,6 +7219,61 @@ bool PresShell::EventHandler::MaybeDiscardOrDelayKeyboardEvent(
     PushDelayedEventIntoQueue(std::move(delayedKeyEvent));
   }
   aGUIEvent->mFlags.mIsSuppressedOrDelayed = true;
+  return true;
+}
+
+bool PresShell::EventHandler::MaybeDiscardOrDelayMouseEvent(
+    nsIFrame* aFrameToHandleEvent, WidgetGUIEvent* aGUIEvent) {
+  MOZ_ASSERT(aFrameToHandleEvent);
+  MOZ_ASSERT(aGUIEvent);
+
+  if (aGUIEvent->mClass != eMouseEventClass) {
+    return false;
+  }
+
+  if (!aFrameToHandleEvent->PresContext()
+           ->Document()
+           ->EventHandlingSuppressed()) {
+    return false;
+  }
+
+  if (aGUIEvent->mMessage == eMouseDown) {
+    mPresShell->mNoDelayedMouseEvents = true;
+  } else if (!mPresShell->mNoDelayedMouseEvents &&
+             (aGUIEvent->mMessage == eMouseUp ||
+              // contextmenu is triggered after right mouseup on Windows and
+              // right mousedown on other platforms.
+              aGUIEvent->mMessage == eContextMenu)) {
+    UniquePtr<DelayedMouseEvent> delayedMouseEvent =
+        MakeUnique<DelayedMouseEvent>(aGUIEvent->AsMouseEvent());
+    PushDelayedEventIntoQueue(std::move(delayedMouseEvent));
+  }
+
+  // If there is a suppressed event listener associated with the document,
+  // notify it about the suppressed mouse event. This allows devtools
+  // features to continue receiving mouse events even when the devtools
+  // debugger has paused execution in a page.
+  RefPtr<EventListener> suppressedListener = aFrameToHandleEvent->PresContext()
+                                                 ->Document()
+                                                 ->GetSuppressedEventListener();
+  if (!suppressedListener ||
+      aGUIEvent->AsMouseEvent()->mReason == WidgetMouseEvent::eSynthesized) {
+    return true;
+  }
+
+  nsCOMPtr<nsIContent> targetContent;
+  aFrameToHandleEvent->GetContentForEvent(aGUIEvent,
+                                          getter_AddRefs(targetContent));
+  if (targetContent) {
+    aGUIEvent->mTarget = targetContent;
+  }
+
+  nsCOMPtr<EventTarget> eventTarget = aGUIEvent->mTarget;
+  RefPtr<Event> event = EventDispatcher::CreateEvent(
+      eventTarget, aFrameToHandleEvent->PresContext(), aGUIEvent,
+      EmptyString());
+
+  suppressedListener->HandleEvent(*event);
   return true;
 }
 

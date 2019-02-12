@@ -260,7 +260,8 @@ class UrlbarView {
     this.panel.setAttribute("width", width);
 
     // Subtract two pixels for left and right borders on the panel.
-    this._mainContainer.style.maxWidth = (width - 2) + "px";
+    let contentWidth = width - 2;
+    this._mainContainer.style.maxWidth = contentWidth + "px";
 
     // Keep the popup items' site icons aligned with the input's identity
     // icon if it's not too far from the edge of the window.  We define
@@ -289,10 +290,12 @@ class UrlbarView {
 
       this.panel.style.setProperty("--item-padding-start", Math.round(start) + "px");
       this.panel.style.setProperty("--item-padding-end", Math.round(endOffset) + "px");
+      contentWidth -= start + endOffset;
     } else {
       this.panel.style.removeProperty("--item-padding-start");
       this.panel.style.removeProperty("--item-padding-end");
     }
+    this.panel.style.setProperty("--item-content-width", Math.round(contentWidth) + "px");
   }
 
   _createRow(resultIndex) {
