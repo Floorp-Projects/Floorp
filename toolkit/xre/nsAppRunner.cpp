@@ -2076,7 +2076,8 @@ static nsresult LockProfile(nsINativeAppSupport* aNative, nsIFile* aRootDir,
   return ProfileLockedDialog(aRootDir, aLocalDir, unlocker, aNative, aResult);
 }
 
-// Pick a profile. We need to end up with a profile lock.
+// Pick a profile. We need to end up with a profile root dir, local dir and
+// potentially an nsIToolkitProfile instance.
 //
 // 1) check for --profile <path>
 // 2) check for -P <name>
@@ -2084,14 +2085,13 @@ static nsresult LockProfile(nsINativeAppSupport* aNative, nsIFile* aRootDir,
 // 4) use the default profile, if there is one
 // 5) if there are *no* profiles, set up profile-migration
 // 6) display the profile-manager UI
-static nsresult SelectProfile(nsIProfileLock** aResult,
-                              nsToolkitProfileService* aProfileSvc,
-                              nsINativeAppSupport* aNative,
-                              nsACString* aProfileName) {
+static nsresult SelectProfile(nsToolkitProfileService* aProfileSvc,
+                              nsINativeAppSupport* aNative, nsIFile** aRootDir,
+                              nsIFile** aLocalDir,
+                              nsIToolkitProfile** aProfile) {
   StartupTimeline::Record(StartupTimeline::SELECT_PROFILE);
 
   nsresult rv;
-  *aResult = nullptr;
 
   if (EnvHasValue("MOZ_RESET_PROFILE_RESTART")) {
     gDoProfileReset = true;
@@ -2132,14 +2132,10 @@ static nsresult SelectProfile(nsIProfileLock** aResult,
     gDoMigration = true;
   }
 
-  nsCOMPtr<nsIFile> rootDir;
-  nsCOMPtr<nsIFile> localDir;
-  nsCOMPtr<nsIToolkitProfile> profile;
   // Ask the profile manager to select the profile directories to use.
   bool didCreate = false;
-  rv = aProfileSvc->SelectStartupProfile(
-      &gArgc, gArgv, gDoProfileReset, getter_AddRefs(rootDir),
-      getter_AddRefs(localDir), getter_AddRefs(profile), &didCreate);
+  rv = aProfileSvc->SelectStartupProfile(&gArgc, gArgv, gDoProfileReset,
+      aRootDir, aLocalDir, aProfile, &didCreate);
 
   if (rv == NS_ERROR_SHOW_PROFILE_MANAGER) {
     return ShowProfileManager(aProfileSvc, aNative);
@@ -2154,7 +2150,7 @@ static nsresult SelectProfile(nsIProfileLock** aResult,
     gDoMigration = false;
   }
 
-  if (gDoProfileReset && !profile) {
+  if (gDoProfileReset && !*aProfile) {
     NS_WARNING("Profile reset is only supported for named profiles.");
     return NS_ERROR_ABORT;
   }
@@ -2162,48 +2158,9 @@ static nsresult SelectProfile(nsIProfileLock** aResult,
   // No profile could be found. This generally shouldn't happen, a new profile
   // should be created in all cases except for profile reset which is covered
   // above, but just in case...
-  if (!rootDir) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // We always want to lock the profile even if we're actually going to reset
-  // it later.
-  nsCOMPtr<nsIProfileLock> tempLock;
-  rv = LockProfile(aNative, rootDir, localDir, profile, getter_AddRefs(tempLock));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (gDoProfileReset) {
-    // Unlock the old profile
-    tempLock->Unlock();
-
-    // If we're resetting a profile, create a new one and use it to startup.
-    gResetOldProfile = profile;
-    rv = aProfileSvc->CreateResetProfile(getter_AddRefs(profile));
-    if (NS_SUCCEEDED(rv)) {
-      rv = profile->GetRootDir(getter_AddRefs(rootDir));
-      NS_ENSURE_SUCCESS(rv, rv);
-      SaveFileToEnv("XRE_PROFILE_PATH", rootDir);
-
-      rv = profile->GetLocalDir(getter_AddRefs(localDir));
-      NS_ENSURE_SUCCESS(rv, rv);
-      SaveFileToEnv("XRE_PROFILE_LOCAL_PATH", localDir);
-
-      // Lock the new profile
-      rv = LockProfile(aNative, rootDir, localDir, profile, aResult);
-      NS_ENSURE_SUCCESS(rv, rv);
-    } else {
-      NS_WARNING("Profile reset failed.");
-      return NS_ERROR_ABORT;
-    }
-  } else {
-    tempLock.forget(aResult);
-  }
-
-  if (aProfileName && profile) {
-    rv = profile->GetName(*aProfileName);
-    if (NS_FAILED(rv)) {
-      aProfileName->Truncate(0);
-    }
+  if (!*aRootDir) {
+    NS_WARNING("Failed to select or create profile.");
+    return NS_ERROR_ABORT;
   }
 
   return NS_OK;
@@ -4172,8 +4129,9 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
     return 1;
   }
 
-  rv = SelectProfile(getter_AddRefs(mProfileLock), mProfileSvc, mNativeApp,
-                     &mProfileName);
+  nsCOMPtr<nsIToolkitProfile> profile;
+  rv = SelectProfile(mProfileSvc, mNativeApp, getter_AddRefs(mProfD),
+                     getter_AddRefs(mProfLD), getter_AddRefs(profile));
   if (rv == NS_ERROR_LAUNCHED_CHILD_PROCESS || rv == NS_ERROR_ABORT) {
     *aExitFlag = true;
     return 0;
@@ -4184,13 +4142,57 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
     ProfileMissingDialog(mNativeApp);
     return 1;
   }
+
+  // We always want to lock the profile even if we're actually going to reset
+  // it later.
+  rv = LockProfile(mNativeApp, mProfD, mProfLD, profile,
+      getter_AddRefs(mProfileLock));
+  if (rv == NS_ERROR_LAUNCHED_CHILD_PROCESS || rv == NS_ERROR_ABORT) {
+    *aExitFlag = true;
+    return 0;
+  } else if (NS_FAILED(rv)) {
+    return 1;
+  }
+
+  if (gDoProfileReset) {
+    // Unlock the source profile.
+    mProfileLock->Unlock();
+
+    // If we're resetting a profile, create a new one and use it to startup.
+    gResetOldProfile = profile;
+    rv = mProfileSvc->CreateResetProfile(getter_AddRefs(profile));
+    if (NS_SUCCEEDED(rv)) {
+      rv = profile->GetRootDir(getter_AddRefs(mProfD));
+      NS_ENSURE_SUCCESS(rv, 1);
+      SaveFileToEnv("XRE_PROFILE_PATH", mProfD);
+
+      rv = profile->GetLocalDir(getter_AddRefs(mProfLD));
+      NS_ENSURE_SUCCESS(rv, 1);
+      SaveFileToEnv("XRE_PROFILE_LOCAL_PATH", mProfLD);
+
+      // Lock the new profile
+      rv = LockProfile(mNativeApp, mProfD, mProfLD, profile,
+                       getter_AddRefs(mProfileLock));
+      if (rv == NS_ERROR_LAUNCHED_CHILD_PROCESS || rv == NS_ERROR_ABORT) {
+        *aExitFlag = true;
+        return 0;
+      } else if (NS_FAILED(rv)) {
+        return 1;
+      }
+    } else {
+      NS_WARNING("Profile reset failed.");
+      return 1;
+    }
+  }
+
+  if (profile) {
+    rv = profile->GetName(mProfileName);
+    if (NS_FAILED(rv)) {
+      mProfileName.Truncate(0);
+    }
+  }
+
   gProfileLock = mProfileLock;
-
-  rv = mProfileLock->GetDirectory(getter_AddRefs(mProfD));
-  NS_ENSURE_SUCCESS(rv, 1);
-
-  rv = mProfileLock->GetLocalDirectory(getter_AddRefs(mProfLD));
-  NS_ENSURE_SUCCESS(rv, 1);
 
   nsAutoCString version;
   BuildVersion(version);
