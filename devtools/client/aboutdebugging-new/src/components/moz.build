@@ -13,6 +13,8 @@ DevToolsModules(
     'App.css',
     'App.js',
     'ConnectionPromptSetting.js',
+    'ProfilerDialog.css',
+    'ProfilerDialog.js',
     'RuntimeInfo.js',
     'RuntimePage.css',
     'RuntimePage.js',

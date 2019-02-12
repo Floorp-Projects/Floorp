@@ -174,7 +174,6 @@ impl<'a> FrameBuildingState<'a> {
 #[derive(Debug)]
 pub struct PictureContext {
     pub pic_index: PictureIndex,
-    pub pipeline_id: PipelineId,
     pub apply_local_clip_rect: bool,
     pub allow_subpixel_aa: bool,
     pub is_passthrough: bool,
@@ -189,7 +188,6 @@ pub struct PictureContext {
 /// Mutable state of a picture that gets modified when
 /// the children are processed.
 pub struct PictureState {
-    pub is_cacheable: bool,
     pub map_local_to_pic: SpaceMapper<LayoutPixel, PicturePixel>,
     pub map_pic_to_world: SpaceMapper<PicturePixel, WorldPixel>,
     pub map_pic_to_raster: SpaceMapper<PicturePixel, RasterPixel>,
