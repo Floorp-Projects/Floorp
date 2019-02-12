@@ -31,11 +31,6 @@ let gFilterPrefsTask = new DeferredTask(() => filterPrefs(), SEARCH_TIMEOUT_MS);
 let gExistingPrefs = new Map();
 let gDeletedPrefs = new Map();
 
-/**
- * Maps each row element currently in the table to its PrefRow object.
- */
-let gElementToPrefMap = new WeakMap();
-
 let gSearchInput = null;
 let gPrefsTable = null;
 
@@ -120,7 +115,7 @@ class PrefRow {
     }
 
     this._element = document.createElement("tr");
-    gElementToPrefMap.set(this._element, this);
+    this._element._pref = this;
 
     let nameCell = document.createElement("th");
     this._element.append(
@@ -367,7 +362,7 @@ function loadPrefs() {
     if (event.target.localName != "button") {
       return;
     }
-    let pref = gElementToPrefMap.get(event.target.closest("tr"));
+    let pref = event.target.closest("tr")._pref;
     let button = event.target.closest("button");
     if (button.classList.contains("button-add")) {
       Preferences.set(pref.name, pref.value);
