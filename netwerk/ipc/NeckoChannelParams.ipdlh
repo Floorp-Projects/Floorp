@@ -22,6 +22,7 @@ using ArrayOfStringPairs from "mozilla/net/PHttpChannelParams.h";
 using struct nsHttpAtom from "nsHttp.h";
 using class mozilla::net::nsHttpResponseHead from "nsHttpResponseHead.h";
 using class mozilla::TimeStamp from "mozilla/TimeStamp.h";
+using nsILoadInfo::CrossOriginOpenerPolicy from "mozilla/net/NeckoMessageUtils.h";
 
 namespace mozilla {
 namespace net {
@@ -111,6 +112,7 @@ struct LoadInfoArgs
   bool                        documentHasUserInteracted;
   bool                        documentHasLoaded;
   bool                        isFromProcessingFrameAttributes;
+  CrossOriginOpenerPolicy     openerPolicy;
 };
 
 /**
@@ -150,6 +152,8 @@ struct ParentLoadInfoForwarderArgs
 
   bool documentHasUserInteracted;
   bool documentHasLoaded;
+
+  CrossOriginOpenerPolicy openerPolicy;
 
   // IMPORTANT: when you add new properites here you must also update
   // LoadInfoToParentLoadInfoForwarder and MergeParentLoadInfoForwarder

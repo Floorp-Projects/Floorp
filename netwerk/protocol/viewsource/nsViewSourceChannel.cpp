@@ -1009,6 +1009,16 @@ nsViewSourceChannel::SwitchProcessTo(mozilla::dom::Promise *aTabParent,
 }
 
 NS_IMETHODIMP
+nsViewSourceChannel::HasCrossOriginOpenerPolicyMismatch(bool *aMismatch) {
+  MOZ_ASSERT(aMismatch);
+  if (!aMismatch) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  *aMismatch = false;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsViewSourceChannel::UpgradeToSecure() {
   return !mHttpChannel ? NS_ERROR_NULL_POINTER
                        : mHttpChannel->UpgradeToSecure();

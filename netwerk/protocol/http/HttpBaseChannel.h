@@ -221,6 +221,7 @@ class HttpBaseChannel : public nsHashPropertyBag,
   NS_IMETHOD RedirectTo(nsIURI *newURI) override;
   NS_IMETHOD SwitchProcessTo(mozilla::dom::Promise *aTabParent,
                              uint64_t aIdentifier) override;
+  NS_IMETHOD HasCrossOriginOpenerPolicyMismatch(bool *aMismatch) override;
   NS_IMETHOD UpgradeToSecure() override;
   NS_IMETHOD GetRequestContextID(uint64_t *aRCID) override;
   NS_IMETHOD GetTransferSize(uint64_t *aTransferSize) override;
