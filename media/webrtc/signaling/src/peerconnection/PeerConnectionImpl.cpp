@@ -2842,8 +2842,8 @@ RefPtr<RTCStatsQueryPromise> PeerConnectionImpl::ExecuteStatsQuery_s(
             s.mPacketsReceived.Construct(packetsReceived);
             s.mBytesReceived.Construct(bytesReceived);
             s.mPacketsLost.Construct(packetsLost);
-            if (rtt > 0) {
-              s.mRoundTripTime.Construct(rtt);
+            if (rtt > 0) { // RTT is not reported when it is zero
+              s.mRoundTripTime.Construct(static_cast<double>(rtt) / 1000);
             }
             query->report->mInboundRTPStreamStats.Value().AppendElement(
                 s, fallible);
