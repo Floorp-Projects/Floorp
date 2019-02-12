@@ -5,6 +5,7 @@
 interface Principal;
 interface URI;
 interface InputStream;
+interface ReferrerInfo;
 
 /**
  * This dictionary holds load arguments for docshell loads.
@@ -23,17 +24,10 @@ dictionary LoadURIOptions {
    long loadFlags = 0;
 
   /**
-   * The referring URI.  If this argument is null, then the referring
-   * URI will be inferred internally.
+   * The referring info of the load.  If this argument is null, then the
+   * referrer URI and referrer policy will be inferred internally.
    */
-  URI? referrerURI = null;
-
-  /**
-   * Referrer Policy for the load, defaults to REFERRER_POLICY_UNSET.
-   * Alternatively use one of REFERRER_POLICY_* constants from
-   * nsIHttpChannel.
-   */
-  long referrerPolicy = 0;
+   ReferrerInfo? referrerInfo = null;
 
   /**
    * If the URI to be loaded corresponds to a HTTP request, then this stream is
