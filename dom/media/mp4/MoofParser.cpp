@@ -273,7 +273,7 @@ void MoofParser::ParseTrak(Box& aBox) {
     } else if (box.IsType("mdia")) {
       if (mTrackParseMode.is<ParseAllTracks>() ||
           tkhd.mTrackId == mTrackParseMode.as<uint32_t>()) {
-        ParseMdia(box, tkhd);
+        ParseMdia(box);
       }
     } else if (box.IsType("edts") &&
                (mTrackParseMode.is<ParseAllTracks>() ||
@@ -284,7 +284,7 @@ void MoofParser::ParseTrak(Box& aBox) {
   LOG_DEBUG(Trak, "Done.");
 }
 
-void MoofParser::ParseMdia(Box& aBox, Tkhd& aTkhd) {
+void MoofParser::ParseMdia(Box& aBox) {
   LOG_DEBUG(Mdia, "Starting.");
   for (Box box = aBox.FirstChild(); box.IsAvailable(); box = box.Next()) {
     if (box.IsType("mdhd")) {
