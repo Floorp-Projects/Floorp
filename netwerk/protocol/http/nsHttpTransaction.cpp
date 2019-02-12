@@ -1159,7 +1159,21 @@ void nsHttpTransaction::Close(nsresult reason) {
     }
 
     // honor the sticky connection flag...
-    if (mCaps & NS_HTTP_STICKY_CONNECTION) relConn = false;
+    if (mCaps & NS_HTTP_STICKY_CONNECTION) {
+      LOG(("  keeping the connection because of STICKY_CONNECTION flag"));
+      relConn = false;
+    }
+
+    // if the proxy connection has failed, we want the connection be held
+    // to allow the upper layers (think nsHttpChannel) to close it when
+    // the failure is unrecoverable.
+    // we can't just close it here, because mProxyConnectFailed is to a general
+    // flag and is also set for e.g. 407 which doesn't mean to kill the
+    // connection, specifically when connection oriented auth may be involved.
+    if (mProxyConnectFailed) {
+      LOG(("  keeping the connection because of mProxyConnectFailed"));
+      relConn = false;
+    }
   }
 
   // mTimings.responseEnd is normally recorded based on the end of a
