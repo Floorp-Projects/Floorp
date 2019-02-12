@@ -134,6 +134,10 @@ task docs(type: org.jetbrains.dokka.gradle.DokkaAndroidTask, overwrite: true) {
         }
     }
 
+    externalDocumentationLink {
+        url = new URL("https://mozilla.github.io/geckoview/javadoc/mozilla-central/package-list")
+    }
+
     sourceDirs = files(subprojects.findAll {
         !it.name.startsWith("samples")
     }.collect { p ->
