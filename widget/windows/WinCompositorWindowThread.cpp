@@ -10,6 +10,10 @@
 #include "mozilla/StaticPtr.h"
 #include "mtransport/runnable_utils.h"
 
+#if WINVER < 0x0602
+#define WS_EX_NOREDIRECTIONBITMAP 0x00200000L
+#endif
+
 namespace mozilla {
 namespace widget {
 
@@ -148,7 +152,8 @@ void InitializeWindowClass() {
             0, GetModuleHandle(nullptr), 0);
 
         compositorWnd = ::CreateWindowEx(
-            WS_EX_NOPARENTNOTIFY, kClassNameCompositor, nullptr,
+            WS_EX_NOPARENTNOTIFY | WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_NOREDIRECTIONBITMAP,
+            kClassNameCompositor, nullptr,
             WS_CHILDWINDOW | WS_DISABLED | WS_VISIBLE, 0, 0, 1, 1, initialParentWnd,
             0, GetModuleHandle(nullptr), 0);
       });
