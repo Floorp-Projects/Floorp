@@ -2,32 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-.xhr-input-form {
-  width: 100%;
-}
-
-.xhr-input {
-  width: 100%;
-  margin: 0;
-  border: 1px;
-  background-color: var(--theme-sidebar-background);
-  font-size: 12px;
-  padding: 0.5em 1.6em;
-  color: var(--theme-body-color);
-  outline: 0;
-}
-
-.xhr-input::placeholder {
-  font-style: italic;
-  color: var(--theme-comment);
-}
-
-.xhr-input:focus {
-  cursor: text;
-}
-
 .xhr-input-container {
-  display: flex;
+  display: block;
   border: 1px solid transparent;
 }
 
@@ -41,6 +17,40 @@
 
 .xhr-input-container.error {
   border: 1px solid red;
+}
+
+.xhr-container label {
+  display: flex;
+}
+
+.xhr-input-form {
+  display: inline-flex;
+  width: 100%;
+  padding: 0.5em 1em 0.5em 1em;
+}
+
+.xhr-checkbox {
+  margin-inline-start: 0;
+}
+
+.xhr-input-url {
+  border: 1px;
+  padding: 0em 0.6em 0em 0.6em;
+  flex-grow: 1;
+  background-color: var(--theme-sidebar-background);
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--theme-body-color);
+}
+
+.xhr-input-url::placeholder {
+  font-style: italic;
+  color: var(--theme-comment);
+}
+
+.xhr-input-url:focus {
+  cursor: text;
+  outline: none;
 }
 
 .xhr-container {
@@ -63,25 +73,44 @@
   background-color: var(--theme-selection-background-hover);
 }
 
-.xhr-checkbox {
-    margin-left: 0px;
+.xhr-label-method {
+  padding: 0px 2px 0px 2px;
+  line-height: 15px;
+  display: inline-block;
 }
 
-.xhr-label {
+.xhr-input-method {
+  display: none;
+}
+
+.xhr-input-container.focused .xhr-input-method {
+  display: block;
+}
+
+.xhr-label-url {
   max-width: calc(100% - var(--breakpoint-expression-right-clear-space));
+  color: var(--theme-comment);
   display: inline-block;
   cursor: text;
   flex-grow: 1;
   text-overflow: ellipsis;
-  padding-inline-end: 8px;
+  overflow: hidden;
+  padding: 0px 2px 0px 2px;
+  line-height: 15px;
   font-size: 11px;
 }
 
-.xhr-container .close-btn {
+.xhr-container label {
+  flex-grow: 1;
+  display: flex;
+  padding-inline-end: 36px;
+  align-items: center;
+  overflow-x: hidden;
+}
+
+.xhr-container__close-btn {
   offset-inline-end: 12px;
-  inset-inline-end: 12px;
   offset-inline-start: auto;
-  inset-inline-start: auto;
   position: absolute;
   top: 8px;
 }
