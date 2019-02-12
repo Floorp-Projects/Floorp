@@ -12,10 +12,14 @@ this.WebConsoleWrapper = function(parentNode, hud, toolbox, owner, document) {
   // Initialize module loader and load all modules of the new inline
   // preview feature. The entire code-base doesn't need any extra
   // privileges and runs entirely in content scope.
-  const WebConsoleWrapper = BrowserLoader({
+  const browserLoader = BrowserLoader({
     baseURI: "resource://devtools/client/webconsole/",
     window,
-  }).require("./webconsole-wrapper");
+  });
 
+  // Expose the browserLoader instance on the webconsole hud for metrics tests.
+  hud.browserLoader = browserLoader;
+
+  const WebConsoleWrapper = browserLoader.require("./webconsole-wrapper");
   return new WebConsoleWrapper(parentNode, hud, toolbox, owner, document);
 };
