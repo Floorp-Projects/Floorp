@@ -38,10 +38,7 @@ mochitest:
     treeherder-symbol: M()
     loopback-video: true
     run-on-projects: built-projects
-    tier:
-        by-test-platform:
-            android-em-7.*: 2
-            default: default
+    tier: default
     instance-size:
         by-test-platform:
             android-em.*: xlarge
