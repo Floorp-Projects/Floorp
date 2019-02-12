@@ -371,7 +371,7 @@ def verify_index(config, index):
 @payload_builder('docker-worker', schema={
     Required('os'): 'linux',
 
-    # For tasks that will run in docker-worker or docker-engine, this is the
+    # For tasks that will run in docker-worker, this is the
     # name of the docker image or in-tree docker image to run the task in.  If
     # in-tree, then a dependency will be created automatically.  This is
     # generally `desktop-test`, or an image that acts an awful lot like it.
@@ -1289,69 +1289,6 @@ def build_always_optimized_payload(config, task, task_def):
     task_def['payload'] = {}
 
 
-@payload_builder('native-engine', schema={
-    Required('os'): Any('macosx', 'linux'),
-
-    # the maximum time to run, in seconds
-    Required('max-run-time'): int,
-
-    # A link for an executable to download
-    Optional('context'): basestring,
-
-    # Tells the worker whether machine should reboot
-    # after the task is finished.
-    Optional('reboot'):
-    Any('always', 'on-exception', 'on-failure'),
-
-    # the command to run
-    Optional('command'): [taskref_or_string],
-
-    # environment variables
-    Optional('env'): {basestring: taskref_or_string},
-
-    # artifacts to extract from the task image after completion
-    Optional('artifacts'): [{
-        # type of artifact -- simple file, or recursive directory
-        Required('type'): Any('file', 'directory'),
-
-        # task image path from which to read artifact
-        Required('path'): basestring,
-
-        # name of the produced artifact (root of the names for
-        # type=directory)
-        Required('name'): basestring,
-    }],
-    # Wether any artifacts are assigned to this worker
-    Optional('skip-artifacts'): bool,
-})
-def build_macosx_engine_payload(config, task, task_def):
-    worker = task['worker']
-
-    # propagate our TASKCLUSTER_ROOT_URL to the task; note that this will soon
-    # be provided directly by the worker, making this redundant
-    worker.setdefault('env', {})['TASKCLUSTER_ROOT_URL'] = get_root_url()
-
-    artifacts = map(lambda artifact: {
-        'name': artifact['name'],
-        'path': artifact['path'],
-        'type': artifact['type'],
-        'expires': task_def['expires'],
-    }, worker.get('artifacts', []))
-
-    task_def['payload'] = {
-        'context': worker['context'],
-        'command': worker['command'],
-        'env': worker['env'],
-        'artifacts': artifacts,
-        'maxRunTime': worker['max-run-time'],
-    }
-    if worker.get('reboot'):
-        task_def['payload'] = worker['reboot']
-
-    if task.get('needs-sccache'):
-        raise Exception('needs-sccache not supported in native-engine')
-
-
 @payload_builder('script-engine-autophone', schema={
     Required('os'): Any('macosx', 'linux'),
 
@@ -1417,7 +1354,7 @@ def set_defaults(config, tasks):
         task.setdefault('needs-sccache', False)
 
         worker = task['worker']
-        if worker['implementation'] in ('docker-worker', 'docker-engine'):
+        if worker['implementation'] in ('docker-worker',):
             worker.setdefault('relengapi-proxy', False)
             worker.setdefault('chain-of-trust', False)
             worker.setdefault('taskcluster-proxy', False)
@@ -1813,8 +1750,6 @@ def build_task(config, tasks):
         # Set MOZ_AUTOMATION on all jobs.
         if task['worker']['implementation'] in (
             'generic-worker',
-            'docker-engine',
-            'native-engine',
             'docker-worker',
         ):
             payload = task_def.get('payload')

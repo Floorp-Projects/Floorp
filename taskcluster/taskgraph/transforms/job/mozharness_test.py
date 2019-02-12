@@ -59,7 +59,6 @@ def test_packages_url(taskdesc):
     return artifact_url
 
 
-@run_job_using('docker-engine', 'mozharness-test', schema=mozharness_test_run_schema)
 @run_job_using('docker-worker', 'mozharness-test', schema=mozharness_test_run_schema)
 def mozharness_test_on_docker(config, job, taskdesc):
     run = job['run']
@@ -323,86 +322,6 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
         worker['command'] = [
             mh_command_task_ref
         ]
-
-
-@run_job_using('native-engine', 'mozharness-test', schema=mozharness_test_run_schema)
-def mozharness_test_on_native_engine(config, job, taskdesc):
-    test = taskdesc['run']['test']
-    mozharness = test['mozharness']
-    worker = taskdesc['worker']
-    is_talos = test['suite'] == 'talos' or test['suite'] == 'raptor'
-    is_macosx = worker['os'] == 'macosx'
-
-    installer_url = get_artifact_url('<build>', mozharness['build-artifact-name'])
-    mozharness_url = get_artifact_url('<build>',
-                                      get_artifact_path(taskdesc, 'mozharness.zip'))
-
-    worker['artifacts'] = [{
-        'name': prefix.rstrip('/'),
-        'path': path.rstrip('/'),
-        'type': 'directory',
-    } for (prefix, path) in [
-        # (artifact name prefix, in-image path relative to homedir)
-        ("public/logs/", "workspace/build/logs/"),
-        ("public/test", "artifacts/"),
-        ("public/test_info/", "workspace/build/blobber_upload_dir/"),
-    ]]
-
-    if test['reboot']:
-        worker['reboot'] = test['reboot']
-
-    if test['max-run-time']:
-        worker['max-run-time'] = test['max-run-time']
-
-    env = worker.setdefault('env', {})
-    env.update({
-        'GECKO_HEAD_REPOSITORY': config.params['head_repository'],
-        'GECKO_HEAD_REV': config.params['head_rev'],
-        'MOZHARNESS_CONFIG': ' '.join(mozharness['config']),
-        'MOZHARNESS_SCRIPT': mozharness['script'],
-        'MOZHARNESS_URL': {'task-reference': mozharness_url},
-        'MOZILLA_BUILD_URL': {'task-reference': installer_url},
-        "MOZ_NO_REMOTE": '1',
-        "XPCOM_DEBUG_BREAK": 'warn',
-        "NO_FAIL_ON_TEST_ERRORS": '1',
-        "MOZ_HIDE_RESULTS_TABLE": '1',
-        "MOZ_NODE_PATH": "/usr/local/bin/node",
-        'MOZ_AUTOMATION': '1',
-    })
-    # talos tests don't need Xvfb
-    if is_talos:
-        env['NEED_XVFB'] = 'false'
-
-    script = 'test-macosx.sh' if is_macosx else 'test-linux.sh'
-    worker['context'] = '{}/raw-file/{}/taskcluster/scripts/tester/{}'.format(
-        config.params['head_repository'], config.params['head_rev'], script
-    )
-
-    command = worker['command'] = ["./{}".format(script)]
-    command.extend([
-        {"task-reference": "--installer-url=" + installer_url},
-        {"task-reference": "--test-packages-url=" + test_packages_url(taskdesc)},
-    ])
-    if mozharness.get('include-blob-upload-branch'):
-        command.append('--blob-upload-branch=' + config.params['project'])
-    command.extend(mozharness.get('extra-options', []))
-
-    # TODO: remove the need for run['chunked']
-    if mozharness.get('chunked') or test['chunks'] > 1:
-        # Implement mozharness['chunking-args'], modifying command in place
-        if mozharness['chunking-args'] == 'this-chunk':
-            command.append('--total-chunk={}'.format(test['chunks']))
-            command.append('--this-chunk={}'.format(test['this-chunk']))
-        elif mozharness['chunking-args'] == 'test-suite-suffix':
-            suffix = mozharness['chunk-suffix'].replace('<CHUNK>', str(test['this-chunk']))
-            for i, c in enumerate(command):
-                if isinstance(c, basestring) and c.startswith('--test-suite'):
-                    command[i] += suffix
-
-    if 'download-symbols' in mozharness:
-        download_symbols = mozharness['download-symbols']
-        download_symbols = {True: 'true', False: 'false'}.get(download_symbols, download_symbols)
-        command.append('--download-symbols=' + download_symbols)
 
 
 @run_job_using('script-engine-autophone', 'mozharness-test', schema=mozharness_test_run_schema)
