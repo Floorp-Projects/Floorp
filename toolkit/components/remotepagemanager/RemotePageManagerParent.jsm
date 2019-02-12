@@ -28,25 +28,20 @@ const {MessageListener, MessagePort} = ChromeUtils.import("resource://gre/module
  * object for every page loaded. Message listeners added to this object receive
  * messages from all loaded pages from the requested urls.
  */
-var RemotePages = function(urls) {
-  this.urls = Array.isArray(urls) ? urls : [urls];
-  this.messagePorts = new Set();
-  this.listener = new MessageListener();
-  this.destroyed = false;
+class RemotePages {
+  constructor(urls) {
+    this.urls = Array.isArray(urls) ? urls : [urls];
+    this.messagePorts = new Set();
+    this.listener = new MessageListener();
+    this.destroyed = false;
 
-  this.portCreated = this.portCreated.bind(this);
-  this.portMessageReceived = this.portMessageReceived.bind(this);
+    this.portCreated = this.portCreated.bind(this);
+    this.portMessageReceived = this.portMessageReceived.bind(this);
 
-  for (const url of this.urls) {
-    RemotePageManager.addRemotePageListener(url, this.portCreated);
+    for (const url of this.urls) {
+      RemotePageManager.addRemotePageListener(url, this.portCreated);
+    }
   }
-};
-
-RemotePages.prototype = {
-  urls: null,
-  messagePorts: null,
-  listener: null,
-  destroyed: null,
 
   destroy() {
     for (const url of this.urls) {
@@ -60,7 +55,7 @@ RemotePages.prototype = {
     this.messagePorts = null;
     this.listener = null;
     this.destroyed = true;
-  },
+  }
 
   // Called when a page matching one of the urls has loaded in a frame.
   portCreated(port) {
@@ -75,7 +70,7 @@ RemotePages.prototype = {
     }
 
     this.listener.callListeners({ target: port, name: "RemotePage:Init" });
-  },
+  }
 
   // A message has been received from one of the pages
   portMessageReceived(message) {
@@ -90,7 +85,7 @@ RemotePages.prototype = {
     }
 
     this.listener.callListeners(message);
-  },
+  }
 
   // A page has closed
   removeMessagePort(port) {
@@ -101,11 +96,11 @@ RemotePages.prototype = {
     port.removeMessageListener("RemotePage:Load", this.portMessageReceived);
     port.removeMessageListener("RemotePage:Unload", this.portMessageReceived);
     this.messagePorts.delete(port);
-  },
+  }
 
   registerPortListener(port, name) {
     port.addMessageListener(name, this.portMessageReceived);
-  },
+  }
 
   // Sends a message to all known pages
   sendAsyncMessage(name, data = null) {
@@ -119,7 +114,7 @@ RemotePages.prototype = {
           Cu.reportError(e);
       }
     }
-  },
+  }
 
   addMessageListener(name, callback) {
     if (this.destroyed) {
@@ -133,7 +128,7 @@ RemotePages.prototype = {
     }
 
     this.listener.addMessageListener(name, callback);
-  },
+  }
 
   removeMessageListener(name, callback) {
     if (this.destroyed) {
@@ -141,12 +136,12 @@ RemotePages.prototype = {
     }
 
     this.listener.removeMessageListener(name, callback);
-  },
+  }
 
   portsForBrowser(browser) {
     return [...this.messagePorts].filter(port => port.browser == browser);
-  },
-};
+  }
+}
 
 
 // Only exposes the public properties of the MessagePort
@@ -186,96 +181,91 @@ function publicMessagePort(port) {
 }
 
 // The chome side of a message port
-function ChromeMessagePort(browser, portID, url) {
-  MessagePort.call(this, browser.messageManager, portID);
+class ChromeMessagePort extends MessagePort {
+  constructor(browser, portID, url) {
+    super(browser.messageManager, portID);
 
-  this._browser = browser;
-  this._permanentKey = browser.permanentKey;
-  this._url = url;
+    this._browser = browser;
+    this._permanentKey = browser.permanentKey;
+    this._url = url;
 
-  Services.obs.addObserver(this, "message-manager-disconnect");
-  this.publicPort = publicMessagePort(this);
+    Services.obs.addObserver(this, "message-manager-disconnect");
+    this.publicPort = publicMessagePort(this);
 
-  this.swapBrowsers = this.swapBrowsers.bind(this);
-  this._browser.addEventListener("SwapDocShells", this.swapBrowsers);
-}
+    this.swapBrowsers = this.swapBrowsers.bind(this);
+    this._browser.addEventListener("SwapDocShells", this.swapBrowsers);
+  }
 
-ChromeMessagePort.prototype = Object.create(MessagePort.prototype);
-
-Object.defineProperty(ChromeMessagePort.prototype, "browser", {
-  get() {
+  get browser() {
     return this._browser;
-  },
-});
+  }
 
-Object.defineProperty(ChromeMessagePort.prototype, "url", {
-  get() {
+  get url() {
     return this._url;
-  },
-});
-
-// Called when the docshell is being swapped with another browser. We have to
-// update to use the new browser's message manager
-ChromeMessagePort.prototype.swapBrowsers = function({ detail: newBrowser }) {
-  // We can see this event for the new browser before the swap completes so
-  // check that the browser we're tracking has our permanentKey.
-  if (this._browser.permanentKey != this._permanentKey)
-    return;
-
-  this._browser.removeEventListener("SwapDocShells", this.swapBrowsers);
-
-  this._browser = newBrowser;
-  this.swapMessageManager(newBrowser.messageManager);
-
-  this._browser.addEventListener("SwapDocShells", this.swapBrowsers);
-};
-
-// Called when a message manager has been disconnected indicating that the
-// tab has closed or crashed
-ChromeMessagePort.prototype.observe = function(messageManager) {
-  if (messageManager != this.messageManager)
-    return;
-
-  this.listener.callListeners({
-    target: this.publicPort,
-    name: "RemotePage:Unload",
-    data: null,
-  });
-  this.destroy();
-};
-
-// Called when a message is received from the message manager. This could
-// have come from any port in the message manager so verify the port ID.
-ChromeMessagePort.prototype.message = function({ data: messagedata }) {
-  if (this.destroyed || (messagedata.portID != this.portID)) {
-    return;
   }
 
-  let message = {
-    target: this.publicPort,
-    name: messagedata.name,
-    data: messagedata.data,
-  };
-  this.listener.callListeners(message);
+  // Called when the docshell is being swapped with another browser. We have to
+  // update to use the new browser's message manager
+  swapBrowsers({ detail: newBrowser }) {
+    // We can see this event for the new browser before the swap completes so
+    // check that the browser we're tracking has our permanentKey.
+    if (this._browser.permanentKey != this._permanentKey)
+      return;
 
-  if (messagedata.name == "RemotePage:Unload")
+    this._browser.removeEventListener("SwapDocShells", this.swapBrowsers);
+
+    this._browser = newBrowser;
+    this.swapMessageManager(newBrowser.messageManager);
+
+    this._browser.addEventListener("SwapDocShells", this.swapBrowsers);
+  }
+
+  // Called when a message manager has been disconnected indicating that the
+  // tab has closed or crashed
+  observe(messageManager) {
+    if (messageManager != this.messageManager)
+      return;
+
+    this.listener.callListeners({
+      target: this.publicPort,
+      name: "RemotePage:Unload",
+      data: null,
+    });
     this.destroy();
-};
-
-ChromeMessagePort.prototype.destroy = function() {
-  try {
-    this._browser.removeEventListener(
-        "SwapDocShells", this.swapBrowsers);
-  } catch (e) {
-    // It's possible the browser instance is already dead so we can just ignore
-    // this error.
   }
 
-  this._browser = null;
-  Services.obs.removeObserver(this, "message-manager-disconnect");
-  MessagePort.prototype.destroy.call(this);
-};
+  // Called when a message is received from the message manager. This could
+  // have come from any port in the message manager so verify the port ID.
+  message({ data: messagedata }) {
+    if (this.destroyed || (messagedata.portID != this.portID)) {
+      return;
+    }
 
+    let message = {
+      target: this.publicPort,
+      name: messagedata.name,
+      data: messagedata.data,
+    };
+    this.listener.callListeners(message);
+
+    if (messagedata.name == "RemotePage:Unload")
+      this.destroy();
+  }
+
+  destroy() {
+    try {
+      this._browser.removeEventListener(
+          "SwapDocShells", this.swapBrowsers);
+    } catch (e) {
+      // It's possible the browser instance is already dead so we can just ignore
+      // this error.
+    }
+
+    this._browser = null;
+    Services.obs.removeObserver(this, "message-manager-disconnect");
+    super.destroy.call(this);
+  }
+}
 
 // Allows callers to register to connect to specific content pages. Registration
 // is done through the addRemotePageListener method
