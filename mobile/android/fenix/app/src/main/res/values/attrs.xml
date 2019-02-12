@@ -21,6 +21,7 @@
     <attr name="menuButtonTint" format="reference"/>
     <attr name="toolbarWrapperBackground" format="reference"/>
     <attr name="toolbarTextColor" format="reference"/>
+    <attr name="navigationBarColorHome" format="reference"/>
 
     <!-- Search fragment -->
     <attr name="searchBackground" format="reference"/>
@@ -32,4 +33,5 @@
     <attr name="browserToolbarBackground" format="reference"/>
     <attr name="browserToolbarIcons" format="reference"/>
     <attr name="browserToolbarHomeIcon" format="reference"/>
+    <attr name="navigationBarColorBrowser" format="reference"/>
 </resources>

@@ -32,6 +32,7 @@ import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import org.mozilla.fenix.DefaultThemeManager
+import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FindInPageIntegration
 import org.mozilla.fenix.ext.requireComponents
@@ -88,6 +89,9 @@ class BrowserFragment : Fragment(), BackHandler {
                 height = (resources.displayMetrics.density * TOOLBAR_HEIGHT).toInt()
             }
         }
+
+        val activity = activity as HomeActivity
+        DefaultThemeManager.applyStatusBarTheme(activity.window, activity.themeManager, activity, false)
 
         return view
     }

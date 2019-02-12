@@ -20,6 +20,7 @@ import kotlinx.android.synthetic.main.fragment_home.view.*
 import kotlinx.android.synthetic.main.tab_list_header.view.*
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.increaseTapArea
@@ -49,6 +50,8 @@ class HomeFragment : Fragment() {
         TabsComponent(view.homeLayout, bus, TabsState(requireComponents.core.sessionManager.sessions))
         SessionsComponent(view.homeLayout, bus)
         ActionBusFactory.get(this).logMergedObservables()
+        val activity = activity as HomeActivity
+        DefaultThemeManager.applyStatusBarTheme(activity.window, activity.themeManager, activity)
         return view
     }
 

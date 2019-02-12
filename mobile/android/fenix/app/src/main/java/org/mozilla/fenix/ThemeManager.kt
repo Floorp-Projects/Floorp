@@ -54,14 +54,25 @@ class DefaultThemeManager : ThemeManager {
         }
 
         // Handles status bar theme change since the window does not dynamically recreate
-        fun applyStatusBarTheme(window: Window, themeManager: ThemeManager, context: Context) {
+        fun applyStatusBarTheme(
+            window: Window,
+            themeManager: ThemeManager,
+            context: Context,
+            onHomeScreen: Boolean = true
+        ) {
             window.statusBarColor = ContextCompat
                 .getColor(context, DefaultThemeManager
                     .resolveAttribute(android.R.attr.statusBarColor, context))
 
-            window.navigationBarColor = ContextCompat
-                .getColor(context, DefaultThemeManager
-                    .resolveAttribute(android.R.attr.navigationBarColor, context))
+            if (onHomeScreen) {
+                window.navigationBarColor = ContextCompat
+                    .getColor(context, DefaultThemeManager
+                        .resolveAttribute(R.attr.navigationBarColorHome, context))
+            } else {
+                window.navigationBarColor = ContextCompat
+                    .getColor(context, DefaultThemeManager
+                        .resolveAttribute(R.attr.navigationBarColorBrowser, context))
+            }
 
             when (themeManager.currentTheme) {
                 ThemeManager.Theme.Light -> {
