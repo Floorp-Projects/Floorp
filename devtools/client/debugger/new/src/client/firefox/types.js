@@ -77,7 +77,7 @@ export type FramePacket = {
   depth?: number,
   oldest?: boolean,
   type: "pause" | "call",
-  where: ActualLocation
+  where: {| actor: string, line: number, column: number |}
 };
 
 /**
