@@ -26,7 +26,7 @@ private object Versions {
     const val test_tools = "1.0.2"
     const val espresso_core = "2.2.2"
 
-    const val android_arch_navigation = "1.0.0-beta01"
+    const val android_arch_navigation = "1.0.0-beta02"
 }
 
 @Suppress("unused")
