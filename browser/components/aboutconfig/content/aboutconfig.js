@@ -52,6 +52,8 @@ class PrefRow {
   constructor(name) {
     this.name = name;
     this.value = true;
+    this.hidden = false;
+    this.odd = false;
     this.editing = false;
     this.refreshValue();
   }
@@ -263,9 +265,25 @@ class PrefRow {
       delete this.resetButton;
     }
 
-    let className = (this.hasUserValue ? "has-user-value " : "") +
-                    (this.isLocked ? "locked " : "") +
-                    (this.exists ? "" : "deleted ");
+    this.refreshClass();
+  }
+
+  refreshClass() {
+    if (!this._element) {
+      // No need to update if this preference was never added to the table.
+      return;
+    }
+
+    let className;
+    if (this.hidden) {
+      className = "hidden";
+    } else {
+      className = (this.hasUserValue ? "has-user-value " : "") +
+                  (this.isLocked ? "locked " : "") +
+                  (this.exists ? "" : "deleted ") +
+                  (this.odd ? "odd " : "");
+    }
+
     if (this._lastClassName !== className) {
       this._element.className = this._lastClassName = className;
     }
@@ -412,20 +430,71 @@ function filterPrefs() {
     gSortedExistingPrefs.sort((a, b) => a.name > b.name);
   }
 
-  let prefArray = gSortedExistingPrefs;
-  if (gFilterString) {
-    prefArray = prefArray.filter(pref => pref.matchesFilter);
-  }
-  if (searchName && !gExistingPrefs.has(searchName)) {
-    prefArray.push(new PrefRow(searchName));
+  // The slowest operations tend to be the addition and removal of DOM nodes, so
+  // this algorithm tries to reduce removals by hiding nodes instead. This
+  // happens frequently when the set narrows while typing preference names. We
+  // iterate the nodes already in the table in parallel to those we want to
+  // show, because the two lists are sorted and they will often match already.
+  let fragment = null;
+  let indexInArray = 0;
+  let elementInTable = gPrefsTable.firstElementChild;
+  let odd = false;
+  while (indexInArray < gSortedExistingPrefs.length || elementInTable) {
+    // For efficiency, filter the array while we are iterating.
+    let prefInArray = gSortedExistingPrefs[indexInArray];
+    if (prefInArray) {
+      if (!prefInArray.matchesFilter) {
+        indexInArray++;
+        continue;
+      }
+      prefInArray.hidden = false;
+      prefInArray.odd = odd;
+    }
+
+    let prefInTable = elementInTable && elementInTable._pref;
+    if (!prefInTable) {
+      // We're at the end of the table, we just have to insert all the matching
+      // elements that remain in the array. We can use a fragment to make the
+      // insertions faster, which is useful during the initial filtering.
+      if (!fragment) {
+        fragment = document.createDocumentFragment();
+      }
+      fragment.appendChild(prefInArray.getElement());
+    } else if (prefInTable == prefInArray) {
+      // We got two matching elements, we just need to update the visibility.
+      elementInTable = elementInTable.nextElementSibling;
+    } else if (prefInArray && prefInArray.name < prefInTable.name) {
+      // The iteration in the table is ahead of the iteration in the array.
+      // Insert or move the array element, and advance the array index.
+      gPrefsTable.insertBefore(prefInArray.getElement(), elementInTable);
+    } else {
+      // The iteration in the array is ahead of the iteration in the table.
+      // Hide the element in the table, and advance to the next element.
+      let nextElementInTable = elementInTable.nextElementSibling;
+      if (!prefInTable.exists) {
+        // Remove rows for deleted preferences, or temporary addition rows.
+        elementInTable.remove();
+      } else {
+        // Keep the element for the next filtering if the preference exists.
+        prefInTable.hidden = true;
+        prefInTable.refreshClass();
+      }
+      elementInTable = nextElementInTable;
+      continue;
+    }
+
+    prefInArray.refreshClass();
+    odd = !odd;
+    indexInArray++;
   }
 
-  gPrefsTable.textContent = "";
-  let fragment = document.createDocumentFragment();
-  for (let pref of prefArray) {
-    fragment.appendChild(pref.getElement());
+  if (fragment) {
+    gPrefsTable.appendChild(fragment);
   }
-  gPrefsTable.appendChild(fragment);
+
+  if (searchName && !gExistingPrefs.has(searchName)) {
+    gPrefsTable.appendChild((new PrefRow(searchName)).getElement());
+  }
 
   // We only start observing preference changes after the first search is done,
   // so that newly added preferences won't appear while the page is still empty.
