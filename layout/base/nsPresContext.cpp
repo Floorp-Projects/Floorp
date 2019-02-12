@@ -232,7 +232,8 @@ nsPresContext::nsPresContext(dom::Document* aDocument, nsPresContextType aType)
       mQuirkSheetAdded(false),
       mNeedsPrefUpdate(false),
       mHadNonBlankPaint(false),
-      mHadContentfulPaint(false)
+      mHadContentfulPaint(false),
+      mHadContentfulPaintComposite(false)
 #ifdef DEBUG
       ,
       mInitialized(false)
@@ -2265,6 +2266,16 @@ void nsPresContext::NotifyRevokingDidPaint(TransactionId aTransactionId) {
 
 void nsPresContext::NotifyDidPaintForSubtree(
     TransactionId aTransactionId, const mozilla::TimeStamp& aTimeStamp) {
+  if (mFirstContentfulPaintTransactionId && !mHadContentfulPaintComposite) {
+    if (aTransactionId >= *mFirstContentfulPaintTransactionId) {
+      mHadContentfulPaintComposite = true;
+      RefPtr<nsDOMNavigationTiming> timing = mDocument->GetNavigationTiming();
+      if (timing) {
+        timing->NotifyContentfulPaintForRootContentDocument(aTimeStamp);
+      }
+    }
+  }
+
   if (IsRoot() && mTransactions.IsEmpty()) {
     return;
   }
@@ -2545,12 +2556,10 @@ void nsPresContext::NotifyContentfulPaint() {
   if (!mHadContentfulPaint) {
     mHadContentfulPaint = true;
     if (IsRootContentDocument()) {
-      RefPtr<nsDOMNavigationTiming> timing = mDocument->GetNavigationTiming();
-      if (timing) {
-        timing->NotifyContentfulPaintForRootContentDocument();
+      if (nsRootPresContext* rootPresContext = GetRootPresContext()) {
+        mFirstContentfulPaintTransactionId =
+            Some(rootPresContext->mRefreshDriver->LastTransactionId().Next());
       }
-
-      mFirstContentfulPaintTime = TimeStamp::Now();
     }
   }
 }
