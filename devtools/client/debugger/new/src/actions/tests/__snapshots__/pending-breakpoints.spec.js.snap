@@ -10,19 +10,21 @@ Object {
         "line": 5,
       },
     },
-    "condition": null,
     "disabled": false,
     "generatedLocation": Object {
       "column": undefined,
       "line": 5,
       "sourceUrl": "http://localhost:8000/examples/bar.js",
     },
-    "hidden": false,
     "location": Object {
       "column": undefined,
       "line": 5,
       "sourceId": "",
       "sourceUrl": "http://localhost:8000/examples/bar.js",
+    },
+    "options": Object {
+      "condition": null,
+      "hidden": false,
     },
   },
 }

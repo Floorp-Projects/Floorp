@@ -274,7 +274,7 @@ class CommandBar extends Component<Props> {
         title={L10N.getStr("skipPausingTooltip.label")}
         onClick={toggleSkipPausing}
       >
-        <AccessibleImage className="skipPausing" />
+        <AccessibleImage className="disable-pausing" />
       </button>
     );
   }

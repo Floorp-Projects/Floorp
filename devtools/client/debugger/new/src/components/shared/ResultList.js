@@ -52,7 +52,7 @@ export default class ResultList extends Component<Props> {
     return (
       <li {...props}>
         {item.icon && (
-          <div>
+          <div className="icon">
             <AccessibleImage className={item.icon} />
           </div>
         )}

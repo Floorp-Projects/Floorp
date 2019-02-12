@@ -471,8 +471,12 @@ const _getGeneratedRanges = dispatcher.task("getGeneratedRanges", {
   queue: true
 });
 
-const _getGeneratedLocation = dispatcher.task("getGeneratedLocation", { queue: true });
-const _getAllGeneratedLocations = dispatcher.task("getAllGeneratedLocations", { queue: true });
+const _getGeneratedLocation = dispatcher.task("getGeneratedLocation", {
+  queue: true
+});
+const _getAllGeneratedLocations = dispatcher.task("getAllGeneratedLocations", {
+  queue: true
+});
 
 const setAssetRootURL = exports.setAssetRootURL = async assetRoot => dispatcher.invoke("setAssetRootURL", assetRoot);
 

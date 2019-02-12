@@ -69,7 +69,10 @@ export function makePendingLocationId(location: SourceLocation) {
   return `${sourceUrlString}:${line}:${columnString}`;
 }
 
-export function makeBreakpointLocation(state: State, location: SourceLocation): BreakpointLocation {
+export function makeBreakpointLocation(
+  state: State,
+  location: SourceLocation
+): BreakpointLocation {
   const source = getSource(state, location.sourceId);
   if (!source) {
     throw new Error("no source");
@@ -166,14 +169,12 @@ export function createBreakpoint(
   overrides: Object = {}
 ): Breakpoint {
   const {
-    condition,
     disabled,
-    hidden,
     generatedLocation,
     astLocation,
     text,
     originalText,
-    logValue
+    options
   } = overrides;
 
   const defaultASTLocation = {
@@ -184,9 +185,9 @@ export function createBreakpoint(
   const properties = {
     id: makeBreakpointId(location),
     options: {
-      condition: condition || null,
-      logValue: logValue || null,
-      hidden: hidden || false
+      condition: options.condition || null,
+      logValue: options.logValue || null,
+      hidden: options.hidden || false
     },
     disabled: disabled || false,
     loading: false,

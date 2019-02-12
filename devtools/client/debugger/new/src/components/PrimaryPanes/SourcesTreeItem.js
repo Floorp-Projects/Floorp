@@ -75,7 +75,7 @@ class SourceTreeItem extends Component<Props, State> {
     if (depth === 0 && projectRoot === "") {
       return (
         <AccessibleImage
-          className={classnames("domain", {
+          className={classnames("globe-small", {
             debuggee: debuggeeUrl && debuggeeUrl.includes(item.name)
           })}
         />
@@ -188,7 +188,7 @@ class SourceTreeItem extends Component<Props, State> {
     return isDirectory(item) ? (
       <AccessibleImage className={classnames("arrow", { expanded })} />
     ) : (
-      <i className="no-arrow" />
+      <span className="img no-arrow" />
     );
   }
 

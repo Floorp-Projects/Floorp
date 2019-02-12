@@ -2,123 +2,96 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-.search-shadow {
-  border: 1px solid var(--theme-toolbar-background);
-  border-bottom: 1px solid var(--theme-splitter-color);
+@keyframes search-loader-rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-.search-shadow.focused {
-  border: 1px solid var(--blue-50);
-  transition: border-color 0.2s ease-in-out;
+.search-outline {
+  border: 1px solid var(--theme-toolbar-background);
+  border-bottom: 1px solid var(--theme-splitter-color);
+  transition: border-color 200ms ease-in-out;
+}
+
+.search-outline.focused {
+  border-color: var(--blue-50);
 }
 
 .search-field {
   position: relative;
-  height: 27px;
-  width: calc(100% - 1px);
-  background-color: var(--theme-toolbar-background);
-  border-bottom: 1px solid var(--theme-splitter-color);
-  padding-right: 10px;
   display: flex;
+  align-items: center;
   flex-shrink: 0;
+  min-height: 24px;
+  width: 100%;
+  background-color: var(--theme-toolbar-background);
 }
 
-.search-field.big {
-  padding: 5px 10px;
-  height: 40px;
+.search-field .img.search {
+  position: absolute;
+  z-index: 1;
+  left: 6px;
+  top: calc(50% - 8px);
+  mask-size: 12px;
+  background-color: var(--theme-icon-dimmed-color);
+  pointer-events: none;
 }
 
-.search-field i {
-  display: block;
-  padding: 0;
-  width: 16px;
-}
-
-.search-field i svg {
-  width: 16px;
-}
-
-.search-field.big i svg {
-  width: 22px;
+.search-field.big .img.search {
+  left: 12px;
+  mask-size: 16px;
 }
 
 .search-field .img.loader {
-  padding-top: 4px;
-  margin-right: 8px;
-  mask-image: url(/images/loader.svg);
-  mask-size: 100%;
-  width: 20px;
-  height: 20px;
-  margin-top: 6px;
+  width: 24px;
+  height: 24px;
+  margin-inline-end: 6px;
+  animation: search-loader-rotate 0.5s linear infinite;
 }
 
 .search-field input {
-  border: none;
-  line-height: 30px;
-  background-color: var(--theme-toolbar-background);
-  color: var(--theme-body-color-active);
+  align-self: stretch;
   flex-grow: 1;
+  height: 24px;
   min-width: 40px;
+  border: none;
+  padding: 4px;
+  padding-inline-start: 28px;
+  line-height: 16px;
+  font-family: inherit;
+  font-size: inherit;
+  color: var(--theme-body-color);
+  background-color: transparent;
 }
 
 .search-field.big input {
-  position: relative;
-  margin-left: 30px;
+  height: 40px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  padding-inline-start: 40px;
   font-size: 14px;
-  line-height: 40px;
+  line-height: 20px;
 }
 
 .search-field input:focus {
   outline: none;
 }
 
-.theme-dark .search-field input {
-  color: var(--theme-body-color-inactive);
-}
-
-.search-field i.magnifying-glass,
-.search-field i.sad-face {
-  padding-top: 5px;
-  padding-bottom: 5px;
-  padding-inline-end: 10px;
-  padding-inline-start: 5px;
-  width: 24px;
-}
-
-.search-field.big i.magnifying-glass,
-.search-field.big i.sad-face {
-  position: absolute;
-  width: 40px;
-}
-
-.search-field.big i.sad-face {
-  padding-top: 4px;
-  padding-inline-start: 4px;
-}
-
-.search-field .magnifying-glass path,
-.search-field .magnifying-glass ellipse {
-  stroke: var(--theme-comment);
-}
-
 .search-field input::placeholder {
   color: var(--theme-toolbar-color);
 }
 
-.search-field input.empty {
-  color: var(--theme-body-color-inactive);
-}
-
-.search-field .summary {
-  line-height: 27px;
-  text-align: center;
-  padding-inline-start: 5px;
-  padding-inline-end: 5px;
-  color: var(--theme-body-color-inactive);
+.search-field-summary {
   align-self: center;
-  padding-top: 1px;
+  padding: 2px 4px;
   white-space: nowrap;
+  text-align: center;
   user-select: none;
+  color: var(--theme-body-color-alt);
 }
 
 .search-field .search-nav-buttons {
@@ -128,44 +101,21 @@
 
 .search-field .search-nav-buttons .nav-btn {
   display: flex;
-  height: 100%;
-  background: transparent;
-  transition: all 0.25s ease-in-out;
   justify-content: center;
-  padding-top: 4px;
-  padding-left: 5px;
-  padding-right: 5px;
-}
-
-.search-field .search-nav-buttons .img.arrow-up {
-  mask: url(/images/arrow-up.svg) no-repeat;
-}
-
-.search-field .search-nav-buttons .img.arrow-down {
-  mask: url(/images/arrow-down.svg) no-repeat;
+  align-items: center;
+  height: 100%;
+  padding: 4px;
+  background: transparent;
 }
 
 .search-field .search-nav-buttons .nav-btn:hover {
-  background: var(--theme-toolbar-background-hover);
+  background-color: var(--theme-toolbar-background-hover);
 }
 
-.search-field .search-nav-buttons .nav-btn:active path {
-  fill: var(--theme-comment-alt);
+.search-field .close-btn {
+  margin-inline-end: 4px;
 }
 
-.search-field .search-nav-buttons .nav-btn path {
-  fill: var(--theme-comment);
-}
-
-.search-field i.loader svg {
-  animation: rotate 0.5s linear infinite;
-}
-
-@keyframes rotate {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.search-field.big .close-btn {
+  margin-inline-end: 8px;
 }

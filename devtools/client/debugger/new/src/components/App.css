@@ -42,23 +42,6 @@ button:focus {
   width: 100%;
 }
 
-.search-container {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  z-index: 200;
-  background-color: var(--search-overlays-semitransparent);
-}
-
-.search-container .close-button {
-  width: 16px;
-  margin-top: 25px;
-  margin-right: 20px;
-}
-
 /* Utils */
 .absolute-center {
   position: absolute;

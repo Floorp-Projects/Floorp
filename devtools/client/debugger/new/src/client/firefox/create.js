@@ -27,14 +27,8 @@ export function createFrame(thread: ThreadId, frame: FramePacket): ?Frame {
   } else {
     title = `(${frame.type})`;
   }
-
-  // NOTE: Firefox 66 switched from where.source to where.actor
-  const actor = frame.where.source
-    ? frame.where.source.actor
-    : frame.where.actor;
-
   const location = {
-    sourceId: clientCommands.getSourceForActor(actor),
+    sourceId: clientCommands.getSourceForActor(frame.where.actor),
     line: frame.where.line,
     column: frame.where.column
   };
