@@ -131,4 +131,10 @@
 
     <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
     <string name="content_description_history_menu">History item menu</string>
+
+    <!-- About content -->
+    <string name="about_content"><![CDATA[
+<p>%1$s puts you in control.</p>
+<p>%1$s is produced by Mozilla. Our mission is to foster a healthy, open Internet.<br/>
+    ]]></string>
 </resources>

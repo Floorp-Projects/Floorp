@@ -9,12 +9,16 @@ import android.os.Bundle
 import android.provider.Settings
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.navigation.Navigation
 import androidx.preference.Preference
 import androidx.preference.Preference.OnPreferenceClickListener
 import androidx.preference.PreferenceFragmentCompat
+import mozilla.components.browser.session.Session
 import org.mozilla.fenix.R
+import org.mozilla.fenix.R.string.pref_key_about
 import org.mozilla.fenix.R.string.pref_key_make_default_browser
 import org.mozilla.fenix.ext.getPreferenceKey
+import org.mozilla.fenix.ext.requireComponents
 
 class SettingsFragment : PreferenceFragmentCompat() {
 
@@ -35,10 +39,14 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
     private fun setupPreferences() {
         val makeDefaultBrowserKey = context?.getPreferenceKey(pref_key_make_default_browser)
+        val aboutKey = context?.getPreferenceKey(pref_key_about)
 
         val preferenceMakeDefaultBrowser = findPreference<Preference>(makeDefaultBrowserKey)
+        val preferenceAbout = findPreference<Preference>(aboutKey)
 
-        preferenceMakeDefaultBrowser.onPreferenceClickListener = getClickListenerForMakeDefaultBrowser()
+        preferenceMakeDefaultBrowser.onPreferenceClickListener =
+            getClickListenerForMakeDefaultBrowser()
+        preferenceAbout.onPreferenceClickListener = getAboutPageListener()
     }
 
     private val defaultClickListener = OnPreferenceClickListener { preference ->
@@ -58,5 +66,24 @@ class SettingsFragment : PreferenceFragmentCompat() {
         } else {
             defaultClickListener
         }
+    }
+
+    private fun getAboutPageListener(): OnPreferenceClickListener {
+        return OnPreferenceClickListener {
+            requireComponents.core.sessionManager.add(Session(aboutURL), true)
+            view?.let {
+                Navigation.findNavController(it)
+                    .navigate(
+                        SettingsFragmentDirections.actionGlobalBrowser(
+                            requireComponents.core.sessionManager.selectedSession?.id
+                        )
+                    )
+            }
+            true
+        }
+    }
+
+    companion object {
+        const val aboutURL = "about:version"
     }
 }

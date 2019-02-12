@@ -12,10 +12,10 @@ android {
     compileSdkVersion 28
     defaultConfig {
         applicationId "org.mozilla.fenix"
-        minSdkVersion 21
-        targetSdkVersion 28
-        versionCode 1
-        versionName "1.0"
+        minSdkVersion Config.minSdkVersion
+        targetSdkVersion Config.targetSdkVersion
+        versionCode Config.versionCode
+        versionName Config.versionName + Config.generateVersionSuffix()
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {

@@ -16,6 +16,7 @@ import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import mozilla.components.feature.session.HistoryDelegate
 import mozilla.components.lib.crash.handler.CrashHandlerService
+import org.mozilla.fenix.AppRequestInterceptor
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoRuntimeSettings
 
@@ -32,6 +33,7 @@ class Core(private val context: Context) {
         val prefs = PreferenceManager.getDefaultSharedPreferences(context)
 
         val defaultSettings = DefaultSettings(
+            requestInterceptor = AppRequestInterceptor(context),
             remoteDebuggingEnabled = false,
             testingModeEnabled = false,
             trackingProtectionPolicy = createTrackingProtectionPolicy(prefs),
