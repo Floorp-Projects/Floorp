@@ -58,7 +58,6 @@
 
 using namespace mozilla;
 using mozilla::dom::Event;
-using mozilla::dom::Document;
 using mozilla::dom::KeyboardEvent;
 
 int8_t nsMenuPopupFrame::sDefaultLevelIsTop = -1;
@@ -391,6 +390,15 @@ void nsXULPopupShownEvent::CancelListener() {
 
 NS_IMPL_ISUPPORTS_INHERITED(nsXULPopupShownEvent, Runnable,
                             nsIDOMEventListener);
+
+void nsMenuPopupFrame::SetInitialChildList(ChildListID aListID,
+                                           nsFrameList& aChildList) {
+  // unless the list is empty, indicate that children have been generated.
+  if (aListID == kPrincipalList && aChildList.NotEmpty()) {
+    mGeneratedChildren = true;
+  }
+  nsBoxFrame::SetInitialChildList(aListID, aChildList);
+}
 
 bool nsMenuPopupFrame::IsLeafDynamic() const {
   if (mGeneratedChildren) return false;
