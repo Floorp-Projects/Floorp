@@ -107,6 +107,15 @@
   background-image: url(chrome://browser/skin/tab.svg);
 }
 
+.urlbarView-title {
+  display: inline-block;
+  vertical-align: text-bottom;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  max-width: calc(var(--item-content-width) * .7 - 2 * (16px + @urlbarViewIconMarginEnd@));
+}
+
 .urlbarView-secondary::before {
   content: "\2014";
   color: var(--panel-disabled-color);
