@@ -127,9 +127,8 @@ void CycleCollectedJSContext::InitializeCommon() {
 
   NS_GetCurrentThread()->SetCanInvokeJS(true);
 
-  JS::SetGetIncumbentGlobalCallback(mJSContext, GetIncumbentGlobalCallback);
+  JS::SetJobQueue(mJSContext, this);
 
-  JS::SetEnqueuePromiseJobCallback(mJSContext, EnqueuePromiseJobCallback, this);
   JS::SetPromiseRejectionTrackerCallback(mJSContext,
                                          PromiseRejectionTrackerCallback, this);
   mUncaughtRejections.init(mJSContext,
@@ -255,8 +254,7 @@ class PromiseJobRunnable final : public MicroTaskRunnable {
   bool mPropagateUserInputEventHandling;
 };
 
-/* static */
-JSObject* CycleCollectedJSContext::GetIncumbentGlobalCallback(JSContext* aCx) {
+JSObject* CycleCollectedJSContext::getIncumbentGlobal(JSContext* aCx) {
   nsIGlobalObject* global = mozilla::dom::GetIncumbentGlobal();
   if (global) {
     return global->GetGlobalJSObject();
@@ -264,14 +262,11 @@ JSObject* CycleCollectedJSContext::GetIncumbentGlobalCallback(JSContext* aCx) {
   return nullptr;
 }
 
-/* static */
-bool CycleCollectedJSContext::EnqueuePromiseJobCallback(
+bool CycleCollectedJSContext::enqueuePromiseJob(
     JSContext* aCx, JS::HandleObject aPromise, JS::HandleObject aJob,
-    JS::HandleObject aAllocationSite, JS::HandleObject aIncumbentGlobal,
-    void* aData) {
-  CycleCollectedJSContext* self = static_cast<CycleCollectedJSContext*>(aData);
-  MOZ_ASSERT(aCx == self->Context());
-  MOZ_ASSERT(Get() == self);
+    JS::HandleObject aAllocationSite, JS::HandleObject aIncumbentGlobal) {
+  MOZ_ASSERT(aCx == Context());
+  MOZ_ASSERT(Get() == this);
 
   nsIGlobalObject* global = nullptr;
   if (aIncumbentGlobal) {
@@ -280,8 +275,21 @@ bool CycleCollectedJSContext::EnqueuePromiseJobCallback(
   JS::RootedObject jobGlobal(aCx, JS::CurrentGlobalOrNull(aCx));
   RefPtr<PromiseJobRunnable> runnable = new PromiseJobRunnable(
       aPromise, aJob, jobGlobal, aAllocationSite, global);
-  self->DispatchToMicroTask(runnable.forget());
+  DispatchToMicroTask(runnable.forget());
   return true;
+}
+
+void CycleCollectedJSContext::runJobs(JSContext* aCx) {
+  MOZ_ASSERT(aCx == Context());
+  MOZ_ASSERT(Get() == this);
+  PerformMicroTaskCheckPoint();
+}
+
+bool CycleCollectedJSContext::empty() const {
+  // This is our override of JS::JobQueue::empty. Since that interface is only
+  // concerned with the ordinary microtask queue, not the debugger microtask
+  // queue, we only report on the former.
+  return mPendingMicroTaskRunnables.empty();
 }
 
 /* static */
@@ -593,4 +601,5 @@ void CycleCollectedJSContext::PerformDebuggerMicroTaskCheckpoint() {
 
   AfterProcessMicrotasks();
 }
+
 }  // namespace mozilla
