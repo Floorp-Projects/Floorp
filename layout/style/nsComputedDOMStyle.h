@@ -404,8 +404,6 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
   /* Helper functions */
   void SetValueFromComplexColor(nsROCSSPrimitiveValue* aValue,
                                 const mozilla::StyleComplexColor& aColor);
-  void SetValueToPositionCoord(const mozilla::Position::Coord& aCoord,
-                               nsROCSSPrimitiveValue* aValue);
   void SetValueToPosition(const mozilla::Position& aPosition,
                           nsDOMCSSValueList* aValueList);
   void SetValueToURLValue(const mozilla::css::URLValue* aURL,

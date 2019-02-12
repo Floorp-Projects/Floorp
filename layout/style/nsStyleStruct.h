@@ -54,33 +54,22 @@ class ImageTracker;
 
 namespace mozilla {
 
-struct Position {
-  using Coord = nsStyleCoord::CalcValue;
+using Position = StylePosition;
 
-  Coord mXPosition, mYPosition;
+/**
+ * True if the effective background image position described by this depends on
+ * the size of the corresponding frame.
+ */
+template <>
+inline bool StylePosition::DependsOnPositioningAreaSize() const {
+  return horizontal.HasPercent() || vertical.HasPercent();
+}
 
-  // Initialize nothing
-  Position() {}
-
-  // Sets both mXPosition and mYPosition to the given percent value for the
-  // initial property-value (e.g. 0.0f for "0% 0%", or 0.5f for "50% 50%")
-  void SetInitialPercentValues(float aPercentVal);
-
-  // Sets both mXPosition and mYPosition to 0 (app units) for the
-  // initial property-value as a length with no percentage component.
-  void SetInitialZeroValues();
-
-  // True if the effective background image position described by this depends
-  // on the size of the corresponding frame.
-  bool DependsOnPositioningAreaSize() const {
-    return mXPosition.mPercent != 0.0f || mYPosition.mPercent != 0.0f;
-  }
-
-  bool operator==(const Position& aOther) const {
-    return mXPosition == aOther.mXPosition && mYPosition == aOther.mYPosition;
-  }
-  bool operator!=(const Position& aOther) const { return !(*this == aOther); }
-};
+template <>
+inline Position Position::FromPercentage(float aPercent) {
+  return {LengthPercentage::FromPercentage(aPercent),
+          LengthPercentage::FromPercentage(aPercent)};
+}
 
 }  // namespace mozilla
 
@@ -1708,9 +1697,9 @@ struct StyleAnimation {
 class StyleBasicShape final {
  public:
   explicit StyleBasicShape(StyleBasicShapeType type)
-      : mType(type), mFillRule(StyleFillRule::Nonzero) {
-    mPosition.SetInitialPercentValues(0.5f);
-  }
+      : mType(type),
+        mFillRule(StyleFillRule::Nonzero),
+        mPosition(Position::FromPercentage(0.5f)) {}
 
   StyleBasicShapeType GetShapeType() const { return mType; }
   nsCSSKeyword GetShapeTypeName() const;

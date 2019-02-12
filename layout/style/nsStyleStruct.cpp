@@ -1295,7 +1295,8 @@ bool nsStyleSVGPaint::operator==(const nsStyleSVGPaint& aOther) const {
 // nsStylePosition
 //
 nsStylePosition::nsStylePosition(const Document& aDocument)
-    : mOffset(StyleRectWithAllSides(LengthPercentageOrAuto::Auto())),
+    : mObjectPosition(Position::FromPercentage(0.5f)),
+      mOffset(StyleRectWithAllSides(LengthPercentageOrAuto::Auto())),
       mWidth(StyleSize::Auto()),
       mMinWidth(StyleSize::Auto()),
       mMaxWidth(StyleMaxSize::None()),
@@ -1326,10 +1327,6 @@ nsStylePosition::nsStylePosition(const Document& aDocument)
       mColumnGap(eStyleUnit_Normal),
       mRowGap(eStyleUnit_Normal) {
   MOZ_COUNT_CTOR(nsStylePosition);
-
-  // positioning values not inherited
-
-  mObjectPosition.SetInitialPercentValues(0.5f);
 
   // The initial value of grid-auto-columns and grid-auto-rows is 'auto',
   // which computes to 'minmax(auto, auto)'.
@@ -2603,32 +2600,7 @@ bool nsStyleImageLayers::operator==(const nsStyleImageLayers& aOther) const {
 
 bool nsStyleImageLayers::IsInitialPositionForLayerType(Position aPosition,
                                                        LayerType aType) {
-  if (aPosition.mXPosition.mPercent == 0.0f &&
-      aPosition.mXPosition.mLength == 0 && aPosition.mXPosition.mHasPercent &&
-      aPosition.mYPosition.mPercent == 0.0f &&
-      aPosition.mYPosition.mLength == 0 && aPosition.mYPosition.mHasPercent) {
-    return true;
-  }
-
-  return false;
-}
-
-void Position::SetInitialPercentValues(float aPercentVal) {
-  mXPosition.mPercent = aPercentVal;
-  mXPosition.mLength = 0;
-  mXPosition.mHasPercent = true;
-  mYPosition.mPercent = aPercentVal;
-  mYPosition.mLength = 0;
-  mYPosition.mHasPercent = true;
-}
-
-void Position::SetInitialZeroValues() {
-  mXPosition.mPercent = 0;
-  mXPosition.mLength = 0;
-  mXPosition.mHasPercent = false;
-  mYPosition.mPercent = 0;
-  mYPosition.mLength = 0;
-  mYPosition.mHasPercent = false;
+  return aPosition == Position::FromPercentage(0.);
 }
 
 bool nsStyleImageLayers::Size::DependsOnPositioningAreaSize(
@@ -2744,7 +2716,7 @@ void nsStyleImageLayers::Layer::Initialize(
     nsStyleImageLayers::LayerType aType) {
   mRepeat.SetInitialValues();
 
-  mPosition.SetInitialPercentValues(0.0f);
+  mPosition = Position::FromPercentage(0.);
 
   if (aType == LayerType::Background) {
     mOrigin = StyleGeometryBox::PaddingBox;
@@ -2790,7 +2762,7 @@ static void FillImageLayerList(
 // layer.mPosition.*aResultLocation instead of layer.*aResultLocation.
 static void FillImageLayerPositionCoordList(
     nsStyleAutoArray<nsStyleImageLayers::Layer>& aLayers,
-    Position::Coord Position::*aResultLocation, uint32_t aItemCount,
+    LengthPercentage Position::*aResultLocation, uint32_t aItemCount,
     uint32_t aFillCount) {
   MOZ_ASSERT(aFillCount <= aLayers.Length(), "unexpected array length");
   for (uint32_t sourceLayer = 0, destLayer = aItemCount; destLayer < aFillCount;
@@ -2812,10 +2784,10 @@ void nsStyleImageLayers::FillAllLayers(uint32_t aMaxItemCount) {
   FillImageLayerList(mLayers, &Layer::mClip, mClipCount, fillCount);
   FillImageLayerList(mLayers, &Layer::mBlendMode, mBlendModeCount, fillCount);
   FillImageLayerList(mLayers, &Layer::mOrigin, mOriginCount, fillCount);
-  FillImageLayerPositionCoordList(mLayers, &Position::mXPosition,
+  FillImageLayerPositionCoordList(mLayers, &Position::horizontal,
                                   mPositionXCount, fillCount);
-  FillImageLayerPositionCoordList(mLayers, &Position::mYPosition,
-                                  mPositionYCount, fillCount);
+  FillImageLayerPositionCoordList(mLayers, &Position::vertical, mPositionYCount,
+                                  fillCount);
   FillImageLayerList(mLayers, &Layer::mSize, mSizeCount, fillCount);
   FillImageLayerList(mLayers, &Layer::mMaskMode, mMaskModeCount, fillCount);
   FillImageLayerList(mLayers, &Layer::mComposite, mCompositeCount, fillCount);
@@ -2991,6 +2963,8 @@ nsStyleDisplay::nsStyleDisplay(const Document& aDocument)
       mScrollSnapTypeY(StyleScrollSnapType::None),
       mScrollSnapPointsX(eStyleUnit_None),
       mScrollSnapPointsY(eStyleUnit_None),
+      mScrollSnapDestination(
+          {LengthPercentage::Zero(), LengthPercentage::Zero()}),
       mBackfaceVisibility(NS_STYLE_BACKFACE_VISIBILITY_VISIBLE),
       mTransformStyle(NS_STYLE_TRANSFORM_STYLE_FLAT),
       mTransformBox(StyleGeometryBox::BorderBox),
@@ -3020,9 +2994,6 @@ nsStyleDisplay::nsStyleDisplay(const Document& aDocument)
       mAnimationIterationCountCount(1),
       mShapeMargin(LengthPercentage::Zero()) {
   MOZ_COUNT_CTOR(nsStyleDisplay);
-
-  // Initial value for mScrollSnapDestination is "0px 0px"
-  mScrollSnapDestination.SetInitialZeroValues();
 
   mTransitions[0].SetInitialValues();
   mAnimations[0].SetInitialValues();

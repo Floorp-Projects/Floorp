@@ -423,6 +423,7 @@ cbindgen-types = [
     { gecko = "StyleSize", servo = "values::computed::Size" },
     { gecko = "StyleMaxSize", servo = "values::computed::MaxSize" },
     { gecko = "StyleFlexBasis", servo = "values::computed::FlexBasis" },
+    { gecko = "StylePosition", servo = "values::computed::Position" },
 ]
 
 mapped-generic-types = [
