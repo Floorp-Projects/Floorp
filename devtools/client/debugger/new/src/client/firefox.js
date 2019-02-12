@@ -44,6 +44,7 @@ export async function onConnect(connection: any, actions: Object) {
 
   await threadClient.reconfigure({
     observeAsmJS: true,
+    pauseWorkersUntilAttach: true,
     wasmBinarySource: supportsWasm,
     skipBreakpoints: prefs.skipPausing
   });

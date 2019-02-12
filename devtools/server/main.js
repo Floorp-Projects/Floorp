@@ -391,6 +391,11 @@ var DebuggerServer = {
           onMessage: (message) => {
             message = JSON.parse(message);
             if (message.type !== "rpc") {
+              if (message.type == "attached") {
+                // The thread actor has finished attaching and can hit installed
+                // breakpoints. Allow content to begin executing in the worker.
+                dbg.setDebuggerReady(true);
+              }
               return;
             }
 
