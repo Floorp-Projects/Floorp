@@ -66,4 +66,4 @@ class Connection {
   toString() {
     return `[object Connection ${this.id}]`;
   }
-};
+}

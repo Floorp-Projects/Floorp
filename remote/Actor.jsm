@@ -32,7 +32,7 @@ class RemoteAgentActorChild extends ActorChild {
     log.trace(`(message ${name})--> ${JSON.stringify(data)}`);
     super.receiveMessage(name, data);
   }
-};
+}
 
 // TODO(ato): Move to MessageChannel.jsm?
 // TODO(ato): This can eventually be replaced by ActorChild and IPDL generation
@@ -69,4 +69,4 @@ class MessageChannelActorChild extends RemoteAgentActorChild {
       this.send({id, error});
     }
   }
-};
+}

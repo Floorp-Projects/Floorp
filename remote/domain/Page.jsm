@@ -116,7 +116,7 @@ class Page extends Domain {
       },
     };
   }
-};
+}
 
 Page.FrameId = {schema: t.String};
 Page.TransitionType = {

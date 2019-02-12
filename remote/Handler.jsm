@@ -52,7 +52,7 @@ class TargetListHandler extends JSONHandler {
   handle(request, response) {
     response.write([...this.targets]);
   }
-};
+}
 
 class ProtocolHandler extends JSONHandler {
   get path() {
@@ -62,7 +62,7 @@ class ProtocolHandler extends JSONHandler {
   handle(request, response) {
     response.write(Protocol.Description);
   }
-};
+}
 
 /**
  * Wraps an httpd.js response and serialises anything passed to

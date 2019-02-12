@@ -47,9 +47,9 @@ class FatalError extends RemoteAgentError {
   quit(mode = Ci.nsIAppStartup.eForceQuit) {
     Services.startup.quit(mode);
   }
-};
+}
 
-class UnsupportedError extends RemoteAgentError {};
+class UnsupportedError extends RemoteAgentError {}
 
 function formatError(error, {stack = false} = {}) {
   const s = [];

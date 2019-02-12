@@ -70,4 +70,4 @@ class TargetListener {
   toString() {
     return `[object Debugger ${this.url || "disconnected"}]`;
   }
-};
+}
