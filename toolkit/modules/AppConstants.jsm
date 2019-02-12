@@ -67,6 +67,13 @@ this.AppConstants = Object.freeze({
   false,
 #endif
 
+  MOZ_SERVICES_SYNC:
+#ifdef MOZ_SERVICES_SYNC
+  true,
+#else
+  false,
+#endif
+
   MOZ_SERVICES_HEALTHREPORT:
 #ifdef MOZ_SERVICES_HEALTHREPORT
   true,

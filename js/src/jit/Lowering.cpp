@@ -2836,9 +2836,22 @@ void LIRGenerator::visitTypedArrayLength(MTypedArrayLength* ins) {
          ins);
 }
 
+void LIRGenerator::visitTypedArrayByteOffset(MTypedArrayByteOffset* ins) {
+  MOZ_ASSERT(ins->object()->type() == MIRType::Object);
+  define(new (alloc()) LTypedArrayByteOffset(useRegisterAtStart(ins->object())),
+         ins);
+}
+
 void LIRGenerator::visitTypedArrayElements(MTypedArrayElements* ins) {
   MOZ_ASSERT(ins->type() == MIRType::Elements);
   define(new (alloc()) LTypedArrayElements(useRegisterAtStart(ins->object())),
+         ins);
+}
+
+void LIRGenerator::visitTypedArrayElementShift(MTypedArrayElementShift* ins) {
+  MOZ_ASSERT(ins->object()->type() == MIRType::Object);
+  define(new (alloc())
+             LTypedArrayElementShift(useRegisterAtStart(ins->object())),
          ins);
 }
 

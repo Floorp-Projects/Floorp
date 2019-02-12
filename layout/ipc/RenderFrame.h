@@ -21,12 +21,20 @@ class nsSubDocumentFrame;
 
 namespace mozilla {
 
+namespace dom {
+class TabParent;
+}  // namespace dom
+
 namespace layers {
 struct TextureFactoryIdentifier;
 }  // namespace layers
 
 namespace layout {
 
+/**
+ * RenderFrame connects and manages layer trees for remote frames. It is
+ * directly owned by a TabParent and always lives in the parent process.
+ */
 class RenderFrame final {
   typedef mozilla::layers::CompositorOptions CompositorOptions;
   typedef mozilla::layers::LayerManager LayerManager;
@@ -37,14 +45,13 @@ class RenderFrame final {
   RenderFrame();
   virtual ~RenderFrame();
 
-  bool Initialize(nsFrameLoader* aFrameLoader);
+  bool Initialize(dom::TabParent* aTabParent);
   void Destroy();
 
   void EnsureLayersConnected(CompositorOptions* aCompositorOptions);
   LayerManager* AttachLayerManager();
-  void OwnerContentChanged(nsIContent* aContent);
+  void OwnerContentChanged();
 
-  nsFrameLoader* GetFrameLoader() const { return mFrameLoader; }
   LayersId GetLayersId() const { return mLayersId; }
   CompositorOptions GetCompositorOptions() const { return mCompositorOptions; }
 
@@ -55,17 +62,17 @@ class RenderFrame final {
   bool IsLayersConnected() const { return mLayersConnected; }
 
  private:
+  // The process id of the remote frame. This is used by the compositor to
+  // do security checks on incoming layer transactions.
   base::ProcessId mTabProcessId;
-  // When our child frame is pushing transactions directly to the
-  // compositor, this is the ID of its layer tree in the compositor's
-  // context.
+  // The layers id of the remote frame.
   LayersId mLayersId;
   // The compositor options for this layers id. This is only meaningful if
   // the compositor actually knows about this layers id (i.e. when
   // mLayersConnected is true).
   CompositorOptions mCompositorOptions;
 
-  RefPtr<nsFrameLoader> mFrameLoader;
+  dom::TabParent* mTabParent;
   RefPtr<LayerManager> mLayerManager;
 
   bool mInitialized;
@@ -79,9 +86,8 @@ class RenderFrame final {
 }  // namespace mozilla
 
 /**
- * A DisplayRemote exists solely to graft a child process's shadow
- * layer tree (for a given RenderFrame) into its parent
- * process's layer tree.
+ * A nsDisplayRemote will graft a remote frame's shadow layer tree (for a given
+ * nsFrameLoader) into its parent frame's layer tree.
  */
 class nsDisplayRemote final : public nsDisplayItem {
   typedef mozilla::dom::TabId TabId;
@@ -122,10 +128,10 @@ class nsDisplayRemote final : public nsDisplayItem {
   NS_DISPLAY_DECL_NAME("Remote", TYPE_REMOTE)
 
  private:
-  LayersId GetRemoteLayersId() const;
-  RenderFrame* GetRenderFrame() const;
+  nsFrameLoader* GetFrameLoader() const;
 
   TabId mTabId;
+  LayersId mLayersId;
   LayoutDeviceIntPoint mOffset;
   EventRegionsOverride mEventRegionsOverride;
 };
