@@ -2198,7 +2198,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_LAMBDA_ARROW() {
 typedef bool (*SetFunNameFn)(JSContext*, HandleFunction, HandleValue,
                              FunctionPrefixKind);
 static const VMFunction SetFunNameInfo =
-    FunctionInfo<SetFunNameFn>(js::SetFunctionNameIfNoOwnName, "SetFunName");
+    FunctionInfo<SetFunNameFn>(js::SetFunctionName, "SetFunName");
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_SETFUNNAME() {
