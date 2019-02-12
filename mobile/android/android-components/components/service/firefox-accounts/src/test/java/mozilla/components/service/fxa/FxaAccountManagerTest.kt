@@ -142,7 +142,7 @@ class FxaAccountManagerTest {
         manager.register(accountObserver)
 
         runBlocking {
-            manager.init().await()
+            manager.initAsync().await()
         }
 
         assertTrue(onErrorCalled)
@@ -165,7 +165,7 @@ class FxaAccountManagerTest {
         val accountObserver: AccountObserver = mock()
 
         manager.register(accountObserver)
-        manager.init().await()
+        manager.initAsync().await()
 
         verify(accountObserver, never()).onError(any())
         verify(accountObserver, never()).onAuthenticated(any())
@@ -201,7 +201,7 @@ class FxaAccountManagerTest {
 
         manager.register(accountObserver)
 
-        manager.init().await()
+        manager.initAsync().await()
 
         // Make sure that account and profile observers are fired exactly once.
         verify(accountObserver, never()).onError(any())
@@ -216,10 +216,10 @@ class FxaAccountManagerTest {
         assertEquals(mockAccount, manager.authenticatedAccount())
         assertEquals(profile, manager.accountProfile())
 
-        // Make sure 'logout' clears out state and fires correct observers.
+        // Make sure 'logoutAsync' clears out state and fires correct observers.
         reset(accountObserver)
         reset(accountStorage)
-        manager.logout().await()
+        manager.logoutAsync().await()
 
         verify(accountObserver, never()).onError(any())
         verify(accountObserver, never()).onAuthenticated(any())
@@ -274,7 +274,7 @@ class FxaAccountManagerTest {
         manager.register(accountObserver)
 
         runBlocking {
-            manager.init().await()
+            manager.initAsync().await()
         }
 
         // We start off as logged-out.
@@ -282,13 +282,13 @@ class FxaAccountManagerTest {
 
         reset(accountObserver)
         runBlocking {
-            assertEquals("auth://url", manager.beginAuthentication().await())
+            assertEquals("auth://url", manager.beginAuthenticationAsync().await())
         }
         assertNull(manager.authenticatedAccount())
         assertNull(manager.accountProfile())
 
         runBlocking {
-            manager.finishAuthentication("dummyCode", "dummyState").await()
+            manager.finishAuthenticationAsync("dummyCode", "dummyState").await()
         }
 
         verify(accountStorage, times(1)).read()
@@ -348,7 +348,7 @@ class FxaAccountManagerTest {
         manager.register(accountObserver)
 
         runBlocking {
-            manager.init().await()
+            manager.initAsync().await()
         }
 
         // We start off as logged-out.
@@ -357,7 +357,7 @@ class FxaAccountManagerTest {
         reset(accountObserver)
         runBlocking {
             try {
-                manager.beginAuthentication().await()
+                manager.beginAuthenticationAsync().await()
                 fail()
             } catch (e: FxaNetworkException) {
                 assertEquals(fxaException, e)
@@ -374,14 +374,14 @@ class FxaAccountManagerTest {
                 .thenReturn(CompletableDeferred("auth://url"))
 
         runBlocking {
-            assertEquals("auth://url", manager.beginAuthentication().await())
+            assertEquals("auth://url", manager.beginAuthenticationAsync().await())
         }
 
         assertNull(manager.authenticatedAccount())
         assertNull(manager.accountProfile())
 
         runBlocking {
-            manager.finishAuthentication("dummyCode", "dummyState").await()
+            manager.finishAuthenticationAsync("dummyCode", "dummyState").await()
         }
 
         verify(accountStorage, times(1)).read()
@@ -435,7 +435,7 @@ class FxaAccountManagerTest {
         manager.register(accountObserver)
 
         runBlocking {
-            manager.init().await()
+            manager.initAsync().await()
         }
 
         // We start off as logged-out.
@@ -443,13 +443,13 @@ class FxaAccountManagerTest {
 
         reset(accountObserver)
         runBlocking {
-            assertEquals("auth://url", manager.beginAuthentication().await())
+            assertEquals("auth://url", manager.beginAuthenticationAsync().await())
         }
         assertNull(manager.authenticatedAccount())
         assertNull(manager.accountProfile())
 
         runBlocking {
-            manager.finishAuthentication("dummyCode", "dummyState").await()
+            manager.finishAuthenticationAsync("dummyCode", "dummyState").await()
         }
 
         verify(accountStorage, times(1)).read()
@@ -473,7 +473,7 @@ class FxaAccountManagerTest {
         `when`(mockAccount.getProfile(ArgumentMatchers.anyBoolean())).thenReturn(CompletableDeferred(profile))
 
         runBlocking {
-            manager.updateProfile().await()
+            manager.updateProfileAsync().await()
         }
 
         verify(accountObserver, times(1)).onProfileUpdated(profile)

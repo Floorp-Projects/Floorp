@@ -29,7 +29,7 @@ class FirefoxAccountsAuthFeature(
     fun beginAuthentication() {
         CoroutineScope(coroutineContext).launch {
             val authUrl = try {
-                accountManager.beginAuthentication().await()
+                accountManager.beginAuthenticationAsync().await()
             } catch (e: FxaException) {
                 // FIXME return a fallback URL provided by Config...
                 "https://accounts.firefox.com/signin"
@@ -55,7 +55,7 @@ class FirefoxAccountsAuthFeature(
             val state = parsedUri.getQueryParameter("state") as String
 
             // Notify the state machine about our success.
-            accountManager.finishAuthentication(code, state)
+            accountManager.finishAuthenticationAsync(code, state)
 
             // TODO this can be simplified once https://github.com/mozilla/application-services/issues/305 lands
             val successUrl = "${parsedUri.scheme}://${parsedUri.host}/$successPath"

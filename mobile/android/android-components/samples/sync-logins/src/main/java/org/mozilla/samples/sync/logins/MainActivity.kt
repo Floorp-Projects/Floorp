@@ -88,12 +88,12 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
 
         accountManager.register(accountObserver, owner = this, autoPause = true)
 
-        launch { accountManager.init().await() }
+        launch { accountManager.initAsync().await() }
 
         findViewById<View>(R.id.buttonWebView).setOnClickListener {
             launch {
                 val authUrl = try {
-                    accountManager.beginAuthentication().await()
+                    accountManager.beginAuthenticationAsync().await()
                 } catch (error: FxaException) {
                     Toast.makeText(this@MainActivity, "Account auth error: $error", Toast.LENGTH_LONG).show()
                     return@launch
@@ -135,7 +135,7 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
 
     override fun onLoginComplete(code: String, state: String, fragment: LoginFragment) {
         launch {
-            accountManager.finishAuthentication(code, state).await()
+            accountManager.finishAuthenticationAsync(code, state).await()
             supportFragmentManager?.popBackStack()
         }
     }

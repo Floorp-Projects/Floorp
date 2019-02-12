@@ -200,8 +200,8 @@ open class FxaAccountManager(
     /**
      * Call this after registering your observers, and before interacting with this class.
      */
-    fun init(): Deferred<Unit> {
-        return processQueue(Event.Init)
+    fun initAsync(): Deferred<Unit> {
+        return processQueueAsync(Event.Init)
     }
 
     fun authenticatedAccount(): FirefoxAccountShaped? {
@@ -219,11 +219,11 @@ open class FxaAccountManager(
         }
     }
 
-    fun updateProfile(): Deferred<Unit> {
-        return processQueue(Event.FetchProfile)
+    fun updateProfileAsync(): Deferred<Unit> {
+        return processQueueAsync(Event.FetchProfile)
     }
 
-    fun beginAuthentication(): Deferred<String> {
+    fun beginAuthenticationAsync(): Deferred<String> {
         val deferredAuthUrl: CompletableDeferred<String> = CompletableDeferred()
 
         oauth.register(object : OAuthObserver {
@@ -238,17 +238,17 @@ open class FxaAccountManager(
             }
         })
 
-        processQueue(Event.Authenticate)
+        processQueueAsync(Event.Authenticate)
 
         return deferredAuthUrl
     }
 
-    fun finishAuthentication(code: String, state: String): Deferred<Unit> {
-        return processQueue(Event.Authenticated(code, state))
+    fun finishAuthenticationAsync(code: String, state: String): Deferred<Unit> {
+        return processQueueAsync(Event.Authenticated(code, state))
     }
 
-    fun logout(): Deferred<Unit> {
-        return processQueue(Event.Logout)
+    fun logoutAsync(): Deferred<Unit> {
+        return processQueueAsync(Event.Logout)
     }
 
     override fun close() {
@@ -259,7 +259,7 @@ open class FxaAccountManager(
     /**
      * Pumps the state machine until all events are processed and their side-effects resolve.
      */
-    private fun processQueue(event: Event): Deferred<Unit> = CoroutineScope(coroutineContext).async {
+    private fun processQueueAsync(event: Event): Deferred<Unit> = CoroutineScope(coroutineContext).async {
         eventQueue.add(event)
         do {
             val toProcess = eventQueue.poll()
@@ -299,7 +299,7 @@ open class FxaAccountManager(
         // States will have certain side-effects associated with different event transitions.
         // In other words, the same state may have different side-effects depending on the event
         // which caused a transition.
-        // For example, a "NotAuthenticated" state may be entered after a logout, and its side-effects
+        // For example, a "NotAuthenticated" state may be entered after a logoutAsync, and its side-effects
         // will include clean-up and re-initialization of an account. Alternatively, it may be entered
         // after we've checked local disk, and didn't find a persisted authenticated account.
         return when (forState) {

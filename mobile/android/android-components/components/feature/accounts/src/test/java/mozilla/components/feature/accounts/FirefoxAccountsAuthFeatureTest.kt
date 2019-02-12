@@ -78,7 +78,7 @@ class FirefoxAccountsAuthFeatureTest {
         }
 
         runBlocking {
-            manager.init().await()
+            manager.initAsync().await()
         }
 
         val mockAddTab: TabsUseCases.AddNewTabUseCase = mock()
@@ -130,7 +130,7 @@ class FirefoxAccountsAuthFeatureTest {
         }
 
         runBlocking {
-            manager.init().await()
+            manager.initAsync().await()
         }
 
         val mockAddTab: TabsUseCases.AddNewTabUseCase = mock()

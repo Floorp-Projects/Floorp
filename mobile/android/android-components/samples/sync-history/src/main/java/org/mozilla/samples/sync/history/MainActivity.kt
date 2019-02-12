@@ -74,7 +74,7 @@ class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener,
         findViewById<View>(R.id.buttonSignIn).setOnClickListener {
             launch {
                 val authUrl = try {
-                    accountManager.beginAuthentication().await()
+                    accountManager.beginAuthenticationAsync().await()
                 } catch (error: FxaException) {
                     val txtView: TextView = findViewById(R.id.fxaStatusView)
                     txtView.text = getString(R.string.account_error, error.toString())
@@ -85,7 +85,7 @@ class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener,
         }
 
         findViewById<View>(R.id.buttonLogout).setOnClickListener {
-            launch { accountManager.logout().await() }
+            launch { accountManager.logoutAsync().await() }
         }
 
         // NB: ObserverRegistry takes care of unregistering this observer when appropriate, and
@@ -95,7 +95,7 @@ class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener,
         accountManager.register(accountObserver, owner = this, autoPause = true)
 
         // Now that our account state observer is registered, we can kick off the account manager.
-        launch { accountManager.init().await() }
+        launch { accountManager.initAsync().await() }
 
         findViewById<View>(R.id.buttonSyncHistory).setOnClickListener {
             val account = accountManager.authenticatedAccount() ?: return@setOnClickListener
@@ -133,7 +133,7 @@ class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener,
     override fun onLoginComplete(code: String, state: String, fragment: LoginFragment) {
         launch {
             supportFragmentManager?.popBackStack()
-            accountManager.finishAuthentication(code, state).await()
+            accountManager.finishAuthenticationAsync(code, state).await()
         }
     }
 
