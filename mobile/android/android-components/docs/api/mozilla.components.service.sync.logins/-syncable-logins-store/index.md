@@ -1,0 +1,31 @@
+[android-components](../../index.md) / [mozilla.components.service.sync.logins](../index.md) / [SyncableLoginsStore](./index.md)
+
+# SyncableLoginsStore
+
+`data class SyncableLoginsStore : `[`SyncableStore`](../../mozilla.components.concept.storage/-syncable-store/index.md)`<`[`SyncUnlockInfo`](../-sync-unlock-info.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/AsyncLoginsStorage.kt#L369)
+
+Wraps [AsyncLoginsStorage](../-async-logins-storage/index.md) instance along with a lazy encryption key.
+
+This helper class lives here and not alongside [AsyncLoginsStorage](../-async-logins-storage/index.md) because we don't want to
+force a `service-sync-logins` dependency (which has a heavy native library dependency) on
+consumers of [FirefoxSyncFeature](#).
+
+### Constructors
+
+| Name | Summary |
+|---|---|
+| [&lt;init&gt;](-init-.md) | `SyncableLoginsStore(store: `[`AsyncLoginsStorage`](../-async-logins-storage/index.md)`, key: () -> Deferred<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`>)`<br>Wraps [AsyncLoginsStorage](../-async-logins-storage/index.md) instance along with a lazy encryption key. |
+
+### Properties
+
+| Name | Summary |
+|---|---|
+| [key](key.md) | `val key: () -> Deferred<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`>` |
+| [store](store.md) | `val store: `[`AsyncLoginsStorage`](../-async-logins-storage/index.md) |
+
+### Functions
+
+| Name | Summary |
+|---|---|
+| [sync](sync.md) | `suspend fun sync(authInfo: `[`SyncUnlockInfo`](../-sync-unlock-info.md)`): `[`SyncStatus`](../../mozilla.components.concept.storage/-sync-status.md)<br>Performs a sync. |
+| [withUnlocked](with-unlocked.md) | `suspend fun <T> withUnlocked(block: suspend (`[`AsyncLoginsStorage`](../-async-logins-storage/index.md)`) -> `[`T`](with-unlocked.md#T)`): `[`T`](with-unlocked.md#T)<br>Run some [block](with-unlocked.md#mozilla.components.service.sync.logins.SyncableLoginsStore$withUnlocked(kotlin.SuspendFunction1((mozilla.components.service.sync.logins.AsyncLoginsStorage, mozilla.components.service.sync.logins.SyncableLoginsStore.withUnlocked.T)))/block) which operates over an unlocked instance of [AsyncLoginsStorage](../-async-logins-storage/index.md). Database is locked once [block](with-unlocked.md#mozilla.components.service.sync.logins.SyncableLoginsStore$withUnlocked(kotlin.SuspendFunction1((mozilla.components.service.sync.logins.AsyncLoginsStorage, mozilla.components.service.sync.logins.SyncableLoginsStore.withUnlocked.T)))/block) is done. |

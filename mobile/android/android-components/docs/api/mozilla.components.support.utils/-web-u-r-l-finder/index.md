@@ -1,0 +1,23 @@
+[android-components](../../index.md) / [mozilla.components.support.utils](../index.md) / [WebURLFinder](./index.md)
+
+# WebURLFinder
+
+`class WebURLFinder` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/WebURLFinder.kt#L20)
+
+Regular expressions used in this class are taken from Android's Patterns.java.
+We brought them in to standardize URL matching across Android versions, instead of relying
+on Android version-dependent built-ins that can vary across Android versions.
+The original code can be found here:
+http://androidxref.com/8.0.0_r4/xref/frameworks/base/core/java/android/util/Patterns.java
+
+### Constructors
+
+| Name | Summary |
+|---|---|
+| [&lt;init&gt;](-init-.md) | `WebURLFinder(string: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?)` |
+
+### Functions
+
+| Name | Summary |
+|---|---|
+| [bestWebURL](best-web-u-r-l.md) | `fun bestWebURL(): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?`<br>Return best Web URL. |

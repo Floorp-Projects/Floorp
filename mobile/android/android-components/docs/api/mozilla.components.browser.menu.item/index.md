@@ -1,0 +1,15 @@
+[android-components](../index.md) / [mozilla.components.browser.menu.item](./index.md)
+
+## Package mozilla.components.browser.menu.item
+
+### Types
+
+| Name | Summary |
+|---|---|
+| [BrowserMenuCheckbox](-browser-menu-checkbox/index.md) | `class BrowserMenuCheckbox : `[`BrowserMenuCompoundButton`](-browser-menu-compound-button/index.md)<br>A simple browser menu checkbox. |
+| [BrowserMenuCompoundButton](-browser-menu-compound-button/index.md) | `abstract class BrowserMenuCompoundButton : `[`BrowserMenuItem`](../mozilla.components.browser.menu/-browser-menu-item/index.md)<br>A browser menu compound button. A basic sub-class would only have to provide a layout resource to satisfy [BrowserMenuItem.getLayoutResource](../mozilla.components.browser.menu/-browser-menu-item/get-layout-resource.md) which contains a [View](https://developer.android.com/reference/android/view/View.html) that inherits from [CompoundButton](https://developer.android.com/reference/android/widget/CompoundButton.html). |
+| [BrowserMenuDivider](-browser-menu-divider/index.md) | `class BrowserMenuDivider : `[`BrowserMenuItem`](../mozilla.components.browser.menu/-browser-menu-item/index.md)<br>A browser menu item to display a horizontal divider. |
+| [BrowserMenuImageText](-browser-menu-image-text/index.md) | `class BrowserMenuImageText : `[`BrowserMenuItem`](../mozilla.components.browser.menu/-browser-menu-item/index.md)<br>A menu item for displaying text with an image icon. |
+| [BrowserMenuItemToolbar](-browser-menu-item-toolbar/index.md) | `class BrowserMenuItemToolbar : `[`BrowserMenuItem`](../mozilla.components.browser.menu/-browser-menu-item/index.md)<br>A toolbar of buttons to show inside the browser menu. |
+| [BrowserMenuSwitch](-browser-menu-switch/index.md) | `class BrowserMenuSwitch : `[`BrowserMenuCompoundButton`](-browser-menu-compound-button/index.md)<br>A simple browser menu switch. |
+| [SimpleBrowserMenuItem](-simple-browser-menu-item/index.md) | `class SimpleBrowserMenuItem : `[`BrowserMenuItem`](../mozilla.components.browser.menu/-browser-menu-item/index.md)<br>A simple browser menu item displaying text. |
