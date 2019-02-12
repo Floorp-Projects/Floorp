@@ -51,6 +51,7 @@
     <color name="library_key_icon_background">#FFF4C3</color>
     <color name="library_key_icon">#C13905</color>
 
+    <color name="history_header">#696A6A</color>
     <color name="history_title">#000000</color>
     <color name="history_url">#696A6A</color>
 </resources>

@@ -42,7 +42,7 @@ class HistoryUIView(
 
 private class HistoryAdapter(
     private val actionEmitter: Observer<HistoryAction>
-) : RecyclerView.Adapter<HistoryAdapter.HistoryListItemViewHolder>() {
+) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     class HistoryListItemViewHolder(
         view: View,
         private val actionEmitter: Observer<HistoryAction>
@@ -72,6 +72,20 @@ private class HistoryAdapter(
         }
     }
 
+    class HistoryHeaderViewHolder(
+        view: View
+    ) : RecyclerView.ViewHolder(view) {
+        private val title = view.findViewById<TextView>(R.id.history_header_title)
+
+        fun bind(title: String) {
+            this.title.text = title
+        }
+
+        companion object {
+            const val LAYOUT_ID = R.layout.history_header
+        }
+    }
+
     private var items: List<HistoryItem> = emptyList()
 
     fun updateData(items: List<HistoryItem>) {
@@ -79,20 +93,34 @@ private class HistoryAdapter(
         notifyDataSetChanged()
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): HistoryListItemViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(viewType, parent, false)
 
-        return HistoryListItemViewHolder(view, actionEmitter)
+        return when (viewType) {
+            HistoryHeaderViewHolder.LAYOUT_ID -> HistoryHeaderViewHolder(view)
+            HistoryListItemViewHolder.LAYOUT_ID -> HistoryListItemViewHolder(view, actionEmitter)
+            else -> throw IllegalStateException("viewType $viewType does not match to a ViewHolder")
+        }
     }
 
     override fun getItemViewType(position: Int): Int {
-        return HistoryListItemViewHolder.LAYOUT_ID
+        return when (position) {
+            0 -> HistoryHeaderViewHolder.LAYOUT_ID
+            else -> HistoryListItemViewHolder.LAYOUT_ID
+        }
     }
 
-    override fun getItemCount(): Int = items.count()
+    override fun getItemCount(): Int = items.count() + NUMBER_OF_SECTIONS
 
-    override fun onBindViewHolder(holder: HistoryListItemViewHolder, position: Int) {
-        val item = items[position]
-        holder.bind(item)
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+
+        when (holder) {
+            is HistoryHeaderViewHolder -> holder.bind("Today")
+            is HistoryListItemViewHolder -> holder.bind(items[position - NUMBER_OF_SECTIONS])
+        }
+    }
+
+    companion object {
+        private const val NUMBER_OF_SECTIONS = 1
     }
 }
