@@ -14,7 +14,7 @@ use api::DevicePoint;
 use border::{get_max_scale_for_border, build_border_instances};
 use border::BorderSegmentCacheKey;
 use clip::{ClipStore};
-use clip_scroll_tree::{ClipScrollTree, SpatialNodeIndex, ROOT_SPATIAL_NODE_INDEX};
+use clip_scroll_tree::{ROOT_SPATIAL_NODE_INDEX, ClipScrollTree, SpatialNodeIndex, VisibleFace};
 use clip::{ClipDataStore, ClipNodeFlags, ClipChainId, ClipChainInstance, ClipItem};
 use debug_colors;
 use debug_render::DebugItem;
@@ -127,21 +127,6 @@ impl PrimitiveOpacity {
     }
 }
 
-#[derive(Debug, Copy, Clone)]
-pub enum VisibleFace {
-    Front,
-    Back,
-}
-
-impl ops::Not for VisibleFace {
-    type Output = Self;
-    fn not(self) -> Self {
-        match self {
-            VisibleFace::Front => VisibleFace::Back,
-            VisibleFace::Back => VisibleFace::Front,
-        }
-    }
-}
 
 #[derive(Debug, Clone)]
 pub enum CoordinateSpaceMapping<F, T> {
@@ -155,32 +140,27 @@ impl<F, T> CoordinateSpaceMapping<F, T> {
         ref_spatial_node_index: SpatialNodeIndex,
         target_node_index: SpatialNodeIndex,
         clip_scroll_tree: &ClipScrollTree,
-    ) -> Option<Self> {
+    ) -> Option<(Self, VisibleFace)> {
         let spatial_nodes = &clip_scroll_tree.spatial_nodes;
         let ref_spatial_node = &spatial_nodes[ref_spatial_node_index.0 as usize];
         let target_spatial_node = &spatial_nodes[target_node_index.0 as usize];
 
         if ref_spatial_node_index == target_node_index {
-            Some(CoordinateSpaceMapping::Local)
+            Some((CoordinateSpaceMapping::Local, VisibleFace::Front))
         } else if ref_spatial_node.coordinate_system_id == target_spatial_node.coordinate_system_id {
-            Some(CoordinateSpaceMapping::ScaleOffset(
-                ref_spatial_node.coordinate_system_relative_scale_offset
-                    .inverse()
-                    .accumulate(
-                        &target_spatial_node.coordinate_system_relative_scale_offset
-                    )
-            ))
+            let scale_offset = ref_spatial_node.coordinate_system_relative_scale_offset
+                .inverse()
+                .accumulate(&target_spatial_node.coordinate_system_relative_scale_offset);
+            Some((CoordinateSpaceMapping::ScaleOffset(scale_offset), VisibleFace::Front))
         } else {
-            let transform = clip_scroll_tree.get_relative_transform(
-                target_node_index,
-                ref_spatial_node_index,
-            );
-
-            transform.map(|transform| {
-                CoordinateSpaceMapping::Transform(
-                    transform.with_source::<F>().with_destination::<T>()
-                )
-            })
+            clip_scroll_tree
+                .get_relative_transform(target_node_index, ref_spatial_node_index)
+                .map(|relative| (
+                    CoordinateSpaceMapping::Transform(
+                        relative.flattened.with_source::<F>().with_destination::<T>()
+                    ),
+                    relative.visible_face,
+                ))
         }
     }
 }
@@ -191,6 +171,7 @@ pub struct SpaceMapper<F, T> {
     pub ref_spatial_node_index: SpatialNodeIndex,
     pub current_target_spatial_node_index: SpatialNodeIndex,
     pub bounds: TypedRect<f32, T>,
+    visible_face: VisibleFace,
 }
 
 impl<F, T> SpaceMapper<F, T> where F: fmt::Debug {
@@ -203,6 +184,7 @@ impl<F, T> SpaceMapper<F, T> where F: fmt::Debug {
             ref_spatial_node_index,
             current_target_spatial_node_index: ref_spatial_node_index,
             bounds,
+            visible_face: VisibleFace::Front,
         }
     }
 
@@ -225,11 +207,14 @@ impl<F, T> SpaceMapper<F, T> where F: fmt::Debug {
         if target_node_index != self.current_target_spatial_node_index {
             self.current_target_spatial_node_index = target_node_index;
 
-            self.kind = CoordinateSpaceMapping::new(
+            let (kind, visible_face) = CoordinateSpaceMapping::new(
                 self.ref_spatial_node_index,
                 target_node_index,
                 clip_scroll_tree,
             ).expect("bug: should have been culled by invalid node");
+
+            self.kind = kind;
+            self.visible_face = visible_face;
         }
     }
 
@@ -284,17 +269,7 @@ impl<F, T> SpaceMapper<F, T> where F: fmt::Debug {
     }
 
     pub fn visible_face(&self) -> VisibleFace {
-        match self.kind {
-            CoordinateSpaceMapping::Local => VisibleFace::Front,
-            CoordinateSpaceMapping::ScaleOffset(_) => VisibleFace::Front,
-            CoordinateSpaceMapping::Transform(ref transform) => {
-                if transform.is_backface_visible() {
-                    VisibleFace::Back
-                } else {
-                    VisibleFace::Front
-                }
-            }
-        }
+        self.visible_face
     }
 }
 

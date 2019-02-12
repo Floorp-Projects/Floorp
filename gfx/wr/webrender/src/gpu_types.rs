@@ -4,7 +4,7 @@
 
 use api::{
     DeviceHomogeneousVector, DevicePoint, DeviceSize, DeviceRect,
-    LayoutRect, LayoutToWorldTransform, LayoutTransform,
+    LayoutRect, LayoutToWorldTransform,
     PremultipliedColorF, LayoutToPictureTransform, PictureToLayoutTransform, PicturePixel,
     WorldPixel, WorldToLayoutTransform, LayoutPoint, DeviceVector2D
 };
@@ -472,18 +472,18 @@ impl TransformPalette {
 
     fn get_index(
         &mut self,
-        from_index: SpatialNodeIndex,
-        to_index: SpatialNodeIndex,
+        child_index: SpatialNodeIndex,
+        parent_index: SpatialNodeIndex,
         clip_scroll_tree: &ClipScrollTree,
     ) -> usize {
-        if to_index == ROOT_SPATIAL_NODE_INDEX {
-            from_index.0 as usize
-        } else if from_index == to_index {
+        if parent_index == ROOT_SPATIAL_NODE_INDEX {
+            child_index.0 as usize
+        } else if child_index == parent_index {
             0
         } else {
             let key = RelativeTransformKey {
-                from_index,
-                to_index,
+                from_index: child_index,
+                to_index: parent_index,
             };
 
             let metadata = &mut self.metadata;
@@ -493,17 +493,18 @@ impl TransformPalette {
                 .entry(key)
                 .or_insert_with(|| {
                     let transform = clip_scroll_tree.get_relative_transform(
-                        from_index,
-                        to_index,
+                        child_index,
+                        parent_index,
                     )
-                    .unwrap_or(LayoutTransform::identity())
+                    .unwrap_or_default()
+                    .flattened
                     .with_destination::<PicturePixel>();
 
                     register_transform(
                         metadata,
                         transforms,
-                        from_index,
-                        to_index,
+                        child_index,
+                        parent_index,
                         transform,
                     )
                 })
