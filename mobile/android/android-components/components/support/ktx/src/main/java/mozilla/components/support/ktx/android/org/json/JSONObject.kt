@@ -86,3 +86,22 @@ fun JSONObject.mergeWith(other: JSONObject) {
         put(key, other[key])
     }
 }
+
+/**
+ * Gets the [JSONObject] value with the given key if it exists.
+ * Otherwise calls the defaultValue function, adds its
+ * result to the object, and returns that.
+ *
+ * @param key the key to get or create.
+ * @param defaultValue a function returning a new default value
+ * @return the existing or new value
+ */
+fun JSONObject.getOrPutJSONObject(key: String, defaultValue: () -> JSONObject): JSONObject {
+    optJSONObject(key)?.let {
+        return it
+    } ?: run {
+        val value = defaultValue()
+        put(key, value)
+        return value
+    }
+}

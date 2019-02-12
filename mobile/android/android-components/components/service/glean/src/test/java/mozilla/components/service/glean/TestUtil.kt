@@ -9,10 +9,22 @@ import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import androidx.test.core.app.ApplicationProvider
 import mozilla.components.service.glean.config.Configuration
+import mozilla.components.service.glean.ping.PingMaker
+import mozilla.components.service.glean.storages.StorageEngineManager
 import org.json.JSONObject
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito
 
+/**
+ * Checks ping content against the glean ping schema.
+ *
+ * This uses the Python utility, glean_parser, to perform the actual checking.
+ * This is installed in its own Miniconda environment as part of the build
+ * configuration in sdk_generator.gradle.
+ *
+ * @param content The JSON content of the ping
+ * @throws AssertionError If the JSON content is not valid
+ */
 internal fun checkPingSchema(content: JSONObject) {
     val os = System.getProperty("os.name")?.toLowerCase()
     val pythonExecutable =
@@ -44,6 +56,39 @@ internal fun checkPingSchema(content: JSONObject) {
 
     val exitCode = process.waitFor()
     assert(exitCode == 0)
+}
+
+/**
+ * Checks ping content against the glean ping schema.
+ *
+ * This uses the Python utility, glean_parser, to perform the actual checking.
+ * This is installed in its own Miniconda environment as part of the build
+ * configuration in sdk_generator.gradle.
+ *
+ * @param content The JSON content of the ping
+ * @return the content string, parsed into a JSONObject
+ * @throws AssertionError If the JSON content is not valid
+ */
+internal fun checkPingSchema(content: String): JSONObject {
+    val jsonContent = JSONObject(content)
+    checkPingSchema(jsonContent)
+    return jsonContent
+}
+
+/**
+ * Collects a specified ping type and checks it against the glean ping schema.
+ *
+ * @param storeName The name of the ping to check
+ * @return the ping contents, in a JSONObject
+ * @throws AssertionError If the JSON content is not valid
+ */
+internal fun collectAndCheckPingSchema(storeName: String): JSONObject {
+    val appContext = ApplicationProvider.getApplicationContext<Context>()
+    val jsonString = PingMaker(
+        StorageEngineManager(applicationContext = appContext),
+        appContext
+    ).collect(storeName)!!
+    return checkPingSchema(jsonString)
 }
 
 /**

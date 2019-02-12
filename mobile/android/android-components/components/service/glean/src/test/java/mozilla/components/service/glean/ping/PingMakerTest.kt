@@ -35,7 +35,7 @@ class PingMakerTest {
         val maker = PingMaker(
             StorageEngineManager(
                 storageEngines = mapOf(
-                    "engine2" to MockStorageEngine(JSONObject())
+                    "engine2" to MockStorageEngine(JSONObject(mapOf("a.b" to "foo")))
                 ),
                 applicationContext = mockApplicationContext
             ),
@@ -143,8 +143,8 @@ class PingMakerTest {
         val maker = PingMaker(
             StorageEngineManager(
                 storageEngines = mapOf(
-                    "engine1" to MockStorageEngine(JSONObject(), "test1"),
-                    "engine2" to MockStorageEngine(JSONObject(), "test2")
+                    "engine1" to MockStorageEngine(JSONObject(mapOf("a.b" to "foo")), "test1"),
+                    "engine2" to MockStorageEngine(JSONObject(mapOf("c.d" to "foo")), "test2")
                 ),
                 applicationContext = applicationContext
             ),

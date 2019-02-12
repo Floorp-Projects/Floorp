@@ -14,7 +14,6 @@ import mozilla.components.service.glean.Glean
 import mozilla.components.service.glean.resetGlean
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
-import org.json.JSONObject
 import org.junit.Before
 import org.junit.Test
 import org.junit.Assert.assertEquals
@@ -203,9 +202,8 @@ class EventsStorageEngineTest {
             val applicationId = "mozilla-components-service-glean"
             assert(request.path.startsWith("/submit/$applicationId/events/${Glean.SCHEMA_VERSION}/"))
             val eventsJsonData = request.body.readUtf8()
-            val eventsJson = JSONObject(eventsJsonData)
+            val eventsJson = checkPingSchema(eventsJsonData)
             val eventsArray = eventsJson.getJSONArray("events")!!
-            checkPingSchema(eventsJson)
             assertEquals(500, eventsArray.length())
 
             for (i in 0..499) {

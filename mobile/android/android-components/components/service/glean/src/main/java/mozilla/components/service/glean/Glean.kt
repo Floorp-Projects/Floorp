@@ -24,6 +24,8 @@ import mozilla.components.service.glean.storages.ExperimentsStorageEngine
 import mozilla.components.service.glean.storages.StorageEngineManager
 import mozilla.components.service.glean.ping.BaselinePing
 import mozilla.components.service.glean.scheduler.MetricsPingScheduler
+import mozilla.components.service.glean.storages.StringsStorageEngine
+import mozilla.components.service.glean.storages.UuidsStorageEngine
 import mozilla.components.support.base.log.logger.Logger
 import java.io.File
 
@@ -189,6 +191,13 @@ open class GleanInternalAPI internal constructor () {
      * Initialize the core metrics internally managed by Glean (e.g. client id).
      */
     private fun initializeCoreMetrics(applicationContext: Context) {
+        // Since all of the ping_info properties are required, we can't
+        // use the normal metrics API to set them, since those work
+        // asynchronously, and there is a race condition between when they
+        // are set and the possible sending of the first ping upon startup.
+        // Therefore, this uses the lower-level internal storage engine API
+        // to set these metrics, which is synchronous.
+
         val gleanDataDir = File(applicationContext.applicationInfo.dataDir, Glean.GLEAN_DATA_DIR)
 
         // Make sure the data directory exists and is writable.
@@ -206,17 +215,22 @@ open class GleanInternalAPI internal constructor () {
         // one-time only metrics.
         val firstRunDetector = FileFirstRunDetector(gleanDataDir)
         if (firstRunDetector.isFirstRun()) {
-            GleanInternalMetrics.clientId.generateAndSet()
+            val uuid = UUID.randomUUID()
+            UuidsStorageEngine.record(GleanInternalMetrics.clientId, uuid)
         }
 
         try {
             val packageInfo = applicationContext.packageManager.getPackageInfo(
                 applicationContext.packageName, 0
             )
-            GleanInternalMetrics.appBuild.set(packageInfo.versionCode.toString())
-            packageInfo.versionName?.let {
-                GleanInternalMetrics.appDisplayVersion.set(it)
-            }
+            StringsStorageEngine.record(
+                GleanInternalMetrics.appBuild,
+                packageInfo.versionCode.toString()
+            )
+            StringsStorageEngine.record(
+                GleanInternalMetrics.appDisplayVersion,
+                packageInfo.versionName?.let { it } ?: "Unknown"
+            )
         } catch (e: PackageManager.NameNotFoundException) {
             logger.error("Could not get own package info, unable to report build id and display version")
             throw AssertionError("Could not get own package info, aborting init")
