@@ -243,17 +243,6 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
             getSettings().mContentBlocking = cb;
             return this;
         }
-
-        /**
-         * Sets video autoplay mode.
-         * May be either {@link GeckoRuntimeSettings#AUTOPLAY_DEFAULT_ALLOWED} or {@link GeckoRuntimeSettings#AUTOPLAY_DEFAULT_BLOCKED}
-         * @param autoplay Allows or blocks video autoplay.
-         * @return This Builder instance.
-         */
-        public @NonNull Builder autoplayDefault(@AutoplayDefault int autoplay) {
-            getSettings().mAutoplayDefault.set(autoplay);
-            return this;
-        }
     }
 
     private GeckoRuntime mRuntime;
@@ -275,8 +264,6 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
         "browser.display.use_document_fonts", 1);
     /* package */ final Pref<Boolean> mConsoleOutput = new Pref<Boolean>(
         "geckoview.console.enabled", false);
-    /* package */ final Pref<Integer> mAutoplayDefault = new Pref<Integer>(
-        "media.autoplay.default", AUTOPLAY_DEFAULT_BLOCKED);
 
     /* package */ boolean mDebugPause;
     /* package */ boolean mUseMaxScreenDepth;
@@ -536,41 +523,6 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
      */
     public boolean getConsoleOutputEnabled() {
         return mConsoleOutput.get();
-    }
-
-    // Sync values with dom/media/nsIAutoplay.idl.
-    @Retention(RetentionPolicy.SOURCE)
-    @IntDef({ AUTOPLAY_DEFAULT_ALLOWED, AUTOPLAY_DEFAULT_BLOCKED })
-    /* package */ @interface AutoplayDefault {}
-
-    /**
-     * Autoplay video is allowed.
-     */
-    public static final int AUTOPLAY_DEFAULT_ALLOWED = 0;
-
-    /**
-     * Autoplay video is blocked.
-     */
-    public static final int AUTOPLAY_DEFAULT_BLOCKED = 1;
-
-    /**
-     * Sets video autoplay mode.
-     * May be either {@link GeckoRuntimeSettings#AUTOPLAY_DEFAULT_ALLOWED} or {@link GeckoRuntimeSettings#AUTOPLAY_DEFAULT_BLOCKED}
-     * @param autoplay Allows or blocks video autoplay.
-     * @return This GeckoRuntimeSettings instance.
-     */
-    public @NonNull GeckoRuntimeSettings setAutoplayDefault(@AutoplayDefault int autoplay) {
-        mAutoplayDefault.commit(autoplay);
-        return this;
-    }
-
-    /**
-     * Gets the current video autoplay mode.
-     * @return The current video autoplay mode. Will be either {@link GeckoRuntimeSettings#AUTOPLAY_DEFAULT_ALLOWED}
-     * or {@link GeckoRuntimeSettings#AUTOPLAY_DEFAULT_BLOCKED}
-     */
-    public @AutoplayDefault int getAutoplayDefault() {
-        return mAutoplayDefault.get();
     }
 
     @Override // Parcelable
