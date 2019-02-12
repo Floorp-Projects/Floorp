@@ -126,6 +126,10 @@ about-debugging-runtime-shared-workers = Shared Workers
 # Title of the other workers category.
 about-debugging-runtime-other-workers = Other Workers
 
+# Label of the button opening the performance profiler panel in runtime pages for remote
+# runtimes.
+about-debugging-runtime-profile-button = Profile Runtime
+
 # This string is displayed in about:debugging#workers if the current configuration of the
 # browser is incompatible with service workers. Learn more points to MDN.
 # https://developer.mozilla.org/en-US/docs/Tools/about%3Adebugging#Service_workers_not_compatible
