@@ -2060,6 +2060,38 @@ static bool gDoMigration = false;
 static bool gDoProfileReset = false;
 static nsCOMPtr<nsIToolkitProfile> gResetOldProfile;
 
+static nsresult LockProfile(nsINativeAppSupport* aNative, nsIFile* aRootDir,
+                            nsIFile* aLocalDir, nsIToolkitProfile* aProfile,
+                            nsIProfileLock** aResult) {
+  // If you close Firefox and very quickly reopen it, the old Firefox may
+  // still be closing down. Rather than immediately showing the
+  // "Firefox is running but is not responding" message, we spend a few
+  // seconds retrying first.
+
+  static const int kLockRetrySeconds = 5;
+  static const int kLockRetrySleepMS = 100;
+
+  nsresult rv;
+  nsCOMPtr<nsIProfileUnlocker> unlocker;
+  const TimeStamp start = TimeStamp::Now();
+  do {
+    if (aProfile) {
+      rv = aProfile->Lock(getter_AddRefs(unlocker), aResult);
+    } else {
+      rv = NS_LockProfilePath(aRootDir, aLocalDir, getter_AddRefs(unlocker),
+                              aResult);
+    }
+    if (NS_SUCCEEDED(rv)) {
+      StartupTimeline::Record(StartupTimeline::AFTER_PROFILE_LOCKED);
+      return NS_OK;
+    }
+    PR_Sleep(kLockRetrySleepMS);
+  } while (TimeStamp::Now() - start <
+           TimeDuration::FromSeconds(kLockRetrySeconds));
+
+  return ProfileLockedDialog(aRootDir, aLocalDir, unlocker, aNative, aResult);
+}
+
 // Pick a profile. We need to end up with a profile lock.
 //
 // 1) check for --profile <path>
@@ -2167,11 +2199,6 @@ static nsresult SelectProfile(nsIProfileLock** aResult,
       rv = profile->GetLocalDir(getter_AddRefs(localDir));
       NS_ENSURE_SUCCESS(rv, rv);
       SaveFileToEnv("XRE_PROFILE_LOCAL_PATH", localDir);
-
-      rv = profile->GetName(*aProfileName);
-      if (NS_FAILED(rv)) {
-        aProfileName->Truncate(0);
-      }
     } else {
       NS_WARNING("Profile reset failed.");
       return NS_ERROR_ABORT;
@@ -2185,39 +2212,17 @@ static nsresult SelectProfile(nsIProfileLock** aResult,
     return NS_ERROR_ABORT;
   }
 
-  // If you close Firefox and very quickly reopen it, the old Firefox may
-  // still be closing down. Rather than immediately showing the
-  // "Firefox is running but is not responding" message, we spend a few
-  // seconds retrying first.
+  rv = LockProfile(aNative, rootDir, localDir, profile, aResult);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  static const int kLockRetrySeconds = 5;
-  static const int kLockRetrySleepMS = 100;
-
-  nsCOMPtr<nsIProfileUnlocker> unlocker;
-  const TimeStamp start = TimeStamp::Now();
-  do {
-    if (profile) {
-      rv = profile->Lock(getter_AddRefs(unlocker), aResult);
-    } else {
-      rv = NS_LockProfilePath(rootDir, localDir, getter_AddRefs(unlocker),
-                              aResult);
+  if (aProfileName && profile) {
+    rv = profile->GetName(*aProfileName);
+    if (NS_FAILED(rv)) {
+      aProfileName->Truncate(0);
     }
-    if (NS_SUCCEEDED(rv)) {
-      StartupTimeline::Record(StartupTimeline::AFTER_PROFILE_LOCKED);
-      // Try to grab the profile name.
-      if (aProfileName && profile) {
-        rv = profile->GetName(*aProfileName);
-        if (NS_FAILED(rv)) {
-          aProfileName->Truncate(0);
-        }
-      }
-      return NS_OK;
-    }
-    PR_Sleep(kLockRetrySleepMS);
-  } while (TimeStamp::Now() - start <
-           TimeDuration::FromSeconds(kLockRetrySeconds));
+  }
 
-  return ProfileLockedDialog(rootDir, localDir, unlocker, aNative, aResult);
+  return NS_OK;
 }
 
 #ifdef MOZ_BLOCK_PROFILE_DOWNGRADE
