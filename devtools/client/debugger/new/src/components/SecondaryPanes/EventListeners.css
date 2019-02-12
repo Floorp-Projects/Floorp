@@ -17,8 +17,6 @@
 
 .event-listeners-content .arrow {
 	margin-inline-end: 0;
-	position: relative;
-	top: 1px;
 }
 
 html[dir="ltr"] .event-listeners-content .arrow.expanded {

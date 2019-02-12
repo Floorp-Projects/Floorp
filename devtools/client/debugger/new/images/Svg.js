@@ -7,8 +7,7 @@ import InlineSVG from "svg-inline-react";
 
 const svg = {
   breakpoint: require("./breakpoint.svg"),
-  "column-marker": require("./column-marker.svg"),
-  "magnifying-glass": require("./magnifying-glass.svg")
+  "column-marker": require("./column-marker.svg")
 };
 
 type SvgType = {
@@ -18,22 +17,17 @@ type SvgType = {
   "aria-label"?: string
 };
 
-function Svg({ name, className, onClick, "aria-label": ariaLabel }) {
+function Svg({ name, className, onClick, "aria-label": ariaLabel }: SvgType) {
   if (!svg[name]) {
     const error = `Unknown SVG: ${name}`;
     console.warn(error);
     return null;
   }
 
-  className = `${name} ${className || ""}`;
-  if (name === "subSettings") {
-    className = "";
-  }
-
   const props = {
-    className,
+    className: `${name} ${className || ""}`,
     onClick,
-    ["aria-label"]: ariaLabel,
+    "aria-label": ariaLabel,
     src: svg[name]
   };
 

@@ -19,70 +19,8 @@ html[dir="rtl"] .command-bar {
   background-color: var(--theme-toolbar-background);
 }
 
-.img.pause,
-.img.stepOver,
-.img.stepIn,
-.img.stepOut,
-.img.resume,
-.img.rewind,
-.img.reverseStepOver,
-.img.reverseStepIn,
-.img.reverseStepOut,
-.img.replay-previous,
-.img.replay-next,
-.img.resume,
-.img.shortcuts,
-.img.skipPausing {
-  background-color: var(--theme-body-color);
-}
-
-.img.pause {
-  mask: url(/images/pause.svg) no-repeat;
-}
-
-.img.stepOver {
-  mask: url(/images/stepOver.svg) no-repeat;
-}
-
-.img.stepIn {
-  mask: url(/images/stepIn.svg) no-repeat;
-}
-
-.img.stepOut {
-  mask: url(/images/stepOut.svg) no-repeat;
-}
-
-.img.resume {
-  mask: url(/images/resume.svg) no-repeat;
-}
-
-.img.rewind {
-  mask: url(/images/resume.svg) no-repeat;
-  transform: scaleX(-1);
-}
-
-.img.reverseStepOver {
-  mask: url(/images/stepOver.svg) no-repeat;
-  transform: scaleX(-1);
-}
-
-.img.reverseStepIn {
-  mask: url(/images/stepIn.svg) no-repeat;
-  transform: scaleX(-1);
-}
-
-.img.reverseStepOut {
-  mask: url(/images/stepOut.svg) no-repeat;
-  transform: scaleX(-1);
-}
-
 .command-bar .filler {
   flex-grow: 1;
-}
-
-.command-bar .img.shortcuts {
-  mask: url(/images/help.svg) no-repeat;
-  mask-size: contain;
 }
 
 .command-bar .replay-inactive {
@@ -103,12 +41,7 @@ html[dir="rtl"] .command-bar {
   float: right;
 }
 
-.command-bar .skipPausing {
-  mask: url(/images/disable-pausing.svg) no-repeat;
-  mask-size: 100%;
-}
-
-.command-bar .active .skipPausing {
+.command-bar .active .disable-pausing {
   background-color: var(--theme-highlight-blue);
 }
 

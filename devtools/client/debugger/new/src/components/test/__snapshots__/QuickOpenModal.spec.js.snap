@@ -72,7 +72,7 @@ exports[`QuickOpenModal Basic render with mount & searchType = functions 1`] = `
               summaryMsg=""
             >
               <div
-                className="search-shadow"
+                className="search-outline"
               >
                 <div
                   aria-expanded={false}
@@ -81,26 +81,13 @@ exports[`QuickOpenModal Basic render with mount & searchType = functions 1`] = `
                   className="search-field"
                   role="combobox"
                 >
-                  <Svg
-                    name="magnifying-glass"
+                  <AccessibleImage
+                    className="search"
                   >
-                    <InlineSVG
-                      className="magnifying-glass "
-                      element="i"
-                      raw={false}
-                      src="<svg></svg>"
-                    >
-                      <i
-                        className="magnifying-glass "
-                        dangerouslySetInnerHTML={
-                          Object {
-                            "__html": "<svg></svg>",
-                          }
-                        }
-                        src={null}
-                      />
-                    </InlineSVG>
-                  </Svg>
+                    <span
+                      className="img search"
+                    />
+                  </AccessibleImage>
                   <input
                     aria-activedescendant=""
                     aria-autocomplete="list"
@@ -213,7 +200,7 @@ exports[`QuickOpenModal Basic render with mount & searchType = variables 1`] = `
               summaryMsg=""
             >
               <div
-                className="search-shadow"
+                className="search-outline"
               >
                 <div
                   aria-expanded={false}
@@ -222,26 +209,13 @@ exports[`QuickOpenModal Basic render with mount & searchType = variables 1`] = `
                   className="search-field"
                   role="combobox"
                 >
-                  <Svg
-                    name="magnifying-glass"
+                  <AccessibleImage
+                    className="search"
                   >
-                    <InlineSVG
-                      className="magnifying-glass "
-                      element="i"
-                      raw={false}
-                      src="<svg></svg>"
-                    >
-                      <i
-                        className="magnifying-glass "
-                        dangerouslySetInnerHTML={
-                          Object {
-                            "__html": "<svg></svg>",
-                          }
-                        }
-                        src={null}
-                      />
-                    </InlineSVG>
-                  </Svg>
+                    <span
+                      className="img search"
+                    />
+                  </AccessibleImage>
                   <input
                     aria-activedescendant=""
                     aria-autocomplete="list"
@@ -337,7 +311,7 @@ exports[`QuickOpenModal Basic render with mount 1`] = `
               summaryMsg=""
             >
               <div
-                className="search-shadow"
+                className="search-outline"
               >
                 <div
                   aria-expanded={false}
@@ -346,26 +320,13 @@ exports[`QuickOpenModal Basic render with mount 1`] = `
                   className="search-field big"
                   role="combobox"
                 >
-                  <Svg
-                    name="magnifying-glass"
+                  <AccessibleImage
+                    className="search"
                   >
-                    <InlineSVG
-                      className="magnifying-glass "
-                      element="i"
-                      raw={false}
-                      src="<svg></svg>"
-                    >
-                      <i
-                        className="magnifying-glass "
-                        dangerouslySetInnerHTML={
-                          Object {
-                            "__html": "<svg></svg>",
-                          }
-                        }
-                        src={null}
-                      />
-                    </InlineSVG>
-                  </Svg>
+                    <span
+                      className="img search"
+                    />
+                  </AccessibleImage>
                   <input
                     aria-activedescendant=""
                     aria-autocomplete="list"
@@ -513,7 +474,7 @@ exports[`QuickOpenModal Simple goto search query = :abc & searchType = goto 1`] 
               summaryMsg="Go to line"
             >
               <div
-                className="search-shadow"
+                className="search-outline"
               >
                 <div
                   aria-expanded={false}
@@ -522,26 +483,13 @@ exports[`QuickOpenModal Simple goto search query = :abc & searchType = goto 1`] 
                   className="search-field"
                   role="combobox"
                 >
-                  <Svg
-                    name="magnifying-glass"
+                  <AccessibleImage
+                    className="search"
                   >
-                    <InlineSVG
-                      className="magnifying-glass "
-                      element="i"
-                      raw={false}
-                      src="<svg></svg>"
-                    >
-                      <i
-                        className="magnifying-glass "
-                        dangerouslySetInnerHTML={
-                          Object {
-                            "__html": "<svg></svg>",
-                          }
-                        }
-                        src={null}
-                      />
-                    </InlineSVG>
-                  </Svg>
+                    <span
+                      className="img search"
+                    />
+                  </AccessibleImage>
                   <input
                     aria-activedescendant=""
                     aria-autocomplete="list"
@@ -556,7 +504,7 @@ exports[`QuickOpenModal Simple goto search query = :abc & searchType = goto 1`] 
                     value=":abc"
                   />
                   <div
-                    className="summary"
+                    className="search-field-summary"
                   >
                     Go to line
                   </div>
@@ -642,7 +590,7 @@ exports[`QuickOpenModal showErrorEmoji false when count + query 1`] = `
               summaryMsg=""
             >
               <div
-                className="search-shadow"
+                className="search-outline"
               >
                 <div
                   aria-expanded={true}
@@ -651,26 +599,13 @@ exports[`QuickOpenModal showErrorEmoji false when count + query 1`] = `
                   className="search-field big"
                   role="combobox"
                 >
-                  <Svg
-                    name="magnifying-glass"
+                  <AccessibleImage
+                    className="search"
                   >
-                    <InlineSVG
-                      className="magnifying-glass "
-                      element="i"
-                      raw={false}
-                      src="<svg></svg>"
-                    >
-                      <i
-                        className="magnifying-glass "
-                        dangerouslySetInnerHTML={
-                          Object {
-                            "__html": "<svg></svg>",
-                          }
-                        }
-                        src={null}
-                      />
-                    </InlineSVG>
-                  </Svg>
+                    <span
+                      className="img search"
+                    />
+                  </AccessibleImage>
                   <input
                     aria-activedescendant=""
                     aria-autocomplete="list"
@@ -814,7 +749,7 @@ exports[`QuickOpenModal showErrorEmoji false when goto numeric ':2222' 1`] = `
               summaryMsg="Go to line"
             >
               <div
-                className="search-shadow"
+                className="search-outline"
               >
                 <div
                   aria-expanded={false}
@@ -823,26 +758,13 @@ exports[`QuickOpenModal showErrorEmoji false when goto numeric ':2222' 1`] = `
                   className="search-field"
                   role="combobox"
                 >
-                  <Svg
-                    name="magnifying-glass"
+                  <AccessibleImage
+                    className="search"
                   >
-                    <InlineSVG
-                      className="magnifying-glass "
-                      element="i"
-                      raw={false}
-                      src="<svg></svg>"
-                    >
-                      <i
-                        className="magnifying-glass "
-                        dangerouslySetInnerHTML={
-                          Object {
-                            "__html": "<svg></svg>",
-                          }
-                        }
-                        src={null}
-                      />
-                    </InlineSVG>
-                  </Svg>
+                    <span
+                      className="img search"
+                    />
+                  </AccessibleImage>
                   <input
                     aria-activedescendant=""
                     aria-autocomplete="list"
@@ -857,7 +779,7 @@ exports[`QuickOpenModal showErrorEmoji false when goto numeric ':2222' 1`] = `
                     value=":2222"
                   />
                   <div
-                    className="summary"
+                    className="search-field-summary"
                   >
                     Go to line
                   </div>
@@ -943,7 +865,7 @@ exports[`QuickOpenModal showErrorEmoji false when no query 1`] = `
               summaryMsg=""
             >
               <div
-                className="search-shadow"
+                className="search-outline"
               >
                 <div
                   aria-expanded={false}
@@ -952,26 +874,13 @@ exports[`QuickOpenModal showErrorEmoji false when no query 1`] = `
                   className="search-field"
                   role="combobox"
                 >
-                  <Svg
-                    name="magnifying-glass"
+                  <AccessibleImage
+                    className="search"
                   >
-                    <InlineSVG
-                      className="magnifying-glass "
-                      element="i"
-                      raw={false}
-                      src="<svg></svg>"
-                    >
-                      <i
-                        className="magnifying-glass "
-                        dangerouslySetInnerHTML={
-                          Object {
-                            "__html": "<svg></svg>",
-                          }
-                        }
-                        src={null}
-                      />
-                    </InlineSVG>
-                  </Svg>
+                    <span
+                      className="img search"
+                    />
+                  </AccessibleImage>
                   <input
                     aria-activedescendant=""
                     aria-autocomplete="list"
@@ -1083,7 +992,7 @@ exports[`QuickOpenModal showErrorEmoji true when goto not numeric ':22k22' 1`] =
               summaryMsg="Go to line"
             >
               <div
-                className="search-shadow"
+                className="search-outline"
               >
                 <div
                   aria-expanded={false}
@@ -1092,26 +1001,13 @@ exports[`QuickOpenModal showErrorEmoji true when goto not numeric ':22k22' 1`] =
                   className="search-field"
                   role="combobox"
                 >
-                  <Svg
-                    name="magnifying-glass"
+                  <AccessibleImage
+                    className="search"
                   >
-                    <InlineSVG
-                      className="magnifying-glass "
-                      element="i"
-                      raw={false}
-                      src="<svg></svg>"
-                    >
-                      <i
-                        className="magnifying-glass "
-                        dangerouslySetInnerHTML={
-                          Object {
-                            "__html": "<svg></svg>",
-                          }
-                        }
-                        src={null}
-                      />
-                    </InlineSVG>
-                  </Svg>
+                    <span
+                      className="img search"
+                    />
+                  </AccessibleImage>
                   <input
                     aria-activedescendant=""
                     aria-autocomplete="list"
@@ -1126,7 +1022,7 @@ exports[`QuickOpenModal showErrorEmoji true when goto not numeric ':22k22' 1`] =
                     value=":22k22"
                   />
                   <div
-                    className="summary"
+                    className="search-field-summary"
                   >
                     Go to line
                   </div>
@@ -1212,7 +1108,7 @@ exports[`QuickOpenModal showErrorEmoji true when no count + query 1`] = `
               summaryMsg=""
             >
               <div
-                className="search-shadow"
+                className="search-outline"
               >
                 <div
                   aria-expanded={false}
@@ -1221,26 +1117,13 @@ exports[`QuickOpenModal showErrorEmoji true when no count + query 1`] = `
                   className="search-field"
                   role="combobox"
                 >
-                  <Svg
-                    name="magnifying-glass"
+                  <AccessibleImage
+                    className="search"
                   >
-                    <InlineSVG
-                      className="magnifying-glass "
-                      element="i"
-                      raw={false}
-                      src="<svg></svg>"
-                    >
-                      <i
-                        className="magnifying-glass "
-                        dangerouslySetInnerHTML={
-                          Object {
-                            "__html": "<svg></svg>",
-                          }
-                        }
-                        src={null}
-                      />
-                    </InlineSVG>
-                  </Svg>
+                    <span
+                      className="img search"
+                    />
+                  </AccessibleImage>
                   <input
                     aria-activedescendant=""
                     aria-autocomplete="list"
@@ -1394,7 +1277,7 @@ exports[`QuickOpenModal updateResults on enable 2`] = `
               summaryMsg=""
             >
               <div
-                className="search-shadow"
+                className="search-outline"
               >
                 <div
                   aria-expanded={false}
@@ -1403,26 +1286,13 @@ exports[`QuickOpenModal updateResults on enable 2`] = `
                   className="search-field big"
                   role="combobox"
                 >
-                  <Svg
-                    name="magnifying-glass"
+                  <AccessibleImage
+                    className="search"
                   >
-                    <InlineSVG
-                      className="magnifying-glass "
-                      element="i"
-                      raw={false}
-                      src="<svg></svg>"
-                    >
-                      <i
-                        className="magnifying-glass "
-                        dangerouslySetInnerHTML={
-                          Object {
-                            "__html": "<svg></svg>",
-                          }
-                        }
-                        src={null}
-                      />
-                    </InlineSVG>
-                  </Svg>
+                    <span
+                      className="img search"
+                    />
+                  </AccessibleImage>
                   <input
                     aria-activedescendant=""
                     aria-autocomplete="list"
