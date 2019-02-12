@@ -1064,7 +1064,7 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
     let rule = this.rawRule;
 
     while (rule.parentRule) {
-      ancestors.push(this.pageStyle._styleRef(rule.parentRule));
+      ancestors.unshift(this.pageStyle._styleRef(rule.parentRule));
       rule = rule.parentRule;
     }
 
