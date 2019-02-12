@@ -3,39 +3,35 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 .search-bar {
+  position: relative;
   display: flex;
-  border: 1px solid transparent;
-  border-top-color: var(--theme-splitter-color);
+  border-top: 1px solid var(--theme-splitter-color);
   height: var(--editor-searchbar-height);
-  transition: border-color 200ms var(--animation-curve);
 }
 
-.search-bar.search-bar-focused {
-  border-color: var(--blue-50);
+/* display a fake outline above the search bar's top border, and above
+   the source footer's top border */
+.search-bar::before {
+  content: "";
+  position: absolute;
+  z-index: 10;
+  top: -1px;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  border: solid 1px  var(--blue-50);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 150ms ease-out;
 }
 
-.search-bar .search-field {
-  padding-left: 7px;
+.search-bar-focused::before {
+  opacity: 1;
 }
 
-.search-bar .search-shadow {
+.search-bar .search-outline {
   flex-grow: 1;
-  border-bottom: none;
-}
-
-.search-bar .search-shadow.focused {
-  border-color: transparent;
-  transition: none;
-}
-
-.search-bar .search-field {
-  border-bottom: none;
-  padding-right: 0;
-  height: 100%;
-}
-
-.search-field .close-btn {
-  align-self: center;
+  border-width: 0;
 }
 
 .search-bottom-bar * {
@@ -47,10 +43,9 @@
   display: flex;
   flex-shrink: 0;
   justify-content: flex-end;
+  align-items: center;
   background-color: var(--theme-toolbar-background);
   padding: 0;
-  padding-inline-start: 1px;
-  padding-inline-end: 4px;
 }
 
 .search-bottom-bar .search-modifiers {
@@ -59,60 +54,34 @@
 }
 
 .search-bottom-bar .search-modifiers button {
-  padding: 0 3px;
+  padding: 2px;
   margin: 0 3px;
   border: none;
   background: none;
   width: 20px;
   height: 20px;
-  border-radius: 3px;
+  border-radius: 2px;
 }
 
-.search-bottom-bar .search-modifiers button.close-btn.big .img {
-  width: 12px;
-  height: 12px;
-}
-
-.search-bottom-bar .search-modifiers .pipe-divider {
-  height: 70%;
-  border: 1px solid var(--grey-20);
+.search-bottom-bar .pipe-divider {
+  flex: none;
+  align-self: stretch;
+  width: 1px;
   vertical-align: middle;
-  margin-inline-start: 0.8em;
-  margin-inline-end: 0.3em;
+  margin: 4px;
+  background-color: var(--theme-splitter-color);
 }
 
-.theme-dark .search-bottom-bar .search-modifiers .pipe-divider {
-  border-color: var(--grey-70);
-}
-
-.search-bottom-bar .search-modifiers button i {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 0;
-  width: 16px;
-}
 .search-bottom-bar .search-modifiers .img {
-  width: 16px;
-  height: 16px;
-  vertical-align: bottom;
-  background-color: var(--theme-comment);
+  display: block;
 }
 
 .search-bottom-bar .search-modifiers button:hover {
-  background: var(--theme-toolbar-background-hover);
-}
-
-.search-bottom-bar .search-modifiers button.close-btn:hover {
-  background: var(--theme-selection-background);
+  background-color: var(--theme-toolbar-background-hover);
 }
 
 .search-bottom-bar .search-modifiers button.active .img {
-  background-color: var(--theme-selection-background);
-}
-
-.theme-dark .search-bottom-bar .search-modifiers button.active .img {
-  fill: white;
+  background-color: var(--theme-icon-checked-color);
 }
 
 .search-bottom-bar .search-type-toggles {
@@ -122,8 +91,7 @@
 }
 
 .search-bottom-bar .search-type-name {
-  padding: 1px 0 0 0;
-  margin: 0 0 0 6px;
+  margin: 0 4px;
   border: none;
   background: transparent;
   color: var(--theme-comment);
@@ -135,6 +103,10 @@
 
 .theme-dark .search-bottom-bar .search-type-toggles .search-type-btn.active {
   color: white;
+}
+
+.search-bottom-bar .close-btn {
+  margin-inline-end: 3px;
 }
 
 .search-bar .result-list {

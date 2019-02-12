@@ -42,10 +42,6 @@ html[dir="rtl"] .managed-tree .tree .node > div {
   margin-right: 10px;
 }
 
-.managed-tree .tree .node.focused svg {
-  fill: white;
-}
-
 .managed-tree .tree-node button {
   position: fixed;
 }

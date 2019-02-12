@@ -4,12 +4,10 @@
 
 :root {
   --accordion-header-background: var(--theme-toolbar-background);
-  --disclosure-arrow: #b2b2b2;
 }
 
 :root.theme-dark {
   --accordion-header-background: #222225;
-  --disclosure-arrow: #7f7f81;
 }
 
 .accordion {
@@ -25,45 +23,31 @@
   border-bottom: 1px solid var(--theme-splitter-color);
   display: flex;
   font-size: 12px;
-  padding: 4px;
-  transition: all 0.25s ease;
+  padding: 4px 8px;
   width: 100%;
-  height: 24px;
+  /* 24px for content + 1px for the bottom border */
+  height: 25px;
   align-items: center;
   margin: 0px;
   font-weight: normal;
-
-  -webkit-user-select: none;
   -moz-user-select: none;
-  -ms-user-select: none;
-  -o-user-select: none;
   user-select: none;
   cursor: default;
 }
 
-.accordion ._header:hover {
+.accordion ._header:hover,
+.accordion ._header:focus {
   background-color: var(--theme-toolbar-background-hover);
 }
 
-.accordion ._header button svg,
-.accordion ._header:hover button svg {
-  fill: currentColor;
-  height: 16px;
-}
-
-.accordion ._content {
-  border-bottom: 1px solid var(--theme-splitter-color);
-  font-size: 12px;
-}
-
-.accordion div:last-child ._content {
-  border-bottom: none;
+.accordion ._header .arrow {
+  margin-inline-start: -3px;
+  margin-inline-end: 5px;
 }
 
 .accordion ._header .header-buttons {
   display: flex;
-  margin-left: auto;
-  padding-right: 5px;
+  margin-inline-start: auto;
 }
 
 .accordion .header-buttons .add-button {
@@ -85,6 +69,16 @@
   border: none;
 }
 
-.accordion .arrow svg {
-  fill: var(--disclosure-arrow);
+/* vertical-align:middle results in slightly wrong alignment */
+.accordion .header-buttons .img {
+  display: block;
+}
+
+.accordion ._content {
+  border-bottom: 1px solid var(--theme-splitter-color);
+  font-size: 12px;
+}
+
+.accordion div:last-child ._content {
+  border-bottom: none;
 }

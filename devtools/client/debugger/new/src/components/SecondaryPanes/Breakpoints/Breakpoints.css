@@ -32,11 +32,6 @@
   padding-left: 4px;
 }
 
-/* temporary until we refactor the sources tree and tab icon styles */
-.breakpoints-list .breakpoint-heading .source-icon.file {
-  top: 0;
-}
-
 .breakpoints-list .breakpoint-heading,
 .breakpoints-list .breakpoint {
   font-size: 12px;

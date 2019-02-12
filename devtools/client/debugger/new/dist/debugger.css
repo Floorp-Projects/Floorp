@@ -553,8 +553,8 @@ html[dir="rtl"] .tree-node button.arrow {
   --editor-header-height: 29px;
   /* footer height is 24px + 1px for its border */
   --editor-footer-height: 25px;
-  /* searchbar height is 24px + 2px for its top and bottom borders */
-  --editor-searchbar-height: 26px;
+  /* searchbar height is 24px + 1px for its top border */
+  --editor-searchbar-height: 25px;
 }
 
 :root.theme-light,
@@ -610,23 +610,6 @@ button:focus {
 
 .editor-container {
   width: 100%;
-}
-
-.search-container {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  z-index: 200;
-  background-color: var(--search-overlays-semitransparent);
-}
-
-.search-container .close-button {
-  width: 16px;
-  margin-top: 25px;
-  margin-right: 20px;
 }
 
 /* Utils */
@@ -1059,81 +1042,235 @@ html[dir="rtl"] .managed-tree .tree .node > div {
   margin-right: 10px;
 }
 
-.managed-tree .tree .node.focused svg {
-  fill: white;
-}
-
 .managed-tree .tree-node button {
   position: fixed;
 }
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
 .img {
-  /* default height an width which will likely be overrode */
-  width: 12px;
-  height: 12px;
-  /* makes span appear like an image */
   display: inline-block;
-  background: var(--theme-icon-color);
-  mask-size: 100%;
+  width: 16px;
+  height: 16px;
+  vertical-align: middle;
+  /* use background-color for the icon color, and mask-image for its shape */
+  background-color: var(--theme-icon-color);
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
 }
 
-.img.arrow.arrow.expanded {
-  transform: rotate(0deg);
+/* Expand arrow icon */
+.img.arrow {
+  width: 10px;
+  height: 10px;
+  mask-image: url("resource://devtools/client/debugger/new/images/arrow.svg");
+  /* we may override the width/height in specific contexts to make the
+     clickable area bigger, but we should always keep the mask size 10x10 */
+  mask-size: 10px 10px;
+  background-color: var(--theme-icon-dimmed-color);
+  transform: rotate(-90deg);
+  transition: transform 180ms var(--animation-curve);
+}
+
+html[dir="rtl"] .img.arrow {
+  transform: rotate(90deg);
+}
+
+.img.arrow.expanded {
+  /* icon should always point to the bottom (default) when expanded,
+  regardless of the text direction */
+  transform: none !important;
+}
+
+.img.arrow-down {
+  mask-image: url("resource://devtools/client/debugger/new/images/arrow-down.svg");
+}
+
+.img.arrow-up {
+  mask-image: url("resource://devtools/client/debugger/new/images/arrow-up.svg");
+}
+
+.img.blackBox {
+  mask-image: url("resource://devtools/client/debugger/new/images/blackBox.svg");
+}
+
+.img.breadcrumb {
+  mask-image: url("resource://devtools/client/debugger/new/images/breadcrumbs-divider.svg");
+}
+
+.img.case-match {
+  mask-image: url("resource://devtools/client/debugger/new/images/case-match.svg");
+}
+
+.img.close {
+  mask-image: url("resource://devtools/client/debugger/new/images/close.svg");
+}
+
+.img.disable-pausing {
+  mask-image: url("resource://devtools/client/debugger/new/images/disable-pausing.svg");
+}
+
+.img.globe {
+  mask-image: url("resource://devtools/client/debugger/new/images/globe.svg");
+}
+
+.img.globe-small {
+  mask-image: url("resource://devtools/client/debugger/new/images/globe-small.svg");
+  mask-size: 12px 12px;
+}
+
+.img.file {
+  mask-image: url("resource://devtools/client/debugger/new/images/file-small.svg");
+  mask-size: 12px 12px;
+}
+
+.img.folder {
+  mask-image: url("resource://devtools/client/debugger/new/images/folder.svg");
+}
+
+.img.home {
+  mask-image: url("resource://devtools/client/debugger/new/images/home.svg");
+}
+
+.img.loader {
+  mask-image: url("resource://devtools/client/debugger/new/images/loader.svg");
+}
+
+.img.more-tabs {
+  mask-image: url("resource://devtools/client/debugger/new/images/command-chevron.svg");
+}
+
+html[dir="rtl"] .img.more-tabs {
+  transform: scaleX(-1);
+}
+
+.img.next {
+  mask-image: url("resource://devtools/client/debugger/new/images/next.svg");
+}
+
+.img.next-circle {
+  mask-image: url("resource://devtools/client/debugger/new/images/next-circle.svg");
+}
+
+.img.pane-collapse {
+  mask-image: url("resource://devtools/client/debugger/new/images/pane-collapse.svg");
+}
+
+.img.pane-expand {
+  mask-image: url("resource://devtools/client/debugger/new/images/pane-expand.svg");
+}
+
+.img.pause {
+  mask-image: url("resource://devtools/client/debugger/new/images/pause.svg");
+}
+
+.img.plus {
+  mask-image: url("resource://devtools/client/debugger/new/images/plus.svg");
+}
+
+.img.prettyPrint {
+  mask-image: url("resource://devtools/client/debugger/new/images/prettyPrint.svg");
+}
+
+.img.refresh {
+  mask-image: url("resource://devtools/client/debugger/new/images/reload.svg");
+}
+
+.img.regex-match {
+  mask-image: url("resource://devtools/client/debugger/new/images/regex-match.svg");
+}
+
+.img.resume {
+  mask-image: url("resource://devtools/client/debugger/new/images/resume.svg");
+}
+
+.img.reverseStepIn {
+  mask-image: url("resource://devtools/client/debugger/new/images/stepIn.svg");
+  transform: scaleX(-1);
+}
+
+.img.reverseStepOut {
+  mask-image: url("resource://devtools/client/debugger/new/images/stepOut.svg");
+  transform: scaleX(-1);
+}
+
+.img.reverseStepOver {
+  mask-image: url("resource://devtools/client/debugger/new/images/stepOver.svg");
+  transform: scaleX(-1);
+}
+
+.img.rewind {
+  mask-image: url("resource://devtools/client/debugger/new/images/rewind.svg");
+}
+
+.img.search {
+  mask-image: url("resource://devtools/client/debugger/new/images/search.svg");
+}
+
+.img.shortcuts {
+  mask-image: url("resource://devtools/client/debugger/new/images/help.svg");
+}
+
+.img.stepIn {
+  mask-image: url("resource://devtools/client/debugger/new/images/stepIn.svg");
+}
+
+.img.stepOut {
+  mask-image: url("resource://devtools/client/debugger/new/images/stepOut.svg");
+}
+
+.img.stepOver {
+  mask-image: url("resource://devtools/client/debugger/new/images/stepOver.svg");
+}
+
+.img.tab {
+  mask-image: url("resource://devtools/client/debugger/new/images/tab.svg");
+}
+
+.img.whole-word-match {
+  mask-image: url("resource://devtools/client/debugger/new/images/whole-word-match.svg");
+}
+
+.img.worker {
+  mask-image: url("resource://devtools/client/debugger/new/images/worker.svg");
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 .close-btn {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   border: 1px solid transparent;
   border-radius: 2px;
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-  padding: 0;
+  padding: 1px;
+  color: var(--theme-icon-color);
 }
 
-.close-btn .close {
-  mask: url("resource://devtools/client/debugger/new/images/close.svg") no-repeat;
-  mask-size: 100%;
-  background-color: var(--theme-comment);
-  width: 8px;
-  height: 8px;
-  padding: 0;
-  margin-top: 0;
-}
-
-.close-btn .close:hover {
-  background-color: var(--theme-comment);
-}
-
-.close-btn:hover .img.close {
-  background-color: white;
-}
-
-.close-btn:hover {
-  background-color: var(--theme-selection-background);
-}
-
+.close-btn:hover,
 .close-btn:focus {
+  color: var(--theme-selection-color);
   background-color: var(--theme-selection-background);
 }
 
-.close-btn:focus .img.close {
-  background-color: white;
+.close-btn .img {
+  display: block;
+  width: 12px;
+  height: 12px;
+  /* inherit the button's text color for the icon's color */
+  background-color: currentColor;
 }
 
 .close-btn.big {
-  width: 16px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
 }
 
-img.close::before {
-  width: 100%;
-  height: 100%;
-  padding: 6px;
+.close-btn.big .img {
+  width: 16px;
+  height: 16px;
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -1207,525 +1344,96 @@ html[dir="ltr"] .toggle-button.end:not(.vertical) .img {
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-.arrow,
-.worker,
-.refresh,
-.shortcut,
-.add-button {
-  fill: var(--theme-splitter-color);
-}
-
-.img.folder,
-.img.domain,
-.img.file,
-.img.extension,
-.img.worker {
-  background-color: var(--theme-comment);
-}
-
-.worker,
-.file,
-.folder,
-.sources-list .source-icon,
-.extension {
-  position: relative;
-  top: 2px;
-}
-
-.domain,
-.worker,
-.refresh,
-.add-button {
-  position: relative;
-  top: 1px;
-}
-
-.worker svg,
-.refresh svg,
-.shortcut svg,
-.add-button svg {
-  width: 15px;
-}
-
-.img.domain,
-.img.folder {
-  width: 15px;
-  height: 15px;
-}
-
-.img.extension,
-.img.worker {
-  width: 13px;
-  height: 13px;
-  margin-inline-start: 2px;
-}
-
-.img.result-item-icon {
-  height: 18px;
-  width: 18px;
-}
-
-.img.domain {
-  mask: url("resource://devtools/client/debugger/new/images/domain.svg") no-repeat;
-  mask-size: 100%;
-}
-
-.img.folder {
-  mask: url("resource://devtools/client/debugger/new/images/folder.svg") no-repeat;
-  mask-size: 100%;
-}
-
-.img.coffeescript {
-  mask: url("resource://devtools/client/debugger/new/images/coffeescript.svg") no-repeat;
-  mask-size: 100%;
-}
-
-.img.javascript {
-  mask: url("resource://devtools/client/debugger/new/images/javascript.svg") no-repeat;
-  mask-size: 100%;
-}
-
-.img.tab {
-  mask: url("resource://devtools/client/debugger/new/images/tab.svg") no-repeat;
-  mask-size: 100%;
-}
-
-.img.react {
-  mask: url("resource://devtools/client/debugger/new/images/react.svg") no-repeat;
-  mask-size: 100%;
-}
-
-.img.aframe {
-  background-image: url("resource://devtools/client/debugger/new/images/aframe.svg");
-  background-size: 15px 15px;
-}
-
-.img.babel {
-  mask: url("resource://devtools/client/debugger/new/images/babel.svg") no-repeat;
-  mask-size: 100%;
-}
-
-.img.backbone {
-  mask: url("resource://devtools/client/debugger/new/images/backbone.svg") no-repeat;
-  mask-size: 100%;
-}
-
-.img.choo {
-  mask: url("resource://devtools/client/debugger/new/images/choo.svg") no-repeat;
-  mask-size: 100%;
-}
-
-.img.dojo {
-  background-image: url("resource://devtools/client/debugger/new/images/dojo.svg");
-}
-
-.img.ember {
-  background-image: url("resource://devtools/client/debugger/new/images/ember.svg");
-}
-
-.img.immutable {
-  mask: url("resource://devtools/client/debugger/new/images/immutable.svg") no-repeat;
-  mask-size: 100%;
-}
-
-.img.jquery {
-  mask: url("resource://devtools/client/debugger/new/images/jquery.svg") no-repeat;
-  mask-size: 100%;
-}
-
-.img.lodash {
-  mask: url("resource://devtools/client/debugger/new/images/lodash.svg") no-repeat;
-  mask-size: 100%;
-}
-
-span.img.marko {
-  background-image: url("resource://devtools/client/debugger/new/images/marko.svg");
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center center;
-}
-
-.img.mobx {
-  background-image: url("resource://devtools/client/debugger/new/images/mobx.svg");
-}
-
-.img.next-circle {
-  mask: url("resource://devtools/client/debugger/new/images/next-circle.svg") no-repeat;
-  mask-size: 100%;
-}
-
-.img.next {
-  mask: url("resource://devtools/client/debugger/new/images/next.svg") no-repeat;
-  mask-size: 100%;
-}
-
-.img.nextjs {
-  background-image: url("resource://devtools/client/debugger/new/images/nextjs.svg");
-}
-
-.img.nuxtjs {
-  background-image: url("resource://devtools/client/debugger/new/images/nuxtjs.svg");
-}
-
-.img.preact {
-  background-image: url("resource://devtools/client/debugger/new/images/preact.svg");
-}
-
-.img.pug {
-  background-image: url("resource://devtools/client/debugger/new/images/pug.svg");
-}
-
-.img.redux {
-  mask: url("resource://devtools/client/debugger/new/images/redux.svg") no-repeat;
-  mask-size: 100%;
-}
-
-.img.rxjs {
-  background-image: url("resource://devtools/client/debugger/new/images/rxjs.svg");
-}
-
-.img.sencha-extjs {
-  background-image: url("resource://devtools/client/debugger/new/images/sencha-extjs.svg");
-}
-
-.img.underscore {
-  mask: url("resource://devtools/client/debugger/new/images/underscore.svg") no-repeat;
-  mask-size: 100%;
-}
-
-.img.webpack {
-  background-image: url("resource://devtools/client/debugger/new/images/webpack.svg");
-  background-repeat: no-repeat;
-}
-
-.img.vue {
-  background: url("resource://devtools/client/debugger/new/images/vuejs.svg") 1px 1px no-repeat;
-  background-size: 15px;
-}
-
-.img.typescript {
-  mask: url("resource://devtools/client/debugger/new/images/typescript.svg") no-repeat;
-  mask-size: 100%;
-}
-
-.img.extension {
-  mask: url("resource://devtools/client/debugger/new/images/extension.svg") no-repeat;
-  mask-size: 100%;
-}
-
-.img.pane-collapse {
-  mask: url("resource://devtools/client/debugger/new/images/pane-collapse.svg") no-repeat;
-  mask-size: 100%;
-}
-
-.img.pane-expand {
-  mask: url("resource://devtools/client/debugger/new/images/pane-expand.svg") no-repeat;
-  mask-size: 100%;
-}
-
-.img.file {
-  mask: url("resource://devtools/client/debugger/new/images/file.svg") no-repeat;
-  mask-size: 100%;
-  width: 13px;
-  height: 13px;
-}
-
-.img.worker {
-  mask: url("resource://devtools/client/debugger/new/images/worker.svg") no-repeat;
-  mask-size: 100%;
-}
-
-.img.plus {
-  mask: url("resource://devtools/client/debugger/new/images/plus.svg") no-repeat;
-  mask-size: 100%;
-  height: 16px;
-  width: 16px;
-}
-
-.img.magnifying-glass {
-  mask: url("resource://devtools/client/debugger/new/images/magnifying-glass.svg") no-repeat;
-  mask-size: 100%;
-}
-
-.img.case-match {
-  mask: url("resource://devtools/client/debugger/new/images/case-match.svg") no-repeat;
-  mask-size: 100%;
-}
-
-.img.regex-match {
-  mask: url("resource://devtools/client/debugger/new/images/regex-match.svg") no-repeat;
-  mask-size: 100%;
-}
-
-.img.whole-word-match {
-  mask: url("resource://devtools/client/debugger/new/images/whole-word-match.svg") no-repeat;
-  mask-size: 100%;
-}
-
-.img.breadcrumb {
-  mask: url("resource://devtools/client/debugger/new/images/breadcrumbs-divider.svg") no-repeat;
-  mask-size: 100%;
-}
-
-.img.home {
-  mask: url("resource://devtools/client/debugger/new/images/home.svg") no-repeat;
-  mask-size: 100%;
-}
-
-.img.angular {
-  background-image: url("resource://devtools/client/debugger/new/images/angular.svg");
-  background-repeat: no-repeat;
-}
-
-.img.angular,
-.img.webpack,
-.img.vue,
-.img.aframe,
-.img.dojo,
-.img.ember,
-.img.marko,
-.img.mobx,
-.img.nextjs,
-.img.nuxtjs,
-.img.preact,
-.img.pug,
-.img.rxjs,
-.img.sencha-extjs {
-  background-size: 15px 15px;
-  background-color: transparent;
-  width: 15px;
-  height: 15px;
-  position: relative;
-}
-
-.sources-list .img.angular,
-.sources-list .img.webpack,
-.sources-list .img.vue,
-.sources-list .img.aframe,
-.sources-list .img.dojo,
-.sources-list .img.ember,
-.sources-list .img.marko,
-.sources-list .img.mobx,
-.sources-list .img.nextjs,
-.sources-list .img.nuxtjs,
-.sources-list .img.preact,
-.sources-list .img.pug,
-.sources-list .img.rxjs,
-.sources-list .img.sencha-extjs {
-  top: 3px;
-}
-
-.img.domain,
-.img.folder,
-.img.file,
-.sources-list .img.source-icon,
-.img.extension,
-.img.worker {
-  mask-size: 100%;
-  margin-inline-end: 5px;
-  display: inline-block;
-}
-
-.img.result-item-icon {
-  mask-size: 100%;
-  margin-inline-end: 15px;
-  margin-inline-start: 5px;
-  display: inline-block;
-}
-
-.img.refresh,
-.img.shortcut,
-.img.worker,
-.img.arrow {
-  margin-inline-end: 5px;
-}
-
-.img.refresh {
-  mask: url("resource://devtools/client/debugger/new/images/reload.svg");
-  mask-size: 100%;
-}
-
-.img.arrow {
-  mask: url("resource://devtools/client/debugger/new/images/arrow.svg");
-  margin-inline-end: 4px;
-  width: 10px;
-  height: 10px;
-  padding-top: 9px;
-  background: var(--disclosure-arrow);
-  mask-size: 100%;
-  display: inline-block;
-  transform: rotate(-90deg);
-  transition: transform 0.18s ease;
-}
-
-/* overrides tree component */
-.tree-node button.arrow {
-  background: none;
-  mask: url("resource://devtools/client/debugger/new/images/arrow.svg");
-  background: var(--disclosure-arrow);
-  mask-size: 100%;
-}
-
-html[dir="rtl"] .img.arrow {
-  transform: rotate(90deg);
-}
-
-.arrow {
-  transition: transform 0.125s ease;
-  height: 10px;
-  width: 10px;
-  transform: rotate(-90deg);
-  vertical-align: -1px;
-}
-
-html[dir="rtl"] .arrow,
-.arrow:dir(rtl),
-.arrow:-moz-locale-dir(rtl) {
-  transform: rotate(90deg);
-}
-
-.arrow.expanded {
-  transform: rotate(0deg);
-}
-
-.arrow.hidden {
-  visibility: hidden;
-}
-
-.angular,
-.webpack {
-  opacity: 0.8;
-}
-
-.theme-dark .angular,
-.theme-dark .webpack {
-  opacity: 0.5;
-}
-
-.source-icon svg {
-  fill: var(--theme-comment);
-}
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-.search-shadow {
+@keyframes search-loader-rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.search-outline {
   border: 1px solid var(--theme-toolbar-background);
   border-bottom: 1px solid var(--theme-splitter-color);
+  transition: border-color 200ms ease-in-out;
 }
 
-.search-shadow.focused {
-  border: 1px solid var(--blue-50);
-  transition: border-color 0.2s ease-in-out;
+.search-outline.focused {
+  border-color: var(--blue-50);
 }
 
 .search-field {
   position: relative;
-  height: 27px;
-  width: calc(100% - 1px);
-  background-color: var(--theme-toolbar-background);
-  border-bottom: 1px solid var(--theme-splitter-color);
-  padding-right: 10px;
   display: flex;
+  align-items: center;
   flex-shrink: 0;
+  min-height: 24px;
+  width: 100%;
+  background-color: var(--theme-toolbar-background);
 }
 
-.search-field.big {
-  padding: 5px 10px;
-  height: 40px;
+.search-field .img.search {
+  position: absolute;
+  z-index: 1;
+  left: 6px;
+  top: calc(50% - 8px);
+  mask-size: 12px;
+  background-color: var(--theme-icon-dimmed-color);
+  pointer-events: none;
 }
 
-.search-field i {
-  display: block;
-  padding: 0;
-  width: 16px;
-}
-
-.search-field i svg {
-  width: 16px;
-}
-
-.search-field.big i svg {
-  width: 22px;
+.search-field.big .img.search {
+  left: 12px;
+  mask-size: 16px;
 }
 
 .search-field .img.loader {
-  padding-top: 4px;
-  margin-right: 8px;
-  mask-image: url("resource://devtools/client/debugger/new/images/loader.svg");
-  mask-size: 100%;
-  width: 20px;
-  height: 20px;
-  margin-top: 6px;
+  width: 24px;
+  height: 24px;
+  margin-inline-end: 6px;
+  animation: search-loader-rotate 0.5s linear infinite;
 }
 
 .search-field input {
-  border: none;
-  line-height: 30px;
-  background-color: var(--theme-toolbar-background);
-  color: var(--theme-body-color-active);
+  align-self: stretch;
   flex-grow: 1;
+  height: 24px;
   min-width: 40px;
+  border: none;
+  padding: 4px;
+  padding-inline-start: 28px;
+  line-height: 16px;
+  font-family: inherit;
+  font-size: inherit;
+  color: var(--theme-body-color);
+  background-color: transparent;
 }
 
 .search-field.big input {
-  position: relative;
-  margin-left: 30px;
+  height: 40px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  padding-inline-start: 40px;
   font-size: 14px;
-  line-height: 40px;
+  line-height: 20px;
 }
 
 .search-field input:focus {
   outline: none;
 }
 
-.theme-dark .search-field input {
-  color: var(--theme-body-color-inactive);
-}
-
-.search-field i.magnifying-glass,
-.search-field i.sad-face {
-  padding-top: 5px;
-  padding-bottom: 5px;
-  padding-inline-end: 10px;
-  padding-inline-start: 5px;
-  width: 24px;
-}
-
-.search-field.big i.magnifying-glass,
-.search-field.big i.sad-face {
-  position: absolute;
-  width: 40px;
-}
-
-.search-field.big i.sad-face {
-  padding-top: 4px;
-  padding-inline-start: 4px;
-}
-
-.search-field .magnifying-glass path,
-.search-field .magnifying-glass ellipse {
-  stroke: var(--theme-comment);
-}
-
 .search-field input::placeholder {
   color: var(--theme-toolbar-color);
 }
 
-.search-field input.empty {
-  color: var(--theme-body-color-inactive);
-}
-
-.search-field .summary {
-  line-height: 27px;
-  text-align: center;
-  padding-inline-start: 5px;
-  padding-inline-end: 5px;
-  color: var(--theme-body-color-inactive);
+.search-field-summary {
   align-self: center;
-  padding-top: 1px;
+  padding: 2px 4px;
   white-space: nowrap;
+  text-align: center;
   user-select: none;
+  color: var(--theme-body-color-alt);
 }
 
 .search-field .search-nav-buttons {
@@ -1735,46 +1443,23 @@ html[dir="rtl"] .arrow,
 
 .search-field .search-nav-buttons .nav-btn {
   display: flex;
-  height: 100%;
-  background: transparent;
-  transition: all 0.25s ease-in-out;
   justify-content: center;
-  padding-top: 4px;
-  padding-left: 5px;
-  padding-right: 5px;
-}
-
-.search-field .search-nav-buttons .img.arrow-up {
-  mask: url("resource://devtools/client/debugger/new/images/arrow-up.svg") no-repeat;
-}
-
-.search-field .search-nav-buttons .img.arrow-down {
-  mask: url("resource://devtools/client/debugger/new/images/arrow-down.svg") no-repeat;
+  align-items: center;
+  height: 100%;
+  padding: 4px;
+  background: transparent;
 }
 
 .search-field .search-nav-buttons .nav-btn:hover {
-  background: var(--theme-toolbar-background-hover);
+  background-color: var(--theme-toolbar-background-hover);
 }
 
-.search-field .search-nav-buttons .nav-btn:active path {
-  fill: var(--theme-comment-alt);
+.search-field .close-btn {
+  margin-inline-end: 4px;
 }
 
-.search-field .search-nav-buttons .nav-btn path {
-  fill: var(--theme-comment);
-}
-
-.search-field i.loader svg {
-  animation: rotate 0.5s linear infinite;
-}
-
-@keyframes rotate {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.search-field.big .close-btn {
+  margin-inline-end: 8px;
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -1782,7 +1467,7 @@ html[dir="rtl"] .arrow,
 
 .search-container {
   position: absolute;
-  top: 30px;
+  top: var(--editor-header-height);
   left: 0;
   width: calc(100% - 1px);
   height: calc(100% - 31px);
@@ -1878,10 +1563,6 @@ html[dir="rtl"] .arrow,
   flex-grow: 1;
   width: 100%;
   border-bottom: none;
-}
-
-.project-text-search .search-field .close-btn.big {
-  margin-top: 2px;
 }
 
 .project-text-search .managed-tree {
@@ -2188,51 +1869,157 @@ menuseparator {
 .function-signature .comma {
   color: var(--object-color);
 }
-.source-icon {
-  position: relative;
-  background-color: var(--theme-comment);
-  mask-size: 100%;
-  display: inline-block;
-  margin-inline-end: 5px;
-}
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+/**
+ * Variant of AccessibleImage used in sources list and tabs.
+ * Define the different source type / framework / library icons here.
+ */
 
 .source-icon {
-  width: 15px;
-  height: 15px;
+  margin-inline-end: 4px;
+  /* multicolor icons use background-image */
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
 }
 
-.img.prettyPrint {
-  mask: url("resource://devtools/client/debugger/new/images/prettyPrint.svg") no-repeat;
-  mask-size: 100%;
-  background: var(--theme-highlight-blue);
-  fill: var(--theme-textbox-box-shadow);
-  position: relative;
+/* Icons for frameworks and libs */
+
+.img.aframe {
+  background-image: url("resource://devtools/client/debugger/new/images/sources/aframe.svg");
+  background-color: transparent !important;
 }
 
-.sources-list .img.prettyPrint {
-  top: 2px;
-  margin-inline-start: 3px;
+.img.angular {
+  background-image: url("resource://devtools/client/debugger/new/images/sources/angular.svg");
+  background-color: transparent !important;
 }
 
-.source-icon.vue {
-  background: url("resource://devtools/client/debugger/new/images/vuejs.svg") 1px 1px no-repeat;
-  background-size: 15px;
+.img.babel {
+  mask-image: url("resource://devtools/client/debugger/new/images/sources/babel.svg");
 }
 
-.source-icon.angular {
-  background: url("resource://devtools/client/debugger/new/images/angular.svg") 1px 1px no-repeat;
-  background-size: 13px 13px;
+.img.backbone {
+  mask-image: url("resource://devtools/client/debugger/new/images/sources/backbone.svg");
 }
 
-.source-icon.blackBox {
-  mask: url("resource://devtools/client/debugger/new/images/blackBox.svg") no-repeat;
-  mask-size: 100%;
-  background: var(--theme-highlight-blue);
+.img.choo {
+  background-image: url("resource://devtools/client/debugger/new/images/sources/choo.svg");
+  background-color: transparent !important;
 }
 
-.source-icon.react {
-  mask-size: 100%;
-  background: var(--theme-highlight-bluegrey);
+.img.coffeescript {
+  mask-image: url("resource://devtools/client/debugger/new/images/sources/coffeescript.svg");
+}
+
+.img.dojo {
+  background-image: url("resource://devtools/client/debugger/new/images/sources/dojo.svg");
+  background-color: transparent !important;
+}
+
+.img.ember {
+  background-image: url("resource://devtools/client/debugger/new/images/sources/ember.svg");
+  background-color: transparent !important;
+}
+
+.img.express {
+  mask-image: url("resource://devtools/client/debugger/new/images/sources/express.svg");
+}
+
+.img.extension {
+  mask-image: url("resource://devtools/client/debugger/new/images/sources/extension.svg");
+}
+
+.img.immutable {
+  mask-image: url("resource://devtools/client/debugger/new/images/sources/immutable.svg");
+}
+
+.img.javascript {
+  mask-image: url("resource://devtools/client/debugger/new/images/sources/javascript.svg");
+  mask-size: 14px 14px;
+}
+
+.img.jquery {
+  mask-image: url("resource://devtools/client/debugger/new/images/sources/jquery.svg");
+}
+
+.img.lodash {
+  mask-image: url("resource://devtools/client/debugger/new/images/sources/lodash.svg");
+}
+
+.img.marko {
+  background-image: url("resource://devtools/client/debugger/new/images/sources/marko.svg");
+  background-color: transparent !important;
+}
+
+.img.mobx {
+  background-image: url("resource://devtools/client/debugger/new/images/sources/mobx.svg");
+  background-color: transparent !important;
+}
+
+.img.nextjs {
+  background-image: url("resource://devtools/client/debugger/new/images/sources/nextjs.svg");
+  background-color: transparent !important;
+}
+
+.img.node {
+  background-image: url("resource://devtools/client/debugger/new/images/sources/node.svg");
+  background-color: transparent !important;
+}
+
+.img.nuxtjs {
+  background-image: url("resource://devtools/client/debugger/new/images/sources/nuxtjs.svg");
+  background-color: transparent !important;
+}
+
+.img.preact {
+  background-image: url("resource://devtools/client/debugger/new/images/sources/preact.svg");
+  background-color: transparent !important;
+}
+
+.img.pug {
+  background-image: url("resource://devtools/client/debugger/new/images/sources/pug.svg");
+  background-color: transparent !important;
+}
+
+.img.react {
+  mask-image: url("resource://devtools/client/debugger/new/images/sources/react.svg");
+  background-color: var(--theme-highlight-bluegrey);
+}
+
+.img.redux {
+  mask-image: url("resource://devtools/client/debugger/new/images/sources/redux.svg");
+}
+
+.img.rxjs {
+  background-image: url("resource://devtools/client/debugger/new/images/sources/rxjs.svg");
+  background-color: transparent !important;
+}
+
+.img.sencha-extjs {
+  background-image: url("resource://devtools/client/debugger/new/images/sources/sencha-extjs.svg");
+  background-color: transparent !important;
+}
+
+.img.typescript {
+  mask-image: url("resource://devtools/client/debugger/new/images/sources/typescript.svg");
+}
+
+.img.underscore {
+  mask-image: url("resource://devtools/client/debugger/new/images/sources/underscore.svg");
+}
+
+.img.vue {
+  background-image: url("resource://devtools/client/debugger/new/images/sources/vuejs.svg");
+  background-color: transparent !important;
+}
+
+.img.webpack {
+  background-image: url("resource://devtools/client/debugger/new/images/sources/webpack.svg");
+  background-color: transparent !important;
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -2253,7 +2040,7 @@ menuseparator {
 }
 
 .sources-clear-root {
-  padding: 4px 3px 4px 3px;
+  padding: 4px 8px;
   width: 100%;
   text-align: start;
   white-space: nowrap;
@@ -2262,22 +2049,8 @@ menuseparator {
   border-bottom: 1px solid var(--theme-splitter-color);
 }
 
-.sources-clear-root i {
-  margin-right: 5px;
-  position: relative;
-}
-
-.sources-clear-root svg {
-  width: 13px;
-  height: 13px;
-}
-
-.theme-dark .sources-clear-root {
-  fill: var(--theme-body-color);
-}
-
 .sources-clear-root .home {
-  opacity: 0.5;
+  background-color: var(--theme-icon-dimmed-color);
 }
 
 .sources-clear-root .breadcrumb {
@@ -2289,6 +2062,7 @@ menuseparator {
 
 .sources-clear-root-label {
   margin-left: 5px;
+  line-height: 16px;
 }
 
 .sources-pane {
@@ -2312,17 +2086,24 @@ menuseparator {
 }
 
 .sources-list .managed-tree .tree .node {
-  padding: 0 10px 0 3px;
+  display: flex;
+  align-items: center;
   width: 100%;
+  padding: 3px 8px 3px 6px;
 }
 
 .sources-list .img {
-  margin-inline-end: 5px;
+  margin-inline-end: 4px;
 }
 
-.sources-list .tree .focused .img:not(.vue):not(.angular):not(.webpack):not(.dojo):not(.ember):not(.aframe):not(.marko):not(.mobx):not(.nextjs):not(.nuxtjs):not(.preact):not(.pug):not(.rxjs):not(.sencha-extjs),
-.sources-list .managed-tree .tree .node.focused .img.blackBox {
-  background: #ffffff;
+.sources-list .tree .focused .img {
+  background-color: #ffffff;
+}
+
+/* Use the same width as .img.arrow */
+.sources-list .tree .img.no-arrow {
+  width: 10px;
+  visibility: hidden;
 }
 
 .sources-list .tree .label .suffix {
@@ -2335,26 +2116,13 @@ menuseparator {
   color: inherit;
 }
 
-.theme-dark .source-list .tree .node.focused {
+.theme-dark .source-list .node.focused {
   background-color: var(--theme-tab-toolbar-background);
 }
 
-.sources-list .tree .focused .label {
-  background-color: var(--theme-selection-background);
-}
-
 .sources-list .tree .label {
-  padding: 3px 0px 3px 0px;
   display: inline-block;
-}
-
-.sources-list .tree .arrow {
-  vertical-align: 1px;
-}
-
-.sources-list .tree .node .no-arrow {
-  width: 10px;
-  display: inline-block;
+  line-height: 16px;
 }
 
 .no-sources-message {
@@ -2400,9 +2168,8 @@ menuseparator {
   flex: 1;
   justify-content: center;
   overflow: hidden;
-  padding: 5px;
+  padding: 4px 8px;
   position: relative;
-  transition: all 0.25s ease;
 }
 
 .source-outline-tabs .tab::before {
@@ -2448,20 +2215,9 @@ menuseparator {
   margin-top: 4px;
 }
 
-.sources-list .managed-tree .tree .node .img.blackBox {
-  mask: url("resource://devtools/client/debugger/new/images/blackBox.svg") no-repeat;
-  mask-size: 100%;
-  background-color: var(--theme-highlight-blue);
-  width: 13px;
-  height: 13px;
-  display: inline-block;
-  margin-inline-end: 6px;
-  margin-inline-start: 1px;
-  margin-top: 2px;
-}
-
-.theme-dark .sources-list .managed-tree .tree .node .img.blackBox {
-  background-color: var(--theme-body-color);
+.sources-list .img.blackBox {
+  mask-size: 13px;
+  background-color: var(--theme-icon-checked-color);
 }
 
 /*
@@ -2543,13 +2299,6 @@ menuseparator {
   padding: 4px 6px;
 }
 
-.source-footer > .commands > .action .img {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
 .source-footer > .commands > button.action:hover {
   background: var(--theme-toolbar-background-hover);
 }
@@ -2568,22 +2317,8 @@ menuseparator {
   margin: 0 4px;
 }
 
-.source-footer > .commands > .action > .img.prettyPrint {
-  mask: url("resource://devtools/client/debugger/new/images/prettyPrint.svg") no-repeat;
-  height: 16px;
-  width: 16px;
-  background: var(--theme-body-color);
-}
-
-.source-footer > .commands > .action > .img.blackBox {
-  mask: url("resource://devtools/client/debugger/new/images/blackBox.svg") no-repeat;
-  height: 16px;
-  width: 16px;
-  background: var(--theme-body-color);
-}
-
 .source-footer > .commands > .blackboxed > .img.blackBox {
-  background: var(--theme-highlight-blue);
+  background-color: var(--theme-highlight-blue);
 }
 
 .source-footer .blackbox-summary,
@@ -2608,39 +2343,35 @@ menuseparator {
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 .search-bar {
+  position: relative;
   display: flex;
-  border: 1px solid transparent;
-  border-top-color: var(--theme-splitter-color);
+  border-top: 1px solid var(--theme-splitter-color);
   height: var(--editor-searchbar-height);
-  transition: border-color 200ms var(--animation-curve);
 }
 
-.search-bar.search-bar-focused {
-  border-color: var(--blue-50);
+/* display a fake outline above the search bar's top border, and above
+   the source footer's top border */
+.search-bar::before {
+  content: "";
+  position: absolute;
+  z-index: 10;
+  top: -1px;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  border: solid 1px  var(--blue-50);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 150ms ease-out;
 }
 
-.search-bar .search-field {
-  padding-left: 7px;
+.search-bar-focused::before {
+  opacity: 1;
 }
 
-.search-bar .search-shadow {
+.search-bar .search-outline {
   flex-grow: 1;
-  border-bottom: none;
-}
-
-.search-bar .search-shadow.focused {
-  border-color: transparent;
-  transition: none;
-}
-
-.search-bar .search-field {
-  border-bottom: none;
-  padding-right: 0;
-  height: 100%;
-}
-
-.search-field .close-btn {
-  align-self: center;
+  border-width: 0;
 }
 
 .search-bottom-bar * {
@@ -2652,10 +2383,9 @@ menuseparator {
   display: flex;
   flex-shrink: 0;
   justify-content: flex-end;
+  align-items: center;
   background-color: var(--theme-toolbar-background);
   padding: 0;
-  padding-inline-start: 1px;
-  padding-inline-end: 4px;
 }
 
 .search-bottom-bar .search-modifiers {
@@ -2664,60 +2394,34 @@ menuseparator {
 }
 
 .search-bottom-bar .search-modifiers button {
-  padding: 0 3px;
+  padding: 2px;
   margin: 0 3px;
   border: none;
   background: none;
   width: 20px;
   height: 20px;
-  border-radius: 3px;
+  border-radius: 2px;
 }
 
-.search-bottom-bar .search-modifiers button.close-btn.big .img {
-  width: 12px;
-  height: 12px;
-}
-
-.search-bottom-bar .search-modifiers .pipe-divider {
-  height: 70%;
-  border: 1px solid var(--grey-20);
+.search-bottom-bar .pipe-divider {
+  flex: none;
+  align-self: stretch;
+  width: 1px;
   vertical-align: middle;
-  margin-inline-start: 0.8em;
-  margin-inline-end: 0.3em;
+  margin: 4px;
+  background-color: var(--theme-splitter-color);
 }
 
-.theme-dark .search-bottom-bar .search-modifiers .pipe-divider {
-  border-color: var(--grey-70);
-}
-
-.search-bottom-bar .search-modifiers button i {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 0;
-  width: 16px;
-}
 .search-bottom-bar .search-modifiers .img {
-  width: 16px;
-  height: 16px;
-  vertical-align: bottom;
-  background-color: var(--theme-comment);
+  display: block;
 }
 
 .search-bottom-bar .search-modifiers button:hover {
-  background: var(--theme-toolbar-background-hover);
-}
-
-.search-bottom-bar .search-modifiers button.close-btn:hover {
-  background: var(--theme-selection-background);
+  background-color: var(--theme-toolbar-background-hover);
 }
 
 .search-bottom-bar .search-modifiers button.active .img {
-  background-color: var(--theme-selection-background);
-}
-
-.theme-dark .search-bottom-bar .search-modifiers button.active .img {
-  fill: white;
+  background-color: var(--theme-icon-checked-color);
 }
 
 .search-bottom-bar .search-type-toggles {
@@ -2727,8 +2431,7 @@ menuseparator {
 }
 
 .search-bottom-bar .search-type-name {
-  padding: 1px 0 0 0;
-  margin: 0 0 0 6px;
+  margin: 0 4px;
   border: none;
   background: transparent;
   color: var(--theme-comment);
@@ -2740,6 +2443,10 @@ menuseparator {
 
 .theme-dark .search-bottom-bar .search-type-toggles .search-type-btn.active {
   color: white;
+}
+
+.search-bottom-bar .close-btn {
+  margin-inline-end: 3px;
 }
 
 .search-bar .result-list {
@@ -2900,10 +2607,6 @@ menuseparator {
 
 .theme-dark .popover .preview-popup {
   border-color: var(--theme-body-color);
-}
-
-.theme-dark .popover .preview-popup .arrow svg {
-  fill: var(--theme-comment);
 }
 
 .tooltip {
@@ -3404,11 +3107,6 @@ debug-expression-error {
   padding-left: 4px;
 }
 
-/* temporary until we refactor the sources tree and tab icon styles */
-.breakpoints-list .breakpoint-heading .source-icon.file {
-  top: 0;
-}
-
 .breakpoints-list .breakpoint-heading,
 .breakpoints-list .breakpoint {
   font-size: 12px;
@@ -3758,10 +3456,6 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
   color: var(--theme-highlight-blue);
 }
 
-.frames ul .frames-group.expanded .react path {
-  fill: var(--theme-highlight-blue);
-}
-
 .frames ul .frames-group .frames-list li {
   padding-left: 30px;
 }
@@ -4009,12 +3703,10 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
 
 :root {
   --accordion-header-background: var(--theme-toolbar-background);
-  --disclosure-arrow: #b2b2b2;
 }
 
 :root.theme-dark {
   --accordion-header-background: #222225;
-  --disclosure-arrow: #7f7f81;
 }
 
 .accordion {
@@ -4030,45 +3722,31 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
   border-bottom: 1px solid var(--theme-splitter-color);
   display: flex;
   font-size: 12px;
-  padding: 4px;
-  transition: all 0.25s ease;
+  padding: 4px 8px;
   width: 100%;
-  height: 24px;
+  /* 24px for content + 1px for the bottom border */
+  height: 25px;
   align-items: center;
   margin: 0px;
   font-weight: normal;
-
-  -webkit-user-select: none;
   -moz-user-select: none;
-  -ms-user-select: none;
-  -o-user-select: none;
   user-select: none;
   cursor: default;
 }
 
-.accordion ._header:hover {
+.accordion ._header:hover,
+.accordion ._header:focus {
   background-color: var(--theme-toolbar-background-hover);
 }
 
-.accordion ._header button svg,
-.accordion ._header:hover button svg {
-  fill: currentColor;
-  height: 16px;
-}
-
-.accordion ._content {
-  border-bottom: 1px solid var(--theme-splitter-color);
-  font-size: 12px;
-}
-
-.accordion div:last-child ._content {
-  border-bottom: none;
+.accordion ._header .arrow {
+  margin-inline-start: -3px;
+  margin-inline-end: 5px;
 }
 
 .accordion ._header .header-buttons {
   display: flex;
-  margin-left: auto;
-  padding-right: 5px;
+  margin-inline-start: auto;
 }
 
 .accordion .header-buttons .add-button {
@@ -4090,8 +3768,18 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
   border: none;
 }
 
-.accordion .arrow svg {
-  fill: var(--disclosure-arrow);
+/* vertical-align:middle results in slightly wrong alignment */
+.accordion .header-buttons .img {
+  display: block;
+}
+
+.accordion ._content {
+  border-bottom: 1px solid var(--theme-splitter-color);
+  font-size: 12px;
+}
+
+.accordion div:last-child ._content {
+  border-bottom: none;
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -4114,70 +3802,8 @@ html[dir="rtl"] .command-bar {
   background-color: var(--theme-toolbar-background);
 }
 
-.img.pause,
-.img.stepOver,
-.img.stepIn,
-.img.stepOut,
-.img.resume,
-.img.rewind,
-.img.reverseStepOver,
-.img.reverseStepIn,
-.img.reverseStepOut,
-.img.replay-previous,
-.img.replay-next,
-.img.resume,
-.img.shortcuts,
-.img.skipPausing {
-  background-color: var(--theme-body-color);
-}
-
-.img.pause {
-  mask: url("resource://devtools/client/debugger/new/images/pause.svg") no-repeat;
-}
-
-.img.stepOver {
-  mask: url("resource://devtools/client/debugger/new/images/stepOver.svg") no-repeat;
-}
-
-.img.stepIn {
-  mask: url("resource://devtools/client/debugger/new/images/stepIn.svg") no-repeat;
-}
-
-.img.stepOut {
-  mask: url("resource://devtools/client/debugger/new/images/stepOut.svg") no-repeat;
-}
-
-.img.resume {
-  mask: url("resource://devtools/client/debugger/new/images/resume.svg") no-repeat;
-}
-
-.img.rewind {
-  mask: url("resource://devtools/client/debugger/new/images/resume.svg") no-repeat;
-  transform: scaleX(-1);
-}
-
-.img.reverseStepOver {
-  mask: url("resource://devtools/client/debugger/new/images/stepOver.svg") no-repeat;
-  transform: scaleX(-1);
-}
-
-.img.reverseStepIn {
-  mask: url("resource://devtools/client/debugger/new/images/stepIn.svg") no-repeat;
-  transform: scaleX(-1);
-}
-
-.img.reverseStepOut {
-  mask: url("resource://devtools/client/debugger/new/images/stepOut.svg") no-repeat;
-  transform: scaleX(-1);
-}
-
 .command-bar .filler {
   flex-grow: 1;
-}
-
-.command-bar .img.shortcuts {
-  mask: url("resource://devtools/client/debugger/new/images/help.svg") no-repeat;
-  mask-size: contain;
 }
 
 .command-bar .replay-inactive {
@@ -4198,12 +3824,7 @@ html[dir="rtl"] .command-bar {
   float: right;
 }
 
-.command-bar .skipPausing {
-  mask: url("resource://devtools/client/debugger/new/images/disable-pausing.svg") no-repeat;
-  mask-size: 100%;
-}
-
-.command-bar .active .skipPausing {
+.command-bar .active .disable-pausing {
   background-color: var(--theme-highlight-blue);
 }
 
@@ -4368,8 +3989,6 @@ html[dir="rtl"] .command-bar {
 
 .event-listeners-content .arrow {
 	margin-inline-end: 0;
-	position: relative;
-	top: 1px;
 }
 
 html[dir="ltr"] .event-listeners-content .arrow.expanded {
@@ -4505,16 +4124,6 @@ html[dir="rtl"] .object-node {
   display: flex;
 }
 
-.secondary-panes .accordion .plus svg {
-  width: 12px;
-  margin-top: 3px;
-  fill: var(--theme-body-color);
-}
-
-.secondary-panes .accordion .plus.active svg {
-  fill: var(--theme-highlight-blue);
-}
-
 .dropdown {
   width: 20em;
   overflow: auto;
@@ -4620,6 +4229,7 @@ html .welcomebox .toggle-button-end.collapsed {
   height: var(--editor-header-height);
   border-bottom: 1px solid var(--theme-splitter-color);
   background-color: var(--theme-toolbar-background);
+  --overflow-button-width: 28px;
 }
 
 .source-header * {
@@ -4635,8 +4245,11 @@ html .welcomebox .toggle-button-end.collapsed {
 }
 
 .source-tabs {
-  max-width: calc(100% - 80px);
+  flex: auto;
   align-self: flex-start;
+  align-items: flex-start;
+  /* Reserve space for the overflow button (even if not visible) */
+  padding-inline-end: 28px;
 }
 
 .source-tab {
@@ -4646,7 +4259,7 @@ html .welcomebox .toggle-button-end.collapsed {
   min-width: 40px;
   max-width: 100%;
   overflow: hidden;
-  padding: 5px;
+  padding: 4px 10px;
   cursor: default;
   height: calc(var(--editor-header-height) - 1px);
   font-size: 12px;
@@ -4685,150 +4298,86 @@ html .welcomebox .toggle-button-end.collapsed {
   transform: scaleX(1);
 }
 
-.source-tab .source-icon {
-  margin-inline-end: 0;
-}
-
 .source-tab .img.prettyPrint,
-.source-tab .source-icon.blackBox {
-  height: 12px;
-  width: 12px;
-  align-self: center;
-}
-
-.source-tab .img.react {
-  mask: url("resource://devtools/client/debugger/new/images/react.svg") no-repeat;
-  mask-size: 100%;
-  height: 14px;
-  width: 14px;
-  background: var(--theme-highlight-bluegrey);
-  top: 0;
+.source-tab .img.blackBox {
+  mask-size: 14px;
+  background-color: currentColor;
 }
 
 .source-tab .filename {
+  display: block;
   white-space: nowrap;
   text-overflow: ellipsis;
   overflow: hidden;
-  padding: 0 4px;
-  align-self: center;
-  margin-bottom: 1px;
+  padding-inline-end: 4px;
 }
 
 .source-tab .filename span {
   opacity: 0.7;
-  padding-left: 4px;
+  padding-inline-start: 4px;
 }
 
 .source-tab .close-btn {
   visibility: hidden;
-  line-height: 0;
+  margin-inline-end: -6px;
 }
 
 .source-tab.active .close-btn {
-  visibility: visible;
+  color: inherit;
 }
 
-.source-tab.active .close {
-  visibility: visible;
-  background-color: var(--theme-toolbar-selected-color);
-}
-
+.source-tab.active .close-btn,
 .source-tab:hover .close-btn {
   visibility: visible;
+}
+
+.source-tab .close-btn:hover,
+.source-tab .close-btn:focus {
+  color: var(--theme-selection-color);
+  background-color: var(--theme-selection-background);
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 .dropdown {
-  --width: 150px;
   background: var(--theme-body-background);
   border: 1px solid var(--theme-splitter-color);
   border-radius: 4px;
   box-shadow: 0 4px 4px 0 var(--search-overlays-semitransparent);
   max-height: 300px;
   position: absolute;
-  right: 0;
-  top: 23px;
-  width: var(--width);
+  offset-inline-end: 2px;
+  top: 24px;
+  width: 150px;
   z-index: 1000;
   overflow: auto;
 }
 
-html[dir="rtl"] .dropdown {
-  right: calc((var(--width) - 11px) * (-1));
-}
-
 .dropdown-block {
-  padding: 0px 2px;
   position: relative;
   align-self: center;
   height: 100%;
+}
+
+/* cover the reserved space at the end of .source-tabs */
+.source-tabs + .dropdown-block {
+  margin-inline-start: -28px;
 }
 
 .dropdown-button {
   color: var(--theme-comment);
   background: none;
   border: none;
-  padding: 0;
+  padding: 4px 6px;
   font-weight: 100;
   font-size: 14px;
   height: 100%;
-  width: 24px;
+  width: 28px;
 }
 
-.more-tabs {
-  mask: url("resource://devtools/client/debugger/new/images/command-chevron.svg") no-repeat;
-  mask-size: 100%;
-  width: 12px;
+.dropdown-button .img {
   display: block;
-  background: var(--theme-body-color);
-  margin-left: 6px;
-}
-
-html[dir="rtl"] .img.more-tabs {
-  transform: rotate(180deg);
-  margin-right: 6px;
-}
-
-.dropdown li {
-  transition: all 0.25s ease;
-  padding: 2px 10px 10px 5px;
-  overflow: hidden;
-  height: 30px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  display: block;
-}
-
-.dropdown li:hover {
-  background-color: var(--search-overlays-semitransparent);
-}
-
-.dropdown-icon {
-  width: 13px;
-  height: 13px;
-  margin-right: 5px;
-  vertical-align: middle;
-  display: inline-block;
-}
-
-.dropdown-icon.prettyPrint {
-  mask: url("resource://devtools/client/debugger/new/images/prettyPrint.svg") no-repeat;
-  mask-size: 100%;
-  background: var(--theme-highlight-blue);
-}
-
-.dropdown-icon.blackBox {
-  mask: url("resource://devtools/client/debugger/new/images/blackBox.svg") no-repeat;
-  mask-size: 100%;
-  background: var(--theme-highlight-blue);
-}
-
-.dropdown-icon.file {
-  mask: url("resource://devtools/client/debugger/new/images/file.svg") no-repeat;
-  mask-size: 100%;
-  margin-bottom: 7px;
 }
 
 .dropdown ul {
@@ -4837,6 +4386,40 @@ html[dir="rtl"] .img.more-tabs {
   font-size: 1em;
   margin: 0;
   padding: 0;
+}
+
+.dropdown li {
+  display: flex;
+  align-items: center;
+  padding: 5px 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  line-height: calc(16 / 12);
+  transition: all 0.25s ease;
+}
+
+.dropdown li:first-child {
+  margin-top: 4px;
+}
+
+.dropdown li:last-child {
+  margin-bottom: 4px;
+}
+
+.dropdown li:hover {
+  background-color: var(--search-overlays-semitransparent);
+}
+
+.dropdown-icon {
+  margin-inline-end: 4px;
+  mask-size: 13px 13px;
+}
+
+.dropdown-icon.prettyPrint,
+.dropdown-icon.blackBox {
+  background-color: var(--theme-highlight-blue);
 }
 
 .dropdown-mask {
@@ -4857,7 +4440,7 @@ html[dir="rtl"] .img.more-tabs {
   margin: 0px;
   padding: 0px;
   overflow: auto;
-  width: calc(100% - 1px); /* 1px fixes the hidden right border */
+  width: 100%;
   background: var(--theme-body-background);
 }
 
@@ -4868,15 +4451,16 @@ html[dir="rtl"] .img.more-tabs {
 
 .result-list li {
   color: var(--theme-body-color);
-  padding: 4px 13px;
+  padding: 4px 8px;
   display: flex;
 }
 
 .result-list.big li {
-  padding: 5px;
   flex-direction: row;
-  line-height: 18px;
+  align-items: center;
+  padding: 6px 8px;
   font-size: 12px;
+  line-height: 16px;
 }
 
 .result-list.small li {
@@ -4911,18 +4495,19 @@ html[dir="rtl"] .img.more-tabs {
 .result-list li .result-item-icon {
   background-color: var(--theme-comment);
 }
-.result-list li.selected .result-item-icon {
+
+.result-list li .icon {
+  align-self: center;
+  margin-inline-end: 14px;
+  margin-inline-start: 4px;
+}
+
+.result-list .result-item-icon {
+  display: block;
+}
+
+.result-list .selected .result-item-icon {
   background-color: var(--theme-selection-color);
-}
-
-.result-list li .result-item-icon.tab {
-  mask-size: 150%;
-  mask-position: 2px 4px;
-}
-
-.result-list li .img.result-item-icon {
-  width: 16px;
-  height: 16px;
 }
 
 .result-list li .title {
@@ -4965,10 +4550,6 @@ html[dir="rtl"] .img.more-tabs {
   text-overflow: ellipsis;
   overflow: hidden;
   white-space: nowrap;
-}
-
-.result-list.big li .subtitle {
-  line-height: 1.5em;
 }
 
 .theme-dark .result-list.big li.selected .subtitle {
