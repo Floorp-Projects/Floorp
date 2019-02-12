@@ -11,14 +11,13 @@ import {
   assertBreakpoint,
   assertPendingBreakpoint,
   findScopeByName,
-  makeSourceActorLocation,
   makeBreakpointLocation
 } from "../../utils/breakpoint";
 
 import { getGeneratedLocation } from "../../utils/source-maps";
 import { getTextAtPosition } from "../../utils/source";
 import { originalToGeneratedId, isOriginalId } from "devtools-source-map";
-import { getSource, getSourceActors } from "../../selectors";
+import { getSource } from "../../selectors";
 import { features } from "../../utils/prefs";
 
 import type { ThunkArgs, Action } from "../types";
@@ -132,9 +131,10 @@ export async function syncBreakpointPromise(
     return null;
   }
 
-  const breakpointLocation = makeBreakpointLocation(getState(), generatedLocation);
-  const scopedBreakpointLocation =
-    makeBreakpointLocation(getState(), scopedGeneratedLocation);
+  const breakpointLocation = makeBreakpointLocation(
+    getState(),
+    generatedLocation
+  );
 
   let possiblePosition = true;
   if (features.columnBreakpoints && generatedLocation.column != undefined) {
@@ -177,12 +177,10 @@ export async function syncBreakpointPromise(
   /** ******* Case 2: Add New Breakpoint ***********/
   // If we are not disabled, set the breakpoint on the server and get
   // that info so we can set it on our breakpoints.
-
-  if (!scopedGeneratedLocation.line) {
-    return { previousLocation, breakpoint: null };
-  }
-
-  await client.setBreakpoint(scopedGeneratedLocation, pendingBreakpoint.options);
+  await client.setBreakpoint(
+    scopedGeneratedLocation,
+    pendingBreakpoint.options
+  );
 
   const originalText = getTextAtPosition(source, scopedLocation);
   const text = getTextAtPosition(generatedSource, scopedGeneratedLocation);

@@ -9,6 +9,4 @@
 
 import Svg from "../../../images/Svg";
 
-import "./Svg.css";
-
 export default Svg;

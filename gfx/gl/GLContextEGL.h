@@ -91,6 +91,10 @@ class GLContextEGL : public GLContext {
       CreateContextFlags flags, const gfx::IntSize& size,
       const SurfaceCaps& minCaps, nsACString* const out_FailureId);
 
+#if defined(MOZ_WAYLAND)
+  static EGLSurface CreateEGLSurfaceForCompositorWidget(
+      widget::CompositorWidget* aCompositorWidget, bool aForceAccelerated);
+#endif
  protected:
   friend class GLContextProviderEGL;
   friend class GLContextEGLFactory;

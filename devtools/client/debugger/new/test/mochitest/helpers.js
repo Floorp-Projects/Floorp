@@ -768,9 +768,9 @@ function findBreakpoint(dbg, url, line) {
     Services.prefs.getBoolPref("devtools.debugger.features.column-breakpoints")
   ) {
     ({ column } = dbg.selectors.getFirstVisibleBreakpointPosition(
-      dbg.store.getState(), 
+      dbg.store.getState(),
       {
-        sourceId: source.id, 
+        sourceId: source.id,
         line
       }
     ));
@@ -1106,14 +1106,16 @@ const selectors = {
   scopeValue: i =>
     `.scopes-list .tree-node:nth-child(${i}) .object-delimiter + *`,
   frame: i => `.frames [role="list"] [role="listitem"]:nth-child(${i})`,
-  frames: `.frames [role="list"] [role="listitem"]`,
+  frames: '.frames [role="list"] [role="listitem"]',
   gutter: i => `.CodeMirror-code *:nth-child(${i}) .CodeMirror-linenumber`,
   // These work for bobth the breakpoint listing and gutter marker
   gutterContextMenu: {
     addConditionalBreakpoint:
       "#node-menu-add-condition, #node-menu-add-conditional-breakpoint",
     editConditionalBreakpoint:
-      "#node-menu-edit-condition, #node-menu-edit-conditional-breakpoint"
+      "#node-menu-edit-condition, #node-menu-edit-conditional-breakpoint",
+    addLogPoint: "#node-menu-add-log-point",
+    editLogPoint: "#node-menu-edit-log-point"
   },
   menuitem: i => `menupopup menuitem:nth-child(${i})`,
   pauseOnExceptions: ".pause-exceptions",
@@ -1147,7 +1149,7 @@ const selectors = {
   outlineItem: i =>
     `.outline-list__element:nth-child(${i}) .function-signature`,
   outlineItems: ".outline-list__element",
-  conditionalPanelInput: ".conditional-breakpoint-panel input",
+  conditionalPanelInput: ".conditional-breakpoint-panel textarea",
   searchField: ".search-field",
   blackbox: ".action.black-box",
   projectSearchCollapsed: ".project-text-search .arrow:not(.expanded)",

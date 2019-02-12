@@ -23,20 +23,6 @@
   width: 30px;
 }
 
-.conditional-breakpoint-panel input {
-  margin: 5px 10px;
-  width: calc(100% - 4em);
-  border: none;
-  background: var(--theme-toolbar-background);
-  font-size: 14px;
-  color: var(--theme-conditional-breakpoint-color);
-  line-height: 30px;
-}
-
-.conditional-breakpoint-panel input:not(:placeholder-shown) {
-  font-family: var(--monospace-font-family);
-}
-
-.conditional-breakpoint-panel input:focus {
-  outline-width: 0;
+.conditional-breakpoint-panel .CodeMirror {
+  margin: 6px 10px;
 }

@@ -4,11 +4,14 @@
 
 // @flow
 
+import { createSource, createWorker } from "./create";
+import { supportsWorkers, updateWorkerClients } from "./workers";
+import { features } from "../../utils/prefs";
+
 import type {
   ActorId,
   BreakpointLocation,
   BreakpointOptions,
-  BreakpointResult,
   EventListenerBreakpoints,
   Frame,
   FrameId,
@@ -29,13 +32,6 @@ import type {
 } from "./types";
 
 import type { PausePointsMap } from "../../workers/parser";
-
-import { makeBreakpointActorId } from "../../utils/breakpoint";
-
-import { createSource, createWorker } from "./create";
-import { supportsWorkers, updateWorkerClients } from "./workers";
-
-import { features } from "../../utils/prefs";
 
 let workerClients: Object;
 let threadClient: ThreadClient;
