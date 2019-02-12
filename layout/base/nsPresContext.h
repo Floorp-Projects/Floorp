@@ -1265,14 +1265,16 @@ class nsPresContext : public nsISupports,
 
   mozilla::TimeStamp mReflowStartTime;
 
+  mozilla::Maybe<TransactionId> mFirstContentfulPaintTransactionId;
+
   // Time of various first interaction types, used to report time from
   // first paint of the top level content pres shell to first interaction.
   mozilla::TimeStamp mFirstNonBlankPaintTime;
-  mozilla::TimeStamp mFirstContentfulPaintTime;
   mozilla::TimeStamp mFirstClickTime;
   mozilla::TimeStamp mFirstKeyTime;
   mozilla::TimeStamp mFirstMouseMoveTime;
   mozilla::TimeStamp mFirstScrollTime;
+
   bool mInteractionTimeEnabled;
 
   // last time we did a full style flush
@@ -1346,6 +1348,8 @@ class nsPresContext : public nsISupports,
   unsigned mHadNonBlankPaint : 1;
   // Has NotifyContentfulPaint been called on this PresContext?
   unsigned mHadContentfulPaint : 1;
+  // Has NotifyDidPaintForSubtree been called for a contentful paint?
+  unsigned mHadContentfulPaintComposite : 1;
 
 #ifdef DEBUG
   unsigned mInitialized : 1;
