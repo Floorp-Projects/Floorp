@@ -123,6 +123,7 @@
 #include "mozilla/dom/ServiceWorkerUtils.h"
 #include "mozilla/net/AsyncUrlChannelClassifier.h"
 #include "mozilla/net/UrlClassifierFeatureFactory.h"
+#include "nsIWebNavigation.h"
 
 #ifdef MOZ_TASK_TRACER
 #  include "GeckoTaskTracer.h"
@@ -7150,6 +7151,147 @@ nsresult nsHttpChannel::StartCrossProcessRedirect() {
   rv = WaitForRedirectCallback();
 
   return rv;
+}
+
+static nsILoadInfo::CrossOriginOpenerPolicy GetCrossOriginOpenerPolicy(
+    nsHttpResponseHead *responseHead) {
+  MOZ_ASSERT(responseHead);
+
+  nsAutoCString openerPolicy;
+  Unused << responseHead->GetHeader(nsHttp::Cross_Origin_Opener_Policy,
+                                    openerPolicy);
+
+  // Cross-Origin-Opener-Policy = sameness [ RWS outgoing ]
+  // sameness = %s"same-origin" / %s"same-site" ; case-sensitive
+  // outgoing = %s"unsafe-allow-outgoing" ; case-sensitive
+
+  Tokenizer t(openerPolicy);
+  nsAutoCString sameness;
+  nsAutoCString outgoing;
+
+  // The return value will be true if we find any whitespace. If there is
+  // whitespace, then it must be followed by "unsafe-allow-outgoing" otherwise
+  // this is a malformed header value.
+  bool allowOutgoing = t.ReadUntil(Tokenizer::Token::Whitespace(), sameness);
+  if (allowOutgoing) {
+    t.SkipWhites();
+    bool foundEOF = t.ReadUntil(Tokenizer::Token::EndOfFile(), outgoing);
+    if (!foundEOF) {
+      // Malformed response. There should be no text after the second token.
+      return nsILoadInfo::OPENER_POLICY_NULL;
+    }
+    if (!outgoing.EqualsLiteral("unsafe-allow-outgoing")) {
+      // Malformed response. Only one allowed value for the second token.
+      return nsILoadInfo::OPENER_POLICY_NULL;
+    }
+  }
+
+  nsILoadInfo::CrossOriginOpenerPolicy policy = nsILoadInfo::OPENER_POLICY_NULL;
+  if (sameness.EqualsLiteral("same-origin")) {
+    policy = nsILoadInfo::OPENER_POLICY_SAME_ORIGIN;
+    if (allowOutgoing) {
+      policy = nsILoadInfo::OPENER_POLICY_SAME_ORIGIN_ALLOW_OUTGOING;
+    }
+  } else if (sameness.EqualsLiteral("same-site")) {
+    policy = nsILoadInfo::OPENER_POLICY_SAME_SITE;
+    if (allowOutgoing) {
+      policy = nsILoadInfo::OPENER_POLICY_SAME_SITE_ALLOW_OUTGOING;
+    }
+  }
+
+  return policy;
+}
+
+static bool CompareCrossOriginOpenerPolicies(
+    nsILoadInfo::CrossOriginOpenerPolicy documentPolicy,
+    nsIPrincipal *documentOrigin,
+    nsILoadInfo::CrossOriginOpenerPolicy resultPolicy,
+    nsIPrincipal *resultOrigin) {
+  if (documentPolicy == nsILoadInfo::OPENER_POLICY_NULL &&
+      resultPolicy == nsILoadInfo::OPENER_POLICY_NULL) {
+    return true;
+  }
+
+  if (documentPolicy != resultPolicy) {
+    return false;
+  }
+  // For the next checks the document and result will have matching policies.
+
+  // We either check if they are same origin or same site.
+  if ((documentPolicy & nsILoadInfo::OPENER_POLICY_SAME_ORIGIN) &&
+      documentOrigin->Equals(resultOrigin)) {
+    return true;
+  }
+
+  if (documentPolicy & nsILoadInfo::OPENER_POLICY_SAME_SITE) {
+    nsAutoCString siteOriginA;
+    nsAutoCString siteOriginB;
+
+    documentOrigin->GetSiteOrigin(siteOriginA);
+    resultOrigin->GetSiteOrigin(siteOriginB);
+    if (siteOriginA == siteOriginB) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::HasCrossOriginOpenerPolicyMismatch(bool *aMismatch) {
+  MOZ_ASSERT(aMismatch);
+  if (!aMismatch) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  *aMismatch = false;
+  // Only consider Cross-Origin-Opener-Policy for toplevel document loads.
+  if (mLoadInfo->GetExternalContentPolicyType() !=
+      nsIContentPolicy::TYPE_DOCUMENT) {
+    return NS_OK;
+  }
+
+  // Maybe the channel failed and we have no response head?
+  nsHttpResponseHead *head =
+      mResponseHead ? mResponseHead : mCachedResponseHead;
+  if (!head) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  // Get the policy of the active document, and the policy for the result.
+  nsILoadInfo::CrossOriginOpenerPolicy documentPolicy =
+      mLoadInfo->GetOpenerPolicy();
+  nsILoadInfo::CrossOriginOpenerPolicy resultPolicy =
+      GetCrossOriginOpenerPolicy(head);
+
+  // We use the top window principal as the documentOrigin
+  if (!mTopWindowPrincipal) {
+    GetTopWindowPrincipal(getter_AddRefs(mTopWindowPrincipal));
+  }
+
+  nsCOMPtr<nsIPrincipal> documentOrigin = mTopWindowPrincipal;
+  nsCOMPtr<nsIPrincipal> resultOrigin;
+
+  nsContentUtils::GetSecurityManager()->GetChannelResultPrincipal(
+      this, getter_AddRefs(resultOrigin));
+
+  if (!CompareCrossOriginOpenerPolicies(documentPolicy, documentOrigin,
+                                        resultPolicy, resultOrigin)) {
+    // If one of the following is false:
+    //   - doc is the initial about:blank document
+    //   - document's unsafe-allow-outgoing is true
+    //   - resultPolicy is null
+    // then we have a mismatch.
+    if (!documentOrigin->GetIsNullPrincipal() ||
+        !(documentPolicy &
+          nsILoadInfo::OPENER_POLICY_UNSAFE_ALLOW_OUTGOING_FLAG) ||
+        !(resultPolicy == nsILoadInfo::OPENER_POLICY_NULL)) {
+      *aMismatch = true;
+      return NS_OK;
+    }
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
