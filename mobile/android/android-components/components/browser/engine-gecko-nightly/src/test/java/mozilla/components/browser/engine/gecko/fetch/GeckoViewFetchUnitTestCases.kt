@@ -8,6 +8,7 @@ import androidx.test.core.app.ApplicationProvider
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.Request
 import mozilla.components.support.test.any
+import mozilla.components.support.test.eq
 import okhttp3.Headers
 import okhttp3.HttpUrl
 import okhttp3.mockwebserver.MockWebServer
@@ -18,9 +19,11 @@ import org.junit.Before
 import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.ArgumentMatchers.anyLong
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.verify
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoWebExecutor
@@ -146,7 +149,7 @@ class GeckoViewFetchUnitTestCases : mozilla.components.tooling.fetch.tests.Fetch
 
         val geckoResult = mock(GeckoResult::class.java)
         `when`(geckoResult.poll(anyLong())).thenThrow(TimeoutException::class.java)
-        `when`(geckoWebExecutor!!.fetch(any())).thenReturn(geckoResult as GeckoResult<WebResponse>)
+        `when`(geckoWebExecutor!!.fetch(any(), anyInt())).thenReturn(geckoResult as GeckoResult<WebResponse>)
 
         super.get200WithReadTimeout()
     }
@@ -205,7 +208,7 @@ class GeckoViewFetchUnitTestCases : mozilla.components.tooling.fetch.tests.Fetch
 
         val geckoResult = mock(GeckoResult::class.java)
         `when`(geckoResult.poll(anyLong())).thenReturn(null)
-        `when`(geckoWebExecutor!!.fetch(any())).thenReturn(geckoResult as GeckoResult<WebResponse>)
+        `when`(geckoWebExecutor!!.fetch(any(), anyInt())).thenReturn(geckoResult as GeckoResult<WebResponse>)
 
         val request = mock(Request::class.java)
         `when`(request.url).thenReturn("https://mozilla.org")
@@ -235,6 +238,19 @@ class GeckoViewFetchUnitTestCases : mozilla.components.tooling.fetch.tests.Fetch
         assertEquals('e'.toByte(), array[1])
         assertEquals('s'.toByte(), array[2])
         assertEquals('t'.toByte(), array[3])
+    }
+
+    @Test
+    override fun get200WithCookiePolicy() {
+        mockResponse(200)
+
+        val request = mock(Request::class.java)
+        `when`(request.url).thenReturn("https://mozilla.org")
+        `when`(request.method).thenReturn(Request.Method.GET)
+        `when`(request.cookiePolicy).thenReturn(Request.CookiePolicy.OMIT)
+        createNewClient().fetch(request)
+
+        verify(geckoWebExecutor)!!.fetch(any(), eq(GeckoWebExecutor.FETCH_FLAGS_ANONYMOUS))
     }
 
     private fun mockRequest(headerMap: Map<String, String>? = null, body: String? = null, method: String = "GET") {
@@ -274,7 +290,7 @@ class GeckoViewFetchUnitTestCases : mozilla.components.tooling.fetch.tests.Fetch
 
         val response = builder.build()
 
-        `when`(executor.fetch(any())).thenReturn(GeckoResult.fromValue(response))
+        `when`(executor.fetch(any(), anyInt())).thenReturn(GeckoResult.fromValue(response))
         geckoWebExecutor = executor
     }
 }

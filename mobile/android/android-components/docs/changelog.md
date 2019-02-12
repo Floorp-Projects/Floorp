@@ -12,6 +12,16 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **concept-fetch**
+  * Added API to specify whether or not cookies should be sent with a request. This can be controlled using the `cookiePolicy` parameter when creating a `Request`.
+
+  ```kotlin
+  // Do not send cookies with this request
+  client.fetch(Request(url, cookiePolicy = CookiePolicy.OMIT)).use { response ->
+    val body = response.body.string()
+  }
+  ```
+
 * **ui-doorhanger**
   * Added `DoorhangerPrompt` - a builder for creating a prompt `Doorhanger` providing a way to present decisions to users.
 

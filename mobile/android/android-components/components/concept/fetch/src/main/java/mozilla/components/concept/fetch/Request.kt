@@ -27,6 +27,8 @@ import java.util.concurrent.TimeUnit
  * timeout.
  * @property body An optional body to be send with the request.
  * @property redirect Whether the [Client] should follow redirects (HTTP 3xx) for this request or not.
+ * @property cookiePolicy A policy to specify whether or not cookies should be
+ * sent with the request, defaults to [CookiePolicy.INCLUDE]
  */
 data class Request(
     val url: String,
@@ -35,7 +37,8 @@ data class Request(
     val connectTimeout: Pair<Long, TimeUnit>? = null,
     val readTimeout: Pair<Long, TimeUnit>? = null,
     val body: Body? = null,
-    val redirect: Redirect = Redirect.FOLLOW
+    val redirect: Redirect = Redirect.FOLLOW,
+    val cookiePolicy: CookiePolicy = CookiePolicy.INCLUDE
 ) {
     /**
      * A [Body] to be send with the [Request].
@@ -107,5 +110,17 @@ data class Request(
          * Do not follow redirects and let caller handle them manually.
          */
         MANUAL
+    }
+
+    enum class CookiePolicy {
+        /**
+         * Include cookies when sending the request.
+         */
+        INCLUDE,
+
+        /**
+         * Do not send cookies with the request.
+         */
+        OMIT
     }
 }

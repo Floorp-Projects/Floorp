@@ -9,8 +9,12 @@ import mozilla.components.concept.fetch.Headers
 import mozilla.components.concept.fetch.MutableHeaders
 import mozilla.components.concept.fetch.Request
 import mozilla.components.concept.fetch.Response
+import mozilla.components.lib.fetch.okhttp.OkHttpClient.Companion.getOrCreateCookieManager
+import okhttp3.JavaNetCookieJar
 import okhttp3.OkHttpClient
 import okhttp3.RequestBody
+import java.net.CookieHandler
+import java.net.CookieManager
 
 typealias RequestBuilder = okhttp3.Request.Builder
 
@@ -32,12 +36,23 @@ class OkHttpClient(
 
         return actualResponse.toResponse()
     }
+
+    companion object {
+        fun getOrCreateCookieManager(): CookieManager {
+            if (CookieHandler.getDefault() == null) {
+                CookieHandler.setDefault(CookieManager())
+            }
+            return CookieHandler.getDefault() as CookieManager
+        }
+    }
 }
 
 private fun okhttp3.OkHttpClient.rebuildFor(request: Request): okhttp3.OkHttpClient {
+    @Suppress("ComplexCondition")
     if (request.connectTimeout != null ||
         request.readTimeout != null ||
-        request.redirect != Request.Redirect.FOLLOW
+        request.redirect != Request.Redirect.FOLLOW ||
+        request.cookiePolicy != Request.CookiePolicy.OMIT
     ) {
         val clientBuilder = newBuilder()
 
@@ -46,6 +61,10 @@ private fun okhttp3.OkHttpClient.rebuildFor(request: Request): okhttp3.OkHttpCli
 
         if (request.redirect == Request.Redirect.MANUAL) {
             clientBuilder.followRedirects(false)
+        }
+
+        if (request.cookiePolicy == Request.CookiePolicy.INCLUDE) {
+            clientBuilder.cookieJar(JavaNetCookieJar(getOrCreateCookieManager()))
         }
 
         return clientBuilder.build()

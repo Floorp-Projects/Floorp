@@ -109,4 +109,10 @@ class GeckoViewFetchTestCases : mozilla.components.tooling.fetch.tests.FetchTest
     override fun put201FileUpload() {
         super.put201FileUpload()
     }
+
+    @Test
+    @UiThreadTest
+    override fun get200WithCookiePolicy() {
+        super.get200WithCookiePolicy()
+    }
 }

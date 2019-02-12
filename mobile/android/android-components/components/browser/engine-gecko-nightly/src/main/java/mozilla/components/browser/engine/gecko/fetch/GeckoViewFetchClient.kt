@@ -51,7 +51,11 @@ class GeckoViewFetchClient(
         }
 
         try {
-            val webResponse = executor.fetch(webRequest).poll(readTimeOutMillis)
+            var fetchFlags = 0
+            if (request.cookiePolicy == Request.CookiePolicy.OMIT) {
+                fetchFlags += GeckoWebExecutor.FETCH_FLAGS_ANONYMOUS
+            }
+            val webResponse = executor.fetch(webRequest, fetchFlags).poll(readTimeOutMillis)
             return webResponse?.toResponse() ?: throw IOException("Fetch failed with null response")
         } catch (e: TimeoutException) {
             throw SocketTimeoutException()

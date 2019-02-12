@@ -79,5 +79,6 @@ object Dependencies {
     const val mozilla_servo_x86 = "org.mozilla.servoview:servoview-x86:${Versions.servo}"
 
     const val thirdparty_okhttp = "com.squareup.okhttp3:okhttp:${Versions.okhttp}"
+    const val thirdparty_okhttp_urlconnection = "com.squareup.okhttp3:okhttp-urlconnection:${Versions.okhttp}"
     const val thirdparty_sentry = "io.sentry:sentry-android:${Versions.sentry}"
 }

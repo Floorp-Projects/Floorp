@@ -5,7 +5,7 @@
 package mozilla.components.lib.fetch.okhttp
 
 import mozilla.components.concept.fetch.Client
-import org.junit.Assert
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class OkHttpFetchTestCases : mozilla.components.tooling.fetch.tests.FetchTestCases() {
@@ -16,6 +16,6 @@ class OkHttpFetchTestCases : mozilla.components.tooling.fetch.tests.FetchTestCas
     @Test
     fun `Client instance`() {
         // We need at least one test case defined here so that this is recognized as test class.
-        Assert.assertTrue(createNewClient() is OkHttpClient)
+        assertTrue(createNewClient() is OkHttpClient)
     }
 }

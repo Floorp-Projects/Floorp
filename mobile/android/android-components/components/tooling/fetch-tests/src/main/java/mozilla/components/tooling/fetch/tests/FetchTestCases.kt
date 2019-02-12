@@ -17,6 +17,7 @@ import okio.GzipSink
 import okio.Okio
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Test
@@ -230,7 +231,8 @@ abstract class FetchTestCases {
             val response = client.fetch(
                 Request(
                     url = rootUrl(),
-                    redirect = Request.Redirect.MANUAL))
+                    redirect = Request.Redirect.MANUAL,
+                    cookiePolicy = Request.CookiePolicy.OMIT))
             assertEquals(302, response.status)
         }
     }
@@ -393,6 +395,35 @@ abstract class FetchTestCases {
             assertEquals(1, acceptHeaders.size)
             assertEquals("text/html", acceptHeaders[0])
         }
+    }
+
+    @Test
+    open fun get200WithCookiePolicy() = withServerResponding(
+            MockResponse().addHeader("Set-Cookie", "name=value"),
+            MockResponse(),
+            MockResponse()
+    ) { client ->
+
+        val responseWithCookies = client.fetch(Request(rootUrl()))
+        assertEquals(200, responseWithCookies.status)
+        assertEquals("name=value", responseWithCookies.headers["Set-Cookie"])
+        assertNull(takeRequest().getHeader("Cookie"))
+
+        // Send additional request, using CookiePolicy.INCLUDE, which should
+        // include the cookie set by the previous response.
+        val response1 = client.fetch(
+            Request(url = rootUrl(), cookiePolicy = Request.CookiePolicy.INCLUDE))
+
+        assertEquals(200, response1.status)
+        assertEquals("name=value", takeRequest().getHeader("Cookie"))
+
+        // Send additional request, using CookiePolicy.OMIT, which should
+        // NOT include the cookie.
+        val response2 = client.fetch(
+            Request(url = rootUrl(), cookiePolicy = Request.CookiePolicy.OMIT))
+
+        assertEquals(200, response2.status)
+        assertNull(takeRequest().getHeader("Cookie"))
     }
 
     private inline fun withServerResponding(
