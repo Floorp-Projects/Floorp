@@ -241,7 +241,8 @@ static bool IsContainerLayerItem(nsDisplayItem* aItem) {
     case DisplayItemType::TYPE_FILTER:
     case DisplayItemType::TYPE_BLEND_CONTAINER:
     case DisplayItemType::TYPE_BLEND_MODE:
-    case DisplayItemType::TYPE_MASK: {
+    case DisplayItemType::TYPE_MASK:
+    case DisplayItemType::TYPE_PERSPECTIVE: {
       return true;
     }
     default: { return false; }
