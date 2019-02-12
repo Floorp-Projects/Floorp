@@ -213,7 +213,7 @@ nsresult WebrtcProxyChannel::Open(const nsCString& aHost, const int& aPort,
   rv = httpChannel->SetConnectOnly();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = NS_MaybeOpenChannelUsingAsyncOpen2(httpChannel, this);
+  rv = NS_MaybeOpenChannelUsingAsyncOpen(httpChannel, this);
 
   if (NS_FAILED(rv)) {
     LOG(("WebrtcProxyChannel %p: cannot async open\n", this));

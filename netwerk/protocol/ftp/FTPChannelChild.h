@@ -62,8 +62,7 @@ class FTPChannelChild final : public PFTPChannelChild,
   void AddIPDLReference();
   void ReleaseIPDLReference();
 
-  NS_IMETHOD AsyncOpen(nsIStreamListener* listener,
-                       nsISupports* aContext) override;
+  NS_IMETHOD AsyncOpen(nsIStreamListener* listener) override;
 
   // Note that we handle this ourselves, overriding the nsBaseChannel
   // default behavior, in order to be e10s-friendly.

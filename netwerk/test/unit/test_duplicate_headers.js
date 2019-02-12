@@ -33,7 +33,7 @@ function run_test_number(num)
 
   var channel = setupChannel(testPath);
   flags = test_flags[num];   // OK if flags undefined for test
-  channel.asyncOpen2(new ChannelListener(this["completeTest" + num],
+  channel.asyncOpen(new ChannelListener(this["completeTest" + num],
                                          channel, flags));
 }
 

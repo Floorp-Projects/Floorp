@@ -205,7 +205,7 @@ nsresult nsSyncLoader::PushAsyncStream(nsIStreamListener *aListener) {
   mAsyncLoadStatus = NS_OK;
 
   // Start reading from the channel
-  nsresult rv = mChannel->AsyncOpen2(this);
+  nsresult rv = mChannel->AsyncOpen(this);
 
   if (NS_SUCCEEDED(rv)) {
     // process events until we're finished.
@@ -230,7 +230,7 @@ nsresult nsSyncLoader::PushAsyncStream(nsIStreamListener *aListener) {
 
 nsresult nsSyncLoader::PushSyncStream(nsIStreamListener *aListener) {
   nsCOMPtr<nsIInputStream> in;
-  nsresult rv = mChannel->Open2(getter_AddRefs(in));
+  nsresult rv = mChannel->Open(getter_AddRefs(in));
   NS_ENSURE_SUCCESS(rv, rv);
 
   mLoading = true;

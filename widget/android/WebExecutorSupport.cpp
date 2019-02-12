@@ -421,7 +421,7 @@ nsresult WebExecutorSupport::CreateStreamLoader(
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Finally, open the channel
-  rv = httpChannel->AsyncOpen2(loader);
+  rv = httpChannel->AsyncOpen(loader);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;

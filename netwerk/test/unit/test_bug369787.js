@@ -60,7 +60,7 @@ function run_test() {
     loadUsingSystemPrincipal: true
   });
   channel.QueryInterface(Ci.nsIHttpChannel);
-  channel.asyncOpen2(new TestListener());
+  channel.asyncOpen(new TestListener());
 
   do_test_pending();
 }

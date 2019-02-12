@@ -1036,7 +1036,7 @@ nsresult ExternalResourceMap::PendingLoad::StartLoad(nsIURI* aURI,
 
   mURI = aURI;
 
-  return channel->AsyncOpen2(this);
+  return channel->AsyncOpen(this);
 }
 
 NS_IMPL_ISUPPORTS(ExternalResourceMap::LoadgroupCallbacks,

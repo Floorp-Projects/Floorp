@@ -11,7 +11,7 @@ var ios = Cc["@mozilla.org/network/io-service;1"].
 function open_inner_zip(base, idx) {
     var spec = "jar:" + base + "inner" + idx + ".zip!/foo";
     var channel = NetUtil.newChannel({uri: spec, loadUsingSystemPrincipal: true});
-    var stream = channel.open2();
+    var stream = channel.open();
 }
 
 function run_test() {

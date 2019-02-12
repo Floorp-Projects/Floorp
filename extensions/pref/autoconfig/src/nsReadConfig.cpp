@@ -263,7 +263,7 @@ nsresult nsReadConfig::openAndEvaluateJSFile(const char *aFileName,
                        nsIContentPolicy::TYPE_OTHER);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = channel->Open2(getter_AddRefs(inStr));
+    rv = channel->Open(getter_AddRefs(inStr));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

@@ -25,7 +25,7 @@ function run_test() {
   channel.QueryInterface(Ci.nsIPrivateBrowsingChannel);
   channel.setPrivate(true);
 
-  channel.asyncOpen2(new ChannelListener(checkRequest, channel));
+  channel.asyncOpen(new ChannelListener(checkRequest, channel));
 
   do_test_pending();
 }

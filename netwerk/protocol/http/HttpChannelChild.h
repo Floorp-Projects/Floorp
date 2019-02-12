@@ -92,9 +92,7 @@ class HttpChannelChild final : public PHttpChannelChild,
   NS_IMETHOD Resume() override;
   // nsIChannel
   NS_IMETHOD GetSecurityInfo(nsISupports** aSecurityInfo) override;
-  NS_IMETHOD AsyncOpen(nsIStreamListener* listener,
-                       nsISupports* aContext) override;
-  NS_IMETHOD AsyncOpen2(nsIStreamListener* aListener) override;
+  NS_IMETHOD AsyncOpen(nsIStreamListener* aListener) override;
 
   // HttpBaseChannel::nsIHttpChannel
   NS_IMETHOD SetReferrerWithPolicy(nsIURI* referrer,

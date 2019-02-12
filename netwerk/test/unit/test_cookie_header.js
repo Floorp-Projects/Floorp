@@ -74,7 +74,7 @@ function run_test() {
 
   chan.setRequestHeader("Cookie", cookieVal, false);
 
-  chan.asyncOpen2(listener);
+  chan.asyncOpen(listener);
 
   do_test_pending();
 }
@@ -93,7 +93,7 @@ function run_test_continued() {
   cookieVal = cookie2 + "; " + cookieVal;
 
   listener._iteration++;
-  chan.asyncOpen2(listener);
+  chan.asyncOpen(listener);
 
   do_test_pending();
 }

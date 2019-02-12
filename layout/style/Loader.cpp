@@ -1311,7 +1311,7 @@ nsresult Loader::LoadSheet(SheetLoadData* aLoadData,
     }
 
     nsCOMPtr<nsIInputStream> stream;
-    rv = channel->Open2(getter_AddRefs(stream));
+    rv = channel->Open(getter_AddRefs(stream));
 
     if (NS_FAILED(rv)) {
       LOG_ERROR(("  Failed to open URI synchronously"));
@@ -1521,7 +1521,7 @@ nsresult Loader::LoadSheet(SheetLoadData* aLoadData,
                                  mDocument);
   }
 
-  rv = channel->AsyncOpen2(streamLoader);
+  rv = channel->AsyncOpen(streamLoader);
 
 #ifdef DEBUG
   mSyncCallback = false;

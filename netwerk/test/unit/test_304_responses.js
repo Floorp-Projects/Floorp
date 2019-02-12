@@ -68,7 +68,7 @@ function consume304(request, buffer) {
 // a 304 response (i.e. when the server shouldn't have sent us one).
 add_test(function test_unexpected_304() {
   var chan = make_channel(baseURI + unexpected304);
-  chan.asyncOpen2(new ChannelListener(consume304, null));
+  chan.asyncOpen(new ChannelListener(consume304, null));
 });
 
 // Test that we can cope with a 304 response that was (erroneously) stored in
@@ -90,6 +90,6 @@ add_test(function test_304_stored_in_cache() {
       chan.QueryInterface(Ci.nsIHttpChannel);
       chan.setRequestHeader("If-None-Match", '"foo"', false);
 
-      chan.asyncOpen2(new ChannelListener(consume304, null));
+      chan.asyncOpen(new ChannelListener(consume304, null));
     });
 });

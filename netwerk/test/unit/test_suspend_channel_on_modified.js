@@ -48,7 +48,7 @@ function startChannelRequest(baseUrl, flags, expectedResponse=null) {
     uri: baseUrl,
     loadUsingSystemPrincipal: true
   });
-  chan.asyncOpen2(new ChannelListener((request, data, context) => {
+  chan.asyncOpen(new ChannelListener((request, data, context) => {
     if (expectedResponse) {
       Assert.equal(data, expectedResponse);
     } else {

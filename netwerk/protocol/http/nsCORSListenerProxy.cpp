@@ -980,9 +980,9 @@ nsresult nsCORSListenerProxy::UpdateChannel(nsIChannel* aChannel,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Make cookie-less if needed. We don't need to do anything here if the
-  // channel was opened with AsyncOpen2, since then AsyncOpen2 will take
+  // channel was opened with AsyncOpen, since then AsyncOpen will take
   // care of the cookie policy for us.
-  if (!mWithCredentials && (!loadInfo || !loadInfo->GetEnforceSecurity())) {
+  if (!mWithCredentials) {
     nsLoadFlags flags;
     rv = http->GetLoadFlags(&flags);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -999,7 +999,7 @@ nsresult nsCORSListenerProxy::UpdateChannel(nsIChannel* aChannel,
 
 nsresult nsCORSListenerProxy::CheckPreflightNeeded(nsIChannel* aChannel,
                                                    UpdateType aUpdateType) {
-  // If this caller isn't using AsyncOpen2, or if this *is* a preflight channel,
+  // If this caller isn't using AsyncOpen, or if this *is* a preflight channel,
   // then we shouldn't initiate preflight for this channel.
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
   if (!loadInfo ||
@@ -1529,7 +1529,7 @@ nsresult nsCORSListenerProxy::StartCORSPreflight(
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Start preflight
-  rv = preflightChannel->AsyncOpen2(preflightListener);
+  rv = preflightChannel->AsyncOpen(preflightListener);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Return newly created preflight channel

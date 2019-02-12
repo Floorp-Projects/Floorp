@@ -39,12 +39,7 @@ FileChannelChild::CompleteRedirectSetup(nsIStreamListener *listener,
                                         nsISupports *ctx) {
   nsresult rv;
 
-  if (mLoadInfo && mLoadInfo->GetEnforceSecurity()) {
-    MOZ_ASSERT(!ctx, "Context should be null");
-    rv = AsyncOpen2(listener);
-  } else {
-    rv = AsyncOpen(listener, ctx);
-  }
+  rv = AsyncOpen(listener);
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;

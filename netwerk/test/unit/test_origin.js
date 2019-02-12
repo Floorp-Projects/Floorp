@@ -141,7 +141,7 @@ function doTest()
                      Ci.nsIChannel.LOAD_INITIAL_DOCUMENT_URI;
   }
   forceReload = false;
-  chan.asyncOpen2(listener);
+  chan.asyncOpen(listener);
 }
 
 function doTest1()
@@ -328,5 +328,5 @@ function doTest11()
   var listener = new Http2PushApiListener();
   nextTest = testsDone;
   chan.notificationCallbacks = listener;
-  chan.asyncOpen2(listener);
+  chan.asyncOpen(listener);
 }

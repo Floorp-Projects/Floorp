@@ -1008,7 +1008,7 @@ nsresult EventSourceImpl::InitChannelAndRequestEventSource() {
   mHttpChannel->SetNotificationCallbacks(this);
 
   // Start reading from the channel
-  rv = mHttpChannel->AsyncOpen2(this);
+  rv = mHttpChannel->AsyncOpen(this);
   if (NS_FAILED(rv)) {
     DispatchFailConnection();
     return rv;

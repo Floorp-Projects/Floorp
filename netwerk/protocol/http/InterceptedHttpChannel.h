@@ -148,10 +148,7 @@ class InterceptedHttpChannel final
   GetSecurityInfo(nsISupports** aSecurityInfo) override;
 
   NS_IMETHOD
-  AsyncOpen(nsIStreamListener* aListener, nsISupports* aContext) override;
-
-  NS_IMETHOD
-  AsyncOpen2(nsIStreamListener* aListener) override;
+  AsyncOpen(nsIStreamListener* aListener) override;
 
   NS_IMETHOD
   LogBlockedCORSRequest(const nsAString& aMessage,

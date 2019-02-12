@@ -76,7 +76,7 @@ function testAsync() {
     var uri = jarBase + "/inner40.zip";
     var chan = NetUtil.newChannel({uri: uri, loadUsingSystemPrincipal: true});
     Assert.ok(chan.contentLength < 0);
-    chan.asyncOpen2(new Listener(function(l) {
+    chan.asyncOpen(new Listener(function(l) {
         Assert.ok(chan.contentLength > 0);
         Assert.ok(l.gotStartRequest);
         Assert.ok(l.gotStopRequest);
@@ -112,7 +112,7 @@ add_test(testZipEntry);
 add_test(function testSync() {
     var uri = jarBase + "/inner40.zip";
     var chan = NetUtil.newChannel({uri: uri, loadUsingSystemPrincipal: true});
-    var stream = chan.open2();
+    var stream = chan.open();
     Assert.ok(chan.contentLength > 0);
     Assert.equal(stream.available(), chan.contentLength);
     stream.close();
@@ -128,7 +128,7 @@ add_test(function testSync() {
 add_test(function testSyncNested() {
     var uri = "jar:" + jarBase + "/inner40.zip!/foo";
     var chan = NetUtil.newChannel({uri: uri, loadUsingSystemPrincipal: true});
-    var stream = chan.open2();
+    var stream = chan.open();
     Assert.ok(chan.contentLength > 0);
     Assert.equal(stream.available(), chan.contentLength);
     stream.close();
@@ -143,7 +143,7 @@ add_test(function testSyncNested() {
 add_test(function testAsyncNested(next) {
     var uri = "jar:" + jarBase + "/inner40.zip!/foo";
     var chan = NetUtil.newChannel({uri: uri, loadUsingSystemPrincipal: true});
-    chan.asyncOpen2(new Listener(function(l) {
+    chan.asyncOpen(new Listener(function(l) {
         Assert.ok(chan.contentLength > 0);
         Assert.ok(l.gotStartRequest);
         Assert.ok(l.gotStopRequest);
@@ -163,7 +163,7 @@ add_test(function testSyncCloseUnlocks() {
     file.copyTo(copy.parent, copy.leafName);
     var uri = "jar:" + ios.newFileURI(copy).spec + "!/inner40.zip";
     var chan = NetUtil.newChannel({uri: uri, loadUsingSystemPrincipal: true});
-    var stream = chan.open2();
+    var stream = chan.open();
     Assert.ok(chan.contentLength > 0);
     stream.close();
 
@@ -192,7 +192,7 @@ add_test(function testAsyncCloseUnlocks() {
     var uri = "jar:" + ios.newFileURI(copy).spec + "!/inner40.zip";
     var chan = NetUtil.newChannel({uri: uri, loadUsingSystemPrincipal: true});
 
-    chan.asyncOpen2(new Listener(function (l) {
+    chan.asyncOpen(new Listener(function (l) {
         Assert.ok(chan.contentLength > 0);
 
         // Drop any jar caches

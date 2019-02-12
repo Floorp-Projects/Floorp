@@ -151,7 +151,7 @@ nsresult nsPrefetchNode::OpenChannel() {
     priorityChannel->AdjustPriority(nsISupportsPriority::PRIORITY_LOWEST);
   }
 
-  rv = mChannel->AsyncOpen2(this);
+  rv = mChannel->AsyncOpen(this);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     // Drop the ref to the channel, because we don't want to end up with
     // cycles through it.

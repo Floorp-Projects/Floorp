@@ -139,21 +139,7 @@ var NetUtil = {
         }
 
         try {
-            // Open the channel using asyncOpen2() if the loadinfo contains one
-            // of the security mode flags, otherwise fall back to use asyncOpen().
-            if (channel.loadInfo &&
-                channel.loadInfo.securityMode != 0) {
-                channel.asyncOpen2(listener);
-            } else {
-                // Log deprecation warning to console to make sure all channels
-                // are created providing the correct security flags in the loadinfo.
-                // See nsILoadInfo for all available security flags and also the API
-                // of NetUtil.newChannel() for details above.
-                Cu.reportError("NetUtil.jsm: asyncFetch() requires the channel to have " +
-                    "one of the security flags set in the loadinfo (see nsILoadInfo). " +
-                    "Please create channel using NetUtil.newChannel()");
-                channel.asyncOpen(listener, null);
-            }
+            channel.asyncOpen(listener);
         } catch (e) {
             let exception = new Components.Exception(
                 "Failed to open input source '" + channel.originalURI.spec + "'",

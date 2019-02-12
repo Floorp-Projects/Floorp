@@ -1110,7 +1110,7 @@ nsresult nsCSPContext::SendReports(
 
     RefPtr<CSPViolationReportListener> listener =
         new CSPViolationReportListener();
-    rv = reportChannel->AsyncOpen2(listener);
+    rv = reportChannel->AsyncOpen(listener);
 
     // AsyncOpen should not fail, but could if there's no load group (like if
     // SetRequestContext is not given a channel).  This should fail quietly and

@@ -1230,7 +1230,7 @@ nsContextMenu.prototype = {
                            timer.TYPE_ONE_SHOT);
 
     // kick off the channel with our proxy object as the listener
-    channel.asyncOpen2(new saveAsListener());
+    channel.asyncOpen(new saveAsListener());
   },
 
   // Save URL of clicked-on link.

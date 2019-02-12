@@ -9,7 +9,7 @@ function run_test() {
             getService(Ci.nsIIOService);
   var spec = "jar:" + ios.newFileURI(do_get_file(path)).spec + "!/foo.txt";
   var channel = NetUtil.newChannel({uri: spec, loadUsingSystemPrincipal: true});
-  instr = channel.open2();
+  instr = channel.open();
   var val;
   try {
     val = channel.contentDisposition;

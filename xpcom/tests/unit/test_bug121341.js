@@ -7,7 +7,7 @@ function run_test() {
     uri: Services.io.newFileURI(dataFile, null, null),
     loadUsingSystemPrincipal: true,
   });
-  var inp = channel.open2();
+  var inp = channel.open();
 
   var properties = Cu.createPersistentProperties();
   properties.load(inp);
@@ -53,7 +53,7 @@ function run_test() {
     uri: Services.io.newFileURI(dataFile, null, null),
     loadUsingSystemPrincipal: true,
   });
-  inp = channel2.open2();
+  inp = channel2.open();
 
   var properties2 = Cu.createPersistentProperties();
   try {

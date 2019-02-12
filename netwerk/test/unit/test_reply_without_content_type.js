@@ -29,7 +29,7 @@ add_test(function test_plainText() {
   httpserver.start(-1);
   var channel = setupChannel(testpath);
   // ChannelListener defined in head_channels.js
-  channel.asyncOpen2(new ChannelListener(checkRequest, channel));
+  channel.asyncOpen(new ChannelListener(checkRequest, channel));
   do_test_pending();
   if (dbg) { print("============== test_plainText: out"); }
 });
@@ -40,7 +40,7 @@ add_test(function test_GZip() {
   httpserver.start(-1);
   var channel = setupChannel(testpathGZip);
   // ChannelListener defined in head_channels.js
-  channel.asyncOpen2(new ChannelListener(checkRequest, channel,
+  channel.asyncOpen(new ChannelListener(checkRequest, channel,
                                         CL_EXPECT_GZIP));
   do_test_pending();
   if (dbg) { print("============== test_GZip: out"); }

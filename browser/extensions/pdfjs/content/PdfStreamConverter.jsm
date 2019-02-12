@@ -301,7 +301,7 @@ class ChromeActions {
         },
       };
 
-      channel.asyncOpen2(listener);
+      channel.asyncOpen(listener);
     });
   }
 
@@ -995,7 +995,7 @@ PdfStreamConverter.prototype = {
         aRequest.loadInfo.originAttributes);
     aRequest.owner = resourcePrincipal;
 
-    channel.asyncOpen2(proxy);
+    channel.asyncOpen(proxy);
   },
 
   // nsIRequestObserver::onStopRequest

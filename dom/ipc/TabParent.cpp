@@ -3047,9 +3047,7 @@ class FakeChannel final : public nsIChannel,
       GetContentLength(int64_t*) NO_IMPL NS_IMETHOD
       SetContentLength(int64_t) NO_IMPL NS_IMETHOD
       Open(nsIInputStream**) NO_IMPL NS_IMETHOD
-      Open2(nsIInputStream**) NO_IMPL NS_IMETHOD
-      AsyncOpen(nsIStreamListener*, nsISupports*) NO_IMPL NS_IMETHOD
-      AsyncOpen2(nsIStreamListener*) NO_IMPL NS_IMETHOD
+      AsyncOpen(nsIStreamListener*) NO_IMPL NS_IMETHOD
       GetContentDisposition(uint32_t*) NO_IMPL NS_IMETHOD
       SetContentDisposition(uint32_t) NO_IMPL NS_IMETHOD
       GetContentDispositionFilename(nsAString&) NO_IMPL NS_IMETHOD

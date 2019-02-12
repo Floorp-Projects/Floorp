@@ -39,7 +39,7 @@ add_task(async function() {
     contentPolicyType: Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE_FAVICON,
   });
   let listener = new streamListener(PlacesUtils.favicons.defaultFaviconMimeType);
-  channel.asyncOpen2(listener);
+  channel.asyncOpen(listener);
   await listener.done.promise;
 });
 
@@ -51,7 +51,7 @@ add_task(async function() {
     contentPolicyType: Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE_FAVICON,
   });
   let listener = new streamListener(PlacesUtils.favicons.defaultFaviconMimeType);
-  channel.asyncOpen2(listener);
+  channel.asyncOpen(listener);
   await listener.done.promise;
 });
 
@@ -71,6 +71,6 @@ add_task(async function() {
     contentPolicyType: Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE_FAVICON,
   });
   let listener = new streamListener("image/png");
-  channel.asyncOpen2(listener);
+  channel.asyncOpen(listener);
   await listener.done.promise;
 });

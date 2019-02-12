@@ -88,7 +88,7 @@ function run_test() {
          .setUploadStream(mime, "", mime.available());
   channel.requestMethod = "POST";
   channel.notificationCallbacks = listenerCallback;
-  channel.asyncOpen2(new ChannelListener(checkRequest, channel));
+  channel.asyncOpen(new ChannelListener(checkRequest, channel));
   do_test_pending();
 }
 
