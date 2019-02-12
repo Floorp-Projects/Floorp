@@ -1040,12 +1040,12 @@ static bool DrainJobQueue(JSContext* cx, unsigned argc, Value* vp) {
 static bool GlobalOfFirstJobInQueue(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  if (cx->jobQueue->empty()) {
+  RootedObject job(cx, cx->internalJobQueue->maybeFront());
+  if (!job) {
     JS_ReportErrorASCII(cx, "Job queue is empty");
     return false;
   }
 
-  RootedObject job(cx, cx->jobQueue->front());
   RootedObject global(cx, &job->nonCCWGlobal());
   if (!cx->compartment()->wrap(cx, &global)) {
     return false;
