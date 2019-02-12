@@ -82,8 +82,8 @@ inline nsDependentCSubstring DigestToDependentString(const Digest& digest) {
       BitwiseCast<char*, unsigned char*>(digest.get().data), digest.get().len);
 }
 
-// Reads a maximum of 1MB from a stream into the supplied buffer.
-// The reason for the 1MB limit is because this function is used to read
+// Reads a maximum of 8MB from a stream into the supplied buffer.
+// The reason for the 8MB limit is because this function is used to read
 // signature-related files and we want to avoid OOM. The uncompressed length of
 // an entry can be hundreds of times larger than the compressed version,
 // especially if someone has specifically crafted the entry to cause OOM or to
@@ -103,12 +103,9 @@ nsresult ReadStream(const nsCOMPtr<nsIInputStream>& stream,
     return rv;
   }
 
-  // Cap the maximum accepted size of signature-related files at 1MB (which is
-  // still crazily huge) to avoid OOM. The uncompressed length of an entry can
-  // be hundreds of times larger than the compressed version, especially if
-  // someone has speifically crafted the entry to cause OOM or to consume
-  // massive amounts of disk space.
-  static const uint32_t MAX_LENGTH = 1024 * 1024;
+  // Cap the maximum accepted size of signature-related files at 8MB (which
+  // should be much larger than necessary for our purposes) to avoid OOM.
+  static const uint32_t MAX_LENGTH = 8 * 1000 * 1000;
   if (length > MAX_LENGTH) {
     return NS_ERROR_FILE_TOO_BIG;
   }
