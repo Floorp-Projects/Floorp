@@ -19,6 +19,7 @@
 #ifndef wasm_op_iter_h
 #define wasm_op_iter_h
 
+#include "mozilla/Pair.h"
 #include "mozilla/Poison.h"
 
 #include "jit/AtomicOp.h"
@@ -197,107 +198,53 @@ struct LinearMemoryAddress {
 
 template <typename ControlItem>
 class ControlStackEntry {
-  LabelKind kind_;
-  bool polymorphicBase_;
-  ExprType type_;
-  size_t valueStackStart_;
-  ControlItem controlItem_;
-
- public:
-  ControlStackEntry(LabelKind kind, ExprType type, size_t valueStackStart)
-      : kind_(kind),
-        polymorphicBase_(false),
-        type_(type),
-        valueStackStart_(valueStackStart),
-        controlItem_() {
-    MOZ_ASSERT(type != ExprType::Limit);
-  }
-
-  LabelKind kind() const { return kind_; }
-  ExprType resultType() const { return type_; }
-  ExprType branchTargetType() const {
-    return kind_ == LabelKind::Loop ? ExprType::Void : type_;
-  }
-  size_t valueStackStart() const { return valueStackStart_; }
-  ControlItem& controlItem() { return controlItem_; }
-  void setPolymorphicBase() { polymorphicBase_ = true; }
-  bool polymorphicBase() const { return polymorphicBase_; }
-
-  void switchToElse() {
-    MOZ_ASSERT(kind_ == LabelKind::Then);
-    kind_ = LabelKind::Else;
-    polymorphicBase_ = false;
-  }
-};
-
-// Specialization for when there is no additional data needed.
-template <>
-class ControlStackEntry<Nothing> {
-  LabelKind kind_;
+  // Use a Pair to optimize away empty ControlItem.
+  mozilla::Pair<LabelKind, ControlItem> kindAndItem_;
   bool polymorphicBase_;
   ExprType type_;
   size_t valueStackStart_;
 
  public:
   ControlStackEntry(LabelKind kind, ExprType type, size_t valueStackStart)
-      : kind_(kind),
+      : kindAndItem_(kind, ControlItem()),
         polymorphicBase_(false),
         type_(type),
         valueStackStart_(valueStackStart) {
     MOZ_ASSERT(type != ExprType::Limit);
   }
 
-  LabelKind kind() const { return kind_; }
+  LabelKind kind() const { return kindAndItem_.first(); }
   ExprType resultType() const { return type_; }
   ExprType branchTargetType() const {
-    return kind_ == LabelKind::Loop ? ExprType::Void : type_;
+    return kind() == LabelKind::Loop ? ExprType::Void : type_;
   }
   size_t valueStackStart() const { return valueStackStart_; }
-  Nothing controlItem() { return Nothing(); }
+  ControlItem& controlItem() { return kindAndItem_.second(); }
   void setPolymorphicBase() { polymorphicBase_ = true; }
   bool polymorphicBase() const { return polymorphicBase_; }
 
   void switchToElse() {
-    MOZ_ASSERT(kind_ == LabelKind::Then);
-    kind_ = LabelKind::Else;
+    MOZ_ASSERT(kind() == LabelKind::Then);
+    kindAndItem_.first() = LabelKind::Else;
     polymorphicBase_ = false;
   }
 };
 
 template <typename Value>
 class TypeAndValue {
-  StackType type_;
-  Value value_;
+  // Use a Pair to optimize away empty Value.
+  mozilla::Pair<StackType, Value> tv_;
 
  public:
-  TypeAndValue() : type_(StackType::TVar), value_() {}
-  explicit TypeAndValue(StackType type) : type_(type), value_() {}
-  explicit TypeAndValue(ValType type) : type_(StackType(type)), value_() {}
-  TypeAndValue(StackType type, Value value) : type_(type), value_(value) {}
-  TypeAndValue(ValType type, Value value)
-      : type_(StackType(type)), value_(value) {}
-  StackType type() const { return type_; }
-  StackType& typeRef() { return type_; }
-  Value value() const { return value_; }
-  void setValue(Value value) { value_ = value; }
-};
-
-// Specialization for when there is no additional data needed.
-template <>
-class TypeAndValue<Nothing> {
-  StackType type_;
-
- public:
-  TypeAndValue() : type_(StackType::TVar) {}
-  explicit TypeAndValue(StackType type) : type_(type) {}
-  explicit TypeAndValue(ValType type) : type_(StackType(type)) {}
-  TypeAndValue(StackType type, Nothing value) : type_(type) {}
-  TypeAndValue(ValType type, Nothing value) : type_(StackType(type)) {}
-
-  StackType type() const { return type_; }
-  StackType& typeRef() { return type_; }
-  Nothing value() const { return Nothing(); }
-  void setValue(Nothing value) {}
+  TypeAndValue() : tv_(StackType::TVar, Value()) {}
+  explicit TypeAndValue(StackType type) : tv_(type, Value()) {}
+  explicit TypeAndValue(ValType type) : tv_(StackType(type), Value()) {}
+  TypeAndValue(StackType type, Value value) : tv_(type, value) {}
+  TypeAndValue(ValType type, Value value) : tv_(StackType(type), value) {}
+  StackType type() const { return tv_.first(); }
+  StackType& typeRef() { return tv_.first(); }
+  Value value() const { return tv_.second(); }
+  void setValue(Value value) { tv_.second() = value; }
 };
 
 // An iterator over the bytes of a function body. It performs validation
