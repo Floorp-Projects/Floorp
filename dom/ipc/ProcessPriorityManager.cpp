@@ -749,12 +749,13 @@ ProcessPriority ParticularProcessPriorityManager::CurrentPriority() {
 
 ProcessPriority ParticularProcessPriorityManager::ComputePriority() {
   if (!mActiveTabParents.IsEmpty() ||
-      mContentParent->GetRemoteType().EqualsLiteral(EXTENSION_REMOTE_TYPE)) {
+      mContentParent->GetRemoteType().EqualsLiteral(EXTENSION_REMOTE_TYPE) ||
+      mHoldsPlayingAudioWakeLock) {
     return PROCESS_PRIORITY_FOREGROUND;
   }
 
   if (mHoldsCPUWakeLock || mHoldsHighPriorityWakeLock ||
-      mHoldsPlayingAudioWakeLock || mHoldsPlayingVideoWakeLock) {
+      mHoldsPlayingVideoWakeLock) {
     return PROCESS_PRIORITY_BACKGROUND_PERCEIVABLE;
   }
 
