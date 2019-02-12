@@ -54,8 +54,9 @@ class CompositorD3D11 : public Compositor {
                                const gfx::IntPoint& aSourcePoint) override;
 
   virtual void SetRenderTarget(CompositingRenderTarget* aSurface) override;
-  virtual CompositingRenderTarget* GetCurrentRenderTarget() const override {
-    return mCurrentRT;
+  virtual already_AddRefed<CompositingRenderTarget> GetCurrentRenderTarget()
+      const override {
+    return do_AddRef(mCurrentRT);
   }
 
   virtual void SetDestinationSurfaceSize(const gfx::IntSize& aSize) override {}
