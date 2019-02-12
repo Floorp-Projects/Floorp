@@ -247,9 +247,6 @@ class nsMenuPopupFrame final : public nsBoxFrame,
   nsresult CreateWidgetForView(nsView* aView);
   uint8_t GetShadowStyle();
 
-  virtual void SetInitialChildList(ChildListID aListID,
-                                   nsFrameList& aChildList) override;
-
   virtual bool IsLeafDynamic() const override;
 
   virtual void UpdateWidgetProperties() override;
