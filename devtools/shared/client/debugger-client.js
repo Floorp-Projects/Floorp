@@ -4,9 +4,7 @@
 
 "use strict";
 
-const Services = require("Services");
 const promise = require("devtools/shared/deprecated-sync-thenables");
-const {AppConstants} = require("resource://gre/modules/AppConstants.jsm");
 
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { getStack, callFunctionWithAsyncStack } = require("devtools/shared/platform/stack");
@@ -28,17 +26,6 @@ loader.lazyRequireGetter(this, "ThreadClient", "devtools/shared/client/thread-cl
 loader.lazyRequireGetter(this, "ObjectClient", "devtools/shared/client/object-client");
 loader.lazyRequireGetter(this, "Pool", "devtools/shared/protocol", true);
 loader.lazyRequireGetter(this, "Front", "devtools/shared/protocol", true);
-
-// Retrieve the major platform version, i.e. if we are on Firefox 64.0a1, it will be 64.
-const PLATFORM_MAJOR_VERSION = AppConstants.MOZ_APP_VERSION.match(/\d+/)[0];
-
-// Define the minimum officially supported version of Firefox when connecting to a remote
-// runtime. (Use ".0a1" to support the very first nightly version)
-// This matches the release channel's version when we are on nightly,
-// or 2 versions before when we are on other channels.
-const MIN_SUPPORTED_PLATFORM_VERSION = (PLATFORM_MAJOR_VERSION - 2) + ".0a1";
-
-const MS_PER_DAY = 86400000;
 
 /**
  * Creates a client for the remote debugging protocol server. This client
@@ -199,80 +186,6 @@ DebuggerClient.prototype = {
 
     this._transport.ready();
     return deferred.promise;
-  },
-
-  /**
-   * Tells if the remote device is using a supported version of Firefox.
-   *
-   * @return Object with the following attributes:
-   *   * String incompatible
-   *            null if the runtime is compatible,
-   *            "too-recent" if the runtime uses a too recent version,
-   *            "too-old" if the runtime uses a too old version.
-   *   * String minVersion
-   *            The minimum supported version.
-   *   * String runtimeVersion
-   *            The remote runtime version.
-   *   * String localID
-   *            Build ID of local runtime. A date with like this: YYYYMMDD.
-   *   * String deviceID
-   *            Build ID of remote runtime. A date with like this: YYYYMMDD.
-   */
-  async checkRuntimeVersion() {
-    const localID = Services.appinfo.appBuildID.substr(0, 8);
-
-    let deviceFront;
-    try {
-      deviceFront = await this.mainRoot.getFront("device");
-    } catch (e) {
-      // On <FF55, getFront is going to call RootActor.getRoot and fail
-      // because this method doesn't exists.
-      if (e.error == "unrecognizedPacketType") {
-        return {
-          incompatible: "too-old",
-          minVersion: MIN_SUPPORTED_PLATFORM_VERSION,
-          runtimeVersion: "<55",
-          localID,
-          runtimeID: "?",
-        };
-      }
-      throw e;
-    }
-    const desc = await deviceFront.getDescription();
-    let incompatible = null;
-
-    // 1) Check for Firefox too recent on device.
-    // Compare device and firefox build IDs
-    // and only compare by day (strip hours/minutes) to prevent
-    // warning against builds of the same day.
-    const runtimeID = desc.appbuildid.substr(0, 8);
-    function buildIDToDate(buildID) {
-      const fields = buildID.match(/(\d{4})(\d{2})(\d{2})/);
-      // Date expects 0 - 11 for months
-      return new Date(fields[1], Number.parseInt(fields[2], 10) - 1, fields[3]);
-    }
-    const runtimeDate = buildIDToDate(runtimeID);
-    const localDate = buildIDToDate(localID);
-    // Allow device to be newer by up to a week.  This accommodates those with
-    // local device builds, since their devices will almost always be newer
-    // than the client.
-    if (runtimeDate - localDate > 7 * MS_PER_DAY) {
-      incompatible = "too-recent";
-    }
-
-    // 2) Check for too old Firefox on device
-    const platformversion = desc.platformversion;
-    if (Services.vc.compare(platformversion, MIN_SUPPORTED_PLATFORM_VERSION) < 0) {
-      incompatible = "too-old";
-    }
-
-    return {
-      incompatible,
-      minVersion: MIN_SUPPORTED_PLATFORM_VERSION,
-      runtimeVersion: platformversion,
-      localID,
-      runtimeID,
-    };
   },
 
   /**
