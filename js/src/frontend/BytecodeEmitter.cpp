@@ -7369,41 +7369,30 @@ bool BytecodeEmitter::emitCallOrNew(
   }
 
   ParseNode* coordNode = callNode;
-  if (op == JSOP_CALL || op == JSOP_SPREADCALL) {
-    switch (calleeNode->getKind()) {
-      case ParseNodeKind::DotExpr: {
-        // Check if this member is a simple chain of simple chain of
-        // property accesses, e.g. x.y.z, this.x.y, super.x.y
-        bool simpleDotChain = false;
-        for (ParseNode* cur = calleeNode; cur->isKind(ParseNodeKind::DotExpr);
-             cur = &cur->as<PropertyAccess>().expression()) {
-          PropertyAccess* prop = &cur->as<PropertyAccess>();
-          ParseNode* left = &prop->expression();
-          // TODO(khyperia): Implement private field access.
-          if (left->isKind(ParseNodeKind::Name) ||
-              left->isKind(ParseNodeKind::ThisExpr) ||
-              left->isKind(ParseNodeKind::SuperBase)) {
-            simpleDotChain = true;
-          }
-        }
+  if (op == JSOP_CALL || op == JSOP_SPREADCALL || op == JSOP_FUNCALL ||
+      op == JSOP_FUNAPPLY) {
+    // Default to using the location of the `(` itself.
+    // obj[expr]() // expression
+    //          ^  // column coord
+    coordNode = argsList;
 
-        if (!simpleDotChain) {
-          // obj().aprop() // expression
-          //       ^       // column coord
-          //
-          // Note: Because of the constant folding logic in FoldElement,
-          // this case also applies for constant string properties.
-          //
-          // obj()['aprop']() // expression
-          //       ^          // column coord
-          coordNode = &calleeNode->as<PropertyAccess>().key();
-        }
+    switch (calleeNode->getKind()) {
+      case ParseNodeKind::DotExpr:
+        // Use the position of a property access identifier.
+        //
+        // obj().aprop() // expression
+        //       ^       // column coord
+        //
+        // Note: Because of the constant folding logic in FoldElement,
+        // this case also applies for constant string properties.
+        //
+        // obj()['aprop']() // expression
+        //       ^          // column coord
+        coordNode = &calleeNode->as<PropertyAccess>().key();
         break;
-      }
-      case ParseNodeKind::ElemExpr:
-        // obj[expr]() // expression
-        //          ^  // column coord
-        coordNode = argsList;
+      case ParseNodeKind::Name:
+        // Use the start of callee names.
+        coordNode = calleeNode;
         break;
       default:
         break;
