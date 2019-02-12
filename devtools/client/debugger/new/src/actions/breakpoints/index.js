@@ -17,8 +17,7 @@ import {
   getSelectedSource,
   getBreakpointAtLocation,
   getConditionalPanelLocation,
-  getBreakpointsForSource,
-  getSourceActors
+  getBreakpointsForSource
 } from "../../selectors";
 import {
   assertBreakpoint,
@@ -49,7 +48,10 @@ import type {
 import { recordEvent } from "../../utils/telemetry";
 
 async function removeBreakpointsPromise(client, state, breakpoint) {
-  const breakpointLocation = makeBreakpointLocation(state, breakpoint.generatedLocation);
+  const breakpointLocation = makeBreakpointLocation(
+    state,
+    breakpoint.generatedLocation
+  );
   await client.removeBreakpoint(breakpointLocation);
 }
 
@@ -293,7 +295,11 @@ export function setBreakpointOptions(
       await dispatch(enableBreakpoint(bp));
     }
 
-    const breakpointLocation = makeBreakpointLocation(getState(), bp.generatedLocation);
+    const breakpointLocation = makeBreakpointLocation(
+      getState(),
+      bp.generatedLocation
+    );
+
     await client.setBreakpoint(breakpointLocation, options);
 
     const newBreakpoint = { ...bp, disabled: false, options };

@@ -1,5 +1,6 @@
-/* Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/ */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 function findBreakpoint(dbg, url, line, column = 0) {
   const {
@@ -21,10 +22,7 @@ function assertEditorBreakpoint(dbg, line, shouldExist) {
 
   ok(
     exists === shouldExist,
-    "Breakpoint " +
-      (shouldExist ? "exists" : "does not exist") +
-      " on line " +
-      line
+    `Breakpoint ${shouldExist ? "exists" : "does not exist"} on line ${line}`
   );
 }
 
@@ -75,6 +73,7 @@ add_task(async function() {
   const bpCondition1 = waitForDispatch(dbg, "SET_BREAKPOINT_OPTIONS");
   await setConditionalBreakpoint(dbg, 5, "2");
   await bpCondition1;
+
   bp = findBreakpoint(dbg, "simple2", 5);
   is(bp.options.condition, "12", "breakpoint is created with the condition");
   assertEditorBreakpoint(dbg, 5, true);
@@ -97,8 +96,8 @@ add_task(async function() {
   assertEditorBreakpoint(dbg, 5, true);
 
   const bpCondition3 = waitForDispatch(dbg, "SET_BREAKPOINT_OPTIONS");
-  //right click breakpoint in breakpoints list
-  rightClickElement(dbg, "breakpointItem", 3)
+  // right click breakpoint in breakpoints list
+  rightClickElement(dbg, "breakpointItem", 3);
   // select "remove condition";
   selectContextMenuItem(dbg, selectors.breakpointContextMenu.removeCondition);
   await bpCondition3;

@@ -16,7 +16,6 @@ import {
 import { PROMISE } from "../utils/middleware/promise";
 import {
   getSource,
-  getSourceActors,
   getSymbols,
   getFirstVisibleBreakpointPosition
 } from "../../selectors";
@@ -71,7 +70,10 @@ async function addBreakpointPromise(getState, client, sourceMaps, breakpoint) {
     return newBreakpoint;
   }
 
-  const breakpointLocation = makeBreakpointLocation(getState(), generatedLocation);
+  const breakpointLocation = makeBreakpointLocation(
+    getState(),
+    generatedLocation
+  );
   await client.setBreakpoint(breakpointLocation, breakpoint.options);
 
   const symbols = getSymbols(getState(), source);
