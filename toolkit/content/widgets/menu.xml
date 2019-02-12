@@ -194,17 +194,6 @@
     </content>
   </binding>
 
-  <binding id="menucaption" extends="chrome://global/content/bindings/menu.xml#menu-base">
-    <content>
-      <xul:hbox class="menu-iconic-left" align="center" pack="center"
-                xbl:inherits="selected,disabled,checked">
-        <xul:image class="menu-iconic-icon" xbl:inherits="src=image,validate,src"/>
-      </xul:hbox>
-      <xul:label class="menu-iconic-text" flex="1" xbl:inherits="value=label,crop,highlightable" crop="right"/>
-      <xul:label class="menu-iconic-highlightable-text" xbl:inherits="xbl:text=label,crop,highlightable" crop="right"/>
-    </content>
-  </binding>
-
   <binding id="menu-iconic"
            extends="chrome://global/content/bindings/menu.xml#menu-base">
     <content>
