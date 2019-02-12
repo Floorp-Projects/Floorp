@@ -1939,22 +1939,6 @@ static ReturnAbortOnError ProfileLockedDialog(nsIFile* aProfileDir,
   }
 }
 
-static nsresult ProfileLockedDialog(nsIToolkitProfile* aProfile,
-                                    nsIProfileUnlocker* aUnlocker,
-                                    nsINativeAppSupport* aNative,
-                                    nsIProfileLock** aResult) {
-  nsCOMPtr<nsIFile> profileDir;
-  nsresult rv = aProfile->GetRootDir(getter_AddRefs(profileDir));
-  if (NS_FAILED(rv)) return rv;
-
-  nsCOMPtr<nsIFile> profileLocalDir;
-  rv = aProfile->GetLocalDir(getter_AddRefs(profileLocalDir));
-  if (NS_FAILED(rv)) return rv;
-
-  return ProfileLockedDialog(profileDir, profileLocalDir, aUnlocker, aNative,
-                             aResult);
-}
-
 static const char kProfileManagerURL[] =
     "chrome://mozapps/content/profile/profileSelection.xul";
 
@@ -2169,23 +2153,27 @@ static nsresult SelectProfile(nsIProfileLock** aResult,
     gDoMigration = false;
   }
 
-  if (gDoProfileReset) {
-    if (!profile) {
-      NS_WARNING("Profile reset is only supported for named profiles.");
-      return NS_ERROR_ABORT;
-    }
+  if (gDoProfileReset && !profile) {
+    NS_WARNING("Profile reset is only supported for named profiles.");
+    return NS_ERROR_ABORT;
+  }
 
-    {
-      // Check that the source profile is not in use by temporarily
-      // acquiring its lock.
-      nsIProfileLock* tempProfileLock;
-      nsCOMPtr<nsIProfileUnlocker> unlocker;
-      rv = profile->Lock(getter_AddRefs(unlocker), &tempProfileLock);
-      if (NS_FAILED(rv)) {
-        return ProfileLockedDialog(profile, unlocker, aNative,
-                                   &tempProfileLock);
-      }
-    }
+  // No profile could be found. This generally shouldn't happen, a new profile
+  // should be created in all cases except for profile reset which is covered
+  // above, but just in case...
+  if (!rootDir) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // We always want to lock the profile even if we're actually going to reset
+  // it later.
+  nsCOMPtr<nsIProfileLock> tempLock;
+  rv = LockProfile(aNative, rootDir, localDir, profile, getter_AddRefs(tempLock));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (gDoProfileReset) {
+    // Unlock the old profile
+    tempLock->Unlock();
 
     // If we're resetting a profile, create a new one and use it to startup.
     gResetOldProfile = profile;
@@ -2198,20 +2186,17 @@ static nsresult SelectProfile(nsIProfileLock** aResult,
       rv = profile->GetLocalDir(getter_AddRefs(localDir));
       NS_ENSURE_SUCCESS(rv, rv);
       SaveFileToEnv("XRE_PROFILE_LOCAL_PATH", localDir);
+
+      // Lock the new profile
+      return LockProfile(aNative, rootDir, localDir, profile, aResult);
     } else {
       NS_WARNING("Profile reset failed.");
       return NS_ERROR_ABORT;
     }
   }
 
-  // No profile could be found. This generally shouldn't happen, a new profile
-  // should be created in all cases except for profile reset which is covered
-  // above, but just in case...
-  if (!rootDir) {
-    return NS_ERROR_ABORT;
-  }
-
-  return LockProfile(aNative, rootDir, localDir, profile, aResult);
+  tempLock.forget(aResult);
+  return rv;
 }
 
 #ifdef MOZ_BLOCK_PROFILE_DOWNGRADE
