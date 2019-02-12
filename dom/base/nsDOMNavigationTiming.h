@@ -142,7 +142,8 @@ class nsDOMNavigationTiming final : public mozilla::RelativeTimeline {
 
   void NotifyLongTask(mozilla::TimeStamp aWhen);
   void NotifyNonBlankPaintForRootContentDocument();
-  void NotifyContentfulPaintForRootContentDocument();
+  void NotifyContentfulPaintForRootContentDocument(
+      const mozilla::TimeStamp& aCompositeEndTime);
   void NotifyDOMContentFlushedForRootContentDocument();
   void NotifyDocShellStateChanged(DocShellState aDocShellState);
 
