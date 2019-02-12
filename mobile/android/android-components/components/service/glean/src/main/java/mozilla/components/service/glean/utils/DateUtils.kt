@@ -35,8 +35,6 @@ internal val DATE_FORMAT_PATTERN_VALUES = DATE_FORMAT_PATTERNS.values.toSet()
 internal fun getISOTimeString(
     date: Date = Date(),
     truncateTo: TimeUnit = TimeUnit.Minute
-    @Suppress("TopLevelPropertyNaming")
-    @Suppress("TopLevelPropertyNaming")
 ): String {
     val cal = Calendar.getInstance()
     cal.setTime(date)

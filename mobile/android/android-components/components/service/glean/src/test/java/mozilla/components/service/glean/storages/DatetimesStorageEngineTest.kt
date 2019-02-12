@@ -9,7 +9,6 @@ import androidx.test.core.app.ApplicationProvider
 import mozilla.components.service.glean.Lifetime
 import mozilla.components.service.glean.DatetimeMetricType
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
@@ -40,9 +39,13 @@ class DatetimesStorageEngineTest {
     fun `datetime deserializer should correctly parse datetimes`() {
         val persistedSample = mapOf(
             "store1#telemetry.invalid_date" to "2019-13-01T00:00:00Z",
-            "store1#telemetry.valid_date1" to "1993-02-23T09:05:23-08:00",
             "store1#telemetry.null" to null,
-            "store1#telemetry.invalid_string" to "test"
+            "store1#telemetry.invalid_string" to "test",
+            "store1#telemetry.valid_date1" to "1993-02-23T09:05:23.320-08:00",
+            "store1#telemetry.valid_date2" to "1993-02-23T09:05:23-08:00",
+            "store1#telemetry.valid_date3" to "1993-02-23T09:05-08:00",
+            "store1#telemetry.valid_date4" to "1993-02-23T09-08:00",
+            "store1#telemetry.valid_date5" to "1993-02-23-08:00"
         )
 
         val storageEngine = DatetimesStorageEngineImplementation()
@@ -58,8 +61,12 @@ class DatetimesStorageEngineTest {
 
         storageEngine.applicationContext = context
         val snapshot = storageEngine.getSnapshot(storeName = "store1", clearStore = true)
-        assertEquals(1, snapshot!!.size)
-        assertEquals("1993-02-23T09:05:23-08:00", snapshot["telemetry.valid_date1"])
+        assertEquals(5, snapshot!!.size)
+        assertEquals("1993-02-23T09:05:23.320-08:00", snapshot["telemetry.valid_date1"])
+        assertEquals("1993-02-23T09:05:23-08:00", snapshot["telemetry.valid_date2"])
+        assertEquals("1993-02-23T09:05-08:00", snapshot["telemetry.valid_date3"])
+        assertEquals("1993-02-23T09-08:00", snapshot["telemetry.valid_date4"])
+        assertEquals("1993-02-23-08:00", snapshot["telemetry.valid_date5"])
     }
 
     @Test
@@ -88,7 +95,7 @@ class DatetimesStorageEngineTest {
             val snapshot = storageEngine.getSnapshotAsJSON(storeName = "store1",
                 clearStore = true)
             // Check that this serializes to the expected JSON format.
-            assertEquals("{\"telemetry.datetime_metric\":\"1993-02-23T09:05:23-08:00\"}",
+            assertEquals("{\"telemetry.datetime_metric\":\"1993-02-23T09:05-08:00\"}",
                 snapshot.toString())
         }
 
@@ -102,7 +109,7 @@ class DatetimesStorageEngineTest {
             val snapshot = storageEngine.getSnapshotAsJSON(storeName = "store1",
                 clearStore = true)
             // Check that this serializes to the expected JSON format.
-            assertEquals("{\"telemetry.datetime_metric\":\"1993-02-23T09:05:23-08:00\"}",
+            assertEquals("{\"telemetry.datetime_metric\":\"1993-02-23T09:05-08:00\"}",
                 snapshot.toString())
         }
     }
@@ -124,9 +131,7 @@ class DatetimesStorageEngineTest {
 
         // Check that the data was correctly set in each store.
         for (storeName in storeNames) {
-            val snapshot = DatetimesStorageEngine.getSnapshot(storeName = storeName, clearStore = false)
-            assertEquals(1, snapshot!!.size)
-            assertNotNull(snapshot.get("telemetry.datetime_metric"))
+            metric.testHasValue(storeName)
         }
     }
 

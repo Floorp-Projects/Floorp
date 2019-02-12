@@ -7,6 +7,7 @@ package mozilla.components.service.glean.storages
 import android.annotation.SuppressLint
 import android.content.SharedPreferences
 import mozilla.components.service.glean.CommonMetricData
+import mozilla.components.service.glean.DatetimeMetricType
 import mozilla.components.service.glean.utils.getISOTimeString
 import mozilla.components.service.glean.utils.parseISOTimeString
 import mozilla.components.support.base.log.logger.Logger
@@ -56,21 +57,27 @@ internal open class DatetimesStorageEngineImplementation(
      * Set the metric to the provided date/time, truncating it to the
      * metric's resolution.
      *
-     * @param date the date value to set this metric to
      * @param metricData the metric information for the datetime
+     * @param date the date value to set this metric to
      */
-    fun set(metricData: CommonMetricData, date: Date = Date()) {
-        super.recordScalar(metricData, getISOTimeString(date))
+    fun set(metricData: DatetimeMetricType, date: Date = Date()) {
+        super.recordScalar(
+            metricData as CommonMetricData,
+            getISOTimeString(date, metricData.timeUnit)
+        )
     }
 
     /**
      * Set the metric to the provided date/time, truncating it to the
      * metric's resolution.
      *
-     * @param date the date value to set this metric to
      * @param metricData the metric information for the datetime
+     * @param date the date value to set this metric to
      */
-    fun set(metricData: CommonMetricData, calendar: Calendar) {
-        super.recordScalar(metricData, getISOTimeString(calendar))
+    fun set(metricData: DatetimeMetricType, calendar: Calendar) {
+        super.recordScalar(
+            metricData as CommonMetricData,
+            getISOTimeString(calendar, metricData.timeUnit)
+        )
     }
 }

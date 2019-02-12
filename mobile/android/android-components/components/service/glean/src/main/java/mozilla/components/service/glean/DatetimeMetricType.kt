@@ -8,7 +8,6 @@ import android.support.annotation.VisibleForTesting
 import kotlinx.coroutines.launch
 import mozilla.components.service.glean.storages.DatetimesStorageEngine
 import mozilla.components.service.glean.utils.parseISOTimeString
-import mozilla.components.service.glean.utils.truncateDate
 import mozilla.components.support.base.log.logger.Logger
 import java.util.Calendar
 import java.util.Date
@@ -25,7 +24,7 @@ data class DatetimeMetricType(
     override val lifetime: Lifetime,
     override val name: String,
     override val sendInPings: List<String>,
-    val timeUnit: TimeUnit = TimeUnit.Nanosecond
+    val timeUnit: TimeUnit = TimeUnit.Minute
 ) : CommonMetricData {
 
     override val defaultStorageDestinations: List<String> = listOf("metrics")
@@ -33,7 +32,7 @@ data class DatetimeMetricType(
     private val logger = Logger("glean/DatetimeMetricType")
 
     /**
-     * Set a datetime value.
+     * Set a datetime value, truncating it to the metric's resolution.
      *
      * @param value The [Date] value to set. If not provided, will record the current time.
      */
@@ -43,19 +42,17 @@ data class DatetimeMetricType(
             return
         }
 
-        val truncatedValue = truncateDate(value, timeUnit)
-
         Dispatchers.API.launch {
             // Delegate storing the datetime to the storage engine.
             DatetimesStorageEngine.set(
                 this@DatetimeMetricType,
-                truncatedValue
+                value
             )
         }
     }
 
     /**
-     * Set a datetime value.
+     * Set a datetime value, truncating it to the metric's resolution.
      *
      * This is provided as an internal-only function so that we can test that timezones
      * are passed through correctly.  The normal public interface uses [Date] objects which
@@ -63,19 +60,18 @@ data class DatetimeMetricType(
      *
      * @param value The [Calendar] value to set. If not provided, will record the current time.
      */
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     internal fun set(value: Calendar) {
         // TODO report errors through other special metrics handled by the SDK. See bug 1499761.
         if (!shouldRecord(logger)) {
             return
         }
 
-        val truncatedValue = truncateDate(value, timeUnit)
-
         Dispatchers.API.launch {
             // Delegate storing the datetime to the storage engine.
             DatetimesStorageEngine.set(
                 this@DatetimeMetricType,
-                truncatedValue
+                value
             )
         }
     }
