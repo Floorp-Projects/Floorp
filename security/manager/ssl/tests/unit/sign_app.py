@@ -174,20 +174,33 @@ def coseAlgorithmToSignatureParams(coseAlgorithm, issuerName):
 
 
 def signZip(appDirectory, outputFile, issuerName, rootName, manifestHashes,
-            signatureHashes, pkcs7Hashes, coseAlgorithms, emptySignerInfos):
+            signatureHashes, pkcs7Hashes, coseAlgorithms, emptySignerInfos,
+            headerPaddingFactor):
     """Given a directory containing the files to package up,
     an output filename to write to, the name of the issuer of
     the signing certificate, the name of trust anchor, a list of hash algorithms
     to use in the manifest file, a similar list for the signature file,
     a similar list for the pkcs#7 signature, a list of COSE signature algorithms
-    to include, and whether the pkcs#7 signer info should be kept empty,
-    packages up the files in the directory and creates the output
-    as appropriate."""
-    # This ensures each manifest file starts with the magic string and
-    # then a blank line.
-    mfEntries = ['Manifest-Version: 1.0', '']
+    to include, whether the pkcs#7 signer info should be kept empty, and how
+    many MB to pad the manifests by (to test handling large manifest files),
+    packages up the files in the directory and creates the output as
+    appropriate."""
+    # The header of each manifest starts with the magic string
+    # 'Manifest-Version: 1.0' and ends with a blank line. There can be
+    # essentially anything after the first line before the blank line.
+    mfEntries = ['Manifest-Version: 1.0']
+    if headerPaddingFactor > 0:
+        # In this format, each line can only be 72 bytes long. We make
+        # our padding 50 bytes per line (49 of content and one newline)
+        # so the math is easy.
+        singleLinePadding = 'a' * 49
+        # 1000000 / 50 = 20000
+        allPadding = [singleLinePadding] * (headerPaddingFactor * 20000)
+        mfEntries.extend(allPadding)
+    # Append the blank line.
+    mfEntries.append('')
 
-    with zipfile.ZipFile(outputFile, 'w') as outZip:
+    with zipfile.ZipFile(outputFile, 'w', zipfile.ZIP_DEFLATED) as outZip:
         for (fullPath, internalPath) in walkDirectory(appDirectory):
             with open(fullPath) as inputFile:
                 contents = inputFile.read()
@@ -297,6 +310,9 @@ def main(outputFile, appPath, *args):
                         help='Append a COSE signature with the given ' +
                              'algorithms (out of ES256, ES384, and ES512)',
                         default=[])
+    parser.add_argument('-z', '--pad-headers', action='store', default=0,
+                        help='Pad the header sections of the manifests ' +
+                             'with X MB of repetitive data')
     group = parser.add_mutually_exclusive_group()
     group.add_argument('-p', '--pkcs7-hash', action='append',
                        help='Hash algorithms to use in PKCS#7 signature',
@@ -311,4 +327,5 @@ def main(outputFile, appPath, *args):
     signZip(appPath, outputFile, parsed.issuer, parsed.root,
             map(hashNameToFunctionAndIdentifier, parsed.manifest_hash),
             map(hashNameToFunctionAndIdentifier, parsed.signature_hash),
-            parsed.pkcs7_hash, parsed.cose_sign, parsed.empty_signerInfos)
+            parsed.pkcs7_hash, parsed.cose_sign, parsed.empty_signerInfos,
+            int(parsed.pad_headers))
