@@ -89,6 +89,10 @@ this.addEventListener("message", function(event) {
         },
 
         window: global,
+
+        onThreadAttached() {
+          postMessage(JSON.stringify({ type: "attached" }));
+        },
       };
 
       const threadActor = new ThreadActor(parent, global);
