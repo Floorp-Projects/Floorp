@@ -16,7 +16,8 @@ import { CloseButton } from "../../shared/Button";
 
 import {
   getLocationWithoutColumn,
-  getSelectedText
+  getSelectedText,
+  makeBreakpointId
 } from "../../../utils/breakpoint";
 import { getSelectedLocation } from "../../../utils/source-maps";
 import { features } from "../../../utils/prefs";
@@ -102,8 +103,12 @@ class Breakpoint extends PureComponent<Props> {
       return false;
     }
 
-    const bpId = getLocationWithoutColumn(this.selectedLocation);
-    const frameId = getLocationWithoutColumn(frame.selectedLocation);
+    const bpId = features.columnBreakpoints
+      ? makeBreakpointId(this.selectedLocation)
+      : getLocationWithoutColumn(this.selectedLocation);
+    const frameId = features.columnBreakpoints
+      ? makeBreakpointId(frame.selectedLocation)
+      : getLocationWithoutColumn(frame.selectedLocation);
     return bpId == frameId;
   }
 
@@ -122,10 +127,8 @@ class Breakpoint extends PureComponent<Props> {
 
   getBreakpointText() {
     const { breakpoint, selectedSource } = this.props;
-    return (
-      breakpoint.options.condition ||
-      getSelectedText(breakpoint, selectedSource)
-    );
+    const { condition, logValue } = breakpoint.options;
+    return logValue || condition || getSelectedText(breakpoint, selectedSource);
   }
 
   highlightText = memoize(
@@ -146,7 +149,6 @@ class Breakpoint extends PureComponent<Props> {
     const { breakpoint } = this.props;
     const text = this.getBreakpointText();
     const editor = getEditor();
-
     return (
       <div
         className={classnames({
@@ -154,7 +156,7 @@ class Breakpoint extends PureComponent<Props> {
           paused: this.isCurrentlyPausedAtBreakpoint(),
           disabled: breakpoint.disabled,
           "is-conditional": !!breakpoint.options.condition,
-          log: !!breakpoint.options.logValue
+          "is-log": !!breakpoint.options.logValue
         })}
         onClick={this.selectBreakpoint}
         onDoubleClick={this.onDoubleClick}

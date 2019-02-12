@@ -1,46 +1,152 @@
-.source-icon {
-  position: relative;
-  background-color: var(--theme-comment);
-  mask-size: 100%;
-  display: inline-block;
-  margin-inline-end: 5px;
-}
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+/**
+ * Variant of AccessibleImage used in sources list and tabs.
+ * Define the different source type / framework / library icons here.
+ */
 
 .source-icon {
-  width: 15px;
-  height: 15px;
+  margin-inline-end: 4px;
+  /* multicolor icons use background-image */
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
 }
 
-.img.prettyPrint {
-  mask: url(/images/prettyPrint.svg) no-repeat;
-  mask-size: 100%;
-  background: var(--theme-highlight-blue);
-  fill: var(--theme-textbox-box-shadow);
-  position: relative;
+/* Icons for frameworks and libs */
+
+.img.aframe {
+  background-image: url(/images/sources/aframe.svg);
+  background-color: transparent !important;
 }
 
-.sources-list .img.prettyPrint {
-  top: 2px;
-  margin-inline-start: 3px;
+.img.angular {
+  background-image: url(/images/sources/angular.svg);
+  background-color: transparent !important;
 }
 
-.source-icon.vue {
-  background: url(/images/vuejs.svg) 1px 1px no-repeat;
-  background-size: 15px;
+.img.babel {
+  mask-image: url(/images/sources/babel.svg);
 }
 
-.source-icon.angular {
-  background: url(/images/angular.svg) 1px 1px no-repeat;
-  background-size: 13px 13px;
+.img.backbone {
+  mask-image: url(/images/sources/backbone.svg);
 }
 
-.source-icon.blackBox {
-  mask: url(/images/blackBox.svg) no-repeat;
-  mask-size: 100%;
-  background: var(--theme-highlight-blue);
+.img.choo {
+  background-image: url(/images/sources/choo.svg);
+  background-color: transparent !important;
 }
 
-.source-icon.react {
-  mask-size: 100%;
-  background: var(--theme-highlight-bluegrey);
+.img.coffeescript {
+  mask-image: url(/images/sources/coffeescript.svg);
+}
+
+.img.dojo {
+  background-image: url(/images/sources/dojo.svg);
+  background-color: transparent !important;
+}
+
+.img.ember {
+  background-image: url(/images/sources/ember.svg);
+  background-color: transparent !important;
+}
+
+.img.express {
+  mask-image: url(/images/sources/express.svg);
+}
+
+.img.extension {
+  mask-image: url(/images/sources/extension.svg);
+}
+
+.img.immutable {
+  mask-image: url(/images/sources/immutable.svg);
+}
+
+.img.javascript {
+  mask-image: url(/images/sources/javascript.svg);
+  mask-size: 14px 14px;
+}
+
+.img.jquery {
+  mask-image: url(/images/sources/jquery.svg);
+}
+
+.img.lodash {
+  mask-image: url(/images/sources/lodash.svg);
+}
+
+.img.marko {
+  background-image: url(/images/sources/marko.svg);
+  background-color: transparent !important;
+}
+
+.img.mobx {
+  background-image: url(/images/sources/mobx.svg);
+  background-color: transparent !important;
+}
+
+.img.nextjs {
+  background-image: url(/images/sources/nextjs.svg);
+  background-color: transparent !important;
+}
+
+.img.node {
+  background-image: url(/images/sources/node.svg);
+  background-color: transparent !important;
+}
+
+.img.nuxtjs {
+  background-image: url(/images/sources/nuxtjs.svg);
+  background-color: transparent !important;
+}
+
+.img.preact {
+  background-image: url(/images/sources/preact.svg);
+  background-color: transparent !important;
+}
+
+.img.pug {
+  background-image: url(/images/sources/pug.svg);
+  background-color: transparent !important;
+}
+
+.img.react {
+  mask-image: url(/images/sources/react.svg);
+  background-color: var(--theme-highlight-bluegrey);
+}
+
+.img.redux {
+  mask-image: url(/images/sources/redux.svg);
+}
+
+.img.rxjs {
+  background-image: url(/images/sources/rxjs.svg);
+  background-color: transparent !important;
+}
+
+.img.sencha-extjs {
+  background-image: url(/images/sources/sencha-extjs.svg);
+  background-color: transparent !important;
+}
+
+.img.typescript {
+  mask-image: url(/images/sources/typescript.svg);
+}
+
+.img.underscore {
+  mask-image: url(/images/sources/underscore.svg);
+}
+
+.img.vue {
+  background-image: url(/images/sources/vuejs.svg);
+  background-color: transparent !important;
+}
+
+.img.webpack {
+  background-image: url(/images/sources/webpack.svg);
+  background-color: transparent !important;
 }

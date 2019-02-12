@@ -57,6 +57,7 @@ class Breakpoint extends PureComponent<Props> {
     doc.setGutterMarker(line, "breakpoints", null);
     doc.removeLineClass(line, "line", "new-breakpoint");
     doc.removeLineClass(line, "line", "has-condition");
+    doc.removeLineClass(line, "line", "has-log");
   }
 
   get selectedLocation() {
@@ -133,12 +134,13 @@ class Breakpoint extends PureComponent<Props> {
     doc.setGutterMarker(line, "breakpoints", this.makeMarker());
 
     editor.codeMirror.addLineClass(line, "line", "new-breakpoint");
-    if (breakpoint.options.condition) {
+    editor.codeMirror.removeLineClass(line, "line", "has-condition");
+    editor.codeMirror.removeLineClass(line, "line", "has-log");
+
+    if (breakpoint.options.logValue) {
+      editor.codeMirror.addLineClass(line, "line", "has-log");
+    } else if (breakpoint.options.condition) {
       editor.codeMirror.addLineClass(line, "line", "has-condition");
-    } else if (breakpoint.options.logValue) {
-      editor.codeMirror.addLineClass(line, "line", "has-condition log");
-    } else {
-      editor.codeMirror.removeLineClass(line, "line", "has-condition");
     }
   };
 

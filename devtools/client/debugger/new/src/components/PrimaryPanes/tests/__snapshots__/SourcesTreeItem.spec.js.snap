@@ -8,8 +8,8 @@ Object {
     onClick={[Function]}
     onContextMenu={[Function]}
   >
-    <i
-      className="no-arrow"
+    <span
+      className="img no-arrow"
     />
     <Connect(SourceIcon)
       source={
@@ -140,8 +140,8 @@ Object {
           onClick={[Function]}
           onContextMenu={[Function]}
         >
-          <i
-            className="no-arrow"
+          <span
+            className="img no-arrow"
           />
           <Connect(SourceIcon)
             source={
@@ -224,8 +224,8 @@ Object {
     onClick={[Function]}
     onContextMenu={[Function]}
   >
-    <i
-      className="no-arrow"
+    <span
+      className="img no-arrow"
     />
     <Connect(SourceIcon)
       source={
@@ -365,8 +365,8 @@ Object {
           onClick={[Function]}
           onContextMenu={[Function]}
         >
-          <i
-            className="no-arrow"
+          <span
+            className="img no-arrow"
           />
           <Connect(SourceIcon)
             source={
@@ -456,11 +456,11 @@ Object {
     onClick={[Function]}
     onContextMenu={[Function]}
   >
-    <i
-      className="no-arrow"
+    <span
+      className="img no-arrow"
     />
     <AccessibleImage
-      className="domain"
+      className="globe-small"
     />
     <span
       className="label"
@@ -578,11 +578,11 @@ Object {
           onClick={[Function]}
           onContextMenu={[Function]}
         >
-          <i
-            className="no-arrow"
+          <span
+            className="img no-arrow"
           />
           <AccessibleImage
-            className="domain"
+            className="globe-small"
           />
           <span
             className="label"
@@ -654,7 +654,7 @@ Object {
       className="arrow"
     />
     <AccessibleImage
-      className="domain debuggee"
+      className="globe-small debuggee"
     />
     <span
       className="label"
@@ -752,7 +752,7 @@ Object {
             className="arrow"
           />
           <AccessibleImage
-            className="domain debuggee"
+            className="globe-small debuggee"
           />
           <span
             className="label"
@@ -812,7 +812,7 @@ Object {
       className="arrow"
     />
     <AccessibleImage
-      className="domain debuggee"
+      className="globe-small debuggee"
     />
     <span
       className="label"
@@ -912,7 +912,7 @@ Object {
             className="arrow"
           />
           <AccessibleImage
-            className="domain debuggee"
+            className="globe-small debuggee"
           />
           <span
             className="label"
@@ -1800,8 +1800,8 @@ Object {
     onClick={[Function]}
     onContextMenu={[Function]}
   >
-    <i
-      className="no-arrow"
+    <span
+      className="img no-arrow"
     />
     <Connect(SourceIcon)
       source={
@@ -1934,8 +1934,8 @@ Object {
           onClick={[Function]}
           onContextMenu={[Function]}
         >
-          <i
-            className="no-arrow"
+          <span
+            className="img no-arrow"
           />
           <Connect(SourceIcon)
             source={
@@ -2019,8 +2019,8 @@ Object {
     onClick={[Function]}
     onContextMenu={[Function]}
   >
-    <i
-      className="no-arrow"
+    <span
+      className="img no-arrow"
     />
     <Connect(SourceIcon)
       source={
@@ -2155,8 +2155,8 @@ Object {
           onClick={[Function]}
           onContextMenu={[Function]}
         >
-          <i
-            className="no-arrow"
+          <span
+            className="img no-arrow"
           />
           <Connect(SourceIcon)
             source={

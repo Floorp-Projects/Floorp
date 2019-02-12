@@ -7,6 +7,8 @@
 import { buildMenu, showMenu } from "devtools-contextmenu";
 import { getSelectedLocation } from "../../../utils/source-maps";
 import actions from "../../../actions";
+import { features } from "../../../utils/prefs";
+
 import type { Breakpoint, Source } from "../../../types";
 
 type Props = {
@@ -189,7 +191,11 @@ export default function showContextMenu(props: Props) {
     label: removeConditionLabel,
     accesskey: removeConditionKey,
     disabled: false,
-    click: () => setBreakpointOptions(selectedLocation, {})
+    click: () =>
+      setBreakpointOptions(selectedLocation, {
+        ...breakpoint.options,
+        condition: null
+      })
   };
 
   const addConditionItem = {
@@ -211,6 +217,40 @@ export default function showContextMenu(props: Props) {
       openConditionalPanel(selectedLocation);
     }
   };
+
+  const addLogPointItem = {
+    id: "node-menu-add-log-point",
+    label: L10N.getStr("editor.addLogPoint"),
+    accesskey: L10N.getStr("editor.addLogPoint.accesskey"),
+    disabled: false,
+    click: () => openConditionalPanel(selectedLocation, true),
+    accelerator: L10N.getStr("toggleCondPanel.key")
+  };
+
+  const editLogPointItem = {
+    id: "node-menu-edit-log-point",
+    label: L10N.getStr("editor.editLogPoint"),
+    accesskey: L10N.getStr("editor.addLogPoint.accesskey"),
+    disabled: false,
+    click: () => openConditionalPanel(selectedLocation, true),
+    accelerator: L10N.getStr("toggleCondPanel.key")
+  };
+
+  const removeLogPointItem = {
+    id: "node-menu-remove-log",
+    label: L10N.getStr("editor.removeLogPoint.label"),
+    accesskey: L10N.getStr("editor.removeLogPoint.accesskey"),
+    disabled: false,
+    click: () =>
+      setBreakpointOptions(selectedLocation, {
+        ...breakpoint.options,
+        logValue: null
+      })
+  };
+
+  const logPointItem = breakpoint.options.logValue
+    ? editLogPointItem
+    : addLogPointItem;
 
   const hideEnableSelfItem = !breakpoint.disabled;
   const hideEnableAllItem = disabledBreakpoints.length === 0;
@@ -254,6 +294,14 @@ export default function showContextMenu(props: Props) {
     {
       item: removeConditionItem,
       hidden: () => !breakpoint.options.condition
+    },
+    {
+      item: logPointItem,
+      hidden: () => !features.logPoints
+    },
+    {
+      item: removeLogPointItem,
+      hidden: () => !features.logPoints || !breakpoint.options.logValue
     }
   ];
 

@@ -40,5 +40,13 @@ mozilla::ipc::IPCResult CompositorWidgetParent::RecvNotifyClientSizeChanged(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult CompositorWidgetParent::RecvRequestsUpdatingEGLSurface()
+{
+#ifdef MOZ_WAYLAND
+  RequestsUpdatingEGLSurface();
+#endif
+  return IPC_OK();
+}
+
 }  // namespace widget
 }  // namespace mozilla
