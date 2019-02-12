@@ -16,7 +16,8 @@ import { CloseButton } from "../../shared/Button";
 
 import {
   getLocationWithoutColumn,
-  getSelectedText
+  getSelectedText,
+  makeBreakpointId
 } from "../../../utils/breakpoint";
 import { getSelectedLocation } from "../../../utils/source-maps";
 import { features } from "../../../utils/prefs";
@@ -102,8 +103,12 @@ class Breakpoint extends PureComponent<Props> {
       return false;
     }
 
-    const bpId = getLocationWithoutColumn(this.selectedLocation);
-    const frameId = getLocationWithoutColumn(frame.selectedLocation);
+    const bpId = features.columnBreakpoints
+      ? makeBreakpointId(this.selectedLocation)
+      : getLocationWithoutColumn(this.selectedLocation);
+    const frameId = features.columnBreakpoints
+      ? makeBreakpointId(frame.selectedLocation)
+      : getLocationWithoutColumn(frame.selectedLocation);
     return bpId == frameId;
   }
 
