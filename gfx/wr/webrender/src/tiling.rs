@@ -12,6 +12,7 @@ use debug_render::DebugItem;
 use device::{Texture};
 #[cfg(feature = "pathfinder")]
 use euclid::{TypedPoint2D, TypedVector2D};
+use frame_builder::FrameGlobalResources;
 use gpu_cache::{GpuCache};
 use gpu_types::{BorderInstance, BlurDirection, BlurInstance, PrimitiveHeaders, ScalingInstance};
 use gpu_types::{TransformData, TransformPalette, ZBufferIdGenerator};
@@ -58,6 +59,7 @@ pub struct RenderTargetContext<'a, 'rc> {
     pub surfaces: &'a [SurfaceInfo],
     pub scratch: &'a PrimitiveScratchBuffer,
     pub screen_world_rect: WorldRect,
+    pub globals: &'a FrameGlobalResources,
 }
 
 /// Represents a number of rendering operations on a surface.
