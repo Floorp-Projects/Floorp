@@ -2,15 +2,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
- async function addXHRBreakpoint(dbg, text) {
-  info("Adding a XHR breakpoint");
+async function addXHRBreakpoint(dbg, text, method) {
+  info(`Adding a XHR breakpoint for pattern ${text} and method ${method}`);
 
   const plusIcon = findElementWithSelector(dbg, ".xhr-breakpoints-pane .plus");
   if (plusIcon) {
     plusIcon.click();
   }
-  findElementWithSelector(dbg, ".xhr-input").focus();
+  findElementWithSelector(dbg, ".xhr-input-url").focus();
   type(dbg, text);
+
+  if (method) {
+    findElementWithSelector(dbg, ".xhr-input-method").value = method;
+  }
+
   pressKey(dbg, "Enter");
 
   await waitForDispatch(dbg, "SET_XHR_BREAKPOINT");
@@ -19,7 +24,9 @@
 async function removeXHRBreakpoint(dbg, index) {
   info("Removing a XHR breakpoint");
 
-  const closeButtons = dbg.win.document.querySelectorAll(".xhr-breakpoints-pane .close-btn");
+  const closeButtons = dbg.win.document.querySelectorAll(
+    ".xhr-breakpoints-pane .close-btn"
+  );
   if (closeButtons[index]) {
     closeButtons[index].click();
   }
@@ -28,7 +35,9 @@ async function removeXHRBreakpoint(dbg, index) {
 }
 
 function getXHRBreakpointsElements(dbg) {
-  return [...dbg.win.document.querySelectorAll(".xhr-breakpoints-pane .xhr-container")];
+  return [
+    ...dbg.win.document.querySelectorAll(".xhr-breakpoints-pane .xhr-container")
+  ];
 }
 
 function getXHRBreakpointLabels(elements) {
@@ -36,7 +45,10 @@ function getXHRBreakpointLabels(elements) {
 }
 
 function getXHRBreakpointCheckbox(dbg) {
-  return findElementWithSelector(dbg, ".xhr-breakpoints-pane .breakpoints-exceptions input");
+  return findElementWithSelector(
+    dbg,
+    ".xhr-breakpoints-pane .breakpoints-exceptions input"
+  );
 }
 
 async function clickPauseOnAny(dbg, expectedEvent) {
@@ -44,21 +56,22 @@ async function clickPauseOnAny(dbg, expectedEvent) {
   await waitForDispatch(dbg, expectedEvent);
 }
 
-// Tests that a basic XHR breakpoint works for get and POST is ignored
 add_task(async function() {
   const dbg = await initDebugger("doc-xhr.html", "fetch.js");
-  await dbg.actions.setXHRBreakpoint("doc", "GET");
+
+  await addXHRBreakpoint(dbg, "doc", "GET");
+
   invokeInTab("main", "doc-xhr.html");
   await waitForPaused(dbg);
   assertPausedLocation(dbg);
-  resume(dbg);
+  await resume(dbg);
 
   await dbg.actions.removeXHRBreakpoint(0);
-  invokeInTab("main", "doc-xhr.html");
+  await invokeInTab("main", "doc-xhr.html");
   assertNotPaused(dbg);
 
-  await dbg.actions.setXHRBreakpoint("doc-xhr.html", "POST");
-  invokeInTab("main", "doc");
+  await addXHRBreakpoint(dbg, "doc", "POST");
+  await invokeInTab("main", "doc-xhr.html");
   assertNotPaused(dbg);
 });
 
@@ -107,14 +120,10 @@ add_task(async function() {
 
   const listItems = getXHRBreakpointsElements(dbg);
   is(listItems.length, 3, "3 XHR breakpoints display in list");
-  is(
-    pauseOnAnyCheckbox.checked, true,
-    "The pause on any is still checked"
-  );
+  is(pauseOnAnyCheckbox.checked, true, "The pause on any is still checked");
   is(
     getXHRBreakpointLabels(listItems).join(""),
     "134",
     "Only the desired breakpoint was removed"
   );
-
 });
