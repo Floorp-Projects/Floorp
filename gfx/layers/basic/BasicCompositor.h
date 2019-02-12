@@ -98,12 +98,14 @@ class BasicCompositor : public Compositor {
     mRenderTarget->BindRenderTarget();
   }
 
-  virtual CompositingRenderTarget* GetWindowRenderTarget() const override {
-    return mFullWindowRenderTarget;
+  virtual already_AddRefed<CompositingRenderTarget> GetWindowRenderTarget()
+      const override {
+    return do_AddRef(mFullWindowRenderTarget);
   }
 
-  virtual CompositingRenderTarget* GetCurrentRenderTarget() const override {
-    return mRenderTarget;
+  virtual already_AddRefed<CompositingRenderTarget> GetCurrentRenderTarget()
+      const override {
+    return do_AddRef(mRenderTarget);
   }
 
   virtual void DrawQuad(const gfx::Rect& aRect, const gfx::IntRect& aClipRect,

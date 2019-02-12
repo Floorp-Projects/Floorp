@@ -565,7 +565,7 @@ RefPtr<CompositingRenderTarget> CreateTemporaryTargetAndCopyFromBackground(
              !gfx::ThebesMatrix(transform2d).HasNonIntegerTranslation());
   sourcePoint += gfx::IntPoint::Truncate(transform._41, transform._42);
 
-  sourcePoint -= compositor->GetCurrentRenderTarget()->GetOrigin();
+  sourcePoint -= previousTarget->GetOrigin();
 
   return compositor->CreateRenderTargetFromSource(surfaceRect, previousTarget,
                                                   sourcePoint);

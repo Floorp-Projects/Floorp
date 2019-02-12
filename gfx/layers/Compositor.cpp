@@ -503,8 +503,10 @@ gfx::IntRect Compositor::ComputeBackdropCopyRect(
     const gfx::Matrix4x4& aTransform, gfx::Matrix4x4* aOutTransform,
     gfx::Rect* aOutLayerQuad) {
   // Compute the clip.
-  gfx::IntPoint rtOffset = GetCurrentRenderTarget()->GetOrigin();
-  gfx::IntSize rtSize = GetCurrentRenderTarget()->GetSize();
+  RefPtr<CompositingRenderTarget> currentRenderTarget =
+      GetCurrentRenderTarget();
+  gfx::IntPoint rtOffset = currentRenderTarget->GetOrigin();
+  gfx::IntSize rtSize = currentRenderTarget->GetSize();
 
   return layers::ComputeBackdropCopyRect(aRect, aClipRect, aTransform,
                                          gfx::IntRect(rtOffset, rtSize),
