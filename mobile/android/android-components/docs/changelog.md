@@ -15,6 +15,9 @@ permalink: /changelog/
 * **ui-doorhanger**
   * Added `DoorhangerPrompt` - a builder for creating a prompt `Doorhanger` providing a way to present decisions to users.
 
+* **feature-downloads**
+  * Ignoring schemes that are not https or http [#issue 554](https://github.com/mozilla-mobile/reference-browser/issues/554)
+
 * **support-ktx**
   * Added `Uri.hostWithoutCommonPrefixes` to return the host with common prefixes removed:
 

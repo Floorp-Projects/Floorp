@@ -17,12 +17,15 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.net.Uri
 import android.support.annotation.RequiresPermission
+import android.widget.Toast
 import mozilla.components.browser.session.Download
 import mozilla.components.support.ktx.android.content.isPermissionGranted
 import mozilla.components.support.utils.DownloadUtils
 
 typealias OnDownloadCompleted = (Download, Long) -> Unit
 typealias AndroidDownloadManager = android.app.DownloadManager
+
+internal const val FILE_NOT_SUPPORTED = -1L
 
 /**
  * Handles the interactions with the [AndroidDownloadManager].
@@ -51,6 +54,14 @@ class DownloadManager(
         refererURL: String = "",
         cookie: String = ""
     ): Long {
+
+        if (download.isSupportedProtocol()) {
+            // We are ignoring everything that is not http or https. This is a limitation of
+            // Android's download manager. There's no reason to show a download dialog for
+            // something we can't download anyways.
+            showUnSupportFileErrorMessage()
+            return FILE_NOT_SUPPORTED
+        }
 
         if (!applicationContext.isPermissionGranted(INTERNET, WRITE_EXTERNAL_STORAGE)) {
             throw SecurityException("You must be granted INTERNET and WRITE_EXTERNAL_STORAGE permissions")
@@ -136,5 +147,15 @@ class DownloadManager(
                 }
             }
         }
+    }
+
+    private fun Download.isSupportedProtocol(): Boolean {
+        val scheme = Uri.parse(url.trim()).scheme
+        return (scheme == null || scheme != "http" && scheme != "https")
+    }
+
+    private fun showUnSupportFileErrorMessage() {
+        Toast.makeText(applicationContext, R.string.mozac_feature_downloads_file_not_supported, Toast.LENGTH_LONG)
+            .show()
     }
 }

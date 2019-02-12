@@ -7,22 +7,25 @@ package mozilla.components.feature.downloads
 import android.Manifest.permission.INTERNET
 import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
 import android.app.DownloadManager.ACTION_DOWNLOAD_COMPLETE
+import android.content.Context
 import android.content.Intent
+import androidx.test.core.app.ApplicationProvider
 import org.junit.Assert.assertFalse
 import mozilla.components.browser.session.Download
 import mozilla.components.support.test.robolectric.grantPermission
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
-import org.robolectric.Shadows
 
 @RunWith(RobolectricTestRunner::class)
 class DownloadManagerTest {
 
     private lateinit var download: Download
     private lateinit var downloadManager: DownloadManager
+    private val context: Context
+        get() = ApplicationProvider.getApplicationContext()
 
     @Before
     fun setup() {
@@ -31,7 +34,6 @@ class DownloadManagerTest {
             "", "application/zip", 5242880,
             "Mozilla/5.0 (Linux; Android 7.1.1) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Focus/8.0 Chrome/69.0.3497.100 Mobile Safari/537.36"
         )
-        val context = RuntimeEnvironment.application
         downloadManager = DownloadManager(context)
     }
 
@@ -41,7 +43,7 @@ class DownloadManagerTest {
     }
 
     @Test
-    fun `calling download must download`() {
+    fun `calling download must download the file`() {
         var downloadCompleted = false
 
         downloadManager.onDownloadCompleted = { _, _ ->
@@ -55,6 +57,21 @@ class DownloadManagerTest {
         notifyDownloadCompleted(id)
 
         assert(downloadCompleted)
+    }
+
+    @Test
+    fun `trying to download a file with invalid protocol must NOT triggered a download`() {
+
+        val invalidDownload = download.copy(url = "ftp://ipv4.download.thinkbroadband.com/5MB.zip")
+
+        downloadManager.onDownloadCompleted = { _, _ ->
+        }
+
+        grantPermissions()
+
+        val id = downloadManager.download(invalidDownload)
+
+        assertEquals(id, FILE_NOT_SUPPORTED)
     }
 
     @Test
@@ -83,11 +100,9 @@ class DownloadManagerTest {
     }
 
     private fun notifyDownloadCompleted(id: Long) {
-        val application = Shadows.shadowOf(RuntimeEnvironment.application)
-
         val intent = Intent(ACTION_DOWNLOAD_COMPLETE)
         intent.putExtra(android.app.DownloadManager.EXTRA_DOWNLOAD_ID, id)
-        application.sendBroadcast(intent)
+        context.sendBroadcast(intent)
     }
 
     private fun grantPermissions() {
