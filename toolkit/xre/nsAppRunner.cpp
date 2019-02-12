@@ -1939,6 +1939,22 @@ static ReturnAbortOnError ProfileLockedDialog(nsIFile* aProfileDir,
   }
 }
 
+static nsresult ProfileLockedDialog(nsIToolkitProfile* aProfile,
+                                    nsIProfileUnlocker* aUnlocker,
+                                    nsINativeAppSupport* aNative,
+                                    nsIProfileLock** aResult) {
+  nsCOMPtr<nsIFile> profileDir;
+  nsresult rv = aProfile->GetRootDir(getter_AddRefs(profileDir));
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIFile> profileLocalDir;
+  rv = aProfile->GetLocalDir(getter_AddRefs(profileLocalDir));
+  if (NS_FAILED(rv)) return rv;
+
+  return ProfileLockedDialog(profileDir, profileLocalDir, aUnlocker, aNative,
+                             aResult);
+}
+
 static const char kProfileManagerURL[] =
     "chrome://mozapps/content/profile/profileSelection.xul";
 
@@ -2044,38 +2060,6 @@ static bool gDoMigration = false;
 static bool gDoProfileReset = false;
 static nsCOMPtr<nsIToolkitProfile> gResetOldProfile;
 
-static nsresult LockProfile(nsINativeAppSupport* aNative, nsIFile* aRootDir,
-                            nsIFile* aLocalDir, nsIToolkitProfile* aProfile,
-                            nsIProfileLock** aResult) {
-  // If you close Firefox and very quickly reopen it, the old Firefox may
-  // still be closing down. Rather than immediately showing the
-  // "Firefox is running but is not responding" message, we spend a few
-  // seconds retrying first.
-
-  static const int kLockRetrySeconds = 5;
-  static const int kLockRetrySleepMS = 100;
-
-  nsresult rv;
-  nsCOMPtr<nsIProfileUnlocker> unlocker;
-  const TimeStamp start = TimeStamp::Now();
-  do {
-    if (aProfile) {
-      rv = aProfile->Lock(getter_AddRefs(unlocker), aResult);
-    } else {
-      rv = NS_LockProfilePath(aRootDir, aLocalDir, getter_AddRefs(unlocker),
-                              aResult);
-    }
-    if (NS_SUCCEEDED(rv)) {
-      StartupTimeline::Record(StartupTimeline::AFTER_PROFILE_LOCKED);
-      return NS_OK;
-    }
-    PR_Sleep(kLockRetrySleepMS);
-  } while (TimeStamp::Now() - start <
-           TimeDuration::FromSeconds(kLockRetrySeconds));
-
-  return ProfileLockedDialog(aRootDir, aLocalDir, unlocker, aNative, aResult);
-}
-
 // Pick a profile. We need to end up with a profile lock.
 //
 // 1) check for --profile <path>
@@ -2085,12 +2069,26 @@ static nsresult LockProfile(nsINativeAppSupport* aNative, nsIFile* aRootDir,
 // 5) if there are *no* profiles, set up profile-migration
 // 6) display the profile-manager UI
 static nsresult SelectProfile(nsIProfileLock** aResult,
-                              nsToolkitProfileService* aProfileSvc,
-                              nsINativeAppSupport* aNative) {
+                              nsIToolkitProfileService* aProfileSvc,
+                              nsINativeAppSupport* aNative, bool* aStartOffline,
+                              nsACString* aProfileName) {
   StartupTimeline::Record(StartupTimeline::SELECT_PROFILE);
 
   nsresult rv;
+  ArgResult ar;
   *aResult = nullptr;
+  *aStartOffline = false;
+
+  ar = CheckArg("offline", nullptr,
+                CheckArgFlag::CheckOSInt | CheckArgFlag::RemoveArg);
+  if (ar == ARG_BAD) {
+    PR_fprintf(PR_STDERR,
+               "Error: argument --offline is invalid when argument --osint is "
+               "specified\n");
+    return NS_ERROR_FAILURE;
+  }
+
+  if (ar || EnvHasValue("XRE_START_OFFLINE")) *aStartOffline = true;
 
   if (EnvHasValue("MOZ_RESET_PROFILE_RESTART")) {
     gDoProfileReset = true;
@@ -2107,8 +2105,8 @@ static nsresult SelectProfile(nsIProfileLock** aResult,
 
   // reset-profile and migration args need to be checked before any profiles are
   // chosen below.
-  ArgResult ar = CheckArg("reset-profile", nullptr,
-                          CheckArgFlag::CheckOSInt | CheckArgFlag::RemoveArg);
+  ar = CheckArg("reset-profile", nullptr,
+                CheckArgFlag::CheckOSInt | CheckArgFlag::RemoveArg);
   if (ar == ARG_BAD) {
     PR_fprintf(PR_STDERR,
                "Error: argument --reset-profile is invalid when argument "
@@ -2135,8 +2133,10 @@ static nsresult SelectProfile(nsIProfileLock** aResult,
   nsCOMPtr<nsIFile> localDir;
   nsCOMPtr<nsIToolkitProfile> profile;
   // Ask the profile manager to select the profile directories to use.
+  nsToolkitProfileService* service =
+      static_cast<nsToolkitProfileService*>(aProfileSvc);
   bool didCreate = false;
-  rv = aProfileSvc->SelectStartupProfile(
+  rv = service->SelectStartupProfile(
       &gArgc, gArgv, gDoProfileReset, getter_AddRefs(rootDir),
       getter_AddRefs(localDir), getter_AddRefs(profile), &didCreate);
 
@@ -2153,31 +2153,27 @@ static nsresult SelectProfile(nsIProfileLock** aResult,
     gDoMigration = false;
   }
 
-  if (gDoProfileReset && !profile) {
-    NS_WARNING("Profile reset is only supported for named profiles.");
-    return NS_ERROR_ABORT;
-  }
-
-  // No profile could be found. This generally shouldn't happen, a new profile
-  // should be created in all cases except for profile reset which is covered
-  // above, but just in case...
-  if (!rootDir) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // We always want to lock the profile even if we're actually going to reset
-  // it later.
-  nsCOMPtr<nsIProfileLock> tempLock;
-  rv = LockProfile(aNative, rootDir, localDir, profile, getter_AddRefs(tempLock));
-  NS_ENSURE_SUCCESS(rv, rv);
-
   if (gDoProfileReset) {
-    // Unlock the old profile
-    tempLock->Unlock();
+    if (!profile) {
+      NS_WARNING("Profile reset is only supported for named profiles.");
+      return NS_ERROR_ABORT;
+    }
+
+    {
+      // Check that the source profile is not in use by temporarily
+      // acquiring its lock.
+      nsIProfileLock* tempProfileLock;
+      nsCOMPtr<nsIProfileUnlocker> unlocker;
+      rv = profile->Lock(getter_AddRefs(unlocker), &tempProfileLock);
+      if (NS_FAILED(rv)) {
+        return ProfileLockedDialog(profile, unlocker, aNative,
+                                   &tempProfileLock);
+      }
+    }
 
     // If we're resetting a profile, create a new one and use it to startup.
     gResetOldProfile = profile;
-    rv = aProfileSvc->CreateResetProfile(getter_AddRefs(profile));
+    rv = service->CreateResetProfile(getter_AddRefs(profile));
     if (NS_SUCCEEDED(rv)) {
       rv = profile->GetRootDir(getter_AddRefs(rootDir));
       NS_ENSURE_SUCCESS(rv, rv);
@@ -2187,16 +2183,56 @@ static nsresult SelectProfile(nsIProfileLock** aResult,
       NS_ENSURE_SUCCESS(rv, rv);
       SaveFileToEnv("XRE_PROFILE_LOCAL_PATH", localDir);
 
-      // Lock the new profile
-      return LockProfile(aNative, rootDir, localDir, profile, aResult);
+      rv = profile->GetName(*aProfileName);
+      if (NS_FAILED(rv)) {
+        aProfileName->Truncate(0);
+      }
     } else {
       NS_WARNING("Profile reset failed.");
       return NS_ERROR_ABORT;
     }
   }
 
-  tempLock.forget(aResult);
-  return rv;
+  // No profile could be found. This generally shouldn't happen, a new profile
+  // should be created in all cases except for profile reset which is covered
+  // above, but just in case...
+  if (!rootDir) {
+    return NS_ERROR_ABORT;
+  }
+
+  // If you close Firefox and very quickly reopen it, the old Firefox may
+  // still be closing down. Rather than immediately showing the
+  // "Firefox is running but is not responding" message, we spend a few
+  // seconds retrying first.
+
+  static const int kLockRetrySeconds = 5;
+  static const int kLockRetrySleepMS = 100;
+
+  nsCOMPtr<nsIProfileUnlocker> unlocker;
+  const TimeStamp start = TimeStamp::Now();
+  do {
+    if (profile) {
+      rv = profile->Lock(getter_AddRefs(unlocker), aResult);
+    } else {
+      rv = NS_LockProfilePath(rootDir, localDir, getter_AddRefs(unlocker),
+                              aResult);
+    }
+    if (NS_SUCCEEDED(rv)) {
+      StartupTimeline::Record(StartupTimeline::AFTER_PROFILE_LOCKED);
+      // Try to grab the profile name.
+      if (aProfileName && profile) {
+        rv = profile->GetName(*aProfileName);
+        if (NS_FAILED(rv)) {
+          aProfileName->Truncate(0);
+        }
+      }
+      return NS_OK;
+    }
+    PR_Sleep(kLockRetrySleepMS);
+  } while (TimeStamp::Now() - start <
+           TimeDuration::FromSeconds(kLockRetrySeconds));
+
+  return ProfileLockedDialog(rootDir, localDir, unlocker, aNative, aResult);
 }
 
 #ifdef MOZ_BLOCK_PROFILE_DOWNGRADE
@@ -2379,6 +2415,8 @@ static const char kProfileDowngradeURL[] =
     "chrome://mozapps/content/profile/profileDowngrade.xul";
 
 static ReturnAbortOnError CheckDowngrade(nsIFile* aProfileDir,
+                                         nsIFile* aProfileLocalDir,
+                                         nsACString& aProfileName,
                                          nsINativeAppSupport* aNative,
                                          nsIToolkitProfileService* aProfileSvc,
                                          const nsCString& aLastVersion) {
@@ -2955,7 +2993,7 @@ class XREMain {
   Result<bool, nsresult> CheckLastStartupWasCrash();
 
   nsCOMPtr<nsINativeAppSupport> mNativeApp;
-  RefPtr<nsToolkitProfileService> mProfileSvc;
+  nsCOMPtr<nsIToolkitProfileService> mProfileSvc;
   nsCOMPtr<nsIFile> mProfD;
   nsCOMPtr<nsIFile> mProfLD;
   nsCOMPtr<nsIProfileLock> mProfileLock;
@@ -2969,6 +3007,7 @@ class XREMain {
   UniquePtr<XREAppData> mAppData;
 
   nsXREDirProvider mDirProvider;
+  nsAutoCString mProfileName;
   nsAutoCString mDesktopStartupID;
 
   bool mStartOffline;
@@ -3501,19 +3540,6 @@ int XREMain::XRE_mainInit(bool* aExitFlag) {
   }
   if (ar == ARG_FOUND) {
     SaveToEnv("MOZ_NEW_INSTANCE=1");
-  }
-
-  ar = CheckArg("offline", nullptr,
-                CheckArgFlag::CheckOSInt | CheckArgFlag::RemoveArg);
-  if (ar == ARG_BAD) {
-    PR_fprintf(PR_STDERR,
-               "Error: argument --offline is invalid when argument --osint is "
-               "specified\n");
-    return 1;
-  }
-
-  if (ar || EnvHasValue("XRE_START_OFFLINE")) {
-    mStartOffline = true;
   }
 
   // Handle --help and --version command line arguments.
@@ -4161,7 +4187,8 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
     return 1;
   }
 
-  rv = SelectProfile(getter_AddRefs(mProfileLock), mProfileSvc, mNativeApp);
+  rv = SelectProfile(getter_AddRefs(mProfileLock), mProfileSvc, mNativeApp,
+                     &mStartOffline, &mProfileName);
   if (rv == NS_ERROR_LAUNCHED_CHILD_PROCESS || rv == NS_ERROR_ABORT) {
     *aExitFlag = true;
     return 0;
@@ -4215,7 +4242,8 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
 
 #ifdef MOZ_BLOCK_PROFILE_DOWNGRADE
   if (isDowngrade && !CheckArg("allow-downgrade")) {
-    rv = CheckDowngrade(mProfD, mNativeApp, mProfileSvc, lastVersion);
+    rv = CheckDowngrade(mProfD, mProfLD, mProfileName, mNativeApp, mProfileSvc,
+                        lastVersion);
     if (rv == NS_ERROR_LAUNCHED_CHILD_PROCESS || rv == NS_ERROR_ABORT) {
       *aExitFlag = true;
       return 0;
@@ -4468,7 +4496,8 @@ nsresult XREMain::XRE_mainRun() {
     }
 
     if (gDoProfileReset) {
-      nsresult backupCreated = ProfileResetCleanup(mProfileSvc,
+      nsresult backupCreated = ProfileResetCleanup(
+          static_cast<nsToolkitProfileService*>(mProfileSvc.get()),
           gResetOldProfile);
       if (NS_FAILED(backupCreated))
         NS_WARNING("Could not cleanup the profile that was reset");
@@ -4666,7 +4695,7 @@ nsresult XREMain::XRE_mainRun() {
   AddSandboxAnnotations();
 #endif /* MOZ_CONTENT_SANDBOX */
 
-  mProfileSvc->CompleteStartup();
+  static_cast<nsToolkitProfileService*>(mProfileSvc.get())->CompleteStartup();
 
   {
     rv = appStartup->Run();
