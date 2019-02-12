@@ -2233,11 +2233,6 @@ HttpBaseChannel::SwitchProcessTo(mozilla::dom::Promise* aTabParent,
 }
 
 NS_IMETHODIMP
-HttpBaseChannel::HasCrossOriginOpenerPolicyMismatch(bool* aMismatch) {
-  return NS_ERROR_NOT_AVAILABLE;
-}
-
-NS_IMETHODIMP
 HttpBaseChannel::UpgradeToSecure() {
   // Upgrades are handled internally between http-on-modify-request and
   // http-on-before-connect, which means upgrades are only possible during
@@ -2332,16 +2327,6 @@ HttpBaseChannel::SetTopWindowURIIfUnknown(nsIURI* aTopWindowURI) {
 }
 
 NS_IMETHODIMP
-HttpBaseChannel::SetTopWindowPrincipal(nsIPrincipal* aTopWindowPrincipal) {
-  if (!aTopWindowPrincipal) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  mTopWindowPrincipal = aTopWindowPrincipal;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 HttpBaseChannel::GetTopWindowURI(nsIURI** aTopWindowURI) {
   nsCOMPtr<nsIURI> uriBeingLoaded =
       AntiTrackingCommon::MaybeGetDocumentURIBeingLoaded(this);
@@ -2377,18 +2362,6 @@ nsresult HttpBaseChannel::GetTopWindowURI(nsIURI* aURIBeingLoaded,
   }
   NS_IF_ADDREF(*aTopWindowURI = mTopWindowURI);
   return rv;
-}
-
-nsresult HttpBaseChannel::GetTopWindowPrincipal(
-    nsIPrincipal** aTopWindowPrincipal) {
-  nsCOMPtr<mozIThirdPartyUtil> util = services::GetThirdPartyUtil();
-  nsCOMPtr<mozIDOMWindowProxy> win;
-  nsresult rv =
-      util->GetTopWindowForChannel(this, nullptr, getter_AddRefs(win));
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  return util->GetPrincipalFromWindow(win, getter_AddRefs(mTopWindowPrincipal));
 }
 
 NS_IMETHODIMP

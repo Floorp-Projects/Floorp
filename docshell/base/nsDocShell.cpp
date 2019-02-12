@@ -9854,12 +9854,6 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
                        (contentPolicyType == nsIContentPolicy::TYPE_DOCUMENT ||
                         GetIsMozBrowser());
 
-  if (isTopLevelDoc && GetDocument() && GetDocument()->GetChannel()) {
-    nsCOMPtr<nsILoadInfo> oldLoadInfo =
-        GetDocument()->GetChannel()->GetLoadInfo();
-    loadInfo->SetOpenerPolicy(oldLoadInfo->GetOpenerPolicy());
-  }
-
   OriginAttributes attrs;
 
   // Inherit origin attributes from PrincipalToInherit if inheritAttrs is
