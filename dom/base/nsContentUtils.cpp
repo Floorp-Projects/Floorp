@@ -7991,6 +7991,7 @@ already_AddRefed<nsPIWindowRoot> nsContentUtils::GetWindowRoot(Document* aDoc) {
 /* static */
 bool nsContentUtils::IsPreloadType(nsContentPolicyType aType) {
   return (aType == nsIContentPolicy::TYPE_INTERNAL_SCRIPT_PRELOAD ||
+          aType == nsIContentPolicy::TYPE_INTERNAL_MODULE_PRELOAD ||
           aType == nsIContentPolicy::TYPE_INTERNAL_IMAGE_PRELOAD ||
           aType == nsIContentPolicy::TYPE_INTERNAL_STYLESHEET_PRELOAD);
 }
