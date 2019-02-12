@@ -299,13 +299,14 @@ class ModifyBusyCountRunnable final : public WorkerControlRunnable {
   }
 };
 
-class CompileScriptRunnable final : public WorkerRunnable {
+class CompileScriptRunnable final : public WorkerDebuggeeRunnable {
   nsString mScriptURL;
 
  public:
   explicit CompileScriptRunnable(WorkerPrivate* aWorkerPrivate,
                                  const nsAString& aScriptURL)
-      : WorkerRunnable(aWorkerPrivate), mScriptURL(aScriptURL) {}
+      : WorkerDebuggeeRunnable(aWorkerPrivate, WorkerThreadModifyBusyCount),
+        mScriptURL(aScriptURL) {}
 
  private:
   // We can't implement PreRun effectively, because at the point when that would
@@ -1332,51 +1333,60 @@ void WorkerPrivate::Traverse(nsCycleCollectionTraversalCallback& aCb) {
 nsresult WorkerPrivate::Dispatch(already_AddRefed<WorkerRunnable> aRunnable,
                                  nsIEventTarget* aSyncLoopTarget) {
   // May be called on any thread!
+  MutexAutoLock lock(mMutex);
+  return DispatchLockHeld(std::move(aRunnable), aSyncLoopTarget, lock);
+}
+
+nsresult WorkerPrivate::DispatchLockHeld(already_AddRefed<WorkerRunnable> aRunnable,
+                                         nsIEventTarget* aSyncLoopTarget,
+                                         const MutexAutoLock& aProofOfLock) {
+  // May be called on any thread!
   RefPtr<WorkerRunnable> runnable(aRunnable);
 
-  {
-    MutexAutoLock lock(mMutex);
+  MOZ_ASSERT_IF(aSyncLoopTarget, mThread);
 
-    MOZ_ASSERT_IF(aSyncLoopTarget, mThread);
-
-    if (!mThread) {
-      if (ParentStatus() == Pending || mStatus == Pending) {
-        mPreStartRunnables.AppendElement(runnable);
-        return NS_OK;
-      }
-
-      NS_WARNING(
-          "Using a worker event target after the thread has already"
-          "been released!");
-      return NS_ERROR_UNEXPECTED;
-    }
-
-    if (mStatus == Dead || (!aSyncLoopTarget && ParentStatus() > Running)) {
-      NS_WARNING(
-          "A runnable was posted to a worker that is already shutting "
-          "down!");
-      return NS_ERROR_UNEXPECTED;
-    }
-
-    nsresult rv;
-    if (aSyncLoopTarget) {
-      rv = aSyncLoopTarget->Dispatch(runnable.forget(), NS_DISPATCH_NORMAL);
-    } else {
-      // WorkerDebuggeeRunnables don't need any special treatment here. True,
-      // they should not be delivered to a frozen worker. But frozen workers
-      // aren't drawing from the thread's main event queue anyway, only from
-      // mControlQueue.
-      rv = mThread->DispatchAnyThread(WorkerThreadFriendKey(),
-                                      runnable.forget());
-    }
-
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    mCondVar.Notify();
+  if (mStatus == Dead || (!aSyncLoopTarget && ParentStatus() > Running)) {
+    NS_WARNING(
+        "A runnable was posted to a worker that is already shutting "
+        "down!");
+    return NS_ERROR_UNEXPECTED;
   }
 
+  if (runnable->IsDebuggeeRunnable() && !mDebuggerReady) {
+    MOZ_RELEASE_ASSERT(!aSyncLoopTarget);
+    mDelayedDebuggeeRunnables.AppendElement(runnable);
+    return NS_OK;
+  }
+
+  if (!mThread) {
+    if (ParentStatus() == Pending || mStatus == Pending) {
+      mPreStartRunnables.AppendElement(runnable);
+      return NS_OK;
+    }
+
+    NS_WARNING(
+        "Using a worker event target after the thread has already"
+        "been released!");
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  nsresult rv;
+  if (aSyncLoopTarget) {
+    rv = aSyncLoopTarget->Dispatch(runnable.forget(), NS_DISPATCH_NORMAL);
+  } else {
+    // WorkerDebuggeeRunnables don't need any special treatment here. True,
+    // they should not be delivered to a frozen worker. But frozen workers
+    // aren't drawing from the thread's main event queue anyway, only from
+    // mControlQueue.
+    rv = mThread->DispatchAnyThread(WorkerThreadFriendKey(),
+                                    runnable.forget());
+  }
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  mCondVar.Notify();
   return NS_OK;
 }
 
@@ -2061,6 +2071,7 @@ WorkerPrivate::WorkerPrivate(WorkerPrivate* aParent,
       mIsSecureContext(
           IsNewWorkerSecureContext(mParent, mWorkerType, mLoadInfo)),
       mDebuggerRegistered(false),
+      mDebuggerReady(true),
       mIsInAutomation(false),
       mPerformanceCounter(nullptr) {
   MOZ_ASSERT_IF(!IsDedicatedWorker(), NS_IsMainThread());
@@ -2241,6 +2252,39 @@ already_AddRefed<WorkerPrivate> WorkerPrivate::Constructor(
   worker->mSelfRef = worker;
 
   return worker.forget();
+}
+
+nsresult
+WorkerPrivate::SetIsDebuggerReady(bool aReady)
+{
+  AssertIsOnParentThread();
+  MutexAutoLock lock(mMutex);
+
+  if (mDebuggerReady == aReady) {
+    return NS_OK;
+  }
+
+  if (!aReady && mDebuggerRegistered) {
+    // The debugger can only be marked as not ready during registration.
+    return NS_ERROR_FAILURE;
+  }
+
+  mDebuggerReady = aReady;
+
+  if (aReady && mDebuggerRegistered) {
+    // Dispatch all the delayed runnables without releasing the lock, to ensure
+    // that the order in which debuggee runnables execute is the same as the
+    // order in which they were originally dispatched.
+    auto pending = std::move(mDelayedDebuggeeRunnables);
+    for (uint32_t i = 0; i < pending.Length(); i++) {
+      RefPtr<WorkerRunnable> runnable = pending[i].forget();
+      nsresult rv = DispatchLockHeld(runnable.forget(), nullptr, lock);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    MOZ_RELEASE_ASSERT(mDelayedDebuggeeRunnables.IsEmpty());
+  }
+
+  return NS_OK;
 }
 
 // static
