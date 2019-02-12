@@ -769,6 +769,18 @@ class ActivePS {
         });
   }
 
+#if !defined(RELEASE_OR_BETA)
+  static void UnregisterIOInterposer(PSLockRef) {
+    if (!sInstance->mInterposeObserver)
+      return;
+
+    IOInterposer::Unregister(IOInterposeObserver::OpAll,
+                             sInstance->mInterposeObserver);
+
+    sInstance->mInterposeObserver = nullptr;
+  }
+#endif
+
  private:
   // The singleton instance.
   static ActivePS* sInstance;
@@ -832,7 +844,7 @@ class ActivePS {
   SamplerThread* const mSamplerThread;
 
   // The interposer that records main thread I/O.
-  const RefPtr<ProfilerIOInterposeObserver> mInterposeObserver;
+  RefPtr<ProfilerIOInterposeObserver> mInterposeObserver;
 
   // Is the profiler paused?
   bool mIsPaused;
@@ -2831,6 +2843,11 @@ void profiler_shutdown() {
     if (ActivePS::Exists(lock)) {
       const char* filename = getenv("MOZ_PROFILER_SHUTDOWN");
       if (filename) {
+#if !defined(RELEASE_OR_BETA)
+        // Attempting to record the I/O we are doing to the shutdown profile
+        // file while we are locked will deadlock.
+        ActivePS::UnregisterIOInterposer(lock);
+#endif
         locked_profiler_save_profile_to_file(lock, filename,
                                              /* aIsShuttingDown */ true);
       }
