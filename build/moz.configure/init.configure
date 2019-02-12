@@ -818,10 +818,18 @@ def real_host(value, shell):
 host = help_host_target | real_host
 
 
-@depends('--target', real_host, shell, '--enable-project')
+@depends('--target', real_host, shell, '--enable-project', '--enable-application')
 @checking('for target system type', lambda t: t.alias)
-def real_target(value, host, shell, project):
-    if project:
+def real_target(value, host, shell, project, application):
+    # Because --enable-project is implied by --enable-application, and
+    # implied options are not currently handled during --help, which is
+    # used get the build target in mozbuild.base, we manually check
+    # whether --enable-application was given, and fall back to
+    # --enable-project if not. Both can't be given contradictory values
+    # under normal circumstances, so it's fine.
+    if application:
+        project = application[0]
+    elif project:
         project = project[0]
     if not value:
         if project == 'mobile/android':
