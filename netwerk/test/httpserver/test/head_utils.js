@@ -261,7 +261,7 @@ function runHttpTests(testArray, done) {
     }
 
     listener._channel = ch;
-    ch.asyncOpen2(listener);
+    ch.asyncOpen(listener);
   }
 
   /** Index of the test being run. */

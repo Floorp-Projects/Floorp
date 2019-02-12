@@ -1936,7 +1936,7 @@ var DownloadAddonInstall = class extends AddonInstall {
       } else {
         this.channel.loadFlags |= Ci.nsIRequest.LOAD_ANONYMOUS;
       }
-      this.channel.asyncOpen2(listener);
+      this.channel.asyncOpen(listener);
 
       Services.obs.addObserver(this, "network:offline-about-to-go-offline");
     } catch (e) {

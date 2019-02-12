@@ -792,19 +792,19 @@ nsresult NS_LinkRedirectChannels(uint32_t channelId,
 
 /**
  * Helper function which checks whether the channel can be
- * openend using Open2() or has to fall back to opening
+ * openend using Open() or has to fall back to opening
  * the channel using Open().
  */
-nsresult NS_MaybeOpenChannelUsingOpen2(nsIChannel *aChannel,
-                                       nsIInputStream **aStream);
+nsresult NS_MaybeOpenChannelUsingOpen(nsIChannel *aChannel,
+                                      nsIInputStream **aStream);
 
 /**
  * Helper function which checks whether the channel can be
- * openend using AsyncOpen2() or has to fall back to opening
+ * openend using AsyncOpen() or has to fall back to opening
  * the channel using AsyncOpen().
  */
-nsresult NS_MaybeOpenChannelUsingAsyncOpen2(nsIChannel *aChannel,
-                                            nsIStreamListener *aListener);
+nsresult NS_MaybeOpenChannelUsingAsyncOpen(nsIChannel *aChannel,
+                                           nsIStreamListener *aListener);
 
 /** Given the first (disposition) token from a Content-Disposition header,
  * tell whether it indicates the content is inline or attachment

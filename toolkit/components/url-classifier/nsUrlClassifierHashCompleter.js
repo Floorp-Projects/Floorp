@@ -498,7 +498,7 @@ HashCompleterRequest.prototype = {
     let timeout = Services.prefs.getIntPref(
       "urlclassifier.gethash.timeout_ms");
     this.timer_.initWithCallback(this, timeout, this.timer_.TYPE_ONE_SHOT);
-    channel.asyncOpen2(this);
+    channel.asyncOpen(this);
     this.telemetryClockStart = Date.now();
   },
 

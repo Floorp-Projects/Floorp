@@ -91,7 +91,7 @@ function InitializeCacheDevices(memDevice, diskDevice) {
             }
         }
         var channel = setupChannel("/bug650995", "Initial value");
-        channel.asyncOpen2(new ChannelListener(nextTest, null));
+        channel.asyncOpen(new ChannelListener(nextTest, null));
     }
 }
 
@@ -108,14 +108,14 @@ function TestCacheEntrySize(setSizeFunc, firstRequest, secondRequest, secondExpe
     this.start = function() {
         setSizeFunc();
         var channel = setupChannel("/bug650995", firstRequest);
-        channel.asyncOpen2(new ChannelListener(this.initialLoad, this));
+        channel.asyncOpen(new ChannelListener(this.initialLoad, this));
     },
 
     this.initialLoad = function(request, data, ctx) {
         Assert.equal(firstRequest, data);
         var channel = setupChannel("/bug650995", secondRequest);
         executeSoon(function() {
-            channel.asyncOpen2(new ChannelListener(ctx.testAndTriggerNext, ctx));
+            channel.asyncOpen(new ChannelListener(ctx.testAndTriggerNext, ctx));
             });
     },
 

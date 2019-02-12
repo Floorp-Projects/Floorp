@@ -169,7 +169,6 @@ class HttpBaseChannel : public nsHashPropertyBag,
   NS_IMETHOD GetContentLength(int64_t *aContentLength) override;
   NS_IMETHOD SetContentLength(int64_t aContentLength) override;
   NS_IMETHOD Open(nsIInputStream **aResult) override;
-  NS_IMETHOD Open2(nsIInputStream **aResult) override;
   NS_IMETHOD GetBlockAuthPrompt(bool *aValue) override;
   NS_IMETHOD SetBlockAuthPrompt(bool aValue) override;
 
@@ -550,7 +549,6 @@ class HttpBaseChannel : public nsHashPropertyBag,
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsCOMPtr<nsIURI> mTopWindowURI;
   nsCOMPtr<nsIStreamListener> mListener;
-  nsCOMPtr<nsISupports> mListenerContext;
   // An instance of nsHTTPCompressConv
   nsCOMPtr<nsIStreamListener> mCompressListener;
 

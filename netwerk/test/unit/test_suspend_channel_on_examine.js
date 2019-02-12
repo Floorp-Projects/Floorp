@@ -34,7 +34,7 @@ function startChannelRequest(baseUrl, flags, callback) {
     uri: baseUrl,
     loadUsingSystemPrincipal: true
   });
-  chan.asyncOpen2(new ChannelListener(callback, null, flags));
+  chan.asyncOpen(new ChannelListener(callback, null, flags));
 }
 
 // We first make a request that we'll cancel asynchronously.  The response will

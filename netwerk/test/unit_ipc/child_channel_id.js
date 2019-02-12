@@ -18,7 +18,7 @@ function run_test() {
 
 function makeRequest(uri) {
   let requestChannel = NetUtil.newChannel({uri, loadUsingSystemPrincipal: true});
-  requestChannel.asyncOpen2(new ChannelListener(checkResponse, requestChannel));
+  requestChannel.asyncOpen(new ChannelListener(checkResponse, requestChannel));
   requestChannel.QueryInterface(Ci.nsIHttpChannel);
   dump(`Child opened request: ${uri}, channelId=${requestChannel.channelId}\n`);
 }

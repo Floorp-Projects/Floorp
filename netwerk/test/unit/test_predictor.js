@@ -504,7 +504,7 @@ function test_prefetch_prime() {
     }).QueryInterface(Ci.nsIHttpChannel);
     channel.requestMethod = "GET";
     channel.referrer = prefetch_tluri;
-    channel.asyncOpen2(prefetchListener);
+    channel.asyncOpen(prefetchListener);
   });
 }
 

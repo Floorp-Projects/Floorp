@@ -31,7 +31,7 @@ function run_test() {
   let tic = channel.QueryInterface(Ci.nsIThrottledInputChannel);
   tic.throttleQueue = tq;
 
-  channel.asyncOpen2(new ChannelListener(() => {
+  channel.asyncOpen(new ChannelListener(() => {
     ok(tq.bytesProcessed() > 0, "throttled queue processed some bytes");
 
     httpserver.stop(do_test_finished);

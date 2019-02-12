@@ -33,7 +33,7 @@ function testCase(testText, expectedText, bufferLength, charset)
 {
   var dataURI = "data:text/plain;charset=" + charset + "," + testText;
   var channel = NetUtil.newChannel({uri: dataURI, loadUsingSystemPrincipal: true});
-  var testInputStream = channel.open2();
+  var testInputStream = channel.open();
   var testConverter = new ConverterInputStream(testInputStream,
                                                charset,
                                                bufferLength,

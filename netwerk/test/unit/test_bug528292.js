@@ -79,7 +79,7 @@ function run_test()
     setCookieString(postRedirectURI, null, sentCookieVal, chan);
 
   // Load the pre-redirect URI.
-  chan.asyncOpen2(new ChannelListener(finish_test, null));
+  chan.asyncOpen(new ChannelListener(finish_test, null));
   do_test_pending();
 }
 

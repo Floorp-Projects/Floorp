@@ -7316,7 +7316,7 @@ nsresult nsContentUtils::SlurpFileToString(nsIFile* aFile,
   }
 
   nsCOMPtr<nsIInputStream> stream;
-  rv = channel->Open2(getter_AddRefs(stream));
+  rv = channel->Open(getter_AddRefs(stream));
   if (NS_FAILED(rv)) {
     return rv;
   }

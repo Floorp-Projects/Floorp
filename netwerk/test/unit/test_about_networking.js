@@ -86,7 +86,7 @@ function run_test() {
   let uri = ioService.newURI("http://localhost:" + gHttpServer.identity.primaryPort);
   let channel = NetUtil.newChannel({uri: uri, loadUsingSystemPrincipal: true});
 
-  channel.open2();
+  channel.open();
 
   gServerSocket.init(-1, true, -1);
 

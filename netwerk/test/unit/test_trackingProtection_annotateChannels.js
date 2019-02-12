@@ -96,7 +96,7 @@ function doPriorityTest() {
   Assert.ok("topWindowURI" in currentTest, "check for incomplete test case");
 
   var channel = makeChannel(currentTest.path, currentTest.loadingPrincipal, currentTest.topWindowURI);
-  channel.asyncOpen2(new listener(currentTest.expectedTracking,
+  channel.asyncOpen(new listener(currentTest.expectedTracking,
                                   currentTest.expectedPriority,
                                   currentTest.expectedThrottleable,
                                   doPriorityTest));

@@ -58,7 +58,7 @@ function run_test() {
       loadUsingSystemPrincipal: true
     });
     chan.contentType = "foo/bar"; // should be ignored
-    chan.asyncOpen2(new ChannelListener(on_read_complete, i));
+    chan.asyncOpen(new ChannelListener(on_read_complete, i));
   }
 }
 

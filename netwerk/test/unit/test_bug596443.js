@@ -62,13 +62,13 @@ function run_test() {
     evict_cache_entries();
 
     var ch0 = setupChannel("/bug596443", "Response0", Ci.nsIRequest.LOAD_BYPASS_CACHE);
-    ch0.asyncOpen2(new Listener("Response0"));
+    ch0.asyncOpen(new Listener("Response0"));
 
     var ch1 = setupChannel("/bug596443", "Response1", Ci.nsIRequest.LOAD_BYPASS_CACHE);
-    ch1.asyncOpen2(new Listener("Response1"));
+    ch1.asyncOpen(new Listener("Response1"));
 
     var ch2 = setupChannel("/bug596443", "Should not be used");
-    ch2.asyncOpen2(new Listener("Response1")); // Note param: we expect this to come from cache
+    ch2.asyncOpen(new Listener("Response1")); // Note param: we expect this to come from cache
 
     do_test_pending();
 }

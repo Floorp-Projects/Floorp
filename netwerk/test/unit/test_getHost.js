@@ -63,6 +63,6 @@ function run_test() {
   httpserver.registerPathHandler("/testdir", test_handler);
 
   var channel = make_channel("http://localhost:" + PORT + "/testdir");
-  channel.asyncOpen2(new CheckGetHostListener());
+  channel.asyncOpen(new CheckGetHostListener());
   do_test_pending();
 }

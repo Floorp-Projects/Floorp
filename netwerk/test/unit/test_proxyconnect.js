@@ -286,7 +286,7 @@ function test_connectonly() {
   Services.prefs.setIntPref("network.proxy.type", 1);
 
   var chan = makeChan();
-  chan.asyncOpen2(listener);
+  chan.asyncOpen(listener);
 
   do_test_pending();
 }
@@ -294,7 +294,7 @@ function test_connectonly() {
 function test_connectonly_noproxy() {
   clearPrefs()
   var chan = makeChan();
-  chan.asyncOpen2(listener);
+  chan.asyncOpen(listener);
 
   do_test_pending();
 }
@@ -308,7 +308,7 @@ function test_connectonly_nonhttp() {
   Services.prefs.setIntPref("network.proxy.type", 1)
 
   var chan = makeChan()
-  chan.asyncOpen2(listener)
+  chan.asyncOpen(listener)
 
   do_test_pending()
 }

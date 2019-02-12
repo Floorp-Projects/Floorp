@@ -625,7 +625,7 @@ nsresult nsExpatDriver::OpenInputStreamFromExternalDTD(const char16_t *aFPIStr,
   CopyUTF8toUTF16(absURL, aAbsURL);
 
   channel->SetContentType(NS_LITERAL_CSTRING("application/xml"));
-  return channel->Open2(aStream);
+  return channel->Open(aStream);
 }
 
 static nsresult CreateErrorText(const char16_t *aDescription,

@@ -39,6 +39,6 @@ function run_test() {
     });
     var chan = NetUtil.newChannel({uri: baseURL, loadUsingSystemPrincipal: true})
                       .QueryInterface(Ci.nsIHttpChannel);
-    chan.asyncOpen2(listener);
+    chan.asyncOpen(listener);
     do_test_pending();
 }

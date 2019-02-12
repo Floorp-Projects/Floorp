@@ -317,7 +317,7 @@ nsresult InterceptedHttpChannel::StartPump() {
       nsInputStreamPump::Create(getter_AddRefs(mPump), mBodyReader, 0, 0, true);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mPump->AsyncRead(this, mListenerContext);
+  rv = mPump->AsyncRead(this, nullptr);
   NS_ENSURE_SUCCESS(rv, rv);
 
   uint32_t suspendCount = mSuspendCount;
@@ -346,12 +346,7 @@ nsresult InterceptedHttpChannel::OpenRedirectChannel() {
   mRedirectChannel->SetOriginalURI(mOriginalURI);
 
   // open new channel
-  if (mLoadInfo && mLoadInfo->GetEnforceSecurity()) {
-    MOZ_ASSERT(!mListenerContext, "mListenerContext should be null!");
-    rv = mRedirectChannel->AsyncOpen2(mListener);
-  } else {
-    rv = mRedirectChannel->AsyncOpen(mListener, mListenerContext);
-  }
+  rv = mRedirectChannel->AsyncOpen(mListener);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mStatus = NS_BINDING_REDIRECTED;
@@ -410,11 +405,10 @@ void InterceptedHttpChannel::MaybeCallStatusAndProgress() {
     CopyUTF8toUTF16(host, mStatusHost);
   }
 
-  mProgressSink->OnStatus(this, mListenerContext, NS_NET_STATUS_READING,
+  mProgressSink->OnStatus(this, nullptr, NS_NET_STATUS_READING,
                           mStatusHost.get());
 
-  mProgressSink->OnProgress(this, mListenerContext, progress,
-                            mSynthesizedStreamLength);
+  mProgressSink->OnProgress(this, nullptr, progress, mSynthesizedStreamLength);
 
   mProgressReported = progress;
 }
@@ -525,8 +519,14 @@ InterceptedHttpChannel::GetSecurityInfo(nsISupports** aSecurityInfo) {
 }
 
 NS_IMETHODIMP
-InterceptedHttpChannel::AsyncOpen(nsIStreamListener* aListener,
-                                  nsISupports* aContext) {
+InterceptedHttpChannel::AsyncOpen(nsIStreamListener* aListener) {
+  nsCOMPtr<nsIStreamListener> listener(aListener);
+  nsresult rv =
+      nsContentSecurityManager::doContentSecurityCheck(this, listener);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    Cancel(rv);
+    return rv;
+  }
   if (mCanceled) {
     return mStatus;
   }
@@ -538,18 +538,6 @@ InterceptedHttpChannel::AsyncOpen(nsIStreamListener* aListener,
   AsyncOpenInternal();
 
   return NS_OK;
-}
-
-NS_IMETHODIMP
-InterceptedHttpChannel::AsyncOpen2(nsIStreamListener* aListener) {
-  nsCOMPtr<nsIStreamListener> listener(aListener);
-  nsresult rv =
-      nsContentSecurityManager::doContentSecurityCheck(this, listener);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    Cancel(rv);
-    return rv;
-  }
-  return AsyncOpen(listener, nullptr);
 }
 
 NS_IMETHODIMP
@@ -1033,7 +1021,7 @@ InterceptedHttpChannel::OnStartRequest(nsIRequest* aRequest,
   }
 
   if (mListener) {
-    mListener->OnStartRequest(this, mListenerContext);
+    mListener->OnStartRequest(this, nullptr);
   }
   return NS_OK;
 }
@@ -1061,7 +1049,7 @@ InterceptedHttpChannel::OnStopRequest(nsIRequest* aRequest,
   MaybeReportTimingData();
 
   if (mListener) {
-    mListener->OnStopRequest(this, mListenerContext, mStatus);
+    mListener->OnStopRequest(this, nullptr, mStatus);
   }
 
   gHttpHandler->OnStopRequest(this);
@@ -1092,8 +1080,8 @@ InterceptedHttpChannel::OnDataAvailable(nsIRequest* aRequest,
     }
   }
 
-  return mListener->OnDataAvailable(this, mListenerContext, aInputStream,
-                                    aOffset, aCount);
+  return mListener->OnDataAvailable(this, nullptr, aInputStream, aOffset,
+                                    aCount);
 }
 
 NS_IMETHODIMP

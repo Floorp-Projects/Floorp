@@ -288,42 +288,24 @@ nsViewSourceChannel::GetURI(nsIURI **aURI) {
 }
 
 NS_IMETHODIMP
-nsViewSourceChannel::Open(nsIInputStream **_retval) {
-  NS_ENSURE_TRUE(mChannel, NS_ERROR_FAILURE);
-
-  nsresult rv = NS_MaybeOpenChannelUsingOpen2(mChannel, _retval);
-  if (NS_SUCCEEDED(rv)) {
-    mOpened = true;
-  }
-  return rv;
-}
-
-NS_IMETHODIMP
-nsViewSourceChannel::Open2(nsIInputStream **aStream) {
+nsViewSourceChannel::Open(nsIInputStream **aStream) {
   NS_ENSURE_TRUE(mChannel, NS_ERROR_FAILURE);
   nsCOMPtr<nsILoadInfo> loadInfo = mChannel->GetLoadInfo();
   if (!loadInfo) {
     MOZ_ASSERT(loadInfo, "can not enforce security without loadInfo");
     return NS_ERROR_UNEXPECTED;
   }
-  // setting the flag on the loadInfo indicates that the underlying
-  // channel will be openend using Open2() and hence performs
-  // the necessary security checks.
-  loadInfo->SetEnforceSecurity(true);
   return Open(aStream);
 }
 
 NS_IMETHODIMP
-nsViewSourceChannel::AsyncOpen(nsIStreamListener *aListener,
-                               nsISupports *ctxt) {
-#ifdef DEBUG
-  {
-    nsCOMPtr<nsILoadInfo> loadInfo = mChannel->GetLoadInfo();
-    MOZ_ASSERT(!loadInfo || loadInfo->GetSecurityMode() == 0 ||
-                   loadInfo->GetEnforceSecurity(),
-               "security flags in loadInfo but asyncOpen2() not called");
+nsViewSourceChannel::AsyncOpen(nsIStreamListener *aListener) {
+  nsCOMPtr<nsILoadInfo> loadInfo = mChannel->GetLoadInfo();
+  if (!loadInfo) {
+    MOZ_ASSERT(loadInfo, "can not enforce security without loadInfo");
+    return NS_ERROR_UNEXPECTED;
   }
-#endif
+  // We can't ensure GetInitialSecurityCheckDone here
 
   NS_ENSURE_TRUE(mChannel, NS_ERROR_FAILURE);
 
@@ -341,12 +323,7 @@ nsViewSourceChannel::AsyncOpen(nsIStreamListener *aListener,
     loadGroup->AddRequest(static_cast<nsIViewSourceChannel *>(this), nullptr);
 
   nsresult rv = NS_OK;
-  nsCOMPtr<nsILoadInfo> loadInfo = mChannel->GetLoadInfo();
-  if (loadInfo && loadInfo->GetEnforceSecurity()) {
-    rv = mChannel->AsyncOpen2(this);
-  } else {
-    rv = mChannel->AsyncOpen(this, ctxt);
-  }
+  rv = mChannel->AsyncOpen(this);
 
   if (NS_FAILED(rv) && loadGroup)
     loadGroup->RemoveRequest(static_cast<nsIViewSourceChannel *>(this), nullptr,
@@ -359,19 +336,6 @@ nsViewSourceChannel::AsyncOpen(nsIStreamListener *aListener,
   return rv;
 }
 
-NS_IMETHODIMP
-nsViewSourceChannel::AsyncOpen2(nsIStreamListener *aListener) {
-  nsCOMPtr<nsILoadInfo> loadInfo = mChannel->GetLoadInfo();
-  if (!loadInfo) {
-    MOZ_ASSERT(loadInfo, "can not enforce security without loadInfo");
-    return NS_ERROR_UNEXPECTED;
-  }
-  // setting the flag on the loadInfo indicates that the underlying
-  // channel will be openend using AsyncOpen2() and hence performs
-  // the necessary security checks.
-  loadInfo->SetEnforceSecurity(true);
-  return AsyncOpen(aListener, nullptr);
-}
 /*
  * Both the view source channel and mChannel are added to the
  * loadgroup.  There should never be more than one request in the

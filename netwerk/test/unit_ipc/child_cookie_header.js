@@ -22,7 +22,7 @@ function OpenChannelPromise(aChannel, aClosure) {
       aClosure(request.QueryInterface(Ci.nsIHttpChannel), buffer, context);
       resolve();
     }
-    aChannel.asyncOpen2(new ChannelListener(processResponse, null));
+    aChannel.asyncOpen(new ChannelListener(processResponse, null));
   });
 }
 

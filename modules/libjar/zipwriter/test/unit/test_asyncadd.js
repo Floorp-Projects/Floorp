@@ -82,7 +82,7 @@ var methods = {
                         NetUtil.newChannel({
                           uri: ioSvc.newFileURI(source),
                           loadUsingSystemPrincipal: true
-                        }).open2(), true);
+                        }).open(), true);
   }
 }
 

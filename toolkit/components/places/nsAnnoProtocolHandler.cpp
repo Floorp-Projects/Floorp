@@ -161,7 +161,7 @@ class faviconAsyncLoader : public AsyncStatementCallback {
       mListener->OnStopRequest(mChannel, nullptr, rv);
       return rv;
     }
-    return newChannel->AsyncOpen2(mListener);
+    return newChannel->AsyncOpen(mListener);
   }
 
  protected:
@@ -293,7 +293,7 @@ nsresult nsAnnoProtocolHandler::NewFaviconChannel(nsIURI *aURI,
           nsresult rv = GetDefaultIcon(channel, getter_AddRefs(chan));
           NS_ENSURE_SUCCESS(rv, Err(rv));
 
-          rv = chan->AsyncOpen2(listener);
+          rv = chan->AsyncOpen(listener);
           NS_ENSURE_SUCCESS(rv, Err(rv));
 
           return RequestOrReason(chan.forget());

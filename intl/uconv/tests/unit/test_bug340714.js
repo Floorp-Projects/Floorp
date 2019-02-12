@@ -49,7 +49,7 @@ function testCase(withBOM, charset, charsetDec, decoder, bufferLength)
 			     "init");
 
   var channel = NetUtil.newChannel({uri: dataURI, loadUsingSystemPrincipal: true});
-  var testInputStream = channel.open2();
+  var testInputStream = channel.open();
   var testConverter = new ConverterInputStream(testInputStream,
 					       decoder,
 					       bufferLength,

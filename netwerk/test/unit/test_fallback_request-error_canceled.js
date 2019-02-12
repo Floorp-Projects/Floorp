@@ -98,7 +98,7 @@ function run_test()
       chan.notificationCallbacks = new ChannelEventSink(ES_ABORT_REDIRECT);
       var chanac = chan.QueryInterface(Ci.nsIApplicationCacheChannel);
       chanac.chooseApplicationCache = true;
-      chan.asyncOpen2(new ChannelListener(finish_test, null, CL_EXPECT_FAILURE));
+      chan.asyncOpen(new ChannelListener(finish_test, null, CL_EXPECT_FAILURE));
     });
   }}
 

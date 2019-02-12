@@ -293,7 +293,6 @@ void HttpBaseChannel::ReleaseMainThreadOnlyReferences() {
   arrayToRelease.AppendElement(mPrincipal.forget());
   arrayToRelease.AppendElement(mTopWindowURI.forget());
   arrayToRelease.AppendElement(mListener.forget());
-  arrayToRelease.AppendElement(mListenerContext.forget());
   arrayToRelease.AppendElement(mCompressListener.forget());
 
   if (mAddedAsNonTailRequest) {
@@ -741,19 +740,7 @@ HttpBaseChannel::SetContentLength(int64_t value) {
 }
 
 NS_IMETHODIMP
-HttpBaseChannel::Open(nsIInputStream** aResult) {
-  NS_ENSURE_TRUE(!mWasOpened, NS_ERROR_IN_PROGRESS);
-
-  if (!gHttpHandler->Active()) {
-    LOG(("HttpBaseChannel::Open after HTTP shutdown..."));
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  return NS_ImplementChannelOpen(this, aResult);
-}
-
-NS_IMETHODIMP
-HttpBaseChannel::Open2(nsIInputStream** aStream) {
+HttpBaseChannel::Open(nsIInputStream** aStream) {
   if (!gHttpHandler->Active()) {
     LOG(("HttpBaseChannel::Open after HTTP shutdown..."));
     return NS_ERROR_NOT_AVAILABLE;
@@ -763,7 +750,15 @@ HttpBaseChannel::Open2(nsIInputStream** aStream) {
   nsresult rv =
       nsContentSecurityManager::doContentSecurityCheck(this, listener);
   NS_ENSURE_SUCCESS(rv, rv);
-  return Open(aStream);
+
+  NS_ENSURE_TRUE(!mWasOpened, NS_ERROR_IN_PROGRESS);
+
+  if (!gHttpHandler->Active()) {
+    LOG(("HttpBaseChannel::Open after HTTP shutdown..."));
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  return NS_ImplementChannelOpen(this, aStream);
 }
 
 //-----------------------------------------------------------------------------
@@ -1087,7 +1082,6 @@ bool HttpBaseChannel::MaybeWaitForUploadStreamLength(
   }
 
   mListener = aListener;
-  mListenerContext = aContext;
   mAsyncOpenWaitingForStreamLength = true;
   return true;
 }
@@ -1103,12 +1097,9 @@ void HttpBaseChannel::MaybeResumeAsyncOpen() {
   nsCOMPtr<nsIStreamListener> listener;
   listener.swap(mListener);
 
-  nsCOMPtr<nsISupports> context;
-  context.swap(mListenerContext);
-
   mAsyncOpenWaitingForStreamLength = false;
 
-  nsresult rv = AsyncOpen(listener, context);
+  nsresult rv = AsyncOpen(listener);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     DoAsyncAbort(rv);
   }
@@ -1134,8 +1125,7 @@ HttpBaseChannel::SetApplyConversion(bool value) {
 
 nsresult HttpBaseChannel::DoApplyContentConversions(
     nsIStreamListener* aNextListener, nsIStreamListener** aNewNextListener) {
-  return DoApplyContentConversions(aNextListener, aNewNextListener,
-                                   mListenerContext);
+  return DoApplyContentConversions(aNextListener, aNewNextListener, nullptr);
 }
 
 // create a listener chain that looks like this
@@ -3263,7 +3253,6 @@ void HttpBaseChannel::ReleaseListeners() {
   MOZ_ASSERT(NS_IsMainThread(), "Should only be called on the main thread.");
 
   mListener = nullptr;
-  mListenerContext = nullptr;
   mCallbacks = nullptr;
   mProgressSink = nullptr;
   mCompressListener = nullptr;
@@ -3284,7 +3273,7 @@ void HttpBaseChannel::DoNotifyListener() {
                "We should not call OnStartRequest twice");
 
     nsCOMPtr<nsIStreamListener> listener = mListener;
-    listener->OnStartRequest(this, mListenerContext);
+    listener->OnStartRequest(this, nullptr);
 
     mOnStartRequestCalled = true;
   }
@@ -3298,7 +3287,7 @@ void HttpBaseChannel::DoNotifyListener() {
     MOZ_ASSERT(!mOnStopRequestCalled, "We should not call OnStopRequest twice");
 
     nsCOMPtr<nsIStreamListener> listener = mListener;
-    listener->OnStopRequest(this, mListenerContext, mStatus);
+    listener->OnStopRequest(this, nullptr, mStatus);
 
     mOnStopRequestCalled = true;
   }

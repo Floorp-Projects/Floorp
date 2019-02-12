@@ -376,7 +376,7 @@ NS_IMETHODIMP nsZipWriter::AddEntryChannel(const nsACString &aZipEntry,
 
   nsCOMPtr<nsIInputStream> inputStream;
   nsresult rv =
-      NS_MaybeOpenChannelUsingOpen2(aChannel, getter_AddRefs(inputStream));
+      NS_MaybeOpenChannelUsingOpen(aChannel, getter_AddRefs(inputStream));
 
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -915,7 +915,7 @@ inline nsresult nsZipWriter::BeginProcessingAddition(nsZipQueueItem *aItem,
       rv = pump->AsyncRead(stream, nullptr);
       NS_ENSURE_SUCCESS(rv, rv);
     } else {
-      rv = NS_MaybeOpenChannelUsingAsyncOpen2(aItem->mChannel, stream);
+      rv = NS_MaybeOpenChannelUsingAsyncOpen(aItem->mChannel, stream);
       NS_ENSURE_SUCCESS(rv, rv);
     }
 

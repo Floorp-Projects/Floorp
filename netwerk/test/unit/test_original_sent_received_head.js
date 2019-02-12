@@ -42,7 +42,7 @@ add_test(function test_headerChange() {
   channel1.loadFlags = Ci.nsIRequest.LOAD_BYPASS_CACHE;
 
   // ChannelListener defined in head_channels.js
-  channel1.asyncOpen2(new ChannelListener(checkResponse, null));
+  channel1.asyncOpen(new ChannelListener(checkResponse, null));
 
   if (dbg) { print("============== test_headerChange setup: out"); }
 });
@@ -54,7 +54,7 @@ add_test(function test_fromCache() {
   channel2.loadFlags = Ci.nsIRequest.LOAD_FROM_CACHE;
 
   // ChannelListener defined in head_channels.js
-  channel2.asyncOpen2(new ChannelListener(checkResponse, null));
+  channel2.asyncOpen(new ChannelListener(checkResponse, null));
 
   if (dbg) { print("============== test_fromCache setup: out"); }
 });

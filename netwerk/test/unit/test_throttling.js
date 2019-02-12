@@ -46,7 +46,7 @@ function run_test() {
   tic.throttleQueue = tq;
 
   let startTime = Date.now();
-  channel.asyncOpen2(new ChannelListener(() => {
+  channel.asyncOpen(new ChannelListener(() => {
     ok(Date.now() - startTime > 1000, "request took more than one second");
 
     httpserver.stop(do_test_finished);

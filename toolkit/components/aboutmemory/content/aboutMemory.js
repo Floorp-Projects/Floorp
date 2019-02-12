@@ -691,7 +691,7 @@ function loadMemoryReportsFromFile(aFilename, aTitleNote, aFn) {
                      uri: Services.io.newFileURI(file),
                      loadUsingSystemPrincipal: true,
                    });
-    fileChan.asyncOpen2(converter);
+    fileChan.asyncOpen(converter);
   } catch (ex) {
     handleException(ex);
   }

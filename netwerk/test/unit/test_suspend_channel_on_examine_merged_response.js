@@ -132,7 +132,7 @@ function test_partial2(status, entry) {
 
   var chan = makeChan("http://localhost:" + httpserv.identity.primaryPort +
                       "/path/partial");
-  chan.asyncOpen2(listener);
+  chan.asyncOpen(listener);
 }
 
 function test_cached() {
@@ -161,7 +161,7 @@ function test_cached2(status, entry) {
   var chan = makeChan("http://localhost:" + httpserv.identity.primaryPort +
                       "/path/cached");
   chan.loadFlags = Ci.nsIRequest.VALIDATE_ALWAYS;
-  chan.asyncOpen2(listener);
+  chan.asyncOpen(listener);
 }
 
 // PATHS

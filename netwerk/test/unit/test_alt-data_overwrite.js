@@ -27,7 +27,7 @@ function make_and_open_channel(url, altContentType, callback) {
     let cc = chan.QueryInterface(Ci.nsICacheInfoChannel);
     cc.preferAlternativeDataType(altContentType, "");
   }
-  chan.asyncOpen2(new ChannelListener(callback, null));
+  chan.asyncOpen(new ChannelListener(callback, null));
 }
 
 const responseContent = "response body";
