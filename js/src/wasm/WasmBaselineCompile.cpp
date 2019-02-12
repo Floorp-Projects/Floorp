@@ -11975,8 +11975,7 @@ bool js::wasm::BaselineCompileFunctions(const ModuleEnvironment& env,
     if (!locals.appendAll(env.funcTypes[func.index]->args())) {
       return false;
     }
-    if (!DecodeLocalEntries(d, env.kind, env.types, env.gcTypesEnabled(),
-                            &locals)) {
+    if (!DecodeLocalEntries(d, env.types, env.gcTypesEnabled(), &locals)) {
       return false;
     }
 
