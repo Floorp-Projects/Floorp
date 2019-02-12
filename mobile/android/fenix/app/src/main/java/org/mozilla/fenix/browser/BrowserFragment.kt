@@ -39,12 +39,12 @@ import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.share
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getSafeManagedObservable
-import org.mozilla.fenix.search.toolbar.SearchAction
-import org.mozilla.fenix.search.toolbar.SearchState
-import org.mozilla.fenix.search.toolbar.ToolbarComponent
-import org.mozilla.fenix.search.toolbar.ToolbarIntegration
-import org.mozilla.fenix.search.toolbar.ToolbarMenu
-import org.mozilla.fenix.search.toolbar.ToolbarUIView
+import org.mozilla.fenix.components.toolbar.SearchAction
+import org.mozilla.fenix.components.toolbar.SearchState
+import org.mozilla.fenix.components.toolbar.ToolbarComponent
+import org.mozilla.fenix.components.toolbar.ToolbarIntegration
+import org.mozilla.fenix.components.toolbar.ToolbarMenu
+import org.mozilla.fenix.components.toolbar.ToolbarUIView
 
 class BrowserFragment : Fragment(), BackHandler {
     private lateinit var toolbarComponent: ToolbarComponent

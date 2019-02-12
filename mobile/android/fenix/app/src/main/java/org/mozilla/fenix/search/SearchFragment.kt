@@ -21,10 +21,10 @@ import org.mozilla.fenix.search.awesomebar.AwesomeBarAction
 import org.mozilla.fenix.search.awesomebar.AwesomeBarChange
 import org.mozilla.fenix.search.awesomebar.AwesomeBarComponent
 import org.mozilla.fenix.search.awesomebar.AwesomeBarState
-import org.mozilla.fenix.search.toolbar.SearchAction
-import org.mozilla.fenix.search.toolbar.SearchState
-import org.mozilla.fenix.search.toolbar.ToolbarComponent
-import org.mozilla.fenix.search.toolbar.ToolbarUIView
+import org.mozilla.fenix.components.toolbar.SearchAction
+import org.mozilla.fenix.components.toolbar.SearchState
+import org.mozilla.fenix.components.toolbar.ToolbarComponent
+import org.mozilla.fenix.components.toolbar.ToolbarUIView
 
 class SearchFragment : Fragment() {
     private lateinit var toolbarComponent: ToolbarComponent
