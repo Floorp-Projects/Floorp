@@ -2999,9 +2999,9 @@ menuseparator {
   stroke: var(--theme-graphs-orange);
 }
 
-.column-breakpoint.has-condition.log svg {
-  fill: var(--theme-graphs-orange);
-  stroke: var(--theme-graphs-yellow);
+.column-breakpoint.has-log svg {
+  fill: var(--theme-graphs-purple);
+  stroke: var(--purple-60);
 }
 
 .theme-dark .column-breakpoint.active svg {
@@ -3068,7 +3068,9 @@ menuseparator {
   min-width: 0 !important;
 }
 
-.CodeMirror.cm-s-mozilla, .CodeMirror-scroll, .CodeMirror-sizer {
+.CodeMirror.cm-s-mozilla,
+.CodeMirror-scroll,
+.CodeMirror-sizer {
   overflow-anchor: none;
 }
 
@@ -3209,9 +3211,9 @@ html[dir="rtl"] .editor-mount {
   stroke: var(--theme-graphs-orange);
 }
 
-.new-breakpoint.has-condition.log .CodeMirror-gutter-wrapper svg {
-  fill: var(--theme-graphs-orange);
-  stroke: var(--theme-graphs-yellow);
+.new-breakpoint.has-log .CodeMirror-gutter-wrapper svg {
+  fill: var(--theme-graphs-purple);
+  stroke: var(--purple-60);
 }
 
 .editor.new-breakpoint.breakpoint-disabled svg {
@@ -3480,20 +3482,12 @@ html:not([dir="rtl"]) .breakpoints-exceptions {
   border-left: 4px solid transparent;
 }
 
-html:not([dir="rtl"]) .breakpoints-list .breakpoint.is-conditional {
-  border-left-color: var(--theme-graphs-yellow);
+html .breakpoints-list .breakpoint.is-conditional {
+  border-inline-start-color: var(--theme-graphs-yellow);
 }
 
-html[dir="rtl"] .breakpoints-list .breakpoint.is-conditional {
-  border-right-color: var(--theme-graphs-yellow);
-}
-
-html:not([dir="rtl"]) .breakpoints-list .breakpoint.is-conditional.log {
-  border-left-color: var(--theme-graphs-orange);
-}
-
-html[dir="rtl"] .breakpoints-list .breakpoint.is-conditional.log {
-  border-right-color: var(--theme-graphs-orange);
+html .breakpoints-list .breakpoint.is-log {
+  border-inline-start-color: var(--theme-graphs-purple);
 }
 
 html .breakpoints-list .breakpoint.paused {
