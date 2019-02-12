@@ -533,6 +533,7 @@ class MOZ_STACK_CLASS OpIter : private Policy {
                                   Value* ptr, Value* val);
   MOZ_MUST_USE bool readStructNarrow(ValType* inputType, ValType* outputType,
                                      Value* ptr);
+  MOZ_MUST_USE bool readValType(ValType* type);
   MOZ_MUST_USE bool readReferenceType(ValType* type, const char* const context);
 
   // At a location where readOp is allowed, peek at the next opcode
@@ -1555,27 +1556,16 @@ inline bool OpIter<Policy>::readRefNull() {
 }
 
 template <typename Policy>
+inline bool OpIter<Policy>::readValType(ValType* type) {
+  return d_.readValType(env_.types, env_.gcTypesEnabled(), type);
+}
+
+template <typename Policy>
 inline bool OpIter<Policy>::readReferenceType(ValType* type,
                                               const char* context) {
-  uint8_t code;
-  uint32_t refTypeIndex;
-
-  if (!d_.readValType(&code, &refTypeIndex)) {
+  if (!readValType(type) || !type->isReference()) {
     return fail_ctx("invalid reference type for %s", context);
   }
-
-  if (code == uint8_t(ValType::Code::Ref)) {
-    if (refTypeIndex >= env_.types.length()) {
-      return fail_ctx("invalid reference type for %s", context);
-    }
-    if (!env_.types[refTypeIndex].isStructType()) {
-      return fail_ctx("reference to struct required for %s", context);
-    }
-  } else if (code != uint8_t(ValType::Code::AnyRef)) {
-    return fail_ctx("invalid reference type for %s", context);
-  }
-
-  *type = ValType(ValType::Code(code), refTypeIndex);
 
   return true;
 }

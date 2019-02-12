@@ -583,20 +583,61 @@ class Decoder {
     return readVarU<uint64_t>(out);
   }
   MOZ_MUST_USE bool readVarS64(int64_t* out) { return readVarS<int64_t>(out); }
-  MOZ_MUST_USE bool readValType(uint8_t* code, uint32_t* refTypeIndex) {
+
+  MOZ_MUST_USE ValType uncheckedReadValType() {
+    uint8_t code = uncheckedReadFixedU8();
+    switch (code) {
+      case uint8_t(ValType::Ref):
+        return ValType(ValType::Code(code), uncheckedReadVarU32());
+      default:
+        return ValType::Code(code);
+    }
+  }
+  MOZ_MUST_USE bool readValType(uint32_t numTypes, bool gcTypesEnabled,
+                                ValType* type) {
     static_assert(uint8_t(TypeCode::Limit) <= UINT8_MAX, "fits");
-    if (!readFixedU8(code)) {
+    uint8_t code;
+    if (!readFixedU8(&code)) {
       return false;
     }
-    if (*code == uint8_t(TypeCode::Ref)) {
-      if (!readVarU32(refTypeIndex)) {
-        return false;
+    switch (code) {
+      case uint8_t(ValType::I32):
+      case uint8_t(ValType::F32):
+      case uint8_t(ValType::F64):
+      case uint8_t(ValType::I64):
+        *type = ValType::Code(code);
+        return true;
+      case uint8_t(ValType::AnyRef):
+        if (!gcTypesEnabled) {
+          return fail("reference types not enabled");
+        }
+        *type = ValType::Code(code);
+        return true;
+      case uint8_t(ValType::Ref): {
+        if (!gcTypesEnabled) {
+          return fail("reference types not enabled");
+        }
+        uint32_t typeIndex;
+        if (!readVarU32(&typeIndex)) {
+          return false;
+        }
+        if (typeIndex >= numTypes) {
+          return fail("ref index out of range");
+        }
+        *type = ValType(ValType::Code(code), typeIndex);
+        return true;
       }
-      if (*refTypeIndex > MaxTypes) {
-        return false;
-      }
-    } else {
-      *refTypeIndex = NoRefTypeIndex;
+      default:
+        return fail("bad type");
+    }
+  }
+  MOZ_MUST_USE bool readValType(const TypeDefVector& types, bool gcTypesEnabled,
+                                ValType* type) {
+    if (!readValType(types.length(), gcTypesEnabled, type)) {
+      return false;
+    }
+    if (type->isRef() && !types[type->refTypeIndex()].isStructType()) {
+      return fail("ref does not reference a struct type");
     }
     return true;
   }
@@ -743,8 +784,7 @@ MOZ_MUST_USE bool DecodeValidatedLocalEntries(Decoder& d,
 
 // This validates the entries.
 
-MOZ_MUST_USE bool DecodeLocalEntries(Decoder& d, ModuleKind kind,
-                                     const TypeDefVector& types,
+MOZ_MUST_USE bool DecodeLocalEntries(Decoder& d, const TypeDefVector& types,
                                      bool gcTypesEnabled,
                                      ValTypeVector* locals);
 

@@ -394,55 +394,8 @@ bool wasm::EncodeLocalEntries(Encoder& e, const ValTypeVector& locals) {
   return true;
 }
 
-static bool DecodeValType(Decoder& d, ModuleKind kind, uint32_t numTypes,
-                          bool gcTypesEnabled, ValType* type) {
-  uint8_t uncheckedCode;
-  uint32_t uncheckedRefTypeIndex;
-  if (!d.readValType(&uncheckedCode, &uncheckedRefTypeIndex)) {
-    return false;
-  }
-
-  switch (uncheckedCode) {
-    case uint8_t(ValType::I32):
-    case uint8_t(ValType::F32):
-    case uint8_t(ValType::F64):
-    case uint8_t(ValType::I64):
-      *type = ValType(ValType::Code(uncheckedCode));
-      return true;
-    case uint8_t(ValType::AnyRef):
-      if (!gcTypesEnabled) {
-        return d.fail("reference types not enabled");
-      }
-      *type = ValType(ValType::Code(uncheckedCode));
-      return true;
-    case uint8_t(ValType::Ref): {
-      if (!gcTypesEnabled) {
-        return d.fail("reference types not enabled");
-      }
-      if (uncheckedRefTypeIndex >= numTypes) {
-        return d.fail("ref index out of range");
-      }
-      // We further validate ref types in the caller.
-      *type = ValType(ValType::Code(uncheckedCode), uncheckedRefTypeIndex);
-      return true;
-    }
-    default:
-      break;
-  }
-  return d.fail("bad type");
-}
-
-static bool ValidateRefType(Decoder& d, const TypeDefVector& types,
-                            ValType type) {
-  if (type.isRef() && !types[type.refTypeIndex()].isStructType()) {
-    return d.fail("ref does not reference a struct type");
-  }
-  return true;
-}
-
-bool wasm::DecodeLocalEntries(Decoder& d, ModuleKind kind,
-                              const TypeDefVector& types, bool gcTypesEnabled,
-                              ValTypeVector* locals) {
+bool wasm::DecodeLocalEntries(Decoder& d, const TypeDefVector& types,
+                              bool gcTypesEnabled, ValTypeVector* locals) {
   uint32_t numLocalEntries;
   if (!d.readVarU32(&numLocalEntries)) {
     return d.fail("failed to read number of local entries");
@@ -459,10 +412,7 @@ bool wasm::DecodeLocalEntries(Decoder& d, ModuleKind kind,
     }
 
     ValType type;
-    if (!DecodeValType(d, kind, types.length(), gcTypesEnabled, &type)) {
-      return false;
-    }
-    if (!ValidateRefType(d, types, type)) {
+    if (!d.readValType(types, gcTypesEnabled, &type)) {
       return false;
     }
 
@@ -479,16 +429,9 @@ bool wasm::DecodeValidatedLocalEntries(Decoder& d, ValTypeVector* locals) {
   MOZ_ALWAYS_TRUE(d.readVarU32(&numLocalEntries));
 
   for (uint32_t i = 0; i < numLocalEntries; i++) {
-    uint32_t count;
-    MOZ_ALWAYS_TRUE(d.readVarU32(&count));
+    uint32_t count = d.uncheckedReadVarU32();
     MOZ_ASSERT(MaxLocals - locals->length() >= count);
-
-    uint8_t uncheckedCode;
-    uint32_t uncheckedRefTypeIndex;
-    MOZ_ALWAYS_TRUE(d.readValType(&uncheckedCode, &uncheckedRefTypeIndex));
-
-    ValType type = ValType(ValType::Code(uncheckedCode), uncheckedRefTypeIndex);
-    if (!locals->appendN(type, count)) {
+    if (!locals->appendN(d.uncheckedReadValType(), count)) {
       return false;
     }
   }
@@ -1193,8 +1136,7 @@ bool wasm::ValidateFunctionBody(const ModuleEnvironment& env,
 
   const uint8_t* bodyBegin = d.currentPosition();
 
-  if (!DecodeLocalEntries(d, ModuleKind::Wasm, env.types, env.gcTypesEnabled(),
-                          &locals)) {
+  if (!DecodeLocalEntries(d, env.types, env.gcTypesEnabled(), &locals)) {
     return false;
   }
 
@@ -1231,8 +1173,8 @@ enum class TypeState { None, Struct, ForwardStruct, Func };
 
 typedef Vector<TypeState, 0, SystemAllocPolicy> TypeStateVector;
 
-static bool ValidateRefType(Decoder& d, TypeStateVector* typeState,
-                            ValType type) {
+static bool ValidateTypeState(Decoder& d, TypeStateVector* typeState,
+                              ValType type) {
   if (!type.isRef()) {
     return true;
   }
@@ -1277,11 +1219,10 @@ static bool DecodeFuncType(Decoder& d, ModuleEnvironment* env,
   }
 
   for (uint32_t i = 0; i < numArgs; i++) {
-    if (!DecodeValType(d, ModuleKind::Wasm, env->types.length(),
-                       env->gcTypesEnabled(), &args[i])) {
+    if (!d.readValType(env->types.length(), env->gcTypesEnabled(), &args[i])) {
       return false;
     }
-    if (!ValidateRefType(d, typeState, args[i])) {
+    if (!ValidateTypeState(d, typeState, args[i])) {
       return false;
     }
   }
@@ -1299,11 +1240,10 @@ static bool DecodeFuncType(Decoder& d, ModuleEnvironment* env,
 
   if (numRets == 1) {
     ValType type;
-    if (!DecodeValType(d, ModuleKind::Wasm, env->types.length(),
-                       env->gcTypesEnabled(), &type)) {
+    if (!d.readValType(env->types.length(), env->gcTypesEnabled(), &type)) {
       return false;
     }
-    if (!ValidateRefType(d, typeState, type)) {
+    if (!ValidateTypeState(d, typeState, type)) {
       return false;
     }
 
@@ -1350,11 +1290,11 @@ static bool DecodeStructType(Decoder& d, ModuleEnvironment* env,
       return d.fail("garbage flag bits");
     }
     fields[i].isMutable = flags & uint8_t(FieldFlags::Mutable);
-    if (!DecodeValType(d, ModuleKind::Wasm, env->types.length(),
-                       env->gcTypesEnabled(), &fields[i].type)) {
+    if (!d.readValType(env->types.length(), env->gcTypesEnabled(),
+                       &fields[i].type)) {
       return false;
     }
-    if (!ValidateRefType(d, typeState, fields[i].type)) {
+    if (!ValidateTypeState(d, typeState, fields[i].type)) {
       return false;
     }
 
@@ -1672,11 +1612,7 @@ static bool GlobalIsJSCompatible(Decoder& d, ValType type, bool isMutable) {
 static bool DecodeGlobalType(Decoder& d, const TypeDefVector& types,
                              bool gcTypesEnabled, ValType* type,
                              bool* isMutable) {
-  if (!DecodeValType(d, ModuleKind::Wasm, types.length(), gcTypesEnabled,
-                     type)) {
-    return false;
-  }
-  if (!ValidateRefType(d, types, *type)) {
+  if (!d.readValType(types, gcTypesEnabled, type)) {
     return false;
   }
 
