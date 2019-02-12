@@ -302,7 +302,7 @@ class MoofParser : public DecoderDoctorLifeLogger<MoofParser> {
   bool ReachedEnd();
   void ParseMoov(Box& aBox);
   void ParseTrak(Box& aBox);
-  void ParseMdia(Box& aBox, Tkhd& aTkhd);
+  void ParseMdia(Box& aBox);
   void ParseMvex(Box& aBox);
 
   void ParseMinf(Box& aBox);
