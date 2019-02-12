@@ -1149,6 +1149,38 @@ JSObject* InternalJobQueue::maybeFront() const {
   return queue.get().front();
 }
 
+class js::InternalJobQueue::SavedQueue : public JobQueue::SavedJobQueue {
+ public:
+  SavedQueue(JSContext* cx, Queue&& saved)
+      : cx(cx), saved(cx, std::move(saved)) {
+    MOZ_ASSERT(cx->internalJobQueue.ref());
+  }
+
+  ~SavedQueue() {
+    MOZ_ASSERT(cx->internalJobQueue.ref());
+    cx->internalJobQueue->queue = std::move(saved.get());
+  }
+
+ private:
+  JSContext* cx;
+  PersistentRooted<Queue> saved;
+};
+
+js::UniquePtr<JS::JobQueue::SavedJobQueue> InternalJobQueue::saveJobQueue(
+    JSContext* cx) {
+  auto saved = js::MakeUnique<SavedQueue>(cx, std::move(queue.get()));
+  if (!saved) {
+    // When MakeUnique's allocation fails, the SavedQueue constructor is never
+    // called, so this->queue is still initialized. (The move doesn't occur
+    // until the constructor gets called.)
+    ReportOutOfMemory(cx);
+    return nullptr;
+  }
+
+  queue = Queue(SystemAllocPolicy());
+  return saved;
+}
+
 JS::Error JSContext::reportedError;
 JS::OOM JSContext::reportedOOM;
 

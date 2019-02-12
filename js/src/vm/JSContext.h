@@ -106,6 +106,9 @@ class InternalJobQueue : public JS::JobQueue {
 
   // True if we've been asked to interrupt draining jobs. Set by interrupt().
   bool interrupted_;
+
+  class SavedQueue;
+  js::UniquePtr<JobQueue::SavedJobQueue> saveJobQueue(JSContext*) override;
 };
 
 class AutoLockScriptData;
