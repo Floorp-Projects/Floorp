@@ -1,0 +1,10 @@
+[
+    {
+    "size": 13576786,
+    "visibility": "public",
+    "digest": "5d471e470369381f130de28a3c54db27c3724e1e9269c510a593d61c4cf41713c9424da62e46ae98fd1decce00ecca876209ed059487f5a02882ba16a50daed1",
+    "algorithm": "sha512",
+    "filename": "mitmdump-win-2.0.2.zip",
+    "unpack": true
+    }
+]
