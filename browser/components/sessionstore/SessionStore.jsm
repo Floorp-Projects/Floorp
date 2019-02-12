@@ -3185,17 +3185,18 @@ var SessionStoreInternal = {
    * @param tab to navigate and restore.
    */
   async _asyncNavigateAndRestore(tab) {
-    let initialBrowser = tab.linkedBrowser;
+    let permanentKey = tab.linkedBrowser.permanentKey;
+
     // NOTE: This is currently the only async operation used, but this is likely
     // to change in the future.
-    await TabStateFlusher.flush(initialBrowser);
+    await TabStateFlusher.flush(tab.linkedBrowser);
 
     // Now that we have flushed state, our loadArguments, etc. may have been
     // overwritten by multiple calls to navigateAndRestore. Load the most
     // recently stored one.
     let {loadArguments, historyIndex} =
-      this._remotenessChangingBrowsers.get(initialBrowser.permanentKey);
-    this._remotenessChangingBrowsers.delete(initialBrowser.permanentKey);
+      this._remotenessChangingBrowsers.get(permanentKey);
+    this._remotenessChangingBrowsers.delete(permanentKey);
 
     // The tab might have been closed/gone in the meantime.
     if (tab.closing || !tab.linkedBrowser) {
