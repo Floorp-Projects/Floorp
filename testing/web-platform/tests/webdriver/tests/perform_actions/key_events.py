@@ -31,6 +31,9 @@ def test_modifier_key_sends_correct_events(session, key_reporter, key_chain, key
     code = ALL_EVENTS[event]["code"]
     value = ALL_EVENTS[event]["key"]
 
+    if session.capabilities["browserName"] == "internet explorer":
+        key_reporter.click()
+        session.execute_script("resetEvents();")
     key_chain \
         .key_down(key) \
         .key_up(key) \
@@ -177,7 +180,7 @@ def test_special_key_sends_keydown(session, key_reporter, key_chain, name, expec
             document.body.addEventListener("keydown",
                     function(e) { e.preventDefault() });
         """)
-    if (session.capabilities["browserName"] == 'internet explorer'):
+    if session.capabilities["browserName"] == "internet explorer":
         key_reporter.click()
         session.execute_script("resetEvents();")
     key_chain.key_down(getattr(Keys, name)).perform()
