@@ -2805,7 +2805,13 @@ AbortReasonOr<Ok> IonBuilder::improveTypesAtTypeOfCompare(MCompare* ins,
     filter.addType(TypeSet::StringType(), alloc_->lifoAlloc());
   } else if (constant->toString() == TypeName(JSTYPE_SYMBOL, names)) {
     filter.addType(TypeSet::SymbolType(), alloc_->lifoAlloc());
-  } else if (constant->toString() == TypeName(JSTYPE_OBJECT, names)) {
+  }
+#ifdef ENABLE_BIGINT
+  else if (constant->toString() == TypeName(JSTYPE_BIGINT, names)) {
+    filter.addType(TypeSet::BigIntType(), alloc_->lifoAlloc());
+  }
+#endif
+  else if (constant->toString() == TypeName(JSTYPE_OBJECT, names)) {
     filter.addType(TypeSet::NullType(), alloc_->lifoAlloc());
     if (trueBranch) {
       filter.addType(TypeSet::AnyObjectType(), alloc_->lifoAlloc());
@@ -3049,6 +3055,10 @@ AbortReasonOr<Ok> IonBuilder::improveTypesAtTest(MDefinition* ins,
                  alloc_->lifoAlloc());  // ToBoolean(0.0) == false
     base.addType(TypeSet::StringType(),
                  alloc_->lifoAlloc());  // ToBoolean("") == false
+#ifdef ENABLE_BIGINT
+    base.addType(TypeSet::BigIntType(),
+                 alloc_->lifoAlloc());  // ToBoolean(0n) == false
+#endif
 
     // If the typeset does emulate undefined, then we cannot filter out
     // objects.
