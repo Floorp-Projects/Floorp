@@ -2665,82 +2665,77 @@ impl PrimitiveStore {
                     .resource_cache
                     .get_image_properties(image_data.key);
 
-                if let Some(image_properties) = image_properties {
-                    if let Some(tile_size) = image_properties.tiling {
-                        let device_image_size = image_properties.descriptor.size;
+                if let Some(ImageProperties { descriptor, tiling: Some(tile_size), .. }) = image_properties {
+                    let device_image_size = descriptor.size;
 
-                        // Tighten the clip rect because decomposing the repeated image can
-                        // produce primitives that are partially covering the original image
-                        // rect and we want to clip these extra parts out.
-                        let prim_info = &scratch.prim_info[prim_instance.visibility_info.0 as usize];
-                        let prim_rect = LayoutRect::new(
-                            prim_instance.prim_origin,
-                            common_data.prim_size,
-                        );
-                        let tight_clip_rect = prim_info
-                            .combined_local_clip_rect
-                            .intersection(&prim_rect).unwrap();
+                    // Tighten the clip rect because decomposing the repeated image can
+                    // produce primitives that are partially covering the original image
+                    // rect and we want to clip these extra parts out.
+                    let prim_info = &scratch.prim_info[prim_instance.visibility_info.0 as usize];
+                    let prim_rect = LayoutRect::new(
+                        prim_instance.prim_origin,
+                        common_data.prim_size,
+                    );
+                    let tight_clip_rect = prim_info
+                        .combined_local_clip_rect
+                        .intersection(&prim_rect).unwrap();
+                    image_instance.tight_local_clip_rect = tight_clip_rect;
 
-                        let visible_rect = compute_conservative_visible_rect(
-                            prim_context,
-                            &frame_state.current_dirty_region().combined.world_rect,
-                            &tight_clip_rect
-                        );
+                    let visible_rect = compute_conservative_visible_rect(
+                        prim_context,
+                        &frame_state.current_dirty_region().combined.world_rect,
+                        &tight_clip_rect
+                    );
 
-                        let base_edge_flags = edge_flags_for_tile_spacing(&image_data.tile_spacing);
+                    let base_edge_flags = edge_flags_for_tile_spacing(&image_data.tile_spacing);
 
-                        let stride = image_data.stretch_size + image_data.tile_spacing;
+                    let stride = image_data.stretch_size + image_data.tile_spacing;
 
-                        let repetitions = ::image::repetitions(
-                            &prim_rect,
-                            &visible_rect,
-                            stride,
-                        );
+                    let repetitions = ::image::repetitions(
+                        &prim_rect,
+                        &visible_rect,
+                        stride,
+                    );
 
-                        let request = ImageRequest {
-                            key: image_data.key,
-                            rendering: image_data.image_rendering,
-                            tile: None,
+                    let request = ImageRequest {
+                        key: image_data.key,
+                        rendering: image_data.image_rendering,
+                        tile: None,
+                    };
+
+                    for Repetition { origin, edge_flags } in repetitions {
+                        let edge_flags = base_edge_flags | edge_flags;
+
+                        let image_rect = LayoutRect {
+                            origin,
+                            size: image_data.stretch_size,
                         };
 
-                        for Repetition { origin, edge_flags } in repetitions {
-                            let edge_flags = base_edge_flags | edge_flags;
+                        let tiles = ::image::tiles(
+                            &image_rect,
+                            &visible_rect,
+                            &device_image_size,
+                            tile_size as i32,
+                        );
 
-                            let image_rect = LayoutRect {
-                                origin,
-                                size: image_data.stretch_size,
-                            };
-
-                            let tiles = ::image::tiles(
-                                &image_rect,
-                                &visible_rect,
-                                &device_image_size,
-                                tile_size as i32,
+                        for tile in tiles {
+                            frame_state.resource_cache.request_image(
+                                request.with_tile(tile.offset),
+                                frame_state.gpu_cache,
                             );
 
-                            for tile in tiles {
-                                frame_state.resource_cache.request_image(
-                                    request.with_tile(tile.offset),
-                                    frame_state.gpu_cache,
-                                );
-
-                                image_instance.visible_tiles.push(VisibleImageTile {
-                                    tile_offset: tile.offset,
-                                    edge_flags: tile.edge_flags & edge_flags,
-                                    local_rect: tile.rect,
-                                    local_clip_rect: tight_clip_rect,
-                                });
-                            }
+                            image_instance.visible_tiles.push(VisibleImageTile {
+                                tile_offset: tile.offset,
+                                edge_flags: tile.edge_flags & edge_flags,
+                                local_rect: tile.rect,
+                                local_clip_rect: tight_clip_rect,
+                            });
                         }
+                    }
 
-                        if image_instance.visible_tiles.is_empty() {
-                            // At this point if we don't have tiles to show it means we could probably
-                            // have done a better a job at culling during an earlier stage.
-                            // Clearing the screen rect has the effect of "culling out" the primitive
-                            // from the point of view of the batch builder, and ensures we don't hit
-                            // assertions later on because we didn't request any image.
-                            prim_instance.visibility_info = PrimitiveVisibilityIndex::INVALID;
-                        }
+                    if image_instance.visible_tiles.is_empty() {
+                        // Mark as invisible
+                        prim_instance.visibility_info = PrimitiveVisibilityIndex::INVALID;
                     }
                 }
 
@@ -2853,7 +2848,7 @@ fn write_segment<F>(
     scratch: &mut PrimitiveScratchBuffer,
     f: F,
 ) where F: Fn(&mut GpuDataRequest) {
-    debug_assert!(segment_instance_index != SegmentInstanceIndex::INVALID);
+    debug_assert_ne!(segment_instance_index, SegmentInstanceIndex::INVALID);
     if segment_instance_index != SegmentInstanceIndex::UNUSED {
         let segment_instance = &mut scratch.segment_instances[segment_instance_index];
 
@@ -3125,15 +3120,17 @@ impl PrimitiveInstance {
             PrimitiveInstanceKind::Image { data_handle, image_instance_index, .. } => {
                 let image_data = &data_stores.image[data_handle].kind;
                 let image_instance = &mut prim_store.images[image_instance_index];
-                // tiled images don't support segmentation
+                //Note: tiled images don't support automatic segmentation,
+                // they strictly produce one segment per visible tile instead.
                 if frame_state
                     .resource_cache
                     .get_image_properties(image_data.key)
                     .and_then(|properties| properties.tiling)
-                    .is_some() {
-                        image_instance.segment_instance_index = SegmentInstanceIndex::UNUSED;
-                        return;
-                    }
+                    .is_some()
+                {
+                    image_instance.segment_instance_index = SegmentInstanceIndex::UNUSED;
+                    return;
+                }
                 &mut image_instance.segment_instance_index
             }
             PrimitiveInstanceKind::Picture { .. } |
@@ -3163,7 +3160,7 @@ impl PrimitiveInstance {
                 frame_state.segment_builder.build(|segment| {
                     segments.push(
                         BrushSegment::new(
-                            segment.rect.translate(&LayoutVector2D::new(-prim_local_rect.origin.x, -prim_local_rect.origin.y)),
+                            segment.rect.translate(&-prim_local_rect.origin.to_vector()),
                             segment.has_mask,
                             segment.edge_flags,
                             [0.0; 4],
