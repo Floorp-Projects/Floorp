@@ -171,7 +171,9 @@ a.button:hover:active {
   visibility: hidden;
 }
 
-.search-handoff-button:dir(rtl) {
+.search-handoff-button:dir(rtl),
+.search-handoff-button:active:dir(rtl),
+.search-handoff-button:enabled:hover:active:dir(rtl) {
   background-position-x: right 12px;
 }
 
