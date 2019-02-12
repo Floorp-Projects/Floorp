@@ -36,3 +36,4 @@ platform(linux,mac) fuzzy(1,69) == border-scale-3.yaml border-scale-3.png
 platform(linux,mac) fuzzy(1,74) == border-scale-4.yaml border-scale-4.png
 # Just make sure we aren't crashing here
 != large-raster-root.yaml blank.yaml
+== flatten-preserve-3d-root.yaml flatten-preserve-3d-root-ref.yaml

@@ -1306,7 +1306,9 @@ fn add_clip_node_to_current_chain(
             ROOT_SPATIAL_NODE_INDEX,
         ) {
             None => return true,
-            Some(xf) => ClipSpaceConversion::Transform(xf.with_destination::<WorldPixel>()),
+            Some(relative) => ClipSpaceConversion::Transform(
+                relative.flattened.with_destination::<WorldPixel>(),
+            ),
         }
     };
 
