@@ -18,8 +18,11 @@ const TEST_URL = "data:text/html;charset=UTF-8,<div>Inspector modules load test<
 add_task(async function() {
   await openNewTabAndToolbox(TEST_URL, "inspector");
 
-  const allModules = getFilteredModules("");
-  const inspectorModules = getFilteredModules("devtools/client/inspector");
+  // The inspector does not use a dedicated browser loader.
+  const loaders = [loader.provider.loader];
+
+  const allModules = getFilteredModules("", loaders);
+  const inspectorModules = getFilteredModules("devtools/client/inspector", loaders);
 
   const allModulesCount = allModules.length;
   const inspectorModulesCount = inspectorModules.length;
@@ -62,19 +65,3 @@ add_task(async function() {
   ok(allModulesChars > inspectorModulesChars &&
      inspectorModulesChars > 0, "Successfully recorded char count for Inspector");
 });
-
-function getFilteredModules(filter) {
-  const modules = Object.keys(loader.provider.loader.modules);
-  return modules.filter(url => url.includes(filter));
-}
-
-function countCharsInModules(modules) {
-  return modules.reduce((sum, uri) => {
-    try {
-      return sum + require("raw!" + uri).length;
-    } catch (e) {
-      // Ignore failures
-      return sum;
-    }
-  }, 0);
-}

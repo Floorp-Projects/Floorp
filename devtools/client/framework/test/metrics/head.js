@@ -9,3 +9,24 @@ Services.scriptloader.loadSubScript("chrome://mochitests/content/browser/devtool
 
 // So that PERFHERDER data can be extracted from the logs.
 SimpleTest.requestCompleteLog();
+
+function getFilteredModules(filter, loaders) {
+  let modules = [];
+  for (const l of loaders) {
+    const loaderModulesMap = l.modules;
+    const loaderModulesPaths = Object.keys(loaderModulesMap);
+    modules = modules.concat(loaderModulesPaths);
+  }
+  return modules.filter(url => url.includes(filter));
+}
+
+function countCharsInModules(modules) {
+  return modules.reduce((sum, uri) => {
+    try {
+      return sum + require("raw!" + uri).length;
+    } catch (e) {
+      // Ignore failures
+      return sum;
+    }
+  }, 0);
+}

@@ -6,7 +6,8 @@
 
 BROWSER_CHROME_MANIFESTS += [
     'test/browser.ini',
-    'test/metrics/browser_metrics_inspector.ini'
+    'test/metrics/browser_metrics_inspector.ini',
+    'test/metrics/browser_metrics_webconsole.ini',
 ]
 XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
 
