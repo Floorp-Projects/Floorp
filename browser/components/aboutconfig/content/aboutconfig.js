@@ -36,6 +36,9 @@ let gDeletedPrefs = new Map();
  */
 let gElementToPrefMap = new WeakMap();
 
+let gSearchInput = null;
+let gPrefsTable = null;
+
 /**
  * Reference to the PrefRow currently being edited, if any.
  */
@@ -335,8 +338,8 @@ function loadPrefs() {
   document.body.textContent = "";
   document.body.appendChild(content);
 
-  let search = document.getElementById("about-config-search");
-  let prefs = document.getElementById("prefs");
+  let search = gSearchInput = document.getElementById("about-config-search");
+  let prefs = gPrefsTable = document.getElementById("prefs");
   search.focus();
 
   for (let name of Services.prefs.getChildList("")) {
@@ -392,7 +395,7 @@ function filterPrefs() {
   }
   gDeletedPrefs.clear();
 
-  let searchName = document.getElementById("about-config-search").value.trim();
+  let searchName = gSearchInput.value.trim();
   gFilterString = searchName.toLowerCase();
   let prefArray = [...gExistingPrefs.values()];
   if (gFilterString) {
@@ -403,13 +406,12 @@ function filterPrefs() {
     prefArray.push(new PrefRow(searchName));
   }
 
-  let prefsElement = document.getElementById("prefs");
-  prefsElement.textContent = "";
+  gPrefsTable.textContent = "";
   let fragment = document.createDocumentFragment();
   for (let pref of prefArray) {
     fragment.appendChild(pref.getElement());
   }
-  prefsElement.appendChild(fragment);
+  gPrefsTable.appendChild(fragment);
 
   // We only start observing preference changes after the first search is done,
   // so that newly added preferences won't appear while the page is still empty.
