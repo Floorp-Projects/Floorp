@@ -39,7 +39,7 @@ class JSONHandler extends Handler {
   }
 }
 
-this.TargetListHandler = class extends JSONHandler {
+class TargetListHandler extends JSONHandler {
   constructor(targets) {
     super();
     this.targets = targets;
@@ -54,7 +54,7 @@ this.TargetListHandler = class extends JSONHandler {
   }
 };
 
-this.ProtocolHandler = class extends JSONHandler {
+class ProtocolHandler extends JSONHandler {
   get path() {
     return "/json/protocol";
   }

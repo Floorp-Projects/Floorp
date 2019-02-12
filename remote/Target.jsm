@@ -20,7 +20,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "Favicons",
  * Targets can be a document (page), an OOP frame, a background
  * document, or a worker.  They can all run in dedicated process or frame.
  */
-this.Target = class {
+class Target {
   constructor(browser) {
     this.browser = browser;
     this.debugger = new TargetListener(this);

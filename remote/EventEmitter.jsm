@@ -12,7 +12,7 @@ const ONCE_ORIGINAL_LISTENER = Symbol("EventEmitter/once-original-listener");
 const BAD_LISTENER = "Listener must be a function " +
     "or an object that has an onevent function";
 
-this.EventEmitter = class {
+class EventEmitter {
   constructor() {
     this.listeners = new Map();
   }

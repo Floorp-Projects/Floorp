@@ -5,7 +5,7 @@ var EXPORTED_SYMBOLS = [
   "t",
 ];
 
-this.t = {
+var t = {
   String: x => typeof x == "string" || x instanceof String,
   Number: x => typeof x == "number",
   Boolean: x => typeof x == "boolean",
@@ -17404,7 +17404,7 @@ const Description = {
     }
 };
 
-this.Protocol = {
+var Protocol = {
   checkSchema,
   Description,
 };

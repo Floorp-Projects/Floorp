@@ -11,7 +11,7 @@ const {t} = ChromeUtils.import("chrome://remote/content/Protocol.jsm");
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {UnsupportedError} = ChromeUtils.import("chrome://remote/content/Error.jsm");
 
-this.Page = class extends Domain {
+class Page extends Domain {
   constructor(session, target) {
     super(session, target);
     this.enabled = false;
@@ -116,8 +116,8 @@ this.Page = class extends Domain {
   }
 };
 
-this.Page.FrameId = {schema: t.String};
-this.Page.TransitionType = {
+Page.FrameId = {schema: t.String};
+Page.TransitionType = {
   schema: t.Enum([
     "auto_bookmark",
     "auto_subframe",

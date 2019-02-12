@@ -34,7 +34,7 @@ class RemoteAgentError extends Error {
  *
  * Constructing this error will cause the application to quit.
  */
-this.FatalError = class extends RemoteAgentError {
+class FatalError extends RemoteAgentError {
   constructor(...args) {
     super(...args);
     this.quit();
@@ -49,7 +49,7 @@ this.FatalError = class extends RemoteAgentError {
   }
 };
 
-this.UnsupportedError = class extends RemoteAgentError {};
+class UnsupportedError extends RemoteAgentError {};
 
 function formatError(error, {stack = false} = {}) {
   const s = [];

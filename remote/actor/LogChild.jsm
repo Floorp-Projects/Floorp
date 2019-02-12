@@ -10,7 +10,7 @@ const {RemoteAgentActorChild} = ChromeUtils.import("chrome://remote/content/Acto
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {WindowManager} = ChromeUtils.import("chrome://remote/content/WindowManager.jsm");
 
-this.LogChild = class extends RemoteAgentActorChild {
+class LogChild extends RemoteAgentActorChild {
   observe(subject, topic) {
     const event = subject.wrappedJSObject;
 
