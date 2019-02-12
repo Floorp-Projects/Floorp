@@ -21,9 +21,15 @@ describe("blackbox", () => {
     await dispatch(actions.toggleBlackBox(foo1CSR.source));
 
     const fooSource = selectors.getSource(getState(), "foo1");
+
+    if (!fooSource) {
+      throw new Error("foo should exist");
+    }
+
+    const thread = (foo1CSR.sourceActor: any).thread;
     const relativeSources = selectors.getRelativeSourcesForThread(
       getState(),
-      foo1CSR.sourceActor.thread
+      thread
     );
 
     expect(relativeSources[fooSource.id].isBlackBoxed).toEqual(true);
