@@ -297,8 +297,13 @@ test_description_schema = Schema({
         # generally set in a per-kind transformation
         Optional('build-artifact-name'): basestring,
 
-        # If true, tooltool downloads will be enabled via relengAPIProxy.
-        Required('tooltool-downloads'): bool,
+        # If not false, tooltool downloads will be enabled via relengAPIProxy
+        # for either just public files, or all files.  Not supported on Windows
+        Required('tooltool-downloads'): Any(
+            False,
+            'public',
+            'internal',
+        ),
 
         # Add --blob-upload-branch=<project> mozharness parameter
         Optional('include-blob-upload-branch'): bool,
@@ -427,7 +432,7 @@ def set_defaults(config, tests):
         build_platform = test['build-platform']
         if build_platform.startswith('android'):
             # all Android test tasks download internal objects from tooltool
-            test['mozharness']['tooltool-downloads'] = True
+            test['mozharness']['tooltool-downloads'] = 'internal'
             test['mozharness']['actions'] = ['get-secrets']
             # Fennec is non-e10s; geckoview handled in set_target
             test['e10s'] = False
@@ -473,7 +478,7 @@ def set_defaults(config, tests):
 
         test['mozharness'].setdefault('extra-options', [])
         test['mozharness'].setdefault('requires-signed-builds', False)
-        test['mozharness'].setdefault('tooltool-downloads', False)
+        test['mozharness'].setdefault('tooltool-downloads', 'public')
         test['mozharness'].setdefault('set-moz-node-path', False)
         test['mozharness'].setdefault('chunked', False)
         test['mozharness'].setdefault('chunking-args', 'this-chunk')
