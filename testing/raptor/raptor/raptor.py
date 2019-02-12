@@ -171,7 +171,6 @@ class Raptor(object):
         _key = 'playback_pageset_zip_%s' % self.config['platform']
         self.config['playback_pageset_zip'] = test.get(_key, None)
         self.config['playback_recordings'] = test.get('playback_recordings', None)
-        self.config['python3_win_manifest'] = test.get('python3_win_manifest', None)
 
     def run_test(self, test, timeout=None):
         self.log.info("starting raptor test: %s" % test['name'])
