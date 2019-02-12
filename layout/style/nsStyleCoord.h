@@ -55,6 +55,10 @@ LengthPercentage LengthPercentage::FromAppUnits(nscoord aCoord) {
           false};
 }
 
+LengthPercentage LengthPercentage::FromPercentage(float aPercentage) {
+  return {{0.}, {aPercentage}, StyleAllowedNumericType::All, true, false};
+}
+
 CSSCoord LengthPercentage::LengthInCSSPixels() const { return length._0; }
 
 float LengthPercentage::Percentage() const { return percentage._0; }
@@ -114,20 +118,38 @@ CSSCoord LengthPercentage::ResolveToCSSPixelsWith(T aPercentageGetter) const {
   return ResolveToCSSPixels(aPercentageGetter());
 }
 
-nscoord LengthPercentage::Resolve(nscoord aPercentageBasis) const {
-  NS_WARNING_ASSERTION(aPercentageBasis >= 0, "nscoord overflow?");
-  return LengthComponent() +
-         NSToCoordFloorClamped(aPercentageBasis * Percentage());
-}
-
-template <typename T>
-nscoord LengthPercentage::ResolveWith(T aPercentageGetter) const {
+template <typename T, typename U>
+nscoord LengthPercentage::Resolve(T aPercentageGetter,
+                                  U aPercentageRounder) const {
   static_assert(std::is_same<decltype(aPercentageGetter()), nscoord>::value,
                 "Should return app units");
+  static_assert(
+      std::is_same<decltype(aPercentageRounder(1.0f)), nscoord>::value,
+      "Should return app units");
   if (ConvertsToLength()) {
     return ToLength();
   }
-  return Resolve(aPercentageGetter());
+  nscoord basis = aPercentageGetter();
+  NS_WARNING_ASSERTION(basis >= 0, "nscoord overflow?");
+  return LengthComponent() + aPercentageRounder(basis * Percentage());
+}
+
+nscoord LengthPercentage::Resolve(nscoord aPercentageBasis) const {
+  NS_WARNING_ASSERTION(aPercentageBasis >= 0, "nscoord overflow?");
+  return Resolve([=] { return aPercentageBasis; }, NSToCoordFloorClamped);
+}
+
+template <typename T>
+nscoord LengthPercentage::Resolve(T aPercentageGetter) const {
+  static_assert(std::is_same<decltype(aPercentageGetter()), nscoord>::value,
+                "Should return app units");
+  return Resolve(aPercentageGetter, NSToCoordFloorClamped);
+}
+
+template <typename T>
+nscoord LengthPercentage::Resolve(nscoord aPercentageBasis,
+                                  T aPercentageRounder) const {
+  return Resolve([=] { return aPercentageBasis; }, aPercentageRounder);
 }
 
 #define IMPL_LENGTHPERCENTAGE_FORWARDS(ty_)                                 \
