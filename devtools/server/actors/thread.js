@@ -270,6 +270,12 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       thread: this,
     });
 
+    if (request.options.breakpoints) {
+      for (const { location, options } of Object.values(request.options.breakpoints)) {
+        this.setBreakpoint(location, options);
+      }
+    }
+
     this.dbg.addDebuggees();
     this.dbg.enabled = true;
 
@@ -1118,6 +1124,8 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
   },
 
   onSources: function(request) {
+    // FIXME bug 1530699 we should make sure that existing breakpoints are
+    // applied to any sources we find here.
     for (const source of this.dbg.findSources()) {
       this.sources.createSourceActor(source);
     }
