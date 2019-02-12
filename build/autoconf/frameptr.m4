@@ -12,6 +12,16 @@ AC_DEFUN([MOZ_SET_FRAMEPTR_FLAGS], [
     MOZ_DISABLE_FRAME_PTR="-fomit-frame-pointer -funwind-tables"
   else
     case "$target" in
+    dnl some versions of clang-cl don't support -Oy-; accommodate them.
+    aarch64-windows*)
+      if test "$CC_TYPE" = "clang-cl"; then
+        MOZ_ENABLE_FRAME_PTR="-Xclang -mdisable-fp-elim"
+        MOZ_DISABLE_FRAME_PTR="-Xclang -mdisable-fp-elim"
+      else
+        MOZ_ENABLE_FRAME_PTR="-Oy-"
+        MOZ_DISABLE_FRAME_PTR="-Oy"
+      fi
+    ;;
     dnl Oy (Frame-Pointer Omission) is only support on x86 compilers
     *-mingw32*)
       MOZ_ENABLE_FRAME_PTR="-Oy-"
