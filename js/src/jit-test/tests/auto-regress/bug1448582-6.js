@@ -9,15 +9,14 @@
         [index]: class {
             constructor() {}
 
-            // Prevent adding an inferred name at index = 1 by creating a
-            // static method named "name".
+            // The static method named "name" is added after assigning the
+            // inferred name.
             static [(index === 0 ? "not-name" : "name")]() {}
         }
     }
 
-    // At index = 0 the class will get the inferred name "0".
-    // At index = 1 the class should have no inferred name.
-    assertEq(displayName(o[index]), index === 0 ? "0" : "");
+    // The inferred name matches the current index.
+    assertEq(displayName(o[index]), String(index));
 
     if (index === 0) {
         (function self() {
