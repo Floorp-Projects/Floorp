@@ -37,13 +37,20 @@ add_task(threadClientTest(async ({ threadClient, debuggee }) => {
     await threadClient.resume();
   })();
 
-  /* eslint-disable */
-  Cu.evalInSandbox(
-    "var line0 = Error().lineNumber;\n" +
-    "debugger;\n" +   // line0 + 1
-    "var a = 1;\n" +  // line0 + 2
-    "var b = 2;\n",   // line0 + 3
-     debuggee
-  );
-  /* eslint-enable */
+  /*
+   * Be sure to run debuggee code in its own HTML 'task', so that when we call
+   * the onDebuggerStatement hook, the test's own microtasks don't get suspended
+   * along with the debuggee's.
+   */
+  do_timeout(0, () => {
+    /* eslint-disable */
+    Cu.evalInSandbox(
+      "var line0 = Error().lineNumber;\n" +
+        "debugger;\n" +   // line0 + 1
+        "var a = 1;\n" +  // line0 + 2
+        "var b = 2;\n",   // line0 + 3
+        debuggee
+    );
+    /* eslint-enable */
+  });
 }));
