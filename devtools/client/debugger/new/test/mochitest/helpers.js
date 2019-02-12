@@ -1113,7 +1113,9 @@ const selectors = {
     addConditionalBreakpoint:
       "#node-menu-add-condition, #node-menu-add-conditional-breakpoint",
     editConditionalBreakpoint:
-      "#node-menu-edit-condition, #node-menu-edit-conditional-breakpoint"
+      "#node-menu-edit-condition, #node-menu-edit-conditional-breakpoint",
+    addLogPoint: "#node-menu-add-log-point",
+    editLogPoint: "#node-menu-edit-log-point"
   },
   menuitem: i => `menupopup menuitem:nth-child(${i})`,
   pauseOnExceptions: ".pause-exceptions",

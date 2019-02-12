@@ -24,7 +24,9 @@
   min-width: 0 !important;
 }
 
-.CodeMirror.cm-s-mozilla, .CodeMirror-scroll, .CodeMirror-sizer {
+.CodeMirror.cm-s-mozilla,
+.CodeMirror-scroll,
+.CodeMirror-sizer {
   overflow-anchor: none;
 }
 
@@ -165,9 +167,9 @@ html[dir="rtl"] .editor-mount {
   stroke: var(--theme-graphs-orange);
 }
 
-.new-breakpoint.has-condition.log .CodeMirror-gutter-wrapper svg {
-  fill: var(--theme-graphs-orange);
-  stroke: var(--theme-graphs-yellow);
+.new-breakpoint.has-log .CodeMirror-gutter-wrapper svg {
+  fill: var(--theme-graphs-purple);
+  stroke: var(--purple-60);
 }
 
 .editor.new-breakpoint.breakpoint-disabled svg {

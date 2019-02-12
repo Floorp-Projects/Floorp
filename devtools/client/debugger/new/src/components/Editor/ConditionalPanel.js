@@ -62,12 +62,14 @@ export class ConditionalPanel extends PureComponent<Props> {
     }
   };
 
-  setBreakpoint(condition: string) {
-    const { location, log } = this.props;
-    return this.props.setBreakpointOptions(
-      location,
-      log ? { logValue: condition } : { condition }
-    );
+  setBreakpoint(value: string) {
+    const { location, log, breakpoint } = this.props;
+    const options = breakpoint ? breakpoint.options : {};
+    const type = log ? "logValue" : "condition";
+    return this.props.setBreakpointOptions(location, {
+      ...options,
+      [type]: value
+    });
   }
 
   clearConditionalPanel() {
