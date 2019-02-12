@@ -60,7 +60,8 @@ class mozSpellChecker final {
    * @param aIsMisspelled will be set to true if the word is misspelled.
    * @param aSuggestions is an array of nsStrings which represent the
    * suggested replacements for the misspelled word. The array will be empty
-   * if there aren't any suggestions.
+   * in chrome process if there aren't any suggestions. If suggestions is
+   * unnecessary, use CheckWords of async version.
    */
   nsresult CheckWord(const nsAString& aWord, bool* aIsMisspelled,
                      nsTArray<nsString>* aSuggestions);

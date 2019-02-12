@@ -433,7 +433,7 @@ static const FeatureInfo sFeatureInfoArr[] = {
       GLContext::Extensions_End}},
     {"texture_float_linear",
      GLVersion::GL3_1,
-     GLESVersion::ES3,
+     GLESVersion::NONE,
      GLContext::Extension_None,
      {GLContext::ARB_texture_float, GLContext::OES_texture_float_linear,
       GLContext::Extensions_End}},

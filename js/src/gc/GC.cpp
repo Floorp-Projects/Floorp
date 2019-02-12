@@ -7408,9 +7408,7 @@ bool GCRuntime::shouldCollectNurseryForSlice(bool nonincrementalByAPI,
       return true;
     case State::Mark:
       return (nonincrementalByAPI || budget.isUnlimited() || lastMarkSlice ||
-              nursery().minorGCRequested() ||
-              nursery().freeSpace() <
-                  tunables.nurseryFreeThresholdForIdleCollection() ||
+              nursery().shouldCollect() ||
               hasIncrementalTwoSliceZealMode());
     case State::Finish:
       return false;

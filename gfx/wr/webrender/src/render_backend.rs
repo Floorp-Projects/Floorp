@@ -611,15 +611,18 @@ impl Document {
         // surface tiles, that can be provided to the next frame builder.
         let mut retained_tiles = RetainedTiles::new();
         if let Some(frame_builder) = self.frame_builder.take() {
-            frame_builder.destroy(
+            let globals = frame_builder.destroy(
                 &mut retained_tiles,
                 &self.clip_scroll_tree,
             );
-        }
 
-        // Provide any cached tiles from the previous frame builder to
-        // the newly built one.
-        built_scene.frame_builder.set_retained_tiles(retained_tiles);
+            // Provide any cached tiles from the previous frame builder to
+            // the newly built one.
+            built_scene.frame_builder.set_retained_resources(
+                retained_tiles,
+                globals,
+            );
+        }
 
         self.frame_builder = Some(built_scene.frame_builder);
 

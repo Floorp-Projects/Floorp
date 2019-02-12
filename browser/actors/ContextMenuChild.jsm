@@ -94,7 +94,12 @@ const messageListeners = {
             if (this.content.document.fullscreenEnabled) {
               media.requestFullscreen();
             }
-
+            break;
+          case "pictureinpicture":
+            let event = new this.content.CustomEvent("MozTogglePictureInPicture", {
+              bubbles: true,
+            }, this.content);
+            media.dispatchEvent(event);
             break;
         }
       }

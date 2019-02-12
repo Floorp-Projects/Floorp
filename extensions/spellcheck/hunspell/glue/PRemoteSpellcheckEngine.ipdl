@@ -12,7 +12,6 @@ sync protocol PRemoteSpellcheckEngine {
 parent:
   async __delete__();
 
-  sync Check(nsString aWord) returns (bool aIsMisspelled);
   async CheckAsync(nsString[] aWord) returns (bool[] aIsMisspelled);
 
   sync CheckAndSuggest(nsString aWord) returns (bool aIsMisspelled, nsString[] aSuggestions);
