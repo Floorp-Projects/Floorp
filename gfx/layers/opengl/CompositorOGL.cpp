@@ -656,12 +656,14 @@ void CompositorOGL::SetRenderTarget(CompositingRenderTarget* aSurface) {
   PrepareViewport(mCurrentRenderTarget);
 }
 
-CompositingRenderTarget* CompositorOGL::GetCurrentRenderTarget() const {
-  return mCurrentRenderTarget;
+already_AddRefed<CompositingRenderTarget>
+CompositorOGL::GetCurrentRenderTarget() const {
+  return do_AddRef(mCurrentRenderTarget);
 }
 
-CompositingRenderTarget* CompositorOGL::GetWindowRenderTarget() const {
-  return mWindowRenderTarget;
+already_AddRefed<CompositingRenderTarget> CompositorOGL::GetWindowRenderTarget()
+    const {
+  return do_AddRef(mWindowRenderTarget);
 }
 
 already_AddRefed<AsyncReadbackBuffer> CompositorOGL::CreateAsyncReadbackBuffer(
