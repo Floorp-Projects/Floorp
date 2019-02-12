@@ -13,7 +13,7 @@ async function demo() {
     Log.entryAdded(({entry}) => {
       const {timestamp, level, text, args} = entry;
       const msg = text || args.join(" ");
-      console.log(`${timestamp}\t${level.toUpperCase()}\t${msg}`);
+      console.log(`${new Date(timestamp)}\t${level.toUpperCase()}\t${msg}`);
     });
 
     // turn on network stack logging
@@ -24,7 +24,7 @@ async function demo() {
     // turn on navigation related events, such as DOMContentLoaded et al.
     await Page.enable();
 
-    await Page.navigate({url: "https://sny.no/e/consoledemo.html"});
+    await Page.navigate({url: "data:text/html,test-page<script>console.log('foo');</script><script>'</script>"});
     await Page.loadEventFired();
   } catch (e) {
     console.error(e);
