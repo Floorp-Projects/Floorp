@@ -330,7 +330,9 @@ static_assert(nsIContentPolicy::TYPE_INVALID == 0 &&
                   nsIContentPolicy::TYPE_INTERNAL_IMAGE_FAVICON == 41 &&
                   nsIContentPolicy::TYPE_INTERNAL_WORKER_IMPORT_SCRIPTS == 42 &&
                   nsIContentPolicy::TYPE_SAVEAS_DOWNLOAD == 43 &&
-                  nsIContentPolicy::TYPE_SPECULATIVE == 44,
+                  nsIContentPolicy::TYPE_SPECULATIVE == 44 &&
+                  nsIContentPolicy::TYPE_INTERNAL_MODULE == 45 &&
+                  nsIContentPolicy::TYPE_INTERNAL_MODULE_PRELOAD == 46,
               "nsContentPolicyType values are as expected");
 
 namespace {

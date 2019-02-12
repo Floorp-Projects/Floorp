@@ -384,8 +384,8 @@ class ScriptLoader final : public nsISupports {
    * Helper function to check the content policy for a given request.
    */
   static nsresult CheckContentPolicy(Document* aDocument, nsISupports* aContext,
-                                     nsIURI* aURI, const nsAString& aType,
-                                     bool aIsPreLoad);
+                                     const nsAString& aType,
+                                     ScriptLoadRequest* aRequest);
 
   /**
    * Start a load for aRequest's URI.

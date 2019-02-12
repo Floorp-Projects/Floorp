@@ -198,6 +198,8 @@ interface nsIInterceptedChannel : nsISupports
             case nsIContentPolicy::TYPE_SCRIPT:
             case nsIContentPolicy::TYPE_INTERNAL_SCRIPT:
             case nsIContentPolicy::TYPE_INTERNAL_SCRIPT_PRELOAD:
+            case nsIContentPolicy::TYPE_INTERNAL_MODULE:
+            case nsIContentPolicy::TYPE_INTERNAL_MODULE_PRELOAD:
             case nsIContentPolicy::TYPE_INTERNAL_WORKER_IMPORT_SCRIPTS: {
               aKey = NS_LITERAL_CSTRING("subresource-script");
               break;
