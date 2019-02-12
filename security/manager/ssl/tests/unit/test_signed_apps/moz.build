@@ -67,3 +67,5 @@ def SignedAppFile(name, flags, app_directory='app/'):
 #SignedAppFile('only_cose_signed.zip', ['-c', 'ES256'])
 #SignedAppFile('only_cose_multiple_signed.zip', ['-c', 'ES384', '-c', 'ES256'])
 #SignedAppFile('cose_tampered_good_pkcs7.zip', ['-m', 'sha1', '-s', 'sha1', '-p', 'sha1'], 'app_cose_tampered/')
+#SignedAppFile('big_manifest.zip', ['-p', 'sha256', '--pad-headers', '2'])
+#SignedAppFile('huge_manifest.zip', ['-p', 'sha256', '--pad-headers', '10'])

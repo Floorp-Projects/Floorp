@@ -687,6 +687,22 @@ add_test(function () {
     check_open_result("bug 1411458", Cr.NS_ERROR_CMS_VERIFY_NO_CONTENT_INFO));
 });
 
+// This has a big manifest file (~2MB). It should verify correctly.
+add_test(function () {
+  certdb.openSignedAppFileAsync(
+    Ci.nsIX509CertDB.AppXPCShellRoot, original_app_path("big_manifest"),
+    check_open_result("add-on with big manifest file", Cr.NS_OK));
+});
+
+// This has a huge manifest file (~10MB). Manifest files this large are not
+// supported (8MB is the limit). It should not verify correctly.
+add_test(function () {
+  certdb.openSignedAppFileAsync(
+    Ci.nsIX509CertDB.AppXPCShellRoot, original_app_path("huge_manifest"),
+    check_open_result("add-on with huge manifest file",
+                      Cr.NS_ERROR_SIGNED_JAR_ENTRY_INVALID));
+});
+
 // TODO: tampered MF, tampered SF
 // TODO: too-large MF, too-large RSA, too-large SF
 // TODO: MF and SF that end immediately after the last main header
