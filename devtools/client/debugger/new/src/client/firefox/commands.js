@@ -12,7 +12,6 @@ import type {
   ActorId,
   BreakpointLocation,
   BreakpointOptions,
-  BreakpointResult,
   EventListenerBreakpoints,
   Frame,
   FrameId,
