@@ -156,7 +156,7 @@ def support_vcs_checkout(config, job, taskdesc, sparse=False):
     taskdesc['scopes'].append('secrets:get:project/taskcluster/gecko/hgfingerprint')
 
     # only some worker platforms have taskcluster-proxy enabled
-    if job['worker']['implementation'] in ('docker-worker', 'docker-engine'):
+    if job['worker']['implementation'] in ('docker-worker',):
         taskdesc['worker']['taskcluster-proxy'] = True
 
 
@@ -216,7 +216,7 @@ def docker_worker_add_tooltool(config, job, taskdesc, internal=False):
     reserved for use with ``run-task``.
     """
 
-    assert job['worker']['implementation'] in ('docker-worker', 'docker-engine')
+    assert job['worker']['implementation'] in ('docker-worker',)
 
     level = config.params['level']
     add_cache(job, taskdesc, 'level-{}-tooltool-cache'.format(level),

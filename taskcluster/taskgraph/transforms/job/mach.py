@@ -39,7 +39,6 @@ defaults = {
 
 
 @run_job_using("docker-worker", "mach", schema=mach_schema, defaults=defaults)
-@run_job_using("native-engine", "mach", schema=mach_schema, defaults=defaults)
 @run_job_using("generic-worker", "mach", schema=mach_schema, defaults=defaults)
 def configure_mach(config, job, taskdesc):
     run = job['run']
