@@ -854,6 +854,7 @@ var Policies = {
                 alias:       newEngine.Alias,
                 description: newEngine.Description,
                 method:      newEngine.Method,
+                postData:    newEngine.PostData,
                 suggestURL:  newEngine.SuggestURLTemplate,
                 extensionID: "set-via-policy",
                 queryCharset: "UTF-8",
