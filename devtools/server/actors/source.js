@@ -70,31 +70,13 @@ function getSourceURL(source, window) {
 exports.getSourceURL = getSourceURL;
 
 /**
- * A SourceActor provides information about the source of a script. There
- * are two kinds of source actors: ones that represent real source objects,
- * and ones that represent non-existant "original" sources when the real
- * sources are HTML documents. We separate these because there isn't a
- * 1:1 mapping of HTML to sources; one source may represent a subsection
- * of an HTML source, so we need to create N + 1 separate
- * actors.
- *
- * There are 2 different scenarios for sources that you should
- * understand:
- *
- * - A single source that is not inlined in HTML
- *   (separate JS file, eval'ed code, etc)
- * - An HTML page with multiple inline scripts, which are distinct
- *   sources, but should be represented as a single source
- *
- * The complexity of `SourceActor` and `ThreadSources` are to handle
- * all of thise cases and hopefully internalize the complexities.
+ * A SourceActor provides information about the source of a script. Source
+ * actors are 1:1 with Debugger.Source objects.
  *
  * @param Debugger.Source source
  *        The source object we are representing.
  * @param ThreadActor thread
  *        The current thread actor.
- * @param String originalUrl
- *        Optional. For HTML documents urls, the original url this is representing.
  * @param Boolean isInlineSource
  *        Optional. True if this is an inline source from a HTML or XUL page.
  * @param String contentType
@@ -103,10 +85,9 @@ exports.getSourceURL = getSourceURL;
 const SourceActor = ActorClassWithSpec(sourceSpec, {
   typeName: "source",
 
-  initialize: function({ source, thread, originalUrl,
-                          isInlineSource, contentType }) {
+  initialize: function({ source, thread, isInlineSource, contentType }) {
     this._threadActor = thread;
-    this._url = originalUrl;
+    this._url = null;
     this._source = source;
     this._contentType = contentType;
     this._isInlineSource = isInlineSource;
@@ -137,10 +118,7 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
     return this.threadActor.breakpointActorMap;
   },
   get url() {
-    if (this._url) {
-      return this._url;
-    }
-    if (this.source) {
+    if (!this._url) {
       this._url = getSourceURL(this.source, this.threadActor._parent.window);
     }
     return this._url;
@@ -155,10 +133,9 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
 
   form: function() {
     const source = this.source;
-    // This might not have a source because we treat HTML pages with
-    // inline scripts as a special SourceActor that doesn't have either.
+
     let introductionUrl = null;
-    if (source && source.introductionScript) {
+    if (source.introductionScript) {
       introductionUrl = source.introductionScript.source.url;
     }
 
@@ -185,15 +162,7 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
       "Debuggee source and URL are set automatically"
     );
 
-    // For most cases, we have a real source to query for. The
-    // only time we don't is for HTML pages. In that case we want
-    // to query for scripts in an HTML page based on its URL, as
-    // there could be several sources within an HTML page.
-    if (this.source) {
-      query.source = this.source;
-    } else {
-      query.url = this.url;
-    }
+    query.source = this.source;
     return this.dbg.findScripts(query);
   },
 
@@ -213,7 +182,7 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
       content: t,
       contentType: this._contentType,
     });
-    const isWasm = this.source && this.source.introductionType === "wasm";
+    const isWasm = this.source.introductionType === "wasm";
 
     if (isWasm) {
       const wasm = this.source.binary;

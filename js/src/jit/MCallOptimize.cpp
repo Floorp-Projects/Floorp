@@ -371,6 +371,10 @@ IonBuilder::InliningResult IonBuilder::inlineNativeCall(CallInfo& callInfo,
       return inlinePossiblyWrappedTypedArrayLength(callInfo);
     case InlinableNative::IntrinsicTypedArrayLength:
       return inlineTypedArrayLength(callInfo);
+    case InlinableNative::IntrinsicTypedArrayByteOffset:
+      return inlineTypedArrayByteOffset(callInfo);
+    case InlinableNative::IntrinsicTypedArrayElementShift:
+      return inlineTypedArrayElementShift(callInfo);
     case InlinableNative::IntrinsicSetDisjointTypedElements:
       return inlineSetDisjointTypedElements(callInfo);
 
@@ -421,13 +425,25 @@ IonBuilder::InliningResult IonBuilder::inlineNativeGetter(CallInfo& callInfo,
 
   // Try to optimize typed array lengths.
   if (TypedArrayObject::isOriginalLengthGetter(native)) {
-    Scalar::Type type = thisTypes->getTypedArrayType(constraints());
-    if (type == Scalar::MaxTypedArrayViewType) {
+    if (thisTypes->forAllClasses(constraints(), IsTypedArrayClass) !=
+        TemporaryTypeSet::ForAllResult::ALL_TRUE) {
       return InliningStatus_NotInlined;
     }
 
     MInstruction* length = addTypedArrayLength(thisArg);
     current->push(length);
+    return InliningStatus_Inlined;
+  }
+
+  // Try to optimize typed array byteOffsets.
+  if (TypedArrayObject::isOriginalByteOffsetGetter(native)) {
+    if (thisTypes->forAllClasses(constraints(), IsTypedArrayClass) !=
+        TemporaryTypeSet::ForAllResult::ALL_TRUE) {
+      return InliningStatus_NotInlined;
+    }
+
+    MInstruction* byteOffset = addTypedArrayByteOffset(thisArg);
+    current->push(byteOffset);
     return InliningStatus_Inlined;
   }
 
@@ -3193,6 +3209,51 @@ IonBuilder::InliningResult IonBuilder::inlinePossiblyWrappedTypedArrayLength(
 IonBuilder::InliningResult IonBuilder::inlineTypedArrayLength(
     CallInfo& callInfo) {
   return inlinePossiblyWrappedTypedArrayLength(callInfo);
+}
+
+IonBuilder::InliningResult IonBuilder::inlineTypedArrayByteOffset(
+    CallInfo& callInfo) {
+  MOZ_ASSERT(!callInfo.constructing());
+  MOZ_ASSERT(callInfo.argc() == 1);
+  if (callInfo.getArg(0)->type() != MIRType::Object) {
+    return InliningStatus_NotInlined;
+  }
+  if (getInlineReturnType() != MIRType::Int32) {
+    return InliningStatus_NotInlined;
+  }
+
+  if (!IsTypedArrayObject(constraints(), callInfo.getArg(0))) {
+    return InliningStatus_NotInlined;
+  }
+
+  MInstruction* byteOffset = addTypedArrayByteOffset(callInfo.getArg(0));
+  current->push(byteOffset);
+
+  callInfo.setImplicitlyUsedUnchecked();
+  return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningResult IonBuilder::inlineTypedArrayElementShift(
+    CallInfo& callInfo) {
+  MOZ_ASSERT(!callInfo.constructing());
+  MOZ_ASSERT(callInfo.argc() == 1);
+  if (callInfo.getArg(0)->type() != MIRType::Object) {
+    return InliningStatus_NotInlined;
+  }
+  if (getInlineReturnType() != MIRType::Int32) {
+    return InliningStatus_NotInlined;
+  }
+
+  if (!IsTypedArrayObject(constraints(), callInfo.getArg(0))) {
+    return InliningStatus_NotInlined;
+  }
+
+  auto* ins = MTypedArrayElementShift::New(alloc(), callInfo.getArg(0));
+  current->add(ins);
+  current->push(ins);
+
+  callInfo.setImplicitlyUsedUnchecked();
+  return InliningStatus_Inlined;
 }
 
 IonBuilder::InliningResult IonBuilder::inlineSetDisjointTypedElements(

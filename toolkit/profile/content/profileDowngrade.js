@@ -4,6 +4,8 @@
 
 let gParams;
 
+const { AppConstants } = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+
 function init() {
   /*
    * The C++ code passes a dialog param block using its integers as in and out
@@ -13,10 +15,12 @@ function init() {
    *  1: A return argument, one of nsIToolkitProfileService.downgradeUIChoice.
    */
   gParams = window.arguments[0].QueryInterface(Ci.nsIDialogParamBlock);
-  let hasSync = gParams.GetInt(0) & Ci.nsIToolkitProfileService.hasSync;
+  if (AppConstants.MOZ_SERVICES_SYNC) {
+    let hasSync = gParams.GetInt(0) & Ci.nsIToolkitProfileService.hasSync;
 
-  document.getElementById("sync").hidden = !hasSync;
-  document.getElementById("nosync").hidden = hasSync;
+    document.getElementById("sync").hidden = !hasSync;
+    document.getElementById("nosync").hidden = hasSync;
+  }
 }
 
 function quit() {

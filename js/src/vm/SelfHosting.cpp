@@ -1143,10 +1143,10 @@ static bool intrinsic_TypedArrayLength(JSContext* cx, unsigned argc,
                                        Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 1);
+  MOZ_ASSERT(TypedArrayObject::is(args[0]));
 
-  JSObject* obj = &args[0].toObject();
-  MOZ_ASSERT(obj->is<TypedArrayObject>());
-  args.rval().setInt32(obj->as<TypedArrayObject>().length());
+  args.rval().set(TypedArrayObject::lengthValue(
+      &args[0].toObject().as<TypedArrayObject>()));
   return true;
 }
 
@@ -2603,8 +2603,10 @@ static const JSFunctionSpec intrinsic_functions[] = {
                     IntrinsicIsTypedArrayConstructor),
 
     JS_FN("TypedArrayBuffer", intrinsic_TypedArrayBuffer, 1, 0),
-    JS_FN("TypedArrayByteOffset", intrinsic_TypedArrayByteOffset, 1, 0),
-    JS_FN("TypedArrayElementShift", intrinsic_TypedArrayElementShift, 1, 0),
+    JS_INLINABLE_FN("TypedArrayByteOffset", intrinsic_TypedArrayByteOffset, 1,
+                    0, IntrinsicTypedArrayByteOffset),
+    JS_INLINABLE_FN("TypedArrayElementShift", intrinsic_TypedArrayElementShift,
+                    1, 0, IntrinsicTypedArrayElementShift),
 
     JS_INLINABLE_FN("TypedArrayLength", intrinsic_TypedArrayLength, 1, 0,
                     IntrinsicTypedArrayLength),
