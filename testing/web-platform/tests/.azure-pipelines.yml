@@ -135,7 +135,7 @@ jobs:
 - job: infrastructure_win10
   displayName: 'infrastructure/ tests (Windows 10)'
   # This job is only triggered manually until it has been shown to be robust.
-  condition: eq(variables['Build.Reason'], 'Manual')
+  condition: and(eq(variables['Build.Reason'], 'Manual'), variables['run_infrastructure_win10'])
   pool:
     name: 'Hosted Windows Client'
   steps:
@@ -160,7 +160,7 @@ jobs:
 - job: all_edge
   displayName: 'all tests (Edge)'
   # This job is only triggered manually until it has been shown to be robust.
-  condition: eq(variables['Build.Reason'], 'Manual')
+  condition: and(eq(variables['Build.Reason'], 'Manual'), variables['run_all_edge'])
   # There are 5 agents in the pool, but use more jobs so that each takes <1h.
   strategy:
     parallel: 20
