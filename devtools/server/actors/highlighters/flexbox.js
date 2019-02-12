@@ -264,8 +264,8 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
       flexboxPatternMap = new Map();
     }
 
-    if (gCachedFlexboxPattern.has(JUSTIFY_CONTENT)) {
-      return gCachedFlexboxPattern.get(JUSTIFY_CONTENT);
+    if (flexboxPatternMap.has(JUSTIFY_CONTENT)) {
+      return flexboxPatternMap.get(JUSTIFY_CONTENT);
     }
 
     // Create the inversed diagonal lines pattern
