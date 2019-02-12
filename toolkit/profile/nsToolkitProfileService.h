@@ -84,7 +84,7 @@ class nsToolkitProfileService final : public nsIToolkitProfileService {
  private:
   friend class nsToolkitProfile;
   friend class nsToolkitProfileFactory;
-  friend nsresult NS_NewToolkitProfileService(nsToolkitProfileService**);
+  friend nsresult NS_NewToolkitProfileService(nsIToolkitProfileService**);
 
   nsToolkitProfileService();
   ~nsToolkitProfileService();

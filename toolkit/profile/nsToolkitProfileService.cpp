@@ -1585,7 +1585,7 @@ nsToolkitProfileFactory::CreateInstance(nsISupports* aOuter, const nsID& aIID,
                                         void** aResult) {
   if (aOuter) return NS_ERROR_NO_AGGREGATION;
 
-  RefPtr<nsToolkitProfileService> profileService =
+  nsCOMPtr<nsIToolkitProfileService> profileService =
       nsToolkitProfileService::gService;
   if (!profileService) {
     nsresult rv = NS_NewToolkitProfileService(getter_AddRefs(profileService));
@@ -1605,7 +1605,7 @@ nsresult NS_NewToolkitProfileFactory(nsIFactory** aResult) {
   return NS_OK;
 }
 
-nsresult NS_NewToolkitProfileService(nsToolkitProfileService** aResult) {
+nsresult NS_NewToolkitProfileService(nsIToolkitProfileService** aResult) {
   nsToolkitProfileService* profileService = new nsToolkitProfileService();
   if (!profileService) return NS_ERROR_OUT_OF_MEMORY;
   nsresult rv = profileService->Init();
