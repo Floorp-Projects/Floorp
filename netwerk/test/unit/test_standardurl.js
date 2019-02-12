@@ -1,6 +1,7 @@
 "use strict";
 
-ChromeUtils.import('resource://gre/modules/Services.jsm');
+var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 const gPrefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
 
 function symmetricEquality(expect, a, b)
@@ -308,7 +309,8 @@ add_test(function test_accentEncoding()
   run_next_test();
 });
 
-add_test(function test_percentDecoding()
+add_test({ skip_if: () => AppConstants.MOZ_APP_NAME == "thunderbird" },
+         function test_percentDecoding()
 {
   var url = stringToURL("http://%70%61%73%74%65%62%69%6E.com");
   Assert.equal(url.spec, "http://pastebin.com/");
@@ -698,7 +700,8 @@ add_test(function test_idna_host() {
   run_next_test();
 });
 
-add_test(function test_bug1517025() {
+add_test({ skip_if: () => AppConstants.MOZ_APP_NAME == "thunderbird" },
+         function test_bug1517025() {
   Assert.throws(() => { let other = stringToURL("https://b%9a/"); },
                 /NS_ERROR_UNEXPECTED/, "bad URI");
 
