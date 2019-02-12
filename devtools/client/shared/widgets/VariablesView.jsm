@@ -34,14 +34,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "clipboardHelper",
   "@mozilla.org/widget/clipboardhelper;1",
   "nsIClipboardHelper");
 
-Object.defineProperty(this, "WebConsoleUtils", {
-  get: function() {
-    return require("devtools/client/webconsole/utils").Utils;
-  },
-  configurable: true,
-  enumerable: true,
-});
-
 this.EXPORTED_SYMBOLS = ["VariablesView", "escapeHTML"];
 
 /**
@@ -3328,13 +3320,96 @@ VariablesView.getGrip = function(aValue) {
       // fall through
     case "function":
       return { type: "object",
-               class: WebConsoleUtils.getObjectClassName(aValue) };
+               class: getObjectClassName(aValue) };
     default:
       console.error("Failed to provide a grip for value of " + typeof value +
                     ": " + aValue);
       return null;
   }
 };
+
+// Match the function name from the result of toString() or toSource().
+//
+// Examples:
+// (function foobar(a, b) { ...
+// function foobar2(a) { ...
+// function() { ...
+const REGEX_MATCH_FUNCTION_NAME = /^\(?function\s+([^(\s]+)\s*\(/;
+
+/**
+ * Helper function to deduce the name of the provided function.
+ *
+ * @param function function
+ *        The function whose name will be returned.
+ * @return string
+ *         Function name.
+ */
+function getFunctionName(func) {
+  let name = null;
+  if (func.name) {
+    name = func.name;
+  } else {
+    let desc;
+    try {
+      desc = func.getOwnPropertyDescriptor("displayName");
+    } catch (ex) {
+      // Ignore.
+    }
+    if (desc && typeof desc.value == "string") {
+      name = desc.value;
+    }
+  }
+  if (!name) {
+    try {
+      const str = (func.toString() || func.toSource()) + "";
+      name = (str.match(REGEX_MATCH_FUNCTION_NAME) || [])[1];
+    } catch (ex) {
+      // Ignore.
+    }
+  }
+  return name;
+}
+
+/**
+ * Get the object class name. For example, the |window| object has the Window
+ * class name (based on [object Window]).
+ *
+ * @param object object
+ *        The object you want to get the class name for.
+ * @return string
+ *         The object class name.
+ */
+function getObjectClassName(object) {
+  if (object === null) {
+    return "null";
+  }
+  if (object === undefined) {
+    return "undefined";
+  }
+
+  const type = typeof object;
+  if (type != "object") {
+    // Grip class names should start with an uppercase letter.
+    return type.charAt(0).toUpperCase() + type.substr(1);
+  }
+
+  let className;
+
+  try {
+    className = ((object + "").match(/^\[object (\S+)\]$/) || [])[1];
+    if (!className) {
+      className = ((object.constructor + "")
+                    .match(/^\[object (\S+)\]$/) || [])[1];
+    }
+    if (!className && typeof object.constructor == "function") {
+      className = getFunctionName(object.constructor);
+    }
+  } catch (ex) {
+    // Ignore.
+  }
+
+  return className;
+}
 
 /**
  * Returns a custom formatted property string for a grip.

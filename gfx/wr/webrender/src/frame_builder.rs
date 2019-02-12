@@ -3,12 +3,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{ColorF, DeviceIntPoint, DevicePixelScale, LayoutPixel, PicturePixel, RasterPixel};
-use api::{DeviceIntRect, DeviceIntSize, DocumentLayer, FontRenderMode, DebugFlags};
+use api::{DeviceIntRect, DeviceIntSize, DocumentLayer, FontRenderMode, DebugFlags, PremultipliedColorF};
 use api::{LayoutPoint, LayoutRect, LayoutSize, PipelineId, RasterSpace, WorldPoint, WorldRect, WorldPixel};
 use clip::{ClipDataStore, ClipStore, ClipChainStack};
 use clip_scroll_tree::{ClipScrollTree, ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex};
 use display_list_flattener::{DisplayListFlattener};
-use gpu_cache::GpuCache;
+use gpu_cache::{GpuCache, GpuCacheHandle};
 use gpu_types::{PrimitiveHeaders, TransformPalette, UvRectKind, ZBufferIdGenerator};
 use hit_test::{HitTester, HitTestingRun};
 use internal_types::{FastHashMap, PlaneSplitter};
@@ -57,6 +57,40 @@ pub struct FrameBuilderConfig {
     pub testing: bool,
 }
 
+/// A set of common / global resources that are retained between
+/// new display lists, such that any GPU cache handles can be
+/// persisted even when a new display list arrives.
+#[cfg_attr(feature = "capture", derive(Serialize))]
+pub struct FrameGlobalResources {
+    /// The image shader block for the most common / default
+    /// set of image parameters (color white, stretch == rect.size).
+    pub default_image_handle: GpuCacheHandle,
+}
+
+impl FrameGlobalResources {
+    pub fn empty() -> Self {
+        FrameGlobalResources {
+            default_image_handle: GpuCacheHandle::new(),
+        }
+    }
+
+    pub fn update(
+        &mut self,
+        gpu_cache: &mut GpuCache,
+    ) {
+        if let Some(mut request) = gpu_cache.request(&mut self.default_image_handle) {
+            request.push(PremultipliedColorF::WHITE);
+            request.push(PremultipliedColorF::WHITE);
+            request.push([
+                -1.0,       // -ve means use prim rect for stretch size
+                0.0,
+                0.0,
+                0.0,
+            ]);
+        }
+    }
+}
+
 /// A builder structure for `tiling::Frame`
 #[cfg_attr(feature = "capture", derive(Serialize))]
 pub struct FrameBuilder {
@@ -72,6 +106,7 @@ pub struct FrameBuilder {
     #[cfg_attr(feature = "capture", serde(skip))] //TODO
     pub hit_testing_runs: Vec<HitTestingRun>,
     pub config: FrameBuilderConfig,
+    pub globals: FrameGlobalResources,
 }
 
 pub struct FrameVisibilityContext<'a> {
@@ -193,6 +228,7 @@ impl FrameBuilder {
             background_color: None,
             root_pic_index: PictureIndex(0),
             pending_retained_tiles: RetainedTiles::new(),
+            globals: FrameGlobalResources::empty(),
             config: FrameBuilderConfig {
                 default_font_render_mode: FontRenderMode::Mono,
                 dual_source_blending_is_enabled: true,
@@ -207,12 +243,14 @@ impl FrameBuilder {
     /// Provide any cached surface tiles from the previous frame builder
     /// to a new frame builder. These will be consumed or dropped the
     /// first time a new frame builder creates a frame.
-    pub fn set_retained_tiles(
+    pub fn set_retained_resources(
         &mut self,
         retained_tiles: RetainedTiles,
+        globals: FrameGlobalResources,
     ) {
         debug_assert!(self.pending_retained_tiles.tiles.is_empty());
         self.pending_retained_tiles = retained_tiles;
+        self.globals = globals;
     }
 
     pub fn with_display_list_flattener(
@@ -231,6 +269,7 @@ impl FrameBuilder {
             window_size,
             pending_retained_tiles: RetainedTiles::new(),
             config: flattener.config,
+            globals: FrameGlobalResources::empty(),
         }
     }
 
@@ -240,7 +279,7 @@ impl FrameBuilder {
         self,
         retained_tiles: &mut RetainedTiles,
         clip_scroll_tree: &ClipScrollTree,
-    ) {
+    ) -> FrameGlobalResources {
         self.prim_store.destroy(
             retained_tiles,
             clip_scroll_tree,
@@ -255,6 +294,8 @@ impl FrameBuilder {
         // avoid this, if there are still pending tiles, include them in
         // the retained tiles passed to the next frame builder.
         retained_tiles.merge(self.pending_retained_tiles);
+
+        self.globals
     }
 
     /// Compute the contribution (bounding rectangles, and resources) of layers and their
@@ -474,6 +515,8 @@ impl FrameBuilder {
         resource_cache.begin_frame(stamp);
         gpu_cache.begin_frame(stamp);
 
+        self.globals.update(gpu_cache);
+
         let mut transform_palette = TransformPalette::new();
         clip_scroll_tree.update_tree(
             pan,
@@ -557,6 +600,7 @@ impl FrameBuilder {
                 surfaces: &surfaces,
                 scratch,
                 screen_world_rect,
+                globals: &self.globals,
             };
 
             pass.build(

@@ -1524,18 +1524,20 @@ impl TileCache {
                 // every frame, which is wasteful.
                 if tile.same_frames >= FRAMES_BEFORE_PICTURE_CACHING {
                     // Ensure that this texture is allocated.
-                    resource_cache.texture_cache.update(
-                        &mut tile.handle,
-                        descriptor,
-                        TextureFilter::Linear,
-                        None,
-                        [0.0; 3],
-                        DirtyRect::All,
-                        gpu_cache,
-                        None,
-                        UvRectKind::Rect,
-                        Eviction::Eager,
-                    );
+                    if !resource_cache.texture_cache.is_allocated(&tile.handle) {
+                        resource_cache.texture_cache.update(
+                            &mut tile.handle,
+                            descriptor,
+                            TextureFilter::Linear,
+                            None,
+                            [0.0; 3],
+                            DirtyRect::All,
+                            gpu_cache,
+                            None,
+                            UvRectKind::Rect,
+                            Eviction::Eager,
+                        );
+                    }
 
                     let cache_item = resource_cache
                         .get_texture_cache_item(&tile.handle);
@@ -2191,8 +2193,6 @@ pub struct PicturePrimitive {
     /// Local clip rect for this picture.
     pub local_clip_rect: LayoutRect,
 
-    pub gpu_location: GpuCacheHandle,
-
     /// If Some(..) the tile cache that is associated with this picture.
     #[cfg_attr(feature = "capture", serde(skip))] //TODO
     pub tile_cache: Option<TileCache>,
@@ -2306,7 +2306,6 @@ impl PicturePrimitive {
             spatial_node_index,
             local_rect: LayoutRect::zero(),
             local_clip_rect,
-            gpu_location: GpuCacheHandle::new(),
             tile_cache,
             options,
         }
@@ -2800,7 +2799,6 @@ impl PicturePrimitive {
             //           stretch size from the segment rect in the shaders, we can
             //           remove this invalidation here completely.
             if self.local_rect != surface_rect {
-                gpu_cache.invalidate(&self.gpu_location);
                 if let PictureCompositeMode::Filter(FilterOp::DropShadow(..)) = raster_config.composite_mode {
                     gpu_cache.invalidate(&self.extra_gpu_data_handle);
                 }

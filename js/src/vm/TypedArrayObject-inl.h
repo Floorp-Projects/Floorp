@@ -614,7 +614,7 @@ class ElementSpecific {
     }
 
     double d;
-    MOZ_ASSERT(v.isString() || v.isObject() || v.isSymbol());
+    MOZ_ASSERT(v.isString() || v.isObject() || v.isSymbol() || IF_BIGINT(v.isBigInt(), false));
     if (!(v.isString() ? StringToNumber(cx, v.toString(), &d)
                        : ToNumber(cx, v, &d))) {
       return false;

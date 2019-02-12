@@ -150,15 +150,12 @@ nsresult mozSpellChecker::CheckWord(const nsAString &aWord, bool *aIsMisspelled,
   bool correct;
 
   if (XRE_IsContentProcess()) {
-    nsString wordwrapped = nsString(aWord);
-    bool rv;
-    if (aSuggestions) {
-      rv = mEngine->SendCheckAndSuggest(wordwrapped, aIsMisspelled,
-                                        aSuggestions);
-    } else {
-      rv = mEngine->SendCheck(wordwrapped, aIsMisspelled);
+    MOZ_ASSERT(aSuggestions, "Use CheckWords if content process");
+    if (!mEngine->SendCheckAndSuggest(nsString(aWord), aIsMisspelled,
+                                      aSuggestions)) {
+      return NS_ERROR_NOT_AVAILABLE;
     }
-    return rv ? NS_OK : NS_ERROR_NOT_AVAILABLE;
+    return NS_OK;
   }
 
   if (!mSpellCheckingEngine) {
