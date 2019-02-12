@@ -24,6 +24,9 @@
 #include "jit/OptimizationTracking.h"
 
 namespace js {
+
+class TypedArrayObject;
+
 namespace jit {
 
 class CodeGenerator;
@@ -493,6 +496,8 @@ class IonBuilder : public MIRGenerator,
 
   MInstruction* addArrayBufferByteLength(MDefinition* obj);
 
+  TypedArrayObject* tryTypedArrayEmbedConstantElements(MDefinition* obj);
+
   // Add instructions to compute a typed array's length and data.  Also
   // optionally convert |*index| into a bounds-checked definition, if
   // requested.
@@ -510,6 +515,10 @@ class IonBuilder : public MIRGenerator,
     addTypedArrayLengthAndData(obj, SkipBoundsCheck, nullptr, &length, nullptr);
     return length;
   }
+
+  // Add an instruction to compute a typed array's byte offset to the current
+  // block.
+  MInstruction* addTypedArrayByteOffset(MDefinition* obj);
 
   AbortReasonOr<Ok> improveThisTypesForCall();
 
@@ -778,6 +787,8 @@ class IonBuilder : public MIRGenerator,
   InliningResult inlineIsPossiblyWrappedTypedArray(CallInfo& callInfo);
   InliningResult inlineTypedArrayLength(CallInfo& callInfo);
   InliningResult inlinePossiblyWrappedTypedArrayLength(CallInfo& callInfo);
+  InliningResult inlineTypedArrayByteOffset(CallInfo& callInfo);
+  InliningResult inlineTypedArrayElementShift(CallInfo& callInfo);
   InliningResult inlineSetDisjointTypedElements(CallInfo& callInfo);
 
   // TypedObject intrinsics and natives.

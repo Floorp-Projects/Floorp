@@ -1452,6 +1452,12 @@ static bool TypedArray_lengthGetter(JSContext* cx, unsigned argc, Value* vp) {
   return TypedArrayObject::Getter<TypedArrayObject::lengthValue>(cx, argc, vp);
 }
 
+static bool TypedArray_byteOffsetGetter(JSContext* cx, unsigned argc,
+                                        Value* vp) {
+  return TypedArrayObject::Getter<TypedArrayObject::byteOffsetValue>(cx, argc,
+                                                                     vp);
+}
+
 bool BufferGetterImpl(JSContext* cx, const CallArgs& args) {
   MOZ_ASSERT(TypedArrayObject::is(args.thisv()));
   Rooted<TypedArrayObject*> tarray(
@@ -1506,8 +1512,7 @@ static bool TypedArray_toStringTagGetter(JSContext* cx, unsigned argc,
     JS_PSG("buffer", TypedArray_bufferGetter, 0),
     JS_PSG("byteLength",
            TypedArrayObject::Getter<TypedArrayObject::byteLengthValue>, 0),
-    JS_PSG("byteOffset",
-           TypedArrayObject::Getter<TypedArrayObject::byteOffsetValue>, 0),
+    JS_PSG("byteOffset", TypedArray_byteOffsetGetter, 0),
     JS_SYM_GET(toStringTag, TypedArray_toStringTagGetter, 0),
     JS_PS_END};
 
@@ -2029,6 +2034,10 @@ const Class TypedArrayObject::protoClasses[Scalar::MaxTypedArrayViewType] = {
 
 /* static */ bool TypedArrayObject::isOriginalLengthGetter(Native native) {
   return native == TypedArray_lengthGetter;
+}
+
+/* static */ bool TypedArrayObject::isOriginalByteOffsetGetter(Native native) {
+  return native == TypedArray_byteOffsetGetter;
 }
 
 bool js::IsTypedArrayConstructor(const JSObject* obj) {

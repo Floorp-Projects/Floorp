@@ -332,21 +332,21 @@ class AliasSet {
  public:
   enum Flag {
     None_ = 0,
-    ObjectFields = 1 << 0,       // shape, class, slots, length etc.
-    Element = 1 << 1,            // A Value member of obj->elements or
-                                 // a typed object.
-    UnboxedElement = 1 << 2,     // An unboxed scalar or reference member of
-                                 // typed object or unboxed object.
-    DynamicSlot = 1 << 3,        // A Value member of obj->slots.
-    FixedSlot = 1 << 4,          // A Value member of obj->fixedSlots().
-    DOMProperty = 1 << 5,        // A DOM property
-    FrameArgument = 1 << 6,      // An argument kept on the stack frame
-    WasmGlobalVar = 1 << 7,      // An asm.js/wasm private global var
-    WasmHeap = 1 << 8,           // An asm.js/wasm heap load
-    WasmHeapMeta = 1 << 9,       // The asm.js/wasm heap base pointer and
-                                 // bounds check limit, in Tls.
-    TypedArrayLength = 1 << 10,  // A typed array's length
-    WasmGlobalCell = 1 << 11,    // A wasm global cell
+    ObjectFields = 1 << 0,    // shape, class, slots, length etc.
+    Element = 1 << 1,         // A Value member of obj->elements or
+                              // a typed object.
+    UnboxedElement = 1 << 2,  // An unboxed scalar or reference member of
+                              // typed object or unboxed object.
+    DynamicSlot = 1 << 3,     // A Value member of obj->slots.
+    FixedSlot = 1 << 4,       // A Value member of obj->fixedSlots().
+    DOMProperty = 1 << 5,     // A DOM property
+    FrameArgument = 1 << 6,   // An argument kept on the stack frame
+    WasmGlobalVar = 1 << 7,   // An asm.js/wasm private global var
+    WasmHeap = 1 << 8,        // An asm.js/wasm heap load
+    WasmHeapMeta = 1 << 9,    // The asm.js/wasm heap base pointer and
+                              // bounds check limit, in Tls.
+    TypedArrayLengthOrOffset = 1 << 10,  // A typed array's length or byteOffset
+    WasmGlobalCell = 1 << 11,            // A wasm global cell
     Last = WasmGlobalCell,
     Any = Last | (Last - 1),
 
@@ -362,8 +362,6 @@ class AliasSet {
   explicit AliasSet(uint32_t flags) : flags_(flags) {}
 
  public:
-  static const char* Name(size_t flag);
-
   inline bool isNone() const { return flags_ == None_; }
   uint32_t flags() const { return flags_ & Any; }
   inline bool isStore() const { return !!(flags_ & Store_); }
@@ -7142,7 +7140,31 @@ class MTypedArrayLength : public MUnaryInstruction,
     return congruentIfOperandsEqual(ins);
   }
   AliasSet getAliasSet() const override {
-    return AliasSet::Load(AliasSet::TypedArrayLength);
+    return AliasSet::Load(AliasSet::TypedArrayLengthOrOffset);
+  }
+
+  void computeRange(TempAllocator& alloc) override;
+};
+
+// Read the byteOffset of a typed array.
+class MTypedArrayByteOffset : public MUnaryInstruction,
+                              public SingleObjectPolicy::Data {
+  explicit MTypedArrayByteOffset(MDefinition* obj)
+      : MUnaryInstruction(classOpcode, obj) {
+    setResultType(MIRType::Int32);
+    setMovable();
+  }
+
+ public:
+  INSTRUCTION_HEADER(TypedArrayByteOffset)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, object))
+
+  bool congruentTo(const MDefinition* ins) const override {
+    return congruentIfOperandsEqual(ins);
+  }
+  AliasSet getAliasSet() const override {
+    return AliasSet::Load(AliasSet::TypedArrayLengthOrOffset);
   }
 
   void computeRange(TempAllocator& alloc) override;
@@ -7170,6 +7192,28 @@ class MTypedArrayElements : public MUnaryInstruction,
   }
 
   ALLOW_CLONE(MTypedArrayElements)
+};
+
+// Return the element shift of a typed array, i.e. the shift value so that
+// |1 << shift| is equal to the element size.
+class MTypedArrayElementShift : public MUnaryInstruction,
+                                public SingleObjectPolicy::Data {
+  explicit MTypedArrayElementShift(MDefinition* obj)
+      : MUnaryInstruction(classOpcode, obj) {
+    setResultType(MIRType::Int32);
+    setMovable();
+  }
+
+ public:
+  INSTRUCTION_HEADER(TypedArrayElementShift)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, object))
+
+  bool congruentTo(const MDefinition* ins) const override {
+    return congruentIfOperandsEqual(ins);
+  }
+
+  void computeRange(TempAllocator& alloc) override;
 };
 
 class MSetDisjointTypedElements : public MTernaryInstruction,
