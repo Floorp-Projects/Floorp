@@ -20,6 +20,10 @@ const {getJSON} = require("devtools/client/shared/getjson");
 const Telemetry = require("devtools/client/shared/telemetry");
 const {RuntimeScanners} = require("devtools/client/webide/modules/runtimes");
 const {openContentLink} = require("devtools/client/shared/link");
+const {
+  checkVersionCompatibility,
+  COMPATIBILITY_STATUS,
+} = require("devtools/client/shared/remote-debugging/version-checker");
 
 loader.lazyRequireGetter(this, "adbAddon", "devtools/shared/adb/adb-addon", true);
 
@@ -737,12 +741,13 @@ var UI = {
   async checkRuntimeVersion() {
     if (AppManager.connected) {
       const { client } = AppManager.connection;
-      const report = await client.checkRuntimeVersion();
-      if (report.incompatible == "too-recent") {
+      const report = await checkVersionCompatibility(client);
+
+      if (report.status == COMPATIBILITY_STATUS.TOO_RECENT) {
         this.reportError("error_runtimeVersionTooRecent", report.runtimeID,
           report.localID);
       }
-      if (report.incompatible == "too-old") {
+      if (report.status == COMPATIBILITY_STATUS.TOO_OLD) {
         this.reportError("error_runtimeVersionTooOld", report.runtimeVersion,
           report.minVersion);
       }
