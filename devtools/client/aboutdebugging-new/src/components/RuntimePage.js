@@ -89,7 +89,7 @@ class RuntimePage extends PureComponent {
           },
           dom.button(
             {
-              className: "default-button",
+              className: "default-button js-profile-runtime-button",
               onClick: () => this.onProfilerButtonClick(),
             },
             "Profile Runtime"
