@@ -9,7 +9,7 @@ import { isDevelopment } from "devtools-environment";
 import Services from "devtools-services";
 import { asyncStoreHelper } from "./asyncStoreHelper";
 
-const prefsSchemaVersion = "1.0.6";
+const prefsSchemaVersion = "1.0.7";
 
 const pref = Services.pref;
 

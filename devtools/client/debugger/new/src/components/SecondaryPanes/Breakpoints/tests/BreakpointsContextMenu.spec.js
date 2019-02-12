@@ -30,7 +30,15 @@ function generateDefaults(disabled) {
         sourceId: "source-https://example.com/main.js",
         sourceUrl: "https://example.com/main.js"
       },
-      { id: "source-https://example.com/main.js:1:", disabled: disabled }
+      {
+        id: "https://example.com/main.js:1:",
+        disabled: disabled,
+        options: {
+          condition: "",
+          logValue: "",
+          hidden: false
+        }
+      }
     ),
     createBreakpoint(
       {
@@ -39,7 +47,13 @@ function generateDefaults(disabled) {
         sourceId: "source-https://example.com/main.js",
         sourceUrl: "https://example.com/main.js"
       },
-      { id: "source-https://example.com/main.js:2:", disabled: disabled }
+      {
+        id: "https://example.com/main.js:2:",
+        disabled: disabled,
+        options: {
+          hidden: false
+        }
+      }
     ),
     createBreakpoint(
       {
@@ -48,7 +62,11 @@ function generateDefaults(disabled) {
         sourceId: "source-https://example.com/main.js",
         sourceUrl: "https://example.com/main.js"
       },
-      { id: "source-https://example.com/main.js:3:", disabled: disabled }
+      {
+        id: "https://example.com/main.js:3:",
+        disabled: disabled,
+        options: {}
+      }
     )
   ];
 

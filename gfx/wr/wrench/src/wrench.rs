@@ -222,6 +222,7 @@ impl Wrench {
             chase_primitive,
             enable_picture_caching: true,
             testing: true,
+            max_texture_size: Some(8196), // Needed for rawtest::test_resize_image.
             ..Default::default()
         };
 

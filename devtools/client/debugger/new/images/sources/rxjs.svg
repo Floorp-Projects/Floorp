@@ -1,0 +1,33 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16">
+  <path d="M1.73 9.9C1 6.05 2.93 2.3 7.33 1.82a2.01 2.01 0 0 0-1.82-.58c-.67.22-.65.66-1.42 1.22-.76.44-1.14.1-1.7.56-.55.44-.16 1.47-.4 1.67-.23.4-.94.76-1.07 1.26-.11.65.29 1.1.27 1.66.05.46-.46.72-.38 1.1.21.6.63.98.83 1.14.05.04.1.12.09.07z" fill="#FF0090"/>
+  <path d="M9.58 4.55a.3.3 0 1 1 0-.58.3.3 0 0 1 0 .58zM1.9 10.33c-.7-3.36 1.46-6.17 5.65-4.79 2.46 1.44 5.56 1.35 5.7.42.34-1.12-1.57-3.42-4.43-4.02C3.15.84.09 6.97 1.9 10.34z" fill="url(#paint0_radial)"/>
+  <path d="M11.2 10.7a3.1 3.1 0 0 0 2.38-.7 6.2 6.2 0 0 1-4.12 2.04c.77.65 1.5.94 2.21.82-1.96.54-3.61-.06-5.61-2.05-.1.54.46 1.37 1.04 1.9-3.39-1.46-3.69-6.04.45-7.17C3.26 3.48.84 7.48 2.03 10.76a7.53 7.53 0 0 0 7.67 4.05 6.4 6.4 0 0 0 5.14-4.05A5.69 5.69 0 0 1 12.29 12c1.92-.96 2.95-2.6 2.66-4.82-.4.95-.92 1.67-1.58 2.17 1.4-2.17 1.16-3.3.13-4.53.73 2.03-.22 4.29-2.3 5.89z" fill="url(#paint1_radial)"/>
+  <path d="M10.22 13.04c-.15-.02.33.2-.6-.05-.91-.24-1.85-.47-3.56-2.18-.1.54.46 1.37 1.04 1.9 1.58 1.1.5.6 2.91 1.42.2-.38.2-.72.2-1.09z" fill="url(#paint2_linear)"/>
+  <path d="M7.16 4.4l.29-.45c.1-.17.25-.48.25-.48s-1.6-.52-2-.59c-1.23.32-1.23.84-.55 1.62.08.1 2-.1 2-.1z" fill="url(#paint3_linear)"/>
+  <defs>
+    <radialGradient id="paint0_radial" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="matrix(10.7025 0 0 7.65602 10.76 5.04)">
+      <stop stop-color="#F80090"/>
+      <stop offset="1" stop-color="#4D008E"/>
+    </radialGradient>
+    <radialGradient id="paint1_radial" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="matrix(10.8482 0 0 8.20619 10.85 5.27)">
+      <stop stop-color="#57008E"/>
+      <stop offset=".29" stop-color="#5C008E"/>
+      <stop offset="1" stop-color="#F80090"/>
+    </radialGradient>
+    <linearGradient id="paint2_linear" x1="6.8" y1="10.81" x2="8.72" y2="14.03" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F70090"/>
+      <stop offset=".67" stop-color="#E50090"/>
+      <stop offset=".83" stop-color="#D6008F" stop-opacity=".2"/>
+      <stop offset="1" stop-color="#C10090" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="paint3_linear" x1="6.65" y1="4.06" x2="6.37" y2="3.53" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#B2008F" stop-opacity=".15"/>
+      <stop offset=".4" stop-color="#F70090" stop-opacity=".4"/>
+      <stop offset=".65" stop-color="#F60090" stop-opacity=".89"/>
+      <stop offset="1" stop-color="#FF0090"/>
+    </linearGradient>
+  </defs>
+</svg>

@@ -25,9 +25,11 @@ export function mockPendingBreakpoint(overrides: Object = {}) {
       },
       index: 0
     },
-    condition: condition || null,
-    disabled: disabled || false,
-    hidden: hidden || false
+    options: {
+      condition: condition || null,
+      hidden: hidden || false
+    },
+    disabled: disabled || false
   };
 }
 

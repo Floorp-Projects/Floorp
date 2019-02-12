@@ -19,10 +19,6 @@
   color: var(--theme-highlight-blue);
 }
 
-.frames ul .frames-group.expanded .react path {
-  fill: var(--theme-highlight-blue);
-}
-
 .frames ul .frames-group .frames-list li {
   padding-left: 30px;
 }

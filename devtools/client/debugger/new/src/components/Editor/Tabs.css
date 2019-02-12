@@ -8,6 +8,7 @@
   height: var(--editor-header-height);
   border-bottom: 1px solid var(--theme-splitter-color);
   background-color: var(--theme-toolbar-background);
+  --overflow-button-width: 28px;
 }
 
 .source-header * {
@@ -23,8 +24,11 @@
 }
 
 .source-tabs {
-  max-width: calc(100% - 80px);
+  flex: auto;
   align-self: flex-start;
+  align-items: flex-start;
+  /* Reserve space for the overflow button (even if not visible) */
+  padding-inline-end: 28px;
 }
 
 .source-tab {
@@ -34,7 +38,7 @@
   min-width: 40px;
   max-width: 100%;
   overflow: hidden;
-  padding: 5px;
+  padding: 4px 10px;
   cursor: default;
   height: calc(var(--editor-header-height) - 1px);
   font-size: 12px;
@@ -73,54 +77,41 @@
   transform: scaleX(1);
 }
 
-.source-tab .source-icon {
-  margin-inline-end: 0;
-}
-
 .source-tab .img.prettyPrint,
-.source-tab .source-icon.blackBox {
-  height: 12px;
-  width: 12px;
-  align-self: center;
-}
-
-.source-tab .img.react {
-  mask: url(/images/react.svg) no-repeat;
-  mask-size: 100%;
-  height: 14px;
-  width: 14px;
-  background: var(--theme-highlight-bluegrey);
-  top: 0;
+.source-tab .img.blackBox {
+  mask-size: 14px;
+  background-color: currentColor;
 }
 
 .source-tab .filename {
+  display: block;
   white-space: nowrap;
   text-overflow: ellipsis;
   overflow: hidden;
-  padding: 0 4px;
-  align-self: center;
-  margin-bottom: 1px;
+  padding-inline-end: 4px;
 }
 
 .source-tab .filename span {
   opacity: 0.7;
-  padding-left: 4px;
+  padding-inline-start: 4px;
 }
 
 .source-tab .close-btn {
   visibility: hidden;
-  line-height: 0;
+  margin-inline-end: -6px;
 }
 
 .source-tab.active .close-btn {
-  visibility: visible;
+  color: inherit;
 }
 
-.source-tab.active .close {
-  visibility: visible;
-  background-color: var(--theme-toolbar-selected-color);
-}
-
+.source-tab.active .close-btn,
 .source-tab:hover .close-btn {
   visibility: visible;
+}
+
+.source-tab .close-btn:hover,
+.source-tab .close-btn:focus {
+  color: var(--theme-selection-color);
+  background-color: var(--theme-selection-background);
 }

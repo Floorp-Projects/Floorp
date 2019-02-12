@@ -4,7 +4,7 @@
 
 .search-container {
   position: absolute;
-  top: 30px;
+  top: var(--editor-header-height);
   left: 0;
   width: calc(100% - 1px);
   height: calc(100% - 31px);
@@ -100,10 +100,6 @@
   flex-grow: 1;
   width: 100%;
   border-bottom: none;
-}
-
-.project-text-search .search-field .close-btn.big {
-  margin-top: 2px;
 }
 
 .project-text-search .managed-tree {

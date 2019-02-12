@@ -98,11 +98,12 @@ function pendingBreakpoint(overrides) {
       },
       index: 0
     },
-    condition: null,
+    options: {
+      logValue: "",
+      hidden: false
+    },
     disabled: false,
-    hidden: false,
     loading: false,
-    options: {},
     text: "",
     ...overrides
   };
