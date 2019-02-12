@@ -12583,33 +12583,6 @@
     "releaseChannelCollection": "opt-out",
     "description": "Graphics Crash Reason (...)"
   },
-  "WEB_NOTIFICATION_CLICKED": {
-    "record_in_processes": ["main", "content"],
-    "releaseChannelCollection": "opt-out",
-    "alert_emails": ["firefox-dev@mozilla.org", "push@mozilla.com"],
-    "bug_numbers": [1225336, 1429286],
-    "expires_in_version": "never",
-    "kind": "count",
-    "description": "Count of times a web notification was clicked"
-  },
-  "WEB_NOTIFICATION_MENU": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["firefox-dev@mozilla.org"],
-    "bug_numbers": [1225336],
-    "expires_in_version": "50",
-    "kind": "enumerated",
-    "n_values": 5,
-    "description": "Count of times a contextual menu item was used from a Notification (0: DND, 1: Disable, 2: Settings)"
-  },
-  "WEB_NOTIFICATION_SHOWN": {
-    "record_in_processes": ["main", "content"],
-    "releaseChannelCollection": "opt-out",
-    "alert_emails": ["firefox-dev@mozilla.org", "push@mozilla.com"],
-    "bug_numbers": [1225336, 1429286],
-    "expires_in_version": "never",
-    "kind": "count",
-    "description": "Count of times a Notification was rendered (accounting for XUL DND). A system backend may put the notification directly into the tray if its own DND is on."
-  },
   "WEBFONT_DOWNLOAD_TIME": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["jdaggett@mozilla.com"],
@@ -12708,24 +12681,6 @@
     "expires_in_version": "50",
     "kind": "flag",
     "description": "Whether the do not disturb option is supported. True if the browser uses XUL alerts."
-  },
-  "WEB_NOTIFICATION_EXCEPTIONS_OPENED": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["firefox-dev@mozilla.org"],
-    "bug_numbers": [1219030],
-    "expires_in_version": "50",
-    "kind": "count",
-    "description": "Number of times the Notification Permissions dialog has been opened."
-  },
-  "WEB_NOTIFICATION_PERMISSIONS": {
-    "record_in_processes": ["main", "content"],
-    "releaseChannelCollection": "opt-out",
-    "alert_emails": ["firefox-dev@mozilla.org", "push@mozilla.com"],
-    "bug_numbers": [1219030, 1429286],
-    "expires_in_version": "never",
-    "kind": "enumerated",
-    "n_values": 10,
-    "description": "Number of origins with the web notifications permission (0 = denied, 1 = allowed)."
   },
   "PLUGIN_DRAWING_MODEL": {
     "record_in_processes": ["main", "content"],
