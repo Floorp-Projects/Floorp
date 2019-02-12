@@ -2313,11 +2313,20 @@ int DataChannelConnection::ReceiveCallback(struct socket *sock, void *data,
   if (!data) {
     LOG(("ReceiveCallback: SCTP has finished shutting down"));
   } else {
-    mLock.AssertCurrentThreadOwns();
+    bool locked = false;
+    if (!IsSTSThread()) {
+      mLock.Lock();
+      locked = true;
+    } else {
+      mLock.AssertCurrentThreadOwns();
+    }
     if (flags & MSG_NOTIFICATION) {
       HandleNotification(static_cast<union sctp_notification *>(data), datalen);
     } else {
       HandleMessage(data, datalen, ntohl(rcv.rcv_ppid), rcv.rcv_sid, flags);
+    }
+    if (locked) {
+      mLock.Unlock();
     }
   }
   // sctp allocates 'data' with malloc(), and expects the receiver to free
