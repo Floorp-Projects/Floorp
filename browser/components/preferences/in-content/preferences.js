@@ -426,3 +426,25 @@ function maybeDisplayPoliciesNotice() {
     document.getElementById("policies-container").removeAttribute("hidden");
   }
 }
+
+/**
+ * Filter the lastFallbackLocale from availableLocales if it doesn't have all
+ * of the needed strings.
+ *
+ * When the lastFallbackLocale isn't the defaultLocale, then by default only
+ * fluent strings are included. To fully use that locale you need the langpack
+ * to be installed, so if it isn't installed remove it from availableLocales.
+ */
+async function getAvailableLocales() {
+  let {availableLocales, defaultLocale, lastFallbackLocale} = Services.locale;
+  // If defaultLocale isn't lastFallbackLocale, then we still need the langpack
+  // for lastFallbackLocale for it to be useful.
+  if (defaultLocale != lastFallbackLocale) {
+    let lastFallbackId = `langpack-${lastFallbackLocale}@firefox.mozilla.org`;
+    let lastFallbackInstalled = await AddonManager.getAddonByID(lastFallbackId);
+    if (!lastFallbackInstalled) {
+      return availableLocales.filter(locale => locale != lastFallbackLocale);
+    }
+  }
+  return availableLocales;
+}
