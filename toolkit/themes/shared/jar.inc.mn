@@ -105,4 +105,7 @@ toolkit.jar:
   skin/classic/global/plugins/contentPluginBlocked.png      (../../shared/plugins/contentPluginBlocked.png)
   skin/classic/global/plugins/contentPluginCrashed.png      (../../shared/plugins/contentPluginCrashed.png)
   skin/classic/global/plugins/contentPluginStripe.png       (../../shared/plugins/contentPluginStripe.png)
+#ifdef NIGHTLY_BUILD
   skin/classic/global/pictureinpicture/player.css           (../../shared/pictureinpicture/player.css)
+#endif
+
