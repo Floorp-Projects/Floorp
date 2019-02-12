@@ -27,4 +27,4 @@ class Observer {
       Observer.observe(type, wrappedObserver);
     });
   }
-};
+}

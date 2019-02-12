@@ -87,4 +87,4 @@ class MessageChannel {
       Ci.nsISupportsWeakReference,
     ]);
   }
-};
+}

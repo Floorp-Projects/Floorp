@@ -99,7 +99,7 @@ class Log extends Domain {
       },
     };
   }
-};
+}
 
 Log.LogEntry = {
   schema: {

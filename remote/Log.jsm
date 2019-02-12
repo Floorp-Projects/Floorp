@@ -17,4 +17,4 @@ class Log {
     }
     return logger;
   }
-};
+}

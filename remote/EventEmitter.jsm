@@ -131,7 +131,7 @@ class EventEmitter {
   emit(...args) {
     EventEmitter.emit(this, ...args);
   }
-};
+}
 
 function invoke(listener, target, type, ...args) {
   if (!listener) {
