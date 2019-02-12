@@ -42,6 +42,7 @@ impl<'a> RawtestHarness<'a> {
 
     pub fn run(mut self) {
         self.test_hit_testing();
+        self.test_resize_image();
         self.test_retained_blob_images_test();
         self.test_blob_update_test();
         self.test_blob_update_epoch_test();
@@ -87,6 +88,102 @@ impl<'a> RawtestHarness<'a> {
         self.wrench.api.send_transaction(self.wrench.document_id, txn);
     }
 
+    fn test_resize_image(&mut self) {
+        println!("\tresize image...");
+        // This test changes the size of an image to make it go switch back and forth
+        // between tiled and non-tiled.
+        // The resource cache should be able to handle this without crashing.
+
+        let layout_size = LayoutSize::new(800., 800.);
+
+        let mut txn = Transaction::new();
+        let img = self.wrench.api.generate_image_key();
+
+        // Start with a non-tiled image.
+        txn.add_image(
+            img,
+            ImageDescriptor::new(64, 64, ImageFormat::BGRA8, true, false),
+            ImageData::new(vec![255; 64 * 64 * 4]),
+            None,
+        );
+
+        let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id, layout_size);
+        let info = LayoutPrimitiveInfo::new(rect(0.0, 0.0, 64.0, 64.0));
+
+        builder.push_image(
+            &info,
+            &SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id),
+            size(64.0, 64.0),
+            size(64.0, 64.0),
+            ImageRendering::Auto,
+            AlphaType::PremultipliedAlpha,
+            img,
+            ColorF::WHITE,
+        );
+
+        let mut epoch = Epoch(0);
+
+        self.submit_dl(&mut epoch, layout_size, builder, &txn.resource_updates);
+        self.rx.recv().unwrap();
+        self.wrench.render();
+
+        let mut txn = Transaction::new();
+        // Resize the image to something bigger than the max texture size (8196) to force tiling.
+        txn.update_image(
+            img,
+            ImageDescriptor::new(8200, 32, ImageFormat::BGRA8, true, false),
+            ImageData::new(vec![255; 8200 * 32 * 4]),
+            &DirtyRect::All,
+        );
+
+        let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id, layout_size);
+        let info = LayoutPrimitiveInfo::new(rect(0.0, 0.0, 1024.0, 1024.0));
+
+        builder.push_image(
+            &info,
+            &SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id),
+            size(1024.0, 1024.0),
+            size(1024.0, 1024.0),
+            ImageRendering::Auto,
+            AlphaType::PremultipliedAlpha,
+            img,
+            ColorF::WHITE,
+        );
+
+        self.submit_dl(&mut epoch, layout_size, builder, &txn.resource_updates);
+        self.rx.recv().unwrap();
+        self.wrench.render();
+
+        // Resize back to something doesn't require tiling.
+        txn.update_image(
+            img,
+            ImageDescriptor::new(64, 64, ImageFormat::BGRA8, true, false),
+            ImageData::new(vec![64; 64 * 64 * 4]),
+            &DirtyRect::All,
+        );
+
+        let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id, layout_size);
+        let info = LayoutPrimitiveInfo::new(rect(0.0, 0.0, 1024.0, 1024.0));
+
+        builder.push_image(
+            &info,
+            &SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id),
+            size(1024.0, 1024.0),
+            size(1024.0, 1024.0),
+            ImageRendering::Auto,
+            AlphaType::PremultipliedAlpha,
+            img,
+            ColorF::WHITE,
+        );
+
+        self.submit_dl(&mut epoch, layout_size, builder, &txn.resource_updates);
+        self.rx.recv().unwrap();
+        self.wrench.render();
+
+        txn = Transaction::new();
+        txn.delete_image(img);
+        self.wrench.api.update_resources(txn.resource_updates);
+    }
 
     fn test_tile_decomposition(&mut self) {
         println!("\ttile decomposition...");

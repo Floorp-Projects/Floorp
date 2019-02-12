@@ -66,6 +66,14 @@ if CONFIG['MOZ_ENABLE_D3D10_LAYER']:
         'RenderCompositorANGLE.cpp',
     ]
 
+if CONFIG['MOZ_WAYLAND']:
+    EXPORTS.mozilla.webrender += [
+        'RenderCompositorEGL.h',
+    ]
+    SOURCES += [
+        'RenderCompositorEGL.cpp',
+    ]
+
 if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gtk3'):
     CXXFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']
     CXXFLAGS += CONFIG['CAIRO_FT_CFLAGS']
@@ -91,6 +99,8 @@ if CONFIG['COMPILE_ENVIRONMENT']:
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
+
+CXXFLAGS += CONFIG['TK_CFLAGS']
 
 if CONFIG['CC_TYPE'] == 'clang-cl':
     AllowCompilerWarnings()  # workaround for bug 1090497

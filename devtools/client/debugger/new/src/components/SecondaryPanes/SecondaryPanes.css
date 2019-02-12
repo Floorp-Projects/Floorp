@@ -53,16 +53,6 @@
   display: flex;
 }
 
-.secondary-panes .accordion .plus svg {
-  width: 12px;
-  margin-top: 3px;
-  fill: var(--theme-body-color);
-}
-
-.secondary-panes .accordion .plus.active svg {
-  fill: var(--theme-highlight-blue);
-}
-
 .dropdown {
   width: 20em;
   overflow: auto;

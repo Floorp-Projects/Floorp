@@ -128,7 +128,7 @@ exports[`ProjectSearch found search results 1`] = `
           summaryMsg="5 results"
         >
           <div
-            className="search-shadow"
+            className="search-outline"
           >
             <div
               aria-expanded={false}
@@ -137,26 +137,13 @@ exports[`ProjectSearch found search results 1`] = `
               className="search-field big"
               role="combobox"
             >
-              <Svg
-                name="magnifying-glass"
+              <AccessibleImage
+                className="search"
               >
-                <InlineSVG
-                  className="magnifying-glass "
-                  element="i"
-                  raw={false}
-                  src="<svg></svg>"
-                >
-                  <i
-                    className="magnifying-glass "
-                    dangerouslySetInnerHTML={
-                      Object {
-                        "__html": "<svg></svg>",
-                      }
-                    }
-                    src={null}
-                  />
-                </InlineSVG>
-              </Svg>
+                <span
+                  className="img search"
+                />
+              </AccessibleImage>
               <input
                 aria-activedescendant=""
                 aria-autocomplete="list"
@@ -171,7 +158,7 @@ exports[`ProjectSearch found search results 1`] = `
                 value="match"
               />
               <div
-                className="summary"
+                className="search-field-summary"
               >
                 5 results
               </div>

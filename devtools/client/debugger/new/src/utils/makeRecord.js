@@ -43,7 +43,7 @@ export type Record<T: Object> = {
  * @memberof utils/makeRecord
  * @static
  */
-function makeRecord<T>(spec: T & Object): (init: $Shape<T>) => Record<T> {
+function makeRecord<T>(spec: T & Object): () => Record<T> {
   return I.Record(spec);
 }
 

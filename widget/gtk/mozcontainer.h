@@ -77,6 +77,7 @@ struct _MozContainer {
   struct wl_egl_window *eglwindow;
   struct wl_callback *frame_callback_handler;
   gboolean surface_needs_clear;
+  gboolean egl_surface_needs_update;
   gboolean ready_to_draw;
 #endif
   gboolean force_default_visual;
@@ -100,6 +101,7 @@ gboolean moz_container_has_wl_egl_window(MozContainer *container);
 gboolean moz_container_surface_needs_clear(MozContainer *container);
 void moz_container_scale_changed(MozContainer *container,
                                  GtkAllocation *aAllocation);
+gboolean moz_container_egl_surface_needs_update(MozContainer *container);
 #endif
 
 #endif /* __MOZ_CONTAINER_H__ */

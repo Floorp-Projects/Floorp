@@ -7,8 +7,8 @@
   --editor-header-height: 29px;
   /* footer height is 24px + 1px for its border */
   --editor-footer-height: 25px;
-  /* searchbar height is 24px + 2px for its top and bottom borders */
-  --editor-searchbar-height: 26px;
+  /* searchbar height is 24px + 1px for its top border */
+  --editor-searchbar-height: 25px;
 }
 
 :root.theme-light,
