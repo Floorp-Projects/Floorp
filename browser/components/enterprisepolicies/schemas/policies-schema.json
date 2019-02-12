@@ -638,9 +638,6 @@
               "URLTemplate": {
                 "type": "string"
               },
-              "PostData": {
-                "type": "string"
-              },
               "SuggestURLTemplate": {
                 "type": "string"
               }
