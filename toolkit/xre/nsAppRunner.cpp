@@ -2070,8 +2070,8 @@ static nsCOMPtr<nsIToolkitProfile> gResetOldProfile;
 // 6) display the profile-manager UI
 static nsresult SelectProfile(nsIProfileLock** aResult,
                               nsToolkitProfileService* aProfileSvc,
-                              nsINativeAppSupport* aNative, bool* aStartOffline,
-                              nsACString* aProfileName) {
+                              nsINativeAppSupport* aNative,
+                              bool* aStartOffline) {
   StartupTimeline::Record(StartupTimeline::SELECT_PROFILE);
 
   nsresult rv;
@@ -2180,11 +2180,6 @@ static nsresult SelectProfile(nsIProfileLock** aResult,
       rv = profile->GetLocalDir(getter_AddRefs(localDir));
       NS_ENSURE_SUCCESS(rv, rv);
       SaveFileToEnv("XRE_PROFILE_LOCAL_PATH", localDir);
-
-      rv = profile->GetName(*aProfileName);
-      if (NS_FAILED(rv)) {
-        aProfileName->Truncate(0);
-      }
     } else {
       NS_WARNING("Profile reset failed.");
       return NS_ERROR_ABORT;
@@ -2217,13 +2212,6 @@ static nsresult SelectProfile(nsIProfileLock** aResult,
     }
     if (NS_SUCCEEDED(rv)) {
       StartupTimeline::Record(StartupTimeline::AFTER_PROFILE_LOCKED);
-      // Try to grab the profile name.
-      if (aProfileName && profile) {
-        rv = profile->GetName(*aProfileName);
-        if (NS_FAILED(rv)) {
-          aProfileName->Truncate(0);
-        }
-      }
       return NS_OK;
     }
     PR_Sleep(kLockRetrySleepMS);
@@ -3003,7 +2991,6 @@ class XREMain {
   UniquePtr<XREAppData> mAppData;
 
   nsXREDirProvider mDirProvider;
-  nsAutoCString mProfileName;
   nsAutoCString mDesktopStartupID;
 
   bool mStartOffline;
@@ -4184,7 +4171,7 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
   }
 
   rv = SelectProfile(getter_AddRefs(mProfileLock), mProfileSvc, mNativeApp,
-                     &mStartOffline, &mProfileName);
+                     &mStartOffline);
   if (rv == NS_ERROR_LAUNCHED_CHILD_PROCESS || rv == NS_ERROR_ABORT) {
     *aExitFlag = true;
     return 0;
