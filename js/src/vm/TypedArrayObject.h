@@ -43,6 +43,9 @@ class TypedArrayObject : public ArrayBufferViewObject {
   static constexpr int lengthOffset() {
     return NativeObject::getFixedSlotOffset(LENGTH_SLOT);
   }
+  static constexpr int byteOffsetOffset() {
+    return NativeObject::getFixedSlotOffset(BYTEOFFSET_SLOT);
+  }
   static constexpr int dataOffset() {
     return NativeObject::getPrivateDataOffset(DATA_SLOT);
   }
@@ -147,6 +150,8 @@ class TypedArrayObject : public ArrayBufferViewObject {
   static constexpr uint32_t SINGLETON_BYTE_LENGTH = 1024 * 1024 * 10;
 
   static bool isOriginalLengthGetter(Native native);
+
+  static bool isOriginalByteOffsetGetter(Native native);
 
   static void finalize(FreeOp* fop, JSObject* obj);
   static size_t objectMoved(JSObject* obj, JSObject* old);
@@ -274,7 +279,7 @@ bool DefineTypedArrayElement(JSContext* cx, HandleObject arr, uint64_t index,
                              Handle<PropertyDescriptor> desc,
                              ObjectOpResult& result);
 
-static inline unsigned TypedArrayShift(Scalar::Type viewType) {
+static inline constexpr unsigned TypedArrayShift(Scalar::Type viewType) {
   switch (viewType) {
     case Scalar::Int8:
     case Scalar::Uint8:
@@ -290,9 +295,9 @@ static inline unsigned TypedArrayShift(Scalar::Type viewType) {
     case Scalar::Int64:
     case Scalar::Float64:
       return 3;
-    default:;
+    default:
+      MOZ_CRASH("Unexpected array type");
   }
-  MOZ_CRASH("Unexpected array type");
 }
 
 static inline unsigned TypedArrayElemSize(Scalar::Type viewType) {
