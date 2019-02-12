@@ -1072,4 +1072,15 @@ interface nsILoadInfo : nsISupports
    * or https://html.spec.whatwg.org/multipage/obsolete.html#process-the-frame-attributes
    */
   [infallible] readonly attribute boolean isFromProcessingFrameAttributes;
+
+  cenum CrossOriginOpenerPolicy : 8 {
+    OPENER_POLICY_NULL           = 0,
+    OPENER_POLICY_SAME_ORIGIN    = 1,
+    OPENER_POLICY_SAME_SITE      = 2,
+    OPENER_POLICY_UNSAFE_ALLOW_OUTGOING_FLAG = 0x80,
+    OPENER_POLICY_SAME_ORIGIN_ALLOW_OUTGOING = OPENER_POLICY_SAME_ORIGIN | OPENER_POLICY_UNSAFE_ALLOW_OUTGOING_FLAG,
+    OPENER_POLICY_SAME_SITE_ALLOW_OUTGOING = OPENER_POLICY_SAME_SITE | OPENER_POLICY_UNSAFE_ALLOW_OUTGOING_FLAG
+  };
+
+  [infallible] attribute nsILoadInfo_CrossOriginOpenerPolicy openerPolicy;
 };
