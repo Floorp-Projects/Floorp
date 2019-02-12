@@ -35,6 +35,7 @@
 #include "mozilla/Unused.h"
 #include "mozilla/dom/LocationBinding.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "ReferrerInfo.h"
 
 namespace mozilla {
 namespace dom {
@@ -151,8 +152,9 @@ already_AddRefed<nsDocShellLoadState> Location::CheckURL(
   loadState->SetTriggeringPrincipal(triggeringPrincipal);
 
   if (sourceURI) {
-    loadState->SetReferrer(sourceURI);
-    loadState->SetReferrerPolicy(referrerPolicy);
+    nsCOMPtr<nsIReferrerInfo> referrerInfo =
+        new ReferrerInfo(sourceURI, referrerPolicy);
+    loadState->SetReferrerInfo(referrerInfo);
   }
 
   return loadState.forget();

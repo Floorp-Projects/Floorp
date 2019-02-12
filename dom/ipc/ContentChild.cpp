@@ -166,6 +166,7 @@
 #  include "nsPrintingProxy.h"
 #endif
 #include "nsWindowMemoryReporter.h"
+#include "nsIReferrerInfo.h"
 
 #include "IHistory.h"
 #include "nsNetUtil.h"
@@ -778,12 +779,12 @@ static nsresult GetCreateWindowParams(mozIDOMWindowProxy* aParent,
   }
 
   baseURI->GetSpec(aBaseURIString);
-
   if (aLoadState) {
-    if (!aLoadState->SendReferrer()) {
-      *aReferrerPolicy = mozilla::net::RP_No_Referrer;
+    nsCOMPtr<nsIReferrerInfo> referrerInfo = aLoadState->GetReferrerInfo();
+    if (referrerInfo && referrerInfo->GetSendReferrer()) {
+      referrerInfo->GetReferrerPolicy(aReferrerPolicy);
     } else {
-      *aReferrerPolicy = aLoadState->ReferrerPolicy();
+      *aReferrerPolicy = mozilla::net::RP_No_Referrer;
     }
   }
 

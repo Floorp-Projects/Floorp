@@ -21,6 +21,7 @@ interface nsIStructuredCloneContainer;
 interface nsIBFCacheEntry;
 interface nsIPrincipal;
 interface nsISHistory;
+interface nsIReferrerInfo;
 
 %{C++
 #include "nsRect.h"
@@ -70,14 +71,8 @@ interface nsISHEntry : nsISupports
      */
     [infallible] attribute boolean isSubFrame;
 
-    /** Referrer URI */
-    [infallible] attribute nsIURI referrerURI;
-
-    /**
-     * Referrer policy, holding one of the values (REFERRER_POLICY_*) defined
-     * in nsIHttpChannel.
-     */
-    [infallible] attribute unsigned long referrerPolicy;
+    /** Referrer Info*/
+    [infallible] attribute nsIReferrerInfo referrerInfo;
 
     /** Content viewer, for fast restoration of presentation */
     [infallible] attribute nsIContentViewer contentViewer;

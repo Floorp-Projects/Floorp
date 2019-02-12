@@ -611,13 +611,6 @@ nsWebBrowser::GetCurrentURI(nsIURI** aURI) {
   return mDocShellAsNav->GetCurrentURI(aURI);
 }
 
-NS_IMETHODIMP
-nsWebBrowser::GetReferringURI(nsIURI** aURI) {
-  NS_ENSURE_STATE(mDocShell);
-
-  return mDocShellAsNav->GetReferringURI(aURI);
-}
-
 // XXX(nika): Consider making the mozilla::dom::ChildSHistory version the
 // canonical one?
 NS_IMETHODIMP
