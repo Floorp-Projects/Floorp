@@ -13369,6 +13369,17 @@
     "bug_numbers": [1411632],
     "description": "The time between navigation start and the first non-blank paint of a foreground root content document, in milliseconds. This only records documents that were in an active docshell throughout the whole time between navigation start and non-blank paint. The non-blank paint timestamp is taken during display list building and does not include rasterization or compositing of that paint.  This probe only accumulates when there were no active-tab network load optimizations happening during the interval."
   },
+  "TIME_TO_FIRST_CONTENTFUL_PAINT_MS": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["hkirschner@mozilla.com", "vchin@mozilla.com", "sphilp@mozilla.com", "dstrohmeier@mozilla.com"],
+    "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
+    "kind": "exponential",
+    "high": 100000,
+    "n_buckets": 100,
+    "bug_numbers": [1515132],
+    "description": "The time between navigation start and the first contentful paint of a foreground root content document, in milliseconds. This only records documents that were in an active docshell throughout the whole time between navigation start and contentful paint. The contentful paint timestamp is taken during display list building and does not include rasterization or compositing of that paint."
+  },
   "TAB_AUDIO_INDICATOR_USED": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["alwu@mozilla.com"],

@@ -458,6 +458,11 @@ void nsDOMNavigationTiming::NotifyContentfulPaintForRootContentDocument() {
                                        TTI_WINDOW_SIZE_MS,
                                        nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY,
                                        "nsDOMNavigationTiming::TTITimeout");
+
+  if (mDocShellHasBeenActiveSinceNavigationStart) {
+    Telemetry::AccumulateTimeDelta(Telemetry::TIME_TO_FIRST_CONTENTFUL_PAINT_MS,
+                                   mNavigationStart, mContentfulPaint);
+  }
 }
 
 void nsDOMNavigationTiming::NotifyDOMContentFlushedForRootContentDocument() {
