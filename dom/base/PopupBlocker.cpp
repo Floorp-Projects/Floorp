@@ -318,18 +318,18 @@ PopupBlocker::PopupControlState PopupBlocker::GetEventPopupControlState(
             default:
               break;
           }
-        } else if (aEvent->AsMouseEvent()->button ==
-                   WidgetMouseEvent::eRightButton) {
-          abuse = PopupBlocker::openBlocked;
-          switch (aEvent->mMessage) {
-            case eContextMenu:
-              if (PopupAllowedForEvent("contextmenu")) {
-                abuse = PopupBlocker::openControlled;
-              }
-              break;
-            default:
-              break;
-          }
+        }
+
+        switch (aEvent->mMessage) {
+          case eContextMenu:
+            if (PopupAllowedForEvent("contextmenu")) {
+              abuse = PopupBlocker::openControlled;
+            } else {
+              abuse = PopupBlocker::openBlocked;
+            }
+            break;
+          default:
+            break;
         }
       }
       break;
