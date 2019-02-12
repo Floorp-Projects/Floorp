@@ -36,9 +36,9 @@
   stroke: var(--theme-graphs-orange);
 }
 
-.column-breakpoint.has-condition.log svg {
-  fill: var(--theme-graphs-orange);
-  stroke: var(--theme-graphs-yellow);
+.column-breakpoint.has-log svg {
+  fill: var(--theme-graphs-purple);
+  stroke: var(--purple-60);
 }
 
 .theme-dark .column-breakpoint.active svg {

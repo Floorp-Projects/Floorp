@@ -110,20 +110,12 @@ html:not([dir="rtl"]) .breakpoints-exceptions {
   border-left: 4px solid transparent;
 }
 
-html:not([dir="rtl"]) .breakpoints-list .breakpoint.is-conditional {
-  border-left-color: var(--theme-graphs-yellow);
+html .breakpoints-list .breakpoint.is-conditional {
+  border-inline-start-color: var(--theme-graphs-yellow);
 }
 
-html[dir="rtl"] .breakpoints-list .breakpoint.is-conditional {
-  border-right-color: var(--theme-graphs-yellow);
-}
-
-html:not([dir="rtl"]) .breakpoints-list .breakpoint.is-conditional.log {
-  border-left-color: var(--theme-graphs-orange);
-}
-
-html[dir="rtl"] .breakpoints-list .breakpoint.is-conditional.log {
-  border-right-color: var(--theme-graphs-orange);
+html .breakpoints-list .breakpoint.is-log {
+  border-inline-start-color: var(--theme-graphs-purple);
 }
 
 html .breakpoints-list .breakpoint.paused {

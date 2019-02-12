@@ -33,30 +33,6 @@ export const removeBreakpointItem = (
   accelerator: L10N.getStr("toggleBreakpoint.key")
 });
 
-export const createConditionalBreakpointItem = (
-  location: SourceLocation,
-  breakpointActions: BreakpointItemActions
-) => ({
-  id: "node-menu-add-conditional-breakpoint",
-  label: L10N.getStr("editor.addConditionalBreakpoint"),
-  accelerator: L10N.getStr("toggleCondPanel.key"),
-  accesskey: L10N.getStr("editor.addConditionBreakpoint.accesskey"),
-  disabled: false,
-  click: () => breakpointActions.openConditionalPanel(location)
-});
-
-export const createLogBreakpointItem = (
-  location: SourceLocation,
-  breakpointActions: BreakpointItemActions
-) => ({
-  id: "node-menu-add-log-breakpoint",
-  label: L10N.getStr("editor.addLogBreakpoint"),
-  accelerator: L10N.getStr("toggleCondPanel.key"),
-  accesskey: L10N.getStr("editor.addConditionBreakpoint.accesskey"),
-  disabled: false,
-  click: () => breakpointActions.openConditionalPanel(location)
-});
-
 export const addConditionalBreakpointItem = (
   location: SourceLocation,
   breakpointActions: BreakpointItemActions
@@ -123,10 +99,10 @@ export const logPointItem = (
   breakpointActions: BreakpointItemActions
 ) => {
   const {
-    options: { condition },
+    options: { logValue },
     location
   } = breakpoint;
-  return condition
+  return logValue
     ? editLogPointItem(location, breakpointActions)
     : addLogPointItem(location, breakpointActions);
 };
@@ -176,6 +152,7 @@ export function breakpointItems(
   if (features.logPoints) {
     items.push(logPointItem(breakpoint, breakpointActions));
   }
+
   return items;
 }
 
@@ -185,11 +162,11 @@ export function createBreakpointItems(
 ) {
   const items = [
     addBreakpointItem(location, breakpointActions),
-    createConditionalBreakpointItem(location, breakpointActions)
+    addConditionalBreakpointItem(location, breakpointActions)
   ];
 
   if (features.logPoints) {
-    items.push(createLogBreakpointItem(location, breakpointActions));
+    items.push(addLogPointItem(location, breakpointActions));
   }
   return items;
 }
