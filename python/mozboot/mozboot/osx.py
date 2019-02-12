@@ -516,8 +516,10 @@ class OSXBootstrapper(BaseBootstrapper):
 
         return active_name.lower()
 
-    def ensure_clang_static_analysis_package(self, checkout_root):
-        self.install_toolchain_static_analysis(checkout_root)
+    def ensure_clang_static_analysis_package(self, state_dir, checkout_root):
+        from mozboot import static_analysis
+        self.install_toolchain_static_analysis(
+            state_dir, checkout_root, static_analysis.MACOS_CLANG_TIDY)
 
     def ensure_stylo_packages(self, state_dir, checkout_root):
         from mozboot import stylo
