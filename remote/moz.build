@@ -13,8 +13,6 @@ EXTRA_COMPONENTS += [
 ]
 
 JAR_MANIFESTS += ["jar.mn"]
-XPIDL_MODULE = "remote"
-XPIDL_SOURCES += ["nsIRemoteAgent.idl"]
 
 with Files("**"):
     BUG_COMPONENT = ("DevTools", "Remote Agent")
