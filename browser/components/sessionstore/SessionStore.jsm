@@ -2315,8 +2315,7 @@ var SessionStoreInternal = {
   // Examine the channel response to see if we should change the process
   // performing the given load.
   onExamineResponse(aChannel) {
-    if (!E10SUtils.useHttpResponseProcessSelection() &&
-        !E10SUtils.useCrossOriginOpenerPolicy()) {
+    if (!E10SUtils.useHttpResponseProcessSelection()) {
       return;
     }
 
@@ -2365,9 +2364,7 @@ var SessionStoreInternal = {
                                                          useRemoteTabs,
                                                          browser.remoteType,
                                                          currentPrincipal);
-    if (browser.remoteType == remoteType &&
-        (!E10SUtils.useCrossOriginOpenerPolicy() ||
-         !aChannel.hasCrossOriginOpenerPolicyMismatch())) {
+    if (browser.remoteType == remoteType) {
       return; // Already in compatible process.
     }
 

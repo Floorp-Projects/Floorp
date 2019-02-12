@@ -7,7 +7,6 @@
 interface nsIURI;
 interface mozIDOMWindowProxy;
 interface nsIChannel;
-interface nsIPrincipal;
 
 /**
  * Utility functions for determining whether a given URI, channel, or window
@@ -149,13 +148,6 @@ interface mozIThirdPartyUtil : nsISupports
    * window.
    */
   nsIURI getURIFromWindow(in mozIDOMWindowProxy aWindow);
-
-  /**
-   * getPrincipalFromWindow
-   *
-   * Returns the script object principal for the window.
-   */
-  nsIPrincipal getPrincipalFromWindow(in mozIDOMWindowProxy aWindow);
 
   /**
    * getTopWindowForChannel
