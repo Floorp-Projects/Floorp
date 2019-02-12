@@ -72,7 +72,41 @@ struct AutoResolving;
 
 struct HelperThread;
 
-using JobQueue = TraceableFifo<JSObject*, 0, SystemAllocPolicy>;
+class InternalJobQueue : public JS::JobQueue {
+ public:
+  explicit InternalJobQueue(JSContext* cx)
+      : queue(cx, SystemAllocPolicy()), draining_(false), interrupted_(false) {}
+  ~InternalJobQueue() = default;
+
+  // JS::JobQueue methods.
+  JSObject* getIncumbentGlobal(JSContext* cx) override;
+  bool enqueuePromiseJob(JSContext* cx, JS::HandleObject promise,
+                         JS::HandleObject job, JS::HandleObject allocationSite,
+                         JS::HandleObject incumbentGlobal) override;
+  void runJobs(JSContext* cx) override;
+  bool empty() const override;
+
+  // If we are currently in a call to runJobs(), make that call stop processing
+  // jobs once the current one finishes, and return. If we are not currently in
+  // a call to runJobs, make all future calls return immediately.
+  void interrupt() { interrupted_ = true; }
+
+  // Return the front element of the queue, or nullptr if the queue is empty.
+  // This is only used by shell testing functions.
+  JSObject* maybeFront() const;
+
+ private:
+  using Queue = js::TraceableFifo<JSObject*, 0, SystemAllocPolicy>;
+
+  JS::PersistentRooted<Queue> queue;
+
+  // True if we are in the midst of draining jobs from this queue. We use this
+  // to avoid re-entry (nested calls simply return immediately).
+  bool draining_;
+
+  // True if we've been asked to interrupt draining jobs. Set by interrupt().
+  bool interrupted_;
+};
 
 class AutoLockScriptData;
 
@@ -893,17 +927,22 @@ struct JSContext : public JS::RootingContext,
   // Like jitStackLimit, but not reset to trigger interrupts.
   js::ThreadData<uintptr_t> jitStackLimitNoInterrupt;
 
-  // Promise callbacks.
-  js::ThreadData<JS::GetIncumbentGlobalCallback> getIncumbentGlobalCallback;
-  js::ThreadData<JS::EnqueuePromiseJobCallback> enqueuePromiseJobCallback;
-  js::ThreadData<void*> enqueuePromiseJobCallbackData;
-
   // Queue of pending jobs as described in ES2016 section 8.4.
-  // Only used if internal job queue handling was activated using
-  // `js::UseInternalJobQueues`.
-  js::ThreadData<JS::PersistentRooted<js::JobQueue>*> jobQueue;
-  js::ThreadData<bool> drainingJobQueue;
-  js::ThreadData<bool> stopDrainingJobQueue;
+  //
+  // This is a non-owning pointer to either:
+  // - a JobQueue implementation the embedding provided by calling
+  //   JS::SetJobQueue, owned by the embedding, or
+  // - our internal JobQueue implementation, established by calling
+  //   js::UseInternalJobQueues, owned by JSContext::internalJobQueue below.
+  js::ThreadData<JS::JobQueue*> jobQueue;
+
+  // If the embedding has called js::UseInternalJobQueues, this is the owning
+  // pointer to our internal JobQueue implementation, which JSContext::jobQueue
+  // borrows.
+  js::ThreadData<js::UniquePtr<js::InternalJobQueue>> internalJobQueue;
+
+  // True if jobQueue is empty, or we are running the last job in the queue.
+  // Such conditions permit optimizations around `await` expressions.
   js::ThreadData<bool> canSkipEnqueuingJobs;
 
   js::ThreadData<JS::PromiseRejectionTrackerCallback>

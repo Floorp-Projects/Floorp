@@ -3872,16 +3872,8 @@ JS_PUBLIC_API void JS_ResetInterruptCallback(JSContext* cx, bool enable) {
 /*
  * Promises.
  */
-JS_PUBLIC_API void JS::SetGetIncumbentGlobalCallback(
-    JSContext* cx, GetIncumbentGlobalCallback callback) {
-  cx->getIncumbentGlobalCallback = callback;
-}
-
-JS_PUBLIC_API void JS::SetEnqueuePromiseJobCallback(
-    JSContext* cx, EnqueuePromiseJobCallback callback,
-    void* data /* = nullptr */) {
-  cx->enqueuePromiseJobCallback = callback;
-  cx->enqueuePromiseJobCallbackData = data;
+JS_PUBLIC_API void JS::SetJobQueue(JSContext* cx, JobQueue* queue) {
+  cx->jobQueue = queue;
 }
 
 extern JS_PUBLIC_API void JS::SetPromiseRejectionTrackerCallback(

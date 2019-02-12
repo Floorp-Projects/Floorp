@@ -582,32 +582,25 @@ bool FreeOp::isDefaultFreeOp() const {
 }
 
 GlobalObject* JSRuntime::getIncumbentGlobal(JSContext* cx) {
-  // If the embedding didn't set a callback for getting the incumbent
-  // global, the currently active global is used.
-  if (!cx->getIncumbentGlobalCallback) {
-    if (!cx->compartment()) {
-      return nullptr;
-    }
-    return cx->global();
+  MOZ_ASSERT(cx->jobQueue);
+
+  JSObject* obj = cx->jobQueue->getIncumbentGlobal(cx);
+  if (!obj) {
+    return nullptr;
   }
 
-  if (JSObject* obj = cx->getIncumbentGlobalCallback(cx)) {
-    MOZ_ASSERT(obj->is<GlobalObject>(),
-               "getIncumbentGlobalCallback must return a global!");
-    return &obj->as<GlobalObject>();
-  }
-
-  return nullptr;
+  MOZ_ASSERT(obj->is<GlobalObject>(),
+             "getIncumbentGlobalCallback must return a global!");
+  return &obj->as<GlobalObject>();
 }
 
 bool JSRuntime::enqueuePromiseJob(JSContext* cx, HandleFunction job,
                                   HandleObject promise,
                                   Handle<GlobalObject*> incumbentGlobal) {
-  MOZ_ASSERT(cx->enqueuePromiseJobCallback,
-             "Must set a callback using JS::SetEnqueuePromiseJobCallback "
-             "before using Promises");
+  MOZ_ASSERT(cx->jobQueue,
+             "Must select a JobQueue implementation using JS::JobQueue "
+             "or js::UseInternalJobQueues before using Promises");
 
-  void* data = cx->enqueuePromiseJobCallbackData;
   RootedObject allocationSite(cx);
   if (promise) {
 #ifdef DEBUG
@@ -625,8 +618,8 @@ bool JSRuntime::enqueuePromiseJob(JSContext* cx, HandleFunction job,
       allocationSite = JS::GetPromiseAllocationSite(unwrappedPromise);
     }
   }
-  return cx->enqueuePromiseJobCallback(cx, promise, job, allocationSite,
-                                       incumbentGlobal, data);
+  return cx->jobQueue->enqueuePromiseJob(cx, promise, job, allocationSite,
+                                         incumbentGlobal);
 }
 
 void JSRuntime::addUnhandledRejectedPromise(JSContext* cx,

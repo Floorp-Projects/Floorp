@@ -13,42 +13,72 @@
 
 namespace JS {
 
-typedef JSObject* (*GetIncumbentGlobalCallback)(JSContext* cx);
+/**
+ * Abstract base class for an ECMAScript Job Queue:
+ * https://www.ecma-international.org/ecma-262/9.0/index.html#sec-jobs-and-job-queues
+ *
+ * SpiderMonkey doesn't schedule Promise resolution jobs itself; instead, the
+ * embedding can provide an instance of this class SpiderMonkey can use to do
+ * that scheduling.
+ *
+ * The JavaScript shell includes a simple implementation adequate for running
+ * tests. Browsers need to augment job handling to meet their own additional
+ * requirements, so they can provide their own implementation.
+ */
+class JS_PUBLIC_API JobQueue {
+ public:
+  virtual ~JobQueue() = default;
 
-typedef bool (*EnqueuePromiseJobCallback)(JSContext* cx,
-                                          JS::HandleObject promise,
-                                          JS::HandleObject job,
-                                          JS::HandleObject allocationSite,
-                                          JS::HandleObject incumbentGlobal,
-                                          void* data);
+  /**
+   * Ask the embedding for the incumbent global.
+   *
+   * SpiderMonkey doesn't itself have a notion of incumbent globals as defined
+   * by the HTML spec, so we need the embedding to provide this. See
+   * dom/script/ScriptSettings.h for details.
+   */
+  virtual JSObject* getIncumbentGlobal(JSContext* cx) = 0;
+
+  /**
+   * Enqueue a reaction job `job` for `promise`, which was allocated at
+   * `allocationSite`. Provide `incumbentGlobal` as the incumbent global for
+   * the reaction job's execution.
+   */
+  virtual bool enqueuePromiseJob(JSContext* cx, JS::HandleObject promise,
+                                 JS::HandleObject job,
+                                 JS::HandleObject allocationSite,
+                                 JS::HandleObject incumbentGlobal) = 0;
+
+  /**
+   * Run all jobs in the queue. Running one job may enqueue others; continue to
+   * run jobs until the queue is empty.
+   *
+   * Calling this method at the wrong time can break the web. The HTML spec
+   * indicates exactly when the job queue should be drained (in HTML jargon,
+   * when it should "perform a microtask checkpoint"), and doing so at other
+   * times can incompatibly change the semantics of programs that use promises
+   * or other microtask-based features.
+   */
+  virtual void runJobs(JSContext* cx) = 0;
+
+  /**
+   * Return true if the job queue is empty, false otherwise.
+   */
+  virtual bool empty() const = 0;
+};
+
+/**
+ * Tell SpiderMonkey to use `queue` to schedule promise reactions.
+ *
+ * SpiderMonkey does not take ownership of the queue; it is the embedding's
+ * responsibility to clean it up after the runtime is destroyed.
+ */
+extern JS_PUBLIC_API void SetJobQueue(JSContext* cx, JobQueue* queue);
 
 enum class PromiseRejectionHandlingState { Unhandled, Handled };
 
 typedef void (*PromiseRejectionTrackerCallback)(
     JSContext* cx, JS::HandleObject promise,
     JS::PromiseRejectionHandlingState state, void* data);
-
-/**
- * Sets the callback that's invoked whenever an incumbent global is required.
- *
- * SpiderMonkey doesn't itself have a notion of incumbent globals as defined
- * by the html spec, so we need the embedding to provide this.
- * See dom/base/ScriptSettings.h for details.
- */
-extern JS_PUBLIC_API void SetGetIncumbentGlobalCallback(
-    JSContext* cx, GetIncumbentGlobalCallback callback);
-
-/**
- * Sets the callback that's invoked whenever a Promise job should be enqeued.
- *
- * SpiderMonkey doesn't schedule Promise resolution jobs itself; instead,
- * using this function the embedding can provide a callback to do that
- * scheduling. The provided `callback` is invoked with the promise job,
- * the corresponding Promise's allocation stack, and the `data` pointer
- * passed here as arguments.
- */
-extern JS_PUBLIC_API void SetEnqueuePromiseJobCallback(
-    JSContext* cx, EnqueuePromiseJobCallback callback, void* data = nullptr);
 
 /**
  * Sets the callback that's invoked whenever a Promise is rejected without
