@@ -434,14 +434,6 @@ EditorSpellCheck::CheckCurrentWord(const nsAString& aSuggestedWord,
                                   &mSuggestedWordList);
 }
 
-NS_IMETHODIMP
-EditorSpellCheck::CheckCurrentWordNoSuggest(const nsAString& aSuggestedWord,
-                                            bool* aIsMisspelled) {
-  NS_ENSURE_TRUE(mSpellChecker, NS_ERROR_NOT_INITIALIZED);
-
-  return mSpellChecker->CheckWord(aSuggestedWord, aIsMisspelled, nullptr);
-}
-
 RefPtr<CheckWordPromise> EditorSpellCheck::CheckCurrentWordsNoSuggest(
     const nsTArray<nsString>& aSuggestedWords) {
   if (NS_WARN_IF(!mSpellChecker)) {

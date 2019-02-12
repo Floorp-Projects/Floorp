@@ -1581,9 +1581,9 @@ var Scratchpad = {
       this.editor.on("cursorActivity", this.updateStatusBar);
       const okstring = this.strings.GetStringFromName("selfxss.okstring");
       const msg = this.strings.formatStringFromName("selfxss.msg", [okstring], 1);
-      this._onPaste = WebConsoleUtils.pasteHandlerGen(this.editor.container.contentDocument.body,
-                                                      this.notificationBox,
-                                                      msg, okstring);
+      this._onPaste = pasteHandlerGen(this.editor.container.contentDocument.body,
+        this.notificationBox, msg, okstring);
+
       editorElement.addEventListener("paste", this._onPaste, true);
       editorElement.addEventListener("drop", this._onPaste);
       this.editor.on("saveRequested", () => this.saveFile());
@@ -2268,3 +2268,52 @@ XPCOMUtils.defineLazyGetter(Scratchpad, "strings", function() {
 addEventListener("load", Scratchpad.onLoad.bind(Scratchpad), false);
 addEventListener("unload", Scratchpad.onUnload.bind(Scratchpad), false);
 addEventListener("close", Scratchpad.onClose.bind(Scratchpad), false);
+
+/**
+ * The inputNode "paste" event handler generator. Helps prevent
+ * self-xss attacks
+ *
+ * @param Element inputField
+ * @param Element notificationBox
+ * @returns A function to be added as a handler to 'paste' and
+ *'drop' events on the input field
+ */
+function pasteHandlerGen(inputField, notificationBox, msg, okstring) {
+  const handler = function(event) {
+    if (WebConsoleUtils.usageCount >= WebConsoleUtils.CONSOLE_ENTRY_THRESHOLD) {
+      inputField.removeEventListener("paste", handler);
+      inputField.removeEventListener("drop", handler);
+      return true;
+    }
+    if (notificationBox.getNotificationWithValue("selfxss-notification")) {
+      event.preventDefault();
+      event.stopPropagation();
+      return false;
+    }
+
+    const notification = notificationBox.appendNotification(msg,
+      "selfxss-notification", null,
+      notificationBox.PRIORITY_WARNING_HIGH, null,
+      function(eventType) {
+        // Cleanup function if notification is dismissed
+        if (eventType == "removed") {
+          inputField.removeEventListener("keyup", pasteKeyUpHandler);
+        }
+      });
+
+    function pasteKeyUpHandler() {
+      const value = inputField.value || inputField.textContent;
+      if (value.includes(okstring)) {
+        notificationBox.removeNotification(notification);
+        inputField.removeEventListener("keyup", pasteKeyUpHandler);
+        WebConsoleUtils.usageCount = WebConsoleUtils.CONSOLE_ENTRY_THRESHOLD;
+      }
+    }
+    inputField.addEventListener("keyup", pasteKeyUpHandler);
+
+    event.preventDefault();
+    event.stopPropagation();
+    return false;
+  };
+  return handler;
+}

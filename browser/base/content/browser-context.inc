@@ -175,6 +175,13 @@
                 accesskey="&leaveDOMFullScreen.accesskey;"
                 label="&leaveDOMFullScreen.label;"
                 oncommand="gContextMenu.leaveDOMFullScreen();"/>
+#ifdef NIGHTLY_BUILD
+      <!-- Don't forget to add a properly localized label and access key
+           before letting this ride up to beta. -->
+      <menuitem id="context-video-pictureinpicture"
+                label="Picture in Picture"
+                oncommand="gContextMenu.mediaCommand('pictureinpicture');"/>
+#endif
       <menuseparator id="context-media-sep-commands"/>
       <menuitem id="context-reloadimage"
                 label="&reloadImageCmd.label;"

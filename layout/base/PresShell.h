@@ -500,6 +500,8 @@ class PresShell final : public nsIPresShell,
     EventHandler() = delete;
     EventHandler(const EventHandler& aOther) = delete;
     explicit EventHandler(PresShell& aPresShell) : mPresShell(aPresShell) {}
+    explicit EventHandler(RefPtr<PresShell>&& aPresShell)
+        : mPresShell(aPresShell.forget()) {}
 
     /**
      * HandleEvent() may dispatch aGUIEvent.  This may redirect the event to
@@ -795,6 +797,25 @@ class PresShell final : public nsIPresShell,
     nsIFrame* ComputeRootFrameToHandleEventWithCapturingContent(
         nsIFrame* aRootFrameToHandleEvent, nsIContent* aCapturingContent,
         bool* aIsCapturingContentIgnored, bool* aIsCaptureRetargeted);
+
+    /**
+     * HandleEventWithPointerCapturingContentWithoutItsFrame() handles
+     * aGUIEvent with aPointerCapturingContent when it does not have primary
+     * frame.
+     *
+     * @param aFrameForPresShell        The frame for mPresShell.  Typically,
+     *                                  aFrame of HandleEvent().
+     * @param aGUIEvent                 The handling event.
+     * @param aPointerCapturingContent  Current pointer capturing content.
+     *                                  Must not be nullptr.
+     * @param aEventStatus              [in/out] The event status of aGUIEvent.
+     * @return                          Basically, result of
+     *                                  HandeEventWithTraget().
+     */
+    MOZ_CAN_RUN_SCRIPT
+    nsresult HandleEventWithPointerCapturingContentWithoutItsFrame(
+        nsIFrame* aFrameForPresShell, WidgetGUIEvent* aGUIEvent,
+        nsIContent* aPointerCapturingContent, nsEventStatus* aEventStatus);
 
     /**
      * XXX Needs better name.

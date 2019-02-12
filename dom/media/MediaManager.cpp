@@ -2652,9 +2652,14 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
           MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
         }
       } else {
-        rv = permManager->TestExactPermissionFromPrincipal(principal, "screen",
-                                                           &audioPerm);
-        MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
+        if (!dom::FeaturePolicyUtils::IsFeatureAllowed(
+                doc, NS_LITERAL_STRING("display-capture"))) {
+          audioPerm = nsIPermissionManager::DENY_ACTION;
+        } else {
+          rv = permManager->TestExactPermissionFromPrincipal(
+              principal, "screen", &audioPerm);
+          MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
+        }
       }
     }
 
@@ -2671,9 +2676,14 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
           MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
         }
       } else {
-        rv = permManager->TestExactPermissionFromPrincipal(principal, "screen",
-                                                           &videoPerm);
-        MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
+        if (!dom::FeaturePolicyUtils::IsFeatureAllowed(
+                doc, NS_LITERAL_STRING("display-capture"))) {
+          videoPerm = nsIPermissionManager::DENY_ACTION;
+        } else {
+          rv = permManager->TestExactPermissionFromPrincipal(
+              principal, "screen", &videoPerm);
+          MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
+        }
       }
     }
 

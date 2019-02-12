@@ -36,15 +36,6 @@ mozilla::ipc::IPCResult RemoteSpellcheckEngineParent::RecvSetDictionaryFromList(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult RemoteSpellcheckEngineParent::RecvCheck(
-    const nsString& aWord, bool* aIsMisspelled) {
-  nsresult rv = mSpellChecker->CheckWord(aWord, aIsMisspelled, nullptr);
-
-  // If CheckWord failed, we can't tell whether the word is correctly spelled.
-  if (NS_FAILED(rv)) *aIsMisspelled = false;
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult RemoteSpellcheckEngineParent::RecvCheckAsync(
     nsTArray<nsString>&& aWords, CheckAsyncResolver&& aResolve) {
   nsTArray<bool> misspells;

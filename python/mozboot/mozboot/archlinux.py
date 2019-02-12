@@ -70,7 +70,6 @@ class ArchlinuxBootstrapper(NodeInstall, StyloInstall,
         # For downloading the Android SDK and NDK.
         'wget',
         # See comment about 32 bit binaries and multilib below.
-        'multilib/lib32-libstdc++5',
         'multilib/lib32-ncurses',
         'multilib/lib32-readline',
         'multilib/lib32-zlib',
