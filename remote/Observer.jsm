@@ -8,7 +8,7 @@ var EXPORTED_SYMBOLS = ["Observer"];
 
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-this.Observer = class {
+class Observer {
   static observe(type, observer) {
     Services.obs.addObserver(observer, type);
   }

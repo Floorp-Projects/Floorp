@@ -13,7 +13,7 @@ const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm")
 
 XPCOMUtils.defineLazyGetter(this, "log", Log.get);
 
-this.MessageChannel = class {
+class MessageChannel {
   constructor(target, channelName, messageManager) {
     this.target = target;
     this.name = channelName;

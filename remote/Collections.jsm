@@ -6,7 +6,7 @@
 
 var EXPORTED_SYMBOLS = ["AtomicMap"];
 
-this.AtomicMap = class extends Map {
+class AtomicMap extends Map {
   set(key, value) {
     if (this.has(key)) {
       throw new RangeError("Key already used: " + key);

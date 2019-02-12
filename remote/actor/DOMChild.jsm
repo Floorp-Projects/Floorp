@@ -8,7 +8,7 @@ var EXPORTED_SYMBOLS = ["DOMChild"];
 
 const {RemoteAgentActorChild} = ChromeUtils.import("chrome://remote/content/Actor.jsm");
 
-this.DOMChild = class extends RemoteAgentActorChild {
+class DOMChild extends RemoteAgentActorChild {
   handleEvent({type}) {
     const event = {
       type,

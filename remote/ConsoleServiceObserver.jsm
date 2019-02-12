@@ -8,7 +8,7 @@ var EXPORTED_SYMBOLS = ["ConsoleServiceObserver"];
 
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-this.ConsoleServiceObserver = class {
+class ConsoleServiceObserver {
   constructor() {
     this.running = false;
   }

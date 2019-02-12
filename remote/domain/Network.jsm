@@ -8,7 +8,7 @@ var EXPORTED_SYMBOLS = ["Network"];
 
 const {t} = ChromeUtils.import("chrome://remote/content/Protocol.jsm");
 
-this.Network = {
+var Network = {
   MonotonicTime: {schema: t.Number},
   LoaderId: {schema: t.String},
   RequestId: {schema: t.Number},

@@ -41,7 +41,7 @@ XPCOMUtils.defineLazyGetter(this, "log", Log.get);
  * The WindowObserver.Event.Open event fires when a window opens.
  * The WindowObserver.Event.Close event fires when a window closes.
  */
-this.WindowObserver = class {
+class WindowObserver {
   /**
    * @param {boolean?} [false] registerExisting
    *     Events will be despatched for the ChromeWindows that exist
@@ -96,7 +96,7 @@ this.WindowObserver = class {
  * "open" fires when a tab opens.
  * "close" fires when a tab closes.
  */
-this.TabObserver = class {
+class TabObserver {
   /**
    * @param {boolean?} [false] registerExisting
    *     Events will be fired for ChromeWIndows and their respective tabs
@@ -156,7 +156,7 @@ this.TabObserver = class {
  * but leave it in here because we may have use for it later
  * if we decide to allow Marionette-style chrome automation.
  */
-this.BrowserObserver = class {
+class BrowserObserver {
   constructor() {
     EventEmitter.decorate(this);
   }
@@ -243,4 +243,4 @@ function isWindowIncluded(boundary, target) {
   return isWindowIncluded(boundary, parent);
 }
 
-this.WindowManager = {isWindowIncluded};
+var WindowManager = {isWindowIncluded};
