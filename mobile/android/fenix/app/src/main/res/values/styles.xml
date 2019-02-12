@@ -41,7 +41,7 @@
 
     </style>
 
-    <style name="PrivateThemeBase" parent="Theme.AppCompat.NoActionBar">
+    <style name="PrivateThemeBase" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="android:statusBarColor">@color/private_browsing_top_gradient</item>
         <item name="android:windowAnimationStyle">@style/WindowAnimationTransition</item>
         <item name="android:textColorHighlight">@color/private_browsing_primary</item>
