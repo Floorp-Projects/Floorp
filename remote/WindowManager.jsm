@@ -88,7 +88,7 @@ class WindowObserver {
   get QueryInterface() {
     return ChromeUtils.generateQI([Ci.nsIWindowMediatorListener]);
   }
-};
+}
 
 /**
  * Observe Firefox tabs as they open and close.
@@ -145,7 +145,7 @@ class TabObserver {
   onWindowClose(window) {
     // TODO(ato): Is TabClose fired when the window closes?
   }
-};
+}
 
 /**
  * BrowserObserver is more powerful than TabObserver,
@@ -218,7 +218,7 @@ class BrowserObserver {
       Ci.nsIObserver,
     ]);
   }
-};
+}
 
 /**
  * Determine if WindowProxy is part of the boundary window.

@@ -75,7 +75,7 @@ class Session {
         break;
     }
   }
-};
+}
 
 function assertSchema(domainName, methodName, params) {
   const domain = Domain[domainName];

@@ -22,4 +22,4 @@ class AtomicMap extends Map {
     super.delete(key);
     return rv;
   }
-};
+}

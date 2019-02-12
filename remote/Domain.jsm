@@ -31,7 +31,7 @@ class Domain {
   get chromeEventHandler() {
     return this.docShell.chromeEventHandler;
   }
-};
+}
 
 XPCOMUtils.defineLazyModuleGetters(Domain, {
   Log: "chrome://remote/content/domain/Log.jsm",
