@@ -9,10 +9,6 @@ exclude: true
 <h1> GeckoView API Changelog. </h1>
 
 ## v67
-- Updated video autoplay API to reflect changes in Gecko. Instead of being a per-video
-  permission in the PermissionDelegate, it is a runtime setting that either allows or
-  blocks autoplay videos.
-
 - Change `ContentBlocking.AT_ALL` and `ContentBlocking.SB_ALL` values to mirror
   the actual constants they encompass.
 
@@ -132,4 +128,4 @@ exclude: true
 [65.24]: ../CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: ../GeckoResult.html
 
-[api-version]: a42a6f4481dd690ac46f14d8e692785bb00e8b04
+[api-version]: 1a31e792d4802cb18219b7ac5281a63a89a1df75
