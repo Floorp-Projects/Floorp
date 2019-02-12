@@ -13,7 +13,6 @@ import androidx.navigation.Navigation
 import androidx.preference.Preference
 import androidx.preference.Preference.OnPreferenceClickListener
 import androidx.preference.PreferenceFragmentCompat
-import mozilla.components.browser.session.Session
 import org.mozilla.fenix.R
 import org.mozilla.fenix.R.string.pref_key_about
 import org.mozilla.fenix.R.string.pref_key_make_default_browser
@@ -70,12 +69,12 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
     private fun getAboutPageListener(): OnPreferenceClickListener {
         return OnPreferenceClickListener {
-            requireComponents.core.sessionManager.add(Session(aboutURL), true)
+            requireComponents.useCases.tabsUseCases.addTab.invoke(aboutURL, true)
             view?.let {
                 Navigation.findNavController(it)
                     .navigate(
                         SettingsFragmentDirections.actionGlobalBrowser(
-                            requireComponents.core.sessionManager.selectedSession?.id
+                            null
                         )
                     )
             }
