@@ -5,6 +5,9 @@
 "use strict";
 
 function _getPath() {
+  if (window.location.protocol == "chrome:") {
+    return "/chrome/dom/browser-element/mochitest";
+  }
   return window.location.pathname
                .substring(0, window.location.pathname.lastIndexOf('/'))
                .replace("/priority", "");
