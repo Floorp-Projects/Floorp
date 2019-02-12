@@ -5,10 +5,11 @@
 use api::{AlphaType, ClipMode, DeviceIntRect, DeviceIntPoint, DeviceIntSize, WorldRect};
 use api::{ExternalImageType, FilterOp, ImageRendering, LayoutRect, DeviceRect, DevicePixelScale};
 use api::{YuvColorSpace, YuvFormat, PictureRect, ColorDepth, LayoutPoint, DevicePoint, LayoutSize};
+use api::{PremultipliedColorF};
 use clip::{ClipDataStore, ClipNodeFlags, ClipNodeRange, ClipItem, ClipStore, ClipNodeInstance};
 use clip_scroll_tree::{ClipScrollTree, ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex, CoordinateSystemId};
 use glyph_rasterizer::GlyphFormat;
-use gpu_cache::{GpuCache, GpuCacheHandle, GpuCacheAddress};
+use gpu_cache::{GpuBlockData, GpuCache, GpuCacheHandle, GpuCacheAddress};
 use gpu_types::{BrushFlags, BrushInstance, PrimitiveHeaders, ZBufferId, ZBufferIdGenerator};
 use gpu_types::{ClipMaskInstance, SplitCompositeInstance, SnapOffsets};
 use gpu_types::{PrimitiveInstanceData, RasterizationSpace, GlyphInstance};
@@ -22,7 +23,7 @@ use prim_store::image::ImageSource;
 use render_backend::DataStores;
 use render_task::{RenderTaskAddress, RenderTaskId, RenderTaskTree, TileBlit};
 use renderer::{BlendMode, ImageBufferKind, ShaderColorMode};
-use renderer::BLOCKS_PER_UV_RECT;
+use renderer::{BLOCKS_PER_UV_RECT, MAX_VERTEX_TEXTURE_WIDTH};
 use resource_cache::{CacheItem, GlyphFetchResult, ImageRequest, ResourceCache, ImageProperties};
 use scene::FilterOpHelpers;
 use smallvec::SmallVec;
@@ -1753,7 +1754,7 @@ impl AlphaBatchBuilder {
                     BlendMode::None
                 };
 
-                debug_assert!(segment_instance_index != SegmentInstanceIndex::INVALID);
+                debug_assert_ne!(segment_instance_index, SegmentInstanceIndex::INVALID);
                 let (prim_cache_address, segments) = if segment_instance_index == SegmentInstanceIndex::UNUSED {
                     (gpu_cache.get_address(&prim_common_data.gpu_cache_handle), None)
                 } else {
@@ -1807,6 +1808,11 @@ impl AlphaBatchBuilder {
                     rendering: image_data.image_rendering,
                     tile: None,
                 };
+                let prim_user_data = [
+                    ShaderColorMode::Image as i32 | ((image_data.alpha_type as i32) << 16),
+                    RasterizationSpace::Local as i32,
+                    get_shader_opacity(opacity_binding),
+                ];
 
                 if image_instance.visible_tiles.is_empty() {
                     let cache_item = match image_data.source {
@@ -1849,15 +1855,11 @@ impl AlphaBatchBuilder {
                     let batch_params = BrushBatchParameters::shared(
                         BrushBatchKind::Image(get_buffer_kind(cache_item.texture_id)),
                         textures,
-                        [
-                            ShaderColorMode::Image as i32 | ((image_data.alpha_type as i32) << 16),
-                            RasterizationSpace::Local as i32,
-                            get_shader_opacity(opacity_binding),
-                        ],
+                        prim_user_data,
                         cache_item.uv_rect_handle.as_int(gpu_cache),
                     );
 
-                    debug_assert!(image_instance.segment_instance_index != SegmentInstanceIndex::INVALID);
+                    debug_assert_ne!(image_instance.segment_instance_index, SegmentInstanceIndex::INVALID);
                     let (prim_cache_address, segments) = if image_instance.segment_instance_index == SegmentInstanceIndex::UNUSED {
                         (gpu_cache.get_address(&common_data.gpu_cache_handle), None)
                     } else {
@@ -1897,37 +1899,62 @@ impl AlphaBatchBuilder {
                         ctx,
                     );
                 } else {
-                    for tile in &image_instance.visible_tiles {
-                        if let Some((batch_kind, textures, user_data, uv_rect_address)) = get_image_tile_params(
-                            ctx.resource_cache,
-                            gpu_cache,
-                            deferred_resolves,
-                            request.with_tile(tile.tile_offset),
-                            image_data.alpha_type,
-                            get_shader_opacity(opacity_binding),
-                        ) {
-                            let prim_cache_address = gpu_cache.get_address(&ctx.globals.default_image_handle);
-                            let prim_header = PrimitiveHeader {
-                                specific_prim_address: prim_cache_address,
-                                local_rect: tile.local_rect,
-                                local_clip_rect: tile.local_clip_rect,
-                                task_address,
-                                clip_task_address,
-                                transform_id,
-                            };
-                            let prim_header_index = prim_headers.push(&prim_header, z_id, user_data);
+                    const VECS_PER_SPECIFIC_BRUSH: usize = 3;
+                    const VECS_PER_SEGMENT: usize = 2;
+                    let max_tiles_per_header = (MAX_VERTEX_TEXTURE_WIDTH - VECS_PER_SPECIFIC_BRUSH) / VECS_PER_SEGMENT;
 
-                            self.add_image_tile_to_batch(
-                                batch_kind,
-                                specified_blend_mode,
-                                textures,
-                                prim_header_index,
-                                clip_task_address,
-                                bounding_rect,
-                                tile.edge_flags,
-                                uv_rect_address,
-                                z_id,
-                            );
+                    // use temporary block storage since we don't know the number of visible tiles beforehand
+                    let mut gpu_blocks = Vec::<GpuBlockData>::new();
+                    for chunk in image_instance.visible_tiles.chunks(max_tiles_per_header) {
+                        gpu_blocks.clear();
+                        gpu_blocks.push(PremultipliedColorF::WHITE.into()); //color
+                        gpu_blocks.push(PremultipliedColorF::WHITE.into()); //bg color
+                        gpu_blocks.push([-1.0, 0.0, 0.0, 0.0].into()); //stretch size
+                        // negative first value makes the shader code ignore it and use the local size instead
+                        for tile in chunk {
+                            let tile_rect = tile.local_rect.translate(&-prim_rect.origin.to_vector());
+                            gpu_blocks.push(tile_rect.into());
+                            gpu_blocks.push(GpuBlockData::EMPTY);
+                        }
+
+                        let gpu_handle = gpu_cache.push_per_frame_blocks(&gpu_blocks);
+                        let prim_header = PrimitiveHeader {
+                            local_rect: prim_rect,
+                            local_clip_rect: image_instance.tight_local_clip_rect,
+                            task_address,
+                            specific_prim_address: gpu_cache.get_address(&gpu_handle),
+                            clip_task_address,
+                            transform_id,
+                        };
+                        let prim_header_index = prim_headers.push(&prim_header, z_id, prim_user_data);
+
+                        for (i, tile) in chunk.iter().enumerate() {
+                            if let Some((batch_kind, textures, uv_rect_address)) = get_image_tile_params(
+                                ctx.resource_cache,
+                                gpu_cache,
+                                deferred_resolves,
+                                request.with_tile(tile.tile_offset),
+                            ) {
+                                let base_instance = BrushInstance {
+                                    prim_header_index,
+                                    clip_task_address,
+                                    segment_index: i as i32,
+                                    edge_flags: tile.edge_flags,
+                                    brush_flags: BrushFlags::SEGMENT_RELATIVE | BrushFlags::PERSPECTIVE_INTERPOLATION,
+                                    user_data: uv_rect_address.as_int(),
+                                };
+                                let batch_key = BatchKey {
+                                    blend_mode: specified_blend_mode,
+                                    kind: BatchKind::Brush(batch_kind),
+                                    textures,
+                                };
+                                self.current_batch_list().push_single_instance(
+                                    batch_key,
+                                    bounding_rect,
+                                    z_id,
+                                    base_instance.into(),
+                                );
+                            }
                         }
                     }
                 }
@@ -2095,40 +2122,6 @@ impl AlphaBatchBuilder {
                 }
             }
         }
-    }
-
-    fn add_image_tile_to_batch(
-        &mut self,
-        batch_kind: BrushBatchKind,
-        blend_mode: BlendMode,
-        textures: BatchTextures,
-        prim_header_index: PrimitiveHeaderIndex,
-        clip_task_address: RenderTaskAddress,
-        bounding_rect: &PictureRect,
-        edge_flags: EdgeAaSegmentMask,
-        uv_rect_address: GpuCacheAddress,
-        z_id: ZBufferId,
-    ) {
-        let base_instance = BrushInstance {
-            prim_header_index,
-            clip_task_address,
-            segment_index: INVALID_SEGMENT_INDEX,
-            edge_flags,
-            brush_flags: BrushFlags::PERSPECTIVE_INTERPOLATION,
-            user_data: uv_rect_address.as_int(),
-        };
-
-        let batch_key = BatchKey {
-            blend_mode,
-            kind: BatchKind::Brush(batch_kind),
-            textures,
-        };
-        self.current_batch_list().push_single_instance(
-            batch_key,
-            bounding_rect,
-            z_id,
-            PrimitiveInstanceData::from(base_instance),
-        );
     }
 
     /// Add a single segment instance to a batch.
@@ -2343,9 +2336,7 @@ fn get_image_tile_params(
     gpu_cache: &mut GpuCache,
     deferred_resolves: &mut Vec<DeferredResolve>,
     request: ImageRequest,
-    alpha_type: AlphaType,
-    shader_opacity: i32,
-) -> Option<(BrushBatchKind, BatchTextures, [i32; 3], GpuCacheAddress)> {
+) -> Option<(BrushBatchKind, BatchTextures, GpuCacheAddress)> {
 
     let cache_item = resolve_image(
         request,
@@ -2361,11 +2352,6 @@ fn get_image_tile_params(
         Some((
             BrushBatchKind::Image(get_buffer_kind(cache_item.texture_id)),
             textures,
-            [
-                ShaderColorMode::Image as i32 | ((alpha_type as i32) << 16),
-                RasterizationSpace::Local as i32,
-                shader_opacity,
-            ],
             gpu_cache.get_address(&cache_item.uv_rect_handle),
         ))
     }
