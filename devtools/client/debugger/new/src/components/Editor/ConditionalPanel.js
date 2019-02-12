@@ -119,7 +119,7 @@ export class ConditionalPanel extends PureComponent<Props> {
       this.renderConditionalPanel(props),
       {
         coverGutter: true,
-        noHScroll: false
+        noHScroll: true
       }
     );
     if (this.input) {
@@ -143,7 +143,7 @@ export class ConditionalPanel extends PureComponent<Props> {
   }
 
   renderConditionalPanel(props: Props) {
-    const { breakpoint, log } = props;
+    const { breakpoint, log, editor } = props;
     const options = (breakpoint && breakpoint.options) || {};
     const condition = log ? options.logValue : options.condition;
 
@@ -160,15 +160,26 @@ export class ConditionalPanel extends PureComponent<Props> {
         <div className="prompt">»</div>
         <input
           defaultValue={condition}
-          placeholder={L10N.getStr(
-            log
-              ? "editor.conditionalPanel.logPoint.placeholder"
-              : "editor.conditionalPanel.placeholder"
-          )}
-          onKeyDown={this.onKey}
           ref={input => {
+            const codeMirror = editor.CodeMirror.fromTextArea(input, {
+              mode: "javascript",
+              theme: "mozilla",
+              placeholder: L10N.getStr(
+                log
+                  ? "editor.conditionalPanel.logPoint.placeholder"
+                  : "editor.conditionalPanel.placeholder"
+              )
+            });
+            const codeMirrorWrapper = codeMirror.getWrapperElement();
+
+            codeMirrorWrapper.addEventListener("keydown", e => {
+              codeMirror.save();
+              this.onKey(e);
+            });
+
             this.input = input;
-            this.keepFocusOnInput();
+            codeMirror.focus();
+            codeMirror.setCursor(codeMirror.lineCount(), 0);
           }}
         />
       </div>,
