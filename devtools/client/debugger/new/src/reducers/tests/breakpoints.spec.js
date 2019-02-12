@@ -24,11 +24,14 @@ describe("Breakpoints Selectors", () => {
   it("it gets a breakpoint for an original source", () => {
     const sourceId = "server1.conn1.child1/source1/originalSource";
     const matchingBreakpoints = {
-      id1: createBreakpoint({ line: 1, sourceId: sourceId })
+      id1: createBreakpoint({ line: 1, sourceId: sourceId }, { options: {} })
     };
 
     const otherBreakpoints = {
-      id2: createBreakpoint({ line: 1, sourceId: "not-this-source" })
+      id2: createBreakpoint(
+        { line: 1, sourceId: "not-this-source" },
+        { options: {} }
+      )
     };
 
     const data = {
@@ -55,7 +58,10 @@ describe("Breakpoints Selectors", () => {
           line: 1,
           sourceId: "original-source-id-1"
         },
-        { generatedLocation: { line: 1, sourceId: generatedSourceId } }
+        {
+          generatedLocation: { line: 1, sourceId: generatedSourceId },
+          options: {}
+        }
       )
     };
 
@@ -65,7 +71,10 @@ describe("Breakpoints Selectors", () => {
           line: 1,
           sourceId: "original-source-id-2"
         },
-        { generatedLocation: { line: 1, sourceId: "not-this-source" } }
+        {
+          generatedLocation: { line: 1, sourceId: "not-this-source" },
+          options: {}
+        }
       )
     };
 

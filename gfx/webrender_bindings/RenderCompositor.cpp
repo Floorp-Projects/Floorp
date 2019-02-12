@@ -16,6 +16,10 @@
 #  include "mozilla/webrender/RenderCompositorANGLE.h"
 #endif
 
+#ifdef MOZ_WAYLAND
+#include "mozilla/webrender/RenderCompositorEGL.h"
+#endif
+
 namespace mozilla {
 namespace wr {
 
@@ -26,6 +30,14 @@ namespace wr {
     return RenderCompositorANGLE::Create(std::move(aWidget));
   }
 #endif
+
+#ifdef MOZ_WAYLAND
+  UniquePtr<RenderCompositor> eglCompositor = RenderCompositorEGL::Create(aWidget);
+  if (eglCompositor) {
+    return eglCompositor;
+  }
+#endif
+
   return RenderCompositorOGL::Create(std::move(aWidget));
 }
 

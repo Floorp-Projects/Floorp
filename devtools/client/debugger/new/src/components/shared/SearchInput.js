@@ -9,7 +9,6 @@ import React, { Component } from "react";
 import { CloseButton } from "./Button";
 
 import AccessibleImage from "./AccessibleImage";
-import Svg from "./Svg";
 import classnames from "classnames";
 import "./SearchInput.css";
 
@@ -105,7 +104,7 @@ class SearchInput extends Component<Props, State> {
   }
 
   renderSvg() {
-    return <Svg name="magnifying-glass" />;
+    return <AccessibleImage className="search" />;
   }
 
   renderArrowButtons() {
@@ -197,7 +196,7 @@ class SearchInput extends Component<Props, State> {
       return null;
     }
 
-    return <div className="summary">{summaryMsg}</div>;
+    return <div className="search-field-summary">{summaryMsg}</div>;
   }
 
   renderSpinner() {
@@ -253,7 +252,7 @@ class SearchInput extends Component<Props, State> {
 
     return (
       <div
-        className={classnames("search-shadow", {
+        className={classnames("search-outline", {
           focused: this.state.inputFocused
         })}
       >

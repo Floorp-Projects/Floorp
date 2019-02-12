@@ -33,30 +33,6 @@ export const removeBreakpointItem = (
   accelerator: L10N.getStr("toggleBreakpoint.key")
 });
 
-export const createConditionalBreakpointItem = (
-  location: SourceLocation,
-  breakpointActions: BreakpointItemActions
-) => ({
-  id: "node-menu-add-conditional-breakpoint",
-  label: L10N.getStr("editor.addConditionalBreakpoint"),
-  accelerator: L10N.getStr("toggleCondPanel.key"),
-  accesskey: L10N.getStr("editor.addConditionBreakpoint.accesskey"),
-  disabled: false,
-  click: () => breakpointActions.openConditionalPanel(location)
-});
-
-export const createLogBreakpointItem = (
-  location: SourceLocation,
-  breakpointActions: BreakpointItemActions
-) => ({
-  id: "node-menu-add-log-breakpoint",
-  label: L10N.getStr("editor.addLogBreakpoint"),
-  accelerator: L10N.getStr("toggleCondPanel.key"),
-  accesskey: L10N.getStr("editor.addConditionBreakpoint.accesskey"),
-  disabled: false,
-  click: () => breakpointActions.openConditionalPanel(location)
-});
-
 export const addConditionalBreakpointItem = (
   location: SourceLocation,
   breakpointActions: BreakpointItemActions
@@ -123,10 +99,10 @@ export const logPointItem = (
   breakpointActions: BreakpointItemActions
 ) => {
   const {
-    options: { condition },
+    options: { logValue },
     location
   } = breakpoint;
-  return condition
+  return logValue
     ? editLogPointItem(location, breakpointActions)
     : addLogPointItem(location, breakpointActions);
 };
@@ -157,13 +133,26 @@ export function breakpointItems(
 ) {
   const items = [
     removeBreakpointItem(breakpoint, breakpointActions),
-    toggleDisabledBreakpointItem(breakpoint, breakpointActions),
-    conditionalBreakpointItem(breakpoint, breakpointActions)
+    toggleDisabledBreakpointItem(breakpoint, breakpointActions)
   ];
+
+  if (features.columnBreakpoints) {
+    items.push(
+      { type: "separator" },
+      removeBreakpointsOnLineItem(breakpoint.location, breakpointActions),
+      breakpoint.disabled
+        ? enableBreakpointsOnLineItem(breakpoint.location, breakpointActions)
+        : disableBreakpointsOnLineItem(breakpoint.location, breakpointActions),
+      { type: "separator" }
+    );
+  }
+
+  items.push(conditionalBreakpointItem(breakpoint, breakpointActions));
 
   if (features.logPoints) {
     items.push(logPointItem(breakpoint, breakpointActions));
   }
+
   return items;
 }
 
@@ -173,19 +162,58 @@ export function createBreakpointItems(
 ) {
   const items = [
     addBreakpointItem(location, breakpointActions),
-    createConditionalBreakpointItem(location, breakpointActions)
+    addConditionalBreakpointItem(location, breakpointActions)
   ];
 
   if (features.logPoints) {
-    items.push(createLogBreakpointItem(location, breakpointActions));
+    items.push(addLogPointItem(location, breakpointActions));
   }
   return items;
 }
+
+// ToDo: Only enable if there are more than one breakpoints on a line?
+export const removeBreakpointsOnLineItem = (
+  location: SourceLocation,
+  breakpointActions: BreakpointItemActions
+) => ({
+  id: "node-menu-remove-breakpoints-on-line",
+  label: L10N.getStr("breakpointMenuItem.removeAllAtLine.label"),
+  accesskey: L10N.getStr("breakpointMenuItem.removeAllAtLine.accesskey"),
+  disabled: false,
+  click: () =>
+    breakpointActions.removeBreakpointsAtLine(location.sourceId, location.line)
+});
+
+export const enableBreakpointsOnLineItem = (
+  location: SourceLocation,
+  breakpointActions: BreakpointItemActions
+) => ({
+  id: "node-menu-remove-breakpoints-on-line",
+  label: L10N.getStr("breakpointMenuItem.enableAllAtLine.label"),
+  accesskey: L10N.getStr("breakpointMenuItem.enableAllAtLine.accesskey"),
+  disabled: false,
+  click: () =>
+    breakpointActions.enableBreakpointsAtLine(location.sourceId, location.line)
+});
+
+export const disableBreakpointsOnLineItem = (
+  location: SourceLocation,
+  breakpointActions: BreakpointItemActions
+) => ({
+  id: "node-menu-remove-breakpoints-on-line",
+  label: L10N.getStr("breakpointMenuItem.disableAllAtLine.label"),
+  accesskey: L10N.getStr("breakpointMenuItem.disableAllAtLine.accesskey"),
+  disabled: false,
+  click: () =>
+    breakpointActions.disableBreakpointsAtLine(location.sourceId, location.line)
+});
 
 export type BreakpointItemActions = {
   addBreakpoint: typeof actions.addBreakpoint,
   removeBreakpoint: typeof actions.removeBreakpoint,
   removeBreakpointsAtLine: typeof actions.removeBreakpointsAtLine,
+  enableBreakpointsAtLine: typeof actions.enableBreakpointsAtLine,
+  disableBreakpointsAtLine: typeof actions.disableBreakpointsAtLine,
   toggleDisabledBreakpoint: typeof actions.toggleDisabledBreakpoint,
   openConditionalPanel: typeof actions.openConditionalPanel
 };
@@ -196,6 +224,8 @@ export function breakpointItemActions(dispatch: Function) {
       addBreakpoint: actions.addBreakpoint,
       removeBreakpoint: actions.removeBreakpoint,
       removeBreakpointsAtLine: actions.removeBreakpointsAtLine,
+      enableBreakpointsAtLine: actions.enableBreakpointsAtLine,
+      disableBreakpointsAtLine: actions.disableBreakpointsAtLine,
       disableBreakpoint: actions.disableBreakpoint,
       toggleDisabledBreakpoint: actions.toggleDisabledBreakpoint,
       openConditionalPanel: actions.openConditionalPanel

@@ -71,10 +71,6 @@
   border-color: var(--theme-body-color);
 }
 
-.theme-dark .popover .preview-popup .arrow svg {
-  fill: var(--theme-comment);
-}
-
 .tooltip {
   position: fixed;
   z-index: 100;
