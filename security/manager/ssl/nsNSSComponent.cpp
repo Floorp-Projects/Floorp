@@ -482,7 +482,7 @@ void nsNSSComponent::UnloadEnterpriseRoots() {
   }
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("UnloadEnterpriseRoots"));
   MutexAutoLock lock(mMutex);
-  mEnterpriseRoots.clear();
+  mEnterpriseCerts.clear();
   setValidationOptions(false, lock);
 }
 
@@ -510,32 +510,47 @@ void nsNSSComponent::MaybeImportEnterpriseRoots() {
 
 void nsNSSComponent::ImportEnterpriseRoots() {
   MutexAutoLock lock(mMutex);
-  nsresult rv = GatherEnterpriseRoots(mEnterpriseRoots);
+  nsresult rv = GatherEnterpriseCerts(mEnterpriseCerts);
   if (NS_FAILED(rv)) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("failed gathering enterprise roots"));
   }
 }
 
-NS_IMETHODIMP
-nsNSSComponent::GetEnterpriseRoots(
-    nsTArray<nsTArray<uint8_t>>& enterpriseRoots) {
+nsresult nsNSSComponent::CommonGetEnterpriseCerts(
+    nsTArray<nsTArray<uint8_t>>& enterpriseCerts, bool getRoots) {
   MutexAutoLock nsNSSComponentLock(mMutex);
   MOZ_ASSERT(NS_IsMainThread());
   if (!NS_IsMainThread()) {
     return NS_ERROR_NOT_SAME_THREAD;
   }
 
-  enterpriseRoots.Clear();
-  for (const auto& root : mEnterpriseRoots) {
-    nsTArray<uint8_t> rootCopy;
-    if (!rootCopy.AppendElements(root.begin(), root.length())) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    if (!enterpriseRoots.AppendElement(std::move(rootCopy))) {
-      return NS_ERROR_OUT_OF_MEMORY;
+  enterpriseCerts.Clear();
+  for (const auto& cert : mEnterpriseCerts) {
+    nsTArray<uint8_t> certCopy;
+    // mEnterpriseCerts includes both roots and intermediates.
+    if (cert.GetIsRoot() == getRoots) {
+      nsresult rv = cert.CopyBytes(certCopy);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+      if (!enterpriseCerts.AppendElement(std::move(certCopy))) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
     }
   }
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNSSComponent::GetEnterpriseRoots(
+    nsTArray<nsTArray<uint8_t>>& enterpriseRoots) {
+  return CommonGetEnterpriseCerts(enterpriseRoots, true);
+}
+
+NS_IMETHODIMP
+nsNSSComponent::GetEnterpriseIntermediates(
+    nsTArray<nsTArray<uint8_t>>& enterpriseIntermediates) {
+  return CommonGetEnterpriseCerts(enterpriseIntermediates, false);
 }
 
 class LoadLoadableRootsTask final : public Runnable {
@@ -1199,7 +1214,7 @@ void nsNSSComponent::setValidationOptions(
   mDefaultCertVerifier = new SharedCertVerifier(
       odc, osc, softTimeout, hardTimeout, certShortLifetimeInDays, pinningMode,
       sha1Mode, nameMatchingMode, netscapeStepUpPolicy, ctMode,
-      distrustedCAPolicy, mEnterpriseRoots);
+      distrustedCAPolicy, mEnterpriseCerts);
 }
 
 void nsNSSComponent::UpdateCertVerifierWithEnterpriseRoots() {
@@ -1218,7 +1233,7 @@ void nsNSSComponent::UpdateCertVerifierWithEnterpriseRoots() {
       oldCertVerifier->mCertShortLifetimeInDays, oldCertVerifier->mPinningMode,
       oldCertVerifier->mSHA1Mode, oldCertVerifier->mNameMatchingMode,
       oldCertVerifier->mNetscapeStepUpPolicy, oldCertVerifier->mCTMode,
-      oldCertVerifier->mDistrustedCAPolicy, mEnterpriseRoots);
+      oldCertVerifier->mDistrustedCAPolicy, mEnterpriseCerts);
 }
 
 // Enable the TLS versions given in the prefs, defaulting to TLS 1.0 (min) and

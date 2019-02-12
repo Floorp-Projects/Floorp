@@ -68,6 +68,7 @@ EXTRA_JS_MODULES.psm += [
 
 EXPORTS += [
     'CryptoTask.h',
+    'EnterpriseRoots.h',
     'nsClientAuthRemember.h',
     'nsNSSCallbacks.h',
     'nsNSSCertificate.h',
