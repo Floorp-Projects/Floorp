@@ -6567,30 +6567,9 @@ nsresult PresShell::EventHandler::HandleEvent(nsIFrame* aFrame,
 
     if (pointerCapturingContent) {
       rootFrameToHandleEvent = pointerCapturingContent->GetPrimaryFrame();
-
       if (!rootFrameToHandleEvent) {
-        RefPtr<PresShell> shell =
-            PresShell::GetShellForEventTarget(nullptr, pointerCapturingContent);
-        if (!shell) {
-          // If we can't process event for the capturing content, release
-          // the capture.
-          PointerEventHandler::ReleaseIfCaptureByDescendant(
-              pointerCapturingContent);
-          return NS_OK;
-        }
-
-        nsCOMPtr<nsIContent> overrideClickTarget =
-            GetOverrideClickTarget(aGUIEvent, aFrame);
-
-        // Dispatch events to the capturing content even it's frame is
-        // destroyed.
-        PointerEventHandler::DispatchPointerFromMouseOrTouch(
-            shell, nullptr, pointerCapturingContent, aGUIEvent, false,
-            aEventStatus, nullptr);
-
-        return shell->HandleEventWithTarget(
-            aGUIEvent, nullptr, pointerCapturingContent, aEventStatus, true,
-            nullptr, overrideClickTarget);
+        return HandleEventWithPointerCapturingContentWithoutItsFrame(
+            aFrame, aGUIEvent, pointerCapturingContent, aEventStatus);
       }
     }
 
@@ -7446,6 +7425,47 @@ PresShell::EventHandler::ComputeRootFrameToHandleEventWithCapturingContent(
   nsIScrollableFrame* scrollFrame = do_QueryFrame(captureFrame);
   return scrollFrame ? scrollFrame->GetScrolledFrame()
                      : aRootFrameToHandleEvent;
+}
+
+nsresult
+PresShell::EventHandler::HandleEventWithPointerCapturingContentWithoutItsFrame(
+    nsIFrame* aFrameForPresShell, WidgetGUIEvent* aGUIEvent,
+    nsIContent* aPointerCapturingContent, nsEventStatus* aEventStatus) {
+  MOZ_ASSERT(aGUIEvent);
+  MOZ_ASSERT(aPointerCapturingContent);
+  MOZ_ASSERT(!aPointerCapturingContent->GetPrimaryFrame(),
+             "Handle the event with frame rather than only with the content");
+  MOZ_ASSERT(aEventStatus);
+
+  RefPtr<PresShell> presShellForCapturingContent =
+      PresShell::GetShellForEventTarget(nullptr, aPointerCapturingContent);
+  if (!presShellForCapturingContent) {
+    // If we can't process event for the capturing content, release
+    // the capture.
+    PointerEventHandler::ReleaseIfCaptureByDescendant(aPointerCapturingContent);
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIContent> overrideClickTarget =
+      GetOverrideClickTarget(aGUIEvent, aFrameForPresShell);
+
+  // Dispatch events to the capturing content even it's frame is
+  // destroyed.
+  PointerEventHandler::DispatchPointerFromMouseOrTouch(
+      presShellForCapturingContent, nullptr, aPointerCapturingContent,
+      aGUIEvent, false, aEventStatus, nullptr);
+
+  if (presShellForCapturingContent == mPresShell) {
+    return HandleEventWithTarget(aGUIEvent, nullptr, aPointerCapturingContent,
+                                 aEventStatus, true, nullptr,
+                                 overrideClickTarget);
+  }
+
+  EventHandler eventHandlerForCapturingContent(
+      std::move(presShellForCapturingContent));
+  return eventHandlerForCapturingContent.HandleEventWithTarget(
+      aGUIEvent, nullptr, aPointerCapturingContent, aEventStatus, true, nullptr,
+      overrideClickTarget);
 }
 
 Document* PresShell::GetPrimaryContentDocument() {
