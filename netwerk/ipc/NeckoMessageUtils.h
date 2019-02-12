@@ -16,7 +16,6 @@
 #include "prio.h"
 #include "mozilla/net/DNS.h"
 #include "TimingStruct.h"
-#include "nsILoadInfo.h"
 
 namespace IPC {
 
@@ -186,21 +185,6 @@ struct ParamTraits<nsIHttpChannel::FlashPluginState>
     : public ContiguousEnumSerializerInclusive<
           nsIHttpChannel::FlashPluginState, nsIHttpChannel::FlashPluginUnknown,
           nsIHttpChannel::FlashPluginLastValue> {};
-
-struct CrossOriginOpenerPolicyValidator {
-  static bool IsLegalValue(nsILoadInfo::CrossOriginOpenerPolicy e) {
-    return e == nsILoadInfo::OPENER_POLICY_NULL ||
-           e == nsILoadInfo::OPENER_POLICY_SAME_ORIGIN ||
-           e == nsILoadInfo::OPENER_POLICY_SAME_SITE ||
-           e == nsILoadInfo::OPENER_POLICY_SAME_ORIGIN_ALLOW_OUTGOING ||
-           e == nsILoadInfo::OPENER_POLICY_SAME_SITE_ALLOW_OUTGOING;
-  }
-};
-
-template <>
-struct ParamTraits<nsILoadInfo::CrossOriginOpenerPolicy>
-    : EnumSerializer<nsILoadInfo::CrossOriginOpenerPolicy,
-                     CrossOriginOpenerPolicyValidator> {};
 
 }  // namespace IPC
 

@@ -14,7 +14,6 @@ include URIParams;
 include IPCServiceWorkerDescriptor;
 include IPCStream;
 include PBackgroundSharedTypes;
-include DOMTypes;
 
 using mozilla::OriginAttributes from "mozilla/ipc/BackgroundUtils.h";
 using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
@@ -23,7 +22,6 @@ using ArrayOfStringPairs from "mozilla/net/PHttpChannelParams.h";
 using struct nsHttpAtom from "nsHttp.h";
 using class mozilla::net::nsHttpResponseHead from "nsHttpResponseHead.h";
 using class mozilla::TimeStamp from "mozilla/TimeStamp.h";
-using nsILoadInfo::CrossOriginOpenerPolicy from "mozilla/net/NeckoMessageUtils.h";
 
 namespace mozilla {
 namespace net {
@@ -113,7 +111,6 @@ struct LoadInfoArgs
   bool                        documentHasUserInteracted;
   bool                        documentHasLoaded;
   bool                        isFromProcessingFrameAttributes;
-  CrossOriginOpenerPolicy     openerPolicy;
 };
 
 /**
@@ -153,8 +150,6 @@ struct ParentLoadInfoForwarderArgs
 
   bool documentHasUserInteracted;
   bool documentHasLoaded;
-
-  CrossOriginOpenerPolicy openerPolicy;
 
   // IMPORTANT: when you add new properites here you must also update
   // LoadInfoToParentLoadInfoForwarder and MergeParentLoadInfoForwarder
@@ -213,7 +208,6 @@ struct HttpChannelOpenArgs
   uint32_t                    referrerPolicy;
   OptionalURIParams           apiRedirectTo;
   OptionalURIParams           topWindowURI;
-  nsIPrincipal                topWindowPrincipal;
   uint32_t                    loadFlags;
   RequestHeaderTuples         requestHeaders;
   nsCString                   requestMethod;
