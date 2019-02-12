@@ -2070,25 +2070,11 @@ static nsCOMPtr<nsIToolkitProfile> gResetOldProfile;
 // 6) display the profile-manager UI
 static nsresult SelectProfile(nsIProfileLock** aResult,
                               nsToolkitProfileService* aProfileSvc,
-                              nsINativeAppSupport* aNative,
-                              bool* aStartOffline) {
+                              nsINativeAppSupport* aNative) {
   StartupTimeline::Record(StartupTimeline::SELECT_PROFILE);
 
   nsresult rv;
-  ArgResult ar;
   *aResult = nullptr;
-  *aStartOffline = false;
-
-  ar = CheckArg("offline", nullptr,
-                CheckArgFlag::CheckOSInt | CheckArgFlag::RemoveArg);
-  if (ar == ARG_BAD) {
-    PR_fprintf(PR_STDERR,
-               "Error: argument --offline is invalid when argument --osint is "
-               "specified\n");
-    return NS_ERROR_FAILURE;
-  }
-
-  if (ar || EnvHasValue("XRE_START_OFFLINE")) *aStartOffline = true;
 
   if (EnvHasValue("MOZ_RESET_PROFILE_RESTART")) {
     gDoProfileReset = true;
@@ -2105,8 +2091,8 @@ static nsresult SelectProfile(nsIProfileLock** aResult,
 
   // reset-profile and migration args need to be checked before any profiles are
   // chosen below.
-  ar = CheckArg("reset-profile", nullptr,
-                CheckArgFlag::CheckOSInt | CheckArgFlag::RemoveArg);
+  ArgResult ar = CheckArg("reset-profile", nullptr,
+                          CheckArgFlag::CheckOSInt | CheckArgFlag::RemoveArg);
   if (ar == ARG_BAD) {
     PR_fprintf(PR_STDERR,
                "Error: argument --reset-profile is invalid when argument "
@@ -3525,6 +3511,19 @@ int XREMain::XRE_mainInit(bool* aExitFlag) {
     SaveToEnv("MOZ_NEW_INSTANCE=1");
   }
 
+  ar = CheckArg("offline", nullptr,
+                CheckArgFlag::CheckOSInt | CheckArgFlag::RemoveArg);
+  if (ar == ARG_BAD) {
+    PR_fprintf(PR_STDERR,
+               "Error: argument --offline is invalid when argument --osint is "
+               "specified\n");
+    return 1;
+  }
+
+  if (ar || EnvHasValue("XRE_START_OFFLINE")) {
+    mStartOffline = true;
+  }
+
   // Handle --help and --version command line arguments.
   // They should return quickly, so we deal with them here.
   if (CheckArg("h") || CheckArg("help") || CheckArg("?")) {
@@ -4170,8 +4169,7 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
     return 1;
   }
 
-  rv = SelectProfile(getter_AddRefs(mProfileLock), mProfileSvc, mNativeApp,
-                     &mStartOffline);
+  rv = SelectProfile(getter_AddRefs(mProfileLock), mProfileSvc, mNativeApp);
   if (rv == NS_ERROR_LAUNCHED_CHILD_PROCESS || rv == NS_ERROR_ABORT) {
     *aExitFlag = true;
     return 0;
