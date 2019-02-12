@@ -63,7 +63,6 @@ var ExtensionPermissions = {
     let perms = prefs.data[extensionId];
     if (!perms) {
       perms = emptyPermissions();
-      prefs.data[extensionId] = perms;
     }
 
     return perms;
@@ -74,6 +73,16 @@ var ExtensionPermissions = {
                                         () => this._get(extensionId));
   },
 
+  /**
+   * Retrieves the optional permissions for the given extension.
+   * The information may be retrieved from the StartupCache, and otherwise fall
+   * back to data from the disk (and cache the result in the StartupCache).
+   *
+   * @param {string} extensionId The extensionId
+   * @returns {object} An object with "permissions" and "origins" array.
+   *   The object may be a direct reference to the storage or cache, so its
+   *   value should immediately be used and not be modified by callers.
+   */
   get(extensionId) {
     return this._getCached(extensionId);
   },
@@ -154,10 +163,10 @@ var ExtensionPermissions = {
   },
 
   async removeAll(extensionId) {
-    let perms = await this._getCached(extensionId);
-
-    if (perms.permissions.length || perms.origins.length) {
-      Object.assign(perms, emptyPermissions());
+    await lazyInit();
+    StartupCache.permissions.delete(extensionId);
+    if (prefs.data[extensionId]) {
+      delete prefs.data[extensionId];
       prefs.saveSoon();
     }
   },
