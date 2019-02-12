@@ -36,9 +36,10 @@ class LibraryFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        libraryHistory.setOnClickListener {
-            Navigation.findNavController(it).navigate(R.id.action_libraryFragment_to_historyFragment)
-        }
+        libraryHistory.setOnClickListener(Navigation.createNavigateOnClickListener(
+            LibraryFragmentDirections.actionLibraryFragmentToHistoryFragment().actionId,
+            null)
+        )
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
