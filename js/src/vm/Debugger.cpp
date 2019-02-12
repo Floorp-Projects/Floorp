@@ -27,6 +27,7 @@
 #include "jit/BaselineJIT.h"
 #include "js/CharacterEncoding.h"
 #include "js/Date.h"
+#include "js/Promise.h"
 #include "js/PropertyDescriptor.h"
 #include "js/PropertySpec.h"
 #include "js/SourceText.h"
@@ -297,8 +298,13 @@ class MOZ_RAII js::EnterDebuggeeNoExecute {
   bool reported_;
 
  public:
-  explicit EnterDebuggeeNoExecute(JSContext* cx, Debugger& dbg)
+  // Mark execution in dbg's debuggees as forbidden, for the lifetime of this
+  // object. Require an AutoDebuggerJobQueueInterruption in scope.
+  explicit EnterDebuggeeNoExecute(
+      JSContext* cx, Debugger& dbg,
+      const JS::AutoDebuggerJobQueueInterruption& adjqiProof)
       : dbg_(dbg), unlocked_(nullptr), reported_(false) {
+    MOZ_ASSERT(adjqiProof.initialized());
     stack_ = &cx->noExecuteDebuggerTop.ref();
     prev_ = *stack_;
     *stack_ = this;
@@ -1041,6 +1047,14 @@ class MOZ_RAII AutoSetGeneratorRunning {
   Debugger::resultToCompletion(cx, frameOk, frame.returnValue(), &resumeMode,
                                &value);
 
+  // Preserve the debuggee's microtask event queue while we run the hooks, so
+  // the debugger's microtask checkpoints don't run from the debuggee's
+  // microtasks, and vice versa.
+  JS::AutoDebuggerJobQueueInterruption adjqi;
+  if (!adjqi.init(cx)) {
+    return false;
+  }
+
   // This path can be hit via unwinding the stack due to over-recursion or
   // OOM. In those cases, don't fire the frames' onPop handlers, because
   // invoking JS will only trigger the same condition. See
@@ -1050,7 +1064,7 @@ class MOZ_RAII AutoSetGeneratorRunning {
     for (size_t i = 0; i < frames.length(); i++) {
       HandleDebuggerFrame frameobj = frames[i];
       Debugger* dbg = Debugger::fromChildJSObject(frameobj);
-      EnterDebuggeeNoExecute nx(cx, *dbg);
+      EnterDebuggeeNoExecute nx(cx, *dbg, adjqi);
 
       if (dbg->enabled && frameobj->onPopHandler()) {
         OnPopHandler* handler = frameobj->onPopHandler();
@@ -1073,6 +1087,7 @@ class MOZ_RAII AutoSetGeneratorRunning {
           AutoSetGeneratorRunning asgr(cx, genObj);
           success = handler->onPop(cx, frameobj, nextResumeMode, &nextValue);
         }
+        adjqi.runJobs();
         nextResumeMode = dbg->processParsedHandlerResult(
             ar, frame, pc, success, nextResumeMode, &nextValue);
 
@@ -1654,8 +1669,9 @@ ResumeMode Debugger::handleUncaughtExceptionHelper(
     const Maybe<HandleValue>& thisVForCheck, AbstractFramePtr frame) {
   JSContext* cx = ar->context();
 
-  // Uncaught exceptions arise from Debugger code, and so we must already be
-  // in an NX section.
+  // Uncaught exceptions arise from Debugger code, and so we must already be in
+  // an NX section. This also establishes that we are already within the scope
+  // of an AutoDebuggerJobQueueInterruption object.
   MOZ_ASSERT(EnterDebuggeeNoExecute::isLockedInStack(cx, *this));
 
   if (cx->isExceptionPending()) {
@@ -2046,13 +2062,22 @@ template <typename HookIsEnabledFun /* bool (Debugger*) */,
     }
   }
 
+  // Preserve the debuggee's microtask event queue while we run the hooks, so
+  // the debugger's microtask checkpoints don't run from the debuggee's
+  // microtasks, and vice versa.
+  JS::AutoDebuggerJobQueueInterruption adjqi;
+  if (!adjqi.init(cx)) {
+    return ResumeMode::Terminate;
+  }
+
   // Deliver the event to each debugger, checking again to make sure it
   // should still be delivered.
   for (Value* p = triggered.begin(); p != triggered.end(); p++) {
     Debugger* dbg = Debugger::fromJSObject(&p->toObject());
-    EnterDebuggeeNoExecute nx(cx, *dbg);
+    EnterDebuggeeNoExecute nx(cx, *dbg, adjqi);
     if (dbg->debuggees.has(global) && dbg->enabled && hookIsEnabled(dbg)) {
       ResumeMode resumeMode = fireHook(dbg);
+      adjqi.runJobs();
       if (resumeMode != ResumeMode::Continue) {
         return resumeMode;
       }
@@ -2147,51 +2172,60 @@ void Debugger::slowPathOnNewWasmInstance(
     }
   }
 
-  for (Breakpoint** p = triggered.begin(); p != triggered.end(); p++) {
-    Breakpoint* bp = *p;
-
-    // Handlers can clear breakpoints. Check that bp still exists.
-    if (!site || !site->hasBreakpoint(bp)) {
-      continue;
+  if (triggered.length() > 0) {
+    // Preserve the debuggee's microtask event queue while we run the hooks, so
+    // the debugger's microtask checkpoints don't run from the debuggee's
+    // microtasks, and vice versa.
+    JS::AutoDebuggerJobQueueInterruption adjqi;
+    if (!adjqi.init(cx)) {
+      return ResumeMode::Terminate;
     }
 
-    // There are two reasons we have to check whether dbg is enabled and
-    // debugging global.
-    //
-    // One is just that one breakpoint handler can disable other Debuggers
-    // or remove debuggees.
-    //
-    // The other has to do with non-compile-and-go scripts, which have no
-    // specific global--until they are executed. Only now do we know which
-    // global the script is running against.
-    Debugger* dbg = bp->debugger;
-    bool hasDebuggee = dbg->enabled && dbg->debuggees.has(global);
-    if (hasDebuggee) {
-      Maybe<AutoRealm> ar;
-      ar.emplace(cx, dbg->object);
-      EnterDebuggeeNoExecute nx(cx, *dbg);
-
-      RootedValue scriptFrame(cx);
-      if (!dbg->getFrame(cx, iter, &scriptFrame)) {
-        return dbg->reportUncaughtException(ar);
-      }
-      RootedValue rv(cx);
-      Rooted<JSObject*> handler(cx, bp->handler);
-      bool ok = CallMethodIfPresent(cx, handler, "hit", 1,
-                                    scriptFrame.address(), &rv);
-      ResumeMode resumeMode = dbg->processHandlerResult(
-          ar, ok, rv, iter.abstractFramePtr(), iter.pc(), vp);
-      if (resumeMode != ResumeMode::Continue) {
-        savedExc.drop();
-        return resumeMode;
+    for (Breakpoint* bp : triggered) {
+      // Handlers can clear breakpoints. Check that bp still exists.
+      if (!site || !site->hasBreakpoint(bp)) {
+        continue;
       }
 
-      // Calling JS code invalidates site. Reload it.
-      if (isJS) {
-        site = iter.script()->getBreakpointSite(pc);
-      } else {
-        site = iter.wasmInstance()->debug().getOrCreateBreakpointSite(
-            cx, bytecodeOffset);
+      // There are two reasons we have to check whether dbg is enabled and
+      // debugging global.
+      //
+      // One is just that one breakpoint handler can disable other Debuggers
+      // or remove debuggees.
+      //
+      // The other has to do with non-compile-and-go scripts, which have no
+      // specific global--until they are executed. Only now do we know which
+      // global the script is running against.
+      Debugger* dbg = bp->debugger;
+      bool hasDebuggee = dbg->enabled && dbg->debuggees.has(global);
+      if (hasDebuggee) {
+        Maybe<AutoRealm> ar;
+        ar.emplace(cx, dbg->object);
+        EnterDebuggeeNoExecute nx(cx, *dbg, adjqi);
+
+        RootedValue scriptFrame(cx);
+        if (!dbg->getFrame(cx, iter, &scriptFrame)) {
+          return dbg->reportUncaughtException(ar);
+        }
+        RootedValue rv(cx);
+        Rooted<JSObject*> handler(cx, bp->handler);
+        bool ok = CallMethodIfPresent(cx, handler, "hit", 1,
+                                      scriptFrame.address(), &rv);
+        adjqi.runJobs();
+        ResumeMode resumeMode = dbg->processHandlerResult(
+            ar, ok, rv, iter.abstractFramePtr(), iter.pc(), vp);
+        if (resumeMode != ResumeMode::Continue) {
+          savedExc.drop();
+          return resumeMode;
+        }
+
+        // Calling JS code invalidates site. Reload it.
+        if (isJS) {
+          site = iter.script()->getBreakpointSite(pc);
+        } else {
+          site = iter.wasmInstance()->debug().getOrCreateBreakpointSite(
+              cx, bytecodeOffset);
+        }
       }
     }
   }
@@ -2255,27 +2289,38 @@ void Debugger::slowPathOnNewWasmInstance(
   }
 #endif
 
-  // Call onStep for frames that have the handler set.
-  for (size_t i = 0; i < frames.length(); i++) {
-    HandleDebuggerFrame frame = frames[i];
-    OnStepHandler* handler = frame->onStepHandler();
-    if (!handler) {
-      continue;
+  if (frames.length() > 0) {
+    // Preserve the debuggee's microtask event queue while we run the hooks, so
+    // the debugger's microtask checkpoints don't run from the debuggee's
+    // microtasks, and vice versa.
+    JS::AutoDebuggerJobQueueInterruption adjqi;
+    if (!adjqi.init(cx)) {
+      return ResumeMode::Terminate;
     }
 
-    Debugger* dbg = Debugger::fromChildJSObject(frame);
-    EnterDebuggeeNoExecute nx(cx, *dbg);
+    // Call onStep for frames that have the handler set.
+    for (size_t i = 0; i < frames.length(); i++) {
+      HandleDebuggerFrame frame = frames[i];
+      OnStepHandler* handler = frame->onStepHandler();
+      if (!handler) {
+        continue;
+      }
 
-    Maybe<AutoRealm> ar;
-    ar.emplace(cx, dbg->object);
+      Debugger* dbg = Debugger::fromChildJSObject(frame);
+      EnterDebuggeeNoExecute nx(cx, *dbg, adjqi);
 
-    ResumeMode resumeMode = ResumeMode::Continue;
-    bool success = handler->onStep(cx, frame, resumeMode, vp);
-    resumeMode = dbg->processParsedHandlerResult(
-        ar, iter.abstractFramePtr(), iter.pc(), success, resumeMode, vp);
-    if (resumeMode != ResumeMode::Continue) {
-      savedExc.drop();
-      return resumeMode;
+      Maybe<AutoRealm> ar;
+      ar.emplace(cx, dbg->object);
+
+      ResumeMode resumeMode = ResumeMode::Continue;
+      bool success = handler->onStep(cx, frame, resumeMode, vp);
+      adjqi.runJobs();
+      resumeMode = dbg->processParsedHandlerResult(
+          ar, iter.abstractFramePtr(), iter.pc(), success, resumeMode, vp);
+      if (resumeMode != ResumeMode::Continue) {
+        savedExc.drop();
+        return resumeMode;
+      }
     }
   }
 
@@ -2348,9 +2393,18 @@ void Debugger::slowPathOnNewGlobalObject(JSContext* cx,
   ResumeMode resumeMode = ResumeMode::Continue;
   RootedValue value(cx);
 
+  // Preserve the debuggee's microtask event queue while we run the hooks, so
+  // the debugger's microtask checkpoints don't run from the debuggee's
+  // microtasks, and vice versa.
+  JS::AutoDebuggerJobQueueInterruption adjqi;
+  if (!adjqi.init(cx)) {
+    cx->clearPendingException();
+    return;
+  }
+
   for (size_t i = 0; i < watchers.length(); i++) {
     Debugger* dbg = fromJSObject(watchers[i]);
-    EnterDebuggeeNoExecute nx(cx, *dbg);
+    EnterDebuggeeNoExecute nx(cx, *dbg, adjqi);
 
     // We disallow resumption values from onNewGlobalObject hooks, because we
     // want the debugger hooks for global object creation to be infallible.
@@ -2362,6 +2416,7 @@ void Debugger::slowPathOnNewGlobalObject(JSContext* cx,
     // if a non-success resume mode is returned.
     if (dbg->observesNewGlobalObject()) {
       resumeMode = dbg->fireNewGlobalObject(cx, global, &value);
+      adjqi.runJobs();
       if (resumeMode != ResumeMode::Continue &&
           resumeMode != ResumeMode::Return) {
         break;
