@@ -382,7 +382,7 @@ class Bootstrapper(object):
         self.instance.ensure_node_packages(state_dir, checkout_root)
         if not self.instance.artifact_mode:
             self.instance.ensure_stylo_packages(state_dir, checkout_root)
-            self.instance.ensure_clang_static_analysis_package(state_dir, checkout_root)
+            self.instance.ensure_clang_static_analysis_package(checkout_root)
 
     def check_telemetry_opt_in(self, state_dir):
         # We can't prompt the user.

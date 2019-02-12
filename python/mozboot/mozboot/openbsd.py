@@ -47,7 +47,7 @@ class OpenBSDBootstrapper(BaseBootstrapper):
         # we use -z because there's no other way to say "any autoconf-2.13"
         self.run_as_root(['pkg_add', '-z'] + self.browser_packages)
 
-    def ensure_clang_static_analysis_package(self, state_dir, checkout_root):
+    def ensure_clang_static_analysis_package(self, checkout_root):
         # TODO: we don't ship clang base static analysis for this platform
         pass
 
