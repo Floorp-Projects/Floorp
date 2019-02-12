@@ -2413,8 +2413,6 @@ static const char kProfileDowngradeURL[] =
     "chrome://mozapps/content/profile/profileDowngrade.xul";
 
 static ReturnAbortOnError CheckDowngrade(nsIFile* aProfileDir,
-                                         nsIFile* aProfileLocalDir,
-                                         nsACString& aProfileName,
                                          nsINativeAppSupport* aNative,
                                          nsIToolkitProfileService* aProfileSvc,
                                          const nsCString& aLastVersion) {
@@ -4240,8 +4238,7 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
 
 #ifdef MOZ_BLOCK_PROFILE_DOWNGRADE
   if (isDowngrade && !CheckArg("allow-downgrade")) {
-    rv = CheckDowngrade(mProfD, mProfLD, mProfileName, mNativeApp, mProfileSvc,
-                        lastVersion);
+    rv = CheckDowngrade(mProfD, mNativeApp, mProfileSvc, lastVersion);
     if (rv == NS_ERROR_LAUNCHED_CHILD_PROCESS || rv == NS_ERROR_ABORT) {
       *aExitFlag = true;
       return 0;
