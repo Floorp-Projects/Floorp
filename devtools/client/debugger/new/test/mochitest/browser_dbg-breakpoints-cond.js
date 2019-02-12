@@ -163,8 +163,9 @@ add_task(async function() {
 
   info('Add "log point"');
   await setLogPoint(dbg, 5, "44");
-  assertEditorBreakpoint(dbg, 5, { hasLog: true });
   await waitForBreakpointWithLog(dbg, "simple2", 5);
+  assertEditorBreakpoint(dbg, 5, { hasLog: true });
+
   bp = findBreakpoint(dbg, "simple2", 5);
   is(bp.options.logValue, "44", "breakpoint condition removed");
 });
