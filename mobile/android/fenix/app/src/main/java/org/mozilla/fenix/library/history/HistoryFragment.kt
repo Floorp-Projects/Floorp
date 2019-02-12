@@ -28,9 +28,9 @@ import kotlin.coroutines.CoroutineContext
 
 class HistoryFragment : Fragment(), CoroutineScope {
 
-    lateinit var job: Job
+    private lateinit var job: Job
     override val coroutineContext: CoroutineContext
-        get() = Dispatchers.Default + job
+        get() = Dispatchers.Main + job
 
     override fun onCreateView(
         inflater: LayoutInflater,
