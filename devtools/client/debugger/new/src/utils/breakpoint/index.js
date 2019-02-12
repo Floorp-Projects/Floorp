@@ -169,14 +169,12 @@ export function createBreakpoint(
   overrides: Object = {}
 ): Breakpoint {
   const {
-    condition,
     disabled,
-    hidden,
     generatedLocation,
     astLocation,
     text,
     originalText,
-    logValue
+    options
   } = overrides;
 
   const defaultASTLocation = {
@@ -187,9 +185,9 @@ export function createBreakpoint(
   const properties = {
     id: makeBreakpointId(location),
     options: {
-      condition: condition || null,
-      logValue: logValue || null,
-      hidden: hidden || false
+      condition: options.condition || null,
+      logValue: options.logValue || null,
+      hidden: options.hidden || false
     },
     disabled: disabled || false,
     loading: false,
