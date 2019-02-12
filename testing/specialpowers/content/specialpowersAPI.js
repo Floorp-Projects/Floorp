@@ -2150,7 +2150,7 @@ SpecialPowersAPI.prototype = {
       channel.loadFlags |= Ci.nsIChannel.LOAD_DOCUMENT_URI;
       channel.QueryInterface(Ci.nsIHttpChannelInternal);
       channel.documentURI = uri;
-      channel.asyncOpen2(listener);
+      channel.asyncOpen(listener);
     });
   },
 

@@ -156,11 +156,6 @@ interface nsIChannel : nsIRequest
     nsIInputStream open();
 
     /**
-     * Performs content security check and calls open()
-     */
-    nsIInputStream open2();
-
-    /**
      * Asynchronously open this channel.  Data is fed to the specified stream
      * listener as it becomes available.  The stream listener's methods are
      * called on the thread that calls asyncOpen and are not called until
@@ -188,15 +183,9 @@ interface nsIChannel : nsIRequest
      * channel is reopened.
      *
      * @param aListener the nsIStreamListener implementation
-     * @param aContext an opaque parameter forwarded to aListener's methods
      * @see nsIChannelEventSink for onChannelRedirect
      */
-    void asyncOpen(in nsIStreamListener aListener, in nsISupports aContext);
-
-    /**
-     * Performs content security check and calls asyncOpen().
-     */
-    void asyncOpen2(in nsIStreamListener aListener);
+    void asyncOpen(in nsIStreamListener aListener);
 
     /**************************************************************************
      * Channel specific load flags:

@@ -256,7 +256,7 @@ nsresult nsAutoConfig::downloadAutoConfig() {
 
   if (NS_FAILED(rv)) return rv;
 
-  rv = channel->AsyncOpen2(this);
+  rv = channel->AsyncOpen(this);
   if (NS_FAILED(rv)) {
     readOfflineFile();
     return rv;

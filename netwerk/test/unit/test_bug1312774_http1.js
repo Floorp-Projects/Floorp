@@ -50,7 +50,7 @@ function commonHttpRequest(id) {
   var listner = new HttpResponseListener(id);
   chan.setRequestHeader("X-ID", id, false);
   chan.setRequestHeader("Cache-control", "no-store", false);
-  chan.asyncOpen2(listner);
+  chan.asyncOpen(listner);
   log("Create common http request id=" + id);
 }
 
@@ -62,7 +62,7 @@ function urgentStartHttpRequest(id) {
   cos.addClassFlags(Ci.nsIClassOfService.UrgentStart);
   chan.setRequestHeader("X-ID", id, false);
   chan.setRequestHeader("Cache-control", "no-store", false);
-  chan.asyncOpen2(listner);
+  chan.asyncOpen(listner);
   log("Create urgent-start http request id=" + id);
 }
 

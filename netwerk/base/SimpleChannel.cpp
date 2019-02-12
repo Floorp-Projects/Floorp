@@ -124,12 +124,8 @@ SimpleChannelChild::CompleteRedirectSetup(nsIStreamListener* aListener,
   }
 
   nsresult rv;
-  if (mLoadInfo && mLoadInfo->GetEnforceSecurity()) {
-    MOZ_ASSERT(!aContext, "aContext should be null!");
-    rv = AsyncOpen2(aListener);
-  } else {
-    rv = AsyncOpen(aListener, aContext);
-  }
+  MOZ_ASSERT(!aContext, "aContext should be null!");
+  rv = AsyncOpen(aListener);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

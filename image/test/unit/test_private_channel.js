@@ -43,7 +43,7 @@ function setup_chan(path, isPrivate, callback) {
   chan.notificationCallbacks = isPrivate ? privateLoadContext
                                          : nonPrivateLoadContext;
   var channelListener = new ChannelListener();
-  chan.asyncOpen2(channelListener);
+  chan.asyncOpen(channelListener);
 
   var listener = new ImageListener(null, callback);
   var outlistener = {};

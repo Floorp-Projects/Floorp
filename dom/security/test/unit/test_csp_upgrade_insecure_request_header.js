@@ -87,7 +87,7 @@ function run_next_test() {
     return;
   }
   channel = setupChannel(curTest.contentType);
-  channel.asyncOpen2(new ChannelListener());
+  channel.asyncOpen(new ChannelListener());
 }
 
 function run_test() {

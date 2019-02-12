@@ -55,7 +55,7 @@ function fetch(preferredDataType = null)
       cc.preferAlternativeDataType(altContentType, "");
     }
 
-    chan.asyncOpen2(new ChannelListener((request,
+    chan.asyncOpen(new ChannelListener((request,
                                          buffer,
                                          ctx,
                                          isFromCache,

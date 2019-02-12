@@ -1588,7 +1588,7 @@ nsresult PendingLookup::SendRemoteQueryInternal(Reason& aReason) {
 
   mTelemetryRemoteRequestStartMs = PR_IntervalNow();
 
-  rv = mChannel->AsyncOpen2(this);
+  rv = mChannel->AsyncOpen(this);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;

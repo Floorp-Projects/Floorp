@@ -112,7 +112,7 @@ nsresult AsyncScriptCompiler::Start(
   rv = NS_NewIncrementalStreamLoader(getter_AddRefs(loader), this);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return channel->AsyncOpen2(loader);
+  return channel->AsyncOpen(loader);
 }
 
 static void OffThreadScriptLoaderCallback(JS::OffThreadToken* aToken,

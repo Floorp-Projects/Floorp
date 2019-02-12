@@ -52,33 +52,29 @@ CustomChannel.prototype = {
   loadGroup: null,
   name: null,
   status: Cr.NS_OK,
-  asyncOpen(listener, context) {
-    let stream = this.open();
-    try {
-      listener.onStartRequest(this, context);
-    } catch (e) {}
-    try {
-      listener.onDataAvailable(this, context, stream, 0, stream.available());
-    } catch (e) {}
-    try {
-      listener.onStopRequest(this, context, Cr.NS_OK);
-    } catch (e) {}
-  },
-  asyncOpen2(listener) {
+  asyncOpen(listener) {
     // throws an error if security checks fail
     var outListener = contentSecManager.performSecurityCheck(this, listener);
-    return this.asyncOpen(outListener, null);
+    let stream = this.open();
+    let context = null;
+    try {
+      outListener.onStartRequest(this, context);
+    } catch (e) {}
+    try {
+      outListener.onDataAvailable(this, context, stream, 0, stream.available());
+    } catch (e) {}
+    try {
+      outListener.onStopRequest(this, context, Cr.NS_OK);
+    } catch (e) {}
   },
   open() {
+    // throws an error if security checks fail
+    contentSecManager.performSecurityCheck(this, null);
+
     let data = "bar";
     let stream = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(Ci.nsIStringInputStream);
     stream.setData(data, data.length);
     return stream;
-  },
-  open2() {
-    // throws an error if security checks fail
-    contentSecManager.performSecurityCheck(this, null);
-    return this.open();
   },
   isPending() {
     return false;

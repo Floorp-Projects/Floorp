@@ -38,6 +38,6 @@ function run_test()
 
   var chan = make_channel("http://localhost:" +
                           httpServer.identity.primaryPort + "/content");
-  chan.asyncOpen2(new ChannelListener(finish_test, null));
+  chan.asyncOpen(new ChannelListener(finish_test, null));
   do_test_pending();
 }

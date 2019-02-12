@@ -847,7 +847,7 @@ NS_IMETHODIMP nsURILoader::OpenURI(nsIChannel* channel, uint32_t aFlags,
     // the preferred protocol handler.
 
     // But for now, I'm going to let necko do the work for us....
-    rv = channel->AsyncOpen2(loader);
+    rv = channel->AsyncOpen(loader);
 
     // no content from this load - that's OK.
     if (rv == NS_ERROR_NO_CONTENT) {

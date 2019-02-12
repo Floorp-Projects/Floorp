@@ -48,7 +48,7 @@ function createHttpRequest(status) {
   var listner = new HttpResponseListener(++requestId, status);
   chan.setRequestHeader("X-ID", requestId, false);
   chan.setRequestHeader("Cache-control", "no-store", false);
-  chan.asyncOpen2(listner);
+  chan.asyncOpen(listner);
   log("Create http request id=" + requestId);
 }
 

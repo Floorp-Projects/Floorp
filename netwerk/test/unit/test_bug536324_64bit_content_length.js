@@ -51,7 +51,7 @@ function test_hugeContentLength() {
     uri: "http://localhost:" + httpServer.identity.primaryPort + "/",
     loadUsingSystemPrincipal: true
   }).QueryInterface(Ci.nsIHttpChannel);
-  chan.asyncOpen2(listener);
+  chan.asyncOpen(listener);
 }
 
 add_test(test_hugeContentLength);

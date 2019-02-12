@@ -68,7 +68,7 @@ function run_test() {
 
   var chan = makeChan(URL + "/woo");
   chan.QueryInterface(Ci.nsIRequest);
-  chan.asyncOpen2(listener);
+  chan.asyncOpen(listener);
 
   do_test_pending();
 }

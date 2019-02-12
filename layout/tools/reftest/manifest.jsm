@@ -50,7 +50,7 @@ function ReadManifest(aURL, aFilter)
 
     var listURL = aURL;
     var channel = NetUtil.newChannel({uri: aURL, loadUsingSystemPrincipal: true});
-    var inputStream = channel.open2();
+    var inputStream = channel.open();
     if (channel instanceof Ci.nsIHttpChannel
         && channel.responseStatus != 200) {
       g.logger.error("HTTP ERROR : " + channel.responseStatus);

@@ -649,7 +649,7 @@ void nsPACMan::ContinueLoadingAfterPACUriKnown() {
       if (channel) {
         channel->SetLoadFlags(nsIRequest::LOAD_BYPASS_CACHE);
         channel->SetNotificationCallbacks(this);
-        if (NS_SUCCEEDED(channel->AsyncOpen2(mLoader))) return;
+        if (NS_SUCCEEDED(channel->AsyncOpen(mLoader))) return;
       }
     }
   }

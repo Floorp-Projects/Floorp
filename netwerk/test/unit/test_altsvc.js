@@ -224,7 +224,7 @@ function doTest()
   }
   loadWithoutClearingMappings = false;
   chan.loadInfo.originAttributes = originAttributes;
-  chan.asyncOpen2(listener);
+  chan.asyncOpen(listener);
 }
 
 // xaltsvc is overloaded to do two things..

@@ -1333,7 +1333,7 @@ Engine.prototype = {
     this._uri = uri;
     var listener = new loadListener(chan, this, this._onLoad);
     chan.notificationCallbacks = listener;
-    chan.asyncOpen2(listener);
+    chan.asyncOpen(listener);
   },
 
   /**
@@ -1700,7 +1700,7 @@ Engine.prototype = {
 
         var listener = new loadListener(chan, engineToSet, iconLoadCallback);
         chan.notificationCallbacks = listener;
-        chan.asyncOpen2(listener);
+        chan.asyncOpen(listener);
         break;
     }
   },

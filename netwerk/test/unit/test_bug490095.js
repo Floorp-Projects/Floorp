@@ -54,7 +54,7 @@ function triggerNextTest() {
     var test = tests[index];
     var channel = setupChannel(test.url, test.server);
     if (test.flags) channel.loadFlags = test.flags;
-    channel.asyncOpen2(new ChannelListener(checkValueAndTrigger, null));
+    channel.asyncOpen(new ChannelListener(checkValueAndTrigger, null));
 }
 
 function checkValueAndTrigger(request, data, ctx) {

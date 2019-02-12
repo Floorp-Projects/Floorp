@@ -149,7 +149,7 @@ function doTest(headerIdx, bodyIdx) {
 
   var listener = makeListener(headerIdx, bodyIdx);
 
-  chan.asyncOpen2(listener);
+  chan.asyncOpen(listener);
 
   do_test_pending();    
 }

@@ -337,14 +337,14 @@ class nsJSChannel : public nsIChannel,
   nsCOMPtr<nsIStreamListener> mListener;              // Our final listener
   nsCOMPtr<nsPIDOMWindowInner> mOriginalInnerWindow;  // The inner window our
                                                       // load started against.
-  // If we blocked onload on a document in AsyncOpen2, this is the document we
+  // If we blocked onload on a document in AsyncOpen, this is the document we
   // did it on.
   RefPtr<mozilla::dom::Document> mDocumentOnloadBlockedOn;
 
   nsresult mStatus;  // Our status
 
   nsLoadFlags mLoadFlags;
-  nsLoadFlags mActualLoadFlags;  // See AsyncOpen2
+  nsLoadFlags mActualLoadFlags;  // See AsyncOpen
 
   RefPtr<nsJSThunk> mIOThunk;
   mozilla::dom::PopupBlocker::PopupControlState mPopupState;
@@ -485,36 +485,37 @@ NS_IMETHODIMP
 nsJSChannel::GetURI(nsIURI** aURI) { return mStreamChannel->GetURI(aURI); }
 
 NS_IMETHODIMP
-nsJSChannel::Open(nsIInputStream** aResult) {
-  nsresult rv = mIOThunk->EvaluateScript(
-      mStreamChannel, mPopupState, mExecutionPolicy, mOriginalInnerWindow);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return mStreamChannel->Open(aResult);
-}
-
-NS_IMETHODIMP
-nsJSChannel::Open2(nsIInputStream** aStream) {
+nsJSChannel::Open(nsIInputStream** aStream) {
   nsCOMPtr<nsIStreamListener> listener;
   nsresult rv =
       nsContentSecurityManager::doContentSecurityCheck(this, listener);
   NS_ENSURE_SUCCESS(rv, rv);
-  return Open(aStream);
+
+  rv = mIOThunk->EvaluateScript(
+      mStreamChannel, mPopupState, mExecutionPolicy, mOriginalInnerWindow);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return mStreamChannel->Open(aStream);
 }
 
+
 NS_IMETHODIMP
-nsJSChannel::AsyncOpen(nsIStreamListener* aListener, nsISupports* aContext) {
+nsJSChannel::AsyncOpen(nsIStreamListener* aListener) {
+  NS_ENSURE_ARG(aListener);
+
+  nsCOMPtr<nsIStreamListener> listener = aListener;
+  nsresult rv =
+      nsContentSecurityManager::doContentSecurityCheck(this, listener);
+  NS_ENSURE_SUCCESS(rv, rv);
+
 #ifdef DEBUG
   {
     nsCOMPtr<nsILoadInfo> loadInfo = nsIChannel::GetLoadInfo();
     MOZ_ASSERT(!loadInfo || loadInfo->GetSecurityMode() == 0 ||
                    loadInfo->GetInitialSecurityCheckDone(),
-               "security flags in loadInfo but asyncOpen2() not called");
+               "security flags in loadInfo but asyncOpen() not called");
   }
 #endif
-  MOZ_RELEASE_ASSERT(!aContext, "please call AsyncOpen2()");
-
-  NS_ENSURE_ARG(aListener);
 
   // First make sure that we have a usable inner window; we'll want to make
   // sure that we execute against that inner and no other.
@@ -550,7 +551,7 @@ nsJSChannel::AsyncOpen(nsIStreamListener* aListener, nsISupports* aContext) {
   nsCOMPtr<nsILoadGroup> loadGroup;
   mStreamChannel->GetLoadGroup(getter_AddRefs(loadGroup));
   if (loadGroup) {
-    nsresult rv = loadGroup->AddRequest(this, nullptr);
+    rv = loadGroup->AddRequest(this, nullptr);
     if (NS_FAILED(rv)) {
       mIsActive = false;
       CleanupStrongRefs();
@@ -604,7 +605,7 @@ nsJSChannel::AsyncOpen(nsIStreamListener* aListener, nsISupports* aContext) {
       return mStatus;
     }
 
-    // We're returning success from asyncOpen2(), but we didn't open a
+    // We're returning success from asyncOpen(), but we didn't open a
     // stream channel.  We'll have to notify ourselves, but make sure to do
     // it asynchronously.
     method = &nsJSChannel::NotifyListener;
@@ -614,7 +615,7 @@ nsJSChannel::AsyncOpen(nsIStreamListener* aListener, nsISupports* aContext) {
   nsCOMPtr<nsIRunnable> runnable =
       mozilla::NewRunnableMethod(name, this, method);
   nsGlobalWindowInner* window = nsGlobalWindowInner::Cast(mOriginalInnerWindow);
-  nsresult rv =
+  rv =
       window->Dispatch(mozilla::TaskCategory::Other, runnable.forget());
 
   if (NS_FAILED(rv)) {
@@ -623,15 +624,6 @@ nsJSChannel::AsyncOpen(nsIStreamListener* aListener, nsISupports* aContext) {
     CleanupStrongRefs();
   }
   return rv;
-}
-
-NS_IMETHODIMP
-nsJSChannel::AsyncOpen2(nsIStreamListener* aListener) {
-  nsCOMPtr<nsIStreamListener> listener = aListener;
-  nsresult rv =
-      nsContentSecurityManager::doContentSecurityCheck(this, listener);
-  NS_ENSURE_SUCCESS(rv, rv);
-  return AsyncOpen(listener, nullptr);
 }
 
 void nsJSChannel::EvaluateScript() {
@@ -723,7 +715,7 @@ void nsJSChannel::EvaluateScript() {
     return;
   }
 
-  mStatus = mStreamChannel->AsyncOpen2(this);
+  mStatus = mStreamChannel->AsyncOpen(this);
   if (NS_SUCCEEDED(mStatus)) {
     // mStreamChannel will call OnStartRequest and OnStopRequest on
     // us, so we'll be sure to call them on our listener.

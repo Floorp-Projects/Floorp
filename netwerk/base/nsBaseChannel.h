@@ -94,7 +94,7 @@ class nsBaseChannel
 
   // Implemented by subclass to begin pumping data for an async channel, in
   // lieu of returning a stream. If implemented, OpenContentStream will never
-  // be called for async channels. If not implemented, AsyncOpen2 will fall
+  // be called for async channels. If not implemented, AsyncOpen will fall
   // back to OpenContentStream.
   //
   // On success, the callee must begin pumping data to the stream listener,
@@ -222,7 +222,6 @@ class nsBaseChannel
   // pointers.
   void ChannelDone() {
     mListener = nullptr;
-    mListenerContext = nullptr;
     OnChannelDone();
   }
 
@@ -279,7 +278,6 @@ class nsBaseChannel
   nsCOMPtr<nsILoadInfo> mLoadInfo;
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
   nsCOMPtr<nsIStreamListener> mListener;
-  nsCOMPtr<nsISupports> mListenerContext;
   nsresult mStatus;
   uint32_t mContentDispositionHint;
   nsAutoPtr<nsString> mContentDispositionFilename;

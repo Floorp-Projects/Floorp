@@ -59,7 +59,7 @@ function createHttpRequest(requestId, priority, isBlocking, callback) {
     var cos = chan.QueryInterface(Ci.nsIClassOfService);
     cos.addClassFlags(Ci.nsIClassOfService.Leader);
   }
-  chan.asyncOpen2(listner);
+  chan.asyncOpen(listner);
   log("Create http request id=" + requestId);
 }
 

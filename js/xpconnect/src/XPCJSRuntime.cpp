@@ -2843,7 +2843,7 @@ static nsresult ReadSourceFromFilename(JSContext* cx, const char* filename,
   scriptChannel->SetContentType(NS_LITERAL_CSTRING("text/plain"));
 
   nsCOMPtr<nsIInputStream> scriptStream;
-  rv = scriptChannel->Open2(getter_AddRefs(scriptStream));
+  rv = scriptChannel->Open(getter_AddRefs(scriptStream));
   NS_ENSURE_SUCCESS(rv, rv);
 
   uint64_t rawLen;

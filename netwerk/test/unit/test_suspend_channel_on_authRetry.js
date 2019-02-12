@@ -224,7 +224,7 @@ function test_suspend_on_auth(suspendOnBeforeConnect, suspendOnModifyRequest) {
     new requestListenerObserver(suspendOnBeforeConnect, suspendOnModifyRequest);
   chan.notificationCallbacks = new Requestor();
   listener.expectedCode = 200; // OK
-  chan.asyncOpen2(listener);
+  chan.asyncOpen(listener);
 
   do_test_pending();
 }

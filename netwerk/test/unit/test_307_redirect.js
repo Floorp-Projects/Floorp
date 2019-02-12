@@ -45,7 +45,7 @@ function noRedirectStreamObserver(request, buffer)
   chan.QueryInterface(Ci.nsIUploadChannel).setUploadStream(uploadStream,
                                                            "text/plain",
                                                            -1);
-  chan.asyncOpen2(new ChannelListener(noHeaderStreamObserver, null));
+  chan.asyncOpen(new ChannelListener(noHeaderStreamObserver, null));
 }
 
 function noHeaderStreamObserver(request, buffer)
@@ -59,7 +59,7 @@ function noHeaderStreamObserver(request, buffer)
       requestBody;
   uploadStream.setData(streamBody, streamBody.length);
   chan.QueryInterface(Ci.nsIUploadChannel).setUploadStream(uploadStream, "", -1);
-  chan.asyncOpen2(new ChannelListener(headerStreamObserver, null));
+  chan.asyncOpen(new ChannelListener(headerStreamObserver, null));
 }
 
 function headerStreamObserver(request, buffer)
@@ -86,6 +86,6 @@ function run_test()
   chan.QueryInterface(Ci.nsIUploadChannel).setUploadStream(uploadStream,
                                                            "text/plain",
                                                            -1);
-  chan.asyncOpen2(new ChannelListener(noRedirectStreamObserver, null));
+  chan.asyncOpen(new ChannelListener(noRedirectStreamObserver, null));
   do_test_pending();
 }

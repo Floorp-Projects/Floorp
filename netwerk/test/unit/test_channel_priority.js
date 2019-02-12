@@ -44,7 +44,7 @@ function makeRequest(uri) {
   let requestChannel = NetUtil.newChannel({uri, loadUsingSystemPrincipal: true});
   requestChannel.QueryInterface(Ci.nsISupportsPriority);
   requestChannel.priority = Ci.nsISupportsPriority.PRIORITY_HIGHEST;
-  requestChannel.asyncOpen2(new ChannelListener(checkResponse, requestChannel));
+  requestChannel.asyncOpen(new ChannelListener(checkResponse, requestChannel));
 }
 
 function checkResponse(request, buffer, requestChannel) {

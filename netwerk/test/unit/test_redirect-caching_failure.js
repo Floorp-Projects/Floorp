@@ -33,7 +33,7 @@ function makeSureNotInCache(request, buffer)
   // Can't hurt to test though.
   var chan = make_channel(randomURI);
   chan.loadFlags |= Ci.nsIRequest.LOAD_ONLY_FROM_CACHE;
-  chan.asyncOpen2(new ChannelListener(finish_test, null, CL_EXPECT_FAILURE));
+  chan.asyncOpen(new ChannelListener(finish_test, null, CL_EXPECT_FAILURE));
 }
 
 function finish_test(request, buffer)
@@ -50,6 +50,6 @@ function run_test()
   httpServer.start(-1);
 
   var chan = make_channel(randomURI);
-  chan.asyncOpen2(new ChannelListener(makeSureNotInCache, null, CL_EXPECT_FAILURE));
+  chan.asyncOpen(new ChannelListener(makeSureNotInCache, null, CL_EXPECT_FAILURE));
   do_test_pending();
 }

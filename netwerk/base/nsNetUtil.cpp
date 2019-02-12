@@ -919,7 +919,7 @@ nsresult NS_NewStreamLoaderInternal(
   }
   rv = NS_NewStreamLoader(outStream, aObserver);
   NS_ENSURE_SUCCESS(rv, rv);
-  return channel->AsyncOpen2(*outStream);
+  return channel->AsyncOpen(*outStream);
 }
 
 nsresult NS_NewStreamLoader(
@@ -973,7 +973,7 @@ nsresult NS_ImplementChannelOpen(nsIChannel *channel, nsIInputStream **result) {
                                          getter_AddRefs(stream));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = NS_MaybeOpenChannelUsingAsyncOpen2(channel, listener);
+  rv = NS_MaybeOpenChannelUsingAsyncOpen(channel, listener);
   NS_ENSURE_SUCCESS(rv, rv);
 
   uint64_t n;
@@ -1683,7 +1683,7 @@ nsresult NS_LoadPersistentPropertiesFromURISpec(
                      nsIContentPolicy::TYPE_OTHER);
   NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsIInputStream> in;
-  rv = channel->Open2(getter_AddRefs(in));
+  rv = channel->Open(getter_AddRefs(in));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIPersistentProperties> properties = new nsPersistentProperties();
@@ -2357,22 +2357,16 @@ nsresult NS_LinkRedirectChannels(uint32_t channelId,
   return registrar->LinkChannels(channelId, parentChannel, _result);
 }
 
-nsresult NS_MaybeOpenChannelUsingOpen2(nsIChannel *aChannel,
+nsresult NS_MaybeOpenChannelUsingOpen(nsIChannel *aChannel,
                                        nsIInputStream **aStream) {
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
-  if (loadInfo && loadInfo->GetSecurityMode() != 0) {
-    return aChannel->Open2(aStream);
-  }
   return aChannel->Open(aStream);
 }
 
-nsresult NS_MaybeOpenChannelUsingAsyncOpen2(nsIChannel *aChannel,
+nsresult NS_MaybeOpenChannelUsingAsyncOpen(nsIChannel *aChannel,
                                             nsIStreamListener *aListener) {
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
-  if (loadInfo && loadInfo->GetSecurityMode() != 0) {
-    return aChannel->AsyncOpen2(aListener);
-  }
-  return aChannel->AsyncOpen(aListener, nullptr);
+  return aChannel->AsyncOpen(aListener);
 }
 
 /** Given the first (disposition) token from a Content-Disposition header,

@@ -30,7 +30,7 @@ function loadFile(aUriSpec)
     });
     var instream = 
         Cc[SIS_CTRID].createInstance(nsISIS);
-    instream.init(chan.open2());
+    instream.init(chan.open());
 
     return instream.read(instream.available());
 }
