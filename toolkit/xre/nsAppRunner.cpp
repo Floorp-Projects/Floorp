@@ -1531,12 +1531,7 @@ static inline void DumpVersion() {
   if (gAppData->vendor) {
     printf("%s ", (const char*)gAppData->vendor);
   }
-  printf("%s ", (const char*)gAppData->name);
-
-  // Use the displayed version
-  // For example, for beta, we would display 42.0b2 instead of 42.0
-  printf("%s", MOZ_APP_VERSION_DISPLAY);
-
+  printf("%s %s", (const char*)gAppData->name, (const char*)gAppData->version);
   if (gAppData->copyright) {
     printf(", %s", (const char*)gAppData->copyright);
   }
