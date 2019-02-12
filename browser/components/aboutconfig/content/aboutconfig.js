@@ -152,9 +152,6 @@ class PrefRow {
       return;
     }
 
-    this._element.classList.toggle("has-user-value", !!this.hasUserValue);
-    this._element.classList.toggle("locked", !!this.isLocked);
-    this._element.classList.toggle("deleted", !this.exists);
     if (this.exists && !this.editing) {
       // We need to place the text inside a "span" element to ensure that the
       // text copied to the clipboard includes all whitespace.
@@ -254,6 +251,13 @@ class PrefRow {
     } else if (this.resetButton) {
       this.resetButton.remove();
       delete this.resetButton;
+    }
+
+    let className = (this.hasUserValue ? "has-user-value " : "") +
+                    (this.isLocked ? "locked " : "") +
+                    (this.exists ? "" : "deleted ");
+    if (this._lastClassName !== className) {
+      this._element.className = this._lastClassName = className;
     }
   }
 
