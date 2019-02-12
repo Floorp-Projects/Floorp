@@ -26,3 +26,4 @@ platform(linux,mac) == small-dotted-border.yaml small-dotted-border.png
 platform(linux,mac) == border-dashed-dotted-caching.yaml border-dashed-dotted-caching.png
 != small-inset-outset.yaml small-inset-outset-notref.yaml
 == no-aa.yaml green-square.yaml
+border-double-1px.yaml border-double-1px-ref.yaml
