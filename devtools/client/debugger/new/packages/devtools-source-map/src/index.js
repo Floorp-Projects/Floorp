@@ -18,9 +18,12 @@ const _getGeneratedRanges = dispatcher.task("getGeneratedRanges", {
   queue: true
 });
 
-const _getGeneratedLocation = dispatcher.task("getGeneratedLocation", { queue: true });
-const _getAllGeneratedLocations = dispatcher.task("getAllGeneratedLocations", { queue: true });
-
+const _getGeneratedLocation = dispatcher.task("getGeneratedLocation", {
+  queue: true
+});
+const _getAllGeneratedLocations = dispatcher.task("getAllGeneratedLocations", {
+  queue: true
+});
 
 export const setAssetRootURL = async (assetRoot: string): Promise<void> =>
   dispatcher.invoke("setAssetRootURL", assetRoot);
@@ -52,21 +55,18 @@ export const getGeneratedRanges = async (
     columnStart: number,
     columnEnd: number
   }>
-> =>
-  _getGeneratedRanges(location, originalSource);
+> => _getGeneratedRanges(location, originalSource);
 
 export const getGeneratedLocation = async (
   location: SourceLocation,
   originalSource: Source
-): Promise<SourceLocation> => _getGeneratedLocation(location,originalSource);
+): Promise<SourceLocation> => _getGeneratedLocation(location, originalSource);
 
 export const getAllGeneratedLocations = async (
   location: SourceLocation,
   originalSource: Source
-): Promise<Array<SourceLocation>> => _getAllGeneratedLocations(
-  location,
-  originalSource
-);
+): Promise<Array<SourceLocation>> =>
+  _getAllGeneratedLocations(location, originalSource);
 
 export const getOriginalLocation = async (
   location: SourceLocation,
