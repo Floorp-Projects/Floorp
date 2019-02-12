@@ -10,7 +10,7 @@ const {Domain} = ChromeUtils.import("chrome://remote/content/Domain.jsm");
 const {formatError} = ChromeUtils.import("chrome://remote/content/Error.jsm");
 const {Protocol} = ChromeUtils.import("chrome://remote/content/Protocol.jsm");
 
-this.Session = class {
+class Session {
   constructor(connection, target) {
     this.connection = connection;
     this.target = target;

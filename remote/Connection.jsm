@@ -11,7 +11,7 @@ const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm")
 
 XPCOMUtils.defineLazyGetter(this, "log", Log.get);
 
-this.Connection = class {
+class Connection {
   constructor(connID, transport, socketListener) {
     this.id = connID;
     this.transport = transport;

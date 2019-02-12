@@ -8,7 +8,7 @@ var EXPORTED_SYMBOLS = ["Runtime"];
 
 const {t} = ChromeUtils.import("chrome://remote/content/Protocol.jsm");
 
-this.Runtime = {
+var Runtime = {
   StackTrace: {schema: t.String},
 
   RemoteObject: {

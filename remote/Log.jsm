@@ -7,7 +7,7 @@
 var EXPORTED_SYMBOLS = ["Log"];
 
 /** E10s compatible wrapper for the standard logger from Log.jsm. */
-this.Log = class {
+class Log {
   static get() {
     const StdLog = ChromeUtils.import("resource://gre/modules/Log.jsm").Log;
     const logger = StdLog.repository.getLogger("RemoteAgent");

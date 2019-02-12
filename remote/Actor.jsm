@@ -18,7 +18,7 @@ XPCOMUtils.defineLazyGetter(this, "log", Log.get);
 // TODO(ato):
 // This used to have more stuff on it, but now only really does logging,
 // and I'm sure there's a better way to get the message manager logs.
-this.RemoteAgentActorChild = class extends ActorChild {
+class RemoteAgentActorChild extends ActorChild {
   get browsingContext() {
     return this.docShell.browsingContext;
   }
@@ -37,7 +37,7 @@ this.RemoteAgentActorChild = class extends ActorChild {
 // TODO(ato): Move to MessageChannel.jsm?
 // TODO(ato): This can eventually be replaced by ActorChild and IPDL generation
 // TODO(ato): Can we find a shorter name?
-this.MessageChannelActorChild = class extends RemoteAgentActorChild {
+class MessageChannelActorChild extends RemoteAgentActorChild {
   constructor(dispatcher) {
     super(dispatcher);
     this.name = `RemoteAgent:${this.constructor.name}`;

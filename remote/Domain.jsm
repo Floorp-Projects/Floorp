@@ -9,7 +9,7 @@ var EXPORTED_SYMBOLS = ["Domain"];
 const {EventEmitter} = ChromeUtils.import("chrome://remote/content/EventEmitter.jsm");
 const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-this.Domain = class {
+class Domain {
   constructor(session, target) {
     this.session = session;
     this.target = target;

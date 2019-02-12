@@ -35,7 +35,7 @@ const ALLOWED_LEVELS = [
   "error",
 ];
 
-this.Log = class extends Domain {
+class Log extends Domain {
   constructor(session, target) {
     super(session, target);
     this.enabled = false;
@@ -93,7 +93,7 @@ this.Log = class extends Domain {
   }
 };
 
-this.Log.LogEntry = {
+Log.LogEntry = {
   schema: {
     source: t.Enum(ALLOWED_SOURCES),
     level: t.Enum(ALLOWED_LEVELS),
