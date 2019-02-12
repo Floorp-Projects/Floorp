@@ -16,6 +16,7 @@ const ConnectionPromptSetting = createFactory(require("./ConnectionPromptSetting
 const DebugTargetPane = createFactory(require("./debugtarget/DebugTargetPane"));
 const ExtensionDetail = createFactory(require("./debugtarget/ExtensionDetail"));
 const InspectAction = createFactory(require("./debugtarget/InspectAction"));
+const ProfilerDialog = createFactory(require("./ProfilerDialog"));
 const RuntimeInfo = createFactory(require("./RuntimeInfo"));
 const ServiceWorkerAction = createFactory(require("./debugtarget/ServiceWorkerAction"));
 const ServiceWorkersWarning = createFactory(require("./ServiceWorkersWarning"));
@@ -44,6 +45,7 @@ class RuntimePage extends PureComponent {
       runtimeId: PropTypes.string.isRequired,
       serviceWorkers: PropTypes.arrayOf(PropTypes.object).isRequired,
       sharedWorkers: PropTypes.arrayOf(PropTypes.object).isRequired,
+      showProfilerDialog: PropTypes.bool.isRequired,
       tabs: PropTypes.arrayOf(PropTypes.object).isRequired,
       temporaryExtensions: PropTypes.arrayOf(PropTypes.object).isRequired,
       temporaryInstallError: PropTypes.string,
@@ -58,8 +60,7 @@ class RuntimePage extends PureComponent {
   }
 
   onProfilerButtonClick() {
-    // TODO
-    // this.props.dispatch(Actions.showProfilerDialog());
+    this.props.dispatch(Actions.showProfilerDialog());
   }
 
   renderRemoteRuntimeActions() {
@@ -131,6 +132,7 @@ class RuntimePage extends PureComponent {
       runtimeDetails,
       serviceWorkers,
       sharedWorkers,
+      showProfilerDialog,
       tabs,
       temporaryExtensions,
       temporaryInstallError,
@@ -191,6 +193,8 @@ class RuntimePage extends PureComponent {
                                  WorkerDetail,
                                  DEBUG_TARGET_PANE.OTHER_WORKER,
                                  "about-debugging-runtime-other-workers"),
+
+      showProfilerDialog ? ProfilerDialog({ dispatch, runtimeDetails }) : null,
     );
   }
 }
@@ -203,6 +207,7 @@ const mapStateToProps = state => {
     runtimeDetails: getCurrentRuntimeDetails(state.runtimes),
     serviceWorkers: state.debugTargets.serviceWorkers,
     sharedWorkers: state.debugTargets.sharedWorkers,
+    showProfilerDialog: state.ui.showProfilerDialog,
     tabs: state.debugTargets.tabs,
     temporaryExtensions: state.debugTargets.temporaryExtensions,
     temporaryInstallError: state.ui.temporaryInstallError,

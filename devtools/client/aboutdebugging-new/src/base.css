@@ -34,7 +34,10 @@
   --error-50: #ff0039;
   --error-60: #d70022;
   --highlight-50: #0a84ff;
+  --grey-20: #ededf0;
   --grey-30: #d7d7db; /* for ui, no special semantic */
+  --grey-90-a60: rgba(12, 12, 13, 0.6);
+  --grey-90-a80: rgba(12, 12, 13, 0.8);
   --white-100: #fff; /* for ui, no special semantic */
 
   /* Global layout vars */
@@ -262,6 +265,26 @@ Form controls
   padding-inline-end: calc(2 * var(--base-unit));
   font-size: var(--micro-font-size);
   height: calc(var(--base-unit) * 6);
+}
+
+/* ghost button. icon button with no background from Photon guidelines */
+.ghost-button {
+  border: none;
+  border-radius: calc(var(--base-unit) / 2);
+  fill: var(--grey-90-a80);
+  height: calc(var(--base-unit) * 8);
+  padding: calc(var(--base-unit) * 2);
+  width: calc(var(--base-unit) * 8);
+
+  -moz-context-properties: fill;
+}
+
+.ghost-button:hover {
+  background-color: var(--grey-30);
+}
+
+.ghost-button:active {
+  background-color: var(--grey-40);
 }
 
 /* standard inputs */

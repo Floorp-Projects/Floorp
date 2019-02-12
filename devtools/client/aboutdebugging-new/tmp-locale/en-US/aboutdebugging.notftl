@@ -283,3 +283,6 @@ about-debugging-page-title-with-runtime = { -application-title } - { about-debug
 
 # Page title without the runtime displayed in the tab
 about-debugging-page-title = { -application-title } - { about-debugging-page-title-selected-page }
+
+# Title of a modal dialog displayed on remote runtime pages after clicking on the Profile Runtime button.
+about-debugging-profiler-dialog-title = Performance Profiler
