@@ -104,7 +104,7 @@ class StackType {
   bool operator!=(Code that) const { return !(*this == that); }
 };
 
-static inline ValType NonAnyToValType(StackType type) {
+static inline ValType NonTVarToValType(StackType type) {
   MOZ_ASSERT(type != StackType::TVar);
   return ValType(type.packed());
 }
@@ -291,12 +291,9 @@ class MOZ_STACK_CLASS OpIter : private Policy {
   MOZ_MUST_USE bool popCallArgs(const ValTypeVector& expectedTypes,
                                 Vector<Value, 8, SystemAllocPolicy>* values);
 
-  MOZ_MUST_USE bool popAnyType(StackType* type, Value* value);
-  MOZ_MUST_USE bool typeMismatch(StackType actual, StackType expected);
-  MOZ_MUST_USE bool popWithType(StackType expectedType, Value* value);
-  MOZ_MUST_USE bool popWithType(ValType valType, Value* value) {
-    return popWithType(StackType(valType), value);
-  }
+  MOZ_MUST_USE bool failEmptyStack();
+  MOZ_MUST_USE bool popStackType(StackType* type, Value* value);
+  MOZ_MUST_USE bool popWithType(ValType valType, Value* value);
   MOZ_MUST_USE bool popWithType(ExprType expectedType, Value* value);
   MOZ_MUST_USE bool topWithType(ExprType expectedType, Value* value);
   MOZ_MUST_USE bool topWithType(ValType valType, Value* value);
@@ -332,7 +329,8 @@ class MOZ_STACK_CLASS OpIter : private Policy {
     controlStack_.back().setPolymorphicBase();
   }
 
-  inline bool Join(StackType one, StackType two, StackType* result);
+  inline bool Join(StackType one, StackType two, StackType* result) const;
+  inline bool checkIsSubtypeOf(ValType lhs, ValType rhs);
 
  public:
   typedef Vector<Value, 8, SystemAllocPolicy> ValueVector;
@@ -516,7 +514,7 @@ class MOZ_STACK_CLASS OpIter : private Policy {
 
 template <typename Policy>
 inline bool OpIter<Policy>::Join(StackType one, StackType two,
-                                 StackType* result) {
+                                 StackType* result) const {
   if (MOZ_LIKELY(one == two)) {
     *result = one;
     return true;
@@ -532,13 +530,13 @@ inline bool OpIter<Policy>::Join(StackType one, StackType two,
     return true;
   }
 
-  if (env_.gcTypesEnabled() && one.isReference() && two.isReference()) {
-    if (env_.isRefSubtypeOf(NonAnyToValType(two), NonAnyToValType(one))) {
+  if (one.isReference() && two.isReference()) {
+    if (env_.isRefSubtypeOf(NonTVarToValType(two), NonTVarToValType(one))) {
       *result = one;
       return true;
     }
 
-    if (env_.isRefSubtypeOf(NonAnyToValType(one), NonAnyToValType(two))) {
+    if (env_.isRefSubtypeOf(NonTVarToValType(one), NonTVarToValType(two))) {
       *result = two;
       return true;
     }
@@ -549,6 +547,27 @@ inline bool OpIter<Policy>::Join(StackType one, StackType two,
   }
 
   return false;
+}
+
+template <typename Policy>
+inline bool OpIter<Policy>::checkIsSubtypeOf(ValType actual, ValType expected) {
+  if (actual == expected) {
+    return true;
+  }
+
+  if (actual.isReference() && expected.isReference() &&
+      env_.isRefSubtypeOf(actual, expected)) {
+    return true;
+  }
+
+  UniqueChars error(
+      JS_smprintf("type mismatch: expression has type %s but expected %s",
+                  ToCString(actual), ToCString(expected)));
+  if (!error) {
+    return false;
+  }
+
+  return fail(error.get());
 }
 
 template <typename Policy>
@@ -576,11 +595,17 @@ inline bool OpIter<Policy>::fail_ctx(const char* fmt, const char* context) {
   return fail(error.get());
 }
 
-// This function pops exactly one value from the stack, yielding Any types in
+template <typename Policy>
+inline bool OpIter<Policy>::failEmptyStack() {
+  return valueStack_.empty() ? fail("popping value from empty stack")
+                             : fail("popping value from outside block");
+}
+
+// This function pops exactly one value from the stack, yielding TVar types in
 // various cases and therefore making it the caller's responsibility to do the
 // right thing for StackType::TVar. Prefer (pop|top)WithType.
 template <typename Policy>
-inline bool OpIter<Policy>::popAnyType(StackType* type, Value* value) {
+inline bool OpIter<Policy>::popStackType(StackType* type, Value* value) {
   ControlStackEntry<ControlItem>& block = controlStack_.back();
 
   MOZ_ASSERT(valueStack_.length() >= block.valueStackStart());
@@ -597,10 +622,7 @@ inline bool OpIter<Policy>::popAnyType(StackType* type, Value* value) {
       return valueStack_.reserve(valueStack_.length() + 1);
     }
 
-    if (valueStack_.empty()) {
-      return fail("popping value from empty stack");
-    }
-    return fail("popping value from outside block");
+    return failEmptyStack();
   }
 
   TypeAndValue<Value>& tv = valueStack_.back();
@@ -610,23 +632,10 @@ inline bool OpIter<Policy>::popAnyType(StackType* type, Value* value) {
   return true;
 }
 
-template <typename Policy>
-inline bool OpIter<Policy>::typeMismatch(StackType actual, StackType expected) {
-  UniqueChars error(
-      JS_smprintf("type mismatch: expression has type %s but expected %s",
-                  ToCString(NonAnyToValType(actual)),
-                  ToCString(NonAnyToValType(expected))));
-  if (!error) {
-    return false;
-  }
-
-  return fail(error.get());
-}
-
 // This function pops exactly one value from the stack, checking that it has the
 // expected type which can either be a specific value type or a type variable.
 template <typename Policy>
-inline bool OpIter<Policy>::popWithType(StackType expectedType, Value* value) {
+inline bool OpIter<Policy>::popWithType(ValType expectedType, Value* value) {
   ControlStackEntry<ControlItem>& block = controlStack_.back();
 
   MOZ_ASSERT(valueStack_.length() >= block.valueStackStart());
@@ -642,25 +651,21 @@ inline bool OpIter<Policy>::popWithType(StackType expectedType, Value* value) {
       return valueStack_.reserve(valueStack_.length() + 1);
     }
 
-    if (valueStack_.empty()) {
-      return fail("popping value from empty stack");
-    }
-    return fail("popping value from outside block");
+    return failEmptyStack();
   }
 
-  TypeAndValue<Value> tv = valueStack_.popCopy();
+  TypeAndValue<Value> observed = valueStack_.popCopy();
 
-  StackType observedType = tv.type();
-  if (!(MOZ_LIKELY(observedType == expectedType) ||
-        observedType == StackType::TVar || expectedType == StackType::TVar ||
-        (env_.gcTypesEnabled() && observedType.isReference() &&
-         expectedType.isReference() &&
-         env_.isRefSubtypeOf(NonAnyToValType(observedType),
-                             NonAnyToValType(expectedType))))) {
-    return typeMismatch(observedType, expectedType);
+  if (observed.type() == StackType::TVar) {
+    *value = Value();
+    return true;
   }
 
-  *value = tv.value();
+  if (!checkIsSubtypeOf(NonTVarToValType(observed.type()), expectedType)) {
+    return false;
+  }
+
+  *value = observed.value();
   return true;
 }
 
@@ -684,7 +689,7 @@ inline bool OpIter<Policy>::topWithType(ValType expectedType, Value* value) {
   ControlStackEntry<ControlItem>& block = controlStack_.back();
 
   MOZ_ASSERT(valueStack_.length() >= block.valueStackStart());
-  if (MOZ_UNLIKELY(valueStack_.length() == block.valueStackStart())) {
+  if (valueStack_.length() == block.valueStackStart()) {
     // If the base of this block's stack is polymorphic, then we can just
     // pull out a dummy value of the expected type; it won't be used since
     // we're in unreachable code. We must however push this value onto the
@@ -699,29 +704,22 @@ inline bool OpIter<Policy>::topWithType(ValType expectedType, Value* value) {
       return true;
     }
 
-    if (valueStack_.empty()) {
-      return fail("reading value from empty stack");
-    }
-    return fail("reading value from outside block");
+    return failEmptyStack();
   }
 
-  TypeAndValue<Value>& tv = valueStack_.back();
+  TypeAndValue<Value>& observed = valueStack_.back();
 
-  StackType observed = tv.type();
-  StackType expected = StackType(expectedType);
-
-  if (!MOZ_UNLIKELY(observed == expected)) {
-    if (observed == StackType::TVar ||
-        (env_.gcTypesEnabled() && observed.isReference() &&
-         expected.isReference() &&
-         env_.isRefSubtypeOf(NonAnyToValType(observed), expectedType))) {
-      tv.typeRef() = expected;
-    } else {
-      return typeMismatch(observed, expected);
-    }
+  if (observed.type() == StackType::TVar) {
+    observed.typeRef() = StackType(expectedType);
+    *value = Value();
+    return true;
   }
 
-  *value = tv.value();
+  if (!checkIsSubtypeOf(NonTVarToValType(observed.type()), expectedType)) {
+    return false;
+  }
+
+  *value = observed.value();
   return true;
 }
 
@@ -1102,7 +1100,7 @@ inline bool OpIter<Policy>::readDrop() {
   MOZ_ASSERT(Classify(op_) == OpKind::Drop);
   StackType type;
   Value value;
-  return popAnyType(&type, &value);
+  return popStackType(&type, &value);
 }
 
 template <typename Policy>
@@ -1349,12 +1347,12 @@ inline bool OpIter<Policy>::readSelect(StackType* type, Value* trueValue,
   }
 
   StackType falseType;
-  if (!popAnyType(&falseType, falseValue)) {
+  if (!popStackType(&falseType, falseValue)) {
     return false;
   }
 
   StackType trueType;
-  if (!popAnyType(&trueType, trueValue)) {
+  if (!popStackType(&trueType, trueValue)) {
     return false;
   }
 
