@@ -207,6 +207,7 @@ package org.mozilla.geckoview {
 
   @android.support.annotation.AnyThread public final class GeckoRuntimeSettings extends org.mozilla.geckoview.RuntimeSettings {
     method @android.support.annotation.NonNull public java.lang.String[] getArguments();
+    method public int getAutoplayDefault();
     method public boolean getConsoleOutputEnabled();
     method @android.support.annotation.NonNull public org.mozilla.geckoview.ContentBlocking.Settings getContentBlocking();
     method @android.support.annotation.Nullable public java.lang.Class<?> getCrashHandler();
@@ -222,17 +223,21 @@ package org.mozilla.geckoview {
     method public boolean getUseContentProcessHint();
     method public boolean getUseMaxScreenDepth();
     method public boolean getWebFontsEnabled();
+    method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings setAutoplayDefault(int);
     method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings setConsoleOutputEnabled(boolean);
     method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings setJavaScriptEnabled(boolean);
     method public void setLocales(@android.support.annotation.Nullable java.lang.String[]);
     method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings setRemoteDebuggingEnabled(boolean);
     method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings setWebFontsEnabled(boolean);
+    field public static final int AUTOPLAY_DEFAULT_ALLOWED = 0;
+    field public static final int AUTOPLAY_DEFAULT_BLOCKED = 1;
     field public static final android.os.Parcelable.Creator<org.mozilla.geckoview.GeckoRuntimeSettings> CREATOR;
   }
 
   @android.support.annotation.AnyThread public static final class GeckoRuntimeSettings.Builder extends org.mozilla.geckoview.RuntimeSettings.Builder<Settings extends org.mozilla.geckoview.RuntimeSettings> {
     ctor public Builder();
     method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings.Builder arguments(@android.support.annotation.NonNull java.lang.String[]);
+    method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings.Builder autoplayDefault(int);
     method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings.Builder consoleOutput(boolean);
     method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings.Builder contentBlocking(@android.support.annotation.NonNull org.mozilla.geckoview.ContentBlocking.Settings);
     method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings.Builder crashHandler(java.lang.Class<?>);
@@ -416,7 +421,6 @@ package org.mozilla.geckoview {
     method @android.support.annotation.UiThread public void onAndroidPermissionsRequest(@android.support.annotation.NonNull org.mozilla.geckoview.GeckoSession, @android.support.annotation.Nullable java.lang.String[], @android.support.annotation.NonNull org.mozilla.geckoview.GeckoSession.PermissionDelegate.Callback);
     method @android.support.annotation.UiThread public void onContentPermissionRequest(@android.support.annotation.NonNull org.mozilla.geckoview.GeckoSession, @android.support.annotation.Nullable java.lang.String, int, @android.support.annotation.NonNull org.mozilla.geckoview.GeckoSession.PermissionDelegate.Callback);
     method @android.support.annotation.UiThread public void onMediaPermissionRequest(@android.support.annotation.NonNull org.mozilla.geckoview.GeckoSession, @android.support.annotation.NonNull java.lang.String, @android.support.annotation.Nullable org.mozilla.geckoview.GeckoSession.PermissionDelegate.MediaSource[], @android.support.annotation.Nullable org.mozilla.geckoview.GeckoSession.PermissionDelegate.MediaSource[], @android.support.annotation.NonNull org.mozilla.geckoview.GeckoSession.PermissionDelegate.MediaCallback);
-    field public static final int PERMISSION_AUTOPLAY_MEDIA = 2;
     field public static final int PERMISSION_DESKTOP_NOTIFICATION = 1;
     field public static final int PERMISSION_GEOLOCATION = 0;
   }
