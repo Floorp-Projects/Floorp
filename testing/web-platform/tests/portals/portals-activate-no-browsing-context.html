@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script>
+promise_test(async () => {
+  let activatePromise = document.createElement('portal').activate();
+  await activatePromise.then(() => assert_unreached(), e => {
+    assert_true(e instanceof DOMException);
+    assert_equals(e.name, 'InvalidStateError');
+  });
+}, "A portal with nothing in it cannot be activated");
+</script>
