@@ -49,6 +49,7 @@ class HomeFragment : Fragment() {
         val view = inflater.inflate(R.layout.fragment_home, container, false)
         TabsComponent(view.homeLayout, bus, TabsState(requireComponents.core.sessionManager.sessions))
         SessionsComponent(view.homeLayout, bus)
+        layoutComponents(view)
         ActionBusFactory.get(this).logMergedObservables()
         val activity = activity as HomeActivity
         DefaultThemeManager.applyStatusBarTheme(activity.window, activity.themeManager, activity)
@@ -60,8 +61,6 @@ class HomeFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         (activity as AppCompatActivity).supportActionBar?.hide()
-
-        layoutComponents(view.homeLayout)
 
         getSafeManagedObservable<TabsAction>()
             .subscribe {
