@@ -43,8 +43,6 @@ class ParentRemoteAgent {
     this.tabs.on("close", tab => this.targets.disconnect(tab.linkedBrowser));
   }
 
-  // nsIRemoteAgent
-
   get listening() {
     return !!this.server && !this.server._socketClosed;
   }
@@ -177,7 +175,6 @@ class ParentRemoteAgent {
   get QueryInterface() {
     return ChromeUtils.generateQI([
       Ci.nsICommandLineHandler,
-      Ci.nsIRemoteAgent,
     ]);
   }
 }
