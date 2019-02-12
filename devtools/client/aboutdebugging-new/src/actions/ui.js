@@ -13,12 +13,14 @@ const {
   ADB_ADDON_UNINSTALL_FAILURE,
   ADB_ADDON_STATUS_UPDATED,
   DEBUG_TARGET_COLLAPSIBILITY_UPDATED,
+  HIDE_PROFILER_DIALOG,
   NETWORK_LOCATIONS_UPDATED,
   PAGE_TYPES,
   SELECT_PAGE_FAILURE,
   SELECT_PAGE_START,
   SELECT_PAGE_SUCCESS,
   SELECTED_RUNTIME_ID_UPDATED,
+  SHOW_PROFILER_DIALOG,
   USB_RUNTIMES_SCAN_START,
   USB_RUNTIMES_SCAN_SUCCESS,
 } = require("../constants");
@@ -49,6 +51,11 @@ function selectPage(page, runtimeId) {
       // Nothing to dispatch if the page is the same as the current page
       if (isSamePage(currentPage, page)) {
         return;
+      }
+
+      // Stop showing the profiler dialog if we are navigating to another page.
+      if (getState().ui.showProfilerDialog) {
+        await dispatch({ type: HIDE_PROFILER_DIALOG });
       }
 
       // Stop watching current runtime, if currently on a RUNTIME page.
@@ -91,6 +98,14 @@ function removeNetworkLocation(location) {
   return (dispatch, getState) => {
     NetworkLocationsModule.removeNetworkLocation(location);
   };
+}
+
+function showProfilerDialog() {
+  return { type: SHOW_PROFILER_DIALOG };
+}
+
+function hideProfilerDialog() {
+  return { type: HIDE_PROFILER_DIALOG };
 }
 
 function updateAdbAddonStatus(adbAddonStatus) {
@@ -147,10 +162,12 @@ function scanUSBRuntimes() {
 
 module.exports = {
   addNetworkLocation,
+  hideProfilerDialog,
   installAdbAddon,
   removeNetworkLocation,
   scanUSBRuntimes,
   selectPage,
+  showProfilerDialog,
   uninstallAdbAddon,
   updateAdbAddonStatus,
   updateDebugTargetCollapsibility,

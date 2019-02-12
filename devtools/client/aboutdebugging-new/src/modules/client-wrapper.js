@@ -154,6 +154,13 @@ class ClientWrapper {
   isClosed() {
     return this.client._closed;
   }
+
+  async loadPerformanceProfiler(win) {
+    const preferenceFront = await this.getFront("preference");
+    const perfFront = await this.getFront("perf");
+    const perfActorVersion = this.client.mainRoot.traits.perfActorVersion;
+    win.gInit(perfFront, preferenceFront, perfActorVersion);
+  }
 }
 
 exports.ClientWrapper = ClientWrapper;
