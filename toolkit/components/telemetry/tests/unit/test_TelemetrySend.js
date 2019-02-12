@@ -46,22 +46,6 @@ function waitForTimer() {
   });
 }
 
-function sendPing(aSendClientId, aSendEnvironment) {
-  const TEST_PING_TYPE = "test-ping-type";
-
-  if (PingServer.started) {
-    TelemetrySend.setServer("http://localhost:" + PingServer.port);
-  } else {
-    TelemetrySend.setServer("http://doesnotexist");
-  }
-
-  let options = {
-    addClientId: aSendClientId,
-    addEnvironment: aSendEnvironment,
-  };
-  return TelemetryController.submitExternalPing(TEST_PING_TYPE, {}, options);
-}
-
 // Allow easy faking of readable ping ids.
 // This helps with debugging issues with e.g. ordering in the send logic.
 function fakePingId(type, number) {
@@ -98,11 +82,6 @@ function histogramValueCount(h) {
 add_task(async function test_setup() {
   // Trigger a proper telemetry init.
   do_get_profile(true);
-
-  // Addon manager needs a profile directory.
-  loadAddonManager("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
-  finishAddonManagerStartup();
-
   // Make sure we don't generate unexpected pings due to pref changes.
   await setEmptyPrefWatchlist();
   Services.prefs.setBoolPref(TelemetryUtils.Preferences.HealthPingEnabled, true);
@@ -552,40 +531,6 @@ add_task(async function test_sendCheckOverride() {
   // Restore the test mode and disable the override.
   TelemetrySend.setTestModeEnabled(true);
   Services.prefs.clearUserPref(TelemetryUtils.Preferences.OverrideOfficialCheck);
-});
-
-add_task(async function test_submissionPath() {
-  const PING_FORMAT_VERSION = 4;
-  const TEST_PING_TYPE = "test-ping-type";
-
-  PingServer.start();
-
-  await sendPing(false, false);
-
-  // Fetch the request from the server.
-  let request = await PingServer.promiseNextRequest();
-
-  // Get the payload.
-  let ping = decodeRequestPayload(request);
-  checkPingFormat(ping, TEST_PING_TYPE, false, false);
-
-  let app = ping.application;
-  let pathComponents = [
-    ping.id, ping.type, app.name, app.version, app.channel, app.buildId,
-  ];
-
-  let urlComponents = request.path.split("/");
-
-  for (let i = 0; i < pathComponents.length; i++) {
-    Assert.ok(urlComponents.includes(pathComponents[i]), `Path should include ${pathComponents[i]}`);
-  }
-
-  // Check that we have a version query parameter in the URL.
-  Assert.notEqual(request.queryString, "");
-
-  // Make sure the version in the query string matches the new ping format version.
-  let params = request.queryString.split("&");
-  Assert.ok(params.find(p => p == ("v=" + PING_FORMAT_VERSION)));
 });
 
 add_task(async function testCookies() {
