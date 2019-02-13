@@ -419,10 +419,7 @@ nsresult nsChildView::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
   // that NS_NATIVE_WIDGET is the NSView.
   CGFloat scaleFactor = nsCocoaUtils::GetBackingScaleFactor(mParentView);
   NSRect r = nsCocoaUtils::DevPixelsToCocoaPoints(mBounds, scaleFactor);
-  mView = [(NSView<mozView>*)CreateCocoaView(r) retain];
-  if (!mView) {
-    return NS_ERROR_FAILURE;
-  }
+  mView = [[ChildView alloc] initWithFrame:r geckoChild:this];
 
   // If this view was created in a Gecko view hierarchy, the initial state
   // is hidden.  If the view is attached only to a native NSView but has
@@ -450,16 +447,6 @@ nsresult nsChildView::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
   return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
-}
-
-// Creates the appropriate child view. Override to create something other than
-// our |ChildView| object. Autoreleases, so caller must retain.
-NSView* nsChildView::CreateCocoaView(NSRect inFrame) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
-
-  return [[[ChildView alloc] initWithFrame:inFrame geckoChild:this] autorelease];
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 void nsChildView::TearDownView() {
@@ -1526,7 +1513,7 @@ nsresult nsChildView::StartPluginIME(const mozilla::WidgetKeyboardEvent& aKeyboa
   // currently exists.  So nested IME should never reach here, and so it should
   // be fine to use the last key-down event received by -[ChildView keyDown:]
   // (as we currently do).
-  ctiPanel->InterpretKeyEvent([(ChildView*)mView lastKeyDownEvent], aCommitted);
+  ctiPanel->InterpretKeyEvent([mView lastKeyDownEvent], aCommitted);
 
   return NS_OK;
 }
@@ -1719,7 +1706,7 @@ NSView<mozView>* nsChildView::GetEditorView() {
 void nsChildView::CreateCompositor() {
   nsBaseWidget::CreateCompositor();
   if (mCompositorBridgeChild) {
-    [(ChildView*)mView setUsingOMTCompositor:true];
+    [mView setUsingOMTCompositor:true];
   }
 }
 
@@ -1754,10 +1741,10 @@ void nsChildView::PrepareWindowEffects() {
   {
     MutexAutoLock lock(mEffectsLock);
     mShowsResizeIndicator = ShowsResizeIndicator(&mResizeIndicatorRect);
-    mHasRoundedBottomCorners = [(ChildView*)mView hasRoundedBottomCorners];
-    CGFloat cornerRadius = [(ChildView*)mView cornerRadius];
+    mHasRoundedBottomCorners = [mView hasRoundedBottomCorners];
+    CGFloat cornerRadius = [mView cornerRadius];
     mDevPixelCornerRadius = cornerRadius * BackingScaleFactor();
-    mIsCoveringTitlebar = [(ChildView*)mView isCoveringTitlebar];
+    mIsCoveringTitlebar = [mView isCoveringTitlebar];
     NSInteger styleMask = [[mView window] styleMask];
     bool wasFullscreen = mIsFullscreen;
     nsCocoaWindow* windowWidget = GetXULWindowWidget();
@@ -1777,7 +1764,7 @@ void nsChildView::PrepareWindowEffects() {
   // If we've just transitioned into or out of full screen then update the opacity on our GLContext.
   if (canBeOpaque != mIsOpaque) {
     mIsOpaque = canBeOpaque;
-    [(ChildView*)mView setGLOpaque:canBeOpaque];
+    [mView setGLOpaque:canBeOpaque];
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
@@ -1843,7 +1830,7 @@ bool nsChildView::PreRender(WidgetRenderingContext* aContext) {
 
   NSOpenGLContext* glContext = GLContextCGL::Cast(gl)->GetNSOpenGLContext();
 
-  if (![(ChildView*)mView preRender:glContext]) {
+  if (![mView preRender:glContext]) {
     mViewTearDownLock.Unlock();
     return false;
   }
@@ -1857,7 +1844,7 @@ void nsChildView::PostRender(WidgetRenderingContext* aContext) {
     return;
   }
   NSOpenGLContext* glContext = GLContextCGL::Cast(gl)->GetNSOpenGLContext();
-  [(ChildView*)mView postRender:glContext];
+  [mView postRender:glContext];
   mViewTearDownLock.Unlock();
 }
 
@@ -2461,7 +2448,7 @@ bool nsChildView::InitCompositor(Compositor* aCompositor) {
 }
 
 void nsChildView::DoRemoteComposition(const LayoutDeviceIntRect& aRenderRect) {
-  if (![(ChildView*)mView preRender:mGLPresenter->GetNSOpenGLContext()]) {
+  if (![mView preRender:mGLPresenter->GetNSOpenGLContext()]) {
     return;
   }
   mGLPresenter->BeginFrame(aRenderRect.Size());
@@ -2475,7 +2462,7 @@ void nsChildView::DoRemoteComposition(const LayoutDeviceIntRect& aRenderRect) {
 
   mGLPresenter->EndFrame();
 
-  [(ChildView*)mView postRender:mGLPresenter->GetNSOpenGLContext()];
+  [mView postRender:mGLPresenter->GetNSOpenGLContext()];
 }
 
 @interface NonDraggableView : NSView
