@@ -653,6 +653,127 @@
         input1.remove();
       }
 
+      function testTabbingThroughScrollableShadowDOM() {
+        opener.is(document.activeElement, document.body.firstChild, "body's first child should have focus.");
+
+        var host0 = document.createElement("div");
+        host0.setAttribute("style", "height: 50px; overflow: auto;");
+        host0.onfocus = focusLogger;
+        document.body.appendChild(host0);
+
+        var sr0 = host0.attachShadow({mode: "open"});
+        sr0.innerHTML = `
+          <style>
+            div,slot {
+              height: 30px;
+              display: block;
+              overflow: auto;
+            }
+            input {
+              display: block;
+            }
+          </style>
+        `;
+
+        var input00 = document.createElement("input");
+        input00.setAttribute("style", "background-color: red;");
+        input00.onfocus = focusLogger;
+        sr0.appendChild(input00);
+
+        var container01 = document.createElement("div");
+        container01.onfocus = focusLogger;
+        sr0.appendChild(container01);
+
+        var input010 = document.createElement("input");
+        input010.onfocus = focusLogger;
+        container01.appendChild(input010);
+
+        var input011 = document.createElement("input");
+        input011.onfocus = focusLogger;
+        container01.appendChild(input011);
+
+        var slot02 = document.createElement("slot");
+        slot02.onfocus = focusLogger;
+        sr0.appendChild(slot02);
+
+        var input020 = document.createElement("input");
+        input020.setAttribute("style", "display: block;");
+        input020.onfocus = focusLogger;
+        host0.appendChild(input020);
+
+        var input021 = document.createElement("input");
+        input021.setAttribute("style", "display: block;");
+        input021.onfocus = focusLogger;
+        host0.appendChild(input021);
+
+        var input1 = document.createElement("input");
+        input1.onfocus = focusLogger;
+        document.body.appendChild(input1);
+
+        document.body.offsetLeft;
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, host0, "Should have focused shadow host element. (1)");
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, input00, "Should have focused input element in shadow dom. (2)");
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, container01, "Should have focused scrollable element in shadow dom. (3)");
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, input010, "Should have focused input element in shadow dom. (4)");
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, input011, "Should have focused input element in shadow dom. (5)");
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, slot02, "Should have focused slot element in shadow dom. (6)");
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, input020, "Should have focused input element in slot. (7)");
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, input021, "Should have focused input element in slot. (8)");
+
+        synthesizeKey("KEY_Tab");
+        opener.is(lastFocusTarget, input1, "Should have focused input element in light dom. (9)");
+
+        // Backwards
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, input021, "Should have focused input element in slot. (10)");
+
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, input020, "Should have focused input element in slot. (11)");
+
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, slot02, "Should have focused slot element in shadow dom. (12)");
+
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, input011, "Should have focused input element in shadow dom. (13)");
+
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, input010, "Should have focused input element in shadow dom. (14)");
+
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, container01, "Should have focused scrollable element in shadow dom. (15)");
+
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(lastFocusTarget, input00, "Should have focused input element in shadow dom. (16)");
+
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        // focus is already on host
+        opener.is(sr0.activeElement, null,
+                  "Focus should have left input element in shadow DOM. (7)");
+
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(document.activeElement, document.body.firstChild,
+                  "body's first child should have focus.");
+
+        host0.remove();
+        input1.remove();
+      }
+
       function runTest() {
 
         testTabbingThroughShadowDOMWithTabIndexes();
@@ -665,6 +786,7 @@
         testTabbingThroughNestedSlot();
         testTabbingThroughSlotInLightDOM();
         testTabbingThroughFocusableSlotInLightDOM();
+        testTabbingThroughScrollableShadowDOM();
 
         opener.didRunTests();
         window.close();
