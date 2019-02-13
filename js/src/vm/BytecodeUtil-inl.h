@@ -118,6 +118,8 @@ class BytecodeRangeWithPosition : private BytecodeRange {
         sn(script->notes()),
         snpc(script->code()),
         isEntryPoint(false),
+        isBreakpoint(false),
+        seenStepSeparator(false),
         wasArtifactEntryPoint(false) {
     if (!SN_IS_TERMINATOR(sn)) {
       snpc += SN_DELTA(sn);
@@ -168,8 +170,23 @@ class BytecodeRangeWithPosition : private BytecodeRange {
   // user) places to stop.
   bool frontIsEntryPoint() const { return isEntryPoint; }
 
+  // Breakable points are explicitly marked by the emitter as locations where
+  // the debugger may want to allow users to pause.
+  bool frontIsBreakablePoint() const { return isBreakpoint; }
+
+  // Breakable step points are the first breakable point after a SRC_STEP_SEP
+  // note has been encountered.
+  bool frontIsBreakableStepPoint() const {
+    return isBreakpoint && seenStepSeparator;
+  }
+
  private:
   void updatePosition() {
+    if (isBreakpoint) {
+      isBreakpoint = false;
+      seenStepSeparator = false;
+    }
+
     // Determine the current line number by reading all source notes up to
     // and including the current offset.
     jsbytecode* lastLinePC = nullptr;
@@ -189,6 +206,12 @@ class BytecodeRangeWithPosition : private BytecodeRange {
         lineno++;
         column = 0;
         lastLinePC = snpc;
+      } else if (type == SRC_BREAKPOINT) {
+        isBreakpoint = true;
+        lastLinePC = snpc;
+      } else if (type == SRC_STEP_SEP) {
+        seenStepSeparator = true;
+        lastLinePC = snpc;
       }
 
       sn = SN_NEXT(sn);
@@ -202,6 +225,8 @@ class BytecodeRangeWithPosition : private BytecodeRange {
   jssrcnote* sn;
   jsbytecode* snpc;
   bool isEntryPoint;
+  bool isBreakpoint;
+  bool seenStepSeparator;
   bool wasArtifactEntryPoint;
 };
 

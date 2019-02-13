@@ -102,6 +102,9 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent, SharedContext* sc,
       lastNoteOffset_(0),
       currentLine_(lineNum),
       lastColumn_(0),
+      lastSeparatorOffet_(0),
+      lastSeparatorLine_(0),
+      lastSeparatorColumn_(0),
       mainOffset_(),
       lastTarget{-1 - ptrdiff_t(JSOP_JUMPTARGET_LENGTH)},
       parser(nullptr),
@@ -192,6 +195,50 @@ Maybe<NameLocation> BytecodeEmitter::locationOfNameBoundInFunctionScope(
     funScope = funScope->enclosingInFrame();
   }
   return source->locationBoundInScope(name, funScope);
+}
+
+bool BytecodeEmitter::markStepBreakpoint() {
+  if (inPrologue()) {
+    return true;
+  }
+
+  if (!newSrcNote(SRC_STEP_SEP)) {
+    return false;
+  }
+
+  if (!newSrcNote(SRC_BREAKPOINT)) {
+    return false;
+  }
+
+  // We track the location of the most recent separator for use in
+  // markSimpleBreakpoint. Note that this means that the position must already
+  // be set before markStepBreakpoint is called.
+  lastSeparatorOffet_ = code().length();
+  lastSeparatorLine_ = currentLine_;
+  lastSeparatorColumn_ = lastColumn_;
+
+  return true;
+}
+
+bool BytecodeEmitter::markSimpleBreakpoint() {
+  if (inPrologue()) {
+    return true;
+  }
+
+  // If a breakable call ends up being the same location as the most recent
+  // expression start, we need to skip marking it breakable in order to avoid
+  // having two breakpoints with the same line/column position.
+  // Note: This assumes that the position for the call has already been set.
+  bool isDuplicateLocation =
+      lastSeparatorLine_ == currentLine_ && lastSeparatorColumn_ == lastColumn_;
+
+  if (!isDuplicateLocation) {
+    if (!newSrcNote(SRC_BREAKPOINT)) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 bool BytecodeEmitter::emitCheck(JSOp op, ptrdiff_t delta, ptrdiff_t* offset) {
@@ -520,6 +567,8 @@ bool BytecodeEmitter::updateLineNumberNotes(uint32_t offset) {
         }
       } while (--delta != 0);
     }
+
+    updateSeparatorPosition();
   }
   return true;
 }
@@ -550,8 +599,17 @@ bool BytecodeEmitter::updateSourceCoordNotes(uint32_t offset) {
       return false;
     }
     lastColumn_ = columnIndex;
+    updateSeparatorPosition();
   }
   return true;
+}
+
+/* Updates the last separator position, if present */
+void BytecodeEmitter::updateSeparatorPosition() {
+  if (!inPrologue() && lastSeparatorOffet_ == code().length()) {
+    lastSeparatorLine_ = currentLine_;
+    lastSeparatorColumn_ = lastColumn_;
+  }
 }
 
 Maybe<uint32_t> BytecodeEmitter::getOffsetForLoop(ParseNode* nextpn) {
@@ -2012,6 +2070,10 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitSwitch(SwitchStatement* switchStmt) {
   if (!se.emitDiscriminant(Some(switchStmt->discriminant().pn_pos.begin))) {
     return false;
   }
+
+  if (!markStepBreakpoint()) {
+    return false;
+  }
   if (!emitTree(&switchStmt->discriminant())) {
     return false;
   }
@@ -2392,6 +2454,9 @@ bool BytecodeEmitter::emitScript(ParseNode* body) {
       return false;
     }
   }
+  if (!markSimpleBreakpoint()) {
+    return false;
+  }
 
   if (!emit1(JSOP_RETRVAL)) {
     return false;
@@ -2452,6 +2517,9 @@ bool BytecodeEmitter::emitFunctionScript(FunctionNode* funNode,
   }
 
   if (!updateSourceCoordNotes(body->pn_pos.end)) {
+    return false;
+  }
+  if (!markSimpleBreakpoint()) {
     return false;
   }
 
@@ -3941,6 +4009,9 @@ bool BytecodeEmitter::emitDeclarationList(ListNode* declList) {
       if (!updateSourceCoordNotes(assignNode->right()->pn_pos.begin)) {
         return false;
       }
+      if (!markStepBreakpoint()) {
+        return false;
+      }
       if (!emitTree(assignNode->right())) {
         return false;
       }
@@ -3990,6 +4061,9 @@ bool BytecodeEmitter::emitSingleDeclaration(ListNode* declList, NameNode* decl,
     MOZ_ASSERT(initializer);
 
     if (!updateSourceCoordNotes(initializer->pn_pos.begin)) {
+      return false;
+    }
+    if (!markStepBreakpoint()) {
       return false;
     }
     if (!emitInitializer(initializer, decl)) {
@@ -4651,6 +4725,10 @@ bool BytecodeEmitter::emitIf(TernaryNode* ifNode) {
   }
 
 if_again:
+  if (!markStepBreakpoint()) {
+    return false;
+  }
+
   /* Emit code for the condition before pushing stmtInfo. */
   if (!emitTree(ifNode->kid1())) {
     return false;
@@ -4816,6 +4894,10 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitLexicalScope(
 bool BytecodeEmitter::emitWith(BinaryNode* withNode) {
   // Ensure that the column of the 'with' is set properly.
   if (!updateSourceCoordNotes(withNode->left()->pn_pos.begin)) {
+    return false;
+  }
+
+  if (!markStepBreakpoint()) {
     return false;
   }
 
@@ -5276,6 +5358,9 @@ bool BytecodeEmitter::emitForOf(ForNode* forOfLoop,
   if (!updateSourceCoordNotes(forHeadExpr->pn_pos.begin)) {
     return false;
   }
+  if (!markStepBreakpoint()) {
+    return false;
+  }
   if (!emitTree(forHeadExpr)) {
     //              [stack] ITERABLE
     return false;
@@ -5374,6 +5459,9 @@ bool BytecodeEmitter::emitForIn(ForNode* forInLoop,
   if (!updateSourceCoordNotes(expr->pn_pos.begin)) {
     return false;
   }
+  if (!markStepBreakpoint()) {
+    return false;
+  }
   if (!emitTree(expr)) {
     //              [stack] EXPR
     return false;
@@ -5449,6 +5537,9 @@ bool BytecodeEmitter::emitCStyleFor(
       if (!updateSourceCoordNotes(init->pn_pos.begin)) {
         return false;
       }
+      if (!markStepBreakpoint()) {
+        return false;
+      }
 
       // 'init' is an expression, not a declaration. emitTree left its
       // value on the stack.
@@ -5487,6 +5578,9 @@ bool BytecodeEmitter::emitCStyleFor(
     if (!updateSourceCoordNotes(update->pn_pos.begin)) {
       return false;
     }
+    if (!markStepBreakpoint()) {
+      return false;
+    }
     if (!emitTree(update, ValueUsage::IgnoreValue)) {
       //            [stack] VAL
       return false;
@@ -5502,6 +5596,9 @@ bool BytecodeEmitter::emitCStyleFor(
 
   if (cond) {
     if (!updateSourceCoordNotes(cond->pn_pos.begin)) {
+      return false;
+    }
+    if (!markStepBreakpoint()) {
       return false;
     }
     if (!emitTree(cond)) {
@@ -5868,6 +5965,9 @@ bool BytecodeEmitter::emitDo(BinaryNode* doNode) {
   if (!updateSourceCoordNotes(condNode->pn_pos.begin)) {
     return false;
   }
+  if (!markStepBreakpoint()) {
+    return false;
+  }
   if (!emitTree(condNode)) {
     return false;
   }
@@ -5898,6 +5998,9 @@ bool BytecodeEmitter::emitWhile(BinaryNode* whileNode) {
   }
 
   if (!updateSourceCoordNotes(condNode->pn_pos.begin)) {
+    return false;
+  }
+  if (!markStepBreakpoint()) {
     return false;
   }
   if (!emitTree(condNode)) {
@@ -6029,6 +6132,9 @@ bool BytecodeEmitter::emitReturn(UnaryNode* returnNode) {
   }
 
   if (!updateSourceCoordNotes(returnNode->pn_pos.begin)) {
+    return false;
+  }
+  if (!markStepBreakpoint()) {
     return false;
   }
 
@@ -6741,6 +6847,9 @@ bool BytecodeEmitter::emitExpressionStatement(UnaryNode* exprStmt) {
         wantval ? ValueUsage::WantValue : ValueUsage::IgnoreValue;
     ExpressionStatementEmitter ese(this, valueUsage);
     if (!ese.prepareForExpr(Some(exprStmt->pn_pos.begin))) {
+      return false;
+    }
+    if (!markStepBreakpoint()) {
       return false;
     }
     if (!emitTree(expr, valueUsage)) {
@@ -8590,6 +8699,9 @@ bool BytecodeEmitter::emitClass(
     if (!updateSourceCoordNotes(classNode->pn_pos.begin)) {
       return false;
     }
+    if (!markStepBreakpoint()) {
+      return false;
+    }
     if (!emitTree(heritageExpression)) {
       //            [stack] HERITAGE
       return false;
@@ -8742,6 +8854,9 @@ bool BytecodeEmitter::emitTree(
       if (!updateSourceCoordNotes(pn->pn_pos.begin)) {
         return false;
       }
+      if (!markStepBreakpoint()) {
+        return false;
+      }
 
       if (!emitBreak(pn->as<BreakStatement>().label())) {
         return false;
@@ -8751,6 +8866,9 @@ bool BytecodeEmitter::emitTree(
     case ParseNodeKind::ContinueStmt:
       // Ensure that the column of the 'continue' is set properly.
       if (!updateSourceCoordNotes(pn->pn_pos.begin)) {
+        return false;
+      }
+      if (!markStepBreakpoint()) {
         return false;
       }
 
@@ -8935,6 +9053,9 @@ bool BytecodeEmitter::emitTree(
 
     case ParseNodeKind::ThrowStmt:
       if (!updateSourceCoordNotes(pn->pn_pos.begin)) {
+        return false;
+      }
+      if (!markStepBreakpoint()) {
         return false;
       }
       MOZ_FALLTHROUGH;
@@ -9154,6 +9275,9 @@ bool BytecodeEmitter::emitTree(
 
     case ParseNodeKind::DebuggerStmt:
       if (!updateSourceCoordNotes(pn->pn_pos.begin)) {
+        return false;
+      }
+      if (!markStepBreakpoint()) {
         return false;
       }
       if (!emit1(JSOP_DEBUGGER)) {
