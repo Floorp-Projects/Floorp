@@ -496,68 +496,6 @@ struct nsStyleImageLayers {
   static bool IsInitialPositionForLayerType(mozilla::Position aPosition,
                                             LayerType aType);
 
-  struct Size {
-    struct Dimension : public nsStyleCoord::CalcValue {
-      nscoord ResolveLengthPercentage(nscoord aAvailable) const {
-        double d = double(mPercent) * double(aAvailable) + double(mLength);
-        if (d < 0.0) {
-          return 0;
-        }
-        return NSToCoordRoundWithClamp(float(d));
-      }
-    };
-    Dimension mWidth, mHeight;
-
-    bool IsInitialValue() const {
-      return mWidthType == eAuto && mHeightType == eAuto;
-    }
-
-    nscoord ResolveWidthLengthPercentage(
-        const nsSize& aBgPositioningArea) const {
-      MOZ_ASSERT(mWidthType == eLengthPercentage,
-                 "resolving non-length/percent dimension!");
-      return mWidth.ResolveLengthPercentage(aBgPositioningArea.width);
-    }
-
-    nscoord ResolveHeightLengthPercentage(
-        const nsSize& aBgPositioningArea) const {
-      MOZ_ASSERT(mHeightType == eLengthPercentage,
-                 "resolving non-length/percent dimension!");
-      return mHeight.ResolveLengthPercentage(aBgPositioningArea.height);
-    }
-
-    // Except for eLengthPercentage, Dimension types which might change
-    // how a layer is painted when the corresponding frame's dimensions
-    // change *must* precede all dimension types which are agnostic to
-    // frame size; see DependsOnDependsOnPositioningAreaSizeSize.
-    enum DimensionType {
-      // If one of mWidth and mHeight is eContain or eCover, then both are.
-      // NOTE: eContain and eCover *must* be equal to NS_STYLE_BG_SIZE_CONTAIN
-      // and NS_STYLE_BG_SIZE_COVER (in kBackgroundSizeKTable).
-      eContain,
-      eCover,
-
-      eAuto,
-      eLengthPercentage,
-      eDimensionType_COUNT
-    };
-    uint8_t mWidthType, mHeightType;
-
-    // True if the effective image size described by this depends on the size of
-    // the corresponding frame, when aImage (which must not have null type) is
-    // the background image.
-    bool DependsOnPositioningAreaSize(const nsStyleImage& aImage) const;
-
-    // Initialize nothing
-    Size() {}
-
-    // Initialize to initial values
-    void SetInitialValues();
-
-    bool operator==(const Size& aOther) const;
-    bool operator!=(const Size& aOther) const { return !(*this == aOther); }
-  };
-
   struct Repeat {
     mozilla::StyleImageLayerRepeat mXRepeat, mYRepeat;
 
@@ -589,10 +527,11 @@ struct nsStyleImageLayers {
   struct Layer {
     typedef mozilla::StyleGeometryBox StyleGeometryBox;
     typedef mozilla::StyleImageLayerAttachment StyleImageLayerAttachment;
+    typedef mozilla::StyleBackgroundSize StyleBackgroundSize;
 
     nsStyleImage mImage;
     mozilla::Position mPosition;
-    Size mSize;
+    StyleBackgroundSize mSize;
     StyleGeometryBox mClip;
     MOZ_INIT_OUTSIDE_CTOR StyleGeometryBox mOrigin;
 
@@ -1290,7 +1229,7 @@ struct nsStyleGridTemplate {
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePosition {
   using LengthPercentageOrAuto = mozilla::LengthPercentageOrAuto;
   using Position = mozilla::Position;
-  template<typename T>
+  template <typename T>
   using StyleRect = mozilla::StyleRect<T>;
   using StyleSize = mozilla::StyleSize;
   using StyleMaxSize = mozilla::StyleMaxSize;
