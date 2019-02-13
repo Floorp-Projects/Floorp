@@ -59,6 +59,14 @@ void VsyncSource::Display::NotifyVsync(TimeStamp aVsyncTimestamp) {
   // Called on the vsync thread
   MutexAutoLock lock(mDispatcherLock);
 
+  // mRefreshTimerVsyncDispatcher might be null here if MoveListenersToNewSource
+  // was called concurrently with this function and won the race to acquire
+  // mDispatcherLock. In this case the new VsyncSource that is replacing this
+  // one will handle notifications from now on, so we can abort.
+  if (!mRefreshTimerVsyncDispatcher) {
+    return;
+  }
+
   mVsyncId = mVsyncId.Next();
   VsyncEvent event(mVsyncId, aVsyncTimestamp);
 
