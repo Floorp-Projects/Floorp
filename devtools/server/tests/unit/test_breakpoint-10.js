@@ -16,7 +16,11 @@ add_task(threadClientTest(({ threadClient, debuggee }) => {
         threadClient,
         packet.frame.where.actor
       );
-      const location = { sourceUrl: source.url, line: debuggee.line0 + 3 };
+      const location = {
+        sourceUrl: source.url,
+        line: debuggee.line0 + 3,
+        column: 5,
+      };
 
       threadClient.setBreakpoint(location, {});
 
@@ -27,6 +31,16 @@ add_task(threadClientTest(({ threadClient, debuggee }) => {
         // Check that the breakpoint worked.
         Assert.equal(debuggee.i, 0);
 
+        // Remove the breakpoint.
+        threadClient.removeBreakpoint(location);
+
+        const location2 = {
+          sourceUrl: source.url,
+          line: debuggee.line0 + 3,
+          column: 12,
+        };
+        threadClient.setBreakpoint(location2, {});
+
         threadClient.addOneTimeListener("paused", function(event, packet) {
           // Check the return value.
           Assert.equal(packet.type, "paused");
@@ -35,7 +49,7 @@ add_task(threadClientTest(({ threadClient, debuggee }) => {
           Assert.equal(debuggee.i, 1);
 
           // Remove the breakpoint.
-          threadClient.removeBreakpoint(location);
+          threadClient.removeBreakpoint(location2);
 
           threadClient.resume(resolve);
         });

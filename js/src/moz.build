@@ -17,6 +17,10 @@ component_wasm   = ('Core', 'Javascript: Web Assembly')
 
 FILES_PER_UNIFIED_FILE = 6
 
+# Prevent redefining FILES_PER_UNIFIED_FILE in each sub-directory of js. This
+# will not escape this directory.
+export('FILES_PER_UNIFIED_FILE')
+
 with Files('*'):
     BUG_COMPONENT = component_engine
 
@@ -417,12 +421,6 @@ DIRS += [
 ]
 
 FINAL_LIBRARY = 'js'
-
-if CONFIG['ENABLE_WASM_CRANELIFT']:
-    DIRS += ['rust']
-    UNIFIED_SOURCES += [
-        'wasm/WasmCraneliftCompile.cpp',
-    ]
 
 # Prepare self-hosted JS code for embedding
 GENERATED_FILES += [('selfhosted.out.h', 'selfhosted.js')]

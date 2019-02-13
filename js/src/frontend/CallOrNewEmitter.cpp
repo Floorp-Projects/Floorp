@@ -271,17 +271,20 @@ bool CallOrNewEmitter::emitEnd(uint32_t argc, const Maybe<uint32_t>& beginPos) {
       }
     }
   }
+  if (beginPos) {
+    if (!bce_->updateSourceCoordNotes(*beginPos)) {
+      return false;
+    }
+  }
+  if (!bce_->markSimpleBreakpoint()) {
+    return false;
+  }
   if (!isSpread()) {
-    if (!bce_->emitCall(op_, argc, beginPos)) {
+    if (!bce_->emitCall(op_, argc)) {
       //            [stack] RVAL
       return false;
     }
   } else {
-    if (beginPos) {
-      if (!bce_->updateSourceCoordNotes(*beginPos)) {
-        return false;
-      }
-    }
     if (!bce_->emit1(op_)) {
       //            [stack] RVAL
       return false;

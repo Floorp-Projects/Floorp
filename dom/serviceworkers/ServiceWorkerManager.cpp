@@ -3010,5 +3010,12 @@ void ServiceWorkerManager::MaybeSendUnregister(nsIPrincipal* aPrincipal,
                                    NS_ConvertUTF8toUTF16(aScope));
 }
 
+NS_IMETHODIMP
+ServiceWorkerManager::IsParentInterceptEnabled(bool* aIsEnabled) {
+  MOZ_ASSERT(NS_IsMainThread());
+  *aIsEnabled = ServiceWorkerParentInterceptEnabled();
+  return NS_OK;
+}
+
 }  // namespace dom
 }  // namespace mozilla

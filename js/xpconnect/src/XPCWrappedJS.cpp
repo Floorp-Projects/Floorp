@@ -462,11 +462,12 @@ void XPCJSRuntime::RemoveWrappedJS(nsXPCWrappedJS* wrapper) {
 }
 
 #ifdef DEBUG
-static void NotHasWrapperAssertionCallback(JSContext* cx, void* data,
-                                           JS::Compartment* comp) {
+static JS::CompartmentIterResult NotHasWrapperAssertionCallback(
+    JSContext* cx, void* data, JS::Compartment* comp) {
   auto wrapper = static_cast<nsXPCWrappedJS*>(data);
   auto xpcComp = xpc::CompartmentPrivate::Get(comp);
   MOZ_ASSERT_IF(xpcComp, !xpcComp->GetWrappedJSMap()->HasWrapper(wrapper));
+  return JS::CompartmentIterResult::KeepGoing;
 }
 #endif
 

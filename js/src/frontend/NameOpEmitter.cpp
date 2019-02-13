@@ -357,7 +357,7 @@ bool NameOpEmitter::emitIncDec() {
     //              [stack] ENV? V
     return false;
   }
-  if (!bce_->emit1(JSOP_POS)) {
+  if (!bce_->emit1(JSOP_TONUMERIC)) {
     //              [stack] ENV? N
     return false;
   }

@@ -29,17 +29,14 @@ add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
   dumpn("Continuing and waiting for second debugger statement");
   const dbgStmt2 = await resumeAndWaitForPause(client, threadClient);
   equal(dbgStmt2.frame.where.line, 12,
-        "Should be at debugger statement on line 3");
+        "Should be at debugger statement on line 12");
 
   dumpn("Testing stepping with explicit return");
   const step3 = await stepOver(client, threadClient);
   equal(step3.frame.where.line, 13, "Should step to line 13");
   const step4 = await stepOver(client, threadClient);
   equal(step4.frame.where.line, 15, "Should step out of the function from line 15");
-  // This step is a bit funny, see bug 1013219 for details.
-  const step5 = await stepOver(client, threadClient);
-  equal(step5.frame.where.line, 15, "Should step out of the function from line 15");
-  ok(step5.why.frameFinished, "This should be the explicit function return");
+  ok(step4.why.frameFinished, "This should be the explicit function return");
 }));
 
 function evaluateTestCode(debuggee) {

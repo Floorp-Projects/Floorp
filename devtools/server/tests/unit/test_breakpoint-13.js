@@ -33,12 +33,6 @@ add_task(threadClientTest(({ threadClient, debuggee }) => {
           Assert.equal(packet.why.type, "resumeLimit");
         },
         function(packet) {
-          // At the end of the foo function call frame.
-          Assert.equal(packet.frame.where.line, debuggee.line0 + 3);
-          Assert.notEqual(packet.why.type, "breakpoint");
-          Assert.equal(packet.why.type, "resumeLimit");
-        },
-        function(packet) {
           // Check that the breakpoint wasn't the reason for this pause, but
           // that the frame is about to be popped while stepping.
           Assert.equal(packet.frame.where.line, debuggee.line0 + 3);

@@ -21,13 +21,17 @@ add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
   await threadClient.setBreakpoint({ sourceUrl: source.url, line: 7 }, {});
 
   dumpn("Step in to innerFunction");
-  const step1 = await stepIn(client, threadClient);
-  equal(step1.frame.where.line, 7);
+  const step1 = await stepOver(client, threadClient);
+  equal(step1.frame.where.line, 3);
+
+  dumpn("Step in to innerFunction");
+  const step2 = await stepIn(client, threadClient);
+  equal(step2.frame.where.line, 7);
 
   dumpn("Step out of innerFunction");
-  const step2 = await stepOut(client, threadClient);
+  const step3 = await stepOut(client, threadClient);
   // The bug was that we'd stop again at the breakpoint on line 7.
-  equal(step2.frame.where.line, 4);
+  equal(step3.frame.where.line, 4);
 }));
 
 function evaluateTestCode(debuggee) {

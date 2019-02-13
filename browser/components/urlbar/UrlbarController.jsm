@@ -198,6 +198,20 @@ class UrlbarController {
       return;
     }
 
+    if (this.view.isOpen) {
+      let queryContext = this._lastQueryContext;
+      if (queryContext) {
+        this.view.oneOffSearchButtons.handleKeyPress(
+          event,
+          queryContext.results.length,
+          this.view.allowEmptySelection,
+          queryContext.searchString);
+        if (event.defaultPrevented) {
+          return;
+        }
+      }
+    }
+
     switch (event.keyCode) {
       case KeyEvent.DOM_VK_ESCAPE:
         this.input.handleRevert();

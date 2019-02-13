@@ -210,9 +210,9 @@ const DownloadMap = new class extends EventEmitter {
     return this.lazyInit().then(() => this.byId.values());
   }
 
-  fromId(id) {
+  fromId(id, privateAllowed = true) {
     const download = this.byId.get(id);
-    if (!download) {
+    if (!download || (!privateAllowed && download.incognito)) {
       throw new Error(`Invalid download id ${id}`);
     }
     return download;
@@ -332,7 +332,7 @@ const downloadQuery = query => {
 
     // todo: include danger
     const SIMPLE_ITEMS = ["id", "mime", "startTime", "endTime", "state",
-                          "paused", "error",
+                          "paused", "error", "incognito",
                           "bytesReceived", "totalBytes", "fileSize", "exists"];
     for (let field of SIMPLE_ITEMS) {
       if (query[field] != null && item[field] != query[field]) {
@@ -397,6 +397,26 @@ const queryHelper = query => {
   });
 };
 
+function downloadEventManagerAPI(context, name, event, listener) {
+  let register = fire => {
+    const handler = (what, item) => {
+      if (context.privateBrowsingAllowed || !item.incognito) {
+        listener(fire, what, item);
+      }
+    };
+    let registerPromise = DownloadMap.getDownloadList().then(() => {
+      DownloadMap.on(event, handler);
+    });
+    return () => {
+      registerPromise.then(() => {
+        DownloadMap.off(event, handler);
+      });
+    };
+  };
+
+  return new EventManager({context, name, register}).api();
+}
+
 this.downloads = class extends ExtensionAPI {
   getAPI(context) {
     let {extension} = context;
@@ -426,6 +446,10 @@ this.downloads = class extends ExtensionAPI {
             if (path.components.some(component => component != DownloadPaths.sanitize(component))) {
               return Promise.reject({message: "filename must not contain illegal characters"});
             }
+          }
+
+          if (options.incognito && !context.privateBrowsingAllowed) {
+            return Promise.reject({message: "private browsing access not allowed"});
           }
 
           if (options.conflictAction == "prompt") {
@@ -580,7 +604,7 @@ this.downloads = class extends ExtensionAPI {
           return DownloadMap.lazyInit().then(() => {
             let item;
             try {
-              item = DownloadMap.fromId(id);
+              item = DownloadMap.fromId(id, context.privateBrowsingAllowed);
             } catch (err) {
               return Promise.reject({message: `Invalid download id ${id}`});
             }
@@ -594,6 +618,9 @@ this.downloads = class extends ExtensionAPI {
         },
 
         search(query) {
+          if (!context.privateBrowsingAllowed) {
+            query.incognito = false;
+          }
           return queryHelper(query)
             .then(items => items.map(item => item.serialize()));
         },
@@ -602,7 +629,7 @@ this.downloads = class extends ExtensionAPI {
           return DownloadMap.lazyInit().then(() => {
             let item;
             try {
-              item = DownloadMap.fromId(id);
+              item = DownloadMap.fromId(id, context.privateBrowsingAllowed);
             } catch (err) {
               return Promise.reject({message: `Invalid download id ${id}`});
             }
@@ -618,7 +645,7 @@ this.downloads = class extends ExtensionAPI {
           return DownloadMap.lazyInit().then(() => {
             let item;
             try {
-              item = DownloadMap.fromId(id);
+              item = DownloadMap.fromId(id, context.privateBrowsingAllowed);
             } catch (err) {
               return Promise.reject({message: `Invalid download id ${id}`});
             }
@@ -634,7 +661,7 @@ this.downloads = class extends ExtensionAPI {
           return DownloadMap.lazyInit().then(() => {
             let item;
             try {
-              item = DownloadMap.fromId(id);
+              item = DownloadMap.fromId(id, context.privateBrowsingAllowed);
             } catch (err) {
               return Promise.reject({message: `Invalid download id ${id}`});
             }
@@ -657,6 +684,9 @@ this.downloads = class extends ExtensionAPI {
         },
 
         erase(query) {
+          if (!context.privateBrowsingAllowed) {
+            query.incognito = false;
+          }
           return queryHelper(query).then(items => {
             let results = [];
             let promises = [];
@@ -670,7 +700,7 @@ this.downloads = class extends ExtensionAPI {
 
         open(downloadId) {
           return DownloadMap.lazyInit().then(() => {
-            let download = DownloadMap.fromId(downloadId).download;
+            let download = DownloadMap.fromId(downloadId, context.privateBrowsingAllowed).download;
             if (download.succeeded) {
               return download.launch();
             }
@@ -682,7 +712,7 @@ this.downloads = class extends ExtensionAPI {
 
         show(downloadId) {
           return DownloadMap.lazyInit().then(() => {
-            let download = DownloadMap.fromId(downloadId);
+            let download = DownloadMap.fromId(downloadId, context.privateBrowsingAllowed);
             return download.download.showContainingDirectory();
           }).then(() => {
             return true;
@@ -694,7 +724,7 @@ this.downloads = class extends ExtensionAPI {
         getFileIcon(downloadId, options) {
           return DownloadMap.lazyInit().then(() => {
             let size = options && options.size ? options.size : 32;
-            let download = DownloadMap.fromId(downloadId).download;
+            let download = DownloadMap.fromId(downloadId, context.privateBrowsingAllowed).download;
             let pathPrefix = "";
             let path;
 
@@ -759,73 +789,30 @@ this.downloads = class extends ExtensionAPI {
         //   ...
         // }
 
-        onChanged: new EventManager({
-          context,
-          name: "downloads.onChanged",
-          register: fire => {
-            const handler = (what, item) => {
-              let changes = {};
-              const noundef = val => (val === undefined) ? null : val;
-              DOWNLOAD_ITEM_CHANGE_FIELDS.forEach(fld => {
-                if (item[fld] != item.prechange[fld]) {
-                  changes[fld] = {
-                    previous: noundef(item.prechange[fld]),
-                    current: noundef(item[fld]),
-                  };
-                }
-              });
-              if (Object.keys(changes).length > 0) {
-                changes.id = item.id;
-                fire.async(changes);
-              }
-            };
+        onChanged: downloadEventManagerAPI(context, "downloads.onChanged", "change", (fire, what, item) => {
+          let changes = {};
+          const noundef = val => (val === undefined) ? null : val;
+          DOWNLOAD_ITEM_CHANGE_FIELDS.forEach(fld => {
+            if (item[fld] != item.prechange[fld]) {
+              changes[fld] = {
+                previous: noundef(item.prechange[fld]),
+                current: noundef(item[fld]),
+              };
+            }
+          });
+          if (Object.keys(changes).length > 0) {
+            changes.id = item.id;
+            fire.async(changes);
+          }
+        }),
 
-            let registerPromise = DownloadMap.getDownloadList().then(() => {
-              DownloadMap.on("change", handler);
-            });
-            return () => {
-              registerPromise.then(() => {
-                DownloadMap.off("change", handler);
-              });
-            };
-          },
-        }).api(),
+        onCreated: downloadEventManagerAPI(context, "downloads.onCreated", "create", (fire, what, item) => {
+          fire.async(item.serialize());
+        }),
 
-        onCreated: new EventManager({
-          context,
-          name: "downloads.onCreated",
-          register: fire => {
-            const handler = (what, item) => {
-              fire.async(item.serialize());
-            };
-            let registerPromise = DownloadMap.getDownloadList().then(() => {
-              DownloadMap.on("create", handler);
-            });
-            return () => {
-              registerPromise.then(() => {
-                DownloadMap.off("create", handler);
-              });
-            };
-          },
-        }).api(),
-
-        onErased: new EventManager({
-          context,
-          name: "downloads.onErased",
-          register: fire => {
-            const handler = (what, item) => {
-              fire.async(item.id);
-            };
-            let registerPromise = DownloadMap.getDownloadList().then(() => {
-              DownloadMap.on("erase", handler);
-            });
-            return () => {
-              registerPromise.then(() => {
-                DownloadMap.off("erase", handler);
-              });
-            };
-          },
-        }).api(),
+        onErased: downloadEventManagerAPI(context, "downloads.onErased", "erase", (fire, what, item) => {
+          fire.async(item.id);
+        }),
 
         onDeterminingFilename: ignoreEvent(context, "downloads.onDeterminingFilename"),
       },

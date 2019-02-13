@@ -140,8 +140,6 @@ CGError CGSNewRegionWithRectList(const CGRect* rects, int rectCount, CGSRegionOb
 // defined in nsMenuBarX.mm
 extern NSMenu* sApplicationMenu;  // Application menu shared by all menubars
 
-static bool gChildViewMethodsSwizzled = false;
-
 extern nsIArray* gDraggedTransferables;
 
 ChildView* ChildViewMouseTracker::sLastMouseEventView = nil;
@@ -317,7 +315,7 @@ struct SwipeEventQueue {
 nsChildView::nsChildView()
     : nsBaseWidget(),
       mView(nullptr),
-      mParentView(nullptr),
+      mParentView(nil),
       mParentWidget(nullptr),
       mViewTearDownLock("ChildViewTearDown"),
       mEffectsLock("WidgetEffects"),
@@ -386,13 +384,6 @@ nsresult nsChildView::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
   // (see bug 559075).
   nsAutoreleasePool localPool;
 
-  // See NSView (MethodSwizzling) below.
-  if (!gChildViewMethodsSwizzled) {
-    nsToolkit::SwizzleMethods([NSView class], @selector(mouseDownCanMoveWindow),
-                              @selector(nsChildView_NSView_mouseDownCanMoveWindow));
-    gChildViewMethodsSwizzled = true;
-  }
-
   mBounds = aRect;
 
   // Ensure that the toolkit is created.
@@ -400,30 +391,26 @@ nsresult nsChildView::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
 
   BaseCreate(aParent, aInitData);
 
-  // inherit things from the parent view and create our parallel
-  // NSView in the Cocoa display system
   mParentView = nil;
   if (aParent) {
-    // inherit the top-level window. NS_NATIVE_WIDGET is always a NSView
-    // regardless of if we're asking a window or a view (for compatibility
-    // with windows).
-    mParentView = (NSView<mozView>*)aParent->GetNativeData(NS_NATIVE_WIDGET);
+    // This is the popup window case. aParent is the nsCocoaWindow for the
+    // popup window, and mParentView will be its content view.
+    mParentView = (NSView*)aParent->GetNativeData(NS_NATIVE_WIDGET);
     mParentWidget = aParent;
   } else {
-    // This is the normal case. When we're the root widget of the view hiararchy,
+    // This is the top-level window case.
     // aNativeParent will be the contentView of our window, since that's what
     // nsCocoaWindow returns when asked for an NS_NATIVE_VIEW.
-    mParentView = reinterpret_cast<NSView<mozView>*>(aNativeParent);
+    // We do not have a direct "parent widget" association with the top level
+    // window's nsCocoaWindow object.
+    mParentView = reinterpret_cast<NSView*>(aNativeParent);
   }
 
   // create our parallel NSView and hook it up to our parent. Recall
   // that NS_NATIVE_WIDGET is the NSView.
   CGFloat scaleFactor = nsCocoaUtils::GetBackingScaleFactor(mParentView);
   NSRect r = nsCocoaUtils::DevPixelsToCocoaPoints(mBounds, scaleFactor);
-  mView = [(NSView<mozView>*)CreateCocoaView(r) retain];
-  if (!mView) {
-    return NS_ERROR_FAILURE;
-  }
+  mView = [[ChildView alloc] initWithFrame:r geckoChild:this];
 
   // If this view was created in a Gecko view hierarchy, the initial state
   // is hidden.  If the view is attached only to a native NSView but has
@@ -451,16 +438,6 @@ nsresult nsChildView::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
   return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
-}
-
-// Creates the appropriate child view. Override to create something other than
-// our |ChildView| object. Autoreleases, so caller must retain.
-NSView* nsChildView::CreateCocoaView(NSRect inFrame) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
-
-  return [[[ChildView alloc] initWithFrame:inFrame geckoChild:this] autorelease];
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 void nsChildView::TearDownView() {
@@ -1527,7 +1504,7 @@ nsresult nsChildView::StartPluginIME(const mozilla::WidgetKeyboardEvent& aKeyboa
   // currently exists.  So nested IME should never reach here, and so it should
   // be fine to use the last key-down event received by -[ChildView keyDown:]
   // (as we currently do).
-  ctiPanel->InterpretKeyEvent([(ChildView*)mView lastKeyDownEvent], aCommitted);
+  ctiPanel->InterpretKeyEvent([mView lastKeyDownEvent], aCommitted);
 
   return NS_OK;
 }
@@ -1720,7 +1697,7 @@ NSView<mozView>* nsChildView::GetEditorView() {
 void nsChildView::CreateCompositor() {
   nsBaseWidget::CreateCompositor();
   if (mCompositorBridgeChild) {
-    [(ChildView*)mView setUsingOMTCompositor:true];
+    [mView setUsingOMTCompositor:true];
   }
 }
 
@@ -1755,10 +1732,10 @@ void nsChildView::PrepareWindowEffects() {
   {
     MutexAutoLock lock(mEffectsLock);
     mShowsResizeIndicator = ShowsResizeIndicator(&mResizeIndicatorRect);
-    mHasRoundedBottomCorners = [(ChildView*)mView hasRoundedBottomCorners];
-    CGFloat cornerRadius = [(ChildView*)mView cornerRadius];
+    mHasRoundedBottomCorners = [mView hasRoundedBottomCorners];
+    CGFloat cornerRadius = [mView cornerRadius];
     mDevPixelCornerRadius = cornerRadius * BackingScaleFactor();
-    mIsCoveringTitlebar = [(ChildView*)mView isCoveringTitlebar];
+    mIsCoveringTitlebar = [mView isCoveringTitlebar];
     NSInteger styleMask = [[mView window] styleMask];
     bool wasFullscreen = mIsFullscreen;
     nsCocoaWindow* windowWidget = GetXULWindowWidget();
@@ -1778,7 +1755,7 @@ void nsChildView::PrepareWindowEffects() {
   // If we've just transitioned into or out of full screen then update the opacity on our GLContext.
   if (canBeOpaque != mIsOpaque) {
     mIsOpaque = canBeOpaque;
-    [(ChildView*)mView setGLOpaque:canBeOpaque];
+    [mView setGLOpaque:canBeOpaque];
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
@@ -1844,7 +1821,7 @@ bool nsChildView::PreRender(WidgetRenderingContext* aContext) {
 
   NSOpenGLContext* glContext = GLContextCGL::Cast(gl)->GetNSOpenGLContext();
 
-  if (![(ChildView*)mView preRender:glContext]) {
+  if (![mView preRender:glContext]) {
     mViewTearDownLock.Unlock();
     return false;
   }
@@ -1858,7 +1835,7 @@ void nsChildView::PostRender(WidgetRenderingContext* aContext) {
     return;
   }
   NSOpenGLContext* glContext = GLContextCGL::Cast(gl)->GetNSOpenGLContext();
-  [(ChildView*)mView postRender:glContext];
+  [mView postRender:glContext];
   mViewTearDownLock.Unlock();
 }
 
@@ -2462,7 +2439,7 @@ bool nsChildView::InitCompositor(Compositor* aCompositor) {
 }
 
 void nsChildView::DoRemoteComposition(const LayoutDeviceIntRect& aRenderRect) {
-  if (![(ChildView*)mView preRender:mGLPresenter->GetNSOpenGLContext()]) {
+  if (![mView preRender:mGLPresenter->GetNSOpenGLContext()]) {
     return;
   }
   mGLPresenter->BeginFrame(aRenderRect.Size());
@@ -2476,7 +2453,7 @@ void nsChildView::DoRemoteComposition(const LayoutDeviceIntRect& aRenderRect) {
 
   mGLPresenter->EndFrame();
 
-  [(ChildView*)mView postRender:mGLPresenter->GetNSOpenGLContext()];
+  [mView postRender:mGLPresenter->GetNSOpenGLContext()];
 }
 
 @interface NonDraggableView : NSView
@@ -4526,19 +4503,8 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
 
   [self maybeInitContextMenuTracking];
 
-  // Go up our view chain to fetch the correct menu to return.
-  return [self contextMenu];
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
-}
-
-- (NSMenu*)contextMenu {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
-
-  NSView* superView = [self superview];
-  if ([superView respondsToSelector:@selector(contextMenu)])
-    return [(NSView<mozView>*)superView contextMenu];
-
+  // We never return an actual NSMenu* for the context menu. Gecko might have
+  // responded to the eContextMenu event by putting up a fake context menu.
   return nil;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
@@ -6126,32 +6092,3 @@ BOOL ChildViewMouseTracker::WindowAcceptsEvent(NSWindow* aWindow, NSEvent* aEven
 }
 
 #pragma mark -
-
-@interface NSView (MethodSwizzling)
-- (BOOL)nsChildView_NSView_mouseDownCanMoveWindow;
-@end
-
-@implementation NSView (MethodSwizzling)
-
-// All top-level browser windows belong to the ToolbarWindow class and have
-// NSTexturedBackgroundWindowMask turned on in their "style" (see particularly
-// [ToolbarWindow initWithContentRect:...] in nsCocoaWindow.mm).  This style
-// normally means the window "may be moved by clicking and dragging anywhere
-// in the window background", but we've suppressed this by giving the
-// ChildView class a mouseDownCanMoveWindow method that always returns NO.
-// Normally a ToolbarWindow's contentView (not a ChildView) returns YES when
-// NSTexturedBackgroundWindowMask is turned on.  But normally this makes no
-// difference.  However, under some (probably very unusual) circumstances
-// (and only on Leopard) it *does* make a difference -- for example it
-// triggers bmo bugs 431902 and 476393.  So here we make sure that a
-// ToolbarWindow's contentView always returns NO from the
-// mouseDownCanMoveWindow method.
-- (BOOL)nsChildView_NSView_mouseDownCanMoveWindow {
-  NSWindow* ourWindow = [self window];
-  NSView* contentView = [ourWindow contentView];
-  if ([ourWindow isKindOfClass:[ToolbarWindow class]] && (self == contentView))
-    return [ourWindow isMovableByWindowBackground];
-  return [self nsChildView_NSView_mouseDownCanMoveWindow];
-}
-
-@end

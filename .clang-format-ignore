@@ -59,8 +59,8 @@ xpcom/reflect/xptcall/md/unix/.*
 browser/components/translation/cld2/.*
 browser/extensions/mortar/ppapi/.*
 db/sqlite3/src/.*
-devtools/client/sourceeditor/codemirror/.*
-devtools/client/sourceeditor/tern/.*
+devtools/client/shared/sourceeditor/codemirror/.*
+devtools/client/shared/sourceeditor/tern/.*
 dom/canvas/test/webgl-conf/checkout/closure-library/.*
 dom/media/gmp/rlz/.*
 dom/media/gmp/widevine-adapter/content_decryption_module.h

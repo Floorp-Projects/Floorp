@@ -4003,6 +4003,51 @@ void CodeGenerator::visitLoadUnboxedExpando(LLoadUnboxedExpando* lir) {
   masm.loadPtr(Address(obj, UnboxedPlainObject::offsetOfExpando()), result);
 }
 
+void CodeGenerator::visitToNumeric(LToNumeric* lir) {
+  ValueOperand operand = ToValue(lir, LToNumeric::Input);
+  ValueOperand output = ToOutValue(lir);
+  bool maybeInt32 = lir->mir()->mightBeType(MIRType::Int32);
+  bool maybeDouble = lir->mir()->mightBeType(MIRType::Double);
+  bool maybeNumber = maybeInt32 || maybeDouble;
+#ifdef ENABLE_BIGINT
+  bool maybeBigInt = lir->mir()->mightBeType(MIRType::BigInt);
+#endif
+  int checks = int(maybeNumber) + IF_BIGINT(int(maybeBigInt), 0);
+
+  OutOfLineCode* ool =
+      oolCallVM(ToNumericInfo, lir, ArgList(operand), StoreValueTo(output));
+
+  if (checks == 0) {
+    masm.jump(ool->entry());
+  } else {
+    Label done;
+    using Condition = Assembler::Condition;
+    constexpr Condition Equal = Assembler::Equal;
+    constexpr Condition NotEqual = Assembler::NotEqual;
+
+    if (maybeNumber) {
+      checks--;
+      Condition cond = checks ? Equal : NotEqual;
+      Label* target = checks ? &done : ool->entry();
+      masm.branchTestNumber(cond, operand, target);
+    }
+#ifdef ENABLE_BIGINT
+    if (maybeBigInt) {
+      checks--;
+      Condition cond = checks ? Equal : NotEqual;
+      Label* target = checks ? &done : ool->entry();
+      masm.branchTestBigInt(cond, operand, target);
+    }
+#endif
+
+    MOZ_ASSERT(checks == 0);
+    masm.bind(&done);
+    masm.moveValue(operand, output);
+  }
+
+  masm.bind(ool->rejoin());
+}
+
 void CodeGenerator::visitTypeBarrierV(LTypeBarrierV* lir) {
   ValueOperand operand = ToValue(lir, LTypeBarrierV::Input);
   Register unboxScratch = ToTempRegisterOrInvalid(lir->unboxTemp());
