@@ -173,6 +173,8 @@ __attribute__((weak_import)) @interface NSSharingServicePickerTouchBarItem : NST
  */
 + (NSImage*)getTouchBarIconNamed:(NSString*)aImageName;
 
+- (void)releaseJSObjects;
+
 @end  // nsTouchBar
 
 #endif  // nsTouchBar_h_
