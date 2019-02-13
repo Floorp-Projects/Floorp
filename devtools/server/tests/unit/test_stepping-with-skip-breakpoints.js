@@ -35,7 +35,7 @@ add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
   equal(step1.type, "paused");
   equal(step1.why.type, "resumeLimit");
   equal(step1.frame.where.line, 3);
-  equal(step1.frame.where.column, 8);
+  equal(step1.frame.where.column, 0);
 
   equal(debuggee.a, undefined);
   equal(debuggee.b, undefined);
@@ -45,7 +45,7 @@ add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
   equal(step2.type, "paused");
   equal(step2.why.type, "resumeLimit");
   equal(step2.frame.where.line, 4);
-  equal(step2.frame.where.column, 8);
+  equal(step2.frame.where.column, 0);
 
   equal(debuggee.a, 1);
   equal(debuggee.b, undefined);

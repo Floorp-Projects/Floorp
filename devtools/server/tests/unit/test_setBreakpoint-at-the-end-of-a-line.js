@@ -23,7 +23,7 @@ add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
   const where = frame.where;
   Assert.equal(where.actor, source.actor);
   Assert.equal(where.line, location.line);
-  Assert.equal(where.column, 28);
+  Assert.equal(where.column, 32);
 
   const variables = frame.environment.bindings.variables;
   Assert.equal(variables.a.value, 1);
