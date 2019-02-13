@@ -18,7 +18,7 @@ add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
   const step2 = await stepOut(client, threadClient);
   // The bug was that we'd step right past the end of the function and never pause.
   equal(step2.frame.where.line, 2);
-  equal(step2.why.frameFinished.return, 42);
+  deepEqual(step2.why.frameFinished.return, { type: "undefined"});
 }));
 
 function evaluateTestCode(debuggee) {

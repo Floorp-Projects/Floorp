@@ -37,7 +37,12 @@ function run_test() {
 }
 
 const SOURCE_URL = "http://example.com/foobar.js";
-const SOURCE_CONTENT = "stopMe()";
+const SOURCE_CONTENT = `
+  stopMe();
+  for(var i = 0; i < 2; i++) {
+    debugger;
+  }
+`;
 
 function test_source() {
   DebuggerServer.LONG_STRING_LENGTH = 200;
@@ -60,11 +65,23 @@ function test_source() {
       Assert.deepEqual(
         response.positions,
         [{
-          line: 1,
-          column: 0,
+          line: 2,
+          column: 2,
         }, {
-          line: 1,
-          column: 8,
+          line: 3,
+          column: 14,
+        }, {
+          line: 3,
+          column: 17,
+        }, {
+          line: 3,
+          column: 24,
+        }, {
+          line: 4,
+          column: 4,
+        }, {
+          line: 6,
+          column: 0,
         }]
       );
 
@@ -74,7 +91,10 @@ function test_source() {
       Assert.deepEqual(
         response.positions,
         {
-          1: [0, 8],
+          2: [2],
+          3: [14, 17, 24],
+          4: [4],
+          6: [0],
         }
       );
 

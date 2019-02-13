@@ -268,7 +268,7 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
   getExecutableLines: async function() {
     const offsetsLines = new Set();
     for (const s of this._findDebuggeeScripts()) {
-      for (const offset of s.getAllColumnOffsets()) {
+      for (const offset of s.getPossibleBreakpoints()) {
         offsetsLines.add(offset.lineNumber);
       }
     }
@@ -307,7 +307,7 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
 
     const positions = [];
     for (const script of scripts) {
-      const offsets = script.getAllColumnOffsets();
+      const offsets = script.getPossibleBreakpoints();
       for (const { lineNumber, columnNumber } of offsets) {
         if (
           lineNumber < startLine ||
@@ -330,13 +330,7 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
       .sort((a, b) => {
         const lineDiff = a.line - b.line;
         return lineDiff === 0 ? a.column - b.column : lineDiff;
-      })
-      // Filter out duplicate locations since they are useless in this context.
-      .filter((item, i, arr) => (
-        i === 0 ||
-        item.line !== arr[i - 1].line ||
-        item.column !== arr[i - 1].column
-      ));
+      });
   },
 
   getBreakpointPositionsCompressed(query) {
@@ -449,12 +443,13 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
     // Find all entry points that correspond to the given location.
     const entryPoints = [];
     if (column === undefined) {
-      // This is a line breakpoint, so we are interested in all offsets
-      // that correspond to the given line number.
+      // This is a line breakpoint, so we add a breakpoint on the first
+      // breakpoint on the line.
       for (const script of scripts) {
-        const offsets = script.getLineOffsets(line);
+        const offsets = script.getPossibleBreakpointOffsets({ line });
         if (offsets.length > 0) {
-          entryPoints.push({ script, offsets });
+          entryPoints.push({ script, offsets: [offsets[0]] });
+          break;
         }
       }
     } else {
@@ -463,8 +458,7 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
       const columnToOffsetMaps = scripts.map(script =>
         [
           script,
-          script.getAllColumnOffsets()
-            .filter(({ lineNumber }) => lineNumber === line),
+          script.getPossibleBreakpoints({ line }),
         ]
       );
 

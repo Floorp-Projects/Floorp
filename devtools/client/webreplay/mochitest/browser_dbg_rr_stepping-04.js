@@ -28,11 +28,9 @@ add_task(async function() {
   await reverseStepOverToLine(client, 21);
   await checkEvaluateInTopFrame(client, "number", 9);
 
-  await stepOverToLine(client, 21);
   await stepOverToLine(client, 22);
   await stepOverToLine(client, 23);
   await stepOverToLine(client, 13);
-  await stepOverToLine(client, 17);
   await stepOverToLine(client, 17);
   await stepOverToLine(client, 18);
 

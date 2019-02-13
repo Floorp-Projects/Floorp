@@ -783,6 +783,9 @@ const gRequestHandlers = {
   getSuccessorOffsets: forwardToScript("getSuccessorOffsets"),
   getPredecessorOffsets: forwardToScript("getPredecessorOffsets"),
   getAllColumnOffsets: forwardToScript("getAllColumnOffsets"),
+  getOffsetMetadata: forwardToScript("getOffsetMetadata"),
+  getPossibleBreakpoints: forwardToScript("getPossibleBreakpoints"),
+  getPossibleBreakpointOffsets: forwardToScript("getPossibleBreakpointOffsets"),
 
   frameEvaluate(request) {
     if (!RecordReplayControl.maybeDivergeFromRecording()) {

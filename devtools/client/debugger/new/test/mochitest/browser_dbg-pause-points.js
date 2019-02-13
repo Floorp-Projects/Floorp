@@ -33,28 +33,17 @@ add_task(async function test() {
   await selectSource(dbg, "pause-points.js")
   await testCase(dbg, {
     name: "statements",
-    steps: [
-      [9, 2],
-      [10, 4],
-      [10, 13],
-      [11, 2],
-      [11, 10],
-      [11, 21],
-      [11, 29],
-      [12, 2],
-      [12, 12],
-      [13, 0]
-    ]
+    steps: [[9,2], [10,4], [10,13], [11,2], [11,21], [12,2], [12,12], [13,0]]
   });
 
   await testCase(dbg, {
     name: "expressions",
-    steps: [[40,2], [41,2], [41,8], [42,12], [43,0]]
+    steps: [[40,2], [41,2], [42,12], [43,0]]
   });
 
   await testCase(dbg, {
     name: "sequences",
-    steps: [[23,2], [25,12], [31,4], [34,2], [37,0]]
+    steps: [[23,2], [25,12], [29,12], [34,2], [37,0]]
   });
 
   await testCase(dbg, {
@@ -62,15 +51,11 @@ add_task(async function test() {
     steps: [
       [16, 2],
       [17, 12],
-      [17, 20],
       [18, 10],
-      [19, 2],
       [19, 8],
       [19, 17],
-      [19, 25],
       [19, 8],
       [19, 17],
-      [19, 25],
       [19, 8]
     ]
   });
