@@ -35,9 +35,9 @@ const TEXTURE_REGION_PIXELS: usize =
 enum EntryDetails {
     Standalone,
     Cache {
-        // Origin within the texture layer where this item exists.
+        /// Origin within the texture layer where this item exists.
         origin: DeviceIntPoint,
-        // The layer index of the texture array.
+        /// The layer index of the texture array.
         layer_index: usize,
     },
 }
@@ -121,12 +121,8 @@ impl CacheEntry {
     fn update_gpu_cache(&mut self, gpu_cache: &mut GpuCache) {
         if let Some(mut request) = gpu_cache.request(&mut self.uv_rect_handle) {
             let (origin, layer_index) = match self.details {
-                EntryDetails::Standalone { .. } => (DeviceIntPoint::zero(), 0.0),
-                EntryDetails::Cache {
-                    origin,
-                    layer_index,
-                    ..
-                } => (origin, layer_index as f32),
+                EntryDetails::Standalone => (DeviceIntPoint::zero(), 0.0),
+                EntryDetails::Cache { origin, layer_index } => (origin, layer_index as f32),
             };
             let image_source = ImageSource {
                 p0: origin.to_f32(),
@@ -295,10 +291,9 @@ struct EntryHandles {
 impl EntryHandles {
     /// Mutably borrows the requested handle list.
     fn select(&mut self, kind: EntryKind) -> &mut Vec<FreeListHandle<CacheEntryMarker>> {
-        if kind == EntryKind::Standalone {
-            &mut self.standalone
-        } else {
-            &mut self.shared
+        match kind {
+            EntryKind::Standalone => &mut self.standalone,
+            EntryKind::Shared => &mut self.shared,
         }
     }
 }
@@ -811,12 +806,8 @@ impl TextureCache {
         // in GPU memory.
         if let Some(data) = data {
             let (layer_index, origin) = match entry.details {
-                EntryDetails::Standalone { .. } => (0, DeviceIntPoint::zero()),
-                EntryDetails::Cache {
-                    layer_index,
-                    origin,
-                    ..
-                } => (layer_index, origin),
+                EntryDetails::Standalone => (0, DeviceIntPoint::zero()),
+                EntryDetails::Cache { layer_index, origin } => (layer_index, origin),
             };
 
             let op = TextureCacheUpdate::new_update(
@@ -844,24 +835,11 @@ impl TextureCache {
     // This function will assert in debug modes if the caller
     // tries to get a handle that was not requested this frame.
     pub fn get(&self, handle: &TextureCacheHandle) -> CacheItem {
-        let entry = self.entries
-            .get_opt(handle)
-            .expect("BUG: was dropped from cache or not updated!");
-        debug_assert_eq!(entry.last_access, self.now);
-        let (layer_index, origin) = match entry.details {
-            EntryDetails::Standalone { .. } => {
-                (0, DeviceIntPoint::zero())
-            }
-            EntryDetails::Cache {
-                layer_index,
-                origin,
-                ..
-            } => (layer_index, origin),
-        };
+        let (texture_id, layer_index, uv_rect, uv_rect_handle) = self.get_cache_location(handle);
         CacheItem {
-            uv_rect_handle: entry.uv_rect_handle,
-            texture_id: TextureSource::TextureCache(entry.texture_id),
-            uv_rect: DeviceIntRect::new(origin, entry.size),
+            uv_rect_handle,
+            texture_id: TextureSource::TextureCache(texture_id),
+            uv_rect,
             texture_layer: layer_index as i32,
         }
     }
@@ -869,11 +847,12 @@ impl TextureCache {
     /// A more detailed version of get(). This allows access to the actual
     /// device rect of the cache allocation.
     ///
-    /// Returns a tuple identifying the texture, the layer, and the region.
+    /// Returns a tuple identifying the texture, the layer, the region,
+    /// and its GPU handle.
     pub fn get_cache_location(
         &self,
         handle: &TextureCacheHandle,
-    ) -> (CacheTextureId, LayerIndex, DeviceIntRect) {
+    ) -> (CacheTextureId, LayerIndex, DeviceIntRect, GpuCacheHandle) {
         let entry = self.entries
             .get_opt(handle)
             .expect("BUG: was dropped from cache or not updated!");
@@ -890,7 +869,8 @@ impl TextureCache {
         };
         (entry.texture_id,
          layer_index as usize,
-         DeviceIntRect::new(origin, entry.size))
+         DeviceIntRect::new(origin, entry.size),
+         entry.uv_rect_handle)
     }
 
     pub fn mark_unused(&mut self, handle: &TextureCacheHandle) {
@@ -980,14 +960,11 @@ impl TextureCache {
     // Free a cache entry from the standalone list or shared cache.
     fn free(&mut self, entry: CacheEntry) {
         match entry.details {
-            EntryDetails::Standalone { .. } => {
+            EntryDetails::Standalone => {
                 // This is a standalone texture allocation. Free it directly.
                 self.pending_updates.push_free(entry.texture_id);
             }
-            EntryDetails::Cache {
-                origin,
-                layer_index,
-            } => {
+            EntryDetails::Cache { origin, layer_index } => {
                 // Free the block in the given region.
                 let texture_array = self.shared_textures.select(entry.format, entry.filter);
                 let region = &mut texture_array.regions[layer_index];
@@ -1202,10 +1179,11 @@ impl TextureCache {
                     // Handle the rare case than an update moves an entry from
                     // shared to standalone or vice versa. This involves a linear
                     // search, but should be rare enough not to matter.
-                    let (from, to) = if new_kind == EntryKind::Standalone {
-                        (&mut self.doc_data.handles.shared, &mut self.doc_data.handles.standalone)
-                    } else {
-                        (&mut self.doc_data.handles.standalone, &mut self.doc_data.handles.shared)
+                    let (from, to) = match new_kind {
+                        EntryKind::Standalone =>
+                            (&mut self.doc_data.handles.shared, &mut self.doc_data.handles.standalone),
+                        EntryKind::Shared =>
+                            (&mut self.doc_data.handles.standalone, &mut self.doc_data.handles.shared),
                     };
                     let idx = from.iter().position(|h| h.weak() == *handle).unwrap();
                     to.push(from.remove(idx));
