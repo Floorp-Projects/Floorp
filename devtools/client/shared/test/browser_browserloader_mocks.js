@@ -102,6 +102,5 @@ function testWithRegularDevtoolsModule() {
 function test() {
   testWithChromeScheme();
   testWithRegularDevtoolsModule();
-  delete window.getBrowserLoaderForWindow;
   finish();
 }
