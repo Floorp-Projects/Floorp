@@ -47,8 +47,8 @@ class StatementClassInfo : public nsIClassInfo {
   NS_DECL_ISUPPORTS_INHERITED
 
   NS_IMETHOD
-  GetInterfaces(uint32_t *_count, nsIID ***_array) override {
-    return NS_CI_INTERFACE_GETTER_NAME(Statement)(_count, _array);
+  GetInterfaces(nsTArray<nsIID> &_array) override {
+    return NS_CI_INTERFACE_GETTER_NAME(Statement)(_array);
   }
 
   NS_IMETHOD
