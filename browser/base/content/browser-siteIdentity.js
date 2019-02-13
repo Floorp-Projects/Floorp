@@ -1189,9 +1189,9 @@ var gIdentityHandler = {
     let icon = document.createXULElement("image");
     icon.setAttribute("class", "popup-subitem identity-popup-permission-icon");
 
-    let text = document.createXULElement("label");
+    let text = document.createXULElement("label", {is: "text-link"});
     text.setAttribute("flex", "1");
-    text.setAttribute("class", "identity-popup-permission-label text-link");
+    text.setAttribute("class", "identity-popup-permission-label");
 
     let popupCount = gBrowser.selectedBrowser.blockedPopups.length;
     let messageBase = gNavigatorBundle.getString("popupShowBlockedPopupsIndicatorText");

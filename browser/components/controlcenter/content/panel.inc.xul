@@ -122,7 +122,7 @@
                   oncommand="ContentBlocking.enableForCurrentPage(); gIdentityHandler.recordClick('block');" />
           <label id="identity-popup-content-blocking-report-breakage"
                  onclick="ContentBlocking.showReportBreakageSubview(); gIdentityHandler.recordClick('report_breakage');"
-                 class="text-link subviewkeynav"
+                 is="text-link" class="subviewkeynav"
                  flex="1">&contentBlocking.openBreakageReportView2.label;</label>
         </vbox>
       </hbox>
@@ -196,7 +196,7 @@
                      and-when-loginforms="secure">&identity.description.insecure;</description>
 
         <!-- Insecure login forms -->
-        <description when-loginforms="insecure">&identity.description.insecureLoginForms; <label id="identity-popup-insecure-login-forms-learn-more" class="text-link plain" value="&identity.learnMore;"/></description>
+        <description when-loginforms="insecure">&identity.description.insecureLoginForms; <label id="identity-popup-insecure-login-forms-learn-more" is="text-link" class="plain" value="&identity.learnMore;"/></description>
 
         <!-- Weak Cipher -->
         <description when-ciphers="weak">&identity.description.weakCipher;</description>
@@ -205,27 +205,27 @@
 
         <!-- Active Mixed Content Blocked -->
         <description class="identity-popup-warning-gray"
-                     when-mixedcontent="active-blocked">&identity.description.activeBlocked; <label class="identity-popup-mcb-learn-more text-link plain" value="&identity.learnMore;"/></description>
+                     when-mixedcontent="active-blocked">&identity.description.activeBlocked; <label is="text-link" class="identity-popup-mcb-learn-more plain" value="&identity.learnMore;"/></description>
 
         <!-- Passive Mixed Content Loaded -->
         <description when-mixedcontent="passive-loaded">&identity.description.passiveLoaded;</description>
         <description class="identity-popup-warning-yellow"
-                     when-mixedcontent="passive-loaded">&identity.description.passiveLoaded2; <label class="identity-popup-mcb-learn-more text-link plain" value="&identity.learnMore;"/></description>
+                     when-mixedcontent="passive-loaded">&identity.description.passiveLoaded2; <label is="text-link" class="identity-popup-mcb-learn-more plain" value="&identity.learnMore;"/></description>
 
         <!-- Passive Mixed Content Loaded, Active Mixed Content Blocked -->
         <description when-mixedcontent="passive-loaded active-blocked">&identity.description.passiveLoaded;</description>
         <description when-mixedcontent="passive-loaded active-blocked"
-                     class="identity-popup-warning-yellow">&identity.description.passiveLoaded3; <label class="identity-popup-mcb-learn-more text-link plain" value="&identity.learnMore;"/></description>
+                     class="identity-popup-warning-yellow">&identity.description.passiveLoaded3; <label is="text-link" class="identity-popup-mcb-learn-more plain" value="&identity.learnMore;"/></description>
 
         <!-- Active Mixed Content Blocking Disabled -->
         <description when-mixedcontent="active-loaded"
                      and-when-loginforms="secure">&identity.description.activeLoaded;</description>
         <description when-mixedcontent="active-loaded"
-                     and-when-loginforms="secure">&identity.description.activeLoaded2; <label class="identity-popup-mcb-learn-more text-link plain" value="&identity.learnMore;"/></description>
+                     and-when-loginforms="secure">&identity.description.activeLoaded2; <label is="text-link" class="identity-popup-mcb-learn-more plain" value="&identity.learnMore;"/></description>
         <!-- Show only the first message when there are insecure login forms,
              and make sure the Learn More link is included. -->
         <description when-mixedcontent="active-loaded"
-                     and-when-loginforms="insecure">&identity.description.activeLoaded; <label class="identity-popup-mcb-learn-more text-link plain" value="&identity.learnMore;"/></description>
+                     and-when-loginforms="insecure">&identity.description.activeLoaded; <label is="text-link" class="identity-popup-mcb-learn-more plain" value="&identity.learnMore;"/></description>
 
         <!-- Buttons to enable/disable mixed content blocking. -->
         <button when-mixedcontent="active-blocked"
@@ -320,7 +320,7 @@
         <vbox id="identity-popup-breakageReportView-heading">
           <description>&contentBlocking.breakageReportView2.description;</description>
           <label id="identity-popup-breakageReportView-learn-more"
-                 class="text-link">&contentBlocking.breakageReportView.learnMore;</label>
+                 is="text-link">&contentBlocking.breakageReportView.learnMore;</label>
         </vbox>
         <vbox id="identity-popup-breakageReportView-body" class="panel-view-body-unscrollable">
           <vbox class="identity-popup-breakageReportView-collection-section">
