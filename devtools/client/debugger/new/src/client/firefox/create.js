@@ -20,13 +20,7 @@ export function createFrame(thread: ThreadId, frame: FramePacket): ?Frame {
   if (!frame) {
     return null;
   }
-  let title;
-  if (frame.type == "call") {
-    const c = frame.callee;
-    title = c.name || c.userDisplayName || c.displayName;
-  } else {
-    title = `(${frame.type})`;
-  }
+  
   const location = {
     sourceId: clientCommands.getSourceForActor(frame.where.actor),
     line: frame.where.line,
@@ -36,7 +30,7 @@ export function createFrame(thread: ThreadId, frame: FramePacket): ?Frame {
   return {
     id: frame.actor,
     thread,
-    displayName: title,
+    displayName: frame.displayName,
     location,
     generatedLocation: location,
     this: frame.this,
