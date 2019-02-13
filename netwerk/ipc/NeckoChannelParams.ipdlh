@@ -109,6 +109,7 @@ struct LoadInfoArgs
   bool                        serviceWorkerTaintingSynthesized;
   bool                        documentHasUserInteracted;
   bool                        documentHasLoaded;
+  nsString                    cspNonce;
   bool                        isFromProcessingFrameAttributes;
 };
 

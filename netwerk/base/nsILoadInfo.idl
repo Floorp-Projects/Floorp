@@ -1048,6 +1048,14 @@ interface nsILoadInfo : nsISupports
   [infallible] attribute boolean documentHasLoaded;
 
   /**
+   * A snapshot of the nonce at load start time which is used for CSP
+   * checks and only set for:
+   *  * TYPE_SCRIPT and
+   *  * TYPE_STYLESHEET
+   */
+  attribute AString cspNonce;
+
+  /**
     * The object in charged to receive CSP violation events. It can be null.
     * This attribute will be merged into the CSP object eventually.
     * See bug 1500908.
