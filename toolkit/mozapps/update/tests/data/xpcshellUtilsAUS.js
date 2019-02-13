@@ -3562,11 +3562,7 @@ function UpdatePrompt(aCallback) {
 UpdatePrompt.prototype = {
   flags: Ci.nsIClassInfo.SINGLETON,
   getScriptableHelper: () => null,
-  getInterfaces(aCount) {
-    let interfaces = [Ci.nsISupports, Ci.nsIUpdatePrompt];
-    aCount.value = interfaces.length;
-    return interfaces;
-  },
+  interfaces: [Ci.nsISupports, Ci.nsIUpdatePrompt],
   QueryInterface: ChromeUtils.generateQI([Ci.nsIClassInfo, Ci.nsIUpdatePrompt]),
 };
 

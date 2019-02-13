@@ -89,8 +89,7 @@ class GenericClassInfo : public nsIClassInfo {
   struct ClassInfoData {
     // This function pointer uses NS_CALLBACK_ because it's always set to an
     // NS_IMETHOD function, which uses __stdcall on Win32.
-    typedef NS_CALLBACK_(nsresult, GetInterfacesProc)(uint32_t* aCountP,
-                                                      nsIID*** aArray);
+    typedef NS_CALLBACK_(nsresult, GetInterfacesProc)(nsTArray<nsIID>& aArray);
     GetInterfacesProc getinterfaces;
 
     // This function pointer doesn't use NS_CALLBACK_ because it's always set to
@@ -113,8 +112,9 @@ class GenericClassInfo : public nsIClassInfo {
 
 #define NS_CLASSINFO_NAME(_class) g##_class##_classInfoGlobal
 #define NS_CI_INTERFACE_GETTER_NAME(_class) _class##_GetInterfacesHelper
-#define NS_DECL_CI_INTERFACE_GETTER(_class) \
-  extern NS_IMETHODIMP NS_CI_INTERFACE_GETTER_NAME(_class)(uint32_t*, nsIID***);
+#define NS_DECL_CI_INTERFACE_GETTER(_class)                                  \
+  extern NS_IMETHODIMP NS_CI_INTERFACE_GETTER_NAME(_class)(nsTArray<nsIID> & \
+                                                           array);
 
 #define NS_IMPL_CLASSINFO(_class, _getscriptablehelper, _flags, _cid)       \
   NS_DECL_CI_INTERFACE_GETTER(_class)                                       \
@@ -135,19 +135,17 @@ class GenericClassInfo : public nsIClassInfo {
     foundInterface = NS_CLASSINFO_NAME(_class);                              \
   } else
 
-#define NS_CLASSINFO_HELPER_BEGIN(_class, _c)                              \
-  NS_IMETHODIMP                                                            \
-  NS_CI_INTERFACE_GETTER_NAME(_class)(uint32_t * count, nsIID * **array) { \
-    *count = _c;                                                           \
-    *array = (nsIID**)moz_xmalloc(sizeof(nsIID*) * _c);                    \
-    uint32_t i = 0;
+#define NS_CLASSINFO_HELPER_BEGIN(_class, _c)                    \
+  NS_IMETHODIMP                                                  \
+  NS_CI_INTERFACE_GETTER_NAME(_class)(nsTArray<nsIID> & array) { \
+    array.Clear();                                               \
+    array.SetCapacity(_c);
 
 #define NS_CLASSINFO_HELPER_ENTRY(_interface) \
-  (*array)[i++] = NS_GET_IID(_interface).Clone();
+  array.AppendElement(NS_GET_IID(_interface));
 
-#define NS_CLASSINFO_HELPER_END                           \
-  MOZ_ASSERT(i == *count, "Incorrent number of entries"); \
-  return NS_OK;                                           \
+#define NS_CLASSINFO_HELPER_END \
+  return NS_OK;                 \
   }
 
 #define NS_IMPL_CI_INTERFACE_GETTER(aClass, ...)                       \

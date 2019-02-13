@@ -516,9 +516,8 @@ TransportSecurityInfo::Read(nsIObjectInputStream* aStream) {
 }
 
 NS_IMETHODIMP
-TransportSecurityInfo::GetInterfaces(uint32_t* count, nsIID*** array) {
-  *count = 0;
-  *array = nullptr;
+TransportSecurityInfo::GetInterfaces(nsTArray<nsIID>& array) {
+  array.Clear();
   return NS_OK;
 }
 

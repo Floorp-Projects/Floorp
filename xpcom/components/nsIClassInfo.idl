@@ -18,15 +18,11 @@ interface nsIXPCScriptable;
 interface nsIClassInfo : nsISupports
 {
     /**
-     * Get an ordered list of the interface ids that instances of the class 
-     * promise to implement. Note that nsISupports is an implicit member 
-     * of any such list and need not be included. 
-     *
-     * Should set *count = 0 and *array = null and return NS_OK if getting the 
-     * list is not supported.
+     * Returns a list of the interfaces which instances of this class promise
+     * to implement. Note that nsISupports is an implicit member of any such
+     * list, and need not be included.
      */
-    void getInterfaces(out uint32_t count, 
-                       [array, size_is(count), retval] out nsIIDPtr array);
+    readonly attribute Array<nsIIDRef> interfaces;
 
     /**
      * Return an object to assist XPConnect in supplying JavaScript-specific

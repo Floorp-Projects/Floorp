@@ -513,71 +513,50 @@ already_AddRefed<XPCNativeSet> XPCNativeSet::GetNewOrUsed(
     return set.forget();
   }
 
-  nsIID** iidArray = nullptr;
-  uint32_t iidCount = 0;
-
-  if (NS_FAILED(classInfo->GetInterfaces(&iidCount, &iidArray))) {
+  AutoTArray<nsIID, 4> iids;
+  if (NS_FAILED(classInfo->GetInterfaces(iids))) {
     // Note: I'm making it OK for this call to fail so that one can add
     // nsIClassInfo to classes implemented in script without requiring this
     // method to be implemented.
 
     // Make sure these are set correctly...
-    iidArray = nullptr;
-    iidCount = 0;
+    iids.Clear();
   }
 
-  MOZ_ASSERT((iidCount && iidArray) || !(iidCount || iidArray),
-             "GetInterfaces returned bad array");
-
-  // !!! from here on we only exit through the 'out' label !!!
-
-  if (iidCount) {
-    nsTArray<RefPtr<XPCNativeInterface>> interfaceArray(iidCount);
-    nsIID** currentIID = iidArray;
-
-    for (uint32_t i = 0; i < iidCount; i++) {
-      nsIID* iid = *(currentIID++);
-      if (!iid) {
-        NS_ERROR("Null found in classinfo interface list");
-        continue;
-      }
-
-      RefPtr<XPCNativeInterface> iface = XPCNativeInterface::GetNewOrUsed(iid);
-
-      if (!iface) {
-        // XXX warn here
-        continue;
-      }
-
-      interfaceArray.AppendElement(iface.forget());
+  // Try to look up each IID's XPCNativeInterface object.
+  nsTArray<RefPtr<XPCNativeInterface>> interfaces(iids.Length());
+  for (auto& iid : iids) {
+    RefPtr<XPCNativeInterface> iface = XPCNativeInterface::GetNewOrUsed(&iid);
+    if (iface) {
+      interfaces.AppendElement(iface.forget());
     }
+  }
 
-    if (interfaceArray.Length() > 0) {
-      set = NewInstance(std::move(interfaceArray));
-      if (set) {
-        NativeSetMap* map2 = xpcrt->GetNativeSetMap();
-        if (!map2) {
-          goto out;
-        }
-
-        XPCNativeSetKey key(set);
-
-        XPCNativeSet* set2 = map2->Add(&key, set);
-        if (!set2) {
-          NS_ERROR("failed to add our set!");
-          set = nullptr;
-          goto out;
-        }
-        // It is okay to find an existing entry here because
-        // we did not look for one before we called Add().
-        if (set2 != set) {
-          set = set2;
-        }
+  // Build a set from the interfaces specified here.
+  if (interfaces.Length() > 0) {
+    set = NewInstance(std::move(interfaces));
+    if (set) {
+      NativeSetMap* map2 = xpcrt->GetNativeSetMap();
+      if (!map2) {
+        return set.forget();
       }
-    } else
-      set = GetNewOrUsed(&NS_GET_IID(nsISupports));
-  } else
+
+      XPCNativeSetKey key(set);
+      XPCNativeSet* set2 = map2->Add(&key, set);
+      if (!set2) {
+        NS_ERROR("failed to add our set");
+        return nullptr;
+      }
+
+      // It is okay to find an existing entry here because
+      // we did not look for one before we called Add().
+      if (set2 != set) {
+        set = set2;
+      }
+    }
+  } else {
     set = GetNewOrUsed(&NS_GET_IID(nsISupports));
+  }
 
   if (set) {
 #ifdef DEBUG
@@ -586,11 +565,6 @@ already_AddRefed<XPCNativeSet> XPCNativeSet::GetNewOrUsed(
         map->Add(classInfo, set);
     MOZ_ASSERT(set2, "failed to add our set!");
     MOZ_ASSERT(set2 == set, "hashtables inconsistent!");
-  }
-
-out:
-  if (iidArray) {
-    NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(iidCount, iidArray);
   }
 
   return set.forget();
