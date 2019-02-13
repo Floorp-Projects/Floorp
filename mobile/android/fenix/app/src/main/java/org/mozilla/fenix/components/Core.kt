@@ -74,7 +74,13 @@ class Core(private val context: Context) {
                 }
 
                 // There's an active bundle with a snapshot: Feed it into the SessionManager.
-                snapshot.await()?.let { sessionManager.restore(it) }
+                snapshot.await()?.let {
+                    try {
+                        sessionManager.restore(it)
+                    } catch (_: IllegalArgumentException) {
+                        return@let
+                    }
+                }
 
                 // Now that we have restored our previous state (if there's one) let's setup auto saving the state while
                 // the app is used.

@@ -14,6 +14,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import androidx.navigation.NavOptions
 import androidx.navigation.Navigation
 import kotlinx.android.synthetic.main.fragment_history.view.*
 import kotlinx.coroutines.CoroutineScope
@@ -54,8 +55,12 @@ class HistoryFragment : Fragment(), CoroutineScope {
         getSafeManagedObservable<HistoryAction>()
             .subscribe {
                 if (it is HistoryAction.Select) {
-                    Navigation.findNavController(requireActivity(), R.id.container)
-                        .popBackStack(R.id.browserFragment, false)
+                    Navigation.findNavController(requireActivity(), R.id.container).apply {
+                        navigate(
+                            HistoryFragmentDirections.actionGlobalBrowser(null),
+                            NavOptions.Builder().setPopUpTo(R.id.homeFragment, false).build()
+                        )
+                    }
 
                     requireComponents.useCases.sessionUseCases.loadUrl.invoke(it.item.url)
                 }
