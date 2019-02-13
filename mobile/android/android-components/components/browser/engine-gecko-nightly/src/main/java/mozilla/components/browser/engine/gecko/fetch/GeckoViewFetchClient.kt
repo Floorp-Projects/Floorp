@@ -95,11 +95,14 @@ private fun WebRequest.Builder.addBodyFrom(request: Request): WebRequest.Builder
 }
 
 private fun WebResponse.toResponse(): Response {
+    val headers = translateHeaders(this)
     return Response(
         uri,
         statusCode,
-        translateHeaders(this),
-            body?.let { Response.Body(ByteBufferInputStream(it)) } ?: Response.Body.empty()
+        headers,
+            body?.let {
+                Response.Body(ByteBufferInputStream(it), headers["Content-Type"])
+            } ?: Response.Body.empty()
     )
 }
 

@@ -7,6 +7,7 @@ package mozilla.components.concept.fetch
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.mockito.Mockito
@@ -40,6 +41,43 @@ class ResponseTest {
             readerUsed = true
         }
 
+        assertTrue(readerUsed)
+
+        verify(body).close()
+    }
+
+    @Test
+    fun `Creating BufferedReader with custom Charset from Body`() {
+        var stream = "ÄäÖöÜü".byteInputStream(Charsets.ISO_8859_1)
+        var body = spy(Response.Body(stream, "text/plain; charset=UTF-8"))
+        var readerUsed = false
+        body.useBufferedReader { reader ->
+            assertNotEquals("ÄäÖöÜü", reader.readText())
+            readerUsed = true
+        }
+        assertTrue(readerUsed)
+
+        stream = "ÄäÖöÜü".byteInputStream(Charsets.ISO_8859_1)
+        body = spy(Response.Body(stream, "text/plain; charset=UTF-8"))
+        readerUsed = false
+        body.useBufferedReader(Charsets.ISO_8859_1) { reader ->
+            assertEquals("ÄäÖöÜü", reader.readText())
+            readerUsed = true
+        }
+        assertTrue(readerUsed)
+
+        verify(body).close()
+    }
+
+    @Test
+    fun `Creating Body with invalid charset falls back to UTF-8`() {
+        var stream = "ÄäÖöÜü".byteInputStream(Charsets.UTF_8)
+        var body = spy(Response.Body(stream, "text/plain; charset=invalid"))
+        var readerUsed = false
+        body.useBufferedReader { reader ->
+            assertEquals("ÄäÖöÜü", reader.readText())
+            readerUsed = true
+        }
         assertTrue(readerUsed)
 
         verify(body).close()

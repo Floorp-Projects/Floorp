@@ -44,10 +44,28 @@ data class Response(
      * A [Body] returned along with the [Request].
      *
      * **The response body can be consumed only once.**.
+     *
+     * @param stream the input stream from which the response body can be read.
+     * @param contentType optional content-type as provided in the response
+     * header. If specified, an attempt will be made to look up the charset
+     * which will be used for decoding the body. If not specified, or if the
+     * charset can't be found, UTF-8 will be used for decoding.
      */
     open class Body(
-        private val stream: InputStream
+        private val stream: InputStream,
+        contentType: String? = null
     ) : Closeable, AutoCloseable {
+
+        @Suppress("TooGenericExceptionCaught")
+        private val charset = contentType?.let {
+            val charset = it.substringAfter("charset=")
+            try {
+                Charset.forName(charset)
+            } catch (e: Exception) {
+                Charsets.UTF_8
+            }
+        } ?: Charsets.UTF_8
+
         /**
          * Creates a usable stream from this body.
          *
@@ -64,8 +82,8 @@ data class Response(
          * Executes the given [block] function with the buffered reader as parameter and then closes it down correctly
          * whether an exception is thrown or not.
          */
-        fun <R> useBufferedReader(charset: Charset = Charsets.UTF_8, block: (BufferedReader) -> R): R = use {
-            block(stream.bufferedReader(charset))
+        fun <R> useBufferedReader(charset: Charset? = null, block: (BufferedReader) -> R): R = use {
+            block(stream.bufferedReader(charset ?: this.charset))
         }
 
         /**
@@ -73,7 +91,7 @@ data class Response(
          *
          * Takes care of closing the body down correctly whether an exception is thrown or not.
          */
-        fun string(charset: Charset = Charsets.UTF_8): String = useBufferedReader(charset) { it.readText() }
+        fun string(): String = useBufferedReader { it.readText() }
 
         /**
          * Closes this [Body] and releases any system resources associated with it.

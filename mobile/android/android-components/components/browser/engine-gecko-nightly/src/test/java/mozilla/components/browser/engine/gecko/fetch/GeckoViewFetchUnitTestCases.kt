@@ -31,6 +31,7 @@ import org.mozilla.geckoview.WebResponse
 import org.robolectric.RobolectricTestRunner
 import java.io.IOException
 import java.nio.ByteBuffer
+import java.nio.charset.Charset
 import java.util.concurrent.TimeoutException
 
 /**
@@ -253,6 +254,21 @@ class GeckoViewFetchUnitTestCases : mozilla.components.tooling.fetch.tests.Fetch
         verify(geckoWebExecutor)!!.fetch(any(), eq(GeckoWebExecutor.FETCH_FLAGS_ANONYMOUS))
     }
 
+    @Test
+    override fun get200WithContentTypeCharset() {
+        val request = mock(Request::class.java)
+        `when`(request.url).thenReturn("https://mozilla.org")
+        `when`(request.method).thenReturn(Request.Method.GET)
+
+        mockResponse(200,
+                headerMap = mapOf("Content-Type" to "text/html; charset=ISO-8859-1"),
+                body = "ÄäÖöÜü",
+                charset = Charsets.ISO_8859_1)
+
+        val response = createNewClient().fetch(request)
+        assertEquals("ÄäÖöÜü", response.body.string())
+    }
+
     private fun mockRequest(headerMap: Map<String, String>? = null, body: String? = null, method: String = "GET") {
         val server = mock(MockWebServer::class.java)
         `when`(server.url(any())).thenReturn(mock(HttpUrl::class.java))
@@ -274,7 +290,12 @@ class GeckoViewFetchUnitTestCases : mozilla.components.tooling.fetch.tests.Fetch
         mockWebServer = server
     }
 
-    private fun mockResponse(statusCode: Int, headerMap: Map<String, String>? = null, body: String? = null) {
+    private fun mockResponse(
+        statusCode: Int,
+        headerMap: Map<String, String>? = null,
+        body: String? = null,
+        charset: Charset = Charsets.UTF_8
+    ) {
         val executor = mock(GeckoWebExecutor::class.java)
         val builder = WebResponse.Builder("").statusCode(statusCode)
         headerMap?.let {
@@ -283,7 +304,7 @@ class GeckoViewFetchUnitTestCases : mozilla.components.tooling.fetch.tests.Fetch
 
         body?.let {
             val buffer = ByteBuffer.allocateDirect(body.length)
-            buffer.put(body.toByteArray())
+            buffer.put(body.toByteArray(charset))
             buffer.rewind()
             builder.body(buffer)
         }

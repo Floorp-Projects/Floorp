@@ -145,8 +145,6 @@ class SearchSuggestionProvider(
             return response.use { it.body.string() }
         } catch (e: IOException) {
             return null
-        } catch (e: ClassCastException) {
-            return null
         } catch (e: ArrayIndexOutOfBoundsException) {
             // On some devices we are seeing an ArrayIndexOutOfBoundsException being thrown
             // somewhere inside AOSP/okhttp.

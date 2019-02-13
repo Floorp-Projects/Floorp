@@ -75,12 +75,13 @@ private fun okhttp3.OkHttpClient.rebuildFor(request: Request): okhttp3.OkHttpCli
 
 private fun okhttp3.Response.toResponse(): Response {
     val body = body()
+    val headers = translateHeaders(headers())
 
     return Response(
         url = request().url().toString(),
-        headers = translateHeaders(headers()),
+        headers = headers,
         status = code(),
-        body = if (body != null) Response.Body(body.byteStream()) else Response.Body.empty()
+        body = if (body != null) Response.Body(body.byteStream(), headers["Content-Type"]) else Response.Body.empty()
     )
 }
 

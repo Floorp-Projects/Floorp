@@ -100,11 +100,12 @@ private fun HttpURLConnection.addHeadersFrom(request: Request, defaultHeaders: H
 }
 
 private fun HttpURLConnection.toResponse(): Response {
+    val headers = translateHeaders(this)
     return Response(
         url.toString(),
         responseCode,
-        translateHeaders(this),
-        createBody(this)
+        headers,
+        createBody(this, headers["Content-Type"])
     )
 }
 
@@ -130,14 +131,15 @@ private fun translateHeaders(connection: HttpURLConnection): Headers {
     return headers
 }
 
-private fun createBody(connection: HttpURLConnection): Response.Body {
+private fun createBody(connection: HttpURLConnection, contentType: String?): Response.Body {
     val gzipped = connection.contentEncoding == "gzip"
 
     withFileNotFoundExceptionIgnored {
         return HttpUrlConnectionBody(
             connection,
             connection.inputStream,
-            gzipped
+            gzipped,
+            contentType
         )
     }
 
@@ -145,7 +147,8 @@ private fun createBody(connection: HttpURLConnection): Response.Body {
         return HttpUrlConnectionBody(
             connection,
             connection.errorStream,
-            gzipped
+            gzipped,
+            contentType
         )
     }
 
@@ -157,8 +160,9 @@ private class EmptyBody : Response.Body("".byteInputStream())
 private class HttpUrlConnectionBody(
     private val connection: HttpURLConnection,
     stream: InputStream,
-    gzipped: Boolean
-) : Response.Body(if (gzipped) GZIPInputStream(stream) else stream) {
+    gzipped: Boolean,
+    contentType: String?
+) : Response.Body(if (gzipped) GZIPInputStream(stream) else stream, contentType) {
     override fun close() {
         super.close()
 

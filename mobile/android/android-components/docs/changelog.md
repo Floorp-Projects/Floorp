@@ -37,7 +37,7 @@ permalink: /changelog/
       components.searchEngineManager.getDefaultSearchEngine(requireContext()),
       components.searchUseCases.defaultSearch,
       // Specify that the GV-based fetch client should be used.
-      GeckoViewFetchClient())
+      GeckoViewFetchClient(context))
   ```
 
 * **ui-doorhanger**

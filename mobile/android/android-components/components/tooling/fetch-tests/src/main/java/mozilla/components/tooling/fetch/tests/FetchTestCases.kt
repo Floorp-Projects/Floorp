@@ -426,6 +426,27 @@ abstract class FetchTestCases {
         assertNull(takeRequest().getHeader("Cookie"))
     }
 
+    @Test
+    open fun get200WithContentTypeCharset() = withServerResponding(
+            MockResponse()
+                .addHeader("Content-Type", "text/html; charset=ISO-8859-1")
+                .setBody(Buffer().writeString("ÄäÖöÜü", Charsets.ISO_8859_1)),
+            MockResponse()
+                .addHeader("Content-Type", "text/html; charset=invalid")
+                .setBody("Hello World")
+    ) { client ->
+
+        val response = client.fetch(Request(rootUrl()))
+
+        assertEquals(200, response.status)
+        assertEquals("ÄäÖöÜü", response.body.string())
+
+        val response2 = client.fetch(Request(rootUrl()))
+
+        assertEquals(200, response2.status)
+        assertEquals("Hello World", response2.body.string())
+    }
+
     private inline fun withServerResponding(
         vararg responses: MockResponse,
         crossinline block: MockWebServer.(Client) -> Unit

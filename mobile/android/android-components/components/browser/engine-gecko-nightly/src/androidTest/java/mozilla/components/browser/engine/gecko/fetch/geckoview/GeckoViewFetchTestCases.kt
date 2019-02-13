@@ -115,4 +115,10 @@ class GeckoViewFetchTestCases : mozilla.components.tooling.fetch.tests.FetchTest
     override fun get200WithCookiePolicy() {
         super.get200WithCookiePolicy()
     }
+
+    @Test
+    @UiThreadTest
+    override fun get200WithContentTypeCharset() {
+        super.get200WithContentTypeCharset()
+    }
 }
