@@ -12,6 +12,7 @@
 #include "nsIPrincipal.h"
 #include "nsIWeakReferenceUtils.h"  // for nsWeakPtr
 #include "nsIURI.h"
+#include "nsString.h"
 #include "nsTArray.h"
 
 #include "mozilla/BasePrincipal.h"
@@ -121,7 +122,8 @@ class LoadInfo final : public nsILoadInfo {
            const nsTArray<nsCString>& aUnsafeHeaders, bool aForcePreflight,
            bool aIsPreflight, bool aLoadTriggeredFromExternal,
            bool aServiceWorkerTaintingSynthesized,
-           bool aDocumentHasUserInteracted, bool aDocumentHasLoaded);
+           bool aDocumentHasUserInteracted, bool aDocumentHasLoaded,
+           const nsAString& aCspNonce);
   LoadInfo(const LoadInfo& rhs);
 
   NS_IMETHOD GetRedirects(JSContext* aCx,
@@ -198,6 +200,7 @@ class LoadInfo final : public nsILoadInfo {
   bool mServiceWorkerTaintingSynthesized;
   bool mDocumentHasUserInteracted;
   bool mDocumentHasLoaded;
+  nsString mCspNonce;
 
   // Is true if this load was triggered by processing the attributes of the
   // browsing context container.
