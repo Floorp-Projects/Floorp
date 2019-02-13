@@ -515,4 +515,46 @@ already_AddRefed<BrowsingContext> BrowsingContext::FindChildWithName(
 }
 
 }  // namespace dom
+
+namespace ipc {
+
+void IPDLParamTraits<dom::BrowsingContext>::Write(
+    IPC::Message* aMsg, IProtocol* aActor, dom::BrowsingContext* aParam) {
+  uint64_t id = aParam ? aParam->Id() : 0;
+  WriteIPDLParam(aMsg, aActor, id);
+
+  // If his is an in-process send. We want to make sure that our BrowsingContext
+  // object lives long enough to make it to the other side, so we take an extra
+  // reference. This reference is freed in ::Read().
+  if (!aActor->GetIPCChannel()->IsCrossProcess()) {
+    NS_IF_ADDREF(aParam);
+  }
+}
+
+bool IPDLParamTraits<dom::BrowsingContext>::Read(
+    const IPC::Message* aMsg, PickleIterator* aIter, IProtocol* aActor,
+    RefPtr<dom::BrowsingContext>* aResult) {
+  uint64_t id = 0;
+  if (!ReadIPDLParam(aMsg, aIter, aActor, &id)) {
+    return false;
+  }
+
+  if (id == 0) {
+    aResult = nullptr;
+    return true;
+  }
+
+  *aResult = dom::BrowsingContext::Get(id);
+  MOZ_ASSERT(aResult, "Deserialized absent BrowsingContext!");
+
+  // If this is an in-process actor, free the reference taken in ::Write().
+  if (!aActor->GetIPCChannel()->IsCrossProcess()) {
+    dom::BrowsingContext* bc = *aResult;
+    NS_IF_RELEASE(bc);
+  }
+
+  return aResult != nullptr;
+}
+
+}  // namespace ipc
 }  // namespace mozilla
