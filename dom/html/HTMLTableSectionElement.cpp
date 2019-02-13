@@ -105,7 +105,7 @@ void HTMLTableSectionElement::DeleteRow(int32_t aValue, ErrorResult& aError) {
     refIndex = (uint32_t)aValue;
   }
 
-  nsINode* row = rows->Item(refIndex);
+  nsCOMPtr<nsINode> row = rows->Item(refIndex);
   if (!row) {
     aError.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
     return;
