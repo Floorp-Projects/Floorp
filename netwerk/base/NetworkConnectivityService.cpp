@@ -237,13 +237,13 @@ NetworkConnectivityService::RecheckIPConnectivity() {
   nsresult rv;
   mIPv4Channel = SetupIPCheckChannel(/* ipv4 = */ true);
   if (mIPv4Channel) {
-    rv = mIPv4Channel->AsyncOpen2(this);
+    rv = mIPv4Channel->AsyncOpen(this);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
   mIPv6Channel = SetupIPCheckChannel(/* ipv4 = */ false);
   if (mIPv6Channel) {
-    rv = mIPv6Channel->AsyncOpen2(this);
+    rv = mIPv6Channel->AsyncOpen(this);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

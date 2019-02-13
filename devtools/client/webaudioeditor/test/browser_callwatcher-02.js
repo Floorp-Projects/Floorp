@@ -22,7 +22,7 @@ add_task(async function() {
 
   let error = await evalInDebuggee("throwError()");
   is(error.lineNumber, 21, "error has correct lineNumber");
-  is(error.columnNumber, 11, "error has correct columnNumber");
+  is(error.columnNumber, 18, "error has correct columnNumber");
   is(error.name, "TypeError", "error has correct name");
   is(error.message, "Argument 1 is not valid for any of the 2-argument overloads of AudioNode.connect.", "error has correct message");
   is(error.stringified, "TypeError: Argument 1 is not valid for any of the 2-argument overloads of AudioNode.connect.", "error is stringified correctly");

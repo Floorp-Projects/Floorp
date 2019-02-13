@@ -14,7 +14,7 @@ function run_test() {
   var channel = NetUtil.newChannel({uri: spec, loadUsingSystemPrincipal: true});
   var failed = false;
   try {
-    var stream = channel.open2();
+    var stream = channel.open();
   } catch (e) {
     failed = true;
   }

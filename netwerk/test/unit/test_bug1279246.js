@@ -53,7 +53,7 @@ Listener.prototype = {
 
       var channel = setupChannel();
       channel.loadFlags = Ci.nsIRequest.VALIDATE_NEVER;
-      channel.asyncOpen2(new Listener());
+      channel.asyncOpen(new Listener());
     } else {
       httpserver.stop(do_test_finished);
       prefs.setCharPref("network.http.accept-encoding", cePref);
@@ -77,7 +77,7 @@ function run_test() {
   httpserver.start(-1);
 
   var channel = setupChannel();
-  channel.asyncOpen2(new Listener());
+  channel.asyncOpen(new Listener());
 
   do_test_pending();
 }

@@ -235,20 +235,28 @@ impl ScaleOffset {
 
 // TODO: Implement these in euclid!
 pub trait MatrixHelpers<Src, Dst> {
+    /// A port of the preserves2dAxisAlignment function in Skia.
+    /// Defined in the SkMatrix44 class.
     fn preserves_2d_axis_alignment(&self) -> bool;
     fn has_perspective_component(&self) -> bool;
     fn has_2d_inverse(&self) -> bool;
+    /// Check if the matrix post-scaling on either the X or Y axes could cause geometry
+    /// transformed by this matrix to have scaling exceeding the supplied limit.
     fn exceeds_2d_scale(&self, limit: f64) -> bool;
     fn inverse_project(&self, target: &TypedPoint2D<f32, Dst>) -> Option<TypedPoint2D<f32, Src>>;
     fn inverse_rect_footprint(&self, rect: &TypedRect<f32, Dst>) -> Option<TypedRect<f32, Src>>;
     fn transform_kind(&self) -> TransformedRectKind;
     fn is_simple_translation(&self) -> bool;
     fn is_simple_2d_translation(&self) -> bool;
+    /// Return the determinant of the 2D part of the matrix.
+    fn determinant_2d(&self) -> f32;
+    /// This function returns a point in the `Src` space that projects into zero XY.
+    /// It ignores the Z coordinate and is usable for "flattened" transformations,
+    /// since they are not generally inversible.
+    fn inverse_project_2d_origin(&self) -> Option<TypedPoint2D<f32, Src>>;
 }
 
 impl<Src, Dst> MatrixHelpers<Src, Dst> for TypedTransform3D<f32, Src, Dst> {
-    // A port of the preserves2dAxisAlignment function in Skia.
-    // Defined in the SkMatrix44 class.
     fn preserves_2d_axis_alignment(&self) -> bool {
         if self.m14 != 0.0 || self.m24 != 0.0 {
             return false;
@@ -287,11 +295,9 @@ impl<Src, Dst> MatrixHelpers<Src, Dst> for TypedTransform3D<f32, Src, Dst> {
     }
 
     fn has_2d_inverse(&self) -> bool {
-        self.m11 * self.m22 - self.m12 * self.m21 != 0.0
+        self.determinant_2d() != 0.0
     }
 
-    // Check if the matrix post-scaling on either the X or Y axes could cause geometry
-    // transformed by this matrix to have scaling exceeding the supplied limit.
     fn exceeds_2d_scale(&self, limit: f64) -> bool {
         let limit2 = (limit * limit) as f32;
         self.m11 * self.m11 + self.m12 * self.m12 > limit2 ||
@@ -348,6 +354,21 @@ impl<Src, Dst> MatrixHelpers<Src, Dst> for TypedTransform3D<f32, Src, Dst> {
         }
 
         self.m43.abs() < NEARLY_ZERO
+    }
+
+    fn determinant_2d(&self) -> f32 {
+        self.m11 * self.m22 - self.m12 * self.m21
+    }
+
+    fn inverse_project_2d_origin(&self) -> Option<TypedPoint2D<f32, Src>> {
+        let det = self.determinant_2d();
+        if det != 0.0 {
+            let x = (self.m21 * self.m42 - self.m41 * self.m22) / det;
+            let y = (self.m12 * self.m41 - self.m11 * self.m42) / det;
+            Some(TypedPoint2D::new(x, y))
+        } else {
+            None
+        }
     }
 }
 
@@ -525,6 +546,22 @@ pub mod test {
         let x1 = LayoutTransform::create_scale(7.0, 3.0, 1.0);
 
         validate_accumulate(&x0, &x1);
+    }
+
+    #[test]
+    fn inverse_project_2d_origin() {
+        let mut m = Transform3D::identity();
+        assert_eq!(m.inverse_project_2d_origin(), Some(Point2D::zero()));
+        m.m11 = 0.0;
+        assert_eq!(m.inverse_project_2d_origin(), None);
+        m.m21 = -2.0;
+        m.m22 = 0.0;
+        m.m12 = -0.5;
+        m.m41 = 1.0;
+        m.m42 = 0.5;
+        let origin = m.inverse_project_2d_origin().unwrap();
+        assert_eq!(origin, Point2D::new(1.0, 0.5));
+        assert_eq!(m.transform_point2d(&origin), Some(Point2D::zero()));
     }
 }
 

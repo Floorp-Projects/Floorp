@@ -703,12 +703,12 @@ nsresult FetchDriver::HttpFetch(
       MOZ_ASSERT(!mAltDataListener);
       mAltDataListener = new AlternativeDataStreamListener(
           this, chan, aPreferredAlternativeDataType);
-      rv = chan->AsyncOpen2(mAltDataListener);
+      rv = chan->AsyncOpen(mAltDataListener);
     } else {
-      rv = chan->AsyncOpen2(this);
+      rv = chan->AsyncOpen(this);
     }
   } else {
-    rv = chan->AsyncOpen2(this);
+    rv = chan->AsyncOpen(this);
   }
   if (NS_FAILED(rv)) {
     return rv;

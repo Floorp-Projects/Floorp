@@ -68,3 +68,6 @@ exports.A11Y_SERVICE_ENABLED_COUNT = "devtools.accessibility.service_enabled_cou
 // URL constants
 exports.A11Y_LEARN_MORE_LINK =
   "https://developer.mozilla.org/docs/Tools/Accessibility_inspector";
+exports.A11Y_CONTRAST_LEARN_MORE_LINK =
+  "https://developer.mozilla.org/docs/Web/Accessibility/Understanding_WCAG/Perceivable/" +
+  "Color_contrast?utm_source=devtools&utm_medium=a11y-panel-checks-color-contrast";

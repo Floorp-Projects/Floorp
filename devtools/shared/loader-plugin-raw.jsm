@@ -27,7 +27,7 @@ this.requireRawId = function(id, require) {
   const stream = NetUtil.newChannel({
     uri: NetUtil.newURI(uri, "UTF-8"),
     loadUsingSystemPrincipal: true,
-  }).open2();
+  }).open();
 
   const count = stream.available();
   const data = NetUtil.readInputStreamToString(stream, count, {

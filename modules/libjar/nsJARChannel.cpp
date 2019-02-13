@@ -199,8 +199,6 @@ nsJARChannel::~nsJARChannel() {
                                     mLoadGroup.forget());
   NS_ReleaseOnMainThreadSystemGroup("nsJARChannel::mListener",
                                     mListener.forget());
-  NS_ReleaseOnMainThreadSystemGroup("nsJARChannel::mListenerContext",
-                                    mListenerContext.forget());
 }
 
 NS_IMPL_ISUPPORTS_INHERITED(nsJARChannel, nsHashPropertyBag, nsIRequest,
@@ -492,7 +490,6 @@ nsresult nsJARChannel::OnOpenLocalFileComplete(nsresult aResult,
 
     mOpened = false;
     mIsPending = false;
-    mListenerContext = nullptr;
     mListener = nullptr;
     mCallbacks = nullptr;
     mProgressSink = nullptr;
@@ -812,7 +809,13 @@ nsJARChannel::SetContentLength(int64_t aContentLength) {
 }
 
 NS_IMETHODIMP
-nsJARChannel::Open(nsIInputStream **stream) {
+nsJARChannel::Open(nsIInputStream **aStream) {
+  LOG(("nsJARChannel::Open [this=%p]\n", this));
+  nsCOMPtr<nsIStreamListener> listener;
+  nsresult rv =
+      nsContentSecurityManager::doContentSecurityCheck(this, listener);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   LOG(("nsJARChannel::Open [this=%p]\n", this));
 
   NS_ENSURE_TRUE(!mOpened, NS_ERROR_IN_PROGRESS);
@@ -820,7 +823,7 @@ nsJARChannel::Open(nsIInputStream **stream) {
 
   mJarFile = nullptr;
 
-  nsresult rv = LookupFile();
+  rv = LookupFile();
   if (NS_FAILED(rv)) return rv;
 
   // If mJarFile was not set by LookupFile, we can't open a channel.
@@ -833,23 +836,26 @@ nsJARChannel::Open(nsIInputStream **stream) {
   rv = CreateJarInput(gJarHandler->JarCache(), getter_AddRefs(input));
   if (NS_FAILED(rv)) return rv;
 
-  input.forget(stream);
+  input.forget(aStream);
   mOpened = true;
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsJARChannel::Open2(nsIInputStream **aStream) {
-  LOG(("nsJARChannel::Open2 [this=%p]\n", this));
-  nsCOMPtr<nsIStreamListener> listener;
-  nsresult rv =
-      nsContentSecurityManager::doContentSecurityCheck(this, listener);
-  NS_ENSURE_SUCCESS(rv, rv);
-  return Open(aStream);
-}
 
 NS_IMETHODIMP
-nsJARChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctx) {
+nsJARChannel::AsyncOpen(nsIStreamListener *aListener) {
+  LOG(("nsJARChannel::AsyncOpen [this=%p]\n", this));
+  nsCOMPtr<nsIStreamListener> listener = aListener;
+  nsresult rv =
+      nsContentSecurityManager::doContentSecurityCheck(this, listener);
+  if (NS_FAILED(rv)) {
+    mIsPending = false;
+    mListener = nullptr;
+    mCallbacks = nullptr;
+    mProgressSink = nullptr;
+    return rv;
+  }
+
   LOG(("nsJARChannel::AsyncOpen [this=%p]\n", this));
   MOZ_ASSERT(
       !mLoadInfo || mLoadInfo->GetSecurityMode() == 0 ||
@@ -857,7 +863,7 @@ nsJARChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctx) {
           (mLoadInfo->GetSecurityMode() ==
                nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL &&
            nsContentUtils::IsSystemPrincipal(mLoadInfo->LoadingPrincipal())),
-      "security flags in loadInfo but asyncOpen2() not called");
+      "security flags in loadInfo but doContentSecurityCheck() not called");
 
   NS_ENSURE_ARG_POINTER(listener);
   NS_ENSURE_TRUE(!mOpened, NS_ERROR_IN_PROGRESS);
@@ -869,14 +875,12 @@ nsJARChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctx) {
   NS_QueryNotificationCallbacks(mCallbacks, mLoadGroup, mProgressSink);
 
   mListener = listener;
-  mListenerContext = ctx;
   mIsPending = true;
 
-  nsresult rv = LookupFile();
+  rv = LookupFile();
   if (NS_FAILED(rv) || !mJarFile) {
     // Not a local file...
     mIsPending = false;
-    mListenerContext = nullptr;
     mListener = nullptr;
     mCallbacks = nullptr;
     mProgressSink = nullptr;
@@ -886,7 +890,6 @@ nsJARChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctx) {
   rv = OpenLocalFile();
   if (NS_FAILED(rv)) {
     mIsPending = false;
-    mListenerContext = nullptr;
     mListener = nullptr;
     mCallbacks = nullptr;
     mProgressSink = nullptr;
@@ -894,24 +897,6 @@ nsJARChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctx) {
   }
 
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsJARChannel::AsyncOpen2(nsIStreamListener *aListener) {
-  LOG(("nsJARChannel::AsyncOpen2 [this=%p]\n", this));
-  nsCOMPtr<nsIStreamListener> listener = aListener;
-  nsresult rv =
-      nsContentSecurityManager::doContentSecurityCheck(this, listener);
-  if (NS_FAILED(rv)) {
-    mIsPending = false;
-    mListenerContext = nullptr;
-    mListener = nullptr;
-    mCallbacks = nullptr;
-    mProgressSink = nullptr;
-    return rv;
-  }
-
-  return AsyncOpen(listener, nullptr);
 }
 
 //-----------------------------------------------------------------------------
@@ -1005,7 +990,7 @@ nsJARChannel::OnStartRequest(nsIRequest *req, nsISupports *ctx) {
   LOG(("nsJARChannel::OnStartRequest [this=%p %s]\n", this, mSpec.get()));
 
   mRequest = req;
-  nsresult rv = mListener->OnStartRequest(this, mListenerContext);
+  nsresult rv = mListener->OnStartRequest(this, nullptr);
   mRequest = nullptr;
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1040,9 +1025,8 @@ nsJARChannel::OnStopRequest(nsIRequest *req, nsISupports *ctx,
   if (NS_SUCCEEDED(mStatus)) mStatus = status;
 
   if (mListener) {
-    mListener->OnStopRequest(this, mListenerContext, status);
+    mListener->OnStopRequest(this, nullptr, status);
     mListener = nullptr;
-    mListenerContext = nullptr;
   }
 
   if (mLoadGroup) mLoadGroup->RemoveRequest(this, nullptr, status);
@@ -1071,8 +1055,7 @@ nsJARChannel::OnDataAvailable(nsIRequest *req, nsISupports *ctx,
 
   nsresult rv;
 
-  rv =
-      mListener->OnDataAvailable(this, mListenerContext, stream, offset, count);
+  rv = mListener->OnDataAvailable(this, nullptr, stream, offset, count);
 
   // simply report progress here instead of hooking ourselves up as a
   // nsITransportEventSink implementation.

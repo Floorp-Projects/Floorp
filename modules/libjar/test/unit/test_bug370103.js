@@ -15,7 +15,7 @@ function run_test() {
 
   var exception = false;
   try {
-    channel.asyncOpen2(null);
+    channel.asyncOpen(null);
   }
   catch(e) {
     exception = true;

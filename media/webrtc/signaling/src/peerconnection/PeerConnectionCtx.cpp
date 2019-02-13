@@ -239,7 +239,7 @@ void PeerConnectionCtx::DeliverStats(RTCStatsQuery& aQuery) {
         MOZ_ASSERT(isRemote);
         HistogramID id = isAudio ? WEBRTC_AUDIO_QUALITY_OUTBOUND_RTT
                                  : WEBRTC_VIDEO_QUALITY_OUTBOUND_RTT;
-        Accumulate(id, s.mRoundTripTime.Value());
+        Accumulate(id, s.mRoundTripTime.Value() * 1000);
       }
       if (lastReport && lastReport->mInboundRTPStreamStats.WasPassed() &&
           s.mBytesReceived.WasPassed()) {

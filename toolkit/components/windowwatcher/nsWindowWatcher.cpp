@@ -71,6 +71,7 @@
 #include "nsIXULWindow.h"
 #include "nsIXULBrowserWindow.h"
 #include "nsGlobalWindow.h"
+#include "ReferrerInfo.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1077,9 +1078,9 @@ nsresult nsWindowWatcher::OpenWindowInternal(
       doc = parentWindow->GetExtantDoc();
     }
     if (doc) {
-      // Set the referrer
-      loadState->SetReferrer(doc->GetDocumentURI());
-      loadState->SetReferrerPolicy(doc->GetReferrerPolicy());
+      nsCOMPtr<nsIReferrerInfo> referrerInfo =
+          new ReferrerInfo(doc->GetDocumentURI(), doc->GetReferrerPolicy());
+      loadState->SetReferrerInfo(referrerInfo);
     }
   }
 

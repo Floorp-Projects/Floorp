@@ -20,7 +20,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1107592
     /* Async parent frames from pushPrefEnv don't show up in e10s.  */
     var isE10S = !SpecialPowers.isMainProcess();
     if (!isE10S && SpecialPowers.getBoolPref("javascript.options.asyncstack")) {
-      asyncFrame = `Async*@${file}:153:3
+      asyncFrame = `Async*@${file}:153:17
 `;
     } else {
       asyncFrame = "";
@@ -36,14 +36,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1107592
       is(e.name, "Error", "Should not have an interesting name here");
       is(e.message, "We are an Error", "Should have the right message");
       is(e.stack,
-         `doTest@${file}:31:7
+         `doTest@${file}:31:9
 ${asyncFrame}`,
          "Exception stack should still only show our code");
       is(e.fileName,
          file,
          "Should have the right file name");
       is(e.lineNumber, 31, "Should have the right line number");
-      is(e.columnNumber, 7, "Should have the right column number");
+      is(e.columnNumber, 9, "Should have the right column number");
     }
 
     try {
@@ -57,7 +57,7 @@ ${asyncFrame}`,
       is(e.code, DOMException.NOT_SUPPORTED_ERR,
          "Should have the right 'code'");
       is(e.stack,
-         `doTest@${file}:50:7
+         `doTest@${file}:50:9
 ${asyncFrame}`,
          "Exception stack should still only show our code");
       is(e.filename,
@@ -78,14 +78,14 @@ ${asyncFrame}`,
       is(e.message, "We are a TypeError",
          "Should also have the right message (2)");
       is(e.stack,
-         `doTest@${file}:72:7
+         `doTest@${file}:72:9
 ${asyncFrame}`,
          "Exception stack for TypeError should only show our code");
       is(e.fileName,
          file,
          "Should still have the right file name for TypeError");
       is(e.lineNumber, 72, "Should still have the right line number for TypeError");
-      is(e.columnNumber, 7, "Should have the right column number for TypeError");
+      is(e.columnNumber, 9, "Should have the right column number for TypeError");
     }
 
     try {
@@ -98,15 +98,15 @@ ${asyncFrame}`,
       is(e.message, "missing argument 0 when calling function Array.indexOf",
          "Should also have the right message (3)");
       is(e.stack,
-         `doTest/<@${file}:92:45
-doTest@${file}:92:7
+         `doTest/<@${file}:92:51
+doTest@${file}:92:9
 ${asyncFrame}`,
          "Exception stack for TypeError should only show our code (3)");
       is(e.fileName,
          file,
          "Should still have the right file name for TypeError (3)");
       is(e.lineNumber, 92, "Should still have the right line number for TypeError (3)");
-      is(e.columnNumber, 45, "Should have the right column number for TypeError (3)");
+      is(e.columnNumber, 51, "Should have the right column number for TypeError (3)");
     }
 
     try {
@@ -118,7 +118,7 @@ ${asyncFrame}`,
       is(e.name, "NS_ERROR_UNEXPECTED", "Name should be sanitized (4)");
       is(e.message, "", "Message should be sanitized (5)");
       is(e.stack,
-         `doTest@${file}:113:7
+         `doTest@${file}:113:9
 ${asyncFrame}`,
          "Exception stack for sanitized exception should only show our code (4)");
       is(e.filename,
@@ -137,7 +137,7 @@ ${asyncFrame}`,
       is(e.name, "NS_ERROR_UNEXPECTED", "Name should be sanitized (5)");
       is(e.message, "", "Message should be sanitized (5)");
       is(e.stack,
-         `doTest@${file}:132:7
+         `doTest@${file}:132:9
 ${asyncFrame}`,
          "Exception stack for sanitized exception should only show our code (5)");
       is(e.filename,

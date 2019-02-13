@@ -1,0 +1,98 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE HTML>
+<html>
+<!--
+Test that Accordion renders correctly.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Accordion component test</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <link rel="stylesheet" href="chrome://devtools/skin/light-theme.css" type="text/css">
+</head>
+<body>
+<pre id="test">
+<script src="head.js" type="application/javascript"></script>
+<script src="accordion.snapshots.js" type="application/javascript"></script>
+<script type="application/javascript">
+
+"use strict";
+
+window.onload = async function() {
+  try {
+    const { button, div } = require("devtools/client/shared/vendor/react-dom-factories");
+    const sinon = require("resource://testing-common/sinon-2.3.2.js");
+    const React = browserRequire("devtools/client/shared/vendor/react");
+    const {
+      Simulate,
+      renderIntoDocument,
+      findAllInRenderedTree,
+    } = browserRequire("devtools/client/shared/vendor/react-dom-test-utils");
+    const Accordion =
+      browserRequire("devtools/client/shared/components/Accordion");
+
+    const testItems = [
+      {
+        header: "Test Accordion Item 1",
+        className: "accordion-item-1",
+        component: div({}),
+        opened: false,
+        labelledby: "label-id-1",
+        onToggle: sinon.spy(),
+      },
+      {
+        header: "Test Accordion Item 2",
+        className: "accordion-item-2",
+        component: div({}),
+        buttons: button({}),
+        opened: false,
+        labelledby: "label-id-2",
+        onToggle: sinon.spy(),
+      },
+      {
+        header: "Test Accordion Item 3",
+        className: "accordion-item-3",
+        component: div({}),
+        opened: true,
+        labelledby: "label-id-3",
+        onToggle: sinon.spy(),
+      },
+    ];
+
+    const accordion = React.createElement(Accordion, { items: testItems });
+
+    matchSnapshot("Accordion basic render.", accordion);
+
+    const tree = renderIntoDocument(accordion);
+    const headers = findAllInRenderedTree(tree, c => c.className === "accordion-header");
+
+    Simulate.click(headers[0]);
+    ok(testItems[0].onToggle.calledWith(true), "Handle click and onToggle.");
+    ok(testItems[1].onToggle.notCalled,
+       "onToggle wasn't called on element we didn't click on.");
+
+    isDeeply(tree.state, { opened: { 0: true, 1: false, 2: true }},
+             "State updated correctly");
+
+    Simulate.keyDown(headers[0], { key: "Enter" });
+    ok(testItems[0].onToggle.calledWith(false), "Handle click and onToggle.");
+    isDeeply(tree.state, { opened: { 0: false, 1: false, 2: true } },
+             "State updated correctly");
+
+    Simulate.keyDown(headers[1], { key: " " });
+    ok(testItems[1].onToggle.calledWith(true), "Handle click and onToggle.");
+    isDeeply(tree.state, { opened: { 0: false, 1: true, 2: true } },
+             "State updated correctly");
+  } catch (e) {
+    ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+  } finally {
+    SimpleTest.finish();
+  }
+};
+</script>
+</pre>
+</body>
+</html>

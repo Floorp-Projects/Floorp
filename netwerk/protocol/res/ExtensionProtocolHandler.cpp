@@ -288,12 +288,12 @@ void ExtensionStreamGetter::OnFD(const FileDescriptor& aFD) {
   }
 
   // We must keep an owning reference to the listener
-  // until we pass it on to AsyncOpen2.
+  // until we pass it on to AsyncOpen.
   nsCOMPtr<nsIStreamListener> listener = mListener.forget();
 
   RefPtr<FileDescriptorFile> fdFile = new FileDescriptorFile(aFD, mJarFile);
   mJarChannel->SetJarFile(fdFile);
-  nsresult rv = mJarChannel->AsyncOpen2(listener);
+  nsresult rv = mJarChannel->AsyncOpen(listener);
   if (NS_FAILED(rv)) {
     CancelRequest(listener, mChannel, rv);
   }
@@ -442,10 +442,9 @@ nsresult ExtensionProtocolHandler::SubstituteChannel(nsIURI* aURI,
 
   // Filter CSS files to replace locale message tokens with localized strings.
 
-  bool haveLoadInfo = aLoadInfo;
   nsCOMPtr<nsIChannel> channel = NS_NewSimpleChannel(
       aURI, aLoadInfo, *result,
-      [haveLoadInfo](nsIStreamListener* listener, nsIChannel* channel,
+      [](nsIStreamListener* listener, nsIChannel* channel,
                      nsIChannel* origChannel) -> RequestOrReason {
         nsresult rv;
         nsCOMPtr<nsIStreamConverterService> convService =
@@ -461,11 +460,8 @@ nsresult ExtensionProtocolHandler::SubstituteChannel(nsIURI* aURI,
         nsCOMPtr<nsIStreamListener> converter;
         MOZ_TRY(convService->AsyncConvertData(kFromType, kToType, listener, uri,
                                               getter_AddRefs(converter)));
-        if (haveLoadInfo) {
-          MOZ_TRY(origChannel->AsyncOpen2(converter));
-        } else {
-          MOZ_TRY(origChannel->AsyncOpen(converter, nullptr));
-        }
+
+        MOZ_TRY(origChannel->AsyncOpen(converter));
 
         return RequestOrReason(origChannel);
       });
@@ -798,7 +794,7 @@ static void NewSimpleChannel(nsIURI* aURI, nsILoadInfo* aLoadinfo,
       aURI, aLoadinfo, aChannel,
       [](nsIStreamListener* listener, nsIChannel* simpleChannel,
          nsIChannel* origChannel) -> RequestOrReason {
-        nsresult rv = origChannel->AsyncOpen2(listener);
+        nsresult rv = origChannel->AsyncOpen(listener);
         if (NS_FAILED(rv)) {
           simpleChannel->Cancel(NS_BINDING_ABORTED);
           return RequestOrReason(rv);

@@ -222,7 +222,7 @@ function getDefaultEngineName(isUS) {
     uri: "resource://search-plugins/list.json",
     loadUsingSystemPrincipal: true,
   });
-  let searchSettings = parseJsonFromStream(chan.open2());
+  let searchSettings = parseJsonFromStream(chan.open());
   let defaultEngineName = searchSettings.default.searchDefault;
 
   if (isUS === undefined)
@@ -241,7 +241,7 @@ function getDefaultEngineList(isUS) {
     uri: "resource://search-plugins/list.json",
     loadUsingSystemPrincipal: true,
   });
-  let json = parseJsonFromStream(chan.open2());
+  let json = parseJsonFromStream(chan.open());
   let visibleDefaultEngines = json.default.visibleDefaultEngines;
 
   if (isUS === undefined)

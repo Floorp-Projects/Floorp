@@ -72,7 +72,7 @@ function stream_from_channel(file) {
   return NetUtil.newChannel({
     uri: uri,
     loadUsingSystemPrincipal: true
-  }).open2();
+  }).open();
 }
 
 function run_test() {

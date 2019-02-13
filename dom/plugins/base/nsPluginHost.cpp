@@ -3160,7 +3160,7 @@ nsresult nsPluginHost::NewPluginURLStream(
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
-  rv = channel->AsyncOpen2(listenerPeer);
+  rv = channel->AsyncOpen(listenerPeer);
   if (NS_SUCCEEDED(rv)) listenerPeer->TrackRequest(channel);
   return rv;
 }

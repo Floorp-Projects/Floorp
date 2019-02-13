@@ -76,7 +76,7 @@ interface nsILoadInfo : nsISupports
    * Exactly one of these flags are required to be set in order to allow
    * the channel to perform the correct security checks (SOP, CORS, ...) and
    * return the correct result principal. If none or more than one of these
-   * flags are set AsyncOpen2 will fail.
+   * flags are set AsyncOpen will fail.
    */
 
    /**
@@ -672,21 +672,9 @@ interface nsILoadInfo : nsISupports
 %}
 
   /**
-   * Whenever a channel is openend by asyncOpen2() [or also open2()],
-   * lets set this flag so that redirects of such channels are also
-   * openend using asyncOpen2() [open2()].
-   *
-   * Please note, once the flag is set to true it must remain true
-   * throughout the lifetime of the channel. Trying to set it
-   * to anything else than true will be discareded.
-   *
-   */
-  [infallible] attribute boolean enforceSecurity;
-
-  /**
    * Whenever a channel is evaluated by the ContentSecurityManager
    * the first time, we set this flag to true to indicate that
-   * subsequent calls of AsyncOpen2() do not have to enforce all
+   * subsequent calls of AsyncOpen() do not have to enforce all
    * security checks again. E.g., after a redirect there is no
    * need to set up CORS again. We need this separate flag
    * because the redirectChain might also contain internal

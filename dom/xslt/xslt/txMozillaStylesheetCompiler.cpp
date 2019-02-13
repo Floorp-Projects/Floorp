@@ -434,7 +434,7 @@ nsresult txCompileObserver::startLoad(nsIURI* aUri,
   parser->SetContentSink(sink);
   parser->Parse(aUri);
 
-  return channel->AsyncOpen2(sink);
+  return channel->AsyncOpen(sink);
 }
 
 nsresult TX_LoadSheet(nsIURI* aUri, txMozillaXSLTProcessor* aProcessor,

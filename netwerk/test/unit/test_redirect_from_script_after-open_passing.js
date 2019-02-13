@@ -9,7 +9,7 @@
  * made with XMLHttpRequest objects.
  *
  * testViaAsyncOpen() checks that internal redirects occur correctly when made
- * with nsIHTTPChannel.asyncOpen2().
+ * with nsIHTTPChannel.asyncOpen().
  *
  * Both of the above functions tests four requests:
  *
@@ -168,7 +168,7 @@ Redirector.prototype = {
 
 function makeAsyncTest(uri, headerValue, nextTask)
 {
-  // Make a test to check a redirect that is created with channel.asyncOpen2()
+  // Make a test to check a redirect that is created with channel.asyncOpen()
 
   // Produce a callback function which checks for the presence of headerValue,
   // and then continues to the next async test task
@@ -183,11 +183,11 @@ function makeAsyncTest(uri, headerValue, nextTask)
     nextTask();
   };
 
-  // Produce a function to run an asyncOpen2 test using the above verifier
+  // Produce a function to run an asyncOpen test using the above verifier
   var test = function()
   {
     var chan = make_channel(uri);
-    chan.asyncOpen2(new ChannelListener(verifier));
+    chan.asyncOpen(new ChannelListener(verifier));
   };
   return test;
 }

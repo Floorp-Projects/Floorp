@@ -34,7 +34,7 @@ function streamDefaultFavicon(uri, loadInfo, outputStream, originalChannel) {
     });
     originalChannel.contentType = PlacesUtils.favicons.defaultFaviconMimeType;
     let defaultIconChannel = makeDefaultFaviconChannel(uri, loadInfo);
-    defaultIconChannel.asyncOpen2(listener);
+    defaultIconChannel.asyncOpen(listener);
   } catch (ex) {
     Cu.reportError(ex);
     outputStream.close();

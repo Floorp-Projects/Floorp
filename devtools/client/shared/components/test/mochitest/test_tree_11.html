@@ -13,14 +13,15 @@ Test that when an item in the Tree component is focused by arrow key, the view i
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
   <link rel="stylesheet" href="chrome://devtools/skin/light-theme.css" type="text/css">
   <style>
-   * {
-       margin: 0;
-       padding: 0;
-       height: 30px;
-       max-height: 30px;
-       min-height: 30px;
-       font-size: 10px;
-       overflow: auto;
+   .tree {
+     height: 30px;
+     overflow: auto;
+     display: block;
+   }
+
+   .tree-node {
+     font-size: 10px;
+     height: 10px;
    }
   </style>
 </head>

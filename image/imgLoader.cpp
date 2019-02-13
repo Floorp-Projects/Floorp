@@ -1747,7 +1747,7 @@ bool imgLoader::ValidateRequestWithNewChannel(
   mozilla::net::PredictorLearn(aURI, aInitialDocumentURI,
                                nsINetworkPredictor::LEARN_LOAD_SUBRESOURCE,
                                aLoadGroup);
-  rv = newChannel->AsyncOpen2(listener);
+  rv = newChannel->AsyncOpen(listener);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     req->CancelAndForgetObserver(rv);
     return false;
@@ -2262,19 +2262,19 @@ nsresult imgLoader::LoadImage(
 
     MOZ_LOG(
         gImgLog, LogLevel::Debug,
-        ("[this=%p] imgLoader::LoadImage -- Calling channel->AsyncOpen2()\n",
+        ("[this=%p] imgLoader::LoadImage -- Calling channel->AsyncOpen()\n",
          this));
 
     mozilla::net::PredictorLearn(aURI, aInitialDocumentURI,
                                  nsINetworkPredictor::LEARN_LOAD_SUBRESOURCE,
                                  aLoadGroup);
 
-    nsresult openRes = newChannel->AsyncOpen2(listener);
+    nsresult openRes = newChannel->AsyncOpen(listener);
 
     if (NS_FAILED(openRes)) {
       MOZ_LOG(
           gImgLog, LogLevel::Debug,
-          ("[this=%p] imgLoader::LoadImage -- AsyncOpen2() failed: 0x%" PRIx32
+          ("[this=%p] imgLoader::LoadImage -- AsyncOpen() failed: 0x%" PRIx32
            "\n",
            this, static_cast<uint32_t>(openRes)));
       request->CancelAndAbort(openRes);

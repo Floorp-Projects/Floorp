@@ -57,7 +57,7 @@ dictionary RTCInboundRTPStreamStats : RTCRtpStreamStats {
   unsigned long long bytesReceived;
   double jitter;
   unsigned long packetsLost;
-  long roundTripTime;
+  double roundTripTime;
 
   // Video decoder measurement, not present in RTCP case
   unsigned long discardedPackets;

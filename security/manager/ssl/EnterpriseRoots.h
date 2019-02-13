@@ -8,8 +8,27 @@
 #define EnterpriseRoots_h
 
 #include "mozilla/Vector.h"
+#include "mozpkix/Input.h"
+#include "mozpkix/Result.h"
+#include "nsTArray.h"
 
-nsresult GatherEnterpriseRoots(
-    mozilla::Vector<mozilla::Vector<uint8_t>>& roots);
+class EnterpriseCert {
+ public:
+  EnterpriseCert() : mIsRoot(false) {}
+
+  nsresult Init(const uint8_t* data, size_t len, bool isRoot);
+  // Like a copy constructor but able to return a result.
+  nsresult Init(const EnterpriseCert& orig);
+
+  nsresult CopyBytes(nsTArray<uint8_t>& dest) const;
+  mozilla::pkix::Result GetInput(mozilla::pkix::Input& input) const;
+  bool GetIsRoot() const;
+
+ private:
+  mozilla::Vector<uint8_t> mDER;
+  bool mIsRoot;
+};
+
+nsresult GatherEnterpriseCerts(mozilla::Vector<EnterpriseCert>& certs);
 
 #endif  // EnterpriseRoots_h

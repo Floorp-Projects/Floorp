@@ -273,7 +273,7 @@ nsresult nsIncrementalDownload::ProcessTimeout() {
     }
   }
 
-  rv = channel->AsyncOpen2(this);
+  rv = channel->AsyncOpen(this);
   if (NS_FAILED(rv)) return rv;
 
   // Wait to assign mChannel when we know we are going to succeed.  This is

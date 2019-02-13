@@ -689,7 +689,7 @@ nsresult CompareNetwork::Initialize(nsIPrincipal* aPrincipal,
     return rv;
   }
 
-  rv = mChannel->AsyncOpen2(loader);
+  rv = mChannel->AsyncOpen(loader);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

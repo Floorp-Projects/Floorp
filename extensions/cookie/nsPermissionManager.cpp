@@ -2987,7 +2987,7 @@ nsresult nsPermissionManager::ImportDefaults() {
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIInputStream> inputStream;
-  rv = channel->Open2(getter_AddRefs(inputStream));
+  rv = channel->Open(getter_AddRefs(inputStream));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = _DoImport(inputStream, nullptr);

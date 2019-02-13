@@ -40,7 +40,7 @@ window.gActivityStreamStrings = {
   "section_disclaimer_topstories_buttontext": "OK, jeg forstår det",
   "prefs_home_header": "Innhold Firefox-startside",
   "prefs_home_description": "Velg hvilket innhold som du vil ha på din Firefox-startside.",
-  "prefs_content_discovery_header": "Firefox Home",
+  "prefs_content_discovery_header": "Firefox startside",
   "prefs_content_discovery_description": "Content Discovery in Firefox Home allows you to discover high-quality, relevant articles from across the web.",
   "prefs_content_discovery_button": "Turn Off Content Discovery",
   "prefs_section_rows_option": "{num} rekke;{num} rekker",
@@ -110,6 +110,5 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Personvernbestemmelser",
   "firstrun_continue_to_login": "Fortsett",
   "firstrun_skip_login": "Hopp over dette trinnet",
-  "context_menu_title": "Åpne meny",
-  "pocket_learn_more": "Les mer"
+  "context_menu_title": "Åpne meny"
 };

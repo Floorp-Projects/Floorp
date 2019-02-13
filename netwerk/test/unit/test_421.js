@@ -22,7 +22,7 @@ function setup_test() {
 
   channel = setupChannel(testpath);
 
-  channel.asyncOpen2(new ChannelListener(checkRequestResponse, channel));
+  channel.asyncOpen(new ChannelListener(checkRequestResponse, channel));
 }
 
 function setupChannel(path) {

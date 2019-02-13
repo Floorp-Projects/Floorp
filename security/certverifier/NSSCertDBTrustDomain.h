@@ -108,6 +108,7 @@ class NSSCertDBTrustDomain : public mozilla::pkix::TrustDomain {
       DistrustedCAPolicy distrustedCAPolicy,
       const OriginAttributes& originAttributes,
       const Vector<mozilla::pkix::Input>& thirdPartyRootInputs,
+      const Vector<mozilla::pkix::Input>& thirdPartyIntermediateInputs,
       /*out*/ UniqueCERTCertList& builtChain,
       /*optional*/ PinningTelemetryInfo* pinningTelemetryInfo = nullptr,
       /*optional*/ const char* hostname = nullptr);
@@ -217,6 +218,8 @@ class NSSCertDBTrustDomain : public mozilla::pkix::TrustDomain {
   bool mSawDistrustedCAByPolicyError;
   const OriginAttributes& mOriginAttributes;
   const Vector<mozilla::pkix::Input>& mThirdPartyRootInputs;  // non-owning
+  const Vector<mozilla::pkix::Input>&
+      mThirdPartyIntermediateInputs;                          // non-owning
   UniqueCERTCertList& mBuiltChain;                            // non-owning
   PinningTelemetryInfo* mPinningTelemetryInfo;
   const char* mHostname;  // non-owning - only used for pinning checks

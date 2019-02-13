@@ -375,11 +375,7 @@ void HttpChannelParent::InvokeAsyncOpen(nsresult rv) {
     AsyncOpenFailed(rv);
     return;
   }
-  if (loadInfo && loadInfo->GetEnforceSecurity()) {
-    rv = mChannel->AsyncOpen2(mParentListener);
-  } else {
-    rv = mChannel->AsyncOpen(mParentListener, nullptr);
-  }
+  rv = mChannel->AsyncOpen(mParentListener);
   if (NS_FAILED(rv)) {
     AsyncOpenFailed(rv);
   }

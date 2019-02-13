@@ -100,7 +100,7 @@ function test_cancel()
   });
   Assert.equal(chan.URI, linkURI);
   Assert.equal(chan.originalURI, linkURI);
-  chan.asyncOpen2(new RequestObserver(linkURI, newURI, do_test_finished));
+  chan.asyncOpen(new RequestObserver(linkURI, newURI, do_test_finished));
   Assert.ok(chan.isPending());
   chan.cancel(Cr.NS_ERROR_ABORT);
   Assert.ok(chan.isPending());
@@ -123,6 +123,6 @@ function run_test()
   Assert.equal(chan.URI, linkURI);
   Assert.equal(chan.originalURI, linkURI);
   chan.notificationCallbacks = new NotificationCallbacks(linkURI, newURI);
-  chan.asyncOpen2(new RequestObserver(linkURI, newURI, test_cancel));
+  chan.asyncOpen(new RequestObserver(linkURI, newURI, test_cancel));
   Assert.ok(chan.isPending());
 }

@@ -59,7 +59,7 @@ function testTimeout(timeoutEnabled, expectResponse) {
   var chan = NetUtil.newChannel({uri: baseURL, loadUsingSystemPrincipal: true})
                     .QueryInterface(Ci.nsIHttpChannel);
   var listener = new TimeoutListener(expectResponse);
-  chan.asyncOpen2(listener);
+  chan.asyncOpen(listener);
 }
 
 function testTimeoutEnabled() {

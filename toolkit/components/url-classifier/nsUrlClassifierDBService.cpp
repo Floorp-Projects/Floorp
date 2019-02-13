@@ -2020,7 +2020,7 @@ nsUrlClassifierDBService::SendThreatHitReport(nsIChannel* aChannel,
   NS_ENSURE_SUCCESS(rv, rv);
 
   RefPtr<ThreatHitReportListener> listener = new ThreatHitReportListener();
-  rv = reportChannel->AsyncOpen2(listener);
+  rv = reportChannel->AsyncOpen(listener);
   if (NS_FAILED(rv)) {
     LOG(("Failure to send Safe Browsing ThreatHit report"));
     return rv;

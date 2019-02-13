@@ -6206,7 +6206,11 @@ static bool TryAddTypeBarrierForWrite(TempAllocator& alloc,
     case MIRType::Int32:
     case MIRType::Double:
     case MIRType::String:
-    case MIRType::Symbol: {
+    case MIRType::Symbol:
+#ifdef ENABLE_BIGINT
+    case MIRType::BigInt:
+#endif
+    {
       // The property is a particular primitive type, guard by unboxing the
       // value before the write.
       if (!(*pvalue)->mightBeType(propertyType)) {

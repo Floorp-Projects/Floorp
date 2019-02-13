@@ -121,7 +121,8 @@ def mozharness_test_on_docker(config, job, taskdesc):
     # handle some of the mozharness-specific options
 
     if mozharness['tooltool-downloads']:
-        docker_worker_add_tooltool(config, job, taskdesc, internal=True)
+        internal = mozharness['tooltool-downloads'] == 'internal'
+        docker_worker_add_tooltool(config, job, taskdesc, internal=internal)
 
     if test['reboot']:
         raise Exception('reboot: {} not supported on generic-worker'.format(test['reboot']))

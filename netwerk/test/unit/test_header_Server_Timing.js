@@ -10,7 +10,7 @@ const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 function make_and_open_channel(url, callback) {
   let chan = NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true});
-  chan.asyncOpen2(new ChannelListener(callback, null, CL_ALLOW_UNKNOWN_CL));
+  chan.asyncOpen(new ChannelListener(callback, null, CL_ALLOW_UNKNOWN_CL));
 }
 
 var responseServerTiming = [{metric:"metric", duration:"123.4", description:"description"},

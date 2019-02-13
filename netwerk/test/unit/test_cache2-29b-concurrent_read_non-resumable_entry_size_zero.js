@@ -52,9 +52,9 @@ function run_test()
   httpServer.start(-1);
 
   var chan1 = make_channel(URL + "/content");
-  chan1.asyncOpen2(new ChannelListener(firstTimeThrough, null, CL_ALLOW_UNKNOWN_CL));
+  chan1.asyncOpen(new ChannelListener(firstTimeThrough, null, CL_ALLOW_UNKNOWN_CL));
   var chan2 = make_channel(URL + "/content");
-  chan2.asyncOpen2(new ChannelListener(secondTimeThrough, null, CL_ALLOW_UNKNOWN_CL));
+  chan2.asyncOpen(new ChannelListener(secondTimeThrough, null, CL_ALLOW_UNKNOWN_CL));
 
   do_test_pending();
 }

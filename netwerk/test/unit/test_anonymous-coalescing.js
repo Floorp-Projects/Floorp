@@ -131,7 +131,7 @@ function doTest()
   chan.loadFlags = loadFlags;
 
   var listener = new Listener();
-  chan.asyncOpen2(listener);
+  chan.asyncOpen(listener);
 }
 
 function doTest1()
