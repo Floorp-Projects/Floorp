@@ -215,7 +215,6 @@ public class GeckoApplication extends Application
     public void onApplicationForeground() {
         if (mIsInitialResume) {
             GeckoBatteryManager.getInstance().start(this);
-            initFontScaleListener();
             GeckoNetworkManager.getInstance().start(this);
             mIsInitialResume = false;
         } else if (mPausedGecko) {
@@ -287,6 +286,7 @@ public class GeckoApplication extends Application
         }
 
         sGeckoRuntime = GeckoRuntime.create(context, builder.build());
+        ((GeckoApplication) GeckoAppShell.getApplicationContext()).initFontScaleListener();
         return sGeckoRuntime;
     }
 
@@ -298,6 +298,12 @@ public class GeckoApplication extends Application
         final Context oldContext = GeckoAppShell.getApplicationContext();
         if (oldContext instanceof GeckoApplication) {
             ((GeckoApplication) oldContext).onDestroy();
+            if (sGeckoRuntime != null) {
+                // The listener is registered when the runtime gets created, so if we already have
+                // a runtime, we need to transfer the listener registration to the new instance.
+                // The old listener will be unregistered through onDestroy().
+                GeckoSharedPrefs.forApp(this).registerOnSharedPreferenceChangeListener(this);
+            }
         }
 
         final Context context = getApplicationContext();
@@ -924,7 +930,7 @@ public class GeckoApplication extends Application
     public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
         if (GeckoPreferences.PREFS_SYSTEM_FONT_SIZE.equals(key)) {
             final boolean enabled = prefs.getBoolean(GeckoPreferences.PREFS_SYSTEM_FONT_SIZE, false);
-            GeckoFontScaleListener.getInstance().setEnabled(enabled);
+            getRuntime().getSettings().setAutomaticFontSizeAdjustment(enabled);
         }
     }
 }
