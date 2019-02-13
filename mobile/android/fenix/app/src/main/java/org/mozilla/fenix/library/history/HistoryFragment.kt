@@ -89,7 +89,7 @@ class HistoryFragment : Fragment(), CoroutineScope {
         return when (item.itemId) {
             R.id.libraryClose -> {
                 Navigation.findNavController(requireActivity(), R.id.container)
-                    .popBackStack(R.id.browserFragment, false)
+                    .popBackStack(R.id.libraryFragment, true)
                 true
             }
             R.id.librarySearch -> {
