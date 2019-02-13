@@ -210,7 +210,7 @@ bool PropOpEmitter::emitIncDec(JSAtom* prop) {
 
   JSOp incOp = isInc() ? JSOP_INC : JSOP_DEC;
 
-  if (!bce_->emit1(JSOP_POS)) {
+  if (!bce_->emit1(JSOP_TONUMERIC)) {
     //              [stack] ... N
     return false;
   }

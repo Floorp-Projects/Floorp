@@ -1650,31 +1650,6 @@ class ICToBool_Fallback : public ICFallbackStub {
   };
 };
 
-// ToNumber
-//     JSOP_POS
-
-class ICToNumber_Fallback : public ICFallbackStub {
-  friend class ICStubSpace;
-
-  explicit ICToNumber_Fallback(JitCode* stubCode)
-      : ICFallbackStub(ICStub::ToNumber_Fallback, stubCode) {}
-
- public:
-  // Compiler for this stub kind.
-  class Compiler : public ICStubCompiler {
-   protected:
-    MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm) override;
-
-   public:
-    explicit Compiler(JSContext* cx)
-        : ICStubCompiler(cx, ICStub::ToNumber_Fallback) {}
-
-    ICStub* getStub(ICStubSpace* space) override {
-      return newStub<ICToNumber_Fallback>(space, getStubCode());
-    }
-  };
-};
-
 // GetElem
 //      JSOP_GETELEM
 //      JSOP_GETELEM_SUPER

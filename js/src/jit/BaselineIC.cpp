@@ -214,13 +214,6 @@ void ICEntry::trace(JSTracer* trc) {
         }
         break;
       }
-      case JSOP_POS: {
-        ICToNumber_Fallback::Compiler stubCompiler(cx);
-        if (!addIC(pc, stubCompiler.getStub(&stubSpace))) {
-          return nullptr;
-        }
-        break;
-      }
       case JSOP_LOOPENTRY: {
         ICWarmUpCounter_Fallback::Compiler stubCompiler(cx);
         if (!addIC(pc, stubCompiler.getStub(&stubSpace))) {
@@ -1927,40 +1920,6 @@ bool ICToBool_Fallback::Compiler::generateStubCode(MacroAssembler& masm) {
   pushStubPayload(masm, R0.scratchReg());
 
   return tailCallVM(fun, masm);
-}
-
-//
-// ToNumber_Fallback
-//
-
-static bool DoToNumberFallback(JSContext* cx, ICToNumber_Fallback* stub,
-                               HandleValue arg, MutableHandleValue ret) {
-  stub->incrementEnteredCount();
-  FallbackICSpew(cx, stub, "ToNumber");
-  ret.set(arg);
-  return ToNumber(cx, ret);
-}
-
-typedef bool (*DoToNumberFallbackFn)(JSContext*, ICToNumber_Fallback*,
-                                     HandleValue, MutableHandleValue);
-static const VMFunction DoToNumberFallbackInfo =
-    FunctionInfo<DoToNumberFallbackFn>(DoToNumberFallback, "DoToNumberFallback",
-                                       TailCall, PopValues(1));
-
-bool ICToNumber_Fallback::Compiler::generateStubCode(MacroAssembler& masm) {
-  MOZ_ASSERT(R0 == JSReturnOperand);
-
-  // Restore the tail call register.
-  EmitRestoreTailCallReg(masm);
-
-  // Ensure stack is fully synced for the expression decompiler.
-  masm.pushValue(R0);
-
-  // Push arguments.
-  masm.pushValue(R0);
-  masm.push(ICStubReg);
-
-  return tailCallVM(DoToNumberFallbackInfo, masm);
 }
 
 static void StripPreliminaryObjectStubs(JSContext* cx, ICFallbackStub* stub) {

@@ -1873,5 +1873,27 @@ const VMFunction GetSparseElementHelperInfo =
     FunctionInfo<GetSparseElementHelperFn>(GetSparseElementHelper,
                                            "getSparseElementHelper");
 
+#ifdef ENABLE_BIGINT
+template <bool allowBigInt = false>
+#endif
+static bool DoToNumeric(JSContext* cx, HandleValue arg,
+                        MutableHandleValue ret) {
+  ret.set(arg);
+#ifdef ENABLE_BIGINT
+  if (allowBigInt) {
+    return ToNumeric(cx, ret);
+  }
+#endif
+  return ToNumber(cx, ret);
+}
+
+typedef bool (*ToNumericFn)(JSContext*, HandleValue, MutableHandleValue);
+const VMFunction ToNumberInfo =
+    FunctionInfo<ToNumericFn>(DoToNumeric, "ToNumber");
+#ifdef ENABLE_BIGINT
+const VMFunction ToNumericInfo =
+    FunctionInfo<ToNumericFn>(DoToNumeric<true>, "ToNumeric");
+#endif
+
 }  // namespace jit
 }  // namespace js

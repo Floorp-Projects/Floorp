@@ -350,7 +350,7 @@
      *   Operands:
      *   Stack: val => (+val)
      */ \
-    MACRO(JSOP_POS, 35, "pos", "+ ", 1, 1, 1, JOF_BYTE|JOF_IC) \
+    MACRO(JSOP_POS, 35, "pos", "+ ", 1, 1, 1, JOF_BYTE) \
     /*
      * Looks up name on the environment chain and deletes it, pushes 'true'
      * onto the stack if succeeded (if the property was present and deleted or
@@ -2523,13 +2523,21 @@
      */ \
     MACRO(JSOP_DEC, 235, "dec", NULL, 1, 1, 1, JOF_BYTE|JOF_IC) \
     /*
+     * Pop 'val' from the stack, then push the result of 'ToNumeric(val)'.
+     *   Category: Operators
+     *   Type: Arithmetic Operators
+     *   Operands:
+     *   Stack: val => ToNumeric(val)
+     */ \
+    MACRO(JSOP_TONUMERIC, 236, "tonumeric", NULL, 1, 1, 1, JOF_BYTE) \
+    /*
      * Pushes a BigInt constant onto the stack.
      *   Category: Literals
      *   Type: Constants
      *   Operands: uint32_t constIndex
      *   Stack: => val
      */ \
-    IF_BIGINT(MACRO(JSOP_BIGINT, 236, "bigint", NULL, 5, 0, 1, JOF_BIGINT),)
+    IF_BIGINT(MACRO(JSOP_BIGINT, 237, "bigint", NULL, 5, 0, 1, JOF_BIGINT),)
 // clang-format on
 
 /*
@@ -2537,8 +2545,7 @@
  * a power of two.  Use this macro to do so.
  */
 #define FOR_EACH_TRAILING_UNUSED_OPCODE(MACRO) \
-  IF_BIGINT(, MACRO(236))                      \
-  MACRO(237)                                   \
+  IF_BIGINT(, MACRO(237))                      \
   MACRO(238)                                   \
   MACRO(239)                                   \
   MACRO(240)                                   \
