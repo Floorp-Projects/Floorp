@@ -302,8 +302,7 @@ interface nsIContentSecurityPolicy : nsISerializable
                    in nsISupports     aContext,
                    in ACString        aMimeTypeGuess,
                    in nsIURI          aOriginalURIIfRedirect,
-                   in bool            aSendViolationReports,
-                   in AString         aNonce);
+                   in bool            aSendViolationReports);
 
 %{ C++
 // nsIObserver topic to fire when the policy encounters a violation.

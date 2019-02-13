@@ -172,10 +172,6 @@ CSPService::ShouldLoad(nsIURI *aContentLocation, nsILoadInfo *aLoadInfo,
     return NS_OK;
   }
 
-  nsAutoString cspNonce;
-  rv = aLoadInfo->GetCspNonce(cspNonce);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // 1) Apply speculate CSP for preloads
   bool isPreload = nsContentUtils::IsPreloadType(contentType);
 
@@ -190,7 +186,7 @@ CSPService::ShouldLoad(nsIURI *aContentLocation, nsILoadInfo *aLoadInfo,
           contentType, cspEventListener, aContentLocation, requestOrigin,
           requestContext, aMimeTypeGuess,
           nullptr,  // no redirect, aOriginal URL is null.
-          aLoadInfo->GetSendCSPViolationEvents(), cspNonce, aDecision);
+          aLoadInfo->GetSendCSPViolationEvents(), aDecision);
       NS_ENSURE_SUCCESS(rv, rv);
 
       // if the preload policy already denied the load, then there
@@ -211,8 +207,7 @@ CSPService::ShouldLoad(nsIURI *aContentLocation, nsILoadInfo *aLoadInfo,
     rv = csp->ShouldLoad(contentType, cspEventListener, aContentLocation,
                          requestOrigin, requestContext, aMimeTypeGuess,
                          nullptr,  // no redirect, aOriginal URL is null.
-                         aLoadInfo->GetSendCSPViolationEvents(), cspNonce,
-                         aDecision);
+                         aLoadInfo->GetSendCSPViolationEvents(), aDecision);
     NS_ENSURE_SUCCESS(rv, rv);
   }
   return NS_OK;
@@ -256,6 +251,17 @@ CSPService::AsyncOnChannelRedirect(nsIChannel *oldChannel,
                                    nsIAsyncVerifyRedirectCallback *callback) {
   net::nsAsyncRedirectAutoCallback autoCallback(callback);
 
+  if (XRE_IsE10sParentProcess()) {
+    nsCOMPtr<nsIParentChannel> parentChannel;
+    NS_QueryNotificationCallbacks(oldChannel, parentChannel);
+    if (parentChannel) {
+      // This is an IPC'd channel. Don't check it here, because we won't have
+      // access to the request context; we'll check them in the content
+      // process instead. Bug 1509738 covers fixing this.
+      return NS_OK;
+    }
+  }
+
   nsCOMPtr<nsIURI> newUri;
   nsresult rv = newChannel->GetURI(getter_AddRefs(newUri));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -297,10 +303,6 @@ CSPService::AsyncOnChannelRedirect(nsIChannel *oldChannel,
     return rv;
   }
 
-  nsAutoString cspNonce;
-  rv = loadInfo->GetCspNonce(cspNonce);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   bool isPreload = nsContentUtils::IsPreloadType(policyType);
 
   /* On redirect, if the content policy is a preload type, rejecting the preload
@@ -328,7 +330,6 @@ CSPService::AsyncOnChannelRedirect(nsIChannel *oldChannel,
           EmptyCString(),  // ACString - MIME guess
           originalUri,     // Original nsIURI
           true,            // aSendViolationReports
-          cspNonce,        // nonce
           &aDecision);
 
       // if the preload policy already denied the load, then there
@@ -355,7 +356,6 @@ CSPService::AsyncOnChannelRedirect(nsIChannel *oldChannel,
                     EmptyCString(),  // ACString - MIME guess
                     originalUri,     // Original nsIURI
                     true,            // aSendViolationReports
-                    cspNonce,        // nonce
                     &aDecision);
   }
 
