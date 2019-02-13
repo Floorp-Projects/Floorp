@@ -78,7 +78,7 @@ nsresult nsDOMCSSAttributeDeclaration::SetCSSDeclaration(
 
   aDecl->SetDirty();
   return mIsSMILOverride
-             ? mElement->SetSMILOverrideStyleDeclaration(aDecl, true)
+             ? mElement->SetSMILOverrideStyleDeclaration(aDecl)
              : mElement->SetInlineStyleDeclaration(*aDecl, *aClosureData);
 }
 
