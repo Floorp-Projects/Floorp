@@ -16,22 +16,26 @@ namespace mozilla {
 class RemoteVideoDecoder;
 class RemoteDecoderModule;
 class VideoDecoderManagerChild;
+using mozilla::ipc::IPCResult;
 
 class VideoDecoderChild final : public PVideoDecoderChild,
                                 public IRemoteDecoderChild {
+  friend class PVideoDecoderChild;
+
  public:
   explicit VideoDecoderChild();
 
   // PVideoDecoderChild
-  mozilla::ipc::IPCResult RecvOutput(const VideoDataIPDL& aData) override;
-  mozilla::ipc::IPCResult RecvInputExhausted() override;
-  mozilla::ipc::IPCResult RecvDrainComplete() override;
-  mozilla::ipc::IPCResult RecvError(const nsresult& aError) override;
-  mozilla::ipc::IPCResult RecvInitComplete(
-      const nsCString& aDecoderDescription, const bool& aHardware,
-      const nsCString& aHardwareReason, const uint32_t& aConversion) override;
-  mozilla::ipc::IPCResult RecvInitFailed(const nsresult& aReason) override;
-  mozilla::ipc::IPCResult RecvFlushComplete() override;
+  IPCResult RecvOutput(const VideoDataIPDL& aData);
+  IPCResult RecvInputExhausted();
+  IPCResult RecvDrainComplete();
+  IPCResult RecvError(const nsresult& aError);
+  IPCResult RecvInitComplete(const nsCString& aDecoderDescription,
+                             const bool& aHardware,
+                             const nsCString& aHardwareReason,
+                             const uint32_t& aConversion);
+  IPCResult RecvInitFailed(const nsresult& aReason);
+  IPCResult RecvFlushComplete();
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 

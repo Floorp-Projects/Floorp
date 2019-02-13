@@ -17,8 +17,11 @@
 namespace mozilla {
 
 class KnowsCompositorVideo;
+using mozilla::ipc::IPCResult;
 
 class VideoDecoderParent final : public PVideoDecoderParent {
+  friend class PVideoDecoderParent;
+
  public:
   // We refcount this class since the task queue can have runnables
   // that reference us.
@@ -34,12 +37,12 @@ class VideoDecoderParent final : public PVideoDecoderParent {
   void Destroy();
 
   // PVideoDecoderParent
-  mozilla::ipc::IPCResult RecvInit() override;
-  mozilla::ipc::IPCResult RecvInput(const MediaRawDataIPDL& aData) override;
-  mozilla::ipc::IPCResult RecvFlush() override;
-  mozilla::ipc::IPCResult RecvDrain() override;
-  mozilla::ipc::IPCResult RecvShutdown() override;
-  mozilla::ipc::IPCResult RecvSetSeekThreshold(const int64_t& aTime) override;
+  IPCResult RecvInit();
+  IPCResult RecvInput(const MediaRawDataIPDL& aData);
+  IPCResult RecvFlush();
+  IPCResult RecvDrain();
+  IPCResult RecvShutdown();
+  IPCResult RecvSetSeekThreshold(const int64_t& aTime);
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
