@@ -65,3 +65,7 @@
 --arm-sim-icache-checks
 --arm-asm-nop-fill=1
 --arm-hwcap=vfp
+
+# Profiling, code coverage, and debugging
+# --dump-bytecode option implies --code-coverage
+--dump-bytecode
