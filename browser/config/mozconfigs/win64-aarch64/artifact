@@ -1,0 +1,13 @@
+. "$topsrcdir/build/mozconfig.artifact.automation"
+
+# Needed to set SourceRepository in application.ini (used by Talos)
+export MOZILLA_OFFICIAL=1
+
+. "$topsrcdir/browser/config/mozconfigs/win64-aarch64/common-win64"
+. "$topsrcdir/browser/config/mozconfigs/common"
+. "$topsrcdir/build/mozconfig.win-common"
+. "$topsrcdir/build/win64-aarch64/mozconfig.vs-latest"
+. "$topsrcdir/build/mozconfig.common.override"
+
+. "$topsrcdir/build/mozconfig.artifact"
+ac_add_options --enable-artifact-build-symbols
