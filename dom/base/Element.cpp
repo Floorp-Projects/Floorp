@@ -978,7 +978,11 @@ nsRect Element::GetClientAreaRect() {
   nsIScrollableFrame* sf = GetScrollFrame(&frame);
 
   if (sf) {
-    return sf->GetScrollPortRect();
+    nsRect scrollPort = sf->GetScrollPortRect();
+    // The scroll port value might be expanded to the minimum scale size, we
+    // should limit the size to the ICB in such cases.
+    scrollPort.SizeTo(sf->GetLayoutSize());
+    return scrollPort;
   }
 
   if (frame &&
