@@ -207,15 +207,12 @@ package org.mozilla.geckoview {
 
   @android.support.annotation.AnyThread public final class GeckoRuntimeSettings extends org.mozilla.geckoview.RuntimeSettings {
     method @android.support.annotation.NonNull public java.lang.String[] getArguments();
-    method public boolean getAutomaticFontSizeAdjustment();
     method public boolean getConsoleOutputEnabled();
     method @android.support.annotation.NonNull public org.mozilla.geckoview.ContentBlocking.Settings getContentBlocking();
     method @android.support.annotation.Nullable public java.lang.Class<?> getCrashHandler();
     method @android.support.annotation.Nullable public java.lang.Float getDisplayDensityOverride();
     method @android.support.annotation.Nullable public java.lang.Integer getDisplayDpiOverride();
     method @android.support.annotation.NonNull public android.os.Bundle getExtras();
-    method public boolean getFontInflationEnabled();
-    method public float getFontSizeFactor();
     method public boolean getJavaScriptEnabled();
     method @android.support.annotation.Nullable public java.lang.String[] getLocales();
     method public boolean getPauseForDebuggerEnabled();
@@ -225,10 +222,7 @@ package org.mozilla.geckoview {
     method public boolean getUseContentProcessHint();
     method public boolean getUseMaxScreenDepth();
     method public boolean getWebFontsEnabled();
-    method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings setAutomaticFontSizeAdjustment(boolean);
     method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings setConsoleOutputEnabled(boolean);
-    method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings setFontInflationEnabled(boolean);
-    method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings setFontSizeFactor(float);
     method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings setJavaScriptEnabled(boolean);
     method public void setLocales(@android.support.annotation.Nullable java.lang.String[]);
     method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings setRemoteDebuggingEnabled(boolean);
@@ -239,15 +233,12 @@ package org.mozilla.geckoview {
   @android.support.annotation.AnyThread public static final class GeckoRuntimeSettings.Builder extends org.mozilla.geckoview.RuntimeSettings.Builder<Settings extends org.mozilla.geckoview.RuntimeSettings> {
     ctor public Builder();
     method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings.Builder arguments(@android.support.annotation.NonNull java.lang.String[]);
-    method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings.Builder automaticFontSizeAdjustment(boolean);
     method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings.Builder consoleOutput(boolean);
     method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings.Builder contentBlocking(@android.support.annotation.NonNull org.mozilla.geckoview.ContentBlocking.Settings);
     method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings.Builder crashHandler(java.lang.Class<?>);
     method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings.Builder displayDensityOverride(float);
     method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings.Builder displayDpiOverride(int);
     method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings.Builder extras(@android.support.annotation.NonNull android.os.Bundle);
-    method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings.Builder fontInflation(boolean);
-    method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings.Builder fontSizeFactor(float);
     method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings.Builder javaScriptEnabled(boolean);
     method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings.Builder locales(java.lang.String[]);
     method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings.Builder pauseForDebugger(boolean);
