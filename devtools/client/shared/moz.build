@@ -30,6 +30,7 @@ DevToolsModules(
     'devices.js',
     'DOMHelpers.jsm',
     'enum.js',
+    'events.js',
     'file-saver.js',
     'focus.js',
     'getjson.js',
