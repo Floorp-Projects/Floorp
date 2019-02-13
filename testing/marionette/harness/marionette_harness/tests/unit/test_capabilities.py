@@ -19,6 +19,7 @@ class TestCapabilities(MarionetteTestCase):
                   name: Services.appinfo.name,
                   version: Services.appinfo.version,
                   processID: Services.appinfo.processID,
+                  buildID: Services.appinfo.appBuildID,
                 }
                 """)
             self.os_name = self.marionette.execute_script("""
@@ -103,6 +104,8 @@ class TestCapabilities(MarionetteTestCase):
         self.assertIn("moz:accessibilityChecks", self.caps)
         self.assertFalse(self.caps["moz:accessibilityChecks"])
 
+        self.assertIn("moz:buildID", self.caps)
+        self.assertEqual(self.caps["moz:buildID"], self.appinfo["buildID"])
         self.assertIn("moz:useNonSpecCompliantPointerOrigin", self.caps)
         self.assertFalse(self.caps["moz:useNonSpecCompliantPointerOrigin"])
 
@@ -232,4 +235,3 @@ class TestCapabilityMatching(MarionetteTestCase):
             print("invalid unhandled prompt behavior {}".format(behavior))
             with self.assertRaisesRegexp(SessionNotCreatedException, "InvalidArgumentError"):
                 self.marionette.start_session({"unhandledPromptBehavior": behavior})
-
