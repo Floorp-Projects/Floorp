@@ -8,6 +8,8 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.support.annotation.DrawableRes
+import android.support.annotation.StringRes
 import android.support.v4.content.ContextCompat
 import android.view.View
 import mozilla.components.browser.session.SelectionAwareSessionObserver
@@ -15,6 +17,7 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.permission.Permission
 import mozilla.components.concept.engine.permission.Permission.ContentGeoLocation
+import mozilla.components.concept.engine.permission.Permission.ContentNotification
 import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.ui.doorhanger.DoorhangerPrompt
@@ -144,7 +147,20 @@ class SitePermissionsFeature(
 
         val prompt = when (permission) {
             is ContentGeoLocation -> {
-                createPromptForLocationPermission(context, uriString, buttons)
+                createSinglePermissionPrompt(context,
+                        uriString,
+                        R.string.mozac_feature_sitepermissions_location_title,
+                        R.drawable.mozac_ic_location,
+                        buttons)
+            }
+            is ContentNotification -> {
+                createSinglePermissionPrompt(
+                        context,
+                        uriString,
+                        R.string.mozac_feature_sitepermissions_notification_title,
+                        R.drawable.mozac_ic_notification,
+                        buttons
+                )
             }
             else ->
                 throw InvalidParameterException("$permission is not a valid permission.")
@@ -155,13 +171,15 @@ class SitePermissionsFeature(
     }
 
     @SuppressLint("VisibleForTests")
-    private fun createPromptForLocationPermission(
+    private fun createSinglePermissionPrompt(
         context: Context,
         uriString: String,
+        @StringRes titleId: Int,
+        @DrawableRes iconId: Int,
         buttons: List<DoorhangerPrompt.Button>
     ): DoorhangerPrompt {
-        val title = context.getString(R.string.mozac_feature_sitepermissions_location_title, uriString)
-        val drawable = ContextCompat.getDrawable(context, R.drawable.mozac_ic_location)
+        val title = context.getString(titleId, uriString)
+        val drawable = ContextCompat.getDrawable(context, iconId)
 
         return DoorhangerPrompt(
             title = title,

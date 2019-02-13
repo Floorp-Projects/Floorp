@@ -13,6 +13,7 @@ import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.permission.Permission
 import mozilla.components.concept.engine.permission.Permission.ContentGeoLocation
+import mozilla.components.concept.engine.permission.Permission.ContentNotification
 import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.support.base.observer.Consumable
 import mozilla.components.support.test.mock
@@ -124,57 +125,66 @@ class SitePermissionsFeatureTest {
         val session = getSelectedSession()
         var grantWasCalled = false
 
-        val permissionRequest: PermissionRequest = object : PermissionRequest {
-            override val uri: String?
-                get() = "http://www.mozilla.org"
-            override val permissions: List<Permission>
-                get() = listOf(ContentGeoLocation())
+        val permissions = listOf(ContentGeoLocation(), ContentNotification())
 
-            override fun grant(permissions: List<Permission>) {
-                grantWasCalled = true
+        permissions.forEach { permission ->
+
+            val permissionRequest: PermissionRequest = object : PermissionRequest {
+                override val uri: String?
+                    get() = "http://www.mozilla.org"
+                override val permissions: List<Permission>
+                    get() = listOf(permission)
+
+                override fun grant(permissions: List<Permission>) {
+                    grantWasCalled = true
+                }
+
+                override fun reject() = Unit
             }
 
-            override fun reject() = Unit
+            session.contentPermissionRequest = Consumable.from(permissionRequest)
+
+            val prompt = sitePermissionFeature.onContentPermissionRequested(session, permissionRequest)
+
+            val positiveButton = prompt.buttons.find { it.positive }
+            positiveButton?.onClick?.invoke()
+
+            assertTrue(grantWasCalled)
+            assertTrue(session.contentPermissionRequest.isConsumed())
         }
-
-        session.contentPermissionRequest = Consumable.from(permissionRequest)
-
-        val prompt = sitePermissionFeature.onContentPermissionRequested(session, permissionRequest)
-
-        val positiveButton = prompt.buttons.find { it.positive }
-        positiveButton?.onClick?.invoke()
-
-        assertTrue(grantWasCalled)
-        assertTrue(session.contentPermissionRequest.isConsumed())
     }
 
     @Test
-    fun `rejecting a location content permission must call reject and consume contentPermissionRequest`() {
+    fun `rejecting a content permission must call reject and consume contentPermissionRequest`() {
         val session = getSelectedSession()
         var grantWasCalled = false
 
-        val permissionRequest: PermissionRequest = object : PermissionRequest {
-            override val uri: String?
-                get() = "http://www.mozilla.org"
-            override val permissions: List<Permission>
-                get() = listOf(ContentGeoLocation())
+        val permissions = listOf(ContentGeoLocation(), ContentNotification())
 
-            override fun reject() {
-                grantWasCalled = true
+        permissions.forEach { permission ->
+            val permissionRequest: PermissionRequest = object : PermissionRequest {
+                override val uri: String?
+                    get() = "http://www.mozilla.org"
+                override val permissions: List<Permission>
+                    get() = listOf(permission)
+
+                override fun reject() {
+                    grantWasCalled = true
+                }
+
+                override fun grant(permissions: List<Permission>) = Unit
             }
 
-            override fun grant(permissions: List<Permission>) = Unit
+            session.contentPermissionRequest = Consumable.from(permissionRequest)
+
+            val prompt = sitePermissionFeature.onContentPermissionRequested(session, permissionRequest)
+
+            val negativeButton = prompt.buttons.find { !it.positive }
+            negativeButton!!.onClick!!.invoke()
+
+            assertTrue(grantWasCalled)
+            assertTrue(session.contentPermissionRequest.isConsumed())
         }
-
-        session.contentPermissionRequest = Consumable.from(permissionRequest)
-
-        val prompt = sitePermissionFeature.onContentPermissionRequested(session, permissionRequest)
-
-        val negativeButton = prompt.buttons.find { !it.positive }
-        negativeButton!!.onClick!!.invoke()
-
-        assertTrue(grantWasCalled)
-        assertTrue(session.contentPermissionRequest.isConsumed())
     }
 
     @Test
