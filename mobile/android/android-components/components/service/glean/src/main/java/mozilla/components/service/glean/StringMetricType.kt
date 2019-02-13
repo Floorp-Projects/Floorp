@@ -7,6 +7,8 @@ package mozilla.components.service.glean
 import android.support.annotation.VisibleForTesting
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import mozilla.components.service.glean.error.ErrorRecording.ErrorType
+import mozilla.components.service.glean.error.ErrorRecording.recordError
 import mozilla.components.service.glean.storages.StringsStorageEngine
 import mozilla.components.support.base.log.logger.Logger
 
@@ -46,15 +48,18 @@ data class StringMetricType(
      * exceeds [MAX_LENGTH_VALUE] characters, it will be truncated.
      */
     fun set(value: String) {
-        // TODO report errors through other special metrics handled by the SDK. See bug 1499761.
-
         if (!shouldRecord(logger)) {
             return
         }
 
         val truncatedValue = value.let {
             if (it.length > MAX_LENGTH_VALUE) {
-                logger.warn("String length ${it.length} > $MAX_LENGTH_VALUE")
+                recordError(
+                    this,
+                    ErrorType.InvalidValue,
+                    "Value length ${it.length} exceeds maximum of $MAX_LENGTH_VALUE",
+                    logger
+                )
                 return@let it.substring(0, MAX_LENGTH_VALUE)
             }
             it

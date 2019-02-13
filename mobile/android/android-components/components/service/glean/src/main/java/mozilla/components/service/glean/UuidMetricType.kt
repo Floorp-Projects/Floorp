@@ -59,8 +59,6 @@ data class UuidMetricType(
      * @param value a valid [UUID] to set the metric to
      */
     fun set(value: UUID) {
-        // TODO report errors through other special metrics handled by the SDK. See bug 1499761.
-
         if (!shouldRecord(logger)) {
             return
         }

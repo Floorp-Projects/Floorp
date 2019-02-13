@@ -7,6 +7,8 @@ package mozilla.components.service.glean.storages
 import android.annotation.SuppressLint
 import android.content.SharedPreferences
 import mozilla.components.service.glean.CommonMetricData
+import mozilla.components.service.glean.error.ErrorRecording.ErrorType
+import mozilla.components.service.glean.error.ErrorRecording.recordError
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.org.json.toList
 import org.json.JSONArray
@@ -80,10 +82,13 @@ internal open class StringListsStorageEngineImplementation(
         // Use a custom combiner to add the string to the existing list rather than overwriting
         super.recordScalar(metricData, listOf(value), null) { currentValue, newValue ->
             currentValue?.let {
-                if (it.count() + value.count() > MAX_LIST_LENGTH_VALUE) {
-                    logger.warn("${metricData.category}.${metricData.name} - " +
-                                "discarding extra values. List limit $MAX_LIST_LENGTH_VALUE " +
-                                "reached.")
+                if (it.count() + 1 > MAX_LIST_LENGTH_VALUE) {
+                    recordError(
+                        metricData,
+                        ErrorType.InvalidValue,
+                        "String list length of ${it.count() + 1} exceeds maximum of $MAX_LIST_LENGTH_VALUE",
+                        logger
+                    )
                 }
 
                 it + newValue.take(MAX_LIST_LENGTH_VALUE - it.count())
@@ -105,8 +110,12 @@ internal open class StringListsStorageEngineImplementation(
         value: List<String>
     ) {
         if (value.count() > MAX_LIST_LENGTH_VALUE) {
-            logger.warn("${metricData.category}.${metricData.name} - " +
-                        "discarding extra values. List limit reached")
+            recordError(
+                metricData,
+                ErrorType.InvalidValue,
+                "String list length of ${value.count()} exceeds maximum of $MAX_LIST_LENGTH_VALUE",
+                logger
+            )
         }
 
         super.recordScalar(metricData, value.take(MAX_LIST_LENGTH_VALUE))

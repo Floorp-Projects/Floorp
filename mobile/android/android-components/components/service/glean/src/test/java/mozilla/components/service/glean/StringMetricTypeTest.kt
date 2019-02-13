@@ -6,6 +6,8 @@ package mozilla.components.service.glean
 
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ObsoleteCoroutinesApi
+import mozilla.components.service.glean.error.ErrorRecording.ErrorType
+import mozilla.components.service.glean.error.ErrorRecording.testGetNumRecordedErrors
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -84,6 +86,9 @@ class StringMetricTypeTest {
             "01234567890123456789012345678901234567890123456789",
             stringMetric.testGetValue()
         )
+
+        // Make sure the error has been recorded
+        assertEquals(1, testGetNumRecordedErrors(stringMetric, ErrorType.InvalidValue))
     }
 
     @Test

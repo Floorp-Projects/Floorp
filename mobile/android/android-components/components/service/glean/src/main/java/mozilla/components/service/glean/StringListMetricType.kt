@@ -7,6 +7,8 @@ package mozilla.components.service.glean
 import android.support.annotation.VisibleForTesting
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import mozilla.components.service.glean.error.ErrorRecording.ErrorType
+import mozilla.components.service.glean.error.ErrorRecording.recordError
 import mozilla.components.service.glean.storages.StringListsStorageEngine
 import mozilla.components.support.base.log.logger.Logger
 
@@ -51,15 +53,18 @@ data class StringListMetricType(
      *              this string is [MAX_STRING_LENGTH].
      */
     fun add(value: String) {
-        // TODO report errors through other special metrics handled by the SDK. See bug 1499761.
-
         if (!shouldRecord(logger)) {
             return
         }
 
         val truncatedValue = value.let {
             if (it.length > MAX_STRING_LENGTH) {
-                logger.warn("$category.$name - string too long ${it.length} > $MAX_STRING_LENGTH")
+                recordError(
+                    this,
+                    ErrorType.InvalidValue,
+                    "Individual value length ${it.length} exceeds maximum of $MAX_STRING_LENGTH",
+                    logger
+                )
                 return@let it.substring(0, MAX_STRING_LENGTH)
             }
             it
@@ -85,15 +90,18 @@ data class StringListMetricType(
      *              up to the [StringListsStorageEngine.MAX_LIST_LENGTH_VALUE], will still be recorded.
      */
     fun set(value: List<String>) {
-        // TODO report errors through other special metrics handled by the SDK. See bug 1499761.
-
         if (!shouldRecord(logger)) {
             return
         }
 
         val stringList = value.map {
             if (it.length > MAX_STRING_LENGTH) {
-                logger.warn("$category.$name - string too long ${it.length} > $MAX_STRING_LENGTH")
+                recordError(
+                    this,
+                    ErrorType.InvalidValue,
+                    "Individual value length ${it.length} exceeds maximum of $MAX_STRING_LENGTH",
+                    logger
+                )
             }
             it.take(MAX_STRING_LENGTH)
         }

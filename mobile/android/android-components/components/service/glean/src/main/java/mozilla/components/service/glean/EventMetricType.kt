@@ -8,6 +8,8 @@ import android.os.SystemClock
 import android.support.annotation.VisibleForTesting
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import mozilla.components.service.glean.error.ErrorRecording.ErrorType
+import mozilla.components.service.glean.error.ErrorRecording.recordError
 import mozilla.components.service.glean.storages.EventsStorageEngine
 import mozilla.components.service.glean.storages.RecordedEventData
 import mozilla.components.support.base.log.logger.Logger
@@ -51,7 +53,6 @@ data class EventMetricType(
      */
     @Suppress("ReturnCount")
     fun record(extra: Map<String, String>? = null) {
-        // TODO report errors through other special metrics handled by the SDK. See bug 1499761.
         if (!shouldRecord(logger)) {
             return
         }
@@ -64,18 +65,33 @@ data class EventMetricType(
         // Check if the provided extra keys are allowed and have sane values.
         val truncatedExtraKeys = extra?.toMutableMap()?.let { eventKeys ->
             if (allowedExtraKeys == null) {
-                logger.error("Cannot use extra keys are no extra keys are defined.")
+                recordError(
+                    this,
+                    ErrorType.InvalidValue,
+                    "Cannot use extra keys when there are no extra keys defined.",
+                    logger
+                )
                 return
             }
 
             for ((key, extraValue) in eventKeys) {
                 if (!allowedExtraKeys.contains(key)) {
-                    logger.error("$key extra key is not allowed for $category.$name.")
+                    recordError(
+                        this,
+                        ErrorType.InvalidValue,
+                        "Extra key '$key' is not allowed",
+                        logger
+                    )
                     return
                 }
 
                 if (extraValue.length > MAX_LENGTH_EXTRA_KEY_VALUE) {
-                    logger.warn("$extraValue for $key is too long for $category.$name, truncating.")
+                    recordError(
+                        this,
+                        ErrorType.InvalidValue,
+                        "Extra key length ${extraValue.length} exceeds maximum of $MAX_LENGTH_EXTRA_KEY_VALUE",
+                        logger
+                    )
                     eventKeys[key] = extraValue.substring(0, MAX_LENGTH_EXTRA_KEY_VALUE)
                 }
             }

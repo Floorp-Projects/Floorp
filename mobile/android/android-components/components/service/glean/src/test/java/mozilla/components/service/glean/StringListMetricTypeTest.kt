@@ -7,6 +7,8 @@ package mozilla.components.service.glean
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import mozilla.components.service.glean.StringListMetricType.Companion.MAX_STRING_LENGTH
+import mozilla.components.service.glean.error.ErrorRecording.ErrorType
+import mozilla.components.service.glean.error.ErrorRecording.testGetNumRecordedErrors
 import mozilla.components.service.glean.storages.StringListsStorageEngineImplementation
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -139,6 +141,8 @@ class StringListMetricTypeTest {
         assertEquals(1, snapshot.size)
         assertTrue(stringListMetric.testHasValue())
         assertEquals(longString.take(MAX_STRING_LENGTH), snapshot[0])
+
+        assertEquals(2, testGetNumRecordedErrors(stringListMetric, ErrorType.InvalidValue))
     }
 
     @Test
@@ -163,6 +167,7 @@ class StringListMetricTypeTest {
             StringListsStorageEngineImplementation.MAX_LIST_LENGTH_VALUE,
             snapshot.count()
         )
+        assertEquals(1, testGetNumRecordedErrors(stringListMetric, ErrorType.InvalidValue))
     }
 
     @Test

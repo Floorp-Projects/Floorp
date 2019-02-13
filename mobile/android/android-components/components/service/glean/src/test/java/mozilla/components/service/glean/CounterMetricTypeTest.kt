@@ -6,6 +6,8 @@ package mozilla.components.service.glean
 
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ObsoleteCoroutinesApi
+import mozilla.components.service.glean.error.ErrorRecording.ErrorType
+import mozilla.components.service.glean.error.ErrorRecording.testGetNumRecordedErrors
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -109,6 +111,9 @@ class CounterMetricTypeTest {
         // Check that nothing was recorded.
         assertFalse("Counters must not be recorded if incremented with negative",
             counterMetric.testHasValue())
+
+        // Make sure that the errors have been recorded
+        assertEquals(2, testGetNumRecordedErrors(counterMetric, ErrorType.InvalidValue))
     }
 
     @Test

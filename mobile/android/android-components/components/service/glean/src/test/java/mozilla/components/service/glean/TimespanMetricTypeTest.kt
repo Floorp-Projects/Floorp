@@ -1,5 +1,8 @@
 package mozilla.components.service.glean
 
+import mozilla.components.service.glean.error.ErrorRecording.ErrorType
+import mozilla.components.service.glean.error.ErrorRecording.testGetNumRecordedErrors
+import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -115,5 +118,28 @@ class TimespanMetricTypeTest {
         // Check that data was properly recorded in the second ping.
         assertTrue(metric.testHasValue("store2"))
         assertTrue(metric.testGetValue("store2") >= 0)
+    }
+
+    @Test
+    fun `Records an error if started twice`() {
+        // Define a timespan metric, which will be stored in "store1" and "store2"
+        val metric = TimespanMetricType(
+            disabled = false,
+            category = "telemetry",
+            lifetime = Lifetime.Application,
+            name = "timespan_metric",
+            sendInPings = listOf("store1", "store2"),
+            timeUnit = TimeUnit.Millisecond
+        )
+
+        // Record a timespan.
+        metric.start()
+        metric.start()
+        metric.stopAndSum()
+
+        // Check that data was properly recorded in the second ping.
+        assertTrue(metric.testHasValue("store2"))
+        assertTrue(metric.testGetValue("store2") >= 0)
+        assertEquals(1, testGetNumRecordedErrors(metric, ErrorType.InvalidValue))
     }
 }

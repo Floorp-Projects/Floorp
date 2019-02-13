@@ -40,8 +40,6 @@ data class BooleanMetricType(
      * @param value This is a user defined boolean value.
      */
     fun set(value: Boolean) {
-        // TODO report errors through other special metrics handled by the SDK. See bug 1499761.
-
         if (!shouldRecord(logger)) {
             return
         }

@@ -14,6 +14,7 @@ import mozilla.components.service.glean.storages.StringListsStorageEngine
 import mozilla.components.service.glean.storages.StringsStorageEngine
 import mozilla.components.service.glean.storages.TimespansStorageEngine
 import mozilla.components.service.glean.storages.UuidsStorageEngine
+import mozilla.components.service.glean.error.ErrorRecording
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -229,7 +230,7 @@ class LabeledMetricTypeTest {
     }
 
     @Test
-    fun `Ensure non-snake_case labels go to __other__`() {
+    fun `Ensure invalid labels go to __other__`() {
         CountersStorageEngine.clearAllStores()
 
         val counterMetric = CounterMetricType(
@@ -257,10 +258,17 @@ class LabeledMetricTypeTest {
             1
         )
 
-        val snapshot = CountersStorageEngine.getSnapshot(storeName = "metrics", clearStore = false)
-
-        assertEquals(1, snapshot!!.size)
-        assertEquals(4, snapshot.get("telemetry.labeled_counter_metric/__other__"))
+        assertEquals(
+            4,
+            ErrorRecording.testGetNumRecordedErrors(
+                labeledCounterMetric,
+                ErrorRecording.ErrorType.InvalidValue
+            )
+        )
+        assertEquals(
+            4,
+            labeledCounterMetric["__other__"].testGetValue()
+        )
     }
 
     @Test

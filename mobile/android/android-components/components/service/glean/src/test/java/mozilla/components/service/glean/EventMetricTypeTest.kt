@@ -7,6 +7,8 @@ package mozilla.components.service.glean
 import android.os.SystemClock
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ObsoleteCoroutinesApi
+import mozilla.components.service.glean.error.ErrorRecording.ErrorType
+import mozilla.components.service.glean.error.ErrorRecording.testGetNumRecordedErrors
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Assert.assertFalse
@@ -171,6 +173,7 @@ class EventMetricTypeTest {
         // Check that nothing was recorded.
         assertFalse("Events must not be recorded if they use unknown extra keys",
             testEvent.testHasValue())
+        assertEquals(1, testGetNumRecordedErrors(testEvent, ErrorType.InvalidValue))
     }
 
     @Test
@@ -190,6 +193,7 @@ class EventMetricTypeTest {
         // Check that nothing was recorded.
         assertFalse("Events must not be recorded if they use unknown extra keys",
             testEvent.testHasValue())
+        assertEquals(1, testGetNumRecordedErrors(testEvent, ErrorType.InvalidValue))
     }
 
     @Test
@@ -219,6 +223,7 @@ class EventMetricTypeTest {
             "extra1" to testValue,
             "truncatedExtra" to (testValue.repeat(10)).substring(0, EventMetricType.MAX_LENGTH_EXTRA_KEY_VALUE)
         ) == snapshot.first().extra)
+        assertEquals(1, testGetNumRecordedErrors(testEvent, ErrorType.InvalidValue))
     }
 
     @Test(expected = NullPointerException::class)

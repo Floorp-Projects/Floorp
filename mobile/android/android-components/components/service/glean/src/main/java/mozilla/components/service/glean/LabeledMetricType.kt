@@ -6,6 +6,8 @@ package mozilla.components.service.glean
 
 import mozilla.components.service.glean.storages.StorageEngine
 import mozilla.components.service.glean.storages.StorageEngineManager
+import mozilla.components.service.glean.error.ErrorRecording.ErrorType
+import mozilla.components.service.glean.error.ErrorRecording.recordError
 import mozilla.components.support.base.log.logger.Logger
 
 /**
@@ -40,6 +42,7 @@ data class LabeledMetricType<T>(
         private const val MAX_LABELS = 16
         private const val OTHER_LABEL = "__other__"
         private val labelRegex = Regex("^[a-z_][a-z0-9_]{0,29}$")
+        private const val MAX_LABEL_LENGTH = 30
     }
 
     private val seenLabels: MutableSet<String> = mutableSetOf()
@@ -68,6 +71,7 @@ data class LabeledMetricType<T>(
      * @param label The label, as specified by the user
      * @return adjusted label, possibly set to [OTHER_LABEL]
      */
+    @Suppress("ReturnCount")
     private fun getFinalDynamicLabel(label: String): String {
         if (lifetime != Lifetime.Application && seenLabels.size == 0) {
             // TODO 1530733: This might cause I/O on the main thread if this is the
@@ -87,9 +91,24 @@ data class LabeledMetricType<T>(
             if (seenLabels.size >= MAX_LABELS) {
                 return OTHER_LABEL
             } else {
+                if (label.length > MAX_LABEL_LENGTH) {
+                    recordError(
+                        this,
+                        ErrorType.InvalidValue,
+                        "label length ${label.length} exceeds maximum of $MAX_LABEL_LENGTH",
+                        logger
+                    )
+                    return OTHER_LABEL
+                }
+
                 // Labels must be snake_case.
                 if (!labelRegex.matches(label)) {
-                    logger.error("Labels must be snake_case and < 30 characters. Got '$label'")
+                    recordError(
+                        this,
+                        ErrorType.InvalidValue,
+                        "label must be snake_case, got '$label'",
+                        logger
+                    )
                     return OTHER_LABEL
                 }
                 seenLabels.add(label)

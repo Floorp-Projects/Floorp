@@ -10,6 +10,8 @@ import android.os.SystemClock
 import android.support.annotation.VisibleForTesting
 import mozilla.components.service.glean.CommonMetricData
 import mozilla.components.service.glean.TimeUnit
+import mozilla.components.service.glean.error.ErrorRecording.ErrorType
+import mozilla.components.service.glean.error.ErrorRecording.recordError
 
 import mozilla.components.support.base.log.logger.Logger
 import org.json.JSONArray
@@ -58,7 +60,6 @@ internal open class TimespansStorageEngineImplementation(
         // the desired time unit together with the raw values. We unpersist the first element
         // in the array as the time unit, the second as the raw Long value.
         if (jsonArray == null || jsonArray.length() != 2) {
-            // TODO report errors through other special metrics handled by the SDK. See bug 1499761.
             logger.error("Unexpected format found when deserializing $metricName")
             return null
         }
@@ -142,8 +143,12 @@ internal open class TimespansStorageEngineImplementation(
         val timespanName = metricData.identifier
 
         if (timespanName in uncommittedStartTimes) {
-            // TODO report errors if already tracking time through internal metrics. See bug 1499761.
-            logger.error("$timespanName already started")
+            recordError(
+                metricData,
+                ErrorType.InvalidValue,
+                "Timespan already started",
+                logger
+            )
             return
         }
 
@@ -164,7 +169,6 @@ internal open class TimespansStorageEngineImplementation(
         metricData: CommonMetricData,
         timeUnit: TimeUnit
     ) {
-        // TODO report errors if not tracking time through internal metrics. See bug 1499761.
         // Look for the start time: if it's there, commit the timespan.
         val timespanName = metricData.identifier
         uncommittedStartTimes.remove(timespanName)?.let { startTime ->
