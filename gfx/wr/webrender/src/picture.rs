@@ -1646,8 +1646,6 @@ impl<'a> PictureUpdateState<'a> {
         clip_store: &ClipStore,
         clip_data_store: &ClipDataStore,
     ) {
-        profile_marker!("UpdatePictures");
-
         let mut state = PictureUpdateState {
             surfaces,
             surface_stack: vec![SurfaceIndex(0)],
