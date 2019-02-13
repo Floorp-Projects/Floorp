@@ -15,7 +15,7 @@ git config --global user.name "MickeyMoz"
 ./gradlew clean docs
 rm -rf docs/api
 mkdir docs/api
-cp -R build/javadoc/android-components/ docs/api
+cp -R build/javadoc/android-components/* docs/api/
 
 # Timestamp used in branch name and commit
 TIMESTAMP=`date "+%Y%m%d-%H%M%S"`
