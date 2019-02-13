@@ -117,8 +117,8 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
 
         if (Intent.ACTION_VIEW == action && data != null) {
             val url = Uri.parse(data)
-            val code = url.getQueryParameter("code")
-            val state = url.getQueryParameter("state")
+            val code = url.getQueryParameter("code")!!
+            val state = url.getQueryParameter("state")!!
             displayAndPersistProfile(code, state)
         }
     }

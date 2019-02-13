@@ -27,8 +27,8 @@ class LoginFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.let {
-            authUrl = it.getString(AUTH_URL)
-            redirectUrl = it.getString(REDIRECT_URL)
+            authUrl = it.getString(AUTH_URL)!!
+            redirectUrl = it.getString(REDIRECT_URL)!!
         }
     }
 
