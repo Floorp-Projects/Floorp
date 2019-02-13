@@ -25,6 +25,9 @@ add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
   let variables = frame.environment.bindings.variables;
   Assert.equal(variables.i.value.type, "undefined");
 
+  const location2 = { sourceUrl: sourceClient.url, line: 7 };
+  setBreakpoint(threadClient, location2);
+
   packet = await executeOnNextTickAndWaitForPause(
     () => resume(threadClient),
     client
@@ -36,9 +39,9 @@ add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
   frame = packet.frame;
   where = frame.where;
   Assert.equal(where.actor, source.actor);
-  Assert.equal(where.line, location.line);
+  Assert.equal(where.line, location2.line);
   variables = frame.environment.bindings.variables;
-  Assert.equal(variables.i.value, 0);
+  Assert.equal(variables.i.value, 1);
 
   await resume(threadClient);
 }, { doNotRunWorker: true }));
