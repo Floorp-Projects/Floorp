@@ -4,6 +4,8 @@
 
 package org.mozilla.geckoview.test
 
+import android.provider.Settings
+import android.support.test.InstrumentationRegistry
 import android.support.test.filters.MediumTest
 import android.support.test.runner.AndroidJUnit4
 import org.hamcrest.Matchers.*
@@ -17,6 +19,58 @@ import kotlin.math.roundToInt
 @MediumTest
 @ReuseSession(false)
 class RuntimeSettingsTest : BaseSessionTest() {
+
+    @Test fun automaticFontSize() {
+        val settings = sessionRule.runtime.settings
+        var initialFontSize = 2.15f
+        var initialFontInflation = true
+        settings.fontSizeFactor = initialFontSize
+        assertThat("initial font scale $initialFontSize set",
+                settings.fontSizeFactor.toDouble(), closeTo(initialFontSize.toDouble(), 0.05))
+        settings.fontInflationEnabled = initialFontInflation
+        assertThat("font inflation initially set to $initialFontInflation",
+                settings.fontInflationEnabled, `is`(initialFontInflation))
+
+
+        settings.automaticFontSizeAdjustment = true
+        val contentResolver = InstrumentationRegistry.getTargetContext().contentResolver
+        val expectedFontSizeFactor = Settings.System.getFloat(contentResolver,
+                Settings.System.FONT_SCALE, 1.0f)
+        assertThat("Gecko font scale should match system font scale",
+                settings.fontSizeFactor.toDouble(), closeTo(expectedFontSizeFactor.toDouble(), 0.05))
+        assertThat("font inflation enabled",
+                settings.fontInflationEnabled, `is`(true))
+
+        settings.automaticFontSizeAdjustment = false
+        assertThat("Gecko font scale restored to previous value",
+                settings.fontSizeFactor.toDouble(), closeTo(initialFontSize.toDouble(), 0.05))
+        assertThat("font inflation restored to previous value",
+                settings.fontInflationEnabled, `is`(initialFontInflation))
+
+        // Now check with that with font inflation initially off, the initial state is still
+        // restored correctly after switching auto mode back off.
+        // Also reset font size factor back to its default value of 1.0f.
+        initialFontSize = 1.0f
+        initialFontInflation = false
+        settings.fontSizeFactor = initialFontSize
+        assertThat("initial font scale $initialFontSize set",
+                settings.fontSizeFactor.toDouble(), closeTo(initialFontSize.toDouble(), 0.05))
+        settings.fontInflationEnabled = initialFontInflation
+        assertThat("font inflation initially set to $initialFontInflation",
+                settings.fontInflationEnabled, `is`(initialFontInflation))
+
+        settings.automaticFontSizeAdjustment = true
+        assertThat("Gecko font scale should match system font scale",
+                settings.fontSizeFactor.toDouble(), closeTo(expectedFontSizeFactor.toDouble(), 0.05))
+        assertThat("font inflation enabled",
+                settings.fontInflationEnabled, `is`(true))
+
+        settings.automaticFontSizeAdjustment = false
+        assertThat("Gecko font scale restored to previous value",
+                settings.fontSizeFactor.toDouble(), closeTo(initialFontSize.toDouble(), 0.05))
+        assertThat("font inflation restored to previous value",
+                settings.fontInflationEnabled, `is`(initialFontInflation))
+    }
 
     @WithDevToolsAPI
     @Test fun fontSize() {
