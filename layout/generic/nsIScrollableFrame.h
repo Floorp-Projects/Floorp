@@ -111,6 +111,15 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
       nsPresContext* aPresContext, gfxContext* aRC,
       mozilla::WritingMode aWM) = 0;
   /**
+   * Get the layout size of this frame.
+   * Note that this is a value which is not expanded by the minimum scale size.
+   * For scroll frames other than the root content document's scroll frame, this
+   * value will be the same as GetScrollPortRect().Size().
+   *
+   * This value is used for Element.clientWidth and clientHeight.
+   */
+  virtual nsSize GetLayoutSize() const = 0;
+  /**
    * GetScrolledRect is designed to encapsulate deciding which
    * directions of overflow should be reachable by scrolling and which
    * should not.  Callers should NOT depend on it having any particular
