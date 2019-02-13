@@ -2658,10 +2658,11 @@ JSObject* nsINode::WrapObject(JSContext* aCx,
   }
 
   JS::Rooted<JSObject*> obj(aCx, WrapNode(aCx, aGivenProto));
-  MOZ_ASSERT_IF(
-      obj && ChromeOnlyAccess(),
-      JS::GetNonCCWObjectGlobal(obj) == xpc::UnprivilegedJunkScope() ||
-          xpc::IsInUAWidgetScope(obj) || xpc::AccessCheck::isChrome(obj));
+  if (obj && ChromeOnlyAccess()) {
+    MOZ_RELEASE_ASSERT(
+        JS::GetNonCCWObjectGlobal(obj) == xpc::UnprivilegedJunkScope() ||
+        xpc::IsInUAWidgetScope(obj) || xpc::AccessCheck::isChrome(obj));
+  }
   return obj;
 }
 
