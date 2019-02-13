@@ -1093,6 +1093,11 @@ var gPrivacyPane = {
 
     gSubDialog.open("chrome://browser/content/preferences/sitePermissions.xul",
       "resizable=yes", params);
+
+    try {
+      Services.telemetry
+        .getHistogramById("WEB_NOTIFICATION_EXCEPTIONS_OPENED").add();
+    } catch (e) { }
   },
 
 
