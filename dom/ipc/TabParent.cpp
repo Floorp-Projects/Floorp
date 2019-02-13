@@ -3444,9 +3444,9 @@ mozilla::ipc::IPCResult TabParent::RecvGetSystemFont(nsCString* aFontName) {
 }
 
 mozilla::ipc::IPCResult TabParent::RecvRootBrowsingContext(
-    const BrowsingContextId& aId) {
+  BrowsingContext* aBrowsingContext) {
   MOZ_ASSERT(!mBrowsingContext, "May only set browsing context once!");
-  mBrowsingContext = CanonicalBrowsingContext::Get(aId);
+  mBrowsingContext = CanonicalBrowsingContext::Cast(aBrowsingContext);
   MOZ_ASSERT(mBrowsingContext, "Invalid ID!");
   return IPC_OK();
 }

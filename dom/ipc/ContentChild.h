@@ -714,12 +714,12 @@ class ContentChild final : public PContentChild,
 
   virtual void OnChannelReceivedMessage(const Message& aMsg) override;
 
-  mozilla::ipc::IPCResult RecvWindowClose(const BrowsingContextId& aContextId,
-                                          const bool& aTrustedCaller);
-  mozilla::ipc::IPCResult RecvWindowFocus(const BrowsingContextId& aContextId);
-  mozilla::ipc::IPCResult RecvWindowBlur(const BrowsingContextId& aContextId);
+  mozilla::ipc::IPCResult RecvWindowClose(BrowsingContext* aContext,
+                                          bool aTrustedCaller);
+  mozilla::ipc::IPCResult RecvWindowFocus(BrowsingContext* aContext);
+  mozilla::ipc::IPCResult RecvWindowBlur(BrowsingContext* aContext);
   mozilla::ipc::IPCResult RecvWindowPostMessage(
-      const BrowsingContextId& aContextId, const ClonedMessageData& aMessage,
+      BrowsingContext* aContext, const ClonedMessageData& aMessage,
       const PostMessageData& aData);
 
 #ifdef NIGHTLY_BUILD

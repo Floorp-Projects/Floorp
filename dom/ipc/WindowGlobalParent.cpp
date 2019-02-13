@@ -37,7 +37,7 @@ WindowGlobalParent::WindowGlobalParent(const WindowGlobalInit& aInit,
   MOZ_RELEASE_ASSERT(mDocumentPrincipal, "Must have a valid principal");
 
   // NOTE: mBrowsingContext initialized in Init()
-  MOZ_RELEASE_ASSERT(aInit.browsingContextId() != 0,
+  MOZ_RELEASE_ASSERT(aInit.browsingContext(),
                      "Must be made in BrowsingContext");
 }
 
@@ -63,7 +63,7 @@ void WindowGlobalParent::Init(const WindowGlobalInit& aInit) {
     processId = static_cast<ContentParent*>(Manager()->Manager())->ChildID();
   }
 
-  mBrowsingContext = CanonicalBrowsingContext::Get(aInit.browsingContextId());
+  mBrowsingContext = CanonicalBrowsingContext::Cast(aInit.browsingContext());
   MOZ_ASSERT(mBrowsingContext);
 
   // XXX(nika): This won't be the case soon, but for now this is a good
