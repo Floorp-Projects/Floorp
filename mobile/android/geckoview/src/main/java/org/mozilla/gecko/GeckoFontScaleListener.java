@@ -22,7 +22,7 @@ import android.util.Log;
  *
  * @see android.provider.Settings.System#FONT_SCALE
  */
-/* package */ final class GeckoFontScaleListener
+public final class GeckoFontScaleListener
         extends ContentObserver {
     private static final String LOGTAG = "GeckoFontScaleListener";
 
