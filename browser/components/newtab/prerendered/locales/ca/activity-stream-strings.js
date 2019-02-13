@@ -45,7 +45,7 @@ window.gActivityStreamStrings = {
   "prefs_content_discovery_button": "Desactiva el descobriment de contingut",
   "prefs_section_rows_option": "{num} fila;{num} files",
   "prefs_search_header": "Cerca web",
-  "prefs_topsites_description": "El llocs que visiteu més sovint",
+  "prefs_topsites_description": "Els llocs que visiteu més sovint",
   "prefs_topstories_description2": "El contingut més interessant de tot el web, personalitzat per a vós",
   "prefs_topstories_options_sponsored_label": "Articles patrocinats",
   "prefs_topstories_sponsored_learn_more": "Més informació",
