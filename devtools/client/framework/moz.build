@@ -6,6 +6,7 @@
 
 BROWSER_CHROME_MANIFESTS += [
     'test/browser.ini',
+    'test/metrics/browser_metrics_debugger.ini',
     'test/metrics/browser_metrics_inspector.ini',
     'test/metrics/browser_metrics_netmonitor.ini',
     'test/metrics/browser_metrics_webconsole.ini',
