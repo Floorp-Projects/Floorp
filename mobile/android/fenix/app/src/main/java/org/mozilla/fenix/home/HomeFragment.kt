@@ -1,4 +1,6 @@
-
+/* This Source Code Form is subject to the terms of the Mozilla Public
+   License, v. 2.0. If a copy of the MPL was not distributed with this
+   file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 package org.mozilla.fenix.home
 
@@ -16,6 +18,7 @@ import androidx.navigation.Navigation
 import kotlinx.android.synthetic.main.fragment_home.*
 import kotlinx.android.synthetic.main.fragment_home.view.*
 import kotlinx.android.synthetic.main.tab_list_header.view.*
+import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import org.mozilla.fenix.DefaultThemeManager
@@ -38,6 +41,7 @@ import kotlin.math.roundToInt
 class HomeFragment : Fragment() {
     private val bus = ActionBusFactory.get(this)
     private var sessionObserver: SessionManager.Observer? = null
+    private lateinit var homeMenu: HomeMenu
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -59,6 +63,7 @@ class HomeFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         (activity as AppCompatActivity).supportActionBar?.hide()
+        setupHomeMenu()
 
         getSafeManagedObservable<TabsAction>()
             .subscribe {
@@ -78,10 +83,10 @@ class HomeFragment : Fragment() {
             BitmapDrawable(resources, it.icon)
         }
 
-        // Temporary so we can easily test settings
         view.menuButton.setOnClickListener {
-            val directions = HomeFragmentDirections.actionHomeFragmentToSettingsFragment()
-            Navigation.findNavController(it).navigate(directions)
+            homeMenu.menuBuilder.build(requireContext()).show(
+                anchor = it,
+                orientation = BrowserMenu.Orientation.DOWN)
         }
 
         view.toolbar.setCompoundDrawablesWithIntrinsicBounds(searchIcon, null, null, null)
@@ -152,6 +157,18 @@ class HomeFragment : Fragment() {
         super.onPause()
         sessionObserver?.let {
             requireComponents.core.sessionManager.unregister(it)
+        }
+    }
+
+    private fun setupHomeMenu() {
+        homeMenu = HomeMenu(requireContext()) {
+            val directions = when (it) {
+                HomeMenu.Item.Settings -> HomeFragmentDirections.actionHomeFragmentToSettingsFragment()
+                HomeMenu.Item.Library -> HomeFragmentDirections.actionHomeFragmentToLibraryFragment()
+                HomeMenu.Item.Help -> return@HomeMenu // Not implemented yetN
+            }
+
+            Navigation.findNavController(homeLayout).navigate(directions)
         }
     }
 

@@ -49,8 +49,7 @@ class LibraryFragment : Fragment() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.libraryClose -> {
-                Navigation.findNavController(requireActivity(), R.id.container)
-                    .popBackStack(R.id.browserFragment, false)
+                Navigation.findNavController(requireActivity(), R.id.container).navigateUp()
                 true
             }
             R.id.librarySearch -> {
