@@ -15,6 +15,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   SessionStartup: "resource:///modules/sessionstore/SessionStartup.jsm",
   ShellService: "resource:///modules/ShellService.jsm",
   UpdatePing: "resource://gre/modules/UpdatePing.jsm",
+  RemotePages: "resource://gre/modules/remotepagemanager/RemotePageManagerParent.jsm",
 });
 XPCOMUtils.defineLazyServiceGetter(this, "WindowsUIUtils",
   "@mozilla.org/windows-ui-utils;1", "nsIWindowsUIUtils");
@@ -22,6 +23,8 @@ XPCOMUtils.defineLazyServiceGetter(this, "WindowsUIUtils",
 XPCOMUtils.defineLazyGetter(this, "gSystemPrincipal",
   () => Services.scriptSecurityManager.getSystemPrincipal());
 XPCOMUtils.defineLazyGlobalGetters(this, [URL]);
+
+const NEWINSTALL_PAGE = "about:newinstall";
 
 function shouldLoadURI(aURI) {
   if (aURI && !aURI.schemeIs("chrome"))
@@ -60,12 +63,14 @@ function resolveURIInternal(aCmdLine, aArgument) {
   return uri;
 }
 
+let gRemoteInstallPage = null;
+
 function getNewInstallPage() {
-  let url = new URL("about:newinstall");
-  let endpoint = Services.prefs.getCharPref("browser.dedicatedprofile.welcome.accounts.endpoint");
-  url.searchParams.set("endpoint", endpoint);
-  url.searchParams.set("channel", AppConstants.MOZ_UPDATE_CHANNEL);
-  return url.toString();
+  if (!gRemoteInstallPage) {
+    gRemoteInstallPage = new RemotePages(NEWINSTALL_PAGE);
+  }
+
+  return NEWINSTALL_PAGE;
 }
 
 var gFirstWindow = false;
