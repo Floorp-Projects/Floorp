@@ -49,12 +49,12 @@ add_task(async function test() {
 
   await testCase(dbg, {
     name: "expressions",
-    steps: [[40,2], [41,2], [41,8], [42,8], [43,0]]
+    steps: [[40,2], [41,2], [41,8], [42,12], [43,0]]
   });
 
   await testCase(dbg, {
     name: "sequences",
-    steps: [[23,2], [25,8], [29,8], [31,4], [34,2], [37,0]]
+    steps: [[23,2], [25,12], [31,4], [34,2], [37,0]]
   });
 
   await testCase(dbg, {
@@ -63,7 +63,7 @@ add_task(async function test() {
       [16, 2],
       [17, 12],
       [17, 20],
-      [18, 6],
+      [18, 10],
       [19, 2],
       [19, 8],
       [19, 17],

@@ -2009,7 +2009,7 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitSwitch(SwitchStatement* switchStmt) {
   MOZ_ASSERT(cases->isKind(ParseNodeKind::StatementList));
 
   SwitchEmitter se(this);
-  if (!se.emitDiscriminant(Some(switchStmt->pn_pos.begin))) {
+  if (!se.emitDiscriminant(Some(switchStmt->discriminant().pn_pos.begin))) {
     return false;
   }
   if (!emitTree(&switchStmt->discriminant())) {
@@ -3930,10 +3930,6 @@ bool BytecodeEmitter::emitDeclarationList(ListNode* declList) {
   MOZ_ASSERT(declList->isOp(JSOP_NOP));
 
   for (ParseNode* decl : declList->contents()) {
-    if (!updateSourceCoordNotes(decl->pn_pos.begin)) {
-      return false;
-    }
-
     if (decl->isKind(ParseNodeKind::AssignExpr)) {
       MOZ_ASSERT(decl->isOp(JSOP_NOP));
 
@@ -3942,6 +3938,9 @@ bool BytecodeEmitter::emitDeclarationList(ListNode* declList) {
       MOZ_ASSERT(pattern->isKind(ParseNodeKind::ArrayExpr) ||
                  pattern->isKind(ParseNodeKind::ObjectExpr));
 
+      if (!updateSourceCoordNotes(assignNode->right()->pn_pos.begin)) {
+        return false;
+      }
       if (!emitTree(assignNode->right())) {
         return false;
       }
@@ -3989,6 +3988,10 @@ bool BytecodeEmitter::emitSingleDeclaration(ListNode* declList, NameNode* decl,
     }
   } else {
     MOZ_ASSERT(initializer);
+
+    if (!updateSourceCoordNotes(initializer->pn_pos.begin)) {
+      return false;
+    }
     if (!emitInitializer(initializer, decl)) {
       //            [stack] ENV? V
       return false;
@@ -4643,7 +4646,7 @@ MOZ_MUST_USE bool BytecodeEmitter::emitGoSub(JumpList* jump) {
 bool BytecodeEmitter::emitIf(TernaryNode* ifNode) {
   IfEmitter ifThenElse(this);
 
-  if (!ifThenElse.emitIf(Some(ifNode->pn_pos.begin))) {
+  if (!ifThenElse.emitIf(Some(ifNode->kid1()->pn_pos.begin))) {
     return false;
   }
 
@@ -4673,7 +4676,7 @@ if_again:
     if (elseNode->isKind(ParseNodeKind::IfStmt)) {
       ifNode = &elseNode->as<TernaryNode>();
 
-      if (!ifThenElse.emitElseIf(Some(ifNode->pn_pos.begin))) {
+      if (!ifThenElse.emitElseIf(Some(ifNode->kid1()->pn_pos.begin))) {
         return false;
       }
 
@@ -4812,7 +4815,7 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitLexicalScope(
 
 bool BytecodeEmitter::emitWith(BinaryNode* withNode) {
   // Ensure that the column of the 'with' is set properly.
-  if (!updateSourceCoordNotes(withNode->pn_pos.begin)) {
+  if (!updateSourceCoordNotes(withNode->left()->pn_pos.begin)) {
     return false;
   }
 
@@ -5270,6 +5273,9 @@ bool BytecodeEmitter::emitForOf(ForNode* forOfLoop,
     return false;
   }
 
+  if (!updateSourceCoordNotes(forHeadExpr->pn_pos.begin)) {
+    return false;
+  }
   if (!emitTree(forHeadExpr)) {
     //              [stack] ITERABLE
     return false;
@@ -5364,6 +5370,10 @@ bool BytecodeEmitter::emitForIn(ForNode* forInLoop,
 
   // Evaluate the expression being iterated.
   ParseNode* expr = forInHead->kid3();
+
+  if (!updateSourceCoordNotes(expr->pn_pos.begin)) {
+    return false;
+  }
   if (!emitTree(expr)) {
     //              [stack] EXPR
     return false;
@@ -5436,6 +5446,10 @@ bool BytecodeEmitter::emitCStyleFor(
         return false;
       }
     } else {
+      if (!updateSourceCoordNotes(init->pn_pos.begin)) {
+        return false;
+      }
+
       // 'init' is an expression, not a declaration. emitTree left its
       // value on the stack.
       if (!emitTree(init, ValueUsage::IgnoreValue)) {
@@ -5470,6 +5484,9 @@ bool BytecodeEmitter::emitCStyleFor(
 
   // Check for update code to do before the condition (if any).
   if (update) {
+    if (!updateSourceCoordNotes(update->pn_pos.begin)) {
+      return false;
+    }
     if (!emitTree(update, ValueUsage::IgnoreValue)) {
       //            [stack] VAL
       return false;
@@ -5484,6 +5501,9 @@ bool BytecodeEmitter::emitCStyleFor(
   }
 
   if (cond) {
+    if (!updateSourceCoordNotes(cond->pn_pos.begin)) {
+      return false;
+    }
     if (!emitTree(cond)) {
       //            [stack] VAL
       return false;
@@ -5845,6 +5865,9 @@ bool BytecodeEmitter::emitDo(BinaryNode* doNode) {
   }
 
   ParseNode* condNode = doNode->right();
+  if (!updateSourceCoordNotes(condNode->pn_pos.begin)) {
+    return false;
+  }
   if (!emitTree(condNode)) {
     return false;
   }
@@ -5874,6 +5897,9 @@ bool BytecodeEmitter::emitWhile(BinaryNode* whileNode) {
     return false;
   }
 
+  if (!updateSourceCoordNotes(condNode->pn_pos.begin)) {
+    return false;
+  }
   if (!emitTree(condNode)) {
     return false;
   }
@@ -6000,6 +6026,10 @@ bool BytecodeEmitter::emitReturn(UnaryNode* returnNode) {
     if (!emitPrepareIteratorResult()) {
       return false;
     }
+  }
+
+  if (!updateSourceCoordNotes(returnNode->pn_pos.begin)) {
+    return false;
   }
 
   /* Push a return value */
@@ -8557,6 +8587,9 @@ bool BytecodeEmitter::emitClass(
   bool isDerived = !!heritageExpression;
   bool hasNameOnStack = nameKind == ClassNameKind::ComputedName;
   if (isDerived) {
+    if (!updateSourceCoordNotes(classNode->pn_pos.begin)) {
+      return false;
+    }
     if (!emitTree(heritageExpression)) {
       //            [stack] HERITAGE
       return false;
@@ -8901,6 +8934,10 @@ bool BytecodeEmitter::emitTree(
       break;
 
     case ParseNodeKind::ThrowStmt:
+      if (!updateSourceCoordNotes(pn->pn_pos.begin)) {
+        return false;
+      }
+      MOZ_FALLTHROUGH;
     case ParseNodeKind::VoidExpr:
     case ParseNodeKind::NotExpr:
     case ParseNodeKind::BitNotExpr:

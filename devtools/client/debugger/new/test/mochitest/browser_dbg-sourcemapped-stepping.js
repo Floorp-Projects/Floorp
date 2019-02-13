@@ -56,7 +56,7 @@ function testStepOverForOf(dbg) {
     "step-over-for-of",
     { line: 4, column: 2 },
     [
-      ["stepOver", { line: 6, column: 2 }],
+      ["stepOver", { line: 6, column: 20 }],
       ["stepOver", { line: 7, column: 4 }],
       ["stepOver", { line: 6, column: 2 }],
       ["stepOver", { line: 7, column: 4 }],
@@ -96,6 +96,7 @@ function testStepOveForOfClosure(dbg) {
     "step-over-for-of-closure",
     { line: 6, column: 2 },
     [
+      ["stepOver", { line: 8, column: 20 }],
       ["stepOver", { line: 8, column: 2 }],
       ["stepOver", { line: 12, column: 2 }]
     ]
