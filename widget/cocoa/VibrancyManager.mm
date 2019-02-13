@@ -174,11 +174,19 @@ enum { NSVisualEffectMaterialSelection = 4 };
 @end
 
 /* static */ NSView* VibrancyManager::CreateEffectView(VibrancyType aType, BOOL aIsContainer) {
-  static Class EffectViewClasses[2][2] = {
-      {CreateEffectViewClass(NO, NO), CreateEffectViewClass(NO, YES)},
-      {CreateEffectViewClass(YES, NO), CreateEffectViewClass(YES, YES)}};
+  static Class EffectViewWithoutForegroundVibrancy = CreateEffectViewClass(NO, NO);
+  static Class EffectViewWithForegroundVibrancy = CreateEffectViewClass(YES, NO);
+  static Class EffectViewContainer = CreateEffectViewClass(NO, YES);
 
-  Class EffectViewClass = EffectViewClasses[HasVibrantForeground(aType)][aIsContainer];
+  // Pick the right NSVisualEffectView subclass for the desired vibrancy mode.
+  // For "container" views, never use foreground vibrancy, because returning
+  // YES from allowsVibrancy forces on foreground vibrancy for all descendant
+  // views which can have unintended effects.
+  Class EffectViewClass = aIsContainer
+                              ? EffectViewContainer
+                              : (HasVibrantForeground(aType) ? EffectViewWithForegroundVibrancy
+                                                             : EffectViewWithoutForegroundVibrancy);
+
   NSView* effectView = [[EffectViewClass alloc] initWithFrame:NSZeroRect];
   [effectView performSelector:@selector(setAppearance:)
                    withObject:AppearanceForVibrancyType(aType)];
