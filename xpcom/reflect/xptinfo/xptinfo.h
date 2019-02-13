@@ -165,7 +165,7 @@ enum nsXPTTypeTag : uint8_t {
   //  - Outparams may be uninitialized by caller,
   //  - Supported in xptcall as raw pointer.
   TD_VOID = 13,
-  TD_PNSIID = 14,
+  TD_NSIDPTR = 14,
   TD_PSTRING = 15,
   TD_PWSTRING = 16,
   TD_INTERFACE_TYPE = 17,
@@ -185,8 +185,9 @@ enum nsXPTTypeTag : uint8_t {
   TD_UTF8STRING = 24,
   TD_CSTRING = 25,
   TD_ASTRING = 26,
-  TD_JSVAL = 27,
-  TD_ARRAY = 28,
+  TD_NSID = 27,
+  TD_JSVAL = 28,
+  TD_ARRAY = 29,
   _TD_LAST_COMPLEX = TD_ARRAY
 };
 
@@ -294,7 +295,7 @@ struct nsXPTType {
     BOOL,
     CHAR,
     WCHAR,
-    PNSIID,
+    NSIDPTR,
     PSTRING,
     PWSTRING,
     INTERFACE_IS_TYPE
@@ -335,7 +336,7 @@ struct nsXPTType {
   TD_ALIAS_(T_CHAR, TD_CHAR);
   TD_ALIAS_(T_WCHAR, TD_WCHAR);
   TD_ALIAS_(T_VOID, TD_VOID);
-  TD_ALIAS_(T_IID, TD_PNSIID);
+  TD_ALIAS_(T_NSIDPTR, TD_NSIDPTR);
   TD_ALIAS_(T_CHAR_STR, TD_PSTRING);
   TD_ALIAS_(T_WCHAR_STR, TD_PWSTRING);
   TD_ALIAS_(T_INTERFACE, TD_INTERFACE_TYPE);
@@ -346,6 +347,7 @@ struct nsXPTType {
   TD_ALIAS_(T_UTF8STRING, TD_UTF8STRING);
   TD_ALIAS_(T_CSTRING, TD_CSTRING);
   TD_ALIAS_(T_ASTRING, TD_ASTRING);
+  TD_ALIAS_(T_NSID, TD_NSID);
   TD_ALIAS_(T_JSVAL, TD_JSVAL);
   TD_ALIAS_(T_DOMOBJECT, TD_DOMOBJECT);
   TD_ALIAS_(T_PROMISE, TD_PROMISE);
@@ -635,7 +637,7 @@ inline const char* GetString(uint32_t aIndex) { return &sStrings[aIndex]; }
 
 #define XPT_FOR_EACH_POINTER_TYPE(MACRO)    \
   MACRO(TD_VOID, void*)                     \
-  MACRO(TD_PNSIID, nsID*)                   \
+  MACRO(TD_NSIDPTR, nsID*)                  \
   MACRO(TD_PSTRING, char*)                  \
   MACRO(TD_PWSTRING, wchar_t*)              \
   MACRO(TD_INTERFACE_TYPE, nsISupports*)    \
@@ -650,6 +652,7 @@ inline const char* GetString(uint32_t aIndex) { return &sStrings[aIndex]; }
   MACRO(TD_UTF8STRING, nsCString)        \
   MACRO(TD_CSTRING, nsCString)           \
   MACRO(TD_ASTRING, nsString)            \
+  MACRO(TD_NSID, nsID)                   \
   MACRO(TD_JSVAL, JS::Value)             \
   MACRO(TD_ARRAY, xpt::detail::UntypedTArray)
 

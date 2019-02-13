@@ -559,15 +559,17 @@ bool nsXPCWrappedJSClass::GetInterfaceTypeFromParam(
   } else if (inner.Tag() == nsXPTType::T_INTERFACE_IS) {
     // Get IID from a passed parameter.
     const nsXPTParamInfo& param = method->Param(inner.ArgNum());
-    if (param.Type().Tag() != nsXPTType::T_IID) {
+    if (param.Type().Tag() != nsXPTType::T_NSID &&
+        param.Type().Tag() != nsXPTType::T_NSIDPTR) {
       return false;
     }
 
     void* ptr = nativeParams[inner.ArgNum()].val.p;
 
-    // If the IID is passed indirectly (as an outparam), dereference by an
-    // extra level.
-    if (ptr && param.IsIndirect()) {
+    // If our IID is passed as a pointer outparameter, an extra level of
+    // dereferencing is required.
+    if (ptr && param.Type().Tag() == nsXPTType::T_NSIDPTR &&
+        param.IsIndirect()) {
       ptr = *(nsID**)ptr;
     }
 
