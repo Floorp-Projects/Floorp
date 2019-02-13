@@ -17,6 +17,10 @@ component_wasm   = ('Core', 'Javascript: Web Assembly')
 
 FILES_PER_UNIFIED_FILE = 6
 
+# Prevent redefining FILES_PER_UNIFIED_FILE in each sub-directory of js. This
+# will not escape this directory.
+export('FILES_PER_UNIFIED_FILE')
+
 with Files('*'):
     BUG_COMPONENT = component_engine
 
