@@ -60,7 +60,7 @@ connection-proxy-socks4 =
 connection-proxy-socks5 =
     .label = SOCKS v5
     .accesskey = v
-connection-proxy-noproxy = No Proxy for
+connection-proxy-noproxy = No proxy for
     .accesskey = N
 
 connection-proxy-noproxy-desc = Example: .mozilla.org, .net.nz, 192.168.1.0/24
