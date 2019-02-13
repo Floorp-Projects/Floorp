@@ -257,11 +257,10 @@ class TabParent final : public PBrowserParent,
       const nsCursor& aValue, const bool& aHasCustomCursor,
       const nsCString& aUri, const uint32_t& aWidth, const uint32_t& aHeight,
       const uint32_t& aStride, const gfx::SurfaceFormat& aFormat,
-      const uint32_t& aHotspotX, const uint32_t& aHotspotY,
-      const bool& aForce);
+      const uint32_t& aHotspotX, const uint32_t& aHotspotY, const bool& aForce);
 
-  mozilla::ipc::IPCResult RecvSetStatus(
-      const uint32_t& aType, const nsString& aStatus);
+  mozilla::ipc::IPCResult RecvSetStatus(const uint32_t& aType,
+                                        const nsString& aStatus);
 
   mozilla::ipc::IPCResult RecvShowTooltip(const uint32_t& aX,
                                           const uint32_t& aY,
@@ -595,7 +594,7 @@ class TabParent final : public PBrowserParent,
   mozilla::ipc::IPCResult RecvShowCanvasPermissionPrompt(
       const nsCString& aFirstPartyURI, const bool& aHideDoorHanger);
 
-  mozilla::ipc::IPCResult RecvRootBrowsingContext(const BrowsingContextId& aId);
+  mozilla::ipc::IPCResult RecvRootBrowsingContext(BrowsingContext* aContext);
 
   mozilla::ipc::IPCResult RecvSetSystemFont(const nsCString& aFontName);
   mozilla::ipc::IPCResult RecvGetSystemFont(nsCString* aFontName);

@@ -27,7 +27,7 @@ using mozilla::LayoutDeviceIntPoint from "Units.h";
 using hal::ScreenOrientation from "mozilla/HalScreenConfiguration.h";
 using mozilla::gfx::SurfaceFormat from "mozilla/gfx/Types.h";
 using refcounted class nsIPrincipal from "mozilla/dom/PermissionMessageUtils.h";
-using mozilla::dom::BrowsingContextId from "mozilla/dom/ipc/IdType.h";
+using refcounted class mozilla::dom::BrowsingContext from "mozilla/dom/BrowsingContext.h";
 using refcounted class nsIURI from "mozilla/ipc/URIUtils.h";
 
 namespace mozilla {
@@ -189,7 +189,7 @@ struct PerformanceInfo
 struct WindowGlobalInit
 {
   nsIPrincipal principal;
-  BrowsingContextId browsingContextId;
+  BrowsingContext browsingContext;
   uint64_t innerWindowId;
   uint64_t outerWindowId;
 };
