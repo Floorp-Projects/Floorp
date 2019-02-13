@@ -30,14 +30,14 @@ class GeckoFontScaleListener
 
     // We're referencing the *application* context, so this is in fact okay.
     @SuppressLint("StaticFieldLeak")
-    private static final GeckoFontScaleListener listenerInstance = new GeckoFontScaleListener();
+    private static final GeckoFontScaleListener sInstance = new GeckoFontScaleListener();
 
-    private Context applicationContext;
-    private boolean initialized;
-    private boolean running;
+    private Context mApplicationContext;
+    private boolean mInitialized;
+    private boolean mRunning;
 
     public static GeckoFontScaleListener getInstance() {
-        return listenerInstance;
+        return sInstance;
     }
 
     private GeckoFontScaleListener() {
@@ -45,53 +45,53 @@ class GeckoFontScaleListener
     }
 
     public synchronized void initialize(final Context context) {
-        if (initialized) {
+        if (mInitialized) {
             Log.w(LOGTAG, "Already initialized!");
             return;
         }
 
-        applicationContext = context.getApplicationContext();
-        SharedPreferences prefs = GeckoSharedPrefs.forApp(applicationContext);
+        mApplicationContext = context.getApplicationContext();
+        SharedPreferences prefs = GeckoSharedPrefs.forApp(mApplicationContext);
         prefs.registerOnSharedPreferenceChangeListener(this);
         onPrefChange(prefs);
-        initialized = true;
+        mInitialized = true;
     }
 
     public synchronized void shutdown() {
-        if (!initialized) {
+        if (!mInitialized) {
             Log.w(LOGTAG, "Already shut down!");
             return;
         }
 
-        GeckoSharedPrefs.forApp(applicationContext).unregisterOnSharedPreferenceChangeListener(this);
+        GeckoSharedPrefs.forApp(mApplicationContext).unregisterOnSharedPreferenceChangeListener(this);
         stop();
-        applicationContext = null;
-        initialized = false;
+        mApplicationContext = null;
+        mInitialized = false;
     }
 
     private synchronized void start() {
-        if (running) {
+        if (mRunning) {
             return;
         }
 
-        ContentResolver contentResolver = applicationContext.getContentResolver();
+        ContentResolver contentResolver = mApplicationContext.getContentResolver();
         Uri fontSizeSetting = Settings.System.getUriFor(Settings.System.FONT_SCALE);
         contentResolver.registerContentObserver(fontSizeSetting, false, this);
         onSystemFontScaleChange(contentResolver, false);
 
-        running = true;
+        mRunning = true;
     }
 
     private synchronized void stop() {
-        if (!running) {
+        if (!mRunning) {
             return;
         }
 
-        ContentResolver contentResolver = applicationContext.getContentResolver();
+        ContentResolver contentResolver = mApplicationContext.getContentResolver();
         contentResolver.unregisterContentObserver(this);
         onSystemFontScaleChange(contentResolver, /*stopping*/ true);
 
-        running = false;
+        mRunning = false;
     }
 
     private void onSystemFontScaleChange(final ContentResolver contentResolver, boolean stopping) {
@@ -122,7 +122,7 @@ class GeckoFontScaleListener
 
     @Override
     public void onChange(boolean selfChange) {
-        onSystemFontScaleChange(applicationContext.getContentResolver(), false);
+        onSystemFontScaleChange(mApplicationContext.getContentResolver(), false);
     }
 
     @UiThread // According to the docs.
