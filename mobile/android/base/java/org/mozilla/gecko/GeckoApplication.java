@@ -11,6 +11,7 @@ import android.app.Service;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.net.Uri;
@@ -49,6 +50,7 @@ import org.mozilla.gecko.notifications.NotificationClient;
 import org.mozilla.gecko.notifications.NotificationHelper;
 import org.mozilla.gecko.permissions.Permissions;
 import org.mozilla.gecko.preferences.DistroSharedPrefsImport;
+import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.pwa.PwaUtils;
 import org.mozilla.gecko.telemetry.TelemetryBackgroundReceiver;
 import org.mozilla.gecko.util.ActivityResultHandler;
@@ -72,7 +74,8 @@ import java.net.URL;
 import java.util.UUID;
 
 public class GeckoApplication extends Application
-                              implements HapticFeedbackDelegate {
+                              implements HapticFeedbackDelegate,
+                                         SharedPreferences.OnSharedPreferenceChangeListener {
     private static final String LOG_TAG = "GeckoApplication";
     public static final String ACTION_DEBUG = "org.mozilla.gecko.DEBUG";
     private static final String MEDIA_DECODING_PROCESS_CRASH = "MEDIA_DECODING_PROCESS_CRASH";
@@ -212,7 +215,7 @@ public class GeckoApplication extends Application
     public void onApplicationForeground() {
         if (mIsInitialResume) {
             GeckoBatteryManager.getInstance().start(this);
-            GeckoFontScaleListener.getInstance().attachToContext(this);
+            initFontScaleListener();
             GeckoNetworkManager.getInstance().start(this);
             mIsInitialResume = false;
         } else if (mPausedGecko) {
@@ -222,6 +225,13 @@ public class GeckoApplication extends Application
         }
 
         mInBackground = false;
+    }
+
+    private void initFontScaleListener() {
+        final SharedPreferences prefs = GeckoSharedPrefs.forApp(this);
+        prefs.registerOnSharedPreferenceChangeListener(this);
+        onSharedPreferenceChanged(prefs, GeckoPreferences.PREFS_SYSTEM_FONT_SIZE);
+        GeckoFontScaleListener.getInstance().attachToContext(this);
     }
 
     private static GeckoRuntime sGeckoRuntime;
@@ -422,6 +432,7 @@ public class GeckoApplication extends Application
                 "Image:SetAs",
                 "Profile:Create",
                 null);
+        GeckoSharedPrefs.forApp(this).unregisterOnSharedPreferenceChangeListener(this);
 
         GeckoService.unregister();
     }
@@ -907,6 +918,14 @@ public class GeckoApplication extends Application
                 GeckoActivityMonitor.getInstance().getCurrentActivity();
         if (currentActivity != null) {
             currentActivity.getWindow().getDecorView().performHapticFeedback(effect);
+        }
+    }
+
+    @Override // OnSharedPreferenceChangeListener
+    public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
+        if (GeckoPreferences.PREFS_SYSTEM_FONT_SIZE.equals(key)) {
+            final boolean enabled = prefs.getBoolean(GeckoPreferences.PREFS_SYSTEM_FONT_SIZE, false);
+            GeckoFontScaleListener.getInstance().setEnabled(enabled);
         }
     }
 }

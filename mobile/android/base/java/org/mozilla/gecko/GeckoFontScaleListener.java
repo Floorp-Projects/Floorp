@@ -5,13 +5,11 @@
 
 package org.mozilla.gecko;
 
-import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.annotation.SuppressLint;
 import android.content.ContentResolver;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.database.ContentObserver;
 import android.net.Uri;
 import android.provider.Settings;
@@ -19,8 +17,7 @@ import android.support.annotation.UiThread;
 import android.util.Log;
 
 class GeckoFontScaleListener
-        extends ContentObserver
-        implements SharedPreferences.OnSharedPreferenceChangeListener {
+        extends ContentObserver {
     private static final String LOGTAG = "GeckoFontScaleListener";
 
     private static final String PREF_SYSTEM_FONT_SCALE = "font.size.systemFontScale";
@@ -35,6 +32,7 @@ class GeckoFontScaleListener
 
     private Context mApplicationContext;
     private boolean mAttached;
+    private boolean mEnabled;
     private boolean mRunning;
 
     public static GeckoFontScaleListener getInstance() {
@@ -54,11 +52,9 @@ class GeckoFontScaleListener
             return;
         }
 
-        mApplicationContext = context.getApplicationContext();
-        SharedPreferences prefs = GeckoSharedPrefs.forApp(mApplicationContext);
-        prefs.registerOnSharedPreferenceChangeListener(this);
-        onPrefChange(prefs);
         mAttached = true;
+        mApplicationContext = context.getApplicationContext();
+        onEnabledChange();
     }
 
     public void detachFromContext() {
@@ -69,10 +65,31 @@ class GeckoFontScaleListener
             return;
         }
 
-        GeckoSharedPrefs.forApp(mApplicationContext).unregisterOnSharedPreferenceChangeListener(this);
         stop();
         mApplicationContext = null;
         mAttached = false;
+    }
+
+    public void setEnabled(boolean enabled) {
+        ThreadUtils.assertOnUiThread();
+        mEnabled = enabled;
+        onEnabledChange();
+    }
+
+    public boolean getEnabled() {
+        return mEnabled;
+    }
+
+    private void onEnabledChange() {
+        if (!mAttached) {
+            return;
+        }
+
+        if (mEnabled) {
+            start();
+        } else {
+            stop();
+        }
     }
 
     private void start() {
@@ -104,10 +121,10 @@ class GeckoFontScaleListener
         float fontScale;
         int fontInflation;
 
-        if (!stopping) { // Pref was flipped to "On" or system font scale changed.
+        if (!stopping) { // Either we were enabled, or else the system font scale changed.
             fontScale = Settings.System.getFloat(contentResolver, Settings.System.FONT_SCALE, DEFAULT_FONT_SCALE);
             fontInflation = Math.round(FONT_INFLATION_ON_DEFAULT_VALUE * fontScale);
-        } else { // Pref was flipped to "Off".
+        } else { // We were turned off.
             fontScale = DEFAULT_FONT_SCALE;
             fontInflation = FONT_INFLATION_OFF;
         }
@@ -116,29 +133,9 @@ class GeckoFontScaleListener
         PrefsHelper.setPref(PREF_SYSTEM_FONT_SCALE, Math.round(fontScale * 100));
     }
 
-    private void onPrefChange(final SharedPreferences prefs) {
-        boolean useSystemFontScale = prefs.getBoolean(GeckoPreferences.PREFS_SYSTEM_FONT_SIZE, false);
-
-        if (useSystemFontScale) {
-            start();
-        } else {
-            stop();
-        }
-    }
-
     @UiThread // See constructor.
     @Override
     public void onChange(boolean selfChange) {
         onSystemFontScaleChange(mApplicationContext.getContentResolver(), false);
-    }
-
-    @UiThread // According to the docs.
-    @Override
-    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        if (!GeckoPreferences.PREFS_SYSTEM_FONT_SIZE.equals(key)) {
-            return;
-        }
-
-        onPrefChange(sharedPreferences);
     }
 }
