@@ -273,10 +273,10 @@ bool ForwardingProxyHandler::isConstructor(JSObject* obj) const {
 JSObject* Wrapper::New(JSContext* cx, JSObject* obj, const Wrapper* handler,
                        const WrapperOptions& options) {
   // If this is a cross-compartment wrapper allocate it in the compartment's
-  // first realm. See Realm::realmForNewCCW.
-  mozilla::Maybe<AutoRealmUnchecked> ar;
+  // first global. See Compartment::globalForNewCCW.
+  mozilla::Maybe<AutoRealm> ar;
   if (handler->isCrossCompartmentWrapper()) {
-    ar.emplace(cx, cx->compartment()->realmForNewCCW());
+    ar.emplace(cx, &cx->compartment()->globalForNewCCW());
   }
   RootedValue priv(cx, ObjectValue(*obj));
   return NewProxyObject(cx, handler, priv, options.proto(), options);

@@ -350,7 +350,7 @@ void XPCWrappedNativeScope::UpdateWeakPointersAfterGC() {
   }
 
   // Update our pointer to the compartment in case we finalized all globals.
-  if (js::gc::AllRealmsNeedSweep(mCompartment)) {
+  if (!js::CompartmentHasLiveGlobal(mCompartment)) {
     mCompartment = nullptr;
     GetWrappedNativeMap()->Clear();
     mWrappedNativeProtoMap->Clear();

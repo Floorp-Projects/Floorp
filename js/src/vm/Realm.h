@@ -513,6 +513,9 @@ class JS::Realm : public JS::shadow::Realm {
   /* True if a global object exists, but it's being collected. */
   inline bool globalIsAboutToBeFinalized();
 
+  /* True if a global exists and it's not being collected. */
+  inline bool hasLiveGlobal();
+
   inline void initGlobal(js::GlobalObject& global);
 
   /*
