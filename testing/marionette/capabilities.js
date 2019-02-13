@@ -408,6 +408,7 @@ class Capabilities extends Map {
 
       // proprietary
       ["moz:accessibilityChecks", false],
+      ["moz:buildID", Services.appinfo.appBuildID],
       ["moz:headless", Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo).isHeadless],
       ["moz:processID", Services.appinfo.processID],
       ["moz:profile", maybeProfile()],
