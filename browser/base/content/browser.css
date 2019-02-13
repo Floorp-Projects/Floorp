@@ -778,7 +778,7 @@ html|input.urlbar-input {
   display: none;
 }
 
-#nav-bar:not([keyNav=true]) #identity-box {
+#identity-box {
   -moz-user-focus: normal;
 }
 
@@ -981,7 +981,7 @@ html|*#fullscreen-exit-button {
 
 /* notification anchors should only be visible when their associated
    notifications are */
-#nav-bar:not([keyNav=true]) .notification-anchor-icon {
+.notification-anchor-icon {
   -moz-user-focus: normal;
 }
 
@@ -1425,10 +1425,6 @@ toolbarpaletteitem > toolbaritem {
   #sidebar-box[sidebarcommand$="-sidebar-action"] > #sidebar-header > #sidebar-switcher-target > #sidebar-icon {
     list-style-image: var(--webextension-menuitem-image-2x, inherit);
   }
-}
-
-toolbar[keyNav=true]:not([collapsed=true]):not([customizing=true]) toolbartabstop {
-  -moz-user-focus: normal;
 }
 
 %include theme-vars.inc.css
