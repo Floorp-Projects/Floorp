@@ -18,19 +18,48 @@
 <script>
 "use strict";
 
+// Waits for |frameCount| requestAnimationFrame callbacks.
+// Returns the number of frame actually waited.
 function waitForAnimationFrames(frameCount) {
   return new Promise(function(resolve, reject) {
+    let previousTime = document.timeline.currentTime;
+    let framesWaited = 0;
     function handleFrame() {
-      if (--frameCount <= 0) {
-        resolve();
-      } else {
-        window.requestAnimationFrame(handleFrame); // wait another frame
+      // SMIL uses a time resolution of 1ms but our software-based vsync timer
+      // sometimes produces ticks with an interval of less than 1ms. In such
+      // cases we will skip restyling for SMIL animations since the SMIL time
+      // will not change.
+      //
+      // In the following we attempt to detect such situations and wait an
+      // additional frame when we detect it. However, the detection is not
+      // completely accurate since it uses the timeline time which is based on
+      // the navigation start time whereas the SMIL start time is based on the
+      // refresh driver time.
+      //
+      // To account for this inaccuracy the Promise returned by this method
+      // resolves with the number of frames waited with the additional frames.
+      // This can be used by the call site to add a suitable tolerance to the
+      // number of restylings it expects to happen. For example, if a call site
+      // is anticipating each animation frame to cause restyling, then the
+      // number of restylings, x, it should expect is frameCount <= x <=
+      // framesWaited.
+      const difference = document.timeline.currentTime - previousTime;
+      framesWaited++;
+      if (difference >= 1.0 && --frameCount <= 0) {
+        resolve(framesWaited);
+        return;
       }
+
+      previousTime = document.timeline.currentTime;
+      window.requestAnimationFrame(handleFrame); // wait another frame
     }
     window.requestAnimationFrame(handleFrame);
   });
 }
 
+// Returns an object consisting of observed styling count and the number of
+// frames actually waited because we detected a possibly overflapping SMIL
+// time.
 function observeStyling(frameCount) {
   var Ci = SpecialPowers.Ci;
   var docShell = SpecialPowers.wrap(window).docShell;
@@ -39,13 +68,16 @@ function observeStyling(frameCount) {
   docShell.popProfileTimelineMarkers();
 
   return new Promise(function(resolve) {
-    return waitForAnimationFrames(frameCount).then(function() {
+    return waitForAnimationFrames(frameCount).then(framesWaited => {
       var markers = docShell.popProfileTimelineMarkers();
       docShell.recordProfileTimelineMarkers = false;
       var stylingMarkers = markers.filter(function(marker, index) {
         return marker.name == 'Styles' && marker.isAnimationOnly;
       });
-      resolve(stylingMarkers);
+      resolve({
+        stylingCount: stylingMarkers.length,
+        framesWaited: framesWaited,
+      });
     });
   });
 }
@@ -79,12 +111,13 @@ add_task(async function smil_is_in_display_none_subtree() {
 
   await waitForAnimationFrames(2);
 
-  var displayMarkers = await observeStyling(5);
+  let result = await observeStyling(5);
   // FIXME: Bug 866411: SMIL animations sometimes skip restyles when the target
   // element is newly associated with an nsIFrame.
-  ok(displayMarkers.length == 5 || displayMarkers.length == 4,
-     `should restyle in most frames (got ${displayMarkers.length} restyles`
-     + ' over five frames, expected 4~5)');
+  ok(result.stylingCount >= 4 &&
+     result.stylingCount <= result.framesWaited,
+     `should restyle in most frames (got ${result.stylingCount} restyles ` +
+     `over ${result.framesWaited} frames, expected 4~${result.framesWaited})`);
 
   var div = document.getElementById("target-div");
 
@@ -92,19 +125,20 @@ add_task(async function smil_is_in_display_none_subtree() {
   getComputedStyle(div).display;
   await waitForPaintFlushed();
 
-  var displayNoneMarkers = await observeStyling(5);
-  is(displayNoneMarkers.length, 0, "should never restyle if display:none");
+  result = await observeStyling(5);
+  is(result.stylingCount, 0, "should never restyle if display:none");
 
   div.style.display = "";
   getComputedStyle(div).display;
   await waitForAnimationFrames(2);
 
-  var displayAgainMarkers = await observeStyling(5);
+  result = await observeStyling(5);
   // FIXME: Bug 866411: SMIL animations sometimes skip restyles when the target
   // element is newly associated with an nsIFrame.
-  ok(displayMarkers.length == 5 || displayMarkers.length == 4,
-     `should restyle again (got ${displayMarkers.length} restyles over`
-     + ' five frames, expected 4~5)');
+  ok(result.stylingCount >= 4 &&
+     result.stylingCount <= result.framesWaited,
+     `should restyle again (got ${result.stylingCount} restyles over ` +
+     `${result.framesWaited} frames, expected 4~${result.framesWaited})`);
 
   await ensureElementRemoval(animate);
 });
