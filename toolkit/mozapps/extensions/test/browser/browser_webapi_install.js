@@ -328,24 +328,3 @@ add_task(async function test_permissions() {
                    "not permitted",
                    "Installing from non-approved URL fails");
 });
-
-add_task(makeInstallTest(async function(browser) {
-  let xpiURL = `${SECURE_TESTROOT}../xpinstall/incompatible.xpi`;
-  let id = "incompatible-xpi@tests.mozilla.org";
-
-  let steps = [
-    {action: "install", expectError: true},
-    {
-      event: "onDownloadStarted",
-      props: {state: "STATE_DOWNLOADING"},
-    },
-    {event: "onDownloadProgress"},
-    {event: "onDownloadEnded"},
-    {event: "onDownloadCancelled"},
-  ];
-
-  await testInstall(browser, {url: xpiURL}, steps, "install of an incompatible XPI fails");
-
-  let addons = await promiseAddonsByIDs([id]);
-  is(addons[0], null, "The addon was not installed");
-}));
