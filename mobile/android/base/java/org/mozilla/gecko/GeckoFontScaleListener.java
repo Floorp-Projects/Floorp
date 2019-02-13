@@ -6,6 +6,7 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.preferences.GeckoPreferences;
+import org.mozilla.gecko.util.ThreadUtils;
 
 import android.annotation.SuppressLint;
 import android.content.ContentResolver;
@@ -41,10 +42,13 @@ class GeckoFontScaleListener
     }
 
     private GeckoFontScaleListener() {
-        super(null);
+        // Ensure the ContentObserver callback runs on the UI thread.
+        super(ThreadUtils.getUiHandler());
     }
 
-    public synchronized void attachToContext(final Context context) {
+    public void attachToContext(final Context context) {
+        ThreadUtils.assertOnUiThread();
+
         if (mAttached) {
             Log.w(LOGTAG, "Already attached!");
             return;
@@ -57,7 +61,9 @@ class GeckoFontScaleListener
         mAttached = true;
     }
 
-    public synchronized void detachFromContext() {
+    public void detachFromContext() {
+        ThreadUtils.assertOnUiThread();
+
         if (!mAttached) {
             Log.w(LOGTAG, "Already detached!");
             return;
@@ -69,7 +75,7 @@ class GeckoFontScaleListener
         mAttached = false;
     }
 
-    private synchronized void start() {
+    private void start() {
         if (mRunning) {
             return;
         }
@@ -82,7 +88,7 @@ class GeckoFontScaleListener
         mRunning = true;
     }
 
-    private synchronized void stop() {
+    private void stop() {
         if (!mRunning) {
             return;
         }
@@ -120,6 +126,7 @@ class GeckoFontScaleListener
         }
     }
 
+    @UiThread // See constructor.
     @Override
     public void onChange(boolean selfChange) {
         onSystemFontScaleChange(mApplicationContext.getContentResolver(), false);
