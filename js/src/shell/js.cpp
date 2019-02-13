@@ -10825,19 +10825,19 @@ int main(int argc, char** argv, char** envp) {
   if (op.getBoolOption("no-sse3")) {
     js::jit::CPUInfo::SetSSE3Disabled();
     if (!sCompilerProcessFlags.append("--no-sse3")) {
-      return EXIT_SUCCESS;
+      return EXIT_FAILURE;
     }
   }
   if (op.getBoolOption("no-sse4")) {
     js::jit::CPUInfo::SetSSE4Disabled();
     if (!sCompilerProcessFlags.append("--no-sse4")) {
-      return EXIT_SUCCESS;
+      return EXIT_FAILURE;
     }
   }
   if (op.getBoolOption("enable-avx")) {
     js::jit::CPUInfo::SetAVXEnabled();
     if (!sCompilerProcessFlags.append("--enable-avx")) {
-      return EXIT_SUCCESS;
+      return EXIT_FAILURE;
     }
   }
 #endif
