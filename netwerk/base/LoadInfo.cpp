@@ -478,7 +478,6 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
       mServiceWorkerTaintingSynthesized(false),
       mDocumentHasUserInteracted(rhs.mDocumentHasUserInteracted),
       mDocumentHasLoaded(rhs.mDocumentHasLoaded),
-      mCspNonce(rhs.mCspNonce),
       mIsFromProcessingFrameAttributes(rhs.mIsFromProcessingFrameAttributes) {}
 
 LoadInfo::LoadInfo(
@@ -511,7 +510,7 @@ LoadInfo::LoadInfo(
     const nsTArray<nsCString>& aCorsUnsafeHeaders, bool aForcePreflight,
     bool aIsPreflight, bool aLoadTriggeredFromExternal,
     bool aServiceWorkerTaintingSynthesized, bool aDocumentHasUserInteracted,
-    bool aDocumentHasLoaded, const nsAString& aCspNonce)
+    bool aDocumentHasLoaded)
     : mLoadingPrincipal(aLoadingPrincipal),
       mTriggeringPrincipal(aTriggeringPrincipal),
       mPrincipalToInherit(aPrincipalToInherit),
@@ -557,7 +556,6 @@ LoadInfo::LoadInfo(
       mServiceWorkerTaintingSynthesized(aServiceWorkerTaintingSynthesized),
       mDocumentHasUserInteracted(aDocumentHasUserInteracted),
       mDocumentHasLoaded(aDocumentHasLoaded),
-      mCspNonce(aCspNonce),
       mIsFromProcessingFrameAttributes(false) {
   // Only top level TYPE_DOCUMENT loads can have a null loadingPrincipal
   MOZ_ASSERT(mLoadingPrincipal ||
@@ -1253,20 +1251,6 @@ LoadInfo::GetDocumentHasLoaded(bool* aDocumentHasLoaded) {
 NS_IMETHODIMP
 LoadInfo::SetDocumentHasLoaded(bool aDocumentHasLoaded) {
   mDocumentHasLoaded = aDocumentHasLoaded;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::GetCspNonce(nsAString& aCspNonce) {
-  aCspNonce = mCspNonce;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::SetCspNonce(const nsAString& aCspNonce) {
-  MOZ_ASSERT(!mInitialSecurityCheckDone,
-             "setting the nonce is only allowed before any sec checks");
-  mCspNonce = aCspNonce;
   return NS_OK;
 }
 
