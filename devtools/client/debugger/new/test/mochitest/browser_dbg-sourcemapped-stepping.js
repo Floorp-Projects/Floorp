@@ -57,6 +57,7 @@ function testStepOverForOf(dbg) {
     { line: 4, column: 2 },
     [
       ["stepOver", { line: 6, column: 20 }],
+      ["stepOver", { line: 6, column: 2 }],
       ["stepOver", { line: 7, column: 4 }],
       ["stepOver", { line: 6, column: 2 }],
       ["stepOver", { line: 7, column: 4 }],
@@ -76,10 +77,10 @@ function testStepOverForOfArray(dbg) {
     { line: 3, column: 2 },
     [
       ["stepOver", { line: 5, column: 2 }],
-      ["stepOver", { line: 5, column: 7 }],
+      ["stepOver", { line: 5, column: 13 }],
       ["stepOver", { line: 6, column: 4 }],
       ["stepOver", { line: 5, column: 2 }],
-      ["stepOver", { line: 5, column: 7 }],
+      ["stepOver", { line: 5, column: 13 }],
       ["stepOver", { line: 6, column: 4 }],
       ["stepOver", { line: 5, column: 2 }],
       ["stepOver", { line: 9, column: 2 }]
@@ -114,9 +115,9 @@ function testStepOverForOfArrayClosure(dbg) {
     { line: 3, column: 2 },
     [
       ["stepOver", { line: 5, column: 2 }],
-      ["stepOver", { line: 5, column: 7 }],
+      ["stepOver", { line: 5, column: 13 }],
       ["stepOver", { line: 5, column: 2 }],
-      ["stepOver", { line: 5, column: 7 }],
+      ["stepOver", { line: 5, column: 13 }],
       ["stepOver", { line: 5, column: 2 }],
       ["stepOver", { line: 9, column: 2 }]
     ]

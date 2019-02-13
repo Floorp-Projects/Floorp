@@ -607,51 +607,37 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
   // "step" from another location.
   _intraFrameLocationIsStepTarget: function(startLocation, script, offset) {
     // Only allow stepping stops at entry points for the line.
-    if (!script.getOffsetLocation(offset).isEntryPoint) {
+    if (!script.getOffsetMetadata(offset).isBreakpoint) {
       return false;
     }
 
-    // Cases when we have executed enough within a frame to consider a "step"
-    // to have occured:
-    //
-    // 1. We change URLs (can happen without changing frames thanks to
-    //    source mapping).
-    // 2. The source has pause points and we change locations.
-    // 3. The source does not have pause points and we change lines.
-
     const generatedLocation = this.sources.getScriptOffsetLocation(script, offset);
 
-    // Case 1.
     if (startLocation.generatedUrl !== generatedLocation.generatedUrl) {
       return true;
     }
 
-    const pausePoints = generatedLocation.generatedSourceActor.pausePoints;
+    // TODO(logan): When we remove points points, this can be removed too as
+    // we assert that we're at a different frame offset from the last time
+    // we paused.
     const lineChanged = startLocation.generatedLine !== generatedLocation.generatedLine;
     const columnChanged =
       startLocation.generatedColumn !== generatedLocation.generatedColumn;
-
-    if (!pausePoints) {
-      // Case 3.
-      return lineChanged;
-    }
-
-    // Case 2.
     if (!lineChanged && !columnChanged) {
       return false;
     }
 
     // When pause points are specified for the source,
     // we should pause when we are at a stepOver pause point
-    const pausePoint = findPausePointForLocation(pausePoints, generatedLocation);
+    const pausePoints = generatedLocation.generatedSourceActor.pausePoints;
+    const pausePoint = pausePoints &&
+      findPausePointForLocation(pausePoints, generatedLocation);
 
     if (pausePoint) {
       return pausePoint.step;
     }
 
-    // NOTE: if we do not find a pause point we want to
-    // fall back on the old behavior (Case 3)
-    return lineChanged;
+    return script.getOffsetMetadata(offset).isStepStart;
   },
 
   _makeOnStep: function({ thread, pauseAndRespond, startFrame,

@@ -32,11 +32,6 @@ add_task(threadClientTest(({ threadClient, debuggee }) => {
           Assert.notEqual(packet.why.type, "resumeLimit");
         },
         function(packet) {
-          // Stepped to the closing brace of the function.
-          Assert.equal(packet.frame.where.line, debuggee.line0 + 3);
-          Assert.equal(packet.why.type, "resumeLimit");
-        },
-        function(packet) {
           // The frame is about to be popped while stepping.
           Assert.equal(packet.frame.where.line, debuggee.line0 + 3);
           Assert.notEqual(packet.why.type, "breakpoint");
