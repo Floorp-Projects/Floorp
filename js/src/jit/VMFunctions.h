@@ -1206,6 +1206,11 @@ extern const VMFunction NativeGetElementInfo;
 extern const VMFunction AddOrUpdateSparseElementHelperInfo;
 extern const VMFunction GetSparseElementHelperInfo;
 
+extern const VMFunction ToNumberInfo;
+#ifdef ENABLE_BIGINT
+extern const VMFunction ToNumericInfo;
+#endif
+
 // TailCall VMFunctions
 extern const VMFunction DoConcatStringObjectInfo;
 
