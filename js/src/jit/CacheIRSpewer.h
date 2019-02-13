@@ -21,9 +21,9 @@ namespace js {
 namespace jit {
 
 class CacheIRSpewer {
-  Mutex outputLock;
-  Fprinter output;
-  mozilla::Maybe<JSONPrinter> json;
+  Mutex outputLock_;
+  Fprinter output_;
+  mozilla::Maybe<JSONPrinter> json_;
   static CacheIRSpewer cacheIRspewer;
 
   // Counter to record how many times Guard class is called. This is used to
@@ -39,12 +39,12 @@ class CacheIRSpewer {
   CacheIRSpewer();
   ~CacheIRSpewer();
 
-  bool enabled() { return json.isSome(); }
+  bool enabled() { return json_.isSome(); }
 
   // These methods can only be called when enabled() is true.
   Mutex& lock() {
     MOZ_ASSERT(enabled());
-    return outputLock;
+    return outputLock_;
   }
 
   void beginCache(const IRGenerator& generator);
@@ -78,7 +78,7 @@ class CacheIRSpewer {
         }
         sp_.endCache();
         if (sp_.guardCount_++ % sp_.spewInterval_ == 0) {
-          sp_.output.flush();
+          sp_.output_.flush();
         }
         sp_.lock().unlock();
       }
