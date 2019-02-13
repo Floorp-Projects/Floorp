@@ -234,13 +234,13 @@ class ChromeMessagePort extends MessagePort {
     this.destroy();
   }
 
-  // Called when a message is received from the message manager. This could
-  // have come from any port in the message manager so verify the port ID.
-  message({ data: messagedata }) {
-    if (this.destroyed || (messagedata.portID != this.portID)) {
-      return;
-    }
+  // Called when the content process is requesting some data.
+  async handleRequest(name, data) {
+    throw new Error(`Unknown request ${name}.`);
+  }
 
+  // Called when a message is received from the message manager.
+  handleMessage(messagedata) {
     let message = {
       target: this.publicPort,
       name: messagedata.name,
