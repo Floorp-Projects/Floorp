@@ -486,7 +486,6 @@ class nsChildView final : public nsBaseWidget {
 
   mozilla::widget::TextInputHandler* GetTextInputHandler() { return mTextInputHandler; }
 
-  void ClearVibrantAreas();
   NSColor* VibrancyFillColorForThemeGeometryType(nsITheme::ThemeGeometryType aThemeGeometryType);
   NSColor* VibrancyFontSmoothingBackgroundColorForThemeGeometryType(
       nsITheme::ThemeGeometryType aThemeGeometryType);
