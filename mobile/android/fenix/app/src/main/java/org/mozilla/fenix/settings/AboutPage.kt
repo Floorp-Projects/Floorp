@@ -10,6 +10,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import androidx.annotation.RawRes
 import org.mozilla.fenix.R
+import org.mozilla.fenix.BuildConfig.BUILD_DATE
 import org.mozilla.fenix.ext.replace
 import org.mozilla.geckoview.BuildConfig
 
@@ -32,6 +33,8 @@ object AboutPage {
         } catch (e: PackageManager.NameNotFoundException) {
             // Nothing to do if we can't find the package name.
         }
+
+        substitutionMap["%build-date%"] = BUILD_DATE
 
         context.resources.getString(R.string.about_content, appName).also { content ->
             substitutionMap["%about-content%"] = content

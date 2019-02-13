@@ -1,4 +1,6 @@
 import java.text.SimpleDateFormat
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.Date
 import java.util.Locale
 
@@ -23,5 +25,13 @@ object Config {
         // the week so that we do not end up with a lot of versions in tools like Sentry. As an extra this matches the
         // sections we use in the changelog (weeks).
         return SimpleDateFormat(".yyww", Locale.US).format(today)
+    }
+
+    @JvmStatic
+    fun generateBuildDate(): String {
+        val dateTime = LocalDateTime.now()
+        val timeFormatter = DateTimeFormatter.ofPattern("h:mm a")
+
+        return "${dateTime.dayOfWeek.toString().toLowerCase().capitalize()} ${dateTime.monthValue}/${dateTime.dayOfMonth} @ ${timeFormatter.format(dateTime)}"
     }
 }

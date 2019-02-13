@@ -186,6 +186,9 @@ android.applicationVariants.all { variant ->
     } else {
         buildConfigField 'boolean', 'TELEMETRY', 'false'
     }
+
+    def buildDate = Config.generateBuildDate()
+    buildConfigField 'String', 'BUILD_DATE', '"' + buildDate + '"'
 }
 
 // Normally this should use the same version as the glean dependency. But since we are currently using AC snapshots we
