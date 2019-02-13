@@ -1384,11 +1384,15 @@ class RTCPeerConnection {
   }
 
   getSenders() {
-    return this.getTransceivers().map(transceiver => transceiver.sender);
+    return this.getTransceivers()
+      .filter(transceiver => !transceiver.stopped)
+      .map(transceiver => transceiver.sender);
   }
 
   getReceivers() {
-    return this.getTransceivers().map(transceiver => transceiver.receiver);
+    return this.getTransceivers()
+      .filter(transceiver => !transceiver.stopped)
+      .map(transceiver => transceiver.receiver);
   }
 
   // test-only: get the current time using the webrtc clock
