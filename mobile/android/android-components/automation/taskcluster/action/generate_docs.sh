@@ -12,7 +12,7 @@ git config --global user.email "sebastian@mozilla.com"
 git config --global user.name "MickeyMoz"
 
 # Generate docs and copy to destination
-./gradlew clean assemble docs
+./gradlew clean docs
 rm -rf docs/api
 mkdir docs/api
 cp -R build/javadoc/android-components/ docs/api
