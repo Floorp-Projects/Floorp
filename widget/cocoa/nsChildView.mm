@@ -140,8 +140,6 @@ CGError CGSNewRegionWithRectList(const CGRect* rects, int rectCount, CGSRegionOb
 // defined in nsMenuBarX.mm
 extern NSMenu* sApplicationMenu;  // Application menu shared by all menubars
 
-static bool gChildViewMethodsSwizzled = false;
-
 extern nsIArray* gDraggedTransferables;
 
 ChildView* ChildViewMouseTracker::sLastMouseEventView = nil;
@@ -385,13 +383,6 @@ nsresult nsChildView::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
   // we need to provide an autorelease pool to avoid leaking cocoa objects
   // (see bug 559075).
   nsAutoreleasePool localPool;
-
-  // See NSView (MethodSwizzling) below.
-  if (!gChildViewMethodsSwizzled) {
-    nsToolkit::SwizzleMethods([NSView class], @selector(mouseDownCanMoveWindow),
-                              @selector(nsChildView_NSView_mouseDownCanMoveWindow));
-    gChildViewMethodsSwizzled = true;
-  }
 
   mBounds = aRect;
 
@@ -6101,32 +6092,3 @@ BOOL ChildViewMouseTracker::WindowAcceptsEvent(NSWindow* aWindow, NSEvent* aEven
 }
 
 #pragma mark -
-
-@interface NSView (MethodSwizzling)
-- (BOOL)nsChildView_NSView_mouseDownCanMoveWindow;
-@end
-
-@implementation NSView (MethodSwizzling)
-
-// All top-level browser windows belong to the ToolbarWindow class and have
-// NSTexturedBackgroundWindowMask turned on in their "style" (see particularly
-// [ToolbarWindow initWithContentRect:...] in nsCocoaWindow.mm).  This style
-// normally means the window "may be moved by clicking and dragging anywhere
-// in the window background", but we've suppressed this by giving the
-// ChildView class a mouseDownCanMoveWindow method that always returns NO.
-// Normally a ToolbarWindow's contentView (not a ChildView) returns YES when
-// NSTexturedBackgroundWindowMask is turned on.  But normally this makes no
-// difference.  However, under some (probably very unusual) circumstances
-// (and only on Leopard) it *does* make a difference -- for example it
-// triggers bmo bugs 431902 and 476393.  So here we make sure that a
-// ToolbarWindow's contentView always returns NO from the
-// mouseDownCanMoveWindow method.
-- (BOOL)nsChildView_NSView_mouseDownCanMoveWindow {
-  NSWindow* ourWindow = [self window];
-  NSView* contentView = [ourWindow contentView];
-  if ([ourWindow isKindOfClass:[ToolbarWindow class]] && (self == contentView))
-    return [ourWindow isMovableByWindowBackground];
-  return [self nsChildView_NSView_mouseDownCanMoveWindow];
-}
-
-@end
