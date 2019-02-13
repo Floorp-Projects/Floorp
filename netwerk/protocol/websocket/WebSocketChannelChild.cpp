@@ -119,35 +119,44 @@ void WebSocketChannelChild::GetEffectiveURL(nsAString& aEffectiveURL) const {
 
 bool WebSocketChannelChild::IsEncrypted() const { return mEncrypted; }
 
-class WrappedChannelEvent : public Runnable {
+class WebSocketEvent {
  public:
-  explicit WrappedChannelEvent(ChannelEvent* aChannelEvent)
-      : Runnable("net::WrappedChannelEvent"), mChannelEvent(aChannelEvent) {
-    MOZ_RELEASE_ASSERT(aChannelEvent);
+  WebSocketEvent() { MOZ_COUNT_CTOR(WebSocketEvent); }
+  virtual ~WebSocketEvent() { MOZ_COUNT_DTOR(WebSocketEvent); }
+  virtual void Run() = 0;
+};
+
+class WrappedWebSocketEvent : public Runnable {
+ public:
+  explicit WrappedWebSocketEvent(WebSocketEvent* aWebSocketEvent)
+      : Runnable("net::WrappedWebSocketEvent"),
+        mWebSocketEvent(aWebSocketEvent) {
+    MOZ_RELEASE_ASSERT(aWebSocketEvent);
   }
   NS_IMETHOD Run() override {
-    mChannelEvent->Run();
+    mWebSocketEvent->Run();
     return NS_OK;
   }
 
  private:
-  nsAutoPtr<ChannelEvent> mChannelEvent;
+  nsAutoPtr<WebSocketEvent> mWebSocketEvent;
 };
 
 class EventTargetDispatcher : public ChannelEvent {
  public:
-  EventTargetDispatcher(ChannelEvent* aChannelEvent,
+  EventTargetDispatcher(WebSocketEvent* aWebSocketEvent,
                         nsIEventTarget* aEventTarget)
-      : mChannelEvent(aChannelEvent), mEventTarget(aEventTarget) {}
+      : mWebSocketEvent(aWebSocketEvent), mEventTarget(aEventTarget) {}
 
   void Run() override {
     if (mEventTarget) {
-      mEventTarget->Dispatch(new WrappedChannelEvent(mChannelEvent.forget()),
-                             NS_DISPATCH_NORMAL);
+      mEventTarget->Dispatch(
+          new WrappedWebSocketEvent(mWebSocketEvent.forget()),
+          NS_DISPATCH_NORMAL);
       return;
     }
 
-    mChannelEvent->Run();
+    mWebSocketEvent->Run();
   }
 
   already_AddRefed<nsIEventTarget> GetEventTarget() override {
@@ -159,11 +168,11 @@ class EventTargetDispatcher : public ChannelEvent {
   }
 
  private:
-  nsAutoPtr<ChannelEvent> mChannelEvent;
+  nsAutoPtr<WebSocketEvent> mWebSocketEvent;
   nsCOMPtr<nsIEventTarget> mEventTarget;
 };
 
-class StartEvent : public ChannelEvent {
+class StartEvent : public WebSocketEvent {
  public:
   StartEvent(WebSocketChannelChild* aChild, const nsCString& aProtocol,
              const nsCString& aExtensions, const nsString& aEffectiveURL,
@@ -176,10 +185,6 @@ class StartEvent : public ChannelEvent {
 
   void Run() override {
     mChild->OnStart(mProtocol, mExtensions, mEffectiveURL, mEncrypted);
-  }
-
-  already_AddRefed<nsIEventTarget> GetEventTarget() override {
-    return do_AddRef(GetCurrentThreadEventTarget());
   }
 
  private:
@@ -222,16 +227,12 @@ void WebSocketChannelChild::OnStart(const nsCString& aProtocol,
   }
 }
 
-class StopEvent : public ChannelEvent {
+class StopEvent : public WebSocketEvent {
  public:
   StopEvent(WebSocketChannelChild* aChild, const nsresult& aStatusCode)
       : mChild(aChild), mStatusCode(aStatusCode) {}
 
   void Run() override { mChild->OnStop(mStatusCode); }
-
-  already_AddRefed<nsIEventTarget> GetEventTarget() override {
-    return do_AddRef(GetCurrentThreadEventTarget());
-  }
 
  private:
   RefPtr<WebSocketChannelChild> mChild;
@@ -261,7 +262,7 @@ void WebSocketChannelChild::OnStop(const nsresult& aStatusCode) {
   }
 }
 
-class MessageEvent : public ChannelEvent {
+class MessageEvent : public WebSocketEvent {
  public:
   MessageEvent(WebSocketChannelChild* aChild, const nsCString& aMessage,
                bool aBinary)
@@ -273,10 +274,6 @@ class MessageEvent : public ChannelEvent {
     } else {
       mChild->OnBinaryMessageAvailable(mMessage);
     }
-  }
-
-  already_AddRefed<nsIEventTarget> GetEventTarget() override {
-    return do_AddRef(GetCurrentThreadEventTarget());
   }
 
  private:
@@ -333,16 +330,12 @@ void WebSocketChannelChild::OnBinaryMessageAvailable(const nsCString& aMsg) {
   }
 }
 
-class AcknowledgeEvent : public ChannelEvent {
+class AcknowledgeEvent : public WebSocketEvent {
  public:
   AcknowledgeEvent(WebSocketChannelChild* aChild, const uint32_t& aSize)
       : mChild(aChild), mSize(aSize) {}
 
   void Run() override { mChild->OnAcknowledge(mSize); }
-
-  already_AddRefed<nsIEventTarget> GetEventTarget() override {
-    return do_AddRef(GetCurrentThreadEventTarget());
-  }
 
  private:
   RefPtr<WebSocketChannelChild> mChild;
@@ -373,17 +366,13 @@ void WebSocketChannelChild::OnAcknowledge(const uint32_t& aSize) {
   }
 }
 
-class ServerCloseEvent : public ChannelEvent {
+class ServerCloseEvent : public WebSocketEvent {
  public:
   ServerCloseEvent(WebSocketChannelChild* aChild, const uint16_t aCode,
                    const nsCString& aReason)
       : mChild(aChild), mCode(aCode), mReason(aReason) {}
 
   void Run() override { mChild->OnServerClose(mCode, mReason); }
-
-  already_AddRefed<nsIEventTarget> GetEventTarget() override {
-    return do_AddRef(GetCurrentThreadEventTarget());
-  }
 
  private:
   RefPtr<WebSocketChannelChild> mChild;
