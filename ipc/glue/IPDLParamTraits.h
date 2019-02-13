@@ -70,6 +70,27 @@ static MOZ_NEVER_INLINE bool ReadIPDLParam(const IPC::Message* aMsg,
       aMsg, aIter, aActor, aResult);
 }
 
+constexpr void WriteIPDLParamList(IPC::Message*, IProtocol*) {}
+
+template <typename P, typename... Ps>
+static void WriteIPDLParamList(IPC::Message* aMsg, IProtocol* aActor,
+                               const P& aParam, const Ps&... aParams) {
+  WriteIPDLParam(aMsg, aActor, aParam);
+  WriteIPDLParamList(aMsg, aActor, aParams...);
+}
+
+constexpr bool ReadIPDLParamList(const IPC::Message*, PickleIterator*,
+                                 IProtocol*) {
+  return true;
+}
+
+template <typename P, typename... Ps>
+static bool ReadIPDLParamList(const IPC::Message* aMsg, PickleIterator* aIter,
+                              IProtocol* aActor, P* aResult, Ps*... aResults) {
+  return ReadIPDLParam(aMsg, aIter, aActor, aResult) &&
+         ReadIPDLParamList(aMsg, aIter, aActor, aResults...);
+}
+
 // nsTArray support for IPDLParamTraits
 template <typename T>
 struct IPDLParamTraits<nsTArray<T>> {
@@ -190,6 +211,35 @@ struct IPDLParamTraits<mozilla::UniquePtr<T>> {
     }
     aResult->reset(obj);
     return true;
+  }
+};
+
+template <typename... Ts>
+struct IPDLParamTraits<Tuple<Ts...>> {
+  static void Write(IPC::Message* aMsg, IProtocol* aActor,
+                    const Tuple<Ts...>& aParam) {
+    WriteInternal(aMsg, aActor, aParam, std::index_sequence_for<Ts...>{});
+  }
+
+  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
+                   IProtocol* aActor, Tuple<Ts...>* aResult) {
+    return ReadInternal(aMsg, aIter, aActor, *aResult,
+                        std::index_sequence_for<Ts...>{});
+  }
+
+ private:
+  template <size_t... Is>
+  static void WriteInternal(IPC::Message* aMsg, IProtocol* aActor,
+                            const Tuple<Ts...>& aParam,
+                            std::index_sequence<Is...>) {
+    WriteIPDLParamList(aMsg, aActor, Get<Is>(aParam)...);
+  }
+
+  template <size_t... Is>
+  static bool ReadInternal(const IPC::Message* aMsg, PickleIterator* aIter,
+                           IProtocol* aActor, Tuple<Ts...>& aResult,
+                           std::index_sequence<Is...>) {
+    return ReadIPDLParamList(aMsg, aIter, aActor, &Get<Is>(aResult)...);
   }
 };
 
