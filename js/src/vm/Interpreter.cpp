@@ -3657,7 +3657,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
       ReservedRooted<Value> name(&rootValue0, REGS.sp[-1]);
       ReservedRooted<JSFunction*> fun(&rootFunction0,
                                       &REGS.sp[-2].toObject().as<JSFunction>());
-      if (!SetFunctionNameIfNoOwnName(cx, fun, name, prefixKind)) {
+      if (!SetFunctionName(cx, fun, name, prefixKind)) {
         goto error;
       }
 

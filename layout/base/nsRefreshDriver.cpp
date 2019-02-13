@@ -1748,6 +1748,7 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
     // We're currently suspended waiting for earlier Tick's to
     // be completed (on the Compositor). Mark that we missed the paint
     // and keep waiting.
+    PROFILER_ADD_MARKER("nsRefreshDriver::Tick waiting for paint", LAYOUT);
     return;
   }
 
