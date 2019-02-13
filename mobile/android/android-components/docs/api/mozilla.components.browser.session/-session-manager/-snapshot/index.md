@@ -28,3 +28,9 @@
 | Name | Summary |
 |---|---|
 | [isEmpty](is-empty.md) | `fun isEmpty(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |
+
+### Companion Object Functions
+
+| Name | Summary |
+|---|---|
+| [empty](empty.md) | `fun empty(): `[`Snapshot`](./index.md) |

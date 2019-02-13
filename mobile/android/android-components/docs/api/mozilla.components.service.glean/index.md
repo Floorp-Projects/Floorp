@@ -12,6 +12,7 @@
 | [EventMetricType](-event-metric-type/index.md) | `data class EventMetricType : `[`CommonMetricData`](-common-metric-data/index.md)<br>This implements the developer facing API for recording events. |
 | [Glean](-glean/index.md) | `object Glean : `[`GleanInternalAPI`](-glean-internal-a-p-i/index.md) |
 | [GleanInternalAPI](-glean-internal-a-p-i/index.md) | `open class GleanInternalAPI` |
+| [LabeledMetricType](-labeled-metric-type/index.md) | `data class LabeledMetricType<T> : `[`CommonMetricData`](-common-metric-data/index.md)<br>This implements the developer facing API for labeled metrics. |
 | [Lifetime](-lifetime/index.md) | `enum class Lifetime`<br>Enumeration of different metric lifetimes. |
 | [StringListMetricType](-string-list-metric-type/index.md) | `data class StringListMetricType : `[`CommonMetricData`](-common-metric-data/index.md)<br>This implements the developer facing API for recording string list metrics. |
 | [StringMetricType](-string-metric-type/index.md) | `data class StringMetricType : `[`CommonMetricData`](-common-metric-data/index.md)<br>This implements the developer facing API for recording string metrics. |

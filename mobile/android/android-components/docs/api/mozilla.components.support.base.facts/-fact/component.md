@@ -2,7 +2,7 @@
 
 # component
 
-`val component: Component` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/facts/Fact.kt#L19)
+`val component: <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/facts/Fact.kt#L19)
 
 Component that emitted this fact.
 
