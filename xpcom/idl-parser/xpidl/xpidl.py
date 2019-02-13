@@ -560,19 +560,20 @@ class Native(object):
             const = True
 
         if calltype == 'element':
+            if self.specialtype == 'nsid':
+                if self.isPtr(calltype):
+                    raise IDLError("Array<nsIDPtr> not yet supported. "
+                                   "File an XPConnect bug if you need it.", self.location)
+
+                # ns[CI]?IDs should be held directly in Array<T>s
+                return self.nativename
+
             if self.isRef(calltype):
                 raise IDLError("[ref] qualified type unsupported in Array<T>", self.location)
 
             # Promises should be held in RefPtr<T> in Array<T>s
             if self.specialtype == 'promise':
                 return 'RefPtr<mozilla::dom::Promise>'
-
-            # We don't support nsIDPtr, in Array<T> currently, although
-            # this or support for Array<nsID> will be needed to replace
-            # [array] completely.
-            if self.specialtype == 'nsid':
-                raise IDLError("Array<nsIDPtr> not yet supported. "
-                               "File an XPConnect bug if you need it.", self.location)
 
         if self.isRef(calltype):
             m = '& '  # [ref] is always passed with a single indirection

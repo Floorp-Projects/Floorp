@@ -51,6 +51,7 @@ struct nsXPTCVariant {
     // can be used to store these types when IsIndirect() is true.
     nsXPTCMiniVariant mini;
 
+    nsID nsid;
     nsCString nscstr;
     nsString nsstr;
     JS::Value jsval;

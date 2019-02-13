@@ -1262,13 +1262,23 @@ bool CallMethodHelper::GetInterfaceTypeFromParam(const nsXPTType& type,
 
     *result = inner.GetInterface()->IID();
   } else if (inner.Tag() == nsXPTType::T_INTERFACE_IS) {
-    nsID* id = (nsID*)GetDispatchParam(inner.ArgNum())->val.p;
-    if (!id) {
+    const nsXPTCVariant* param = GetDispatchParam(inner.ArgNum());
+    if (param->type.Tag() != nsXPTType::T_NSID &&
+        param->type.Tag() != nsXPTType::T_NSIDPTR) {
+      return Throw(NS_ERROR_UNEXPECTED, mCallContext);
+    }
+
+    const void* ptr = &param->val;
+    if (param->type.Tag() == nsXPTType::T_NSIDPTR) {
+      ptr = *static_cast<nsID* const*>(ptr);
+    }
+
+    if (!ptr) {
       return ThrowBadParam(NS_ERROR_XPC_CANT_GET_PARAM_IFACE_INFO,
                            inner.ArgNum(), mCallContext);
     }
 
-    *result = *id;
+    *result = *static_cast<const nsID*>(ptr);
   }
   return true;
 }
@@ -1499,9 +1509,9 @@ bool CallMethodHelper::ConvertIndependentParam(uint8_t i) {
   // the default value if IsOptional is true.
   if (i >= mArgc) {
     MOZ_ASSERT(paramInfo.IsOptional(), "missing non-optional argument!");
-    if (type.Tag() == nsXPTType::T_IID) {
-      // NOTE: 'const nsIID&' is supported, so it must be allocated.
-      dp->val.p = new nsIID();
+    if (type.Tag() == nsXPTType::T_NSID) {
+      // Use a default value of the null ID for optional NSID objects.
+      dp->ext.nsid.Clear();
       return true;
     }
   }
