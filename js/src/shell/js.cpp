@@ -1040,12 +1040,12 @@ static bool DrainJobQueue(JSContext* cx, unsigned argc, Value* vp) {
 static bool GlobalOfFirstJobInQueue(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  if (cx->jobQueue->empty()) {
+  RootedObject job(cx, cx->internalJobQueue->maybeFront());
+  if (!job) {
     JS_ReportErrorASCII(cx, "Job queue is empty");
     return false;
   }
 
-  RootedObject job(cx, cx->jobQueue->front());
   RootedObject global(cx, &job->nonCCWGlobal());
   if (!cx->compartment()->wrap(cx, &global)) {
     return false;
@@ -2969,6 +2969,8 @@ static MOZ_MUST_USE bool SrcNotes(JSContext* cx, HandleScript script,
       case SRC_BREAK2LABEL:
       case SRC_SWITCHBREAK:
       case SRC_ASSIGNOP:
+      case SRC_BREAKPOINT:
+      case SRC_STEP_SEP:
       case SRC_XDELTA:
         break;
 

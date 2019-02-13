@@ -14,19 +14,6 @@ import { getGeneratedLocation } from "../../utils/source-maps";
 import type { SourceId } from "../../types";
 import type { ThunkArgs, Action } from "../types";
 
-function compressPausePoints(pausePoints) {
-  const compressed = {};
-  for (const line in pausePoints) {
-    compressed[line] = {};
-    for (const col in pausePoints[line]) {
-      const { types } = pausePoints[line][col];
-      compressed[line][col] = (types.break ? 1 : 0) | (types.step ? 2 : 0);
-    }
-  }
-
-  return compressed;
-}
-
 async function mapLocations(pausePoints, state, source, sourceMaps) {
   const pausePointList = convertToList(pausePoints);
   const sourceId = source.id;
@@ -58,17 +45,8 @@ export function setPausePoints(sourceId: SourceId) {
       return;
     }
 
-    let pausePoints = await parser.getPausePoints(sourceId);
-
-    if (isGenerated(source)) {
-      const compressed = compressPausePoints(pausePoints);
-      for (const sourceActor of getSourceActors(getState(), sourceId)) {
-        await client.setPausePoints(sourceActor, compressed);
-      }
-    }
-
-    pausePoints = await mapLocations(
-      pausePoints,
+    const pausePoints = await mapLocations(
+      await parser.getPausePoints(sourceId),
       getState(),
       source,
       sourceMaps

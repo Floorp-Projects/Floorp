@@ -526,9 +526,6 @@ class nsChildView final : public nsBaseWidget {
   void ReportMoveEvent();
   void ReportSizeEvent();
 
-  // override to create different kinds of child views. Autoreleases, so
-  // caller must retain.
-  virtual NSView* CreateCocoaView(NSRect inFrame);
   void TearDownView();
 
   virtual already_AddRefed<nsIWidget> AllocateChildPopupWidget() override {
@@ -567,11 +564,11 @@ class nsChildView final : public nsBaseWidget {
                                uint32_t aAllowedDirections);
 
  protected:
-  NSView<mozView>* mView;  // my parallel cocoa view (ChildView or NativeScrollbarView), [STRONG]
+  ChildView* mView;  // my parallel cocoa view, [STRONG]
   RefPtr<mozilla::widget::TextInputHandler> mTextInputHandler;
   InputContext mInputContext;
 
-  NSView<mozView>* mParentView;
+  NSView* mParentView;
   nsIWidget* mParentWidget;
 
 #ifdef ACCESSIBILITY

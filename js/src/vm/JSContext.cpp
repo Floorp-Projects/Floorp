@@ -173,18 +173,6 @@ JSContext* js::NewContext(uint32_t maxBytes, uint32_t maxNurseryBytes,
   return cx;
 }
 
-static void FreeJobQueueHandling(JSContext* cx) {
-  if (!cx->jobQueue) {
-    return;
-  }
-
-  FreeOp* fop = cx->defaultFreeOp();
-  fop->delete_(cx->jobQueue.ref());
-  cx->getIncumbentGlobalCallback = nullptr;
-  cx->enqueuePromiseJobCallback = nullptr;
-  cx->enqueuePromiseJobCallbackData = nullptr;
-}
-
 void js::DestroyContext(JSContext* cx) {
   JS_AbortIfWrongThread(cx);
 
@@ -194,7 +182,8 @@ void js::DestroyContext(JSContext* cx) {
   // interrupt this context. See HelperThread::handleIonWorkload.
   CancelOffThreadIonCompile(cx->runtime());
 
-  FreeJobQueueHandling(cx);
+  cx->jobQueue = nullptr;
+  cx->internalJobQueue = nullptr;
 
   // Flush promise tasks executing in helper threads early, before any parts
   // of the JSRuntime that might be visible to helper threads are torn down.
@@ -1019,21 +1008,6 @@ void JSContext::recoverFromOutOfMemory() {
   }
 }
 
-static bool InternalEnqueuePromiseJobCallback(JSContext* cx,
-                                              JS::HandleObject promise,
-                                              JS::HandleObject job,
-                                              JS::HandleObject allocationSite,
-                                              JS::HandleObject incumbentGlobal,
-                                              void* data) {
-  MOZ_ASSERT(job);
-  JS::JobQueueMayNotBeEmpty(cx);
-  if (!cx->jobQueue->pushBack(job)) {
-    ReportOutOfMemory(cx);
-    return false;
-  }
-  return true;
-}
-
 JS_FRIEND_API bool js::UseInternalJobQueues(JSContext* cx) {
   // Internal job queue handling must be set up very early. Self-hosting
   // initialization is as good a marker for that as any.
@@ -1041,42 +1015,59 @@ JS_FRIEND_API bool js::UseInternalJobQueues(JSContext* cx) {
       !cx->runtime()->hasInitializedSelfHosting(),
       "js::UseInternalJobQueues must be called early during runtime startup.");
   MOZ_ASSERT(!cx->jobQueue);
-  auto* queue =
-      js_new<PersistentRooted<JobQueue>>(cx, JobQueue(SystemAllocPolicy()));
+  auto queue = MakeUnique<InternalJobQueue>(cx);
   if (!queue) {
     return false;
   }
 
-  cx->jobQueue = queue;
+  cx->internalJobQueue = std::move(queue);
+  cx->jobQueue = cx->internalJobQueue.ref().get();
 
   cx->runtime()->offThreadPromiseState.ref().initInternalDispatchQueue();
   MOZ_ASSERT(cx->runtime()->offThreadPromiseState.ref().initialized());
-
-  JS::SetEnqueuePromiseJobCallback(cx, InternalEnqueuePromiseJobCallback);
 
   return true;
 }
 
 JS_FRIEND_API bool js::EnqueueJob(JSContext* cx, JS::HandleObject job) {
   MOZ_ASSERT(cx->jobQueue);
-  JS::JobQueueMayNotBeEmpty(cx);
-  if (!cx->jobQueue->pushBack(job)) {
-    ReportOutOfMemory(cx);
-    return false;
-  }
-
-  return true;
+  return cx->jobQueue->enqueuePromiseJob(cx, nullptr, job, nullptr, nullptr);
 }
 
 JS_FRIEND_API void js::StopDrainingJobQueue(JSContext* cx) {
-  MOZ_ASSERT(cx->jobQueue);
-  cx->stopDrainingJobQueue = true;
+  MOZ_ASSERT(cx->internalJobQueue.ref());
+  cx->internalJobQueue->interrupt();
 }
 
 JS_FRIEND_API void js::RunJobs(JSContext* cx) {
   MOZ_ASSERT(cx->jobQueue);
+  cx->jobQueue->runJobs(cx);
+}
 
-  if (cx->drainingJobQueue || cx->stopDrainingJobQueue) {
+JSObject* InternalJobQueue::getIncumbentGlobal(JSContext* cx) {
+  if (!cx->compartment()) {
+    return nullptr;
+  }
+  return cx->global();
+}
+
+bool InternalJobQueue::enqueuePromiseJob(JSContext* cx,
+                                         JS::HandleObject promise,
+                                         JS::HandleObject job,
+                                         JS::HandleObject allocationSite,
+                                         JS::HandleObject incumbentGlobal) {
+  MOZ_ASSERT(job);
+  if (!queue.pushBack(job)) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+
+  JS::JobQueueMayNotBeEmpty(cx);
+  return true;
+}
+
+void InternalJobQueue::runJobs(JSContext* cx) {
+  if (draining_ || interrupted_) {
     return;
   }
 
@@ -1087,26 +1078,26 @@ JS_FRIEND_API void js::RunJobs(JSContext* cx) {
     // same time we don't want to assert against it, because that'd make
     // drainJobQueue unsafe for fuzzers. We do want fuzzers to test this,
     // so we simply ignore nested calls of drainJobQueue.
-    cx->drainingJobQueue = true;
+    draining_ = true;
 
     RootedObject job(cx);
     JS::HandleValueArray args(JS::HandleValueArray::empty());
     RootedValue rval(cx);
 
     // Execute jobs in a loop until we've reached the end of the queue.
-    while (!cx->jobQueue->empty()) {
+    while (!queue.empty()) {
       // A previous job might have set this flag. E.g., the js shell
       // sets it if the `quit` builtin function is called.
-      if (cx->stopDrainingJobQueue) {
+      if (interrupted_) {
         break;
       }
 
-      job = cx->jobQueue->front();
-      cx->jobQueue->popFront();
+      job = queue.front();
+      queue.popFront();
 
       // If the next job is the last job in the job queue, allow
       // skipping the standard job queuing behavior.
-      if (cx->jobQueue->empty()) {
+      if (queue.empty()) {
         JS::JobQueueIsEmpty(cx);
       }
 
@@ -1132,20 +1123,62 @@ JS_FRIEND_API void js::RunJobs(JSContext* cx) {
       }
     }
 
-    cx->drainingJobQueue = false;
+    draining_ = false;
 
-    if (cx->stopDrainingJobQueue) {
-      cx->stopDrainingJobQueue = false;
+    if (interrupted_) {
+      interrupted_ = false;
       break;
     }
 
-    cx->jobQueue->clear();
+    queue.clear();
 
     // It's possible a job added a new off-thread promise task.
     if (!cx->runtime()->offThreadPromiseState.ref().internalHasPending()) {
       break;
     }
   }
+}
+
+bool InternalJobQueue::empty() const { return queue.empty(); }
+
+JSObject* InternalJobQueue::maybeFront() const {
+  if (queue.empty()) {
+    return nullptr;
+  }
+
+  return queue.get().front();
+}
+
+class js::InternalJobQueue::SavedQueue : public JobQueue::SavedJobQueue {
+ public:
+  SavedQueue(JSContext* cx, Queue&& saved)
+      : cx(cx), saved(cx, std::move(saved)) {
+    MOZ_ASSERT(cx->internalJobQueue.ref());
+  }
+
+  ~SavedQueue() {
+    MOZ_ASSERT(cx->internalJobQueue.ref());
+    cx->internalJobQueue->queue = std::move(saved.get());
+  }
+
+ private:
+  JSContext* cx;
+  PersistentRooted<Queue> saved;
+};
+
+js::UniquePtr<JS::JobQueue::SavedJobQueue> InternalJobQueue::saveJobQueue(
+    JSContext* cx) {
+  auto saved = js::MakeUnique<SavedQueue>(cx, std::move(queue.get()));
+  if (!saved) {
+    // When MakeUnique's allocation fails, the SavedQueue constructor is never
+    // called, so this->queue is still initialized. (The move doesn't occur
+    // until the constructor gets called.)
+    ReportOutOfMemory(cx);
+    return nullptr;
+  }
+
+  queue = Queue(SystemAllocPolicy());
+  return saved;
 }
 
 JS::Error JSContext::reportedError;
@@ -1243,12 +1276,7 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
       ionReturnOverride_(MagicValue(JS_ARG_POISON)),
       jitStackLimit(UINTPTR_MAX),
       jitStackLimitNoInterrupt(UINTPTR_MAX),
-      getIncumbentGlobalCallback(nullptr),
-      enqueuePromiseJobCallback(nullptr),
-      enqueuePromiseJobCallbackData(nullptr),
       jobQueue(nullptr),
-      drainingJobQueue(false),
-      stopDrainingJobQueue(false),
       canSkipEnqueuingJobs(false),
       promiseRejectionTrackerCallback(nullptr),
       promiseRejectionTrackerCallbackData(nullptr)

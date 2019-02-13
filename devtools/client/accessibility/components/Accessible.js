@@ -93,6 +93,7 @@ class Accessible extends Component {
 
     this.state = {
       expanded: new Set(),
+      active: null,
       focused: null,
     };
 
@@ -230,7 +231,7 @@ class Accessible extends Component {
     if (props) {
       props.refs.tree.blur();
     }
-    await this.setState({ focused: null });
+    await this.setState({ active: null, focused: null });
 
     window.emit(EVENTS.NEW_ACCESSIBLE_FRONT_INSPECTED);
   }
@@ -300,7 +301,7 @@ class Accessible extends Component {
   }
 
   render() {
-    const { expanded, focused } = this.state;
+    const { expanded, active, focused } = this.state;
     const { items, parents, accessible, labelledby } = this.props;
 
     if (accessible) {
@@ -320,17 +321,15 @@ class Accessible extends Component {
             this.setState({ focused: item.path });
           }
         },
-        onActivate: ({ contents }) => {
-          if (isNode(contents)) {
-            this.selectNode(this.props.DOMNode, "accessibility-keyboard");
-          } else if (isAccessible(contents)) {
-            const target = findAccessibleTarget(this.props.relations, contents.actor);
-            if (target) {
-              this.selectAccessible(target);
-            }
+        onActivate: item => {
+          if (item == null) {
+            this.setState({ active: null });
+          } else if (this.state.active !== item.path) {
+            this.setState({ active: item.path });
           }
         },
-        focused: findFocused(focused, items),
+        focused: findByPath(focused, items),
+        active: findByPath(active, items),
         renderItem: this.renderItem,
         labelledby,
       });
@@ -362,17 +361,21 @@ const findAccessibleTarget = (relations, actorID) => {
 };
 
 /**
- * Find currently focused item.
- * @param  {String} focused Key of the currently focused item.
- * @param  {Array}  items   Accessibility properties array.
- * @return {Object?}        Possibly found focused item.
+ * Find an item based on a given path.
+ * @param  {String} path
+ *         Key of the item to be looked up.
+ * @param  {Array}  items
+ *         Accessibility properties array.
+ * @return {Object?}
+ *         Possibly found item.
  */
-const findFocused = (focused, items) => {
+const findByPath = (path, items) => {
   for (const item of items) {
-    if (item.path === focused) {
+    if (item.path === path) {
       return item;
     }
-    const found = findFocused(focused, item.children);
+
+    const found = findByPath(path, item.children);
     if (found) {
       return found;
     }

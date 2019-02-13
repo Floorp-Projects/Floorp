@@ -143,11 +143,11 @@ devtools/client/jsonview/lib/require.js
 devtools/client/shared/demangle.js
 devtools/client/shared/source-map/*
 devtools/client/shared/vendor/*
-devtools/client/sourceeditor/codemirror/*.js
-devtools/client/sourceeditor/codemirror/**/*.js
-devtools/client/sourceeditor/tern/*
-devtools/client/sourceeditor/test/cm_mode_ruby.js
-devtools/client/sourceeditor/test/codemirror/*
+devtools/client/shared/sourceeditor/codemirror/*.js
+devtools/client/shared/sourceeditor/codemirror/**/*.js
+devtools/client/shared/sourceeditor/tern/*
+devtools/client/shared/sourceeditor/test/cm_mode_ruby.js
+devtools/client/shared/sourceeditor/test/codemirror/*
 devtools/server/actors/utils/automation-timeline.js
 
 # Ignore devtools files testing sourcemaps / code style

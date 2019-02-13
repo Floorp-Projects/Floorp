@@ -8,9 +8,9 @@
 @import "resource://devtools/client/shared/components/tabs/Tabs.css";
 @import "resource://devtools/client/shared/components/tabs/TabBar.css";
 @import "chrome://devtools/skin/components-frame.css";
-@import "chrome://devtools/content/sourceeditor/codemirror/lib/codemirror.css";
-@import "chrome://devtools/content/sourceeditor/codemirror/addon/dialog/dialog.css";
-@import "chrome://devtools/content/sourceeditor/codemirror/mozilla.css";
+@import "chrome://devtools/content/shared/sourceeditor/codemirror/lib/codemirror.css";
+@import "chrome://devtools/content/shared/sourceeditor/codemirror/addon/dialog/dialog.css";
+@import "chrome://devtools/content/shared/sourceeditor/codemirror/mozilla.css";
 @import "resource://devtools/client/shared/components/MdnLink.css";
 
 /* Network panel components & styles */

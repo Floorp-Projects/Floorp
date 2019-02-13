@@ -1664,12 +1664,33 @@ bool BaselineCodeGen<Handler>::emit_JSOP_POS() {
   // Keep top stack value in R0.
   frame.popRegsAndSync(1);
 
-  // Inline path for int32 and double.
+  // Inline path for int32 and double; otherwise call VM.
   Label done;
   masm.branchTestNumber(Assembler::Equal, R0, &done);
 
-  // Call IC.
-  if (!emitNextIC()) {
+  prepareVMCall();
+  pushArg(R0);
+  if (!callVM(ToNumberInfo)) {
+    return false;
+  }
+
+  masm.bind(&done);
+  frame.push(R0);
+  return true;
+}
+
+template <typename Handler>
+bool BaselineCodeGen<Handler>::emit_JSOP_TONUMERIC() {
+  // Keep top stack value in R0.
+  frame.popRegsAndSync(1);
+
+  // Inline path for int32 and double; otherwise call VM.
+  Label done;
+  masm.branchTestNumber(Assembler::Equal, R0, &done);
+
+  prepareVMCall();
+  pushArg(R0);
+  if (!callVM(ToNumericInfo)) {
     return false;
   }
 

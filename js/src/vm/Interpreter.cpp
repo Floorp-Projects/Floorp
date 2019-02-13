@@ -4319,6 +4319,13 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     }
     END_CASE(JSOP_DEC)
 
+    CASE(JSOP_TONUMERIC) {
+      if (!ToNumeric(cx, REGS.stackHandleAt(-1))) {
+        goto error;
+      }
+    }
+    END_CASE(JSOP_TONUMERIC)
+
 #ifdef ENABLE_BIGINT
     CASE(JSOP_BIGINT) {
       PUSH_COPY(script->getConst(GET_UINT32_INDEX(REGS.pc)));

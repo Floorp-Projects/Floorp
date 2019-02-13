@@ -36,6 +36,9 @@ add_task(async function() {
   await pressResume(dbg);
   assertPausedLocation(dbg);
 
+  await pressStepOver(dbg);
+  assertPausedLocation(dbg);
+
   await pressStepIn(dbg);
   assertPausedLocation(dbg);
 

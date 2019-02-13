@@ -14,9 +14,40 @@
   background: var(--theme-sidebar-background);
 }
 
-/* Columns with date should have a min width so that date is visible */
+/* The minimum column width needs to be determined by the header width */
+.table-widget-cell {
+  min-width: unset;
+}
+
+/* Set minimum column widths */
+#name {
+  min-width: 65px;
+}
+
+#host {
+  min-width: 80px;
+}
+
+#path {
+  min-width: 60px;
+}
+
 #expires, #lastAccessed, #creationTime {
-  min-width: 150px;
+  min-width: 115px;
+}
+
+#value {
+  min-width: 95px;
+}
+
+#hostOnly,
+#isHttpOnly,
+#sameSite {
+  min-width: 50px;
+}
+
+#isSecure {
+  min-width: 40px;
 }
 
 /* Variables View Sidebar */

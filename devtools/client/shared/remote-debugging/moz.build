@@ -6,7 +6,12 @@
 
 DevToolsModules(
     'remote-client-manager.js',
+    'version-checker.js',
 )
+
+XPCSHELL_TESTS_MANIFESTS += [
+    'test/unit/xpcshell.ini'
+]
 
 with Files('**'):
     BUG_COMPONENT = ('DevTools', 'about:debugging')

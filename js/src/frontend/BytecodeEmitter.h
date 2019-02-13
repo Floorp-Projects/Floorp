@@ -137,6 +137,10 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   // we can get undefined behavior.
   uint32_t lastColumn_;
 
+  uint32_t lastSeparatorOffet_;
+  uint32_t lastSeparatorLine_;
+  uint32_t lastSeparatorColumn_;
+
   // switchToMain sets this to the bytecode offset of the main section.
   mozilla::Maybe<uint32_t> mainOffset_;
 
@@ -488,8 +492,11 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
                                        TopLevelFunction isTopLevel);
 
   void updateDepth(ptrdiff_t target);
+  MOZ_MUST_USE bool markStepBreakpoint();
+  MOZ_MUST_USE bool markSimpleBreakpoint();
   MOZ_MUST_USE bool updateLineNumberNotes(uint32_t offset);
   MOZ_MUST_USE bool updateSourceCoordNotes(uint32_t offset);
+  void updateSeparatorPosition();
 
   JSOp strictifySetNameOp(JSOp op);
 

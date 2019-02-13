@@ -61,7 +61,7 @@ async function stepOutOfA(dbg, func, expectedLocation) {
 
 async function stepOverInA(dbg, func, expectedLocation) {
   await invokeAndPause(dbg, `${func}()`);
-  await steps(dbg, [stepOver, stepIn, stepOver]);
+  await steps(dbg, [stepOver, stepIn]);
 
   let packet = await step(dbg, stepOver);
   dump(`>> stepOverInA hi\n`);
@@ -82,9 +82,9 @@ function run_test() {
   return (async function() {
     const dbg = await setupTestFromUrl("stepping.js");
 
-    await testStep(dbg, "arithmetic", {line: 16, column: 8});
-    await testStep(dbg, "composition", {line: 21, column: 2});
-    await testStep(dbg, "chaining", {line: 26, column: 6});
+    await testStep(dbg, "arithmetic", {line: 17, column: 0});
+    await testStep(dbg, "composition", {line: 22, column: 0});
+    await testStep(dbg, "chaining", {line: 27, column: 0});
 
     await testFinish(dbg);
   })();

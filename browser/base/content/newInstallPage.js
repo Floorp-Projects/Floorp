@@ -2,12 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* global RPMGetUpdateChannel, RPMGetFxAccountsEndpoint */
+
 const PARAMS = new URL(location).searchParams;
 const ENTRYPOINT = "new-install-page";
-const SOURCE = `new-install-page-${PARAMS.get("channel")}`;
+const SOURCE = `new-install-page-${RPMGetUpdateChannel()}`;
 const CAMPAIGN = "dedicated-profiles";
 const ENDPOINT = PARAMS.get("endpoint");
-const CONTEXT = "fx_desktop_v3";
 
 function appendAccountsParams(url) {
   url.searchParams.set("entrypoint", ENTRYPOINT);
@@ -24,7 +25,8 @@ function appendParams(url, params) {
 }
 
 async function requestFlowMetrics() {
-  let requestURL = new URL(`${ENDPOINT}metrics-flow`);
+  let requestURL = new URL(await endpoint);
+  requestURL.pathname = "metrics-flow";
   appendParams(requestURL, {
     "form_type": "email",
   });
@@ -47,11 +49,9 @@ async function submitForm(event) {
 
   let { flowId, flowBeginTime } = await metrics;
 
-  let requestURL = new URL(ENDPOINT);
+  let requestURL = new URL(await endpoint);
   appendParams(requestURL, {
-    "service": "sync",
     "action": "email",
-    "context": CONTEXT,
     "utm_campaign": CAMPAIGN,
     "email": input.value,
     "flow_id": flowId,
@@ -60,6 +60,8 @@ async function submitForm(event) {
 
   window.open(requestURL, "_blank", "noopener");
 }
+
+const endpoint = RPMGetFxAccountsEndpoint(ENTRYPOINT);
 
 // This must come before the CSP is set or it will be blocked.
 const metrics = requestFlowMetrics();
