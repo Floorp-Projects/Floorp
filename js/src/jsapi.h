@@ -570,13 +570,22 @@ extern JS_PUBLIC_API void IterateRealmsInCompartment(
 
 }  // namespace JS
 
-typedef void (*JSIterateCompartmentCallback)(JSContext* cx, void* data,
-                                             JS::Compartment* compartment);
+/**
+ * An enum that JSIterateCompartmentCallback can return to indicate
+ * whether to keep iterating.
+ */
+namespace JS {
+enum class CompartmentIterResult { KeepGoing, Stop };
+}  // namespace JS
+
+typedef JS::CompartmentIterResult (*JSIterateCompartmentCallback)(
+    JSContext* cx, void* data, JS::Compartment* compartment);
 
 /**
- * This function calls |compartmentCallback| on every compartment. Beware that
- * there is no guarantee that the compartment will survive after the callback
- * returns. Also, barriers are disabled via the TraceSession.
+ * This function calls |compartmentCallback| on every compartment until either
+ * all compartments have been iterated or CompartmentIterResult::Stop is
+ * returned. Beware that there is no guarantee that the compartment will survive
+ * after the callback returns. Also, barriers are disabled via the TraceSession.
  */
 extern JS_PUBLIC_API void JS_IterateCompartments(
     JSContext* cx, void* data,
