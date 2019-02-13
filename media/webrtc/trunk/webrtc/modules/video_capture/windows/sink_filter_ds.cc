@@ -319,7 +319,7 @@ CaptureInputPin::Receive(IN IMediaSample* pIMediaSample) {
   reinterpret_cast<CaptureSinkFilter*>(mFilter)->LockReceive();
   hr = BaseInputPin::Receive(pIMediaSample);
 
-  if (SUCCEEDED(hr)) {
+  if (hr == S_OK) {
     const int32_t length = pIMediaSample->GetActualDataLength();
 
     unsigned char* pBuffer = NULL;
