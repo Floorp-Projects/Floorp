@@ -212,7 +212,6 @@ public final class GeckoRuntime implements Parcelable {
         GeckoAppShell.setDisplayDpiOverride(settings.getDisplayDpiOverride());
         GeckoAppShell.setScreenSizeOverride(settings.getScreenSizeOverride());
         GeckoAppShell.setCrashHandlerService(settings.getCrashHandler());
-        GeckoFontScaleListener.getInstance().attachToContext(context, settings);
 
         final GeckoThread.InitInfo info = new GeckoThread.InitInfo();
         info.args = settings.getArguments();

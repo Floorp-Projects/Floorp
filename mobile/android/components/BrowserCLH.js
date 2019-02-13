@@ -9,9 +9,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ActorManagerParent: "resource://gre/modules/ActorManagerParent.jsm",
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   DelayedInit: "resource://gre/modules/DelayedInit.jsm",
-  EventDispatcher: "resource://gre/modules/Messaging.jsm",
   GeckoViewUtils: "resource://gre/modules/GeckoViewUtils.jsm",
-  Preferences: "resource://gre/modules/Preferences.jsm",
   Services: "resource://gre/modules/Services.jsm",
 });
 
@@ -174,32 +172,6 @@ BrowserCLH.prototype = {
             mozSystemGroup: true,
           },
         });
-        break;
-      }
-
-      case "profile-after-change": {
-        EventDispatcher.instance.registerListener(this, "GeckoView:SetDefaultPrefs");
-        break;
-      }
-    }
-  },
-
-  onEvent(aEvent, aData, aCallback) {
-    switch (aEvent) {
-      case "GeckoView:SetDefaultPrefs": {
-        // While we want to allow setting certain preferences via GeckoView, we
-        // don't want to let it take over completely the management of those
-        // preferences. Therefore we don't handle the "ResetUserPrefs" message,
-        // and consequently we also apply any pref changes directly, i.e. *not*
-        // on the default branch.
-        const prefs = new Preferences();
-        for (const name of Object.keys(aData)) {
-          try {
-            prefs.set(name, aData[name]);
-          } catch (e) {
-            Cu.reportError(`Failed to set preference ${name}: ${e}`);
-          }
-        }
         break;
       }
     }
