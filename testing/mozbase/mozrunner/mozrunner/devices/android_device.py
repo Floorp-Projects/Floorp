@@ -724,7 +724,7 @@ class AndroidEmulator(object):
             if not self.substs['TARGET_CPU'].startswith('arm'):
                 return 'x86-7.0'
             else:
-                return '7.0'
+                return '4.3'
         return 'x86-7.0'
 
 
