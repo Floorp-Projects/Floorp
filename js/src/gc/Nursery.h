@@ -362,6 +362,7 @@ class Nursery {
     return capacity() - freeSpace();
   }
   MOZ_ALWAYS_INLINE size_t freeSpace() const {
+    MOZ_ASSERT(isEnabled());
     MOZ_ASSERT(currentEnd_ - position_ <= NurseryChunkUsableSize);
     MOZ_ASSERT(currentChunk_ < maxChunkCount());
     return (currentEnd_ - position_) +
