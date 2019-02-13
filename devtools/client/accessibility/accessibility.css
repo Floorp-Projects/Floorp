@@ -383,20 +383,29 @@ body {
   background-color: var(--theme-selection-background-hover);
 }
 
-.accessible .tree:focus .node.focused {
+.accessible .tree:focus .node.focused,
+.accessible .tree .tree-node-active .node.focused {
   background-color: var(--theme-selection-background);
 }
 
-.accessible .tree:focus .node.focused * {
+.accessible .tree:focus .node.focused *,
+.accessible .tree .tree-node-active .node.focused * {
   color: var(--theme-selection-color);
 }
 
-.accessible .tree:focus .node.focused .open-inspector {
+.accessible .tree:focus .node.focused .open-inspector,
+.accessible .tree .tree-node-active .node.focused .open-inspector {
   background-color: var(--grey-30);
 }
 
-.accessible .tree:focus .node.focused:hover .open-inspector {
+.accessible .tree:focus .node.focused:hover .open-inspector,
+.accessible .tree .tree-node-active .node.focused:hover .open-inspector {
   background-color: var(--theme-selection-color);
+}
+
+.accessible .tree .tree-node-active .node.focused .open-inspector:focus,
+.accessible .tree .tree-node-active .node.focused:hover .open-inspector:focus {
+  background-color: var(--grey-40);
 }
 
 .accessible .tree .arrow {
@@ -425,18 +434,26 @@ body {
   margin-inline-start: 5px;
 }
 
-.accessible .tree:focus .node.focused .objectBox-accessible .accessible-role {
+.accessible .tree:focus .node.focused .objectBox-accessible .accessible-role,
+.accessible .tree .tree-node-active .node.focused .objectBox-accessible .accessible-role {
   background-color: var(--accessible-role-active-background-color);
   border-color: var(--accessible-role-active-border-color);
   color: var(--theme-selection-color);
 }
 
-.accessible .tree:focus .node.focused .open-accessibility-inspector {
+.accessible .tree:focus .node.focused .open-accessibility-inspector,
+.accessible .tree .tree-node-active .node.focused .open-accessibility-inspector {
   background-color: var(--grey-30);
 }
 
-.accessible .tree:focus .node.focused:hover .open-accessibility-inspector {
+.accessible .tree:focus .node.focused:hover .open-accessibility-inspector,
+.accessible .tree .tree-node-active .node.focused:hover .open-accessibility-inspector {
   background-color: var(--theme-selection-color);
+}
+
+.accessible .tree .tree-node-active .node.focused .open-accessibility-inspector:focus,
+.accessible .tree .tree-node-active .node.focused:hover .open-accessibility-inspector:focus {
+  background-color: var(--grey-40);
 }
 
 .accessible .tree .objectBox-accessible,

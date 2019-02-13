@@ -38,12 +38,6 @@ window.onload = async function () {
       return ReactDOM.render(Tree(treeProps), window.document.body);
     }
 
-    const checker = Symbol();
-    let isActivated;
-    const mockFn = activated => {
-      isActivated = activated;
-    };
-
     const tree = renderTree();
 
     TEST_TREE.expanded = new Set("ABCDEFGHIJKLMNO".split(""));
@@ -140,112 +134,6 @@ window.onload = async function () {
       "-N:false",
       "--O:true",
     ], "After the End key again, O should still be focused.");
-
-    // Test Enter key ----------------------------------------------------------
-
-    info("Press Enter to activate node, when onActivate is not passed.");
-    isActivated = checker;
-    renderTree({ focused: "L" });
-    Simulate.keyDown(document.querySelector(".tree"), { key: "Enter" });
-    await forceRender(tree);
-
-    isRenderedTree(document.body.textContent, [
-      "A:false",
-      "-B:false",
-      "--E:false",
-      "---K:false",
-      "---L:true",
-      "--F:false",
-      "--G:false",
-      "-C:false",
-      "--H:false",
-      "--I:false",
-      "-D:false",
-      "--J:false",
-      "M:false",
-      "-N:false",
-      "--O:false",
-    ], "After the Enter, L should be focused and the tree remained unchanged.");
-    ok(isActivated === checker,
-       "Since onActivate was not specified, 'isActivated' should not be set.");
-
-    info("Press Enter to activate node, when onActivate is passed.");
-    isActivated = checker;
-    renderTree({ focused: "L", onActivate: mockFn });
-    Simulate.keyDown(document.querySelector(".tree"), { key: "Enter" });
-    await forceRender(tree);
-
-    isRenderedTree(document.body.textContent, [
-      "A:false",
-      "-B:false",
-      "--E:false",
-      "---K:false",
-      "---L:true",
-      "--F:false",
-      "--G:false",
-      "-C:false",
-      "--H:false",
-      "--I:false",
-      "-D:false",
-      "--J:false",
-      "M:false",
-      "-N:false",
-      "--O:false",
-    ], "After the Enter, L should be focused and the tree remained unchanged.");
-    is(isActivated, "L", "onActivate function was called with the right node.");
-
-    // Test Space key ----------------------------------------------------------
-
-    info("Press Space to activate node, when onActivate is not passed.");
-    isActivated = checker;
-    renderTree({ focused: "K" });
-    Simulate.keyDown(document.querySelector(".tree"), { key: " " });
-    await forceRender(tree);
-
-    isRenderedTree(document.body.textContent, [
-      "A:false",
-      "-B:false",
-      "--E:false",
-      "---K:true",
-      "---L:false",
-      "--F:false",
-      "--G:false",
-      "-C:false",
-      "--H:false",
-      "--I:false",
-      "-D:false",
-      "--J:false",
-      "M:false",
-      "-N:false",
-      "--O:false",
-    ], "After the Space, K should be focused and the tree remained unchanged.");
-    ok(isActivated === checker,
-       "Since onActivate was not specified, 'isActivated' should not be set.");
-
-    info("Press Space to activate node, when onActivate is passed.");
-    isActivated = checker;
-    renderTree({ focused: "K", onActivate: mockFn });
-    Simulate.keyDown(document.querySelector(".tree"), { key: " " });
-    await forceRender(tree);
-
-    isRenderedTree(document.body.textContent, [
-      "A:false",
-      "-B:false",
-      "--E:false",
-      "---K:true",
-      "---L:false",
-      "--F:false",
-      "--G:false",
-      "-C:false",
-      "--H:false",
-      "--I:false",
-      "-D:false",
-      "--J:false",
-      "M:false",
-      "-N:false",
-      "--O:false",
-    ], "After the Space, K should be focused and the tree remained unchanged.");
-    is(isActivated, "K", "onActivate function was called with the right node.");
   } catch (e) {
     ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
   } finally {
