@@ -374,8 +374,6 @@ impl FrameBuilder {
         );
 
         {
-            profile_marker!("UpdateVisibility");
-
             let visibility_context = FrameVisibilityContext {
                 device_pixel_scale,
                 clip_scroll_tree,
@@ -441,19 +439,15 @@ impl FrameBuilder {
             )
             .unwrap();
 
-        {
-            profile_marker!("PreparePrims");
-
-            self.prim_store.prepare_primitives(
-                &mut prim_list,
-                &pic_context,
-                &mut pic_state,
-                &frame_context,
-                &mut frame_state,
-                data_stores,
-                scratch,
-            );
-        }
+        self.prim_store.prepare_primitives(
+            &mut prim_list,
+            &pic_context,
+            &mut pic_state,
+            &frame_context,
+            &mut frame_state,
+            data_stores,
+            scratch,
+        );
 
         let pic = &mut self.prim_store.pictures[self.root_pic_index.0];
         pic.restore_context(
@@ -506,7 +500,6 @@ impl FrameBuilder {
         debug_flags: DebugFlags,
     ) -> Frame {
         profile_scope!("build");
-        profile_marker!("BuildFrame");
         debug_assert!(
             DeviceIntRect::new(DeviceIntPoint::zero(), self.window_size)
                 .contains_rect(&self.screen_rect)
@@ -553,86 +546,79 @@ impl FrameBuilder {
             debug_flags,
         );
 
-        {
-            profile_marker!("BlockOnResources");
-
-            resource_cache.block_until_all_resources_added(gpu_cache,
-                                                           &mut render_tasks,
-                                                           texture_cache_profile);
-        }
+        resource_cache.block_until_all_resources_added(gpu_cache,
+                                                       &mut render_tasks,
+                                                       texture_cache_profile);
 
         let mut passes = vec![];
-        let mut deferred_resolves = vec![];
-        let mut has_texture_cache_tasks = false;
-        let mut prim_headers = PrimitiveHeaders::new();
 
-        {
-            profile_marker!("Batching");
-
-            // Add passes as required for our cached render tasks.
-            if !render_tasks.cacheable_render_tasks.is_empty() {
-                passes.push(RenderPass::new_off_screen(screen_size));
-                for cacheable_render_task in &render_tasks.cacheable_render_tasks {
-                    render_tasks.assign_to_passes(
-                        *cacheable_render_task,
-                        0,
-                        screen_size,
-                        &mut passes,
-                    );
-                }
-                passes.reverse();
-            }
-
-            if let Some(main_render_task_id) = main_render_task_id {
-                let passes_start = passes.len();
-                passes.push(RenderPass::new_main_framebuffer(screen_size));
+        // Add passes as required for our cached render tasks.
+        if !render_tasks.cacheable_render_tasks.is_empty() {
+            passes.push(RenderPass::new_off_screen(screen_size));
+            for cacheable_render_task in &render_tasks.cacheable_render_tasks {
                 render_tasks.assign_to_passes(
-                    main_render_task_id,
-                    passes_start,
+                    *cacheable_render_task,
+                    0,
                     screen_size,
                     &mut passes,
                 );
-                passes[passes_start..].reverse();
             }
+            passes.reverse();
+        }
 
-            // Used to generated a unique z-buffer value per primitive.
-            let mut z_generator = ZBufferIdGenerator::new();
-            let use_dual_source_blending = self.config.dual_source_blending_is_enabled &&
-                                           self.config.dual_source_blending_is_supported;
+        if let Some(main_render_task_id) = main_render_task_id {
+            let passes_start = passes.len();
+            passes.push(RenderPass::new_main_framebuffer(screen_size));
+            render_tasks.assign_to_passes(
+                main_render_task_id,
+                passes_start,
+                screen_size,
+                &mut passes,
+            );
+            passes[passes_start..].reverse();
+        }
 
-            for pass in &mut passes {
-                let mut ctx = RenderTargetContext {
-                    device_pixel_scale,
-                    prim_store: &self.prim_store,
-                    resource_cache,
-                    use_dual_source_blending,
-                    clip_scroll_tree,
-                    data_stores,
-                    surfaces: &surfaces,
-                    scratch,
-                    screen_world_rect,
-                    globals: &self.globals,
-                };
 
-                pass.build(
-                    &mut ctx,
-                    gpu_cache,
-                    &mut render_tasks,
-                    &mut deferred_resolves,
-                    &self.clip_store,
-                    &mut transform_palette,
-                    &mut prim_headers,
-                    &mut z_generator,
-                );
+        let mut deferred_resolves = vec![];
+        let mut has_texture_cache_tasks = false;
+        let mut prim_headers = PrimitiveHeaders::new();
+        // Used to generated a unique z-buffer value per primitive.
+        let mut z_generator = ZBufferIdGenerator::new();
+        let use_dual_source_blending = self.config.dual_source_blending_is_enabled &&
+                                       self.config.dual_source_blending_is_supported;
 
-                match pass.kind {
-                    RenderPassKind::MainFramebuffer(ref color) => {
-                        has_texture_cache_tasks |= color.must_be_drawn();
-                    }
-                    RenderPassKind::OffScreen { ref texture_cache, ref color, .. } => {
-                        has_texture_cache_tasks |= !texture_cache.is_empty();
-                        has_texture_cache_tasks |= color.must_be_drawn();
-                    }
+        for pass in &mut passes {
+            let mut ctx = RenderTargetContext {
+                device_pixel_scale,
+                prim_store: &self.prim_store,
+                resource_cache,
+                use_dual_source_blending,
+                clip_scroll_tree,
+                data_stores,
+                surfaces: &surfaces,
+                scratch,
+                screen_world_rect,
+                globals: &self.globals,
+            };
+
+            pass.build(
+                &mut ctx,
+                gpu_cache,
+                &mut render_tasks,
+                &mut deferred_resolves,
+                &self.clip_store,
+                &mut transform_palette,
+                &mut prim_headers,
+                &mut z_generator,
+            );
+
+            match pass.kind {
+                RenderPassKind::MainFramebuffer(ref color) => {
+                    has_texture_cache_tasks |= color.must_be_drawn();
+                }
+                RenderPassKind::OffScreen { ref texture_cache, ref color, .. } => {
+                    has_texture_cache_tasks |= !texture_cache.is_empty();
+                    has_texture_cache_tasks |= color.must_be_drawn();
                 }
             }
         }
