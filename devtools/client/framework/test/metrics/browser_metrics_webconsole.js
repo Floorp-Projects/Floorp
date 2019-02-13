@@ -17,10 +17,10 @@ const TEST_URL = "data:text/html;charset=UTF-8,<div>Webconsole modules load test
 
 add_task(async function() {
   const toolbox = await openNewTabAndToolbox(TEST_URL, "webconsole");
-  const hud = toolbox.getCurrentPanel().hud;
+  const panel = toolbox.getCurrentPanel();
 
   // Retrieve the browser loader dedicated to the WebConsole.
-  const webconsoleLoader = hud.ui.browserLoader;
+  const webconsoleLoader = panel._frameWindow.getBrowserLoaderForWindow();
   const loaders = [loader.provider.loader, webconsoleLoader.loader];
 
   runMetricsTest({
