@@ -27,8 +27,8 @@ object Facts {
         processors.forEach { it.process(fact) }
     }
 
-    @VisibleForTesting
-    internal fun clearProcessors() {
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    fun clearProcessors() {
         processors.clear()
     }
 }

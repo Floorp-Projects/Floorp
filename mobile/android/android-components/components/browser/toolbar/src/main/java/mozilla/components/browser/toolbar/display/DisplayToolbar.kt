@@ -20,6 +20,7 @@ import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.browser.toolbar.R
+import mozilla.components.browser.toolbar.facts.emitOpenMenuFact
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.concept.toolbar.Toolbar.SiteSecurity
 import mozilla.components.support.ktx.android.content.res.pxToDp
@@ -121,6 +122,8 @@ internal class DisplayToolbar(
             menuBuilder?.build(context)?.show(
                 anchor = this,
                 orientation = BrowserMenu.determineMenuOrientation(toolbar))
+
+            emitOpenMenuFact()
         }
     }
 

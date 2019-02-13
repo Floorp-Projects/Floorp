@@ -16,10 +16,13 @@ import androidx.test.core.app.ApplicationProvider
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.toolbar.BrowserToolbar
+import mozilla.components.browser.toolbar.R
 import mozilla.components.concept.toolbar.Toolbar.SiteSecurity
+import mozilla.components.support.base.Component
+import mozilla.components.support.base.facts.Action
+import mozilla.components.support.base.facts.processor.CollectionProcessor
 import mozilla.components.support.ktx.android.view.forEach
 import mozilla.components.support.test.mock
-import mozilla.components.browser.toolbar.R
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -636,6 +639,33 @@ class DisplayToolbarTest {
 
         assertEquals(R.color.photonBlue40, displayToolbar.securityIconColor.first)
         assertEquals(R.color.photonBlue40, displayToolbar.securityIconColor.second)
+    }
+
+    @Test
+    fun `clicking menu button emits fact`() {
+        CollectionProcessor.withFactCollection { facts ->
+            val toolbar = mock(BrowserToolbar::class.java)
+            val displayToolbar = DisplayToolbar(context, toolbar)
+            val menuView = extractMenuView(displayToolbar)
+
+            val menuBuilder = mock(BrowserMenuBuilder::class.java)
+            val menu = mock(BrowserMenu::class.java)
+            doReturn(menu).`when`(menuBuilder).build(context)
+            displayToolbar.menuBuilder = menuBuilder
+
+            assertEquals(0, facts.size)
+
+            menuView.performClick()
+
+            assertEquals(1, facts.size)
+
+            val fact = facts[0]
+            assertEquals(Component.BROWSER_TOOLBAR, fact.component)
+            assertEquals(Action.CLICK, fact.action)
+            assertEquals("menu", fact.item)
+            assertNull(fact.value)
+            assertNull(fact.metadata)
+        }
     }
 
     companion object {

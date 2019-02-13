@@ -14,6 +14,7 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.ImageView
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.browser.toolbar.R
+import mozilla.components.browser.toolbar.facts.emitCommitFact
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.support.ktx.android.content.res.pxToDp
 import mozilla.components.support.ktx.android.view.showKeyboard
@@ -48,7 +49,11 @@ class EditToolbar(
         setPadding(padding, padding, padding, padding)
         setSelectAllOnFocus(true)
 
-        setOnCommitListener { toolbar.onUrlEntered(text.toString()) }
+        setOnCommitListener {
+            toolbar.onUrlEntered(text.toString())
+            emitCommitFact()
+        }
+
         setOnTextChangeListener { text, _ ->
             editListener?.onTextChanged(text)
         }

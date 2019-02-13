@@ -14,11 +14,11 @@ Use Gradle to download the library from [maven.mozilla.org](https://maven.mozill
 implementation "org.mozilla.components:support-base:{latest-version}"
 ```
 
-### Logging
+## Logging
 
 The base component offers helpers for logging for component (and app) code that allows the app to be in control what gets logged and how.
 
-#### Setup
+### Setup
 
 A log messages are routed through the `Log` object which doesn't process any logs itself. Instead it forwards the calls to `LogSink` implementations. The base component includes the `AndroidLogSink` class which implements `LogSink` and forwards log messages to Android's system log.
 
@@ -39,7 +39,7 @@ Log.logLevel = Log.Priority.WARN
 
 An application can add multiple `LogSink` implementations to save logs to disk, send them to a crash reporting service or display them inside the app.
 
-#### Logger
+### Logger
 
 The `Log` class only offers a low-level logging call. The `logger` sub package contains classes that wrap `Log` and provide a more convenient API for logging.
 
@@ -67,6 +67,25 @@ class MyClass {
      Logger.info("Hello World!")
    }
 }
+```
+
+## Facts
+
+A `Fact` is a generic "event" that a component emitted.
+
+Facts are not meant to implement application logic based on them. Instead they can be observed as a stream of "user/app events" inside components that can be analyzed or forwarded to external telemetry services.
+
+By default nothing happens with `Fact` instances. An app needs to register a `FactProcessor` that will receive all emitted `Fact` objects.
+
+The base component comes with a `LogFactProcessor` that will print all emitted `Fact` instances to a `Logger`.
+
+```kotlin
+// Either install processors on the Facts object:
+Facts.registerProcessor(LogFactProcessor())
+
+// Or use the extension method:
+LogFactProcessor()
+    .register()
 ```
 
 ## License

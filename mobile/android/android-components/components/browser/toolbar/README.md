@@ -12,6 +12,15 @@ Use Gradle to download the library from [maven.mozilla.org](https://maven.mozill
 implementation "org.mozilla.components:browser-toolbar:{latest-version}"
 ```
 
+## Facts
+
+This component emits the following [Facts](../../support/base/README.md#Facts):
+
+| Action | Item | Description |
+|---|---|---|---|---|
+| CLICK | menu | The user opened the overflow menu. |
+| COMMIT | toolbar | The user has edited the URL. |
+
 ## License
 
     This Source Code Form is subject to the terms of the Mozilla Public

@@ -4,23 +4,32 @@
 
 package mozilla.components.browser.toolbar.edit
 
+import android.content.Context
+import android.view.KeyEvent
+import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.concept.toolbar.AutocompleteDelegate
+import mozilla.components.support.base.Component
+import mozilla.components.support.base.facts.Action
+import mozilla.components.support.base.facts.processor.CollectionProcessor
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 import java.util.concurrent.CountDownLatch
 
 @RunWith(RobolectricTestRunner::class)
 class EditToolbarTest {
+    private val context: Context
+        get() = ApplicationProvider.getApplicationContext()
+
     @Test
     fun `entered text is forwarded to async autocomplete filter`() {
-        val toolbar = BrowserToolbar(RuntimeEnvironment.application)
+        val toolbar = BrowserToolbar(context)
         toolbar.editToolbar.urlView.onAttachedToWindow()
 
         val latch = CountDownLatch(1)
@@ -47,7 +56,7 @@ class EditToolbarTest {
         var listenerInvoked = false
         var value = false
 
-        val toolbar = BrowserToolbar(RuntimeEnvironment.application)
+        val toolbar = BrowserToolbar(context)
         toolbar.setOnEditFocusChangeListener { hasFocus ->
             listenerInvoked = true
             value = hasFocus
@@ -66,5 +75,32 @@ class EditToolbarTest {
 
         assertTrue(listenerInvoked)
         assertFalse(value)
+    }
+
+    @Test
+    fun `entering text emits commit fact`() {
+        CollectionProcessor.withFactCollection { facts ->
+            val toolbar = BrowserToolbar(context)
+            toolbar.editToolbar.urlView.onAttachedToWindow()
+
+            assertEquals(0, facts.size)
+
+            toolbar.editToolbar.urlView.setText("https://www.mozilla.org")
+            toolbar.editToolbar.urlView.dispatchKeyEvent(KeyEvent(
+                System.currentTimeMillis(),
+                System.currentTimeMillis(),
+                KeyEvent.ACTION_DOWN,
+                KeyEvent.KEYCODE_ENTER,
+                0))
+
+            assertEquals(1, facts.size)
+
+            val fact = facts[0]
+            assertEquals(Component.BROWSER_TOOLBAR, fact.component)
+            assertEquals(Action.COMMIT, fact.action)
+            assertEquals("toolbar", fact.item)
+            assertNull(fact.value)
+            assertNull(fact.metadata)
+        }
     }
 }
