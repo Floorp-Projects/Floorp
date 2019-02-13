@@ -9,7 +9,7 @@
 const {LocalizationHelper} = require("devtools/shared/l10n");
 const L10N = new LocalizationHelper("devtools/client/locales/inspector.properties");
 
-const Editor = require("devtools/client/sourceeditor/editor");
+const Editor = require("devtools/client/shared/sourceeditor/editor");
 const beautify = require("devtools/shared/jsbeautify/beautify");
 
 const XHTML_NS = "http://www.w3.org/1999/xhtml";

@@ -66,6 +66,15 @@ void WebRenderBackgroundData::AddWebRenderCommands(
 }
 
 WebRenderUserData::WebRenderUserData(RenderRootStateManager* aManager,
+                                     uint32_t aDisplayItemKey,
+                                     nsIFrame* aFrame)
+    : mManager(aManager),
+      mFrame(aFrame),
+      mDisplayItemKey(aDisplayItemKey),
+      mTable(aManager->GetWebRenderUserDataTable()),
+      mUsed(false) {}
+
+WebRenderUserData::WebRenderUserData(RenderRootStateManager* aManager,
                                      nsDisplayItem* aItem)
     : mManager(aManager),
       mFrame(aItem->Frame()),
@@ -84,6 +93,11 @@ WebRenderBridgeChild* WebRenderUserData::WrBridge() const {
 WebRenderImageData::WebRenderImageData(RenderRootStateManager* aManager,
                                        nsDisplayItem* aItem)
     : WebRenderUserData(aManager, aItem), mOwnsKey(false) {}
+
+WebRenderImageData::WebRenderImageData(RenderRootStateManager* aManager,
+                                       uint32_t aDisplayItemKey,
+                                       nsIFrame* aFrame)
+    : WebRenderUserData(aManager, aDisplayItemKey, aFrame), mOwnsKey(false) {}
 
 WebRenderImageData::~WebRenderImageData() {
   ClearImageKey();
@@ -266,23 +280,13 @@ void WebRenderImageData::CreateImageClientIfNeeded() {
 
 WebRenderFallbackData::WebRenderFallbackData(RenderRootStateManager* aManager,
                                              nsDisplayItem* aItem)
-    : WebRenderImageData(aManager, aItem), mInvalid(false) {}
+    : WebRenderUserData(aManager, aItem), mInvalid(false) {}
 
 WebRenderFallbackData::~WebRenderFallbackData() { ClearImageKey(); }
-
-nsDisplayItemGeometry* WebRenderFallbackData::GetGeometry() {
-  return mGeometry.get();
-}
-
-void WebRenderFallbackData::SetGeometry(
-    nsAutoPtr<nsDisplayItemGeometry> aGeometry) {
-  mGeometry = aGeometry;
-}
 
 void WebRenderFallbackData::SetBlobImageKey(const wr::BlobImageKey& aKey) {
   ClearImageKey();
   mBlobKey = Some(aKey);
-  mOwnsKey = true;
 }
 
 Maybe<wr::ImageKey> WebRenderFallbackData::GetImageKey() {
@@ -290,17 +294,40 @@ Maybe<wr::ImageKey> WebRenderFallbackData::GetImageKey() {
     return Some(wr::AsImageKey(mBlobKey.value()));
   }
 
-  return mKey;
+  if (mImageData) {
+    return mImageData->GetImageKey();
+  }
+
+  return Nothing();
 }
 
 void WebRenderFallbackData::ClearImageKey() {
-  if (mBlobKey && mOwnsKey) {
-    mManager->AddBlobImageKeyForDiscard(mBlobKey.value());
+  if (mImageData) {
+    mImageData->ClearImageKey();
+    mImageData = nullptr;
   }
-  mBlobKey.reset();
 
-  WebRenderImageData::ClearImageKey();
+  if (mBlobKey) {
+    mManager->AddBlobImageKeyForDiscard(mBlobKey.value());
+    mBlobKey.reset();
+  }
 }
+
+WebRenderImageData* WebRenderFallbackData::PaintIntoImage() {
+  if (mBlobKey) {
+    mManager->AddBlobImageKeyForDiscard(mBlobKey.value());
+    mBlobKey.reset();
+  }
+
+  if (mImageData) {
+    return mImageData.get();
+  }
+
+  mImageData = MakeAndAddRef<WebRenderImageData>(mManager.get(), mDisplayItemKey, mFrame);
+
+  return mImageData.get();
+}
+
 
 WebRenderAnimationData::WebRenderAnimationData(RenderRootStateManager* aManager,
                                                nsDisplayItem* aItem)

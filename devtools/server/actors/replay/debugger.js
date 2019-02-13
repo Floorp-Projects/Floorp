@@ -737,6 +737,13 @@ ReplayDebuggerScript.prototype = {
   getSuccessorOffsets(pc) { return this._forward("getSuccessorOffsets", pc); },
   getPredecessorOffsets(pc) { return this._forward("getPredecessorOffsets", pc); },
   getAllColumnOffsets() { return this._forward("getAllColumnOffsets"); },
+  getOffsetMetadata(pc) { return this._forward("getOffsetMetadata", pc); },
+  getPossibleBreakpoints(query) {
+    return this._forward("getPossibleBreakpoints", query);
+  },
+  getPossibleBreakpointOffsets(query) {
+    return this._forward("getPossibleBreakpointOffsets", query);
+  },
 
   setBreakpoint(offset, handler) {
     this._dbg._setBreakpoint(() => { handler.hit(this._dbg.getNewestFrame()); },

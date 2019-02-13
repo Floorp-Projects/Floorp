@@ -11,6 +11,7 @@
 #include "mozilla/Move.h"
 #include "mozilla/TimeStamp.h"
 
+#include "jsapi.h"
 #include "jsexn.h"
 #include "jsfriendapi.h"
 
@@ -5169,6 +5170,28 @@ void OffThreadPromiseRuntimeState::shutdown(JSContext* cx) {
   // JSRuntime. Revert to the !initialized() state to catch bugs.
   dispatchToEventLoopCallback_ = nullptr;
   MOZ_ASSERT(!initialized());
+}
+
+JS::AutoDebuggerJobQueueInterruption::AutoDebuggerJobQueueInterruption(
+    MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_IN_IMPL)
+    : cx(nullptr) {
+  MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+}
+
+JS::AutoDebuggerJobQueueInterruption::~AutoDebuggerJobQueueInterruption() {
+  MOZ_ASSERT_IF(cx, cx->jobQueue->empty());
+}
+
+bool JS::AutoDebuggerJobQueueInterruption::init(JSContext* cx) {
+  MOZ_ASSERT(cx->jobQueue);
+  this->cx = cx;
+  saved = cx->jobQueue->saveJobQueue(cx);
+  return !!saved;
+}
+
+void JS::AutoDebuggerJobQueueInterruption::runJobs() {
+  JS::AutoSaveExceptionState ases(cx);
+  cx->jobQueue->runJobs(cx);
 }
 
 const JSJitInfo promise_then_info = {

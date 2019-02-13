@@ -220,7 +220,23 @@ JS_PUBLIC_API void JS_IterateCompartments(
   AutoTraceSession session(cx->runtime());
 
   for (CompartmentsIter c(cx->runtime()); !c.done(); c.next()) {
-    (*compartmentCallback)(cx, data, c);
+    if ((*compartmentCallback)(cx, data, c) ==
+        JS::CompartmentIterResult::Stop) {
+      break;
+    }
+  }
+}
+
+JS_PUBLIC_API void JS_IterateCompartmentsInZone(
+    JSContext* cx, JS::Zone* zone, void* data,
+    JSIterateCompartmentCallback compartmentCallback) {
+  AutoTraceSession session(cx->runtime());
+
+  for (CompartmentsInZoneIter c(zone); !c.done(); c.next()) {
+    if ((*compartmentCallback)(cx, data, c) ==
+        JS::CompartmentIterResult::Stop) {
+      break;
+    }
   }
 }
 

@@ -49,7 +49,7 @@ async function testRet(dbg) {
 
   info(`1. Test returning from doRet via stepping over`);
   await invokeAndPause(dbg, `doRet()`);
-  await steps(dbg, [stepOver, stepIn, stepOver]);
+  await steps(dbg, [stepOver, stepIn]);
   packet = await step(dbg, stepOver);
 
   deepEqual(
@@ -89,7 +89,7 @@ async function testThrow(dbg) {
 
   info(`3. Test leaving from doThrow via stepping over`);
   await invokeAndPause(dbg, `doThrow()`);
-  await steps(dbg, [stepOver, stepOver, stepIn]);
+  await steps(dbg, [stepOver, stepIn]);
   packet = await step(dbg, stepOver);
 
   deepEqual(
@@ -113,24 +113,19 @@ async function testThrow(dbg) {
 
   info(`4. Test leaving from doThrow via stepping out`);
   await invokeAndPause(dbg, `doThrow()`);
-  await steps(dbg, [stepOver, stepOver, stepIn]);
+  await steps(dbg, [stepOver, stepIn]);
 
   packet = await step(dbg, stepOut);
   deepEqual(
     getPauseLocation(packet),
-    {line: 22, column: 14},
-    `completion location in doThrow`
+    {line: 24, column: 0},
+    `stepOut location in doThrow`
   );
 
   deepEqual(
-    getFrameFinished(packet).throw.class,
-    "Error",
-    `completion completion value class`
-  );
-  deepEqual(
-    getFrameFinished(packet).throw.preview.message,
-    "yo",
-    `completion completion value preview`
+    getFrameFinished(packet),
+    {return: {type: "undefined"}},
+    `completion type`
   );
   await resume(dbg.threadClient);
 }

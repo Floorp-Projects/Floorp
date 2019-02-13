@@ -1,7 +1,7 @@
 browser/components/translation/cld2/
 db/sqlite3/src/
-devtools/client/sourceeditor/codemirror/
-devtools/client/sourceeditor/tern/
+devtools/client/shared/sourceeditor/codemirror/
+devtools/client/shared/sourceeditor/tern/
 devtools/shared/heapsnapshot/CoreDump.pb.cc
 devtools/shared/heapsnapshot/CoreDump.pb.h
 dom/canvas/test/webgl-conf/checkout/closure-library/

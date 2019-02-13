@@ -16,10 +16,13 @@ class TextInputHandler;
 }  // namespace widget
 }  // namespace mozilla
 
-// A protocol listing all the methods that an object which wants
-// to live in gecko's widget hierarchy must implement. |nsChildView|
-// makes assumptions that any NSView with which it comes in contact will
-// implement this protocol.
+// A protocol with some of the methods that ChildView implements. In the distant
+// past, this protocol was used by embedders: They would create their own NSView
+// subclass, implement mozView on it, and then embed a Gecko ChildView by adding
+// it as a subview of this view. This scenario no longer exists.
+// Now this protocol is mostly just used by TextInputHandler and mozAccessible
+// in order to communicate with ChildView without seeing the entire ChildView
+// interface definition.
 @protocol mozView
 
 // aHandler is Gecko's default text input handler:  It implements the
@@ -30,9 +33,6 @@ class TextInputHandler;
 
 // access the nsIWidget associated with this view. DOES NOT ADDREF.
 - (nsIWidget*)widget;
-
-// return a context menu for this view
-- (NSMenu*)contextMenu;
 
 // called when our corresponding Gecko view goes away
 - (void)widgetDestroyed;

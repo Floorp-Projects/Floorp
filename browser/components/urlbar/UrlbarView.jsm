@@ -64,6 +64,12 @@ class UrlbarView {
     return this.panel.state == "open" || this.panel.state == "showing";
   }
 
+  get allowEmptySelection() {
+    return !(this._queryContext &&
+             this._queryContext.results[0] &&
+             this._queryContext.results[0].heuristic);
+  }
+
   get selectedIndex() {
     if (!this.isOpen || !this._selected) {
       return -1;
@@ -115,15 +121,13 @@ class UrlbarView {
       throw new Error("UrlbarView: Cannot select an item if the view isn't open.");
     }
 
-    // TODO bug 1527260: handle one-off search buttons
-
     let row;
     if (reverse) {
       row = (this._selected && this._selected.previousElementSibling) ||
-            this._rows.lastElementChild;
+            ((this._selected && this.allowEmptySelection) ? null : this._rows.lastElementChild);
     } else {
       row = (this._selected && this._selected.nextElementSibling) ||
-            this._rows.firstElementChild;
+            ((this._selected && this.allowEmptySelection) ? null : this._rows.firstElementChild);
     }
     this._selectItem(row);
   }

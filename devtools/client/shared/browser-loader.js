@@ -188,6 +188,10 @@ function BrowserLoaderBuilder({ baseURI, window, useOnlyShared, commonLibRequire
 
   const mainModule = loaders.Module(baseURI, joinURI(baseURI, "main.js"));
   this.loader = loaders.Loader(opts);
+  // When running tests, expose the BrowserLoader instance for metrics tests.
+  if (flags.testing) {
+    window.getBrowserLoaderForWindow = () => this;
+  }
   this.require = loaders.Require(this.loader, mainModule);
 }
 

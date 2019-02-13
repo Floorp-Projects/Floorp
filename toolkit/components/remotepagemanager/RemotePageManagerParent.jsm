@@ -21,6 +21,8 @@ var EXPORTED_SYMBOLS = ["RemotePages", "RemotePageManager"];
 
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {MessageListener, MessagePort} = ChromeUtils.import("resource://gre/modules/remotepagemanager/MessagePort.jsm");
+ChromeUtils.defineModuleGetter(this, "FxAccounts",
+  "resource://gre/modules/FxAccounts.jsm");
 
 /**
  * Creates a RemotePages object which listens for new remote pages of some
@@ -234,13 +236,17 @@ class ChromeMessagePort extends MessagePort {
     this.destroy();
   }
 
-  // Called when a message is received from the message manager. This could
-  // have come from any port in the message manager so verify the port ID.
-  message({ data: messagedata }) {
-    if (this.destroyed || (messagedata.portID != this.portID)) {
-      return;
+  // Called when the content process is requesting some data.
+  async handleRequest(name, data) {
+    if (name == "FxAccountsEndpoint") {
+      return FxAccounts.config.promiseEmailFirstURI(data);
     }
 
+    throw new Error(`Unknown request ${name}.`);
+  }
+
+  // Called when a message is received from the message manager.
+  handleMessage(messagedata) {
     let message = {
       target: this.publicPort,
       name: messagedata.name,

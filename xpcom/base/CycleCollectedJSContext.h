@@ -84,7 +84,8 @@ class MicroTaskRunnable {
 
 class CycleCollectedJSContext
     : dom::PerThreadAtomCache,
-      public LinkedListElement<CycleCollectedJSContext> {
+      public LinkedListElement<CycleCollectedJSContext>,
+      private JS::JobQueue {
   friend class CycleCollectedJSRuntime;
 
  protected:
@@ -231,6 +232,21 @@ class CycleCollectedJSContext
       mUncaughtRejectionObservers;
 
   virtual bool IsSystemCaller() const = 0;
+
+ private:
+  // JS::JobQueue implementation: see js/public/Promise.h.
+  // SpiderMonkey uses some of these methods to enqueue promise resolution jobs.
+  // Others protect the debuggee microtask queue from the debugger's
+  // interruptions; see the comments on JS::AutoDebuggerJobQueueInterruption for
+  // details.
+  JSObject* getIncumbentGlobal(JSContext* cx) override;
+  bool enqueuePromiseJob(JSContext* cx, JS::HandleObject promise,
+                         JS::HandleObject job, JS::HandleObject allocationSite,
+                         JS::HandleObject incumbentGlobal) override;
+  void runJobs(JSContext* cx) override;
+  bool empty() const override;
+  class SavedMicroTaskQueue;
+  js::UniquePtr<SavedJobQueue> saveJobQueue(JSContext*) override;
 
  private:
   // A primary context owns the mRuntime. Non-main-thread contexts should always

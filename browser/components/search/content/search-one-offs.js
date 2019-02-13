@@ -298,7 +298,7 @@ class SearchOneOffs {
       // If the button doesn't have an engine, then clear the popup's
       // selection to indicate that pressing Return while the button is
       // selected will do the button's command, not search.
-      this.popup.selectedIndex = -1;
+      this.selectedAutocompleteIndex = -1;
     }
     let event = new CustomEvent("SelectedOneOffButtonChanged", {
       previousSelectedButton: previousButton,
@@ -332,6 +332,14 @@ class SearchOneOffs {
       }
     }
     return -1;
+  }
+
+  get selectedAutocompleteIndex() {
+    return (this._view || this.popup).selectedIndex;
+  }
+
+  set selectedAutocompleteIndex(val) {
+    return (this._view || this.popup).selectedIndex = val;
   }
 
   get compact() {
@@ -887,7 +895,7 @@ class SearchOneOffs {
         this.selectedButton = null;
         return false;
       }
-      this.popup.selectedIndex = -1;
+      this.selectedAutocompleteIndex = -1;
       this.advanceSelection(!event.shiftKey, true, false);
       return !!this.selectedButton;
     }
@@ -904,13 +912,13 @@ class SearchOneOffs {
         this.advanceSelection(false, true, false);
         return true;
       }
-      if (this.popup.selectedIndex > 0) {
+      if (this.selectedAutocompleteIndex > 0) {
         // Moving up within the list.  The autocomplete controller should
         // handle this case.  A button may be selected, so null it.
         this.selectedButton = null;
         return false;
       }
-      if (this.popup.selectedIndex == 0) {
+      if (this.selectedAutocompleteIndex == 0) {
         // Moving up from the top of the list.
         if (allowEmptySelection) {
           // Let the autocomplete controller remove selection in the list
@@ -952,14 +960,14 @@ class SearchOneOffs {
         this.advanceSelection(true, true, false);
         return true;
       }
-      if (this.popup.selectedIndex >= 0 &&
-          this.popup.selectedIndex < numListItems - 1) {
+      if (this.selectedAutocompleteIndex >= 0 &&
+          this.selectedAutocompleteIndex < numListItems - 1) {
         // Moving down within the list.  The autocomplete controller
         // should handle this case.  A button may be selected, so null it.
         this.selectedButton = null;
         return false;
       }
-      if (this.popup.selectedIndex == numListItems - 1) {
+      if (this.selectedAutocompleteIndex == numListItems - 1) {
         // Moving down from the last item in the list to the buttons.
         this.selectedButtonIndex = 0;
         if (allowEmptySelection) {
@@ -970,7 +978,7 @@ class SearchOneOffs {
         if (this.textbox && typeof textboxUserValue == "string") {
           this.textbox.value = textboxUserValue;
         }
-        this.popup.selectedIndex = -1;
+        this.selectedAutocompleteIndex = -1;
         return true;
       }
       if (this.selectedButton) {

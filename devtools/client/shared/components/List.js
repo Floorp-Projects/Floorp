@@ -14,6 +14,7 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { ul, li, div } = require("devtools/client/shared/vendor/react-dom-factories");
 
 const { scrollIntoView } = require("devtools/client/shared/scroll");
+const { preventDefaultAndStopPropagation } = require("devtools/client/shared/events");
 
 loader.lazyRequireGetter(this, "focusableSelector", "devtools/client/shared/focus", true);
 
@@ -182,8 +183,6 @@ class List extends Component {
 
     this._setCurrentItem = this._setCurrentItem.bind(this);
     this._preventArrowKeyScrolling = this._preventArrowKeyScrolling.bind(this);
-    this._preventDefaultAndStopPropagation =
-      this._preventDefaultAndStopPropagation.bind(this);
     this._onKeyDown = this._onKeyDown.bind(this);
   }
 
@@ -201,21 +200,8 @@ class List extends Component {
       case "ArrowDown":
       case "ArrowLeft":
       case "ArrowRight":
-        this._preventDefaultAndStopPropagation(e);
+        preventDefaultAndStopPropagation(e);
         break;
-    }
-  }
-
-  _preventDefaultAndStopPropagation(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.nativeEvent) {
-      if (e.nativeEvent.preventDefault) {
-        e.nativeEvent.preventDefault();
-      }
-      if (e.nativeEvent.stopPropagation) {
-        e.nativeEvent.stopPropagation();
-      }
     }
   }
 
@@ -293,7 +279,7 @@ class List extends Component {
         // On space or enter make current list item active. This means keyboard focus
         // handling is passed on to the component within the list item.
         if (document.activeElement === this.listRef.current) {
-          this._preventDefaultAndStopPropagation(e);
+          preventDefaultAndStopPropagation(e);
           if (active !== current) {
             this.setState({ active: current });
           }
@@ -303,7 +289,7 @@ class List extends Component {
       case "Escape":
         // If current list item is active, make it inactive and let keyboard focusing be
         // handled normally.
-        this._preventDefaultAndStopPropagation(e);
+        preventDefaultAndStopPropagation(e);
         if (active != null) {
           this.setState({ active: null });
         }

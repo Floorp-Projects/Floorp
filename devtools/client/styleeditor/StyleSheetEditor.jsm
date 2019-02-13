@@ -8,7 +8,7 @@
 this.EXPORTED_SYMBOLS = ["StyleSheetEditor"];
 
 const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
-const Editor = require("devtools/client/sourceeditor/editor");
+const Editor = require("devtools/client/shared/sourceeditor/editor");
 const promise = require("promise");
 const {shortSource, prettifyCSS} = require("devtools/shared/inspector/css-logic");
 const {throttle} = require("devtools/shared/throttle");

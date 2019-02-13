@@ -31,7 +31,7 @@ using namespace js::jit;
 CacheIRSpewer CacheIRSpewer::cacheIRspewer;
 
 CacheIRSpewer::CacheIRSpewer()
-    : outputLock(mutexid::CacheIRSpewer), guardCount_(0) {
+    : outputLock_(mutexid::CacheIRSpewer), guardCount_(0) {
   spewInterval_ =
       getenv("CACHEIR_LOG_FLUSH") ? atoi(getenv("CACHEIR_LOG_FLUSH")) : 10000;
 
@@ -45,9 +45,9 @@ CacheIRSpewer::~CacheIRSpewer() {
     return;
   }
 
-  json.ref().endList();
-  output.flush();
-  output.finish();
+  json_.ref().endList();
+  output_.flush();
+  output_.finish();
 }
 
 #  ifndef JIT_SPEW_DIR
@@ -74,18 +74,18 @@ bool CacheIRSpewer::init(const char* filename) {
     SprintfLiteral(name, "%s%" PRIu32 ".json", filename, pid);
   }
 
-  if (!output.init(name)) {
+  if (!output_.init(name)) {
     return false;
   }
-  output.put("[");
+  output_.put("[");
 
-  json.emplace(output);
+  json_.emplace(output_);
   return true;
 }
 
 void CacheIRSpewer::beginCache(const IRGenerator& gen) {
   MOZ_ASSERT(enabled());
-  JSONPrinter& j = json.ref();
+  JSONPrinter& j = json_.ref();
   const char* filename = gen.script_->filename();
   j.beginObject();
   j.property("name", CacheKindNames[uint8_t(gen.cacheKind_)]);
@@ -128,7 +128,7 @@ static void QuoteString(GenericPrinter& out, JSLinearString* str) {
 
 void CacheIRSpewer::valueProperty(const char* name, const Value& v) {
   MOZ_ASSERT(enabled());
-  JSONPrinter& j = json.ref();
+  JSONPrinter& j = json_.ref();
 
   j.beginObjectProperty(name);
 
@@ -146,7 +146,7 @@ void CacheIRSpewer::valueProperty(const char* name, const Value& v) {
     JSString* str = v.isString() ? v.toString() : v.toSymbol()->description();
     if (str && str->isLinear()) {
       j.beginStringProperty("value");
-      QuoteString(output, &str->asLinear());
+      QuoteString(output_, &str->asLinear());
       j.endStringProperty();
     }
   } else if (v.isObject()) {
@@ -185,21 +185,21 @@ void CacheIRSpewer::valueProperty(const char* name, const Value& v) {
 
 void CacheIRSpewer::opcodeProperty(const char* name, const JSOp op) {
   MOZ_ASSERT(enabled());
-  JSONPrinter& j = json.ref();
+  JSONPrinter& j = json_.ref();
 
   j.beginStringProperty(name);
-  output.put(CodeName[op]);
+  output_.put(CodeName[op]);
   j.endStringProperty();
 }
 
 void CacheIRSpewer::attached(const char* name) {
   MOZ_ASSERT(enabled());
-  json.ref().property("attached", name);
+  json_.ref().property("attached", name);
 }
 
 void CacheIRSpewer::endCache() {
   MOZ_ASSERT(enabled());
-  json.ref().endObject();
+  json_.ref().endObject();
 }
 
 #endif /* JS_CACHEIR_SPEW */

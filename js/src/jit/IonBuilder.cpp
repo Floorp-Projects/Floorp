@@ -622,7 +622,7 @@ AbortReasonOr<Ok> IonBuilder::analyzeNewLoopTypes(
 
     MPhi* phi = entry->getSlot(slot)->toPhi();
 
-    if (*last == JSOP_POS) {
+    if (*last == JSOP_POS || *last == JSOP_TONUMERIC) {
       last = earlier;
     }
 
@@ -1659,6 +1659,7 @@ AbortReasonOr<Ok> IonBuilder::visitBlock(const CFGBlock* cfgblock,
           break;
 
         case JSOP_POS:
+        case JSOP_TONUMERIC:
         case JSOP_TOID:
         case JSOP_TOSTRING:
           // These ops may leave their input on the stack without setting
@@ -1900,6 +1901,9 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op) {
 
     case JSOP_POS:
       return jsop_pos();
+
+    case JSOP_TONUMERIC:
+      return jsop_tonumeric();
 
     case JSOP_NEG:
       return jsop_neg();
@@ -3802,6 +3806,44 @@ AbortReasonOr<Ok> IonBuilder::jsop_neg() {
   MDefinition* right = current->pop();
 
   return jsop_binary_arith(JSOP_MUL, negator, right);
+}
+
+AbortReasonOr<Ok> IonBuilder::jsop_tonumeric() {
+  MDefinition* peeked = current->peek(-1);
+
+  if (IsNumericType(peeked->type())) {
+    // Elide the ToNumeric as we already unboxed the value.
+    peeked->setImplicitlyUsedUnchecked();
+    return Ok();
+  }
+
+  LifoAlloc* lifoAlloc = alloc().lifoAlloc();
+  TemporaryTypeSet* types = lifoAlloc->new_<TemporaryTypeSet>();
+  if (!types) {
+    return abort(AbortReason::Alloc);
+  }
+
+  types->addType(TypeSet::Int32Type(), lifoAlloc);
+  types->addType(TypeSet::DoubleType(), lifoAlloc);
+#ifdef ENABLE_BIGINT
+  types->addType(TypeSet::BigIntType(), lifoAlloc);
+#endif
+
+  if (peeked->type() == MIRType::Value && peeked->resultTypeSet() &&
+      peeked->resultTypeSet()->isSubset(types)) {
+    // Elide the ToNumeric because the arg is already a boxed numeric.
+    peeked->setImplicitlyUsedUnchecked();
+    return Ok();
+  }
+
+  // Otherwise, pop the value and add an MToNumeric.
+  MDefinition* popped = current->pop();
+  MToNumeric* ins = MToNumeric::New(alloc(), popped, types);
+  current->add(ins);
+  current->push(ins);
+
+  // toValue() is effectful, so add a resume point.
+  return resumeAfter(ins);
 }
 
 AbortReasonOr<Ok> IonBuilder::jsop_inc_or_dec(JSOp op) {

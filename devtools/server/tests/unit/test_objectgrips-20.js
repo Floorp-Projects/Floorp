@@ -20,7 +20,7 @@ add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
     debugger;
   }.toString());
 
-  await Promise.all([{
+  const testCases = [{
     evaledObject: { a: 10 },
     expectedIndexedProperties: [],
     expectedNonIndexedProperties: [["a", 10]],
@@ -166,9 +166,11 @@ add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
     })()`,
     expectedIndexedProperties: [["0", 1], ["1", 2]],
     expectedNonIndexedProperties: [],
-  }].map(async (testData) => {
-    await test_object_grip(debuggee, client, threadClient, testData);
-  }));
+  }];
+
+  for (const test of testCases) {
+    await test_object_grip(debuggee, client, threadClient, test);
+  }
 }));
 
 async function test_object_grip(debuggee, dbgClient, threadClient, testData = {}) {
@@ -204,13 +206,18 @@ async function test_object_grip(debuggee, dbgClient, threadClient, testData = {}
       resolve();
     });
 
-    debuggee.eval(`
-      stopMe(${
-        typeof evaledObject === "string"
-          ? evaledObject
-          : JSON.stringify(evaledObject)
-      });
-    `);
+    // Be sure to run debuggee code in its own HTML 'task', so that when we call
+    // the onDebuggerStatement hook, the test's own microtasks don't get suspended
+    // along with the debuggee's.
+    do_timeout(0, () => {
+      debuggee.eval(`
+        stopMe(${
+          typeof evaledObject === "string"
+            ? evaledObject
+            : JSON.stringify(evaledObject)
+        });
+      `);
+    });
   });
 }
 
