@@ -201,6 +201,11 @@ class WidgetRenderingContext;
   // CGContext painting (i.e. non-accelerated).
   CGImageRef mTopLeftCornerMask;
 
+  // Subviews of self, which act as container views for vibrancy views and
+  // non-draggable views.
+  NSView* mVibrancyViewsContainer;      // [STRONG]
+  NSView* mNonDraggableViewsContainer;  // [STRONG]
+
   // Last pressure stage by trackpad's force click
   NSInteger mLastPressureStage;
 }
@@ -228,6 +233,9 @@ class WidgetRenderingContext;
 
 - (bool)preRender:(NSOpenGLContext*)aGLContext;
 - (void)postRender:(NSOpenGLContext*)aGLContext;
+
+- (NSView*)vibrancyViewsContainer;
+- (NSView*)nonDraggableViewsContainer;
 
 - (BOOL)isCoveringTitlebar;
 
