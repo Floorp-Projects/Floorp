@@ -40,7 +40,7 @@
         <row id="pluginFlashBlocking" class="detail-row-complex">
           <vbox>
             <label>&plugin.enableBlocklists.label;</label>
-            <label class="preferences-learnmore text-link"
+            <label class="preferences-learnmore" is="text-link"
                    href="https://support.mozilla.org/kb/flash-blocklists">&setting.learnmore;</label>
           </vbox>
           <checkbox id="pluginFlashBlockingCheckbox"/>
@@ -48,7 +48,7 @@
         <row id="pluginEnableProtectedMode" class="detail-row-complex">
           <vbox>
             <label>&plugin.flashProtectedMode.label;</label>
-            <label class="preferences-learnmore text-link"
+            <label class="preferences-learnmore" is="text-link"
                    href="https://support.mozilla.org/kb/flash-protected-mode-settings">&setting.learnmore;</label>
           </vbox>
           <checkbox id="pluginEnableProtectedModeCheckbox"/>

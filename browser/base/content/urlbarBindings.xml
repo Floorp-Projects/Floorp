@@ -1872,7 +1872,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             </xul:description>
           </xul:hbox>
           <xul:label id="search-suggestions-change-settings"
-                     class="text-link"
+                     is="text-link"
                      role="link"
 #ifdef XP_WIN
                      value="&urlbar.searchSuggestionsNotification.changeSettingsWin;"

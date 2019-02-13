@@ -303,8 +303,8 @@ class ExtensionControlledPopup {
         BrowserUtils.getLocalizedFragment(doc, message, addonDetails));
     }
 
-    let link = doc.createXULElement("label");
-    link.setAttribute("class", "learnMore text-link");
+    let link = doc.createXULElement("label", {is: "text-link"});
+    link.setAttribute("class", "learnMore");
     link.href = Services.urlFormatter.formatURLPref("app.support.baseURL") + this.learnMoreLink;
     link.textContent = strBundle.GetStringFromName(this.learnMoreMessageId);
     description.appendChild(link);

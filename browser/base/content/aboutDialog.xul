@@ -54,7 +54,7 @@
         </label>
         <hbox align="baseline">
           <label id="version"/>
-          <label id="releasenotes" class="text-link" hidden="true" data-l10n-id="releaseNotes-link"></label>
+          <label id="releasenotes" is="text-link" hidden="true" data-l10n-id="releaseNotes-link"></label>
         </hbox>
 
         <label id="distribution" class="text-blurb"/>
@@ -95,7 +95,7 @@
                 <label data-l10n-id="update-applying"></label>
               </hbox>
               <hbox id="downloadFailed" align="center" data-l10n-id="update-failed">
-                <label id="failedLink" class="text-link" data-l10n-name="failed-link"></label>
+                <label id="failedLink" is="text-link" data-l10n-name="failed-link"></label>
               </hbox>
               <hbox id="policyDisabled" align="center">
                 <label data-l10n-id="update-adminDisabled"></label>
@@ -107,10 +107,10 @@
                 <label data-l10n-id="update-otherInstanceHandlingUpdates"></label>
               </hbox>
               <hbox id="manualUpdate" align="center" data-l10n-id="update-manual">
-                <label id="manualLink" class="text-link" data-l10n-name="manual-link"/>
+                <label id="manualLink" is="text-link" data-l10n-name="manual-link"/>
               </hbox>
               <hbox id="unsupportedSystem" align="center" data-l10n-id="update-unsupported">
-                <label id="unsupportedLink" class="text-link" data-l10n-name="unsupported-link"></label>
+                <label id="unsupportedLink" is="text-link" data-l10n-name="unsupported-link"></label>
               </hbox>
               <hbox id="restarting" align="center">
                 <image class="update-throbber"/>
@@ -128,26 +128,26 @@
           <vbox id="experimental" hidden="true">
             <description class="text-blurb" id="warningDesc" data-l10n-id="warningDesc-version"></description>
             <description class="text-blurb" id="communityExperimentalDesc" data-l10n-id="community-exp">
-              <label class="text-link" href="http://www.mozilla.org/" data-l10n-name="community-exp-mozillaLink"></label>
-              <label class="text-link" useoriginprincipal="true" href="about:credits" data-l10n-name="community-exp-creditsLink"></label>
+              <label is="text-link" href="http://www.mozilla.org/" data-l10n-name="community-exp-mozillaLink"></label>
+              <label is="text-link" useoriginprincipal="true" href="about:credits" data-l10n-name="community-exp-creditsLink"></label>
             </description>
           </vbox>
           <description class="text-blurb" id="communityDesc" data-l10n-id="community-2">
-            <label class="text-link" href="http://www.mozilla.org/" data-l10n-name="community-mozillaLink"></label>
-            <label class="text-link" useoriginprincipal="true" href="about:credits" data-l10n-name="community-creditsLink"></label>
+            <label is="text-link" href="http://www.mozilla.org/" data-l10n-name="community-mozillaLink"></label>
+            <label is="text-link" useoriginprincipal="true" href="about:credits" data-l10n-name="community-creditsLink"></label>
           </description>
           <description class="text-blurb" id="contributeDesc" data-l10n-id="helpus">
-            <label class="text-link" href="https://donate.mozilla.org/?utm_source=firefox&#38;utm_medium=referral&#38;utm_campaign=firefox_about&#38;utm_content=firefox_about" data-l10n-name="helpus-donateLink"></label>
-            <label class="text-link" href="http://www.mozilla.org/contribute/" data-l10n-name="helpus-getInvolvedLink"></label>
+            <label is="text-link" href="https://donate.mozilla.org/?utm_source=firefox&#38;utm_medium=referral&#38;utm_campaign=firefox_about&#38;utm_content=firefox_about" data-l10n-name="helpus-donateLink"></label>
+            <label is="text-link" href="http://www.mozilla.org/contribute/" data-l10n-name="helpus-getInvolvedLink"></label>
           </description>
         </vbox>
       </vbox>
     </hbox>
     <vbox id="bottomBox">
       <hbox pack="center">
-        <label class="text-link bottom-link" useoriginprincipal="true" href="about:license" data-l10n-id="bottomLinks-license"></label>
-        <label class="text-link bottom-link" useoriginprincipal="true" href="about:rights" data-l10n-id="bottomLinks-rights"></label>
-        <label class="text-link bottom-link" href="https://www.mozilla.org/privacy/" data-l10n-id="bottomLinks-privacy"></label>
+        <label is="text-link" class="bottom-link" useoriginprincipal="true" href="about:license" data-l10n-id="bottomLinks-license"></label>
+        <label is="text-link" class="bottom-link" useoriginprincipal="true" href="about:rights" data-l10n-id="bottomLinks-rights"></label>
+        <label is="text-link" class="bottom-link" href="https://www.mozilla.org/privacy/" data-l10n-id="bottomLinks-privacy"></label>
       </hbox>
       <description id="trademark" data-l10n-id="trademarkInfo"></description>
     </vbox>
