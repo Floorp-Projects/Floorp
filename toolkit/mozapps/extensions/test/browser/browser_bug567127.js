@@ -54,6 +54,10 @@ add_task(async function test_install_from_file() {
                    get_addon_file_url("browser_dragdrop1.xpi"),
                    get_addon_file_url("browser_dragdrop2.xpi"),
                   ];
+  for (let uri of filePaths) {
+    ok(uri.file != null, `Should have file for ${uri.spec}`);
+    ok(uri.file instanceof Ci.nsIFile, `Should have nsIFile for ${uri.spec}`);
+  }
   MockFilePicker.setFiles(filePaths.map(aPath => aPath.file));
 
   // Set handler that executes the core test after the window opens,
