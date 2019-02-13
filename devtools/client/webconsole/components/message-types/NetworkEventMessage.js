@@ -7,13 +7,14 @@
 "use strict";
 
 // React & Redux
-const { createFactory } = require("devtools/client/shared/vendor/react");
+const { createFactory, createElement } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const Message = createFactory(require("devtools/client/webconsole/components/Message"));
 const actions = require("devtools/client/webconsole/actions/index");
 const { l10n } = require("devtools/client/webconsole/utils/messages");
-const TabboxPanel = createFactory(require("devtools/client/netmonitor/src/components/TabboxPanel"));
+
+loader.lazyRequireGetter(this, "TabboxPanel", "devtools/client/netmonitor/src/components/TabboxPanel");
 const { getHTTPStatusCodeURL } = require("devtools/client/netmonitor/src/utils/mdn-utils");
 const LEARN_MORE = l10n.getStr("webConsoleMoreInfoLabel");
 
@@ -139,7 +140,7 @@ function NetworkEventMessage({
   // actually opened (performance optimization).
   const attachment = open && dom.div({
     className: "network-info network-monitor devtools-monospace"},
-    TabboxPanel({
+    createElement(TabboxPanel, {
       connector,
       activeTabId: networkMessageActiveTabId,
       request: networkMessageUpdate,

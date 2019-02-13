@@ -40,16 +40,12 @@ def get_dependent_loaded_tasks(config, params, loaded_tasks):
 
     # TODO Bug 1368484: Aarch64 is not planned to ride the trains regularly. It may stay on nightly
     # for a few cycles. Then, we should activate it on beta then release, once ready.
-    aarch64_tasks_only_on_central = (
-        task for task in android_tasks
-        if params['project'] == 'mozilla-central' or
-        'aarch64' not in task.attributes.get('build_platform', '')
-    )
+    if params['project'] in ('mozilla-central', 'try'):
+        shipping_tasks = list(android_tasks)
+    else:
+        shipping_tasks = [
+            task for task in android_tasks
+            if 'aarch64' not in task.attributes.get('build_platform', '')
+        ]
 
-    # TODO Bug 1490502: Activate x86-64 once ready
-    non_shipping_tasks = [
-        task for task in aarch64_tasks_only_on_central
-        if 'x86_64' not in task.attributes.get('build_platform', '')
-    ]
-
-    return non_shipping_tasks
+    return shipping_tasks

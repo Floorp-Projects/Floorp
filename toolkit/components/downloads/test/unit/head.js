@@ -334,7 +334,7 @@ function promiseStartExternalHelperAppServiceDownload(aSourceUrl) {
       });
 
       // Start the actual download process.
-      channel.asyncOpen2({
+      channel.asyncOpen({
         contentListener: null,
 
         onStartRequest(aRequest, aContext) {

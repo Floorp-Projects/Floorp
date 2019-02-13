@@ -1073,7 +1073,7 @@ nsresult nsXBLService::FetchBindingDocument(
     xblListener->AddRequest(req);
 
     // Now kick off the async read.
-    rv = channel->AsyncOpen2(xblListener);
+    rv = channel->AsyncOpen(xblListener);
     if (NS_FAILED(rv)) {
       // Well, we won't be getting a load.  Make sure to clean up our stuff!
       if (bindingManager) {
@@ -1090,7 +1090,7 @@ nsresult nsXBLService::FetchBindingDocument(
 
   // Now do a blocking synchronous parse of the file.
   nsCOMPtr<nsIInputStream> in;
-  rv = channel->Open2(getter_AddRefs(in));
+  rv = channel->Open(getter_AddRefs(in));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = nsSyncLoadService::PushSyncStreamToListener(in.forget(), listener,

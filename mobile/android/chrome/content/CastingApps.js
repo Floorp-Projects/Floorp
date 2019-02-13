@@ -362,7 +362,7 @@ var CastingApps = {
     };
 
     if (channel) {
-      channel.asyncOpen2(listener);
+      channel.asyncOpen(listener);
     } else {
       aCallback(null);
     }

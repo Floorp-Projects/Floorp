@@ -137,7 +137,7 @@ class WebPlatformTestsRunnerSetup(MozbuildObject):
         kwargs["install_browser"] = False
 
         try:
-            kwargs = run.setup_wptrunner(run.virtualenv.Virtualenv(self.virtualenv_manager.virtualenv_root),
+            kwargs = run.setup_wptrunner(run.virtualenv.Virtualenv(self.virtualenv_manager.virtualenv_root, False),
                                          **kwargs)
         except run.WptrunError as e:
             print(e.message, file=sys.stderr)

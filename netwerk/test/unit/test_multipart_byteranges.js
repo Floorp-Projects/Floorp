@@ -108,6 +108,6 @@ function run_test()
 					 null);
 
   var chan = make_channel(uri);
-  chan.asyncOpen2(conv, null);
+  chan.asyncOpen(conv, null);
   do_test_pending();
 }

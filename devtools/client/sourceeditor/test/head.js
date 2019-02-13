@@ -112,7 +112,7 @@ function read(url) {
     uri: url,
     loadUsingSystemPrincipal: true,
   });
-  const input = channel.open2();
+  const input = channel.open();
   scriptableStream.init(input);
 
   let data = "";

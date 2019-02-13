@@ -92,7 +92,7 @@ add_test(function testNoConnectChannelCanceledEarly() {
     uri:"http://localhost:" + serv.port,
     loadUsingSystemPrincipal: true
   });
-  chan.asyncOpen2(listener);
+  chan.asyncOpen(listener);
 
   registerCleanupFunction(function(){ serv.stop(); });
 });

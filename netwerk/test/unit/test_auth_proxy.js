@@ -253,7 +253,7 @@ function test_proxy_returnfalse() {
   var chan = makeChan();
   chan.notificationCallbacks = new Requestor(FLAG_RETURN_FALSE, 0);
   listener.expectedCode = 407; // Proxy Unauthorized
-  chan.asyncOpen2(listener);
+  chan.asyncOpen(listener);
 
   do_test_pending();
 }
@@ -263,7 +263,7 @@ function test_proxy_wrongpw() {
   var chan = makeChan();
   chan.notificationCallbacks = new Requestor(FLAG_WRONG_PASSWORD, 0);
   listener.expectedCode = 200; // Eventually OK
-  chan.asyncOpen2(listener);
+  chan.asyncOpen(listener);
   do_test_pending();
 }
 
@@ -272,7 +272,7 @@ function test_all_ok() {
   var chan = makeChan();
   chan.notificationCallbacks = new Requestor(0, 0);
   listener.expectedCode = 200; // OK
-  chan.asyncOpen2(listener);
+  chan.asyncOpen(listener);
   do_test_pending();
 }
 
@@ -281,7 +281,7 @@ function test_proxy_407_cookie() {
   chan.notificationCallbacks = new Requestor(FLAG_RETURN_FALSE, 0);
   chan.setRequestHeader("X-Set-407-Cookie", "1", false);
   listener.expectedCode = 407; // Proxy Unauthorized
-  chan.asyncOpen2(listener);
+  chan.asyncOpen(listener);
 
   do_test_pending();
 }
@@ -291,7 +291,7 @@ function test_proxy_200_cookie() {
   chan.notificationCallbacks = new Requestor(0, 0);
   chan.setRequestHeader("X-Set-407-Cookie", "1", false);
   listener.expectedCode = 200; // OK
-  chan.asyncOpen2(listener);
+  chan.asyncOpen(listener);
   do_test_pending();
 }
 
@@ -300,7 +300,7 @@ function test_host_returnfalse() {
   var chan = makeChan();
   chan.notificationCallbacks = new Requestor(0, FLAG_RETURN_FALSE);
   listener.expectedCode = 401; // Host Unauthorized
-  chan.asyncOpen2(listener);
+  chan.asyncOpen(listener);
 
   do_test_pending();
 }
@@ -310,7 +310,7 @@ function test_host_wrongpw() {
   var chan = makeChan();
   chan.notificationCallbacks = new Requestor(0, FLAG_WRONG_PASSWORD);
   listener.expectedCode = 200; // Eventually OK
-  chan.asyncOpen2(listener);
+  chan.asyncOpen(listener);
   do_test_pending();
 }
 
@@ -320,7 +320,7 @@ function test_proxy_wrongpw_host_wrongpw() {
   chan.notificationCallbacks =
       new Requestor(FLAG_WRONG_PASSWORD, FLAG_WRONG_PASSWORD);
   listener.expectedCode = 200; // OK
-  chan.asyncOpen2(listener);
+  chan.asyncOpen(listener);
   do_test_pending();
 }
 
@@ -330,7 +330,7 @@ function test_proxy_wrongpw_host_returnfalse() {
   chan.notificationCallbacks =
       new Requestor(FLAG_WRONG_PASSWORD, FLAG_RETURN_FALSE);
   listener.expectedCode = 401; // Host Unauthorized
-  chan.asyncOpen2(listener);
+  chan.asyncOpen(listener);
   do_test_pending();
 }
 

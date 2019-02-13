@@ -62,7 +62,7 @@ function run_test()
   httpServer.start(-1);
 
   var chan = make_channel(URL + "/content");
-  chan.asyncOpen2(new ChannelListener(firstTimeThrough, null, CL_IGNORE_CL));
+  chan.asyncOpen(new ChannelListener(firstTimeThrough, null, CL_IGNORE_CL));
   do_test_pending();
 }
 
@@ -72,7 +72,7 @@ function firstTimeThrough(request, buffer)
   Services.prefs.setIntPref("browser.cache.disk.max_entry_size", 1);
 
   var chan = make_channel(URL + "/content");
-  chan.asyncOpen2(new ChannelListener(finish_test, null));
+  chan.asyncOpen(new ChannelListener(finish_test, null));
 }
 
 function finish_test(request, buffer)

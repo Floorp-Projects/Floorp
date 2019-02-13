@@ -351,7 +351,7 @@ function test_noauth() {
   var chan = makeChan(URL + "/auth", URL);
 
   listener.expectedCode = 401; // Unauthorized
-  chan.asyncOpen2(listener);
+  chan.asyncOpen(listener);
 
   do_test_pending();
 }
@@ -361,7 +361,7 @@ function test_returnfalse1() {
 
   chan.notificationCallbacks = new Requestor(FLAG_RETURN_FALSE, 1);
   listener.expectedCode = 401; // Unauthorized
-  chan.asyncOpen2(listener);
+  chan.asyncOpen(listener);
 
   do_test_pending();
 }
@@ -371,7 +371,7 @@ function test_wrongpw1() {
 
   chan.notificationCallbacks = new Requestor(FLAG_WRONG_PASSWORD, 1);
   listener.expectedCode = 200; // OK
-  chan.asyncOpen2(listener);
+  chan.asyncOpen(listener);
 
   do_test_pending();
 }
@@ -381,7 +381,7 @@ function test_prompt1() {
 
   chan.notificationCallbacks = new Requestor(0, 1);
   listener.expectedCode = 200; // OK
-  chan.asyncOpen2(listener);
+  chan.asyncOpen(listener);
 
   do_test_pending();
 }
@@ -391,7 +391,7 @@ function test_prompt1CrossOrigin() {
 
   chan.notificationCallbacks = new Requestor(16, 1);
   listener.expectedCode = 200; // OK
-  chan.asyncOpen2(listener);
+  chan.asyncOpen(listener);
 
   do_test_pending();
 }
@@ -401,7 +401,7 @@ function test_prompt2CrossOrigin() {
 
   chan.notificationCallbacks = new Requestor(16, 2);
   listener.expectedCode = 200; // OK
-  chan.asyncOpen2(listener);
+  chan.asyncOpen(listener);
 
   do_test_pending();
 }
@@ -411,7 +411,7 @@ function test_returnfalse2() {
 
   chan.notificationCallbacks = new Requestor(FLAG_RETURN_FALSE, 2);
   listener.expectedCode = 401; // Unauthorized
-  chan.asyncOpen2(listener);
+  chan.asyncOpen(listener);
 
   do_test_pending();
 }
@@ -421,7 +421,7 @@ function test_wrongpw2() {
 
   chan.notificationCallbacks = new Requestor(FLAG_WRONG_PASSWORD, 2);
   listener.expectedCode = 200; // OK
-  chan.asyncOpen2(listener);
+  chan.asyncOpen(listener);
 
   do_test_pending();
 }
@@ -431,7 +431,7 @@ function test_prompt2() {
 
   chan.notificationCallbacks = new Requestor(0, 2);
   listener.expectedCode = 200; // OK
-  chan.asyncOpen2(listener);
+  chan.asyncOpen(listener);
 
   do_test_pending();
 }
@@ -441,7 +441,7 @@ function test_ntlm() {
 
   chan.notificationCallbacks = new Requestor(FLAG_RETURN_FALSE, 2);
   listener.expectedCode = 401; // Unauthorized
-  chan.asyncOpen2(listener);
+  chan.asyncOpen(listener);
 
   do_test_pending();
 }
@@ -451,7 +451,7 @@ function test_basicrealm() {
 
   chan.notificationCallbacks = new RealmTestRequestor();
   listener.expectedCode = 401; // Unauthorized
-  chan.asyncOpen2(listener);
+  chan.asyncOpen(listener);
 
   do_test_pending();
 }
@@ -461,7 +461,7 @@ function test_nonascii() {
 
   chan.notificationCallbacks = new Requestor(FLAG_NON_ASCII_USER_PASSWORD, 2);
   listener.expectedCode = 200; // OK
-  chan.asyncOpen2(listener);
+  chan.asyncOpen(listener);
 
   do_test_pending();
 }
@@ -486,7 +486,7 @@ function test_digest_noauth() {
 
   //chan.notificationCallbacks = new Requestor(FLAG_RETURN_FALSE, 2);
   listener.expectedCode = 401; // Unauthorized
-  chan.asyncOpen2(listener);
+  chan.asyncOpen(listener);
 
   do_test_pending();
 }
@@ -496,7 +496,7 @@ function test_digest() {
 
   chan.notificationCallbacks = new Requestor(0, 2);
   listener.expectedCode = 200; // OK
-  chan.asyncOpen2(listener);
+  chan.asyncOpen(listener);
 
   do_test_pending();
 }
@@ -505,7 +505,7 @@ function test_digest_bogus_user() {
   var chan = makeChan(URL + "/auth/digest", URL);
   chan.notificationCallbacks =  new Requestor(FLAG_BOGUS_USER, 2);
   listener.expectedCode = 401; // unauthorized
-  chan.asyncOpen2(listener);
+  chan.asyncOpen(listener);
 
   do_test_pending();
 }
@@ -515,7 +515,7 @@ function test_short_digest() {
   var chan = makeChan(URL + "/auth/short_digest", URL);
   chan.notificationCallbacks =  new Requestor(FLAG_NO_REALM, 2);
   listener.expectedCode = 401; // OK
-  chan.asyncOpen2(listener);
+  chan.asyncOpen(listener);
 
   do_test_pending();
 }
@@ -725,7 +725,7 @@ function test_large_realm() {
   var chan = makeChan(URL + "/largeRealm", URL);
 
   listener.expectedCode = 401; // Unauthorized
-  chan.asyncOpen2(listener);
+  chan.asyncOpen(listener);
 
   do_test_pending();
 }
@@ -734,7 +734,7 @@ function test_large_domain() {
   var chan = makeChan(URL + "/largeDomain", URL);
 
   listener.expectedCode = 401; // Unauthorized
-  chan.asyncOpen2(listener);
+  chan.asyncOpen(listener);
 
   do_test_pending();
 }

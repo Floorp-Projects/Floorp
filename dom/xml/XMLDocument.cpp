@@ -423,7 +423,7 @@ bool XMLDocument::Load(const nsAString& aUrl, CallerType aCallerType,
   // mChannelIsPending.
 
   // Start an asynchronous read of the XML document
-  rv = channel->AsyncOpen2(listener);
+  rv = channel->AsyncOpen(listener);
   if (NS_FAILED(rv)) {
     mChannelIsPending = false;
     aRv.Throw(rv);

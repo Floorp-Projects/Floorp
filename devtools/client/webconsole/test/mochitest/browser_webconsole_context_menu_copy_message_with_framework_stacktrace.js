@@ -58,7 +58,7 @@ add_task(async function() {
   let lines = clipboardText.split(newLineString);
   is(lines.length, 5, "Correct number of lines in the copied text");
   is(lines[lines.length - 1], "", "The last line is an empty new line");
-  is(lines[0], `console.trace() wrapperTrace test.js:3:27`,
+  is(lines[0], `console.trace() wrapperTrace test.js:3:35`,
     "Message first line has the expected text");
   is(lines[1], `    wrapper ${TEST_URI}test.js:3`,
     "Stacktrace first line has the expected text");
@@ -80,7 +80,7 @@ add_task(async function() {
   lines = clipboardText.split(newLineString);
   is(lines.length, 7, "Correct number of lines in the copied text");
   is(lines[lines.length - 1], "", "The last line is an empty new line");
-  is(lines[0], `console.trace() wrapperTrace test.js:3:27`,
+  is(lines[0], `console.trace() wrapperTrace test.js:3:35`,
     "Message first line has the expected text");
   is(lines[1], `    wrapper ${TEST_URI}test.js:3`,
     "Stacktrace first line has the expected text");

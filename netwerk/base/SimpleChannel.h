@@ -73,8 +73,8 @@ already_AddRefed<nsIChannel> NS_NewSimpleChannelInternal(
 
 /**
  * Creates a simple channel which wraps an input stream created by the given
- * callbacks. The callbacks are not called until the underlying AsyncOpen2 or
- * Open2 methods are called, and correspond to the nsBaseChannel::StartAsyncRead
+ * callbacks. The callbacks are not called until the underlying AsyncOpen or
+ * Open methods are called, and correspond to the nsBaseChannel::StartAsyncRead
  * and nsBaseChannel::OpenContentStream methods of the same names.
  *
  * The last two arguments of each callback are the created channel instance,

@@ -939,7 +939,7 @@ function failed_script_callback(pi)
     uri: "http://127.0.0.1:7247",
     loadUsingSystemPrincipal: true
   });
-  chan.asyncOpen2(directFilterListener);
+  chan.asyncOpen(directFilterListener);
 }
 
 var directFilterListener = {

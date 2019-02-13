@@ -65,8 +65,8 @@ test(function(){e += 1 }, 17);
 test(function() {  print[e]; }, 20);
 test(function() { e[1]; }, 19);
 test(function() { e(); }, 19);
-test(function() { 1(); }, 19);
-test(function() { Object.defineProperty() }, 19);
+test(function() { 1(); }, 20);
+test(function() { Object.defineProperty() }, 26);
 
 test(function() {
 //       1         2

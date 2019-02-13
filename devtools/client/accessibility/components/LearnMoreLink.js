@@ -17,6 +17,7 @@ const { openDocLink } = require("devtools/client/shared/link");
 class LearnMoreLink extends Component {
   static get propTypes() {
     return {
+      className: PropTypes.string,
       href: PropTypes.string,
       learnMoreStringKey: PropTypes.string.isRequired,
       l10n: PropTypes.object.isRequired,
@@ -41,7 +42,8 @@ class LearnMoreLink extends Component {
   }
 
   render() {
-    const { href, learnMoreStringKey, l10n, messageStringKey, onClick } = this.props;
+    const { className, href, learnMoreStringKey, l10n, messageStringKey, onClick } =
+      this.props;
     const learnMoreString = l10n.getStr(learnMoreStringKey);
     const messageString = l10n.getFormatStr(messageStringKey, learnMoreString);
 
@@ -52,7 +54,9 @@ class LearnMoreLink extends Component {
     contents[1] = a({ className: "link", href, onClick }, contents[1]);
 
     return (
-      p({}, ...contents)
+      p({
+        className,
+      }, ...contents)
     );
   }
 }

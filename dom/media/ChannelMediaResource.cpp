@@ -546,7 +546,7 @@ nsresult ChannelMediaResource::OpenChannel(int64_t aOffset) {
   rv = SetupChannelHeaders(aOffset);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mChannel->AsyncOpen2(mListener);
+  rv = mChannel->AsyncOpen(mListener);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Tell the media element that we are fetching data from a channel.

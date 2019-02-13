@@ -37,6 +37,11 @@ inline bool JS::Realm::globalIsAboutToBeFinalized() {
          js::gc::IsAboutToBeFinalizedUnbarriered(global_.unsafeGet());
 }
 
+inline bool JS::Realm::hasLiveGlobal() {
+  js::GlobalObject* global = unsafeUnbarrieredMaybeGlobal();
+  return global && !js::gc::IsAboutToBeFinalizedUnbarriered(&global);
+}
+
 /* static */ inline js::ObjectRealm& js::ObjectRealm::get(const JSObject* obj) {
   // Note: obj might be a CCW if we're accessing ObjectRealm::enumerators.
   // CCWs here are fine because we always return the same ObjectRealm for a

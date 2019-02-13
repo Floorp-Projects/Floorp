@@ -135,6 +135,8 @@ inline const char *NS_CP_ContentTypeName(uint32_t contentType) {
     CASE_RETURN(TYPE_INTERNAL_WORKER_IMPORT_SCRIPTS);
     CASE_RETURN(TYPE_SAVEAS_DOWNLOAD);
     CASE_RETURN(TYPE_SPECULATIVE);
+    CASE_RETURN(TYPE_INTERNAL_MODULE);
+    CASE_RETURN(TYPE_INTERNAL_MODULE_PRELOAD);
     default:
       return "<Unknown Type>";
   }

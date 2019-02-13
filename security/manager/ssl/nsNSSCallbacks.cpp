@@ -332,7 +332,7 @@ OCSPRequest::Run() {
   if (NS_FAILED(rv)) {
     return NotifyDone(rv, lock);
   }
-  rv = hchan->AsyncOpen2(this->mLoader);
+  rv = hchan->AsyncOpen(this->mLoader);
   if (NS_FAILED(rv)) {
     return NotifyDone(rv, lock);
   }

@@ -1280,12 +1280,12 @@ nsresult Predictor::Prefetch(nsIURI *uri, nsIURI *referrer,
 
   nsCOMPtr<nsIStreamListener> listener =
       new PrefetchListener(verifier, uri, this);
-  PREDICTOR_LOG(("    calling AsyncOpen2 listener=%p channel=%p",
+  PREDICTOR_LOG(("    calling AsyncOpen listener=%p channel=%p",
                  listener.get(), channel.get()));
-  rv = channel->AsyncOpen2(listener);
+  rv = channel->AsyncOpen(listener);
   if (NS_FAILED(rv)) {
     PREDICTOR_LOG(
-        ("    AsyncOpen2 failed rv=0x%" PRIX32, static_cast<uint32_t>(rv)));
+        ("    AsyncOpen failed rv=0x%" PRIX32, static_cast<uint32_t>(rv)));
   }
 
   return rv;

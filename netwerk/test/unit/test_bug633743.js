@@ -58,7 +58,7 @@ Test.prototype = {
     if (this._cacheHdr)
         channel.setRequestHeader(CACHECTRL_HDR_NAME, this._cacheHdr, false);
 
-    channel.asyncOpen2(this);
+    channel.asyncOpen(this);
   }
 };
 

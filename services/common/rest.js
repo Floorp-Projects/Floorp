@@ -326,7 +326,7 @@ RESTRequest.prototype = {
 
     // Blast off!
     try {
-      channel.asyncOpen2(this);
+      channel.asyncOpen(this);
     } catch (ex) {
       // asyncOpen can throw in a bunch of cases -- e.g., a forbidden port.
       this._log.warn("Caught an error in asyncOpen", ex);

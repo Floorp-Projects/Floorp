@@ -83,7 +83,7 @@ function doTest() {
   for (let userContextId = 0; userContextId < 3; userContextId++) {
     let chan = makeChan(URL, userContextId);
     let listener = new Listener(userContextId);
-    chan.asyncOpen2(listener);
+    chan.asyncOpen(listener);
   }
 }
 

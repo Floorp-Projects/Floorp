@@ -436,7 +436,7 @@ nsresult mozJSSubScriptLoader::ReadScriptAsync(nsIURI* uri,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIStreamListener> listener = loader.get();
-  return channel->AsyncOpen2(listener);
+  return channel->AsyncOpen(listener);
 }
 
 bool mozJSSubScriptLoader::ReadScript(nsIURI* uri, JSContext* cx,
@@ -463,7 +463,7 @@ bool mozJSSubScriptLoader::ReadScript(nsIURI* uri, JSContext* cx,
 
   if (NS_SUCCEEDED(rv)) {
     chan->SetContentType(NS_LITERAL_CSTRING("application/javascript"));
-    rv = chan->Open2(getter_AddRefs(instream));
+    rv = chan->Open(getter_AddRefs(instream));
   }
 
   if (NS_FAILED(rv)) {

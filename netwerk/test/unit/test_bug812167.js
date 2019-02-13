@@ -70,7 +70,7 @@ function check_response(path, request, buffer, expectedExpiration, continuation)
 
     // Do the request again and check the server handler is called appropriately
     var chan = make_channel(path);
-    chan.asyncOpen2(new ChannelListener(function(request, buffer) {
+    chan.asyncOpen(new ChannelListener(function(request, buffer) {
       Assert.equal(buffer, responseBody);
 
       if (expectedExpiration) {
@@ -92,7 +92,7 @@ function check_response(path, request, buffer, expectedExpiration, continuation)
 function run_test_no_store()
 {
   var chan = make_channel(randomURI1);
-  chan.asyncOpen2(new ChannelListener(function(request, buffer) {
+  chan.asyncOpen(new ChannelListener(function(request, buffer) {
     // Cache-control: no-store response should only be found in the memory cache.
     check_response(randomURI1, request, buffer, false, run_test_expires_past);
   }, null));
@@ -101,7 +101,7 @@ function run_test_no_store()
 function run_test_expires_past()
 {
   var chan = make_channel(randomURI2);
-  chan.asyncOpen2(new ChannelListener(function(request, buffer) {
+  chan.asyncOpen(new ChannelListener(function(request, buffer) {
     // Expires: -1 response should not be found in any cache.
     check_response(randomURI2, request, buffer, true, finish_test);
   }, null));

@@ -1068,7 +1068,15 @@ const char* js::ValueToSourceForError(JSContext* cx, HandleValue val,
     if (!sb.append("the string ")) {
       return "<<error converting value to string>>";
     }
-  } else {
+  }
+#ifdef ENABLE_BIGINT
+  else if (val.isBigInt()) {
+    if (!sb.append("the BigInt ")) {
+      return "<<error converting value to string>>";
+    }
+  }
+#endif
+  else {
     MOZ_ASSERT(val.isBoolean() || val.isSymbol());
     bytes = StringToNewUTF8CharsZ(cx, *str);
     return bytes.get();

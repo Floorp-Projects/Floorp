@@ -799,20 +799,17 @@ class MozBrowser extends MozElementMixin(XULFrameElement) {
     if (!aURI) {
       aURI = "about:blank";
     }
-
     let {
       flags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE,
-        referrerURI,
-        referrerPolicy = Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
+        referrerInfo,
         triggeringPrincipal,
         postData,
         headers,
     } = aParams || {};
     let loadURIOptions = {
       triggeringPrincipal,
-      referrerURI,
+      referrerInfo,
       loadFlags: flags,
-      referrerPolicy,
       postData,
       headers,
     };

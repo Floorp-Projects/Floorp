@@ -2620,7 +2620,7 @@ nsresult XMLHttpRequestMainThread::InitiateFetch(
   }
 
   // Start reading from the channel
-  rv = mChannel->AsyncOpen2(listener);
+  rv = mChannel->AsyncOpen(listener);
   listener = nullptr;
   if (NS_WARN_IF(NS_FAILED(rv))) {
     // Drop our ref to the channel to avoid cycles. Also drop channel's

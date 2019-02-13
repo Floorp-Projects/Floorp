@@ -88,6 +88,7 @@ class nsIURIFixup;
 class nsIURILoader;
 class nsIWebBrowserFind;
 class nsIWidget;
+class nsIReferrerInfo;
 
 class nsDocShell;
 class nsDocShellEditorData;
@@ -661,23 +662,21 @@ class nsDocShell final : public nsDocLoader,
    *
    * Visits can be saved either during a redirect or when the request has
    * reached its final destination. The previous URI in the visit may be
-   * from another redirect or it may be the referrer.
+   * from another redirect.
    *
    * @pre aURI is not null.
    *
    * @param aURI
    *        The URI that was just visited
-   * @param aReferrerURI
-   *        The referrer URI of this request
    * @param aPreviousURI
-   *        The previous URI of this visit (may be the same as aReferrerURI)
+   *        The previous URI of this visit
    * @param aChannelRedirectFlags
    *        For redirects, the redirect flags from nsIChannelEventSink
    *        (0 otherwise)
    * @param aResponseStatus
    *        For HTTP channels, the response code (0 otherwise).
    */
-  void AddURIVisit(nsIURI* aURI, nsIURI* aReferrerURI, nsIURI* aPreviousURI,
+  void AddURIVisit(nsIURI* aURI, nsIURI* aPreviousURI,
                    uint32_t aChannelRedirectFlags,
                    uint32_t aResponseStatus = 0);
 
@@ -828,9 +827,8 @@ class nsDocShell final : public nsDocLoader,
   nsresult DispatchToTabGroup(mozilla::TaskCategory aCategory,
                               already_AddRefed<nsIRunnable>&& aRunnable);
 
-  void SetupReferrerFromChannel(nsIChannel* aChannel);
-  void SetReferrerURI(nsIURI* aURI);
-  void SetReferrerPolicy(uint32_t aReferrerPolicy);
+  void SetupReferrerInfoFromChannel(nsIChannel* aChannel);
+  void SetReferrerInfo(nsIReferrerInfo* aReferrerInfo);
   void ReattachEditorToWindow(nsISHEntry* aSHEntry);
   void RecomputeCanExecuteScripts();
   void ClearFrameHistory(nsISHEntry* aEntry);
@@ -964,7 +962,7 @@ class nsDocShell final : public nsDocLoader,
 
   // mCurrentURI should be marked immutable on set if possible.
   nsCOMPtr<nsIURI> mCurrentURI;
-  nsCOMPtr<nsIURI> mReferrerURI;
+  nsCOMPtr<nsIReferrerInfo> mReferrerInfo;
 
   // Reference to the SHEntry for this docshell until the page is destroyed.
   // Somebody give me better name
@@ -1053,7 +1051,6 @@ class nsDocShell final : public nsDocLoader,
   AppType mAppType;
   uint32_t mLoadType;
   uint32_t mDefaultLoadFlags;
-  uint32_t mReferrerPolicy;
   uint32_t mFailedLoadType;
 
   // Are we a regular frame, a browser frame, or an app frame?

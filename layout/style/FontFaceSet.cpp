@@ -656,7 +656,7 @@ nsresult FontFaceSet::StartLoad(gfxUserFontEntry* aUserFontEntry,
       aFontFaceSrc->mURI->get(), mDocument->GetDocumentURI(),
       nsINetworkPredictor::LEARN_LOAD_SUBRESOURCE, loadGroup);
 
-  rv = channel->AsyncOpen2(streamLoader);
+  rv = channel->AsyncOpen(streamLoader);
   if (NS_FAILED(rv)) {
     fontLoader->DropChannel();  // explicitly need to break ref cycle
   }
@@ -1370,7 +1370,7 @@ nsresult FontFaceSet::SyncLoadFontData(gfxUserFontEntry* aFontToLoad,
 
   // blocking stream is OK for data URIs
   nsCOMPtr<nsIInputStream> stream;
-  rv = channel->Open2(getter_AddRefs(stream));
+  rv = channel->Open(getter_AddRefs(stream));
   NS_ENSURE_SUCCESS(rv, rv);
 
   uint64_t bufferLength64;

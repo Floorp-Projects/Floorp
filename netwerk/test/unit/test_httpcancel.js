@@ -93,7 +93,7 @@ function execute_test() {
   obs = obs.QueryInterface(Ci.nsIObserverService);
   obs.addObserver(observer, "http-on-modify-request");
 
-  chan.asyncOpen2(listener);
+  chan.asyncOpen(listener);
 }
 
 function run_test() {

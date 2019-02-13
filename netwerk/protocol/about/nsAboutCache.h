@@ -125,11 +125,8 @@ class nsAboutCache final : public nsIAboutModule {
     NS_DECL_NSICACHESTORAGEVISITOR
     NS_FORWARD_SAFE_NSIREQUEST(mChannel)
     NS_FORWARD_SAFE_NSICHANNEL_SUBSET(mChannel)
-    NS_IMETHOD AsyncOpen(nsIStreamListener *aListener,
-                         nsISupports *aContext) override;
-    NS_IMETHOD AsyncOpen2(nsIStreamListener *aListener) override;
+    NS_IMETHOD AsyncOpen(nsIStreamListener *aListener) override;
     NS_IMETHOD Open(nsIInputStream **_retval) override;
-    NS_IMETHOD Open2(nsIInputStream **_retval) override;
 
    private:
     virtual ~Channel() = default;

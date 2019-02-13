@@ -31,7 +31,7 @@ function run_test() {
 
   channel.QueryInterface(Ci.nsIHttpChannel);
   channel.setRequestHeader("If-None-Match", "foobar", false);
-  channel.asyncOpen2(new TestListener());
+  channel.asyncOpen(new TestListener());
 
   do_test_pending();
 }

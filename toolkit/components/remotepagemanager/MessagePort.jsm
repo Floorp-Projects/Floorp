@@ -68,18 +68,18 @@ let RPMAccessManager = {
   },
 };
 
-function MessageListener() {
-  this.listeners = new Map();
-}
+class MessageListener {
+  constructor() {
+    this.listeners = new Map();
+  }
 
-MessageListener.prototype = {
   keys() {
     return this.listeners.keys();
-  },
+  }
 
   has(name) {
     return this.listeners.has(name);
-  },
+  }
 
   callListeners(message) {
     let listeners = this.listeners.get(message.name);
@@ -94,22 +94,22 @@ MessageListener.prototype = {
         Cu.reportError(e);
       }
     }
-  },
+  }
 
   addMessageListener(name, callback) {
     if (!this.listeners.has(name))
       this.listeners.set(name, new Set([callback]));
     else
       this.listeners.get(name).add(callback);
-  },
+  }
 
   removeMessageListener(name, callback) {
     if (!this.listeners.has(name))
       return;
 
     this.listeners.get(name).delete(callback);
-  },
-};
+  }
+}
 
 /*
  * A message port sits on each side of the process boundary for every remote
@@ -119,23 +119,16 @@ MessageListener.prototype = {
  * We roughly implement the same contract as nsIMessageSender and
  * nsIMessageListenerManager
  */
-function MessagePort(messageManager, portID) {
-  this.messageManager = messageManager;
-  this.portID = portID;
-  this.destroyed = false;
-  this.listener = new MessageListener();
+class MessagePort {
+  constructor(messageManager, portID) {
+    this.messageManager = messageManager;
+    this.portID = portID;
+    this.destroyed = false;
+    this.listener = new MessageListener();
 
-  this.message = this.message.bind(this);
-  this.messageManager.addMessageListener("RemotePage:Message", this.message);
-}
-
-MessagePort.prototype = {
-  messageManager: null,
-  portID: null,
-  destroyed: null,
-  listener: null,
-  _browser: null,
-  remotePort: null,
+    this.message = this.message.bind(this);
+    this.messageManager.addMessageListener("RemotePage:Message", this.message);
+  }
 
   // Called when the message manager used to connect to the other process has
   // changed, i.e. when a tab is detached.
@@ -145,7 +138,7 @@ MessagePort.prototype = {
     this.messageManager = messageManager;
 
     this.messageManager.addMessageListener("RemotePage:Message", this.message);
-  },
+  }
 
   /* Adds a listener for messages. Many callbacks can be registered for the
    * same message if necessary. An attempt to register the same callback for the
@@ -161,7 +154,7 @@ MessagePort.prototype = {
     }
 
     this.listener.addMessageListener(name, callback);
-  },
+  }
 
   /*
    * Removes a listener for messages.
@@ -172,7 +165,7 @@ MessagePort.prototype = {
     }
 
     this.listener.removeMessageListener(name, callback);
-  },
+  }
 
   // Sends a message asynchronously to the other process
   sendAsyncMessage(name, data = null) {
@@ -185,7 +178,7 @@ MessagePort.prototype = {
       name,
       data,
     });
-  },
+  }
 
   // Called to destroy this port
   destroy() {
@@ -197,7 +190,7 @@ MessagePort.prototype = {
     this.destroyed = true;
     this.portID = null;
     this.listener = null;
-  },
+  }
 
   getBoolPref(aPref) {
     let principal = this.window.document.nodePrincipal;
@@ -205,7 +198,7 @@ MessagePort.prototype = {
       throw new Error("RPMAccessManager does not allow access to getBoolPref");
     }
     return Services.prefs.getBoolPref(aPref);
-  },
+  }
 
   setBoolPref(aPref, aVal) {
     return new this.window.Promise(function(resolve) {
@@ -213,7 +206,7 @@ MessagePort.prototype = {
         resolve();
       });
     });
-  },
+  }
 
   getFormatURLPref(aFormatURL) {
     let principal = this.window.document.nodePrincipal;
@@ -221,7 +214,7 @@ MessagePort.prototype = {
       throw new Error("RPMAccessManager does not allow access to getFormatURLPref");
     }
     return Services.urlFormatter.formatURLPref(aFormatURL);
-  },
+  }
 
   isWindowPrivate() {
     let principal = this.window.document.nodePrincipal;
@@ -229,5 +222,5 @@ MessagePort.prototype = {
       throw new Error("RPMAccessManager does not allow access to isWindowPrivate");
     }
     return PrivateBrowsingUtils.isContentWindowPrivate(this.window);
-  },
-};
+  }
+}

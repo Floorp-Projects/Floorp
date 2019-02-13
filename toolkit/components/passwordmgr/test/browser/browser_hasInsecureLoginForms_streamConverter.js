@@ -44,7 +44,7 @@ function registerConverter() {
       // In this test, we pass the new channel to the listener but don't fire a
       // redirect notification, even if it would be required. This keeps the
       // test code simpler and doesn't impact the principal check we're testing.
-      channel.asyncOpen2(this.listener);
+      channel.asyncOpen(this.listener);
     },
 
     // nsIRequestObserver

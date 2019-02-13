@@ -12,7 +12,7 @@ function run_test() {
     loadUsingSystemPrincipal: true
   });
   try {
-    instr = channel.open2();
+    instr = channel.open();
     do_throw("Failed to report that file doesn't exist")
   } catch (e) {
       Assert.ok(e.name == "NS_ERROR_FILE_NOT_FOUND")

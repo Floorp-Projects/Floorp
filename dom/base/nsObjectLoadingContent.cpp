@@ -1974,7 +1974,7 @@ nsresult nsObjectLoadingContent::LoadObject(bool aNotify, bool aForceLoad,
     int16_t contentPolicy = nsIContentPolicy::ACCEPT;
     // If mChannelLoaded is set we presumably already passed load policy
     // If mType == eType_Loading then we call OpenChannel() which internally
-    // creates a new channel and calls asyncOpen2() on that channel which
+    // creates a new channel and calls asyncOpen() on that channel which
     // then enforces content policy checks.
     if (allowLoad && mURI && !mChannelLoaded && mType != eType_Loading) {
       allowLoad = CheckLoadPolicy(&contentPolicy);
@@ -2456,8 +2456,8 @@ nsresult nsObjectLoadingContent::OpenChannel() {
     scriptChannel->SetExecutionPolicy(nsIScriptChannel::EXECUTE_NORMAL);
   }
 
-  // AsyncOpen2 can fail if a file does not exist.
-  rv = chan->AsyncOpen2(shim);
+  // AsyncOpen can fail if a file does not exist.
+  rv = chan->AsyncOpen(shim);
   NS_ENSURE_SUCCESS(rv, rv);
   LOG(("OBJLC [%p]: Channel opened", this));
   mChannel = chan;

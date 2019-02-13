@@ -68,6 +68,8 @@ static const char *kTypeString[] = {
     "",  // TYPE_INTERNAL_WORKERS_IMPORT_SCRIPTS
     "saveas_download",
     "speculative",
+    "",  // TYPE_INTERNAL_MODULE
+    "",  // TYPE_INTERNAL_MODULE_PRELOAD
 };
 
 #define NUMBER_OF_TYPES MOZ_ARRAY_LENGTH(kTypeString)

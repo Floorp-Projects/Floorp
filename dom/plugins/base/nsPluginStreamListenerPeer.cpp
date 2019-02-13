@@ -267,7 +267,7 @@ nsresult nsPluginStreamListenerPeer::GetURL(const char** result) {
 }
 
 // XXX: Converting the channel within nsPluginStreamListenerPeer
-// to use asyncOpen2() and do not want to touch the fragile logic
+// to use asyncOpen() and do not want to touch the fragile logic
 // of byte range requests. Hence we just introduce this lightweight
 // wrapper to proxy the context.
 class PluginContextProxy final : public nsIStreamListener {

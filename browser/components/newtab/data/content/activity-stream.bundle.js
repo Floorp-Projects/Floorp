@@ -2398,7 +2398,7 @@ class BaseContent extends react__WEBPACK_IMPORTED_MODULE_10___default.a.PureComp
       this.disableDarkTheme();
     }
 
-    const outerClassName = ["outer-wrapper", isDiscoveryStream && "ds-outer-wrapper-search-alignment", shouldBeFixedToTop && "fixed-to-top", prefs.showSearch && this.state.fixedSearch && !noSectionsEnabled && "fixed-search", prefs.showSearch && noSectionsEnabled && "only-search"].filter(v => v).join(" ");
+    const outerClassName = ["outer-wrapper", isDiscoveryStream && "ds-outer-wrapper-search-alignment", isDiscoveryStream && "ds-outer-wrapper-breakpoint-override", shouldBeFixedToTop && "fixed-to-top", prefs.showSearch && this.state.fixedSearch && !noSectionsEnabled && "fixed-search", prefs.showSearch && noSectionsEnabled && "only-search"].filter(v => v).join(" ");
 
     return react__WEBPACK_IMPORTED_MODULE_10___default.a.createElement(
       "div",
@@ -2587,7 +2587,7 @@ class DiscoveryStreamAdmin extends react__WEBPACK_IMPORTED_MODULE_4___default.a.
         react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(
           "td",
           null,
-          relativeTime(feeds[feed.url] ? feeds[feed.url].lastUpdated : null) || "(no data)"
+          relativeTime(feeds.data[feed.url] ? feeds.data[feed.url].lastUpdated : null) || "(no data)"
         )
       )
     );
@@ -7194,10 +7194,40 @@ var Actions = __webpack_require__(2);
 var external_React_ = __webpack_require__(10);
 var external_React_default = /*#__PURE__*/__webpack_require__.n(external_React_);
 
+// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/SafeAnchor/SafeAnchor.jsx
+
+
+class SafeAnchor_SafeAnchor extends external_React_default.a.PureComponent {
+  safeURI(url) {
+    let protocol = null;
+    try {
+      protocol = new URL(url).protocol;
+    } catch (e) {
+      return "";
+    }
+
+    const isAllowed = ["http:", "https:"].includes(protocol);
+    if (!isAllowed) {
+      console.warn(`${protocol} is not allowed for anchor targets.`); // eslint-disable-line no-console
+      return "";
+    }
+    return url;
+  }
+
+  render() {
+    const { url, className, onLinkClick } = this.props;
+    return external_React_default.a.createElement(
+      "a",
+      { href: this.safeURI(url), className: className, onClick: onLinkClick },
+      this.props.children
+    );
+  }
+}
 // EXTERNAL MODULE: ./content-src/components/DiscoveryStreamComponents/SpocIntersectionObserver/SpocIntersectionObserver.jsx
 var SpocIntersectionObserver = __webpack_require__(30);
 
 // CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/DSCard/DSCard.jsx
+
 
 
 
@@ -7227,11 +7257,11 @@ class DSCard_DSCard extends external_React_default.a.PureComponent {
 
   render() {
     return external_React_default.a.createElement(
-      SpocIntersectionObserver["SpocIntersectionObserver"],
-      { campaignId: this.props.campaignId, dispatch: this.props.dispatch },
+      SafeAnchor_SafeAnchor,
+      { url: this.props.url, className: "ds-card", onLinkClick: this.onLinkClick },
       external_React_default.a.createElement(
-        "a",
-        { href: this.props.url, className: "ds-card", onClick: this.onLinkClick },
+        SpocIntersectionObserver["SpocIntersectionObserver"],
+        { campaignId: this.props.campaignId, dispatch: this.props.dispatch },
         external_React_default.a.createElement(
           "div",
           { className: "img-wrapper" },
@@ -7382,6 +7412,7 @@ class DSMessage_DSMessage extends external_React_default.a.PureComponent {
 
 
 
+
 /**
  * @note exported for testing only
  */
@@ -7411,14 +7442,14 @@ class List_ListItem extends external_React_default.a.PureComponent {
 
   render() {
     return external_React_default.a.createElement(
-      SpocIntersectionObserver["SpocIntersectionObserver"],
-      { campaignId: this.props.campaignId, dispatch: this.props.dispatch },
+      "li",
+      { className: "ds-list-item" },
       external_React_default.a.createElement(
-        "li",
-        { className: "ds-list-item" },
+        SpocIntersectionObserver["SpocIntersectionObserver"],
+        { campaignId: this.props.campaignId, dispatch: this.props.dispatch },
         external_React_default.a.createElement(
-          "a",
-          { className: "ds-list-item-link", href: this.props.url, onClick: this.onLinkClick },
+          SafeAnchor_SafeAnchor,
+          { url: this.props.url, className: "ds-list-item-link", onLinkClick: this.onLinkClick },
           external_React_default.a.createElement(
             "div",
             { className: "ds-list-item-text" },
@@ -7513,6 +7544,7 @@ const List = Object(external_ReactRedux_["connect"])(state => ({ DiscoveryStream
 
 
 
+
 class Hero_Hero extends external_React_default.a.PureComponent {
   constructor(props) {
     super(props);
@@ -7580,8 +7612,8 @@ class Hero_Hero extends external_React_default.a.PureComponent {
         "div",
         { className: `ds-hero ds-hero-${this.props.border}` },
         external_React_default.a.createElement(
-          "a",
-          { href: heroRec.url, className: "wrapper", onClick: this.onLinkClick },
+          SafeAnchor_SafeAnchor,
+          { url: heroRec.url, className: "wrapper", onLinkClick: this.onLinkClick },
           external_React_default.a.createElement(
             "div",
             { className: "img-wrapper" },
@@ -7863,7 +7895,15 @@ function layoutRender(layout, feeds, spocs) {
         return component;
       }
 
-      return Object.assign({}, component, { data: maybeInjectSpocs(feeds.data[component.feed.url].data, component.spocs) });
+      let { data } = feeds.data[component.feed.url];
+
+      if (component && component.properties && component.properties.offset) {
+        data = Object.assign({}, data, {
+          recommendations: data.recommendations.slice(component.properties.offset)
+        });
+      }
+
+      return Object.assign({}, component, { data: maybeInjectSpocs(data, component.spocs) });
     })
   }));
 });

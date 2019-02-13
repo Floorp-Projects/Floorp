@@ -31,7 +31,7 @@ InitialListener.prototype = {
             var channel = setupChannel("http://localhost:" +
                                        httpserv.identity.primaryPort + "/post");
             channel.requestMethod = "POST";
-            channel.asyncOpen2(new RedirectingListener());
+            channel.asyncOpen(new RedirectingListener());
         });
     }
 };
@@ -46,7 +46,7 @@ RedirectingListener.prototype = {
             var channel = setupChannel("http://localhost:" +
                                        httpserv.identity.primaryPort + "/post");
             channel.requestMethod = "POST";
-            channel.asyncOpen2(new VerifyingListener());
+            channel.asyncOpen(new VerifyingListener());
         });
     }
 };
@@ -60,7 +60,7 @@ VerifyingListener.prototype = {
         Assert.equal(2, numberOfHandlerCalls);
         var channel = setupChannel("http://localhost:" +
                                    httpserv.identity.primaryPort + "/cl");
-        channel.asyncOpen2(new FinalListener());
+        channel.asyncOpen(new FinalListener());
     }
 };
 
@@ -88,7 +88,7 @@ function run_test() {
   // Load Content-Location URI into cache and start the chain of loads
   var channel = setupChannel("http://localhost:" +
                              httpserv.identity.primaryPort + "/cl");
-  channel.asyncOpen2(new InitialListener());
+  channel.asyncOpen(new InitialListener());
 
   do_test_pending();
 }

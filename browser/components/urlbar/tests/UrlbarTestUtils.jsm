@@ -304,11 +304,8 @@ class UrlbarAbstraction {
   }
 
   getSelectedIndex() {
-    if (!this.quantumbar) {
-      return this.panel.selectedIndex;
-    }
-
-    return parseInt(this.urlbar.view._selected.getAttribute("resultIndex"));
+    return this.quantumbar ? this.urlbar.view.selectedIndex
+                           : this.panel.selectedIndex;
   }
 
   getResultCount() {

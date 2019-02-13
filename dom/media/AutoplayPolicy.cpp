@@ -88,16 +88,6 @@ static bool IsWindowAllowedToPlay(nsPIDOMWindowInner* aWindow) {
     return false;
   }
 
-  // Here we are checking whether the current document is blocked via
-  // feature-policy, and further down we walk up the doc tree to the top level
-  // content document and check permissions etc on the top level content
-  // document. FeaturePolicy propagates the permission to any sub-documents if
-  // they don't have special directives.
-  if (!FeaturePolicyUtils::IsFeatureAllowed(aWindow->GetExtantDoc(),
-                                            NS_LITERAL_STRING("autoplay"))) {
-    return false;
-  }
-
   Document* approver = ApproverDocOf(*aWindow->GetExtantDoc());
   if (!approver) {
     return false;

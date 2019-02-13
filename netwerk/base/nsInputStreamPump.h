@@ -70,7 +70,6 @@ class nsInputStreamPump final : public nsIInputStreamPump,
   uint32_t mState;
   nsCOMPtr<nsILoadGroup> mLoadGroup;
   nsCOMPtr<nsIStreamListener> mListener;
-  nsCOMPtr<nsISupports> mListenerContext;
   nsCOMPtr<nsIEventTarget> mTargetThread;
   nsCOMPtr<nsIEventTarget> mLabeledMainThreadTarget;
   nsCOMPtr<nsIInputStream> mStream;

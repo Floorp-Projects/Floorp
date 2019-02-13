@@ -584,6 +584,44 @@ class PresShell final : public nsIPresShell,
         PresShell& aPresShell);
 
     /**
+     * EventTargetData struct stores a set of a PresShell (event handler),
+     * a frame (to handle the event) and a content (event target for the frame).
+     */
+    struct MOZ_STACK_CLASS EventTargetData final {
+      EventTargetData() = delete;
+      EventTargetData(const EventTargetData& aOther) = delete;
+      EventTargetData(PresShell* aPresShell, nsIFrame* aFrameToHandleEvent)
+          : mPresShell(aPresShell), mFrame(aFrameToHandleEvent) {}
+
+      void SetPresShellAndFrame(PresShell* aPresShell,
+                                nsIFrame* aFrameToHandleEvent) {
+        mPresShell = aPresShell;
+        mFrame = aFrameToHandleEvent;
+        mContent = nullptr;
+      }
+      void SetFrameAndComputePresShell(nsIFrame* aFrameToHandleEvent);
+      void SetFrameAndComputePresShellAndContent(nsIFrame* aFrameToHandleEvent,
+                                                 WidgetGUIEvent* aGUIEvent);
+      void SetContentForEventFromFrame(WidgetGUIEvent* aGUIEvent);
+
+      nsPresContext* GetPresContext() const {
+        return mPresShell ? mPresShell->GetPresContext() : nullptr;
+      };
+      EventStateManager* GetEventStateManager() const {
+        nsPresContext* presContext = GetPresContext();
+        return presContext ? presContext->EventStateManager() : nullptr;
+      }
+      Document* GetDocument() const {
+        return mPresShell ? mPresShell->GetDocument() : nullptr;
+      }
+      nsIContent* GetFrameContent() const;
+
+      RefPtr<PresShell> mPresShell;
+      nsIFrame* mFrame;
+      nsCOMPtr<nsIContent> mContent;
+    };
+
+    /**
      * MaybeFlushPendingNotifications() maybe flush pending notifications if
      * aGUIEvent should be handled with the latest layout.
      *

@@ -94,7 +94,6 @@ class WyciwygChannelChild final
   nsCOMPtr<nsIProgressEventSink> mProgressSink;
   nsCOMPtr<nsILoadGroup> mLoadGroup;
   nsCOMPtr<nsIStreamListener> mListener;
-  nsCOMPtr<nsISupports> mListenerContext;
   nsCOMPtr<nsISupports> mSecurityInfo;
 
   // FIXME: replace with IPDL states (bug 536319)

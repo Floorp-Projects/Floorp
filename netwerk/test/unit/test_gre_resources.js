@@ -18,7 +18,7 @@ function check_file(file) {
     loadUsingSystemPrincipal: true
   });
   try {
-    let instr = wrapInputStream(channel.open2());
+    let instr = wrapInputStream(channel.open());
     Assert.ok(instr.read(1024).length > 0)
   } catch (e) {
     do_throw("Failed to read " + file + " from gre-resources:"+e)

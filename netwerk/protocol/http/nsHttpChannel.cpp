@@ -1381,6 +1381,8 @@ nsresult EnsureMIMEOfScript(nsHttpChannel *aChannel, nsIURI *aURI,
     case nsIContentPolicy::TYPE_SCRIPT:
     case nsIContentPolicy::TYPE_INTERNAL_SCRIPT:
     case nsIContentPolicy::TYPE_INTERNAL_SCRIPT_PRELOAD:
+    case nsIContentPolicy::TYPE_INTERNAL_MODULE:
+    case nsIContentPolicy::TYPE_INTERNAL_MODULE_PRELOAD:
       AccumulateCategorical(
           Telemetry::LABELS_SCRIPT_BLOCK_INCORRECT_MIME_3::script_load);
       break;
@@ -1532,8 +1534,8 @@ nsresult EnsureMIMEOfScript(nsHttpChannel *aChannel, nsIURI *aURI,
   }
 
   // We restrict importScripts() in worker code to JavaScript MIME types.
-  if (aLoadInfo->InternalContentPolicyType() ==
-      nsIContentPolicy::TYPE_INTERNAL_WORKER_IMPORT_SCRIPTS) {
+  nsContentPolicyType internalType = aLoadInfo->InternalContentPolicyType();
+  if (internalType == nsIContentPolicy::TYPE_INTERNAL_WORKER_IMPORT_SCRIPTS) {
     // Instead of consulting Preferences::GetBool() all the time we
     // can cache the result to speed things up.
     static bool sCachedBlockImportScriptsWithWrongMime = false;
@@ -1552,6 +1554,14 @@ nsresult EnsureMIMEOfScript(nsHttpChannel *aChannel, nsIURI *aURI,
 
     ReportMimeTypeMismatch(aChannel, "BlockImportScriptsWithWrongMimeType",
                            aURI, contentType, Report::Error);
+    return NS_ERROR_CORRUPTED_CONTENT;
+  }
+
+  // ES6 modules require a strict MIME type check.
+  if (internalType == nsIContentPolicy::TYPE_INTERNAL_MODULE ||
+      internalType == nsIContentPolicy::TYPE_INTERNAL_MODULE_PRELOAD) {
+    ReportMimeTypeMismatch(aChannel, "BlockModuleWithWrongMimeType", aURI,
+                           contentType, Report::Error);
     return NS_ERROR_CORRUPTED_CONTENT;
   }
 
@@ -1618,7 +1628,7 @@ nsresult nsHttpChannel::CallOnStartRequest() {
 
     if (mListener) {
       nsCOMPtr<nsIStreamListener> deleteProtector(mListener);
-      deleteProtector->OnStartRequest(this, mListenerContext);
+      deleteProtector->OnStartRequest(this, nullptr);
     }
 
     mOnStartRequestCalled = true;
@@ -1667,9 +1677,8 @@ nsresult nsHttpChannel::CallOnStartRequest() {
       // If we failed, we just fall through to the "normal" case
       if (NS_SUCCEEDED(rv)) {
         nsCOMPtr<nsIStreamListener> converter;
-        rv =
-            serv->AsyncConvertData(UNKNOWN_CONTENT_TYPE, "*/*", mListener,
-                                   mListenerContext, getter_AddRefs(converter));
+        rv = serv->AsyncConvertData(UNKNOWN_CONTENT_TYPE, "*/*", mListener,
+                                    nullptr, getter_AddRefs(converter));
         if (NS_SUCCEEDED(rv)) {
           mListener = converter;
           unknownDecoderStarted = true;
@@ -1691,7 +1700,7 @@ nsresult nsHttpChannel::CallOnStartRequest() {
     MOZ_ASSERT(!mOnStartRequestCalled,
                "We should not call OsStartRequest twice");
     nsCOMPtr<nsIStreamListener> deleteProtector(mListener);
-    rv = deleteProtector->OnStartRequest(this, mListenerContext);
+    rv = deleteProtector->OnStartRequest(this, nullptr);
     mOnStartRequestCalled = true;
     if (NS_FAILED(rv)) return rv;
   } else {
@@ -1704,8 +1713,8 @@ nsresult nsHttpChannel::CallOnStartRequest() {
   // nsUnknownDecoder) after OnStartRequest is called for the real listener.
   if (!unknownDecoderStarted) {
     nsCOMPtr<nsIStreamListener> listener;
-    nsISupports *ctxt = mListenerContext;
-    rv = DoApplyContentConversions(mListener, getter_AddRefs(listener), ctxt);
+    rv =
+        DoApplyContentConversions(mListener, getter_AddRefs(listener), nullptr);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -1840,6 +1849,12 @@ nsresult nsHttpChannel::ProcessFailedProxyConnect(uint32_t httpStatus) {
   }
   LOG(("Cancelling failed proxy CONNECT [this=%p httpStatus=%u]\n", this,
        httpStatus));
+
+  // Make sure the connection is thrown away as it can be in a bad state
+  // and the proxy may just hang on the next request.
+  MOZ_ASSERT(mTransaction);
+  mTransaction->DontReuseConnection();
+
   Cancel(rv);
   {
     nsresult rv = CallOnStartRequest();
@@ -2083,9 +2098,8 @@ nsresult nsHttpChannel::ProcessContentSignatureHeader(
   }
   // create a new listener that meadiates the content
   RefPtr<ContentVerifier> contentVerifyingMediator =
-      new ContentVerifier(mListener, mListenerContext);
-  rv = contentVerifyingMediator->Init(contentSignatureHeader, this,
-                                      mListenerContext);
+      new ContentVerifier(mListener, nullptr);
+  rv = contentVerifyingMediator->Init(contentSignatureHeader, this, nullptr);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_INVALID_SIGNATURE);
   mListener = contentVerifyingMediator;
 
@@ -3080,12 +3094,8 @@ nsresult nsHttpChannel::OpenRedirectChannel(nsresult rv) {
   mRedirectChannel->SetOriginalURI(mOriginalURI);
 
   // open new channel
-  if (mLoadInfo && mLoadInfo->GetEnforceSecurity()) {
-    MOZ_ASSERT(!mListenerContext, "mListenerContext should be null!");
-    rv = mRedirectChannel->AsyncOpen2(mListener);
-  } else {
-    rv = mRedirectChannel->AsyncOpen(mListener, mListenerContext);
-  }
+  rv = mRedirectChannel->AsyncOpen(mListener);
+
   NS_ENSURE_SUCCESS(rv, rv);
 
   mStatus = NS_BINDING_REDIRECTED;
@@ -3138,13 +3148,9 @@ nsresult nsHttpChannel::ContinueDoReplaceWithProxy(nsresult rv) {
   // i.e. after all sinks had been notified
   mRedirectChannel->SetOriginalURI(mOriginalURI);
 
+
   // open new channel
-  if (mLoadInfo && mLoadInfo->GetEnforceSecurity()) {
-    MOZ_ASSERT(!mListenerContext, "mListenerContext should be null!");
-    rv = mRedirectChannel->AsyncOpen2(mListener);
-  } else {
-    rv = mRedirectChannel->AsyncOpen(mListener, mListenerContext);
-  }
+  rv = mRedirectChannel->AsyncOpen(mListener);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mStatus = NS_BINDING_REDIRECTED;
@@ -3706,12 +3712,7 @@ nsresult nsHttpChannel::ContinueProcessFallback(nsresult rv) {
   // i.e. after all sinks had been notified
   mRedirectChannel->SetOriginalURI(mOriginalURI);
 
-  if (mLoadInfo && mLoadInfo->GetEnforceSecurity()) {
-    MOZ_ASSERT(!mListenerContext, "mListenerContext should be null!");
-    rv = mRedirectChannel->AsyncOpen2(mListener);
-  } else {
-    rv = mRedirectChannel->AsyncOpen(mListener, mListenerContext);
-  }
+  rv = mRedirectChannel->AsyncOpen(mListener);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (mLoadFlags & LOAD_INITIAL_DOCUMENT_URI) {
@@ -5126,7 +5127,7 @@ nsresult nsHttpChannel::ReadFromCache(bool alreadyMarkedValid) {
     return rv;
   }
 
-  rv = mCachePump->AsyncRead(this, mListenerContext);
+  rv = mCachePump->AsyncRead(this, nullptr);
   if (NS_FAILED(rv)) return rv;
 
   if (mTimingEnabled) mCacheReadStart = TimeStamp::Now();
@@ -5819,12 +5820,7 @@ nsresult nsHttpChannel::ContinueProcessRedirection(nsresult rv) {
   // should really be handled by the event sink implementation.
 
   // begin loading the new channel
-  if (mLoadInfo && mLoadInfo->GetEnforceSecurity()) {
-    MOZ_ASSERT(!mListenerContext, "mListenerContext should be null!");
-    rv = mRedirectChannel->AsyncOpen2(mListener);
-  } else {
-    rv = mRedirectChannel->AsyncOpen(mListener, mListenerContext);
-  }
+  rv = mRedirectChannel->AsyncOpen(mListener);
   LOG(("  new channel AsyncOpen returned %" PRIX32, static_cast<uint32_t>(rv)));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -6160,14 +6156,21 @@ nsHttpChannel::GetSecurityInfo(nsISupports **securityInfo) {
 // If AsyncOpen returns NS_OK, after that point AsyncAbort must be called on
 // any error.
 NS_IMETHODIMP
-nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context) {
+nsHttpChannel::AsyncOpen(nsIStreamListener *aListener) {
+  nsCOMPtr<nsIStreamListener> listener = aListener;
+  nsresult rv =
+      nsContentSecurityManager::doContentSecurityCheck(this, listener);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    ReleaseListeners();
+    return rv;
+  }
   MOZ_ASSERT(
       !mLoadInfo || mLoadInfo->GetSecurityMode() == 0 ||
           mLoadInfo->GetInitialSecurityCheckDone() ||
           (mLoadInfo->GetSecurityMode() ==
                nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL &&
            nsContentUtils::IsSystemPrincipal(mLoadInfo->LoadingPrincipal())),
-      "security flags in loadInfo but asyncOpen2() not called");
+      "security flags in loadInfo but doContentSecurityCheck() not called");
 
   LOG(("nsHttpChannel::AsyncOpen [this=%p]\n", this));
 
@@ -6202,11 +6205,9 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context) {
   NS_ENSURE_TRUE(!mIsPending, NS_ERROR_IN_PROGRESS);
   NS_ENSURE_TRUE(!mWasOpened, NS_ERROR_ALREADY_OPENED);
 
-  if (MaybeWaitForUploadStreamLength(listener, context)) {
+  if (MaybeWaitForUploadStreamLength(listener, nullptr)) {
     return NS_OK;
   }
-
-  nsresult rv;
 
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -6254,7 +6255,6 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context) {
     // When tail is unblocked, OnTailUnblock on this channel will be called
     // to continue AsyncOpen.
     mListener = listener;
-    mListenerContext = context;
     MOZ_DIAGNOSTIC_ASSERT(!mOnTailUnblock);
     mOnTailUnblock = &nsHttpChannel::AsyncOpenOnTailUnblock;
 
@@ -6288,7 +6288,6 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context) {
   mWasOpened = true;
 
   mListener = listener;
-  mListenerContext = context;
 
   // PauseTask/DelayHttpChannel queuing
   if (!DelayHttpChannelQueue::AttemptQueueChannel(this)) {
@@ -6338,7 +6337,7 @@ nsresult nsHttpChannel::AsyncOpenFinal(TimeStamp aTimeStamp) {
 }
 
 nsresult nsHttpChannel::AsyncOpenOnTailUnblock() {
-  return AsyncOpen(mListener, mListenerContext);
+  return AsyncOpen(mListener);
 }
 
 already_AddRefed<nsChannelClassifier>
@@ -6351,18 +6350,6 @@ nsHttpChannel::GetOrCreateChannelClassifier() {
 
   RefPtr<nsChannelClassifier> classifier = mChannelClassifier;
   return classifier.forget();
-}
-
-NS_IMETHODIMP
-nsHttpChannel::AsyncOpen2(nsIStreamListener *aListener) {
-  nsCOMPtr<nsIStreamListener> listener = aListener;
-  nsresult rv =
-      nsContentSecurityManager::doContentSecurityCheck(this, listener);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    ReleaseListeners();
-    return rv;
-  }
-  return AsyncOpen(listener, nullptr);
 }
 
 // BeginConnect() SHOULD NOT call AsyncAbort(). AsyncAbort will be called by
@@ -7577,7 +7564,7 @@ nsresult nsHttpChannel::ContinueOnStopRequestAfterAuthRetry(
     if (mListener) {
       MOZ_ASSERT(!mOnStartRequestCalled,
                  "We should not call OnStartRequest twice.");
-      mListener->OnStartRequest(this, mListenerContext);
+      mListener->OnStartRequest(this, nullptr);
       mOnStartRequestCalled = true;
     } else {
       NS_WARNING("OnStartRequest skipped because of null listener");
@@ -7780,7 +7767,7 @@ nsresult nsHttpChannel::ContinueOnStopRequest(nsresult aStatus, bool aIsFromNet,
     MOZ_ASSERT(mOnStartRequestCalled,
                "OnStartRequest should be called before OnStopRequest");
     MOZ_ASSERT(!mOnStopRequestCalled, "We should not call OnStopRequest twice");
-    mListener->OnStopRequest(this, mListenerContext, aStatus);
+    mListener->OnStopRequest(this, nullptr, aStatus);
     mOnStopRequestCalled = true;
   }
 
@@ -7935,8 +7922,8 @@ nsHttpChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
       seekable = nullptr;
     }
 
-    nsresult rv = mListener->OnDataAvailable(this, mListenerContext, input,
-                                             mLogicalOffset, count);
+    nsresult rv =
+        mListener->OnDataAvailable(this, nullptr, input, mLogicalOffset, count);
     if (NS_SUCCEEDED(rv)) {
       // by contract mListener must read all of "count" bytes, but
       // nsInputStreamPump is tolerant to seekable streams that violate that

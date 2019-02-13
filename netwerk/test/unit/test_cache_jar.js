@@ -101,7 +101,7 @@ function run_test() {
 function test_channel(appId, inIsolatedMozBrowser, userContextId, expected) {
   return new Promise(resolve => {
     var chan = makeChan(URL, appId, inIsolatedMozBrowser, userContextId);
-    chan.asyncOpen2(new ChannelListener(doneFirstLoad.bind(null, resolve), expected));
+    chan.asyncOpen(new ChannelListener(doneFirstLoad.bind(null, resolve), expected));
   });
 }
 
@@ -109,7 +109,7 @@ function doneFirstLoad(resolve, req, buffer, expected) {
   // Load it again, make sure it hits the cache
   var oa = req.loadInfo.originAttributes;
   var chan = makeChan(URL, oa.appId, oa.isInIsolatedMozBrowserElement, oa.userContextId);
-  chan.asyncOpen2(new ChannelListener(doneSecondLoad.bind(null, resolve), expected));
+  chan.asyncOpen(new ChannelListener(doneSecondLoad.bind(null, resolve), expected));
 }
 
 function doneSecondLoad(resolve, req, buffer, expected) {

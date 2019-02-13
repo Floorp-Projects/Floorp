@@ -56,6 +56,6 @@ function run_test() {
   httpserver.registerPathHandler("/ok", handler);
   httpserver.start(-1);
   var channel = createChannel();
-  channel.asyncOpen2(new ChannelListener(checkValueAndTrigger, null));
+  channel.asyncOpen(new ChannelListener(checkValueAndTrigger, null));
 }
 

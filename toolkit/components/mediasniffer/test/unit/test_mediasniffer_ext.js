@@ -81,7 +81,7 @@ function runNext() {
     return;
   }
   var channel = setupChannel("/");
-  channel.asyncOpen2(listener);
+  channel.asyncOpen(listener);
 }
 
 function getFileContents(aFile) {

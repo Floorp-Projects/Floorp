@@ -28,7 +28,7 @@ Result<Ok, nsresult> FileMgr::Open(const nsACString& aPath) {
                         nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_INHERITS,
                         nsIContentPolicy::TYPE_OTHER));
 
-  MOZ_TRY(channel->Open2(getter_AddRefs(mStream)));
+  MOZ_TRY(channel->Open(getter_AddRefs(mStream)));
   return Ok();
 }
 

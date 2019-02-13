@@ -38,5 +38,5 @@ function run_test() {
     uri: ios.newFileURI(file),
     loadUsingSystemPrincipal: true
   });
-  channel.asyncOpen2(listener);
+  channel.asyncOpen(listener);
 }

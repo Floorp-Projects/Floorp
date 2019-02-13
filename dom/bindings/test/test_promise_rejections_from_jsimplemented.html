@@ -42,7 +42,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1107592
     var asyncStack = SpecialPowers.getBoolPref("javascript.options.asyncstack");
     var ourFile = location.href;
     var unwrapError = "Promise rejection value is a non-unwrappable cross-compartment wrapper.";
-    var parentFrame = (asyncStack && !isE10S) ? `Async*@${ourFile}:130:3
+    var parentFrame = (asyncStack && !isE10S) ? `Async*@${ourFile}:130:17
 ` : "";
 
     Promise.all([
@@ -50,7 +50,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1107592
           ensurePromiseFail.bind(null, 1),
           checkExn.bind(null, 49, "InternalError", unwrapError,
                         undefined, ourFile, 1,
-                        `doTest@${ourFile}:49:7
+                        `doTest@${ourFile}:49:9
 ` +
                         parentFrame)),
       t.testPromiseWithThrowingContentPromiseInit(function() {
@@ -61,12 +61,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1107592
                         "thereIsNoSuchContentFunction1 is not defined",
                         undefined, ourFile, 2,
                         `doTest/<@${ourFile}:57:11
-doTest@${ourFile}:56:7
+doTest@${ourFile}:56:9
 ` +
                         parentFrame)),
       t.testPromiseWithThrowingChromeThenFunction().then(
           ensurePromiseFail.bind(null, 3),
-          checkExn.bind(null, 0, "InternalError", unwrapError, undefined, "", 3, asyncStack ? (`Async*doTest@${ourFile}:67:7
+          checkExn.bind(null, 0, "InternalError", unwrapError, undefined, "", 3, asyncStack ? (`Async*doTest@${ourFile}:67:9
 ` +
                         parentFrame) : "")),
       t.testPromiseWithThrowingContentThenFunction(function() {
@@ -78,12 +78,12 @@ doTest@${ourFile}:56:7
                         undefined, ourFile, 4,
                         `doTest/<@${ourFile}:73:11
 ` +
-                        (asyncStack ? `Async*doTest@${ourFile}:72:7
+                        (asyncStack ? `Async*doTest@${ourFile}:72:9
 ` : "") +
                         parentFrame)),
       t.testPromiseWithThrowingChromeThenable().then(
           ensurePromiseFail.bind(null, 5),
-          checkExn.bind(null, 0, "InternalError", unwrapError, undefined, "", 5, asyncStack ? (`Async*doTest@${ourFile}:84:7
+          checkExn.bind(null, 0, "InternalError", unwrapError, undefined, "", 5, asyncStack ? (`Async*doTest@${ourFile}:84:9
 ` +
                         parentFrame) : "")),
       t.testPromiseWithThrowingContentThenable({
@@ -94,13 +94,13 @@ doTest@${ourFile}:56:7
                         "thereIsNoSuchContentFunction3 is not defined",
                         undefined, ourFile, 6,
                         `then@${ourFile}:90:32
-` + (asyncStack ? `Async*doTest@${ourFile}:89:7\n` + parentFrame : ""))),
+` + (asyncStack ? `Async*doTest@${ourFile}:89:9\n` + parentFrame : ""))),
       t.testPromiseWithDOMExceptionThrowingPromiseInit().then(
           ensurePromiseFail.bind(null, 7),
           checkExn.bind(null, 98, "NotFoundError",
                         "We are a second DOMException",
                         DOMException.NOT_FOUND_ERR, ourFile, 7,
-                        `doTest@${ourFile}:98:7
+                        `doTest@${ourFile}:98:9
 ` +
                         parentFrame)),
       t.testPromiseWithDOMExceptionThrowingThenFunction().then(
@@ -108,7 +108,7 @@ doTest@${ourFile}:56:7
           checkExn.bind(null, asyncStack ? 106 : 0, "NetworkError",
                          "We are a third DOMException",
                         DOMException.NETWORK_ERR, asyncStack ? ourFile : "", 8,
-                        (asyncStack ? `Async*doTest@${ourFile}:106:7
+                        (asyncStack ? `Async*doTest@${ourFile}:106:9
 ` +
                          parentFrame : ""))),
       t.testPromiseWithDOMExceptionThrowingThenable().then(
@@ -117,7 +117,7 @@ doTest@${ourFile}:56:7
                         "We are a fourth DOMException",
                         DOMException.TYPE_MISMATCH_ERR,
                         asyncStack ? ourFile : "", 9,
-                        (asyncStack ? `Async*doTest@${ourFile}:114:7
+                        (asyncStack ? `Async*doTest@${ourFile}:114:9
 ` +
                          parentFrame : ""))),
     ]).then(SimpleTest.finish,

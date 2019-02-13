@@ -153,12 +153,12 @@ add_test(function test_non_safebrowsing_cookie() {
   function setNonSafeBrowsingCookie() {
     var channel = setupChannel(setCookiePath, originAttributes);
     channel.setRequestHeader("set-cookie", cookieName, false);
-    channel.asyncOpen2(new ChannelListener(checkNonSafeBrowsingCookie, null));
+    channel.asyncOpen(new ChannelListener(checkNonSafeBrowsingCookie, null));
   }
 
   function checkNonSafeBrowsingCookie() {
     var channel = setupChannel(checkCookiePath, originAttributes);
-    channel.asyncOpen2(new ChannelListener(completeCheckNonSafeBrowsingCookie, null));
+    channel.asyncOpen(new ChannelListener(completeCheckNonSafeBrowsingCookie, null));
   }
 
   function completeCheckNonSafeBrowsingCookie(request, data, context) {
@@ -183,12 +183,12 @@ add_test(function test_safebrowsing_cookie() {
   function setSafeBrowsingCookie() {
     var channel = setupChannel(setCookiePath, originAttributes);
     channel.setRequestHeader("set-cookie", cookieName, false);
-    channel.asyncOpen2(new ChannelListener(checkSafeBrowsingCookie, null));
+    channel.asyncOpen(new ChannelListener(checkSafeBrowsingCookie, null));
   }
 
   function checkSafeBrowsingCookie() {
     var channel = setupChannel(checkCookiePath, originAttributes);
-    channel.asyncOpen2(new ChannelListener(completeCheckSafeBrowsingCookie, null));
+    channel.asyncOpen(new ChannelListener(completeCheckSafeBrowsingCookie, null));
   }
 
   function completeCheckSafeBrowsingCookie(request, data, context) {

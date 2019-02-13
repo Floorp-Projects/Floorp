@@ -37,7 +37,7 @@ function run_test()
 
     // load first time
     var channel = setupChannel("/redirect1");
-    channel.asyncOpen2(new ChannelListener(checkValueAndTrigger, null));
+    channel.asyncOpen(new ChannelListener(checkValueAndTrigger, null));
 
     do_test_pending();
 }

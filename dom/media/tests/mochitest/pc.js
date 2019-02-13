@@ -1854,9 +1854,9 @@ PeerConnectionWrapper.prototype = {
               }
               ok(rem.jitter !== undefined, "Rtcp jitter");
               if (rem.roundTripTime) {
-                ok(rem.roundTripTime > 0,
+                ok(rem.roundTripTime >= 0,
                    "Rtcp rtt " + rem.roundTripTime + " >= 0");
-                ok(rem.roundTripTime < 60000,
+                ok(rem.roundTripTime < 60,
                    "Rtcp rtt " + rem.roundTripTime + " < 1 min");
               }
             } else {

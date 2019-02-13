@@ -287,32 +287,45 @@ PopupBlocker::PopupControlState PopupBlocker::GetEventPopupControlState(
       }
       break;
     case eMouseEventClass:
-      if (aEvent->IsTrusted() &&
-          aEvent->AsMouseEvent()->button == WidgetMouseEvent::eLeftButton) {
-        abuse = PopupBlocker::openBlocked;
+      if (aEvent->IsTrusted()) {
+        if (aEvent->AsMouseEvent()->button == WidgetMouseEvent::eLeftButton) {
+          abuse = PopupBlocker::openBlocked;
+          switch (aEvent->mMessage) {
+            case eMouseUp:
+              if (PopupAllowedForEvent("mouseup")) {
+                abuse = PopupBlocker::openControlled;
+              }
+              break;
+            case eMouseDown:
+              if (PopupAllowedForEvent("mousedown")) {
+                abuse = PopupBlocker::openControlled;
+              }
+              break;
+            case eMouseClick:
+              /* Click events get special treatment because of their
+                 historical status as a more legitimate event handler. If
+                 click popups are enabled in the prefs, clear the popup
+                 status completely. */
+              if (PopupAllowedForEvent("click")) {
+                abuse = PopupBlocker::openAllowed;
+              }
+              break;
+            case eMouseDoubleClick:
+              if (PopupAllowedForEvent("dblclick")) {
+                abuse = PopupBlocker::openControlled;
+              }
+              break;
+            default:
+              break;
+          }
+        }
+
         switch (aEvent->mMessage) {
-          case eMouseUp:
-            if (PopupAllowedForEvent("mouseup")) {
+          case eContextMenu:
+            if (PopupAllowedForEvent("contextmenu")) {
               abuse = PopupBlocker::openControlled;
-            }
-            break;
-          case eMouseDown:
-            if (PopupAllowedForEvent("mousedown")) {
-              abuse = PopupBlocker::openControlled;
-            }
-            break;
-          case eMouseClick:
-            /* Click events get special treatment because of their
-               historical status as a more legitimate event handler. If
-               click popups are enabled in the prefs, clear the popup
-               status completely. */
-            if (PopupAllowedForEvent("click")) {
-              abuse = PopupBlocker::openAllowed;
-            }
-            break;
-          case eMouseDoubleClick:
-            if (PopupAllowedForEvent("dblclick")) {
-              abuse = PopupBlocker::openControlled;
+            } else {
+              abuse = PopupBlocker::openBlocked;
             }
             break;
           default:

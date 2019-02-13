@@ -5,6 +5,7 @@ root:
       type: "stacking-context"
       perspective: 1000
       perspective-origin: 0 0
+      "transform-style": "preserve-3d"
       items:
         -
           type: "stacking-context"
