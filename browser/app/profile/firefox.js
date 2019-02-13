@@ -237,8 +237,6 @@ pref("browser.startup.homepage",            "about:home");
 // Whether we should skip the homepage when opening the first-run page
 pref("browser.startup.firstrunSkipsHomepage", true);
 
-pref("browser.dedicatedprofile.welcome.accounts.endpoint", "https://accounts.firefox.com/");
-
 // Show an about:blank window as early as possible for quick startup feedback.
 // Held to nightly on Linux due to bug 1450626.
 // Disabled on Mac because the bouncing dock icon already provides feedback.
