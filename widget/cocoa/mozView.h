@@ -34,9 +34,6 @@ class TextInputHandler;
 // access the nsIWidget associated with this view. DOES NOT ADDREF.
 - (nsIWidget*)widget;
 
-// return a context menu for this view
-- (NSMenu*)contextMenu;
-
 // called when our corresponding Gecko view goes away
 - (void)widgetDestroyed;
 

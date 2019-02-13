@@ -4525,19 +4525,8 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
 
   [self maybeInitContextMenuTracking];
 
-  // Go up our view chain to fetch the correct menu to return.
-  return [self contextMenu];
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
-}
-
-- (NSMenu*)contextMenu {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
-
-  NSView* superView = [self superview];
-  if ([superView respondsToSelector:@selector(contextMenu)])
-    return [(NSView<mozView>*)superView contextMenu];
-
+  // We never return an actual NSMenu* for the context menu. Gecko might have
+  // responded to the eContextMenu event by putting up a fake context menu.
   return nil;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
