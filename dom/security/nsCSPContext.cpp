@@ -121,7 +121,8 @@ nsCSPContext::ShouldLoad(nsContentPolicyType aContentType,
                          nsISupports* aRequestContext,
                          const nsACString& aMimeTypeGuess,
                          nsIURI* aOriginalURIIfRedirect,
-                         bool aSendViolationReports, int16_t* outDecision) {
+                         bool aSendViolationReports, const nsAString& aNonce,
+                         int16_t* outDecision) {
   if (CSPCONTEXTLOGENABLED()) {
     CSPCONTEXTLOG(("nsCSPContext::ShouldLoad, aContentLocation: %s",
                    aContentLocation->GetSpecOrDefault().get()));
@@ -155,18 +156,8 @@ nsCSPContext::ShouldLoad(nsContentPolicyType aContentType,
     return NS_OK;
   }
 
-  nsAutoString nonce;
   bool parserCreated = false;
   if (!isPreload) {
-    if (aContentType == nsIContentPolicy::TYPE_SCRIPT ||
-        aContentType == nsIContentPolicy::TYPE_STYLESHEET) {
-      nsCOMPtr<Element> element = do_QueryInterface(aRequestContext);
-      if (element && element->IsHTMLElement()) {
-        // XXXbz What about SVG elements that can have nonce?
-        element->GetAttribute(NS_LITERAL_STRING("nonce"), nonce);
-      }
-    }
-
     nsCOMPtr<nsIScriptElement> script = do_QueryInterface(aRequestContext);
     if (script && script->GetParserCreated() != mozilla::dom::NOT_FROM_PARSER) {
       parserCreated = true;
@@ -177,7 +168,7 @@ nsCSPContext::ShouldLoad(nsContentPolicyType aContentType,
       permitsInternal(dir,
                       nullptr,  // aTriggeringElement
                       aCSPEventListener, aContentLocation,
-                      aOriginalURIIfRedirect, nonce, isPreload,
+                      aOriginalURIIfRedirect, aNonce, isPreload,
                       false,  // allow fallback to default-src
                       aSendViolationReports,
                       true,  // send blocked URI in violation reports
