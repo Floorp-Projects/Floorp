@@ -4,8 +4,8 @@
 
 "use strict";
 
-const URI = "chrome://mochitests/content/browser/devtools/client/" +
-            "sourceeditor/test/codemirror/codemirror.html";
+const URI = "chrome://mochitests/content/browser/devtools/client/shared/sourceeditor/" +
+            "test/codemirror/codemirror.html";
 loadHelperScript("helper_codemirror_runner.js");
 
 function test() {
@@ -13,7 +13,7 @@ function test() {
   waitForExplicitFinish();
 
   /*
-   * In devtools/client/sourceeditor/test/codemirror/search_test.js there is a test
+   * In devtools/client/shared/sourceeditor/test/codemirror/search_test.js there is a test
    * multilineInsensitiveSlow which assumes an operation takes less than 100ms.
    * With a precision of 100ms, if we get unlikely and begin execution towards the
    * end of one spot (e.g. at 95 ms) we will clamp down, take (e.g.) 10ms to execute

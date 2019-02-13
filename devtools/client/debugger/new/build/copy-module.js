@@ -16,8 +16,8 @@ const EXCLUDED_FILES = {
 
 const mappings =  Object.assign(
   {
-    "./source-editor": "devtools/client/sourceeditor/editor",
-    "../editor/source-editor": "devtools/client/sourceeditor/editor",
+    "./source-editor": "devtools/client/shared/sourceeditor/editor",
+    "../editor/source-editor": "devtools/client/shared/sourceeditor/editor",
     "./test-flag": "devtools/shared/flags",
     "./fronts-device": "devtools/shared/fronts/device",
     immutable: "devtools/client/shared/vendor/immutable",

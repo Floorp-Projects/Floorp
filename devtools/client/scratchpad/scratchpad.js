@@ -45,7 +45,7 @@ const VARIABLES_VIEW_URL = "chrome://devtools/content/shared/widgets/VariablesVi
 
 const {require, loader} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 
-const Editor = require("devtools/client/sourceeditor/editor");
+const Editor = require("devtools/client/shared/sourceeditor/editor");
 const TargetFactory = require("devtools/client/framework/target").TargetFactory;
 const EventEmitter = require("devtools/shared/event-emitter");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");

@@ -2,7 +2,7 @@
 
 module.exports = {
   // Extend from the devtools eslintrc.
-  "extends": "../../.eslintrc.js",
+  "extends": "../../../.eslintrc.js",
 
   "rules": {
     // The inspector is being migrated to HTML and cleaned of

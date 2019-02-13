@@ -10,7 +10,7 @@ CodeMirror from the project's page [1] and replace all JavaScript and
 CSS files inside the codemirror directory [2].
 
 Then to recreate codemirror.bundle.js:
- > cd devtools/client/sourceeditor
+ > cd devtools/client/shared/sourceeditor
  > npm install
  > webpack
 
@@ -46,14 +46,14 @@ below.
 
 # License
 
-The following files in this directory and devtools/client/sourceeditor/test/codemirror/
+The following files in this directory and devtools/client/shared/sourceeditor/test/codemirror/
 are licensed according to the contents in the LICENSE file.
 
 # Localization patches
 
-diff --git a/devtools/client/sourceeditor/codemirror/addon/search/search.js b/devtools/client/sourceeditor/codemirror/addon/search/search.js
---- a/devtools/client/sourceeditor/codemirror/addon/search/search.js
-+++ b/devtools/client/sourceeditor/codemirror/addon/search/search.js
+diff --git a/devtools/client/shared/sourceeditor/codemirror/addon/search/search.js b/devtools/client/shared/sourceeditor/codemirror/addon/search/search.js
+--- a/devtools/client/shared/sourceeditor/codemirror/addon/search/search.js
++++ b/devtools/client/shared/sourceeditor/codemirror/addon/search/search.js
 @@ -93,32 +93,47 @@
      } else {
        query = parseString(query)
@@ -231,9 +231,9 @@ diff --git a/devtools/client/sourceeditor/codemirror/addon/search/search.js b/de
 See Bug 1482875. Not needed anymore when https://github.com/codemirror/CodeMirror/pull/5751 lands.
 
 ```diff
-diff --git a/devtools/client/sourceeditor/codemirror/lib/codemirror.js b/devtools/client/sourceeditor/codemirror/lib/codemirror.js
---- a/devtools/client/sourceeditor/codemirror/lib/codemirror.js
-+++ b/devtools/client/sourceeditor/codemirror/lib/codemirror.js
+diff --git a/devtools/client/shared/sourceeditor/codemirror/lib/codemirror.js b/devtools/client/shared/sourceeditor/codemirror/lib/codemirror.js
+--- a/devtools/client/shared/sourceeditor/codemirror/lib/codemirror.js
++++ b/devtools/client/shared/sourceeditor/codemirror/lib/codemirror.js
 @@ -9256,8 +9256,9 @@ TextareaInput.prototype.init = function
 
    on(display.scroller, "paste", function (e) {
@@ -251,7 +251,7 @@ diff --git a/devtools/client/sourceeditor/codemirror/lib/codemirror.js b/devtool
 # Footnotes
 
 [1] http://codemirror.net
-[2] devtools/client/sourceeditor/codemirror
-[3] devtools/client/sourceeditor/test/browser_codemirror.js
+[2] devtools/client/shared/sourceeditor/codemirror
+[3] devtools/client/shared/sourceeditor/test/browser_codemirror.js
 [4] devtools/client/jar.mn
-[5] devtools/client/sourceeditor/editor.js
+[5] devtools/client/shared/sourceeditor/editor.js
