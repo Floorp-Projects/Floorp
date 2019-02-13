@@ -12,6 +12,10 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **browser-icons**
+  * 🆕 New component for loading and storing website icons (like [Favicons](https://en.wikipedia.org/wiki/Favicon)).
+  * Supports generating a "fallback" icon if no icon could be loaded.
+
 * **concept-fetch**
   * Added API to specify whether or not cookies should be sent with a request. This can be controlled using the `cookiePolicy` parameter when creating a `Request`.
 

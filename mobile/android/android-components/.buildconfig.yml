@@ -116,6 +116,10 @@ projects:
     path: components/browser/errorpages
     description: 'Responsive browser error pages for Android apps.'
     publish: true
+  browser-icons:
+    path: components/browser/icons
+    description: 'A component for loading and storing website icons.'
+    publish: true
   browser-menu:
     path: components/browser/menu
     description: 'A customizable menu for browsers.'

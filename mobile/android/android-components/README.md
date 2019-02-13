@@ -66,6 +66,8 @@ High-level components for building browser(-like) apps.
 
 * 🔵 [**Errorpages**](components/browser/errorpages/README.md) - Responsive browser error pages for Android apps.
 
+* 🔴 [**Icons**](components/browser/icons/README.md) - A component for loading and storing website icons (like [Favicons](https://en.wikipedia.org/wiki/Favicon)).
+
 * 🔴 [**Menu**](components/browser/menu/README.md) - A generic menu with customizable items primarily for browser toolbars.
 
 * 🔵 [**Search**](components/browser/search/README.md) - Search plugins and companion code to load, parse and use them.
