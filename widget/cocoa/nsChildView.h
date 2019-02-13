@@ -571,7 +571,7 @@ class nsChildView final : public nsBaseWidget {
   RefPtr<mozilla::widget::TextInputHandler> mTextInputHandler;
   InputContext mInputContext;
 
-  NSView<mozView>* mParentView;
+  NSView* mParentView;
   nsIWidget* mParentWidget;
 
 #ifdef ACCESSIBILITY
