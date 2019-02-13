@@ -739,6 +739,78 @@ These report any failures during domain affinity v2 calculations, and where it f
 }
 ```
 
+### Discovery Stream performance pings
+
+#### Request time of layout feed in ms
+
+```js
+{
+  "action": "activity_stream_performance_event",
+  "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
+  "addon_version": "20180710100040",
+  "locale": "en-US",
+  "user_prefs": 7,
+  "event": "LAYOUT_REQUEST_TIME",
+  "value": 42
+}
+```
+
+#### Request time of SPOCS feed in ms
+
+```js
+{
+  "action": "activity_stream_performance_event",
+  "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
+  "addon_version": "20180710100040",
+  "locale": "en-US",
+  "user_prefs": 7,
+  "event": "SPOCS_REQUEST_TIME",
+  "value": 42
+}
+```
+
+#### Request time of component feed feed in ms
+
+```js
+{
+  "action": "activity_stream_performance_event",
+  "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
+  "addon_version": "20180710100040",
+  "locale": "en-US",
+  "user_prefs": 7,
+  "event": "COMPONENT_FEED_REQUEST_TIME",
+  "value": 42
+}
+```
+
+#### Request time of total Discovery Stream feed in ms
+
+```js
+{
+  "action": "activity_stream_performance_event",
+  "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
+  "addon_version": "20180710100040",
+  "locale": "en-US",
+  "user_prefs": 7,
+  "event": "DS_FEED_TOTAL_REQUEST_TIME",
+  "value": 136
+}
+```
+
+#### Cache age of Discovery Stream feed in second
+
+```js
+{
+  "action": "activity_stream_performance_event",
+  "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
+  "addon_version": "20180710100040",
+  "locale": "en-US",
+  "user_prefs": 7,
+  "event": "DS_CACHE_AGE_IN_SEC",
+  "value": 1800 // 30 minutes
+}
+```
+
 ## Undesired event pings
 
 These pings record the undesired events happen in the addon for further investigation.
