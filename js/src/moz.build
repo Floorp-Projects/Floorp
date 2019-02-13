@@ -422,12 +422,6 @@ DIRS += [
 
 FINAL_LIBRARY = 'js'
 
-if CONFIG['ENABLE_WASM_CRANELIFT']:
-    DIRS += ['rust']
-    UNIFIED_SOURCES += [
-        'wasm/WasmCraneliftCompile.cpp',
-    ]
-
 # Prepare self-hosted JS code for embedding
 GENERATED_FILES += [('selfhosted.out.h', 'selfhosted.js')]
 selfhosted = GENERATED_FILES[('selfhosted.out.h', 'selfhosted.js')]
