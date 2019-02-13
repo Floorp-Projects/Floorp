@@ -2603,32 +2603,29 @@ bool nsStyleImageLayers::IsInitialPositionForLayerType(Position aPosition,
   return aPosition == Position::FromPercentage(0.);
 }
 
-bool nsStyleImageLayers::Size::DependsOnPositioningAreaSize(
-    const nsStyleImage& aImage) const {
+static bool SizeDependsOnPositioningAreaSize(const StyleBackgroundSize& aSize,
+                                             const nsStyleImage& aImage) {
   MOZ_ASSERT(aImage.GetType() != eStyleImageType_Null,
              "caller should have handled this");
 
-  // If either dimension contains a non-zero percentage, rendering for that
-  // dimension straightforwardly depends on frame size.
-  if ((mWidthType == eLengthPercentage && mWidth.mPercent != 0.0f) ||
-      (mHeightType == eLengthPercentage && mHeight.mPercent != 0.0f)) {
+  // Contain and cover straightforwardly depend on frame size.
+  if (aSize.IsCover() || aSize.IsContain()) {
     return true;
   }
 
-  // So too for contain and cover.
-  if (mWidthType == eContain || mWidthType == eCover) {
+  MOZ_ASSERT(aSize.IsExplicitSize());
+  auto& size = aSize.explicit_size;
+
+  // If either dimension contains a non-zero percentage, rendering for that
+  // dimension straightforwardly depends on frame size.
+  if (size.width.HasPercent() || size.height.HasPercent()) {
     return true;
   }
 
   // If both dimensions are fixed lengths, there's no dependency.
-  if (mWidthType == eLengthPercentage && mHeightType == eLengthPercentage) {
+  if (!size.width.IsAuto() && !size.height.IsAuto()) {
     return false;
   }
-
-  MOZ_ASSERT((mWidthType == eLengthPercentage && mHeightType == eAuto) ||
-                 (mWidthType == eAuto && mHeightType == eLengthPercentage) ||
-                 (mWidthType == eAuto && mHeightType == eAuto),
-             "logic error");
 
   nsStyleImageType type = aImage.GetType();
 
@@ -2667,13 +2664,13 @@ bool nsStyleImageLayers::Size::DependsOnPositioningAreaSize(
       // If the image has an intrinsic ratio, rendering will depend on frame
       // size when background-size is all auto.
       if (imageRatio != nsSize(0, 0)) {
-        return mWidthType == mHeightType;
+        return size.width.IsAuto() == size.height.IsAuto();
       }
 
       // Otherwise, rendering depends on frame size when the image dimensions
       // and background-size don't complement each other.
-      return !(hasWidth && mHeightType == eLengthPercentage) &&
-             !(hasHeight && mWidthType == eLengthPercentage);
+      return !(hasWidth && size.width.IsLengthPercentage()) &&
+             !(hasHeight && size.height.IsLengthPercentage());
     }
   } else {
     MOZ_ASSERT_UNREACHABLE("missed an enum value");
@@ -2683,31 +2680,15 @@ bool nsStyleImageLayers::Size::DependsOnPositioningAreaSize(
   return false;
 }
 
-void nsStyleImageLayers::Size::SetInitialValues() {
-  mWidthType = mHeightType = eAuto;
-}
-
-bool nsStyleImageLayers::Size::operator==(const Size& aOther) const {
-  MOZ_ASSERT(mWidthType < eDimensionType_COUNT, "bad mWidthType for this");
-  MOZ_ASSERT(mHeightType < eDimensionType_COUNT, "bad mHeightType for this");
-  MOZ_ASSERT(aOther.mWidthType < eDimensionType_COUNT,
-             "bad mWidthType for aOther");
-  MOZ_ASSERT(aOther.mHeightType < eDimensionType_COUNT,
-             "bad mHeightType for aOther");
-
-  return mWidthType == aOther.mWidthType && mHeightType == aOther.mHeightType &&
-         (mWidthType != eLengthPercentage || mWidth == aOther.mWidth) &&
-         (mHeightType != eLengthPercentage || mHeight == aOther.mHeight);
-}
-
 nsStyleImageLayers::Layer::Layer()
-    : mClip(StyleGeometryBox::BorderBox),
+    : mSize(StyleBackgroundSize::ExplicitSize(LengthPercentageOrAuto::Auto(),
+                                              LengthPercentageOrAuto::Auto())),
+      mClip(StyleGeometryBox::BorderBox),
       mAttachment(StyleImageLayerAttachment::Scroll),
       mBlendMode(NS_STYLE_BLEND_NORMAL),
       mComposite(NS_STYLE_MASK_COMPOSITE_ADD),
       mMaskMode(NS_STYLE_MASK_MODE_MATCH_SOURCE) {
   mImage.SetNull();
-  mSize.SetInitialValues();
 }
 
 nsStyleImageLayers::Layer::~Layer() {}
@@ -2734,7 +2715,7 @@ bool nsStyleImageLayers::Layer::
   }
 
   return mPosition.DependsOnPositioningAreaSize() ||
-         mSize.DependsOnPositioningAreaSize(mImage) ||
+         SizeDependsOnPositioningAreaSize(mSize, mImage) ||
          mRepeat.DependsOnPositioningAreaSize();
 }
 
