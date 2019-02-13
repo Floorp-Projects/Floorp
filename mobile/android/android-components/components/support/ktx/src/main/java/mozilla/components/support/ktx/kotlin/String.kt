@@ -55,3 +55,8 @@ fun String.toDate(format: String, locale: Locale = Locale.ROOT): Date {
         Date()
     }
 }
+
+/**
+ * Converts a [String] to a [Uri] object.
+ */
+fun String.toUri() = Uri.parse(this)
