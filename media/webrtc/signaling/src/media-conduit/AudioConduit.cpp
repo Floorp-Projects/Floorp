@@ -174,7 +174,7 @@ bool WebrtcAudioConduit::GetRecvPacketTypeStats(
   return mRecvChannelProxy->GetRTCPPacketTypeCounters(*aPacketCounts);
 }
 
-bool WebrtcAudioConduit::GetRTPStats(unsigned int* jitterMs,
+bool WebrtcAudioConduit::GetRTPReceiverStats(unsigned int* jitterMs,
                                      unsigned int* cumulativeLost) {
   ASSERT_ON_THREAD(mStsThread);
   *jitterMs = 0;

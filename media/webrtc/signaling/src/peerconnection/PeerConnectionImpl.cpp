@@ -2939,7 +2939,7 @@ RefPtr<RTCStatsQueryPromise> PeerConnectionImpl::ExecuteStatsQuery_s(
         s.mMediaType.Construct(kind);  // mediaType is the old name for kind.
         s.mKind.Construct(kind);
         unsigned int jitterMs, packetsLost;
-        if (mp.Conduit()->GetRTPStats(&jitterMs, &packetsLost)) {
+        if (mp.Conduit()->GetRTPReceiverStats(&jitterMs, &packetsLost)) {
           s.mJitter.Construct(double(jitterMs) / 1000);
           s.mPacketsLost.Construct(packetsLost);
         }
