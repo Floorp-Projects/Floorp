@@ -20,7 +20,7 @@ private object Versions {
     const val androidx_fragment = "1.1.0-alpha04"
     const val androidx_safeargs = "1.0.0-beta01"
 
-    const val mozilla_android_components = "0.42.0-SNAPSHOT"
+    const val mozilla_android_components = "0.43.0-SNAPSHOT"
 
     const val junit = "4.12"
     const val test_tools = "1.0.2"
