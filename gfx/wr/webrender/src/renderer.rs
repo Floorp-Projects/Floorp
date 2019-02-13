@@ -84,7 +84,6 @@ use std::os::raw::c_void;
 use std::path::PathBuf;
 use std::rc::Rc;
 use std::sync::Arc;
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::{channel, Receiver};
 use std::thread;
 use std::cell::RefCell;
@@ -105,14 +104,6 @@ cfg_if! {
         use api::ApiMsg;
         use api::channel::MsgSender;
     }
-}
-
-/// Is only false if no WR instances have ever been created.
-static HAS_BEEN_INITIALIZED: AtomicBool = AtomicBool::new(false);
-
-/// Returns true if a WR instance has ever been initialized in this process.
-pub fn wr_has_been_initialized() -> bool {
-    HAS_BEEN_INITIALIZED.load(Ordering::SeqCst)
 }
 
 pub const MAX_VERTEX_TEXTURE_WIDTH: usize = 1024;
@@ -1638,8 +1629,6 @@ impl Renderer {
         mut options: RendererOptions,
         shaders: Option<&mut WrShaders>
     ) -> Result<(Self, RenderApiSender), RendererError> {
-        HAS_BEEN_INITIALIZED.store(true, Ordering::SeqCst);
-
         let (api_tx, api_rx) = channel::msg_channel()?;
         let (payload_tx, payload_rx) = channel::payload_channel()?;
         let (result_tx, result_rx) = channel();

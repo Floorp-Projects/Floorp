@@ -56,8 +56,6 @@ extern crate bitflags;
 #[macro_use]
 extern crate cfg_if;
 #[macro_use]
-extern crate cstr;
-#[macro_use]
 extern crate lazy_static;
 #[macro_use]
 extern crate log;
@@ -71,9 +69,6 @@ extern crate thread_profiler;
 
 extern crate wr_malloc_size_of;
 use wr_malloc_size_of as malloc_size_of;
-
-#[macro_use]
-mod profiler;
 
 mod batch;
 mod border;
@@ -108,6 +103,7 @@ mod internal_types;
 mod picture;
 mod prim_store;
 mod print_tree;
+mod profiler;
 mod record;
 mod render_backend;
 mod render_task;
@@ -211,7 +207,6 @@ pub use device::{ProgramBinary, ProgramCache, ProgramCacheObserver};
 pub use device::Device;
 pub use frame_builder::ChasePrimitive;
 pub use picture::FRAMES_BEFORE_PICTURE_CACHING;
-pub use profiler::{ProfilerHooks, set_profiler_hooks};
 pub use renderer::{AsyncPropertySampler, CpuProfile, DebugFlags, OutputImageHandler, RendererKind};
 pub use renderer::{ExternalImage, ExternalImageHandler, ExternalImageSource, GpuProfile};
 pub use renderer::{GraphicsApi, GraphicsApiInfo, PipelineInfo, Renderer, RendererOptions};
