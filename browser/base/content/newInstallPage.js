@@ -4,9 +4,10 @@
 
 const PARAMS = new URL(location).searchParams;
 const ENTRYPOINT = "new-install-page";
-const SOURCE = `new-install-page-${RPMGetUpdateChannel()}`;
+const SOURCE = `new-install-page-${PARAMS.get("channel")}`;
 const CAMPAIGN = "dedicated-profiles";
 const ENDPOINT = PARAMS.get("endpoint");
+const CONTEXT = "fx_desktop_v3";
 
 function appendAccountsParams(url) {
   url.searchParams.set("entrypoint", ENTRYPOINT);
@@ -23,8 +24,7 @@ function appendParams(url, params) {
 }
 
 async function requestFlowMetrics() {
-  let requestURL = new URL(await endpoint);
-  requestURL.pathname = "metrics-flow";
+  let requestURL = new URL(`${ENDPOINT}metrics-flow`);
   appendParams(requestURL, {
     "form_type": "email",
   });
@@ -47,9 +47,11 @@ async function submitForm(event) {
 
   let { flowId, flowBeginTime } = await metrics;
 
-  let requestURL = new URL(await endpoint);
+  let requestURL = new URL(ENDPOINT);
   appendParams(requestURL, {
+    "service": "sync",
     "action": "email",
+    "context": CONTEXT,
     "utm_campaign": CAMPAIGN,
     "email": input.value,
     "flow_id": flowId,
@@ -58,8 +60,6 @@ async function submitForm(event) {
 
   window.open(requestURL, "_blank", "noopener");
 }
-
-const endpoint = RPMGetFxAccountsEndpoint(ENTRYPOINT);
 
 // This must come before the CSP is set or it will be blocked.
 const metrics = requestFlowMetrics();
