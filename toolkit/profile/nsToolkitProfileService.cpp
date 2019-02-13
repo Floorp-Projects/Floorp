@@ -1022,6 +1022,11 @@ nsresult nsToolkitProfileService::SelectStartupProfile(
     return NS_ERROR_SHOW_PROFILE_MANAGER;
   }
 
+  // We've been told not to use the selected profile automatically.
+  if (!mStartWithLast) {
+    return NS_ERROR_SHOW_PROFILE_MANAGER;
+  }
+
   // If this is a first run then create a new profile.
   if (mIsFirstRun) {
     if (aIsResetting) {
@@ -1122,11 +1127,6 @@ nsresult nsToolkitProfileService::SelectStartupProfile(
       *aDidCreate = true;
       return NS_OK;
     }
-  }
-
-  // We've been told not to use the selected profile automatically.
-  if (!mStartWithLast) {
-    return NS_ERROR_SHOW_PROFILE_MANAGER;
   }
 
   GetDefaultProfile(getter_AddRefs(mCurrent));
