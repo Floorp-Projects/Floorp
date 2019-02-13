@@ -304,7 +304,7 @@ describe("MessageLoaderUtils", () => {
       // Verify that the expected installation source has been passed to the getInstallForURL
       // method (See Bug 1496167 for a rationale).
       assert.calledWithExactly(getInstallStub, "foo.com", "application/x-xpinstall", null,
-                               null, null, null, null, {source: "activitystream"});
+                               null, null, null, null, {source: "amo"});
     });
     it("should not call the Addons API on invalid URLs", async () => {
       sandbox.stub(global.Services.scriptSecurityManager, "getSystemPrincipal").throws();
