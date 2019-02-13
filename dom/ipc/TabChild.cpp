@@ -554,7 +554,7 @@ nsresult TabChild::Init(mozIDOMWindowProxy* aParent) {
   // Send our browsing context to the parent process.
   RefPtr<BrowsingContext> browsingContext =
       nsDocShell::Cast(docShell)->GetBrowsingContext();
-  SendRootBrowsingContext(BrowsingContextId(browsingContext->Id()));
+  SendRootBrowsingContext(browsingContext);
 
   // Few lines before, baseWindow->Create() will end up creating a new
   // window root in nsGlobalWindow::SetDocShell.
