@@ -703,7 +703,7 @@ class WellKnownChecker {
     }
     chan->SetTransactionObserver(obs);
     chan->SetConnectionInfo(ci);
-    return chan->AsyncOpen2(obs);
+    return chan->AsyncOpen(obs);
   }
 
   RefPtr<TransactionObserver> mTransactionAlternate;

@@ -564,7 +564,7 @@ RTPStats.prototype = {
       statsString += ` ${getString("lost_label")}: ${stats.packetsLost} ${getString("jitter_label")}: ${stats.jitter}`;
 
       if (stats.roundTripTime) {
-        statsString += ` RTT: ${stats.roundTripTime} ms`;
+        statsString += ` RTT: ${stats.roundTripTime * 1000} ms`;
       }
     } else if (stats.packetsSent) {
       statsString += ` ${getString("sent_label")}: ${stats.packetsSent} ${getString("packets")}`;

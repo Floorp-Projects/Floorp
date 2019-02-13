@@ -18,7 +18,7 @@ const TEST_URI = `<html>
  * Test data has the format of:
  * {
  *   desc     {String}    description for better logging
- *   action   {Function}  An optional action that needs to be performed before
+ *   setup    {Function}  An optional setup that needs to be performed before
  *                        the state of the tree and the sidebar can be checked.
  *   expected {JSON}      An expected states for the tree and the sidebar.
  * }
@@ -33,7 +33,7 @@ const tests = [{
   },
 }, {
   desc: "Expand first tree node.",
-  action: async ({ doc }) => toggleRow(doc, 0),
+  setup: async ({ doc }) => toggleRow(doc, 0),
   expected: {
     tree: [{
       role: "document",
@@ -48,7 +48,7 @@ const tests = [{
   },
 }, {
   desc: "Collapse first tree node.",
-  action: async ({ doc }) => toggleRow(doc, 0),
+  setup: async ({ doc }) => toggleRow(doc, 0),
   expected: {
     tree: [{
       role: "document",

@@ -511,11 +511,14 @@ function openLinkIn(url, where, params) {
                                          { recordExecution: "*", newFrameloader: true });
     }
 
+    let ReferrerInfo = Components.Constructor("@mozilla.org/referrer-info;1",
+                                              "nsIReferrerInfo",
+                                              "init");
     targetBrowser.loadURI(url, {
       triggeringPrincipal: aTriggeringPrincipal,
+      referrerInfo: new ReferrerInfo(
+        aReferrerPolicy, !aNoReferrer, aReferrerURI),
       flags,
-      referrerURI: aNoReferrer ? null : aReferrerURI,
-      referrerPolicy: aReferrerPolicy,
       postData: aPostData,
       userContextId: aUserContextId,
     });

@@ -64,6 +64,57 @@ define(function(require, exports, module) {
       }
     }
   }
+
+  function closestScrolledParent(node) {
+    if (node == null) {
+      return null;
+    }
+
+    if (node.scrollHeight > node.clientHeight) {
+      return node;
+    }
+
+    return closestScrolledParent(node.parentNode);
+  }
+
+  /**
+   * Scrolls the element into view if it is not visible.
+   *
+   * @param {DOMNode|undefined} element
+   *        The item to be scrolled to.
+   *
+   * @param {Object|undefined} options
+   *        An options object which can contain:
+   *          - container: possible scrollable container. If it is not scrollable, we will
+   *                       look it up.
+   *          - alignTo:   "top" or "bottom" to indicate if we should scroll the element
+   *                       to the top or the bottom of the scrollable container when the
+   *                       element is off canvas.
+   */
+  function scrollIntoView(element, options = {}) {
+    if (!element) {
+      return;
+    }
+
+    const { alignTo, container } = options;
+
+    const { top, bottom } = element.getBoundingClientRect();
+    const scrolledParent = closestScrolledParent(container || element.parentNode);
+    const scrolledParentRect = scrolledParent ? scrolledParent.getBoundingClientRect() :
+                                                null;
+    const isVisible = !scrolledParent ||
+      (top >= scrolledParentRect.top && bottom <= scrolledParentRect.bottom);
+
+    if (isVisible) {
+      return;
+    }
+
+    const scrollToTop = alignTo ?
+      alignTo === "top" : !scrolledParentRect || top < scrolledParentRect.top;
+    element.scrollIntoView(scrollToTop);
+  }
+
   // Exports from this module
   module.exports.scrollIntoViewIfNeeded = scrollIntoViewIfNeeded;
+  module.exports.scrollIntoView = scrollIntoView;
 });

@@ -291,28 +291,25 @@ nsWyciwygChannel::SetContentLength(int64_t aContentLength) {
 }
 
 NS_IMETHODIMP
-nsWyciwygChannel::Open(nsIInputStream **aReturn) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsWyciwygChannel::Open2(nsIInputStream **aStream) {
+nsWyciwygChannel::Open(nsIInputStream **aStream) {
   nsCOMPtr<nsIStreamListener> listener;
   nsresult rv =
       nsContentSecurityManager::doContentSecurityCheck(this, listener);
   NS_ENSURE_SUCCESS(rv, rv);
-  return Open(aStream);
+
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsWyciwygChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctx) {
-  MOZ_ASSERT(
-      !mLoadInfo || mLoadInfo->GetSecurityMode() == 0 ||
-          mLoadInfo->GetInitialSecurityCheckDone() ||
-          (mLoadInfo->GetSecurityMode() ==
-               nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL &&
-           nsContentUtils::IsSystemPrincipal(mLoadInfo->LoadingPrincipal())),
-      "security flags in loadInfo but asyncOpen2() not called");
+nsWyciwygChannel::AsyncOpen(nsIStreamListener *aListener) {
+  nsCOMPtr<nsIStreamListener> listener = aListener;
+  nsresult rv =
+      nsContentSecurityManager::doContentSecurityCheck(this, listener);
+  if (NS_FAILED(rv)) {
+    mIsPending = false;
+    mCallbacks = nullptr;
+    return rv;
+  }
 
   LOG(("nsWyciwygChannel::AsyncOpen [this=%p]\n", this));
   MOZ_ASSERT(mMode == NONE, "nsWyciwygChannel already open");
@@ -327,7 +324,7 @@ nsWyciwygChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctx) {
   // mIsPending set to true since OnCacheEntryAvailable may be called
   // synchronously and fails when mIsPending found false.
   mIsPending = true;
-  nsresult rv = OpenCacheEntryForReading(mURI);
+  rv = OpenCacheEntryForReading(mURI);
   if (NS_FAILED(rv)) {
     LOG(("nsWyciwygChannel::OpenCacheEntryForReading failed [rv=%" PRIx32 "]\n",
          static_cast<uint32_t>(rv)));
@@ -340,24 +337,10 @@ nsWyciwygChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctx) {
   // we get to this line in case OnCacheEntryAvailable is invoked
   // synchronously.
   mListener = listener;
-  mListenerContext = ctx;
 
   if (mLoadGroup) mLoadGroup->AddRequest(this, nullptr);
 
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWyciwygChannel::AsyncOpen2(nsIStreamListener *aListener) {
-  nsCOMPtr<nsIStreamListener> listener = aListener;
-  nsresult rv =
-      nsContentSecurityManager::doContentSecurityCheck(this, listener);
-  if (NS_FAILED(rv)) {
-    mIsPending = false;
-    mCallbacks = nullptr;
-    return rv;
-  }
-  return AsyncOpen(listener, nullptr);
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -572,10 +555,9 @@ nsWyciwygChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctx,
   nsresult rv;
 
   nsCOMPtr<nsIStreamListener> listener = mListener;
-  nsCOMPtr<nsISupports> listenerContext = mListenerContext;
 
   if (listener) {
-    rv = listener->OnDataAvailable(this, listenerContext, input, offset, count);
+    rv = listener->OnDataAvailable(this, nullptr, input, offset, count);
   } else {
     MOZ_ASSERT(false, "We must have a listener!");
     rv = NS_ERROR_UNEXPECTED;
@@ -599,10 +581,9 @@ nsWyciwygChannel::OnStartRequest(nsIRequest *request, nsISupports *ctx) {
        request));
 
   nsCOMPtr<nsIStreamListener> listener = mListener;
-  nsCOMPtr<nsISupports> listenerContext = mListenerContext;
 
   if (listener) {
-    return listener->OnStartRequest(this, listenerContext);
+    return listener->OnStartRequest(this, nullptr);
   }
 
   MOZ_ASSERT(false, "We must have a listener!");
@@ -621,12 +602,10 @@ nsWyciwygChannel::OnStopRequest(nsIRequest *request, nsISupports *ctx,
   mIsPending = false;
 
   nsCOMPtr<nsIStreamListener> listener;
-  nsCOMPtr<nsISupports> listenerContext;
   listener.swap(mListener);
-  listenerContext.swap(mListenerContext);
 
   if (listener) {
-    listener->OnStopRequest(this, listenerContext, mStatus);
+    listener->OnStopRequest(this, nullptr, mStatus);
   } else {
     MOZ_ASSERT(false, "We must have a listener!");
   }
@@ -731,15 +710,13 @@ void nsWyciwygChannel::WriteCharsetAndSourceToCache(int32_t aSource,
 
 void nsWyciwygChannel::NotifyListener() {
   nsCOMPtr<nsIStreamListener> listener;
-  nsCOMPtr<nsISupports> listenerContext;
 
   listener.swap(mListener);
-  listenerContext.swap(mListenerContext);
 
   if (listener) {
-    listener->OnStartRequest(this, listenerContext);
+    listener->OnStartRequest(this, nullptr);
     mIsPending = false;
-    listener->OnStopRequest(this, listenerContext, mStatus);
+    listener->OnStopRequest(this, nullptr, mStatus);
   } else {
     MOZ_ASSERT(false, "We must have the listener!");
     mIsPending = false;

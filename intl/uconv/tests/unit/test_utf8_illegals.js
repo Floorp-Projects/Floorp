@@ -101,7 +101,7 @@ function testCaseInputStream(inStr, expected)
 	 "nsIConverterInputStream",
 	 "init");
   var channel = NetUtil.newChannel({uri: dataURI, loadUsingSystemPrincipal: true});
-  var testInputStream = channel.open2();
+  var testInputStream = channel.open();
   var testConverter = new ConverterInputStream(testInputStream,
 					       "UTF-8",
 					       16,

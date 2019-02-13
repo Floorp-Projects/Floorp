@@ -185,7 +185,7 @@ void WyciwygChannelChild::OnStartRequest(const nsresult& statusCode,
 
   AutoEventEnqueuer ensureSerialDispatch(mEventQ);
 
-  rv = mListener->OnStartRequest(this, mListenerContext);
+  rv = mListener->OnStartRequest(this, nullptr);
   if (NS_FAILED(rv)) Cancel(rv);
 }
 
@@ -234,7 +234,7 @@ void WyciwygChannelChild::OnDataAvailable(const nsCString& data,
 
   AutoEventEnqueuer ensureSerialDispatch(mEventQ);
 
-  rv = mListener->OnDataAvailable(this, mListenerContext, stringStream, offset,
+  rv = mListener->OnDataAvailable(this, nullptr, stringStream, offset,
                                   data.Length());
   if (NS_FAILED(rv)) Cancel(rv);
 
@@ -278,10 +278,9 @@ void WyciwygChannelChild::OnStopRequest(const nsresult& statusCode) {
 
     if (!mCanceled) mStatus = statusCode;
 
-    mListener->OnStopRequest(this, mListenerContext, statusCode);
+    mListener->OnStopRequest(this, nullptr, statusCode);
 
     mListener = nullptr;
-    mListenerContext = nullptr;
 
     if (mLoadGroup) mLoadGroup->RemoveRequest(this, nullptr, mStatus);
 
@@ -321,11 +320,10 @@ void WyciwygChannelChild::CancelEarly(const nsresult& statusCode) {
   if (mLoadGroup) mLoadGroup->RemoveRequest(this, nullptr, mStatus);
 
   if (mListener) {
-    mListener->OnStartRequest(this, mListenerContext);
-    mListener->OnStopRequest(this, mListenerContext, mStatus);
+    mListener->OnStartRequest(this, nullptr);
+    mListener->OnStopRequest(this, nullptr, mStatus);
   }
   mListener = nullptr;
-  mListenerContext = nullptr;
 
   if (mIPCOpen) PWyciwygChannelChild::Send__delete__(this);
 }
@@ -538,17 +536,13 @@ WyciwygChannelChild::SetContentLength(int64_t aContentLength) {
 }
 
 NS_IMETHODIMP
-WyciwygChannelChild::Open(nsIInputStream** _retval) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-WyciwygChannelChild::Open2(nsIInputStream** aStream) {
+WyciwygChannelChild::Open(nsIInputStream** aStream) {
   nsCOMPtr<nsIStreamListener> listener;
   nsresult rv =
       nsContentSecurityManager::doContentSecurityCheck(this, listener);
   NS_ENSURE_SUCCESS(rv, rv);
-  return Open(aStream);
+
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 static mozilla::dom::TabChild* GetTabChild(nsIChannel* aChannel) {
@@ -559,15 +553,21 @@ static mozilla::dom::TabChild* GetTabChild(nsIChannel* aChannel) {
 }
 
 NS_IMETHODIMP
-WyciwygChannelChild::AsyncOpen(nsIStreamListener* aListener,
-                               nsISupports* aContext) {
+WyciwygChannelChild::AsyncOpen(nsIStreamListener* aListener) {
+  nsCOMPtr<nsIStreamListener> listener = aListener;
+  nsresult rv =
+      nsContentSecurityManager::doContentSecurityCheck(this, listener);
+  if (NS_FAILED(rv)) {
+    mCallbacks = nullptr;
+    return rv;
+  }
   MOZ_ASSERT(
       !mLoadInfo || mLoadInfo->GetSecurityMode() == 0 ||
           mLoadInfo->GetInitialSecurityCheckDone() ||
           (mLoadInfo->GetSecurityMode() ==
                nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL &&
            nsContentUtils::IsSystemPrincipal(mLoadInfo->LoadingPrincipal())),
-      "security flags in loadInfo but asyncOpen2() not called");
+      "security flags in loadInfo but doContentSecurityCheck() not called");
 
   LOG(("WyciwygChannelChild::AsyncOpen [this=%p]\n", this));
 
@@ -581,7 +581,6 @@ WyciwygChannelChild::AsyncOpen(nsIStreamListener* aListener,
   NS_ENSURE_TRUE(!mIsPending, NS_ERROR_IN_PROGRESS);
 
   mListener = aListener;
-  mListenerContext = aContext;
   mIsPending = true;
 
   if (mLoadGroup) {
@@ -607,18 +606,6 @@ WyciwygChannelChild::AsyncOpen(nsIStreamListener* aListener,
   mState = WCC_OPENED;
 
   return NS_OK;
-}
-
-NS_IMETHODIMP
-WyciwygChannelChild::AsyncOpen2(nsIStreamListener* aListener) {
-  nsCOMPtr<nsIStreamListener> listener = aListener;
-  nsresult rv =
-      nsContentSecurityManager::doContentSecurityCheck(this, listener);
-  if (NS_FAILED(rv)) {
-    mCallbacks = nullptr;
-    return rv;
-  }
-  return AsyncOpen(listener, nullptr);
 }
 
 //-----------------------------------------------------------------------------

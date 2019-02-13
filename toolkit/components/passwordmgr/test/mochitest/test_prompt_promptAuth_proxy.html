@@ -111,7 +111,7 @@ var resolveCallback = SpecialPowers.wrapCallbackObject({
                                                          null, // aTriggeringPrincipal
                                                          Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                                                          Ci.nsIContentPolicy.TYPE_OTHER);
-    proxyChannel.asyncOpen2(SpecialPowers.wrapCallbackObject(new proxyChannelListener()));
+    proxyChannel.asyncOpen(SpecialPowers.wrapCallbackObject(new proxyChannelListener()));
   },
 });
 

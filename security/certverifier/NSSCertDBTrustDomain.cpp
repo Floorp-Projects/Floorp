@@ -61,6 +61,7 @@ NSSCertDBTrustDomain::NSSCertDBTrustDomain(
     DistrustedCAPolicy distrustedCAPolicy,
     const OriginAttributes& originAttributes,
     const Vector<Input>& thirdPartyRootInputs,
+    const Vector<Input>& thirdPartyIntermediateInputs,
     /*out*/ UniqueCERTCertList& builtChain,
     /*optional*/ PinningTelemetryInfo* pinningTelemetryInfo,
     /*optional*/ const char* hostname)
@@ -80,6 +81,7 @@ NSSCertDBTrustDomain::NSSCertDBTrustDomain(
       mSawDistrustedCAByPolicyError(false),
       mOriginAttributes(originAttributes),
       mThirdPartyRootInputs(thirdPartyRootInputs),
+      mThirdPartyIntermediateInputs(thirdPartyIntermediateInputs),
       mBuiltChain(builtChain),
       mPinningTelemetryInfo(pinningTelemetryInfo),
       mHostname(hostname),
@@ -122,6 +124,13 @@ Result NSSCertDBTrustDomain::FindIssuer(Input encodedIssuerName,
 
   for (const auto& thirdPartyRootInput : mThirdPartyRootInputs) {
     if (!rootCandidates.append(thirdPartyRootInput)) {
+      return Result::FATAL_ERROR_NO_MEMORY;
+    }
+  }
+
+  for (const auto& thirdPartyIntermediateInput :
+       mThirdPartyIntermediateInputs) {
+    if (!intermediateCandidates.append(thirdPartyIntermediateInput)) {
       return Result::FATAL_ERROR_NO_MEMORY;
     }
   }

@@ -77,7 +77,7 @@ class nsSecCheckWrapChannelBase : public nsIHttpChannel,
 };
 
 /* We define a separate class here to make it clear that we're overriding
- * Get/SetLoadInfo as well as AsyncOpen2() and Open2(), rather that using
+ * Get/SetLoadInfo as well as AsyncOpen() and Open(), rather that using
  * the forwarded implementations provided by NS_FORWARD_NSICHANNEL"
  */
 class nsSecCheckWrapChannel : public nsSecCheckWrapChannelBase {
@@ -85,8 +85,8 @@ class nsSecCheckWrapChannel : public nsSecCheckWrapChannelBase {
   NS_IMETHOD GetLoadInfo(nsILoadInfo** aLoadInfo) override;
   NS_IMETHOD SetLoadInfo(nsILoadInfo* aLoadInfo) override;
 
-  NS_IMETHOD AsyncOpen2(nsIStreamListener* aListener) override;
-  NS_IMETHOD Open2(nsIInputStream** aStream) override;
+  NS_IMETHOD AsyncOpen(nsIStreamListener* aListener) override;
+  NS_IMETHOD Open(nsIInputStream** aStream) override;
 
   nsSecCheckWrapChannel(nsIChannel* aChannel, nsILoadInfo* aLoadInfo);
   static already_AddRefed<nsIChannel> MaybeWrap(nsIChannel* aChannel,

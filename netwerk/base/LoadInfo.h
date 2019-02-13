@@ -110,7 +110,7 @@ class LoadInfo final : public nsILoadInfo {
            bool aForceInheritPrincipalDropped, uint64_t aInnerWindowID,
            uint64_t aOuterWindowID, uint64_t aParentOuterWindowID,
            uint64_t aTopOuterWindowID, uint64_t aFrameOuterWindowID,
-           uint64_t aBrowsingContextID, bool aEnforceSecurity,
+           uint64_t aBrowsingContextID,
            bool aInitialSecurityCheckDone, bool aIsThirdPartyRequest,
            bool aIsDocshellReload, bool aSendCSPViolationEvents,
            const OriginAttributes& aOriginAttributes,
@@ -182,7 +182,6 @@ class LoadInfo final : public nsILoadInfo {
   uint64_t mTopOuterWindowID;
   uint64_t mFrameOuterWindowID;
   uint64_t mBrowsingContextID;
-  bool mEnforceSecurity;
   bool mInitialSecurityCheckDone;
   bool mIsThirdPartyContext;
   bool mIsDocshellReload;

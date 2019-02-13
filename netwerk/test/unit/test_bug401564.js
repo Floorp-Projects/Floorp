@@ -42,7 +42,7 @@ function run_test()
   chan.QueryInterface(Ci.nsIHttpChannel);
   chan.setRequestHeader("Accept", acceptType, false);
 
-  chan.asyncOpen2(new ChannelListener(dummyHandler, null));
+  chan.asyncOpen(new ChannelListener(dummyHandler, null));
 
   do_test_pending();
 }

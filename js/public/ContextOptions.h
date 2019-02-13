@@ -19,9 +19,15 @@ class JS_PUBLIC_API ContextOptions {
  public:
   ContextOptions()
       : baseline_(true),
+#ifdef JS_CODEGEN_ARM64
+        ion_(false),
+        asmJS_(false),
+        wasm_(false),
+#else
         ion_(true),
         asmJS_(true),
         wasm_(true),
+#endif
         wasmVerbose_(false),
         wasmBaseline_(true),
         wasmIon_(true),

@@ -89,7 +89,7 @@ function run_test()
                       Ci.nsICachingChannel.LOAD_ONLY_FROM_CACHE);
     var chanac = chan.QueryInterface(Ci.nsIApplicationCacheChannel);
     chanac.chooseApplicationCache = true;
-    chan.asyncOpen2(new ChannelListener(finish_test));
+    chan.asyncOpen(new ChannelListener(finish_test));
   }}
 
   var os = Cc["@mozilla.org/observer-service;1"].

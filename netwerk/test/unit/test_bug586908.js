@@ -55,7 +55,7 @@ function run_test() {
 
   var chan = makeChan("http://localhost:" + httpserv.identity.primaryPort +
                       "/target");
-  chan.asyncOpen2(new ChannelListener(checkValue, null));
+  chan.asyncOpen(new ChannelListener(checkValue, null));
 
   do_test_pending();
 }

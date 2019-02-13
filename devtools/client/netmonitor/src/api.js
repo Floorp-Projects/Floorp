@@ -43,7 +43,7 @@ function NetMonitorAPI() {
   this._requestFinishedListeners = new Set();
 
   // Bind event handlers
-  this.onRequestAdded = this.onRequestAdded.bind(this);
+  this.onPayloadReady = this.onPayloadReady.bind(this);
   this.actions = bindActionCreators(Actions, this.store.dispatch);
 }
 
@@ -57,7 +57,7 @@ NetMonitorAPI.prototype = {
     this.toolbox = toolbox;
 
     // Register listener for new requests (utilized by WebExtension API).
-    this.on(EVENTS.REQUEST_ADDED, this.onRequestAdded);
+    this.on(EVENTS.PAYLOAD_READY, this.onPayloadReady);
 
     // Initialize connection to the backend. Pass `this` as the owner,
     // so this object can receive all emitted events.
@@ -77,7 +77,7 @@ NetMonitorAPI.prototype = {
    * Clean up (unmount from DOM, remove listeners, disconnect).
    */
   async destroy() {
-    this.off(EVENTS.REQUEST_ADDED, this.onRequestAdded);
+    this.off(EVENTS.PAYLOAD_READY, this.onPayloadReady);
 
     await this.connector.disconnect();
 
@@ -120,7 +120,7 @@ NetMonitorAPI.prototype = {
    * Support for `devtools.network.onRequestFinished`. A hook for
    * every finished HTTP request used by WebExtensions API.
    */
-  async onRequestAdded(requestId) {
+  async onPayloadReady(requestId) {
     if (!this._requestFinishedListeners.size) {
       return;
     }

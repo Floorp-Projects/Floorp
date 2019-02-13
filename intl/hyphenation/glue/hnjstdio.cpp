@@ -54,7 +54,7 @@ hnjFile* hnjFopen(const char* aURISpec, const char* aMode) {
   }
 
   nsCOMPtr<nsIInputStream> instream;
-  rv = channel->Open2(getter_AddRefs(instream));
+  rv = channel->Open(getter_AddRefs(instream));
   if (NS_FAILED(rv)) {
     return nullptr;
   }

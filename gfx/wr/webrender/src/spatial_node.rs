@@ -346,6 +346,7 @@ impl SpatialNode {
                             // Push that new coordinate system and record the new id.
                             let coord_system = CoordinateSystem {
                                 transform,
+                                is_flatten_root: !state.preserves_3d && info.transform_style == TransformStyle::Preserve3D,
                                 parent: Some(state.current_coordinate_system_id),
                             };
                             state.current_coordinate_system_id = CoordinateSystemId(coord_systems.len() as u32);
@@ -526,11 +527,13 @@ impl SpatialNode {
                 // We want nested sticky items to take into account the shift
                 // we applied as well.
                 state.nearest_scrolling_ancestor_offset += info.current_offset;
+                state.preserves_3d = false;
             }
             SpatialNodeType::ScrollFrame(ref scrolling) => {
                 state.parent_accumulated_scroll_offset += scrolling.offset;
                 state.nearest_scrolling_ancestor_offset = scrolling.offset;
                 state.nearest_scrolling_ancestor_viewport = scrolling.viewport_rect;
+                state.preserves_3d = false;
             }
             SpatialNodeType::ReferenceFrame(ref info) => {
                 state.parent_reference_frame_transform = self.world_viewport_transform;
@@ -542,6 +545,7 @@ impl SpatialNode {
                 if should_flatten {
                     state.parent_reference_frame_transform = state.parent_reference_frame_transform.project_to_2d();
                 }
+                state.preserves_3d = info.transform_style == TransformStyle::Preserve3D;
 
                 state.parent_accumulated_scroll_offset = LayoutVector2D::zero();
                 state.coordinate_system_relative_scale_offset = self.coordinate_system_relative_scale_offset;

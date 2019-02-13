@@ -31,7 +31,7 @@ loader.lazyRequireGetter(this, "openContentLink", "devtools/client/shared/link",
 
 const TELEMETRY_NODE_INSPECTED_COUNT = "devtools.accessibility.node_inspected_count";
 
-const TREE_DEPTH_PADDING_INCREMENT = 15;
+const TREE_DEPTH_PADDING_INCREMENT = 20;
 
 class AccessiblePropertyClass extends Component {
   static get propTypes() {

@@ -80,7 +80,6 @@ LoadInfo::LoadInfo(
       mTopOuterWindowID(0),
       mFrameOuterWindowID(0),
       mBrowsingContextID(0),
-      mEnforceSecurity(false),
       mInitialSecurityCheckDone(false),
       mIsThirdPartyContext(false),
       mIsDocshellReload(false),
@@ -363,7 +362,6 @@ LoadInfo::LoadInfo(nsPIDOMWindowOuter* aOuterWindow,
       mTopOuterWindowID(0),
       mFrameOuterWindowID(0),
       mBrowsingContextID(0),
-      mEnforceSecurity(false),
       mInitialSecurityCheckDone(false),
       mIsThirdPartyContext(false),  // NB: TYPE_DOCUMENT implies !third-party.
       mIsDocshellReload(false),
@@ -461,7 +459,6 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
       mTopOuterWindowID(rhs.mTopOuterWindowID),
       mFrameOuterWindowID(rhs.mFrameOuterWindowID),
       mBrowsingContextID(rhs.mBrowsingContextID),
-      mEnforceSecurity(rhs.mEnforceSecurity),
       mInitialSecurityCheckDone(rhs.mInitialSecurityCheckDone),
       mIsThirdPartyContext(rhs.mIsThirdPartyContext),
       mIsDocshellReload(rhs.mIsDocshellReload),
@@ -502,7 +499,7 @@ LoadInfo::LoadInfo(
     bool aForceInheritPrincipalDropped, uint64_t aInnerWindowID,
     uint64_t aOuterWindowID, uint64_t aParentOuterWindowID,
     uint64_t aTopOuterWindowID, uint64_t aFrameOuterWindowID,
-    uint64_t aBrowsingContextID, bool aEnforceSecurity,
+    uint64_t aBrowsingContextID,
     bool aInitialSecurityCheckDone, bool aIsThirdPartyContext,
     bool aIsDocshellReload, bool aSendCSPViolationEvents,
     const OriginAttributes& aOriginAttributes,
@@ -545,7 +542,6 @@ LoadInfo::LoadInfo(
       mTopOuterWindowID(aTopOuterWindowID),
       mFrameOuterWindowID(aFrameOuterWindowID),
       mBrowsingContextID(aBrowsingContextID),
-      mEnforceSecurity(aEnforceSecurity),
       mInitialSecurityCheckDone(aInitialSecurityCheckDone),
       mIsThirdPartyContext(aIsThirdPartyContext),
       mIsDocshellReload(aIsDocshellReload),
@@ -606,7 +602,6 @@ already_AddRefed<nsILoadInfo> LoadInfo::CloneWithNewSecFlags(
 
 already_AddRefed<nsILoadInfo> LoadInfo::CloneForNewRequest() const {
   RefPtr<LoadInfo> copy(new LoadInfo(*this));
-  copy->mEnforceSecurity = false;
   copy->mInitialSecurityCheckDone = false;
   copy->mRedirectChainIncludingInternalRedirects.Clear();
   copy->mRedirectChain.Clear();
@@ -765,7 +760,6 @@ LoadInfo::GetCookiePolicy(uint32_t* aResult) {
 }
 
 void LoadInfo::SetIncludeCookiesSecFlag() {
-  MOZ_ASSERT(!mEnforceSecurity, "Request should not have been opened yet");
   MOZ_ASSERT((mSecurityFlags & sCookiePolicyMask) ==
              nsILoadInfo::SEC_COOKIES_DEFAULT);
   mSecurityFlags =
@@ -1051,22 +1045,6 @@ nsresult LoadInfo::GetOriginAttributes(
 nsresult LoadInfo::SetOriginAttributes(
     const mozilla::OriginAttributes& aOriginAttributes) {
   mOriginAttributes = aOriginAttributes;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::SetEnforceSecurity(bool aEnforceSecurity) {
-  // Indicates whether the channel was openend using AsyncOpen2. Once set
-  // to true, it must remain true throughout the lifetime of the channel.
-  // Setting it to anything else than true will be discarded.
-  MOZ_ASSERT(aEnforceSecurity, "aEnforceSecurity must be true");
-  mEnforceSecurity = mEnforceSecurity || aEnforceSecurity;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::GetEnforceSecurity(bool* aResult) {
-  *aResult = mEnforceSecurity;
   return NS_OK;
 }
 

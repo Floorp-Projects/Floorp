@@ -552,6 +552,10 @@ extern JS_FRIEND_API JS::Realm* GetAnyRealmInZone(JS::Zone* zone);
 extern JS_FRIEND_API JSObject* GetFirstGlobalInCompartment(
     JS::Compartment* comp);
 
+// Returns true if the compartment contains a global object and this global is
+// not being collected.
+extern JS_FRIEND_API bool CompartmentHasLiveGlobal(JS::Compartment* comp);
+
 /*
  * Shadow declarations of JS internal structures, for access by inline access
  * functions below. Do not use these structures in any other way. When adding

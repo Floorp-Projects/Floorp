@@ -9,6 +9,7 @@
 
 #include "nsINSSComponent.h"
 
+#include "EnterpriseRoots.h"
 #include "ScopedNSSTypes.h"
 #include "SharedCertVerifier.h"
 #include "mozilla/Attributes.h"
@@ -86,6 +87,8 @@ class nsNSSComponent final : public nsINSSComponent, public nsIObserver {
   void MaybeImportEnterpriseRoots();
   void ImportEnterpriseRoots();
   void UnloadEnterpriseRoots();
+  nsresult CommonGetEnterpriseCerts(
+      nsTArray<nsTArray<uint8_t>>& enterpriseCerts, bool getRoots);
 
   bool ShouldEnableEnterpriseRootsForFamilySafety(uint32_t familySafetyMode);
 
@@ -106,7 +109,7 @@ class nsNSSComponent final : public nsINSSComponent, public nsIObserver {
   RefPtr<mozilla::psm::SharedCertVerifier> mDefaultCertVerifier;
   nsString mMitmCanaryIssuer;
   bool mMitmDetecionEnabled;
-  mozilla::Vector<mozilla::Vector<uint8_t>> mEnterpriseRoots;
+  mozilla::Vector<EnterpriseCert> mEnterpriseCerts;
 
   // The following members are accessed only on the main thread:
   static int mInstanceCount;

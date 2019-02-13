@@ -370,7 +370,8 @@ public class SessionAccessibility {
             int[] children = nodeInfo.getIntArray("children");
             if (children != null) {
                 for (int childId : children) {
-                    if (!fromCache || getMostRecentBundle(childId) != null) {
+                    final GeckoBundle childBundle = getMostRecentBundle(childId);
+                    if (!fromCache || (childBundle != null && childBundle.getInt("parentId") == id)) {
                         // If this node is from cache, only populate with children that are cached as well.
                         node.addChild(mView, childId);
                     }

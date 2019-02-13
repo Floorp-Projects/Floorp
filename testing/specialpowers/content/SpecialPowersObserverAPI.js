@@ -221,7 +221,7 @@ SpecialPowersObserverAPI.prototype = {
       uri: aUrl,
       loadUsingSystemPrincipal: true,
     });
-    var input = channel.open2();
+    var input = channel.open();
     scriptableStream.init(input);
 
     var str;

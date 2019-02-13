@@ -87,7 +87,7 @@ function runNext() {
     response.setHeader("Content-Type", tests[testRan].contentType, false);
     response.bodyOutputStream.write(data, data.length);
   });
-  channel.asyncOpen2(listener);
+  channel.asyncOpen(listener);
 }
 
 function run_test() {

@@ -17,6 +17,7 @@
 class nsSHEntryShared;
 class nsIInputStream;
 class nsIURI;
+class nsIReferrerInfo;
 
 class nsSHEntry final : public nsISHEntry {
  public:
@@ -42,8 +43,7 @@ class nsSHEntry final : public nsISHEntry {
   nsCOMPtr<nsIURI> mURI;
   nsCOMPtr<nsIURI> mOriginalURI;
   nsCOMPtr<nsIURI> mResultPrincipalURI;
-  nsCOMPtr<nsIURI> mReferrerURI;
-  uint32_t mReferrerPolicy;
+  nsCOMPtr<nsIReferrerInfo> mReferrerInfo;
   nsString mTitle;
   nsCOMPtr<nsIInputStream> mPostData;
   uint32_t mLoadType;

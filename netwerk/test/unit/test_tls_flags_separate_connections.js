@@ -103,7 +103,7 @@ function doTest() {
   for (let tlsFlags of randomFlagValues) {
     let chan = makeChan(URL, tlsFlags);
     let listener = new Listener(tlsFlags);
-    chan.asyncOpen2(listener);
+    chan.asyncOpen(listener);
   }
 }
 

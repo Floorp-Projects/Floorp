@@ -41,8 +41,8 @@ function get_channel(spec)
   });
 
   try {
-    channel.asyncOpen2(null);
-    ok(false, "asyncOpen2() of URI: " + spec + "should throw");
+    channel.asyncOpen(null);
+    ok(false, "asyncOpen() of URI: " + spec + "should throw");
   }
   catch (e) {
     // make sure we get the right error code in the exception
@@ -51,8 +51,8 @@ function get_channel(spec)
   }
 
   try {
-    channel.open2();
-    ok(false, "Open2() of uri: " + spec + "should throw");
+    channel.open();
+    ok(false, "Open() of uri: " + spec + "should throw");
   }
   catch (e) {
     // make sure we get the right error code in the exception

@@ -1284,7 +1284,7 @@ void nsMessageManagerScriptExecutor::TryCacheLoadAndCompileScript(
     }
 
     nsCOMPtr<nsIInputStream> input;
-    rv = channel->Open2(getter_AddRefs(input));
+    rv = channel->Open(getter_AddRefs(input));
     NS_ENSURE_SUCCESS_VOID(rv);
     nsString dataString;
     char16_t* dataStringBuf = nullptr;

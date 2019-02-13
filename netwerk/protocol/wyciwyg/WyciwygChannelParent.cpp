@@ -213,11 +213,7 @@ mozilla::ipc::IPCResult WyciwygChannelParent::RecvAsyncOpen(
   }
 
   nsCOMPtr<nsILoadInfo> loadInfo = mChannel->GetLoadInfo();
-  if (loadInfo && loadInfo->GetEnforceSecurity()) {
-    rv = mChannel->AsyncOpen2(this);
-  } else {
-    rv = mChannel->AsyncOpen(this, nullptr);
-  }
+  rv = mChannel->AsyncOpen(this);
 
   if (NS_FAILED(rv)) {
     if (!SendCancelEarly(rv)) {

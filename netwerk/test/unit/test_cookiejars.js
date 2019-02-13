@@ -57,7 +57,7 @@ function setupChannel(path)
 function setCookie() {
   var channel = setupChannel(cookieSetPath);
   channel.setRequestHeader("foo-set-cookie", tests[i].cookieName, false);
-  channel.asyncOpen2(new ChannelListener(setNextCookie, null));
+  channel.asyncOpen(new ChannelListener(setNextCookie, null));
 }
 
 function setNextCookie(request, data, context) 
@@ -77,7 +77,7 @@ function setNextCookie(request, data, context)
 function checkCookie()
 {
   var channel = setupChannel(cookieCheckPath);
-  channel.asyncOpen2(new ChannelListener(completeCheckCookie, null));
+  channel.asyncOpen(new ChannelListener(completeCheckCookie, null));
 }
 
 function completeCheckCookie(request, data, context) {

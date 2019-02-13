@@ -16,7 +16,6 @@ namespace gc {
 JS_PUBLIC_API void TraceRealm(JSTracer* trc, JS::Realm* realm,
                               const char* name);
 JS_PUBLIC_API bool RealmNeedsSweep(JS::Realm* realm);
-JS_PUBLIC_API bool AllRealmsNeedSweep(JS::Compartment* comp);
 }  // namespace gc
 }  // namespace js
 

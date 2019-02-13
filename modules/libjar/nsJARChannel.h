@@ -79,7 +79,6 @@ class nsJARChannel final : public nsIJARChannel,
   nsCOMPtr<nsIProgressEventSink> mProgressSink;
   nsCOMPtr<nsILoadGroup> mLoadGroup;
   nsCOMPtr<nsIStreamListener> mListener;
-  nsCOMPtr<nsISupports> mListenerContext;
   nsCString mContentType;
   nsCString mContentCharset;
   int64_t mContentLength;

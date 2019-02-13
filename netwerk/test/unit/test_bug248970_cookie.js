@@ -22,7 +22,7 @@ function makeChan(path) {
 function setup_chan(path, isPrivate, callback) {
   var chan = makeChan(path);
   chan.QueryInterface(Ci.nsIPrivateBrowsingChannel).setPrivate(isPrivate);
-  chan.asyncOpen2(new ChannelListener(callback));  
+  chan.asyncOpen(new ChannelListener(callback));  
  }
 
 function set_cookie(value, callback) {

@@ -182,32 +182,22 @@ TrackingDummyChannel::SetContentLength(int64_t aContentLength) {
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::Open(nsIInputStream** aRetval) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-TrackingDummyChannel::Open2(nsIInputStream** aStream) {
+TrackingDummyChannel::Open(nsIInputStream** aStream) {
   nsCOMPtr<nsIStreamListener> listener;
   nsresult rv =
       nsContentSecurityManager::doContentSecurityCheck(this, listener);
   NS_ENSURE_SUCCESS(rv, rv);
-  return Open(aStream);
-}
 
-NS_IMETHODIMP
-TrackingDummyChannel::AsyncOpen(nsIStreamListener* aListener,
-                                nsISupports* aContext) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::AsyncOpen2(nsIStreamListener* aListener) {
+TrackingDummyChannel::AsyncOpen(nsIStreamListener* aListener) {
   nsCOMPtr<nsIStreamListener> listener = aListener;
   nsresult rv =
       nsContentSecurityManager::doContentSecurityCheck(this, listener);
   NS_ENSURE_SUCCESS(rv, rv);
-  return AsyncOpen(listener, nullptr);
+  return AsyncOpen(listener);
 }
 
 NS_IMETHODIMP

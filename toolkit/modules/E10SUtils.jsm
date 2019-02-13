@@ -17,6 +17,9 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "useSeparatePrivilegedContentProcess
                                       "browser.tabs.remote.separatePrivilegedContentProcess", false);
 XPCOMUtils.defineLazyPreferenceGetter(this, "useHttpResponseProcessSelection",
                                       "browser.tabs.remote.useHTTPResponseProcessSelection", false);
+XPCOMUtils.defineLazyServiceGetter(this, "serializationHelper",
+                                   "@mozilla.org/network/serialization-helper;1",
+                                   "nsISerializationHelper");
 ChromeUtils.defineModuleGetter(this, "Utils",
                                "resource://gre/modules/sessionstore/Utils.jsm");
 
@@ -402,5 +405,41 @@ var E10SUtils = {
     } finally {
       handlingUserInput.destruct();
     }
+  },
+
+  /**
+   * Serialize referrerInfo.
+   *
+   * @param {nsIReferrerInfo} The referrerInfo to serialize.
+   * @return {String} The base64 encoded referrerInfo.
+   */
+  serializeReferrerInfo(referrerInfo) {
+    let serialized = null;
+    if (referrerInfo) {
+      try {
+        serialized = serializationHelper.serializeToString(referrerInfo);
+      } catch (e) {
+        debug(`Failed to serialize referrerInfo '${referrerInfo}' ${e}`);
+      }
+    }
+    return serialized;
+  },
+  /**
+   * Deserialize a base64 encoded referrerInfo
+   *
+   * @param {String} referrerInfo_b64 A base64 encoded serialized referrerInfo.
+   * @return {nsIReferrerInfo} A deserialized referrerInfo.
+   */
+  deserializeReferrerInfo(referrerInfo_b64) {
+    let deserialized = null;
+    if (referrerInfo_b64) {
+      try {
+        deserialized = serializationHelper.deserializeObject(referrerInfo_b64);
+        deserialized.QueryInterface(Ci.nsIReferrerInfo);
+      } catch (e) {
+        debug(`Failed to deserialize referrerInfo_b64 '${referrerInfo_b64}' ${e}`);
+      }
+    }
+    return deserialized;
   },
 };

@@ -326,7 +326,7 @@ void HTMLTrackElement::LoadResource(RefPtr<WebVTTListener>&& aWebVTTListener) {
         channel->SetNotificationCallbacks(self->mListener);
 
         LOG(LogLevel::Debug, ("opening webvtt channel"));
-        rv = channel->AsyncOpen2(self->mListener);
+        rv = channel->AsyncOpen(self->mListener);
 
         if (NS_FAILED(rv)) {
           self->SetReadyState(TextTrackReadyState::FailedToLoad);

@@ -1,0 +1,63 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Accordion */
+
+:root {
+  --accordion-header-background: var(--theme-toolbar-background);
+  --disclosure-arrow: #b2b2b2;
+}
+
+:root.theme-dark {
+  --accordion-header-background: #222225;
+  --disclosure-arrow: #7f7f81;
+}
+
+.accordion {
+  background-color: var(--theme-sidebar-background);
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  white-space: nowrap;
+  overflow: auto;
+}
+
+.accordion .accordion-header {
+  background-color: var(--accordion-header-background);
+  border-bottom: 1px solid var(--theme-splitter-color);
+  display: flex;
+  font-size: 12px;
+  transition: all 0.25s ease;
+  height: 24px;
+  width: calc(100% - 4px);
+  padding-inline-end: 4px;
+  align-items: center;
+  margin: 0px;
+  font-weight: normal;
+
+  -moz-user-select: none;
+  cursor: default;
+}
+
+.accordion .accordion-header .theme-twisty {
+  width: 20px;
+}
+
+.accordion .accordion-header:hover {
+  background-color: var(--theme-toolbar-background-hover);
+}
+
+.accordion .accordion-content:not(:empty) {
+  font-size: 12px;
+  overflow: auto;
+}
+
+.accordion > li > .accordion-content:not(:empty) {
+  border-bottom: 1px solid var(--theme-splitter-color);
+}
+
+.accordion li:last-child .accordion-content {
+  border-bottom: none;
+}

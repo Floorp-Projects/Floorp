@@ -56,7 +56,7 @@ interface nsIURILoader : nsISupports
   /**
    * If this flag is set, it means that aChannel has been redirected from
    * another process, and should be reopened using CompleteRedirectSetup rather
-   * than AsyncOpen2.
+   * than AsyncOpen.
    */
   const unsigned long REDIRECTED_CHANNEL   = 1 << 2;
   /* @} */

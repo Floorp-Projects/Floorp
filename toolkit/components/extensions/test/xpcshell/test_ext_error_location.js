@@ -41,7 +41,7 @@ add_task(async function test_error_location() {
   if (frame) {
     equal(frame.source, fileName, "Frame source");
     equal(frame.line, 6, "Frame line");
-    equal(frame.column, 7, "Frame column");
+    equal(frame.column, 23, "Frame column");
     equal(frame.functionDisplayName, "background", "Frame function name");
   }
 });

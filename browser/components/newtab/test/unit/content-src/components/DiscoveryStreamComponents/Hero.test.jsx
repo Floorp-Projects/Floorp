@@ -27,7 +27,7 @@ describe("<Hero>", () => {
   it("should render a hero link with expected url", () => {
     const wrapper = shallow(<Hero {...DEFAULT_PROPS} />);
 
-    assert.equal(wrapper.find("a").prop("href"), DEFAULT_PROPS.data.recommendations[0].url);
+    assert.equal(wrapper.find("SafeAnchor").prop("url"), DEFAULT_PROPS.data.recommendations[0].url);
   });
 
   describe("subComponent: cards", () => {

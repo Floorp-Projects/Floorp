@@ -377,32 +377,22 @@ NullHttpChannel::SetContentLength(int64_t aContentLength) {
 }
 
 NS_IMETHODIMP
-NullHttpChannel::Open(nsIInputStream **_retval) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-NullHttpChannel::Open2(nsIInputStream **aStream) {
+NullHttpChannel::Open(nsIInputStream **aStream) {
   nsCOMPtr<nsIStreamListener> listener;
   nsresult rv =
       nsContentSecurityManager::doContentSecurityCheck(this, listener);
   NS_ENSURE_SUCCESS(rv, rv);
-  return Open(aStream);
-}
 
-NS_IMETHODIMP
-NullHttpChannel::AsyncOpen(nsIStreamListener *aListener,
-                           nsISupports *aContext) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::AsyncOpen2(nsIStreamListener *aListener) {
+NullHttpChannel::AsyncOpen(nsIStreamListener *aListener) {
   nsCOMPtr<nsIStreamListener> listener = aListener;
   nsresult rv =
       nsContentSecurityManager::doContentSecurityCheck(this, listener);
   NS_ENSURE_SUCCESS(rv, rv);
-  return AsyncOpen(listener, nullptr);
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP

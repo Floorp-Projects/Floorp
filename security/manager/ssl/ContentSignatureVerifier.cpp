@@ -333,7 +333,7 @@ nsresult ContentSignatureVerifier::DownloadCertChain() {
     priorityChannel->AdjustPriority(nsISupportsPriority::PRIORITY_HIGHEST);
   }
 
-  rv = mChannel->AsyncOpen2(this);
+  rv = mChannel->AsyncOpen(this);
   if (NS_FAILED(rv)) {
     return rv;
   }

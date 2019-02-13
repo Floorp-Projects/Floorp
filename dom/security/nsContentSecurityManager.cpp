@@ -749,9 +749,6 @@ static void DebugDoContentSecurityCheck(nsIChannel* aChannel,
     MOZ_LOG(sCSMLog, LogLevel::Debug,
             ("  initalSecurityChecksDone: %s\n",
              aLoadInfo->GetInitialSecurityCheckDone() ? "true" : "false"));
-    MOZ_LOG(sCSMLog, LogLevel::Debug,
-            ("  enforceSecurity: %s\n",
-             aLoadInfo->GetEnforceSecurity() ? "true" : "false"));
 
     // Log CSPrequestPrincipal
     nsCOMPtr<nsIContentSecurityPolicy> csp;
@@ -789,7 +786,7 @@ static void DebugDoContentSecurityCheck(nsIChannel* aChannel,
  * @param aChannel
  *    The channel to perform the security checks on.
  * @param aInAndOutListener
- *    The streamListener that is passed to channel->AsyncOpen2() that is now
+ *    The streamListener that is passed to channel->AsyncOpen() that is now
  * potentially wrappend within nsCORSListenerProxy() and becomes the
  * corsListener that now needs to be set as new streamListener on the channel.
  */
@@ -818,13 +815,6 @@ nsresult nsContentSecurityManager::doContentSecurityCheck(
   // e.g. do not require same origin and allow cross origin at the same time
   nsresult rv = ValidateSecurityFlags(loadInfo);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  // since aChannel was openend using asyncOpen2() we have to make sure
-  // that redirects of that channel also get openend using asyncOpen2()
-  // please note that some implementations of ::AsyncOpen2 might already
-  // have set that flag to true (e.g. nsViewSourceChannel) in which case
-  // we just set the flag again.
-  loadInfo->SetEnforceSecurity(true);
 
   if (loadInfo->GetSecurityMode() ==
       nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS) {
@@ -855,8 +845,7 @@ nsContentSecurityManager::AsyncOnChannelRedirect(
     nsIChannel* aOldChannel, nsIChannel* aNewChannel, uint32_t aRedirFlags,
     nsIAsyncVerifyRedirectCallback* aCb) {
   nsCOMPtr<nsILoadInfo> loadInfo = aOldChannel->GetLoadInfo();
-  // Are we enforcing security using LoadInfo?
-  if (loadInfo && loadInfo->GetEnforceSecurity()) {
+  if (loadInfo) {
     nsresult rv = CheckChannel(aNewChannel);
     if (NS_SUCCEEDED(rv)) {
       rv = CheckFTPSubresourceLoad(aNewChannel);

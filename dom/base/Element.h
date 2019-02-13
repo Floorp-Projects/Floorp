@@ -347,12 +347,11 @@ class Element : public FragmentOrElement {
   DeclarationBlock* GetSMILOverrideStyleDeclaration();
 
   /**
-   * Set the SMIL override style declaration for this element. If
-   * aNotify is true, this method will notify the document's pres
-   * context, so that the style changes will be noticed.
+   * Set the SMIL override style declaration for this element. This method will
+   * notify the document's pres context, so that the style changes will be
+   * noticed.
    */
-  nsresult SetSMILOverrideStyleDeclaration(DeclarationBlock* aDeclaration,
-                                           bool aNotify);
+  nsresult SetSMILOverrideStyleDeclaration(DeclarationBlock* aDeclaration);
 
   /**
    * Returns a new SMILAttr that allows the caller to animate the given

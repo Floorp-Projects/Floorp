@@ -38,7 +38,7 @@ const windowTracker = {
 
 function readSync(uri) {
   let channel = NetUtil.newChannel({uri, loadUsingSystemPrincipal: true});
-  let buffer = NetUtil.readInputStream(channel.open2());
+  let buffer = NetUtil.readInputStream(channel.open());
   return new TextDecoder().decode(buffer);
 }
 

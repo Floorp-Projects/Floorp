@@ -55,6 +55,11 @@ interface nsINSSComponent : nsISupports {
   Array<Array<octet> > getEnterpriseRoots();
 
   /**
+   * Similarly, but for intermediate certificates.
+   */
+  Array<Array<octet> > getEnterpriseIntermediates();
+
+  /**
    * For performance reasons, the builtin roots module is loaded on a background
    * thread. When any code that depends on the builtin roots module runs, it
    * must first wait for the module to be loaded.

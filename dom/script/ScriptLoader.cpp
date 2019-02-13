@@ -285,13 +285,24 @@ static bool IsScriptEventHandler(ScriptKind kind, nsIContent* aScriptElement) {
   return false;
 }
 
+nsContentPolicyType ScriptLoadRequestToContentPolicyType(
+    ScriptLoadRequest* aRequest) {
+  if (aRequest->IsPreload()) {
+    return aRequest->IsModuleRequest()
+               ? nsIContentPolicy::TYPE_INTERNAL_MODULE_PRELOAD
+               : nsIContentPolicy::TYPE_INTERNAL_SCRIPT_PRELOAD;
+  }
+
+  return aRequest->IsModuleRequest() ? nsIContentPolicy::TYPE_INTERNAL_MODULE
+                                     : nsIContentPolicy::TYPE_INTERNAL_SCRIPT;
+}
+
 nsresult ScriptLoader::CheckContentPolicy(Document* aDocument,
-                                          nsISupports* aContext, nsIURI* aURI,
+                                          nsISupports* aContext,
                                           const nsAString& aType,
-                                          bool aIsPreLoad) {
+                                          ScriptLoadRequest* aRequest) {
   nsContentPolicyType contentPolicyType =
-      aIsPreLoad ? nsIContentPolicy::TYPE_INTERNAL_SCRIPT_PRELOAD
-                 : nsIContentPolicy::TYPE_INTERNAL_SCRIPT;
+      ScriptLoadRequestToContentPolicyType(aRequest);
 
   nsCOMPtr<nsINode> requestingNode = do_QueryInterface(aContext);
   nsCOMPtr<nsILoadInfo> secCheckLoadInfo = new net::LoadInfo(
@@ -302,8 +313,8 @@ nsresult ScriptLoader::CheckContentPolicy(Document* aDocument,
 
   int16_t shouldLoad = nsIContentPolicy::ACCEPT;
   nsresult rv = NS_CheckContentLoadPolicy(
-      aURI, secCheckLoadInfo, NS_LossyConvertUTF16toASCII(aType), &shouldLoad,
-      nsContentUtils::GetContentPolicy());
+      aRequest->mURI, secCheckLoadInfo, NS_LossyConvertUTF16toASCII(aType),
+      &shouldLoad, nsContentUtils::GetContentPolicy());
   if (NS_FAILED(rv) || NS_CP_REJECTED(shouldLoad)) {
     if (NS_FAILED(rv) || shouldLoad != nsIContentPolicy::REJECT_TYPE) {
       return NS_ERROR_CONTENT_BLOCKED;
@@ -1193,8 +1204,7 @@ nsresult ScriptLoader::StartLoad(ScriptLoadRequest* aRequest) {
   }
 
   nsContentPolicyType contentPolicyType =
-      aRequest->IsPreload() ? nsIContentPolicy::TYPE_INTERNAL_SCRIPT_PRELOAD
-                            : nsIContentPolicy::TYPE_INTERNAL_SCRIPT;
+      ScriptLoadRequestToContentPolicyType(aRequest);
   nsCOMPtr<nsINode> context;
   if (aRequest->Element()) {
     context = do_QueryInterface(aRequest->Element());
@@ -1356,7 +1366,7 @@ nsresult ScriptLoader::StartLoad(ScriptLoadRequest* aRequest) {
   rv = NS_NewIncrementalStreamLoader(getter_AddRefs(loader), handler);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = channel->AsyncOpen2(loader);
+  rv = channel->AsyncOpen(loader);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (aRequest->IsModuleRequest()) {
@@ -1507,8 +1517,8 @@ bool ScriptLoader::ProcessExternalScript(nsIScriptElement* aElement,
   RefPtr<ScriptLoadRequest> request =
       LookupPreloadRequest(aElement, aScriptKind);
 
-  if (request && NS_FAILED(CheckContentPolicy(
-                     mDocument, aElement, request->mURI, aTypeAttr, false))) {
+  if (request &&
+      NS_FAILED(CheckContentPolicy(mDocument, aElement, aTypeAttr, request))) {
     LOG(("ScriptLoader (%p): content policy check failed for preload", this));
 
     // Probably plans have changed; even though the preload was allowed seems

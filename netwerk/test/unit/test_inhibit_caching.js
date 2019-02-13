@@ -35,7 +35,7 @@ function run_test()
 // Makes a regular request
 function test_first_response() {
   var chan = NetUtil.newChannel({uri: uri+"/test", loadUsingSystemPrincipal: true});
-  chan.asyncOpen2(new ChannelListener(check_first_response, null));
+  chan.asyncOpen(new ChannelListener(check_first_response, null));
 }
 
 // Checks that we got the appropriate response
@@ -62,7 +62,7 @@ function cache_entry_callback(status, entry) {
 function test_inhibit_caching() {
   var chan = NetUtil.newChannel({uri: uri+"/test", loadUsingSystemPrincipal: true});
   chan.QueryInterface(Ci.nsIRequest).loadFlags |= Ci.nsIRequest.INHIBIT_CACHING;
-  chan.asyncOpen2(new ChannelListener(check_second_response, null));
+  chan.asyncOpen(new ChannelListener(check_second_response, null));
 }
 
 // Checks that we got a different response from the first request

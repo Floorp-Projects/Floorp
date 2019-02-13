@@ -156,17 +156,17 @@ nsSecCheckWrapChannel::SetLoadInfo(nsILoadInfo *aLoadInfo) {
 }
 
 NS_IMETHODIMP
-nsSecCheckWrapChannel::AsyncOpen2(nsIStreamListener *aListener) {
+nsSecCheckWrapChannel::AsyncOpen(nsIStreamListener *aListener) {
   nsCOMPtr<nsIStreamListener> secWrapChannelListener =
       new SecWrapChannelStreamListener(this, aListener);
   nsresult rv = nsContentSecurityManager::doContentSecurityCheck(
       this, secWrapChannelListener);
   NS_ENSURE_SUCCESS(rv, rv);
-  return AsyncOpen(secWrapChannelListener, nullptr);
+  return AsyncOpen(secWrapChannelListener);
 }
 
 NS_IMETHODIMP
-nsSecCheckWrapChannel::Open2(nsIInputStream **aStream) {
+nsSecCheckWrapChannel::Open(nsIInputStream **aStream) {
   nsCOMPtr<nsIStreamListener> listener;
   nsresult rv =
       nsContentSecurityManager::doContentSecurityCheck(this, listener);

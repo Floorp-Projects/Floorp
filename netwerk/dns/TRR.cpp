@@ -307,7 +307,7 @@ nsresult TRR::SendHTTPRequest() {
           NS_LITERAL_CSTRING("application/dns-message")))) {
     LOG(("TRR::SendHTTPRequest: couldn't set content-type!\n"));
   }
-  if (NS_SUCCEEDED(httpChannel->AsyncOpen2(this))) {
+  if (NS_SUCCEEDED(httpChannel->AsyncOpen(this))) {
     NS_NewTimerWithCallback(getter_AddRefs(mTimeout), this,
                             gTRRService->GetRequestTimeout(),
                             nsITimer::TYPE_ONE_SHOT);
@@ -448,7 +448,7 @@ nsresult TRR::ReceivePush(nsIHttpChannel *pushed, nsHostRecord *pushedRec) {
     return rv;
   }
 
-  rv = pushed->AsyncOpen2(this);
+  rv = pushed->AsyncOpen(this);
   if (NS_FAILED(rv)) {
     return rv;
   }

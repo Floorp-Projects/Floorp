@@ -49,7 +49,7 @@ function run_test()
 
   var chan = make_channel("http://localhost:" +
                           httpServer.identity.primaryPort + "/content");
-  chan.asyncOpen2(new ChannelListener(finish_test, null, CL_EXPECT_FAILURE));
+  chan.asyncOpen(new ChannelListener(finish_test, null, CL_EXPECT_FAILURE));
   chan.cancel(Cr.NS_BINDING_ABORTED);
   do_test_pending();
 }

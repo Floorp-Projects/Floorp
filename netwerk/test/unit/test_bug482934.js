@@ -92,7 +92,7 @@ add_test(() => {
   response_time = "Thu, 1 Jan 2009 00:00:00 GMT";
 
   var ch = make_channel(resource_url);
-  ch.asyncOpen2(new ChannelListener(function(aRequest, aData) {
+  ch.asyncOpen(new ChannelListener(function(aRequest, aData) {
     Assert.ok(hit_server);
     Assert.equal(aRequest.QueryInterface(Ci.nsIHttpChannel).responseStatus, 304);
     Assert.ok(!cache_storage.exists(make_uri(resource_url), ""));
@@ -111,7 +111,7 @@ add_test(() => {
   response_time = "Fri, 2 Jan 2009 00:00:00 GMT";
 
   var ch = make_channel(resource_url);
-  ch.asyncOpen2(new ChannelListener(function(aRequest, aData) {
+  ch.asyncOpen(new ChannelListener(function(aRequest, aData) {
     Assert.ok(hit_server);
     Assert.equal(aRequest.QueryInterface(Ci.nsIHttpChannel).responseStatus, 200);
     Assert.ok(cache_storage.exists(make_uri(resource_url), ""));
@@ -130,7 +130,7 @@ add_test(() => {
   response_time = "Fri, 2 Jan 2009 00:00:00 GMT";
 
   var ch = make_channel(resource_url);
-  ch.asyncOpen2(new ChannelListener(function(aRequest, aData) {
+  ch.asyncOpen(new ChannelListener(function(aRequest, aData) {
     Assert.ok(hit_server);
     Assert.equal(aRequest.QueryInterface(Ci.nsIHttpChannel).responseStatus, 304);
     Assert.ok(cache_storage.exists(make_uri(resource_url), ""));
@@ -150,7 +150,7 @@ add_test(() => {
   request_time = "Fri, 2 Jan 2009 00:00:00 GMT";
   response_time = "Sat, 3 Jan 2009 00:00:00 GMT";
   var ch = make_channel(resource_url);
-  ch.asyncOpen2(new ChannelListener(function(aRequest, aData) {
+  ch.asyncOpen(new ChannelListener(function(aRequest, aData) {
     Assert.ok(hit_server);
     Assert.equal(aRequest.QueryInterface(Ci.nsIHttpChannel).responseStatus, 200);
     Assert.ok(cache_storage.exists(make_uri(resource_url), ""));
