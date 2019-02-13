@@ -20,7 +20,7 @@ add_task(async function() {
     getSelectedRequest,
     getSortedRequests,
   } = windowRequire("devtools/client/netmonitor/src/selectors/index");
-  const Editor = require("devtools/client/sourceeditor/editor");
+  const Editor = require("devtools/client/shared/sourceeditor/editor");
 
   store.dispatch(Actions.batchEnable(false));
 

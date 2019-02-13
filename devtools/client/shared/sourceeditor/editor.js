@@ -52,10 +52,10 @@ const { OS } = Services.appinfo;
 // injected into an iframe in order to initialize a CodeMirror instance.
 
 const CM_SCRIPTS = [
-  "chrome://devtools/content/sourceeditor/codemirror/codemirror.bundle.js",
+  "chrome://devtools/content/shared/sourceeditor/codemirror/codemirror.bundle.js",
 ];
 
-const CM_IFRAME = "chrome://devtools/content/sourceeditor/codemirror/cmiframe.html";
+const CM_IFRAME = "chrome://devtools/content/shared/sourceeditor/codemirror/cmiframe.html";
 
 const CM_MAPPING = [
   "clearHistory",
@@ -518,7 +518,7 @@ Editor.prototype = {
    */
   insertCommandsController: function() {
     const { insertCommandsController } =
-      require("devtools/client/sourceeditor/editor-commands-controller");
+      require("devtools/client/shared/sourceeditor/editor-commands-controller");
     insertCommandsController(this);
   },
 

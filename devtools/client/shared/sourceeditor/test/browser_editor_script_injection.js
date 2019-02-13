@@ -12,7 +12,7 @@ add_task(async function() {
 
 async function runTest() {
   const baseURL =
-    "chrome://mochitests/content/browser/devtools/client/sourceeditor/test";
+    "chrome://mochitests/content/browser/devtools/client/shared/sourceeditor/test";
   const injectedText = "Script successfully injected!";
 
   const {ed, win} = await setup(null, {
