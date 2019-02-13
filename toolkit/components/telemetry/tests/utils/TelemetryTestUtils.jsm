@@ -132,8 +132,10 @@ var TelemetryTestUtils = {
    */
   assertHistogram(histogram, index, expected) {
     const snapshot = histogram.snapshot();
+    let found = false;
     for (let [i, val] of Object.entries(snapshot.values)) {
       if (i == index) {
+        found = true;
         Assert.equal(val, expected,
           `expected counts should match for the histogram index ${i}`);
       } else {
@@ -141,6 +143,7 @@ var TelemetryTestUtils = {
           `unexpected counts should be zero for the histogram index ${i}`);
       }
     }
+    Assert.ok(found, `Should have found an entry for histogram index ${index}`);
   },
 
   /**
@@ -172,6 +175,10 @@ var TelemetryTestUtils = {
    */
   assertKeyedHistogramValue(histogram, key, index, expected) {
     const snapshot = histogram.snapshot();
+    if (!(key in snapshot)) {
+      Assert.ok(false, `The histogram must contain ${key}`);
+      return;
+    }
     for (let [i, val] of Object.entries(snapshot[key].values)) {
       if (i == index) {
         Assert.equal(val, expected,
