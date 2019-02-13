@@ -86,7 +86,7 @@ class ScreenOrientation final
   already_AddRefed<Promise> LockInternal(hal::ScreenOrientation aOrientation,
                                          ErrorResult& aRv);
 
-  void DispatchChangeEvent();
+  nsCOMPtr<nsIRunnable> DispatchChangeEventAndResolvePromise();
 
   bool ShouldResistFingerprinting() const;
 
