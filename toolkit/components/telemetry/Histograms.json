@@ -11278,13 +11278,13 @@
   },
   "WEAVE_LOGIN_FAILED_FOR": {
     "record_in_processes": ["main"],
-    "expires_in_version": "68",
+    "expires_in_version": "72",
     "alert_emails": ["sync-dev@mozilla.org"],
     "kind": "exponential",
     "high": 20000,
     "n_buckets": 100,
     "releaseChannelCollection": "opt-out",
-    "bug_numbers": [1375635],
+    "bug_numbers": [1375635, 1523644],
     "description": "The number of minutes the user was in a bad login state."
   },
   "WEAVE_WIPE_SERVER_SUCCEEDED": {
