@@ -58,7 +58,10 @@ class HistoryFragment : Fragment(), CoroutineScope {
             .subscribe {
                 when (it) {
                     is HistoryAction.Select -> selectItem(it.item)
-                    is HistoryAction.Edit ->  getManagedEmitter<HistoryChange>().onNext(HistoryChange.Mode(HistoryState.Mode.Editing))
+                    is HistoryAction.EnterEditMode -> getManagedEmitter<HistoryChange>()
+                        .onNext(HistoryChange.EnterEditMode(it.item))
+                    is HistoryAction.AddItemForRemoval -> getManagedEmitter<HistoryChange>()
+                        .onNext(HistoryChange.AddItemForRemoval(it.item))
                 }
             }
     }
@@ -90,7 +93,8 @@ class HistoryFragment : Fragment(), CoroutineScope {
         val eventEmitter = ActionBusFactory.get(this)
 
         launch(Dispatchers.IO) {
-            val items = requireComponents.core.historyStorage.getVisited().map { HistoryItem(it) }
+            val items = requireComponents.core.historyStorage.getVisited()
+                .mapIndexed { id, item -> HistoryItem(id, item) }
 
             launch(Dispatchers.Main) {
                 eventEmitter.emit(HistoryChange::class.java, HistoryChange.Change(items))

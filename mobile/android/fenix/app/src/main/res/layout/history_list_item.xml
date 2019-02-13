@@ -23,7 +23,7 @@
         android:layout_height="@dimen/history_favicon_width_height"
         android:background="@drawable/history_favicon_background"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"/>
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/history_title"

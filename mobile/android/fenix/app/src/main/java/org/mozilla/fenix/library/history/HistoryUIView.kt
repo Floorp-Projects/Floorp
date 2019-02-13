@@ -38,8 +38,6 @@ class HistoryUIView(
     }
 
     override fun updateView() = Consumer<HistoryState> {
-        val isEditing = it.mode == HistoryState.Mode.Editing
-
         (view.adapter as HistoryAdapter).updateData(it.items, it.mode)
     }
 }
@@ -68,10 +66,16 @@ private class HistoryAdapter(
 
             view.setOnLongClickListener {
                 item?.apply {
-                    actionEmitter.onNext(HistoryAction.Edit(this))
+                    actionEmitter.onNext(HistoryAction.EnterEditMode(this))
                 }
 
                 true
+            }
+
+            checkbox.setOnClickListener {
+                item?.apply {
+                    actionEmitter.onNext(HistoryAction.AddItemForRemoval(this))
+                }
             }
         }
 
@@ -82,9 +86,13 @@ private class HistoryAdapter(
             title.text = item.title
             url.text = item.url
 
-            val isEditing = mode == HistoryState.Mode.Editing
+            val isEditing = mode is HistoryState.Mode.Editing
             checkbox.visibility = if (isEditing) { View.VISIBLE } else { View.GONE }
             favicon.visibility = if (isEditing) { View.INVISIBLE } else { View.VISIBLE }
+
+            if (mode is HistoryState.Mode.Editing) {
+                checkbox.isChecked = mode.selectedItems.contains(item)
+            }
         }
 
         companion object {
