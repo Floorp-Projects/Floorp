@@ -3,8 +3,8 @@ load(libdir + "assert-offset-columns.js");
 // getColumnOffsets correctly places the various parts of a ForStatement.
 assertOffsetColumns(
     "function f(n) { for (var i = 0; i < n; ++i) hits.push('.'); hits.push('!'); }",
-    "                         ^      ^      ^    ^    ^          ^    ^          ^",
-    "0 1 3 4 . 2 1 3 4 . 2 1 3 4 . 2 1 5 6 ! 7",
+    "                         ^      ^      ^    ^               ^               ^",
+    "0 1 3 . 2 1 3 . 2 1 3 . 2 1 4 ! 5",
 );
 
 // getColumnOffsets correctly places multiple variable declarations.
@@ -89,8 +89,8 @@ assertOffsetColumns(
     "var args = [];\n" +
     "var obj = { base: { a(){ return { b(){} }; } } };\n" +
     "function f(n) { obj.base.a().b(...args); }",
-    "                ^        ^   ^ ^         ^",
-    "0 1 3 2 4",
+    "                ^            ^ ^         ^",
+    "0 2 1 3",
 );
 
 // getColumnOffsets correctly places the part of normal ::Dot node with "this" root.
@@ -98,8 +98,8 @@ assertOffsetColumns(
     "var args = [];\n" +
     "var obj = { base: { a(){ return { b(){} }; } } };\n" +
     "var f = function() { this.base.a().b(...args);  }.bind(obj);",
-    "                     ^         ^   ^ ^          ^",
-    "0 1 3 2 4",
+    "                     ^             ^ ^          ^",
+    "0 2 1 3",
 );
 
 // getColumnOffsets correctly places the part of normal ::Dot node with "super" base.
@@ -107,8 +107,8 @@ assertOffsetColumns(
     "var args = [];\n" +
     "var obj = { base: { a(){ return { b(){} }; } } };\n" +
     "var f = { __proto__: obj, f(n) { super.base.a().b(...args); } }.f;",
-    "                                 ^          ^   ^ ^         ^",
-    "0 1 3 2 4",
+    "                                 ^              ^ ^         ^",
+    "0 2 1 3",
 );
 
 // getColumnOffsets correctly places the part of normal ::Dot node with other base.
@@ -126,8 +126,8 @@ assertOffsetColumns(
     "var obj = { base: { a(){ return { b(){} }; } } };\n" +
     // Constant folding makes the static string behave like a dot access.
     "function f(n) { obj.base['a']()['b'](...args); }",
-    "                ^        ^      ^    ^         ^",
-    "0 1 3 2 4",
+    "                ^               ^    ^         ^",
+    "0 2 1 3",
 );
 
 // getColumnOffsets correctly places the part of computed ::Elem node.
