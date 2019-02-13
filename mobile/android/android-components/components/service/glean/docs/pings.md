@@ -22,8 +22,8 @@ The following fields are always included in the `ping_info` section, for every p
 | `client_id` | UUID |  A UUID identifying a profile and allowing user-oriented correlation of data |
 | `seq` | Counter | A running counter of the number of times pings of this type have been sent |
 | `experiments` | Object | A dictionary of [active experiments](#the-experiments-object) |
-| `start_time` | Datetime | The time of the start of collection of the data in the ping | See [note](#a-note-about-time-formats) |
-| `end_time` | Datetime | The time of the end of collection of the data in the ping. This is also the time this ping was generated and is likely well before ping transmission time | See [note](#a-note-about-time-formats) |
+| `start_time` | Datetime | The time of the start of collection of the data in the ping, in local time and with minute precision. | See [note](#a-note-about-time-formats) |
+| `end_time` | Datetime | The time of the end of collection of the data in the ping, in local time and with minute precision. This is also the time this ping was generated and is likely well before ping transmission time | See [note](#a-note-about-time-formats) |
 | `profile_age` | Datetime | TBD |
 
 All the metrics surviving application restarts (e.g. `client_id`, `seq`, ...) are removed once the
