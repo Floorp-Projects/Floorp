@@ -10,6 +10,7 @@ private object Versions {
     const val rxKotlin = "2.3.0"
     const val anko = "0.10.8"
     const val sentry = "1.7.10"
+    const val leakcanary = "1.6.3"
 
     const val androidx_appcompat = "1.1.0-alpha02"
     const val androidx_constraint_layout = "2.0.0-alpha2"
@@ -90,6 +91,8 @@ object Deps {
     const val mozilla_support_ktx = "org.mozilla.components:support-ktx:${Versions.mozilla_android_components}"
 
     const val sentry = "io.sentry:sentry-android:${Versions.sentry}"
+    const val leakcanary = "com.squareup.leakcanary:leakcanary-android:${Versions.leakcanary}"
+    const val leakcanary_noop = "com.squareup.leakcanary:leakcanary-android-no-op:${Versions.leakcanary}"
 
     const val junit = "junit:junit:${Versions.junit}"
     const val tools_test_runner = "com.android.support.test:runner:${Versions.test_tools}"

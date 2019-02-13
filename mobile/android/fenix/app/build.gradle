@@ -145,6 +145,8 @@ dependencies {
     implementation Deps.mozilla_ui_icons
 
     implementation Deps.mozilla_lib_crash
+    debugImplementation Deps.leakcanary
+    releaseImplementation Deps.leakcanary_noop
 
     testImplementation Deps.junit
     androidTestImplementation Deps.tools_test_runner

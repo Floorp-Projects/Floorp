@@ -4,8 +4,10 @@
 
 package org.mozilla.fenix
 
+import android.annotation.SuppressLint
 import android.app.Application
 import android.content.Context
+import com.squareup.leakcanary.LeakCanary
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -19,7 +21,8 @@ import mozilla.components.support.base.log.sink.AndroidLogSink
 import org.mozilla.fenix.components.Components
 import java.io.File
 
-class FenixApplication : Application() {
+@SuppressLint("Registered")
+open class FenixApplication : Application() {
     lateinit var fretboard: Fretboard
 
     val components by lazy { Components(this) }
@@ -28,9 +31,21 @@ class FenixApplication : Application() {
         super.onCreate()
         Log.addSink(AndroidLogSink())
 
+        if (LeakCanary.isInAnalyzerProcess(this)) {
+            return // don't perform extra init in analyzer
+        }
+        setupLeakCanary()
         setupCrashReporting()
         setupGlean(this)
         loadExperiments()
+    }
+
+    protected open fun setupLeakCanary() {
+        // no-op, LeakCanary is disabled by default
+    }
+
+    open fun toggleLeakCanary(newValue: Boolean) {
+        // no-op, LeakCanary is disabled by default
     }
 
     private fun setupGlean(context: Context) {

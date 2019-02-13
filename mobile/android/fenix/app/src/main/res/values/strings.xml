@@ -105,6 +105,8 @@
     <string name="preferences_language">Language</string>
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">Data choices</string>
+    <!-- Preference for developers -->
+    <string name="preference_leakcanary">Leak Canary</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->

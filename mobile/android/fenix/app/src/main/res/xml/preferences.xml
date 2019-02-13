@@ -64,6 +64,10 @@
             android:icon="@drawable/ic_data_collection"
             android:key="@string/pref_key_data_choices"
             android:title="@string/preferences_data_choices" />
+        <androidx.preference.SwitchPreference
+            android:icon="@drawable/ic_about"
+            android:key="@string/pref_key_leakcanary"
+            android:title="@string/preference_leakcanary" />
     </androidx.preference.PreferenceCategory>
 
     <androidx.preference.PreferenceCategory

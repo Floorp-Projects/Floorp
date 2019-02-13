@@ -68,8 +68,8 @@ class ActionBusFactory private constructor(val owner: LifecycleOwner) {
 
     internal val observer = object : LifecycleObserver {
 
-        @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
-        fun onDestroy() {
+        @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
+        fun onStop() {
             map.forEach { entry -> entry.value.onComplete() }
             buses.remove(owner)
         }
@@ -113,8 +113,7 @@ class ActionBusFactory private constructor(val owner: LifecycleOwner) {
     }
 
     /**
-     * getDestroyObservable observes to Lifecycle owner and fires when
-     * lifecycle.currentState == Lifecycle.State.DESTROYED
+     * getDestroyObservable observes to Lifecycle owner and fires during ON_STOP
      */
     fun getDestroyObservable(): Observable<Unit> {
         return owner.createDestroyObservable()
@@ -141,8 +140,6 @@ inline fun <reified T : Action> LifecycleOwner.getManagedEmitter(): Observer<T> 
 
 /**
  * This method returns a destroy observable that can be passed to [org.mozilla.fenix.mvi.UIView]s as needed.
- * This is deliberately scoped to the attached [LifecycleOwner]'s [Lifecycle.Event.ON_DESTROY]
- * because a viewholder can be reused across adapter destroys.
  */
 inline fun LifecycleOwner?.createDestroyObservable(): Observable<Unit> {
     return Observable.create { emitter ->
@@ -152,7 +149,7 @@ inline fun LifecycleOwner?.createDestroyObservable(): Observable<Unit> {
             return@create
         }
         this.lifecycle.addObserver(object : LifecycleObserver {
-            @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
+            @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
             fun emitDestroy() {
                 if (emitter.isDisposed) {
                     emitter.onNext(kotlin.Unit)

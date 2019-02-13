@@ -13,8 +13,11 @@ import androidx.navigation.Navigation
 import androidx.preference.Preference
 import androidx.preference.Preference.OnPreferenceClickListener
 import androidx.preference.PreferenceFragmentCompat
+import org.mozilla.fenix.BuildConfig
+import org.mozilla.fenix.FenixApplication
 import org.mozilla.fenix.R
 import org.mozilla.fenix.R.string.pref_key_about
+import org.mozilla.fenix.R.string.pref_key_leakcanary
 import org.mozilla.fenix.R.string.pref_key_make_default_browser
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.requireComponents
@@ -39,13 +42,24 @@ class SettingsFragment : PreferenceFragmentCompat() {
     private fun setupPreferences() {
         val makeDefaultBrowserKey = context?.getPreferenceKey(pref_key_make_default_browser)
         val aboutKey = context?.getPreferenceKey(pref_key_about)
+        val leakKey = context?.getPreferenceKey(pref_key_leakcanary)
 
         val preferenceMakeDefaultBrowser = findPreference<Preference>(makeDefaultBrowserKey)
         val preferenceAbout = findPreference<Preference>(aboutKey)
+        val preferenceLeakCanary = findPreference<Preference>(leakKey)
 
         preferenceMakeDefaultBrowser.onPreferenceClickListener =
             getClickListenerForMakeDefaultBrowser()
         preferenceAbout.onPreferenceClickListener = getAboutPageListener()
+
+        preferenceLeakCanary.isVisible = BuildConfig.DEBUG
+        if (BuildConfig.DEBUG) {
+            preferenceLeakCanary.onPreferenceChangeListener =
+                Preference.OnPreferenceChangeListener { _, newValue ->
+                    (context?.applicationContext as FenixApplication).toggleLeakCanary(newValue as Boolean)
+                    true
+                }
+        }
     }
 
     private val defaultClickListener = OnPreferenceClickListener { preference ->
