@@ -217,11 +217,13 @@
   MACRO(InterpretGeneratorResume, InterpretGeneratorResume,                    \
         "InterpretGeneratorResume")                                            \
   MACRO(InvalidDate, InvalidDate, "Invalid Date")                              \
+  MACRO(isBreakpoint, isBreakpoint, "isBreakpoint")                            \
   MACRO(isEntryPoint, isEntryPoint, "isEntryPoint")                            \
   MACRO(isExtensible, isExtensible, "isExtensible")                            \
   MACRO(isFinite, isFinite, "isFinite")                                        \
   MACRO(isNaN, isNaN, "isNaN")                                                 \
   MACRO(isPrototypeOf, isPrototypeOf, "isPrototypeOf")                         \
+  MACRO(isStepStart, isStepStart, "isStepStart")                               \
   MACRO(IterableToList, IterableToList, "IterableToList")                      \
   MACRO(iterate, iterate, "iterate")                                           \
   MACRO(join, join, "join")                                                    \
@@ -241,16 +243,22 @@
   MACRO(ltr, ltr, "ltr")                                                       \
   MACRO(MapConstructorInit, MapConstructorInit, "MapConstructorInit")          \
   MACRO(MapIterator, MapIterator, "Map Iterator")                              \
+  MACRO(maxColumn, maxColumn, "maxColumn")                                     \
   MACRO(maximumFractionDigits, maximumFractionDigits, "maximumFractionDigits") \
   MACRO(maximumSignificantDigits, maximumSignificantDigits,                    \
         "maximumSignificantDigits")                                            \
+  MACRO(maxLine, maxLine, "maxLine")                                           \
+  MACRO(maxOffset, maxOffset, "maxOffset")                                     \
   MACRO(message, message, "message")                                           \
   MACRO(meta, meta, "meta")                                                    \
+  MACRO(minColumn, minColumn, "minColumn")                                     \
   MACRO(minDays, minDays, "minDays")                                           \
   MACRO(minimumFractionDigits, minimumFractionDigits, "minimumFractionDigits") \
   MACRO(minimumIntegerDigits, minimumIntegerDigits, "minimumIntegerDigits")    \
   MACRO(minimumSignificantDigits, minimumSignificantDigits,                    \
         "minimumSignificantDigits")                                            \
+  MACRO(minLine, minLine, "minLine")                                           \
+  MACRO(minOffset, minOffset, "minOffset")                                     \
   MACRO(minusSign, minusSign, "minusSign")                                     \
   MACRO(minute, minute, "minute")                                              \
   MACRO(missingArguments, missingArguments, "missingArguments")                \

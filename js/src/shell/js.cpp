@@ -2969,6 +2969,8 @@ static MOZ_MUST_USE bool SrcNotes(JSContext* cx, HandleScript script,
       case SRC_BREAK2LABEL:
       case SRC_SWITCHBREAK:
       case SRC_ASSIGNOP:
+      case SRC_BREAKPOINT:
+      case SRC_STEP_SEP:
       case SRC_XDELTA:
         break;
 
