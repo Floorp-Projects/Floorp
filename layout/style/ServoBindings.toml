@@ -424,6 +424,8 @@ cbindgen-types = [
     { gecko = "StyleMaxSize", servo = "values::computed::MaxSize" },
     { gecko = "StyleFlexBasis", servo = "values::computed::FlexBasis" },
     { gecko = "StylePosition", servo = "values::computed::Position" },
+    { gecko = "StyleBackgroundSize", servo = "values::computed::BackgroundSize" },
+    { gecko = "StyleGenericBackgroundSize", servo = "values::generics::background::BackgroundSize" },
 ]
 
 mapped-generic-types = [

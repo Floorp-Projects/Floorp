@@ -224,6 +224,12 @@ inline StyleExtremumLength StyleMaxSize::AsExtremumLength() const {
   return extremum_length._0;
 }
 
+template <>
+inline bool StyleBackgroundSize::IsInitialValue() const {
+  return IsExplicitSize() && explicit_size.width.IsAuto() &&
+         explicit_size.height.IsAuto();
+}
+
 template <typename T>
 const T& StyleRect<T>::Get(mozilla::Side aSide) const {
   static_assert(sizeof(StyleRect<T>) == sizeof(T) * 4, "");
