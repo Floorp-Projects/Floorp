@@ -387,8 +387,8 @@ class ImageContainer final : public SupportsWeakPtr<ImageContainer> {
    */
   explicit ImageContainer(const CompositableHandle& aHandle);
 
-  typedef uint32_t FrameID;
-  typedef uint32_t ProducerID;
+  typedef ContainerFrameID FrameID;
+  typedef ContainerProducerID ProducerID;
 
   RefPtr<PlanarYCbCrImage> CreatePlanarYCbCrImage();
 

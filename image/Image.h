@@ -271,6 +271,10 @@ class ImageResource : public Image {
   explicit ImageResource(nsIURI* aURI);
   ~ImageResource();
 
+  layers::ContainerProducerID GetImageProducerId() const {
+    return mImageProducerID;
+  }
+
   bool GetSpecTruncatedTo1k(nsCString& aSpec) const;
 
   // Shared functionality for implementors of imgIContainer. Every

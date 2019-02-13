@@ -13,6 +13,7 @@
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "mozilla/layers/AnimationInfo.h"
 #include "nsIFrame.h"
+#include "ImageTypes.h"
 
 class nsDisplayItemGeometry;
 
@@ -57,8 +58,8 @@ class WebRenderUserData {
 
   static bool SupportsAsyncUpdate(nsIFrame* aFrame);
 
-  static bool ProcessInvalidateForImage(nsIFrame* aFrame,
-                                        DisplayItemType aType);
+  static bool ProcessInvalidateForImage(nsIFrame* aFrame, DisplayItemType aType,
+                                        ContainerProducerID aProducerId);
 
   NS_INLINE_DECL_REFCOUNTING(WebRenderUserData)
 
@@ -151,7 +152,7 @@ class WebRenderImageData : public WebRenderUserData {
 
   bool IsAsync() { return mPipelineId.isSome(); }
 
-  bool UsingSharedSurface() const;
+  bool UsingSharedSurface(ContainerProducerID aProducerId) const;
 
   void ClearImageKey();
 
