@@ -317,7 +317,7 @@ struct SwipeEventQueue {
 nsChildView::nsChildView()
     : nsBaseWidget(),
       mView(nullptr),
-      mParentView(nullptr),
+      mParentView(nil),
       mParentWidget(nullptr),
       mViewTearDownLock("ChildViewTearDown"),
       mEffectsLock("WidgetEffects"),
@@ -400,20 +400,19 @@ nsresult nsChildView::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
 
   BaseCreate(aParent, aInitData);
 
-  // inherit things from the parent view and create our parallel
-  // NSView in the Cocoa display system
   mParentView = nil;
   if (aParent) {
-    // inherit the top-level window. NS_NATIVE_WIDGET is always a NSView
-    // regardless of if we're asking a window or a view (for compatibility
-    // with windows).
-    mParentView = (NSView<mozView>*)aParent->GetNativeData(NS_NATIVE_WIDGET);
+    // This is the popup window case. aParent is the nsCocoaWindow for the
+    // popup window, and mParentView will be its content view.
+    mParentView = (NSView*)aParent->GetNativeData(NS_NATIVE_WIDGET);
     mParentWidget = aParent;
   } else {
-    // This is the normal case. When we're the root widget of the view hiararchy,
+    // This is the top-level window case.
     // aNativeParent will be the contentView of our window, since that's what
     // nsCocoaWindow returns when asked for an NS_NATIVE_VIEW.
-    mParentView = reinterpret_cast<NSView<mozView>*>(aNativeParent);
+    // We do not have a direct "parent widget" association with the top level
+    // window's nsCocoaWindow object.
+    mParentView = reinterpret_cast<NSView*>(aNativeParent);
   }
 
   // create our parallel NSView and hook it up to our parent. Recall
