@@ -223,6 +223,7 @@ static inline PackedTypeCode PackTypeCode(TypeCode tc, uint32_t refTypeIndex) {
   MOZ_ASSERT(uint32_t(tc) <= 0xFF);
   MOZ_ASSERT_IF(tc != TypeCode::Ref, refTypeIndex == NoRefTypeIndex);
   MOZ_ASSERT_IF(tc == TypeCode::Ref, refTypeIndex <= MaxTypes);
+  static_assert(MaxTypes < (1 << (32 - 8)), "enough bits");
   return PackedTypeCode((refTypeIndex << 8) | uint32_t(tc));
 }
 

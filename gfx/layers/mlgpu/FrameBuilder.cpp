@@ -320,6 +320,10 @@ void FrameBuilder::RetainTemporaryLayer(LayerMLGPU* aLayer) {
   mTemporaryLayers.push_back(aLayer->GetLayer());
 }
 
+MLGRenderTarget* FrameBuilder::GetWidgetRT() {
+  return mWidgetRenderView->GetRenderTarget();
+}
+
 LayerConstants* FrameBuilder::AllocateLayerInfo(ItemInfo& aItem) {
   if (((mCurrentLayerBuffer.Length() + 1) * sizeof(LayerConstants)) >
       mDevice->GetMaxConstantBufferBindSize()) {

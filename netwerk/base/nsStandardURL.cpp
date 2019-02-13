@@ -69,7 +69,12 @@ constexpr bool TestForInvalidHostCharacters(char c) {
   return (c > 0 && c < 32) ||  // The control characters are [1, 31]
          c == ' ' || c == '#' || c == '/' || c == ':' || c == '?' || c == '@' ||
          c == '[' || c == '\\' || c == ']' || c == '*' || c == '<' ||
+#if defined(MOZ_THUNDERBIRD) || defined(MOZ_SUITE)
+         // Mailnews %-escapes file paths into URLs.
+         c == '>' || c == '|' || c == '"';
+#else
          c == '>' || c == '|' || c == '"' || c == '%';
+#endif
 }
 constexpr ASCIIMaskArray sInvalidHostChars =
     CreateASCIIMask(TestForInvalidHostCharacters);

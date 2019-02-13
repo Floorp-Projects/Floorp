@@ -47,10 +47,14 @@ class TestCapabilities(MarionetteTestCase):
             import re
             device = self.marionette.instance.runner.device.app_ctx.device
             root = posixpath.sep.join(profile.split(posixpath.sep)[0:2])
-            ls_out = device.shell_output("ls -l %s" % root)
-            match = re.match(r'.*->\s(.*)', ls_out)
-            if match:
-                new_root = match.group(1)
+            new_root = root
+            match = True
+            while match:
+                ls_out = device.shell_output("ls -l %s" % new_root)
+                match = re.match(r'.*->\s(.*)', ls_out)
+                if match:
+                    new_root = match.group(1)
+            if new_root != root:
                 profile = profile.replace(root, new_root)
         return profile
 

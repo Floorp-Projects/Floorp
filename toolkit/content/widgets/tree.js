@@ -210,9 +210,9 @@
     }
 
     buildPopup(aPopup) {
-      // We no longer cache the picker content, remove the old content.
-      while (aPopup.childNodes.length > 2)
-        aPopup.firstChild.remove();
+      // We no longer cache the picker content, remove the old content related to
+      // the cols - menuitem and separator should stay.
+      aPopup.querySelectorAll("[colindex]").forEach((e) => { e.remove(); });
 
       var refChild = aPopup.firstChild;
 
@@ -237,11 +237,7 @@
       }
 
       var hidden = !tree.enableColumnDrag;
-      const anonids = ["menuseparator", "menuitem"];
-      for (var i = 0; i < anonids.length; i++) {
-        var element = this.querySelector(`[anonid=\"${anonids[i]}\"]`);
-        element.hidden = hidden;
-      }
+      aPopup.querySelectorAll(":not([colindex])").forEach((e) => { e.hidden = hidden; });
     }
   }
 

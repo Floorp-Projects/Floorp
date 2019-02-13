@@ -146,7 +146,8 @@ void CreatePermissionKey(const nsCString& aTrackingOrigin,
   static const nsLiteralCString prefix =
       NS_LITERAL_CSTRING(ANTITRACKING_PERM_KEY "^");
 
-  aPermissionKey.SetCapacity(prefix.Length() + 1 + aTrackingOrigin.Length());
+  aPermissionKey.SetCapacity(prefix.Length() + 1 + aTrackingOrigin.Length() +
+                             aGrantedOrigin.Length());
   aPermissionKey.Append(prefix);
   aPermissionKey.Append(aTrackingOrigin);
   aPermissionKey.AppendLiteral("^");

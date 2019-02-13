@@ -592,6 +592,13 @@ JOB_DETAILS = {
     'win64-debug': (WinArtifactJob, (r'public/build/firefox-(.*)\.win64\.(zip|tar\.gz)|public/build/target\.(zip|tar\.gz)',
                                      r'public/build/firefox-(.*)\.common\.tests\.(zip|tar\.gz)|'
                                      r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
+    'win64-aarch64-opt': (WinArtifactJob, (r'public/build/firefox-(.*)\.win64\.(zip|tar\.gz)|'
+                                           r'public/build/target\.(zip|tar\.gz)',
+                                           r'public/build/firefox-(.*)\.common\.tests\.(zip|tar\.gz)|'
+                                           r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
+    'win64-aarch64-debug': (WinArtifactJob, (r'public/build/firefox-(.*)\.win64\.(zip|tar\.gz)|public/build/target\.(zip|tar\.gz)',
+                                             r'public/build/firefox-(.*)\.common\.tests\.(zip|tar\.gz)|'
+                                             r'public/build/target\.common\.tests\.(zip|tar\.gz)')),
 }
 
 
@@ -1023,6 +1030,8 @@ class Artifacts(object):
         if self._defines.get('XP_LINUX', False):
             return ('linux64' if target_64bit else 'linux') + target_suffix
         if self._defines.get('XP_WIN', False):
+            if self._substs['target_cpu'] == 'aarch64':
+                return 'win64-aarch64' + target_suffix
             return ('win64' if target_64bit else 'win32') + target_suffix
         if self._defines.get('XP_MACOSX', False):
             # We only produce unified builds in automation, so the target_cpu
