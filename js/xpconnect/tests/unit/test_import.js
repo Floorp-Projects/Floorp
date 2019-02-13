@@ -75,10 +75,10 @@ function run_test() {
 
   // Call getInterfaces to test line numbers in JS components.  But as long as
   // we're doing that, why not test what it returns too?
-  // Kind of odd that this is not returning an array containing the
-  // number... Or for that matter not returning an array containing an object?
-  var interfaces = foo.getInterfaces({});
-  Assert.equal(interfaces, Ci.nsIClassInfo.number);
+  var interfaces = foo.interfaces;
+  Assert.ok(Array.isArray(interfaces));
+  Assert.equal(interfaces.length, 1);
+  Assert.ok(interfaces[0].equals(Ci.nsIClassInfo))
 
   // try to create another component which doesn't directly implement QI
   Assert.ok((contractID + "2") in Cc);

@@ -59,11 +59,7 @@ BlobComponent.prototype =
   // nsIClassInfo
   flags: 0,
 
-  getInterfaces: function getInterfaces(aCount) {
-    var interfaces = [Ci.nsIClassInfo];
-    aCount.value = interfaces.length;
-    return interfaces;
-  },
+  interfaces: [Ci.nsIClassInfo],
 
   getScriptableHelper: function getScriptableHelper() {
     return null;
