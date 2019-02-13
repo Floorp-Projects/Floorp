@@ -16,6 +16,7 @@ IPDL_SOURCES += [
 
 EXPORTS.mozilla += [
     'GpuDecoderModule.h',
+    'IRemoteDecoderChild.h',
     'RDDChild.h',
     'RDDParent.h',
     'RDDProcessHost.h',
@@ -25,8 +26,12 @@ EXPORTS.mozilla += [
     'RemoteDecoderManagerParent.h',
     'RemoteDecoderModule.h',
     'RemoteMediaDataDecoder.h',
+    'RemoteVideoDecoderChild.h',
+    'RemoteVideoDecoderParent.h',
+    'VideoDecoderChild.h',
     'VideoDecoderManagerChild.h',
     'VideoDecoderManagerParent.h',
+    'VideoDecoderParent.h',
 ]
 
 EXPORTS.mozilla.dom += [

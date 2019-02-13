@@ -20,23 +20,24 @@ namespace mozilla {
 
 class RemoteDecoderManagerChild;
 using mozilla::MediaDataDecoder;
+using mozilla::ipc::IPCResult;
 
 class RemoteVideoDecoderChild final : public PRemoteVideoDecoderChild,
                                       public IRemoteDecoderChild {
+  friend class PRemoteVideoDecoderChild;
+
  public:
   explicit RemoteVideoDecoderChild();
 
   // PRemoteVideoDecoderChild
-  mozilla::ipc::IPCResult RecvVideoOutput(
-      const RemoteVideoDataIPDL& aData) override;
-  mozilla::ipc::IPCResult RecvInputExhausted() override;
-  mozilla::ipc::IPCResult RecvDrainComplete() override;
-  mozilla::ipc::IPCResult RecvError(const nsresult& aError) override;
-  mozilla::ipc::IPCResult RecvInitComplete(
-      const nsCString& aDecoderDescription,
-      const ConversionRequired& aConversion) override;
-  mozilla::ipc::IPCResult RecvInitFailed(const nsresult& aReason) override;
-  mozilla::ipc::IPCResult RecvFlushComplete() override;
+  IPCResult RecvVideoOutput(const RemoteVideoDataIPDL& aData);
+  IPCResult RecvInputExhausted();
+  IPCResult RecvDrainComplete();
+  IPCResult RecvError(const nsresult& aError);
+  IPCResult RecvInitComplete(const nsCString& aDecoderDescription,
+                             const ConversionRequired& aConversion);
+  IPCResult RecvInitFailed(const nsresult& aReason);
+  IPCResult RecvFlushComplete();
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
