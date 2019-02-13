@@ -3146,6 +3146,8 @@ nsIContent* nsFocusManager::GetNextTabbableContentInAncestorScopes(
     int32_t tabIndex = 0;
     if (IsHostOrSlot(startContent)) {
       tabIndex = HostOrSlotTabIndexValue(startContent);
+    } else if (nsIFrame* frame = startContent->GetPrimaryFrame()) {
+      frame->IsFocusable(&tabIndex);
     } else {
       startContent->IsFocusable(&tabIndex);
     }
