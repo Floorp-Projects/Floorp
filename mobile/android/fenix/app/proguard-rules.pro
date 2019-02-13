@@ -1,21 +1,37 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
+-dontobfuscate
+
+####################################################################################################
+# Sentry
+####################################################################################################
+
+# Recommended config via https://docs.sentry.io/clients/java/modules/android/#manual-integration
+# Since we don't obfuscate, we don't need to use their Gradle plugin to upload ProGuard mappings.
+-keepattributes LineNumberTable,SourceFile
+-dontwarn org.slf4j.**
+-dontwarn javax.**
+
+# Our addition: this class is saved to disk via Serializable, which ProGuard doesn't like.
+# If we exclude this, upload silently fails (Sentry swallows a NPE so we don't crash).
+# I filed https://github.com/getsentry/sentry-java/issues/572
 #
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
+# If Sentry ever mysteriously stops working after we upgrade it, this could be why.
+-keep class io.sentry.event.Event { *; }
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+####################################################################################################
+# Android and GeckoView built-ins
+####################################################################################################
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+-dontwarn android.**
+-dontwarn androidx.**
+-dontwarn com.google.**
+-dontwarn org.mozilla.geckoview.**
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+####################################################################################################
+# Kotlinx
+####################################################################################################
+
+-keepnames class kotlinx.coroutines.internal.MainDispatcherFactory {}
+-keepnames class kotlinx.coroutines.CoroutineExceptionHandler {}
+-keepclassmembernames class kotlinx.** {
+    volatile <fields>;
+}
