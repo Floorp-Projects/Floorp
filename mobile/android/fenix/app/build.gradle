@@ -30,8 +30,8 @@ android {
     }
 
     flavorDimensions "abi"
+
     productFlavors {
-        // replace the libraries with 64-bit versions when they're ready
         // Processor architectures
         arm {
             dimension "abi"
@@ -43,6 +43,12 @@ android {
             dimension "abi"
             ndk {
                 abiFilter "x86"
+            }
+        }
+        aarch64 {
+            dimension "abi"
+            ndk {
+                abiFilter "arm64-v8a"
             }
         }
     }
@@ -143,6 +149,8 @@ dependencies {
 
     armImplementation Deps.geckoview_nightly_arm
     x86Implementation Deps.geckoview_nightly_x86
+    aarch64Implementation Deps.geckoview_nightly_aarch64
+
     implementation Deps.androidx_legacy
     implementation Deps.androidx_preference
     implementation Deps.androidx_fragment

@@ -91,6 +91,7 @@ tasks:
                 --output /opt/fenix/app/build/outputs/apk \
                 --apk arm/release/app-arm-release-unsigned.apk \
                 --apk x86/release/app-x86-release-unsigned.apk \
+                --apk aarch64/release/app-aarch64-release-unsigned.apk
                 --date ${now}
           artifacts:
             public/task-graph.json:
