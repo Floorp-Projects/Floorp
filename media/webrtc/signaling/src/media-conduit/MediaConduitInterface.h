@@ -238,7 +238,7 @@ class MediaSessionConduit {
                                     double* bitrateMean, double* bitrateStdDev,
                                     uint32_t* discardedPackets,
                                     uint32_t* framesDecoded) = 0;
-  virtual bool GetRTPStats(unsigned int* jitterMs,
+  virtual bool GetRTPReceiverStats(unsigned int* jitterMs,
                            unsigned int* cumulativeLost) = 0;
   virtual bool GetRTCPReceiverReport(uint32_t* jitterMs,
                                      uint32_t* packetsReceived,
