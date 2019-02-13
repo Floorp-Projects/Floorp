@@ -69,7 +69,7 @@ async function getResponseResult(browser, resultUrl) {
 }
 
 async function waitForAuthPrompt() {
-  let promptDoc = await TestUtils.waitForCondition(() => {
+  let promptDoc = await BrowserTestUtils.waitForCondition(() => {
     return getAuthPrompt();
   });
   info("Got prompt: " + promptDoc);
@@ -136,8 +136,7 @@ add_task(async function test_normal_popup_notification_1() {
     let notif = getCaptureDoorhanger("password-save", PopupNotifications, browser);
     ok(notif, "got notification popup");
     if (notif) {
-      await TestUtils.waitForCondition(() => !notif.dismissed,
-                                       "notification should not be dismissed");
+      ok(!notif.wasDismissed, "notification should not be dismissed");
       notif.remove();
     }
   });
@@ -166,8 +165,7 @@ add_task(async function test_private_popup_notification_2() {
     let notif = getCaptureDoorhanger("password-save", PopupNotifications, browser);
     ok(notif, "Expected notification popup");
     if (notif) {
-      await TestUtils.waitForCondition(() => notif.dismissed,
-                                       "notification should be dismissed");
+      ok(notif.wasDismissed, "notification should be dismissed");
       notif.remove();
     }
   });
@@ -298,8 +296,7 @@ add_task(async function test_normal_new_password_4() {
     let notif = getCaptureDoorhanger("password-change", PopupNotifications, browser);
     ok(notif, "got notification popup");
     if (notif) {
-      await TestUtils.waitForCondition(() => !notif.dismissed,
-                                       "notification should not be dismissed");
+      ok(!notif.wasDismissed, "notification should not be dismissed");
       notif.remove();
     }
   });
@@ -335,8 +332,7 @@ add_task(async function test_private_new_password_5() {
     let notif = getCaptureDoorhanger("password-change", PopupNotifications, browser);
     ok(notif, "Expected notification popup");
     if (notif) {
-      await TestUtils.waitForCondition(() => !notif.dismissed,
-                                       "notification should not be dismissed");
+      ok(!notif.wasDismissed, "notification should not be dismissed");
       notif.remove();
     }
   });
@@ -363,8 +359,7 @@ add_task(async function test_normal_with_login_6() {
     let notif = getCaptureDoorhanger("password-change", PopupNotifications, browser);
     ok(notif, "got notification popup");
     if (notif) {
-      await TestUtils.waitForCondition(() => !notif.dismissed,
-                                       "notification should not be dismissed");
+      ok(!notif.wasDismissed, "notification should not be dismissed");
       notif.remove();
     }
     Services.logins.removeLogin(login);
@@ -500,8 +495,7 @@ add_task(async function test_normal_http_basic_auth() {
     let notif = getCaptureDoorhanger("password-save", PopupNotifications, browser);
     ok(notif, "got notification popup");
     if (notif) {
-      await TestUtils.waitForCondition(() => !notif.dismissed,
-                                       "notification should not be dismissed");
+      ok(!notif.wasDismissed, "notification should not be dismissed");
       notif.remove();
     }
   });
@@ -527,8 +521,7 @@ add_task(async function test_private_http_basic_auth() {
     let notif = getCaptureDoorhanger("password-save", PopupNotifications, browser);
     ok(notif, "got notification popup");
     if (notif) {
-      await TestUtils.waitForCondition(() => notif.dismissed,
-                                       "notification should be dismissed");
+      ok(notif.wasDismissed, "notification should be dismissed");
       notif.remove();
     }
   });
