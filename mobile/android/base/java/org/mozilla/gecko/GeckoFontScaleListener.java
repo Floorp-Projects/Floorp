@@ -5,16 +5,17 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.preferences.GeckoPreferences;
+
+import android.annotation.SuppressLint;
 import android.content.ContentResolver;
 import android.content.Context;
-import android.database.ContentObserver;
 import android.content.SharedPreferences;
+import android.database.ContentObserver;
 import android.net.Uri;
 import android.provider.Settings;
 import android.support.annotation.UiThread;
 import android.util.Log;
-
-import org.mozilla.gecko.preferences.GeckoPreferences;
 
 class GeckoFontScaleListener
         extends ContentObserver
@@ -27,6 +28,8 @@ class GeckoFontScaleListener
     private static final int FONT_INFLATION_ON_DEFAULT_VALUE = 120;
     private static final float DEFAULT_FONT_SCALE = 1.0f;
 
+    // We're referencing the *application* context, so this is in fact okay.
+    @SuppressLint("StaticFieldLeak")
     private static final GeckoFontScaleListener listenerInstance = new GeckoFontScaleListener();
 
     private Context applicationContext;
