@@ -785,7 +785,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
    *          rejected with an error packet.
    */
   _handleResumeLimit: async function(request) {
-    const steppingType = request.resumeLimit.type;
+    let steppingType = request.resumeLimit.type;
     const rewinding = request.rewind;
     if (!["break", "step", "next", "finish", "warp"].includes(steppingType)) {
       return Promise.reject({
@@ -797,6 +797,12 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     if (steppingType == "warp") {
       // Time warp resume limits are handled by the caller.
       return true;
+    }
+
+    // If we are stepping out of the onPop handler, we want to use "next" mode
+    // so that the parent frame's handlers behave consistently.
+    if (steppingType === "finish" && this.youngestFrame.reportedPop) {
+      steppingType = "next";
     }
 
     const generatedLocation = this.sources.getFrameLocation(this.youngestFrame);
