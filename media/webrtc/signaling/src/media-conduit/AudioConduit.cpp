@@ -179,7 +179,13 @@ bool WebrtcAudioConduit::GetRTPStats(unsigned int* jitterMs,
   ASSERT_ON_THREAD(mStsThread);
   *jitterMs = 0;
   *cumulativeLost = 0;
-  return !mSendChannelProxy->GetRTPStatistics(*jitterMs, *cumulativeLost);
+  if (!mRecvStream) {
+    return false;
+  }
+  auto stats = mRecvStream->GetStats();
+  *jitterMs = stats.jitter_ms;
+  *cumulativeLost = stats.packets_lost;
+  return true;
 }
 
 bool WebrtcAudioConduit::GetRTCPReceiverReport(uint32_t* jitterMs,
