@@ -14,3 +14,4 @@ the following fields:
 | `device_model` | String | The model name of the device |
 | `architecture` | String | The architecture of the device (e.g. "arm", "x86") |
 | `locale` | String | The locale of the application |
+| `first_run_date` | Datetime | The date of the first run of the application |
