@@ -53,6 +53,9 @@ permalink: /changelog/
 
   * Added `String.toUri()` as a shorthand for `Uri.parse()` and in addition to other `to*()` methods already available in the Kotlin Standard Library.
 
+* **browser-session**, **feature-session-bundling**
+  * `SessionStorage` and `SessionBundleStorage` now save and restore the title of `Session` objects.
+
 # 0.42.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.41.0...v0.42.0)

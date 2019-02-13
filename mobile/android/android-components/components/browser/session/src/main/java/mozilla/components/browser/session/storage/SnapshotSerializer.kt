@@ -67,12 +67,14 @@ class SnapshotSerializer {
 }
 
 @Throws(JSONException::class)
-private fun serializeSession(session: Session): JSONObject {
+@VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+internal fun serializeSession(session: Session): JSONObject {
     return JSONObject().apply {
         put(Keys.SESSION_URL_KEY, session.url)
         put(Keys.SESSION_SOURCE_KEY, session.source.name)
         put(Keys.SESSION_UUID_KEY, session.id)
         put(Keys.SESSION_PARENT_UUID_KEY, session.parentId ?: "")
+        put(Keys.SESSION_TITLE, session.title)
     }
 }
 
@@ -92,6 +94,7 @@ internal fun deserializeSession(json: JSONObject): Session {
         json.getString(Keys.SESSION_UUID_KEY)
     )
     session.parentId = json.getString(Keys.SESSION_PARENT_UUID_KEY).takeIf { it != "" }
+    session.title = if (json.has(Keys.SESSION_TITLE)) json.getString(Keys.SESSION_TITLE) else ""
     return session
 }
 
@@ -103,6 +106,7 @@ private object Keys {
     const val SESSION_URL_KEY = "url"
     const val SESSION_UUID_KEY = "uuid"
     const val SESSION_PARENT_UUID_KEY = "parentUuid"
+    const val SESSION_TITLE = "title"
 
     const val SESSION_KEY = "session"
     const val ENGINE_SESSION_KEY = "engineSession"
