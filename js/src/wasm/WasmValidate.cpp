@@ -2317,33 +2317,44 @@ static bool DecodeElemSection(Decoder& d, ModuleEnvironment* env) {
     // required Ref.Func and End here.
 
     for (uint32_t i = 0; i < numElems; i++) {
+      bool needIndex = true;
+
       if (initializerKind == InitializerKind::Passive) {
         OpBytes op;
-        if (!d.readOp(&op) || op.b0 != uint8_t(Op::RefFunc)) {
-          return d.fail("failed to read ref.func operation");
+        if (!d.readOp(&op)) {
+          return d.fail("failed to read initializer operation");
+        }
+        switch (op.b0) {
+          case uint16_t(Op::RefFunc):
+            break;
+          case uint16_t(Op::RefNull):
+            needIndex = false;
+            break;
+          default:
+            return d.fail("failed to read initializer operation");
         }
       }
 
-      uint32_t funcIndex;
-      if (!d.readVarU32(&funcIndex)) {
-        return d.fail("failed to read element function index");
-      }
-
-      if (funcIndex >= env->numFuncs()) {
-        return d.fail("table element out of range");
-      }
-
+      uint32_t funcIndex = NullFuncIndex;
+      if (needIndex) {
+        if (!d.readVarU32(&funcIndex)) {
+          return d.fail("failed to read element function index");
+        }
+        if (funcIndex >= env->numFuncs()) {
+          return d.fail("table element out of range");
+        }
 #ifdef WASM_PRIVATE_REFTYPES
-      if (exportedTable &&
-          !FuncTypeIsJSCompatible(d, *env->funcTypes[funcIndex])) {
-        return false;
-      }
+        if (exportedTable &&
+            !FuncTypeIsJSCompatible(d, *env->funcTypes[funcIndex])) {
+          return false;
+        }
 #endif
+      }
 
       if (initializerKind == InitializerKind::Passive) {
         OpBytes end;
         if (!d.readOp(&end) || end.b0 != uint16_t(Op::End)) {
-          return d.fail("failed to read end of ref.func expression");
+          return d.fail("failed to read end of initializer expression");
         }
       }
 
