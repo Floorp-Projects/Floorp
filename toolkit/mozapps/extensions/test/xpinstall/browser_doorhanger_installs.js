@@ -375,9 +375,11 @@ async function test_incompatible() {
   let panel = await failPromise;
 
   let notification = panel.childNodes[0];
+  let brandBundle = Services.strings.createBundle("chrome://branding/locale/brand.properties");
+  let brandShortName = brandBundle.GetStringFromName("brandShortName");
+  let message = `XPI Test could not be installed because it is not compatible with ${brandShortName} ${Services.appinfo.version}.`;
   is(notification.getAttribute("label"),
-     "The add-on downloaded from this site could not be installed " +
-     "because it appears to be corrupt.",
+     message,
      "Should have seen the right message");
 
   Services.perms.remove(makeURI("http://example.com/"), "install");
