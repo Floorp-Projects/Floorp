@@ -125,9 +125,6 @@
             </radiogroup>
             </box>
           </row>
-          <label data-l10n-id="connection-proxy-noproxy" control="networkProxyNone"/>
-          <textbox id="networkProxyNone" preference="network.proxy.no_proxies_on" multiline="true" rows="2"/>
-          <label control="networkProxyNone" data-l10n-id="connection-proxy-noproxy-desc" />
         </rows>
       </grid>
       <radio value="2" data-l10n-id="connection-proxy-autotype" />
@@ -142,6 +139,9 @@
     </radiogroup>
   </groupbox>
   <separator class="thin"/>
+  <label data-l10n-id="connection-proxy-noproxy" control="networkProxyNone"/>
+  <textbox id="networkProxyNone" preference="network.proxy.no_proxies_on" multiline="true" rows="2"/>
+  <label control="networkProxyNone" data-l10n-id="connection-proxy-noproxy-desc" />
   <checkbox id="autologinProxy"
             data-l10n-id="connection-proxy-autologin"
             preference="signon.autologin.proxy" />
