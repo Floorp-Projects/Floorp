@@ -175,7 +175,7 @@ bool XPCConvert::NativeData2JS(MutableHandleValue d, const void* s,
       XPC_LOG_ERROR(("XPCConvert::NativeData2JS : void* params not supported"));
       return false;
 
-    case nsXPTType::T_IID: {
+    case nsXPTType::T_NSIDPTR: {
       nsID* iid2 = *static_cast<nsID* const*>(s);
       if (!iid2) {
         d.setNull();
@@ -184,6 +184,9 @@ bool XPCConvert::NativeData2JS(MutableHandleValue d, const void* s,
 
       return xpc::ID2JSValue(cx, *iid2, d);
     }
+
+    case nsXPTType::T_NSID:
+      return xpc::ID2JSValue(cx, *static_cast<const nsID*>(s), d);
 
     case nsXPTType::T_ASTRING: {
       const nsAString* p = static_cast<const nsAString*>(s);
@@ -542,9 +545,16 @@ bool XPCConvert::JSData2Native(JSContext* cx, void* d, HandleValue s,
       NS_ERROR("void* params not supported");
       return false;
 
-    case nsXPTType::T_IID:
+    case nsXPTType::T_NSIDPTR:
       if (Maybe<nsID> id = xpc::JSValue2ID(cx, s)) {
         *((const nsID**)d) = id.ref().Clone();
+        return true;
+      }
+      return false;
+
+    case nsXPTType::T_NSID:
+      if (Maybe<nsID> id = xpc::JSValue2ID(cx, s)) {
+        *((nsID*)d) = id.ref();
         return true;
       }
       return false;
@@ -1615,7 +1625,7 @@ void xpc::InnerCleanupValue(const nsXPTType& aType, void* aValue,
       break;
 
     // Pointer Types
-    case nsXPTType::T_IID:
+    case nsXPTType::T_NSIDPTR:
     case nsXPTType::T_CHAR_STR:
     case nsXPTType::T_WCHAR_STR:
     case nsXPTType::T_PSTRING_SIZE_IS:
@@ -1646,6 +1656,11 @@ void xpc::InnerCleanupValue(const nsXPTType& aType, void* aValue,
       array->Clear();
       break;
     }
+
+    // Clear nsID& parameters to `0`
+    case nsXPTType::T_NSID:
+      ((nsID*)aValue)->Clear();
+      break;
 
     // Clear the JS::Value to `undefined`
     case nsXPTType::T_JSVAL:
