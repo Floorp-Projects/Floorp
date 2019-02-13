@@ -11,6 +11,7 @@ import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.feature.search.SearchUseCases
+import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
@@ -56,7 +57,7 @@ class SearchSuggestionProviderTest {
             ).defaultSearch)
             doNothing().`when`(useCase).invoke(anyString(), any<Session>())
 
-            val provider = SearchSuggestionProvider(searchEngine, useCase)
+            val provider = SearchSuggestionProvider(searchEngine, useCase, HttpURLConnectionClient())
 
             try {
                 val suggestions = provider.onInputChanged("fire")
@@ -114,6 +115,7 @@ class SearchSuggestionProviderTest {
             val provider = SearchSuggestionProvider(
                 searchEngine,
                 useCase,
+                HttpURLConnectionClient(),
                 SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS
             )
 
@@ -149,13 +151,13 @@ class SearchSuggestionProviderTest {
 
     @Test
     fun `Provider should not clear suggestions`() {
-        val provider = SearchSuggestionProvider(mock(), mock())
+        val provider = SearchSuggestionProvider(mock(), mock(), mock())
         assertFalse(provider.shouldClearSuggestions)
     }
 
     @Test
     fun `Provider returns empty list if text is empty`() = runBlocking {
-        val provider = SearchSuggestionProvider(mock(), mock())
+        val provider = SearchSuggestionProvider(mock(), mock(), mock())
 
         val suggestions = provider.onInputChanged("")
         assertTrue(suggestions.isEmpty())
@@ -166,7 +168,7 @@ class SearchSuggestionProviderTest {
         val searchEngine: SearchEngine = mock()
         doReturn(false).`when`(searchEngine).canProvideSearchSuggestions
 
-        val provider = SearchSuggestionProvider(searchEngine, mock())
+        val provider = SearchSuggestionProvider(searchEngine, mock(), mock())
 
         val suggestions = provider.onInputChanged("fire")
         assertEquals(1, suggestions.size)

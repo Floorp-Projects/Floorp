@@ -24,6 +24,7 @@ import mozilla.components.feature.sitepermissions.SitePermissionsFeature
 import mozilla.components.feature.tabs.toolbar.TabsToolbarFeature
 import mozilla.components.feature.toolbar.ToolbarAutocompleteFeature
 import mozilla.components.feature.toolbar.ToolbarFeature
+import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.arch.lifecycle.addObservers
@@ -77,7 +78,8 @@ class BrowserFragment : Fragment(), BackHandler {
             .addSessionProvider(components.sessionManager, components.tabsUseCases.selectTab)
             .addSearchProvider(
                 components.searchEngineManager.getDefaultSearchEngine(requireContext()),
-                components.searchUseCases.defaultSearch)
+                components.searchUseCases.defaultSearch,
+                HttpURLConnectionClient())
             .addClipboardProvider(requireContext(), components.sessionUseCases.loadUrl)
 
         downloadsFeature.set(

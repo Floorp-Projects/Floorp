@@ -25,6 +25,20 @@ permalink: /changelog/
     val body = response.body.string()
   }
   ```
+* **feature-awesomebar**
+  * ⚠️ **This is a breaking API change!**
+  * Now makes use of our concept-fetch module when fetching search suggestions. This allows applications to specify which HTTP client library to use e.g. apps already using GeckoView can now specify that the `GeckoViewFetchClient` should be used. As a consequence, the fetch client instance now needs to be provided when adding a search provider. 
+
+  ```kotlin
+  AwesomeBarFeature(layout.awesomeBar, layout.toolbar, layout.engineView)
+    .addHistoryProvider(components.historyStorage, components.sessionUseCases.loadUrl)
+    .addSessionProvider(components.sessionManager, components.tabsUseCases.selectTab)
+    .addSearchProvider(
+      components.searchEngineManager.getDefaultSearchEngine(requireContext()),
+      components.searchUseCases.defaultSearch,
+      // Specify that the GV-based fetch client should be used.
+      GeckoViewFetchClient())
+  ```
 
 * **ui-doorhanger**
   * Added `DoorhangerPrompt` - a builder for creating a prompt `Doorhanger` providing a way to present decisions to users.

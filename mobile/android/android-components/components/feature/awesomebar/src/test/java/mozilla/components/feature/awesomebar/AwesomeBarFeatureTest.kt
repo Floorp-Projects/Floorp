@@ -95,7 +95,7 @@ class AwesomeBarFeatureTest {
 
         verify(awesomeBar, never()).addProviders(any())
 
-        feature.addSearchProvider(mock(), mock())
+        feature.addSearchProvider(mock(), mock(), mock())
 
         verify(awesomeBar).addProviders(any())
     }

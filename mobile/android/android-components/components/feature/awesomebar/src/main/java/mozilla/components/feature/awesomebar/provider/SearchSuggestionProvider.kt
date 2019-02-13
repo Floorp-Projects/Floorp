@@ -7,11 +7,13 @@ package mozilla.components.feature.awesomebar.provider
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.search.suggestions.SearchSuggestionClient
 import mozilla.components.concept.awesomebar.AwesomeBar
+import mozilla.components.concept.fetch.Client
+import mozilla.components.concept.fetch.Request
+import mozilla.components.concept.fetch.success
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.support.base.log.logger.Logger
 import java.io.IOException
-import java.net.HttpURLConnection
-import java.net.URL
+import java.util.concurrent.TimeUnit
 
 /**
  * A [AwesomeBar.SuggestionProvider] implementation that provides a suggestion containing search engine suggestions (as
@@ -20,6 +22,7 @@ import java.net.URL
 class SearchSuggestionProvider(
     private val searchEngine: SearchEngine,
     private val searchUseCase: SearchUseCases.SearchUseCase,
+    private val fetchClient: Client,
     private val mode: Mode = Mode.SINGLE_SUGGESTION
 ) : AwesomeBar.SuggestionProvider {
     private val client = if (searchEngine.canProvideSearchSuggestions) {
@@ -124,39 +127,36 @@ class SearchSuggestionProvider(
         SINGLE_SUGGESTION,
         MULTIPLE_SUGGESTIONS
     }
-}
 
-private const val READ_TIMEOUT = 2000
-private const val CONNECT_TIMEOUT = 1000
+    @Suppress("ReturnCount", "TooGenericExceptionCaught")
+    private fun fetch(url: String): String? {
+        try {
+            val request = Request(
+                url = url,
+                readTimeout = Pair(READ_TIMEOUT_IN_MS, TimeUnit.MILLISECONDS),
+                connectTimeout = Pair(CONNECT_TIMEOUT_IN_MS, TimeUnit.MILLISECONDS)
+            )
 
-// To be replaced with http/fetch dependency:
-// https://github.com/mozilla-mobile/android-components/issues/1012
-@Suppress("ReturnCount", "TooGenericExceptionCaught", "MagicNumber")
-private fun fetch(url: String): String? {
-    var urlConnection: HttpURLConnection? = null
-    try {
-        urlConnection = URL(url).openConnection() as HttpURLConnection
-        urlConnection.requestMethod = "GET"
-        urlConnection.useCaches = false
-        urlConnection.readTimeout = READ_TIMEOUT
-        urlConnection.connectTimeout = CONNECT_TIMEOUT
+            val response = fetchClient.fetch(request)
+            if (!response.success) {
+                return null
+            }
 
-        val responseCode = urlConnection.responseCode
-        if (responseCode !in 200..299) {
+            return response.use { it.body.string() }
+        } catch (e: IOException) {
+            return null
+        } catch (e: ClassCastException) {
+            return null
+        } catch (e: ArrayIndexOutOfBoundsException) {
+            // On some devices we are seeing an ArrayIndexOutOfBoundsException being thrown
+            // somewhere inside AOSP/okhttp.
+            // See: https://github.com/mozilla-mobile/android-components/issues/964
             return null
         }
+    }
 
-        return urlConnection.inputStream.bufferedReader().use { it.readText() }
-    } catch (e: IOException) {
-        return null
-    } catch (e: ClassCastException) {
-        return null
-    } catch (e: ArrayIndexOutOfBoundsException) {
-        // On some devices we are seeing an ArrayIndexOutOfBoundsException being thrown
-        // somewhere inside AOSP/okhttp.
-        // See: https://github.com/mozilla-mobile/android-components/issues/964
-        return null
-    } finally {
-        urlConnection?.disconnect()
+    companion object {
+        private const val READ_TIMEOUT_IN_MS = 2000L
+        private const val CONNECT_TIMEOUT_IN_MS = 1000L
     }
 }

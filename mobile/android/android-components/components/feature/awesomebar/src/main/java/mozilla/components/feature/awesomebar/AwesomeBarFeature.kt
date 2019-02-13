@@ -10,6 +10,7 @@ import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.concept.engine.EngineView
+import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.feature.awesomebar.provider.ClipboardSuggestionProvider
@@ -29,7 +30,6 @@ class AwesomeBarFeature(
     private val engineView: EngineView? = null,
     private val onEditStart: (() -> Unit)? = null,
     private val onEditComplete: (() -> Unit)? = null
-
 ) {
     init {
         toolbar.setOnEditListener(object : mozilla.components.concept.toolbar.Toolbar.OnEditListener {
@@ -67,9 +67,10 @@ class AwesomeBarFeature(
     fun addSearchProvider(
         searchEngine: SearchEngine,
         searchUseCase: SearchUseCases.SearchUseCase,
+        fetchClient: Client,
         mode: SearchSuggestionProvider.Mode = SearchSuggestionProvider.Mode.SINGLE_SUGGESTION
     ): AwesomeBarFeature {
-        awesomeBar.addProviders(SearchSuggestionProvider(searchEngine, searchUseCase, mode))
+        awesomeBar.addProviders(SearchSuggestionProvider(searchEngine, searchUseCase, fetchClient, mode))
         return this
     }
 
