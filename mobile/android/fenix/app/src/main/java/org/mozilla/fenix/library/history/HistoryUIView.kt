@@ -109,7 +109,13 @@ private class HistoryAdapter(
 
             if (mode is HistoryState.Mode.Editing) {
                 checkbox.setOnCheckedChangeListener(null)
-                checkbox.isChecked = mode.selectedItems.contains(item)
+
+                // Don't set the checkbox if it already contains the right value.
+                // This prevent us from cutting off the animation
+                val shouldCheck = mode.selectedItems.contains(item)
+                if (checkbox.isChecked != shouldCheck) {
+                    checkbox.isChecked = mode.selectedItems.contains(item)
+                }
                 checkbox.setOnCheckedChangeListener(checkListener)
             }
         }
