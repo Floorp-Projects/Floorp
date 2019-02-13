@@ -23,47 +23,9 @@ add_task(async function() {
   const webconsoleLoader = hud.ui.browserLoader;
   const loaders = [loader.provider.loader, webconsoleLoader.loader];
 
-  const allModules = getFilteredModules("", loaders);
-  const webconsoleModules = getFilteredModules("devtools/client/webconsole", loaders);
-
-  const allModulesCount = allModules.length;
-  const webconsoleModulesCount = webconsoleModules.length;
-
-  const allModulesChars = countCharsInModules(allModules);
-  const webconsoleModulesChars = countCharsInModules(webconsoleModules);
-
-  const PERFHERDER_DATA = {
-    framework: {
-      name: "devtools",
-    },
-    suites: [{
-      name: "webconsole-metrics",
-      value: allModulesChars,
-      subtests: [
-        {
-          name: "webconsole-modules",
-          value: webconsoleModulesCount,
-        },
-        {
-          name: "webconsole-chars",
-          value: webconsoleModulesChars,
-        },
-        {
-          name: "all-modules",
-          value: allModulesCount,
-        },
-        {
-          name: "all-chars",
-          value: allModulesChars,
-        },
-      ],
-    }],
-  };
-  info("PERFHERDER_DATA: " + JSON.stringify(PERFHERDER_DATA));
-
-  // Simply check that we found valid values.
-  ok(allModulesCount > webconsoleModulesCount &&
-     webconsoleModulesCount > 0, "Successfully recorded module count for WebConsole");
-  ok(allModulesChars > webconsoleModulesChars &&
-     webconsoleModulesChars > 0, "Successfully recorded char count for WebConsole");
+  runMetricsTest({
+    filterString: "devtools/client/webconsole",
+    loaders,
+    panelName: "webconsole",
+  });
 });
