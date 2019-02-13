@@ -972,6 +972,7 @@ class JS_PUBLIC_API RealmCreationOptions {
   RealmCreationOptions& setNewCompartmentInExistingZone(JSObject* obj);
   RealmCreationOptions& setNewCompartmentAndZone();
   RealmCreationOptions& setExistingCompartment(JSObject* obj);
+  RealmCreationOptions& setExistingCompartment(JS::Compartment* compartment);
 
   // Certain compartments are implementation details of the embedding, and
   // references to them should never leak out to script. This flag causes this

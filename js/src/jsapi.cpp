@@ -1578,6 +1578,13 @@ JS::RealmCreationOptions& JS::RealmCreationOptions::setExistingCompartment(
   return *this;
 }
 
+JS::RealmCreationOptions& JS::RealmCreationOptions::setExistingCompartment(
+    JS::Compartment* compartment) {
+  compSpec_ = CompartmentSpecifier::ExistingCompartment;
+  comp_ = compartment;
+  return *this;
+}
+
 JS::RealmCreationOptions& JS::RealmCreationOptions::setNewCompartmentAndZone() {
   compSpec_ = CompartmentSpecifier::NewCompartmentAndZone;
   comp_ = nullptr;
