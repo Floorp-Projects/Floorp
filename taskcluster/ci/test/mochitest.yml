@@ -104,6 +104,7 @@ mochitest-browser-chrome:
         by-test-platform:
             linux64-.*cov/opt: 7200
             windows10-64-ccov/debug: 7200
+            windows10-aarch64/*: 7200
             macosx64-ccov/debug: 10800
             linux.*/debug: 5400
             default: 3600

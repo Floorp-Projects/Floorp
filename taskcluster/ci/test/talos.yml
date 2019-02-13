@@ -291,10 +291,12 @@ talos-xperf:
     run-as-administrator:
         by-test-platform:
             windows7-32.*: false
+            windows10-aarch64.*: false
             windows10-64.*: true
     run-on-projects:
         by-test-platform:
             windows7-32(-pgo)?/.*: ['mozilla-beta', 'trunk', 'try']
+            windows10-aarch64/opt: []
             windows10-64.*/opt: ['mozilla-beta', 'trunk', 'try']
             default: []
     tier:
