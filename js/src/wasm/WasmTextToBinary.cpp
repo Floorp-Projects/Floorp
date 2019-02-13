@@ -4920,11 +4920,11 @@ static bool ParseTable(WasmParseContext& c, WasmToken token,
     if (name.empty()) return false;
   }
 
-  AstRefVector elems(c.lifo);
+  AstElemVector elems(c.lifo);
 
   AstRef elem;
   while (c.ts.getIfRef(&elem)) {
-    if (!elems.append(elem)) {
+    if (!elems.append(AstElem(elem))) {
       return false;
     }
   }
@@ -4955,9 +4955,9 @@ static bool ParseTable(WasmParseContext& c, WasmToken token,
 }
 
 static AstElemSegment* ParseElemSegment(WasmParseContext& c) {
-  // (elem table-name init-expr ref ...)
-  // (elem init-expr ref ...)
-  // (elem passive ref ...)
+  // (elem table-name init-expr fnref...)
+  // (elem init-expr fnref...)
+  // (elem passive (fnref|ref.null)...)
 
   AstRef targetTable = AstRef(0);
   bool hasTableName = c.ts.getIfRef(&targetTable);
@@ -4973,13 +4973,23 @@ static AstElemSegment* ParseElemSegment(WasmParseContext& c) {
     return nullptr;
   }
 
-  AstRefVector elems(c.lifo);
+  AstElemVector elems(c.lifo);
 
-  AstRef elem;
-  while (c.ts.getIfRef(&elem)) {
-    if (!elems.append(elem)) {
-      return nullptr;
+  for (;;) {
+    AstRef elemRef;
+    if (c.ts.getIfRef(&elemRef)) {
+      if (!elems.append(AstElem(elemRef))) {
+        return nullptr;
+      }
+      continue;
     }
+    if (!offsetIfActive && c.ts.getIf(WasmToken::RefNull)) {
+      if (!elems.append(AstElem(AstNullValue()))) {
+        return nullptr;
+      }
+      continue;
+    }
+    break;
   }
 
   return new (c.lifo)
@@ -6022,9 +6032,15 @@ static bool ResolveModule(LifoAlloc& lifo, AstModule* module,
         !ResolveExpr(r, *segment->offsetIfActive())) {
       return false;
     }
-    for (AstRef& ref : segment->elems()) {
-      if (!r.resolveFunction(ref)) {
-        return false;
+    for (AstElem& elemRef : segment->elems()) {
+      if (elemRef.is<AstRef>()) {
+        if (!r.resolveFunction(elemRef.as<AstRef>())) {
+          return false;
+        }
+      } else if (elemRef.is<AstNullValue>()) {
+        // Nothing
+      } else {
+        MOZ_CRASH("Unexpected variant");
       }
     }
   }
@@ -7178,17 +7194,28 @@ static bool EncodeElemSegment(Encoder& e, AstElemSegment& segment) {
     return false;
   }
 
-  for (const AstRef& elem : segment.elems()) {
-    // Passive segments have an initializer expression, for now restricted to a
-    // function index.
-    if (segment.isPassive() && !e.writeFixedU8(uint8_t(Op::RefFunc))) {
-      return false;
-    }
-    if (!e.writeVarU32(elem.index())) {
-      return false;
-    }
-    if (segment.isPassive() && !e.writeFixedU8(uint8_t(Op::End))) {
-      return false;
+  for (const AstElem& elem : segment.elems()) {
+    if (elem.is<AstRef>()) {
+      const AstRef& ref = elem.as<AstRef>();
+      // Passive segments have an initializer expression, for now restricted to a
+      // function index.
+      if (segment.isPassive() && !e.writeFixedU8(uint8_t(Op::RefFunc))) {
+        return false;
+      }
+      if (!e.writeVarU32(ref.index())) {
+        return false;
+      }
+      if (segment.isPassive() && !e.writeFixedU8(uint8_t(Op::End))) {
+        return false;
+      }
+    } else if (elem.is<AstNullValue>()) {
+      MOZ_ASSERT(segment.isPassive());
+      if (!e.writeFixedU8(uint8_t(Op::RefNull)) ||
+          !e.writeFixedU8(uint8_t(Op::End))) {
+        return false;
+      }
+    } else {
+      MOZ_CRASH("Unexpected variant");
     }
   }
 
