@@ -8,6 +8,8 @@ package org.mozilla.fenix.library.history
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.CheckBox
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -36,7 +38,9 @@ class HistoryUIView(
     }
 
     override fun updateView() = Consumer<HistoryState> {
-        (view.adapter as HistoryAdapter).updateData(it.items)
+        val isEditing = it.mode == HistoryState.Mode.Editing
+
+        (view.adapter as HistoryAdapter).updateData(it.items, it.mode)
     }
 }
 
@@ -48,9 +52,12 @@ private class HistoryAdapter(
         private val actionEmitter: Observer<HistoryAction>
     ) : RecyclerView.ViewHolder(view) {
 
-        private var title = view.findViewById<TextView>(R.id.history_title)
-        private var url = view.findViewById<TextView>(R.id.history_url)
+        private val checkbox = view.findViewById<CheckBox>(R.id.should_remove_checkbox)
+        private val favicon = view.findViewById<ImageView>(R.id.history_favicon)
+        private val title = view.findViewById<TextView>(R.id.history_title)
+        private val url = view.findViewById<TextView>(R.id.history_url)
         private var item: HistoryItem? = null
+        private var mode: HistoryState.Mode = HistoryState.Mode.Normal
 
         init {
             view.setOnClickListener {
@@ -58,13 +65,26 @@ private class HistoryAdapter(
                     actionEmitter.onNext(HistoryAction.Select(this))
                 }
             }
+
+            view.setOnLongClickListener {
+                item?.apply {
+                    actionEmitter.onNext(HistoryAction.Edit(this))
+                }
+
+                true
+            }
         }
 
-        fun bind(item: HistoryItem) {
+        fun bind(item: HistoryItem, mode: HistoryState.Mode) {
             this.item = item
+            this.mode = mode
 
             title.text = item.title
             url.text = item.url
+
+            val isEditing = mode == HistoryState.Mode.Editing
+            checkbox.visibility = if (isEditing) { View.VISIBLE } else { View.GONE }
+            favicon.visibility = if (isEditing) { View.INVISIBLE } else { View.VISIBLE }
         }
 
         companion object {
@@ -87,9 +107,11 @@ private class HistoryAdapter(
     }
 
     private var items: List<HistoryItem> = emptyList()
+    private var mode: HistoryState.Mode = HistoryState.Mode.Normal
 
-    fun updateData(items: List<HistoryItem>) {
+    fun updateData(items: List<HistoryItem>, mode: HistoryState.Mode) {
         this.items = items
+        this.mode = mode
         notifyDataSetChanged()
     }
 
@@ -116,7 +138,7 @@ private class HistoryAdapter(
 
         when (holder) {
             is HistoryHeaderViewHolder -> holder.bind("Today")
-            is HistoryListItemViewHolder -> holder.bind(items[position - NUMBER_OF_SECTIONS])
+            is HistoryListItemViewHolder -> holder.bind(items[position - NUMBER_OF_SECTIONS], mode)
         }
     }
 

@@ -28,7 +28,7 @@ data class HistoryItem(val url: String) {
 class HistoryComponent(
     private val container: ViewGroup,
     bus: ActionBusFactory,
-    override var initialState: HistoryState = HistoryState(emptyList())
+    override var initialState: HistoryState = HistoryState(emptyList(), HistoryState.Mode.Normal)
 ) :
     UIComponent<HistoryState, HistoryAction, HistoryChange>(
         bus.getManagedEmitter(HistoryAction::class.java),
@@ -38,6 +38,7 @@ class HistoryComponent(
     override val reducer: (HistoryState, HistoryChange) -> HistoryState = { state, change ->
         when (change) {
             is HistoryChange.Change -> state.copy(items = change.list)
+            is HistoryChange.Mode-> state.copy(mode = change.mode)
         }
     }
 
@@ -48,12 +49,19 @@ class HistoryComponent(
     }
 }
 
-data class HistoryState(val items: List<HistoryItem>) : ViewState
+data class HistoryState(val items: List<HistoryItem>, val mode: Mode) : ViewState {
+    sealed class Mode {
+        object Normal : Mode()
+        object Editing : Mode()
+    }
+}
 
 sealed class HistoryAction : Action {
     data class Select(val item: HistoryItem) : HistoryAction()
+    data class Edit(val item: HistoryItem) : HistoryAction()
 }
 
 sealed class HistoryChange : Change {
     data class Change(val list: List<HistoryItem>) : HistoryChange()
+    data class Mode(val mode: HistoryState.Mode) : HistoryChange()
 }

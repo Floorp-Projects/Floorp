@@ -25,6 +25,7 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.mvi.ActionBusFactory
+import org.mozilla.fenix.mvi.getManagedEmitter
 import org.mozilla.fenix.mvi.getSafeManagedObservable
 import kotlin.coroutines.CoroutineContext
 
@@ -40,7 +41,7 @@ class HistoryFragment : Fragment(), CoroutineScope {
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_history, container, false)
-        HistoryComponent(view.history_layout, ActionBusFactory.get(this), initialState = HistoryState(emptyList()))
+        HistoryComponent(view.history_layout, ActionBusFactory.get(this))
 
         return view
     }
@@ -55,18 +56,23 @@ class HistoryFragment : Fragment(), CoroutineScope {
 
         getSafeManagedObservable<HistoryAction>()
             .subscribe {
-                if (it is HistoryAction.Select) {
-                    Navigation.findNavController(requireActivity(), R.id.container).apply {
-                        navigate(
-                            HistoryFragmentDirections.actionGlobalBrowser(null,
-                                (activity as HomeActivity).browsingModeManager.isPrivate),
-                            NavOptions.Builder().setPopUpTo(R.id.homeFragment, false).build()
-                        )
-                    }
-
-                    requireComponents.useCases.sessionUseCases.loadUrl.invoke(it.item.url)
+                when (it) {
+                    is HistoryAction.Select -> selectItem(it.item)
+                    is HistoryAction.Edit ->  getManagedEmitter<HistoryChange>().onNext(HistoryChange.Mode(HistoryState.Mode.Editing))
                 }
             }
+    }
+
+    private fun selectItem(item: HistoryItem) {
+        Navigation.findNavController(requireActivity(), R.id.container).apply {
+            navigate(
+                HistoryFragmentDirections.actionGlobalBrowser(null,
+                    (activity as HomeActivity).browsingModeManager.isPrivate),
+                NavOptions.Builder().setPopUpTo(R.id.homeFragment, false).build()
+            )
+        }
+
+        requireComponents.useCases.sessionUseCases.loadUrl.invoke(item.url)
     }
 
     override fun onDestroy() {
