@@ -13,6 +13,8 @@ ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "PromiseUtils",
   "resource://gre/modules/PromiseUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "UpdateUtils",
+  "resource://gre/modules/UpdateUtils.jsm");
 
 /*
  * Used for all kinds of permissions checks which requires explicit
@@ -32,6 +34,10 @@ let RPMAccessManager = {
       "getFormatURLPref": ["privacy.trackingprotection.introURL",
                            "app.support.baseURL"],
       "isWindowPrivate": ["yes"],
+    },
+    "about:newinstall": {
+      "getUpdateChannel": ["yes"],
+      "getFxAccountsEndpoint": ["yes"],
     },
   },
 
@@ -163,7 +169,7 @@ class MessagePort {
   // once the other process has responded to the request or some error occurs.
   sendRequest(name, data = null) {
     if (this.destroyed) {
-      return Promise.reject(new Error("Message port has been destroyed"));
+      return this.window.Promise.reject(new Error("Message port has been destroyed"));
     }
 
     let deferred = PromiseUtils.defer();
@@ -176,7 +182,7 @@ class MessagePort {
       data,
     });
 
-    return deferred.promise;
+    return this.wrapPromise(deferred.promise);
   }
 
   // Handles an IPC message to perform a request of some kind.
@@ -291,6 +297,10 @@ class MessagePort {
     this.requests = [];
   }
 
+  wrapPromise(promise) {
+    return new this.window.Promise((resolve, reject) => promise.then(resolve, reject));
+  }
+
   getBoolPref(aPref) {
     let principal = this.window.document.nodePrincipal;
     if (!RPMAccessManager.checkAllowAccess(principal, "getBoolPref", aPref)) {
@@ -300,11 +310,7 @@ class MessagePort {
   }
 
   setBoolPref(aPref, aVal) {
-    return new this.window.Promise(function(resolve) {
-      AsyncPrefs.set(aPref, aVal).then(function() {
-        resolve();
-      });
-    });
+    return this.wrapPromise(AsyncPrefs.set(aPref, aVal));
   }
 
   getFormatURLPref(aFormatURL) {
@@ -321,5 +327,22 @@ class MessagePort {
       throw new Error("RPMAccessManager does not allow access to isWindowPrivate");
     }
     return PrivateBrowsingUtils.isContentWindowPrivate(this.window);
+  }
+
+  getUpdateChannel() {
+    let principal = this.window.document.nodePrincipal;
+    if (!RPMAccessManager.checkAllowAccess(principal, "getUpdateChannel", "yes")) {
+      throw new Error("RPMAccessManager does not allow access to getUpdateChannel");
+    }
+    return UpdateUtils.UpdateChannel;
+  }
+
+  getFxAccountsEndpoint(aEntrypoint) {
+    let principal = this.window.document.nodePrincipal;
+    if (!RPMAccessManager.checkAllowAccess(principal, "getFxAccountsEndpoint", "yes")) {
+      throw new Error("RPMAccessManager does not allow access to getFxAccountsEndpoint");
+    }
+
+    return this.sendRequest("FxAccountsEndpoint", aEntrypoint);
   }
 }

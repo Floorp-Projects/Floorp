@@ -41,6 +41,12 @@ class ChildMessagePort extends MessagePort {
     Cu.exportFunction(this.isWindowPrivate.bind(this), window, {
       defineAs: "RPMIsWindowPrivate",
     });
+    Cu.exportFunction(this.getUpdateChannel.bind(this), window, {
+      defineAs: "RPMGetUpdateChannel",
+    });
+    Cu.exportFunction(this.getFxAccountsEndpoint.bind(this), window, {
+      defineAs: "RPMGetFxAccountsEndpoint",
+    });
 
     // Send a message for load events
     let loadListener = () => {
