@@ -13,10 +13,10 @@ import kotlinx.coroutines.plus
 import mozilla.appservices.logins.DatabaseLoginsStorage
 import mozilla.appservices.logins.LoginsStorage
 import mozilla.appservices.logins.MemoryLoginsStorage
-import mozilla.components.concept.storage.SyncError
-import mozilla.components.concept.storage.SyncOk
-import mozilla.components.concept.storage.SyncStatus
-import mozilla.components.concept.storage.SyncableStore
+import mozilla.components.concept.sync.SyncError
+import mozilla.components.concept.sync.SyncOk
+import mozilla.components.concept.sync.SyncStatus
+import mozilla.components.concept.sync.SyncableStore
 
 /**
  * This type contains the set of information required to successfully

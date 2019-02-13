@@ -13,37 +13,22 @@ android {
         targetSdkVersion config.targetSdkVersion
     }
 
-    lintOptions {
-        warningsAsErrors true
-        abortOnError true
-    }
-
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-            consumerProguardFiles 'proguard-rules-consumer.pro'
         }
     }
 }
 
 dependencies {
-    // Parts of this dependency are typealiase'd or are otherwise part of this module's public API.
-    api Dependencies.mozilla_sync_logins
+    // Necessary because we use 'suspend'. Fun fact: this module will compile just fine without this
+    // dependency, but it will crash at runtime.
+    // Included via 'api' because this module is unusable without coroutines.
+    api Dependencies.kotlin_coroutines
 
-    // Types defined in concept-sync are part of this module's public API.
-    api project(':concept-sync')
-
-    implementation project(':concept-storage')
-
-    implementation Dependencies.kotlin_stdlib
-    implementation Dependencies.kotlin_coroutines
-
-    testImplementation Dependencies.mozilla_sync_logins
-
-    testImplementation Dependencies.testing_junit
-    testImplementation Dependencies.testing_robolectric
-    testImplementation Dependencies.testing_mockito
+    // Observables are part of the public API of this module.
+    api project(':support-base')
 }
 
 apply from: '../../../publish.gradle'

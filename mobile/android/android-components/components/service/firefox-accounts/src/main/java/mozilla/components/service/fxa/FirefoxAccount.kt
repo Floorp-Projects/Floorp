@@ -13,27 +13,17 @@ import kotlinx.coroutines.plus
 import mozilla.appservices.fxaclient.FirefoxAccount as InternalFxAcct
 import mozilla.appservices.fxaclient.FxaException.Unauthorized as Unauthorized
 
-typealias PersistCallback = mozilla.appservices.fxaclient.FirefoxAccount.PersistCallback
+import mozilla.components.concept.sync.AccessTokenInfo
+import mozilla.components.concept.sync.OAuthAccount
+import mozilla.components.concept.sync.Profile
 
-/**
- * Facilitates testing consumers of FirefoxAccount.
- */
-interface FirefoxAccountShaped : AutoCloseable {
-    fun beginOAuthFlow(scopes: Array<String>, wantsKeys: Boolean): Deferred<String>
-    fun beginPairingFlow(pairingUrl: String, scopes: Array<String>): Deferred<String>
-    fun getProfile(ignoreCache: Boolean): Deferred<Profile>
-    fun getProfile(): Deferred<Profile>
-    fun completeOAuthFlow(code: String, state: String): Deferred<Unit>
-    fun getAccessToken(singleScope: String): Deferred<AccessTokenInfo>
-    fun getTokenServerEndpointURL(): String
-    fun toJSONString(): String
-}
+typealias PersistCallback = mozilla.appservices.fxaclient.FirefoxAccount.PersistCallback
 
 /**
  * FirefoxAccount represents the authentication state of a client.
  */
 @Suppress("TooManyFunctions")
-class FirefoxAccount internal constructor(private val inner: InternalFxAcct) : FirefoxAccountShaped {
+class FirefoxAccount internal constructor(private val inner: InternalFxAcct) : OAuthAccount {
 
     private val job = SupervisorJob()
     private val scope = CoroutineScope(Dispatchers.IO) + job
@@ -106,7 +96,7 @@ class FirefoxAccount internal constructor(private val inner: InternalFxAcct) : F
      */
     override fun getProfile(ignoreCache: Boolean): Deferred<Profile> {
         return scope.async {
-            Profile.fromInternal(inner.getProfile(ignoreCache))
+            inner.getProfile(ignoreCache).into()
         }
     }
 
@@ -155,7 +145,7 @@ class FirefoxAccount internal constructor(private val inner: InternalFxAcct) : F
      */
     override fun getAccessToken(singleScope: String): Deferred<AccessTokenInfo> {
         return scope.async {
-            inner.getAccessToken(singleScope)
+            inner.getAccessToken(singleScope).into()
         }
     }
 

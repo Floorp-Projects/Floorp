@@ -22,7 +22,7 @@ android {
 }
 
 dependencies {
-    implementation project(':concept-storage')
+    implementation project(':concept-sync')
     implementation project(':service-firefox-accounts')
 
     // ObserverRegistry is part of this module's public API, so 'support-base' becomes necessary for

@@ -28,6 +28,9 @@ android {
 }
 
 dependencies {
+    // Types defined in concept-sync are part of the public API of this module.
+    api project(':concept-sync')
+
     // Parts of this dependency are typealiase'd or are otherwise part of this module's public API.
     api Dependencies.mozilla_fxa
 

@@ -24,6 +24,10 @@ projects:
     path: components/concept/storage
     description: 'An abstract definition of a browser storage layer.'
     publish: true
+  concept-sync:
+    path: components/concept/sync
+    description: 'An abstract definition of a browser data synchronization layer.'
+    publish: true
   feature-awesomebar:
     path: components/feature/awesomebar
     description: 'Component connecting a concept-toolbar with a concept-awesomebar.'

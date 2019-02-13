@@ -6,14 +6,15 @@ package mozilla.components.service.fxa
 
 import android.content.Context
 import android.content.SharedPreferences
+import mozilla.components.concept.sync.OAuthAccount
 
 const val FXA_STATE_PREFS_KEY = "fxaAppState"
 const val FXA_STATE_KEY = "fxaState"
 
 interface AccountStorage {
     @Throws(Exception::class)
-    fun read(): FirefoxAccountShaped?
-    fun write(account: FirefoxAccountShaped)
+    fun read(): OAuthAccount?
+    fun write(account: OAuthAccount)
     fun clear()
 }
 
@@ -21,7 +22,7 @@ class SharedPrefAccountStorage(val context: Context) : AccountStorage {
     /**
      * @throws FxaException if JSON failed to parse into a [FirefoxAccount].
      */
-    override fun read(): FirefoxAccountShaped? {
+    override fun read(): OAuthAccount? {
         val savedJSON = accountPreferences().getString(FXA_STATE_KEY, null)
                 ?: return null
 
@@ -29,7 +30,7 @@ class SharedPrefAccountStorage(val context: Context) : AccountStorage {
         return FirefoxAccount.fromJSONString(savedJSON)
     }
 
-    override fun write(account: FirefoxAccountShaped) {
+    override fun write(account: OAuthAccount) {
         accountPreferences()
             .edit()
             .putString(FXA_STATE_KEY, account.toJSONString())

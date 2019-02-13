@@ -16,15 +16,15 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
-import mozilla.components.concept.storage.SyncError
+import mozilla.components.concept.sync.AccountObserver
+import mozilla.components.concept.sync.OAuthAccount
+import mozilla.components.concept.sync.Profile
+import mozilla.components.concept.sync.SyncError
 import mozilla.components.feature.sync.FirefoxSyncFeature
 import mozilla.components.service.fxa.FxaAccountManager
-import mozilla.components.service.fxa.AccountObserver
 import mozilla.components.service.fxa.Config
 import mozilla.components.service.fxa.FirefoxAccount
-import mozilla.components.service.fxa.FirefoxAccountShaped
 import mozilla.components.service.fxa.FxaException
-import mozilla.components.service.fxa.Profile
 import mozilla.components.service.sync.logins.AsyncLoginsStorageAdapter
 import mozilla.components.service.sync.logins.SyncableLoginsStore
 import mozilla.components.service.sync.logins.SyncUnlockInfo
@@ -47,7 +47,10 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
     }
 
     private val featureSync by lazy {
-        FirefoxSyncFeature(mapOf(Pair(loginsStoreName, loginsStore))) { authInfo ->
+        FirefoxSyncFeature(
+            syncableStores = mapOf(Pair(loginsStoreName, loginsStore)),
+            syncScope = "https://identity.mozilla.com/apps/oldsync"
+        ) { authInfo ->
             SyncUnlockInfo(
                 fxaAccessToken = authInfo.fxaAccessToken,
                 kid = authInfo.kid,
@@ -106,7 +109,7 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
     private val accountObserver = object : AccountObserver {
         override fun onLoggedOut() {}
 
-        override fun onAuthenticated(account: FirefoxAccountShaped) {
+        override fun onAuthenticated(account: OAuthAccount) {
             launch { syncLogins(account) }
         }
 
@@ -140,7 +143,7 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
         }
     }
 
-    private suspend fun syncLogins(account: FirefoxAccountShaped) {
+    private suspend fun syncLogins(account: OAuthAccount) {
         val syncResult = CoroutineScope(Dispatchers.IO + job).async {
             featureSync.sync(account)
         }.await()

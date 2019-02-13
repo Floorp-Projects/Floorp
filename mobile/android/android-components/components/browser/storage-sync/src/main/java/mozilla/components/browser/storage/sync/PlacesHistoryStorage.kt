@@ -15,10 +15,10 @@ import mozilla.components.concept.storage.HistoryAutocompleteResult
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.concept.storage.PageObservation
 import mozilla.components.concept.storage.SearchResult
-import mozilla.components.concept.storage.SyncError
-import mozilla.components.concept.storage.SyncOk
-import mozilla.components.concept.storage.SyncStatus
-import mozilla.components.concept.storage.SyncableStore
+import mozilla.components.concept.sync.SyncError
+import mozilla.components.concept.sync.SyncOk
+import mozilla.components.concept.sync.SyncStatus
+import mozilla.components.concept.sync.SyncableStore
 import mozilla.components.concept.storage.VisitType
 import mozilla.components.support.utils.segmentAwareDomainMatch
 import org.mozilla.places.PlacesConnection

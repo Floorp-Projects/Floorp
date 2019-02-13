@@ -7,6 +7,9 @@ package mozilla.components.service.fxa
 import android.content.Context
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.runBlocking
+import mozilla.components.concept.sync.AccountObserver
+import mozilla.components.concept.sync.OAuthAccount
+import mozilla.components.concept.sync.Profile
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import org.junit.Test
@@ -36,9 +39,9 @@ class TestableFxaAccountManager(
     config: Config,
     scopes: Array<String>,
     accountStorage: AccountStorage = SharedPrefAccountStorage(context),
-    val block: () -> FirefoxAccountShaped = { mock() }
-) : FxaAccountManager(context, config, scopes, accountStorage) {
-    override fun createAccount(config: Config): FirefoxAccountShaped {
+    val block: () -> OAuthAccount = { mock() }
+) : FxaAccountManager(context, config, scopes, null, accountStorage) {
+    override fun createAccount(config: Config): OAuthAccount {
         return block()
     }
 }
@@ -123,7 +126,7 @@ class FxaAccountManagerTest {
                 onLoggedOutCalled = true
             }
 
-            override fun onAuthenticated(account: FirefoxAccountShaped) {
+            override fun onAuthenticated(account: OAuthAccount) {
                 fail()
             }
 
@@ -183,7 +186,7 @@ class FxaAccountManagerTest {
     @Test
     fun `with persisted account and profile`() = runBlocking {
         val accountStorage = mock<AccountStorage>()
-        val mockAccount: FirefoxAccountShaped = mock()
+        val mockAccount: OAuthAccount = mock()
         val profile = Profile(
                 "testUid", "test@example.com", null, "Test Profile")
         `when`(mockAccount.getProfile(ArgumentMatchers.anyBoolean())).thenReturn(CompletableDeferred(profile))
@@ -241,7 +244,7 @@ class FxaAccountManagerTest {
     @Test
     fun `happy authentication and profile flow`() {
         val accountStorage = mock<AccountStorage>()
-        val mockAccount: FirefoxAccountShaped = mock()
+        val mockAccount: OAuthAccount = mock()
 
         val profile = Profile(
             uid = "testUID", avatar = null, email = "test@example.com", displayName = "test profile")
@@ -308,7 +311,7 @@ class FxaAccountManagerTest {
     @Test
     fun `unhappy authentication flow`() {
         val accountStorage = mock<AccountStorage>()
-        val mockAccount: FirefoxAccountShaped = mock()
+        val mockAccount: OAuthAccount = mock()
 
         val profile = Profile(
                 uid = "testUID", avatar = null, email = "test@example.com", displayName = "test profile")
@@ -401,7 +404,7 @@ class FxaAccountManagerTest {
     @Test
     fun `unhappy profile fetching flow`() {
         val accountStorage = mock<AccountStorage>()
-        val mockAccount: FirefoxAccountShaped = mock()
+        val mockAccount: OAuthAccount = mock()
 
         val exceptionalProfile = CompletableDeferred<Profile>()
         val fxaException = FxaException("test exception")

@@ -16,15 +16,15 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
 import mozilla.components.browser.storage.sync.SyncAuthInfo
-import mozilla.components.concept.storage.SyncError
+import mozilla.components.concept.sync.AccountObserver
+import mozilla.components.concept.sync.OAuthAccount
+import mozilla.components.concept.sync.Profile
+import mozilla.components.concept.sync.SyncError
+import mozilla.components.concept.sync.SyncStatusObserver
 import mozilla.components.feature.sync.FirefoxSyncFeature
-import mozilla.components.feature.sync.SyncStatusObserver
 import mozilla.components.service.fxa.FxaAccountManager
-import mozilla.components.service.fxa.AccountObserver
 import mozilla.components.service.fxa.Config
-import mozilla.components.service.fxa.FirefoxAccountShaped
 import mozilla.components.service.fxa.FxaException
-import mozilla.components.service.fxa.Profile
 import mozilla.components.support.base.log.Log
 import mozilla.components.support.base.log.sink.AndroidLogSink
 import java.lang.Exception
@@ -44,7 +44,8 @@ class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener,
     }
     private val featureSync by lazy {
         FirefoxSyncFeature(
-            mapOf(historyStoreName to historyStorage)
+            syncableStores = mapOf(historyStoreName to historyStorage),
+            syncScope = "https://identity.mozilla.com/apps/oldsync"
         ) { authInfo ->
             SyncAuthInfo(
                 fxaAccessToken = authInfo.fxaAccessToken,
@@ -157,7 +158,7 @@ class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener,
             }
         }
 
-        override fun onAuthenticated(account: FirefoxAccountShaped) {
+        override fun onAuthenticated(account: OAuthAccount) {
             launch {
                 val txtView: TextView = findViewById(R.id.fxaStatusView)
                 txtView.text = getString(R.string.signed_in_waiting_for_profile)

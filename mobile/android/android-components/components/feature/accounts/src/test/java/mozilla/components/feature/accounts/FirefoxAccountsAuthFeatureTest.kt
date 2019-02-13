@@ -7,13 +7,13 @@ package mozilla.components.feature.accounts
 import android.content.Context
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.runBlocking
+import mozilla.components.concept.sync.OAuthAccount
+import mozilla.components.concept.sync.Profile
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.service.fxa.AccountStorage
 import mozilla.components.service.fxa.Config
-import mozilla.components.service.fxa.FirefoxAccountShaped
 import mozilla.components.service.fxa.FxaAccountManager
 import mozilla.components.service.fxa.FxaNetworkException
-import mozilla.components.service.fxa.Profile
 import mozilla.components.service.fxa.SharedPrefAccountStorage
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
@@ -37,9 +37,9 @@ class TestableFxaAccountManager(
     config: Config,
     scopes: Array<String>,
     accountStorage: AccountStorage = SharedPrefAccountStorage(context),
-    val block: () -> FirefoxAccountShaped = { mock() }
-) : FxaAccountManager(context, config, scopes, accountStorage) {
-    override fun createAccount(config: Config): FirefoxAccountShaped {
+    val block: () -> OAuthAccount = { mock() }
+) : FxaAccountManager(context, config, scopes, null, accountStorage) {
+    override fun createAccount(config: Config): OAuthAccount {
         return block()
     }
 }
@@ -49,7 +49,7 @@ class FirefoxAccountsAuthFeatureTest {
     @Test
     fun `begin authentication`() {
         val accountStorage = mock<AccountStorage>()
-        val mockAccount: FirefoxAccountShaped = mock()
+        val mockAccount: OAuthAccount = mock()
 
         val profile = Profile(
                 uid = "testUID", avatar = null, email = "test@example.com", displayName = "test profile")
@@ -98,7 +98,7 @@ class FirefoxAccountsAuthFeatureTest {
     @Test
     fun `begin authentication with errors`() {
         val accountStorage = mock<AccountStorage>()
-        val mockAccount: FirefoxAccountShaped = mock()
+        val mockAccount: OAuthAccount = mock()
 
         val profile = Profile(
                 uid = "testUID", avatar = null, email = "test@example.com", displayName = "test profile")

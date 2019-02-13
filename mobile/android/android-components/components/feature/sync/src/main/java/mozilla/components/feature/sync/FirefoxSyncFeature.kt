@@ -6,34 +6,17 @@ package mozilla.components.feature.sync
 
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import mozilla.components.concept.storage.SyncError
-import mozilla.components.concept.storage.SyncableStore
-import mozilla.components.service.fxa.FirefoxAccountShaped
+import mozilla.components.concept.sync.AuthException
+import mozilla.components.concept.sync.AuthInfo
+import mozilla.components.concept.sync.OAuthAccount
+import mozilla.components.concept.sync.StoreSyncStatus
+import mozilla.components.concept.sync.SyncError
+import mozilla.components.concept.sync.SyncResult
+import mozilla.components.concept.sync.SyncStatusObserver
+import mozilla.components.concept.sync.SyncableStore
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
-import java.lang.Exception
-
-/**
- * An interface for consumers that wish to observer "sync lifecycle" events.
- */
-interface SyncStatusObserver {
-    /**
-     * Gets called at the start of a sync, before any configured syncable is synchronized.
-     */
-    fun onStarted()
-
-    /**
-     * Gets called at the end of a sync, after every configured syncable has been synchronized.
-     */
-    fun onIdle()
-
-    /**
-     * Gets called if sync encounters an error that's worthy of processing by status observers.
-     * @param error Optional relevant exception.
-     */
-    fun onError(error: Exception?)
-}
 
 val registry = ObserverRegistry<SyncStatusObserver>()
 
@@ -52,7 +35,8 @@ val registry = ObserverRegistry<SyncStatusObserver>()
  */
 class FirefoxSyncFeature<AuthType>(
     private val syncableStores: Map<String, SyncableStore<AuthType>>,
-    private val reifyAuth: suspend (authInfo: FxaAuthInfo) -> AuthType
+    private val syncScope: String,
+    private val reifyAuth: suspend (authInfo: AuthInfo) -> AuthType
 ) : Observable<SyncStatusObserver> by registry {
     private val logger = Logger("feature-sync")
 
@@ -76,7 +60,7 @@ class FirefoxSyncFeature<AuthType>(
      * @param account [FirefoxAccountShaped] for which to perform a sync.
      * @return a [SyncResult] indicating result of synchronization of configured stores.
      */
-    suspend fun sync(account: FirefoxAccountShaped): SyncResult = syncMutex.withLock { withListeners {
+    suspend fun sync(account: OAuthAccount): SyncResult = syncMutex.withLock { withListeners {
         if (syncableStores.isEmpty()) {
             return@withListeners mapOf()
         }
@@ -84,7 +68,7 @@ class FirefoxSyncFeature<AuthType>(
         val results = mutableMapOf<String, StoreSyncStatus>()
 
         val reifiedAuthInfo = try {
-            reifyAuth(account.authInfo())
+            reifyAuth(account.authInfo(syncScope))
         } catch (e: AuthException) {
             syncableStores.keys.forEach { storeName ->
                 results[storeName] = StoreSyncStatus(SyncError(e))
@@ -93,7 +77,7 @@ class FirefoxSyncFeature<AuthType>(
         }
 
         syncableStores.keys.forEach { storeName ->
-            results[storeName] = syncStore(syncableStores[storeName]!!, storeName, reifiedAuthInfo)
+            results[storeName] = syncStore(syncableStores.getValue(storeName), storeName, reifiedAuthInfo)
         }
 
         return@withListeners results

@@ -27,6 +27,7 @@ dependencies {
     // These dependencies are part of this module's public API.
     api Dependencies.mozilla_places
     api project(':concept-storage')
+    api project(':concept-sync')
 
     implementation project(':support-utils')
 
