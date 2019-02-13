@@ -276,6 +276,9 @@ bool CallOrNewEmitter::emitEnd(uint32_t argc, const Maybe<uint32_t>& beginPos) {
       return false;
     }
   }
+  if (!bce_->markSimpleBreakpoint()) {
+    return false;
+  }
   if (!isSpread()) {
     if (!bce_->emitCall(op_, argc)) {
       //            [stack] RVAL

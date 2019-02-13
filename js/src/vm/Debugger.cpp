@@ -6189,6 +6189,478 @@ static bool EnsureScriptOffsetIsValid(JSContext* cx, JSScript* script,
   return false;
 }
 
+template <bool OnlyOffsets>
+class DebuggerScriptGetPossibleBreakpointsMatcher {
+  JSContext* cx_;
+  MutableHandleObject result_;
+
+  Maybe<size_t> minOffset;
+  Maybe<size_t> maxOffset;
+
+  Maybe<size_t> minLine;
+  size_t minColumn;
+  Maybe<size_t> maxLine;
+  size_t maxColumn;
+
+  bool passesQuery(size_t offset, size_t lineno, size_t colno) {
+    // [minOffset, maxOffset) - Inclusive minimum and exclusive maximum.
+    if ((minOffset && offset < *minOffset) ||
+        (maxOffset && offset >= *maxOffset)) {
+      return false;
+    }
+
+    if (minLine) {
+      if (lineno < *minLine || (lineno == *minLine && colno < minColumn)) {
+        return false;
+      }
+    }
+
+    if (maxLine) {
+      if (lineno > *maxLine || (lineno == *maxLine && colno >= maxColumn)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  bool maybeAppendEntry(size_t offset, size_t lineno, size_t colno,
+                        bool isStepStart) {
+    if (!passesQuery(offset, lineno, colno)) {
+      return true;
+    }
+
+    if (OnlyOffsets) {
+      if (!NewbornArrayPush(cx_, result_, NumberValue(offset))) {
+        return false;
+      }
+
+      return true;
+    }
+
+    RootedPlainObject entry(cx_, NewBuiltinClassInstance<PlainObject>(cx_));
+    if (!entry) {
+      return false;
+    }
+
+    RootedValue value(cx_, NumberValue(offset));
+    if (!DefineDataProperty(cx_, entry, cx_->names().offset, value)) {
+      return false;
+    }
+
+    value = NumberValue(lineno);
+    if (!DefineDataProperty(cx_, entry, cx_->names().lineNumber, value)) {
+      return false;
+    }
+
+    value = NumberValue(colno);
+    if (!DefineDataProperty(cx_, entry, cx_->names().columnNumber, value)) {
+      return false;
+    }
+
+    value = BooleanValue(isStepStart);
+    if (!DefineDataProperty(cx_, entry, cx_->names().isStepStart, value)) {
+      return false;
+    }
+
+    if (!NewbornArrayPush(cx_, result_, ObjectValue(*entry))) {
+      return false;
+    }
+    return true;
+  }
+
+  bool parseIntValue(HandleValue value, size_t* result) {
+    if (!value.isNumber()) {
+      return false;
+    }
+
+    double doubleOffset = value.toNumber();
+    if (doubleOffset < 0 || (unsigned int)doubleOffset != doubleOffset) {
+      return false;
+    }
+
+    *result = doubleOffset;
+    return true;
+  }
+
+  bool parseIntValue(HandleValue value, Maybe<size_t>* result) {
+    size_t result_;
+    if (!parseIntValue(value, &result_)) {
+      return false;
+    }
+
+    *result = Some(result_);
+    return true;
+  }
+
+ public:
+  explicit DebuggerScriptGetPossibleBreakpointsMatcher(
+      JSContext* cx, MutableHandleObject result)
+      : cx_(cx),
+        result_(result),
+        minOffset(),
+        maxOffset(),
+        minLine(),
+        minColumn(0),
+        maxLine(),
+        maxColumn(0) {}
+
+  bool parseQuery(HandleObject query) {
+    RootedValue lineValue(cx_);
+    if (!GetProperty(cx_, query, query, cx_->names().line, &lineValue)) {
+      return false;
+    }
+
+    RootedValue minLineValue(cx_);
+    if (!GetProperty(cx_, query, query, cx_->names().minLine, &minLineValue)) {
+      return false;
+    }
+
+    RootedValue minColumnValue(cx_);
+    if (!GetProperty(cx_, query, query, cx_->names().minColumn,
+                     &minColumnValue)) {
+      return false;
+    }
+
+    RootedValue minOffsetValue(cx_);
+    if (!GetProperty(cx_, query, query, cx_->names().minOffset,
+                     &minOffsetValue)) {
+      return false;
+    }
+
+    RootedValue maxLineValue(cx_);
+    if (!GetProperty(cx_, query, query, cx_->names().maxLine, &maxLineValue)) {
+      return false;
+    }
+
+    RootedValue maxColumnValue(cx_);
+    if (!GetProperty(cx_, query, query, cx_->names().maxColumn,
+                     &maxColumnValue)) {
+      return false;
+    }
+
+    RootedValue maxOffsetValue(cx_);
+    if (!GetProperty(cx_, query, query, cx_->names().maxOffset,
+                     &maxOffsetValue)) {
+      return false;
+    }
+
+    if (!minOffsetValue.isUndefined()) {
+      if (!parseIntValue(minOffsetValue, &minOffset)) {
+        JS_ReportErrorNumberASCII(
+            cx_, GetErrorMessage, nullptr, JSMSG_UNEXPECTED_TYPE,
+            "getPossibleBreakpoints' 'minOffset'", "not an integer");
+        return false;
+      }
+    }
+    if (!maxOffsetValue.isUndefined()) {
+      if (!parseIntValue(maxOffsetValue, &maxOffset)) {
+        JS_ReportErrorNumberASCII(
+            cx_, GetErrorMessage, nullptr, JSMSG_UNEXPECTED_TYPE,
+            "getPossibleBreakpoints' 'maxOffset'", "not an integer");
+        return false;
+      }
+    }
+
+    if (!lineValue.isUndefined()) {
+      if (!minLineValue.isUndefined() || !maxLineValue.isUndefined()) {
+        JS_ReportErrorNumberASCII(cx_, GetErrorMessage, nullptr,
+                                  JSMSG_UNEXPECTED_TYPE,
+                                  "getPossibleBreakpoints' 'line'",
+                                  "not allowed alongside 'minLine'/'maxLine'");
+      }
+
+      size_t line;
+      if (!parseIntValue(lineValue, &line)) {
+        JS_ReportErrorNumberASCII(
+            cx_, GetErrorMessage, nullptr, JSMSG_UNEXPECTED_TYPE,
+            "getPossibleBreakpoints' 'line'", "not an integer");
+        return false;
+      }
+
+      // If no end column is given, we use the default of 0 and wrap to
+      // the next line.
+      minLine = Some(line);
+      maxLine = Some(line + (maxColumnValue.isUndefined() ? 1 : 0));
+    }
+
+    if (!minLineValue.isUndefined()) {
+      if (!parseIntValue(minLineValue, &minLine)) {
+        JS_ReportErrorNumberASCII(
+            cx_, GetErrorMessage, nullptr, JSMSG_UNEXPECTED_TYPE,
+            "getPossibleBreakpoints' 'minLine'", "not an integer");
+        return false;
+      }
+    }
+
+    if (!minColumnValue.isUndefined()) {
+      if (!minLine) {
+        JS_ReportErrorNumberASCII(cx_, GetErrorMessage, nullptr,
+                                  JSMSG_UNEXPECTED_TYPE,
+                                  "getPossibleBreakpoints' 'minColumn'",
+                                  "not allowed without 'line' or 'minLine'");
+        return false;
+      }
+
+      if (!parseIntValue(minColumnValue, &minColumn)) {
+        JS_ReportErrorNumberASCII(
+            cx_, GetErrorMessage, nullptr, JSMSG_UNEXPECTED_TYPE,
+            "getPossibleBreakpoints' 'minColumn'", "not an integer");
+        return false;
+      }
+    }
+
+    if (!maxLineValue.isUndefined()) {
+      if (!parseIntValue(maxLineValue, &maxLine)) {
+        JS_ReportErrorNumberASCII(
+            cx_, GetErrorMessage, nullptr, JSMSG_UNEXPECTED_TYPE,
+            "getPossibleBreakpoints' 'maxLine'", "not an integer");
+        return false;
+      }
+    }
+
+    if (!maxColumnValue.isUndefined()) {
+      if (!maxLine) {
+        JS_ReportErrorNumberASCII(cx_, GetErrorMessage, nullptr,
+                                  JSMSG_UNEXPECTED_TYPE,
+                                  "getPossibleBreakpoints' 'maxColumn'",
+                                  "not allowed without 'line' or 'maxLine'");
+        return false;
+      }
+
+      if (!parseIntValue(maxColumnValue, &maxColumn)) {
+        JS_ReportErrorNumberASCII(
+            cx_, GetErrorMessage, nullptr, JSMSG_UNEXPECTED_TYPE,
+            "getPossibleBreakpoints' 'maxColumn'", "not an integer");
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  using ReturnType = bool;
+  ReturnType match(HandleScript script) {
+    // Second pass: build the result array.
+    result_.set(NewDenseEmptyArray(cx_));
+    if (!result_) {
+      return false;
+    }
+
+    for (BytecodeRangeWithPosition r(cx_, script); !r.empty(); r.popFront()) {
+      if (!r.frontIsBreakablePoint()) {
+        continue;
+      }
+
+      size_t offset = r.frontOffset();
+      size_t lineno = r.frontLineNumber();
+      size_t colno = r.frontColumnNumber();
+
+      if (!maybeAppendEntry(offset, lineno, colno,
+                            r.frontIsBreakableStepPoint())) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+  ReturnType match(Handle<LazyScript*> lazyScript) {
+    RootedScript script(cx_, DelazifyScript(cx_, lazyScript));
+    if (!script) {
+      return false;
+    }
+    return match(script);
+  }
+  ReturnType match(Handle<WasmInstanceObject*> instanceObj) {
+    wasm::Instance& instance = instanceObj->instance();
+
+    Vector<wasm::ExprLoc> offsets(cx_);
+    if (instance.debugEnabled() &&
+        !instance.debug().getAllColumnOffsets(cx_, &offsets)) {
+      return false;
+    }
+
+    result_.set(NewDenseEmptyArray(cx_));
+    if (!result_) {
+      return false;
+    }
+
+    for (uint32_t i = 0; i < offsets.length(); i++) {
+      size_t lineno = offsets[i].lineno;
+      size_t column = offsets[i].column;
+      size_t offset = offsets[i].offset;
+      if (!maybeAppendEntry(offset, lineno, column, true)) {
+        return false;
+      }
+    }
+    return true;
+  }
+};
+
+static bool DebuggerScript_getPossibleBreakpoints(JSContext* cx, unsigned argc,
+                                                  Value* vp) {
+  THIS_DEBUGSCRIPT_REFERENT(cx, argc, vp, "getPossibleBreakpoints", args, obj,
+                            referent);
+
+  RootedObject result(cx);
+  DebuggerScriptGetPossibleBreakpointsMatcher<false> matcher(cx, &result);
+  if (args.length() >= 1 && !args[0].isUndefined()) {
+    RootedObject queryObject(cx, NonNullObject(cx, args[0]));
+    if (!queryObject || !matcher.parseQuery(queryObject)) {
+      return false;
+    }
+  }
+  if (!referent.match(matcher)) {
+    return false;
+  }
+
+  args.rval().setObject(*result);
+  return true;
+}
+
+static bool DebuggerScript_getPossibleBreakpointOffsets(JSContext* cx,
+                                                        unsigned argc,
+                                                        Value* vp) {
+  THIS_DEBUGSCRIPT_REFERENT(cx, argc, vp, "getPossibleBreakpointOffsets", args,
+                            obj, referent);
+
+  RootedObject result(cx);
+  DebuggerScriptGetPossibleBreakpointsMatcher<true> matcher(cx, &result);
+  if (args.length() >= 1 && !args[0].isUndefined()) {
+    RootedObject queryObject(cx, NonNullObject(cx, args[0]));
+    if (!queryObject || !matcher.parseQuery(queryObject)) {
+      return false;
+    }
+  }
+  if (!referent.match(matcher)) {
+    return false;
+  }
+
+  args.rval().setObject(*result);
+  return true;
+}
+
+class DebuggerScriptGetOffsetMetadataMatcher {
+  JSContext* cx_;
+  size_t offset_;
+  MutableHandlePlainObject result_;
+
+ public:
+  explicit DebuggerScriptGetOffsetMetadataMatcher(
+      JSContext* cx, size_t offset, MutableHandlePlainObject result)
+      : cx_(cx), offset_(offset), result_(result) {}
+  using ReturnType = bool;
+  ReturnType match(HandleScript script) {
+    if (!EnsureScriptOffsetIsValid(cx_, script, offset_)) {
+      return false;
+    }
+
+    result_.set(NewBuiltinClassInstance<PlainObject>(cx_));
+    if (!result_) {
+      return false;
+    }
+
+    BytecodeRangeWithPosition r(cx_, script);
+    while (!r.empty() && r.frontOffset() < offset_) {
+      r.popFront();
+    }
+
+    RootedValue value(cx_, NumberValue(r.frontLineNumber()));
+    if (!DefineDataProperty(cx_, result_, cx_->names().lineNumber, value)) {
+      return false;
+    }
+
+    value = NumberValue(r.frontColumnNumber());
+    if (!DefineDataProperty(cx_, result_, cx_->names().columnNumber, value)) {
+      return false;
+    }
+
+    value = BooleanValue(r.frontIsBreakablePoint());
+    if (!DefineDataProperty(cx_, result_, cx_->names().isBreakpoint, value)) {
+      return false;
+    }
+
+    value = BooleanValue(r.frontIsBreakableStepPoint());
+    if (!DefineDataProperty(cx_, result_, cx_->names().isStepStart, value)) {
+      return false;
+    }
+
+    return true;
+  }
+  ReturnType match(Handle<LazyScript*> lazyScript) {
+    RootedScript script(cx_, DelazifyScript(cx_, lazyScript));
+    if (!script) {
+      return false;
+    }
+    return match(script);
+  }
+  ReturnType match(Handle<WasmInstanceObject*> instanceObj) {
+    wasm::Instance& instance = instanceObj->instance();
+    if (!instance.debugEnabled()) {
+      JS_ReportErrorNumberASCII(cx_, GetErrorMessage, nullptr,
+                                JSMSG_DEBUG_BAD_OFFSET);
+      return false;
+    }
+
+    size_t lineno;
+    size_t column;
+    if (!instance.debug().getOffsetLocation(offset_, &lineno, &column)) {
+      JS_ReportErrorNumberASCII(cx_, GetErrorMessage, nullptr,
+                                JSMSG_DEBUG_BAD_OFFSET);
+      return false;
+    }
+
+    result_.set(NewBuiltinClassInstance<PlainObject>(cx_));
+    if (!result_) {
+      return false;
+    }
+
+    RootedValue value(cx_, NumberValue(lineno));
+    if (!DefineDataProperty(cx_, result_, cx_->names().lineNumber, value)) {
+      return false;
+    }
+
+    value = NumberValue(column);
+    if (!DefineDataProperty(cx_, result_, cx_->names().columnNumber, value)) {
+      return false;
+    }
+
+    value.setBoolean(true);
+    if (!DefineDataProperty(cx_, result_, cx_->names().isBreakpoint, value)) {
+      return false;
+    }
+
+    value.setBoolean(true);
+    if (!DefineDataProperty(cx_, result_, cx_->names().isStepStart, value)) {
+      return false;
+    }
+
+    return true;
+  }
+};
+
+static bool DebuggerScript_getOffsetMetadata(JSContext* cx, unsigned argc,
+                                             Value* vp) {
+  THIS_DEBUGSCRIPT_REFERENT(cx, argc, vp, "getOffsetMetadata", args, obj,
+                            referent);
+  if (!args.requireAtLeast(cx, "Debugger.Script.getOffsetMetadata", 1)) {
+    return false;
+  }
+  size_t offset;
+  if (!ScriptOffset(cx, args[0], &offset)) {
+    return false;
+  }
+
+  RootedPlainObject result(cx);
+  DebuggerScriptGetOffsetMetadataMatcher matcher(cx, offset, &result);
+  if (!referent.match(matcher)) {
+    return false;
+  }
+
+  args.rval().setObject(*result);
+  return true;
+}
+
 namespace {
 
 /*
@@ -7488,18 +7960,27 @@ static const JSPropertySpec DebuggerScript_properties[] = {
 
 static const JSFunctionSpec DebuggerScript_methods[] = {
     JS_FN("getChildScripts", DebuggerScript_getChildScripts, 0, 0),
-    JS_FN("getAllOffsets", DebuggerScript_getAllOffsets, 0, 0),
-    JS_FN("getAllColumnOffsets", DebuggerScript_getAllColumnOffsets, 0, 0),
-    JS_FN("getLineOffsets", DebuggerScript_getLineOffsets, 1, 0),
-    JS_FN("getOffsetLocation", DebuggerScript_getOffsetLocation, 0, 0),
-    JS_FN("getSuccessorOffsets", DebuggerScript_getSuccessorOffsets, 1, 0),
-    JS_FN("getPredecessorOffsets", DebuggerScript_getPredecessorOffsets, 1, 0),
+    JS_FN("getPossibleBreakpoints", DebuggerScript_getPossibleBreakpoints, 0,
+          0),
+    JS_FN("getPossibleBreakpointOffsets",
+          DebuggerScript_getPossibleBreakpointOffsets, 0, 0),
     JS_FN("setBreakpoint", DebuggerScript_setBreakpoint, 2, 0),
     JS_FN("getBreakpoints", DebuggerScript_getBreakpoints, 1, 0),
     JS_FN("clearBreakpoint", DebuggerScript_clearBreakpoint, 1, 0),
     JS_FN("clearAllBreakpoints", DebuggerScript_clearAllBreakpoints, 0, 0),
     JS_FN("isInCatchScope", DebuggerScript_isInCatchScope, 1, 0),
+    JS_FN("getOffsetMetadata", DebuggerScript_getOffsetMetadata, 1, 0),
     JS_FN("getOffsetsCoverage", DebuggerScript_getOffsetsCoverage, 0, 0),
+    JS_FN("getSuccessorOffsets", DebuggerScript_getSuccessorOffsets, 1, 0),
+    JS_FN("getPredecessorOffsets", DebuggerScript_getPredecessorOffsets, 1, 0),
+
+    // The following APIs are deprecated due to their reliance on the
+    // under-defined 'entrypoint' concept. Make use of getPossibleBreakpoints,
+    // getPossibleBreakpointOffsets, or getOffsetMetadata instead.
+    JS_FN("getAllOffsets", DebuggerScript_getAllOffsets, 0, 0),
+    JS_FN("getAllColumnOffsets", DebuggerScript_getAllColumnOffsets, 0, 0),
+    JS_FN("getLineOffsets", DebuggerScript_getLineOffsets, 1, 0),
+    JS_FN("getOffsetLocation", DebuggerScript_getOffsetLocation, 0, 0),
     JS_FS_END};
 
 /*** Debugger.Source ********************************************************/
