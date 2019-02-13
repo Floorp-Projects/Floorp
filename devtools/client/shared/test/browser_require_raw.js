@@ -16,5 +16,6 @@ const variableFileContents = browserRequire("raw!devtools/client/themes/variable
 
 function test() {
   ok(variableFileContents.length > 0, "raw browserRequire worked");
+  delete window.getBrowserLoaderForWindow;
   finish();
 }
