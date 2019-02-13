@@ -45,7 +45,16 @@ export const selectLayoutRender = createSelector(
           return component;
         }
 
-        return {...component, data: maybeInjectSpocs(feeds.data[component.feed.url].data, component.spocs)};
+        let {data} = feeds.data[component.feed.url];
+
+        if (component && component.properties && component.properties.offset) {
+          data = {
+            ...data,
+            recommendations: data.recommendations.slice(component.properties.offset),
+          };
+        }
+
+        return {...component, data: maybeInjectSpocs(data, component.spocs)};
       }),
     }));
   }

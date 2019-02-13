@@ -27,5 +27,5 @@ cd /mozilla-central && ./mach build \
     browser/components/search/test/browser/browser_google_behavior.js \
     browser/modules/test/browser/browser_UsageTelemetry_content.js \
   && ! grep -q TEST-UNEXPECTED test_run_log \
-  && ! ./mach test all_files_referenced | grep activity-stream \
-  && RUN_FIND_DUPES=1 ./mach package
+  && RUN_FIND_DUPES=1 ./mach package \
+  && ./mach test --appname=dist all_files_referenced --headless

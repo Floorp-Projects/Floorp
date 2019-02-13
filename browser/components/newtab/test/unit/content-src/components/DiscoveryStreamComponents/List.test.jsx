@@ -101,7 +101,7 @@ describe("<ListItem> presentation component", () => {
     const wrapper = shallow(<ListItem {...ValidListItemProps} />);
 
     const anchors = wrapper.find(
-      `a.ds-list-item-link[href="${ValidListItemProps.url}"]`);
+      `SafeAnchor.ds-list-item-link[url="${ValidListItemProps.url}"]`);
     assert.lengthOf(anchors, 1);
   });
 

@@ -2,6 +2,7 @@ import {actionCreators as ac} from "common/Actions.jsm";
 import {DSCard} from "../DSCard/DSCard.jsx";
 import {List} from "../List/List.jsx";
 import React from "react";
+import {SafeAnchor} from "../SafeAnchor/SafeAnchor";
 
 export class Hero extends React.PureComponent {
   constructor(props) {
@@ -68,7 +69,7 @@ export class Hero extends React.PureComponent {
       <div>
         <div className="ds-header">{this.props.title}</div>
         <div className={`ds-hero ds-hero-${this.props.border}`}>
-          <a href={heroRec.url} className="wrapper" onClick={this.onLinkClick}>
+          <SafeAnchor url={heroRec.url} className="wrapper" onLinkClick={this.onLinkClick}>
             <div className="img-wrapper">
               <div className="img" style={{backgroundImage: `url(${heroRec.image_src})`}} />
             </div>
@@ -81,7 +82,7 @@ export class Hero extends React.PureComponent {
                 <p className="source">{heroRec.domain}</p>
               )}
             </div>
-          </a>
+          </SafeAnchor>
           <div className={`${this.props.subComponentType}`}>
             { this.props.subComponentType === `cards` ? cards : list }
           </div>
