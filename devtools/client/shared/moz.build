@@ -15,6 +15,7 @@ DIRS += [
     'redux',
     'remote-debugging',
     'source-map',
+    'sourceeditor',
     'vendor',
     'webpack',
     'widgets',

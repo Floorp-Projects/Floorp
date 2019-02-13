@@ -16,7 +16,7 @@ loader.lazyRequireGetter(this, "AutocompletePopup", "devtools/client/shared/auto
 loader.lazyRequireGetter(this, "PropTypes", "devtools/client/shared/vendor/react-prop-types");
 loader.lazyRequireGetter(this, "gDevTools", "devtools/client/framework/devtools", true);
 loader.lazyRequireGetter(this, "KeyCodes", "devtools/client/shared/keycodes", true);
-loader.lazyRequireGetter(this, "Editor", "devtools/client/sourceeditor/editor");
+loader.lazyRequireGetter(this, "Editor", "devtools/client/shared/sourceeditor/editor");
 loader.lazyRequireGetter(this, "Telemetry", "devtools/client/shared/telemetry");
 loader.lazyRequireGetter(this, "saveScreenshot", "devtools/shared/screenshot/save");
 loader.lazyRequireGetter(this, "focusableSelector", "devtools/client/shared/focus", true);

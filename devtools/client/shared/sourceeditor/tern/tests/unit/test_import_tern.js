@@ -6,9 +6,9 @@
  */
 
 function run_test() {
-  const tern = require("devtools/client/sourceeditor/tern/tern");
-  const ecma5 = require("devtools/client/sourceeditor/tern/ecma5");
-  const browser = require("devtools/client/sourceeditor/tern/browser");
+  const tern = require("devtools/client/shared/sourceeditor/tern/tern");
+  const ecma5 = require("devtools/client/shared/sourceeditor/tern/ecma5");
+  const browser = require("devtools/client/shared/sourceeditor/tern/browser");
   Assert.ok(!!tern);
   Assert.ok(!!ecma5);
   Assert.ok(!!browser);

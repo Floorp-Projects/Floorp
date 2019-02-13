@@ -83,7 +83,7 @@ const webpackConfig = {
       "devtools/client/shared/vendor/reselect": "reselect",
       "devtools/client/shared/vendor/jszip": "jszip",
 
-      "devtools/client/sourceeditor/editor": "devtools-source-editor/src/source-editor",
+      "devtools/client/shared/sourceeditor/editor": "devtools-source-editor/src/source-editor",
 
       "devtools/shared/event-emitter": "devtools-modules/src/utils/event-emitter",
       "devtools/shared/platform/clipboard": path.join(__dirname, "../../client/shared/webpack/shims/platform-clipboard-stub"),

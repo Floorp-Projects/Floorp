@@ -4,12 +4,12 @@
 
 "use strict";
 
-const CSSCompleter = require("devtools/client/sourceeditor/css-autocompleter");
+const CSSCompleter = require("devtools/client/shared/sourceeditor/css-autocompleter");
 
-const CSS_URI = "http://mochi.test:8888/browser/devtools/client/sourceeditor" +
+const CSS_URI = "http://mochi.test:8888/browser/devtools/client/shared/sourceeditor" +
                 "/test/css_statemachine_testcases.css";
 const TESTS_URI = "http://mochi.test:8888/browser/devtools/client" +
-                  "/sourceeditor/test/css_statemachine_tests.json";
+                  "/shared/sourceeditor/test/css_statemachine_tests.json";
 
 const source = read(CSS_URI);
 const {tests} = JSON.parse(read(TESTS_URI));

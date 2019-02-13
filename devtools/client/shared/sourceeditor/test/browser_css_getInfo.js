@@ -4,8 +4,7 @@
 
 "use strict";
 
-const CSSCompleter =
-      require("devtools/client/sourceeditor/css-autocompleter");
+const CSSCompleter = require("devtools/client/shared/sourceeditor/css-autocompleter");
 
 const source = [
   ".devtools-toolbar {",
