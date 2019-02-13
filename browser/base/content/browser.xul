@@ -835,6 +835,7 @@ xmlns="http://www.w3.org/1999/xhtml"
              overflowpanel="widget-overflow"
              context="toolbar-context-menu">
 
+      <toolbartabstop/>
       <hbox id="nav-bar-customization-target" flex="1">
         <toolbarbutton id="back-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                        label="&backCmd.label;"
@@ -888,6 +889,7 @@ xmlns="http://www.w3.org/1999/xhtml"
         <toolbaritem id="urlbar-container" flex="400" persist="width"
                      removable="false"
                      class="chromeclass-location" overflows="false">
+            <toolbartabstop/>
             <textbox id="urlbar" flex="1"
                      placeholder="&urlbar.placeholder2;"
                      defaultPlaceholder="&urlbar.placeholder2;"
@@ -1007,6 +1009,7 @@ xmlns="http://www.w3.org/1999/xhtml"
                 <label id="extension" class="urlbar-display urlbar-display-extension" value="&urlbar.extension.label;"/>
               </box>
               <hbox id="page-action-buttons" context="pageActionContextMenu">
+                <toolbartabstop/>
                 <hbox id="contextual-feature-recommendation" role="button" hidden="true">
                   <hbox id="cfr-label-container">
                     <label id="cfr-label"/>
@@ -1064,6 +1067,7 @@ xmlns="http://www.w3.org/1999/xhtml"
                 </hbox>
               </hbox>
             </textbox>
+            <toolbartabstop/>
         </toolbaritem>
 
         <toolbarspring cui-areatype="toolbar" class="chromeclass-toolbar-additional"/>
@@ -1159,6 +1163,7 @@ xmlns="http://www.w3.org/1999/xhtml"
              toolbarname="&personalbarCmd.label;" accesskey="&personalbarCmd.accesskey;"
              collapsed="true"
              customizable="true">
+      <toolbartabstop skipintoolbarset="true"/>
       <toolbaritem id="personal-bookmarks"
                    title="&bookmarksToolbarItem.label;"
                    cui-areatype="toolbar"
@@ -1328,7 +1333,9 @@ xmlns="http://www.w3.org/1999/xhtml"
                    align="center"
                    flex="100"
                    persist="width">
+        <toolbartabstop/>
         <searchbar id="searchbar" flex="1"/>
+        <toolbartabstop/>
       </toolbaritem>
     </toolbarpalette>
   </toolbox>
