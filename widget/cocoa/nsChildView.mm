@@ -2327,7 +2327,7 @@ NSColor* nsChildView::VibrancyFillColorForThemeGeometryType(
 mozilla::VibrancyManager& nsChildView::EnsureVibrancyManager() {
   MOZ_ASSERT(mView, "Only call this once we have a view!");
   if (!mVibrancyManager) {
-    mVibrancyManager = MakeUnique<VibrancyManager>(*this, mView);
+    mVibrancyManager = MakeUnique<VibrancyManager>(*this, [mView vibrancyViewsContainer]);
   }
   return *mVibrancyManager;
 }
@@ -2481,9 +2481,10 @@ void nsChildView::UpdateWindowDraggingRegion(const LayoutDeviceIntRegion& aRegio
 
   // Suppress calls to setNeedsDisplay during NSView geometry changes.
   ManipulateViewWithoutNeedingDisplay(mView, ^() {
-    changed = mNonDraggableRegion.UpdateRegion(nonDraggable, *this, mView, ^() {
-      return [[NonDraggableView alloc] initWithFrame:NSZeroRect];
-    });
+    changed = mNonDraggableRegion.UpdateRegion(
+        nonDraggable, *this, [mView nonDraggableViewsContainer], ^() {
+          return [[NonDraggableView alloc] initWithFrame:NSZeroRect];
+        });
   });
 
   if (changed) {
@@ -2847,6 +2848,31 @@ class WidgetsReleaserRunnable final : public mozilla::Runnable {
 
 #pragma mark -
 
+// ViewRegionContainerView is a view class for certain subviews of ChildView
+// which contain the NSViews created for ViewRegions (see ViewRegion.h).
+// It doesn't do anything interesting, it only acts as a container so that it's
+// easier for ChildView to control the z order of its children.
+@interface ViewRegionContainerView : NSView {
+}
+@end
+
+@implementation ViewRegionContainerView
+
+- (NSView*)hitTest:(NSPoint)aPoint {
+  return nil;  // Be transparent to mouse events.
+}
+
+- (BOOL)isFlipped {
+  return [[self superview] isFlipped];
+}
+
+- (BOOL)mouseDownCanMoveWindow {
+  return [[self superview] mouseDownCanMoveWindow];
+}
+
+@end
+;
+
 @implementation ChildView
 
 // globalDragPboard is non-null during native drag sessions that did not originate
@@ -2917,6 +2943,15 @@ NSEvent* gLastDragMouseDownEvent = nil;
 #ifdef __LP64__
     mCancelSwipeAnimation = nil;
 #endif
+
+    mNonDraggableViewsContainer = [[ViewRegionContainerView alloc] initWithFrame:[self bounds]];
+    mVibrancyViewsContainer = [[ViewRegionContainerView alloc] initWithFrame:[self bounds]];
+
+    [mNonDraggableViewsContainer setAutoresizingMask:NSViewWidthSizable | NSViewHeightSizable];
+    [mVibrancyViewsContainer setAutoresizingMask:NSViewWidthSizable | NSViewHeightSizable];
+
+    [self addSubview:mNonDraggableViewsContainer];
+    [self addSubview:mVibrancyViewsContainer];
 
     mTopLeftCornerMask = NULL;
     mLastPressureStage = 0;
@@ -3049,6 +3084,14 @@ NSEvent* gLastDragMouseDownEvent = nil;
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
+- (NSView*)vibrancyViewsContainer {
+  return mVibrancyViewsContainer;
+}
+
+- (NSView*)nonDraggableViewsContainer {
+  return mNonDraggableViewsContainer;
+}
+
 - (void)dealloc {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
@@ -3061,6 +3104,10 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   [[NSNotificationCenter defaultCenter] removeObserver:self];
   [[NSDistributedNotificationCenter defaultCenter] removeObserver:self];
+  [mVibrancyViewsContainer removeFromSuperview];
+  [mVibrancyViewsContainer release];
+  [mNonDraggableViewsContainer removeFromSuperview];
+  [mNonDraggableViewsContainer release];
 
   [super dealloc];
 
