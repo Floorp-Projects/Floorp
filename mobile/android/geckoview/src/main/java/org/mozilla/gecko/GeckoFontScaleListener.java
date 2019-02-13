@@ -16,7 +16,13 @@ import android.provider.Settings;
 import android.support.annotation.UiThread;
 import android.util.Log;
 
-class GeckoFontScaleListener
+/**
+ * A class that automatically adjusts font size and font inflation settings for web content in Gecko
+ * in accordance with the device's OS font scale setting.
+ *
+ * @see android.provider.Settings.System#FONT_SCALE
+ */
+/* package */ final class GeckoFontScaleListener
         extends ContentObserver {
     private static final String LOGTAG = "GeckoFontScaleListener";
 
@@ -44,6 +50,10 @@ class GeckoFontScaleListener
         super(ThreadUtils.getUiHandler());
     }
 
+    /**
+     * Prepare the GeckoFontScaleListener for usage. If it has been previously enabled, it will
+     * now start actively working.
+     */
     public void attachToContext(final Context context) {
         ThreadUtils.assertOnUiThread();
 
@@ -57,6 +67,9 @@ class GeckoFontScaleListener
         onEnabledChange();
     }
 
+    /**
+     * Detaches the context and also stops the GeckoFontScaleListener if it was previously enabled.
+     */
     public void detachFromContext() {
         ThreadUtils.assertOnUiThread();
 
@@ -70,12 +83,26 @@ class GeckoFontScaleListener
         mAttached = false;
     }
 
+    /**
+     * Controls whether the GeckoFontScaleListener should automatically adjust font sizes for web
+     * content in Gecko.
+     *
+     * <p>This method can be called at any time, but the GeckoFontScaleListener won't start actively
+     * adjusting font sizes until it has been attached to a context.
+     *
+     * @param enabled True if automatic font size setting should be enabled.
+     */
     public void setEnabled(boolean enabled) {
         ThreadUtils.assertOnUiThread();
         mEnabled = enabled;
         onEnabledChange();
     }
 
+    /**
+     * Get whether the GeckoFontScaleListener is currently enabled.
+     *
+     * @return True if the GeckoFontScaleListener is currently enabled.
+     */
     public boolean getEnabled() {
         return mEnabled;
     }
