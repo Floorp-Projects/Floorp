@@ -48,6 +48,15 @@ class HistoryComponent(
                     state
                 }
             }
+            is HistoryChange.RemoveItemForRemoval -> {
+                val mode = state.mode
+                if (mode is HistoryState.Mode.Editing) {
+                    val items = mode.selectedItems.filter { it.id != change.item.id }
+                    state.copy(mode = mode.copy(selectedItems = items))
+                } else {
+                    state
+                }
+            }
         }
     }
 
@@ -69,10 +78,12 @@ sealed class HistoryAction : Action {
     data class Select(val item: HistoryItem) : HistoryAction()
     data class EnterEditMode(val item: HistoryItem) : HistoryAction()
     data class AddItemForRemoval(val item: HistoryItem) : HistoryAction()
+    data class RemoveItemForRemoval(val item: HistoryItem) : HistoryAction()
 }
 
 sealed class HistoryChange : Change {
     data class Change(val list: List<HistoryItem>) : HistoryChange()
     data class EnterEditMode(val item: HistoryItem) : HistoryChange()
     data class AddItemForRemoval(val item: HistoryItem) : HistoryChange()
+    data class RemoveItemForRemoval(val item: HistoryItem) : HistoryChange()
 }

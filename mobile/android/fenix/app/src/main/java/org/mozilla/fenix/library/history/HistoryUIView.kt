@@ -9,6 +9,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.CheckBox
+import android.widget.CompoundButton
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -56,9 +57,29 @@ private class HistoryAdapter(
         private val url = view.findViewById<TextView>(R.id.history_url)
         private var item: HistoryItem? = null
         private var mode: HistoryState.Mode = HistoryState.Mode.Normal
+        private val checkListener = object : CompoundButton.OnCheckedChangeListener {
+            override fun onCheckedChanged(buttonView: CompoundButton?, isChecked: Boolean) {
+                if (mode is HistoryState.Mode.Normal) { return }
+
+                item?.apply {
+                    val action = if (isChecked) {
+                        HistoryAction.AddItemForRemoval(this)
+                    } else {
+                        HistoryAction.RemoveItemForRemoval(this)
+                    }
+
+                    actionEmitter.onNext(action)
+                }
+            }
+        }
 
         init {
             view.setOnClickListener {
+                if (mode is HistoryState.Mode.Editing) {
+                    checkbox.isChecked = !checkbox.isChecked
+                    return@setOnClickListener
+                }
+
                 item?.apply {
                     actionEmitter.onNext(HistoryAction.Select(this))
                 }
@@ -72,11 +93,7 @@ private class HistoryAdapter(
                 true
             }
 
-            checkbox.setOnClickListener {
-                item?.apply {
-                    actionEmitter.onNext(HistoryAction.AddItemForRemoval(this))
-                }
-            }
+            checkbox.setOnCheckedChangeListener(checkListener)
         }
 
         fun bind(item: HistoryItem, mode: HistoryState.Mode) {
@@ -91,7 +108,9 @@ private class HistoryAdapter(
             favicon.visibility = if (isEditing) { View.INVISIBLE } else { View.VISIBLE }
 
             if (mode is HistoryState.Mode.Editing) {
+                checkbox.setOnCheckedChangeListener(null)
                 checkbox.isChecked = mode.selectedItems.contains(item)
+                checkbox.setOnCheckedChangeListener(checkListener)
             }
         }
 

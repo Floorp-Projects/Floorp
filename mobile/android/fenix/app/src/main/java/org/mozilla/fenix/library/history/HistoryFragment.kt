@@ -62,6 +62,8 @@ class HistoryFragment : Fragment(), CoroutineScope {
                         .onNext(HistoryChange.EnterEditMode(it.item))
                     is HistoryAction.AddItemForRemoval -> getManagedEmitter<HistoryChange>()
                         .onNext(HistoryChange.AddItemForRemoval(it.item))
+                    is HistoryAction.RemoveItemForRemoval -> getManagedEmitter<HistoryChange>()
+                        .onNext(HistoryChange.RemoveItemForRemoval(it.item))
                 }
             }
     }
