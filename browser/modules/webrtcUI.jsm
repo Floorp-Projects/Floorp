@@ -719,8 +719,7 @@ function prompt(aBrowser, aRequest) {
             let baseURL =
               Services.urlFormatter.formatURLPref("app.support.baseURL");
 
-            let learnMore = chromeWin.document.createXULElement("label");
-            learnMore.className = "text-link";
+            let learnMore = chromeWin.document.createXULElement("label", {is: "text-link"});
             learnMore.setAttribute("href", baseURL + "screenshare-safety");
             learnMore.textContent = learnMoreText;
 

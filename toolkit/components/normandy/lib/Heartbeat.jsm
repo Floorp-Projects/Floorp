@@ -206,8 +206,7 @@ var Heartbeat = class {
 
     // Add Learn More Link
     if (this.options.learnMoreMessage && this.options.learnMoreUrl) {
-      this.learnMore = this.chromeWindow.document.createXULElement("label");
-      this.learnMore.className = "text-link";
+      this.learnMore = this.chromeWindow.document.createXULElement("label", {is: "text-link"});
       this.learnMore.href = this.options.learnMoreUrl.toString();
       this.learnMore.setAttribute("value", this.options.learnMoreMessage);
       this.learnMore.addEventListener("click",

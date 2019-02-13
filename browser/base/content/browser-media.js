@@ -38,8 +38,7 @@ var gEMEHandler = {
     let mainMessage = gNavigatorBundle.getString("emeNotifications.drmContentDisabled.message");
     let text = gNavigatorBundle.getString("emeNotifications.drmContentDisabled.learnMoreLabel");
     let baseURL = Services.urlFormatter.formatURLPref("app.support.baseURL");
-    let link = document.createXULElement("label");
-    link.className = "text-link";
+    let link = document.createXULElement("label", {is: "text-link"});
     link.setAttribute("href", baseURL + "drm-content");
     link.textContent = text;
     return BrowserUtils.getLocalizedFragment(document, mainMessage, link);
