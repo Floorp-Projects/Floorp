@@ -312,6 +312,11 @@ class MessageChannel : HasResultCodes, MessageLoop::DestructionObserver {
     sIsPumpingMessages = aIsPumping;
   }
 
+  /**
+   * Does this MessageChannel cross process boundaries?
+   */
+  bool IsCrossProcess() const { return mIsCrossProcess; }
+
 #ifdef OS_WIN
   struct MOZ_STACK_CLASS SyncStackFrame {
     SyncStackFrame(MessageChannel* channel, bool interrupt);
