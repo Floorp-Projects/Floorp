@@ -78,7 +78,7 @@
             android:id="@+id/homeDivider"
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="@color/photonGrey30"
+            android:background="?attr/homeDividerColor"
             app:layout_constraintTop_toBottomOf="@id/toolbar_wrapper"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"

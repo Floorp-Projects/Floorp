@@ -23,6 +23,7 @@
         <item name="menuButtonTint">@android:color/black</item>
         <item name="toolbarWrapperBackground">@drawable/home_search_background_light</item>
         <item name="toolbarTextColor">@color/search_text</item>
+        <item name="homeDividerColor">@color/photonGrey30</item>
 
         <!-- Search fragment colors -->
         <item name="searchBackground">@color/off_white</item>
@@ -62,6 +63,7 @@
         <item name="menuButtonTint">@color/off_white</item>
         <item name="toolbarWrapperBackground">@drawable/home_search_background_private</item>
         <item name="toolbarTextColor">@color/off_white</item>
+        <item name="homeDividerColor">@color/search_private_background</item>
 
         <!-- Search fragment colors -->
         <item name="searchBackground">@color/private_browsing_bottom_gradient</item>

@@ -22,6 +22,7 @@
     <attr name="toolbarWrapperBackground" format="reference"/>
     <attr name="toolbarTextColor" format="reference"/>
     <attr name="navigationBarColorHome" format="reference"/>
+    <attr name="homeDividerColor" format="reference" />
 
     <!-- Search fragment -->
     <attr name="searchBackground" format="reference"/>
