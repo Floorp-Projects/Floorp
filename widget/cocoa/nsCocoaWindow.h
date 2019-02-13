@@ -86,6 +86,8 @@ typedef struct _nsCocoaWindowList {
 
 - (void)setUseMenuStyle:(BOOL)aValue;
 
+- (void)releaseJSObjects;
+
 @end
 
 @interface NSWindow (Undocumented)
