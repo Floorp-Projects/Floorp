@@ -50,4 +50,4 @@ git push  --no-verify --quiet $URL $BRANCH
 echo "Done ($?)"
 
 echo "Opening pull request"
-./gradlew openPR -Ptitle="Docs update ($TIMESTAMP)" -Pbranch="$BRANCH" -PtokenFile="token.properties"
+./gradlew openPR -Ptitle="Docs update ($TIMESTAMP) [ci skip]" -Pbranch="$BRANCH" -PtokenFile="token.properties"
