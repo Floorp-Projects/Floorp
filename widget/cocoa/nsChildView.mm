@@ -2317,12 +2317,6 @@ void nsChildView::UpdateVibrancy(const nsTArray<ThemeGeometry>& aThemeGeometries
                          activeSourceListSelectionRegion);
 }
 
-void nsChildView::ClearVibrantAreas() {
-  if (VibrancyManager::SystemSupportsVibrancy()) {
-    EnsureVibrancyManager().ClearVibrantAreas();
-  }
-}
-
 NSColor* nsChildView::VibrancyFillColorForThemeGeometryType(
     nsITheme::ThemeGeometryType aThemeGeometryType) {
   if (VibrancyManager::SystemSupportsVibrancy()) {
@@ -3184,10 +3178,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
   return YES;
 }
 
-- (BOOL)isOpaque {
-  return [[self window] isOpaque];
-}
-
 // We accept key and mouse events, so don't keep passing them up the chain. Allow
 // this to be a 'focused' widget for event dispatch.
 - (BOOL)acceptsFirstResponder {
@@ -3304,15 +3294,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
   CGContextRef cgContext = (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort];
 
   if ([self isUsingOpenGL]) {
-    // Since this view is usually declared as opaque, the window's pixel
-    // buffer may now contain garbage which we need to prevent from reaching
-    // the screen. The only place where garbage can show is in the window
-    // corners and the vibrant regions of the window - the rest of the window
-    // is covered by opaque content in our OpenGL surface.
-    // So we need to clear the pixel buffer contents in these areas.
-    mGeckoChild->ClearVibrantAreas();
-    [self clearCorners];
-
     // Force a sync OMTC composite into the OpenGL context and return.
     LayoutDeviceIntRect geckoBounds = mGeckoChild->GetBounds();
     LayoutDeviceIntRegion region(geckoBounds);
@@ -3379,35 +3360,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
   GLint opaque = aOpaque || gfxPrefs::CompositorGLContextOpaque();
   [mGLContext setValues:&opaque forParameter:NSOpenGLCPSurfaceOpacity];
   CGLUnlockContext((CGLContextObj)[mGLContext CGLContextObj]);
-}
-
-// Accelerated windows have two NSSurfaces:
-//  (1) The window's pixel buffer in the back and
-//  (2) the OpenGL view in the front.
-// These two surfaces are composited by the window manager. Drawing into the
-// CGContext which is provided by drawRect ends up in (1).
-// When our window has rounded corners, the OpenGL view has transparent pixels
-// in the corners. In these places the contents of the window's pixel buffer
-// can show through. So we need to make sure that the pixel buffer is
-// transparent in the corners so that no garbage reaches the screen.
-// The contents of the pixel buffer in the rest of the window don't matter
-// because they're covered by opaque pixels of the OpenGL context.
-// Making the corners transparent works even though our window is
-// declared "opaque" (in the NSWindow's isOpaque method).
-- (void)clearCorners {
-  CGFloat radius = [self cornerRadius];
-  CGFloat w = [self bounds].size.width, h = [self bounds].size.height;
-  [[NSColor clearColor] set];
-
-  if ([self isCoveringTitlebar]) {
-    NSRectFill(NSMakeRect(0, 0, radius, radius));
-    NSRectFill(NSMakeRect(w - radius, 0, radius, radius));
-  }
-
-  if ([self hasRoundedBottomCorners]) {
-    NSRectFill(NSMakeRect(0, h - radius, radius, radius));
-    NSRectFill(NSMakeRect(w - radius, h - radius, radius, radius));
-  }
 }
 
 // This is the analog of nsChildView::MaybeDrawRoundedCorners for CGContexts.

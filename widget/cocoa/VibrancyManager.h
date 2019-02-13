@@ -73,14 +73,6 @@ class VibrancyManager {
   bool HasVibrantRegions() { return !mVibrantRegions.IsEmpty(); }
 
   /**
-   * Clear the vibrant areas that we know about.
-   * The clearing happens in the current NSGraphicsContext. If you call this
-   * from within an -[NSView drawRect:] implementation, the currrent
-   * NSGraphicsContext is already correctly set to the window drawing context.
-   */
-  void ClearVibrantAreas() const;
-
-  /**
    * Return the fill color that should be drawn on top of the cleared window
    * parts. Usually this would be drawn by -[NSVisualEffectView drawRect:].
    * The returned color is opaque if the system-wide "Reduce transparency"
@@ -108,8 +100,6 @@ class VibrancyManager {
   static NSView* CreateEffectView(VibrancyType aType, BOOL aIsContainer = NO);
 
  protected:
-  void ClearVibrantRegion(const LayoutDeviceIntRegion& aVibrantRegion) const;
-
   const nsChildView& mCoordinateConverter;
   NSView* mContainerView;
   nsClassHashtable<nsUint32HashKey, ViewRegion> mVibrantRegions;
