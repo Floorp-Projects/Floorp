@@ -16,7 +16,8 @@
         android:id="@+id/libraryIcon"
         android:layout_width="@dimen/library_item_icon_height"
         android:layout_height="@dimen/library_item_icon_height"
-        android:layout_margin="@dimen/library_item_icon_margin"
+        android:layout_margin="8dp"
+        android:layout_marginStart="16dp"
         android:background="@drawable/library_icon_logins_circle_background"
         android:clickable="false"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -26,16 +27,14 @@
     <TextView
         android:id="@+id/libraryItemTitle"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginBottom="8dp"
         android:gravity="center_vertical"
         android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
         android:clickable="false"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toEndOf="@id/libraryIcon"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintStart_toEndOf="@id/libraryIcon" />
 
     <View
         android:layout_width="0dp"
