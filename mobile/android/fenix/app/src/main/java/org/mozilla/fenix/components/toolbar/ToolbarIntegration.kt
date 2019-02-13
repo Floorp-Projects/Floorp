@@ -5,6 +5,8 @@
 package org.mozilla.fenix.components.toolbar
 
 import android.content.Context
+import android.graphics.PorterDuff
+import androidx.core.content.ContextCompat
 import androidx.navigation.Navigation
 import mozilla.components.browser.domains.autocomplete.DomainAutocompleteProvider
 import mozilla.components.browser.session.SessionManager
@@ -13,11 +15,10 @@ import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.feature.toolbar.ToolbarAutocompleteFeature
 import mozilla.components.feature.toolbar.ToolbarFeature
-import org.mozilla.fenix.DefaultThemeManager
 import mozilla.components.support.base.feature.LifecycleAwareFeature
+import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserFragmentDirections
-import org.mozilla.fenix.ext.application
 import org.mozilla.fenix.ext.components
 
 class ToolbarIntegration(
@@ -32,19 +33,30 @@ class ToolbarIntegration(
     init {
         toolbar.setMenuBuilder(toolbarMenu.menuBuilder)
 
-        val home = BrowserToolbar.Button(
-            context.resources
-                .getDrawable(DefaultThemeManager.resolveAttribute(R.attr.browserToolbarHomeIcon, context),
-                    context.application.theme),
-            context.getString(R.string.browser_home_button),
-            visible = { sessionId == null ||
-                    sessionManager.runWithSession(sessionId) { it.isCustomTabSession().not() } }
-        ) {
-            Navigation.findNavController(toolbar)
-                .navigate(BrowserFragmentDirections.actionBrowserFragmentToHomeFragment())
-        }
+        val tabsIcon = context.getDrawable(R.drawable.ic_tabs)
+        tabsIcon?.setColorFilter(
+            ContextCompat.getColor(
+                context,
+                DefaultThemeManager.resolveAttribute(R.attr.browserToolbarIcons, context)
+            ), PorterDuff.Mode.SRC_IN
+        )
+        tabsIcon?.let {
+            val home = BrowserToolbar.Button(
+                it,
+                context.getString(R.string.browser_home_button),
+                visible = {
+                    sessionId == null ||
+                            sessionManager.runWithSession(sessionId) {
+                                it.isCustomTabSession().not()
+                            }
+                }
+            ) {
+                Navigation.findNavController(toolbar)
+                    .navigate(BrowserFragmentDirections.actionBrowserFragmentToHomeFragment())
+            }
 
-        toolbar.addBrowserAction(home)
+            toolbar.addBrowserAction(home)
+        }
 
         ToolbarAutocompleteFeature(toolbar).apply {
             addDomainProvider(domainAutocompleteProvider)

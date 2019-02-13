@@ -34,6 +34,5 @@
     <attr name="browserToolbarBackground" format="reference"/>
     <attr name="browserToolbarIcons" format="reference"/>
     <attr name="browserToolbarMenuIcons" format="reference"/>
-    <attr name="browserToolbarHomeIcon" format="reference"/>
     <attr name="navigationBarColorBrowser" format="reference"/>
 </resources>
