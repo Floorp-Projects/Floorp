@@ -212,7 +212,7 @@ public class GeckoApplication extends Application
     public void onApplicationForeground() {
         if (mIsInitialResume) {
             GeckoBatteryManager.getInstance().start(this);
-            GeckoFontScaleListener.getInstance().initialize(this);
+            GeckoFontScaleListener.getInstance().attachToContext(this);
             GeckoNetworkManager.getInstance().start(this);
             mIsInitialResume = false;
         } else if (mPausedGecko) {
