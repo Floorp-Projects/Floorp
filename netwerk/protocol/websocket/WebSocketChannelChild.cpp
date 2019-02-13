@@ -123,40 +123,46 @@ class WebSocketEvent {
  public:
   WebSocketEvent() { MOZ_COUNT_CTOR(WebSocketEvent); }
   virtual ~WebSocketEvent() { MOZ_COUNT_DTOR(WebSocketEvent); }
-  virtual void Run() = 0;
+  virtual void Run(WebSocketChannelChild* aChild) = 0;
 };
 
 class WrappedWebSocketEvent : public Runnable {
  public:
-  explicit WrappedWebSocketEvent(WebSocketEvent* aWebSocketEvent)
+  WrappedWebSocketEvent(WebSocketChannelChild* aChild,
+                        WebSocketEvent* aWebSocketEvent)
       : Runnable("net::WrappedWebSocketEvent"),
+        mChild(aChild),
         mWebSocketEvent(aWebSocketEvent) {
     MOZ_RELEASE_ASSERT(aWebSocketEvent);
   }
   NS_IMETHOD Run() override {
-    mWebSocketEvent->Run();
+    mWebSocketEvent->Run(mChild);
     return NS_OK;
   }
 
  private:
+  RefPtr<WebSocketChannelChild> mChild;
   nsAutoPtr<WebSocketEvent> mWebSocketEvent;
 };
 
 class EventTargetDispatcher : public ChannelEvent {
  public:
-  EventTargetDispatcher(WebSocketEvent* aWebSocketEvent,
+  EventTargetDispatcher(WebSocketChannelChild* aChild,
+                        WebSocketEvent* aWebSocketEvent,
                         nsIEventTarget* aEventTarget)
-      : mWebSocketEvent(aWebSocketEvent), mEventTarget(aEventTarget) {}
+      : mChild(aChild),
+        mWebSocketEvent(aWebSocketEvent),
+        mEventTarget(aEventTarget) {}
 
   void Run() override {
     if (mEventTarget) {
       mEventTarget->Dispatch(
-          new WrappedWebSocketEvent(mWebSocketEvent.forget()),
+          new WrappedWebSocketEvent(mChild, mWebSocketEvent.forget()),
           NS_DISPATCH_NORMAL);
       return;
     }
 
-    mWebSocketEvent->Run();
+    mWebSocketEvent->Run(mChild);
   }
 
   already_AddRefed<nsIEventTarget> GetEventTarget() override {
@@ -168,27 +174,26 @@ class EventTargetDispatcher : public ChannelEvent {
   }
 
  private:
+  // The lifetime of the child is ensured by ChannelEventQueue.
+  WebSocketChannelChild* mChild;
   nsAutoPtr<WebSocketEvent> mWebSocketEvent;
   nsCOMPtr<nsIEventTarget> mEventTarget;
 };
 
 class StartEvent : public WebSocketEvent {
  public:
-  StartEvent(WebSocketChannelChild* aChild, const nsCString& aProtocol,
-             const nsCString& aExtensions, const nsString& aEffectiveURL,
-             bool aEncrypted)
-      : mChild(aChild),
-        mProtocol(aProtocol),
+  StartEvent(const nsCString& aProtocol, const nsCString& aExtensions,
+             const nsString& aEffectiveURL, bool aEncrypted)
+      : mProtocol(aProtocol),
         mExtensions(aExtensions),
         mEffectiveURL(aEffectiveURL),
         mEncrypted(aEncrypted) {}
 
-  void Run() override {
-    mChild->OnStart(mProtocol, mExtensions, mEffectiveURL, mEncrypted);
+  void Run(WebSocketChannelChild* aChild) override {
+    aChild->OnStart(mProtocol, mExtensions, mEffectiveURL, mEncrypted);
   }
 
  private:
-  RefPtr<WebSocketChannelChild> mChild;
   nsCString mProtocol;
   nsCString mExtensions;
   nsString mEffectiveURL;
@@ -199,7 +204,7 @@ mozilla::ipc::IPCResult WebSocketChannelChild::RecvOnStart(
     const nsCString& aProtocol, const nsCString& aExtensions,
     const nsString& aEffectiveURL, const bool& aEncrypted) {
   mEventQ->RunOrEnqueue(new EventTargetDispatcher(
-      new StartEvent(this, aProtocol, aExtensions, aEffectiveURL, aEncrypted),
+      this, new StartEvent(aProtocol, aExtensions, aEffectiveURL, aEncrypted),
       mTargetThread));
 
   return IPC_OK();
@@ -229,20 +234,20 @@ void WebSocketChannelChild::OnStart(const nsCString& aProtocol,
 
 class StopEvent : public WebSocketEvent {
  public:
-  StopEvent(WebSocketChannelChild* aChild, const nsresult& aStatusCode)
-      : mChild(aChild), mStatusCode(aStatusCode) {}
+  explicit StopEvent(const nsresult& aStatusCode) : mStatusCode(aStatusCode) {}
 
-  void Run() override { mChild->OnStop(mStatusCode); }
+  void Run(WebSocketChannelChild* aChild) override {
+    aChild->OnStop(mStatusCode);
+  }
 
  private:
-  RefPtr<WebSocketChannelChild> mChild;
   nsresult mStatusCode;
 };
 
 mozilla::ipc::IPCResult WebSocketChannelChild::RecvOnStop(
     const nsresult& aStatusCode) {
   mEventQ->RunOrEnqueue(new EventTargetDispatcher(
-      new StopEvent(this, aStatusCode), mTargetThread));
+      this, new StopEvent(aStatusCode), mTargetThread));
 
   return IPC_OK();
 }
@@ -264,20 +269,18 @@ void WebSocketChannelChild::OnStop(const nsresult& aStatusCode) {
 
 class MessageEvent : public WebSocketEvent {
  public:
-  MessageEvent(WebSocketChannelChild* aChild, const nsCString& aMessage,
-               bool aBinary)
-      : mChild(aChild), mMessage(aMessage), mBinary(aBinary) {}
+  MessageEvent(const nsCString& aMessage, bool aBinary)
+      : mMessage(aMessage), mBinary(aBinary) {}
 
-  void Run() override {
+  void Run(WebSocketChannelChild* aChild) override {
     if (!mBinary) {
-      mChild->OnMessageAvailable(mMessage);
+      aChild->OnMessageAvailable(mMessage);
     } else {
-      mChild->OnBinaryMessageAvailable(mMessage);
+      aChild->OnBinaryMessageAvailable(mMessage);
     }
   }
 
  private:
-  RefPtr<WebSocketChannelChild> mChild;
   nsCString mMessage;
   bool mBinary;
 };
@@ -285,7 +288,7 @@ class MessageEvent : public WebSocketEvent {
 mozilla::ipc::IPCResult WebSocketChannelChild::RecvOnMessageAvailable(
     const nsCString& aMsg) {
   mEventQ->RunOrEnqueue(new EventTargetDispatcher(
-      new MessageEvent(this, aMsg, false), mTargetThread));
+      this, new MessageEvent(aMsg, false), mTargetThread));
 
   return IPC_OK();
 }
@@ -309,7 +312,7 @@ void WebSocketChannelChild::OnMessageAvailable(const nsCString& aMsg) {
 mozilla::ipc::IPCResult WebSocketChannelChild::RecvOnBinaryMessageAvailable(
     const nsCString& aMsg) {
   mEventQ->RunOrEnqueue(new EventTargetDispatcher(
-      new MessageEvent(this, aMsg, true), mTargetThread));
+      this, new MessageEvent(aMsg, true), mTargetThread));
 
   return IPC_OK();
 }
@@ -332,20 +335,20 @@ void WebSocketChannelChild::OnBinaryMessageAvailable(const nsCString& aMsg) {
 
 class AcknowledgeEvent : public WebSocketEvent {
  public:
-  AcknowledgeEvent(WebSocketChannelChild* aChild, const uint32_t& aSize)
-      : mChild(aChild), mSize(aSize) {}
+  explicit AcknowledgeEvent(const uint32_t& aSize) : mSize(aSize) {}
 
-  void Run() override { mChild->OnAcknowledge(mSize); }
+  void Run(WebSocketChannelChild* aChild) override {
+    aChild->OnAcknowledge(mSize);
+  }
 
  private:
-  RefPtr<WebSocketChannelChild> mChild;
   uint32_t mSize;
 };
 
 mozilla::ipc::IPCResult WebSocketChannelChild::RecvOnAcknowledge(
     const uint32_t& aSize) {
   mEventQ->RunOrEnqueue(new EventTargetDispatcher(
-      new AcknowledgeEvent(this, aSize), mTargetThread));
+      this, new AcknowledgeEvent(aSize), mTargetThread));
 
   return IPC_OK();
 }
@@ -368,14 +371,14 @@ void WebSocketChannelChild::OnAcknowledge(const uint32_t& aSize) {
 
 class ServerCloseEvent : public WebSocketEvent {
  public:
-  ServerCloseEvent(WebSocketChannelChild* aChild, const uint16_t aCode,
-                   const nsCString& aReason)
-      : mChild(aChild), mCode(aCode), mReason(aReason) {}
+  ServerCloseEvent(const uint16_t aCode, const nsCString& aReason)
+      : mCode(aCode), mReason(aReason) {}
 
-  void Run() override { mChild->OnServerClose(mCode, mReason); }
+  void Run(WebSocketChannelChild* aChild) override {
+    aChild->OnServerClose(mCode, mReason);
+  }
 
  private:
-  RefPtr<WebSocketChannelChild> mChild;
   uint16_t mCode;
   nsCString mReason;
 };
@@ -383,7 +386,7 @@ class ServerCloseEvent : public WebSocketEvent {
 mozilla::ipc::IPCResult WebSocketChannelChild::RecvOnServerClose(
     const uint16_t& aCode, const nsCString& aReason) {
   mEventQ->RunOrEnqueue(new EventTargetDispatcher(
-      new ServerCloseEvent(this, aCode, aReason), mTargetThread));
+      this, new ServerCloseEvent(aCode, aReason), mTargetThread));
 
   return IPC_OK();
 }
