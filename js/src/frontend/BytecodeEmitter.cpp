@@ -1946,7 +1946,7 @@ bool BytecodeEmitter::emitCallIncDec(UnaryNode* incDec) {
     //              [stack] CALLRESULT
     return false;
   }
-  if (!emit1(JSOP_POS)) {
+  if (!emit1(JSOP_TONUMERIC)) {
     //              [stack] N
     return false;
   }

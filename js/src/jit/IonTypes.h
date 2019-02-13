@@ -656,6 +656,10 @@ static inline bool IsNumberType(MIRType type) {
          type == MIRType::Float32 || type == MIRType::Int64;
 }
 
+static inline bool IsNumericType(MIRType type) {
+  return IsNumberType(type) || IF_BIGINT(type == MIRType::BigInt, false);
+}
+
 static inline bool IsTypeRepresentableAsDouble(MIRType type) {
   return type == MIRType::Int32 || type == MIRType::Double ||
          type == MIRType::Float32;
