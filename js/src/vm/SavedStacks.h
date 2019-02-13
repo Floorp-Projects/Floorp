@@ -222,11 +222,11 @@ class SavedStacks {
       JSContext* cx, MutableHandleSavedFrame asyncStack, HandleAtom asyncCause,
       const mozilla::Maybe<size_t>& maxFrameCount);
   MOZ_MUST_USE bool checkForEvalInFramePrev(JSContext* cx,
-                                            SavedFrame::HandleLookup lookup);
+                                            MutableHandle<SavedFrame::Lookup> lookup);
   SavedFrame* getOrCreateSavedFrame(JSContext* cx,
-                                    SavedFrame::HandleLookup lookup);
+                                    Handle<SavedFrame::Lookup> lookup);
   SavedFrame* createFrameFromLookup(JSContext* cx,
-                                    SavedFrame::HandleLookup lookup);
+                                    Handle<SavedFrame::Lookup> lookup);
 
   // Cache for memoizing PCToLineNumber lookups.
 
