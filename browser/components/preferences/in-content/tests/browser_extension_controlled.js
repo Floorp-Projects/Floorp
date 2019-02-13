@@ -756,7 +756,7 @@ add_task(async function testExtensionControlledProxyConfig() {
             ...doc.querySelectorAll("#networkProxySOCKSVersion > radio")],
           pacControls: [doc.getElementById("networkProxyAutoconfigURL")],
           otherControls: [
-            manualControlContainer.querySelector("label[control=networkProxyNone]"),
+            doc.querySelector("label[control=networkProxyNone]"),
             doc.getElementById("networkProxyNone"),
             ...controlGroup.querySelectorAll(":scope > radio"),
             ...doc.querySelectorAll("#ConnectionsDialogPane > checkbox")],
