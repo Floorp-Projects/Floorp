@@ -33,11 +33,11 @@ class DebugFenixApplication : FenixApplication() {
     }
 
     internal class ToggleableHeapDumper(
-        private val context: Context,
+        context: Context,
         private val defaultDumper: HeapDumper
     ) : HeapDumper {
         var prefs: SharedPreferences? = PreferenceManager.getDefaultSharedPreferences(context)
         var enabled = prefs?.getBoolean(context.getPreferenceKey(pref_key_leakcanary), true) ?: true
-        override fun dumpHeap(): File = if (enabled) defaultDumper.dumpHeap() else HeapDumper.RETRY_LATER
+        override fun dumpHeap(): File? = if (enabled) defaultDumper.dumpHeap() else HeapDumper.RETRY_LATER
     }
 }
