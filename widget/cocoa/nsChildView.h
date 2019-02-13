@@ -57,6 +57,8 @@ class WidgetRenderingContext;
 }  // namespace widget
 }  // namespace mozilla
 
+@class PixelHostingView;
+
 @interface NSEvent (Undocumented)
 
 // Return Cocoa event's corresponding Carbon event.  Not initialized (on
@@ -206,6 +208,10 @@ class WidgetRenderingContext;
   NSView* mVibrancyViewsContainer;      // [STRONG]
   NSView* mNonDraggableViewsContainer;  // [STRONG]
 
+  // The view that does our drawing. This is a subview of self so that it can
+  // be ordered on top of mVibrancyViewsContainer.
+  PixelHostingView* mPixelHostingView;
+
   // Last pressure stage by trackpad's force click
   NSInteger mLastPressureStage;
 }
@@ -236,6 +242,7 @@ class WidgetRenderingContext;
 
 - (NSView*)vibrancyViewsContainer;
 - (NSView*)nonDraggableViewsContainer;
+- (NSView*)pixelHostingView;
 
 - (BOOL)isCoveringTitlebar;
 

@@ -162,6 +162,11 @@ static uint32_t sUniqueKeyEventId = 0;
 
 static NSMutableDictionary* sNativeKeyEventsMap = [NSMutableDictionary dictionary];
 
+// The view that will do our drawing or host our NSOpenGLContext or Core Animation layer.
+@interface PixelHostingView : NSView {
+}
+@end
+
 @interface ChildView (Private)
 
 // sets up our view, attaching it to its owning gecko view
@@ -862,7 +867,9 @@ void nsChildView::Resize(double aWidth, double aHeight, bool aRepaint) {
     [mView setFrame:DevPixelsToCocoaPoints(mBounds)];
   });
 
-  if (mVisible && aRepaint) [mView setNeedsDisplay:YES];
+  if (mVisible && aRepaint) {
+    [[mView pixelHostingView] setNeedsDisplay:YES];
+  }
 
   NotifyRollupGeometryChange();
   ReportSizeEvent();
@@ -895,7 +902,9 @@ void nsChildView::Resize(double aX, double aY, double aWidth, double aHeight, bo
     [mView setFrame:DevPixelsToCocoaPoints(mBounds)];
   });
 
-  if (mVisible && aRepaint) [mView setNeedsDisplay:YES];
+  if (mVisible && aRepaint) {
+    [[mView pixelHostingView] setNeedsDisplay:YES];
+  }
 
   NotifyRollupGeometryChange();
   if (isMoving) {
@@ -1211,7 +1220,7 @@ void nsChildView::Invalidate(const LayoutDeviceIntRect& aRect) {
   NS_ASSERTION(GetLayerManager()->GetBackendType() != LayersBackend::LAYERS_CLIENT,
                "Shouldn't need to invalidate with accelerated OMTC layers!");
 
-  [mView setNeedsDisplayInRect:DevPixelsToCocoaPoints(aRect)];
+  [[mView pixelHostingView] setNeedsDisplayInRect:DevPixelsToCocoaPoints(aRect)];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -2953,6 +2962,11 @@ NSEvent* gLastDragMouseDownEvent = nil;
     [self addSubview:mNonDraggableViewsContainer];
     [self addSubview:mVibrancyViewsContainer];
 
+    mPixelHostingView = [[PixelHostingView alloc] initWithFrame:[self bounds]];
+    [mPixelHostingView setAutoresizingMask:NSViewWidthSizable | NSViewHeightSizable];
+
+    [self addSubview:mPixelHostingView];
+
     mTopLeftCornerMask = NULL;
     mLastPressureStage = 0;
   }
@@ -2998,7 +3012,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   [[NSNotificationCenter defaultCenter] addObserver:self
                                            selector:@selector(_surfaceNeedsUpdate:)
                                                name:NSViewGlobalFrameDidChangeNotification
-                                             object:self];
+                                             object:mPixelHostingView];
 
   [[NSDistributedNotificationCenter defaultCenter]
              addObserver:self
@@ -3092,6 +3106,10 @@ NSEvent* gLastDragMouseDownEvent = nil;
   return mNonDraggableViewsContainer;
 }
 
+- (NSView*)pixelHostingView {
+  return mPixelHostingView;
+}
+
 - (void)dealloc {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
@@ -3108,6 +3126,8 @@ NSEvent* gLastDragMouseDownEvent = nil;
   [mVibrancyViewsContainer release];
   [mNonDraggableViewsContainer removeFromSuperview];
   [mNonDraggableViewsContainer release];
+  [mPixelHostingView removeFromSuperview];
+  [mPixelHostingView release];
 
   [super dealloc];
 
@@ -3196,7 +3216,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 }
 
 - (void)updateGLContext {
-  [mGLContext setView:self];
+  [mGLContext setView:mPixelHostingView];
   [mGLContext update];
 }
 
@@ -3206,10 +3226,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
     mNeedsGLUpdate = YES;
     CGLUnlockContext((CGLContextObj)[mGLContext CGLContextObj]);
   }
-}
-
-- (BOOL)wantsBestResolutionOpenGLSurface {
-  return nsCocoaUtils::HiDPIEnabled() ? YES : NO;
 }
 
 - (void)viewDidChangeBackingProperties {
@@ -3259,7 +3275,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   LayoutDeviceIntRect boundingRect = mGeckoChild->CocoaPointsToDevPixels(aRect);
   const NSRect* rects;
   NSInteger count;
-  [self getRectsBeingDrawn:&rects count:&count];
+  [mPixelHostingView getRectsBeingDrawn:&rects count:&count];
 
   if (count > MAX_RECTS_IN_REGION) {
     return boundingRect;
@@ -3275,7 +3291,8 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
 // The display system has told us that a portion of our view is dirty. Tell
 // gecko to paint it
-- (void)drawRect:(NSRect)aRect {
+// This method is called from mPixelHostingView's drawRect handler.
+- (void)doDrawRect:(NSRect)aRect {
   if (!NS_IsMainThread()) {
     // In the presence of CoreAnimation, this method can sometimes be called on
     // a non-main thread. Ignore those calls because Gecko can only react to
@@ -3324,7 +3341,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   // CocoaPoints again.
   CGContextRestoreGState(cgContext);
 
-  if (!painted && [self isOpaque]) {
+  if (!painted && [mPixelHostingView isOpaque]) {
     // Gecko refused to draw, but we've claimed to be opaque, so we have to
     // draw something--fill with white.
     CGContextSetRGBFillColor(cgContext, 1, 1, 1, 1);
@@ -6002,6 +6019,26 @@ nsresult nsChildView::GetSelectionAsPlaintext(nsAString& aResult) {
 
 + (NSMutableDictionary*)sNativeKeyEventsMap {
   return sNativeKeyEventsMap;
+}
+
+@end
+
+@implementation PixelHostingView
+
+- (BOOL)isFlipped {
+  return YES;
+}
+
+- (NSView*)hitTest:(NSPoint)aPoint {
+  return nil;
+}
+
+- (void)drawRect:(NSRect)aRect {
+  [(ChildView*)[self superview] doDrawRect:aRect];
+}
+
+- (BOOL)wantsBestResolutionOpenGLSurface {
+  return nsCocoaUtils::HiDPIEnabled() ? YES : NO;
 }
 
 @end
