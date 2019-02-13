@@ -225,6 +225,8 @@ nsContextMenu.prototype = {
     this.frameOuterWindowID = context.frameOuterWindowID;
 
     this.inSyntheticDoc = context.inSyntheticDoc;
+    this.inAboutDevtoolsToolbox = context.inAboutDevtoolsToolbox;
+
 
     // Everything after this isn't sent directly from ContextMenu
     this.ownerDoc = this.target.ownerDocument;
@@ -423,23 +425,14 @@ nsContextMenu.prototype = {
   initViewItems: function CM_initViewItems() {
     // View source is always OK, unless in directory listing.
     this.showItem("context-viewpartialsource-selection",
-                  this.isContentSelected);
-
-    const {gBrowser} = this.browser.ownerGlobal;
-    // Hide menu that opens devtools when the window is showing `about:devtools-toolbox`.
-    // This is to avoid displaying multiple devtools at the same time. See bug 1495944.
-    const isAboutDevtoolsToolbox = gBrowser &&
-                                   gBrowser.currentURI &&
-                                   gBrowser.currentURI.scheme === "about" &&
-                                   gBrowser.currentURI.filePath === "devtools-toolbox";
+                  !this.inAboutDevtoolsToolbox && this.isContentSelected);
 
     var shouldShow = !(this.isContentSelected ||
                        this.onImage || this.onCanvas ||
                        this.onVideo || this.onAudio ||
                        this.onLink || this.onTextInput);
 
-    var showInspect = this.inTabBrowser &&
-                      !isAboutDevtoolsToolbox &&
+    var showInspect = this.inTabBrowser && !this.inAboutDevtoolsToolbox &&
                       Services.prefs.getBoolPref("devtools.inspector.enabled", true) &&
                       !Services.prefs.getBoolPref("devtools.policy.disabled", false);
 
@@ -527,7 +520,8 @@ nsContextMenu.prototype = {
                   this.onTextInput && this.onKeywordField);
     this.showItem("frame", this.inFrame);
 
-    let showSearchSelect = (this.isTextSelected || this.onLink) && !this.onImage;
+    let showSearchSelect = !this.inAboutDevtoolsToolbox &&
+                           (this.isTextSelected || this.onLink) && !this.onImage;
     this.showItem("context-searchselect", showSearchSelect);
     if (showSearchSelect) {
       this.formatSearchContextItem();
@@ -628,7 +622,8 @@ nsContextMenu.prototype = {
                                          this.onVideo || this.onAudio ||
                                          this.inSyntheticDoc) ||
                                        this.isDesignMode);
-    this.showItem("context-sep-selectall", this.isContentSelected );
+    this.showItem("context-sep-selectall",
+                  !this.inAboutDevtoolsToolbox && this.isContentSelected);
 
     // XXX dr
     // ------

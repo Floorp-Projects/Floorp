@@ -32,17 +32,35 @@ add_task(async function() {
 });
 
 async function assertContextMenu(rootDocument, browser, targetSelector, shouldBeEnabled) {
+  if (shouldBeEnabled) {
+    await assertContextMenuEnabled(rootDocument, browser, targetSelector);
+  } else {
+    await assertContextMenuDisabled(rootDocument, browser, targetSelector);
+  }
+}
+
+async function assertContextMenuDisabled(rootDocument, browser, targetSelector) {
+  const contextMenu = rootDocument.getElementById("contentAreaContextMenu");
+  let isPopupShown = false;
+  const listener = () => {
+    isPopupShown = true;
+  };
+  contextMenu.addEventListener("popupshown", listener);
+  BrowserTestUtils.synthesizeMouseAtCenter(targetSelector,
+                                           { type: "contextmenu" }, browser);
+  await wait(1000);
+  ok(!isPopupShown, `Context menu should not be shown`);
+  contextMenu.removeEventListener("popupshown", listener);
+}
+
+async function assertContextMenuEnabled(rootDocument, browser, targetSelector) {
   // Show content context menu.
   const contextMenu = rootDocument.getElementById("contentAreaContextMenu");
   const popupShownPromise = BrowserTestUtils.waitForEvent(contextMenu, "popupshown");
   BrowserTestUtils.synthesizeMouseAtCenter(targetSelector,
                                            { type: "contextmenu" }, browser);
   await popupShownPromise;
-
-  // Check hidden attribute of #context-inspect.
-  const inspectMenuItem = rootDocument.getElementById("context-inspect");
-  is(inspectMenuItem.hidden, !shouldBeEnabled,
-     '"hidden" attribute of #context-inspect should be correct');
+  ok(true, `Context menu should be shown`);
 
   // Hide content context menu.
   const popupHiddenPromise = BrowserTestUtils.waitForEvent(contextMenu, "popuphidden");
