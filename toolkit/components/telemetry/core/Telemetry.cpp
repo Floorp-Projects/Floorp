@@ -1106,12 +1106,14 @@ TelemetryImpl::SetCanRecordBase(bool canRecord) {
   if (recordreplay::IsRecordingOrReplaying()) {
     return NS_OK;
   }
+#ifndef FUZZING
   if (canRecord != mCanRecordBase) {
     TelemetryHistogram::SetCanRecordBase(canRecord);
     TelemetryScalar::SetCanRecordBase(canRecord);
     TelemetryEvent::SetCanRecordBase(canRecord);
     mCanRecordBase = canRecord;
   }
+#endif
   return NS_OK;
 }
 
@@ -1133,12 +1135,14 @@ TelemetryImpl::SetCanRecordExtended(bool canRecord) {
   if (recordreplay::IsRecordingOrReplaying()) {
     return NS_OK;
   }
+#ifndef FUZZING
   if (canRecord != mCanRecordExtended) {
     TelemetryHistogram::SetCanRecordExtended(canRecord);
     TelemetryScalar::SetCanRecordExtended(canRecord);
     TelemetryEvent::SetCanRecordExtended(canRecord);
     mCanRecordExtended = canRecord;
   }
+#endif
   return NS_OK;
 }
 
@@ -1171,6 +1175,7 @@ already_AddRefed<nsITelemetry> TelemetryImpl::CreateTelemetryInstance() {
       "CreateTelemetryInstance may only be called once, via GetService()");
 
   bool useTelemetry = false;
+#ifndef FUZZING
   if ((XRE_IsParentProcess() || XRE_IsContentProcess() || XRE_IsGPUProcess() ||
        XRE_IsSocketProcess()) &&
       // Telemetry is never accumulated when recording or replaying, both
@@ -1180,6 +1185,7 @@ already_AddRefed<nsITelemetry> TelemetryImpl::CreateTelemetryInstance() {
       !recordreplay::IsRecordingOrReplaying()) {
     useTelemetry = true;
   }
+#endif
 
   // Set current product (determines Fennec/GeckoView at runtime).
   SetCurrentProduct();
