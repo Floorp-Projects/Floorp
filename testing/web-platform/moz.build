@@ -551,7 +551,7 @@ with Files("tests/webaudio/**"):
     BUG_COMPONENT = ("Core", "Web Audio")
 
 with Files("tests/webauthn/**"):
-    BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
+    BUG_COMPONENT = ("Core", "DOM: Web Authentication")
 
 with Files("tests/webdriver/**"):
     BUG_COMPONENT = ("Testing", "geckodriver")
