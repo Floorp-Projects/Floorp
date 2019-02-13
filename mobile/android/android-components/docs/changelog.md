@@ -15,6 +15,27 @@ permalink: /changelog/
 * **ui-doorhanger**
   * Added `DoorhangerPrompt` - a builder for creating a prompt `Doorhanger` providing a way to present decisions to users.
 
+* **support-ktx**
+  * Added `Uri.hostWithoutCommonPrefixes` to return the host with common prefixes removed:
+
+  ```kotlin
+  "https://www.mozilla.org"
+      .toUri()
+      .hostWithoutCommonPrefixes // mozilla.org
+
+  "https://mobile.twitter.com/home"
+      .toUri()
+      .hostWithoutCommonPrefixes  // twitter.com
+
+  "https://m.facebook.com/"
+      .toUri()
+      .hostWithoutCommonPrefixes
+  ```
+
+  ℹ️ Note that this method only strips common prefixes like "www", "m" or "mobile". If you are interested in extracting something like the [eTLD](https://en.wikipedia.org/wiki/Public_Suffix_List) from a host then use [PublicSuffixList](https://mozac.org/api/mozilla.components.lib.publicsuffixlist/-public-suffix-list/) of the `lib-publicsuffixlist` component.
+
+  * Added `String.toUri()` as a shorthand for `Uri.parse()` and in addition to other `to*()` methods already available in the Kotlin Standard Library.
+
 # 0.42.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.41.0...v0.42.0)
