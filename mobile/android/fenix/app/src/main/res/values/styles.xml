@@ -36,6 +36,7 @@
         <item name="browserUrlBarBackground">@drawable/home_search_background_dark</item>
         <item name="browserToolbarBackground">@color/off_white</item>
         <item name="browserToolbarIcons">@color/icons</item>
+        <item name="browserToolbarMenuIcons">@color/icons</item>
         <item name="browserToolbarHomeIcon">@drawable/ic_home</item>
     </style>
 
@@ -76,6 +77,7 @@
         <item name="browserUrlBarBackground">@drawable/home_search_background_private_dark</item>
         <item name="browserToolbarBackground">@color/private_browsing_top_gradient</item>
         <item name="browserToolbarIcons">@color/off_white</item>
+        <item name="browserToolbarMenuIcons">@color/icons</item>
         <item name="browserToolbarHomeIcon">@drawable/ic_home_white</item>
     </style>
 

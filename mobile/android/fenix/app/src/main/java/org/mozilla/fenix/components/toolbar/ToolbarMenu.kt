@@ -38,7 +38,7 @@ class ToolbarMenu(
     val menuToolbar by lazy {
         val back = BrowserMenuItemToolbar.Button(
             mozilla.components.ui.icons.R.drawable.mozac_ic_back,
-            iconTintColorResource = DefaultThemeManager.resolveAttribute(R.attr.browserToolbarIcons, context),
+            iconTintColorResource = DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context),
             contentDescription = context.getString(R.string.browser_menu_back)
         ) {
             onItemTapped.invoke(Item.Back)
@@ -46,7 +46,7 @@ class ToolbarMenu(
 
         val forward = BrowserMenuItemToolbar.Button(
             mozilla.components.ui.icons.R.drawable.mozac_ic_forward,
-            iconTintColorResource = DefaultThemeManager.resolveAttribute(R.attr.browserToolbarIcons, context),
+            iconTintColorResource = DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context),
             contentDescription = context.getString(R.string.browser_menu_forward)
         ) {
             onItemTapped.invoke(Item.Forward)
@@ -54,7 +54,7 @@ class ToolbarMenu(
 
         val refresh = BrowserMenuItemToolbar.Button(
             mozilla.components.ui.icons.R.drawable.mozac_ic_refresh,
-            iconTintColorResource = DefaultThemeManager.resolveAttribute(R.attr.browserToolbarIcons, context),
+            iconTintColorResource = DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context),
             contentDescription = context.getString(R.string.browser_menu_refresh)
         ) {
             onItemTapped.invoke(Item.Reload)
@@ -69,7 +69,7 @@ class ToolbarMenu(
                 context.getString(R.string.browser_menu_help),
                 R.drawable.ic_help,
                 context.getString(R.string.browser_menu_help),
-                DefaultThemeManager.resolveAttribute(R.attr.browserToolbarIcons, context)
+                DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context)
             ) {
                 onItemTapped.invoke(Item.Help)
             },
@@ -78,7 +78,7 @@ class ToolbarMenu(
                 context.getString(R.string.browser_menu_settings),
                 R.drawable.ic_settings,
                 context.getString(R.string.browser_menu_settings),
-                DefaultThemeManager.resolveAttribute(R.attr.browserToolbarIcons, context)
+                DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context)
             ) {
                 onItemTapped.invoke(Item.Settings)
             },
@@ -87,7 +87,7 @@ class ToolbarMenu(
                 context.getString(R.string.browser_menu_library),
                 R.drawable.ic_library,
                 context.getString(R.string.browser_menu_library),
-                DefaultThemeManager.resolveAttribute(R.attr.browserToolbarIcons, context)
+                DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context)
             ) {
                 onItemTapped.invoke(Item.Library)
             },
@@ -103,7 +103,7 @@ class ToolbarMenu(
                 context.getString(R.string.browser_menu_find_in_page),
                 R.drawable.mozac_ic_search,
                 context.getString(R.string.browser_menu_find_in_page),
-                DefaultThemeManager.resolveAttribute(R.attr.browserToolbarIcons, context)
+                DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context)
             ) {
                 onItemTapped.invoke(Item.FindInPage)
             },
@@ -112,7 +112,7 @@ class ToolbarMenu(
                 context.getString(R.string.browser_menu_private_tab),
                 R.drawable.ic_private_browsing,
                 context.getString(R.string.browser_menu_private_tab),
-                DefaultThemeManager.resolveAttribute(R.attr.browserToolbarIcons, context)
+                DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context)
             ) {
                 onItemTapped.invoke(Item.NewPrivateTab)
             },
@@ -121,7 +121,7 @@ class ToolbarMenu(
                 context.getString(R.string.browser_menu_new_tab),
                 R.drawable.ic_new,
                 context.getString(R.string.browser_menu_new_tab),
-                DefaultThemeManager.resolveAttribute(R.attr.browserToolbarIcons, context)
+                DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context)
             ) {
                 onItemTapped.invoke(Item.NewTab)
             },
@@ -130,7 +130,7 @@ class ToolbarMenu(
                 context.getString(R.string.browser_menu_share),
                 R.drawable.mozac_ic_share,
                 context.getString(R.string.browser_menu_share),
-                DefaultThemeManager.resolveAttribute(R.attr.browserToolbarIcons, context)
+                DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context)
             ) {
                 onItemTapped.invoke(Item.Share)
             },
@@ -139,7 +139,7 @@ class ToolbarMenu(
                 context.getString(R.string.browser_menu_report_issue),
                 R.drawable.ic_report_issues,
                 context.getString(R.string.browser_menu_report_issue),
-                DefaultThemeManager.resolveAttribute(R.attr.browserToolbarIcons, context)
+                DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context)
             ) {
                 onItemTapped.invoke(Item.ReportIssue)
             },
