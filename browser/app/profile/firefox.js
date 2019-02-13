@@ -1816,3 +1816,5 @@ pref("browser.aboutConfig.showWarning", true);
 // Launcher process is disabled by default, will be selectively enabled via SHIELD
 pref("browser.launcherProcess.enabled", false);
 #endif // defined(XP_WIN) && defined(MOZ_LAUNCHER_PROCESS)
+
+pref("browser.toolbars.keyboard_navigation", false);

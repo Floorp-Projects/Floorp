@@ -148,6 +148,8 @@ if (AppConstants.NIGHTLY_BUILD) {
 }
 
 XPCOMUtils.defineLazyScriptGetter(this, "pktUI", "chrome://pocket/content/main.js");
+XPCOMUtils.defineLazyScriptGetter(this, "ToolbarKeyboardNavigator",
+  "chrome://browser/content/browser-toolbarKeyNav.js");
 
 // lazy service getters
 
@@ -282,6 +284,16 @@ XPCOMUtils.defineLazyGetter(this, "Win7Features", () => {
   }
   return null;
 });
+
+XPCOMUtils.defineLazyPreferenceGetter(this, "gToolbarKeyNavEnabled",
+  "browser.toolbars.keyboard_navigation", false,
+  (aPref, aOldVal, aNewVal) => {
+    if (aNewVal) {
+      ToolbarKeyboardNavigator.init();
+    } else {
+      ToolbarKeyboardNavigator.uninit();
+    }
+  });
 
 customElements.setElementCreationCallback("translation-notification", () => {
   Services.scriptloader.loadSubScript(
@@ -1384,6 +1396,9 @@ var gBrowserInit = {
     BrowserPageActions.init();
     gAccessibilityServiceIndicator.init();
     AccessibilityRefreshBlocker.init();
+    if (gToolbarKeyNavEnabled) {
+      ToolbarKeyboardNavigator.init();
+    }
 
     gRemoteControl.updateVisualCue(Marionette.running);
 
@@ -1929,6 +1944,10 @@ var gBrowserInit = {
     gAccessibilityServiceIndicator.uninit();
 
     AccessibilityRefreshBlocker.uninit();
+
+    if (gToolbarKeyNavEnabled) {
+      ToolbarKeyboardNavigator.uninit();
+    }
 
     LanguagePrompt.uninit();
 
