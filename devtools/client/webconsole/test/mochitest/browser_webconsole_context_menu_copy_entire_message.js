@@ -72,7 +72,7 @@ async function testMessagesCopy(hud, timestamp) {
   is(lines.length, 2, "There are 2 lines in the copied text");
   is(lines[1], "", "The last line is an empty new line");
   is(lines[0],
-    `${timestamp ? getTimestampText(message) + " " : ""}simple text message test.js:3:7`,
+    `${timestamp ? getTimestampText(message) + " " : ""}simple text message test.js:3:15`,
     "Line of simple log message has expected text");
   if (timestamp) {
     ok(LOG_FORMAT_WITH_TIMESTAMP.test(lines[0]),
@@ -91,7 +91,7 @@ async function testMessagesCopy(hud, timestamp) {
   is(lines.length, 4, "There are 4 lines in the copied text");
   is(lines[lines.length - 1], "", "The last line is an empty new line");
   is(lines[0],
-    `${timestamp ? getTimestampText(message) + " " : ""}console.trace() test.js:6:9`,
+    `${timestamp ? getTimestampText(message) + " " : ""}console.trace() test.js:6:17`,
     "Stacktrace first line has the expected text");
   if (timestamp) {
     ok(LOG_FORMAT_WITH_TIMESTAMP.test(lines[0]),
