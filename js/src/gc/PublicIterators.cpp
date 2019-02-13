@@ -227,6 +227,19 @@ JS_PUBLIC_API void JS_IterateCompartments(
   }
 }
 
+JS_PUBLIC_API void JS_IterateCompartmentsInZone(
+    JSContext* cx, JS::Zone* zone, void* data,
+    JSIterateCompartmentCallback compartmentCallback) {
+  AutoTraceSession session(cx->runtime());
+
+  for (CompartmentsInZoneIter c(zone); !c.done(); c.next()) {
+    if ((*compartmentCallback)(cx, data, c) ==
+        JS::CompartmentIterResult::Stop) {
+      break;
+    }
+  }
+}
+
 JS_PUBLIC_API void JS::IterateRealms(JSContext* cx, void* data,
                                      JS::IterateRealmCallback realmCallback) {
   AutoTraceSession session(cx->runtime());

@@ -592,6 +592,17 @@ extern JS_PUBLIC_API void JS_IterateCompartments(
     JSIterateCompartmentCallback compartmentCallback);
 
 /**
+ * This function calls |compartmentCallback| on every compartment in the given
+ * zone until either all compartments have been iterated or
+ * CompartmentIterResult::Stop is returned. Beware that there is no guarantee
+ * that the compartment will survive after the callback returns. Also, barriers
+ * are disabled via the TraceSession.
+ */
+extern JS_PUBLIC_API void JS_IterateCompartmentsInZone(
+    JSContext* cx, JS::Zone* zone, void* data,
+    JSIterateCompartmentCallback compartmentCallback);
+
+/**
  * Mark a jsid after entering a new compartment. Different zones separately
  * mark the ids in a runtime, and this must be used any time an id is obtained
  * from one compartment and then used in another compartment, unless the two
