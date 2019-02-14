@@ -50,13 +50,6 @@ function emptyPermissions() {
 }
 
 var ExtensionPermissions = {
-  async _saveSoon(extensionId) {
-    await lazyInit();
-
-    prefs.data[extensionId] = await this._getCached(extensionId);
-    return prefs.saveSoon();
-  },
-
   async _get(extensionId) {
     await lazyInit();
 
@@ -96,7 +89,7 @@ var ExtensionPermissions = {
    * @param {EventEmitter} emitter optional object implementing emitter interfaces
    */
   async add(extensionId, perms, emitter) {
-    let {permissions, origins} = await this._getCached(extensionId);
+    let {permissions, origins} = await this._get(extensionId);
 
     let added = emptyPermissions();
 
@@ -116,7 +109,8 @@ var ExtensionPermissions = {
     }
 
     if (added.permissions.length > 0 || added.origins.length > 0) {
-      this._saveSoon(extensionId);
+      prefs.saveSoon();
+      await StartupCache.permissions.set(extensionId, {permissions, origins});
       if (emitter) {
         emitter.emit("add-permissions", added);
       }
@@ -132,7 +126,7 @@ var ExtensionPermissions = {
    * @param {EventEmitter} emitter optional object implementing emitter interfaces
    */
   async remove(extensionId, perms, emitter) {
-    let {permissions, origins} = await this._getCached(extensionId);
+    let {permissions, origins} = await this._get(extensionId);
 
     let removed = emptyPermissions();
 
@@ -155,7 +149,8 @@ var ExtensionPermissions = {
     }
 
     if (removed.permissions.length > 0 || removed.origins.length > 0) {
-      this._saveSoon(extensionId);
+      prefs.saveSoon();
+      await StartupCache.permissions.set(extensionId, {permissions, origins});
       if (emitter) {
         emitter.emit("remove-permissions", removed);
       }
