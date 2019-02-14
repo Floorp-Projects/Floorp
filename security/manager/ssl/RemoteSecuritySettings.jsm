@@ -18,6 +18,11 @@ const INTERMEDIATES_ENABLED_PREF         = "security.remote_settings.intermediat
 const INTERMEDIATES_SIGNER_PREF          = "security.remote_settings.intermediates.signer";
 const LOGLEVEL_PREF                      = "browser.policies.loglevel";
 
+const INTERMEDIATES_ERRORS_TELEMETRY     = "INTERMEDIATE_PRELOADING_ERRORS";
+const INTERMEDIATES_PENDING_TELEMETRY    = "security.intermediate_preloading_num_pending";
+const INTERMEDIATES_PRELOADED_TELEMETRY  = "security.intermediate_preloading_num_preloaded";
+const INTERMEDIATES_UPDATE_MS_TELEMETRY  = "INTERMEDIATE_PRELOADING_UPDATE_TIME_MS";
+
 XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 
 XPCOMUtils.defineLazyGetter(this, "gTextDecoder", () => new TextDecoder());
@@ -78,7 +83,7 @@ this.RemoteSecuritySettings = class RemoteSecuritySettings {
         log.debug("Intermediate Preloading: constructor");
     }
 
-    async updatePreloadedIntermediates(col, current) {
+    async updatePreloadedIntermediates() {
         // Bug 1429800: once the CertStateService has the correct interface, also
         // store the whitelist status and crlite enrollment status
 
@@ -94,18 +99,31 @@ this.RemoteSecuritySettings = class RemoteSecuritySettings {
         // Bug 1519256: Move this to a separate method that's on a separate timer
         // with a higher frequency (so we can attempt to download outstanding
         // certs more than once daily)
-
-        let waiting = current.filter(record => !record.cert_import_complete);
-        let certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(Ci.nsIX509CertDB);
+        const current = await this.client.get();
+        const waiting = current.filter(record => !record.cert_import_complete);
 
         log.debug(`There are ${waiting.length} intermediates awaiting download.`);
 
-        // Bug 1519273 - Log telemetry after an event, including waiting.length
-        // and its inverse (count imported)
+        TelemetryStopwatch.start(INTERMEDIATES_UPDATE_MS_TELEMETRY);
+
+        const certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(Ci.nsIX509CertDB);
+        const col = await this.client.openCollection();
+
         Promise.all(waiting.slice(0, maxDownloadsPerRun)
           .map(record => this.maybeDownloadAttachment(record, col, certdb))
-        ).then(result => {
-          Services.obs.notifyObservers(null, "remote-security-settings:intermediates-updated", "success");
+        ).then(async () => {
+          const finalCurrent = await this.client.get();
+          const finalWaiting = finalCurrent.filter(record => !record.cert_import_complete);
+          const countPreloaded = finalCurrent.length - finalWaiting.length;
+
+          TelemetryStopwatch.finish(INTERMEDIATES_UPDATE_MS_TELEMETRY);
+          Services.telemetry.scalarSet(INTERMEDIATES_PRELOADED_TELEMETRY,
+                                       countPreloaded);
+          Services.telemetry.scalarSet(INTERMEDIATES_PENDING_TELEMETRY,
+                                       finalWaiting.length);
+
+          Services.obs.notifyObservers(null, "remote-security-settings:intermediates-updated",
+                                       "success");
         });
     }
 
@@ -113,12 +131,12 @@ this.RemoteSecuritySettings = class RemoteSecuritySettings {
         log.debug(`onObservePollEnd ${subject} ${topic}`);
 
         try {
-          const col = await this.client.openCollection();
-          const current = await this.client.get();
-
-          await this.updatePreloadedIntermediates(col, current);
+          await this.updatePreloadedIntermediates();
         } catch (err) {
           log.warn(`Unable to update intermediate preloads: ${err}`);
+
+          Services.telemetry.getHistogramById(INTERMEDIATES_ERRORS_TELEMETRY)
+            .add("failedToObserve");
         }
     }
 
@@ -155,6 +173,10 @@ this.RemoteSecuritySettings = class RemoteSecuritySettings {
         log.debug(`Download fetch completed: ${resp.ok} ${resp.status}`);
         if (!resp.ok) {
           Cu.reportError(`Failed to fetch ${remoteFilePath}: ${resp.status}`);
+
+          Services.telemetry.getHistogramById(INTERMEDIATES_ERRORS_TELEMETRY)
+            .add("failedToFetch");
+
           return Promise.reject();
         }
         return resp.arrayBuffer();
@@ -180,12 +202,20 @@ this.RemoteSecuritySettings = class RemoteSecuritySettings {
         if (!attachmentData || attachmentData.length == 0) {
           // Bug 1519273 - Log telemetry for these rejections
           log.debug(`Empty attachment. Hash=${hash}`);
+
+          Services.telemetry.getHistogramById(INTERMEDIATES_ERRORS_TELEMETRY)
+            .add("emptyAttachment");
+
           return Promise.reject();
         }
 
         // check the length
         if (attachmentData.length !== size) {
           log.debug(`Unexpected attachment length. Hash=${hash} Lengths ${attachmentData.length} != ${size}`);
+
+          Services.telemetry.getHistogramById(INTERMEDIATES_ERRORS_TELEMETRY)
+            .add("unexpectedLength");
+
           return Promise.reject();
         }
 
@@ -194,6 +224,10 @@ this.RemoteSecuritySettings = class RemoteSecuritySettings {
         let calculatedHash = getHash(dataAsString);
         if (calculatedHash !== hash) {
           log.warn(`Invalid hash. CalculatedHash=${calculatedHash}, Hash=${hash}, data=${dataAsString}`);
+
+          Services.telemetry.getHistogramById(INTERMEDIATES_ERRORS_TELEMETRY)
+            .add("unexpectedHash");
+
           return Promise.reject();
         }
 
@@ -202,12 +236,21 @@ this.RemoteSecuritySettings = class RemoteSecuritySettings {
         let b64data = dataAsString.split("-----")[2].replace(/\s/g, "");
         let certDer = atob(b64data);
 
-        log.debug(`Adding cert. Hash=${hash}. Size=${size}`);
+        try {
+          log.debug(`Adding cert. Hash=${hash}. Size=${size}`);
 
-        // We can assume that roots obtained from remote-settings are part of
-        // the root program. If they aren't, they won't be used for path-
-        // building or have trust anyway, so just add it to the DB.
-        certdb.addCert(certDer, ",,");
+          // We can assume that roots obtained from remote-settings are part of
+          // the root program. If they aren't, they won't be used for path-
+          // building or have trust anyway, so just add it to the DB.
+          certdb.addCert(certDer, ",,");
+        } catch (err) {
+          Cu.reportError(`Failed to update CertDB: ${err}`);
+
+          Services.telemetry.getHistogramById(INTERMEDIATES_ERRORS_TELEMETRY)
+            .add("failedToUpdateNSS");
+
+          return Promise.reject();
+        }
 
         record.cert_import_complete = true;
         return col.update(record);
@@ -215,6 +258,8 @@ this.RemoteSecuritySettings = class RemoteSecuritySettings {
       .catch(() => {
         // Don't abort the outer Promise.all because of an error. Errors were
         // sent using Cu.reportError()
+        Services.telemetry.getHistogramById(INTERMEDIATES_ERRORS_TELEMETRY)
+          .add("failedToDownloadMisc");
       });
     }
 
@@ -234,8 +279,12 @@ this.RemoteSecuritySettings = class RemoteSecuritySettings {
         for (let i = 0; i < recordsToRemove.length; i++) {
           let record = recordsToRemove[i];
           if (record.pubKeyHash == certHash) {
-            certdb.deleteCertificate(cert);
-            recordsToRemove.splice(i, 1);
+            try {
+              certdb.deleteCertificate(cert);
+              recordsToRemove.splice(i, 1);
+            } catch (err) {
+              Cu.reportError(`Failed to remove intermediate certificate Hash=${certHash}: ${err}`);
+            }
             break;
           }
         }
@@ -243,6 +292,8 @@ this.RemoteSecuritySettings = class RemoteSecuritySettings {
 
       if (recordsToRemove.length > 0) {
         Cu.reportError(`Failed to remove ${recordsToRemove.length} intermediate certificates`);
+        Services.telemetry.getHistogramById(INTERMEDIATES_ERRORS_TELEMETRY)
+          .add("failedToRemove");
       }
     }
 };
