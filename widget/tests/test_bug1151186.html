@@ -19,8 +19,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1151186
     SimpleTest.executeSoon(runTests);
   });
 
-  function runTests()
-  {
+  function runTests() {
     is(document.activeElement, document.getElementById("editor"),
        "The div element should be focused");
     var utils = SpecialPowers.getDOMWindowUtils(window);

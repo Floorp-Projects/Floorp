@@ -105,7 +105,7 @@
       expectations.push({
         editable: [0, 0],
         textarea: [0, 0],
-        input:    [0, 0]
+        input:    [0, 0],
       });
 
       // Move to end of line
@@ -114,7 +114,7 @@
       expectations.push({
         editable: [73, 73],
         textarea: [72, 72],
-        input:    [732, 732]
+        input:    [732, 732],
       });
 
       // Move down
@@ -123,7 +123,7 @@
       expectations.push({
         editable: [140, 140],
         textarea: [145, 145],
-        input:    [732, 732]
+        input:    [732, 732],
       });
 
       // Move to beginning of line
@@ -132,7 +132,7 @@
       expectations.push({
         editable: [73, 73],
         textarea: [73, 73],
-        input:    [0, 0]
+        input:    [0, 0],
       });
 
       // Move word right and modify selection
@@ -141,7 +141,7 @@
       expectations.push({
         editable: [73, 84],
         textarea: [73, 90],
-        input:    [0, 10]
+        input:    [0, 10],
       });
 
       // Move word right
@@ -150,7 +150,7 @@
       expectations.push({
         editable: [84, 84],
         textarea: [90, 90],
-        input:    [10, 10]
+        input:    [10, 10],
       });
 
       // Move word right
@@ -159,7 +159,7 @@
       expectations.push({
         editable: [89, 89],
         textarea: [95, 95],
-        input:    [17, 17]
+        input:    [17, 17],
       });
 
       // Move down and modify selection
@@ -168,7 +168,7 @@
       expectations.push({
         editable: [89, 171],
         textarea: [95, 175],
-        input:    [17, 732]
+        input:    [17, 732],
       });
 
       // Move backward and modify selection
@@ -177,7 +177,7 @@
       expectations.push({
         editable: [89, 170],
         textarea: [95, 174],
-        input:    [17, 731]
+        input:    [17, 731],
       });
 
       // Delete forward
@@ -186,7 +186,7 @@
       expectations.push({
         editable: [89, 89],
         textarea: [95, 95],
-        input:    [17, 17]
+        input:    [17, 17],
       });
 
       // Delete backward
@@ -195,7 +195,7 @@
       expectations.push({
         editable: [88, 88],
         textarea: [94, 94],
-        input:    [16, 16]
+        input:    [16, 16],
       });
 
       // Move backward
@@ -204,7 +204,7 @@
       expectations.push({
         editable: [87, 87],
         textarea: [93, 93],
-        input:    [15, 15]
+        input:    [15, 15],
       });
 
       // Move to beginning of paragraph (line for now)
@@ -213,7 +213,7 @@
       expectations.push({
         editable: [73, 73],
         textarea: [73, 73],
-        input:    [0, 0]
+        input:    [0, 0],
       });
 
       // Move forward
@@ -222,7 +222,7 @@
       expectations.push({
         editable: [74, 74],
         textarea: [74, 74],
-        input:    [1, 1]
+        input:    [1, 1],
       });
 
       // Move word right
@@ -231,7 +231,7 @@
       expectations.push({
         editable: [84, 84],
         textarea: [90, 90],
-        input:    [10, 10]
+        input:    [10, 10],
       });
 
       // Move word right
@@ -240,7 +240,7 @@
       expectations.push({
         editable: [88, 88],
         textarea: [94, 94],
-        input:    [17, 17]
+        input:    [17, 17],
       });
 
       // Delete to end of paragraph (line for now)
@@ -249,7 +249,7 @@
       expectations.push({
         editable: [88, 88],
         textarea: [94, 94],
-        input:    [17, 17]
+        input:    [17, 17],
       });
 
       // Move backward and modify selection
@@ -258,7 +258,7 @@
       expectations.push({
         editable: [88, 87],
         textarea: [93, 94],
-        input:    [16, 17]
+        input:    [16, 17],
       });
 
       // Move to end of paragraph (line for now)
@@ -267,7 +267,7 @@
       expectations.push({
         editable: [139, 139],
         textarea: [94, 94],
-        input:    [17, 17]
+        input:    [17, 17],
       });
 
       // Move up
@@ -276,11 +276,10 @@
       expectations.push({
         editable: [73, 73],
         textarea: [21, 21],
-        input:    [0, 0]
+        input:    [0, 0],
       });
 
-      function checkWindowSelection(aElement, aSelection)
-      {
+      function checkWindowSelection(aElement, aSelection) {
         let selection = window.getSelection();
 
         is(selection.anchorOffset, aSelection[aElement.id][0],
@@ -289,16 +288,14 @@
            aElement.id + ": Incorrect focus offset");
       }
 
-      function checkElementSelection(aElement, aSelection)
-      {
+      function checkElementSelection(aElement, aSelection) {
         is(aElement.selectionStart, aSelection[aElement.id][0],
            aElement.id + ": Incorrect selection start");
         is(aElement.selectionEnd, aSelection[aElement.id][1],
            aElement.id + ": Incorrect selection end");
       }
 
-      function* testRun(aElement, aSelectionCheck, aCallback)
-      {
+      function* testRun(aElement, aSelectionCheck, aCallback) {
         if (document.activeElement) {
           document.activeElement.blur();
         }
@@ -324,8 +321,7 @@
 
       let gTestContinuation = null;
 
-      function continueTest()
-      {
+      function continueTest() {
         if (!gTestContinuation) {
           gTestContinuation = doTest();
         }
