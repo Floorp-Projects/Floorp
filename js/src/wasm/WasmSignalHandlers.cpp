@@ -213,7 +213,25 @@ using mozilla::DebugOnly;
 #  error "Don't know how to read/write to the thread state via the mcontext_t."
 #endif
 
+// On ARM Linux, including Android, unaligned FP accesses that were not flagged
+// as unaligned will tend to trap (with SIGBUS) and will need to be emulated.
+//
+// We can only perform this emulation if the system header files provide access
+// to the FP registers.  In particular, <sys/user.h> must have definitions of
+// `struct user_vfp` and `struct user_vfp_exc`, as it does on Android.
+//
+// Those definitions are however not present in the headers of every Linux
+// distro - Raspbian is known to be a problem, for example.  However those
+// distros are tier-3 platforms.
+//
+// If you run into compile problems on a tier-3 platform, you can disable the
+// emulation here.
+
 #if defined(__linux__) && defined(__arm__)
+#  define WASM_EMULATE_ARM_UNALIGNED_FP_ACCESS
+#endif
+
+#ifdef WASM_EMULATE_ARM_UNALIGNED_FP_ACCESS
 #  include <sys/user.h>
 #endif
 
@@ -441,7 +459,7 @@ struct AutoHandlingTrap {
   }
 };
 
-#if defined(__linux__) && defined(__arm__)
+#ifdef WASM_EMULATE_ARM_UNALIGNED_FP_ACCESS
 
 // Code to handle SIGBUS for unaligned floating point accesses on 32-bit ARM.
 
@@ -641,12 +659,12 @@ static bool HandleUnalignedTrap(CONTEXT* context, uint8_t* pc,
 #  endif
   return false;
 }
-#else   // __linux__ && __arm__
+#else   // WASM_EMULATE_ARM_UNALIGNED_FP_ACCESS
 static bool HandleUnalignedTrap(CONTEXT* context, uint8_t* pc,
                                 Instance* instance) {
   return false;
 }
-#endif  // __linux__ && __arm__
+#endif  // WASM_EMULATE_ARM_UNALIGNED_FP_ACCESS
 
 static MOZ_MUST_USE bool HandleTrap(CONTEXT* context,
                                     bool isUnalignedSignal = false,
@@ -1170,3 +1188,5 @@ bool wasm::HandleIllegalInstruction(const RegisterState& regs,
   *newPC = segment.trapCode();
   return true;
 }
+
+#undef WASM_EMULATE_ARM_UNALIGNED_FP_ACCESS
