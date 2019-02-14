@@ -400,9 +400,48 @@ class SystemEngineView @JvmOverloads constructor(
             return true
         }
 
-        // Related Issue: https://github.com/mozilla-mobile/android-components/issues/1814
-        override fun onJsConfirm(view: WebView?, url: String?, message: String?, result: JsResult?): Boolean {
-            return applyDefaultJsDialogBehavior(result)
+        override fun onJsConfirm(view: WebView?, url: String?, message: String?, result: JsResult): Boolean {
+            val session = session ?: return applyDefaultJsDialogBehavior(result)
+            val title = context.getString(R.string.mozac_browser_engine_system_alert_title, url ?: session.currentUrl)
+            val positiveButton = context.getString(android.R.string.ok)
+            val negativeButton = context.getString(android.R.string.cancel)
+
+            val onDismiss: () -> Unit = {
+                result.cancel()
+            }
+
+            val onConfirmPositiveButton: (Boolean) -> Unit = { shouldNotShowMoreDialogs ->
+                shouldShowMoreDialogs = !shouldNotShowMoreDialogs
+                result.confirm()
+            }
+
+            val onConfirmNegativeButton: (Boolean) -> Unit = { shouldNotShowMoreDialogs ->
+                shouldShowMoreDialogs = !shouldNotShowMoreDialogs
+                result.cancel()
+            }
+
+            if (shouldShowMoreDialogs) {
+                session.notifyObservers {
+                    onPromptRequest(
+                        PromptRequest.Confirm(
+                            title,
+                            message ?: "",
+                            areDialogsBeingAbused(),
+                            positiveButton,
+                            negativeButton,
+                            "",
+                            onConfirmPositiveButton,
+                            onConfirmNegativeButton,
+                            {},
+                            onDismiss
+                        )
+                    )
+                }
+            } else {
+                result.cancel()
+            }
+            updateJSDialogAbusedState()
+            return true
         }
 
         override fun onShowFileChooser(

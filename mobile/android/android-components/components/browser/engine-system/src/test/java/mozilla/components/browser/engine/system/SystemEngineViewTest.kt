@@ -1202,7 +1202,7 @@ class SystemEngineViewTest {
     }
 
     @Test
-    fun `Calling onJsPrompt must provide a TextPrompt PromptRequest`() {
+    fun `calling onJsPrompt must provide a TextPrompt PromptRequest`() {
         val context = getApplicationContext<Context>()
         val engineSession = SystemEngineSession(context)
         val engineView = SystemEngineView(context)
@@ -1281,7 +1281,7 @@ class SystemEngineViewTest {
     }
 
     @Test
-    fun `Calling onJsPrompt with a null session must not provide a TextPrompt PromptRequest`() {
+    fun `calling onJsPrompt with a null session must not provide a TextPrompt PromptRequest`() {
         val context = getApplicationContext<Context>()
         val engineSession = SystemEngineSession(context)
         val engineView = SystemEngineView(context)
@@ -1309,6 +1309,86 @@ class SystemEngineViewTest {
         assertTrue(wasTheDialogHandled)
         assertNull(request)
         verify(mockJSPromptResult).cancel()
+    }
+
+    @Test
+    fun `calling onJsConfirm must provide a Confirm PromptRequest`() {
+        val context = getApplicationContext<Context>()
+        val engineSession = SystemEngineSession(context)
+        val engineView = SystemEngineView(context)
+        var request: PromptRequest? = null
+
+        engineSession.register(object : EngineSession.Observer {
+            override fun onPromptRequest(promptRequest: PromptRequest) {
+                request = promptRequest
+            }
+        })
+
+        engineView.render(engineSession)
+
+        val mockJSPromptResult = mock<JsResult>()
+
+        engineSession.webView.webChromeClient!!.onJsConfirm(
+            mock(),
+            "http://www.mozilla.org",
+            "message",
+            mockJSPromptResult
+        )
+
+        val confirmPromptRequest = request as PromptRequest.Confirm
+        assertTrue(request is PromptRequest.Confirm)
+
+        assertTrue(confirmPromptRequest.title.contains("mozilla.org"))
+        assertEquals(confirmPromptRequest.hasShownManyDialogs, false)
+        assertEquals(confirmPromptRequest.message, "message")
+        assertEquals(confirmPromptRequest.positiveButtonTitle.toLowerCase(), "OK".toLowerCase())
+        assertEquals(confirmPromptRequest.negativeButtonTitle.toLowerCase(), "Cancel".toLowerCase())
+
+        confirmPromptRequest.onConfirmPositiveButton(true)
+        verify(mockJSPromptResult).confirm()
+        assertEquals(engineView.jsAlertCount, 1)
+
+        confirmPromptRequest.onDismiss()
+        verify(mockJSPromptResult).cancel()
+
+        confirmPromptRequest.onConfirmNegativeButton(true)
+        verify(mockJSPromptResult, times(2)).cancel()
+
+        confirmPromptRequest.onConfirmPositiveButton(true)
+        assertEquals(engineView.shouldShowMoreDialogs, false)
+
+        engineView.lastDialogShownAt = engineView.lastDialogShownAt.add(YEAR, -1)
+        engineSession.webView.webChromeClient!!.onJsConfirm(
+            mock(),
+            "http://www.mozilla.org",
+            "message",
+            mockJSPromptResult
+        )
+
+        assertEquals(engineView.jsAlertCount, 1)
+        verify(mockJSPromptResult, times(3)).cancel()
+
+        engineView.lastDialogShownAt = engineView.lastDialogShownAt.add(YEAR, -1)
+        engineView.jsAlertCount = 100
+        engineView.shouldShowMoreDialogs = true
+
+        engineSession.webView.webChromeClient!!.onJsConfirm(
+            mock(),
+            "http://www.mozilla.org",
+            null,
+            mockJSPromptResult
+        )
+
+        assertTrue((request as PromptRequest.Confirm).hasShownManyDialogs)
+
+        engineSession.currentUrl = "http://www.mozilla.org"
+        engineSession.webView.webChromeClient!!.onJsConfirm(
+            mock(),
+            null,
+            "message",
+            mockJSPromptResult
+        )
+        assertTrue((request as PromptRequest.Confirm).title.contains("mozilla.org"))
     }
 
     private fun Date.add(timeUnit: Int, amountOfTime: Int): Date {
