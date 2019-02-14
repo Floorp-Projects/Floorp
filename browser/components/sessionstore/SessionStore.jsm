@@ -48,9 +48,7 @@ const OBSERVING = [
   "quit-application", "browser:purge-session-history",
   "browser:purge-session-history-for-domain",
   "idle-daily", "clear-origin-attributes-data",
-  "http-on-examine-response",
-  "http-on-examine-merged-response",
-  "http-on-examine-cached-response",
+  "http-on-may-change-process",
 ];
 
 // XUL Window properties to (re)store
@@ -814,10 +812,8 @@ var SessionStoreInternal = {
           this._forgetTabsWithUserContextId(userContextId);
         }
         break;
-      case "http-on-examine-response":
-      case "http-on-examine-cached-response":
-      case "http-on-examine-merged-response":
-        this.onExamineResponse(aSubject);
+      case "http-on-may-change-process":
+        this.onMayChangeProcess(aSubject);
         break;
     }
   },
@@ -2318,7 +2314,7 @@ var SessionStoreInternal = {
 
   // Examine the channel response to see if we should change the process
   // performing the given load.
-  onExamineResponse(aChannel) {
+  onMayChangeProcess(aChannel) {
     if (!E10SUtils.useHttpResponseProcessSelection()) {
       return;
     }
