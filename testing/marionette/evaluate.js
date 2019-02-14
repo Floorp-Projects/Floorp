@@ -137,9 +137,12 @@ evaluate.sandbox = function(sb, script, args = [],
   });
 
   return promise.then(res => {
+    return res;
+  }, error => {
+    throw error;
+  }).finally(() => {
     clearTimeout(scriptTimeoutID);
     sb.window.removeEventListener("unload", unloadHandler);
-    return res;
   });
 };
 
