@@ -2286,6 +2286,8 @@ var SessionStoreInternal = {
    * processes.
    */
   async _doProcessSwitch(aBrowser, aRemoteType, aChannel, aSwitchId) {
+    debug(`[process-switch]: performing switch from ${aBrowser.remoteType} to ${aRemoteType}`);
+
     // Don't try to switch tabs before delayed startup is completed.
     await aBrowser.ownerGlobal.delayedStartupPromise;
 
@@ -2309,7 +2311,9 @@ var SessionStoreInternal = {
     }
 
     // Tell our caller to redirect the load into this newly created process.
-    return aBrowser.frameLoader.tabParent;
+    let tabParent = aBrowser.frameLoader.tabParent;
+    debug(`[process-switch]: new tabID: ${tabParent.tabId}`);
+    return tabParent;
   },
 
   // Examine the channel response to see if we should change the process
@@ -2323,17 +2327,21 @@ var SessionStoreInternal = {
       return; // Not a document load.
     }
 
+    // Check that this is a toplevel document load.
     let cpType = aChannel.loadInfo.externalContentPolicyType;
     let toplevel = cpType == Ci.nsIContentPolicy.TYPE_DOCUMENT;
     if (!toplevel) {
-      return; // Not loading a toplevel document.
+      debug(`[process-switch]: non-toplevel - ignoring`);
+      return;
     }
 
+    // Check that the document has a corresponding BrowsingContext.
     let browsingContext = toplevel
         ? aChannel.loadInfo.browsingContext
         : aChannel.loadInfo.frameBrowsingContext;
     if (!browsingContext) {
-      return; // Not loading in a browsing context.
+      debug(`[process-switch]: no BrowsingContext - ignoring`);
+      return;
     }
 
     // Get principal for a document already loaded in the BrowsingContext.
@@ -2342,34 +2350,60 @@ var SessionStoreInternal = {
       currentPrincipal = browsingContext.currentWindowGlobal.documentPrincipal;
     }
 
-    let parentChannel = aChannel.notificationCallbacks
-                                .getInterface(Ci.nsIParentChannel);
-    if (!parentChannel) {
-      return; // Not an actor channel
+    // Ensure we have an nsIParentChannel listener for a remote load.
+    let parentChannel;
+    try {
+      parentChannel = aChannel.notificationCallbacks
+                              .getInterface(Ci.nsIParentChannel);
+    } catch (e) {
+      debug(`[process-switch]: No nsIParentChannel callback - ignoring`);
+      return;
     }
 
-    let tabParent = parentChannel.QueryInterface(Ci.nsIInterfaceRequestor)
-                                 .getInterface(Ci.nsITabParent);
-    if (!tabParent || !tabParent.ownerElement) {
-      console.warn("warning: Missing tabParent");
-      return; // Not an embedded browsing context
+    // Ensure we have a nsITabParent for our remote load.
+    let tabParent;
+    try {
+      tabParent = parentChannel.QueryInterface(Ci.nsIInterfaceRequestor)
+                               .getInterface(Ci.nsITabParent);
+    } catch (e) {
+      debug(`[process-switch]: No nsITabParent for channel - ignoring`);
+      return;
     }
 
+    // Ensure we're loaded in a regular tabbrowser environment, and can swap processes.
     let browser = tabParent.ownerElement;
-    if (browser.tagName !== "browser") {
-      console.warn("warning: Not a xul:browser element:", browser.tagName);
-      return; // Not a vanilla xul:browser element performing embedding.
+    if (!browser) {
+      debug(`[process-switch]: TabParent has no ownerElement - ignoring`);
     }
 
+    let tabbrowser = browser.ownerGlobal.gBrowser;
+    if (!tabbrowser) {
+      debug(`[process-switch]: cannot find tabbrowser for loading tab - ignoring`);
+      return;
+    }
+
+    let tab = tabbrowser.getTabForBrowser(browser);
+    if (!tab) {
+      debug(`[process-switch]: not a normal tab, so cannot swap processes - ignoring`);
+      return;
+    }
+
+    // Determine the process type the load should be performed in.
     let resultPrincipal =
       Services.scriptSecurityManager.getChannelResultPrincipal(aChannel);
-    let useRemoteTabs = browser.ownerGlobal.gMultiProcessBrowser;
     let remoteType = E10SUtils.getRemoteTypeForPrincipal(resultPrincipal,
-                                                         useRemoteTabs,
+                                                         true,
                                                          browser.remoteType,
                                                          currentPrincipal);
     if (browser.remoteType == remoteType) {
-      return; // Already in compatible process.
+      debug(`[process-switch]: type (${remoteType}) is compatible - ignoring`);
+      return;
+    }
+
+    if (remoteType == E10SUtils.NOT_REMOTE ||
+        browser.remoteType == E10SUtils.NOT_REMOTE) {
+      debug(`[process-switch]: non-remote source/target - ignoring`);
+      return;
     }
 
     // ------------------------------------------------------------------------
