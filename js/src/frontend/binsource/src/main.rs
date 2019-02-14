@@ -933,9 +933,8 @@ impl CPPExporter {
             buffer.push_str(&self.rules.hpp_tokens_kind_doc.reindent(""));
         }
 
-        let node_names = self.syntax.interfaces_by_name()
+        let node_names = self.syntax.node_names()
             .keys()
-            .map(|n| n.to_string())
             .sorted();
         buffer.push_str(&format!("\n#define FOR_EACH_BIN_KIND(F) \\\n{nodes}\n",
             nodes = node_names.iter()
