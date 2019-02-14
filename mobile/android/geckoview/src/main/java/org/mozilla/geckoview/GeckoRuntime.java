@@ -25,7 +25,6 @@ import android.util.Log;
 
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.GeckoFontScaleListener;
 import org.mozilla.gecko.GeckoSystemStateListener;
 import org.mozilla.gecko.GeckoScreenOrientation;
 import org.mozilla.gecko.GeckoThread;

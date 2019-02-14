@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.gecko;
+package org.mozilla.geckoview;
 
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.geckoview.GeckoRuntimeSettings;
@@ -23,7 +23,7 @@ import android.util.Log;
  *
  * @see android.provider.Settings.System#FONT_SCALE
  */
-public final class GeckoFontScaleListener
+/* package */ final class GeckoFontScaleListener
         extends ContentObserver {
     private static final String LOGTAG = "GeckoFontScaleListener";
 
@@ -164,8 +164,8 @@ public final class GeckoFontScaleListener
             fontInflationEnabled = mPrevFontInflationState;
         }
 
-        mSettings.setFontInflationEnabled(fontInflationEnabled);
-        mSettings.setFontSizeFactor(fontScale);
+        mSettings.setFontInflationEnabledInternal(fontInflationEnabled);
+        mSettings.setFontSizeFactorInternal(fontScale);
     }
 
     @UiThread // See constructor.
