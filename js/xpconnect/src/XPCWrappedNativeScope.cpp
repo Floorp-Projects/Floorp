@@ -351,6 +351,7 @@ void XPCWrappedNativeScope::UpdateWeakPointersAfterGC() {
 
   // Update our pointer to the compartment in case we finalized all globals.
   if (!js::CompartmentHasLiveGlobal(mCompartment)) {
+    CompartmentPrivate::Get(mCompartment)->scope = nullptr;
     mCompartment = nullptr;
     GetWrappedNativeMap()->Clear();
     mWrappedNativeProtoMap->Clear();
