@@ -53,6 +53,14 @@ interface nsISHistory: nsISupports
   [infallible] readonly attribute long requestedIndex;
 
   /**
+   * Artifically set the |requestedIndex| for this nsISHEntry to the given
+   * index. This is used when resuming a cross-process load from a different
+   * process.
+   */
+  [noscript, notxpcom]
+  void internalSetRequestedIndex(in long aRequestedIndex);
+
+  /**
    * Get the history entry at a given index. Returns non-null on success.
    *
    * @param index             The index value whose entry is requested.
