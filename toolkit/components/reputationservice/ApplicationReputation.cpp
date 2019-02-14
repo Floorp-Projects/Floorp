@@ -487,10 +487,10 @@ static const char* const kBinaryFileExtensions[] = {
     ".cpi",        // Control Panel Item. Executable used for adding icons
                    // to Control Panel
     //".cpio",
-    ".cpl",         // Windows executable
-    ".crt",         // Windows signed certificate
-    ".crx",         // Chrome extensions
-    ".csh",         // Linux shell
+    ".cpl",  // Windows executable
+    ".crt",  // Windows signed certificate
+    ".crx",  // Chrome extensions
+    ".csh",  // Linux shell
     //".csv",
     ".dart",        // Mac disk image
     ".dc42",        // Apple DiskCopy Image
@@ -504,31 +504,33 @@ static const char* const kBinaryFileExtensions[] = {
     ".dll",         // Windows executable
     ".dmg",         // Mac disk image
     ".dmgpart",     // Mac disk image
-    //".doc",
-    //".docb", // MS Office
-    //".docm", // MS Word
-    //".docx", // MS Word
-    //".dotm", // MS Word
-    //".dott", // MS Office
-    ".drv",   // Windows driver
-    ".dvdr",  // Mac Disk image
-    ".efi",   // Firmware
-    ".eml",   // MS Outlook
-    ".exe",   // Windows executable
+    ".doc",         // MS Office
+    ".docb",        // MS Office
+    ".docm",        // MS Word
+    ".docx",        // MS Word
+    ".dot",         // MS Word
+    ".dotm",        // MS Word
+    ".dott",        // MS Office
+    ".dotx",        // MS Word
+    ".drv",         // Windows driver
+    ".dvdr",        // Mac Disk image
+    ".efi",         // Firmware
+    ".eml",         // MS Outlook
+    ".exe",         // Windows executable
     //".fat",
     ".fon",     // Windows font
     ".fxp",     // MS FoxPro
     ".gadget",  // Windows
     //".gif",
-    ".grp",     // Windows
-    ".gz",      // Linux archive (gzip)
-    ".gzip",    // Linux archive (gzip)
-    ".hfs",     // Mac disk image
-    ".hlp",     // Windows Help
-    ".hqx",     // Mac archive
-    ".hta",     // HTML trusted application
+    ".grp",   // Windows
+    ".gz",    // Linux archive (gzip)
+    ".gzip",  // Linux archive (gzip)
+    ".hfs",   // Mac disk image
+    ".hlp",   // Windows Help
+    ".hqx",   // Mac archive
+    ".hta",   // HTML trusted application
     ".htm", ".html",
-    ".htt",      // MS HTML template
+    ".htt",  // MS HTML template
     //".ica",
     ".img",      // Mac disk image
     ".imgpart",  // Mac disk image
@@ -577,24 +579,24 @@ static const char* const kBinaryFileExtensions[] = {
     ".mhtml",     // MS HTML
     ".mim",       // MS Mail
     //".mkv",
-    ".mmc",       // MS Office
-    ".mof",       // Windows
+    ".mmc",  // MS Office
+    ".mof",  // Windows
     //".mov",
     //".mp3",
     //".mp4",
-    ".mpkg",      // Mac installer
-    ".msc",       // Windows executable
-    ".msg",       // MS Outlook
-    ".msh",       // Windows shell
-    ".msh1",      // Windows shell
-    ".msh1xml",   // Windows shell
-    ".msh2",      // Windows shell
-    ".msh2xml",   // Windows shell
-    ".mshxml",    // Windows
-    ".msi",       // Windows installer
-    ".msp",       // Windows installer
-    ".mst",       // Windows installer
-    ".ndif",      // Mac disk image
+    ".mpkg",     // Mac installer
+    ".msc",      // Windows executable
+    ".msg",      // MS Outlook
+    ".msh",      // Windows shell
+    ".msh1",     // Windows shell
+    ".msh1xml",  // Windows shell
+    ".msh2",     // Windows shell
+    ".msh2xml",  // Windows shell
+    ".mshxml",   // Windows
+    ".msi",      // Windows installer
+    ".msp",      // Windows installer
+    ".mst",      // Windows installer
+    ".ndif",     // Mac disk image
     //".ntfs", // 7z
     ".ocx",   // ActiveX
     ".ops",   // MS Office
@@ -619,12 +621,16 @@ static const char* const kBinaryFileExtensions[] = {
     ".pl",   // Perl script
     ".plg",  // MS Visual Studio
     //".png",
-    //".potx", // MS PowerPoint
-    //".ppam", // MS PowerPoint
-    //".ppsx", // MS PowerPoint
-    //".ppt",
-    //".pptm", // MS PowerPoint
-    //".pptx", // MS PowerPoint
+    ".pot",     // MS PowerPoint
+    ".potm",    // MS PowerPoint
+    ".potx",    // MS PowerPoint
+    ".ppam",    // MS PowerPoint
+    ".pps",     // MS PowerPoint
+    ".ppsm",    // MS PowerPoint
+    ".ppsx",    // MS PowerPoint
+    ".ppt",     // MS PowerPoint
+    ".pptm",    // MS PowerPoint
+    ".pptx",    // MS PowerPoint
     ".prf",     // MS Outlook
     ".prg",     // Windows
     ".ps1",     // Windows shell
@@ -677,7 +683,7 @@ static const char* const kBinaryFileExtensions[] = {
     ".rels",  // MS Office
     //".rgs", // Windows Registry
     ".rpm",  // Linux package
-    //".rtf", // MS Office
+    ".rtf",  // MS Office
     //".run", // Linux shell
     ".scf",                // Windows shell
     ".scpt",               // AppleScript
@@ -694,14 +700,14 @@ static const char* const kBinaryFileExtensions[] = {
     ".shtml",              // HTML
     ".shtm",               // HTML
     ".sht",                // HTML
-    //".sldm", // MS PowerPoint
-    //".sldx", // MS PowerPoint
-    ".slk",           // MS Excel
-    ".slp",           // Linux package
-    ".smi",           // Mac disk image
-    ".sparsebundle",  // Mac disk image
-    ".sparseimage",   // Mac disk image
-    ".spl",           // Adobe Flash
+    ".sldm",               // MS PowerPoint
+    ".sldx",               // MS PowerPoint
+    ".slk",                // MS Excel
+    ".slp",                // Linux package
+    ".smi",                // Mac disk image
+    ".sparsebundle",       // Mac disk image
+    ".sparseimage",        // Mac disk image
+    ".spl",                // Adobe Flash
     //".squashfs",
     ".svg",
     ".swf",   // Adobe Flash
@@ -713,13 +719,13 @@ static const char* const kBinaryFileExtensions[] = {
     ".tbz2",  // Linux archive (bzip2)
     ".tcsh",  // Linux shell
     //".tif",
-    ".tgz",   // Linux archive (gzip)
+    ".tgz",  // Linux archive (gzip)
     //".toast", // Roxio disk image
     ".torrent",  // Bittorrent
     ".tpz",      // Linux archive (gzip)
     //".txt",
-    ".txz",      // Linux archive (xz)
-    ".tz",       // Linux archive (gzip)
+    ".txz",  // Linux archive (xz)
+    ".tz",   // Linux archive (gzip)
     //".u3p", // U3 Smart Apps
     ".udf",   // MS Excel
     ".udif",  // Mac disk image
@@ -749,8 +755,8 @@ static const char* const kBinaryFileExtensions[] = {
     ".vtx",       // MS Visio
     //".wav",
     //".webp",
-    ".website",   // Windows
-    ".wim",       // Windows Imaging
+    ".website",  // Windows
+    ".wim",      // Windows Imaging
     //".workflow", // Mac Automator
     //".wrc", // FreeArc archive
     ".ws",    // Windows script
@@ -760,13 +766,21 @@ static const char* const kBinaryFileExtensions[] = {
     ".xar",   // MS Excel
     ".xbap",  // XAML Browser Application
     ".xhtml", ".xhtm", ".xht",
-    ".xip",  // Mac archive
-    //".xls",
-    //".xlsm", // MS Excel
-    //".xlsx", // MS Excel
-    //".xltm", // MS Excel
-    //".xltx", // MS Excel
-    ".xml",
+    ".xip",     // Mac archive
+    ".xla",     // MS Excel
+    ".xlam",    // MS Excel
+    ".xldm",    // MS Excel
+    ".xll",     // MS Excel
+    ".xlm",     // MS Excel
+    ".xls",     // MS Excel
+    ".xlsb",    // MS Excel
+    ".xlsm",    // MS Excel
+    ".xlsx",    // MS Excel
+    ".xlt",     // MS Excel
+    ".xltm",    // MS Excel
+    ".xltx",    // MS Excel
+    ".xlw",     // MS Excel
+    ".xml",     // MS Excel
     ".xnk",     // MS Exchange
     ".xrm-ms",  // Windows
     ".xsl",     // XML Stylesheet
