@@ -2396,7 +2396,7 @@ class BaseContent extends react__WEBPACK_IMPORTED_MODULE_9___default.a.PureCompo
       this.disableDarkTheme();
     }
 
-    const outerClassName = ["outer-wrapper", shouldBeFixedToTop && "fixed-to-top", prefs.showSearch && this.state.fixedSearch && !noSectionsEnabled && "fixed-search", prefs.showSearch && noSectionsEnabled && "only-search"].filter(v => v).join(" ");
+    const outerClassName = ["outer-wrapper", isDiscoveryStream && "ds-outer-wrapper-search-alignment", shouldBeFixedToTop && "fixed-to-top", prefs.showSearch && this.state.fixedSearch && !noSectionsEnabled && "fixed-search", prefs.showSearch && noSectionsEnabled && "only-search"].filter(v => v).join(" ");
 
     return react__WEBPACK_IMPORTED_MODULE_9___default.a.createElement(
       "div",
@@ -7740,11 +7740,11 @@ function layoutRender(layout, feeds, spocs) {
     // Loops through all the components and adds a .data property
     // containing data from feeds
     components: row.components.map(component => {
-      if (!component.feed || !feeds[component.feed.url]) {
+      if (!component.feed || !feeds.data[component.feed.url]) {
         return component;
       }
 
-      return Object.assign({}, component, { data: maybeInjectSpocs(feeds[component.feed.url].data, component.spocs) });
+      return Object.assign({}, component, { data: maybeInjectSpocs(feeds.data[component.feed.url].data, component.spocs) });
     })
   }));
 });
@@ -7899,14 +7899,6 @@ class DiscoveryStreamBase_DiscoveryStreamBase extends external_React_default.a.P
 
   renderComponent(component, embedWidth) {
     let rows;
-    const { spocs } = this.props.DiscoveryStream;
-
-    // TODO: Can we make this a bit better visually while it loads?
-    // If this component expects spocs,
-    // wait until spocs are loaded before attempting to use it.
-    if (component.spocs && !spocs.loaded) {
-      return null;
-    }
 
     switch (component.type) {
       case "TopSites":
@@ -7991,6 +7983,12 @@ class DiscoveryStreamBase_DiscoveryStreamBase extends external_React_default.a.P
   render() {
     const { layoutRender } = this.props.DiscoveryStream;
     const styles = [];
+    const { spocs, feeds } = this.props.DiscoveryStream;
+
+    if (!spocs.loaded || !feeds.loaded) {
+      return null;
+    }
+
     return external_React_default.a.createElement(
       "div",
       { className: "discovery-stream ds-layout" },
@@ -11587,7 +11585,10 @@ const INITIAL_STATE = {
     layout: [],
     lastUpdated: null,
     feeds: {
-      // "https://foo.com/feed1": {lastUpdated: 123, data: []}
+      data: {
+        // "https://foo.com/feed1": {lastUpdated: 123, data: []}
+      },
+      loaded: false
     },
     spocs: {
       spocs_endpoint: "",
@@ -11999,7 +12000,12 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
     case Actions["actionTypes"].DISCOVERY_STREAM_LAYOUT_RESET:
       return Object.assign({}, prevState, { lastUpdated: INITIAL_STATE.DiscoveryStream.lastUpdated, layout: INITIAL_STATE.DiscoveryStream.layout });
     case Actions["actionTypes"].DISCOVERY_STREAM_FEEDS_UPDATE:
-      return Object.assign({}, prevState, { feeds: action.data || prevState.feeds });
+      return Object.assign({}, prevState, {
+        feeds: Object.assign({}, prevState.feeds, {
+          data: action.data || prevState.feeds.data,
+          loaded: true
+        })
+      });
     case Actions["actionTypes"].DISCOVERY_STREAM_SPOCS_ENDPOINT:
       return Object.assign({}, prevState, {
         spocs: Object.assign({}, INITIAL_STATE.DiscoveryStream.spocs, {

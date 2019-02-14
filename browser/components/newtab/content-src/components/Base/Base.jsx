@@ -162,6 +162,7 @@ export class BaseContent extends React.PureComponent {
 
     const outerClassName = [
       "outer-wrapper",
+      isDiscoveryStream && "ds-outer-wrapper-search-alignment",
       shouldBeFixedToTop && "fixed-to-top",
       prefs.showSearch && this.state.fixedSearch && !noSectionsEnabled && "fixed-search",
       prefs.showSearch && noSectionsEnabled && "only-search",

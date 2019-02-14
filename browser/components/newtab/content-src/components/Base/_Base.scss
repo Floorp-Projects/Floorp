@@ -54,6 +54,14 @@ main {
 
 }
 
+.ds-outer-wrapper-search-alignment {
+  main {
+    // This override is to ensure while Discovery Stream loads,
+    // the search bar does not jump around. (it sticks to the top)
+    margin: 0 auto;
+  }
+}
+
 .base-content-fallback {
   // Make the error message be centered against the viewport
   height: 100vh;

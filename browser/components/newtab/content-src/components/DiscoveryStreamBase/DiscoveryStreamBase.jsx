@@ -116,14 +116,6 @@ export class _DiscoveryStreamBase extends React.PureComponent {
 
   renderComponent(component, embedWidth) {
     let rows;
-    const {spocs} = this.props.DiscoveryStream;
-
-    // TODO: Can we make this a bit better visually while it loads?
-    // If this component expects spocs,
-    // wait until spocs are loaded before attempting to use it.
-    if (component.spocs && !spocs.loaded) {
-      return null;
-    }
 
     switch (component.type) {
       case "TopSites":
@@ -210,6 +202,12 @@ export class _DiscoveryStreamBase extends React.PureComponent {
   render() {
     const {layoutRender} = this.props.DiscoveryStream;
     const styles = [];
+    const {spocs, feeds} = this.props.DiscoveryStream;
+
+    if (!spocs.loaded || !feeds.loaded) {
+      return null;
+    }
+
     return (
       <div className="discovery-stream ds-layout">
         {layoutRender.map((row, rowIndex) => (
