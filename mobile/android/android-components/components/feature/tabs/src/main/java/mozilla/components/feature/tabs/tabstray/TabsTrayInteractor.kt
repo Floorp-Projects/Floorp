@@ -4,10 +4,6 @@
 
 package mozilla.components.feature.tabs.tabstray
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import mozilla.components.browser.session.Session
 import mozilla.components.concept.tabstray.TabsTray
 import mozilla.components.feature.tabs.TabsUseCases
@@ -33,25 +29,10 @@ class TabsTrayInteractor(
 
     override fun onTabSelected(session: Session) {
         selectTabUseCase.invoke(session)
-
-        CoroutineScope(Dispatchers.Main).launch {
-            delay(CLOSE_TABS_TRAY_DELAY_MS)
-
-            closeTabsTray.invoke()
-        }
+        closeTabsTray.invoke()
     }
 
     override fun onTabClosed(session: Session) {
         removeTabUseCase.invoke(session)
-    }
-
-    companion object {
-        /**
-         * Delay when closing the tabs tray after a user interaction. We delay closing the tabs
-         * tray so that the user has a chance seeing the state change inside the tabs tray before
-         * we close it. Android uses 250ms for most of its animations (e.g.
-         * Switch.THUMB_ANIMATION_DURATION).
-         */
-        private const val CLOSE_TABS_TRAY_DELAY_MS = 250L
     }
 }
