@@ -110,7 +110,7 @@
 #  include "cairo/cairo-features.h"
 #  include "mozilla/WindowsDllBlocklist.h"
 #  include "mozilla/WinHeaderOnlyUtils.h"
-#  include "mozilla/mscom/MainThreadRuntime.h"
+#  include "mozilla/mscom/ProcessRuntime.h"
 #  include "mozilla/widget/AudioSession.h"
 
 #  if defined(MOZ_LAUNCHER_PROCESS)
@@ -4803,7 +4803,7 @@ int XREMain::XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig) {
   // trivial COM is run in the application. Since these settings may affect
   // stability, we should instantiate COM ASAP so that we can ensure that these
   // global settings are configured before anything can interfere.
-  mozilla::mscom::MainThreadRuntime msCOMRuntime;
+  mozilla::mscom::ProcessRuntime msCOMRuntime;
 #endif
 
   // init
