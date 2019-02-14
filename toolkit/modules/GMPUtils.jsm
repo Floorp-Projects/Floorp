@@ -12,6 +12,7 @@ var EXPORTED_SYMBOLS = [ "GMP_PLUGIN_IDS",
 
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+const {UpdateUtils} = ChromeUtils.import("resource://gre/modules/UpdateUtils.jsm");
 
 // GMP IDs
 const OPEN_H264_ID  = "gmp-gmpopenh264";
@@ -94,6 +95,10 @@ var GMPUtils = {
    */
   _isPluginForceSupported(aPlugin) {
     return GMPPrefs.getBool(GMPPrefs.KEY_PLUGIN_FORCE_SUPPORTED, false, aPlugin.id);
+  },
+
+  _isWindowsOnARM64() {
+    return AppConstants.platform == "win" && UpdateUtils.ABI.match(/aarch64/);
   },
 };
 
