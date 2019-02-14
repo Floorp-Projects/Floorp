@@ -16,7 +16,7 @@ wasmFullPass(`(module
     (func $test (result i32)
         (i32.store (i32.const 0) (i32.const 1))
         (i32.store (i32.const 65532) (i32.const 10))
-        (drop (grow_memory (i32.const 99)))
+        (drop (memory.grow (i32.const 99)))
         (i32.store (i32.const 6553596) (i32.const 100))
         (i32.add
             (i32.load (i32.const 0))
@@ -30,7 +30,7 @@ wasmFullPass(`(module
 var exports = wasmEvalText(`(module
     (import $imp "" "imp")
     (memory 1)
-    (func $grow (drop (grow_memory (i32.const 99))))
+    (func $grow (drop (memory.grow (i32.const 99))))
     (export "grow" $grow)
     (func $test (result i32)
         (i32.store (i32.const 0) (i32.const 1))
@@ -57,7 +57,7 @@ var exports1 = wasmEvalText(`(module
     (import "" "mem" (memory 1))
     (func $grow
         (i32.store (i32.const 65532) (i32.const 10))
-        (drop (grow_memory (i32.const 99)))
+        (drop (memory.grow (i32.const 99)))
         (i32.store (i32.const 6553596) (i32.const 100)))
     (export "grow" $grow)
 )`, {"":{mem}}).exports;
@@ -84,9 +84,9 @@ var mem = new Memory({initial:1});
 new Int32Array(mem.buffer)[0] = 42;
 var mod = new Module(wasmTextToBinary(`(module
     (import "" "mem" (memory 1))
-    (func $gm (param i32) (result i32) (grow_memory (get_local 0)))
+    (func $gm (param i32) (result i32) (memory.grow (get_local 0)))
     (export "grow_memory" $gm)
-    (func $cm (result i32) (current_memory))
+    (func $cm (result i32) (memory.size))
     (export "current_memory" $cm)
     (func $ld (param i32) (result i32) (i32.load (get_local 0)))
     (export "load" $ld)

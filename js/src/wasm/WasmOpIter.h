@@ -131,8 +131,8 @@ enum class OpKind {
   Load,
   Store,
   TeeStore,
-  CurrentMemory,
-  GrowMemory,
+  MemorySize,
+  MemoryGrow,
   Select,
   GetLocal,
   SetLocal,
@@ -416,8 +416,8 @@ class MOZ_STACK_CLASS OpIter : private Policy {
                                  LinearMemoryAddress<Value>* addr,
                                  Value* value);
   MOZ_MUST_USE bool readNop();
-  MOZ_MUST_USE bool readCurrentMemory();
-  MOZ_MUST_USE bool readGrowMemory(Value* input);
+  MOZ_MUST_USE bool readMemorySize();
+  MOZ_MUST_USE bool readMemoryGrow(Value* input);
   MOZ_MUST_USE bool readSelect(StackType* type, Value* trueValue,
                                Value* falseValue, Value* condition);
   MOZ_MUST_USE bool readGetLocal(const ValTypeVector& locals, uint32_t* id);
@@ -1292,8 +1292,8 @@ inline bool OpIter<Policy>::readNop() {
 }
 
 template <typename Policy>
-inline bool OpIter<Policy>::readCurrentMemory() {
-  MOZ_ASSERT(Classify(op_) == OpKind::CurrentMemory);
+inline bool OpIter<Policy>::readMemorySize() {
+  MOZ_ASSERT(Classify(op_) == OpKind::MemorySize);
 
   if (!env_.usesMemory()) {
     return fail("can't touch memory without memory");
@@ -1312,8 +1312,8 @@ inline bool OpIter<Policy>::readCurrentMemory() {
 }
 
 template <typename Policy>
-inline bool OpIter<Policy>::readGrowMemory(Value* input) {
-  MOZ_ASSERT(Classify(op_) == OpKind::GrowMemory);
+inline bool OpIter<Policy>::readMemoryGrow(Value* input) {
+  MOZ_ASSERT(Classify(op_) == OpKind::MemoryGrow);
 
   if (!env_.usesMemory()) {
     return fail("can't touch memory without memory");
