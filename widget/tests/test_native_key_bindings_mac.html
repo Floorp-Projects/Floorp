@@ -304,7 +304,7 @@
 
         for (let i = 0; i < synthesizedKeys.length; i++) {
           synthesizedKeys[i].push(function() {
-            aSelectionCheck.call(null, aElement, expectations[i]);
+            aSelectionCheck(aElement, expectations[i]);
             continueTest();
           });
           var synthOk = synthesizeNativeKey.apply(null, synthesizedKeys[i]);

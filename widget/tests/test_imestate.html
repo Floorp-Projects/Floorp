@@ -116,6 +116,8 @@ setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
 
 <script class="testbody" type="application/javascript">
 
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
 SimpleTest.waitForExplicitFinish();
 
 function hitEventLoop(aFunc, aTimes) {
@@ -127,8 +129,7 @@ function hitEventLoop(aFunc, aTimes) {
 }
 
 var gUtils = window.windowUtils;
-var gFM = Cc["@mozilla.org/focus-manager;1"].
-      getService(Ci.nsIFocusManager);
+var gFM = Services.focus;
 const kIMEEnabledSupported = navigator.platform.indexOf("Mac") == 0 ||
                              navigator.platform.indexOf("Win") == 0 ||
                              navigator.platform.indexOf("Linux") == 0;
@@ -167,7 +168,7 @@ function runBasicTest(aIsEditable, aInDesignMode, aDescription) {
   }
 
   function test(aTest) {
-    function moveFocus(aTest, aFocusEventHandler) {
+    function moveFocus(aTestInner, aFocusEventHandler) {
       if (aInDesignMode) {
         if (document.activeElement) {
           document.activeElement.blur();
@@ -182,10 +183,8 @@ function runBasicTest(aIsEditable, aInDesignMode, aDescription) {
       var previousFocusedElement = gFM.focusedElement;
       var element = document.getElementById(aTest.id);
       var focusEventTarget = element;
-      var subDocument = null;
       if (element.contentDocument) {
         focusEventTarget = element.contentDocument;
-        subDocument = element.contentDocument;
         element = element.contentDocument.documentElement;
       }
 
@@ -214,7 +213,7 @@ function runBasicTest(aIsEditable, aInDesignMode, aDescription) {
       return (previousFocusedElement == focusedElement);
     }
 
-    function testOpened(aTest, aOpened) {
+    function testOpened(aTestInner, aOpened) {
       document.getElementById("text").focus();
       gUtils.IMEIsOpen = aOpened;
       if (!moveFocus(aTest)) {
@@ -317,7 +316,7 @@ function runBasicTest(aIsEditable, aInDesignMode, aDescription) {
       }
 
       enabled = gUtils.IMEStatus;
-      inputtype = gUtils.focusedInputType;
+      var inputtype = gUtils.focusedInputType;
       is(enabled, aTest.expectedEnabled,
          aDescription + ": " + aTest.description + ", wrong enabled state");
       if (aTest.expectedType && !aInDesignMode) {
@@ -1069,7 +1068,6 @@ function runComplexContenteditableTests() {
 
   description = "testOnIndependentEditor: ";
   function testOnIndependentEditor(aEditor, aEditorDescription) {
-    var isReadonly = aEditor.readOnly;
     var expectedState =
       aEditor.readOnly ? gUtils.IME_STATUS_DISABLED : gUtils.IME_STATUS_ENABLED;
     var unexpectedStateDescription =
@@ -1274,9 +1272,7 @@ function runTestPasswordFieldOnDialog() {
   var dialog;
 
   function WindowObserver() {
-    Cc["@mozilla.org/observer-service;1"].
-       getService(Ci.nsIObserverService).
-       addObserver(this, "domwindowopened");
+    Services.obs.addObserver(this, "domwindowopened");
   }
 
   WindowObserver.prototype = {
@@ -1292,16 +1288,12 @@ function runTestPasswordFieldOnDialog() {
   };
 
   var observer = new WindowObserver();
-  var arg1 = new Object(), arg2 = new Object();
-  Cc["@mozilla.org/embedcomp/prompt-service;1"].
-     getService(Ci.nsIPromptService).
-     promptPassword(window, "title", "text", arg1, "msg", arg2);
+  var arg1 = {}, arg2 = {};
+  Services.prompt.promptPassword(window, "title", "text", arg1, "msg", arg2);
 
   ok(true, "password dialog was closed");
 
-  Cc["@mozilla.org/observer-service;1"].
-     getService(Ci.nsIObserverService).
-     removeObserver(observer, "domwindowopened");
+  Services.obs.addObserver(observer, "domwindowopened");
 
   var passwordField;
 

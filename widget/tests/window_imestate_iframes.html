@@ -34,6 +34,8 @@
 </p>
 <script class="testbody" type="application/javascript">
 
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
 window.opener.wrappedJSObject.SimpleTest.waitForFocus(runTests, window);
 
 function ok(aCondition, aMessage) {
@@ -101,11 +103,9 @@ function observeFocusBlur(aNextFocusedNode, aWillFireFocusEvent,
 
 function runTests() {
   var utils = window.windowUtils;
-  var fm =
-    Cc["@mozilla.org/focus-manager;1"]
-      .getService(Ci.nsIFocusManager);
+  var fm = Services.focus;
 
-  var iframe, editor, root, input;
+  var iframe, editor, root;
   var prev = document.getElementById("prev");
   var next = document.getElementById("next");
   var html = document.documentElement;
