@@ -496,25 +496,15 @@ const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm")
   // Constructs the computed display state of the cue (a div). Places the div
   // into the overlay which should be a block level element (usually a div).
   function CueStyleBox(window, cue, styleOptions) {
-    var isIE8 = (typeof navigator !== "undefined") &&
-      (/MSIE\s8\.0/).test(navigator.userAgent);
-
-    var isFirefoxSupportPseudo = (/firefox/i.test(window.navigator.userAgent))
-          && this.supportPseudo;
     var color = "rgba(255, 255, 255, 1)";
     var backgroundColor = "rgba(0, 0, 0, 0.8)";
-
-    if (isIE8) {
-      color = "rgb(255, 255, 255)";
-      backgroundColor = "rgb(0, 0, 0)";
-    }
 
     StyleBox.call(this);
     this.cue = cue;
 
     // Parse our cue's text into a DOM tree rooted at 'cueDiv'. This div will
     // have inline positioning and will function as the cue background box.
-    if (isFirefoxSupportPseudo) {
+    if (this.supportPseudo) {
       this.cueDiv = parseContent(window, cue.text, PARSE_CONTENT_MODE.PSUEDO_CUE);
     } else {
       this.cueDiv = parseContent(window, cue.text, PARSE_CONTENT_MODE.NORMAL_CUE);
@@ -526,19 +516,18 @@ const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm")
       font: styleOptions.font,
       whiteSpace: "pre-line",
     };
-    if (isFirefoxSupportPseudo) {
+    if (this.supportPseudo) {
       delete styles.color;
       delete styles.backgroundColor;
       delete styles.font;
       delete styles.whiteSpace;
     }
 
-    if (!isIE8) {
-      styles.writingMode = cue.vertical === "" ? "horizontal-tb"
-                                               : cue.vertical === "lr" ? "vertical-lr"
-                                                                       : "vertical-rl";
-      styles.unicodeBidi = "plaintext";
-    }
+    styles.writingMode = cue.vertical === "" ? "horizontal-tb"
+                                             : cue.vertical === "lr" ? "vertical-lr"
+                                                                     : "vertical-rl";
+    styles.unicodeBidi = "plaintext";
+
     this.applyStyles(styles, this.cueDiv);
 
     // Create an absolutely positioned div that will be used to position the cue
@@ -687,9 +676,6 @@ const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm")
   // compute things with such as if it overlaps or intersects with another Element.
   // Can initialize it with either a StyleBox or another BoxPosition.
   function BoxPosition(obj) {
-    var isIE8 = (typeof navigator !== "undefined") &&
-      (/MSIE\s8\.0/).test(navigator.userAgent);
-
     // Either a BoxPosition was passed in and we need to copy it, or a StyleBox
     // was passed in and we need to copy the results of 'getBoundingClientRect'
     // as the object returned is readonly. All co-ordinate values are in reference
@@ -718,10 +704,6 @@ const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm")
     this.bottom = obj.bottom || (top + (obj.height || height));
     this.width = obj.width || width;
     this.lineHeight = lh !== undefined ? lh : obj.lineHeight;
-
-    if (isIE8 && !this.lineHeight) {
-      this.lineHeight = 13;
-    }
   }
 
   // Move the box along a particular axis. Optionally pass in an amount to move
