@@ -5,6 +5,9 @@
 
 ChromeUtils.defineModuleGetter(this, "ExtensionSettingsStore",
                                "resource://gre/modules/ExtensionSettingsStore.jsm");
+XPCOMUtils.defineLazyServiceGetter(this, "aboutNewTabService",
+                                   "@mozilla.org/browser/aboutnewtab-service;1",
+                                   "nsIAboutNewTabService");
 
 const NEWTAB_URI_1 = "webext-newtab-1.html";
 
@@ -521,4 +524,184 @@ add_task(async function dontTemporarilyShowAboutExtensionPath() {
 
   BrowserTestUtils.removeTab(tab);
   await extension.unload();
+});
+
+add_task(async function test_overriding_newtab_incognito_not_allowed() {
+  await SpecialPowers.pushPrefEnv({set: [["extensions.allowPrivateBrowsingByDefault", false]]});
+
+  let panel = getNewTabDoorhanger().closest("panel");
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      chrome_url_overrides: {"newtab": "newtab.html"},
+      name: "extension",
+      applications: {
+        gecko: {id: "@not-allowed-newtab"},
+      },
+    },
+    files: {
+      "newtab.html": `
+        <!DOCTYPE html>
+        <head>
+          <meta charset="utf-8"/></head>
+        <html>
+          <body>
+            <script src="newtab.js"></script>
+          </body>
+        </html>
+      `,
+
+      "newtab.js": function() {
+        window.onload = () => {
+          browser.test.sendMessage("from-newtab-page", window.location.href);
+        };
+      },
+    },
+    useAddonManager: "permanent",
+  });
+
+  await extension.startup();
+
+  let popupShown = promisePopupShown(panel);
+  BrowserOpenTab();
+  await popupShown;
+
+  let url = await extension.awaitMessage("from-newtab-page");
+  ok(url.endsWith("newtab.html"),
+     "Newtab url is overridden by the extension.");
+
+  // This will show a confirmation doorhanger, make sure we don't leave it open.
+  let popupHidden = promisePopupHidden(panel);
+  panel.hidePopup();
+  await popupHidden;
+
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+
+  // Verify a private window does not open the extension page.  We would
+  // get an extra notification that we don't listen for if it gets loaded.
+  let windowOpenedPromise = BrowserTestUtils.waitForNewWindow();
+  let win = OpenBrowserWindow({private: true});
+  await windowOpenedPromise;
+
+  let newTabOpened = waitForNewTab();
+  win.BrowserOpenTab();
+  await newTabOpened;
+
+  is(win.gURLBar.value, "", "newtab not used in private window");
+
+  // Verify setting the pref directly doesn't bypass permissions.
+  aboutNewTabService.newTabURL = url;
+  newTabOpened = waitForNewTab();
+  win.BrowserOpenTab();
+  await newTabOpened;
+
+  is(win.gURLBar.value, "", "directly set newtab not used in private window");
+
+  await extension.unload();
+  await BrowserTestUtils.closeWindow(win);
+});
+
+add_task(async function test_overriding_newtab_incognito_not_allowed_bypass() {
+  await SpecialPowers.pushPrefEnv({set: [["extensions.allowPrivateBrowsingByDefault", false]]});
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      name: "extension",
+      applications: {
+        gecko: {id: "@not-allowed-newtab"},
+      },
+    },
+    background() {
+      browser.test.sendMessage("url", browser.runtime.getURL("newtab.html"));
+    },
+    files: {
+      "newtab.html": `
+        <!DOCTYPE html>
+        <head>
+          <meta charset="utf-8"/></head>
+        <html>
+          <body>
+          </body>
+        </html>
+      `,
+    },
+    useAddonManager: "permanent",
+  });
+
+  await extension.startup();
+  let url = await extension.awaitMessage("url");
+
+  // Verify setting the pref directly doesn't bypass permissions.
+  aboutNewTabService.newTabURL = url;
+
+  // Verify a private window does not open the extension page.  We would
+  // get an extra notification that we don't listen for if it gets loaded.
+  let windowOpenedPromise = BrowserTestUtils.waitForNewWindow();
+  let win = OpenBrowserWindow({private: true});
+  await windowOpenedPromise;
+
+  let newTabOpened = waitForNewTab();
+  win.BrowserOpenTab();
+  await newTabOpened;
+
+  is(win.gURLBar.value, "", "directly set newtab not used in private window");
+
+  await extension.unload();
+  await BrowserTestUtils.closeWindow(win);
+});
+
+add_task(async function test_overriding_newtab_incognito_spanning() {
+  await SpecialPowers.pushPrefEnv({set: [["extensions.allowPrivateBrowsingByDefault", false]]});
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      chrome_url_overrides: {"newtab": "newtab.html"},
+      name: "extension",
+      applications: {
+        gecko: {id: "@spanning-newtab"},
+      },
+    },
+    files: {
+      "newtab.html": `
+        <!DOCTYPE html>
+        <head>
+          <meta charset="utf-8"/></head>
+        <html>
+          <body>
+            <script src="newtab.js"></script>
+          </body>
+        </html>
+      `,
+
+      "newtab.js": function() {
+        window.onload = () => {
+          browser.test.sendMessage("from-newtab-page", window.location.href);
+        };
+      },
+    },
+    useAddonManager: "permanent",
+    incognitoOverride: "spanning",
+  });
+
+  await extension.startup();
+
+  let windowOpenedPromise = BrowserTestUtils.waitForNewWindow();
+  let win = OpenBrowserWindow({private: true});
+  await windowOpenedPromise;
+  let panel = win.document.getElementById("extension-new-tab-notification").closest("panel");
+  let popupShown = promisePopupShown(panel);
+  win.BrowserOpenTab();
+  await popupShown;
+
+  let url = await extension.awaitMessage("from-newtab-page");
+  ok(url.endsWith("newtab.html"),
+     "Newtab url is overridden by the extension.");
+
+  // This will show a confirmation doorhanger, make sure we don't leave it open.
+  let popupHidden = promisePopupHidden(panel);
+  panel.hidePopup();
+  await popupHidden;
+
+  await extension.unload();
+  await BrowserTestUtils.closeWindow(win);
 });
