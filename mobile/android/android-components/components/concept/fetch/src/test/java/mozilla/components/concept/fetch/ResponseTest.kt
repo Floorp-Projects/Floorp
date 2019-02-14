@@ -47,7 +47,7 @@ class ResponseTest {
     }
 
     @Test
-    fun `Creating BufferedReader with custom Charset from Body`() {
+    fun `Creating BufferedReader from Body with custom Charset `() {
         var stream = "ÄäÖöÜü".byteInputStream(Charsets.ISO_8859_1)
         var body = spy(Response.Body(stream, "text/plain; charset=UTF-8"))
         var readerUsed = false
@@ -65,6 +65,19 @@ class ResponseTest {
             readerUsed = true
         }
         assertTrue(readerUsed)
+
+        verify(body).close()
+    }
+
+    @Test
+    fun `Creating String from Body with custom Charset `() {
+        var stream = "ÄäÖöÜü".byteInputStream(Charsets.ISO_8859_1)
+        var body = spy(Response.Body(stream, "text/plain; charset=UTF-8"))
+        assertNotEquals("ÄäÖöÜü", body.string())
+
+        stream = "ÄäÖöÜü".byteInputStream(Charsets.ISO_8859_1)
+        body = spy(Response.Body(stream, "text/plain; charset=UTF-8"))
+        assertEquals("ÄäÖöÜü", body.string(Charsets.ISO_8859_1))
 
         verify(body).close()
     }

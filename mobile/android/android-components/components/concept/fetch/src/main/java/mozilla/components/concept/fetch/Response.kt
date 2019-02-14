@@ -81,6 +81,12 @@ data class Response(
          *
          * Executes the given [block] function with the buffered reader as parameter and then closes it down correctly
          * whether an exception is thrown or not.
+         *
+         * @param charset the optional charset to use when decoding the body. If not specified,
+         * the charset provided in the response content-type header will be used. If the header
+         * is missing or the charset is not supported, UTF-8 will be used.
+         * @param block a function to consume the buffered reader.
+         *
          */
         fun <R> useBufferedReader(charset: Charset? = null, block: (BufferedReader) -> R): R = use {
             block(stream.bufferedReader(charset ?: this.charset))
@@ -90,8 +96,12 @@ data class Response(
          * Reads this body completely as a String.
          *
          * Takes care of closing the body down correctly whether an exception is thrown or not.
+         *
+         * @param charset the optional charset to use when decoding the body. If not specified,
+         * the charset provided in the response content-type header will be used. If the header
+         * is missing or the charset not supported, UTF-8 will be used.
          */
-        fun string(): String = useBufferedReader { it.readText() }
+        fun string(charset: Charset? = null): String = useBufferedReader(charset) { it.readText() }
 
         /**
          * Closes this [Body] and releases any system resources associated with it.
