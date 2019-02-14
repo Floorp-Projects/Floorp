@@ -23,7 +23,7 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/Promise.h"
-#include "mozilla/mscom/ApartmentRegion.h"
+#include "mozilla/mscom/COMApartmentRegion.h"
 #include "mozilla/mscom/EnsureMTA.h"
 
 #include <shellapi.h>
