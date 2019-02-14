@@ -125,7 +125,28 @@ FormAutofillParent.prototype = {
       Services.ppmm.addMessageListener("FormAutofill:GetDecryptedString", this);
       Services.prefs.addObserver(ENABLED_AUTOFILL_CREDITCARDS_PREF, this);
     }
+
+    for (let win of Services.wm.getEnumerator("navigator:browser")) {
+      this.injectElements(win.document);
+    }
+    Services.wm.addListener(this);
   },
+
+  injectElements(doc) {
+    Services.scriptloader.loadSubScript("chrome://formautofill/content/customElements.js",
+                                        doc.ownerGlobal);
+  },
+
+  onOpenWindow(xulWindow) {
+    const win = xulWindow.docShell.domWindow;
+    win.addEventListener("load", () => {
+      if (win.document.documentElement.getAttribute("windowtype") == "navigator:browser") {
+        this.injectElements(win.document);
+      }
+    }, {once: true});
+  },
+
+  onCloseWindow() {},
 
   observe(subject, topic, data) {
     log.debug("observe:", topic, "with data:", data);
@@ -280,6 +301,7 @@ FormAutofillParent.prototype = {
     Services.ppmm.removeMessageListener("FormAutofill:RemoveAddresses", this);
     Services.obs.removeObserver(this, "privacy-pane-loaded");
     Services.prefs.removeObserver(ENABLED_AUTOFILL_ADDRESSES_PREF, this);
+    Services.wm.removeListener(this);
 
     if (FormAutofill.isAutofillCreditCardsAvailable) {
       Services.ppmm.removeMessageListener("FormAutofill:SaveCreditCard", this);

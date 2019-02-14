@@ -16,6 +16,7 @@
 #include "nsDiskCacheDeviceSQL.h"
 #include "nsCacheService.h"
 #include "nsApplicationCache.h"
+#include "../cache2/CacheHashUtils.h"
 
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
@@ -142,8 +143,8 @@ class EvictionObserver {
  */
 static uint64_t DCacheHash(const char *key) {
   // initval 0x7416f295 was chosen randomly
-  return (uint64_t(nsDiskCache::Hash(key, 0)) << 32) |
-         nsDiskCache::Hash(key, 0x7416f295);
+  return (uint64_t(CacheHash::Hash(key, strlen(key), 0)) << 32) |
+         CacheHash::Hash(key, strlen(key), 0x7416f295);
 }
 
 /******************************************************************************
