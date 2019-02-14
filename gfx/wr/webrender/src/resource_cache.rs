@@ -1792,7 +1792,7 @@ impl ResourceCache {
             self.cached_render_tasks.clear();
         }
         if what.contains(ClearCache::TEXTURE_CACHE) {
-            self.texture_cache.clear();
+            self.texture_cache.clear_all();
         }
         if what.contains(ClearCache::RASTERIZED_BLOBS) {
             self.rasterized_blob_images.clear();
@@ -2199,6 +2199,7 @@ impl ResourceCache {
                 self.texture_cache = TextureCache::new(
                     self.texture_cache.max_texture_size(),
                     self.texture_cache.max_texture_layers(),
+                    self.texture_cache.picture_tile_size(),
                 );
             }
         }
