@@ -272,22 +272,15 @@ update-packaging:
 package-generated-sources:
 	$(call py_action,package_generated_sources,'$(DIST)/$(PKG_PATH)$(GENERATED_SOURCE_FILE_PACKAGE)')
 
-#XXX: this is a hack, since we don't want to clobber for MSVC
 # PGO support, but we can't do this test in client.mk
 # No point in clobbering if PGO has been explicitly disabled.
 ifdef NO_PROFILE_GUIDED_OPTIMIZE
 maybe_clobber_profiledbuild:
 else
-ifneq ($(CC_TYPE),msvc)
 maybe_clobber_profiledbuild: clean
 ifneq (,$(findstring clang,$(CC_TYPE)))
 	$(LLVM_PROFDATA) merge -o $(DEPTH)/merged.profdata $(DEPTH)/*.profraw
 endif
-else
-maybe_clobber_profiledbuild:
-	$(RM) $(DIST)/bin/*.pgc
-	find $(DIST)/$(MOZ_APP_NAME) -name '*.pgc' -exec mv {} $(DIST)/bin \;
-endif # msvc
 endif # NO_PROFILE_GUIDED_OPTIMIZE
 
 .PHONY: maybe_clobber_profiledbuild

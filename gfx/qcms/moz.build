@@ -27,7 +27,7 @@ use_sse2 = False
 use_altivec = False
 if CONFIG['INTEL_ARCHITECTURE']:
     use_sse2 = True
-    if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
+    if CONFIG['CC_TYPE'] == 'clang-cl':
         if CONFIG['OS_ARCH'] != 'WINNT' or CONFIG['CPU_ARCH'] != 'x86_64':
             use_sse1 = True
     else:

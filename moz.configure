@@ -180,7 +180,7 @@ def library_name_info_template(host_or_target):
         if host_or_target.kernel == 'WINNT':
             # There aren't artifacts for mingw builds, so it's OK that the
             # results are inaccurate in that case.
-            if compiler and compiler.type not in ('msvc', 'clang-cl'):
+            if compiler and compiler.type != 'clang-cl':
                 return namespace(
                     dll=namespace(prefix='', suffix='.dll'),
                     lib=namespace(prefix='lib', suffix='a'),

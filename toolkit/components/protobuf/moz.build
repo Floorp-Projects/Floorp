@@ -136,7 +136,7 @@ if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
             '-Wno-null-conversion',
             '-Wno-unused-local-typedef',
         ]
-elif CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
+elif CONFIG['CC_TYPE'] == 'clang-cl':
     CXXFLAGS += [
         '-wd4005',  # 'WIN32_LEAN_AND_MEAN' : macro redefinition
         '-wd4018',  # '<' : signed/unsigned mismatch

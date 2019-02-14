@@ -109,34 +109,24 @@ if CONFIG['OS_TARGET'] == 'Android':
         '%%%s/sources/android/cpufeatures/cpu-features.c' % CONFIG['ANDROID_NDK'],
     ]
 
-if CONFIG['CC_TYPE'] != 'msvc':
-    for f in SOURCES:
-        if f.endswith('.c'):
-            if 'sse2.c' in f:
-                SOURCES[f].flags += CONFIG['SSE2_FLAGS']
-            if 'ssse3.c' in f:
-                SOURCES[f].flags += ['-mssse3']
-            if 'sse4.c' in f:
-                SOURCES[f].flags += ['-msse4.1']
-            if 'avx.c' in f:
-                SOURCES[f].flags += ['-mavx']
-            if 'avx2.c' in f:
-                SOURCES[f].flags += ['-mavx2']
-
-if CONFIG['CC_TYPE'] == 'msvc' and CONFIG['INTEL_ARCHITECTURE']:
-    for f in SOURCES:
-        if f.endswith('.c'):
-            if 'avx.c' in f:
-                SOURCES[f].flags += ['-arch:AVX']
-            if 'avx2.c' in f:
-                SOURCES[f].flags += ['-arch:AVX2']
+for f in SOURCES:
+    if f.endswith('.c'):
+        if 'sse2.c' in f:
+            SOURCES[f].flags += CONFIG['SSE2_FLAGS']
+        if 'ssse3.c' in f:
+            SOURCES[f].flags += ['-mssse3']
+        if 'sse4.c' in f:
+            SOURCES[f].flags += ['-msse4.1']
+        if 'avx.c' in f:
+            SOURCES[f].flags += ['-mavx']
+        if 'avx2.c' in f:
+            SOURCES[f].flags += ['-mavx2']
 
 # Suppress warnings in third-party code.
-if CONFIG['CC_TYPE'] in ('clang', 'clang-cl', 'gcc'):
-    CFLAGS += [
-        '-Wno-sign-compare',
-        '-Wno-unused-function', # so many of these warnings; just ignore them
-    ]
+CFLAGS += [
+    '-Wno-sign-compare',
+    '-Wno-unused-function', # so many of these warnings; just ignore them
+]
 if CONFIG['CC_TYPE'] in ('clang', 'clang-cl'):
     CFLAGS += [
         '-Wno-unreachable-code',

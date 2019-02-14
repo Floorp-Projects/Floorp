@@ -85,7 +85,7 @@ use_arm_neon_gcc = False
 if CONFIG['INTEL_ARCHITECTURE']:
     use_sse2 = True
     if CONFIG['CPU_ARCH'] == 'x86':
-        if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
+        if CONFIG['CC_TYPE'] == 'clang-cl':
             use_mmx = True
     if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
         use_mmx = True
@@ -150,14 +150,13 @@ if CONFIG['OS_TARGET'] == 'Android' and (use_arm_neon_gcc or use_arm_simd_gcc):
     ]
 
 # Suppress warnings in third-party code.
-if CONFIG['CC_TYPE'] in ('clang', 'clang-cl', 'gcc'):
-    CFLAGS += [
-        '-Wno-address',
-        '-Wno-missing-field-initializers',
-        '-Wno-sign-compare',
-        '-Wno-incompatible-pointer-types',
-        '-Wno-unused',                      # too many unused warnings; ignore
-    ]
+CFLAGS += [
+    '-Wno-address',
+    '-Wno-missing-field-initializers',
+    '-Wno-sign-compare',
+    '-Wno-incompatible-pointer-types',
+    '-Wno-unused',                      # too many unused warnings; ignore
+]
 if CONFIG['CC_TYPE'] in ('clang', 'clang-cl'):
     CFLAGS += [
         '-Wno-incompatible-pointer-types',
@@ -167,14 +166,6 @@ if CONFIG['CC_TYPE'] in ('clang', 'clang-cl'):
 if CONFIG['CC_TYPE'] == 'clang-cl':
     CFLAGS += [
         '-Wno-unused-variable',
-    ]
-if CONFIG['CC_TYPE'] == 'msvc':
-    CFLAGS += [
-        '-wd4047', # different levels of indirection
-        '-wd4101', # unreferenced local variable
-        '-wd4133', # 'function' : incompatible types
-        '-wd4146', # unary minus operator applied to unsigned type
-        '-wd4311', # 'variable' : pointer truncation from 'type' to 'type'
     ]
 
 # See bug 386897.

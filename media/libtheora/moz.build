@@ -22,8 +22,7 @@ FINAL_LIBRARY = 'gkmedias'
 DEFINES['THEORA_DISABLE_ENCODE'] = True
 
 # Suppress warnings in third-party code.
-if CONFIG['CC_TYPE'] in ('clang', 'clang-cl', 'gcc'):
-    CFLAGS += ['-Wno-type-limits']
+CFLAGS += ['-Wno-type-limits']
 if CONFIG['CC_TYPE'] in ('clang', 'clang-cl'):
     CFLAGS += ['-Wno-tautological-compare']
 if CONFIG['CC_TYPE'] == 'clang-cl':
@@ -58,18 +57,16 @@ if CONFIG['INTEL_ARCHITECTURE']:
             DEFINES['OC_X86_ASM'] = True
             if CONFIG['CPU_ARCH'] == 'x86_64':
                 DEFINES['OC_X86_64_ASM'] = True
-    if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
-        if CONFIG['CC_TYPE'] == 'clang-cl':
-            # clang-cl can't handle libtheora's inline asm.
-            pass
-        elif CONFIG['CPU_ARCH'] == 'x86':
-            SOURCES += [
-                'lib/x86_vc/mmxfrag.c',
-                'lib/x86_vc/mmxidct.c',
-                'lib/x86_vc/mmxstate.c',
-                'lib/x86_vc/x86cpu.c',
-                'lib/x86_vc/x86state.c',
-            ]
+    if CONFIG['CC_TYPE'] == 'clang-cl':
+        # clang-cl can't handle libtheora's inline asm.
+        pass
+        #SOURCES += [
+        #    'lib/x86_vc/mmxfrag.c',
+        #    'lib/x86_vc/mmxidct.c',
+        #    'lib/x86_vc/mmxstate.c',
+        #    'lib/x86_vc/x86cpu.c',
+        #    'lib/x86_vc/x86state.c',
+        #]
     else:
         SOURCES += [
             'lib/x86/mmxfrag.c',

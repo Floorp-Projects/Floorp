@@ -34,7 +34,7 @@ if CONFIG['CC_TYPE'] == 'clang':
   CXXFLAGS += [
     '-Wno-unknown-attributes',
   ]
-if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
+if CONFIG['CC_TYPE'] == 'clang-cl':
   CXXFLAGS += [
     '-wd4996', # deprecated declaration
   ]

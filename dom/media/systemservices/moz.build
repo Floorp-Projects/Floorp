@@ -48,7 +48,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
   UNIFIED_SOURCES += ['OSXRunLoopSingleton.cpp']
   EXPORTS += ['OSXRunLoopSingleton.h']
 
-if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
+if CONFIG['CC_TYPE'] == 'clang-cl':
     DEFINES['__PRETTY_FUNCTION__'] = '__FUNCSIG__'
 
     # This is intended as a temporary workaround to enable building with VS2015.

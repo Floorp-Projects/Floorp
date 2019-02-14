@@ -22,7 +22,7 @@ if CONFIG['MOZ_WEBRTC']:
     elif CONFIG['OS_TARGET'] == 'Android':
         DEFINES['WEBRTC_ANDROID'] = True
 
-    if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
+    if CONFIG['CC_TYPE'] == 'clang-cl':
         DEFINES['__PRETTY_FUNCTION__'] = '__FUNCSIG__'
 
     if CONFIG['CC_TYPE'] in ('clang', 'gcc'):

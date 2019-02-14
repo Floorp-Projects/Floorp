@@ -1791,16 +1791,14 @@ pref("browser.fission.simulate", false);
 // On platforms that do not build libprio, do not set these prefs at all, which gives us a way to detect support.
 
 // Curve25519 public keys for Prio servers
-#ifdef MOZ_LIBPRIO
 pref("prio.publicKeyA", "35AC1C7576C7C6EDD7FED6BCFC337B34D48CB4EE45C86BEEFB40BD8875707733");
 pref("prio.publicKeyB", "26E6674E65425B823F1F1D5F96E3BB3EF9E406EC7FBA7DEF8B08A35DD135AF50");
-#endif
 
 // Coverage ping is disabled by default.
 pref("toolkit.coverage.enabled", false);
 pref("toolkit.coverage.endpoint.base", "https://coverage.mozilla.org");
 // Whether or not Prio-encoded Telemetry will be sent along with the main ping.
-#if defined(NIGHTLY_BUILD) && defined(MOZ_LIBPRIO)
+#if defined(NIGHTLY_BUILD)
 pref("prio.enabled", true);
 #endif
 
