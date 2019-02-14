@@ -346,7 +346,7 @@ static bool MaybeCreateThisForConstructor(JSContext* cx, JSScript* calleeScript,
     return true;
   }
 
-  RootedObject callee(cx, &args.callee());
+  RootedFunction callee(cx, &args.callee().as<JSFunction>());
   RootedObject newTarget(cx, &args.newTarget().toObject());
   NewObjectKind newKind = createSingleton ? SingletonObject : GenericObject;
 
@@ -5153,6 +5153,7 @@ JSObject* js::NewObjectOperationWithTemplate(JSContext* cx,
   // object is not a singleton and has had its preliminary objects analyzed,
   // with the template object a copy of the object to create.
   MOZ_ASSERT(!templateObject->isSingleton());
+  MOZ_ASSERT(cx->realm() == templateObject->nonCCWRealm());
 
   NewObjectKind newKind;
   bool isUnboxed;
@@ -5175,6 +5176,17 @@ JSObject* js::NewObjectOperationWithTemplate(JSContext* cx,
 
   obj->setGroup(templateObject->group());
   return obj;
+}
+
+JSObject* js::CreateThisWithTemplate(JSContext* cx,
+                                     HandleObject templateObject) {
+  mozilla::Maybe<AutoRealm> ar;
+  if (cx->realm() != templateObject->nonCCWRealm()) {
+    MOZ_ASSERT(cx->compartment() == templateObject->compartment());
+    ar.emplace(cx, templateObject);
+  }
+
+  return NewObjectOperationWithTemplate(cx, templateObject);
 }
 
 JSObject* js::NewArrayOperation(JSContext* cx, HandleScript script,

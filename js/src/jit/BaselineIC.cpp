@@ -3565,6 +3565,7 @@ static bool TryAttachCallStub(JSContext* cx, ICCall_Fallback* stub,
       }
 
       if (protov.isObject()) {
+        AutoRealm ar(cx, fun);
         TaggedProto proto(&protov.toObject());
         ObjectGroup* group =
             ObjectGroup::defaultNewGroup(cx, nullptr, proto, newTarget);
@@ -3584,17 +3585,17 @@ static bool TryAttachCallStub(JSContext* cx, ICCall_Fallback* stub,
         }
       }
 
-      if (cx->realm() == fun->realm()) {
-        JSObject* thisObject =
-            CreateThisForFunction(cx, fun, newTarget, TenuredObject);
-        if (!thisObject) {
-          return false;
-        }
+      JSObject* thisObject =
+          CreateThisForFunction(cx, fun, newTarget, TenuredObject);
+      if (!thisObject) {
+        return false;
+      }
 
-        if (thisObject->is<PlainObject>() ||
-            thisObject->is<UnboxedPlainObject>()) {
-          templateObject = thisObject;
-        }
+      MOZ_ASSERT(thisObject->nonCCWRealm() == fun->realm());
+
+      if (thisObject->is<PlainObject>() ||
+          thisObject->is<UnboxedPlainObject>()) {
+        templateObject = thisObject;
       }
     }
 
