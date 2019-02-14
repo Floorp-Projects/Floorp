@@ -331,12 +331,12 @@ static bool GetBuildConfiguration(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-#ifdef ENABLE_BINARYDATA
+#ifdef ENABLE_TYPED_OBJECTS
   value = BooleanValue(true);
 #else
   value = BooleanValue(false);
 #endif
-  if (!JS_SetProperty(cx, info, "binary-data", value)) {
+  if (!JS_SetProperty(cx, info, "typed-objects", value)) {
     return false;
   }
 
