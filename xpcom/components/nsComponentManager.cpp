@@ -531,8 +531,6 @@ nsresult nsComponentManagerImpl::Init() {
     // used, and before any calls are made into the JS engine.
     nsLayoutModuleInitialize();
 
-    mJSLoaderReady = true;
-
     // The overall order in which chrome.manifests are expected to be treated
     // is the following:
     // - greDir
@@ -2010,14 +2008,6 @@ nsComponentManagerImpl::RemoveBootstrappedManifestLocation(nsIFile* aLocation) {
 
   rv = cr->CheckForNewChrome();
   return rv;
-}
-
-
-NS_IMETHODIMP
-nsComponentManagerImpl::GetComponentJSMs(nsIUTF8StringEnumerator** aJSMs) {
-  nsCOMPtr<nsIUTF8StringEnumerator> result = StaticComponents::GetComponentJSMs();
-  result.forget(aJSMs);
-  return NS_OK;
 }
 
 NS_IMETHODIMP
