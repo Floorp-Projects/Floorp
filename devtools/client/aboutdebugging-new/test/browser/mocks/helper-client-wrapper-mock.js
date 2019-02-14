@@ -37,7 +37,6 @@ function createClientMock() {
     removeListener: (evt, listener) => {
       eventEmitter.off(evt, listener);
     },
-
     client: {
       addOneTimeListener: (evt, listener) => {
         eventEmitter.once(evt, listener);

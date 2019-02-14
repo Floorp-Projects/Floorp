@@ -5,6 +5,7 @@
 "use strict";
 
 const { RUNTIME_PREFERENCE } = require("../constants");
+const { WorkersListener } = require("./workers-listener");
 
 const PREF_TYPES = {
   BOOL: "BOOL",
@@ -18,10 +19,7 @@ const PREF_TO_TYPE = {
 // Some events are fired by mainRoot rather than client.
 const MAIN_ROOT_EVENTS = [
   "addonListChanged",
-  "processListChanged",
-  "serviceWorkerRegistrationListChanged",
   "tabListChanged",
-  "workerListChanged",
 ];
 
 /**
@@ -31,9 +29,7 @@ const MAIN_ROOT_EVENTS = [
 class ClientWrapper {
   constructor(client) {
     this.client = client;
-    // Array of contentProcessTarget fronts on which we will listen for worker events.
-    this.contentProcessFronts = [];
-    this.serviceWorkerRegistrationFronts = [];
+    this.workersListener = new WorkersListener(client.mainRoot);
   }
 
   addOneTimeListener(evt, listener) {
@@ -45,7 +41,9 @@ class ClientWrapper {
   }
 
   addListener(evt, listener) {
-    if (MAIN_ROOT_EVENTS.includes(evt)) {
+    if (evt === "workersUpdated") {
+      this.workersListener.addListener(listener);
+    } else if (MAIN_ROOT_EVENTS.includes(evt)) {
       this.client.mainRoot.on(evt, listener);
     } else {
       this.client.addListener(evt, listener);
@@ -53,7 +51,9 @@ class ClientWrapper {
   }
 
   removeListener(evt, listener) {
-    if (MAIN_ROOT_EVENTS.includes(evt)) {
+    if (evt === "workersUpdated") {
+      this.workersListener.removeListener(listener);
+    } else if (MAIN_ROOT_EVENTS.includes(evt)) {
       this.client.mainRoot.off(evt, listener);
     } else {
       this.client.removeListener(evt, listener);

@@ -36,7 +36,7 @@ add_task(async function() {
     sharedWorkers: [],
   };
   networkClient.listWorkers = () => workers;
-  networkClient._eventEmitter.emit("workerListChanged");
+  networkClient._eventEmitter.emit("workersUpdated");
 
   info("Wait until the service worker is displayed");
   await waitUntil(() => findDebugTargetByText(WORKER_NAME, document));
