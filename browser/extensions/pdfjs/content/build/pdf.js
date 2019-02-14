@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.2.8';
-var pdfjsBuild = 'dfe7d9bc';
+var pdfjsVersion = '2.1.266';
+var pdfjsBuild = '81f5835c';
 
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 
@@ -1411,7 +1411,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId,
-    apiVersion: '2.2.8',
+    apiVersion: '2.1.266',
     source: {
       data: source.data,
       url: source.url,
@@ -2339,7 +2339,10 @@ class WorkerTransport {
     this.messageHandler = messageHandler;
     this.loadingTask = loadingTask;
     this.commonObjs = new PDFObjects();
-    this.fontLoader = new _font_loader.FontLoader(loadingTask.docId);
+    this.fontLoader = new _font_loader.FontLoader({
+      docId: loadingTask.docId,
+      onUnsupportedFeature: this._onUnsupportedFeature.bind(this)
+    });
     this._params = params;
     this.CMapReaderFactory = new params.CMapReaderFactory({
       baseUrl: params.cMapUrl,
@@ -2600,12 +2603,15 @@ class WorkerTransport {
             onUnsupportedFeature: this._onUnsupportedFeature.bind(this),
             fontRegistry
           });
-
-          const fontReady = fontObjs => {
+          this.fontLoader.bind(font).then(() => {
             this.commonObjs.resolve(id, font);
-          };
-
-          this.fontLoader.bind([font], fontReady);
+          }, reason => {
+            messageHandler.sendWithPromise('FontFallback', {
+              id
+            }).finally(() => {
+              this.commonObjs.resolve(id, font);
+            });
+          });
           break;
 
         case 'FontPath':
@@ -3142,9 +3148,9 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-const version = '2.2.8';
+const version = '2.1.266';
 exports.version = version;
-const build = 'dfe7d9bc';
+const build = '81f5835c';
 exports.build = build;
 
 /***/ }),
@@ -3559,18 +3565,18 @@ exports.FontLoader = exports.FontFaceObject = void 0;
 var _util = __w_pdfjs_require__(1);
 
 class BaseFontLoader {
-  constructor(docId) {
+  constructor({
+    docId,
+    onUnsupportedFeature
+  }) {
     if (this.constructor === BaseFontLoader) {
       (0, _util.unreachable)('Cannot initialize BaseFontLoader.');
     }
 
     this.docId = docId;
+    this._onUnsupportedFeature = onUnsupportedFeature;
     this.nativeFontFaces = [];
     this.styleElement = null;
-    this.loadingContext = {
-      requests: [],
-      nextRequestId: 0
-    };
   }
 
   addNativeFontFace(nativeFontFace) {
@@ -3603,73 +3609,54 @@ class BaseFontLoader {
     }
   }
 
-  bind(fonts, callback) {
-    const rules = [];
-    const fontsToLoad = [];
-    const fontLoadPromises = [];
-
-    const getNativeFontPromise = function (nativeFontFace) {
-      return nativeFontFace.loaded.catch(function (reason) {
-        (0, _util.warn)(`Failed to load font "${nativeFontFace.family}": ${reason}`);
-      });
-    };
-
-    for (const font of fonts) {
-      if (font.attached || font.missingFile) {
-        continue;
-      }
-
-      font.attached = true;
-
-      if (this.isFontLoadingAPISupported) {
-        const nativeFontFace = font.createNativeFontFace();
-
-        if (nativeFontFace) {
-          this.addNativeFontFace(nativeFontFace);
-          fontLoadPromises.push(getNativeFontPromise(nativeFontFace));
-        }
-      } else {
-        const rule = font.createFontFaceRule();
-
-        if (rule) {
-          this.insertRule(rule);
-          rules.push(rule);
-          fontsToLoad.push(font);
-        }
-      }
+  async bind(font) {
+    if (font.attached || font.missingFile) {
+      return;
     }
 
-    const request = this._queueLoadingCallback(callback);
+    font.attached = true;
 
     if (this.isFontLoadingAPISupported) {
-      Promise.all(fontLoadPromises).then(request.complete);
-    } else if (rules.length > 0 && !this.isSyncFontLoadingSupported) {
-      this._prepareFontLoadEvent(rules, fontsToLoad, request);
-    } else {
-      request.complete();
+      const nativeFontFace = font.createNativeFontFace();
+
+      if (nativeFontFace) {
+        this.addNativeFontFace(nativeFontFace);
+
+        try {
+          await nativeFontFace.loaded;
+        } catch (ex) {
+          this._onUnsupportedFeature({
+            featureId: _util.UNSUPPORTED_FEATURES.font
+          });
+
+          (0, _util.warn)(`Failed to load font '${nativeFontFace.family}': '${ex}'.`);
+          font.disableFontFace = true;
+          throw ex;
+        }
+      }
+
+      return;
+    }
+
+    const rule = font.createFontFaceRule();
+
+    if (rule) {
+      this.insertRule(rule);
+
+      if (this.isSyncFontLoadingSupported) {
+        return;
+      }
+
+      return new Promise(resolve => {
+        const request = this._queueLoadingCallback(resolve);
+
+        this._prepareFontLoadEvent([rule], [font], request);
+      });
     }
   }
 
   _queueLoadingCallback(callback) {
-    function completeRequest() {
-      (0, _util.assert)(!request.done, 'completeRequest() cannot be called twice.');
-      request.done = true;
-
-      while (context.requests.length > 0 && context.requests[0].done) {
-        const otherRequest = context.requests.shift();
-        setTimeout(otherRequest.callback, 0);
-      }
-    }
-
-    const context = this.loadingContext;
-    const request = {
-      id: `pdfjs-font-loading-${context.nextRequestId++}`,
-      done: false,
-      complete: completeRequest,
-      callback
-    };
-    context.requests.push(request);
-    return request;
+    (0, _util.unreachable)('Abstract method `_queueLoadingCallback`.');
   }
 
   get isFontLoadingAPISupported() {

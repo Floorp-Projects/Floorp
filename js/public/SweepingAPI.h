@@ -74,7 +74,7 @@ class WeakCache : protected detail::WeakCacheBase,
   }
 
   bool needsSweep() override { return cache.needsSweep(); }
-};
+} JS_HAZ_NON_GC_POINTER;
 
 }  // namespace JS
 
