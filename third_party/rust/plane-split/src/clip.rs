@@ -95,6 +95,7 @@ impl<
 
     /// Clip specified polygon by the contained planes, return the fragmented polygons.
     pub fn clip(&mut self, polygon: Polygon<T, U>) -> &[Polygon<T, U>] {
+        debug!("\tClipping {:?}", polygon);
         self.results.clear();
         self.results.push(polygon);
 
@@ -104,7 +105,7 @@ impl<
 
             for mut poly in self.temp.drain(..) {
                 if let Intersection::Inside(line) = poly.intersect_plane(clip) {
-                    let (res1, res2) = poly.split(&line);
+                    let (res1, res2) = poly.split_with_normal(&line, &clip.normal);
                     self.results.extend(
                         res1
                             .into_iter()
