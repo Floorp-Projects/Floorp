@@ -123,8 +123,4 @@ async function waitUntilDebuggerReady(debuggerContext) {
   // We have to wait until the debugger has fully loaded the source otherwise
   // we will get unhandled promise rejections.
   await waitForLoadedSource(debuggerContext, "data:");
-
-  // Have to wait until https://github.com/devtools-html/debugger.html/pull/6189
-  // is released to avoid unhandled promise rejections.
-  await waitForTime(1000);
 }
