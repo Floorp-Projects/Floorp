@@ -7478,7 +7478,7 @@ class Hero_Hero extends external_React_default.a.PureComponent {
             ),
             external_React_default.a.createElement(
               "p",
-              null,
+              { className: "excerpt" },
               heroRec.excerpt
             ),
             heroRec.context ? external_React_default.a.createElement(
