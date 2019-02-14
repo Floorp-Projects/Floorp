@@ -38,6 +38,7 @@
 using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::image;
+using mozilla::dom::Document;
 
 #define MAX_COMPOSITE_BORDER_WIDTH LayoutDeviceIntCoord(10000)
 
@@ -3441,12 +3442,9 @@ ImgDrawResult nsCSSBorderImageRenderer::DrawBorderImage(
 
       if (i == MIDDLE && j == MIDDLE) {
         // Discard the middle portion unless set to fill.
-        if (NS_STYLE_BORDER_IMAGE_SLICE_NOFILL == mFill) {
+        if (!mFill) {
           continue;
         }
-
-        NS_ASSERTION(NS_STYLE_BORDER_IMAGE_SLICE_FILL == mFill,
-                     "Unexpected border image fill");
 
         // css-background:
         //     The middle image's width is scaled by the same factor as the
@@ -3734,29 +3732,22 @@ nsCSSBorderImageRenderer::nsCSSBorderImageRenderer(
   nsMargin slice;
   nsMargin border;
   NS_FOR_CSS_SIDES(s) {
-    nsStyleCoord coord = aStyleBorder.mBorderImageSlice.Get(s);
+    const auto& slice = aStyleBorder.mBorderImageSlice.offsets.Get(s);
     int32_t imgDimension =
         SideIsVertical(s) ? mImageSize.width : mImageSize.height;
     nscoord borderDimension = SideIsVertical(s) ? mArea.width : mArea.height;
     double value;
-    switch (coord.GetUnit()) {
-      case eStyleUnit_Percent:
-        value = coord.GetPercentValue() * imgDimension;
-        break;
-      case eStyleUnit_Factor:
-        value = nsPresContext::CSSPixelsToAppUnits(
-            NS_lround(coord.GetFactorValue()));
-        break;
-      default:
-        MOZ_ASSERT_UNREACHABLE("unexpected CSS unit for image slice");
-        value = 0;
-        break;
+    if (slice.IsNumber()) {
+      value = nsPresContext::CSSPixelsToAppUnits(NS_lround(slice.number._0));
+    } else {
+      MOZ_ASSERT(slice.IsPercentage());
+      value = slice.percentage._0._0 * imgDimension;
     }
     if (value < 0) value = 0;
     if (value > imgDimension) value = imgDimension;
     mSlice.Side(s) = value;
 
-    coord = aStyleBorder.mBorderImageWidth.Get(s);
+    nsStyleCoord coord = aStyleBorder.mBorderImageWidth.Get(s);
     switch (coord.GetUnit()) {
       case eStyleUnit_Coord:  // absolute dimension
         value = coord.GetCoordValue();
@@ -3813,5 +3804,5 @@ nsCSSBorderImageRenderer::nsCSSBorderImageRenderer(
 
   mRepeatModeHorizontal = aStyleBorder.mBorderImageRepeatH;
   mRepeatModeVertical = aStyleBorder.mBorderImageRepeatV;
-  mFill = aStyleBorder.mBorderImageFill;
+  mFill = aStyleBorder.mBorderImageSlice.fill;
 }
