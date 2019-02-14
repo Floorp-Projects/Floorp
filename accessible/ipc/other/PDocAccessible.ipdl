@@ -97,6 +97,9 @@ parent:
   async ScrollingEvent(uint64_t aID, uint64_t aType,
                        uint32_t aScrollX, uint32_t aScrollY,
                        uint32_t aMaxScrollX, uint32_t aMaxScrollY);
+  async AnnouncementEvent(uint64_t aID,
+                          nsString aAnnouncement,
+                          uint16_t aPriority);
 
   /*
    * Tell the parent document to bind the existing document as a new child
@@ -134,6 +137,7 @@ child:
   async ScrollTo(uint64_t aID, uint32_t aScrollType);
   async ScrollToPoint(uint64_t aID, uint32_t aScrollType, int32_t aX,
                       int32_t aY);
+  async Announce(uint64_t aID, nsString aAnnouncement, uint16_t aPriority);
 
   // AccessibleText
 

@@ -914,6 +914,14 @@ nsresult Accessible::HandleAccEvent(AccEvent* aEvent) {
               scrollingEvent->MaxScrollY());
           break;
         }
+#if !defined(XP_WIN)
+        case nsIAccessibleEvent::EVENT_ANNOUNCEMENT: {
+          AccAnnouncementEvent* announcementEvent = downcast_accEvent(aEvent);
+          ipcDoc->SendAnnouncementEvent(id, announcementEvent->Announcement(),
+                                        announcementEvent->Priority());
+          break;
+        }
+#endif
         default:
           ipcDoc->SendEvent(id, aEvent->GetEventType());
       }
