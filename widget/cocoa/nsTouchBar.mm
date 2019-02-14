@@ -192,6 +192,10 @@ static char sIdentifierAssociationKey;
   callback->OnCommand();
 }
 
+- (void)releaseJSObjects {
+  mTouchBarHelper = nil;
+}
+
 #pragma mark - TouchBar Utilities
 
 + (NSImage*)getTouchBarIconNamed:(NSString*)aImageName {
