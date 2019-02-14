@@ -362,6 +362,9 @@ main {
   .hide-main main {
     visibility: hidden; }
 
+.ds-outer-wrapper-search-alignment main {
+  margin: 0 auto; }
+
 .base-content-fallback {
   height: 100vh; }
 

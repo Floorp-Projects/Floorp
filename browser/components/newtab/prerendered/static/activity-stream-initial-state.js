@@ -76,7 +76,10 @@ window.gActivityStreamPrerenderedState = {
     },
     "layout": [],
     "lastUpdated": null,
-    "feeds": {},
+    "feeds": {
+      "data": {},
+      "loaded": false
+    },
     "spocs": {
       "spocs_endpoint": "",
       "lastUpdated": null,

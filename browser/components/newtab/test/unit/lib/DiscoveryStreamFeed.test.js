@@ -746,5 +746,22 @@ describe("DiscoveryStreamFeed", () => {
           assert.deepEqual(result, {type: "FOO"});
         });
     });
+    it("should set loaded to true if loadSpocs and loadComponentFeeds fails", async () => {
+      feed.loadComponentFeeds.rejects("loadComponentFeeds error");
+      feed.loadSpocs.rejects("loadSpocs error");
+
+      await feed.refreshAll();
+
+      assert.isTrue(feed.loaded);
+    });
+    it("should call loadComponentFeeds and loadSpocs in Promise.all", async () => {
+      sandbox.stub(global.Promise, "all").resolves();
+
+      await feed.refreshAll();
+
+      assert.calledOnce(global.Promise.all);
+      const {args} = global.Promise.all.firstCall;
+      assert.equal(args[0].length, 2);
+    });
   });
 });
