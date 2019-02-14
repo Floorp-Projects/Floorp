@@ -754,7 +754,9 @@ void nsComponentManagerImpl::RegisterContractIDLocked(
     return;
   }
 
-  mContractIDs.Put(AsLiteralCString(aEntry->contractid), f);
+  auto contract = AsLiteralCString(aEntry->contractid);
+  StaticComponents::InvalidateContractID(contract);
+  mContractIDs.Put(contract, f);
 }
 
 static void CutExtension(nsCString& aPath) {
