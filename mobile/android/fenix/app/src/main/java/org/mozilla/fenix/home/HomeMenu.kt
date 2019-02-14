@@ -29,7 +29,7 @@ class HomeMenu(
                 context.getString(R.string.browser_menu_settings),
                 R.drawable.ic_settings,
                 context.getString(R.string.browser_menu_settings),
-                DefaultThemeManager.resolveAttribute(R.attr.browserToolbarIcons, context)
+                DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context)
             ) {
                 onItemTapped.invoke(HomeMenu.Item.Settings)
             },
@@ -38,7 +38,7 @@ class HomeMenu(
                 context.getString(R.string.browser_menu_library),
                 R.drawable.ic_library,
                 context.getString(R.string.browser_menu_library),
-                DefaultThemeManager.resolveAttribute(R.attr.browserToolbarIcons, context)
+                DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context)
             ) {
                 onItemTapped.invoke(HomeMenu.Item.Library)
             },
@@ -48,7 +48,7 @@ class HomeMenu(
                 context.getString(R.string.browser_menu_help),
                 R.drawable.ic_help,
                 context.getString(R.string.browser_menu_help),
-                DefaultThemeManager.resolveAttribute(R.attr.browserToolbarIcons, context)
+                DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context)
             ) {
                 onItemTapped.invoke(HomeMenu.Item.Help)
             })
