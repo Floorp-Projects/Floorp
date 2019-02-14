@@ -933,9 +933,11 @@ impl CPPExporter {
             buffer.push_str(&self.rules.hpp_tokens_kind_doc.reindent(""));
         }
 
-        let node_names = self.syntax.node_names()
+        let node_names = self.syntax.interfaces_by_name()
             .keys()
+            .map(|n| n.to_string())
             .sorted();
+        let kind_limit = node_names.len();
         buffer.push_str(&format!("\n#define FOR_EACH_BIN_KIND(F) \\\n{nodes}\n",
             nodes = node_names.iter()
                 .map(|name| format!("    F({enum_name}, \"{spec_name}\")",
@@ -950,7 +952,7 @@ enum class BinKind {
 };
 ");
 
-        buffer.push_str(&format!("\n// The number of distinct values of BinKind.\nconst size_t BINKIND_LIMIT = {};\n\n\n", self.syntax.node_names().len()));
+        buffer.push_str(&format!("\n// The number of distinct values of BinKind.\nconst size_t BINKIND_LIMIT = {};\n\n\n", kind_limit));
         buffer.push_str("\n\n");
         if self.rules.hpp_tokens_field_doc.is_some() {
             buffer.push_str(&self.rules.hpp_tokens_field_doc.reindent(""));
@@ -959,6 +961,7 @@ enum class BinKind {
         let field_names = self.syntax.field_names()
             .keys()
             .sorted();
+        let field_limit = field_names.len();
         buffer.push_str(&format!("\n#define FOR_EACH_BIN_FIELD(F) \\\n{nodes}\n",
             nodes = field_names.iter()
                 .map(|name| format!("    F({enum_name}, \"{spec_name}\")",
@@ -972,7 +975,7 @@ enum class BinField {
 #undef EMIT_ENUM
 };
 ");
-        buffer.push_str(&format!("\n// The number of distinct values of BinField.\nconst size_t BINFIELD_LIMIT = {};\n\n\n", self.syntax.field_names().len()));
+        buffer.push_str(&format!("\n// The number of distinct values of BinField.\nconst size_t BINFIELD_LIMIT = {};\n\n\n", field_limit));
 
         if self.rules.hpp_tokens_variants_doc.is_some() {
             buffer.push_str(&self.rules.hpp_tokens_variants_doc.reindent(""));
@@ -983,6 +986,7 @@ enum class BinField {
                 Ord::cmp(name_1, name_2)
                     .then_with(|| Ord::cmp(symbol_1, symbol_2))
             });
+        let variants_limit = enum_variants.len();
 
         buffer.push_str(&format!("\n#define FOR_EACH_BIN_VARIANT(F) \\\n{nodes}\n",
             nodes = enum_variants.into_iter()
@@ -999,7 +1003,7 @@ enum class BinVariant {
 };
 ");
         buffer.push_str(&format!("\n// The number of distinct values of BinVariant.\nconst size_t BINVARIANT_LIMIT = {};\n\n\n",
-            self.variants_by_symbol.len()));
+            variants_limit));
 
         buffer.push_str(&self.rules.hpp_tokens_footer.reindent(""));
         buffer.push_str("\n");

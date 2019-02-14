@@ -162,6 +162,11 @@ static uint32_t sUniqueKeyEventId = 0;
 
 static NSMutableDictionary* sNativeKeyEventsMap = [NSMutableDictionary dictionary];
 
+// The view that will do our drawing or host our NSOpenGLContext or Core Animation layer.
+@interface PixelHostingView : NSView {
+}
+@end
+
 @interface ChildView (Private)
 
 // sets up our view, attaching it to its owning gecko view
@@ -862,7 +867,9 @@ void nsChildView::Resize(double aWidth, double aHeight, bool aRepaint) {
     [mView setFrame:DevPixelsToCocoaPoints(mBounds)];
   });
 
-  if (mVisible && aRepaint) [mView setNeedsDisplay:YES];
+  if (mVisible && aRepaint) {
+    [[mView pixelHostingView] setNeedsDisplay:YES];
+  }
 
   NotifyRollupGeometryChange();
   ReportSizeEvent();
@@ -895,7 +902,9 @@ void nsChildView::Resize(double aX, double aY, double aWidth, double aHeight, bo
     [mView setFrame:DevPixelsToCocoaPoints(mBounds)];
   });
 
-  if (mVisible && aRepaint) [mView setNeedsDisplay:YES];
+  if (mVisible && aRepaint) {
+    [[mView pixelHostingView] setNeedsDisplay:YES];
+  }
 
   NotifyRollupGeometryChange();
   if (isMoving) {
@@ -1211,7 +1220,7 @@ void nsChildView::Invalidate(const LayoutDeviceIntRect& aRect) {
   NS_ASSERTION(GetLayerManager()->GetBackendType() != LayersBackend::LAYERS_CLIENT,
                "Shouldn't need to invalidate with accelerated OMTC layers!");
 
-  [mView setNeedsDisplayInRect:DevPixelsToCocoaPoints(aRect)];
+  [[mView pixelHostingView] setNeedsDisplayInRect:DevPixelsToCocoaPoints(aRect)];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -2308,12 +2317,6 @@ void nsChildView::UpdateVibrancy(const nsTArray<ThemeGeometry>& aThemeGeometries
                          activeSourceListSelectionRegion);
 }
 
-void nsChildView::ClearVibrantAreas() {
-  if (VibrancyManager::SystemSupportsVibrancy()) {
-    EnsureVibrancyManager().ClearVibrantAreas();
-  }
-}
-
 NSColor* nsChildView::VibrancyFillColorForThemeGeometryType(
     nsITheme::ThemeGeometryType aThemeGeometryType) {
   if (VibrancyManager::SystemSupportsVibrancy()) {
@@ -2327,7 +2330,7 @@ NSColor* nsChildView::VibrancyFillColorForThemeGeometryType(
 mozilla::VibrancyManager& nsChildView::EnsureVibrancyManager() {
   MOZ_ASSERT(mView, "Only call this once we have a view!");
   if (!mVibrancyManager) {
-    mVibrancyManager = MakeUnique<VibrancyManager>(*this, mView);
+    mVibrancyManager = MakeUnique<VibrancyManager>(*this, [mView vibrancyViewsContainer]);
   }
   return *mVibrancyManager;
 }
@@ -2481,9 +2484,10 @@ void nsChildView::UpdateWindowDraggingRegion(const LayoutDeviceIntRegion& aRegio
 
   // Suppress calls to setNeedsDisplay during NSView geometry changes.
   ManipulateViewWithoutNeedingDisplay(mView, ^() {
-    changed = mNonDraggableRegion.UpdateRegion(nonDraggable, *this, mView, ^() {
-      return [[NonDraggableView alloc] initWithFrame:NSZeroRect];
-    });
+    changed = mNonDraggableRegion.UpdateRegion(
+        nonDraggable, *this, [mView nonDraggableViewsContainer], ^() {
+          return [[NonDraggableView alloc] initWithFrame:NSZeroRect];
+        });
   });
 
   if (changed) {
@@ -2847,6 +2851,31 @@ class WidgetsReleaserRunnable final : public mozilla::Runnable {
 
 #pragma mark -
 
+// ViewRegionContainerView is a view class for certain subviews of ChildView
+// which contain the NSViews created for ViewRegions (see ViewRegion.h).
+// It doesn't do anything interesting, it only acts as a container so that it's
+// easier for ChildView to control the z order of its children.
+@interface ViewRegionContainerView : NSView {
+}
+@end
+
+@implementation ViewRegionContainerView
+
+- (NSView*)hitTest:(NSPoint)aPoint {
+  return nil;  // Be transparent to mouse events.
+}
+
+- (BOOL)isFlipped {
+  return [[self superview] isFlipped];
+}
+
+- (BOOL)mouseDownCanMoveWindow {
+  return [[self superview] mouseDownCanMoveWindow];
+}
+
+@end
+;
+
 @implementation ChildView
 
 // globalDragPboard is non-null during native drag sessions that did not originate
@@ -2918,6 +2947,20 @@ NSEvent* gLastDragMouseDownEvent = nil;
     mCancelSwipeAnimation = nil;
 #endif
 
+    mNonDraggableViewsContainer = [[ViewRegionContainerView alloc] initWithFrame:[self bounds]];
+    mVibrancyViewsContainer = [[ViewRegionContainerView alloc] initWithFrame:[self bounds]];
+
+    [mNonDraggableViewsContainer setAutoresizingMask:NSViewWidthSizable | NSViewHeightSizable];
+    [mVibrancyViewsContainer setAutoresizingMask:NSViewWidthSizable | NSViewHeightSizable];
+
+    [self addSubview:mNonDraggableViewsContainer];
+    [self addSubview:mVibrancyViewsContainer];
+
+    mPixelHostingView = [[PixelHostingView alloc] initWithFrame:[self bounds]];
+    [mPixelHostingView setAutoresizingMask:NSViewWidthSizable | NSViewHeightSizable];
+
+    [self addSubview:mPixelHostingView];
+
     mTopLeftCornerMask = NULL;
     mLastPressureStage = 0;
   }
@@ -2963,7 +3006,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   [[NSNotificationCenter defaultCenter] addObserver:self
                                            selector:@selector(_surfaceNeedsUpdate:)
                                                name:NSViewGlobalFrameDidChangeNotification
-                                             object:self];
+                                             object:mPixelHostingView];
 
   [[NSDistributedNotificationCenter defaultCenter]
              addObserver:self
@@ -3049,6 +3092,18 @@ NSEvent* gLastDragMouseDownEvent = nil;
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
+- (NSView*)vibrancyViewsContainer {
+  return mVibrancyViewsContainer;
+}
+
+- (NSView*)nonDraggableViewsContainer {
+  return mNonDraggableViewsContainer;
+}
+
+- (NSView*)pixelHostingView {
+  return mPixelHostingView;
+}
+
 - (void)dealloc {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
@@ -3061,6 +3116,12 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   [[NSNotificationCenter defaultCenter] removeObserver:self];
   [[NSDistributedNotificationCenter defaultCenter] removeObserver:self];
+  [mVibrancyViewsContainer removeFromSuperview];
+  [mVibrancyViewsContainer release];
+  [mNonDraggableViewsContainer removeFromSuperview];
+  [mNonDraggableViewsContainer release];
+  [mPixelHostingView removeFromSuperview];
+  [mPixelHostingView release];
 
   [super dealloc];
 
@@ -3117,10 +3178,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
   return YES;
 }
 
-- (BOOL)isOpaque {
-  return [[self window] isOpaque];
-}
-
 // We accept key and mouse events, so don't keep passing them up the chain. Allow
 // this to be a 'focused' widget for event dispatch.
 - (BOOL)acceptsFirstResponder {
@@ -3149,7 +3206,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 }
 
 - (void)updateGLContext {
-  [mGLContext setView:self];
+  [mGLContext setView:mPixelHostingView];
   [mGLContext update];
 }
 
@@ -3159,10 +3216,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
     mNeedsGLUpdate = YES;
     CGLUnlockContext((CGLContextObj)[mGLContext CGLContextObj]);
   }
-}
-
-- (BOOL)wantsBestResolutionOpenGLSurface {
-  return nsCocoaUtils::HiDPIEnabled() ? YES : NO;
 }
 
 - (void)viewDidChangeBackingProperties {
@@ -3212,7 +3265,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   LayoutDeviceIntRect boundingRect = mGeckoChild->CocoaPointsToDevPixels(aRect);
   const NSRect* rects;
   NSInteger count;
-  [self getRectsBeingDrawn:&rects count:&count];
+  [mPixelHostingView getRectsBeingDrawn:&rects count:&count];
 
   if (count > MAX_RECTS_IN_REGION) {
     return boundingRect;
@@ -3228,7 +3281,8 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
 // The display system has told us that a portion of our view is dirty. Tell
 // gecko to paint it
-- (void)drawRect:(NSRect)aRect {
+// This method is called from mPixelHostingView's drawRect handler.
+- (void)doDrawRect:(NSRect)aRect {
   if (!NS_IsMainThread()) {
     // In the presence of CoreAnimation, this method can sometimes be called on
     // a non-main thread. Ignore those calls because Gecko can only react to
@@ -3240,15 +3294,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
   CGContextRef cgContext = (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort];
 
   if ([self isUsingOpenGL]) {
-    // Since this view is usually declared as opaque, the window's pixel
-    // buffer may now contain garbage which we need to prevent from reaching
-    // the screen. The only place where garbage can show is in the window
-    // corners and the vibrant regions of the window - the rest of the window
-    // is covered by opaque content in our OpenGL surface.
-    // So we need to clear the pixel buffer contents in these areas.
-    mGeckoChild->ClearVibrantAreas();
-    [self clearCorners];
-
     // Force a sync OMTC composite into the OpenGL context and return.
     LayoutDeviceIntRect geckoBounds = mGeckoChild->GetBounds();
     LayoutDeviceIntRegion region(geckoBounds);
@@ -3277,7 +3322,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   // CocoaPoints again.
   CGContextRestoreGState(cgContext);
 
-  if (!painted && [self isOpaque]) {
+  if (!painted && [mPixelHostingView isOpaque]) {
     // Gecko refused to draw, but we've claimed to be opaque, so we have to
     // draw something--fill with white.
     CGContextSetRGBFillColor(cgContext, 1, 1, 1, 1);
@@ -3315,35 +3360,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
   GLint opaque = aOpaque || gfxPrefs::CompositorGLContextOpaque();
   [mGLContext setValues:&opaque forParameter:NSOpenGLCPSurfaceOpacity];
   CGLUnlockContext((CGLContextObj)[mGLContext CGLContextObj]);
-}
-
-// Accelerated windows have two NSSurfaces:
-//  (1) The window's pixel buffer in the back and
-//  (2) the OpenGL view in the front.
-// These two surfaces are composited by the window manager. Drawing into the
-// CGContext which is provided by drawRect ends up in (1).
-// When our window has rounded corners, the OpenGL view has transparent pixels
-// in the corners. In these places the contents of the window's pixel buffer
-// can show through. So we need to make sure that the pixel buffer is
-// transparent in the corners so that no garbage reaches the screen.
-// The contents of the pixel buffer in the rest of the window don't matter
-// because they're covered by opaque pixels of the OpenGL context.
-// Making the corners transparent works even though our window is
-// declared "opaque" (in the NSWindow's isOpaque method).
-- (void)clearCorners {
-  CGFloat radius = [self cornerRadius];
-  CGFloat w = [self bounds].size.width, h = [self bounds].size.height;
-  [[NSColor clearColor] set];
-
-  if ([self isCoveringTitlebar]) {
-    NSRectFill(NSMakeRect(0, 0, radius, radius));
-    NSRectFill(NSMakeRect(w - radius, 0, radius, radius));
-  }
-
-  if ([self hasRoundedBottomCorners]) {
-    NSRectFill(NSMakeRect(0, h - radius, radius, radius));
-    NSRectFill(NSMakeRect(w - radius, h - radius, radius, radius));
-  }
 }
 
 // This is the analog of nsChildView::MaybeDrawRoundedCorners for CGContexts.
@@ -5955,6 +5971,26 @@ nsresult nsChildView::GetSelectionAsPlaintext(nsAString& aResult) {
 
 + (NSMutableDictionary*)sNativeKeyEventsMap {
   return sNativeKeyEventsMap;
+}
+
+@end
+
+@implementation PixelHostingView
+
+- (BOOL)isFlipped {
+  return YES;
+}
+
+- (NSView*)hitTest:(NSPoint)aPoint {
+  return nil;
+}
+
+- (void)drawRect:(NSRect)aRect {
+  [(ChildView*)[self superview] doDrawRect:aRect];
+}
+
+- (BOOL)wantsBestResolutionOpenGLSurface {
+  return nsCocoaUtils::HiDPIEnabled() ? YES : NO;
 }
 
 @end

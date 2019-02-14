@@ -9,9 +9,6 @@ loader.lazyRequireGetter(this, "extend", "devtools/shared/extend", true);
 loader.lazyRequireGetter(this, "Telemetry", "devtools/client/shared/telemetry");
 loader.lazyRequireGetter(this, "WebConsole", "devtools/client/webconsole/webconsole");
 
-// The preference prefix for all of the Browser Console filters.
-const BC_FILTER_PREFS_PREFIX = "devtools.browserconsole.filter.";
-
 /**
  * A BrowserConsole instance is an interactive console initialized *per target*
  * that displays console log data as well as provides an interactive terminal to
@@ -58,8 +55,6 @@ BrowserConsole.prototype = extend(WebConsole.prototype, {
 
     // Only add the shutdown observer if we've opened a Browser Console window.
     ShutdownObserver.init(this.hudService);
-
-    this.ui._filterPrefsPrefix = BC_FILTER_PREFS_PREFIX;
 
     const window = this.iframeWindow;
 

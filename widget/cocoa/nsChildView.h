@@ -57,6 +57,8 @@ class WidgetRenderingContext;
 }  // namespace widget
 }  // namespace mozilla
 
+@class PixelHostingView;
+
 @interface NSEvent (Undocumented)
 
 // Return Cocoa event's corresponding Carbon event.  Not initialized (on
@@ -201,6 +203,15 @@ class WidgetRenderingContext;
   // CGContext painting (i.e. non-accelerated).
   CGImageRef mTopLeftCornerMask;
 
+  // Subviews of self, which act as container views for vibrancy views and
+  // non-draggable views.
+  NSView* mVibrancyViewsContainer;      // [STRONG]
+  NSView* mNonDraggableViewsContainer;  // [STRONG]
+
+  // The view that does our drawing. This is a subview of self so that it can
+  // be ordered on top of mVibrancyViewsContainer.
+  PixelHostingView* mPixelHostingView;
+
   // Last pressure stage by trackpad's force click
   NSInteger mLastPressureStage;
 }
@@ -228,6 +239,10 @@ class WidgetRenderingContext;
 
 - (bool)preRender:(NSOpenGLContext*)aGLContext;
 - (void)postRender:(NSOpenGLContext*)aGLContext;
+
+- (NSView*)vibrancyViewsContainer;
+- (NSView*)nonDraggableViewsContainer;
+- (NSView*)pixelHostingView;
 
 - (BOOL)isCoveringTitlebar;
 
@@ -471,7 +486,6 @@ class nsChildView final : public nsBaseWidget {
 
   mozilla::widget::TextInputHandler* GetTextInputHandler() { return mTextInputHandler; }
 
-  void ClearVibrantAreas();
   NSColor* VibrancyFillColorForThemeGeometryType(nsITheme::ThemeGeometryType aThemeGeometryType);
   NSColor* VibrancyFontSmoothingBackgroundColorForThemeGeometryType(
       nsITheme::ThemeGeometryType aThemeGeometryType);

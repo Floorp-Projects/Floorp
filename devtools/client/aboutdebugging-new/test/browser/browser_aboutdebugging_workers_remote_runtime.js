@@ -3,9 +3,6 @@
 
 "use strict";
 
-/* import-globals-from helper-mocks.js */
-Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-mocks.js", this);
-
 const NETWORK_RUNTIME_HOST = "localhost:6080";
 const NETWORK_RUNTIME_APP_NAME = "TestNetworkApp";
 const USB_RUNTIME_ID = "test-runtime-id";
@@ -38,7 +35,7 @@ const EMPTY_WORKERS_RESPONSE = {
 add_task(async function() {
   const mocks = new Mocks();
 
-  const { document, tab } = await openAboutDebugging();
+  const { document, tab } = await openAboutDebugging({ enableWorkerUpdates: true });
 
   info("Prepare USB client mock");
   const usbClient = mocks.createUSBRuntime(USB_RUNTIME_ID, {
@@ -95,7 +92,7 @@ async function testWorkerOnMockedRemoteClient(testData, remoteClient, firefoxCli
     }],
   });
   remoteClient.listWorkers = () => workers;
-  remoteClient._eventEmitter.emit("workerListChanged");
+  remoteClient._eventEmitter.emit("workersUpdated");
 
   info("Wait until the worker appears");
   await waitUntil(() => !workersPane.querySelector(".js-debug-target-list-empty"));
@@ -104,12 +101,12 @@ async function testWorkerOnMockedRemoteClient(testData, remoteClient, firefoxCli
   ok(workerTarget, "Worker target appeared for the remote runtime");
 
   // Check that the list of REMOTE workers are NOT updated when the local this-firefox
-  // emits a workerListChanged event.
+  // emits a workersUpdated event.
   info("Remove the worker from the remote client WITHOUT sending an event");
   remoteClient.listWorkers = () => EMPTY_WORKERS_RESPONSE;
 
   info("Simulate a worker update on the ThisFirefox client");
-  firefoxClient._eventEmitter.emit("workerListChanged");
+  firefoxClient._eventEmitter.emit("workersUpdated");
 
   // To avoid wait for a set period of time we trigger another async update, adding a new
   // tab. We assume that if the worker update mechanism had started, it would also be done
@@ -123,7 +120,7 @@ async function testWorkerOnMockedRemoteClient(testData, remoteClient, firefoxCli
   ok(findDebugTargetByText(workerName, document),
     "The test worker is still visible");
 
-  info("Emit `workerListChanged` on remoteClient and wait for the target list to update");
-  remoteClient._eventEmitter.emit("workerListChanged");
+  info("Emit `workersUpdated` on remoteClient and wait for the target list to update");
+  remoteClient._eventEmitter.emit("workersUpdated");
   await waitUntil(() => !findDebugTargetByText(workerName, document));
 }

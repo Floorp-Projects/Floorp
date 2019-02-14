@@ -3,9 +3,6 @@
 
 "use strict";
 
-/* import-globals-from helper-mocks.js */
-Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-mocks.js", this);
-
 // Test migrated from
 // devtools/client/aboutdebugging/test/browser_service_workers_not_compatible.js
 
@@ -47,7 +44,7 @@ add_task(async function testLocalRuntime() {
     await pushPref("dom.serviceWorkers.enabled", serviceWorkersEnabled);
     await pushPref("browser.privatebrowsing.autostart", privateBrowsingEnabled);
 
-    const { document, tab } = await openAboutDebugging();
+    const { document, tab } = await openAboutDebugging({ enableWorkerUpdates: true });
     assertWarningMessage(document, expectedMessage);
     await removeTab(tab);
   }
@@ -74,7 +71,7 @@ add_task(async function testRemoteRuntime() {
     client.setPreference("dom.serviceWorkers.enabled", serviceWorkersEnabled);
     client.setPreference("browser.privatebrowsing.autostart", privateBrowsingEnabled);
 
-    const { document, tab } = await openAboutDebugging();
+    const { document, tab } = await openAboutDebugging({ enableWorkerUpdates: true });
 
     info("Checking a USB runtime");
     mocks.emitUSBUpdate();
