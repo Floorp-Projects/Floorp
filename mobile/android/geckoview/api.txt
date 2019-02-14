@@ -832,8 +832,16 @@ package org.mozilla.geckoview {
     method public boolean onMotionEvent(@android.support.annotation.NonNull android.view.MotionEvent);
     method public boolean onMouseEvent(@android.support.annotation.NonNull android.view.MotionEvent);
     method public boolean onTouchEvent(@android.support.annotation.NonNull android.view.MotionEvent);
+    method @android.support.annotation.UiThread public void scrollBy(@android.support.annotation.NonNull org.mozilla.geckoview.ScreenLength, @android.support.annotation.NonNull org.mozilla.geckoview.ScreenLength);
+    method @android.support.annotation.UiThread public void scrollBy(@android.support.annotation.NonNull org.mozilla.geckoview.ScreenLength, @android.support.annotation.NonNull org.mozilla.geckoview.ScreenLength, int);
+    method @android.support.annotation.UiThread public void scrollTo(@android.support.annotation.NonNull org.mozilla.geckoview.ScreenLength, @android.support.annotation.NonNull org.mozilla.geckoview.ScreenLength);
+    method @android.support.annotation.UiThread public void scrollTo(@android.support.annotation.NonNull org.mozilla.geckoview.ScreenLength, @android.support.annotation.NonNull org.mozilla.geckoview.ScreenLength, int);
+    method @android.support.annotation.UiThread public void scrollToBottom();
+    method @android.support.annotation.UiThread public void scrollToTop();
     method public void setIsLongpressEnabled(boolean);
     method public void setScrollFactor(float);
+    field public static final int SCROLL_BEHAVIOR_AUTO = 1;
+    field public static final int SCROLL_BEHAVIOR_SMOOTH = 0;
   }
 
   public abstract class RuntimeSettings implements android.os.Parcelable {
@@ -852,6 +860,22 @@ package org.mozilla.geckoview {
 
   public final class RuntimeTelemetry {
     method @android.support.annotation.AnyThread @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoResult<org.mozilla.gecko.util.GeckoBundle> getSnapshots(boolean);
+  }
+
+  public class ScreenLength {
+    method @android.support.annotation.NonNull @android.support.annotation.AnyThread public static org.mozilla.geckoview.ScreenLength bottom();
+    method @android.support.annotation.NonNull @android.support.annotation.AnyThread public static org.mozilla.geckoview.ScreenLength fromPixels(double);
+    method @android.support.annotation.NonNull @android.support.annotation.AnyThread public static org.mozilla.geckoview.ScreenLength fromViewportHeight(double);
+    method @android.support.annotation.NonNull @android.support.annotation.AnyThread public static org.mozilla.geckoview.ScreenLength fromViewportWidth(double);
+    method @android.support.annotation.AnyThread public int getType();
+    method @android.support.annotation.AnyThread public double getValue();
+    method @android.support.annotation.NonNull @android.support.annotation.AnyThread public static org.mozilla.geckoview.ScreenLength top();
+    method @android.support.annotation.NonNull @android.support.annotation.AnyThread public static org.mozilla.geckoview.ScreenLength zero();
+    field public static final int DOCUMENT_HEIGHT = 4;
+    field public static final int DOCUMENT_WIDTH = 3;
+    field public static final int PIXEL = 0;
+    field public static final int VIEWPORT_HEIGHT = 2;
+    field public static final int VIEWPORT_WIDTH = 1;
   }
 
   @android.support.annotation.UiThread public class SessionAccessibility {

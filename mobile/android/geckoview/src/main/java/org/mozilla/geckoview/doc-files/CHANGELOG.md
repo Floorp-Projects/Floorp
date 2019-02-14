@@ -23,6 +23,8 @@ exclude: true
 - Added `baseUri` to [`ContentDelegate.ContextElement`][65.21] and changed
   `linkUri` to absolute form.
 
+- Added `scrollBy()` and `scrollTo()` to `PanZoomController`.
+
 ## v66
 - Removed redundant field `GeckoSession.ProgressDelegate.SecurityInformation.trackingMode`.
   Use `GeckoSession.TrackingProtectionDelegate.onTrackerBlocked` for
@@ -132,4 +134,4 @@ exclude: true
 [65.24]: ../CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: ../GeckoResult.html
 
-[api-version]: a42a6f4481dd690ac46f14d8e692785bb00e8b04
+[api-version]: fb3375bbe85695b337d830dcf3fffec7231f4e4b
