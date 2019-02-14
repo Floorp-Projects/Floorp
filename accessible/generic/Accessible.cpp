@@ -335,8 +335,15 @@ uint64_t Accessible::VisibilityState() const {
     nsIFrame* parentFrame = curFrame->GetParent();
     nsDeckFrame* deckFrame = do_QueryFrame(parentFrame);
     if (deckFrame && deckFrame->GetSelectedBox() != curFrame) {
+#if defined(ANDROID)
+      // In Fennec instead of a <tabpanels> container there is a <deck>
+      // with direct <browser> children.
+      if (curFrame->GetContent()->IsXULElement(nsGkAtoms::browser))
+        return states::OFFSCREEN;
+#else
       if (deckFrame->GetContent()->IsXULElement(nsGkAtoms::tabpanels))
         return states::OFFSCREEN;
+#endif
 
       MOZ_ASSERT_UNREACHABLE(
           "Children of not selected deck panel are not accessible.");
