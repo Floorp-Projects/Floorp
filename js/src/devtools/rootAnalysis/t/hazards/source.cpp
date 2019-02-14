@@ -1,3 +1,5 @@
+#include <utility>
+
 #define ANNOTATE(property) __attribute__((annotate(property)))
 
 struct Cell {
@@ -205,5 +207,102 @@ void loopy() {
     GC();
     use(haz8.cell);
     haz8.cell = &cell;
+  }
+}
+
+namespace mozilla {
+template<typename T>
+class UniquePtr
+{
+  T* val;
+ public:
+  UniquePtr() : val(nullptr) { asm(""); }
+  UniquePtr(T* p) : val(p) {}
+  UniquePtr(UniquePtr<T>&& u) : val(u.val) { u.val = nullptr; }
+  ~UniquePtr() { use(val); }
+  T* get() { return val; }
+  void reset() { val = nullptr; }
+} ANNOTATE("moz_inherit_type_annotations_from_template_args");
+} // namespace mozilla
+
+extern void consume(mozilla::UniquePtr<Cell> uptr);
+
+void safevals() {
+  Cell cell;
+
+  // Simple hazard.
+  Cell* unsafe1 = &cell;
+  GC();
+  use(unsafe1);
+
+  // Safe because it's known to be nullptr.
+  Cell* safe2 = &cell;
+  safe2 = nullptr;
+  GC();
+  use(safe2);
+
+  // Unsafe because it may not be nullptr.
+  Cell* unsafe3 = &cell;
+  if (reinterpret_cast<long>(&cell) & 0x100) {
+    unsafe3 = nullptr;
+  }
+  GC();
+  use(unsafe3);
+
+  // Unsafe because it's not nullptr anymore.
+  Cell* unsafe3b = &cell;
+  unsafe3b = nullptr;
+  unsafe3b = &cell;
+  GC();
+  use(unsafe3b);
+
+  // Hazard involving UniquePtr.
+  {
+    mozilla::UniquePtr<Cell> unsafe4(&cell);
+    GC();
+    // Destructor uses unsafe4.
+  }
+
+  // reset() to safe value before the GC.
+  {
+    mozilla::UniquePtr<Cell> safe5(&cell);
+    safe5.reset();
+    GC();
+  }
+
+  // reset() to safe value after the GC.
+  {
+    mozilla::UniquePtr<Cell> safe6(&cell);
+    GC();
+    safe6.reset();
+  }
+
+  // reset() to safe value after the GC -- but we've already used it, so it's
+  // too late.
+  {
+    mozilla::UniquePtr<Cell> unsafe7(&cell);
+    GC();
+    use(unsafe7.get());
+    unsafe7.reset();
+  }
+
+  // initialized to safe value.
+  {
+    mozilla::UniquePtr<Cell> safe8;
+    GC();
+  }
+
+  // passed to a function that takes ownership before GC.
+  {
+    mozilla::UniquePtr<Cell> safe9(&cell);
+    consume(std::move(safe9));
+    GC();
+  }
+
+  // passed to a function that takes ownership after GC.
+  {
+    mozilla::UniquePtr<Cell> unsafe10(&cell);
+    GC();
+    consume(std::move(unsafe10));
   }
 }
