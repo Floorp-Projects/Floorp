@@ -135,6 +135,11 @@ class TabObserver {
     }
 
     for (const tab of window.gBrowser.tabs) {
+      // If `linkedBrowser` isn't set, it means that the tab is still initializing
+      // and a `TabOpen` event will be fired once it is all set.
+      if (!tab.linkedBrowser) {
+        continue;
+      }
       this.onTabOpen(tab);
     }
 
