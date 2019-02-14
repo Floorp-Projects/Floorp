@@ -31,6 +31,10 @@ add_task(async function() {
     await PlacesUtils.history.clear();
   });
 
+  await promiseAutocompleteResultPopup("moz");
+  Assert.equal(gURLBar.textValue, "moz",
+    "Preselected search keyword result shouldn't automatically add a space");
+
   await promiseAutocompleteResultPopup("moz open a search");
   let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
   if (UrlbarPrefs.get("quantumbar")) {

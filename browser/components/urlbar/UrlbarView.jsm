@@ -162,7 +162,7 @@ class UrlbarView {
 
     if (queryContext.lastResultCount == 0) {
       if (queryContext.preselected) {
-        this._selectItem(fragment.firstElementChild);
+        this._selectItem(fragment.firstElementChild, false);
       } else {
         // Clear the selection when we get a new set of results.
         this._selectItem(null);
@@ -172,7 +172,7 @@ class UrlbarView {
       // TODO bug 1523602: the selection should stay on the node that had it, if
       // it's still in the current result set.
       let resultIndex = this._selected.getAttribute("resultIndex");
-      this._selectItem(fragment.children[resultIndex]);
+      this._selectItem(fragment.children[resultIndex], false);
     }
 
     // TODO bug 1523602: For now, clear the results for each set received.
