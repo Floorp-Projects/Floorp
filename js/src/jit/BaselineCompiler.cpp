@@ -3132,16 +3132,15 @@ void BaselineInterpreterCodeGen::getEnvironmentCoordinateObject(Register reg) {
 template <>
 Address BaselineCompilerCodeGen::getEnvironmentCoordinateAddressFromObject(
     Register objReg, Register reg) {
-  JSScript* script = handler.script();
   EnvironmentCoordinate ec(handler.pc());
-  Shape* shape = EnvironmentCoordinateToEnvironmentShape(script, handler.pc());
 
-  if (shape->numFixedSlots() <= ec.slot()) {
-    masm.loadPtr(Address(objReg, NativeObject::offsetOfSlots()), reg);
-    return Address(reg, (ec.slot() - shape->numFixedSlots()) * sizeof(Value));
+  if (EnvironmentObject::nonExtensibleIsFixedSlot(ec)) {
+    return Address(objReg, NativeObject::getFixedSlotOffset(ec.slot()));
   }
 
-  return Address(objReg, NativeObject::getFixedSlotOffset(ec.slot()));
+  uint32_t slot = EnvironmentObject::nonExtensibleDynamicSlotIndex(ec);
+  masm.loadPtr(Address(objReg, NativeObject::offsetOfSlots()), reg);
+  return Address(reg, slot * sizeof(Value));
 }
 
 template <>

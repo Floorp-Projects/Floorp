@@ -36,21 +36,7 @@ function debugTargetListenerMiddleware(store) {
         clientWrapper.addListener("addonListChanged", onExtensionsUpdated);
 
         // Workers
-        clientWrapper.addListener("workerListChanged", onWorkersUpdated);
-        clientWrapper.onFront("contentProcessTarget", front => {
-          clientWrapper.contentProcessFronts.push(front);
-          front.on("workerListChanged", onWorkersUpdated);
-        });
-
-        clientWrapper.onFront("serviceWorkerRegistration", front => {
-          clientWrapper.serviceWorkerRegistrationFronts.push(front);
-          front.on("push-subscription-modified", onWorkersUpdated);
-          front.on("registration-changed", onWorkersUpdated);
-        });
-
-        clientWrapper.addListener("serviceWorkerRegistrationListChanged",
-          onWorkersUpdated);
-        clientWrapper.addListener("processListChanged", onWorkersUpdated);
+        clientWrapper.addListener("workersUpdated", onWorkersUpdated);
 
         break;
       }
@@ -65,22 +51,7 @@ function debugTargetListenerMiddleware(store) {
         clientWrapper.removeListener("addonListChanged", onExtensionsUpdated);
 
         // Workers
-        clientWrapper.removeListener("workerListChanged", onWorkersUpdated);
-        clientWrapper.removeListener("serviceWorkerRegistrationListChanged",
-          onWorkersUpdated);
-
-        for (const front of clientWrapper.contentProcessFronts) {
-          front.off("workerListChanged", onWorkersUpdated);
-        }
-        clientWrapper.contentProcessFronts = [];
-
-        for (const front of clientWrapper.serviceWorkerRegistrationFronts) {
-          front.off("push-subscription-modified", onWorkersUpdated);
-          front.off("registration-changed", onWorkersUpdated);
-        }
-        clientWrapper.serviceWorkerRegistrationFronts = [];
-
-        clientWrapper.removeListener("processListChanged", onWorkersUpdated);
+        clientWrapper.removeListener("workersUpdated", onWorkersUpdated);
 
         break;
       }

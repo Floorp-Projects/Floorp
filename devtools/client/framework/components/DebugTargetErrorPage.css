@@ -1,0 +1,21 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.error-page {
+  --base-unit: 4px; /* from photon */
+
+  padding: calc(var(--base-unit) * 4);
+  font-size: 15px; /* from photon */
+  min-height: 100vh;
+}
+
+.error-page__title {
+  margin: 0;
+  font-size: 36px; /* from photon */
+  font-weight: 200; /* from photon */
+}
+
+.error-page__details {
+  font-family: monospace;
+}
