@@ -19,6 +19,7 @@ import org.junit.Before
 import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.ArgumentMatchers.anyLong
 import org.mockito.Mockito.`when`
@@ -27,6 +28,7 @@ import org.mockito.Mockito.verify
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoWebExecutor
+import org.mozilla.geckoview.WebRequest
 import org.mozilla.geckoview.WebResponse
 import org.robolectric.RobolectricTestRunner
 import java.io.IOException
@@ -267,6 +269,21 @@ class GeckoViewFetchUnitTestCases : mozilla.components.tooling.fetch.tests.Fetch
 
         val response = createNewClient().fetch(request)
         assertEquals("ÄäÖöÜü", response.body.string())
+    }
+
+    override fun get200WithCacheControl() {
+        mockResponse(200)
+
+        val request = mock(Request::class.java)
+        `when`(request.url).thenReturn("https://mozilla.org")
+        `when`(request.method).thenReturn(Request.Method.GET)
+        `when`(request.useCaches).thenReturn(false)
+        createNewClient().fetch(request)
+
+        val captor = ArgumentCaptor.forClass(WebRequest::class.java)
+
+        verify(geckoWebExecutor)!!.fetch(captor.capture(), eq(GeckoWebExecutor.FETCH_FLAGS_NONE))
+        assertEquals(WebRequest.CACHE_MODE_RELOAD, captor.value.cacheMode)
     }
 
     private fun mockRequest(headerMap: Map<String, String>? = null, body: String? = null, method: String = "GET") {

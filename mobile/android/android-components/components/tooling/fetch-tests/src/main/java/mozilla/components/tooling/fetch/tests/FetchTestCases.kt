@@ -17,6 +17,7 @@ import okio.GzipSink
 import okio.Okio
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
@@ -445,6 +446,30 @@ abstract class FetchTestCases {
 
         assertEquals(200, response2.status)
         assertEquals("Hello World", response2.body.string())
+    }
+
+    @Test
+    open fun get200WithCacheControl() = withServerResponding(
+            MockResponse()
+                .addHeader("Cache-Control", "max-age=600")
+                .setBody("Cache this!"),
+            MockResponse().setBody("Could've cached this!")
+    ) { client ->
+
+        val responseWithCacheControl = client.fetch(Request(rootUrl()))
+        assertEquals(200, responseWithCacheControl.status)
+        assertEquals("Cache this!", responseWithCacheControl.body.string())
+        assertNotNull(responseWithCacheControl.headers["Cache-Control"])
+
+        // Request should hit cache.
+        val response1 = client.fetch(Request(rootUrl()))
+        assertEquals(200, response1.status)
+        assertEquals("Cache this!", response1.body.string())
+
+        // Request should hit network.
+        val response2 = client.fetch(Request(rootUrl(), useCaches = false))
+        assertEquals(200, response2.status)
+        assertEquals("Could've cached this!", response2.body.string())
     }
 
     private inline fun withServerResponding(

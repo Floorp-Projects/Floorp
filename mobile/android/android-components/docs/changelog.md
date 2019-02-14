@@ -25,6 +25,15 @@ permalink: /changelog/
     val body = response.body.string()
   }
   ```
+  * Added flag to specify whether or not caches should be used. This can be controlled with the `useCaches` parameter when creating a `Request`.
+
+  ```kotlin
+  // Force a network request (do not use cached responses)
+  client.fetch(Request(url, useCaches = false)).use { response ->
+    val body = response.body.string()
+  }
+  ```
+
 * **feature-awesomebar**
   * ⚠️ **This is a breaking API change!**
   * Now makes use of our concept-fetch module when fetching search suggestions. This allows applications to specify which HTTP client library to use e.g. apps already using GeckoView can now specify that the `GeckoViewFetchClient` should be used. As a consequence, the fetch client instance now needs to be provided when adding a search provider. 

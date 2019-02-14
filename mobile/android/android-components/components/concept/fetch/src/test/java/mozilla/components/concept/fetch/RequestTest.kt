@@ -39,7 +39,9 @@ class RequestTest {
             connectTimeout = Pair(10, TimeUnit.SECONDS),
             readTimeout = Pair(1, TimeUnit.MINUTES),
             body = Request.Body.fromString("Hello World!"),
-            redirect = Request.Redirect.MANUAL
+            redirect = Request.Redirect.MANUAL,
+            cookiePolicy = Request.CookiePolicy.INCLUDE,
+            useCaches = true
         )
 
         assertEquals("https://www.mozilla.org", request.url)
@@ -53,6 +55,8 @@ class RequestTest {
 
         assertEquals("Hello World!", request.body!!.useStream { it.bufferedReader().readText() })
         assertEquals(Request.Redirect.MANUAL, request.redirect)
+        assertEquals(Request.CookiePolicy.INCLUDE, request.cookiePolicy)
+        assertEquals(true, request.useCaches)
 
         val headers = request.headers!!
         assertEquals(3, headers.size)

@@ -5,8 +5,12 @@
 package mozilla.components.lib.fetch.httpurlconnection
 
 import mozilla.components.concept.fetch.Client
+import mozilla.components.concept.fetch.Request
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.net.HttpURLConnection
+import java.net.URL
 
 class HttpUrlConnectionFetchTestCases : mozilla.components.tooling.fetch.tests.FetchTestCases() {
     override fun createNewClient(): Client = HttpURLConnectionClient()
@@ -17,5 +21,17 @@ class HttpUrlConnectionFetchTestCases : mozilla.components.tooling.fetch.tests.F
     fun `Client instance`() {
         // We need at least one test case defined here so that this is recognized as test class.
         assertTrue(createNewClient() is HttpURLConnectionClient)
+    }
+
+    @Test
+    override fun get200WithCacheControl() {
+        // We can't run the base fetch test case because HttpResponseCache
+        // doesn't work in a unit test. So we test that we set the
+        // flag correctly instead.
+        val connection = (URL("https://mozilla.org").openConnection() as HttpURLConnection)
+        assertTrue(connection.useCaches)
+
+        connection.setupWith((Request("https://mozilla.org", useCaches = false)))
+        assertFalse(connection.useCaches)
     }
 }

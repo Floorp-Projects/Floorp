@@ -29,6 +29,8 @@ import java.util.concurrent.TimeUnit
  * @property redirect Whether the [Client] should follow redirects (HTTP 3xx) for this request or not.
  * @property cookiePolicy A policy to specify whether or not cookies should be
  * sent with the request, defaults to [CookiePolicy.INCLUDE]
+ * @property useCaches Whether caches should be used or a network request
+ * should be forced, defaults to true (use caches).
  */
 data class Request(
     val url: String,
@@ -38,7 +40,8 @@ data class Request(
     val readTimeout: Pair<Long, TimeUnit>? = null,
     val body: Body? = null,
     val redirect: Redirect = Redirect.FOLLOW,
-    val cookiePolicy: CookiePolicy = CookiePolicy.INCLUDE
+    val cookiePolicy: CookiePolicy = CookiePolicy.INCLUDE,
+    val useCaches: Boolean = true
 ) {
     /**
      * A [Body] to be send with the [Request].

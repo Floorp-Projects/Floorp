@@ -121,4 +121,10 @@ class GeckoViewFetchTestCases : mozilla.components.tooling.fetch.tests.FetchTest
     override fun get200WithContentTypeCharset() {
         super.get200WithContentTypeCharset()
     }
+
+    @Test
+    @UiThreadTest
+    override fun get200WithCacheControl() {
+        super.get200WithCacheControl()
+    }
 }

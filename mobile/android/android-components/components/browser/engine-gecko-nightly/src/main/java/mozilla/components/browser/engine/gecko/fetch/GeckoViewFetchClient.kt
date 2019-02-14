@@ -15,6 +15,8 @@ import mozilla.components.concept.fetch.Response
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoWebExecutor
 import org.mozilla.geckoview.WebRequest
+import org.mozilla.geckoview.WebRequest.CACHE_MODE_DEFAULT
+import org.mozilla.geckoview.WebRequest.CACHE_MODE_RELOAD
 import org.mozilla.geckoview.WebResponse
 import java.io.IOException
 import java.io.InputStream
@@ -42,6 +44,7 @@ class GeckoViewFetchClient(
                 .method(method.name)
                 .addHeadersFrom(request, defaultHeaders)
                 .addBodyFrom(request)
+                .cacheMode(if (request.useCaches) CACHE_MODE_DEFAULT else CACHE_MODE_RELOAD)
                 .build()
         }
 

@@ -63,7 +63,7 @@ private fun HttpURLConnection.addBodyFrom(request: Request) {
     }
 }
 
-private fun HttpURLConnection.setupWith(request: Request) {
+internal fun HttpURLConnection.setupWith(request: Request) {
     requestMethod = request.method.name
     instanceFollowRedirects = request.redirect == Request.Redirect.FOLLOW
 
@@ -74,6 +74,8 @@ private fun HttpURLConnection.setupWith(request: Request) {
     request.readTimeout?.let { (timeout, unit) ->
         readTimeout = unit.toMillis(timeout).toInt()
     }
+
+    useCaches = request.useCaches
 
     // HttpURLConnection can't be configured to omit cookies. As
     // a workaround, we delete all cookies we have stored for

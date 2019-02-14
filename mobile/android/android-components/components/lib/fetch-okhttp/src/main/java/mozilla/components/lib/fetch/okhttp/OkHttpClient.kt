@@ -4,12 +4,16 @@
 
 package mozilla.components.lib.fetch.okhttp
 
+import android.content.Context
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.Headers
 import mozilla.components.concept.fetch.MutableHeaders
 import mozilla.components.concept.fetch.Request
 import mozilla.components.concept.fetch.Response
+import mozilla.components.lib.fetch.okhttp.OkHttpClient.Companion.CACHE_MAX_SIZE
 import mozilla.components.lib.fetch.okhttp.OkHttpClient.Companion.getOrCreateCookieManager
+import okhttp3.Cache
+import okhttp3.CacheControl
 import okhttp3.JavaNetCookieJar
 import okhttp3.OkHttpClient
 import okhttp3.RequestBody
@@ -22,13 +26,18 @@ typealias RequestBuilder = okhttp3.Request.Builder
  * [Client] implementation using OkHttp.
  */
 class OkHttpClient(
-    private val client: OkHttpClient = OkHttpClient()
+    private val client: OkHttpClient = OkHttpClient(),
+    private val context: Context? = null
 ) : Client() {
     override fun fetch(request: Request): Response {
-        val requestClient = client.rebuildFor(request)
+        val requestClient = client.rebuildFor(request, context)
 
         val requestBuilder = createRequestBuilderWithBody(request)
         requestBuilder.addHeadersFrom(request, defaultHeaders = defaultHeaders)
+
+        if (!request.useCaches) {
+            requestBuilder.cacheControl(CacheControl.FORCE_NETWORK)
+        }
 
         val actualResponse = requestClient.newCall(
             requestBuilder.build()
@@ -38,6 +47,8 @@ class OkHttpClient(
     }
 
     companion object {
+        internal const val CACHE_MAX_SIZE: Long = 10 * 1024 * 1024
+
         fun getOrCreateCookieManager(): CookieManager {
             if (CookieHandler.getDefault() == null) {
                 CookieHandler.setDefault(CookieManager())
@@ -47,7 +58,7 @@ class OkHttpClient(
     }
 }
 
-private fun okhttp3.OkHttpClient.rebuildFor(request: Request): okhttp3.OkHttpClient {
+private fun okhttp3.OkHttpClient.rebuildFor(request: Request, context: Context?): okhttp3.OkHttpClient {
     @Suppress("ComplexCondition")
     if (request.connectTimeout != null ||
         request.readTimeout != null ||
@@ -65,6 +76,10 @@ private fun okhttp3.OkHttpClient.rebuildFor(request: Request): okhttp3.OkHttpCli
 
         if (request.cookiePolicy == Request.CookiePolicy.INCLUDE) {
             clientBuilder.cookieJar(JavaNetCookieJar(getOrCreateCookieManager()))
+        }
+
+        context?.let {
+            clientBuilder.cache(Cache(context.cacheDir, CACHE_MAX_SIZE))
         }
 
         return clientBuilder.build()
