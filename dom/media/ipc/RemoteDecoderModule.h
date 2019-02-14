@@ -24,9 +24,7 @@ class RemoteDecoderModule : public PlatformDecoderModule {
       const CreateDecoderParams& aParams) override;
 
   already_AddRefed<MediaDataDecoder> CreateAudioDecoder(
-      const CreateDecoderParams& aParams) override {
-    return nullptr;
-  }
+      const CreateDecoderParams& aParams) override;
 };
 
 }  // namespace mozilla

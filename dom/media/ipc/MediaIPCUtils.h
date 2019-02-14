@@ -44,6 +44,19 @@ struct ParamTraits<mozilla::VideoInfo> {
 };
 
 template <>
+struct ParamTraits<mozilla::TrackInfo::TrackType>
+    : public ContiguousEnumSerializerInclusive<
+          mozilla::TrackInfo::TrackType,
+          mozilla::TrackInfo::TrackType::kUndefinedTrack,
+          mozilla::TrackInfo::TrackType::kTextTrack> {};
+
+template <>
+struct ParamTraits<mozilla::MediaByteBuffer>
+    : public ParamTraits<nsTArray<uint8_t>> {
+  typedef mozilla::MediaByteBuffer paramType;
+};
+
+template <>
 struct ParamTraits<mozilla::AudioInfo> {
   typedef mozilla::AudioInfo paramType;
 
@@ -58,6 +71,7 @@ struct ParamTraits<mozilla::AudioInfo> {
     WriteParam(aMsg, aParam.mBitDepth);
     WriteParam(aMsg, aParam.mProfile);
     WriteParam(aMsg, aParam.mExtendedProfile);
+    WriteParam(aMsg, *aParam.mCodecSpecificConfig);
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter,
@@ -68,7 +82,8 @@ struct ParamTraits<mozilla::AudioInfo> {
         ReadParam(aMsg, aIter, &aResult->mChannelMap) &&
         ReadParam(aMsg, aIter, &aResult->mBitDepth) &&
         ReadParam(aMsg, aIter, &aResult->mProfile) &&
-        ReadParam(aMsg, aIter, &aResult->mExtendedProfile)) {
+        ReadParam(aMsg, aIter, &aResult->mExtendedProfile) &&
+        ReadParam(aMsg, aIter, aResult->mCodecSpecificConfig.get())) {
       return true;
     }
     return false;

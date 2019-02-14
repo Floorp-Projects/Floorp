@@ -13,9 +13,11 @@
 #ifdef MOZ_AV1
 #  include "AOMDecoder.h"
 #endif
+#include "RemoteAudioDecoder.h"
 #include "RemoteDecoderManagerChild.h"
 #include "RemoteMediaDataDecoder.h"
-#include "RemoteVideoDecoderChild.h"
+#include "RemoteVideoDecoder.h"
+#include "VorbisDecoder.h"
 
 namespace mozilla {
 
@@ -33,10 +35,54 @@ bool RemoteDecoderModule::SupportsMimeType(
     supports |= AOMDecoder::IsAV1(aMimeType);
   }
 #endif
+  if (StaticPrefs::MediaRddVorbisEnabled()) {
+    supports |= VorbisDataDecoder::IsVorbis(aMimeType);
+  }
+
   MOZ_LOG(
       sPDMLog, LogLevel::Debug,
       ("Sandbox decoder %s requested type", supports ? "supports" : "rejects"));
   return supports;
+}
+
+already_AddRefed<MediaDataDecoder>
+RemoteDecoderModule::CreateAudioDecoder(const CreateDecoderParams& aParams) {
+  if (XRE_IsContentProcess()) {
+    ContentChild* contentChild = ContentChild::GetSingleton();
+    contentChild->LaunchRDDProcess();
+  }
+
+  if (!RemoteDecoderManagerChild::GetManagerThread()) {
+    return nullptr;
+  }
+
+  RemoteAudioDecoderChild* child = new RemoteAudioDecoderChild();
+  RefPtr<RemoteMediaDataDecoder> object = new RemoteMediaDataDecoder(
+      child, RemoteDecoderManagerChild::GetManagerThread(),
+      RemoteDecoderManagerChild::GetManagerAbstractThread());
+
+  // (per Matt Woodrow) We can't use NS_DISPATCH_SYNC here since that
+  // can spin the event loop while it waits.
+  SynchronousTask task("InitIPDL");
+  MediaResult result(NS_OK);
+  RemoteDecoderManagerChild::GetManagerThread()->Dispatch(
+      NS_NewRunnableFunction("dom::RemoteDecoderModule::CreateAudioDecoder",
+                             [&, child]() {
+                               AutoCompleteTask complete(&task);
+                               result = child->InitIPDL(aParams.AudioConfig(),
+                                                        aParams.mOptions);
+                             }),
+      NS_DISPATCH_NORMAL);
+  task.Wait();
+
+  if (NS_FAILED(result)) {
+    if (aParams.mError) {
+      *aParams.mError = result;
+    }
+    return nullptr;
+  }
+
+  return object.forget();
 }
 
 already_AddRefed<MediaDataDecoder> RemoteDecoderModule::CreateVideoDecoder(

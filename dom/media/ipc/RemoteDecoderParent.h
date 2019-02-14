@@ -3,33 +3,30 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#ifndef include_dom_media_ipc_RemoteVideoDecoderParent_h
-#define include_dom_media_ipc_RemoteVideoDecoderParent_h
-#include "mozilla/PRemoteVideoDecoderParent.h"
+#ifndef include_dom_media_ipc_RemoteDecoderParent_h
+#define include_dom_media_ipc_RemoteDecoderParent_h
+#include "mozilla/PRemoteDecoderParent.h"
 
 namespace mozilla {
 
 class RemoteDecoderManagerParent;
 using mozilla::ipc::IPCResult;
 
-class RemoteVideoDecoderParent final : public PRemoteVideoDecoderParent {
-  friend class PRemoteVideoDecoderParent;
+class RemoteDecoderParent : public PRemoteDecoderParent {
+  friend class PRemoteDecoderParent;
 
  public:
   // We refcount this class since the task queue can have runnables
   // that reference us.
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RemoteVideoDecoderParent)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RemoteDecoderParent)
 
-  RemoteVideoDecoderParent(RemoteDecoderManagerParent* aParent,
-                           const VideoInfo& aVideoInfo, float aFramerate,
-                           const CreateDecoderParams::OptionSet& aOptions,
-                           TaskQueue* aManagerTaskQueue,
-                           TaskQueue* aDecodeTaskQueue, bool* aSuccess,
-                           nsCString* aErrorDescription);
+  RemoteDecoderParent(RemoteDecoderManagerParent* aParent,
+                      TaskQueue* aManagerTaskQueue,
+                      TaskQueue* aDecodeTaskQueue);
 
   void Destroy();
 
-  // PRemoteVideoDecoderParent
+  // PRemoteDecoderParent
   IPCResult RecvInit();
   IPCResult RecvInput(const MediaRawDataIPDL& aData);
   IPCResult RecvFlush();
@@ -39,24 +36,25 @@ class RemoteVideoDecoderParent final : public PRemoteVideoDecoderParent {
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
- private:
+ protected:
+  virtual ~RemoteDecoderParent();
+
   bool OnManagerThread();
   void Error(const MediaResult& aError);
 
-  ~RemoteVideoDecoderParent();
-  void ProcessDecodedData(const MediaDataDecoder::DecodedData& aData);
+  virtual void ProcessDecodedData(
+      const MediaDataDecoder::DecodedData& aData) = 0;
 
   RefPtr<RemoteDecoderManagerParent> mParent;
-  RefPtr<RemoteVideoDecoderParent> mIPDLSelfRef;
+  RefPtr<RemoteDecoderParent> mIPDLSelfRef;
   RefPtr<TaskQueue> mManagerTaskQueue;
   RefPtr<TaskQueue> mDecodeTaskQueue;
   RefPtr<MediaDataDecoder> mDecoder;
 
   // Can only be accessed from the manager thread
-  bool mDestroyed;
-  VideoInfo mVideoInfo;
+  bool mDestroyed = false;
 };
 
 }  // namespace mozilla
 
-#endif  // include_dom_media_ipc_RemoteVideoDecoderParent_h
+#endif  // include_dom_media_ipc_RemoteDecoderParent_h
