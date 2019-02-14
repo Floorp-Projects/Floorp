@@ -163,3 +163,23 @@ class Mocks {
 }
 /* exported Mocks */
 
+const silenceWorkerUpdates = function() {
+  const { removeMockedModule, setMockedModule } =
+    require("devtools/client/shared/browser-loader-mocks");
+
+  const mock = {
+    WorkersListener: () => {
+      return {
+        addListener: () => {},
+        removeListener: () => {},
+      };
+    },
+  };
+  setMockedModule(mock,
+    "devtools/client/aboutdebugging-new/src/modules/workers-listener");
+
+  registerCleanupFunction(() => {
+    removeMockedModule("devtools/client/aboutdebugging-new/src/modules/workers-listener");
+  });
+};
+/* exported silenceWorkerUpdates */
