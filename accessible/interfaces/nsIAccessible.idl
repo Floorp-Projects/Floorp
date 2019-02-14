@@ -298,6 +298,16 @@ interface nsIAccessible : nsISupports
   */
   void scrollToPoint(in unsigned long coordinateType, in long x, in long y);
 
+  /**
+   * Dispatches an ANNOUNCEMENT event with this accessible as target.
+   *
+   * @param announcement [in] - string to use in announcement.
+   * @param priority [in] - priority for announcement, could be
+   *                      nsIAccessibleAnnouncementEvent.POLITE or
+   *                      nsIAccessibleAnnouncementEvent.ASSERTIVE.
+   */
+  void announce(in AString announcement, in unsigned short priority);
+
   %{C++
   virtual mozilla::a11y::Accessible* ToInternalAccessible() const = 0;
   %}
