@@ -171,7 +171,7 @@ utility_types = [
     {'tag': 'TD_BOOL'},
     {'tag': 'TD_CHAR'},
     {'tag': 'TD_WCHAR'},
-    {'tag': 'TD_PNSIID'},
+    {'tag': 'TD_NSIDPTR'},
     {'tag': 'TD_PSTRING'},
     {'tag': 'TD_PWSTRING'},
     {'tag': 'TD_INTERFACE_IS_TYPE', 'iid_is': 0},

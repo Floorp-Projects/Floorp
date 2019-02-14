@@ -607,9 +607,8 @@ nsSimpleURI::GetAsciiHost(nsACString &result) {
 //----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsSimpleURI::GetInterfaces(uint32_t *count, nsIID ***array) {
-  *count = 0;
-  *array = nullptr;
+nsSimpleURI::GetInterfaces(nsTArray<nsIID> &array) {
+  array.Clear();
   return NS_OK;
 }
 

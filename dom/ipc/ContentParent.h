@@ -618,27 +618,25 @@ class ContentParent final : public PContentParent,
   static bool IsInputEventQueueSupported();
 
   mozilla::ipc::IPCResult RecvAttachBrowsingContext(
-      const BrowsingContextId& aParentContextId,
-      const BrowsingContextId& aOpenerId, const BrowsingContextId& aContextId,
-      const nsString& aName);
+      BrowsingContext* aParentContext, BrowsingContext* aOpener,
+      BrowsingContextId aContextId, const nsString& aName);
 
-  mozilla::ipc::IPCResult RecvDetachBrowsingContext(
-      const BrowsingContextId& aContextId, const bool& aMoveToBFCache);
+  mozilla::ipc::IPCResult RecvDetachBrowsingContext(BrowsingContext* aContext,
+                                                    bool aMoveToBFCache);
 
   mozilla::ipc::IPCResult RecvSetOpenerBrowsingContext(
-      const BrowsingContextId& aContextId,
-      const BrowsingContextId& aOpenerContextId);
+      BrowsingContext* aContext, BrowsingContext* aOpener);
 
-  mozilla::ipc::IPCResult RecvWindowClose(const BrowsingContextId& aContextId,
-                                          const bool& aTrustedCaller);
-  mozilla::ipc::IPCResult RecvWindowFocus(const BrowsingContextId& aContextId);
-  mozilla::ipc::IPCResult RecvWindowBlur(const BrowsingContextId& aContextId);
+  mozilla::ipc::IPCResult RecvWindowClose(BrowsingContext* aContext,
+                                          bool aTrustedCaller);
+  mozilla::ipc::IPCResult RecvWindowFocus(BrowsingContext* aContext);
+  mozilla::ipc::IPCResult RecvWindowBlur(BrowsingContext* aContext);
   mozilla::ipc::IPCResult RecvWindowPostMessage(
-      const BrowsingContextId& aContextId, const ClonedMessageData& aMessage,
+      BrowsingContext* aContext, const ClonedMessageData& aMessage,
       const PostMessageData& aData);
 
   mozilla::ipc::IPCResult RecvSetUserGestureActivation(
-      const BrowsingContextId& aContextId, const bool& aNewValue);
+      BrowsingContext* aContext, bool aNewValue);
 
  protected:
   void OnChannelConnected(int32_t pid) override;

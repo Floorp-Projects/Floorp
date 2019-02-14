@@ -64,8 +64,7 @@ static void Sync(BrowsingContext* aBrowsingContext) {
   MOZ_DIAGNOSTIC_ASSERT(cc);
   RefPtr<BrowsingContext> parent = aBrowsingContext->GetParent();
   BrowsingContext* opener = aBrowsingContext->GetOpener();
-  cc->SendAttachBrowsingContext(BrowsingContextId(parent ? parent->Id() : 0),
-                                BrowsingContextId(opener ? opener->Id() : 0),
+  cc->SendAttachBrowsingContext(parent, opener,
                                 BrowsingContextId(aBrowsingContext->Id()),
                                 aBrowsingContext->Name());
 }
@@ -101,6 +100,10 @@ BrowsingContext* BrowsingContext::TopLevelBrowsingContext() {
   }
 
   return nullptr;
+}
+
+CanonicalBrowsingContext* BrowsingContext::Canonical() {
+  return CanonicalBrowsingContext::Cast(this);
 }
 
 /* static */ already_AddRefed<BrowsingContext> BrowsingContext::Create(
@@ -238,8 +241,7 @@ void BrowsingContext::Detach() {
 
   auto cc = ContentChild::GetSingleton();
   MOZ_DIAGNOSTIC_ASSERT(cc);
-  cc->SendDetachBrowsingContext(BrowsingContextId(Id()),
-                                false /* aMoveToBFCache */);
+  cc->SendDetachBrowsingContext(this, false /* aMoveToBFCache */);
 }
 
 void BrowsingContext::CacheChildren() {
@@ -264,8 +266,7 @@ void BrowsingContext::CacheChildren() {
 
   auto cc = ContentChild::GetSingleton();
   MOZ_DIAGNOSTIC_ASSERT(cc);
-  cc->SendDetachBrowsingContext(BrowsingContextId(Id()),
-                                true /* aMoveToBFCache */);
+  cc->SendDetachBrowsingContext(this, true /* aMoveToBFCache */);
 }
 
 bool BrowsingContext::IsCached() { return sCachedBrowsingContexts->has(Id()); }
@@ -288,8 +289,7 @@ void BrowsingContext::SetOpener(BrowsingContext* aOpener) {
 
   auto cc = ContentChild::GetSingleton();
   MOZ_DIAGNOSTIC_ASSERT(cc);
-  cc->SendSetOpenerBrowsingContext(
-      BrowsingContextId(Id()), BrowsingContextId(aOpener ? aOpener->Id() : 0));
+  cc->SendSetOpenerBrowsingContext(this, aOpener);
 }
 
 BrowsingContext::~BrowsingContext() {
@@ -326,7 +326,7 @@ void BrowsingContext::NotifyUserGestureActivation() {
   }
   auto cc = ContentChild::GetSingleton();
   MOZ_ASSERT(cc);
-  cc->SendSetUserGestureActivation(BrowsingContextId(topLevelBC->Id()), true);
+  cc->SendSetUserGestureActivation(topLevelBC, true);
 }
 
 void BrowsingContext::NotifyResetUserGestureActivation() {
@@ -343,7 +343,7 @@ void BrowsingContext::NotifyResetUserGestureActivation() {
   }
   auto cc = ContentChild::GetSingleton();
   MOZ_ASSERT(cc);
-  cc->SendSetUserGestureActivation(BrowsingContextId(topLevelBC->Id()), false);
+  cc->SendSetUserGestureActivation(topLevelBC, false);
 }
 
 void BrowsingContext::SetUserGestureActivation() {
@@ -397,18 +397,17 @@ void BrowsingContext::Close(CallerType aCallerType, ErrorResult& aError) {
   //       document for this browsing context is loaded).
   //       See https://bugzilla.mozilla.org/show_bug.cgi?id=1516343.
   ContentChild* cc = ContentChild::GetSingleton();
-  cc->SendWindowClose(BrowsingContextId(mBrowsingContextId),
-                      aCallerType == CallerType::System);
+  cc->SendWindowClose(this, aCallerType == CallerType::System);
 }
 
 void BrowsingContext::Focus(ErrorResult& aError) {
   ContentChild* cc = ContentChild::GetSingleton();
-  cc->SendWindowFocus(BrowsingContextId(mBrowsingContextId));
+  cc->SendWindowFocus(this);
 }
 
 void BrowsingContext::Blur(ErrorResult& aError) {
   ContentChild* cc = ContentChild::GetSingleton();
-  cc->SendWindowBlur(BrowsingContextId(mBrowsingContextId));
+  cc->SendWindowBlur(this);
 }
 
 Nullable<WindowProxyHolder> BrowsingContext::GetTop(ErrorResult& aError) {
@@ -460,7 +459,7 @@ void BrowsingContext::PostMessageMoz(JSContext* aCx,
           getter_AddRefs(data.callerDocumentURI()), aError)) {
     return;
   }
-  data.source() = BrowsingContextId(sourceBc->Id());
+  data.source() = sourceBc;
   data.isFromPrivateWindow() =
       callerInnerWindow &&
       nsScriptErrorBase::ComputeIsFromPrivateWindow(callerInnerWindow);
@@ -485,8 +484,7 @@ void BrowsingContext::PostMessageMoz(JSContext* aCx,
     return;
   }
 
-  cc->SendWindowPostMessage(BrowsingContextId(mBrowsingContextId), messageData,
-                            data);
+  cc->SendWindowPostMessage(this, messageData, data);
 }
 
 void BrowsingContext::PostMessageMoz(JSContext* aCx,
@@ -515,4 +513,46 @@ already_AddRefed<BrowsingContext> BrowsingContext::FindChildWithName(
 }
 
 }  // namespace dom
+
+namespace ipc {
+
+void IPDLParamTraits<dom::BrowsingContext>::Write(
+    IPC::Message* aMsg, IProtocol* aActor, dom::BrowsingContext* aParam) {
+  uint64_t id = aParam ? aParam->Id() : 0;
+  WriteIPDLParam(aMsg, aActor, id);
+
+  // If his is an in-process send. We want to make sure that our BrowsingContext
+  // object lives long enough to make it to the other side, so we take an extra
+  // reference. This reference is freed in ::Read().
+  if (!aActor->GetIPCChannel()->IsCrossProcess()) {
+    NS_IF_ADDREF(aParam);
+  }
+}
+
+bool IPDLParamTraits<dom::BrowsingContext>::Read(
+    const IPC::Message* aMsg, PickleIterator* aIter, IProtocol* aActor,
+    RefPtr<dom::BrowsingContext>* aResult) {
+  uint64_t id = 0;
+  if (!ReadIPDLParam(aMsg, aIter, aActor, &id)) {
+    return false;
+  }
+
+  if (id == 0) {
+    aResult = nullptr;
+    return true;
+  }
+
+  *aResult = dom::BrowsingContext::Get(id);
+  MOZ_ASSERT(aResult, "Deserialized absent BrowsingContext!");
+
+  // If this is an in-process actor, free the reference taken in ::Write().
+  if (!aActor->GetIPCChannel()->IsCrossProcess()) {
+    dom::BrowsingContext* bc = *aResult;
+    NS_IF_RELEASE(bc);
+  }
+
+  return aResult != nullptr;
+}
+
+}  // namespace ipc
 }  // namespace mozilla

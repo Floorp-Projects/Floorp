@@ -33,7 +33,7 @@ struct nsIDataType
         VTYPE_CHAR              = TD_CHAR             ,
         VTYPE_WCHAR             = TD_WCHAR            ,
         VTYPE_VOID              = TD_VOID             ,
-        VTYPE_ID                = TD_PNSIID           ,
+        VTYPE_ID                = TD_NSIDPTR          ,
         VTYPE_CHAR_STR          = TD_PSTRING          ,
         VTYPE_WCHAR_STR         = TD_PWSTRING         ,
         VTYPE_INTERFACE         = TD_INTERFACE_TYPE   ,

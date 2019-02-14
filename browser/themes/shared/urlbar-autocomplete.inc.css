@@ -126,19 +126,23 @@
   display: none;
 }
 
+.urlbarView-tags,
 .urlbarView-secondary {
-  color: var(--urlbar-popup-action-color);
   font-size: .85em;
-}
-
-.urlbarView-url {
-  color: var(--urlbar-popup-url-color);
 }
 
 .urlbarView-title > strong,
 .urlbarView-url > strong,
 .urlbarView-tag > strong {
   font-weight: 600;
+}
+
+.urlbarView-secondary {
+  color: var(--urlbar-popup-action-color);
+}
+
+.urlbarView-url {
+  color: var(--urlbar-popup-url-color);
 }
 
 .urlbarView-row[selected] > .urlbarView-row-inner > .urlbarView-secondary::before,

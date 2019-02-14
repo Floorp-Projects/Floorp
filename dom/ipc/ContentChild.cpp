@@ -3590,67 +3590,54 @@ PContentChild::Result ContentChild::OnMessageReceived(const Message& aMsg,
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvWindowClose(
-    const BrowsingContextId& aContextId, const bool& aTrustedCaller) {
-  RefPtr<BrowsingContext> bc = BrowsingContext::Get(aContextId);
-  if (!bc) {
+    BrowsingContext* aContext, bool aTrustedCaller) {
+  if (!aContext) {
     MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Debug,
-            ("ChildIPC: Trying to send a message to dead or detached context "
-             "0x%08" PRIx64,
-             (uint64_t)aContextId));
+            ("ChildIPC: Trying to send a message to dead or detached context"));
     return IPC_OK();
   }
 
-  nsCOMPtr<nsPIDOMWindowOuter> window = bc->GetDOMWindow();
+  nsCOMPtr<nsPIDOMWindowOuter> window = aContext->GetDOMWindow();
   nsGlobalWindowOuter::Cast(window)->CloseOuter(aTrustedCaller);
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult ContentChild::RecvWindowFocus(
-    const BrowsingContextId& aContextId) {
-  RefPtr<BrowsingContext> bc = BrowsingContext::Get(aContextId);
-  if (!bc) {
+mozilla::ipc::IPCResult ContentChild::RecvWindowFocus(BrowsingContext* aContext) {
+  if (!aContext) {
     MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Debug,
-            ("ChildIPC: Trying to send a message to dead or detached context "
-             "0x%08" PRIx64,
-             (uint64_t)aContextId));
+            ("ChildIPC: Trying to send a message to dead or detached context"));
     return IPC_OK();
   }
 
-  nsCOMPtr<nsPIDOMWindowOuter> window = bc->GetDOMWindow();
+  nsCOMPtr<nsPIDOMWindowOuter> window = aContext->GetDOMWindow();
   nsGlobalWindowOuter::Cast(window)->FocusOuter();
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvWindowBlur(
-    const BrowsingContextId& aContextId) {
-  RefPtr<BrowsingContext> bc = BrowsingContext::Get(aContextId);
-  if (!bc) {
+    BrowsingContext* aContext) {
+  if (!aContext) {
     MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Debug,
-            ("ChildIPC: Trying to send a message to dead or detached context "
-             "0x%08" PRIx64,
-             (uint64_t)aContextId));
+            ("ChildIPC: Trying to send a message to dead or detached context"));
     return IPC_OK();
   }
 
-  nsCOMPtr<nsPIDOMWindowOuter> window = bc->GetDOMWindow();
+  nsCOMPtr<nsPIDOMWindowOuter> window = aContext->GetDOMWindow();
   nsGlobalWindowOuter::Cast(window)->BlurOuter();
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvWindowPostMessage(
-    const BrowsingContextId& aContextId, const ClonedMessageData& aMessage,
+    BrowsingContext* aContext, const ClonedMessageData& aMessage,
     const PostMessageData& aData) {
-  RefPtr<BrowsingContext> bc = BrowsingContext::Get(aContextId);
-  if (!bc) {
+  if (!aContext) {
     MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Debug,
-            ("ChildIPC: Trying to send a message to dead or detached context "
-             "0x%08" PRIx64,
-             (uint64_t)aContextId));
+            ("ChildIPC: Trying to send a message to dead or detached context"));
     return IPC_OK();
   }
 
   RefPtr<nsGlobalWindowOuter> window =
-      nsGlobalWindowOuter::Cast(bc->GetDOMWindow());
+      nsGlobalWindowOuter::Cast(aContext->GetDOMWindow());
   nsCOMPtr<nsIPrincipal> providedPrincipal;
   if (!window->GetPrincipalForPostMessage(
           aData.targetOrigin(), aData.targetOriginURI(),
@@ -3659,11 +3646,10 @@ mozilla::ipc::IPCResult ContentChild::RecvWindowPostMessage(
     return IPC_OK();
   }
 
-  RefPtr<BrowsingContext> sourceBc = BrowsingContext::Get(aData.source());
+  RefPtr<BrowsingContext> sourceBc = aData.source();
   if (!sourceBc) {
     MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Debug,
-            ("ChildIPC: Trying to use a dead or detached context 0x%08" PRIx64,
-             (uint64_t)aData.source()));
+            ("ChildIPC: Trying to use a dead or detached context"));
     return IPC_OK();
   }
 

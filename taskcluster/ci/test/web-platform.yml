@@ -35,6 +35,7 @@ web-platform-tests:
             macosx64.*/opt: 8
             macosx64/debug: 16
             windows10.*/debug: 18
+            windows10-aarch64/opt: 12
             macosx64-ccov/debug: 24
             default: 12
     max-run-time:
@@ -49,6 +50,7 @@ web-platform-tests:
     run-on-projects:
         by-test-platform:
             android.*: ['mozilla-central', 'try']
+            windows10-aarch64/opt: ['try', 'mozilla-central']
             .*-qr/.*: ['release', 'try']  # skip on integration branches due to high load
             default: built-projects
     tier:
@@ -104,6 +106,7 @@ web-platform-tests-reftests:
     run-on-projects:
         by-test-platform:
             android.*: ['mozilla-central', 'try']
+            windows10-aarch64/opt: ['try', 'mozilla-central']
             linux64-qr/.*: ['release', 'try']  # skip on integration branches due to high load
             default: built-projects
     tier:
@@ -151,6 +154,7 @@ web-platform-tests-wdspec:
             - --test-type=wdspec
     run-on-projects:
         by-test-platform:
+            windows10-aarch64/opt: ['try', 'mozilla-central']
             android.*: ['mozilla-central', 'try']
             .*-qr/.*: ['release', 'try']  # skip on integration branches due to high load
             default: built-projects
