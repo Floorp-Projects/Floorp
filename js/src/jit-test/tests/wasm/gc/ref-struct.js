@@ -416,7 +416,7 @@ assertErrorMessage(() => wasmEvalText(
 
 checkInvalid(funcBody({locals:[],
                        body:[
-                           RefNull,
+                           RefNullCode,
                            MiscPrefix, StructNarrow, I32Code, AnyrefCode,
                            DropCode
                        ]}),
@@ -424,7 +424,7 @@ checkInvalid(funcBody({locals:[],
 
 checkInvalid(funcBody({locals:[],
                        body:[
-                           RefNull,
+                           RefNullCode,
                            MiscPrefix, StructNarrow, AnyrefCode, I32Code,
                            DropCode
                        ]}),

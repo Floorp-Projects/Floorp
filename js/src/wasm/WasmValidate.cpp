@@ -534,6 +534,16 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
         uint32_t unused;
         CHECK(iter.readSetGlobal(&unused, &nothing));
       }
+#ifdef ENABLE_WASM_GENERALIZED_TABLES
+      case uint16_t(Op::TableGet): {
+        uint32_t unusedTableIndex;
+        CHECK(iter.readTableGet(&unusedTableIndex, &nothing));
+      }
+      case uint16_t(Op::TableSet): {
+        uint32_t unusedTableIndex;
+        CHECK(iter.readTableSet(&unusedTableIndex, &nothing, &nothing));
+      }
+#endif
       case uint16_t(Op::Select): {
         StackType unused;
         CHECK(iter.readSelect(&unused, &nothing, &nothing, &nothing));
@@ -860,17 +870,9 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
           }
 #endif
 #ifdef ENABLE_WASM_GENERALIZED_TABLES
-          case uint16_t(MiscOp::TableGet): {
-            uint32_t unusedTableIndex;
-            CHECK(iter.readTableGet(&unusedTableIndex, &nothing));
-          }
           case uint16_t(MiscOp::TableGrow): {
             uint32_t unusedTableIndex;
             CHECK(iter.readTableGrow(&unusedTableIndex, &nothing, &nothing));
-          }
-          case uint16_t(MiscOp::TableSet): {
-            uint32_t unusedTableIndex;
-            CHECK(iter.readTableSet(&unusedTableIndex, &nothing, &nothing));
           }
           case uint16_t(MiscOp::TableSize): {
             uint32_t unusedTableIndex;
@@ -2312,7 +2314,7 @@ static bool DecodeElemSection(Decoder& d, ModuleEnvironment* env) {
     for (uint32_t i = 0; i < numElems; i++) {
       if (initializerKind == InitializerKind::Passive) {
         OpBytes op;
-        if (!d.readOp(&op) || op.b0 != PlaceholderRefFunc) {
+        if (!d.readOp(&op) || op.b0 != uint8_t(Op::RefFunc)) {
           return d.fail("failed to read ref.func operation");
         }
       }

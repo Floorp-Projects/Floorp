@@ -3165,6 +3165,12 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
         CHECK(EmitGetGlobal(f));
       case uint16_t(Op::SetGlobal):
         CHECK(EmitSetGlobal(f));
+#ifdef ENABLE_WASM_GENERALIZED_TABLES
+      case uint16_t(Op::TableGet):
+        CHECK(EmitTableGet(f));
+      case uint16_t(Op::TableSet):
+        CHECK(EmitTableSet(f));
+#endif
 
       // Memory-related operators
       case uint16_t(Op::I32Load):
@@ -3581,12 +3587,8 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
             CHECK(EmitMemOrTableInit(f, /*isMem=*/false));
 #endif
 #ifdef ENABLE_WASM_GENERALIZED_TABLES
-          case uint16_t(MiscOp::TableGet):
-            CHECK(EmitTableGet(f));
           case uint16_t(MiscOp::TableGrow):
             CHECK(EmitTableGrow(f));
-          case uint16_t(MiscOp::TableSet):
-            CHECK(EmitTableSet(f));
           case uint16_t(MiscOp::TableSize):
             CHECK(EmitTableSize(f));
 #endif
