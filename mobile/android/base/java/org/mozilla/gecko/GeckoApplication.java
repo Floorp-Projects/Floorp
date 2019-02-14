@@ -231,7 +231,6 @@ public class GeckoApplication extends Application
         final SharedPreferences prefs = GeckoSharedPrefs.forApp(this);
         prefs.registerOnSharedPreferenceChangeListener(this);
         onSharedPreferenceChanged(prefs, GeckoPreferences.PREFS_SYSTEM_FONT_SIZE);
-        GeckoFontScaleListener.getInstance().attachToContext(this);
     }
 
     private static GeckoRuntime sGeckoRuntime;
