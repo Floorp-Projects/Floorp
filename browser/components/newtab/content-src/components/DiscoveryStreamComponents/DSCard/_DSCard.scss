@@ -1,7 +1,7 @@
 // Type sizes
 $header-font-size: 17;
 $header-line-height: 24;
-$excerpt-font-size: 13;
+$excerpt-font-size: 14;
 $excerpt-line-height: 20;
 
 .ds-card {
@@ -50,6 +50,11 @@ $excerpt-line-height: 20;
       // show only 4 lines of copy
       @include limit-visibile-lines(4, $excerpt-line-height, $excerpt-font-size);
     }
+
+    .context,
+    .source {
+      font-size: 13px;
+    }
   }
 
   header {
@@ -64,9 +69,5 @@ $excerpt-line-height: 20;
     line-height: $excerpt-line-height * 1px;
     color: $grey-50;
     margin: 8px 0 0;
-  }
-
-  .context {
-    color: $teal-70;
   }
 }
