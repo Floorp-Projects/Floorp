@@ -814,7 +814,6 @@ void MacroAssembler::branchTestSymbol(Condition cond, const ValueOperand& value,
   branchTestSymbol(cond, value.typeReg(), label);
 }
 
-#ifdef ENABLE_BIGINT
 void MacroAssembler::branchTestBigInt(Condition cond, const ValueOperand& value,
                                       Label* label) {
   branchTestBigInt(cond, value.typeReg(), label);
@@ -827,7 +826,6 @@ void MacroAssembler::branchTestBigIntTruthy(bool b, const ValueOperand& value,
   ma_lw(scratch2, Address(bi, BigInt::offsetOfLengthSignAndReservedBits()));
   ma_b(scratch2, Imm32(0), label, b ? NotEqual : Equal);
 }
-#endif
 
 void MacroAssembler::branchTestNull(Condition cond, const ValueOperand& value,
                                     Label* label) {

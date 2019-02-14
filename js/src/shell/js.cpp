@@ -500,9 +500,7 @@ static bool enableWasmVerbose = false;
 static bool enableTestWasmAwaitTier2 = false;
 static bool enableAsyncStacks = false;
 static bool enableStreams = false;
-#ifdef ENABLE_BIGINT
 static bool enableBigInt = false;
-#endif
 #ifdef JS_GC_ZEAL
 static uint32_t gZealBits = 0;
 static uint32_t gZealFrequency = 0;
@@ -3773,9 +3771,7 @@ static const JSClass sandbox_class = {"sandbox", JSCLASS_GLOBAL_FLAGS,
 static void SetStandardRealmOptions(JS::RealmOptions& options) {
   options.creationOptions()
       .setSharedMemoryAndAtomicsEnabled(enableSharedMemory)
-#ifdef ENABLE_BIGINT
       .setBigIntEnabled(enableBigInt)
-#endif
       .setStreamsEnabled(enableStreams);
 }
 
@@ -9895,9 +9891,7 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   enableTestWasmAwaitTier2 = op.getBoolOption("test-wasm-await-tier2");
   enableAsyncStacks = !op.getBoolOption("no-async-stacks");
   enableStreams = !op.getBoolOption("no-streams");
-#ifdef ENABLE_BIGINT
   enableBigInt = !op.getBoolOption("no-bigint");
-#endif
 
   JS::ContextOptionsRef(cx)
       .setBaseline(enableBaseline)
@@ -10603,19 +10597,17 @@ int main(int argc, char** argv, char** envp) {
                         "Disable creating unboxed plain objects") ||
       !op.addBoolOption('\0', "enable-streams",
                         "Enable WHATWG Streams (default)") ||
-      !op.addBoolOption('\0', "no-streams", "Disable WHATWG Streams")
-#ifdef ENABLE_BIGINT
-      || !op.addBoolOption('\0', "no-bigint",
-                           "Disable experimental BigInt support")
-#endif
-      || !op.addStringOption('\0', "shared-memory", "on/off",
-                             "SharedArrayBuffer and Atomics "
+      !op.addBoolOption('\0', "no-streams", "Disable WHATWG Streams") ||
+      !op.addBoolOption('\0', "no-bigint",
+                        "Disable experimental BigInt support") ||
+      !op.addStringOption('\0', "shared-memory", "on/off",
+                          "SharedArrayBuffer and Atomics "
 #if SHARED_MEMORY_DEFAULT
-                             "(default: on, off to disable)"
+                          "(default: on, off to disable)"
 #else
-                             "(default: off, on to enable)"
+                          "(default: off, on to enable)"
 #endif
-                             ) ||
+                          ) ||
       !op.addStringOption('\0', "spectre-mitigations", "on/off",
                           "Whether Spectre mitigations are enabled (default: "
                           "off, on to enable)") ||

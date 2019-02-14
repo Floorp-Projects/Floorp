@@ -167,7 +167,6 @@ bool js::ValueToStringBufferSlow(JSContext* cx, const Value& arg,
                               JSMSG_SYMBOL_TO_STRING);
     return false;
   }
-#ifdef ENABLE_BIGINT
   if (v.isBigInt()) {
     RootedBigInt i(cx, v.toBigInt());
     JSLinearString* str = BigInt::toString<CanGC>(cx, i, 10);
@@ -176,7 +175,6 @@ bool js::ValueToStringBufferSlow(JSContext* cx, const Value& arg,
     }
     return sb.append(str);
   }
-#endif
   MOZ_ASSERT(v.isUndefined());
   return sb.append(cx->names().undefined);
 }

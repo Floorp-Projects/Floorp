@@ -22,9 +22,7 @@
 #include "js/SliceBudget.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/ArrayObject.h"
-#ifdef ENABLE_BIGINT
-#  include "vm/BigIntType.h"
-#endif
+#include "vm/BigIntType.h"
 #include "vm/Debugger.h"
 #include "vm/EnvironmentObject.h"
 #include "vm/RegExpShared.h"
@@ -803,12 +801,10 @@ template <>
 void GCMarker::traverse(JS::Symbol* thing) {
   markAndTraceChildren(thing);
 }
-#ifdef ENABLE_BIGINT
 template <>
 void GCMarker::traverse(JS::BigInt* thing) {
   markAndTraceChildren(thing);
 }
-#endif
 template <>
 void GCMarker::traverse(RegExpShared* thing) {
   markAndTraceChildren(thing);
@@ -1496,9 +1492,7 @@ void js::GCMarker::lazilyMarkChildren(ObjectGroup* group) {
   }
 }
 
-#ifdef ENABLE_BIGINT
 void JS::BigInt::traceChildren(JSTracer* trc) { return; }
-#endif
 
 template <typename Functor>
 static void VisitTraceList(const Functor& f, const int32_t* traceList,
@@ -1659,7 +1653,7 @@ inline static bool ObjectDenseElementsMayBeMarkable(NativeObject* nobj) {
 
   static const uint32_t flagMask = TYPE_FLAG_STRING | TYPE_FLAG_SYMBOL |
                                    TYPE_FLAG_LAZYARGS | TYPE_FLAG_ANYOBJECT |
-                                   IF_BIGINT(TYPE_FLAG_BIGINT, 0);
+                                   TYPE_FLAG_BIGINT;
   bool mayBeMarkable =
       typeSet->hasAnyFlag(flagMask) || typeSet->getObjectCount() != 0;
 
@@ -1776,13 +1770,9 @@ scan_value_array:
       }
     } else if (v.isSymbol()) {
       traverseEdge(obj, v.toSymbol());
-    }
-#ifdef ENABLE_BIGINT
-    else if (v.isBigInt()) {
+    } else if (v.isBigInt()) {
       traverseEdge(obj, v.toBigInt());
-    }
-#endif
-    else if (v.isPrivateGCThing()) {
+    } else if (v.isPrivateGCThing()) {
       // v.toGCCellPtr cannot be inlined, so construct one manually.
       Cell* cell = v.toGCThing();
       traverseEdge(obj, JS::GCCellPtr(cell, cell->getTraceKind()));

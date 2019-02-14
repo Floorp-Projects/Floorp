@@ -717,11 +717,9 @@ AbortReasonOr<Ok> IonBuilder::analyzeNewLoopTypes(
         case JSOP_DEC:
           type = inspector->expectedResultType(last);
           break;
-#ifdef ENABLE_BIGINT
         case JSOP_BIGINT:
           type = MIRType::BigInt;
           break;
-#endif
         default:
           break;
       }
@@ -1341,9 +1339,7 @@ AbortReasonOr<Ok> IonBuilder::addOsrValueTypeBarrier(
     case MIRType::Double:
     case MIRType::String:
     case MIRType::Symbol:
-#ifdef ENABLE_BIGINT
     case MIRType::BigInt:
-#endif
     case MIRType::Object:
       if (type != def->type()) {
         MUnbox* unbox = MUnbox::New(alloc(), def, type, MUnbox::Fallible);
@@ -1936,9 +1932,7 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op) {
       return jsop_compare(op);
 
     case JSOP_DOUBLE:
-#ifdef ENABLE_BIGINT
     case JSOP_BIGINT:
-#endif
       pushConstant(info().getConst(pc));
       return Ok();
 
@@ -2809,13 +2803,9 @@ AbortReasonOr<Ok> IonBuilder::improveTypesAtTypeOfCompare(MCompare* ins,
     filter.addType(TypeSet::StringType(), alloc_->lifoAlloc());
   } else if (constant->toString() == TypeName(JSTYPE_SYMBOL, names)) {
     filter.addType(TypeSet::SymbolType(), alloc_->lifoAlloc());
-  }
-#ifdef ENABLE_BIGINT
-  else if (constant->toString() == TypeName(JSTYPE_BIGINT, names)) {
+  } else if (constant->toString() == TypeName(JSTYPE_BIGINT, names)) {
     filter.addType(TypeSet::BigIntType(), alloc_->lifoAlloc());
-  }
-#endif
-  else if (constant->toString() == TypeName(JSTYPE_OBJECT, names)) {
+  } else if (constant->toString() == TypeName(JSTYPE_OBJECT, names)) {
     filter.addType(TypeSet::NullType(), alloc_->lifoAlloc());
     if (trueBranch) {
       filter.addType(TypeSet::AnyObjectType(), alloc_->lifoAlloc());
@@ -3059,10 +3049,8 @@ AbortReasonOr<Ok> IonBuilder::improveTypesAtTest(MDefinition* ins,
                  alloc_->lifoAlloc());  // ToBoolean(0.0) == false
     base.addType(TypeSet::StringType(),
                  alloc_->lifoAlloc());  // ToBoolean("") == false
-#ifdef ENABLE_BIGINT
     base.addType(TypeSet::BigIntType(),
                  alloc_->lifoAlloc());  // ToBoolean(0n) == false
-#endif
 
     // If the typeset does emulate undefined, then we cannot filter out
     // objects.
@@ -3371,7 +3359,7 @@ AbortReasonOr<Ok> IonBuilder::bitnotTrySpecialized(bool* emitted,
 
   if (input->mightBeType(MIRType::Object) ||
       input->mightBeType(MIRType::Symbol) ||
-      IF_BIGINT(input->mightBeType(MIRType::BigInt), false)) {
+      input->mightBeType(MIRType::BigInt)) {
     return Ok();
   }
 
@@ -3825,9 +3813,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_tonumeric() {
 
   types->addType(TypeSet::Int32Type(), lifoAlloc);
   types->addType(TypeSet::DoubleType(), lifoAlloc);
-#ifdef ENABLE_BIGINT
   types->addType(TypeSet::BigIntType(), lifoAlloc);
-#endif
 
   if (peeked->type() == MIRType::Value && peeked->resultTypeSet() &&
       peeked->resultTypeSet()->isSubset(types)) {
@@ -6270,7 +6256,7 @@ static bool ObjectOrSimplePrimitive(MDefinition* op) {
   // Return true if op is either undefined/null/boolean/int32/symbol or an
   // object.
   return !op->mightBeType(MIRType::String) &&
-         IF_BIGINT(!op->mightBeType(MIRType::BigInt), true) &&
+         !op->mightBeType(MIRType::BigInt) &&
          !op->mightBeType(MIRType::Double) &&
          !op->mightBeType(MIRType::Float32) &&
          !op->mightBeType(MIRType::MagicOptimizedArguments) &&
@@ -7521,11 +7507,9 @@ JSObject* IonBuilder::testSingletonPropertyTypes(MDefinition* obj, jsid id) {
       key = JSProto_Symbol;
       break;
 
-#ifdef ENABLE_BIGINT
     case MIRType::BigInt:
       key = JSProto_BigInt;
       break;
-#endif
 
     case MIRType::Int32:
     case MIRType::Double:

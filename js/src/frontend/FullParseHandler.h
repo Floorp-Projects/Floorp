@@ -130,7 +130,6 @@ class FullParseHandler {
     return new_<NumericLiteral>(value, decimalPoint, pos);
   }
 
-#ifdef ENABLE_BIGINT
   // The Boxer object here is any object that can allocate BigIntBoxes.
   // Specifically, a Boxer has a .newBigIntBox(T) method that accepts a
   // BigInt* argument and returns a BigIntBox*.
@@ -142,7 +141,6 @@ class FullParseHandler {
     }
     return new_<BigIntLiteral>(box, pos);
   }
-#endif
 
   BooleanLiteralType newBooleanLiteral(bool cond, const TokenPos& pos) {
     return new_<BooleanLiteral>(cond, pos);

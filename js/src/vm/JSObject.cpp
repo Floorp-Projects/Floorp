@@ -25,9 +25,7 @@
 #include "jsutil.h"
 
 #include "builtin/Array.h"
-#ifdef ENABLE_BIGINT
-#  include "builtin/BigInt.h"
-#endif
+#include "builtin/BigInt.h"
 #include "builtin/Eval.h"
 #include "builtin/Object.h"
 #include "builtin/String.h"
@@ -3310,7 +3308,6 @@ JSObject* js::PrimitiveToObject(JSContext* cx, const Value& v) {
   if (v.isBoolean()) {
     return BooleanObject::create(cx, v.toBoolean());
   }
-#ifdef ENABLE_BIGINT
   if (v.isSymbol()) {
     RootedSymbol symbol(cx, v.toSymbol());
     return SymbolObject::create(cx, symbol);
@@ -3318,11 +3315,6 @@ JSObject* js::PrimitiveToObject(JSContext* cx, const Value& v) {
   MOZ_ASSERT(v.isBigInt());
   RootedBigInt bigInt(cx, v.toBigInt());
   return BigIntObject::create(cx, bigInt);
-#else
-  MOZ_ASSERT(v.isSymbol());
-  RootedSymbol symbol(cx, v.toSymbol());
-  return SymbolObject::create(cx, symbol);
-#endif
 }
 
 /*
@@ -4215,10 +4207,8 @@ bool js::Unbox(JSContext* cx, HandleObject obj, MutableHandleValue vp) {
     vp.set(obj->as<DateObject>().UTCTime());
   } else if (obj->is<SymbolObject>()) {
     vp.setSymbol(obj->as<SymbolObject>().unbox());
-#ifdef ENABLE_BIGINT
   } else if (obj->is<BigIntObject>()) {
     vp.setBigInt(obj->as<BigIntObject>().unbox());
-#endif
   } else {
     vp.setUndefined();
   }

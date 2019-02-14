@@ -525,9 +525,7 @@ class LDefinition {
         return LDefinition::INT32;
       case MIRType::String:
       case MIRType::Symbol:
-#ifdef ENABLE_BIGINT
       case MIRType::BigInt:
-#endif
       case MIRType::Object:
       case MIRType::ObjectOrNull:
         return LDefinition::OBJECT;

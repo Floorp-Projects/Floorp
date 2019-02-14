@@ -55,7 +55,7 @@
 #endif
 
 #define JS_FOR_PROTOTYPES_(REAL, IMAGINARY, REAL_IF_INTL, REAL_IF_BDATA,     \
-                           REAL_IF_SAB, REAL_IF_BIGINT)                      \
+                           REAL_IF_SAB)                                      \
   IMAGINARY(Null, InitNullClass, dummy)                                      \
   REAL(Object, InitViaClassSpec, OCLASP(Plain))                              \
   REAL(Function, InitViaClassSpec, &JSFunction::class_)                      \
@@ -90,7 +90,7 @@
   REAL(Float32Array, InitViaClassSpec, TYPED_ARRAY_CLASP(Float32))           \
   REAL(Float64Array, InitViaClassSpec, TYPED_ARRAY_CLASP(Float64))           \
   REAL(Uint8ClampedArray, InitViaClassSpec, TYPED_ARRAY_CLASP(Uint8Clamped)) \
-  REAL_IF_BIGINT(BigInt, InitViaClassSpec, OCLASP(BigInt))                   \
+  REAL(BigInt, InitViaClassSpec, OCLASP(BigInt))                             \
   REAL(Proxy, InitProxyClass, &js::ProxyClass)                               \
   REAL(WeakMap, InitViaClassSpec, OCLASP(WeakMap))                           \
   REAL(Map, InitViaClassSpec, OCLASP(Map))                                   \
@@ -131,8 +131,7 @@
 
 #define JS_FOR_PROTOTYPES(REAL, IMAGINARY)                               \
   JS_FOR_PROTOTYPES_(REAL, IMAGINARY, IF_INTL(REAL, IMAGINARY),          \
-                     IF_BDATA(REAL, IMAGINARY), IF_SAB(REAL, IMAGINARY), \
-                     IF_BIGINT(REAL, IMAGINARY))
+                     IF_BDATA(REAL, IMAGINARY), IF_SAB(REAL, IMAGINARY))
 
 #define JS_FOR_EACH_PROTOTYPE(MACRO) JS_FOR_PROTOTYPES(MACRO, MACRO)
 

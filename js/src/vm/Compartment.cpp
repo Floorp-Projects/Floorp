@@ -168,7 +168,6 @@ bool Compartment::wrap(JSContext* cx, MutableHandleString strp) {
   return true;
 }
 
-#ifdef ENABLE_BIGINT
 bool Compartment::wrap(JSContext* cx, MutableHandleBigInt bi) {
   MOZ_ASSERT(cx->compartment() == this);
 
@@ -183,7 +182,6 @@ bool Compartment::wrap(JSContext* cx, MutableHandleBigInt bi) {
   bi.set(copy);
   return true;
 }
-#endif
 
 bool Compartment::getNonWrapperObjectForCurrentCompartment(
     JSContext* cx, MutableHandleObject obj) {

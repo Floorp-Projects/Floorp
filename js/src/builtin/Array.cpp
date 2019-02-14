@@ -1312,7 +1312,7 @@ static bool ArrayJoinDenseKernel(JSContext* cx, SeparatorOp sepOp,
        * with those as well.
        */
       break;
-    } else if (IF_BIGINT(elem.isBigInt(), false)) {
+    } else if (elem.isBigInt()) {
       // ToString(bigint) doesn't access bigint.toString or
       // anything like that, so it can't mutate the array we're
       // walking through, so it *could* be handled here. We don't

@@ -16,9 +16,7 @@
 #include "js/Result.h"    // JS_TRY_VAR_OR_RETURN_FALSE
 #include "js/RootingAPI.h"  // JS::Rooted
 #include "js/Value.h"       // JS::Int32Value, JS::SameType, JS::Value
-#ifdef ENABLE_BIGINT
-#  include "vm/BigIntType.h"  // JS::BigInt
-#endif                        // ENABLE_BIGINT
+#include "vm/BigIntType.h"  // JS::BigInt
 #include "vm/JSContext.h"     // CHECK_THREAD
 #include "vm/JSObject.h"      // js::ToPrimitive
 #include "vm/StringType.h"    // js::EqualStrings
@@ -39,12 +37,10 @@ static bool EqualGivenSameType(JSContext* cx, JS::Handle<JS::Value> lval,
     return true;
   }
 
-#ifdef ENABLE_BIGINT
   if (lval.isBigInt()) {
     *equal = JS::BigInt::equal(lval.toBigInt(), rval.toBigInt());
     return true;
   }
-#endif
 
   if (lval.isGCThing()) {  // objects or symbols
     *equal = (lval.toGCThing() == rval.toGCThing());
@@ -162,7 +158,6 @@ bool js::LooselyEqual(JSContext* cx, JS::Handle<JS::Value> lval,
     return js::LooselyEqual(cx, lvalue, rval, result);
   }
 
-#ifdef ENABLE_BIGINT
   if (lval.isBigInt()) {
     JS::Rooted<JS::BigInt*> lbi(cx, lval.toBigInt());
     bool tmpResult;
@@ -180,7 +175,6 @@ bool js::LooselyEqual(JSContext* cx, JS::Handle<JS::Value> lval,
     *result = tmpResult;
     return true;
   }
-#endif
 
   // Step 12.
   *result = false;
