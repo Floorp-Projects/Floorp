@@ -6796,25 +6796,20 @@ void CodeGenerator::visitCreateThis(LCreateThis* lir) {
   callVM(CreateThisInfoCodeGen, lir);
 }
 
-static JSObject* CreateThisForFunctionWithProtoWrapper(JSContext* cx,
-                                                       HandleObject callee,
-                                                       HandleObject newTarget,
-                                                       HandleObject proto) {
-  return CreateThisForFunctionWithProto(cx, callee, newTarget, proto);
-}
-
-typedef JSObject* (*CreateThisWithProtoFn)(JSContext* cx, HandleObject callee,
+typedef JSObject* (*CreateThisWithProtoFn)(JSContext* cx, HandleFunction callee,
                                            HandleObject newTarget,
-                                           HandleObject proto);
+                                           HandleObject proto,
+                                           NewObjectKind newKind);
 static const VMFunction CreateThisWithProtoInfo =
-    FunctionInfo<CreateThisWithProtoFn>(
-        CreateThisForFunctionWithProtoWrapper,
-        "CreateThisForFunctionWithProtoWrapper");
+    FunctionInfo<CreateThisWithProtoFn>(CreateThisForFunctionWithProto,
+                                        "CreateThisForFunctionWithProto");
 
 void CodeGenerator::visitCreateThisWithProto(LCreateThisWithProto* lir) {
   const LAllocation* callee = lir->getCallee();
   const LAllocation* newTarget = lir->getNewTarget();
   const LAllocation* proto = lir->getPrototype();
+
+  pushArg(Imm32(GenericObject));
 
   if (proto->isConstant()) {
     pushArg(ImmGCPtr(&proto->toConstant()->toObject()));
@@ -6837,13 +6832,18 @@ void CodeGenerator::visitCreateThisWithProto(LCreateThisWithProto* lir) {
   callVM(CreateThisWithProtoInfo, lir);
 }
 
+typedef JSObject* (*CreateThisWithTemplateFn)(JSContext*, HandleObject);
+static const VMFunction CreateThisWithTemplateInfo =
+    FunctionInfo<CreateThisWithTemplateFn>(CreateThisWithTemplate,
+                                           "CreateThisWithTemplate");
+
 void CodeGenerator::visitCreateThisWithTemplate(LCreateThisWithTemplate* lir) {
   JSObject* templateObject = lir->mir()->templateObject();
   Register objReg = ToRegister(lir->output());
   Register tempReg = ToRegister(lir->temp());
 
   OutOfLineCode* ool =
-      oolCallVM(NewInitObjectWithTemplateInfo, lir,
+      oolCallVM(CreateThisWithTemplateInfo, lir,
                 ArgList(ImmGCPtr(templateObject)), StoreRegisterTo(objReg));
 
   // Allocate. If the FreeList is empty, call to VM, which may GC.

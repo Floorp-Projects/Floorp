@@ -12,6 +12,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/MathAlgorithms.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/TemplateLib.h"
 
@@ -1109,9 +1110,16 @@ static inline JSObject* CreateThisForFunctionWithGroup(JSContext* cx,
 }
 
 JSObject* js::CreateThisForFunctionWithProto(
-    JSContext* cx, HandleObject callee, HandleObject newTarget,
+    JSContext* cx, HandleFunction callee, HandleObject newTarget,
     HandleObject proto, NewObjectKind newKind /* = GenericObject */) {
   RootedObject res(cx);
+
+  // Ion may call this with a cross-realm callee.
+  mozilla::Maybe<AutoRealm> ar;
+  if (cx->realm() != callee->realm()) {
+    MOZ_ASSERT(cx->compartment() == callee->compartment());
+    ar.emplace(cx, callee);
+  }
 
   if (proto) {
     RootedObjectGroup group(
@@ -1145,8 +1153,8 @@ JSObject* js::CreateThisForFunctionWithProto(
   }
 
   if (res) {
-    JSScript* script =
-        JSFunction::getOrCreateScript(cx, callee.as<JSFunction>());
+    MOZ_ASSERT(res->nonCCWRealm() == callee->realm());
+    JSScript* script = JSFunction::getOrCreateScript(cx, callee);
     if (!script) {
       return nullptr;
     }
@@ -1199,7 +1207,7 @@ bool js::GetPrototypeFromConstructor(JSContext* cx, HandleObject newTarget,
   return true;
 }
 
-JSObject* js::CreateThisForFunction(JSContext* cx, HandleObject callee,
+JSObject* js::CreateThisForFunction(JSContext* cx, HandleFunction callee,
                                     HandleObject newTarget,
                                     NewObjectKind newKind) {
   RootedObject proto(cx);
@@ -1216,7 +1224,7 @@ JSObject* js::CreateThisForFunction(JSContext* cx, HandleObject callee,
     /* Reshape the singleton before passing it as the 'this' value. */
     NativeObject::clear(cx, nobj);
 
-    JSScript* calleeScript = callee->as<JSFunction>().nonLazyScript();
+    JSScript* calleeScript = callee->nonLazyScript();
     TypeScript::SetThis(cx, calleeScript, TypeSet::ObjectType(nobj));
 
     return nobj;
