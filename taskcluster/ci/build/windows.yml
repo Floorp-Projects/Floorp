@@ -34,6 +34,7 @@ win32/debug:
         - win64-rust-size
         - win64-cbindgen
         - win64-sccache
+        - win64-nasm
         - win64-node
 
 win32/opt:
@@ -67,6 +68,7 @@ win32/opt:
         - win64-rust-size
         - win64-cbindgen
         - win64-sccache
+        - win64-nasm
         - win64-node
 
 win32/pgo:
@@ -100,6 +102,7 @@ win32/pgo:
         - win64-rust-size
         - win64-cbindgen
         - win64-sccache
+        - win64-nasm
         - win64-node
 
 win64/debug:
@@ -133,6 +136,7 @@ win64/debug:
         - win64-rust-size
         - win64-cbindgen
         - win64-sccache
+        - win64-nasm
         - win64-node
 
 win64-fuzzing/debug:
@@ -168,6 +172,7 @@ win64-fuzzing/debug:
         - win64-rust-size
         - win64-cbindgen
         - win64-sccache
+        - win64-nasm
         - win64-node
 
 win64-plain/debug:
@@ -201,6 +206,7 @@ win64-plain/debug:
         - win64-clang-cl
         - win64-rust
         - win64-node
+        - win64-nasm
         - win64-cbindgen
 
 win64/opt:
@@ -234,6 +240,7 @@ win64/opt:
         - win64-rust-size
         - win64-cbindgen
         - win64-sccache
+        - win64-nasm
         - win64-node
 
 win64-plain/opt:
@@ -267,6 +274,7 @@ win64-plain/opt:
     toolchains:
         - win64-clang-cl
         - win64-rust
+        - win64-nasm
         - win64-node
         - win64-cbindgen
 
@@ -314,6 +322,7 @@ win32-nightly/opt:
         - win64-rust-size
         - win64-cbindgen
         - win64-sccache
+        - win64-nasm
         - win64-node
 
 win64-nightly/opt:
@@ -353,6 +362,7 @@ win64-nightly/opt:
         - win64-rust-size
         - win64-cbindgen
         - win64-sccache
+        - win64-nasm
         - win64-node
 
 win64/pgo:
@@ -386,6 +396,7 @@ win64/pgo:
         - win64-rust-size
         - win64-cbindgen
         - win64-sccache
+        - win64-nasm
         - win64-node
 
 win32-add-on-devel/opt:
@@ -419,6 +430,7 @@ win32-add-on-devel/opt:
         - win64-rust-size
         - win64-cbindgen
         - win64-sccache
+        - win64-nasm
         - win64-node
 
 win64-add-on-devel/opt:
@@ -452,6 +464,7 @@ win64-add-on-devel/opt:
         - win64-rust-size
         - win64-cbindgen
         - win64-sccache
+        - win64-nasm
         - win64-node
 
 win64-noopt/debug:
@@ -484,6 +497,7 @@ win64-noopt/debug:
         - win64-rust-size
         - win64-cbindgen
         - win64-sccache
+        - win64-nasm
         - win64-node
 
 win32-noopt/debug:
@@ -516,6 +530,7 @@ win32-noopt/debug:
         - win64-rust-size
         - win64-cbindgen
         - win64-sccache
+        - win64-nasm
         - win64-node
 
 win32-rusttests/opt:
@@ -553,6 +568,7 @@ win32-rusttests/opt:
         - win64-rust
         - win64-cbindgen
         - win64-sccache
+        - win64-nasm
         - win64-node
 
 win32-rusttests/debug:
@@ -590,6 +606,7 @@ win32-rusttests/debug:
         - win64-rust
         - win64-cbindgen
         - win64-sccache
+        - win64-nasm
         - win64-node
 
 win64-rusttests/opt:
@@ -622,6 +639,7 @@ win64-rusttests/opt:
         - win64-rust
         - win64-cbindgen
         - win64-sccache
+        - win64-nasm
         - win64-node
 
 win64-rusttests/debug:
@@ -654,6 +672,7 @@ win64-rusttests/debug:
         - win64-rust
         - win64-cbindgen
         - win64-sccache
+        - win64-nasm
         - win64-node
 
 win64-ccov/debug:
@@ -690,6 +709,7 @@ win64-ccov/debug:
         - win64-rust-size
         - win64-cbindgen
         - win64-sccache
+        - win64-nasm
         - win64-node
     fetches:
         toolchain:
@@ -726,6 +746,7 @@ win64-asan/debug:
         - win64-rust-size
         - win64-cbindgen
         - win64-sccache
+        - win64-nasm
         - win64-node
 
 win64-asan/opt:
@@ -760,6 +781,7 @@ win64-asan/opt:
         - win64-rust-size
         - win64-cbindgen
         - win64-sccache
+        - win64-nasm
         - win64-node
 
 win64-asan-reporter-nightly/opt:
@@ -802,6 +824,7 @@ win64-asan-reporter-nightly/opt:
         - win64-rust-size
         - win64-cbindgen
         - win64-sccache
+        - win64-nasm
         - win64-node
 
 win64-asan-fuzzing/opt:
@@ -835,6 +858,7 @@ win64-asan-fuzzing/opt:
         - win64-rust-size
         - win64-cbindgen
         - win64-sccache
+        - win64-nasm
         - win64-node
 
 win32-devedition-nightly/opt:
@@ -882,6 +906,7 @@ win32-devedition-nightly/opt:
         - win64-rust-size
         - win64-cbindgen
         - win64-sccache
+        - win64-nasm
         - win64-node
 
 win64-devedition-nightly/opt:
@@ -922,6 +947,7 @@ win64-devedition-nightly/opt:
         - win64-rust-size
         - win64-cbindgen
         - win64-sccache
+        - win64-nasm
         - win64-node
 
 win32-msvc/debug:
@@ -953,6 +979,7 @@ win32-msvc/debug:
         - win64-rust
         - win64-cbindgen
         - win64-sccache
+        - win64-nasm
         - win64-node
 
 win32-msvc/opt:
@@ -985,6 +1012,7 @@ win32-msvc/opt:
         - win64-rust
         - win64-cbindgen
         - win64-sccache
+        - win64-nasm
         - win64-node
 
 win64-msvc/debug:
@@ -1016,6 +1044,7 @@ win64-msvc/debug:
         - win64-rust
         - win64-cbindgen
         - win64-sccache
+        - win64-nasm
         - win64-node
 
 win64-msvc/opt:
@@ -1048,6 +1077,7 @@ win64-msvc/opt:
         - win64-rust
         - win64-cbindgen
         - win64-sccache
+        - win64-nasm
         - win64-node
 
 win64-aarch64/debug:
@@ -1083,6 +1113,7 @@ win64-aarch64/debug:
         - win64-aarch64-rust
         - win64-cbindgen
         - win64-sccache
+        - win64-nasm
         - win64-node
 
 win64-aarch64/opt:
@@ -1118,6 +1149,7 @@ win64-aarch64/opt:
         - win64-aarch64-rust
         - win64-cbindgen
         - win64-sccache
+        - win64-nasm
         - win64-node
 
 win64-aarch64-nightly/opt:
@@ -1157,6 +1189,7 @@ win64-aarch64-nightly/opt:
         - win64-aarch64-rust
         - win64-cbindgen
         - win64-sccache
+        - win64-nasm
         - win64-node
 
 win32-mingwclang/opt:
