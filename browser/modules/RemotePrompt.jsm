@@ -13,7 +13,7 @@ ChromeUtils.defineModuleGetter(this, "Services",
                                "resource://gre/modules/Services.jsm");
 
 var RemotePrompt = {
-  // Listeners are added in BrowserGlue.jsm
+  // Listeners are added in nsBrowserGlue.js
   receiveMessage(message) {
     switch (message.name) {
       case "Prompt:Open":

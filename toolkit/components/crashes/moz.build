@@ -16,13 +16,13 @@ XPIDL_SOURCES += [
 ]
 
 if CONFIG['MOZ_CRASHREPORTER']:
-    EXTRA_JS_MODULES += [
-        'CrashManager.jsm',
-        'CrashService.jsm',
+    EXTRA_COMPONENTS += [
+        'CrashService.js',
+        'CrashService.manifest',
     ]
 
-    XPCOM_MANIFESTS += [
-        'components.conf',
+    EXTRA_JS_MODULES += [
+        'CrashManager.jsm',
     ]
 
     TESTING_JS_MODULES += [

@@ -1,0 +1,3 @@
+component {9e9a9283-0ce9-4e4a-8f1c-ba129a032c32} devtools-startup.js
+contract @mozilla.org/devtools/startup-clh;1 {9e9a9283-0ce9-4e4a-8f1c-ba129a032c32}
+category command-line-handler m-devtools @mozilla.org/devtools/startup-clh;1

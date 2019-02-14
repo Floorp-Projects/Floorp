@@ -185,6 +185,9 @@ function loadPrivilegedScriptTest() {
         originalClassId = "";
         originalFactory = null;
       }
+      if (originalFactory) {
+        registrar.unregisterFactory(originalClassId, originalFactory);
+      }
       registrar.registerFactory(mockedClassId, "", contractId, mockedFactory);
     }
 
@@ -199,7 +202,7 @@ function loadPrivilegedScriptTest() {
     if (originalFactory) {
       var registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
       registrar.unregisterFactory(mockedClassId, mockedFactory);
-      registrar.registerFactory(originalClassId, "", contractId, null);
+      registrar.registerFactory(originalClassId, "", contractId, originalFactory);
     }
   }
 

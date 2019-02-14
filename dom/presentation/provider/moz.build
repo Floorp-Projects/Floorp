@@ -4,17 +4,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-EXTRA_JS_MODULES += [
-    'PresentationControlService.jsm'
+EXTRA_COMPONENTS += [
+    'BuiltinProviders.manifest',
+    'PresentationControlService.js'
 ]
 
 UNIFIED_SOURCES += [
     'DeviceProviderHelpers.cpp',
     'MulticastDNSDeviceProvider.cpp',
-]
-
-XPCOM_MANIFESTS += [
-    'components.conf',
+    'PresentationDeviceProviderModule.cpp',
 ]
 
 EXTRA_JS_MODULES.presentation += [
@@ -24,9 +22,10 @@ EXTRA_JS_MODULES.presentation += [
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
-    EXTRA_JS_MODULES += [
+    EXTRA_COMPONENTS += [
         # For android presentation device
-        'AndroidCastDeviceProvider.jsm',
+        'AndroidCastDeviceProvider.js',
+        'AndroidCastDeviceProvider.manifest',
     ]
 
 include('/ipc/chromium/chromium-config.mozbuild')

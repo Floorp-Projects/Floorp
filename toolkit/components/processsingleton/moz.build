@@ -8,15 +8,11 @@ with Files('**'):
     BUG_COMPONENT = ('Toolkit', 'General')
 
 EXTRA_COMPONENTS += [
+    'ContentProcessSingleton.js',
+    'MainProcessSingleton.js',
     'ProcessSingleton.manifest',
 ]
 
 EXTRA_JS_MODULES += [
-    'ContentProcessSingleton.jsm',
     'CustomElementsListener.jsm',
-    'MainProcessSingleton.jsm',
-]
-
-XPCOM_MANIFESTS += [
-    'components.conf',
 ]

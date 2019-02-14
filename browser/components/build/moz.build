@@ -7,8 +7,12 @@
 with Files("**"):
     BUG_COMPONENT = ("Firefox Build System", "General")
 
-XPCOM_MANIFESTS += [
-    'components.conf',
+EXPORTS += [
+    'nsBrowserCompsCID.h',
+]
+
+SOURCES += [
+    'nsModule.cpp',
 ]
 
 Library('browsercomps')

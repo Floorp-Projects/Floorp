@@ -15,7 +15,7 @@ ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
                                "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 var ContentClick = {
-  // Listeners are added in BrowserGlue.jsm
+  // Listeners are added in nsBrowserGlue.js
   receiveMessage(message) {
     switch (message.name) {
       case "Content:Click":

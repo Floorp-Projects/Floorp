@@ -22,10 +22,6 @@ UNIFIED_SOURCES += [
     'nsAutoCompleteSimpleResult.cpp',
 ]
 
-XPCOM_MANIFESTS += [
-    'components.conf',
-]
-
 FINAL_LIBRARY = 'xul'
 
 with Files('**'):

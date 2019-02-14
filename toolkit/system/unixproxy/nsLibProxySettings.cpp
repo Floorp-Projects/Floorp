@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISystemProxySettings.h"
-#include "mozilla/Components.h"
+#include "mozilla/ModuleUtils.h"
 #include "nsIServiceManager.h"
 #include "nsIURI.h"
 #include "nsString.h"
@@ -22,6 +22,7 @@ class nsUnixSystemProxySettings : public nsISystemProxySettings {
   NS_DECL_NSISYSTEMPROXYSETTINGS
 
   nsUnixSystemProxySettings() { mProxyFactory = nullptr; }
+  nsresult Init();
 
  private:
   ~nsUnixSystemProxySettings() {
@@ -38,6 +39,8 @@ nsUnixSystemProxySettings::GetMainThreadOnly(bool *aMainThreadOnly) {
   *aMainThreadOnly = false;
   return NS_OK;
 }
+
+nsresult nsUnixSystemProxySettings::Init() { return NS_OK; }
 
 nsresult nsUnixSystemProxySettings::GetPACURI(nsACString &aResult) {
   // Make sure we return an empty result.
@@ -101,6 +104,27 @@ nsresult nsUnixSystemProxySettings::GetProxyForURI(const nsACString &aSpec,
   return NS_OK;
 }
 
-NS_IMPL_COMPONENT_FACTORY(nsUnixSystemProxySettings) {
-  return do_AddRef(new nsUnixSystemProxySettings()).downcast<nsISupports>();
-}
+/* 0fa3158c-d5a7-43de-9181-a285e74cf1d4 */
+#define NS_UNIXSYSTEMPROXYSERVICE_CID                \
+  {                                                  \
+    0x0fa3158c, 0xd5a7, 0x43de, {                    \
+      0x91, 0x81, 0xa2, 0x85, 0xe7, 0x4c, 0xf1, 0xd4 \
+    }                                                \
+  }
+
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsUnixSystemProxySettings, Init)
+NS_DEFINE_NAMED_CID(NS_UNIXSYSTEMPROXYSERVICE_CID);
+
+static const mozilla::Module::CIDEntry kUnixProxyCIDs[] = {
+    {&kNS_UNIXSYSTEMPROXYSERVICE_CID, false, nullptr,
+     nsUnixSystemProxySettingsConstructor},
+    {nullptr}};
+
+static const mozilla::Module::ContractIDEntry kUnixProxyContracts[] = {
+    {NS_SYSTEMPROXYSETTINGS_CONTRACTID, &kNS_UNIXSYSTEMPROXYSERVICE_CID},
+    {nullptr}};
+
+static const mozilla::Module kUnixProxyModule = {
+    mozilla::Module::kVersion, kUnixProxyCIDs, kUnixProxyContracts};
+
+NSMODULE_DEFN(nsUnixProxyModule) = &kUnixProxyModule;

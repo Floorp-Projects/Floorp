@@ -21,13 +21,13 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'browser-element'
 
-EXTRA_JS_MODULES += [
-    'BrowserElementParent.jsm',
-    'BrowserElementPromptService.jsm',
+EXTRA_COMPONENTS += [
+    'BrowserElementParent.js',
+    'BrowserElementParent.manifest',
 ]
 
-XPCOM_MANIFESTS += [
-    'components.conf',
+EXTRA_JS_MODULES += [
+    'BrowserElementPromptService.jsm',
 ]
 
 LOCAL_INCLUDES += [

@@ -51,11 +51,6 @@ extern nsString gAbsoluteArgv0Path;
 
 extern bool gIsGtest;
 
-namespace mozilla {
-nsresult AppInfoConstructor(nsISupports* aOuter, const nsID& aIID,
-                            void** aResult);
-}  // namespace mozilla
-
 /**
  * Create the nativeappsupport implementation.
  *

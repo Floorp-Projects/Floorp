@@ -12,12 +12,9 @@ XPIDL_SOURCES += [
     'nsIUpdateTimerManager.idl',
 ]
 
-EXTRA_JS_MODULES += [
-    'UpdateTimerManager.jsm',
-]
-
-XPCOM_MANIFESTS += [
-    'components.conf',
+EXTRA_COMPONENTS += [
+    'nsUpdateTimerManager.js',
+    'nsUpdateTimerManager.manifest',
 ]
 
 with Files('**'):

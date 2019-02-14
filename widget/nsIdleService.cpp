@@ -624,16 +624,6 @@ bool nsIdleService::UsePollMode() {
   return PollIdleTime(&dummy);
 }
 
-nsresult nsIdleService::GetDisabled(bool* aResult) {
-  *aResult = mDisabled;
-  return NS_OK;
-}
-
-nsresult nsIdleService::SetDisabled(bool aDisabled) {
-  mDisabled = aDisabled;
-  return NS_OK;
-}
-
 void nsIdleService::StaticIdleTimerCallback(nsITimer* aTimer, void* aClosure) {
   static_cast<nsIdleService*>(aClosure)->IdleTimerCallback();
 }
@@ -684,14 +674,6 @@ void nsIdleService::IdleTimerCallback(void) {
   // Restart timer and bail if no-one are expected to be in idle
   if (mDeltaToNextIdleSwitchInS > currentIdleTimeInS) {
     // If we didn't expect anyone to be idle, then just re-start the timer.
-    ReconfigureTimer();
-    return;
-  }
-
-  if (mDisabled) {
-    MOZ_LOG(sLog, LogLevel::Info,
-            ("idleService: Skipping idle callback while disabled"));
-
     ReconfigureTimer();
     return;
   }

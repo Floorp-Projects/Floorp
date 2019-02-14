@@ -7,8 +7,9 @@
 with Files('**'):
     BUG_COMPONENT = ('Toolkit', 'General')
 
-EXTRA_JS_MODULES += [
-    'SimpleServices.jsm',
+EXTRA_COMPONENTS += [
+    'simpleServices.js',
+    'utils.manifest',
 ]
 
 EXTRA_JS_MODULES['components-utils'] = [
@@ -18,10 +19,6 @@ EXTRA_JS_MODULES['components-utils'] = [
     'mozjexl.js',
     'PreferenceFilters.jsm',
     'Sampling.jsm',
-]
-
-XPCOM_MANIFESTS += [
-    'components.conf',
 ]
 
 BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']

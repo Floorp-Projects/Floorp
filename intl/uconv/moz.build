@@ -22,10 +22,7 @@ UNIFIED_SOURCES += [
     'nsConverterOutputStream.cpp',
     'nsScriptableUConv.cpp',
     'nsTextToSubURI.cpp',
-]
-
-XPCOM_MANIFESTS += [
-    'components.conf',
+    'nsUConvModule.cpp',
 ]
 
 FINAL_LIBRARY = 'xul'

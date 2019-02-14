@@ -1798,28 +1798,36 @@ SpecialPowersAPI.prototype = {
     return Services.clipboard.supportsSelectionClipboard();
   },
 
-  swapFactoryRegistration(cid, contractID, newFactory) {
+  swapFactoryRegistration(cid, contractID, newFactory, oldFactory) {
     newFactory = Cu.waiveXrays(newFactory);
+    oldFactory = Cu.waiveXrays(oldFactory);
 
     var componentRegistrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
 
-    var currentCID = componentRegistrar.contractIDToCID(contractID);
-    var currentFactory = Components.manager.getClassObject(Cc[contractID],
-                                                           Ci.nsIFactory);
-    if (cid) {
-      componentRegistrar.unregisterFactory(currentCID, currentFactory);
-    } else {
-      let uuidGenerator = Cc["@mozilla.org/uuid-generator;1"]
-                            .getService(Ci.nsIUUIDGenerator);
-      cid = uuidGenerator.generateUUID();
+    var unregisterFactory = newFactory;
+    var registerFactory = oldFactory;
+
+    if (cid == null) {
+      if (contractID != null) {
+        cid = componentRegistrar.contractIDToCID(contractID);
+        oldFactory = Components.manager.getClassObject(Cc[contractID],
+                                                            Ci.nsIFactory);
+      } else {
+        return {"error": "trying to register a new contract ID: Missing contractID"};
+      }
+
+      unregisterFactory = oldFactory;
+      registerFactory = newFactory;
     }
+    componentRegistrar.unregisterFactory(cid,
+                                         unregisterFactory);
 
     // Restore the original factory.
     componentRegistrar.registerFactory(cid,
                                        "",
                                        contractID,
-                                       newFactory);
-    return {"originalCID": currentCID};
+                                       registerFactory);
+    return {"cid": cid, "originalFactory": oldFactory};
   },
 
   _getElement(aWindow, id) {

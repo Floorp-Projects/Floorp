@@ -16,8 +16,12 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     ]
 
 else:
+    EXTRA_COMPONENTS += [
+        'nsDNSServiceDiscovery.js',
+        'nsDNSServiceDiscovery.manifest',
+    ]
+
     EXTRA_JS_MODULES += [
-        'DNSServiceDiscovery.jsm',
         'fallback/DataReader.jsm',
         'fallback/DataWriter.jsm',
         'fallback/DNSPacket.jsm',
@@ -27,10 +31,6 @@ else:
         'fallback/MulticastDNS.jsm',
     ]
 
-    XPCOM_MANIFESTS += [
-        'components.conf',
-    ]
-
     if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
         EXTRA_JS_MODULES += [
             'MulticastDNSAndroid.jsm',
@@ -38,10 +38,7 @@ else:
 
 UNIFIED_SOURCES += [
     'nsDNSServiceInfo.cpp',
-]
-
-XPCOM_MANIFESTS += [
-    'components.conf',
+    'nsMulticastDNSModule.cpp',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')

@@ -1,0 +1,3 @@
+# nsDNSServiceDiscovery.js
+component {f9346d98-f27a-4e89-b744-493843416480} nsDNSServiceDiscovery.js
+contract @mozilla.org/toolkit/components/mdnsresponder/dns-sd;1 {f9346d98-f27a-4e89-b744-493843416480}

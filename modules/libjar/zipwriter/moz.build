@@ -18,10 +18,7 @@ UNIFIED_SOURCES += [
     'nsZipHeader.cpp',
     'nsZipWriter.cpp',
     'StreamFunctions.cpp',
-]
-
-XPCOM_MANIFESTS += [
-    'components.conf',
+    'ZipWriterModule.cpp',
 ]
 
 FINAL_LIBRARY = 'xul'

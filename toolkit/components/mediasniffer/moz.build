@@ -13,10 +13,7 @@ EXPORTS += [
 UNIFIED_SOURCES += [
     'mp3sniff.c',
     'nsMediaSniffer.cpp',
-]
-
-XPCOM_MANIFESTS += [
-    'components.conf',
+    'nsMediaSnifferModule.cpp',
 ]
 
 FINAL_LIBRARY = 'xul'

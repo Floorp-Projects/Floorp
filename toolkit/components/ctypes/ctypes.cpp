@@ -6,6 +6,7 @@
 #include "ctypes.h"
 #include "jsapi.h"
 #include "js/MemoryFunctions.h"
+#include "mozilla/ModuleUtils.h"
 #include "nsMemory.h"
 #include "nsString.h"
 #include "nsNativeCharsetUtils.h"
@@ -13,6 +14,15 @@
 #include "mozJSComponentLoader.h"
 #include "nsZipArchive.h"
 #include "xpc_make_class.h"
+
+#define JSCTYPES_CONTRACTID "@mozilla.org/jsctypes;1"
+
+#define JSCTYPES_CID                                \
+  {                                                 \
+    0xc797702, 0x1c60, 0x4051, {                    \
+      0x9d, 0xd7, 0x4d, 0x74, 0x5, 0x60, 0x56, 0x42 \
+    }                                               \
+  }
 
 namespace mozilla {
 namespace ctypes {
@@ -35,6 +45,8 @@ static char* UnicodeToNative(JSContext* cx, const char16_t* source,
 }
 
 static JSCTypesCallbacks sCallbacks = {UnicodeToNative};
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(Module)
 
 NS_IMPL_ISUPPORTS(Module, nsIXPCScriptable)
 
@@ -100,3 +112,17 @@ Module::Call(nsIXPConnectWrappedNative* wrapper, JSContext* cx, JSObject* obj,
 
 }  // namespace ctypes
 }  // namespace mozilla
+
+NS_DEFINE_NAMED_CID(JSCTYPES_CID);
+
+static const mozilla::Module::CIDEntry kCTypesCIDs[] = {
+    {&kJSCTYPES_CID, false, nullptr, mozilla::ctypes::ModuleConstructor},
+    {nullptr}};
+
+static const mozilla::Module::ContractIDEntry kCTypesContracts[] = {
+    {JSCTYPES_CONTRACTID, &kJSCTYPES_CID}, {nullptr}};
+
+static const mozilla::Module kCTypesModule = {mozilla::Module::kVersion,
+                                              kCTypesCIDs, kCTypesContracts};
+
+NSMODULE_DEFN(jsctypes) = &kCTypesModule;

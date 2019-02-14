@@ -60,17 +60,15 @@ UNIFIED_SOURCES += [
     'PresentationTransportBuilderConstructor.cpp'
 ]
 
-EXTRA_JS_MODULES += [
-    'PresentationDataChannelSessionTransport.jsm',
-]
-
-XPCOM_MANIFESTS += [
-    'components.conf',
+EXTRA_COMPONENTS += [
+    'PresentationDataChannelSessionTransport.js',
+    'PresentationDataChannelSessionTransport.manifest',
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
-    EXTRA_JS_MODULES += [
-        'PresentationNetworkHelper.jsm',
+    EXTRA_COMPONENTS += [
+        'PresentationNetworkHelper.js',
+        'PresentationNetworkHelper.manifest',
     ]
 
 IPDL_SOURCES += [

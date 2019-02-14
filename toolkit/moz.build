@@ -14,6 +14,7 @@ DIRS += [
     'modules',
     'mozapps/downloads',
     'mozapps/extensions',
+    'mozapps/handling',
     'mozapps/preferences',
     'pluginproblem',
     'profile',
@@ -36,8 +37,6 @@ if CONFIG['MOZ_MAINTENANCE_SERVICE']:
 
 DIRS += ['xre']
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
-    DIRS += ['mozapps/handling']
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk3':
     DIRS += ['system/unixproxy']
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':

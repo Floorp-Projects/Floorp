@@ -1,0 +1,3 @@
+component {86FB70EC-90FF-45AD-A1C1-F77D3C1184E9} recording-cmdline.js
+contract @mozilla.org/commandlinehandler/general-startup;1?type=recording {86FB70EC-90FF-45AD-A1C1-F77D3C1184E9}
+category command-line-handler m-recording @mozilla.org/commandlinehandler/general-startup;1?type=recording

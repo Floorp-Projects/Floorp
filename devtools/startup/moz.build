@@ -12,10 +12,13 @@ DIRS += [
 
 # Register the startup components only for 'all' builds.
 if CONFIG['MOZ_DEVTOOLS'] == 'all':
-    EXTRA_JS_MODULES += [
-        'AboutDebuggingRegistration.jsm',
-        'AboutDevToolsToolboxRegistration.jsm',
-        'DevToolsStartup.jsm',
+    EXTRA_COMPONENTS += [
+        'aboutdebugging-registration.js',
+        'aboutdebugging.manifest',
+        'aboutdevtoolstoolbox-registration.js',
+        'aboutdevtoolstoolbox.manifest',
+        'devtools-startup.js',
+        'devtools-startup.manifest',
     ]
 
     DIRS += [
@@ -25,12 +28,9 @@ if CONFIG['MOZ_DEVTOOLS'] == 'all':
 
 if CONFIG['NIGHTLY_BUILD']:
     EXTRA_COMPONENTS += [
-        'AboutDebuggingNewRegistration.jsm',
+        'aboutdebugging-new-registration.js',
+        'aboutdebugging-new.manifest',
     ]
-
-XPCOM_MANIFESTS += [
-    'components.conf',
-]
 
 XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
 

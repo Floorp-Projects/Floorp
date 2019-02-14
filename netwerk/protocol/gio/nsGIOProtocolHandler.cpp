@@ -7,7 +7,7 @@
  * This code is based on original Mozilla gnome-vfs extension. It implements
  * input stream provided by GVFS/GIO.
  */
-#include "mozilla/Components.h"
+#include "mozilla/ModuleUtils.h"
 #include "mozilla/NullPrincipal.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
@@ -31,8 +31,6 @@
 #include "prtime.h"
 #include <gio/gio.h>
 #include <algorithm>
-
-using namespace mozilla;
 
 #define MOZ_GIO_SCHEME "moz-gio"
 #define MOZ_GIO_SUPPORTED_PROTOCOLS "network.gio.supported-protocols"
@@ -847,14 +845,6 @@ class nsGIOProtocolHandler final : public nsIProtocolHandler,
 
 NS_IMPL_ISUPPORTS(nsGIOProtocolHandler, nsIProtocolHandler, nsIObserver)
 
-NS_IMPL_COMPONENT_FACTORY(nsGIOProtocolHandler) {
-  auto inst = MakeRefPtr<nsGIOProtocolHandler>();
-  if (NS_SUCCEEDED(inst->Init())) {
-    return inst.forget().downcast<nsIProtocolHandler>();
-  }
-  return nullptr;
-}
-
 nsresult nsGIOProtocolHandler::Init() {
   nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (prefs) {
@@ -1023,3 +1013,30 @@ nsGIOProtocolHandler::Observe(nsISupports *aSubject, const char *aTopic,
   }
   return NS_OK;
 }
+
+//-----------------------------------------------------------------------------
+
+#define NS_GIOPROTOCOLHANDLER_CID                    \
+  { /* ee706783-3af8-4d19-9e84-e2ebfe213480 */       \
+    0xee706783, 0x3af8, 0x4d19, {                    \
+      0x9e, 0x84, 0xe2, 0xeb, 0xfe, 0x21, 0x34, 0x80 \
+    }                                                \
+  }
+
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGIOProtocolHandler, Init)
+NS_DEFINE_NAMED_CID(NS_GIOPROTOCOLHANDLER_CID);
+
+static const mozilla::Module::CIDEntry kVFSCIDs[] = {
+    {&kNS_GIOPROTOCOLHANDLER_CID, false, nullptr,
+     nsGIOProtocolHandlerConstructor},
+    {nullptr}};
+
+static const mozilla::Module::ContractIDEntry kVFSContracts[] = {
+    {NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX MOZ_GIO_SCHEME,
+     &kNS_GIOPROTOCOLHANDLER_CID},
+    {nullptr}};
+
+static const mozilla::Module kVFSModule = {mozilla::Module::kVersion, kVFSCIDs,
+                                           kVFSContracts};
+
+NSMODULE_DEFN(nsGIOModule) = &kVFSModule;

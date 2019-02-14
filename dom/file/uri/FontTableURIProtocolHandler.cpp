@@ -5,10 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "FontTableURIProtocolHandler.h"
-#include "nsIURIMutator.h"
-#include "nsIUUIDGenerator.h"
+#include "mozilla/ModuleUtils.h"
 #include "nsNetUtil.h"
-#include "nsSimpleURI.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -114,3 +112,31 @@ FontTableURIProtocolHandler::NewURI(const nsACString &aSpec,
   uri.forget(aResult);
   return NS_OK;
 }
+
+#define NS_FONTTABLEPROTOCOLHANDLER_CID              \
+  {                                                  \
+    0x3fc8f04e, 0xd719, 0x43ca, {                    \
+      0x9a, 0xd0, 0x18, 0xee, 0x32, 0x02, 0x11, 0xf2 \
+    }                                                \
+  }
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(FontTableURIProtocolHandler)
+
+NS_DEFINE_NAMED_CID(NS_FONTTABLEPROTOCOLHANDLER_CID);
+
+static const mozilla::Module::CIDEntry FontTableURIProtocolHandlerCIDs[] = {
+    {&kNS_FONTTABLEPROTOCOLHANDLER_CID, false, nullptr,
+     FontTableURIProtocolHandlerConstructor},
+    {nullptr}};
+
+static const mozilla::Module::ContractIDEntry
+    FontTableURIProtocolHandlerContracts[] = {
+        {NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX FONTTABLEURI_SCHEME,
+         &kNS_FONTTABLEPROTOCOLHANDLER_CID},
+        {nullptr}};
+
+static const mozilla::Module FontTableURIProtocolHandlerModule = {
+    mozilla::Module::kVersion, FontTableURIProtocolHandlerCIDs,
+    FontTableURIProtocolHandlerContracts};
+
+NSMODULE_DEFN(FontTableURIProtocolHandler) = &FontTableURIProtocolHandlerModule;

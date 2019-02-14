@@ -1,0 +1,3 @@
+component {f3a8ca4d-4c83-456b-aee2-6a2cbf11e9bd} SanityTest.js process=main
+contract @mozilla.org/sanity-test;1 {f3a8ca4d-4c83-456b-aee2-6a2cbf11e9bd} process=main
+category profile-after-change SanityTest @mozilla.org/sanity-test;1 process=main
