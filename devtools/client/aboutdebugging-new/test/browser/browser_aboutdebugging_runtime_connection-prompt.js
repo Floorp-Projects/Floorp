@@ -3,10 +3,6 @@
 
 "use strict";
 
-/* import-globals-from helper-mocks.js */
-Services.scriptloader.loadSubScript(
-  CHROME_URL_ROOT + "helper-mocks.js", this);
-
 /**
  * Test that remote runtimes show the connection prompt,
  * but it's hidden in 'This Firefox'

@@ -3,13 +3,6 @@
 
 "use strict";
 
-/* import-globals-from mocks/helper-client-wrapper-mock.js */
-Services.scriptloader.loadSubScript(
-  CHROME_URL_ROOT + "mocks/helper-client-wrapper-mock.js", this);
-/* import-globals-from mocks/helper-runtime-client-factory-mock.js */
-Services.scriptloader.loadSubScript(
-  CHROME_URL_ROOT + "mocks/helper-runtime-client-factory-mock.js", this);
-
 const { gDevToolsBrowser } = require("devtools/client/framework/devtools-browser");
 
 add_task(async function() {
