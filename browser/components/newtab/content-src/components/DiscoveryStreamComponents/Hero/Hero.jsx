@@ -2,7 +2,6 @@ import {actionCreators as ac} from "common/Actions.jsm";
 import {DSCard} from "../DSCard/DSCard.jsx";
 import {List} from "../List/List.jsx";
 import React from "react";
-import {truncateText} from "content-src/lib/truncate-text";
 
 export class Hero extends React.PureComponent {
   constructor(props) {
@@ -45,14 +44,14 @@ export class Hero extends React.PureComponent {
         campaignId={rec.campaign_id}
         key={`dscard-${index}`}
         image_src={rec.image_src}
-        title={truncateText(rec.title, 44)}
+        title={rec.title}
         url={rec.url}
         id={rec.id}
         index={index + 1}
         type={this.props.type}
         dispatch={this.props.dispatch}
-        context={truncateText(rec.context, 22)}
-        source={truncateText(rec.domain, 22)} />
+        context={rec.context}
+        source={rec.domain} />
     ));
 
     let list = (
@@ -74,12 +73,12 @@ export class Hero extends React.PureComponent {
               <div className="img" style={{backgroundImage: `url(${heroRec.image_src})`}} />
             </div>
             <div className="meta">
-              <header>{truncateText(heroRec.title, 28)}</header>
-              <p>{truncateText(heroRec.excerpt, 114)}</p>
+              <header>{heroRec.title}</header>
+              <p>{heroRec.excerpt}</p>
               {heroRec.context ? (
-                <p className="context">{truncateText(heroRec.context, 22)}</p>
+                <p className="context">{heroRec.context}</p>
               ) : (
-                <p className="source">{truncateText(heroRec.domain, 22)}</p>
+                <p className="source">{heroRec.domain}</p>
               )}
             </div>
           </a>
