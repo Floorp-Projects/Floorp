@@ -1,0 +1,18 @@
+win64-nasm:
+    description: "nasm win64 build"
+    treeherder:
+        symbol: TW64(nasm)
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        docker-image: {in-tree: mingw32-build}
+        max-run-time: 1800
+    run:
+        script: build-nasm.sh
+        resources:
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
+        toolchain-artifact: public/build/nasm.tar.bz2
+    toolchains:
+        - linux64-clang-trunk-mingw-x64
+    fetches:
+        fetch:
+            - nasm-2.14.02
