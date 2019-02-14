@@ -12,12 +12,14 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import mozilla.components.browser.engine.gecko.GeckoEngine
+import mozilla.components.browser.engine.gecko.fetch.GeckoViewFetchClient
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.storage.SessionStorage
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
+import mozilla.components.concept.fetch.Client
 import mozilla.components.feature.session.HistoryDelegate
 import mozilla.components.feature.session.bundling.SessionBundleStorage
 import mozilla.components.lib.crash.handler.CrashHandlerService
@@ -30,6 +32,14 @@ import java.util.concurrent.TimeUnit
  * Component group for all core browser functionality.
  */
 class Core(private val context: Context) {
+
+    private val runtime by lazy {
+        val runtimeSettings = GeckoRuntimeSettings.Builder()
+            .crashHandler(CrashHandlerService::class.java)
+            .build()
+
+        GeckoRuntime.create(context, runtimeSettings)
+    }
 
     /**
      * The browser engine component initialized based on the build
@@ -46,13 +56,14 @@ class Core(private val context: Context) {
             historyTrackingDelegate = HistoryDelegate(historyStorage)
         )
 
-        val runtimeSettings = GeckoRuntimeSettings.Builder()
-            .crashHandler(CrashHandlerService::class.java)
-            .build()
-
-        val runtime = GeckoRuntime.create(context, runtimeSettings)
-
         GeckoEngine(context, defaultSettings, runtime)
+    }
+
+    /**
+     * [Client] implementation to be used for code depending on `concept-fetch``
+     */
+    val client: Client by lazy {
+        GeckoViewFetchClient(context, runtime)
     }
 
     val sessionStorage by lazy {

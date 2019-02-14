@@ -59,6 +59,7 @@ class AwesomeBarUIView(
                     if (useNewTab) {
                         components.useCases.searchUseCases.newTabSearch
                     } else components.useCases.searchUseCases.defaultSearch,
+                    components.core.client,
                     SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS
                 )
             )
