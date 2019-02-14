@@ -1,6 +1,4 @@
-import pytest
-
-from tests.support.asserts import assert_dialog_handled, assert_error, assert_success
+from tests.support.asserts import assert_error, assert_success
 
 
 def execute_script(session, script, args=None):
@@ -98,7 +96,7 @@ def test_promise_resolve_timeout(session):
             )
         );
         """)
-    assert_error(response, "timeout error")
+    assert_error(response, "script timeout")
 
 
 def test_promise_reject_timeout(session):
@@ -111,4 +109,4 @@ def test_promise_reject_timeout(session):
             )
         );
         """)
-    assert_error(response, "timeout error")
+    assert_error(response, "script timeout")
