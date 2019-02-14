@@ -39,13 +39,12 @@ import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 
 @RunWith(RobolectricTestRunner::class)
 class BrowserToolbarTest {
     private val context: Context
         get() = ApplicationProvider.getApplicationContext()
-    
+
     @Test
     fun `display toolbar is visible by default`() {
         val toolbar = BrowserToolbar(context)

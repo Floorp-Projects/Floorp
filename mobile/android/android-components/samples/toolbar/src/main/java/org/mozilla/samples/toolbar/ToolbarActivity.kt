@@ -57,6 +57,7 @@ class ToolbarActivity : AppCompatActivity() {
             ToolbarConfiguration.FOCUS_PHONE -> setupFocusPhoneToolbar()
             ToolbarConfiguration.SEEDLING -> setupSeedlingToolbar()
             ToolbarConfiguration.CUSTOM_MENU -> setupCustomMenu()
+            ToolbarConfiguration.PRIVATE_MODE -> setupDefaultToolbar(private = true)
         }
 
         recyclerView.adapter = ConfigurationAdapter(configuration)
@@ -77,9 +78,11 @@ class ToolbarActivity : AppCompatActivity() {
     /**
      * A very simple toolbar with mostly default values.
      */
-    private fun setupDefaultToolbar() {
+    private fun setupDefaultToolbar(private: Boolean = false) {
         toolbar.setBackgroundColor(
                 ContextCompat.getColor(this, mozilla.components.ui.colors.R.color.photonBlue80))
+
+        toolbar.private = private
 
         toolbar.url = "https://www.mozilla.org/en-US/firefox/"
     }

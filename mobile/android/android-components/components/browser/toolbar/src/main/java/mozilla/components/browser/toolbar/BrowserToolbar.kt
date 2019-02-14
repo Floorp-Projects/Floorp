@@ -14,7 +14,6 @@ import android.util.AttributeSet
 import android.view.View
 import android.view.View.OnFocusChangeListener
 import android.view.ViewGroup
-import android.view.inputmethod.EditorInfo
 import android.widget.ImageButton
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope

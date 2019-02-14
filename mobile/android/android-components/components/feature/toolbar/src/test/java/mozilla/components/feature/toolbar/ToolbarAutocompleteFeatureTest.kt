@@ -32,6 +32,7 @@ class ToolbarAutocompleteFeatureTest {
     class TestToolbar : Toolbar {
         override var url: String = ""
         override var siteSecure: Toolbar.SiteSecurity = Toolbar.SiteSecurity.INSECURE
+        override var private: Boolean = false
 
         var autocompleteFilter: (suspend (String, AutocompleteDelegate) -> Unit)? = null
 
