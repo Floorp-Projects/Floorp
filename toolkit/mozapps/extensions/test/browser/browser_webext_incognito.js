@@ -26,6 +26,11 @@ async function hasPrivateAllowed(id) {
          perms.permissions[0] == "internal:privateBrowsingAllowed";
 }
 
+add_task(function clearInitialTelemetry() {
+  // Clear out any telemetry data that existed before this file is run.
+  Services.telemetry.clearEvents();
+});
+
 add_task(async function test_addon() {
   await SpecialPowers.pushPrefEnv({set: [["extensions.allowPrivateBrowsingByDefault", false]]});
 
@@ -120,5 +125,18 @@ add_task(async function test_addon() {
   for (let extension of extensions) {
     await extension.unload();
   }
+
+  const expectedExtras = {
+    action: "privateBrowsingAllowed",
+    view: "detail",
+    type: "extension",
+  };
+
+  assertTelemetryMatches([
+    ["action", "aboutAddons", "on", {...expectedExtras, addonId: "@test-default"}],
+    ["action", "aboutAddons", "off", {...expectedExtras, addonId: "@test-override"}],
+    ["action", "aboutAddons", "off", {...expectedExtras, addonId: "@test-override-permanent"}],
+  ], {filterMethods: ["action"]});
+
   Services.prefs.clearUserPref("extensions.allowPrivateBrowsingByDefault");
 });

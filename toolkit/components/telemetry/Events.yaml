@@ -168,15 +168,15 @@ addonsManager:
     extra_keys:
       action: >
         The action that was performed. Options include disable, enable, uninstall, undo, contribute, preferences,
-        installFromFile, manage, checkForUpdates, checkForUpdate, setUpdatePolicy, setAddonUpdate, resetUpdatePolicy
-        and releaseNotes.
+        installFromFile, manage, checkForUpdates, checkForUpdate, setUpdatePolicy, setAddonUpdate, resetUpdatePolicy,
+        privateBrowsingAllowed, and releaseNotes.
       type: "For enable, disable, uninstall and undo: the add-on type that is being acted upon."
       view: The view for the event, when object is aboutAddons.
       addonId: The id of the add-on being acted upon.
     notification_emails: ["addons-dev-internal@mozilla.com"]
     expiry_version: "73"
     record_in_processes: ["main"]
-    bug_numbers: [1500147]
+    bug_numbers: [1500147, 1513344]
     release_channel_collection: opt-out
 
 extensions.data:
