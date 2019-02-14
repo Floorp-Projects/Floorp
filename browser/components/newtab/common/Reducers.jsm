@@ -54,7 +54,10 @@ const INITIAL_STATE = {
     layout: [],
     lastUpdated: null,
     feeds: {
-      // "https://foo.com/feed1": {lastUpdated: 123, data: []}
+      data: {
+        // "https://foo.com/feed1": {lastUpdated: 123, data: []}
+      },
+      loaded: false,
     },
     spocs: {
       spocs_endpoint: "",
@@ -465,7 +468,14 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
     case at.DISCOVERY_STREAM_LAYOUT_RESET:
       return {...prevState, lastUpdated: INITIAL_STATE.DiscoveryStream.lastUpdated, layout: INITIAL_STATE.DiscoveryStream.layout};
     case at.DISCOVERY_STREAM_FEEDS_UPDATE:
-      return {...prevState, feeds: action.data || prevState.feeds};
+      return {
+        ...prevState,
+        feeds: {
+          ...prevState.feeds,
+          data: action.data || prevState.feeds.data,
+          loaded: true,
+        },
+      };
     case at.DISCOVERY_STREAM_SPOCS_ENDPOINT:
       return {
         ...prevState,
