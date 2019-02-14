@@ -148,6 +148,8 @@ CanonicalBrowsingContext* BrowsingContext::Canonical() {
   if (XRE_IsParentProcess()) {
     context = new CanonicalBrowsingContext(
         aParent, aOpener, aName, aId, aOriginProcess->ChildID(), Type::Content);
+
+    context->Group()->Subscribe(aOriginProcess);
   } else {
     context = new BrowsingContext(aParent, aOpener, aName, aId, Type::Content);
   }
