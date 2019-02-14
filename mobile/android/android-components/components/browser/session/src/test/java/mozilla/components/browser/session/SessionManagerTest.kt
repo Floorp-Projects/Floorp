@@ -332,10 +332,16 @@ class SessionManagerTest {
         assertTrue(manager.createSnapshot().isEmpty())
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun `restore checks validity of a snapshot - empty`() {
         val manager = SessionManager(mock())
+
+        val observer: SessionManager.Observer = mock()
+        manager.register(observer)
+
         manager.restore(SessionManager.Snapshot(listOf(), selectedSessionIndex = 0))
+
+        verify(observer, never()).onSessionsRestored()
     }
 
     @Test

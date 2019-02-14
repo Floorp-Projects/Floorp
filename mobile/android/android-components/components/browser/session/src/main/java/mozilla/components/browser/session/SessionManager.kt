@@ -190,11 +190,10 @@ class SessionManager(
      *   notification will fire.
      *
      * @param snapshot A [Snapshot] which may be produced by [createSnapshot].
-     * @throws IllegalArgumentException if an empty snapshot is passed in.
      */
     fun restore(snapshot: Snapshot) = synchronized(values) {
-        require(snapshot.sessions.isNotEmpty()) {
-            "Snapshot must contain session state tuples"
+        if (snapshot.sessions.isEmpty()) {
+            return
         }
 
         // Let's be forgiving about incoming illegal selection indices, but strict about what we

@@ -69,6 +69,7 @@ permalink: /changelog/
 
 * **browser-session**, **feature-session-bundling**
   * `SessionStorage` and `SessionBundleStorage` now save and restore the title of `Session` objects.
+  * `SessionManager.restore()` now allows passing in empty snapshots.
 
 # 0.42.0
 
