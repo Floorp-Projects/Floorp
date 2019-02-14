@@ -734,7 +734,11 @@ void ContentChild::SetProcessName(const nsAString& aName) {
   }
 
   mProcessName = aName;
-  mozilla::ipc::SetThisProcessName(NS_LossyConvertUTF16toASCII(aName).get());
+  NS_LossyConvertUTF16toASCII asciiName(aName);
+  mozilla::ipc::SetThisProcessName(asciiName.get());
+#ifdef MOZ_GECKO_PROFILER
+  profiler_set_process_name(asciiName);
+#endif
 }
 
 NS_IMETHODIMP
