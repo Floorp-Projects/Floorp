@@ -135,9 +135,6 @@ UNIFIED_SOURCES += [
 SOURCES += [
     'nsDirectoryService.cpp',
 ]
-if CONFIG['CC_TYPE'] == 'msvc':
-    # Needed for gDirectoryAtoms.
-    SOURCES['nsDirectoryService.cpp'].flags += ['-Zc:externConstexpr']
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     SOURCES += [
@@ -156,7 +153,7 @@ LOCAL_INCLUDES += [
     '../build',
 ]
 
-if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
+if CONFIG['CC_TYPE'] == 'clang-cl':
     # This is intended as a temporary hack to support building with VS2015.
     # '_snwprintf' : format string '%s' requires an argument of type 'wchar_t *',
     # but variadic argument 3 has type 'char16ptr_t'

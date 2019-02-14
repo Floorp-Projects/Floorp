@@ -151,7 +151,7 @@ OS_LIBS += [
     'rpcrt4',
 ]
 
-if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
+if CONFIG['CC_TYPE'] == 'clang-cl':
     SOURCES += [
         'ToastNotification.cpp',
         'ToastNotificationHandler.cpp',

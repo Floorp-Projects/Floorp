@@ -227,11 +227,6 @@ SOURCES += [
     # windows.h.
     'nsLayoutStylesheetCache.cpp',
 ]
-if CONFIG['CC_TYPE'] == 'msvc':
-    # Needed for gCSSAnonBoxAtoms.
-    SOURCES['nsCSSAnonBoxes.cpp'].flags += ['-Zc:externConstexpr']
-    # Needed for gCSSPseudoElementAtoms.
-    SOURCES['nsCSSPseudoElements.cpp'].flags += ['-Zc:externConstexpr']
 
 include('/ipc/chromium/chromium-config.mozbuild')
 

@@ -22,7 +22,7 @@ SOURCES += [
 ]
 
 # warning C4661 for FilteringWrapper
-if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
+if CONFIG['CC_TYPE'] == 'clang-cl':
     CXXFLAGS += [
         '-wd4661', # no suitable definition provided for explicit template instantiation request
     ]

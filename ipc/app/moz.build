@@ -59,7 +59,7 @@ if CONFIG['MOZ_SANDBOX'] and CONFIG['OS_TARGET'] == 'Darwin':
         'mozsandbox',
     ]
 
-if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
+if CONFIG['CC_TYPE'] == 'clang-cl':
     # Always enter a Windows program through wmain, whether or not we're
     # a console application.
     WIN32_EXE_LDFLAGS += ['-ENTRY:wmainCRTStartup']

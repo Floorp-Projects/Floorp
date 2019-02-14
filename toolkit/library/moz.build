@@ -85,7 +85,7 @@ def Libxul(name, output_category=None):
         LDFLAGS += ['-Wl,-U,_OBJC_CLASS_$_NSCustomTouchBarItem']
         LDFLAGS += ['-lresolv']
 
-    if CONFIG['MOZ_DEBUG_SYMBOLS'] and CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
+    if CONFIG['MOZ_DEBUG_SYMBOLS'] and CONFIG['CC_TYPE'] == 'clang-cl':
         LDFLAGS += ['-NATVIS:%s/toolkit/library/gecko.natvis' % TOPSRCDIR]
     if CONFIG['RUSTC_NATVIS_LDFLAGS']:
         LDFLAGS += CONFIG['RUSTC_NATVIS_LDFLAGS']
@@ -323,7 +323,7 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         'dhcpcsvc',
     ]
 
-    if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
+    if CONFIG['CC_TYPE'] == 'clang-cl':
         OS_LIBS += [
             'runtimeobject',
         ]

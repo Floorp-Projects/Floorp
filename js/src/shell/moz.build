@@ -26,12 +26,6 @@ UNIFIED_SOURCES += [
 
 DEFINES['EXPORT_JS_API'] = True
 
-if CONFIG['CC_TYPE'] == 'msvc':
-    # PGO is unnecessary for the js shell, but clang/gcc cannot turn off PGO
-    # because we need to resolve symbols from PGO runtime library when our
-    # object files have been compiled for PGO.
-    NO_PGO = True
-
 LOCAL_INCLUDES += [
     '!..',
     '..',

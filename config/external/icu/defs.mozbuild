@@ -49,14 +49,3 @@ if CONFIG['CC_TYPE'] == 'clang-cl':
         '-Wno-macro-redefined',
         '-Wno-microsoft-include',
     ]
-
-if CONFIG['CC_TYPE'] == 'msvc':
-    CFLAGS += [
-        '-wd4005', # 'WIN32_LEAN_AND_MEAN' : macro redefinition
-        '-wd4996', # The compiler encountered a deprecated declaration.
-    ]
-    CXXFLAGS += [
-        '-wd4005', # 'WIN32_LEAN_AND_MEAN' : macro redefinition
-        '-wd4333', # '>>' : right shift by too large amount, data loss
-        '-wd4996', # The compiler encountered a deprecated declaration.
-    ]

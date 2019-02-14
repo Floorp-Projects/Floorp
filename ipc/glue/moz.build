@@ -189,7 +189,7 @@ else:
         'GeckoChildProcessHost.cpp',
     ]
 
-if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
+if CONFIG['CC_TYPE'] == 'clang-cl':
     # This is intended as a temporary hack to support building with VS2015.
     # 'reinterpret_cast': conversion from 'DWORD' to 'HANDLE' of greater size
     SOURCES['BackgroundChildImpl.cpp'].flags += ['-wd4312']

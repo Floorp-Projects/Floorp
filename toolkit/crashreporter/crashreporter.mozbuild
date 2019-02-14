@@ -10,7 +10,7 @@ LOCAL_INCLUDES += [
 ]
 
 # Suppress warnings in third-party code.
-if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
+if CONFIG['CC_TYPE'] == 'clang-cl':
     CXXFLAGS += [
         '-wd4005', # macro redefinition
         '-wd4146', # negative unsigned
@@ -34,7 +34,7 @@ if CONFIG['CC_TYPE'] in ('clang', 'clang-cl'):
          '-Wno-c++11-narrowing',
      ]
 
-if CONFIG['CC_TYPE'] not in ('msvc', 'clang-cl'):
+if CONFIG['CC_TYPE'] != 'clang-cl':
      CXXFLAGS += [
          '-Wno-implicit-fallthrough',
      ]
