@@ -15,6 +15,8 @@ const LAYOUT_UPDATE_TIME = 30 * 60 * 1000; // 30 minutes
 const COMPONENT_FEEDS_UPDATE_TIME = 30 * 60 * 1000; // 30 minutes
 const SPOCS_FEEDS_UPDATE_TIME = 30 * 60 * 1000; // 30 minutes
 const CONFIG_PREF_NAME = "browser.newtabpage.activity-stream.discoverystream.config";
+const SPOC_IMPRESSION_TRACKING_PREF = "browser.newtabpage.activity-stream.discoverystream.spoc.impressions";
+const MAX_LIFETIME_CAP = 500; // Guard against misconfiguration on the server
 
 this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
   constructor() {
@@ -183,6 +185,8 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
             lastUpdated: Date.now(),
             data: spocsResponse,
           };
+
+          this.cleanUpCampaignImpressionPref(spocs.data);
           await this.cache.set("spocs", spocs);
         } else {
           Cu.reportError("No response for spocs_endpoint prop");
@@ -203,9 +207,60 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
       type: at.DISCOVERY_STREAM_SPOCS_UPDATE,
       data: {
         lastUpdated: spocs.lastUpdated,
-        spocs: spocs.data,
+        spocs: this.filterSpocs(spocs.data),
       },
     });
+  }
+
+  // Filter spocs based on frequency caps
+  filterSpocs(data) {
+    if (data && data.spocs && data.spocs.length) {
+      const {spocs} = data;
+      const impressions = this.readImpressionsPref(SPOC_IMPRESSION_TRACKING_PREF);
+      return {
+        ...data,
+        spocs: spocs.filter(s => this.isBelowFrequencyCap(impressions, s)),
+      };
+    }
+    return data;
+  }
+
+  // Frequency caps are based on campaigns, which may include multiple spocs.
+  // We currently support two types of frequency caps:
+  // - lifetime: Indicates how many times spocs from a campaign can be shown in total
+  // - period: Indicates how many times spocs from a campaign can be shown within a period
+  //
+  // So, for example, the feed configuration below defines that for campaign 1 no more
+  // than 5 spocs can be shown in total, and no more than 2 per hour.
+  // "campaign_id": 1,
+  // "caps": {
+  //  "lifetime": 5,
+  //  "campaign": {
+  //    "count": 2,
+  //    "period": 3600
+  //  }
+  // }
+  isBelowFrequencyCap(impressions, spoc) {
+    const campaignImpressions = impressions[spoc.campaign_id];
+    if (!campaignImpressions) {
+      return true;
+    }
+
+    const lifetime = spoc.caps && spoc.caps.lifetime;
+
+    const lifeTimeCap = Math.min(lifetime || MAX_LIFETIME_CAP, MAX_LIFETIME_CAP);
+    const lifeTimeCapExceeded = campaignImpressions.length >= lifeTimeCap;
+    if (lifeTimeCapExceeded) {
+      return false;
+    }
+
+    const campaignCap = spoc.caps && spoc.caps.campaign;
+    if (campaignCap) {
+      const campaignCapExceeded = campaignImpressions
+        .filter(i => (Date.now() - i) < (campaignCap.period * 1000)).length >= campaignCap.count;
+      return !campaignCapExceeded;
+    }
+    return true;
   }
 
   async getComponentFeed(feedUrl) {
@@ -277,6 +332,50 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     }
   }
 
+  recordCampaignImpression(campaignId) {
+    let impressions = this.readImpressionsPref(SPOC_IMPRESSION_TRACKING_PREF);
+
+    const timeStamps = impressions[campaignId] || [];
+    timeStamps.push(Date.now());
+    impressions = {...impressions, [campaignId]: timeStamps};
+
+    this.writeImpressionsPref(SPOC_IMPRESSION_TRACKING_PREF, impressions);
+  }
+
+  cleanUpCampaignImpressionPref(data) {
+    if (data.spocs && data.spocs.length) {
+      const campaignIds = data.spocs.map(s => `${s.campaign_id}`);
+      this.cleanUpImpressionPref(id => !campaignIds.includes(id), SPOC_IMPRESSION_TRACKING_PREF);
+    }
+  }
+
+  writeImpressionsPref(pref, impressions) {
+    Services.prefs.setStringPref(pref, JSON.stringify(impressions));
+  }
+
+  readImpressionsPref(pref) {
+    const prefVal = Services.prefs.getStringPref(pref, "");
+    return prefVal ? JSON.parse(prefVal) : {};
+  }
+
+  cleanUpImpressionPref(isExpired, pref) {
+    const impressions = this.readImpressionsPref(pref);
+    let changed = false;
+
+    Object
+      .keys(impressions)
+      .forEach(id => {
+        if (isExpired(id)) {
+          changed = true;
+          delete impressions[id];
+        }
+      });
+
+    if (changed) {
+      this.writeImpressionsPref(pref, impressions);
+    }
+  }
+
   async onAction(action) {
     switch (action.type) {
       case at.INIT:
@@ -300,6 +399,22 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
       case at.DISCOVERY_STREAM_CONFIG_CHANGE:
         // When the config pref changes, load or unload data as needed.
         await this.onPrefChange();
+        break;
+      case at.DISCOVERY_STREAM_SPOC_IMPRESSION:
+        if (this.showSpocs) {
+          this.recordCampaignImpression(action.data.campaignId);
+
+          const cachedData = await this.cache.get() || {};
+          const {spocs} = cachedData;
+
+          this.store.dispatch(ac.AlsoToPreloaded({
+            type: at.DISCOVERY_STREAM_SPOCS_UPDATE,
+            data: {
+              lastUpdated: spocs.lastUpdated,
+              spocs: this.filterSpocs(spocs.data),
+            },
+          }));
+        }
         break;
       case at.UNINIT:
         // When this feed is shutting down:
