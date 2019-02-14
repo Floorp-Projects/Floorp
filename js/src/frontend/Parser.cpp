@@ -275,11 +275,9 @@ ObjectBox* ParserBase::newObjectBox(JSObject* obj) {
   return newTraceListNode<ObjectBox, JSObject>(obj);
 }
 
-#ifdef ENABLE_BIGINT
 BigIntBox* ParserBase::newBigIntBox(BigInt* val) {
   return newTraceListNode<BigIntBox, BigInt>(val);
 }
-#endif
 
 template <class ParseHandler>
 FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
@@ -9020,7 +9018,6 @@ GeneralParser<ParseHandler, Unit>::newRegExp() {
   return asFinalParser()->newRegExp();
 }
 
-#ifdef ENABLE_BIGINT
 template <typename Unit>
 BigIntLiteral* Parser<FullParseHandler, Unit>::newBigInt() {
   // The token's charBuffer contains the DecimalIntegerLiteral or
@@ -9054,7 +9051,6 @@ typename ParseHandler::BigIntLiteralType
 GeneralParser<ParseHandler, Unit>::newBigInt() {
   return asFinalParser()->newBigInt();
 }
-#endif /* ENABLE_BIGINT */
 
 // |exprPossibleError| is the PossibleError state within |expr|,
 // |possibleError| is the surrounding PossibleError state.
@@ -10080,10 +10076,8 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::primaryExpr(
     case TokenKind::Number:
       return newNumber(anyChars.currentToken());
 
-#ifdef ENABLE_BIGINT
     case TokenKind::BigInt:
       return newBigInt();
-#endif
 
     case TokenKind::True:
       return handler.newBooleanLiteral(true, pos());

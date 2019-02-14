@@ -2345,7 +2345,7 @@ static bool CanCompareRegExp(MCompare* compare, MDefinition* def) {
       value->mightBeType(MIRType::Double) ||
       value->mightBeType(MIRType::Float32) ||
       value->mightBeType(MIRType::Symbol) ||
-      IF_BIGINT(value->mightBeType(MIRType::BigInt), false)) {
+      value->mightBeType(MIRType::BigInt)) {
     return false;
   }
 
@@ -3177,9 +3177,7 @@ static bool IsResumableMIRType(MIRType type) {
     case MIRType::Float32:
     case MIRType::String:
     case MIRType::Symbol:
-#  ifdef ENABLE_BIGINT
     case MIRType::BigInt:
-#  endif
     case MIRType::Object:
     case MIRType::MagicOptimizedArguments:
     case MIRType::MagicOptimizedOut:

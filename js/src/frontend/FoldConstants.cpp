@@ -398,9 +398,7 @@ restart:
     case ParseNodeKind::ThisExpr:
     case ParseNodeKind::Elision:
     case ParseNodeKind::NumberExpr:
-#ifdef ENABLE_BIGINT
     case ParseNodeKind::BigIntExpr:
-#endif
     case ParseNodeKind::NewExpr:
     case ParseNodeKind::Generator:
     case ParseNodeKind::ParamsBody:
@@ -482,9 +480,7 @@ static bool IsEffectless(ParseNode* node) {
          node->isKind(ParseNodeKind::StringExpr) ||
          node->isKind(ParseNodeKind::TemplateStringExpr) ||
          node->isKind(ParseNodeKind::NumberExpr) ||
-#ifdef ENABLE_BIGINT
          node->isKind(ParseNodeKind::BigIntExpr) ||
-#endif
          node->isKind(ParseNodeKind::NullExpr) ||
          node->isKind(ParseNodeKind::RawUndefinedExpr) ||
          node->isKind(ParseNodeKind::Function);
@@ -500,11 +496,9 @@ static Truthiness Boolish(ParseNode* pn) {
                  ? Truthy
                  : Falsy;
 
-#ifdef ENABLE_BIGINT
     case ParseNodeKind::BigIntExpr:
       return (pn->as<BigIntLiteral>().box()->value()->isZero()) ? Falsy
                                                                 : Truthy;
-#endif
 
     case ParseNodeKind::StringExpr:
     case ParseNodeKind::TemplateStringExpr:
@@ -574,13 +568,9 @@ static bool FoldTypeOfExpr(JSContext* cx, FullParseHandler* handler,
     result = cx->names().string;
   } else if (expr->isKind(ParseNodeKind::NumberExpr)) {
     result = cx->names().number;
-  }
-#ifdef ENABLE_BIGINT
-  else if (expr->isKind(ParseNodeKind::BigIntExpr)) {
+  } else if (expr->isKind(ParseNodeKind::BigIntExpr)) {
     result = cx->names().bigint;
-  }
-#endif
-  else if (expr->isKind(ParseNodeKind::NullExpr)) {
+  } else if (expr->isKind(ParseNodeKind::NullExpr)) {
     result = cx->names().object;
   } else if (expr->isKind(ParseNodeKind::TrueExpr) ||
              expr->isKind(ParseNodeKind::FalseExpr)) {

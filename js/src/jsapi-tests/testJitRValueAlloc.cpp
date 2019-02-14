@@ -68,7 +68,7 @@ BEGIN_TEST(testJitRValueAlloc_TypedReg) {
   /* _(JSVAL_TYPE_MAGIC) */     \
   _(JSVAL_TYPE_STRING)          \
   _(JSVAL_TYPE_SYMBOL)          \
-  IF_BIGINT(_(JSVAL_TYPE_BIGINT),) \
+  _(JSVAL_TYPE_BIGINT)          \
   /* _(JSVAL_TYPE_NULL) */      \
   _(JSVAL_TYPE_OBJECT)
 
@@ -96,7 +96,7 @@ BEGIN_TEST(testJitRValueAlloc_TypedStack) {
   /* _(JSVAL_TYPE_MAGIC) */     \
   _(JSVAL_TYPE_STRING)          \
   _(JSVAL_TYPE_SYMBOL)          \
-  IF_BIGINT(_(JSVAL_TYPE_BIGINT),) \
+  _(JSVAL_TYPE_BIGINT)          \
   /* _(JSVAL_TYPE_NULL) */      \
   _(JSVAL_TYPE_OBJECT)
 

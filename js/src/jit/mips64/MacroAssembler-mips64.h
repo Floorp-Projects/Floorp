@@ -398,11 +398,9 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64 {
   void unboxSymbol(const ValueOperand& src, Register dest);
   void unboxSymbol(Register src, Register dest);
   void unboxSymbol(const Address& src, Register dest);
-#ifdef ENABLE_BIGINT
   void unboxBigInt(const ValueOperand& operand, Register dest);
   void unboxBigInt(Register src, Register dest);
   void unboxBigInt(const Address& src, Register dest);
-#endif
   void unboxObject(const ValueOperand& src, Register dest);
   void unboxObject(Register src, Register dest);
   void unboxObject(const Address& src, Register dest);

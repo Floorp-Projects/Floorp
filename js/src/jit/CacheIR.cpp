@@ -1952,13 +1952,9 @@ bool GetPropIRGenerator::tryAttachPrimitive(ValOperandId valId, HandleId id) {
     protoKey = JSProto_Boolean;
   } else if (val_.isSymbol()) {
     protoKey = JSProto_Symbol;
-  }
-#ifdef ENABLE_BIGINT
-  else if (val_.isBigInt()) {
+  } else if (val_.isBigInt()) {
     protoKey = JSProto_BigInt;
-  }
-#endif
-  else {
+  } else {
     MOZ_ASSERT(val_.isNullOrUndefined() || val_.isMagic());
     return false;
   }
@@ -5444,7 +5440,7 @@ bool CompareIRGenerator::tryAttachPrimitiveUndefined(ValOperandId lhsId,
   // undefined)
   auto isPrimitive = [](HandleValue& x) {
     return x.isString() || x.isSymbol() || x.isBoolean() || x.isNumber() ||
-           IF_BIGINT(x.isBigInt(), false);
+           x.isBigInt();
   };
 
   if (!(lhsVal_.isNullOrUndefined() && isPrimitive(rhsVal_)) &&
@@ -5464,11 +5460,9 @@ bool CompareIRGenerator::tryAttachPrimitiveUndefined(ValOperandId lhsId,
       case JSVAL_TYPE_SYMBOL:
         writer.guardIsSymbol(id);
         return;
-#ifdef ENABLE_BIGINT
       case JSVAL_TYPE_BIGINT:
         writer.guardIsBigInt(id);
         return;
-#endif
       case JSVAL_TYPE_STRING:
         writer.guardIsString(id);
         return;

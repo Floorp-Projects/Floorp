@@ -2537,7 +2537,7 @@
      *   Operands: uint32_t constIndex
      *   Stack: => val
      */ \
-    IF_BIGINT(MACRO(JSOP_BIGINT, 237, "bigint", NULL, 5, 0, 1, JOF_BIGINT),)
+    MACRO(JSOP_BIGINT, 237, "bigint", NULL, 5, 0, 1, JOF_BIGINT)
 // clang-format on
 
 /*
@@ -2545,7 +2545,6 @@
  * a power of two.  Use this macro to do so.
  */
 #define FOR_EACH_TRAILING_UNUSED_OPCODE(MACRO) \
-  IF_BIGINT(, MACRO(237))                      \
   MACRO(238)                                   \
   MACRO(239)                                   \
   MACRO(240)                                   \

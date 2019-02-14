@@ -43,9 +43,7 @@ static JSObject* jsfuzz_createGlobal(JSContext* cx, JSPrincipals* principals) {
   JS::RootedObject newGlobal(cx);
   JS::RealmOptions options;
   options.creationOptions().setStreamsEnabled(true);
-#ifdef ENABLE_BIGINT
   options.creationOptions().setBigIntEnabled(true);
-#endif
   newGlobal = JS_NewGlobalObject(cx, getGlobalClass(), principals,
                                  JS::FireOnNewGlobalHook, options);
   if (!newGlobal) {

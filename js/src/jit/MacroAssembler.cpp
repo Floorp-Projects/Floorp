@@ -65,11 +65,9 @@ static void EmitTypeCheck(MacroAssembler& masm, Assembler::Condition cond,
     case JSVAL_TYPE_SYMBOL:
       masm.branchTestSymbol(cond, src, label);
       break;
-#ifdef ENABLE_BIGINT
     case JSVAL_TYPE_BIGINT:
       masm.branchTestBigInt(cond, src, label);
       break;
-#endif
     case JSVAL_TYPE_NULL:
       masm.branchTestNull(cond, src, label);
       break;
@@ -104,10 +102,7 @@ void MacroAssembler::guardTypeSet(const Source& address, const TypeSet* types,
   Label matched;
   TypeSet::Type tests[] = {TypeSet::Int32Type(),    TypeSet::UndefinedType(),
                            TypeSet::BooleanType(),  TypeSet::StringType(),
-                           TypeSet::SymbolType(),
-#ifdef ENABLE_BIGINT
-                           TypeSet::BigIntType(),
-#endif
+                           TypeSet::SymbolType(),   TypeSet::BigIntType(),
                            TypeSet::NullType(),     TypeSet::MagicArgType(),
                            TypeSet::AnyObjectType()};
 
@@ -3402,11 +3397,9 @@ void MacroAssembler::maybeBranchTestType(MIRType type, MDefinition* maybeDef,
       case MIRType::Symbol:
         branchTestSymbol(Equal, tag, label);
         break;
-#ifdef ENABLE_BIGINT
       case MIRType::BigInt:
         branchTestBigInt(Equal, tag, label);
         break;
-#endif
       case MIRType::Object:
         branchTestObject(Equal, tag, label);
         break;

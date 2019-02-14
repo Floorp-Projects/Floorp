@@ -343,10 +343,8 @@ static const char* ValTypeToString(JSValueType type) {
       return "string";
     case JSVAL_TYPE_SYMBOL:
       return "symbol";
-#ifdef ENABLE_BIGINT
     case JSVAL_TYPE_BIGINT:
       return "BigInt";
-#endif
     case JSVAL_TYPE_BOOLEAN:
       return "boolean";
     case JSVAL_TYPE_OBJECT:

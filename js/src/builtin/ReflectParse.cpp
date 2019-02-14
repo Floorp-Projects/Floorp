@@ -21,9 +21,7 @@
 #include "frontend/Parser.h"
 #include "js/CharacterEncoding.h"
 #include "js/StableStringChars.h"
-#ifdef ENABLE_BIGINT
-#  include "vm/BigIntType.h"
-#endif
+#include "vm/BigIntType.h"
 #include "vm/JSAtom.h"
 #include "vm/JSObject.h"
 #include "vm/RegExpObject.h"
@@ -2950,9 +2948,7 @@ bool ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst) {
     case ParseNodeKind::StringExpr:
     case ParseNodeKind::RegExpExpr:
     case ParseNodeKind::NumberExpr:
-#ifdef ENABLE_BIGINT
     case ParseNodeKind::BigIntExpr:
-#endif
     case ParseNodeKind::TrueExpr:
     case ParseNodeKind::FalseExpr:
     case ParseNodeKind::NullExpr:
@@ -3125,14 +3121,12 @@ bool ASTSerializer::literal(ParseNode* pn, MutableHandleValue dst) {
       val.setNumber(pn->as<NumericLiteral>().value());
       break;
 
-#ifdef ENABLE_BIGINT
     case ParseNodeKind::BigIntExpr: {
       BigInt* x = pn->as<BigIntLiteral>().box()->value();
       cx->check(x);
       val.setBigInt(x);
       break;
     }
-#endif
 
     case ParseNodeKind::NullExpr:
       val.setNull();

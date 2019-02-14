@@ -107,19 +107,6 @@ def disable_export_js(value):
     die('Setting %s is deprecated, use %s instead.',
         value.format('DISABLE_EXPORT_JS'), suggestion)
 
-# Experimental BigInt support
-# =======================================================
-js_option('--disable-bigint',
-          help='{Enable|Disable} BigInt')
-
-@depends('--disable-bigint')
-def enable_bigint(value):
-    if value:
-        return True
-
-set_config('ENABLE_BIGINT', enable_bigint)
-set_define('ENABLE_BIGINT', enable_bigint)
-
 # JIT support
 # =======================================================
 @depends(target)
