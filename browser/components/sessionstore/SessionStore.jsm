@@ -48,7 +48,9 @@ const OBSERVING = [
   "quit-application", "browser:purge-session-history",
   "browser:purge-session-history-for-domain",
   "idle-daily", "clear-origin-attributes-data",
-  "http-on-may-change-process",
+  "http-on-examine-response",
+  "http-on-examine-merged-response",
+  "http-on-examine-cached-response",
 ];
 
 // XUL Window properties to (re)store
@@ -812,8 +814,10 @@ var SessionStoreInternal = {
           this._forgetTabsWithUserContextId(userContextId);
         }
         break;
-      case "http-on-may-change-process":
-        this.onMayChangeProcess(aSubject);
+      case "http-on-examine-response":
+      case "http-on-examine-cached-response":
+      case "http-on-examine-merged-response":
+        this.onExamineResponse(aSubject);
         break;
     }
   },
@@ -2282,8 +2286,6 @@ var SessionStoreInternal = {
    * processes.
    */
   async _doProcessSwitch(aBrowser, aRemoteType, aChannel, aSwitchId) {
-    debug(`[process-switch]: performing switch from ${aBrowser.remoteType} to ${aRemoteType}`);
-
     // Don't try to switch tabs before delayed startup is completed.
     await aBrowser.ownerGlobal.delayedStartupPromise;
 
@@ -2307,14 +2309,12 @@ var SessionStoreInternal = {
     }
 
     // Tell our caller to redirect the load into this newly created process.
-    let tabParent = aBrowser.frameLoader.tabParent;
-    debug(`[process-switch]: new tabID: ${tabParent.tabId}`);
-    return tabParent;
+    return aBrowser.frameLoader.tabParent;
   },
 
   // Examine the channel response to see if we should change the process
   // performing the given load.
-  onMayChangeProcess(aChannel) {
+  onExamineResponse(aChannel) {
     if (!E10SUtils.useHttpResponseProcessSelection()) {
       return;
     }
@@ -2323,21 +2323,13 @@ var SessionStoreInternal = {
       return; // Not a document load.
     }
 
-    // Check that this is a toplevel document load.
-    let cpType = aChannel.loadInfo.externalContentPolicyType;
-    let toplevel = cpType == Ci.nsIContentPolicy.TYPE_DOCUMENT;
-    if (!toplevel) {
-      debug(`[process-switch]: non-toplevel - ignoring`);
-      return;
+    let browsingContext = aChannel.loadInfo.browsingContext;
+    if (!browsingContext) {
+      return; // Not loading in a browsing context.
     }
 
-    // Check that the document has a corresponding BrowsingContext.
-    let browsingContext = toplevel
-        ? aChannel.loadInfo.browsingContext
-        : aChannel.loadInfo.frameBrowsingContext;
-    if (!browsingContext) {
-      debug(`[process-switch]: no BrowsingContext - ignoring`);
-      return;
+    if (browsingContext.parent) {
+      return; // Not a toplevel load, can't flip procs.
     }
 
     // Get principal for a document already loaded in the BrowsingContext.
@@ -2346,60 +2338,34 @@ var SessionStoreInternal = {
       currentPrincipal = browsingContext.currentWindowGlobal.documentPrincipal;
     }
 
-    // Ensure we have an nsIParentChannel listener for a remote load.
-    let parentChannel;
-    try {
-      parentChannel = aChannel.notificationCallbacks
-                              .getInterface(Ci.nsIParentChannel);
-    } catch (e) {
-      debug(`[process-switch]: No nsIParentChannel callback - ignoring`);
-      return;
+    let parentChannel = aChannel.notificationCallbacks
+                                .getInterface(Ci.nsIParentChannel);
+    if (!parentChannel) {
+      return; // Not an actor channel
     }
 
-    // Ensure we have a nsITabParent for our remote load.
-    let tabParent;
-    try {
-      tabParent = parentChannel.QueryInterface(Ci.nsIInterfaceRequestor)
-                               .getInterface(Ci.nsITabParent);
-    } catch (e) {
-      debug(`[process-switch]: No nsITabParent for channel - ignoring`);
-      return;
+    let tabParent = parentChannel.QueryInterface(Ci.nsIInterfaceRequestor)
+                                 .getInterface(Ci.nsITabParent);
+    if (!tabParent || !tabParent.ownerElement) {
+      console.warn("warning: Missing tabParent");
+      return; // Not an embedded browsing context
     }
 
-    // Ensure we're loaded in a regular tabbrowser environment, and can swap processes.
     let browser = tabParent.ownerElement;
-    if (!browser) {
-      debug(`[process-switch]: TabParent has no ownerElement - ignoring`);
+    if (browser.tagName !== "browser") {
+      console.warn("warning: Not a xul:browser element:", browser.tagName);
+      return; // Not a vanilla xul:browser element performing embedding.
     }
 
-    let tabbrowser = browser.ownerGlobal.gBrowser;
-    if (!tabbrowser) {
-      debug(`[process-switch]: cannot find tabbrowser for loading tab - ignoring`);
-      return;
-    }
-
-    let tab = tabbrowser.getTabForBrowser(browser);
-    if (!tab) {
-      debug(`[process-switch]: not a normal tab, so cannot swap processes - ignoring`);
-      return;
-    }
-
-    // Determine the process type the load should be performed in.
     let resultPrincipal =
       Services.scriptSecurityManager.getChannelResultPrincipal(aChannel);
+    let useRemoteTabs = browser.ownerGlobal.gMultiProcessBrowser;
     let remoteType = E10SUtils.getRemoteTypeForPrincipal(resultPrincipal,
-                                                         true,
+                                                         useRemoteTabs,
                                                          browser.remoteType,
                                                          currentPrincipal);
     if (browser.remoteType == remoteType) {
-      debug(`[process-switch]: type (${remoteType}) is compatible - ignoring`);
-      return;
-    }
-
-    if (remoteType == E10SUtils.NOT_REMOTE ||
-        browser.remoteType == E10SUtils.NOT_REMOTE) {
-      debug(`[process-switch]: non-remote source/target - ignoring`);
-      return;
+      return; // Already in compatible process.
     }
 
     // ------------------------------------------------------------------------
@@ -3265,14 +3231,6 @@ var SessionStoreInternal = {
       tabState.index = Math.max(1, Math.min(tabState.index, tabState.entries.length));
     } else {
       options.loadArguments = loadArguments;
-
-      // If we're resuming a load which has been redirected from another
-      // process, record the history index which is currently being requested.
-      // It has to be offset by 1 to get back to native history indices from
-      // SessionStore history indicies.
-      if (loadArguments.redirectLoadSwitchId) {
-        loadArguments.redirectHistoryIndex = tabState.requestedIndex - 1;
-      }
     }
 
     // Need to reset restoring tabs.
