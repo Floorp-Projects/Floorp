@@ -643,10 +643,6 @@ add_task(async function checkAllTheFiles() {
   // Wait for all manifest to be parsed
   await throttledMapPromises(manifestURIs, parseManifest);
 
-  for (let jsm of Components.manager.getComponentJSMs()) {
-    gReferencesFromCode.set(jsm, null);
-  }
-
   // manifest.json is a common name, it is used for WebExtension manifests
   // but also for other things.  To tell them apart, we have to actually
   // read the contents.  This will populate gExtensionRoots with all
