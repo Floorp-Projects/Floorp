@@ -19,6 +19,8 @@ interface PublicKeyCredential : Credential {
 [SecureContext]
 partial interface PublicKeyCredential {
     static Promise<boolean> isUserVerifyingPlatformAuthenticatorAvailable();
+    // isExternalCTAP2SecurityKeySupported is non-standard; see Bug 1526023
+    static Promise<boolean> isExternalCTAP2SecurityKeySupported();
 };
 
 [SecureContext, Pref="security.webauth.webauthn"]

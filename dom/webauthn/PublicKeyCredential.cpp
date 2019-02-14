@@ -112,6 +112,31 @@ PublicKeyCredential::IsUserVerifyingPlatformAuthenticatorAvailable(
   return promise.forget();
 }
 
+/* static */ already_AddRefed<Promise>
+PublicKeyCredential::IsExternalCTAP2SecurityKeySupported(
+    GlobalObject& aGlobal) {
+  nsIGlobalObject* globalObject = xpc::CurrentNativeGlobal(aGlobal.Context());
+  if (NS_WARN_IF(!globalObject)) {
+    return nullptr;
+  }
+
+  ErrorResult rv;
+  RefPtr<Promise> promise = Promise::Create(globalObject, rv);
+  if (rv.Failed()) {
+    return nullptr;
+  }
+
+#ifdef OS_WIN
+  if (WinWebAuthnManager::AreWebAuthNApisAvailable()) {
+    promise->MaybeResolve(true);
+    return promise.forget();
+  }
+#endif
+
+  promise->MaybeResolve(false);
+  return promise.forget();
+}
+
 void PublicKeyCredential::GetClientExtensionResults(
     AuthenticationExtensionsClientOutputs& aResult) {
   aResult = mClientExtensionOutputs;
