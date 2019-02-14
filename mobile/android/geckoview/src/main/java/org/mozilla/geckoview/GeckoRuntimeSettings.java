@@ -20,6 +20,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import org.mozilla.gecko.EventDispatcher;
+import org.mozilla.gecko.GeckoFontScaleListener;
 import org.mozilla.gecko.util.GeckoBundle;
 
 @AnyThread
@@ -151,6 +152,19 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
          */
         public @NonNull Builder consoleOutput(boolean enabled) {
             getSettings().mConsoleOutput.set(enabled);
+            return this;
+        }
+
+        /**
+         * Set whether or not font sizes in web content should be automatically scaled according to
+         * the device's current system font scale setting.
+         *
+         * @param enabled A flag determining whether or not font sizes should be scaled automatically
+         *                to match the device's system font scale.
+         * @return The builder instance.
+         */
+        public @NonNull Builder automaticFontSizeAdjustment(boolean enabled) {
+            getSettings().setAutomaticFontSizeAdjustment(enabled);
             return this;
         }
 
@@ -577,6 +591,32 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
      */
     public boolean getConsoleOutputEnabled() {
         return mConsoleOutput.get();
+    }
+
+    /**
+     * Set whether or not font sizes in web content should be automatically scaled according to
+     * the device's current system font scale setting.
+     * Disabling this setting will restore the previously used values for
+     * {@link GeckoRuntimeSettings#getFontSizeFactor()} and
+     * {@link GeckoRuntimeSettings#getFontInflationEnabled()}.
+     *
+     * @param enabled A flag determining whether or not font sizes should be scaled automatically
+     *                to match the device's system font scale.
+     * @return This GeckoRuntimeSettings instance.
+     */
+    public @NonNull GeckoRuntimeSettings setAutomaticFontSizeAdjustment(boolean enabled) {
+        GeckoFontScaleListener.getInstance().setEnabled(enabled);
+        return this;
+    }
+
+    /**
+     * Get whether or not the font sizes for web content are automatically adjusted to match the
+     * device's system font scale setting.
+     *
+     * @return True if font sizes are automatically adjusted.
+     */
+    public boolean getAutomaticFontSizeAdjustment() {
+        return GeckoFontScaleListener.getInstance().getEnabled();
     }
 
     // Sync values with dom/media/nsIAutoplay.idl.
