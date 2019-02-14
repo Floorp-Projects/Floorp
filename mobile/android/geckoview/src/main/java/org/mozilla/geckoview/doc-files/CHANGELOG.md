@@ -9,6 +9,9 @@ exclude: true
 <h1> GeckoView API Changelog. </h1>
 
 ## v67
+- Added GeckoRuntimeSetting for automatically adjusting font size settings
+  depending on the OS-level font size setting.
+
 - Added GeckoRuntimeSettings for setting a font size scaling factor, and for
   enabling font inflation for non-mobile-friendly pages.
 
@@ -137,4 +140,4 @@ exclude: true
 [65.24]: ../CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: ../GeckoResult.html
 
-[api-version]: 4cd5232f60675d7eaaad47fb62d7245f643039fe
+[api-version]: f318744a2a5bd8058977a5709a3e9a3b73d5202b
