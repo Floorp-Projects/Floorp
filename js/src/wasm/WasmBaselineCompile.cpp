@@ -10999,6 +10999,12 @@ bool BaseCompiler::emitBody() {
         CHECK_NEXT(emitGetGlobal());
       case uint16_t(Op::SetGlobal):
         CHECK_NEXT(emitSetGlobal());
+#ifdef ENABLE_WASM_GENERALIZED_TABLES
+      case uint16_t(Op::TableGet):
+        CHECK_NEXT(emitTableGet());
+      case uint16_t(Op::TableSet):
+        CHECK_NEXT(emitTableSet());
+#endif
 
       // Select
       case uint16_t(Op::Select):
@@ -11596,12 +11602,8 @@ bool BaseCompiler::emitBody() {
             CHECK_NEXT(emitMemOrTableInit(/*isMem=*/false));
 #endif  // ENABLE_WASM_BULKMEM_OPS
 #ifdef ENABLE_WASM_GENERALIZED_TABLES
-          case uint16_t(MiscOp::TableGet):
-            CHECK_NEXT(emitTableGet());
           case uint16_t(MiscOp::TableGrow):
             CHECK_NEXT(emitTableGrow());
-          case uint16_t(MiscOp::TableSet):
-            CHECK_NEXT(emitTableSet());
           case uint16_t(MiscOp::TableSize):
             CHECK_NEXT(emitTableSize());
 #endif

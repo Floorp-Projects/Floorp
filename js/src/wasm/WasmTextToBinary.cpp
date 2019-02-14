@@ -6122,14 +6122,6 @@ static bool EncodeCall(Encoder& e, AstCall& c) {
   return true;
 }
 
-static bool EncodeOneTableIndex(Encoder& e, uint32_t index) {
-  if (index) {
-    return e.writeVarU32(uint32_t(MemoryTableFlags::HasTableIndex)) &&
-           e.writeVarU32(index);
-  }
-  return e.writeVarU32(uint32_t(MemoryTableFlags::Default));
-}
-
 static bool EncodeCallIndirect(Encoder& e, AstCallIndirect& c) {
   if (!EncodeArgs(e, c.args())) {
     return false;
@@ -6147,7 +6139,7 @@ static bool EncodeCallIndirect(Encoder& e, AstCallIndirect& c) {
     return false;
   }
 
-  return EncodeOneTableIndex(e, c.targetTable().index());
+  return e.writeVarU32(c.targetTable().index());
 }
 
 static bool EncodeConst(Encoder& e, AstConst& c) {
@@ -6402,25 +6394,25 @@ static bool EncodeMemOrTableInit(Encoder& e, AstMemOrTableInit& s) {
 
 #ifdef ENABLE_WASM_GENERALIZED_TABLES
 static bool EncodeTableGet(Encoder& e, AstTableGet& s) {
-  return EncodeExpr(e, s.index()) && e.writeOp(MiscOp::TableGet) &&
-         EncodeOneTableIndex(e, s.targetTable().index());
+  return EncodeExpr(e, s.index()) && e.writeOp(Op::TableGet) &&
+         e.writeVarU32(s.targetTable().index());
 }
 
 static bool EncodeTableGrow(Encoder& e, AstTableGrow& s) {
   return EncodeExpr(e, s.delta()) && EncodeExpr(e, s.initValue()) &&
          e.writeOp(MiscOp::TableGrow) &&
-         EncodeOneTableIndex(e, s.targetTable().index());
+         e.writeVarU32(s.targetTable().index());
 }
 
 static bool EncodeTableSet(Encoder& e, AstTableSet& s) {
   return EncodeExpr(e, s.index()) && EncodeExpr(e, s.value()) &&
-         e.writeOp(MiscOp::TableSet) &&
-         EncodeOneTableIndex(e, s.targetTable().index());
+         e.writeOp(Op::TableSet) &&
+         e.writeVarU32(s.targetTable().index());
 }
 
 static bool EncodeTableSize(Encoder& e, AstTableSize& s) {
   return e.writeOp(MiscOp::TableSize) &&
-         EncodeOneTableIndex(e, s.targetTable().index());
+         e.writeVarU32(s.targetTable().index());
 }
 #endif
 
@@ -7189,7 +7181,7 @@ static bool EncodeElemSegment(Encoder& e, AstElemSegment& segment) {
   for (const AstRef& elem : segment.elems()) {
     // Passive segments have an initializer expression, for now restricted to a
     // function index.
-    if (segment.isPassive() && !e.writeFixedU8(PlaceholderRefFunc)) {
+    if (segment.isPassive() && !e.writeFixedU8(uint8_t(Op::RefFunc))) {
       return false;
     }
     if (!e.writeVarU32(elem.index())) {
