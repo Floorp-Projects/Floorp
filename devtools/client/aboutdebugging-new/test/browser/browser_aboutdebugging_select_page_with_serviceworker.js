@@ -3,6 +3,9 @@
 
 "use strict";
 
+/* import-globals-from helper-mocks.js */
+Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-mocks.js", this);
+
 const NETWORK_RUNTIME_HOST = "localhost:6080";
 const NETWORK_RUNTIME_APP_NAME = "TestNetworkApp";
 const WORKER_NAME = "testserviceworker";
@@ -15,8 +18,7 @@ const WORKER_NAME = "testserviceworker";
 add_task(async function() {
   const mocks = new Mocks();
 
-  const { document, tab, window } =
-    await openAboutDebugging({ enableWorkerUpdates: true });
+  const { document, tab, window } = await openAboutDebugging();
 
   info("Prepare Network client mock");
   const networkClient = mocks.createNetworkRuntime(NETWORK_RUNTIME_HOST, {
@@ -37,7 +39,7 @@ add_task(async function() {
     sharedWorkers: [],
   };
   networkClient.listWorkers = () => workers;
-  networkClient._eventEmitter.emit("workersUpdated");
+  networkClient._eventEmitter.emit("workerListChanged");
 
   info("Wait until the service worker is displayed");
   await waitUntil(() => findDebugTargetByText(WORKER_NAME, document));
