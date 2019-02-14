@@ -24,9 +24,12 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers
+import org.mockito.Mockito.anyLong
 import org.mockito.Mockito.doReturn
+import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.verifyNoMoreInteractions
 import org.robolectric.RobolectricTestRunner
 import java.util.concurrent.TimeUnit
 
@@ -201,6 +204,52 @@ class SessionBundleStorageTest {
 
         verify(newBundle).updateFrom(snapshot)
         verify(dao).updateBundle(newBundle)
+    }
+
+    @Test
+    fun `An empty snapshot will not be saved as bundle in the database`() {
+        val bundle: BundleEntity = mock()
+
+        val dao: BundleDao = mock()
+        doReturn(bundle).`when`(dao).getLastBundle(ArgumentMatchers.anyLong())
+
+        val database = mockDatabase(dao)
+
+        val storage = SessionBundleStorage(mock(), Pair(2, TimeUnit.HOURS)).apply {
+            databaseInitializer = { database }
+        }
+
+        val snapshot = SessionManager.Snapshot(emptyList(), -1)
+        storage.save(snapshot)
+
+        verifyNoMoreInteractions(dao)
+    }
+
+    @Test
+    fun `An existing bundle will be removed instead of updated with an empty snapshot`() {
+        val bundle: BundleEntity = mock()
+
+        val dao: BundleDao = mock()
+        doReturn(bundle).`when`(dao).getLastBundle(ArgumentMatchers.anyLong())
+
+        val database = mockDatabase(dao)
+
+        val storage = SessionBundleStorage(mock(), Pair(2, TimeUnit.HOURS)).apply {
+            databaseInitializer = { database }
+        }
+
+        storage.restore()
+
+        verify(dao).getLastBundle(ArgumentMatchers.anyLong())
+
+        assertNotNull(storage.current())
+
+        val snapshot = SessionManager.Snapshot(emptyList(), -1)
+        storage.save(snapshot)
+
+        verify(bundle, never()).updateFrom(snapshot)
+        verify(dao).deleteBundle(bundle)
+        verifyNoMoreInteractions(dao)
     }
 
     private fun mockDatabase(bundleDao: BundleDao) = object : BundleDatabase() {

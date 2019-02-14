@@ -26,6 +26,7 @@ import java.util.concurrent.TimeUnit
  * @param bundleLifetime The lifetime of a bundle controls whether a bundle will be restored or whether this bundle is
  * considered expired and a new bundle will be used.
  */
+@Suppress("TooManyFunctions")
 class SessionBundleStorage(
     context: Context,
     private val bundleLifetime: Pair<Long, TimeUnit>
@@ -59,14 +60,12 @@ class SessionBundleStorage(
      */
     @Synchronized
     override fun save(snapshot: SessionManager.Snapshot): Boolean {
-        var bundle = lastBundle
+        val bundle = lastBundle
 
         if (bundle == null) {
-            bundle = snapshot.toBundleEntity().also { lastBundle = it }
-            bundle.id = database.bundleDao().insertBundle(bundle)
+            saveNewBundle(snapshot)
         } else {
-            bundle.updateFrom(snapshot)
-            database.bundleDao().updateBundle(bundle)
+            updateExistingBundle(bundle, snapshot)
         }
 
         return true
@@ -158,6 +157,34 @@ class SessionBundleStorage(
         unit: TimeUnit = TimeUnit.MILLISECONDS
     ): AutoSave {
         return AutoSave(sessionManager, this, unit.toMillis(interval))
+    }
+
+    /**
+     * Save the given [SessionManager.Snapshot] as a new bundle.
+     */
+    private fun saveNewBundle(snapshot: SessionManager.Snapshot) {
+        if (snapshot.isEmpty()) {
+            // There's no need to save a new empty bundle to the database. Let's wait until there are sessions
+            // in the snapshot.
+            return
+        }
+
+        val bundle = snapshot.toBundleEntity().also { lastBundle = it }
+        bundle.id = database.bundleDao().insertBundle(bundle)
+    }
+
+    /**
+     * Update the given bundle with the data from the [SessionManager.Snapshot].
+     */
+    private fun updateExistingBundle(bundle: BundleEntity, snapshot: SessionManager.Snapshot) {
+        if (snapshot.isEmpty()) {
+            // If this snapshot is empty then instead of saving an empty bundle: Remove the bundle. Otherwise
+            // we end up with empty bundles to restore and that is not helpful at all.
+            remove(SessionBundleAdapter(bundle))
+        } else {
+            bundle.updateFrom(snapshot)
+            database.bundleDao().updateBundle(bundle)
+        }
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)

@@ -71,6 +71,11 @@ permalink: /changelog/
   * `SessionStorage` and `SessionBundleStorage` now save and restore the title of `Session` objects.
   * `SessionManager.restore()` now allows passing in empty snapshots.
 
+* **feature-session-bundling**
+  * Empty snapshots are no longer saved in the database:
+    * If no restored bundle exists then no new bundle is saved for an empty snapshot.
+    * If there is an active bundle then the bundle will be removed instead of updated with the empty snapshot.
+
 # 0.42.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.41.0...v0.42.0)
