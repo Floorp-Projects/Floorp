@@ -60,7 +60,24 @@ fn sort_trivial(splitter: &mut Splitter<f32, ()>) {
     let anchors1: Vec<_> = result.iter().map(|p| p.anchor).collect();
     let mut anchors2 = anchors1.clone();
     anchors2.sort_by_key(|&a| -(a as i32));
-    assert_eq!(anchors1, anchors2); //make sure Z is sorted backwards
+    //make sure Z is sorted backwards
+    assert_eq!(anchors1, anchors2);
+}
+
+fn sort_external(splitter: &mut Splitter<f32, ()>) {
+    let rect0: TypedRect<f32, ()> = rect(-10.0, -10.0, 20.0, 20.0);
+    let poly0 = Polygon::from_rect(rect0, 0);
+    let poly1 = {
+        let transform0: TypedTransform3D<f32, (), ()> = TypedTransform3D::create_rotation(1.0, 0.0, 0.0, Angle::radians(2.0 * FRAC_PI_4));
+        let transform1: TypedTransform3D<f32, (), ()> = TypedTransform3D::create_translation(0.0, 100.0, 0.0);
+        Polygon::from_transformed_rect(rect0, transform1.pre_mul(&transform0), 1).unwrap()
+    };
+
+    let result = splitter.solve(&[poly0, poly1], vec3(1.0, 1.0, 0.0).normalize());
+    let anchors: Vec<_> = result.iter().map(|p| p.anchor).collect();
+    // make sure the second polygon is split in half around the plane of the first one,
+    // even if geometrically their polygons don't intersect.
+    assert_eq!(anchors, vec![1, 0, 1]);
 }
 
 #[test]
@@ -69,26 +86,43 @@ fn trivial_bsp() {
 }
 
 #[test]
+fn external_bsp() {
+    sort_external(&mut BspSplitter::new());
+}
+
+#[test]
 fn test_cut() {
     let rect: TypedRect<f32, ()> = rect(-10.0, -10.0, 20.0, 20.0);
     let poly = Polygon::from_rect(rect, 0);
     let mut poly2 = Polygon::from_rect(rect, 0);
+    // test robustness for positions
+    for p in &mut poly2.points {
+        p.z += 0.00000001;
+    }
+    match poly.cut(poly2.clone()) {
+        PlaneCut::Sibling(p) => assert_eq!(p, poly2),
+        PlaneCut::Cut { .. } => panic!("wrong cut!"),
+    }
+    // test robustness for normal
     poly2.plane.normal.z += 0.00000001;
     match poly.cut(poly2.clone()) {
         PlaneCut::Sibling(p) => assert_eq!(p, poly2),
         PlaneCut::Cut { .. } => panic!("wrong cut!"),
     }
+    // test opposite normal handling
     poly2.plane.normal *= -1.0;
     match poly.cut(poly2.clone()) {
         PlaneCut::Sibling(p) => assert_eq!(p, poly2),
         PlaneCut::Cut { .. } => panic!("wrong cut!"),
     }
 
+    // test grouping front
     poly2.plane.offset += 0.1;
     match poly.cut(poly2.clone()) {
         PlaneCut::Cut { ref front, ref back } => assert_eq!((front.len(), back.len()), (1, 0)),
         PlaneCut::Sibling(_) => panic!("wrong sibling!"),
     }
+    // test grouping back
     poly2.plane.normal *= -1.0;
     match poly.cut(poly2.clone()) {
         PlaneCut::Cut { ref front, ref back } => assert_eq!((front.len(), back.len()), (0, 1)),
