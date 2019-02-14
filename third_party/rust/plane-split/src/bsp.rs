@@ -13,24 +13,30 @@ impl<T, U> BspPlane for Polygon<T, U> where
     T: Copy + fmt::Debug + ApproxEq<T> +
         ops::Sub<T, Output=T> + ops::Add<T, Output=T> +
         ops::Mul<T, Output=T> + ops::Div<T, Output=T> +
-        Zero + One + Float,
+        Zero + Float,
     U: fmt::Debug,
 {
     fn cut(&self, mut poly: Self) -> PlaneCut<Self> {
         debug!("\tCutting anchor {} by {}", poly.anchor, self.anchor);
         trace!("\t\tbase {:?}", self.plane);
 
-        let ndot = self.plane.normal.dot(poly.plane.normal);
-        let (intersection, dist) = if ndot.approx_eq(&T::one()) {
-            debug!("\t\tNormals roughly point to the same direction");
-            (Intersection::Coplanar, self.plane.offset - poly.plane.offset)
-        } else if ndot.approx_eq(&-T::one()) {
-            debug!("\t\tNormals roughly point to opposite directions");
-            (Intersection::Coplanar, self.plane.offset + poly.plane.offset)
-        } else {
-            let is = self.intersect(&poly);
-            let dist = self.plane.signed_distance_sum_to(&poly);
-            (is, dist)
+        //Note: we treat `self` as a plane, and `poly` as a concrete polygon here
+        let (intersection, dist) = match self.plane.intersect(&poly.plane) {
+            None => {
+                let ndot = self.plane.normal.dot(poly.plane.normal);
+                debug!("\t\tNormals are aligned with {:?}", ndot);
+                let dist = self.plane.offset - ndot * poly.plane.offset;
+                (Intersection::Coplanar, dist)
+            }
+            Some(_) if self.plane.are_outside(&poly.points) => {
+                //Note: we can't start with `are_outside` because it's subject to FP precision
+                let dist = self.plane.signed_distance_sum_to(&poly);
+                (Intersection::Outside, dist)
+            }
+            Some(line) => {
+                //Note: distance isn't relevant here
+                (Intersection::Inside(line), T::zero())
+            }
         };
 
         match intersection {
@@ -57,7 +63,7 @@ impl<T, U> BspPlane for Polygon<T, U> where
             }
             Intersection::Inside(line) => {
                 debug!("\t\tCut across {:?}", line);
-                let (res_add1, res_add2) = poly.split(&line);
+                let (res_add1, res_add2) = poly.split_with_normal(&line, &self.plane.normal);
                 let mut front = Vec::new();
                 let mut back = Vec::new();
 
@@ -66,11 +72,12 @@ impl<T, U> BspPlane for Polygon<T, U> where
                     .chain(res_add2)
                     .filter(|p| !p.is_empty())
                 {
-                    if self.plane.signed_distance_sum_to(&sub) > T::zero() {
-                        trace!("\t\t\tfront: {:?}", sub);
+                    let dist = self.plane.signed_distance_sum_to(&sub);
+                    if dist > T::zero() {
+                        trace!("\t\t\tdist {:?} -> front: {:?}", dist, sub);
                         front.push(sub)
                     } else {
-                        trace!("\t\t\tback: {:?}", sub);
+                        trace!("\t\t\tdist {:?} -> back: {:?}", dist, sub);
                         back.push(sub)
                     }
                 }

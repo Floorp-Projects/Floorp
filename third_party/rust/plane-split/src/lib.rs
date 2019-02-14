@@ -67,6 +67,30 @@ impl<T, U> Line<T, U> where
         is_zero_vec(self.dir.cross(other.dir)) &&
         is_zero_vec(self.dir.cross(diff))
     }
+
+    /// Intersect an edge given by the end points.
+    /// Returns the fraction of the edge where the intersection occurs.
+    fn intersect_edge(
+        &self,
+        edge: ops::Range<TypedPoint3D<T, U>>,
+    ) -> Option<T>
+    where T: ops::Div<T, Output=T>
+    {
+        let edge_vec = edge.end - edge.start;
+        let origin_vec = self.origin - edge.start;
+        // edge.start + edge_vec * t = r + k * d
+        // (edge.start, d) + t * (edge_vec, d) - (r, d) = k
+        // edge.start + t * edge_vec = r + t * (edge_vec, d) * d + (start-r, d) * d
+        // t * (edge_vec - (edge_vec, d)*d) = origin_vec - (origin_vec, d) * d
+        let pr = origin_vec - self.dir * self.dir.dot(origin_vec);
+        let pb = edge_vec - self.dir * self.dir.dot(edge_vec);
+        let denom = pb.dot(pb);
+        if denom.approx_eq(&T::zero()) {
+            None
+        } else {
+            Some(pr.dot(pb) / denom)
+        }
+    }
 }
 
 
@@ -162,13 +186,9 @@ impl<
             .all(|p| self.signed_distance_to(p) * d0 > T::zero())
     }
 
+    //TODO(breaking): turn this into Result<Line, DotProduct>
     /// Compute the line of intersection with another plane.
     pub fn intersect(&self, other: &Self) -> Option<Line<T, U>> {
-        let cross_dir = self.normal.cross(other.normal);
-        if cross_dir.dot(cross_dir) < T::approx_epsilon() {
-            return None
-        }
-
         // compute any point on the intersection between planes
         // (n1, v) + d1 = 0
         // (n2, v) + d2 = 0
@@ -183,6 +203,10 @@ impl<
         let origin = TypedPoint3D::origin() +
             self.normal * ((other.offset * w - self.offset) * factor) -
             other.normal* ((other.offset - self.offset * w) * factor);
+
+        let cross_dir = self.normal.cross(other.normal);
+        // note: the cross product isn't too close to zero
+        // due to the previous check
 
         Some(Line {
             origin,
