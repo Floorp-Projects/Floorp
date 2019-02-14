@@ -757,3 +757,13 @@ xpcAccessible::ScrollToPoint(uint32_t aCoordinateType, int32_t aX, int32_t aY) {
 
   return NS_OK;
 }
+
+NS_IMETHODIMP
+xpcAccessible::Announce(const nsAString& aAnnouncement, uint16_t aPriority) {
+  if (IntlGeneric().IsProxy()) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  } else {
+    Intl()->Announce(aAnnouncement, aPriority);
+  }
+  return NS_OK;
+}

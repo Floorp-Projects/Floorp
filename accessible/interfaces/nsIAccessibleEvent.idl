@@ -424,9 +424,14 @@ interface nsIAccessibleEvent : nsISupports
   const unsigned long EVENT_SCROLLING = 0x0058;
 
   /**
+   * An accessible is making an explicit announcement.
+   */
+  const unsigned long EVENT_ANNOUNCEMENT = 0x0059;
+
+  /**
    * Help make sure event map does not get out-of-line.
    */
-  const unsigned long EVENT_LAST_ENTRY = 0x0059;
+  const unsigned long EVENT_LAST_ENTRY = 0x005A;
 
   /**
    * The type of event, based on the enumerated event values
