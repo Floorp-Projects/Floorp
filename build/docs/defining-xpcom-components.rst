@@ -102,12 +102,6 @@ Class definitions may have the following properties:
   
   This property is incompatible with ``legacy_constructor``.
 
-``jsm`` (optional)
-  If provided, must be the URL of a JavaScript module which contains a
-  JavaScript implementation of the component. The ``constructor`` property
-  must contain the name of an exported function which can be constructed to
-  create a new instance of the component.
-
 ``legacy_constructor`` (optional)
   This property is deprecated, and should not be used in new code.
   

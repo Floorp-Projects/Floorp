@@ -1,0 +1,3 @@
+# UAOverridesBootstrapper.js
+component {965b0ca8-155b-11e7-93ae-92361f002671} UAOverridesBootstrapper.js process=main
+contract @mozilla.org/network/ua-overrides-bootstrapper;1 {965b0ca8-155b-11e7-93ae-92361f002671} process=main

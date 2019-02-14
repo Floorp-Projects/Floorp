@@ -16,34 +16,43 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'migration'
 
+EXTRA_COMPONENTS += [
+    'ChromeProfileMigrator.js',
+    'FirefoxProfileMigrator.js',
+    'ProfileMigrator.js',
+]
+
+EXTRA_PP_COMPONENTS += [
+    'BrowserProfileMigrators.manifest',
+]
+
 EXTRA_JS_MODULES += [
     'ChromeMigrationUtils.jsm',
-    'ChromeProfileMigrator.jsm',
-    'FirefoxProfileMigrator.jsm',
     'MigrationUtils.jsm',
-    'ProfileMigrator.jsm',
 ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':
     SOURCES += [
         'nsIEHistoryEnumerator.cpp',
     ]
+    EXTRA_COMPONENTS += [
+        '360seProfileMigrator.js',
+        'EdgeProfileMigrator.js',
+        'IEProfileMigrator.js',
+    ]
     EXTRA_JS_MODULES += [
-        '360seProfileMigrator.jsm',
-        'EdgeProfileMigrator.jsm',
         'ESEDBReader.jsm',
-        'IEProfileMigrator.jsm',
         'MSMigrationUtils.jsm',
     ]
+    DEFINES['HAS_360SE_MIGRATOR'] = True
+    DEFINES['HAS_IE_MIGRATOR'] = True
+    DEFINES['HAS_EDGE_MIGRATOR'] = True
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
-    EXTRA_JS_MODULES += [
-        'SafariProfileMigrator.jsm',
+    EXTRA_COMPONENTS += [
+        'SafariProfileMigrator.js',
     ]
-
-XPCOM_MANIFESTS += [
-    'components.conf',
-]
+    DEFINES['HAS_SAFARI_MIGRATOR'] = True
 
 FINAL_LIBRARY = 'browsercomps'
 

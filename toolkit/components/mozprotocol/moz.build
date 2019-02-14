@@ -7,12 +7,9 @@
 with Files('**'):
     BUG_COMPONENT = ('Toolkit', 'General')
 
-EXTRA_JS_MODULES += [
-    'MozProtocolHandler.jsm',
-]
-
-XPCOM_MANIFESTS += [
-    'components.conf',
+EXTRA_COMPONENTS += [
+    'mozProtocolHandler.js',
+    'mozProtocolHandler.manifest',
 ]
 
 BROWSER_CHROME_MANIFESTS += [

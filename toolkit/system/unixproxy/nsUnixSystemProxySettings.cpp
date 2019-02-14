@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISystemProxySettings.h"
-#include "mozilla/Components.h"
+#include "mozilla/ModuleUtils.h"
 #include "nsIServiceManager.h"
 #include "nsIGConfService.h"
 #include "nsIURI.h"
@@ -21,15 +21,13 @@
 #include "mozilla/Attributes.h"
 #include "nsIURI.h"
 
-using namespace mozilla;
-
 class nsUnixSystemProxySettings final : public nsISystemProxySettings {
  public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSISYSTEMPROXYSETTINGS
 
   nsUnixSystemProxySettings() : mSchemeProxySettings(4) {}
-  void Init();
+  nsresult Init();
 
  private:
   ~nsUnixSystemProxySettings() = default;
@@ -61,7 +59,7 @@ nsUnixSystemProxySettings::GetMainThreadOnly(bool* aMainThreadOnly) {
   return NS_OK;
 }
 
-void nsUnixSystemProxySettings::Init() {
+nsresult nsUnixSystemProxySettings::Init() {
   mGSettings = do_GetService(NS_GSETTINGSSERVICE_CONTRACTID);
   if (mGSettings) {
     mGSettings->GetCollectionForSchema(
@@ -71,6 +69,8 @@ void nsUnixSystemProxySettings::Init() {
   if (!mProxySettings) {
     mGConf = do_GetService(NS_GCONFSERVICE_CONTRACTID);
   }
+
+  return NS_OK;
 }
 
 bool nsUnixSystemProxySettings::IsProxyMode(const char* aMode) {
@@ -499,8 +499,27 @@ nsresult nsUnixSystemProxySettings::GetProxyForURI(const nsACString& aSpec,
   return GetProxyFromEnvironment(aScheme, aHost, aPort, aResult);
 }
 
-NS_IMPL_COMPONENT_FACTORY(nsUnixSystemProxySettings) {
-  auto result = MakeRefPtr<nsUnixSystemProxySettings>();
-  result->Init();
-  return result.forget().downcast<nsISupports>();
-}
+/* 0fa3158c-d5a7-43de-9181-a285e74cf1d4 */
+#define NS_UNIXSYSTEMPROXYSERVICE_CID                \
+  {                                                  \
+    0x0fa3158c, 0xd5a7, 0x43de, {                    \
+      0x91, 0x81, 0xa2, 0x85, 0xe7, 0x4c, 0xf1, 0xd4 \
+    }                                                \
+  }
+
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsUnixSystemProxySettings, Init)
+NS_DEFINE_NAMED_CID(NS_UNIXSYSTEMPROXYSERVICE_CID);
+
+static const mozilla::Module::CIDEntry kUnixProxyCIDs[] = {
+    {&kNS_UNIXSYSTEMPROXYSERVICE_CID, false, nullptr,
+     nsUnixSystemProxySettingsConstructor},
+    {nullptr}};
+
+static const mozilla::Module::ContractIDEntry kUnixProxyContracts[] = {
+    {NS_SYSTEMPROXYSETTINGS_CONTRACTID, &kNS_UNIXSYSTEMPROXYSERVICE_CID},
+    {nullptr}};
+
+static const mozilla::Module kUnixProxyModule = {
+    mozilla::Module::kVersion, kUnixProxyCIDs, kUnixProxyContracts};
+
+NSMODULE_DEFN(nsUnixProxyModule) = &kUnixProxyModule;

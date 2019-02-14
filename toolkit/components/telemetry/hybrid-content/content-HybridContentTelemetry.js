@@ -124,7 +124,7 @@ var HybridContentTelemetryListener = {
     }
 
     // Note that the name of the async message must match the name of
-    // the message in the related listener in BrowserGlue.jsm.
+    // the message in the related listener in nsBrowserGlue.js.
     sendAsyncMessage("HybridContentTelemetry:onTelemetryMessage", {
       name: event.detail.name,
       data: event.detail.data,

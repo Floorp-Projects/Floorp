@@ -32,14 +32,11 @@ EXPORTS += [
 UNIFIED_SOURCES += [
     'nsJAR.cpp',
     'nsJARChannel.cpp',
+    'nsJARFactory.cpp',
     'nsJARInputStream.cpp',
     'nsJARProtocolHandler.cpp',
     'nsJARURI.cpp',
     'nsZipArchive.cpp',
-]
-
-XPCOM_MANIFESTS += [
-    'components.conf',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')

@@ -1,0 +1,3 @@
+component {c616fcfd-9737-41f1-aa74-cee72a38f91b} ProcessSelector.js
+component {2dc08eaf-6eef-4394-b1df-a3a927c1290b} ProcessSelector.js
+contract @mozilla.org/ipc/processselector;1 {2dc08eaf-6eef-4394-b1df-a3a927c1290b}

@@ -43,16 +43,19 @@ elif CONFIG['MOZ_BUILD_APP'] == 'mobile/android':
         '!%s' % built_in_addons,
     ]
 
+EXTRA_COMPONENTS += [
+    'addonManager.js',
+    'amContentHandler.js',
+    'amInstallTrigger.js',
+    'amWebAPI.js',
+]
+
 EXTRA_PP_COMPONENTS += [
     'extensions.manifest',
 ]
 
 EXTRA_JS_MODULES += [
-    'addonManager.js',
     'AddonManager.jsm',
-    'amContentHandler.jsm',
-    'amInstallTrigger.jsm',
-    'amWebAPI.jsm',
     'Blocklist.jsm',
     'LightweightThemeManager.jsm',
 ]
@@ -69,10 +72,6 @@ UNIFIED_SOURCES += [
     'AddonContentPolicy.cpp',
     'AddonManagerStartup.cpp',
     'AddonManagerWebAPI.cpp',
-]
-
-XPCOM_MANIFESTS += [
-    'components.conf',
 ]
 
 LOCAL_INCLUDES += [

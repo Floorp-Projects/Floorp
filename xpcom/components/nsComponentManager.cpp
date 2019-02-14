@@ -338,7 +338,7 @@ nsresult nsComponentManagerImpl::Create(nsISupports* aOuter, REFNSIID aIID,
   return gComponentManager->QueryInterface(aIID, aResult);
 }
 
-static const int CONTRACTID_HASHTABLE_INITIAL_LENGTH = 32;
+static const int CONTRACTID_HASHTABLE_INITIAL_LENGTH = 256;
 
 nsComponentManagerImpl::nsComponentManagerImpl()
     : mFactories(CONTRACTID_HASHTABLE_INITIAL_LENGTH),
@@ -530,8 +530,6 @@ nsresult nsComponentManagerImpl::Init() {
     // This needs to be called very early, before anything in nsLayoutModule is
     // used, and before any calls are made into the JS engine.
     nsLayoutModuleInitialize();
-
-    mJSLoaderReady = true;
 
     // The overall order in which chrome.manifests are expected to be treated
     // is the following:
@@ -754,9 +752,7 @@ void nsComponentManagerImpl::RegisterContractIDLocked(
     return;
   }
 
-  auto contract = AsLiteralCString(aEntry->contractid);
-  StaticComponents::InvalidateContractID(contract);
-  mContractIDs.Put(contract, f);
+  mContractIDs.Put(AsLiteralCString(aEntry->contractid), f);
 }
 
 static void CutExtension(nsCString& aPath) {
@@ -1598,13 +1594,10 @@ nsComponentManagerImpl::RegisterFactory(const nsCID& aClass, const char* aName,
       return NS_ERROR_INVALID_ARG;
     }
 
-    nsDependentCString contractID(aContractID);
-
     SafeMutexAutoLock lock(mLock);
     nsFactoryEntry* oldf = mFactories.Get(&aClass);
     if (oldf) {
-      StaticComponents::InvalidateContractID(contractID);
-      mContractIDs.Put(contractID, oldf);
+      mContractIDs.Put(nsDependentCString(aContractID), oldf);
       return NS_OK;
     }
 
@@ -1612,6 +1605,7 @@ nsComponentManagerImpl::RegisterFactory(const nsCID& aClass, const char* aName,
       // If this is the CID of a static module, just reset the invalid bit of
       // the static entry for this contract ID, and assume it points to the
       // correct class.
+      nsDependentCString contractID(aContractID);
       if (StaticComponents::InvalidateContractID(contractID, false)) {
         mContractIDs.Remove(contractID);
         return NS_OK;
@@ -2014,14 +2008,6 @@ nsComponentManagerImpl::RemoveBootstrappedManifestLocation(nsIFile* aLocation) {
 
   rv = cr->CheckForNewChrome();
   return rv;
-}
-
-
-NS_IMETHODIMP
-nsComponentManagerImpl::GetComponentJSMs(nsIUTF8StringEnumerator** aJSMs) {
-  nsCOMPtr<nsIUTF8StringEnumerator> result = StaticComponents::GetComponentJSMs();
-  result.forget(aJSMs);
-  return NS_OK;
 }
 
 NS_IMETHODIMP

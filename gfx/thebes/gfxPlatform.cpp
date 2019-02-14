@@ -1548,10 +1548,6 @@ void gfxPlatform::PopulateScreenInfo() {
   nsCOMPtr<nsIScreenManager> manager =
       do_GetService("@mozilla.org/gfx/screenmanager;1");
   MOZ_ASSERT(manager, "failed to get nsIScreenManager");
-  if (!manager) {
-    // This can happen in xpcshell, for instance
-    return;
-  }
 
   nsCOMPtr<nsIScreen> screen;
   manager->GetPrimaryScreen(getter_AddRefs(screen));

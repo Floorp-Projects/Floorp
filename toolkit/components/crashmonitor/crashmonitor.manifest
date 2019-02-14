@@ -1,0 +1,3 @@
+component {d9d75e86-8f17-4c57-993e-f738f0d86d42} nsCrashMonitor.js
+contract @mozilla.org/toolkit/crashmonitor;1 {d9d75e86-8f17-4c57-993e-f738f0d86d42}
+category profile-after-change CrashMonitor @mozilla.org/toolkit/crashmonitor;1

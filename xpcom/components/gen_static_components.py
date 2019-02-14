@@ -218,8 +218,6 @@ class ModuleEntry(object):
         self.legacy_constructor = data.get('legacy_constructor', None)
         self.init_method = data.get('init_method', [])
 
-        self.jsm = data.get('jsm', None)
-
         self.external = data.get('external', not (self.headers or
                                                   self.legacy_constructor))
         self.singleton = data.get('singleton', False)
@@ -238,15 +236,7 @@ class ModuleEntry(object):
                 str(self.cid), ', '.join(map(repr, self.contract_ids)),
                 str_))
 
-        if self.jsm:
-            if not self.constructor:
-                error("JavaScript components must specify a constructor")
-
-            for prop in ('init_method', 'legacy_constructor', 'headers'):
-                if getattr(self, prop):
-                    error("JavaScript components may not specify a '%s' "
-                          "property" % prop)
-        elif self.external:
+        if self.external:
             if self.constructor or self.legacy_constructor:
                 error("Externally-constructed components may not specify "
                       "'constructor' or 'legacy_constructor' properties")
@@ -309,14 +299,7 @@ class ModuleEntry(object):
                     % self.legacy_constructor)
             return res
 
-        if self.jsm:
-            res += (
-                '      nsCOMPtr<nsISupports> inst;\n'
-                '      MOZ_TRY(ConstructJSMComponent(NS_LITERAL_CSTRING(%s),\n'
-                '                                    %s,\n'
-                '                                    getter_AddRefs(inst)));'
-                '\n' % (json.dumps(self.jsm), json.dumps(self.constructor)))
-        elif self.external:
+        if self.external:
             res += ('      nsCOMPtr<nsISupports> inst = '
                     'mozCreateComponent<%s>();\n' % self.type)
         else:
@@ -567,8 +550,6 @@ def gen_substs(manifests):
     contract_map = {}
     categories = defaultdict(list)
 
-    jsms = set()
-
     types = set()
 
     for mod in modules:
@@ -590,9 +571,6 @@ def gen_substs(manifests):
         if mod.type and not mod.headers:
             types.add(mod.type)
 
-        if mod.jsm:
-            jsms.add(mod.jsm)
-
     cid_phf = PerfectHash(modules, PHF_SIZE,
                           key=lambda module: module.cid.bytes)
 
@@ -612,9 +590,6 @@ def gen_substs(manifests):
     gen_module_funcs(substs, module_funcs)
 
     gen_includes(substs, headers)
-
-    substs['component_jsms'] = '\n'.join(' %s,' % strings.entry_to_cxx(jsm)
-                                         for jsm in sorted(jsms)) + '\n'
 
     substs['decls'] = gen_decls(types)
 

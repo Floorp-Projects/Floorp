@@ -15,8 +15,4 @@ EXTRA_JS_MODULES += [
     'reflect.jsm',
 ]
 
-XPCOM_MANIFESTS += [
-    'components.conf',
-]
-
 FINAL_LIBRARY = 'xul'

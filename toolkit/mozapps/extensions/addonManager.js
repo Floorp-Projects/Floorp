@@ -34,6 +34,7 @@ const MSG_ADDON_EVENT      = "WebAPIAddonEvent";
 
 const CHILD_SCRIPT = "resource://gre/modules/addons/Content.js";
 
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var gSingleton = null;
@@ -331,5 +332,4 @@ BlocklistService.prototype = {
                                           Ci.nsITimerCallback]),
 };
 
-// eslint-disable-next-line no-unused-vars
-var EXPORTED_SYMBOLS = ["amManager", "BlocklistService"];
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([amManager, BlocklistService]);

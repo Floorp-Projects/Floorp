@@ -28,10 +28,6 @@ if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
         ]
         CXXFLAGS += CONFIG['MOZ_DBUS_GLIB_CFLAGS']
 
-    XPCOM_MANIFESTS += [
-        'components.conf',
-    ]
-
 FINAL_LIBRARY = 'xul'
 
 CXXFLAGS += CONFIG['TK_CFLAGS']
