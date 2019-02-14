@@ -774,6 +774,9 @@ class MOZ_RAII AutoProfilerTextMarker {
 // Output profiles
 //---------------------------------------------------------------------------
 
+// Set a user-friendly process name, used in JSON stream.
+void profiler_set_process_name(const nsACString& aProcessName);
+
 // Get the profile encoded as a JSON string. A no-op (returning nullptr) if the
 // profiler is inactive.
 // If aIsShuttingDown is true, the current time is included as the process
