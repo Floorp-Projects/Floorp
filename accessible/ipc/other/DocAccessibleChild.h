@@ -93,6 +93,10 @@ class DocAccessibleChild : public DocAccessibleChildBase {
                                                     const int32_t& aX,
                                                     const int32_t& aY) override;
 
+  virtual mozilla::ipc::IPCResult RecvAnnounce(
+      const uint64_t& aID, const nsString& aAnnouncement,
+      const uint16_t& aPriority) override;
+
   virtual mozilla::ipc::IPCResult RecvCaretLineNumber(
       const uint64_t& aID, int32_t* aLineNumber) override;
   virtual mozilla::ipc::IPCResult RecvCaretOffset(const uint64_t& aID,
