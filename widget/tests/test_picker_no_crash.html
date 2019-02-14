@@ -14,7 +14,7 @@ SimpleTest.requestFlakyTimeout("untriaged");
 var childWindow;
 
 function testStepOne() {
-  childWindow = window.open('window_picker_no_crash_child.html', 'childWindow', 'width=300,height=150');
+  childWindow = window.open("window_picker_no_crash_child.html", "childWindow", "width=300,height=150");
   SimpleTest.waitForFocus(testStepTwo, childWindow);
 }
 

@@ -5,8 +5,7 @@
 
 // This tests taskbar jump list functionality available on win7 and up.
 
-function test_basics()
-{
+function test_basics() {
   var item = Cc["@mozilla.org/windows-jumplistitem;1"].
   createInstance(Ci.nsIJumpListItem);
 
@@ -41,8 +40,7 @@ function test_basics()
   Assert.ok(shortcut.equals(shortcut));
 }
 
-function test_separator()
-{
+function test_separator() {
   // separators:
 
   var item = Cc["@mozilla.org/windows-jumplistseparator;1"].
@@ -51,8 +49,7 @@ function test_separator()
   Assert.ok(item.type == Ci.nsIJumpListItem.JUMPLIST_ITEM_SEPARATOR);
 }
 
-function test_hashes()
-{
+function test_hashes() {
   var link = Cc["@mozilla.org/windows-jumplistlink;1"]
              .createInstance(Ci.nsIJumpListLink);
   var uri1 = Cc["@mozilla.org/network/simple-uri-mutator;1"]
@@ -66,31 +63,31 @@ function test_hashes()
 
   link.uri = uri1;
 
-  Assert.ok(link.compareHash(uri2))
+  Assert.ok(link.compareHash(uri2));
   uri2 = uri2.mutate().setSpec("http://www.456.com/").finalize();
-  Assert.ok(!link.compareHash(uri2))
+  Assert.ok(!link.compareHash(uri2));
   uri2 = uri2.mutate().setSpec("http://www.123.com/").finalize();
-  Assert.ok(link.compareHash(uri2))
+  Assert.ok(link.compareHash(uri2));
   uri2 = uri2.mutate().setSpec("https://www.123.com/").finalize();
-  Assert.ok(!link.compareHash(uri2))
+  Assert.ok(!link.compareHash(uri2));
   uri2 = uri2.mutate().setSpec("http://www.123.com/test/").finalize();
-  Assert.ok(!link.compareHash(uri2))
+  Assert.ok(!link.compareHash(uri2));
   uri1 = uri1.mutate().setSpec("http://www.123.com/test/").finalize();
   link.uri = uri1;
   uri2 = uri2.mutate().setSpec("http://www.123.com/test/").finalize();
-  Assert.ok(link.compareHash(uri2))
+  Assert.ok(link.compareHash(uri2));
   uri1 = uri1.mutate().setSpec("https://www.123.com/test/").finalize();
   link.uri = uri1;
   uri2 = uri2.mutate().setSpec("https://www.123.com/test/").finalize();
-  Assert.ok(link.compareHash(uri2))
+  Assert.ok(link.compareHash(uri2));
   uri2 = uri2.mutate().setSpec("ftp://www.123.com/test/").finalize();
-  Assert.ok(!link.compareHash(uri2))
+  Assert.ok(!link.compareHash(uri2));
   uri2 = uri2.mutate().setSpec("http://123.com/test/").finalize();
-  Assert.ok(!link.compareHash(uri2))
+  Assert.ok(!link.compareHash(uri2));
   uri1 = uri1.mutate().setSpec("https://www.123.com/test/").finalize();
   link.uri = uri1;
   uri2 = uri2.mutate().setSpec("https://www.123.com/Test/").finalize();
-  Assert.ok(!link.compareHash(uri2))
+  Assert.ok(!link.compareHash(uri2));
 
   uri1 = uri1.mutate().setSpec("http://www.123.com/").finalize();
   link.uri = uri1;
@@ -103,8 +100,7 @@ function test_hashes()
   Assert.equal(link.uriHash, "iSx6UH1a9enVPzUA9JZ42g==");
 }
 
-function test_links()
-{
+function test_links() {
   // links:
   var link1 = Cc["@mozilla.org/windows-jumplistlink;1"]
              .createInstance(Ci.nsIJumpListLink);
@@ -138,8 +134,7 @@ function test_links()
   Assert.ok(!link1.equals(link2));
 }
 
-function test_shortcuts()
-{
+function test_shortcuts() {
   // shortcuts:
   var sc = Cc["@mozilla.org/windows-jumplistshortcut;1"]
            .createInstance(Ci.nsIJumpListShortcut);
@@ -176,8 +171,7 @@ function test_shortcuts()
   }
 }
 
-async function test_jumplist()
-{
+async function test_jumplist() {
   // Jump lists can't register links unless the application is the default
   // protocol handler for the protocol of the link, so we skip off testing
   // those in these tests. We'll init the jump list for the xpc shell harness,
@@ -259,8 +253,7 @@ async function test_jumplist()
   }
 }
 
-function run_test()
-{
+function run_test() {
   if (mozinfo.os != "win") {
     return;
   }

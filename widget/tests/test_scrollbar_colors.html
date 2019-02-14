@@ -24,7 +24,7 @@
 <script>
 function countPixels(canvas) {
   let result = new Map;
-  let ctx = canvas.getContext('2d');
+  let ctx = canvas.getContext("2d");
   let image = ctx.getImageData(0, 0, canvas.width, canvas.height);
   let data = image.data;
   let size = image.width * image.height;
@@ -64,7 +64,7 @@ const LINUX_REFERENCES = [
   ["0,255,255", 1180],
 ];
 
-let outer = document.querySelector('.outer');
+let outer = document.querySelector(".outer");
 let outerRect = outer.getBoundingClientRect();
 if (outerRect.width == outer.clientWidth &&
     outerRect.height == outer.clientHeight) {
@@ -74,7 +74,7 @@ if (outerRect.width == outer.clientWidth &&
   SpecialPowers.pushPrefEnv({
     "set": [["layout.css.scrollbar-color.enabled", true]],
   }, function() {
-    document.querySelector('#style').textContent = `
+    document.querySelector("#style").textContent = `
       .outer { scrollbar-color: blue cyan; }
     `;
 

@@ -30,8 +30,6 @@ netwerk/test/unit*/**
 tools/update-packaging/**
 uriloader/exthandler/**
 uriloader/exthandler/tests/mochitest/**
-widget/headless/tests/**
-widget/tests/**
 xpfe/**
 
 # We currently have no js files in these directories, so we ignore them by
