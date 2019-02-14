@@ -1205,6 +1205,12 @@ VARCACHE_PREF(
   RelaxedAtomicInt32, 5000
 )
 
+VARCACHE_PREF(
+  "media.rdd-vorbis.enabled",
+   MediaRddVorbisEnabled,
+  RelaxedAtomicBool, false
+)
+
 #ifdef ANDROID
 
 // Enable the MediaCodec PlatformDecoderModule by default.

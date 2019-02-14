@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-include protocol PRemoteVideoDecoder;
+include protocol PRemoteDecoder;
 include "mozilla/dom/MediaIPCUtils.h";
 
 using VideoInfo from "MediaInfo.h";
@@ -12,14 +12,25 @@ using mozilla::CreateDecoderParams::OptionSet from "PlatformDecoderModule.h";
 
 namespace mozilla {
 
+struct VideoDecoderInfoIPDL
+{
+  VideoInfo videoInfo;
+  float framerate;
+};
+
+union RemoteDecoderInfoIPDL
+{
+  AudioInfo;
+  VideoDecoderInfoIPDL;
+};
+
 sync protocol PRemoteDecoderManager
 {
-  manages PRemoteVideoDecoder;
+  manages PRemoteDecoder;
 
 parent:
-  sync PRemoteVideoDecoder(VideoInfo info,
-                           float framerate,
-                           OptionSet options)
+  sync PRemoteDecoder(RemoteDecoderInfoIPDL info,
+                      OptionSet options)
          returns (bool success,
                   nsCString aErrorDescription);
 };

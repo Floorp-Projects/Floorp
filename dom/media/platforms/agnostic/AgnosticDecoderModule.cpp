@@ -24,8 +24,10 @@ bool AgnosticDecoderModule::SupportsMimeType(
     const nsACString& aMimeType, DecoderDoctorDiagnostics* aDiagnostics) const {
   bool supports =
       VPXDecoder::IsVPX(aMimeType) || OpusDataDecoder::IsOpus(aMimeType) ||
-      VorbisDataDecoder::IsVorbis(aMimeType) ||
       WaveDataDecoder::IsWave(aMimeType) || TheoraDecoder::IsTheora(aMimeType);
+  if (!StaticPrefs::MediaRddVorbisEnabled() || !StaticPrefs::MediaRddProcessEnabled()) {
+    supports |= VorbisDataDecoder::IsVorbis(aMimeType);
+  }
 #ifdef MOZ_AV1
   if (StaticPrefs::MediaAv1Enabled()) {
     supports |= AOMDecoder::IsAV1(aMimeType);
