@@ -9,6 +9,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import os
 import re
+import taskcluster_urls
 
 from taskgraph.util.schema import Schema
 from voluptuous import Any, Optional, Required
@@ -72,21 +73,17 @@ def docker_worker_debian_package(config, job, taskdesc):
 
     name = taskdesc['label'].replace('{}-'.format(config.kind), '', 1)
 
+    docker_repo = 'debian'
     arch = run.get('arch', 'amd64')
+    if arch != 'amd64':
+        docker_repo = '{}/{}'.format(arch, docker_repo)
 
     worker = taskdesc['worker']
     worker['artifacts'] = []
-    version = {
-        'wheezy': 7,
-        'jessie': 8,
-        'stretch': 9,
-        'buster': 10,
-    }[run['dist']]
-    image = 'debian%d' % version
-    if arch != 'amd64':
-        image += '-' + arch
-    image += '-packages'
-    worker['docker-image'] = {'in-tree': image}
+    worker['docker-image'] = '{repo}:{dist}-{date}'.format(
+        repo=docker_repo,
+        dist=run['dist'],
+        date=run['snapshot'][:8])
     # Retry on apt-get errors.
     worker['retry-exit-status'] = [100]
 
@@ -113,6 +110,13 @@ def docker_worker_debian_package(config, job, taskdesc):
     package = package_re.match(src_file).group(0)
     unpack = unpack.format(src_file=src_file, package=package)
 
+    base_deps = [
+        'apt-utils',
+        'build-essential',
+        'devscripts',
+        'fakeroot',
+    ]
+
     resolver = run.get('resolver', 'apt-get')
     if resolver == 'apt-get':
         resolver = 'apt-get -yyq --no-install-recommends'
@@ -120,13 +124,15 @@ def docker_worker_debian_package(config, job, taskdesc):
         resolver = ('aptitude -y --without-recommends -o '
                     'Aptitude::ProblemResolver::Hints::KeepBuildDeps='
                     '"reject {}-build-deps :UNINST"').format(package)
+        base_deps.append('aptitude')
     else:
         raise RuntimeError('Unreachable')
 
     adjust = ''
     if 'patch' in run:
-        # We don't use robustcheckout or run-task to get a checkout. So for
-        # this one file we'd need from a checkout, download it.
+        # We can't depend on docker images, so we don't have robustcheckout or
+        # or run-task to get a checkout. So for this one file we'd need
+        # from a checkout, download it.
         env['PATCH_URL'] = '{head_repo}/raw-file/{head_rev}/build/debian-packages/{patch}'.format(
             head_repo=config.params['head_repository'],
             head_rev=config.params['head_rev'],
@@ -148,15 +154,33 @@ def docker_worker_debian_package(config, job, taskdesc):
             dist=run['dist'],
         )
 
+    queue_url = taskcluster_urls.api(get_root_url(), 'queue', 'v1', '')
+
+    # We can't depend on docker images (since docker images depend on packages),
+    # so we inline the whole script here.
     worker['command'] = [
         'sh',
         '-x',
         '-c',
+        # Fill /etc/apt/sources.list with the relevant snapshot repository.
+        'echo "deb http://snapshot.debian.org/archive/debian'
+        '/{snapshot}/ {dist} main" > /etc/apt/sources.list && '
+        'echo "deb http://snapshot.debian.org/archive/debian'
+        '/{snapshot}/ {dist}-updates main" >> /etc/apt/sources.list && '
+        'echo "deb http://snapshot.debian.org/archive/debian'
+        '/{snapshot}/ {dist}-backports main" >> /etc/apt/sources.list && '
+        'echo "deb http://snapshot.debian.org/archive/debian-security'
+        '/{snapshot}/ {dist}/updates main" >> /etc/apt/sources.list && '
+        'apt-get update -o Acquire::Check-Valid-Until=false -q && '
         # Add sources for packages coming from other package tasks.
-        '/usr/local/sbin/setup_packages.sh {queue_url} $PACKAGES && '
-        'apt-get update && '
-        # Upgrade packages that might have new versions in package tasks.
-        'apt-get dist-upgrade && '
+        'apt-get install -yyq apt-transport-https ca-certificates && '
+        'for task in $PACKAGES; do '
+        '  echo "deb [trusted=yes] {queue_url}task/$task/artifacts/public/build/ debian/" '
+        '>> /etc/apt/sources.list; '
+        'done && '
+        # Install the base utilities required to build debian packages.
+        'apt-get update -o Acquire::Check-Valid-Until=false -q && '
+        'apt-get install -yyq {base_deps} && '
         'cd /tmp && '
         # Get, validate and extract the package source.
         'dget -d -u {src_url} && '
@@ -177,7 +201,7 @@ def docker_worker_debian_package(config, job, taskdesc):
         'apt-ftparchive sources debian | gzip -c9 > debian/Sources.gz && '
         'apt-ftparchive packages debian | gzip -c9 > debian/Packages.gz'
         .format(
-            queue_url=get_root_url(),
+            queue_url=queue_url,
             package=package,
             snapshot=run['snapshot'],
             dist=run['dist'],
@@ -187,6 +211,7 @@ def docker_worker_debian_package(config, job, taskdesc):
             unpack=unpack,
             adjust=adjust,
             artifacts='/tmp/artifacts',
+            base_deps=' '.join(base_deps),
             resolver=resolver,
         )
     ]
@@ -207,6 +232,9 @@ def docker_worker_debian_package(config, job, taskdesc):
     if 'patch' in run:
         digest_data.append(
             hash_path(os.path.join(GECKO, 'build', 'debian-packages', run['patch'])))
+
+    if docker_repo != 'debian':
+        digest_data.append(docker_repo)
 
     if not taskgraph.fast:
         taskdesc['cache'] = {
