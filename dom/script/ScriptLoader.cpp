@@ -2567,11 +2567,16 @@ nsresult ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest) {
     return NS_ERROR_FAILURE;
   }
 
+  nsCOMPtr<nsPIDOMWindowOuter> window = mDocument->GetWindow();
+  nsIDocShell* docShell = window ? window->GetDocShell() : nullptr;
+  nsAutoCString profilerLabelString;
+  GetProfilerLabelForRequest(aRequest, profilerLabelString);
+  AUTO_PROFILER_TEXT_MARKER_DOCSHELL("Script", profilerLabelString, JS,
+                                     docShell);
+
   // New script entry point required, due to the "Create a script" sub-step of
   // http://www.whatwg.org/specs/web-apps/current-work/#execute-the-script-block
   nsAutoMicroTask mt;
-  nsAutoCString profilerLabelString;
-  GetProfilerLabelForRequest(aRequest, profilerLabelString);
   AutoEntryScript aes(globalObject, profilerLabelString.get(), true);
   JSContext* cx = aes.cx();
   JS::Rooted<JSObject*> global(cx, globalObject->GetGlobalJSObject());
