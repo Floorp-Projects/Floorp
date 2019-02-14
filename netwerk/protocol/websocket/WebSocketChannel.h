@@ -157,7 +157,6 @@ class WebSocketChannel : public BaseWebSocketChannel,
   MOZ_MUST_USE nsresult SetupRequest();
   MOZ_MUST_USE nsresult ApplyForAdmission();
   MOZ_MUST_USE nsresult DoAdmissionDNS();
-  MOZ_MUST_USE nsresult CallStartWebsocketData();
   MOZ_MUST_USE nsresult StartWebsocketData();
   uint16_t ResultToCloseCode(nsresult resultCode);
   void ReportConnectionTelemetry();
