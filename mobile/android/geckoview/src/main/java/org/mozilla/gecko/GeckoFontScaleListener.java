@@ -6,6 +6,7 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.util.ThreadUtils;
+import org.mozilla.geckoview.GeckoRuntimeSettings;
 
 import android.annotation.SuppressLint;
 import android.content.ContentResolver;
@@ -26,10 +27,6 @@ public final class GeckoFontScaleListener
         extends ContentObserver {
     private static final String LOGTAG = "GeckoFontScaleListener";
 
-    private static final String PREF_SYSTEM_FONT_SCALE = "font.size.systemFontScale";
-    private static final String PREF_FONT_INFLATION = "font.size.inflation.minTwips";
-    private static final int FONT_INFLATION_OFF = 0;
-    private static final int FONT_INFLATION_ON_DEFAULT_VALUE = 120;
     private static final float DEFAULT_FONT_SCALE = 1.0f;
 
     // We're referencing the *application* context, so this is in fact okay.
@@ -37,9 +34,14 @@ public final class GeckoFontScaleListener
     private static final GeckoFontScaleListener sInstance = new GeckoFontScaleListener();
 
     private Context mApplicationContext;
+    private GeckoRuntimeSettings mSettings;
+
     private boolean mAttached;
     private boolean mEnabled;
     private boolean mRunning;
+
+    private float mPrevGeckoFontScale;
+    private boolean mPrevFontInflationState;
 
     public static GeckoFontScaleListener getInstance() {
         return sInstance;
@@ -54,7 +56,8 @@ public final class GeckoFontScaleListener
      * Prepare the GeckoFontScaleListener for usage. If it has been previously enabled, it will
      * now start actively working.
      */
-    public void attachToContext(final Context context) {
+    public void attachToContext(final Context context,
+                                final GeckoRuntimeSettings settings) {
         ThreadUtils.assertOnUiThread();
 
         if (mAttached) {
@@ -63,12 +66,14 @@ public final class GeckoFontScaleListener
         }
 
         mAttached = true;
+        mSettings = settings;
         mApplicationContext = context.getApplicationContext();
         onEnabledChange();
     }
 
     /**
      * Detaches the context and also stops the GeckoFontScaleListener if it was previously enabled.
+     * This will also restore the previously used font size settings.
      */
     public void detachFromContext() {
         ThreadUtils.assertOnUiThread();
@@ -80,12 +85,13 @@ public final class GeckoFontScaleListener
 
         stop();
         mApplicationContext = null;
+        mSettings = null;
         mAttached = false;
     }
 
     /**
      * Controls whether the GeckoFontScaleListener should automatically adjust font sizes for web
-     * content in Gecko.
+     * content in Gecko. When disabling, this will restore the previously used font size settings.
      *
      * <p>This method can be called at any time, but the GeckoFontScaleListener won't start actively
      * adjusting font sizes until it has been attached to a context.
@@ -124,6 +130,8 @@ public final class GeckoFontScaleListener
             return;
         }
 
+        mPrevGeckoFontScale = mSettings.getFontSizeFactor();
+        mPrevFontInflationState = mSettings.getFontInflationEnabled();
         ContentResolver contentResolver = mApplicationContext.getContentResolver();
         Uri fontSizeSetting = Settings.System.getUriFor(Settings.System.FONT_SCALE);
         contentResolver.registerContentObserver(fontSizeSetting, false, this);
@@ -146,18 +154,18 @@ public final class GeckoFontScaleListener
 
     private void onSystemFontScaleChange(final ContentResolver contentResolver, boolean stopping) {
         float fontScale;
-        int fontInflation;
+        boolean fontInflationEnabled;
 
         if (!stopping) { // Either we were enabled, or else the system font scale changed.
             fontScale = Settings.System.getFloat(contentResolver, Settings.System.FONT_SCALE, DEFAULT_FONT_SCALE);
-            fontInflation = Math.round(FONT_INFLATION_ON_DEFAULT_VALUE * fontScale);
+            fontInflationEnabled = true;
         } else { // We were turned off.
-            fontScale = DEFAULT_FONT_SCALE;
-            fontInflation = FONT_INFLATION_OFF;
+            fontScale = mPrevGeckoFontScale;
+            fontInflationEnabled = mPrevFontInflationState;
         }
 
-        PrefsHelper.setPref(PREF_FONT_INFLATION, fontInflation);
-        PrefsHelper.setPref(PREF_SYSTEM_FONT_SCALE, Math.round(fontScale * 100));
+        mSettings.setFontInflationEnabled(fontInflationEnabled);
+        mSettings.setFontSizeFactor(fontScale);
     }
 
     @UiThread // See constructor.
