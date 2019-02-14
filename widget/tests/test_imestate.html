@@ -118,8 +118,7 @@ setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
 
 SimpleTest.waitForExplicitFinish();
 
-function hitEventLoop(aFunc, aTimes)
-{
+function hitEventLoop(aFunc, aTimes) {
   if (--aTimes) {
     setTimeout(hitEventLoop, 0, aFunc, aTimes);
   } else {
@@ -140,8 +139,7 @@ const kIMEEnabledSupported = navigator.platform.indexOf("Mac") == 0 ||
 // currently we should not run the open state testing.
 const kIMEOpenSupported = false;
 
-function runBasicTest(aIsEditable, aInDesignMode, aDescription)
-{
+function runBasicTest(aIsEditable, aInDesignMode, aDescription) {
   var onIMEFocusBlurHandler = null;
   var TIPCallback = function(aTIP, aNotification) {
     switch (aNotification.type) {
@@ -168,10 +166,8 @@ function runBasicTest(aIsEditable, aInDesignMode, aDescription)
     return;
   }
 
-  function test(aTest)
-  {
-    function moveFocus(aTest, aFocusEventHandler)
-    {
+  function test(aTest) {
+    function moveFocus(aTest, aFocusEventHandler) {
       if (aInDesignMode) {
         if (document.activeElement) {
           document.activeElement.blur();
@@ -218,8 +214,7 @@ function runBasicTest(aIsEditable, aInDesignMode, aDescription)
       return (previousFocusedElement == focusedElement);
     }
 
-    function testOpened(aTest, aOpened)
-    {
+    function testOpened(aTest, aOpened) {
       document.getElementById("text").focus();
       gUtils.IMEIsOpen = aOpened;
       if (!moveFocus(aTest)) {
@@ -239,8 +234,7 @@ function runBasicTest(aIsEditable, aInDesignMode, aDescription)
       var IMEReceivesBlur = 0;
       var IMEHasFocus = false;
 
-      function onFocus(aEvent)
-      {
+      function onFocus(aEvent) {
         switch (aEvent.type) {
           case "focus":
             focusEventCount++;
@@ -331,7 +325,7 @@ function runBasicTest(aIsEditable, aInDesignMode, aDescription)
            aDescription + ": " + aTest.description + ", wrong input type");
       } else if (aInDesignMode) {
         is(inputtype, "",
-           aDescription + ": " + aTest.description + ", wrong input type")
+           aDescription + ": " + aTest.description + ", wrong input type");
       }
     }
 
@@ -672,8 +666,7 @@ function runBasicTest(aIsEditable, aInDesignMode, aDescription)
   }
 }
 
-function runPluginTest()
-{
+function runPluginTest() {
   if (!kIMEEnabledSupported) {
     return;
   }
@@ -712,8 +705,7 @@ function runPluginTest()
      "runPluginTest: unexpected enabled state when input[type=text] has focus");
 }
 
-function runTypeChangingTest()
-{
+function runTypeChangingTest() {
   if (!kIMEEnabledSupported)
     return;
 
@@ -876,7 +868,7 @@ function runTypeChangingTest()
       description: "[type=\"password\"][ime-mode: inactive;]" },
     { id: "ime_mode_disabled_p",
       type: "password", expected: gUtils.IME_STATUS_PASSWORD, imeMode:  true,
-      description: "[type=\"password\"][ime-mode: disabled;]" }
+      description: "[type=\"password\"][ime-mode: disabled;]" },
   ];
 
   const kInputTypes = [
@@ -894,11 +886,10 @@ function runTypeChangingTest()
     { type: "email",    expected: gUtils.IME_STATUS_ENABLED  },
     { type: "search",   expected: gUtils.IME_STATUS_ENABLED  },
     { type: "tel",      expected: gUtils.IME_STATUS_ENABLED  },
-    { type: "number",   expected: gUtils.IME_STATUS_ENABLED  }
+    { type: "number",   expected: gUtils.IME_STATUS_ENABLED  },
   ];
 
-  function getExpectedIMEEnabled(aNewType, aInputControl)
-  {
+  function getExpectedIMEEnabled(aNewType, aInputControl) {
     if (aNewType.expected == gUtils.IME_STATUS_DISABLED ||
         aInputControl.isReadonly)
       return gUtils.IME_STATUS_DISABLED;
@@ -920,10 +911,10 @@ function runTypeChangingTest()
         e.setAttribute("type", kInput.type);
         is(gUtils.IMEStatus, kInput.expected,
            "type attr changing test (IMEStatus): " + typeChangingDescription +
-             " (" +  kInput.description + ")");
+             " (" + kInput.description + ")");
         is(gUtils.focusedInputType, kInput.type,
            "type attr changing test (type): " + typeChangingDescription +
-             " (" +  kInput.description + ")");
+             " (" + kInput.description + ")");
 
         const kTestOpenState = kIMEOpenSupported &&
                 gUtils.IMEStatus == gUtils.IME_STATUS_ENABLED &&
@@ -941,14 +932,14 @@ function runTypeChangingTest()
 
         is(gUtils.IMEStatus, getExpectedIMEEnabled(kType, kInput),
            "type attr changing test (IMEStatus): " + typeChangingDescription +
-             " (" +  kInput.description + ")");
+             " (" + kInput.description + ")");
         is(gUtils.focusedInputType, kType.type,
            "type attr changing test (type): " + typeChangingDescription +
-             " (" +  kInput.description + ")");
+             " (" + kInput.description + ")");
         if (kTestOpenState && gUtils.IMEStatus == gUtils.IME_STATUS_ENABLED) {
           is(gUtils.IMEIsOpen, kOpened,
              "type attr changing test (open state is changed): " +
-               typeChangingDescription + " (" +  kInput.description + ")");
+               typeChangingDescription + " (" + kInput.description + ")");
         }
       }
       // reset the type to default
@@ -959,8 +950,7 @@ function runTypeChangingTest()
   }
 }
 
-function runReadonlyChangingTest()
-{
+function runReadonlyChangingTest() {
   if (!kIMEEnabledSupported)
     return;
 
@@ -980,7 +970,7 @@ function runReadonlyChangingTest()
     { id: "number",
       type: "number",   expected: gUtils.IME_STATUS_ENABLED  },
     { id: "textarea",
-      type: "textarea", expected: gUtils.IME_STATUS_ENABLED  }
+      type: "textarea", expected: gUtils.IME_STATUS_ENABLED  },
   ];
   const kOpenedState = [ true, false ];
 
@@ -1010,8 +1000,7 @@ function runReadonlyChangingTest()
   }
 }
 
-function runComplexContenteditableTests()
-{
+function runComplexContenteditableTests() {
   if (!kIMEEnabledSupported) {
     return;
   }
@@ -1079,8 +1068,7 @@ function runComplexContenteditableTests()
           description + "IME is still enabled on the button, the container has been no editable");
 
   description = "testOnIndependentEditor: ";
-  function testOnIndependentEditor(aEditor, aEditorDescription)
-  {
+  function testOnIndependentEditor(aEditor, aEditorDescription) {
     var isReadonly = aEditor.readOnly;
     var expectedState =
       aEditor.readOnly ? gUtils.IME_STATUS_DISABLED : gUtils.IME_STATUS_ENABLED;
@@ -1138,8 +1126,7 @@ function runComplexContenteditableTests()
                           "input[type=\"text\"][readonly]");
 
   description = "testOnOutsideOfEditor: ";
-  function testOnOutsideOfEditor(aFocusNode, aFocusNodeDescription, aEditor)
-  {
+  function testOnOutsideOfEditor(aFocusNode, aFocusNodeDescription, aEditor) {
     if (aFocusNode) {
       aFocusNode.focus();
       is(gFM.focusedElement, aFocusNode,
@@ -1207,8 +1194,7 @@ function runComplexContenteditableTests()
   testOnOutsideOfEditor(null, "nobody", div);
 }
 
-function runEditorFlagChangeTests()
-{
+function runEditorFlagChangeTests() {
   if (!kIMEEnabledSupported) {
     return;
   }
@@ -1241,10 +1227,10 @@ function runEditorFlagChangeTests()
       { "string": "\u3078\u3093\u3057\u3093",
         "clauses":
         [
-          { "length": 4, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
-        ]
+          { "length": 4, "attr": COMPOSITION_ATTR_RAW_CLAUSE },
+        ],
       },
-      "caret": { "start": 4, "length": 0 }
+      "caret": { "start": 4, "length": 0 },
     });
 
   editor.flags &= ~kIMEStateChangeFlags;
@@ -1271,14 +1257,12 @@ function runEditorFlagChangeTests()
   container.removeAttribute("contenteditable");
 }
 
-function runEditableSubframeTests()
-{
+function runEditableSubframeTests() {
   window.open("window_imestate_iframes.html", "_blank",
               "width=600,height=600");
 }
 
-function runTestPasswordFieldOnDialog()
-{
+function runTestPasswordFieldOnDialog() {
   if (!kIMEEnabledSupported) {
     return;
   }
@@ -1289,30 +1273,22 @@ function runTestPasswordFieldOnDialog()
 
   var dialog;
 
-  function WindowObserver()
-  {
+  function WindowObserver() {
     Cc["@mozilla.org/observer-service;1"].
        getService(Ci.nsIObserverService).
        addObserver(this, "domwindowopened");
   }
 
   WindowObserver.prototype = {
-    QueryInterface: function (iid)
-    {
-      if (iid.equals(Ci.nsIObserver) ||
-          iid.equals(Ci.nsISupports)) {
-        return this;
-      }
-    },
+    QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
 
-    observe: function (subject, topic, data)
-    {
+    observe(subject, topic, data) {
       if (topic === "domwindowopened") {
         ok(true, "dialog window is created");
         dialog = subject.QueryInterface(Ci.nsIDOMWindow);
         dialog.addEventListener("load", onPasswordDialogLoad);
       }
-    }
+    },
   };
 
   var observer = new WindowObserver();
@@ -1329,16 +1305,14 @@ function runTestPasswordFieldOnDialog()
 
   var passwordField;
 
-  function onPasswordDialogLoad()
-  {
+  function onPasswordDialogLoad() {
     ok(true, "onPasswordDialogLoad is called");
     dialog.removeEventListener("load", onPasswordDialogLoad);
     passwordField = dialog.document.getElementById("password1Textbox");
     passwordField.addEventListener("focus", onPasswordFieldFocus);
   }
 
-  function onPasswordFieldFocus()
-  {
+  function onPasswordFieldFocus() {
     ok(true, "onPasswordFieldFocus is called");
     passwordField.removeEventListener("focus", onPasswordFieldFocus);
     var utils = dialog.windowUtils;
@@ -1349,8 +1323,7 @@ function runTestPasswordFieldOnDialog()
 }
 
 // Bug 580388 and bug 808287
-function runEditorReframeTests(aCallback)
-{
+function runEditorReframeTests(aCallback) {
   if (document.activeElement) {
     document.activeElement.blur();
   }
@@ -1396,16 +1369,16 @@ function runEditorReframeTests(aCallback)
 
   input.style.overflow = "visible";
 
-  var onInput = function (aEvent) {
+  var onInput = function(aEvent) {
     aEvent.target.style.overflow = "hidden";
-  }
+  };
   input.addEventListener("input", onInput, true);
 
   var AKey = new KeyboardEvent("", { key: "a", code: "KeyA", keyCode: KeyboardEvent.DOM_VK_A });
   TIP.keydown(AKey);
   TIP.keyup(AKey);
 
-  hitEventLoop(function () {
+  hitEventLoop(function() {
     is(IMEFocus, 0, "runEditorReframeTests(): IME shouldn't receive a focus notification during reframing");
     is(IMEBlur, 0, "runEditorReframeTests(): IME shouldn't receive a blur notification during reframing");
     ok(IMEHasFocus, "runEditorReframeTests(): IME must have focus even after reframing");
@@ -1441,8 +1414,7 @@ function runEditorReframeTests(aCallback)
   }, 20);
 }
 
-function runTests()
-{
+function runTests() {
   if (!kIMEEnabledSupported && !kIMEOpenSupported)
     return;
 
@@ -1488,17 +1460,16 @@ function runTests()
 
   // test password field on dialog
   // XXX temporary disable against failure
-  //runTestPasswordFieldOnDialog();
+  // runTestPasswordFieldOnDialog();
 
   // Asynchronous tests
-  runEditorReframeTests(function () {
+  runEditorReframeTests(function() {
     // This will call onFinish(), so, this test must be the last.
     runEditableSubframeTests();
   });
 }
 
-function onFinish()
-{
+function onFinish() {
   SimpleTest.finish();
 }
 

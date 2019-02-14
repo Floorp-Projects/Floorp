@@ -3,10 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-//Basic tests to verify that MacSharingService returns expected data
+// Basic tests to verify that MacSharingService returns expected data
 
-function test_getSharingProviders()
-{
+function test_getSharingProviders() {
   let sharingService = Cc["@mozilla.org/widget/macsharingservice;1"].
       getService(Ci.nsIMacSharingService);
   let providers = sharingService.getSharingProviders("http://example.org");
@@ -20,7 +19,6 @@ function test_getSharingProviders()
   });
 }
 
-function run_test()
-{
+function run_test() {
   test_getSharingProviders();
 }

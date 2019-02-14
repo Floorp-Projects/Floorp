@@ -25,8 +25,7 @@
 SimpleTest.waitForExplicitFinish();
 
 async function testNativeKey(aKeyboardLayout, aNativeKeyCode, aModifiers,
-                             aChars, aUnmodifiedChars)
-{
+                             aChars, aUnmodifiedChars) {
   // XXX Need to listen keyup event here because synthesizeNativeKey() does not
   //     guarantee that its callback will be called after "keypress" and "keyup".
   let waitForKeyUp = new Promise(resolve => {
@@ -41,8 +40,7 @@ async function testNativeKey(aKeyboardLayout, aNativeKeyCode, aModifiers,
   return keypress;
 }
 
-async function runTests()
-{
+async function runTests() {
   await SpecialPowers.pushPrefEnv({"set": [
           ["dom.keyboardevent.keypress.dispatch_non_printable_keys_only_system_group_in_content", true],
         ]});

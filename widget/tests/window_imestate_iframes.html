@@ -36,26 +36,22 @@
 
 window.opener.wrappedJSObject.SimpleTest.waitForFocus(runTests, window);
 
-function ok(aCondition, aMessage)
-{
+function ok(aCondition, aMessage) {
   window.opener.wrappedJSObject.SimpleTest.ok(aCondition, aMessage);
 }
 
-function is(aLeft, aRight, aMessage)
-{
+function is(aLeft, aRight, aMessage) {
   window.opener.wrappedJSObject.SimpleTest.is(aLeft, aRight, aMessage);
 }
 
-function onUnload()
-{
+function onUnload() {
   window.opener.wrappedJSObject.onFinish();
 }
 
 var gFocusObservingElement = null;
 var gBlurObservingElement = null;
 
-function onFocus(aEvent)
-{
+function onFocus(aEvent) {
   if (aEvent.target != gFocusObservingElement) {
     return;
   }
@@ -64,8 +60,7 @@ function onFocus(aEvent)
   gFocusObservingElement.willFocus = false;
 }
 
-function onBlur(aEvent)
-{
+function onBlur(aEvent) {
   if (aEvent.target != gBlurObservingElement) {
     return;
   }
@@ -75,8 +70,7 @@ function onBlur(aEvent)
 }
 
 function observeFocusBlur(aNextFocusedNode, aWillFireFocusEvent,
-                          aNextBlurredNode, aWillFireBlurEvent)
-{
+                          aNextBlurredNode, aWillFireBlurEvent) {
   if (gFocusObservingElement) {
     if (gFocusObservingElement.willFocus) {
       ok(false, "focus event was never fired on " + gFocusObservingElement);
@@ -105,8 +99,7 @@ function observeFocusBlur(aNextFocusedNode, aWillFireFocusEvent,
   }
 }
 
-function runTests()
-{
+function runTests() {
   var utils = window.windowUtils;
   var fm =
     Cc["@mozilla.org/focus-manager;1"]
@@ -117,8 +110,7 @@ function runTests()
   var next = document.getElementById("next");
   var html = document.documentElement;
 
-  function resetFocusToInput(aDescription)
-  {
+  function resetFocusToInput(aDescription) {
     observeFocusBlur(null, false, null, false);
     prev.focus();
     is(fm.focusedElement, prev,
@@ -127,8 +119,7 @@ function runTests()
        "IME enabled on input#prev[readonly]: " + aDescription);
   }
 
-  function resetFocusToParentHTML(aDescription)
-  {
+  function resetFocusToParentHTML(aDescription) {
     observeFocusBlur(null, false, null, false);
     html.focus();
     is(fm.focusedElement, html,
@@ -140,8 +131,7 @@ function runTests()
   function testTabKey(aForward,
                       aNextFocusedNode, aWillFireFocusEvent,
                       aNextBlurredNode, aWillFireBlurEvent,
-                      aIMEShouldBeEnabled, aTestingCaseDescription)
-  {
+                      aIMEShouldBeEnabled, aTestingCaseDescription) {
     observeFocusBlur(aNextFocusedNode, aWillFireFocusEvent,
                      aNextBlurredNode, aWillFireBlurEvent);
     synthesizeKey("VK_TAB", { shiftKey: !aForward });
@@ -161,8 +151,7 @@ function runTests()
   function testMouseClick(aNextFocusedNode, aWillFireFocusEvent,
                           aWillAllNodeLostFocus,
                           aNextBlurredNode, aWillFireBlurEvent,
-                          aIMEShouldBeEnabled, aTestingCaseDescription)
-  {
+                          aIMEShouldBeEnabled, aTestingCaseDescription) {
     observeFocusBlur(aNextFocusedNode, aWillFireFocusEvent,
                      aNextBlurredNode, aWillFireBlurEvent);
     // We're relying on layout inside the iframe being up to date, so make it so
@@ -177,8 +166,7 @@ function runTests()
        description + "didn't set IME state as expected");
   }
 
-  function testOnEditorFlagChange(aDescription, aIsInDesignMode)
-  {
+  function testOnEditorFlagChange(aDescription, aIsInDesignMode) {
     const kReadonly =
       Ci.nsIPlaintextEditor.eEditorReadonlyMask;
     var description = "testOnEditorFlagChange: " + aDescription;

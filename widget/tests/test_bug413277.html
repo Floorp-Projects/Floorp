@@ -18,11 +18,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=413277
 </div>
 <pre id="test">
 <script class="testbody" type="application/javascript">
-  var atts='width=100, height=100, top=100, screenY=100';
-  atts += ', left=100, screenX=100, toolbar=no';
-  atts += ', location=no, directories=no, status=no';
-  atts += ', menubar=no, scrollbars=no, resizable=no';
-  var newWindow = window.open('_blank', 'win_name', atts);
+  var atts = "width=100, height=100, top=100, screenY=100";
+  atts += ", left=100, screenX=100, toolbar=no";
+  atts += ", location=no, directories=no, status=no";
+  atts += ", menubar=no, scrollbars=no, resizable=no";
+  var newWindow = window.open("_blank", "win_name", atts);
   
   newWindow.resizeBy(1000000, 1000000);
   SimpleTest.is(newWindow.outerWidth, newWindow.screen.availWidth, true);
