@@ -243,6 +243,7 @@
 @BINPATH@/components/BlocklistPrompt.js
 @BINPATH@/components/BrowserCLH.js
 @BINPATH@/components/ColorPicker.js
+@BINPATH@/components/ContentDispatchChooser.js
 @BINPATH@/components/ContentPermissionPrompt.js
 @BINPATH@/components/ImageBlockingPolicy.js
 @BINPATH@/components/DirectoryProvider.js
