@@ -20,6 +20,11 @@
 
 class nsGlobalWindowOuter;
 class nsOuterWindowProxy;
+class PickleIterator;
+
+namespace IPC {
+class Message;
+}  // namespace IPC
 
 namespace mozilla {
 
@@ -27,9 +32,17 @@ class ErrorResult;
 class LogModule;
 class OOMReporter;
 
+namespace ipc {
+class IProtocol;
+
+template <typename T>
+struct IPDLParamTraits;
+}  // namespace ipc
+
 namespace dom {
 
 class BrowsingContextGroup;
+class CanonicalBrowsingContext;
 class ContentParent;
 template <typename>
 struct Nullable;
@@ -80,6 +93,9 @@ class BrowsingContext : public nsWrapperCache,
   static already_AddRefed<BrowsingContext> CreateFromIPC(
       BrowsingContext* aParent, BrowsingContext* aOpener,
       const nsAString& aName, uint64_t aId, ContentParent* aOriginProcess);
+
+  // Cast this object to a canonical browsing context, and return it.
+  CanonicalBrowsingContext* Canonical();
 
   // Get the DocShell for this BrowsingContext if it is in-process, or
   // null if it's not.
@@ -254,6 +270,17 @@ extern bool GetRemoteOuterWindowProxy(JSContext* aCx, BrowsingContext* aContext,
                                       JS::MutableHandle<JSObject*> aRetVal);
 
 }  // namespace dom
+
+// Allow sending BrowsingContext objects over IPC.
+namespace ipc {
+template <>
+struct IPDLParamTraits<dom::BrowsingContext> {
+  static void Write(IPC::Message* aMsg, IProtocol* aActor,
+                    dom::BrowsingContext* aParam);
+  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
+                   IProtocol* aActor, RefPtr<dom::BrowsingContext>* aResult);
+};
+}  // namespace ipc
 }  // namespace mozilla
 
 #endif  // !defined(mozilla_dom_BrowsingContext_h)

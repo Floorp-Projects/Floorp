@@ -2896,7 +2896,7 @@ nsIPrincipal* GetObjectPrincipal(JSObject* obj);
 // a pointer to a value described by the type `nsXPTType`.
 //
 // This method expects a value of the following types:
-//   TD_PNSIID
+//   TD_NSIDPTR
 //     value : nsID* (free)
 //   TD_ASTRING, TD_CSTRING, TD_UTF8STRING
 //     value : ns[C]String* (truncate)

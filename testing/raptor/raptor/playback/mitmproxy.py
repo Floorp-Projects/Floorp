@@ -12,6 +12,7 @@ import time
 import mozinfo
 
 from mozlog import get_proxy_logger
+from mozprocess import ProcessHandler
 
 from .base import Playback
 
@@ -26,11 +27,6 @@ else:
     # locally it's in source tree
     mozharness_dir = os.path.join(here, '../../../mozharness')
 sys.path.insert(0, mozharness_dir)
-
-# required for using a python3 virtualenv on win for mitmproxy
-from mozharness.base.python import Python3Virtualenv
-from mozharness.mozilla.testing.testbase import TestingMixin
-from mozharness.base.vcs.vcsbase import MercurialScript
 
 raptor_dir = os.path.join(here, '..')
 sys.path.insert(0, raptor_dir)
@@ -79,7 +75,7 @@ POLICIES_CONTENT_OFF = '''{
 }'''
 
 
-class Mitmproxy(Playback, Python3Virtualenv, TestingMixin, MercurialScript):
+class Mitmproxy(Playback):
 
     def __init__(self, config):
         self.config = config
@@ -106,10 +102,6 @@ class Mitmproxy(Playback, Python3Virtualenv, TestingMixin, MercurialScript):
         # go ahead and download and setup mitmproxy
         self.download()
 
-        # on windows we must use a python3 virtualen for mitmproxy
-        if 'win' in self.config['platform']:
-            self.setup_py3_virtualenv()
-
         # mitmproxy must be started before setup, so that the CA cert is available
         self.start()
         self.setup()
@@ -119,16 +111,10 @@ class Mitmproxy(Playback, Python3Virtualenv, TestingMixin, MercurialScript):
         if not os.path.exists(self.raptor_dir):
             os.makedirs(self.raptor_dir)
 
-        if 'win' in self.config['platform']:
-            # on windows we need a python3 environment and use our own package from tooltool
-            self.py3_path = self.fetch_python3()
-            LOG.info("python3 path is: %s" % self.py3_path)
-        else:
-            # on osx and linux we use pre-built binaries
-            LOG.info("downloading mitmproxy binary")
-            _manifest = os.path.join(here, self.config['playback_binary_manifest'])
-            transformed_manifest = transform_platform(_manifest, self.config['platform'])
-            tooltool_download(transformed_manifest, self.config['run_local'], self.raptor_dir)
+        LOG.info("downloading mitmproxy binary")
+        _manifest = os.path.join(here, self.config['playback_binary_manifest'])
+        transformed_manifest = transform_platform(_manifest, self.config['platform'])
+        tooltool_download(transformed_manifest, self.config['run_local'], self.raptor_dir)
 
         # we use one pageset for all platforms
         LOG.info("downloading mitmproxy pageset")
@@ -137,44 +123,10 @@ class Mitmproxy(Playback, Python3Virtualenv, TestingMixin, MercurialScript):
         tooltool_download(transformed_manifest, self.config['run_local'], self.raptor_dir)
         return
 
-    def fetch_python3(self):
-        """Mitmproxy on windows needs Python 3.x"""
-        python3_path = os.path.join(self.raptor_dir, 'python3.6', 'python')
-        if not os.path.exists(os.path.dirname(python3_path)):
-            _manifest = os.path.join(here, self.config['python3_win_manifest'])
-            transformed_manifest = transform_platform(_manifest, self.config['platform'],
-                                                      self.config['processor'])
-            LOG.info("downloading py3 package for mitmproxy windows: %s" % transformed_manifest)
-            tooltool_download(transformed_manifest, self.config['run_local'], self.raptor_dir)
-        cmd = [python3_path, '--version']
-        # just want python3 ver printed in production log
-        subprocess.Popen(cmd, env=os.environ.copy())
-        return python3_path
-
-    def setup_py3_virtualenv(self):
-        """Mitmproxy on windows needs Python 3.x; set up a separate py 3.x env here"""
-        LOG.info("Setting up python 3.x virtualenv, required for mitmproxy on windows")
-        # these next two are required for py3_venv_configuration
-        self.abs_dirs = {'base_work_dir': mozharness_dir}
-        self.log_obj = None
-        # now create the py3 venv
-        venv_path = os.path.join(self.raptor_dir, 'py3venv')
-        self.py3_venv_configuration(python_path=self.py3_path, venv_path=venv_path)
-        self.py3_create_venv()
-        self.py3_install_modules(["cffi==1.10.0"])
-        requirements = [os.path.join(here, "mitmproxy_requirements.txt")]
-        self.py3_install_requirement_files(requirements)
-        # add py3 executables path to system path
-        sys.path.insert(1, self.py3_path_to_executables())
-        # install mitmproxy itself
-        self.py3_install_modules(modules=['mitmproxy'])
-        self.mitmdump_path = os.path.join(self.py3_path_to_executables(), 'mitmdump')
-
     def start(self):
-        """Start playing back the mitmproxy recording. If on windows, the mitmdump_path was
-        already set when creating py3 env"""
-        if self.mitmdump_path is None:
-            self.mitmdump_path = os.path.join(self.raptor_dir, 'mitmdump')
+        """Start playing back the mitmproxy recording."""
+
+        self.mitmdump_path = os.path.join(self.raptor_dir, 'mitmdump')
 
         recordings_list = self.recordings.split()
         self.mitmproxy_proc = self.start_mitmproxy_playback(self.mitmdump_path,
@@ -228,7 +180,9 @@ class Mitmproxy(Playback, Python3Virtualenv, TestingMixin, MercurialScript):
         LOG.info("Starting mitmproxy playback using command: %s" % ' '.join(command))
         # to turn off mitmproxy log output, use these params for Popen:
         # Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
-        mitmproxy_proc = subprocess.Popen(command, env=env)
+        mitmproxy_proc = ProcessHandler(command, env=env)
+        mitmproxy_proc.run()
+
         time.sleep(MITMDUMP_SLEEP)
         data = mitmproxy_proc.poll()
         if data is None:  # None value indicates process hasn't terminated
@@ -242,10 +196,8 @@ class Mitmproxy(Playback, Python3Virtualenv, TestingMixin, MercurialScript):
         """Stop the mitproxy server playback"""
         mitmproxy_proc = self.mitmproxy_proc
         LOG.info("Stopping mitmproxy playback, klling process %d" % mitmproxy_proc.pid)
-        if mozinfo.os == 'win':
-            mitmproxy_proc.kill()
-        else:
-            mitmproxy_proc.terminate()
+        mitmproxy_proc.kill()
+
         time.sleep(MITMDUMP_SLEEP)
         status = mitmproxy_proc.poll()
         if status is None:  # None value indicates process hasn't terminated
@@ -334,8 +286,8 @@ class MitmproxyDesktop(Mitmproxy):
             LOG.info("Firefox policies file contents:")
             LOG.info(contents)
             if (POLICIES_CONTENT_ON % {
-                    'cert': self.cert_path,
-                    'host': self.config['host']}) in contents:
+                'cert': self.cert_path,
+                'host': self.config['host']}) in contents:
                 LOG.info("Verified mitmproxy CA certificate is installed in Firefox")
             else:
 

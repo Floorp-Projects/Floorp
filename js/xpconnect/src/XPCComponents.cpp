@@ -118,13 +118,9 @@ class nsXPCComponents_Interfaces final : public nsIXPCComponents_Interfaces,
 };
 
 NS_IMETHODIMP
-nsXPCComponents_Interfaces::GetInterfaces(uint32_t* aCount, nsIID*** aArray) {
-  *aCount = 2;
-  nsIID** array = static_cast<nsIID**>(moz_xmalloc(2 * sizeof(nsIID*)));
-  *aArray = array;
-
-  array[0] = NS_GET_IID(nsIXPCComponents_Interfaces).Clone();
-  array[1] = NS_GET_IID(nsIXPCScriptable).Clone();
+nsXPCComponents_Interfaces::GetInterfaces(nsTArray<nsIID>& aArray) {
+  aArray = nsTArray<nsIID>{NS_GET_IID(nsIXPCComponents_Interfaces),
+                           NS_GET_IID(nsIXPCScriptable)};
   return NS_OK;
 }
 
@@ -275,13 +271,9 @@ class nsXPCComponents_Classes final : public nsIXPCComponents_Classes,
 
 /***************************************************************************/
 NS_IMETHODIMP
-nsXPCComponents_Classes::GetInterfaces(uint32_t* aCount, nsIID*** aArray) {
-  *aCount = 2;
-  nsIID** array = static_cast<nsIID**>(moz_xmalloc(2 * sizeof(nsIID*)));
-  *aArray = array;
-
-  array[0] = NS_GET_IID(nsIXPCComponents_Classes).Clone();
-  array[1] = NS_GET_IID(nsIXPCScriptable).Clone();
+nsXPCComponents_Classes::GetInterfaces(nsTArray<nsIID>& aArray) {
+  aArray = nsTArray<nsIID>{NS_GET_IID(nsIXPCComponents_Classes),
+                           NS_GET_IID(nsIXPCScriptable)};
   return NS_OK;
 }
 
@@ -432,13 +424,9 @@ class nsXPCComponents_Results final : public nsIXPCComponents_Results,
 
 /***************************************************************************/
 NS_IMETHODIMP
-nsXPCComponents_Results::GetInterfaces(uint32_t* aCount, nsIID*** aArray) {
-  *aCount = 2;
-  nsIID** array = static_cast<nsIID**>(moz_xmalloc(2 * sizeof(nsIID*)));
-  *aArray = array;
-
-  array[0] = NS_GET_IID(nsIXPCComponents_Results).Clone();
-  array[1] = NS_GET_IID(nsIXPCScriptable).Clone();
+nsXPCComponents_Results::GetInterfaces(nsTArray<nsIID>& aArray) {
+  aArray = nsTArray<nsIID>{NS_GET_IID(nsIXPCComponents_Results),
+                           NS_GET_IID(nsIXPCScriptable)};
   return NS_OK;
 }
 
@@ -577,13 +565,9 @@ class nsXPCComponents_ID final : public nsIXPCComponents_ID,
 
 /***************************************************************************/
 NS_IMETHODIMP
-nsXPCComponents_ID::GetInterfaces(uint32_t* aCount, nsIID*** aArray) {
-  *aCount = 2;
-  nsIID** array = static_cast<nsIID**>(moz_xmalloc(2 * sizeof(nsIID*)));
-  *aArray = array;
-
-  array[0] = NS_GET_IID(nsIXPCComponents_ID).Clone();
-  array[1] = NS_GET_IID(nsIXPCScriptable).Clone();
+nsXPCComponents_ID::GetInterfaces(nsTArray<nsIID>& aArray) {
+  aArray = nsTArray<nsIID>{NS_GET_IID(nsIXPCComponents_ID),
+                           NS_GET_IID(nsIXPCScriptable)};
   return NS_OK;
 }
 
@@ -732,13 +716,9 @@ class nsXPCComponents_Exception final : public nsIXPCComponents_Exception,
 
 /***************************************************************************/
 NS_IMETHODIMP
-nsXPCComponents_Exception::GetInterfaces(uint32_t* aCount, nsIID*** aArray) {
-  *aCount = 2;
-  nsIID** array = static_cast<nsIID**>(moz_xmalloc(2 * sizeof(nsIID*)));
-  *aArray = array;
-
-  array[0] = NS_GET_IID(nsIXPCComponents_Exception).Clone();
-  array[1] = NS_GET_IID(nsIXPCScriptable).Clone();
+nsXPCComponents_Exception::GetInterfaces(nsTArray<nsIID>& aArray) {
+  aArray = nsTArray<nsIID>{NS_GET_IID(nsIXPCComponents_Exception),
+                           NS_GET_IID(nsIXPCScriptable)};
   return NS_OK;
 }
 
@@ -1027,13 +1007,9 @@ class nsXPCComponents_Constructor final : public nsIXPCComponents_Constructor,
 
 /***************************************************************************/
 NS_IMETHODIMP
-nsXPCComponents_Constructor::GetInterfaces(uint32_t* aCount, nsIID*** aArray) {
-  *aCount = 2;
-  nsIID** array = static_cast<nsIID**>(moz_xmalloc(2 * sizeof(nsIID*)));
-  *aArray = array;
-
-  array[0] = NS_GET_IID(nsIXPCComponents_Constructor).Clone();
-  array[1] = NS_GET_IID(nsIXPCScriptable).Clone();
+nsXPCComponents_Constructor::GetInterfaces(nsTArray<nsIID>& aArray) {
+  aArray = nsTArray<nsIID>{NS_GET_IID(nsIXPCComponents_Constructor),
+                           NS_GET_IID(nsIXPCScriptable)};
   return NS_OK;
 }
 

@@ -136,9 +136,8 @@ nsJARURI::Write(nsIObjectOutputStream *aOutputStream) {
 // nsIClassInfo methods:
 
 NS_IMETHODIMP
-nsJARURI::GetInterfaces(uint32_t *count, nsIID ***array) {
-  *count = 0;
-  *array = nullptr;
+nsJARURI::GetInterfaces(nsTArray<nsIID> &array) {
+  array.Clear();
   return NS_OK;
 }
 
