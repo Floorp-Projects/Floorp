@@ -138,14 +138,13 @@ class ParamsPanel extends Component {
 
       if (json) {
         object[JSON_SCOPE_NAME] = sortObjectKeys(json);
-      } else {
-        object[PARAMS_POST_PAYLOAD] = {
-          EDITOR_CONFIG: {
-            text: postData,
-            mode: mimeType.replace(/;.+/, ""),
-          },
-        };
       }
+      object[PARAMS_POST_PAYLOAD] = {
+        EDITOR_CONFIG: {
+          text: postData,
+          mode: mimeType.replace(/;.+/, ""),
+        },
+      };
     } else {
       postData = "";
     }
