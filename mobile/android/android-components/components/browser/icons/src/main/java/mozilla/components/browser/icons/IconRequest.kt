@@ -23,6 +23,7 @@ data class IconRequest(
     enum class Size(
         val value: Int
     ) {
-        DEFAULT(32)
+        DEFAULT(32),
+        LAUNCHER(48)
     }
 }
