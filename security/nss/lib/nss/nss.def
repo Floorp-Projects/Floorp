@@ -1139,3 +1139,9 @@ CERT_GetCertKeyType;
 ;+    local:
 ;+       *;
 ;+};
+;+NSS_3.43 { 	# NSS 3.43 release
+;+    global:
+HASH_GetHashOidTagByHashType;
+;+    local:
+;+       *;
+;+};

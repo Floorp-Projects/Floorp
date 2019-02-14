@@ -9,6 +9,7 @@ RUN apt-get update \
     locales \
     mercurial \
     nodejs \
+    npm \
  && rm -rf /var/lib/apt/lists/* \
  && apt-get autoremove -y && apt-get clean -y
 

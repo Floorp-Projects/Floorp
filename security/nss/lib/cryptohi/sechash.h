@@ -53,6 +53,8 @@ extern HASH_HashType HASH_GetHashTypeByOidTag(SECOidTag hashOid);
 extern SECOidTag HASH_GetHashOidTagByHMACOidTag(SECOidTag hmacOid);
 extern SECOidTag HASH_GetHMACOidTagByHashOidTag(SECOidTag hashOid);
 
+extern SECOidTag HASH_GetHashOidTagByHashType(HASH_HashType type);
+
 SEC_END_PROTOS
 
 #endif /* _HASH_H_ */
