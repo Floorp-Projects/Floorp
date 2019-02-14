@@ -60,6 +60,10 @@
 #  define AUTO_PROFILER_TRACING(categoryString, markerName, category)
 #  define AUTO_PROFILER_TRACING_DOCSHELL(categoryString, markerName, category, \
                                          docShell)
+#  define AUTO_PROFILER_TEXT_MARKER_DOCSHELL(markerName, text, category, \
+                                             docShell)
+#  define AUTO_PROFILER_TEXT_MARKER_DOCSHELL_CAUSE(markerName, text, category, \
+                                                   docShell, cause)
 
 #else  // !MOZ_GECKO_PROFILER
 
@@ -694,6 +698,70 @@ void profiler_tracing(
         categoryString, markerName,                                            \
         js::ProfilingStackFrame::Category::category, docShellId,               \
         docShellHistoryId)
+
+// Add a text marker. Text markers are similar to tracing markers, with the
+// difference that text markers have their "text" separate from the marker name;
+// multiple text markers with the same name can have different text, and these
+// markers will still be displayed in the same "row" in the UI.
+// Another difference is that text markers combine the start and end markers
+// into one marker.
+void profiler_add_text_marker(
+    const char* aMarkerName, const nsACString& aText,
+    js::ProfilingStackFrame::Category aCategory,
+    const mozilla::TimeStamp& aStartTime, const mozilla::TimeStamp& aEndTime,
+    const mozilla::Maybe<nsID>& aDocShellId = mozilla::Nothing(),
+    const mozilla::Maybe<uint32_t>& aDocShellHistoryId = mozilla::Nothing(),
+    UniqueProfilerBacktrace aCause = nullptr);
+
+class MOZ_RAII AutoProfilerTextMarker {
+ public:
+  AutoProfilerTextMarker(const char* aMarkerName, const nsACString& aText,
+                         js::ProfilingStackFrame::Category aCategory,
+                         const mozilla::Maybe<nsID>& aDocShellId,
+                         const mozilla::Maybe<uint32_t>& aDocShellHistoryId,
+                         UniqueProfilerBacktrace&& aCause =
+                             nullptr MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : mMarkerName(aMarkerName),
+        mText(aText),
+        mCategory(aCategory),
+        mStartTime(mozilla::TimeStamp::Now()),
+        mCause(std::move(aCause)),
+        mDocShellId(aDocShellId),
+        mDocShellHistoryId(aDocShellHistoryId) {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+  }
+
+  ~AutoProfilerTextMarker() {
+    profiler_add_text_marker(mMarkerName, mText,
+                             js::ProfilingStackFrame::Category::LAYOUT,
+                             mStartTime, mozilla::TimeStamp::Now(), mDocShellId,
+                             mDocShellHistoryId, std::move(mCause));
+  }
+
+ protected:
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+  const char* mMarkerName;
+  nsCString mText;
+  const js::ProfilingStackFrame::Category mCategory;
+  mozilla::TimeStamp mStartTime;
+  UniqueProfilerBacktrace mCause;
+  const mozilla::Maybe<nsID> mDocShellId;
+  const mozilla::Maybe<uint32_t> mDocShellHistoryId;
+};
+
+#  define AUTO_PROFILER_TEXT_MARKER_DOCSHELL(markerName, text, category, \
+                                             docShell)                   \
+    DECLARE_DOCSHELL_AND_HISTORY_ID(docShell);                           \
+    AutoProfilerTextMarker PROFILER_RAII(                                \
+        markerName, text, js::ProfilingStackFrame::Category::category,   \
+        docShellId, docShellHistoryId)
+
+#  define AUTO_PROFILER_TEXT_MARKER_DOCSHELL_CAUSE(markerName, text, category, \
+                                                   docShell, cause)            \
+    DECLARE_DOCSHELL_AND_HISTORY_ID(docShell);                                 \
+    AutoProfilerTextMarker PROFILER_RAII(                                      \
+        markerName, text, js::ProfilingStackFrame::Category::category,         \
+        docShellId, docShellHistoryId, cause)
 
 //---------------------------------------------------------------------------
 // Output profiles
