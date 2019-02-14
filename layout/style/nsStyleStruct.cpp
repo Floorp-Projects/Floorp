@@ -489,7 +489,7 @@ void nsStyleList::TriggerImageLoads(Document& aDocument,
 }
 
 nsChangeHint nsStyleList::CalcDifference(
-    const nsStyleList& aNewData, const nsStyleDisplay* aOldDisplay) const {
+    const nsStyleList& aNewData, const nsStyleDisplay& aOldDisplay) const {
   // If the quotes implementation is ever going to change we might not need
   // a framechange here and a reflow should be sufficient.  See bug 35768.
   if (mQuotes != aNewData.mQuotes &&
@@ -503,7 +503,7 @@ nsChangeHint nsStyleList::CalcDifference(
   // and thus these properties should not affect it either. This also
   // relies on that when the display value changes from something else
   // to list-item, that change itself would cause ReconstructFrame.
-  if (aOldDisplay && aOldDisplay->mDisplay == StyleDisplay::ListItem) {
+  if (aOldDisplay.mDisplay == StyleDisplay::ListItem) {
     if (mListStylePosition != aNewData.mListStylePosition) {
       return nsChangeHint_ReconstructFrame;
     }
@@ -1416,7 +1416,7 @@ static bool IsGridTemplateEqual(
 
 nsChangeHint nsStylePosition::CalcDifference(
     const nsStylePosition& aNewData,
-    const nsStyleVisibility* aOldStyleVisibility) const {
+    const nsStyleVisibility& aOldStyleVisibility) const {
   nsChangeHint hint = nsChangeHint(0);
 
   // Changes to "z-index" require a repaint.
@@ -1519,10 +1519,6 @@ nsChangeHint nsStylePosition::CalcDifference(
                        mMinHeight != aNewData.mMinHeight ||
                        mMaxHeight != aNewData.mMaxHeight;
 
-  // If aOldStyleVisibility is null, we don't need to bother with any of
-  // these tests, since we know that the element never had its
-  // nsStyleVisibility accessed, which means it couldn't have done
-  // layout.
   // Note that we pass an nsStyleVisibility here because we don't want
   // to cause a new struct to be computed during
   // ComputedStyle::CalcStyleDifference, which can lead to incorrect
@@ -1530,19 +1526,13 @@ nsChangeHint nsStylePosition::CalcDifference(
   // It doesn't matter whether we're looking at the old or new
   // visibility struct, since a change between vertical and horizontal
   // writing-mode will cause a reframe, and it's easier to pass the old.
-  if (aOldStyleVisibility) {
-    bool isVertical = WritingMode(aOldStyleVisibility).IsVertical();
-    if (isVertical ? widthChanged : heightChanged) {
-      hint |= nsChangeHint_ReflowHintsForBSizeChange;
-    }
+  bool isVertical = WritingMode(&aOldStyleVisibility).IsVertical();
+  if (isVertical ? widthChanged : heightChanged) {
+    hint |= nsChangeHint_ReflowHintsForBSizeChange;
+  }
 
-    if (isVertical ? heightChanged : widthChanged) {
-      hint |= nsChangeHint_ReflowHintsForISizeChange;
-    }
-  } else {
-    if (widthChanged || heightChanged) {
-      hint |= nsChangeHint_NeutralChange;
-    }
+  if (isVertical ? heightChanged : widthChanged) {
+    hint |= nsChangeHint_ReflowHintsForISizeChange;
   }
 
   // If any of the offsets have changed, then return the respective hints
