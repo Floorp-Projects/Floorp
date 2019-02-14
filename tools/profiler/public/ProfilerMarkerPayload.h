@@ -385,9 +385,10 @@ class TextMarkerPayload : public ProfilerMarkerPayload {
                     const mozilla::TimeStamp& aStartTime,
                     const mozilla::TimeStamp& aEndTime,
                     const mozilla::Maybe<nsID>& aDocShellId,
-                    const mozilla::Maybe<uint32_t>& aDocShellHistoryId)
+                    const mozilla::Maybe<uint32_t>& aDocShellHistoryId,
+                    UniqueProfilerBacktrace aCause = nullptr)
       : ProfilerMarkerPayload(aStartTime, aEndTime, aDocShellId,
-                              aDocShellHistoryId),
+                              aDocShellHistoryId, std::move(aCause)),
         mText(aText) {}
 
   DECL_STREAM_PAYLOAD

@@ -24,7 +24,7 @@ async function checkIconInView(view, name, findIcon) {
   const icon = findIcon(manager.document);
   const size = Number(icon.src.match(/icon(\d+)\.png/)[1]);
   is(icon.clientWidth, icon.clientHeight, `The icon should be square in ${name}`);
-  is(size, icon.clientWidth, `The correct icon size should have been chosen in ${name}`);
+  is(size, icon.clientWidth * window.devicePixelRatio, `The correct icon size should have been chosen in ${name}`);
   await close_manager(manager);
 }
 

@@ -21,7 +21,8 @@ const SW_URL = URL_ROOT + "resources/service-workers/push-sw.js";
 add_task(async function() {
   prepareCollapsibilitiesTest();
   await enableServiceWorkerDebugging();
-  const { document, tab, window } = await openAboutDebugging();
+  const { document, tab, window } =
+    await openAboutDebugging({ enableWorkerUpdates: true });
   const store = window.AboutDebugging.store;
 
   await selectThisFirefoxPage(document, store);
