@@ -32,6 +32,9 @@ class MetadataTag {
       : mKey(aKey), mValue(aValue) {}
   nsCString mKey;
   nsCString mValue;
+  bool operator==(const MetadataTag& rhs) const {
+    return mKey == rhs.mKey && mValue == rhs.mValue;
+  }
 };
 
 typedef nsDataHashtable<nsCStringHashKey, nsCString> MetadataTags;
@@ -119,6 +122,7 @@ class TrackInfo {
     mTags = aOther.mTags;
     MOZ_COUNT_CTOR(TrackInfo);
   }
+  bool IsEqualTo(const TrackInfo& rhs) const;
 
  private:
   TrackType mType;
@@ -164,6 +168,8 @@ class VideoInfo : public TrackInfo {
         mColorDepth(aOther.mColorDepth),
         mImageRect(aOther.mImageRect),
         mAlphaPresent(aOther.mAlphaPresent) {}
+
+  bool operator==(const VideoInfo& rhs) const;
 
   bool IsValid() const override {
     return mDisplay.width > 0 && mDisplay.height > 0;
@@ -285,6 +291,8 @@ class AudioInfo : public TrackInfo {
         mExtendedProfile(aOther.mExtendedProfile),
         mCodecSpecificConfig(aOther.mCodecSpecificConfig),
         mExtraData(aOther.mExtraData) {}
+
+  bool operator==(const AudioInfo& rhs) const;
 
   static const uint32_t MAX_RATE = 640000;
 
