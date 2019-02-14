@@ -15,7 +15,8 @@ const WORKER_NAME = "testserviceworker";
 add_task(async function() {
   const mocks = new Mocks();
 
-  const { document, tab, window } = await openAboutDebugging();
+  const { document, tab, window } =
+    await openAboutDebugging({ enableWorkerUpdates: true });
 
   info("Prepare Network client mock");
   const networkClient = mocks.createNetworkRuntime(NETWORK_RUNTIME_HOST, {
