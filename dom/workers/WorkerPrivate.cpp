@@ -2703,7 +2703,8 @@ void WorkerPrivate::DoRunLoop(JSContext* aCx) {
     size_t queuedEvents = mMainThreadEventTarget->Length() +
                           mMainThreadDebuggeeEventTarget->Length();
     if (queuedEvents > 5000) {
-      mMainThreadEventTarget->AwaitIdle();
+      // Note, postMessage uses mMainThreadDebuggeeEventTarget!
+      mMainThreadDebuggeeEventTarget->AwaitIdle();
     }
   }
 
