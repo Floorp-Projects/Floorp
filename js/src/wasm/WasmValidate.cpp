@@ -1374,21 +1374,26 @@ static bool DecodeGCFeatureOptInSection(Decoder& d, ModuleEnvironment* env) {
   // For documentation of what's in the various versions, see
   // https://github.com/lars-t-hansen/moz-gc-experiments
   //
-  // Version 1 is complete.
-  // Version 2 is in progress.
+  // Version 1 is complete and obsolete.
+  // Version 2 is incomplete but obsolete.
+  // Version 3 is in progress.
 
   switch (version) {
     case 1:
-      return d.fail(
-          "Wasm GC feature version 1 is no longer supported by this engine.\n"
-          "The current version is 2, which is not backward-compatible:\n"
-          " - The old encoding of ref.null is no longer accepted.");
     case 2:
+      return d.fail(
+          "Wasm GC feature versions 1 and 2 are no longer supported by this engine.\n"
+          "The current version is 3, which is not backward-compatible with earlier\n"
+          "versions:\n"
+          " - The v1 encoding of ref.null is no longer accepted.\n"
+          " - The v2 encodings of ref.eq, table.get, table.set, and table.size\n"
+          "   are no longer accepted.\n");
+    case 3:
       break;
     default:
       return d.fail(
           "The specified Wasm GC feature version is unknown.\n"
-          "The current version is 2.");
+          "The current version is 3.");
   }
 
   env->gcFeatureOptIn = true;
