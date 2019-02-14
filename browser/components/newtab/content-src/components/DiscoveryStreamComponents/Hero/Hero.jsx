@@ -42,6 +42,7 @@ export class Hero extends React.PureComponent {
     // Note that `{index + 1}` is necessary below for telemetry since we treat heroRec as index 0.
     let cards = otherRecs.map((rec, index) => (
       <DSCard
+        campaignId={rec.campaign_id}
         key={`dscard-${index}`}
         image_src={rec.image_src}
         title={truncateText(rec.title, 44)}

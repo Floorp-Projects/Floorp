@@ -4,6 +4,7 @@ import {DiscoveryStreamFeed} from "lib/DiscoveryStreamFeed.jsm";
 import {reducers} from "common/Reducers.jsm";
 
 const CONFIG_PREF_NAME = "browser.newtabpage.activity-stream.discoverystream.config";
+const SPOC_IMPRESSION_TRACKING_PREF = "browser.newtabpage.activity-stream.discoverystream.spoc.impressions";
 const THIRTY_MINUTES = 30 * 60 * 1000;
 
 describe("DiscoveryStreamFeed", () => {
@@ -254,6 +255,257 @@ describe("DiscoveryStreamFeed", () => {
       assert.deepEqual(firstCall.args, ["layout", {}]);
       assert.deepEqual(secondCall.args, ["feeds", {}]);
       assert.deepEqual(thirdCall.args, ["spocs", {}]);
+    });
+  });
+
+  describe("#filterSpocs", () => {
+    it("should return filtered out spocs based on frequency caps", () => {
+      const fakeSpocs = {
+        spocs: [
+          {
+            campaign_id: "seen",
+            caps: {
+              lifetime: 3,
+              campaign: {
+                count: 1,
+                period: 1,
+              },
+            },
+          },
+          {
+            campaign_id: "not-seen",
+            caps: {
+              lifetime: 3,
+              campaign: {
+                count: 1,
+                period: 1,
+              },
+            },
+          },
+        ],
+      };
+      const fakeImpressions = {
+        "seen": [Date.now() - 1],
+      };
+      sandbox.stub(feed, "readImpressionsPref").returns(fakeImpressions);
+
+      const result = feed.filterSpocs(fakeSpocs);
+
+      assert.equal(result.spocs.length, 1);
+      assert.equal(result.spocs[0].campaign_id, "not-seen");
+    });
+  });
+
+  describe("#isBelowFrequencyCap", () => {
+    it("should return true if there are no campaign impressions", () => {
+      const fakeImpressions = {
+        "seen": [Date.now() - 1],
+      };
+      const fakeSpoc = {
+        campaign_id: "not-seen",
+        caps: {
+          lifetime: 3,
+          campaign: {
+            count: 1,
+            period: 1,
+          },
+        },
+      };
+
+      const result = feed.isBelowFrequencyCap(fakeImpressions, fakeSpoc);
+
+      assert.isTrue(result);
+    });
+    it("should return true if there are no campaign caps", () => {
+      const fakeImpressions = {
+        "seen": [Date.now() - 1],
+      };
+      const fakeSpoc = {
+        campaign_id: "seen",
+        caps: {
+          lifetime: 3,
+        },
+      };
+
+      const result = feed.isBelowFrequencyCap(fakeImpressions, fakeSpoc);
+
+      assert.isTrue(result);
+    });
+
+    it("should return false if lifetime cap is hit", () => {
+      const fakeImpressions = {
+        "seen": [Date.now() - 1],
+      };
+      const fakeSpoc = {
+        campaign_id: "seen",
+        caps: {
+          lifetime: 1,
+          campaign: {
+            count: 3,
+            period: 1,
+          },
+        },
+      };
+
+      const result = feed.isBelowFrequencyCap(fakeImpressions, fakeSpoc);
+
+      assert.isFalse(result);
+    });
+
+    it("should return false if time based cap is hit", () => {
+      const fakeImpressions = {
+        "seen": [Date.now() - 1],
+      };
+      const fakeSpoc = {
+        campaign_id: "seen",
+        caps: {
+          lifetime: 3,
+          campaign: {
+            count: 1,
+            period: 1,
+          },
+        },
+      };
+
+      const result = feed.isBelowFrequencyCap(fakeImpressions, fakeSpoc);
+
+      assert.isFalse(result);
+    });
+  });
+
+  describe("#recordCampaignImpression", () => {
+    it("should return false if time based cap is hit", () => {
+      sandbox.stub(feed, "readImpressionsPref").returns({});
+      sandbox.stub(feed, "writeImpressionsPref").returns();
+
+      feed.recordCampaignImpression("seen");
+
+      assert.calledWith(feed.writeImpressionsPref, SPOC_IMPRESSION_TRACKING_PREF, {"seen": [0]});
+    });
+  });
+
+  describe("#cleanUpCampaignImpressionPref", () => {
+    it("should remove campaign-3 because it is no longer being used", async () => {
+      const fakeSpocs = {
+        spocs: [
+          {
+            campaign_id: "campaign-1",
+            caps: {
+              lifetime: 3,
+              campaign: {
+                count: 1,
+                period: 1,
+              },
+            },
+          },
+          {
+            campaign_id: "campaign-2",
+            caps: {
+              lifetime: 3,
+              campaign: {
+                count: 1,
+                period: 1,
+              },
+            },
+          },
+        ],
+      };
+      const fakeImpressions = {
+        "campaign-2": [Date.now() - 1],
+        "campaign-3": [Date.now() - 1],
+      };
+      sandbox.stub(feed, "readImpressionsPref").returns(fakeImpressions);
+      sandbox.stub(feed, "writeImpressionsPref").returns();
+
+      feed.cleanUpCampaignImpressionPref(fakeSpocs);
+
+      assert.calledWith(feed.writeImpressionsPref, SPOC_IMPRESSION_TRACKING_PREF, {"campaign-2": [-1]});
+    });
+  });
+
+  describe("#writeImpressionsPref", () => {
+    it("should call Services.prefs.setStringPref", () => {
+      sandbox.stub(global.Services.prefs, "setStringPref").returns();
+      const fakeImpressions = {
+        "foo": [Date.now() - 1],
+        "bar": [Date.now() - 1],
+      };
+
+      feed.writeImpressionsPref(SPOC_IMPRESSION_TRACKING_PREF, fakeImpressions);
+
+      assert.calledWith(global.Services.prefs.setStringPref, SPOC_IMPRESSION_TRACKING_PREF, JSON.stringify(fakeImpressions));
+    });
+  });
+
+  describe("#readImpressionsPref", () => {
+    it("should return what's in Services.prefs.getStringPref", () => {
+      const fakeImpressions = {
+        "foo": [Date.now() - 1],
+        "bar": [Date.now() - 1],
+      };
+      configPrefStub.withArgs(SPOC_IMPRESSION_TRACKING_PREF).returns(JSON.stringify(fakeImpressions));
+
+      const result = feed.readImpressionsPref(SPOC_IMPRESSION_TRACKING_PREF);
+
+      assert.deepEqual(result, fakeImpressions);
+    });
+  });
+
+  describe("#onAction: DISCOVERY_STREAM_SPOC_IMPRESSION", () => {
+    it("should call dispatch to ac.AlsoToPreloaded with filtered spoc data", async () => {
+      Object.defineProperty(feed, "showSpocs", {get: () => true});
+      const fakeSpocs = {
+        lastUpdated: 1,
+        data: {
+          spocs: [
+            {
+              campaign_id: "seen",
+              caps: {
+                lifetime: 3,
+                campaign: {
+                  count: 1,
+                  period: 1,
+                },
+              },
+            },
+            {
+              campaign_id: "not-seen",
+              caps: {
+                lifetime: 3,
+                campaign: {
+                  count: 1,
+                  period: 1,
+                },
+              },
+            },
+          ],
+        },
+      };
+      const fakeImpressions = {
+        "seen": [Date.now() - 1],
+      };
+      const result = {
+        spocs: [
+          {
+            campaign_id: "not-seen",
+            caps: {
+              lifetime: 3,
+              campaign: {
+                count: 1,
+                period: 1,
+              },
+            },
+          },
+        ],
+      };
+      sandbox.stub(feed, "recordCampaignImpression").returns();
+      sandbox.stub(feed, "readImpressionsPref").returns(fakeImpressions);
+      sandbox.stub(feed.cache, "get").returns(Promise.resolve({spocs: fakeSpocs}));
+      sandbox.spy(feed.store, "dispatch");
+
+      await feed.onAction({type: at.DISCOVERY_STREAM_SPOC_IMPRESSION, data: {campaign_id: "seen"}});
+
+      assert.deepEqual(feed.store.dispatch.firstCall.args[0].data.spocs, result);
     });
   });
 
