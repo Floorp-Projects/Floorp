@@ -3,9 +3,6 @@
 
 "use strict";
 
-/* import-globals-from helper-mocks.js */
-Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-mocks.js", this);
-
 // Test migrated from
 // devtools/client/aboutdebugging/test/browser_service_workers_not_compatible.js
 

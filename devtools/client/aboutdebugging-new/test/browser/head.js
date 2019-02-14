@@ -17,6 +17,9 @@ Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/shared/test/shared-redux-head.js",
   this);
 
+/* import-globals-from helper-mocks.js */
+Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-mocks.js", this);
+
 // Make sure the ADB addon is removed and ADB is stopped when the test ends.
 registerCleanupFunction(async function() {
   try {
