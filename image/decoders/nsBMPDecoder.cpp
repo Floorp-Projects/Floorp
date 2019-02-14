@@ -66,6 +66,16 @@
 //   compression, then instead of treating the pixel data as 0RGB it is treated
 //   as ARGB, but only if one or more of the A values are non-zero.
 //
+// Clipboard variants.
+// - It's the BMP format used for BMP images captured from the clipboard.
+// - It is missing the file header, containing the BM signature and the data
+//   offset. Instead the data begins after the header.
+// - If it uses BITFIELDS compression, then there is always an additional 12
+//   bytes of data after the header that must be read. In WinBMPv4+, the masks
+//   are supposed to be included in the header size, which are the values we use
+//   for decoding purposes, but there is additional three masks following the
+//   header which must be skipped to get to the pixel data.
+//
 // OS/2 VERSIONS OF THE BMP FORMAT
 // -------------------------------
 // OS2-BMPv1.
@@ -157,10 +167,12 @@ static mozilla::LazyLogModule sBMPLog("BMPDecoder");
 // The length of the mBIHSize field in the info header.
 static const uint32_t BIHSIZE_FIELD_LENGTH = 4;
 
-nsBMPDecoder::nsBMPDecoder(RasterImage* aImage, State aState, size_t aLength)
+nsBMPDecoder::nsBMPDecoder(RasterImage* aImage, State aState, size_t aLength,
+                           bool aForClipboard)
     : Decoder(aImage),
       mLexer(Transition::To(aState, aLength), Transition::TerminateSuccess()),
       mIsWithinICO(false),
+      mIsForClipboard(aForClipboard),
       mMayHaveTransparency(false),
       mDoesHaveTransparency(false),
       mNumColors(0),
@@ -175,12 +187,14 @@ nsBMPDecoder::nsBMPDecoder(RasterImage* aImage, State aState, size_t aLength)
 // Constructor for normal BMP files or from the clipboard.
 nsBMPDecoder::nsBMPDecoder(RasterImage* aImage, bool aForClipboard)
     : nsBMPDecoder(aImage,
-                   aForClipboard ? State::CLIPBOARD_HEADER : State::FILE_HEADER,
-                   aForClipboard ? BIHSIZE_FIELD_LENGTH : FILE_HEADER_LENGTH) {}
+                   aForClipboard ? State::INFO_HEADER_SIZE : State::FILE_HEADER,
+                   aForClipboard ? BIHSIZE_FIELD_LENGTH : FILE_HEADER_LENGTH,
+                   aForClipboard) {}
 
 // Constructor used for WinBMPv3-ICO files, which lack a file header.
 nsBMPDecoder::nsBMPDecoder(RasterImage* aImage, uint32_t aDataOffset)
-    : nsBMPDecoder(aImage, State::INFO_HEADER_SIZE, BIHSIZE_FIELD_LENGTH) {
+    : nsBMPDecoder(aImage, State::INFO_HEADER_SIZE, BIHSIZE_FIELD_LENGTH,
+                   /* aForClipboard */ false) {
   SetIsWithinICO();
 
   // Even though the file header isn't present in this case, the dataOffset
@@ -404,8 +418,6 @@ LexerResult nsBMPDecoder::DoDecode(SourceBufferIterator& aIterator,
                       switch (aState) {
                         case State::FILE_HEADER:
                           return ReadFileHeader(aData, aLength);
-                        case State::CLIPBOARD_HEADER:
-                          return ReadClipboardHeader(aData, aLength);
                         case State::INFO_HEADER_SIZE:
                           return ReadInfoHeaderSize(aData, aLength);
                         case State::INFO_HEADER_REST:
@@ -446,13 +458,6 @@ LexerTransition<nsBMPDecoder::State> nsBMPDecoder::ReadFileHeader(
   mH.mDataOffset = LittleEndian::readUint32(aData + 10);
 
   return Transition::To(State::INFO_HEADER_SIZE, BIHSIZE_FIELD_LENGTH);
-}
-
-LexerTransition<nsBMPDecoder::State> nsBMPDecoder::ReadClipboardHeader(
-    const char* aData, size_t aLength) {
-  // With the clipboard, the data offset is the header length.
-  mH.mDataOffset = LittleEndian::readUint32(aData);
-  return ReadInfoHeaderSize(aData, aLength);
 }
 
 // We read the info header in two steps: (a) read the mBIHSize field to
@@ -571,6 +576,13 @@ LexerTransition<nsBMPDecoder::State> nsBMPDecoder::ReadInfoHeaderRest(
       // Bitfields are present in the info header, so we can read them
       // immediately.
       mBitFields.ReadFromHeader(aData + 36, /* aReadAlpha = */ true);
+
+      // If this came from the clipboard, then we know that even if the header
+      // explicitly includes the bitfield masks, we need to add an additional
+      // offset for the start of the RGB data.
+      if (mIsForClipboard) {
+        mH.mDataOffset += BitFields::LENGTH;
+      }
     } else {
       // Bitfields are present after the info header, so we will read them in
       // ReadBitfields().
@@ -680,6 +692,12 @@ LexerTransition<nsBMPDecoder::State> nsBMPDecoder::ReadColorTable(
     mColors[i].mGreen = uint8_t(aData[1]);
     mColors[i].mRed = uint8_t(aData[2]);
     aData += mBytesPerColor;
+  }
+
+  // If we are decoding a BMP from the clipboard, we did not know the data
+  // offset in advance. It is just defined as after the header and color table.
+  if (mIsForClipboard) {
+    mH.mDataOffset += mPreGapLength;
   }
 
   // We know how many bytes we've read so far (mPreGapLength) and we know the
