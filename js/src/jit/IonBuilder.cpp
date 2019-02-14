@@ -13155,16 +13155,15 @@ MDefinition* IonBuilder::walkEnvironmentChain(unsigned hops) {
 MDefinition* IonBuilder::getAliasedVar(EnvironmentCoordinate ec) {
   MDefinition* obj = walkEnvironmentChain(ec.hops());
 
-  Shape* shape = EnvironmentCoordinateToEnvironmentShape(script(), pc);
-
   MInstruction* load;
-  if (shape->numFixedSlots() <= ec.slot()) {
+  if (EnvironmentObject::nonExtensibleIsFixedSlot(ec)) {
+    load = MLoadFixedSlot::New(alloc(), obj, ec.slot());
+  } else {
     MInstruction* slots = MSlots::New(alloc(), obj);
     current->add(slots);
 
-    load = MLoadSlot::New(alloc(), slots, ec.slot() - shape->numFixedSlots());
-  } else {
-    load = MLoadFixedSlot::New(alloc(), obj, ec.slot());
+    uint32_t slot = EnvironmentObject::nonExtensibleDynamicSlotIndex(ec);
+    load = MLoadSlot::New(alloc(), slots, slot);
   }
 
   current->add(load);
@@ -13187,21 +13186,19 @@ AbortReasonOr<Ok> IonBuilder::jsop_setaliasedvar(EnvironmentCoordinate ec) {
   MDefinition* rval = current->peek(-1);
   MDefinition* obj = walkEnvironmentChain(ec.hops());
 
-  Shape* shape = EnvironmentCoordinateToEnvironmentShape(script(), pc);
-
   if (needsPostBarrier(rval)) {
     current->add(MPostWriteBarrier::New(alloc(), obj, rval));
   }
 
   MInstruction* store;
-  if (shape->numFixedSlots() <= ec.slot()) {
+  if (EnvironmentObject::nonExtensibleIsFixedSlot(ec)) {
+    store = MStoreFixedSlot::NewBarriered(alloc(), obj, ec.slot(), rval);
+  } else {
     MInstruction* slots = MSlots::New(alloc(), obj);
     current->add(slots);
 
-    store = MStoreSlot::NewBarriered(alloc(), slots,
-                                     ec.slot() - shape->numFixedSlots(), rval);
-  } else {
-    store = MStoreFixedSlot::NewBarriered(alloc(), obj, ec.slot(), rval);
+    uint32_t slot = EnvironmentObject::nonExtensibleDynamicSlotIndex(ec);
+    store = MStoreSlot::NewBarriered(alloc(), slots, slot, rval);
   }
 
   current->add(store);
