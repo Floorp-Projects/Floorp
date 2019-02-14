@@ -210,55 +210,34 @@ if CONFIG['MOZ_TREE_FREETYPE']:
     DEFINES['FT_LCD_FILTER_H'] = '%s/modules/freetype2/include/freetype/ftlcdfil.h' % TOPSRCDIR
 
 # Suppress warnings in third-party code.
-if CONFIG['CC_TYPE'] in ('clang', 'clang-cl', 'gcc'):
+CFLAGS += [
+    '-Wno-enum-compare',
+    '-Wno-int-to-pointer-cast',
+    '-Wno-int-conversion',
+    '-Wno-incompatible-pointer-types',
+    '-Wno-sign-compare',
+    '-Wno-type-limits',
+    '-Wno-missing-field-initializers',
+    '-Wno-conversion',
+    '-Wno-narrowing',
+    '-Wno-switch',
+    '-Wno-unused',
+    '-Wno-unused-variable',
+    '-Wno-error=uninitialized',
+]
+if CONFIG['CC_TYPE'] in ('clang', 'clang-cl'):
     CFLAGS += [
-        '-Wno-enum-compare',
-        '-Wno-int-to-pointer-cast',
-        '-Wno-int-conversion',
+        '-Wno-absolute-value',
+        '-Wno-deprecated-register',
         '-Wno-incompatible-pointer-types',
-        '-Wno-sign-compare',
-        '-Wno-type-limits',
-        '-Wno-missing-field-initializers',
-        '-Wno-conversion',
-        '-Wno-narrowing',
-        '-Wno-switch',
-        '-Wno-unused',
-        '-Wno-unused-variable',
-        '-Wno-error=uninitialized',
+        '-Wno-macro-redefined',
+        '-Wno-shift-negative-value',
+        '-Wno-tautological-compare',
+        '-Wno-tautological-constant-out-of-range-compare',
+        '-Wno-unreachable-code',
     ]
-    if CONFIG['CC_TYPE'] in ('clang', 'clang-cl'):
-        CFLAGS += [
-            '-Wno-absolute-value',
-            '-Wno-deprecated-register',
-            '-Wno-incompatible-pointer-types',
-            '-Wno-macro-redefined',
-            '-Wno-shift-negative-value',
-            '-Wno-tautological-compare',
-            '-Wno-tautological-constant-out-of-range-compare',
-            '-Wno-unreachable-code',
-        ]
-    else:
-        CFLAGS += ['-Wno-unused-but-set-variable']
-
-if CONFIG['CC_TYPE'] == 'msvc':
-    CFLAGS += [
-        '-wd4005', # 'WIN32_LEAN_AND_MEAN' : macro redefinition
-        '-wd4018', # '>' : signed/unsigned mismatch
-        '-wd4047', # different levels of indirection
-        '-wd4101', # unreferenced local variable
-        '-wd4133', # 'function' : incompatible types
-        '-wd4146', # unary minus operator applied to unsigned type
-        '-wd4311', # 'variable' : pointer truncation from 'type' to 'type'
-        '-wd4477', # format string '%s' requires an argument of type 'type'
-        '-wd4996', # The compiler encountered a deprecated declaration.
-    ]
-    CXXFLAGS += [
-        '-wd4005', # 'WIN32_LEAN_AND_MEAN' : macro redefinition
-        '-wd4018', # '>' : signed/unsigned mismatch
-        '-wd4146', # unary minus operator applied to unsigned type
-        '-wd4828', # illegal in the current source character set
-        '-wd4838', # requires a narrowing conversion
-    ]
+else:
+    CFLAGS += ['-Wno-unused-but-set-variable']
 
 # See bug 386897.
 if CONFIG['CC_TYPE'] in ('clang', 'gcc') and CONFIG['OS_TARGET'] == 'Android' and CONFIG['MOZ_OPTIMIZE']:

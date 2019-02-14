@@ -5998,9 +5998,7 @@ pref("dom.datatransfer.mozAtAPIs", true);
 #endif
 
 // Whether or not Prio is supported on this platform.
-#ifdef MOZ_LIBPRIO
 pref("prio.enabled", false);
-#endif
 
 // External.AddSearchProvider is deprecated and it will be removed in the next
 // cycles.

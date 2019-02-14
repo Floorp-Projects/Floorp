@@ -359,7 +359,7 @@ else
 # Windows-to-Windows cross compiles should always use MSVC-style options for
 # host compiles.
 ifeq (WINNT_WINNT,$(HOST_OS_ARCH)_$(OS_ARCH))
-ifneq (,$(filter-out msvc clang-cl,$(HOST_CC_TYPE)))
+ifneq (,$(filter-out clang-cl,$(HOST_CC_TYPE)))
 $(error MSVC-style compilers should be used for host compilations!)
 endif
 HOST_OUTOPTION = -Fo# eol
@@ -517,13 +517,6 @@ define EXPAND_CC_OR_CXX
 $(if $(PROG_IS_C_ONLY_$(1)),$(CC),$(CCC))
 endef
 
-# Workaround a bug of MSVC 2017 Update 8 (see bug 1485224)
-ifeq ($(CC_TYPE)_$(HOST_OS_ARCH)_$(MOZ_PROFILE_GENERATE),msvc_WINNT_1)
-LINKER_OUT=$(subst /,\,$1)
-else
-LINKER_OUT=$1
-endif
-
 #
 # PROGRAM = Foo
 # creates OBJS, links with LIBS to create Foo
@@ -532,7 +525,7 @@ $(PROGRAM): $(PROGOBJS) $(STATIC_LIBS) $(RUST_STATIC_LIB) $(EXTRA_DEPS) $(RESFIL
 	$(REPORT_BUILD)
 	@$(RM) $@.manifest
 ifeq (_WINNT,$(GNU_CC)_$(OS_ARCH))
-	$(LINKER) -NOLOGO -OUT:$(call LINKER_OUT,$@) -PDB:$(LINK_PDBFILE) -IMPLIB:$(basename $(@F)).lib $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(MOZ_PROGRAM_LDFLAGS) $($(notdir $@)_$(OBJS_VAR_SUFFIX)) $(RESFILE) $(STATIC_LIBS) $(RUST_STATIC_LIB) $(SHARED_LIBS) $(OS_LIBS)
+	$(LINKER) -NOLOGO -OUT:$@ -PDB:$(LINK_PDBFILE) -IMPLIB:$(basename $(@F)).lib $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(MOZ_PROGRAM_LDFLAGS) $($(notdir $@)_$(OBJS_VAR_SUFFIX)) $(RESFILE) $(STATIC_LIBS) $(RUST_STATIC_LIB) $(SHARED_LIBS) $(OS_LIBS)
 ifdef MSMANIFEST_TOOL
 	@if test -f $@.manifest; then \
 		if test -f '$(srcdir)/$(notdir $@).manifest'; then \
@@ -659,7 +652,7 @@ endif
 $(HOST_SHARED_LIBRARY): Makefile
 	$(REPORT_BUILD)
 	$(RM) $@
-ifneq (,$(filter msvc clang-cl,$(HOST_CC_TYPE)))
+ifneq (,$(filter clang-cl,$(HOST_CC_TYPE)))
 	$(HOST_LINKER) -NOLOGO -DLL -OUT:$@ $($(notdir $@)_OBJS) $(HOST_CXX_LDFLAGS) $(HOST_LDFLAGS) $(HOST_LINKER_LIBPATHS) $(HOST_LIBS) $(HOST_EXTRA_LIBS)
 else
 	$(HOST_CXX) $(HOST_OUTOPTION)$@ $($(notdir $@)_OBJS) $(HOST_CXX_LDFLAGS) $(HOST_LDFLAGS) $(HOST_LIBS) $(HOST_EXTRA_LIBS)

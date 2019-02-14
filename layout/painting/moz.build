@@ -68,7 +68,7 @@ FINAL_LIBRARY = 'xul'
 
 CXXFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']
 
-if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
+if CONFIG['CC_TYPE'] == 'clang-cl':
     # This is intended as a temporary hack to support building with VS2015.
     # 'type cast': conversion from 'unsigned int' to 'void *' of greater size
     CXXFLAGS += ['-wd4312']

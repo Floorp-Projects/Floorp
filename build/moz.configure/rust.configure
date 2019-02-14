@@ -321,7 +321,7 @@ set_config('WIN64_CARGO_LINKER_CONFIG', win64_cargo_linker_config)
 @depends(target, c_compiler, rustc)
 @imports('os')
 def rustc_natvis_ldflags(target, compiler_info, rustc):
-    if target.kernel == 'WINNT' and compiler_info.type in ('msvc', 'clang-cl'):
+    if target.kernel == 'WINNT' and compiler_info.type == 'clang-cl':
         sysroot = check_cmd_output(rustc, '--print', 'sysroot').strip()
         etc = os.path.join(sysroot, 'lib/rustlib/etc')
         ldflags = []

@@ -868,15 +868,14 @@ class TestMisc(unittest.TestCase):
 
 class TestEnumString(unittest.TestCase):
     def test_string(self):
-        CompilerType = EnumString.subclass('msvc', 'gcc', 'clang', 'clang-cl')
+        CompilerType = EnumString.subclass('gcc', 'clang', 'clang-cl')
 
-        type = CompilerType('msvc')
-        self.assertEquals(type, 'msvc')
-        self.assertNotEquals(type, 'gcc')
+        type = CompilerType('gcc')
+        self.assertEquals(type, 'gcc')
         self.assertNotEquals(type, 'clang')
         self.assertNotEquals(type, 'clang-cl')
-        self.assertIn(type, ('msvc', 'clang-cl'))
-        self.assertNotIn(type, ('gcc', 'clang'))
+        self.assertIn(type, ('gcc', 'clang-cl'))
+        self.assertNotIn(type, ('clang', 'clang-cl'))
 
         with self.assertRaises(EnumStringComparisonError):
             self.assertEquals(type, 'foo')
