@@ -21,10 +21,10 @@ import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
 import mozilla.components.concept.sync.SyncError
 import mozilla.components.concept.sync.SyncStatusObserver
-import mozilla.components.feature.sync.FirefoxSyncFeature
 import mozilla.components.service.fxa.FxaAccountManager
 import mozilla.components.service.fxa.Config
 import mozilla.components.service.fxa.FxaException
+import mozilla.components.service.sync.StorageSync
 import mozilla.components.support.base.log.Log
 import mozilla.components.support.base.log.sink.AndroidLogSink
 import java.lang.Exception
@@ -43,7 +43,7 @@ class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener,
         )
     }
     private val featureSync by lazy {
-        FirefoxSyncFeature(
+        StorageSync(
             syncableStores = mapOf(historyStoreName to historyStorage),
             syncScope = "https://identity.mozilla.com/apps/oldsync"
         ) { authInfo ->

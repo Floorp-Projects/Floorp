@@ -37,9 +37,9 @@ android {
 
 dependencies {
     implementation project(':concept-storage')
-    implementation project(':feature-sync')
     implementation project(':service-firefox-accounts')
     implementation project(':service-sync-logins')
+    implementation project(':service-sync')
 
     implementation Dependencies.kotlin_stdlib
 

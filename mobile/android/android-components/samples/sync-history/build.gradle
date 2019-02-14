@@ -39,7 +39,7 @@ dependencies {
     implementation project(':concept-storage')
     implementation project(':browser-storage-sync')
     implementation project(':service-firefox-accounts')
-    implementation project(':feature-sync')
+    implementation project(':service-sync')
 
     implementation Dependencies.support_constraintlayout
 }

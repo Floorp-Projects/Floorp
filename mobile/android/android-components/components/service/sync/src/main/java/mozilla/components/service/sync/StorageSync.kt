@@ -2,8 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.feature.sync
+package mozilla.components.service.sync
 
+import android.support.annotation.VisibleForTesting
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import mozilla.components.concept.sync.AuthException
@@ -18,46 +19,38 @@ import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
 
-val registry = ObserverRegistry<SyncStatusObserver>()
-
 /**
  * A feature implementation which orchestrates data synchronization of a set of [SyncableStore] which
  * all share a common [AuthType].
  *
- * [AuthType] provides us with a layer of indirection that allows consumers of [FirefoxSyncFeature]
+ * [AuthType] provides us with a layer of indirection that allows consumers of [StorageSync]
  * to use entirely different types of [SyncableStore], without this feature needing to depend on
  * their specific implementations. Those implementations might have heavy native dependencies
  * (e.g. places and logins depend on native libraries), and we do not want to force a consumer which
  * only cares about syncing logins to have to import a places native library.
  *
- * @param reifyAuth A conversion method which reifies a generic [FxaAuthInfo] into an object of
+ * @param reifyAuth A conversion method which reifies a generic [AuthInfo] into an object of
  * type [AuthType].
  */
-class FirefoxSyncFeature<AuthType>(
-    private val syncableStores: Map<String, SyncableStore<AuthType>>,
-    private val syncScope: String,
-    private val reifyAuth: suspend (authInfo: AuthInfo) -> AuthType
-) : Observable<SyncStatusObserver> by registry {
-    private val logger = Logger("feature-sync")
+class StorageSync<AuthType>(
+        private val syncableStores: Map<String, SyncableStore<AuthType>>,
+        private val syncScope: String,
+        private val reifyAuth: suspend (authInfo: AuthInfo) -> AuthType
+) : Observable<SyncStatusObserver> by ObserverRegistry() {
+    private val logger = Logger("StorageSync")
 
     /**
      * Sync operation exposed by this feature is guarded by a mutex, ensuring that only one Sync
      * may be running at any given time.
      */
-    private var syncMutex = Mutex()
-
-    /**
-     * @return A [Boolean] indicating if any sync operations are currently running.
-     */
-    fun syncRunning(): Boolean {
-        return syncMutex.isLocked
-    }
+    @VisibleForTesting
+    internal var syncMutex = Mutex()
 
     /**
      * Performs a sync of configured [SyncableStore] history instance. This method guarantees that
      * only one sync may be running at any given time.
      *
-     * @param account [FirefoxAccountShaped] for which to perform a sync.
+     * @param account [OAuthAccount] for which to perform a sync.
      * @return a [SyncResult] indicating result of synchronization of configured stores.
      */
     suspend fun sync(account: OAuthAccount): SyncResult = syncMutex.withLock { withListeners {
@@ -84,9 +77,9 @@ class FirefoxSyncFeature<AuthType>(
     } }
 
     private suspend fun syncStore(
-        store: SyncableStore<AuthType>,
-        storeName: String,
-        account: AuthType
+            store: SyncableStore<AuthType>,
+            storeName: String,
+            account: AuthType
     ): StoreSyncStatus {
         return StoreSyncStatus(store.sync(account).also {
             if (it is SyncError) {
