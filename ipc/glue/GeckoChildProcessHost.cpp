@@ -856,24 +856,25 @@ bool GeckoChildProcessHost::PerformAsyncLaunch(
 
   childArgv.insert(childArgv.end(), aExtraOpts.begin(), aExtraOpts.end());
 
-  if (Omnijar::IsInitialized()) {
-    // Make sure that child processes can find the omnijar
-    // See XRE_InitCommandLine in nsAppRunner.cpp
-    nsAutoCString path;
-    nsCOMPtr<nsIFile> file = Omnijar::GetPath(Omnijar::GRE);
-    if (file && NS_SUCCEEDED(file->GetNativePath(path))) {
-      childArgv.push_back("-greomni");
-      childArgv.push_back(path.get());
+  if (mProcessType != GeckoProcessType_GMPlugin) {
+    if (Omnijar::IsInitialized()) {
+      // Make sure that child processes can find the omnijar
+      // See XRE_InitCommandLine in nsAppRunner.cpp
+      nsAutoCString path;
+      nsCOMPtr<nsIFile> file = Omnijar::GetPath(Omnijar::GRE);
+      if (file && NS_SUCCEEDED(file->GetNativePath(path))) {
+        childArgv.push_back("-greomni");
+        childArgv.push_back(path.get());
+      }
+      file = Omnijar::GetPath(Omnijar::APP);
+      if (file && NS_SUCCEEDED(file->GetNativePath(path))) {
+        childArgv.push_back("-appomni");
+        childArgv.push_back(path.get());
+      }
     }
-    file = Omnijar::GetPath(Omnijar::APP);
-    if (file && NS_SUCCEEDED(file->GetNativePath(path))) {
-      childArgv.push_back("-appomni");
-      childArgv.push_back(path.get());
-    }
+    // Add the application directory path (-appdir path)
+    AddAppDirToCommandLine(childArgv);
   }
-
-  // Add the application directory path (-appdir path)
-  AddAppDirToCommandLine(childArgv);
 
   childArgv.push_back(pidstring);
 
