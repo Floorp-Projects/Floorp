@@ -7,43 +7,78 @@
 
 "use strict";
 
+const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+
 // URL constructor doesn't support about: scheme
 const href = window.location.href.replace("about:", "http://");
 const url = new window.URL(href);
 
-// Only use this method to attach the toolbox if some query parameters are given
-if (url.search.length > 1) {
-  const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+// `host` is the frame element loading the toolbox.
+let host = window.windowUtils.containerElement;
+
+// If there's no containerElement (which happens when loading about:devtools-toolbox as
+// a top level document), use the current window.
+if (!host) {
+  host = {
+    contentWindow: window,
+    contentDocument: document,
+    // toolbox-host-manager.js wants to set attributes on the frame that contains it,
+    // but that is fine to skip and doesn't make sense when using the current window.
+    setAttribute() {},
+    ownerDocument: document,
+    // toolbox-host-manager.js wants to listen for unload events from outside the frame,
+    // but this is fine to skip since the toolbox code listens inside the frame as well,
+    // and there is no outer document in this case.
+    addEventListener() {},
+  };
+}
+
+const onLoad = new Promise(r => {
+  host.contentWindow.addEventListener("DOMContentLoaded", r, { once: true });
+});
+
+async function showErrorPage(doc, errorMessage) {
+  const win = doc.defaultView;
+  const { BrowserLoader } =
+    ChromeUtils.import("resource://devtools/client/shared/browser-loader.js");
+  const browserRequire = BrowserLoader({
+    window: win,
+    useOnlyShared: true,
+  }).require;
+
+  const React = browserRequire("devtools/client/shared/vendor/react");
+  const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
+  const DebugTargetErrorPage = React.createFactory(
+    require("devtools/client/framework/components/DebugTargetErrorPage"));
+  const { LocalizationHelper } = browserRequire("devtools/shared/l10n");
+  const L10N = new LocalizationHelper("devtools/client/locales/toolbox.properties");
+
+  // mount the React component into our XUL container once the DOM is ready
+  await onLoad;
+  const mountEl = doc.querySelector("#toolbox-error-mount");
+  const element = DebugTargetErrorPage({
+    errorMessage,
+    L10N,
+  });
+  ReactDOM.render(element, mountEl);
+
+  // make sure we unmount the component when the page is destroyed
+  win.addEventListener("unload", () => {
+    ReactDOM.unmountComponentAtNode(mountEl);
+  }, { once: true });
+}
+
+async function initToolbox(url, host) {
   const { gDevTools } = require("devtools/client/framework/devtools");
   const { targetFromURL } = require("devtools/client/framework/target-from-url");
   const { Toolbox } = require("devtools/client/framework/toolbox");
   const { DebuggerServer } = require("devtools/server/main");
   const { DebuggerClient } = require("devtools/shared/client/debugger-client");
 
-  // `host` is the frame element loading the toolbox.
-  let host = window.windowUtils.containerElement;
-
-  // If there's no containerElement (which happens when loading about:devtools-toolbox as
-  // a top level document), use the current window.
-  if (!host) {
-    host = {
-      contentWindow: window,
-      contentDocument: document,
-      // toolbox-host-manager.js wants to set attributes on the frame that contains it,
-      // but that is fine to skip and doesn't make sense when using the current window.
-      setAttribute() {},
-      ownerDocument: document,
-      // toolbox-host-manager.js wants to listen for unload events from outside the frame,
-      // but this is fine to skip since the toolbox code listens inside the frame as well,
-      // and there is no outer document in this case.
-      addEventListener() {},
-    };
-  }
-
   // Specify the default tool to open
   const tool = url.searchParams.get("tool");
 
-  (async function() {
+  try {
     let target;
     if (url.searchParams.has("target")) {
       // Attach toolbox to a given browser iframe (<xul:browser> or <html:iframe
@@ -76,7 +111,16 @@ if (url.search.length > 1) {
     }
     const options = { customIframe: host };
     await gDevTools.showToolbox(target, tool, Toolbox.HostType.PAGE, options);
-  })().catch(error => {
+  } catch (error) {
+    // When an error occurs, show error page with message.
     console.error("Exception while loading the toolbox", error);
-  });
+    showErrorPage(host.contentDocument, `${error}`);
+  }
 }
+
+// Only use this method to attach the toolbox if some query parameters are given
+if (url.search.length > 1) {
+  initToolbox(url, host);
+}
+// TODO: handle no params in about:devtool-toolbox
+// https://bugzilla.mozilla.org/show_bug.cgi?id=1526996
