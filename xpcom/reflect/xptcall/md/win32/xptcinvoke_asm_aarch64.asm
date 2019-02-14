@@ -2,19 +2,21 @@
 ; License, v. 2.0. If a copy of the MPL was not distributed with this
 ; file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-	AREA |.text|, CODE, ARM64
+#include "ksarm64.h"
+
 	IMPORT |invoke_copy_to_stack|
-	EXPORT |XPTC__InvokebyIndex|
+	TEXTAREA
 
 ;
 ;XPTC__InvokebyIndex(nsISupports* that, uint32_t methodIndex,
 ;                   uint32_t paramCount, nsXPTCVariant* params)
 ;
-|XPTC__InvokebyIndex| PROC
+
+	NESTED_ENTRY XPTC__InvokebyIndex
+
 	; set up frame
-	stp         x29, x30, [sp,#-32]!
-	mov         x29, sp
-	stp         x19, x20, [sp,#16]
+	PROLOG_SAVE_REG_PAIR fp, lr, #-32!
+	PROLOG_SAVE_REG_PAIR x19, x20, #16
 
 	; save methodIndex across function calls
 	mov         w20, w1
@@ -55,10 +57,10 @@
 	ldr         x16, [x16]
 	blr         x16
 
-	add         sp, sp, w19, uxth #3
-	ldp         x19, x20, [sp,#16]
-	ldp         x29, x30, [sp],#32
-	ret
+	EPILOG_STACK_RESTORE
+	EPILOG_RESTORE_REG_PAIR x19, x20, #16
+	EPILOG_RESTORE_REG_PAIR x29, x30, #32!
+	EPILOG_RETURN
 
-        ENDP
+	NESTED_END XPTC__InvokebyIndex
 	END
