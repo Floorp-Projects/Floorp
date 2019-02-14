@@ -138,6 +138,7 @@
 #  include "jit/mips64/Assembler-mips64.h"
 #endif
 
+#include "wasm/WasmGC.h"
 #include "wasm/WasmGenerator.h"
 #include "wasm/WasmInstance.h"
 #include "wasm/WasmOpIter.h"
@@ -962,8 +963,6 @@ using ScratchI8 = ScratchI32;
 //                 +============================+
 //                 |    Incoming arg            |
 //                 |    ...                     |
-//                 +----------------------------+
-//                 |    unspecified             |
 // --------------  +============================+
 //                 |    Frame (fixed size)      |
 // --------------  +============================+ <-------------------- FP
@@ -2106,18 +2105,24 @@ struct StackMapGenerator {
 
   // --- These can change at any point ---
 
-  // This holds masm.framePushed immediately before we move the stack
-  // pointer down so as to reserve space, in a function call, for arguments
-  // passed in memory.  To be more precise: this holds the value
-  // masm.framePushed would have had after moving the stack pointer over any
-  // alignment padding pushed before the arguments proper, but before the
-  // downward movement of the stack pointer that allocates space for the
-  // arguments proper.
+  // This holds masm.framePushed at it would be be for a function call
+  // instruction, but excluding the stack area used to pass arguments in
+  // memory.  That is, for an upcoming function call, this will hold
+  //
+  //   masm.framePushed() at the call instruction -
+  //      StackArgAreaSizeUnaligned(argumentTypes)
+  //
+  // This value denotes the lowest-addressed stack word covered by the current
+  // function's stackmap.  Words below this point form the highest-addressed
+  // area of the callee's stackmap.  Note that all alignment padding above the
+  // arguments-in-memory themselves belongs to the caller's stack map, which
+  // is why this is defined in terms of StackArgAreaSizeUnaligned() rather than
+  // StackArgAreaSizeAligned().
   //
   // When not inside a function call setup/teardown sequence, it is Nothing.
   // It can make Nothing-to/from-Some transitions arbitrarily as we progress
   // through the function body.
-  Maybe<uint32_t> framePushedBeforePushingCallArgs_;
+  Maybe<uint32_t> framePushedExcludingOutboundCallArgs_;
 
   // The number of memory-resident, ref-typed entries on the containing
   // BaseCompiler::stk_.
@@ -2229,24 +2234,31 @@ struct StackMapGenerator {
     // upcoming function call, since those words "belong" to the stackmap of
     // the callee, not to the stackmap of this function.  Note however that
     // any alignment padding pushed prior to pushing the args *does* belong to
-    // this function.  That padding is taken into account at the point where
-    // framePushedBeforePushingCallArgs_ is set.
+    // this function.
+    //
+    // That padding is taken into account at the point where
+    // framePushedExcludingOutboundCallArgs_ is set, viz, in startCallArgs(),
+    // and comprises two components:
+    //
+    // * call->frameAlignAdjustment
+    // * the padding applied to the stack arg area itself.  That is:
+    //   StackArgAreaSize(argTys) - StackArgAreaSizeUnpadded(argTys)
     Maybe<uint32_t> framePushedExcludingArgs;
     if (framePushedAtEntryToBody_.isNothing()) {
       // Still in the prologue.  framePushedExcludingArgs remains Nothing.
-      MOZ_ASSERT(framePushedBeforePushingCallArgs_.isNothing());
+      MOZ_ASSERT(framePushedExcludingOutboundCallArgs_.isNothing());
     } else {
       // In the body.
       MOZ_ASSERT(masm_.framePushed() >= framePushedAtEntryToBody_.value());
-      if (framePushedBeforePushingCallArgs_.isSome()) {
+      if (framePushedExcludingOutboundCallArgs_.isSome()) {
         // In the body, and we've potentially pushed some args onto the stack.
         // We must ignore them when sizing the stackmap.
         MOZ_ASSERT(masm_.framePushed() >=
-                   framePushedBeforePushingCallArgs_.value());
-        MOZ_ASSERT(framePushedBeforePushingCallArgs_.value() >=
+                   framePushedExcludingOutboundCallArgs_.value());
+        MOZ_ASSERT(framePushedExcludingOutboundCallArgs_.value() >=
                    framePushedAtEntryToBody_.value());
         framePushedExcludingArgs =
-            Some(framePushedBeforePushingCallArgs_.value());
+            Some(framePushedExcludingOutboundCallArgs_.value());
       } else {
         // In the body, but not with call args on the stack.  The stackmap
         // must be sized so as to extend all the way "down" to
@@ -4055,9 +4067,9 @@ class BaseCompiler final : public BaseCompilerInterface {
 
     const ValTypeVector& argTys = env_.funcTypes[func_.index]->args();
 
-    size_t nStackArgBytes = stackArgAreaSize(argTys);
-    MOZ_ASSERT(nStackArgBytes % sizeof(void*) == 0);
-    smgen_.numStackArgWords_ = nStackArgBytes / sizeof(void*);
+    size_t nInboundStackArgBytes = StackArgAreaSizeUnaligned(argTys);
+    MOZ_ASSERT(nInboundStackArgBytes % sizeof(void*) == 0);
+    smgen_.numStackArgWords_ = nInboundStackArgBytes / sizeof(void*);
 
     MOZ_ASSERT(smgen_.mst_.length() == 0);
     if (!smgen_.mst_.pushNonGCPointers(smgen_.numStackArgWords_)) {
@@ -4072,7 +4084,7 @@ class BaseCompiler final : public BaseCompilerInterface {
         continue;
       }
       uint32_t offset = argLoc.offsetFromArgBase();
-      MOZ_ASSERT(offset < nStackArgBytes);
+      MOZ_ASSERT(offset < nInboundStackArgBytes);
       MOZ_ASSERT(offset % sizeof(void*) == 0);
       smgen_.mst_.setGCPointer(offset / sizeof(void*));
     }
@@ -4383,8 +4395,8 @@ class BaseCompiler final : public BaseCompilerInterface {
     size_t adjustment = call.stackArgAreaSize + call.frameAlignAdjustment;
     fr.freeArgAreaAndPopBytes(adjustment, stackSpace);
 
-    MOZ_ASSERT(smgen_.framePushedBeforePushingCallArgs_.isSome());
-    smgen_.framePushedBeforePushingCallArgs_.reset();
+    MOZ_ASSERT(smgen_.framePushedExcludingOutboundCallArgs_.isSome());
+    smgen_.framePushedExcludingOutboundCallArgs_.reset();
 
     if (call.isInterModule) {
       masm.loadWasmTlsRegFromFrame();
@@ -4400,32 +4412,25 @@ class BaseCompiler final : public BaseCompilerInterface {
     }
   }
 
-  // TODO / OPTIMIZE (Bug 1316821): This is expensive; let's roll the iterator
-  // walking into the walking done for passArg.  See comments in passArg.
+  void startCallArgs(size_t stackArgAreaSizeUnaligned, FunctionCall* call) {
+    size_t stackArgAreaSizeAligned
+        = AlignStackArgAreaSize(stackArgAreaSizeUnaligned);
+    MOZ_ASSERT(stackArgAreaSizeUnaligned <= stackArgAreaSizeAligned);
 
-  // Note, stackArgAreaSize() must process all the arguments to get the
-  // alignment right; the signature must therefore be the complete call
-  // signature.
-
-  template <class T>
-  size_t stackArgAreaSize(const T& args) {
-    ABIArgIter<const T> i(args);
-    while (!i.done()) {
-      i++;
-    }
-    return AlignBytes(i.stackBytesConsumedSoFar(), 16u);
-  }
-
-  void startCallArgs(size_t stackArgAreaSize, FunctionCall* call) {
     // Record the masm.framePushed() value at this point, before we push args
     // for the call, but including the alignment space placed above the args.
     // This defines the lower limit of the stackmap that will be created for
     // this call.
-    MOZ_ASSERT(smgen_.framePushedBeforePushingCallArgs_.isNothing());
-    smgen_.framePushedBeforePushingCallArgs_.emplace(
-        masm.framePushed() + call->frameAlignAdjustment);
+    MOZ_ASSERT(smgen_.framePushedExcludingOutboundCallArgs_.isNothing());
+    smgen_.framePushedExcludingOutboundCallArgs_.emplace(
+        // However much we've pushed so far
+        masm.framePushed() +
+        // Extra space we'll push to get the frame aligned
+        call->frameAlignAdjustment +
+        // Extra space we'll push to get the outbound arg area 16-aligned
+        (stackArgAreaSizeAligned - stackArgAreaSizeUnaligned));
 
-    call->stackArgAreaSize = stackArgAreaSize;
+    call->stackArgAreaSize = stackArgAreaSizeAligned;
 
     size_t adjustment = call->stackArgAreaSize + call->frameAlignAdjustment;
     fr.allocArgArea(adjustment);
@@ -4444,17 +4449,17 @@ class BaseCompiler final : public BaseCompilerInterface {
   //
   // The bulk of the work here (60%) is in the next() call, though.
   //
-  // Notably, since next() is so expensive, stackArgAreaSize() becomes
-  // expensive too.
+  // Notably, since next() is so expensive, StackArgAreaSizeUnaligned()
+  // becomes expensive too.
   //
-  // Somehow there could be a trick here where the sequence of
-  // argument types (read from the input stream) leads to a cached
-  // entry for stackArgAreaSize() and for how to pass arguments...
+  // Somehow there could be a trick here where the sequence of argument types
+  // (read from the input stream) leads to a cached entry for
+  // StackArgAreaSizeUnaligned() and for how to pass arguments...
   //
-  // But at least we could reduce the cost of stackArgAreaSize() by
-  // first reading the argument types into a (reusable) vector, then
-  // we have the outgoing size at low cost, and then we can pass
-  // args based on the info we read.
+  // But at least we could reduce the cost of StackArgAreaSizeUnaligned() by
+  // first reading the argument types into a (reusable) vector, then we have
+  // the outgoing size at low cost, and then we can pass args based on the
+  // info we read.
 
   void passArg(ValType type, const Stk& arg, FunctionCall* call) {
     switch (type.code()) {
@@ -8601,7 +8606,7 @@ bool BaseCompiler::emitCallArgs(const ValTypeVector& argTypes,
                                 FunctionCall* baselineCall) {
   MOZ_ASSERT(!deadCode_);
 
-  startCallArgs(stackArgAreaSize(argTypes), baselineCall);
+  startCallArgs(StackArgAreaSizeUnaligned(argTypes), baselineCall);
 
   uint32_t numArgs = argTypes.length();
   for (size_t i = 0; i < numArgs; ++i) {
@@ -9766,7 +9771,7 @@ bool BaseCompiler::emitInstanceCall(uint32_t lineOrBytecode,
 
   ABIArg instanceArg = reservePointerArgument(&baselineCall);
 
-  startCallArgs(stackArgAreaSize(sig), &baselineCall);
+  startCallArgs(StackArgAreaSizeUnaligned(sig), &baselineCall);
   for (uint32_t i = 1; i < sig.length(); i++) {
     ValType t;
     switch (sig[i]) {
@@ -10902,7 +10907,7 @@ bool BaseCompiler::emitBody() {
     MOZ_ASSERT(masm.framePushed() >= smgen_.framePushedAtEntryToBody_.value());
 
     // At this point we're definitely not generating code for a function call.
-    MOZ_ASSERT(smgen_.framePushedBeforePushingCallArgs_.isNothing());
+    MOZ_ASSERT(smgen_.framePushedExcludingOutboundCallArgs_.isNothing());
 
     switch (op.b0) {
       case uint16_t(Op::End):
