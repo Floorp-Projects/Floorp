@@ -2,7 +2,7 @@
 
 # string
 
-`fun string(charset: `[`Charset`](https://developer.android.com/reference/java/nio/charset/Charset.html)` = Charsets.UTF_8): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Response.kt#L76)
+`fun string(): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Response.kt#L94)
 
 Reads this body completely as a String.
 

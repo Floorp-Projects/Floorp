@@ -2,7 +2,7 @@
 
 # FetchTestCases
 
-`abstract class FetchTestCases` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/tooling/fetch-tests/src/main/java/mozilla/components/tooling/fetch/tests/FetchTestCases.kt#L36)
+`abstract class FetchTestCases` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/tooling/fetch-tests/src/main/java/mozilla/components/tooling/fetch/tests/FetchTestCases.kt#L37)
 
 Generic test cases for concept-fetch implementations.
 
@@ -21,6 +21,8 @@ We expect any implementation of concept-fetch to pass all test cases here.
 | [createNewClient](create-new-client.md) | `abstract fun createNewClient(): `[`Client`](../../mozilla.components.concept.fetch/-client/index.md)<br>Creates a new [Client](../../mozilla.components.concept.fetch/-client/index.md) for running a specific test case with it. |
 | [createWebServer](create-web-server.md) | `open fun createWebServer(): MockWebServer`<br>Creates a new [MockWebServer](#) to accept test requests. |
 | [get200OverridingDefaultHeaders](get200-overriding-default-headers.md) | `open fun get200OverridingDefaultHeaders(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
+| [get200WithContentTypeCharset](get200-with-content-type-charset.md) | `open fun get200WithContentTypeCharset(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
+| [get200WithCookiePolicy](get200-with-cookie-policy.md) | `open fun get200WithCookiePolicy(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [get200WithDefaultHeaders](get200-with-default-headers.md) | `open fun get200WithDefaultHeaders(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [get200WithDuplicatedCacheControlRequestHeaders](get200-with-duplicated-cache-control-request-headers.md) | `open fun get200WithDuplicatedCacheControlRequestHeaders(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [get200WithDuplicatedCacheControlResponseHeaders](get200-with-duplicated-cache-control-response-headers.md) | `open fun get200WithDuplicatedCacheControlResponseHeaders(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |

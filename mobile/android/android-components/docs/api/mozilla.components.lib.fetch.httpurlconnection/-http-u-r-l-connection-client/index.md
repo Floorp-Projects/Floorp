@@ -2,7 +2,7 @@
 
 # HttpURLConnectionClient
 
-`class HttpURLConnectionClient : `[`Client`](../../mozilla.components.concept.fetch/-client/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/fetch-httpurlconnection/src/main/java/mozilla/components/lib/fetch/httpurlconnection/HttpURLConnectionClient.kt#L22)
+`class HttpURLConnectionClient : `[`Client`](../../mozilla.components.concept.fetch/-client/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/fetch-httpurlconnection/src/main/java/mozilla/components/lib/fetch/httpurlconnection/HttpURLConnectionClient.kt#L25)
 
 [HttpURLConnection](https://developer.android.com/reference/java/net/HttpURLConnection.html) implementation of [Client](../../mozilla.components.concept.fetch/-client/index.md).
 
@@ -23,3 +23,9 @@
 | Name | Summary |
 |---|---|
 | [fetch](fetch.md) | `fun fetch(request: `[`Request`](../../mozilla.components.concept.fetch/-request/index.md)`): `[`Response`](../../mozilla.components.concept.fetch/-response/index.md)<br>Starts the process of fetching a resource from the network as described by the [Request](../../mozilla.components.concept.fetch/-request/index.md) object. |
+
+### Companion Object Functions
+
+| Name | Summary |
+|---|---|
+| [getOrCreateCookieManager](get-or-create-cookie-manager.md) | `fun getOrCreateCookieManager(): `[`CookieManager`](https://developer.android.com/reference/java/net/CookieManager.html) |

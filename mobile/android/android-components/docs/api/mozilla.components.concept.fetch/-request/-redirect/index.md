@@ -2,7 +2,7 @@
 
 # Redirect
 
-`enum class Redirect` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Request.kt#L100)
+`enum class Redirect` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Request.kt#L103)
 
 ### Enum Values
 

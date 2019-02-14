@@ -19,6 +19,7 @@ $dokka.location:mozilla.components.support.ktx.android.content.res$readJSONObjec
 $dokka.location:mozilla.components.support.ktx.android.graphics$toDataUri(android.graphics.Bitmap)mozilla.components.support.ktx.android.graphics/android.graphics.-bitmap/to-data-uri.md
 $dokka.location:mozilla.components.support.ktx.android.graphics$withRoundedCorners(android.graphics.Bitmap, kotlin.Float)mozilla.components.support.ktx.android.graphics/android.graphics.-bitmap/with-rounded-corners.md
 $dokka.location:mozilla.components.support.ktx.android.graphics.drawable$toBitmap(android.graphics.drawable.Drawable, android.graphics.Bitmap.Config)mozilla.components.support.ktx.android.graphics.drawable/android.graphics.drawable.-drawable/to-bitmap.md
+$dokka.location:mozilla.components.support.ktx.android.net$hostWithoutCommonPrefixes#android.net.Urimozilla.components.support.ktx.android.net/android.net.-uri/host-without-common-prefixes.md
 $dokka.location:mozilla.components.support.ktx.android.org.json$asSequence(org.json.JSONArray)mozilla.components.support.ktx.android.org.json/org.json.-j-s-o-n-array/as-sequence.md
 $dokka.location:mozilla.components.support.ktx.android.org.json$getOrPutJSONObject(org.json.JSONObject, kotlin.String, kotlin.Function0((org.json.JSONObject)))mozilla.components.support.ktx.android.org.json/org.json.-j-s-o-n-object/get-or-put-j-s-o-n-object.md
 $dokka.location:mozilla.components.support.ktx.android.org.json$mergeWith(org.json.JSONObject, org.json.JSONObject)mozilla.components.support.ktx.android.org.json/org.json.-j-s-o-n-object/merge-with.md
@@ -49,6 +50,7 @@ $dokka.location:mozilla.components.support.ktx.kotlin$isUrl(kotlin.String)mozil
 $dokka.location:mozilla.components.support.ktx.kotlin$toBundle(kotlin.collections.Map((mozilla.components.support.ktx.kotlin.toBundle.K, mozilla.components.support.ktx.kotlin.toBundle.V)))mozilla.components.support.ktx.kotlin/kotlin.collections.-map/to-bundle.md
 $dokka.location:mozilla.components.support.ktx.kotlin$toDate(kotlin.String, kotlin.String, java.util.Locale)mozilla.components.support.ktx.kotlin/kotlin.-string/to-date.md
 $dokka.location:mozilla.components.support.ktx.kotlin$toNormalizedUrl(kotlin.String)mozilla.components.support.ktx.kotlin/kotlin.-string/to-normalized-url.md
+$dokka.location:mozilla.components.support.ktx.kotlin$toUri(kotlin.String)mozilla.components.support.ktx.kotlin/kotlin.-string/to-uri.md
 mozilla.components.browser.awesomebar
 mozilla.components.browser.awesomebar.layout
 mozilla.components.browser.awesomebar.transform
@@ -64,6 +66,8 @@ mozilla.components.browser.engine.system.matcher
 mozilla.components.browser.engine.system.permission
 mozilla.components.browser.engine.system.window
 mozilla.components.browser.errorpages
+mozilla.components.browser.icons
+mozilla.components.browser.icons.generator
 mozilla.components.browser.menu
 mozilla.components.browser.menu.item
 mozilla.components.browser.search
@@ -149,6 +153,7 @@ mozilla.components.support.ktx.android.content
 mozilla.components.support.ktx.android.content.res
 mozilla.components.support.ktx.android.graphics
 mozilla.components.support.ktx.android.graphics.drawable
+mozilla.components.support.ktx.android.net
 mozilla.components.support.ktx.android.org.json
 mozilla.components.support.ktx.android.os
 mozilla.components.support.ktx.android.util

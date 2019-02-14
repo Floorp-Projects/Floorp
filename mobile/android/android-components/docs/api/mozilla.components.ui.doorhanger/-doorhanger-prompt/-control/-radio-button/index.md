@@ -2,7 +2,7 @@
 
 # RadioButton
 
-`data class RadioButton : `[`Control`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/ui/doorhanger/src/main/java/mozilla/components/ui/doorhanger/DoorhangerPrompt.kt#L114)
+`data class RadioButton : `[`Control`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/ui/doorhanger/src/main/java/mozilla/components/ui/doorhanger/DoorhangerPrompt.kt#L116)
 
 [Control](../index.md) implementation for radio buttons. A radio button is a two-states button that can be either checked
 or unchecked.

@@ -2,7 +2,7 @@
 
 # OkHttpClient
 
-`class OkHttpClient : `[`Client`](../../mozilla.components.concept.fetch/-client/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/fetch-okhttp/src/main/java/mozilla/components/lib/fetch/okhttp/OkHttpClient.kt#L20)
+`class OkHttpClient : `[`Client`](../../mozilla.components.concept.fetch/-client/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/fetch-okhttp/src/main/java/mozilla/components/lib/fetch/okhttp/OkHttpClient.kt#L24)
 
 [Client](../../mozilla.components.concept.fetch/-client/index.md) implementation using OkHttp.
 
@@ -23,3 +23,9 @@
 | Name | Summary |
 |---|---|
 | [fetch](fetch.md) | `fun fetch(request: `[`Request`](../../mozilla.components.concept.fetch/-request/index.md)`): `[`Response`](../../mozilla.components.concept.fetch/-response/index.md)<br>Starts the process of fetching a resource from the network as described by the [Request](../../mozilla.components.concept.fetch/-request/index.md) object. |
+
+### Companion Object Functions
+
+| Name | Summary |
+|---|---|
+| [getOrCreateCookieManager](get-or-create-cookie-manager.md) | `fun getOrCreateCookieManager(): `[`CookieManager`](https://developer.android.com/reference/java/net/CookieManager.html) |

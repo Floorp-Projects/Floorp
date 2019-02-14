@@ -2,7 +2,7 @@
 
 # headers
 
-`val headers: `[`MutableHeaders`](../-mutable-headers/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Request.kt#L34)
+`val headers: `[`MutableHeaders`](../-mutable-headers/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Request.kt#L36)
 
 Optional HTTP headers to be send with the request.
 

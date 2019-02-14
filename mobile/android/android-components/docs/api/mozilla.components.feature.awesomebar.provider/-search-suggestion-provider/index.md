@@ -2,7 +2,7 @@
 
 # SearchSuggestionProvider
 
-`class SearchSuggestionProvider : `[`SuggestionProvider`](../../mozilla.components.concept.awesomebar/-awesome-bar/-suggestion-provider/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/awesomebar/src/main/java/mozilla/components/feature/awesomebar/provider/SearchSuggestionProvider.kt#L20)
+`class SearchSuggestionProvider : `[`SuggestionProvider`](../../mozilla.components.concept.awesomebar/-awesome-bar/-suggestion-provider/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/awesomebar/src/main/java/mozilla/components/feature/awesomebar/provider/SearchSuggestionProvider.kt#L22)
 
 A [AwesomeBar.SuggestionProvider](../../mozilla.components.concept.awesomebar/-awesome-bar/-suggestion-provider/index.md) implementation that provides a suggestion containing search engine suggestions (as
 chips) from the passed in [SearchEngine](../../mozilla.components.browser.search/-search-engine/index.md).
@@ -17,7 +17,7 @@ chips) from the passed in [SearchEngine](../../mozilla.components.browser.search
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `SearchSuggestionProvider(searchEngine: `[`SearchEngine`](../../mozilla.components.browser.search/-search-engine/index.md)`, searchUseCase: `[`SearchUseCase`](../../mozilla.components.feature.search/-search-use-cases/-search-use-case/index.md)`, mode: `[`Mode`](-mode/index.md)` = Mode.SINGLE_SUGGESTION)`<br>A [AwesomeBar.SuggestionProvider](../../mozilla.components.concept.awesomebar/-awesome-bar/-suggestion-provider/index.md) implementation that provides a suggestion containing search engine suggestions (as chips) from the passed in [SearchEngine](../../mozilla.components.browser.search/-search-engine/index.md). |
+| [&lt;init&gt;](-init-.md) | `SearchSuggestionProvider(searchEngine: `[`SearchEngine`](../../mozilla.components.browser.search/-search-engine/index.md)`, searchUseCase: `[`SearchUseCase`](../../mozilla.components.feature.search/-search-use-cases/-search-use-case/index.md)`, fetchClient: `[`Client`](../../mozilla.components.concept.fetch/-client/index.md)`, mode: `[`Mode`](-mode/index.md)` = Mode.SINGLE_SUGGESTION)`<br>A [AwesomeBar.SuggestionProvider](../../mozilla.components.concept.awesomebar/-awesome-bar/-suggestion-provider/index.md) implementation that provides a suggestion containing search engine suggestions (as chips) from the passed in [SearchEngine](../../mozilla.components.browser.search/-search-engine/index.md). |
 
 ### Properties
 

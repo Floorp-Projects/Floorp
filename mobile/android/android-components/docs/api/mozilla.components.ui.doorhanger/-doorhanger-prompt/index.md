@@ -2,7 +2,7 @@
 
 # DoorhangerPrompt
 
-`class DoorhangerPrompt` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/ui/doorhanger/src/main/java/mozilla/components/ui/doorhanger/DoorhangerPrompt.kt#L29)
+`class DoorhangerPrompt` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/ui/doorhanger/src/main/java/mozilla/components/ui/doorhanger/DoorhangerPrompt.kt#L31)
 
 Builder for creating a prompt [Doorhanger](../-doorhanger/index.md) providing a way to present decisions to users.
 
@@ -31,6 +31,12 @@ Builder for creating a prompt [Doorhanger](../-doorhanger/index.md) providing a 
 | Name | Summary |
 |---|---|
 | [&lt;init&gt;](-init-.md) | `DoorhangerPrompt(title: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, icon: `[`Drawable`](https://developer.android.com/reference/android/graphics/drawable/Drawable.html)`? = null, controlGroups: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`ControlGroup`](-control-group/index.md)`> = listOf(), buttons: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`Button`](-button/index.md)`> = listOf(), onDismiss: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)` = null)`<br>Builder for creating a prompt [Doorhanger](../-doorhanger/index.md) providing a way to present decisions to users. |
+
+### Properties
+
+| Name | Summary |
+|---|---|
+| [buttons](buttons.md) | `val buttons: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`Button`](-button/index.md)`>`<br>A list of buttons to be displayed in the prompt. |
 
 ### Functions
 

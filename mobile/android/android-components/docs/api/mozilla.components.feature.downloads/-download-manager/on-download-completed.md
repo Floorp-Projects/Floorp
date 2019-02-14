@@ -2,7 +2,7 @@
 
 # onDownloadCompleted
 
-`var onDownloadCompleted: `[`OnDownloadCompleted`](../-on-download-completed.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/src/main/java/mozilla/components/feature/downloads/DownloadManager.kt#L34)
+`var onDownloadCompleted: `[`OnDownloadCompleted`](../-on-download-completed.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/src/main/java/mozilla/components/feature/downloads/DownloadManager.kt#L37)
 
 a callback to be notified when a download is completed.
 
