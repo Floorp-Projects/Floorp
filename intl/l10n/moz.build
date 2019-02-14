@@ -7,7 +7,6 @@
 EXTRA_JS_MODULES += [
     'DOMLocalization.jsm',
     'Fluent.jsm',
-    'FluentSyntax.jsm',
     'L10nRegistry.jsm',
     'Localization.jsm',
 ]
