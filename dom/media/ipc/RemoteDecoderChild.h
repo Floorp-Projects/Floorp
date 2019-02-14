@@ -3,18 +3,10 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#ifndef include_dom_media_ipc_RemoteVideoDecoderChild_h
-#define include_dom_media_ipc_RemoteVideoDecoderChild_h
-#include "mozilla/PRemoteVideoDecoderChild.h"
+#ifndef include_dom_media_ipc_RemoteDecoderChild_h
+#define include_dom_media_ipc_RemoteDecoderChild_h
+#include "mozilla/PRemoteDecoderChild.h"
 #include "IRemoteDecoderChild.h"
-
-#include "MediaResult.h"
-
-namespace mozilla {
-namespace layers {
-class BufferRecycleBin;
-}
-}  // namespace mozilla
 
 namespace mozilla {
 
@@ -22,19 +14,20 @@ class RemoteDecoderManagerChild;
 using mozilla::MediaDataDecoder;
 using mozilla::ipc::IPCResult;
 
-class RemoteVideoDecoderChild final : public PRemoteVideoDecoderChild,
-                                      public IRemoteDecoderChild {
-  friend class PRemoteVideoDecoderChild;
+class RemoteDecoderChild : public PRemoteDecoderChild,
+                           public IRemoteDecoderChild {
+  friend class PRemoteDecoderChild;
 
  public:
-  explicit RemoteVideoDecoderChild();
+  explicit RemoteDecoderChild();
 
-  // PRemoteVideoDecoderChild
-  IPCResult RecvVideoOutput(const RemoteVideoDataIPDL& aData);
+  // PRemoteDecoderChild
+  virtual IPCResult RecvOutput(const DecodedOutputIPDL& aDecodedData) = 0;
   IPCResult RecvInputExhausted();
   IPCResult RecvDrainComplete();
   IPCResult RecvError(const nsresult& aError);
-  IPCResult RecvInitComplete(const nsCString& aDecoderDescription,
+  IPCResult RecvInitComplete(const TrackInfo::TrackType& trackType,
+                             const nsCString& aDecoderDescription,
                              const ConversionRequired& aConversion);
   IPCResult RecvInitFailed(const nsresult& aReason);
   IPCResult RecvFlushComplete();
@@ -54,23 +47,20 @@ class RemoteVideoDecoderChild final : public PRemoteVideoDecoderChild,
   MediaDataDecoder::ConversionRequired NeedsConversion() const override;
   void DestroyIPDL() override;
 
-  MOZ_IS_CLASS_INIT
-  MediaResult InitIPDL(const VideoInfo& aVideoInfo, float aFramerate,
-                       const CreateDecoderParams::OptionSet& aOptions);
-
   // Called from IPDL when our actor has been destroyed
   void IPDLActorDestroyed();
 
   RemoteDecoderManagerChild* GetManager();
 
- private:
-  ~RemoteVideoDecoderChild();
-
+ protected:
+  virtual ~RemoteDecoderChild();
   void AssertOnManagerThread() const;
-  RefPtr<mozilla::layers::Image> DeserializeImage(
-      const SurfaceDescriptorBuffer& sdBuffer, const IntSize& aPicSize);
 
-  RefPtr<RemoteVideoDecoderChild> mIPDLSelfRef;
+  RefPtr<RemoteDecoderChild> mIPDLSelfRef;
+  bool mCanSend = false;
+  MediaDataDecoder::DecodedData mDecodedData;
+
+ private:
   RefPtr<nsIThread> mThread;
 
   MozPromiseHolder<MediaDataDecoder::InitPromise> mInitPromise;
@@ -80,14 +70,12 @@ class RemoteVideoDecoderChild final : public PRemoteVideoDecoderChild,
 
   nsCString mHardwareAcceleratedReason;
   nsCString mDescription;
-  bool mCanSend;
-  bool mInitialized;
-  bool mIsHardwareAccelerated;
-  MediaDataDecoder::ConversionRequired mConversion;
-  MediaDataDecoder::DecodedData mDecodedData;
-  RefPtr<mozilla::layers::BufferRecycleBin> mBufferRecycleBin;
+  bool mInitialized = false;
+  bool mIsHardwareAccelerated = false;
+  MediaDataDecoder::ConversionRequired mConversion =
+      MediaDataDecoder::ConversionRequired::kNeedNone;
 };
 
 }  // namespace mozilla
 
-#endif  // include_dom_media_ipc_RemoteVideoDecoderChild_h
+#endif  // include_dom_media_ipc_RemoteDecoderChild_h

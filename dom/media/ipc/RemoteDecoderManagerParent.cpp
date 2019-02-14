@@ -9,7 +9,8 @@
 #  include <objbase.h>
 #endif
 
-#include "RemoteVideoDecoderParent.h"
+#include "RemoteAudioDecoder.h"
+#include "RemoteVideoDecoder.h"
 #include "VideoUtils.h"  // for MediaThreadType
 
 namespace mozilla {
@@ -146,26 +147,46 @@ void RemoteDecoderManagerParent::ActorDestroy(
   mThreadHolder = nullptr;
 }
 
-PRemoteVideoDecoderParent*
-RemoteDecoderManagerParent::AllocPRemoteVideoDecoderParent(
-    const VideoInfo& aVideoInfo, const float& aFramerate,
-    const CreateDecoderParams::OptionSet& aOptions, bool* aSuccess,
+PRemoteDecoderParent*
+RemoteDecoderManagerParent::AllocPRemoteDecoderParent(
+    const RemoteDecoderInfoIPDL& aRemoteDecoderInfo,
+    const CreateDecoderParams::OptionSet& aOptions,
+    bool* aSuccess,
     nsCString* aErrorDescription) {
   RefPtr<TaskQueue> decodeTaskQueue =
       new TaskQueue(GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER),
                     "RemoteVideoDecoderParent::mDecodeTaskQueue");
 
-  auto* parent = new RemoteVideoDecoderParent(
-      this, aVideoInfo, aFramerate, aOptions, sRemoteDecoderManagerTaskQueue,
-      decodeTaskQueue, aSuccess, aErrorDescription);
+  if (aRemoteDecoderInfo.type() ==
+      RemoteDecoderInfoIPDL::TVideoDecoderInfoIPDL) {
+    const VideoDecoderInfoIPDL& decoderInfo =
+        aRemoteDecoderInfo.get_VideoDecoderInfoIPDL();
+    return new RemoteVideoDecoderParent(this,
+                                        decoderInfo.videoInfo(),
+                                        decoderInfo.framerate(),
+                                        aOptions,
+                                        sRemoteDecoderManagerTaskQueue,
+                                        decodeTaskQueue,
+                                        aSuccess,
+                                        aErrorDescription);
+  } else if (aRemoteDecoderInfo.type() == RemoteDecoderInfoIPDL::TAudioInfo) {
+    return new RemoteAudioDecoderParent(this,
+                                        aRemoteDecoderInfo.get_AudioInfo(),
+                                        aOptions,
+                                        sRemoteDecoderManagerTaskQueue,
+                                        decodeTaskQueue,
+                                        aSuccess,
+                                        aErrorDescription);
+  }
 
-  return parent;
+  MOZ_CRASH("unrecognized type of RemoteDecoderInfoIPDL union");
+  return nullptr;
 }
 
-bool RemoteDecoderManagerParent::DeallocPRemoteVideoDecoderParent(
-    PRemoteVideoDecoderParent* actor) {
-  RemoteVideoDecoderParent* parent =
-      static_cast<RemoteVideoDecoderParent*>(actor);
+bool RemoteDecoderManagerParent::DeallocPRemoteDecoderParent(
+    PRemoteDecoderParent* actor) {
+  RemoteDecoderParent* parent =
+      static_cast<RemoteDecoderParent*>(actor);
   parent->Destroy();
   return true;
 }

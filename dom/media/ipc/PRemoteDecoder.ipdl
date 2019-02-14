@@ -9,6 +9,7 @@ include protocol PRemoteDecoderManager;
 include PMediaDecoderParams;
 include LayersSurfaces;
 using mozilla::MediaDataDecoder::ConversionRequired from "PlatformDecoderModule.h";
+using mozilla::TrackInfo::TrackType from "MediaInfo.h";
 
 namespace mozilla {
 
@@ -21,12 +22,27 @@ struct RemoteVideoDataIPDL
   int32_t frameID;
 };
 
+struct RemoteAudioDataIPDL
+{
+  MediaDataIPDL base;
+  uint32_t channels;
+  uint32_t rate;
+  uint32_t channelMap;
+  Shmem buffer;
+};
+
+union DecodedOutputIPDL
+{
+  RemoteAudioDataIPDL;
+  RemoteVideoDataIPDL;
+};
+
 // This protocol provides a way to use MediaDataDecoder across processes.
 // The parent side currently is only implemented to work with
 // RemoteDecoderModule.
 // The child side runs in the content process, and the parent side runs
 // in the RDD process. We run a separate IPDL thread for both sides.
-async protocol PRemoteVideoDecoder
+async protocol PRemoteDecoder
 {
   manager PRemoteDecoderManager;
 parent:
@@ -43,15 +59,14 @@ parent:
   async __delete__();
 
 child:
-  async InitComplete(nsCString decoderDescription,
+  async InitComplete(TrackType trackType,
+                     nsCString decoderDescription,
                      ConversionRequired conversion);
   async InitFailed(nsresult reason);
 
   async FlushComplete();
 
-  // Each output includes a SurfaceDescriptorBuffer that represents the decoded
-  // frame.
-  async VideoOutput(RemoteVideoDataIPDL data);
+  async Output(DecodedOutputIPDL data);
   async InputExhausted();
   async DrainComplete();
   async Error(nsresult error);
