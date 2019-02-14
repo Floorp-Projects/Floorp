@@ -107,6 +107,7 @@ class WebExecutorTest {
                 .addHeader("Header2", "Value1")
                 .addHeader("Header2", "Value2")
                 .referrer(referrer)
+                .header("Content-Type", "text/plain")
                 .body(bodyString.toDirectByteBuffer())
                 .build()
 
@@ -121,6 +122,7 @@ class WebExecutorTest {
         assertThat("Method should match", body.getString("method"), equalTo("POST"))
         assertThat("Headers should match", body.getJSONObject("headers").getString("Header1"), equalTo("Value"))
         assertThat("Headers should match", body.getJSONObject("headers").getString("Header2"), equalTo("Value1, Value2"))
+        assertThat("Headers should match", body.getJSONObject("headers").getString("Content-Type"), equalTo("text/plain"))
         assertThat("Referrer should match", body.getJSONObject("headers").getString("Referer"), equalTo(referrer))
         assertThat("Data should match", body.getString("data"), equalTo(bodyString));
     }
