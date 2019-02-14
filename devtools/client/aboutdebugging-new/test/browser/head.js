@@ -44,7 +44,11 @@ async function enableNewAboutDebugging() {
   await pushPref("devtools.aboutdebugging.network", true);
 }
 
-async function openAboutDebugging() {
+async function openAboutDebugging({ enableWorkerUpdates } = {}) {
+  if (!enableWorkerUpdates) {
+    silenceWorkerUpdates();
+  }
+
   await enableNewAboutDebugging();
 
   info("opening about:debugging");
