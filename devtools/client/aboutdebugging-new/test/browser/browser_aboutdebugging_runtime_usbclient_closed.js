@@ -3,9 +3,6 @@
 
 "use strict";
 
-/* import-globals-from helper-mocks.js */
-Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-mocks.js", this);
-
 const NETWORK_RUNTIME_HOST = "localhost:6080";
 const NETWORK_RUNTIME_APP_NAME = "TestNetworkApp";
 const USB_RUNTIME_ID = "test-runtime-id";
