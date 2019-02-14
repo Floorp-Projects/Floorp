@@ -381,6 +381,7 @@ opaque-types = [
 ]
 
 # All cbindgen-types are in mod "structs::root::mozilla".
+# FIXME(emilio): We probably want to automate this somehow...
 cbindgen-types = [
     { gecko = "StyleAppearance", servo = "values::specified::Appearance" },
     { gecko = "StyleComputedFontStretchRange", servo = "font_face::ComputedFontStretchRange" },
@@ -430,6 +431,12 @@ cbindgen-types = [
     { gecko = "StylePosition", servo = "values::computed::Position" },
     { gecko = "StyleBackgroundSize", servo = "values::computed::BackgroundSize" },
     { gecko = "StyleGenericBackgroundSize", servo = "values::generics::background::BackgroundSize" },
+    { gecko = "StyleBorderImageSlice", servo = "values::computed::BorderImageSlice" },
+    { gecko = "StyleGenericLengthOrNumber", servo = "values::generics::length::LengthOrNumber" },
+    { gecko = "StyleCSSPixelLength", servo = "values::computed::length::CSSPixelLength" },
+    { gecko = "StyleNonNegativeLength", servo = "values::computed::NonNegativeLength" },
+    { gecko = "StyleNonNegativeNumber", servo = "values::computed::NonNegativeNumber" },
+    { gecko = "StylePercentage", servo = "values::computed::Percentage" }
 ]
 
 mapped-generic-types = [

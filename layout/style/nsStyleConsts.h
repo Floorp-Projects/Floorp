@@ -285,9 +285,6 @@ enum class StyleImageLayerRepeat : uint8_t {
 // border-image-repeat
 enum class StyleBorderImageRepeat : uint8_t { Stretch, Repeat, Round, Space };
 
-#define NS_STYLE_BORDER_IMAGE_SLICE_NOFILL 0
-#define NS_STYLE_BORDER_IMAGE_SLICE_FILL 1
-
 // See nsStyleContent
 enum class StyleContent : uint8_t {
   OpenQuote,

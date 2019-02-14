@@ -945,11 +945,9 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleBorder {
  public:
   nsStyleCorners mBorderRadius;  // coord, percent
   nsStyleImage mBorderImageSource;
-  nsStyleSides mBorderImageSlice;   // factor, percent
-  nsStyleSides mBorderImageWidth;   // length, factor, percent, auto
-  nsStyleSides mBorderImageOutset;  // length, factor
-
-  uint8_t mBorderImageFill;
+  nsStyleSides mBorderImageWidth;  // length, factor, percent, auto
+  mozilla::StyleNonNegativeLengthOrNumberRect mBorderImageOutset;
+  mozilla::StyleBorderImageSlice mBorderImageSlice;  // factor, percent
   mozilla::StyleBorderImageRepeat mBorderImageRepeatH;
   mozilla::StyleBorderImageRepeat mBorderImageRepeatV;
   mozilla::StyleFloatEdge mFloatEdge;
@@ -1473,7 +1471,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleText {
   mozilla::StyleComplexColor mWebkitTextFillColor;
   mozilla::StyleComplexColor mWebkitTextStrokeColor;
 
-  nsStyleCoord mTabSize;        // coord, factor, calc
+  mozilla::StyleNonNegativeLengthOrNumber mMozTabSize;
   nsStyleCoord mWordSpacing;    // coord, percent, calc
   nsStyleCoord mLetterSpacing;  // coord, normal
   nsStyleCoord mLineHeight;     // coord, factor, normal

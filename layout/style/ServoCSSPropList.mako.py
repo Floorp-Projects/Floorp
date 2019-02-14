@@ -139,6 +139,9 @@ SERIALIZED_PREDEFINED_TYPES = [
     "ScrollSnapType",
     "Float",
     "Overflow",
+    "BorderImageSlice",
+    "NonNegativeLengthOrNumberRect",
+    "NonNegativeLengthOrNumber",
 ]
 
 def serialized_by_servo(prop):

@@ -2202,12 +2202,6 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetTextShadow() {
   return GetCSSShadowArray(StyleText()->mTextShadow, false);
 }
 
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetTabSize() {
-  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  SetValueToCoord(val, StyleText()->mTabSize, true);
-  return val.forget();
-}
-
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetLetterSpacing() {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
   SetValueToCoord(val, StyleText()->mLetterSpacing, false);
@@ -2267,32 +2261,10 @@ void nsComputedDOMStyle::AppendFourSideCoordValues(
   }
 }
 
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetBorderImageSlice() {
-  const nsStyleBorder* border = StyleBorder();
-  RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(false);
-  AppendFourSideCoordValues(valueList, border->mBorderImageSlice);
-
-  // Fill keyword.
-  if (NS_STYLE_BORDER_IMAGE_SLICE_FILL == border->mBorderImageFill) {
-    RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-    val->SetIdent(eCSSKeyword_fill);
-    valueList->AppendCSSValue(val.forget());
-  }
-
-  return valueList.forget();
-}
-
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetBorderImageWidth() {
   const nsStyleBorder* border = StyleBorder();
   RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(false);
   AppendFourSideCoordValues(valueList, border->mBorderImageWidth);
-  return valueList.forget();
-}
-
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetBorderImageOutset() {
-  const nsStyleBorder* border = StyleBorder();
-  RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(false);
-  AppendFourSideCoordValues(valueList, border->mBorderImageOutset);
   return valueList.forget();
 }
 
