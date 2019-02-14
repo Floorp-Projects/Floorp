@@ -6,9 +6,6 @@
 
 # Nightly-only features
 if CONFIG['NIGHTLY_BUILD']:
-    # The evolving bulk-copy proposal - mem.fill, mem.copy,
-    # table.copy, etc
-    DEFINES['ENABLE_WASM_BULKMEM_OPS'] = True
     # Support the evolving reftypes proposal - anyref, funcref, null,
     # and a few other things
     DEFINES['ENABLE_WASM_REFTYPES'] = True
