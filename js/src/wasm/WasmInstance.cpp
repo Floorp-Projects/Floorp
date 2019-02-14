@@ -312,7 +312,7 @@ Instance::callImport_anyref(Instance* instance, int32_t funcImportIndex,
 }
 
 /* static */ uint32_t /* infallible */
-Instance::growMemory_i32(Instance* instance, uint32_t delta) {
+Instance::memoryGrow_i32(Instance* instance, uint32_t delta) {
   MOZ_ASSERT(!instance->isAsmJS());
 
   JSContext* cx = TlsContext.get();
@@ -328,7 +328,7 @@ Instance::growMemory_i32(Instance* instance, uint32_t delta) {
 }
 
 /* static */ uint32_t /* infallible */
-Instance::currentMemory_i32(Instance* instance) {
+Instance::memorySize_i32(Instance* instance) {
   // This invariant must hold when running Wasm code. Assert it here so we can
   // write tests for cross-realm calls.
   MOZ_ASSERT(TlsContext.get()->realm() == instance->realm());

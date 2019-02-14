@@ -266,10 +266,10 @@ OpKind wasm::Classify(OpBytes op) {
       return OpKind::Else;
     case Op::End:
       return OpKind::End;
-    case Op::CurrentMemory:
-      return OpKind::CurrentMemory;
-    case Op::GrowMemory:
-      return OpKind::GrowMemory;
+    case Op::MemorySize:
+      return OpKind::MemorySize;
+    case Op::MemoryGrow:
+      return OpKind::MemoryGrow;
     case Op::RefNull:
       WASM_REF_OP(OpKind::RefNull);
     case Op::RefIsNull:

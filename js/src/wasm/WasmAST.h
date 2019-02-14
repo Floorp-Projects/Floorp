@@ -396,20 +396,34 @@ enum class AstExprKind {
   ComparisonOperator,
   Const,
   ConversionOperator,
-  CurrentMemory,
+#ifdef ENABLE_WASM_BULKMEM_OPS
+  DataOrElemDrop,
+#endif
   Drop,
   ExtraConversionOperator,
   First,
   GetGlobal,
   GetLocal,
-  GrowMemory,
   If,
   Load,
 #ifdef ENABLE_WASM_BULKMEM_OPS
-  MemOrTableCopy,
-  DataOrElemDrop,
   MemFill,
+  MemOrTableCopy,
   MemOrTableInit,
+#endif
+  MemoryGrow,
+  MemorySize,
+  Nop,
+  Pop,
+  RefNull,
+  Return,
+  SetGlobal,
+  SetLocal,
+#ifdef ENABLE_WASM_GC
+  StructNew,
+  StructGet,
+  StructSet,
+  StructNarrow,
 #endif
 #ifdef ENABLE_WASM_GENERALIZED_TABLES
   TableGet,
@@ -417,18 +431,6 @@ enum class AstExprKind {
   TableSet,
   TableSize,
 #endif
-#ifdef ENABLE_WASM_GC
-  StructNew,
-  StructGet,
-  StructSet,
-  StructNarrow,
-#endif
-  Nop,
-  Pop,
-  RefNull,
-  Return,
-  SetGlobal,
-  SetLocal,
   TeeLocal,
   Store,
   TernaryOperator,
@@ -1048,18 +1050,18 @@ class AstStructNarrow : public AstExpr {
 };
 #endif
 
-class AstCurrentMemory final : public AstExpr {
+class AstMemorySize final : public AstExpr {
  public:
-  static const AstExprKind Kind = AstExprKind::CurrentMemory;
-  explicit AstCurrentMemory() : AstExpr(Kind, ExprType::I32) {}
+  static const AstExprKind Kind = AstExprKind::MemorySize;
+  explicit AstMemorySize() : AstExpr(Kind, ExprType::I32) {}
 };
 
-class AstGrowMemory final : public AstExpr {
+class AstMemoryGrow final : public AstExpr {
   AstExpr* operand_;
 
  public:
-  static const AstExprKind Kind = AstExprKind::GrowMemory;
-  explicit AstGrowMemory(AstExpr* operand)
+  static const AstExprKind Kind = AstExprKind::MemoryGrow;
+  explicit AstMemoryGrow(AstExpr* operand)
       : AstExpr(Kind, ExprType::I32), operand_(operand) {}
 
   AstExpr* operand() const { return operand_; }

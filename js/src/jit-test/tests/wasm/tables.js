@@ -205,13 +205,13 @@ assertEq(tbl.get(0).foo, 42);
 (function testCrossRealmCall() {
     var g = newGlobal({sameCompartmentAs: this});
 
-    // The current_memory builtin asserts cx->realm matches instance->realm so
+    // The memory.size builtin asserts cx->realm matches instance->realm so
     // we call it here.
     var src = `
         (module
             (import "a" "t" (table 3 anyfunc))
             (import "a" "m" (memory 1))
-            (func $f (result i32) (i32.add (i32.const 3) (current_memory)))
+            (func $f (result i32) (i32.add (i32.const 3) (memory.size)))
             (elem (i32.const 0) $f))
     `;
     g.mem = new Memory({initial:4});
@@ -223,7 +223,7 @@ assertEq(tbl.get(0).foo, 42);
             (import "a" "t" (table 3 anyfunc))
             (import "a" "m" (memory 1))
             (type $v2i (func (result i32)))
-            (func $call (param $i i32) (result i32) (i32.add (call_indirect $v2i (get_local $i)) (current_memory)))
+            (func $call (param $i i32) (result i32) (i32.add (call_indirect $v2i (get_local $i)) (memory.size)))
             (export "call" $call))
     `)), {a:{t:g.tbl,m:g.mem}}).exports.call;
 
