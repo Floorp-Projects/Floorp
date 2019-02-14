@@ -27,6 +27,14 @@ interface Toolbar {
     var url: String
 
     /**
+     * Sets/gets private mode.
+     *
+     * In private mode the IME should not update any personalized data such as typing history and personalized language
+     * model based on what the user typed.
+     */
+    var private: Boolean
+
+    /**
      * Sets/Gets the site security to be displayed on the toolbar.
      */
     var siteSecure: SiteSecurity

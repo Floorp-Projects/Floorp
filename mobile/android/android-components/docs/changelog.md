@@ -88,6 +88,9 @@ permalink: /changelog/
     * If no restored bundle exists then no new bundle is saved for an empty snapshot.
     * If there is an active bundle then the bundle will be removed instead of updated with the empty snapshot.
 
+* **browser-toolbar**, **concept-toolbar**
+  * Added `private` field (`Boolean`): Enables/Disables private mode. In private mode the IME should not update any personalized data such as typing history and personalized language model based on what the user typed.
+
 # 0.42.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.41.0...v0.42.0)

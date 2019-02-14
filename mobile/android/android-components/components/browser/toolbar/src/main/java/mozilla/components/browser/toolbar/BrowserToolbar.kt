@@ -9,10 +9,12 @@ import android.graphics.Typeface
 import android.graphics.drawable.Drawable
 import android.support.annotation.DrawableRes
 import android.support.annotation.VisibleForTesting
+import android.support.v13.view.inputmethod.EditorInfoCompat
 import android.util.AttributeSet
 import android.view.View
 import android.view.View.OnFocusChangeListener
 import android.view.ViewGroup
+import android.view.inputmethod.EditorInfo
 import android.widget.ImageButton
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
@@ -80,6 +82,23 @@ class BrowserToolbar @JvmOverloads constructor(
     private val autocompleteDispatcher = autocompleteSupervisorJob +
         Executors.newFixedThreadPool(AUTOCOMPLETE_QUERY_THREADS).asCoroutineDispatcher() +
         autocompleteExceptionHandler
+
+    /**
+     * Sets/gets private mode.
+     *
+     * In private mode the IME should not update any personalized data such as typing history and personalized language
+     * model based on what the user typed.
+     */
+    override var private: Boolean
+        //  = 0x1000000
+        get() = (editToolbar.urlView.imeOptions and EditorInfoCompat.IME_FLAG_NO_PERSONALIZED_LEARNING) != 0
+        set(value) {
+            editToolbar.urlView.imeOptions = if (value) {
+                editToolbar.urlView.imeOptions or EditorInfoCompat.IME_FLAG_NO_PERSONALIZED_LEARNING
+            } else {
+                editToolbar.urlView.imeOptions and (EditorInfoCompat.IME_FLAG_NO_PERSONALIZED_LEARNING.inv())
+            }
+        }
 
     /**
      * Set/Get whether a site security icon (usually a lock or globe icon) should be visible next to the URL.
