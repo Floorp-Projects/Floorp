@@ -3832,6 +3832,19 @@ void profiler_tracing(const char* aCategoryString, const char* aMarkerName,
   racy_profiler_add_marker(aMarkerName, aCategory, std::move(payload));
 }
 
+void profiler_add_text_marker(
+    const char* aMarkerName, const nsACString& aText,
+    js::ProfilingStackFrame::Category aCategory,
+    const mozilla::TimeStamp& aStartTime, const mozilla::TimeStamp& aEndTime,
+    const mozilla::Maybe<nsID>& aDocShellId,
+    const mozilla::Maybe<uint32_t>& aDocShellHistoryId,
+    UniqueProfilerBacktrace aCause) {
+  profiler_add_marker(
+      aMarkerName, aCategory,
+      MakeUnique<TextMarkerPayload>(aText, aStartTime, aEndTime, aDocShellId,
+                                    aDocShellHistoryId, std::move(aCause)));
+}
+
 void profiler_set_js_context(JSContext* aCx) {
   MOZ_ASSERT(aCx);
 
