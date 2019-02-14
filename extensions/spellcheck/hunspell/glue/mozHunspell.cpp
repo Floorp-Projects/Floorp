@@ -72,7 +72,6 @@
 #include "nsIPrefBranch.h"
 #include "nsNetUtil.h"
 #include "mozilla/dom/ContentParent.h"
-#include "mozilla/Components.h"
 
 using mozilla::dom::ContentParent;
 using namespace mozilla;
@@ -90,14 +89,6 @@ NS_INTERFACE_MAP_BEGIN(mozHunspell)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTION(mozHunspell, mPersonalDictionary)
-
-NS_IMPL_COMPONENT_FACTORY(mozHunspell) {
-  auto hunspell = MakeRefPtr<mozHunspell>();
-  if (NS_SUCCEEDED(hunspell->Init())) {
-    return hunspell.forget().downcast<mozISpellCheckingEngine>();
-  }
-  return nullptr;
-}
 
 template <>
 mozilla::CountingAllocatorBase<HunspellAllocator>::AmountType

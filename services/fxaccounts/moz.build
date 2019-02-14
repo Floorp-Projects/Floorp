@@ -15,6 +15,11 @@ BROWSER_CHROME_MANIFESTS += ['tests/browser/browser.ini']
 
 XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell/xpcshell.ini']
 
+EXTRA_COMPONENTS += [
+  'FxAccountsComponents.manifest',
+  'FxAccountsPush.js',
+]
+
 EXTRA_JS_MODULES += [
   'Credentials.jsm',
   'FxAccounts.jsm',
@@ -25,11 +30,6 @@ EXTRA_JS_MODULES += [
   'FxAccountsOAuthGrantClient.jsm',
   'FxAccountsProfile.jsm',
   'FxAccountsProfileClient.jsm',
-  'FxAccountsPush.jsm',
   'FxAccountsStorage.jsm',
   'FxAccountsWebChannel.jsm',
-]
-
-XPCOM_MANIFESTS += [
-    'components.conf',
 ]

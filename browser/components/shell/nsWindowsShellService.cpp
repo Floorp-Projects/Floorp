@@ -21,6 +21,7 @@
 #include "nsShellService.h"
 #include "nsIProcess.h"
 #include "nsICategoryManager.h"
+#include "nsBrowserCompsCID.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceDefs.h"

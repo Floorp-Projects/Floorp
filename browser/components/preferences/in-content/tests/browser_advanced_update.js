@@ -14,6 +14,8 @@ const mockUpdateManager = {
 
   _originalClassId: "",
 
+  _originalFactory: null,
+
   QueryInterface: ChromeUtils.generateQI([Ci.nsIUpdateManager]),
 
   createInstance(outer, iiD) {
@@ -27,6 +29,8 @@ const mockUpdateManager = {
     let registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
     if (!registrar.isCIDRegistered(this._mockClassId)) {
       this._originalClassId = registrar.contractIDToCID(this.contractId);
+      this._originalFactory = Cm.getClassObject(Cc[this.contractId], Ci.nsIFactory);
+      registrar.unregisterFactory(this._originalClassId, this._originalFactory);
       registrar.registerFactory(this._mockClassId, "Unregister after testing", this.contractId, this);
     }
   },
@@ -34,7 +38,7 @@ const mockUpdateManager = {
   unregister() {
     let registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
     registrar.unregisterFactory(this._mockClassId, this);
-    registrar.registerFactory(this._originalClassId, "", this.contractId, null);
+    registrar.registerFactory(this._originalClassId, "", this.contractId, this._originalFactory);
   },
 
   get updateCount() {

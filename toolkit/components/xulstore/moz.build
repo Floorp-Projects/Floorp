@@ -16,10 +16,7 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'toolkit_xulstore'
 
-EXTRA_JS_MODULES += [
-    'XULStore.jsm',
-]
-
-XPCOM_MANIFESTS += [
-    'components.conf',
+EXTRA_COMPONENTS += [
+    'XULStore.js',
+    'XULStore.manifest',
 ]

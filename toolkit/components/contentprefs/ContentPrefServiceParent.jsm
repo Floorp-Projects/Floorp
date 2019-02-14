@@ -29,7 +29,7 @@ var ContentPrefServiceParent = {
     globalMM.addMessageListener("child-process-shutdown", this);
   },
 
-  // Only called on Android. Listeners are added in BrowserGlue.jsm on other
+  // Only called on Android. Listeners are added in nsBrowserGlue.js on other
   // platforms.
   init() {
     let globalMM = Cc["@mozilla.org/parentprocessmessagemanager;1"].getService();
@@ -106,7 +106,7 @@ var ContentPrefServiceParent = {
     }
   },
 
-  // Listeners are added in BrowserGlue.jsm
+  // Listeners are added in nsBrowserGlue.js
   receiveMessage(msg) {
     if (msg.name != "ContentPrefs:FunctionCall") {
       this.handleObserverChange(msg);

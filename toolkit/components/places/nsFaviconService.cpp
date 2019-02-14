@@ -43,8 +43,6 @@
 using namespace mozilla;
 using namespace mozilla::places;
 
-const uint16_t gFaviconSizes[7] = {192, 144, 96, 64, 48, 32, 16};
-
 /**
  * Used to notify a topic to system observers on async execute completion.
  * Will throw on error.
@@ -79,9 +77,9 @@ nsresult GetFramesInfoForContainer(imgIContainer* aContainer,
           continue;
         }
         // Check if it's one of the sizes we care about.
-        auto end = std::end(gFaviconSizes);
-        const uint16_t* matchingSize =
-            std::find(std::begin(gFaviconSizes), end, nativeSize.width);
+        auto end = std::end(sFaviconSizes);
+        uint16_t* matchingSize =
+            std::find(std::begin(sFaviconSizes), end, nativeSize.width);
         if (matchingSize != end) {
           // We must avoid duped sizes, an image could contain multiple frames
           // of the same size, but we can only store one. We could use an
@@ -729,7 +727,7 @@ nsresult nsFaviconService::OptimizeIconSizes(IconData& aIcon) {
     IconPayload newPayload;
     newPayload.mimeType = NS_LITERAL_CSTRING(PNG_MIME_TYPE);
     newPayload.width = frameInfo.width;
-    for (uint16_t size : gFaviconSizes) {
+    for (uint16_t size : sFaviconSizes) {
       // The icon could be smaller than 16, that is our minimum.
       // Icons smaller than 16px are kept as-is.
       if (frameInfo.width >= 16) {

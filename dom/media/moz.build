@@ -307,14 +307,10 @@ SOURCES += [
 if CONFIG['CC_TYPE'] in ('clang', 'clang-cl', 'gcc'):
   SOURCES['DecoderTraits.cpp'].flags += ['-Wno-error=multichar']
 
-if CONFIG['MOZ_WEBRTC']:
-    XPCOM_MANIFESTS += [
-        'components.conf',
-    ]
-
-    EXTRA_JS_MODULES.media += [
-        'PeerConnection.jsm',
-    ]
+EXTRA_COMPONENTS += [
+    'PeerConnection.js',
+    'PeerConnection.manifest',
+]
 
 EXTRA_JS_MODULES.media += [
     'IdpSandbox.jsm',

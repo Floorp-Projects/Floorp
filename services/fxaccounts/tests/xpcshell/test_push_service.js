@@ -11,7 +11,7 @@
 const {FXA_PUSH_SCOPE_ACCOUNT_UPDATE, ONLOGOUT_NOTIFICATION, ON_ACCOUNT_DESTROYED_NOTIFICATION, ON_DEVICE_CONNECTED_NOTIFICATION, ON_DEVICE_DISCONNECTED_NOTIFICATION, ON_PASSWORD_CHANGED_NOTIFICATION, ON_PASSWORD_RESET_NOTIFICATION, ON_PROFILE_CHANGE_NOTIFICATION, ON_PROFILE_UPDATED_NOTIFICATION, ON_VERIFY_LOGIN_NOTIFICATION, log} = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
 
 let importScope = {};
-Services.scriptloader.loadSubScript("resource://gre/modules/FxAccountsPush.jsm", importScope);
+Services.scriptloader.loadSubScript("resource://gre/components/FxAccountsPush.js", importScope);
 const FxAccountsPushService = importScope.FxAccountsPushService;
 
 XPCOMUtils.defineLazyServiceGetter(this, "pushService",

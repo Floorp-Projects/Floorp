@@ -14,10 +14,6 @@ SOURCES += [
     'SandboxReporterWrappers.cpp',
 ]
 
-XPCOM_MANIFESTS += [
-    'components.conf',
-]
-
 LOCAL_INCLUDES += [
     '/security/sandbox/linux', # SandboxLogging.h
 ]

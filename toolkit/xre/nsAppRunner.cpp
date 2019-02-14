@@ -1248,14 +1248,12 @@ nsXULAppInfo::Callback(nsISupports* aData) {
 }
 
 static const nsXULAppInfo kAppInfo;
-namespace mozilla {
-nsresult AppInfoConstructor(nsISupports* aOuter, REFNSIID aIID,
-                            void** aResult) {
+static nsresult AppInfoConstructor(nsISupports* aOuter, REFNSIID aIID,
+                                   void** aResult) {
   NS_ENSURE_NO_AGGREGATION(aOuter);
 
   return const_cast<nsXULAppInfo*>(&kAppInfo)->QueryInterface(aIID, aResult);
 }
-}  // namespace mozilla
 
 bool gLogConsoleErrors = false;
 

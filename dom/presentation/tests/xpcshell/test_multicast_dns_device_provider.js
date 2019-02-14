@@ -100,7 +100,7 @@ ContractHook.prototype = {
     this.unregister();
     let prevContract = this.hookedMap.get(this._contractID).pop();
 
-    if (prevContract.classID) {
+    if (prevContract.factory) {
       registrar.registerFactory(prevContract.classID,
                                 "",
                                 this._contractID,
@@ -120,11 +120,7 @@ ContractHook.prototype = {
     }
 
     if (factory) {
-      try {
-        registrar.unregisterFactory(classID, factory);
-      } catch (e) {
-        factory = null;
-      }
+      registrar.unregisterFactory(classID, factory);
     }
 
     return { classID, factory };

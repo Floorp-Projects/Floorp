@@ -34,12 +34,9 @@ UNIFIED_SOURCES += [
     'ConsoleUtils.cpp',
 ]
 
-EXTRA_JS_MODULES += [
-    'ConsoleAPIStorage.jsm',
-]
-
-XPCOM_MANIFESTS += [
-    'components.conf',
+EXTRA_COMPONENTS += [
+    'ConsoleAPI.manifest',
+    'ConsoleAPIStorage.js',
 ]
 
 LOCAL_INCLUDES += [

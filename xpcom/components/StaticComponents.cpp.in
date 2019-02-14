@@ -9,16 +9,11 @@
 #include "mozilla/PerfectHash.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/StaticPtr.h"
-#include "mozilla/UniquePtr.h"
-#include "mozilla/dom/ScriptSettings.h"
-#include "mozJSComponentLoader.h"
 #include "nsCOMPtr.h"
 #include "nsComponentManager.h"
-#include "nsContentUtils.h"
 #include "nsIFactory.h"
 #include "nsISupports.h"
 #include "nsString.h"
-#include "nsStringEnumerator.h"
 
 // Cleanup pollution from zipstruct.h
 #undef UNSUPPORTED
@@ -32,9 +27,6 @@
 //# @decls@
 
 namespace mozilla {
-
-using dom::AutoJSAPI;
-
 namespace xpcom {
 
 static constexpr uint32_t kNoContractID = 0xffffffff;
@@ -70,10 +62,6 @@ const StaticCategoryEntry gStaticCategoryEntries[] = {
 //# @category_entries@
 };
 
-const StringOffset gComponentJSMs[] = {
-//# @component_jsms@
-};
-
 /**
  * Returns a nsCString corresponding to the given entry in the `gStrings` string
  * table. The resulting nsCString points directly to static storage, and does
@@ -92,37 +80,6 @@ nsCString ContractEntry::ContractID() const {
 
 bool ContractEntry::Matches(const nsACString& aContractID) const {
   return aContractID == ContractID() && Module().Active();
-}
-
-
-static nsresult ConstructJSMComponent(const nsACString& aURI,
-                                      const char* aConstructor,
-                                      nsISupports** aResult) {
-  if (!nsComponentManagerImpl::JSLoaderReady()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  AutoJSAPI jsapi;
-  MOZ_ALWAYS_TRUE(jsapi.Init(xpc::PrivilegedJunkScope()));
-  JSContext* cx = jsapi.cx();
-
-  JS::RootedObject global(cx);
-  JS::RootedObject exports(cx);
-  MOZ_TRY(mozJSComponentLoader::Get()->Import(cx, aURI, &global, &exports));
-
-  JS::RootedValue ctor(cx);
-  if (!JS_GetProperty(cx, exports, aConstructor, &ctor) ||
-      !ctor.isObject()) {
-    return NS_ERROR_XPC_JSOBJECT_HAS_NO_FUNCTION_NAMED;
-  }
-
-  JS::RootedObject inst(cx);
-  if (!JS::Construct(cx, ctor, JS::HandleValueArray::empty(), &inst)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return nsContentUtils::XPConnect()->WrapJS(cx, inst, NS_GET_IID(nsISupports),
-                                             (void**)aResult);
 }
 
 
@@ -272,20 +229,6 @@ nsCString StaticCategory::Name() const {
     return true;
   }
   return false;
-}
-
-/* static */ already_AddRefed<nsIUTF8StringEnumerator>
-StaticComponents::GetComponentJSMs() {
-  auto jsms = MakeUnique<nsTArray<nsCString>>(MOZ_ARRAY_LENGTH(gComponentJSMs));
-
-  for (const auto& entry : gComponentJSMs) {
-    jsms->AppendElement(GetString(entry));
-  }
-
-  nsCOMPtr<nsIUTF8StringEnumerator> result;
-  MOZ_ALWAYS_SUCCEEDS(NS_NewAdoptingUTF8StringEnumerator(getter_AddRefs(result),
-                                                         jsms.release()));
-  return result.forget();
 }
 
 /* static */ void StaticComponents::Shutdown() {

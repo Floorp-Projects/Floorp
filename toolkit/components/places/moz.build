@@ -44,6 +44,7 @@ if CONFIG['MOZ_PLACES']:
         'nsNavHistory.cpp',
         'nsNavHistoryQuery.cpp',
         'nsNavHistoryResult.cpp',
+        'nsPlacesModule.cpp',
         'PlaceInfo.cpp',
         'Shutdown.cpp',
         'SQLFunctions.cpp',
@@ -59,28 +60,28 @@ if CONFIG['MOZ_PLACES']:
         'BookmarkJSONUtils.jsm',
         'Bookmarks.jsm',
         'ClusterLib.js',
-        'ColorAnalyzer.jsm',
         'ColorAnalyzer_worker.js',
         'ColorConversion.js',
         'ExtensionSearchHandler.jsm',
         'History.jsm',
-        'PageIconProtocolHandler.jsm',
         'PlacesBackups.jsm',
-        'PlacesCategoriesStarter.jsm',
         'PlacesDBUtils.jsm',
-        'PlacesExpiration.jsm',
         'PlacesRemoteTabsAutocompleteProvider.jsm',
         'PlacesSearchAutocompleteProvider.jsm',
         'PlacesSyncUtils.jsm',
         'PlacesTransactions.jsm',
         'PlacesUtils.jsm',
         'SyncedBookmarksMirror.jsm',
-        'TaggingService.jsm',
-        'UnifiedComplete.jsm',
     ]
 
-    XPCOM_MANIFESTS += [
-        'components.conf',
+    EXTRA_COMPONENTS += [
+        'ColorAnalyzer.js',
+        'nsPlacesExpiration.js',
+        'nsTaggingService.js',
+        'PageIconProtocolHandler.js',
+        'PlacesCategoriesStarter.js',
+        'toolkitplaces.manifest',
+        'UnifiedComplete.js',
     ]
 
     FINAL_LIBRARY = 'xul'

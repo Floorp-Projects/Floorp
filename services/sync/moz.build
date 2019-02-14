@@ -13,6 +13,7 @@ XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
 
 EXTRA_COMPONENTS += [
     'SyncComponents.manifest',
+    'Weave.js',
 ]
 
 EXTRA_JS_MODULES['services-sync'] += [
@@ -38,7 +39,6 @@ EXTRA_JS_MODULES['services-sync'] += [
     'modules/telemetry.js',
     'modules/UIState.jsm',
     'modules/util.js',
-    'Weave.jsm',
 ]
 
 EXTRA_JS_MODULES['services-sync'].engines += [
@@ -56,10 +56,6 @@ EXTRA_JS_MODULES['services-sync'].engines += [
 EXTRA_JS_MODULES['services-sync'].stages += [
     'modules/stages/declined.js',
     'modules/stages/enginesync.js',
-]
-
-XPCOM_MANIFESTS += [
-    'components.conf',
 ]
 
 TESTING_JS_MODULES.services.sync += [

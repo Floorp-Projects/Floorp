@@ -1,0 +1,2 @@
+component {9f171ac4-0939-4ef8-b360-3408aedc3060} BrowserElementParent.js
+contract @mozilla.org/dom/browser-element-api;1 {9f171ac4-0939-4ef8-b360-3408aedc3060}

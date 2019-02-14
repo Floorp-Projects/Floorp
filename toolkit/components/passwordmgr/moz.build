@@ -28,28 +28,37 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'loginmgr'
 
-EXTRA_JS_MODULES += [
+EXTRA_COMPONENTS += [
     'crypto-SDR.js',
+    'nsLoginInfo.js',
+    'nsLoginManager.js',
+    'nsLoginManagerPrompter.js',
+]
+
+EXTRA_PP_COMPONENTS += [
+    'passwordmgr.manifest',
+]
+
+EXTRA_JS_MODULES += [
     'InsecurePasswordUtils.jsm',
     'LoginHelper.jsm',
-    'LoginInfo.jsm',
-    'LoginManager.jsm',
     'LoginManagerContent.jsm',
     'LoginManagerParent.jsm',
-    'LoginManagerPrompter.jsm',
     'LoginRecipes.jsm',
     'OSCrypto.jsm',
 ]
 
 if CONFIG['OS_TARGET'] == 'Android':
-    EXTRA_JS_MODULES += [
+    EXTRA_COMPONENTS += [
         'storage-mozStorage.js',
     ]
 else:
+    EXTRA_COMPONENTS += [
+        'storage-json.js',
+    ]
     EXTRA_JS_MODULES += [
         'LoginImport.jsm',
         'LoginStore.jsm',
-        'storage-json.js',
     ]
 
 if CONFIG['OS_TARGET'] == 'WINNT':
@@ -61,10 +70,6 @@ if CONFIG['MOZ_BUILD_APP'] == 'browser':
     EXTRA_JS_MODULES += [
         'LoginManagerContextMenu.jsm',
     ]
-
-XPCOM_MANIFESTS += [
-    'components.conf',
-]
 
 JAR_MANIFESTS += ['jar.mn']
 
