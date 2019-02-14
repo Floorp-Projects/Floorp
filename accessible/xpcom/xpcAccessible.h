@@ -82,6 +82,8 @@ class xpcAccessible : public nsIAccessible {
   NS_IMETHOD ScrollToPoint(uint32_t aCoordinateType, int32_t aX,
                            int32_t aY) final;
 
+  NS_IMETHOD Announce(const nsAString& aAnnouncement, uint16_t aPriority) final;
+
  protected:
   xpcAccessible() {}
   virtual ~xpcAccessible() {}

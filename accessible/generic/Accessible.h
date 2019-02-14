@@ -980,6 +980,8 @@ class Accessible : public nsISupports {
    */
   void SetHideEventTarget(bool aTarget) { mHideEventTarget = aTarget; }
 
+  void Announce(const nsAString& aAnnouncement, uint16_t aPriority);
+
  protected:
   virtual ~Accessible();
 

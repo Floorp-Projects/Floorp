@@ -16,6 +16,8 @@ const nsIAccessibleVirtualCursorChangeEvent =
   Ci.nsIAccessibleVirtualCursorChangeEvent;
 const nsIAccessibleObjectAttributeChangedEvent =
   Ci.nsIAccessibleObjectAttributeChangedEvent;
+const nsIAccessibleAnnouncementEvent =
+  Ci.nsIAccessibleAnnouncementEvent;
 
 const nsIAccessibleStates = Ci.nsIAccessibleStates;
 const nsIAccessibleRole = Ci.nsIAccessibleRole;

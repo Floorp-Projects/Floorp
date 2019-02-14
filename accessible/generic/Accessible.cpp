@@ -2441,6 +2441,12 @@ Accessible* Accessible::ContainerWidget() const {
   return nullptr;
 }
 
+void Accessible::Announce(const nsAString& aAnnouncement, uint16_t aPriority) {
+  RefPtr<AccAnnouncementEvent> event =
+      new AccAnnouncementEvent(this, aAnnouncement, aPriority);
+  nsEventShell::FireEvent(event);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Accessible protected methods
 
