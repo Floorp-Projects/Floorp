@@ -61,11 +61,9 @@ namespace frontend {
  */
 #define FOR_EACH_BIN_KIND(F)                                                  \
   F(_Null, "")                                                                \
-  F(Arguments, "Arguments")                                                   \
   F(ArrayAssignmentTarget, "ArrayAssignmentTarget")                           \
   F(ArrayBinding, "ArrayBinding")                                             \
   F(ArrayExpression, "ArrayExpression")                                       \
-  F(ArrowExpression, "ArrowExpression")                                       \
   F(ArrowExpressionContentsWithExpression,                                    \
     "ArrowExpressionContentsWithExpression")                                  \
   F(ArrowExpressionContentsWithFunctionBody,                                  \
@@ -73,10 +71,7 @@ namespace frontend {
   F(AssertedBlockScope, "AssertedBlockScope")                                 \
   F(AssertedBoundName, "AssertedBoundName")                                   \
   F(AssertedBoundNamesScope, "AssertedBoundNamesScope")                       \
-  F(AssertedDeclaredKind, "AssertedDeclaredKind")                             \
   F(AssertedDeclaredName, "AssertedDeclaredName")                             \
-  F(AssertedMaybePositionalParameterName,                                     \
-    "AssertedMaybePositionalParameterName")                                   \
   F(AssertedParameterName, "AssertedParameterName")                           \
   F(AssertedParameterScope, "AssertedParameterScope")                         \
   F(AssertedPositionalParameterName, "AssertedPositionalParameterName")       \
@@ -84,23 +79,13 @@ namespace frontend {
   F(AssertedScriptGlobalScope, "AssertedScriptGlobalScope")                   \
   F(AssertedVarScope, "AssertedVarScope")                                     \
   F(AssignmentExpression, "AssignmentExpression")                             \
-  F(AssignmentTarget, "AssignmentTarget")                                     \
   F(AssignmentTargetIdentifier, "AssignmentTargetIdentifier")                 \
-  F(AssignmentTargetOrAssignmentTargetWithInitializer,                        \
-    "AssignmentTargetOrAssignmentTargetWithInitializer")                      \
-  F(AssignmentTargetPattern, "AssignmentTargetPattern")                       \
-  F(AssignmentTargetProperty, "AssignmentTargetProperty")                     \
   F(AssignmentTargetPropertyIdentifier, "AssignmentTargetPropertyIdentifier") \
   F(AssignmentTargetPropertyProperty, "AssignmentTargetPropertyProperty")     \
   F(AssignmentTargetWithInitializer, "AssignmentTargetWithInitializer")       \
   F(AwaitExpression, "AwaitExpression")                                       \
   F(BinaryExpression, "BinaryExpression")                                     \
-  F(BinaryOperator, "BinaryOperator")                                         \
-  F(Binding, "Binding")                                                       \
   F(BindingIdentifier, "BindingIdentifier")                                   \
-  F(BindingOrBindingWithInitializer, "BindingOrBindingWithInitializer")       \
-  F(BindingPattern, "BindingPattern")                                         \
-  F(BindingProperty, "BindingProperty")                                       \
   F(BindingPropertyIdentifier, "BindingPropertyIdentifier")                   \
   F(BindingPropertyProperty, "BindingPropertyProperty")                       \
   F(BindingWithInitializer, "BindingWithInitializer")                         \
@@ -112,7 +97,6 @@ namespace frontend {
   F(ClassElement, "ClassElement")                                             \
   F(ClassExpression, "ClassExpression")                                       \
   F(CompoundAssignmentExpression, "CompoundAssignmentExpression")             \
-  F(CompoundAssignmentOperator, "CompoundAssignmentOperator")                 \
   F(ComputedMemberAssignmentTarget, "ComputedMemberAssignmentTarget")         \
   F(ComputedMemberExpression, "ComputedMemberExpression")                     \
   F(ComputedPropertyName, "ComputedPropertyName")                             \
@@ -133,45 +117,25 @@ namespace frontend {
   F(EmptyStatement, "EmptyStatement")                                         \
   F(Export, "Export")                                                         \
   F(ExportAllFrom, "ExportAllFrom")                                           \
-  F(ExportDeclaration, "ExportDeclaration")                                   \
   F(ExportDefault, "ExportDefault")                                           \
   F(ExportFrom, "ExportFrom")                                                 \
   F(ExportFromSpecifier, "ExportFromSpecifier")                               \
   F(ExportLocalSpecifier, "ExportLocalSpecifier")                             \
   F(ExportLocals, "ExportLocals")                                             \
-  F(Expression, "Expression")                                                 \
-  F(ExpressionOrSuper, "ExpressionOrSuper")                                   \
-  F(ExpressionOrTemplateElement, "ExpressionOrTemplateElement")               \
   F(ExpressionStatement, "ExpressionStatement")                               \
   F(ForInOfBinding, "ForInOfBinding")                                         \
-  F(ForInOfBindingOrAssignmentTarget, "ForInOfBindingOrAssignmentTarget")     \
   F(ForInStatement, "ForInStatement")                                         \
   F(ForOfStatement, "ForOfStatement")                                         \
   F(ForStatement, "ForStatement")                                             \
   F(FormalParameters, "FormalParameters")                                     \
-  F(FunctionBody, "FunctionBody")                                             \
-  F(FunctionDeclaration, "FunctionDeclaration")                               \
-  F(FunctionDeclarationOrClassDeclarationOrExpression,                        \
-    "FunctionDeclarationOrClassDeclarationOrExpression")                      \
-  F(FunctionDeclarationOrClassDeclarationOrVariableDeclaration,               \
-    "FunctionDeclarationOrClassDeclarationOrVariableDeclaration")             \
-  F(FunctionExpression, "FunctionExpression")                                 \
   F(FunctionExpressionContents, "FunctionExpressionContents")                 \
   F(FunctionOrMethodContents, "FunctionOrMethodContents")                     \
-  F(Getter, "Getter")                                                         \
   F(GetterContents, "GetterContents")                                         \
-  F(Identifier, "Identifier")                                                 \
   F(IdentifierExpression, "IdentifierExpression")                             \
-  F(IdentifierName, "IdentifierName")                                         \
   F(IfStatement, "IfStatement")                                               \
   F(Import, "Import")                                                         \
-  F(ImportDeclaration, "ImportDeclaration")                                   \
-  F(ImportDeclarationOrExportDeclarationOrStatement,                          \
-    "ImportDeclarationOrExportDeclarationOrStatement")                        \
   F(ImportNamespace, "ImportNamespace")                                       \
   F(ImportSpecifier, "ImportSpecifier")                                       \
-  F(IterationStatement, "IterationStatement")                                 \
-  F(Label, "Label")                                                           \
   F(LabelledStatement, "LabelledStatement")                                   \
   F(LazyArrowExpressionWithExpression, "LazyArrowExpressionWithExpression")   \
   F(LazyArrowExpressionWithFunctionBody,                                      \
@@ -181,32 +145,6 @@ namespace frontend {
   F(LazyGetter, "LazyGetter")                                                 \
   F(LazyMethod, "LazyMethod")                                                 \
   F(LazySetter, "LazySetter")                                                 \
-  F(ListOfAssertedBoundName, "ListOfAssertedBoundName")                       \
-  F(ListOfAssertedDeclaredName, "ListOfAssertedDeclaredName")                 \
-  F(ListOfAssertedMaybePositionalParameterName,                               \
-    "ListOfAssertedMaybePositionalParameterName")                             \
-  F(ListOfAssignmentTargetOrAssignmentTargetWithInitializer,                  \
-    "ListOfAssignmentTargetOrAssignmentTargetWithInitializer")                \
-  F(ListOfAssignmentTargetProperty, "ListOfAssignmentTargetProperty")         \
-  F(ListOfBindingProperty, "ListOfBindingProperty")                           \
-  F(ListOfClassElement, "ListOfClassElement")                                 \
-  F(ListOfDirective, "ListOfDirective")                                       \
-  F(ListOfExportFromSpecifier, "ListOfExportFromSpecifier")                   \
-  F(ListOfExportLocalSpecifier, "ListOfExportLocalSpecifier")                 \
-  F(ListOfExpressionOrTemplateElement, "ListOfExpressionOrTemplateElement")   \
-  F(ListOfImportDeclarationOrExportDeclarationOrStatement,                    \
-    "ListOfImportDeclarationOrExportDeclarationOrStatement")                  \
-  F(ListOfImportSpecifier, "ListOfImportSpecifier")                           \
-  F(ListOfObjectProperty, "ListOfObjectProperty")                             \
-  F(ListOfOptionalBindingOrBindingWithInitializer,                            \
-    "ListOfOptionalBindingOrBindingWithInitializer")                          \
-  F(ListOfOptionalSpreadElementOrExpression,                                  \
-    "ListOfOptionalSpreadElementOrExpression")                                \
-  F(ListOfParameter, "ListOfParameter")                                       \
-  F(ListOfStatement, "ListOfStatement")                                       \
-  F(ListOfSwitchCase, "ListOfSwitchCase")                                     \
-  F(ListOfVariableDeclarator, "ListOfVariableDeclarator")                     \
-  F(Literal, "Literal")                                                       \
   F(LiteralBooleanExpression, "LiteralBooleanExpression")                     \
   F(LiteralInfinityExpression, "LiteralInfinityExpression")                   \
   F(LiteralNullExpression, "LiteralNullExpression")                           \
@@ -214,42 +152,17 @@ namespace frontend {
   F(LiteralPropertyName, "LiteralPropertyName")                               \
   F(LiteralRegExpExpression, "LiteralRegExpExpression")                       \
   F(LiteralStringExpression, "LiteralStringExpression")                       \
-  F(Method, "Method")                                                         \
-  F(MethodDefinition, "MethodDefinition")                                     \
   F(Module, "Module")                                                         \
   F(NewExpression, "NewExpression")                                           \
   F(NewTargetExpression, "NewTargetExpression")                               \
   F(ObjectAssignmentTarget, "ObjectAssignmentTarget")                         \
   F(ObjectBinding, "ObjectBinding")                                           \
   F(ObjectExpression, "ObjectExpression")                                     \
-  F(ObjectProperty, "ObjectProperty")                                         \
-  F(OptionalAssignmentTarget, "OptionalAssignmentTarget")                     \
-  F(OptionalBinding, "OptionalBinding")                                       \
-  F(OptionalBindingIdentifier, "OptionalBindingIdentifier")                   \
-  F(OptionalBindingOrBindingWithInitializer,                                  \
-    "OptionalBindingOrBindingWithInitializer")                                \
-  F(OptionalCatchClause, "OptionalCatchClause")                               \
-  F(OptionalExpression, "OptionalExpression")                                 \
-  F(OptionalIdentifierName, "OptionalIdentifierName")                         \
-  F(OptionalLabel, "OptionalLabel")                                           \
-  F(OptionalPropertyKey, "OptionalPropertyKey")                               \
-  F(OptionalSpreadElementOrExpression, "OptionalSpreadElementOrExpression")   \
-  F(OptionalStatement, "OptionalStatement")                                   \
-  F(OptionalVariableDeclarationOrExpression,                                  \
-    "OptionalVariableDeclarationOrExpression")                                \
-  F(Parameter, "Parameter")                                                   \
-  F(Program, "Program")                                                       \
-  F(PropertyKey, "PropertyKey")                                               \
-  F(PropertyName, "PropertyName")                                             \
   F(ReturnStatement, "ReturnStatement")                                       \
   F(Script, "Script")                                                         \
-  F(Setter, "Setter")                                                         \
   F(SetterContents, "SetterContents")                                         \
   F(ShorthandProperty, "ShorthandProperty")                                   \
-  F(SimpleAssignmentTarget, "SimpleAssignmentTarget")                         \
   F(SpreadElement, "SpreadElement")                                           \
-  F(SpreadElementOrExpression, "SpreadElementOrExpression")                   \
-  F(Statement, "Statement")                                                   \
   F(StaticMemberAssignmentTarget, "StaticMemberAssignmentTarget")             \
   F(StaticMemberExpression, "StaticMemberExpression")                         \
   F(Super, "Super")                                                           \
@@ -264,18 +177,13 @@ namespace frontend {
   F(TryCatchStatement, "TryCatchStatement")                                   \
   F(TryFinallyStatement, "TryFinallyStatement")                               \
   F(UnaryExpression, "UnaryExpression")                                       \
-  F(UnaryOperator, "UnaryOperator")                                           \
   F(UpdateExpression, "UpdateExpression")                                     \
-  F(UpdateOperator, "UpdateOperator")                                         \
   F(VariableDeclaration, "VariableDeclaration")                               \
-  F(VariableDeclarationKind, "VariableDeclarationKind")                       \
-  F(VariableDeclarationOrExpression, "VariableDeclarationOrExpression")       \
   F(VariableDeclarator, "VariableDeclarator")                                 \
   F(WhileStatement, "WhileStatement")                                         \
   F(WithStatement, "WithStatement")                                           \
   F(YieldExpression, "YieldExpression")                                       \
-  F(YieldStarExpression, "YieldStarExpression")                               \
-  F(String, "string")
+  F(YieldStarExpression, "YieldStarExpression")
 
 enum class BinKind {
 #define EMIT_ENUM(name, _) name,
