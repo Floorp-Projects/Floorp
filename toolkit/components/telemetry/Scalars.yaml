@@ -1806,6 +1806,20 @@ telemetry:
     record_in_processes:
       - 'main'
 
+  process_creation_timestamp_inconsistent:
+    bug_numbers:
+      - 1514392
+    description: >
+      The number of times ProcessCreation saw an inconsistent value.
+    expires: "72"
+    kind: uint
+    notification_emails:
+      - jrediger@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+      - 'content'
+
 telemetry.discarded:
   accumulations:
     bug_numbers:

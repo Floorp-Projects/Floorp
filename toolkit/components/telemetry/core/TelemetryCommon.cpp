@@ -14,6 +14,7 @@
 #include "nsThreadUtils.h"
 #include "nsVersionComparator.h"
 #include "TelemetryProcessData.h"
+#include "Telemetry.h"
 
 namespace mozilla {
 namespace Telemetry {
@@ -83,11 +84,15 @@ bool CanRecordProduct(SupportedProduct aProducts) {
 }
 
 nsresult MsSinceProcessStart(double* aResult) {
-  bool error;
-  *aResult = (TimeStamp::NowLoRes() - TimeStamp::ProcessCreation(&error))
-                 .ToMilliseconds();
-  if (error) {
-    return NS_ERROR_NOT_AVAILABLE;
+  bool isInconsistent = false;
+  *aResult =
+      (TimeStamp::NowLoRes() - TimeStamp::ProcessCreation(&isInconsistent))
+          .ToMilliseconds();
+
+  if (isInconsistent) {
+    Telemetry::ScalarAdd(
+        Telemetry::ScalarID::TELEMETRY_PROCESS_CREATION_TIMESTAMP_INCONSISTENT,
+        1);
   }
   return NS_OK;
 }
