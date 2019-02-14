@@ -2,15 +2,18 @@
 ; License, v. 2.0. If a copy of the MPL was not distributed with this
 ; file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "ksarm64.h"
+
 NGPREGS EQU 8
 NFPREGS EQU 8
 
-	AREA |.text|, CODE, ARM64
 	IMPORT |PrepareAndDispatch|
 
-|SharedStub| PROC
-	stp         x29, x30, [sp,#-16]!
-	mov         x29, sp
+	TEXTAREA
+
+	NESTED_ENTRY SharedStub
+
+	PROLOG_SAVE_REG_PAIR x29, x30, #-16!
 
 	sub         sp, sp, #128 ; 8*(NGPREGS+NFPREGS)
 	stp         x0, x1, [sp, #64+(0*8)]
@@ -31,19 +34,25 @@ NFPREGS EQU 8
 
 	bl          PrepareAndDispatch
 
-	add         sp, sp, #128 ; 8*(NGPREGS+NFPREGS)
-	ldp         x29, x30, [sp],#16
-	ret
-	ENDP
+	EPILOG_STACK_RESTORE
+	EPILOG_RESTORE_REG_PAIR x29, x30, #16!
+	EPILOG_RETURN
+
+	NESTED_END SharedStub
 
 
 	MACRO
 	STUBENTRY $functionname, $paramcount
 	EXPORT |$functionname|
-|$functionname| PROC
+	TEXTAREA
+
+	LEAF_ENTRY |$functionname|
+
 	mov	w17, $paramcount
 	b	SharedStub
-	ENDP
+
+	LEAF_END |$functionname|
+
 	MEND
 
     STUBENTRY ?Stub3@nsXPTCStubBase@@UEAA?AW4nsresult@@XZ, 3
