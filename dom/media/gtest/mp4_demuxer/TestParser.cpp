@@ -237,6 +237,8 @@ static const TestFileData testFiles[] = {
      false, 0},
     {"test_case_1410565.mp4", false, 0, false, 0, 0, 0, 0, 0, false, 955100,
      true, true, 2},  // negative 'timescale'
+    {"test_case_1513651-2-sample-description-entries.mp4", true, 1, true,
+     9843344, 400, 300, 0, -1, true, 0, false, false, 0},
     {"test_case_1519617-cenc-init-with-track_id-0.mp4", true, 1, true, 0, 1272,
      530, 0, -1, false, 0, false, false,
      0},  // Uses bad track id 0 and has a sinf but no pssh
