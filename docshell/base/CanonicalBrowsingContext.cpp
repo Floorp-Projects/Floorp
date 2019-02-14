@@ -30,6 +30,27 @@ CanonicalBrowsingContext::CanonicalBrowsingContext(BrowsingContext* aParent,
   MOZ_RELEASE_ASSERT(XRE_IsParentProcess());
 }
 
+// TODO(farre): CanonicalBrowsingContext::CleanupContexts starts from the
+// list of root BrowsingContexts. This isn't enough when separate
+// BrowsingContext nodes of a BrowsingContext tree, not in a crashing
+// child process, are from that process and thus needs to be
+// cleaned. [Bug 1472108]
+/* static */ void CanonicalBrowsingContext::CleanupContexts(
+    uint64_t aProcessId) {
+  nsTArray<RefPtr<BrowsingContext>> contexts;
+  for (auto& group : *BrowsingContextGroup::sAllGroups) {
+    for (auto& context : group->Toplevels()) {
+      if (Cast(context)->IsOwnedByProcess(aProcessId)) {
+        contexts.AppendElement(context);
+      }
+    }
+  }
+
+  for (auto& context : contexts) {
+    context->Detach();
+  }
+}
+
 /* static */ already_AddRefed<CanonicalBrowsingContext>
 CanonicalBrowsingContext::Get(uint64_t aId) {
   MOZ_RELEASE_ASSERT(XRE_IsParentProcess());
