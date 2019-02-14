@@ -298,6 +298,7 @@ already_AddRefed<nsIMIMEInfo> nsOSHelperAppService::GetMIMEInfoFromOS(const nsAC
   OSStatus err;
   bool haveAppForType = false;
   bool haveAppForExt = false;
+  bool typeIsOctetStream = false;
   bool typeAppIsDefault = false;
   bool extAppIsDefault = false;
   FSRef typeAppFSRef;
@@ -306,6 +307,7 @@ already_AddRefed<nsIMIMEInfo> nsOSHelperAppService::GetMIMEInfoFromOS(const nsAC
   CFStringRef cfMIMEType = NULL;
 
   if (!aMIMEType.IsEmpty()) {
+    typeIsOctetStream = aMIMEType.LowerCaseEqualsLiteral(APPLICATION_OCTET_STREAM);
     CFURLRef appURL = NULL;
     // CFStringCreateWithCString() can fail even if we're not out of memory --
     // for example if the 'cStr' parameter is something very weird (like "ÿÿ~"
@@ -353,7 +355,12 @@ already_AddRefed<nsIMIMEInfo> nsOSHelperAppService::GetMIMEInfoFromOS(const nsAC
       typeAppIsDefault = true;
       *aFound = true;
     }
-  } else if (haveAppForExt) {
+  }
+
+  // If we have an app for the extension, and either don't have one for the
+  // type, or the type is application/octet-stream (ie "binary blob"), rely
+  // on the file extension.
+  if ((!haveAppForType || (!*aFound && typeIsOctetStream)) && haveAppForExt) {
     // If aMIMEType isn't empty, it doesn't match aFileExt, which should mean
     // that we haven't found a matching app.  But make an exception for an app
     // that also explicitly claims to handle aMIMEType, or which doesn't claim
@@ -374,7 +381,7 @@ already_AddRefed<nsIMIMEInfo> nsOSHelperAppService::GetMIMEInfoFromOS(const nsAC
     // also don't register to handle them.  But for some reason Launch Services
     // is (apparently) better about translating support for a given UTI into
     // support for one or more file extensions.  It's not at all clear why.
-    if (aMIMEType.IsEmpty()) {
+    if (aMIMEType.IsEmpty() || typeIsOctetStream) {
       extAppIsDefault = true;
       *aFound = true;
     } else {
