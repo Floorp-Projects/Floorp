@@ -90,7 +90,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT']:
         'arm.h',
         'mips.h',
         'SSE.h',
-        'WindowsCFGStatus.h',
         'WindowsDllBlocklist.h',
     ]
 
