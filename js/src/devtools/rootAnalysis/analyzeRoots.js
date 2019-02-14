@@ -126,14 +126,20 @@ function expressionUsesVariableContents(exp, variable)
     return false;
 }
 
+function isImmobileValue(exp) {
+    if (exp.Kind == "Int" && exp.String == "0") {
+        return true;
+    }
+    return false;
+}
+
 // Detect simple |return nullptr;| statements.
 function isReturningImmobileValue(edge, variable)
 {
     if (variable.Kind == "Return") {
         if (edge.Exp[0].Kind == "Var" && sameVariable(edge.Exp[0].Variable, variable)) {
-            if (edge.Exp[1].Kind == "Int" && edge.Exp[1].String == "0") {
+            if (isImmobileValue(edge.Exp[1]))
                 return true;
-            }
         }
     }
     return false;
@@ -266,19 +272,20 @@ function expressionIsVariable(exp, variable)
     return exp.Kind == "Var" && sameVariable(exp.Variable, variable);
 }
 
-// Return whether the edge kills (overwrites) the variable's incoming value.
-// Examples of killing 'obj':
+// Return whether the edge terminates the live range of a variable's value when
+// searching in reverse through the CFG, by setting it to some new value.
+// Examples of killing 'obj's live range:
 //
 //     obj = foo;
 //     obj = foo();
-//     obj = foo(obj);         // uses previous value but then kills it
+//     obj = foo(obj);         // uses previous value but then sets to new value
 //     SomeClass obj(true, 1); // constructor
 //
 function edgeKillsVariable(edge, variable)
 {
     // Direct assignments kill their lhs: var = value
     if (edge.Kind == "Assign") {
-        const [lhs] = edge.Exp;
+        const [lhs, rhs] = edge.Exp;
         return (expressionIsVariable(lhs, variable) &&
                 !isReturningImmobileValue(edge, variable));
     }
@@ -329,6 +336,163 @@ function edgeKillsVariable(edge, variable)
 
         if (calleeName.endsWith(constructorName))
             return true;
+    }
+
+    return false;
+}
+
+function edgeMovesVariable(edge, variable)
+{
+    if (edge.Kind != 'Call')
+        return false;
+    const callee = edge.Exp[0];
+    if (callee.Kind == 'Var' &&
+        callee.Variable.Kind == 'Func')
+    {
+        const { Variable: { Name: [ fullname, shortname ] } } = callee;
+        const [ mangled, unmangled ] = splitFunction(fullname);
+        // Match a UniquePtr move constructor.
+        if (unmangled.match(/::UniquePtr<[^>]*>::UniquePtr\((\w+::)*UniquePtr<[^>]*>&&/))
+            return true;
+    }
+
+    return false;
+}
+
+// Scan forward through the given 'body', starting at 'startpoint', looking for
+// a call that passes 'variable' to a move constructor that "consumes" it (eg
+// UniquePtr::UniquePtr(UniquePtr&&)).
+function bodyEatsVariable(variable, body, startpoint)
+{
+    const successors = getSuccessors(body);
+    const work = [startpoint];
+    while (work.length > 0) {
+        const point = work.shift();
+        if (!(point in successors))
+            continue;
+        for (const edge of successors[point]) {
+            if (edgeMovesVariable(edge, variable))
+                return true;
+            // edgeKillsVariable will find places where 'variable' is given a
+            // new value. Never observed in practice, since this function is
+            // only called with a temporary resulting from std::move(), which
+            // is used immediately for a call. But just to be robust to future
+            // uses:
+            if (!edgeKillsVariable(edge, variable))
+                work.push(edge.Index[1]);
+        }
+    }
+    return false;
+}
+
+// Return whether an edge "clears out" a variable's value. A simple example
+// would be
+//
+//     var = nullptr;
+//
+// for analyses for which nullptr is a "safe" value (eg GC rooting hazards; you
+// can't get in trouble by holding a nullptr live across a GC.) A more complex
+// example is a Maybe<T> that gets reset:
+//
+//     Maybe<AutoCheckCannotGC> nogc;
+//     nogc.emplace(cx);
+//     nogc.reset();
+//     gc();             // <-- not a problem; nogc is invalidated by prev line
+//     nogc.emplace(cx);
+//     foo(nogc);
+//
+// Yet another example is a UniquePtr being passed by value, which means the
+// receiver takes ownership:
+//
+//     UniquePtr<JSObject*> uobj(obj);
+//     foo(uobj);
+//     gc();
+//
+// Compare to edgeKillsVariable: killing (in backwards direction) means the
+// variable's value was live and is no longer. Invalidating means it wasn't
+// actually live after all.
+//
+function edgeInvalidatesVariable(edge, variable, body)
+{
+    // var = nullptr;
+    if (edge.Kind == "Assign") {
+        const [lhs, rhs] = edge.Exp;
+        return expressionIsVariable(lhs, variable) && isImmobileValue(rhs);
+    }
+
+    if (edge.Kind != "Call")
+        return false;
+
+    var callee = edge.Exp[0];
+
+    if (edge.Type.Kind == 'Function' &&
+        edge.Exp[0].Kind == 'Var' &&
+        edge.Exp[0].Variable.Kind == 'Func' &&
+        edge.Exp[0].Variable.Name[1] == 'move' &&
+        edge.Exp[0].Variable.Name[0].includes('std::move(') &&
+        expressionIsVariable(edge.PEdgeCallArguments.Exp[0], variable) &&
+        edge.Exp[1].Kind == 'Var' &&
+        edge.Exp[1].Variable.Kind == 'Temp')
+    {
+        // temp = std::move(var)
+        //
+        // If var is a UniquePtr, and we pass it into something that takes
+        // ownership, then it should be considered to be invalid. It really
+        // ought to be invalidated at the point of the function call that calls
+        // the move constructor, but given that we're creating a temporary here
+        // just for the purpose of passing it in, this edge is good enough.
+        const lhs = edge.Exp[1].Variable;
+        if (bodyEatsVariable(lhs, body, edge.Index[1]))
+            return true;
+    }
+
+    if (edge.Type.Kind == 'Function' &&
+        edge.Type.TypeFunctionCSU &&
+        edge.PEdgeCallInstance &&
+        edge.PEdgeCallInstance.Exp.Kind == 'Var' &&
+        expressionIsVariable(edge.PEdgeCallInstance.Exp, variable))
+    do {
+        const typeName = edge.Type.TypeFunctionCSU.Type.Name;
+        const m = typeName.match(/^(((\w|::)+?)(\w+))</);
+        if (!m)
+            break;
+        const [, type, namespace,, classname] = m;
+
+        // special-case: the initial constructor that doesn't provide a value.
+        // Useful for things like Maybe<T>.
+        if (callee.Kind == 'Var' &&
+            typesWithSafeConstructors.has(type) &&
+            callee.Variable.Name[0].includes(`${namespace}${classname}<T>::${classname}()`))
+        {
+            return true;
+        }
+
+        // special-case: UniquePtr::reset() and similar.
+        if (callee.Kind == 'Var' &&
+            type in resetterMethods &&
+            resetterMethods[type].has(callee.Variable.Name[1]))
+        {
+            return true;
+        }
+
+    } while(0);
+
+    // special-case: passing UniquePtr<T> by value.
+    if (edge.Type.Kind == 'Function' &&
+        edge.Type.TypeFunctionArgument &&
+        edge.PEdgeCallArguments)
+    {
+        for (const i in edge.Type.TypeFunctionArgument) {
+            const param = edge.Type.TypeFunctionArgument[i];
+            if (param.Type.Kind != 'CSU')
+                continue;
+            if (!param.Type.Name.startsWith("mozilla::UniquePtr<"))
+                continue;
+            const arg = edge.PEdgeCallArguments.Exp[i];
+            if (expressionIsVariable(arg, variable)) {
+                return true;
+            }
+        }
     }
 
     return false;
@@ -483,6 +647,13 @@ function findGCBeforeValueUse(start_body, start_point, suppressed, variable)
         for (var edge of predecessors[ppoint]) {
             var source = edge.Index[0];
 
+            if (edgeInvalidatesVariable(edge, variable, body)) {
+                // Terminate the search through this point; we thought we were
+                // within the live range, but it turns out that the variable
+                // was set to a value that we don't care about.
+                continue;
+            }
+
             var edge_kills = edgeKillsVariable(edge, variable);
             var edge_uses = edgeUsesVariable(edge, variable, body);
 
@@ -613,6 +784,10 @@ function variableLiveAcrossGC(suppressed, variable)
             // probably after, but not across.) There may be a hazard within
             // CopyObject, of course.
             //
+
+            // Ignore uses that are just invalidating the previous value.
+            if (edgeInvalidatesVariable(edge, variable, body))
+                continue;
 
             var usePoint = edgeUsesVariable(edge, variable, body);
             if (usePoint) {
@@ -790,7 +965,60 @@ function processBodies(functionName)
     if (!("DefineVariable" in functionBodies[0]))
         return;
     var suppressed = Boolean(limitedFunctions[mangled(functionName)] & LIMIT_CANNOT_GC);
-    for (var variable of functionBodies[0].DefineVariable) {
+
+    // Look for the JS_EXPECT_HAZARDS annotation, and output a different
+    // message in that case that won't be counted as a hazard.
+    var annotations = new Set();
+    for (const variable of functionBodies[0].DefineVariable) {
+        if (variable.Variable.Kind == "Func" && variable.Variable.Name[0] == functionName) {
+            for (const { Name: [tag, value] } of (variable.Type.Annotation || [])) {
+                if (tag == 'annotate')
+                    annotations.add(value);
+            }
+        }
+    }
+
+    var missingExpectedHazard = annotations.has("Expect Hazards");
+
+    // Awful special case, hopefully temporary:
+    //
+    // The DOM bindings code generator uses "holders" to externally root
+    // variables. So for example:
+    //
+    //       StringObjectRecordOrLong arg0;
+    //       StringObjectRecordOrLongArgument arg0_holder(arg0);
+    //       arg0_holder.TrySetToStringObjectRecord(cx, args[0]);
+    //       GC();
+    //       self->PassUnion22(cx, arg0);
+    //
+    // This appears to be a rooting hazard on arg0, but it is rooted by
+    // arg0_holder if you set it to any of its union types that requires
+    // rooting.
+    //
+    // Additionally, the holder may be reported as a hazard because it's not
+    // itself a Rooted or a subclass of AutoRooter; it contains a
+    // Maybe<RecordRooter<T>> that will get emplaced if rooting is required.
+    //
+    // Hopefully these will be simplified at some point (see bug 1517829), but
+    // for now we special-case functions in the mozilla::dom namespace that
+    // contain locals with types ending in "Argument". Or
+    // Maybe<SomethingArgument>. It's a harsh world.
+    const ignoreVars = new Set();
+    if (functionName.match(/mozilla::dom::/)) {
+        const vars = functionBodies[0].DefineVariable.filter(
+            v => v.Type.Kind == 'CSU' && v.Variable.Kind == 'Local'
+        ).map(
+            v => [ v.Variable.Name[0], v.Type.Name ]
+        );
+
+        const holders = vars.filter(([n, t]) => n.match(/^arg\d+_holder$/) && t.match(/Argument\b/));
+        for (const [holder,] of holders) {
+            ignoreVars.add(holder); // Ignore the older.
+            ignoreVars.add(holder.replace("_holder", "")); // Ignore the "managed" arg.
+        }
+    }
+
+    for (const variable of functionBodies[0].DefineVariable) {
         var name;
         if (variable.Variable.Kind == "This")
             name = "this";
@@ -798,6 +1026,9 @@ function processBodies(functionName)
             name = "<returnvalue>";
         else
             name = variable.Variable.Name[0];
+
+        if (ignoreVars.has(name))
+            continue;
 
         if (isRootedType(variable.Type)) {
             if (!variableLiveAcrossGC(suppressed, variable.Variable)) {
@@ -817,11 +1048,20 @@ function processBodies(functionName)
             var result = variableLiveAcrossGC(suppressed, variable.Variable);
             if (result) {
                 var lineText = findLocation(result.gcInfo.body, result.gcInfo.ppoint);
-                print("\nFunction '" + functionName + "'" +
-                      " has unrooted '" + name + "'" +
-                      " of type '" + typeDesc(variable.Type) + "'" +
-                      " live across GC call " + result.gcInfo.name +
-                      " at " + lineText);
+                if (annotations.has('Expect Hazards')) {
+                    print("\nThis is expected, but '" + functionName + "'" +
+                          " has unrooted '" + name + "'" +
+                          " of type '" + typeDesc(variable.Type) + "'" +
+                          " live across GC call " + result.gcInfo.name +
+                          " at " + lineText);
+                    missingExpectedHazard = false;
+                } else {
+                    print("\nFunction '" + functionName + "'" +
+                          " has unrooted '" + name + "'" +
+                          " of type '" + typeDesc(variable.Type) + "'" +
+                          " live across GC call " + result.gcInfo.name +
+                          " at " + lineText);
+                }
                 printEntryTrace(functionName, result);
             }
             result = unsafeVariableAddressTaken(suppressed, variable.Variable);
@@ -833,6 +1073,20 @@ function processBodies(functionName)
                 printEntryTrace(functionName, {body:result.body, ppoint:result.ppoint});
             }
         }
+    }
+
+    if (missingExpectedHazard) {
+        const {
+            Location: [
+                { CacheString: startfile, Line: startline },
+                { CacheString: endfile, Line: endline }
+            ]
+        } = functionBodies[0];
+
+        const loc = (startfile == endfile) ? `${startfile}:${startline}-${endline}`
+              : `${startfile}:${startline}`;
+
+        print("\nFunction '" + functionName + "' expected hazard(s) but none were found at " + loc);
     }
 }
 
