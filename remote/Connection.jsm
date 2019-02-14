@@ -61,6 +61,10 @@ class Connection {
     }
   }
 
+  close() {
+    this.transport.close();
+  }
+
   onClosed(status) {}
 
   toString() {
