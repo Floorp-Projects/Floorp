@@ -6,7 +6,7 @@
 {
     let bin = wasmTextToBinary(
         `(module
-          (gc_feature_opt_in 2)
+          (gc_feature_opt_in 3)
 
           (type $point (struct
                         (field $x f64)
@@ -42,7 +42,7 @@
 {
     let bin = wasmTextToBinary(
         `(module
-          (gc_feature_opt_in 2)
+          (gc_feature_opt_in 3)
 
           (type $point (struct
                         (field $x f64)
@@ -87,7 +87,7 @@
 {
     let bin = wasmTextToBinary(
         `(module
-          (gc_feature_opt_in 2)
+          (gc_feature_opt_in 3)
           (import $g "" "g" (global anyref))
           (global $glob anyref (get_global $g))
           (func (export "get") (result anyref)
@@ -105,7 +105,7 @@
 {
     let bin = wasmTextToBinary(
         `(module
-          (gc_feature_opt_in 2)
+          (gc_feature_opt_in 3)
           (type $box (struct (field $val i32)))
           (import "m" "g" (global (mut (ref $box)))))`);
 
@@ -120,7 +120,7 @@
 {
     let bin = wasmTextToBinary(
         `(module
-          (gc_feature_opt_in 2)
+          (gc_feature_opt_in 3)
           (type $box (struct (field $val i32)))
           (global $boxg (export "box") (mut (ref $box)) (ref.null)))`);
 
