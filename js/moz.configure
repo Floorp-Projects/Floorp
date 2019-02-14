@@ -538,3 +538,68 @@ js_option('--enable-wasm-bulk-memory',
 
 set_config('ENABLE_WASM_BULKMEM_OPS', depends_if('--enable-wasm-bulk-memory')(lambda x: True))
 set_define('ENABLE_WASM_BULKMEM_OPS', depends_if('--enable-wasm-bulk-memory')(lambda x: True))
+
+
+# Support for WebAssembly reference types.
+# =====================================================
+
+@depends(milestone.is_nightly)
+def default_wasm_reftypes(is_nightly):
+    return is_nightly
+
+js_option('--enable-wasm-reftypes',
+          default=default_wasm_reftypes,
+          help='{Enable|Disable} WebAssembly reference types')
+
+set_config('ENABLE_WASM_REFTYPES', depends_if('--enable-wasm-reftypes')(lambda x: True))
+set_define('ENABLE_WASM_REFTYPES', depends_if('--enable-wasm-reftypes')(lambda x: True))
+
+
+# Support for WebAssembly generalized tables (anyref tables, multiple tables).
+# ============================================================================
+
+@depends(milestone.is_nightly, '--enable-wasm-reftypes')
+def default_wasm_generalized_tables(is_nightly, reftypes):
+    if reftypes and is_nightly:
+        return True
+
+js_option('--enable-wasm-generalized-tables',
+          default=default_wasm_generalized_tables,
+          help='{Enable|Disable} WebAssembly generalized reference tables')
+
+set_config('ENABLE_WASM_GENERALIZED_TABLES', depends_if('--enable-wasm-generalized-tables')(lambda x: True))
+set_define('ENABLE_WASM_GENERALIZED_TABLES', depends_if('--enable-wasm-generalized-tables')(lambda x: True))
+
+
+# Support for WebAssembly GC.
+# ===========================
+
+@depends(milestone.is_nightly, '--enable-wasm-reftypes')
+def default_wasm_gc(is_nightly, reftypes):
+    if reftypes and is_nightly:
+        return True
+
+js_option('--enable-wasm-gc',
+          default=default_wasm_gc,
+          help='{Enable|Disable} WebAssembly GC')
+
+set_config('ENABLE_WASM_GC', depends_if('--enable-wasm-gc')(lambda x: True))
+set_define('ENABLE_WASM_GC', depends_if('--enable-wasm-gc')(lambda x: True))
+
+
+# Support for WebAssembly private ref types.
+# Prevent (ref T) types from being exposed to JS content so that wasm need do
+# no typechecking at the JS/wasm boundary
+# ===========================================================================
+
+@depends(milestone.is_nightly, '--enable-wasm-gc')
+def default_wasm_private_reftypes(is_nightly, gc):
+    if gc and is_nightly:
+        return True
+
+js_option('--enable-wasm-private-reftypes',
+          default=default_wasm_private_reftypes,
+          help='{Enable|Disable} WebAssembly private reference types')
+
+set_config('WASM_PRIVATE_REFTYPES', depends_if('--enable-wasm-private-reftypes')(lambda x: True))
+set_define('WASM_PRIVATE_REFTYPES', depends_if('--enable-wasm-private-reftypes')(lambda x: True))
