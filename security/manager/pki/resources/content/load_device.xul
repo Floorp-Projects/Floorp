@@ -9,12 +9,13 @@
 
 <dialog id="loaddevice"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
         data-l10n-id="load-device"
         buttons="accept,cancel"
         ondialogaccept="return onDialogAccept();">
 
   <linkset>
-    <link rel="localization" href="security/certificates/deviceManager.ftl"/>
+    <html:link rel="localization" href="security/certificates/deviceManager.ftl"/>
   </linkset>
 
   <script type="application/javascript" src="chrome://pippki/content/pippki.js"/>

@@ -11,13 +11,14 @@
 <window id="ClearSiteDataDialog"
         windowtype="Browser:ClearSiteData"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
         data-l10n-id="clear-site-data-window"
         data-l10n-attrs="title, style"
         persist="screenX screenY width height">
 
   <linkset>
-    <link rel="localization" href="branding/brand.ftl"/>
-    <link rel="localization" href="browser/preferences/clearSiteData.ftl"/>
+    <html:link rel="localization" href="branding/brand.ftl"/>
+    <html:link rel="localization" href="browser/preferences/clearSiteData.ftl"/>
   </linkset>
   <script src="chrome://browser/content/preferences/clearSiteData.js"/>
 

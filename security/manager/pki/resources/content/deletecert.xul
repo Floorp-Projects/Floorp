@@ -11,13 +11,14 @@
   data-l10n-id="certmgr-delete-cert"
   data-l10n-attrs="style"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  xmlns:html="http://www.w3.org/1999/xhtml"
   onload="onLoad();"
   buttons="accept,cancel"
   ondialogaccept="return onDialogAccept();"
   ondialogcancel="return onDialogCancel();">
 
   <linkset>
-    <link rel="localization" href="security/certificates/certManager.ftl"/>
+    <html:link rel="localization" href="security/certificates/certManager.ftl"/>
   </linkset>
 
   <script type="application/javascript" src="pippki.js" />

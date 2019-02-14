@@ -216,7 +216,8 @@ const MozElementMixin = Base => class MozElement extends Base {
       }
     }
 
-    let link = document.createElement("link");
+    let link = document.createElementNS("http://www.w3.org/1999/xhtml",
+                                        "link");
     link.setAttribute("rel", "localization");
     link.setAttribute("href", path);
 

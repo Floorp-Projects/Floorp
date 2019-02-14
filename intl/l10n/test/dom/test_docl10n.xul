@@ -9,7 +9,7 @@
         title="Testing DocumentL10n in XUL environment">
 
   <linkset>
-    <link rel="localization" href="crashreporter/aboutcrashes.ftl"/>
+    <html:link rel="localization" href="crashreporter/aboutcrashes.ftl"/>
   </linkset>
 
   <script type="application/javascript"

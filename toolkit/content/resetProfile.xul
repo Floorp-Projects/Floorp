@@ -9,6 +9,7 @@
 
 <dialog id="resetProfileDialog"
             xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+            xmlns:html="http://www.w3.org/1999/xhtml"
             data-l10n-id="refresh-profile-dialog"
             buttons="accept,cancel"
             defaultButton="cancel"
@@ -19,8 +20,8 @@
 	<!-- The empty onload event handler is a hack to get the accept button text applied by Fluent. -->
 
   <linkset>
-    <link rel="localization" href="branding/brand.ftl"/>
-    <link rel="localization" href="toolkit/global/resetProfile.ftl"/>
+    <html:link rel="localization" href="branding/brand.ftl"/>
+    <html:link rel="localization" href="toolkit/global/resetProfile.ftl"/>
   </linkset>
 
   <script type="application/javascript" src="chrome://global/content/resetProfile.js"/>
