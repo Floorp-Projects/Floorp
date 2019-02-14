@@ -71,13 +71,9 @@ BackstagePass::NewEnumerate(nsIXPConnectWrappedNative* wrapper, JSContext* cx,
 
 /***************************************************************************/
 NS_IMETHODIMP
-BackstagePass::GetInterfaces(uint32_t* aCount, nsIID*** aArray) {
-  *aCount = 2;
-  nsIID** array = static_cast<nsIID**>(moz_xmalloc(2 * sizeof(nsIID*)));
-  *aArray = array;
-
-  array[0] = NS_GET_IID(nsIXPCScriptable).Clone();
-  array[1] = NS_GET_IID(nsIScriptObjectPrincipal).Clone();
+BackstagePass::GetInterfaces(nsTArray<nsIID>& aArray) {
+  aArray = nsTArray<nsIID>{NS_GET_IID(nsIXPCScriptable),
+                           NS_GET_IID(nsIScriptObjectPrincipal)};
   return NS_OK;
 }
 

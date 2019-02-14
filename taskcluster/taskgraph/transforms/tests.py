@@ -77,6 +77,11 @@ WINDOWS_WORKER_TYPES = {
       'virtual-with-gpu': 'aws-provisioner-v1/gecko-t-win10-64-gpu',
       'hardware': 'releng-hardware/gecko-t-win10-64-hw',
     },
+    'windows10-aarch64': {
+      'virtual': 'test-provisioner/bitbar',
+      'virtual-with-gpu': 'test-provisioner/bitbar',
+      'hardware': 'test-provisioner/bitbar',
+    },
     'windows10-64-ccov': {
       'virtual': 'aws-provisioner-v1/gecko-t-win10-64',
       'virtual-with-gpu': 'aws-provisioner-v1/gecko-t-win10-64-gpu',
@@ -583,6 +588,7 @@ def set_treeherder_machine_platform(config, tests):
         'macosx64/debug': 'osx-10-10/debug',
         'macosx64/opt': 'osx-10-10/opt',
         'win64-asan/opt': 'windows10-64/asan',
+        'win64-aarch64/opt': 'windows10-aarch64/opt',
         'win32-pgo/opt': 'windows7-32/pgo',
         'win64-pgo/opt': 'windows10-64/pgo',
         # The build names for Android platforms have partially evolved over the
@@ -644,6 +650,7 @@ def set_tier(config, tests):
                                          'windows7-32-pgo/opt',
                                          'windows7-32-devedition/opt',
                                          'windows7-32-nightly/opt',
+                                         'windows10-aarch64/opt',
                                          'windows10-64/debug',
                                          'windows10-64/opt',
                                          'windows10-64-pgo/opt',

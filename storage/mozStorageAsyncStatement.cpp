@@ -45,8 +45,8 @@ class AsyncStatementClassInfo : public nsIClassInfo {
   NS_DECL_ISUPPORTS_INHERITED
 
   NS_IMETHOD
-  GetInterfaces(uint32_t *_count, nsIID ***_array) override {
-    return NS_CI_INTERFACE_GETTER_NAME(AsyncStatement)(_count, _array);
+  GetInterfaces(nsTArray<nsIID> &_array) override {
+    return NS_CI_INTERFACE_GETTER_NAME(AsyncStatement)(_array);
   }
 
   NS_IMETHOD

@@ -30,6 +30,12 @@ function waitForLocationChange() {
   return promise;
 }
 
+add_task(async function setPref() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.toolbars.keyboard_navigation", true]],
+  });
+});
+
 // Test activation of the app menu button from the keyboard.
 // The app menu should appear and focus should move inside it.
 add_task(async function testAppMenuButtonPress() {
@@ -86,6 +92,7 @@ add_task(async function testDeveloperButtonPress() {
   await hidden;
   CustomizableUI.reset();
 });
+
 // Test that the Developer menu doesn't open when a key other than space or
 // enter is pressed .
 add_task(async function testDeveloperButtonWrongKey() {
@@ -158,4 +165,81 @@ add_task(async function testSendTabToDeviceButtonPress() {
     await hidden;
     PageActions.actionForID("sendToDevice").pinnedToUrlbar = false;
   });
+});
+
+// Test activation of the Reload button from the keyboard.
+// This is a toolbarbutton with a click handler and no command handler, but
+// the toolbar keyboard navigation code should handle keyboard activation.
+add_task(async function testReloadButtonPress() {
+  await BrowserTestUtils.withNewTab("https://example.com", async function(aBrowser) {
+    let button = document.getElementById("reload-button");
+    await TestUtils.waitForCondition(() => !button.disabled);
+    forceFocus(button);
+    let loaded = BrowserTestUtils.browserLoaded(aBrowser);
+    EventUtils.synthesizeKey(" ");
+    await loaded;
+    ok(true, "Page loaded after Reload button pressed");
+  });
+});
+
+// Test activation of the Sidebars button from the keyboard.
+// This is a toolbarbutton with a command handler.
+add_task(async function testSidebarsButtonPress() {
+  let button = document.getElementById("sidebar-button");
+  ok(!button.checked, "Sidebars button not checked at start of test");
+  let sidebarBox = document.getElementById("sidebar-box");
+  ok(sidebarBox.hidden, "Sidebar hidden at start of test");
+  forceFocus(button);
+  EventUtils.synthesizeKey(" ");
+  await TestUtils.waitForCondition(() => button.checked);
+  ok(true, "Sidebars button checked after press");
+  ok(!sidebarBox.hidden, "Sidebar visible after press");
+  // Make sure the sidebar is fully loaded before we hide it.
+  // Otherwise, the unload event might call JS which isn't loaded yet.
+  // We can't use BrowserTestUtils.browserLoaded because it fails on non-tab
+  // docs. Instead, wait for something in the JS script.
+  let sidebarWin = document.getElementById("sidebar").contentWindow;
+  await TestUtils.waitForCondition(() => sidebarWin.PlacesUIUtils);
+  forceFocus(button);
+  EventUtils.synthesizeKey(" ");
+  await TestUtils.waitForCondition(() => !button.checked);
+  ok(true, "Sidebars button not checked after press");
+  ok(sidebarBox.hidden, "Sidebar hidden after press");
+});
+
+// Test activation of the Bookmark this page button from the keyboard.
+// This is an image with a click handler on its parent and no command handler,
+// but the toolbar keyboard navigation code should handle keyboard activation.
+add_task(async function testBookmarkButtonPress() {
+  await BrowserTestUtils.withNewTab("https://example.com", async function(aBrowser) {
+    let button = document.getElementById("star-button");
+    forceFocus(button);
+    let panel = document.getElementById("editBookmarkPanel");
+    let focused = BrowserTestUtils.waitForEvent(panel, "focus", true);
+    EventUtils.synthesizeKey(" ");
+    await focused;
+    ok(true, "Focus inside edit bookmark panel after Bookmark button pressed");
+    let hidden = BrowserTestUtils.waitForEvent(panel, "popuphidden");
+    EventUtils.synthesizeKey("KEY_Escape");
+    await hidden;
+  });
+});
+
+// Test activation of the Bookmarks Menu button from the keyboard.
+// This is a button with type="menu".
+// The Bookmarks Menu should appear.
+add_task(async function testBookmarksmenuButtonPress() {
+  CustomizableUI.addWidgetToArea("bookmarks-menu-button",
+                                 CustomizableUI.AREA_NAVBAR);
+  let button = document.getElementById("bookmarks-menu-button");
+  forceFocus(button);
+  let menu = document.getElementById("BMB_bookmarksPopup");
+  let shown = BrowserTestUtils.waitForEvent(menu, "popupshown");
+  EventUtils.synthesizeKey(" ");
+  await shown;
+  ok(true, "Bookmarks Menu shown after toolbar button pressed");
+  let hidden = BrowserTestUtils.waitForEvent(menu, "popuphidden");
+  menu.hidePopup();
+  await hidden;
+  CustomizableUI.reset();
 });

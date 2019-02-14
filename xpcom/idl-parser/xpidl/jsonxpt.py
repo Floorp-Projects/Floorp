@@ -37,7 +37,7 @@ TypeMap = {
     'wchar':              'TD_WCHAR',
     'wstring':            'TD_PWSTRING',
     # special types
-    'nsid':               'TD_PNSIID',
+    'nsid':               'TD_NSID',
     'astring':            'TD_ASTRING',
     'utf8string':         'TD_UTF8STRING',
     'cstring':            'TD_CSTRING',
@@ -93,7 +93,9 @@ def get_type(type, calltype, iid_is=None, size_is=None):
         }
 
     if isinstance(type, xpidl.Native):
-        if type.specialtype:
+        if type.specialtype == 'nsid' and type.isPtr(calltype):
+            return {'tag': 'TD_NSIDPTR'}
+        elif type.specialtype:
             return {
                 'tag': TypeMap[type.specialtype]
             }

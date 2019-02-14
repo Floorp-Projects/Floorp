@@ -39,9 +39,8 @@ already_AddRefed<WindowGlobalChild> WindowGlobalChild::Create(
   RefPtr<dom::BrowsingContext> bc = docshell->GetBrowsingContext();
   RefPtr<WindowGlobalChild> wgc = new WindowGlobalChild(aWindow, bc);
 
-  WindowGlobalInit init(principal,
-                        BrowsingContextId(wgc->BrowsingContext()->Id()),
-                        wgc->mInnerWindowId, wgc->mOuterWindowId);
+  WindowGlobalInit init(principal, bc, wgc->mInnerWindowId,
+                        wgc->mOuterWindowId);
 
   // Send the link constructor over PInProcessChild or PBrowser.
   if (XRE_IsParentProcess()) {

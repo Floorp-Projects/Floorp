@@ -1781,8 +1781,9 @@ class CacheStore {
   async delete(path) {
     let [store, key] = await this.getStore(path);
 
-    store.delete(key);
-    StartupCache.save();
+    if (store.delete(key)) {
+      StartupCache.save();
+    }
   }
 }
 

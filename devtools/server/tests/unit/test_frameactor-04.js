@@ -29,57 +29,36 @@ function run_test() {
   do_test_pending();
 }
 
-var gFrames = [
+var frameFixtures = [
   // Function calls...
-  { type: "call", callee: { name: "depth3" } },
-  { type: "call", callee: { name: "depth2" } },
-  { type: "call", callee: { name: "depth1" } },
+  { type: "call", displayName: "depth3" },
+  { type: "call", displayName: "depth2" },
+  { type: "call", displayName: "depth1" },
 
   // Anonymous function call in our eval...
-  { type: "call", callee: { name: undefined } },
+  { type: "call", displayName: undefined },
 
   // The eval itself.
-  { type: "eval", callee: { name: undefined } },
+  { type: "eval", displayName: "(eval)" },
 ];
 
-var gSliceTests = [
-  { start: 0, count: undefined, resetActors: true },
-  { start: 0, count: 1 },
-  { start: 2, count: 2 },
-  { start: 1, count: 15 },
-  { start: 15, count: undefined },
-];
-
-function test_frame_slice() {
-  if (gSliceTests.length == 0) {
-    gThreadClient.resume(() => finishClient(gClient));
-    return;
-  }
-
-  const test = gSliceTests.shift();
-  gThreadClient.getFrames(test.start, test.count, function(response) {
-    const testFrames = gFrames.slice(test.start,
-                                   test.count ? test.start + test.count : undefined);
-    Assert.equal(testFrames.length, response.frames.length);
-    for (let i = 0; i < testFrames.length; i++) {
-      const expected = testFrames[i];
+function test_frame_packet() {
+  gThreadClient.getFrames(0, 1000, function(response) {
+    for (let i = 0; i < response.frames.length; i++) {
+      const expected = frameFixtures[i];
       const actual = response.frames[i];
 
-      if (test.resetActors) {
-        expected.actor = actual.actor;
-      }
-
-      for (const key of ["type", "callee-name"]) {
-        Assert.equal(expected[key] || undefined, actual[key]);
-      }
+      Assert.equal(expected.displayname, actual.displayname, "Frame displayname");
+      Assert.equal(expected.type, actual.type, "Frame displayname");
     }
-    test_frame_slice();
+
+    gThreadClient.resume(() => finishClient(gClient));
   });
 }
 
 function test_pause_frame() {
   gThreadClient.addOneTimeListener("paused", function(event, packet) {
-    test_frame_slice();
+    test_frame_packet();
   });
 
   gDebuggee.eval("(" + function() {

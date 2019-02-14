@@ -132,10 +132,6 @@ class RaptorRunner(MozbuildObject):
             'title': socket.gethostname(),
             'default_actions': default_actions,
             'raptor_cmd_line_args': self.raptor_args,
-            'python3_manifest': {
-                'win32': 'python3.manifest',
-                'win64': 'python3_x64.manifest',
-            },
             'host': self.host,
             'power_test': self.power_test,
             'is_release_build': self.is_release_build,

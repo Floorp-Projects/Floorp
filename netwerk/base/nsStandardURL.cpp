@@ -3447,9 +3447,8 @@ bool nsStandardURL::Deserialize(const URIParams &aParams) {
 //----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsStandardURL::GetInterfaces(uint32_t *count, nsIID ***array) {
-  *count = 0;
-  *array = nullptr;
+nsStandardURL::GetInterfaces(nsTArray<nsIID> &array) {
+  array.Clear();
   return NS_OK;
 }
 
