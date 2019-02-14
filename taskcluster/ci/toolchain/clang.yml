@@ -60,7 +60,7 @@ linux64-clang-trunk-mingw-x64:
     description: "MinGW-Clang Trunk x64 toolchain build"
     treeherder:
         symbol: TMW(clang-x64)
-        tier: 1
+        tier: 2
     run:
         script: build-clang-trunk-mingw.sh
         arguments: [

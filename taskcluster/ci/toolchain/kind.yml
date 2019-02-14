@@ -35,7 +35,6 @@ jobs-from:
    - mingw.yml
    - minidump_stackwalk.yml
    - misc.yml
-   - nasm.yml
    - node.yml
    - rust.yml
    - rust-size.yml
