@@ -40,6 +40,7 @@ ProfiledThreadData::~ProfiledThreadData() {
 void ProfiledThreadData::StreamJSON(const ProfileBuffer& aBuffer,
                                     JSContext* aCx,
                                     SpliceableJSONWriter& aWriter,
+                                    const nsACString& aProcessName,
                                     const mozilla::TimeStamp& aProcessStartTime,
                                     double aSinceTime, bool JSTracerEnabled) {
   if (mJITFrameInfoForPreviousJSContexts &&
@@ -64,7 +65,7 @@ void ProfiledThreadData::StreamJSON(const ProfileBuffer& aBuffer,
   aWriter.Start();
   {
     StreamSamplesAndMarkers(mThreadInfo->Name(), mThreadInfo->ThreadId(),
-                            aBuffer, aWriter, aProcessStartTime,
+                            aBuffer, aWriter, aProcessName, aProcessStartTime,
                             mThreadInfo->RegisterTime(), mUnregisterTime,
                             aSinceTime, uniqueStacks);
 
@@ -204,6 +205,7 @@ void ProfiledThreadData::StreamTraceLoggerJSON(
 void StreamSamplesAndMarkers(const char* aName, int aThreadId,
                              const ProfileBuffer& aBuffer,
                              SpliceableJSONWriter& aWriter,
+                             const nsACString& aProcessName,
                              const mozilla::TimeStamp& aProcessStartTime,
                              const mozilla::TimeStamp& aRegisterTime,
                              const mozilla::TimeStamp& aUnregisterTime,
@@ -213,16 +215,11 @@ void StreamSamplesAndMarkers(const char* aName, int aThreadId,
 
   aWriter.StringProperty("name", aName);
 
+  // Use given process name (if any), unless we're the parent process.
   if (XRE_IsParentProcess()) {
     aWriter.StringProperty("processName", "Parent Process");
-  } else if (mozilla::dom::ContentChild* cc =
-                 mozilla::dom::ContentChild::GetSingleton()) {
-    // Try to get the process name from ContentChild.
-    nsAutoCString processName;
-    cc->GetProcessName(processName);
-    if (!processName.IsEmpty()) {
-      aWriter.StringProperty("processName", processName.Data());
-    }
+  } else if (!aProcessName.IsEmpty()) {
+    aWriter.StringProperty("processName", aProcessName.Data());
   }
 
   aWriter.IntProperty("tid", static_cast<int64_t>(aThreadId));

@@ -63,7 +63,7 @@ class ProfiledThreadData final {
   mozilla::Maybe<uint64_t>& LastSample() { return mLastSample; }
 
   void StreamJSON(const ProfileBuffer& aBuffer, JSContext* aCx,
-                  SpliceableJSONWriter& aWriter,
+                  SpliceableJSONWriter& aWriter, const nsACString& aProcessName,
                   const mozilla::TimeStamp& aProcessStartTime,
                   double aSinceTime, bool aJSTracerEnabled);
 
@@ -130,6 +130,7 @@ class ProfiledThreadData final {
 void StreamSamplesAndMarkers(const char* aName, int aThreadId,
                              const ProfileBuffer& aBuffer,
                              SpliceableJSONWriter& aWriter,
+                             const nsACString& aProcessName,
                              const mozilla::TimeStamp& aProcessStartTime,
                              const mozilla::TimeStamp& aRegisterTime,
                              const mozilla::TimeStamp& aUnregisterTime,

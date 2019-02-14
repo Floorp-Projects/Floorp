@@ -356,6 +356,8 @@ class CorePS {
   }
 #endif
 
+  PS_GET_AND_SET(const nsACString&, ProcessName)
+
  private:
   // The singleton instance
   static CorePS* sInstance;
@@ -378,6 +380,9 @@ class CorePS {
   // LUL's state. Null prior to the first activation, non-null thereafter.
   UniquePtr<lul::LUL> mLul;
 #endif
+
+  // Process name, provided by child process initialization code.
+  nsAutoCString mProcessName;
 };
 
 CorePS* CorePS::sInstance = nullptr;
@@ -2005,6 +2010,7 @@ static void locked_profiler_stream_json_for_this_process(
           registeredThread ? registeredThread->GetJSContext() : nullptr;
       ProfiledThreadData* profiledThreadData = thread.second();
       profiledThreadData->StreamJSON(buffer, cx, aWriter,
+                                     CorePS::ProcessName(aLock),
                                      CorePS::ProcessStartTime(), aSinceTime,
                                      ActivePS::FeatureJSTracer(aLock));
     }
@@ -2022,6 +2028,7 @@ static void locked_profiler_stream_json_for_this_process(
       ProfiledThreadData profiledThreadData(
           threadInfo, nullptr, ActivePS::FeatureResponsiveness(aLock));
       profiledThreadData.StreamJSON(*javaBuffer.get(), nullptr, aWriter,
+                                    CorePS::ProcessName(aLock),
                                     CorePS::ProcessStartTime(), aSinceTime,
                                     ActivePS::FeatureJSTracer(aLock));
 
@@ -2895,6 +2902,12 @@ static bool WriteProfileToJSONWriter(SpliceableChunkedJSONWriter& aWriter,
   }
   aWriter.End();
   return true;
+}
+
+void profiler_set_process_name(const nsACString& aProcessName) {
+  LOG("profiler_set_process_name(\"%s\")", aProcessName.Data());
+  PSAutoLock lock(gPSMutex);
+  CorePS::SetProcessName(lock, aProcessName);
 }
 
 UniquePtr<char[]> profiler_get_profile(double aSinceTime,
