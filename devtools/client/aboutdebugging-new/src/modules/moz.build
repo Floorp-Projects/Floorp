@@ -12,4 +12,5 @@ DevToolsModules(
     'runtime-client-factory.js',
     'runtimes-state-helper.js',
     'usb-runtimes.js',
+    'workers-listener.js',
 )
