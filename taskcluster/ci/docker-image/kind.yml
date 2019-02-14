@@ -22,34 +22,13 @@ jobs:
     symbol: I(ib)
   desktop1604-test:
     symbol: I(dt16t)
-  # Neither the debian7-*raw nor the debian7-*packages images can have
-  # packages dependencies.
-  debian7-raw:
-    symbol: I(deb7-raw)
-    definition: debian-raw
-    args:
-      BASE_IMAGE: debian:wheezy-20171210
-      DIST: wheezy
-      SNAPSHOT: '20171210T214726Z'
-  debian7-packages:
-    symbol: I(deb7-pkg)
-    definition: debian-packages
-    parent: debian7-raw
-  debian7-i386-raw:
-    symbol: I(deb7-32-raw)
-    definition: debian-raw
-    args:
-      BASE_IMAGE: i386/debian:wheezy-20171210
-      DIST: wheezy
-      SNAPSHOT: '20171210T214726Z'
-  debian7-i386-packages:
-    symbol: I(deb7-32-pkg)
-    definition: debian-packages
-    parent: debian7-i386-raw
   debian7-base:
     symbol: I(deb7-base)
     definition: debian-base
-    parent: debian7-raw
+    args:
+      DIST: wheezy
+      BASE_TAG: '20171210'
+      SNAPSHOT: '20171210T214726Z'
     packages:
       - deb7-gdb
       - deb7-git
@@ -132,23 +111,13 @@ jobs:
     parent: debian7-amd64-build
   lint:
     symbol: I(lnt)
-  # Neither the debian9-raw nor the debian9-packages images can have
-  # packages dependencies.
-  debian9-raw:
-    symbol: I(deb9-raw)
-    definition: debian-raw
-    args:
-      BASE_IMAGE: debian:stretch-20170620
-      DIST: stretch
-      SNAPSHOT: '20170830T000511Z'
-  debian9-packages:
-    symbol: I(deb9-pkg)
-    definition: debian-packages
-    parent: debian9-raw
   debian9-base:
     symbol: I(deb9-base)
     definition: debian-base
-    parent: debian9-raw
+    args:
+      DIST: stretch
+      BASE_TAG: '20170620'
+      SNAPSHOT: '20170830T000511Z'
     packages:
       - deb9-mercurial
       - deb9-python-zstandard
