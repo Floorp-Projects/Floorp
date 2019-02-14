@@ -74,10 +74,10 @@ class WasmToken {
     ComparisonOpcode,
     Const,
     ConversionOpcode,
-    CurrentMemory,
     Data,
 #ifdef ENABLE_WASM_BULKMEM_OPS
     DataCount,
+    DataDrop,
 #endif
     Drop,
     Elem,
@@ -97,7 +97,6 @@ class WasmToken {
     GetGlobal,
     GetLocal,
     Global,
-    GrowMemory,
     If,
     Import,
     Index,
@@ -108,10 +107,11 @@ class WasmToken {
     Loop,
 #ifdef ENABLE_WASM_BULKMEM_OPS
     MemCopy,
-    DataDrop,
     MemFill,
     MemInit,
 #endif
+    MemoryGrow,
+    MemorySize,
     Module,
     Mutable,
     Name,
@@ -310,20 +310,25 @@ class WasmToken {
       case Const:
       case ConversionOpcode:
       case ExtraConversionOpcode:
-      case CurrentMemory:
+#ifdef ENABLE_WASM_BULKMEM_OPS
+      case DataDrop:
+#endif
       case Drop:
+#ifdef ENABLE_WASM_BULKMEM_OPS
+      case ElemDrop:
+#endif
       case GetGlobal:
       case GetLocal:
-      case GrowMemory:
       case If:
       case Load:
       case Loop:
 #ifdef ENABLE_WASM_BULKMEM_OPS
       case MemCopy:
-      case DataDrop:
       case MemFill:
       case MemInit:
 #endif
+      case MemoryGrow:
+      case MemorySize:
 #ifdef ENABLE_WASM_GC
       case StructNew:
       case StructGet:
@@ -338,7 +343,6 @@ class WasmToken {
       case Store:
 #ifdef ENABLE_WASM_BULKMEM_OPS
       case TableCopy:
-      case ElemDrop:
       case TableInit:
 #endif
 #ifdef ENABLE_WASM_GENERALIZED_TABLES
@@ -984,7 +988,7 @@ WasmToken WasmTokenStream::next() {
         return WasmToken(WasmToken::Call, begin, cur_);
       }
       if (consume(u"current_memory")) {
-        return WasmToken(WasmToken::CurrentMemory, begin, cur_);
+        return WasmToken(WasmToken::MemorySize, begin, cur_);
       }
       break;
 
@@ -1342,7 +1346,7 @@ WasmToken WasmTokenStream::next() {
         return WasmToken(WasmToken::Global, begin, cur_);
       }
       if (consume(u"grow_memory")) {
-        return WasmToken(WasmToken::GrowMemory, begin, cur_);
+        return WasmToken(WasmToken::MemoryGrow, begin, cur_);
       }
       break;
 
@@ -2126,10 +2130,10 @@ WasmToken WasmTokenStream::next() {
         }
 #endif
         if (consume(u"grow")) {
-          return WasmToken(WasmToken::GrowMemory, begin, cur_);
+          return WasmToken(WasmToken::MemoryGrow, begin, cur_);
         }
         if (consume(u"size")) {
-          return WasmToken(WasmToken::CurrentMemory, begin, cur_);
+          return WasmToken(WasmToken::MemorySize, begin, cur_);
         }
         break;
       }
@@ -3622,13 +3626,13 @@ static AstBranchTable* ParseBranchTable(WasmParseContext& c, bool inParens) {
   return new (c.lifo) AstBranchTable(*index, def, std::move(table), value);
 }
 
-static AstGrowMemory* ParseGrowMemory(WasmParseContext& c, bool inParens) {
+static AstMemoryGrow* ParseMemoryGrow(WasmParseContext& c, bool inParens) {
   AstExpr* operand = ParseExpr(c, inParens);
   if (!operand) {
     return nullptr;
   }
 
-  return new (c.lifo) AstGrowMemory(operand);
+  return new (c.lifo) AstMemoryGrow(operand);
 }
 
 #ifdef ENABLE_WASM_BULKMEM_OPS
@@ -3997,10 +4001,10 @@ static AstExpr* ParseExprBody(WasmParseContext& c, WasmToken token,
       return ParseUnaryOperator(c, token.op(), inParens);
     case WasmToken::Nop:
       return new (c.lifo) AstNop();
-    case WasmToken::CurrentMemory:
-      return new (c.lifo) AstCurrentMemory();
-    case WasmToken::GrowMemory:
-      return ParseGrowMemory(c, inParens);
+    case WasmToken::MemorySize:
+      return new (c.lifo) AstMemorySize();
+    case WasmToken::MemoryGrow:
+      return ParseMemoryGrow(c, inParens);
 #ifdef ENABLE_WASM_BULKMEM_OPS
     case WasmToken::MemCopy:
       return ParseMemOrTableCopy(c, inParens, /*isMem=*/true);
@@ -5490,7 +5494,7 @@ static bool ResolveUnaryOperator(Resolver& r, AstUnaryOperator& b) {
   return ResolveExpr(r, *b.operand());
 }
 
-static bool ResolveGrowMemory(Resolver& r, AstGrowMemory& gm) {
+static bool ResolveMemoryGrow(Resolver& r, AstMemoryGrow& gm) {
   return ResolveExpr(r, *gm.operand());
 }
 
@@ -5697,7 +5701,7 @@ static bool ResolveExpr(Resolver& r, AstExpr& expr) {
     case AstExprKind::Nop:
     case AstExprKind::Pop:
     case AstExprKind::Unreachable:
-    case AstExprKind::CurrentMemory:
+    case AstExprKind::MemorySize:
       return true;
     case AstExprKind::RefNull:
       return ResolveRefNull(r, expr.as<AstRefNull>());
@@ -5748,8 +5752,8 @@ static bool ResolveExpr(Resolver& r, AstExpr& expr) {
       return ResolveTernaryOperator(r, expr.as<AstTernaryOperator>());
     case AstExprKind::UnaryOperator:
       return ResolveUnaryOperator(r, expr.as<AstUnaryOperator>());
-    case AstExprKind::GrowMemory:
-      return ResolveGrowMemory(r, expr.as<AstGrowMemory>());
+    case AstExprKind::MemoryGrow:
+      return ResolveMemoryGrow(r, expr.as<AstMemoryGrow>());
     case AstExprKind::AtomicCmpXchg:
       return ResolveAtomicCmpXchg(r, expr.as<AstAtomicCmpXchg>());
     case AstExprKind::AtomicLoad:
@@ -6308,8 +6312,8 @@ static bool EncodeBranchTable(Encoder& e, AstBranchTable& bt) {
   return true;
 }
 
-static bool EncodeCurrentMemory(Encoder& e, AstCurrentMemory& cm) {
-  if (!e.writeOp(Op::CurrentMemory)) {
+static bool EncodeMemorySize(Encoder& e, AstMemorySize& cm) {
+  if (!e.writeOp(Op::MemorySize)) {
     return false;
   }
 
@@ -6320,12 +6324,12 @@ static bool EncodeCurrentMemory(Encoder& e, AstCurrentMemory& cm) {
   return true;
 }
 
-static bool EncodeGrowMemory(Encoder& e, AstGrowMemory& gm) {
+static bool EncodeMemoryGrow(Encoder& e, AstMemoryGrow& gm) {
   if (!EncodeExpr(e, *gm.operand())) {
     return false;
   }
 
-  if (!e.writeOp(Op::GrowMemory)) {
+  if (!e.writeOp(Op::MemoryGrow)) {
     return false;
   }
 
@@ -6550,10 +6554,10 @@ static bool EncodeExpr(Encoder& e, AstExpr& expr) {
       return EncodeTernaryOperator(e, expr.as<AstTernaryOperator>());
     case AstExprKind::UnaryOperator:
       return EncodeUnaryOperator(e, expr.as<AstUnaryOperator>());
-    case AstExprKind::CurrentMemory:
-      return EncodeCurrentMemory(e, expr.as<AstCurrentMemory>());
-    case AstExprKind::GrowMemory:
-      return EncodeGrowMemory(e, expr.as<AstGrowMemory>());
+    case AstExprKind::MemorySize:
+      return EncodeMemorySize(e, expr.as<AstMemorySize>());
+    case AstExprKind::MemoryGrow:
+      return EncodeMemoryGrow(e, expr.as<AstMemoryGrow>());
     case AstExprKind::AtomicCmpXchg:
       return EncodeAtomicCmpXchg(e, expr.as<AstAtomicCmpXchg>());
     case AstExprKind::AtomicLoad:

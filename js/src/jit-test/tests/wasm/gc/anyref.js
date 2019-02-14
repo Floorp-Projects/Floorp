@@ -160,9 +160,9 @@ assertEq(ref.calories, baguette.calories);
     (memory 0 64)
     (func (export "f") (param anyref) (result i32)
         i32.const 10
-        grow_memory
+        memory.grow
         drop
-        current_memory
+        memory.size
     )
 )`).exports.f({}), 10);
 })();

@@ -197,8 +197,8 @@ enum class Op {
   I64Store8 = 0x3c,
   I64Store16 = 0x3d,
   I64Store32 = 0x3e,
-  CurrentMemory = 0x3f,
-  GrowMemory = 0x40,
+  MemorySize = 0x3f,
+  MemoryGrow = 0x40,
 
   // Constants
   I32Const = 0x41,

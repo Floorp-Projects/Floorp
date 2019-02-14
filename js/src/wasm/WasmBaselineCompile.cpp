@@ -6880,8 +6880,8 @@ class BaseCompiler final : public BaseCompilerInterface {
                                      const MIRTypeVector& sig, ExprType retType,
                                      SymbolicAddress builtin,
                                      bool pushReturnedValue = true);
-  MOZ_MUST_USE bool emitGrowMemory();
-  MOZ_MUST_USE bool emitCurrentMemory();
+  MOZ_MUST_USE bool emitMemoryGrow();
+  MOZ_MUST_USE bool emitMemorySize();
 
   MOZ_MUST_USE bool emitRefNull();
   void emitRefIsNull();
@@ -9834,11 +9834,11 @@ bool BaseCompiler::emitInstanceCall(uint32_t lineOrBytecode,
   return true;
 }
 
-bool BaseCompiler::emitGrowMemory() {
+bool BaseCompiler::emitMemoryGrow() {
   uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
 
   Nothing arg;
-  if (!iter_.readGrowMemory(&arg)) {
+  if (!iter_.readMemoryGrow(&arg)) {
     return false;
   }
 
@@ -9847,13 +9847,13 @@ bool BaseCompiler::emitGrowMemory() {
   }
 
   return emitInstanceCall(lineOrBytecode, SigPI_, ExprType::I32,
-                          SymbolicAddress::GrowMemory);
+                          SymbolicAddress::MemoryGrow);
 }
 
-bool BaseCompiler::emitCurrentMemory() {
+bool BaseCompiler::emitMemorySize() {
   uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
 
-  if (!iter_.readCurrentMemory()) {
+  if (!iter_.readMemorySize()) {
     return false;
   }
 
@@ -9862,7 +9862,7 @@ bool BaseCompiler::emitCurrentMemory() {
   }
 
   return emitInstanceCall(lineOrBytecode, SigP_, ExprType::I32,
-                          SymbolicAddress::CurrentMemory);
+                          SymbolicAddress::MemorySize);
 }
 
 bool BaseCompiler::emitRefNull() {
@@ -11491,10 +11491,10 @@ bool BaseCompiler::emitBody() {
             emitConversion(emitExtendI64_32, ValType::I64, ValType::I64));
 
       // Memory Related
-      case uint16_t(Op::GrowMemory):
-        CHECK_NEXT(emitGrowMemory());
-      case uint16_t(Op::CurrentMemory):
-        CHECK_NEXT(emitCurrentMemory());
+      case uint16_t(Op::MemoryGrow):
+        CHECK_NEXT(emitMemoryGrow());
+      case uint16_t(Op::MemorySize):
+        CHECK_NEXT(emitMemorySize());
 
 #ifdef ENABLE_WASM_GC
       case uint16_t(Op::RefEq):

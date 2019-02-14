@@ -88,27 +88,27 @@ if (getBuildConfiguration()["arm-simulator"]) {
     }
 }
 
-// current_memory is a callout.
+// memory.size is a callout.
 test(`(module
     (memory 1)
     (func (export "") (result i32)
-         current_memory
+         memory.size
     )
 )`,
 this,
-["", ">", "0,>", "<,0,>", "current_memory,0,>", "<,0,>", "0,>", ">", ""],
+["", ">", "0,>", "<,0,>", "memory.size,0,>", "<,0,>", "0,>", ">", ""],
 );
 
-// grow_memory is a callout.
+// memory.grow is a callout.
 test(`(module
     (memory 1)
     (func (export "") (result i32)
          i32.const 1
-         grow_memory
+         memory.grow
     )
 )`,
 this,
-["", ">", "0,>", "<,0,>", "grow_memory,0,>", "<,0,>", "0,>", ">", ""],
+["", ">", "0,>", "<,0,>", "memory.grow,0,>", "<,0,>", "0,>", ">", ""],
 );
 
 // A few math builtins.

@@ -1333,10 +1333,10 @@ static const char* ThunkedNativeToDescription(SymbolicAddress func) {
       return "call to asm.js native f64 Math.pow";
     case SymbolicAddress::ATan2D:
       return "call to asm.js native f64 Math.atan2";
-    case SymbolicAddress::GrowMemory:
-      return "call to native grow_memory (in wasm)";
-    case SymbolicAddress::CurrentMemory:
-      return "call to native current_memory (in wasm)";
+    case SymbolicAddress::MemoryGrow:
+      return "call to native memory.grow (in wasm)";
+    case SymbolicAddress::MemorySize:
+      return "call to native memory.size (in wasm)";
     case SymbolicAddress::WaitI32:
       return "call to native i32.wait (in wasm)";
     case SymbolicAddress::WaitI64:
