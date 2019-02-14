@@ -9,6 +9,9 @@ exclude: true
 <h1> GeckoView API Changelog. </h1>
 
 ## v67
+- Added GeckoRuntimeSettings for setting a font size scaling factor, and for
+  enabling font inflation for non-mobile-friendly pages.
+
 - Updated video autoplay API to reflect changes in Gecko. Instead of being a per-video
   permission in the PermissionDelegate, it is a runtime setting that either allows or
   blocks autoplay videos.
@@ -134,4 +137,4 @@ exclude: true
 [65.24]: ../CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: ../GeckoResult.html
 
-[api-version]: fb3375bbe85695b337d830dcf3fffec7231f4e4b
+[api-version]: 4cd5232f60675d7eaaad47fb62d7245f643039fe
