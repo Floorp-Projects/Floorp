@@ -191,6 +191,7 @@ EXPORTS.js += [
 UNIFIED_SOURCES += [
     'builtin/Array.cpp',
     'builtin/AtomicsObject.cpp',
+    'builtin/BigInt.cpp',
     'builtin/Boolean.cpp',
     'builtin/DataViewObject.cpp',
     'builtin/Eval.cpp',
@@ -258,6 +259,7 @@ UNIFIED_SOURCES += [
     'vm/ArrayBufferViewObject.cpp',
     'vm/AsyncFunction.cpp',
     'vm/AsyncIteration.cpp',
+    'vm/BigIntType.cpp',
     'vm/BuildId.cpp',
     'vm/BytecodeUtil.cpp',
     'vm/Caches.cpp',
@@ -345,12 +347,6 @@ SOURCES += [
     'vm/Interpreter.cpp',
     'vm/ProfilingStack.cpp',
 ]
-
-if CONFIG['ENABLE_BIGINT']:
-    SOURCES += [
-        'builtin/BigInt.cpp',
-        'vm/BigIntType.cpp',
-    ]
 
 if CONFIG['JS_POSIX_NSPR']:
     UNIFIED_SOURCES += [

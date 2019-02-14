@@ -35,9 +35,7 @@
 #include "js/PropertySpec.h"
 #include "util/DoubleToString.h"
 #include "util/StringBuffer.h"
-#ifdef ENABLE_BIGINT
-#  include "vm/BigIntType.h"
-#endif
+#include "vm/BigIntType.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSAtom.h"
 #include "vm/JSContext.h"
@@ -545,11 +543,9 @@ static bool Number(JSContext* cx, unsigned argc, Value* vp) {
     if (!ToNumeric(cx, args[0])) {
       return false;
     }
-#ifdef ENABLE_BIGINT
     if (args[0].isBigInt()) {
       args[0].setNumber(BigInt::numberValue(args[0].toBigInt()));
     }
-#endif
     MOZ_ASSERT(args[0].isNumber());
   }
 
@@ -1688,14 +1684,12 @@ JS_PUBLIC_API bool js::ToNumberSlow(JSContext* cx, HandleValue v_,
     return true;
   }
 
-  MOZ_ASSERT(v.isSymbol() || IF_BIGINT(v.isBigInt(), false));
+  MOZ_ASSERT(v.isSymbol() || v.isBigInt());
   if (!cx->helperThread()) {
     unsigned errnum = JSMSG_SYMBOL_TO_NUMBER;
-#ifdef ENABLE_BIGINT
     if (v.isBigInt()) {
       errnum = JSMSG_BIGINT_TO_NUMBER;
     }
-#endif
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, errnum);
   }
   return false;
@@ -1704,9 +1698,7 @@ JS_PUBLIC_API bool js::ToNumberSlow(JSContext* cx, HandleValue v_,
 // BigInt proposal section 3.1.6
 bool js::ToNumericSlow(JSContext* cx, MutableHandleValue vp) {
   MOZ_ASSERT(!vp.isNumber());
-#ifdef ENABLE_BIGINT
   MOZ_ASSERT(!vp.isBigInt());
-#endif
 
   // Step 1.
   if (!vp.isPrimitive()) {
@@ -1719,11 +1711,9 @@ bool js::ToNumericSlow(JSContext* cx, MutableHandleValue vp) {
   }
 
   // Step 2.
-#ifdef ENABLE_BIGINT
   if (vp.isBigInt()) {
     return true;
   }
-#endif
 
   // Step 3.
   return ToNumber(cx, vp);
@@ -1852,11 +1842,9 @@ bool js::ToInt32OrBigIntSlow(JSContext* cx, MutableHandleValue vp) {
     return false;
   }
 
-#ifdef ENABLE_BIGINT
   if (vp.isBigInt()) {
     return true;
   }
-#endif
 
   vp.setInt32(ToInt32(vp.toNumber()));
   return true;

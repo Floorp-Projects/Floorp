@@ -205,11 +205,9 @@ MOZ_ALWAYS_INLINE MOZ_MUST_USE bool ToNumeric(JSContext* cx,
   if (vp.isNumber()) {
     return true;
   }
-#ifdef ENABLE_BIGINT
   if (vp.isBigInt()) {
     return true;
   }
-#endif
   return ToNumericSlow(cx, vp);
 }
 

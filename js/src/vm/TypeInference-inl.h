@@ -180,10 +180,8 @@ inline TypeFlags PrimitiveTypeFlag(JSValueType type) {
       return TYPE_FLAG_STRING;
     case JSVAL_TYPE_SYMBOL:
       return TYPE_FLAG_SYMBOL;
-#ifdef ENABLE_BIGINT
     case JSVAL_TYPE_BIGINT:
       return TYPE_FLAG_BIGINT;
-#endif
     case JSVAL_TYPE_MAGIC:
       return TYPE_FLAG_LAZYARGS;
     default:
@@ -207,10 +205,8 @@ inline JSValueType TypeFlagPrimitive(TypeFlags flags) {
       return JSVAL_TYPE_STRING;
     case TYPE_FLAG_SYMBOL:
       return JSVAL_TYPE_SYMBOL;
-#ifdef ENABLE_BIGINT
     case TYPE_FLAG_BIGINT:
       return JSVAL_TYPE_BIGINT;
-#endif
     case TYPE_FLAG_LAZYARGS:
       return JSVAL_TYPE_MAGIC;
     default:

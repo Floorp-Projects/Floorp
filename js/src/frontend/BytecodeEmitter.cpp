@@ -1061,12 +1061,10 @@ restart:
       *answer = false;
       return true;
 
-#ifdef ENABLE_BIGINT
     case ParseNodeKind::BigIntExpr:
       MOZ_ASSERT(pn->is<BigIntLiteral>());
       *answer = false;
       return true;
-#endif
 
     // |this| can throw in derived class constructors, including nested arrow
     // functions or eval.
@@ -4394,11 +4392,9 @@ bool ParseNode::getConstantValue(JSContext* cx,
     case ParseNodeKind::NumberExpr:
       vp.setNumber(as<NumericLiteral>().value());
       return true;
-#ifdef ENABLE_BIGINT
     case ParseNodeKind::BigIntExpr:
       vp.setBigInt(as<BigIntLiteral>().box()->value());
       return true;
-#endif
     case ParseNodeKind::TemplateStringExpr:
     case ParseNodeKind::StringExpr:
       vp.setString(as<NameNode>().atom());
@@ -4977,14 +4973,12 @@ bool BytecodeEmitter::emitCopyDataProperties(CopyOption option) {
   return true;
 }
 
-#ifdef ENABLE_BIGINT
 bool BytecodeEmitter::emitBigIntOp(BigInt* bigint) {
   if (!numberList.append(BigIntValue(bigint))) {
     return false;
   }
   return emitIndex32(JSOP_BIGINT, numberList.length() - 1);
 }
-#endif
 
 bool BytecodeEmitter::emitIterator() {
   // Convert iterable to iterator.
@@ -9244,13 +9238,11 @@ bool BytecodeEmitter::emitTree(
       }
       break;
 
-#ifdef ENABLE_BIGINT
     case ParseNodeKind::BigIntExpr:
       if (!emitBigIntOp(pn->as<BigIntLiteral>().box()->value())) {
         return false;
       }
       break;
-#endif
 
     case ParseNodeKind::RegExpExpr:
       if (!emitRegExp(objectList.add(pn->as<RegExpLiteral>().objbox()))) {

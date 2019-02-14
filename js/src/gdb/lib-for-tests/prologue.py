@@ -83,13 +83,6 @@ def assert_subprinter_registered(printer, subprinter):
                              "%s" % (printer, subprinter, output))
 
 
-enable_bigint = False
-try:
-    if gdb.lookup_type('JS::BigInt'):
-        enable_bigint = True
-except Exception:
-    pass
-
 # Request full stack traces for Python errors.
 gdb.execute('set python print-stack full')
 
