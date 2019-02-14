@@ -4,8 +4,8 @@ AddonTestUtils.initMochitest(this);
 
 let gManagerWindow;
 let gCategoryUtilities;
-const TELEMETRY_CATEGORY = "addonsManager";
-const TELEMETRY_METHODS = new Set(["action", "link", "view"]);
+
+const TELEMETRY_METHODS = ["action", "link", "view"];
 const addonId = "extension@mochi.test";
 
 registerCleanupFunction(() => {
@@ -25,28 +25,6 @@ async function init(startPage) {
   }
 
   return gCategoryUtilities.openType(startPage);
-}
-
-function assertTelemetryMatches(events) {
-  let snapshot = Services.telemetry.snapshotEvents(
-    Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, true);
-
-  if (events.length == 0) {
-    ok(!snapshot.parent || snapshot.parent.length == 0, "There are no telemetry events");
-    return;
-  }
-
-  // Make sure we got some data.
-  ok(snapshot.parent && snapshot.parent.length > 0, "Got parent telemetry events in the snapshot");
-
-  // Only look at the related events after stripping the timestamp and category.
-  let relatedEvents = snapshot.parent
-    .filter(([timestamp, category, method]) =>
-      category == TELEMETRY_CATEGORY && TELEMETRY_METHODS.has(method))
-    .map(relatedEvent => relatedEvent.slice(2, 6));
-
-  // Events are now [method, object, value, extra] as expected.
-  Assert.deepEqual(relatedEvents, events, "The events are recorded correctly");
 }
 
 async function installTheme() {
@@ -121,7 +99,7 @@ add_task(async function testBasicViewTelemetry() {
     ["view", "aboutAddons", "detail", {type: "theme", addonId: "theme@mochi.test"}],
     ["view", "aboutAddons", "list", {type: "extension"}],
     ["view", "aboutAddons", "detail", {type: "extension", addonId: "extension@mochi.test"}],
-  ]);
+  ], {filterMethods: ["view"]});
 
   await close_manager(gManagerWindow);
   await Promise.all(addons.map(addon => addon.unload()));
@@ -137,7 +115,8 @@ add_task(async function testExtensionEvents() {
   let row = list.querySelector(`[value="${addonId}"]`);
 
   // Check/clear the current telemetry.
-  assertTelemetryMatches([["view", "aboutAddons", "list", {type: "extension"}]]);
+  assertTelemetryMatches([["view", "aboutAddons", "list", {type: "extension"}]],
+                         {filterMethods: ["view"]});
 
   // Check disable/enable.
   is(row.getAttribute("active"), "true", "The add-on is enabled");
@@ -148,7 +127,7 @@ add_task(async function testExtensionEvents() {
   assertTelemetryMatches([
     ["action", "aboutAddons", null, {action: "disable", addonId, type, view: "list"}],
     ["action", "aboutAddons", null, {action: "enable", addonId, type, view: "list"}],
-  ]);
+  ], {filterMethods: ["action"]});
 
   // Check remove/undo.
   is(row.getAttribute("status"), "installed", "The add-on is installed");
@@ -161,7 +140,7 @@ add_task(async function testExtensionEvents() {
   assertTelemetryMatches([
     ["action", "aboutAddons", null, {action: "uninstall", addonId, type, view: "list"}],
     ["action", "aboutAddons", null, {action: "undo", addonId, type, view: "list"}],
-  ]);
+  ], {filterMethods: ["action"]});
 
   // Open the preferences page.
   let waitForNewTab = BrowserTestUtils.waitForNewTab(gBrowser);
@@ -174,14 +153,14 @@ add_task(async function testExtensionEvents() {
   BrowserTestUtils.removeTab(await waitForNewTab);
   assertTelemetryMatches([
     ["action", "aboutAddons", "external", {action: "preferences", type, addonId, view: "list"}],
-  ]);
+  ], {filterMethods: ["action"]});
 
   // Go to the detail view.
   row.click();
   await wait_for_view_load(gManagerWindow);
   assertTelemetryMatches([
     ["view", "aboutAddons", "detail", {type, addonId}],
-  ]);
+  ], {filterMethods: ["view"]});
 
   // Check updates.
   let autoUpdate = doc.getElementById("detail-autoUpdate");
@@ -201,7 +180,7 @@ add_task(async function testExtensionEvents() {
     ["action", "aboutAddons", null, {action: "checkForUpdate", type, addonId, view: "detail"}],
     ["action", "aboutAddons", "enabled", {action: "setAddonUpdate", type, addonId, view: "detail"}],
     ["action", "aboutAddons", "default", {action: "setAddonUpdate", type, addonId, view: "detail"}],
-  ]);
+  ], {filterMethods: ["action"]});
 
   // Check links.
   let creator = doc.getElementById("detail-creator");
@@ -238,7 +217,7 @@ add_task(async function testExtensionEvents() {
     ["link", "aboutAddons", "rating", {view: "detail"}],
     ["link", "aboutAddons", "support", {view: "detail"}],
     ["action", "aboutAddons", "external", {action: "preferences", type, addonId, view: "detail"}],
-  ]);
+  ], {filterMethods: ["action", "link"]});
 
   // Update the preferences and check that inline changes.
   await gCategoryUtilities.openType("extension");
@@ -254,7 +233,7 @@ add_task(async function testExtensionEvents() {
     ["view", "aboutAddons", "list", {type}],
     ["action", "aboutAddons", "inline", {action: "preferences", type, addonId, view: "list"}],
     ["view", "aboutAddons", "detail", {type: "extension", addonId: "extension@mochi.test"}],
-  ]);
+  ], {filterMethods: ["action", "view"]});
 
   await close_manager(gManagerWindow);
   await addon.unload();
@@ -314,7 +293,7 @@ add_task(async function testGeneralActions() {
     ["action", "aboutAddons", null, {action: "checkForUpdates", view: "shortcuts"}],
     ["link", "aboutAddons", "about:debugging", {view: "shortcuts"}],
     ["link", "aboutAddons", "search", {view: "shortcuts", type: "shortcuts"}],
-  ]);
+  ], {filterMethods: TELEMETRY_METHODS});
 
   await close_manager(gManagerWindow);
 
@@ -347,7 +326,7 @@ add_task(async function testPreferencesLink() {
     ["view", "aboutAddons", "list", {type: "theme"}],
     ["link", "aboutAddons", "about:preferences", {view: "list"}],
     ["link", "aboutPreferences", "about:addons"],
-  ]);
+  ], {filterMethods: ["link", "view"]});
 
   await close_manager(gManagerWindow);
 });
