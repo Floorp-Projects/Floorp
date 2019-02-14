@@ -8,6 +8,7 @@
 <?xml-stylesheet href="chrome://browser/content/safeMode.css"?>
 
 <dialog id="safeModeDialog"
+            xmlns:html="http://www.w3.org/1999/xhtml"
             xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
             data-l10n-id="safe-mode-window"
             data-l10n-attrs="title,style"
@@ -20,8 +21,8 @@
             onload="onLoad()">
 
   <linkset>
-    <link rel="localization" href="branding/brand.ftl"/>
-    <link rel="localization" href="browser/safeMode.ftl"/>
+    <html:link rel="localization" href="branding/brand.ftl"/>
+    <html:link rel="localization" href="browser/safeMode.ftl"/>
   </linkset>
 
   <script type="application/javascript" src="chrome://browser/content/safeMode.js"/>

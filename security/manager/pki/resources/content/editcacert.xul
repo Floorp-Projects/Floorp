@@ -11,12 +11,13 @@
         data-l10n-id="certmgr-edit-ca-cert"
         data-l10n-attrs="style"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
         buttons="accept,cancel"
         ondialogaccept="return onDialogAccept();"
         onload="onLoad();">
 
   <linkset>
-    <link rel="localization" href="security/certificates/certManager.ftl"/>
+    <html:link rel="localization" href="security/certificates/certManager.ftl"/>
   </linkset>
 
   <script type="application/javascript" src="chrome://pippki/content/pippki.js"/>

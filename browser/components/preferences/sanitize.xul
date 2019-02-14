@@ -22,8 +22,8 @@
         onload="gSanitizeDialog.init();">
 
   <linkset>
-    <link rel="localization" href="browser/sanitize.ftl"/>
-    <link rel="localization" href="branding/brand.ftl"/>
+    <html:link rel="localization" href="browser/sanitize.ftl"/>
+    <html:link rel="localization" href="branding/brand.ftl"/>
   </linkset>
 
   <script type="application/javascript" src="chrome://browser/content/utilityOverlay.js"/>

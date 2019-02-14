@@ -9,6 +9,7 @@
 
 <dialog id="LanguagesDialog" type="child"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
         data-l10n-id="webpage-languages-window"
         data-l10n-attrs="title, style"
         buttons="accept,cancel,help"
@@ -18,7 +19,7 @@
         helpTopic="prefs-languages">
 
   <linkset>
-    <link rel="localization" href="browser/preferences/languages.ftl"/>
+    <html:link rel="localization" href="browser/preferences/languages.ftl"/>
   </linkset>
 
   <script type="application/javascript" src="chrome://browser/content/utilityOverlay.js"/>

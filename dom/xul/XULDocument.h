@@ -78,15 +78,6 @@ class XULDocument final : public XMLDocument,
 
   virtual void InitialDocumentTranslationCompleted() override;
 
-  // nsIMutationObserver interface
-  NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
-  NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
-  NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
-
-  /**
-   * Notify the XUL document that a subtree has been added
-   */
-  void AddSubtreeToDocument(nsIContent* aContent);
   /**
    * This is invoked whenever the prototype for this document is loaded
    * and should be walked, regardless of whether the XUL cache is
@@ -139,7 +130,7 @@ class XULDocument final : public XMLDocument,
                                   nsIPrincipal* aDocumentPrincipal,
                                   nsIParser** aResult);
 
-  void AddElementToDocumentPost(Element* aElement);
+  void CloseElement(Element* aElement);
 
   static void DirectionChanged(const char* aPrefName, XULDocument* aData);
 
