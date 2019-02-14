@@ -12,6 +12,23 @@ var ignoreIndirectCalls = {
     "mozalloc_oom.cpp:void (* gAbortHandler)(size_t)" : true,
 };
 
+// Types that when constructed with no arguments, are "safe" values (they do
+// not contain GC pointers).
+var typesWithSafeConstructors = new Set([
+    "mozilla::Maybe",
+    "mozilla::dom::Nullable",
+    "mozilla::dom::Optional",
+    "mozilla::UniquePtr",
+    "js::UniquePtr"
+]);
+
+var resetterMethods = {
+    'mozilla::Maybe': new Set(["reset"]),
+    'mozilla::UniquePtr': new Set(["reset"]),
+    'js::UniquePtr': new Set(["reset"]),
+    'mozilla::dom::Nullable': new Set(["SetNull"]),
+};
+
 function indirectCallCannotGC(fullCaller, fullVariable)
 {
     var caller = readable(fullCaller);
