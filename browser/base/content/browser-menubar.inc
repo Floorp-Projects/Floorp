@@ -606,6 +606,12 @@
                           oncommand="ReportFalseDeceptiveSite();"
                           onclick="checkForMiddleClick(this, event);"
                           hidden="true"/>
+                <menuseparator id="helpPolicySeparator"
+                          hidden="true"/>
+                <menuitem id="helpPolicySupport"
+                          hidden="true"
+                          oncommand="openUILink(this.getAttribute('href'), event, {triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({})});"
+                          onclick="checkForMiddleClick(this, event);"/>
                 <menuseparator id="aboutSeparator"/>
                 <menuitem id="aboutName"
                           accesskey="&aboutProduct2.accesskey;"
