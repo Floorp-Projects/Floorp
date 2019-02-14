@@ -40,10 +40,20 @@ elif CONFIG['CPU_ARCH'] == 'aarch64':
         'xptcinvoke_aarch64.cpp',
         'xptcstubs_aarch64.cpp',
     ]
-    SOURCES += [
+    asm_files = [
         'xptcinvoke_asm_aarch64.asm',
         'xptcstubs_asm_aarch64.asm',
     ]
+
+    # make gets confused if the srcdir and objdir files have the same name, so
+    # we generate different names for the objdir files
+    for src in asm_files:
+        obj = src.replace('_asm_aarch64', '')
+        GENERATED_FILES += [obj]
+        asm = GENERATED_FILES[obj]
+        asm.script = 'preprocess.py:preprocess'
+        asm.inputs = [src]
+        SOURCES += ['!%s' % obj]
 
 FINAL_LIBRARY = 'xul'
 
