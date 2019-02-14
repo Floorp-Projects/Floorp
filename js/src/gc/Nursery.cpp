@@ -1174,12 +1174,12 @@ void js::Nursery::maybeResizeNursery(JS::GCReason reason) {
     unsigned lowLimit = maxChunkCount() + 1;
     unsigned highLimit = Min(chunkCountLimit(), maxChunkCount() * 2);
 
-    growAllocableSpace(mozilla::Clamp(newChunkCount, lowLimit, highLimit));
+    growAllocableSpace(Min(Max(newChunkCount, lowLimit), highLimit));
   } else if (maxChunkCount() > 1 && promotionRate < ShrinkThreshold) {
     unsigned lowLimit = Max(1u, maxChunkCount() / 2);
     unsigned highLimit = maxChunkCount() - 1u;
 
-    shrinkAllocableSpace(mozilla::Clamp(newChunkCount, lowLimit, highLimit));
+    shrinkAllocableSpace(Max(Min(newChunkCount, highLimit), lowLimit));
   }
 }
 
