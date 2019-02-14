@@ -227,7 +227,7 @@ class MutableWrappedPtrOperations<JS::GCVector<T, Capacity, AllocPolicy>,
   }
   template <typename... Args>
   MOZ_MUST_USE bool emplaceBack(Args&&... aArgs) {
-    return vec().emplaceBack(std::forward<Args...>(aArgs...));
+    return vec().emplaceBack(std::forward<Args>(aArgs)...);
   }
   template <typename U>
   MOZ_MUST_USE bool appendAll(const U& aU) {
