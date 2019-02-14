@@ -491,6 +491,7 @@ static const char* const kBinaryFileExtensions[] = {
     ".crt",         // Windows signed certificate
     ".crx",         // Chrome extensions
     ".csh",         // Linux shell
+    //".csv",
     ".dart",        // Mac disk image
     ".dc42",        // Apple DiskCopy Image
     ".deb",         // Linux package
@@ -503,6 +504,7 @@ static const char* const kBinaryFileExtensions[] = {
     ".dll",         // Windows executable
     ".dmg",         // Mac disk image
     ".dmgpart",     // Mac disk image
+    //".doc",
     //".docb", // MS Office
     //".docm", // MS Word
     //".docx", // MS Word
@@ -517,6 +519,7 @@ static const char* const kBinaryFileExtensions[] = {
     ".fon",     // Windows font
     ".fxp",     // MS FoxPro
     ".gadget",  // Windows
+    //".gif",
     ".grp",     // Windows
     ".gz",      // Linux archive (gzip)
     ".gzip",    // Linux archive (gzip)
@@ -526,6 +529,7 @@ static const char* const kBinaryFileExtensions[] = {
     ".hta",     // HTML trusted application
     ".htm", ".html",
     ".htt",      // MS HTML template
+    //".ica",
     ".img",      // Mac disk image
     ".imgpart",  // Mac disk image
     ".inf",      // Windows installer
@@ -538,6 +542,8 @@ static const char* const kBinaryFileExtensions[] = {
     ".jar",   // Java
     ".jnlp",  // Java
     //".job", // Windows
+    //".jpg",
+    //".jpeg",
     ".js",   // JavaScript script
     ".jse",  // JScript
     ".ksh",  // Linux shell
@@ -570,8 +576,12 @@ static const char* const kBinaryFileExtensions[] = {
     ".mht",       // MS HTML
     ".mhtml",     // MS HTML
     ".mim",       // MS Mail
+    //".mkv",
     ".mmc",       // MS Office
     ".mof",       // Windows
+    //".mov",
+    //".mp3",
+    //".mp4",
     ".mpkg",      // Mac installer
     ".msc",       // Windows executable
     ".msg",       // MS Outlook
@@ -592,6 +602,7 @@ static const char* const kBinaryFileExtensions[] = {
     ".osax",  // AppleScript
     //".out", // Linux binary
     ".oxt",  // OpenOffice extension, can execute arbitrary code
+    //".package",
     //".paf", // PortableApps package
     //".paq8f",
     //".paq8jd",
@@ -607,9 +618,11 @@ static const char* const kBinaryFileExtensions[] = {
     ".pkg",  // Mac installer
     ".pl",   // Perl script
     ".plg",  // MS Visual Studio
+    //".png",
     //".potx", // MS PowerPoint
     //".ppam", // MS PowerPoint
     //".ppsx", // MS PowerPoint
+    //".ppt",
     //".pptm", // MS PowerPoint
     //".pptx", // MS PowerPoint
     ".prf",     // MS Outlook
@@ -699,10 +712,12 @@ static const char* const kBinaryFileExtensions[] = {
     ".tbz",   // Linux archive (bzip2)
     ".tbz2",  // Linux archive (bzip2)
     ".tcsh",  // Linux shell
+    //".tif",
     ".tgz",   // Linux archive (gzip)
     //".toast", // Roxio disk image
     ".torrent",  // Bittorrent
     ".tpz",      // Linux archive (gzip)
+    //".txt",
     ".txz",      // Linux archive (xz)
     ".tz",       // Linux archive (gzip)
     //".u3p", // U3 Smart Apps
@@ -732,6 +747,8 @@ static const char* const kBinaryFileExtensions[] = {
     ".vsw",       // MS Visio
     ".vsx",       // MS Visio
     ".vtx",       // MS Visio
+    //".wav",
+    //".webp",
     ".website",   // Windows
     ".wim",       // Windows Imaging
     //".workflow", // Mac Automator
@@ -744,6 +761,7 @@ static const char* const kBinaryFileExtensions[] = {
     ".xbap",  // XAML Browser Application
     ".xhtml", ".xhtm", ".xht",
     ".xip",  // Mac archive
+    //".xls",
     //".xlsm", // MS Excel
     //".xlsx", // MS Excel
     //".xltm", // MS Excel
