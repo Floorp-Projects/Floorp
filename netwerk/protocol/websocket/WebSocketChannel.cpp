@@ -2839,8 +2839,14 @@ nsresult WebSocketChannel::ApplyForAdmission() {
 // Called after both OnStartRequest and OnTransportAvailable have
 // executed. This essentially ends the handshake and starts the websockets
 // protocol state machine.
-nsresult WebSocketChannel::StartWebsocketData() {
-  nsresult rv;
+nsresult WebSocketChannel::CallStartWebsocketData() {
+  LOG(("WebSocketChannel::CallStartWebsocketData() %p", this));
+  MOZ_ASSERT(NS_IsMainThread(), "not main thread");
+
+  if (mOpenTimer) {
+    mOpenTimer->Cancel();
+    mOpenTimer = nullptr;
+  }
 
   if (!IsOnTargetThread()) {
     return mTargetThread->Dispatch(
@@ -2848,6 +2854,12 @@ nsresult WebSocketChannel::StartWebsocketData() {
                           &WebSocketChannel::StartWebsocketData),
         NS_DISPATCH_NORMAL);
   }
+
+  return StartWebsocketData();
+}
+
+nsresult WebSocketChannel::StartWebsocketData() {
+  nsresult rv;
 
   {
     MutexAutoLock lock(mMutex);
@@ -3165,7 +3177,6 @@ WebSocketChannel::Notify(nsITimer *timer) {
     LOG(("WebSocketChannel:: Expecting Server Close - Timed Out\n"));
     AbortSession(NS_ERROR_NET_TIMEOUT);
   } else if (timer == mOpenTimer) {
-    MOZ_ASSERT(!mGotUpgradeOK, "Open Timer after open complete");
     MOZ_ASSERT(NS_IsMainThread(), "not main thread");
 
     mOpenTimer = nullptr;
@@ -3597,7 +3608,7 @@ WebSocketChannel::OnTransportAvailable(nsISocketTransport *aTransport,
     // is pending
     nsWSAdmissionManager::OnConnected(this);
 
-    return StartWebsocketData();
+    return CallStartWebsocketData();
   }
 
   if (mIsServerSide) {
@@ -3640,7 +3651,7 @@ WebSocketChannel::OnTransportAvailable(nsISocketTransport *aTransport,
       }
     }
 
-    return StartWebsocketData();
+    return CallStartWebsocketData();
   }
 
   return NS_OK;
@@ -3654,11 +3665,6 @@ WebSocketChannel::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext) {
        this, aRequest, mHttpChannel.get(), mRecvdHttpUpgradeTransport));
   MOZ_ASSERT(NS_IsMainThread(), "not main thread");
   MOZ_ASSERT(!mGotUpgradeOK, "OTA duplicated");
-
-  if (mOpenTimer) {
-    mOpenTimer->Cancel();
-    mOpenTimer = nullptr;
-  }
 
   if (mStopped) {
     LOG(("WebSocketChannel::OnStartRequest: Channel Already Done\n"));
@@ -3832,7 +3838,7 @@ WebSocketChannel::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext) {
     // is pending
     nsWSAdmissionManager::OnConnected(this);
 
-    return StartWebsocketData();
+    return CallStartWebsocketData();
   }
 
   return NS_OK;
@@ -3844,6 +3850,13 @@ WebSocketChannel::OnStopRequest(nsIRequest *aRequest, nsISupports *aContext,
   LOG(("WebSocketChannel::OnStopRequest() %p [%p %p %" PRIx32 "]\n", this,
        aRequest, mHttpChannel.get(), static_cast<uint32_t>(aStatusCode)));
   MOZ_ASSERT(NS_IsMainThread(), "not main thread");
+
+  // OnTransportAvailable won't be called if the request is stopped with
+  // an error. Abort the session now instead of waiting for timeout.
+  if (NS_FAILED(aStatusCode) && !mRecvdHttpUpgradeTransport) {
+    AbortSession(aStatusCode);
+    return NS_OK;
+  }
 
   ReportConnectionTelemetry();
 
