@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // This tests taskbar jump list functionality available on win7 and up.
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function test_basics() {
   var item = Cc["@mozilla.org/windows-jumplistitem;1"].
@@ -156,10 +157,7 @@ function test_shortcuts() {
   sc.faviconPageUri = faviconPageUri;
   Assert.equal(sc.faviconPageUri, faviconPageUri);
 
-  var dirSvc = Cc["@mozilla.org/file/directory_service;1"].
-                  getService(Ci.nsIProperties).
-                  QueryInterface(Ci.nsIDirectoryService);
-  var notepad = dirSvc.get("WinD", Ci.nsIFile);
+  var notepad = Services.dirsvc.get("WinD", Ci.nsIFile);
   notepad.append("notepad.exe");
   if (notepad.exists()) {
     handlerApp.executable = notepad;
@@ -215,10 +213,7 @@ async function test_jumplist() {
   handlerApp.name = "Notepad";
   handlerApp.detailedDescription = "Testing detailed description.";
 
-  var dirSvc = Cc["@mozilla.org/file/directory_service;1"].
-                  getService(Ci.nsIProperties).
-                  QueryInterface(Ci.nsIDirectoryService);
-  var notepad = dirSvc.get("WinD", Ci.nsIFile);
+  var notepad = Services.dirsvc.get("WinD", Ci.nsIFile);
   notepad.append("notepad.exe");
   if (notepad.exists()) {
     // To ensure "profile-before-change" will fire before

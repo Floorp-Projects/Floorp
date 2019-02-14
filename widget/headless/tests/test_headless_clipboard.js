@@ -1,6 +1,7 @@
 /* -*- Mode: indent-tabs-mode: nil; js-indent-level: 2 -*- */
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function getString(clipboard) {
   var str = "";
@@ -29,8 +30,7 @@ function getString(clipboard) {
 }
 
 add_task(async function test_clipboard() {
-  let clipboard = Cc["@mozilla.org/widget/clipboard;1"]
-                  .getService(Ci.nsIClipboard);
+  let clipboard = Services.clipboard;
 
   // Test copy.
   const data = "random number: " + Math.random();

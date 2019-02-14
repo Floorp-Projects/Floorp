@@ -22,7 +22,7 @@ function testStepTwo() {
   childWindow.document.form1.uploadbox.click();
   // This should not crash the browser
   childWindow.close();
-  setTimeout("testStepThree();", 5000);
+  setTimeout(testStepThree, 5000);
 }
 
 function testStepThree() {
