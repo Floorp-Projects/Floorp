@@ -6,8 +6,6 @@
 
 # Nightly-only features
 if CONFIG['NIGHTLY_BUILD']:
-    # TypedObject
-    DEFINES['ENABLE_BINARYDATA'] = True
     # The evolving bulk-copy proposal - mem.fill, mem.copy,
     # table.copy, etc
     DEFINES['ENABLE_WASM_BULKMEM_OPS'] = True

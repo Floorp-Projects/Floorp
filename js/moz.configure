@@ -508,3 +508,18 @@ js_option('--enable-wasm-codegen-debug',
 
 set_config('WASM_CODEGEN_DEBUG', depends_if('--enable-wasm-codegen-debug')(lambda x: True))
 set_define('WASM_CODEGEN_DEBUG', depends_if('--enable-wasm-codegen-debug')(lambda x: True))
+
+
+# Support for typed objects.
+# =====================================================
+
+@depends(milestone.is_nightly)
+def default_typed_objects(is_nightly):
+    return is_nightly
+
+js_option('--enable-typed-objects',
+          default=default_typed_objects,
+          help='{Enable|Disable} typed objects')
+
+set_config('ENABLE_TYPED_OBJECTS', depends_if('--enable-typed-objects')(lambda x: True))
+set_define('ENABLE_TYPED_OBJECTS', depends_if('--enable-typed-objects')(lambda x: True))
