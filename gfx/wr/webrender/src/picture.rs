@@ -5,14 +5,13 @@
 use api::{FilterOp, MixBlendMode, PipelineId, PremultipliedColorF, PictureRect, PicturePoint, WorldPoint};
 use api::{DeviceIntRect, DeviceIntSize, DevicePoint, DeviceRect};
 use api::{LayoutRect, PictureToRasterTransform, LayoutPixel, PropertyBinding, PropertyBindingId};
-use api::{DevicePixelScale, RasterRect, RasterSpace, ColorF, ImageKey, DirtyRect, WorldSize, ClipMode, LayoutSize};
-use api::{PicturePixel, RasterPixel, WorldPixel, WorldRect, ImageFormat, ImageDescriptor, WorldVector2D, LayoutPoint};
+use api::{DevicePixelScale, RasterRect, RasterSpace, ColorF, ImageKey, WorldSize, ClipMode, LayoutSize};
+use api::{PicturePixel, RasterPixel, WorldPixel, WorldRect, WorldVector2D, LayoutPoint};
 use api::{DebugFlags, DeviceHomogeneousVector, DeviceVector2D};
 use box_shadow::{BLUR_SAMPLE_SCALE};
 use clip::{ClipChainId, ClipChainNode, ClipItem, ClipStore, ClipDataStore, ClipChainStack};
 use clip_scroll_tree::{ROOT_SPATIAL_NODE_INDEX, ClipScrollTree, SpatialNodeIndex, CoordinateSystemId, VisibleFace};
 use debug_colors;
-use device::TextureFilter;
 use euclid::{size2, vec3, TypedPoint2D, TypedScale, TypedSize2D};
 use euclid::approxeq::ApproxEq;
 use frame_builder::{FrameVisibilityContext, FrameVisibilityState};
@@ -35,7 +34,7 @@ use scene_builder::Interners;
 use smallvec::SmallVec;
 use std::{mem, u16};
 use std::sync::atomic::{AtomicUsize, Ordering};
-use texture_cache::{Eviction, TextureCacheHandle};
+use texture_cache::TextureCacheHandle;
 use tiling::RenderTargetKind;
 use util::{ComparableVec, TransformedRectKind, MatrixHelpers, MaxRect};
 
@@ -101,9 +100,10 @@ pub struct TileIndex(pub usize);
 /// Note that we use a separate, smaller size during wrench testing, so that
 /// we get tighter dirty rects and can do more meaningful invalidation
 /// tests.
-pub const TILE_SIZE_WIDTH: i32 = 1024;
-pub const TILE_SIZE_HEIGHT: i32 = 256;
-pub const TILE_SIZE_TESTING: i32 = 64;
+const TILE_SIZE_WIDTH: i32 = 1024;
+const TILE_SIZE_HEIGHT: i32 = 256;
+const TILE_SIZE_TESTING: i32 = 64;
+
 pub const FRAMES_BEFORE_PICTURE_CACHING: usize = 2;
 const MAX_DIRTY_RECTS: usize = 3;
 
@@ -783,7 +783,7 @@ impl TileCache {
         }
 
         let DeviceIntSize { width: tile_width, height: tile_height, _unit: _ } =
-            self.tile_dimensions(frame_context.config.testing);
+            Self::tile_dimensions(frame_context.config.testing);
 
         // Work out the scroll offset to apply to the world reference point.
         let scroll_offset_point = frame_context.clip_scroll_tree
@@ -1391,15 +1391,6 @@ impl TileCache {
             return LayoutRect::max_rect();
         }
 
-        let dim = self.tile_dimensions(frame_context.config.testing);
-        let descriptor = ImageDescriptor::new(
-            dim.width,
-            dim.height,
-            ImageFormat::BGRA8,
-            true,
-            false,
-        );
-
         // Skip all tiles if completely off-screen.
         if !self.world_bounding_rect.intersects(&frame_context.screen_world_rect) {
             return LayoutRect::zero();
@@ -1547,17 +1538,9 @@ impl TileCache {
                 if tile.same_frames >= FRAMES_BEFORE_PICTURE_CACHING {
                     // Ensure that this texture is allocated.
                     if !resource_cache.texture_cache.is_allocated(&tile.handle) {
-                        resource_cache.texture_cache.update(
+                        resource_cache.texture_cache.update_picture_cache(
                             &mut tile.handle,
-                            descriptor,
-                            TextureFilter::Linear,
-                            None,
-                            [0.0; 3],
-                            DirtyRect::All,
                             gpu_cache,
-                            None,
-                            UvRectKind::Rect,
-                            Eviction::Eager,
                         );
                     }
 
@@ -1618,7 +1601,7 @@ impl TileCache {
         local_clip_rect
     }
 
-    fn tile_dimensions(&self, testing: bool) -> DeviceIntSize {
+    pub fn tile_dimensions(testing: bool) -> DeviceIntSize {
         if testing {
             size2(TILE_SIZE_TESTING, TILE_SIZE_TESTING)
         } else {

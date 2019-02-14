@@ -24,7 +24,9 @@
 //! address in the GPU cache of a given resource slot
 //! for this frame.
 
-use api::{DebugFlags, DocumentId, PremultipliedColorF, IdNamespace, TexelRect};
+use api::{DebugFlags, DocumentId, PremultipliedColorF, TexelRect};
+#[cfg(test)]
+use api::IdNamespace;
 use euclid::{HomogeneousVector, TypedRect};
 use internal_types::{FastHashMap};
 use profiler::GpuCacheProfileCounters;
@@ -708,7 +710,7 @@ impl GpuCache {
     /// Creates a GpuCache and sets it up with a valid `FrameStamp`, which
     /// is useful for avoiding panics when instantiating the `GpuCache`
     /// directly from unit test code.
-    #[allow(dead_code)]
+    #[cfg(test)]
     pub fn new_for_testing() -> Self {
         let mut cache = Self::new();
         let mut now = FrameStamp::first(DocumentId(IdNamespace(1), 1));
