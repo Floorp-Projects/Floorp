@@ -8,6 +8,7 @@
 
 <dialog id="removemp"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
         style="width: 35em;" 
         ondialogaccept="gRemovePasswordDialog.removePassword();" 
         onload="gRemovePasswordDialog.init()"
@@ -16,7 +17,7 @@
   <script type="application/javascript" src="chrome://mozapps/content/preferences/removemp.js"/>
 
   <linkset>
-    <link rel="localization" href="toolkit/preferences/preferences.ftl"/>
+    <html:link rel="localization" href="toolkit/preferences/preferences.ftl"/>
   </linkset>
 
   <vbox id="warnings">

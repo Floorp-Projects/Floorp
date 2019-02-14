@@ -722,6 +722,15 @@ void nsXULElement::UnbindFromTree(bool aDeep, bool aNullParent) {
   nsStyledElement::UnbindFromTree(aDeep, aNullParent);
 }
 
+void nsXULElement::DoneAddingChildren(bool aHaveNotified) {
+  if (IsXULElement(nsGkAtoms::linkset)) {
+    Document* doc = GetComposedDoc();
+    if (doc) {
+      doc->OnL10nResourceContainerParsed();
+    }
+  }
+}
+
 void nsXULElement::UnregisterAccessKey(const nsAString& aOldValue) {
   // If someone changes the accesskey, unregister the old one
   //

@@ -17,8 +17,8 @@
   <script type="application/javascript" src="chrome://mozapps/content/preferences/changemp.js"/>
 
   <linkset>
-    <link rel="localization" href="branding/brand.ftl"/>
-    <link rel="localization" href="toolkit/preferences/preferences.ftl"/>
+    <html:link rel="localization" href="branding/brand.ftl"/>
+    <html:link rel="localization" href="toolkit/preferences/preferences.ftl"/>
   </linkset>
 
   <description control="pw1" data-l10n-id="master-password-description"></description>
