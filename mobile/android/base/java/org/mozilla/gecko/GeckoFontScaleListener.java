@@ -33,7 +33,7 @@ class GeckoFontScaleListener
     private static final GeckoFontScaleListener sInstance = new GeckoFontScaleListener();
 
     private Context mApplicationContext;
-    private boolean mInitialized;
+    private boolean mAttached;
     private boolean mRunning;
 
     public static GeckoFontScaleListener getInstance() {
@@ -44,9 +44,9 @@ class GeckoFontScaleListener
         super(null);
     }
 
-    public synchronized void initialize(final Context context) {
-        if (mInitialized) {
-            Log.w(LOGTAG, "Already initialized!");
+    public synchronized void attachToContext(final Context context) {
+        if (mAttached) {
+            Log.w(LOGTAG, "Already attached!");
             return;
         }
 
@@ -54,19 +54,19 @@ class GeckoFontScaleListener
         SharedPreferences prefs = GeckoSharedPrefs.forApp(mApplicationContext);
         prefs.registerOnSharedPreferenceChangeListener(this);
         onPrefChange(prefs);
-        mInitialized = true;
+        mAttached = true;
     }
 
-    public synchronized void shutdown() {
-        if (!mInitialized) {
-            Log.w(LOGTAG, "Already shut down!");
+    public synchronized void detachFromContext() {
+        if (!mAttached) {
+            Log.w(LOGTAG, "Already detached!");
             return;
         }
 
         GeckoSharedPrefs.forApp(mApplicationContext).unregisterOnSharedPreferenceChangeListener(this);
         stop();
         mApplicationContext = null;
-        mInitialized = false;
+        mAttached = false;
     }
 
     private synchronized void start() {
