@@ -189,23 +189,34 @@ class Targets {
     this._targets = new Map();
   }
 
-  /** @param {XULElement|Target} subject */
-  connect(subject) {
-    let target = subject;
-    if (!(subject instanceof Target)) {
-      target = new Target(subject);
+  /** @param BrowserElement browser */
+  async connect(browser) {
+    // The tab may just have been created and not fully initialized yet.
+    // Target class expects BrowserElement.browsingContext to be defined
+    // whereas it is asynchronously set by the custom element class.
+    // At least ensure that this property is set before instantiating the target.
+    if (!browser.browsingContext) {
+      await new Promise(resolve => {
+        const onInit = () => {
+          browser.messageManager.removeMessageListener("Browser:Init", onInit);
+          resolve();
+        };
+        browser.messageManager.addMessageListener("Browser:Init", onInit);
+      });
     }
+    const target = new Target(browser);
 
     target.connect();
     this._targets.set(target.id, target);
   }
 
-  /** @param {XULElement|Target} subject */
-  disconnect(subject) {
-    let target = subject;
-    if (!(subject instanceof Target)) {
-      target = this._targets.get(subject.browsingContext.id);
+  /** @param BrowserElement browser */
+  disconnect(browser) {
+    // Ignore the browsers that haven't had time to initialize.
+    if (!browser.browsingContext) {
+      return;
     }
+    let target = this._targets.get(browser.browsingContext.id);
 
     if (target) {
       target.disconnect();
@@ -215,7 +226,7 @@ class Targets {
 
   clear() {
     for (const target of this) {
-      this.disconnect(target);
+      this.disconnect(target.browser);
     }
   }
 
