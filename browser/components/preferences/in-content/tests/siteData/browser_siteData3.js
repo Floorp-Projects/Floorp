@@ -1,8 +1,8 @@
 "use strict";
 
 // Test not displaying sites which store 0 byte and don't have persistent storage.
-add_task(async function test_exclusions() {
-  let hosts = await addTestData([
+add_task(async function() {
+  mockSiteDataManager.register(SiteDataManager, [
     {
       usage: 0,
       origin: "https://account.xyz.com",
@@ -30,22 +30,23 @@ add_task(async function test_exclusions() {
       persisted: false,
     },
   ]);
+  let fakeHosts = mockSiteDataManager.fakeSites.map(site => site.principal.URI.host);
 
   let updatePromise = promiseSiteDataManagerSitesUpdated();
   let doc = gBrowser.selectedBrowser.contentDocument;
   await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
   await updatePromise;
   await openSiteDataSettingsDialog();
-  assertSitesListed(doc, hosts.filter(host => host != "shopping.xyz.com"));
+  assertSitesListed(doc, fakeHosts.filter(host => host != "shopping.xyz.com"));
 
-  await SiteDataTestUtils.clear();
+  await mockSiteDataManager.unregister();
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 // Test grouping and listing sites across scheme, port and origin attributes by host
-add_task(async function test_grouping() {
-  let quotaUsage = 7000000;
-  await addTestData([
+add_task(async function() {
+  const quotaUsage = 1024;
+  mockSiteDataManager.register(SiteDataManager, [
     {
       usage: quotaUsage,
       origin: "https://account.xyz.com^userContextId=1",
@@ -90,51 +91,40 @@ add_task(async function test_grouping() {
 
   is(columns[1].value, "5", "Should group cookies across scheme, port and origin attributes");
 
-  let [value, unit] = DownloadUtils.convertByteUnits(quotaUsage * 4);
-  let l10nAttributes = frameDoc.l10n.getAttributes(columns[2]);
-  is(l10nAttributes.id, "site-usage-persistent",
-    "Should show the site as persistent if one origin is persistent.");
-  // The shown quota can be slightly larger than the raw data we put in (though it should
-  // never be smaller), but that doesn't really matter to us since we only want to test that
-  // the site data dialog accumulates this into a single column.
-  ok(parseFloat(l10nAttributes.args.value) >= parseFloat(value),
-    "Should show the correct accumulated quota size.");
-  is(l10nAttributes.args.unit, unit, "Should show the correct quota size unit.");
+  let [value, unit] = DownloadUtils.convertByteUnits(quotaUsage * mockSiteDataManager.fakeSites.length);
+  Assert.deepEqual(frameDoc.l10n.getAttributes(columns[2]), {
+    id: "site-usage-persistent",
+    args: { value, unit },
+  }, "Should sum up usages across scheme, port, origin attributes and persistent status");
 
-  await SiteDataTestUtils.clear();
+  await mockSiteDataManager.unregister();
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 // Test sorting
-add_task(async function test_sorting() {
-  let testData = [
+add_task(async function() {
+  mockSiteDataManager.register(SiteDataManager, [
     {
-      baseDomain: "xyz.com",
       usage: 1024,
       origin: "https://account.xyz.com",
       cookies: 6,
       persisted: true,
     },
     {
-      baseDomain: "foo.com",
       usage: 1024 * 2,
       origin: "https://books.foo.com",
       cookies: 0,
       persisted: false,
     },
     {
-      baseDomain: "bar.com",
       usage: 1024 * 3,
       origin: "http://cinema.bar.com",
       cookies: 3,
       persisted: true,
     },
-  ];
-
-  await addTestData(testData);
+  ]);
 
   let updatePromise = promiseSiteDataManagerSitesUpdated();
-
   await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
   await updatePromise;
   await openSiteDataSettingsDialog();
@@ -145,42 +135,146 @@ add_task(async function test_sorting() {
   let hostCol = frameDoc.getElementById("hostCol");
   let usageCol = frameDoc.getElementById("usageCol");
   let cookiesCol = frameDoc.getElementById("cookiesCol");
-  let lastAccessedCol = frameDoc.getElementById("lastAccessedCol");
   let sitesList = frameDoc.getElementById("sitesList");
 
-  function getHostOrder() {
-    let siteItems = sitesList.getElementsByTagName("richlistitem");
-    return Array.from(siteItems).map(item => item.getAttribute("host"));
-  }
-
-  // Test default sorting by usage, descending.
-  Assert.deepEqual(getHostOrder(),
-    ["cinema.bar.com", "books.foo.com", "account.xyz.com"], "Has sorted descending by usage");
+  // Test default sorting
+  assertSortByUsage("descending");
 
   // Test sorting on the usage column
   usageCol.click();
-  Assert.deepEqual(getHostOrder(),
-    ["account.xyz.com", "books.foo.com", "cinema.bar.com"], "Has sorted ascending by usage");
+  assertSortByUsage("ascending");
   usageCol.click();
-  Assert.deepEqual(getHostOrder(),
-    ["cinema.bar.com", "books.foo.com", "account.xyz.com"], "Has sorted descending by usage");
+  assertSortByUsage("descending");
 
   // Test sorting on the host column
   hostCol.click();
-  Assert.deepEqual(getHostOrder(),
-    ["cinema.bar.com", "books.foo.com", "account.xyz.com"], "Has sorted ascending by base domain");
+  assertSortByBaseDomain("ascending");
   hostCol.click();
-  Assert.deepEqual(getHostOrder(),
-    ["account.xyz.com", "books.foo.com", "cinema.bar.com"], "Has sorted descending by base domain");
+  assertSortByBaseDomain("descending");
 
   // Test sorting on the cookies column
   cookiesCol.click();
-  Assert.deepEqual(getHostOrder(),
-    ["books.foo.com", "cinema.bar.com", "account.xyz.com"], "Has sorted ascending by cookies");
+  assertSortByCookies("ascending");
   cookiesCol.click();
-  Assert.deepEqual(getHostOrder(),
-    ["account.xyz.com", "cinema.bar.com", "books.foo.com"], "Has sorted descending by cookies");
+  assertSortByCookies("descending");
 
-  await SiteDataTestUtils.clear();
+  await mockSiteDataManager.unregister();
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
+
+  function assertSortByBaseDomain(order) {
+    let siteItems = sitesList.getElementsByTagName("richlistitem");
+    for (let i = 0; i < siteItems.length - 1; ++i) {
+      let aHost = siteItems[i].getAttribute("host");
+      let bHost = siteItems[i + 1].getAttribute("host");
+      let a = findSiteByHost(aHost);
+      let b = findSiteByHost(bHost);
+      let result = a.baseDomain.localeCompare(b.baseDomain);
+      if (order == "ascending") {
+        Assert.lessOrEqual(result, 0, "Should sort sites in the ascending order by host");
+      } else {
+        Assert.greaterOrEqual(result, 0, "Should sort sites in the descending order by host");
+      }
+    }
+  }
+
+  function assertSortByUsage(order) {
+    let siteItems = sitesList.getElementsByTagName("richlistitem");
+    for (let i = 0; i < siteItems.length - 1; ++i) {
+      let aHost = siteItems[i].getAttribute("host");
+      let bHost = siteItems[i + 1].getAttribute("host");
+      let a = findSiteByHost(aHost);
+      let b = findSiteByHost(bHost);
+      let result = a.usage - b.usage;
+      if (order == "ascending") {
+        Assert.lessOrEqual(result, 0, "Should sort sites in the ascending order by usage");
+      } else {
+        Assert.greaterOrEqual(result, 0, "Should sort sites in the descending order by usage");
+      }
+    }
+  }
+
+  function assertSortByCookies(order) {
+    let siteItems = sitesList.getElementsByTagName("richlistitem");
+    for (let i = 0; i < siteItems.length - 1; ++i) {
+      let aHost = siteItems[i].getAttribute("host");
+      let bHost = siteItems[i + 1].getAttribute("host");
+      let a = findSiteByHost(aHost);
+      let b = findSiteByHost(bHost);
+      let result = a.cookies.length - b.cookies.length;
+      if (order == "ascending") {
+        Assert.lessOrEqual(result, 0, "Should sort sites in the ascending order by number of cookies");
+      } else {
+        Assert.greaterOrEqual(result, 0, "Should sort sites in the descending order by number of cookies");
+      }
+    }
+  }
+
+  function findSiteByHost(host) {
+    return mockSiteDataManager.fakeSites.find(site => site.principal.URI.host == host);
+  }
+});
+
+// Test sorting based on access date (separate from cookies for simplicity,
+// since cookies access date affects this as well, but we don't mock our cookies)
+add_task(async function() {
+  mockSiteDataManager.register(SiteDataManager, [
+    {
+      usage: 1024,
+      origin: "https://account.xyz.com",
+      persisted: true,
+      lastAccessed: (Date.now() - 120 * 1000) * 1000,
+    },
+    {
+      usage: 1024 * 2,
+      origin: "https://books.foo.com",
+      persisted: false,
+      lastAccessed: (Date.now() - 240 * 1000) * 1000,
+    },
+    {
+      usage: 1024 * 3,
+      origin: "http://cinema.bar.com",
+      persisted: true,
+      lastAccessed: Date.now() * 1000,
+    },
+  ]);
+
+  let updatePromise = promiseSiteDataManagerSitesUpdated();
+  await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
+  await updatePromise;
+  await openSiteDataSettingsDialog();
+
+  let dialog = content.gSubDialog._topDialog;
+  let dialogFrame = dialog._frame;
+  let frameDoc = dialogFrame.contentDocument;
+  let lastAccessedCol = frameDoc.getElementById("lastAccessedCol");
+  let sitesList = frameDoc.getElementById("sitesList");
+
+  // Test sorting on the date column
+  lastAccessedCol.click();
+  assertSortByDate("ascending");
+  lastAccessedCol.click();
+  assertSortByDate("descending");
+
+  await mockSiteDataManager.unregister();
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+
+  function assertSortByDate(order) {
+    let siteItems = sitesList.getElementsByTagName("richlistitem");
+    for (let i = 0; i < siteItems.length - 1; ++i) {
+      let aHost = siteItems[i].getAttribute("host");
+      let bHost = siteItems[i + 1].getAttribute("host");
+      let a = findSiteByHost(aHost);
+      let b = findSiteByHost(bHost);
+      let result = a.lastAccessed - b.lastAccessed;
+      if (order == "ascending") {
+        Assert.lessOrEqual(result, 0, "Should sort sites in the ascending order by date");
+      } else {
+        Assert.greaterOrEqual(result, 0, "Should sort sites in the descending order date");
+      }
+    }
+  }
+
+  function findSiteByHost(host) {
+    return mockSiteDataManager.fakeSites.find(site => site.principal.URI.host == host);
+  }
 });
