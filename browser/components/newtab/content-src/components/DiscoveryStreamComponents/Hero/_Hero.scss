@@ -1,4 +1,4 @@
-$card-header-in-hero-font-size: 13;
+$card-header-in-hero-font-size: 14;
 $card-header-in-hero-line-height: 20;
 
 .ds-hero {
@@ -12,6 +12,12 @@ $card-header-in-hero-line-height: 20;
 
   p {
     line-height: 1.538;
+    margin: 8px 0;
+  }
+
+  .excerpt {
+    @include limit-visibile-lines(4, 23, 15);
+    margin: 4px 0 8px;
   }
 
   .ds-list {
@@ -21,6 +27,10 @@ $card-header-in-hero-line-height: 20;
 
   .ds-card {
     border: 0;
+
+    p {
+      margin-top: 4px;
+    }
 
     &:hover {
       border: 0;
@@ -50,15 +60,15 @@ $card-header-in-hero-line-height: 20;
   .wrapper {
     color: $grey-50;
     display: block;
-    margin: 16px 0 24px;
-    padding: 24px 0;
+    margin: 12px 0 16px;
+    padding: 16px 0;
     border-top: $border-secondary;
     border-bottom: $border-secondary;
 
     @at-root .ds-hero-no-border .wrapper {
       border-top: 0;
       border-bottom: 0;
-      padding: 0;
+      padding: 0 0 8px;
     }
 
     &:hover .meta header {
@@ -80,12 +90,12 @@ $card-header-in-hero-line-height: 20;
 
     .meta {
       header {
-        font-size: 22px;
+        @include limit-visibile-lines(2, 28, 22);
         color: $grey-90;
       }
 
       p {
-        font-size: 13px;
+        font-size: 14px;
 
         &.context {
           color: $teal-70;
@@ -93,7 +103,10 @@ $card-header-in-hero-line-height: 20;
       }
 
       .source {
+        font-size: 13px;
         margin-bottom: 0;
+        overflow-x: hidden;
+        text-overflow: ellipsis;
       }
     }
   }
@@ -157,11 +170,11 @@ $card-header-in-hero-line-height: 20;
         padding: 0 24px 0 0;
 
         header {
-          font-size: 22px;
+          @include limit-visibile-lines(6, 28, 22);
+          margin: 0 0 4px;
         }
 
         p {
-          font-size: 15px;
           line-height: 1.6;
         }
       }
