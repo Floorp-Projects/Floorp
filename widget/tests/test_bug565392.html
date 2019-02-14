@@ -17,13 +17,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=565392
 <pre id="test">
 <script type="application/javascript">
 
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
 /** Test for Bug 565392 **/
 
-  var ds = Cc["@mozilla.org/file/directory_service;1"]
-             .getService(Ci.nsIProperties);
-  var dir1 = ds.get("ProfD", Ci.nsIFile);
-  var clipboard = Cc["@mozilla.org/widget/clipboard;1"]
-                    .getService(Ci.nsIClipboard);
+var dir1 = Services.dirsvc.get("ProfD", Ci.nsIFile);
+var clipboard = Services.clipboard;
 
   function getLoadContext() {
     return window.docShell.QueryInterface(Ci.nsILoadContext);

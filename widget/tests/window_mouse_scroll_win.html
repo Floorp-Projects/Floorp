@@ -20,6 +20,8 @@ window.opener.wrappedJSObject.SimpleTest.waitForFocus(prepareTests, window);
 
 const nsIDOMWindowUtils = Ci.nsIDOMWindowUtils;
 
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
 const WHEEL_PAGESCROLL = 4294967295;
 
 const WM_VSCROLL     = 0x0115;
@@ -1103,8 +1105,7 @@ var gDeactiveWindowTests = [
       SpecialPowers.setIntPref(kHAmountPref, 3);
     },
     onLineScrollEvent(aEvent) {
-      var fm = Cc["@mozilla.org/focus-manager;1"].
-            getService(Ci.nsIFocusManager);
+      var fm = Services.focus;
       is(fm.activeWindow, gOtherWindow, "The other window isn't activated");
     },
   },
