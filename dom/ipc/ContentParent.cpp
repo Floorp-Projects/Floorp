@@ -39,7 +39,6 @@
 #include "mozilla/devtools/HeapSnapshotTempFileHelperParent.h"
 #include "mozilla/docshell/OfflineCacheUpdateParent.h"
 #include "mozilla/dom/BrowsingContext.h"
-#include "mozilla/dom/BrowsingContextGroup.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/ClientManager.h"
 #include "mozilla/dom/ClientOpenWindowOpActors.h"
@@ -1744,12 +1743,7 @@ void ContentParent::ActorDestroy(ActorDestroyReason why) {
   a11y::AccessibleWrap::ReleaseContentProcessIdFor(ChildID());
 #endif
 
-  for (auto iter = mGroups.Iter(); !iter.Done(); iter.Next()) {
-    nsRefPtrHashKey<mozilla::dom::BrowsingContextGroup>* entry = iter.Get();
-    entry->GetKey()->Unsubscribe(this);
-  }
-
-  MOZ_DIAGNOSTIC_ASSERT(mGroups.IsEmpty());
+  CanonicalBrowsingContext::CleanupContexts(ChildID());
 }
 
 bool ContentParent::TryToRecycle() {
@@ -5824,16 +5818,6 @@ mozilla::ipc::IPCResult ContentParent::RecvWindowPostMessage(
   }
   Unused << cp->SendWindowPostMessage(aContext, message, aData);
   return IPC_OK();
-}
-
-void ContentParent::OnBrowsingContextGroupSubscribe(BrowsingContextGroup* aGroup) {
-  MOZ_DIAGNOSTIC_ASSERT(aGroup);
-  mGroups.PutEntry(aGroup);
-}
-
-void ContentParent::OnBrowsingContextGroupUnsubscribe(BrowsingContextGroup* aGroup) {
-  MOZ_DIAGNOSTIC_ASSERT(aGroup);
-  mGroups.RemoveEntry(aGroup);
 }
 
 }  // namespace dom

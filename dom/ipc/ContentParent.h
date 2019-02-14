@@ -96,7 +96,6 @@ struct TextureFactoryIdentifier;
 
 namespace dom {
 
-class BrowsingContextGroup;
 class Element;
 class TabParent;
 class ClonedMessageData;
@@ -123,7 +122,6 @@ class ContentParent final : public PContentParent,
   typedef mozilla::ipc::URIParams URIParams;
   typedef mozilla::ipc::PrincipalInfo PrincipalInfo;
   typedef mozilla::dom::ClonedMessageData ClonedMessageData;
-  typedef mozilla::dom::BrowsingContextGroup BrowsingContextGroup;
 
   friend class mozilla::PreallocatedProcessManagerImpl;
   friend class PContentParent;
@@ -1193,9 +1191,6 @@ class ContentParent final : public PContentParent,
     return mRecordReplayState != eNotRecordingOrReplaying;
   }
 
-  void OnBrowsingContextGroupSubscribe(BrowsingContextGroup* aGroup);
-  void OnBrowsingContextGroupUnsubscribe(BrowsingContextGroup* aGroup);
-
  private:
   // Released in ActorDestroy; deliberately not exposed to the CC.
   RefPtr<ContentParent> mSelfRef;
@@ -1331,8 +1326,6 @@ class ContentParent final : public PContentParent,
   // for the SetProcessSandbox IPDL message.
   static bool sEarlySandboxInit;
 #endif
-
-  nsTHashtable<nsRefPtrHashKey<BrowsingContextGroup>> mGroups;
 };
 
 }  // namespace dom
