@@ -16,6 +16,8 @@
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
 
+#include <objidl.h>
+
 /**
  * The glue code in mozilla::mscom often needs to pass around interface pointers
  * belonging to a different apartment from the current one. We must not touch

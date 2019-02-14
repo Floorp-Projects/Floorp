@@ -7,17 +7,20 @@
 EXPORTS.mozilla.mscom += [
     'Aggregation.h',
     'AgileReference.h',
+    'ApartmentRegion.h',
     'AsyncInvoker.h',
-    'COMApartmentRegion.h',
     'COMPtrHolder.h',
     'EnsureMTA.h',
-    'MainThreadClientInfo.h',
-    'MainThreadRuntime.h',
     'Objref.h',
     'PassthruProxy.h',
+    'ProcessRuntime.h',
     'ProxyStream.h',
     'Ptr.h',
     'Utils.h',
+]
+
+DIRS += [
+    'mozglue',
 ]
 
 SOURCES += [
@@ -27,10 +30,9 @@ SOURCES += [
 UNIFIED_SOURCES += [
     'AgileReference.cpp',
     'EnsureMTA.cpp',
-    'MainThreadClientInfo.cpp',
-    'MainThreadRuntime.cpp',
     'Objref.cpp',
     'PassthruProxy.cpp',
+    'ProcessRuntime.cpp',
     'ProxyStream.cpp',
     'RegistrationAnnotator.cpp',
     'Utils.cpp',

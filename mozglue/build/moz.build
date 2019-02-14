@@ -36,6 +36,9 @@ if CONFIG['OS_TARGET'] == 'WINNT':
         'user32.dll',
     ]
     RCINCLUDE = 'mozglue.rc'
+    USE_LIBS += [
+        'mscom-mozglue',
+    ]
 
     if CONFIG['MOZ_PGO'] and CONFIG['CC_TYPE'] == 'clang-cl':
         SOURCES += ['cygprofile.cpp']
