@@ -27,7 +27,6 @@ import mozilla.components.service.fxa.FxaException
 import mozilla.components.service.sync.StorageSync
 import mozilla.components.service.sync.logins.AsyncLoginsStorageAdapter
 import mozilla.components.service.sync.logins.SyncableLoginsStore
-import mozilla.components.service.sync.logins.SyncUnlockInfo
 import mozilla.components.support.base.log.Log
 import mozilla.components.support.base.log.sink.AndroidLogSink
 import java.io.File
@@ -50,14 +49,7 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
         StorageSync(
             syncableStores = mapOf(Pair(loginsStoreName, loginsStore)),
             syncScope = "https://identity.mozilla.com/apps/oldsync"
-        ) { authInfo ->
-            SyncUnlockInfo(
-                fxaAccessToken = authInfo.fxaAccessToken,
-                kid = authInfo.kid,
-                syncKey = authInfo.syncKey,
-                tokenserverURL = authInfo.tokenServerUrl
-            )
-        }
+        )
     }
 
     private lateinit var listView: ListView

@@ -20,10 +20,10 @@ import mozilla.components.concept.sync.SyncOk
 import mozilla.components.concept.sync.SyncStatus
 import mozilla.components.concept.sync.SyncableStore
 import mozilla.components.concept.storage.VisitType
+import mozilla.components.concept.sync.AuthInfo
 import mozilla.components.support.utils.segmentAwareDomainMatch
 import org.mozilla.places.PlacesConnection
 import org.mozilla.places.PlacesException
-import org.mozilla.places.SyncAuthInfo
 import org.mozilla.places.VisitObservation
 
 const val AUTOCOMPLETE_SOURCE_NAME = "placesHistory"
@@ -33,7 +33,7 @@ typealias SyncAuthInfo = org.mozilla.places.SyncAuthInfo
 /**
  * Implementation of the [HistoryStorage] which is backed by a Rust Places lib via [PlacesConnection].
  */
-open class PlacesHistoryStorage(context: Context) : HistoryStorage, SyncableStore<SyncAuthInfo> {
+open class PlacesHistoryStorage(context: Context) : HistoryStorage, SyncableStore {
     private val scope by lazy { CoroutineScope(Dispatchers.IO) }
     private val storageDir by lazy { context.filesDir }
 
@@ -45,7 +45,7 @@ open class PlacesHistoryStorage(context: Context) : HistoryStorage, SyncableStor
 
     override suspend fun recordVisit(uri: String, visitType: VisitType) {
         scope.launch {
-            places.api().noteObservation(VisitObservation(uri, visitType = visitType.toPlacesType()))
+            places.api().noteObservation(VisitObservation(uri, visitType = visitType.into()))
         }.join()
     }
 
@@ -103,27 +103,14 @@ open class PlacesHistoryStorage(context: Context) : HistoryStorage, SyncableStor
         }
     }
 
-    override suspend fun sync(authInfo: SyncAuthInfo): SyncStatus {
+    override suspend fun sync(authInfo: AuthInfo): SyncStatus {
         return RustPlacesConnection.newConnection(storageDir).use {
             try {
-                it.sync(authInfo)
+                it.sync(authInfo.into())
                 SyncOk
             } catch (e: PlacesException) {
                 SyncError(e)
             }
-        }
-    }
-
-    /**
-     * We have an internal visit type definition defined at the concept level, and an external type
-     * defined within Places. In practice these two types are the same, with the Places one being a
-     * little richer.
-     */
-    private fun VisitType.toPlacesType(): org.mozilla.places.VisitType {
-        return when (this) {
-            VisitType.LINK -> org.mozilla.places.VisitType.LINK
-            VisitType.RELOAD -> org.mozilla.places.VisitType.RELOAD
-            VisitType.TYPED -> org.mozilla.places.VisitType.TYPED
         }
     }
 }

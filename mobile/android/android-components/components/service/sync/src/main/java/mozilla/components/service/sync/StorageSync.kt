@@ -21,21 +21,11 @@ import mozilla.components.support.base.observer.ObserverRegistry
 
 /**
  * A feature implementation which orchestrates data synchronization of a set of [SyncableStore] which
- * all share a common [AuthType].
- *
- * [AuthType] provides us with a layer of indirection that allows consumers of [StorageSync]
- * to use entirely different types of [SyncableStore], without this feature needing to depend on
- * their specific implementations. Those implementations might have heavy native dependencies
- * (e.g. places and logins depend on native libraries), and we do not want to force a consumer which
- * only cares about syncing logins to have to import a places native library.
- *
- * @param reifyAuth A conversion method which reifies a generic [AuthInfo] into an object of
- * type [AuthType].
+ * all share a common, generic [AuthInfo].
  */
-class StorageSync<AuthType>(
-        private val syncableStores: Map<String, SyncableStore<AuthType>>,
-        private val syncScope: String,
-        private val reifyAuth: suspend (authInfo: AuthInfo) -> AuthType
+class StorageSync(
+    private val syncableStores: Map<String, SyncableStore>,
+    private val syncScope: String
 ) : Observable<SyncStatusObserver> by ObserverRegistry() {
     private val logger = Logger("StorageSync")
 
@@ -60,8 +50,8 @@ class StorageSync<AuthType>(
 
         val results = mutableMapOf<String, StoreSyncStatus>()
 
-        val reifiedAuthInfo = try {
-            reifyAuth(account.authInfo(syncScope))
+        val authInfo = try {
+            account.authInfo(syncScope)
         } catch (e: AuthException) {
             syncableStores.keys.forEach { storeName ->
                 results[storeName] = StoreSyncStatus(SyncError(e))
@@ -70,18 +60,18 @@ class StorageSync<AuthType>(
         }
 
         syncableStores.keys.forEach { storeName ->
-            results[storeName] = syncStore(syncableStores.getValue(storeName), storeName, reifiedAuthInfo)
+            results[storeName] = syncStore(syncableStores.getValue(storeName), storeName, authInfo)
         }
 
         return@withListeners results
     } }
 
     private suspend fun syncStore(
-            store: SyncableStore<AuthType>,
-            storeName: String,
-            account: AuthType
+        store: SyncableStore,
+        storeName: String,
+        auth: AuthInfo
     ): StoreSyncStatus {
-        return StoreSyncStatus(store.sync(account).also {
+        return StoreSyncStatus(store.sync(auth).also {
             if (it is SyncError) {
                 logger.error("Error synchronizing a $storeName store", it.exception)
             } else {

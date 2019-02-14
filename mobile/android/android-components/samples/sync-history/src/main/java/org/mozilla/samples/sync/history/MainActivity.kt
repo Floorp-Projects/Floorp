@@ -15,7 +15,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
-import mozilla.components.browser.storage.sync.SyncAuthInfo
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
@@ -46,14 +45,7 @@ class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener,
         StorageSync(
             syncableStores = mapOf(historyStoreName to historyStorage),
             syncScope = "https://identity.mozilla.com/apps/oldsync"
-        ) { authInfo ->
-            SyncAuthInfo(
-                fxaAccessToken = authInfo.fxaAccessToken,
-                kid = authInfo.kid,
-                syncKey = authInfo.syncKey,
-                tokenserverURL = authInfo.tokenServerUrl
-            )
-        }
+        )
     }
 
     private var job = Job()

@@ -32,7 +32,7 @@ class StorageSyncTest {
 
     @Test
     fun `sync with no stores`() = runBlocking {
-        val feature = StorageSync(mapOf(), "sync-scope") { it }
+        val feature = StorageSync(mapOf(), "sync-scope")
         val results = feature.sync(mock())
         assertTrue(results.isEmpty())
     }
@@ -49,8 +49,8 @@ class StorageSyncTest {
         `when`(mockAccount.getAccessToken(any())).thenReturn(CompletableDeferred((mockAccessTokenInfo)))
 
         // Single store, different result types.
-        val testStore: SyncableStore<AuthInfo> = mock()
-        val feature = StorageSync(mapOf("testStore" to testStore), "sync-scope") { it }
+        val testStore: SyncableStore = mock()
+        val feature = StorageSync(mapOf("testStore" to testStore), "sync-scope")
 
         `when`(testStore.sync(any())).thenReturn(SyncOk)
         var results = feature.sync(mockAccount)
@@ -65,12 +65,12 @@ class StorageSyncTest {
         assertEquals(1, results.size)
 
         // Multiple stores, different result types.
-        val anotherStore: SyncableStore<AuthInfo> = mock()
+        val anotherStore: SyncableStore = mock()
         val anotherFeature = StorageSync(mapOf(
                 Pair("testStore", testStore),
                 Pair("goodStore", anotherStore)),
                 "sync-scope"
-        ) { it }
+        )
 
         `when`(anotherStore.sync(any())).thenReturn(SyncOk)
 
@@ -105,7 +105,7 @@ class StorageSyncTest {
         }
 
         // A store that runs verifications during a sync.
-        val testStore = object : SyncableStore<AuthInfo> {
+        val testStore = object : SyncableStore {
             override suspend fun sync(authInfo: AuthInfo): SyncStatus {
                 verifier.verify()
                 return SyncOk
@@ -113,7 +113,7 @@ class StorageSyncTest {
         }
         val syncStatusObserver: SyncStatusObserver = mock()
 
-        val feature = StorageSync(mapOf("testStore" to testStore), "sync-scope") { it }
+        val feature = StorageSync(mapOf("testStore" to testStore), "sync-scope")
 
         // These assertions will run while sync is in progress.
         verifier.addVerifyBlock {

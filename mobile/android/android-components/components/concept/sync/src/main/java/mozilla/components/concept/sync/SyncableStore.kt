@@ -9,7 +9,7 @@ import java.lang.Exception
 /**
  * Describes a "sync" entry point for store which operates over [AuthInfo].
  */
-interface SyncableStore<AuthInfo> {
+interface SyncableStore {
     /**
      * Performs a sync.
      * @param authInfo Auth information of type [AuthInfo] necessary for syncing this store.
