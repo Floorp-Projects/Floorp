@@ -168,7 +168,8 @@ public class TestRunnerActivity extends Activity {
             runtimeSettingsBuilder
                     .arguments(new String[] { "-purgecaches" })
                     .displayDpiOverride(160)
-                    .displayDensityOverride(1.0f);
+                    .displayDensityOverride(1.0f)
+                    .autoplayDefault(GeckoRuntimeSettings.AUTOPLAY_DEFAULT_ALLOWED);
 
             final Bundle extras = intent.getExtras();
             if (extras != null) {
