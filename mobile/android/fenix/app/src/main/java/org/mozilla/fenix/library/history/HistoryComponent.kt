@@ -57,6 +57,7 @@ class HistoryComponent(
                     state
                 }
             }
+            is HistoryChange.ExitEditMode -> state.copy(mode = HistoryState.Mode.Normal)
         }
     }
 
@@ -77,6 +78,7 @@ data class HistoryState(val items: List<HistoryItem>, val mode: Mode) : ViewStat
 sealed class HistoryAction : Action {
     data class Select(val item: HistoryItem) : HistoryAction()
     data class EnterEditMode(val item: HistoryItem) : HistoryAction()
+    object onBackPressed : HistoryAction()
     data class AddItemForRemoval(val item: HistoryItem) : HistoryAction()
     data class RemoveItemForRemoval(val item: HistoryItem) : HistoryAction()
 }
@@ -84,6 +86,7 @@ sealed class HistoryAction : Action {
 sealed class HistoryChange : Change {
     data class Change(val list: List<HistoryItem>) : HistoryChange()
     data class EnterEditMode(val item: HistoryItem) : HistoryChange()
+    object ExitEditMode : HistoryChange()
     data class AddItemForRemoval(val item: HistoryItem) : HistoryChange()
     data class RemoveItemForRemoval(val item: HistoryItem) : HistoryChange()
 }

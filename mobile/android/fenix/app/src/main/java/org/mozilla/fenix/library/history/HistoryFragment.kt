@@ -22,6 +22,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import org.mozilla.fenix.HomeActivity
+import mozilla.components.support.base.feature.BackHandler
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.mvi.ActionBusFactory
@@ -29,9 +30,11 @@ import org.mozilla.fenix.mvi.getManagedEmitter
 import org.mozilla.fenix.mvi.getSafeManagedObservable
 import kotlin.coroutines.CoroutineContext
 
-class HistoryFragment : Fragment(), CoroutineScope {
+class HistoryFragment : Fragment(), CoroutineScope, BackHandler {
 
     private lateinit var job: Job
+    private lateinit var historyComponent: HistoryComponent
+
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.Main + job
 
@@ -41,7 +44,7 @@ class HistoryFragment : Fragment(), CoroutineScope {
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_history, container, false)
-        HistoryComponent(view.history_layout, ActionBusFactory.get(this))
+        historyComponent = HistoryComponent(view.history_layout, ActionBusFactory.get(this))
 
         return view
     }
@@ -64,6 +67,8 @@ class HistoryFragment : Fragment(), CoroutineScope {
                         .onNext(HistoryChange.AddItemForRemoval(it.item))
                     is HistoryAction.RemoveItemForRemoval -> getManagedEmitter<HistoryChange>()
                         .onNext(HistoryChange.RemoveItemForRemoval(it.item))
+                    is HistoryAction.onBackPressed -> getManagedEmitter<HistoryChange>()
+                        .onNext(HistoryChange.ExitEditMode)
                 }
             }
     }
@@ -117,5 +122,10 @@ class HistoryFragment : Fragment(), CoroutineScope {
             }
             else -> super.onOptionsItemSelected(item)
         }
+    }
+
+    override fun onBackPressed(): Boolean {
+        if((historyComponent.uiView as HistoryUIView).onBackPressed()) { return true }
+        return false
     }
 }
