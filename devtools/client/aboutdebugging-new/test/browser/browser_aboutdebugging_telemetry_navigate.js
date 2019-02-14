@@ -2,6 +2,9 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
+
+/* import-globals-from helper-mocks.js */
+Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-mocks.js", this);
 /* import-globals-from helper-telemetry.js */
 Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-telemetry.js", this);
 

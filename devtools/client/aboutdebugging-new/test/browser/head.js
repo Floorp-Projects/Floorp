@@ -17,9 +17,6 @@ Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/shared/test/shared-redux-head.js",
   this);
 
-/* import-globals-from helper-mocks.js */
-Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-mocks.js", this);
-
 // Make sure the ADB addon is removed and ADB is stopped when the test ends.
 registerCleanupFunction(async function() {
   try {
@@ -44,16 +41,12 @@ async function enableNewAboutDebugging() {
   await pushPref("devtools.aboutdebugging.network", true);
 }
 
-async function openAboutDebugging({ enableWorkerUpdates } = {}) {
-  if (!enableWorkerUpdates) {
-    silenceWorkerUpdates();
-  }
-
+async function openAboutDebugging(page, win) {
   await enableNewAboutDebugging();
 
   info("opening about:debugging");
 
-  const tab = await addTab("about:debugging");
+  const tab = await addTab("about:debugging", { window: win });
   const browser = tab.linkedBrowser;
   const document = browser.contentDocument;
   const window = browser.contentWindow;
