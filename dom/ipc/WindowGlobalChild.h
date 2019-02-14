@@ -20,6 +20,7 @@ namespace dom {
 class BrowsingContext;
 class WindowGlobalParent;
 class JSWindowActorChild;
+class TabChild;
 
 /**
  * Actor for a single nsGlobalWindowInner. This actor is used to communicate

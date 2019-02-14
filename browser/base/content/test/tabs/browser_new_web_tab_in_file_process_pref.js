@@ -24,6 +24,7 @@ add_task(async function() {
   await SpecialPowers.pushPrefEnv(
     {set: [["browser.tabs.remote.separateFileUriProcess", true],
            ["browser.tabs.remote.allowLinkedWebInFileUriProcess", true],
+           ["browser.tabs.remote.useHTTPResponseProcessSelection", false],
            ["dom.ipc.processCount.file", 2]]});
 
   // Open file:// page.
