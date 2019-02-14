@@ -1,7 +1,6 @@
 import {actionCreators as ac} from "common/Actions.jsm";
 import {connect} from "react-redux";
 import React from "react";
-import {truncateText} from "content-src/lib/truncate-text";
 
 /**
  * @note exported for testing only
@@ -36,7 +35,7 @@ export class ListItem extends React.PureComponent {
         <a className="ds-list-item-link" href={this.props.url} onClick={this.onLinkClick}>
           <div className="ds-list-item-text">
             <div className="ds-list-item-title">{this.props.title}</div>
-            {this.props.excerpt && <div className="ds-list-item-excerpt">{truncateText(this.props.excerpt, 90)}</div>}
+            {this.props.excerpt && <div className="ds-list-item-excerpt">{this.props.excerpt}</div>}
             <div className="ds-list-item-info">{this.props.domain}</div>
           </div>
           <div className="ds-list-image" style={{backgroundImage: `url(${this.props.image_src})`}} />

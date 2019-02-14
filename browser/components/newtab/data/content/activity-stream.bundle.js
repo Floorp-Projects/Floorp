@@ -7274,12 +7274,7 @@ class DSMessage_DSMessage extends external_React_default.a.PureComponent {
 // EXTERNAL MODULE: ./common/Actions.jsm
 var Actions = __webpack_require__(2);
 
-// CONCATENATED MODULE: ./content-src/lib/truncate-text.js
-function truncateText(text = "", cap) {
-  return text.substring(0, cap).trim() + (text.length > cap ? "…" : "");
-}
 // CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/List/List.jsx
-
 
 
 
@@ -7329,7 +7324,7 @@ class List_ListItem extends external_React_default.a.PureComponent {
           this.props.excerpt && external_React_default.a.createElement(
             "div",
             { className: "ds-list-item-excerpt" },
-            truncateText(this.props.excerpt, 90)
+            this.props.excerpt
           ),
           external_React_default.a.createElement(
             "div",
@@ -7399,7 +7394,6 @@ const List = Object(external_ReactRedux_["connect"])(state => ({ DiscoveryStream
 
 
 
-
 class Hero_Hero extends external_React_default.a.PureComponent {
   constructor(props) {
     super(props);
@@ -7438,14 +7432,14 @@ class Hero_Hero extends external_React_default.a.PureComponent {
       campaignId: rec.campaign_id,
       key: `dscard-${index}`,
       image_src: rec.image_src,
-      title: truncateText(rec.title, 44),
+      title: rec.title,
       url: rec.url,
       id: rec.id,
       index: index + 1,
       type: this.props.type,
       dispatch: this.props.dispatch,
-      context: truncateText(rec.context, 22),
-      source: truncateText(rec.domain, 22) }));
+      context: rec.context,
+      source: rec.domain }));
 
     let list = external_React_default.a.createElement(List, {
       recStartingPoint: 1,
@@ -7480,21 +7474,21 @@ class Hero_Hero extends external_React_default.a.PureComponent {
             external_React_default.a.createElement(
               "header",
               null,
-              truncateText(heroRec.title, 28)
+              heroRec.title
             ),
             external_React_default.a.createElement(
               "p",
               null,
-              truncateText(heroRec.excerpt, 114)
+              heroRec.excerpt
             ),
             heroRec.context ? external_React_default.a.createElement(
               "p",
               { className: "context" },
-              truncateText(heroRec.context, 22)
+              heroRec.context
             ) : external_React_default.a.createElement(
               "p",
               { className: "source" },
-              truncateText(heroRec.domain, 22)
+              heroRec.domain
             )
           )
         ),
