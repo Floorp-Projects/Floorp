@@ -80,6 +80,8 @@ android.applicationVariants.all { variant ->
         // with ARM compatibility mode.
 
         if (variant.flavorName.contains("x86")) {
+            versionCode = versionCode + 2
+        } else if (variant.flavorName.contains("aarch64")) {
             versionCode = versionCode + 1
         }// else variant.flavorName.contains("Arm")) use generated version code
 
