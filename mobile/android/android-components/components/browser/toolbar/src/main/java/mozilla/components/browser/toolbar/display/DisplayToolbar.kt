@@ -86,6 +86,7 @@ internal class DisplayToolbar(
     }
 
     internal val urlView = AppCompatTextView(context).apply {
+        id = R.id.mozac_browser_toolbar_url_view
         gravity = Gravity.CENTER_VERTICAL
         textSize = URL_TEXT_SIZE
         setFadingEdgeLength(URL_FADING_EDGE_SIZE_DP)
