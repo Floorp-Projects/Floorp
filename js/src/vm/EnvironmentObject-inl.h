@@ -34,6 +34,14 @@ inline JSObject& GetVariablesObject(JSObject* envChain) {
   return *envChain;
 }
 
+inline const Value& EnvironmentObject::aliasedBinding(
+    EnvironmentCoordinate ec) {
+  MOZ_ASSERT(!IsExtensibleLexicalEnvironment(this));
+  MOZ_ASSERT(nonExtensibleIsFixedSlot(ec) ==
+             NativeObject::isFixedSlot(ec.slot()));
+  return getSlot(ec.slot());
+}
+
 inline void EnvironmentObject::setAliasedBinding(JSContext* cx, uint32_t slot,
                                                  const Value& v) {
   MOZ_ASSERT(!isSingleton());
@@ -43,6 +51,9 @@ inline void EnvironmentObject::setAliasedBinding(JSContext* cx, uint32_t slot,
 inline void EnvironmentObject::setAliasedBinding(JSContext* cx,
                                                  EnvironmentCoordinate ec,
                                                  const Value& v) {
+  MOZ_ASSERT(!IsExtensibleLexicalEnvironment(this));
+  MOZ_ASSERT(nonExtensibleIsFixedSlot(ec) ==
+             NativeObject::isFixedSlot(ec.slot()));
   setAliasedBinding(cx, ec.slot(), v);
 }
 

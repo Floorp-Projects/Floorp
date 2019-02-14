@@ -278,10 +278,18 @@ class EnvironmentObject : public NativeObject {
     initReservedSlot(ENCLOSING_ENV_SLOT, ObjectOrNullValue(enclosing));
   }
 
-  // Get or set a name contained in this environment.
-  const Value& aliasedBinding(EnvironmentCoordinate ec) {
-    return getSlot(ec.slot());
+  static bool nonExtensibleIsFixedSlot(EnvironmentCoordinate ec) {
+    // For non-extensible environment objects isFixedSlot(slot) is equivalent to
+    // slot < MAX_FIXED_SLOTS.
+    return ec.slot() < MAX_FIXED_SLOTS;
   }
+  static size_t nonExtensibleDynamicSlotIndex(EnvironmentCoordinate ec) {
+    MOZ_ASSERT(!nonExtensibleIsFixedSlot(ec));
+    return ec.slot() - MAX_FIXED_SLOTS;
+  }
+
+  // Get or set a name contained in this environment.
+  inline const Value& aliasedBinding(EnvironmentCoordinate ec);
 
   const Value& aliasedBinding(const BindingIter& bi) {
     MOZ_ASSERT(bi.location().kind() == BindingLocation::Kind::Environment);
