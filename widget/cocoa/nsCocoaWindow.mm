@@ -165,6 +165,7 @@ void nsCocoaWindow::DestroyNativeWindow() {
 
   if (!mWindow) return;
 
+  [mWindow releaseJSObjects];
   // We want to unhook the delegate here because we don't want events
   // sent to it after this object has been destroyed.
   [mWindow setDelegate:nil];
@@ -3119,6 +3120,10 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
   return retval;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+}
+
+- (void)releaseJSObjects {
+  [mTouchBar releaseJSObjects];
 }
 
 @end
