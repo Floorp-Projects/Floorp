@@ -42,7 +42,7 @@ class nsBrowserElement {
   already_AddRefed<dom::Promise> GetCanGoForward(ErrorResult& aRv);
 
  protected:
-  NS_IMETHOD_(already_AddRefed<nsFrameLoader>) GetFrameLoader() = 0;
+  virtual already_AddRefed<nsFrameLoader> GetFrameLoader() = 0;
 
   void InitBrowserElementAPI();
   void DestroyBrowserElementFrameScripts();

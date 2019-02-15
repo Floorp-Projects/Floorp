@@ -23,7 +23,7 @@
 #include "nsIRunnable.h"
 #include "nsIThreadInternal.h"
 #include "nsIFrame.h"
-#include "nsIFrameLoaderOwner.h"
+#include "nsFrameLoaderOwner.h"
 
 class nsAsyncInstantiateEvent;
 class nsStopPluginRunnable;
@@ -48,7 +48,7 @@ class XULFrameElement;
 
 class nsObjectLoadingContent : public nsImageLoadingContent,
                                public nsIStreamListener,
-                               public nsIFrameLoaderOwner,
+                               public nsFrameLoaderOwner,
                                public nsIObjectLoadingContent,
                                public nsIChannelEventSink {
   friend class AutoSetInstantiatingToFalse;
@@ -116,7 +116,6 @@ class nsObjectLoadingContent : public nsImageLoadingContent,
 
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
-  NS_DECL_NSIFRAMELOADEROWNER
   NS_DECL_NSIOBJECTLOADINGCONTENT
   NS_DECL_NSICHANNELEVENTSINK
 
@@ -609,9 +608,6 @@ class nsObjectLoadingContent : public nsImageLoadingContent,
 
   // The final listener for mChannel (uriloader, pluginstreamlistener, etc.)
   nsCOMPtr<nsIStreamListener> mFinalListener;
-
-  // Frame loader, for content documents we load.
-  RefPtr<nsFrameLoader> mFrameLoader;
 
   // Track if we have a pending AsyncInstantiateEvent
   nsCOMPtr<nsIRunnable> mPendingInstantiateEvent;

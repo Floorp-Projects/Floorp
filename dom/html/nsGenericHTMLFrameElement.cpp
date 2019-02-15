@@ -49,7 +49,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsGenericHTMLFrameElement,
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(
-    nsGenericHTMLFrameElement, nsGenericHTMLElement, nsIFrameLoaderOwner,
+    nsGenericHTMLFrameElement, nsGenericHTMLElement, nsFrameLoaderOwner,
     nsIDOMMozBrowserFrame, nsIMozBrowserFrame, nsGenericHTMLFrameElement)
 
 NS_IMETHODIMP
@@ -155,22 +155,11 @@ nsresult nsGenericHTMLFrameElement::CreateRemoteFrameLoader(
   return NS_OK;
 }
 
-NS_IMETHODIMP_(already_AddRefed<nsFrameLoader>)
-nsGenericHTMLFrameElement::GetFrameLoader() {
-  RefPtr<nsFrameLoader> loader = mFrameLoader;
-  return loader.forget();
-}
-
 void nsGenericHTMLFrameElement::PresetOpenerWindow(
     const Nullable<WindowProxyHolder>& aOpenerWindow, ErrorResult& aRv) {
   MOZ_ASSERT(!mFrameLoader);
   mOpenerWindow =
       aOpenerWindow.IsNull() ? nullptr : aOpenerWindow.Value().get();
-}
-
-void nsGenericHTMLFrameElement::InternalSetFrameLoader(
-    nsFrameLoader* aNewFrameLoader) {
-  mFrameLoader = aNewFrameLoader;
 }
 
 void nsGenericHTMLFrameElement::SwapFrameLoaders(
@@ -189,7 +178,7 @@ void nsGenericHTMLFrameElement::SwapFrameLoaders(
 }
 
 void nsGenericHTMLFrameElement::SwapFrameLoaders(
-    nsIFrameLoaderOwner* aOtherLoaderOwner, mozilla::ErrorResult& rv) {
+    nsFrameLoaderOwner* aOtherLoaderOwner, mozilla::ErrorResult& rv) {
   RefPtr<nsFrameLoader> loader = GetFrameLoader();
   RefPtr<nsFrameLoader> otherLoader = aOtherLoaderOwner->GetFrameLoader();
   if (!loader || !otherLoader) {

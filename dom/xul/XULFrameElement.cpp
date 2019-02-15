@@ -31,7 +31,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(XULFrameElement, nsXULElement)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(XULFrameElement, nsXULElement,
-                                             nsIFrameLoaderOwner)
+                                             nsFrameLoaderOwner)
 
 JSObject* XULFrameElement::WrapNode(JSContext* aCx,
                                     JS::Handle<JSObject*> aGivenProto) {
@@ -121,7 +121,7 @@ void XULFrameElement::SwapFrameLoaders(XULFrameElement& aOtherLoaderOwner,
   aOtherLoaderOwner.SwapFrameLoaders(this, rv);
 }
 
-void XULFrameElement::SwapFrameLoaders(nsIFrameLoaderOwner* aOtherLoaderOwner,
+void XULFrameElement::SwapFrameLoaders(nsFrameLoaderOwner* aOtherLoaderOwner,
                                        mozilla::ErrorResult& rv) {
   RefPtr<nsFrameLoader> loader = GetFrameLoader();
   RefPtr<nsFrameLoader> otherLoader = aOtherLoaderOwner->GetFrameLoader();

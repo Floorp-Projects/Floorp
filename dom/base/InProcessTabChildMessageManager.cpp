@@ -228,7 +228,7 @@ void InProcessTabChildMessageManager::GetEventTargetParent(
 
 #ifdef DEBUG
   if (mOwner) {
-    nsCOMPtr<nsIFrameLoaderOwner> owner = do_QueryInterface(mOwner);
+    RefPtr<nsFrameLoaderOwner> owner = do_QueryObject(mOwner);
     RefPtr<nsFrameLoader> fl = owner->GetFrameLoader();
     if (fl) {
       NS_ASSERTION(this == fl->GetTabChildMessageManager(),
@@ -293,7 +293,7 @@ void InProcessTabChildMessageManager::LoadFrameScript(const nsAString& aURL,
 
 already_AddRefed<nsFrameLoader>
 InProcessTabChildMessageManager::GetFrameLoader() {
-  nsCOMPtr<nsIFrameLoaderOwner> owner = do_QueryInterface(mOwner);
+  RefPtr<nsFrameLoaderOwner> owner = do_QueryObject(mOwner);
   RefPtr<nsFrameLoader> fl = owner ? owner->GetFrameLoader() : nullptr;
   if (!fl) {
     fl = mFrameLoader;

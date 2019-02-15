@@ -620,7 +620,7 @@ interface nsILoadInfo : nsISupports
 
   /**
    * Only when the element being loaded is <frame src="foo.html">
-   * (or, more generally, if the element QIs to nsIFrameLoaderOwner),
+   * (or, more generally, if the element QIs to nsFrameLoaderOwner),
    * the frameOuterWindowID is the outer window containing the
    * foo.html document.
    *

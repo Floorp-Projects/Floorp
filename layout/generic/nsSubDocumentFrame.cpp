@@ -41,6 +41,7 @@
 #include "nsContentUtils.h"
 #include "nsIPermissionManager.h"
 #include "nsServiceManagerUtils.h"
+#include "nsQueryObject.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/HTMLFrameElement.h"
 #include "RetainedDisplayListBuilder.h"
@@ -987,7 +988,7 @@ nsFrameLoader* nsSubDocumentFrame::FrameLoader() const {
   if (!content) return nullptr;
 
   if (!mFrameLoader) {
-    nsCOMPtr<nsIFrameLoaderOwner> loaderOwner = do_QueryInterface(content);
+    RefPtr<nsFrameLoaderOwner> loaderOwner = do_QueryObject(content);
     if (loaderOwner) {
       mFrameLoader = loaderOwner->GetFrameLoader();
     }

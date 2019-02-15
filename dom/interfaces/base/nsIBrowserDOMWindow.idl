@@ -8,8 +8,8 @@
 interface mozIDOMWindowProxy;
 interface nsIDOMWindow;
 interface nsIURI;
-interface nsIFrameLoaderOwner;
 interface nsIPrincipal;
+webidl Element;
 
 [scriptable, uuid(e774db14-79ac-4156-a7a3-aa3fd0a22c10)]
 interface nsIOpenURIInFrameParams : nsISupports
@@ -21,7 +21,7 @@ interface nsIOpenURIInFrameParams : nsISupports
 
   // The browser or frame element in the parent process which holds the
   // opener window in the content process. May be null.
-  readonly attribute nsIFrameLoaderOwner openerBrowser;
+  readonly attribute Element openerBrowser;
 
   [implicit_jscontext]
   readonly attribute jsval openerOriginAttributes;
@@ -113,14 +113,15 @@ interface nsIBrowserDOMWindow : nsISupports
                       in nsIPrincipal aTriggeringPrincipal);
 
   /**
-   * As above, but return the nsIFrameLoaderOwner for the new window.
+   * As above, but return the nsFrameLoaderOwner for the new window. Value is
+   * returned as Element, QI'd back to nsFrameLoaderOwner as needed.
    *
    * Additional Parameters:
    * @param aNextTabParentId The TabParent to associate the window with.
    * @param aName The name to give the window opened in the new tab.
-   * @return The nsIFrameLoaderOwner for the newly opened window.
+   * @return The frame element for the newly opened window.
    */
-  nsIFrameLoaderOwner
+  Element
   createContentWindowInFrame(in nsIURI aURI, in nsIOpenURIInFrameParams params,
                              in short aWhere, in long aFlags,
                              in unsigned long long aNextTabParentId,
@@ -144,16 +145,17 @@ interface nsIBrowserDOMWindow : nsISupports
           in short aWhere, in long aFlags, in nsIPrincipal aTriggeringPrincipal);
 
   /**
-   * As above, but return the nsIFrameLoaderOwner for the new window.
+   * As above, but return the nsFrameLoaderOwner for the new window. Value is
+   * returned as Element, QI'd back to nsFrameLoaderOwner as needed.
    *
    * Additional Parameters:
    * @param aNextTabParentId The TabParent to associate the window with.
    * @param aName The name to give the window opened in the new tab.
-   * @return The nsIFrameLoaderOwner for the newly opened window.
+   * @return The frame element for the newly opened window.
    // XXXbz is this the right API?
    // See bug 537428
    */
-  nsIFrameLoaderOwner
+  Element
   openURIInFrame(in nsIURI aURI, in nsIOpenURIInFrameParams params,
                  in short aWhere, in long aFlags,
                  in unsigned long long aNextTabParentId,
