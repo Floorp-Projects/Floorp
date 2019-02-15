@@ -14,6 +14,7 @@ add_task(async function() {
   prepareCollapsibilitiesTest();
 
   const { document, tab, window } = await openAboutDebugging();
+  await selectThisFirefoxPage(document, window.AboutDebugging.store);
   const { devtoolsBrowser, devtoolsTab, devtoolsWindow } =
     await openAboutDevtoolsToolbox(document, tab, window);
 

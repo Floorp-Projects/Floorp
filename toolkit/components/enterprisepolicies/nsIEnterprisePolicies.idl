@@ -23,4 +23,11 @@ interface nsIEnterprisePolicies : nsISupports
    *          their corresponding parameters.
    */
   jsval getActivePolicies();
+
+  /**
+   * Get the contents of the support menu (if applicable)
+   *
+   * @returns A JS object that contains the url and label or null.
+   */
+  jsval getSupportMenu();
 };

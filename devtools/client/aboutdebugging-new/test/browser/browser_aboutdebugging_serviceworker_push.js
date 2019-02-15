@@ -13,7 +13,9 @@ const TAB_URL = URL_ROOT + "resources/service-workers/push-sw.html";
 // It should trigger a "push" notification in the worker.
 add_task(async function() {
   await enableServiceWorkerDebugging();
-  const { document, tab } = await openAboutDebugging({ enableWorkerUpdates: true });
+  const { document, tab, window } =
+    await openAboutDebugging({ enableWorkerUpdates: true });
+  await selectThisFirefoxPage(document, window.AboutDebugging.store);
 
   // Open a tab that registers a push service worker.
   const swTab = await addTab(TAB_URL);

@@ -568,10 +568,11 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
   virtual bool IsRootScrollFrameOfDocument() const = 0;
 
   /**
-   * Returns the scroll anchor associated with this scrollable frame.
+   * Returns the scroll anchor associated with this scrollable frame. This is
+   * never null.
    */
-  virtual const ScrollAnchorContainer* GetAnchor() const = 0;
-  virtual ScrollAnchorContainer* GetAnchor() = 0;
+  virtual const ScrollAnchorContainer* Anchor() const = 0;
+  virtual ScrollAnchorContainer* Anchor() = 0;
 };
 
 #endif

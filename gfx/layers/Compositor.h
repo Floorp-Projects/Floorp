@@ -292,7 +292,8 @@ class Compositor : public TextureSourceProvider {
    * Returns the current target for rendering. Will return null if we are
    * rendering to the screen.
    */
-  virtual CompositingRenderTarget* GetCurrentRenderTarget() const = 0;
+  virtual already_AddRefed<CompositingRenderTarget> GetCurrentRenderTarget()
+      const = 0;
 
   /**
    * Returns a render target which contains the entire window's drawing.
@@ -300,7 +301,8 @@ class Compositor : public TextureSourceProvider {
    * with buffered BasicCompositor, where only the invalid area is drawn to a
    * render target), this will return null.
    */
-  virtual CompositingRenderTarget* GetWindowRenderTarget() const {
+  virtual already_AddRefed<CompositingRenderTarget> GetWindowRenderTarget()
+      const {
     return nullptr;
   }
 

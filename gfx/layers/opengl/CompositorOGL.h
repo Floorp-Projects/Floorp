@@ -155,8 +155,10 @@ class CompositorOGL final : public Compositor {
                                const gfx::IntPoint& aSourcePoint) override;
 
   virtual void SetRenderTarget(CompositingRenderTarget* aSurface) override;
-  virtual CompositingRenderTarget* GetCurrentRenderTarget() const override;
-  virtual CompositingRenderTarget* GetWindowRenderTarget() const override;
+  virtual already_AddRefed<CompositingRenderTarget> GetCurrentRenderTarget()
+      const override;
+  virtual already_AddRefed<CompositingRenderTarget> GetWindowRenderTarget()
+      const override;
 
   virtual bool ReadbackRenderTarget(CompositingRenderTarget* aSource,
                                     AsyncReadbackBuffer* aDest) override;

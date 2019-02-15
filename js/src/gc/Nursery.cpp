@@ -1170,16 +1170,16 @@ void js::Nursery::maybeResizeNursery(JS::GCReason reason) {
   // If one of these conditions is true then we always shrink or grow the
   // nursery.  This way the thresholds still have an effect even if the goal
   // seeking says the current size is ideal.
-  if (promotionRate > GrowThreshold) {
+  if (maxChunkCount() < chunkCountLimit() && promotionRate > GrowThreshold) {
     unsigned lowLimit = maxChunkCount() + 1;
     unsigned highLimit = Min(chunkCountLimit(), maxChunkCount() * 2);
 
-    growAllocableSpace(Min(Max(newChunkCount, lowLimit), highLimit));
+    growAllocableSpace(mozilla::Clamp(newChunkCount, lowLimit, highLimit));
   } else if (maxChunkCount() > 1 && promotionRate < ShrinkThreshold) {
     unsigned lowLimit = Max(1u, maxChunkCount() / 2);
     unsigned highLimit = maxChunkCount() - 1u;
 
-    shrinkAllocableSpace(Max(Min(newChunkCount, highLimit), lowLimit));
+    shrinkAllocableSpace(mozilla::Clamp(newChunkCount, lowLimit, highLimit));
   }
 }
 

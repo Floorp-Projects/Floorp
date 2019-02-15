@@ -15,7 +15,8 @@ add_task(async function() {
 
   setupTelemetryTest();
 
-  const { tab, document } = await openAboutDebugging();
+  const { tab, document, window } = await openAboutDebugging();
+  await selectThisFirefoxPage(document, window.AboutDebugging.store);
 
   const sessionId = getOpenEventSessionId();
   ok(!isNaN(sessionId), "Open event has a valid session id");
@@ -28,6 +29,7 @@ add_task(async function() {
   info("Navigate to 'USB device runtime' page");
   await navigateToUSBRuntime(mocks, document);
   checkSelectPageEvent("runtime", sessionId);
+  await waitForRequestsToSettle(window.AboutDebugging.store);
 
   await removeTab(tab);
 });

@@ -915,6 +915,18 @@ function buildHelpMenu() {
   document.getElementById("helpSafeMode")
           .disabled = !Services.policies.isAllowed("safeMode");
 
+  let supportMenu = Services.policies.getSupportMenu();
+  if (supportMenu) {
+    let menuitem = document.getElementById("helpPolicySupport");
+    menuitem.hidden = false;
+    menuitem.setAttribute("label", supportMenu.Title);
+    menuitem.setAttribute("href", supportMenu.URL);
+    if ("AccessKey" in supportMenu) {
+      menuitem.setAttribute("accesskey", supportMenu.AccessKey);
+    }
+    document.getElementById("helpPolicySeparator").hidden = false;
+  }
+
   // Enable/disable the "Report Web Forgery" menu item.
   if (typeof gSafeBrowsing != "undefined") {
     gSafeBrowsing.setReportPhishingMenu();
