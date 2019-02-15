@@ -11,7 +11,8 @@ add_task(async function() {
   const EXTENSION_NAME = "Temporary web extension";
   const EXTENSION_ID = "test-devtools@mozilla.org";
 
-  const { document, tab } = await openAboutDebugging();
+  const { document, tab, window } = await openAboutDebugging();
+  await selectThisFirefoxPage(document, window.AboutDebugging.store);
 
   await installTemporaryExtensionFromXPI({
     id: EXTENSION_ID,

@@ -18,7 +18,8 @@ add_task(async function() {
   await pushPref("devtools.debugger.prompt-connection", true);
 
   // open a remote runtime page
-  const { document, tab } = await openAboutDebugging();
+  const { document, tab, window } = await openAboutDebugging();
+  await selectThisFirefoxPage(document, window.AboutDebugging.store);
 
   mocks.emitUSBUpdate();
   await connectToRuntime("Fancy Phone", document);

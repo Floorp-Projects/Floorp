@@ -12,7 +12,8 @@ const NETWORK_RUNTIME_VERSION = "12.3";
 add_task(async function() {
   const mocks = new Mocks();
 
-  const { document, tab } = await openAboutDebugging();
+  const { document, tab, window } = await openAboutDebugging();
+  await selectThisFirefoxPage(document, window.AboutDebugging.store);
 
   info("Prepare Network client mock");
   const networkClient = mocks.createNetworkRuntime(NETWORK_RUNTIME_HOST, {

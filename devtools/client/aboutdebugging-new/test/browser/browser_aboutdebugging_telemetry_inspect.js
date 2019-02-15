@@ -15,6 +15,7 @@ add_task(async function() {
   setupTelemetryTest();
 
   const { document, tab, window } = await openAboutDebugging();
+  await selectThisFirefoxPage(document, window.AboutDebugging.store);
 
   const sessionId = getOpenEventSessionId();
   ok(!isNaN(sessionId), "Open event has a valid session id");

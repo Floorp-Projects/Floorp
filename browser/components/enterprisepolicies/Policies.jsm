@@ -961,6 +961,12 @@ var Policies = {
     },
   },
 
+  "SupportMenu": {
+    onProfileAfterChange(manager, param) {
+      manager.setSupportMenu(param);
+    },
+  },
+
   "WebsiteFilter": {
     onBeforeUIStartup(manager, param) {
       this.filter = new WebsiteFilter(param.Block || [], param.Exceptions || []);

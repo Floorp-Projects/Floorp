@@ -26,7 +26,8 @@ const {
  */
 add_task(async function testWebExtensionsToolboxNoBackgroundPage() {
   await enableExtensionDebugging();
-  const { document, tab } = await openAboutDebugging();
+  const { document, tab, window } = await openAboutDebugging();
+  await selectThisFirefoxPage(document, window.AboutDebugging.store);
 
   await installTemporaryExtensionFromXPI({
     // Do not pass any `background` script.

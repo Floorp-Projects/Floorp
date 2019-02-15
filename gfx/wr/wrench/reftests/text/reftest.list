@@ -32,7 +32,7 @@ fuzzy(1,1786) options(disable-subpixel) == synthetic-bold-transparent.yaml synth
 != synthetic-italics-custom.yaml synthetic-italics.yaml
 options(disable-aa) == ahem.yaml ahem-ref.yaml
 platform(linux) == isolated-text.yaml isolated-text.png
-platform(mac) == white-opacity.yaml white-opacity.png
+platform(mac) fuzzy(3,67) == white-opacity.yaml white-opacity.png
 fuzzy(1,4) platform(linux) options(disable-subpixel) == colors.yaml colors-alpha.png
 # Run without dual-source blending path, batches are broken when text colors change.
 fuzzy(1,6) platform(linux) options(disable-dual-source-blending) draw_calls(5) == colors.yaml colors-subpx.png
@@ -51,7 +51,7 @@ platform(linux) == subpixel-skew.yaml subpixel-skew.png
 != shadow-rotate.yaml blank.yaml
 platform(linux) == embedded-bitmaps.yaml embedded-bitmaps.png
 platform(linux) == clipped-transform.yaml clipped-transform.png
-platform(mac) == color-bitmap-shadow.yaml color-bitmap-shadow-ref.yaml
+platform(mac) fuzzy(195,30) == color-bitmap-shadow.yaml color-bitmap-shadow-ref.yaml
 platform(linux) == writing-modes.yaml writing-modes-ref.yaml
 platform(linux) == blurred-shadow-local-clip-rect.yaml blurred-shadow-local-clip-rect-ref.png
 fuzzy(1,1) platform(linux) == two-shadows.yaml two-shadows.png

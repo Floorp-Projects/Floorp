@@ -18,7 +18,8 @@ const EXPECTED_TARGET_PANES = [
 ];
 
 add_task(async function() {
-  const { document, tab } = await openAboutDebugging();
+  const { document, tab, window } = await openAboutDebugging();
+  await selectThisFirefoxPage(document, window.AboutDebugging.store);
 
   // Check that the selected sidebar item is "This Firefox"
   const selectedSidebarItem = document.querySelector(".js-sidebar-item-selected");

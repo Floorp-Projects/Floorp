@@ -18,6 +18,7 @@ add_task(async function() {
   await checkAdbNotRunning();
 
   const { document, tab, window } = await openAboutDebugging();
+  await selectThisFirefoxPage(document, window.AboutDebugging.store);
   const usbStatusElement = document.querySelector(".js-sidebar-usb-status");
 
   info("Install ADB");

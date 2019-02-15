@@ -69,6 +69,12 @@ main {
     // and Activity Stream breakpoints do some wonky things.
     width: 1042px;
   }
+
+  &:not(.fixed-search) {
+    .search-wrapper .search-inner-wrapper {
+      width: $searchbar-width-large;
+    }
+  }
 }
 
 .base-content-fallback {
