@@ -13,13 +13,12 @@ use std::os::raw::c_void;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::u32;
-
-use {display_item as di, font};
-use color::ColorF;
-use display_list::{BuiltDisplayList, BuiltDisplayListDescriptor};
-use image::{BlobImageData, BlobImageKey, ImageData, ImageDescriptor, ImageKey};
-use units::*;
-
+use {BuiltDisplayList, BuiltDisplayListDescriptor, ColorF, DeviceIntPoint, DeviceIntRect};
+use {DeviceIntSize, ExternalScrollId, FontInstanceKey, FontInstanceOptions};
+use {FontInstancePlatformOptions, FontKey, FontVariation, GlyphDimensions, GlyphIndex, ImageData};
+use {ImageDescriptor, ItemTag, LayoutPoint, LayoutSize, LayoutTransform, LayoutVector2D};
+use {BlobDirtyRect, ImageDirtyRect, ImageKey, BlobImageKey, BlobImageData};
+use {NativeFontHandle, WorldPoint};
 
 pub type TileSize = u16;
 /// Documents are rendered in the ascending order of their associated layer values.
@@ -34,9 +33,9 @@ pub enum ResourceUpdate {
     DeleteImage(ImageKey),
     SetBlobImageVisibleArea(BlobImageKey, DeviceIntRect),
     AddFont(AddFont),
-    DeleteFont(font::FontKey),
+    DeleteFont(FontKey),
     AddFontInstance(AddFontInstance),
-    DeleteFontInstance(font::FontInstanceKey),
+    DeleteFontInstance(FontInstanceKey),
 }
 
 /// A Transaction is a group of commands to apply atomically to a document.
@@ -225,7 +224,7 @@ impl Transaction {
     pub fn scroll_node_with_id(
         &mut self,
         origin: LayoutPoint,
-        id: di::ExternalScrollId,
+        id: ExternalScrollId,
         clamp: ScrollClamping,
     ) {
         self.frame_ops.push(FrameMsg::ScrollNodeWithId(origin, id, clamp));
@@ -381,28 +380,28 @@ impl Transaction {
         self.resource_updates.push(ResourceUpdate::SetBlobImageVisibleArea(key, area))
     }
 
-    pub fn add_raw_font(&mut self, key: font::FontKey, bytes: Vec<u8>, index: u32) {
+    pub fn add_raw_font(&mut self, key: FontKey, bytes: Vec<u8>, index: u32) {
         self.resource_updates
             .push(ResourceUpdate::AddFont(AddFont::Raw(key, bytes, index)));
     }
 
-    pub fn add_native_font(&mut self, key: font::FontKey, native_handle: font::NativeFontHandle) {
+    pub fn add_native_font(&mut self, key: FontKey, native_handle: NativeFontHandle) {
         self.resource_updates
             .push(ResourceUpdate::AddFont(AddFont::Native(key, native_handle)));
     }
 
-    pub fn delete_font(&mut self, key: font::FontKey) {
+    pub fn delete_font(&mut self, key: FontKey) {
         self.resource_updates.push(ResourceUpdate::DeleteFont(key));
     }
 
     pub fn add_font_instance(
         &mut self,
-        key: font::FontInstanceKey,
-        font_key: font::FontKey,
+        key: FontInstanceKey,
+        font_key: FontKey,
         glyph_size: Au,
-        options: Option<font::FontInstanceOptions>,
-        platform_options: Option<font::FontInstancePlatformOptions>,
-        variations: Vec<font::FontVariation>,
+        options: Option<FontInstanceOptions>,
+        platform_options: Option<FontInstancePlatformOptions>,
+        variations: Vec<FontVariation>,
     ) {
         self.resource_updates
             .push(ResourceUpdate::AddFontInstance(AddFontInstance {
@@ -415,7 +414,7 @@ impl Transaction {
             }));
     }
 
-    pub fn delete_font_instance(&mut self, key: font::FontInstanceKey) {
+    pub fn delete_font_instance(&mut self, key: FontInstanceKey) {
         self.resource_updates.push(ResourceUpdate::DeleteFontInstance(key));
     }
 
@@ -530,11 +529,11 @@ pub struct UpdateBlobImage {
 #[derive(Clone, Deserialize, Serialize)]
 pub enum AddFont {
     Raw(
-        font::FontKey,
+        FontKey,
         #[serde(with = "serde_bytes")] Vec<u8>,
         u32
     ),
-    Native(font::FontKey, font::NativeFontHandle),
+    Native(FontKey, NativeFontHandle),
 }
 
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
@@ -543,7 +542,7 @@ pub struct HitTestItem {
     pub pipeline: PipelineId,
 
     /// The tag of the hit display item.
-    pub tag: di::ItemTag,
+    pub tag: ItemTag,
 
     /// The hit point in the coordinate space of the "viewport" of the display item. The
     /// viewport is the scroll node formed by the root reference frame of the display item's
@@ -570,12 +569,12 @@ bitflags! {
 
 #[derive(Clone, Deserialize, Serialize)]
 pub struct AddFontInstance {
-    pub key: font::FontInstanceKey,
-    pub font_key: font::FontKey,
+    pub key: FontInstanceKey,
+    pub font_key: FontKey,
     pub glyph_size: Au,
-    pub options: Option<font::FontInstanceOptions>,
-    pub platform_options: Option<font::FontInstancePlatformOptions>,
-    pub variations: Vec<font::FontVariation>,
+    pub options: Option<FontInstanceOptions>,
+    pub platform_options: Option<FontInstancePlatformOptions>,
+    pub variations: Vec<FontVariation>,
 }
 
 // Frame messages affect building the scene.
@@ -609,7 +608,7 @@ pub enum FrameMsg {
     SetPan(DeviceIntPoint),
     EnableFrameOutput(PipelineId, bool),
     Scroll(ScrollLocation, WorldPoint),
-    ScrollNodeWithId(LayoutPoint, di::ExternalScrollId, ScrollClamping),
+    ScrollNodeWithId(LayoutPoint, ExternalScrollId, ScrollClamping),
     GetScrollNodeState(MsgSender<Vec<ScrollNodeState>>),
     UpdateDynamicProperties(DynamicProperties),
     AppendDynamicProperties(DynamicProperties),
@@ -716,12 +715,12 @@ pub enum ApiMsg {
     UpdateResources(Vec<ResourceUpdate>),
     /// Gets the glyph dimensions
     GetGlyphDimensions(
-        font::FontInstanceKey,
-        Vec<font::GlyphIndex>,
-        MsgSender<Vec<Option<font::GlyphDimensions>>>,
+        FontInstanceKey,
+        Vec<GlyphIndex>,
+        MsgSender<Vec<Option<GlyphDimensions>>>,
     ),
     /// Gets the glyph indices from a string
-    GetGlyphIndices(font::FontKey, String, MsgSender<Vec<Option<u32>>>),
+    GetGlyphIndices(FontKey, String, MsgSender<Vec<Option<u32>>>),
     /// Adds a new document namespace.
     CloneApi(MsgSender<IdNamespace>),
     /// Adds a new document namespace.
@@ -1060,14 +1059,14 @@ impl RenderApi {
         self.api_sender.send(msg).unwrap();
     }
 
-    pub fn generate_font_key(&self) -> font::FontKey {
+    pub fn generate_font_key(&self) -> FontKey {
         let new_id = self.next_unique_id();
-        font::FontKey::new(self.namespace_id, new_id)
+        FontKey::new(self.namespace_id, new_id)
     }
 
-    pub fn generate_font_instance_key(&self) -> font::FontInstanceKey {
+    pub fn generate_font_instance_key(&self) -> FontInstanceKey {
         let new_id = self.next_unique_id();
-        font::FontInstanceKey::new(self.namespace_id, new_id)
+        FontInstanceKey::new(self.namespace_id, new_id)
     }
 
     /// Gets the dimensions for the supplied glyph keys
@@ -1077,9 +1076,9 @@ impl RenderApi {
     /// This means that glyph dimensions e.g. for spaces (' ') will mostly be None.
     pub fn get_glyph_dimensions(
         &self,
-        font: font::FontInstanceKey,
-        glyph_indices: Vec<font::GlyphIndex>,
-    ) -> Vec<Option<font::GlyphDimensions>> {
+        font: FontInstanceKey,
+        glyph_indices: Vec<GlyphIndex>,
+    ) -> Vec<Option<GlyphDimensions>> {
         let (tx, rx) = channel::msg_channel().unwrap();
         let msg = ApiMsg::GetGlyphDimensions(font, glyph_indices, tx);
         self.api_sender.send(msg).unwrap();
@@ -1088,7 +1087,7 @@ impl RenderApi {
 
     /// Gets the glyph indices for the supplied string. These
     /// can be used to construct GlyphKeys.
-    pub fn get_glyph_indices(&self, font_key: font::FontKey, text: &str) -> Vec<Option<u32>> {
+    pub fn get_glyph_indices(&self, font_key: FontKey, text: &str) -> Vec<Option<u32>> {
         let (tx, rx) = channel::msg_channel().unwrap();
         let msg = ApiMsg::GetGlyphIndices(font_key, text.to_string(), tx);
         self.api_sender.send(msg).unwrap();
@@ -1293,7 +1292,7 @@ impl Drop for RenderApi {
 
 #[derive(Clone, Deserialize, Serialize)]
 pub struct ScrollNodeState {
-    pub id: di::ExternalScrollId,
+    pub id: ExternalScrollId,
     pub scroll_offset: LayoutVector2D,
 }
 
@@ -1313,7 +1312,7 @@ pub struct ZoomFactor(f32);
 
 impl ZoomFactor {
     /// Construct a new zoom factor.
-    pub fn new(scale: f32) -> Self {
+    pub fn new(scale: f32) -> ZoomFactor {
         ZoomFactor(scale)
     }
 
