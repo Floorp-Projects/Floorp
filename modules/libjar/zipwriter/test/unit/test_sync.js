@@ -8,17 +8,16 @@ var TESTS = [
   {
     name: "test.txt",
     size: 232,
-    crc: 0x0373ac26
+    crc: 0x0373ac26,
   },
   {
     name: "test.png",
     size: 3402,
-    crc: 0x504a5c30
-  }
+    crc: 0x504a5c30,
+  },
 ];
 
-function run_test()
-{
+function run_test() {
   zipW.open(tmpFile, PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE);
 
   var size = 0;
@@ -28,7 +27,7 @@ function run_test()
                       false);
     size += ZIP_FILE_HEADER_SIZE + ZIP_CDS_HEADER_SIZE +
             (ZIP_EXTENDED_TIMESTAMP_SIZE * 2) +
-            (TESTS[i].name.length*2) + TESTS[i].size;
+            (TESTS[i].name.length * 2) + TESTS[i].size;
   }
 
   zipW.close();

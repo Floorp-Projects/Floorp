@@ -21,11 +21,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1173171
 // __xhr(method, url, responseType__.
 // A simple async XMLHttpRequest call.
 // Returns a promise with the response.
-let xhr = function (method, url, responseType) {
-  return new Promise(function (resolve, reject) {
+let xhr = function(method, url, responseType) {
+  return new Promise(function(resolve, reject) {
     let xhr = new XMLHttpRequest();
     xhr.open(method, url, true);
-    xhr.onload = function () {
+    xhr.onload = function() {
       resolve(xhr.response);
     };
     xhr.onerror = function() {

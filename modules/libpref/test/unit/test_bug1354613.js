@@ -18,6 +18,6 @@ function run_test() {
   let pb = ps.getBranch(BRANCH);
 
   let floatPref = pb.getFloatPref(PREF_NAME);
-  Assert.ok(FLOAT+FUDGE >= floatPref);
-  Assert.ok(FLOAT-FUDGE <= floatPref);
+  Assert.ok(FLOAT + FUDGE >= floatPref);
+  Assert.ok(FLOAT - FUDGE <= floatPref);
 }

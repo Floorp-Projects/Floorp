@@ -5,20 +5,20 @@
 
 const NS_ERROR_IN_PROGRESS = 2152398863;
 
-const PR_RDONLY      = 0x01
-const PR_WRONLY      = 0x02
-const PR_RDWR        = 0x04
-const PR_CREATE_FILE = 0x08
-const PR_APPEND      = 0x10
-const PR_TRUNCATE    = 0x20
-const PR_SYNC        = 0x40
-const PR_EXCL        = 0x80
+const PR_RDONLY      = 0x01;
+const PR_WRONLY      = 0x02;
+const PR_RDWR        = 0x04;
+const PR_CREATE_FILE = 0x08;
+const PR_APPEND      = 0x10;
+const PR_TRUNCATE    = 0x20;
+const PR_SYNC        = 0x40;
+const PR_EXCL        = 0x80;
 
 const ZIP_EOCDR_HEADER_SIZE = 22;
 const ZIP_FILE_HEADER_SIZE = 30;
 const ZIP_CDS_HEADER_SIZE = 46;
-const ZIP_METHOD_STORE = 0
-const ZIP_METHOD_DEFLATE = 8
+const ZIP_METHOD_STORE = 0;
+const ZIP_METHOD_DEFLATE = 8;
 const ZIP_EXTENDED_TIMESTAMP_SIZE = 9;
 
 const PR_USEC_PER_MSEC = 1000;

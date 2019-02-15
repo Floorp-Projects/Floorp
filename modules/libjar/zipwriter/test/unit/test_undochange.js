@@ -6,11 +6,10 @@
 // Values taken from using zipinfo to list the test.zip contents
 var TESTS = [
   "test.txt",
-  "test.png"
+  "test.png",
 ];
 
-function run_test()
-{
+function run_test() {
   zipW.open(tmpFile, PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE);
 
   for (var i = 0; i < TESTS.length; i++) {
@@ -24,8 +23,7 @@ function run_test()
     zipW.addEntryFile(TESTS[0], Ci.nsIZipWriter.COMPRESSION_NONE, source,
                       false);
     do_throw("Should not be able to add the same file twice");
-  }
-  catch (e) {
+  } catch (e) {
     Assert.equal(e.result, Cr.NS_ERROR_FILE_ALREADY_EXISTS);
   }
 
