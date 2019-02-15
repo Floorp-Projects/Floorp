@@ -83,6 +83,29 @@ nsresult nsOSHelperAppService::OSProtocolHandlerExists(
                                                 AL_EFFECTIVE, &pResult);
     if (SUCCEEDED(hr)) {
       CoTaskMemFree(pResult);
+      nsCOMPtr<nsIWindowsRegKey> regKey =
+          do_CreateInstance("@mozilla.org/windows-registry-key;1");
+      if (!regKey) {
+        return NS_ERROR_NOT_AVAILABLE;
+      }
+
+      nsresult rv = regKey->Open(nsIWindowsRegKey::ROOT_KEY_CLASSES_ROOT,
+                                 nsDependentString(scheme.get()),
+                                 nsIWindowsRegKey::ACCESS_QUERY_VALUE);
+      if (NS_FAILED(rv)) {
+        // Open will fail if the registry key path doesn't exist.
+        return NS_OK;
+      }
+
+      bool hasValue;
+      rv = regKey->HasValue(NS_LITERAL_STRING("URL Protocol"), &hasValue);
+      if (NS_FAILED(rv)) {
+        return NS_ERROR_FAILURE;
+      }
+      if (!hasValue) {
+        return NS_OK;
+      }
+
       *aHandlerExists = true;
     }
   }
