@@ -47,20 +47,20 @@ xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   var d = 10;
   function middle(e) {
-    return { "x": e.boxObject.x + e.boxObject.width/2,
-             "y": e.boxObject.y + e.boxObject.height/2 };
+    return { "x": e.getBoundingClientRect().x + e.getBoundingClientRect().width/2,
+             "y": e.getBoundingClientRect().y + e.getBoundingClientRect().height/2 };
   }
   function lower_right(e) {
-    return { "x": e.boxObject.x + e.boxObject.width - d,
-             "y": e.boxObject.y + e.boxObject.height - d };
+    return { "x": e.getBoundingClientRect().x + e.getBoundingClientRect().width - d,
+             "y": e.getBoundingClientRect().y + e.getBoundingClientRect().height - d };
   }
   function upper_left(e) {
-    return { "x": e.boxObject.x + d,
-             "y": e.boxObject.y + d };
+    return { "x": e.getBoundingClientRect().x + d,
+             "y": e.getBoundingClientRect().y + d };
   }
   function scrollbar_button(e) { // a bit down from upper right
-    return { "x": e.boxObject.x + e.boxObject.width - d,
-             "y": e.boxObject.y + d + 15 };
+    return { "x": e.getBoundingClientRect().x + e.getBoundingClientRect().width - d,
+             "y": e.getBoundingClientRect().y + d + 15 };
   }
   
   function test(ptFunc, id, message) {
