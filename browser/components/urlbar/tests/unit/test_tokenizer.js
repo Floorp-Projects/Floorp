@@ -7,6 +7,10 @@ add_task(async function test_tokenizer() {
       searchString: "",
       expectedTokens: [],
     },
+    { desc: "Spaces string",
+      searchString: "      ",
+      expectedTokens: [],
+    },
     { desc: "Single word string",
       searchString: "test",
       expectedTokens: [
