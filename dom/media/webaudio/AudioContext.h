@@ -388,6 +388,8 @@ class AudioContext final : public DOMEventTargetHelper,
 
   // True if this AudioContext has been suspended by the page.
   bool mSuspendedByContent;
+  // True if this AudioContext has been suspended by the chrome.
+  bool mSuspendedByChrome;
 
   // These variables are used for telemetry, they're not reflect the actual
   // status of AudioContext, they are based on the "assumption" of enabling
