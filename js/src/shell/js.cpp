@@ -10309,9 +10309,14 @@ static MOZ_MUST_USE bool ReportUnhandledRejections(JSContext* cx) {
     }
 
     RootedObject obj(cx, &resultObj->getDenseElement(0).toObject());
-    Rooted<PromiseObject*> promise(cx, obj->maybeUnwrapAs<PromiseObject>());
+    Rooted<PromiseObject*> promise(cx, obj->maybeUnwrapIf<PromiseObject>());
     if (!promise) {
-      return false;
+      FILE* fp = ErrorFilePointer();
+      fputs(
+          "Unhandled rejection: dead proxy found in unhandled "
+          "rejections set\n",
+          fp);
+      continue;
     }
 
     AutoRealm ar2(cx, promise);
