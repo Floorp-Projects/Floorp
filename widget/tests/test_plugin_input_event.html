@@ -47,7 +47,7 @@ function* doTest() {
   yield synthesizeNativeKey(KEYBOARD_LAYOUT_GERMAN, WIN_VK_OEM_PLUS, {}, "+", "+", continueTest);
   is(gPlugin.getLastKeyText(), "+", "Invalid character was inputted");
 
-  yield synthesizeNativeKey(KEYBOARD_LAYOUT_GERMAN, WIN_VK_OEM_PLUS, {altGrKey:1}, "~", "+", continueTest);
+  yield synthesizeNativeKey(KEYBOARD_LAYOUT_GERMAN, WIN_VK_OEM_PLUS, {altGrKey: 1}, "~", "+", continueTest);
   is(gPlugin.getLastKeyText(), "~", "Invalid character was inputted");
 }
 

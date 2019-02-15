@@ -219,8 +219,8 @@ class NSSCertDBTrustDomain : public mozilla::pkix::TrustDomain {
   const OriginAttributes& mOriginAttributes;
   const Vector<mozilla::pkix::Input>& mThirdPartyRootInputs;  // non-owning
   const Vector<mozilla::pkix::Input>&
-      mThirdPartyIntermediateInputs;                          // non-owning
-  UniqueCERTCertList& mBuiltChain;                            // non-owning
+      mThirdPartyIntermediateInputs;  // non-owning
+  UniqueCERTCertList& mBuiltChain;    // non-owning
   PinningTelemetryInfo* mPinningTelemetryInfo;
   const char* mHostname;  // non-owning - only used for pinning checks
   nsCOMPtr<nsICertBlocklist> mCertBlocklist;

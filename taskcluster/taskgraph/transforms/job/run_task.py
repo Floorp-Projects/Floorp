@@ -117,26 +117,6 @@ def docker_worker_run_task(config, job, taskdesc):
     worker['command'] = command
 
 
-@run_job_using("native-engine", "run-task", schema=run_task_schema, defaults=worker_defaults)
-def native_engine_run_task(config, job, taskdesc):
-    run = job['run']
-    worker = taskdesc['worker'] = job['worker']
-    command = ['./run-task']
-    common_setup(config, job, taskdesc, command)
-
-    worker['context'] = run_task_url(config)
-
-    if run.get('cache-dotcache'):
-        raise Exception("No cache support on native-worker; can't use cache-dotcache")
-
-    run_command = run['command']
-    if isinstance(run_command, basestring):
-        run_command = ['bash', '-cx', run_command]
-    command.append('--')
-    command.extend(run_command)
-    worker['command'] = command
-
-
 @run_job_using("generic-worker", "run-task", schema=run_task_schema, defaults=worker_defaults)
 def generic_worker_run_task(config, job, taskdesc):
     run = job['run']

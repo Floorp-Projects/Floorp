@@ -132,6 +132,16 @@ const CorsErrorDocs = {
   CORSMissingAllowHeaderFromPreflight: "CORSMissingAllowHeaderFromPreflight",
 };
 
+const baseStorageAccessPolicyErrorUrl = "https://developer.mozilla.org/docs/Mozilla/Firefox/Privacy/Storage_access_policy/Errors/";
+const storageAccessPolicyParams =
+  "?utm_source=devtools&utm_medium=firefox-cookie-errors&utm_campaign=default";
+const StorageAccessPolicyErrorDocs = {
+  cookieBlockedPermission: "CookieBlockedByPermission",
+  cookieBlockedTracker: "CookieBlockedTracker",
+  cookieBlockedAll: "CookieBlockedAll",
+  cookieBlockedForeign: "CookieBlockedForeign",
+};
+
 exports.GetURL = (error) => {
   if (!error) {
     return undefined;
@@ -145,6 +155,15 @@ exports.GetURL = (error) => {
   const corsDoc = CorsErrorDocs[error.category];
   if (corsDoc) {
     return baseCorsErrorUrl + corsDoc + corsParams;
+  }
+
+  const storageAccessPolicyDoc = StorageAccessPolicyErrorDocs[error.category];
+  if (storageAccessPolicyDoc) {
+    return (
+      baseStorageAccessPolicyErrorUrl +
+      storageAccessPolicyDoc +
+      storageAccessPolicyParams
+    );
   }
 
   const categoryURL = ErrorCategories[error.category];

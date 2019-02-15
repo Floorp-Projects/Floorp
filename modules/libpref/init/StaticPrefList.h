@@ -472,17 +472,11 @@ VARCACHE_PREF(
 )
 
 // Block multiple external protocol URLs in iframes per single event.
-#ifdef NIGHTLY_BUILD
-#define PREF_VALUE true
-#else
-#define PREF_VALUE false
-#endif
 VARCACHE_PREF(
   "dom.block_external_protocol_in_iframes",
    dom_block_external_protocol_in_iframes,
-  bool, PREF_VALUE
+  bool, true
 )
-#undef PREF_VALUE
 
 // Any how many seconds we allow external protocol URLs in iframe when not in
 // single events

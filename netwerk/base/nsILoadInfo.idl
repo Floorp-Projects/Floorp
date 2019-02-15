@@ -635,13 +635,6 @@ interface nsILoadInfo : nsISupports
   readonly attribute BrowsingContext browsingContext;
 
   /**
-   * Like `frameOuterWindowID`, however returning the BrowsingContextID
-   * instead.
-   */
-  [infallible] readonly attribute unsigned long long frameBrowsingContextID;
-  readonly attribute BrowsingContext frameBrowsingContext;
-
-  /**
    * Resets the PrincipalToInherit to a freshly created NullPrincipal
    * which inherits the origin attributes from the loadInfo.
    *

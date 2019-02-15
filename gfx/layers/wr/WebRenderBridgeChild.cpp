@@ -278,8 +278,8 @@ Maybe<wr::FontInstanceKey> WebRenderBridgeChild::GetFontKeyForScaledFont(
                                         &variations);
 
   aResources->AddFontInstance(
-      instanceKey, fontKey.value(), aScaledFont->GetSize(), options.ptrOr(nullptr),
-      platformOptions.ptrOr(nullptr),
+      instanceKey, fontKey.value(), aScaledFont->GetSize(),
+      options.ptrOr(nullptr), platformOptions.ptrOr(nullptr),
       Range<const FontVariation>(variations.data(), variations.size()));
   if (resources.isSome()) {
     UpdateResources(resources.ref());

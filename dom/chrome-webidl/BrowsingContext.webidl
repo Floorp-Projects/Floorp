@@ -9,6 +9,11 @@ interface nsIDocShell;
 interface BrowsingContext {
   static BrowsingContext? get(unsigned long long aId);
 
+  BrowsingContext? findChildWithName(DOMString name);
+  BrowsingContext? findWithName(DOMString name);
+
+  readonly attribute DOMString name;
+
   readonly attribute BrowsingContext? parent;
 
   sequence<BrowsingContext> getChildren();

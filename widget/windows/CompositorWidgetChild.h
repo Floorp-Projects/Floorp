@@ -33,7 +33,8 @@ class CompositorWidgetChild final : public PCompositorWidgetChild,
   mozilla::ipc::IPCResult RecvObserveVsync() override;
   mozilla::ipc::IPCResult RecvUnobserveVsync() override;
   mozilla::ipc::IPCResult RecvUpdateCompositorWnd(
-      const WindowsHandle& aCompositorWnd, const WindowsHandle& aParentWnd) override;
+      const WindowsHandle& aCompositorWnd,
+      const WindowsHandle& aParentWnd) override;
 
  private:
   RefPtr<CompositorVsyncDispatcher> mVsyncDispatcher;

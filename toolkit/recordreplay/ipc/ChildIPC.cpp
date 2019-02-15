@@ -543,7 +543,8 @@ static void PaintFromMainThread() {
   // operating on the draw target buffer.
   MOZ_RELEASE_ASSERT(!gNumPendingPaints);
 
-  if (IsActiveChild() && navigation::ShouldSendPaintMessage() && gDrawTargetBuffer) {
+  if (IsActiveChild() && navigation::ShouldSendPaintMessage() &&
+      gDrawTargetBuffer) {
     memcpy(gGraphicsShmem, gDrawTargetBuffer, gDrawTargetBufferSize);
     gChannel->SendMessage(PaintMessage(navigation::LastNormalCheckpoint(),
                                        gPaintWidth, gPaintHeight));

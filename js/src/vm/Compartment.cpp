@@ -435,12 +435,10 @@ void Compartment::sweepCrossCompartmentWrappers() {
 }
 
 void CrossCompartmentKey::trace(JSTracer* trc) {
-  applyToWrapped([trc](auto tp) {
-    TraceRoot(trc, tp, "CrossCompartmentKey::wrapped");
-  });
-  applyToDebugger([trc](auto tp) {
-    TraceRoot(trc, tp, "CrossCompartmentKey::debugger");
-  });
+  applyToWrapped(
+      [trc](auto tp) { TraceRoot(trc, tp, "CrossCompartmentKey::wrapped"); });
+  applyToDebugger(
+      [trc](auto tp) { TraceRoot(trc, tp, "CrossCompartmentKey::debugger"); });
 }
 
 bool CrossCompartmentKey::needsSweep() {

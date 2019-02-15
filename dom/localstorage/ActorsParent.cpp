@@ -3137,8 +3137,8 @@ PBackgroundLSRequestParent* AllocPBackgroundLSRequestParent(
         contentParentId = Some(ContentParentId(childID));
       }
 
-      RefPtr<PrepareDatastoreOp> prepareDatastoreOp = new PrepareDatastoreOp(
-          mainEventTarget, aParams, contentParentId);
+      RefPtr<PrepareDatastoreOp> prepareDatastoreOp =
+          new PrepareDatastoreOp(mainEventTarget, aParams, contentParentId);
 
       if (!gPrepareDatastoreOps) {
         gPrepareDatastoreOps = new PrepareDatastoreOpArray();
@@ -5582,8 +5582,7 @@ mozilla::ipc::IPCResult LSRequestBase::RecvFinish() {
  ******************************************************************************/
 
 PrepareDatastoreOp::PrepareDatastoreOp(
-    nsIEventTarget* aMainEventTarget,
-    const LSRequestParams& aParams,
+    nsIEventTarget* aMainEventTarget, const LSRequestParams& aParams,
     const Maybe<ContentParentId>& aContentParentId)
     : LSRequestBase(aMainEventTarget),
       mMainEventTarget(aMainEventTarget),

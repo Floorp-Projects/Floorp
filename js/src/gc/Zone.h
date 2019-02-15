@@ -415,15 +415,13 @@ class Zone : public JS::shadow::Zone,
   // A set of edges from this zone to other zones used during GC to calculate
   // sweep groups.
   NodeSet& gcSweepGroupEdges() {
-    return gcGraphEdges; // Defined in GraphNodeBase base class.
+    return gcGraphEdges;  // Defined in GraphNodeBase base class.
   }
   MOZ_MUST_USE bool addSweepGroupEdgeTo(Zone* otherZone) {
     MOZ_ASSERT(otherZone->isGCMarking());
     return gcSweepGroupEdges().put(otherZone);
   }
-  void clearSweepGroupEdges() {
-    gcSweepGroupEdges().clear();
-  }
+  void clearSweepGroupEdges() { gcSweepGroupEdges().clear(); }
 
   // Keep track of all TypeDescr and related objects in this compartment.
   // This is used by the GC to trace them all first when compacting, since the

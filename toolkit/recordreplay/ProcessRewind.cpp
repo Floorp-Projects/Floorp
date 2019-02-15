@@ -246,9 +246,7 @@ CheckpointId GetLastSavedCheckpoint() {
   return gRewindInfo->mSavedCheckpoints.back().mCheckpoint;
 }
 
-CheckpointId
-GetLastSavedCheckpointPriorTo(const CheckpointId& aCheckpoint)
-{
+CheckpointId GetLastSavedCheckpointPriorTo(const CheckpointId& aCheckpoint) {
   MOZ_RELEASE_ASSERT(HasSavedCheckpoint());
   for (size_t i = gRewindInfo->mSavedCheckpoints.length() - 1; i >= 1; i--) {
     if (gRewindInfo->mSavedCheckpoints[i].mCheckpoint == aCheckpoint) {

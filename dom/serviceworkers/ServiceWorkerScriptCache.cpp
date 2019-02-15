@@ -109,7 +109,7 @@ class CompareNetwork final : public nsIStreamLoaderObserver,
   }
 
   nsresult Initialize(nsIPrincipal* aPrincipal, const nsAString& aURL,
-                      nsILoadGroup* aLoadGroup, Cache* const aCache);
+                      Cache* const aCache);
 
   void Abort();
 
@@ -257,7 +257,7 @@ class CompareManager final : public PromiseNativeHandler {
   }
 
   nsresult Initialize(nsIPrincipal* aPrincipal, const nsAString& aURL,
-                      const nsAString& aCacheName, nsILoadGroup* aLoadGroup);
+                      const nsAString& aCacheName);
 
   void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
 
@@ -330,7 +330,7 @@ class CompareManager final : public PromiseNativeHandler {
     mCNList.AppendElement(cn);
     mPendingCount += 1;
 
-    nsresult rv = cn->Initialize(mPrincipal, aURL, mLoadGroup, aCache);
+    nsresult rv = cn->Initialize(mPrincipal, aURL, aCache);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -586,7 +586,6 @@ class CompareManager final : public PromiseNativeHandler {
 
   nsString mURL;
   RefPtr<nsIPrincipal> mPrincipal;
-  RefPtr<nsILoadGroup> mLoadGroup;
 
   // Used for the old cache where saves the old source scripts.
   RefPtr<Cache> mOldCache;
@@ -616,7 +615,6 @@ NS_IMPL_ISUPPORTS0(CompareManager)
 
 nsresult CompareNetwork::Initialize(nsIPrincipal* aPrincipal,
                                     const nsAString& aURL,
-                                    nsILoadGroup* aLoadGroup,
                                     Cache* const aCache) {
   MOZ_ASSERT(aPrincipal);
   MOZ_ASSERT(NS_IsMainThread());
@@ -1144,8 +1142,7 @@ void CompareCache::ManageValueResult(JSContext* aCx,
 
 nsresult CompareManager::Initialize(nsIPrincipal* aPrincipal,
                                     const nsAString& aURL,
-                                    const nsAString& aCacheName,
-                                    nsILoadGroup* aLoadGroup) {
+                                    const nsAString& aCacheName) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aPrincipal);
   MOZ_ASSERT(mPendingCount == 0);
@@ -1156,7 +1153,6 @@ nsresult CompareManager::Initialize(nsIPrincipal* aPrincipal,
 
   mURL = aURL;
   mPrincipal = aPrincipal;
-  mLoadGroup = aLoadGroup;
 
   // Always create a CacheStorage since we want to write the network entry to
   // the cache even if there isn't an existing one.
@@ -1334,8 +1330,7 @@ nsresult GenerateCacheName(nsAString& aName) {
 
 nsresult Compare(ServiceWorkerRegistrationInfo* aRegistration,
                  nsIPrincipal* aPrincipal, const nsAString& aCacheName,
-                 const nsAString& aURL, CompareCallback* aCallback,
-                 nsILoadGroup* aLoadGroup) {
+                 const nsAString& aURL, CompareCallback* aCallback) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aRegistration);
   MOZ_ASSERT(aPrincipal);
@@ -1344,7 +1339,7 @@ nsresult Compare(ServiceWorkerRegistrationInfo* aRegistration,
 
   RefPtr<CompareManager> cm = new CompareManager(aRegistration, aCallback);
 
-  nsresult rv = cm->Initialize(aPrincipal, aURL, aCacheName, aLoadGroup);
+  nsresult rv = cm->Initialize(aPrincipal, aURL, aCacheName);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

@@ -23,7 +23,7 @@ add_task(async function task() {
   const target = await TargetFactory.forTab(currentTab);
   const toolbox = gDevTools.getToolbox(target);
   const {ui} = toolbox.getCurrentPanel().hud;
-  const onNetworkMessageUpdate = ui.jsterm.hud.once("network-message-updated");
+  const onNetworkMessageUpdate = ui.once("network-message-updated");
 
   // Fire an XHR POST request.
   await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {

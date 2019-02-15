@@ -491,13 +491,12 @@ nsJSChannel::Open(nsIInputStream** aStream) {
       nsContentSecurityManager::doContentSecurityCheck(this, listener);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mIOThunk->EvaluateScript(
-      mStreamChannel, mPopupState, mExecutionPolicy, mOriginalInnerWindow);
+  rv = mIOThunk->EvaluateScript(mStreamChannel, mPopupState, mExecutionPolicy,
+                                mOriginalInnerWindow);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return mStreamChannel->Open(aStream);
 }
-
 
 NS_IMETHODIMP
 nsJSChannel::AsyncOpen(nsIStreamListener* aListener) {
@@ -615,8 +614,7 @@ nsJSChannel::AsyncOpen(nsIStreamListener* aListener) {
   nsCOMPtr<nsIRunnable> runnable =
       mozilla::NewRunnableMethod(name, this, method);
   nsGlobalWindowInner* window = nsGlobalWindowInner::Cast(mOriginalInnerWindow);
-  rv =
-      window->Dispatch(mozilla::TaskCategory::Other, runnable.forget());
+  rv = window->Dispatch(mozilla::TaskCategory::Other, runnable.forget());
 
   if (NS_FAILED(rv)) {
     loadGroup->RemoveRequest(this, nullptr, rv);

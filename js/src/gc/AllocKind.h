@@ -141,9 +141,8 @@ inline auto ObjectAllocKinds() {
 
 // Returns a sequence for use in a range-based for loop,
 // to iterate over alloc kinds from |first| to |limit|, exclusive.
-inline auto
-SomeAllocKinds(AllocKind first = AllocKind::FIRST,
-               AllocKind limit = AllocKind::LIMIT) {
+inline auto SomeAllocKinds(AllocKind first = AllocKind::FIRST,
+                           AllocKind limit = AllocKind::LIMIT) {
   MOZ_ASSERT(IsAllocKind(first), "|first| is not a valid AllocKind!");
   MOZ_ASSERT(IsAllocKind(limit), "|limit| is not a valid AllocKind!");
   return mozilla::MakeEnumeratedRange(first, limit);

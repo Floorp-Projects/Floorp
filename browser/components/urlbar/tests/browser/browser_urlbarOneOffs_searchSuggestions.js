@@ -16,8 +16,7 @@ add_task(async function init() {
 
     await PlacesUtils.history.clear();
     // Make sure the popup is closed for the next test.
-    gURLBar.blur();
-    Assert.ok(!gURLBar.popup.popupOpen, "popup should be closed");
+    await UrlbarTestUtils.promisePopupClose(window);
   });
 });
 
@@ -70,7 +69,7 @@ add_task(async function oneOffClickAfterSuggestion() {
   EventUtils.synthesizeKey("KEY_ArrowDown");
   assertState(2, -1, "foobar");
 
-  let oneOffs = gURLBar.popup.oneOffSearchButtons.getSelectableButtons(true);
+  let oneOffs = UrlbarTestUtils.getOneOffSearchButtons(window).getSelectableButtons(true);
   let resultsPromise =
     BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, false,
                                    `http://mochi.test:8888/?terms=foobar`);
@@ -95,28 +94,28 @@ add_task(async function overridden_engine_not_reused() {
     EventUtils.synthesizeKey("KEY_ArrowDown", {altKey: true});
     assertState(1, 1, "foofoo");
 
-    let label = gURLBar.popup.richlistbox.itemChildren[gURLBar.popup.richlistbox.selectedIndex].label;
+    let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
+    let label = result.displayed.action;
     // Run again the query, check the label has been replaced.
     await promiseAutocompleteResultPopup(typedValue, window, true);
     await promiseSuggestionsPresent();
     assertState(0, -1, "foo");
-    let newLabel = gURLBar.popup.richlistbox.itemChildren[1].label;
-    Assert.notEqual(newLabel, label, "The label should have been updated");
+    result = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
+    Assert.notEqual(result.displayed.action, label, "The label should have been updated");
 
     BrowserTestUtils.removeTab(tab);
 });
 
 function assertState(result, oneOff, textValue = undefined) {
-  Assert.equal(gURLBar.popup.selectedIndex, result,
-               "Expected result should be selected");
-  Assert.equal(gURLBar.popup.oneOffSearchButtons.selectedButtonIndex, oneOff,
-               "Expected one-off should be selected");
-  if (textValue !== undefined) {
-    Assert.equal(gURLBar.textValue, textValue, "Expected textValue");
-  }
-}
-
-async function hidePopup() {
-  EventUtils.synthesizeKey("KEY_Escape");
-  await promisePopupHidden(gURLBar.popup);
+  Assert.equal(UrlbarTestUtils.getSelectedIndex(window), result,
+    "Expected result should be selected");
+  Assert.equal(UrlbarTestUtils.getOneOffSearchButtons(window).selectedButtonIndex,
+    oneOff, "Expected one-off should be selected");
+    // TODO Bug 1527946: Fix textValue differences for QuantumBar
+    if (UrlbarPrefs.get("quantumbar")) {
+      return;
+    }
+    if (textValue !== undefined) {
+      Assert.equal(gURLBar.textValue, textValue, "Expected textValue");
+    }
 }

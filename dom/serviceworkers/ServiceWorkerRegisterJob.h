@@ -19,7 +19,6 @@ class ServiceWorkerRegisterJob final : public ServiceWorkerUpdateJob {
  public:
   ServiceWorkerRegisterJob(nsIPrincipal* aPrincipal, const nsACString& aScope,
                            const nsACString& aScriptSpec,
-                           nsILoadGroup* aLoadGroup,
                            ServiceWorkerUpdateViaCache aUpdateViaCache);
 
  private:

@@ -11,7 +11,7 @@
 #include "mtransport/runnable_utils.h"
 
 #if WINVER < 0x0602
-#define WS_EX_NOREDIRECTIONBITMAP 0x00200000L
+#  define WS_EX_NOREDIRECTIONBITMAP 0x00200000L
 #endif
 
 namespace mozilla {
@@ -77,7 +77,8 @@ void WinCompositorWindowThread::ShutDownTask(layers::SynchronousTask* aTask) {
              PlatformThread::CurrentId();
 }
 
-const wchar_t kClassNameCompositorInitalParent[] = L"MozillaCompositorInitialParentClass";
+const wchar_t kClassNameCompositorInitalParent[] =
+    L"MozillaCompositorInitialParentClass";
 const wchar_t kClassNameCompositor[] = L"MozillaCompositorWindowClass";
 
 ATOM g_compositor_inital_parent_window_class;
@@ -123,7 +124,8 @@ void InitializeWindowClass() {
   g_compositor_window_class = ::RegisterClassW(&wc);
 }
 
-/* static */ WinCompositorWnds WinCompositorWindowThread::CreateCompositorWindow() {
+/* static */ WinCompositorWnds
+WinCompositorWindowThread::CreateCompositorWindow() {
   MOZ_ASSERT(Loop());
 
   if (!Loop()) {
@@ -143,19 +145,20 @@ void InitializeWindowClass() {
         InitializeWindowClass();
 
         // Create initial parent window.
-        // We could not directly create a compositor window with a main window as
-        // parent window, so instead create it with a temporary placeholder parent.
-        // Its parent is set as main window in UI process.
-        initialParentWnd = ::CreateWindowEx(
-            WS_EX_TOOLWINDOW, kClassNameCompositorInitalParent, nullptr,
-            WS_POPUP | WS_DISABLED, 0, 0, 1, 1, nullptr,
-            0, GetModuleHandle(nullptr), 0);
+        // We could not directly create a compositor window with a main window
+        // as parent window, so instead create it with a temporary placeholder
+        // parent. Its parent is set as main window in UI process.
+        initialParentWnd =
+            ::CreateWindowEx(WS_EX_TOOLWINDOW, kClassNameCompositorInitalParent,
+                             nullptr, WS_POPUP | WS_DISABLED, 0, 0, 1, 1,
+                             nullptr, 0, GetModuleHandle(nullptr), 0);
 
         compositorWnd = ::CreateWindowEx(
-            WS_EX_NOPARENTNOTIFY | WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_NOREDIRECTIONBITMAP,
+            WS_EX_NOPARENTNOTIFY | WS_EX_LAYERED | WS_EX_TRANSPARENT |
+                WS_EX_NOREDIRECTIONBITMAP,
             kClassNameCompositor, nullptr,
-            WS_CHILDWINDOW | WS_DISABLED | WS_VISIBLE, 0, 0, 1, 1, initialParentWnd,
-            0, GetModuleHandle(nullptr), 0);
+            WS_CHILDWINDOW | WS_DISABLED | WS_VISIBLE, 0, 0, 1, 1,
+            initialParentWnd, 0, GetModuleHandle(nullptr), 0);
       });
 
   Loop()->PostTask(runnable.forget());
@@ -176,8 +179,7 @@ void InitializeWindowClass() {
   }
 
   RefPtr<Runnable> runnable = NS_NewRunnableFunction(
-      "WinCompositorWidget::CreateNativeWindow::Runnable",
-      [aWnds]() {
+      "WinCompositorWidget::CreateNativeWindow::Runnable", [aWnds]() {
         ::DestroyWindow(aWnds.mCompositorWnd);
         ::DestroyWindow(aWnds.mInitialParentWnd);
       });

@@ -521,9 +521,9 @@ void js::TraceGenericPointerRoot(JSTracer* trc, Cell** thingp,
 
   auto traced = MapGCThingTyped(thing, thing->getTraceKind(),
                                 [trc, name](auto t) -> Cell* {
-    TraceRoot(trc, &t, name);
-    return t;
-  });
+                                  TraceRoot(trc, &t, name);
+                                  return t;
+                                });
   if (traced != thing) {
     *thingp = traced;
   }
@@ -539,9 +539,9 @@ void js::TraceManuallyBarrieredGenericPointerEdge(JSTracer* trc, Cell** thingp,
 
   auto traced = MapGCThingTyped(thing, thing->getTraceKind(),
                                 [trc, name](auto t) -> Cell* {
-    TraceManuallyBarrieredEdge(trc, &t, name);
-    return t;
-  });
+                                  TraceManuallyBarrieredEdge(trc, &t, name);
+                                  return t;
+                                });
   if (traced != thing) {
     *thingp = traced;
   }
@@ -919,9 +919,8 @@ void js::GCMarker::traverseEdge(S source, T* target) {
 
 template <typename S, typename T>
 void js::GCMarker::traverseEdge(S source, const T& thing) {
-  ApplyGCThingTyped(thing, [this, source](auto t) {
-                             this->traverseEdge(source, t);
-                           });
+  ApplyGCThingTyped(thing,
+                    [this, source](auto t) { this->traverseEdge(source, t); });
 }
 
 namespace {
@@ -1503,7 +1502,8 @@ static void VisitTraceList(const Functor& f, const int32_t* traceList,
 enum class CheckGeneration { DoChecks, NoChecks };
 template <typename Functor>
 static inline NativeObject* CallTraceHook(Functor&& f, JSTracer* trc,
-                                          JSObject* obj, CheckGeneration check) {
+                                          JSObject* obj,
+                                          CheckGeneration check) {
   const Class* clasp = obj->getClass();
   MOZ_ASSERT(clasp);
   MOZ_ASSERT(obj->isNative() == clasp->isNative());
@@ -1793,9 +1793,9 @@ scan_obj : {
   ObjectGroup* group = obj->groupFromGC();
   traverseEdge(obj, group);
 
-  NativeObject* nobj = CallTraceHook([this, obj](auto thingp) {
-                                       this->traverseEdge(obj, *thingp);
-                                     }, this, obj, CheckGeneration::DoChecks);
+  NativeObject* nobj = CallTraceHook(
+      [this, obj](auto thingp) { this->traverseEdge(obj, *thingp); }, this, obj,
+      CheckGeneration::DoChecks);
   if (!nobj) {
     return;
   }
@@ -2903,9 +2903,9 @@ void js::gc::StoreBuffer::ValueEdge::trace(TenuringTracer& mover) const {
 
 // Visit all object children of the object and trace them.
 void js::TenuringTracer::traceObject(JSObject* obj) {
-  NativeObject* nobj = CallTraceHook([this](auto thingp) {
-                                       this->traverse(thingp);
-                                     }, this, obj, CheckGeneration::NoChecks);
+  NativeObject* nobj =
+      CallTraceHook([this](auto thingp) { this->traverse(thingp); }, this, obj,
+                    CheckGeneration::NoChecks);
   if (!nobj) {
     return;
   }
@@ -3591,9 +3591,8 @@ static bool UnmarkGrayGCThing(JSRuntime* rt, JS::GCCellPtr thing) {
   mozilla::recordreplay::AutoDisallowThreadEvents d;
 
   AutoGeckoProfilerEntry profilingStackFrame(
-    rt->mainContextFromOwnThread(),
-    "UnmarkGrayGCThing",
-    ProfilingStackFrame::Category::GCCC);
+      rt->mainContextFromOwnThread(), "UnmarkGrayGCThing",
+      ProfilingStackFrame::Category::GCCC);
 
   UnmarkGrayTracer unmarker(rt);
   gcstats::AutoPhase innerPhase(rt->gc.stats(),

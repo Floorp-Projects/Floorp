@@ -404,13 +404,6 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
   padding: 0;
 }
 
-#edit-controls@inAnyPanel@ > #copy-button,
-#zoom-controls@inAnyPanel@ > #zoom-reset-button {
-  border-left: none;
-  border-right: none;
-  border-radius: 0;
-}
-
 #zoom-in-button > .toolbarbutton-text,
 #zoom-out-button > .toolbarbutton-text,
 #zoom-reset-button > .toolbarbutton-icon {
@@ -1248,22 +1241,6 @@ toolbarpaletteitem[place="menu-panel"] > .toolbaritem-combined-buttons > toolbar
 %else
   min-width: 7ch;
 %endif
-}
-
-#edit-controls@inAnyPanel@ > #cut-button:-moz-locale-dir(ltr),
-#edit-controls@inAnyPanel@ > #paste-button:-moz-locale-dir(rtl),
-#zoom-controls@inAnyPanel@ > #zoom-out-button:-moz-locale-dir(ltr),
-#zoom-controls@inAnyPanel@ > #zoom-in-button:-moz-locale-dir(rtl) {
-  border-top-right-radius: 0;
-  border-bottom-right-radius: 0;
-}
-
-#edit-controls@inAnyPanel@ > #cut-button:-moz-locale-dir(rtl),
-#edit-controls@inAnyPanel@ > #paste-button:-moz-locale-dir(ltr),
-#zoom-controls@inAnyPanel@ > #zoom-out-button:-moz-locale-dir(rtl),
-#zoom-controls@inAnyPanel@ > #zoom-in-button:-moz-locale-dir(ltr) {
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
 }
 
 .toolbaritem-combined-buttons@inAnyPanel@ > separator {

@@ -131,8 +131,7 @@ nsIconChannel::GetURI(nsIURI** aURI) {
 }
 
 NS_IMETHODIMP
-nsIconChannel::Open(nsIInputStream** _retval)
-{
+nsIconChannel::Open(nsIInputStream** _retval) {
   nsCOMPtr<nsIStreamListener> listener;
   nsresult rv = nsContentSecurityManager::doContentSecurityCheck(this, listener);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -172,8 +171,7 @@ nsresult nsIconChannel::ExtractIconInfoFromUrl(nsIFile** aLocalFile, uint32_t* a
 }
 
 NS_IMETHODIMP
-nsIconChannel::AsyncOpen(nsIStreamListener* aListener)
-{
+nsIconChannel::AsyncOpen(nsIStreamListener* aListener) {
   nsCOMPtr<nsIStreamListener> listener = aListener;
   nsresult rv = nsContentSecurityManager::doContentSecurityCheck(this, listener);
   if (NS_FAILED(rv)) {
@@ -186,7 +184,6 @@ nsIconChannel::AsyncOpen(nsIStreamListener* aListener)
           (mLoadInfo->GetSecurityMode() == nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL &&
            nsContentUtils::IsSystemPrincipal(mLoadInfo->LoadingPrincipal())),
       "security flags in loadInfo but doContentSecurityCheck() not called");
-
 
   nsCOMPtr<nsIInputStream> inStream;
   MakeInputStream(getter_AddRefs(inStream), true);

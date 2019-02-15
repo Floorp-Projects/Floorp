@@ -160,7 +160,7 @@ function promiseWarn(error) {
 }
 
 /**
- * While waiting for a reps fix in https://github.com/devtools-html/reps/issues/92,
+ * While waiting for a reps fix in https://github.com/firefox-devtools/reps/issues/92,
  * translate nodeFront to a grip-like object that can be used with an ElementNode rep.
  *
  * @params  {NodeFront} nodeFront

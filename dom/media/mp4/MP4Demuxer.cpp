@@ -74,11 +74,7 @@ class MP4TrackDemuxer : public MediaTrackDemuxer,
   RefPtr<MediaRawData> mQueuedSample;
   bool mNeedReIndex;
   bool mNeedSPSForTelemetry;
-  enum CodecType {
-    kH264,
-    kVP9,
-    kOther
-  } mType = kOther;
+  enum CodecType { kH264, kVP9, kOther } mType = kOther;
 };
 
 // Returns true if no SPS was found and search for it should continue.

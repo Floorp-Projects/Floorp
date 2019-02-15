@@ -23,7 +23,8 @@ bool WebGLExtensionFragDepth::IsSupported(const WebGLContext* webgl) {
 
   gl::GLContext* gl = webgl->GL();
   if (gl->IsGLES() && gl->Version() >= 300) {
-    // ANGLE's shader translator can't translate ESSL1 exts to ESSL3. (bug 1524804)
+    // ANGLE's shader translator can't translate ESSL1 exts to ESSL3. (bug
+    // 1524804)
     return false;
   }
   return gl->IsSupported(gl::GLFeature::frag_depth);

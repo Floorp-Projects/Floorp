@@ -27,9 +27,7 @@ class FilterBar extends Component {
     return {
       dispatch: PropTypes.func.isRequired,
       filter: PropTypes.object.isRequired,
-      serviceContainer: PropTypes.shape({
-        attachRefToHud: PropTypes.func.isRequired,
-      }).isRequired,
+      attachRefToWebConsoleUI: PropTypes.func.isRequired,
       filterBarVisible: PropTypes.bool.isRequired,
       persistLogs: PropTypes.bool.isRequired,
       hidePersistLogsCheckbox: PropTypes.bool.isRequired,
@@ -57,7 +55,7 @@ class FilterBar extends Component {
   }
 
   componentDidMount() {
-    this.props.serviceContainer.attachRefToHud(
+    this.props.attachRefToWebConsoleUI(
       "filterBox",
       this.wrapperNode.querySelector(".text-filter")
     );

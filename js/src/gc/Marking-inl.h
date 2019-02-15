@@ -19,8 +19,8 @@
 namespace js {
 namespace gc {
 
-// An abstraction to re-wrap any kind of typed pointer back to the tagged pointer
-// it came from with |TaggedPtr<TargetType>::wrap(sourcePtr)|.
+// An abstraction to re-wrap any kind of typed pointer back to the tagged
+// pointer it came from with |TaggedPtr<TargetType>::wrap(sourcePtr)|.
 template <typename T>
 struct TaggedPtr {};
 

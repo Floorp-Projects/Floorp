@@ -593,7 +593,8 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   CodeOffset callWithABI(wasm::BytecodeOffset offset, wasm::SymbolicAddress fun,
                          MoveOp::Type result = MoveOp::GENERAL);
-  void callDebugWithABI(wasm::SymbolicAddress fun, MoveOp::Type result = MoveOp::GENERAL);
+  void callDebugWithABI(wasm::SymbolicAddress fun,
+                        MoveOp::Type result = MoveOp::GENERAL);
 
  private:
   // Reinitialize the variables which have to be cleared before making a call

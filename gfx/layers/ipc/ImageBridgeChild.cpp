@@ -623,12 +623,14 @@ void ImageBridgeChild::UpdateTextureFactoryIdentifier(
   // D3DTexture might become obsolte. To prevent to use obsoleted D3DTexture,
   // drop all ImageContainers' ImageClients.
 
-  // During re-creating GPU process, there was a period that ImageBridgeChild was
-  // re-created, but ImageBridgeChild::UpdateTextureFactoryIdentifier() was not
-  // called yet. In the period, if ImageBridgeChild::CreateImageClient() is called,
-  // ImageBridgeParent creates incompatible ImageHost than WebRenderImageHost.
-  bool initializingWebRender = GetCompositorBackendType() != LayersBackend::LAYERS_WR &&
-                               aIdentifier.mParentBackend == LayersBackend::LAYERS_WR;
+  // During re-creating GPU process, there was a period that ImageBridgeChild
+  // was re-created, but ImageBridgeChild::UpdateTextureFactoryIdentifier() was
+  // not called yet. In the period, if ImageBridgeChild::CreateImageClient() is
+  // called, ImageBridgeParent creates incompatible ImageHost than
+  // WebRenderImageHost.
+  bool initializingWebRender =
+      GetCompositorBackendType() != LayersBackend::LAYERS_WR &&
+      aIdentifier.mParentBackend == LayersBackend::LAYERS_WR;
 
   bool needsDrop = disablingWebRender || initializingWebRender;
 

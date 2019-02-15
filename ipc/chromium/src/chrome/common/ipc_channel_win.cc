@@ -19,7 +19,7 @@
 #include "mozilla/ipc/ProtocolUtils.h"
 
 #ifdef FUZZING
-#include "mozilla/ipc/Faulty.h"
+#  include "mozilla/ipc/Faulty.h"
 #endif
 
 // ChannelImpl is used on the IPC thread, but constructed on a different thread,
