@@ -25,6 +25,7 @@
 #include "nsNetUtil.h"
 #include "nsIFile.h"
 #include "nsFrameLoader.h"
+#include "nsFrameLoaderOwner.h"
 #include "nsIWebNavigation.h"
 #include "nsIDocShell.h"
 #include "nsIContent.h"
@@ -53,6 +54,7 @@
 #include "mozilla/dom/HTMLAnchorElement.h"
 #include "mozilla/dom/Selection.h"
 #include "nsVariant.h"
+#include "nsQueryObject.h"
 
 using namespace mozilla::dom;
 using mozilla::IgnoreErrors;
@@ -546,7 +548,7 @@ nsresult DragDataProducer::Produce(DataTransfer* aDataTransfer, bool* aCanDrag,
 
   // In chrome shells, only allow dragging inside editable areas.
   if (isChromeShell && !editingElement) {
-    nsCOMPtr<nsIFrameLoaderOwner> flo = do_QueryInterface(mTarget);
+    RefPtr<nsFrameLoaderOwner> flo = do_QueryObject(mTarget);
     if (flo) {
       RefPtr<nsFrameLoader> fl = flo->GetFrameLoader();
       if (fl) {

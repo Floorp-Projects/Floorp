@@ -186,8 +186,6 @@ class HTMLObjectElement final : public nsGenericHTMLFormElement,
    */
   void StartObjectLoad(bool aNotify, bool aForceLoad);
 
-  NS_FORWARD_NSIFRAMELOADEROWNER(nsObjectLoadingContent::)
-
  protected:
   // Override for nsImageLoadingContent.
   nsIContent* AsContent() override { return this; }

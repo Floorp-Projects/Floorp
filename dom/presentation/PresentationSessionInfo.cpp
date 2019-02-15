@@ -14,11 +14,13 @@
 #include "nsGlobalWindow.h"
 #include "nsIDocShell.h"
 #include "nsFrameLoader.h"
+#include "nsFrameLoaderOwner.h"
 #include "nsIMutableArray.h"
 #include "nsINetAddr.h"
 #include "nsISocketTransport.h"
 #include "nsISupportsPrimitives.h"
 #include "nsNetCID.h"
+#include "nsQueryObject.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
 #include "PresentationLog.h"
@@ -1489,7 +1491,7 @@ void PresentationPresentingInfo::ResolvedCallback(
     return;
   }
 
-  nsCOMPtr<nsIFrameLoaderOwner> owner = do_QueryInterface(frame);
+  RefPtr<nsFrameLoaderOwner> owner = do_QueryObject(frame);
   if (NS_WARN_IF(!owner)) {
     ReplyError(NS_ERROR_DOM_OPERATION_ERR);
     return;

@@ -1073,23 +1073,9 @@ nsObjectLoadingContent::OnDataAvailable(nsIRequest* aRequest,
   return NS_ERROR_UNEXPECTED;
 }
 
-// nsIFrameLoaderOwner
-NS_IMETHODIMP_(already_AddRefed<nsFrameLoader>)
-nsObjectLoadingContent::GetFrameLoader() {
-  RefPtr<nsFrameLoader> loader = mFrameLoader;
-  return loader.forget();
-}
-
 void nsObjectLoadingContent::PresetOpenerWindow(
     const Nullable<WindowProxyHolder>& aOpenerWindow, ErrorResult& aRv) {
   aRv.Throw(NS_ERROR_FAILURE);
-}
-
-void nsObjectLoadingContent::InternalSetFrameLoader(
-    nsFrameLoader* aNewFrameLoader) {
-  MOZ_CRASH(
-      "You shouldn't be calling this function, it doesn't make any sense on "
-      "this type.");
 }
 
 NS_IMETHODIMP

@@ -1882,6 +1882,6 @@ class MozBrowser extends MozElementMixin(XULFrameElement) {
   }
 }
 
-MozXULElement.implementCustomInterface(MozBrowser, [Ci.nsIBrowser, Ci.nsIFrameLoaderOwner]);
+MozXULElement.implementCustomInterface(MozBrowser, [Ci.nsIBrowser]);
 customElements.define("browser", MozBrowser);
 }

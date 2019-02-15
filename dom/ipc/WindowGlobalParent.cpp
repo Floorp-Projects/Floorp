@@ -12,6 +12,7 @@
 #include "mozJSComponentLoader.h"
 #include "nsContentUtils.h"
 #include "nsError.h"
+#include "nsQueryObject.h"
 
 #include "mozilla/dom/JSWindowActorBinding.h"
 #include "mozilla/dom/JSWindowActorParent.h"
@@ -97,7 +98,7 @@ void WindowGlobalParent::Init(const WindowGlobalInit& aInit) {
 
   // Extract the nsFrameLoader from the current frame element. We may not have a
   // nsFrameLoader if we are a chrome document.
-  nsCOMPtr<nsIFrameLoaderOwner> flOwner = do_QueryInterface(frameElement);
+  RefPtr<nsFrameLoaderOwner> flOwner = do_QueryObject(frameElement);
   if (flOwner) {
     mFrameLoader = flOwner->GetFrameLoader();
   }

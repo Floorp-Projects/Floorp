@@ -45,6 +45,7 @@
 #include "nsIWebNavigation.h"
 #include "nsIWebPageDescriptor.h"
 #include "nsNetUtil.h"
+#include "nsQueryObject.h"
 
 namespace mozilla {
 
@@ -283,7 +284,7 @@ void ResourceReader::DocumentDone(nsresult aStatus) {
 }
 
 nsresult ResourceReader::OnWalkSubframe(nsINode* aNode) {
-  nsCOMPtr<nsIFrameLoaderOwner> loaderOwner = do_QueryInterface(aNode);
+  RefPtr<nsFrameLoaderOwner> loaderOwner = do_QueryObject(aNode);
   NS_ENSURE_STATE(loaderOwner);
   RefPtr<nsFrameLoader> loader = loaderOwner->GetFrameLoader();
   NS_ENSURE_STATE(loader);
