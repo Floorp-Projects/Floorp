@@ -10,20 +10,15 @@ with Files('**'):
 BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
 XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell.ini']
 
-EXTRA_COMPONENTS += [
-    'PageThumbsComponents.manifest',
-    'PageThumbsStorageService.js',
-]
-
 EXTRA_JS_MODULES += [
     'BackgroundPageThumbs.jsm',
     'PageThumbs.jsm',
+    'PageThumbsStorageService.jsm',
     'PageThumbsWorker.js',
     'PageThumbUtils.jsm',
 ]
 
 UNIFIED_SOURCES += [
-    'nsPageThumbsModule.cpp',
     'PageThumbsProtocol.cpp'
 ]
 
@@ -33,6 +28,10 @@ XPIDL_SOURCES += [
 
 LOCAL_INCLUDES += [
     '/netwerk/base'
+]
+
+XPCOM_MANIFESTS += [
+    'components.conf',
 ]
 
 XPIDL_MODULE = 'thumbnails'

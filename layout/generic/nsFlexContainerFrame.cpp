@@ -254,10 +254,8 @@ static nscoord AddChecked(nscoord aFirst, nscoord aSecond) {
 // max-content and min-content should behave as property's initial value.
 // Bug 567039: We treat -moz-fit-content and -moz-available as property's
 // initial value for now.
-static inline bool IsAutoOrEnumOnBSize(const nsStyleCoord& aSize,
-                                       bool aIsInline) {
-  return aSize.GetUnit() == eStyleUnit_Auto ||
-         (!aIsInline && aSize.GetUnit() == eStyleUnit_Enumerated);
+static inline bool IsAutoOrEnumOnBSize(const StyleSize& aSize, bool aIsInline) {
+  return aSize.IsAuto() || (!aIsInline && aSize.IsExtremumLength());
 }
 
 // Helper-macros to let us pick one of two expressions to evaluate
@@ -1403,7 +1401,7 @@ static bool IsCrossSizeDefinite(const ReflowInput& aItemReflowInput,
 
   if (aAxisTracker.IsColumnOriented()) {
     // Column-oriented means cross axis is container's inline axis.
-    return pos->ISize(containerWM).GetUnit() != eStyleUnit_Auto;
+    return !pos->ISize(containerWM).IsAuto();
   }
   // Else, we're row-oriented, which means cross axis is container's block
   // axis. We need to use IsAutoBSize() to catch e.g. %-BSize applied to
@@ -1486,8 +1484,7 @@ static nscoord PartiallyResolveAutoMinSize(
   // We need the smallest of:
   // * the used flex-basis, if the computed flex-basis was 'auto':
   // XXXdholbert ('auto' might be renamed to 'main-size'; see bug 1032922)
-  if (eStyleUnit_Auto ==
-          aItemReflowInput.mStylePosition->mFlexBasis.GetUnit() &&
+  if (aItemReflowInput.mStylePosition->mFlexBasis.IsAuto() &&
       aFlexItem.GetFlexBaseSize() != NS_AUTOHEIGHT) {
     // NOTE: We skip this if the flex base size depends on content & isn't yet
     // resolved. This is OK, because the caller is responsible for computing
@@ -2025,10 +2022,9 @@ void FlexItem::CheckForMinSizeAuto(const ReflowInput& aFlexItemReflowInput,
   // (a) its computed value is "auto"
   // (b) the "overflow" sub-property in the same axis (the main axis) has a
   //     computed value of "visible"
-  const nsStyleCoord& mainMinSize =
-      aAxisTracker.IsRowOriented()
-          ? pos->MinISize(aAxisTracker.GetWritingMode())
-          : pos->MinBSize(aAxisTracker.GetWritingMode());
+  const auto& mainMinSize = aAxisTracker.IsRowOriented()
+                                ? pos->MinISize(aAxisTracker.GetWritingMode())
+                                : pos->MinBSize(aAxisTracker.GetWritingMode());
 
   // NOTE: Technically we should be checking the 'overflow' subproperty in the
   // main axis. But since we only care whether it's 'visible', we can check
@@ -2083,9 +2079,8 @@ bool FlexItem::IsCrossSizeAuto() const {
   // Check whichever component is in the flex container's cross axis.
   // (IsInlineAxisCrossAxis() tells us whether that's our ISize or BSize, in
   // terms of our own WritingMode, mWM.)
-  return eStyleUnit_Auto == (IsInlineAxisCrossAxis()
-                                 ? stylePos->ISize(mWM).GetUnit()
-                                 : stylePos->BSize(mWM).GetUnit());
+  return IsInlineAxisCrossAxis() ? stylePos->ISize(mWM).IsAuto()
+                                 : stylePos->BSize(mWM).IsAuto();
 }
 
 uint32_t FlexItem::GetNumAutoMarginsInAxis(AxisOrientationType aAxis) const {
@@ -4206,11 +4201,11 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
   // flexible -- but we'll let our ancestors handle those sorts of cases.)
   WritingMode wm = aReflowInput.GetWritingMode();
   const nsStylePosition* stylePos = StylePosition();
-  const nsStyleCoord& bsize = stylePos->BSize(wm);
-  if (bsize.HasPercent() ||
-      (StyleDisplay()->IsAbsolutelyPositionedStyle() && bsize.IsAutoOrEnum() &&
-       !stylePos->mOffset.GetBStart(wm).IsAuto() &&
-       !stylePos->mOffset.GetBEnd(wm).IsAuto())) {
+  const auto& bsize = stylePos->BSize(wm);
+  if (bsize.HasPercent() || (StyleDisplay()->IsAbsolutelyPositionedStyle() &&
+                             (bsize.IsAuto() || bsize.IsExtremumLength()) &&
+                             !stylePos->mOffset.GetBStart(wm).IsAuto() &&
+                             !stylePos->mOffset.GetBEnd(wm).IsAuto())) {
     AddStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE);
   }
 
@@ -4465,15 +4460,15 @@ bool nsFlexContainerFrame::IsItemInlineAxisMainAxis(nsIFrame* aFrame) {
 
 /* static */
 bool nsFlexContainerFrame::IsUsedFlexBasisContent(
-    const nsStyleCoord* aFlexBasis, const nsStyleCoord* aMainSize) {
+    const StyleFlexBasis& aFlexBasis, const StyleSize& aMainSize) {
   // We have a used flex-basis of 'content' if flex-basis explicitly has that
   // value, OR if flex-basis is 'auto' (deferring to the main-size property)
   // and the main-size property is also 'auto'.
   // See https://drafts.csswg.org/css-flexbox-1/#valdef-flex-basis-auto
-  return (aFlexBasis->GetUnit() == eStyleUnit_Enumerated &&
-          aFlexBasis->GetIntValue() == NS_STYLE_FLEX_BASIS_CONTENT) ||
-         (aFlexBasis->GetUnit() == eStyleUnit_Auto &&
-          aMainSize->GetUnit() == eStyleUnit_Auto);
+  if (aFlexBasis.IsContent()) {
+    return true;
+  }
+  return aFlexBasis.IsAuto() && aMainSize.IsAuto();
 }
 
 static mozilla::dom::FlexPhysicalDirection ConvertAxisOrientationTypeToAPIEnum(

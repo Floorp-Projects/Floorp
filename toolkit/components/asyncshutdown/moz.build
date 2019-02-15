@@ -14,11 +14,11 @@ XPIDL_SOURCES += [
 
 EXTRA_JS_MODULES += [
     'AsyncShutdown.jsm',
+    'nsAsyncShutdown.jsm',
 ]
 
-EXTRA_COMPONENTS += [
-    'nsAsyncShutdown.js',
-    'nsAsyncShutdown.manifest',
+XPCOM_MANIFESTS += [
+    'components.conf',
 ]
 
 with Files('**'):

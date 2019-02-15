@@ -7,9 +7,12 @@
 with Files('**'):
     BUG_COMPONENT = ('Firefox', 'File Handling')
 
-EXTRA_COMPONENTS += [
-    'nsContentDispatchChooser.js',
-    'nsContentDispatchChooser.manifest',
+EXTRA_JS_MODULES += [
+    'ContentDispatchChooser.jsm',
+]
+
+XPCOM_MANIFESTS += [
+    'components.conf',
 ]
 
 JAR_MANIFESTS += ['jar.mn']

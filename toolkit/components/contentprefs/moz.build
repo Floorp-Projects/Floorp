@@ -12,16 +12,16 @@ MOCHITEST_MANIFESTS += [
     'tests/mochitest/mochitest.ini'
 ]
 
-EXTRA_COMPONENTS += [
-    'ContentPrefService2.js',
-    'ContentPrefService2.manifest',
-]
-
 EXTRA_JS_MODULES += [
+    'ContentPrefService2.jsm',
     'ContentPrefServiceChild.jsm',
     'ContentPrefServiceParent.jsm',
     'ContentPrefStore.jsm',
     'ContentPrefUtils.jsm',
+]
+
+XPCOM_MANIFESTS += [
+    'components.conf',
 ]
 
 with Files('**'):

@@ -100,8 +100,8 @@ vbox {
 /********** label **********/
 
 label.text-link, label[onclick] {
-  -moz-binding: url("chrome://global/content/bindings/text.xml#text-link");
   -moz-user-focus: normal;
+  -moz-binding: none;
 }
 
 label[control], label.radio-label, label.checkbox-label, label.toolbarbutton-multiline-text {

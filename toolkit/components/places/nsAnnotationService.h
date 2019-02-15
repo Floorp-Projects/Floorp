@@ -16,8 +16,18 @@
 #include "nsString.h"
 #include "mozilla/Attributes.h"
 
+namespace mozilla {
+namespace places {
+
+struct BookmarkData;
+
+}  // namespace places
+}  // namespace mozilla
+
 class nsAnnotationService final : public nsIAnnotationService,
                                   public nsSupportsWeakReference {
+  using BookmarkData = mozilla::places::BookmarkData;
+
  public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIANNOTATIONSERVICE

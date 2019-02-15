@@ -10,8 +10,6 @@
 var EXPORTED_SYMBOLS = ["HomePage"];
 
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
-                               "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 const kPrefName = "browser.startup.homepage";
 
@@ -45,34 +43,12 @@ function getHomepagePref(useDefault) {
 }
 
 let HomePage = {
-  get(aWindow) {
-    if (PrivateBrowsingUtils.permanentPrivateBrowsing ||
-        (aWindow && PrivateBrowsingUtils.isWindowPrivate(aWindow))) {
-      return this.getPrivate();
-    }
+  get() {
     return getHomepagePref();
   },
 
   getDefault() {
     return getHomepagePref(true);
-  },
-
-  getPrivate() {
-    let homePages = getHomepagePref();
-    if (!homePages.includes("moz-extension")) {
-      return homePages;
-    }
-    // Verify private access and build a new list.
-    let privateHomePages = homePages.split("|").filter(page => {
-      let url = new URL(page);
-      if (url.protocol !== "moz-extension:") {
-        return true;
-      }
-      let policy = WebExtensionPolicy.getByHostname(url.hostname);
-      return policy && policy.privateBrowsingAllowed;
-    });
-    // Extensions may not be ready on startup, fallback to defaults.
-    return privateHomePages.join("|") || this.getDefault();
   },
 
   get overridden() {

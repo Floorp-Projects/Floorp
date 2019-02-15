@@ -799,10 +799,8 @@ LogicalSize nsContainerFrame::ComputeAutoSize(
     // flex item with our inline axis being the main axis), AND we have
     // flex-basis:content.
     const nsStylePosition* pos = StylePosition();
-    if (pos->ISize(aWM).GetUnit() == eStyleUnit_Auto ||
-        (pos->mFlexBasis.GetUnit() == eStyleUnit_Enumerated &&
-         pos->mFlexBasis.GetIntValue() == NS_STYLE_FLEX_BASIS_CONTENT &&
-         IsFlexItem() &&
+    if (pos->ISize(aWM).IsAuto() ||
+        (pos->mFlexBasis.IsContent() && IsFlexItem() &&
          nsFlexContainerFrame::IsItemInlineAxisMainAxis(this))) {
       result.ISize(aWM) =
           ShrinkWidthToFit(aRenderingContext, availBased, aFlags);

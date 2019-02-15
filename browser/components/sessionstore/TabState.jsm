@@ -184,10 +184,6 @@ var TabStateInternal = {
         if (value.hasOwnProperty("index")) {
           tabData.index = value.index;
         }
-
-        if (value.hasOwnProperty("requestedIndex")) {
-          tabData.requestedIndex = value.requestedIndex;
-        }
       } else {
         tabData[key] = value;
       }

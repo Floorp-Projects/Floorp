@@ -132,6 +132,11 @@ NS_IMETHODIMP
 ImageWrapper::GetType(uint16_t* aType) { return mInnerImage->GetType(aType); }
 
 NS_IMETHODIMP
+ImageWrapper::GetProducerId(uint32_t* aId) {
+  return mInnerImage->GetProducerId(aId);
+}
+
+NS_IMETHODIMP
 ImageWrapper::GetAnimated(bool* aAnimated) {
   return mInnerImage->GetAnimated(aAnimated);
 }

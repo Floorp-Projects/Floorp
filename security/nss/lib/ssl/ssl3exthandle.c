@@ -1927,7 +1927,7 @@ ssl_HandleRecordSizeLimitXtn(const sslSocket *ss, TLSExtensionData *xtnData,
         return SECFailure;
     }
     if (data->len != 0 || limit < 64) {
-        ssl3_ExtSendAlert(ss, alert_fatal, illegal_parameter);
+        ssl3_ExtSendAlert(ss, alert_fatal, decode_error);
         PORT_SetError(SSL_ERROR_RX_MALFORMED_HANDSHAKE);
         return SECFailure;
     }

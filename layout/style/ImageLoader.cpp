@@ -481,7 +481,7 @@ static bool IsRenderNoImages(uint32_t aDisplayItemKey) {
   return flags & TYPE_RENDERS_NO_IMAGES;
 }
 
-static void InvalidateImages(nsIFrame* aFrame) {
+static void InvalidateImages(nsIFrame* aFrame, imgIRequest* aRequest) {
   bool invalidateFrame = false;
   const SmallPointerArray<DisplayItemData>& array = aFrame->DisplayItemData();
   for (uint32_t i = 0; i < array.Length(); i++) {
@@ -516,7 +516,7 @@ static void InvalidateImages(nsIFrame* aFrame) {
           break;
         case layers::WebRenderUserData::UserDataType::eImage:
           if (static_cast<layers::WebRenderImageData*>(data.get())
-                  ->UsingSharedSurface()) {
+                  ->UsingSharedSurface(aRequest->GetProducerId())) {
             break;
           }
           MOZ_FALLTHROUGH;
@@ -532,7 +532,9 @@ static void InvalidateImages(nsIFrame* aFrame) {
   }
 }
 
-void ImageLoader::RequestPaintIfNeeded(FrameSet* aFrameSet, bool aForcePaint) {
+void ImageLoader::RequestPaintIfNeeded(FrameSet* aFrameSet,
+                                       imgIRequest* aRequest,
+                                       bool aForcePaint) {
   NS_ASSERTION(aFrameSet, "Must have a frame set");
   NS_ASSERTION(mDocument, "Should have returned earlier!");
 
@@ -545,7 +547,7 @@ void ImageLoader::RequestPaintIfNeeded(FrameSet* aFrameSet, bool aForcePaint) {
         // might not find the right display item.
         frame->InvalidateFrame();
       } else {
-        InvalidateImages(frame);
+        InvalidateImages(frame, aRequest);
 
         // Update ancestor rendering observers (-moz-element etc)
         nsIFrame* f = frame;
@@ -730,7 +732,7 @@ nsresult ImageLoader::OnFrameComplete(imgIRequest* aRequest) {
   // Since we just finished decoding a frame, we always want to paint, in case
   // we're now able to paint an image that we couldn't paint before (and hence
   // that we don't have retained data for).
-  RequestPaintIfNeeded(frameSet, /* aForcePaint = */ true);
+  RequestPaintIfNeeded(frameSet, aRequest, /* aForcePaint = */ true);
 
   return NS_OK;
 }
@@ -745,7 +747,7 @@ nsresult ImageLoader::OnFrameUpdate(imgIRequest* aRequest) {
     return NS_OK;
   }
 
-  RequestPaintIfNeeded(frameSet, /* aForcePaint = */ false);
+  RequestPaintIfNeeded(frameSet, aRequest, /* aForcePaint = */ false);
 
   return NS_OK;
 }

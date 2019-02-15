@@ -4,9 +4,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-EXTRA_COMPONENTS += [
-  'aboutdevtools-registration.js',
-  'aboutdevtools.manifest',
+EXTRA_JS_MODULES += [
+  'AboutDevToolsRegistration.jsm',
+]
+
+XPCOM_MANIFESTS += [
+    'components.conf',
 ]
 
 BROWSER_CHROME_MANIFESTS += ['test/browser.ini']

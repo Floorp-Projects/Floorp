@@ -25,7 +25,7 @@
       <vbox flex="1">
         <description class="description-with-side-element">
           <html:span id="contentBlockingDescription" class="tail-with-learn-more" data-l10n-id="content-blocking-description"></html:span>
-          <label id="contentBlockingLearnMore" class="learnMore text-link" data-l10n-id="content-blocking-learn-more"/>
+          <label id="contentBlockingLearnMore" class="learnMore" data-l10n-id="content-blocking-learn-more" is="text-link"/>
         </description>
       </vbox>
       <vbox>
@@ -107,7 +107,7 @@
                     </hbox>
                     <description class="indent">
                       <html:span class="tail-with-learn-more" data-l10n-id="content-blocking-warning-description"></html:span>
-                      <label class="text-link content-blocking-warning-learn-how" data-l10n-id="content-blocking-learn-how"/>
+                      <label class="content-blocking-warning-learn-how" data-l10n-id="content-blocking-learn-how" is="text-link"/>
                     </description>
                   </vbox>
                 </vbox>
@@ -148,7 +148,7 @@
                 </hbox>
                 <label id="changeBlockListLink"
                        data-l10n-id="content-blocking-tracking-protection-change-block-list"
-                       class="text-link"
+                       is="text-link"
                        search-l10n-ids="blocklist-window.title, blocklist-description, blocklist-button-cancel.label, blocklist-button-ok.label"/>
                 <hbox class="reject-trackers-ui custom-option">
                   <checkbox id="contentBlockingBlockCookiesCheckbox"
@@ -197,7 +197,7 @@
                   </hbox>
                   <description class="indent">
                     <html:span class="tail-with-learn-more" data-l10n-id="content-blocking-warning-description"></html:span>
-                    <label class="text-link content-blocking-warning-learn-how" data-l10n-id="content-blocking-learn-how"/>
+                    <label class="content-blocking-warning-learn-how" data-l10n-id="content-blocking-learn-how" is="text-link"/>
                   </description>
                 </vbox>
               </vbox>
@@ -208,7 +208,7 @@
     </vbox>
     <vbox id="doNotTrackLearnMoreBox">
       <label><label class="tail-with-learn-more" data-l10n-id="do-not-track-description" id="doNotTrackDesc"></label><label
-      class="learnMore text-link" href="https://www.mozilla.org/dnt"
+      class="learnMore" is="text-link" href="https://www.mozilla.org/dnt"
       data-l10n-id="do-not-track-learn-more"></label></label>
       <radiogroup id="doNotTrackRadioGroup" aria-labelledby="doNotTrackDesc" preference="privacy.donottrackheader.enabled">
         <radio value="true" data-l10n-id="do-not-track-option-always"/>
@@ -227,7 +227,7 @@
       <description class="description-with-side-element" flex="1">
         <html:span id="totalSiteDataSize" class="tail-with-learn-more"></html:span>
         <label id="siteDataLearnMoreLink"
-          class="learnMore text-link" data-l10n-id="sitedata-learn-more"/>
+          class="learnMore" is="text-link" data-l10n-id="sitedata-learn-more"/>
       </description>
       <hbox flex="1" id="deleteOnCloseNote" class="info-panel">
         <description flex="1" data-l10n-id="sitedata-delete-on-close-private-browsing" />
@@ -452,7 +452,7 @@
             preference="browser.urlbar.suggest.bookmark"/>
   <checkbox id="openpageSuggestion" data-l10n-id="addressbar-locbar-openpage-option"
             preference="browser.urlbar.suggest.openpage"/>
-  <label class="text-link" id="openSearchEnginePreferences"
+  <label id="openSearchEnginePreferences" is="text-link"
          data-l10n-id="addressbar-suggestions-settings"/>
 </groupbox>
 
@@ -546,7 +546,8 @@
                class="tail-with-learn-more"
                data-l10n-id="permissions-notification"/>
         <label id="notificationPermissionsLearnMore"
-               class="learnMore text-link"
+               class="learnMore"
+               is="text-link"
                data-l10n-id="permissions-notification-link"/>
       </description>
       <hbox pack="end">
@@ -641,7 +642,7 @@
       <checkbox id="a11yPrivacyCheckbox" class="tail-with-learn-more"
                 data-l10n-id="permissions-a11y-privacy-checkbox"
                 oncommand="return gPrivacyPane.updateA11yPrefs(this.checked)"/>
-      <label id="a11yLearnMoreLink" class="learnMore text-link"
+      <label id="a11yLearnMoreLink" class="learnMore" is="text-link"
              data-l10n-id="permissions-a11y-privacy-link"/>
     </hbox>
   </vbox>
@@ -663,7 +664,7 @@
   <description>
     <label class="tail-with-learn-more" data-l10n-id="collection-description"/>
     <label id="dataCollectionPrivacyNotice"
-           class="learnMore text-link"
+           class="learnMore" is="text-link"
            data-l10n-id="collection-privacy-notice"/>
   </description>
   <vbox data-subcategory="reports">
@@ -672,7 +673,7 @@
                 data-l10n-id="collection-health-report"
                 class="tail-with-learn-more"/>
       <label id="FHRLearnMore"
-             class="learnMore text-link"
+             class="learnMore" is="text-link"
              data-l10n-id="collection-health-report-link"/>
       <vbox class="indent">
         <hbox align="center">
@@ -682,7 +683,7 @@
           <label id="viewShieldStudies"
                  href="about:studies"
                  useoriginprincipal="true"
-                 class="learnMore text-link"
+                 class="learnMore" is="text-link"
                  data-l10n-id="collection-studies-link"/>
         </hbox>
 
@@ -691,7 +692,7 @@
                     class="tail-with-learn-more"
                     data-l10n-id="addon-recommendations"/>
           <label id="addonRecommendationLearnMore"
-                 class="learnMore text-link"
+                 class="learnMore" is="text-link"
                  data-l10n-id="addon-recommendations-link"/>
         </hbox>
       </vbox>
@@ -710,7 +711,7 @@
                 data-l10n-id="collection-backlogged-crash-reports"
                 flex="1"/>
       <label id="crashReporterLearnMore"
-              class="learnMore text-link" data-l10n-id="collection-backlogged-crash-reports-link"/>
+              class="learnMore" is="text-link" data-l10n-id="collection-backlogged-crash-reports-link"/>
     </hbox>
 #endif
   </vbox>
@@ -732,7 +733,7 @@
               data-l10n-id="security-enable-safe-browsing"
               class="tail-with-learn-more"/>
     <label id="enableSafeBrowsingLearnMore"
-           class="learnMore text-link" data-l10n-id="security-enable-safe-browsing-link"/>
+           class="learnMore" is="text-link" data-l10n-id="security-enable-safe-browsing-link"/>
   </hbox>
   <vbox class="indent">
     <checkbox id="blockDownloads"

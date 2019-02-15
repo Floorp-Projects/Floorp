@@ -143,6 +143,11 @@ interface imgIContainer : nsISupports
   readonly attribute boolean animated;
 
   /**
+   * Producer ID for image containers created by this image.
+   */
+  [infallible] readonly attribute unsigned long producerId;
+
+  /**
    * Flags for imgIContainer operations.
    *
    * Meanings:

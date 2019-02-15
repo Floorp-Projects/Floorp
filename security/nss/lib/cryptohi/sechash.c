@@ -202,11 +202,44 @@ HASH_GetHashTypeByOidTag(SECOidTag hashOid)
             ht = HASH_AlgSHA512;
             break;
         default:
-            ht = HASH_AlgNULL;
             PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
             break;
     }
     return ht;
+}
+
+SECOidTag
+HASH_GetHashOidTagByHashType(HASH_HashType type)
+{
+    SECOidTag oid = SEC_OID_UNKNOWN;
+
+    switch (type) {
+        case HASH_AlgMD2:
+            oid = SEC_OID_MD2;
+            break;
+        case HASH_AlgMD5:
+            oid = SEC_OID_MD5;
+            break;
+        case HASH_AlgSHA1:
+            oid = SEC_OID_SHA1;
+            break;
+        case HASH_AlgSHA224:
+            oid = SEC_OID_SHA224;
+            break;
+        case HASH_AlgSHA256:
+            oid = SEC_OID_SHA256;
+            break;
+        case HASH_AlgSHA384:
+            oid = SEC_OID_SHA384;
+            break;
+        case HASH_AlgSHA512:
+            oid = SEC_OID_SHA512;
+            break;
+        default:
+            PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
+            break;
+    }
+    return oid;
 }
 
 SECOidTag

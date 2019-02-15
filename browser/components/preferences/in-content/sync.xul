@@ -185,14 +185,14 @@
       </hbox>
     </groupbox>
     <vbox align="start">
-      <label id="mobilePromo-singledevice"
-             class="text-link fxaMobilePromo" data-l10n-id="sync-mobilepromo-single"/>
-      <label id="mobilePromo-multidevice"
-             class="text-link fxaMobilePromo" data-l10n-id="sync-mobilepromo-multi"/>
+      <label id="mobilePromo-singledevice" is="text-link"
+             class="fxaMobilePromo" data-l10n-id="sync-mobilepromo-single"/>
+      <label id="mobilePromo-multidevice" is="text-link"
+             class="fxaMobilePromo" data-l10n-id="sync-mobilepromo-multi"/>
     </vbox>
     <vbox id="tosPP-small" align="start">
-      <label id="tosPP-small-ToS" class="text-link" data-l10n-id="sync-tos-link"/>
-      <label id="tosPP-small-PP" class="text-link" data-l10n-id="sync-fxa-privacy-notice"/>
+      <label id="tosPP-small-ToS" is="text-link" data-l10n-id="sync-tos-link"/>
+      <label id="tosPP-small-PP" is="text-link" data-l10n-id="sync-fxa-privacy-notice"/>
     </vbox>
   </vbox>
 </deck>

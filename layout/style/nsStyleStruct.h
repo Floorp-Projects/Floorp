@@ -54,33 +54,22 @@ class ImageTracker;
 
 namespace mozilla {
 
-struct Position {
-  using Coord = nsStyleCoord::CalcValue;
+using Position = StylePosition;
 
-  Coord mXPosition, mYPosition;
+/**
+ * True if the effective background image position described by this depends on
+ * the size of the corresponding frame.
+ */
+template <>
+inline bool StylePosition::DependsOnPositioningAreaSize() const {
+  return horizontal.HasPercent() || vertical.HasPercent();
+}
 
-  // Initialize nothing
-  Position() {}
-
-  // Sets both mXPosition and mYPosition to the given percent value for the
-  // initial property-value (e.g. 0.0f for "0% 0%", or 0.5f for "50% 50%")
-  void SetInitialPercentValues(float aPercentVal);
-
-  // Sets both mXPosition and mYPosition to 0 (app units) for the
-  // initial property-value as a length with no percentage component.
-  void SetInitialZeroValues();
-
-  // True if the effective background image position described by this depends
-  // on the size of the corresponding frame.
-  bool DependsOnPositioningAreaSize() const {
-    return mXPosition.mPercent != 0.0f || mYPosition.mPercent != 0.0f;
-  }
-
-  bool operator==(const Position& aOther) const {
-    return mXPosition == aOther.mXPosition && mYPosition == aOther.mYPosition;
-  }
-  bool operator!=(const Position& aOther) const { return !(*this == aOther); }
-};
+template <>
+inline Position Position::FromPercentage(float aPercent) {
+  return {LengthPercentage::FromPercentage(aPercent),
+          LengthPercentage::FromPercentage(aPercent)};
+}
 
 }  // namespace mozilla
 
@@ -507,68 +496,6 @@ struct nsStyleImageLayers {
   static bool IsInitialPositionForLayerType(mozilla::Position aPosition,
                                             LayerType aType);
 
-  struct Size {
-    struct Dimension : public nsStyleCoord::CalcValue {
-      nscoord ResolveLengthPercentage(nscoord aAvailable) const {
-        double d = double(mPercent) * double(aAvailable) + double(mLength);
-        if (d < 0.0) {
-          return 0;
-        }
-        return NSToCoordRoundWithClamp(float(d));
-      }
-    };
-    Dimension mWidth, mHeight;
-
-    bool IsInitialValue() const {
-      return mWidthType == eAuto && mHeightType == eAuto;
-    }
-
-    nscoord ResolveWidthLengthPercentage(
-        const nsSize& aBgPositioningArea) const {
-      MOZ_ASSERT(mWidthType == eLengthPercentage,
-                 "resolving non-length/percent dimension!");
-      return mWidth.ResolveLengthPercentage(aBgPositioningArea.width);
-    }
-
-    nscoord ResolveHeightLengthPercentage(
-        const nsSize& aBgPositioningArea) const {
-      MOZ_ASSERT(mHeightType == eLengthPercentage,
-                 "resolving non-length/percent dimension!");
-      return mHeight.ResolveLengthPercentage(aBgPositioningArea.height);
-    }
-
-    // Except for eLengthPercentage, Dimension types which might change
-    // how a layer is painted when the corresponding frame's dimensions
-    // change *must* precede all dimension types which are agnostic to
-    // frame size; see DependsOnDependsOnPositioningAreaSizeSize.
-    enum DimensionType {
-      // If one of mWidth and mHeight is eContain or eCover, then both are.
-      // NOTE: eContain and eCover *must* be equal to NS_STYLE_BG_SIZE_CONTAIN
-      // and NS_STYLE_BG_SIZE_COVER (in kBackgroundSizeKTable).
-      eContain,
-      eCover,
-
-      eAuto,
-      eLengthPercentage,
-      eDimensionType_COUNT
-    };
-    uint8_t mWidthType, mHeightType;
-
-    // True if the effective image size described by this depends on the size of
-    // the corresponding frame, when aImage (which must not have null type) is
-    // the background image.
-    bool DependsOnPositioningAreaSize(const nsStyleImage& aImage) const;
-
-    // Initialize nothing
-    Size() {}
-
-    // Initialize to initial values
-    void SetInitialValues();
-
-    bool operator==(const Size& aOther) const;
-    bool operator!=(const Size& aOther) const { return !(*this == aOther); }
-  };
-
   struct Repeat {
     mozilla::StyleImageLayerRepeat mXRepeat, mYRepeat;
 
@@ -600,10 +527,11 @@ struct nsStyleImageLayers {
   struct Layer {
     typedef mozilla::StyleGeometryBox StyleGeometryBox;
     typedef mozilla::StyleImageLayerAttachment StyleImageLayerAttachment;
+    typedef mozilla::StyleBackgroundSize StyleBackgroundSize;
 
     nsStyleImage mImage;
     mozilla::Position mPosition;
-    Size mSize;
+    StyleBackgroundSize mSize;
     StyleGeometryBox mClip;
     MOZ_INIT_OUTSIDE_CTOR StyleGeometryBox mOrigin;
 
@@ -1299,6 +1227,15 @@ struct nsStyleGridTemplate {
 };
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePosition {
+  using LengthPercentageOrAuto = mozilla::LengthPercentageOrAuto;
+  using Position = mozilla::Position;
+  template <typename T>
+  using StyleRect = mozilla::StyleRect<T>;
+  using StyleSize = mozilla::StyleSize;
+  using StyleMaxSize = mozilla::StyleMaxSize;
+  using StyleFlexBasis = mozilla::StyleFlexBasis;
+  using WritingMode = mozilla::WritingMode;
+
   explicit nsStylePosition(const mozilla::dom::Document&);
   nsStylePosition(const nsStylePosition& aOther);
   ~nsStylePosition();
@@ -1321,15 +1258,15 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePosition {
    */
   uint8_t UsedJustifySelf(mozilla::ComputedStyle* aParent) const;
 
-  mozilla::Position mObjectPosition;
-  mozilla::StyleRect<mozilla::LengthPercentageOrAuto> mOffset;
-  nsStyleCoord mWidth;               // coord, percent, enum, calc, auto
-  nsStyleCoord mMinWidth;            // coord, percent, enum, calc
-  nsStyleCoord mMaxWidth;            // coord, percent, enum, calc, none
-  nsStyleCoord mHeight;              // coord, percent, calc, auto
-  nsStyleCoord mMinHeight;           // coord, percent, calc
-  nsStyleCoord mMaxHeight;           // coord, percent, calc, none
-  nsStyleCoord mFlexBasis;           // coord, percent, enum, calc, auto
+  Position mObjectPosition;
+  StyleRect<LengthPercentageOrAuto> mOffset;
+  StyleSize mWidth;
+  StyleSize mMinWidth;
+  StyleMaxSize mMaxWidth;
+  StyleSize mHeight;
+  StyleSize mMinHeight;
+  StyleMaxSize mMaxHeight;
+  StyleFlexBasis mFlexBasis;
   nsStyleCoord mGridAutoColumnsMin;  // coord, percent, enum, calc, flex
   nsStyleCoord mGridAutoColumnsMax;  // coord, percent, enum, calc, flex
   nsStyleCoord mGridAutoRowsMin;     // coord, percent, enum, calc, flex
@@ -1382,37 +1319,42 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePosition {
   // given a WritingMode value. The definitions of these methods are
   // found in WritingModes.h (after the WritingMode class is fully
   // declared).
-  inline nsStyleCoord& ISize(mozilla::WritingMode aWM);
-  inline nsStyleCoord& MinISize(mozilla::WritingMode aWM);
-  inline nsStyleCoord& MaxISize(mozilla::WritingMode aWM);
-  inline nsStyleCoord& BSize(mozilla::WritingMode aWM);
-  inline nsStyleCoord& MinBSize(mozilla::WritingMode aWM);
-  inline nsStyleCoord& MaxBSize(mozilla::WritingMode aWM);
-  inline const nsStyleCoord& ISize(mozilla::WritingMode aWM) const;
-  inline const nsStyleCoord& MinISize(mozilla::WritingMode aWM) const;
-  inline const nsStyleCoord& MaxISize(mozilla::WritingMode aWM) const;
-  inline const nsStyleCoord& BSize(mozilla::WritingMode aWM) const;
-  inline const nsStyleCoord& MinBSize(mozilla::WritingMode aWM) const;
-  inline const nsStyleCoord& MaxBSize(mozilla::WritingMode aWM) const;
-  inline bool ISizeDependsOnContainer(mozilla::WritingMode aWM) const;
-  inline bool MinISizeDependsOnContainer(mozilla::WritingMode aWM) const;
-  inline bool MaxISizeDependsOnContainer(mozilla::WritingMode aWM) const;
-  inline bool BSizeDependsOnContainer(mozilla::WritingMode aWM) const;
-  inline bool MinBSizeDependsOnContainer(mozilla::WritingMode aWM) const;
-  inline bool MaxBSizeDependsOnContainer(mozilla::WritingMode aWM) const;
+  inline const StyleSize& ISize(WritingMode) const;
+  inline const StyleSize& MinISize(WritingMode) const;
+  inline const StyleMaxSize& MaxISize(WritingMode) const;
+  inline const StyleSize& BSize(WritingMode) const;
+  inline const StyleSize& MinBSize(WritingMode) const;
+  inline const StyleMaxSize& MaxBSize(WritingMode) const;
+  inline bool ISizeDependsOnContainer(WritingMode) const;
+  inline bool MinISizeDependsOnContainer(WritingMode) const;
+  inline bool MaxISizeDependsOnContainer(WritingMode) const;
+  inline bool BSizeDependsOnContainer(WritingMode) const;
+  inline bool MinBSizeDependsOnContainer(WritingMode) const;
+  inline bool MaxBSizeDependsOnContainer(WritingMode) const;
 
   const nsStyleGridTemplate& GridTemplateColumns() const;
   const nsStyleGridTemplate& GridTemplateRows() const;
 
  private:
-  static bool ISizeCoordDependsOnContainer(const nsStyleCoord& aCoord) {
-    return aCoord.HasPercent() ||
-           (aCoord.GetUnit() == eStyleUnit_Enumerated &&
-            (aCoord.GetIntValue() == NS_STYLE_WIDTH_FIT_CONTENT ||
-             aCoord.GetIntValue() == NS_STYLE_WIDTH_AVAILABLE));
+  template <typename SizeOrMaxSize>
+  static bool ISizeCoordDependsOnContainer(const SizeOrMaxSize& aCoord) {
+    if (aCoord.IsLengthPercentage()) {
+      return aCoord.AsLengthPercentage().HasPercent();
+    }
+
+    if (!aCoord.IsExtremumLength()) {
+      return false;
+    }
+
+    auto keyword = aCoord.AsExtremumLength();
+    return keyword == mozilla::StyleExtremumLength::MozFitContent ||
+           keyword == mozilla::StyleExtremumLength::MozAvailable;
   }
-  static bool BSizeCoordDependsOnContainer(const nsStyleCoord& aCoord) {
-    return aCoord.HasPercent();
+
+  template <typename SizeOrMaxSize>
+  static bool BSizeCoordDependsOnContainer(const SizeOrMaxSize& aCoord) {
+    return aCoord.IsLengthPercentage() &&
+           aCoord.AsLengthPercentage().HasPercent();
   }
 };
 
@@ -1694,9 +1636,9 @@ struct StyleAnimation {
 class StyleBasicShape final {
  public:
   explicit StyleBasicShape(StyleBasicShapeType type)
-      : mType(type), mFillRule(StyleFillRule::Nonzero) {
-    mPosition.SetInitialPercentValues(0.5f);
-  }
+      : mType(type),
+        mFillRule(StyleFillRule::Nonzero),
+        mPosition(Position::FromPercentage(0.5f)) {}
 
   StyleBasicShapeType GetShapeType() const { return mType; }
   nsCSSKeyword GetShapeTypeName() const;

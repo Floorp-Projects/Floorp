@@ -11925,15 +11925,12 @@ class MWasmCall final : public MVariadicInstruction, public NoTypePolicy::Data {
   wasm::CallSiteDesc desc_;
   wasm::CalleeDesc callee_;
   FixedList<AnyRegister> argRegs_;
-  uint32_t spIncrement_;
   ABIArg instanceArg_;
 
-  MWasmCall(const wasm::CallSiteDesc& desc, const wasm::CalleeDesc& callee,
-            uint32_t spIncrement)
+  MWasmCall(const wasm::CallSiteDesc& desc, const wasm::CalleeDesc& callee)
       : MVariadicInstruction(classOpcode),
         desc_(desc),
-        callee_(callee),
-        spIncrement_(spIncrement) {}
+        callee_(callee) {}
 
  public:
   INSTRUCTION_HEADER(WasmCall)
@@ -11947,13 +11944,12 @@ class MWasmCall final : public MVariadicInstruction, public NoTypePolicy::Data {
 
   static MWasmCall* New(TempAllocator& alloc, const wasm::CallSiteDesc& desc,
                         const wasm::CalleeDesc& callee, const Args& args,
-                        MIRType resultType, uint32_t spIncrement,
-                        MDefinition* tableIndex = nullptr);
+                        MIRType resultType, MDefinition* tableIndex = nullptr);
 
   static MWasmCall* NewBuiltinInstanceMethodCall(
       TempAllocator& alloc, const wasm::CallSiteDesc& desc,
       const wasm::SymbolicAddress builtin, const ABIArg& instanceArg,
-      const Args& args, MIRType resultType, uint32_t spIncrement);
+      const Args& args, MIRType resultType);
 
   size_t numArgs() const { return argRegs_.length(); }
   AnyRegister registerForArg(size_t index) const {
@@ -11962,7 +11958,6 @@ class MWasmCall final : public MVariadicInstruction, public NoTypePolicy::Data {
   }
   const wasm::CallSiteDesc& desc() const { return desc_; }
   const wasm::CalleeDesc& callee() const { return callee_; }
-  uint32_t spIncrement() const { return spIncrement_; }
 
   bool possiblyCalls() const override { return true; }
 

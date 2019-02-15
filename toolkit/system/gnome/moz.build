@@ -23,6 +23,10 @@ SOURCES += [
     'nsGSettingsService.cpp',
 ]
 
+XPCOM_MANIFESTS += [
+    'components.conf',
+]
+
 FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [

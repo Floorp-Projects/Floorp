@@ -5,26 +5,14 @@
 
 #include "PerfMeasurement.h"
 #include "jsperf.h"
-#include "mozilla/ModuleUtils.h"
 #include "nsMemory.h"
 #include "mozilla/Preferences.h"
 #include "mozJSComponentLoader.h"
 #include "nsZipArchive.h"
 #include "xpc_make_class.h"
 
-#define JSPERF_CONTRACTID "@mozilla.org/jsperf;1"
-
-#define JSPERF_CID                                   \
-  {                                                  \
-    0x421c38e6, 0xaee0, 0x4509, {                    \
-      0xa0, 0x25, 0x13, 0x0f, 0x43, 0x78, 0x03, 0x5a \
-    }                                                \
-  }
-
 namespace mozilla {
 namespace jsperf {
-
-NS_GENERIC_FACTORY_CONSTRUCTOR(Module)
 
 NS_IMPL_ISUPPORTS(Module, nsIXPCScriptable)
 
@@ -84,17 +72,3 @@ Module::Call(nsIXPConnectWrappedNative* wrapper, JSContext* cx, JSObject* obj,
 
 }  // namespace jsperf
 }  // namespace mozilla
-
-NS_DEFINE_NAMED_CID(JSPERF_CID);
-
-static const mozilla::Module::CIDEntry kPerfCIDs[] = {
-    {&kJSPERF_CID, false, nullptr, mozilla::jsperf::ModuleConstructor},
-    {nullptr}};
-
-static const mozilla::Module::ContractIDEntry kPerfContracts[] = {
-    {JSPERF_CONTRACTID, &kJSPERF_CID}, {nullptr}};
-
-static const mozilla::Module kPerfModule = {mozilla::Module::kVersion,
-                                            kPerfCIDs, kPerfContracts};
-
-NSMODULE_DEFN(jsperf) = &kPerfModule;

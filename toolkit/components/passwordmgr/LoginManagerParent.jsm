@@ -67,7 +67,7 @@ var LoginManagerParent = {
     return LoginHelper.dedupeLogins(logins, ["username"], resolveBy, formOrigin);
   },
 
-  // Listeners are added in nsBrowserGlue.js on desktop
+  // Listeners are added in BrowserGlue.jsm on desktop
   // and in BrowserCLH.js on mobile.
   receiveMessage(msg) {
     let data = msg.data;

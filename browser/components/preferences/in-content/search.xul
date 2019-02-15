@@ -78,7 +78,7 @@
                 />
       </hbox>
       <hbox id="addEnginesBox" pack="start">
-        <label id="addEngines" class="text-link" data-l10n-id="search-find-more-link"></label>
+        <label id="addEngines" data-l10n-id="search-find-more-link" is="text-link"></label>
       </hbox>
     </groupbox>
     ]]></box>

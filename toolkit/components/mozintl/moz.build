@@ -20,9 +20,12 @@ SOURCES += [
     'MozIntlHelper.cpp',
 ]
 
-EXTRA_COMPONENTS += [
-    'mozIntl.js',
-    'mozIntl.manifest',
+EXTRA_JS_MODULES += [
+    'mozIntl.jsm',
+]
+
+XPCOM_MANIFESTS += [
+    'components.conf',
 ]
 
 FINAL_LIBRARY = 'xul'
