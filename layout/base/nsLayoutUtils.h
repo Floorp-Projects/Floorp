@@ -1345,12 +1345,6 @@ class nsLayoutUtils {
    */
   static nsIFrame* GetNonGeneratedAncestor(nsIFrame* aFrame);
 
-  /**
-   * Cast aFrame to an nsBlockFrame* or return null if it's not
-   * an nsBlockFrame.
-   */
-  static nsBlockFrame* GetAsBlock(nsIFrame* aFrame);
-
   /*
    * Whether the frame is an nsBlockFrame which is not a wrapper block.
    */

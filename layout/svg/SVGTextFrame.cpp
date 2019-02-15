@@ -4547,8 +4547,7 @@ static void ShiftAnchoredChunk(nsTArray<CharPosition>& aCharPositions,
 }
 
 void SVGTextFrame::AdjustChunksForLineBreaks() {
-  nsBlockFrame* block =
-      nsLayoutUtils::GetAsBlock(PrincipalChildList().FirstChild());
+  nsBlockFrame* block = do_QueryFrame(PrincipalChildList().FirstChild());
   NS_ASSERTION(block, "expected block frame");
 
   nsBlockFrame::LineIterator line = block->LinesBegin();

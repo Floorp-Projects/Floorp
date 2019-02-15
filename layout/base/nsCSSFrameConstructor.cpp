@@ -3790,7 +3790,7 @@ void nsCSSFrameConstructor::ConstructFrameFromItemInternal(
       newFrameAsContainer->SetInitialChildList(kPrincipalList, childItems);
 
       if (bits & FCDATA_MAY_NEED_BULLET) {
-        nsBlockFrame* block = nsLayoutUtils::GetAsBlock(newFrameAsContainer);
+        nsBlockFrame* block = do_QueryFrame(newFrameAsContainer);
         MOZ_ASSERT(block,
                    "FCDATA_MAY_NEED_BULLET should not be set on "
                    "non-block type!");
