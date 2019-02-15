@@ -1433,7 +1433,7 @@ static void BuildTextRuns(DrawTarget* aDrawTarget, nsTextFrame* aForFrame,
   BuildTextRunsScanner scanner(presContext, aDrawTarget, aLineContainer,
                                aWhichTextRun);
 
-  nsBlockFrame* block = nsLayoutUtils::GetAsBlock(aLineContainer);
+  nsBlockFrame* block = do_QueryFrame(aLineContainer);
 
   if (!block) {
     nsIFrame* textRunContainer = aLineContainer;
@@ -5294,7 +5294,7 @@ void nsTextFrame::GetTextDecorations(
           nsLayoutUtils::GetColor(f, &nsStyleTextReset::mTextDecorationColor);
     }
 
-    nsBlockFrame* fBlock = nsLayoutUtils::GetAsBlock(f);
+    nsBlockFrame* fBlock = do_QueryFrame(f);
     const bool firstBlock = !nearestBlockFound && fBlock;
 
     // Not updating positions once we hit a parent block is equivalent to
@@ -8735,7 +8735,7 @@ static void RemoveEmptyInFlows(nsTextFrame* aFrame,
   lastRemoved->SetNextInFlow(nullptr);
 
   nsContainerFrame* parent = aFrame->GetParent();
-  nsBlockFrame* parentBlock = nsLayoutUtils::GetAsBlock(parent);
+  nsBlockFrame* parentBlock = do_QueryFrame(parent);
   if (parentBlock) {
     // Manually call DoRemoveFrame so we can tell it that we're
     // removing empty frames; this will keep it from blowing away
@@ -10049,7 +10049,7 @@ bool nsTextFrame::ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas) {
   } else {
     nsIFrame* f = this;
     for (;;) {
-      nsBlockFrame* fBlock = nsLayoutUtils::GetAsBlock(f);
+      nsBlockFrame* fBlock = do_QueryFrame(f);
       if (fBlock) {
         decorationsBlock = fBlock;
         break;
