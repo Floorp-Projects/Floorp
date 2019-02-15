@@ -165,13 +165,15 @@ addonsManager:
       - browserAction
       - customize
       - pageAction
+      - doorhanger
     extra_keys:
       action: >
         The action that was performed. Options include disable, enable, uninstall, undo, contribute, preferences,
-        installFromFile, manage, checkForUpdates, checkForUpdate, setUpdatePolicy, setAddonUpdate, resetUpdatePolicy,
-        privateBrowsingAllowed, and releaseNotes.
+        installFromFile, manage, dismiss, checkForUpdates, checkForUpdate, setUpdatePolicy, setAddonUpdate,
+        resetUpdatePolicy, privateBrowsingAllowed and releaseNotes.
       type: "For enable, disable, uninstall and undo: the add-on type that is being acted upon."
-      view: The view for the event, when object is aboutAddons.
+      view: >
+        The view for the event when object is aboutAddons, or the specific doorhanger when object is doorhanger.
       addonId: The id of the add-on being acted upon.
     notification_emails: ["addons-dev-internal@mozilla.com"]
     expiry_version: "73"
