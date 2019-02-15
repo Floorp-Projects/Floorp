@@ -9,6 +9,7 @@
 
 <window id="ContainersDialog"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
         data-l10n-attrs="title, style"
         onload="gContainersManager.onLoad();"
         onunload="gContainersManager.uninit();"
@@ -16,7 +17,7 @@
         onkeypress="gContainersManager.onWindowKeyPress(event);">
 
   <linkset>
-    <link rel="localization" href="browser/preferences/containers.ftl"/>
+    <html:link rel="localization" href="browser/preferences/containers.ftl"/>
   </linkset>
 
   <script src="chrome://browser/content/preferences/containers.js"/>

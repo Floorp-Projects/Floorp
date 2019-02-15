@@ -963,9 +963,7 @@ class JS_PUBLIC_API RealmCreationOptions {
         cloneSingletons_(false),
         sharedMemoryAndAtomics_(false),
         streams_(false),
-#ifdef ENABLE_BIGINT
         bigint_(false),
-#endif
         secureContext_(false),
         clampAndJitterTime_(true) {
   }
@@ -1042,13 +1040,11 @@ class JS_PUBLIC_API RealmCreationOptions {
     return *this;
   }
 
-#ifdef ENABLE_BIGINT
   bool getBigIntEnabled() const { return bigint_; }
   RealmCreationOptions& setBigIntEnabled(bool flag) {
     bigint_ = flag;
     return *this;
   }
-#endif
 
   // This flag doesn't affect JS engine behavior.  It is used by Gecko to
   // mark whether content windows and workers are "Secure Context"s. See
@@ -1079,9 +1075,7 @@ class JS_PUBLIC_API RealmCreationOptions {
   bool cloneSingletons_;
   bool sharedMemoryAndAtomics_;
   bool streams_;
-#ifdef ENABLE_BIGINT
   bool bigint_;
-#endif
   bool secureContext_;
   bool clampAndJitterTime_;
 };

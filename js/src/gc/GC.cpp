@@ -229,9 +229,7 @@
 #include "js/SliceBudget.h"
 #include "proxy/DeadObjectProxy.h"
 #include "util/Windows.h"
-#ifdef ENABLE_BIGINT
-#  include "vm/BigIntType.h"
-#endif
+#include "vm/BigIntType.h"
 #include "vm/Debugger.h"
 #include "vm/GeckoProfiler.h"
 #include "vm/JSAtom.h"
@@ -506,10 +504,7 @@ static const FinalizePhase BackgroundFinalizePhases[] = {
     {gcstats::PhaseKind::SWEEP_STRING,
      {AllocKind::FAT_INLINE_STRING, AllocKind::STRING,
       AllocKind::EXTERNAL_STRING, AllocKind::FAT_INLINE_ATOM, AllocKind::ATOM,
-      AllocKind::SYMBOL,
-#ifdef ENABLE_BIGINT
-      AllocKind::BIGINT
-#endif
+      AllocKind::SYMBOL, AllocKind::BIGINT
      }},
     {gcstats::PhaseKind::SWEEP_SHAPE,
      {AllocKind::SHAPE, AllocKind::ACCESSOR_SHAPE, AllocKind::BASE_SHAPE,
@@ -8383,10 +8378,8 @@ JS::GCCellPtr::GCCellPtr(const Value& v) : ptr(0) {
     ptr = checkedCast(&v.toObject(), JS::TraceKind::Object);
   } else if (v.isSymbol()) {
     ptr = checkedCast(v.toSymbol(), JS::TraceKind::Symbol);
-#ifdef ENABLE_BIGINT
   } else if (v.isBigInt()) {
     ptr = checkedCast(v.toBigInt(), JS::TraceKind::BigInt);
-#endif
   } else if (v.isPrivateGCThing()) {
     ptr = checkedCast(v.toGCThing(), v.toGCThing()->getTraceKind());
   } else {
@@ -9003,11 +8996,9 @@ void js::gc::ClearEdgesTracer::onStringEdge(JSString** strp) {
 void js::gc::ClearEdgesTracer::onSymbolEdge(JS::Symbol** symp) {
   clearEdge(symp);
 }
-#ifdef ENABLE_BIGINT
 void js::gc::ClearEdgesTracer::onBigIntEdge(JS::BigInt** bip) {
   clearEdge(bip);
 }
-#endif
 void js::gc::ClearEdgesTracer::onScriptEdge(JSScript** scriptp) {
   clearEdge(scriptp);
 }

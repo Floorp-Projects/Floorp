@@ -329,6 +329,7 @@ class nsXULElement : public nsStyledElement {
                               nsIContent* aBindingParent) override;
   virtual void UnbindFromTree(bool aDeep, bool aNullParent) override;
   virtual void DestroyContent() override;
+  virtual void DoneAddingChildren(bool aHaveNotified) override;
 
 #ifdef DEBUG
   virtual void List(FILE* out, int32_t aIndent) const override;

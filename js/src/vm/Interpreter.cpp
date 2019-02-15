@@ -35,9 +35,7 @@
 #include "util/StringBuffer.h"
 #include "vm/AsyncFunction.h"
 #include "vm/AsyncIteration.h"
-#ifdef ENABLE_BIGINT
-#  include "vm/BigIntType.h"
-#endif
+#include "vm/BigIntType.h"
 #include "vm/BytecodeUtil.h"
 #include "vm/Debugger.h"
 #include "vm/EqualityOperations.h"  // js::StrictlyEqual
@@ -348,7 +346,7 @@ static bool MaybeCreateThisForConstructor(JSContext* cx, JSScript* calleeScript,
     return true;
   }
 
-  RootedObject callee(cx, &args.callee());
+  RootedFunction callee(cx, &args.callee().as<JSFunction>());
   RootedObject newTarget(cx, &args.newTarget().toObject());
   NewObjectKind newKind = createSingleton ? SingletonObject : GenericObject;
 
@@ -891,11 +889,9 @@ JSType js::TypeOfValue(const Value& v) {
   if (v.isBoolean()) {
     return JSTYPE_BOOLEAN;
   }
-#ifdef ENABLE_BIGINT
   if (v.isBigInt()) {
     return JSTYPE_BIGINT;
   }
-#endif
   MOZ_ASSERT(v.isSymbol());
   return JSTYPE_SYMBOL;
 }
@@ -1440,11 +1436,9 @@ static MOZ_ALWAYS_INLINE bool AddOperation(JSContext* cx,
     return false;
   }
 
-#ifdef ENABLE_BIGINT
   if (lhs.isBigInt() || rhs.isBigInt()) {
     return BigInt::add(cx, lhs, rhs, res);
   }
-#endif
 
   res.setNumber(lhs.toNumber() + rhs.toNumber());
   return true;
@@ -1458,11 +1452,9 @@ static MOZ_ALWAYS_INLINE bool SubOperation(JSContext* cx,
     return false;
   }
 
-#ifdef ENABLE_BIGINT
   if (lhs.isBigInt() || rhs.isBigInt()) {
     return BigInt::sub(cx, lhs, rhs, res);
   }
-#endif
 
   res.setNumber(lhs.toNumber() - rhs.toNumber());
   return true;
@@ -1476,11 +1468,9 @@ static MOZ_ALWAYS_INLINE bool MulOperation(JSContext* cx,
     return false;
   }
 
-#ifdef ENABLE_BIGINT
   if (lhs.isBigInt() || rhs.isBigInt()) {
     return BigInt::mul(cx, lhs, rhs, res);
   }
-#endif
 
   res.setNumber(lhs.toNumber() * rhs.toNumber());
   return true;
@@ -1494,11 +1484,9 @@ static MOZ_ALWAYS_INLINE bool DivOperation(JSContext* cx,
     return false;
   }
 
-#ifdef ENABLE_BIGINT
   if (lhs.isBigInt() || rhs.isBigInt()) {
     return BigInt::div(cx, lhs, rhs, res);
   }
-#endif
 
   res.setNumber(NumberDiv(lhs.toNumber(), rhs.toNumber()));
   return true;
@@ -1520,11 +1508,9 @@ static MOZ_ALWAYS_INLINE bool ModOperation(JSContext* cx,
     return false;
   }
 
-#ifdef ENABLE_BIGINT
   if (lhs.isBigInt() || rhs.isBigInt()) {
     return BigInt::mod(cx, lhs, rhs, res);
   }
-#endif
 
   res.setNumber(NumberMod(lhs.toNumber(), rhs.toNumber()));
   return true;
@@ -1538,11 +1524,9 @@ static MOZ_ALWAYS_INLINE bool PowOperation(JSContext* cx,
     return false;
   }
 
-#ifdef ENABLE_BIGINT
   if (lhs.isBigInt() || rhs.isBigInt()) {
     return BigInt::pow(cx, lhs, rhs, res);
   }
-#endif
 
   res.setNumber(ecmaPow(lhs.toNumber(), rhs.toNumber()));
   return true;
@@ -4326,13 +4310,11 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     }
     END_CASE(JSOP_TONUMERIC)
 
-#ifdef ENABLE_BIGINT
     CASE(JSOP_BIGINT) {
       PUSH_COPY(script->getConst(GET_UINT32_INDEX(REGS.pc)));
       MOZ_ASSERT(REGS.sp[-1].isBigInt());
     }
     END_CASE(JSOP_BIGINT)
-#endif
 
     DEFAULT() {
       char numBuf[12];
@@ -4425,8 +4407,7 @@ bool js::GetProperty(JSContext* cx, HandleValue v, HandlePropertyName name,
 
   // Optimize common cases like (2).toString() or "foo".valueOf() to not
   // create a wrapper object.
-  if (v.isPrimitive() && !v.isNullOrUndefined() &&
-      IF_BIGINT(!v.isBigInt(), true)) {
+  if (v.isPrimitive() && !v.isNullOrUndefined() && !v.isBigInt()) {
     NativeObject* proto;
     if (v.isNumber()) {
       proto = GlobalObject::getOrCreateNumberPrototype(cx, cx->global());
@@ -5172,6 +5153,7 @@ JSObject* js::NewObjectOperationWithTemplate(JSContext* cx,
   // object is not a singleton and has had its preliminary objects analyzed,
   // with the template object a copy of the object to create.
   MOZ_ASSERT(!templateObject->isSingleton());
+  MOZ_ASSERT(cx->realm() == templateObject->nonCCWRealm());
 
   NewObjectKind newKind;
   bool isUnboxed;
@@ -5194,6 +5176,17 @@ JSObject* js::NewObjectOperationWithTemplate(JSContext* cx,
 
   obj->setGroup(templateObject->group());
   return obj;
+}
+
+JSObject* js::CreateThisWithTemplate(JSContext* cx,
+                                     HandleObject templateObject) {
+  mozilla::Maybe<AutoRealm> ar;
+  if (cx->realm() != templateObject->nonCCWRealm()) {
+    MOZ_ASSERT(cx->compartment() == templateObject->compartment());
+    ar.emplace(cx, templateObject);
+  }
+
+  return NewObjectOperationWithTemplate(cx, templateObject);
 }
 
 JSObject* js::NewArrayOperation(JSContext* cx, HandleScript script,

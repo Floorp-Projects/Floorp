@@ -58,23 +58,18 @@ DEFINES['MOZ_NO_MOZALLOC'] = True
 USE_LIBS += ['psshparser']
 
 # Suppress warnings in third-party code.
-if CONFIG['CC_TYPE'] in ('clang', 'clang-cl', 'gcc'):
-    CFLAGS += [
-        '-Wno-missing-braces',
-        '-Wno-pointer-to-int-cast',
-        '-Wno-sign-compare',
-    ]
-elif CONFIG['CC_TYPE'] == 'msvc':
-    CFLAGS += [
-        '-wd4090',                  # '=' : different 'const' qualifiers
-    ]
+CFLAGS += [
+    '-Wno-missing-braces',
+    '-Wno-pointer-to-int-cast',
+    '-Wno-sign-compare',
+]
 
 if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CFLAGS += [
         '-include', 'stdio.h',      # for sprintf() prototype
         '-include', 'unistd.h',     # for getpid() prototype
     ]
-elif CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
+elif CONFIG['CC_TYPE'] == 'clang-cl':
     CFLAGS += [
         '-FI', 'stdio.h',           # for sprintf() prototype
     ]

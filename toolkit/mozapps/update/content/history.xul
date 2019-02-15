@@ -12,6 +12,7 @@
 
 <dialog id="history" windowtype="Update:History"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
         style="width: 35em;"
         buttons="cancel"
         defaultButton="cancel"
@@ -20,7 +21,7 @@
         onload="gUpdateHistory.onLoad();">
 
   <linkset>
-    <link rel="localization" href="toolkit/updates/history.ftl"/>
+    <html:link rel="localization" href="toolkit/updates/history.ftl"/>
   </linkset>
 
   <script type="application/javascript"

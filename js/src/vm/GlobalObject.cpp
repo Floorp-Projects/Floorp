@@ -11,9 +11,7 @@
 #include "jsfriendapi.h"
 
 #include "builtin/AtomicsObject.h"
-#ifdef ENABLE_BIGINT
-#  include "builtin/BigInt.h"
-#endif
+#include "builtin/BigInt.h"
 #include "builtin/DataViewObject.h"
 #include "builtin/Eval.h"
 #include "builtin/MapObject.h"
@@ -104,10 +102,8 @@ TypedObjectModuleObject& js::GlobalObject::getTypedObjectModule() const {
     case JSProto_CountQueuingStrategy:
       return !cx->realm()->creationOptions().getStreamsEnabled();
 
-#ifdef ENABLE_BIGINT
     case JSProto_BigInt:
       return !cx->realm()->creationOptions().getBigIntEnabled();
-#endif
 
     // Return true if the given constructor has been disabled at run-time.
     case JSProto_Atomics:

@@ -1266,7 +1266,6 @@ void MacroAssemblerMIPS64Compat::unboxSymbol(const Address& src,
   unboxNonDouble(src, dest, JSVAL_TYPE_SYMBOL);
 }
 
-#ifdef ENABLE_BIGINT
 void MacroAssemblerMIPS64Compat::unboxBigInt(const ValueOperand& operand,
                                              Register dest) {
   unboxNonDouble(operand, dest, JSVAL_TYPE_BIGINT);
@@ -1280,7 +1279,6 @@ void MacroAssemblerMIPS64Compat::unboxBigInt(const Address& src,
                                              Register dest) {
   unboxNonDouble(src, dest, JSVAL_TYPE_BIGINT);
 }
-#endif
 
 void MacroAssemblerMIPS64Compat::unboxObject(const ValueOperand& src,
                                              Register dest) {

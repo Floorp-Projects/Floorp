@@ -69,8 +69,7 @@ if CONFIG['MOZ_PLACES']:
         'PlacesObservers.webidl',
     ]
 
-if CONFIG['MOZ_LIBPRIO']:
-    WEBIDL_FILES += [
-        'PrioEncoder.webidl',
-    ]
+WEBIDL_FILES += [
+    'PrioEncoder.webidl',
+]
 

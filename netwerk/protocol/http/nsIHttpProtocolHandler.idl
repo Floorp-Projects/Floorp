@@ -124,6 +124,14 @@ interface nsIHttpProtocolHandler : nsIProxiedProtocolHandler
 #define NS_HTTP_ON_EXAMINE_CACHED_RESPONSE_TOPIC "http-on-examine-cached-response"
 
 /**
+ * The observer of this topic is notified before before the response for a HTTP
+ * load is available. The "subject" of the notification is the nsIHttpChannel
+ * instance. Observers may call "switchProcessTo" to perform a process switch
+ * while this is being run.
+ */
+#define NS_HTTP_ON_MAY_CHANGE_PROCESS_TOPIC "http-on-may-change-process"
+
+/**
  * Before an HTTP request corresponding to a channel with the LOAD_DOCUMENT_URI
  * flag is sent to the server, this observer topic is notified. The observer of
  * this topic can then choose to modify the user agent for this request before

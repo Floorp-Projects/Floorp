@@ -12,6 +12,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/MathAlgorithms.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/TemplateLib.h"
 
@@ -25,9 +26,7 @@
 #include "jsutil.h"
 
 #include "builtin/Array.h"
-#ifdef ENABLE_BIGINT
-#  include "builtin/BigInt.h"
-#endif
+#include "builtin/BigInt.h"
 #include "builtin/Eval.h"
 #include "builtin/Object.h"
 #include "builtin/String.h"
@@ -1111,9 +1110,16 @@ static inline JSObject* CreateThisForFunctionWithGroup(JSContext* cx,
 }
 
 JSObject* js::CreateThisForFunctionWithProto(
-    JSContext* cx, HandleObject callee, HandleObject newTarget,
+    JSContext* cx, HandleFunction callee, HandleObject newTarget,
     HandleObject proto, NewObjectKind newKind /* = GenericObject */) {
   RootedObject res(cx);
+
+  // Ion may call this with a cross-realm callee.
+  mozilla::Maybe<AutoRealm> ar;
+  if (cx->realm() != callee->realm()) {
+    MOZ_ASSERT(cx->compartment() == callee->compartment());
+    ar.emplace(cx, callee);
+  }
 
   if (proto) {
     RootedObjectGroup group(
@@ -1147,8 +1153,8 @@ JSObject* js::CreateThisForFunctionWithProto(
   }
 
   if (res) {
-    JSScript* script =
-        JSFunction::getOrCreateScript(cx, callee.as<JSFunction>());
+    MOZ_ASSERT(res->nonCCWRealm() == callee->realm());
+    JSScript* script = JSFunction::getOrCreateScript(cx, callee);
     if (!script) {
       return nullptr;
     }
@@ -1201,7 +1207,7 @@ bool js::GetPrototypeFromConstructor(JSContext* cx, HandleObject newTarget,
   return true;
 }
 
-JSObject* js::CreateThisForFunction(JSContext* cx, HandleObject callee,
+JSObject* js::CreateThisForFunction(JSContext* cx, HandleFunction callee,
                                     HandleObject newTarget,
                                     NewObjectKind newKind) {
   RootedObject proto(cx);
@@ -1218,7 +1224,7 @@ JSObject* js::CreateThisForFunction(JSContext* cx, HandleObject callee,
     /* Reshape the singleton before passing it as the 'this' value. */
     NativeObject::clear(cx, nobj);
 
-    JSScript* calleeScript = callee->as<JSFunction>().nonLazyScript();
+    JSScript* calleeScript = callee->nonLazyScript();
     TypeScript::SetThis(cx, calleeScript, TypeSet::ObjectType(nobj));
 
     return nobj;
@@ -3310,7 +3316,6 @@ JSObject* js::PrimitiveToObject(JSContext* cx, const Value& v) {
   if (v.isBoolean()) {
     return BooleanObject::create(cx, v.toBoolean());
   }
-#ifdef ENABLE_BIGINT
   if (v.isSymbol()) {
     RootedSymbol symbol(cx, v.toSymbol());
     return SymbolObject::create(cx, symbol);
@@ -3318,11 +3323,6 @@ JSObject* js::PrimitiveToObject(JSContext* cx, const Value& v) {
   MOZ_ASSERT(v.isBigInt());
   RootedBigInt bigInt(cx, v.toBigInt());
   return BigIntObject::create(cx, bigInt);
-#else
-  MOZ_ASSERT(v.isSymbol());
-  RootedSymbol symbol(cx, v.toSymbol());
-  return SymbolObject::create(cx, symbol);
-#endif
 }
 
 /*
@@ -4215,10 +4215,8 @@ bool js::Unbox(JSContext* cx, HandleObject obj, MutableHandleValue vp) {
     vp.set(obj->as<DateObject>().UTCTime());
   } else if (obj->is<SymbolObject>()) {
     vp.setSymbol(obj->as<SymbolObject>().unbox());
-#ifdef ENABLE_BIGINT
   } else if (obj->is<BigIntObject>()) {
     vp.setBigInt(obj->as<BigIntObject>().unbox());
-#endif
   } else {
     vp.setUndefined();
   }

@@ -430,10 +430,7 @@ void LIRGeneratorShared::redefine(MDefinition* def, MDefinition* as) {
         case MIRType::ObjectOrNull:
         case MIRType::String:
         case MIRType::Symbol:
-#  ifdef ENABLE_BIGINT
-        case MIRType::BigInt:
-#  endif
-        {
+        case MIRType::BigInt: {
           LAssertResultT* check =
               new (alloc()) LAssertResultT(useRegister(def));
           add(check, def->toInstruction());

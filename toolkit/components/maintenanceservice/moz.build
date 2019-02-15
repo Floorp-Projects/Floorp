@@ -34,7 +34,7 @@ LOCAL_INCLUDES += [
 
 USE_STATIC_LIBS = True
 
-if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
+if CONFIG['CC_TYPE'] == 'clang-cl':
     WIN32_EXE_LDFLAGS += ['-ENTRY:wmainCRTStartup']
 
 RCINCLUDE = 'maintenanceservice.rc'

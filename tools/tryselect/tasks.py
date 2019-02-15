@@ -22,7 +22,7 @@ import taskgraph
 from taskgraph.generator import TaskGraphGenerator
 from taskgraph.parameters import (
     ParameterMismatch,
-    load_parameters_file,
+    parameters_loader,
 )
 from taskgraph.taskgraph import TaskGraph
 
@@ -81,19 +81,18 @@ def generate_tasks(params, full, root):
         os.makedirs(cache_dir)
 
     print("Task configuration changed, generating {}".format(attr.replace('_', ' ')))
-    try:
-        params = load_parameters_file(params, strict=False, overrides={'try_mode': 'try_select'})
-        params.check()
-    except ParameterMismatch as e:
-        print(PARAMETER_MISMATCH.format(e.args[0]))
-        sys.exit(1)
 
     taskgraph.fast = True
     cwd = os.getcwd()
     os.chdir(build.topsrcdir)
 
     root = os.path.join(root, 'taskcluster', 'ci')
-    tg = getattr(TaskGraphGenerator(root_dir=root, parameters=params), attr)
+    params = parameters_loader(params, strict=False, overrides={'try_mode': 'try_select'})
+    try:
+        tg = getattr(TaskGraphGenerator(root_dir=root, parameters=params), attr)
+    except ParameterMismatch as e:
+        print(PARAMETER_MISMATCH.format(e.args[0]))
+        sys.exit(1)
 
     os.chdir(cwd)
 

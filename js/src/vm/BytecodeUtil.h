@@ -62,9 +62,7 @@ enum {
   JOF_CODE_OFFSET = 19, /* int32_t bytecode offset */
   JOF_ICINDEX = 20,     /* uint32_t IC index */
   JOF_LOOPENTRY = 21,   /* JSOP_LOOPENTRY, combines JOF_ICINDEX and JOF_UINT8 */
-#ifdef ENABLE_BIGINT
-  JOF_BIGINT = 22, /* uint32_t index for BigInt value */
-#endif
+  JOF_BIGINT = 22,      /* uint32_t index for BigInt value */
   JOF_TYPEMASK = 0x001f, /* mask for above immediate types */
 
   JOF_NAME = 1 << 5,     /* name operation */

@@ -46,9 +46,7 @@
 #include "js/Date.h"
 #include "js/GCHashTable.h"
 #include "js/Wrapper.h"
-#ifdef ENABLE_BIGINT
-#  include "vm/BigIntType.h"
-#endif
+#include "vm/BigIntType.h"
 #include "vm/JSContext.h"
 #include "vm/RegExpObject.h"
 #include "vm/SavedFrame.h"
@@ -402,9 +400,7 @@ struct JSStructuredCloneReader {
   JSString* readStringImpl(uint32_t nchars);
   JSString* readString(uint32_t data);
 
-#ifdef ENABLE_BIGINT
   BigInt* readBigInt(uint32_t data);
-#endif
 
   bool checkDouble(double d);
   MOZ_MUST_USE bool readTypedArray(uint32_t arrayType, uint32_t nelems,
@@ -496,6 +492,7 @@ struct JSStructuredCloneWriter {
   bool writeTransferMap();
 
   bool writeString(uint32_t tag, JSString* str);
+  bool writeBigInt(uint32_t tag, BigInt* bi);
   bool writeArrayBuffer(HandleObject obj);
   bool writeTypedArray(HandleObject obj);
   bool writeDataView(HandleObject obj);
@@ -507,10 +504,6 @@ struct JSStructuredCloneWriter {
   bool traverseMap(HandleObject obj);
   bool traverseSet(HandleObject obj);
   bool traverseSavedFrame(HandleObject obj);
-
-#ifdef ENABLE_BIGINT
-  bool writeBigInt(uint32_t tag, BigInt* bi);
-#endif
 
   bool reportDataCloneError(uint32_t errorId);
 
@@ -1145,7 +1138,6 @@ bool JSStructuredCloneWriter::writeString(uint32_t tag, JSString* str) {
              : out.writeChars(linear->twoByteChars(nogc), length);
 }
 
-#ifdef ENABLE_BIGINT
 bool JSStructuredCloneWriter::writeBigInt(uint32_t tag, BigInt* bi) {
   bool signBit = bi->isNegative();
   size_t length = bi->digitLength();
@@ -1160,7 +1152,6 @@ bool JSStructuredCloneWriter::writeBigInt(uint32_t tag, BigInt* bi) {
   }
   return out.writeArray(bi->digits().data(), length);
 }
-#endif
 
 inline void JSStructuredCloneWriter::checkStack() {
 #ifdef DEBUG
@@ -1626,13 +1617,9 @@ bool JSStructuredCloneWriter::startWrite(HandleValue v) {
     return out.writePair(SCTAG_NULL, 0);
   } else if (v.isUndefined()) {
     return out.writePair(SCTAG_UNDEFINED, 0);
-  }
-#ifdef ENABLE_BIGINT
-  else if (v.isBigInt()) {
+  } else if (v.isBigInt()) {
     return writeBigInt(SCTAG_BIGINT, v.toBigInt());
-  }
-#endif
-  else if (v.isObject()) {
+  } else if (v.isObject()) {
     RootedObject obj(context(), &v.toObject());
 
     bool backref;
@@ -1705,7 +1692,6 @@ bool JSStructuredCloneWriter::startWrite(HandleValue v) {
         return traverseSet(obj);
       case ESClass::Map:
         return traverseMap(obj);
-#ifdef ENABLE_BIGINT
       case ESClass::BigInt: {
         RootedValue unboxed(context());
         if (!Unbox(context(), obj, &unboxed)) {
@@ -1713,7 +1699,6 @@ bool JSStructuredCloneWriter::startWrite(HandleValue v) {
         }
         return writeBigInt(SCTAG_BIGINT_OBJECT, unboxed.toBigInt());
       }
-#endif
       case ESClass::Promise:
       case ESClass::MapIterator:
       case ESClass::SetIterator:
@@ -2062,7 +2047,6 @@ JSString* JSStructuredCloneReader::readString(uint32_t data) {
                 : readStringImpl<char16_t>(nchars);
 }
 
-#ifdef ENABLE_BIGINT
 BigInt* JSStructuredCloneReader::readBigInt(uint32_t data) {
   size_t length = data & JS_BITMASK(31);
   bool isNegative = data & (1 << 31);
@@ -2079,7 +2063,6 @@ BigInt* JSStructuredCloneReader::readBigInt(uint32_t data) {
   }
   return result;
 }
-#endif
 
 static uint32_t TagToV1ArrayType(uint32_t tag) {
   MOZ_ASSERT(tag >= SCTAG_TYPED_ARRAY_V1_MIN &&
@@ -2429,7 +2412,6 @@ bool JSStructuredCloneReader::startRead(MutableHandleValue vp) {
 
     case SCTAG_BIGINT:
     case SCTAG_BIGINT_OBJECT: {
-#ifdef ENABLE_BIGINT
       RootedBigInt bi(context(), readBigInt(data));
       if (!bi) {
         return false;
@@ -2439,12 +2421,6 @@ bool JSStructuredCloneReader::startRead(MutableHandleValue vp) {
         return false;
       }
       break;
-#else
-      JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
-                                JSMSG_SC_BAD_SERIALIZED_DATA,
-                                "BigInt unsupported");
-      return false;
-#endif
     }
 
     case SCTAG_DATE_OBJECT: {

@@ -133,12 +133,6 @@ UNIFIED_SOURCES += [
 SOURCES += [
     'nsGkAtoms.cpp',
 ]
-if CONFIG['CC_TYPE'] == 'msvc':
-    # Needed for gGkAtoms.
-    SOURCES['nsGkAtoms.cpp'].flags += [
-        '-constexpr:steps300000',
-        '-Zc:externConstexpr',
-    ]
 
 LOCAL_INCLUDES += [
     '../io',

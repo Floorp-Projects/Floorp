@@ -35,8 +35,8 @@
 #endif
 
   <linkset>
-    <link rel="localization" href="branding/brand.ftl"/>
-    <link rel="localization" href="browser/aboutDialog.ftl"/>
+    <html:link rel="localization" href="branding/brand.ftl"/>
+    <html:link rel="localization" href="browser/aboutDialog.ftl"/>
   </linkset>
 
   <script type="application/javascript" src="chrome://browser/content/aboutDialog.js"/>

@@ -14,7 +14,7 @@ EXPORTS.mozilla += [
 if CONFIG['WRAP_STL_INCLUDES']:
     if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
         EXPORTS.mozilla += ['throw_gcc.h']
-    elif CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
+    elif CONFIG['CC_TYPE'] == 'clang-cl':
         DEFINES['_HAS_EXCEPTIONS'] = 0
         SOURCES += [
             'msvc_raise_wrappers.cpp',

@@ -66,7 +66,7 @@ namespace gc {
     D(FAT_INLINE_ATOM,     String,       js::FatInlineAtom, js::FatInlineAtom, true,   false,  true) \
     D(ATOM,                String,       js::NormalAtom,    js::NormalAtom,    true,   false,  true) \
     D(SYMBOL,              Symbol,       JS::Symbol,        JS::Symbol,        true,   false,  false) \
-    IF_BIGINT(D(BIGINT,    BigInt,       JS::BigInt,        JS::BigInt,        true,   false,  false),) \
+    D(BIGINT,              BigInt,       JS::BigInt,        JS::BigInt,        true,   false,  false) \
     D(JITCODE,             JitCode,      js::jit::JitCode,  js::jit::JitCode,  false,  false,  false) \
     D(SCOPE,               Scope,        js::Scope,         js::Scope,         true,   false,  true) \
     D(REGEXP_SHARED,       RegExpShared, js::RegExpShared,  js::RegExpShared,  true,   false,  true)

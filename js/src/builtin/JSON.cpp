@@ -16,9 +16,7 @@
 #include "jsutil.h"
 
 #include "builtin/Array.h"
-#ifdef ENABLE_BIGINT
-#  include "builtin/BigInt.h"
-#endif
+#include "builtin/BigInt.h"
 #include "builtin/String.h"
 #include "js/PropertySpec.h"
 #include "js/StableStringChars.h"
@@ -291,7 +289,7 @@ static bool PreprocessValue(JSContext* cx, HandleObject holder, KeyType key,
 
   // Step 2. Modified by BigInt spec 6.1 to check for a toJSON method on the
   // BigInt prototype when the value is a BigInt.
-  if (vp.isObject() || IF_BIGINT(vp.isBigInt(), false)) {
+  if (vp.isObject() || vp.isBigInt()) {
     RootedValue toJSON(cx);
     RootedObject obj(cx, JS::ToObject(cx, vp));
     if (!obj) {
@@ -359,14 +357,11 @@ static bool PreprocessValue(JSContext* cx, HandleObject holder, KeyType key,
       if (!Unbox(cx, obj, vp)) {
         return false;
       }
-    }
-#ifdef ENABLE_BIGINT
-    else if (cls == ESClass::BigInt) {
+    } else if (cls == ESClass::BigInt) {
       if (!Unbox(cx, obj, vp)) {
         return false;
       }
     }
-#endif
   }
 
   return true;
@@ -681,14 +676,12 @@ static bool Str(JSContext* cx, const Value& v, StringifyContext* scx) {
     return NumberValueToStringBuffer(cx, v, scx->sb);
   }
 
-#ifdef ENABLE_BIGINT
   /* Step 10 in the BigInt proposal. */
   if (v.isBigInt()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_BIGINT_NOT_SERIALIZABLE);
     return false;
   }
-#endif
 
   /* Step 10. */
   MOZ_ASSERT(v.isObject());
