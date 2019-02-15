@@ -1,5 +1,6 @@
 import {actionCreators as ac} from "common/Actions.jsm";
 import React from "react";
+import {SafeAnchor} from "../SafeAnchor/SafeAnchor";
 import {SpocIntersectionObserver} from "content-src/components/DiscoveryStreamComponents/SpocIntersectionObserver/SpocIntersectionObserver";
 
 export class DSCard extends React.PureComponent {
@@ -28,7 +29,7 @@ export class DSCard extends React.PureComponent {
   render() {
     return (
       <SpocIntersectionObserver campaignId={this.props.campaignId} dispatch={this.props.dispatch}>
-        <a href={this.props.url} className="ds-card" onClick={this.onLinkClick}>
+        <SafeAnchor url={this.props.url} className="ds-card" onLinkClick={this.onLinkClick}>
           <div className="img-wrapper">
             <div className="img" style={{backgroundImage: `url(${this.props.image_src}`}} />
           </div>
@@ -47,7 +48,7 @@ export class DSCard extends React.PureComponent {
               <span className="source">{this.props.source}</span>
             </p>
           </div>
-        </a>
+        </SafeAnchor>
       </SpocIntersectionObserver>
     );
   }

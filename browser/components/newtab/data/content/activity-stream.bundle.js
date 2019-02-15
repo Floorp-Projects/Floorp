@@ -7114,10 +7114,40 @@ var Actions = __webpack_require__(2);
 var external_React_ = __webpack_require__(10);
 var external_React_default = /*#__PURE__*/__webpack_require__.n(external_React_);
 
+// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/SafeAnchor/SafeAnchor.jsx
+
+
+class SafeAnchor_SafeAnchor extends external_React_default.a.PureComponent {
+  safeURI(url) {
+    let protocol = null;
+    try {
+      protocol = new URL(url).protocol;
+    } catch (e) {
+      return "";
+    }
+
+    const isAllowed = ["http:", "https:"].includes(protocol);
+    if (!isAllowed) {
+      console.warn(`${protocol} is not allowed for anchor targets.`); // eslint-disable-line no-console
+      return "";
+    }
+    return url;
+  }
+
+  render() {
+    const { url, className, onLinkClick } = this.props;
+    return external_React_default.a.createElement(
+      "a",
+      { href: this.safeURI(url), className: className, onClick: onLinkClick },
+      this.props.children
+    );
+  }
+}
 // EXTERNAL MODULE: ./content-src/components/DiscoveryStreamComponents/SpocIntersectionObserver/SpocIntersectionObserver.jsx
 var SpocIntersectionObserver = __webpack_require__(29);
 
 // CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/DSCard/DSCard.jsx
+
 
 
 
@@ -7150,8 +7180,8 @@ class DSCard_DSCard extends external_React_default.a.PureComponent {
       SpocIntersectionObserver["SpocIntersectionObserver"],
       { campaignId: this.props.campaignId, dispatch: this.props.dispatch },
       external_React_default.a.createElement(
-        "a",
-        { href: this.props.url, className: "ds-card", onClick: this.onLinkClick },
+        SafeAnchor_SafeAnchor,
+        { url: this.props.url, className: "ds-card", onLinkClick: this.onLinkClick },
         external_React_default.a.createElement(
           "div",
           { className: "img-wrapper" },
@@ -7302,6 +7332,7 @@ class DSMessage_DSMessage extends external_React_default.a.PureComponent {
 
 
 
+
 /**
  * @note exported for testing only
  */
@@ -7337,8 +7368,8 @@ class List_ListItem extends external_React_default.a.PureComponent {
         SpocIntersectionObserver["SpocIntersectionObserver"],
         { campaignId: this.props.campaignId, dispatch: this.props.dispatch },
         external_React_default.a.createElement(
-          "a",
-          { className: "ds-list-item-link", href: this.props.url, onClick: this.onLinkClick },
+          SafeAnchor_SafeAnchor,
+          { url: this.props.url, className: "ds-list-item-link", onLinkClick: this.onLinkClick },
           external_React_default.a.createElement(
             "div",
             { className: "ds-list-item-text" },
@@ -7433,6 +7464,7 @@ const List = Object(external_ReactRedux_["connect"])(state => ({ DiscoveryStream
 
 
 
+
 class Hero_Hero extends external_React_default.a.PureComponent {
   constructor(props) {
     super(props);
@@ -7500,8 +7532,8 @@ class Hero_Hero extends external_React_default.a.PureComponent {
         "div",
         { className: `ds-hero ds-hero-${this.props.border}` },
         external_React_default.a.createElement(
-          "a",
-          { href: heroRec.url, className: "wrapper", onClick: this.onLinkClick },
+          SafeAnchor_SafeAnchor,
+          { url: heroRec.url, className: "wrapper", onLinkClick: this.onLinkClick },
           external_React_default.a.createElement(
             "div",
             { className: "img-wrapper" },
