@@ -3717,23 +3717,21 @@ const ConfirmDialog = Object(react_redux__WEBPACK_IMPORTED_MODULE_1__["connect"]
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* WEBPACK VAR INJECTION */(function(global) {/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "DSCard", function() { return DSCard; });
+/* WEBPACK VAR INJECTION */(function(global) {/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "SpocIntersectionObserver", function() { return SpocIntersectionObserver; });
 /* harmony import */ var common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(10);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_1__);
-
 
 
 const VISIBLE = "visible";
 const VISIBILITY_CHANGE_EVENT = "visibilitychange";
 const INTERSECTION_RATIO = 0.5;
 
-class DSCard extends react__WEBPACK_IMPORTED_MODULE_1___default.a.PureComponent {
+class SpocIntersectionObserver extends react__WEBPACK_IMPORTED_MODULE_1___default.a.PureComponent {
   constructor(props) {
     super(props);
 
-    this.cardElementRef = this.cardElementRef.bind(this);
-    this.onLinkClick = this.onLinkClick.bind(this);
+    this.spocElementRef = this.spocElementRef.bind(this);
   }
 
   componentDidMount() {
@@ -3755,7 +3753,7 @@ class DSCard extends react__WEBPACK_IMPORTED_MODULE_1___default.a.PureComponent 
       this.props.document.removeEventListener(VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
     }
     if (this._intersectionObserver) {
-      this._intersectionObserver.unobserve(this.cardElement);
+      this._intersectionObserver.unobserve(this.spocElement);
     }
   }
 
@@ -3769,87 +3767,30 @@ class DSCard extends react__WEBPACK_IMPORTED_MODULE_1___default.a.PureComponent 
         }
       }
     }, options);
-    this._intersectionObserver.observe(this.cardElement);
+    this._intersectionObserver.observe(this.spocElement);
   }
 
   dispatchSpocImpression() {
     if (this.props.campaignId) {
       this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].OnlyToMain({ type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionTypes"].DISCOVERY_STREAM_SPOC_IMPRESSION, data: { campaignId: this.props.campaignId } }));
     }
-    this._intersectionObserver.unobserve(this.cardElement);
+    this._intersectionObserver.unobserve(this.spocElement);
   }
 
-  cardElementRef(element) {
-    this.cardElement = element;
-  }
-
-  onLinkClick(event) {
-    if (this.props.dispatch) {
-      this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].UserEvent({
-        event: "CLICK",
-        source: this.props.type.toUpperCase(),
-        action_position: this.props.index
-      }));
-
-      this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].ImpressionStats({
-        source: this.props.type.toUpperCase(),
-        click: 0,
-        tiles: [{ id: this.props.id, pos: this.props.index }]
-      }));
-    }
+  spocElementRef(element) {
+    this.spocElement = element;
   }
 
   render() {
     return react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(
-      "a",
-      { href: this.props.url, className: "ds-card", onClick: this.onLinkClick, ref: this.cardElementRef },
-      react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(
-        "div",
-        { className: "img-wrapper" },
-        react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("div", { className: "img", style: { backgroundImage: `url(${this.props.image_src}` } })
-      ),
-      react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(
-        "div",
-        { className: "meta" },
-        react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(
-          "div",
-          { className: "info-wrap" },
-          react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(
-            "header",
-            { className: "title" },
-            this.props.title
-          ),
-          this.props.excerpt && react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(
-            "p",
-            { className: "excerpt" },
-            this.props.excerpt
-          )
-        ),
-        react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(
-          "p",
-          null,
-          this.props.context && react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(
-            "span",
-            null,
-            react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(
-              "span",
-              { className: "context" },
-              this.props.context
-            ),
-            react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("br", null)
-          ),
-          react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(
-            "span",
-            { className: "source" },
-            this.props.source
-          )
-        )
-      )
+      "div",
+      { ref: this.spocElementRef },
+      this.props.children
     );
   }
 }
 
-DSCard.defaultProps = {
+SpocIntersectionObserver.defaultProps = {
   document: global.document
 };
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1)))
@@ -7166,13 +7107,97 @@ function enableASRouterContent(store, asrouterContent) {
 
 "use strict";
 
-// EXTERNAL MODULE: ./content-src/components/DiscoveryStreamComponents/DSCard/DSCard.jsx
-var DSCard = __webpack_require__(29);
+// EXTERNAL MODULE: ./common/Actions.jsm
+var Actions = __webpack_require__(2);
 
 // EXTERNAL MODULE: external "React"
 var external_React_ = __webpack_require__(10);
 var external_React_default = /*#__PURE__*/__webpack_require__.n(external_React_);
 
+// EXTERNAL MODULE: ./content-src/components/DiscoveryStreamComponents/SpocIntersectionObserver/SpocIntersectionObserver.jsx
+var SpocIntersectionObserver = __webpack_require__(29);
+
+// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/DSCard/DSCard.jsx
+
+
+
+
+class DSCard_DSCard extends external_React_default.a.PureComponent {
+  constructor(props) {
+    super(props);
+
+    this.onLinkClick = this.onLinkClick.bind(this);
+  }
+
+  onLinkClick(event) {
+    if (this.props.dispatch) {
+      this.props.dispatch(Actions["actionCreators"].UserEvent({
+        event: "CLICK",
+        source: this.props.type.toUpperCase(),
+        action_position: this.props.index
+      }));
+
+      this.props.dispatch(Actions["actionCreators"].ImpressionStats({
+        source: this.props.type.toUpperCase(),
+        click: 0,
+        tiles: [{ id: this.props.id, pos: this.props.index }]
+      }));
+    }
+  }
+
+  render() {
+    return external_React_default.a.createElement(
+      SpocIntersectionObserver["SpocIntersectionObserver"],
+      { campaignId: this.props.campaignId, dispatch: this.props.dispatch },
+      external_React_default.a.createElement(
+        "a",
+        { href: this.props.url, className: "ds-card", onClick: this.onLinkClick },
+        external_React_default.a.createElement(
+          "div",
+          { className: "img-wrapper" },
+          external_React_default.a.createElement("div", { className: "img", style: { backgroundImage: `url(${this.props.image_src}` } })
+        ),
+        external_React_default.a.createElement(
+          "div",
+          { className: "meta" },
+          external_React_default.a.createElement(
+            "div",
+            { className: "info-wrap" },
+            external_React_default.a.createElement(
+              "header",
+              { className: "title" },
+              this.props.title
+            ),
+            this.props.excerpt && external_React_default.a.createElement(
+              "p",
+              { className: "excerpt" },
+              this.props.excerpt
+            )
+          ),
+          external_React_default.a.createElement(
+            "p",
+            null,
+            this.props.context && external_React_default.a.createElement(
+              "span",
+              null,
+              external_React_default.a.createElement(
+                "span",
+                { className: "context" },
+                this.props.context
+              ),
+              external_React_default.a.createElement("br", null)
+            ),
+            external_React_default.a.createElement(
+              "span",
+              { className: "source" },
+              this.props.source
+            )
+          )
+        )
+      )
+    );
+  }
+}
 // CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/CardGrid/CardGrid.jsx
 
 
@@ -7186,7 +7211,7 @@ class CardGrid_CardGrid extends external_React_default.a.PureComponent {
       return external_React_default.a.createElement("div", null);
     }
 
-    let cards = data.recommendations.slice(0, this.props.items).map((rec, index) => external_React_default.a.createElement(DSCard["DSCard"], {
+    let cards = data.recommendations.slice(0, this.props.items).map((rec, index) => external_React_default.a.createElement(DSCard_DSCard, {
       campaignId: rec.campaign_id,
       key: `dscard-${index}`,
       image_src: rec.image_src,
@@ -7271,10 +7296,8 @@ class DSMessage_DSMessage extends external_React_default.a.PureComponent {
     );
   }
 }
-// EXTERNAL MODULE: ./common/Actions.jsm
-var Actions = __webpack_require__(2);
-
 // CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/List/List.jsx
+
 
 
 
@@ -7308,31 +7331,49 @@ class List_ListItem extends external_React_default.a.PureComponent {
 
   render() {
     return external_React_default.a.createElement(
-      "li",
-      { className: "ds-list-item" },
+      SpocIntersectionObserver["SpocIntersectionObserver"],
+      { campaignId: this.props.campaignId, dispatch: this.props.dispatch },
       external_React_default.a.createElement(
-        "a",
-        { className: "ds-list-item-link", href: this.props.url, onClick: this.onLinkClick },
+        "li",
+        { className: "ds-list-item" },
         external_React_default.a.createElement(
-          "div",
-          { className: "ds-list-item-text" },
+          "a",
+          { className: "ds-list-item-link", href: this.props.url, onClick: this.onLinkClick },
           external_React_default.a.createElement(
             "div",
-            { className: "ds-list-item-title" },
-            this.props.title
+            { className: "ds-list-item-text" },
+            external_React_default.a.createElement(
+              "div",
+              { className: "ds-list-item-title" },
+              this.props.title
+            ),
+            this.props.excerpt && external_React_default.a.createElement(
+              "div",
+              { className: "ds-list-item-excerpt" },
+              this.props.excerpt
+            ),
+            external_React_default.a.createElement(
+              "p",
+              null,
+              this.props.context && external_React_default.a.createElement(
+                "span",
+                null,
+                external_React_default.a.createElement(
+                  "span",
+                  { className: "ds-list-item-context" },
+                  this.props.context
+                ),
+                external_React_default.a.createElement("br", null)
+              ),
+              external_React_default.a.createElement(
+                "span",
+                { className: "ds-list-item-info" },
+                this.props.domain
+              )
+            )
           ),
-          this.props.excerpt && external_React_default.a.createElement(
-            "div",
-            { className: "ds-list-item-excerpt" },
-            this.props.excerpt
-          ),
-          external_React_default.a.createElement(
-            "div",
-            { className: "ds-list-item-info" },
-            this.props.domain
-          )
-        ),
-        external_React_default.a.createElement("div", { className: "ds-list-image", style: { backgroundImage: `url(${this.props.image_src})` } })
+          external_React_default.a.createElement("div", { className: "ds-list-image", style: { backgroundImage: `url(${this.props.image_src})` } })
+        )
       )
     );
   }
@@ -7342,15 +7383,13 @@ class List_ListItem extends external_React_default.a.PureComponent {
  * @note exported for testing only
  */
 function _List(props) {
-  const feed = props.DiscoveryStream.feeds[props.feed.url];
-
-  if (!feed || !feed.data || !feed.data.recommendations) {
+  const feed = props.data;
+  if (!feed || !feed.recommendations) {
     return null;
   }
-
-  const recs = feed.data.recommendations;
-
+  const recs = feed.recommendations;
   let recMarkup = recs.slice(props.recStartingPoint, props.recStartingPoint + props.items).map((rec, index) => external_React_default.a.createElement(List_ListItem, { key: `ds-list-item-${index}`,
+    campaignId: rec.campaign_id,
     dispatch: props.dispatch,
     domain: rec.domain,
     excerpt: rec.excerpt,
@@ -7358,9 +7397,9 @@ function _List(props) {
     image_src: rec.image_src,
     index: index,
     title: rec.title,
+    context: rec.context,
     type: props.type,
     url: rec.url }));
-
   const listStyles = ["ds-list", props.fullWidth ? "ds-list-full-width" : "", props.hasBorders ? "ds-list-borders" : "", props.hasImages ? "ds-list-images" : "", props.hasNumbers ? "ds-list-numbers" : ""];
   return external_React_default.a.createElement(
     "div",
@@ -7428,7 +7467,7 @@ class Hero_Hero extends external_React_default.a.PureComponent {
     this.heroRec = heroRec;
 
     // Note that `{index + 1}` is necessary below for telemetry since we treat heroRec as index 0.
-    let cards = otherRecs.map((rec, index) => external_React_default.a.createElement(DSCard["DSCard"], {
+    let cards = otherRecs.map((rec, index) => external_React_default.a.createElement(DSCard_DSCard, {
       campaignId: rec.campaign_id,
       key: `dscard-${index}`,
       image_src: rec.image_src,
@@ -7443,7 +7482,7 @@ class Hero_Hero extends external_React_default.a.PureComponent {
 
     let list = external_React_default.a.createElement(List, {
       recStartingPoint: 1,
-      feed: this.props.feed,
+      data: data,
       hasImages: true,
       hasBorders: this.props.border === `border`,
       items: this.props.items - 1,
@@ -7955,7 +7994,7 @@ class DiscoveryStreamBase_DiscoveryStreamBase extends external_React_default.a.P
           ImpressionStats["ImpressionStats"],
           { rows: rows, dispatch: this.props.dispatch, source: component.type },
           external_React_default.a.createElement(List, {
-            feed: component.feed,
+            data: component.data,
             fullWidth: component.properties.full_width,
             hasBorders: component.properties.border === "border",
             hasImages: component.properties.has_images,
