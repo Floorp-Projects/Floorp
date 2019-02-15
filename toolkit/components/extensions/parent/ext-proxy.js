@@ -94,6 +94,7 @@ function registerProxyFilterEvent(context, extension, fire, filterProps, extraIn
   if (filter.urls) {
     let perms = new MatchPatternSet([...extension.whiteListedHosts.patterns,
                                      ...extension.optionalOrigins.patterns]);
+
     filter.urls = new MatchPatternSet(filter.urls);
 
     if (!perms.overlapsAll(filter.urls)) {
@@ -225,10 +226,6 @@ this.proxy = class extends ExtensionAPI {
               if (AppConstants.platform === "android") {
                 throw new ExtensionError(
                   "proxy.settings is not supported on android.");
-              }
-
-              if (!extension.privateBrowsingAllowed) {
-                throw new ExtensionError("proxy.settings requires private browsing permission.");
               }
 
               if (!Services.policies.isAllowed("changeProxySettings")) {
