@@ -7241,8 +7241,8 @@ bool nsIFrame::IsBlockWrapper() const {
           pseudoType == nsCSSAnonBoxes::cellContent());
 }
 
-bool nsIFrame::IsBlockFrameOrSubclass() {
-  nsBlockFrame* thisAsBlock = do_QueryFrame(this);
+bool nsIFrame::IsBlockFrameOrSubclass() const {
+  const nsBlockFrame* thisAsBlock = do_QueryFrame(this);
   return !!thisAsBlock;
 }
 

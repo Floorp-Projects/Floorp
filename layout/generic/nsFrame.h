@@ -100,7 +100,7 @@ enum class TableSelection : uint32_t;
   NS_DECL_QUERYFRAME_TARGET(class)                                             \
   static constexpr nsIFrame::ClassID kClassID = nsIFrame::ClassID::class##_id; \
   void* operator new(size_t, nsIPresShell*) MOZ_MUST_OVERRIDE;                 \
-  nsQueryFrame::FrameIID GetFrameId() override MOZ_MUST_OVERRIDE {             \
+  nsQueryFrame::FrameIID GetFrameId() const override MOZ_MUST_OVERRIDE {       \
     return nsQueryFrame::class##_id;                                           \
   }
 
@@ -111,7 +111,7 @@ enum class TableSelection : uint32_t;
 
 #define NS_DECL_ABSTRACT_FRAME(class)                                   \
   void* operator new(size_t, nsIPresShell*) MOZ_MUST_OVERRIDE = delete; \
-  virtual nsQueryFrame::FrameIID GetFrameId() override MOZ_MUST_OVERRIDE = 0;
+  nsQueryFrame::FrameIID GetFrameId() const override MOZ_MUST_OVERRIDE = 0;
 
 //----------------------------------------------------------------------
 
@@ -155,7 +155,7 @@ class nsFrame : public nsBox {
   // nsQueryFrame
   NS_DECL_QUERYFRAME
   NS_DECL_QUERYFRAME_TARGET(nsFrame)
-  virtual nsQueryFrame::FrameIID GetFrameId() MOZ_MUST_OVERRIDE {
+  virtual nsQueryFrame::FrameIID GetFrameId() const MOZ_MUST_OVERRIDE {
     return kFrameIID;
   }
   void* operator new(size_t, nsIPresShell*) MOZ_MUST_OVERRIDE;
