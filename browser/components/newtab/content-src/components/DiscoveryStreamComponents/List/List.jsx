@@ -32,8 +32,8 @@ export class ListItem extends React.PureComponent {
 
   render() {
     return (
-      <SpocIntersectionObserver campaignId={this.props.campaignId} dispatch={this.props.dispatch}>
-        <li className="ds-list-item">
+      <li className="ds-list-item">
+        <SpocIntersectionObserver campaignId={this.props.campaignId} dispatch={this.props.dispatch}>
           <a className="ds-list-item-link" href={this.props.url} onClick={this.onLinkClick}>
             <div className="ds-list-item-text">
               <div className="ds-list-item-title">{this.props.title}</div>
@@ -50,8 +50,8 @@ export class ListItem extends React.PureComponent {
             </div>
             <div className="ds-list-image" style={{backgroundImage: `url(${this.props.image_src})`}} />
           </a>
-        </li>
-      </SpocIntersectionObserver>
+        </SpocIntersectionObserver>
+      </li>
     );
   }
 }
