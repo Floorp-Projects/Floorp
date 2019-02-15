@@ -90,6 +90,14 @@ permalink: /changelog/
 
 * **browser-toolbar**, **concept-toolbar**
   * Added `private` field (`Boolean`): Enables/Disables private mode. In private mode the IME should not update any personalized data such as typing history and personalized language model based on what the user typed.
+  * The background and foreground color of the autocomplete suggestion can now be styled:
+
+  ```xml
+  <mozilla.components.browser.toolbar.BrowserToolbar
+      ...
+      app:browserToolbarSuggestionBackgroundColor="#ffffcc00"
+      app:browserToolbarSuggestionForegroundColor="#ffff4444"/>
+  ```
 
 # 0.42.0
 

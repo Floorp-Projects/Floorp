@@ -11,5 +11,7 @@
     <attr name="browserToolbarSecureColor" format="color"/>
     <attr name="browserToolbarInsecureColor" format="color"/>
     <attr name="browserToolbarMenuColor" format="color"/>
+    <attr name="browserToolbarSuggestionBackgroundColor" format="color" />
+    <attr name="browserToolbarSuggestionForegroundColor" format="color" />
   </declare-styleable>
 </resources>

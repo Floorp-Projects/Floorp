@@ -5,6 +5,7 @@
 package mozilla.components.browser.toolbar
 
 import android.content.Context
+import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.Drawable
 import android.support.annotation.DrawableRes
@@ -123,6 +124,9 @@ class BrowserToolbar @JvmOverloads constructor(
         get() = displayToolbar.urlBoxView
         set(value) { displayToolbar.urlBoxView = value }
 
+    /**
+     * Gets/Sets the color tint of the menu button.
+     */
     var menuViewColor: Int
         get() = displayToolbar.menuViewColor
         set(value) { displayToolbar.menuViewColor = value }
@@ -189,6 +193,20 @@ class BrowserToolbar @JvmOverloads constructor(
             displayToolbar.urlView.textSize = value
             editToolbar.urlView.textSize = value
         }
+
+    /**
+     * The background color used for autocomplete suggestions in edit mode.
+     */
+    var suggestionBackgroundColor: Int
+        get() = editToolbar.urlView.autoCompleteBackgroundColor
+        set(value) { editToolbar.urlView.autoCompleteBackgroundColor = value }
+
+    /**
+     * The foreground color used for autocomplete suggestions in edit mode.
+     */
+    var suggestionForegroundColor: Int?
+        get() = editToolbar.urlView.autoCompleteForegroundColor
+        set(value) { editToolbar.urlView.autoCompleteForegroundColor = value }
 
     /**
      * Sets the typeface of the text for the URL/search term displayed in the toolbar.
@@ -271,6 +289,16 @@ class BrowserToolbar @JvmOverloads constructor(
                 menuViewColor = getColor(
                     R.styleable.BrowserToolbar_browserToolbarMenuColor,
                     displayToolbar.menuViewColor
+                )
+                if (peekValue(R.styleable.BrowserToolbar_browserToolbarSuggestionForegroundColor) != null) {
+                    suggestionForegroundColor = getColor(
+                        R.styleable.BrowserToolbar_browserToolbarSuggestionForegroundColor,
+                        // Default color should not be used since we are checking for a value before using it.
+                        Color.CYAN)
+                }
+                suggestionBackgroundColor = getColor(
+                    R.styleable.BrowserToolbar_browserToolbarSuggestionBackgroundColor,
+                    suggestionBackgroundColor
                 )
                 val inSecure = getColor(
                     R.styleable.BrowserToolbar_browserToolbarInsecureColor,

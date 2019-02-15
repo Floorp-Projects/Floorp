@@ -6,7 +6,6 @@ package mozilla.components.ui.autocomplete
 
 import android.content.Context
 import android.content.Context.INPUT_METHOD_SERVICE
-import android.graphics.Color.parseColor
 import android.graphics.Rect
 import android.os.Build
 import android.provider.Settings.Secure.DEFAULT_INPUT_METHOD
@@ -19,6 +18,7 @@ import android.text.Spanned
 import android.text.TextUtils
 import android.text.TextWatcher
 import android.text.style.BackgroundColorSpan
+import android.text.style.ForegroundColorSpan
 import android.util.AttributeSet
 import android.view.KeyEvent
 import android.view.MotionEvent
@@ -128,7 +128,7 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
     // If text change is due to us setting autocomplete
     private var settingAutoComplete: Boolean = false
     // Spans used for marking the autocomplete text
-    private var autoCompleteSpans: Array<Any>? = null
+    private var autoCompleteSpans: List<Any>? = null
     // Do not process autocomplete result
     private var discardAutoCompleteResult: Boolean = false
 
@@ -138,13 +138,21 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
     override val originalText: String
         get() = text.subSequence(0, autoCompletePrefixLength).toString()
 
-    private val autoCompleteBackgroundColor: Int = {
+    /**
+     * The background color used for the autocomplete suggestion.
+     */
+    var autoCompleteBackgroundColor: Int = {
         val a = context.obtainStyledAttributes(attrs, R.styleable.InlineAutocompleteEditText)
         val color = a.getColor(R.styleable.InlineAutocompleteEditText_autocompleteBackgroundColor,
                 DEFAULT_AUTOCOMPLETE_BACKGROUND_COLOR)
         a.recycle()
         color
     }()
+
+    /**
+     * The Foreground color used for the autocomplete suggestion.
+     */
+    var autoCompleteForegroundColor: Int? = null
 
     private val inputMethodManger get() = context.getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager?
 
@@ -296,7 +304,11 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
      * Reset autocomplete states to their initial values
      */
     private fun resetAutocompleteState() {
-        autoCompleteSpans = arrayOf(AUTOCOMPLETE_SPAN, BackgroundColorSpan(autoCompleteBackgroundColor))
+        autoCompleteSpans = mutableListOf(
+            AUTOCOMPLETE_SPAN,
+            BackgroundColorSpan(autoCompleteBackgroundColor)).apply {
+            autoCompleteForegroundColor?.let { add(ForegroundColorSpan(it)) }
+        }
         autocompleteResult = null
         // Pretend we already autocompleted the existing text,
         // so that actions like backspacing don't trigger autocompletion.
@@ -369,7 +381,7 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
      * Applies the provided result by updating the current autocomplete
      * text and selection, if any.
      *
-     * @param result the [AutocompleteProvider.AutocompleteResult] to apply
+     * @param result the [AutocompleteResult] to apply
      */
     @Suppress("ComplexMethod", "ReturnCount")
     override fun applyAutocompleteResult(result: AutocompleteResult) {
@@ -658,8 +670,8 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
     }
 
     companion object {
-        val AUTOCOMPLETE_SPAN = NoCopySpan.Concrete()
-        val DEFAULT_AUTOCOMPLETE_BACKGROUND_COLOR = parseColor("#ffb5007f")
+        internal val AUTOCOMPLETE_SPAN = NoCopySpan.Concrete()
+        internal const val DEFAULT_AUTOCOMPLETE_BACKGROUND_COLOR = 0xffb5007f.toInt()
 
         // The Echo Show IME does not conflict with Fire TV: com.amazon.tv.ime/.FireTVIME
         // However, it may be used by other Amazon keyboards. In theory, if they have the same IME
