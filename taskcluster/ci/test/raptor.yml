@@ -12,7 +12,6 @@ job-defaults:
     run-on-projects:
         by-test-platform:
             windows10-64-ux: ['try', 'mozilla-central']
-            (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
             default: ['try', 'trunk', 'mozilla-beta']
     tier:
         by-test-platform:
