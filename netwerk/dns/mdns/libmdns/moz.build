@@ -27,10 +27,6 @@ else:
         'fallback/MulticastDNS.jsm',
     ]
 
-    XPCOM_MANIFESTS += [
-        'components.conf',
-    ]
-
     if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
         EXTRA_JS_MODULES += [
             'MulticastDNSAndroid.jsm',
