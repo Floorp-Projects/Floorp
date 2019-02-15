@@ -6629,35 +6629,12 @@ nsresult PresShell::EventHandler::HandleEvent(nsIFrame* aFrame,
     }
 
     // Check if we have an active EventStateManager which isn't the
-    // EventStateManager of the current PresContext.
-    // If that is the case, and mouse is over some ancestor document,
-    // forward event handling to the active document.
-    // This way content can get mouse events even when
-    // mouse is over the chrome or outside the window.
-    //
-    // Note, currently for backwards compatibility we don't forward mouse events
-    // to the active document when mouse is over some subdocument.
-    if (EventStateManager* activeESM =
-            EventStateManager::GetActiveEventStateManager()) {
-      if (aGUIEvent->mClass == ePointerEventClass ||
-          aGUIEvent->HasMouseEventMessage()) {
-        if (activeESM != eventTargetData.GetEventStateManager()) {
-          if (nsPresContext* activeContext = activeESM->GetPresContext()) {
-            if (nsIPresShell* activeShell = activeContext->GetPresShell()) {
-              if (nsContentUtils::ContentIsCrossDocDescendantOf(
-                      activeShell->GetDocument(),
-                      eventTargetData.GetDocument())) {
-                eventTargetData.SetPresShellAndFrame(
-                    static_cast<PresShell*>(activeShell),
-                    activeShell->GetRootFrame());
-              }
-            }
-          }
-        }
-      }
-    }
-
-    if (NS_WARN_IF(!eventTargetData.mFrame)) {
+    // EventStateManager of the current PresContext.  If that is the case, and
+    // mouse is over some ancestor document, forward event handling to the
+    // active document.  This way content can get mouse events even when mouse
+    // is over the chrome or outside the window.
+    if (eventTargetData.MaybeRetargetToActiveDocument(aGUIEvent) &&
+        NS_WARN_IF(!eventTargetData.mFrame)) {
       return NS_OK;
     }
 
@@ -10772,4 +10749,34 @@ void PresShell::EventHandler::EventTargetData::SetContentForEventFromFrame(
 
 nsIContent* PresShell::EventHandler::EventTargetData::GetFrameContent() const {
   return mFrame ? mFrame->GetContent() : nullptr;
+}
+
+bool PresShell::EventHandler::EventTargetData::MaybeRetargetToActiveDocument(
+    WidgetGUIEvent* aGUIEvent) {
+  MOZ_ASSERT(aGUIEvent);
+  MOZ_ASSERT(mFrame);
+  MOZ_ASSERT(mPresShell);
+  MOZ_ASSERT(!mContent, "Doesn't support to retarget the content");
+
+  // Note, currently for backwards compatibility we don't forward mouse events
+  // to the active document when mouse is over some subdocument.
+  if (EventStateManager* activeESM =
+          EventStateManager::GetActiveEventStateManager()) {
+    if (aGUIEvent->mClass == ePointerEventClass ||
+        aGUIEvent->HasMouseEventMessage()) {
+      if (activeESM != GetEventStateManager()) {
+        if (nsPresContext* activeContext = activeESM->GetPresContext()) {
+          if (nsIPresShell* activeShell = activeContext->GetPresShell()) {
+            if (nsContentUtils::ContentIsCrossDocDescendantOf(
+                    activeShell->GetDocument(), GetDocument())) {
+              SetPresShellAndFrame(static_cast<PresShell*>(activeShell),
+                                   activeShell->GetRootFrame());
+              return true;
+            }
+          }
+        }
+      }
+    }
+  }
+  return false;
 }
