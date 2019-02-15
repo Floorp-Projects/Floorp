@@ -26,13 +26,13 @@ abstract class TabsGridLayout extends TabsLayout {
 
         final int dragDirections = ItemTouchHelper.UP | ItemTouchHelper.DOWN | ItemTouchHelper.START | ItemTouchHelper.END;
         // A TouchHelper handler for drag and drop and swipe to close.
-        final TabsTouchHelperCallback callback = new TabsTouchHelperCallback(this, dragDirections, this) {
+        tabTouchCallback = new TabsTouchHelperCallback(this, dragDirections, this) {
             @Override
             protected float alphaForItemSwipeDx(float dX, int distanceToAlphaMin) {
                 return 1f - 2f * Math.abs(dX) / distanceToAlphaMin;
             }
         };
-        final ItemTouchHelper touchHelper = new ItemTouchHelper(callback);
+        final ItemTouchHelper touchHelper = new ItemTouchHelper(tabTouchCallback);
         touchHelper.attachToRecyclerView(this);
     }
 

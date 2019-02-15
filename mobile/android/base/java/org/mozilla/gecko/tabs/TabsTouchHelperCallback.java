@@ -16,6 +16,7 @@ class TabsTouchHelperCallback extends ItemTouchHelper.Callback {
     private final @Nullable DismissListener dismissListener;
     private final @NonNull DragListener dragListener;
     private final int movementFlags;
+    private boolean isInteractionInProgress;
 
     interface DismissListener {
         void onItemDismiss(View view);
@@ -96,6 +97,25 @@ class TabsTouchHelperCallback extends ItemTouchHelper.Callback {
     @Override
     public void clearView(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder) {
         super.clearView(recyclerView, viewHolder);
+
         viewHolder.itemView.setAlpha(1);
+
+        isInteractionInProgress = false;
+    }
+
+    @Override
+    public void onSelectedChanged(RecyclerView.ViewHolder viewHolder, int actionState) {
+        super.onSelectedChanged(viewHolder, actionState);
+
+        if (viewHolder != null) {
+            isInteractionInProgress = true;
+        }
+    }
+
+    /**
+     * Get if user started interacting with RecyclerView's items and their animations have not yet completed.
+     */
+    public boolean isInteractionInProgress() {
+        return isInteractionInProgress;
     }
 }
