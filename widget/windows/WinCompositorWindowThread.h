@@ -23,8 +23,7 @@ struct WinCompositorWnds {
   HWND mCompositorWnd;
   HWND mInitialParentWnd;
   WinCompositorWnds(HWND aCompositorWnd, HWND aInitialParentWnd)
-      : mCompositorWnd(aCompositorWnd),
-        mInitialParentWnd(aInitialParentWnd) {}
+      : mCompositorWnd(aCompositorWnd), mInitialParentWnd(aInitialParentWnd) {}
 };
 
 class WinCompositorWindowThread final {

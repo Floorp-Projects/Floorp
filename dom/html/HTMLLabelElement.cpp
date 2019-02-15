@@ -73,8 +73,8 @@ nsresult HTMLLabelElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
     return NS_OK;
   }
 
-  nsCOMPtr<Element> target = do_QueryInterface(
-      aVisitor.mEvent->GetOriginalDOMEventTarget());
+  nsCOMPtr<Element> target =
+      do_QueryInterface(aVisitor.mEvent->GetOriginalDOMEventTarget());
   if (nsContentUtils::IsInInteractiveHTMLContent(target, this)) {
     return NS_OK;
   }

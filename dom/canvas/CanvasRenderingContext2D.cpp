@@ -2591,7 +2591,7 @@ bool CanvasRenderingContext2D::ParseFilter(
     return false;
   }
 
-  nsAutoString usedFont; // unused
+  nsAutoString usedFont;  // unused
 
   RefPtr<ComputedStyle> parentStyle = GetFontStyleForServo(
       mCanvasElement, GetFont(), presShell, usedFont, aError);

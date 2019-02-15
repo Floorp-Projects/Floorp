@@ -286,8 +286,7 @@ class AtomicOperations {
     } else {
       memset(buf, value, tail);
     }
-    memcpySafeWhenRacy(dest + offs, SharedMem<uint8_t*>::unshared(buf),
-                       tail);
+    memcpySafeWhenRacy(dest + offs, SharedMem<uint8_t*>::unshared(buf), tail);
   }
 
   template <typename T>

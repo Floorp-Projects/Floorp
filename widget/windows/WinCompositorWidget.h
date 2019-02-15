@@ -33,8 +33,9 @@ class PlatformCompositorWidgetDelegate : public CompositorWidgetDelegate {
   // If in-process and using software rendering, return the backing transparent
   // DC.
   virtual HDC GetTransparentDC() const = 0;
-  virtual void SetParentWnd( const HWND aParentWnd) {}
-  virtual void UpdateCompositorWnd(const HWND aCompositorWnd, const HWND aParentWnd) {}
+  virtual void SetParentWnd(const HWND aParentWnd) {}
+  virtual void UpdateCompositorWnd(const HWND aCompositorWnd,
+                                   const HWND aParentWnd) {}
 
   // CompositorWidgetDelegate Overrides
 
@@ -88,7 +89,10 @@ class WinCompositorWidget : public CompositorWidget,
   RefPtr<gfxASurface> EnsureTransparentSurface();
 
   HDC GetTransparentDC() const override { return mMemoryDC; }
-  HWND GetHwnd() const { return mCompositorWnds.mCompositorWnd ? mCompositorWnds.mCompositorWnd : mWnd; }
+  HWND GetHwnd() const {
+    return mCompositorWnds.mCompositorWnd ? mCompositorWnds.mCompositorWnd
+                                          : mWnd;
+  }
 
   HWND GetCompositorHwnd() const { return mCompositorWnds.mCompositorWnd; }
 

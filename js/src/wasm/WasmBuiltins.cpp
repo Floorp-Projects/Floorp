@@ -468,30 +468,15 @@ static inline void* FuncCast(F* funcPtr, ABIFunctionType abiType) {
 }
 
 #ifdef WASM_CODEGEN_DEBUG
-void wasm::PrintI32(int32_t val)
-{
-  fprintf(stderr, "i32(%d) ", val);
-}
+void wasm::PrintI32(int32_t val) { fprintf(stderr, "i32(%d) ", val); }
 
-void wasm::PrintPtr(uint8_t* val)
-{
-  fprintf(stderr, "ptr(%p) ", val);
-}
+void wasm::PrintPtr(uint8_t* val) { fprintf(stderr, "ptr(%p) ", val); }
 
-void wasm::PrintF32(float val)
-{
-  fprintf(stderr, "f32(%f) ", val);
-}
+void wasm::PrintF32(float val) { fprintf(stderr, "f32(%f) ", val); }
 
-void wasm::PrintF64(double val)
-{
-  fprintf(stderr, "f64(%lf) ", val);
-}
+void wasm::PrintF64(double val) { fprintf(stderr, "f64(%lf) ", val); }
 
-void wasm::PrintText(const char* out)
-{
-  fprintf(stderr, "%s", out);
-}
+void wasm::PrintText(const char* out) { fprintf(stderr, "%s", out); }
 #endif
 
 void* wasm::AddressOf(SymbolicAddress imm, ABIFunctionType* abiType) {
@@ -743,7 +728,7 @@ bool wasm::NeedsBuiltinThunk(SymbolicAddress sym) {
     case SymbolicAddress::PrintPtr:
     case SymbolicAddress::PrintF32:
     case SymbolicAddress::PrintF64:
-    case SymbolicAddress::PrintText: // Used only in stubs
+    case SymbolicAddress::PrintText:  // Used only in stubs
 #endif
       return false;
     case SymbolicAddress::ToInt32:

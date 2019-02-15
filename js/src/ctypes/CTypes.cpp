@@ -3241,7 +3241,7 @@ static bool ImplicitConvert(JSContext* cx, HandleValue val,
   case TYPE_##name: {                                                        \
     /* Convert from a 1-character string, regardless of encoding, */         \
     /* or from an integer, provided the result fits in 'type'. */            \
-    type result = 0;                                                             \
+    type result = 0;                                                         \
     if (val.isString()) {                                                    \
       JSString* str = val.toString();                                        \
       if (str->length() != 1)                                                \

@@ -1449,19 +1449,18 @@ uint8_t* Code::serialize(uint8_t* cursor, const LinkData& linkData) const {
   return cursor;
 }
 
-void wasm::PatchDebugSymbolicAccesses(uint8_t* codeBase, MacroAssembler& masm)
-{
+void wasm::PatchDebugSymbolicAccesses(uint8_t* codeBase, MacroAssembler& masm) {
 #ifdef WASM_CODEGEN_DEBUG
   for (auto& access : masm.symbolicAccesses()) {
     switch (access.target) {
-     case SymbolicAddress::PrintI32:
-     case SymbolicAddress::PrintPtr:
-     case SymbolicAddress::PrintF32:
-     case SymbolicAddress::PrintF64:
-     case SymbolicAddress::PrintText:
-      break;
-     default:
-      MOZ_CRASH("unexpected symbol in PatchDebugSymbolicAccesses");
+      case SymbolicAddress::PrintI32:
+      case SymbolicAddress::PrintPtr:
+      case SymbolicAddress::PrintF32:
+      case SymbolicAddress::PrintF64:
+      case SymbolicAddress::PrintText:
+        break;
+      default:
+        MOZ_CRASH("unexpected symbol in PatchDebugSymbolicAccesses");
     }
     ABIFunctionType abiType;
     void* target = AddressOf(access.target, &abiType);

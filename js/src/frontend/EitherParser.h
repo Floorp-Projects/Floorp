@@ -64,32 +64,24 @@ struct GetParser {
 
 template <class Parser>
 struct GetTokenStream {
-  static auto get(Parser* parser) {
-    return &parser->tokenStream;
-  }
+  static auto get(Parser* parser) { return &parser->tokenStream; }
 };
 
 // Member function-computing templates.
 
 template <class Parser>
 struct ParserOptions {
-  static constexpr auto get() {
-    return &Parser::options;
-  }
+  static constexpr auto get() { return &Parser::options; }
 };
 
 template <class Parser>
 struct ParserNewObjectBox {
-  static constexpr auto get() {
-    return &Parser::newObjectBox;
-  }
+  static constexpr auto get() { return &Parser::newObjectBox; }
 };
 
 template <class TokenStream>
 struct TokenStreamComputeLineAndColumn {
-  static constexpr auto get() {
-    return &TokenStream::computeLineAndColumn;
-  }
+  static constexpr auto get() { return &TokenStream::computeLineAndColumn; }
 };
 
 // Generic matchers.

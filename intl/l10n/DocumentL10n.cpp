@@ -75,7 +75,7 @@ DocumentL10n::~DocumentL10n() {}
 
 bool DocumentL10n::Init(nsTArray<nsString>& aResourceIds) {
   nsCOMPtr<mozIDOMLocalizationJSM> jsm =
-        do_ImportModule("resource://gre/modules/DOMLocalization.jsm");
+      do_ImportModule("resource://gre/modules/DOMLocalization.jsm");
   MOZ_RELEASE_ASSERT(jsm);
 
   Unused << jsm->GetDOMLocalization(getter_AddRefs(mDOMLocalization));

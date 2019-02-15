@@ -17,7 +17,7 @@
 #endif
 
 #ifdef MOZ_WAYLAND
-#include "mozilla/webrender/RenderCompositorEGL.h"
+#  include "mozilla/webrender/RenderCompositorEGL.h"
 #endif
 
 namespace mozilla {
@@ -32,7 +32,8 @@ namespace wr {
 #endif
 
 #ifdef MOZ_WAYLAND
-  UniquePtr<RenderCompositor> eglCompositor = RenderCompositorEGL::Create(aWidget);
+  UniquePtr<RenderCompositor> eglCompositor =
+      RenderCompositorEGL::Create(aWidget);
   if (eglCompositor) {
     return eglCompositor;
   }

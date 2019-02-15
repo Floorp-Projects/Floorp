@@ -2358,13 +2358,13 @@ nsresult NS_LinkRedirectChannels(uint32_t channelId,
 }
 
 nsresult NS_MaybeOpenChannelUsingOpen(nsIChannel *aChannel,
-                                       nsIInputStream **aStream) {
+                                      nsIInputStream **aStream) {
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
   return aChannel->Open(aStream);
 }
 
 nsresult NS_MaybeOpenChannelUsingAsyncOpen(nsIChannel *aChannel,
-                                            nsIStreamListener *aListener) {
+                                           nsIStreamListener *aListener) {
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
   return aChannel->AsyncOpen(aListener);
 }

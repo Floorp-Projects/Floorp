@@ -2260,10 +2260,9 @@ nsresult imgLoader::LoadImage(
     // create the proxy listener
     nsCOMPtr<nsIStreamListener> listener = new ProxyListener(request.get());
 
-    MOZ_LOG(
-        gImgLog, LogLevel::Debug,
-        ("[this=%p] imgLoader::LoadImage -- Calling channel->AsyncOpen()\n",
-         this));
+    MOZ_LOG(gImgLog, LogLevel::Debug,
+            ("[this=%p] imgLoader::LoadImage -- Calling channel->AsyncOpen()\n",
+             this));
 
     mozilla::net::PredictorLearn(aURI, aInitialDocumentURI,
                                  nsINetworkPredictor::LEARN_LOAD_SUBRESOURCE,
