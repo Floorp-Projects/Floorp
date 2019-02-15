@@ -122,7 +122,7 @@ class AboutConfigTest {
    * Array of AboutConfigRowTest objects, one for each row in the main table.
    */
   get rows() {
-    let elements = this.prefsTable.getElementsByTagName("tr");
+    let elements = this.prefsTable.querySelectorAll("tr:not(.hidden)");
     return Array.map(elements, element => new AboutConfigRowTest(element));
   }
 
