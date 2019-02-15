@@ -54,6 +54,7 @@ import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
 import org.mockito.Mockito.reset
+import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyZeroInteractions
@@ -830,7 +831,11 @@ class SystemEngineViewTest {
 
     @Test
     fun `when a page is loaded a thumbnail should be captured`() {
-        val engineSession = SystemEngineSession(getApplicationContext())
+        val engineSession = spy(SystemEngineSession(getApplicationContext()))
+        doReturn(
+            Bitmap.createBitmap(100, 100, Bitmap.Config.ARGB_8888)
+        ).`when`(engineSession).captureThumbnail()
+
         val engineView = SystemEngineView(getApplicationContext())
         engineView.render(engineSession)
         var thumbnailChanged = false

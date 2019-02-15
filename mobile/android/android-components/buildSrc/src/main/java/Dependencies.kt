@@ -11,7 +11,7 @@ object Versions {
     const val androidx_runner = "1.1.0"
 
     const val junit = "4.12"
-    const val robolectric = "4.0.2"
+    const val robolectric = "4.2"
     const val mockito = "2.23.0"
 
     const val mockwebserver = "3.10.0"

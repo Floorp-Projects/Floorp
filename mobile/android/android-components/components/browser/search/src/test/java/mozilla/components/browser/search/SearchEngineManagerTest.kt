@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
+import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -137,7 +138,8 @@ class SearchEngineManagerTest {
 
             verify(provider, never()).loadSearchEngines(RuntimeEnvironment.application)
 
-            shadow.sendBroadcast(Intent(Intent.ACTION_LOCALE_CHANGED))
+            val context = ApplicationProvider.getApplicationContext<Context>()
+            context.sendBroadcast(Intent(Intent.ACTION_LOCALE_CHANGED))
             launch(Dispatchers.Default) {}.join()
 
             verify(provider).loadSearchEngines(RuntimeEnvironment.application)
