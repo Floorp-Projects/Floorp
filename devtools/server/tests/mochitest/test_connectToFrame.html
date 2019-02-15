@@ -39,7 +39,7 @@ function runTests() {
   iframe.mozbrowser = true;
   document.body.appendChild(iframe);
 
-  const mm = iframe.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader.messageManager;
+  const mm = iframe.frameLoader.messageManager;
 
   // Register a test actor in the child process so that we can know if and when
   // this fake actor is destroyed.

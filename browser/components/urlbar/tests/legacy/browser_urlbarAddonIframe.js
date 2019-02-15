@@ -55,7 +55,7 @@ add_task(async function() {
   Assert.ok(!!iframe, "iframe should not be null");
 
   gMsgMan =
-    iframe.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader.messageManager;
+    iframe.frameLoader.messageManager;
   gMsgMan.loadFrameScript(contentScriptURL, false);
 
   await promiseIframeLoad();
