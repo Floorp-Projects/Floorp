@@ -7245,10 +7245,6 @@ void CodeGenerator::visitGetNextEntryForIterator(
 }
 
 void CodeGenerator::emitWasmCallBase(MWasmCall* mir, bool needsBoundsCheck) {
-  if (mir->spIncrement()) {
-    masm.freeStack(mir->spIncrement());
-  }
-
   MOZ_ASSERT((sizeof(wasm::Frame) + masm.framePushed()) % WasmStackAlignment ==
              0);
   static_assert(
@@ -7305,10 +7301,6 @@ void CodeGenerator::emitWasmCallBase(MWasmCall* mir, bool needsBoundsCheck) {
     }
   } else {
     MOZ_ASSERT(!switchRealm);
-  }
-
-  if (mir->spIncrement()) {
-    masm.reserveStack(mir->spIncrement());
   }
 }
 

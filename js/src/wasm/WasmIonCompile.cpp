@@ -53,26 +53,11 @@ typedef OpIter<IonCompilePolicy> IonOpIter;
 
 class FunctionCompiler;
 
-// CallCompileState describes a call that is being compiled. Due to expression
-// nesting, multiple calls can be in the middle of compilation at the same time
-// and these are tracked in a stack by FunctionCompiler.
+// CallCompileState describes a call that is being compiled.
 
 class CallCompileState {
-  // The line or bytecode of the call.
-  uint32_t lineOrBytecode_;
-
   // A generator object that is passed each argument as it is compiled.
   ABIArgGenerator abi_;
-
-  // The maximum number of bytes used by "child" calls, i.e., calls that occur
-  // while evaluating the arguments of the call represented by this
-  // CallCompileState.
-  uint32_t maxChildStackBytes_;
-
-  // Set by FunctionCompiler::finishCall(), tells the MWasmCall by how
-  // much to bump the stack pointer before making the call. See
-  // FunctionCompiler::startCall() comment below.
-  uint32_t spIncrement_;
 
   // Accumulates the register arguments while compiling arguments.
   MWasmCall::Args regArgs_;
@@ -80,26 +65,8 @@ class CallCompileState {
   // Reserved argument for passing Instance* to builtin instance method calls.
   ABIArg instanceArg_;
 
-  // Accumulates the stack arguments while compiling arguments. This is only
-  // necessary to track when childClobbers_ is true so that the stack offsets
-  // can be updated.
-  Vector<MWasmStackArg*, 0, SystemAllocPolicy> stackArgs_;
-
-  // Set by child calls (i.e., calls that execute while evaluating a parent's
-  // operands) to indicate that the child and parent call cannot reuse the
-  // same stack space -- the parent must store its stack arguments below the
-  // child's and increment sp when performing its call.
-  bool childClobbers_;
-
   // Only FunctionCompiler should be directly manipulating CallCompileState.
   friend class FunctionCompiler;
-
- public:
-  CallCompileState(FunctionCompiler& f, uint32_t lineOrBytecode)
-      : lineOrBytecode_(lineOrBytecode),
-        maxChildStackBytes_(0),
-        spIncrement_(0),
-        childClobbers_(false) {}
 };
 
 // Encapsulates the compilation of a single function in an asm.js module. The
@@ -116,8 +83,6 @@ class FunctionCompiler {
   typedef Vector<ControlFlowPatch, 0, SystemAllocPolicy> ControlFlowPatchVector;
   typedef Vector<ControlFlowPatchVector, 0, SystemAllocPolicy>
       ControlFlowPatchsVector;
-  typedef Vector<CallCompileState*, 0, SystemAllocPolicy>
-      CallCompileStateVector;
 
   const ModuleEnvironment& env_;
   IonOpIter iter_;
@@ -131,7 +96,6 @@ class FunctionCompiler {
   MIRGenerator& mirGen_;
 
   MBasicBlock* curBlock_;
-  CallCompileStateVector callStack_;
   uint32_t maxStackArgBytes_;
 
   uint32_t loopDepth_;
@@ -235,7 +199,6 @@ class FunctionCompiler {
   void finish() {
     mirGen().initWasmMaxStackArgBytes(maxStackArgBytes_);
 
-    MOZ_ASSERT(callStack_.empty());
     MOZ_ASSERT(loopDepth_ == 0);
     MOZ_ASSERT(blockDepth_ == 0);
 #ifdef DEBUG
@@ -944,22 +907,11 @@ class FunctionCompiler {
   // Since we do not use IonMonkey's MPrepareCall/MPassArg/MCall, we must
   // manually accumulate, for the entire function, the maximum required stack
   // space for argument passing. (This is passed to the CodeGenerator via
-  // MIRGenerator::maxWasmStackArgBytes.) Naively, this would just be the
-  // maximum of the stack space required for each individual call (as
-  // determined by the call ABI). However, as an optimization, arguments are
-  // stored to the stack immediately after evaluation (to decrease live
-  // ranges and reduce spilling). This introduces the complexity that,
-  // between evaluating an argument and making the call, another argument
-  // evaluation could perform a call that also needs to store to the stack.
-  // When this occurs childClobbers_ = true and the parent expression's
-  // arguments are stored above the maximum depth clobbered by a child
-  // expression.
+  // MIRGenerator::maxWasmStackArgBytes.) This is just be the maximum of the
+  // stack space required for each individual call (as determined by the call
+  // ABI).
 
-  bool startCall(CallCompileState* call) {
-    // Always push calls to maintain the invariant that if we're inDeadCode
-    // in finishCall, we have something to pop.
-    return callStack_.append(call);
-  }
+  // Operations that modify a CallCompileState.
 
   bool passInstance(CallCompileState* args) {
     if (inDeadCode()) {
@@ -1000,7 +952,7 @@ class FunctionCompiler {
         auto* mir =
             MWasmStackArg::New(alloc(), arg.offsetFromArgBase(), argDef);
         curBlock_->add(mir);
-        return call->stackArgs_.append(mir);
+        return true;
       }
       case ABIArg::Uninitialized:
         MOZ_ASSERT_UNREACHABLE("Uninitialized ABIArg kind");
@@ -1008,26 +960,8 @@ class FunctionCompiler {
     MOZ_CRASH("Unknown ABIArg kind.");
   }
 
-  void propagateMaxStackArgBytes(uint32_t stackBytes) {
-    if (callStack_.empty()) {
-      // Outermost call
-      maxStackArgBytes_ = Max(maxStackArgBytes_, stackBytes);
-      return;
-    }
-
-    // Non-outermost call
-    CallCompileState* outer = callStack_.back();
-    outer->maxChildStackBytes_ = Max(outer->maxChildStackBytes_, stackBytes);
-    if (stackBytes && !outer->stackArgs_.empty()) {
-      outer->childClobbers_ = true;
-    }
-  }
-
   bool finishCall(CallCompileState* call) {
-    MOZ_ALWAYS_TRUE(callStack_.popCopy() == call);
-
     if (inDeadCode()) {
-      propagateMaxStackArgBytes(call->maxChildStackBytes_);
       return true;
     }
 
@@ -1037,42 +971,25 @@ class FunctionCompiler {
     }
 
     uint32_t stackBytes = call->abi_.stackBytesConsumedSoFar();
-    if (call->childClobbers_) {
-      call->spIncrement_ =
-          AlignBytes(call->maxChildStackBytes_, WasmStackAlignment);
-      for (MWasmStackArg* stackArg : call->stackArgs_) {
-        stackArg->incrementOffset(call->spIncrement_);
-      }
 
-      // If instanceArg_ is not initialized then
-      // instanceArg_.kind() != ABIArg::Stack
-      if (call->instanceArg_.kind() == ABIArg::Stack) {
-        call->instanceArg_ =
-            ABIArg(call->instanceArg_.offsetFromArgBase() + call->spIncrement_);
-      }
-
-      stackBytes += call->spIncrement_;
-    } else {
-      call->spIncrement_ = 0;
-      stackBytes = Max(stackBytes, call->maxChildStackBytes_);
-    }
-
-    propagateMaxStackArgBytes(stackBytes);
+    maxStackArgBytes_ = Max(maxStackArgBytes_, stackBytes);
     return true;
   }
 
+  // Wrappers for creating various kinds of calls.
+
   bool callDirect(const FuncType& funcType, uint32_t funcIndex,
-                  const CallCompileState& call, MDefinition** def) {
+                  uint32_t lineOrBytecode, const CallCompileState& call,
+                  MDefinition** def) {
     if (inDeadCode()) {
       *def = nullptr;
       return true;
     }
 
-    CallSiteDesc desc(call.lineOrBytecode_, CallSiteDesc::Func);
+    CallSiteDesc desc(lineOrBytecode, CallSiteDesc::Func);
     MIRType ret = ToMIRType(funcType.ret());
     auto callee = CalleeDesc::function(funcIndex);
-    auto* ins = MWasmCall::New(alloc(), desc, callee, call.regArgs_, ret,
-                               call.spIncrement_);
+    auto* ins = MWasmCall::New(alloc(), desc, callee, call.regArgs_, ret);
     if (!ins) {
       return false;
     }
@@ -1083,8 +1000,8 @@ class FunctionCompiler {
   }
 
   bool callIndirect(uint32_t funcTypeIndex, uint32_t tableIndex,
-                    MDefinition* index, const CallCompileState& call,
-                    MDefinition** def) {
+                    MDefinition* index, uint32_t lineOrBytecode,
+                    const CallCompileState& call, MDefinition** def) {
     if (inDeadCode()) {
       *def = nullptr;
       return true;
@@ -1114,10 +1031,10 @@ class FunctionCompiler {
       callee = CalleeDesc::wasmTable(table, funcType.id);
     }
 
-    CallSiteDesc desc(call.lineOrBytecode_, CallSiteDesc::Dynamic);
+    CallSiteDesc desc(lineOrBytecode, CallSiteDesc::Dynamic);
     auto* ins =
         MWasmCall::New(alloc(), desc, callee, call.regArgs_,
-                       ToMIRType(funcType.ret()), call.spIncrement_, index);
+                       ToMIRType(funcType.ret()), index);
     if (!ins) {
       return false;
     }
@@ -1127,17 +1044,18 @@ class FunctionCompiler {
     return true;
   }
 
-  bool callImport(unsigned globalDataOffset, const CallCompileState& call,
-                  ExprType ret, MDefinition** def) {
+  bool callImport(unsigned globalDataOffset, uint32_t lineOrBytecode,
+                  const CallCompileState& call, const FuncType& funcType,
+                  MDefinition** def) {
     if (inDeadCode()) {
       *def = nullptr;
       return true;
     }
 
-    CallSiteDesc desc(call.lineOrBytecode_, CallSiteDesc::Dynamic);
+    CallSiteDesc desc(lineOrBytecode, CallSiteDesc::Dynamic);
     auto callee = CalleeDesc::import(globalDataOffset);
     auto* ins = MWasmCall::New(alloc(), desc, callee, call.regArgs_,
-                               ToMIRType(ret), call.spIncrement_);
+                               ToMIRType(funcType.ret()));
     if (!ins) {
       return false;
     }
@@ -1147,17 +1065,18 @@ class FunctionCompiler {
     return true;
   }
 
-  bool builtinCall(SymbolicAddress builtin, const CallCompileState& call,
-                   ValType ret, MDefinition** def) {
+  bool builtinCall(SymbolicAddress builtin, uint32_t lineOrBytecode,
+                   const CallCompileState& call, ValType ret,
+                   MDefinition** def) {
     if (inDeadCode()) {
       *def = nullptr;
       return true;
     }
 
-    CallSiteDesc desc(call.lineOrBytecode_, CallSiteDesc::Symbolic);
+    CallSiteDesc desc(lineOrBytecode, CallSiteDesc::Symbolic);
     auto callee = CalleeDesc::builtin(builtin);
     auto* ins = MWasmCall::New(alloc(), desc, callee, call.regArgs_,
-                               ToMIRType(ret), call.spIncrement_);
+                               ToMIRType(ret));
     if (!ins) {
       return false;
     }
@@ -1168,6 +1087,7 @@ class FunctionCompiler {
   }
 
   bool builtinInstanceMethodCall(SymbolicAddress builtin,
+                                 uint32_t lineOrBytecode,
                                  const CallCompileState& call, ValType ret,
                                  MDefinition** def) {
     if (inDeadCode()) {
@@ -1175,10 +1095,10 @@ class FunctionCompiler {
       return true;
     }
 
-    CallSiteDesc desc(call.lineOrBytecode_, CallSiteDesc::Symbolic);
+    CallSiteDesc desc(lineOrBytecode, CallSiteDesc::Symbolic);
     auto* ins = MWasmCall::NewBuiltinInstanceMethodCall(
         alloc(), desc, builtin, call.instanceArg_, call.regArgs_,
-        ToMIRType(ret), call.spIncrement_);
+        ToMIRType(ret));
     if (!ins) {
       return false;
     }
@@ -2001,10 +1921,6 @@ typedef IonOpIter::ValueVector DefVector;
 
 static bool EmitCallArgs(FunctionCompiler& f, const FuncType& funcType,
                          const DefVector& args, CallCompileState* call) {
-  if (!f.startCall(call)) {
-    return false;
-  }
-
   for (size_t i = 0, n = funcType.args().length(); i < n; ++i) {
     if (!f.mirGen().ensureBallast()) {
       return false;
@@ -2039,7 +1955,7 @@ static bool EmitCall(FunctionCompiler& f, bool asmJSFuncDef) {
 
   const FuncType& funcType = *f.env().funcTypes[funcIndex];
 
-  CallCompileState call(f, lineOrBytecode);
+  CallCompileState call;
   if (!EmitCallArgs(f, funcType, args, &call)) {
     return false;
   }
@@ -2047,11 +1963,11 @@ static bool EmitCall(FunctionCompiler& f, bool asmJSFuncDef) {
   MDefinition* def;
   if (f.env().funcIsImport(funcIndex)) {
     uint32_t globalDataOffset = f.env().funcImportGlobalDataOffsets[funcIndex];
-    if (!f.callImport(globalDataOffset, call, funcType.ret(), &def)) {
+    if (!f.callImport(globalDataOffset, lineOrBytecode, call, funcType, &def)) {
       return false;
     }
   } else {
-    if (!f.callDirect(funcType, funcIndex, call, &def)) {
+    if (!f.callDirect(funcType, funcIndex, lineOrBytecode, call, &def)) {
       return false;
     }
   }
@@ -2089,13 +2005,14 @@ static bool EmitCallIndirect(FunctionCompiler& f, bool oldStyle) {
 
   const FuncType& funcType = f.env().types[funcTypeIndex].funcType();
 
-  CallCompileState call(f, lineOrBytecode);
+  CallCompileState call;
   if (!EmitCallArgs(f, funcType, args, &call)) {
     return false;
   }
 
   MDefinition* def;
-  if (!f.callIndirect(funcTypeIndex, tableIndex, callee, call, &def)) {
+  if (!f.callIndirect(funcTypeIndex, tableIndex, callee, lineOrBytecode, call,
+                      &def)) {
     return false;
   }
 
@@ -2576,11 +2493,7 @@ static bool EmitUnaryMathBuiltinCall(FunctionCompiler& f,
     return true;
   }
 
-  CallCompileState call(f, lineOrBytecode);
-  if (!f.startCall(&call)) {
-    return false;
-  }
-
+  CallCompileState call;
   if (!f.passArg(input, operandType, &call)) {
     return false;
   }
@@ -2590,7 +2503,7 @@ static bool EmitUnaryMathBuiltinCall(FunctionCompiler& f,
   }
 
   MDefinition* def;
-  if (!f.builtinCall(callee, call, operandType, &def)) {
+  if (!f.builtinCall(callee, lineOrBytecode, call, operandType, &def)) {
     return false;
   }
 
@@ -2603,11 +2516,7 @@ static bool EmitBinaryMathBuiltinCall(FunctionCompiler& f,
                                       ValType operandType) {
   uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
 
-  CallCompileState call(f, lineOrBytecode);
-  if (!f.startCall(&call)) {
-    return false;
-  }
-
+  CallCompileState call;
   MDefinition* lhs;
   MDefinition* rhs;
   if (!f.iter().readBinary(operandType, &lhs, &rhs)) {
@@ -2627,7 +2536,7 @@ static bool EmitBinaryMathBuiltinCall(FunctionCompiler& f,
   }
 
   MDefinition* def;
-  if (!f.builtinCall(callee, call, operandType, &def)) {
+  if (!f.builtinCall(callee, lineOrBytecode, call, operandType, &def)) {
     return false;
   }
 
@@ -2638,11 +2547,7 @@ static bool EmitBinaryMathBuiltinCall(FunctionCompiler& f,
 static bool EmitGrowMemory(FunctionCompiler& f) {
   uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
 
-  CallCompileState args(f, lineOrBytecode);
-  if (!f.startCall(&args)) {
-    return false;
-  }
-
+  CallCompileState args;
   if (!f.passInstance(&args)) {
     return false;
   }
@@ -2659,8 +2564,8 @@ static bool EmitGrowMemory(FunctionCompiler& f) {
   f.finishCall(&args);
 
   MDefinition* ret;
-  if (!f.builtinInstanceMethodCall(SymbolicAddress::GrowMemory, args,
-                                   ValType::I32, &ret)) {
+  if (!f.builtinInstanceMethodCall(SymbolicAddress::GrowMemory, lineOrBytecode,
+                                   args, ValType::I32, &ret)) {
     return false;
   }
 
@@ -2671,13 +2576,9 @@ static bool EmitGrowMemory(FunctionCompiler& f) {
 static bool EmitCurrentMemory(FunctionCompiler& f) {
   uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
 
-  CallCompileState args(f, lineOrBytecode);
+  CallCompileState args;
 
   if (!f.iter().readCurrentMemory()) {
-    return false;
-  }
-
-  if (!f.startCall(&args)) {
     return false;
   }
 
@@ -2688,8 +2589,8 @@ static bool EmitCurrentMemory(FunctionCompiler& f) {
   f.finishCall(&args);
 
   MDefinition* ret;
-  if (!f.builtinInstanceMethodCall(SymbolicAddress::CurrentMemory, args,
-                                   ValType::I32, &ret)) {
+  if (!f.builtinInstanceMethodCall(SymbolicAddress::CurrentMemory,
+                                   lineOrBytecode, args, ValType::I32, &ret)) {
     return false;
   }
 
@@ -2773,11 +2674,7 @@ static bool EmitAtomicStore(FunctionCompiler& f, ValType type,
 static bool EmitWait(FunctionCompiler& f, ValType type, uint32_t byteSize) {
   uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
 
-  CallCompileState args(f, lineOrBytecode);
-  if (!f.startCall(&args)) {
-    return false;
-  }
-
+  CallCompileState args;
   if (!f.passInstance(&args)) {
     return false;
   }
@@ -2815,7 +2712,8 @@ static bool EmitWait(FunctionCompiler& f, ValType type, uint32_t byteSize) {
   SymbolicAddress callee = type == ValType::I32 ? SymbolicAddress::WaitI32
                                                 : SymbolicAddress::WaitI64;
   MDefinition* ret;
-  if (!f.builtinInstanceMethodCall(callee, args, ValType::I32, &ret)) {
+  if (!f.builtinInstanceMethodCall(callee, lineOrBytecode, args, ValType::I32,
+                                   &ret)) {
     return false;
   }
 
@@ -2830,11 +2728,7 @@ static bool EmitWait(FunctionCompiler& f, ValType type, uint32_t byteSize) {
 static bool EmitWake(FunctionCompiler& f) {
   uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
 
-  CallCompileState args(f, lineOrBytecode);
-  if (!f.startCall(&args)) {
-    return false;
-  }
-
+  CallCompileState args;
   if (!f.passInstance(&args)) {
     return false;
   }
@@ -2865,8 +2759,8 @@ static bool EmitWake(FunctionCompiler& f) {
   }
 
   MDefinition* ret;
-  if (!f.builtinInstanceMethodCall(SymbolicAddress::Wake, args, ValType::I32,
-                                   &ret)) {
+  if (!f.builtinInstanceMethodCall(SymbolicAddress::Wake, lineOrBytecode,
+                                   args, ValType::I32, &ret)) {
     return false;
   }
 
@@ -2913,11 +2807,7 @@ static bool EmitMemOrTableCopy(FunctionCompiler& f, bool isMem) {
 
   uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
 
-  CallCompileState args(f, lineOrBytecode);
-  if (!f.startCall(&args)) {
-    return false;
-  }
-
+  CallCompileState args;
   if (!f.passInstance(&args)) {
     return false;
   }
@@ -2954,7 +2844,8 @@ static bool EmitMemOrTableCopy(FunctionCompiler& f, bool isMem) {
   SymbolicAddress callee =
       isMem ? SymbolicAddress::MemCopy : SymbolicAddress::TableCopy;
   MDefinition* ret;
-  if (!f.builtinInstanceMethodCall(callee, args, ValType::I32, &ret)) {
+  if (!f.builtinInstanceMethodCall(callee, lineOrBytecode, args, ValType::I32,
+                                   &ret)) {
     return false;
   }
 
@@ -2977,11 +2868,7 @@ static bool EmitDataOrElemDrop(FunctionCompiler& f, bool isData) {
 
   uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
 
-  CallCompileState args(f, lineOrBytecode);
-  if (!f.startCall(&args)) {
-    return false;
-  }
-
+  CallCompileState args;
   if (!f.passInstance(&args)) {
     return false;
   }
@@ -2999,7 +2886,8 @@ static bool EmitDataOrElemDrop(FunctionCompiler& f, bool isData) {
   SymbolicAddress callee =
       isData ? SymbolicAddress::DataDrop : SymbolicAddress::ElemDrop;
   MDefinition* ret;
-  if (!f.builtinInstanceMethodCall(callee, args, ValType::I32, &ret)) {
+  if (!f.builtinInstanceMethodCall(callee, lineOrBytecode, args, ValType::I32,
+                                   &ret)) {
     return false;
   }
 
@@ -3022,11 +2910,7 @@ static bool EmitMemFill(FunctionCompiler& f) {
 
   uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
 
-  CallCompileState args(f, lineOrBytecode);
-  if (!f.startCall(&args)) {
-    return false;
-  }
-
+  CallCompileState args;
   if (!f.passInstance(&args)) {
     return false;
   }
@@ -3046,8 +2930,8 @@ static bool EmitMemFill(FunctionCompiler& f) {
   }
 
   MDefinition* ret;
-  if (!f.builtinInstanceMethodCall(SymbolicAddress::MemFill, args, ValType::I32,
-                                   &ret)) {
+  if (!f.builtinInstanceMethodCall(SymbolicAddress::MemFill, lineOrBytecode,
+                                   args, ValType::I32, &ret)) {
     return false;
   }
 
@@ -3072,11 +2956,7 @@ static bool EmitMemOrTableInit(FunctionCompiler& f, bool isMem) {
 
   uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
 
-  CallCompileState args(f, lineOrBytecode);
-  if (!f.startCall(&args)) {
-    return false;
-  }
-
+  CallCompileState args;
   if (!f.passInstance(&args)) {
     return false;
   }
@@ -3112,7 +2992,8 @@ static bool EmitMemOrTableInit(FunctionCompiler& f, bool isMem) {
   SymbolicAddress callee =
       isMem ? SymbolicAddress::MemInit : SymbolicAddress::TableInit;
   MDefinition* ret;
-  if (!f.builtinInstanceMethodCall(callee, args, ValType::I32, &ret)) {
+  if (!f.builtinInstanceMethodCall(callee, lineOrBytecode, args, ValType::I32,
+                                   &ret)) {
     return false;
   }
 
@@ -3176,11 +3057,7 @@ static bool EmitTableSize(FunctionCompiler& f) {
 
   uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
 
-  CallCompileState args(f, lineOrBytecode);
-  if (!f.startCall(&args)) {
-    return false;
-  }
-
+  CallCompileState args;
   if (!f.passInstance(&args)) {
     return false;
   }
@@ -3199,8 +3076,8 @@ static bool EmitTableSize(FunctionCompiler& f) {
   }
 
   MDefinition* ret;
-  if (!f.builtinInstanceMethodCall(SymbolicAddress::TableSize, args,
-                                   ValType::I32, &ret)) {
+  if (!f.builtinInstanceMethodCall(SymbolicAddress::TableSize, lineOrBytecode,
+                                   args, ValType::I32, &ret)) {
     return false;
   }
 
