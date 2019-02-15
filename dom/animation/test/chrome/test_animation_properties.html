@@ -818,6 +818,11 @@ SpecialPowers.pushPrefEnv(
       test(function(t) {
         var div = addDiv(t);
         var animation = div.animate(subtest.frames, 100 * MS_PER_SEC);
+        // Flush styles since getProperties currently does not. Rather, it
+        // returns the actual properties in use at the current time.
+        // However, we want to test what these properties will look like
+        // after the next restyle.
+        getComputedStyle(div).opacity;
         assert_properties_equal(
           animation.effect.getProperties(),
           subtest.expected
