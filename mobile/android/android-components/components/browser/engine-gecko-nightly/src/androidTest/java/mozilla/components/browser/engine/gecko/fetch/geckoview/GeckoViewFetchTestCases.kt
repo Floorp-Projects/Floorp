@@ -127,4 +127,10 @@ class GeckoViewFetchTestCases : mozilla.components.tooling.fetch.tests.FetchTest
     override fun get200WithCacheControl() {
         super.get200WithCacheControl()
     }
+
+    @Test
+    @UiThreadTest
+    override fun getThrowsIOExceptionWhenHostNotReachable() {
+        super.getThrowsIOExceptionWhenHostNotReachable()
+    }
 }

@@ -17,6 +17,7 @@ import org.mozilla.geckoview.GeckoWebExecutor
 import org.mozilla.geckoview.WebRequest
 import org.mozilla.geckoview.WebRequest.CACHE_MODE_DEFAULT
 import org.mozilla.geckoview.WebRequest.CACHE_MODE_RELOAD
+import org.mozilla.geckoview.WebRequestError
 import org.mozilla.geckoview.WebResponse
 import java.io.IOException
 import java.io.InputStream
@@ -62,6 +63,8 @@ class GeckoViewFetchClient(
             return webResponse?.toResponse() ?: throw IOException("Fetch failed with null response")
         } catch (e: TimeoutException) {
             throw SocketTimeoutException()
+        } catch (e: WebRequestError) {
+            throw IOException(e)
         }
     }
 

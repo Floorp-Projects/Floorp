@@ -29,6 +29,7 @@ import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoWebExecutor
 import org.mozilla.geckoview.WebRequest
+import org.mozilla.geckoview.WebRequestError
 import org.mozilla.geckoview.WebResponse
 import org.robolectric.RobolectricTestRunner
 import java.io.IOException
@@ -271,6 +272,7 @@ class GeckoViewFetchUnitTestCases : mozilla.components.tooling.fetch.tests.Fetch
         assertEquals("ÄäÖöÜü", response.body.string())
     }
 
+    @Test
     override fun get200WithCacheControl() {
         mockResponse(200)
 
@@ -284,6 +286,15 @@ class GeckoViewFetchUnitTestCases : mozilla.components.tooling.fetch.tests.Fetch
 
         verify(geckoWebExecutor)!!.fetch(captor.capture(), eq(GeckoWebExecutor.FETCH_FLAGS_NONE))
         assertEquals(WebRequest.CACHE_MODE_RELOAD, captor.value.cacheMode)
+    }
+
+    @Test(expected = IOException::class)
+    override fun getThrowsIOExceptionWhenHostNotReachable() {
+        val executor = mock(GeckoWebExecutor::class.java)
+        `when`(executor.fetch(any(), anyInt())).thenAnswer { throw WebRequestError(0, 0) }
+        geckoWebExecutor = executor
+
+        createNewClient().fetch(Request(""))
     }
 
     private fun mockRequest(headerMap: Map<String, String>? = null, body: String? = null, method: String = "GET") {

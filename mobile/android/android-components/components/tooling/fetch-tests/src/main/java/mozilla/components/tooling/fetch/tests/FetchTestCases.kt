@@ -472,6 +472,23 @@ abstract class FetchTestCases {
         assertEquals("Could've cached this!", response2.body.string())
     }
 
+    @Test
+    open fun getThrowsIOExceptionWhenHostNotReachable() {
+        try {
+            val client = createNewClient()
+            val response = client.fetch(Request(url = "http://invalid.offline"))
+
+            // We're doing this the old-fashioned way instead of using the
+            // expected= attribute, because the test is launched on a different
+            // thread (using a different coroutine context) than this block.
+            fail("Expected IOException, but got response: ${response.status}")
+        } catch (e: IOException) {
+            // expected
+        } catch (e: Exception) {
+            fail("Expected IOException")
+        }
+    }
+
     private inline fun withServerResponding(
         vararg responses: MockResponse,
         crossinline block: MockWebServer.(Client) -> Unit
