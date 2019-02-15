@@ -11,35 +11,36 @@
 namespace mozilla {
 namespace dom {
 
-StaticAutoPtr<nsTArray<RefPtr<BrowsingContextGroup>>>
-    BrowsingContextGroup::sAllGroups;
-
-/* static */ void BrowsingContextGroup::Init() {
-  if (!sAllGroups) {
-    sAllGroups = new nsTArray<RefPtr<BrowsingContextGroup>>();
-    ClearOnShutdown(&sAllGroups);
-  }
-}
-
 bool BrowsingContextGroup::Contains(BrowsingContext* aBrowsingContext) {
   return aBrowsingContext->Group() == this;
 }
 
 void BrowsingContextGroup::Register(BrowsingContext* aBrowsingContext) {
+  MOZ_DIAGNOSTIC_ASSERT(aBrowsingContext);
   mContexts.PutEntry(aBrowsingContext);
 }
 
 void BrowsingContextGroup::Unregister(BrowsingContext* aBrowsingContext) {
+  MOZ_DIAGNOSTIC_ASSERT(aBrowsingContext);
   mContexts.RemoveEntry(aBrowsingContext);
 }
 
-BrowsingContextGroup::BrowsingContextGroup() {
-  sAllGroups->AppendElement(this);
+void BrowsingContextGroup::Subscribe(ContentParent* aOriginProcess) {
+  MOZ_DIAGNOSTIC_ASSERT(aOriginProcess);
+  mSubscribers.PutEntry(aOriginProcess);
+  aOriginProcess->OnBrowsingContextGroupSubscribe(this);
+}
+
+void BrowsingContextGroup::Unsubscribe(ContentParent* aOriginProcess) {
+  MOZ_DIAGNOSTIC_ASSERT(aOriginProcess);
+  mSubscribers.RemoveEntry(aOriginProcess);
+  aOriginProcess->OnBrowsingContextGroupUnsubscribe(this);
 }
 
 BrowsingContextGroup::~BrowsingContextGroup() {
-  if (sAllGroups) {
-    sAllGroups->RemoveElement(this);
+  for (auto iter = mSubscribers.Iter(); !iter.Done(); iter.Next()) {
+    nsRefPtrHashKey<ContentParent>* entry = iter.Get();
+    entry->GetKey()->OnBrowsingContextGroupUnsubscribe(this);
   }
 }
 
@@ -52,20 +53,8 @@ JSObject* BrowsingContextGroup::WrapObject(JSContext* aCx,
   return BrowsingContextGroup_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(BrowsingContextGroup)
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(BrowsingContextGroup)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mContexts)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mToplevels)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(BrowsingContextGroup)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mContexts)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mToplevels)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(BrowsingContextGroup)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(BrowsingContextGroup, mContexts,
+                                      mToplevels, mSubscribers)
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(BrowsingContextGroup, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(BrowsingContextGroup, Release)

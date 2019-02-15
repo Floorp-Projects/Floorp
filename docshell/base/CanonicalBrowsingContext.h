@@ -26,7 +26,6 @@ class WindowGlobalParent;
 // parent needs.
 class CanonicalBrowsingContext final : public BrowsingContext {
  public:
-  static void CleanupContexts(uint64_t aProcessId);
   static already_AddRefed<CanonicalBrowsingContext> Get(uint64_t aId);
   static CanonicalBrowsingContext* Cast(BrowsingContext* aContext);
   static const CanonicalBrowsingContext* Cast(const BrowsingContext* aContext);
