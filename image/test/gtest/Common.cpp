@@ -613,6 +613,20 @@ ImageTestCase TransparentGIFTestCase() {
                        TEST_CASE_IS_TRANSPARENT);
 }
 
+ImageTestCase TransparentWebPTestCase() {
+  ImageTestCase test("transparent.webp", "image/webp", IntSize(100, 100),
+                     TEST_CASE_IS_TRANSPARENT);
+  test.mColor = BGRAColor::Transparent();
+  return test;
+}
+
+ImageTestCase TransparentNoAlphaHeaderWebPTestCase() {
+  ImageTestCase test("transparent-no-alpha-header.webp", "image/webp",
+                     IntSize(100, 100), TEST_CASE_IS_FUZZY);
+  test.mColor = BGRAColor(0x00, 0x00, 0x00, 0xFF);  // black
+  return test;
+}
+
 ImageTestCase FirstFramePaddingGIFTestCase() {
   return ImageTestCase("transparent.gif", "image/gif", IntSize(16, 16),
                        TEST_CASE_IS_TRANSPARENT);
