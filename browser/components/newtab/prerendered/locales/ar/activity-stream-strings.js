@@ -49,6 +49,7 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "محتوى مميز من أرجاء الوِب انتقيناه لك أنت",
   "prefs_topstories_options_sponsored_label": "الأخبار الممولة",
   "prefs_topstories_sponsored_learn_more": "اطّلع على المزيد",
+  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "مجموعة المواقع التي حفظتها أو زرتها",
   "prefs_highlights_options_visited_label": "الصفحات المزارة",
   "prefs_highlights_options_download_label": "آخر ما نُزّل",

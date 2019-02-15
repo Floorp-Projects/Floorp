@@ -49,6 +49,7 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "Отличный контент со всего Интернета, отобранный по вашему вкусу",
   "prefs_topstories_options_sponsored_label": "Статьи спонсоров",
   "prefs_topstories_sponsored_learn_more": "Подробнее",
+  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "Избранные сайты, которые вы сохранили или посещали",
   "prefs_highlights_options_visited_label": "Посещённые страницы",
   "prefs_highlights_options_download_label": "Недавние загрузки",

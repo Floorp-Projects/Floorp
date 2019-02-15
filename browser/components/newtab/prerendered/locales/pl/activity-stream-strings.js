@@ -49,6 +49,7 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "Świetne rzeczy z całego Internetu, personalizowane specjalnie dla Ciebie",
   "prefs_topstories_options_sponsored_label": "Sponsorowane treści",
   "prefs_topstories_sponsored_learn_more": "Więcej informacji",
+  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "Wybierane z zachowanych i odwiedzonych stron.",
   "prefs_highlights_options_visited_label": "Historia",
   "prefs_highlights_options_download_label": "Ostatnio pobrane pliki",

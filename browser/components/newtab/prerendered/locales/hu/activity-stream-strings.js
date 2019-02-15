@@ -49,6 +49,7 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "Nagyszerű tartalom szerte a webről, személyre szabva",
   "prefs_topstories_options_sponsored_label": "Szponzorált történetek",
   "prefs_topstories_sponsored_learn_more": "További tudnivalók",
+  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "Válogatás azon oldalakból, amelyeket elmentett vagy felkeresett",
   "prefs_highlights_options_visited_label": "Látogatott oldalak",
   "prefs_highlights_options_download_label": "Legutóbbi letöltés",

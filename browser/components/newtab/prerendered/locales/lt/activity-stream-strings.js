@@ -49,6 +49,7 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "Puikus turinys iš viso saityno, parinktas specialiai jums",
   "prefs_topstories_options_sponsored_label": "Rėmėjų straipsniai",
   "prefs_topstories_sponsored_learn_more": "Sužinoti daugiau",
+  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "Aplankytų bei išsaugotų svetainių rinkinys",
   "prefs_highlights_options_visited_label": "Aplankyti tinklalapiai",
   "prefs_highlights_options_download_label": "Paskiausias atsisiuntimas",

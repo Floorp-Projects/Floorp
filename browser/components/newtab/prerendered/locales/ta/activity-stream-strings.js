@@ -49,6 +49,7 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "இணையத்திலிருந்து சிறந்த உள்ளடக்கங்கள், உங்களுக்காக தனிப்பயனாக்கப்பட்டவை",
   "prefs_topstories_options_sponsored_label": "விளம்பரக் கதைகள்",
   "prefs_topstories_sponsored_learn_more": "மேலும் அறிய",
+  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "நீங்கள் சேமித்த அல்லது பார்வையிட்ட தளங்களின் தேர்வு",
   "prefs_highlights_options_visited_label": "பார்வையிட்டத் தளம்",
   "prefs_highlights_options_download_label": "அண்மைய பதிவிறக்கம்",

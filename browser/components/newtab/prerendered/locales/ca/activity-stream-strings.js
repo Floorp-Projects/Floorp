@@ -49,6 +49,7 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "El contingut més interessant de tot el web, personalitzat per a vós",
   "prefs_topstories_options_sponsored_label": "Articles patrocinats",
   "prefs_topstories_sponsored_learn_more": "Més informació",
+  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "Una selecció dels llocs que heu desat o visitat",
   "prefs_highlights_options_visited_label": "Pàgines visitades",
   "prefs_highlights_options_download_label": "Baixada més recent",

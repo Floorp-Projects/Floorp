@@ -18,6 +18,7 @@ const HTML_NS = "http://www.w3.org/1999/xhtml";
 
 const PREFERENCES_LOADED_EVENT = "home-pane-loaded";
 const DISCOVERY_STREAM_CONFIG_PREF_NAME = "browser.newtabpage.activity-stream.discoverystream.config";
+const PREF_SHOW_SPONSORED = "showSponsored";
 
 // These "section" objects are formatted in a way to be similar to the ones from
 // SectionsManager to construct the preferences view.
@@ -105,7 +106,7 @@ this.AboutPreferences = class AboutPreferences {
 
   async observe(window) {
     this.renderPreferences(window, await this.strings, [...PREFS_BEFORE_SECTIONS,
-      ...this.store.getState().Sections, ...PREFS_AFTER_SECTIONS], this.store.getState().DiscoveryStream.config.enabled);
+      ...this.store.getState().Sections, ...PREFS_AFTER_SECTIONS], this.store.getState().DiscoveryStream.config);
   }
 
   /**
@@ -133,7 +134,7 @@ this.AboutPreferences = class AboutPreferences {
    * Render preferences to an about:preferences content window with the provided
    * strings and preferences structure.
    */
-  renderPreferences({document, Preferences, gHomePane}, strings, prefStructure, discoveryStreamEnabled) {
+  renderPreferences({document, Preferences, gHomePane}, strings, prefStructure, discoveryStreamConfig) {
     // Helper to create a new element and append it
     const createAppend = (tag, parent) => parent.appendChild(
       document.createXULElement(tag));
@@ -166,6 +167,10 @@ this.AboutPreferences = class AboutPreferences {
     document.insertBefore(document.createProcessingInstruction("xml-stylesheet",
       `href="data:text/css,${encodeURIComponent(CUSTOM_CSS)}" type="text/css"`),
       document.documentElement);
+
+    // Both Topstories and Discovery Stream need to toggle the same pref but
+    // we can't have two elements linked to the same pref so we reuse the same.
+    let sponsoredStoriesCheckbox = null;
 
     // Insert a new group immediately after the homepage one
     const homeGroup = document.getElementById("homepageGroup");
@@ -262,10 +267,13 @@ this.AboutPreferences = class AboutPreferences {
         subcheck.classList.add("indent");
         subcheck.setAttribute("label", formatString(nested.titleString));
         linkPref(subcheck, nested.name, "bool");
+        if (nested.name === PREF_SHOW_SPONSORED) {
+          sponsoredStoriesCheckbox = subcheck;
+        }
       });
     });
 
-    if (discoveryStreamEnabled) {
+    if (discoveryStreamConfig.enabled) {
       // If Discovery Stream is enabled hide Home Content options
       contentsGroup.style.visibility = "hidden";
 
@@ -275,8 +283,31 @@ this.AboutPreferences = class AboutPreferences {
       createAppend("label", discoveryGroup)
         .appendChild(document.createElementNS(HTML_NS, "h2"))
         .textContent = formatString("prefs_content_discovery_header");
-      createAppend("description", discoveryGroup)
-        .textContent = formatString("prefs_content_discovery_description");
+      const descriptionHbox = createAppend("hbox", discoveryGroup);
+      const discoveryGroupDescription = createAppend("description", descriptionHbox);
+      discoveryGroupDescription.textContent = formatString("prefs_content_discovery_description");
+      discoveryGroupDescription.classList.add("tail-with-learn-more");
+
+      // Add the Learn more link in the description
+      const topstoriesSection = prefStructure.find(s => s.id === "topstories");
+      const learnMoreURL = topstoriesSection && topstoriesSection.learnMore.link.href;
+      const link = createAppend("label", descriptionHbox);
+      link.classList.add("learn-sponsored");
+      link.classList.add("text-link");
+      link.setAttribute("href", learnMoreURL);
+      link.textContent = formatString("prefs_topstories_sponsored_learn_more");
+
+      if (discoveryStreamConfig.show_spocs && sponsoredStoriesCheckbox) {
+        sponsoredStoriesCheckbox.remove();
+        sponsoredStoriesCheckbox.classList.remove("indent");
+        discoveryGroup.appendChild(sponsoredStoriesCheckbox);
+      } else if (discoveryStreamConfig.show_spocs) {
+        // If there is no element to reuse create one
+        const discoveryDetails = createAppend("vbox", discoveryGroup);
+        const subcheck = createAppend("checkbox", discoveryDetails);
+        subcheck.setAttribute("label", formatString("prefs_sponsored_stories_status_label"));
+        linkPref(subcheck, PREF_SHOW_SPONSORED, "bool");
+      }
 
       const contentDiscoveryButton = document.createElementNS(HTML_NS, "button");
       contentDiscoveryButton.classList.add("contentDiscoveryButton");
@@ -290,6 +321,13 @@ this.AboutPreferences = class AboutPreferences {
           // order to help with testing
           discoveryGroup.style.display = "none";
           contentsGroup.style.visibility = "visible";
+          if (sponsoredStoriesCheckbox) {
+            // If we reused the checkbox element we need to restore it
+            sponsoredStoriesCheckbox.remove();
+            sponsoredStoriesCheckbox.classList.add("indent");
+            const topstoriesDetails = document.querySelector("[data-subcategory='topstories'] .indent");
+            topstoriesDetails.appendChild(sponsoredStoriesCheckbox);
+          }
           if (experiment) {
             await PreferenceExperiments.stop(experiment.name, {
               resetValue: true,

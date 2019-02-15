@@ -49,6 +49,7 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "તમારા માટે વ્યક્તિગત કરેલ વેબ પરથી, વિખ્યાત સામગ્રી",
   "prefs_topstories_options_sponsored_label": "પ્રાયોજિત વાર્તાઓ",
   "prefs_topstories_sponsored_learn_more": "વધુ શીખો",
+  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "સાઇટ્સની પસંદગી કે જે તમે સાચવી અથવા મુલાકાત લીધી છે",
   "prefs_highlights_options_visited_label": "મુલાકાત લીધેલા પૃષ્ઠો",
   "prefs_highlights_options_download_label": "સૌથી તાજેતરની ડાઉનલોડ",

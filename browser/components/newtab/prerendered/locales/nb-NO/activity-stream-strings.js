@@ -49,6 +49,7 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "Bra innhold fra hele nettet, tilpasset for deg",
   "prefs_topstories_options_sponsored_label": "Sponsede historier",
   "prefs_topstories_sponsored_learn_more": "Les mer",
+  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "Et utvalg av nettsteder som du har lagret eller besøkt",
   "prefs_highlights_options_visited_label": "Besøkte nettsider",
   "prefs_highlights_options_download_label": "Siste nedlasting",

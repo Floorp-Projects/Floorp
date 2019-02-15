@@ -49,6 +49,7 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "Одличан садржај из целог света, персонализован за вас",
   "prefs_topstories_options_sponsored_label": "Спонзорисане приче",
   "prefs_topstories_sponsored_learn_more": "Сазнајте више",
+  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "Изабрани сајтови које сте сачували или посетили",
   "prefs_highlights_options_visited_label": "Посећене странице",
   "prefs_highlights_options_download_label": "Најновије преузимање",
