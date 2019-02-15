@@ -7543,14 +7543,18 @@ class Hero_Hero extends external_React_default.a.PureComponent {
             "div",
             { className: "meta" },
             external_React_default.a.createElement(
-              "header",
-              null,
-              heroRec.title
-            ),
-            external_React_default.a.createElement(
-              "p",
-              { className: "excerpt" },
-              heroRec.excerpt
+              "div",
+              { className: "header-and-excerpt" },
+              external_React_default.a.createElement(
+                "header",
+                null,
+                heroRec.title
+              ),
+              external_React_default.a.createElement(
+                "p",
+                { className: "excerpt" },
+                heroRec.excerpt
+              )
             ),
             heroRec.context ? external_React_default.a.createElement(
               "p",
