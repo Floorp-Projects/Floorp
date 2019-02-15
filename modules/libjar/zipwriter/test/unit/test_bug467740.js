@@ -3,8 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-function run_test()
-{
+function run_test() {
   // In this test we try to open some files that aren't archives:
   //  - An empty file, that is certainly not an archive.
   //  - A file that couldn't be mistaken for archive, since it is too small.

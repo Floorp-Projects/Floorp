@@ -22,7 +22,7 @@
 const PREF1_NAME = "dom.webcomponents.shadowdom.report_usage";
 const PREF1_VALUE = false;
 
-const PREF2_NAME = "dom.mutation-events.cssom.disabled"
+const PREF2_NAME = "dom.mutation-events.cssom.disabled";
 const PREF2_VALUE = true;
 
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -55,7 +55,7 @@ add_task(async function test_sharedMap_var_caches() {
   let values = await contentPage.spawn([PREF1_NAME, PREF2_NAME], (prefs) => {
     const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
     return prefs.map(pref => Services.prefs.getBoolPref(pref));
-  })
+  });
 
   equal(values[0], !PREF1_VALUE,
         `Expected content value for ${PREF1_NAME}`);

@@ -1,7 +1,7 @@
 
 function run_test() {
-  var dirService = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties); 
-  var tmpDir = dirService.get("TmpD", Ci.nsIFile); 
+  var dirService = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
+  var tmpDir = dirService.get("TmpD", Ci.nsIFile);
 
   var zipfile = do_get_file("data/test_umlaute.zip");
 
@@ -15,7 +15,7 @@ function run_test() {
   zipreader.open(zipfile);
 
   var entries = zipreader.findEntries(null);
-  Assert.ok(entries.hasMore()); 
+  Assert.ok(entries.hasMore());
 
   var entryName = entries.getNext();
   Assert.equal(entryName, "test_\u00FC.txt");

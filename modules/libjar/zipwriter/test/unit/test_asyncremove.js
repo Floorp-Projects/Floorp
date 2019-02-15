@@ -5,16 +5,14 @@
 
 var TESTS = [
   "test.txt",
-  "test.png"
+  "test.png",
 ];
 
 var observer = {
-  onStartRequest: function(request, context)
-  {
+  onStartRequest(request, context) {
   },
 
-  onStopRequest: function(request, context, status)
-  {
+  onStopRequest(request, context, status) {
     Assert.equal(status, Cr.NS_OK);
 
     zipW.close();
@@ -23,11 +21,10 @@ var observer = {
     var newTmpFile = tmpFile.clone();
     Assert.equal(newTmpFile.fileSize, ZIP_EOCDR_HEADER_SIZE);
     do_test_finished();
-  }
+  },
 };
 
-function run_test()
-{
+function run_test() {
   // Copy our test zip to the tmp dir so we can modify it
   var testzip = do_get_file(DATA_DIR + "test.zip");
   testzip.copyTo(tmpDir, tmpFile.leafName);

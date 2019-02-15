@@ -5,9 +5,8 @@ function isParentProcess() {
 
 function run_test() {
   if (isParentProcess() == false) {
-
     do_load_child_test_harness();
- 
+
     var pb = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
     pb.setBoolPref("Test.IPC.bool.new", true);
     pb.setIntPref("Test.IPC.int.new", 23);

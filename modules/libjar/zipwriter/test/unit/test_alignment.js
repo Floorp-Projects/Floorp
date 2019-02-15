@@ -11,30 +11,27 @@ const time = 1199145600000; // Jan 1st 2008
 var TESTS = [
   {
     name: "test.txt",
-    compression: Ci.nsIZipWriter.COMPRESSION_DEFAULT
+    compression: Ci.nsIZipWriter.COMPRESSION_DEFAULT,
   },
   {
     name: "test.png",
-    compression: Ci.nsIZipWriter.COMPRESSION_NONE
-  }
+    compression: Ci.nsIZipWriter.COMPRESSION_NONE,
+  },
 ];
 
-function swap16(n)
-{
-  return (((n >> 8) & 0xFF) <<  0) |
-         (((n >>  0) & 0xFF) << 8);
+function swap16(n) {
+  return (((n >> 8) & 0xFF) << 0) |
+         (((n >> 0) & 0xFF) << 8);
 }
 
-function swap32(n)
-{
-  return (((n >> 24) & 0xFF) <<  0) |
-         (((n >> 16) & 0xFF) <<  8) |
-         (((n >>  8) & 0xFF) << 16) |
-         (((n >>  0) & 0xFF) << 24);
+function swap32(n) {
+  return (((n >> 24) & 0xFF) << 0) |
+         (((n >> 16) & 0xFF) << 8) |
+         (((n >> 8) & 0xFF) << 16) |
+         (((n >> 0) & 0xFF) << 24);
 }
 
-function move_to_data(bis, offset)
-{
+function move_to_data(bis, offset) {
   bis.readBytes(18); // Move to compressed size
   var size = swap32(bis.read32());
   bis.readBytes(4);
@@ -44,11 +41,10 @@ function move_to_data(bis, offset)
   bis.readBytes(extra_len);
   offset += ZIP_FILE_HEADER_SIZE + file_len + extra_len;
 
-  return {offset: offset, size: size};
+  return {offset, size};
 }
 
-function test_alignment(align_size)
-{
+function test_alignment(align_size) {
   // Create zip for testing.
   zipW.open(tmpFile, PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE);
   for (var i = 0; i < TESTS.length; i++) {
@@ -103,8 +99,7 @@ function test_alignment(align_size)
   bis.close();
 }
 
-function run_test()
-{
+function run_test() {
   test_alignment(2);
   test_alignment(4);
   test_alignment(16);

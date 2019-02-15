@@ -5,7 +5,6 @@ function isParentProcess() {
 
 function run_test() {
   if (isParentProcess()) {
-
     do_load_child_test_harness();
 
     var pb = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
@@ -24,7 +23,7 @@ function testPrefClear() {
   pb.clearUserPref("Test.IPC.bool.new");
 
   sendCommand(
-'var pb = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);\n'+
+'var pb = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);\n' +
 'pb.prefHasUserValue("Test.IPC.bool.new");\n',
     checkWasCleared);
 }

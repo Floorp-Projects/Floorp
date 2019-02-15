@@ -12,7 +12,7 @@ function run_test() {
   zipreader.open(file);
 
   var failed = false;
-  for (let entryPath of zipreader.findEntries('*')) {
+  for (let entryPath of zipreader.findEntries("*")) {
     let entry = zipreader.getEntry(entryPath);
     if (!entry.isDirectory) {
       try {
