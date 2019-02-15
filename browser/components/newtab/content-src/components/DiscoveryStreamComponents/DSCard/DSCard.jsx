@@ -28,8 +28,8 @@ export class DSCard extends React.PureComponent {
 
   render() {
     return (
-      <SpocIntersectionObserver campaignId={this.props.campaignId} dispatch={this.props.dispatch}>
-        <SafeAnchor url={this.props.url} className="ds-card" onLinkClick={this.onLinkClick}>
+      <SafeAnchor url={this.props.url} className="ds-card" onLinkClick={this.onLinkClick}>
+        <SpocIntersectionObserver campaignId={this.props.campaignId} dispatch={this.props.dispatch}>
           <div className="img-wrapper">
             <div className="img" style={{backgroundImage: `url(${this.props.image_src}`}} />
           </div>
@@ -48,8 +48,8 @@ export class DSCard extends React.PureComponent {
               <span className="source">{this.props.source}</span>
             </p>
           </div>
-        </SafeAnchor>
-      </SpocIntersectionObserver>
+        </SpocIntersectionObserver>
+      </SafeAnchor>
     );
   }
 }
