@@ -1,0 +1,60 @@
+<!doctype html>
+<title>Test for bug 1526609</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<style>
+  body {
+    margin: 0;
+  }
+  .scroller {
+    overflow-y: auto;
+    position: relative;
+    width: 500px;
+    height: 300px;
+  }
+  .kid {
+    position: absolute;
+    width: 100%;
+    background: linear-gradient(to bottom, red, green);
+    line-height: 100px;
+  }
+</style>
+<div class="scroller" id="scroller">
+  <div class="kid"></div>
+</div>
+<script>
+{
+  let text = " foo bar ";
+
+  for (let i = 0; i < 16; ++i)
+    text = text + text;
+  document.querySelector(".kid").innerText = text;
+}
+
+SimpleTest.waitForExplicitFinish();
+
+const scroller = document.querySelector("#scroller");
+
+is(scroller.scrollTop, 0, "Initial scroll position");
+ok(scroller.scrollTopMax > 0, "Should be able to scroll down");
+
+scroller.scrollTop = scroller.scrollTopMax;
+is(scroller.scrollTop, scroller.scrollTopMax, "Should've scrolled");
+
+const origWidth = scroller.offsetWidth;
+const utils = SpecialPowers.DOMWindowUtils;
+
+// Take control of the refresh driver
+utils.advanceTimeAndRefresh(0);
+
+// Force the next reflow to get interrupted
+utils.forceReflowInterrupt();
+scroller.style.width = "300px";
+utils.advanceTimeAndRefresh(0);
+
+isnot(scroller.scrollTop, 0, "Shouldn't have lost scroll position");
+isnot(scroller.offsetWidth, origWidth, "Should've had to reflow");
+
+utils.restoreNormalRefresh();
+SimpleTest.finish();
+</script>
