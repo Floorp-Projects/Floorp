@@ -22,7 +22,6 @@
 #  include "nsXULPopupManager.h"
 #endif
 #include "nsIPopupContainer.h"
-#include "nsIBoxObject.h"
 #include "nsTreeColumns.h"
 #include "nsContentUtils.h"
 #include "mozilla/ErrorResult.h"
@@ -30,7 +29,6 @@
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"  // for Event
-#include "mozilla/dom/BoxObject.h"
 #include "mozilla/dom/MouseEvent.h"
 #include "mozilla/dom/TreeColumnBinding.h"
 #include "mozilla/dom/XULTreeElementBinding.h"
@@ -325,25 +323,19 @@ void nsXULTooltipListener::CheckTreeBodyMove(MouseEvent* aMouseEvent) {
   nsCOMPtr<nsIContent> sourceNode = do_QueryReferent(mSourceNode);
   if (!sourceNode) return;
 
-  // get the boxObject of the documentElement of the document the tree is in
-  nsCOMPtr<nsIBoxObject> bx;
+  // get the documentElement of the document the tree is in
   Document* doc = sourceNode->GetComposedDoc();
-  if (doc) {
-    ErrorResult ignored;
-    bx = doc->GetBoxObjectFor(doc->GetRootElement(), ignored);
-  }
 
   RefPtr<XULTreeElement> tree = GetSourceTree();
-  if (bx && tree) {
+  Element* root = doc ? doc->GetRootElement() : nullptr;
+  if (root && root->GetPrimaryFrame() && tree) {
     int32_t x = aMouseEvent->ScreenX(CallerType::System);
     int32_t y = aMouseEvent->ScreenY(CallerType::System);
 
-    // subtract off the documentElement's boxObject
-    int32_t boxX, boxY;
-    bx->GetScreenX(&boxX);
-    bx->GetScreenY(&boxY);
-    x -= boxX;
-    y -= boxY;
+    // subtract off the documentElement's position
+    CSSIntRect rect = root->GetPrimaryFrame()->GetScreenRect();
+    x -= rect.x;
+    y -= rect.y;
 
     ErrorResult rv;
     TreeCellInfo cellInfo;
