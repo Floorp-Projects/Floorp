@@ -7,7 +7,6 @@
 #ifndef ProfileBufferEntry_h
 #define ProfileBufferEntry_h
 
-#include "PlatformMacros.h"
 #include "ProfileJSONWriter.h"
 
 #include "gtest/MozGtestFriend.h"
@@ -52,11 +51,6 @@ class ProfilerMarker;
   MACRO(Count, int64_t)                                             \
   MACRO(ProfilerOverheadTime, double)                               \
   MACRO(ProfilerOverheadDuration, double)
-
-// NB: Packing this structure has been shown to cause SIGBUS issues on ARM.
-#if !defined(GP_ARCH_arm)
-#  pragma pack(push, 1)
-#endif
 
 class ProfileBufferEntry {
  public:
@@ -109,23 +103,20 @@ class ProfileBufferEntry {
   friend class ProfileBuffer;
 
   Kind mKind;
-  union {
-    const char* mString;
-    char mChars[kNumChars];
-    void* mPtr;
-    ProfilerMarker* mMarker;
-    double mDouble;
-    int mInt;
-    int64_t mInt64;
-    uint64_t mUint64;
-  } u;
+  uint8_t mStorage[kNumChars];
+
+  const char* GetString() const;
+  void* GetPtr() const;
+  ProfilerMarker* GetMarker() const;
+  double GetDouble() const;
+  int GetInt() const;
+  int64_t GetInt64() const;
+  uint64_t GetUint64() const;
+  void CopyCharsInto(char (&aOutArray)[kNumChars]) const;
 };
 
-#if !defined(GP_ARCH_arm)
 // Packed layout: 1 byte for the tag + 8 bytes for the value.
 static_assert(sizeof(ProfileBufferEntry) == 9, "bad ProfileBufferEntry size");
-#  pragma pack(pop)
-#endif
 
 class UniqueJSONStrings {
  public:
