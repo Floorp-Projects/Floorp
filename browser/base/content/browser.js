@@ -4645,7 +4645,7 @@ var XULBrowserWindow = {
     elt.label = tooltip;
     elt.style.direction = direction;
 
-    elt.openPopupAtScreen(browser.boxObject.screenX + x, browser.boxObject.screenY + y, false, null);
+    elt.openPopupAtScreen(browser.screenX + x, browser.screenY + y, false, null);
   },
 
   hideTooltip() {

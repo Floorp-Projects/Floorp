@@ -68,13 +68,12 @@ add_task(async function testPopupSelectPopup() {
       return {left: r.left, bottom: r.bottom};
     });
 
-    let {boxObject} = browser;
     let popupRect = selectPopup.getOuterScreenRect();
 
-    is(Math.floor(boxObject.screenX + elemRect.left), popupRect.left,
+    is(Math.floor(browser.screenX + elemRect.left), popupRect.left,
        "Select popup has the correct x origin");
 
-    is(Math.floor(boxObject.screenY + elemRect.bottom), popupRect.top,
+    is(Math.floor(browser.screenY + elemRect.bottom), popupRect.top,
        "Select popup has the correct y origin");
 
     // Close the select popup before proceeding to the next test.
