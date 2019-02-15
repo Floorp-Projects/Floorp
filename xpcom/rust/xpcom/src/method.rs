@@ -94,9 +94,15 @@ use nserror::{nsresult, NS_ERROR_NULL_POINTER};
 /// call it with valid pointer arguments.
 #[macro_export]
 macro_rules! xpcom_method {
+    // `#[allow(non_snake_case)]` is used for each method because `$xpcom_name`
+    // is almost always UpperCamelCase, and Rust gives a warning that it should
+    // be snake_case. It isn't reasonable to rename the XPCOM methods, so
+    // silence the warning.
+
     // A method whose return value is a *mut *const nsISomething type.
     // Example: foo => Foo(bar: *const nsACString, baz: bool) -> *const nsIVariant
     ($rust_name:ident => $xpcom_name:ident($($param_name:ident: $param_type:ty),*) -> *const $retval:ty) => {
+        #[allow(non_snake_case)]
         unsafe fn $xpcom_name(&self, $($param_name: $param_type,)* retval: *mut *const $retval) -> nsresult {
             $(ensure_param!($param_name);)*
             match self.$rust_name($($param_name, )*) {
@@ -114,6 +120,7 @@ macro_rules! xpcom_method {
     // A method whose return value is a *mut nsAString type.
     // Example: foo => Foo(bar: *const nsACString, baz: bool) -> nsAString
     ($rust_name:ident => $xpcom_name:ident($($param_name:ident: $param_type:ty),*) -> nsAString) => {
+        #[allow(non_snake_case)]
         unsafe fn $xpcom_name(&self, $($param_name: $param_type,)* retval: *mut nsAString) -> nsresult {
             $(ensure_param!($param_name);)*
             match self.$rust_name($($param_name, )*) {
@@ -131,6 +138,7 @@ macro_rules! xpcom_method {
     // A method whose return value is a *mut nsACString type.
     // Example: foo => Foo(bar: *const nsACString, baz: bool) -> nsACString
     ($rust_name:ident => $xpcom_name:ident($($param_name:ident: $param_type:ty),*) -> nsACString) => {
+        #[allow(non_snake_case)]
         unsafe fn $xpcom_name(&self, $($param_name: $param_type,)* retval: *mut nsACString) -> nsresult {
             $(ensure_param!($param_name);)*
             match self.$rust_name($($param_name, )*) {
@@ -148,6 +156,7 @@ macro_rules! xpcom_method {
     // A method whose return value is a non-nsA[C]String *mut type.
     // Example: foo => Foo(bar: *const nsACString, baz: bool) -> bool
     ($rust_name:ident => $xpcom_name:ident($($param_name:ident: $param_type:ty),*) -> $retval:ty) => {
+        #[allow(non_snake_case)]
         unsafe fn $xpcom_name(&self, $($param_name: $param_type,)* retval: *mut $retval) -> nsresult {
             $(ensure_param!($param_name);)*
             match self.$rust_name($($param_name, )*) {
@@ -165,6 +174,7 @@ macro_rules! xpcom_method {
     // A method that doesn't have a return value.
     // Example: foo => Foo(bar: *const nsACString, baz: bool)
     ($rust_name:ident => $xpcom_name:ident($($param_name:ident: $param_type:ty),*)) => {
+        #[allow(non_snake_case)]
         unsafe fn $xpcom_name(&self, $($param_name: $param_type,)*) -> nsresult {
             $(ensure_param!($param_name);)*
             match self.$rust_name($($param_name, )*) {
