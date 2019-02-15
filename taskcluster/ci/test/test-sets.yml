@@ -90,6 +90,7 @@ raptor-firefox:
     - raptor-tp6-8-firefox
     - raptor-tp6-9-firefox
     - raptor-tp6-10-firefox
+    - raptor-tp6-binast-1-firefox
     - raptor-speedometer-firefox
     - raptor-stylebench-firefox
     - raptor-motionmark-htmlsuite-firefox
