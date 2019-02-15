@@ -14,7 +14,7 @@ TEST(ThreadProfile, InsertOneEntry) {
   auto pb = MakeUnique<ProfileBuffer>(10);
   pb->AddEntry(ProfileBufferEntry::Time(123.1));
   ASSERT_TRUE(pb->GetEntry(pb->mRangeStart).IsTime());
-  ASSERT_TRUE(pb->GetEntry(pb->mRangeStart).u.mDouble == 123.1);
+  ASSERT_TRUE(pb->GetEntry(pb->mRangeStart).GetDouble() == 123.1);
 }
 
 // See if we can insert some entries
@@ -27,7 +27,7 @@ TEST(ThreadProfile, InsertEntriesNoWrap) {
   uint64_t readPos = pb->mRangeStart;
   while (readPos != pb->mRangeEnd) {
     ASSERT_TRUE(pb->GetEntry(readPos).IsTime());
-    ASSERT_TRUE(pb->GetEntry(readPos).u.mDouble == readPos);
+    ASSERT_TRUE(pb->GetEntry(readPos).GetDouble() == readPos);
     readPos++;
   }
 }
@@ -48,7 +48,7 @@ TEST(ThreadProfile, InsertEntriesWrap) {
   uint64_t readPos = pb->mRangeStart;
   while (readPos != pb->mRangeEnd) {
     ASSERT_TRUE(pb->GetEntry(readPos).IsTime());
-    ASSERT_TRUE(pb->GetEntry(readPos).u.mDouble == readPos);
+    ASSERT_TRUE(pb->GetEntry(readPos).GetDouble() == readPos);
     readPos++;
   }
 }
