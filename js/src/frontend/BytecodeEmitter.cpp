@@ -118,6 +118,8 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent, SharedContext* sc,
       innermostNestableControl(nullptr),
       innermostEmitterScope_(nullptr),
       innermostTDZCheckCache(nullptr),
+      fieldInitializers_(parent ? parent->fieldInitializers_
+                                : FieldInitializers::Invalid()),
 #ifdef DEBUG
       unstableEmitterScope(false),
 #endif
@@ -2473,6 +2475,73 @@ bool BytecodeEmitter::emitScript(ParseNode* body) {
   }
 
   tellDebuggerAboutCompiledScript(cx);
+
+  return true;
+}
+
+bool BytecodeEmitter::emitInitializeInstanceFields() {
+  FieldInitializers fieldInfo = this->fieldInitializers_;
+  MOZ_ASSERT(fieldInfo.valid);
+  size_t numFields = fieldInfo.numFieldInitializers;
+
+  if (numFields == 0) {
+    return true;
+  }
+
+  PropOpEmitter poe(this, PropOpEmitter::Kind::Get,
+                    PropOpEmitter::ObjKind::Other);
+  if (!poe.prepareForObj()) {
+    return false;
+  }
+
+  // This is guaranteed to run after super(), so we don't need TDZ checks.
+  if (!emitGetName(cx->names().dotThis)) {
+    //              [stack] THIS
+    return false;
+  }
+
+  if (!poe.emitGet(cx->names().dotInitializers)) {
+    //              [stack] ARRAY
+    return false;
+  }
+
+  for (size_t fieldIndex = 0; fieldIndex < numFields; fieldIndex++) {
+    if (fieldIndex < numFields - 1) {
+      // We DUP to keep the array around (it is consumed in the bytecode below)
+      // for next iterations of this loop, except for the last iteration, which
+      // avoids an extra POP at the end of the loop.
+      if (!emit1(JSOP_DUP)) {
+        //          [stack] ARRAY ARRAY
+        return false;
+      }
+    }
+
+    if (!emitNumberOp(fieldIndex)) {
+      //            [stack] ARRAY? ARRAY INDEX
+      return false;
+    }
+
+    if (!emit1(JSOP_CALLELEM)) {
+      //            [stack] ARRAY? FUNC
+      return false;
+    }
+
+    // This is guaranteed to run after super(), so we don't need TDZ checks.
+    if (!emitGetName(cx->names().dotThis)) {
+      //            [stack] ARRAY? FUNC THIS
+      return false;
+    }
+
+    if (!emitCall(JSOP_CALL_IGNORES_RV, 0)) {
+      //            [stack] ARRAY? RVAL
+      return false;
+    }
+
+    if (!emit1(JSOP_POP)) {
+      //            [stack] ARRAY?
+      return false;
+    }
+  }
 
   return true;
 }
@@ -7764,10 +7833,18 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
                                        PropListType type) {
   //                [stack] CTOR? OBJ
 
+  size_t numFields = 0;
   for (ParseNode* propdef : obj->contents()) {
     if (propdef->is<ClassField>()) {
-      // TODO(khyperia): Implement private field access.
-      return false;
+      // Skip over class fields and emit them at the end.  This is needed
+      // because they're all emitted into a single array, which is then stored
+      // into a private slot.
+      FunctionNode* initializer = &propdef->as<ClassField>().initializer();
+      // Don't include fields without initializers.
+      if (initializer != nullptr) {
+        numFields++;
+      }
+      continue;
     }
 
     // Handle __proto__: v specially because *only* this form, and no other
@@ -8013,6 +8090,64 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
         break;
       default:
         MOZ_CRASH("Invalid op");
+    }
+  }
+
+  if (numFields > 0) {
+    // .initializers is a variable that stores an array of lambdas containing
+    // code (the initializer) for each field. Upon an object's construction,
+    // these lambdas will be called, defining the values.
+
+    PropOpEmitter poe(this, PropOpEmitter::Kind::SimpleAssignment,
+                      PropOpEmitter::ObjKind::Other);
+    if (!poe.prepareForObj()) {
+      return false;
+    }
+
+    if (!emit1(JSOP_DUP)) {
+      //            [stack] CTOR? OBJ OBJ
+      return false;
+    }
+
+    if (!poe.prepareForRhs()) {
+      return false;
+    }
+
+    if (!emitUint32Operand(JSOP_NEWARRAY, numFields)) {
+      //            [stack] CTOR? OBJ OBJ ARRAY
+      return false;
+    }
+
+    size_t curFieldIndex = 0;
+    for (ParseNode* propdef : obj->contents()) {
+      if (propdef->is<ClassField>()) {
+        FunctionNode* initializer = &propdef->as<ClassField>().initializer();
+        if (initializer == nullptr) {
+          continue;
+        }
+
+        if (!emitTree(initializer)) {
+          //        [stack] CTOR? OBJ OBJ ARRAY LAMBDA
+          return false;
+        }
+
+        if (!emitUint32Operand(JSOP_INITELEM_ARRAY, curFieldIndex)) {
+          //        [stack] CTOR? OBJ OBJ ARRAY
+          return false;
+        }
+
+        curFieldIndex++;
+      }
+    }
+
+    if (!poe.emitAssignment(cx->names().dotInitializers)) {
+      //            [stack] CTOR? OBJ ARRAY
+      return false;
+    }
+
+    if (!emit1(JSOP_POP)) {
+      //            [stack] CTOR? OBJ
+      return false;
     }
   }
   return true;
@@ -8557,6 +8692,13 @@ bool BytecodeEmitter::emitInitializeFunctionSpecialNames() {
 bool BytecodeEmitter::emitFunctionBody(ParseNode* funBody) {
   FunctionBox* funbox = sc->asFunctionBox();
 
+  if (funbox->function()->kind() ==
+      JSFunction::FunctionKind::ClassConstructor) {
+    if (!emitInitializeInstanceFields()) {
+      return false;
+    }
+  }
+
   if (!emitTree(funBody)) {
     return false;
   }
@@ -8642,23 +8784,34 @@ bool BytecodeEmitter::emitLexicalInitialization(JSAtom* name) {
 static MOZ_ALWAYS_INLINE FunctionNode* FindConstructor(JSContext* cx,
                                                        ListNode* classMethods) {
   for (ParseNode* mn : classMethods->contents()) {
-    if (mn->is<ClassField>()) {
-      // TODO(khyperia): Implement private field access.
-      continue;
-    }
-
-    ClassMethod& method = mn->as<ClassMethod>();
-    ParseNode& methodName = method.name();
-    if (!method.isStatic() &&
-        (methodName.isKind(ParseNodeKind::ObjectPropertyName) ||
-         methodName.isKind(ParseNodeKind::StringExpr)) &&
-        methodName.as<NameNode>().atom() == cx->names().constructor) {
-      return &method.method();
+    if (mn->is<ClassMethod>()) {
+      ClassMethod& method = mn->as<ClassMethod>();
+      ParseNode& methodName = method.name();
+      if (!method.isStatic() &&
+          (methodName.isKind(ParseNodeKind::ObjectPropertyName) ||
+           methodName.isKind(ParseNodeKind::StringExpr)) &&
+          methodName.as<NameNode>().atom() == cx->names().constructor) {
+        return &method.method();
+      }
     }
   }
 
   return nullptr;
 }
+
+class AutoResetFieldInitializers {
+  BytecodeEmitter* bce;
+  FieldInitializers oldFieldInfo;
+
+ public:
+  AutoResetFieldInitializers(BytecodeEmitter* bce,
+                             FieldInitializers newFieldInfo)
+      : bce(bce), oldFieldInfo(bce->fieldInitializers_) {
+    bce->fieldInitializers_ = newFieldInfo;
+  }
+
+  ~AutoResetFieldInitializers() { bce->fieldInitializers_ = oldFieldInfo; }
+};
 
 // This follows ES6 14.5.14 (ClassDefinitionEvaluation) and ES6 14.5.15
 // (BindingClassDeclarationEvaluation).
@@ -8672,6 +8825,20 @@ bool BytecodeEmitter::emitClass(
   ParseNode* heritageExpression = classNode->heritage();
   ListNode* classMembers = classNode->memberList();
   FunctionNode* constructor = FindConstructor(cx, classMembers);
+
+  // set this->fieldInitializers_
+  size_t numFields = 0;
+  for (ParseNode* propdef : classMembers->contents()) {
+    if (propdef->is<ClassField>()) {
+      FunctionNode* initializer = &propdef->as<ClassField>().initializer();
+      // Don't include fields without initializers.
+      if (initializer != nullptr) {
+        numFields++;
+      }
+    }
+  }
+  FieldInitializers fieldInfo(numFields);
+  AutoResetFieldInitializers _innermostClassAutoReset(this, fieldInfo);
 
   // If |nameKind != ClassNameKind::ComputedName|
   //                [stack]
