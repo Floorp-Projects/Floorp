@@ -4502,16 +4502,11 @@ nsIFrame* nsLayoutUtils::FindChildContainingDescendant(
   return result;
 }
 
-nsBlockFrame* nsLayoutUtils::GetAsBlock(nsIFrame* aFrame) {
-  nsBlockFrame* block = do_QueryFrame(aFrame);
-  return block;
-}
-
 nsBlockFrame* nsLayoutUtils::FindNearestBlockAncestor(nsIFrame* aFrame) {
   nsIFrame* nextAncestor;
   for (nextAncestor = aFrame->GetParent(); nextAncestor;
        nextAncestor = nextAncestor->GetParent()) {
-    nsBlockFrame* block = GetAsBlock(nextAncestor);
+    nsBlockFrame* block = do_QueryFrame(nextAncestor);
     if (block) return block;
   }
   return nullptr;
@@ -6052,8 +6047,7 @@ void nsLayoutUtils::DrawUniDirString(const char16_t* aString, uint32_t aLength,
   if (aFrame->StyleDisplay()->IsContainLayout()) {
     return false;
   }
-  const nsBlockFrame* block =
-      nsLayoutUtils::GetAsBlock(const_cast<nsIFrame*>(aFrame));
+  const nsBlockFrame* block = do_QueryFrame(aFrame);
   if (!block) {
     // For the first-line baseline we also have to check for a table, and if
     // so, use the baseline of its first row.
@@ -6155,8 +6149,7 @@ void nsLayoutUtils::DrawUniDirString(const char16_t* aString, uint32_t aLength,
     return false;
   }
 
-  const nsBlockFrame* block =
-      nsLayoutUtils::GetAsBlock(const_cast<nsIFrame*>(aFrame));
+  const nsBlockFrame* block = do_QueryFrame(aFrame);
   if (!block)
     // No baseline.  (We intentionally don't descend into scroll frames.)
     return false;
@@ -6230,7 +6223,7 @@ static nscoord CalculateBlockContentBEnd(WritingMode aWM,
     nsIFrame::ChildListIDs skip = {nsIFrame::kOverflowList,
                                    nsIFrame::kExcessOverflowContainersList,
                                    nsIFrame::kOverflowOutOfFlowList};
-    nsBlockFrame* blockFrame = GetAsBlock(aFrame);
+    nsBlockFrame* blockFrame = do_QueryFrame(aFrame);
     if (blockFrame) {
       contentBEnd =
           std::max(contentBEnd, CalculateBlockContentBEnd(aWM, blockFrame));
