@@ -1,6 +1,6 @@
 # Where is the code? (or: `mozilla-central` vs `devtools-html`)
 
-Most of the code is hosted in the Firefox repository (we call it `mozilla-central`, often abbreviated as `m-c`), in the [devtools](https://dxr.mozilla.org/mozilla-central/source/devtools) folder. Development of newer pieces of the tools is happening in GitHub, on the [devtools-html](https://github.com/devtools-html/) organisation.
+Most of the code is hosted in the Firefox repository (we call it `mozilla-central`, often abbreviated as `m-c`), in the [devtools](https://dxr.mozilla.org/mozilla-central/source/devtools) folder. Development of some pieces of the tools is happening in GitHub, on the [firefox-devtools](https://github.com/firefox-devtools/) organisation.
 
 <!--TODO: table listing components and locations (m-c vs github)-->
 

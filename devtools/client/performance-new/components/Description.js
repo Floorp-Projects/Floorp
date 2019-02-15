@@ -56,8 +56,8 @@ class Description extends PureComponent {
       p(null,
         "This is still a prototype. Join along or file bugs at: ",
         this.renderLink(
-          "https://github.com/devtools-html/perf.html",
-          "github.com/devtools-html/perf.html"
+          "https://github.com/firefox-devtools/perf.html",
+          "github.com/firefox-devtools/perf.html"
         ),
         "."
       )

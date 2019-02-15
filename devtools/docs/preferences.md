@@ -40,7 +40,7 @@ this service at:
 
 If you are using Launchpad, note that only a subset of nsIPrefService methods are
 implemented (addObserver and removeObserver). Launchpad relies on a Services shim file
-provided by devtools-module ([code on GitHub](https://github.com/devtools-html/devtools-core/blob/master/packages/devtools-modules/src/Services.js)).
+provided by devtools-module ([code on GitHub](https://github.com/firefox-devtools/devtools-core/blob/master/packages/devtools-modules/src/Services.js)).
 
 ### Requiring Services.pref
 
@@ -86,7 +86,7 @@ sequence, it should go in devtools/startup/preferences/devtools-startup.js.
 
 At the time of writing this doc, projects using Launchpad have to duplicate the default
 definition of a preference.
-* debugger.html: update [src/utils/prefs.js](https://github.com/devtools-html/debugger.html/blob/master/src/utils/prefs.js)
+* debugger.html: update [src/utils/prefs.js](https://github.com/firefox-devtools/debugger.html/blob/master/src/utils/prefs.js)
 * netmonitor: update [index.js](http://searchfox.org/mozilla-central/source/devtools/client/netmonitor/index.js)
 * webconsole: update [local-dev/index.js](http://searchfox.org/mozilla-central/source/devtools/client/webconsole/local-dev/index.js)
 

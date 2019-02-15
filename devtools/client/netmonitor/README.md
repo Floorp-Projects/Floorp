@@ -24,7 +24,7 @@ Files used to run the Network Monitor in the browser tab
 * `webpack.config.js` the webpack config file, including plenty of module alias map to shims and polyfills.
 * `package.json` declare every required packages and available commands.
 
-To run in the browser tab, the Network Monitor needs to get some dependencies from npm module. Check `package.json` to see all dependencies. Check `webpack.config.js` to find the module alias, and check [devtools-core](https://github.com/devtools-html/devtools-core) packages to dive into actual modules used by the Network Monitor and other Devtools.
+To run in the browser tab, the Network Monitor needs to get some dependencies from npm module. Check `package.json` to see all dependencies. Check `webpack.config.js` to find the module alias, and check [devtools-core](https://github.com/firefox-devtools/devtools-core) packages to dive into actual modules used by the Network Monitor and other Devtools.
 
 ### UI
 
