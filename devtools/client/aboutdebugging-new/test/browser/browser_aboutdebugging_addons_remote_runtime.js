@@ -13,7 +13,8 @@ const USB_RUNTIME_APP_NAME = "TestUsbApp";
 add_task(async function() {
   const mocks = new Mocks();
 
-  const { document, tab } = await openAboutDebugging();
+  const { document, tab, window } = await openAboutDebugging();
+  await selectThisFirefoxPage(document, window.AboutDebugging.store);
 
   info("Prepare USB client mock");
   const usbClient = mocks.createUSBRuntime(USB_RUNTIME_ID, {

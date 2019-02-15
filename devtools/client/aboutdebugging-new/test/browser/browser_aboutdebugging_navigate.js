@@ -20,6 +20,7 @@ add_task(async function() {
 
   const { document, tab, window } = await openAboutDebugging();
   const AboutDebugging = window.AboutDebugging;
+  await selectThisFirefoxPage(document, AboutDebugging.store);
 
   const connectSidebarItem = findSidebarItemByText("Connect", document);
   const connectLink = connectSidebarItem.querySelector(".js-sidebar-link");
@@ -52,7 +53,7 @@ add_task(async function() {
   const backgroundTab2 = await addTab(TAB_URL_2, { background: true });
 
   info("Click on the ThisFirefox item in the sidebar");
-  const requestsSuccess = waitForRequestsSuccess(window);
+  const requestsSuccess = waitForRequestsSuccess(AboutDebugging.store);
   thisFirefoxLink.click();
 
   info("Wait for all target requests to complete");

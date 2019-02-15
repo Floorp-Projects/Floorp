@@ -17,6 +17,7 @@ add_task(async function() {
 
   const { document, tab, window } =
     await openAboutDebugging({ enableWorkerUpdates: true });
+  await selectThisFirefoxPage(document, window.AboutDebugging.store);
 
   info("Prepare Network client mock");
   const networkClient = mocks.createNetworkRuntime(NETWORK_RUNTIME_HOST, {
@@ -46,7 +47,7 @@ add_task(async function() {
   const thisFirefoxSidebarItem = findSidebarItemByText("This Firefox", document);
   const thisFirefoxLink = thisFirefoxSidebarItem.querySelector(".js-sidebar-link");
   info("Click on the ThisFirefox item in the sidebar");
-  const requestsSuccess = waitForRequestsSuccess(window);
+  const requestsSuccess = waitForRequestsSuccess(window.AboutDebugging.store);
   thisFirefoxLink.click();
 
   info("Wait for all target requests to complete");
