@@ -95,9 +95,11 @@ class BigInt final : public js::gc::TenuredCell {
   static BigInt* createFromDouble(JSContext* cx, double d);
   static BigInt* createFromUint64(JSContext* cx, uint64_t n);
   static BigInt* createFromInt64(JSContext* cx, int64_t n);
+  static BigInt* createFromDigit(JSContext* cx, Digit d, bool isNegative);
   // FIXME: Cache these values.
   static BigInt* zero(JSContext* cx);
   static BigInt* one(JSContext* cx);
+  static BigInt* negativeOne(JSContext* cx);
 
   static BigInt* copy(JSContext* cx, Handle<BigInt*> x);
   static BigInt* add(JSContext* cx, Handle<BigInt*> x, Handle<BigInt*> y);
@@ -107,6 +109,8 @@ class BigInt final : public js::gc::TenuredCell {
   static BigInt* mod(JSContext* cx, Handle<BigInt*> x, Handle<BigInt*> y);
   static BigInt* pow(JSContext* cx, Handle<BigInt*> x, Handle<BigInt*> y);
   static BigInt* neg(JSContext* cx, Handle<BigInt*> x);
+  static BigInt* inc(JSContext* cx, Handle<BigInt*> x);
+  static BigInt* dec(JSContext* cx, Handle<BigInt*> x);
   static BigInt* lsh(JSContext* cx, Handle<BigInt*> x, Handle<BigInt*> y);
   static BigInt* rsh(JSContext* cx, Handle<BigInt*> x, Handle<BigInt*> y);
   static BigInt* bitAnd(JSContext* cx, Handle<BigInt*> x, Handle<BigInt*> y);
@@ -137,6 +141,10 @@ class BigInt final : public js::gc::TenuredCell {
   static bool pow(JSContext* cx, Handle<Value> lhs, Handle<Value> rhs,
                   MutableHandle<Value> res);
   static bool neg(JSContext* cx, Handle<Value> operand,
+                  MutableHandle<Value> res);
+  static bool inc(JSContext* cx, Handle<Value> operand,
+                  MutableHandle<Value> res);
+  static bool dec(JSContext* cx, Handle<Value> operand,
                   MutableHandle<Value> res);
   static bool lsh(JSContext* cx, Handle<Value> lhs, Handle<Value> rhs,
                   MutableHandle<Value> res);
@@ -282,7 +290,7 @@ class BigInt final : public js::gc::TenuredCell {
   // Return `(|x| - 1) * (resultNegative ? -1 : +1)`, with the precondition that
   // |x| != 0.
   static BigInt* absoluteSubOne(JSContext* cx, Handle<BigInt*> x,
-                                unsigned resultLength);
+                                bool resultNegative = false);
 
   // Return `a + b`, incrementing `*carry` if the addition overflows.
   static inline Digit digitAdd(Digit a, Digit b, Digit* carry) {

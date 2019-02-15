@@ -346,8 +346,13 @@ class IonBuilder : public MIRGenerator,
   // jsop_binary_arith helpers.
   MBinaryArithInstruction* binaryArithInstruction(JSOp op, MDefinition* left,
                                                   MDefinition* right);
+  MIRType binaryArithNumberSpecialization(MDefinition* left,
+                                          MDefinition* right);
   AbortReasonOr<Ok> binaryArithTryConcat(bool* emitted, JSOp op,
                                          MDefinition* left, MDefinition* right);
+  AbortReasonOr<MBinaryArithInstruction*> binaryArithEmitSpecialized(
+      MDefinition::Opcode op, MIRType specialization, MDefinition* left,
+      MDefinition* right);
   AbortReasonOr<Ok> binaryArithTrySpecialized(bool* emitted, JSOp op,
                                               MDefinition* left,
                                               MDefinition* right);
@@ -358,6 +363,13 @@ class IonBuilder : public MIRGenerator,
 
   // jsop_bitnot helpers.
   AbortReasonOr<Ok> bitnotTrySpecialized(bool* emitted, MDefinition* input);
+
+  // jsop_inc_or_dec helpers.
+  MDefinition* unaryArithConvertToBinary(JSOp op, MDefinition::Opcode* defOp);
+  AbortReasonOr<Ok> unaryArithTrySpecialized(bool* emitted, JSOp op,
+                                             MDefinition* value);
+  AbortReasonOr<Ok> unaryArithTrySpecializedOnBaselineInspector(
+      bool* emitted, JSOp op, MDefinition* value);
 
   // jsop_pow helpers.
   AbortReasonOr<Ok> powTrySpecialized(bool* emitted, MDefinition* base,
