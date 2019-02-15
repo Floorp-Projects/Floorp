@@ -61,10 +61,8 @@ decorate_task(
     );
 
     // Telemetry is updated
-    Assert.deepEqual(
-      sendEventStub.args,
-      [["unenroll", "preference_rollback", recipe.arguments.rolloutSlug, {reason: "rollback"}]],
-      "an unenrollment event should be sent"
+    sendEventStub.assertEvents(
+      [["unenroll", "preference_rollback", recipe.arguments.rolloutSlug, {reason: "rollback"}]]
     );
     Assert.deepEqual(setExperimentInactiveStub.args, [["test-rollout"]], "the telemetry experiment should deactivated");
 
@@ -108,10 +106,8 @@ decorate_task(
       "Rollout should not change in db"
     );
 
-    Assert.deepEqual(
-      sendEventStub.args,
-      [["unenrollFailed", "preference_rollback", "graduated-rollout", {reason: "graduated"}]],
-      "correct event was sent"
+    sendEventStub.assertEvents(
+      [["unenrollFailed", "preference_rollback", "graduated-rollout", {reason: "graduated"}]]
     );
 
     // Cleanup
@@ -132,7 +128,7 @@ decorate_task(
     await action.finalize();
     is(action.lastError, null, "lastError should be null");
 
-    Assert.deepEqual(sendEventStub.args, [], "an unenrollFailure event should not be sent");
+    sendEventStub.assertEvents([]);
     Assert.deepEqual(
       reportRecipeStub.args,
       [[recipe.id, Uptake.RECIPE_SUCCESS]],
@@ -169,7 +165,7 @@ decorate_task(
     Assert.deepEqual(await PreferenceRollouts.getAll(), [rollout], "Rollout shouldn't change in db");
 
     // Telemetry is updated
-    Assert.deepEqual(sendEventStub.args, [], "no telemetry event should be sent");
+    sendEventStub.assertEvents([]);
     Assert.deepEqual(setExperimentInactiveStub.args, [], "telemetry experiments should not be updated");
 
     // Cleanup

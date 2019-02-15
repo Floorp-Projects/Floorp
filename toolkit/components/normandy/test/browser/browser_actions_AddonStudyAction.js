@@ -58,7 +58,7 @@ decorate_task(
     await action.runRecipe(recipe);
     is(action.lastError, null, "lastError should be null");
     Assert.deepEqual(enrollSpy.args, [], "enroll should not be called");
-    Assert.deepEqual(sendEventStub.args, [], "no events should be sent");
+    sendEventStub.assertEvents([]);
   },
 );
 
@@ -76,10 +76,8 @@ decorate_task(
     const studies = await AddonStudies.getAll();
     Assert.deepEqual(studies, [], "the study should not be in the database");
 
-    Assert.deepEqual(
-      sendEventStub.args,
-      [["enrollFailed", "addon_study", recipe.arguments.name, {reason: "download-failure", detail: "ERROR_NETWORK_FAILURE"}]],
-      "An enrollFailed event should be sent",
+    sendEventStub.assertEvents(
+      [["enrollFailed", "addon_study", recipe.arguments.name, {reason: "download-failure", detail: "ERROR_NETWORK_FAILURE"}]]
     );
   }
 );
@@ -103,10 +101,8 @@ decorate_task(
 
     Assert.deepEqual(await AddonStudies.getAll(), [], "There should be no enrolled studies");
 
-    Assert.deepEqual(
-      sendEventStub.args,
-      [["enrollFailed", "addon_study", recipe.arguments.name, { reason: "conflicting-addon-id" }]],
-      "A enrollFailed event should be sent",
+    sendEventStub.assertEvents(
+      [["enrollFailed", "addon_study", recipe.arguments.name, { reason: "conflicting-addon-id" }]]
     );
   },
 );
@@ -153,10 +149,8 @@ decorate_task(
     ok(study.studyStartDate, "a start date should be assigned");
     is(study.studyEndDate, null, "an end date should not be assigned");
 
-    Assert.deepEqual(
-      sendEventStub.args,
-      [["enroll", "addon_study", recipe.arguments.name, { addonId: FIXTURE_ADDON_ID, addonVersion: "1.0" }]],
-      "an enrollment event should be sent",
+    sendEventStub.assertEvents(
+      [["enroll", "addon_study", recipe.arguments.name, { addonId: FIXTURE_ADDON_ID, addonVersion: "1.0" }]]
     );
 
     // cleanup
@@ -218,14 +212,12 @@ decorate_task(
     addon = await AddonManager.getAddonByID(addonId);
     is(addon, null, "the add-on should be uninstalled after unenrolling");
 
-    Assert.deepEqual(
-      sendEventStub.args,
+    sendEventStub.assertEvents(
       [["unenroll", "addon_study", study.name, {
         addonId,
         addonVersion: study.addonVersion,
         reason: "test-reason",
-      }]],
-      "an unenroll event should be sent",
+      }]]
     );
   },
 );
@@ -244,14 +236,12 @@ decorate_task(
     SimpleTest.monitorConsole(() => SimpleTest.finish(), [{message: /could not uninstall addon/i}]);
     await action.unenroll(study.recipeId);
 
-    Assert.deepEqual(
-      sendEventStub.args,
+    sendEventStub.assertEvents(
       [["unenroll", "addon_study", study.name, {
         addonId: study.addonId,
         addonVersion: study.addonVersion,
         reason: "unknown",
-      }]],
-      "an unenroll event should be sent",
+      }]]
     );
 
     SimpleTest.endMonitorConsole();
@@ -275,7 +265,7 @@ decorate_task(
     is(action.state, AddonStudyAction.STATE_FINALIZED, "the action should be finalized");
     is(action.lastError, null, "lastError should be null");
     Assert.deepEqual(enrollSpy.args, [], "enroll should not be called");
-    Assert.deepEqual(sendEventStub.args, [], "no events should be sent");
+    sendEventStub.assertEvents([]);
   },
 );
 
@@ -291,7 +281,7 @@ decorate_task(
     await action.runRecipe(recipe);
     await action.finalize();
     Assert.deepEqual(enrollSpy.args, [], "enroll should not be called");
-    Assert.deepEqual(sendEventStub.args, [], "no events should be sent");
+    sendEventStub.assertEvents([]);
   },
 );
 

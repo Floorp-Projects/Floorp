@@ -6,6 +6,8 @@ ChromeUtils.import("resource://normandy/lib/SandboxManager.jsm", this);
 ChromeUtils.import("resource://normandy/lib/NormandyDriver.jsm", this);
 ChromeUtils.import("resource://normandy/lib/NormandyApi.jsm", this);
 ChromeUtils.import("resource://normandy/lib/TelemetryEvents.jsm", this);
+ChromeUtils.defineModuleGetter(this, "TelemetryTestUtils",
+                               "resource://testing-common/TelemetryTestUtils.jsm");
 
 // Load mocking/stubbing library, sinon
 // docs: http://sinonjs.org/docs/
@@ -348,6 +350,13 @@ this.studyEndObserved = function(recipeId) {
 this.withSendEventStub = function(testFunction) {
   return async function wrappedTestFunction(...args) {
     const stub = sinon.spy(TelemetryEvents, "sendEvent");
+    stub.assertEvents = (expected) => {
+      let events = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
+      events = (events.parent || []).filter(e => e[1] == "normandy");
+      expected = expected.map(event => ["normandy"].concat(event));
+      TelemetryTestUtils.assertEvents(events, expected);
+    };
+    Services.telemetry.clearEvents();
     try {
       await testFunction(...args, stub);
     } finally {
