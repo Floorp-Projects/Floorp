@@ -365,6 +365,12 @@ main {
 .ds-outer-wrapper-search-alignment main {
   margin: 0 auto; }
 
+.ds-outer-wrapper-breakpoint-override main {
+  width: 1042px; }
+
+.ds-outer-wrapper-breakpoint-override:not(.fixed-search) .search-wrapper .search-inner-wrapper {
+  width: 736px; }
+
 .base-content-fallback {
   height: 100vh; }
 

@@ -62,6 +62,21 @@ main {
   }
 }
 
+.ds-outer-wrapper-breakpoint-override {
+  main {
+    // Override Activity Stream breakpoints for Discovery Stream.
+    // Right now Discovery Stream doesn't have any breakpoints,
+    // and Activity Stream breakpoints do some wonky things.
+    width: 1042px;
+  }
+
+  &:not(.fixed-search) {
+    .search-wrapper .search-inner-wrapper {
+      width: $searchbar-width-large;
+    }
+  }
+}
+
 .base-content-fallback {
   // Make the error message be centered against the viewport
   height: 100vh;
