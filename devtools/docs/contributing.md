@@ -24,7 +24,7 @@ Whether you're an external contributor or a Mozilla employee, the process to get
 
 ## Help with design and UX
 
-If you're more interested in user experience (think: wireframes, workflows, navigations... and not necessarily implementation details), please have a look at the [UX](https://github.com/devtools-html/ux) repository—our friendly designers will be more than happy to welcome you onboard. You can also have a look at the [issues](https://github.com/devtools-html/ux/issues) they are considering right now, to get an idea of how it works.
+If you're more interested in user experience (think: wireframes, workflows, navigations... and not necessarily implementation details), please have a look at the [UX](https://github.com/firefox-devtools/ux) repository—our friendly designers will be more than happy to welcome you onboard. You can also have a look at the [issues](https://github.com/firefox-devtools/ux/issues) they are considering right now, to get an idea of how it works.
 
 ## Help with BUGS! 🐛🐞 <!--TODO: we might want to split this out to another page with more detail, in addition to this introductory section-->
 
