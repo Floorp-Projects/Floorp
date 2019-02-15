@@ -332,9 +332,6 @@ class Nursery {
 
   MOZ_MUST_USE bool queueDictionaryModeObjectToSweep(NativeObject* obj);
 
-  size_t sizeOfHeapCommitted() const {
-    return allocatedChunkCount() * gc::ChunkSize;
-  }
   size_t sizeOfMallocedBuffers(mozilla::MallocSizeOf mallocSizeOf) const {
     size_t total = 0;
     for (BufferSet::Range r = mallocedBuffers.all(); !r.empty(); r.popFront()) {
@@ -355,7 +352,7 @@ class Nursery {
     MOZ_ASSERT(capacity_ <= chunkCountLimit() * NurseryChunkUsableSize);
     return capacity_;
   }
-  size_t lazyCapacity() const { return spaceToEnd(allocatedChunkCount()); }
+  size_t committed() const { return spaceToEnd(allocatedChunkCount()); }
 
   // Used and free space, not counting chunk trailers.
   //
@@ -505,7 +502,7 @@ class Nursery {
   struct {
     JS::GCReason reason = JS::GCReason::NO_REASON;
     size_t nurseryCapacity = 0;
-    size_t nurseryLazyCapacity = 0;
+    size_t nurseryCommitted = 0;
     size_t nurseryUsedBytes = 0;
     size_t tenuredBytes = 0;
     size_t tenuredCells = 0;
