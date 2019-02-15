@@ -160,7 +160,8 @@ def support_vcs_checkout(config, job, taskdesc, sparse=False):
         taskdesc['worker']['taskcluster-proxy'] = True
 
 
-def generic_worker_hg_commands(base_repo, head_repo, head_rev, path):
+def generic_worker_hg_commands(base_repo, head_repo, head_rev, path,
+                               sparse_profile=None):
     """Obtain commands needed to obtain a Mercurial checkout on generic-worker.
 
     Returns two command strings. One performs the checkout. Another logs.
@@ -172,9 +173,16 @@ def generic_worker_hg_commands(base_repo, head_repo, head_rev, path):
         '--purge',
         '--upstream', base_repo,
         '--revision', head_rev,
+    ]
+
+    if sparse_profile:
+        args.extend(['--config', 'extensions.sparse='])
+        args.extend(['--sparseprofile', sparse_profile])
+
+    args.extend([
         head_repo,
         path,
-    ]
+    ])
 
     logging_args = [
         b":: TinderboxPrint:<a href={source_repo}/rev/{revision} "
