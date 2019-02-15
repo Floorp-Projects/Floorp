@@ -525,7 +525,6 @@ class gfxContext final {
   void ChangeTransform(const mozilla::gfx::Matrix& aNewMatrix,
                        bool aUpdatePatternTransform = true);
   Rect GetAzureDeviceSpaceClipBounds() const;
-  Matrix GetDeviceTransform() const;
   Matrix GetDTTransform() const;
 
   bool mPathIsRect;
