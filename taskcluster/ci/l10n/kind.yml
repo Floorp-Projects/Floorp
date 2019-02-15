@@ -22,12 +22,12 @@ kind-dependencies:
 primary-dependency: build
 
 only-for-build-platforms:
-    - linux64-pgo/opt
+    - linux64/opt
     - linux/opt
     - android-api-16/opt
     - macosx64/opt
-    - win32-pgo/opt
-    - win64-pgo/opt
+    - win32/opt
+    - win64/opt
 
 job-template:
     description:
@@ -78,10 +78,10 @@ job-template:
         job-name:
             by-build-platform:
                 linux: linux-opt
-                linux64.*: linux64-opt
+                linux64: linux64-opt
                 macosx64: macosx64-opt
-                win32.*: win32-opt
-                win64.*: win64-opt
+                win32: win32-opt
+                win64: win64-opt
                 android-api-16: android-api-16-opt
     run-on-projects: ['all']
     worker-type:
@@ -98,13 +98,10 @@ job-template:
         platform:
             by-build-platform:
                 linux64: linux64/opt
-                linux64-pgo: linux64-pgo/opt
                 linux: linux32/opt
                 macosx64: osx-cross/opt
                 win32: windows2012-32/opt
-                win32-pgo: windows2012-32-pgo/opt
                 win64: windows2012-64/opt
-                win64-pgo: windows2012-64-pgo/opt
                 android-api-16: android-4-0-armv7-api16/opt
     env:
         by-build-platform:
@@ -134,7 +131,7 @@ job-template:
                     - single_locale/linux32.py
                     - single_locale/tc_common.py
                     - single_locale/tc_linux_common.py
-                linux64.*:
+                linux64:
                     - single_locale/firefox.py
                     - single_locale/linux64.py
                     - single_locale/tc_common.py
@@ -144,12 +141,12 @@ job-template:
                     - single_locale/macosx64.py
                     - single_locale/tc_common.py
                     - single_locale/tc_macosx64.py
-                win32.*:
+                win32:
                     - single_locale/firefox.py
                     - single_locale/win32.py
                     - single_locale/tc_common.py
                     - single_locale/tc_win32.py
-                win64.*:
+                win64:
                     - single_locale/firefox.py
                     - single_locale/win64.py
                     - single_locale/tc_common.py
