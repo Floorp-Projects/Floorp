@@ -45,7 +45,7 @@ typedef struct {
   AppMemoryList::const_iterator end;
 } MinidumpCallbackContext;
 
-static const size_t kExceptionAppMemoryRegions = 16;
+static const size_t kExceptionAppMemoryRegions = 33;
 
 #if defined(_M_IX86)
 using RegisterValueType = DWORD;
