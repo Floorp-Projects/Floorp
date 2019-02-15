@@ -60,8 +60,7 @@ function nextTest()
       step = "open near bottom";
       // request that the menu be opened with a target point near the bottom of the window,
       // so that the menu's top margin will push it completely outside the window.
-      var bo = document.documentElement.boxObject;
-      popup.setAttribute("top", bo.screenY + window.innerHeight - 5);
+      popup.setAttribute("top", document.documentElement.screenY + window.innerHeight - 5);
       synthesizeMouse(menu, 2, 2, { });
       break;
     case "open near bottom":
