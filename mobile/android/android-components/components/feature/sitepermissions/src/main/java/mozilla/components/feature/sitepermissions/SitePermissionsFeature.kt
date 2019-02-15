@@ -18,9 +18,13 @@ import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.permission.Permission
 import mozilla.components.concept.engine.permission.Permission.ContentGeoLocation
 import mozilla.components.concept.engine.permission.Permission.ContentNotification
+import mozilla.components.concept.engine.permission.Permission.ContentAudioCapture
+import mozilla.components.concept.engine.permission.Permission.ContentAudioMicrophone
 import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.ui.doorhanger.DoorhangerPrompt
+import mozilla.components.ui.doorhanger.DoorhangerPrompt.Control.RadioButton
+import mozilla.components.ui.doorhanger.DoorhangerPrompt.ControlGroup
 import java.security.InvalidParameterException
 
 typealias OnNeedToRequestPermissions = (permissions: Array<String>) -> Unit
@@ -78,7 +82,7 @@ class SitePermissionsFeature(
     }
 
     /**
-     * Notifies that the list of [permissions] have been granted for the [sessionId] and [url].
+     * Notifies that the list of [permissions] have been granted for the [session] and [url].
      *
      * @param session the session which requested the permissions.
      * @param url the url which requested the permissions.
@@ -93,7 +97,7 @@ class SitePermissionsFeature(
     }
 
     /**
-     * Notifies that the permissions requested by this [sessionId] were rejected.
+     * Notifies that the permissions requested by this [session] were rejected.
      *
      * @param session the session which requested the permissions.
      * @param url the url which requested the permissions.
@@ -162,6 +166,20 @@ class SitePermissionsFeature(
                         buttons
                 )
             }
+            is ContentAudioCapture -> {
+                createPromptForMicrophonePermission(
+                    context,
+                    uriString,
+                    buttons
+                )
+            }
+            is ContentAudioMicrophone -> {
+                createPromptForMicrophonePermission(
+                    context,
+                    uriString,
+                    buttons
+                )
+            }
             else ->
                 throw InvalidParameterException("$permission is not a valid permission.")
         }
@@ -184,6 +202,28 @@ class SitePermissionsFeature(
         return DoorhangerPrompt(
             title = title,
             icon = drawable,
+            buttons = buttons
+        )
+    }
+
+    @SuppressLint("VisibleForTests")
+    private fun createPromptForMicrophonePermission(
+        context: Context,
+        uriString: String,
+        buttons: List<DoorhangerPrompt.Button>
+    ): DoorhangerPrompt {
+
+        val title = context.getString(R.string.mozac_feature_sitepermissions_microfone_title, uriString)
+        val optionTitle = context.getString(R.string.mozac_feature_sitepermissions_option_microphone_one)
+        val drawable = ContextCompat.getDrawable(context, R.drawable.mozac_ic_microphone)
+
+        val microphoneRadioButton = RadioButton(optionTitle)
+        val controlGroup = ControlGroup(controls = listOf(microphoneRadioButton))
+
+        return DoorhangerPrompt(
+            title = title,
+            icon = drawable,
+            controlGroups = listOf(controlGroup),
             buttons = buttons
         )
     }

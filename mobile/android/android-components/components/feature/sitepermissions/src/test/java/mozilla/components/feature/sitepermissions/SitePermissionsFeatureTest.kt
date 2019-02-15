@@ -12,6 +12,8 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.permission.Permission
+import mozilla.components.concept.engine.permission.Permission.ContentAudioCapture
+import mozilla.components.concept.engine.permission.Permission.ContentAudioMicrophone
 import mozilla.components.concept.engine.permission.Permission.ContentGeoLocation
 import mozilla.components.concept.engine.permission.Permission.ContentNotification
 import mozilla.components.concept.engine.permission.PermissionRequest
@@ -125,7 +127,12 @@ class SitePermissionsFeatureTest {
         val session = getSelectedSession()
         var grantWasCalled = false
 
-        val permissions = listOf(ContentGeoLocation(), ContentNotification())
+        val permissions = listOf(
+            ContentGeoLocation(),
+            ContentNotification(),
+            ContentAudioCapture(),
+            ContentAudioMicrophone()
+        )
 
         permissions.forEach { permission ->
 
@@ -159,7 +166,12 @@ class SitePermissionsFeatureTest {
         val session = getSelectedSession()
         var grantWasCalled = false
 
-        val permissions = listOf(ContentGeoLocation(), ContentNotification())
+        val permissions = listOf(
+            ContentGeoLocation(),
+            ContentNotification(),
+            ContentAudioCapture(),
+            ContentAudioMicrophone()
+        )
 
         permissions.forEach { permission ->
             val permissionRequest: PermissionRequest = object : PermissionRequest {
@@ -180,7 +192,7 @@ class SitePermissionsFeatureTest {
             val prompt = sitePermissionFeature.onContentPermissionRequested(session, permissionRequest)
 
             val negativeButton = prompt.buttons.find { !it.positive }
-            negativeButton!!.onClick!!.invoke()
+            negativeButton!!.onClick.invoke()
 
             assertTrue(grantWasCalled)
             assertTrue(session.contentPermissionRequest.isConsumed())

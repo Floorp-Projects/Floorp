@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?><!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources>
 
     <!-- Title of a dialog for a notification permission request. -->
     <string name="mozac_feature_sitepermissions_notification_title">Allow %1$s to send notifications?</string>
@@ -37,13 +37,4 @@
     <!-- Text for a negative button in a permission request dialog, this button will do not give
     access to this permission-->
     <string name="mozac_feature_sitepermissions_not_allow">Don\'t allow</string>
-
-    <!-- Accessibility text for indicating the permission icon in a permission request dialog -->
-    <string name="mozac_feature_sitepermissions_accessibility_permission_icon">Permission Icon</string>
-
-    <!-- Accessibility text for indicating the permission camera icon in a permission request dialog -->
-    <string name="mozac_feature_sitepermissions_accessibility_permission_camera_icon">Camera Icon</string>
-
-    <!-- Accessibility text for indicating the permission microphone icon in a permission request dialog -->
-    <string name="mozac_feature_sitepermissions_accessibility_permission_microphone_icon">Microphone Icon</string>
 </resources>
