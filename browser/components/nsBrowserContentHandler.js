@@ -207,7 +207,7 @@ function openBrowserWindow(cmdLine, triggeringPrincipal, urlOrUrlList, postData 
   let args;
   if (!urlOrUrlList) {
     // Just pass in the defaultArgs directly. We'll use system principal on the other end.
-    args = [gBrowserContentHandler.getDefaultArgs(forcePrivate)];
+    args = [gBrowserContentHandler.defaultArgs];
   } else {
     let pService = Cc["@mozilla.org/toolkit/profile-service;1"].
                   getService(Ci.nsIToolkitProfileService);
@@ -522,7 +522,7 @@ nsBrowserContentHandler.prototype = {
 
   /* nsIBrowserHandler */
 
-  getDefaultArgs(forcePrivate = false) {
+  get defaultArgs() {
     var prefb = Services.prefs;
 
     if (!gFirstWindow) {
@@ -607,7 +607,7 @@ nsBrowserContentHandler.prototype = {
     try {
       var choice = prefb.getIntPref("browser.startup.page");
       if (choice == 1 || choice == 3)
-        startPage = forcePrivate ? HomePage.getPrivate() : HomePage.get();
+        startPage = HomePage.get();
     } catch (e) {
       Cu.reportError(e);
     }
@@ -623,10 +623,6 @@ nsBrowserContentHandler.prototype = {
       return overridePage + "|" + startPage;
 
     return overridePage || startPage || "about:blank";
-  },
-
-  get defaultArgs() {
-    return this.getDefaultArgs(PrivateBrowsingUtils.permanentPrivateBrowsing);
   },
 
   mFeatures: null,

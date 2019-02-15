@@ -31,8 +31,6 @@ ChromeUtils.defineModuleGetter(this, "CustomizableUI",
                                "resource:///modules/CustomizableUI.jsm");
 ChromeUtils.defineModuleGetter(this, "ExtensionSettingsStore",
                                "resource://gre/modules/ExtensionSettingsStore.jsm");
-ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
-                               "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 let {
   makeWidgetId,
@@ -197,12 +195,6 @@ class ExtensionControlledPopup {
       extensionId = item && item.id;
     }
 
-    let win = targetWindow || this.topWindow;
-    let isPrivate = PrivateBrowsingUtils.isWindowPrivate(win);
-    if (isPrivate && extensionId && !WebExtensionPolicy.getByID(extensionId).privateBrowsingAllowed) {
-      return;
-    }
-
     // The item should have an extension and the user shouldn't have confirmed
     // the change here, but just to be sure check that it is still controlled
     // and the user hasn't already confirmed the change.
@@ -211,6 +203,7 @@ class ExtensionControlledPopup {
       return;
     }
 
+    let win = targetWindow || this.topWindow;
     // If the window closes while waiting for focus, this might reject/throw,
     // and we should stop trying to show the popup.
     try {
