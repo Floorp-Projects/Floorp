@@ -9363,6 +9363,7 @@ class UnblockParsingPromiseHandler final : public PromiseNativeHandler {
       mParser = do_GetWeakReference(parser);
       mDocument = aDocument;
       mDocument->BlockOnload();
+      mDocument->BlockDOMContentLoaded();
     }
   }
 
@@ -9396,8 +9397,16 @@ class UnblockParsingPromiseHandler final : public PromiseNativeHandler {
       if (parser == docParser) {
         parser->UnblockParser();
         parser->ContinueInterruptedParsingAsync();
-        mDocument->UnblockOnload(false);
       }
+    }
+    if (mDocument) {
+      // We blocked DOMContentLoaded and load events on this document.  Unblock
+      // them.  Note that we want to do that no matter what's going on with the
+      // parser state for this document.  Maybe someone caused it to stop being
+      // parsed, so CreatorParserOrNull() is returning null, but we still want
+      // to unblock these.
+      mDocument->UnblockDOMContentLoaded();
+      mDocument->UnblockOnload(false);
     }
     mParser = nullptr;
     mDocument = nullptr;
