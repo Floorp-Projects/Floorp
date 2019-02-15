@@ -77,6 +77,21 @@ function synthesizeTouchEnd(aTarget, aId, aOffsetX, aOffsetY) {
                        [1], [1], [0], [1]);
 }
 
+function synthesizeTouchMove(aTarget, aId, aOffsetX, aOffsetY) {
+  let index = touches.ids.indexOf(aId);
+  if (-1 === index) {
+    ok(false, `touch with id=${aTouch.id} isn't registered`);
+    return;
+  }
+
+  let rect = aTarget.getBoundingClientRect();
+  touches.lefts[index] = rect.left + aOffsetX;
+  touches.tops[index] = rect.top + aOffsetY;
+
+  synthesizeTouchEvent("touchmove", touches.ids, touches.lefts, touches.tops,
+                       touches.rxs, touches.rys, touches.angles, touches.forces);
+}
+
 var target0 = document.getElementById("target0");
 var target1 = document.getElementById("target1");
 
@@ -137,6 +152,33 @@ add_task(async function ShouldNotSendDuplicatedPointerDown() {
       var defaultId = SpecialPowers.Ci.nsIDOMWindowUtils.DEFAULT_TOUCH_POINTER_ID;
       synthesizeTouchStart(target0, defaultId, 10, 10);
       synthesizeTouchStart(target1, defaultId + 1, 10, 10);
+      synthesizeTouchEnd(target1, defaultId + 1, 10, 10);
+      synthesizeTouchEnd(target0, defaultId, 10, 10);
+    }
+  );
+});
+
+// Test for bug 1323400
+add_task(async function ShouldNotSendDuplicatedPointerMove() {
+  return WaitExpectedEvents(
+    ["pointerup", "pointerdown","pointermove"],
+    [ // [event target, event type]
+      [target0, "pointerdown"],
+      [target1, "pointerdown"],
+      // The first pointermove should not be suppressed.
+      [target0, "pointermove"],
+      [target1, "pointermove"],
+      // Should receive only one pointer event for target 1.
+      [target1, "pointermove"],
+      [target1, "pointerup"],
+      [target0, "pointerup"],
+    ],
+    function() {
+      var defaultId = SpecialPowers.Ci.nsIDOMWindowUtils.DEFAULT_TOUCH_POINTER_ID;
+      synthesizeTouchStart(target0, defaultId, 10, 10);
+      synthesizeTouchStart(target1, defaultId + 1, 10, 10);
+      synthesizeTouchMove(target1, defaultId + 1, 11, 11);
+      synthesizeTouchMove(target1, defaultId + 1, 12, 12);
       synthesizeTouchEnd(target1, defaultId + 1, 10, 10);
       synthesizeTouchEnd(target0, defaultId, 10, 10);
     }
