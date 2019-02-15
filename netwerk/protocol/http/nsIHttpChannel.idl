@@ -458,13 +458,6 @@ interface nsIHttpChannel : nsIChannel
                                     in unsigned long long aIdentifier);
 
     /**
-     * Used to determine if there is a Cross-Origin-Opener-Policy mismatch
-     * that would require switching the channel to another process.
-     * @throws NS_ERROR_NOT_AVAILABLE if we don't have a responseHead
-     */
-    [must_use] boolean hasCrossOriginOpenerPolicyMismatch();
-
-    /**
      * Flags a channel to be upgraded to HTTPS.
      *
      * Upgrading to a secure channel must happen before or during
