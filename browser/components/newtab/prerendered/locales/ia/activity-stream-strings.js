@@ -49,7 +49,6 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "Grande contento ex tote le Web, personalisate pro te",
   "prefs_topstories_options_sponsored_label": "Historias sponsorisate",
   "prefs_topstories_sponsored_learn_more": "Saper plus",
-  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "Un election de files que tu ha salvate o visitate",
   "prefs_highlights_options_visited_label": "Paginas visitate",
   "prefs_highlights_options_download_label": "Discargamentos plus recente",

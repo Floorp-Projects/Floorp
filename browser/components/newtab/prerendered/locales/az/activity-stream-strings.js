@@ -49,7 +49,6 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "İnternetin ən yaxşı məzmunları, sizə görə fərdiləşdirilmiş",
   "prefs_topstories_options_sponsored_label": "Sponsorlaşdırılmış Hekayələr",
   "prefs_topstories_sponsored_learn_more": "Ətraflı öyrən",
-  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "Saxladığınız və ya ziyarət etdiyiniz saytlardan seçmələr",
   "prefs_highlights_options_visited_label": "Baxılmış Səhifələr",
   "prefs_highlights_options_download_label": "Son Endirmələr",

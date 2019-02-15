@@ -49,7 +49,6 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "Iporãvéva ñanduti retepy, oñemomba’éva ndéve g̃uarã",
   "prefs_topstories_options_sponsored_label": "Tembiasakue jehepyme'ẽguáva",
   "prefs_topstories_sponsored_learn_more": "Kuaave",
-  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "Tenda jeporavopy eñongatu térã eike hague",
   "prefs_highlights_options_visited_label": "Tenda jeikepyre",
   "prefs_highlights_options_download_label": "Oñemboguejy ramovéva",

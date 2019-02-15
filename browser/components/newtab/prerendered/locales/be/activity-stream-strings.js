@@ -49,7 +49,6 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "Выдатнае змесціва з усяго інтэрнэту, выбранае спецыяльна для вас",
   "prefs_topstories_options_sponsored_label": "Артыкулы ад спонсараў",
   "prefs_topstories_sponsored_learn_more": "Даведацца больш",
-  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "Выбраныя сайты, якія вы захавалі ці наведалі",
   "prefs_highlights_options_visited_label": "Наведаныя старонкі",
   "prefs_highlights_options_download_label": "Нядаўнія сцягванні",

@@ -49,7 +49,6 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "Loowdi dowrowri geese, keertinanaandi ma",
   "prefs_topstories_options_sponsored_label": "Daari joɓanaaɗi",
   "prefs_topstories_sponsored_learn_more": "Ɓeydu humpito",
-  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "Suɓngo lowe ɗe ndannduɗaa walla ɗe njilliɗaa",
   "prefs_highlights_options_visited_label": "Kelle jiyaaɗe",
   "prefs_highlights_options_download_label": "Cakkitiiɗe awteede",

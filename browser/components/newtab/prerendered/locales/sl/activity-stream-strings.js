@@ -49,7 +49,6 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "Odlična vsebina iz celega spleta, prilagojena vašemu okusu",
   "prefs_topstories_options_sponsored_label": "Zgodbe oglaševalcev",
   "prefs_topstories_sponsored_learn_more": "Več o tem",
-  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "Izbor strani, ki ste jih shranili ali obiskali",
   "prefs_highlights_options_visited_label": "Obiskane strani",
   "prefs_highlights_options_download_label": "Najnovejši prenos",

@@ -49,7 +49,6 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "Cuntegn interessant ord il web, persunalisà per tai",
   "prefs_topstories_options_sponsored_label": "Artitgels sponsurads",
   "prefs_topstories_sponsored_learn_more": "Ulteriuras infurmaziuns",
-  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "Ina selecziun da paginas che ti has memorisà u visità",
   "prefs_highlights_options_visited_label": "Paginas visitadas",
   "prefs_highlights_options_download_label": "L'ultima telechargiada",

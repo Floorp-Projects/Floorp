@@ -49,7 +49,6 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "Siz uchun moslangan internetdagi ajoyib kontent",
   "prefs_topstories_options_sponsored_label": "Homiylik maqolalari",
   "prefs_topstories_sponsored_learn_more": "Batafsil",
-  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "Saqlangan yoki tashrif buyurgan saralangan saytlaringiz",
   "prefs_highlights_options_visited_label": "Kirilgan sahifalar",
   "prefs_highlights_options_download_label": "Oxirgi yuklanmalar",

@@ -49,7 +49,6 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "Lëndë e bukur nga anembanë internetit, personalizuar për ju",
   "prefs_topstories_options_sponsored_label": "Histori të Sponsorizuara",
   "prefs_topstories_sponsored_learn_more": "Mësoni më tepër",
-  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "Një përzgjedhje të sajteve që keni ruajtur ose vizituar",
   "prefs_highlights_options_visited_label": "Faqe të Vizituara",
   "prefs_highlights_options_download_label": "Shkarkimet Më të Reja",

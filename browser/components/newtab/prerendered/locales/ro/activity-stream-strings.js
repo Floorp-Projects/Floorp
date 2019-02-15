@@ -49,7 +49,6 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "Conținut nemaipomenit de pe web, personalizat pentru tine",
   "prefs_topstories_options_sponsored_label": "Articole sponsorizate",
   "prefs_topstories_sponsored_learn_more": "Află mai multe",
-  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "O selecție a site-urilor pe care le-ai salvat sau vizitat",
   "prefs_highlights_options_visited_label": "Pagini vizitate",
   "prefs_highlights_options_download_label": "Cele mai recente descărcări",
