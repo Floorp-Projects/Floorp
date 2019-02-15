@@ -109,6 +109,19 @@ class UrlbarView {
   }
 
   /**
+   * Gets the result for the index.
+   * @param {number} index
+   *   The index to look up.
+   * @returns {UrlbarResult}
+   */
+  getResult(index) {
+    if (index < 0 || index > this._queryContext.results.length) {
+      throw new Error(`UrlbarView: Index ${index} is out of bounds`);
+    }
+    return this._queryContext.results[index];
+  }
+
+  /**
    * Selects the next or previous view item. An item could be an autocomplete
    * result or a one-off search button.
    *
@@ -513,11 +526,7 @@ class UrlbarView {
     while (!row.classList.contains("urlbarView-row")) {
       row = row.parentNode;
     }
-    let resultIndex = row.getAttribute("resultIndex");
-    let result = this._queryContext.results[resultIndex];
-    if (result) {
-      this.input.pickResult(event, result);
-    }
+    this.input.pickResult(event, parseInt(row.getAttribute("resultIndex")));
   }
 
   _on_overflow(event) {
