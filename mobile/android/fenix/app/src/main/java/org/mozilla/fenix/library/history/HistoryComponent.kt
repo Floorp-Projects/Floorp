@@ -78,7 +78,7 @@ data class HistoryState(val items: List<HistoryItem>, val mode: Mode) : ViewStat
 sealed class HistoryAction : Action {
     data class Select(val item: HistoryItem) : HistoryAction()
     data class EnterEditMode(val item: HistoryItem) : HistoryAction()
-    object onBackPressed : HistoryAction()
+    object BackPressed : HistoryAction()
     data class AddItemForRemoval(val item: HistoryItem) : HistoryAction()
     data class RemoveItemForRemoval(val item: HistoryItem) : HistoryAction()
 }

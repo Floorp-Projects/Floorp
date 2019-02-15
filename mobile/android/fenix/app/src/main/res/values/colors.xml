@@ -7,6 +7,8 @@
     <color name="color_primary_dark">#202340</color>
     <color name="color_accent">#D81B60</color>
 
+    <color name="history_delete_button_background">#F2F2F5</color>
+
     <color name="awesome_bar_title_color">#212121</color>
     <color name="awesome_bar_description_color">#6b6b6b</color>
     <color name="search_dark_background">#F2F2F5</color>

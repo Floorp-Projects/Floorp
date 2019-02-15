@@ -44,7 +44,7 @@ class HistoryUIView(
 
     override fun onBackPressed(): Boolean {
         if (mode is HistoryState.Mode.Editing) {
-            actionEmitter.onNext(HistoryAction.onBackPressed)
+            actionEmitter.onNext(HistoryAction.BackPressed)
             return true
         }
 

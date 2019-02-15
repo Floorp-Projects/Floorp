@@ -27,7 +27,7 @@
 
     <TextView
         android:id="@+id/history_title"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:layout_marginStart="16dp"

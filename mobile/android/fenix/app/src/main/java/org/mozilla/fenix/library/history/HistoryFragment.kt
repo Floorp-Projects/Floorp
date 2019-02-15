@@ -67,7 +67,7 @@ class HistoryFragment : Fragment(), CoroutineScope, BackHandler {
                         .onNext(HistoryChange.AddItemForRemoval(it.item))
                     is HistoryAction.RemoveItemForRemoval -> getManagedEmitter<HistoryChange>()
                         .onNext(HistoryChange.RemoveItemForRemoval(it.item))
-                    is HistoryAction.onBackPressed -> getManagedEmitter<HistoryChange>()
+                    is HistoryAction.BackPressed -> getManagedEmitter<HistoryChange>()
                         .onNext(HistoryChange.ExitEditMode)
                 }
             }
@@ -125,7 +125,7 @@ class HistoryFragment : Fragment(), CoroutineScope, BackHandler {
     }
 
     override fun onBackPressed(): Boolean {
-        if((historyComponent.uiView as HistoryUIView).onBackPressed()) { return true }
+        if ((historyComponent.uiView as HistoryUIView).onBackPressed()) { return true }
         return false
     }
 }

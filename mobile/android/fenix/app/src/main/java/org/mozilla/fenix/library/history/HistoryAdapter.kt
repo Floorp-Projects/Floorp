@@ -14,6 +14,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import io.reactivex.Observer
 import org.mozilla.fenix.R
+import androidx.core.content.ContextCompat
 
 class HistoryAdapter(
     private val actionEmitter: Observer<HistoryAction>
@@ -111,6 +112,24 @@ class HistoryAdapter(
         }
     }
 
+    class HistoryDeleteViewHolder(
+        view: View
+    ) : RecyclerView.ViewHolder(view) {
+        private val button = view.findViewById<View>(R.id.delete_history_button)
+        private val text = view.findViewById<TextView>(R.id.delete_history_button_text).apply {
+            val color = ContextCompat.getColor(context, R.color.photonRed60)
+            val drawable = ContextCompat.getDrawable(context, R.drawable.ic_delete)
+            drawable?.setTint(color)
+            this.setCompoundDrawablesWithIntrinsicBounds(drawable, null, null, null)
+        }
+
+        fun bind() { }
+
+        companion object {
+            const val LAYOUT_ID = R.layout.history_delete
+        }
+    }
+
     private var items: List<HistoryItem> = emptyList()
     private var mode: HistoryState.Mode = HistoryState.Mode.Normal
 
@@ -124,6 +143,7 @@ class HistoryAdapter(
         val view = LayoutInflater.from(parent.context).inflate(viewType, parent, false)
 
         return when (viewType) {
+            HistoryDeleteViewHolder.LAYOUT_ID -> HistoryDeleteViewHolder(view)
             HistoryHeaderViewHolder.LAYOUT_ID -> HistoryHeaderViewHolder(view)
             HistoryListItemViewHolder.LAYOUT_ID -> HistoryListItemViewHolder(view, actionEmitter)
             else -> throw IllegalStateException("viewType $viewType does not match to a ViewHolder")
@@ -132,7 +152,8 @@ class HistoryAdapter(
 
     override fun getItemViewType(position: Int): Int {
         return when (position) {
-            0 -> HistoryHeaderViewHolder.LAYOUT_ID
+            0 -> HistoryDeleteViewHolder.LAYOUT_ID
+            1 -> HistoryHeaderViewHolder.LAYOUT_ID
             else -> HistoryListItemViewHolder.LAYOUT_ID
         }
     }
@@ -147,6 +168,6 @@ class HistoryAdapter(
     }
 
     companion object {
-        private const val NUMBER_OF_SECTIONS = 1
+        private const val NUMBER_OF_SECTIONS = 2
     }
 }
