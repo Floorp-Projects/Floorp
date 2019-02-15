@@ -676,6 +676,22 @@
       "enum": ["tls1", "tls1.1", "tls1.2", "tls1.3"]
     },
 
+    "SupportMenu": {
+      "type": "object",
+      "properties": {
+        "Title": {
+          "type": "string"
+        },
+        "URL": {
+          "type": "URL"
+        },
+        "AccessKey": {
+          "type": "string"
+        }
+      },
+      "required": ["Title", "URL"],
+    },
+
     "WebsiteFilter": {
       "type": "object",
       "properties": {

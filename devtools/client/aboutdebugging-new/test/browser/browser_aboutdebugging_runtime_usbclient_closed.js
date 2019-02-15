@@ -13,7 +13,8 @@ const USB_APP_NAME = "TestApp";
 // unplugged.
 add_task(async function testUsbDeviceUnplugged() {
   const mocks = new Mocks();
-  const { document, tab } = await openAboutDebugging();
+  const { document, tab, window } = await openAboutDebugging();
+  await selectThisFirefoxPage(document, window.AboutDebugging.store);
 
   mocks.createUSBRuntime(USB_RUNTIME_ID, {
     deviceName: USB_DEVICE_NAME,
@@ -42,7 +43,8 @@ add_task(async function testUsbDeviceUnplugged() {
 // current USB runtime is closed.
 add_task(async function testUsbClientDisconnected() {
   const mocks = new Mocks();
-  const { document, tab } = await openAboutDebugging();
+  const { document, tab, window } = await openAboutDebugging();
+  await selectThisFirefoxPage(document, window.AboutDebugging.store);
 
   const usbClient = mocks.createUSBRuntime(USB_RUNTIME_ID, {
     deviceName: USB_DEVICE_NAME,
@@ -73,7 +75,8 @@ add_task(async function testUsbClientDisconnected() {
 // current network runtime is closed.
 add_task(async function testNetworkClientDisconnected() {
   const mocks = new Mocks();
-  const { document, tab } = await openAboutDebugging();
+  const { document, tab, window } = await openAboutDebugging();
+  await selectThisFirefoxPage(document, window.AboutDebugging.store);
 
   const networkClient = mocks.createNetworkRuntime(NETWORK_RUNTIME_HOST, {
     name: NETWORK_RUNTIME_APP_NAME,

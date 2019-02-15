@@ -2500,10 +2500,21 @@ function relativeTime(timestamp) {
   return new Date(timestamp).toLocaleString();
 }
 
+const OPT_OUT_PREF = "discoverystream.optOut.0";
+const LAYOUT_VARIANTS = {
+  "basic": "Basic default layout (on by default in nightly)",
+  "dev-test-all": "A little bit of everything. Good layout for testing all components",
+  "dev-test-feeds": "Stress testing for slow feeds"
+};
 class DiscoveryStreamAdmin extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureComponent {
   constructor(props) {
     super(props);
     this.onEnableToggle = this.onEnableToggle.bind(this);
+    this.changeEndpointVariant = this.changeEndpointVariant.bind(this);
+  }
+
+  get isOptedOut() {
+    return this.props.otherPrefs[OPT_OUT_PREF];
   }
 
   setConfigValue(name, value) {
@@ -2512,6 +2523,13 @@ class DiscoveryStreamAdmin extends react__WEBPACK_IMPORTED_MODULE_4___default.a.
 
   onEnableToggle(event) {
     this.setConfigValue("enabled", event.target.checked);
+  }
+
+  changeEndpointVariant(event) {
+    const endpoint = this.props.state.config.layout_endpoint;
+    if (endpoint) {
+      this.setConfigValue("layout_endpoint", endpoint.replace(/layout_variant=.+/, `layout_variant=${event.target.value}`));
+    }
   }
 
   renderComponent(width, component) {
@@ -2554,6 +2572,12 @@ class DiscoveryStreamAdmin extends react__WEBPACK_IMPORTED_MODULE_4___default.a.
     );
   }
 
+  isCurrentVariant(id) {
+    const endpoint = this.props.state.config.layout_endpoint;
+    const isMatch = endpoint && !!endpoint.match(`layout_variant=${id}`);
+    return isMatch;
+  }
+
   renderFeed(feed) {
     const { feeds } = this.props.state;
     if (!feed.url) {
@@ -2594,6 +2618,8 @@ class DiscoveryStreamAdmin extends react__WEBPACK_IMPORTED_MODULE_4___default.a.
   }
 
   render() {
+    const { isOptedOut } = this;
+
     const { config, lastUpdated, layout } = this.props.state;
     return react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(
       "div",
@@ -2602,7 +2628,59 @@ class DiscoveryStreamAdmin extends react__WEBPACK_IMPORTED_MODULE_4___default.a.
         "div",
         { className: "dsEnabled" },
         react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("input", { type: "checkbox", checked: config.enabled, onChange: this.onEnableToggle }),
-        " enabled"
+        " enabled",
+        isOptedOut ? react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(
+          "span",
+          { className: "optOutNote" },
+          "(Note: User has opted-out. Check this box to reset)"
+        ) : ""
+      ),
+      react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(
+        "h3",
+        null,
+        "Endpoint variant"
+      ),
+      react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(
+        "p",
+        null,
+        "You can also change this manually by changing this pref: ",
+        react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(
+          "code",
+          null,
+          "browser.newtabpage.activity-stream.discoverystream.config"
+        )
+      ),
+      react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(
+        "table",
+        { style: config.enabled ? null : { opacity: 0.5 } },
+        react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(
+          "tbody",
+          null,
+          Object.keys(LAYOUT_VARIANTS).map(id => react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(
+            Row,
+            { key: id },
+            react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(
+              "td",
+              { className: "min" },
+              react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("input", { type: "radio", value: id, checked: this.isCurrentVariant(id), onChange: this.changeEndpointVariant })
+            ),
+            react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(
+              "td",
+              { className: "min" },
+              id
+            ),
+            react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(
+              "td",
+              null,
+              LAYOUT_VARIANTS[id]
+            )
+          ))
+        )
+      ),
+      react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(
+        "h3",
+        null,
+        "Caching info"
       ),
       react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(
         "table",
@@ -2622,20 +2700,6 @@ class DiscoveryStreamAdmin extends react__WEBPACK_IMPORTED_MODULE_4___default.a.
               "td",
               null,
               relativeTime(lastUpdated) || "(no data)"
-            )
-          ),
-          react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(
-            Row,
-            null,
-            react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(
-              "td",
-              { className: "min" },
-              "Endpoint"
-            ),
-            react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(
-              "td",
-              null,
-              config.layout_endpoint || "(empty)"
             )
           )
         )
@@ -3446,7 +3510,7 @@ class ASRouterAdminInner extends react__WEBPACK_IMPORTED_MODULE_4___default.a.Pu
             null,
             "Discovery Stream"
           ),
-          react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(DiscoveryStreamAdmin, { state: this.props.DiscoveryStream, dispatch: this.props.dispatch })
+          react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(DiscoveryStreamAdmin, { state: this.props.DiscoveryStream, otherPrefs: this.props.Prefs.values, dispatch: this.props.dispatch })
         );
       default:
         return react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(
@@ -3558,7 +3622,7 @@ const _ASRouterAdmin = props => react__WEBPACK_IMPORTED_MODULE_4___default.a.cre
   null,
   react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(ASRouterAdminInner, props)
 );
-const ASRouterAdmin = Object(react_redux__WEBPACK_IMPORTED_MODULE_2__["connect"])(state => ({ Sections: state.Sections, DiscoveryStream: state.DiscoveryStream }))(_ASRouterAdmin);
+const ASRouterAdmin = Object(react_redux__WEBPACK_IMPORTED_MODULE_2__["connect"])(state => ({ Sections: state.Sections, DiscoveryStream: state.DiscoveryStream, Prefs: state.Prefs }))(_ASRouterAdmin);
 
 /***/ }),
 /* 27 */
@@ -7208,7 +7272,7 @@ class SafeAnchor_SafeAnchor extends external_React_default.a.PureComponent {
 
     const isAllowed = ["http:", "https:"].includes(protocol);
     if (!isAllowed) {
-      console.warn(`${protocol} is not allowed for anchor targets.`); // eslint-disable-line no-console
+      console.warn(`${url} is not allowed for anchor targets.`); // eslint-disable-line no-console
       return "";
     }
     return url;
@@ -7370,39 +7434,27 @@ var external_ReactRedux_ = __webpack_require__(24);
 // CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/DSMessage/DSMessage.jsx
 
 
+
 class DSMessage_DSMessage extends external_React_default.a.PureComponent {
   render() {
-    let hasSubtitleAndOrLink = this.props.link_text && this.props.link_url;
-    hasSubtitleAndOrLink = hasSubtitleAndOrLink || this.props.subtitle;
-
     return external_React_default.a.createElement(
       "div",
       { className: "ds-message" },
-      this.props.title && external_React_default.a.createElement(
+      external_React_default.a.createElement(
         "header",
         { className: "title" },
-        this.props.icon && external_React_default.a.createElement("img", { src: this.props.icon }),
-        external_React_default.a.createElement(
+        this.props.icon && external_React_default.a.createElement("div", { className: "glyph", style: { backgroundImage: `url(${this.props.icon})` } }),
+        this.props.title && external_React_default.a.createElement(
           "span",
-          null,
+          { className: "title-text" },
           this.props.title
-        )
-      ),
-      hasSubtitleAndOrLink && external_React_default.a.createElement(
-        "p",
-        { className: "subtitle" },
-        this.props.subtitle && external_React_default.a.createElement(
-          "span",
-          null,
-          this.props.subtitle
         ),
         this.props.link_text && this.props.link_url && external_React_default.a.createElement(
-          "a",
-          { href: this.props.link_url },
+          SafeAnchor_SafeAnchor,
+          { className: "link", url: this.props.link_url },
           this.props.link_text
         )
-      ),
-      external_React_default.a.createElement("hr", { className: "ds-hr" })
+      )
     );
   }
 }
@@ -7623,14 +7675,18 @@ class Hero_Hero extends external_React_default.a.PureComponent {
             "div",
             { className: "meta" },
             external_React_default.a.createElement(
-              "header",
-              null,
-              heroRec.title
-            ),
-            external_React_default.a.createElement(
-              "p",
-              { className: "excerpt" },
-              heroRec.excerpt
+              "div",
+              { className: "header-and-excerpt" },
+              external_React_default.a.createElement(
+                "header",
+                null,
+                heroRec.title
+              ),
+              external_React_default.a.createElement(
+                "p",
+                { className: "excerpt" },
+                heroRec.excerpt
+              )
             ),
             heroRec.context ? external_React_default.a.createElement(
               "p",
@@ -7672,6 +7728,7 @@ var ImpressionStats = __webpack_require__(31);
 // CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/Navigation/Navigation.jsx
 
 
+
 class Navigation_Topic extends external_React_default.a.PureComponent {
   render() {
     const { url, name } = this.props;
@@ -7679,8 +7736,8 @@ class Navigation_Topic extends external_React_default.a.PureComponent {
       "li",
       null,
       external_React_default.a.createElement(
-        "a",
-        { key: name, href: url },
+        SafeAnchor_SafeAnchor,
+        { key: name, url: url },
         name
       )
     );

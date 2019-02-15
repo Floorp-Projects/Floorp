@@ -70,7 +70,7 @@ static nsIFrame* CheckForTrailingTextFrameRecursive(nsIFrame* aFrame,
 static nsLineBox* FindContainingLine(nsIFrame* aFrame) {
   while (aFrame && aFrame->IsFrameOfType(nsIFrame::eLineParticipant)) {
     nsIFrame* parent = aFrame->GetParent();
-    nsBlockFrame* blockParent = nsLayoutUtils::GetAsBlock(parent);
+    nsBlockFrame* blockParent = do_QueryFrame(parent);
     if (blockParent) {
       bool isValid;
       nsBlockInFlowLineIterator iter(blockParent, aFrame, &isValid);

@@ -13,7 +13,8 @@ Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-collapsibilities.j
 add_task(async function() {
   prepareCollapsibilitiesTest();
 
-  const { document, tab } = await openAboutDebugging();
+  const { document, tab, window } = await openAboutDebugging();
+  await selectThisFirefoxPage(document, window.AboutDebugging.store);
 
   info("Collapse all pane");
   for (const { title } of TARGET_PANES) {

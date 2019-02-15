@@ -31,7 +31,9 @@ add_task(async function() {
   await pushPref("dom.serviceWorkers.idle_timeout", SW_TIMEOUT);
   await pushPref("dom.serviceWorkers.idle_extended_timeout", SW_TIMEOUT);
 
-  const { document, tab } = await openAboutDebugging({ enableWorkerUpdates: true });
+  const { document, tab, window } =
+    await openAboutDebugging({ enableWorkerUpdates: true });
+  await selectThisFirefoxPage(document, window.AboutDebugging.store);
 
   // Open a tab that registers a basic service worker.
   const swTab = await addTab(SW_TAB_URL);

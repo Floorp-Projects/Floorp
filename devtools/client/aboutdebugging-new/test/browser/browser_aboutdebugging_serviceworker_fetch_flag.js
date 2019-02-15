@@ -17,7 +17,9 @@ const EMPTY_SW_HTML = URL_ROOT + "resources/service-workers/empty-sw.html";
  */
 add_task(async function() {
   await enableServiceWorkerDebugging();
-  const { document, tab } = await openAboutDebugging({ enableWorkerUpdates: true });
+  const { document, tab, window } =
+    await openAboutDebugging({ enableWorkerUpdates: true });
+  await selectThisFirefoxPage(document, window.AboutDebugging.store);
 
   info("Test fetch status for a service worker listening to fetch events");
   await testServiceWorkerFetchStatus(document, FETCH_SW_HTML, FETCH_SW_JS, true);

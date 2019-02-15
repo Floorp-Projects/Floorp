@@ -19,7 +19,8 @@ const EXTENSION_NAME = "test-temporary-extension";
 add_task(async function() {
   prepareCollapsibilitiesTest();
 
-  const { document, tab } = await openAboutDebugging();
+  const { document, tab, window } = await openAboutDebugging();
+  await selectThisFirefoxPage(document, window.AboutDebugging.store);
 
   info("Check that the temporary extensions pane is empty");
   const temporaryExtensionPane = getDebugTargetPane("Temporary Extensions", document);

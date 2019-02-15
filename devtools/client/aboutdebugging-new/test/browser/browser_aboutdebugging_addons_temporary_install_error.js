@@ -16,7 +16,8 @@ const EXTENSION_PATH = "resources/test-temporary-extension/manifest.json";
 const EXTENSION_NAME = "test-temporary-extension";
 
 add_task(async function() {
-  const { document, tab } = await openAboutDebugging();
+  const { document, tab, window } = await openAboutDebugging();
+  await selectThisFirefoxPage(document, window.AboutDebugging.store);
 
   info("Install a bad extension");
   // Do not use installTemporaryAddon here since the install will fail.

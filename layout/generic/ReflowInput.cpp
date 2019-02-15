@@ -687,7 +687,7 @@ void ReflowInput::InitResizeFlags(nsPresContext* aPresContext,
     // Possibly; in that case we should at least be checking
     // NS_SUBTREE_DIRTY, I'd think.
     SetBResize(mCBReflowInput->IsBResizeForWM(wm));
-  } else if (mCBReflowInput && !nsLayoutUtils::GetAsBlock(mFrame)) {
+  } else if (mCBReflowInput && !mFrame->IsBlockFrameOrSubclass()) {
     // Some non-block frames (e.g. table frames) aggressively optimize out their
     // BSize recomputation when they don't have the BResize flag set.  This
     // means that if they go from having a computed non-auto height to having an
@@ -1445,7 +1445,7 @@ void ReflowInput::CalculateHypotheticalPosition(
   // sure to compute all coordinates in the coordinate system of
   // containingBlock.
   nsBlockFrame* blockFrame =
-      nsLayoutUtils::GetAsBlock(containingBlock->GetContentInsertionFrame());
+      do_QueryFrame(containingBlock->GetContentInsertionFrame());
   if (blockFrame) {
     // Use a null containerSize to convert a LogicalPoint functioning as a
     // vector into a physical nsPoint vector.

@@ -61,7 +61,8 @@ static gfxTextRun* GetEllipsisTextRun(nsIFrame* aFrame) {
 }
 
 static nsIFrame* GetSelfOrNearestBlock(nsIFrame* aFrame) {
-  return nsLayoutUtils::GetAsBlock(aFrame)
+  MOZ_ASSERT(aFrame);
+  return aFrame->IsBlockFrameOrSubclass()
              ? aFrame
              : nsLayoutUtils::FindNearestBlockAncestor(aFrame);
 }
@@ -70,7 +71,7 @@ static nsIFrame* GetSelfOrNearestBlock(nsIFrame* aFrame) {
 // It's not supposed to be called for block frames since we never
 // process block descendants for text-overflow.
 static bool IsAtomicElement(nsIFrame* aFrame, LayoutFrameType aFrameType) {
-  MOZ_ASSERT(!nsLayoutUtils::GetAsBlock(aFrame) || !aFrame->IsBlockOutside(),
+  MOZ_ASSERT(!aFrame->IsBlockFrameOrSubclass() || !aFrame->IsBlockOutside(),
              "unexpected block frame");
   MOZ_ASSERT(aFrameType != LayoutFrameType::Placeholder,
              "unexpected placeholder frame");
@@ -89,7 +90,7 @@ static bool IsFullyClipped(nsTextFrame* aFrame, nscoord aLeft, nscoord aRight,
 }
 
 static bool IsInlineAxisOverflowVisible(nsIFrame* aFrame) {
-  MOZ_ASSERT(nsLayoutUtils::GetAsBlock(aFrame) != nullptr,
+  MOZ_ASSERT(aFrame && aFrame->IsBlockFrameOrSubclass(),
              "expected a block frame");
 
   nsIFrame* f = aFrame;

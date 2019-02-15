@@ -36,12 +36,11 @@ add_task(async function() {
   // open a tab and register service worker
   info("Register a service worker");
   const swTab = await addTab(SW_TAB_URL);
+
   // check that service worker is rendered
-  info("Wait for sw to appear in the debug pane list");
-  await waitUntil(() => {
-    swPane = getDebugTargetPane("Service Workers", document);
-    return swPane.querySelectorAll(".js-debug-target-item").length > 0;
-  });
+  info("Wait until the service worker appears and is running");
+  await waitForServiceWorkerRunning(SW_URL, document);
+
   swPane = getDebugTargetPane("Service Workers", document);
   ok(swPane.querySelectorAll(".js-debug-target-item").length === 1,
     "Service worker list has one element");
