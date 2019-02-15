@@ -112,7 +112,7 @@ void KeyframeEffect::SetComposite(const CompositeOperation& aComposite) {
   }
 
   if (mTarget) {
-    RefPtr<ComputedStyle> computedStyle = GetTargetComputedStyle();
+    RefPtr<ComputedStyle> computedStyle = GetTargetComputedStyle(Flush::None);
     if (computedStyle) {
       UpdateProperties(computedStyle);
     }
@@ -206,7 +206,7 @@ void KeyframeEffect::SetKeyframes(JSContext* aContext,
     return;
   }
 
-  RefPtr<ComputedStyle> style = GetTargetComputedStyle();
+  RefPtr<ComputedStyle> style = GetTargetComputedStyle(Flush::None);
   SetKeyframes(std::move(keyframes), style);
 }
 
@@ -768,7 +768,8 @@ void KeyframeEffect::RequestRestyle(
   }
 }
 
-already_AddRefed<ComputedStyle> KeyframeEffect::GetTargetComputedStyle() const {
+already_AddRefed<ComputedStyle> KeyframeEffect::GetTargetComputedStyle(
+    Flush aFlushType) const {
   if (!GetRenderedDocument()) {
     return nullptr;
   }
@@ -784,7 +785,10 @@ already_AddRefed<ComputedStyle> KeyframeEffect::GetTargetComputedStyle() const {
   OwningAnimationTarget kungfuDeathGrip(mTarget->mElement,
                                         mTarget->mPseudoType);
 
-  return nsComputedDOMStyle::GetComputedStyle(mTarget->mElement, pseudo);
+  return aFlushType == Flush::Style
+             ? nsComputedDOMStyle::GetComputedStyle(mTarget->mElement, pseudo)
+             : nsComputedDOMStyle::GetComputedStyleNoFlush(mTarget->mElement,
+                                                           pseudo);
 }
 
 #ifdef DEBUG
@@ -900,7 +904,7 @@ void KeyframeEffect::SetTarget(
 
   if (mTarget) {
     UpdateTargetRegistration();
-    RefPtr<ComputedStyle> computedStyle = GetTargetComputedStyle();
+    RefPtr<ComputedStyle> computedStyle = GetTargetComputedStyle(Flush::None);
     if (computedStyle) {
       UpdateProperties(computedStyle);
     }
@@ -1032,7 +1036,7 @@ void KeyframeEffect::GetKeyframes(JSContext*& aCx, nsTArray<JSObject*>& aResult,
     // we might end up returning variables as-is or empty string. That should be
     // acceptable however, since such a case is rare and this is only
     // short-term (and unshipped) behavior until bug 1391537 is fixed.
-    computedStyle = GetTargetComputedStyle();
+    computedStyle = GetTargetComputedStyle(Flush::Style);
   }
 
   for (const Keyframe& keyframe : mKeyframes) {
