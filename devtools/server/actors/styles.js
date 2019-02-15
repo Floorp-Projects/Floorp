@@ -1634,8 +1634,7 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
 
   /**
    * Helper method for tracking CSS changes. Logs the change of this rule's selector as
-   * two operations: a rule removal, including its CSS declarations, using the old
-   * selector and a rule addition using the new selector.
+   * two operations: a removal using the old selector and an addition using the new one.
    *
    * @param {String} oldSelector
    *        This rule's previous selector.
@@ -1643,31 +1642,18 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
    *        This rule's new selector.
    */
   logSelectorChange(oldSelector, newSelector) {
-    // Build a collection of CSS declarations existing on this rule.
-    const declarations = this._declarations.reduce((acc, decl, index) => {
-      acc.push({
-        property: decl.name,
-        value: decl.priority ? decl.value + " !important" : decl.value,
-        index,
-      });
-      return acc;
-    }, []);
-
-    // Logging two distinct operations to remove the old rule and add a new one.
-    // TODO: Make TrackChangeEmitter support transactions so these two operations are
-    // grouped together when implementing undo/redo.
     TrackChangeEmitter.trackChange({
       ...this.metadata,
-      type: "rule-remove",
+      type: "selector-remove",
       add: null,
-      remove: declarations,
+      remove: null,
       selector: oldSelector,
     });
 
     TrackChangeEmitter.trackChange({
       ...this.metadata,
-      type: "rule-add",
-      add: declarations,
+      type: "selector-add",
+      add: null,
       remove: null,
       selector: newSelector,
     });
