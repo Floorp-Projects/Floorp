@@ -292,7 +292,7 @@ class ProxyChannelFilter {
    * @param {nsIChannel} channel The channel for which these proxy settings apply.
    * @param {nsIProxyInfo} defaultProxyInfo The proxy (or list of proxies) that
    *     would be used by default for the given URI. This may be null.
-   * @param {nsIProxyProtocolFilterResult} proxyFilter
+   * @param {nsIProtocolProxyChannelFilter} proxyFilter
    */
   async applyFilter(service, channel, defaultProxyInfo, proxyFilter) {
     let proxyInfo;
@@ -400,8 +400,8 @@ class ProxyScriptContext extends BaseContext {
       return false;
     }
 
-    ProxyService.registerChannelFilter(
-      this /* nsIProtocolProxyChannelFilter aFilter */,
+    ProxyService.registerFilter(
+      this /* nsIProtocolProxyFilter aFilter */,
       0 /* unsigned long aPosition */
     );
 
@@ -421,24 +421,19 @@ class ProxyScriptContext extends BaseContext {
    * is called to apply proxy filter rules for the given URI and proxy object
    * (or list of proxy objects).
    *
-   * @param {nsIProtocolProxyService} service A reference to the Protocol Proxy Service.
-   * @param {nsIChannel} channel The channel for which these proxy settings apply.
-   * @param {nsIProxyInfo} defaultProxyInfo The proxy (or list of proxies) that
+   * @param {Object} service A reference to the Protocol Proxy Service.
+   * @param {Object} uri The URI for which these proxy settings apply.
+   * @param {Object} defaultProxyInfo The proxy (or list of proxies) that
    *     would be used by default for the given URI. This may be null.
-   * @param {nsIProxyProtocolFilterResult} proxyFilter to call
+   * @param {Object} callback nsIProxyProtocolFilterResult to call onProxyFilterResult
          on with the proxy info to apply for the given URI.
    */
-  applyFilter(service, channel, defaultProxyInfo, proxyFilter) {
-    let proxyInfo;
+  applyFilter(service, uri, defaultProxyInfo, callback) {
     try {
-      let wrapper = ChannelWrapper.get(channel);
-      if (this.extension.policy.privateBrowsingAllowed ||
-          wrapper.loadInfo.originAttributes.privateBrowsingId == 0) {
-        let uri = wrapper.finalURI;
-        // TODO Bug 1337001 - provide path and query components to non-https URLs.
-        let ret = this.FindProxyForURL(uri.prePath, uri.host, this.contextInfo);
-        proxyInfo = ProxyInfoData.proxyInfoFromProxyData(this, ret, defaultProxyInfo);
-      }
+      // TODO Bug 1337001 - provide path and query components to non-https URLs.
+      let ret = this.FindProxyForURL(uri.prePath, uri.host, this.contextInfo);
+      ret = ProxyInfoData.proxyInfoFromProxyData(this, ret, defaultProxyInfo);
+      callback.onProxyFilterResult(ret);
     } catch (e) {
       let error = this.normalizeError(e);
       this.extension.emit("proxy-error", {
@@ -447,9 +442,7 @@ class ProxyScriptContext extends BaseContext {
         lineNumber: error.lineNumber,
         stack: error.stack,
       });
-    } finally {
-      // FindProxyForURL may return nothing, null, or proxyInfo.
-      proxyFilter.onProxyFilterResult(proxyInfo !== undefined ? proxyInfo : defaultProxyInfo);
+      callback.onProxyFilterResult(defaultProxyInfo);
     }
   }
 
