@@ -21,7 +21,8 @@ const EXPECTED_FAVICON = "data:image/png;base64," +
 
 add_task(async function() {
   const faviconTab = await addTab(TAB_URL, { background: true });
-  const { document, tab } = await openAboutDebugging();
+  const { document, tab, window } = await openAboutDebugging();
+  await selectThisFirefoxPage(document, window.AboutDebugging.store);
 
   await waitUntil(() => findDebugTargetByText("Favicon tab", document));
   const faviconTabTarget = findDebugTargetByText("Favicon tab", document);
