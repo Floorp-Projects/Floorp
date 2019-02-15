@@ -2584,6 +2584,7 @@ already_AddRefed<nsIEventTarget> HttpChannelChild::GetODATarget() {
 }
 
 nsresult HttpChannelChild::ContinueAsyncOpen() {
+  nsresult rv;
   nsCString appCacheClientId;
   if (mInheritApplicationCache) {
     // Pick up an application cache from the notification
@@ -2678,6 +2679,11 @@ nsresult HttpChannelChild::ContinueAsyncOpen() {
 
   SerializeURI(mTopWindowURI, openArgs.topWindowURI());
 
+  if (!mTopWindowPrincipal) {
+    GetTopWindowPrincipal(getter_AddRefs(mTopWindowPrincipal));
+  }
+  openArgs.topWindowPrincipal() = mTopWindowPrincipal;
+
   openArgs.preflightArgs() = optionalCorsPreflightArgs;
 
   openArgs.uploadStreamHasHeaders() = mUploadStreamHasHeaders;
@@ -2705,8 +2711,7 @@ nsresult HttpChannelChild::ContinueAsyncOpen() {
 
   openArgs.contentTypeHint() = mContentTypeHint;
 
-  nsresult rv =
-      mozilla::ipc::LoadInfoToLoadInfoArgs(mLoadInfo, &openArgs.loadInfo());
+  rv = mozilla::ipc::LoadInfoToLoadInfoArgs(mLoadInfo, &openArgs.loadInfo());
   NS_ENSURE_SUCCESS(rv, rv);
 
   EnsureRequestContextID();
