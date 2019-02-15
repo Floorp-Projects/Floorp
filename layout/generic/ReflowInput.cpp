@@ -688,7 +688,7 @@ void ReflowInput::InitResizeFlags(nsPresContext* aPresContext,
     // Possibly; in that case we should at least be checking
     // NS_SUBTREE_DIRTY, I'd think.
     SetBResize(mCBReflowInput->IsBResizeForWM(wm));
-  } else if (mCBReflowInput && !nsLayoutUtils::GetAsBlock(mFrame)) {
+  } else if (mCBReflowInput && !mFrame->IsBlockFrameOrSubclass()) {
     // Some non-block frames (e.g. table frames) aggressively optimize out their
     // BSize recomputation when they don't have the BResize flag set.  This
     // means that if they go from having a computed non-auto height to having an

@@ -330,7 +330,7 @@ struct MOZ_STACK_CLASS BidiParagraphData {
     // Advance aLine to the line containing aFrame
     nsIFrame* child = aFrame;
     nsIFrame* parent = nsLayoutUtils::GetParentOrPlaceholderFor(child);
-    while (parent && !nsLayoutUtils::GetAsBlock(parent)) {
+    while (parent && !parent->IsBlockFrameOrSubclass()) {
       child = parent;
       parent = nsLayoutUtils::GetParentOrPlaceholderFor(child);
     }

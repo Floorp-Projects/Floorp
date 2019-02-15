@@ -8456,7 +8456,8 @@ nsLayoutUtils::SurfaceFromElementResult::GetSourceSurface() {
 ////////////////////////////////////////
 
 bool nsLayoutUtils::IsNonWrapperBlock(nsIFrame* aFrame) {
-  return GetAsBlock(aFrame) && !aFrame->IsBlockWrapper();
+  MOZ_ASSERT(aFrame);
+  return aFrame->IsBlockFrameOrSubclass() && !aFrame->IsBlockWrapper();
 }
 
 bool nsLayoutUtils::NeedsPrintPreviewBackground(nsPresContext* aPresContext) {
@@ -9222,7 +9223,7 @@ nsRect nsLayoutUtils::GetSelectionBoundingRect(Selection* aSel) {
   while (ancestor && !ancestor->IsFloatContainingBlock()) {
     ancestor = ancestor->GetParent();
   }
-  MOZ_ASSERT(!ancestor || GetAsBlock(ancestor),
+  MOZ_ASSERT(!ancestor || ancestor->IsBlockFrameOrSubclass(),
              "Float containing block can only be block frame");
   return static_cast<nsBlockFrame*>(ancestor);
 }

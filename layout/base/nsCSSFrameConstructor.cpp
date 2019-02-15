@@ -412,7 +412,7 @@ static bool ShouldSuppressColumnSpanDescendants(nsIFrame* aFrame) {
     return false;
   }
 
-  if (!nsLayoutUtils::GetAsBlock(aFrame) ||
+  if (!aFrame->IsBlockFrameOrSubclass() ||
       aFrame->HasAnyStateBits(NS_BLOCK_FLOAT_MGR | NS_FRAME_OUT_OF_FLOW)) {
     // Need to suppress column-span under a different block formatting
     // context or an out-of-flow frame.
@@ -2482,7 +2482,7 @@ nsIFrame* nsCSSFrameConstructor::ConstructDocElementFrame(
     // Still need to process the child content
     nsFrameItems childItems;
 
-    NS_ASSERTION(!nsLayoutUtils::GetAsBlock(contentFrame) &&
+    NS_ASSERTION(!contentFrame->IsBlockFrameOrSubclass() &&
                      !contentFrame->IsFrameOfType(nsIFrame::eSVG),
                  "Only XUL frames should reach here");
     // Use a null PendingBinding, since our binding is not in fact pending.
@@ -6800,7 +6800,7 @@ void nsCSSFrameConstructor::ContentAppended(nsIContent* aFirstNewContent,
   // If the parent is a block frame, and we're not in a special case
   // where frames can be moved around, determine if the list is for the
   // start or end of the block.
-  if (nsLayoutUtils::GetAsBlock(parentFrame) && !haveFirstLetterStyle &&
+  if (parentFrame->IsBlockFrameOrSubclass() && !haveFirstLetterStyle &&
       !haveFirstLineStyle && !IsFramePartOfIBSplit(parentFrame)) {
     items.SetLineBoundaryAtStart(!prevSibling ||
                                  !prevSibling->IsInlineOutside() ||
@@ -8734,7 +8734,7 @@ bool nsCSSFrameConstructor::ShouldHaveFirstLetterStyle(
 
 bool nsCSSFrameConstructor::HasFirstLetterStyle(nsIFrame* aBlockFrame) {
   MOZ_ASSERT(aBlockFrame, "Need a frame");
-  NS_ASSERTION(nsLayoutUtils::GetAsBlock(aBlockFrame), "Not a block frame?");
+  NS_ASSERTION(aBlockFrame->IsBlockFrameOrSubclass(), "Not a block frame?");
 
   return (aBlockFrame->GetStateBits() & NS_BLOCK_HAS_FIRST_LETTER_STYLE) != 0;
 }
@@ -9598,7 +9598,7 @@ void nsCSSFrameConstructor::ProcessChildren(
   // Check that our parent frame is a block before allowing ::first-letter/line.
   // E.g. <button style="display:grid"> should not allow it.
   const bool allowFirstPseudos =
-      aAllowBlockStyles && nsLayoutUtils::GetAsBlock(aFrame);
+      aAllowBlockStyles && aFrame->IsBlockFrameOrSubclass();
   bool haveFirstLetterStyle = false, haveFirstLineStyle = false;
   if (allowFirstPseudos) {
     ShouldHaveSpecialBlockStyle(aContent, aComputedStyle, &haveFirstLetterStyle,
@@ -10025,7 +10025,7 @@ void nsCSSFrameConstructor::CreateLetterFrame(
     nsIContent* aTextContent, nsContainerFrame* aParentFrame,
     nsFrameItems& aResult) {
   MOZ_ASSERT(aTextContent->IsText(), "aTextContent isn't text");
-  NS_ASSERTION(nsLayoutUtils::GetAsBlock(aBlockFrame), "Not a block frame?");
+  NS_ASSERTION(aBlockFrame->IsBlockFrameOrSubclass(), "Not a block frame?");
 
   // Get a ComputedStyle for the first-letter-frame.
   //
