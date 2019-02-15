@@ -1120,6 +1120,16 @@ var Impl = {
 
     // Register the builtin probes.
     for (let category in scalarJSProbes) {
+      // Expire the expired scalars
+      for (let name in scalarJSProbes[category]) {
+        let def = scalarJSProbes[category][name];
+        if (!def || !def.expires || def.expires == "never" || def.expires == "default") {
+          continue;
+        }
+        if (Services.vc.compare(AppConstants.MOZ_APP_VERSION, def.expires) >= 0) {
+          def.expired = true;
+        }
+      }
       Telemetry.registerBuiltinScalars(category, scalarJSProbes[category]);
     }
   },
@@ -1140,6 +1150,15 @@ var Impl = {
 
     // Register the builtin probes.
     for (let category in eventJSProbes) {
+      for (let name in eventJSProbes[category]) {
+        let def = eventJSProbes[category][name];
+        if (!def || !def.expires || def.expires == "never" || def.expires == "default") {
+          continue;
+        }
+        if (Services.vc.compare(AppConstants.MOZ_APP_VERSION, def.expires) >= 0) {
+          def.expired = true;
+        }
+      }
       Telemetry.registerBuiltinEvents(category, eventJSProbes[category]);
     }
   },
