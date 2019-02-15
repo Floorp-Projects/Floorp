@@ -301,19 +301,7 @@ nsMixedContentBlocker::AsyncOnChannelRedirect(
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Get the loading Info from the old channel
-  nsCOMPtr<nsILoadInfo> loadInfo;
-  rv = aOldChannel->GetLoadInfo(getter_AddRefs(loadInfo));
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!loadInfo) {
-    // XXX: We want to have a loadInfo on all channels, but we don't yet.
-    // If an addon creates a channel, they may not set loadinfo. If that
-    // channel redirects from one page to another page, we would get caught
-    // in this code path. Hence, we have to return NS_OK. Once we have more
-    // confidence that all channels have loadinfo, we can change this to
-    // a failure. See bug 1077201.
-    return NS_OK;
-  }
-
+  nsCOMPtr<nsILoadInfo> loadInfo = aOldChannel->GetLoadInfo();
   nsCOMPtr<nsIPrincipal> requestingPrincipal = loadInfo->LoadingPrincipal();
 
   // Since we are calling shouldLoad() directly on redirects, we don't go
