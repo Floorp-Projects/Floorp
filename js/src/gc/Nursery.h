@@ -612,8 +612,8 @@ class Nursery {
 
   /* Change the allocable space provided by the nursery. */
   void maybeResizeNursery(JS::GCReason reason);
-  void growAllocableSpace(unsigned newCount);
-  void shrinkAllocableSpace(unsigned newCount);
+  void growAllocableSpace(unsigned newCapacity);
+  void shrinkAllocableSpace(unsigned newCapacity);
   void minimizeAllocableSpace();
 
   // Free the chunks starting at firstFreeChunk until the end of the chunks
