@@ -4011,47 +4011,34 @@ bool BytecodeEmitter::emitDeclarationList(ListNode* declList) {
   MOZ_ASSERT(declList->isOp(JSOP_NOP));
 
   for (ParseNode* decl : declList->contents()) {
-    ParseNode* pattern;
-    ParseNode* initializer;
-    if (decl->isKind(ParseNodeKind::Name)) {
-      pattern = decl;
-      initializer = nullptr;
-    } else {
+    if (decl->isKind(ParseNodeKind::AssignExpr)) {
       MOZ_ASSERT(decl->isOp(JSOP_NOP));
 
       AssignmentNode* assignNode = &decl->as<AssignmentNode>();
-      pattern = assignNode->left();
-      initializer = assignNode->right();
-    }
-
-    if (pattern->isKind(ParseNodeKind::Name)) {
-      // initializer can be null here.
-      if (!emitSingleDeclaration(declList, &pattern->as<NameNode>(),
-                                 initializer)) {
-        return false;
-      }
-    } else {
-      MOZ_ASSERT(decl->isOp(JSOP_NOP));
+      ListNode* pattern = &assignNode->left()->as<ListNode>();
       MOZ_ASSERT(pattern->isKind(ParseNodeKind::ArrayExpr) ||
                  pattern->isKind(ParseNodeKind::ObjectExpr));
-      MOZ_ASSERT(initializer != nullptr);
 
-      if (!updateSourceCoordNotes(initializer->pn_pos.begin)) {
+      if (!updateSourceCoordNotes(assignNode->right()->pn_pos.begin)) {
         return false;
       }
       if (!markStepBreakpoint()) {
         return false;
       }
-      if (!emitTree(initializer)) {
+      if (!emitTree(assignNode->right())) {
         return false;
       }
 
-      if (!emitDestructuringOps(&pattern->as<ListNode>(),
-                                DestructuringDeclaration)) {
+      if (!emitDestructuringOps(pattern, DestructuringDeclaration)) {
         return false;
       }
 
       if (!emit1(JSOP_POP)) {
+        return false;
+      }
+    } else {
+      NameNode* name = &decl->as<NameNode>();
+      if (!emitSingleDeclaration(declList, name, name->initializer())) {
         return false;
       }
     }
@@ -5305,17 +5292,8 @@ bool BytecodeEmitter::emitInitializeForInOrOfTarget(TernaryNode* forHead) {
   target = parser->astGenerator().singleBindingFromDeclaration(
       &target->as<ListNode>());
 
-  NameNode* nameNode = nullptr;
   if (target->isKind(ParseNodeKind::Name)) {
-    nameNode = &target->as<NameNode>();
-  } else if (target->isKind(ParseNodeKind::AssignExpr)) {
-    AssignmentNode* assignNode = &target->as<AssignmentNode>();
-    if (assignNode->left()->is<NameNode>()) {
-      nameNode = &assignNode->left()->as<NameNode>();
-    }
-  }
-
-  if (nameNode) {
+    NameNode* nameNode = &target->as<NameNode>();
     NameOpEmitter noe(this, nameNode->name(), NameOpEmitter::Kind::Initialize);
     if (!noe.prepareForRhs()) {
       return false;
@@ -5448,11 +5426,8 @@ bool BytecodeEmitter::emitForIn(ForNode* forInLoop,
   if (parser->astGenerator().isDeclarationList(forInTarget)) {
     ParseNode* decl = parser->astGenerator().singleBindingFromDeclaration(
         &forInTarget->as<ListNode>());
-    if (decl->isKind(ParseNodeKind::AssignExpr)) {
-      AssignmentNode* assignNode = &decl->as<AssignmentNode>();
-      if (assignNode->left()->is<NameNode>()) {
-        NameNode* nameNode = &assignNode->left()->as<NameNode>();
-        ParseNode* initializer = assignNode->right();
+    if (decl->isKind(ParseNodeKind::Name)) {
+      if (ParseNode* initializer = decl->as<NameNode>().initializer()) {
         MOZ_ASSERT(
             forInTarget->isKind(ParseNodeKind::VarStmt),
             "for-in initializers are only permitted for |var| declarations");
@@ -5461,12 +5436,13 @@ bool BytecodeEmitter::emitForIn(ForNode* forInLoop,
           return false;
         }
 
+        NameNode* nameNode = &decl->as<NameNode>();
         NameOpEmitter noe(this, nameNode->name(),
                           NameOpEmitter::Kind::Initialize);
         if (!noe.prepareForRhs()) {
           return false;
         }
-        if (!emitInitializer(initializer, nameNode)) {
+        if (!emitInitializer(initializer, decl)) {
           return false;
         }
         if (!noe.emitAssignment()) {
