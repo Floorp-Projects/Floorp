@@ -13,11 +13,7 @@
 
 #include "typedefs.h"  // NOLINT(build/include)
 #if defined(WEBRTC_HAS_NEON)
-#if defined(_MSC_VER) && !defined(__clang__)
-#include <arm64_neon.h>
-#else
 #include <arm_neon.h>
-#endif
 #endif
 #if defined(WEBRTC_ARCH_X86_FAMILY)
 #include <emmintrin.h>
@@ -68,7 +64,7 @@ class VectorMath {
         int j = 0;
         for (; j < vector_limit * 4; j += 4) {
           float32x4_t g = vld1q_f32(&x[j]);
-#if !defined(WEBRTC_ARCH_ARM64) || (defined(_MSC_VER) && !defined(__clang__))
+#if !defined(WEBRTC_ARCH_ARM64)
           float32x4_t y = vrsqrteq_f32(g);
 
           // Code to handle sqrt(0).
