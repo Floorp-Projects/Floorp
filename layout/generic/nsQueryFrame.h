@@ -19,17 +19,17 @@
       nsQueryFrame::classname##_id;               \
   typedef classname Has_NS_DECL_QUERYFRAME_TARGET;
 
-#define NS_DECL_QUERYFRAME void* QueryFrame(FrameIID id) override;
+#define NS_DECL_QUERYFRAME void* QueryFrame(FrameIID id) const override;
 
-#define NS_QUERYFRAME_HEAD(class)         \
-  void* class ::QueryFrame(FrameIID id) { \
+#define NS_QUERYFRAME_HEAD(class)               \
+  void* class ::QueryFrame(FrameIID id) const { \
     switch (id) {
 #define NS_QUERYFRAME_ENTRY(class)                                            \
   case class ::kFrameIID: {                                                   \
     static_assert(                                                            \
         mozilla::IsSame<class, class ::Has_NS_DECL_QUERYFRAME_TARGET>::value, \
         #class " must declare itself as a queryframe target");                \
-    return static_cast<class*>(this);                                         \
+    return const_cast<class*>(static_cast<const class*>(this));               \
   }
 
 #define NS_QUERYFRAME_ENTRY_CONDITIONAL(class, condition)                \
@@ -39,7 +39,7 @@
           mozilla::IsSame<class,                                         \
                           class ::Has_NS_DECL_QUERYFRAME_TARGET>::value, \
           #class " must declare itself as a queryframe target");         \
-      return static_cast<class*>(this);                                  \
+      return const_cast<class*>(static_cast<const class*>(this));        \
     }                                                                    \
     break;
 
@@ -85,7 +85,7 @@ class nsQueryFrame {
 #undef ABSTRACT_FRAME_ID
   };
 
-  virtual void* QueryFrame(FrameIID id) = 0;
+  virtual void* QueryFrame(FrameIID id) const = 0;
 };
 
 class nsIFrame;
@@ -104,7 +104,7 @@ class do_QueryFrameHelper {
   template <class Dest>
   operator Dest*() {
     static_assert(
-        mozilla::IsSame<Dest,
+        mozilla::IsSame<typename mozilla::RemoveConst<Dest>::Type,
                         typename Dest::Has_NS_DECL_QUERYFRAME_TARGET>::value,
         "Dest must declare itself as a queryframe target");
     if (!mRawPtr) {

@@ -11,6 +11,8 @@
 
 class nsMathMLSelectedFrame : public nsMathMLContainerFrame {
  public:
+  NS_DECL_ABSTRACT_FRAME(nsMathMLSelectedFrame)
+
   NS_IMETHOD
   TransmitAutomaticData() override;
 
@@ -35,8 +37,6 @@ class nsMathMLSelectedFrame : public nsMathMLContainerFrame {
                       const ReflowInput& aReflowInput,
                       nsReflowStatus& aStatus) override;
 
-  virtual nsQueryFrame::FrameIID GetFrameId() override = 0;
-
  protected:
   nsMathMLSelectedFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
                         ClassID aID)
@@ -49,9 +49,6 @@ class nsMathMLSelectedFrame : public nsMathMLContainerFrame {
   nsIFrame* mSelectedFrame;
 
   bool mInvalidMarkup;
-
- private:
-  void* operator new(size_t, nsIPresShell*) MOZ_MUST_OVERRIDE = delete;
 };
 
 #endif /* nsMathMLSelectedFrame_h___ */
