@@ -124,8 +124,5 @@ class HistoryFragment : Fragment(), CoroutineScope, BackHandler {
         }
     }
 
-    override fun onBackPressed(): Boolean {
-        if ((historyComponent.uiView as HistoryUIView).onBackPressed()) { return true }
-        return false
-    }
+    override fun onBackPressed(): Boolean = (historyComponent.uiView as HistoryUIView).onBackPressed()
 }
