@@ -23,9 +23,7 @@ function ProcessChooser(tabParent, from, to, rejectPromise = false) {
   this.rejectPromise = rejectPromise;
 
   this.registered = true;
-  Services.obs.addObserver(this, "http-on-examine-response");
-  Services.obs.addObserver(this, "http-on-examine-merged-response");
-  Services.obs.addObserver(this, "http-on-examine-cached-response");
+  Services.obs.addObserver(this, "http-on-may-change-process");
 }
 
 ProcessChooser.prototype = {
@@ -34,9 +32,7 @@ ProcessChooser.prototype = {
       return;
     }
     this.registered = false;
-    Services.obs.removeObserver(this, "http-on-examine-response");
-    Services.obs.removeObserver(this, "http-on-examine-merged-response");
-    Services.obs.removeObserver(this, "http-on-examine-cached-response");
+    Services.obs.removeObserver(this, "http-on-may-change-process");
   },
 
   examine(aChannel) {
@@ -83,9 +79,7 @@ ProcessChooser.prototype = {
 
   observe(aSubject, aTopic, aData) {
     switch (aTopic) {
-      case "http-on-examine-response":
-      case "http-on-examine-cached-response":
-      case "http-on-examine-merged-response":
+      case "http-on-may-change-process":
         this.examine(aSubject.QueryInterface(Ci.nsIHttpChannel));
         break;
       default:

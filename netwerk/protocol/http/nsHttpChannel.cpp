@@ -2450,15 +2450,20 @@ nsresult nsHttpChannel::ContinueProcessResponse1() {
   }
 
   rv = NS_OK;
-  if (mRedirectTabPromise && !mCanceled) {
-    MOZ_ASSERT(!mOnStartRequestCalled);
+  if (!mCanceled) {
+    // notify "http-on-may-change-process" observers
+    gHttpHandler->OnMayChangeProcess(this);
 
-    PushRedirectAsyncFunc(&nsHttpChannel::ContinueProcessResponse2);
-    rv = StartCrossProcessRedirect();
-    if (NS_SUCCEEDED(rv)) {
-      return NS_OK;
+    if (mRedirectTabPromise) {
+      MOZ_ASSERT(!mOnStartRequestCalled);
+
+      PushRedirectAsyncFunc(&nsHttpChannel::ContinueProcessResponse2);
+      rv = StartCrossProcessRedirect();
+      if (NS_SUCCEEDED(rv)) {
+        return NS_OK;
+      }
+      PopRedirectAsyncFunc(&nsHttpChannel::ContinueProcessResponse2);
     }
-    PopRedirectAsyncFunc(&nsHttpChannel::ContinueProcessResponse2);
   }
 
   // No process switch needed, continue as normal.
@@ -7120,6 +7125,8 @@ NS_IMETHODIMP nsHttpChannel::SwitchProcessTo(dom::Promise *aTabPromise,
 nsresult nsHttpChannel::StartCrossProcessRedirect() {
   nsresult rv;
 
+  LOG(("nsHttpChannel::StartCrossProcessRedirect [this=%p]", this));
+
   rv = CheckRedirectLimit(nsIChannelEventSink::REDIRECT_INTERNAL);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -7256,13 +7263,18 @@ nsHttpChannel::OnStartRequest(nsIRequest *request, nsISupports *ctxt) {
   // before we check for redirects, check if the load should be shifted into a
   // new process.
   rv = NS_OK;
-  if (mRedirectTabPromise && !mCanceled) {
-    PushRedirectAsyncFunc(&nsHttpChannel::ContinueOnStartRequest1);
-    rv = StartCrossProcessRedirect();
-    if (NS_SUCCEEDED(rv)) {
-      return NS_OK;
+  if (!mCanceled) {
+    // notify "http-on-may-change-process" observers
+    gHttpHandler->OnMayChangeProcess(this);
+
+    if (mRedirectTabPromise) {
+      PushRedirectAsyncFunc(&nsHttpChannel::ContinueOnStartRequest1);
+      rv = StartCrossProcessRedirect();
+      if (NS_SUCCEEDED(rv)) {
+        return NS_OK;
+      }
+      PopRedirectAsyncFunc(&nsHttpChannel::ContinueOnStartRequest1);
     }
-    PopRedirectAsyncFunc(&nsHttpChannel::ContinueOnStartRequest1);
   }
 
   // No process change is needed, so continue on to ContinueOnStartRequest1.
