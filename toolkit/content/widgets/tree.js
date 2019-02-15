@@ -244,11 +244,13 @@
   customElements.define("treecolpicker", MozTreecolPicker);
 
   class MozTreecol extends MozElements.BaseControl {
-    static get inheritedAttributes() {
-      return {
-        ".treecol-sortdirection": "sortdirection,hidden=hideheader",
-        ".treecol-text": "value=label,crop",
-      };
+    static get observedAttributes() {
+      return [
+        "label",
+        "sortdirection",
+        "hideheader",
+        "crop",
+      ];
     }
 
     get content() {
@@ -314,7 +316,28 @@
 
       this.textContent = "";
       this.appendChild(this.content);
-      this.initializeAttributeInheritance();
+
+      this._updateAttributes();
+    }
+
+    attributeChangedCallback() {
+      if (this.isConnectedAndReady) {
+        this._updateAttributes();
+      }
+    }
+
+    _updateAttributes() {
+      let image = this.querySelector(".treecol-sortdirection");
+      let label = this.querySelector(".treecol-text");
+
+      this.inheritAttribute(image, "sortdirection");
+      this.inheritAttribute(image, "hidden=hideheader");
+      this.inheritAttribute(label, "value=label");
+
+      // Don't remove the attribute on the child if it's los on the host.
+      if (this.hasAttribute("crop")) {
+        this.inheritAttribute(label, "crop");
+      }
     }
 
     set ordinal(val) {
@@ -466,12 +489,6 @@
   customElements.define("treecol", MozTreecol);
 
   class MozTreecols extends MozElements.BaseControl {
-    static get inheritedAttributes() {
-      return {
-        "treecolpicker": "tooltiptext=pickertooltiptext",
-      };
-    }
-
     connectedCallback() {
       if (this.delayConnectedCallback()) {
         return;
@@ -481,8 +498,10 @@
         this.appendChild(MozXULElement.parseXULToFragment(`
           <treecolpicker class="treecol-image" fixed="true"></treecolpicker>
         `));
-        this.initializeAttributeInheritance();
       }
+
+      let treecolpicker = this.querySelector("treecolpicker");
+      this.inheritAttribute(treecolpicker, "tooltiptext=pickertooltiptext");
 
       // Set resizeafter="farthest" on the splitters if nothing else has been
       // specified.

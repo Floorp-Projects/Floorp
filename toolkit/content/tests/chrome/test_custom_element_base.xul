@@ -16,8 +16,7 @@
   <simpleelement id="two" style="-moz-user-focus: normal;"/>
   <simpleelement id="three" disabled="true" style="-moz-user-focus: normal;"/>
   <button id="four"/>
-  <inherited-element-declarative foo="fuagra"></inherited-element-declarative>
-  <inherited-element-imperative foo="fuagra"></inherited-element-imperative>
+  <inherited-element foo="fuagra"></inherited-element>
 
 
   <!-- test code goes here -->
@@ -32,7 +31,7 @@
     testBaseControlMixin();
     testBaseText();
     testParseXULToFragment();
-    testInheritAttributes();
+    testInherits();
     await testCustomInterface();
 
     let htmlWin = await new Promise(resolve => {
@@ -89,26 +88,8 @@
     deck.remove();
   }
 
-  function testInheritAttributes() {
-    class InheritsElementDeclarative extends MozXULElement {
-      static get inheritedAttributes() {
-        return {
-          "label": "text=label,foo,boo,bardo=bar",
-          "unmatched": "foo", // Make sure we don't throw on unmatched selectors
-        };
-      }
-
-      connectedCallback() {
-        this.append(MozXULElement.parseXULToFragment(`<label />`));
-        this.label = this.querySelector("label");
-        this.initializeAttributeInheritance();
-      }
-    }
-    customElements.define("inherited-element-declarative", InheritsElementDeclarative);
-    let declarativeEl = document.querySelector("inherited-element-declarative");
-    ok(declarativeEl, "declarative inheritance element exists");
-
-    class InheritsElementImperative extends MozXULElement {
+  function testInherits() {
+    class InheritsElement extends MozXULElement {
       static get observedAttributes() {
         return [ "label", "foo", "boo", "bar" ];
       }
@@ -132,49 +113,49 @@
       }
     }
 
-    customElements.define("inherited-element-imperative", InheritsElementImperative);
-    let imperativeEl = document.querySelector("inherited-element-imperative");
-    ok(imperativeEl, "imperative inheritance element exists");
+    customElements.define("inherited-element", InheritsElement);
+    let el = document.querySelector("inherited-element");
+    ok(el, "element exists");
 
-    for (let el of [declarativeEl, imperativeEl]) {
-      info(`Running checks for ${el.tagName}`);
-      is(el.label.getAttribute("foo"), "fuagra", "predefined attribute @foo");
-      ok(!el.label.hasAttribute("boo"), "predefined attribute @boo");
-      ok(!el.label.hasAttribute("bardo"), "predefined attribute @bardo");
-      ok(!el.label.textContent, "predefined attribute @label");
+    is(el.label.getAttribute("foo"), "fuagra", "predefined attribute @foo");
+    ok(!el.label.hasAttribute("boo"), "predefined attribute @boo");
+    ok(!el.label.hasAttribute("bardo"), "predefined attribute @bardo");
+    ok(!el.label.textContent, "predefined attribute @label");
 
-      el.setAttribute("boo", "boo-test");
-      is(el.label.getAttribute("boo"), "boo-test",
-        "attribute inheritance: boo");
+    el.setAttribute("boo", "boo-test");
+    is(el.label.getAttribute("boo"), "boo-test",
+       "attribute inheritance: boo");
 
-      el.setAttribute("label", "label-test");
-      is(el.label.textContent, "label-test",
-        "attribute inheritance: text=label attribute change");
+    el.setAttribute("label", "label-test");
+    is(el.label.textContent, "label-test",
+       "attribute inheritance: text=label attribute change");
 
-      el.setAttribute("bar", "bar-test");
-      is(el.label.getAttribute("bardo"), "bar-test",
-        "attribute inheritance: `=` mapping");
+    el.setAttribute("bar", "bar-test");
+    is(el.label.getAttribute("bardo"), "bar-test",
+       "attribute inheritance: `=` mapping");
 
-      el.label.setAttribute("bardo", "changed-from-child");
-      is(el.label.getAttribute("bardo"), "changed-from-child",
-        "attribute inheritance: doesn't apply when host attr hasn't changed and child attr was changed");
+    el.label.setAttribute("bardo", "changed-from-child");
+    el.inherit();
+    is(el.label.getAttribute("bardo"), "changed-from-child",
+       "attribute inheritance: doesn't apply when host attr hasn't changed and child attr was changed");
 
-      el.label.removeAttribute("bardo");
-      ok(!el.label.hasAttribute("bardo"),
-        "attribute inheritance: doesn't apply when host attr hasn't changed and child attr was removed");
+    el.label.removeAttribute("bardo");
+    el.inherit();
+    ok(!el.label.hasAttribute("bardo"),
+       "attribute inheritance: doesn't apply when host attr hasn't changed and child attr was removed");
 
-      el.setAttribute("bar", "changed-from-host");
-      is(el.label.getAttribute("bardo"), "changed-from-host",
-        "attribute inheritance: does apply when host attr has changed and child attr was changed");
+    el.setAttribute("bar", "changed-from-host");
+    is(el.label.getAttribute("bardo"), "changed-from-host",
+       "attribute inheritance: does apply when host attr has changed and child attr was changed");
 
-      el.removeAttribute("bar");
-      ok(!el.label.hasAttribute("bardo"),
-        "attribute inheritance: does apply when host attr has been removed");
+    el.removeAttribute("bar");
+    ok(!el.label.hasAttribute("bardo"),
+       "attribute inheritance: does apply when host attr has been removed");
 
-      el.setAttribute("bar", "changed-from-host-2");
-      is(el.label.getAttribute("bardo"), "changed-from-host-2",
-        "attribute inheritance: does apply when host attr has changed after being removed");
-    }
+    el.setAttribute("bar", "changed-from-host-2");
+    is(el.label.getAttribute("bardo"), "changed-from-host-2",
+       "attribute inheritance: does apply when host attr has changed after being removed");
+
   }
 
   async function testCustomInterface() {
