@@ -10,10 +10,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from taskgraph.transforms.task import taskref_or_string
 from taskgraph.transforms.job import run_job_using
 from taskgraph.util.schema import Schema
-from taskgraph.transforms.job.common import (
-        docker_worker_add_tooltool,
-        support_vcs_checkout
-)
+from taskgraph.transforms.job.common import support_vcs_checkout
 from voluptuous import Any, Optional, Required
 
 run_task_schema = Schema({
@@ -45,16 +42,6 @@ run_task_schema = Schema({
 
     # Base work directory used to set up the task.
     Required('workdir'): basestring,
-
-    # If not false, tooltool downloads will be enabled via relengAPIProxy
-    # for either just public files, or all files. Only supported on
-    # docker-worker.
-    Required('tooltool-downloads'): Any(
-        False,
-        'public',
-        'internal',
-    ),
-
 })
 
 
@@ -77,7 +64,6 @@ worker_defaults = {
     'checkout': True,
     'comm-checkout': False,
     'sparse-profile': None,
-    'tooltool-downloads': False,
 }
 
 
@@ -92,10 +78,6 @@ def docker_worker_run_task(config, job, taskdesc):
     worker = taskdesc['worker'] = job['worker']
     command = ['/builds/worker/bin/run-task']
     common_setup(config, job, taskdesc, command)
-
-    if run['tooltool-downloads']:
-        internal = run['tooltool-downloads'] == 'internal'
-        docker_worker_add_tooltool(config, job, taskdesc, internal=internal)
 
     if run.get('cache-dotcache'):
         worker['caches'].append({

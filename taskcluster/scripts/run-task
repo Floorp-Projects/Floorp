@@ -497,8 +497,7 @@ def fetch_artifacts():
         print(FETCH_CONTENT_NOT_FOUND)
         sys.exit(1)
 
-    cmd = [sys.executable, '-u', fetch_content, 'task-artifacts']
-    print_line(b'fetches', b'executing %r\n' % cmd)
+    cmd = [fetch_content, 'task-artifacts']
     subprocess.run(cmd, check=True, env=os.environ)
     print_line(b'fetches', b'finished fetching artifacts\n')
 
