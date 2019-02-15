@@ -2140,6 +2140,7 @@ struct StackMapGenerator {
         trapExitLayoutNumWords_(trapExitLayoutNumWords),
         stackMaps_(stackMaps),
         masm_(masm),
+        numStackArgWords_(0),
         memRefsOnStk_(0) {}
 
   // At the beginning of a function, we may have live roots in registers (as
