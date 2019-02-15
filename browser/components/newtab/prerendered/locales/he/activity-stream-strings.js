@@ -49,6 +49,7 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "תוכן נהדר מכל רחבי הרשת, בהתאמה אישית להעדפותיך",
   "prefs_topstories_options_sponsored_label": "סיפורים ממומנים",
   "prefs_topstories_sponsored_learn_more": "מידע נוסף",
+  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "מבחר של אתרים ששמרת או ביקרת בהם",
   "prefs_highlights_options_visited_label": "עמודים בהם ביקרת",
   "prefs_highlights_options_download_label": "ההורדות האחרונות",

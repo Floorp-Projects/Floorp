@@ -49,6 +49,7 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "Bjusterbaarlike ynhâld fan it ynternet, oanpast foar jo",
   "prefs_topstories_options_sponsored_label": "Sponsore ferhalen",
   "prefs_topstories_sponsored_learn_more": "Mear ynfo",
+  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "In seleksje fan websites dy't jo bewarre of besocht hawwe",
   "prefs_highlights_options_visited_label": "Besochte siden",
   "prefs_highlights_options_download_label": "Meast resinte download",

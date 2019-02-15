@@ -49,6 +49,7 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "İnternetin her yanından sizin için seçtiğimiz kaliteli içerikler",
   "prefs_topstories_options_sponsored_label": "Sponsorlu haberler",
   "prefs_topstories_sponsored_learn_more": "Daha fazla bilgi al",
+  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "Kaydettiğiniz ve ziyaret ettiğiniz sitelerin bir seçkisi",
   "prefs_highlights_options_visited_label": "Ziyaret ettiğim sayfalar",
   "prefs_highlights_options_download_label": "Son indirme",

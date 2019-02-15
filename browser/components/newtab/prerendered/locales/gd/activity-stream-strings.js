@@ -49,6 +49,7 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "Sàr-shusbaint o fheadh an lìn, air a phearsantachadh dhut-sa",
   "prefs_topstories_options_sponsored_label": "Sgeulachdan sponsairichte",
   "prefs_topstories_sponsored_learn_more": "Barrachd fiosrachaidh",
+  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "Taghadh de làraichean a shàbhail thu no air an do thadhail thu",
   "prefs_highlights_options_visited_label": "Duilleagan air an do thadhail thu",
   "prefs_highlights_options_download_label": "Air a luchdadh a-nuas o chionn goirid",

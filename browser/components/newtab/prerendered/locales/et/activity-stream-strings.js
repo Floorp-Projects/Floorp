@@ -49,6 +49,7 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "Parim veebisisu sinu huvidest lähtuvalt",
   "prefs_topstories_options_sponsored_label": "Sponsitud postitused",
   "prefs_topstories_sponsored_learn_more": "Rohkem teavet",
+  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "Valik saitidest, mille oled salvestanud või mida oled külastanud",
   "prefs_highlights_options_visited_label": "Külastatud lehed",
   "prefs_highlights_options_download_label": "Viimane allalaadimine",

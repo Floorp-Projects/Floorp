@@ -622,7 +622,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
       case at.PREF_CHANGED:
         // Check if spocs was disabled. Remove them if they were.
         if (action.data.name === "showSponsored") {
-          await this.loadSpocs();
+          await this.loadSpocs(update => this.store.dispatch(ac.BroadcastToContent(update)));
         }
         break;
     }

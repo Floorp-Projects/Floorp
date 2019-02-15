@@ -49,6 +49,7 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "ওয়েবের দারুন সব বিষয়বস্তু, নিজের মত করে সাজিয়ে নিন",
   "prefs_topstories_options_sponsored_label": "স্পন্সর করা গল্প",
   "prefs_topstories_sponsored_learn_more": "আরো জানুন",
+  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "সাইটের একটি বিভাগ যা আপনি সংরক্ষণ করেছিলেন অথবা গিয়েছিলেন",
   "prefs_highlights_options_visited_label": "পরিদর্শন করা পৃষ্ঠা",
   "prefs_highlights_options_download_label": "সর্বশেষ ডাউনলোডগুলি",

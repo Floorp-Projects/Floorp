@@ -49,6 +49,7 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "Nội dung tuyệt vời từ trên web, được cá nhân hóa cho bạn",
   "prefs_topstories_options_sponsored_label": "Bài viết quảng cáo",
   "prefs_topstories_sponsored_learn_more": "Tìm hiểu thêm",
+  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "Một lựa chọn các trang web mà bạn đã lưu hoặc truy cập",
   "prefs_highlights_options_visited_label": "Trang đã truy cập",
   "prefs_highlights_options_download_label": "Tải xuống gần đây nhất",

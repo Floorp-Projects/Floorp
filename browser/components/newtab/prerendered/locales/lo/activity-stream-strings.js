@@ -49,6 +49,7 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "ເນື້ອຫາທີ່ຍອດຢ້ຽມຈາກເວັບຕ່າງໆ, ປັບແຕ່ງໃຫ້ເປັນສ່ວນບຸກຄົນເພື່ອທ່ານ",
   "prefs_topstories_options_sponsored_label": "ເລື່ອງລາວທີ່ໄດ້ຮັບການສະຫນັບສະຫນູນ",
   "prefs_topstories_sponsored_learn_more": "ສຶກສາເພີ່ມເຕີມ",
+  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "ການຄັດເລືອກເວັບໄຊທ໌ທີ່ທ່ານໄດ້ບັນທຶກໄວ້ຫລືເຂົ້າໄປເບິ່ງມາແລ້ວ",
   "prefs_highlights_options_visited_label": "ຫນ້າທີ່ເຂົ້າໄປເບິ່ງແລ້ວ",
   "prefs_highlights_options_download_label": "ການດາວໂຫລດລ່າສຸດ",

@@ -49,6 +49,7 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "Konten bermutu dari seluruh web, khusus untuk Anda",
   "prefs_topstories_options_sponsored_label": "Konten Sponsor",
   "prefs_topstories_sponsored_learn_more": "Pelajari lebih lanjut",
+  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "Sejumlah situs yang Anda simpan atau kunjungi",
   "prefs_highlights_options_visited_label": "Laman yang Dikunjungi",
   "prefs_highlights_options_download_label": "Unduhan Terbaru",

@@ -49,6 +49,7 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "来自网络的精彩内容，为您量身打造",
   "prefs_topstories_options_sponsored_label": "赞助内容",
   "prefs_topstories_sponsored_learn_more": "详细了解",
+  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "您访问过或保存过的网站精选",
   "prefs_highlights_options_visited_label": "访问过的页面",
   "prefs_highlights_options_download_label": "最近下载",

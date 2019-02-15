@@ -49,6 +49,7 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "მნიშვნელოვანი ამბები ინტერნეტ-სამყაროდან, შერჩეული თქვენი ინტერესების მიხედვით",
   "prefs_topstories_options_sponsored_label": "დაფინანსებული სტატიები",
   "prefs_topstories_sponsored_learn_more": "იხილეთ ვრცლად",
+  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "თქვენ მიერ შენახული ან ბოლოს მონახულებული საიტები",
   "prefs_highlights_options_visited_label": "მონახულებული გვერდები",
   "prefs_highlights_options_download_label": "ბოლო ჩამოტვირთვები",

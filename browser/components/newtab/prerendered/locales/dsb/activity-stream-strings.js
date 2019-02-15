@@ -49,6 +49,7 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "Wjelicne wopśimjeśe z cełego weba, wubrane specielnje za was",
   "prefs_topstories_options_sponsored_label": "Sponsorowane tšojenja pokazaś",
   "prefs_topstories_sponsored_learn_more": "Dalšne informacije",
+  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "Wuběrk websedłow, kótarež sćo składował abo se woglědał",
   "prefs_highlights_options_visited_label": "Woglědane boki",
   "prefs_highlights_options_download_label": "Nejnowše ześěgnjenje",

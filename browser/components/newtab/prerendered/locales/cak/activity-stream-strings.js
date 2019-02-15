@@ -49,6 +49,7 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "Nïm rupam chijun ri ajk'amaya'l, ichinan awuma rat",
   "prefs_topstories_options_sponsored_label": "To'on taq B'anob'äl",
   "prefs_topstories_sponsored_learn_more": "Tetamäx ch'aqa' chik",
+  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "Jun rucha'onem ruxaq, ri xayäk o xatz'ët",
   "prefs_highlights_options_visited_label": "Taq Ruxaq Etz'eton",
   "prefs_highlights_options_download_label": "K'a B'a' Keqasäx",

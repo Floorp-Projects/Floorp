@@ -49,6 +49,7 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "Great content from around the web, personalized for you",
   "prefs_topstories_options_sponsored_label": "Sponsored Stories",
   "prefs_topstories_sponsored_learn_more": "ಇನ್ನಷ್ಟು ತಿಳಿಯಿರಿ",
+  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "A selection of sites that you’ve saved or visited",
   "prefs_highlights_options_visited_label": "ಭೇಟಿಕೊಟ್ಟ ಪುಟಗಳು",
   "prefs_highlights_options_download_label": "ತೀರಾ ಇತ್ತೀಚಿನ ಡೌನ್ಲೋಡ್",

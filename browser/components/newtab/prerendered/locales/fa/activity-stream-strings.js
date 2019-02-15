@@ -49,6 +49,7 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "محتوایی عالی از سراسر وب، شخصی شده برای شما",
   "prefs_topstories_options_sponsored_label": "محتوایی از حامیان مالی",
   "prefs_topstories_sponsored_learn_more": "اطلاعات بیشتر",
+  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "گزیده‌ای از سایت‌هایی که بازدید یا ذخیره کرده‌اید",
   "prefs_highlights_options_visited_label": "صفحات بازدید شده",
   "prefs_highlights_options_download_label": "آخرین دریافت",

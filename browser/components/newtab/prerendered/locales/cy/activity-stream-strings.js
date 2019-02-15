@@ -49,6 +49,7 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "Cynnwys gwych o ar draws y we, wedi ei ddewis yn arbennig i chi",
   "prefs_topstories_options_sponsored_label": "Straeon wedi eu Noddi",
   "prefs_topstories_sponsored_learn_more": "Dysgu rhagor",
+  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "Detholiad o wefannau rydych wedi eu cadw neu ymweld â nhw",
   "prefs_highlights_options_visited_label": "Tudalennau Ymwelwyd â Nhw",
   "prefs_highlights_options_download_label": "Llwytho i Lawr Mwyaf Diweddar",

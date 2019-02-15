@@ -49,6 +49,7 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "ਸਮੁੱਚੇ ਵੈੱਬ ਤੋਂ ਸ਼ਾਨਦਾਰ ਸਮੱਗਰੀ, ਤੁਹਾਡੇ ਲਈ ਵਿਅਕਤੀਗਤ ਹੈ",
   "prefs_topstories_options_sponsored_label": "ਪ੍ਰਾਯੋਜਿਤ ਕਹਾਣੀਆਂ",
   "prefs_topstories_sponsored_learn_more": "ਹੋਰ ਜਾਣੋ",
+  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "ਉਹਨਾਂ ਸਾਈਟਾਂ ਦੀ ਚੋਣ ਕਰੋ ਜੋ ਤੁਸੀਂ ਸੁਰੱਖਿਅਤ ਜਾਂ ਵਿਜ਼ਿਟ ਕੀਤੀ ਹੈ",
   "prefs_highlights_options_visited_label": "ਵੇਖੇ ਗਏ ਸਫੇ",
   "prefs_highlights_options_download_label": "ਸਭ ਤੋਂ ਤਾਜ਼ਾ ਕੀਤੇ ਡਾਊਨਲੋਡ",
