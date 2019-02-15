@@ -56,11 +56,11 @@
         android:ellipsize="end"
         app:layout_constraintStart_toEndOf="@id/history_favicon"
         app:layout_constraintTop_toBottomOf="@id/history_title"
-        app:layout_constraintEnd_toStartOf="@id/overflow_button"
+        app:layout_constraintEnd_toStartOf="@id/history_item_overflow"
         app:layout_constraintBottom_toBottomOf="parent" />
 
     <ImageButton
-        android:id="@+id/overflow_button"
+        android:id="@+id/history_item_overflow"
         android:layout_width="@dimen/glyph_button_height"
         android:layout_height="@dimen/glyph_button_height"
         android:background="?android:attr/selectableItemBackgroundBorderless"

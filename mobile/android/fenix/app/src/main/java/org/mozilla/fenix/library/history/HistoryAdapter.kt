@@ -9,12 +9,14 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.CheckBox
 import android.widget.CompoundButton
+import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import io.reactivex.Observer
 import org.mozilla.fenix.R
 import androidx.core.content.ContextCompat
+import mozilla.components.browser.menu.BrowserMenu
 
 class HistoryAdapter(
     private val actionEmitter: Observer<HistoryAction>
@@ -28,7 +30,10 @@ class HistoryAdapter(
         private val favicon = view.findViewById<ImageView>(R.id.history_favicon)
         private val title = view.findViewById<TextView>(R.id.history_title)
         private val url = view.findViewById<TextView>(R.id.history_url)
+        private val menuButton = view.findViewById<ImageButton>(R.id.history_item_overflow)
+
         private var item: HistoryItem? = null
+        private lateinit var historyMenu: HistoryItemMenu
         private var mode: HistoryState.Mode = HistoryState.Mode.Normal
         private val checkListener = CompoundButton.OnCheckedChangeListener { _, isChecked ->
             if (mode is HistoryState.Mode.Normal) {
@@ -47,6 +52,8 @@ class HistoryAdapter(
         }
 
         init {
+            setupMenu()
+
             view.setOnClickListener {
                 if (mode is HistoryState.Mode.Editing) {
                     checkbox.isChecked = !checkbox.isChecked
@@ -64,6 +71,12 @@ class HistoryAdapter(
                 }
 
                 true
+            }
+
+            menuButton.setOnClickListener {
+                historyMenu.menuBuilder.build(view.context).show(
+                    anchor = it,
+                    orientation = BrowserMenu.Orientation.DOWN)
             }
 
             checkbox.setOnCheckedChangeListener(checkListener)
@@ -90,6 +103,16 @@ class HistoryAdapter(
                     checkbox.isChecked = mode.selectedItems.contains(item)
                 }
                 checkbox.setOnCheckedChangeListener(checkListener)
+            }
+        }
+
+        private fun setupMenu() {
+            this.historyMenu = HistoryItemMenu(itemView.context) {
+                when (it) {
+                    is HistoryItemMenu.Item.Delete -> {
+                        item?.apply { actionEmitter.onNext(HistoryAction.Delete.One(this)) }
+                    }
+                }
             }
         }
 
@@ -140,9 +163,9 @@ class HistoryAdapter(
             this.mode = mode
 
             val text = if (mode is HistoryState.Mode.Editing && mode.selectedItems.isNotEmpty()) {
-                text.context.resources.getString(R.string.delete_history_items, mode.selectedItems.size)
+                text.context.resources.getString(R.string.history_delete_some, mode.selectedItems.size)
             } else {
-                text.context.resources.getString(R.string.delete_history)
+                text.context.resources.getString(R.string.history_delete_all)
             }
 
             button.contentDescription = text

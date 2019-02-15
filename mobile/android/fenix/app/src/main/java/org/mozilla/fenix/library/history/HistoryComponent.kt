@@ -84,6 +84,7 @@ sealed class HistoryAction : Action {
 
     sealed class Delete : HistoryAction() {
         object All : Delete()
+        data class One(val item: HistoryItem) : Delete()
         data class Some(val items: List<HistoryItem>) : Delete()
     }
 }
