@@ -76,6 +76,8 @@ promise_test(t => {
     getComputedStyle(div).opacity;
 
     div.style.opacity = '0.5';
+    getComputedStyle(div).opacity;
+
     div.animate({ opacity: 1 }, 100 * MS_PER_SEC);
 
     return waitForPaintsFlushed();
@@ -134,6 +136,8 @@ promise_test(t => {
     getComputedStyle(div).opacity;
 
     div.style.opacity = '0.5';
+    getComputedStyle(div).opacity;
+
     div.animate([{ offset: 0, opacity: 1 }], 100 * MS_PER_SEC);
 
     return waitForPaintsFlushed();
@@ -274,6 +278,8 @@ promise_test(t => {
     getComputedStyle(div).transform;
 
     div.style.transform = 'translateX(200px)';
+    getComputedStyle(div).transform;
+
     div.animate({ transform: 'translateX(400px)' }, 100 * MS_PER_SEC);
 
     return waitForPaintsFlushed();
@@ -334,6 +340,8 @@ promise_test(t => {
     getComputedStyle(div).transform;
 
     div.style.transform = 'translateX(200px)';
+    getComputedStyle(div).transform;
+
     div.animate([{ offset: 0, transform: 'translateX(300px)' }],
                 100 * MS_PER_SEC);
 

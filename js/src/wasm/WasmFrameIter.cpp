@@ -1123,6 +1123,8 @@ ProfilingFrameIterator::ProfilingFrameIterator(const JitActivation& activation,
     return;
   }
 
+  MOZ_ASSERT(unwindState.codeRange);
+
   if (unwoundCaller) {
     callerFP_ = unwindState.fp;
     callerPC_ = unwindState.pc;
@@ -1131,7 +1133,7 @@ ProfilingFrameIterator::ProfilingFrameIterator(const JitActivation& activation,
     // and the jit entry don't set FP's low bit). We can't observe
     // transient tagged values of FP (during wasm::SetExitFP) here because
     // StartUnwinding would not have unwound then.
-    if (unwindState.codeRange && unwindState.codeRange->isFunction() &&
+    if (unwindState.codeRange->isFunction() &&
         (uintptr_t(state.fp) & ExitOrJitEntryFPTag)) {
       unwoundIonCallerFP_ = (uint8_t*)callerFP_;
     }

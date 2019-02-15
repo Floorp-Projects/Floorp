@@ -41,21 +41,24 @@ add_task(async function() {
   await wait;
   testParamsTab1("a", "b", "?foo", "bar");
 
-  wait = waitForDOM(document, "#params-panel tr:not(.tree-section).treeRow", 2);
+  let waitSections, waitSourceEditor;
+  waitSections = waitForDOM(document, "#params-panel tr:not(.tree-section).treeRow", 2);
+  waitSourceEditor = waitForDOM(document, "#params-panel .CodeMirror-code");
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.querySelectorAll(".request-list-item")[3]);
-  await wait;
+  await Promise.all([waitSections, waitSourceEditor]);
   testParamsTab2("a", "", '{ "foo": "bar" }', "js");
 
-  wait = waitForDOM(document, "#params-panel tr:not(.tree-section).treeRow", 2);
+  waitSections = waitForDOM(document, "#params-panel tr:not(.tree-section).treeRow", 2);
+  waitSourceEditor = waitForDOM(document, "#params-panel .CodeMirror-code");
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.querySelectorAll(".request-list-item")[4]);
-  await wait;
+  await Promise.all([waitSections, waitSourceEditor]);
   testParamsTab2("a", "b", '{ "foo": "bar" }', "js");
 
   // Wait for all tree sections and editor updated by react
-  const waitSections = waitForDOM(document, "#params-panel .tree-section", 2);
-  const waitSourceEditor = waitForDOM(document, "#params-panel .CodeMirror-code");
+  waitSections = waitForDOM(document, "#params-panel .tree-section", 2);
+  waitSourceEditor = waitForDOM(document, "#params-panel .CodeMirror-code");
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.querySelectorAll(".request-list-item")[5]);
   await Promise.all([waitSections, waitSourceEditor]);
@@ -149,7 +152,7 @@ add_task(async function() {
     const isJSON = editorMode === "js";
     const tabpanel = document.querySelector("#params-panel");
 
-    is(tabpanel.querySelectorAll(".tree-section").length, 2,
+    is(tabpanel.querySelectorAll(".tree-section").length, isJSON ? 3 : 2,
       "The number of param tree sections displayed in this tabpanel is incorrect.");
     is(tabpanel.querySelectorAll("tr:not(.tree-section).treeRow").length, isJSON ? 2 : 1,
       "The number of param rows displayed in this tabpanel is incorrect.");
@@ -158,9 +161,8 @@ add_task(async function() {
 
     ok(tabpanel.querySelector(".treeTable"),
       "The request params box should be displayed.");
-    is(tabpanel.querySelector(".CodeMirror-code") === null,
-      isJSON,
-      "The request post data editor should be not displayed.");
+    ok(tabpanel.querySelector(".CodeMirror-code"),
+      "The request post data editor should be displayed.");
 
     const treeSections = tabpanel.querySelectorAll(".tree-section");
 
@@ -181,7 +183,14 @@ add_task(async function() {
     is(values[0].textContent, queryStringParamValue,
       "The first query string param value was incorrect.");
 
+    ok(tabpanel.querySelector(".CodeMirror-code").textContent.includes(requestPayload),
+      "The text shown in the source editor is incorrect.");
+
     if (isJSON) {
+      is(treeSections[2].querySelector(".treeLabel").textContent,
+        L10N.getStr("paramsPostPayload"),
+        "The post section doesn't have the correct title.");
+
       const requestPayloadObject = JSON.parse(requestPayload);
       const requestPairs = Object.keys(requestPayloadObject)
         .map(k => [k, requestPayloadObject[k]]);
@@ -192,9 +201,6 @@ add_task(async function() {
         is('"' + requestPayloadValue + '"', values[i].textContent,
           "JSON property value " + i + " should be displayed correctly");
       }
-    } else {
-      ok(document.querySelector(".CodeMirror-code").textContent.includes(requestPayload),
-        "The text shown in the source editor is incorrect.");
     }
   }
 

@@ -23,40 +23,40 @@ const PREF_MESSAGE_TIMESTAMP = "devtools.webconsole.timestampMessages";
 const PREF_SIDEBAR_ENABLED = "devtools.webconsole.sidebarToggle";
 
 /**
- * A WebConsoleFrame instance is an interactive console initialized *per target*
+ * A WebConsoleUI instance is an interactive console initialized *per target*
  * that displays console log data as well as provides an interactive terminal to
  * manipulate the target's document content.
  *
- * The WebConsoleFrame is responsible for the actual Web Console UI
+ * The WebConsoleUI is responsible for the actual Web Console UI
  * implementation.
- *
- * @constructor
- * @param object webConsoleOwner
- *        The WebConsole owner object.
  */
-function WebConsoleFrame(webConsoleOwner) {
-  this.owner = webConsoleOwner;
-  this.hudId = this.owner.hudId;
-  this.isBrowserConsole = this.owner._browserConsole;
-  this.window = this.owner.iframeWindow;
+class WebConsoleUI {
+  /*
+   * @param {object} webConsoleOwner: The WebConsole owner object.
+   */
+  constructor(webConsoleOwner) {
+    this.owner = webConsoleOwner;
+    this.hudId = this.owner.hudId;
+    this.isBrowserConsole = this.owner._browserConsole;
+    this.window = this.owner.iframeWindow;
 
-  this._onToolboxPrefChanged = this._onToolboxPrefChanged.bind(this);
-  this._onPanelSelected = this._onPanelSelected.bind(this);
-  this._onChangeSplitConsoleState = this._onChangeSplitConsoleState.bind(this);
+    this._onToolboxPrefChanged = this._onToolboxPrefChanged.bind(this);
+    this._onPanelSelected = this._onPanelSelected.bind(this);
+    this._onChangeSplitConsoleState = this._onChangeSplitConsoleState.bind(this);
 
-  EventEmitter.decorate(this);
-}
-WebConsoleFrame.prototype = {
+    EventEmitter.decorate(this);
+  }
+
   /**
    * Getter for the debugger WebConsoleClient.
    * @type object
    */
   get webConsoleClient() {
     return this.proxy ? this.proxy.webConsoleClient : null;
-  },
+  }
 
   /**
-   * Initialize the WebConsoleFrame instance.
+   * Initialize the WebConsoleUI instance.
    * @return object
    *         A promise object that resolves once the frame is ready to use.
    */
@@ -72,7 +72,8 @@ WebConsoleFrame.prototype = {
     if (Services.obs) {
       Services.obs.notifyObservers(id, "web-console-created");
     }
-  },
+  }
+
   destroy() {
     if (this._destroyer) {
       return this._destroyer.promise;
@@ -105,7 +106,7 @@ WebConsoleFrame.prototype = {
     }
 
     return this._destroyer.promise;
-  },
+  }
 
   /**
    * Clear the Web Console output.
@@ -125,7 +126,7 @@ WebConsoleFrame.prototype = {
       this.webConsoleClient.clearMessagesCache();
     }
     this.emit("messages-cleared");
-  },
+  }
 
   /**
    * Remove all of the private messages from the Web Console output.
@@ -137,7 +138,7 @@ WebConsoleFrame.prototype = {
       this.wrapper.dispatchPrivateMessagesClear();
       this.emit("private-messages-cleared");
     }
-  },
+  }
 
   inspectObjectActor(objectActor) {
     this.wrapper.dispatchMessageAdd({
@@ -147,20 +148,12 @@ WebConsoleFrame.prototype = {
       },
     }, true);
     return this.wrapper;
-  },
-
-  _onUpdateListeners() {
-
-  },
+  }
 
   logWarningAboutReplacedAPI() {
     return this.owner.target.logWarningInPage(l10n.getStr("ConsoleAPIDisabled"),
       "ConsoleAPIDisabled");
-  },
-
-  handleNetworkEventUpdate() {
-
-  },
+  }
 
   /**
    * Setter for saving of network request and response bodies.
@@ -181,7 +174,7 @@ WebConsoleFrame.prototype = {
 
     // Make sure the web console client connection is established first.
     return this.webConsoleClient.setPreferences(toSet);
-  },
+  }
 
   /**
    * Connect to the server using the remote debugging protocol.
@@ -191,7 +184,7 @@ WebConsoleFrame.prototype = {
    *         A promise object that is resolved/reject based on the connection
    *         result.
    */
-  _initConnection: function() {
+  _initConnection() {
     if (this._initDefer) {
       return this._initDefer.promise;
     }
@@ -209,9 +202,9 @@ WebConsoleFrame.prototype = {
     });
 
     return this._initDefer.promise;
-  },
+  }
 
-  _initUI: function() {
+  _initUI() {
     this.document = this.window.document;
     this.rootElement = this.document.documentElement;
 
@@ -230,9 +223,9 @@ WebConsoleFrame.prototype = {
       toolbox.on("split-console", this._onChangeSplitConsoleState);
       toolbox.on("select", this._onChangeSplitConsoleState);
     }
-  },
+  }
 
-  _initOutputSyntaxHighlighting: function() {
+  _initOutputSyntaxHighlighting() {
     // Given a DOM node, we syntax highlight identically to how the input field
     // looks. See https://codemirror.net/demo/runmode.html;
     const syntaxHighlightNode = node => {
@@ -254,9 +247,9 @@ WebConsoleFrame.prototype = {
         }
       }
     });
-  },
+  }
 
-  _initShortcuts: function() {
+  _initShortcuts() {
     const shortcuts = new KeyShortcuts({
       window: this.window,
     });
@@ -294,7 +287,7 @@ WebConsoleFrame.prototype = {
         }
       });
     }
-  },
+  }
 
   /**
    * Handler for page location changes.
@@ -304,12 +297,12 @@ WebConsoleFrame.prototype = {
    * @param string title
    *        New page title.
    */
-  onLocationChange: function(uri, title) {
+  onLocationChange(uri, title) {
     this.contentLocation = uri;
     if (this.owner.onLocationChange) {
       this.owner.onLocationChange(uri, title);
     }
-  },
+  }
 
   /**
    * Release an actor.
@@ -318,32 +311,32 @@ WebConsoleFrame.prototype = {
    * @param string actor
    *        The actor ID you want to release.
    */
-  _releaseObject: function(actor) {
+  _releaseObject(actor) {
     if (this.proxy) {
       this.proxy.releaseActor(actor);
     }
-  },
+  }
 
   /**
    * Called when the message timestamp pref changes.
    */
-  _onToolboxPrefChanged: function() {
+  _onToolboxPrefChanged() {
     const newValue = Services.prefs.getBoolPref(PREF_MESSAGE_TIMESTAMP);
     this.wrapper.dispatchTimestampsToggle(newValue);
-  },
+  }
 
   /**
    * Sets the focus to JavaScript input field when the web console tab is
    * selected or when there is a split console present.
    * @private
    */
-  _onPanelSelected: function() {
+  _onPanelSelected() {
     this.jsterm.focus();
-  },
+  }
 
-  _onChangeSplitConsoleState: function() {
+  _onChangeSplitConsoleState() {
     this.wrapper.dispatchSplitConsoleCloseButtonToggle();
-  },
+  }
 
   /**
    * Handler for the tabNavigated notification.
@@ -353,7 +346,7 @@ WebConsoleFrame.prototype = {
    * @param object packet
    *        Notification packet received from the server.
    */
-  handleTabNavigated: async function(packet) {
+  async handleTabNavigated(packet) {
     if (packet.url) {
       this.onLocationChange(packet.url, packet.title);
     }
@@ -366,15 +359,15 @@ WebConsoleFrame.prototype = {
     // is fully updated after a page reload
     await this.wrapper.waitAsyncDispatches();
     this.emit("reloaded");
-  },
+  }
 
-  handleTabWillNavigate: function(packet) {
+  handleTabWillNavigate(packet) {
     this.wrapper.dispatchTabWillNavigate(packet);
     if (packet.url) {
       this.onLocationChange(packet.url, packet.title);
     }
-  },
-};
+  }
+}
 
 /* This is the same as DevelopmentHelpers.quickRestart, but it runs in all
  * builds (even official). This allows a user to do a restart + session restore
@@ -389,4 +382,4 @@ function quickRestart() {
   Services.startup.quit(Ci.nsIAppStartup.eAttemptQuit | Ci.nsIAppStartup.eRestart);
 }
 
-exports.WebConsoleFrame = WebConsoleFrame;
+exports.WebConsoleUI = WebConsoleUI;

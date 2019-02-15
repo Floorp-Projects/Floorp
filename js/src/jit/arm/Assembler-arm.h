@@ -91,11 +91,11 @@ static const uint32_t NumCallTempNonArgRegs =
 static constexpr Register CmpXchgOldLo = r4;
 static constexpr Register CmpXchgOldHi = r5;
 static constexpr Register64 CmpXchgOld64 =
-  Register64(CmpXchgOldHi, CmpXchgOldLo);
+    Register64(CmpXchgOldHi, CmpXchgOldLo);
 static constexpr Register CmpXchgNewLo = IntArgReg2;
 static constexpr Register CmpXchgNewHi = IntArgReg3;
 static constexpr Register64 CmpXchgNew64 =
-  Register64(CmpXchgNewHi, CmpXchgNewLo);
+    Register64(CmpXchgNewHi, CmpXchgNewLo);
 static constexpr Register CmpXchgOutLo = IntArgReg0;
 static constexpr Register CmpXchgOutHi = IntArgReg1;
 
@@ -113,7 +113,7 @@ static constexpr Register XchgOutHi = IntArgReg1;
 static constexpr Register FetchOpValLo = r4;
 static constexpr Register FetchOpValHi = r5;
 static constexpr Register64 FetchOpVal64 =
-  Register64(FetchOpValHi, FetchOpValLo);
+    Register64(FetchOpValHi, FetchOpValLo);
 static constexpr Register FetchOpTmpLo = IntArgReg2;
 static constexpr Register FetchOpTmpHi = IntArgReg3;
 static constexpr Register FetchOpOutLo = IntArgReg0;

@@ -89,15 +89,11 @@ class CrossCompartmentKey {
       explicit WrappedMatcher(F f) : f_(f) {}
       auto match(JSObject*& obj) { return f_(&obj); }
       auto match(JSString*& str) { return f_(&str); }
-      auto match(DebuggerAndScript& tpl) {
-        return f_(&mozilla::Get<1>(tpl));
-      }
+      auto match(DebuggerAndScript& tpl) { return f_(&mozilla::Get<1>(tpl)); }
       auto match(DebuggerAndLazyScript& tpl) {
         return f_(&mozilla::Get<1>(tpl));
       }
-      auto match(DebuggerAndObject& tpl) {
-        return f_(&mozilla::Get<1>(tpl));
-      }
+      auto match(DebuggerAndObject& tpl) { return f_(&mozilla::Get<1>(tpl)); }
     } matcher(f);
     return wrapped.match(matcher);
   }

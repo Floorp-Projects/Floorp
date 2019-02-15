@@ -38,9 +38,9 @@ class RenderCompositorEGL : public RenderCompositor {
   LayoutDeviceIntSize GetBufferSize() override;
 
  protected:
-   static already_AddRefed<gl::GLContext> CreateGLContext(
+  static already_AddRefed<gl::GLContext> CreateGLContext(
       RefPtr<widget::CompositorWidget> aWidget);
-   static EGLSurface CreateEGLSurface(widget::CompositorWidget* aWidget);
+  static EGLSurface CreateEGLSurface(widget::CompositorWidget* aWidget);
 
   void DestroyEGLSurface();
 

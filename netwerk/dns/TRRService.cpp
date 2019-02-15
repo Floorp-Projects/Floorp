@@ -318,9 +318,9 @@ TRRService::Observe(nsISupports *aSubject, const char *aTopic,
     nsAutoCString data = NS_ConvertUTF16toUTF8(aData);
     LOG(("TRRservice captive portal was %s\n", data.get()));
     if (!mTRRBLStorage) {
-     // We need a lock if we modify mTRRBLStorage variable because it is
-     // access off the main thread as well.
-     MutexAutoLock lock(mLock);
+      // We need a lock if we modify mTRRBLStorage variable because it is
+      // access off the main thread as well.
+      MutexAutoLock lock(mLock);
       mTRRBLStorage = DataStorage::Get(DataStorageClass::TRRBlacklist);
       if (mTRRBLStorage) {
         bool storageWillPersist = true;
@@ -379,7 +379,8 @@ void TRRService::MaybeConfirm_locked() {
   } else {
     LOG(("TRRService starting confirmation test %s %s\n", mPrivateURI.get(),
          mConfirmationNS.get()));
-    mConfirmer = new TRR(this, mConfirmationNS, TRRTYPE_NS, EmptyCString(), false);
+    mConfirmer =
+        new TRR(this, mConfirmationNS, TRRTYPE_NS, EmptyCString(), false);
     NS_DispatchToMainThread(mConfirmer);
   }
 }
@@ -625,8 +626,8 @@ AHostResolver::LookupStatus TRRService::CompleteLookup(
       MutexAutoLock lock(mLock);
       MOZ_ASSERT(mConfirmer);
       mConfirmationState = NS_SUCCEEDED(status) ? CONFIRM_OK : CONFIRM_FAILED;
-      LOG(("TRRService finishing confirmation test %s %d %X\n", mPrivateURI.get(),
-           (int)mConfirmationState, (unsigned int)status));
+      LOG(("TRRService finishing confirmation test %s %d %X\n",
+           mPrivateURI.get(), (int)mConfirmationState, (unsigned int)status));
       mConfirmer = nullptr;
     }
     if (mConfirmationState == CONFIRM_FAILED) {

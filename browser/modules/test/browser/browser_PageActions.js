@@ -1464,7 +1464,7 @@ add_task(async function contextMenu() {
   // urlbar tests that run after this one can break if the mouse is left over
   // the area where the urlbar popup appears, which seems to happen due to the
   // above synthesized mouse events.  Move it over the urlbar.
-  EventUtils.synthesizeMouseAtCenter(gURLBar, { type: "mousemove" });
+  EventUtils.synthesizeMouseAtCenter(gURLBar.inputField, { type: "mousemove" });
   gURLBar.focus();
 });
 

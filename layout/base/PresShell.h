@@ -616,6 +616,16 @@ class PresShell final : public nsIPresShell,
       }
       nsIContent* GetFrameContent() const;
 
+      /**
+       * MaybeRetargetToActiveDocument() tries retarget aGUIEvent into
+       * active document if there is.  Note that this does not support to
+       * retarget mContent.  Make sure it is nullptr before calling this.
+       *
+       * @param aGUIEvent       The handling event.
+       * @return                true if retargetted.
+       */
+      bool MaybeRetargetToActiveDocument(WidgetGUIEvent* aGUIEvent);
+
       RefPtr<PresShell> mPresShell;
       nsIFrame* mFrame;
       nsCOMPtr<nsIContent> mContent;

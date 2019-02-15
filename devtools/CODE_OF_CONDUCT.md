@@ -48,7 +48,7 @@ point of contact for the medium in which you're communicating:
   have an "@" in front of their names);
 * Bugzilla and the dev-developer-tools mailing list, contact
   [inclusion@mozilla.com](mailto:inclusion@mozilla.com);
-* The debugger.html repository on GitHub has [its own code of conduct](https://github.com/devtools-html/debugger.html/blob/master/CODE_OF_CONDUCT.md), but you can also
+* The debugger.html repository on GitHub has [its own code of conduct](https://github.com/firefox-devtools/debugger.html/blob/master/CODE_OF_CONDUCT.md), but you can also
   email [inclusion@mozilla.com](mailto:inclusion@mozilla.com).
 
 Remarks that violate these standards of conduct, including hateful,

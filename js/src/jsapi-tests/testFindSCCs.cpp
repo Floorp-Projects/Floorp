@@ -18,7 +18,6 @@ using js::gc::GraphNodeBase;
 
 struct TestNode : public GraphNodeBase<TestNode> {
   unsigned index;
-
 };
 
 using TestComponentFinder = ComponentFinder<TestNode>;

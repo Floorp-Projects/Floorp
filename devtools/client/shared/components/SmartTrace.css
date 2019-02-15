@@ -123,7 +123,7 @@
 .frames .img.annotation-logo {
   /* FIXME: In order to display the Framework icons, we need to find a way to share CSS
    * from the debugger, where the background images are defined.
-   * See https://github.com/devtools-html/debugger.html/issues/7782.
+   * See https://github.com/firefox-devtools/debugger.html/issues/7782.
    */
   display: none;
   /*

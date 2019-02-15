@@ -82,6 +82,16 @@ var UrlbarTestUtils = {
   },
 
   /**
+   * Returns true if the oneOffSearchButtons are visible.
+   * @param {object} win The window containing the urlbar
+   * @returns {boolena} True if the buttons are visible.
+   */
+  getOneOffSearchButtonsVisible(win) {
+    let urlbar = getUrlbarAbstraction(win);
+    return urlbar.oneOffSearchButtonsVisible;
+  },
+
+  /**
    * Gets an abstracted rapresentation of the result at an index.
    * @param {object} win The window containing the urlbar
    * @param {number} index The index to look for
@@ -109,6 +119,16 @@ var UrlbarTestUtils = {
   getSelectedIndex(win) {
     let urlbar = getUrlbarAbstraction(win);
     return urlbar.getSelectedIndex();
+  },
+
+  /**
+   * Selects the item at the index specified.
+   * @param {object} win The window containing the urlbar.
+   * @param {index} index The index to select.
+   */
+  setSelectedIndex(win, index) {
+    let urlbar = getUrlbarAbstraction(win);
+    urlbar.setSelectedIndex(index);
   },
 
   /**
@@ -252,6 +272,14 @@ class UrlbarAbstraction {
            this.urlbar.popup.oneOffSearchButtons;
   }
 
+  get oneOffSearchButtonsVisible() {
+    if (!this.quantumbar) {
+      return this.window.getComputedStyle(this.oneOffSearchButtons.container).display != "none";
+    }
+
+    return this.oneOffSearchButtons.style.display != "none";
+  }
+
   startSearch(text) {
     if (this.quantumbar) {
       this.urlbar.value = text;
@@ -306,6 +334,13 @@ class UrlbarAbstraction {
   getSelectedIndex() {
     return this.quantumbar ? this.urlbar.view.selectedIndex
                            : this.panel.selectedIndex;
+  }
+
+  setSelectedIndex(index) {
+    if (!this.quantumbar) {
+      return this.panel.selectedIndex = index;
+    }
+    return this.urlbar.view.selectedIndex;
   }
 
   getResultCount() {

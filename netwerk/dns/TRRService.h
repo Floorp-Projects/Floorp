@@ -90,9 +90,9 @@ class TRRService : public nsIObserver,
       mDisableAfterFails;  // this many fails in a row means failed TRR service
 
   // TRR Blacklist storage
-  // mTRRBLStorage is only modified on the main thread, but we query whether it is initialized or not
-  // off the main thread as well. Therefore we need to lock while creating it and while accessing it
-  // off the main thread.
+  // mTRRBLStorage is only modified on the main thread, but we query whether it
+  // is initialized or not off the main thread as well. Therefore we need to
+  // lock while creating it and while accessing it off the main thread.
   RefPtr<DataStorage> mTRRBLStorage;
   Atomic<bool, Relaxed> mClearTRRBLStorage;
 

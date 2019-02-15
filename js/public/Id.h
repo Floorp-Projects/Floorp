@@ -228,7 +228,12 @@ auto MapGCThingTyped(const jsid& id, F&& f) {
 // pointer. Return whether this happened.
 template <typename F>
 bool ApplyGCThingTyped(const jsid& id, F&& f) {
-  return MapGCThingTyped(id, [&f](auto t) { f(t); return true; }).isSome();
+  return MapGCThingTyped(id,
+                         [&f](auto t) {
+                           f(t);
+                           return true;
+                         })
+      .isSome();
 }
 
 #undef id

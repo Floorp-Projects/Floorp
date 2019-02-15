@@ -34,11 +34,10 @@ namespace dom {
  **/
 class ReferrerInfo : public nsIReferrerInfo {
  public:
-  ReferrerInfo () = default;
+  ReferrerInfo() = default;
   explicit ReferrerInfo(nsIURI* aOriginalReferrer,
                         uint32_t aPolicy = mozilla::net::RP_Unset,
                         bool aSendReferrer = true);
-
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIREFERRERINFO

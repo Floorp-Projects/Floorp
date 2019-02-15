@@ -3541,8 +3541,9 @@ void profiler_unregister_thread() {
 
 void profiler_register_page(const nsID& aDocShellId, uint32_t aHistoryId,
                             const nsCString& aUrl, bool aIsSubFrame) {
-  DEBUG_LOG("profiler_register_page(%s, %u, %s, %d)", aDocShellId.ToString(),
-            aHistoryId, aUrl.get(), aIsSubFrame);
+  DEBUG_LOG("profiler_register_page(%s, %u, %s, %d)",
+            nsIDToCString(aDocShellId).get(), aHistoryId, aUrl.get(),
+            aIsSubFrame);
 
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 

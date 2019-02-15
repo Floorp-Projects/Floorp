@@ -306,12 +306,14 @@ already_AddRefed<GLContext> GLContextEGLFactory::Create(
   }
 
   MOZ_ASSERT(aCompositorWidget);
-  EGLNativeWindowType window = GET_NATIVE_WINDOW_FROM_COMPOSITOR_WIDGET(aCompositorWidget);
+  EGLNativeWindowType window =
+      GET_NATIVE_WINDOW_FROM_COMPOSITOR_WIDGET(aCompositorWidget);
   if (!window) {
     gfxCriticalNote << "window is null";
     return EGL_NO_SURFACE;
   }
-  const bool useWebRender = aCompositorWidget->GetCompositorOptions().UseWebRender();
+  const bool useWebRender =
+      aCompositorWidget->GetCompositorOptions().UseWebRender();
 
   EGLConfig config;
   if (!CreateConfig(&config, useWebRender)) {

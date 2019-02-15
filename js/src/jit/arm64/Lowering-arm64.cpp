@@ -432,8 +432,9 @@ void LIRGenerator::visitCompareExchangeTypedArrayElement(
     outTemp = temp();
   }
 
-  LCompareExchangeTypedArrayElement* lir = new (alloc())
-      LCompareExchangeTypedArrayElement(elements, index, oldval, newval, outTemp);
+  LCompareExchangeTypedArrayElement* lir =
+      new (alloc()) LCompareExchangeTypedArrayElement(elements, index, oldval,
+                                                      newval, outTemp);
 
   define(lir, ins);
 }

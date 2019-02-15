@@ -4030,9 +4030,8 @@ static bool InCrossCompartmentMap(JSObject* src, JS::GCCellPtr dst) {
 }
 
 void CompartmentCheckTracer::onChild(const JS::GCCellPtr& thing) {
-  Compartment* comp = MapGCThingTyped(thing, [](auto t) {
-    return t->maybeCompartment();
-  });
+  Compartment* comp =
+      MapGCThingTyped(thing, [](auto t) { return t->maybeCompartment(); });
   if (comp && compartment) {
     MOZ_ASSERT(comp == compartment ||
                (srcKind == JS::TraceKind::Object &&
@@ -4059,9 +4058,8 @@ void GCRuntime::checkForCompartmentMismatches() {
            i.next()) {
         trc.src = i.getCell();
         trc.srcKind = MapAllocToTraceKind(thingKind);
-        trc.compartment = MapGCThingTyped(trc.src, trc.srcKind, [](auto t) {
-          return t->maybeCompartment();
-        });
+        trc.compartment = MapGCThingTyped(
+            trc.src, trc.srcKind, [](auto t) { return t->maybeCompartment(); });
         js::TraceChildren(&trc, trc.src, trc.srcKind);
       }
     }
@@ -4848,9 +4846,8 @@ bool Compartment::findSweepGroupEdges() {
       continue;
     }
 
-    Zone* target = key.applyToWrapped([](auto tp) {
-      return (*tp)->asTenured().zone();
-    });
+    Zone* target =
+        key.applyToWrapped([](auto tp) { return (*tp)->asTenured().zone(); });
     if (!target->isGCMarking()) {
       continue;
     }
@@ -7405,8 +7402,7 @@ bool GCRuntime::shouldCollectNurseryForSlice(bool nonincrementalByAPI,
       return true;
     case State::Mark:
       return (nonincrementalByAPI || budget.isUnlimited() || lastMarkSlice ||
-              nursery().shouldCollect() ||
-              hasIncrementalTwoSliceZealMode());
+              nursery().shouldCollect() || hasIncrementalTwoSliceZealMode());
     case State::Finish:
       return false;
     case State::MarkRoots:

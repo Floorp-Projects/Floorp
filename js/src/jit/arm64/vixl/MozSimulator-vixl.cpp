@@ -683,7 +683,12 @@ Simulator::VisitCallRedirection(const Instruction* instr)
       MOZ_CRASH("Unknown function type.");
   }
 
-  // TODO: Nuke the volatile registers.
+  // Nuke the volatile registers. x0-x7 are used as result registers, but except
+  // for x0, none are used in the above signatures.
+  for (int i = 1; i <= 18; i++) {
+    // Code feed 1 bad data
+    set_xreg(i, int64_t(0xc0defeed1badda7a));
+  }
 
   // Assert that callee-saved registers are unchanged.
   VIXL_ASSERT(xreg(19) == x19);

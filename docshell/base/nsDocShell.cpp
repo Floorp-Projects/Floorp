@@ -8656,9 +8656,9 @@ nsresult nsDocShell::PerformRetargeting(nsDocShellLoadState* aLoadState,
   if ((!targetDocShell || targetDocShell == static_cast<nsIDocShell*>(this))) {
     bool handled;
     rv = MaybeHandleLoadDelegate(aLoadState,
-                                 targetDocShell ?
-                                 nsIBrowserDOMWindow::OPEN_CURRENTWINDOW :
-                                 nsIBrowserDOMWindow::OPEN_NEWWINDOW,
+                                 targetDocShell
+                                     ? nsIBrowserDOMWindow::OPEN_CURRENTWINDOW
+                                     : nsIBrowserDOMWindow::OPEN_NEWWINDOW,
                                  &handled);
     if (NS_FAILED(rv)) {
       return rv;
@@ -8687,7 +8687,7 @@ nsresult nsDocShell::PerformRetargeting(nsDocShellLoadState* aLoadState,
     Document* doc = mContentViewer->GetDocument();
 
     const bool isDocumentAuxSandboxed =
-      doc && (doc->GetSandboxFlags() & SANDBOXED_AUXILIARY_NAVIGATION);
+        doc && (doc->GetSandboxFlags() & SANDBOXED_AUXILIARY_NAVIGATION);
 
     if (isDocumentAuxSandboxed) {
       return NS_ERROR_DOM_INVALID_ACCESS_ERR;
@@ -12993,39 +12993,21 @@ nsDocShell::SetOriginAttributesBeforeLoading(
 }
 
 NS_IMETHODIMP
-nsDocShell::ResumeRedirectedLoad(uint64_t aIdentifier, int32_t aHistoryIndex) {
+nsDocShell::ResumeRedirectedLoad(uint64_t aIdentifier) {
   RefPtr<nsDocShell> self = this;
   RefPtr<ChildProcessChannelListener> cpcl =
       ChildProcessChannelListener::GetSingleton();
 
   // Call into InternalLoad with the pending channel when it is received.
-  cpcl->RegisterCallback(
-      aIdentifier, [self, aHistoryIndex](nsIChildChannel* aChannel) {
-        RefPtr<nsDocShellLoadState> loadState;
-        nsresult rv = nsDocShellLoadState::CreateFromPendingChannel(
-            aChannel, getter_AddRefs(loadState));
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return;
-        }
-
-        // If we're performing a history load, locate the correct history entry,
-        // and set the relevant bits on our loadState.
-        if (aHistoryIndex >= 0) {
-          nsCOMPtr<nsISHistory> legacySHistory =
-              self->mSessionHistory->LegacySHistory();
-
-          nsCOMPtr<nsISHEntry> entry;
-          rv = legacySHistory->GetEntryAtIndex(aHistoryIndex,
-                                               getter_AddRefs(entry));
-          if (NS_SUCCEEDED(rv)) {
-            legacySHistory->InternalSetRequestedIndex(aHistoryIndex);
-            loadState->SetLoadType(LOAD_HISTORY);
-            loadState->SetSHEntry(entry);
-          }
-        }
-
-        self->InternalLoad(loadState, nullptr, nullptr);
-      });
+  cpcl->RegisterCallback(aIdentifier, [self](nsIChildChannel* aChannel) {
+    RefPtr<nsDocShellLoadState> loadState;
+    nsresult rv = nsDocShellLoadState::CreateFromPendingChannel(
+        aChannel, getter_AddRefs(loadState));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return;
+    }
+    self->InternalLoad(loadState, nullptr, nullptr);
+  });
   return NS_OK;
 }
 

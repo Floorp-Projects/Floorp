@@ -108,15 +108,13 @@ void VRService::Start() {
   // to OpenMutex when there is no GPU process to create
   // VRSystemManagerExternal and its mutex.
   if (!mMutex && !XRE_IsParentProcess()) {
-     mMutex = OpenMutex(
-        MUTEX_ALL_ACCESS,       // request full access
-        false,                  // handle not inheritable
-        TEXT("mozilla::vr::ShmemMutex"));  // object name
+    mMutex = OpenMutex(MUTEX_ALL_ACCESS,  // request full access
+                       false,             // handle not inheritable
+                       TEXT("mozilla::vr::ShmemMutex"));  // object name
 
     if (mMutex == NULL) {
       nsAutoCString msg;
-      msg.AppendPrintf("VRService OpenMutex error \"%lu\".",
-                       GetLastError());
+      msg.AppendPrintf("VRService OpenMutex error \"%lu\".", GetLastError());
       NS_WARNING(msg.get());
       MOZ_ASSERT(false);
     }
@@ -461,12 +459,12 @@ void VRService::PushState(const mozilla::gfx::VRSystemState& aState) {
   }
 #else
   bool state = true;
-#if defined(XP_WIN)
+#  if defined(XP_WIN)
   if (!XRE_IsParentProcess()) {
     WaitForMutex lock(mMutex);
     state = lock.GetStatus();
   }
-#endif  // defined(XP_WIN)
+#  endif  // defined(XP_WIN)
   if (state) {
     mAPIShmem->generationA++;
     memcpy((void*)&mAPIShmem->state, &aState, sizeof(VRSystemState));
@@ -496,12 +494,12 @@ void VRService::PullState(mozilla::gfx::VRBrowserState& aState) {
   }
 #else
   bool status = true;
-#if defined(XP_WIN)
+#  if defined(XP_WIN)
   if (!XRE_IsParentProcess()) {
     WaitForMutex lock(mMutex);
     status = lock.GetStatus();
   }
-#endif  // defined(XP_WIN)
+#  endif  // defined(XP_WIN)
   if (status) {
     VRExternalShmem tmp;
     if (mAPIShmem->geckoGenerationA != mBrowserGeneration) {

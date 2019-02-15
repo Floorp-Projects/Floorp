@@ -143,7 +143,12 @@ auto MapGCThingTyped(const TaggedProto& proto, F&& f) {
 
 template <typename F>
 bool ApplyGCThingTyped(const TaggedProto& proto, F&& f) {
-  return MapGCThingTyped(proto, [&f](auto t) { f(t); return true; }).isSome();
+  return MapGCThingTyped(proto,
+                         [&f](auto t) {
+                           f(t);
+                           return true;
+                         })
+      .isSome();
 }
 
 // Since JSObject pointers are either nullptr or a valid object and since the

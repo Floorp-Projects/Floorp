@@ -277,7 +277,6 @@ class ComputedStyle {
   void AddSizeOfIncludingThis(nsWindowSizes& aSizes, size_t* aCVsSize) const;
 
  protected:
-
   // Needs to be friend so that it can call the destructor without making it
   // public.
   friend void ::Gecko_ComputedStyle_Destroy(ComputedStyle*);

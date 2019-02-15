@@ -11,7 +11,7 @@ const ROOT = `http://localhost:${server.identity.primaryPort}`;
 const BASE = `${ROOT}/`;
 const HEADLESS_URL = `${BASE}/headless.html`;
 const HEADLESS_BUTTON_URL = `${BASE}/headless_button.html`;
-registerCleanupFunction(() => { server.stop(() => {})});
+registerCleanupFunction(() => { server.stop(() => {}); });
 
 // Refrences to the progress listeners to keep them from being gc'ed
 // before they are called.
@@ -27,7 +27,7 @@ function loadContentWindow(windowlessBrowser, uri) {
     let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                       .getInterface(Ci.nsIWebProgress);
     let progressListener = {
-      onLocationChange: function (progress, request, location, flags) {
+      onLocationChange(progress, request, location, flags) {
         // Ignore inner-frame events
         if (progress != webProgress) {
           return;
@@ -44,7 +44,7 @@ function loadContentWindow(windowlessBrowser, uri) {
         }, { once: true });
       },
       QueryInterface: ChromeUtils.generateQI(["nsIWebProgressListener",
-                                             "nsISupportsWeakReference"])
+                                             "nsISupportsWeakReference"]),
     };
     progressListeners.set(progressListener, progressListener);
     webProgress.addProgressListener(progressListener,
@@ -63,8 +63,8 @@ add_task(async function test_snapshot() {
   equal(contentWindow.innerHeight, contentHeight);
 
   // Snapshot the test page.
-  let canvas = contentWindow.document.createElementNS('http://www.w3.org/1999/xhtml', 'html:canvas');
-  let context = canvas.getContext('2d');
+  let canvas = contentWindow.document.createElementNS("http://www.w3.org/1999/xhtml", "html:canvas");
+  let context = canvas.getContext("2d");
   let width = contentWindow.innerWidth;
   let height = contentWindow.innerHeight;
   canvas.width = width;
@@ -75,7 +75,7 @@ add_task(async function test_snapshot() {
     0,
     width,
     height,
-    'rgb(255, 255, 255)'
+    "rgb(255, 255, 255)"
   );
   let imageData = context.getImageData(0, 0, width, height).data;
   ok(imageData[0] === 0 && imageData[1] === 255 && imageData[2] === 0 && imageData[3] === 255, "Page is green.");
@@ -106,8 +106,8 @@ add_task(async function test_snapshot_widget_layers() {
   equal(contentWindow.innerHeight, contentHeight);
 
   // Snapshot the test page.
-  let canvas = contentWindow.document.createElementNS('http://www.w3.org/1999/xhtml', 'html:canvas');
-  let context = canvas.getContext('2d');
+  let canvas = contentWindow.document.createElementNS("http://www.w3.org/1999/xhtml", "html:canvas");
+  let context = canvas.getContext("2d");
   let width = contentWindow.innerWidth;
   let height = contentWindow.innerHeight;
   canvas.width = width;
@@ -118,7 +118,7 @@ add_task(async function test_snapshot_widget_layers() {
     0,
     width,
     height,
-    'rgb(255, 255, 255)',
+    "rgb(255, 255, 255)",
     context.DRAWWINDOW_DRAW_CARET | context.DRAWWINDOW_DRAW_VIEW | context.DRAWWINDOW_USE_WIDGET_LAYERS
   );
   ok(true, "Snapshot with widget layers didn't crash.");
@@ -136,7 +136,7 @@ add_task(async function test_keydown() {
     contentWindow.addEventListener("keydown", () => {
       resolve();
     }, { once: true });
-  })
+  });
 
   let tip = Cc["@mozilla.org/text-input-processor;1"]
             .createInstance(Ci.nsITextInputProcessor);
@@ -158,7 +158,7 @@ add_task(async function test_mouse_drag() {
   let contentWindow = await loadContentWindow(windowlessBrowser, HEADLESS_BUTTON_URL);
   contentWindow.resizeTo(400, 400);
 
-  let target = contentWindow.document.getElementById('btn');
+  let target = contentWindow.document.getElementById("btn");
   let rect = target.getBoundingClientRect();
   let left = rect.left;
   let top = rect.top;
@@ -168,7 +168,7 @@ add_task(async function test_mouse_drag() {
   utils.sendMouseEvent("mousemove", left, top, 0, 1, 0, false, 0, 0);
   // Wait for a turn of the event loop since the synthetic mouse event
   // that creates the drag service is processed during the refresh driver.
-  await new Promise((r) => {executeSoon(r)});
+  await new Promise((r) => { executeSoon(r); });
   utils.sendMouseEvent("mouseup", left, top, 0, 1, 0, false, 0, 0);
 
   ok(true, "Send mouse event didn't crash");

@@ -327,7 +327,8 @@ void WinCompositorWidget::UpdateCompositorWndSizeIfNecessary() {
   }
 
   // Force a resize and redraw (but not a move, activate, etc.).
-  if (!::SetWindowPos(mCompositorWnds.mCompositorWnd, nullptr, 0, 0, size.width, size.height,
+  if (!::SetWindowPos(mCompositorWnds.mCompositorWnd, nullptr, 0, 0, size.width,
+                      size.height,
                       SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOCOPYBITS |
                           SWP_NOOWNERZORDER | SWP_NOZORDER)) {
     return;
