@@ -58,7 +58,7 @@ use internal_types::{CacheTextureId, DebugOutput, FastHashMap, LayerIndex, Rende
 use internal_types::{TextureCacheAllocationKind, TextureCacheUpdate, TextureUpdateList, TextureUpdateSource};
 use internal_types::{RenderTargetInfo, SavedTargetIndex};
 use malloc_size_of::MallocSizeOfOps;
-use picture::RecordedDirtyRegion;
+use picture::{RecordedDirtyRegion, TileCache};
 use prim_store::DeferredResolve;
 use profiler::{BackendProfileCounters, FrameProfileCounters, TimeProfileCounter,
                GpuProfileTag, RendererProfileCounters, RendererProfileTimers};
@@ -1931,6 +1931,7 @@ impl Renderer {
             let texture_cache = TextureCache::new(
                 max_texture_size,
                 max_texture_layers,
+                TileCache::tile_dimensions(config.testing),
             );
 
             let resource_cache = ResourceCache::new(
@@ -2850,7 +2851,6 @@ impl Renderer {
                                 if self.debug_flags.contains(DebugFlags::TEXTURE_CACHE_DBG) {
                                     self.clear_texture(&texture, TEXTURE_CACHE_DBG_CLEAR_COLOR);
                                 }
-
                             }
 
                             let old = self.texture_resolver.texture_cache_map.insert(allocation.id, texture);

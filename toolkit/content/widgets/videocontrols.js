@@ -1559,6 +1559,10 @@ this.VideoControlsImplWidget = class {
       },
 
       get isClosedCaptionAvailable() {
+        // There is no rendering area, no need to show the caption.
+        if (!this.video.videoWidth || !this.video.videoHeight) {
+          return false;
+        }
         return this.overlayableTextTracks.length;
       },
 

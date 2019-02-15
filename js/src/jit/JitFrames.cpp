@@ -1500,11 +1500,9 @@ static Value FromSymbolPayload(uintptr_t payload) {
   return SymbolValue(reinterpret_cast<JS::Symbol*>(payload));
 }
 
-#ifdef ENABLE_BIGINT
 static Value FromBigIntPayload(uintptr_t payload) {
   return BigIntValue(reinterpret_cast<JS::BigInt*>(payload));
 }
-#endif
 
 static Value FromTypedPayload(JSValueType type, uintptr_t payload) {
   switch (type) {
@@ -1516,10 +1514,8 @@ static Value FromTypedPayload(JSValueType type, uintptr_t payload) {
       return FromStringPayload(payload);
     case JSVAL_TYPE_SYMBOL:
       return FromSymbolPayload(payload);
-#ifdef ENABLE_BIGINT
     case JSVAL_TYPE_BIGINT:
       return FromBigIntPayload(payload);
-#endif
     case JSVAL_TYPE_OBJECT:
       return FromObjectPayload(payload);
     default:
@@ -1616,10 +1612,8 @@ Value SnapshotIterator::allocationValue(const RValueAllocation& alloc,
           return FromStringPayload(fromStack(alloc.stackOffset2()));
         case JSVAL_TYPE_SYMBOL:
           return FromSymbolPayload(fromStack(alloc.stackOffset2()));
-#ifdef ENABLE_BIGINT
         case JSVAL_TYPE_BIGINT:
           return FromBigIntPayload(fromStack(alloc.stackOffset2()));
-#endif
         case JSVAL_TYPE_OBJECT:
           return FromObjectPayload(fromStack(alloc.stackOffset2()));
         default:
@@ -1741,9 +1735,7 @@ void SnapshotIterator::writeAllocationValuePayload(
           break;
         case JSVAL_TYPE_STRING:
         case JSVAL_TYPE_SYMBOL:
-#ifdef ENABLE_BIGINT
         case JSVAL_TYPE_BIGINT:
-#endif
         case JSVAL_TYPE_OBJECT:
           WriteFrameSlot(fp_, alloc.stackOffset2(), uintptr_t(v.toGCThing()));
           break;

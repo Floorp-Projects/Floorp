@@ -70,8 +70,6 @@ def GCC_BASE(version):
         '__GNUC_MINOR__': version.minor,
         '__GNUC_PATCHLEVEL__': version.patch,
         '__STDC__': 1,
-        '__ORDER_LITTLE_ENDIAN__': 1234,
-        '__ORDER_BIG_ENDIAN__': 4321,
     })
 
 
@@ -102,10 +100,14 @@ DEFAULT_GCC = GCC_6
 DEFAULT_GXX = GXX_6
 
 GCC_PLATFORM_LITTLE_ENDIAN = {
+    '__ORDER_LITTLE_ENDIAN__': 1234,
+    '__ORDER_BIG_ENDIAN__': 4321,
     '__BYTE_ORDER__': 1234,
 }
 
 GCC_PLATFORM_BIG_ENDIAN = {
+    '__ORDER_LITTLE_ENDIAN__': 1234,
+    '__ORDER_BIG_ENDIAN__': 4321,
     '__BYTE_ORDER__': 4321,
 }
 
@@ -234,14 +236,6 @@ def VS(version):
     })
 
 
-VS_2013u2 = VS('18.00.30501')
-VS_2013u3 = VS('18.00.30723')
-VS_2015 = VS('19.00.23026')
-VS_2015u1 = VS('19.00.23506')
-VS_2015u2 = VS('19.00.23918')
-VS_2015u3 = VS('19.00.24213')
-VS_2017u4 = VS('19.11.25547')
-VS_2017u6 = VS('19.13.26128')
 VS_2017u8 = VS('19.15.26726')
 
 VS_PLATFORM_X86 = {
@@ -265,8 +259,10 @@ CLANG_CL_3_9 = (CLANG_BASE('3.9.0') + VS('18.00.00000') + DEFAULT_C11 +
     },
 }
 
-CLANG_CL_PLATFORM_X86 = FakeCompiler(VS_PLATFORM_X86, GCC_PLATFORM_X86[None])
-CLANG_CL_PLATFORM_X86_64 = FakeCompiler(VS_PLATFORM_X86_64, GCC_PLATFORM_X86_64[None])
+CLANG_CL_PLATFORM_X86 = FakeCompiler(
+    VS_PLATFORM_X86, GCC_PLATFORM_X86[None], GCC_PLATFORM_LITTLE_ENDIAN)
+CLANG_CL_PLATFORM_X86_64 = FakeCompiler(
+    VS_PLATFORM_X86_64, GCC_PLATFORM_X86_64[None], GCC_PLATFORM_LITTLE_ENDIAN)
 
 LIBRARY_NAME_INFOS = {
     'linux-gnu': {
@@ -385,7 +381,7 @@ class BaseToolchainTest(BaseConfigureTest):
         target_os = getattr(self, 'TARGET', self.HOST).split('-', 2)[2]
         if target_os == 'mingw32':
             compiler_type = sandbox._value_for(sandbox['c_compiler']).type
-            if compiler_type in ('msvc', 'clang-cl'):
+            if compiler_type == 'clang-cl':
                 target_os = 'msvc'
         elif target_os == 'linux-gnuabi64':
             target_os = 'linux-gnu'
@@ -874,14 +870,6 @@ class WindowsToolchainTest(BaseToolchainTest):
     # For the purpose of this test, it doesn't matter that the paths are not
     # real Windows paths.
     PATHS = {
-        '/opt/VS_2013u2/bin/cl': VS_2013u2 + VS_PLATFORM_X86,
-        '/opt/VS_2013u3/bin/cl': VS_2013u3 + VS_PLATFORM_X86,
-        '/opt/VS_2015/bin/cl': VS_2015 + VS_PLATFORM_X86,
-        '/opt/VS_2015u1/bin/cl': VS_2015u1 + VS_PLATFORM_X86,
-        '/opt/VS_2015u2/bin/cl': VS_2015u2 + VS_PLATFORM_X86,
-        '/opt/VS_2015u3/bin/cl': VS_2015u3 + VS_PLATFORM_X86,
-        '/opt/VS_2017u4/bin/cl': VS_2017u4 + VS_PLATFORM_X86,
-        '/opt/VS_2017u6/bin/cl': VS_2017u6 + VS_PLATFORM_X86,
         '/usr/bin/cl': VS_2017u8 + VS_PLATFORM_X86,
         '/usr/bin/clang-cl': CLANG_CL_3_9 + CLANG_CL_PLATFORM_X86,
         '/usr/bin/gcc': DEFAULT_GCC + GCC_PLATFORM_X86_WIN,
@@ -900,32 +888,6 @@ class WindowsToolchainTest(BaseToolchainTest):
         '/usr/bin/clang++-3.3': CLANGXX_3_3 + CLANG_PLATFORM_X86_WIN,
     }
 
-    VS_FAILURE_MESSAGE = (
-        'This version (%s) of the MSVC compiler is not supported.\nYou must'
-        ' install Visual C++ 2017 Update 8 or later in order to build.\n'
-        'See https://developer.mozilla.org/en/Windows_Build_Prerequisites')
-    VS_2013u2_RESULT = VS_FAILURE_MESSAGE % '18.00.30501'
-    VS_2013u3_RESULT = VS_FAILURE_MESSAGE % '18.00.30723'
-    VS_2015_RESULT = VS_FAILURE_MESSAGE % '19.00.23026'
-    VS_2015u1_RESULT = VS_FAILURE_MESSAGE % '19.00.23506'
-    VS_2015u2_RESULT = VS_FAILURE_MESSAGE % '19.00.23918'
-    VS_2015u3_RESULT = VS_FAILURE_MESSAGE % '19.00.24213'
-    VS_2017u4_RESULT = VS_FAILURE_MESSAGE % '19.11.25547'
-    VS_2017u6_RESULT = VS_FAILURE_MESSAGE % '19.13.26128'
-    VS_2017u8_RESULT = CompilerResult(
-        flags=[],
-        version='19.15.26726',
-        type='msvc',
-        compiler='/usr/bin/cl',
-        language='C',
-    )
-    VSXX_2017u8_RESULT = CompilerResult(
-        flags=[],
-        version='19.15.26726',
-        type='msvc',
-        compiler='/usr/bin/cl',
-        language='C++',
-    )
     CLANG_CL_3_9_RESULT = CompilerResult(
         version='3.9.0',
         flags=['-Xclang', '-std=gnu99'],
@@ -953,65 +915,11 @@ class WindowsToolchainTest(BaseToolchainTest):
     DEFAULT_GCC_RESULT = LinuxToolchainTest.DEFAULT_GCC_RESULT
     DEFAULT_GXX_RESULT = LinuxToolchainTest.DEFAULT_GXX_RESULT
 
-    # VS2017u6 or greater is required.
-    def test_msvc(self):
-        # We'll pick msvc if clang-cl can't be found.
-        paths = {
-            k: v for k, v in self.PATHS.iteritems()
-            if os.path.basename(k) != 'clang-cl'
-        }
-        self.do_toolchain_test(paths, {
-            'c_compiler': self.VS_2017u8_RESULT,
-            'cxx_compiler': self.VSXX_2017u8_RESULT,
-        })
-
     def test_unsupported_msvc(self):
         self.do_toolchain_test(self.PATHS, {
-            'c_compiler': self.VS_2017u6_RESULT,
+            'c_compiler': 'Unknown compiler or compiler not supported.'
         }, environ={
-            'CC': '/opt/VS_2017u6/bin/cl',
-        })
-
-        self.do_toolchain_test(self.PATHS, {
-            'c_compiler': self.VS_2017u4_RESULT,
-        }, environ={
-            'CC': '/opt/VS_2017u4/bin/cl',
-        })
-
-        self.do_toolchain_test(self.PATHS, {
-            'c_compiler': self.VS_2015u3_RESULT,
-        }, environ={
-            'CC': '/opt/VS_2015u3/bin/cl',
-        })
-
-        self.do_toolchain_test(self.PATHS, {
-            'c_compiler': self.VS_2015u2_RESULT,
-        }, environ={
-            'CC': '/opt/VS_2015u2/bin/cl',
-        })
-
-        self.do_toolchain_test(self.PATHS, {
-            'c_compiler': self.VS_2015u1_RESULT,
-        }, environ={
-            'CC': '/opt/VS_2015u1/bin/cl',
-        })
-
-        self.do_toolchain_test(self.PATHS, {
-            'c_compiler': self.VS_2015_RESULT,
-        }, environ={
-            'CC': '/opt/VS_2015/bin/cl',
-        })
-
-        self.do_toolchain_test(self.PATHS, {
-            'c_compiler': self.VS_2013u3_RESULT,
-        }, environ={
-            'CC': '/opt/VS_2013u3/bin/cl',
-        })
-
-        self.do_toolchain_test(self.PATHS, {
-            'c_compiler': self.VS_2013u2_RESULT,
-        }, environ={
-            'CC': '/opt/VS_2013u2/bin/cl',
+            'CC': '/usr/bin/cl',
         })
 
     def test_clang_cl(self):
@@ -1060,15 +968,6 @@ class WindowsToolchainTest(BaseToolchainTest):
             'CXX': 'clang++-3.3',
         })
 
-    def test_cannot_cross(self):
-        paths = {
-            '/usr/bin/cl': VS_2017u8 + VS_PLATFORM_X86_64,
-        }
-        self.do_toolchain_test(paths, {
-            'c_compiler': ('Target C compiler target CPU (x86_64) '
-                           'does not match --target CPU (i686)'),
-        })
-
 
 class Windows64ToolchainTest(WindowsToolchainTest):
     HOST = 'x86_64-pc-mingw32'
@@ -1076,14 +975,6 @@ class Windows64ToolchainTest(WindowsToolchainTest):
     # For the purpose of this test, it doesn't matter that the paths are not
     # real Windows paths.
     PATHS = {
-        '/opt/VS_2013u2/bin/cl': VS_2013u2 + VS_PLATFORM_X86_64,
-        '/opt/VS_2013u3/bin/cl': VS_2013u3 + VS_PLATFORM_X86_64,
-        '/opt/VS_2015/bin/cl': VS_2015 + VS_PLATFORM_X86_64,
-        '/opt/VS_2015u1/bin/cl': VS_2015u1 + VS_PLATFORM_X86_64,
-        '/opt/VS_2015u2/bin/cl': VS_2015u2 + VS_PLATFORM_X86_64,
-        '/opt/VS_2015u3/bin/cl': VS_2015u3 + VS_PLATFORM_X86_64,
-        '/opt/VS_2017u4/bin/cl': VS_2017u4 + VS_PLATFORM_X86_64,
-        '/opt/VS_2017u6/bin/cl': VS_2017u6 + VS_PLATFORM_X86_64,
         '/usr/bin/cl': VS_2017u8 + VS_PLATFORM_X86_64,
         '/usr/bin/clang-cl': CLANG_CL_3_9 + CLANG_CL_PLATFORM_X86_64,
         '/usr/bin/gcc': DEFAULT_GCC + GCC_PLATFORM_X86_64_WIN,
@@ -1103,15 +994,6 @@ class Windows64ToolchainTest(WindowsToolchainTest):
         '/usr/bin/clang-3.3': CLANG_3_3 + CLANG_PLATFORM_X86_64_WIN,
         '/usr/bin/clang++-3.3': CLANGXX_3_3 + CLANG_PLATFORM_X86_64_WIN,
     }
-
-    def test_cannot_cross(self):
-        paths = {
-            '/usr/bin/cl': VS_2017u8 + VS_PLATFORM_X86,
-        }
-        self.do_toolchain_test(paths, {
-            'c_compiler': ('Target C compiler target CPU (x86) '
-                           'does not match --target CPU (x86_64)'),
-        })
 
 
 class LinuxCrossCompileToolchainTest(BaseToolchainTest):
@@ -1453,18 +1335,6 @@ class WindowsCrossToolchainTest(BaseToolchainTest):
     TARGET = 'x86_64-pc-mingw32'
     DEFAULT_CLANG_RESULT = LinuxToolchainTest.DEFAULT_CLANG_RESULT
     DEFAULT_CLANGXX_RESULT = LinuxToolchainTest.DEFAULT_CLANGXX_RESULT
-
-    def test_wsl_cross(self):
-        paths = {
-            '/usr/bin/cl': VS_2017u8 + VS_PLATFORM_X86_64,
-        }
-        paths.update(LinuxToolchainTest.PATHS)
-        self.do_toolchain_test(paths, {
-            'c_compiler': WindowsToolchainTest.VS_2017u8_RESULT,
-            'cxx_compiler': WindowsToolchainTest.VSXX_2017u8_RESULT,
-            'host_c_compiler': self.DEFAULT_CLANG_RESULT,
-            'host_cxx_compiler': self.DEFAULT_CLANGXX_RESULT,
-        })
 
     def test_clang_cl_cross(self):
         paths = {

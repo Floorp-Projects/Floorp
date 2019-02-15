@@ -11,6 +11,7 @@ function backgroundGetSelf() {
   browser.management.getSelf().then(extInfo => {
     let url = browser.extension.getURL("*");
     extInfo.hostPermissions = extInfo.hostPermissions.filter(i => i != url);
+    extInfo.url = browser.extension.getURL("");
     browser.test.sendMessage("management-getSelf", extInfo);
   }, error => {
     browser.test.notifyFail(`getSelf rejected with error: ${error}`);
@@ -65,8 +66,9 @@ add_task(async function test_management_get_self_complete() {
   equal(extInfo.updateUrl, manifest.applications.gecko.update_url, "getSelf returned the expected updateUrl");
   ok(extInfo.optionsUrl.endsWith(manifest.options_ui.page), "getSelf returned the expected optionsUrl");
   for (let [index, size] of Object.keys(manifest.icons).sort().entries()) {
+    let iconUrl = `${extInfo.url}${manifest.icons[size]}`;
     equal(extInfo.icons[index].size, +size, "getSelf returned the expected icon size");
-    equal(extInfo.icons[index].url, manifest.icons[size], "getSelf returned the expected icon url");
+    equal(extInfo.icons[index].url, iconUrl, "getSelf returned the expected icon url");
   }
   deepEqual(extInfo.permissions.sort(), permissions.sort(), "getSelf returned the expected permissions");
   deepEqual(extInfo.hostPermissions.sort(), hostPermissions.sort(), "getSelf returned the expected hostPermissions");

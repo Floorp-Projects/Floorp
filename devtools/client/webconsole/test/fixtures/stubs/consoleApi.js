@@ -34,6 +34,7 @@ stubPreparedMessages.set(`console.log('foobar', 'test')`, new ConsoleMessage({
     "column": 35
   },
   "groupId": null,
+  "errorMessageName": null,
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
@@ -64,6 +65,7 @@ stubPreparedMessages.set(`console.log(undefined)`, new ConsoleMessage({
     "column": 35
   },
   "groupId": null,
+  "errorMessageName": null,
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
@@ -92,6 +94,7 @@ stubPreparedMessages.set(`console.warn('danger, will robinson!')`, new ConsoleMe
     "column": 35
   },
   "groupId": null,
+  "errorMessageName": null,
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
@@ -122,6 +125,7 @@ stubPreparedMessages.set(`console.log(NaN)`, new ConsoleMessage({
     "column": 35
   },
   "groupId": null,
+  "errorMessageName": null,
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
@@ -152,6 +156,7 @@ stubPreparedMessages.set(`console.log(null)`, new ConsoleMessage({
     "column": 35
   },
   "groupId": null,
+  "errorMessageName": null,
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
@@ -180,6 +185,7 @@ stubPreparedMessages.set(`console.log('鼬')`, new ConsoleMessage({
     "column": 35
   },
   "groupId": null,
+  "errorMessageName": null,
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
@@ -208,6 +214,7 @@ stubPreparedMessages.set(`console.clear()`, new ConsoleMessage({
     "column": 35
   },
   "groupId": null,
+  "errorMessageName": null,
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
@@ -234,6 +241,7 @@ stubPreparedMessages.set(`console.count('bar')`, new ConsoleMessage({
     "column": 35
   },
   "groupId": null,
+  "errorMessageName": null,
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
@@ -292,6 +300,7 @@ stubPreparedMessages.set(`console.assert(false, {message: 'foobar'})`, new Conso
     "column": 35
   },
   "groupId": null,
+  "errorMessageName": null,
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
@@ -320,6 +329,7 @@ stubPreparedMessages.set(`console.log('hello \nfrom \rthe \"string world!')`, ne
     "column": 35
   },
   "groupId": null,
+  "errorMessageName": null,
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
@@ -348,6 +358,7 @@ stubPreparedMessages.set(`console.log('úṇĩçödê țĕșť')`, new ConsoleMe
     "column": 35
   },
   "groupId": null,
+  "errorMessageName": null,
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
@@ -388,6 +399,7 @@ stubPreparedMessages.set(`console.dirxml(window)`, new ConsoleMessage({
     "column": 35
   },
   "groupId": null,
+  "errorMessageName": null,
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
@@ -434,6 +446,7 @@ stubPreparedMessages.set(`console.log('myarray', ['red', 'green', 'blue'])`, new
     "column": 35
   },
   "groupId": null,
+  "errorMessageName": null,
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
@@ -472,6 +485,7 @@ stubPreparedMessages.set(`console.log('myregex', /a.b.c/)`, new ConsoleMessage({
     "column": 35
   },
   "groupId": null,
+  "errorMessageName": null,
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
@@ -517,6 +531,7 @@ stubPreparedMessages.set(`console.table(['red', 'green', 'blue']);`, new Console
     "column": 35
   },
   "groupId": null,
+  "errorMessageName": null,
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
@@ -581,6 +596,7 @@ stubPreparedMessages.set(`console.log('myobject', {red: 'redValue', green: 'gree
     "column": 35
   },
   "groupId": null,
+  "errorMessageName": null,
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
@@ -609,6 +625,7 @@ stubPreparedMessages.set(`console.debug('debug message');`, new ConsoleMessage({
     "column": 35
   },
   "groupId": null,
+  "errorMessageName": null,
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
@@ -637,6 +654,7 @@ stubPreparedMessages.set(`console.info('info message');`, new ConsoleMessage({
     "column": 35
   },
   "groupId": null,
+  "errorMessageName": null,
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
@@ -672,6 +690,7 @@ stubPreparedMessages.set(`console.error('error message');`, new ConsoleMessage({
     "column": 35
   },
   "groupId": null,
+  "errorMessageName": null,
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
@@ -723,6 +742,7 @@ stubPreparedMessages.set(`console.log('mymap')`, new ConsoleMessage({
     "column": 9
   },
   "groupId": null,
+  "errorMessageName": null,
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
@@ -768,6 +788,7 @@ stubPreparedMessages.set(`console.log('myset')`, new ConsoleMessage({
     "column": 9
   },
   "groupId": null,
+  "errorMessageName": null,
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
@@ -813,6 +834,7 @@ stubPreparedMessages.set(`console.trace()`, new ConsoleMessage({
     "column": 11
   },
   "groupId": null,
+  "errorMessageName": null,
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
@@ -902,6 +924,7 @@ stubPreparedMessages.set(`console.trace('bar', {'foo': 'bar'}, [1,2,3])`, new Co
     "column": 11
   },
   "groupId": null,
+  "errorMessageName": null,
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
@@ -928,6 +951,7 @@ stubPreparedMessages.set(`console.time('bar')`, new ConsoleMessage({
     "column": 9
   },
   "groupId": null,
+  "errorMessageName": null,
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
@@ -954,6 +978,7 @@ stubPreparedMessages.set(`timerAlreadyExists`, new ConsoleMessage({
     "column": 9
   },
   "groupId": null,
+  "errorMessageName": null,
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
@@ -982,6 +1007,7 @@ stubPreparedMessages.set(`console.timeLog('bar') - 1`, new ConsoleMessage({
     "column": 9
   },
   "groupId": null,
+  "errorMessageName": null,
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
@@ -1035,6 +1061,7 @@ stubPreparedMessages.set(`console.timeLog('bar') - 2`, new ConsoleMessage({
     "column": 9
   },
   "groupId": null,
+  "errorMessageName": null,
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
@@ -1061,6 +1088,7 @@ stubPreparedMessages.set(`console.timeEnd('bar')`, new ConsoleMessage({
     "column": 9
   },
   "groupId": null,
+  "errorMessageName": null,
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
@@ -1087,6 +1115,7 @@ stubPreparedMessages.set(`timeEnd.timerDoesntExist`, new ConsoleMessage({
     "column": 9
   },
   "groupId": null,
+  "errorMessageName": null,
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
@@ -1113,6 +1142,7 @@ stubPreparedMessages.set(`timeLog.timerDoesntExist`, new ConsoleMessage({
     "column": 9
   },
   "groupId": null,
+  "errorMessageName": null,
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
@@ -1141,6 +1171,7 @@ stubPreparedMessages.set(`console.table('bar')`, new ConsoleMessage({
     "column": 9
   },
   "groupId": null,
+  "errorMessageName": null,
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
@@ -1186,6 +1217,7 @@ stubPreparedMessages.set(`console.table(['a', 'b', 'c'])`, new ConsoleMessage({
     "column": 9
   },
   "groupId": null,
+  "errorMessageName": null,
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
@@ -1214,6 +1246,7 @@ stubPreparedMessages.set(`console.group('bar')`, new ConsoleMessage({
     "column": 9
   },
   "groupId": null,
+  "errorMessageName": null,
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
@@ -1240,6 +1273,7 @@ stubPreparedMessages.set(`console.groupEnd('bar')`, new ConsoleMessage({
     "column": 9
   },
   "groupId": null,
+  "errorMessageName": null,
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
@@ -1268,6 +1302,7 @@ stubPreparedMessages.set(`console.groupCollapsed('foo')`, new ConsoleMessage({
     "column": 9
   },
   "groupId": null,
+  "errorMessageName": null,
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
@@ -1294,6 +1329,7 @@ stubPreparedMessages.set(`console.groupEnd('foo')`, new ConsoleMessage({
     "column": 9
   },
   "groupId": null,
+  "errorMessageName": null,
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
@@ -1322,6 +1358,7 @@ stubPreparedMessages.set(`console.group()`, new ConsoleMessage({
     "column": 9
   },
   "groupId": null,
+  "errorMessageName": null,
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
@@ -1348,6 +1385,7 @@ stubPreparedMessages.set(`console.groupEnd()`, new ConsoleMessage({
     "column": 9
   },
   "groupId": null,
+  "errorMessageName": null,
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
@@ -1377,6 +1415,7 @@ stubPreparedMessages.set(`console.log(%cfoobar)`, new ConsoleMessage({
     "column": 9
   },
   "groupId": null,
+  "errorMessageName": null,
   "exceptionDocURL": null,
   "userProvidedStyles": [
     "color:blue; font-size:1.3em; background:url('http://example.com/test'); position:absolute; top:10px; ",
@@ -1410,6 +1449,7 @@ stubPreparedMessages.set(`console.log("%cHello%c|%cWorld")`, new ConsoleMessage(
     "column": 11
   },
   "groupId": null,
+  "errorMessageName": null,
   "exceptionDocURL": null,
   "userProvidedStyles": [
     "color:red",
@@ -1443,6 +1483,7 @@ stubPreparedMessages.set(`console.group(%cfoo%cbar)`, new ConsoleMessage({
     "column": 9
   },
   "groupId": null,
+  "errorMessageName": null,
   "exceptionDocURL": null,
   "userProvidedStyles": [
     "color:blue;font-size:1.3em;background:url('http://example.com/test');position:absolute;top:10px",
@@ -1472,6 +1513,7 @@ stubPreparedMessages.set(`console.groupEnd(%cfoo%cbar)`, new ConsoleMessage({
     "column": 9
   },
   "groupId": null,
+  "errorMessageName": null,
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
@@ -1501,6 +1543,7 @@ stubPreparedMessages.set(`console.groupCollapsed(%cfoo%cbaz)`, new ConsoleMessag
     "column": 9
   },
   "groupId": null,
+  "errorMessageName": null,
   "exceptionDocURL": null,
   "userProvidedStyles": [
     "color:blue;font-size:1.3em;background:url('http://example.com/test');position:absolute;top:10px",
@@ -1530,6 +1573,7 @@ stubPreparedMessages.set(`console.groupEnd(%cfoo%cbaz)`, new ConsoleMessage({
     "column": 9
   },
   "groupId": null,
+  "errorMessageName": null,
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
@@ -1599,6 +1643,7 @@ stubPreparedMessages.set(`console.dir({C, M, Y, K})`, new ConsoleMessage({
     "column": 35
   },
   "groupId": null,
+  "errorMessageName": null,
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
@@ -1625,6 +1670,7 @@ stubPreparedMessages.set(`console.count | default: 1`, new ConsoleMessage({
     "column": 13
   },
   "groupId": null,
+  "errorMessageName": null,
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
@@ -1651,6 +1697,7 @@ stubPreparedMessages.set(`console.count | default: 2`, new ConsoleMessage({
     "column": 13
   },
   "groupId": null,
+  "errorMessageName": null,
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
@@ -1677,6 +1724,7 @@ stubPreparedMessages.set(`console.count | test counter: 1`, new ConsoleMessage({
     "column": 13
   },
   "groupId": null,
+  "errorMessageName": null,
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
@@ -1703,6 +1751,7 @@ stubPreparedMessages.set(`console.count | test counter: 2`, new ConsoleMessage({
     "column": 13
   },
   "groupId": null,
+  "errorMessageName": null,
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
@@ -1729,6 +1778,7 @@ stubPreparedMessages.set(`console.count | default: 3`, new ConsoleMessage({
     "column": 13
   },
   "groupId": null,
+  "errorMessageName": null,
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
@@ -1757,6 +1807,7 @@ stubPreparedMessages.set(`console.count | clear`, new ConsoleMessage({
     "column": 13
   },
   "groupId": null,
+  "errorMessageName": null,
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
@@ -1783,6 +1834,7 @@ stubPreparedMessages.set(`console.count | default: 4`, new ConsoleMessage({
     "column": 13
   },
   "groupId": null,
+  "errorMessageName": null,
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
@@ -1809,6 +1861,7 @@ stubPreparedMessages.set(`console.count | test counter: 3`, new ConsoleMessage({
     "column": 13
   },
   "groupId": null,
+  "errorMessageName": null,
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
@@ -1835,6 +1888,7 @@ stubPreparedMessages.set(`console.countReset | test counter: 0`, new ConsoleMess
     "column": 13
   },
   "groupId": null,
+  "errorMessageName": null,
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,
@@ -1861,6 +1915,7 @@ stubPreparedMessages.set(`console.countReset | counterDoesntExist`, new ConsoleM
     "column": 13
   },
   "groupId": null,
+  "errorMessageName": null,
   "exceptionDocURL": null,
   "userProvidedStyles": [],
   "notes": null,

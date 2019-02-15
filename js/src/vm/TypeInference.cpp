@@ -107,10 +107,8 @@ const char* js::TypeIdStringImpl(jsid id) {
         return "string";
       case JSVAL_TYPE_SYMBOL:
         return "symbol";
-#ifdef ENABLE_BIGINT
       case JSVAL_TYPE_BIGINT:
         return "BigInt";
-#endif
       case JSVAL_TYPE_MAGIC:
         return "lazyargs";
       default:
@@ -391,10 +389,8 @@ bool TypeSet::mightBeMIRType(jit::MIRType type) const {
       return baseFlags() & TYPE_FLAG_STRING;
     case jit::MIRType::Symbol:
       return baseFlags() & TYPE_FLAG_SYMBOL;
-#ifdef ENABLE_BIGINT
     case jit::MIRType::BigInt:
       return baseFlags() & TYPE_FLAG_BIGINT;
-#endif
     case jit::MIRType::MagicOptimizedArguments:
       return baseFlags() & TYPE_FLAG_LAZYARGS;
     case jit::MIRType::MagicHole:
@@ -826,11 +822,9 @@ void TypeSet::print(FILE* fp) {
   if (flags & TYPE_FLAG_SYMBOL) {
     fprintf(fp, " symbol");
   }
-#ifdef ENABLE_BIGINT
   if (flags & TYPE_FLAG_BIGINT) {
     fprintf(fp, " BigInt");
   }
-#endif
   if (flags & TYPE_FLAG_LAZYARGS) {
     fprintf(fp, " lazyargs");
   }
@@ -1713,10 +1707,8 @@ static inline jit::MIRType GetMIRTypeFromTypeFlags(TypeFlags flags) {
       return jit::MIRType::String;
     case TYPE_FLAG_SYMBOL:
       return jit::MIRType::Symbol;
-#ifdef ENABLE_BIGINT
     case TYPE_FLAG_BIGINT:
       return jit::MIRType::BigInt;
-#endif
     case TYPE_FLAG_LAZYARGS:
       return jit::MIRType::MagicOptimizedArguments;
     case TYPE_FLAG_ANYOBJECT:

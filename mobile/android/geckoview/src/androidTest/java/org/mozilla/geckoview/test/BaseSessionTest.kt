@@ -52,6 +52,7 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
         const val IFRAME_REDIRECT_LOCAL = "/assets/www/iframe_redirect_local.html"
         const val IFRAME_REDIRECT_AUTOMATION = "/assets/www/iframe_redirect_automation.html"
         const val AUTOPLAY_PATH = "/assets/www/autoplay.html"
+        const val SCROLL_TEST_PATH = "/assets/www/scroll.html"
     }
 
     @get:Rule val sessionRule = GeckoSessionTestRule()

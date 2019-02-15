@@ -152,17 +152,9 @@ class JSValueTypeCache(object):
         self.MAGIC = get('JSVAL_TYPE_MAGIC')
         self.STRING = get('JSVAL_TYPE_STRING')
         self.SYMBOL = get('JSVAL_TYPE_SYMBOL')
+        self.BIGINT = get('JSVAL_TYPE_BIGINT')
         self.NULL = get('JSVAL_TYPE_NULL')
         self.OBJECT = get('JSVAL_TYPE_OBJECT')
-
-        self.enable_bigint = False
-        try:
-            # Looking up the tag will throw an exception if BigInt is not
-            # enabled.
-            self.BIGINT = get('JSVAL_TYPE_BIGINT')
-            self.enable_bigint = True
-        except Exception:
-            pass
 
         # Let self.magic_names be an array whose i'th element is the name of
         # the i'th magic value.
@@ -218,7 +210,7 @@ class JSValue(object):
             value = self.box.as_address().cast(self.cache.JSObject_ptr_t)
         elif tag == self.jtc.SYMBOL:
             value = self.box.as_address().cast(self.cache.JSSymbol_ptr_t)
-        elif self.jtc.enable_bigint and tag == self.jtc.BIGINT:
+        elif tag == self.jtc.BIGINT:
             return '$JS::BigIntValue()'
         else:
             value = 'unrecognized!'

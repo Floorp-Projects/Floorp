@@ -399,9 +399,7 @@ class MOZ_STACK_CLASS ParserBase : private JS::AutoGCRooter,
 
  public:
   ObjectBox* newObjectBox(JSObject* obj);
-#ifdef ENABLE_BIGINT
   BigIntBox* newBigIntBox(BigInt* val);
-#endif
 
   mozilla::Maybe<GlobalScope::Data*> newGlobalScopeData(
       ParseContext::Scope& scope);
@@ -1385,9 +1383,7 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
     return handler.newNumber(tok.number(), tok.decimalPoint(), tok.pos);
   }
 
-#ifdef ENABLE_BIGINT
   inline BigIntLiteralType newBigInt();
-#endif
 
  protected:
   // Match the current token against the BindingIdentifier production with
@@ -1530,9 +1526,7 @@ class MOZ_STACK_CLASS Parser<SyntaxParseHandler, Unit> final
   inline void setInParametersOfAsyncFunction(bool inParameters);
 
   RegExpLiteralType newRegExp();
-#ifdef ENABLE_BIGINT
   BigIntLiteralType newBigInt();
-#endif
 
   // Parse a module.
   ModuleNodeType moduleBody(ModuleSharedContext* modulesc);
@@ -1685,9 +1679,7 @@ class MOZ_STACK_CLASS Parser<FullParseHandler, Unit> final
   inline void setInParametersOfAsyncFunction(bool inParameters);
 
   RegExpLiteralType newRegExp();
-#ifdef ENABLE_BIGINT
   BigIntLiteralType newBigInt();
-#endif
 
   // Parse a module.
   ModuleNodeType moduleBody(ModuleSharedContext* modulesc);

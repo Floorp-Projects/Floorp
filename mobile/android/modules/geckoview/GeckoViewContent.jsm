@@ -25,6 +25,8 @@ class GeckoViewContent extends GeckoViewModule {
         "GeckoView:SetActive",
         "GeckoView:SetFocused",
         "GeckoView:ZoomToInput",
+        "GeckoView:ScrollBy",
+        "GeckoView:ScrollTo",
     ]);
 
     this.messageManager.addMessageListener("GeckoView:SaveStateFinish", this);
@@ -76,6 +78,12 @@ class GeckoViewContent extends GeckoViewModule {
       }
       case "GeckoView:ZoomToInput":
         this.messageManager.sendAsyncMessage(aEvent);
+        break;
+      case "GeckoView:ScrollBy":
+        this.messageManager.sendAsyncMessage(aEvent, aData);
+        break;
+      case "GeckoView:ScrollTo":
+        this.messageManager.sendAsyncMessage(aEvent, aData);
         break;
       case "GeckoView:SetActive":
         if (aData.active) {

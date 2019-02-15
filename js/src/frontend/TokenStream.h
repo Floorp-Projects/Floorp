@@ -1954,12 +1954,10 @@ class GeneralTokenStreamChars : public SpecializedTokenStreamCharsBase<Unit> {
     token->setNumber(dval, decimalPoint);
   }
 
-#ifdef ENABLE_BIGINT
   void newBigIntToken(TokenStart start, TokenStreamShared::Modifier modifier,
                       TokenKind* out) {
     newToken(TokenKind::BigInt, start, modifier, out);
   }
-#endif
 
   void newAtomToken(TokenKind kind, JSAtom* atom, TokenStart start,
                     TokenStreamShared::Modifier modifier, TokenKind* out) {
@@ -2412,9 +2410,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
   using TokenStreamCharsShared::copyCharBufferTo;
   using TokenStreamCharsShared::drainCharBufferIntoAtom;
   using TokenStreamCharsShared::isAsciiCodePoint;
-#ifdef ENABLE_BIGINT
   using GeneralCharsBase::newBigIntToken;
-#endif
   using CharsBase::peekCodeUnit;
   using GeneralCharsBase::newRegExpToken;
   using GeneralCharsBase::newSimpleToken;

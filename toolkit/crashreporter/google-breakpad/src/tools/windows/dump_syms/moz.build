@@ -19,7 +19,7 @@ HOST_CXXFLAGS += [
     '-O2',
 ]
 
-if CONFIG['HOST_CC_TYPE'] in ('msvc', 'clang-cl'):
+if CONFIG['HOST_CC_TYPE'] == 'clang-cl':
     HOST_CXXFLAGS += [
         '-EHsc',
         '-MD'

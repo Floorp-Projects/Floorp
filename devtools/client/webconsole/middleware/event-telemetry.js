@@ -8,6 +8,7 @@ const {
   FILTER_TEXT_SET,
   FILTER_TOGGLE,
   DEFAULT_FILTERS_RESET,
+  MESSAGES_ADD,
 } = require("devtools/client/webconsole/constants");
 
 /**
@@ -37,6 +38,8 @@ function eventTelemetryMiddleware(telemetry, sessionId, store) {
         telemetry,
         sessionId,
       });
+    } else if (action.type === MESSAGES_ADD) {
+      messagesAdd({ action, telemetry });
     }
 
     return res;
@@ -75,6 +78,16 @@ function filterChange({action, state, oldState, telemetry, sessionId}) {
     "inactive": inactiveFilters.join(","),
     "session_id": sessionId,
   });
+}
+
+function messagesAdd({ action, telemetry }) {
+  const {messages} = action;
+  for (const message of messages) {
+    if (message.level === "error" && message.source === "javascript") {
+      telemetry.getKeyedHistogramById("DEVTOOLS_JAVASCRIPT_ERROR_DISPLAYED")
+        .add(message.errorMessageName || "Unknown", true);
+    }
+  }
 }
 
 module.exports = eventTelemetryMiddleware;

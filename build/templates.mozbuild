@@ -159,7 +159,7 @@ def NoVisibilityFlags():
 @template
 def ForceInclude(*headers):
     """Force includes a set of header files in C++ compilations"""
-    if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
+    if CONFIG['CC_TYPE'] == 'clang-cl':
         include_flag = '-FI'
     else:
         include_flag = '-include'

@@ -207,9 +207,7 @@ class SyntaxParseHandler {
     return NodeGeneric;
   }
 
-#ifdef ENABLE_BIGINT
   BigIntLiteralType newBigInt() { return NodeGeneric; }
-#endif
 
   BooleanLiteralType newBooleanLiteral(bool cond, const TokenPos& pos) {
     return NodeGeneric;

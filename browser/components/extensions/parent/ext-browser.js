@@ -454,10 +454,11 @@ class TabTracker extends TabTrackerBase {
           // This tab is being created to adopt a tab from a different window.
           // Handle the adoption.
           this.adopt(nativeTab, adoptedTab);
-
-          adoptedTab.linkedBrowser.messageManager.sendAsyncMessage("Extension:SetFrameData", {
-            windowId: windowTracker.getId(nativeTab.ownerGlobal),
-          });
+          if (adoptedTab.linkedPanel) {
+            adoptedTab.linkedBrowser.messageManager.sendAsyncMessage("Extension:SetFrameData", {
+              windowId: windowTracker.getId(nativeTab.ownerGlobal),
+            });
+          }
         } else {
           // Save the size of the current tab, since the newly-created tab will
           // likely be active by the time the promise below resolves and the

@@ -117,6 +117,12 @@ class DocAccessibleParent : public ProxyAccessible,
       const uint32_t& aScrollY, const uint32_t& aMaxScrollX,
       const uint32_t& aMaxScrollY) override;
 
+#if !defined(XP_WIN)
+  virtual mozilla::ipc::IPCResult RecvAnnouncementEvent(
+      const uint64_t& aID, const nsString& aAnnouncement,
+      const uint16_t& aPriority) override;
+#endif
+
   mozilla::ipc::IPCResult RecvRoleChangedEvent(const a11y::role& aRole) final;
 
   virtual mozilla::ipc::IPCResult RecvBindChildDoc(

@@ -623,7 +623,7 @@ inline bool IsConstructor(const Value& v) {
   return v.isObject() && v.toObject().isConstructor();
 }
 
-MOZ_ALWAYS_INLINE bool CreateThis(JSContext* cx, HandleObject callee,
+MOZ_ALWAYS_INLINE bool CreateThis(JSContext* cx, HandleFunction callee,
                                   JSScript* calleeScript,
                                   HandleObject newTarget, NewObjectKind newKind,
                                   MutableHandleValue thisv) {
@@ -645,6 +645,7 @@ MOZ_ALWAYS_INLINE bool CreateThis(JSContext* cx, HandleObject callee,
     return false;
   }
 
+  MOZ_ASSERT(obj->nonCCWRealm() == callee->realm());
   thisv.setObject(*obj);
   return true;
 }

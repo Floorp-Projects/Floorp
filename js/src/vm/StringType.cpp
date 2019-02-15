@@ -2163,17 +2163,13 @@ JSString* js::ToStringSlow(
                                 JSMSG_SYMBOL_TO_STRING);
     }
     return nullptr;
-  }
-#ifdef ENABLE_BIGINT
-  else if (v.isBigInt()) {
+  } else if (v.isBigInt()) {
     if (!allowGC) {
       return nullptr;
     }
     RootedBigInt i(cx, v.toBigInt());
     str = BigInt::toString<CanGC>(cx, i, 10);
-  }
-#endif
-  else {
+  } else {
     MOZ_ASSERT(v.isUndefined());
     str = cx->names().undefined;
   }

@@ -8,7 +8,7 @@
 #include "mozilla/ipc/ProcessChild.h"
 
 #if defined(XP_WIN)
-#  include "mozilla/mscom/MainThreadRuntime.h"
+#  include "mozilla/mscom/ProcessRuntime.h"
 #endif
 
 #include "RDDParent.h"

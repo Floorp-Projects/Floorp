@@ -7,6 +7,17 @@ const {GeckoViewChildModule} = ChromeUtils.import("resource://gre/modules/GeckoV
 var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+// This needs to match ScreenLength.java
+const SCREEN_LENGTH_TYPE_PIXEL = 0;
+const SCREEN_LENGTH_TYPE_VIEWPORT_WIDTH = 1;
+const SCREEN_LENGTH_TYPE_VIEWPORT_HEIGHT = 2;
+const SCREEN_LENGTH_DOCUMENT_WIDTH = 3;
+const SCREEN_LENGTH_DOCUMENT_HEIGHT = 4;
+
+// This need to match PanZoomController.java
+const SCROLL_BEHAVIOR_SMOOTH = 0;
+const SCROLL_BEHAVIOR_AUTO = 1;
+
 XPCOMUtils.defineLazyModuleGetters(this, {
   FormLikeFactory: "resource://gre/modules/FormLikeFactory.jsm",
   GeckoViewAutoFill: "resource://gre/modules/GeckoViewAutoFill.jsm",
@@ -33,6 +44,8 @@ class GeckoViewContentChild extends GeckoViewChildModule {
     this.messageManager.addMessageListener("GeckoView:SetActive", this);
     this.messageManager.addMessageListener("GeckoView:UpdateInitData", this);
     this.messageManager.addMessageListener("GeckoView:ZoomToInput", this);
+    this.messageManager.addMessageListener("GeckoView:ScrollBy", this);
+    this.messageManager.addMessageListener("GeckoView:ScrollTo", this);
 
     const options = {
         mozSystemGroup: true,
@@ -107,6 +120,31 @@ class GeckoViewContentChild extends GeckoViewChildModule {
     formdata = PrivacyFilter.filterFormData(formdata || {});
 
     return {history, formdata, scrolldata};
+  }
+
+  toPixels(aLength, aType) {
+    if (aType === SCREEN_LENGTH_TYPE_PIXEL) {
+      return aLength;
+    } else if (aType === SCREEN_LENGTH_TYPE_VIEWPORT_WIDTH) {
+      return aLength * content.innerWidth;
+    } else if (aType === SCREEN_LENGTH_TYPE_VIEWPORT_HEIGHT) {
+      return aLength * content.innerHeight;
+    } else if (aType === SCREEN_LENGTH_DOCUMENT_WIDTH) {
+      return aLength * content.document.body.scrollWidth;
+    } else if (aType === SCREEN_LENGTH_DOCUMENT_HEIGHT) {
+      return aLength * content.document.body.scrollHeight;
+    }
+
+    return aLength;
+  }
+
+  toScrollBehavior(aBehavior) {
+    if (aBehavior === SCROLL_BEHAVIOR_SMOOTH) {
+      return "smooth";
+    } else if (aBehavior === SCROLL_BEHAVIOR_AUTO) {
+      return "auto";
+    }
+    return "smooth";
   }
 
   receiveMessage(aMsg) {
@@ -245,6 +283,20 @@ class GeckoViewContentChild extends GeckoViewChildModule {
         // Provide a hook for native code to detect a transfer.
         Services.obs.notifyObservers(
             docShell, "geckoview-content-global-transferred");
+        break;
+      case "GeckoView:ScrollBy":
+        content.scrollBy({
+          top: this.toPixels(aMsg.data.heightValue, aMsg.data.heightType),
+          left: this.toPixels(aMsg.data.widthValue, aMsg.data.widthType),
+          behavior: this.toScrollBehavior(aMsg.data.behavior),
+        });
+        break;
+      case "GeckoView:ScrollTo":
+        content.scrollTo({
+          top: this.toPixels(aMsg.data.heightValue, aMsg.data.heightType),
+          left: this.toPixels(aMsg.data.widthValue, aMsg.data.widthType),
+          behavior: this.toScrollBehavior(aMsg.data.behavior),
+        });
         break;
     }
   }

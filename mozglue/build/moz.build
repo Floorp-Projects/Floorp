@@ -58,8 +58,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT']:
             '/memory/build',
         ]
 
-        if CONFIG['CC_TYPE'] == "msvc":
-            SOURCES += ['WindowsCFGStatus.cpp']
         SOURCES += [
             'Authenticode.cpp',
             'UntrustedDllsHandler.cpp',
@@ -84,12 +82,14 @@ if CONFIG['MOZ_WIDGET_TOOLKIT']:
         EXPORTS.mozilla.glue += [
             'WindowsDllServices.h',
         ]
+        USE_LIBS += [
+            'mscom-mozglue',
+        ]
 
     EXPORTS.mozilla += [
         'arm.h',
         'mips.h',
         'SSE.h',
-        'WindowsCFGStatus.h',
         'WindowsDllBlocklist.h',
     ]
 

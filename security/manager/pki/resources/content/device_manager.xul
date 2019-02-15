@@ -10,6 +10,7 @@
 <dialog id="devicemanager"
         windowtype="mozilla:devicemanager"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
         data-l10n-id="devmgr"
         data-l10n-attrs="style"
         persist="screenX screenY width height"
@@ -17,7 +18,7 @@
         buttons="accept">
 
 <linkset>
-  <link rel="localization" href="security/certificates/deviceManager.ftl"/>
+  <html:link rel="localization" href="security/certificates/deviceManager.ftl"/>
 </linkset>
 
 <script type="application/javascript" src="chrome://pippki/content/device_manager.js"/>

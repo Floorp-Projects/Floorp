@@ -13,9 +13,7 @@
 
 #include <stdint.h>
 
-#ifdef ENABLE_BIGINT
-#  include "builtin/BigInt.h"
-#endif
+#include "builtin/BigInt.h"
 #include "builtin/Promise.h"
 #include "builtin/TestingFunctions.h"
 #include "gc/GCInternals.h"
@@ -306,10 +304,8 @@ JS_FRIEND_API bool js::GetBuiltinClass(JSContext* cx, HandleObject obj,
     *cls = ESClass::Arguments;
   } else if (obj->is<ErrorObject>()) {
     *cls = ESClass::Error;
-#ifdef ENABLE_BIGINT
   } else if (obj->is<BigIntObject>()) {
     *cls = ESClass::BigInt;
-#endif
   } else {
     *cls = ESClass::Other;
   }

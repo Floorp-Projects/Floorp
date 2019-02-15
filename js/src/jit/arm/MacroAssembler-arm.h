@@ -766,9 +766,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM {
   Condition testUndefined(Condition cond, const ValueOperand& value);
   Condition testString(Condition cond, const ValueOperand& value);
   Condition testSymbol(Condition cond, const ValueOperand& value);
-#ifdef ENABLE_BIGINT
   Condition testBigInt(Condition cond, const ValueOperand& value);
-#endif
   Condition testObject(Condition cond, const ValueOperand& value);
   Condition testNumber(Condition cond, const ValueOperand& value);
   Condition testMagic(Condition cond, const ValueOperand& value);
@@ -782,9 +780,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM {
   Condition testUndefined(Condition cond, Register tag);
   Condition testString(Condition cond, Register tag);
   Condition testSymbol(Condition cond, Register tag);
-#ifdef ENABLE_BIGINT
   Condition testBigInt(Condition cond, Register tag);
-#endif
   Condition testObject(Condition cond, Register tag);
   Condition testDouble(Condition cond, Register tag);
   Condition testNumber(Condition cond, Register tag);
@@ -800,9 +796,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM {
   Condition testUndefined(Condition cond, const Address& address);
   Condition testString(Condition cond, const Address& address);
   Condition testSymbol(Condition cond, const Address& address);
-#ifdef ENABLE_BIGINT
   Condition testBigInt(Condition cond, const Address& address);
-#endif
   Condition testObject(Condition cond, const Address& address);
   Condition testNumber(Condition cond, const Address& address);
 
@@ -811,9 +805,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM {
   Condition testBoolean(Condition cond, const BaseIndex& src);
   Condition testString(Condition cond, const BaseIndex& src);
   Condition testSymbol(Condition cond, const BaseIndex& src);
-#ifdef ENABLE_BIGINT
   Condition testBigInt(Condition cond, const BaseIndex& src);
-#endif
   Condition testInt32(Condition cond, const BaseIndex& src);
   Condition testObject(Condition cond, const BaseIndex& src);
   Condition testDouble(Condition cond, const BaseIndex& src);
@@ -849,14 +841,12 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM {
   void unboxSymbol(const Address& src, Register dest) {
     unboxNonDouble(src, dest, JSVAL_TYPE_SYMBOL);
   }
-#ifdef ENABLE_BIGINT
   void unboxBigInt(const ValueOperand& src, Register dest) {
     unboxNonDouble(src, dest, JSVAL_TYPE_BIGINT);
   }
   void unboxBigInt(const Address& src, Register dest) {
     unboxNonDouble(src, dest, JSVAL_TYPE_BIGINT);
   }
-#endif
   void unboxObject(const ValueOperand& src, Register dest) {
     unboxNonDouble(src, dest, JSVAL_TYPE_OBJECT);
   }
@@ -925,9 +915,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM {
   Condition testBooleanTruthy(bool truthy, const ValueOperand& operand);
   Condition testDoubleTruthy(bool truthy, FloatRegister reg);
   Condition testStringTruthy(bool truthy, const ValueOperand& value);
-#ifdef ENABLE_BIGINT
   Condition testBigIntTruthy(bool truthy, const ValueOperand& value);
-#endif
 
   void boolValueToFloat32(const ValueOperand& operand, FloatRegister dest);
   void int32ValueToFloat32(const ValueOperand& operand, FloatRegister dest);

@@ -95,7 +95,7 @@
             "type": "object",
             "optional": true,
             "patternProperties": {
-              "^[1-9]\\d*$": { "type": "string" }
+              "^[1-9]\\d*$": { "$ref": "ExtensionFileUrl" }
             }
           },
 

@@ -309,13 +309,11 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared {
     cmp32(tag, ImmTag(JSVAL_TAG_SYMBOL));
     return cond;
   }
-#ifdef ENABLE_BIGINT
   Condition testBigInt(Condition cond, Register tag) {
     MOZ_ASSERT(cond == Equal || cond == NotEqual);
     cmp32(tag, ImmTag(JSVAL_TAG_BIGINT));
     return cond;
   }
-#endif
   Condition testObject(Condition cond, Register tag) {
     MOZ_ASSERT(cond == Equal || cond == NotEqual);
     cmp32(tag, ImmTag(JSVAL_TAG_OBJECT));
@@ -431,11 +429,9 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared {
   Condition testSymbol(Condition cond, const ValueOperand& value) {
     return testSymbol(cond, value.typeReg());
   }
-#ifdef ENABLE_BIGINT
   Condition testBigInt(Condition cond, const ValueOperand& value) {
     return testBigInt(cond, value.typeReg());
   }
-#endif
   Condition testObject(Condition cond, const ValueOperand& value) {
     return testObject(cond, value.typeReg());
   }
@@ -485,13 +481,11 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared {
     cmp32(tagOf(address), ImmTag(JSVAL_TAG_SYMBOL));
     return cond;
   }
-#ifdef ENABLE_BIGINT
   Condition testBigInt(Condition cond, const BaseIndex& address) {
     MOZ_ASSERT(cond == Equal || cond == NotEqual);
     cmp32(tagOf(address), ImmTag(JSVAL_TAG_BIGINT));
     return cond;
   }
-#endif
   Condition testInt32(Condition cond, const BaseIndex& address) {
     MOZ_ASSERT(cond == Equal || cond == NotEqual);
     cmp32(tagOf(address), ImmTag(JSVAL_TAG_INT32));
@@ -766,14 +760,12 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared {
   void unboxSymbol(const Address& src, Register dest) {
     unboxNonDouble(src, dest, JSVAL_TYPE_SYMBOL);
   }
-#ifdef ENABLE_BIGINT
   void unboxBigInt(const ValueOperand& src, Register dest) {
     unboxNonDouble(src, dest, JSVAL_TYPE_BIGINT);
   }
   void unboxBigInt(const Address& src, Register dest) {
     unboxNonDouble(src, dest, JSVAL_TYPE_BIGINT);
   }
-#endif
   void unboxObject(const ValueOperand& src, Register dest) {
     unboxNonDouble(src, dest, JSVAL_TYPE_OBJECT);
   }
@@ -890,14 +882,12 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared {
     cmp32(Operand(string, JSString::offsetOfLength()), Imm32(0));
     return truthy ? Assembler::NotEqual : Assembler::Equal;
   }
-#ifdef ENABLE_BIGINT
   Condition testBigIntTruthy(bool truthy, const ValueOperand& value) {
     Register bi = value.payloadReg();
     cmpPtr(Operand(bi, BigInt::offsetOfLengthSignAndReservedBits()),
            ImmWord(0));
     return truthy ? Assembler::NotEqual : Assembler::Equal;
   }
-#endif
 
   template <typename T>
   inline void loadInt32OrDouble(const T& src, FloatRegister dest);

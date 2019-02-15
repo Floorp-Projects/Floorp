@@ -55,7 +55,7 @@ namespace jit {
   _(JSOP_UINT24)                \
   _(JSOP_RESUMEINDEX)           \
   _(JSOP_DOUBLE)                \
-  IF_BIGINT(_(JSOP_BIGINT), )   \
+  _(JSOP_BIGINT)                \
   _(JSOP_STRING)                \
   _(JSOP_SYMBOL)                \
   _(JSOP_OBJECT)                \

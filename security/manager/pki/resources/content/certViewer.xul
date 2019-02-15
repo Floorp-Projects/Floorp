@@ -18,7 +18,7 @@
 
 
 <linkset>
-  <link rel="localization" href="security/certificates/certManager.ftl"/>
+  <html:link rel="localization" href="security/certificates/certManager.ftl"/>
 </linkset>
 
 <script type="application/javascript" src="chrome://pippki/content/pippki.js"/>

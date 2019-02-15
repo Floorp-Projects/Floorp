@@ -448,14 +448,11 @@ def get_compiler_info(compiler, language):
     form of a list or tuple), in the given `language`.
 
     The returned information includes:
-    - the compiler type (msvc, clang-cl, clang or gcc)
+    - the compiler type (clang-cl, clang or gcc)
     - the compiler version
     - the compiler supported language
     - the compiler supported language version
     '''
-    # Note: MSVC doesn't expose __STDC_VERSION__. It does expose __STDC__,
-    # but only when given the -Za option, which disables compiler
-    # extensions.
     # Note: We'd normally do a version check for clang, but versions of clang
     # in Xcode have a completely different versioning scheme despite exposing
     # the version with the same defines.
@@ -469,9 +466,6 @@ def get_compiler_info(compiler, language):
         #if defined(__clang__)
         %COMPILER "clang-cl"
         %VERSION __clang_major__.__clang_minor__.__clang_patchlevel__
-        #else
-        %COMPILER "msvc"
-        %VERSION _MSC_FULL_VER
         #endif
         #elif defined(__clang__)
         %COMPILER "clang"
@@ -487,8 +481,6 @@ def get_compiler_info(compiler, language):
         %cplusplus __cplusplus
         #elif __STDC_VERSION__
         %STDC_VERSION __STDC_VERSION__
-        #elif __STDC__
-        %STDC_VERSION 198900L
         #endif
     ''')
 
@@ -514,9 +506,9 @@ def get_compiler_info(compiler, language):
 
     # Also check for endianness. The advantage of living in modern times is
     # that all the modern compilers we support now have __BYTE_ORDER__ defined
-    # by the preprocessor, except MSVC, which only supports little endian.
+    # by the preprocessor.
     check += dedent('''\
-        #if _MSC_VER || __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+        #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
         %ENDIANNESS "little"
         #elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
         %ENDIANNESS "big"
@@ -549,14 +541,6 @@ def get_compiler_info(compiler, language):
     stdc_version = int(data.get('STDC_VERSION', '0L').rstrip('L'))
 
     version = data.get('VERSION')
-    if version and type == 'msvc':
-        msc_ver = version
-        version = msc_ver[0:2]
-        if len(msc_ver) > 2:
-            version += '.' + msc_ver[2:4]
-        if len(msc_ver) > 4:
-            version += '.' + msc_ver[4:]
-
     if version:
         version = Version(version)
 
@@ -604,7 +588,6 @@ def check_compiler(compiler, language, target):
                 flags.append('-Xclang')
             flags.append('-std=gnu99')
 
-    # Note: MSVC, while supporting C++14, still reports 199711L for __cplusplus.
     # Note: this is a strict version check because we used to always add
     # -std=gnu++14.
     cxx14_version = 201402
@@ -634,7 +617,7 @@ def check_compiler(compiler, language, target):
             flags.append('--target=%s' % target.toolchain)
             has_target = True
 
-    if not has_target and (not info.cpu or info.cpu != target.cpu and info.type != 'msvc'):
+    if not has_target and (not info.cpu or info.cpu != target.cpu):
         same_arch = same_arch_different_bits()
         if (target.cpu, info.cpu) in same_arch:
             flags.append('-m32')
@@ -853,7 +836,7 @@ def default_c_compilers(host_or_target, other_c_compiler=None):
     def default_c_compilers(host_or_target, target, toolchain_prefix,
                             android_clang_compiler, *other_c_compiler):
         if host_or_target.kernel == 'WINNT':
-            supported = types = ('clang-cl', 'msvc', 'gcc', 'clang')
+            supported = types = ('clang-cl', 'gcc', 'clang')
         elif host_or_target.kernel == 'Darwin':
             types = ('clang',)
             supported = ('clang', 'gcc')
@@ -878,10 +861,6 @@ def default_c_compilers(host_or_target, other_c_compiler=None):
                 # Android NDK clangs do not function as host compiler, so
                 # prioritize a raw 'clang' instead.
                 prioritized = info.type
-            elif info.type == 'msvc' and target.cpu != host_or_target.cpu:
-                # MSVC compilers only support one architecture, so we'll
-                # want a cl in another (detected) path.
-                prioritized = 'cl'
 
             types = [prioritized] + [t for t in types if t != info.type]
 
@@ -898,8 +877,6 @@ def default_c_compilers(host_or_target, other_c_compiler=None):
                 result.append(android_clang_compiler)
             elif type == 'gcc':
                 result.extend(gcc)
-            elif type == 'msvc':
-                result.append('cl')
             else:
                 result.append(type)
 
@@ -1119,16 +1096,6 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
             raise FatalCheckError(
                 'Only clang/llvm 3.9 or newer is supported.')
 
-        if info.type == 'msvc':
-            if info.version < '19.15.26726':
-                raise FatalCheckError(
-                    'This version (%s) of the MSVC compiler is not '
-                    'supported.\n'
-                    'You must install Visual C++ 2017 Update 8 or '
-                    'later in order to build.\n'
-                    'See https://developer.mozilla.org/en/'
-                    'Windows_Build_Prerequisites' % info.version)
-
         if info.flags:
             raise FatalCheckError(
                 'Unknown compiler or compiler not supported.')
@@ -1234,18 +1201,11 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
             if value:
                 return value[0]
 
-        @depends(valid_compiler, linker)
-        def unused_linker(compiler, linker):
-            if linker and compiler.type != 'msvc':
+        @depends(linker)
+        def unused_linker(linker):
+            if linker:
                 log.warning('The value of %s is not used by this build system.'
                             % linker_var)
-
-        if host_or_target is target:
-            @depends(valid_compiler)
-            def is_msvc(compiler):
-                return compiler.type == 'msvc'
-
-            imply_option('LINKER', linker, reason='LD', when=is_msvc)
 
     return valid_compiler
 
@@ -1258,7 +1218,6 @@ host_cxx_compiler = compiler('C++', host, c_compiler=host_c_compiler,
                              other_c_compiler=c_compiler)
 
 # Generic compiler-based conditions.
-non_msvc_compiler = depends(c_compiler)(lambda info: info.type != 'msvc')
 building_with_gcc = depends(c_compiler)(lambda info: info.type == 'gcc')
 
 
@@ -1266,7 +1225,7 @@ building_with_gcc = depends(c_compiler)(lambda info: info.type == 'gcc')
 def msvs_version(info):
     # clang-cl emulates the same version scheme as cl. And MSVS_VERSION needs to
     # be set for GYP on Windows.
-    if info.type in ('clang-cl', 'msvc'):
+    if info.type == 'clang-cl':
         return '2017'
 
     return ''
@@ -1289,7 +1248,7 @@ def check_have_64_bit(have_64_bit, compiler_have_64_bit):
 @depends(c_compiler, target)
 def default_debug_flags(compiler_info, target):
     # Debug info is ON by default.
-    if compiler_info.type in ('msvc', 'clang-cl'):
+    if compiler_info.type == 'clang-cl':
         return '-Z7'
     elif target.kernel == 'WINNT' and compiler_info.type == 'clang':
         return '-g -gcodeview'
@@ -1427,11 +1386,11 @@ set_config('WRAP_SYSTEM_INCLUDES', wrap_system_includes)
 set_config('VISIBILITY_FLAGS', visibility_flags)
 
 
-@depends(c_compiler, using_sccache)
-def depend_cflags(info, using_sccache):
-    if info.type not in ('clang-cl', 'msvc'):
+@depends(c_compiler)
+def depend_cflags(info):
+    if info.type != 'clang-cl':
         return ['-MD', '-MP', '-MF $(MDDEPDIR)/$(@F).pp']
-    elif info.type == 'clang-cl':
+    else:
         # clang-cl doesn't accept the normal -MD -MP -MF options that clang
         # does, but the underlying cc1 binary understands how to generate
         # dependency files.  These options are based on analyzing what the
@@ -1444,10 +1403,6 @@ def depend_cflags(info, using_sccache):
             '-Xclang', '-MT',
             '-Xclang', '$@'
         ]
-    elif using_sccache:
-        # sccache supports a special flag to create depfiles
-        # by parsing MSVC's -showIncludes output.
-        return ['-deps$(MDDEPDIR)/$(@F).pp']
 
 
 set_config('_DEPEND_CFLAGS', depend_cflags)
@@ -1491,29 +1446,6 @@ def pgo_flags(compiler, build_env, target):
                             '-Wno-error=profile-instr-unprofiled'],
                 use_ldflags=[],
             )
-
-    if compiler.type == 'msvc':
-        num_cores = min(8, multiprocessing.cpu_count())
-        cgthreads = '-CGTHREADS:%s' % num_cores
-
-        return namespace(
-            gen_cflags=['-GL'],
-            gen_ldflags=['-LTCG:PGINSTRUMENT', '-PogoSafeMode', cgthreads],
-            # XXX: PGO builds can fail with warnings treated as errors,
-            # specifically "no profile data available" appears to be
-            # treated as an error sometimes. This might be a consequence
-            # of using WARNINGS_AS_ERRORS in some modules, combined
-            # with the linker doing most of the work in the whole-program
-            # optimization/PGO case. I think it's probably a compiler bug,
-            # but we work around it here.
-            use_cflags=['-GL', '-wd4624', '-wd4952'],
-            # XXX: should be -LTCG:PGOPTIMIZE, but that fails on libxul.
-            # Probably also a compiler bug, but what can you do?
-            # /d2:-cgsummary prints a summary of what is happening during
-            # code generation. How long individual functions are optimized,
-            # which functions are optimized, etc.
-            use_ldflags=['-LTCG:PGUPDATE', cgthreads, '-d2:-cgsummary'],
-        )
 
 
 set_config('PROFILE_GEN_CFLAGS', pgo_flags.gen_cflags)
@@ -2069,7 +2001,7 @@ js_option(env='AS', nargs=1, help='Path to the assembler')
 
 @depends(target, c_compiler)
 def as_info(target, c_compiler):
-    if c_compiler.type in ('msvc', 'clang-cl'):
+    if c_compiler.type == 'clang-cl':
         ml = {
             'x86': 'ml',
             'x86_64': 'ml64',
@@ -2079,7 +2011,7 @@ def as_info(target, c_compiler):
             type='masm',
             names=(ml, )
         )
-    # When building with anything but MSVC, we just use the C compiler as the assembler.
+    # When building with anything but clang-cl, we just use the C compiler as the assembler.
     return namespace(
         type='gcc',
         names=(c_compiler.compiler, )

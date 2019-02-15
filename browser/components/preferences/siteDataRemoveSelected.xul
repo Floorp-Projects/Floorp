@@ -16,10 +16,11 @@
         onload="gSiteDataRemoveSelected.init();"
         ondialogaccept="gSiteDataRemoveSelected.ondialogaccept(); return true;"
         ondialogcancel="gSiteDataRemoveSelected.ondialogcancel(); return true;"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml">
 
   <linkset>
-    <link rel="localization" href="browser/preferences/siteDataSettings.ftl"/>
+    <html:link rel="localization" href="browser/preferences/siteDataSettings.ftl"/>
   </linkset>
 
   <hbox>
