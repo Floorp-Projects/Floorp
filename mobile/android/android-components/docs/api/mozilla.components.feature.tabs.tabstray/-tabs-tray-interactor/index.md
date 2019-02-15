@@ -2,7 +2,7 @@
 
 # TabsTrayInteractor
 
-`class TabsTrayInteractor : `[`Observer`](../../mozilla.components.concept.tabstray/-tabs-tray/-observer/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/tabs/src/main/java/mozilla/components/feature/tabs/tabstray/TabsTrayInteractor.kt#L19)
+`class TabsTrayInteractor : `[`Observer`](../../mozilla.components.concept.tabstray/-tabs-tray/-observer/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/tabs/src/main/java/mozilla/components/feature/tabs/tabstray/TabsTrayInteractor.kt#L15)
 
 Interactor for a tabs tray component. Subscribes to the tabs tray and invokes use cases to update
 the session manager.

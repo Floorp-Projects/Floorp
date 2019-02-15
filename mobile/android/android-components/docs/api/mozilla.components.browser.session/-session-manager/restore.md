@@ -2,7 +2,7 @@
 
 # restore
 
-`fun restore(snapshot: `[`Snapshot`](-snapshot/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/SessionManager.kt#L195)
+`fun restore(snapshot: `[`Snapshot`](-snapshot/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/SessionManager.kt#L194)
 
 Restores sessions from the provided [Snapshot](-snapshot/index.md).
 Notification behaviour is as follows:
@@ -15,7 +15,3 @@ notification will fire.
 ### Parameters
 
 `snapshot` - A [Snapshot](-snapshot/index.md) which may be produced by [createSnapshot](create-snapshot.md).
-
-### Exceptions
-
-`IllegalArgumentException` - if an empty snapshot is passed in.

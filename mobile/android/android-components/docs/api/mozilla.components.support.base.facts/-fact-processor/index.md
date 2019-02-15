@@ -22,4 +22,5 @@ A [FactProcessor](./index.md) receives [Fact](../-fact/index.md) instances to pr
 
 | Name | Summary |
 |---|---|
+| [CollectionProcessor](../../mozilla.components.support.base.facts.processor/-collection-processor/index.md) | `class CollectionProcessor : `[`FactProcessor`](./index.md)<br>A [FactProcessor](./index.md) implementation that keeps all [Fact](../-fact/index.md) objects in a list. |
 | [LogFactProcessor](../../mozilla.components.support.base.facts.processor/-log-fact-processor/index.md) | `class LogFactProcessor : `[`FactProcessor`](./index.md)<br>A [FactProcessor](./index.md) implementation that prints collected [Fact](../-fact/index.md) instances to the log. |

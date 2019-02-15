@@ -2,7 +2,7 @@
 
 # SessionBundleStorage
 
-`class SessionBundleStorage : `[`Storage`](../../mozilla.components.browser.session.storage/-auto-save/-storage/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session-bundling/src/main/java/mozilla/components/feature/session/bundling/SessionBundleStorage.kt#L29)
+`class SessionBundleStorage : `[`Storage`](../../mozilla.components.browser.session.storage/-auto-save/-storage/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session-bundling/src/main/java/mozilla/components/feature/session/bundling/SessionBundleStorage.kt#L30)
 
 A [Session](../../mozilla.components.browser.session/-session/index.md) storage implementation that saves snapshots as a [SessionBundle](../-session-bundle/index.md).
 

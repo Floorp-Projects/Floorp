@@ -28,7 +28,7 @@ charset can't be found, UTF-8 will be used for decoding.
 | Name | Summary |
 |---|---|
 | [close](close.md) | `open fun close(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Closes this [Body](./index.md) and releases any system resources associated with it. |
-| [string](string.md) | `fun string(): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Reads this body completely as a String. |
+| [string](string.md) | `fun string(charset: `[`Charset`](https://developer.android.com/reference/java/nio/charset/Charset.html)`? = null): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Reads this body completely as a String. |
 | [useBufferedReader](use-buffered-reader.md) | `fun <R> useBufferedReader(charset: `[`Charset`](https://developer.android.com/reference/java/nio/charset/Charset.html)`? = null, block: (`[`BufferedReader`](https://developer.android.com/reference/java/io/BufferedReader.html)`) -> `[`R`](use-buffered-reader.md#R)`): `[`R`](use-buffered-reader.md#R)<br>Creates a buffered reader from this body. |
 | [useStream](use-stream.md) | `fun <R> useStream(block: (`[`InputStream`](https://developer.android.com/reference/java/io/InputStream.html)`) -> `[`R`](use-stream.md#R)`): `[`R`](use-stream.md#R)<br>Creates a usable stream from this body. |
 

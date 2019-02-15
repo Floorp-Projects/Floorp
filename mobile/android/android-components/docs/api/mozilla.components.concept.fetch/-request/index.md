@@ -2,7 +2,7 @@
 
 # Request
 
-`data class Request` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Request.kt#L33)
+`data class Request` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Request.kt#L35)
 
 The [Request](./index.md) data class represents a resource request to be send by a [Client](../-client/index.md).
 
@@ -22,7 +22,7 @@ https://developer.mozilla.org/en-US/docs/Web/API/Request
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `Request(url: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, method: `[`Method`](-method/index.md)` = Method.GET, headers: `[`MutableHeaders`](../-mutable-headers/index.md)`? = MutableHeaders(), connectTimeout: `[`Pair`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-pair/index.html)`<`[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)`, `[`TimeUnit`](https://developer.android.com/reference/java/util/concurrent/TimeUnit.html)`>? = null, readTimeout: `[`Pair`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-pair/index.html)`<`[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)`, `[`TimeUnit`](https://developer.android.com/reference/java/util/concurrent/TimeUnit.html)`>? = null, body: `[`Body`](-body/index.md)`? = null, redirect: `[`Redirect`](-redirect/index.md)` = Redirect.FOLLOW, cookiePolicy: `[`CookiePolicy`](-cookie-policy/index.md)` = CookiePolicy.INCLUDE)`<br>The [Request](./index.md) data class represents a resource request to be send by a [Client](../-client/index.md). |
+| [&lt;init&gt;](-init-.md) | `Request(url: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, method: `[`Method`](-method/index.md)` = Method.GET, headers: `[`MutableHeaders`](../-mutable-headers/index.md)`? = MutableHeaders(), connectTimeout: `[`Pair`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-pair/index.html)`<`[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)`, `[`TimeUnit`](https://developer.android.com/reference/java/util/concurrent/TimeUnit.html)`>? = null, readTimeout: `[`Pair`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-pair/index.html)`<`[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)`, `[`TimeUnit`](https://developer.android.com/reference/java/util/concurrent/TimeUnit.html)`>? = null, body: `[`Body`](-body/index.md)`? = null, redirect: `[`Redirect`](-redirect/index.md)` = Redirect.FOLLOW, cookiePolicy: `[`CookiePolicy`](-cookie-policy/index.md)` = CookiePolicy.INCLUDE, useCaches: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = true)`<br>The [Request](./index.md) data class represents a resource request to be send by a [Client](../-client/index.md). |
 
 ### Properties
 
@@ -36,3 +36,4 @@ https://developer.mozilla.org/en-US/docs/Web/API/Request
 | [readTimeout](read-timeout.md) | `val readTimeout: `[`Pair`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-pair/index.html)`<`[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)`, `[`TimeUnit`](https://developer.android.com/reference/java/util/concurrent/TimeUnit.html)`>?`<br>A timeout to be used when reading from the resource. If the timeout expires before there is data available for read, a java.net.SocketTimeoutException is raised. A timeout of zero is interpreted as an infinite timeout. |
 | [redirect](redirect.md) | `val redirect: `[`Redirect`](-redirect/index.md)<br>Whether the [Client](../-client/index.md) should follow redirects (HTTP 3xx) for this request or not. |
 | [url](url.md) | `val url: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>The URL of the request. |
+| [useCaches](use-caches.md) | `val useCaches: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Whether caches should be used or a network request should be forced, defaults to true (use caches). |

@@ -2,7 +2,7 @@
 
 # OkHttpClient
 
-`class OkHttpClient : `[`Client`](../../mozilla.components.concept.fetch/-client/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/fetch-okhttp/src/main/java/mozilla/components/lib/fetch/okhttp/OkHttpClient.kt#L24)
+`class OkHttpClient : `[`Client`](../../mozilla.components.concept.fetch/-client/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/fetch-okhttp/src/main/java/mozilla/components/lib/fetch/okhttp/OkHttpClient.kt#L28)
 
 [Client](../../mozilla.components.concept.fetch/-client/index.md) implementation using OkHttp.
 
@@ -10,7 +10,7 @@
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `OkHttpClient(client: OkHttpClient = OkHttpClient())`<br>[Client](../../mozilla.components.concept.fetch/-client/index.md) implementation using OkHttp. |
+| [&lt;init&gt;](-init-.md) | `OkHttpClient(client: OkHttpClient = OkHttpClient(), context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`? = null)`<br>[Client](../../mozilla.components.concept.fetch/-client/index.md) implementation using OkHttp. |
 
 ### Inherited Properties
 

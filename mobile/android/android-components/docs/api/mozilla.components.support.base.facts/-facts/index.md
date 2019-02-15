@@ -10,5 +10,6 @@ Global API for collecting [Fact](../-fact/index.md) objects and forwarding them 
 
 | Name | Summary |
 |---|---|
+| [clearProcessors](clear-processors.md) | `fun clearProcessors(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [collect](collect.md) | `fun collect(fact: `[`Fact`](../-fact/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Collects a [Fact](../-fact/index.md) and forwards it to all registered [FactProcessor](../-fact-processor/index.md) instances. |
 | [registerProcessor](register-processor.md) | `fun registerProcessor(processor: `[`FactProcessor`](../-fact-processor/index.md)`): `[`Facts`](./index.md)<br>Registers a new [FactProcessor](../-fact-processor/index.md). |

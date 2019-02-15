@@ -59,6 +59,7 @@
 | [mozilla.components.concept.fetch.Client](../mozilla.components.concept.fetch/-client/index.md) | A generic [Client](../mozilla.components.concept.fetch/-client/index.md) for fetching resources via HTTP/s. |
 | [org.mozilla.telemetry.measurement.ClientIdMeasurement](../org.mozilla.telemetry.measurement/-client-id-measurement/index.md) | A unique, randomly generated UUID for this client. |
 | [mozilla.components.feature.awesomebar.provider.ClipboardSuggestionProvider](../mozilla.components.feature.awesomebar.provider/-clipboard-suggestion-provider/index.md) | An [AwesomeBar.SuggestionProvider](../mozilla.components.concept.awesomebar/-awesome-bar/-suggestion-provider/index.md) implementation that returns a suggestions for an URL in the clipboard (if there's any). |
+| [mozilla.components.support.base.facts.processor.CollectionProcessor](../mozilla.components.support.base.facts.processor/-collection-processor/index.md) | A [FactProcessor](../mozilla.components.support.base.facts/-fact-processor/index.md) implementation that keeps all [Fact](../mozilla.components.support.base.facts/-fact/index.md) objects in a list. |
 | [mozilla.components.support.utils.ColorUtils](../mozilla.components.support.utils/-color-utils/index.md) |  |
 | [mozilla.components.service.glean.CommonMetricData](../mozilla.components.service.glean/-common-metric-data/index.md) | This defines the common set of data shared across all the different metric types. |
 | [mozilla.components.service.fxa.Config](../mozilla.components.service.fxa/-config.md) |  |

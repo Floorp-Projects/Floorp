@@ -2,7 +2,7 @@
 
 # body
 
-`val body: `[`Body`](-body/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Request.kt#L39)
+`val body: `[`Body`](-body/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Request.kt#L41)
 
 An optional body to be send with the request.
 
