@@ -67,6 +67,7 @@ EXPORTS += [
     'nsDOMTokenList.h',
     'nsFocusManager.h',
     'nsFrameLoader.h',  # Because binding headers include it.
+    'nsFrameLoaderOwner.h',
     'nsFrameMessageManager.h',
     'nsGlobalWindow.h',  # Because binding headers include it.
     'nsGlobalWindowInner.h',  # Because binding headers include it.
@@ -331,6 +332,7 @@ UNIFIED_SOURCES += [
     'nsDOMWindowList.cpp',
     'nsFocusManager.cpp',
     'nsFrameLoader.cpp',
+    'nsFrameLoaderOwner.cpp',
     'nsGlobalWindowCommands.cpp',
     'nsHistory.cpp',
     'nsHTMLContentSerializer.cpp',
