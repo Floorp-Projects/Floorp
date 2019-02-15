@@ -2315,8 +2315,7 @@ var SessionStoreInternal = {
   // Examine the channel response to see if we should change the process
   // performing the given load.
   onMayChangeProcess(aChannel) {
-    if (!E10SUtils.useHttpResponseProcessSelection() &&
-        !E10SUtils.useCrossOriginOpenerPolicy()) {
+    if (!E10SUtils.useHttpResponseProcessSelection()) {
       return;
     }
 
@@ -2371,7 +2370,6 @@ var SessionStoreInternal = {
     let browser = tabParent.ownerElement;
     if (!browser) {
       debug(`[process-switch]: TabParent has no ownerElement - ignoring`);
-      return;
     }
 
     let tabbrowser = browser.ownerGlobal.gBrowser;
@@ -2393,9 +2391,7 @@ var SessionStoreInternal = {
                                                          true,
                                                          browser.remoteType,
                                                          currentPrincipal);
-    if (browser.remoteType == remoteType &&
-        (!E10SUtils.useCrossOriginOpenerPolicy() ||
-         !aChannel.hasCrossOriginOpenerPolicyMismatch())) {
+    if (browser.remoteType == remoteType) {
       debug(`[process-switch]: type (${remoteType}) is compatible - ignoring`);
       return;
     }
