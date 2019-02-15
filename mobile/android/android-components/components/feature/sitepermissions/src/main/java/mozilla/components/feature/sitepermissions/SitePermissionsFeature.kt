@@ -20,9 +20,12 @@ import mozilla.components.concept.engine.permission.Permission.ContentGeoLocatio
 import mozilla.components.concept.engine.permission.Permission.ContentNotification
 import mozilla.components.concept.engine.permission.Permission.ContentAudioCapture
 import mozilla.components.concept.engine.permission.Permission.ContentAudioMicrophone
+import mozilla.components.concept.engine.permission.Permission.ContentVideoCamera
+import mozilla.components.concept.engine.permission.Permission.ContentVideoCapture
 import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.ui.doorhanger.DoorhangerPrompt
+import mozilla.components.ui.doorhanger.DoorhangerPrompt.Button
 import mozilla.components.ui.doorhanger.DoorhangerPrompt.Control.RadioButton
 import mozilla.components.ui.doorhanger.DoorhangerPrompt.ControlGroup
 import java.security.InvalidParameterException
@@ -41,6 +44,8 @@ typealias OnNeedToRequestPermissions = (permissions: Array<String>) -> Unit
  * @property onNeedToRequestPermissions a callback invoked when permissions
  * need to be requested. Once the request is completed, [onPermissionsResult] needs to be invoked.
  **/
+
+@Suppress("TooManyFunctions")
 class SitePermissionsFeature(
     private val anchorView: View,
     private val sessionManager: SessionManager,
@@ -82,13 +87,13 @@ class SitePermissionsFeature(
     }
 
     /**
-     * Notifies that the list of [permissions] have been granted for the [session] and [url].
+     * Notifies that the list of [grantedPermissions] have been granted for the [session] and [url].
      *
      * @param session the session which requested the permissions.
      * @param url the url which requested the permissions.
-     * @param permissions the list of [permissions] that have been granted.
+     * @param grantedPermissions the list of [grantedPermissions] that have been granted.
      */
-    private fun onContentPermissionGranted(session: Session, url: String, permissions: List<Permission>) {
+    private fun onContentPermissionGranted(session: Session, url: String, grantedPermissions: List<Permission>) {
         session.contentPermissionRequest.consume {
             it.grant()
             // Update the DB
@@ -136,14 +141,14 @@ class SitePermissionsFeature(
         val uri = Uri.parse(permissionRequest.uri ?: url)
         val uriString = " ${uri.host}"
 
-        val allowString = context.getString(R.string.mozac_feature_sitepermissions_allow)
+        val allowButtonTitle = context.getString(R.string.mozac_feature_sitepermissions_allow)
         val denyString = context.getString(R.string.mozac_feature_sitepermissions_not_allow)
 
-        val allowButton = DoorhangerPrompt.Button(allowString, true) {
+        val allowButton = Button(allowButtonTitle, true) {
             onContentPermissionGranted(session, url, permissionRequest.permissions)
         }
 
-        val denyButton = DoorhangerPrompt.Button(denyString) {
+        val denyButton = Button(denyString) {
             onContentPermissionDeny(session, url)
         }
 
@@ -180,6 +185,26 @@ class SitePermissionsFeature(
                     buttons
                 )
             }
+            is ContentVideoCapture -> {
+                createPromptForCameraPermission(
+                    context,
+                    uriString,
+                    permissionRequest,
+                    session,
+                    allowButtonTitle,
+                    denyButton
+                )
+            }
+            is ContentVideoCamera -> {
+                createPromptForCameraPermission(
+                    context,
+                    uriString,
+                    permissionRequest,
+                    session,
+                    allowButtonTitle,
+                    denyButton
+                )
+            }
             else ->
                 throw InvalidParameterException("$permission is not a valid permission.")
         }
@@ -210,7 +235,7 @@ class SitePermissionsFeature(
     private fun createPromptForMicrophonePermission(
         context: Context,
         uriString: String,
-        buttons: List<DoorhangerPrompt.Button>
+        buttons: List<Button>
     ): DoorhangerPrompt {
 
         val title = context.getString(R.string.mozac_feature_sitepermissions_microfone_title, uriString)
@@ -227,6 +252,82 @@ class SitePermissionsFeature(
             buttons = buttons
         )
     }
+
+    @Suppress("LongParameterList")
+    @SuppressLint("VisibleForTests")
+    private fun createPromptForCameraPermission(
+        context: Context,
+        uriString: String,
+        permissionRequest: PermissionRequest,
+        session: Session,
+        allowButtonTitle: String,
+        denyButton: Button
+    ): DoorhangerPrompt {
+
+        val title = context.getString(R.string.mozac_feature_sitepermissions_microfone_title, uriString)
+        val drawable = ContextCompat.getDrawable(context, R.drawable.mozac_ic_video)
+
+        val (controlGroup, allowButton) = createControlGroupAndAllowButtonForCameraPermission(
+            permissionRequest.cameraPermissions,
+            allowButtonTitle,
+            session
+        )
+
+        return DoorhangerPrompt(
+            title = title,
+            icon = drawable,
+            controlGroups = listOf(controlGroup),
+            buttons = listOf(denyButton, allowButton)
+        )
+    }
+
+    private fun createControlGroupAndAllowButtonForCameraPermission(
+        cameraPermissions: List<Permission>,
+        allowButtonTitle: String,
+        session: Session
+    ): Pair<ControlGroup, Button> {
+
+        val (titleOption1, titleOption2) = getCameraTextOptions(cameraPermissions)
+
+        val option1 = RadioButton(titleOption1)
+
+        val option2 = RadioButton(titleOption2)
+
+        val allowButton = Button(allowButtonTitle, true) {
+            val selectedPermission: Permission = if (option1.checked) {
+                cameraPermissions[0]
+            } else {
+                cameraPermissions[1]
+            }
+
+            onContentPermissionGranted(session, session.url, listOf(selectedPermission))
+        }
+
+        return ControlGroup(controls = listOf(option1, option2)) to allowButton
+    }
+
+    private fun getCameraTextOptions(cameraPermissions: List<Permission>): Pair<String, String> {
+        val context = anchorView.context
+        val option1Text = if (cameraPermissions[0].desc?.contains("back") == true) {
+            R.string.mozac_feature_sitepermissions_back_facing_camera
+        } else {
+            R.string.mozac_feature_sitepermissions_selfie_camera
+        }
+
+        val option2Text = if (cameraPermissions[1].desc?.contains("back") == true) {
+            R.string.mozac_feature_sitepermissions_back_facing_camera
+        } else {
+            R.string.mozac_feature_sitepermissions_selfie_camera
+        }
+        return context.getString(option1Text) to context.getString(option2Text)
+    }
+
+    private val PermissionRequest.cameraPermissions: List<Permission>
+        get() {
+            return permissions.filter {
+                it is ContentVideoCamera || it is ContentVideoCapture
+            }
+        }
 
     private fun onAppPermissionRequested(permissionRequest: PermissionRequest): Boolean {
         val permissions = permissionRequest.permissions.map { it.id ?: "" }

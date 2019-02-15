@@ -31,7 +31,7 @@ import mozilla.components.support.ktx.android.view.forEach
 class DoorhangerPrompt(
     private val title: String,
     private val icon: Drawable? = null,
-    private val controlGroups: List<ControlGroup> = listOf(),
+    @VisibleForTesting(otherwise = PRIVATE) val controlGroups: List<ControlGroup> = listOf(),
     @VisibleForTesting(otherwise = PRIVATE) val buttons: List<Button> = listOf(),
     private val onDismiss: (() -> Unit)? = null
 ) {

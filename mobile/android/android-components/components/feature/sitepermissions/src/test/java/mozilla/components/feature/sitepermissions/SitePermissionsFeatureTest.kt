@@ -16,9 +16,12 @@ import mozilla.components.concept.engine.permission.Permission.ContentAudioCaptu
 import mozilla.components.concept.engine.permission.Permission.ContentAudioMicrophone
 import mozilla.components.concept.engine.permission.Permission.ContentGeoLocation
 import mozilla.components.concept.engine.permission.Permission.ContentNotification
+import mozilla.components.concept.engine.permission.Permission.ContentVideoCamera
+import mozilla.components.concept.engine.permission.Permission.ContentVideoCapture
 import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.support.base.observer.Consumable
 import mozilla.components.support.test.mock
+import mozilla.components.ui.doorhanger.DoorhangerPrompt
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -179,6 +182,86 @@ class SitePermissionsFeatureTest {
                     get() = "http://www.mozilla.org"
                 override val permissions: List<Permission>
                     get() = listOf(permission)
+
+                override fun reject() {
+                    grantWasCalled = true
+                }
+
+                override fun grant(permissions: List<Permission>) = Unit
+            }
+
+            session.contentPermissionRequest = Consumable.from(permissionRequest)
+
+            val prompt = sitePermissionFeature.onContentPermissionRequested(session, permissionRequest)
+
+            val negativeButton = prompt.buttons.find { !it.positive }
+            negativeButton!!.onClick.invoke()
+
+            assertTrue(grantWasCalled)
+            assertTrue(session.contentPermissionRequest.isConsumed())
+        }
+    }
+
+    @Test
+    fun `granting a camera permission must call grant and consume contentPermissionRequest`() {
+        val session = getSelectedSession()
+        var grantWasCalled = false
+
+        val permissions = listOf(
+                ContentVideoCapture("", "back camera"),
+                ContentVideoCamera("", "front camera")
+        )
+
+        permissions.forEachIndexed { index, _ ->
+
+            val permissionRequest: PermissionRequest = object : PermissionRequest {
+                override val uri: String?
+                    get() = "http://www.mozilla.org"
+
+                override val permissions: List<Permission>
+                    get() = if (index > 0) permissions.reversed() else permissions
+
+                override fun grant(permissions: List<Permission>) {
+                    grantWasCalled = true
+                }
+
+                override fun reject() = Unit
+            }
+
+            session.contentPermissionRequest = Consumable.from(permissionRequest)
+
+            val prompt = sitePermissionFeature.onContentPermissionRequested(session, permissionRequest)
+
+            val radioButton = prompt.controlGroups.first().controls[index] as DoorhangerPrompt.Control.RadioButton
+
+            // Simulating a user click either on the back/front camera option
+            radioButton.checked = !radioButton.checked
+
+            val positiveButton = prompt.buttons.find { it.positive }
+            positiveButton?.onClick?.invoke()
+
+            assertTrue(grantWasCalled)
+            assertTrue(session.contentPermissionRequest.isConsumed())
+        }
+    }
+
+    @Test
+    fun `rejecting a camera content permission must call reject and consume contentPermissionRequest`() {
+        val session = getSelectedSession()
+        var grantWasCalled = false
+
+        val permissions = listOf(
+                ContentVideoCapture("", "back camera"),
+                ContentVideoCamera("", "front camera")
+        )
+
+        permissions.forEachIndexed { index, _ ->
+            val permissionRequest: PermissionRequest = object : PermissionRequest {
+                override val uri: String?
+                    get() = "http://www.mozilla.org"
+
+                override val permissions: List<Permission>
+                    get() = if (index > 0) permissions.reversed() else permissions
 
                 override fun reject() {
                     grantWasCalled = true
