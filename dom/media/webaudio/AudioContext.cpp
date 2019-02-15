@@ -156,6 +156,7 @@ AudioContext::AudioContext(nsPIDOMWindowInner* aWindow, bool aIsOffline,
       mIsDisconnecting(false),
       mWasAllowedToStart(true),
       mSuspendedByContent(false),
+      mSuspendedByChrome(false),
       mWasEverAllowedToStart(false),
       mWasEverBlockedToStart(false),
       mWouldBeAllowedToStart(true) {
@@ -935,6 +936,7 @@ void AudioContext::SuspendFromChrome() {
     return;
   }
   SuspendInternal(nullptr);
+  mSuspendedByChrome = true;
 }
 
 void AudioContext::SuspendInternal(void* aPromise) {
@@ -958,10 +960,11 @@ void AudioContext::ResumeFromChrome() {
   // Not support resume call for these situations.
   if (mAudioContextState == AudioContextState::Running || mIsOffline ||
       (mAudioContextState == AudioContextState::Closed || mCloseCalled) ||
-      mIsShutDown) {
+      mIsShutDown || !mSuspendedByChrome) {
     return;
   }
   ResumeInternal();
+  mSuspendedByChrome = false;
 }
 
 already_AddRefed<Promise> AudioContext::Resume(ErrorResult& aRv) {
@@ -1016,6 +1019,10 @@ void AudioContext::ResumeInternal() {
   Graph()->ApplyAudioContextOperation(DestinationStream(), streams,
                                       AudioContextOperation::Resume, nullptr);
   mSuspendCalled = false;
+  // AudioContext will be resumed later, so we have no need to keep the suspend
+  // flag from Chrome, in case to avoid to resume the suspended Audio Context
+  // which is requested by content.
+  mSuspendedByChrome = false;
 }
 
 void AudioContext::UpdateAutoplayAssumptionStatus() {
