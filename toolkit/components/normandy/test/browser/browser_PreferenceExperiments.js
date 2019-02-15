@@ -57,10 +57,8 @@ decorate_task(
       "start threw an error due to a conflicting experiment name",
     );
 
-    Assert.deepEqual(
-      sendEventStub.args,
-      [["enrollFailed", "preference_study", "test", {reason: "name-conflict"}]],
-      "event should be sent for failure",
+    sendEventStub.assertEvents(
+      [["enrollFailed", "preference_study", "test", {reason: "name-conflict"}]]
     );
   }
 );
@@ -83,10 +81,8 @@ decorate_task(
       "start threw an error due to an active experiment for the given preference",
     );
 
-    Assert.deepEqual(
-      sendEventStub.args,
-      [["enrollFailed", "preference_study", "different", {reason: "pref-conflict"}]],
-      "event should be sent for failure",
+    sendEventStub.assertEvents(
+      [["enrollFailed", "preference_study", "different", {reason: "pref-conflict"}]]
     );
   }
 );
@@ -109,10 +105,8 @@ decorate_task(
       "start threw an error due to an invalid preference branch type",
     );
 
-    Assert.deepEqual(
-      sendEventStub.args,
-      [["enrollFailed", "preference_study", "test", {reason: "invalid-branch"}]],
-      "event should be sent for failure",
+    sendEventStub.assertEvents(
+      [["enrollFailed", "preference_study", "test", {reason: "invalid-branch"}]]
     );
   }
 );
@@ -242,10 +236,8 @@ decorate_task(
       "start threw error for incompatible preference type"
     );
 
-    Assert.deepEqual(
-      sendEventStub.args,
-      [["enrollFailed", "preference_study", "test", {reason: "invalid-type"}]],
-      "event should be sent for failure",
+    sendEventStub.assertEvents(
+      [["enrollFailed", "preference_study", "test", {reason: "invalid-type"}]]
     );
   }
 );
@@ -424,10 +416,8 @@ decorate_task(
       "stop threw an error because there are no experiments with the given name",
     );
 
-    Assert.deepEqual(
-      sendEventStub.args,
-      [["unenrollFailed", "preference_study", "test", {reason: "does-not-exist"}]],
-      "event should be sent for failure",
+    sendEventStub.assertEvents(
+      [["unenrollFailed", "preference_study", "test", {reason: "does-not-exist"}]]
     );
   }
 );
@@ -443,10 +433,8 @@ decorate_task(
       "stop threw an error because the experiment was already expired",
     );
 
-    Assert.deepEqual(
-      sendEventStub.args,
-      [["unenrollFailed", "preference_study", "test", {reason: "already-unenrolled"}]],
-      "event should be sent for failure",
+    sendEventStub.assertEvents(
+      [["unenrollFailed", "preference_study", "test", {reason: "already-unenrolled"}]]
     );
   }
 );
@@ -492,14 +480,12 @@ decorate_task(
       "stop cleared the startup preference for fake.preference.",
     );
 
-    Assert.deepEqual(
-      sendEventStub.args,
+    sendEventStub.assertEvents(
       [["unenroll", "preference_study", "test", {
         didResetValue: "true",
         reason: "test-reason",
         branch: "fakebranch",
-      }]],
-      "stop should send the correct telemetry event"
+      }]]
     );
 
     PreferenceExperiments.stopAllObservers();
@@ -590,14 +576,12 @@ decorate_task(
       "customvalue",
       "stop did not modify the preference",
     );
-    Assert.deepEqual(
-      sendEventStub.args,
+    sendEventStub.assertEvents(
       [["unenroll", "preference_study", "test", {
         didResetValue: "false",
         reason: "test-reason",
         branch: "fakebranch",
-      }]],
-      "stop should send the correct telemetry event"
+      }]]
     );
   }
 );
@@ -763,8 +747,7 @@ decorate_task(
     await PreferenceExperiments.stop("test", { reason: "test-reason" });
     Assert.deepEqual(setInactiveStub.args, [["test"]], "Experiment is unregistered by stop()");
 
-    Assert.deepEqual(
-      sendEventStub.args,
+    sendEventStub.assertEvents(
       [
         ["enroll", "preference_study", "test", {
           experimentType: "exp",
@@ -775,8 +758,7 @@ decorate_task(
           didResetValue: "true",
           branch: "branch",
         }],
-      ],
-      "PreferenceExperiments.start() and stop() should send the correct telemetry event"
+      ]
     );
   },
 );
@@ -804,13 +786,11 @@ decorate_task(
       "start() should register the experiment with the provided type",
     );
 
-    Assert.deepEqual(
-      sendEventStub.getCall(0).args,
-      ["enroll", "preference_study", "test", {
+    sendEventStub.assertEvents(
+      [["enroll", "preference_study", "test", {
         experimentType: "pref-test",
         branch: "branch",
-      }],
-      "start should include the passed reason in the telemetry event"
+      }]]
     );
 
     // start sets the passed preference in a way that is hard to mock.
@@ -1152,14 +1132,12 @@ decorate_task(
     // let the event loop tick to run the observer
     await Promise.resolve();
 
-    Assert.deepEqual(
-      sendEventStub.args,
+    sendEventStub.assertEvents(
       [["unenroll", "preference_study", "test", {
         didResetValue: "false",
         reason: "user-preference-changed",
         branch: "fakebranch",
-      }]],
-      "stop should send a telemetry event indicating the user unenrolled manually",
+      }]]
     );
   },
 );
