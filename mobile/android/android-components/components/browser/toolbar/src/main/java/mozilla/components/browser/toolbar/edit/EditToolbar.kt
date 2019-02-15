@@ -64,6 +64,7 @@ class EditToolbar(
         setPadding(padding, padding, padding, padding)
         setImageResource(mozilla.components.ui.icons.R.drawable.mozac_ic_close)
         contentDescription = context.getString(R.string.mozac_close_button_description)
+        scaleType = ImageView.ScaleType.CENTER
 
         setOnClickListener {
             toolbar.displayMode()
