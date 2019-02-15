@@ -36,6 +36,7 @@ use prim_store::{PrimitiveScratchBuffer, PrimitiveInstance};
 use prim_store::{PrimitiveInstanceKind, PrimTemplateCommonData};
 use profiler::{BackendProfileCounters, IpcProfileCounters, ResourceProfileCounters};
 use record::ApiRecordingReceiver;
+use render_task::RenderTaskTreeCounters;
 use renderer::{AsyncPropertySampler, PipelineInfo};
 use resource_cache::ResourceCache;
 #[cfg(feature = "replay")]
@@ -346,6 +347,9 @@ struct Document {
     /// where we want to recycle the memory each new display list, to avoid constantly
     /// re-allocating and moving memory around.
     scratch: PrimitiveScratchBuffer,
+    /// Keep track of the size of render task tree to pre-allocate memory up-front
+    /// the next frame.
+    render_task_counters: RenderTaskTreeCounters,
 }
 
 impl Document {
@@ -379,6 +383,7 @@ impl Document {
             has_built_scene: false,
             data_stores: DataStores::default(),
             scratch: PrimitiveScratchBuffer::new(),
+            render_task_counters: RenderTaskTreeCounters::new(),
         }
     }
 
@@ -521,6 +526,7 @@ impl Document {
                 &self.dynamic_properties,
                 &mut self.data_stores,
                 &mut self.scratch,
+                &mut self.render_task_counters,
                 debug_flags,
             );
             self.hit_tester = Some(frame_builder.create_hit_tester(
@@ -1751,6 +1757,7 @@ impl RenderBackend {
                 has_built_scene: false,
                 data_stores,
                 scratch: PrimitiveScratchBuffer::new(),
+                render_task_counters: RenderTaskTreeCounters::new(),
             };
 
             let frame_name = format!("frame-{}-{}", (id.0).0, id.1);
