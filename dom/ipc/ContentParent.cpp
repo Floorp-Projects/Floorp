@@ -178,6 +178,7 @@
 #include "mozilla/dom/nsMixedContentBlocker.h"
 #include "nsMemoryInfoDumper.h"
 #include "nsMemoryReporterManager.h"
+#include "nsQueryObject.h"
 #include "nsScriptError.h"
 #include "nsServiceManagerUtils.h"
 #include "nsStyleSheetService.h"
@@ -4680,25 +4681,27 @@ mozilla::ipc::IPCResult ContentParent::CommonCreateWindow(
       return IPC_OK();
     }
 
-    nsCOMPtr<nsIFrameLoaderOwner> opener = do_QueryInterface(frame);
+    RefPtr<Element> openerElement = do_QueryObject(frame);
 
     nsCOMPtr<nsIOpenURIInFrameParams> params =
-        new nsOpenURIInFrameParams(openerOriginAttributes, opener);
+        new nsOpenURIInFrameParams(openerOriginAttributes, openerElement);
     params->SetReferrer(NS_ConvertUTF8toUTF16(aBaseURI));
     MOZ_ASSERT(aTriggeringPrincipal, "need a valid triggeringPrincipal");
     params->SetTriggeringPrincipal(aTriggeringPrincipal);
     params->SetReferrerPolicy(aReferrerPolicy);
 
-    nsCOMPtr<nsIFrameLoaderOwner> frameLoaderOwner;
+    RefPtr<Element> el;
+
     if (aLoadURI) {
       aResult = browserDOMWin->OpenURIInFrame(
           aURIToLoad, params, aOpenLocation, nsIBrowserDOMWindow::OPEN_NEW,
-          aNextTabParentId, aName, getter_AddRefs(frameLoaderOwner));
+          aNextTabParentId, aName, getter_AddRefs(el));
     } else {
       aResult = browserDOMWin->CreateContentWindowInFrame(
           aURIToLoad, params, aOpenLocation, nsIBrowserDOMWindow::OPEN_NEW,
-          aNextTabParentId, aName, getter_AddRefs(frameLoaderOwner));
+          aNextTabParentId, aName, getter_AddRefs(el));
     }
+    RefPtr<nsFrameLoaderOwner> frameLoaderOwner = do_QueryObject(el);
     if (NS_SUCCEEDED(aResult) && frameLoaderOwner) {
       RefPtr<nsFrameLoader> frameLoader = frameLoaderOwner->GetFrameLoader();
       if (frameLoader) {
@@ -4752,8 +4755,8 @@ mozilla::ipc::IPCResult ContentParent::CommonCreateWindow(
     nsCOMPtr<Element> frameElement =
         TabParent::GetFrom(aNewTabParent)->GetOwnerElement();
     MOZ_ASSERT(frameElement);
-    nsCOMPtr<nsIFrameLoaderOwner> frameLoaderOwner =
-        do_QueryInterface(frameElement);
+    RefPtr<nsFrameLoaderOwner> frameLoaderOwner =
+        do_QueryObject(frameElement);
     MOZ_ASSERT(frameLoaderOwner);
     RefPtr<nsFrameLoader> frameLoader = frameLoaderOwner->GetFrameLoader();
     MOZ_ASSERT(frameLoader);

@@ -16,10 +16,10 @@
 #include "mozilla/NullPrincipal.h"
 #include "mozIThirdPartyUtil.h"
 #include "nsFrameLoader.h"
+#include "nsFrameLoaderOwner.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsIDocShell.h"
 #include "mozilla/dom/Document.h"
-#include "nsIFrameLoaderOwner.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsISupportsImpl.h"
 #include "nsISupportsUtils.h"
@@ -28,6 +28,7 @@
 #include "nsDocShell.h"
 #include "nsGlobalWindow.h"
 #include "nsMixedContentBlocker.h"
+#include "nsQueryObject.h"
 #include "nsRedirectHistoryEntry.h"
 #include "nsSandboxFlags.h"
 #include "LoadInfo.h"
@@ -222,8 +223,8 @@ LoadInfo::LoadInfo(
     // must be coming from an object (such as a plugin) that's loaded into it
     // instead of a document being loaded. In that case, treat this object like
     // any other non-document-loading element.
-    nsCOMPtr<nsIFrameLoaderOwner> frameLoaderOwner =
-        do_QueryInterface(aLoadingContext);
+    RefPtr<nsFrameLoaderOwner> frameLoaderOwner =
+        do_QueryObject(aLoadingContext);
     RefPtr<nsFrameLoader> fl =
         frameLoaderOwner ? frameLoaderOwner->GetFrameLoader() : nullptr;
     if (fl) {

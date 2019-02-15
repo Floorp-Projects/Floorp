@@ -14,7 +14,6 @@
 
 #include "nsDocShell.h"
 #include "nsStringFwd.h"
-#include "nsIFrameLoaderOwner.h"
 #include "nsPoint.h"
 #include "nsSize.h"
 #include "nsWrapperCache.h"
@@ -35,6 +34,7 @@ class nsSubDocumentFrame;
 class nsView;
 class AutoResetInShow;
 class AutoResetInFrameSwap;
+class nsFrameLoaderOwner;
 class nsITabParent;
 class nsIDocShellTreeItem;
 class nsIDocShellTreeOwner;
@@ -245,16 +245,16 @@ class nsFrameLoader final : public nsStubMutationObserver,
   // dimensions for the content area.
   void ForceLayoutIfNecessary();
 
-  // The guts of an nsIFrameLoaderOwner::SwapFrameLoader implementation.  A
+  // The guts of an nsFrameLoaderOwner::SwapFrameLoader implementation.  A
   // frame loader owner needs to call this, and pass in the two references to
   // nsRefPtrs for frame loaders that need to be swapped.
   nsresult SwapWithOtherLoader(nsFrameLoader* aOther,
-                               nsIFrameLoaderOwner* aThisOwner,
-                               nsIFrameLoaderOwner* aOtherOwner);
+                               nsFrameLoaderOwner* aThisOwner,
+                               nsFrameLoaderOwner* aOtherOwner);
 
   nsresult SwapWithOtherRemoteLoader(nsFrameLoader* aOther,
-                                     nsIFrameLoaderOwner* aThisOwner,
-                                     nsIFrameLoaderOwner* aOtherOwner);
+                                     nsFrameLoaderOwner* aThisOwner,
+                                     nsFrameLoaderOwner* aOtherOwner);
 
   /**
    * Return the primary frame for our owning content, or null if it

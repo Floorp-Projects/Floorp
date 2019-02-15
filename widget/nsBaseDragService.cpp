@@ -15,6 +15,7 @@
 #include "nsCOMPtr.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIFrame.h"
+#include "nsFrameLoaderOwner.h"
 #include "mozilla/dom/Document.h"
 #include "nsIContent.h"
 #include "nsIPresShell.h"
@@ -540,7 +541,7 @@ nsresult nsBaseDragService::DrawDrag(nsINode* aDOMNode,
 
   *aPresContext = presShell->GetPresContext();
 
-  nsCOMPtr<nsIFrameLoaderOwner> flo = do_QueryInterface(dragNode);
+  RefPtr<nsFrameLoaderOwner> flo = do_QueryObject(dragNode);
   if (flo) {
     RefPtr<nsFrameLoader> fl = flo->GetFrameLoader();
     if (fl) {

@@ -119,6 +119,7 @@
 #include "nsDOMMutationObserver.h"
 #include "nsError.h"
 #include "nsFocusManager.h"
+#include "nsFrameLoaderOwner.h"
 #include "nsGenericHTMLElement.h"
 #include "nsGenericHTMLFrameElement.h"
 #include "nsGkAtoms.h"
@@ -201,6 +202,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsPresContext.h"
 #include "nsPrintfCString.h"
+#include "nsQueryObject.h"
 #include "nsSandboxFlags.h"
 #include "nsScriptSecurityManager.h"
 #include "nsSerializationHelper.h"
@@ -10423,7 +10425,7 @@ static Result<Ok, nsresult> ExtractExceptionValues(
 
 /* static */ already_AddRefed<ContentFrameMessageManager>
 nsContentUtils::TryGetTabChildGlobal(nsISupports* aFrom) {
-  nsCOMPtr<nsIFrameLoaderOwner> frameLoaderOwner = do_QueryInterface(aFrom);
+  RefPtr<nsFrameLoaderOwner> frameLoaderOwner = do_QueryObject(aFrom);
   if (!frameLoaderOwner) {
     return nullptr;
   }
