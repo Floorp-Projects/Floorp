@@ -348,7 +348,7 @@ class SyntaxParseHandler {
     return true;
   }
   MOZ_MUST_USE bool addClassFieldDefinition(ListNodeType memberList, Node name,
-                                            FunctionNodeType initializer) {
+                                            Node initializer) {
     return true;
   }
   UnaryNodeType newYieldExpression(uint32_t begin, Node value) {
