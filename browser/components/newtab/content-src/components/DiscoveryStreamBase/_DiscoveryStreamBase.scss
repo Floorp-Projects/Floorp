@@ -25,9 +25,13 @@
 }
 
 .ds-header {
-  font-size: 17px;
+  color: $grey-50;
+  font-size: 13px;
   font-weight: 600;
-  line-height: 24px;
-  color: $grey-90;
-  margin: 24px 0 12px;
+  line-height: 20px;
+  margin: 8px 0;
+
+  .icon {
+    fill: var(--newtab-text-secondary-color);
+  }
 }

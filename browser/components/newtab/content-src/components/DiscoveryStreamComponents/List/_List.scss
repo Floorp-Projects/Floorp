@@ -24,7 +24,7 @@ $item-line-height: 20;
   }
 
   .ds-list-item-title {
-    @include limit-visibile-lines(2, $line-height, $font-size);
+    @include limit-visibile-lines(3, $line-height, $font-size);
   }
 
   .ds-list-image {
@@ -179,7 +179,7 @@ $item-line-height: 20;
   .ds-list-item-info,
   .ds-list-item-context {
     @include limit-visibile-lines(1, $item-line-height, $item-font-size);
-    color: $grey-50;
+    color: $teal-80;
     font-size: 13px;
     text-overflow: ellipsis;
   }

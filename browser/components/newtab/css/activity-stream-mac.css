@@ -1837,15 +1837,18 @@ main {
     grid-row-gap: var(--gridRowGap); }
 
 .ds-header {
-  font-size: 17px;
+  color: #737373;
+  font-size: 13px;
   font-weight: 600;
-  line-height: 24px;
-  color: #0C0C0D;
-  margin: 24px 0 12px; }
+  line-height: 20px;
+  margin: 8px 0; }
+  .ds-header .icon {
+    fill: var(--newtab-text-secondary-color); }
 
 .ds-card-grid {
   display: grid;
-  grid-gap: 24px; }
+  grid-gap: 24px;
+  margin: 16px 0; }
   .ds-card-grid .ds-card {
     background: #FFF;
     border-radius: 4px; }
@@ -1871,14 +1874,6 @@ main {
   .ds-column-11 .ds-card-grid,
   .ds-column-12 .ds-card-grid {
     grid-template-columns: repeat(4, 1fr); }
-    .ds-column-9 .ds-card-grid .meta .title,
-    .ds-column-10 .ds-card-grid .meta .title,
-    .ds-column-11 .ds-card-grid .meta .title,
-    .ds-column-12 .ds-card-grid .meta .title {
-      font-size: 14px;
-      line-height: 20px;
-      max-height: 2.85714em;
-      overflow: hidden; }
     .ds-column-9 .ds-card-grid.ds-card-grid-divisible-by-3,
     .ds-column-10 .ds-card-grid.ds-card-grid-divisible-by-3,
     .ds-column-11 .ds-card-grid.ds-card-grid-divisible-by-3,
@@ -1890,6 +1885,14 @@ main {
       .ds-column-12 .ds-card-grid.ds-card-grid-divisible-by-3 .title {
         font-size: 17px;
         line-height: 24px; }
+    .ds-column-9 .ds-card-grid.ds-card-grid-divisible-by-4 .title,
+    .ds-column-10 .ds-card-grid.ds-card-grid-divisible-by-4 .title,
+    .ds-column-11 .ds-card-grid.ds-card-grid-divisible-by-4 .title,
+    .ds-column-12 .ds-card-grid.ds-card-grid-divisible-by-4 .title {
+      font-size: 14px;
+      line-height: 20px;
+      max-height: 4.28571em;
+      overflow: hidden; }
 
 .ds-hero .img {
   background-color: var(--newtab-card-placeholder-color);
@@ -1918,7 +1921,8 @@ main {
   padding-top: 0; }
 
 .ds-hero .ds-card {
-  border: 0; }
+  border: 0;
+  padding-bottom: 20px; }
   .ds-hero .ds-card p {
     margin-top: 4px; }
   .ds-hero .ds-card:hover {
@@ -1927,11 +1931,6 @@ main {
     border-radius: 0; }
   .ds-hero .ds-card .meta {
     padding: 0; }
-    .ds-hero .ds-card .meta .title {
-      font-size: 14px;
-      line-height: 20px;
-      max-height: 2.85714em;
-      overflow: hidden; }
   .ds-hero .ds-card .img-wrapper {
     margin: 0 0 12px; }
 
@@ -1968,12 +1967,11 @@ main {
       max-height: 5.09091em;
       overflow: hidden;
       color: #0C0C0D; }
-    .ds-hero .wrapper .meta p {
-      font-size: 14px; }
-      .ds-hero .wrapper .meta p.context {
-        color: #008EA4; }
+    .ds-hero .wrapper .meta .context {
+      color: #008EA4; }
     .ds-hero .wrapper .meta .source {
       font-size: 13px;
+      color: #005A71;
       margin-bottom: 0;
       overflow-x: hidden;
       text-overflow: ellipsis; }
@@ -2020,13 +2018,13 @@ main {
 .ds-column-12 .ds-hero {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  grid-column-gap: 24px;
-  padding: 20px 0; }
+  grid-column-gap: 24px; }
   .ds-column-9 .ds-hero.ds-hero-border,
   .ds-column-10 .ds-hero.ds-hero-border,
   .ds-column-11 .ds-hero.ds-hero-border,
   .ds-column-12 .ds-hero.ds-hero-border {
-    border-top: 1px solid var(--newtab-border-secondary-color); }
+    border-top: 1px solid var(--newtab-border-secondary-color);
+    padding: 20px 0; }
     .ds-column-9 .ds-hero.ds-hero-border .ds-card:nth-child(-n+2),
     .ds-column-10 .ds-hero.ds-hero-border .ds-card:nth-child(-n+2),
     .ds-column-11 .ds-hero.ds-hero-border .ds-card:nth-child(-n+2),
@@ -2040,7 +2038,9 @@ main {
     border-top: 0;
     border-bottom: 0;
     margin: 0;
-    padding: 0; }
+    padding: 0 0 20px;
+    display: flex;
+    flex-direction: column; }
     .ds-column-9 .ds-hero .wrapper .img-wrapper,
     .ds-column-10 .ds-hero .wrapper .img-wrapper,
     .ds-column-11 .ds-hero .wrapper .img-wrapper,
@@ -2057,6 +2057,7 @@ main {
     .ds-column-10 .ds-hero .wrapper .meta,
     .ds-column-11 .ds-hero .wrapper .meta,
     .ds-column-12 .ds-hero .wrapper .meta {
+      flex-grow: 1;
       display: flex;
       padding: 0 24px 0 0; }
       .ds-column-9 .ds-hero .wrapper .meta header,
@@ -2072,7 +2073,7 @@ main {
       .ds-column-10 .ds-hero .wrapper .meta .source,
       .ds-column-11 .ds-hero .wrapper .meta .source,
       .ds-column-12 .ds-hero .wrapper .meta .source {
-        margin: 0; }
+        margin-bottom: 0; }
   .ds-column-9 .ds-hero .cards,
   .ds-column-10 .ds-hero .cards,
   .ds-column-11 .ds-hero .cards,
@@ -2080,6 +2081,14 @@ main {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     grid-column-gap: 24px; }
+    .ds-column-9 .ds-hero .cards .title,
+    .ds-column-10 .ds-hero .cards .title,
+    .ds-column-11 .ds-hero .cards .title,
+    .ds-column-12 .ds-hero .cards .title {
+      font-size: 14px;
+      line-height: 20px;
+      max-height: 4.28571em;
+      overflow: hidden; }
 
 .ds-hr {
   border: 0;
@@ -2097,7 +2106,7 @@ main {
   .ds-list:not(.ds-list-full-width) .ds-list-item-title {
     font-size: 14px;
     line-height: 20px;
-    max-height: 2.85714em;
+    max-height: 4.28571em;
     overflow: hidden; }
   .ds-list:not(.ds-list-full-width) .ds-list-image {
     min-width: 72px;
@@ -2176,7 +2185,7 @@ main {
 .ds-list-full-width .ds-list-item-title {
   font-size: 17px;
   line-height: 24px;
-  max-height: 2.82353em;
+  max-height: 4.23529em;
   overflow: hidden; }
 
 .ds-list-full-width .ds-list-image {
@@ -2207,7 +2216,7 @@ main {
     line-height: 20px;
     max-height: 1.42857em;
     overflow: hidden;
-    color: #737373;
+    color: #005A71;
     font-size: 13px;
     text-overflow: ellipsis; }
   .ds-list-item .ds-list-item-title {
@@ -2381,17 +2390,18 @@ main {
     .ds-card .meta .title {
       font-size: 17px;
       line-height: 24px;
-      max-height: 2.82353em;
+      max-height: 4.23529em;
       overflow: hidden;
       font-weight: 600; }
     .ds-card .meta .excerpt {
       font-size: 14px;
       line-height: 20px;
-      max-height: 5.71429em;
+      max-height: 4.28571em;
       overflow: hidden; }
     .ds-card .meta .context,
     .ds-card .meta .source {
-      font-size: 13px; }
+      font-size: 13px;
+      color: #005A71; }
   .ds-card header {
     line-height: 24px;
     font-size: 17px;
@@ -2407,27 +2417,26 @@ main {
   .ds-message .title {
     display: flex;
     align-items: center; }
-    .ds-message .title img {
+    .ds-message .title .glyph {
       width: 16px;
       height: 16px;
-      margin: 0 6px 0 0; }
-    .ds-message .title span {
-      line-height: 24px;
-      font-size: 17px;
-      color: #0C0C0D;
-      font-weight: 600; }
-  .ds-message .subtitle {
-    line-height: 20px;
-    font-size: 14px;
-    color: #737373;
-    margin: 0; }
-    .ds-message .subtitle span::after {
-      content: ' '; }
-    .ds-message .subtitle a:hover,
-    .ds-message .subtitle a:focus {
-      text-decoration: underline; }
-  .ds-message .ds-hr {
-    margin: 16px 0 8px; }
+      margin: 0 6px 0 0;
+      -moz-context-properties: fill;
+      fill: var(--newtab-icon-secondary-color);
+      background-position: center center;
+      background-size: 16px;
+      background-repeat: no-repeat; }
+    .ds-message .title .title-text {
+      line-height: 20px;
+      font-size: 13px;
+      color: #737373;
+      font-weight: 600;
+      padding-right: 12px; }
+    .ds-message .title .link {
+      line-height: 20px;
+      font-size: 13px; }
+      .ds-message .title .link:hover, .ds-message .title .link:focus {
+        text-decoration: underline; }
 
 .ASRouterButton {
   font-weight: 600;
