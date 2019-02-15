@@ -24,7 +24,7 @@ The following fields are always included in the `ping_info` section, for every p
 | `experiments` | Object | A dictionary of [active experiments](#the-experiments-object) |
 | `start_time` | Datetime | The time of the start of collection of the data in the ping, in local time and with minute precision. | See [note](#a-note-about-time-formats) |
 | `end_time` | Datetime | The time of the end of collection of the data in the ping, in local time and with minute precision. This is also the time this ping was generated and is likely well before ping transmission time | See [note](#a-note-about-time-formats) |
-| `profile_age` | Datetime | TBD |
+| `first_run_date` | Datetime | The date of the first run of the application, in local time and with day precision. | See [note](#a-note-about-time-formats)  |
 
 All the metrics surviving application restarts (e.g. `client_id`, `seq`, ...) are removed once the
 application using glean is uninstalled.

@@ -11,7 +11,6 @@ import android.support.annotation.VisibleForTesting
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import mozilla.components.service.glean.GleanMetrics.GleanBaseline
 
 import java.util.UUID
 
@@ -219,7 +218,7 @@ open class GleanInternalAPI internal constructor () {
         if (firstRunDetector.isFirstRun()) {
             val uuid = UUID.randomUUID()
             UuidsStorageEngine.record(GleanInternalMetrics.clientId, uuid)
-            GleanBaseline.firstRunDate.set()
+            GleanInternalMetrics.firstRunDate.set()
         }
 
         try {
