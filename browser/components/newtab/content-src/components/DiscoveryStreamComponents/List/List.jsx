@@ -1,6 +1,7 @@
 import {actionCreators as ac} from "common/Actions.jsm";
 import {connect} from "react-redux";
 import React from "react";
+import {SafeAnchor} from "../SafeAnchor/SafeAnchor";
 import {SpocIntersectionObserver} from "content-src/components/DiscoveryStreamComponents/SpocIntersectionObserver/SpocIntersectionObserver";
 
 /**
@@ -34,7 +35,7 @@ export class ListItem extends React.PureComponent {
     return (
       <li className="ds-list-item">
         <SpocIntersectionObserver campaignId={this.props.campaignId} dispatch={this.props.dispatch}>
-          <a className="ds-list-item-link" href={this.props.url} onClick={this.onLinkClick}>
+          <SafeAnchor url={this.props.url} className="ds-list-item-link" onLinkClick={this.onLinkClick}>
             <div className="ds-list-item-text">
               <div className="ds-list-item-title">{this.props.title}</div>
               {this.props.excerpt && <div className="ds-list-item-excerpt">{this.props.excerpt}</div>}
@@ -49,7 +50,7 @@ export class ListItem extends React.PureComponent {
               </p>
             </div>
             <div className="ds-list-image" style={{backgroundImage: `url(${this.props.image_src})`}} />
-          </a>
+          </SafeAnchor>
         </SpocIntersectionObserver>
       </li>
     );
