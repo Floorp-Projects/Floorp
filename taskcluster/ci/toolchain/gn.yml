@@ -23,7 +23,7 @@ linux64-gn:
     run:
         script: build-gn-linux.sh
     toolchains:
-        - linux64-gcc-6
+        - linux64-gcc-4.9
 
 macosx64-gn:
     treeherder:

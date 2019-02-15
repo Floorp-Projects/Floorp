@@ -8,7 +8,6 @@ UPLOAD_DIR=$HOME/artifacts
 COMPRESS_EXT=xz
 export CC=$WORKSPACE/build/src/gcc/bin/gcc
 export CXX=$WORKSPACE/build/src/gcc/bin/g++
-export LDFLAGS=-lrt
 
 # Gn build scripts use #!/usr/bin/env python, which will be python 2.6 on
 # the worker and cause failures. Work around this by putting python2.7
