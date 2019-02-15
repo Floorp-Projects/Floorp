@@ -263,23 +263,17 @@ nsresult JsepSessionImpl::CreateOfferMsection(const JsepOfferOptions& options,
 
   AddExtmap(msection);
 
-  if (lastAnswerMsection && lastAnswerMsection->GetPort()) {
-    MOZ_ASSERT(transceiver.IsAssociated());
-    MOZ_ASSERT(transceiver.GetMid() ==
-               lastAnswerMsection->GetAttributeList().GetMid());
+  std::string mid;
+  // We do not set the mid on the transceiver, that happens when a description
+  // is set.
+  if (transceiver.IsAssociated()) {
+    mid = transceiver.GetMid();
   } else {
-    std::string mid;
-    // We do not set the mid on the transceiver, that happens when a description
-    // is set.
-    if (transceiver.IsAssociated()) {
-      mid = transceiver.GetMid();
-    } else {
-      mid = GetNewMid();
-    }
-
-    msection->GetAttributeList().SetAttribute(
-        new SdpStringAttribute(SdpAttribute::kMidAttribute, mid));
+    mid = GetNewMid();
   }
+
+  msection->GetAttributeList().SetAttribute(
+      new SdpStringAttribute(SdpAttribute::kMidAttribute, mid));
 
   return NS_OK;
 }
