@@ -16,7 +16,7 @@ $card-header-in-hero-line-height: 20;
   }
 
   .excerpt {
-    @include limit-visibile-lines(4, 23, 15);
+    @include limit-visibile-lines(3, 20, 14);
     margin: 4px 0 8px;
   }
 
@@ -89,8 +89,12 @@ $card-header-in-hero-line-height: 20;
     }
 
     .meta {
+      display: block;
+      flex-direction: column;
+      justify-content: space-between;
+
       header {
-        @include limit-visibile-lines(2, 28, 22);
+        @include limit-visibile-lines(4, 28, 22);
         color: $grey-90;
       }
 
@@ -130,6 +134,7 @@ $card-header-in-hero-line-height: 20;
       .meta {
         grid-column: 1;
         grid-row: 1;
+        display: flex;
       }
 
       .img {
@@ -150,39 +155,54 @@ $card-header-in-hero-line-height: 20;
   .ds-column-10 &,
   .ds-column-11 &,
   .ds-column-12 & {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-column-gap: 24px;
+    padding: 20px 0;
+
+    &.ds-hero-border {
+      border-top: $border-secondary;
+
+      .ds-card:nth-child(-n+2) {
+        border-bottom: $border-secondary;
+        margin-bottom: 20px;
+      }
+    }
+
     .wrapper {
-      display: flex;
-      align-items: flex-start;
-      flex-direction: row-reverse;
+      border-top: 0;
+      border-bottom: 0;
+      margin: 0;
+      padding: 0;
 
       .img-wrapper {
-        width: 67%;
         margin: 0;
       }
 
       .img {
+        margin-bottom: 16px;
         height: 0;
         padding-top: 50%; // 2:1 aspect ratio
       }
 
       .meta {
-        width: 33%;
+        display: flex;
         padding: 0 24px 0 0;
 
         header {
-          @include limit-visibile-lines(6, 28, 22);
-          margin: 0 0 4px;
+          @include limit-visibile-lines(3, 28, 22);
+          margin: 0 0 8px;
         }
 
-        p {
-          line-height: 1.6;
+        .source {
+          margin: 0;
         }
       }
     }
 
     .cards {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(2, 1fr);
       grid-column-gap: 24px;
     }
   }
