@@ -166,13 +166,16 @@ class Nursery {
   // lazilly allocated and added to the chunks array up to this limit, after
   // that the nursery must be collected, this limit may be raised during
   // collection.
-  unsigned maxChunkCount() const { return maxChunkCount_; }
+  unsigned maxChunkCount() const {
+    MOZ_ASSERT(capacity());
+    return JS_HOWMANY(capacity(), NurseryChunkUsableSize);
+  }
 
   bool exists() const { return chunkCountLimit() != 0; }
 
   void enable();
   void disable();
-  bool isEnabled() const { return maxChunkCount() != 0; }
+  bool isEnabled() const { return capacity() != 0; }
 
   void enableStrings();
   void disableStrings();
@@ -324,7 +327,8 @@ class Nursery {
   // to calculate the nursery size, current lazy-allocated size or nursery
   // limit respectively.
   size_t spaceToEnd(unsigned chunkCount) const;
-  size_t capacity() const { return spaceToEnd(maxChunkCount()); }
+
+  size_t capacity() const { return capacity_; }
   size_t lazyCapacity() const { return spaceToEnd(allocatedChunkCount()); }
 
   // Used and free space, not counting chunk trailers.
@@ -336,6 +340,7 @@ class Nursery {
   }
   MOZ_ALWAYS_INLINE size_t freeSpace() const {
     MOZ_ASSERT(currentEnd_ - position_ <= NurseryChunkUsableSize);
+    MOZ_ASSERT(currentChunk_ < maxChunkCount());
     return (currentEnd_ - position_) +
            (maxChunkCount() - currentChunk_ - 1) * NurseryChunkUsableSize;
   }
@@ -419,11 +424,12 @@ class Nursery {
   unsigned currentChunk_;
 
   /*
-   * The nursery may grow the chunks_ vector up to this size without a
-   * collection.  This allows the nursery to grow lazilly.  This limit may
-   * change during maybeResizeNursery() each collection.
+   * The current nursery capacity measured in bytes. It may grow up to this
+   * value without a collection, allocating chunks on demand.  This limit may be
+   * changed by maybeResizeNursery() each collection.  It does not include chunk
+   * trailers.
    */
-  unsigned maxChunkCount_;
+  size_t capacity_;
 
   /*
    * This limit is fixed by configuration.  It represents the maximum size

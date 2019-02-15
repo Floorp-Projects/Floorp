@@ -105,7 +105,7 @@ js::Nursery::Nursery(JSRuntime* rt)
       currentEnd_(0),
       currentStringEnd_(0),
       currentChunk_(0),
-      maxChunkCount_(0),
+      capacity_(0),
       chunkCountLimit_(0),
       timeInChunkAlloc_(0),
       profileThreshold_(0),
@@ -139,11 +139,10 @@ bool js::Nursery::init(uint32_t maxNurseryBytes, AutoLockGCBgAlloc& lock) {
     return true;
   }
 
-  maxChunkCount_ = 1;
   if (!allocateNextChunk(0, lock)) {
-    maxChunkCount_ = 0;
     return false;
   }
+  capacity_ = NurseryChunkUsableSize;
   /* After this point the Nursery has been enabled */
 
   setCurrentChunk(0, true);
@@ -192,11 +191,10 @@ void js::Nursery::enable() {
 
   {
     AutoLockGCBgAlloc lock(runtime());
-    maxChunkCount_ = 1;
     if (!allocateNextChunk(0, lock)) {
-      maxChunkCount_ = 0;
       return;
     }
+    capacity_ = NurseryChunkUsableSize;
   }
 
   setCurrentChunk(0, true);
@@ -217,7 +215,7 @@ void js::Nursery::disable() {
   }
 
   freeChunksFrom(0);
-  maxChunkCount_ = 0;
+  capacity_ = 0;
 
   // We must reset currentEnd_ so that there is no space for anything in the
   // nursery.  JIT'd code uses this even if the nursery is disabled.
@@ -253,7 +251,7 @@ bool js::Nursery::isEmpty() const {
 #ifdef JS_GC_ZEAL
 void js::Nursery::enterZealMode() {
   if (isEnabled()) {
-    maxChunkCount_ = chunkCountLimit();
+    capacity_ = chunkCountLimit() * NurseryChunkUsableSize;
   }
 }
 
@@ -1097,7 +1095,6 @@ bool js::Nursery::allocateNextChunk(const unsigned chunkno,
              (chunkno == 0 && allocatedChunkCount() == 0));
   MOZ_ASSERT(chunkno == allocatedChunkCount());
   MOZ_ASSERT(chunkno < chunkCountLimit());
-  MOZ_ASSERT(chunkno < maxChunkCount());
 
   if (!chunks_.resize(newCount)) {
     return false;
@@ -1185,7 +1182,9 @@ void js::Nursery::maybeResizeNursery(JS::GCReason reason) {
 
 void js::Nursery::growAllocableSpace(unsigned newCount) {
   MOZ_ASSERT(newCount > currentChunk_);
-  maxChunkCount_ = newCount;
+  capacity_ = newCount * NurseryChunkUsableSize;
+  MOZ_ASSERT(newCount <= chunkCountLimit_);
+  MOZ_ASSERT(capacity_ <= chunkCountLimit_ * NurseryChunkUsableSize);
 }
 
 void js::Nursery::freeChunksFrom(unsigned firstFreeChunk) {
@@ -1220,7 +1219,7 @@ void js::Nursery::shrinkAllocableSpace(unsigned newCount) {
     freeChunksFrom(newCount);
   }
 
-  maxChunkCount_ = newCount;
+  capacity_ = newCount * NurseryChunkUsableSize;
 }
 
 void js::Nursery::minimizeAllocableSpace() { shrinkAllocableSpace(1); }
