@@ -38,7 +38,7 @@ ScrollAnchorContainer* ScrollAnchorContainer::FindFor(nsIFrame* aFrame) {
       aFrame, nsLayoutUtils::SCROLLABLE_SAME_DOC |
                   nsLayoutUtils::SCROLLABLE_INCLUDE_HIDDEN);
   if (nearest) {
-    return nearest->GetAnchor();
+    return nearest->Anchor();
   }
   return nullptr;
 }

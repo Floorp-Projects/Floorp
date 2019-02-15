@@ -1165,7 +1165,7 @@ void nsHTMLScrollFrame::Reflow(nsPresContext* aPresContext,
 void nsHTMLScrollFrame::DidReflow(nsPresContext* aPresContext,
                                   const ReflowInput* aReflowInput) {
   nsContainerFrame::DidReflow(aPresContext, aReflowInput);
-  PresShell()->PostPendingScrollAnchorAdjustment(GetAnchor());
+  PresShell()->PostPendingScrollAnchorAdjustment(Anchor());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
