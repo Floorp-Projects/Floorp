@@ -3443,7 +3443,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_bitop(JSOp op) {
   return Ok();
 }
 
-MDefinition::Opcode JSOpToMDefinition(JSOp op) {
+MDefinition::Opcode BinaryJSOpToMDefinition(JSOp op) {
   switch (op) {
     case JSOP_ADD:
       return MDefinition::Opcode::Add;
@@ -3551,6 +3551,36 @@ AbortReasonOr<Ok> IonBuilder::powTrySpecialized(bool* emitted,
   return Ok();
 }
 
+MIRType IonBuilder::binaryArithNumberSpecialization(MDefinition* left,
+                                                    MDefinition* right) {
+  // Try to specialize as int32.
+  if (left->type() == MIRType::Int32 && right->type() == MIRType::Int32 &&
+      !inspector->hasSeenDoubleResult(pc)) {
+    return MIRType::Int32;
+  }
+  return MIRType::Double;
+}
+
+AbortReasonOr<MBinaryArithInstruction*> IonBuilder::binaryArithEmitSpecialized(
+    MDefinition::Opcode op, MIRType specialization, MDefinition* left,
+    MDefinition* right) {
+  MBinaryArithInstruction* ins =
+      MBinaryArithInstruction::New(alloc(), op, left, right);
+  ins->setSpecialization(specialization);
+
+  if (op == MDefinition::Opcode::Add || op == MDefinition::Opcode::Mul) {
+    ins->setCommutative();
+  }
+
+  current->add(ins);
+  current->push(ins);
+
+  MOZ_ASSERT(!ins->isEffectful());
+  MOZ_TRY(maybeInsertResume());
+
+  return ins;
+}
+
 AbortReasonOr<Ok> IonBuilder::binaryArithTrySpecialized(bool* emitted, JSOp op,
                                                         MDefinition* left,
                                                         MDefinition* right) {
@@ -3573,20 +3603,18 @@ AbortReasonOr<Ok> IonBuilder::binaryArithTrySpecialized(bool* emitted, JSOp op,
     return Ok();
   }
 
-  MDefinition::Opcode defOp = JSOpToMDefinition(op);
-  MBinaryArithInstruction* ins =
-      MBinaryArithInstruction::New(alloc(), defOp, left, right);
-  ins->setNumberSpecialization(alloc(), inspector, pc);
+  MDefinition::Opcode defOp = BinaryJSOpToMDefinition(op);
+  MIRType specialization = binaryArithNumberSpecialization(left, right);
+  MBinaryArithInstruction* ins;
+  MOZ_TRY_VAR(ins,
+              binaryArithEmitSpecialized(defOp, specialization, left, right));
 
-  if (op == JSOP_ADD || op == JSOP_MUL) {
-    ins->setCommutative();
+  // Relax int32 to double if, despite the fact that we have int32 operands and
+  // we've never seen a double result, we know the result may overflow or be a
+  // double.
+  if (specialization == MIRType::Int32 && ins->constantDoubleResult(alloc())) {
+    ins->setSpecialization(MIRType::Double);
   }
-
-  current->add(ins);
-  current->push(ins);
-
-  MOZ_ASSERT(!ins->isEffectful());
-  MOZ_TRY(maybeInsertResume());
 
   trackOptimizationSuccess();
   *emitted = true;
@@ -3609,16 +3637,8 @@ AbortReasonOr<Ok> IonBuilder::binaryArithTrySpecializedOnBaselineInspector(
     return Ok();
   }
 
-  MDefinition::Opcode def_op = JSOpToMDefinition(op);
-  MBinaryArithInstruction* ins =
-      MBinaryArithInstruction::New(alloc(), def_op, left, right);
-  ins->setSpecialization(specialization);
-
-  current->add(ins);
-  current->push(ins);
-
-  MOZ_ASSERT(!ins->isEffectful());
-  MOZ_TRY(maybeInsertResume());
+  MDefinition::Opcode defOp = BinaryJSOpToMDefinition(op);
+  MOZ_TRY(binaryArithEmitSpecialized(defOp, specialization, left, right));
 
   trackOptimizationSuccess();
   *emitted = true;
@@ -3651,14 +3671,6 @@ AbortReasonOr<Ok> IonBuilder::arithTryBinaryStub(bool* emitted, JSOp op,
                         left->maybeConstantValue()->toInt32() == -1);
       MOZ_ASSERT_IF(op != JSOP_MUL, !left);
       stub = MUnaryCache::New(alloc(), right);
-      break;
-    case JSOP_INC:
-      MOZ_ASSERT(op == JSOP_ADD && right->toConstant()->toInt32() == 1);
-      stub = MUnaryCache::New(alloc(), left);
-      break;
-    case JSOP_DEC:
-      MOZ_ASSERT(op == JSOP_SUB && right->toConstant()->toInt32() == 1);
-      stub = MUnaryCache::New(alloc(), left);
       break;
     case JSOP_ADD:
     case JSOP_SUB:
@@ -3721,9 +3733,9 @@ AbortReasonOr<Ok> IonBuilder::jsop_binary_arith(JSOp op, MDefinition* left,
   trackOptimizationAttempt(TrackedStrategy::BinaryArith_Call);
   trackOptimizationSuccess();
 
-  MDefinition::Opcode def_op = JSOpToMDefinition(op);
+  MDefinition::Opcode defOp = BinaryJSOpToMDefinition(op);
   MBinaryArithInstruction* ins =
-      MBinaryArithInstruction::New(alloc(), def_op, left, right);
+      MBinaryArithInstruction::New(alloc(), defOp, left, right);
 
   // Decrease type from 'any type' to 'empty type' when one of the operands
   // is 'empty typed'.
@@ -3832,25 +3844,106 @@ AbortReasonOr<Ok> IonBuilder::jsop_tonumeric() {
   return resumeAfter(ins);
 }
 
-AbortReasonOr<Ok> IonBuilder::jsop_inc_or_dec(JSOp op) {
-  // As above, pass constant without slot traffic.
-  MConstant* one = MConstant::New(alloc(), Int32Value(1));
-  current->add(one);
-
-  MDefinition* value = current->pop();
-
+MDefinition* IonBuilder::unaryArithConvertToBinary(JSOp op,
+                                                   MDefinition::Opcode* defOp) {
   switch (op) {
-    case JSOP_INC:
-      op = JSOP_ADD;
-      break;
-    case JSOP_DEC:
-      op = JSOP_SUB;
-      break;
+    case JSOP_INC: {
+      *defOp = MDefinition::Opcode::Add;
+      MConstant* right = MConstant::New(alloc(), Int32Value(1));
+      current->add(right);
+      return right;
+    }
+    case JSOP_DEC: {
+      *defOp = MDefinition::Opcode::Sub;
+      MConstant* right = MConstant::New(alloc(), Int32Value(1));
+      current->add(right);
+      return right;
+    }
     default:
-      MOZ_CRASH("jsop_inc_or_dec with bad op");
+      MOZ_CRASH("unexpected unary opcode");
+  }
+}
+
+AbortReasonOr<Ok> IonBuilder::unaryArithTrySpecialized(bool* emitted, JSOp op,
+                                                       MDefinition* value) {
+  MOZ_ASSERT(*emitted == false);
+
+  // Try to convert Inc(x) or Dec(x) to Add(x,1) or Sub(x,1) if the operand is a
+  // number.
+
+  trackOptimizationAttempt(TrackedStrategy::UnaryArith_SpecializedTypes);
+
+  if (!IsNumberType(value->type())) {
+    trackOptimizationOutcome(TrackedOutcome::OperandNotNumber);
+    return Ok();
   }
 
-  return jsop_binary_arith(op, value, one);
+  MDefinition::Opcode defOp;
+  MDefinition* rhs = unaryArithConvertToBinary(op, &defOp);
+  MIRType specialization = binaryArithNumberSpecialization(value, rhs);
+  MOZ_TRY(binaryArithEmitSpecialized(defOp, specialization, value, rhs));
+
+  trackOptimizationSuccess();
+  *emitted = true;
+  return Ok();
+}
+
+AbortReasonOr<Ok> IonBuilder::unaryArithTrySpecializedOnBaselineInspector(
+    bool* emitted, JSOp op, MDefinition* value) {
+  MOZ_ASSERT(*emitted == false);
+
+  // Try to emit a specialized binary instruction speculating the
+  // type using the baseline caches.
+
+  trackOptimizationAttempt(
+      TrackedStrategy::UnaryArith_SpecializedOnBaselineTypes);
+
+  MIRType specialization = inspector->expectedBinaryArithSpecialization(pc);
+  if (specialization == MIRType::None) {
+    trackOptimizationOutcome(TrackedOutcome::SpeculationOnInputTypesFailed);
+    return Ok();
+  }
+
+  MDefinition::Opcode defOp;
+  MDefinition* rhs = unaryArithConvertToBinary(op, &defOp);
+  MOZ_TRY(binaryArithEmitSpecialized(defOp, specialization, value, rhs));
+
+  trackOptimizationSuccess();
+  *emitted = true;
+  return Ok();
+}
+
+AbortReasonOr<Ok> IonBuilder::jsop_inc_or_dec(JSOp op) {
+  bool emitted = false;
+  MDefinition* value = current->pop();
+
+  startTrackingOptimizations();
+
+  trackTypeInfo(TrackedTypeSite::Operand, value->type(),
+                value->resultTypeSet());
+
+  MOZ_TRY(unaryArithTrySpecialized(&emitted, op, value));
+  if (emitted) {
+    return Ok();
+  }
+
+  MOZ_TRY(unaryArithTrySpecializedOnBaselineInspector(&emitted, op, value));
+  if (emitted) {
+    return Ok();
+  }
+
+  trackOptimizationAttempt(TrackedStrategy::UnaryArith_InlineCache);
+  trackOptimizationSuccess();
+
+  MInstruction* stub = MUnaryCache::New(alloc(), value);
+  current->add(stub);
+  current->push(stub);
+
+  // Decrease type from 'any type' to 'empty type' when one of the operands
+  // is 'empty typed'.
+  maybeMarkEmpty(stub);
+
+  return resumeAfter(stub);
 }
 
 AbortReasonOr<Ok> IonBuilder::jsop_tostring() {

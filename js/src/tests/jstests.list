@@ -961,12 +961,6 @@ skip script test262/built-ins/DataView/prototype/getBigUint64/return-values.js
 skip script test262/built-ins/DataView/prototype/getBigUint64/index-is-out-of-range.js
 skip script test262/built-ins/DataView/prototype/getBigUint64/toindex-byteoffset-wrapped-values.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1501105
-skip script test262/language/expressions/prefix-increment/bigint.js
-skip script test262/language/expressions/postfix-increment/bigint.js
-skip script test262/language/expressions/postfix-decrement/bigint.js
-skip script test262/language/expressions/prefix-decrement/bigint.js
-
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1317405
 skip script test262/language/computed-property-names/class/static/method-number.js
 skip script test262/language/computed-property-names/class/static/method-string.js
