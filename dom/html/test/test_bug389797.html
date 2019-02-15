@@ -51,7 +51,7 @@ function HTML_TAG(aTagName, aImplClass) {
 
 const objectIfaces = [
     "imgINotificationObserver", "nsIRequestObserver", "nsIStreamListener",
-    "nsIFrameLoaderOwner", "nsIObjectLoadingContent", "nsIChannelEventSink"
+    "nsIObjectLoadingContent", "nsIChannelEventSink"
   ];
 
 var objectIfaces2 = [];
@@ -119,7 +119,7 @@ HTML_TAG("figure", "")
 HTML_TAG("font", "Font");
 HTML_TAG("footer", "")
 HTML_TAG("form", "Form", [], [ "nsIWebProgressListener" ]);
-HTML_TAG("frame", "Frame", [ "nsIDOMMozBrowserFrame" ], [ "nsIFrameLoaderOwner" ]);
+HTML_TAG("frame", "Frame", [ "nsIDOMMozBrowserFrame" ]);
 HTML_TAG("frameset", "FrameSet");
 HTML_TAG("h1", "Heading");
 HTML_TAG("h2", "Heading");
@@ -133,8 +133,7 @@ HTML_TAG("hgroup", "")
 HTML_TAG("hr", "HR");
 HTML_TAG("html", "Html");
 HTML_TAG("i", "");
-HTML_TAG("iframe", "IFrame", [ "nsIDOMMozBrowserFrame" ],
-                             [ "nsIFrameLoaderOwner" ]);
+HTML_TAG("iframe", "IFrame", [ "nsIDOMMozBrowserFrame" ]);
 HTML_TAG("image", "");
 HTML_TAG("img", "Image", [ "nsIImageLoadingContent" ], []);
 HTML_TAG("input", "Input", [], [ "imgINotificationObserver",

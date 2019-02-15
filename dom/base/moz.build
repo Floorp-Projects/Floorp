@@ -18,7 +18,6 @@ XPIDL_SOURCES += [
     'nsIDocumentEncoder.idl',
     'nsIDOMRequestService.idl',
     'nsIDroppedLinkHandler.idl',
-    'nsIFrameLoaderOwner.idl',
     'nsIImageLoadingContent.idl',
     'nsIMessageManager.idl',
     'nsIObjectLoadingContent.idl',
