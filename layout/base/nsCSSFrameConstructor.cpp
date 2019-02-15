@@ -2913,11 +2913,8 @@ nsIFrame* nsCSSFrameConstructor::ConstructSelectFrame(
     // Notify combobox that it should use the listbox as it's popup
     comboboxFrame->SetDropDown(listFrame);
 
-    if (!nsLayoutUtils::IsContentSelectEnabled()) {
-      // TODO(kuoe0) Remove this assertion when content-select is shipped.
-      NS_ASSERTION(!listFrame->IsAbsPosContainingBlock(),
-                   "Ended up with positioned dropdown list somehow.");
-    }
+    NS_ASSERTION(!listFrame->IsAbsPosContainingBlock(),
+                 "Ended up with positioned dropdown list somehow.");
     NS_ASSERTION(!listFrame->IsFloating(),
                  "Ended up with floating dropdown list somehow.");
 
@@ -2933,10 +2930,7 @@ nsIFrame* nsCSSFrameConstructor::ConstructSelectFrame(
                           comboboxFrame, listStyle, true, aItem.mPendingBinding,
                           childItems);
 
-    if (!nsLayoutUtils::IsContentSelectEnabled()) {
-      // TODO(kuoe0) Remove this assertion when content-select is shipped.
-      NS_ASSERTION(listFrame->GetView(), "ListFrame's view is nullptr");
-    }
+    NS_ASSERTION(listFrame->GetView(), "ListFrame's view is nullptr");
 
     // Create display and button frames from the combobox's anonymous content.
     // The anonymous content is appended to existing anonymous content for this
@@ -2970,14 +2964,12 @@ nsIFrame* nsCSSFrameConstructor::ConstructSelectFrame(
 
     comboboxFrame->SetInitialChildList(kPrincipalList, childItems);
 
-    if (!nsLayoutUtils::IsContentSelectEnabled()) {
-      // Initialize the additional popup child list which contains the
-      // dropdown list frame.
-      nsFrameItems popupItems;
-      popupItems.AddChild(listFrame);
-      comboboxFrame->SetInitialChildList(nsIFrame::kSelectPopupList,
-                                         popupItems);
-    }
+    // Initialize the additional popup child list which contains the
+    // dropdown list frame.
+    nsFrameItems popupItems;
+    popupItems.AddChild(listFrame);
+    comboboxFrame->SetInitialChildList(nsIFrame::kSelectPopupList,
+                                       popupItems);
 
     aState.mFrameState = historyState;
     if (aState.mFrameState) {
@@ -3025,7 +3017,7 @@ void nsCSSFrameConstructor::InitializeSelectFrame(
 
   scrollFrame->Init(aContent, geometricParent, nullptr);
 
-  if (!aBuildCombobox || nsLayoutUtils::IsContentSelectEnabled()) {
+  if (!aBuildCombobox) {
     aState.AddChild(scrollFrame, aFrameItems, aContent, aParentFrame);
   }
 
