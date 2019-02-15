@@ -78,7 +78,9 @@ add_task(async function testWebExtensionsToolboxWebConsole() {
     onPopupCustomMessage = waitForExtensionTestMessage("popupPageFunctionCalled");
   });
 
-  const { document, tab } = await openAboutDebugging();
+  const { document, tab, window: aboutDebuggingWindow } = await openAboutDebugging();
+  await selectThisFirefoxPage(document, aboutDebuggingWindow.AboutDebugging.store);
+
   await installTemporaryExtensionFromXPI({
     background: function() {
       const {browser} = this;
@@ -115,6 +117,7 @@ add_task(async function testWebExtensionsToolboxWebConsole() {
     id: ADDON_ID,
     name: ADDON_NAME,
   }, document);
+
   const target = findDebugTargetByText(ADDON_NAME, document);
 
   info("Setup the toolbox test function as environment variable");

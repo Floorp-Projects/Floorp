@@ -2553,7 +2553,7 @@ void nsIPresShell::FlushPendingScrollAnchorSelections() {
   for (auto iter = mPendingScrollAnchorSelection.Iter(); !iter.Done();
        iter.Next()) {
     nsIScrollableFrame* scroll = iter.Get()->GetKey();
-    scroll->GetAnchor()->SelectAnchor();
+    scroll->Anchor()->SelectAnchor();
   }
   mPendingScrollAnchorSelection.Clear();
 }
@@ -2567,7 +2567,7 @@ void nsIPresShell::FlushPendingScrollAnchorAdjustments() {
   for (auto iter = mPendingScrollAnchorAdjustment.Iter(); !iter.Done();
        iter.Next()) {
     nsIScrollableFrame* scroll = iter.Get()->GetKey();
-    scroll->GetAnchor()->ApplyAdjustments();
+    scroll->Anchor()->ApplyAdjustments();
   }
   mPendingScrollAnchorAdjustment.Clear();
 }
@@ -10499,7 +10499,7 @@ void nsIPresShell::SetVisualViewportSize(nscoord aWidth, nscoord aHeight) {
 
     if (nsIScrollableFrame* rootScrollFrame =
             GetRootScrollFrameAsScrollable()) {
-      ScrollAnchorContainer* container = rootScrollFrame->GetAnchor();
+      ScrollAnchorContainer* container = rootScrollFrame->Anchor();
       container->UserScrolled();
     }
   }
@@ -10520,7 +10520,7 @@ bool nsIPresShell::SetVisualViewportOffset(
 
     if (nsIScrollableFrame* rootScrollFrame =
             GetRootScrollFrameAsScrollable()) {
-      ScrollAnchorContainer* container = rootScrollFrame->GetAnchor();
+      ScrollAnchorContainer* container = rootScrollFrame->Anchor();
       container->UserScrolled();
     }
   }

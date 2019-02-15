@@ -12,8 +12,8 @@ function assertAllSitesNotListed(win) {
 }
 
 // Test selecting and removing all sites one by one
-add_task(async function() {
-  mockSiteDataManager.register(SiteDataManager, [
+add_task(async function test_selectRemove() {
+  let hosts = await addTestData([
     {
       usage: 1024,
       origin: "https://account.xyz.com",
@@ -22,7 +22,6 @@ add_task(async function() {
     {
       usage: 1024,
       origin: "https://shopping.xyz.com",
-      persisted: false,
     },
     {
       usage: 1024,
@@ -32,12 +31,11 @@ add_task(async function() {
     {
       usage: 1024,
       origin: "http://email.bar.com",
-      persisted: false,
     },
   ]);
-  let fakeHosts = mockSiteDataManager.fakeSites.map(site => site.principal.URI.host);
 
   let updatePromise = promiseSiteDataManagerSitesUpdated();
+
   await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
   await updatePromise;
   await openSiteDataSettingsDialog();
@@ -50,7 +48,7 @@ add_task(async function() {
   let settingsDialogClosePromise = null;
 
   // Test the initial state
-  assertSitesListed(doc, fakeHosts);
+  assertSitesListed(doc, hosts);
 
   // Test the "Cancel" button
   settingsDialogClosePromise = promiseSettingsDialogClose();
@@ -61,7 +59,7 @@ add_task(async function() {
   cancelBtn.doCommand();
   await settingsDialogClosePromise;
   await openSiteDataSettingsDialog();
-  assertSitesListed(doc, fakeHosts);
+  assertSitesListed(doc, hosts);
 
   // Test the "Save Changes" button but cancelling save
   let cancelPromise = BrowserTestUtils.promiseAlertDialogOpen("cancel");
@@ -76,7 +74,7 @@ add_task(async function() {
   cancelBtn.doCommand();
   await settingsDialogClosePromise;
   await openSiteDataSettingsDialog();
-  assertSitesListed(doc, fakeHosts);
+  assertSitesListed(doc, hosts);
 
   // Test the "Save Changes" button and accepting save
   let acceptPromise = BrowserTestUtils.promiseAlertDialogOpen("accept");
@@ -93,7 +91,7 @@ add_task(async function() {
   await openSiteDataSettingsDialog();
   assertAllSitesNotListed(win);
 
-  await mockSiteDataManager.unregister();
+  await SiteDataTestUtils.clear();
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
   function removeAllSitesOneByOne() {
@@ -109,8 +107,8 @@ add_task(async function() {
 });
 
 // Test selecting and removing partial sites
-add_task(async function() {
-  mockSiteDataManager.register(SiteDataManager, [
+add_task(async function test_removePartialSites() {
+  let hosts = await addTestData([
     {
       usage: 1024,
       origin: "https://account.xyz.com",
@@ -141,15 +139,10 @@ add_task(async function() {
       origin: "https://127.0.0.1",
       persisted: false,
     },
-    {
-      usage: 1024,
-      origin: "https://[0:0:0:0:0:0:0:1]",
-      persisted: true,
-    },
   ]);
-  let fakeHosts = mockSiteDataManager.fakeSites.map(site => site.principal.URI.host);
 
   let updatePromise = promiseSiteDataManagerSitesUpdated();
+
   await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
   await updatePromise;
   await openSiteDataSettingsDialog();
@@ -163,18 +156,18 @@ add_task(async function() {
   let settingsDialogClosePromise = null;
 
   // Test the initial state
-  assertSitesListed(doc, fakeHosts);
+  assertSitesListed(doc, hosts);
 
   // Test the "Cancel" button
   settingsDialogClosePromise = promiseSettingsDialogClose();
   frameDoc = win.gSubDialog._topDialog._frame.contentDocument;
   cancelBtn = frameDoc.getElementById("cancel");
-  removeSelectedSite(fakeHosts.slice(0, 2));
-  assertSitesListed(doc, fakeHosts.slice(2));
+  await removeSelectedSite(hosts.slice(0, 2));
+  assertSitesListed(doc, hosts.slice(2));
   cancelBtn.doCommand();
   await settingsDialogClosePromise;
   await openSiteDataSettingsDialog();
-  assertSitesListed(doc, fakeHosts);
+  assertSitesListed(doc, hosts);
 
   // Test the "Save Changes" button but canceling save
   removeDialogOpenPromise = BrowserTestUtils.promiseAlertDialogOpen("cancel", REMOVE_DIALOG_URL);
@@ -182,44 +175,49 @@ add_task(async function() {
   frameDoc = win.gSubDialog._topDialog._frame.contentDocument;
   saveBtn = frameDoc.getElementById("save");
   cancelBtn = frameDoc.getElementById("cancel");
-  removeSelectedSite(fakeHosts.slice(0, 2));
-  assertSitesListed(doc, fakeHosts.slice(2));
+  await removeSelectedSite(hosts.slice(0, 2));
+  assertSitesListed(doc, hosts.slice(2));
   saveBtn.doCommand();
   await removeDialogOpenPromise;
   cancelBtn.doCommand();
   await settingsDialogClosePromise;
   await openSiteDataSettingsDialog();
-  assertSitesListed(doc, fakeHosts);
+  assertSitesListed(doc, hosts);
 
   // Test the "Save Changes" button and accepting save
   removeDialogOpenPromise = BrowserTestUtils.promiseAlertDialogOpen("accept", REMOVE_DIALOG_URL);
   settingsDialogClosePromise = promiseSettingsDialogClose();
   frameDoc = win.gSubDialog._topDialog._frame.contentDocument;
   saveBtn = frameDoc.getElementById("save");
-  removeSelectedSite(fakeHosts.slice(0, 2));
-  assertSitesListed(doc, fakeHosts.slice(2));
+  await removeSelectedSite(hosts.slice(0, 2));
+  assertSitesListed(doc, hosts.slice(2));
   saveBtn.doCommand();
   await removeDialogOpenPromise;
   await settingsDialogClosePromise;
   await openSiteDataSettingsDialog();
-  assertSitesListed(doc, fakeHosts.slice(2));
+  assertSitesListed(doc, hosts.slice(2));
 
-  await mockSiteDataManager.unregister();
+  await SiteDataTestUtils.clear();
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
-  function removeSelectedSite(hosts) {
+  function removeSelectedSite(removeHosts) {
     frameDoc = win.gSubDialog._topDialog._frame.contentDocument;
     let removeBtn = frameDoc.getElementById("removeSelected");
     is(removeBtn.disabled, true, "Should start with disabled removeSelected button");
     let sitesList = frameDoc.getElementById("sitesList");
-    hosts.forEach(host => {
+    removeHosts.forEach(host => {
       let site = sitesList.querySelector(`richlistitem[host="${host}"]`);
       if (site) {
         site.click();
         let currentSelectedIndex = sitesList.selectedIndex;
         is(removeBtn.disabled, false, "Should enable the removeSelected button");
         removeBtn.doCommand();
-        is(sitesList.selectedIndex, currentSelectedIndex);
+        let newSelectedIndex = sitesList.selectedIndex;
+        if (currentSelectedIndex >= sitesList.itemCount) {
+          is(newSelectedIndex, currentSelectedIndex - 1);
+        } else {
+          is(newSelectedIndex, currentSelectedIndex);
+        }
       } else {
         ok(false, `Should not select and remove inexistent site of ${host}`);
       }
@@ -229,7 +227,7 @@ add_task(async function() {
 
 // Test searching and then removing only visible sites
 add_task(async function() {
-  mockSiteDataManager.register(SiteDataManager, [
+  let hosts = await addTestData([
     {
       usage: 1024,
       origin: "https://account.xyz.com",
@@ -251,9 +249,9 @@ add_task(async function() {
       persisted: false,
     },
   ]);
-  let fakeHosts = mockSiteDataManager.fakeSites.map(site => site.principal.URI.host);
 
   let updatePromise = promiseSiteDataManagerSitesUpdated();
+
   await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
   await updatePromise;
   await openSiteDataSettingsDialog();
@@ -265,7 +263,7 @@ add_task(async function() {
   let searchBox = frameDoc.getElementById("searchBox");
   searchBox.value = "xyz";
   searchBox.doCommand();
-  assertSitesListed(doc, fakeHosts.filter(host => host.includes("xyz")));
+  assertSitesListed(doc, hosts.filter(host => host.includes("xyz")));
 
   // Test only removing all visible sites listed
   updatePromise = promiseSiteDataManagerSitesUpdated();
@@ -279,15 +277,15 @@ add_task(async function() {
   await settingsDialogClosePromise;
   await updatePromise;
   await openSiteDataSettingsDialog();
-  assertSitesListed(doc, fakeHosts.filter(host => !host.includes("xyz")));
+  assertSitesListed(doc, hosts.filter(host => !host.includes("xyz")));
 
-  await mockSiteDataManager.unregister();
+  await SiteDataTestUtils.clear();
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 // Test dynamically clearing all site data
 add_task(async function() {
-  mockSiteDataManager.register(SiteDataManager, [
+  let hosts = await addTestData([
     {
       usage: 1024,
       origin: "https://account.xyz.com",
@@ -299,28 +297,28 @@ add_task(async function() {
       persisted: false,
     },
   ]);
-  let fakeHosts = mockSiteDataManager.fakeSites.map(site => site.principal.URI.host);
+
+  let updatePromise = promiseSiteDataManagerSitesUpdated();
 
   // Test the initial state
-  let updatePromise = promiseSiteDataManagerSitesUpdated();
   await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
   await updatePromise;
   await openSiteDataSettingsDialog();
   let doc = gBrowser.selectedBrowser.contentDocument;
-  assertSitesListed(doc, fakeHosts);
+  assertSitesListed(doc, hosts);
 
-  // Add more sites dynamically
-  mockSiteDataManager.fakeSites.push({
-    usage: 1024,
-    principal: Services.scriptSecurityManager
-                       .createCodebasePrincipalFromOrigin("http://cinema.bar.com"),
-    persisted: true,
-  }, {
-    usage: 1024,
-    principal: Services.scriptSecurityManager
-                       .createCodebasePrincipalFromOrigin("http://email.bar.com"),
-    persisted: false,
-  });
+  await addTestData([
+    {
+      usage: 1024,
+      origin: "http://cinema.bar.com",
+      persisted: true,
+    },
+    {
+      usage: 1024,
+      origin: "http://email.bar.com",
+      persisted: false,
+    },
+  ]);
 
   // Test clearing all site data dynamically
   let win = gBrowser.selectedBrowser.contentWindow;
@@ -338,6 +336,6 @@ add_task(async function() {
   await openSiteDataSettingsDialog();
   assertAllSitesNotListed(win);
 
-  await mockSiteDataManager.unregister();
+  await SiteDataTestUtils.clear();
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });

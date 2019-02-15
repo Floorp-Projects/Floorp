@@ -42,7 +42,9 @@ add_task(async function() {
 async function testRemoteClientPersistConnection(mocks,
   { client, id, runtimeName, sidebarName }) {
   info("Open about:debugging and connect to the test runtime");
-  let { document, tab } = await openAboutDebugging();
+  let { document, tab, window } = await openAboutDebugging();
+  await selectThisFirefoxPage(document, window.AboutDebugging.store);
+
   await connectToRuntime(sidebarName, document);
   await selectRuntime(sidebarName, runtimeName, document);
 

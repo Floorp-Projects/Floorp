@@ -5,37 +5,33 @@
     display: flex;
     align-items: center;
 
-    img {
+    .glyph {
       width: 16px;
       height: 16px;
       margin: 0 6px 0 0;
+      -moz-context-properties: fill;
+      fill: var(--newtab-icon-secondary-color);
+      background-position: center center;
+      background-size: 16px;
+      background-repeat: no-repeat;
     }
 
-    span {
-      line-height: 24px;
-      font-size: 17px;
-      color: $grey-90;
+    .title-text {
+      line-height: 20px;
+      font-size: 13px;
+      color: $grey-50;
       font-weight: 600;
-    }
-  }
-
-  .subtitle {
-    line-height: 20px;
-    font-size: 14px;
-    color: $grey-50;
-    margin: 0;
-
-    span::after {
-      content: ' ';
+      padding-right: 12px;
     }
 
-    a:hover,
-    a:focus {
-      text-decoration: underline;
-    }
-  }
+    .link {
+      line-height: 20px;
+      font-size: 13px;
 
-  .ds-hr {
-    margin: 16px 0 8px;
+      &:hover,
+      &:focus {
+        text-decoration: underline;
+      }
+    }
   }
 }

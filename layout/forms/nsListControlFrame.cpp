@@ -119,12 +119,6 @@ nsListControlFrame::nsListControlFrame(ComputedStyle* aStyle,
 nsListControlFrame::~nsListControlFrame() { mComboboxFrame = nullptr; }
 
 static bool ShouldFireDropDownEvent() {
-  // We don't need to fire the event to SelectContentHelper when content-select
-  // is enabled.
-  if (nsLayoutUtils::IsContentSelectEnabled()) {
-    return false;
-  }
-
   return (XRE_IsContentProcess() &&
           Preferences::GetBool("browser.tabs.remote.desktopbehavior", false)) ||
          Preferences::GetBool("dom.select_popup_in_parent.enabled", false);
@@ -920,8 +914,7 @@ void nsListControlFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
                               nsIFrame* aPrevInFlow) {
   nsHTMLScrollFrame::Init(aContent, aParent, aPrevInFlow);
 
-  if (!nsLayoutUtils::IsContentSelectEnabled() && IsInDropDownMode()) {
-    // TODO(kuoe0) Remove the following code when content-select is enabled.
+  if (IsInDropDownMode()) {
     AddStateBits(NS_FRAME_IN_POPUP);
     CreateView();
   }

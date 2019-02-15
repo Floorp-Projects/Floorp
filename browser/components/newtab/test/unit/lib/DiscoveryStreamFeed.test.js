@@ -109,6 +109,71 @@ describe("DiscoveryStreamFeed", () => {
     });
   });
 
+  describe("#loadLayoutEndPointUsingPref", () => {
+    it("should return endpoint if valid key", async () => {
+      const endpoint = feed.finalLayoutEndpoint("https://somedomain.org/stories?consumer_key=$apiKey", "test_key_val");
+      assert.equal("https://somedomain.org/stories?consumer_key=test_key_val", endpoint);
+    });
+
+    it("should throw error if key is empty", async () => {
+      assert.throws(() => {
+        feed.finalLayoutEndpoint("https://somedomain.org/stories?consumer_key=$apiKey", "");
+      });
+    });
+
+    it("should return url if $apiKey is missing in layout_endpoint", async () => {
+      const endpoint = feed.finalLayoutEndpoint("https://somedomain.org/stories?consumer_key=", "test_key_val");
+      assert.equal("https://somedomain.org/stories?consumer_key=", endpoint);
+    });
+
+    it("should update config layout_endpoint based on api_key_pref value", async () => {
+      feed.store.getState = () => ({
+        Prefs: {
+          values: {
+            [CONFIG_PREF_NAME]: JSON.stringify({
+              api_key_pref: "test_api_key_pref",
+              enabled: true,
+              layout_endpoint: "https://somedomain.org/stories?consumer_key=$apiKey",
+            }),
+          },
+        },
+      });
+      sandbox.stub(global.Services.prefs, "getCharPref").returns("test_api_key_val");
+      assert.equal("https://somedomain.org/stories?consumer_key=test_api_key_val", feed.config.layout_endpoint);
+    });
+
+    it("should not update config layout_endpoint if api_key_pref missing", async () => {
+      feed.store.getState = () => ({
+        Prefs: {
+          values: {
+            [CONFIG_PREF_NAME]: JSON.stringify({
+              enabled: true,
+              layout_endpoint: "https://somedomain.org/stories?consumer_key=1234",
+            }),
+          },
+        },
+      });
+      sandbox.stub(global.Services.prefs, "getCharPref").returns("test_api_key_val");
+      assert.notCalled(global.Services.prefs.getCharPref);
+      assert.equal("https://somedomain.org/stories?consumer_key=1234", feed.config.layout_endpoint);
+    });
+
+    it("should not set config layout_endpoint if layout_endpoint missing in prefs", async () => {
+      feed.store.getState = () => ({
+        Prefs: {
+          values: {
+            [CONFIG_PREF_NAME]: JSON.stringify({
+              enabled: true,
+            }),
+          },
+        },
+      });
+      sandbox.stub(global.Services.prefs, "getCharPref").returns("test_api_key_val");
+      assert.notCalled(global.Services.prefs.getCharPref);
+      assert.isUndefined(feed.config.layout_endpoint);
+    });
+  });
+
   describe("#loadComponentFeeds", () => {
     let fakeCache;
     let fakeDiscoveryStream;
@@ -790,6 +855,20 @@ describe("DiscoveryStreamFeed", () => {
 
       await feed.onAction({type: at.SYSTEM_TICK});
       assert.calledWith(feed.refreshAll, {updateOpenTabs: false});
+    });
+  });
+
+  describe("#onAction: PREF_SHOW_SPONSORED", () => {
+    it("should call loadSpocs when preference changes", async () => {
+      sandbox.stub(feed, "loadSpocs").resolves();
+      sandbox.stub(feed.store, "dispatch");
+
+      await feed.onAction({type: at.PREF_CHANGED, data: {name: "showSponsored"}});
+
+      assert.calledOnce(feed.loadSpocs);
+      const [dispatchFn] = feed.loadSpocs.firstCall.args;
+      dispatchFn({});
+      assert.calledWith(feed.store.dispatch, ac.BroadcastToContent({}));
     });
   });
 

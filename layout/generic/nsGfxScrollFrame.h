@@ -1178,13 +1178,11 @@ class nsHTMLScrollFrame : public nsContainerFrame,
     return mHelper.IsRootScrollFrameOfDocument();
   }
 
-  virtual const ScrollAnchorContainer* GetAnchor() const override {
+  virtual const ScrollAnchorContainer* Anchor() const override {
     return &mHelper.mAnchor;
   }
 
-  virtual ScrollAnchorContainer* GetAnchor() override {
-    return &mHelper.mAnchor;
-  }
+  virtual ScrollAnchorContainer* Anchor() override { return &mHelper.mAnchor; }
 
   // Return the scrolled frame.
   void AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult) override {
@@ -1658,13 +1656,11 @@ class nsXULScrollFrame final : public nsBoxFrame,
     return mHelper.IsRootScrollFrameOfDocument();
   }
 
-  virtual const ScrollAnchorContainer* GetAnchor() const override {
+  virtual const ScrollAnchorContainer* Anchor() const override {
     return &mHelper.mAnchor;
   }
 
-  virtual ScrollAnchorContainer* GetAnchor() override {
-    return &mHelper.mAnchor;
-  }
+  virtual ScrollAnchorContainer* Anchor() override { return &mHelper.mAnchor; }
 
   // Return the scrolled frame.
   void AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult) override {
