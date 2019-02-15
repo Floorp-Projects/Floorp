@@ -143,6 +143,10 @@ class nsRangeFrame final : public nsContainerFrame,
   void UpdateForValueChange();
 
  private:
+  // Return our preferred size in the cross-axis (the axis perpendicular
+  // to the direction of movement of the thumb).
+  nscoord AutoCrossSize(nscoord aEm);
+
   nsresult MakeAnonymousDiv(Element** aResult, CSSPseudoElementType aPseudoType,
                             nsTArray<ContentInfo>& aElements);
 

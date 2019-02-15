@@ -719,6 +719,21 @@ nsresult nsRangeFrame::AttributeChanged(int32_t aNameSpaceID,
   return nsContainerFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType);
 }
 
+nscoord nsRangeFrame::AutoCrossSize(nscoord aEm) {
+  nscoord minCrossSize(0);
+  if (IsThemed()) {
+    bool unused;
+    LayoutDeviceIntSize size;
+    nsPresContext* pc = PresContext();
+    pc->GetTheme()->GetMinimumWidgetSize(pc, this,
+                                         StyleAppearance::RangeThumb,
+                                         &size, &unused);
+    minCrossSize = pc->DevPixelsToAppUnits(IsHorizontal() ? size.height
+                                                          : size.width);
+  }
+  return std::max(minCrossSize, NSToCoordRound(CROSS_AXIS_EM_SIZE * aEm));
+}
+
 LogicalSize nsRangeFrame::ComputeAutoSize(
     gfxContext* aRenderingContext, WritingMode aWM, const LogicalSize& aCBSize,
     nscoord aAvailableISize, const LogicalSize& aMargin,
@@ -731,9 +746,9 @@ LogicalSize nsRangeFrame::ComputeAutoSize(
   LogicalSize autoSize(wm);
   if (isInlineOriented) {
     autoSize.ISize(wm) = NSToCoordRound(MAIN_AXIS_EM_SIZE * em);
-    autoSize.BSize(wm) = NSToCoordRound(CROSS_AXIS_EM_SIZE * em);
+    autoSize.BSize(wm) = AutoCrossSize(em);
   } else {
-    autoSize.ISize(wm) = NSToCoordRound(CROSS_AXIS_EM_SIZE * em);
+    autoSize.ISize(wm) = AutoCrossSize(em);
     autoSize.BSize(wm) = NSToCoordRound(MAIN_AXIS_EM_SIZE * em);
   }
 
@@ -754,8 +769,8 @@ nscoord nsRangeFrame::GetMinISize(gfxContext* aRenderingContext) {
 nscoord nsRangeFrame::GetPrefISize(gfxContext* aRenderingContext) {
   bool isInline = IsInlineOriented();
   auto em = StyleFont()->mFont.size * nsLayoutUtils::FontSizeInflationFor(this);
-  return NSToCoordRound(em *
-                        (isInline ? MAIN_AXIS_EM_SIZE : CROSS_AXIS_EM_SIZE));
+  return isInline ? NSToCoordRound(em * MAIN_AXIS_EM_SIZE)
+                  : AutoCrossSize(em);
 }
 
 bool nsRangeFrame::IsHorizontal() const {
