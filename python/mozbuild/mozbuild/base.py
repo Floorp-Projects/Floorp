@@ -247,13 +247,17 @@ class MozbuildObject(ProcessExecutionMixin):
         sandbox = ReducedConfigureSandbox({}, environ=env, argv=['mach', '--help'],
                                           stdout=out, stderr=out)
         base_dir = os.path.join(topsrcdir, 'build', 'moz.configure')
-        sandbox.include_file(os.path.join(base_dir, 'init.configure'))
-        # Force mozconfig options injection before getting the target.
-        sandbox._value_for(sandbox['mozconfig_options'])
-        return (
-            sandbox._value_for(sandbox['mozconfig']),
-            sandbox._value_for(sandbox['real_target']),
-        )
+        try:
+            sandbox.include_file(os.path.join(base_dir, 'init.configure'))
+            # Force mozconfig options injection before getting the target.
+            sandbox._value_for(sandbox['mozconfig_options'])
+            return (
+                sandbox._value_for(sandbox['mozconfig']),
+                sandbox._value_for(sandbox['real_target']),
+            )
+        except SystemExit:
+            print(out.getvalue())
+            raise
 
     @property
     def mozconfig_and_target(self):
