@@ -1051,13 +1051,6 @@ class Artifacts(object):
             found_pushids = {}
 
             search_trees = list(CANDIDATE_TREES)
-            # We aren't generally interested in pushes from autoland because
-            # people aren't generally working off of autoland locally, but we
-            # sometimes find errant public pushheads on autoland in automation,
-            # so we check autoland in automation as a workaround.
-            if os.environ.get('MOZ_AUTOMATION'):
-                search_trees += ['integration/autoland']
-
             for tree in search_trees:
                 self.log(logging.INFO, 'artifact',
                          {'tree': tree,
@@ -1318,6 +1311,23 @@ class Artifacts(object):
         pushheads = [(list(CANDIDATE_TREES) + ['try'], revision)]
         return self._install_from_hg_pushheads(pushheads, distdir)
 
+    def install_from_task(self, taskId, distdir):
+        artifacts = list_artifacts(taskId)
+
+        urls = []
+        for artifact_name in self._artifact_job.find_candidate_artifacts(artifacts):
+            # We can easily extract the task ID from the URL.  We can't easily
+            # extract the build ID; we use the .ini files embedded in the
+            # downloaded artifact for this.
+            url = get_artifact_url(taskId, artifact_name)
+            urls.append(url)
+        if not urls:
+            raise ValueError('Task {taskId} existed, but no artifacts found!'.format(taskId=taskId))
+        for url in urls:
+            if self.install_from_url(url, distdir):
+                return 1
+        return 0
+
     def install_from(self, source, distdir):
         """Install artifacts from a ``source`` into the given ``distdir``.
         """
@@ -1331,6 +1341,9 @@ class Artifacts(object):
 
             if source:
                 return self.install_from_revset(source, distdir)
+
+            if 'MOZ_ARTIFACT_TASK' in os.environ:
+                return self.install_from_task(os.environ['MOZ_ARTIFACT_TASK'], distdir)
 
             return self.install_from_recent(distdir)
 
