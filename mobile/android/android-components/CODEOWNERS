@@ -23,3 +23,6 @@
 /components/service/glean/ @mozilla-mobile/telemetry
 /samples/glean/ @mozilla-mobile/telemetry
 
+# Release Engineering pipeline
+/automation @mozilla-mobile/releng
+/CODEOWNERS @mozilla-mobile/releng
