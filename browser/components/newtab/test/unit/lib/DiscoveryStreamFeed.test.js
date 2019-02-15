@@ -184,6 +184,19 @@ describe("DiscoveryStreamFeed", () => {
         assert.equal(args[0].length, 3);
       }
     );
+
+    it("should not record the request time if no fetch request was issued", async () => {
+      const fakeComponents = {components: []};
+      const fakeLayout = [fakeComponents, {components: [{}]}, {}];
+      fakeDiscoveryStream = {DiscoveryStream: {layout: fakeLayout}};
+      fakeCache = {feeds: {"foo.com": {"lastUpdated": Date.now(), "data": "data"}}};
+      sandbox.stub(feed.cache, "get").returns(Promise.resolve(fakeCache));
+      feed.componentFeedRequestTime = undefined;
+
+      await feed.loadComponentFeeds(feed.store.dispatch);
+
+      assert.isUndefined(feed.componentFeedRequestTime);
+    });
   });
 
   describe("#getComponentFeed", () => {
@@ -586,11 +599,15 @@ describe("DiscoveryStreamFeed", () => {
       configPrefStub.returns(JSON.stringify({enabled: true}));
       sandbox.stub(feed, "loadLayout").returns(Promise.resolve());
       sandbox.stub(global.Services.prefs, "addObserver");
+      sandbox.stub(feed, "reportCacheAge").resolves();
+      sandbox.spy(feed, "reportRequestTime");
 
       await feed.onAction({type: at.INIT});
 
       assert.calledOnce(feed.loadLayout);
       assert.calledWith(global.Services.prefs.addObserver, CONFIG_PREF_NAME, feed);
+      assert.calledOnce(feed.reportCacheAge);
+      assert.calledOnce(feed.reportRequestTime);
       assert.isTrue(feed.loaded);
     });
   });
@@ -810,7 +827,7 @@ describe("DiscoveryStreamFeed", () => {
       Object.defineProperty(feed, "showSpocs", {get: () => true});
     });
 
-    it("should call layout, component, spocs update functions", async () => {
+    it("should call layout, component, spocs update and telemetry reporting functions", async () => {
       await feed.refreshAll();
 
       assert.calledOnce(feed.loadLayout);
@@ -921,6 +938,79 @@ describe("DiscoveryStreamFeed", () => {
         assert.calledTwice(feed.store.dispatch);
         assert.equal(feed.store.dispatch.firstCall.args[0].type, at.DISCOVERY_STREAM_FEEDS_UPDATE);
       });
+    });
+  });
+
+  describe("#reportCacheAge", () => {
+    let cache;
+    const cacheAge = 30;
+    beforeEach(() => {
+      cache = {
+        layout: {_timestamp: Date.now() - 10 * 1000},
+        feeds: {"foo.com": {lastUpdated: Date.now() - cacheAge * 1000}},
+        spocs: {lastUpdated: Date.now() - 20 * 1000},
+      };
+      sandbox.stub(feed.cache, "get").resolves(cache);
+    });
+
+    it("should report the oldest lastUpdated date as the cache age", async () => {
+      sandbox.spy(feed.store, "dispatch");
+      feed.loaded = false;
+      await feed.reportCacheAge();
+
+      assert.calledOnce(feed.store.dispatch);
+
+      const [action] = feed.store.dispatch.firstCall.args;
+      assert.equal(action.type, at.TELEMETRY_PERFORMANCE_EVENT);
+      assert.equal(action.data.event, "DS_CACHE_AGE_IN_SEC");
+      assert.isAtLeast(action.data.value, cacheAge);
+      feed.loaded = true;
+    });
+  });
+
+  describe("#reportRequestTime", () => {
+    let cache;
+    const cacheAge = 30;
+    beforeEach(() => {
+      cache = {
+        layout: {_timeStamp: Date.now() - 10 * 1000},
+        feeds: {"foo.com": {lastUpdated: Date.now() - cacheAge * 1000}},
+        spocs: {lastUpdated: Date.now() - 20 * 1000},
+      };
+      sandbox.stub(feed.cache, "get").resolves(cache);
+    });
+
+    it("should report all the request times", async () => {
+      sandbox.spy(feed.store, "dispatch");
+      feed.loaded = false;
+      feed.layoutRequestTime = 1000;
+      feed.spocsRequestTime = 2000;
+      feed.componentFeedRequestTime = 3000;
+      feed.totalRequestTime = 5000;
+      feed.reportRequestTime();
+
+      assert.equal(feed.store.dispatch.callCount, 4);
+
+      let [action] = feed.store.dispatch.getCall(0).args;
+      assert.equal(action.type, at.TELEMETRY_PERFORMANCE_EVENT);
+      assert.equal(action.data.event, "LAYOUT_REQUEST_TIME");
+      assert.equal(action.data.value, 1000);
+
+      [action] = feed.store.dispatch.getCall(1).args;
+      assert.equal(action.type, at.TELEMETRY_PERFORMANCE_EVENT);
+      assert.equal(action.data.event, "SPOCS_REQUEST_TIME");
+      assert.equal(action.data.value, 2000);
+
+      [action] = feed.store.dispatch.getCall(2).args;
+      assert.equal(action.type, at.TELEMETRY_PERFORMANCE_EVENT);
+      assert.equal(action.data.event, "COMPONENT_FEED_REQUEST_TIME");
+      assert.equal(action.data.value, 3000);
+
+      [action] = feed.store.dispatch.getCall(3).args;
+      assert.equal(action.type, at.TELEMETRY_PERFORMANCE_EVENT);
+      assert.equal(action.data.event, "DS_FEED_TOTAL_REQUEST_TIME");
+      assert.equal(action.data.value, 5000);
+      feed.loaded = true;
     });
   });
 });

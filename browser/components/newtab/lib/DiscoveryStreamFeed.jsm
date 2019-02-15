@@ -6,6 +6,7 @@
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.defineModuleGetter(this, "perfService", "resource://activity-stream/common/PerfService.jsm");
 
 const {actionTypes: at, actionCreators: ac} = ChromeUtils.import("resource://activity-stream/common/Actions.jsm", {});
 const {PersistentCache} = ChromeUtils.import("resource://activity-stream/lib/PersistentCache.jsm", {});
@@ -142,8 +143,10 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     const cachedData = await this.cache.get() || {};
     let {layout: layoutResponse} = cachedData;
     if (this.isExpired({cachedData, key: "layout", isStartup})) {
+      const start = perfService.absNow();
       layoutResponse = await this.fetchFromEndpoint(this.config.layout_endpoint);
       if (layoutResponse && layoutResponse.layout) {
+        this.layoutRequestTime = Math.round(perfService.absNow() - start);
         layoutResponse._timestamp = Date.now();
         await this.cache.set("layout", layoutResponse);
       } else {
@@ -240,10 +243,17 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
       return;
     }
 
+    // Reset the flag that indicates whether or not at least one API request
+    // was issued to fetch the component feed in `getComponentFeed()`.
+    this.componentFeedFetched = false;
+    const start = perfService.absNow();
     const {newFeedsPromises, newFeeds} = this.buildFeedPromises(DiscoveryStream.layout, isStartup);
 
     // Each promise has a catch already built in, so no need to catch here.
     await Promise.all(newFeedsPromises);
+    if (this.componentFeedFetched) {
+      this.componentFeedRequestTime = Math.round(perfService.absNow() - start);
+    }
     await this.cache.set("feeds", newFeeds);
     sendUpdate({type: at.DISCOVERY_STREAM_FEEDS_UPDATE, data: newFeeds});
   }
@@ -256,8 +266,10 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
       spocs = cachedData.spocs;
       if (this.isExpired({cachedData, key: "spocs", isStartup})) {
         const endpoint = this.store.getState().DiscoveryStream.spocs.spocs_endpoint;
+        const start = perfService.absNow();
         const spocsResponse = await this.fetchFromEndpoint(endpoint);
         if (spocsResponse) {
+          this.spocsRequestTime = Math.round(perfService.absNow() - start);
           spocs = {
             lastUpdated: Date.now(),
             data: spocsResponse,
@@ -347,6 +359,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     if (this.isExpired({cachedData, key: "feed", url: feedUrl, isStartup})) {
       const feedResponse = await this.fetchFromEndpoint(feedUrl);
       if (feedResponse) {
+        this.componentFeedFetched = true;
         feed = {
           lastUpdated: Date.now(),
           data: feedResponse,
@@ -403,8 +416,88 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     this.loaded = true;
   }
 
+  /**
+   * Reports the cache age in second for Discovery Stream.
+   */
+  async reportCacheAge() {
+    const cachedData = await this.cache.get() || {};
+    const {layout, spocs, feeds} = cachedData;
+    let cacheAge = Date.now();
+    let updated = false;
+
+    if (layout && layout._timestamp && layout._timestamp < cacheAge) {
+      updated = true;
+      cacheAge = layout._timestamp;
+    }
+
+    if (spocs && spocs.lastUpdated && spocs.lastUpdated < cacheAge) {
+      updated = true;
+      cacheAge = spocs.lastUpdated;
+    }
+
+    if (feeds) {
+      Object.keys(feeds).forEach(url => {
+        const feed = feeds[url];
+        if (feed.lastUpdated && feed.lastUpdated < cacheAge) {
+          updated = true;
+          cacheAge = feed.lastUpdated;
+        }
+      });
+    }
+
+    if (updated) {
+      this.store.dispatch(ac.PerfEvent({
+        event: "DS_CACHE_AGE_IN_SEC",
+        value: Math.round((Date.now() - cacheAge) / 1000),
+      }));
+    }
+  }
+
+  /**
+   * Reports various time durations when the feed is requested from endpoint for
+   * the first time. This could happen on the browser start-up, or the pref changes
+   * of discovery stream.
+   *
+   * Metrics to be reported:
+   *   - Request time for layout endpoint
+   *   - Request time for feed endpoint
+   *   - Request time for spoc endpoint
+   *   - Total request time for data completeness
+   */
+  reportRequestTime() {
+    if (this.layoutRequestTime) {
+      this.store.dispatch(ac.PerfEvent({
+        event: "LAYOUT_REQUEST_TIME",
+        value: this.layoutRequestTime,
+      }));
+    }
+    if (this.spocsRequestTime) {
+      this.store.dispatch(ac.PerfEvent({
+        event: "SPOCS_REQUEST_TIME",
+        value: this.spocsRequestTime,
+      }));
+    }
+    if (this.componentFeedRequestTime) {
+      this.store.dispatch(ac.PerfEvent({
+        event: "COMPONENT_FEED_REQUEST_TIME",
+        value: this.componentFeedRequestTime,
+      }));
+    }
+    if (this.totalRequestTime) {
+      this.store.dispatch(ac.PerfEvent({
+        event: "DS_FEED_TOTAL_REQUEST_TIME",
+        value: this.totalRequestTime,
+      }));
+    }
+  }
+
   async enable() {
+    // Note that cache age needs to be reported prior to refreshAll.
+    await this.reportCacheAge();
+    const start = perfService.absNow();
     await this.refreshAll({updateOpenTabs: true, isStartup: true});
+    this.totalRequestTime = Math.round(perfService.absNow() - start);
+    this.reportRequestTime();
   }
 
   async disable() {
@@ -412,6 +505,10 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     // Reset reducer
     this.store.dispatch(ac.BroadcastToContent({type: at.DISCOVERY_STREAM_LAYOUT_RESET}));
     this.loaded = false;
+    this.layoutRequestTime = undefined;
+    this.spocsRequestTime = undefined;
+    this.componentFeedRequestTime = undefined;
+    this.totalRequestTime = undefined;
   }
 
   async clearCache() {
