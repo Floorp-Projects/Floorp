@@ -50,7 +50,7 @@ class ConsoleOutput extends Component {
       messages: PropTypes.object.isRequired,
       messagesUi: PropTypes.array.isRequired,
       serviceContainer: PropTypes.shape({
-        attachRefToHud: PropTypes.func.isRequired,
+        attachRefToWebConsoleUI: PropTypes.func.isRequired,
         openContextMenu: PropTypes.func.isRequired,
         sourceMapService: PropTypes.object,
       }),
@@ -74,18 +74,23 @@ class ConsoleOutput extends Component {
 
   componentDidMount() {
     scrollToBottom(this.outputNode);
-    this.props.serviceContainer.attachRefToHud("outputScroller", this.outputNode);
+    const {
+      serviceContainer,
+      onFirstMeaningfulPaint,
+      dispatch,
+    } = this.props;
+    serviceContainer.attachRefToWebConsoleUI("outputScroller", this.outputNode);
 
     // Waiting for the next paint.
     new Promise(res => requestAnimationFrame(res))
       .then(() => {
-        if (this.props.onFirstMeaningfulPaint) {
-          this.props.onFirstMeaningfulPaint();
+        if (onFirstMeaningfulPaint) {
+          onFirstMeaningfulPaint();
         }
 
         // Dispatching on next tick so we don't block on action execution.
         setTimeout(() => {
-          this.props.dispatch(initialize());
+          dispatch(initialize());
         }, 0);
       });
   }
