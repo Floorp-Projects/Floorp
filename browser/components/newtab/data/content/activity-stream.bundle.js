@@ -7331,11 +7331,11 @@ class List_ListItem extends external_React_default.a.PureComponent {
 
   render() {
     return external_React_default.a.createElement(
-      SpocIntersectionObserver["SpocIntersectionObserver"],
-      { campaignId: this.props.campaignId, dispatch: this.props.dispatch },
+      "li",
+      { className: "ds-list-item" },
       external_React_default.a.createElement(
-        "li",
-        { className: "ds-list-item" },
+        SpocIntersectionObserver["SpocIntersectionObserver"],
+        { campaignId: this.props.campaignId, dispatch: this.props.dispatch },
         external_React_default.a.createElement(
           "a",
           { className: "ds-list-item-link", href: this.props.url, onClick: this.onLinkClick },
