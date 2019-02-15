@@ -1184,7 +1184,7 @@ void js::Nursery::maybeResizeNursery(JS::GCReason reason) {
 }
 
 void js::Nursery::growAllocableSpace(unsigned newCount) {
-  MOZ_ASSERT(newCount >= currentChunk_);
+  MOZ_ASSERT(newCount > currentChunk_);
   maxChunkCount_ = newCount;
 }
 
