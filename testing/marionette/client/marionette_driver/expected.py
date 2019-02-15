@@ -101,7 +101,9 @@ class element_stale(object):
             # Calling any method forces a staleness check
             self.el.is_enabled()
             return False
-        except errors.StaleElementException:
+        except (errors.StaleElementException, errors.NoSuchElementException):
+            # StaleElementException is raised when the element is gone, and
+            # NoSuchElementException is raised after a process swap.
             return True
 
 
