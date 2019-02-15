@@ -16,7 +16,8 @@ use app_units::Au;
 use euclid::{Length, TypedRect, TypedScale, TypedSize2D, TypedTransform3D, TypedTranslation2D};
 use euclid::{TypedPoint2D, TypedPoint3D, TypedVector2D, TypedVector3D, TypedSideOffsets2D};
 use euclid::HomogeneousVector;
-use DirtyRect;
+
+use image::DirtyRect;
 
 /// Geometry in the coordinate system of the render target (screen or intermediate
 /// surface) in physical pixels.
