@@ -33,6 +33,7 @@ public abstract class TabsLayout extends RecyclerView
     private TabsPanel tabsPanel;
     private final TabsLayoutAdapter tabsAdapter;
     private View emptyView;
+    protected TabsTouchHelperCallback tabTouchCallback;
 
     public TabsLayout(Context context, AttributeSet attrs, int itemViewLayoutResId) {
         super(context, attrs);
@@ -46,10 +47,14 @@ public abstract class TabsLayout extends RecyclerView
                 new Button.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        // The view here is the close button, which has a reference
-                        // to the parent TabsLayoutItemView in its tag, hence the getTag() call.
-                        TabsLayoutItemView itemView = (TabsLayoutItemView) v.getTag();
-                        closeTab(itemView);
+                        // Bug 1525796: ignore action if the user already interacts with the whole view
+                        // with the help of an ItemTouchHelper
+                        if (tabTouchCallback == null || !tabTouchCallback.isInteractionInProgress()) {
+                            // The view here is the close button, which has a reference
+                            // to the parent TabsLayoutItemView in its tag, hence the getTag() call.
+                            TabsLayoutItemView itemView = (TabsLayoutItemView) v.getTag();
+                            closeTab(itemView);
+                        }
                     }
                 });
         setAdapter(tabsAdapter);
