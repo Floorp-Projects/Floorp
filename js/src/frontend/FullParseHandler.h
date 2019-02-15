@@ -461,7 +461,7 @@ class FullParseHandler {
   }
 
   MOZ_MUST_USE bool addClassFieldDefinition(ListNodeType memberList, Node name,
-                                            FunctionNodeType initializer) {
+                                            Node initializer) {
     MOZ_ASSERT(memberList->isKind(ParseNodeKind::ClassMemberList));
     MOZ_ASSERT(isUsableAsObjectPropertyName(name));
 
