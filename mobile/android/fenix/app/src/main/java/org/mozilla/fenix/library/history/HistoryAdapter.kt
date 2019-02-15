@@ -210,12 +210,16 @@ class HistoryAdapter(
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         when (holder) {
             is HistoryDeleteViewHolder -> holder.bind(mode)
+            // Temporarily hard code the header until
+            // we build out support for time based sections
             is HistoryHeaderViewHolder -> holder.bind("Today")
             is HistoryListItemViewHolder -> holder.bind(items[position - NUMBER_OF_SECTIONS], mode)
         }
     }
 
     companion object {
+        // Temporarily hard code the number of sections until
+        // we build out support for time based sections
         private const val NUMBER_OF_SECTIONS = 2
     }
 }
