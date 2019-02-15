@@ -61,56 +61,28 @@ MozElements.MozAutocompleteRichlistitem = class MozAutocompleteRichlistitem exte
 
     this.textContent = "";
     this.appendChild(MozXULElement.parseXULToFragment(this._markup));
+    this.initializeAttributeInheritance();
 
     this._boundaryCutoff = null;
     this._inOverflow = false;
 
-    this._updateAttributes();
     this._adjustAcItem();
   }
 
-  static get observedAttributes() {
-    return [
-      "actiontype",
-      "current",
-      "selected",
-      "image",
-      "type",
-    ];
-  }
-
-  get inheritedAttributeMap() {
-    if (!this.__inheritedAttributeMap) {
-      this.__inheritedAttributeMap = new Map([
-        [ this.querySelector(".ac-type-icon"), [ "selected", "current", "type" ] ],
-        [ this.querySelector(".ac-site-icon"), [ "src=image", "selected", "type" ] ],
-        [ this.querySelector(".ac-title"), [ "selected" ] ],
-        [ this.querySelector(".ac-title-text"), [ "selected" ] ],
-        [ this.querySelector(".ac-tags"), [ "selected" ] ],
-        [ this.querySelector(".ac-tags-text"), [ "selected" ] ],
-        [ this.querySelector(".ac-separator"), [ "selected", "actiontype", "type" ] ],
-        [ this.querySelector(".ac-url"), [ "selected", "actiontype" ] ],
-        [ this.querySelector(".ac-url-text"), [ "selected" ] ],
-        [ this.querySelector(".ac-action"), [ "selected", "actiontype" ] ],
-        [ this.querySelector(".ac-action-text"), [ "selected" ] ],
-      ]);
-    }
-    return this.__inheritedAttributeMap;
-  }
-
-  attributeChangedCallback(name, oldValue, newValue) {
-    if (this.isConnectedAndReady && oldValue != newValue &&
-        this.constructor.observedAttributes.includes(name)) {
-      this._updateAttributes();
-    }
-  }
-
-  _updateAttributes() {
-    for (let [ el, attrs ] of this.inheritedAttributeMap.entries()) {
-      for (let attr of attrs) {
-        this.inheritAttribute(el, attr);
-      }
-    }
+  static get inheritedAttributes() {
+    return {
+      ".ac-type-icon": "selected,current,type",
+      ".ac-site-icon": "src=image,selected,type",
+      ".ac-title": "selected",
+      ".ac-title-text": "selected",
+      ".ac-tags": "selected",
+      ".ac-tags-text": "selected",
+      ".ac-separator": "selected,actiontype,type",
+      ".ac-url": "selected,actiontype",
+      ".ac-url-text": "selected",
+      ".ac-action": "selected,actiontype",
+      ".ac-action-text": "selected",
+    };
   }
 
   get _markup() {
@@ -942,31 +914,18 @@ class MozAutocompleteRichlistitemInsecureWarning extends MozElements.MozAutocomp
     this.classList.add("forceHandleUnderflow");
   }
 
-  static get observedAttributes() {
-    return [
-      "actiontype",
-      "current",
-      "selected",
-      "image",
-      "type",
-    ];
-  }
-
-  get inheritedAttributeMap() {
-    if (!this.__inheritedAttributeMap) {
-      this.__inheritedAttributeMap = new Map([
-        [ this.querySelector(".ac-type-icon"), [ "selected", "current", "type" ] ],
-        [ this.querySelector(".ac-site-icon"), [ "src=image", "selected", "type" ] ],
-        [ this.querySelector(".ac-title-text"), [ "selected" ] ],
-        [ this.querySelector(".ac-tags-text"), [ "selected" ] ],
-        [ this.querySelector(".ac-separator"), [ "selected", "actiontype", "type" ] ],
-        [ this.querySelector(".ac-url"), [ "selected", "actiontype" ] ],
-        [ this.querySelector(".ac-url-text"), [ "selected" ] ],
-        [ this.querySelector(".ac-action"), [ "selected", "actiontype" ] ],
-        [ this.querySelector(".ac-action-text"), [ "selected" ] ],
-      ]);
-    }
-    return this.__inheritedAttributeMap;
+  static get inheritedAttributes() {
+    return {
+      ".ac-type-icon": "selected,current,type",
+      ".ac-site-icon": "src=image,selected,type",
+      ".ac-title-text": "selected",
+      ".ac-tags-text": "selected",
+      ".ac-separator": "selected,actiontype,type",
+      ".ac-url": "selected,actiontype",
+      ".ac-url-text": "selected",
+      ".ac-action": "selected,actiontype",
+      ".ac-action-text": "selected",
+    };
   }
 
   get _markup() {
