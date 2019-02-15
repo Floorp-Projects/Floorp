@@ -92,7 +92,7 @@ function run_test() {
         try {
           let val = pb.getCharPref(pref_name);
           prefExists = val.length > 128;
-        } catch(e) {
+        } catch (e) {
           prefExists = false;
         }
         ok(!prefExists,

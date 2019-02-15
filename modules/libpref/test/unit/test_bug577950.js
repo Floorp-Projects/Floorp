@@ -10,17 +10,12 @@ function run_test() {
             getService(Ci.nsIPrefBranch);
 
   var observer = {
-    QueryInterface: function QueryInterface(aIID) {
-      if (aIID.equals(Ci.nsIObserver) ||
-          aIID.equals(Ci.nsISupports))
-         return this;
-      throw Cr.NS_NOINTERFACE;
-    },
+    QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
 
     observe: function observe(aSubject, aTopic, aState) {
       // Don't do anything.
-    }
-  }
+    },
+  };
 
   /* Set the same pref twice.  This shouldn't leak. */
   pb.addObserver("UserPref.nonexistent.setIntPref", observer);

@@ -6,8 +6,7 @@
 const DIRNAME = "test/";
 const time = Date.now();
 
-function run_test()
-{
+function run_test() {
   // Copy in the test file.
   var source = do_get_file("data/test.zip");
   source.copyTo(tmpFile.parent, tmpFile.leafName);

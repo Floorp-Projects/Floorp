@@ -9,12 +9,12 @@ function run_test() {
   var spec = "jar:" + ios.newFileURI(do_get_file(path)).spec + "!/";
   var channel = NetUtil.newChannel({
     uri: spec + "file_that_isnt_in.archive",
-    loadUsingSystemPrincipal: true
+    loadUsingSystemPrincipal: true,
   });
   try {
     instr = channel.open();
-    do_throw("Failed to report that file doesn't exist")
+    do_throw("Failed to report that file doesn't exist");
   } catch (e) {
-      Assert.ok(e.name == "NS_ERROR_FILE_NOT_FOUND")
+      Assert.ok(e.name == "NS_ERROR_FILE_NOT_FOUND");
   }
 }

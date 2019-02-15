@@ -37,10 +37,6 @@ function saveAndReload() {
   ps.readUserPrefsFromFile(file);
 }
 
-function run_test() {
-  run_next_test();
-}
-
 // A sticky pref should not be written if the value is unchanged.
 add_test(function notWrittenWhenUnchanged() {
   resetAndLoadDefaults();

@@ -9,7 +9,7 @@ var ps = Cc["@mozilla.org/preferences-service;1"].
   getService(Ci.nsIPrefService);
 
 function makeBuffer(length) {
-  return new Array(length + 1).join('x');
+  return new Array(length + 1).join("x");
 }
 
 /**
@@ -20,7 +20,7 @@ function checkWarning(pref, buffer) {
   return new Promise(resolve => {
     let complete = false;
     let listener = {
-      observe: function(event) {
+      observe(event) {
         let message = event.message;
         if (!(message.startsWith("Warning: attempting to write")
               && message.includes(pref))) {
@@ -33,7 +33,7 @@ function checkWarning(pref, buffer) {
         info("Warning while setting " + pref);
         cs.unregisterListener(listener);
         resolve(true);
-      }
+      },
     };
     do_timeout(1000, function() {
       if (complete) {
@@ -47,10 +47,6 @@ function checkWarning(pref, buffer) {
     cs.registerListener(listener);
     ps.setCharPref(pref, buffer);
   });
-}
-
-function run_test() {
-  run_next_test();
 }
 
 add_task(async function() {

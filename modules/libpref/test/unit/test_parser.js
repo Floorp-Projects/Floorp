@@ -10,7 +10,7 @@ function run_test() {
   var prefs = ps.getBranch(null);
 
   ps.resetPrefs();
-  ps.readDefaultPrefsFromFile(do_get_file('data/testParser.js'));
+  ps.readDefaultPrefsFromFile(do_get_file("data/testParser.js"));
 
   Assert.equal(ps.getBoolPref("comment1"), true);
   Assert.equal(ps.getBoolPref("comment2"), true);
@@ -46,7 +46,7 @@ function run_test() {
   Assert.equal(ps.getCharPref("string.empty"), "");
   Assert.equal(ps.getCharPref("string.abc"), "abc");
   Assert.equal(ps.getCharPref("string.long"), "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
-  Assert.equal(ps.getCharPref('string.single-quotes'), '"abc"');
+  Assert.equal(ps.getCharPref("string.single-quotes"), '"abc"');
   Assert.equal(ps.getCharPref("string.double-quotes"), "'abc'");
   Assert.equal(ps.getCharPref("string.weird-chars"),
                "\x0d \x09 \x0b \x0c \x06 \x16");
