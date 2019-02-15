@@ -154,6 +154,12 @@ class Mitmproxy(Playback):
         mitmproxy_recordings = []
         # recording names can be provided in comma-separated list; build py list including path
         for recording in mitmproxy_recordings_list:
+            if not os.path.isfile(os.path.join(mitmproxy_recording_path, recording)):
+                LOG.critical('Recording file {} cannot be found!'.
+                             format(os.path.join(mitmproxy_recording_path, recording)))
+                raise Exception('Recording file {} cannot be found!'.
+                                format(os.path.join(mitmproxy_recording_path, recording)))
+
             mitmproxy_recordings.append(os.path.join(mitmproxy_recording_path, recording))
 
         # cmd line to start mitmproxy playback using custom playback script is as follows:
