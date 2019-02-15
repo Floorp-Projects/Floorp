@@ -6,6 +6,7 @@ import {reducers} from "common/Reducers.jsm";
 const CONFIG_PREF_NAME = "browser.newtabpage.activity-stream.discoverystream.config";
 const SPOC_IMPRESSION_TRACKING_PREF = "browser.newtabpage.activity-stream.discoverystream.spoc.impressions";
 const THIRTY_MINUTES = 30 * 60 * 1000;
+const ONE_WEEK = 7 * 24 * 60 * 60 * 1000; // 1 week
 
 describe("DiscoveryStreamFeed", () => {
   let feed;
@@ -30,6 +31,8 @@ describe("DiscoveryStreamFeed", () => {
     // Feed
     feed = new DiscoveryStreamFeed();
     feed.store = createStore(combineReducers(reducers));
+
+    sandbox.stub(feed, "_maybeUpdateCachedData").resolves();
   });
 
   afterEach(() => {
@@ -652,6 +655,26 @@ describe("DiscoveryStreamFeed", () => {
         feed.isExpired({}, "foo");
       });
     });
+    it("should return false for layout on startup for content under 1 week", () => {
+      const layout = {_timestamp: Date.now()};
+      const result = feed.isExpired({cachedData: {layout}, key: "layout", isStartup: true});
+
+      assert.isFalse(result);
+    });
+    it("should return true for layout for isStartup=false", () => {
+      const layout = {_timestamp: Date.now()};
+      clock.tick(THIRTY_MINUTES + 1);
+      const result = feed.isExpired({cachedData: {layout}, key: "layout"});
+
+      assert.isTrue(result);
+    });
+    it("should return true for layout on startup for content over 1 week", () => {
+      const layout = {_timestamp: Date.now()};
+      clock.tick(ONE_WEEK + 1);
+      const result = feed.isExpired({cachedData: {layout}, key: "layout", isStartup: true});
+
+      assert.isTrue(result);
+    });
   });
 
   describe("#checkIfAnyCacheExpired", () => {
@@ -719,6 +742,7 @@ describe("DiscoveryStreamFeed", () => {
       sandbox.stub(feed, "loadComponentFeeds").resolves();
       sandbox.stub(feed, "loadSpocs").resolves();
       sandbox.spy(feed.store, "dispatch");
+      Object.defineProperty(feed, "showSpocs", {get: () => true});
     });
 
     it("should call layout, component, spocs update functions", async () => {
@@ -762,6 +786,76 @@ describe("DiscoveryStreamFeed", () => {
       assert.calledOnce(global.Promise.all);
       const {args} = global.Promise.all.firstCall;
       assert.equal(args[0].length, 2);
+    });
+    describe("test startup cache behaviour", () => {
+      beforeEach(() => {
+        feed._maybeUpdateCachedData.restore();
+        sandbox.stub(feed.cache, "set").resolves();
+      });
+      it("should refresh layout on startup if it was served from cache", async () => {
+        feed.loadLayout.restore();
+        sandbox.stub(feed.cache, "get").resolves({layout: {_timestamp: Date.now(), layout: {}}});
+        sandbox.stub(feed, "fetchFromEndpoint").resolves({layout: {}});
+        clock.tick(THIRTY_MINUTES + 1);
+
+        await feed.refreshAll({isStartup: true});
+
+        assert.calledOnce(feed.fetchFromEndpoint);
+        // Once from cache, once to update the store
+        assert.calledTwice(feed.store.dispatch);
+        assert.equal(feed.store.dispatch.firstCall.args[0].type, at.DISCOVERY_STREAM_LAYOUT_UPDATE);
+      });
+      it("should not refresh layout on startup if it is under THIRTY_MINUTES", async () => {
+        feed.loadLayout.restore();
+        sandbox.stub(feed.cache, "get").resolves({layout: {_timestamp: Date.now(), layout: {}}});
+        sandbox.stub(feed, "fetchFromEndpoint").resolves({layout: {}});
+
+        await feed.refreshAll({isStartup: true});
+
+        assert.notCalled(feed.fetchFromEndpoint);
+      });
+      it("should refresh spocs on startup if it was served from cache", async () => {
+        feed.loadSpocs.restore();
+        sandbox.stub(feed.cache, "get").resolves({spocs: {lastUpdated: Date.now()}});
+        sandbox.stub(feed, "fetchFromEndpoint").resolves("data");
+        clock.tick(THIRTY_MINUTES + 1);
+
+        await feed.refreshAll({isStartup: true});
+
+        assert.calledOnce(feed.fetchFromEndpoint);
+        // Once from cache, once to update the store
+        assert.calledTwice(feed.store.dispatch);
+        assert.equal(feed.store.dispatch.firstCall.args[0].type, at.DISCOVERY_STREAM_SPOCS_UPDATE);
+      });
+      it("should not refresh spocs on startup if it is under THIRTY_MINUTES", async () => {
+        feed.loadSpocs.restore();
+        sandbox.stub(feed.cache, "get").resolves({spocs: {lastUpdated: Date.now()}});
+        sandbox.stub(feed, "fetchFromEndpoint").resolves("data");
+
+        await feed.refreshAll({isStartup: true});
+
+        assert.notCalled(feed.fetchFromEndpoint);
+      });
+      it("should refresh feeds on startup if it was served from cache", async () => {
+        feed.loadComponentFeeds.restore();
+
+        const fakeComponents = {components: [{feed: {url: "foo.com"}}]};
+        const fakeLayout = [fakeComponents];
+        const fakeDiscoveryStream = {DiscoveryStream: {layout: fakeLayout}};
+        sandbox.stub(feed.store, "getState").returns(fakeDiscoveryStream);
+
+        const fakeCache = {feeds: {"foo.com": {lastUpdated: Date.now(), data: "data"}}};
+        sandbox.stub(feed.cache, "get").resolves(fakeCache);
+        clock.tick(THIRTY_MINUTES + 1);
+        sandbox.stub(feed, "fetchFromEndpoint").resolves("data");
+
+        await feed.refreshAll({isStartup: true});
+
+        assert.calledOnce(feed.fetchFromEndpoint);
+        // Once from cache, once to update the store
+        assert.calledTwice(feed.store.dispatch);
+        assert.equal(feed.store.dispatch.firstCall.args[0].type, at.DISCOVERY_STREAM_FEEDS_UPDATE);
+      });
     });
   });
 });
