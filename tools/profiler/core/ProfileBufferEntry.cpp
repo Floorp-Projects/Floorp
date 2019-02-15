@@ -1017,9 +1017,9 @@ void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter,
           if (e.Get().IsDynamicStringFragment()) {
             char chars[ProfileBufferEntry::kNumChars];
             e.Get().CopyCharsInto(chars);
-            for (size_t j = 0; j < ProfileBufferEntry::kNumChars; j++) {
+            for (char c : chars) {
               if (i < kMaxFrameKeyLength) {
-                dynStrBuf[i] = chars[j];
+                dynStrBuf[i] = c;
                 i++;
               }
             }
