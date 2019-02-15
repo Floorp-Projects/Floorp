@@ -7063,7 +7063,7 @@ void nsBlockFrame::IsMarginRoot(bool* aBStartMarginRoot,
 /* static */
 bool nsBlockFrame::BlockNeedsFloatManager(nsIFrame* aBlock) {
   MOZ_ASSERT(aBlock, "Must have a frame");
-  NS_ASSERTION(nsLayoutUtils::GetAsBlock(aBlock), "aBlock must be a block");
+  NS_ASSERTION(aBlock->IsBlockFrameOrSubclass(), "aBlock must be a block");
 
   nsIFrame* parent = aBlock->GetParent();
   return (aBlock->GetStateBits() & NS_BLOCK_FLOAT_MGR) ||
