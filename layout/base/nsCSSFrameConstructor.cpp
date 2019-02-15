@@ -4353,10 +4353,6 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay& aDisplay,
       FCDATA_FOR_DISPLAY(StyleDisplay::None, UNREACHABLE_FCDATA()),
       FCDATA_FOR_DISPLAY(StyleDisplay::Block, UNREACHABLE_FCDATA()),
       FCDATA_FOR_DISPLAY(StyleDisplay::FlowRoot, UNREACHABLE_FCDATA()),
-      // To keep the hash table small don't add inline frames (they're
-      // typically things like FONT and B), because we can quickly
-      // find them if we need to.
-      // XXXbz the "quickly" part is a bald-faced lie!
       FCDATA_FOR_DISPLAY(
           StyleDisplay::Inline,
           FULL_CTOR_FCDATA(FCDATA_IS_INLINE | FCDATA_IS_LINE_PARTICIPANT,
