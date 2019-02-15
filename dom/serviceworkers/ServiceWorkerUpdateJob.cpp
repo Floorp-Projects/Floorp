@@ -151,10 +151,8 @@ class ServiceWorkerUpdateJob::ContinueInstallRunnable final
 
 ServiceWorkerUpdateJob::ServiceWorkerUpdateJob(
     nsIPrincipal* aPrincipal, const nsACString& aScope,
-    const nsACString& aScriptSpec, nsILoadGroup* aLoadGroup,
-    ServiceWorkerUpdateViaCache aUpdateViaCache)
+    const nsACString& aScriptSpec, ServiceWorkerUpdateViaCache aUpdateViaCache)
     : ServiceWorkerJob(Type::Update, aPrincipal, aScope, aScriptSpec),
-      mLoadGroup(aLoadGroup),
       mUpdateViaCache(aUpdateViaCache),
       mOnFailure(OnFailure::DoNothing) {}
 
@@ -167,10 +165,8 @@ ServiceWorkerUpdateJob::GetRegistration() const {
 
 ServiceWorkerUpdateJob::ServiceWorkerUpdateJob(
     Type aType, nsIPrincipal* aPrincipal, const nsACString& aScope,
-    const nsACString& aScriptSpec, nsILoadGroup* aLoadGroup,
-    ServiceWorkerUpdateViaCache aUpdateViaCache)
+    const nsACString& aScriptSpec, ServiceWorkerUpdateViaCache aUpdateViaCache)
     : ServiceWorkerJob(aType, aPrincipal, aScope, aScriptSpec),
-      mLoadGroup(aLoadGroup),
       mUpdateViaCache(aUpdateViaCache),
       mOnFailure(serviceWorkerScriptCache::OnFailure::DoNothing) {}
 
@@ -300,7 +296,7 @@ void ServiceWorkerUpdateJob::Update() {
 
   nsresult rv = serviceWorkerScriptCache::Compare(
       mRegistration, mPrincipal, cacheName, NS_ConvertUTF8toUTF16(mScriptSpec),
-      callback, mLoadGroup);
+      callback);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     FailUpdateJob(rv);
     return;

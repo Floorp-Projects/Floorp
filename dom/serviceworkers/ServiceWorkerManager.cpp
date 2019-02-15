@@ -772,9 +772,8 @@ RefPtr<ServiceWorkerRegistrationPromise> ServiceWorkerManager::Register(
   RefPtr<ServiceWorkerResolveWindowPromiseOnRegisterCallback> cb =
       new ServiceWorkerResolveWindowPromiseOnRegisterCallback();
 
-  nsCOMPtr<nsILoadGroup> loadGroup = do_CreateInstance(NS_LOADGROUP_CONTRACTID);
   RefPtr<ServiceWorkerRegisterJob> job = new ServiceWorkerRegisterJob(
-      principal, aScopeURL, aScriptURL, loadGroup,
+      principal, aScopeURL, aScriptURL,
       static_cast<ServiceWorkerUpdateViaCache>(aUpdateViaCache));
 
   job->AppendResultCallback(cb);
@@ -2255,7 +2254,7 @@ void ServiceWorkerManager::SoftUpdateInternal(
   RefPtr<ServiceWorkerJobQueue> queue = GetOrCreateJobQueue(scopeKey, aScope);
 
   RefPtr<ServiceWorkerUpdateJob> job = new ServiceWorkerUpdateJob(
-      principal, registration->Scope(), newest->ScriptSpec(), nullptr,
+      principal, registration->Scope(), newest->ScriptSpec(),
       registration->GetUpdateViaCache());
 
   if (aCallback) {
@@ -2342,7 +2341,7 @@ void ServiceWorkerManager::UpdateInternal(
   // "Invoke Update algorithm, or its equivalent, with client, registration as
   // its argument."
   RefPtr<ServiceWorkerUpdateJob> job = new ServiceWorkerUpdateJob(
-      aPrincipal, registration->Scope(), newest->ScriptSpec(), nullptr,
+      aPrincipal, registration->Scope(), newest->ScriptSpec(),
       registration->GetUpdateViaCache());
 
   RefPtr<UpdateJobCallback> cb = new UpdateJobCallback(aCallback);
