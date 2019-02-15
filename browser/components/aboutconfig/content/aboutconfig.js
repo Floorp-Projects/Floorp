@@ -32,9 +32,11 @@ let gExistingPrefs = new Map();
 let gDeletedPrefs = new Map();
 
 /**
- * Maps each row element currently in the table to its PrefRow object.
+ * Also cache several values to improve the performance of common use cases.
  */
-let gElementToPrefMap = new WeakMap();
+let gSortedExistingPrefs = null;
+let gSearchInput = null;
+let gPrefsTable = null;
 
 /**
  * Reference to the PrefRow currently being edited, if any.
@@ -50,6 +52,8 @@ class PrefRow {
   constructor(name) {
     this.name = name;
     this.value = true;
+    this.hidden = false;
+    this.odd = false;
     this.editing = false;
     this.refreshValue();
   }
@@ -62,12 +66,18 @@ class PrefRow {
       this.hasDefaultValue = false;
       this.hasUserValue = false;
       this.isLocked = false;
-      gExistingPrefs.delete(this.name);
+      if (gExistingPrefs.has(this.name)) {
+        gExistingPrefs.delete(this.name);
+        gSortedExistingPrefs = null;
+      }
       gDeletedPrefs.set(this.name, this);
       return;
     }
 
-    gExistingPrefs.set(this.name, this);
+    if (!gExistingPrefs.has(this.name)) {
+      gExistingPrefs.set(this.name, this);
+      gSortedExistingPrefs = null;
+    }
     gDeletedPrefs.delete(this.name);
 
     try {
@@ -117,7 +127,7 @@ class PrefRow {
     }
 
     this._element = document.createElement("tr");
-    gElementToPrefMap.set(this._element, this);
+    this._element._pref = this;
 
     let nameCell = document.createElement("th");
     this._element.append(
@@ -154,9 +164,6 @@ class PrefRow {
       return;
     }
 
-    this._element.classList.toggle("has-user-value", !!this.hasUserValue);
-    this._element.classList.toggle("locked", !!this.isLocked);
-    this._element.classList.toggle("deleted", !this.exists);
     if (this.exists && !this.editing) {
       // We need to place the text inside a "span" element to ensure that the
       // text copied to the clipboard includes all whitespace.
@@ -257,6 +264,29 @@ class PrefRow {
       this.resetButton.remove();
       delete this.resetButton;
     }
+
+    this.refreshClass();
+  }
+
+  refreshClass() {
+    if (!this._element) {
+      // No need to update if this preference was never added to the table.
+      return;
+    }
+
+    let className;
+    if (this.hidden) {
+      className = "hidden";
+    } else {
+      className = (this.hasUserValue ? "has-user-value " : "") +
+                  (this.isLocked ? "locked " : "") +
+                  (this.exists ? "" : "deleted ") +
+                  (this.odd ? "odd " : "");
+    }
+
+    if (this._lastClassName !== className) {
+      this._element.className = this._lastClassName = className;
+    }
   }
 
   edit() {
@@ -335,8 +365,8 @@ function loadPrefs() {
   document.body.textContent = "";
   document.body.appendChild(content);
 
-  let search = document.getElementById("about-config-search");
-  let prefs = document.getElementById("prefs");
+  let search = gSearchInput = document.getElementById("about-config-search");
+  let prefs = gPrefsTable = document.getElementById("prefs");
   search.focus();
 
   for (let name of Services.prefs.getChildList("")) {
@@ -364,7 +394,7 @@ function loadPrefs() {
     if (event.target.localName != "button") {
       return;
     }
-    let pref = gElementToPrefMap.get(event.target.closest("tr"));
+    let pref = event.target.closest("tr")._pref;
     let button = event.target.closest("button");
     if (button.classList.contains("button-add")) {
       Preferences.set(pref.name, pref.value);
@@ -392,24 +422,79 @@ function filterPrefs() {
   }
   gDeletedPrefs.clear();
 
-  let searchName = document.getElementById("about-config-search").value.trim();
+  let searchName = gSearchInput.value.trim();
   gFilterString = searchName.toLowerCase();
-  let prefArray = [...gExistingPrefs.values()];
-  if (gFilterString) {
-    prefArray = prefArray.filter(pref => pref.matchesFilter);
-  }
-  prefArray.sort((a, b) => a.name > b.name);
-  if (searchName && !gExistingPrefs.has(searchName)) {
-    prefArray.push(new PrefRow(searchName));
+
+  if (!gSortedExistingPrefs) {
+    gSortedExistingPrefs = [...gExistingPrefs.values()];
+    gSortedExistingPrefs.sort((a, b) => a.name > b.name);
   }
 
-  let prefsElement = document.getElementById("prefs");
-  prefsElement.textContent = "";
-  let fragment = document.createDocumentFragment();
-  for (let pref of prefArray) {
-    fragment.appendChild(pref.getElement());
+  // The slowest operations tend to be the addition and removal of DOM nodes, so
+  // this algorithm tries to reduce removals by hiding nodes instead. This
+  // happens frequently when the set narrows while typing preference names. We
+  // iterate the nodes already in the table in parallel to those we want to
+  // show, because the two lists are sorted and they will often match already.
+  let fragment = null;
+  let indexInArray = 0;
+  let elementInTable = gPrefsTable.firstElementChild;
+  let odd = false;
+  while (indexInArray < gSortedExistingPrefs.length || elementInTable) {
+    // For efficiency, filter the array while we are iterating.
+    let prefInArray = gSortedExistingPrefs[indexInArray];
+    if (prefInArray) {
+      if (!prefInArray.matchesFilter) {
+        indexInArray++;
+        continue;
+      }
+      prefInArray.hidden = false;
+      prefInArray.odd = odd;
+    }
+
+    let prefInTable = elementInTable && elementInTable._pref;
+    if (!prefInTable) {
+      // We're at the end of the table, we just have to insert all the matching
+      // elements that remain in the array. We can use a fragment to make the
+      // insertions faster, which is useful during the initial filtering.
+      if (!fragment) {
+        fragment = document.createDocumentFragment();
+      }
+      fragment.appendChild(prefInArray.getElement());
+    } else if (prefInTable == prefInArray) {
+      // We got two matching elements, we just need to update the visibility.
+      elementInTable = elementInTable.nextElementSibling;
+    } else if (prefInArray && prefInArray.name < prefInTable.name) {
+      // The iteration in the table is ahead of the iteration in the array.
+      // Insert or move the array element, and advance the array index.
+      gPrefsTable.insertBefore(prefInArray.getElement(), elementInTable);
+    } else {
+      // The iteration in the array is ahead of the iteration in the table.
+      // Hide the element in the table, and advance to the next element.
+      let nextElementInTable = elementInTable.nextElementSibling;
+      if (!prefInTable.exists) {
+        // Remove rows for deleted preferences, or temporary addition rows.
+        elementInTable.remove();
+      } else {
+        // Keep the element for the next filtering if the preference exists.
+        prefInTable.hidden = true;
+        prefInTable.refreshClass();
+      }
+      elementInTable = nextElementInTable;
+      continue;
+    }
+
+    prefInArray.refreshClass();
+    odd = !odd;
+    indexInArray++;
   }
-  prefsElement.appendChild(fragment);
+
+  if (fragment) {
+    gPrefsTable.appendChild(fragment);
+  }
+
+  if (searchName && !gExistingPrefs.has(searchName)) {
+    gPrefsTable.appendChild((new PrefRow(searchName)).getElement());
+  }
 
   // We only start observing preference changes after the first search is done,
   // so that newly added preferences won't appear while the page is still empty.
