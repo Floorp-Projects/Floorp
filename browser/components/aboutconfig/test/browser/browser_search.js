@@ -67,13 +67,17 @@ add_task(async function test_search_delayed() {
     Assert.equal(this.rows.length, 2);
 
     // The table is updated in a single microtask, so we don't need to wait for
-    // specific mutations, we can just continue when the children are updated.
+    // specific mutations, we can just continue when any of the children or
+    // their "hidden" attributes are updated.
     let prefsTableChanged = new Promise(resolve => {
       let observer = new MutationObserver(() => {
         observer.disconnect();
         resolve();
       });
       observer.observe(this.prefsTable, { childList: true });
+      for (let element of this.prefsTable.children) {
+        observer.observe(element, { attributes: true });
+      }
     });
 
     // Add a character and test that the table is not updated immediately.
