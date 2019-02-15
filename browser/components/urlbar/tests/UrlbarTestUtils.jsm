@@ -82,6 +82,16 @@ var UrlbarTestUtils = {
   },
 
   /**
+   * Returns true if the oneOffSearchButtons are visible.
+   * @param {object} win The window containing the urlbar
+   * @returns {boolena} True if the buttons are visible.
+   */
+  getOneOffSearchButtonsVisible(win) {
+    let urlbar = getUrlbarAbstraction(win);
+    return urlbar.oneOffSearchButtonsVisible;
+  },
+
+  /**
    * Gets an abstracted rapresentation of the result at an index.
    * @param {object} win The window containing the urlbar
    * @param {number} index The index to look for
@@ -260,6 +270,14 @@ class UrlbarAbstraction {
   get oneOffSearchButtons() {
     return this.quantumbar ? this.urlbar.view.oneOffSearchButtons :
            this.urlbar.popup.oneOffSearchButtons;
+  }
+
+  get oneOffSearchButtonsVisible() {
+    if (!this.quantumbar) {
+      return this.window.getComputedStyle(this.oneOffSearchButtons.container).display != "none";
+    }
+
+    return this.oneOffSearchButtons.style.display != "none";
   }
 
   startSearch(text) {
