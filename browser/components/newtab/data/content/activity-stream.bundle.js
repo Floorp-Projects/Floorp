@@ -7293,37 +7293,24 @@ var external_ReactRedux_ = __webpack_require__(24);
 
 class DSMessage_DSMessage extends external_React_default.a.PureComponent {
   render() {
-    let hasSubtitleAndOrLink = this.props.link_text && this.props.link_url;
-    hasSubtitleAndOrLink = hasSubtitleAndOrLink || this.props.subtitle;
-
     return external_React_default.a.createElement(
       "div",
       { className: "ds-message" },
-      this.props.title && external_React_default.a.createElement(
+      external_React_default.a.createElement(
         "header",
         { className: "title" },
-        this.props.icon && external_React_default.a.createElement("img", { src: this.props.icon }),
-        external_React_default.a.createElement(
+        this.props.icon && external_React_default.a.createElement("div", { className: "glyph", style: { backgroundImage: `url(${this.props.icon})` } }),
+        this.props.title && external_React_default.a.createElement(
           "span",
-          null,
+          { className: "title-text" },
           this.props.title
-        )
-      ),
-      hasSubtitleAndOrLink && external_React_default.a.createElement(
-        "p",
-        { className: "subtitle" },
-        this.props.subtitle && external_React_default.a.createElement(
-          "span",
-          null,
-          this.props.subtitle
         ),
         this.props.link_text && this.props.link_url && external_React_default.a.createElement(
           SafeAnchor_SafeAnchor,
-          { url: this.props.link_url },
+          { className: "link", url: this.props.link_url },
           this.props.link_text
         )
-      ),
-      external_React_default.a.createElement("hr", { className: "ds-hr" })
+      )
     );
   }
 }
