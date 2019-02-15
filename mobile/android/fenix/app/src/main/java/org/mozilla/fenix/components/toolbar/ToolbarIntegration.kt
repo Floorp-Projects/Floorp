@@ -34,6 +34,7 @@ class ToolbarIntegration(
 ) : LifecycleAwareFeature {
     init {
         toolbar.setMenuBuilder(toolbarMenu.menuBuilder)
+        toolbar.private = isPrivate
 
         val tabsIcon = context.getDrawable(R.drawable.ic_tabs)
         tabsIcon?.setColorFilter(
