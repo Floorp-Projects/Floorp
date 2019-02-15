@@ -185,9 +185,9 @@ class Registers {
       (1 << Registers::x3) | (1 << Registers::x4) | (1 << Registers::x5) |
       (1 << Registers::x6) | (1 << Registers::x7) | (1 << Registers::x8) |
       (1 << Registers::x9) | (1 << Registers::x10) | (1 << Registers::x11) |
-      (1 << Registers::x11) | (1 << Registers::x12) | (1 << Registers::x13) |
-      (1 << Registers::x14) | (1 << Registers::x14) | (1 << Registers::x15) |
-      (1 << Registers::x16) | (1 << Registers::x17) | (1 << Registers::x18);
+      (1 << Registers::x12) | (1 << Registers::x13) | (1 << Registers::x14) |
+      (1 << Registers::x15) | (1 << Registers::x16) | (1 << Registers::x17) |
+      (1 << Registers::x18);
 
   static const SetType NonVolatileMask =
       (1 << Registers::x19) | (1 << Registers::x20) | (1 << Registers::x21) |
