@@ -121,7 +121,7 @@ async function testCPOWInspection(hud) {
   const cpowEval = await hud.jsterm.requestEvaluation("gBrowser.selectedBrowser");
   info("Creating an ObjectClient with: " + cpowEval.result.actor);
 
-  const objectClient = new ObjectClient(hud.jsterm.hud.proxy.client, {
+  const objectClient = new ObjectClient(hud.ui.proxy.client, {
     actor: cpowEval.result.actor,
   });
 
@@ -147,7 +147,7 @@ async function testCPOWInspection(hud) {
   is(cpow.class, "CPOW: Window", "The CPOW grip has the right class.");
 
   // Check that various protocol request methods work for the CPOW.
-  const objClient = new ObjectClient(hud.jsterm.hud.proxy.client, cpow);
+  const objClient = new ObjectClient(hud.ui.proxy.client, cpow);
 
   let response = await objClient.getPrototypeAndProperties();
   is(Reflect.ownKeys(response.ownProperties).length, 0, "No property was retrieved.");

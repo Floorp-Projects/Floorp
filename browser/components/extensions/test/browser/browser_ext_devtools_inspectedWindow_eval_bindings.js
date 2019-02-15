@@ -110,14 +110,13 @@ add_task(async function test_devtools_inspectedWindow_eval_bindings() {
   const splitPanelOpenedPromise = (async () => {
     await toolbox.once("split-console");
     const {hud} = toolbox.getPanel("webconsole");
-    let {jsterm} = hud;
 
     // Wait for the message to appear on the console.
     const messageNode = await new Promise(resolve => {
-      jsterm.hud.on("new-messages", function onThisMessage(messages) {
+      hud.ui.on("new-messages", function onThisMessage(messages) {
         for (let m of messages) {
           resolve(m.node);
-          jsterm.hud.off("new-messages", onThisMessage);
+          hud.ui.off("new-messages", onThisMessage);
           return;
         }
       });

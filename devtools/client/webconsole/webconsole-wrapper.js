@@ -28,11 +28,11 @@ loader.lazyRequireGetter(this, "getElementText", "devtools/client/webconsole/uti
 let store = null;
 
 class WebConsoleWrapper {
-  constructor(parentNode, hud, toolbox, owner, document) {
+  constructor(parentNode, webConsoleUI, toolbox, owner, document) {
     EventEmitter.decorate(this);
 
     this.parentNode = parentNode;
-    this.hud = hud;
+    this.webConsoleUI = webConsoleUI;
     this.toolbox = toolbox;
     this.owner = owner;
     this.document = document;
@@ -49,44 +49,48 @@ class WebConsoleWrapper {
 
   init() {
     return new Promise((resolve) => {
-      const attachRefToHud = (id, node) => {
-        this.hud[id] = node;
+      const attachRefToWebConsoleUI = (id, node) => {
+        this.webConsoleUI[id] = node;
       };
-      const { hud } = this;
+      const { webConsoleUI } = this;
       const debuggerClient = this.owner.target.client;
 
       const serviceContainer = {
-        attachRefToHud,
+        attachRefToWebConsoleUI,
         emitNewMessage: (node, messageId, timeStamp) => {
-          hud.emit("new-messages", new Set([{
+          webConsoleUI.emit("new-messages", new Set([{
             node,
             messageId,
             timeStamp,
           }]));
         },
-        hudProxy: hud.proxy,
+        proxy: webConsoleUI.proxy,
         openLink: (url, e) => {
-          hud.owner.openLink(url, e);
+          webConsoleUI.owner.openLink(url, e);
         },
         canRewind: () => {
-          if (!(hud.owner && hud.owner.target && hud.owner.target)) {
+          if (!(
+            webConsoleUI.owner
+            && webConsoleUI.owner.target
+            && webConsoleUI.owner.target.traits
+          )) {
             return false;
           }
 
-          return hud.owner.target.traits.canRewind;
+          return webConsoleUI.owner.target.traits.canRewind;
         },
         createElement: nodename => {
           return this.document.createElement(nodename);
         },
         getLongString: (grip) => {
-          return hud.proxy.webConsoleClient.getString(grip);
+          return webConsoleUI.proxy.webConsoleClient.getString(grip);
         },
         requestData(id, type) {
-          return hud.proxy.networkDataProvider.requestData(id, type);
+          return webConsoleUI.proxy.networkDataProvider.requestData(id, type);
         },
         onViewSource(frame) {
-          if (hud && hud.owner && hud.owner.viewSource) {
-            hud.owner.viewSource(frame.url, frame.line);
+          if (webConsoleUI && webConsoleUI.owner && webConsoleUI.owner.viewSource) {
+            webConsoleUI.owner.viewSource(frame.url, frame.line);
           }
         },
         recordTelemetryEvent: (eventName, extra = {}) => {
@@ -112,7 +116,7 @@ class WebConsoleWrapper {
         },
 
         getWebConsoleClient: () => {
-          return hud.webConsoleClient;
+          return webConsoleUI.webConsoleClient;
         },
 
         /**
@@ -136,18 +140,18 @@ class WebConsoleWrapper {
         },
 
         inputHasSelection: () => {
-          const {editor, inputNode} = hud.jsterm || {};
+          const {editor, inputNode} = webConsoleUI.jsterm || {};
           return editor
             ? !!editor.getSelection()
             : (inputNode && inputNode.selectionStart !== inputNode.selectionEnd);
         },
 
         getInputValue: () => {
-          return hud.jsterm && hud.jsterm.getInputValue();
+          return webConsoleUI.jsterm && webConsoleUI.jsterm.getInputValue();
         },
 
         getInputCursor: () => {
-          return hud.jsterm && hud.jsterm.getSelectionStart();
+          return webConsoleUI.jsterm && webConsoleUI.jsterm.getSelectionStart();
         },
 
         getSelectedNodeActor: () => {
@@ -160,9 +164,9 @@ class WebConsoleWrapper {
 
         getJsTermTooltipAnchor: () => {
           if (jstermCodeMirror) {
-            return hud.jsterm.node.querySelector(".CodeMirror-cursor");
+            return webConsoleUI.jsterm.node.querySelector(".CodeMirror-cursor");
           }
-          return hud.jsterm.completeNode;
+          return webConsoleUI.jsterm.completeNode;
         },
       };
 
@@ -200,7 +204,7 @@ class WebConsoleWrapper {
         const messageData = getMessage(store.getState(), message.messageId);
         const executionPoint = messageData && messageData.executionPoint;
 
-        const menu = createContextMenu(this.hud, this.parentNode, {
+        const menu = createContextMenu(this.webConsoleUI, this.parentNode, {
           actor,
           clipboardText,
           variableText,
@@ -240,7 +244,7 @@ class WebConsoleWrapper {
               this.telemetry.recordEvent("jump_to_source", "webconsole",
                                          null, { "session_id": this.toolbox.sessionId }
               );
-              this.hud.emit("source-in-debugger-opened");
+              this.webConsoleUI.emit("source-in-debugger-opened");
             });
           },
           onViewSourceInScratchpad: frame => this.toolbox.viewSourceInScratchpad(
@@ -298,12 +302,12 @@ class WebConsoleWrapper {
 
           onMessageHover: (type, messageId) => {
             const message = getMessage(store.getState(), messageId);
-            this.hud.emit("message-hover", type, message);
+            this.webConsoleUI.emit("message-hover", type, message);
           },
         });
       }
 
-      store = configureStore(this.hud, {
+      store = configureStore(this.webConsoleUI, {
         // We may not have access to the toolbox (e.g. in the browser console).
         sessionId: this.toolbox && this.toolbox.sessionId || -1,
         telemetry: this.telemetry,
@@ -315,9 +319,9 @@ class WebConsoleWrapper {
         && !Services.appinfo.accessibilityEnabled;
 
       const app = App({
-        attachRefToHud,
+        attachRefToWebConsoleUI,
         serviceContainer,
-        hud,
+        webConsoleUI,
         onFirstMeaningfulPaint: resolve,
         closeSplitConsole: this.closeSplitConsole.bind(this),
         jstermCodeMirror,
@@ -347,11 +351,11 @@ class WebConsoleWrapper {
         : packet.timestamp;
 
       promise = new Promise(resolve => {
-        this.hud.on("new-messages", function onThisMessage(messages) {
+        this.webConsoleUI.on("new-messages", function onThisMessage(messages) {
           for (const m of messages) {
             if (m.timeStamp === timeStampToMatch) {
               resolve(m.node);
-              this.hud.off("new-messages", onThisMessage);
+              this.webConsoleUI.off("new-messages", onThisMessage);
               return;
             }
           }
@@ -377,7 +381,7 @@ class WebConsoleWrapper {
     this.queuedMessageUpdates = [];
     this.queuedRequestUpdates = [];
     store.dispatch(actions.messagesClear());
-    this.hud.emit("messages-cleared");
+    this.webConsoleUI.emit("messages-cleared");
   }
 
   dispatchPrivateMessagesClear() {
@@ -450,7 +454,7 @@ class WebConsoleWrapper {
     const NUMBER_OF_NETWORK_UPDATE = 8;
 
     let expectedLength = NUMBER_OF_NETWORK_UPDATE;
-    if (this.hud.proxy.webConsoleClient.traits.fetchCacheDescriptor
+    if (this.webConsoleUI.webConsoleClient.traits.fetchCacheDescriptor
       && res.networkInfo.updates.includes("responseCache")) {
       expectedLength++;
     }
@@ -483,13 +487,13 @@ class WebConsoleWrapper {
     // when the original top level window we attached to is closed,
     // but we don't want to reset console history and just switch to
     // the next available window.
-    if (ui.persistLogs || this.hud.isBrowserConsole) {
+    if (ui.persistLogs || this.webConsoleUI.isBrowserConsole) {
       // Add a type in order for this event packet to be identified by
       // utils/messages.js's `transformPacket`
       packet.type = "will-navigate";
       this.dispatchMessageAdd(packet);
     } else {
-      this.hud.webConsoleClient.clearNetworkRequests();
+      this.webConsoleUI.webConsoleClient.clearNetworkRequests();
       this.dispatchMessagesClear();
       store.dispatch({
         type: Constants.WILL_NAVIGATE,
@@ -563,7 +567,7 @@ class WebConsoleWrapper {
         if (this.queuedMessageUpdates.length > 0) {
           this.queuedMessageUpdates.forEach(({ message, res }) => {
             store.dispatch(actions.networkMessageUpdate(message, null, res));
-            this.hud.emit("network-message-updated", res);
+            this.webConsoleUI.emit("network-message-updated", res);
           });
           this.queuedMessageUpdates = [];
         }
@@ -580,7 +584,7 @@ class WebConsoleWrapper {
           // (netmonitor/src/connector/firefox-data-provider).
           // This event might be utilized in tests to find the right
           // time when to finish.
-          this.hud.emit("network-request-payload-ready");
+          this.webConsoleUI.emit("network-request-payload-ready");
         }
         done();
       }, 50);

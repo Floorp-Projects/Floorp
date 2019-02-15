@@ -6,9 +6,9 @@
 
 const { ConsoleCommand } = require("devtools/client/webconsole/types");
 
-function JSTerm(webConsoleFrame) {
-  this.hud = webConsoleFrame;
-  this.hudId = this.hud.hudId;
+function JSTerm(webConsoleUI) {
+  this.ui = webConsoleUI;
+  this.hudId = this.ui.hudId;
   this.historyLoaded = new Promise(r => {
     r();
   });
@@ -72,10 +72,10 @@ JSTerm.prototype = {
       const message = new ConsoleCommand({
         messageText: executeString,
       });
-      this.hud.proxy.dispatchMessageAdd(message);
+      this.ui.proxy.dispatchMessageAdd(message);
 
       let selectedNodeActor = null;
-      const inspectorSelection = this.hud.owner.getInspectorSelection();
+      const inspectorSelection = this.ui.owner.getInspectorSelection();
       if (inspectorSelection && inspectorSelection.nodeFront) {
         selectedNodeActor = inspectorSelection.nodeFront.actorID;
       }
@@ -86,7 +86,7 @@ JSTerm.prototype = {
                         response.message);
           return;
         }
-        this.hud.wrapper.dispatchMessageAdd(response, true).then(resolve);
+        this.ui.wrapper.dispatchMessageAdd(response, true).then(resolve);
       };
 
       const options = {
@@ -147,7 +147,7 @@ JSTerm.prototype = {
    *         The FrameActor ID for the given frame depth.
    */
   getFrameActor(frame) {
-    const state = this.hud.owner.getDebuggerFrames();
+    const state = this.ui.owner.getDebuggerFrames();
     if (!state) {
       return null;
     }

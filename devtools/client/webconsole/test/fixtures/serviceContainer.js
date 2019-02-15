@@ -4,10 +4,10 @@
 "use strict";
 
 module.exports = {
-  attachRefToHud: () => {},
+  attachRefToWebConsoleUI: () => {},
   canRewind: () => false,
   emitNewMessage: () => {},
-  hudProxy: {
+  proxy: {
     client: {},
     releaseActor: actor => console.log("Release actor", actor),
   },

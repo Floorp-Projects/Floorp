@@ -54,10 +54,6 @@ const {
  * Create a JSTerminal (a JavaScript command line). This is attached to an
  * existing HeadsUpDisplay (a Web Console instance). This code is responsible
  * with handling command line input and code evaluation.
- *
- * @constructor
- * @param object webConsoleFrame
- *        The WebConsoleFrame object that owns this JSTerm instance.
  */
 class JSTerm extends Component {
   static get propTypes() {
@@ -72,7 +68,7 @@ class JSTerm extends Component {
       // History of executed expression (state).
       history: PropTypes.object.isRequired,
       // Console object.
-      hud: PropTypes.object.isRequired,
+      webConsoleUI: PropTypes.object.isRequired,
       // Needed for opening context menu
       serviceContainer: PropTypes.object.isRequired,
       // Handler for clipboard 'paste' event (also used for 'drop' event, callback).
@@ -91,11 +87,11 @@ class JSTerm extends Component {
     super(props);
 
     const {
-      hud,
+      webConsoleUI,
     } = props;
 
-    this.hud = hud;
-    this.hudId = this.hud.hudId;
+    this.webConsoleUI = webConsoleUI;
+    this.hudId = this.webConsoleUI.hudId;
 
     this._keyPress = this._keyPress.bind(this);
     this._inputEventHandler = this._inputEventHandler.bind(this);
@@ -116,7 +112,7 @@ class JSTerm extends Component {
     this._telemetry = new Telemetry();
 
     EventEmitter.decorate(this);
-    hud.jsterm = this;
+    webConsoleUI.jsterm = this;
   }
 
   componentDidMount() {
@@ -128,8 +124,8 @@ class JSTerm extends Component {
       autoSelect: true,
     };
 
-    const doc = this.hud.document;
-    const toolbox = gDevTools.getToolbox(this.hud.owner.target);
+    const doc = this.webConsoleUI.document;
+    const toolbox = gDevTools.getToolbox(this.webConsoleUI.owner.target);
     const tooltipDoc = toolbox ? toolbox.doc : doc;
     // The popup will be attached to the toolbox document or HUD document in the case
     // such as the browser console which doesn't have a toolbox.
@@ -307,10 +303,9 @@ class JSTerm extends Component {
               if (this.autocompletePopup.isOpen) {
                 this.autocompletePopup.selectPreviousPageItem();
               } else {
-                this.hud.outputScroller.scrollTop = Math.max(
-                  0,
-                  this.hud.outputScroller.scrollTop - this.hud.outputScroller.clientHeight
-                );
+                const {outputScroller} = this.webConsoleUI;
+                const {scrollTop, clientHeight} = outputScroller;
+                outputScroller.scrollTop = Math.max(0, scrollTop - clientHeight);
               }
 
               return null;
@@ -320,10 +315,10 @@ class JSTerm extends Component {
               if (this.autocompletePopup.isOpen) {
                 this.autocompletePopup.selectNextPageItem();
               } else {
-                this.hud.outputScroller.scrollTop = Math.min(
-                  this.hud.outputScroller.scrollHeight,
-                  this.hud.outputScroller.scrollTop + this.hud.outputScroller.clientHeight
-                );
+                const {outputScroller} = this.webConsoleUI;
+                const {scrollTop, scrollHeight, clientHeight} = outputScroller;
+                outputScroller.scrollTop =
+                  Math.min(scrollHeight, scrollTop + clientHeight);
               }
 
               return null;
@@ -336,7 +331,7 @@ class JSTerm extends Component {
               }
 
               if (!this.getInputValue()) {
-                this.hud.outputScroller.scrollTop = 0;
+                this.webConsoleUI.outputScroller.scrollTop = 0;
                 return null;
               }
 
@@ -355,7 +350,8 @@ class JSTerm extends Component {
               }
 
               if (!this.getInputValue()) {
-                this.hud.outputScroller.scrollTop = this.hud.outputScroller.scrollHeight;
+                const {outputScroller} = this.webConsoleUI;
+                outputScroller.scrollTop = outputScroller.scrollHeight;
                 return null;
               }
 
@@ -411,7 +407,7 @@ class JSTerm extends Component {
     this._inputCharWidth = this._getInputCharWidth();
     this._paddingInlineStart = this.editor ? null : this._getInputPaddingInlineStart();
 
-    this.hud.window.addEventListener("blur", this._blurEventHandler);
+    this.webConsoleUI.window.addEventListener("blur", this._blurEventHandler);
     this.lastInputValue && this.setInputValue(this.lastInputValue);
   }
 
@@ -446,7 +442,7 @@ class JSTerm extends Component {
    * @type Element
    */
   get outputNode() {
-    return this.hud.outputNode;
+    return this.webConsoleUI.outputNode;
   }
 
   /**
@@ -454,7 +450,7 @@ class JSTerm extends Component {
    * @type object
    */
   get webConsoleClient() {
-    return this.hud.webConsoleClient;
+    return this.webConsoleUI.webConsoleClient;
   }
 
   focus() {
@@ -500,7 +496,7 @@ class JSTerm extends Component {
    *        The message received from the server.
    */
   async _executeResultCallback(response) {
-    if (!this.hud) {
+    if (!this.webConsoleUI) {
       return null;
     }
 
@@ -528,13 +524,13 @@ class JSTerm extends Component {
     if (helperResult && helperResult.type) {
       switch (helperResult.type) {
         case "clearOutput":
-          this.hud.clearOutput();
+          this.webConsoleUI.clearOutput();
           break;
         case "clearHistory":
           this.props.clearHistory();
           break;
         case "inspectObject":
-          this.hud.inspectObjectActor(helperResult.object);
+          this.webConsoleUI.inspectObjectActor(helperResult.object);
           break;
         case "error":
           try {
@@ -544,14 +540,14 @@ class JSTerm extends Component {
           }
           break;
         case "help":
-          this.hud.owner.openLink(HELP_URL);
+          this.webConsoleUI.owner.openLink(HELP_URL);
           break;
         case "copyValueToClipboard":
           clipboardHelper.copyString(helperResult.value);
           break;
         case "screenshotOutput":
           const { args, value } = helperResult;
-          const results = await saveScreenshot(this.hud.window, args, value);
+          const results = await saveScreenshot(this.webConsoleUI.window, args, value);
           this.screenshotNotify(results);
           // early return as screenshot notify has dispatched all necessary messages
           return null;
@@ -565,8 +561,8 @@ class JSTerm extends Component {
       return null;
     }
 
-    if (this.hud.wrapper) {
-      return this.hud.wrapper.dispatchMessageAdd(response, true);
+    if (this.webConsoleUI.wrapper) {
+      return this.webConsoleUI.wrapper.dispatchMessageAdd(response, true);
     }
 
     return null;
@@ -574,7 +570,7 @@ class JSTerm extends Component {
 
   screenshotNotify(results) {
     const wrappedResults = results.map(message => ({ message, type: "logMessage" }));
-    this.hud.wrapper.dispatchMessagesAdd(wrappedResults);
+    this.webConsoleUI.wrapper.dispatchMessagesAdd(wrappedResults);
   }
 
   /**
@@ -601,7 +597,7 @@ class JSTerm extends Component {
     this.clearCompletion();
 
     let selectedNodeActor = null;
-    const inspectorSelection = this.hud.owner.getInspectorSelection();
+    const inspectorSelection = this.webConsoleUI.owner.getInspectorSelection();
     if (inspectorSelection && inspectorSelection.nodeFront) {
       selectedNodeActor = inspectorSelection.nodeFront.actorID;
     }
@@ -611,11 +607,12 @@ class JSTerm extends Component {
       messageText: executeString,
       timeStamp: Date.now(),
     });
-    this.hud.proxy.dispatchMessageAdd(cmdMessage);
+    this.webConsoleUI.proxy.dispatchMessageAdd(cmdMessage);
 
     let mappedExpressionRes = null;
     try {
-      mappedExpressionRes = await this.hud.owner.getMappedExpression(executeString);
+      mappedExpressionRes =
+        await this.webConsoleUI.owner.getMappedExpression(executeString);
     } catch (e) {
       console.warn("Error when calling getMappedExpression", e);
     }
@@ -964,10 +961,10 @@ class JSTerm extends Component {
         if (this.autocompletePopup.isOpen) {
           this.autocompletePopup.selectPreviousPageItem();
         } else {
-          this.hud.outputScroller.scrollTop =
+          this.webConsoleUI.outputScroller.scrollTop =
             Math.max(0,
-              this.hud.outputScroller.scrollTop -
-              this.hud.outputScroller.clientHeight
+              this.webConsoleUI.outputScroller.scrollTop -
+              this.webConsoleUI.outputScroller.clientHeight
             );
         }
         event.preventDefault();
@@ -977,10 +974,10 @@ class JSTerm extends Component {
         if (this.autocompletePopup.isOpen) {
           this.autocompletePopup.selectNextPageItem();
         } else {
-          this.hud.outputScroller.scrollTop =
-            Math.min(this.hud.outputScroller.scrollHeight,
-              this.hud.outputScroller.scrollTop +
-              this.hud.outputScroller.clientHeight
+          this.webConsoleUI.outputScroller.scrollTop =
+            Math.min(this.webConsoleUI.outputScroller.scrollHeight,
+              this.webConsoleUI.outputScroller.scrollTop +
+              this.webConsoleUI.outputScroller.clientHeight
             );
         }
         event.preventDefault();
@@ -993,7 +990,7 @@ class JSTerm extends Component {
         } else if (this.getAutoCompletionText()) {
           this.clearCompletion();
         } else if (inputValue.length <= 0) {
-          this.hud.outputScroller.scrollTop = 0;
+          this.webConsoleUI.outputScroller.scrollTop = 0;
           event.preventDefault();
         }
         break;
@@ -1005,7 +1002,8 @@ class JSTerm extends Component {
         } else if (this.getAutoCompletionText()) {
           this.clearCompletion();
         } else if (inputValue.length <= 0) {
-          this.hud.outputScroller.scrollTop = this.hud.outputScroller.scrollHeight;
+          const {outputScroller} = this.webConsoleUI;
+          outputScroller.scrollTop = outputScroller.scrollHeight;
           event.preventDefault();
         }
         break;
@@ -1482,7 +1480,7 @@ class JSTerm extends Component {
       return this.editor.defaultCharWidth();
     }
 
-    const doc = this.hud.document;
+    const doc = this.webConsoleUI.document;
     const tempLabel = doc.createElement("span");
     const style = tempLabel.style;
     style.position = "fixed";
@@ -1509,7 +1507,7 @@ class JSTerm extends Component {
       return null;
     }
    // Calculate the width of the chevron placed at the beginning of the input box.
-    const doc = this.hud.document;
+    const doc = this.webConsoleUI.document;
 
     return new Number(doc.defaultView
       .getComputedStyle(this.inputNode)
@@ -1522,10 +1520,10 @@ class JSTerm extends Component {
 
   destroy() {
     this.webConsoleClient.clearNetworkRequests();
-    if (this.hud.outputNode) {
+    if (this.webConsoleUI.outputNode) {
       // We do this because it's much faster than letting React handle the ConsoleOutput
       // unmounting.
-      this.hud.outputNode.innerHTML = "";
+      this.webConsoleUI.outputNode.innerHTML = "";
     }
 
     if (this.autocompletePopup) {
@@ -1537,7 +1535,7 @@ class JSTerm extends Component {
       this.inputNode.removeEventListener("keypress", this._keyPress);
       this.inputNode.removeEventListener("input", this._inputEventHandler);
       this.inputNode.removeEventListener("keyup", this._inputEventHandler);
-      this.hud.window.removeEventListener("blur", this._blurEventHandler);
+      this.webConsoleUI.window.removeEventListener("blur", this._blurEventHandler);
     }
 
     if (this.editor) {
@@ -1545,11 +1543,11 @@ class JSTerm extends Component {
       this.editor = null;
     }
 
-    this.hud = null;
+    this.webConsoleUI = null;
   }
 
   render() {
-    if (this.props.hud.isBrowserConsole &&
+    if (this.props.webConsoleUI.isBrowserConsole &&
         !Services.prefs.getBoolPref("devtools.chrome.enabled")) {
       return null;
     }
