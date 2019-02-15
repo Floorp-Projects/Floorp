@@ -145,7 +145,7 @@ pref("app.update.silent", false);
 
 // If set to true, the Update Service will apply updates in the background
 // when it finishes downloading them.
-#if defined(XP_WIN)
+#if defined(XP_WIN) || defined(XP_MACOSX)
 pref("app.update.staging.enabled", true);
 #elif defined(EARLY_BETA_OR_EARLIER)
 pref("app.update.staging.enabled", true);
