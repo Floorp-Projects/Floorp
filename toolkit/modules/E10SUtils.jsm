@@ -17,9 +17,12 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "useSeparatePrivilegedContentProcess
                                       "browser.tabs.remote.separatePrivilegedContentProcess", false);
 XPCOMUtils.defineLazyPreferenceGetter(this, "useHttpResponseProcessSelection",
                                       "browser.tabs.remote.useHTTPResponseProcessSelection", false);
+XPCOMUtils.defineLazyPreferenceGetter(this, "useCrossOriginOpenerPolicy",
+                                      "browser.tabs.remote.useCrossOriginOpenerPolicy", false);
 XPCOMUtils.defineLazyServiceGetter(this, "serializationHelper",
                                    "@mozilla.org/network/serialization-helper;1",
                                    "nsISerializationHelper");
+
 ChromeUtils.defineModuleGetter(this, "Utils",
                                "resource://gre/modules/sessionstore/Utils.jsm");
 
@@ -97,6 +100,9 @@ var E10SUtils = {
 
   useHttpResponseProcessSelection() {
     return useHttpResponseProcessSelection;
+  },
+  useCrossOriginOpenerPolicy() {
+    return useCrossOriginOpenerPolicy;
   },
 
   canLoadURIInRemoteType(aURL, aRemoteType = DEFAULT_REMOTE_TYPE,
