@@ -220,6 +220,103 @@ navigation:
     extra_keys:
       engine: The id of the search engine used.
 
+normandy:
+  enroll:
+    objects: ["preference_study", "addon_study", "preference_rollout"]
+    description: >
+      Sent when applying a Normandy recipe of the above types has succeeded.
+    extra_keys:
+      experimentType: >
+        For preference_study recipes, the type of experiment this is ("exp" or "exp-highpop").
+      branch: >
+        For preference_study recipes, the slug of the branch that was chosen for this client.
+      addonId: For addon_study recipes, the ID of the addon that was installed.
+      addonVersion: For addon_study recipes, the version of the addon that was installed.
+    bug_numbers: [1443560]
+    notification_emails: ["normandy-notifications@mozilla.com"]
+    record_in_processes: [main]
+    release_channel_collection: opt-out
+    expiry_version: never
+
+  enroll_failed:
+    methods: ["enrollFailed"]
+    objects: ["addon_study", "preference_rollout", "preference_study"]
+    description: >
+      Sent when applying a Normandy recipe of the above types has failed.
+    extra_keys:
+      reason: An error code describing the failure.
+      preference: >
+        For preference_rollout when reason=conflict, the name of the preference
+        that was going to be modified.
+      detail: >
+        Extra text describing the failure.
+        Currently only provided for addon_study.
+    bug_numbers: [1443560]
+    notification_emails: ["normandy-notifications@mozilla.com"]
+    record_in_processes: [main]
+    release_channel_collection: opt-out
+    expiry_version: never
+
+  update:
+    objects: ["preference_rollout"]
+    description: >
+      This event is fired when a client detects that a preference
+      rollout has changed on the server, and the new version of the
+      preference rollout is being applied over an existing, older
+      version previously fetched from the server.
+    extra_keys:
+      previousState: >
+        This is the state of the rollout that had been applied previously.
+    bug_numbers: [1443560]
+    notification_emails: ["normandy-notifications@mozilla.com"]
+    record_in_processes: [main]
+    release_channel_collection: opt-out
+    expiry_version: never
+
+  unenroll:
+    objects: ["preference_study", "addon_study", "preference_rollback"]
+    description: >
+      Sent when a Normandy recipe of certain types "ends".  N.B. For
+      preference_rollback, this is fired when the recipe is fired (the
+      recipe that "ends" is a corresponding preference_rollout).
+    extra_keys:
+      reason: A code describing the reason why the recipe ended.
+      didResetValue: >
+        For preference_study, "true" or "false" according to whether we put the preference back the way it was.
+      addonId: For addon_study, the ID of the addon that ended.
+      addonVersion: For addon_study, the version of the addon for which the recipe ended.
+      branch: For preference_study, the branch of the experiment that this client was on.
+    bug_numbers: [1443560]
+    notification_emails: ["normandy-notifications@mozilla.com"]
+    record_in_processes: [main]
+    release_channel_collection: opt-out
+    expiry_version: never
+
+  unenroll_failed:
+    methods: ["unenrollFailed"]
+    description: >
+      Sent when unenrolling a user fails (see the unenroll event).
+    objects: ["preference_rollback", "preference_study"]
+    extra_keys:
+      reason: A code describing the reason the unenroll failed.
+    bug_numbers: [1443560]
+    notification_emails: ["normandy-notifications@mozilla.com"]
+    record_in_processes: [main]
+    release_channel_collection: opt-out
+    expiry_version: never
+
+  graduate:
+    objects: ["preference_rollout"]
+    description: >
+      Sent when a preference rollout ends due to the rolled-out
+      preference becoming a new default.
+    bug_numbers: [1443560]
+    notification_emails: ["normandy-notifications@mozilla.com"]
+    record_in_processes: [main]
+    release_channel_collection: opt-out
+    expiry_version: never
+
+
 # This category contains event entries used for Telemetry tests.
 # They will not be sent out with any pings.
 telemetry.test:
