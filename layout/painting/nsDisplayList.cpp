@@ -3835,9 +3835,7 @@ bool nsDisplayBackgroundImage::CanOptimizeToImageLayer(
   // because there isn't going to be any spriting/atlasing going on.
   const nsStyleImageLayers::Layer& layer =
       mBackgroundStyle->StyleBackground()->mImage.mLayers[mLayer];
-  bool allowPartialImages =
-      (layer.mSize.mWidthType == nsStyleImageLayers::Size::eContain ||
-       layer.mSize.mWidthType == nsStyleImageLayers::Size::eCover);
+  bool allowPartialImages = layer.mSize.IsContain() || layer.mSize.IsCover();
   if (!allowPartialImages && !mFillRect.Contains(mDestRect)) {
     return false;
   }

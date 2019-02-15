@@ -1,4 +1,4 @@
-53000
+53005
 0/nm
 0th/pt
 1/n1
@@ -15303,6 +15303,8 @@ artilleryman/M
 artillerymen
 artiness/M
 artisan/MS
+artisanal/Y
+artisanship/S
 artist/MS
 artiste/MS
 artistic/I
@@ -16731,6 +16733,7 @@ biennial/MYS
 biennium/MS
 bier/M
 biff/SGD
+bifida
 bifocal/S
 bifocals/M
 bifurcate/XDSGN
@@ -18570,6 +18573,7 @@ cardiograph/M
 cardiographs
 cardiologist/MS
 cardiology/M
+cardiomegaly
 cardiomyopathy
 cardiopulmonary
 cardiovascular
@@ -46403,6 +46407,7 @@ spillage/MS
 spillover/SM
 spillway/MS
 spin/MS
+spina
 spinach/M
 spinal/SMY
 spindle/MGDS

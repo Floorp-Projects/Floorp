@@ -7,13 +7,13 @@
 with Files("**"):
     BUG_COMPONENT = ("Toolkit", "Notifications and Alerts")
 
-EXTRA_COMPONENTS += [
-    'NotificationStorage.js',
-    'NotificationStorage.manifest',
+EXTRA_JS_MODULES += [
+    'NotificationDB.jsm',
+    'NotificationStorage.jsm',
 ]
 
-EXTRA_JS_MODULES += [
-    'NotificationDB.jsm'
+XPCOM_MANIFESTS += [
+    'components.conf',
 ]
 
 EXPORTS.mozilla.dom += [

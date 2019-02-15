@@ -11,7 +11,10 @@ BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
 
 JAR_MANIFESTS += ['jar.mn']
 
-EXTRA_COMPONENTS += [
+EXTRA_JS_MODULES += [
     'pdfjs.js',
-    'pdfjs.manifest',
+]
+
+XPCOM_MANIFESTS += [
+    'components.conf',
 ]

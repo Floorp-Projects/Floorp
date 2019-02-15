@@ -417,6 +417,15 @@ cbindgen-types = [
     { gecko = "StyleLengthPercentageOrAuto", servo = "values::computed::LengthPercentageOrAuto" },
     { gecko = "StyleRect", servo = "values::generics::rect::Rect" },
     { gecko = "StyleIntersectionObserverRootMargin", servo = "values::specified::gecko::IntersectionObserverRootMargin" },
+    { gecko = "StyleGenericSize", servo = "values::generics::length::Size" },
+    { gecko = "StyleGenericMaxSize", servo = "values::generics::length::MaxSize" },
+    { gecko = "StyleGenericFlexBasis", servo = "values::generics::flex::FlexBasis" },
+    { gecko = "StyleSize", servo = "values::computed::Size" },
+    { gecko = "StyleMaxSize", servo = "values::computed::MaxSize" },
+    { gecko = "StyleFlexBasis", servo = "values::computed::FlexBasis" },
+    { gecko = "StylePosition", servo = "values::computed::Position" },
+    { gecko = "StyleBackgroundSize", servo = "values::computed::BackgroundSize" },
+    { gecko = "StyleGenericBackgroundSize", servo = "values::generics::background::BackgroundSize" },
 ]
 
 mapped-generic-types = [

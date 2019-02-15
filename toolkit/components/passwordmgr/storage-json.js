@@ -542,4 +542,4 @@ XPCOMUtils.defineLazyGetter(this.LoginManagerStorage_json.prototype, "log", () =
   return logger.log.bind(logger);
 });
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([LoginManagerStorage_json]);
+var EXPORTED_SYMBOLS = ["LoginManagerStorage_json"];

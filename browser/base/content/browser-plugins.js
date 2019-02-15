@@ -474,8 +474,7 @@ var gPluginHandler = {
                                                       iconURL, priority, buttons);
 
     // Add the "learn more" link.
-    let link = notification.ownerDocument.createXULElement("label");
-    link.className = "text-link";
+    let link = notification.ownerDocument.createXULElement("label", {is: "text-link"});
     link.setAttribute("value", gNavigatorBundle.getString("crashedpluginsMessage.learnMore"));
     let crashurl = formatURL("app.support.baseURL", true);
     crashurl += "plugin-crashed-notificationbar";

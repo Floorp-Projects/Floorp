@@ -458,11 +458,12 @@ bool GetNtPathFromWin32Path(const base::string16& path,
 }
 
 bool WriteProtectedChildMemory(HANDLE child_process, void* address,
-                               const void* buffer, size_t length) {
+                               const void* buffer, size_t length,
+                               DWORD writeProtection) {
   // First, remove the protections.
   DWORD old_protection;
   if (!::VirtualProtectEx(child_process, address, length,
-                          PAGE_WRITECOPY, &old_protection))
+                          writeProtection, &old_protection))
     return false;
 
   SIZE_T written;
@@ -515,6 +516,30 @@ void* GetProcessBaseAddress(HANDLE process) {
 
   if (magic[0] != 'M' || magic[1] != 'Z')
     return nullptr;
+
+#if defined(_M_ARM64)
+  // Windows 10 on ARM64 has multi-threaded DLL loading that does not work with
+  // the sandbox. (On x86 this gets disabled by hook detection code that was not
+  // ported to ARM64). This overwrites the LoaderThreads value in the process
+  // parameters part of the PEB, if it is set to the default of 0 (which
+  // actually means it defaults to 4 loading threads). This is an undocumented
+  // field so there is a, probably small, risk that it might change or move in
+  // the future. In order to slightly guard against that we only update if the
+  // value is currently 0.
+  uint8_t* processParameters = static_cast<uint8_t*>(peb.ProcessParameters);
+  const uint32_t loaderThreadsOffset = 0x40c;
+  uint32_t maxLoaderThreads = 0;
+  BOOL memoryRead = ::ReadProcessMemory(
+      process, processParameters + loaderThreadsOffset, &maxLoaderThreads,
+      sizeof(maxLoaderThreads), &bytes_read);
+  if (memoryRead && (sizeof(maxLoaderThreads) == bytes_read) &&
+      (maxLoaderThreads == 0)) {
+    maxLoaderThreads = 1;
+    WriteProtectedChildMemory(process, processParameters + loaderThreadsOffset,
+                              &maxLoaderThreads, sizeof(maxLoaderThreads),
+                              PAGE_READWRITE);
+  }
+#endif
 
   return base_address;
 }

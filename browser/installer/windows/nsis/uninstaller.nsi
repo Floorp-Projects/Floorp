@@ -373,13 +373,6 @@ Section "Uninstall"
     StrCpy $0 "Software\Classes\MIME\Database\Content Type\application/x-xpinstall;app=firefox"
     DeleteRegKey HKLM "$0"
     DeleteRegKey HKCU "$0"
-    ; Image File Execution Options are only set on AArch64 (ARM64).
-    ${If} "${ARCH}" == "AArch64"
-      StrCpy $0 "Software\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\${FileMainEXE}"
-      DeleteRegKey HKLM "$0"
-      StrCpy $0 "Software\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\plugin-container.exe"
-      DeleteRegKey HKLM "$0"
-    ${EndIf}
   ${Else}
     ReadRegStr $R1 HKLM "$0" ""
     ${un.RemoveQuotesFromPath} "$R1" $R1

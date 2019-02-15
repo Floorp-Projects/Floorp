@@ -1,22 +1,8 @@
-component {66354bc9-7ed1-4692-ae1d-8da97d6b205e} addonManager.js process=main
-contract @mozilla.org/extensions/blocklist;1 {66354bc9-7ed1-4692-ae1d-8da97d6b205e} process=main
-#ifndef MOZ_BUILD_APP_IS_BROWSER
-category profile-after-change nsBlocklistService @mozilla.org/extensions/blocklist;1 process=main
-#endif
-
 category update-timer nsBlocklistService @mozilla.org/extensions/blocklist;1,getService,blocklist-background-update-timer,extensions.blocklist.interval,86400
-component {4399533d-08d1-458c-a87a-235f74451cfa} addonManager.js
-contract @mozilla.org/addons/integration;1 {4399533d-08d1-458c-a87a-235f74451cfa}
 #ifndef MOZ_WIDGET_ANDROID
 category update-timer addonManager @mozilla.org/addons/integration;1,getService,addon-background-update-timer,extensions.update.interval,86400
 #endif
-component {7beb3ba8-6ec3-41b4-b67c-da89b8518922} amContentHandler.js
-contract @mozilla.org/uriloader/content-handler;1?type=application/x-xpinstall {7beb3ba8-6ec3-41b4-b67c-da89b8518922}
-component {9df8ef2b-94da-45c9-ab9f-132eb55fddf1} amInstallTrigger.js
-contract @mozilla.org/addons/installtrigger;1 {9df8ef2b-94da-45c9-ab9f-132eb55fddf1}
 #ifndef MOZ_WIDGET_ANDROID
 category addon-provider-module PluginProvider resource://gre/modules/addons/PluginProvider.jsm
 #endif
 category addon-provider-module GMPProvider resource://gre/modules/addons/GMPProvider.jsm
-component {8866d8e3-4ea5-48b7-a891-13ba0ac15235} amWebAPI.js
-contract @mozilla.org/addon-web-api/manager;1 {8866d8e3-4ea5-48b7-a891-13ba0ac15235}

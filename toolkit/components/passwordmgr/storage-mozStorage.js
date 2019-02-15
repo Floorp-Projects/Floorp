@@ -1279,5 +1279,4 @@ XPCOMUtils.defineLazyGetter(this.LoginManagerStorage_mozStorage.prototype, "log"
   return logger.log.bind(logger);
 });
 
-var component = [LoginManagerStorage_mozStorage];
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory(component);
+var EXPORTED_SYMBOLS = ["LoginManagerStorage_mozStorage"];

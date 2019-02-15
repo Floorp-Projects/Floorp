@@ -101,47 +101,14 @@
 @BINPATH@/components/components.manifest
 
 ; JavaScript components
-@BINPATH@/components/ConsoleAPI.manifest
-@BINPATH@/components/ConsoleAPIStorage.js
-@BINPATH@/components/NotificationStorage.js
-@BINPATH@/components/NotificationStorage.manifest
 #ifdef MOZ_ANDROID_GCM
-@BINPATH@/components/Push.js
 @BINPATH@/components/Push.manifest
-@BINPATH@/components/PushComponents.js
-#endif
-@BINPATH@/components/BrowserElementParent.manifest
-@BINPATH@/components/BrowserElementParent.js
-@BINPATH@/components/UAOverridesBootstrapper.js
-@BINPATH@/components/UAOverridesBootstrapper.manifest
-@BINPATH@/components/WellKnownOpportunisticUtils.js
-@BINPATH@/components/WellKnownOpportunisticUtils.manifest
-@BINPATH@/components/mozProtocolHandler.js
-@BINPATH@/components/mozProtocolHandler.manifest
-#ifndef MOZ_GECKOVIEW_JAR
-@BINPATH@/components/nsDNSServiceDiscovery.manifest
-@BINPATH@/components/nsDNSServiceDiscovery.js
 #endif
 @BINPATH@/components/toolkitsearch.manifest
-@BINPATH@/components/nsSearchService.js
-@BINPATH@/components/nsSidebar.js
-@BINPATH@/components/passwordmgr.manifest
-@BINPATH@/components/nsLoginInfo.js
-@BINPATH@/components/nsLoginManager.js
-@BINPATH@/components/nsLoginManagerPrompter.js
-@BINPATH@/components/storage-mozStorage.js
-@BINPATH@/components/crypto-SDR.js
-@BINPATH@/components/TooltipTextProvider.js
-@BINPATH@/components/TooltipTextProvider.manifest
-@BINPATH@/components/NetworkGeolocationProvider.manifest
-@BINPATH@/components/NetworkGeolocationProvider.js
 
 @BINPATH@/components/extensions.manifest
-@BINPATH@/components/addonManager.js
 
 #ifndef MOZ_GECKOVIEW_JAR
-@BINPATH@/components/utils.manifest
-@BINPATH@/components/simpleServices.js
 @BINPATH@/components/amContentHandler.js
 @BINPATH@/components/amWebAPI.js
 @BINPATH@/components/amInstallTrigger.js
@@ -156,55 +123,14 @@
 #ifndef MOZ_GECKOVIEW_JAR
 #ifdef MOZ_UPDATER
 @BINPATH@/components/nsUpdateService.manifest
-@BINPATH@/components/nsUpdateService.js
-@BINPATH@/components/nsUpdateServiceStub.js
 #endif
 #endif
-
-@BINPATH@/components/ClearDataService.manifest
-@BINPATH@/components/ClearDataService.js
-
-@BINPATH@/components/nsUpdateTimerManager.manifest
-@BINPATH@/components/nsUpdateTimerManager.js
 
 @BINPATH@/components/ProcessSingleton.manifest
-@BINPATH@/components/MainProcessSingleton.js
-@BINPATH@/components/ContentProcessSingleton.js
-@BINPATH@/components/nsURLFormatter.manifest
-@BINPATH@/components/nsURLFormatter.js
-@BINPATH@/components/ContentPrefService2.manifest
-@BINPATH@/components/ContentPrefService2.js
 @BINPATH@/components/HandlerService.manifest
 @BINPATH@/components/HandlerService.js
-@BINPATH@/components/nsWebHandlerApp.manifest
-@BINPATH@/components/nsWebHandlerApp.js
-@BINPATH@/components/satchel.manifest
-@BINPATH@/components/nsFormAutoComplete.js
-@BINPATH@/components/FormHistoryStartup.js
-@BINPATH@/components/nsInputListAutoComplete.js
-@BINPATH@/components/contentAreaDropListener.manifest
-@BINPATH@/components/contentAreaDropListener.js
 @BINPATH@/components/servicesComponents.manifest
 @BINPATH@/components/servicesSettings.manifest
-@BINPATH@/components/RemoteSettingsComponents.js
-
-#ifndef MOZ_GECKOVIEW_JAR
-@BINPATH@/components/TelemetryStartup.js
-@BINPATH@/components/TelemetryStartup.manifest
-#endif
-
-@BINPATH@/components/XULStore.js
-@BINPATH@/components/XULStore.manifest
-@BINPATH@/components/htmlMenuBuilder.js
-@BINPATH@/components/htmlMenuBuilder.manifest
-
-#ifdef MOZ_WEBRTC
-@BINPATH@/components/PeerConnection.js
-@BINPATH@/components/PeerConnection.manifest
-#endif
-
-@BINPATH@/components/CaptivePortalDetectComponents.manifest
-@BINPATH@/components/captivedetect.js
 
 #if defined(ENABLE_TESTS) && defined(MOZ_DEBUG)
 @BINPATH@/components/TestInterfaceJS.js
@@ -212,35 +138,9 @@
 @BINPATH@/components/TestInterfaceJSMaplike.js
 #endif
 
-@BINPATH@/components/nsAsyncShutdown.manifest
-@BINPATH@/components/nsAsyncShutdown.js
-
-@BINPATH@/components/Downloads.manifest
-@BINPATH@/components/DownloadLegacy.js
-
-#ifndef MOZ_GECKOVIEW_JAR
-@BINPATH@/components/BuiltinProviders.manifest
-@BINPATH@/components/PresentationControlService.js
-@BINPATH@/components/PresentationNetworkHelper.js
-@BINPATH@/components/PresentationNetworkHelper.manifest
-@BINPATH@/components/PresentationDataChannelSessionTransport.js
-@BINPATH@/components/PresentationDataChannelSessionTransport.manifest
-@BINPATH@/components/AndroidCastDeviceProvider.manifest
-@BINPATH@/components/AndroidCastDeviceProvider.js
-#endif
-
-@BINPATH@/components/mozIntl.manifest
-@BINPATH@/components/mozIntl.js
-
 ; Modules
 @BINPATH@/modules/*
 @BINPATH@/actors/*
-
-; Safe Browsing
-@BINPATH@/components/nsURLClassifier.manifest
-@BINPATH@/components/nsUrlClassifierHashCompleter.js
-@BINPATH@/components/nsUrlClassifierListManager.js
-@BINPATH@/components/nsUrlClassifierLib.js
 
 ; Security Reports
 @BINPATH@/components/SecurityReporter.manifest
@@ -325,9 +225,6 @@
 @BINPATH@/crashreporter-override.ini
 #endif
 
-@BINPATH@/components/RemoteWebNavigation.js
-@BINPATH@/components/remotebrowserutils.manifest
-
 [mobile]
 @BINPATH@/chrome/geckoview@JAREXT@
 @BINPATH@/chrome/geckoview.manifest
@@ -351,7 +248,6 @@
 @BINPATH@/components/ImageBlockingPolicy.js
 @BINPATH@/components/DirectoryProvider.js
 @BINPATH@/components/FilePicker.js
-@BINPATH@/components/FxAccountsPush.js
 @BINPATH@/components/HelperAppDialog.js
 @BINPATH@/components/LoginManagerPrompter.js
 @BINPATH@/components/MobileComponents.manifest
@@ -375,11 +271,4 @@
 
 #ifdef PKG_LOCALE_MANIFEST
 #include @PKG_LOCALE_MANIFEST@
-#endif
-
-; NOTE: This must match the config checks in
-; /toolkit/components/backgroundhangmonitor/moz.build.
-#if defined(NIGHTLY_BUILD) && !defined(MOZ_DEBUG) && !defined(MOZ_TSAN) && !defined(MOZ_ASAN)
-@BINPATH@/components/BHRTelemetryService.js
-@BINPATH@/components/BHRTelemetryService.manifest
 #endif

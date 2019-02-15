@@ -53,35 +53,11 @@
     }                                                \
   }
 
-// {F6D5EBBD-34F4-487d-9D10-3D34123E3EB9}
-#define NS_AUTOCOMPLETECONTROLLER_CID                \
-  {                                                  \
-    0xf6d5ebbd, 0x34f4, 0x487d, {                    \
-      0x9d, 0x10, 0x3d, 0x34, 0x12, 0x3e, 0x3e, 0xb9 \
-    }                                                \
-  }
-
-// {2ee3039b-2de4-43d9-93b0-649beacff39a}
-#define NS_AUTOCOMPLETESIMPLERESULT_CID              \
-  {                                                  \
-    0x2ee3039b, 0x2de4, 0x43d9, {                    \
-      0x93, 0xb0, 0x64, 0x9b, 0xea, 0xcf, 0xf3, 0x9a \
-    }                                                \
-  }
-
 // {7A6F70B6-2BBD-44b5-9304-501352D44AB5}
 #define NS_AUTOCOMPLETEMDBRESULT_CID                \
   {                                                 \
     0x7a6f70b6, 0x2bbd, 0x44b5, {                   \
       0x93, 0x4, 0x50, 0x13, 0x52, 0xd4, 0x4a, 0xb5 \
-    }                                               \
-  }
-
-// {895DB6C7-DBDF-40ea-9F64-B175033243DC}
-#define NS_FORMFILLCONTROLLER_CID                   \
-  {                                                 \
-    0x895db6c7, 0xdbdf, 0x40ea, {                   \
-      0x9f, 0x64, 0xb1, 0x75, 0x3, 0x32, 0x43, 0xdc \
     }                                               \
   }
 

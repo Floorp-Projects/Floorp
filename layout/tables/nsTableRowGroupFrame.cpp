@@ -405,9 +405,8 @@ void nsTableRowGroupFrame::ReflowChildren(
           rowFrame->DidResize();
           // the overflow area may have changed inflate the overflow area
           const nsStylePosition* stylePos = StylePosition();
-          nsStyleUnit unit = stylePos->BSize(wm).GetUnit();
           if (aReflowInput.tableFrame->IsAutoBSize(wm) &&
-              unit != eStyleUnit_Coord) {
+              !stylePos->BSize(wm).ConvertsToLength()) {
             // Because other cells in the row may need to be aligned
             // differently, repaint the entire row
             InvalidateFrame();

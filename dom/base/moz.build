@@ -452,18 +452,16 @@ if CONFIG['INTEL_ARCHITECTURE']:
     SOURCES += ['nsTextFragmentSSE2.cpp']
     SOURCES['nsTextFragmentSSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
 
-EXTRA_COMPONENTS += [
-    'contentAreaDropListener.js',
-    'contentAreaDropListener.manifest',
-    'ProcessSelector.js',
-    'ProcessSelector.manifest',
-    'SlowScriptDebug.js',
-    'SlowScriptDebug.manifest',
-]
-
 EXTRA_JS_MODULES += [
+    'ContentAreaDropListener.jsm',
     'DOMRequestHelper.jsm',
     'IndexedDBHelper.jsm',
+    'ProcessSelector.jsm',
+    'SlowScriptDebug.jsm',
+]
+
+XPCOM_MANIFESTS += [
+    'components.conf',
 ]
 
 LOCAL_INCLUDES += [

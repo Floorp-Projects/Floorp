@@ -403,6 +403,7 @@ if (!isDummyDocument) {
     ["stringbundle", "chrome://global/content/elements/stringbundle.js"],
     ["printpreview-toolbar", "chrome://global/content/printPreviewToolbar.js"],
     ["editor", "chrome://global/content/elements/editor.js"],
+    ["text-link", "chrome://global/content/elements/text.js"],
   ]) {
     customElements.setElementCreationCallback(tag, () => {
       Services.scriptloader.loadSubScript(script, window);

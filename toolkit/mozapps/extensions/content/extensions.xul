@@ -158,7 +158,7 @@
       <spacer flex="1"/>
 
       <hbox class="sidebar-footer-button" pack="center">
-        <label id="preferencesButton" class="text-link">
+        <label id="preferencesButton" is="text-link">
           <hbox align="center">
             <image class="sidebar-footer-icon preferences-icon"/>
             <label class="sidebar-footer-label" data-l10n-id="preferences" flex="1"/>
@@ -167,7 +167,7 @@
       </hbox>
 
       <hbox class="sidebar-footer-button help-button" pack="center">
-        <label id="helpButton" class="text-link">
+        <label id="helpButton" is="text-link">
           <hbox align="center">
             <image class="sidebar-footer-icon help-icon"/>
             <label class="sidebar-footer-label" data-l10n-id="help-button" flex="1"/>
@@ -298,17 +298,17 @@
               <vbox id="disabled-unsigned-addons-info" class="alert-container" hidden="true">
                 <label id="disabled-unsigned-addons-heading" data-l10n-id="disabled-unsigned-heading"/>
                 <description data-l10n-id="disabled-unsigned-description">
-                  <label class="text-link plain" id="find-alternative-addons" data-l10n-name="find-addons"/>
+                  <label class="plain" id="find-alternative-addons" data-l10n-name="find-addons" is="text-link"/>
                 </description>
-                <hbox pack="start"><label class="text-link" id="signing-learn-more" data-l10n-id="disabled-unsigned-learn-more"></label></hbox>
+                <hbox pack="start"><label id="signing-learn-more" data-l10n-id="disabled-unsigned-learn-more" is="text-link"></label></hbox>
                 <description id="signing-dev-info" data-l10n-id="disabled-unsigned-devinfo">
-                  <label class="text-link plain" id="signing-dev-manual-link" data-l10n-name="learn-more"/>
+                  <label class="plain" id="signing-dev-manual-link" data-l10n-name="learn-more" is="text-link"/>
                 </description>
               </vbox>
               <vbox id="legacy-extensions-notice" class="alert-container" hidden="true">
                 <vbox class="alert">
                   <description id="legacy-extensions-description">
-                    <label class="text-link plain" id="legacy-extensions-learnmore-link" data-l10n-id="legacy-warning-show-legacy"/>
+                    <label class="plain" id="legacy-extensions-learnmore-link" data-l10n-id="legacy-warning-show-legacy" is="text-link"/>
                   </description>
                 </vbox>
               </vbox>
@@ -317,7 +317,7 @@
                   <image class="message-bar-icon"/>
                   <vbox class="message-container">
                     <description class="message-bar-description" data-l10n-id="private-browsing-description">
-                      <label class="text-link plain" id="private-browsing-learnmore-link" data-l10n-name="private-browsing-learn-more"/>
+                      <label class="plain" id="private-browsing-learnmore-link" data-l10n-name="private-browsing-learn-more" is="text-link"/>
                     </description>
                   </vbox>
                 </hbox>
@@ -326,7 +326,7 @@
                 <hbox class="message-bar">
                   <image class="message-bar-icon"/>
                   <description class="message-bar-description" data-l10n-id="plugin-deprecation-description">
-                    <label class="text-link plain" id="plugindeprecation-learnmore-link" data-l10n-name="learn-more"></label>
+                    <label class="plain" id="plugindeprecation-learnmore-link" data-l10n-name="learn-more" is="text-link"></label>
                   </description>
                 </hbox>
               </vbox>
@@ -383,7 +383,7 @@
               <vbox id="legacy-extensions-info">
                 <label id="legacy-extensions-heading" data-l10n-id="legacy-extensions"/>
                 <description data-l10n-id="legacy-extensions-description">
-                  <label class="text-link plain" id="legacy-learnmore" data-l10n-name="legacy-learn-more"></label>
+                  <label class="plain" id="legacy-learnmore" data-l10n-name="legacy-learn-more" is="text-link"></label>
                 </description>
               </vbox>
               <richlistbox id="legacy-list" class="list" flex="1"/>
@@ -486,13 +486,13 @@
                     <hbox id="warning-container" align="center" class="warning">
                       <image class="warning-icon"/>
                       <label id="detail-warning" flex="1"/>
-                      <label id="detail-warning-link" class="text-link"/>
+                      <label id="detail-warning-link" is="text-link"/>
                       <spacer flex="5000"/> <!-- Necessary to allow the message to wrap -->
                     </hbox>
                     <hbox id="error-container" align="center" class="error">
                       <image class="error-icon"/>
                       <label id="detail-error" flex="1"/>
-                      <label id="detail-error-link" class="text-link"/>
+                      <label id="detail-error-link" is="text-link"/>
                       <spacer flex="5000"/> <!-- Necessary to allow the message to wrap -->
                     </hbox>
                     <hbox id="pending-container" align="center" class="pending">
@@ -519,7 +519,7 @@
                           <hbox id="detail-name-container" class="name-container"
                                 align="start">
                             <label id="detail-name" flex="1"/>
-                            <label id="detail-legacy-warning" class="legacy-warning text-link" value="&addon.legacy.label;"/>
+                            <label id="detail-legacy-warning" class="legacy-warning" value="&addon.legacy.label;" is="text-link"/>
                             <label class="disabled-postfix" value="&addon.disabled.postfix;"/>
                             <label class="update-postfix" value="&addon.update.postfix;"/>
                             <spacer flex="5000"/> <!-- Necessary to allow the name to wrap -->
@@ -559,7 +559,7 @@
                           </row>
                           <hbox class="detail-row-footer" id="detail-privateBrowsing-row-footer">
                             <description class="indent preferences-description" data-l10n-id="detail-private-browsing-description">
-                              <label id="detail-private-browsing-learnmore-link" class="learnMore text-link" data-l10n-name="detail-private-browsing-learn-more"/>
+                              <label id="detail-private-browsing-learnmore-link" class="learnMore" data-l10n-name="detail-private-browsing-learn-more" is="text-link"/>
                             </description>
                           </hbox>
                           <row class="detail-row-complex" id="detail-updates-row">
@@ -584,18 +584,18 @@
                           <row class="detail-row" id="detail-dateUpdated" data-l10n-id="detail-last-updated"/>
                           <row class="detail-row-complex" id="detail-homepage-row" data-l10n-id="detail-home">
                             <label class="detail-row-label" data-l10n-id="detail-home-value"/>
-                            <label id="detail-homepage" class="detail-row-value text-link" crop="end"/>
+                            <label id="detail-homepage" class="detail-row-value" crop="end" is="text-link"/>
                           </row>
                           <row class="detail-row-complex" id="detail-repository-row" data-l10n-id="detail-repository">
                             <label class="detail-row-label" data-l10n-id="detail-repository-value"/>
-                            <label id="detail-repository" class="detail-row-value text-link"/>
+                            <label id="detail-repository" class="detail-row-value" is="text-link"/>
                           </row>
                           <row class="detail-row-complex" id="detail-rating-row">
                             <label class="detail-row-label" data-l10n-id="detail-rating"/>
                             <hbox>
                               <label id="detail-rating" class="meta-value meta-rating"
                                      showrating="average"/>
-                              <label id="detail-reviews" class="text-link"/>
+                              <label id="detail-reviews" is="text-link"/>
                             </hbox>
                           </row>
                         </rows>

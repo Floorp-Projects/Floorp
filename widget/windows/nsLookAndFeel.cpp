@@ -742,8 +742,7 @@ static bool GetSysFontInfo(HDC aHDC, LookAndFeel::FontID anID,
 }
 
 bool nsLookAndFeel::GetFontImpl(FontID anID, nsString &aFontName,
-                                gfxFontStyle &aFontStyle,
-                                float aDevPixPerCSSPixel) {
+                                gfxFontStyle &aFontStyle) {
   CachedSystemFont &cacheSlot = mSystemFontCache[anID];
 
   bool status;
@@ -765,9 +764,6 @@ bool nsLookAndFeel::GetFontImpl(FontID anID, nsString &aFontName,
       cacheSlot.mFontStyle = aFontStyle;
     }
   }
-  // now convert the logical font size from GetSysFontInfo into device pixels
-  // for layout
-  aFontStyle.size *= aDevPixPerCSSPixel;
   return status;
 }
 

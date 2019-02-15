@@ -36,7 +36,6 @@ nsresult NS_NewSVGElement(mozilla::dom::Element** aResult,
 namespace mozilla {
 class DeclarationBlock;
 
-class SVGAngle;
 class SVGAnimatedNumberList;
 class SVGAnimatedPathSegList;
 class SVGAnimatedPointList;
@@ -50,6 +49,7 @@ class SVGInteger;
 class SVGIntegerPair;
 class SVGNumberList;
 class SVGNumberPair;
+class SVGOrient;
 class SVGString;
 class SVGStringList;
 class DOMSVGStringList;
@@ -182,7 +182,7 @@ class SVGElement : public SVGElementBase  // nsIContent
   nsAttrValue WillChangeLength(uint8_t aAttrEnum);
   nsAttrValue WillChangeNumberPair(uint8_t aAttrEnum);
   nsAttrValue WillChangeIntegerPair(uint8_t aAttrEnum);
-  nsAttrValue WillChangeAngle(uint8_t aAttrEnum);
+  nsAttrValue WillChangeOrient();
   nsAttrValue WillChangeViewBox();
   nsAttrValue WillChangePreserveAspectRatio();
   nsAttrValue WillChangeNumberList(uint8_t aAttrEnum);
@@ -200,9 +200,9 @@ class SVGElement : public SVGElementBase  // nsIContent
   void DidChangeInteger(uint8_t aAttrEnum);
   void DidChangeIntegerPair(uint8_t aAttrEnum,
                             const nsAttrValue& aEmptyOrOldValue);
-  void DidChangeAngle(uint8_t aAttrEnum, const nsAttrValue& aEmptyOrOldValue);
   void DidChangeBoolean(uint8_t aAttrEnum);
   void DidChangeEnum(uint8_t aAttrEnum);
+  void DidChangeOrient(const nsAttrValue& aEmptyOrOldValue);
   void DidChangeViewBox(const nsAttrValue& aEmptyOrOldValue);
   void DidChangePreserveAspectRatio(const nsAttrValue& aEmptyOrOldValue);
   void DidChangeNumberList(uint8_t aAttrEnum,
@@ -222,9 +222,9 @@ class SVGElement : public SVGElementBase  // nsIContent
   void DidAnimateNumberPair(uint8_t aAttrEnum);
   void DidAnimateInteger(uint8_t aAttrEnum);
   void DidAnimateIntegerPair(uint8_t aAttrEnum);
-  void DidAnimateAngle(uint8_t aAttrEnum);
   void DidAnimateBoolean(uint8_t aAttrEnum);
   void DidAnimateEnum(uint8_t aAttrEnum);
+  void DidAnimateOrient();
   void DidAnimateViewBox();
   void DidAnimatePreserveAspectRatio();
   void DidAnimateNumberList(uint8_t aAttrEnum);
@@ -443,24 +443,6 @@ class SVGElement : public SVGElementBase  // nsIContent
     void Reset(uint8_t aAttrEnum);
   };
 
-  struct AngleInfo {
-    nsStaticAtom* const mName;
-    const float mDefaultValue;
-    const uint8_t mDefaultUnitType;
-  };
-
-  struct AngleAttributesInfo {
-    SVGAngle* const mAngles;
-    const AngleInfo* const mAngleInfo;
-    const uint32_t mAngleCount;
-
-    AngleAttributesInfo(SVGAngle* aAngles, AngleInfo* aAngleInfo,
-                        uint32_t aAngleCount)
-        : mAngles(aAngles), mAngleInfo(aAngleInfo), mAngleCount(aAngleCount) {}
-
-    void Reset(uint8_t aAttrEnum);
-  };
-
   struct BooleanInfo {
     nsStaticAtom* const mName;
     const bool mDefaultValue;
@@ -595,11 +577,11 @@ class SVGElement : public SVGElementBase  // nsIContent
   virtual NumberPairAttributesInfo GetNumberPairInfo();
   virtual IntegerAttributesInfo GetIntegerInfo();
   virtual IntegerPairAttributesInfo GetIntegerPairInfo();
-  virtual AngleAttributesInfo GetAngleInfo();
   virtual BooleanAttributesInfo GetBooleanInfo();
   virtual EnumAttributesInfo GetEnumInfo();
-  // We assume all viewboxes and preserveAspectRatios are alike
+  // We assume all orients, viewboxes and preserveAspectRatios are alike
   // so we don't need to wrap the class
+  virtual SVGOrient* GetOrient();
   virtual SVGViewBox* GetViewBox();
   virtual SVGAnimatedPreserveAspectRatio* GetPreserveAspectRatio();
   virtual NumberListAttributesInfo GetNumberListInfo();

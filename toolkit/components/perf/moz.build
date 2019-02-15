@@ -15,6 +15,10 @@ EXTRA_JS_MODULES += [
     'PerfMeasurement.jsm',
 ]
 
+XPCOM_MANIFESTS += [
+    'components.conf',
+]
+
 FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [

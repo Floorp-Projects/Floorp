@@ -313,8 +313,6 @@ class nsCSSProps {
   static const KTableEntry kTextOverflowKTable[];
   static const KTableEntry kTouchActionKTable[];
   static const KTableEntry kVerticalAlignKTable[];
-  static const KTableEntry kWidthKTable[];  // also min-width, max-width
-  static const KTableEntry kFlexBasisKTable[];
 };
 
 #endif /* nsCSSProps_h___ */

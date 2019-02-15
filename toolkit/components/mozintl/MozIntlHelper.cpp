@@ -7,14 +7,6 @@
 #include "jsapi.h"
 #include "js/PropertySpec.h"
 #include "js/Wrapper.h"
-#include "mozilla/ModuleUtils.h"
-
-#define MOZ_MOZINTLHELPER_CID                        \
-  {                                                  \
-    0xb43c96be, 0x2b3a, 0x4dc4, {                    \
-      0x90, 0xe9, 0xb0, 0x6d, 0x34, 0x21, 0x9b, 0x68 \
-    }                                                \
-  }
 
 using namespace mozilla;
 
@@ -95,23 +87,3 @@ MozIntlHelper::AddGetLocaleInfo(JS::Handle<JS::Value> val, JSContext* cx) {
 
   return AddFunctions(cx, val, funcs);
 }
-
-NS_GENERIC_FACTORY_CONSTRUCTOR(MozIntlHelper)
-NS_DEFINE_NAMED_CID(MOZ_MOZINTLHELPER_CID);
-
-static const Module::CIDEntry kMozIntlHelperCIDs[] = {
-    {&kMOZ_MOZINTLHELPER_CID, false, nullptr, MozIntlHelperConstructor},
-    {nullptr}};
-
-static const mozilla::Module::ContractIDEntry kMozIntlHelperContracts[] = {
-    {"@mozilla.org/mozintlhelper;1", &kMOZ_MOZINTLHELPER_CID}, {nullptr}};
-
-static const mozilla::Module kMozIntlHelperModule = {mozilla::Module::kVersion,
-                                                     kMozIntlHelperCIDs,
-                                                     kMozIntlHelperContracts,
-                                                     nullptr,
-                                                     nullptr,
-                                                     nullptr,
-                                                     nullptr};
-
-NSMODULE_DEFN(mozMozIntlHelperModule) = &kMozIntlHelperModule;

@@ -30,8 +30,8 @@ struct ScrollStyles {
   StyleScrollSnapType mScrollSnapTypeY;
   nsStyleCoord mScrollSnapPointsX;
   nsStyleCoord mScrollSnapPointsY;
-  nsStyleCoord::CalcValue mScrollSnapDestinationX;
-  nsStyleCoord::CalcValue mScrollSnapDestinationY;
+  LengthPercentage mScrollSnapDestinationX;
+  LengthPercentage mScrollSnapDestinationY;
 
   ScrollStyles(StyleOverflow aH, StyleOverflow aV)
       : mHorizontal(aH),
@@ -42,14 +42,9 @@ struct ScrollStyles {
         mScrollSnapTypeX(StyleScrollSnapType::None),
         mScrollSnapTypeY(StyleScrollSnapType::None),
         mScrollSnapPointsX(nsStyleCoord(eStyleUnit_None)),
-        mScrollSnapPointsY(nsStyleCoord(eStyleUnit_None)) {
-    mScrollSnapDestinationX.mPercent = 0;
-    mScrollSnapDestinationX.mLength = nscoord(0.0f);
-    mScrollSnapDestinationX.mHasPercent = false;
-    mScrollSnapDestinationY.mPercent = 0;
-    mScrollSnapDestinationY.mLength = nscoord(0.0f);
-    mScrollSnapDestinationY.mHasPercent = false;
-  }
+        mScrollSnapPointsY(nsStyleCoord(eStyleUnit_None)),
+        mScrollSnapDestinationX(LengthPercentage::Zero()),
+        mScrollSnapDestinationY(LengthPercentage::Zero()) {}
 
   explicit ScrollStyles(const nsStyleDisplay* aDisplay);
   ScrollStyles(StyleOverflow aH, StyleOverflow aV, const nsStyleDisplay*);
