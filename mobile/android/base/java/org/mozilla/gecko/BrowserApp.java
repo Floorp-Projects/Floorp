@@ -1083,11 +1083,14 @@ public class BrowserApp extends GeckoApp
                 // by checking if the activity received onStop() or not.
                 final boolean userReturnedToFullApp = !isApplicationInBackground();
 
-                // After returning from Picture-in-picture mode the video will still be playing
+                // After returning from Picture-in-picture mode the video can still be playing
                 // in fullscreen. But now we have the status bar showing.
-                // Call setFullscreen(..) to hide it and offer the same fullscreen video experience
-                // that the user had before entering in Picture-in-picture mode.
-                if (userReturnedToFullApp) {
+                // If media is still playing / is paused we need to call setFullscreen(..) to hide
+                // the status bar and offer the same fullscreen video experience that the user had
+                // before entering in Picture-in-picture mode.
+                final boolean shouldKeepVideoInFullscreen =
+                        mPipController.isMediaPlaying() || mPipController.isMediaPaused();
+                if (userReturnedToFullApp && shouldKeepVideoInFullscreen) {
                     ActivityUtils.setFullScreen(this, true);
                 } else {
                     // User closed the PIP mode.
