@@ -1057,9 +1057,11 @@ var PanelMultiView = class extends AssociatedToNode {
     // view based on the space that will be available. We cannot just use
     // window.screen.availTop and availHeight because these may return an
     // incorrect value when the window spans multiple screens.
-    let anchorBox = this._panel.anchorNode.boxObject;
-    let screen = this._screenManager.screenForRect(anchorBox.screenX,
-                                                   anchorBox.screenY,
+    let anchor = this._panel.anchorNode;
+    let anchorBox = anchor.boxObject;
+
+    let screen = this._screenManager.screenForRect(anchor.screenX,
+                                                   anchor.screenY,
                                                    anchorBox.width,
                                                    anchorBox.height);
     let availTop = {}, availHeight = {};
@@ -1070,9 +1072,9 @@ var PanelMultiView = class extends AssociatedToNode {
     // based on whether the panel will open towards the top or the bottom.
     let maxHeight;
     if (this._panel.alignmentPosition.startsWith("before_")) {
-      maxHeight = anchorBox.screenY - cssAvailTop;
+      maxHeight = anchor.screenY - cssAvailTop;
     } else {
-      let anchorScreenBottom = anchorBox.screenY + anchorBox.height;
+      let anchorScreenBottom = anchor.screenY + anchorBox.height;
       let cssAvailHeight = availHeight.value / screen.defaultCSSScaleFactor;
       maxHeight = cssAvailTop + cssAvailHeight - anchorScreenBottom;
     }

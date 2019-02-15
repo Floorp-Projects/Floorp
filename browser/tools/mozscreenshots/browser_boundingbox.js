@@ -9,14 +9,14 @@ add_task(async function() {
                       .QueryInterface(Ci.nsIBaseWindow)
                       .devicePixelsPerDesktopPixel;
   let {bounds, rects} = TestRunner._findBoundingBox(["#tabbrowser-tabs"]);
-  let element = document.querySelector("#tabbrowser-tabs");
-  let tabBar = element.ownerDocument.getBoxObjectFor(element);
+  let tabBar = document.querySelector("#tabbrowser-tabs");
+  let tabBarRect = tabBar.getBoundingClientRect();
 
   // Calculate expected values
   let expectedLeft = scale * (tabBar.screenX - TestRunner.croppingPadding);
   let expectedTop = scale * (tabBar.screenY - TestRunner.croppingPadding);
-  let expectedRight = scale * (tabBar.width + TestRunner.croppingPadding * 2) + expectedLeft;
-  let expectedBottom = scale * (tabBar.height + TestRunner.croppingPadding * 2) + expectedTop;
+  let expectedRight = scale * (tabBarRect.width + TestRunner.croppingPadding * 2) + expectedLeft;
+  let expectedBottom = scale * (tabBarRect.height + TestRunner.croppingPadding * 2) + expectedTop;
 
   // Calculate browser region
   let windowLeft = window.screenX * scale;
@@ -48,21 +48,21 @@ add_task(async function() {
   bounds = result.bounds;
   rects = result.rects;
 
-  element = document.querySelector("#TabsToolbar");
-  let tabToolbar = element.ownerDocument.getBoxObjectFor(element);
-  element = document.querySelector("#forward-button");
-  let fButton = element.ownerDocument.getBoxObjectFor(element);
+  let tabToolbar = document.querySelector("#TabsToolbar");
+  let tabToolbarRect = tabToolbar.getBoundingClientRect();
+  let fButton = document.querySelector("#forward-button");
+  let fButtonRect = fButton.getBoundingClientRect();
 
   // Calculate expected values
   expectedLeft = scale * (Math.min(tabToolbar.screenX, fButton.screenX)
                               - TestRunner.croppingPadding);
   expectedTop = scale * (Math.min(tabToolbar.screenY, fButton.screenY)
                               - TestRunner.croppingPadding);
-  expectedRight = scale * (Math.max(tabToolbar.width + tabToolbar.screenX,
-                                    fButton.width + fButton.screenX)
+  expectedRight = scale * (Math.max(tabToolbarRect.width + tabToolbar.screenX,
+                                    fButtonRect.width + fButton.screenX)
                               + TestRunner.croppingPadding);
-  expectedBottom = scale * (Math.max(tabToolbar.height + tabToolbar.screenY,
-                                     fButton.height + fButton.screenY)
+  expectedBottom = scale * (Math.max(tabToolbarRect.height + tabToolbar.screenY,
+                                     fButtonRect.height + fButton.screenY)
                               + TestRunner.croppingPadding );
 
   // Adjust values based on browser window
@@ -81,13 +81,13 @@ add_task(async function() {
   is(rects[0].left, Math.max(scale * (fButton.screenX - TestRunner.croppingPadding), windowLeft),
     "Checking single selector's left position when _findBoundingBox has multiple selectors");
   // Check single selector's right position
-  is(rects[0].right, Math.min(scale * (fButton.width + fButton.screenX + TestRunner.croppingPadding), windowRight),
+  is(rects[0].right, Math.min(scale * (fButtonRect.width + fButton.screenX + TestRunner.croppingPadding), windowRight),
     "Checking single selector's right position when _findBoundingBox has multiple selectors");
   // Check single selector's top position
   is(rects[0].top, Math.max(scale * (fButton.screenY - TestRunner.croppingPadding), windowTop),
     "Checking single selector's top position when _findBoundingBox has multiple selectors");
   // Check single selector's bottom position
-  is(rects[0].bottom, Math.min(scale * (fButton.height + fButton.screenY + TestRunner.croppingPadding), windowBottom),
+  is(rects[0].bottom, Math.min(scale * (fButtonRect.height + fButton.screenY + TestRunner.croppingPadding), windowBottom),
     "Checking single selector's bottom position when _findBoundingBox has multiple selectors");
 
     // Check that nonexistent selectors throws an exception
