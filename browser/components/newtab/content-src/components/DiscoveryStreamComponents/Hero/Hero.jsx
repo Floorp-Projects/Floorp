@@ -57,7 +57,7 @@ export class Hero extends React.PureComponent {
     let list = (
       <List
         recStartingPoint={1}
-        feed={this.props.feed}
+        data={data}
         hasImages={true}
         hasBorders={this.props.border === `border`}
         items={this.props.items - 1}
