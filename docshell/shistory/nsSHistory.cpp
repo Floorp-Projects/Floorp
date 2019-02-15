@@ -626,6 +626,12 @@ nsSHistory::GetRequestedIndex(int32_t* aResult) {
   return NS_OK;
 }
 
+NS_IMETHODIMP_(void)
+nsSHistory::InternalSetRequestedIndex(int32_t aRequestedIndex) {
+  MOZ_ASSERT(aRequestedIndex >= -1 && aRequestedIndex < Length());
+  mRequestedIndex = aRequestedIndex;
+}
+
 NS_IMETHODIMP
 nsSHistory::GetEntryAtIndex(int32_t aIndex, nsISHEntry** aResult) {
   NS_ENSURE_ARG_POINTER(aResult);

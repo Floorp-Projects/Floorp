@@ -3235,6 +3235,14 @@ var SessionStoreInternal = {
       tabState.index = Math.max(1, Math.min(tabState.index, tabState.entries.length));
     } else {
       options.loadArguments = loadArguments;
+
+      // If we're resuming a load which has been redirected from another
+      // process, record the history index which is currently being requested.
+      // It has to be offset by 1 to get back to native history indices from
+      // SessionStore history indicies.
+      if (loadArguments.redirectLoadSwitchId) {
+        loadArguments.redirectHistoryIndex = tabState.requestedIndex - 1;
+      }
     }
 
     // Need to reset restoring tabs.
