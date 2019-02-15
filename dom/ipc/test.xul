@@ -51,7 +51,7 @@
       p.removeChild(y);
       p.appendChild(y);
 
-      var fl = y.QueryInterface(Components.interfaces.nsIFrameLoaderOwner).frameLoader;
+      var fl = y.frameLoader;
       fl.activateFrameEvent("MozAfterPaint", true);
       fl.activateFrameEvent("MozScrolledAreaChanged", true);
       y.addEventListener("MozAfterPaint", handleMozAfterPaint, true);
@@ -66,7 +66,7 @@
        // First focus the remote frame, then dispatch click. This way remote frame gets focus before
        // mouse event.
        document.getElementById('page').focus();
-       var frameLoader = document.getElementById('page').QueryInterface(Components.interfaces.nsIFrameLoaderOwner).frameLoader;
+       var frameLoader = document.getElementById('page').frameLoader;
        var x = parseInt(Math.random() * 100);
        var y = parseInt(Math.random() * 100);
        frameLoader.sendCrossProcessMouseEvent("mousedown", x, y, 0, 1, 0, false);
@@ -245,7 +245,6 @@
   <toolbar><label value="Load a script (URL) to content process:"/>
     <textbox flex="1" id="script"/><button
       label="send" oncommand="document.getElementById('page')
-                                      .QueryInterface(Components.interfaces.nsIFrameLoaderOwner)
                                       .frameLoader.messageManager
                                       .loadFrameScript(this.previousSibling.value, false);"/>
   </toolbar>

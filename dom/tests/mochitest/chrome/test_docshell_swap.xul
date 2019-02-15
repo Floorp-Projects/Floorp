@@ -29,9 +29,6 @@
     let browser1 = win1.document.getElementById("browser");
     let browser2 = win2.document.getElementById("browser");
 
-    let flo1 = browser1.QueryInterface(Ci.nsIFrameLoaderOwner);
-    let flo2 = browser2.QueryInterface(Ci.nsIFrameLoaderOwner);
-
     let pongCount = 0;
 
     function gotPong(target_ok) {
@@ -44,15 +41,15 @@
       }
     }
 
-    let mm1 = flo1.frameLoader.messageManager;
-    let mm2 = flo2.frameLoader.messageManager;
+    let mm1 = browser1.frameLoader.messageManager;
+    let mm2 = browser2.frameLoader.messageManager;
 
     // Swap docshells. Everything should be identical to before, since there was nothing to
     // distinguish these docshells.
-    flo1.swapFrameLoaders(flo2);
+    browser1.swapFrameLoaders(browser2);
 
     // mm1 shouldn't change here, but we update it in case it does due to a bug.
-    mm1 = flo1.frameLoader.messageManager;
+    mm1 = browser1.frameLoader.messageManager;
 
     // Load ping-pong code into first window.
     mm1.loadFrameScript("data:,addMessageListener('ping', () => sendAsyncMessage('pong'));", false);

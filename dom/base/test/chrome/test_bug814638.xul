@@ -39,7 +39,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=814638
     function swapFrames() {
       let iframe1 = host1.document.querySelector("iframe");
       let iframe2 = host2.document.querySelector("iframe");
-      iframe2.QueryInterface(Ci.nsIFrameLoaderOwner);
       iframe2.swapFrameLoaders(iframe1);
       setTimeout(function() {
         iframe2.contentWindow.receivedKeyEvent = receivedKeyEvent;
