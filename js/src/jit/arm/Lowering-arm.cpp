@@ -864,10 +864,8 @@ void LIRGenerator::visitWasmCompareExchangeHeap(MWasmCompareExchangeHeap* ins) {
 
   if (ins->access().type() == Scalar::Int64) {
     // The three register pairs must be distinct.
-    auto* lir =
-      new (alloc()) LWasmCompareExchangeI64(
-        useRegister(base),
-        useInt64Fixed(ins->oldValue(), CmpXchgOld64),
+    auto* lir = new (alloc()) LWasmCompareExchangeI64(
+        useRegister(base), useInt64Fixed(ins->oldValue(), CmpXchgOld64),
         useInt64Fixed(ins->newValue(), CmpXchgNew64));
     defineInt64Fixed(lir, ins,
                      LInt64Allocation(LAllocation(AnyRegister(CmpXchgOutHi)),
@@ -890,8 +888,7 @@ void LIRGenerator::visitWasmAtomicExchangeHeap(MWasmAtomicExchangeHeap* ins) {
 
   if (ins->access().type() == Scalar::Int64) {
     auto* lir = new (alloc()) LWasmAtomicExchangeI64(
-        useRegister(ins->base()),
-        useInt64Fixed(ins->value(), XchgNew64),
+        useRegister(ins->base()), useInt64Fixed(ins->value(), XchgNew64),
         ins->access());
     defineInt64Fixed(lir, ins,
                      LInt64Allocation(LAllocation(AnyRegister(XchgOutHi)),
@@ -909,14 +906,10 @@ void LIRGenerator::visitWasmAtomicExchangeHeap(MWasmAtomicExchangeHeap* ins) {
 
 void LIRGenerator::visitWasmAtomicBinopHeap(MWasmAtomicBinopHeap* ins) {
   if (ins->access().type() == Scalar::Int64) {
-    auto* lir =
-      new (alloc()) LWasmAtomicBinopI64(useRegister(ins->base()),
-                                        useInt64Fixed(ins->value(),
-                                                      FetchOpVal64),
-                                        tempFixed(FetchOpTmpLo),
-                                        tempFixed(FetchOpTmpHi),
-                                        ins->access(),
-                                        ins->operation());
+    auto* lir = new (alloc()) LWasmAtomicBinopI64(
+        useRegister(ins->base()), useInt64Fixed(ins->value(), FetchOpVal64),
+        tempFixed(FetchOpTmpLo), tempFixed(FetchOpTmpHi), ins->access(),
+        ins->operation());
     defineInt64Fixed(lir, ins,
                      LInt64Allocation(LAllocation(AnyRegister(FetchOpOutHi)),
                                       LAllocation(AnyRegister(FetchOpOutLo))));

@@ -1339,8 +1339,8 @@ nsresult nsWebBrowserPersist::SaveChannelInternal(nsIChannel *aChannel,
 
   if (fc && !fu) {
     nsCOMPtr<nsIInputStream> fileInputStream, bufferedInputStream;
-    nsresult rv = NS_MaybeOpenChannelUsingOpen(
-        aChannel, getter_AddRefs(fileInputStream));
+    nsresult rv =
+        NS_MaybeOpenChannelUsingOpen(aChannel, getter_AddRefs(fileInputStream));
     NS_ENSURE_SUCCESS(rv, rv);
     rv = NS_NewBufferedInputStream(getter_AddRefs(bufferedInputStream),
                                    fileInputStream.forget(),

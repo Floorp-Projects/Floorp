@@ -7258,7 +7258,6 @@ bool PresShell::EventHandler::MaybeDiscardOrDelayMouseEvent(
 
 nsIFrame* PresShell::EventHandler::MaybeFlushThrottledStyles(
     nsIFrame* aFrameForPresShell) {
-
   if (!GetDocument()) {
     // XXX Only when mPresShell has document, we'll try to look for a frame
     //     containing mPresShell even if given frame is nullptr.  Does this
