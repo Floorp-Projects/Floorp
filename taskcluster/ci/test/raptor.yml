@@ -361,6 +361,16 @@ raptor-tp6-10-chrome:
             - --test=raptor-tp6-10
             - --app=chrome
 
+raptor-tp6-binast-1-firefox:
+    description: "Raptor tp6-binast-1 on Firefox"
+    try-name: = raptor-tp6-binast-1
+    treeherder-symbol: Rap(tp6-b-1)
+    run-on-projects: ['try', 'mozilla-central']
+    tier: 2
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6-binast-1
+
 raptor-tp6m-1-geckoview:
     description: "Raptor tp6m-1 on Geckoview"
     try-name: raptor-tp6m-1-geckoview
