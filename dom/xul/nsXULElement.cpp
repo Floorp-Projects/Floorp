@@ -472,6 +472,16 @@ bool nsXULElement::IsFocusableInternal(int32_t* aTabIndex, bool aWithMouse) {
   return shouldFocus;
 }
 
+int32_t nsXULElement::ScreenX() {
+  nsIFrame* frame = GetPrimaryFrame(FlushType::Layout);
+  return frame ? frame->GetScreenRect().x: 0;
+}
+
+int32_t nsXULElement::ScreenY() {
+  nsIFrame* frame = GetPrimaryFrame(FlushType::Layout);
+  return frame ? frame->GetScreenRect().y : 0;
+}
+
 bool nsXULElement::HasMenu() {
   nsMenuFrame* menu = do_QueryFrame(GetPrimaryFrame());
   return menu != nullptr;
