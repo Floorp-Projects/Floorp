@@ -74,6 +74,16 @@ warning heuristic.
 '''
 
 
+# Function used by clang-format to run it in parallel, according to the given
+# arguments. Must be defined at the top-level so it can be used with
+# multiprocessing.Pool.imap_unordered.
+def run_one_clang_format_batch(args):
+    try:
+        subprocess.check_output(args)
+    except subprocess.CalledProcessError as e:
+        return e
+
+
 class StoreDebugParamsAndWarnAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         sys.stderr.write('The --debugparams argument is deprecated. Please ' +
@@ -2861,13 +2871,10 @@ class StaticAnalysis(MachCommandBase):
 
         print("Processing %d file(s)..." % len(path_list))
 
-        batchsize = 200
         if show:
-            batchsize = 1
+            for i in range(0, len(path_list)):
+                l = path_list[i: (i + 1)]
 
-        for i in range(0, len(path_list), batchsize):
-            l = path_list[i: (i + batchsize)]
-            if show:
                 # Copy the files into a temp directory
                 # and run clang-format on the temp directory
                 # and show the diff
@@ -2880,15 +2887,14 @@ class StaticAnalysis(MachCommandBase):
                 shutil.copy(l[0], faketmpdir)
                 l[0] = target_file
 
-            # Run clang-format on the list
-            try:
-                check_output(args + l)
-            except CalledProcessError as e:
-                # Something wrong happend
-                print("clang-format: An error occured while running clang-format.")
-                return e.returncode
+                # Run clang-format on the list
+                try:
+                    check_output(args + l)
+                except CalledProcessError as e:
+                    # Something wrong happend
+                    print("clang-format: An error occured while running clang-format.")
+                    return e.returncode
 
-            if show:
                 # show the diff
                 diff_command = ["diff", "-u", original_path, target_file]
                 try:
@@ -2899,8 +2905,30 @@ class StaticAnalysis(MachCommandBase):
                     # there is a diff to show
                     if e.output:
                         print(e.output)
-        if show:
+
             shutil.rmtree(tmpdir)
+            return 0
+
+        import multiprocessing
+        import math
+
+        cpu_count = multiprocessing.cpu_count()
+        batchsize = int(math.ceil(float(len(path_list)) / cpu_count))
+
+        batches = []
+        for i in range(0, len(path_list), batchsize):
+            batches.append(args + path_list[i: (i + batchsize)])
+
+        pool = multiprocessing.Pool(cpu_count)
+
+        error_code = None
+        for result in pool.imap_unordered(run_one_clang_format_batch, batches):
+            if error_code is None and result is not None:
+                print("clang-format: An error occured while running clang-format.")
+                error_code = result.returncode
+
+        if error_code is not None:
+            return error_code
         return 0
 
 @CommandProvider
