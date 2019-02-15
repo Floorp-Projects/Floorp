@@ -115,8 +115,8 @@ static bool HaveSpecifiedSize(const nsStylePosition* aStylePosition) {
   // check the width and height values in the reflow state's style struct
   // - if width and height are specified as either coord or percentage, then
   //   the size of the image frame is constrained
-  return aStylePosition->mWidth.IsCoordPercentCalcUnit() &&
-         aStylePosition->mHeight.IsCoordPercentCalcUnit();
+  return aStylePosition->mWidth.IsLengthPercentage() &&
+         aStylePosition->mHeight.IsLengthPercentage();
 }
 
 // Decide whether we can optimize away reflows that result from the
@@ -740,7 +740,9 @@ void nsImageFrame::InvalidateSelf(const nsIntRect* aLayerInvalidRect,
   // Check if WebRender has interacted with this frame. If it has
   // we need to let it know that things have changed.
   const auto type = DisplayItemType::TYPE_IMAGE;
-  if (WebRenderUserData::ProcessInvalidateForImage(this, type)) {
+  const auto producerId =
+      mImage ? mImage->GetProducerId() : kContainerProducerID_Invalid;
+  if (WebRenderUserData::ProcessInvalidateForImage(this, type, producerId)) {
     return;
   }
 
@@ -2620,8 +2622,7 @@ static bool IsInAutoWidthTableCellForQuirk(nsIFrame* aFrame) {
   if (ancestor->Style()->GetPseudo() == nsCSSAnonBoxes::cellContent()) {
     // Assume direct parent is a table cell frame.
     nsFrame* grandAncestor = static_cast<nsFrame*>(ancestor->GetParent());
-    return grandAncestor &&
-           grandAncestor->StylePosition()->mWidth.GetUnit() == eStyleUnit_Auto;
+    return grandAncestor && grandAncestor->StylePosition()->mWidth.IsAuto();
   }
   return false;
 }

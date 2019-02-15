@@ -41,7 +41,7 @@
 #include "builtin/Stream.h"
 #include "builtin/String.h"
 #include "builtin/Symbol.h"
-#ifdef ENABLE_BINARYDATA
+#ifdef ENABLE_TYPED_OBJECTS
 #  include "builtin/TypedObject.h"
 #endif
 #include "frontend/BytecodeCompiler.h"

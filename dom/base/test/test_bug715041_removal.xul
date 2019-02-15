@@ -765,7 +765,7 @@ target="_blank">Mozilla Bug 715041</a>
     }
 
     try {
-      componentMgr.registerFactory(oldIdleServiceCID, "Re registering old idle service", idleServiceContractID, oldIdleServiceFactoryObj);
+      componentMgr.registerFactory(oldIdleServiceCID, "Re registering old idle service", idleServiceContractID, null);
     }
     catch(err) {
       dump("test_bug715041_removal.xul: RemoveLastAddLastCleanUp() Failed to register factory, original idle service!\n");
@@ -810,13 +810,6 @@ target="_blank">Mozilla Bug 715041</a>
   }
   catch(err) {
     dump("test_bug715041._removalxul: Failed to convert ID to CID for old idle service.\n");
-  }
-
-  try {
-    componentMgr.unregisterFactory(oldIdleServiceCID, oldIdleServiceFactoryObj);
-  }
-  catch(err) {
-    dump("test_bug715041_removal.xul: Failed to unregister old idle service factory object!\n");
   }
 
   try {

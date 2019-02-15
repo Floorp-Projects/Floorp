@@ -76,6 +76,10 @@ if CONFIG['JS_BUILD_BINAST']:
         'BinTokenReaderMultipart.cpp',
     ]
 
+    DIRS += [
+        'binsource'
+    ]
+
     # Instrument BinAST files for fuzzing as we have a fuzzing target for BinAST.
     if CONFIG['FUZZING_INTERFACES'] and CONFIG['LIBFUZZER']:
         include('/tools/fuzzing/libfuzzer-flags.mozbuild')

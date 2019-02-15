@@ -276,6 +276,14 @@ RasterImage::GetType(uint16_t* aType) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+RasterImage::GetProducerId(uint32_t* aId) {
+  NS_ENSURE_ARG_POINTER(aId);
+
+  *aId = ImageResource::GetImageProducerId();
+  return NS_OK;
+}
+
 LookupResult RasterImage::LookupFrameInternal(const IntSize& aSize,
                                               uint32_t aFlags,
                                               PlaybackType aPlaybackType,

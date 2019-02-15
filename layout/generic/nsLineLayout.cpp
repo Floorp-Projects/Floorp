@@ -699,8 +699,7 @@ static bool IsPercentageAware(const nsIFrame* aFrame, WritingMode aWM) {
 
   const nsStylePosition* pos = aFrame->StylePosition();
 
-  if ((pos->ISizeDependsOnContainer(aWM) &&
-       pos->ISize(aWM).GetUnit() != eStyleUnit_Auto) ||
+  if ((pos->ISizeDependsOnContainer(aWM) && !pos->ISize(aWM).IsAuto()) ||
       pos->MaxISizeDependsOnContainer(aWM) ||
       pos->MinISizeDependsOnContainer(aWM) ||
       pos->OffsetHasPercent(aWM.IsVertical() ? eSideBottom : eSideRight) ||
@@ -708,7 +707,7 @@ static bool IsPercentageAware(const nsIFrame* aFrame, WritingMode aWM) {
     return true;
   }
 
-  if (eStyleUnit_Auto == pos->ISize(aWM).GetUnit()) {
+  if (pos->ISize(aWM).IsAuto()) {
     // We need to check for frames that shrink-wrap when they're auto
     // width.
     const nsStyleDisplay* disp = aFrame->StyleDisplay();
@@ -731,7 +730,7 @@ static bool IsPercentageAware(const nsIFrame* aFrame, WritingMode aWM) {
     nsIFrame* f = const_cast<nsIFrame*>(aFrame);
     if (f->GetIntrinsicRatio() != nsSize(0, 0) &&
         // Some percents are treated like 'auto', so check != coord
-        pos->BSize(aWM).GetUnit() != eStyleUnit_Coord) {
+        !pos->BSize(aWM).ConvertsToLength()) {
       const IntrinsicSize& intrinsicSize = f->GetIntrinsicSize();
       if (intrinsicSize.width.GetUnit() == eStyleUnit_None &&
           intrinsicSize.height.GetUnit() == eStyleUnit_None) {

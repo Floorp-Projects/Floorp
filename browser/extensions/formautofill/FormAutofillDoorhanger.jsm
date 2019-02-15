@@ -236,8 +236,7 @@ let FormAutofillDoorhanger = {
    */
   _appendPrivacyPanelLink(content, message, link) {
     let chromeDoc = content.ownerDocument;
-    let privacyLinkElement = chromeDoc.createXULElement("label");
-    privacyLinkElement.className = "text-link";
+    let privacyLinkElement = chromeDoc.createXULElement("label", {is: "text-link"});
     privacyLinkElement.setAttribute("useoriginprincipal", true);
     privacyLinkElement.setAttribute("href", link || "about:preferences#privacy-form-autofill");
     privacyLinkElement.setAttribute("value", message);

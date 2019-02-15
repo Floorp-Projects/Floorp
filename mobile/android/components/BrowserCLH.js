@@ -88,14 +88,16 @@ BrowserCLH.prototype = {
         GeckoViewUtils.addLazyGetter(this, "LoginManagerParent", {
           module: "resource://gre/modules/LoginManagerParent.jsm",
           mm: [
-            // PLEASE KEEP THIS LIST IN SYNC WITH THE DESKTOP LIST IN nsBrowserGlue.js
+            // PLEASE KEEP THIS LIST IN SYNC WITH THE DESKTOP LIST IN
+            // BrowserGlue.jsm
             "RemoteLogins:findLogins",
             "RemoteLogins:findRecipes",
             "RemoteLogins:onFormSubmit",
             "RemoteLogins:autoCompleteLogins",
             "RemoteLogins:removeLogin",
             "RemoteLogins:insecureLoginFormPresent",
-            // PLEASE KEEP THIS LIST IN SYNC WITH THE DESKTOP LIST IN nsBrowserGlue.js
+            // PLEASE KEEP THIS LIST IN SYNC WITH THE DESKTOP LIST IN
+            // BrowserGlue.jsm
           ],
         });
         GeckoViewUtils.addLazyGetter(this, "LoginManagerContent", {

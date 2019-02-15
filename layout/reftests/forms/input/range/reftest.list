@@ -55,3 +55,5 @@ skip-if(Android) == range-border-background.html range-border-background-ref.htm
 # -webkit-appearance:none isn't supported in other UAs so this test
 # is an internal reftest for now.
 == range-percent-intrinsic-size-2b.html range-percent-intrinsic-size-2b-ref.html
+
+== auto-size.html auto-size-ref.html

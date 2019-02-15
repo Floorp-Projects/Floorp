@@ -73,7 +73,7 @@
       <separator class="thin"/>
       <label>&manualUpdateGetMsg.label;</label>
       <hbox>
-        <label class="text-link" id="manualUpdateLinkLabel" value=""
+        <label id="manualUpdateLinkLabel" value="" is="text-link"
                onclick="openUpdateURL(event);"/>
       </hbox>
     </vbox>
@@ -85,7 +85,7 @@
     <updateheader label="&unsupported.title;"/>
     <vbox class="update-content" flex="1">
       <description flex="1">&unsupported.label;
-        <label id="unsupportedLinkLabel" class="text-link inline-link" onclick="openUpdateURL(event);">
+        <label id="unsupportedLinkLabel" class="inline-link" onclick="openUpdateURL(event);" is="text-link">
           &unsupportedLink.label;
         </label>
       </description>
@@ -107,7 +107,7 @@
       <separator id="upgradeEvangelismSep" flex="1"/>
       <vbox flex="1">
         <hbox id="moreInfoURL">
-          <label class="text-link" id="updateMoreInfoURL"
+          <label id="updateMoreInfoURL" is="text-link"
                  value="&clickHere.label;" onclick="openUpdateURL(event);"/>
         </hbox>
       </vbox>
@@ -147,7 +147,7 @@
       <separator/>
       <label id="errorManual">&errorManual.label;</label>
       <hbox>
-        <label class="text-link" id="errorLinkLabel" value=""
+        <label id="errorLinkLabel" value="" is="text-link"
                onclick="openUpdateURL(event);"/>
       </hbox>
     </vbox>
@@ -160,7 +160,7 @@
     <vbox class="update-content" flex="1">
       <label id="bgErrorLabel">&genericBackgroundError.label;</label>
       <hbox>
-        <label id="errorExtraLinkLabel" class="text-link"
+        <label id="errorExtraLinkLabel" is="text-link"
                value="" onclick="openUpdateURL(event);"/>
       </hbox>
     </vbox>
@@ -195,7 +195,7 @@
       <hbox align="center">
         <label>&finishedBackground.name;</label>
         <label id="updateFinishedName" flex="1" crop="right" value=""/>
-        <label id="finishedBackgroundLink" class="text-link" disabled="true"
+        <label id="finishedBackgroundLink" disabled="true" is="text-link"
                value="&details.link;" onclick="openUpdateURL(event);"/>
       </hbox>
       <spacer flex="1"/>
@@ -205,7 +205,7 @@
       <label id="finishedBackgroundMoreElevatedLink"
              hidden="true">&errorManual.label;</label>
       <hbox>
-        <label class="text-link" id="finishedBackgroundMoreElevatedLinkLabel"
+        <label id="finishedBackgroundMoreElevatedLinkLabel" is="text-link"
                value="" onclick="openUpdateURL(event);" hidden="true"/>
       </hbox>
     </vbox>

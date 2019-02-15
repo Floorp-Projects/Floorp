@@ -424,3 +424,20 @@ BEGIN_TEST(testGCHandleVector) {
   return true;
 }
 END_TEST(testGCHandleVector)
+
+class Foo {
+  public:
+   Foo(int, int) {}
+   void trace(JSTracer*) {}
+};
+
+using FooVector = JS::GCVector<Foo>;
+
+BEGIN_TEST(testGCVectorEmplaceBack) {
+  JS::Rooted<FooVector> vector(cx, FooVector(cx));
+
+  CHECK(vector.emplaceBack(1, 2));
+
+  return true;
+}
+END_TEST(testGCVectorEmplaceBack)

@@ -18,8 +18,7 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
   virtual nsresult GetIntImpl(IntID aID, int32_t& aResult) override;
   virtual nsresult GetFloatImpl(FloatID aID, float& aResult) override;
   virtual bool GetFontImpl(FontID aID, nsString& aFontName,
-                           gfxFontStyle& aFontStyle,
-                           float aDevPixPerCSSPixel) override;
+                           gfxFontStyle& aFontStyle) override;
 
   virtual char16_t GetPasswordCharacterImpl() override {
     // unicode value for the bullet character, used for password textfields.

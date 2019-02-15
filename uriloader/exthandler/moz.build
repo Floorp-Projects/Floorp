@@ -110,8 +110,14 @@ if CONFIG['MOZ_ENABLE_DBUS']:
 EXTRA_COMPONENTS += [
     'HandlerService.js',
     'HandlerService.manifest',
-    'nsWebHandlerApp.js',
-    'nsWebHandlerApp.manifest',
+]
+
+EXTRA_JS_MODULES += [
+    'WebHandlerApp.jsm',
+]
+
+XPCOM_MANIFESTS += [
+    'components.conf',
 ]
 
 IPDL_SOURCES += [

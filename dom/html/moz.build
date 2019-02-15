@@ -227,9 +227,12 @@ SOURCES += [
     'PluginDocument.cpp',
 ]
 
-EXTRA_COMPONENTS += [
-    'htmlMenuBuilder.js',
-    'htmlMenuBuilder.manifest'
+EXTRA_JS_MODULES += [
+    'HTMLMenuBuilder.jsm',
+]
+
+XPCOM_MANIFESTS += [
+    'components.conf',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')

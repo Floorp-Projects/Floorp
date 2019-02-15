@@ -5504,9 +5504,8 @@ MDefinition* MWasmUnsignedToFloat32::foldsTo(TempAllocator& alloc) {
 
 MWasmCall* MWasmCall::New(TempAllocator& alloc, const wasm::CallSiteDesc& desc,
                           const wasm::CalleeDesc& callee, const Args& args,
-                          MIRType resultType, uint32_t spIncrement,
-                          MDefinition* tableIndex) {
-  MWasmCall* call = new (alloc) MWasmCall(desc, callee, spIncrement);
+                          MIRType resultType, MDefinition* tableIndex) {
+  MWasmCall* call = new (alloc) MWasmCall(desc, callee);
   call->setResultType(resultType);
 
   if (!call->argRegs_.init(alloc, args.length())) {
@@ -5534,10 +5533,10 @@ MWasmCall* MWasmCall::New(TempAllocator& alloc, const wasm::CallSiteDesc& desc,
 MWasmCall* MWasmCall::NewBuiltinInstanceMethodCall(
     TempAllocator& alloc, const wasm::CallSiteDesc& desc,
     const wasm::SymbolicAddress builtin, const ABIArg& instanceArg,
-    const Args& args, MIRType resultType, uint32_t spIncrement) {
+    const Args& args, MIRType resultType) {
   auto callee = wasm::CalleeDesc::builtinInstanceMethod(builtin);
   MWasmCall* call = MWasmCall::New(alloc, desc, callee, args, resultType,
-                                   spIncrement, nullptr);
+                                   nullptr);
   if (!call) {
     return nullptr;
   }

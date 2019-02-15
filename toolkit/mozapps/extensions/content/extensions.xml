@@ -241,7 +241,7 @@
   <binding id="creator-link">
     <content>
       <xul:label anonid="label" value="&addon.createdBy.label;"/>
-      <xul:label anonid="creator-link" class="creator-link text-link"/>
+      <xul:label anonid="creator-link" class="creator-link" is="text-link"/>
       <xul:label anonid="creator-name" class="creator-name"/>
     </content>
 
@@ -545,7 +545,7 @@
                 class="warning">
         <xul:image class="warning-icon"/>
         <xul:label anonid="warning" flex="1"/>
-        <xul:label anonid="warning-link" class="text-link"/>
+        <xul:label anonid="warning-link" is="text-link"/>
         <xul:button anonid="warning-btn" class="button-link" hidden="true"/>
         <xul:spacer flex="5000"/> <!-- Necessary to allow the message to wrap -->
       </xul:hbox>
@@ -553,7 +553,7 @@
                 class="error">
         <xul:image class="error-icon"/>
         <xul:label anonid="error" flex="1"/>
-        <xul:label anonid="error-link" class="text-link" hidden="true"/>
+        <xul:label anonid="error-link" hidden="true" is="text-link"/>
         <xul:spacer flex="5000"/> <!-- Necessary to allow the message to wrap -->
       </xul:hbox>
       <xul:hbox anonid="pending-container"
@@ -578,7 +578,7 @@
               <xul:hbox class="name-container">
                 <xul:label anonid="name" class="name" crop="end" flex="1"
                            tooltip="addonitem-tooltip" xbl:inherits="xbl:text=name"/>
-                <xul:label anonid="legacy" class="legacy-warning text-link" value="&addon.legacy.label;"/>
+                <xul:label anonid="legacy" class="legacy-warning" value="&addon.legacy.label;" is="text-link"/>
                 <xul:label class="disabled-postfix" value="&addon.disabled.postfix;"/>
                 <xul:label class="update-postfix" value="&addon.update.postfix;"/>
                 <xul:spacer flex="5000"/> <!-- Necessary to make the name crop -->

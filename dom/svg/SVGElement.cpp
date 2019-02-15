@@ -38,7 +38,6 @@
 #include "nsIFrame.h"
 #include "nsQueryObject.h"
 #include "nsLayoutUtils.h"
-#include "SVGAngle.h"
 #include "SVGAnimatedNumberList.h"
 #include "SVGAnimatedLengthList.h"
 #include "SVGAnimatedPointList.h"
@@ -52,6 +51,7 @@
 #include "SVGMotionSMILAttr.h"
 #include "nsSVGNumber2.h"
 #include "SVGNumberPair.h"
+#include "SVGOrient.h"
 #include "SVGString.h"
 #include "SVGViewBox.h"
 #include <stdarg.h>
@@ -160,12 +160,6 @@ nsresult SVGElement::Init() {
     integerPairInfo.Reset(i);
   }
 
-  AngleAttributesInfo angleInfo = GetAngleInfo();
-
-  for (i = 0; i < angleInfo.mAngleCount; i++) {
-    angleInfo.Reset(i);
-  }
-
   BooleanAttributesInfo booleanInfo = GetBooleanInfo();
 
   for (i = 0; i < booleanInfo.mBooleanCount; i++) {
@@ -176,6 +170,12 @@ nsresult SVGElement::Init() {
 
   for (i = 0; i < enumInfo.mEnumCount; i++) {
     enumInfo.Reset(i);
+  }
+
+  SVGOrient* orient = GetOrient();
+
+  if (orient) {
+    orient->Init();
   }
 
   SVGViewBox* viewBox = GetViewBox();
@@ -462,24 +462,6 @@ bool SVGElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
     }
 
     if (!foundMatch) {
-      // Check for SVGAngle attribute
-      AngleAttributesInfo angleInfo = GetAngleInfo();
-      for (i = 0; i < angleInfo.mAngleCount; i++) {
-        if (aAttribute == angleInfo.mAngleInfo[i].mName) {
-          rv = angleInfo.mAngles[i].SetBaseValueString(aValue, this, false);
-          if (NS_FAILED(rv)) {
-            angleInfo.Reset(i);
-          } else {
-            aResult.SetTo(angleInfo.mAngles[i], &aValue);
-            didSetResult = true;
-          }
-          foundMatch = true;
-          break;
-        }
-      }
-    }
-
-    if (!foundMatch) {
       // Check for SVGBoolean attribute
       BooleanAttributesInfo booleanInfo = GetBooleanInfo();
       for (i = 0; i < booleanInfo.mBooleanCount; i++) {
@@ -547,8 +529,21 @@ bool SVGElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
     }
 
     if (!foundMatch) {
-      // Check for SVGViewBox attribute
-      if (aAttribute == nsGkAtoms::viewBox) {
+      // Check for orient attribute
+      if (aAttribute == nsGkAtoms::orient) {
+        SVGOrient* orient = GetOrient();
+        if (orient) {
+          rv = orient->SetBaseValueString(aValue, this, false);
+          if (NS_FAILED(rv)) {
+            orient->Init();
+          } else {
+            aResult.SetTo(*orient, &aValue);
+            didSetResult = true;
+          }
+          foundMatch = true;
+        }
+        // Check for SVGViewBox attribute
+      } else if (aAttribute == nsGkAtoms::viewBox) {
         SVGViewBox* viewBox = GetViewBox();
         if (viewBox) {
           rv = viewBox->SetBaseValueString(aValue, this, false);
@@ -750,17 +745,6 @@ void SVGElement::UnsetAttrInternal(int32_t aNamespaceID, nsAtom* aName,
       }
     }
 
-    // Check if this is an angle attribute going away
-    AngleAttributesInfo angleInfo = GetAngleInfo();
-
-    for (uint32_t i = 0; i < angleInfo.mAngleCount; i++) {
-      if (aName == angleInfo.mAngleInfo[i].mName) {
-        MaybeSerializeAttrBeforeRemoval(aName, aNotify);
-        angleInfo.Reset(i);
-        return;
-      }
-    }
-
     // Check if this is a boolean attribute going away
     BooleanAttributesInfo boolInfo = GetBooleanInfo();
 
@@ -781,7 +765,17 @@ void SVGElement::UnsetAttrInternal(int32_t aNamespaceID, nsAtom* aName,
       }
     }
 
-    // Check if this is a nsViewBox attribute going away
+    // Check if this is an orient attribute going away
+    if (aName == nsGkAtoms::orient) {
+      SVGOrient* orient = GetOrient();
+      if (orient) {
+        MaybeSerializeAttrBeforeRemoval(aName, aNotify);
+        orient->Init();
+        return;
+      }
+    }
+
+    // Check if this is a viewBox attribute going away
     if (aName == nsGkAtoms::viewBox) {
       SVGViewBox* viewBox = GetViewBox();
       if (viewBox) {
@@ -1815,43 +1809,6 @@ void SVGElement::DidAnimateIntegerPair(uint8_t aAttrEnum) {
   }
 }
 
-SVGElement::AngleAttributesInfo SVGElement::GetAngleInfo() {
-  return AngleAttributesInfo(nullptr, nullptr, 0);
-}
-
-void SVGElement::AngleAttributesInfo::Reset(uint8_t aAttrEnum) {
-  mAngles[aAttrEnum].Init(aAttrEnum, mAngleInfo[aAttrEnum].mDefaultValue,
-                          mAngleInfo[aAttrEnum].mDefaultUnitType);
-}
-
-nsAttrValue SVGElement::WillChangeAngle(uint8_t aAttrEnum) {
-  return WillChangeValue(GetAngleInfo().mAngleInfo[aAttrEnum].mName);
-}
-
-void SVGElement::DidChangeAngle(uint8_t aAttrEnum,
-                                const nsAttrValue& aEmptyOrOldValue) {
-  AngleAttributesInfo info = GetAngleInfo();
-
-  NS_ASSERTION(info.mAngleCount > 0,
-               "DidChangeAngle on element with no angle attribs");
-  NS_ASSERTION(aAttrEnum < info.mAngleCount, "aAttrEnum out of range");
-
-  nsAttrValue newValue;
-  newValue.SetTo(info.mAngles[aAttrEnum], nullptr);
-
-  DidChangeValue(info.mAngleInfo[aAttrEnum].mName, aEmptyOrOldValue, newValue);
-}
-
-void SVGElement::DidAnimateAngle(uint8_t aAttrEnum) {
-  nsIFrame* frame = GetPrimaryFrame();
-
-  if (frame) {
-    AngleAttributesInfo info = GetAngleInfo();
-    frame->AttributeChanged(kNameSpaceID_None, info.mAngleInfo[aAttrEnum].mName,
-                            MutationEvent_Binding::SMIL);
-  }
-}
-
 SVGElement::BooleanAttributesInfo SVGElement::GetBooleanInfo() {
   return BooleanAttributesInfo(nullptr, nullptr, 0);
 }
@@ -1914,6 +1871,32 @@ void SVGElement::DidAnimateEnum(uint8_t aAttrEnum) {
   if (frame) {
     EnumAttributesInfo info = GetEnumInfo();
     frame->AttributeChanged(kNameSpaceID_None, info.mEnumInfo[aAttrEnum].mName,
+                            MutationEvent_Binding::SMIL);
+  }
+}
+
+SVGOrient* SVGElement::GetOrient() { return nullptr; }
+
+nsAttrValue SVGElement::WillChangeOrient() {
+  return WillChangeValue(nsGkAtoms::orient);
+}
+
+void SVGElement::DidChangeOrient(const nsAttrValue& aEmptyOrOldValue) {
+  SVGOrient* orient = GetOrient();
+
+  NS_ASSERTION(orient, "DidChangeOrient on element with no orient attrib");
+
+  nsAttrValue newValue;
+  newValue.SetTo(*orient, nullptr);
+
+  DidChangeValue(nsGkAtoms::orient, aEmptyOrOldValue, newValue);
+}
+
+void SVGElement::DidAnimateOrient() {
+  nsIFrame* frame = GetPrimaryFrame();
+
+  if (frame) {
+    frame->AttributeChanged(kNameSpaceID_None, nsGkAtoms::orient,
                             MutationEvent_Binding::SMIL);
   }
 }
@@ -2227,16 +2210,13 @@ UniquePtr<SMILAttr> SVGElement::GetAnimatedAttr(int32_t aNamespaceID,
       }
     }
 
-    // Angles:
-    {
-      AngleAttributesInfo info = GetAngleInfo();
-      for (uint32_t i = 0; i < info.mAngleCount; i++) {
-        if (aName == info.mAngleInfo[i].mName) {
-          return info.mAngles[i].ToSMILAttr(this);
-        }
-      }
+    // orient:
+    if (aName == nsGkAtoms::orient) {
+      SVGOrient* orient = GetOrient();
+      return orient ? orient->ToSMILAttr(this) : nullptr;
     }
 
+    // preserveAspectRatio:
     // viewBox:
     if (aName == nsGkAtoms::viewBox) {
       SVGViewBox* viewBox = GetViewBox();

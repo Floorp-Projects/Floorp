@@ -6394,17 +6394,10 @@ static void CollectScrollSnapCoordinates(nsIFrame* aFrame,
           const Position& coordPosition =
               f->StyleDisplay()->mScrollSnapCoordinate[coordNum];
           nsPoint coordPoint = edgesRect.TopLeft();
-          coordPoint += nsPoint(coordPosition.mXPosition.mLength,
-                                coordPosition.mYPosition.mLength);
-          if (coordPosition.mXPosition.mHasPercent) {
-            coordPoint.x += NSToCoordRound(coordPosition.mXPosition.mPercent *
-                                           frameRect.width);
-          }
-          if (coordPosition.mYPosition.mHasPercent) {
-            coordPoint.y += NSToCoordRound(coordPosition.mYPosition.mPercent *
-                                           frameRect.height);
-          }
-
+          coordPoint += nsPoint(coordPosition.horizontal.Resolve(
+                                    frameRect.width, NSToCoordRoundWithClamp),
+                                coordPosition.vertical.Resolve(
+                                    frameRect.height, NSToCoordRoundWithClamp));
           aOutCoords.AppendElement(coordPoint);
         }
       }
@@ -6432,16 +6425,8 @@ static layers::ScrollSnapInfo ComputeScrollSnapInfo(
   nsSize scrollPortSize = aScrollFrame.GetScrollPortRect().Size();
 
   result.mScrollSnapDestination =
-      nsPoint(styles.mScrollSnapDestinationX.mLength,
-              styles.mScrollSnapDestinationY.mLength);
-  if (styles.mScrollSnapDestinationX.mHasPercent) {
-    result.mScrollSnapDestination.x += NSToCoordFloorClamped(
-        styles.mScrollSnapDestinationX.mPercent * scrollPortSize.width);
-  }
-  if (styles.mScrollSnapDestinationY.mHasPercent) {
-    result.mScrollSnapDestination.y += NSToCoordFloorClamped(
-        styles.mScrollSnapDestinationY.mPercent * scrollPortSize.height);
-  }
+      nsPoint(styles.mScrollSnapDestinationX.Resolve(scrollPortSize.width),
+              styles.mScrollSnapDestinationY.Resolve(scrollPortSize.height));
 
   if (styles.mScrollSnapPointsX.GetUnit() != eStyleUnit_None) {
     result.mScrollSnapIntervalX =

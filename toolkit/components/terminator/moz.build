@@ -18,8 +18,15 @@ EXPORTS += [
 ]
 
 EXTRA_COMPONENTS += [
-    'nsTerminatorTelemetry.js',
     'terminator.manifest',
+]
+
+EXTRA_JS_MODULES += [
+    'TerminatorTelemetry.jsm',
+]
+
+XPCOM_MANIFESTS += [
+    'components.conf',
 ]
 
 FINAL_LIBRARY = 'xul'
