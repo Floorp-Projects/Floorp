@@ -42,3 +42,4 @@ pref(dom.animations-api.core.enabled,true) pref(dom.animations-api.implicit-keyf
 pref(dom.animations-api.core.enabled,true) pref(dom.animations-api.timelines.enabled,true) pref(dom.animations-api.implicit-keyframes.enabled,true) load 1411318-1.html
 pref(dom.animations-api.implicit-keyframes.enabled,true) load 1468294-1.html
 pref(dom.animations-api.implicit-keyframes.enabled,true) load 1467277-1.html
+load 1524480-1.html
