@@ -479,18 +479,29 @@ LexerResult nsWebPDecoder::ReadSingle(const uint8_t* aData, size_t aLength,
       }
 
       WriteState result;
-      if (noPremultiply) {
-        result = mPipe.WritePixelsToRow<uint32_t>([&]() -> NextPixel<uint32_t> {
-          MOZ_ASSERT(mFormat == SurfaceFormat::B8G8R8A8 || src[3] == 0xFF);
-          const uint32_t pixel =
-              gfxPackedPixelNoPreMultiply(src[3], src[0], src[1], src[2]);
-          src += 4;
-          return AsVariant(pixel);
-        });
+      if (mFormat == SurfaceFormat::B8G8R8A8) {
+        if (noPremultiply) {
+          result =
+              mPipe.WritePixelsToRow<uint32_t>([&]() -> NextPixel<uint32_t> {
+                const uint32_t pixel =
+                    gfxPackedPixelNoPreMultiply(src[3], src[0], src[1], src[2]);
+                src += 4;
+                return AsVariant(pixel);
+              });
+        } else {
+          result =
+              mPipe.WritePixelsToRow<uint32_t>([&]() -> NextPixel<uint32_t> {
+                const uint32_t pixel =
+                    gfxPackedPixel(src[3], src[0], src[1], src[2]);
+                src += 4;
+                return AsVariant(pixel);
+              });
+        }
       } else {
+        // We are producing a surface without transparency. Ignore the alpha
+        // channel provided to us by the library.
         result = mPipe.WritePixelsToRow<uint32_t>([&]() -> NextPixel<uint32_t> {
-          MOZ_ASSERT(mFormat == SurfaceFormat::B8G8R8A8 || src[3] == 0xFF);
-          const uint32_t pixel = gfxPackedPixel(src[3], src[0], src[1], src[2]);
+          const uint32_t pixel = gfxPackedPixel(0xFF, src[0], src[1], src[2]);
           src += 4;
           return AsVariant(pixel);
         });

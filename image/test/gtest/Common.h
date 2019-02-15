@@ -30,40 +30,6 @@ namespace image {
 // Types
 ///////////////////////////////////////////////////////////////////////////////
 
-enum TestCaseFlags {
-  TEST_CASE_DEFAULT_FLAGS = 0,
-  TEST_CASE_IS_FUZZY = 1 << 0,
-  TEST_CASE_HAS_ERROR = 1 << 1,
-  TEST_CASE_IS_TRANSPARENT = 1 << 2,
-  TEST_CASE_IS_ANIMATED = 1 << 3,
-  TEST_CASE_IGNORE_OUTPUT = 1 << 4,
-};
-
-struct ImageTestCase {
-  ImageTestCase(const char* aPath, const char* aMimeType, gfx::IntSize aSize,
-                uint32_t aFlags = TEST_CASE_DEFAULT_FLAGS)
-      : mPath(aPath),
-        mMimeType(aMimeType),
-        mSize(aSize),
-        mOutputSize(aSize),
-        mFlags(aFlags) {}
-
-  ImageTestCase(const char* aPath, const char* aMimeType, gfx::IntSize aSize,
-                gfx::IntSize aOutputSize,
-                uint32_t aFlags = TEST_CASE_DEFAULT_FLAGS)
-      : mPath(aPath),
-        mMimeType(aMimeType),
-        mSize(aSize),
-        mOutputSize(aOutputSize),
-        mFlags(aFlags) {}
-
-  const char* mPath;
-  const char* mMimeType;
-  gfx::IntSize mSize;
-  gfx::IntSize mOutputSize;
-  uint32_t mFlags;
-};
-
 struct BGRAColor {
   BGRAColor() : BGRAColor(0, 0, 0, 0) {}
 
@@ -101,6 +67,43 @@ struct BGRAColor {
   uint8_t mRed;
   uint8_t mAlpha;
   bool mPremultiplied;
+};
+
+enum TestCaseFlags {
+  TEST_CASE_DEFAULT_FLAGS = 0,
+  TEST_CASE_IS_FUZZY = 1 << 0,
+  TEST_CASE_HAS_ERROR = 1 << 1,
+  TEST_CASE_IS_TRANSPARENT = 1 << 2,
+  TEST_CASE_IS_ANIMATED = 1 << 3,
+  TEST_CASE_IGNORE_OUTPUT = 1 << 4,
+};
+
+struct ImageTestCase {
+  ImageTestCase(const char* aPath, const char* aMimeType, gfx::IntSize aSize,
+                uint32_t aFlags = TEST_CASE_DEFAULT_FLAGS)
+      : mPath(aPath),
+        mMimeType(aMimeType),
+        mSize(aSize),
+        mOutputSize(aSize),
+        mFlags(aFlags),
+        mColor(BGRAColor::Green()) {}
+
+  ImageTestCase(const char* aPath, const char* aMimeType, gfx::IntSize aSize,
+                gfx::IntSize aOutputSize,
+                uint32_t aFlags = TEST_CASE_DEFAULT_FLAGS)
+      : mPath(aPath),
+        mMimeType(aMimeType),
+        mSize(aSize),
+        mOutputSize(aOutputSize),
+        mFlags(aFlags),
+        mColor(BGRAColor::Green()) {}
+
+  const char* mPath;
+  const char* mMimeType;
+  gfx::IntSize mSize;
+  gfx::IntSize mOutputSize;
+  uint32_t mFlags;
+  BGRAColor mColor;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -436,6 +439,8 @@ ImageTestCase CorruptICOWithBadBppTestCase();
 
 ImageTestCase TransparentPNGTestCase();
 ImageTestCase TransparentGIFTestCase();
+ImageTestCase TransparentWebPTestCase();
+ImageTestCase TransparentNoAlphaHeaderWebPTestCase();
 ImageTestCase FirstFramePaddingGIFTestCase();
 ImageTestCase TransparentIfWithinICOBMPTestCase(TestCaseFlags aFlags);
 ImageTestCase NoFrameDelayGIFTestCase();

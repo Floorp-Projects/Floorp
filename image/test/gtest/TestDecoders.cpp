@@ -89,7 +89,7 @@ static void CheckDecoderResults(const ImageTestCase& aTestCase,
   }
 
   // Check the output.
-  EXPECT_TRUE(IsSolidColor(surface, BGRAColor::Green(),
+  EXPECT_TRUE(IsSolidColor(surface, aTestCase.mColor,
                            aTestCase.mFlags & TEST_CASE_IS_FUZZY ? 1 : 0));
 }
 
@@ -723,6 +723,14 @@ TEST_F(ImageDecoders, WebPDownscaleDuringDecode) {
 
 TEST_F(ImageDecoders, WebPIccSrgbMultiChunk) {
   CheckDecoderMultiChunk(GreenWebPIccSrgbTestCase());
+}
+
+TEST_F(ImageDecoders, WebPTransparentSingleChunk) {
+  CheckDecoderSingleChunk(TransparentWebPTestCase());
+}
+
+TEST_F(ImageDecoders, WebPTransparentNoAlphaHeaderSingleChunk) {
+  CheckDecoderSingleChunk(TransparentNoAlphaHeaderWebPTestCase());
 }
 
 TEST_F(ImageDecoders, AnimatedGIFSingleChunk) {
