@@ -307,7 +307,7 @@ void nsAttrValue::SetTo(const nsAttrValue& aOther) {
       if (IsSVGType(otherCont->mType)) {
         // All SVG types are just pointers to classes and will therefore have
         // the same size so it doesn't really matter which one we assign
-        cont->mValue.mSVGAngle = otherCont->mValue.mSVGAngle;
+        cont->mValue.mSVGLength = otherCont->mValue.mSVGLength;
       } else {
         MOZ_ASSERT_UNREACHABLE("unknown type stored in MiscContainer");
       }
@@ -398,8 +398,8 @@ void nsAttrValue::SetToSerialized(const nsAttrValue& aOther) {
   }
 }
 
-void nsAttrValue::SetTo(const SVGAngle& aValue, const nsAString* aSerialized) {
-  SetSVGType(eSVGAngle, &aValue, aSerialized);
+void nsAttrValue::SetTo(const SVGOrient& aValue, const nsAString* aSerialized) {
+  SetSVGType(eSVGOrient, &aValue, aSerialized);
 }
 
 void nsAttrValue::SetTo(const SVGIntegerPair& aValue,
@@ -563,13 +563,13 @@ void nsAttrValue::ToString(nsAString& aResult) const {
       aResult.AppendFloat(GetDoubleValue());
       break;
     }
-    case eSVGAngle: {
-      SVGAttrValueWrapper::ToString(GetMiscContainer()->mValue.mSVGAngle,
+    case eSVGIntegerPair: {
+      SVGAttrValueWrapper::ToString(GetMiscContainer()->mValue.mSVGIntegerPair,
                                     aResult);
       break;
     }
-    case eSVGIntegerPair: {
-      SVGAttrValueWrapper::ToString(GetMiscContainer()->mValue.mSVGIntegerPair,
+    case eSVGOrient: {
+      SVGAttrValueWrapper::ToString(GetMiscContainer()->mValue.mSVGOrient,
                                     aResult);
       break;
     }
@@ -787,7 +787,7 @@ uint32_t nsAttrValue::HashValue() const {
     default: {
       if (IsSVGType(cont->mType)) {
         // All SVG types are just pointers to classes so we can treat them alike
-        return NS_PTR_TO_INT32(cont->mValue.mSVGAngle);
+        return NS_PTR_TO_INT32(cont->mValue.mSVGLength);
       }
       MOZ_ASSERT_UNREACHABLE("unknown type stored in MiscContainer");
       return 0;
@@ -1607,7 +1607,7 @@ void nsAttrValue::SetSVGType(ValueType aType, const void* aValue,
   // will do. We'll lose type-safety but the signature of the calling
   // function should ensure we don't get anything unexpected, and once we
   // stick aValue in a union we lose type information anyway.
-  cont->mValue.mSVGAngle = static_cast<const SVGAngle*>(aValue);
+  cont->mValue.mSVGLength = static_cast<const nsSVGLength2*>(aValue);
   cont->mType = aType;
   SetMiscAtomOrString(aSerialized);
 }

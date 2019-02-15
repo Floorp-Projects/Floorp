@@ -4,14 +4,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef __NS_SVGANGLE_H__
-#define __NS_SVGANGLE_H__
+#ifndef __NS_SVGORIENT_H__
+#define __NS_SVGORIENT_H__
 
 #include "nsError.h"
+#include "SVGEnum.h"
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/SMILAttr.h"
 #include "mozilla/dom/SVGAngleBinding.h"
+#include "mozilla/dom/SVGAnimatedEnumeration.h"
+#include "mozilla/dom/SVGMarkerElementBinding.h"
 #include "mozilla/UniquePtr.h"
 
 class nsISupports;
@@ -21,32 +24,33 @@ namespace mozilla {
 class SMILValue;
 
 namespace dom {
-class nsSVGOrientType;
 class DOMSVGAngle;
 class SVGAnimatedAngle;
 class SVGAnimationElement;
 class SVGElement;
 }  // namespace dom
 
-class SVGAngle {
+class SVGOrient {
+  friend class AutoChangeOrientNotifier;
   friend class mozilla::dom::DOMSVGAngle;
   friend class mozilla::dom::SVGAnimatedAngle;
   typedef mozilla::dom::SVGElement SVGElement;
 
  public:
-  void Init(uint8_t aAttrEnum = 0xff, float aValue = 0,
-            uint8_t aUnitType =
-                mozilla::dom::SVGAngle_Binding::SVG_ANGLETYPE_UNSPECIFIED) {
-    mAnimVal = mBaseVal = aValue;
-    mAnimValUnit = mBaseValUnit = aUnitType;
-    mAttrEnum = aAttrEnum;
+  void Init() {
+    mAnimVal = mBaseVal = .0f;
+    mAnimType = mBaseType =
+        dom::SVGMarkerElement_Binding::SVG_MARKER_ORIENT_ANGLE;
+    mAnimValUnit = mBaseValUnit =
+        dom::SVGAngle_Binding::SVG_ANGLETYPE_UNSPECIFIED;
     mIsAnimated = false;
   }
 
   nsresult SetBaseValueString(const nsAString& aValue, SVGElement* aSVGElement,
                               bool aDoSetAttr);
   void GetBaseValueString(nsAString& aValue) const;
-  void GetAnimValueString(nsAString& aValue) const;
+  void GetBaseAngleValueString(nsAString& aValue) const;
+  void GetAnimAngleValueString(nsAString& aValue) const;
 
   float GetBaseValue() const {
     return mBaseVal * GetDegreesPerUnit(mBaseValUnit);
@@ -54,10 +58,13 @@ class SVGAngle {
   float GetAnimValue() const {
     return mAnimVal * GetDegreesPerUnit(mAnimValUnit);
   }
+  SVGEnumValue GetAnimType() const { return mAnimType; }
 
   void SetBaseValue(float aValue, uint8_t aUnit, SVGElement* aSVGElement,
                     bool aDoSetAttr);
+  nsresult SetBaseType(SVGEnumValue aValue, SVGElement* aSVGElement);
   void SetAnimValue(float aValue, uint8_t aUnit, SVGElement* aSVGElement);
+  void SetAnimType(SVGEnumValue aType, SVGElement* aSVGElement);
 
   uint8_t GetBaseValueUnit() const { return mBaseValUnit; }
   uint8_t GetAnimValueUnit() const { return mAnimValUnit; }
@@ -65,9 +72,11 @@ class SVGAngle {
   float GetAnimValInSpecifiedUnits() const { return mAnimVal; }
 
   static nsresult ToDOMSVGAngle(nsISupports** aResult);
-  already_AddRefed<mozilla::dom::SVGAnimatedAngle> ToDOMAnimatedAngle(
+  already_AddRefed<dom::SVGAnimatedAngle> ToDOMAnimatedAngle(
       SVGElement* aSVGElement);
-  mozilla::UniquePtr<SMILAttr> ToSMILAttr(SVGElement* aSVGElement);
+  already_AddRefed<dom::SVGAnimatedEnumeration> ToDOMAnimatedEnum(
+      SVGElement* aSVGElement);
+  UniquePtr<SMILAttr> ToSMILAttr(SVGElement* aSVGElement);
 
   static bool GetValueFromString(const nsAString& aString, float& aValue,
                                  uint16_t* aUnitType);
@@ -76,44 +85,59 @@ class SVGAngle {
  private:
   float mAnimVal;
   float mBaseVal;
+  uint8_t mAnimType;
+  uint8_t mBaseType;
   uint8_t mAnimValUnit;
   uint8_t mBaseValUnit;
-  uint8_t mAttrEnum;  // element specified tracking for attribute
   bool mIsAnimated;
 
   void SetBaseValueInSpecifiedUnits(float aValue, SVGElement* aSVGElement);
   nsresult NewValueSpecifiedUnits(uint16_t aUnitType, float aValue,
                                   SVGElement* aSVGElement);
   nsresult ConvertToSpecifiedUnits(uint16_t aUnitType, SVGElement* aSVGElement);
-  already_AddRefed<mozilla::dom::DOMSVGAngle> ToDOMBaseVal(
-      SVGElement* aSVGElement);
-  already_AddRefed<mozilla::dom::DOMSVGAngle> ToDOMAnimVal(
-      SVGElement* aSVGElement);
+  already_AddRefed<dom::DOMSVGAngle> ToDOMBaseVal(SVGElement* aSVGElement);
+  already_AddRefed<dom::DOMSVGAngle> ToDOMAnimVal(SVGElement* aSVGElement);
 
  public:
-  // We do not currently implemente a SMILAngle struct because in SVG 1.1 the
-  // only *animatable* attribute that takes an <angle> is 'orient', on the
-  // 'marker' element, and 'orient' must be special cased since it can also
-  // take the value 'auto', making it a more complex type.
+  struct DOMAnimatedEnum final : public dom::SVGAnimatedEnumeration {
+    DOMAnimatedEnum(SVGOrient* aVal, SVGElement* aSVGElement)
+        : SVGAnimatedEnumeration(aSVGElement), mVal(aVal) {}
+    ~DOMAnimatedEnum();
+
+    SVGOrient* mVal;  // kept alive because it belongs to content
+
+    using mozilla::dom::SVGAnimatedEnumeration::SetBaseVal;
+    uint16_t BaseVal() override { return Sanitize(mVal->mBaseType); }
+    void SetBaseVal(uint16_t aBaseVal, ErrorResult& aRv) override {
+      aRv = mVal->SetBaseType(aBaseVal, mSVGElement);
+    }
+    uint16_t AnimVal() override {
+      // Script may have modified animation parameters or timeline -- DOM
+      // getters need to flush any resample requests to reflect these
+      // modifications.
+      mSVGElement->FlushAnimations();
+      return Sanitize(mVal->mAnimType);
+    }
+
+   private:
+    uint16_t Sanitize(uint16_t aValue);
+  };
 
   struct SMILOrient final : public SMILAttr {
    public:
-    SMILOrient(mozilla::dom::nsSVGOrientType* aOrientType, SVGAngle* aAngle,
-               SVGElement* aSVGElement)
-        : mOrientType(aOrientType), mAngle(aAngle), mSVGElement(aSVGElement) {}
+    SMILOrient(SVGOrient* aOrient, SVGElement* aSVGElement)
+        : mOrient(aOrient), mSVGElement(aSVGElement) {}
 
     // These will stay alive because a SMILAttr only lives as long
     // as the Compositing step, and DOM elements don't get a chance to
     // die during that.
-    mozilla::dom::nsSVGOrientType* mOrientType;
-    SVGAngle* mAngle;
+    SVGOrient* mOrient;
     SVGElement* mSVGElement;
 
     // SMILAttr methods
     virtual nsresult ValueFromString(
-        const nsAString& aStr,
-        const mozilla::dom::SVGAnimationElement* aSrcElement, SMILValue& aValue,
-        bool& aPreventCachingOfSandwich) const override;
+        const nsAString& aStr, const dom::SVGAnimationElement* aSrcElement,
+        SMILValue& aValue, bool& aPreventCachingOfSandwich) const override;
     virtual SMILValue GetBaseValue() const override;
     virtual void ClearAnimValue() override;
     virtual nsresult SetAnimValue(const SMILValue& aValue) override;
@@ -122,4 +146,4 @@ class SVGAngle {
 
 }  // namespace mozilla
 
-#endif  //__NS_SVGANGLE_H__
+#endif  //__NS_SVGORIENT_H__

@@ -44,12 +44,12 @@ struct MiscContainer final {
         nsIURI* mURL;
         mozilla::AtomArray* mAtomArray;
         nsIntMargin* mIntMargin;
-        const mozilla::SVGAngle* mSVGAngle;
         const mozilla::SVGIntegerPair* mSVGIntegerPair;
         const nsSVGLength2* mSVGLength;
         const mozilla::SVGLengthList* mSVGLengthList;
         const mozilla::SVGNumberList* mSVGNumberList;
         const mozilla::SVGNumberPair* mSVGNumberPair;
+        const mozilla::SVGOrient* mSVGOrient;
         const mozilla::SVGPathData* mSVGPathData;
         const mozilla::SVGPointList* mSVGPointList;
         const mozilla::SVGAnimatedPreserveAspectRatio* mSVGPreserveAspectRatio;
