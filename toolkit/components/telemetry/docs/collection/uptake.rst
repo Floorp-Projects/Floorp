@@ -26,9 +26,10 @@ Usage
 
    const { UptakeTelemetry } = ChromeUtils.import("resource://services-common/uptake-telemetry.js", {});
 
-   UptakeTelemetry.report(source, status);
+   UptakeTelemetry.report(component, status, { source });
 
-- ``source``, a ``string`` that is an identifier for the update source (eg. ``addons-blocklist``)
+- ``component``, a ``string`` that identifies the calling component (eg. ``"remotesettings"``, ``"normandy"``). Arbitrary components have to be previously declared in the :ref:`Telemetry Events definition file <eventdefinition>`.
+- ``source``, a ``string`` to distinguish what is being pulled or updated in the component (eg. ``"blocklists/addons"``, ``"recipes/33"``)
 - ``status``, one of the following status constants:
 
   - ``UptakeTelemetry.STATUS.UP_TO_DATE``: Local content was already up-to-date with remote content.
@@ -57,12 +58,13 @@ Usage
   - ``UptakeTelemetry.STATUS.CUSTOM_5_ERROR``: Error #5 specific to this update source.
 
 
-The data is submitted to a single :ref:`keyed histogram <histogram-type-keyed>` whose id is ``UPTAKE_REMOTE_CONTENT_RESULT_1`` and the specified update ``source`` as the key.
+The data is submitted as a :ref:`Telemetry Event <eventtelemetry>`, and to a single :ref:`keyed histogram <histogram-type-keyed>` whose id is ``UPTAKE_REMOTE_CONTENT_RESULT_1`` and the specified update ``source`` as the key.
 
 Example:
 
 .. code-block:: js
 
+   const COMPONENT = "normandy";
    const UPDATE_SOURCE = "update-monitoring";
 
    let status;
@@ -74,7 +76,7 @@ Example:
                  UptakeTelemetry.STATUS.NETWORK_ERROR :
                  UptakeTelemetry.STATUS.SERVER_ERROR ;
    }
-   UptakeTelemetry.report(UPDATE_SOURCE, status);
+   UptakeTelemetry.report(COMPONENT, status, { source: UPDATE_SOURCE });
 
 
 Use-cases
@@ -88,7 +90,7 @@ The following remote data sources are already using this unified histogram.
 * plugins blocklist
 * certificate revocation
 * certificate pinning
-* :ref:`Shield Recipe client <components/normandy>`
+* :ref:`Normandy Recipe client <components/normandy>`
 
 Obviously, the goal is to eventually converge and avoid ad-hoc Telemetry probes for measuring uptake of remote content. Some notable potential use-cases are:
 
