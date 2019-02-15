@@ -180,7 +180,7 @@ void Touch::SetTouchTarget(EventTarget* aTarget) {
   mTarget = aTarget;
 }
 
-bool Touch::Equals(Touch* aTouch) {
+bool Touch::Equals(Touch* aTouch) const {
   return mRefPoint == aTouch->mRefPoint && mForce == aTouch->mForce &&
          mRotationAngle == aTouch->mRotationAngle &&
          mRadius.x == aTouch->mRadius.x && mRadius.y == aTouch->mRadius.y;
