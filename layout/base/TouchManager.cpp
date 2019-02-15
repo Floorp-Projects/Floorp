@@ -273,8 +273,8 @@ bool TouchManager::PreHandleEvent(WidgetEvent* aEvent, nsEventStatus* aStatus,
           touches.RemoveElementAt(i);
           continue;
         }
-        RefPtr<Touch> oldTouch = info.mTouch;
-        if (!touch->Equals(oldTouch)) {
+        const RefPtr<Touch> oldTouch = info.mTouch;
+        if (!oldTouch->Equals(touch)) {
           touch->mChanged = true;
           haveChanged = true;
         }
