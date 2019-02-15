@@ -1869,6 +1869,37 @@ waitForAllPaints(() => {
     await ensureElementRemoval(div);
   });
 
+  add_task(async function restyling_on_create_animation() {
+    const div = addDiv();
+    const docShell = getDocShellForObservingRestylesForWindow(window);
+
+    const animationA = div.animate(
+      { transform: ['none', 'rotate(360deg)'] },
+      100 * MS_PER_SEC
+    );
+    const animationB = div.animate({ opacity: [0, 1] }, 100 * MS_PER_SEC);
+    const animationC = div.animate(
+      { color: ['blue', 'green'] },
+      100 * MS_PER_SEC
+    );
+    const animationD = div.animate(
+      { width: ['100px', '200px'] },
+      100 * MS_PER_SEC
+    );
+    const animationE = div.animate(
+      { height: ['100px', '200px'] },
+      100 * MS_PER_SEC
+    );
+
+    const markers = docShell
+      .popProfileTimelineMarkers()
+      .filter(marker => marker.name === 'Styles' && !marker.isAnimationOnly);
+    docShell.recordProfileTimelineMarkers = false;
+
+    is(markers.length, 0, 'Creating animations should not flush styles');
+
+    await ensureElementRemoval(div);
+  });
 });
 
 </script>
