@@ -27,3 +27,9 @@ test-pref(ui.prefersReducedMotion,0) == mq_prefers_reduced_motion_reduce.html ab
 test-pref(ui.prefersReducedMotion,1) == mq_prefers_reduced_motion_reduce.html greenbox.html
 test-pref(privacy.resistFingerprinting,true) test-pref(ui.prefersReducedMotion,1) == mq_prefers_reduced_motion_reduce.html about:blank
 test-pref(privacy.resistFingerprinting,true) == mq_prefers_reduced_motion_both.html greenbox.html
+test-pref(ui.systemUsesDarkTheme,1) == mq_prefers_color_scheme.html greenbox.html
+test-pref(privacy.resistFingerprinting,true) == mq_prefers_color_scheme_light.html greenbox.html
+== mq_prefers_color_scheme_print.html greenbox-print.html
+test-pref(ui.systemUsesDarkTheme,0) == mq_prefers_color_scheme_light.html greenbox.html
+test-pref(ui.systemUsesDarkTheme,1) == mq_prefers_color_scheme_dark.html greenbox.html
+test-pref(ui.systemUsesDarkTheme,2) == mq_prefers_color_scheme_no_preference.html greenbox.html
