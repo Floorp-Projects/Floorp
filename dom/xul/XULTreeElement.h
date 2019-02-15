@@ -38,7 +38,7 @@ class XULTreeElement final : public nsXULElement {
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(XULTreeElement, nsXULElement)
 
-  nsTreeBodyFrame* GetTreeBodyFrame(bool aFlushLayout = false);
+  nsTreeBodyFrame* GetTreeBodyFrame(FlushType = FlushType::Frames);
   nsTreeBodyFrame* GetCachedTreeBodyFrame() { return mTreeBody; }
 
   already_AddRefed<nsTreeColumns> GetColumns();

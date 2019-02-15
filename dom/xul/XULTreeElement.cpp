@@ -79,7 +79,9 @@ static nsIContent* FindBodyElement(nsIContent* aParent) {
   return nullptr;
 }
 
-nsTreeBodyFrame* XULTreeElement::GetTreeBodyFrame(bool aFlushLayout) {
+nsTreeBodyFrame* XULTreeElement::GetTreeBodyFrame(FlushType aFlushType) {
+  MOZ_ASSERT(aFlushType == FlushType::Frames ||
+             aFlushType == FlushType::Layout || aFlushType == FlushType::None);
   nsCOMPtr<nsIContent> kungFuDeathGrip = this;  // keep a reference
   RefPtr<Document> doc = GetUncomposedDoc();
 
@@ -89,7 +91,7 @@ nsTreeBodyFrame* XULTreeElement::GetTreeBodyFrame(bool aFlushLayout) {
   // is true we need to make sure to flush no matter what.
   // XXXbz except that flushing style when we were not asked to flush
   // layout here breaks things.  See bug 585123.
-  if (aFlushLayout && doc) {
+  if (aFlushType == FlushType::Layout && doc) {
     doc->FlushPendingNotifications(FlushType::Layout);
   }
 
@@ -98,12 +100,11 @@ nsTreeBodyFrame* XULTreeElement::GetTreeBodyFrame(bool aFlushLayout) {
     return mTreeBody;
   }
 
-  if (!aFlushLayout && doc) {
+  if (aFlushType == FlushType::Frames && doc) {
     doc->FlushPendingNotifications(FlushType::Frames);
   }
 
-  nsCOMPtr<nsIContent> tree = FindBodyElement(this);
-  if (tree) {
+  if (nsCOMPtr<nsIContent> tree = FindBodyElement(this)) {
     mTreeBody = do_QueryFrame(tree->GetPrimaryFrame());
   }
 
@@ -252,7 +253,7 @@ void XULTreeElement::EnsureCellIsVisible(int32_t aRow, nsTreeColumn* aCol,
 }
 
 void XULTreeElement::ScrollToRow(int32_t aRow) {
-  nsTreeBodyFrame* body = GetTreeBodyFrame(true);
+  nsTreeBodyFrame* body = GetTreeBodyFrame(FlushType::Layout);
   if (!body) {
     return;
   }
