@@ -5,5 +5,5 @@
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       xmlns:html="http://www.w3.org/1999/xhtml">
-  <label id="test-xul-text-link-label" class="text-link" value="XUL text-link label" href="https://www.mozilla.com"/>
+  <label id="test-xul-text-link-label" is="text-link" value="XUL text-link label" href="https://www.mozilla.com"/>
 </page>

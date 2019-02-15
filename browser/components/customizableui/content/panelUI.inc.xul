@@ -109,7 +109,7 @@
                      hidden="true">
     <popupnotificationcontent id="update-available-notification-content" orient="vertical">
       <description id="update-available-description">&updateAvailable.message;</description>
-      <label id="update-available-whats-new" class="text-link" value="&updateAvailable.whatsnew.label;" />
+      <label id="update-available-whats-new" is="text-link" value="&updateAvailable.whatsnew.label;" />
     </popupnotificationcontent>
   </popupnotification>
 
@@ -127,7 +127,7 @@
                      hidden="true">
     <popupnotificationcontent id="update-manual-notification-content" orient="vertical">
       <description id="update-manual-description">&updateManual.message;</description>
-      <label id="update-manual-whats-new" class="text-link" value="&updateManual.whatsnew.label;" />
+      <label id="update-manual-whats-new" is="text-link" value="&updateManual.whatsnew.label;" />
     </popupnotificationcontent>
   </popupnotification>
 

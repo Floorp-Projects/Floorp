@@ -6,9 +6,12 @@
 
 BROWSER_CHROME_MANIFESTS += ['tests/browser.ini']
 
-EXTRA_COMPONENTS += [
-    'TooltipTextProvider.js',
-    'TooltipTextProvider.manifest',
+EXTRA_JS_MODULES += [
+    'TooltipTextProvider.jsm',
+]
+
+XPCOM_MANIFESTS += [
+    'components.conf',
 ]
 
 with Files('**'):

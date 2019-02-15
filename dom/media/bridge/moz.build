@@ -26,6 +26,11 @@ LOCAL_INCLUDES += [
     '/media/webrtc/trunk/',
 ]
 
+if CONFIG['MOZ_WEBRTC']:
+    XPCOM_MANIFESTS += [
+        'components.conf',
+    ]
+
 FINAL_LIBRARY = 'xul'
 
 if CONFIG['CC_TYPE'] in ('clang', 'gcc'):

@@ -397,6 +397,16 @@ TEST_P(TlsConnectGeneric, RecordSizeServerExtensionInvalid) {
   ConnectExpectAlert(client_, kTlsAlertIllegalParameter);
 }
 
+TEST_P(TlsConnectGeneric, RecordSizeServerExtensionExtra) {
+  EnsureTlsSetup();
+  server_->SetOption(SSL_RECORD_SIZE_LIMIT, 1000);
+  static const uint8_t v[] = {0x01, 0x00, 0x00};
+  auto replace = MakeTlsFilter<TlsExtensionReplacer>(
+      server_, ssl_record_size_limit_xtn, DataBuffer(v, sizeof(v)));
+  replace->EnableDecryption();
+  ConnectExpectAlert(client_, kTlsAlertDecodeError);
+}
+
 class RecordSizeDefaultsTest : public ::testing::Test {
  public:
   void SetUp() {

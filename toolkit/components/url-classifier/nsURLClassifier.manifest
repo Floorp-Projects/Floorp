@@ -1,6 +1,0 @@
-component {26a4a019-2827-4a89-a85c-5931a678823a} nsUrlClassifierLib.js
-contract @mozilla.org/url-classifier/jslib;1 {26a4a019-2827-4a89-a85c-5931a678823a}
-component {ca168834-cc00-48f9-b83c-fd018e58cae3} nsUrlClassifierListManager.js
-contract @mozilla.org/url-classifier/listmanager;1 {ca168834-cc00-48f9-b83c-fd018e58cae3}
-component {9111de73-9322-4bfc-8b65-2b727f3e6ec8} nsUrlClassifierHashCompleter.js
-contract @mozilla.org/url-classifier/hashcompleter;1 {9111de73-9322-4bfc-8b65-2b727f3e6ec8}

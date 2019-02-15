@@ -40,14 +40,6 @@
     }                                                \
   }
 
-// 7e4bb6ad-2fc4-4dc6-89ef-23e8e5ccf980
-#define NS_BROWSER_ABOUT_REDIRECTOR_CID              \
-  {                                                  \
-    0x7e4bb6ad, 0x2fc4, 0x4dc6, {                    \
-      0x89, 0xef, 0x23, 0xe8, 0xe5, 0xcc, 0xf9, 0x80 \
-    }                                                \
-  }
-
 // {6DEB193C-F87D-4078-BC78-5E64655B4D62}
 #define NS_BROWSERDIRECTORYPROVIDER_CID              \
   {                                                  \
@@ -55,14 +47,3 @@
       0xbc, 0x78, 0x5e, 0x64, 0x65, 0x5b, 0x4d, 0x62 \
     }                                                \
   }
-
-#if defined(MOZ_WIDGET_COCOA)
-#  define NS_MACATTRIBUTIONSERVICE_CONTRACTID "@mozilla.org/mac-attribution;1"
-
-#  define NS_MACATTRIBUTIONSERVICE_CID                 \
-    {                                                  \
-      0x6FC66A78, 0x6CBC, 0x4B3F, {                    \
-        0xB7, 0xBA, 0x37, 0x92, 0x89, 0xB2, 0x92, 0x76 \
-      }                                                \
-    }
-#endif

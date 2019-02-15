@@ -453,22 +453,6 @@ def set_gecko_property(ffi_name, expr):
     }
 </%def>
 
-<%def name="impl_position(ident, gecko_ffi_name)">
-    #[allow(non_snake_case)]
-    pub fn set_${ident}(&mut self, v: longhands::${ident}::computed_value::T) {
-        ${set_gecko_property("%s.mXPosition" % gecko_ffi_name, "v.horizontal.into()")}
-        ${set_gecko_property("%s.mYPosition" % gecko_ffi_name, "v.vertical.into()")}
-    }
-    <%call expr="impl_simple_copy(ident, gecko_ffi_name)"></%call>
-    #[allow(non_snake_case)]
-    pub fn clone_${ident}(&self) -> longhands::${ident}::computed_value::T {
-        longhands::${ident}::computed_value::T {
-            horizontal: self.gecko.${gecko_ffi_name}.mXPosition.into(),
-            vertical: self.gecko.${gecko_ffi_name}.mYPosition.into(),
-        }
-    }
-</%def>
-
 <%def name="impl_color(ident, gecko_ffi_name)">
 <%call expr="impl_color_setter(ident, gecko_ffi_name)"></%call>
 <%call expr="impl_color_copy(ident, gecko_ffi_name)"></%call>
@@ -1385,13 +1369,13 @@ impl Clone for ${style_struct.gecko_struct_name} {
         "length::NonNegativeLengthOrAuto": impl_style_coord,
         "length::NonNegativeLengthPercentageOrNormal": impl_style_coord,
         "FillRule": impl_simple,
-        "FlexBasis": impl_style_coord,
+        "FlexBasis": impl_simple,
         "Length": impl_absolute_length,
         "LengthOrNormal": impl_style_coord,
         "LengthPercentage": impl_simple,
         "LengthPercentageOrAuto": impl_style_coord,
-        "MaxSize": impl_style_coord,
-        "Size": impl_style_coord,
+        "MaxSize": impl_simple,
+        "Size": impl_simple,
         "MozScriptMinSize": impl_absolute_length,
         "MozScriptSizeMultiplier": impl_simple,
         "NonNegativeLengthPercentage": impl_simple,
@@ -1401,7 +1385,7 @@ impl Clone for ${style_struct.gecko_struct_name} {
         "OverflowWrap": impl_simple,
         "OverflowAnchor": impl_simple,
         "Perspective": impl_style_coord,
-        "Position": impl_position,
+        "Position": impl_simple,
         "RGBAColor": impl_rgba_color,
         "SVGLength": impl_svg_length,
         "SVGOpacity": impl_svg_opacity,
@@ -3095,11 +3079,7 @@ fn static_assert() {
         where I: IntoIterator<Item = longhands::scroll_snap_coordinate::computed_value::single_value::T>,
               I::IntoIter: ExactSizeIterator
     {
-        let iter = v.into_iter().map(|c| structs::mozilla::Position {
-            mXPosition: c.horizontal.into(),
-            mYPosition: c.vertical.into(),
-        });
-        self.gecko.mScrollSnapCoordinate.assign_from_iter_pod(iter);
+        self.gecko.mScrollSnapCoordinate.assign_from_iter_pod(v.into_iter());
     }
 
     pub fn copy_scroll_snap_coordinate_from(&mut self, other: &Self) {
@@ -3112,7 +3092,7 @@ fn static_assert() {
     }
 
     pub fn clone_scroll_snap_coordinate(&self) -> longhands::scroll_snap_coordinate::computed_value::T {
-        let vec = self.gecko.mScrollSnapCoordinate.iter().map(|f| f.into()).collect();
+        let vec = self.gecko.mScrollSnapCoordinate.iter().cloned().collect();
         longhands::scroll_snap_coordinate::computed_value::List(vec)
     }
 
@@ -3759,7 +3739,7 @@ fn static_assert() {
     <% impl_simple_image_array_property("clip", shorthand, image_layers_field, "mClip", struct_name) %>
     <% impl_simple_image_array_property("origin", shorthand, image_layers_field, "mOrigin", struct_name) %>
 
-    % for orientation in ["x", "y"]:
+    % for (orientation, keyword) in [("x", "horizontal"), ("y", "vertical")]:
     pub fn copy_${shorthand}_position_${orientation}_from(&mut self, other: &Self) {
         use crate::gecko_bindings::structs::nsStyleImageLayers_LayerType as LayerType;
 
@@ -3774,8 +3754,7 @@ fn static_assert() {
         for (layer, other) in self.gecko.${image_layers_field}.mLayers.iter_mut()
                                   .zip(other.gecko.${image_layers_field}.mLayers.iter())
                                   .take(count as usize) {
-            layer.mPosition.m${orientation.upper()}Position
-                = other.mPosition.m${orientation.upper()}Position;
+            layer.mPosition.${keyword} = other.mPosition.${keyword};
         }
         self.gecko.${image_layers_field}.mPosition${orientation.upper()}Count = count;
     }
@@ -3789,7 +3768,7 @@ fn static_assert() {
         longhands::${shorthand}_position_${orientation}::computed_value::List(
             self.gecko.${image_layers_field}.mLayers.iter()
                 .take(self.gecko.${image_layers_field}.mPosition${orientation.upper()}Count as usize)
-                .map(|position| position.mPosition.m${orientation.upper()}Position.into())
+                .map(|position| position.mPosition.${keyword})
                 .collect()
         )
     }
@@ -3812,86 +3791,18 @@ fn static_assert() {
         self.gecko.${image_layers_field}.mPosition${orientation[0].upper()}Count = v.len() as u32;
         for (servo, geckolayer) in v.zip(self.gecko.${image_layers_field}
                                                            .mLayers.iter_mut()) {
-            geckolayer.mPosition.m${orientation[0].upper()}Position = servo.into();
+            geckolayer.mPosition.${keyword} = servo;
         }
     }
     % endfor
 
     <%self:simple_image_array_property name="size" shorthand="${shorthand}" field_name="mSize">
-        use crate::gecko_bindings::structs::nsStyleImageLayers_Size_Dimension;
-        use crate::gecko_bindings::structs::nsStyleImageLayers_Size_DimensionType;
-        use crate::gecko_bindings::structs::{nsStyleCoord_CalcValue, nsStyleImageLayers_Size};
-        use crate::values::generics::background::BackgroundSize;
-
-        let mut width = nsStyleCoord_CalcValue::new();
-        let mut height = nsStyleCoord_CalcValue::new();
-
-        let (w_type, h_type) = match servo {
-            BackgroundSize::Explicit { width: explicit_width, height: explicit_height } => {
-                let mut w_type = nsStyleImageLayers_Size_DimensionType::eAuto;
-                let mut h_type = nsStyleImageLayers_Size_DimensionType::eAuto;
-                if let Some(w) = explicit_width.to_calc_value() {
-                    width = w;
-                    w_type = nsStyleImageLayers_Size_DimensionType::eLengthPercentage;
-                }
-                if let Some(h) = explicit_height.to_calc_value() {
-                    height = h;
-                    h_type = nsStyleImageLayers_Size_DimensionType::eLengthPercentage;
-                }
-                (w_type, h_type)
-            }
-            BackgroundSize::Cover => {
-                (
-                    nsStyleImageLayers_Size_DimensionType::eCover,
-                    nsStyleImageLayers_Size_DimensionType::eCover,
-                )
-            },
-            BackgroundSize::Contain => {
-                (
-                    nsStyleImageLayers_Size_DimensionType::eContain,
-                    nsStyleImageLayers_Size_DimensionType::eContain,
-                )
-            },
-        };
-
-        nsStyleImageLayers_Size {
-            mWidth: nsStyleImageLayers_Size_Dimension { _base: width },
-            mHeight: nsStyleImageLayers_Size_Dimension { _base: height },
-            mWidthType: w_type as u8,
-            mHeightType: h_type as u8,
-        }
+        servo
     </%self:simple_image_array_property>
 
     pub fn clone_${shorthand}_size(&self) -> longhands::${shorthand}_size::computed_value::T {
-        use crate::gecko_bindings::structs::nsStyleCoord_CalcValue as CalcValue;
-        use crate::gecko_bindings::structs::nsStyleImageLayers_Size_DimensionType as DimensionType;
-        use crate::values::computed::NonNegativeLengthPercentageOrAuto;
-        use crate::values::generics::background::BackgroundSize;
-
-        fn to_servo(value: CalcValue, ty: u8) -> NonNegativeLengthPercentageOrAuto {
-            if ty == DimensionType::eAuto as u8 {
-                NonNegativeLengthPercentageOrAuto::auto()
-            } else {
-                debug_assert_eq!(ty, DimensionType::eLengthPercentage as u8);
-                value.into()
-            }
-        }
-
         longhands::${shorthand}_size::computed_value::List(
-            self.gecko.${image_layers_field}.mLayers.iter().map(|ref layer| {
-                if DimensionType::eCover as u8 == layer.mSize.mWidthType {
-                    debug_assert_eq!(layer.mSize.mHeightType, DimensionType::eCover as u8);
-                    return BackgroundSize::Cover
-                }
-                if DimensionType::eContain as u8 == layer.mSize.mWidthType {
-                    debug_assert_eq!(layer.mSize.mHeightType, DimensionType::eContain as u8);
-                    return BackgroundSize::Contain
-                }
-                BackgroundSize::Explicit {
-                    width: to_servo(layer.mSize.mWidth._base, layer.mSize.mWidthType),
-                    height: to_servo(layer.mSize.mHeight._base, layer.mSize.mHeightType),
-                }
-            }).collect()
+            self.gecko.${image_layers_field}.mLayers.iter().map(|layer| layer.mSize).collect()
         )
     }
 

@@ -84,7 +84,7 @@
       <popupnotificationheader id="cfr-notification-header">
         <stack id="cfr-notification-header-stack">
           <description id="cfr-notification-header-label"></description>
-          <label id="cfr-notification-header-link" class="text-link">
+          <label id="cfr-notification-header-link" is="text-link">
             <xul:image id="cfr-notification-header-image"/>
           </label>
         </stack>
@@ -99,7 +99,7 @@
           <hbox id="cfr-notification-footer-empty-stars"/>
           <label id="cfr-notification-footer-users"/>
           <spacer id="cfr-notification-footer-spacer" hidden="true"/>
-          <label id="cfr-notification-footer-learn-more-link" class="text-link"/>
+          <label id="cfr-notification-footer-learn-more-link" is="text-link"/>
         </hbox>
       </popupnotificationfooter>
     </popupnotification>

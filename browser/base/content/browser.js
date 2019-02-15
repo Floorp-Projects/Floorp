@@ -1738,7 +1738,7 @@ var gBrowserInit = {
    * The functions scheduled here will fire from idle callbacks
    * once every window has finished being restored by session
    * restore, and after the equivalent only-once tasks
-   * have run (from _scheduleStartupIdleTasks in nsBrowserGlue.js).
+   * have run (from _scheduleStartupIdleTasks in BrowserGlue.jsm).
    */
   _schedulePerWindowIdleTasks() {
     // Bail out if the window has been closed in the meantime.

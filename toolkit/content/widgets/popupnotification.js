@@ -102,7 +102,7 @@ class MozPopupNotification extends MozXULElement {
             </vbox>
             <toolbarbutton class="messageCloseButton close-icon popup-notification-closebutton tabbable" inherits="oncommand=closebuttoncommand,hidden=closebuttonhidden" tooltiptext="&closeNotification.tooltip;"></toolbarbutton>
           </hbox>
-          <label class="text-link popup-notification-learnmore-link" inherits="onclick=learnmoreclick,href=learnmoreurl">&learnMore;</label>
+          <label class="popup-notification-learnmore-link" inherits="onclick=learnmoreclick,href=learnmoreurl" is="text-link">&learnMore;</label>
           <checkbox class="popup-notification-checkbox" oncommand="PopupNotifications._onCheckboxCommand(event)"></checkbox>
           <description class="popup-notification-warning" inherits="hidden=warninghidden,text=warninglabel"></description>
         </vbox>

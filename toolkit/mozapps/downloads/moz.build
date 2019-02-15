@@ -9,14 +9,14 @@ with Files('**'):
 
 TEST_DIRS += ['tests']
 
-EXTRA_COMPONENTS += [
-    'nsHelperAppDlg.js',
-    'nsHelperAppDlg.manifest',
-]
-
 EXTRA_JS_MODULES += [
     'DownloadLastDir.jsm',
     'DownloadUtils.jsm',
+    'HelperAppDlg.jsm',
+]
+
+XPCOM_MANIFESTS += [
+    'components.conf',
 ]
 
 JAR_MANIFESTS += ['jar.mn']
