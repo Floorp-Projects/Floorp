@@ -489,7 +489,8 @@ nsresult LoadInfoToLoadInfoArgs(nsILoadInfo* aLoadInfo,
       aLoadInfo->GetServiceWorkerTaintingSynthesized(),
       aLoadInfo->GetDocumentHasUserInteracted(),
       aLoadInfo->GetDocumentHasLoaded(), cspNonce,
-      aLoadInfo->GetIsFromProcessingFrameAttributes());
+      aLoadInfo->GetIsFromProcessingFrameAttributes(),
+      aLoadInfo->GetOpenerPolicy());
 
   return NS_OK;
 }
@@ -651,6 +652,8 @@ nsresult LoadInfoArgsToLoadInfo(
     loadInfo->SetIsFromProcessingFrameAttributes();
   }
 
+  loadInfo->SetOpenerPolicy(loadInfoArgs.openerPolicy());
+
   loadInfo.forget(outLoadInfo);
   return NS_OK;
 }
@@ -662,8 +665,8 @@ void LoadInfoToParentLoadInfoForwarder(
         false, void_t(), nsILoadInfo::TAINTING_BASIC,
         false,  // serviceWorkerTaintingSynthesized
         false,  // documentHasUserInteracted
-        false   // documentHasLoaded
-    );
+        false,  // documentHasLoaded
+        nsILoadInfo::OPENER_POLICY_NULL);
     return;
   }
 
@@ -676,11 +679,14 @@ void LoadInfoToParentLoadInfoForwarder(
   uint32_t tainting = nsILoadInfo::TAINTING_BASIC;
   Unused << aLoadInfo->GetTainting(&tainting);
 
+  nsILoadInfo::CrossOriginOpenerPolicy openerPolicy =
+      aLoadInfo->GetOpenerPolicy();
+
   *aForwarderArgsOut = ParentLoadInfoForwarderArgs(
       aLoadInfo->GetAllowInsecureRedirectToDataURI(), ipcController, tainting,
       aLoadInfo->GetServiceWorkerTaintingSynthesized(),
       aLoadInfo->GetDocumentHasUserInteracted(),
-      aLoadInfo->GetDocumentHasLoaded());
+      aLoadInfo->GetDocumentHasLoaded(), openerPolicy);
 }
 
 nsresult MergeParentLoadInfoForwarder(
@@ -708,6 +714,8 @@ nsresult MergeParentLoadInfoForwarder(
   } else {
     aLoadInfo->MaybeIncreaseTainting(aForwarderArgs.tainting());
   }
+
+  // TODO: merge openerPolicy
 
   MOZ_ALWAYS_SUCCEEDS(aLoadInfo->SetDocumentHasUserInteracted(
       aForwarderArgs.documentHasUserInteracted()));
