@@ -4,14 +4,13 @@
 
 #![deny(missing_docs)]
 
-extern crate serde_bytes;
-
-use font::{FontInstanceKey, FontInstanceData, FontKey, FontTemplate};
-use std::sync::Arc;
-use {DeviceIntPoint, DeviceIntRect, DeviceIntSize, LayoutIntRect};
-use {BlobDirtyRect, IdNamespace, TileOffset, TileSize};
 use euclid::{size2, TypedRect, num::Zero};
 use std::ops::{Add, Sub};
+use std::sync::Arc;
+// local imports
+use api::{IdNamespace, TileSize};
+use font::{FontInstanceKey, FontInstanceData, FontKey, FontTemplate};
+use units::*;
 
 /// An opaque identifier describing an image registered with WebRender.
 /// This is used as a handle to reference images, and is used as the
