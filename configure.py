@@ -14,7 +14,10 @@ import textwrap
 
 base_dir = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, os.path.join(base_dir, 'python', 'mozbuild'))
-from mozbuild.configure import ConfigureSandbox
+from mozbuild.configure import (
+    ConfigureSandbox,
+    TRACE,
+)
 from mozbuild.pythonutil import iter_modules_in_path
 from mozbuild.backend.configenvironment import PartialConfigEnvironment
 from mozbuild.util import (
@@ -26,7 +29,12 @@ import mozpack.path as mozpath
 
 def main(argv):
     config = {}
+
     sandbox = ConfigureSandbox(config, os.environ, argv)
+
+    if os.environ.get('MOZ_CONFIGURE_TRACE'):
+        sandbox._logger.setLevel(TRACE)
+
     sandbox.run(os.path.join(os.path.dirname(__file__), 'moz.configure'))
 
     if sandbox._help:
