@@ -2584,7 +2584,7 @@ class DiscoveryStreamAdmin extends react__WEBPACK_IMPORTED_MODULE_4___default.a.
         react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(
           "td",
           null,
-          relativeTime(feeds[feed.url] ? feeds[feed.url].lastUpdated : null) || "(no data)"
+          relativeTime(feeds.data[feed.url] ? feeds.data[feed.url].lastUpdated : null) || "(no data)"
         )
       )
     );
@@ -7783,7 +7783,15 @@ function layoutRender(layout, feeds, spocs) {
         return component;
       }
 
-      return Object.assign({}, component, { data: maybeInjectSpocs(feeds.data[component.feed.url].data, component.spocs) });
+      let { data } = feeds.data[component.feed.url];
+
+      if (component && component.properties && component.properties.offset) {
+        data = Object.assign({}, data, {
+          recommendations: data.recommendations.slice(component.properties.offset)
+        });
+      }
+
+      return Object.assign({}, component, { data: maybeInjectSpocs(data, component.spocs) });
     })
   }));
 });

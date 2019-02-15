@@ -106,19 +106,84 @@ describe("DiscoveryStreamFeed", () => {
   });
 
   describe("#loadComponentFeeds", () => {
-    it("should populate feeds cache", async () => {
-      const fakeComponents = {components: [{feed: {url: "foo.com"}}]};
-      const fakeLayout = [fakeComponents, {components: [{}]}, {}];
-      const fakeDiscoveryStream = {DiscoveryStream: {layout: fakeLayout}};
+    let fakeCache;
+    let fakeDiscoveryStream;
+    beforeEach(() => {
+      fakeDiscoveryStream = {
+        DiscoveryStream: {
+          layout: [
+            {components: [{feed: {url: "foo.com"}}]},
+            {components: [{}]},
+            {},
+          ],
+        },
+      };
+      fakeCache = {};
       sandbox.stub(feed.store, "getState").returns(fakeDiscoveryStream);
       sandbox.stub(feed.cache, "set").returns(Promise.resolve());
-      const fakeCache = {feeds: {"foo.com": {"lastUpdated": Date.now(), "data": "data"}}};
+    });
+
+    afterEach(() => {
+      sandbox.restore();
+    });
+
+    it("should not dispatch updates when layout is not defined", async () => {
+      fakeDiscoveryStream = {
+        DiscoveryStream: {},
+      };
+      feed.store.getState.returns(fakeDiscoveryStream);
+      sandbox.spy(feed.store, "dispatch");
+
+      await feed.loadComponentFeeds(feed.store.dispatch);
+
+      assert.notCalled(feed.store.dispatch);
+    });
+
+    it("should populate feeds cache", async () => {
+      fakeCache = {feeds: {"foo.com": {"lastUpdated": Date.now(), "data": "data"}}};
       sandbox.stub(feed.cache, "get").returns(Promise.resolve(fakeCache));
 
       await feed.loadComponentFeeds(feed.store.dispatch);
 
       assert.calledWith(feed.cache.set, "feeds", {"foo.com": {"data": "data", "lastUpdated": 0}});
     });
+
+    it("should send at.DISCOVERY_STREAM_FEEDS_UPDATE with new feed data",
+      async () => {
+        sandbox.stub(feed.cache, "get").returns(Promise.resolve(fakeCache));
+        sandbox.spy(feed.store, "dispatch");
+
+        await feed.loadComponentFeeds(feed.store.dispatch);
+
+        assert.calledWith(feed.store.dispatch, {
+          type: at.DISCOVERY_STREAM_FEEDS_UPDATE,
+          data: {"foo.com": null},
+        });
+      });
+
+    it("should return number of promises equal to unique urls",
+      async () => {
+        sandbox.stub(feed.cache, "get").returns(Promise.resolve(fakeCache));
+        sandbox.stub(global.Promise, "all").resolves();
+        fakeDiscoveryStream = {
+          DiscoveryStream: {
+            layout: [
+              {components: [{feed: {url: "foo.com"}}, {feed: {url: "bar.com"}}]},
+              {components: [{feed: {url: "foo.com"}}]},
+              {},
+              {components: [{feed: {url: "baz.com"}}]},
+            ],
+          },
+        };
+        feed.store.getState.returns(fakeDiscoveryStream);
+
+        await feed.loadComponentFeeds(feed.store.dispatch);
+
+        assert.calledOnce(global.Promise.all);
+        const {args} = global.Promise.all.firstCall;
+        assert.equal(args[0].length, 3);
+      }
+    );
   });
 
   describe("#getComponentFeed", () => {

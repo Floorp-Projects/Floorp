@@ -47,6 +47,16 @@ describe("selectLayoutRender", () => {
     assert.deepEqual(result[0].components[0], FAKE_LAYOUT[0].components[0]);
   });
 
+  it("should return feed data offset by layout set prop", () => {
+    const fakeLayout = [{width: 3, components: [{type: "foo", properties: {offset: 1}, feed: {url: "foo.com"}}]}];
+    store.dispatch({type: at.DISCOVERY_STREAM_LAYOUT_UPDATE, data: {layout: fakeLayout}});
+    store.dispatch({type: at.DISCOVERY_STREAM_FEEDS_UPDATE, data: FAKE_FEEDS});
+
+    const result = selectLayoutRender(store.getState());
+
+    assert.deepEqual(result[0].components[0].data, {recommendations: ["bar"]});
+  });
+
   it("should return spoc result for rolls below the probability", () => {
     const fakeSpocConfig = {positions: [{index: 0}, {index: 1}], probability: 0.5};
     const fakeLayout = [{width: 3, components: [{type: "foo", feed: {url: "foo.com"}, spocs: fakeSpocConfig}]}];
