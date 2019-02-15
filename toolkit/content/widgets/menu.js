@@ -111,18 +111,13 @@ MozXULElement.implementCustomInterface(MozMenuBase, [Ci.nsIDOMXULContainerElemen
 // The <menucaption> element is used for rendering <html:optgroup> inside of <html:select>,
 // See SelectParentHelper.jsm.
 class MozMenuCaption extends MozMenuBase {
-  static get observedAttributes() {
-    return [
-      "selected",
-      "disabled",
-      "checked",
-      "image",
-      "validate",
-      "src",
-      "label",
-      "crop",
-      "highlightable",
-    ];
+  static get inheritedAttributes() {
+    return {
+      ".menu-iconic-left": "selected,disabled,checked",
+      ".menu-iconic-icon": "src=image,validate,src",
+      ".menu-iconic-text": "value=label,crop,highlightable",
+      ".menu-iconic-highlightable-text": "text=label,crop,highlightable",
+    };
   }
 
   _updateAttributes() {
@@ -148,17 +143,13 @@ class MozMenuCaption extends MozMenuBase {
   connectedCallback() {
     this.textContent = "";
     this.appendChild(MozXULElement.parseXULToFragment(`
-      <hbox class="menu-iconic-left" align="center" pack="center" inherits="selected,disabled,checked" role="none">
-        <image class="menu-iconic-icon" inherits="src=image,validate,src" role="none"></image>
+      <hbox class="menu-iconic-left" align="center" pack="center" role="none">
+        <image class="menu-iconic-icon" role="none"></image>
       </hbox>
-      <label class="menu-iconic-text" flex="1" inherits="value=label,crop,highlightable" crop="right" role="none"></label>
-      <label class="menu-iconic-highlightable-text" inherits="text=label,crop,highlightable" crop="right" role="none"></label>
+      <label class="menu-iconic-text" flex="1" crop="right" role="none"></label>
+      <label class="menu-iconic-highlightable-text" crop="right" role="none"></label>
     `));
-    this._inheritedAttributeMap = new Map();
-    for (let el of this.querySelectorAll("[inherits]")) {
-      this._inheritedAttributeMap.set(el, el.getAttribute("inherits").split(","));
-    }
-    this._updateAttributes();
+    this.initializeAttributeInheritance();
   }
 }
 
