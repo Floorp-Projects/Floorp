@@ -68,8 +68,8 @@ class ActionBusFactory private constructor(val owner: LifecycleOwner) {
 
     internal val observer = object : LifecycleObserver {
 
-        @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
-        fun onStop() {
+        @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
+        fun onDestroy() {
             map.forEach { entry -> entry.value.onComplete() }
             buses.remove(owner)
         }
@@ -113,7 +113,7 @@ class ActionBusFactory private constructor(val owner: LifecycleOwner) {
     }
 
     /**
-     * getDestroyObservable observes to Lifecycle owner and fires during ON_STOP
+     * getDestroyObservable observes to Lifecycle owner and fires during ON_DESTROY
      */
     fun getDestroyObservable(): Observable<Unit> {
         return owner.createDestroyObservable()
@@ -149,7 +149,7 @@ inline fun LifecycleOwner?.createDestroyObservable(): Observable<Unit> {
             return@create
         }
         this.lifecycle.addObserver(object : LifecycleObserver {
-            @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
+            @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
             fun emitDestroy() {
                 if (emitter.isDisposed) {
                     emitter.onNext(kotlin.Unit)
