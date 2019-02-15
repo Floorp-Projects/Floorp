@@ -7128,7 +7128,7 @@ class SafeAnchor_SafeAnchor extends external_React_default.a.PureComponent {
 
     const isAllowed = ["http:", "https:"].includes(protocol);
     if (!isAllowed) {
-      console.warn(`${protocol} is not allowed for anchor targets.`); // eslint-disable-line no-console
+      console.warn(`${url} is not allowed for anchor targets.`); // eslint-disable-line no-console
       return "";
     }
     return url;
@@ -7290,6 +7290,7 @@ var external_ReactRedux_ = __webpack_require__(24);
 // CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/DSMessage/DSMessage.jsx
 
 
+
 class DSMessage_DSMessage extends external_React_default.a.PureComponent {
   render() {
     let hasSubtitleAndOrLink = this.props.link_text && this.props.link_url;
@@ -7317,8 +7318,8 @@ class DSMessage_DSMessage extends external_React_default.a.PureComponent {
           this.props.subtitle
         ),
         this.props.link_text && this.props.link_url && external_React_default.a.createElement(
-          "a",
-          { href: this.props.link_url },
+          SafeAnchor_SafeAnchor,
+          { url: this.props.link_url },
           this.props.link_text
         )
       ),
@@ -7596,6 +7597,7 @@ var ImpressionStats = __webpack_require__(30);
 // CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/Navigation/Navigation.jsx
 
 
+
 class Navigation_Topic extends external_React_default.a.PureComponent {
   render() {
     const { url, name } = this.props;
@@ -7603,8 +7605,8 @@ class Navigation_Topic extends external_React_default.a.PureComponent {
       "li",
       null,
       external_React_default.a.createElement(
-        "a",
-        { key: name, href: url },
+        SafeAnchor_SafeAnchor,
+        { key: name, url: url },
         name
       )
     );

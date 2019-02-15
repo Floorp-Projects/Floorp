@@ -1,4 +1,5 @@
 import React from "react";
+import {SafeAnchor} from "../SafeAnchor/SafeAnchor";
 
 export class DSMessage extends React.PureComponent {
   render() {
@@ -16,7 +17,7 @@ export class DSMessage extends React.PureComponent {
         { hasSubtitleAndOrLink && (
           <p className="subtitle">
             {this.props.subtitle && (<span>{this.props.subtitle}</span>)}
-            {this.props.link_text && this.props.link_url && (<a href={this.props.link_url}>{this.props.link_text}</a>)}
+            {this.props.link_text && this.props.link_url && (<SafeAnchor url={this.props.link_url}>{this.props.link_text}</SafeAnchor>)}
           </p>
         )}
         <hr className="ds-hr" />
