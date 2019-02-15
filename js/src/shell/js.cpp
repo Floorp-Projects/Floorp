@@ -10543,6 +10543,15 @@ static MOZ_MUST_USE bool ReportUnhandledRejections(JSContext* cx) {
       return false;
     }
 
+    if (!obj->is<PromiseObject>()) {
+      FILE* fp = ErrorFilePointer();
+      fputs(
+          "Unhandled rejection: dead proxy found in unhandled "
+          "rejections set\n",
+          fp);
+      continue;
+    }
+
     Handle<PromiseObject*> promise = obj.as<PromiseObject>();
 
     AutoRealm ar2(cx, promise);
