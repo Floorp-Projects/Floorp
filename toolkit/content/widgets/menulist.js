@@ -56,15 +56,6 @@ class MozMenuList extends MenuBaseControl {
     }, { mozSystemGroup: true });
   }
 
-  static get inheritedAttributes() {
-    return {
-      ".menulist-icon": "src=image",
-      ".menulist-label": "value=label,crop,accesskey,highlightable",
-      ".menulist-highlightable-label": "text=label,crop,accesskey,highlightable",
-      ".menulist-dropmarker": "disabled,open",
-    };
-  }
-
   connectedCallback() {
     if (this.delayConnectedCallback()) {
       return;
@@ -74,8 +65,9 @@ class MozMenuList extends MenuBaseControl {
       this.prepend(MozMenuList.fragment.cloneNode(true));
       this._labelBox = this.children[0];
       this._dropmarker = this.children[1];
-      this.initializeAttributeInheritance();
     }
+
+    this._updateAttributes();
 
     this.mSelectedInternal = null;
     this.mAttributeObserver = null;
@@ -368,6 +360,41 @@ class MozMenuList extends MenuBaseControl {
       this._labelBox = null;
       this._dropmarker = null;
     }
+  }
+
+  static get observedAttributes() {
+    return ["label", "crop", "accesskey", "highlightable", "image", "disabled",
+            "open"];
+  }
+
+  attributeChangedCallback() {
+    if (this.isConnectedAndReady) {
+      this._updateAttributes();
+    }
+  }
+
+  _updateAttributes() {
+    if (!this._labelBox) {
+      return;
+    }
+
+    let icon = this._labelBox.querySelector(".menulist-icon");
+    this.inheritAttribute(icon, "src=image");
+
+    let label = this._labelBox.querySelector(".menulist-label");
+    this.inheritAttribute(label, "value=label");
+    this.inheritAttribute(label, "crop");
+    this.inheritAttribute(label, "accesskey");
+    this.inheritAttribute(label, "highlightable");
+
+    let highlightableLabel = this._labelBox.querySelector(".menulist-highlightable-label");
+    this.inheritAttribute(highlightableLabel, "text=label");
+    this.inheritAttribute(highlightableLabel, "crop");
+    this.inheritAttribute(highlightableLabel, "accesskey");
+    this.inheritAttribute(highlightableLabel, "highlightable");
+
+    this.inheritAttribute(this._dropmarker, "disabled");
+    this.inheritAttribute(this._dropmarker, "open");
   }
 }
 

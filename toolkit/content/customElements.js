@@ -48,119 +48,8 @@ const MozElements = {};
 
 const MozElementMixin = Base => class MozElement extends Base {
   /*
-   * A declarative way to wire up attribute inheritance and automatically generate
-   * the `observedAttributes` getter.  For example, if you returned:
-   *    {
-   *      ".foo": "bar,baz=bat"
-   *    }
-   *
-   * Then the base class will automatically return ["bar", "bat"] from `observedAttributes`,
-   * and set up an `attributeChangedCallback` to pass those attributes down onto an element
-   * matching the ".foo" selector.
-   *
-   * See the `inheritAttribute` function for more details on the attribute string format.
-   *
-   * @return {Object<string selector, string attributes>}
-   */
-  static get inheritedAttributes() {
-    return null;
-  }
-
-  /*
-   * Generate this array based on `inheritedAttributes`, if any. A class is free to override
-   * this if it needs to do something more complex or wants to opt out of this behavior.
-   */
-  static get observedAttributes() {
-    let {inheritedAttributes} = this;
-    if (!inheritedAttributes) {
-      return [];
-    }
-
-    let allAttributes = new Set();
-    for (let sel in inheritedAttributes) {
-      for (let attrName of inheritedAttributes[sel].split(",")) {
-        allAttributes.add(attrName.split("=").pop());
-      }
-    }
-    return [...allAttributes];
-  }
-
-  /*
-   * Provide default lifecycle callback for attribute changes that will inherit attributes
-   * based on the static `inheritedAttributes` Object. This can be overridden by callers.
-   */
-  attributeChangedCallback(name, oldValue, newValue) {
-    if (!this.isConnectedAndReady || oldValue === newValue || !this.inheritedAttributesCache) {
-      return;
-    }
-
-    this.inheritAttributes();
-  }
-
-  /*
-  * After setting content, calling this will cache the elements from selectors in the
-  * static `inheritedAttributes` Object. It'll also do an initial call to `this.inheritAttributes()`,
-  * so in the simple case, this is the only function you need to call.
-  *
-  * This should be called any time the children that are inheriting attributes changes. For instance,
-  * it's common in a connectedCallback to do something like:
-  *
-  *   this.textContent = "";
-  *   this.append(MozXULElement.parseXULToFragment(`<label />`))
-  *   this.initializeAttributeInheritance();
-  *
-  */
-  initializeAttributeInheritance() {
-    let {inheritedAttributes} = this.constructor;
-    if (!inheritedAttributes) {
-      return;
-    }
-    this._inheritedAttributesValuesCache = null;
-    this.inheritedAttributesCache = new Map();
-    for (let selector in inheritedAttributes) {
-      let el = this.querySelector(selector);
-      // Skip unmatched selectors in case an element omits some elements in certain cases:
-      if (!el) {
-        continue;
-      }
-      if (this.inheritedAttributesCache.has(el)) {
-        console.error(`Error: duplicate element encountered with ${selector}`);
-      }
-
-      this.inheritedAttributesCache.set(el, inheritedAttributes[selector]);
-    }
-    this.inheritAttributes();
-  }
-
-  /*
-   * Loop through the static `inheritedAttributes` Map and inherit attributes to child elements.
-   *
-   * This usually won't need to be called directly - `this.initializeAttributeInheritance()` and
-   * `this.attributeChangedCallback` will call it for you when appropriate.
-   */
-  inheritAttributes() {
-    let {inheritedAttributes} = this.constructor;
-    if (!inheritedAttributes) {
-      return;
-    }
-
-    if (!this.inheritedAttributesCache) {
-     console.error(`You must call this.initializeAttributeInheritance() for ${this.tagName}`);
-     return;
-    }
-
-    for (let [ el, attrs ] of this.inheritedAttributesCache.entries()) {
-      for (let attr of attrs.split(",")) {
-        this.inheritAttribute(el, attr);
-      }
-    }
-  }
-
-  /*
    * Implements attribute inheritance by a child element. Uses XBL @inherit
-   * syntax of |to=from|. This can be used directly, but for simple cases
-   * you should use the inheritedAttributes getter and let the base class
-   * handle this for you.
+   * syntax of |to=from|.
    *
    * @param {element} child
    *        A child element that inherits an attribute.
@@ -185,13 +74,13 @@ const MozElementMixin = Base => class MozElement extends Base {
     // If our attribute hasn't changed since we last inherited, we don't want to
     // propagate it down to the child. This prevents overriding an attribute that's
     // been changed on the child (for instance, [checked]).
-    if (!this._inheritedAttributesValuesCache) {
-      this._inheritedAttributesValuesCache = new WeakMap();
+    if (!this._inheritedAttributesMap) {
+      this._inheritedAttributesMap = new WeakMap();
     }
-    if (!this._inheritedAttributesValuesCache.has(child)) {
-      this._inheritedAttributesValuesCache.set(child, {});
+    if (!this._inheritedAttributesMap.has(child)) {
+      this._inheritedAttributesMap.set(child, {});
     }
-    let lastInheritedAttributes = this._inheritedAttributesValuesCache.get(child);
+    let lastInheritedAttributes = this._inheritedAttributesMap.get(child);
 
     if ((hasAttr && attrValue === lastInheritedAttributes[attrName]) ||
         (!hasAttr && !lastInheritedAttributes.hasOwnProperty(attrName))) {
