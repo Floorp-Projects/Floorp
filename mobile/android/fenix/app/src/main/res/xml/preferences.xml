@@ -67,7 +67,8 @@
         <androidx.preference.SwitchPreference
             android:icon="@drawable/ic_about"
             android:key="@string/pref_key_leakcanary"
-            android:title="@string/preference_leakcanary" />
+            android:title="@string/preference_leakcanary"
+            android:defaultValue="false" />
     </androidx.preference.PreferenceCategory>
 
     <androidx.preference.PreferenceCategory
