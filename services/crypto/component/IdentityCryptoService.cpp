@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsIIdentityCryptoService.h"
+#include "mozilla/ModuleUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIThread.h"
 #include "nsThreadUtils.h"
@@ -13,7 +14,6 @@
 #include "nsString.h"
 #include "mozilla/ArrayUtils.h"  // ArrayLength
 #include "mozilla/Base64.h"
-#include "mozilla/Components.h"
 #include "ScopedNSSTypes.h"
 #include "NSSErrorsService.h"
 
@@ -449,14 +449,31 @@ SignRunnable::Run() {
 
   return NS_OK;
 }
-}  // unnamed namespace
 
 // XPCOM module registration
 
-NS_IMPL_COMPONENT_FACTORY(nsIIdentityCryptoService) {
-  auto inst = MakeRefPtr<IdentityCryptoService>();
-  if (NS_SUCCEEDED(inst->Init())) {
-    return inst.forget().downcast<nsIIdentityCryptoService>();
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(IdentityCryptoService, Init)
+
+#define NS_IDENTITYCRYPTOSERVICE_CID                 \
+  {                                                  \
+    0xbea13a3a, 0x44e8, 0x4d7f, {                    \
+      0xa0, 0xa2, 0x2c, 0x67, 0xf8, 0x4e, 0x3a, 0x97 \
+    }                                                \
   }
-  return nullptr;
-}
+
+NS_DEFINE_NAMED_CID(NS_IDENTITYCRYPTOSERVICE_CID);
+
+const mozilla::Module::CIDEntry kCIDs[] = {
+    {&kNS_IDENTITYCRYPTOSERVICE_CID, false, nullptr,
+     IdentityCryptoServiceConstructor},
+    {nullptr}};
+
+const mozilla::Module::ContractIDEntry kContracts[] = {
+    {"@mozilla.org/identity/crypto-service;1", &kNS_IDENTITYCRYPTOSERVICE_CID},
+    {nullptr}};
+
+const mozilla::Module kModule = {mozilla::Module::kVersion, kCIDs, kContracts};
+
+}  // unnamed namespace
+
+NSMODULE_DEFN(identity) = &kModule;

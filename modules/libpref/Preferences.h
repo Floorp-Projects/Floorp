@@ -33,8 +33,6 @@ class nsPrefBranch;
 
 namespace mozilla {
 
-void UnloadPrefsModule();
-
 // A typesafe version of PrefChangeFunc, with its data argument type deduced
 // from the type of the argument passed to RegisterCallback.
 //
