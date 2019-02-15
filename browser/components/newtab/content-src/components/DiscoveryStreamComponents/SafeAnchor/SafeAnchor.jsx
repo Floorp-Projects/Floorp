@@ -12,7 +12,7 @@ export class SafeAnchor extends React.PureComponent {
       "https:",
     ].includes(protocol);
     if (!isAllowed) {
-      console.warn(`${protocol} is not allowed for anchor targets.`); // eslint-disable-line no-console
+      console.warn(`${url} is not allowed for anchor targets.`); // eslint-disable-line no-console
       return "";
     }
     return url;
