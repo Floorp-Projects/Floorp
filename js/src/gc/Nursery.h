@@ -141,6 +141,28 @@ class Nursery {
   static const size_t Alignment = gc::ChunkSize;
   static const size_t ChunkShift = gc::ChunkShift;
 
+  /*
+   * SubChunkLimit is the lower limit of the nursery's capacity.
+   * SubChunkStep is the minimum amount to adjust the nursery's size by (to
+   * avoid too many size adjustments and allow quicker changes in size than eg:
+   * 4k).
+   */
+#ifndef JS_GC_SMALL_CHUNK_SIZE
+  /*
+   * 192K is conservative, not too low that root marking dominates.  The Limit
+   * should be a multiple of the Step.
+   */
+  static const size_t SubChunkLimit = 192 * 1024;
+  static const size_t SubChunkStep = 64 * 1024;
+#else
+  /*
+   * With small chunk sizes (256K) we need to use smaller sub chunk limits and
+   * steps so that a full chunk minus one step is still larger than the limit.
+   */
+  static const size_t SubChunkLimit = 64 * 1024;
+  static const size_t SubChunkStep = 16 * 1024;
+#endif
+
   struct alignas(gc::CellAlignBytes) CellAlignedByte {
     char byte;
   };
@@ -328,7 +350,11 @@ class Nursery {
   // limit respectively.
   size_t spaceToEnd(unsigned chunkCount) const;
 
-  size_t capacity() const { return capacity_; }
+  size_t capacity() const {
+    MOZ_ASSERT(capacity_ >= SubChunkLimit || capacity_ == 0);
+    MOZ_ASSERT(capacity_ <= chunkCountLimit() * NurseryChunkUsableSize);
+    return capacity_;
+  }
   size_t lazyCapacity() const { return spaceToEnd(allocatedChunkCount()); }
 
   // Used and free space, not counting chunk trailers.
@@ -553,6 +579,7 @@ class Nursery {
    * the current chunk.
    */
   void setCurrentChunk(unsigned chunkno, bool fullPoison = false);
+  void setCurrentEnd();
   void setStartPosition();
 
   /*
@@ -565,6 +592,8 @@ class Nursery {
   MOZ_ALWAYS_INLINE uintptr_t currentEnd() const;
 
   uintptr_t position() const { return position_; }
+
+  MOZ_ALWAYS_INLINE bool isSubChunkMode() const;
 
   JSRuntime* runtime() const { return runtime_; }
   gcstats::Statistics& stats() const;
