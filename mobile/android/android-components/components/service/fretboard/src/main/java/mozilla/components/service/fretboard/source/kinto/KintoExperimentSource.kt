@@ -4,6 +4,7 @@
 
 package mozilla.components.service.fretboard.source.kinto
 
+import mozilla.components.concept.fetch.Client
 import mozilla.components.service.fretboard.ExperimentDownloadException
 import mozilla.components.service.fretboard.ExperimentSource
 import mozilla.components.service.fretboard.ExperimentsSnapshot
@@ -18,17 +19,19 @@ import org.json.JSONObject
  * @property baseUrl Kinto server url
  * @property bucketName name of the bucket to fetch
  * @property collectionName name of the collection to fetch
- * @property client http client to use
+ * @param httpClient the http client to use.
+ * @property validateSignature specifies whether or not the signature should be
+ * validated, defaults to false.
  */
 class KintoExperimentSource(
     private val baseUrl: String,
     private val bucketName: String,
     private val collectionName: String,
-    private val validateSignature: Boolean = false,
-    client: HttpClient = HttpURLConnectionHttpClient()
+    httpClient: Client,
+    private val validateSignature: Boolean = false
 ) : ExperimentSource {
-    private val kintoClient = KintoClient(client, baseUrl, bucketName, collectionName)
-    private val signatureVerifier = SignatureVerifier(client, kintoClient)
+    private val kintoClient = KintoClient(httpClient, baseUrl, bucketName, collectionName)
+    private val signatureVerifier = SignatureVerifier(httpClient, kintoClient)
 
     override fun getExperiments(snapshot: ExperimentsSnapshot): ExperimentsSnapshot {
         val experimentsDiff = getExperimentsDiff(snapshot)

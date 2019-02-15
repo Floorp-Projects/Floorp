@@ -34,8 +34,11 @@ class SampleApp : Application() {
 Fretboard includes a default source implementation for a Kinto backend, which you can use like this:
 
 ```Kotlin
+// Specify which HTTP (Fetch) client to use
+val httpClient = GeckoViewFetchClient(context)
+
 val fretboard = Fretboard(
-    KintoExperimentSource(baseUrl, bucketName, collectionName),
+    KintoExperimentSource(baseUrl, bucketName, collectionName, httpClient),
     experimentStorage
 )
 ```

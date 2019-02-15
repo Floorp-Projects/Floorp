@@ -4,6 +4,7 @@
 
 package mozilla.components.service.fretboard.source.kinto
 
+import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 import mozilla.components.service.fretboard.Experiment
 import mozilla.components.service.fretboard.ExperimentDownloadException
 import mozilla.components.service.fretboard.JSONExperimentParser
@@ -622,7 +623,7 @@ class SignatureVerifierTest {
         for (i in 0 until experimentsJSONArray.length()) {
             experiments.add(parser.fromJson(experimentsJSONArray[i] as JSONObject))
         }
-        val client = HttpURLConnectionHttpClient()
+        val client = HttpURLConnectionClient()
         val verifier = SignatureVerifier(client, KintoClient(client, url, "testbucket", "testcollection"), currentDate)
         assertEquals(expected, verifier.validSignature(experiments, experimentsJSON.getLong("last_modified")))
         server.shutdown()

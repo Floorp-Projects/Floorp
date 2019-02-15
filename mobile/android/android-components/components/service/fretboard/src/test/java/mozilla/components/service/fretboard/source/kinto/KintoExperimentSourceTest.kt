@@ -4,8 +4,12 @@
 
 package mozilla.components.service.fretboard.source.kinto
 
+import mozilla.components.concept.fetch.Client
+import mozilla.components.concept.fetch.MutableHeaders
+import mozilla.components.concept.fetch.Response
 import mozilla.components.service.fretboard.Experiment
 import mozilla.components.service.fretboard.ExperimentsSnapshot
+import mozilla.components.support.test.any
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -13,7 +17,6 @@ import org.junit.runner.RunWith
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
 import org.robolectric.RobolectricTestRunner
-import java.net.URL
 
 @RunWith(RobolectricTestRunner::class)
 class KintoExperimentSourceTest {
@@ -23,11 +26,12 @@ class KintoExperimentSourceTest {
 
     @Test
     fun noExperiments() {
-        val httpClient = mock(HttpClient::class.java)
+        val httpClient = mock(Client::class.java)
 
-        `when`(httpClient.get(URL("$baseUrl/buckets/$bucketName/collections/$collectionName/records")))
-            .thenReturn("""{"data":[]}""")
-        val experimentSource = KintoExperimentSource(baseUrl, bucketName, collectionName, false, httpClient)
+        val url = "$baseUrl/buckets/$bucketName/collections/$collectionName/records"
+        `when`(httpClient.fetch(any()))
+            .thenReturn(Response(url, 200, MutableHeaders(), Response.Body("""{"data":[]}""".byteInputStream())))
+        val experimentSource = KintoExperimentSource(baseUrl, bucketName, collectionName, httpClient)
         val result = experimentSource.getExperiments(ExperimentsSnapshot(listOf(), null))
         assertEquals(0, result.experiments.size)
         assertNull(result.lastModified)
@@ -35,10 +39,14 @@ class KintoExperimentSourceTest {
 
     @Test
     fun getExperimentsNoDiff() {
-        val httpClient = mock(HttpClient::class.java)
+        val httpClient = mock(Client::class.java)
 
-        `when`(httpClient.get(URL("$baseUrl/buckets/$bucketName/collections/$collectionName/records")))
-            .thenReturn("""{"data":[{"name":"first-name","match":{"lang":"eng","appId":"first-appId",regions:[]},"schema":1523549592861,"buckets":{"max":"100","min":"0"},"description":"first-description", "id":"first-id","last_modified":1523549895713}]}""")
+        val url = "$baseUrl/buckets/$bucketName/collections/$collectionName/records"
+        `when`(httpClient.fetch(any())).thenReturn(
+            Response(url,
+                200,
+                MutableHeaders(),
+                Response.Body("""{"data":[{"name":"first-name","match":{"lang":"eng","appId":"first-appId",regions:[]},"schema":1523549592861,"buckets":{"max":"100","min":"0"},"description":"first-description", "id":"first-id","last_modified":1523549895713}]}""".byteInputStream())))
 
         val expectedExperiment = Experiment("first-id",
             "first-name",
@@ -48,7 +56,7 @@ class KintoExperimentSourceTest {
             1523549895713
         )
 
-        val experimentSource = KintoExperimentSource(baseUrl, bucketName, collectionName, false, httpClient)
+        val experimentSource = KintoExperimentSource(baseUrl, bucketName, collectionName, httpClient)
         val kintoExperiments = experimentSource.getExperiments(ExperimentsSnapshot(listOf(), null))
         assertEquals(1, kintoExperiments.experiments.size)
         assertEquals(expectedExperiment, kintoExperiments.experiments[0])
@@ -57,9 +65,13 @@ class KintoExperimentSourceTest {
 
     @Test
     fun getExperimentsDiffAdd() {
-        val httpClient = mock(HttpClient::class.java)
-        `when`(httpClient.get(URL("$baseUrl/buckets/$bucketName/collections/$collectionName/records?_since=1523549890000")))
-            .thenReturn("""{"data":[{"name":"first-name","match":{"lang":"eng","appId":"first-appId",regions:[]},"schema":1523549592861,"buckets":{"max":"100","min":"0"},"description":"first-description", "id":"first-id","last_modified":1523549895713}]}""")
+        val httpClient = mock(Client::class.java)
+        val url = "$baseUrl/buckets/$bucketName/collections/$collectionName/records?_since=1523549890000"
+        `when`(httpClient.fetch(any())).thenReturn(
+            Response(url,
+                200,
+                MutableHeaders(),
+                Response.Body("""{"data":[{"name":"first-name","match":{"lang":"eng","appId":"first-appId",regions:[]},"schema":1523549592861,"buckets":{"max":"100","min":"0"},"description":"first-description", "id":"first-id","last_modified":1523549895713}]}""".byteInputStream())))
 
         val kintoExperiment = Experiment("first-id",
             "first-name",
@@ -77,7 +89,7 @@ class KintoExperimentSourceTest {
             1523549890000
         )
 
-        val experimentSource = KintoExperimentSource(baseUrl, bucketName, collectionName, false, httpClient)
+        val experimentSource = KintoExperimentSource(baseUrl, bucketName, collectionName, httpClient)
         val kintoExperiments = experimentSource.getExperiments(ExperimentsSnapshot(listOf(storageExperiment), 1523549890000))
         assertEquals(2, kintoExperiments.experiments.size)
         assertEquals(storageExperiment, kintoExperiments.experiments[0])
@@ -87,11 +99,7 @@ class KintoExperimentSourceTest {
 
     @Test
     fun getExperimentsDiffDelete() {
-        val httpClient = mock(HttpClient::class.java)
-        `when`(httpClient.get(URL("$baseUrl/buckets/$bucketName/collections/$collectionName/records?_since=1523549890000")))
-            .thenReturn("""{"data":[{"deleted":true,"id":"id","last_modified":1523549899999}]}""")
-        `when`(httpClient.get(URL("$baseUrl/buckets/$bucketName/collections/$collectionName/records?_since=1523549899999")))
-            .thenReturn("""{"data":[]}""")
+        val httpClient = mock(Client::class.java)
 
         val storageExperiment = Experiment("id",
             "name",
@@ -108,10 +116,23 @@ class KintoExperimentSourceTest {
             Experiment.Bucket(10, 5),
             1523549890000)
 
-        val experimentSource = KintoExperimentSource(baseUrl, bucketName, collectionName, false, httpClient)
+        `when`(httpClient.fetch(any())).thenReturn(
+                Response("$baseUrl/buckets/$bucketName/collections/$collectionName/records?_since=1523549890000",
+                        200,
+                        MutableHeaders(),
+                        Response.Body("""{"data":[{"deleted":true,"id":"id","last_modified":1523549899999}]}""".byteInputStream())))
+
+        val experimentSource = KintoExperimentSource(baseUrl, bucketName, collectionName, httpClient)
         val kintoExperiments = experimentSource.getExperiments(ExperimentsSnapshot(listOf(storageExperiment, secondExperiment), 1523549890000))
         assertEquals(1, kintoExperiments.experiments.size)
         assertEquals(1523549899999, kintoExperiments.lastModified)
+
+        `when`(httpClient.fetch(any())).thenReturn(
+                Response("$baseUrl/buckets/$bucketName/collections/$collectionName/records?_since=1523549899999",
+                        200,
+                        MutableHeaders(),
+                        Response.Body("""{"data":[]}""".byteInputStream())))
+
         val experimentsResult = experimentSource.getExperiments(ExperimentsSnapshot(kintoExperiments.experiments, 1523549899999))
         assertEquals(1, experimentsResult.experiments.size)
         assertEquals(1523549899999, experimentsResult.lastModified)
@@ -119,9 +140,13 @@ class KintoExperimentSourceTest {
 
     @Test
     fun getExperimentsDiffUpdate() {
-        val httpClient = mock(HttpClient::class.java)
-        `when`(httpClient.get(URL("$baseUrl/buckets/$bucketName/collections/$collectionName/records?_since=1523549800000")))
-            .thenReturn("""{"data":[{"name":"first-name","match":{"lang":"eng","appId":"first-appId",regions:[]},"schema":1523549592861,"buckets":{"max":"100","min":"0"},"description":"first-description", "id":"first-id","last_modified":1523549895713}]}""")
+        val httpClient = mock(Client::class.java)
+        val url = "$baseUrl/buckets/$bucketName/collections/$collectionName/records?_since=1523549800000"
+        `when`(httpClient.fetch(any())).thenReturn(
+            Response(url,
+                200,
+                MutableHeaders(),
+                Response.Body("""{"data":[{"name":"first-name","match":{"lang":"eng","appId":"first-appId",regions:[]},"schema":1523549592861,"buckets":{"max":"100","min":"0"},"description":"first-description", "id":"first-id","last_modified":1523549895713}]}""".byteInputStream())))
 
         val kintoExperiment = Experiment("first-id",
             "first-name",
@@ -139,7 +164,7 @@ class KintoExperimentSourceTest {
             1523549800000
         )
 
-        val experimentSource = KintoExperimentSource(baseUrl, bucketName, collectionName, false, httpClient)
+        val experimentSource = KintoExperimentSource(baseUrl, bucketName, collectionName, httpClient)
         val kintoExperiments = experimentSource.getExperiments(ExperimentsSnapshot(listOf(storageExperiment), 1523549800000))
         assertEquals(1, kintoExperiments.experiments.size)
         assertEquals(kintoExperiment, kintoExperiments.experiments[0])
@@ -148,9 +173,13 @@ class KintoExperimentSourceTest {
 
     @Test
     fun getExperimentsEmptyDiff() {
-        val httpClient = mock(HttpClient::class.java)
-        `when`(httpClient.get(URL("$baseUrl/buckets/$bucketName/collections/$collectionName/records?_since=1523549895713")))
-            .thenReturn("""{"data":[]}""")
+        val httpClient = mock(Client::class.java)
+        val url = "$baseUrl/buckets/$bucketName/collections/$collectionName/records?_since=1523549895713"
+        `when`(httpClient.fetch(any())).thenReturn(
+            Response(url,
+                200,
+                MutableHeaders(),
+                Response.Body("""{"data":[]}""".byteInputStream())))
 
         val storageExperiment = Experiment("first-id",
             "first-name",
@@ -160,7 +189,7 @@ class KintoExperimentSourceTest {
             1523549895713
         )
 
-        val experimentSource = KintoExperimentSource(baseUrl, bucketName, collectionName, false, httpClient)
+        val experimentSource = KintoExperimentSource(baseUrl, bucketName, collectionName, httpClient)
         val kintoExperiments = experimentSource.getExperiments(ExperimentsSnapshot(listOf(storageExperiment), 1523549895713))
         assertEquals(1, kintoExperiments.experiments.size)
         assertEquals(storageExperiment, kintoExperiments.experiments[0])

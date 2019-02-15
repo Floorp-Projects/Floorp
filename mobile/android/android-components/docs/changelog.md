@@ -18,6 +18,23 @@ permalink: /changelog/
 * **feature-toolbar**
   * `ToolbarPresenter` now handles situations where no `Session` is selected.
 
+* **service-fretboard (Kinto)**
+  * ⚠️ **This is a breaking API change!**
+  * Now makes use of our concept-fetch module when communicating with the server. This allows applications to specify which HTTP client library to use e.g. apps already using GeckoView can now specify that the `GeckoViewFetchClient` should be used. As a consequence, the fetch client instance now needs to be provided when creating a `KintoExperimentSource`. 
+
+  ```kotlin
+  val fretboard = Fretboard(    
+    KintoExperimentSource(
+      baseUrl,
+      bucketName,
+      collectionName,
+      // Specify that the GV-based fetch client should be used.
+      GeckoViewFetchClient(context)
+    ),
+    experimentStorage
+)  
+```
+
 # 0.43.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.42.0...v0.43.0)

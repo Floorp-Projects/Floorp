@@ -4,7 +4,12 @@
 
 package mozilla.components.service.fretboard.source.kinto
 
-import java.net.URL
+import mozilla.components.concept.fetch.Client
+import mozilla.components.concept.fetch.MutableHeaders
+import mozilla.components.concept.fetch.Request
+import mozilla.components.concept.fetch.success
+import mozilla.components.service.fretboard.ExperimentDownloadException
+import java.io.IOException
 
 /**
  * Helper class to make it easier to interact with Kinto
@@ -16,20 +21,19 @@ import java.net.URL
  * @property headers headers to provide along with the request
  */
 internal class KintoClient(
-    private val httpClient: HttpClient = HttpURLConnectionHttpClient(),
+    private val httpClient: Client,
     private val baseUrl: String,
     private val bucketName: String,
     private val collectionName: String,
     private val headers: Map<String, String>? = null
 ) {
-
     /**
      * Returns all records from the collection
      *
      * @return Kinto response with all records
      */
     fun get(): String {
-        return httpClient.get(URL(recordsUrl()), headers)
+        return fetch(recordsUrl())
     }
 
     /**
@@ -40,7 +44,7 @@ internal class KintoClient(
      * @return Kinto diff response
      */
     fun diff(lastModified: Long): String {
-        return httpClient.get(URL("${recordsUrl()}?_since=$lastModified"), headers)
+        return fetch("${recordsUrl()}?_since=$lastModified")
     }
 
     /**
@@ -49,7 +53,30 @@ internal class KintoClient(
      * @return collection metadata
      */
     fun getMetadata(): String {
-        return httpClient.get(URL(collectionUrl()))
+        return fetch(collectionUrl())
+    }
+
+    @Suppress("TooGenericExceptionCaught", "ThrowsCount")
+    internal fun fetch(url: String): String {
+        try {
+            val headers = MutableHeaders().also {
+                headers?.forEach { (k, v) -> it.append(k, v) }
+            }
+
+            val request = Request(url, headers = headers, useCaches = false)
+            val response = httpClient.fetch(request)
+            if (!response.success) {
+                throw ExperimentDownloadException("Status code: ${response.status}")
+            }
+            return response.body.string()
+        } catch (e: IOException) {
+            throw ExperimentDownloadException(e)
+        } catch (e: ArrayIndexOutOfBoundsException) {
+            // On some devices we are seeing an ArrayIndexOutOfBoundsException being thrown
+            // somewhere inside AOSP/okhttp.
+            // See: https://github.com/mozilla-mobile/android-components/issues/964
+            throw ExperimentDownloadException(e)
+        }
     }
 
     private fun recordsUrl() = "${collectionUrl()}/records"

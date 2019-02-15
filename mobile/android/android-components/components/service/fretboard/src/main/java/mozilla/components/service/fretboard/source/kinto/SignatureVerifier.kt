@@ -5,16 +5,15 @@
 package mozilla.components.service.fretboard.source.kinto
 
 import android.util.Base64
+import mozilla.components.concept.fetch.Client
+import mozilla.components.concept.fetch.Request
 import mozilla.components.service.fretboard.Experiment
 import mozilla.components.service.fretboard.ExperimentDownloadException
 import mozilla.components.service.fretboard.JSONExperimentParser
 import org.json.JSONArray
 import org.json.JSONObject
-import java.io.BufferedReader
 import java.io.ByteArrayInputStream
-import java.io.StringReader
 import java.math.BigInteger
-import java.net.URL
 import java.nio.charset.StandardCharsets
 import java.security.InvalidKeyException
 import java.security.NoSuchAlgorithmException
@@ -32,7 +31,7 @@ import java.util.concurrent.TimeUnit
  * This class is used to validate the signature of the downloaded list of experiments
  */
 internal class SignatureVerifier(
-    private val client: HttpClient,
+    private val client: Client,
     private val kintoClient: KintoClient,
     private val currentDate: Date = Date()
 ) {
@@ -57,7 +56,7 @@ internal class SignatureVerifier(
             val metadataJson = JSONObject(metadata).getJSONObject(DATA_KEY)
             val signatureJson = metadataJson.getJSONObject(SIGNATURE_KEY)
             val signature = signatureJson.getString(SIGNATURE_KEY)
-            val publicKey = getX5U(URL(signatureJson.getString(X5U_KEY)))
+            val publicKey = getX5U(signatureJson.getString(X5U_KEY))
             val resultJsonString = resultJson.toString().replace("\\/", "/")
             val data = "$SIGNATURE_PREFIX{\"data\":$resultJsonString,\"last_modified\":\"$lastModified\"}"
             return validSignature(data, signature, publicKey)
@@ -75,31 +74,32 @@ internal class SignatureVerifier(
      *
      * @return public key of the end-entity certificate
      */
-    private fun getX5U(url: URL): PublicKey {
+    private fun getX5U(url: String): PublicKey {
         val certs = ArrayList<X509Certificate>()
         val cf = CertificateFactory.getInstance("X.509")
-        val response = client.get(url)
-        val reader = BufferedReader(StringReader(response))
-        val firstLine = reader.readLine()
-        if (firstLine != "-----BEGIN CERTIFICATE-----") {
-            throw ExperimentDownloadException("")
-        }
-        var certPem = firstLine
-        certPem += '\n'
-
-        reader.readLines().forEach {
-            certPem += it
-            certPem += '\n'
-            if (it == "-----END CERTIFICATE-----") {
-                val cert = cf.generateCertificate(ByteArrayInputStream(certPem.toByteArray()))
-                certs.add(cert as X509Certificate)
-                certPem = ""
+        val response = client.fetch(Request(url))
+        response.body.useBufferedReader {
+            val firstLine = it.readLine()
+            if (firstLine != "-----BEGIN CERTIFICATE-----") {
+                throw ExperimentDownloadException("")
             }
+            var certPem = firstLine
+            certPem += '\n'
+
+            it.readLines().forEach { line ->
+                certPem += line
+                certPem += '\n'
+                if (line == "-----END CERTIFICATE-----") {
+                    val cert = cf.generateCertificate(ByteArrayInputStream(certPem.toByteArray()))
+                    certs.add(cert as X509Certificate)
+                    certPem = ""
+                }
+            }
+            if (certs.count() < MIN_CERTIFICATES) {
+                throw ExperimentDownloadException("The chain must contain at least 2 certificates")
+            }
+            verifyCertChain(certs)
         }
-        if (certs.count() < MIN_CERTIFICATES) {
-            throw ExperimentDownloadException("The chain must contain at least 2 certificates")
-        }
-        verifyCertChain(certs)
         return certs[0].publicKey
     }
 

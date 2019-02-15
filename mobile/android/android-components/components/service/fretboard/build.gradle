@@ -26,9 +26,9 @@ dependencies {
     implementation Dependencies.kotlin_coroutines
     implementation Dependencies.arch_workmanager
 
+    implementation project(':concept-fetch')
     implementation project(':support-ktx')
     implementation project(':support-base')
-
 
     testImplementation Dependencies.testing_junit
     testImplementation Dependencies.testing_robolectric
@@ -37,6 +37,7 @@ dependencies {
     testImplementation Dependencies.kotlin_reflect
 
     testImplementation project(':support-test')
+    testImplementation project(':lib-fetch-httpurlconnection')
 }
 
 apply from: '../../../publish.gradle'
