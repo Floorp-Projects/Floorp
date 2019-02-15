@@ -484,18 +484,16 @@ function JSPropertyProvider({
       // If we're not performing an element access, we need to check that the property
       // are suited for a dot access. (Reflect.jsm is not available in worker context yet,
       // see Bug 1507181).
-      matches = new Set([...matches].filter(propertyName => {
-        let valid = true;
+      for (const match of matches) {
         try {
           // In order to know if the property is suited for dot notation, we use Reflect
           // to parse an expression where we try to access the property with a dot. If it
           // throws, this means that we need to do an element access instead.
-          Reflect.parse(`({${propertyName}: true})`);
+          Reflect.parse(`({${match}: true})`);
         } catch (e) {
-          valid = false;
+          matches.delete(match);
         }
-        return valid;
-      }));
+      }
     }
 
     return {isElementAccess, matchProp, matches};
