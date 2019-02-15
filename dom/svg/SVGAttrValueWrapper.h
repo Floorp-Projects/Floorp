@@ -17,11 +17,11 @@
 class nsSVGLength2;
 
 namespace mozilla {
-class SVGAngle;
 class SVGIntegerPair;
 class SVGLengthList;
 class SVGNumberList;
 class SVGNumberPair;
+class SVGOrient;
 class SVGPathData;
 class SVGPointList;
 class SVGAnimatedPreserveAspectRatio;
@@ -31,7 +31,7 @@ class SVGViewBox;
 
 class SVGAttrValueWrapper {
  public:
-  static void ToString(const SVGAngle* aAngle, nsAString& aResult);
+  static void ToString(const SVGOrient* aAngle, nsAString& aResult);
   static void ToString(const SVGIntegerPair* aIntegerPair, nsAString& aResult);
   static void ToString(const nsSVGLength2* aLength, nsAString& aResult);
   static void ToString(const SVGLengthList* aLengthList, nsAString& aResult);

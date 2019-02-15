@@ -478,27 +478,6 @@ enum class StyleGridTrackBreadth : uint8_t {
 #define NS_MATHML_DISPLAYSTYLE_INLINE 0
 #define NS_MATHML_DISPLAYSTYLE_BLOCK 1
 
-// See nsStylePosition::mWidth, mMinWidth, mMaxWidth
-#define NS_STYLE_WIDTH_MAX_CONTENT \
-  ((uint8_t)mozilla::StyleExtremumLength::MaxContent)
-#define NS_STYLE_WIDTH_MIN_CONTENT \
-  ((uint8_t)mozilla::StyleExtremumLength::MinContent)
-#define NS_STYLE_WIDTH_FIT_CONTENT \
-  ((uint8_t)mozilla::StyleExtremumLength::MozFitContent)
-#define NS_STYLE_WIDTH_AVAILABLE \
-  ((uint8_t)mozilla::StyleExtremumLength::MozAvailable)
-// The 'content' keyword is only valid for 'flex-basis' (not for 'width').  But
-// aside from that, the 'flex-basis' property accepts exactly the same values
-// as 'width'. So I'm listing this one 'flex-basis'-specific enumerated value
-// alongside the 'width' ones, to be sure we don't accidentally overload this
-// numeric value with two different meanings if new 'width' keywords are added.
-#define NS_STYLE_FLEX_BASIS_CONTENT 4
-static_assert(NS_STYLE_FLEX_BASIS_CONTENT != NS_STYLE_WIDTH_MAX_CONTENT &&
-                  NS_STYLE_FLEX_BASIS_CONTENT != NS_STYLE_WIDTH_MIN_CONTENT &&
-                  NS_STYLE_FLEX_BASIS_CONTENT != NS_STYLE_WIDTH_FIT_CONTENT &&
-                  NS_STYLE_FLEX_BASIS_CONTENT != NS_STYLE_WIDTH_AVAILABLE,
-              "Should use different enum value for flex basis content");
-
 // See nsStyleDisplay.mPosition
 #define NS_STYLE_POSITION_STATIC 0
 #define NS_STYLE_POSITION_RELATIVE 1

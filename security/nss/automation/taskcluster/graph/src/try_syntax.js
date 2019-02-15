@@ -5,6 +5,10 @@
 import * as queue from "./queue";
 import intersect from "intersect";
 import parse_args from "minimist";
+import util from "util";
+import child_process from 'child_process';
+
+let execFile = util.promisify(child_process.execFile);
 
 function parseOptions(opts) {
   opts = parse_args(opts.split(/\s+/), {
@@ -154,8 +158,13 @@ function filter(opts) {
   }
 }
 
-export function initFilter() {
-  let comment = process.env.TC_COMMENT || "";
+async function getCommitComment() {
+  const res = await execFile('hg', ['log', '-r', '.', '-T', '{desc}']);
+  return res.stdout;
+};
+
+export async function initFilter() {
+  let comment = await getCommitComment();
 
   // Check for try syntax in changeset comment.
   let match = comment.match(/^\s*try:\s*(.*)\s*$/);

@@ -17,14 +17,18 @@ XPIDL_SOURCES += [
 TEST_DIRS += ['tests']
 
 EXTRA_COMPONENTS += [
-    'nsUpdateService.js',
     'nsUpdateService.manifest',
-    'nsUpdateServiceStub.js',
 ]
 
 EXTRA_JS_MODULES += [
     'UpdateListener.jsm',
+    'UpdateService.jsm',
+    'UpdateServiceStub.jsm',
     'UpdateTelemetry.jsm',
+]
+
+XPCOM_MANIFESTS += [
+    'components.conf',
 ]
 
 JAR_MANIFESTS += ['jar.mn']

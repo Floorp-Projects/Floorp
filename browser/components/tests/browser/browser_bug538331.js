@@ -265,7 +265,7 @@ function testDefaultArgs() {
   testShowNotification();
 }
 
-// nsBrowserGlue.js _showUpdateNotification notification tests
+// BrowserGlue.jsm _showUpdateNotification notification tests
 const BG_NOTIFY_TESTS = [
   {
     description: "'silent showNotification' actions should not display a notification",
@@ -292,7 +292,7 @@ const BG_NOTIFY_TESTS = [
 ];
 
 // Test showing a notification after an update
-// _showUpdateNotification in nsBrowserGlue.js
+// _showUpdateNotification in BrowserGlue.jsm
 function testShowNotification() {
   // Catches any windows opened by these tests (e.g. alert windows) and closes
   // them

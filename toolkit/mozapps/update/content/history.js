@@ -44,8 +44,7 @@ var gUpdateHistory = {
         topLine.appendChild(nameLabel);
 
         if (update.detailsURL) {
-          const detailsLink = document.createXULElement("label");
-          detailsLink.className = "text-link";
+          const detailsLink = document.createXULElement("label", {is: "text-link"});
           detailsLink.href = update.detailsURL;
           document.l10n.setAttributes(detailsLink, "update-details");
           topLine.appendChild(detailsLink);

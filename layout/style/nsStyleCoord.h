@@ -47,13 +47,48 @@ constexpr LengthPercentage LengthPercentage::Zero() {
   return {{0.}, {0.}, StyleAllowedNumericType::All, false, false};
 }
 
+LengthPercentage LengthPercentage::FromAppUnits(nscoord aCoord) {
+  return {{CSSPixel::FromAppUnits(aCoord)},
+          {0.},
+          StyleAllowedNumericType::All,
+          false,
+          false};
+}
+
+LengthPercentage LengthPercentage::FromPercentage(float aPercentage) {
+  return {{0.}, {aPercentage}, StyleAllowedNumericType::All, true, false};
+}
+
+CSSCoord LengthPercentage::LengthInCSSPixels() const { return length._0; }
+
+float LengthPercentage::Percentage() const { return percentage._0; }
+
 bool LengthPercentage::HasPercent() const { return has_percentage; }
 
 bool LengthPercentage::ConvertsToLength() const { return !HasPercent(); }
 
+nscoord LengthPercentage::LengthComponent() const {
+  // We want to resolve the length part of the calc() expression rounding 0.5
+  // away from zero, instead of the default behavior of NSToCoordRoundWithClamp
+  // which is floor(x + 0.5).
+  //
+  // This is what the rust code in the app_units crate does, and not doing this
+  // would regress bug 1323735, for example.
+  //
+  // FIXME(emilio, bug 1528114): Probably we should do something smarter.
+  float length = LengthInCSSPixels() * float(mozilla::AppUnitsPerCSSPixel());
+  if (length >= nscoord_MAX) {
+    return nscoord_MAX;
+  }
+  if (length <= nscoord_MIN) {
+    return nscoord_MIN;
+  }
+  return roundf(length);
+}
+
 nscoord LengthPercentage::ToLength() const {
   MOZ_ASSERT(ConvertsToLength());
-  return CSSPixel::ToAppUnits(length._0);
+  return LengthComponent();
 }
 
 bool LengthPercentage::ConvertsToPercentage() const {
@@ -65,9 +100,9 @@ float LengthPercentage::ToPercentage() const {
   return Percentage();
 }
 
-CSSCoord LengthPercentage::LengthInCSSPixels() const { return length._0; }
-
-float LengthPercentage::Percentage() const { return percentage._0; }
+bool LengthPercentage::HasLengthAndPercentage() const {
+  return !ConvertsToLength() && !ConvertsToPercentage();
+}
 
 CSSCoord LengthPercentage::ResolveToCSSPixels(CSSCoord aPercentageBasis) const {
   return LengthInCSSPixels() + Percentage() * aPercentageBasis;
@@ -83,37 +118,116 @@ CSSCoord LengthPercentage::ResolveToCSSPixelsWith(T aPercentageGetter) const {
   return ResolveToCSSPixels(aPercentageGetter());
 }
 
-nscoord LengthPercentage::Resolve(nscoord aPercentageBasis) const {
-  NS_WARNING_ASSERTION(aPercentageBasis >= 0, "nscoord overflow?");
-  return CSSPixel::ToAppUnits(LengthInCSSPixels()) +
-         NSToCoordFloorClamped(aPercentageBasis * Percentage());
-}
-
-template <typename T>
-nscoord LengthPercentage::ResolveWith(T aPercentageGetter) const {
+template <typename T, typename U>
+nscoord LengthPercentage::Resolve(T aPercentageGetter,
+                                  U aPercentageRounder) const {
   static_assert(std::is_same<decltype(aPercentageGetter()), nscoord>::value,
                 "Should return app units");
+  static_assert(
+      std::is_same<decltype(aPercentageRounder(1.0f)), nscoord>::value,
+      "Should return app units");
   if (ConvertsToLength()) {
     return ToLength();
   }
-  return Resolve(aPercentageGetter());
+  nscoord basis = aPercentageGetter();
+  NS_WARNING_ASSERTION(basis >= 0, "nscoord overflow?");
+  return LengthComponent() + aPercentageRounder(basis * Percentage());
+}
+
+nscoord LengthPercentage::Resolve(nscoord aPercentageBasis) const {
+  NS_WARNING_ASSERTION(aPercentageBasis >= 0, "nscoord overflow?");
+  return Resolve([=] { return aPercentageBasis; }, NSToCoordFloorClamped);
+}
+
+template <typename T>
+nscoord LengthPercentage::Resolve(T aPercentageGetter) const {
+  static_assert(std::is_same<decltype(aPercentageGetter()), nscoord>::value,
+                "Should return app units");
+  return Resolve(aPercentageGetter, NSToCoordFloorClamped);
+}
+
+template <typename T>
+nscoord LengthPercentage::Resolve(nscoord aPercentageBasis,
+                                  T aPercentageRounder) const {
+  return Resolve([=] { return aPercentageBasis; }, aPercentageRounder);
+}
+
+#define IMPL_LENGTHPERCENTAGE_FORWARDS(ty_)                                 \
+  template <>                                                               \
+  inline const LengthPercentage& ty_::AsLengthPercentage() const {          \
+    MOZ_ASSERT(IsLengthPercentage());                                       \
+    return length_percentage._0;                                            \
+  }                                                                         \
+  template <>                                                               \
+  inline bool ty_::HasPercent() const {                                     \
+    return IsLengthPercentage() && AsLengthPercentage().HasPercent();       \
+  }                                                                         \
+  template <>                                                               \
+  inline bool ty_::ConvertsToLength() const {                               \
+    return IsLengthPercentage() && AsLengthPercentage().ConvertsToLength(); \
+  }                                                                         \
+  template <>                                                               \
+  inline bool ty_::HasLengthAndPercentage() const {                         \
+    return IsLengthPercentage() &&                                          \
+           AsLengthPercentage().HasLengthAndPercentage();                   \
+  }                                                                         \
+  template <>                                                               \
+  inline nscoord ty_::ToLength() const {                                    \
+    MOZ_ASSERT(ConvertsToLength());                                         \
+    return AsLengthPercentage().ToLength();                                 \
+  }                                                                         \
+  template <>                                                               \
+  inline bool ty_::ConvertsToPercentage() const {                           \
+    return IsLengthPercentage() &&                                          \
+           AsLengthPercentage().ConvertsToPercentage();                     \
+  }                                                                         \
+  template <>                                                               \
+  inline float ty_::ToPercentage() const {                                  \
+    MOZ_ASSERT(ConvertsToPercentage());                                     \
+    return AsLengthPercentage().ToPercentage();                             \
+  }
+
+IMPL_LENGTHPERCENTAGE_FORWARDS(LengthPercentageOrAuto)
+IMPL_LENGTHPERCENTAGE_FORWARDS(StyleSize)
+IMPL_LENGTHPERCENTAGE_FORWARDS(StyleMaxSize)
+
+template <>
+inline const StyleSize& StyleFlexBasis::AsSize() const {
+  MOZ_ASSERT(IsSize());
+  return size._0;
 }
 
 template <>
-inline const LengthPercentage& LengthPercentageOrAuto::AsLengthPercentage()
-    const {
-  MOZ_ASSERT(IsLengthPercentage());
-  return length_percentage._0;
+inline bool StyleFlexBasis::IsAuto() const {
+  return IsSize() && AsSize().IsAuto();
 }
 
 template <>
-inline bool LengthPercentageOrAuto::ConvertsToLength() const {
-  return IsLengthPercentage() && AsLengthPercentage().ConvertsToLength();
+inline StyleExtremumLength StyleSize::AsExtremumLength() const {
+  MOZ_ASSERT(IsExtremumLength());
+  return extremum_length._0;
 }
 
 template <>
-inline bool LengthPercentageOrAuto::HasPercent() const {
-  return IsLengthPercentage() && AsLengthPercentage().HasPercent();
+inline bool StyleSize::BehavesLikeInitialValueOnBlockAxis() const {
+  return IsAuto() || IsExtremumLength();
+}
+
+template <>
+inline bool StyleMaxSize::BehavesLikeInitialValueOnBlockAxis() const {
+  return IsNone() || IsExtremumLength();
+}
+
+template <>
+inline StyleExtremumLength StyleMaxSize::AsExtremumLength() const {
+  MOZ_ASSERT(IsExtremumLength());
+  return extremum_length._0;
+}
+
+template <>
+inline bool StyleBackgroundSize::IsInitialValue() const {
+  return IsExplicitSize() && explicit_size.width.IsAuto() &&
+         explicit_size.height.IsAuto();
 }
 
 template <typename T>

@@ -112,6 +112,10 @@ UNIFIED_SOURCES += [
     'WidgetStyleCache.cpp',
 ]
 
+XPCOM_MANIFESTS += [
+    'components.conf',
+]
+
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'

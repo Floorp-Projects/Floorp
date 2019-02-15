@@ -54,8 +54,8 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
   nsresult NativeGetColor(ColorID aID, nscolor& aResult) override;
   nsresult GetIntImpl(IntID aID, int32_t& aResult) override;
   nsresult GetFloatImpl(FloatID aID, float& aResult) override;
-  bool GetFontImpl(FontID aID, nsString& aFontName, gfxFontStyle& aFontStyle,
-                   float aDevPixPerCSSPixel) override;
+  bool GetFontImpl(FontID aID, nsString& aFontName,
+                   gfxFontStyle& aFontStyle) override;
   char16_t GetPasswordCharacterImpl() override;
 
   nsTArray<LookAndFeelInt> GetIntCacheImpl() override;

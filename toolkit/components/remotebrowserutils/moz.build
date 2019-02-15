@@ -7,9 +7,12 @@
 with Files('**'):
     BUG_COMPONENT = ('Core', 'Document Navigation')
 
-EXTRA_COMPONENTS += [
-    'remotebrowserutils.manifest',
-    'RemoteWebNavigation.js',
+EXTRA_JS_MODULES += [
+    'RemoteWebNavigation.jsm',
+]
+
+XPCOM_MANIFESTS += [
+    'components.conf',
 ]
 
 BROWSER_CHROME_MANIFESTS += ['tests/browser/browser.ini']

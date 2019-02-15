@@ -16,12 +16,8 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     ]
 
 else:
-    EXTRA_COMPONENTS += [
-        'nsDNSServiceDiscovery.js',
-        'nsDNSServiceDiscovery.manifest',
-    ]
-
     EXTRA_JS_MODULES += [
+        'DNSServiceDiscovery.jsm',
         'fallback/DataReader.jsm',
         'fallback/DataWriter.jsm',
         'fallback/DNSPacket.jsm',
@@ -39,6 +35,10 @@ else:
 UNIFIED_SOURCES += [
     'nsDNSServiceInfo.cpp',
     'nsMulticastDNSModule.cpp',
+]
+
+XPCOM_MANIFESTS += [
+    'components.conf',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')

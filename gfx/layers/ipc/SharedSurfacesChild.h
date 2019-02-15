@@ -15,6 +15,7 @@
 #include "mozilla/gfx/UserData.h"              // for UserDataKey
 #include "mozilla/webrender/WebRenderTypes.h"  // for wr::ImageKey
 #include "nsTArray.h"                          // for AutoTArray
+#include "ImageTypes.h"                        // for ContainerProducerID
 
 namespace mozilla {
 namespace layers {
@@ -91,7 +92,7 @@ class SharedSurfacesChild final {
   static nsresult Share(ImageContainer* aContainer,
                         RenderRootStateManager* aManager,
                         wr::IpcResourceUpdateQueue& aResources,
-                        wr::ImageKey& aKey);
+                        wr::ImageKey& aKey, ContainerProducerID aProducerId);
 
   /**
    * Get the external ID, if any, bound to the shared surface. Used for memory

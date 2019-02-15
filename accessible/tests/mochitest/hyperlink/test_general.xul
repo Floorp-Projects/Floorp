@@ -27,14 +27,14 @@
                       aStartIndex, aEndIndex, aValid)
     {
       testRole(aID, aRole);
-      is(aAcc.anchorCount, aAnchorCount, "Wrong number of anchors for ID " 
+      is(aAcc.anchorCount, aAnchorCount, "Wrong number of anchors for ID "
          + aID + "!");
       is(aAcc.getAnchor(0).name, aAnchorName, "Wrong name for ID " + aID + "!");
       is(aAcc.getURI(0).spec, aURI, "URI wrong for ID " + aID + "!");
-      is(aAcc.startIndex, aStartIndex, "Wrong startIndex value for ID " + aID 
+      is(aAcc.startIndex, aStartIndex, "Wrong startIndex value for ID " + aID
          + "!");
       is(aAcc.endIndex, aEndIndex, "Wrong endIndex value for ID " + aID + "!");
-      is(aAcc.valid, aValid, "Wrong valid state for ID " + aID + "!");      
+      is(aAcc.valid, aValid, "Wrong valid state for ID " + aID + "!");
     }
 
     var gQueue = null;
@@ -89,9 +89,9 @@
     </pre>
   </body>
 
-  <label id="linkedLabel" class="text-link" href="http://www.mozilla.org/">
+  <label id="linkedLabel" href="http://www.mozilla.org/" is="text-link">
     Mozilla Foundation home</label>
-  <label id="linkLabelWithValue" value="Mozilla Foundation" class="text-link"
+  <label id="linkLabelWithValue" value="Mozilla Foundation" is="text-link"
    href="http://www.mozilla.org/" />
   <label id="normalLabel" value="This label should not be a link" />
 </window>

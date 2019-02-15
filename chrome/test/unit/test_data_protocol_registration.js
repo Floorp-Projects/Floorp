@@ -55,7 +55,6 @@ function run_test() {
           factory: Components.manager.getClassObject(Cc[factory.contractID], Ci.nsIFactory),
         });
         old_factories_inds.push(true);
-        registrar.unregisterFactory(old_factories[i].CID, old_factories[i].factory);
       } else {
         dump(factory.scheme + " has never been registered. Registering...");
         old_factories.push({CID: "", factory: null});
@@ -95,7 +94,7 @@ function run_test() {
 
     if (ind) {
       let old_factory = old_factories[i];
-      registrar.registerFactory(old_factory.CID, factory.scheme, factory.contractID, old_factory.factory);
+      registrar.registerFactory(old_factory.CID, factory.scheme, factory.contractID, null);
     }
   }
 }

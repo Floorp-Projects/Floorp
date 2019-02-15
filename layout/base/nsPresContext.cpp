@@ -1202,10 +1202,8 @@ static bool CheckOverflow(const nsStyleDisplay* aDisplay,
       aDisplay->mScrollSnapTypeY == StyleScrollSnapType::None &&
       aDisplay->mScrollSnapPointsX == nsStyleCoord(eStyleUnit_None) &&
       aDisplay->mScrollSnapPointsY == nsStyleCoord(eStyleUnit_None) &&
-      !aDisplay->mScrollSnapDestination.mXPosition.mHasPercent &&
-      !aDisplay->mScrollSnapDestination.mYPosition.mHasPercent &&
-      aDisplay->mScrollSnapDestination.mXPosition.mLength == 0 &&
-      aDisplay->mScrollSnapDestination.mYPosition.mLength == 0) {
+      aDisplay->mScrollSnapDestination.horizontal == LengthPercentage::Zero() &&
+      aDisplay->mScrollSnapDestination.vertical == LengthPercentage::Zero()) {
     return false;
   }
 
