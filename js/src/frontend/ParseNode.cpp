@@ -346,12 +346,8 @@ void NameNode::dump(GenericPrinter& out, int indent) {
         out.put("#<null name>");
       } else if (getOp() == JSOP_GETARG && atom()->length() == 0) {
         // Dump destructuring parameter.
-        static const char ZeroLengthPrefix[] = "(#<zero-length name> ";
-        constexpr size_t ZeroLengthPrefixLength =
-            ArrayLength(ZeroLengthPrefix) - 1;
-        out.put(ZeroLengthPrefix);
-        DumpParseTree(initializer(), out, indent + ZeroLengthPrefixLength);
-        out.printf(")");
+        static const char ZeroLengthName[] = "(#<zero-length name>)";
+        out.put(ZeroLengthName);
       } else {
         JS::AutoCheckCannotGC nogc;
         if (atom()->hasLatin1Chars()) {
@@ -363,24 +359,26 @@ void NameNode::dump(GenericPrinter& out, int indent) {
       return;
 
     case ParseNodeKind::LabelStmt: {
-      const char* name = parseNodeNames[size_t(getKind())];
-      out.printf("(%s ", name);
-      atom()->dumpCharsNoNewline(out);
-      indent += strlen(name) + atom()->length() + 2;
-      DumpParseTree(initializer(), out, indent);
-      out.printf(")");
+      this->as<LabeledStatement>().dump(out, indent);
       return;
     }
 
     default: {
       const char* name = parseNodeNames[size_t(getKind())];
-      out.printf("(%s ", name);
-      indent += strlen(name) + 2;
-      DumpParseTree(initializer(), out, indent);
-      out.printf(")");
+      out.printf("(%s)", name);
       return;
     }
   }
+}
+
+void LabeledStatement::dump(GenericPrinter& out, int indent) {
+  const char* name = parseNodeNames[size_t(getKind())];
+  out.printf("(%s ", name);
+  atom()->dumpCharsNoNewline(out);
+  out.printf(" ");
+  indent += strlen(name) + atom()->length() + 3;
+  DumpParseTree(statement(), out, indent);
+  out.printf(")");
 }
 
 void ClassField::dump(GenericPrinter& out, int indent) {

@@ -4261,9 +4261,11 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceVariableDeclarator(
     // `var foo [= bar]``
     NameNode* bindingNameNode = &binding->template as<NameNode>();
     MOZ_TRY(checkBinding(bindingNameNode->atom()->asPropertyName()));
-    result = bindingNameNode;
     if (init) {
-      BINJS_TRY(factory_.finishInitializerAssignment(bindingNameNode, init));
+      BINJS_TRY_VAR(
+          result, factory_.finishInitializerAssignment(bindingNameNode, init));
+    } else {
+      result = bindingNameNode;
     }
   } else {
     // `var pattern = bar`
