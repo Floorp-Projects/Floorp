@@ -76,8 +76,10 @@ TEST_HARNESS_FILES.gtest += [
     'rle8.bmp',
     'transparent-ico-with-and-mask.ico',
     'transparent-if-within-ico.bmp',
+    'transparent-no-alpha-header.webp',
     'transparent.gif',
     'transparent.png',
+    'transparent.webp',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
