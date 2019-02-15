@@ -37,7 +37,7 @@ class ToolbarInteractorTest {
             return false
         }
 
-        override fun setOnUrlCommitListener(listener: (String) -> Unit) {
+        override fun setOnUrlCommitListener(listener: (String) -> Boolean) {
             listener("https://mozilla.org")
         }
 

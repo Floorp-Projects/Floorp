@@ -50,6 +50,7 @@ private const val AUTOCOMPLETE_QUERY_THREADS = 3
  * URL and controls for navigation. In edit mode the current URL can be edited. Those two modes are
  * implemented by the DisplayToolbar and EditToolbar classes.
  *
+ * ```
  *           +----------------+
  *           | BrowserToolbar |
  *           +--------+-------+
@@ -59,7 +60,7 @@ private const val AUTOCOMPLETE_QUERY_THREADS = 3
  *  +---------v------+ +-------v--------+
  *  | DisplayToolbar | |   EditToolbar  |
  *  +----------------+ +----------------+
- *
+ * ```
  */
 @Suppress("TooManyFunctions")
 class BrowserToolbar @JvmOverloads constructor(
@@ -253,7 +254,7 @@ class BrowserToolbar @JvmOverloads constructor(
 
     private var state: State = State.DISPLAY
     private var searchTerms: String = ""
-    private var urlCommitListener: ((String) -> Unit)? = null
+    private var urlCommitListener: ((String) -> Boolean)? = null
 
     override var url: String = ""
         set(value) {
@@ -322,10 +323,10 @@ class BrowserToolbar @JvmOverloads constructor(
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
         forEach { child ->
             child.layout(
-                    0 + paddingLeft,
-                    0 + paddingTop,
-                    paddingLeft + child.measuredWidth,
-                    paddingTop + child.measuredHeight)
+                0 + paddingLeft,
+                0 + paddingTop,
+                paddingLeft + child.measuredWidth,
+                paddingTop + child.measuredHeight)
         }
     }
 
@@ -368,7 +369,7 @@ class BrowserToolbar @JvmOverloads constructor(
         displayToolbar.updateProgress(progress)
     }
 
-    override fun setOnUrlCommitListener(listener: (String) -> Unit) {
+    override fun setOnUrlCommitListener(listener: (String) -> Boolean) {
         this.urlCommitListener = listener
     }
 
@@ -444,9 +445,11 @@ class BrowserToolbar @JvmOverloads constructor(
     }
 
     internal fun onUrlEntered(url: String) {
-        displayMode()
-
-        urlCommitListener?.invoke(url)
+        if (urlCommitListener?.invoke(url) != false) {
+            // Return to display mode if there's no urlCommitListener or if it returned true. This lets
+            // the app control whether we should switch to display mode automatically.
+            displayMode()
+        }
     }
 
     private fun updateState(state: State) {

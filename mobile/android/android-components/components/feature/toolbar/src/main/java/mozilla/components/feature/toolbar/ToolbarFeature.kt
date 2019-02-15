@@ -50,7 +50,6 @@ class ToolbarFeature(
      * Stop feature: App is in the background.
      */
     override fun stop() {
-        interactor.stop()
         presenter.stop()
     }
 }

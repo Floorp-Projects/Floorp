@@ -406,6 +406,8 @@ class ToolbarActivity : AppCompatActivity() {
             if (url.isNotEmpty()) {
                 toolbar.url = url
             }
+
+            true
         }
     }
 

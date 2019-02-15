@@ -62,9 +62,12 @@ interface Toolbar {
      * Registers the given function to be invoked when the user selected a new URL i.e. is done
      * editing.
      *
+     * If the function returns `true` then the toolbar will automatically switch to "display mode". Otherwise it
+     * remains in "edit mode".
+     *
      * @param listener the listener function
      */
-    fun setOnUrlCommitListener(listener: (String) -> Unit)
+    fun setOnUrlCommitListener(listener: (String) -> Boolean)
 
     /**
      * Registers the given function to be invoked when users changes text in the toolbar.
@@ -223,9 +226,9 @@ interface Toolbar {
             if (background == 0) {
                 val outValue = TypedValue()
                 parent.context.theme.resolveAttribute(
-                        android.R.attr.selectableItemBackgroundBorderless,
-                        outValue,
-                        true)
+                    android.R.attr.selectableItemBackgroundBorderless,
+                    outValue,
+                    true)
 
                 imageButton.setBackgroundResource(outValue.resourceId)
             } else {

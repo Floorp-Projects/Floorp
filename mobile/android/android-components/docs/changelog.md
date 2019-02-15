@@ -89,6 +89,7 @@ permalink: /changelog/
     * If there is an active bundle then the bundle will be removed instead of updated with the empty snapshot.
 
 * **browser-toolbar**, **concept-toolbar**
+  * ⚠️ **This is a breaking API change**: The interface of the "URL commit listener" changed from `(String) -> Unit` to `(String) -> Boolean`. If the function returns `true` then the toolbar will automatically switch to "display mode". If no function is set or if the function returns false the toolbar remains in "edit mode".
   * Added `private` field (`Boolean`): Enables/Disables private mode. In private mode the IME should not update any personalized data such as typing history and personalized language model based on what the user typed.
   * The background and foreground color of the autocomplete suggestion can now be styled:
 

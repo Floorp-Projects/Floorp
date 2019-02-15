@@ -21,6 +21,7 @@ import mozilla.components.browser.toolbar.edit.EditToolbar
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.concept.toolbar.Toolbar.SiteSecurity
 import mozilla.components.support.base.android.Padding
+import mozilla.components.support.ktx.android.view.isGone
 import mozilla.components.support.ktx.android.view.isVisible
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
@@ -161,9 +162,10 @@ class BrowserToolbarTest {
             var called = false
             var url: String? = null
 
-            fun invoke(url: String) {
+            fun invoke(url: String): Boolean {
                 this.called = true
                 this.url = url
+                return true
             }
         }
 
@@ -232,6 +234,36 @@ class BrowserToolbarTest {
 
         assertTrue(toolbar.displayToolbar.visibility == View.VISIBLE)
         assertTrue(toolbar.editToolbar.visibility == View.GONE)
+    }
+
+    @Test
+    fun `toolbar will switch back to display mode if URL commit listener returns true`() {
+        val toolbar = BrowserToolbar(context)
+        toolbar.setOnUrlCommitListener { true }
+        toolbar.editMode()
+
+        assertTrue(toolbar.displayToolbar.isGone())
+        assertTrue(toolbar.editToolbar.isVisible())
+
+        toolbar.onUrlEntered("https://www.mozilla.org")
+
+        assertTrue(toolbar.displayToolbar.isVisible())
+        assertTrue(toolbar.editToolbar.isGone())
+    }
+
+    @Test
+    fun `toolbar will stay in edit mode if URL commit listener returns false`() {
+        val toolbar = BrowserToolbar(context)
+        toolbar.setOnUrlCommitListener { false }
+        toolbar.editMode()
+
+        assertTrue(toolbar.displayToolbar.isGone())
+        assertTrue(toolbar.editToolbar.isVisible())
+
+        toolbar.onUrlEntered("https://www.mozilla.org")
+
+        assertTrue(toolbar.displayToolbar.isGone())
+        assertTrue(toolbar.editToolbar.isVisible())
     }
 
     @Test

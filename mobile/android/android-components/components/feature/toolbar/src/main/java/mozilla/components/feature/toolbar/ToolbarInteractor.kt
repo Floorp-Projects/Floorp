@@ -30,13 +30,7 @@ class ToolbarInteractor(
             } else {
                 searchUseCase?.invoke(text) ?: loadUrlUseCase.invoke(text)
             }
+            true
         }
-    }
-
-    /**
-     * Stops this interactor.
-     */
-    fun stop() {
-        toolbar.setOnUrlCommitListener { }
     }
 }
