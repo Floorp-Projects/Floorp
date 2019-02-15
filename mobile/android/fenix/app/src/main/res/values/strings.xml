@@ -146,4 +146,11 @@
     <string name="current_session_archive">Archive</string>
     <string name="current_session_send_and_share">Send and Share</string>
     <string name="current_session_image">Current session image</string>
+
+    <!-- Text for the button to clear all history -->
+    <string name="delete_history">Delete History</string>
+
+    <!-- Text for the button to clear selected history items. The first parameter
+        is the number of items you have selected -->
+    <string name="delete_history_items">Delete %1$s Items</string>
 </resources>

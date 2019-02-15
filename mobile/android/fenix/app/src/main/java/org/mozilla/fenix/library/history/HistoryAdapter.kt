@@ -113,7 +113,8 @@ class HistoryAdapter(
     }
 
     class HistoryDeleteViewHolder(
-        view: View
+        view: View,
+        private val actionEmitter: Observer<HistoryAction>
     ) : RecyclerView.ViewHolder(view) {
         private val button = view.findViewById<View>(R.id.delete_history_button)
         private val text = view.findViewById<TextView>(R.id.delete_history_button_text).apply {
@@ -123,7 +124,14 @@ class HistoryAdapter(
             this.setCompoundDrawablesWithIntrinsicBounds(drawable, null, null, null)
         }
 
-        fun bind() { }
+        fun bind(mode: HistoryState.Mode) {
+            when(mode) {
+                is HistoryState.Mode.Normal ->
+                    text.text = text.context.resources.getText(R.string.delete_history)
+                is HistoryState.Mode.Editing ->
+                    text.text = text.context.resources.getString(R.string.delete_history_items, mode.selectedItems.size)
+            }
+        }
 
         companion object {
             const val LAYOUT_ID = R.layout.history_delete
@@ -143,7 +151,7 @@ class HistoryAdapter(
         val view = LayoutInflater.from(parent.context).inflate(viewType, parent, false)
 
         return when (viewType) {
-            HistoryDeleteViewHolder.LAYOUT_ID -> HistoryDeleteViewHolder(view)
+            HistoryDeleteViewHolder.LAYOUT_ID -> HistoryDeleteViewHolder(view, actionEmitter)
             HistoryHeaderViewHolder.LAYOUT_ID -> HistoryHeaderViewHolder(view)
             HistoryListItemViewHolder.LAYOUT_ID -> HistoryListItemViewHolder(view, actionEmitter)
             else -> throw IllegalStateException("viewType $viewType does not match to a ViewHolder")
@@ -162,6 +170,7 @@ class HistoryAdapter(
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         when (holder) {
+            is HistoryDeleteViewHolder -> holder.bind(mode)
             is HistoryHeaderViewHolder -> holder.bind("Today")
             is HistoryListItemViewHolder -> holder.bind(items[position - NUMBER_OF_SECTIONS], mode)
         }

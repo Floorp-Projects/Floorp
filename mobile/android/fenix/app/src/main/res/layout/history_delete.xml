@@ -14,7 +14,7 @@
         android:id="@+id/delete_history_button_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Delete History"
+        android:text="@string/delete_history"
         android:textColor="@color/photonRed60"
         android:drawablePadding="8dp"
         android:textSize="16sp"
