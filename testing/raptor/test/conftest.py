@@ -18,7 +18,7 @@ else:
     mozharness_dir = os.path.join(here, '../../mozharness')
 sys.path.insert(0, mozharness_dir)
 
-from raptor.raptor import Raptor
+from raptor.raptor import RaptorDesktopFirefox
 
 
 @pytest.fixture(scope='function')
@@ -35,7 +35,7 @@ def options(request):
 
 @pytest.fixture(scope='function')
 def raptor(options):
-    return Raptor(**options)
+    return RaptorDesktopFirefox(**options)
 
 
 @pytest.fixture(scope='session')

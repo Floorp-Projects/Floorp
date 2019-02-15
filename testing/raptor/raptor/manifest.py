@@ -51,6 +51,8 @@ def validate_test_ini(test_details):
             LOG.error("ERROR: setting '%s' is required but not found in %s"
                       % (setting, test_details['manifest']))
 
+    test_details.setdefault("page_timeout", 30000)
+
     # if playback is specified, we need more playback settings
     if 'playback' in test_details:
         for setting in playback_settings:
