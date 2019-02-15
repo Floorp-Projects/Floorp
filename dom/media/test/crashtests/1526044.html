@@ -1,0 +1,19 @@
+<script>
+  function start () {
+    try { o1 = new AudioContext({}) } catch (e) { }
+    try { o2 = new DynamicsCompressorNode(o1, {}) } catch (e) { }
+    try { o3 = o2.attack } catch (e) { }
+    try { o4 = new XMLHttpRequest({mozAnon: true, mozSystem: true}) } catch (e) { }
+    try { o4.open('GET', '', false) } catch (e) { }
+    try { o4.send() } catch (e) { }
+    for (let i = 0; i < 20; i++) {
+      try { o5 = o1.createGain() } catch (e) { }
+      try { o1.suspend().then(function () { }) } catch (e) { }
+      try { o5.connect(o3) } catch (e) { }
+    }
+    setTimeout('location.reload()', 200)
+  }
+
+  window.addEventListener('load', start)
+</script>
+
