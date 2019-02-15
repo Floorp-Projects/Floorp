@@ -21,16 +21,25 @@ else:
     mozharness_dir = os.path.join(here, '../../mozharness')
 sys.path.insert(0, mozharness_dir)
 
-from raptor.raptor import Raptor
+from raptor.raptor import RaptorDesktopFirefox, RaptorDesktopChrome, RaptorAndroid
 
 
-@pytest.mark.parametrize('app', ['firefox', 'chrome'])
-def test_create_profile(options, app, get_prefs):
-    options['app'] = app
-    raptor = Raptor(**options)
+@pytest.mark.parametrize("raptor_class, app_name", [
+                         [RaptorDesktopFirefox, "firefox"],
+                         [RaptorDesktopChrome, "chrome"],
+                         [RaptorAndroid, "fennec"],
+                         [RaptorAndroid, "geckoview"],
+                         ])
+def test_create_profile(options, raptor_class, app_name, get_prefs):
+    options['app'] = app_name
+    raptor = raptor_class(**options)
+
+    if app_name in ["fennec", "geckoview"]:
+        raptor.profile_class = "firefox"
+    raptor.create_browser_profile()
 
     assert isinstance(raptor.profile, BaseProfile)
-    if app != 'firefox':
+    if app_name != 'firefox':
         return
 
     # These prefs are set in mozprofile
@@ -54,6 +63,8 @@ def test_create_profile(options, app, get_prefs):
 def test_start_and_stop_server(raptor):
     assert raptor.control_server is None
 
+    raptor.create_browser_profile()
+    raptor.create_browser_handler()
     raptor.start_control_server()
 
     assert raptor.control_server._server_thread.is_alive()
@@ -72,7 +83,9 @@ def test_start_browser(get_binary, app):
     binary = get_binary(app)
     assert binary
 
-    raptor = Raptor(app, binary)
+    raptor = RaptorDesktopFirefox(app, binary)
+    raptor.create_browser_profile()
+    raptor.create_browser_handler()
     raptor.start_control_server()
 
     test = {}
