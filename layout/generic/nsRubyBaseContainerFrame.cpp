@@ -736,8 +736,7 @@ void nsRubyBaseContainerFrame::PullOneColumn(nsLineLayout* aLineLayout,
                  "the same old float containing block");
     }
 #endif
-    nsBlockFrame* newFloatCB =
-        nsLayoutUtils::GetAsBlock(aLineLayout->LineContainerFrame());
+    nsBlockFrame* newFloatCB = do_QueryFrame(aLineLayout->LineContainerFrame());
     MOZ_ASSERT(newFloatCB, "Must have a float containing block");
     if (oldFloatCB != newFloatCB) {
       for (nsIFrame* frame : aColumn) {

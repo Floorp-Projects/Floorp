@@ -363,10 +363,11 @@ services.sync:
   sync_login_state_transitions:
     bug_numbers:
       - 1375635
+      - 1523644
     description: >
       Records transitions between login states of "success", "unverified"
       and "rejected.
-    expires: "68"
+    expires: "72"
     kind: boolean
     keyed: true
     notification_emails:

@@ -339,7 +339,7 @@ class UrlbarView {
     favicon.className = "urlbarView-favicon";
     if (result.type == UrlbarUtils.RESULT_TYPE.SEARCH ||
         result.type == UrlbarUtils.RESULT_TYPE.KEYWORD) {
-      favicon.src = UrlbarUtils.ICON.SEARCH_GLASS;
+      favicon.src = result.payload.icon || UrlbarUtils.ICON.SEARCH_GLASS;
     } else {
       favicon.src = result.payload.icon || UrlbarUtils.ICON.DEFAULT;
     }

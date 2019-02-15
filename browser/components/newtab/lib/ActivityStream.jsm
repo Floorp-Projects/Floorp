@@ -222,10 +222,11 @@ const PREFS_CONFIG = new Map([
       })[geo];
       const isEnabled = IS_NIGHTLY_OR_UNBRANDED_BUILD && locales && locales.includes(locale);
       return JSON.stringify({
+        api_key_pref: "extensions.pocket.oAuthConsumerKey",
         enabled: isEnabled,
         show_spocs: geo === "US",
         // This is currently an exmple layout used for dev purposes.
-        layout_endpoint: "https://getpocket.com/v3/newtab/layout?version=1&consumer_key=40249-e88c401e1b1f2242d9e441c4&layout_variant=basic",
+        layout_endpoint: "https://getpocket.com/v3/newtab/layout?version=1&consumer_key=$apiKey&layout_variant=basic",
       });
     },
   }],

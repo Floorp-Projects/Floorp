@@ -1165,7 +1165,7 @@ void nsHTMLScrollFrame::Reflow(nsPresContext* aPresContext,
 void nsHTMLScrollFrame::DidReflow(nsPresContext* aPresContext,
                                   const ReflowInput* aReflowInput) {
   nsContainerFrame::DidReflow(aPresContext, aReflowInput);
-  PresShell()->PostPendingScrollAnchorAdjustment(GetAnchor());
+  PresShell()->PostPendingScrollAnchorAdjustment(Anchor());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -5509,7 +5509,7 @@ nsresult nsXULScrollFrame::XULLayout(nsBoxLayoutState& aState) {
   // Set up overflow areas for block frames for the benefit of
   // text-overflow.
   nsIFrame* f = mHelper.mScrolledFrame->GetContentInsertionFrame();
-  if (nsLayoutUtils::GetAsBlock(f)) {
+  if (f && f->IsBlockFrameOrSubclass()) {
     nsRect origRect = f->GetRect();
     nsRect clippedRect = origRect;
     clippedRect.MoveBy(mHelper.mScrollPort.TopLeft());

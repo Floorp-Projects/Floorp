@@ -278,9 +278,18 @@ EnterprisePoliciesManager.prototype = {
   getActivePolicies() {
     return this._parsedPolicies;
   },
+
+  setSupportMenu(supportMenu) {
+    SupportMenu = supportMenu;
+  },
+
+  getSupportMenu() {
+    return SupportMenu;
+  },
 };
 
 let DisallowedFeatures = {};
+let SupportMenu = null;
 
 /**
  * areEnterpriseOnlyPoliciesAllowed
