@@ -79,6 +79,9 @@ permalink: /changelog/
 
   * Added `String.toUri()` as a shorthand for `Uri.parse()` and in addition to other `to*()` methods already available in the Kotlin Standard Library.
 
+* **support-utils**
+  * Added `Browsers` utility class for collecting and analyzing information about installed browser applications.
+
 * **browser-session**, **feature-session-bundling**
   * `SessionStorage` and `SessionBundleStorage` now save and restore the title of `Session` objects.
   * `SessionManager.restore()` now allows passing in empty snapshots.
