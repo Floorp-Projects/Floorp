@@ -49,7 +49,6 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "Geweldige inhoud van het web, gepersonaliseerd voor u",
   "prefs_topstories_options_sponsored_label": "Gesponsorde verhalen",
   "prefs_topstories_sponsored_learn_more": "Meer info",
-  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "Een selectie van websites die u hebt opgeslagen of bezocht",
   "prefs_highlights_options_visited_label": "Bezochte pagina’s",
   "prefs_highlights_options_download_label": "Meest recent gedownload",

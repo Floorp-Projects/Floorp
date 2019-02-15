@@ -49,7 +49,6 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "Skvelý obsah z celého webu, vybraný špeciálne pre vás",
   "prefs_topstories_options_sponsored_label": "Sponzorované stránky",
   "prefs_topstories_sponsored_learn_more": "Ďalšie informácie",
-  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "Výber stránok, ktoré ste si uložili alebo ste ich navštívili",
   "prefs_highlights_options_visited_label": "Navštívené stránky",
   "prefs_highlights_options_download_label": "Nedávne prevzatia",

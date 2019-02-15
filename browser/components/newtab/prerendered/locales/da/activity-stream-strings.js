@@ -49,7 +49,6 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "Spændende indhold fra nettet, specielt udvalgt til dig",
   "prefs_topstories_options_sponsored_label": "Sponsorerede historier",
   "prefs_topstories_sponsored_learn_more": "Læs mere",
-  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "Et afsnit med sider, du har gemt eller besøgt",
   "prefs_highlights_options_visited_label": "Besøgte sider",
   "prefs_highlights_options_download_label": "Seneste filhentninger",

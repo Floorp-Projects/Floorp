@@ -49,7 +49,6 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "ప్రపంచం నలుమూలలనుండి మీకోసం వ్యక్తిగతీకరించబడిన ఆసక్తికర సమాచారం",
   "prefs_topstories_options_sponsored_label": "ప్రాయోజిక కథనాలు",
   "prefs_topstories_sponsored_learn_more": "ఇంకా తెలుసుకోండి",
-  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "మీరు భద్రపరచిన లేదా సందర్శించిన సైట్ల నుండి ఎంపికచేసినవి",
   "prefs_highlights_options_visited_label": "చూసిన పేజీలు",
   "prefs_highlights_options_download_label": "ఇటీవలి దింపుకోలు",

@@ -49,7 +49,6 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "Bonega enhavo de la tuta Teksaĵo, personecigita por vi",
   "prefs_topstories_options_sponsored_label": "Patronitaj artikoloj",
   "prefs_topstories_sponsored_learn_more": "Pli da informo",
-  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "Retejoj elektitaj inter tiuj, kiun vi vizitis aŭ konservis",
   "prefs_highlights_options_visited_label": "Vizititaj paĝoj",
   "prefs_highlights_options_download_label": "Lasta elŝuto",

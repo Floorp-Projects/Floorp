@@ -49,7 +49,6 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "Frábært efni víðsvegar að af vefnum, sérsniðið fyrir þig",
   "prefs_topstories_options_sponsored_label": "Kostaðar sögur",
   "prefs_topstories_sponsored_learn_more": "Læra meira",
-  "prefs_sponsored_stories_status_label": "Show sponsored stories",
   "prefs_highlights_description": "Úrval af vefsvæðum sem þú hefur vistað eða heimsótt",
   "prefs_highlights_options_visited_label": "Heimsóttar síður",
   "prefs_highlights_options_download_label": "Síðasta niðurhal",
