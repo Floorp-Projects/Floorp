@@ -8,63 +8,34 @@
 // leaking to window scope.
 {
 class MozPopupNotification extends MozXULElement {
-  static get observedAttributes() {
-    return [
-      "buttonaccesskey",
-      "buttoncommand",
-      "buttonhighlight",
-      "buttonlabel",
-      "closebuttoncommand",
-      "closebuttonhidden",
-      "dropmarkerhidden",
-      "dropmarkerpopupshown",
-      "endlabel",
-      "icon",
-      "iconclass",
-      "label",
-      "learnmoreclick",
-      "learnmoreurl",
-      "mainactiondisabled",
-      "menucommand",
-      "name",
-      "origin",
-      "origin",
-      "popupid",
-      "secondarybuttonaccesskey",
-      "secondarybuttoncommand",
-      "secondarybuttonhidden",
-      "secondarybuttonlabel",
-      "secondendlabel",
-      "secondname",
-      "warninghidden",
-      "warninglabel",
-    ];
-  }
-
-  _updateAttributes() {
-    for (let [ el, attrs ] of this._inheritedAttributeMap.entries()) {
-      for (let attr of attrs) {
-        this.inheritAttribute(el, attr);
-      }
-    }
-  }
-
-  get _inheritedAttributeMap() {
-    if (!this.__inheritedAttributeMap) {
-      this.__inheritedAttributeMap = new Map();
-      for (let el of this.querySelectorAll("[inherits]")) {
-        this.__inheritedAttributeMap.set(el, el.getAttribute("inherits").split(","));
-      }
-    }
-    return this.__inheritedAttributeMap;
+  static get inheritedAttributes() {
+    return {
+      ".popup-notification-icon": "popupid,src=icon,class=iconclass",
+      ".popup-notification-origin": "value=origin,tooltiptext=origin",
+      ".popup-notification-description": "popupid",
+      ".popup-notification-description > span:first-of-type": "text=label,popupid",
+      ".popup-notification-description > b:first-of-type": "text=name,popupid",
+      ".popup-notification-description > span:nth-of-type(2)": "text=endlabel,popupid",
+      ".popup-notification-description > b:last-of-type": "text=secondname,popupid",
+      ".popup-notification-description > span:last-of-type": "secondendlabel,popupid",
+      ".popup-notification-closebutton": "oncommand=closebuttoncommand,hidden=closebuttonhidden",
+      ".popup-notification-learnmore-link": "onclick=learnmoreclick,href=learnmoreurl",
+      ".popup-notification-warning": "hidden=warninghidden,text=warninglabel",
+      ".popup-notification-button-container > .popup-notification-secondary-button":
+          "oncommand=secondarybuttoncommand,label=secondarybuttonlabel,accesskey=secondarybuttonaccesskey,hidden=secondarybuttonhidden",
+      ".popup-notification-button-container > toolbarseparator": "hidden=dropmarkerhidden",
+      ".popup-notification-dropmarker": "onpopupshown=dropmarkerpopupshown,hidden=dropmarkerhidden",
+      ".popup-notification-dropmarker > menupopup": "oncommand=menucommand",
+      ".popup-notification-primary-button": "oncommand=buttoncommand,label=buttonlabel,accesskey=buttonaccesskey,default=buttonhighlight,disabled=mainactiondisabled",
+    };
   }
 
   attributeChangedCallback(name, oldValue, newValue) {
-    if (!this._hasSlotted || oldValue === newValue) {
+    if (!this._hasSlotted) {
       return;
     }
 
-    this._updateAttributes();
+    super.attributeChangedCallback(name, oldValue, newValue);
   }
 
   show() {
@@ -89,33 +60,32 @@ class MozPopupNotification extends MozXULElement {
     this.appendChild(MozXULElement.parseXULToFragment(`
       <hbox class="popup-notification-header-container"></hbox>
       <hbox align="start" class="popup-notification-body-container">
-        <image class="popup-notification-icon"
-               inherits="popupid,src=icon,class=iconclass"/>
+        <image class="popup-notification-icon"/>
         <vbox flex="1" pack="start" class="popup-notification-body">
           <hbox align="start">
             <vbox flex="1">
-              <label class="popup-notification-origin header" inherits="value=origin,tooltiptext=origin" crop="center"></label>
+              <label class="popup-notification-origin header" crop="center"></label>
               <!-- These need to be on the same line to avoid creating
                   whitespace between them (whitespace is added in the
                   localization file, if necessary). -->
-              <description class="popup-notification-description" inherits="popupid"><html:span inherits="text=label,popupid"></html:span><html:b inherits="text=name,popupid"></html:b><html:span inherits="text=endlabel,popupid"></html:span><html:b inherits="text=secondname,popupid"></html:b><html:span inherits="text=secondendlabel,popupid"></html:span></description>
+              <description class="popup-notification-description"><html:span></html:span><html:b></html:b><html:span></html:span><html:b></html:b><html:span></html:span></description>
             </vbox>
-            <toolbarbutton class="messageCloseButton close-icon popup-notification-closebutton tabbable" inherits="oncommand=closebuttoncommand,hidden=closebuttonhidden" tooltiptext="&closeNotification.tooltip;"></toolbarbutton>
+            <toolbarbutton class="messageCloseButton close-icon popup-notification-closebutton tabbable" tooltiptext="&closeNotification.tooltip;"></toolbarbutton>
           </hbox>
-          <label class="text-link popup-notification-learnmore-link" inherits="onclick=learnmoreclick,href=learnmoreurl">&learnMore;</label>
+          <label class="text-link popup-notification-learnmore-link">&learnMore;</label>
           <checkbox class="popup-notification-checkbox" oncommand="PopupNotifications._onCheckboxCommand(event)"></checkbox>
-          <description class="popup-notification-warning" inherits="hidden=warninghidden,text=warninglabel"></description>
+          <description class="popup-notification-warning"></description>
         </vbox>
       </hbox>
       <hbox class="popup-notification-footer-container"></hbox>
       <hbox class="popup-notification-button-container panel-footer">
-        <button class="popup-notification-button popup-notification-secondary-button" inherits="oncommand=secondarybuttoncommand,label=secondarybuttonlabel,accesskey=secondarybuttonaccesskey,hidden=secondarybuttonhidden"></button>
-        <toolbarseparator inherits="hidden=dropmarkerhidden"></toolbarseparator>
-        <button type="menu" class="popup-notification-button popup-notification-dropmarker" aria-label="&moreActionsButton.accessibleLabel;" inherits="onpopupshown=dropmarkerpopupshown,hidden=dropmarkerhidden">
-          <menupopup position="after_end" aria-label="&moreActionsButton.accessibleLabel;" inherits="oncommand=menucommand">
+        <button class="popup-notification-button popup-notification-secondary-button"></button>
+        <toolbarseparator></toolbarseparator>
+        <button type="menu" class="popup-notification-button popup-notification-dropmarker" aria-label="&moreActionsButton.accessibleLabel;">
+          <menupopup position="after_end" aria-label="&moreActionsButton.accessibleLabel;">
           </menupopup>
         </button>
-        <button class="popup-notification-button popup-notification-primary-button" label="&defaultButton.label;" accesskey="&defaultButton.accesskey;" inherits="oncommand=buttoncommand,label=buttonlabel,accesskey=buttonaccesskey,default=buttonhighlight,disabled=mainactiondisabled"></button>
+        <button class="popup-notification-button popup-notification-primary-button" label="&defaultButton.label;" accesskey="&defaultButton.accesskey;"></button>
       </hbox>
     `, ["chrome://global/locale/notification.dtd"]));
 
@@ -140,7 +110,7 @@ class MozPopupNotification extends MozXULElement {
       this.appendNotificationContent(popupnotificationcontent);
     }
 
-    this._updateAttributes();
+    this.initializeAttributeInheritance();
   }
 
   appendNotificationContent(el) {
